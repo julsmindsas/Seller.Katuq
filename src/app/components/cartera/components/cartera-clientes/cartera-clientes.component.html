@@ -1,0 +1,166 @@
+<div class="cx-clientes">
+
+  <!-- KPI cards -->
+  <div class="cx-grid" *ngIf="data as d">
+    <div class="cx-card cx-accent-purple">
+      <div class="cx-label"><span aria-hidden="true">💰</span> Cartera total</div>
+      <div class="cx-value">{{ d.kpis.carteraTotal.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-sub">{{ d.kpis.carteraTotal.clientes | number }} cliente(s) con saldo</div>
+    </div>
+    <div class="cx-card cx-accent-red">
+      <div class="cx-label"><span aria-hidden="true">⏰</span> Cartera vencida</div>
+      <div class="cx-value cx-value-danger">{{ d.kpis.carteraVencida.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-sub">{{ d.kpis.carteraVencida.pct | number:'1.0-0' }}% del total (&gt; 15 días)</div>
+    </div>
+    <div class="cx-card cx-accent-blue">
+      <div class="cx-label"><span aria-hidden="true">📊</span> DSO promedio</div>
+      <div class="cx-value">{{ d.kpis.dsoPromedio | number:'1.0-0' }} <span class="cx-value-unit">días</span></div>
+      <div class="cx-sub">antigüedad promedio de la cartera</div>
+    </div>
+    <div class="cx-card" [ngClass]="d.kpis.excedenCupo.cantidad > 0 ? 'cx-accent-orange' : 'cx-accent-gray'">
+      <div class="cx-label"><span aria-hidden="true">🚫</span> Exceden cupo</div>
+      <div class="cx-value" [class.cx-value-danger]="d.kpis.excedenCupo.cantidad > 0">{{ d.kpis.excedenCupo.cantidad | number }}</div>
+      <div class="cx-sub">cliente(s) sobre su cupo de crédito</div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="cx-toolbar">
+    <div class="cx-field cx-field-search">
+      <label for="cx-search">Buscar</label>
+      <input id="cx-search" type="text" [(ngModel)]="searchTerm" (input)="onFilterChange()"
+             placeholder="Nombre o documento del cliente" autocomplete="off">
+    </div>
+    <div class="cx-field">
+      <label for="cx-risk">Riesgo</label>
+      <select id="cx-risk" [(ngModel)]="riskFilter" (change)="onFilterChange()">
+        <option *ngFor="let opt of riskOptions" [value]="opt.value">{{ opt.label }}</option>
+      </select>
+    </div>
+    <div class="cx-field">
+      <label for="cx-vendor">Vendedor</label>
+      <select id="cx-vendor" [(ngModel)]="vendorFilter" (change)="onFilterChange()">
+        <option value="">Todos</option>
+        <option *ngFor="let v of vendorOptions" [value]="v">{{ v }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Empty: sin cartera en absoluto -->
+  <div *ngIf="clientes.length === 0" class="cx-empty">
+    <i class="pi pi-check-circle"></i>
+    <div class="cx-empty-title">No hay cartera pendiente 🎉</div>
+    <div>Todos los pedidos están al día.</div>
+  </div>
+
+  <!-- Empty: no hay resultados para el filtro -->
+  <div *ngIf="clientes.length > 0 && filtered.length === 0" class="cx-empty">
+    <i class="pi pi-filter-slash"></i>
+    <div class="cx-empty-title">Ningún cliente coincide con el filtro</div>
+    <div>Ajusta la búsqueda, el riesgo o el vendedor.</div>
+  </div>
+
+  <!-- Lista de clientes -->
+  <div class="cx-list" *ngIf="filtered.length > 0">
+    <div class="cx-client" *ngFor="let c of filtered; trackBy: trackByDoc" [class.is-expanded]="isExpanded(c)">
+
+      <!-- Cabecera clickable -->
+      <div class="cx-client-head" (click)="toggleExpand(c)" role="button" tabindex="0"
+           (keydown.enter)="toggleExpand(c)" (keydown.space)="toggleExpand(c)"
+           [attr.aria-expanded]="isExpanded(c)">
+
+        <div class="cx-client-id">
+          <div class="cx-client-name">
+            {{ c.nombre || '—' }}
+            <span *ngIf="c.excedeCupo" class="cx-badge-excede"><i class="pi pi-exclamation-triangle"></i>Excede cupo</span>
+          </div>
+          <div class="cx-client-meta">
+            <span *ngIf="c.documento"><i class="pi pi-id-card"></i> {{ c.documento }}</span>
+            <span *ngIf="c.vendedor"><i class="pi pi-user"></i> {{ c.vendedor }}</span>
+            <span><i class="pi pi-shopping-cart"></i> {{ c.pedidosActivos | number }} pedido(s)</span>
+            <span class="cx-dso"><i class="pi pi-clock"></i> DSO {{ c.dso | number:'1.0-0' }} d</span>
+          </div>
+        </div>
+
+        <div class="cx-client-saldo">
+          <div class="cx-saldo-value">{{ c.saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+          <div class="cx-saldo-label">saldo pendiente</div>
+        </div>
+
+        <i class="pi cx-chevron" [ngClass]="isExpanded(c) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+      </div>
+
+      <!-- Barras: cupo + aging -->
+      <div class="cx-client-bars">
+        <!-- Cupo de crédito -->
+        <div class="cx-bar-block">
+          <div class="cx-bar-caption">
+            <span>Cupo de crédito</span>
+            <span *ngIf="c.cupoUsadoPct != null" class="cx-bar-caption-val" [ngClass]="cupoClass(c)">
+              {{ c.cupoUsadoPct | number:'1.0-0' }}%
+            </span>
+            <span *ngIf="c.cupoUsadoPct == null" class="cx-bar-caption-muted">Sin cupo configurado</span>
+          </div>
+          <div class="cx-cupo-track" *ngIf="c.cupoUsadoPct != null">
+            <div class="cx-cupo-fill" [ngClass]="cupoClass(c)" [style.width.%]="cupoWidth(c)"></div>
+          </div>
+          <div class="cx-bar-foot" *ngIf="c.cupoUsadoPct != null">
+            {{ c.saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}
+            de {{ c.creditLimit | currency:'COP':'symbol-narrow':'1.0-0' }}
+          </div>
+        </div>
+
+        <!-- Aging del cliente -->
+        <div class="cx-bar-block">
+          <div class="cx-bar-caption"><span>Antigüedad</span></div>
+          <div class="cx-aging-mini" *ngIf="agingSegments(c).length > 0; else noAging">
+            <div class="cx-aging-seg" *ngFor="let s of agingSegments(c)" [ngClass]="s.cssClass"
+                 [style.width.%]="s.pct"
+                 [attr.title]="s.label + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0')"></div>
+          </div>
+          <ng-template #noAging>
+            <div class="cx-aging-mini cx-aging-empty"></div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Detalle de pedidos (expandible) -->
+      <div class="cx-client-detail" *ngIf="isExpanded(c)">
+        <div class="cx-detail-scroll">
+          <table class="cx-detail-table">
+            <thead>
+              <tr>
+                <th>Pedido</th>
+                <th class="text-center">Estado</th>
+                <th>Entrega</th>
+                <th>Límite pago</th>
+                <th class="text-end">Total</th>
+                <th class="text-end">Pagado</th>
+                <th class="text-end">Saldo</th>
+                <th class="text-center">Días venc.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of c.pedidos; trackBy: trackByPedido">
+                <td class="cx-cell-strong">{{ p.nroPedido || '—' }}</td>
+                <td class="text-center">
+                  <span class="cx-badge" [ngClass]="metaPago(p.estadoPago).badgeClass">{{ metaPago(p.estadoPago).label }}</span>
+                </td>
+                <td>{{ p.fechaEntrega ? (p.fechaEntrega | date:'dd/MM/yyyy') : '—' }}</td>
+                <td>{{ p.payDueDate ? (p.payDueDate | date:'dd/MM/yyyy') : '—' }}</td>
+                <td class="text-end">{{ p.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td class="text-end">{{ p.pagado | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td class="text-end cx-cell-strong">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                <td class="text-center" [class.cx-dias-venc]="p.diasVencido > 15">
+                  {{ p.diasVencido > 0 ? p.diasVencido : 0 }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

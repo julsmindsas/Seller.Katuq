@@ -1,0 +1,165 @@
+// ==========================================================================
+// Spec 014 — Finanzas MVP (CxC / Cartera). Estilos compartidos del módulo.
+// Estilo PLANO (sin gradientes en cards/stats) — border-left de color acento.
+// Se @importa desde el scss de cada componente (encapsulación de Angular).
+// ==========================================================================
+@import '../../../assets/scss/utils/katuq-tokens';
+
+// Colores del semáforo de aging (verde → amarillo → naranja → rojo).
+$cx-aging-corriente: $katuq-success; // #10b981
+$cx-aging-16:        $katuq-warning; // #f59e0b
+$cx-aging-31:        #f97316;        // naranja
+$cx-aging-60:        $katuq-danger;  // #ef4444
+
+// ── Grid de KPI cards (auto-fit: sirve para 4 y 5 columnas) ───────────────
+.cx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem;
+}
+
+.cx-card {
+  background: #fff;
+  border: 1px solid $katuq-gray-200;
+  border-left: 4px solid $katuq-gray-300;
+  border-radius: $card-radius;
+  padding: 0.75rem 0.9rem;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cx-accent-green  { border-left-color: $katuq-success-dark; }
+.cx-accent-orange { border-left-color: $cx-aging-31; }
+.cx-accent-amber  { border-left-color: $katuq-warning-dark; }
+.cx-accent-purple { border-left-color: $katuq-purple-600; }
+.cx-accent-blue   { border-left-color: #2563eb; }
+.cx-accent-red    { border-left-color: $katuq-danger-dark; }
+.cx-accent-gray   { border-left-color: $katuq-gray-300; }
+
+.cx-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; color: $katuq-gray-500; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.35rem; }
+.cx-value { font-size: 1.25rem; font-weight: 700; color: $katuq-gray-800; line-height: 1.2; }
+.cx-value-danger { color: $katuq-danger-dark; }
+.cx-sub   { font-size: 0.72rem; color: $katuq-gray-500; margin-top: 0.15rem; }
+
+// ── Skeleton shimmer ──────────────────────────────────────────────────────
+.cx-skel {
+  border-left-color: #e5e7eb;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e9ebee 37%, #f3f4f6 63%);
+  background-size: 400% 100%;
+  animation: cx-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes cx-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+// ── Toolbar de filtros ────────────────────────────────────────────────────
+.cx-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.9rem 0.2rem 0.8rem;
+}
+.cx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: $katuq-gray-500;
+    font-weight: 600;
+  }
+  input, select {
+    height: 34px;
+    border: 1px solid $katuq-gray-300;
+    border-radius: 6px;
+    padding: 0 0.6rem;
+    font-size: 0.85rem;
+    color: $katuq-gray-800;
+    background: #fff;
+    &:focus { outline: none; border-color: $katuq-primary; box-shadow: $focus-ring; }
+  }
+}
+.cx-field-search { flex: 1 1 240px; }
+.cx-field-search input { width: 100%; }
+
+// ── Badges de estado de pago (paridad con tesorería) ──────────────────────
+.cx-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 0.12rem 0.55rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.cx-badge-pendiente   { background: $badge-pago-pendiente-bg;   color: $badge-pago-pendiente-text;   border-color: $badge-pago-pendiente-border; }
+.cx-badge-preaprobado { background: $badge-pago-preaprobado-bg; color: $badge-pago-preaprobado-text; border-color: $badge-pago-preaprobado-border; }
+.cx-badge-neutral     { background: $katuq-gray-100;            color: $katuq-gray-600;              border-color: $katuq-gray-300; }
+
+/** Badge rojo "excede cupo". */
+.cx-badge-excede {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-radius: 20px;
+  padding: 0.12rem 0.55rem;
+  background: $katuq-danger-light;
+  color: $katuq-danger-text;
+  border: 1px solid #fca5a5;
+}
+
+// ── Estados vacíos y error ────────────────────────────────────────────────
+.cx-empty {
+  text-align: center;
+  padding: 2.75rem 1rem;
+  color: $katuq-gray-500;
+  i { font-size: 2.2rem; display: block; margin-bottom: 0.5rem; color: $katuq-gray-400; }
+  .cx-empty-title { font-size: 1rem; font-weight: 600; color: $katuq-gray-600; }
+}
+.cx-error {
+  margin: 0.5rem 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid #fcd34d;
+  border-left: 4px solid $katuq-warning-dark;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: $katuq-warning-text;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  &.cx-error-perms { border-color: #fca5a5; border-left-color: $katuq-danger-dark; background: $katuq-danger-light; color: $katuq-danger-text; }
+}
+.cx-retry {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $katuq-purple-700;
+  background: #fff;
+  border: 1px solid $katuq-purple-200;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  &:hover { background: $katuq-purple-50; }
+}
+
+// ── Segmento de aging reutilizable (mini-bar y barra grande) ──────────────
+.cx-seg-corriente { background: $cx-aging-corriente; }
+.cx-seg-d16       { background: $cx-aging-16; }
+.cx-seg-d31       { background: $cx-aging-31; }
+.cx-seg-d60       { background: $cx-aging-60; }
+
+.cx-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }

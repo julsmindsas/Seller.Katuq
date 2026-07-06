@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "predeploy": "node scripts/verify-dist-prod.js",
     "public": "dist/cuba",
     "ignore": [
       "firebase.json",

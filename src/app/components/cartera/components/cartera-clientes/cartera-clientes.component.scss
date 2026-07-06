@@ -1,0 +1,161 @@
+@import '../../cartera-shared';
+
+:host { display: block; }
+
+.cx-value-unit { font-size: 0.8rem; font-weight: 600; color: $katuq-gray-500; }
+
+// ── Lista de clientes ──────────────────────────────────────────────────────
+.cx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cx-client {
+  background: #fff;
+  border: 1px solid $katuq-gray-200;
+  border-radius: $card-radius;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  &:hover { box-shadow: $card-shadow; }
+  &.is-expanded { border-color: $katuq-purple-200; box-shadow: 0 2px 10px rgba(109, 40, 217, 0.08); }
+}
+
+// Cabecera clickable
+.cx-client-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+  &:hover { background: $katuq-gray-50; }
+  &:focus-visible { outline: 2px solid $katuq-primary; outline-offset: -2px; }
+}
+
+.cx-client-id { flex: 1 1 auto; min-width: 0; }
+.cx-client-name {
+  font-weight: 700;
+  color: $katuq-gray-800;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.cx-client-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: $katuq-gray-500;
+  i { font-size: 0.72rem; margin-right: 0.15rem; }
+  .cx-dso { color: $katuq-gray-600; font-weight: 600; }
+}
+
+.cx-client-saldo { text-align: right; flex: 0 0 auto; }
+.cx-saldo-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: $katuq-purple-700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.cx-saldo-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em; color: $katuq-gray-400; }
+
+.cx-chevron { color: $katuq-gray-400; font-size: 0.85rem; flex: 0 0 auto; }
+
+// ── Barras (cupo + aging) ─────────────────────────────────────────────────
+.cx-client-bars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.5rem;
+  padding: 0 0.9rem 0.8rem;
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+.cx-bar-block { min-width: 0; }
+.cx-bar-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $katuq-gray-500;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+.cx-bar-caption-val {
+  font-weight: 700;
+  &.is-ok      { color: $katuq-success-dark; }
+  &.is-warning { color: $katuq-warning-dark; }
+  &.is-danger  { color: $katuq-danger-dark; }
+}
+.cx-bar-caption-muted { color: $katuq-gray-400; font-weight: 500; text-transform: none; font-style: italic; }
+.cx-bar-foot { font-size: 0.68rem; color: $katuq-gray-500; margin-top: 0.25rem; font-variant-numeric: tabular-nums; }
+
+// Semáforo de cupo
+.cx-cupo-track {
+  width: 100%;
+  height: 8px;
+  background: $katuq-gray-200;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.cx-cupo-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.25s ease;
+  background: $katuq-success;
+  &.is-ok      { background: $katuq-success; }
+  &.is-warning { background: $katuq-warning; }
+  &.is-danger  { background: $katuq-danger; }
+}
+
+// Mini-barra de aging segmentada
+.cx-aging-mini {
+  display: flex;
+  width: 100%;
+  height: 8px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: $katuq-gray-200;
+}
+.cx-aging-seg { height: 100%; transition: width 0.25s ease; }
+.cx-aging-empty { background: $katuq-gray-200; }
+
+// ── Detalle de pedidos ────────────────────────────────────────────────────
+.cx-client-detail {
+  border-top: 1px solid $katuq-gray-200;
+  background: $katuq-gray-50;
+  padding: 0.6rem 0.9rem 0.8rem;
+}
+.cx-detail-scroll { overflow-x: auto; }
+.cx-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  th {
+    text-align: left;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: $katuq-gray-500;
+    font-weight: 600;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid $katuq-gray-200;
+  }
+  td {
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid $katuq-gray-200;
+    color: $katuq-gray-700;
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  .text-center { text-align: center; }
+  .text-end { text-align: right; font-variant-numeric: tabular-nums; }
+}
+.cx-cell-strong { font-weight: 700; color: $katuq-gray-800; }
+.cx-dias-venc { color: $katuq-danger-dark; font-weight: 700; }

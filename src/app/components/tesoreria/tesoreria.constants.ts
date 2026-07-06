@@ -12,10 +12,13 @@ export const PRESET_POR_REVISAR: string[] = ['Pospendiente'];
 export const PRESET_SIN_PAGO: string[] = ['Pendiente', 'PreAprobado'];
 export const PRESET_RECHAZADOS: string[] = ['Rechazado'];
 
-/** Matriz de transiciones manuales permitidas (CA-09). */
+/** Matriz de transiciones manuales permitidas (CA-09).
+ * Espejo de treasuryConstants.js del backend — el enforcement real es server-side.
+ * D-077: Pospendiente permite Precancelado (cancelar pedido con pago en revisión;
+ * el servidor resuelve los pagos Pendientes como Rechazados con auditoría). */
 export const PAYMENT_STATE_TRANSITIONS: { [estadoActual: string]: string[] } = {
   Pendiente: ['PreAprobado', 'Precancelado'],
-  Pospendiente: ['Aprobado', 'PreAprobado', 'Rechazado'],
+  Pospendiente: ['Aprobado', 'PreAprobado', 'Rechazado', 'Precancelado'],
   PreAprobado: ['Aprobado', 'Pendiente', 'Precancelado'],
   Rechazado: ['Pendiente', 'PreAprobado', 'Precancelado'],
 };

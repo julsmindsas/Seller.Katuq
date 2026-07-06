@@ -1,0 +1,55 @@
+<div class="cx-page">
+
+  <!-- Encabezado -->
+  <div class="cx-header">
+    <div>
+      <h4 class="cx-page-title"><i class="pi pi-chart-line me-2"></i>Cartera (CxC)</h4>
+      <p class="cx-page-sub">Cuánto te debe cada cliente, hace cuánto y la antigüedad de la deuda.</p>
+    </div>
+    <button type="button" class="cx-refresh" (click)="load()" [disabled]="loading"
+            aria-label="Actualizar cartera">
+      <i class="pi" [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+      Actualizar
+    </button>
+  </div>
+
+  <!-- Error de permisos (403) -->
+  <div *ngIf="forbidden && !loading" class="cx-error cx-error-perms" role="alert">
+    <i class="pi pi-lock"></i>
+    No tienes permiso para ver la cartera. Esta pantalla es para roles Tesorero o Administrador.
+  </div>
+
+  <!-- Error genérico -->
+  <div *ngIf="error && !loading" class="cx-error" role="alert">
+    <i class="pi pi-exclamation-triangle"></i>
+    No se pudo cargar la cartera.
+    <button type="button" class="cx-retry" (click)="load()">Reintentar</button>
+  </div>
+
+  <!-- Skeleton de carga -->
+  <div *ngIf="loading" class="cx-grid" aria-busy="true">
+    <div class="cx-card cx-skel" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <!-- Contenido -->
+  <p-tabView *ngIf="data && !loading && !error && !forbidden"
+             [activeIndex]="activeIndex" (onChange)="onTabChange($event)" styleClass="cx-tabs">
+
+    <p-tabPanel>
+      <ng-template pTemplate="header">
+        <i class="pi pi-users me-2"></i>
+        <span>Cartera por Cliente</span>
+      </ng-template>
+      <app-cartera-clientes [data]="data"></app-cartera-clientes>
+    </p-tabPanel>
+
+    <p-tabPanel>
+      <ng-template pTemplate="header">
+        <i class="pi pi-clock me-2"></i>
+        <span>Aging (Antigüedad)</span>
+      </ng-template>
+      <app-cartera-aging [data]="data"></app-cartera-aging>
+    </p-tabPanel>
+
+  </p-tabView>
+</div>

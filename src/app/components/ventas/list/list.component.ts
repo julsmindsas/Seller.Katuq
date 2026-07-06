@@ -2434,7 +2434,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchError = null;
     this.isSearching = false;
     this.showSuggestions = false;
-    this.refrescarDatos();
+    // forceRefresh: acción explícita del usuario sobre filtros — no debe caer
+    // en el throttle de 5s ni descartarse por un refresco en vuelo
+    this.refrescarDatos(true);
     this.saveFiltersState();
 
     // Mostrar notificación
@@ -3101,6 +3103,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // ✅ NUEVO: Flag para controlar refrescos automáticos
   private ultimoRefresco = 0;
   private refrescoEnProgreso = false;
+  // Secuencia de refrescos: un refresco forzado supersede al que esté en vuelo,
+  // y la respuesta del viejo se descarta para que no pise la del nuevo.
+  private refrescoSeq = 0;
 
   // Método para aplicar el filtro de fecha desde el calendario
   onDateFilterSelect(event: any, filterCallback: Function) {
@@ -3155,10 +3160,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // PROTECCIÓN CONTRA LLAMADAS SIMULTÁNEAS
-    // Para cambios de página: permitir si el anterior ya terminó o si pasaron más de 3s
+    // Un refresco forzado (filtro aplicado por el usuario) supersede al que esté
+    // en vuelo — la respuesta vieja se descarta vía refrescoSeq. Para cambios de
+    // página: permitir si el anterior ya terminó o si pasaron más de 3s.
     if (this.refrescoEnProgreso) {
       const tiempoMaximoEspera = 3000; // 3 segundos máximo de espera
-      if (isPageChange && tiempoDesdeUltimoRefresco > tiempoMaximoEspera) {
+      if (forceRefresh || (isPageChange && tiempoDesdeUltimoRefresco > tiempoMaximoEspera)) {
         // Resetear el flag para permitir el nuevo refresco
         this.refrescoEnProgreso = false;
       } else {
@@ -3168,6 +3175,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.refrescoEnProgreso = true;
     this.ultimoRefresco = ahora;
+    const seqRefresco = ++this.refrescoSeq;
 
     // Si es un refresco forzado (filtros nuevos), resetear a página 1
     if (forceRefresh && this.usePagination) {
@@ -3303,15 +3311,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         takeUntil(this.destroy$)
       ).subscribe({
         next: (paginatedResponse) => {
+          // Respuesta obsoleta: un refresco forzado más nuevo la supersedió
+          if (seqRefresco !== this.refrescoSeq) return;
           // Si debemos cargar POS, hacerlo en paralelo
           if (shouldLoadPOS) {
             this.ventasService.getOrdersPOSByFilter(posFilter).pipe(
               takeUntil(this.destroy$)
             ).subscribe({
               next: (posOrdersResponse) => {
+                if (seqRefresco !== this.refrescoSeq) return;
                 this.procesarRespuestaPaginada(paginatedResponse, posOrdersResponse || [], shouldLoadPOS);
               },
               error: (error) => {
+                if (seqRefresco !== this.refrescoSeq) return;
                 console.error('Error cargando pedidos POS:', error);
                 // Continuar sin pedidos POS
                 this.procesarRespuestaPaginada(paginatedResponse, [], shouldLoadPOS);
@@ -3322,6 +3334,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         },
         error: (error) => {
+          if (seqRefresco !== this.refrescoSeq) return;
           console.error('Error cargando pedidos:', error);
           this.loading = false;
           this.refrescoEnProgreso = false;
@@ -3480,7 +3493,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
           // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
           // ✅ CORREGIDO: No recalcular estados finales (Aprobado, Rechazado, Cancelado, Precancelado)
-          const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado"];
+          // Spec 013: "Pospendiente" también es intocable para el recálculo —
+          // lo administra SOLO el servidor (pago en revisión de tesorería),
+          // incluso si el flag de tesorería aún no cargó (null) en esta sesión.
+          const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado", "Pospendiente"];
           const esEstadoFinal = estadosFinales.includes(order.estadoPago);
 
           // Spec 013 — con tesorería activa el estadoPago lo decide el SERVIDOR
@@ -4063,7 +4079,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private static readonly PAGO_STATUS_MAP: { [key: string]: { short: string; full: string } } = {
-    Pospendiente: { short: "Pendiente", full: "Pospendiente - Pago en validación posterior" },
+    // Spec 013: el short label decía "Pendiente" y el usuario no podía
+    // distinguir un Pospendiente (pago subido, en revisión de tesorería) de
+    // un Pendiente real — reportado por Almara: "asenté el pago y sigue
+    // Pendiente" cuando el server SÍ estaba en Pospendiente.
+    Pospendiente: { short: "Pospendiente", full: "Pospendiente - Pago subido, en revisión de tesorería" },
     Pendiente: { short: "Pendiente", full: "Pendiente - Pago pendiente de confirmación" },
     PreAprobado: { short: "Pre-Aprob.", full: "Pre-Aprobado - Pago pre-aprobado, verificando" },
     Aprobado: { short: "Aprobado", full: "Aprobado - Pago confirmado y exitoso" },
@@ -4493,8 +4513,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.sharedFilterService.updateFilterState({ estadoProceso: estado });
     }
 
-    // Refrescar los datos con el nuevo filtro
-    this.refrescarDatos();
+    // Refrescar los datos con el nuevo filtro (forzado: acción de filtro del usuario)
+    this.refrescarDatos(true);
   }
 
   /**
@@ -7549,7 +7569,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Update Date objects for calendar components
     this.fechaInicialDate = new Date(fechaActual);
     this.fechaFinalDate = new Date(fechaActual);
-    this.refrescarDatos();
+    this.refrescarDatos(true);
   }
   filter(event) {
     console.log(event);
@@ -7564,7 +7584,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Update Date objects for calendar components
     this.fechaInicialDate = new Date(fechaManana);
     this.fechaFinalDate = new Date(fechaManana);
-    this.refrescarDatos();
+    this.refrescarDatos(true);
   }
 
   filtrarParaPasadoManana(): void {
@@ -7576,7 +7596,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Update Date objects for calendar components
     this.fechaInicialDate = new Date(fechaPasadoManana);
     this.fechaFinalDate = new Date(fechaPasadoManana);
-    this.refrescarDatos();
+    this.refrescarDatos(true);
   }
 
   AsentarPago(content, order: Pedido) {
@@ -7891,7 +7911,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (new Date(ev) > new Date(this.fechaFinal)) {
       this.fechaFinal = ev;
       this.clearFilter();
-      this.refrescarDatos();
+      this.refrescarDatos(true);
     }
     this.saveFiltersState();
   }
@@ -8493,7 +8513,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.fechaFinal = "";
       this.fechaFinalDate = null;
     }
-    this.refrescarDatos();
+    // forceRefresh: acción explícita del usuario sobre filtros — no debe caer
+    // en el throttle de 5s ni descartarse por un refresco en vuelo
+    this.refrescarDatos(true);
     this.saveFiltersState();
   }
 
@@ -8566,7 +8588,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.fechaFinalDate = new Date(lastMonthEnd);
         break;
     }
-    this.refrescarDatos();
+    // forceRefresh: acción explícita del usuario sobre filtros — no debe caer
+    // en el throttle de 5s ni descartarse por un refresco en vuelo
+    this.refrescarDatos(true);
     this.saveFiltersState();
   }
 
@@ -8574,7 +8598,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   clearQuickFilter(type: "estadoPago" | "estadoProceso"): void {
     this.quickFilters[type] = "all";
-    this.refrescarDatos();
+    // forceRefresh: acción explícita del usuario sobre filtros — no debe caer
+    // en el throttle de 5s ni descartarse por un refresco en vuelo
+    this.refrescarDatos(true);
     this.saveFiltersState();
   }
 
@@ -8592,7 +8618,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.hasActiveFilters()) {
       this.showFilters = false;
     }
-    this.refrescarDatos();
+    // forceRefresh: acción explícita del usuario sobre filtros — no debe caer
+    // en el throttle de 5s ni descartarse por un refresco en vuelo
+    this.refrescarDatos(true);
     this.saveFiltersState();
   }
 
@@ -8667,7 +8695,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (value !== "all" && !this.showFilters) {
       this.showFilters = true;
     }
-    this.refrescarDatos();
+    // forceRefresh: acción explícita del usuario sobre filtros — no debe caer
+    // en el throttle de 5s ni descartarse por un refresco en vuelo
+    this.refrescarDatos(true);
     this.saveFiltersState();
   }
 
@@ -8745,7 +8775,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Maneja el cambio en el estado de pago seleccionado
    */
   onEstadoPagoChange(): void {
-    this.refrescarDatos();
+    // forceRefresh: acción explícita del usuario sobre filtros — no debe caer
+    // en el throttle de 5s ni descartarse por un refresco en vuelo
+    this.refrescarDatos(true);
     this.saveFiltersState();
   }
 
@@ -8753,7 +8785,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Maneja el cambio en el estado de proceso seleccionado
    */
   onEstadoProcesoChange(): void {
-    this.refrescarDatos();
+    // forceRefresh: acción explícita del usuario sobre filtros — no debe caer
+    // en el throttle de 5s ni descartarse por un refresco en vuelo
+    this.refrescarDatos(true);
     this.saveFiltersState();
   }
 

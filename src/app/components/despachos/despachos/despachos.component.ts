@@ -3443,13 +3443,19 @@ export class DespachosComponent implements OnInit, OnDestroy {
           fechaEnvioConvert.setHours(0, 0, 0, 0),
         ); // Asegurarse de que también esté en 00:00:00
 
+        // Despachable = todo lo que NO sea recogida en tienda; los canales
+        // externos (WooCommerce "Precio fijo", etc.) traen su propio naming y
+        // exigir "DOMICILIO" ocultaba sus pedidos.
+        const feUpper = o.formaEntrega ? o.formaEntrega.toLocaleUpperCase() : "";
+        const esDespachable = o.formaEntrega
+          ? !(feUpper.includes("RECOG") || feUpper.includes("PICKUP") || feUpper.includes("RETIR"))
+          : !!o.envio?.direccionEntrega;
+
         return (
           fechaEntregaNormalized.getTime() === fechaEnvioNormalized.getTime() &&
           o.estadoProceso !== EstadoProceso.Entregado &&
           o.estadoProceso !== EstadoProceso.Despachado &&
-          (o.formaEntrega
-            ? o.formaEntrega.toLocaleUpperCase().includes("DOMICILIO")
-            : false)
+          esDespachable
         );
       })
       .reduce((acc: Pedido[], pedido) => {

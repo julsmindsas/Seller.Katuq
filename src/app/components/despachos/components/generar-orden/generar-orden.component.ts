@@ -801,19 +801,20 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
             return true;
           }
 
-          // Verificar formaEntrega para pedidos normales (no en órdenes)
+          // Verificar formaEntrega para pedidos normales (no en órdenes).
+          // Despachable = todo lo que NO sea recogida en tienda. Los canales
+          // externos traen su propio naming (WooCommerce: "Precio fijo"), así
+          // que exigir "DOMIC" ocultaba sus pedidos; se excluye recogida
+          // explícita y, si el carrito no trae formaEntrega, se exige
+          // dirección de entrega.
           let formaEntregaValida = false;
           try {
-            if (o.carrito &&
-                Array.isArray(o.carrito) &&
-                o.carrito.length > 0 &&
-                o.carrito[0] &&
-                o.carrito[0].configuracion &&
-                o.carrito[0].configuracion.datosEntrega &&
-                o.carrito[0].configuracion.datosEntrega.formaEntrega) {
-              formaEntregaValida = o.carrito[0].configuracion.datosEntrega.formaEntrega
-                .toLocaleUpperCase()
-                .includes("DOMIC");
+            const formaEntrega = o.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega;
+            if (formaEntrega) {
+              const fe = formaEntrega.toLocaleUpperCase();
+              formaEntregaValida = !(fe.includes("RECOG") || fe.includes("PICKUP") || fe.includes("RETIR"));
+            } else {
+              formaEntregaValida = !!o.envio?.direccionEntrega;
             }
           } catch (formaEntregaError) {
             console.error("Error verificando forma entrega para pedido:", o.nroPedido, formaEntregaError);
