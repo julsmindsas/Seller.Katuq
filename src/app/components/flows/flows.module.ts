@@ -1,6 +1,7 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { FlowsRoutingModule } from './flows-routing.module';
 import { FlowsListComponent } from './flow-list/flow-list.component';
@@ -29,7 +30,7 @@ import { FlowCanvasLoaderService } from './services/flow-canvas-loader.service';
     FlowDiffComponent,
     FlowAiAssistComponent
   ],
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, FlowsRoutingModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, NgbModalModule, FlowsRoutingModule],
   providers: [FlowCanvasLoaderService],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   exports: [FlowAiAssistComponent]

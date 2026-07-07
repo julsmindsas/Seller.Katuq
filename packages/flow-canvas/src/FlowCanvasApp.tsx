@@ -205,7 +205,14 @@ export const FlowCanvasApp: React.FC<FlowCanvasAppProps> = ({
                     </div>
                 </div>
 
-                {showConfig && <ConfigPanel onClose={closeRight} />}
+                {showConfig && (
+                    <ConfigPanel
+                        onClose={closeRight}
+                        onOpenIntegrations={(provider) =>
+                            onIntent?.('openIntegrations', { provider })
+                        }
+                    />
+                )}
                 {showRuns && (
                     <aside className="kfc-config" aria-label="Historial de ejecuciones">
                         <div className="kfc-config__header">

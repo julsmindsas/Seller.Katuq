@@ -160,13 +160,17 @@
 .kfc-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     background: #fff;
     border: 1px solid #d1d5db;
     border-radius: 6px;
-    padding: 6px 12px;
+    padding: 0 12px;
+    height: 32px;
     font-size: 13px;
     font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
     color: #1f2937;
     cursor: pointer;
     transition: background 0.12s ease, border-color 0.12s ease, transform 0.05s ease;
@@ -195,7 +199,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 10px;
+    height: 32px;
+    padding: 0 10px;
+    box-sizing: border-box;
     border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
@@ -228,7 +234,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
+    height: 32px;
+    padding: 0 10px;
+    box-sizing: border-box;
     border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
@@ -431,8 +439,8 @@
 
 /* ----- Config panel ----- */
 .kfc-config {
-    width: 360px;
-    flex: 0 0 360px;
+    width: 380px;
+    flex: 0 0 380px;
     border-left: 1px solid #e5e7eb;
     background: #fff;
     display: flex;
@@ -440,34 +448,117 @@
     min-height: 0;
 }
 .kfc-config__header {
-    padding: 14px 16px;
+    padding: 12px 12px 12px 16px;
     border-bottom: 1px solid #f1f3f6;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
 }
-.kfc-config__title { font-weight: 600; font-size: 14px; }
+.kfc-config__heading { min-width: 0; }
+.kfc-config__title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.kfc-config__subtitle {
+    font-size: 11px;
+    color: #6b7280;
+    font-family: 'Menlo', 'Consolas', monospace;
+    margin-top: 2px;
+}
+.kfc-config__close {
+    flex: 0 0 auto;
+    width: 32px;
+    padding: 0;
+}
 .kfc-config__body { padding: 14px 16px; flex: 1; overflow-y: auto; }
+.kfc-config__desc { margin: 0 0 12px; color: #4b5563; font-size: 12px; line-height: 1.45; }
+.kfc-config__errors {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 12px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+.kfc-config__sep { border: 0; border-top: 1px solid #e5e7eb; margin: 18px 0; }
+
+/* Missing-integration banner */
+.kfc-config__missing {
+    border: 1px solid #fcd34d;
+    background: #fffbeb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+.kfc-config__missing-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #92400e;
+    font-weight: 500;
+}
+.kfc-config__missing-head > i { margin-top: 1px; flex-shrink: 0; }
+.kfc-config__missing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+.kfc-btn--sm { height: 28px; font-size: 12px; padding: 0 10px; }
+.kfc-btn--warn-solid {
+    background: #d97706;
+    color: #fff;
+    border-color: #b45309;
+}
+.kfc-btn--warn-solid:hover { background: #b45309; border-color: #b45309; }
+.kfc-config__note {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 12px;
+    line-height: 1.45;
+    margin-top: 12px;
+}
 .kfc-config__footer {
     padding: 12px 16px;
     border-top: 1px solid #f1f3f6;
     display: flex;
+    align-items: center;
     gap: 8px;
-    justify-content: flex-end;
 }
+.kfc-config__footer-spacer { flex: 1; }
 
-.kfc-field { margin-bottom: 14px; }
+.kfc-field { margin-bottom: 16px; }
 .kfc-field__label {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     font-weight: 500;
     font-size: 12px;
     color: #374151;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
-.kfc-field__hint { font-size: 11px; color: #6b7280; margin-top: 4px; }
-.kfc-field__error { font-size: 11px; color: #b91c1c; margin-top: 4px; }
+.kfc-field__labeltext {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+.kfc-req { color: #dc2626; }
+.kfc-field__hint { font-size: 11px; color: #6b7280; margin-top: 5px; line-height: 1.4; }
+.kfc-field__error { font-size: 11px; color: #b91c1c; margin-top: 5px; }
 .kfc-input,
 .kfc-select,
 .kfc-textarea {
@@ -486,6 +577,7 @@
 .kfc-textarea:focus {
     outline: none;
     border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 .kfc-textarea { font-family: 'Menlo', 'Consolas', monospace; min-height: 90px; }
 
@@ -495,21 +587,234 @@
     gap: 8px;
     font-size: 13px;
 }
+
+/* Type chip — makes each property's data type recognizable at a glance */
+.kfc-typechip {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 1px 6px;
+    border-radius: 999px;
+    color: #6b7280;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    flex-shrink: 0;
+}
+.kfc-typechip--string { color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe; }
+.kfc-typechip--number { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
+.kfc-typechip--boolean { color: #b45309; background: #fffbeb; border-color: #fde68a; }
+.kfc-typechip--enum { color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe; }
+.kfc-typechip--array { color: #be185d; background: #fdf2f8; border-color: #fbcfe8; }
+.kfc-typechip--object { color: #374151; background: #f3f4f6; border-color: #d1d5db; }
+
+/* Multi-select chips (array<enum>) */
+.kfc-checkchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.kfc-checkchip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #f3f4f6;
+    color: #374151;
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 12px;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+.kfc-checkchip.is-on { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+
 .kfc-mode-toggle {
     display: inline-flex;
     border: 1px solid #d1d5db;
-    border-radius: 4px;
+    border-radius: 6px;
     overflow: hidden;
     font-size: 11px;
+    flex-shrink: 0;
 }
 .kfc-mode-toggle button {
-    background: transparent;
+    background: #fff;
     border: 0;
-    padding: 2px 8px;
+    padding: 3px 10px;
     color: #6b7280;
     cursor: pointer;
+    font-weight: 600;
+    line-height: 1.6;
 }
+.kfc-mode-toggle button:hover:not(.is-active) { background: #f3f4f6; }
 .kfc-mode-toggle button.is-active { background: #2563eb; color: #fff; }
+
+/* ----- Expression field + data picker (n8n style) ----- */
+.kfc-expr-wrap { position: relative; }
+.kfc-expr {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+}
+.kfc-expr:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.kfc-expr__fx {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    flex-shrink: 0;
+    background: #f5f3ff;
+    color: #7c3aed;
+    border-right: 1px solid #ede9fe;
+    font-size: 12px;
+}
+.kfc-expr__input {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    flex: 1;
+    min-width: 0;
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 12px;
+}
+.kfc-expr__input:focus { box-shadow: none !important; }
+.kfc-expr__pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    border: 0;
+    border-left: 1px solid #e5e7eb;
+    background: #f9fafb;
+    color: #374151;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.kfc-expr__pick:hover { background: #eff6ff; color: #1d4ed8; }
+.kfc-expr__pick.is-open { background: #2563eb; color: #fff; }
+.kfc-expr__preview {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #047857;
+    font-family: 'Menlo', 'Consolas', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.kfc-expr__preview-eq { color: #9ca3af; font-weight: 700; }
+
+.kfc-datapick {
+    margin-top: 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+.kfc-datapick__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f3f6;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #475569;
+}
+.kfc-datapick__search {
+    width: calc(100% - 16px);
+    margin: 8px;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-size: 12px;
+}
+.kfc-datapick__search:focus { outline: none; border-color: #2563eb; }
+.kfc-datapick__list {
+    list-style: none;
+    margin: 0;
+    padding: 0 6px 6px;
+    max-height: 230px;
+    overflow-y: auto;
+}
+.kfc-datapick__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    padding: 6px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 12px;
+}
+.kfc-datapick__row:hover { background: #eff6ff; }
+.kfc-datapick__type {
+    flex-shrink: 0;
+    width: 34px;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 0;
+    border-radius: 4px;
+    color: #6b7280;
+    background: #f3f4f6;
+}
+.kfc-datapick__type--string { color: #1d4ed8; background: #eff6ff; }
+.kfc-datapick__type--number { color: #047857; background: #ecfdf5; }
+.kfc-datapick__type--boolean { color: #b45309; background: #fffbeb; }
+.kfc-datapick__type--array { color: #be185d; background: #fdf2f8; }
+.kfc-datapick__type--object { color: #374151; background: #f3f4f6; }
+.kfc-datapick__path {
+    flex-shrink: 0;
+    max-width: 45%;
+    color: #111827;
+    font-family: 'Menlo', 'Consolas', monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.kfc-datapick__val {
+    flex: 1;
+    min-width: 0;
+    color: #94a3b8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.kfc-datapick__empty {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.45;
+}
+.kfc-datapick__empty > i { color: #2563eb; }
+.kfc-datapick__tokens { display: flex; gap: 6px; flex-wrap: wrap; }
+.kfc-datapick__noresult { padding: 8px 6px; font-size: 12px; color: #9ca3af; }
+.kfc-token {
+    border: 1px solid #ddd6fe;
+    background: #f5f3ff;
+    color: #7c3aed;
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 12px;
+    cursor: pointer;
+}
+.kfc-token:hover { background: #ede9fe; }
 
 /* ----- Empty state (panel) ----- */
 .kfc-empty {
