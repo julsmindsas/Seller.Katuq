@@ -170,6 +170,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Propiedades para búsqueda mejorada
   private searchSubject = new Subject<string>();
+  private searchRequestSub: any = null;
   private destroy$ = new Subject<void>();
   private editOrderSubject = new Subject<Pedido>();
   isSearching: boolean = false;
@@ -2271,8 +2272,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isSearching = true;
     this.searchError = null;
 
+    // Cancelar la búsqueda en vuelo: si el usuario siguió tecleando, la
+    // respuesta vieja no debe pisar los resultados de la query más nueva
+    if (this.searchRequestSub) {
+      this.searchRequestSub.unsubscribe();
+    }
     // Usar el servicio principal para búsqueda
-    this.ventasService.searchOrders(trimmedQuery).subscribe({
+    this.searchRequestSub = this.ventasService.searchOrders(trimmedQuery).subscribe({
       next: (res: any) => {
         // Asegurar que la respuesta sea un array
         const results = Array.isArray(res) ? res : res ? [res] : [];
@@ -8795,8 +8801,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Maneja el cambio en el campo de búsqueda con debounce
    */
   onSearchQueryChange(value: string): void {
+    // Solo actualiza estado. La búsqueda HTTP la dispara únicamente el
+    // completeMethod del p-autoComplete (onSearchComplete): antes este camino
+    // también llamaba performSearch por tecleo y duplicaba POST /v1/orders/search.
     this.searchQuery = value;
-    this.searchSubject.next(value);
   }
 
   /**
@@ -9223,6 +9231,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.searchRequestSub) {
+      this.searchRequestSub.unsubscribe();
+    }
   }
 
   /**
