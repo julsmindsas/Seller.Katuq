@@ -1,6 +1,6 @@
 # Spec 018 — Sincronización de Tipo de Cliente (Katuq → Shopify)
 
-> Estado: **draft**
+> Estado: **approved** (clarifications resueltas por Daniel 2026-07-07, ver §8)
 > Autor(es): Daniel García + Claude
 > Última actualización: 2026-07-07
 
@@ -21,10 +21,12 @@ Todo customer de Shopify de OH MY STORE que exista en Katuq con email tiene sus 
 ## 4. Criterios de aceptación (notación EARS)
 
 - WHEN un cliente de Katuq de una empresa con la sincronización habilitada es creado o editado y tiene email, THE system SHALL actualizar en el customer de Shopify cuyo email coincida los metafields `katuq.tipo_cliente` (nombre del tipo) y `katuq.customer_id` (ID del cliente en Katuq).
-- THE system SHALL resolver el tipo del cliente con una regla única: `categoria.nombre` si existe; en su defecto `tipoCliente`; y el valor emitido SHALL pertenecer al maestro de tipos activos de la empresa.
+- THE system SHALL resolver el tipo del cliente con una regla única: `categoria.nombre` si existe; en su defecto `tipoCliente`; y el valor emitido SHALL ser el nombre tal cual está en el maestro de tipos de Katuq (Katuq es la fuente de verdad de los nombres; un renombre en el maestro se propaga en la siguiente sincronización de cada cliente).
 - WHEN se actualiza el metafield THE system SHALL sobrescribir el valor anterior (nunca acumular valores ni tags).
 - IF el cliente no tiene email THEN THE system SHALL omitirlo y contarlo en el reporte del run, sin abortar el proceso.
-- IF no existe customer en Shopify con ese email THEN THE system SHALL [NEEDS CLARIFICATION #1].
+- IF no existe customer en Shopify con ese email THEN THE system SHALL crearlo con la identidad mínima (email + nombre del cliente en Katuq) y estamparle los metafields en la misma operación.
+- IF el cliente pierde su tipo en Katuq (categoría vacía) THEN THE system SHALL eliminar el metafield `katuq.tipo_cliente` del customer (Shopify fiel a Katuq; el storefront cae al precio público).
+- WHEN un customer nuevo aparece en Shopify (registro directo en la tienda) y su email coincide con un cliente existente de Katuq, THE system SHALL estamparle los metafields al recibir el evento del proveedor (estampado al vuelo, sin esperar backfill/edición).
 - WHEN se ejecuta la carga retroactiva THE system SHALL procesar todos los clientes de la empresa en modo dry-run por defecto y producir un reporte con conteos: actualizados, sin email, sin match, con error.
 - IF el proveedor responde rate-limit o error transitorio THEN THE system SHALL reintentar con backoff, sin efectos duplicados (la escritura es idempotente por sobrescritura).
 - WHILE la sincronización esté deshabilitada para una empresa THE system SHALL no emitir ninguna actualización de clientes de esa empresa (multi-tenant, default OFF; se habilita solo para OH MY STORE).
@@ -47,9 +49,9 @@ Todo customer de Shopify de OH MY STORE que exista en Katuq con email tiene sus 
 
 ## 6. Out of scope (explícito)
 
-- Sincronizar otros campos del cliente (nombre, teléfono, direcciones).
+- Sincronizar otros campos del cliente de forma continua (teléfono, direcciones); el nombre solo se envía una vez al CREAR el customer que no existía.
 - Sección "Clientes" en la UI de Mapeo de Campos (se opera desde el motor de integraciones).
-- Dirección Shopify → Katuq (crear/actualizar clientes de Katuq desde Shopify).
+- Crear/actualizar clientes DE KATUQ desde Shopify (el estampado al vuelo del §4 solo escribe metafields en Shopify; no toca la base de Katuq).
 - Otros canales (WooCommerce, etc.) — el diseño debe permitirlo a futuro, pero no se implementa.
 - Tags de producto `precio_mayorista`/`precio_modelo`: NO son mecanismo de esta spec. El mecanismo real de precios diferenciados ya existe (price lists B2B / `preciosPorTipoCliente`). Si se pide formalizar los tags como entregable, será spec aparte.
 
@@ -59,17 +61,17 @@ Todo customer de Shopify de OH MY STORE que exista en Katuq con email tiene sus 
 - Maestro de tipos de cliente del tenant (colección `tiposPrecios`).
 - D-069 — protección de `preciosPorTipoCliente` (el tier "modelo" solo existe curado en Katuq).
 
-## 8. [NEEDS CLARIFICATION]
+## 8. [NEEDS CLARIFICATION] — resueltas por Daniel (2026-07-07)
 
-- [ ] #1 — Si el email no existe como customer en Shopify: ¿crear el customer o solo reportar no-match? (recomendación: solo reportar en MVP; los customers los crea la tienda).
-- [ ] #2 — Normalización de valores: ¿"Público", "Mayoristas", "Modelo" exactos como están hoy en el maestro de OMS? ¿Sensible a mayúsculas/tildes? ¿Se congela el maestro para OMS?
-- [ ] #3 — Si un cliente pierde el tipo en Katuq (categoría vacía): ¿borrar el metafield o conservar el último valor?
-- [ ] #4 — Cliente que se registra directo en la tienda y ya existía en Katuq: ¿se estampa al vuelo (webhook de customer) o queda para la siguiente edición/backfill?
+- [x] #1 — Si el email no existe como customer en Shopify: **CREAR el customer** (identidad mínima + metafields).
+- [x] #2 — Valores: **siempre los nombres de Katuq** — se emite el nombre tal cual del maestro (fuente de verdad); no se congela el maestro; un renombre se propaga en la siguiente sync.
+- [x] #3 — Tipo vaciado: **borrar el metafield** (Shopify fiel a Katuq).
+- [x] #4 — Registro directo en la tienda: **estampado al vuelo** vía evento de customer del proveedor.
 
 ## 9. Riesgos identificados
 
 - R-01: doble representación del tipo en el doc de cliente (`tipoCliente` string vs `categoria` objeto; el pricing usa `categoria.id`) → regla única de resolución + datos legacy inconsistentes.
-- R-02: el maestro de tipos es editable por el comercio; si OMS renombra un tipo, el pricing del storefront se rompe → congelar/validar valores para OMS.
+- R-02: el maestro de tipos es editable por el comercio y los nombres de Katuq son la fuente de verdad (decisión #2): si OMS renombra un tipo, el nuevo nombre se propaga y la lógica de CreaCTA debe leerlo dinámicamente → acuerdo operativo con CreaCTA de que los valores son los que Katuq emita.
 - R-03: rate limits del proveedor durante el backfill (~900 customers) → throttling y reanudación.
 
 ## 10. Métricas de éxito post-launch
