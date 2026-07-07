@@ -278,9 +278,15 @@ export class VentasService extends BaseService {
    * @param pageSize - Number of items per page (default 50, max 100) - sent as query parameter
    * @returns Observable with paginated orders and metadata
    */
-  getOrdersByFilterOptimized(filter: any, page: number = 1, pageSize: number = 50): Observable<PaginatedOrdersResponse> {
+  getOrdersByFilterOptimized(filter: any, page: number = 1, pageSize: number = 50, includeMetrics: boolean = true): Observable<PaginatedOrdersResponse> {
     // Extract sorting parameters from filter object if present
     let queryParams = `page=${page}&pageSize=${pageSize}`;
+
+    // Las métricas se calculan en el backend sobre TODO el rango filtrado y no
+    // cambian entre páginas — el caller las pide solo cuando las necesita (página 1)
+    if (!includeMetrics) {
+      queryParams += '&includeMetrics=false';
+    }
 
     // Add sorting parameters to query string if they exist in the filter
     if (filter.sortField) {

@@ -3310,7 +3310,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const shouldLoadPOS = this.currentPage === 1;
       
       // Usar forkJoin con tipos explícitos para evitar errores de TypeScript
-      const paginatedRequest = this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.pageSize);
+      // Métricas solo en página 1: no cambian al paginar y en páginas siguientes
+      // se conservan las de la página 1 (backendMetrics solo se pisa si vienen).
+      const paginatedRequest = this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.pageSize, this.currentPage === 1);
       
       // Cargar pedidos paginados primero
       paginatedRequest.pipe(
