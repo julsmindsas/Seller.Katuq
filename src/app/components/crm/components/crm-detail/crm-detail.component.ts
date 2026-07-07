@@ -142,12 +142,32 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   // ─── Pipeline ──────────────────────────────────────────────
 
   changeStage(newStage: string): void {
+    const stageConfig = this.stages.find(s => s.key === newStage);
+
     this.crmService.updatePipeline(this.entityId, { stage: newStage })
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         if (res.success) {
-          if (this.lead.pipeline) this.lead.pipeline.stage = newStage;
-          this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+          if (this.lead.pipeline) {
+            this.lead.pipeline.stage = newStage;
+            if (stageConfig?.isWon) {
+              this.lead.pipeline.verifiedBuyer = res.verifiedBuyer;
+              this.lead.pipeline.verifiedOrderId = res.verifiedOrderId;
+              this.lead.pipeline.verifiedAt = res.verifiedAt;
+            }
+          }
+
+          if (stageConfig?.isWon) {
+            if (res.verifiedBuyer) {
+              this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+            } else {
+              this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
+            }
+          } else if (stageConfig?.isLost) {
+            this.messageService.add({ severity: 'info', summary: 'Lead archivado como perdido' });
+          } else {
+            this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+          }
           this.loadActivities();
         }
       });

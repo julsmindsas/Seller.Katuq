@@ -169,6 +169,10 @@
   &.action-btn-detail:hover { background: #ddd6fe; color: #6d28d9; }
   &.action-btn-delete { background: #fef2f2; color: #d12b38; }
   &.action-btn-delete:hover { background: #fee2e2; color: #b91c1c; }
+  &.action-btn-won { background: #f0fdf4; color: #27AE60; }
+  &.action-btn-won:hover { background: #dcfce7; color: #16a34a; }
+  &.action-btn-lost { background: #fef2f2; color: #d12b38; }
+  &.action-btn-lost:hover { background: #fee2e2; color: #b91c1c; }
 }
 
 // Column value
@@ -238,6 +242,7 @@
   .gu-unselectable { user-select: none !important; }
   .gu-transit { opacity: 0.3; }
 }
+
 
 // ─── Indicadores de gestión (dashboard) ─────────────────────
 .crm-dashboard {

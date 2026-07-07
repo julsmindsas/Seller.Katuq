@@ -45,6 +45,10 @@ export interface CrmLead {
   estimatedValue?: number;
   source?: string;
   lastContactedAt?: string;
+  // Verificación de compra al cerrar (isWon)
+  verifiedBuyer?: boolean;
+  verifiedAt?: string;
+  verifiedOrderId?: string;
 }
 
 export interface CrmActivity {

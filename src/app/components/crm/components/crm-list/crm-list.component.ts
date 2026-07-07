@@ -25,6 +25,12 @@ export class CrmListComponent implements OnInit, OnDestroy {
   entityType = 'client';
   leadsByStage: Record<string, CrmLead[]> = {};
 
+  // Cerrados (isWon/isLost) — archivados fuera del pipeline activo
+  activeTab: 'active' | 'closed' = 'active';
+  closedLeads: CrmLead[] = [];
+  closedLoaded = false;
+  loadingClosed = false;
+
   // UI
   loading = false;
   searchTerm = '';
@@ -317,6 +323,27 @@ export class CrmListComponent implements OnInit, OnDestroy {
       .subscribe(stats => { this.stats = stats; });
   }
 
+  setActiveTab(tab: 'active' | 'closed'): void {
+    this.activeTab = tab;
+    if (tab === 'closed' && !this.closedLoaded) {
+      this.loadClosedLeads();
+    }
+  }
+
+  loadClosedLeads(): void {
+    this.loadingClosed = true;
+    this.crmService.getLeads({ view: 'closed', limit: 200 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: res => {
+          this.closedLeads = res.data || [];
+          this.closedLoaded = true;
+          this.loadingClosed = false;
+        },
+        error: () => { this.loadingClosed = false; },
+      });
+  }
+
   groupByStage(): void {
     let filtered = this.searchTerm
       ? this.leads.filter(l =>
@@ -357,20 +384,60 @@ export class CrmListComponent implements OnInit, OnDestroy {
   }
 
   get visibleStages(): CrmStage[] {
-    return this.stages.filter(s => s.active !== false);
+    return this.stages.filter(s => s.active !== false && !s.isWon && !s.isLost);
+  }
+
+  get wonStage(): CrmStage | undefined {
+    return this.stages.find(s => s.isWon);
+  }
+
+  get lostStage(): CrmStage | undefined {
+    return this.stages.find(s => s.isLost);
+  }
+
+  /** Cierra un lead directamente desde la card del Kanban, sin abrir el detalle. */
+  quickCloseLead(lead: CrmLead, type: 'won' | 'lost', event: Event): void {
+    event.stopPropagation();
+    const target = type === 'won' ? this.wonStage : this.lostStage;
+    if (!target) return;
+    this.onStageDrop(lead.id, target.key);
   }
 
   // ─── Actions ───────────────────────────────────────────────
 
   onStageDrop(leadId: string, newStage: string): void {
+    const stageConfig = this.stages.find(s => s.key === newStage);
+    const closing = !!(stageConfig && (stageConfig.isWon || stageConfig.isLost));
+
     this.crmService.updatePipeline(leadId, { stage: newStage })
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         if (res.success) {
-          // Update local data
           const lead = this.leads.find(l => l.id === leadId);
           if (lead) lead.stage = newStage;
-          this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+
+          if (closing && lead) {
+            // Sale del pipeline activo: se archiva en "Cerrados"
+            this.leads = this.leads.filter(l => l.id !== leadId);
+            for (const key of Object.keys(this.leadsByStage)) {
+              this.leadsByStage[key] = this.leadsByStage[key].filter(l => l.id !== leadId);
+            }
+            if (this.closedLoaded) {
+              this.closedLeads = [{ ...lead, verifiedBuyer: res.verifiedBuyer, verifiedOrderId: res.verifiedOrderId }, ...this.closedLeads];
+            }
+
+            if (stageConfig?.isWon) {
+              if (res.verifiedBuyer) {
+                this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+              } else {
+                this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
+              }
+            } else {
+              this.messageService.add({ severity: 'info', summary: 'Lead archivado como perdido' });
+            }
+          } else {
+            this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+          }
           this.loadStats();
         } else {
           // Revert: reload

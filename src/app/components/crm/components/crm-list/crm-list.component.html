@@ -56,6 +56,25 @@
               </div>
             </div>
           </div>
+
+          <!-- Tabs: Pipeline activo / Cerrados -->
+          <div class="row mt-2">
+            <div class="col-12">
+              <ul class="nav nav-tabs crm-tabs">
+                <li class="nav-item">
+                  <a class="nav-link" [class.active]="activeTab === 'active'" (click)="setActiveTab('active')">
+                    <i class="fa fa-columns me-1"></i>Pipeline activo
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" [class.active]="activeTab === 'closed'" (click)="setActiveTab('closed')">
+                    <i class="fa fa-archive me-1"></i>Cerrados
+                    <span class="badge bg-secondary ms-1" *ngIf="closedLoaded">{{ closedLeads.length }}</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <!-- ═══════ Indicadores de gestión ═══════ -->
@@ -160,12 +179,12 @@
         </div>
 
         <!-- Loader -->
-        <div class="loader-box" *ngIf="loading">
+        <div class="loader-box" *ngIf="loading && activeTab === 'active'">
           <div class="loader-8"></div>
         </div>
 
         <!-- ═══════ KANBAN VIEW ═══════ -->
-        <div class="card-body p-2" *ngIf="!loading && viewMode === 'kanban'">
+        <div class="card-body p-2" *ngIf="activeTab === 'active' && !loading && viewMode === 'kanban'">
           <div class="kanban-board">
             <div class="kanban-column" *ngFor="let stage of visibleStages"
               [class.d-none]="selectedStage && selectedStage !== stage.key">
@@ -234,6 +253,14 @@
                     <a class="action-btn-pill action-btn-detail" (click)="viewDetail(lead)">
                       <i class="fa fa-external-link me-1"></i>Ver
                     </a>
+                    <a *ngIf="wonStage" class="action-btn-pill action-btn-won" pTooltip="Marcar como Ganado"
+                      (click)="quickCloseLead(lead, 'won', $event)">
+                      <i class="fa fa-check"></i>
+                    </a>
+                    <a *ngIf="lostStage" class="action-btn-pill action-btn-lost" pTooltip="Marcar como Perdido"
+                      (click)="quickCloseLead(lead, 'lost', $event)">
+                      <i class="fa fa-times"></i>
+                    </a>
                     <a class="action-btn-pill action-btn-delete" (click)="deleteSingleLead(lead, $event)">
                       <i class="fa fa-trash"></i>
                     </a>
@@ -268,7 +295,7 @@
         </div>
 
         <!-- Barra selección masiva -->
-        <div class="card-body py-2 border-bottom bg-light" *ngIf="selectedCount > 0">
+        <div class="card-body py-2 border-bottom bg-light" *ngIf="activeTab === 'active' && selectedCount > 0">
           <div class="d-flex align-items-center gap-3">
             <span class="fw-semibold" style="color: #334155;">
               <i class="fa fa-check-square-o me-1"></i>{{ selectedCount }} seleccionado(s)
@@ -283,7 +310,7 @@
         </div>
 
         <!-- ═══════ TABLE VIEW ═══════ -->
-        <div class="card-body p-2" *ngIf="!loading && viewMode === 'table'">
+        <div class="card-body p-2" *ngIf="activeTab === 'active' && !loading && viewMode === 'table'">
           <p-table [value]="filteredLeads" dataKey="id"
             [paginator]="true" [rows]="20" [rowsPerPageOptions]="[10,20,50]"
             [showCurrentPageReport]="true"
@@ -375,6 +402,78 @@
                 <td [attr.colspan]="entityType === 'company' ? 10 : 9" class="text-center p-4">
                   <i class="fa fa-inbox" style="font-size:2rem; color:#9ca3af;"></i>
                   <p class="text-muted mt-2 mb-0">No hay leads que mostrar</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- ═══════ CERRADOS (isWon/isLost) ═══════ -->
+        <div class="card-body p-2" *ngIf="activeTab === 'closed'">
+          <div class="loader-box" *ngIf="loadingClosed">
+            <div class="loader-3"></div>
+          </div>
+
+          <p-table [value]="closedLeads" dataKey="id" *ngIf="!loadingClosed"
+            [paginator]="true" [rows]="20" [rowsPerPageOptions]="[10,20,50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+            styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
+            style="font-size: 0.75em;">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width:22%">Nombre</th>
+                <th style="width:14%">Documento</th>
+                <th style="width:12%">Etapa</th>
+                <th style="width:16%">Compra</th>
+                <th style="width:14%">Cierre</th>
+                <th style="width:10%">Valor est.</th>
+                <th style="width:12%">Acciones</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-lead>
+              <tr>
+                <td>
+                  <strong>{{ lead.name }}</strong>
+                  <small class="d-block text-muted">{{ lead.email || '' }}</small>
+                </td>
+                <td><small>{{ lead.nit || '-' }}</small></td>
+                <td>
+                  <p-tag [value]="getStageLabel(lead.stage)" [severity]="getStageSeverity(lead.stage)"
+                    [style]="{'font-size':'0.75rem'}"></p-tag>
+                </td>
+                <td>
+                  <span class="stat-badge badge-sm" *ngIf="lead.verifiedBuyer"
+                    style="background-color:#f0fdf4; color:#27AE60;">
+                    <i class="fa fa-check-circle me-1"></i>Comprador verificado
+                  </span>
+                  <span class="stat-badge badge-sm" *ngIf="lead.verifiedBuyer === false"
+                    style="background-color:#fff7ed; color:#c2410c;">
+                    <i class="fa fa-exclamation-triangle me-1"></i>Sin verificar
+                  </span>
+                  <small class="text-muted" *ngIf="lead.verifiedBuyer === undefined">—</small>
+                </td>
+                <td><small>{{ lead.lastContactedAt ? (lead.lastContactedAt | date:'short') : '-' }}</small></td>
+                <td>
+                  <small *ngIf="lead.estimatedValue" style="color:#8b5cf6; font-weight:600;">
+                    {{ formatCurrency(lead.estimatedValue) }}
+                  </small>
+                </td>
+                <td>
+                  <a class="action-btn" (click)="viewDetail(lead)" pTooltip="Ver detalle">
+                    <i class="fa fa-eye"></i>
+                  </a>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="text-center p-4">
+                  <i class="fa fa-archive" style="font-size:2rem; color:#9ca3af;"></i>
+                  <p class="text-muted mt-2 mb-0">Todavía no hay leads cerrados</p>
                 </td>
               </tr>
             </ng-template>

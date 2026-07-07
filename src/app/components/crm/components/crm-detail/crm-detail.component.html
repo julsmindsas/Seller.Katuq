@@ -17,6 +17,14 @@
       <button pButton icon="pi pi-arrow-left" class="p-button-text p-button-sm" (click)="goBack()"></button>
       <h5 class="mb-0">{{ entityName }}</h5>
       <p-tag [value]="getStageLabel(currentStage)" [severity]="getStageSeverity(currentStage)"></p-tag>
+      <span class="stat-badge badge-sm" *ngIf="lead.pipeline?.verifiedBuyer === true"
+        style="background-color:#f0fdf4; color:#27AE60;">
+        <i class="fa fa-check-circle me-1"></i>Comprador verificado
+      </span>
+      <span class="stat-badge badge-sm" *ngIf="lead.pipeline?.verifiedBuyer === false"
+        style="background-color:#fff7ed; color:#c2410c;">
+        <i class="fa fa-exclamation-triangle me-1"></i>Sin verificar
+      </span>
       <span class="text-muted ms-2" *ngIf="lead.entity?.email">{{ lead.entity.email }}</span>
       <button pButton icon="pi pi-pencil" label="{{ 'Editar' | translate }}" class="p-button-text p-button-sm ms-auto"
         pTooltip="Corregir los datos ingresados de este lead" tooltipPosition="bottom"
