@@ -742,6 +742,7 @@ export class IntegrationsService {
   private getDisplayNameForProvider(provider: string): string | null {
     const map: Record<string, string> = {
       osmosis:           'Guía Cereza',
+      fullpi:            'Fullpi',
       prindel:           'Prindel',
       enviame:           'Envíame.io',
       partners_logistics:'Partners Logística',
@@ -792,6 +793,7 @@ export class IntegrationsService {
       case "partners_logistics":
       case "prindel":
       case "osmosis": // Cereza/Guía Cereza opera como proveedor logístico (despacha desde sus bodegas)
+      case "fullpi": // WMS Fullpi (spec 017): despacha pedidos desde su bodega y reporta stock
         return IntegrationCategory.LOGISTICS;
       case "mailchimp":
       case "hubspot":
@@ -1488,6 +1490,17 @@ export class IntegrationsService {
           description:
             "Proveedor logístico + catálogo Cereza Media (Osmosis ERP/ICG). Sincroniza productos y stock por bodega; recibe pedidos y los despacha desde sus bodegas.",
           logo: "assets/images/logos/guiacereza.svg",
+          active: true,
+        },
+        {
+          // Fullpi (WMS) — spec 017. Recibe pedidos pagados/contraentrega para
+          // despacho, reporta estados (tracking) y stock por SKU. La sincronización
+          // corre por los flows fullpi-* (activarlos en /flows es el toggle).
+          id: "fullpi",
+          name: "Fullpi",
+          description:
+            "WMS de fulfillment: recibe tus pedidos pagados para despacharlos desde su bodega, reporta el estado de cada envío y sincroniza el inventario disponible.",
+          logo: "assets/images/logos/fullpi.svg",
           active: true,
         },
       ],

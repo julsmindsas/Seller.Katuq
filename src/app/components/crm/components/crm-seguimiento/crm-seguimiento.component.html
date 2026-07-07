@@ -201,5 +201,44 @@
     </div>
   </div>
 
+  <!-- Tareas sin revisar -->
+  <div class="card stat-card-unreviewed">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h6 class="mb-0"><i class="fa fa-eye-slash me-2" style="color:#7c3aed;"></i>Tareas sin revisar</h6>
+        <span class="stat-badge stat-badge-purple">{{ unreviewedTasks.length }}</span>
+      </div>
+      <small class="text-muted d-block mb-2">Tareas pendientes que no has revisado en los últimos 8 días.</small>
+
+      <div *ngIf="loading" class="text-center text-muted py-4">
+        <i class="fa fa-spinner fa-spin me-1"></i>Cargando…
+      </div>
+
+      <div *ngIf="!loading && unreviewedTasks.length === 0" class="text-center text-muted py-4">
+        <i class="fa fa-check-circle" style="font-size:2rem; color:#27AE60;"></i>
+        <p class="mb-0 mt-2">Todo al día, sin tareas olvidadas</p>
+      </div>
+
+      <div *ngIf="!loading && unreviewedTasks.length > 0">
+        <div *ngFor="let task of unreviewedTasks"
+          class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom">
+          <div class="flex-grow-1" style="min-width:0;">
+            <div class="fw-semibold text-truncate">{{ task.title }}</div>
+            <small class="text-muted d-block">
+              <i class="fa fa-user-o me-1"></i>{{ leadName(task) }}
+              <span class="badge-unreviewed ms-2">{{ task._daysSinceReview }}d sin revisar</span>
+            </small>
+          </div>
+          <p-tag [value]="task.priority" [severity]="getPrioritySeverity(task.priority)"
+            [style]="{'font-size':'0.7rem'}"></p-tag>
+          <button class="btn btn-outline-primary btn-sm py-0 px-2"
+            style="font-size:0.75rem; white-space:nowrap;" (click)="goToUnreviewedTask(task)">
+            <i class="fa fa-external-link me-1"></i>Ver
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   </div>
 </div>
