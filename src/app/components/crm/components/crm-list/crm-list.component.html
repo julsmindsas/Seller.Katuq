@@ -56,6 +56,25 @@
               </div>
             </div>
           </div>
+
+          <!-- Tabs: Pipeline activo / Cerrados -->
+          <div class="row mt-2">
+            <div class="col-12">
+              <ul class="nav nav-tabs crm-tabs">
+                <li class="nav-item">
+                  <a class="nav-link" [class.active]="activeTab === 'active'" (click)="setActiveTab('active')">
+                    <i class="fa fa-columns me-1"></i>Pipeline activo
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" [class.active]="activeTab === 'closed'" (click)="setActiveTab('closed')">
+                    <i class="fa fa-archive me-1"></i>Cerrados
+                    <span class="badge bg-secondary ms-1" *ngIf="closedLoaded">{{ closedLeads.length }}</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <!-- ═══════ Indicadores de gestión ═══════ -->
@@ -115,12 +134,12 @@
         <div class="card-body py-2 border-bottom" *ngIf="stats">
           <div class="d-flex flex-wrap align-items-center gap-2">
             <span class="stat-badge stat-badge-primary">{{ stats.total }} en total</span>
-            <ng-container *ngFor="let stage of stages">
+            <ng-container *ngFor="let stage of visibleStages">
               <span class="stat-badge cursor-pointer"
-                [style.background-color]="getStageBgColor(stage)" [style.color]="getStageColor(stage)"
-                [class.stat-badge-active]="selectedStage === stage"
-                (click)="selectedStage = (selectedStage === stage ? null : stage); onStageFilter()">
-                {{ capitalize(stage) }}: {{ stats.byStage[stage] || 0 }}
+                [style.background-color]="getStageBgColor(stage.key)" [style.color]="getStageColor(stage.key)"
+                [class.stat-badge-active]="selectedStage === stage.key"
+                (click)="selectedStage = (selectedStage === stage.key ? null : stage.key); onStageFilter()">
+                {{ stage.label }}: {{ stats.byStage[stage.key] || 0 }}
               </span>
             </ng-container>
             <span class="stat-badge stat-badge-warning cursor-pointer" *ngIf="stats.tasksPending > 0"
@@ -139,6 +158,10 @@
               pTooltip="Crear o gestionar etiquetas de segmentación" tooltipPosition="bottom">
               <i class="fa fa-tags"></i> Etiquetas
             </button>
+            <button *ngIf="canManageStages" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" (click)="abrirEtapasModal()"
+              pTooltip="Renombrar, agregar o reordenar las etapas del pipeline" tooltipPosition="bottom">
+              <i class="fa fa-list-ol"></i> Etapas
+            </button>
             <ng-container *ngIf="clientTagsCatalog.length > 0">
               <small class="text-muted ms-2 me-1"><i class="pi pi-tags me-1"></i>Segmentar:</small>
               <span *ngFor="let tag of clientTagsCatalog" class="tag-filter-chip"
@@ -156,33 +179,33 @@
         </div>
 
         <!-- Loader -->
-        <div class="loader-box" *ngIf="loading">
+        <div class="loader-box" *ngIf="loading && activeTab === 'active'">
           <div class="loader-8"></div>
         </div>
 
         <!-- ═══════ KANBAN VIEW ═══════ -->
-        <div class="card-body p-2" *ngIf="!loading && viewMode === 'kanban'">
+        <div class="card-body p-2" *ngIf="activeTab === 'active' && !loading && viewMode === 'kanban'">
           <div class="kanban-board">
-            <div class="kanban-column" *ngFor="let stage of stages"
-              [class.d-none]="selectedStage && selectedStage !== stage">
+            <div class="kanban-column" *ngFor="let stage of visibleStages"
+              [class.d-none]="selectedStage && selectedStage !== stage.key">
 
               <!-- Header fijo -->
-              <div class="kanban-column-header" [style.border-top-color]="getStageColor(stage)">
+              <div class="kanban-column-header" [style.border-top-color]="getStageColor(stage.key)">
                 <div class="d-flex align-items-center gap-2">
-                  <span class="kanban-column-title">{{ capitalize(stage) }}</span>
-                  <span class="kanban-column-count">{{ getStageCount(stage) }}</span>
+                  <span class="kanban-column-title">{{ stage.label }}</span>
+                  <span class="kanban-column-count">{{ getStageCount(stage.key) }}</span>
                 </div>
-                <small class="kanban-column-value" *ngIf="getStageValue(stage) > 0">
-                  {{ formatCurrency(getStageValue(stage)) }}
+                <small class="kanban-column-value" *ngIf="getStageValue(stage.key) > 0">
+                  {{ formatCurrency(getStageValue(stage.key)) }}
                 </small>
               </div>
 
               <!-- Cards con scroll independiente -->
               <div class="kanban-cards"
-                [dragula]="'crm-kanban'" [dragulaModel]="leadsByStage[stage]"
-                [attr.data-stage]="stage">
+                [dragula]="'crm-kanban'" [dragulaModel]="leadsByStage[stage.key]"
+                [attr.data-stage]="stage.key">
 
-                <div class="kanban-card" *ngFor="let lead of leadsByStage[stage]; trackBy: trackById"
+                <div class="kanban-card" *ngFor="let lead of leadsByStage[stage.key]; trackBy: trackById"
                   [attr.data-lead-id]="lead.id">
 
                   <div class="kanban-card-header">
@@ -230,6 +253,14 @@
                     <a class="action-btn-pill action-btn-detail" (click)="viewDetail(lead)">
                       <i class="fa fa-external-link me-1"></i>Ver
                     </a>
+                    <a *ngIf="wonStage" class="action-btn-pill action-btn-won" pTooltip="Marcar como Ganado"
+                      (click)="quickCloseLead(lead, 'won', $event)">
+                      <i class="fa fa-check"></i>
+                    </a>
+                    <a *ngIf="lostStage" class="action-btn-pill action-btn-lost" pTooltip="Marcar como Perdido"
+                      (click)="quickCloseLead(lead, 'lost', $event)">
+                      <i class="fa fa-times"></i>
+                    </a>
                     <a class="action-btn-pill action-btn-delete" (click)="deleteSingleLead(lead, $event)">
                       <i class="fa fa-trash"></i>
                     </a>
@@ -253,7 +284,7 @@
                 </div>
 
                 <!-- Columna vacía -->
-                <div class="kanban-empty" *ngIf="getStageCount(stage) === 0">
+                <div class="kanban-empty" *ngIf="getStageCount(stage.key) === 0">
                   <i class="fa fa-inbox" style="font-size:1.5rem; color:#d1d5db;"></i>
                   <small class="d-block text-muted mt-1">Sin leads en esta etapa</small>
                 </div>
@@ -264,7 +295,7 @@
         </div>
 
         <!-- Barra selección masiva -->
-        <div class="card-body py-2 border-bottom bg-light" *ngIf="selectedCount > 0">
+        <div class="card-body py-2 border-bottom bg-light" *ngIf="activeTab === 'active' && selectedCount > 0">
           <div class="d-flex align-items-center gap-3">
             <span class="fw-semibold" style="color: #334155;">
               <i class="fa fa-check-square-o me-1"></i>{{ selectedCount }} seleccionado(s)
@@ -279,7 +310,7 @@
         </div>
 
         <!-- ═══════ TABLE VIEW ═══════ -->
-        <div class="card-body p-2" *ngIf="!loading && viewMode === 'table'">
+        <div class="card-body p-2" *ngIf="activeTab === 'active' && !loading && viewMode === 'table'">
           <p-table [value]="filteredLeads" dataKey="id"
             [paginator]="true" [rows]="20" [rowsPerPageOptions]="[10,20,50]"
             [showCurrentPageReport]="true"
@@ -320,7 +351,7 @@
                   </span>
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
-                  <p-tag [value]="capitalize(lead.stage)" [severity]="getStageSeverity(lead.stage)"
+                  <p-tag [value]="getStageLabel(lead.stage)" [severity]="getStageSeverity(lead.stage)"
                     [style]="{'font-size':'0.75rem'}"></p-tag>
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
@@ -371,6 +402,78 @@
                 <td [attr.colspan]="entityType === 'company' ? 10 : 9" class="text-center p-4">
                   <i class="fa fa-inbox" style="font-size:2rem; color:#9ca3af;"></i>
                   <p class="text-muted mt-2 mb-0">No hay leads que mostrar</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- ═══════ CERRADOS (isWon/isLost) ═══════ -->
+        <div class="card-body p-2" *ngIf="activeTab === 'closed'">
+          <div class="loader-box" *ngIf="loadingClosed">
+            <div class="loader-3"></div>
+          </div>
+
+          <p-table [value]="closedLeads" dataKey="id" *ngIf="!loadingClosed"
+            [paginator]="true" [rows]="20" [rowsPerPageOptions]="[10,20,50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+            styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
+            style="font-size: 0.75em;">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width:22%">Nombre</th>
+                <th style="width:14%">Documento</th>
+                <th style="width:12%">Etapa</th>
+                <th style="width:16%">Compra</th>
+                <th style="width:14%">Cierre</th>
+                <th style="width:10%">Valor est.</th>
+                <th style="width:12%">Acciones</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-lead>
+              <tr>
+                <td>
+                  <strong>{{ lead.name }}</strong>
+                  <small class="d-block text-muted">{{ lead.email || '' }}</small>
+                </td>
+                <td><small>{{ lead.nit || '-' }}</small></td>
+                <td>
+                  <p-tag [value]="getStageLabel(lead.stage)" [severity]="getStageSeverity(lead.stage)"
+                    [style]="{'font-size':'0.75rem'}"></p-tag>
+                </td>
+                <td>
+                  <span class="stat-badge badge-sm" *ngIf="lead.verifiedBuyer"
+                    style="background-color:#f0fdf4; color:#27AE60;">
+                    <i class="fa fa-check-circle me-1"></i>Comprador verificado
+                  </span>
+                  <span class="stat-badge badge-sm" *ngIf="lead.verifiedBuyer === false"
+                    style="background-color:#fff7ed; color:#c2410c;">
+                    <i class="fa fa-exclamation-triangle me-1"></i>Sin verificar
+                  </span>
+                  <small class="text-muted" *ngIf="lead.verifiedBuyer === undefined">—</small>
+                </td>
+                <td><small>{{ lead.lastContactedAt ? (lead.lastContactedAt | date:'short') : '-' }}</small></td>
+                <td>
+                  <small *ngIf="lead.estimatedValue" style="color:#8b5cf6; font-weight:600;">
+                    {{ formatCurrency(lead.estimatedValue) }}
+                  </small>
+                </td>
+                <td>
+                  <a class="action-btn" (click)="viewDetail(lead)" pTooltip="Ver detalle">
+                    <i class="fa fa-eye"></i>
+                  </a>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="text-center p-4">
+                  <i class="fa fa-archive" style="font-size:2rem; color:#9ca3af;"></i>
+                  <p class="text-muted mt-2 mb-0">Todavía no hay leads cerrados</p>
                 </td>
               </tr>
             </ng-template>
@@ -571,7 +674,7 @@
                 <span class="stat-badge badge-sm"
                   [style.background-color]="getStageBgColor(lead.stage)"
                   [style.color]="getStageColor(lead.stage)">
-                  {{ capitalize(lead.stage) }}
+                  {{ getStageLabel(lead.stage) }}
                 </span>
               </td>
               <td>
@@ -660,6 +763,33 @@
       class="p-button-text" (click)="cerrarConfigModal()"></button>
     <button pButton type="button" label="Guardar" icon="pi pi-check"
       class="p-button-primary" (click)="guardarConfig()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Configuración de Etapas" [(visible)]="showStagesModal"
+  [modal]="true" [closable]="true" [dismissableMask]="false" [style]="{width: '480px'}">
+
+  <p class="text-muted small mb-3">Activa o desactiva las etapas de tu pipeline según tu proceso de ventas. Los nombres y el orden son fijos.</p>
+
+  <div class="config-list mb-3">
+    <div *ngFor="let stage of editableStages; let i = index" class="config-list-item d-flex align-items-center justify-content-between gap-2 mb-2">
+      <span class="d-flex align-items-center gap-2">
+        <span class="stage-color-dot" [style.background-color]="getStageColor(stage.key)"></span>
+        {{ stage.label }}
+        <span class="stat-badge badge-sm" *ngIf="stage.isWon" style="background-color:#f0fdf4; color:#27AE60;">Ganada</span>
+        <span class="stat-badge badge-sm" *ngIf="stage.isLost" style="background-color:#fef2f2; color:#d12b38;">Perdida</span>
+      </span>
+      <p-inputSwitch [(ngModel)]="stage.active" [ngModelOptions]="{standalone: true}"
+        [trueValue]="true" [falseValue]="false" (onChange)="toggleStageActive(i)"></p-inputSwitch>
+    </div>
+    <div *ngIf="editableStages.length === 0" class="text-muted small text-center py-2">Sin etapas configuradas</div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" icon="pi pi-times"
+      class="p-button-text" (click)="cerrarEtapasModal()"></button>
+    <button pButton type="button" label="Guardar" icon="pi pi-check"
+      class="p-button-primary" (click)="guardarEtapas()"></button>
   </ng-template>
 </p-dialog>
 

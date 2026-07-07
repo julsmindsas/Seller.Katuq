@@ -8,7 +8,7 @@ import { CrmService } from '../../services/crm.service';
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
 import {
-  CrmActivity, CrmTask, getStageSeverity, getPrioritySeverity,
+  CrmActivity, CrmTask, CrmStage, getStageSeverity, getPrioritySeverity,
   ACTIVITY_TYPE_OPTIONS, TASK_TYPE_OPTIONS, PRIORITY_OPTIONS,
 } from '../../models/crm.models';
 
@@ -21,7 +21,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   lead: any = null;
   activities: CrmActivity[] = [];
   tasks: CrmTask[] = [];
-  stages: string[] = [];
+  stages: CrmStage[] = [];
   loading = true;
   activeTab = 0;
 
@@ -142,12 +142,32 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   // ─── Pipeline ──────────────────────────────────────────────
 
   changeStage(newStage: string): void {
+    const stageConfig = this.stages.find(s => s.key === newStage);
+
     this.crmService.updatePipeline(this.entityId, { stage: newStage })
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         if (res.success) {
-          if (this.lead.pipeline) this.lead.pipeline.stage = newStage;
-          this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+          if (this.lead.pipeline) {
+            this.lead.pipeline.stage = newStage;
+            if (stageConfig?.isWon) {
+              this.lead.pipeline.verifiedBuyer = res.verifiedBuyer;
+              this.lead.pipeline.verifiedOrderId = res.verifiedOrderId;
+              this.lead.pipeline.verifiedAt = res.verifiedAt;
+            }
+          }
+
+          if (stageConfig?.isWon) {
+            if (res.verifiedBuyer) {
+              this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+            } else {
+              this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
+            }
+          } else if (stageConfig?.isLost) {
+            this.messageService.add({ severity: 'info', summary: 'Lead archivado como perdido' });
+          } else {
+            this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+          }
           this.loadActivities();
         }
       });
@@ -297,6 +317,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     return this.lead?.pipeline?.stage || (this.lead?.entityType === 'company' ? 'registro' : 'nuevo');
   }
 
+  get visibleStages(): CrmStage[] {
+    return this.stages.filter(s => s.active !== false);
+  }
+
   get entityName(): string {
     const e = this.lead?.entity;
     if (!e) return '';
@@ -305,6 +329,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
   getStageSeverity = getStageSeverity;
   getPrioritySeverity = getPrioritySeverity;
+
+  getStageLabel(key: string): string {
+    return this.stages.find(s => s.key === key)?.label || this.capitalize(key);
+  }
 
   capitalize(s: string): string {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';

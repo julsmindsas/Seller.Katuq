@@ -10,7 +10,7 @@ import { ClientTag } from '../../../ventas/clientes/services/client-config.servi
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
-import { CrmLead, CrmStats, CrmTask, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
+import { CrmLead, CrmStats, CrmStage, CrmTask, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
 
 @Component({
   selector: 'app-crm-list',
@@ -21,9 +21,15 @@ export class CrmListComponent implements OnInit, OnDestroy {
   // Data
   leads: CrmLead[] = [];
   stats: CrmStats | null = null;
-  stages: string[] = [];
+  stages: CrmStage[] = [];
   entityType = 'client';
   leadsByStage: Record<string, CrmLead[]> = {};
+
+  // Cerrados (isWon/isLost) — archivados fuera del pipeline activo
+  activeTab: 'active' | 'closed' = 'active';
+  closedLeads: CrmLead[] = [];
+  closedLoaded = false;
+  loadingClosed = false;
 
   // UI
   loading = false;
@@ -62,6 +68,10 @@ export class CrmListComponent implements OnInit, OnDestroy {
   availableColors: string[] = [];
   newTagName = '';
   newTagColor = 'violet';
+  // Modal de configuración de etapas (solo administradores)
+  canManageStages = false;
+  showStagesModal = false;
+  editableStages: CrmStage[] = [];
   readonly sourceOptions = [
     { label: 'Redes sociales', value: 'social_media' },
     { label: 'Referido', value: 'referral' },
@@ -99,6 +109,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     private router: Router,
     private corpConfig: CorporateConfigService,
   ) {
+    this.canManageStages = this.computeCanManageStages();
     this.createForm = this.fb.group({
       name:            ['', Validators.required],
       tipoDocumento:   ['CC'],
@@ -111,6 +122,17 @@ export class CrmListComponent implements OnInit, OnDestroy {
       productoInteres: [''],
       etiquetas:       [[]],
     });
+  }
+
+  private computeCanManageStages(): boolean {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return false;
+      const parsedUser = JSON.parse(raw);
+      return parsedUser?.rol === 'Administrador' || parsedUser?.rol === 'Super Administrador';
+    } catch (_) {
+      return false;
+    }
   }
 
   ngOnInit(): void {
@@ -208,7 +230,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   submitCreate(): void {
     if (this.createForm.invalid) return;
-    const firstStage = this.stages[0] || 'nuevo';
+    const firstStage = this.visibleStages[0]?.key || 'nuevo';
     const formData = { ...this.createForm.value, stage: firstStage };
 
     // Verdadero optimistic update: tarjeta visible ANTES del HTTP call
@@ -301,6 +323,27 @@ export class CrmListComponent implements OnInit, OnDestroy {
       .subscribe(stats => { this.stats = stats; });
   }
 
+  setActiveTab(tab: 'active' | 'closed'): void {
+    this.activeTab = tab;
+    if (tab === 'closed' && !this.closedLoaded) {
+      this.loadClosedLeads();
+    }
+  }
+
+  loadClosedLeads(): void {
+    this.loadingClosed = true;
+    this.crmService.getLeads({ view: 'closed', limit: 200 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: res => {
+          this.closedLeads = res.data || [];
+          this.closedLoaded = true;
+          this.loadingClosed = false;
+        },
+        error: () => { this.loadingClosed = false; },
+      });
+  }
+
   groupByStage(): void {
     let filtered = this.searchTerm
       ? this.leads.filter(l =>
@@ -326,30 +369,75 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
     this.leadsByStage = {};
     for (const stage of this.stages) {
-      this.leadsByStage[stage] = sorted.filter(l => l.stage === stage);
+      this.leadsByStage[stage.key] = sorted.filter(l => l.stage === stage.key);
     }
 
-    // Leads sin stage van al primero
-    const noStage = sorted.filter(l => !this.stages.includes(l.stage));
-    if (noStage.length > 0 && this.stages.length > 0) {
-      this.leadsByStage[this.stages[0]] = [
+    // Leads sin stage (o en una etapa desactivada) van a la primera etapa activa
+    const firstVisible = this.visibleStages[0];
+    const noStage = sorted.filter(l => !this.stages.some(s => s.key === l.stage));
+    if (noStage.length > 0 && firstVisible) {
+      this.leadsByStage[firstVisible.key] = [
         ...noStage,
-        ...(this.leadsByStage[this.stages[0]] || []),
+        ...(this.leadsByStage[firstVisible.key] || []),
       ];
     }
+  }
+
+  get visibleStages(): CrmStage[] {
+    return this.stages.filter(s => s.active !== false && !s.isWon && !s.isLost);
+  }
+
+  get wonStage(): CrmStage | undefined {
+    return this.stages.find(s => s.isWon);
+  }
+
+  get lostStage(): CrmStage | undefined {
+    return this.stages.find(s => s.isLost);
+  }
+
+  /** Cierra un lead directamente desde la card del Kanban, sin abrir el detalle. */
+  quickCloseLead(lead: CrmLead, type: 'won' | 'lost', event: Event): void {
+    event.stopPropagation();
+    const target = type === 'won' ? this.wonStage : this.lostStage;
+    if (!target) return;
+    this.onStageDrop(lead.id, target.key);
   }
 
   // ─── Actions ───────────────────────────────────────────────
 
   onStageDrop(leadId: string, newStage: string): void {
+    const stageConfig = this.stages.find(s => s.key === newStage);
+    const closing = !!(stageConfig && (stageConfig.isWon || stageConfig.isLost));
+
     this.crmService.updatePipeline(leadId, { stage: newStage })
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         if (res.success) {
-          // Update local data
           const lead = this.leads.find(l => l.id === leadId);
           if (lead) lead.stage = newStage;
-          this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+
+          if (closing && lead) {
+            // Sale del pipeline activo: se archiva en "Cerrados"
+            this.leads = this.leads.filter(l => l.id !== leadId);
+            for (const key of Object.keys(this.leadsByStage)) {
+              this.leadsByStage[key] = this.leadsByStage[key].filter(l => l.id !== leadId);
+            }
+            if (this.closedLoaded) {
+              this.closedLeads = [{ ...lead, verifiedBuyer: res.verifiedBuyer, verifiedOrderId: res.verifiedOrderId }, ...this.closedLeads];
+            }
+
+            if (stageConfig?.isWon) {
+              if (res.verifiedBuyer) {
+                this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+              } else {
+                this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
+              }
+            } else {
+              this.messageService.add({ severity: 'info', summary: 'Lead archivado como perdido' });
+            }
+          } else {
+            this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+          }
           this.loadStats();
         } else {
           // Revert: reload
@@ -465,6 +553,66 @@ export class CrmListComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ─── Configuración de etapas del pipeline (solo administradores) ───
+  // Las etapas son predeterminadas y con nombres fijos (estándar de la industria).
+  // El comercio solo puede activar/desactivar cuáles usar, no renombrarlas ni reordenarlas.
+
+  abrirEtapasModal(): void {
+    this.editableStages = this.stages.map(s => ({ ...s }));
+    this.showStagesModal = true;
+  }
+
+  cerrarEtapasModal(): void {
+    this.showStagesModal = false;
+  }
+
+  toggleStageActive(index: number): void {
+    // El ngModel del p-inputSwitch ya actualizó stage.active al nuevo valor antes de este callback.
+    const stage = this.editableStages[index];
+    if (stage.active === false) {
+      const count = (this.leadsByStage[stage.key] || []).length;
+      if (count > 0) {
+        stage.active = true; // revertir mientras se confirma
+        Swal.fire({
+          title: `¿Desactivar "${stage.label}"?`,
+          text: `Hay ${count} lead(s) en esta etapa. Al desactivarla dejará de mostrarse en el pipeline, pero los leads conservan su información.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc2626',
+          cancelButtonColor: '#6b7280',
+          confirmButtonText: 'Sí, desactivar',
+          cancelButtonText: 'Cancelar',
+          didOpen: () => {
+            const container = document.querySelector('.swal2-container') as HTMLElement;
+            if (container) container.style.zIndex = '99999';
+          },
+        }).then(result => {
+          if (result.isConfirmed) stage.active = false;
+        });
+      }
+    }
+  }
+
+  guardarEtapas(): void {
+    if (!this.editableStages.some(s => s.active !== false)) {
+      this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'Debe quedar al menos una etapa activa.' });
+      return;
+    }
+    this.crmService.saveStages(this.editableStages).subscribe(success => {
+      if (success) {
+        this.stages = this.editableStages.map(s => ({ ...s }));
+        this.groupByStage();
+        this.showStagesModal = false;
+        this.messageService.add({
+          severity: 'success', summary: 'Configuración guardada',
+          detail: 'Etapas actualizadas correctamente.', life: 3000,
+        });
+      } else {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron guardar las etapas.' });
+      }
+    });
+  }
+
   // ─── Filtro por etiqueta (segmentación del pipeline) ───────
 
   toggleTagFilter(tagName: string): void {
@@ -506,6 +654,10 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   capitalize(s: string): string {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+  }
+
+  getStageLabel(key: string): string {
+    return this.stages.find(s => s.key === key)?.label || this.capitalize(key);
   }
 
   getStageCount(stage: string): number {
@@ -610,7 +762,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       'Email': l.email || '',
       'Teléfono': l.phone || '',
       'NIT/Doc': l.nit || '',
-      'Etapa': this.capitalize(l.stage),
+      'Etapa': this.getStageLabel(l.stage),
       'Prioridad': l.priority || '',
       'Asignado': l.assignedTo || '',
       'Valor Estimado': l.estimatedValue || 0,
@@ -687,7 +839,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
           if (existing) {
             // Update pipeline for existing lead
             this.crmService.updatePipeline(existing.id, {
-              stage: leadData.stage !== this.stages[0] ? leadData.stage : undefined,
+              stage: leadData.stage !== this.stages[0]?.key ? leadData.stage : undefined,
               source: leadData.source,
             }).pipe(takeUntil(this.destroy$)).subscribe();
           } else {
@@ -799,7 +951,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       'negociacion': 'negociacion', 'negociación': 'negociacion',
       'convertido': 'convertido', 'perdido': 'perdido',
     };
-    return map[v] || this.stages[0] || 'nuevo';
+    return map[v] || this.stages[0]?.key || 'nuevo';
   }
 
   // ─── Duplicados & Eliminación ─────────────────────────────
