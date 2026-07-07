@@ -178,3 +178,10 @@ tmp_*.xlsx
 **/CLAUDE.md
 !/CLAUDE.md
 CLAUDE.md.tmp
+
+# Acceso EC2 (la carpeta contiene la llave .pem al lado del manual) — nunca versionar
+katuq-ec2-access/
+
+# Documentos comerciales (cotizaciones/propuestas en la raiz) — no van al repo de codigo
+/Cotizacion_*.pdf
+/Propuesta_*.pdf
