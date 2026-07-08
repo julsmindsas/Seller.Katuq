@@ -60,19 +60,15 @@
           <!-- Tabs: Pipeline activo / Cerrados -->
           <div class="row mt-2">
             <div class="col-12">
-              <ul class="nav nav-tabs crm-tabs">
-                <li class="nav-item">
-                  <a class="nav-link" [class.active]="activeTab === 'active'" (click)="setActiveTab('active')">
-                    <i class="fa fa-columns me-1"></i>Pipeline activo
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" [class.active]="activeTab === 'closed'" (click)="setActiveTab('closed')">
-                    <i class="fa fa-archive me-1"></i>Cerrados
-                    <span class="badge bg-secondary ms-1" *ngIf="closedLoaded">{{ closedLeads.length }}</span>
-                  </a>
-                </li>
-              </ul>
+              <div class="crm-tabs-btn-group" role="group">
+                <button type="button" class="crm-tab-btn" [class.active]="activeTab === 'active'" (click)="setActiveTab('active')">
+                  <i class="fa fa-columns me-1"></i>Pipeline activo
+                </button>
+                <button type="button" class="crm-tab-btn" [class.active]="activeTab === 'closed'" (click)="setActiveTab('closed')">
+                  <i class="fa fa-archive me-1"></i>Cerrados
+                  <span class="badge bg-secondary ms-1" *ngIf="closedLoaded">{{ closedLeads.length }}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -108,17 +104,23 @@
               <div class="dash-value">{{ stats.perdidaRate || 0 }}%</div>
               <div class="dash-sub">{{ stats.perdidos || 0 | number }} perdidos</div>
             </div>
-            <div class="dash-card" [ngClass]="(stats.tasksOverdue || 0) > 0 ? 'dash-red' : 'dash-gray'">
-              <div class="dash-label">Recordatorios vencidos</div>
+            <div class="dash-card cursor-pointer" [ngClass]="(stats.tasksOverdue || 0) > 0 ? 'dash-red' : 'dash-gray'"
+              (click)="openOverdueTasks()"
+              pTooltip="Tareas sin completar cuya fecha límite ya pasó. Se crean en la pestaña 'Tareas' del lead."
+              tooltipPosition="top">
+              <div class="dash-label">Tareas vencidas</div>
               <div class="dash-value" [style.color]="(stats.tasksOverdue || 0) > 0 ? '#dc2626' : '#6b7280'">
                 {{ stats.tasksOverdue | number }}
               </div>
-              <div class="dash-sub">{{ stats.tasksDue7d || 0 | number }} próximos 7 días</div>
+              <div class="dash-sub">sin completar, fecha ya pasó</div>
             </div>
-            <div class="dash-card dash-cyan">
-              <div class="dash-label">Citas esta semana</div>
+            <div class="dash-card dash-cyan cursor-pointer"
+              (click)="openWeekMeetings()"
+              pTooltip="Tareas tipo 'Reunión' con fecha entre hoy y los próximos 7 días. Se crean en la pestaña 'Tareas' del lead."
+              tooltipPosition="top">
+              <div class="dash-label">Reuniones próximos 7 días</div>
               <div class="dash-value">{{ stats.citasEstaSemana || 0 | number }}</div>
-              <div class="dash-sub">reuniones agendadas (7d)</div>
+              <div class="dash-sub">tipo 'Reunión', agendadas y sin vencer</div>
             </div>
             <div class="dash-card" [ngClass]="(stats.leadsEstancados || 0) > 0 ? 'dash-orange' : 'dash-gray'">
               <div class="dash-label">Leads estancados</div>
@@ -126,6 +128,22 @@
                 {{ stats.leadsEstancados || 0 | number }}
               </div>
               <div class="dash-sub">sin avanzar hace +30 días</div>
+            </div>
+            <div class="dash-card dash-indigo cursor-pointer"
+              (click)="openMyTasksToday()"
+              pTooltip="Tareas asignadas a ti para hoy o los próximos 7 días. Las vencidas están en la card 'Tareas vencidas'."
+              tooltipPosition="top">
+              <div class="dash-label">Mis tareas</div>
+              <div class="dash-value"><i class="fa fa-user-circle-o"></i></div>
+              <div class="dash-sub">hoy o próx. 7 días</div>
+            </div>
+            <div class="dash-card dash-cyan cursor-pointer"
+              (click)="openConversionByAgent()"
+              pTooltip="Tasa de conversión (ganados / total) por vendedor asignado. Incluye leads del pipeline activo y cerrados."
+              tooltipPosition="top">
+              <div class="dash-label">Conversión por vendedor</div>
+              <div class="dash-value"><i class="fa fa-bar-chart"></i></div>
+              <div class="dash-sub">ranking de cierre por asesor</div>
             </div>
           </div>
         </div>
@@ -143,8 +161,10 @@
               </span>
             </ng-container>
             <span class="stat-badge stat-badge-warning cursor-pointer" *ngIf="stats.tasksPending > 0"
-              (click)="openPendingTasks()" pTooltip="Ver tareas pendientes" tooltipPosition="bottom">
-              <i class="fa fa-clock-o me-1"></i>{{ stats.tasksPending }} tareas pendientes
+              (click)="openPendingTasks()"
+              pTooltip="Total de tareas sin completar de todos los leads (de cualquier tipo y fecha). Las tarjetas de arriba son subconjuntos: solo las vencidas, o solo las reuniones próximas."
+              tooltipPosition="bottom">
+              <i class="fa fa-clock-o me-1"></i>{{ stats.tasksPending }} tareas pendientes en total
             </span>
             <span class="stat-badge stat-badge-primary ms-auto" *ngIf="stats.totalValue > 0"
               pTooltip="Valor estimado total del pipeline" tooltipPosition="bottom">
@@ -275,6 +295,11 @@
                     <small class="text-muted" *ngIf="lead.assignedTo">
                       <i class="fa fa-user-o me-1"></i>{{ lead.assignedTo?.split('@')[0] }}
                     </small>
+                    <span class="stat-badge badge-sm" *ngIf="getContactBadge(lead) as cb"
+                      [style.background-color]="cb.bg" [style.color]="cb.color"
+                      pTooltip="Último contacto registrado (lastContactedAt)" tooltipPosition="top">
+                      <i class="fa fa-clock-o me-1"></i>{{ cb.label }}
+                    </span>
                     <span class="stat-badge badge-sm"
                       [style.background-color]="lead.activo ? '#f0fdf4' : '#fef2f2'"
                       [style.color]="lead.activo ? '#27AE60' : '#d12b38'">
@@ -691,7 +716,7 @@
 </p-dialog>
 
 <!-- Tareas pendientes del pipeline -->
-<p-dialog header="Tareas pendientes" [(visible)]="showTasksDialog"
+<p-dialog [header]="tasksDialogTitle" [(visible)]="showTasksDialog"
   [modal]="true" [style]="{width: '640px', maxHeight: '85vh'}" [closable]="true">
 
   <div *ngIf="loadingTasks" class="text-center py-4">
@@ -701,7 +726,7 @@
 
   <div *ngIf="!loadingTasks && pendingTasks.length === 0" class="text-center py-4">
     <i class="fa fa-check-circle" style="font-size: 2.5rem; color: #27AE60;"></i>
-    <p class="mt-2 fw-semibold" style="color: #334155;">Sin tareas pendientes</p>
+    <p class="mt-2 fw-semibold" style="color: #334155;">Sin resultados para "{{ tasksDialogTitle }}"</p>
   </div>
 
   <div *ngIf="!loadingTasks && pendingTasks.length > 0" style="max-height: 60vh; overflow-y: auto;">
@@ -714,6 +739,10 @@
           <span *ngIf="task.dueDate"><i class="fa fa-calendar-o ms-2 me-1"></i>{{ task.dueDate | date:'dd/MM/yyyy' }}</span>
         </small>
       </div>
+      <span class="stat-badge badge-sm" *ngIf="taskGroupLabel(task) as tg"
+        [style.background-color]="tg.bg" [style.color]="tg.color">
+        {{ tg.label }}
+      </span>
       <span class="stat-badge badge-sm" *ngIf="task.priority"
         [style.background-color]="getPriorityBgColor(task.priority)"
         [style.color]="getPriorityColor(task.priority)">
@@ -724,6 +753,46 @@
         <i class="fa fa-external-link me-1"></i>Ver
       </button>
     </div>
+  </div>
+</p-dialog>
+
+<!-- Conversión por vendedor -->
+<p-dialog header="Conversión por vendedor" [(visible)]="showConversionDialog"
+  [modal]="true" [style]="{ width: '640px' }" [draggable]="false">
+  <div class="loader-box" *ngIf="loadingConversion">
+    <div class="loader-8"></div>
+  </div>
+  <div *ngIf="!loadingConversion && conversionRows.length === 0" class="text-center py-4">
+    <i class="fa fa-bar-chart fa-2x text-muted mb-2 d-block"></i>
+    <p class="text-muted mb-0">No hay leads con vendedor asignado todavía.</p>
+  </div>
+  <div class="table-responsive" *ngIf="!loadingConversion && conversionRows.length > 0">
+    <table class="table table-sm align-middle">
+      <thead>
+        <tr>
+          <th>Vendedor</th>
+          <th class="text-end">Total</th>
+          <th class="text-end">Ganados</th>
+          <th class="text-end">Perdidos</th>
+          <th class="text-end">Conversión</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of conversionRows">
+          <td>{{ row.assignedTo }}</td>
+          <td class="text-end">{{ row.total }}</td>
+          <td class="text-end" style="color:#059669;">{{ row.won }}</td>
+          <td class="text-end" style="color:#dc2626;">{{ row.lost }}</td>
+          <td class="text-end">
+            <span class="stat-badge badge-sm"
+              [style.background-color]="row.rate >= 50 ? '#f0fdf4' : '#fff7ed'"
+              [style.color]="row.rate >= 50 ? '#27AE60' : '#D35400'">
+              {{ row.rate }}%
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </p-dialog>
 
@@ -794,4 +863,4 @@
 </p-dialog>
 
 <p-confirmDialog acceptLabel="Eliminar" rejectLabel="Cancelar"></p-confirmDialog>
-<p-toast></p-toast>
+<p-toast appendTo="body"></p-toast>

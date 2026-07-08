@@ -49,6 +49,11 @@ export interface CrmLead {
   verifiedBuyer?: boolean;
   verifiedAt?: string;
   verifiedOrderId?: string;
+  // Cierre forzado sin compra verificada (override manual)
+  forcedClose?: boolean;
+  forcedReason?: string;
+  forcedBy?: string;
+  forcedAt?: string;
 }
 
 export interface CrmActivity {
