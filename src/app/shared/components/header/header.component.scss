@@ -1,645 +1,305 @@
-/* Header Component Styles - GLASSMORPHISM DESIGN */
-/* Armonizado con Sidebar Glassmorphism 2025 */
+/* =====================================================================
+   HEADER KATUQ — Rediseño 2026 "Almara"
+   Referencia: claude.ai/design "Rediseño moderno 2026" (Jairo Arango)
+   Barra sticky con blur suave sobre el lienzo #f4f3fa, botones cuadrados
+   blancos de 40px, y perfil en píldora. Tokens --ktq-* definidos en el
+   sidebar (encapsulation None → globales).
+   ===================================================================== */
 
 .page-header {
   position: sticky;
   top: 0;
   z-index: var(--z-header, 1025);
 
-  // =============================================
-  // GLASSMORPHISM - Igual que sidebar
-  // =============================================
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(244, 243, 250, .72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(236, 232, 247, .7);
+  border-radius: 0;
+  box-shadow: none;
 
-  // Borde sutil glassmorphism
-  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
-  border-left: none;
+  min-height: 60px;
+  font-family: var(--ktq-font, 'Plus Jakarta Sans', system-ui, sans-serif);
 
-  // =============================================
-  // BORDES REDONDEADOS - Conexión fluida con sidebar
-  // El sidebar tiene: 0px 29px 29px 0px (derecha redondeada)
-  // El header debe conectar suavemente
-  // =============================================
-
-  // Mobile: esquinas inferiores redondeadas
-  border-radius: 0 0 24px 24px;
-
-  @media (min-width: 992px) {
-    // Desktop: solo esquina inferior DERECHA redondeada
-    // La izquierda se conecta con el sidebar
-    border-radius: 0 0 24px 0;
-
-    // Pequeño margen superior para separar del borde del viewport
-    margin-top: 0;
-  }
-
-  // =============================================
-  // DIMENSIONES
-  // =============================================
-  min-height: 56px;
-
-  @media (min-width: 768px) {
-    min-height: 52px;
-  }
-
-  // =============================================
-  // SOMBRA GLASSMORPHISM
-  // =============================================
-  box-shadow:
-    0 4px 24px rgba(99, 102, 241, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-
-  font-family: var(--font-family, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
-
-  // ✅ SAFE AREA: Handle iPhone X+ notch and other safe areas
+  // Safe areas (iPhone notch)
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
   padding-top: env(safe-area-inset-top);
 
-  // Fallback for browsers without safe-area support
   @supports not (padding: env(safe-area-inset-top)) {
     padding-top: 0;
   }
 
-  // ✅ Transiciones optimizadas para margin-left y width
-  transition: margin-left 0.15s ease-out, width 0.15s ease-out, opacity 0.2s ease;
+  transition: margin-left .15s ease-out, width .15s ease-out;
 
   .header-wrapper {
-    padding: 8px 16px;
+    padding: 10px 22px;
     align-items: center;
-    justify-content: flex-end; // Alinear a la derecha
+    gap: 14px;
+    flex-wrap: nowrap;
 
-    @media (min-width: 768px) {
-      padding: 6px 20px;
+    // Buscador central (como el diseño): nombre a la izquierda, búsqueda al
+    // centro, acciones a la derecha. El orden flex reubica el app-search que
+    // en el template va de primero.
+    app-search {
+      display: block;
+      order: 2;
+      flex: 1 1 auto;
+      max-width: 430px;
+      min-width: 140px;
+      margin: 0 auto;
+      position: relative;
     }
 
-    // =============================================
-    // ELEMENTOS ELIMINADOS - Mantenidos por compatibilidad
-    // =============================================
-    .header-logo-wrapper {
-      display: none; // Ya no se usa - logo está en sidebar
+    .header-logos-section { order: 1; }
+    .nav-right { order: 3; }
 
-      .logo-wrapper {
-        padding: 6px 12px;
+    @media (max-width: 767.98px) {
+      app-search { display: none; } // en móvil manda el buscador del menú
+    }
 
-        // =============================================
-        // GLASSMORPHISM LOGO CONTAINER
-        // =============================================
-        background: rgba(99, 102, 241, 0.06);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 12px;
-        border: 1px solid rgba(99, 102, 241, 0.1);
-        box-shadow:
-          0 2px 8px rgba(99, 102, 241, 0.06),
-          inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    @media (max-width: 767.98px) {
+      padding: 8px 12px;
+      gap: 8px;
+    }
+  }
 
-        transition: all 0.15s ease-out;
+  // ================= LOGOS =================
+  .header-logos-section {
+    min-width: 0;
 
-        img {
-          max-height: 28px;
-          transition: transform 0.15s ease-out;
-        }
+    // Como en el diseño de referencia: a la izquierda va SOLO el nombre del
+    // comercio en cursiva (el logo Katuq ya vive en el sidebar).
+    .logo-link.katuq-logo,
+    .logo-divider {
+      display: none;
+    }
 
-        &:hover {
-          background: rgba(99, 102, 241, 0.1);
-          border-color: rgba(99, 102, 241, 0.2);
-          transform: translateY(-1px);
-          box-shadow:
-            0 4px 12px rgba(99, 102, 241, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    .company-logo {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+    }
+  }
 
-          img {
-            transform: scale(1.02);
-          }
-        }
-      }
+  // ================= ACCIONES DERECHA =================
+  .nav-right {
+    display: flex;
+    justify-content: flex-end;
 
-      .toggle-sidebar {
+    .nav-menus {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+
+      > li {
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
+      }
 
-        // MOBILE: Hide toggle-sidebar (menu is elsewhere)
-        @media (max-width: 991px) {
-          display: none !important;
-        }
-
-        // MOBILE-FIRST: 44x44px touch target (WCAG compliant)
-        width: 44px;
-        height: 44px;
-
-        @media (min-width: 768px) {
-          width: 36px;
-          height: 36px;
-        }
-
-        // =============================================
-        // GLASSMORPHISM TOGGLE BUTTON
-        // =============================================
-        background: rgba(99, 102, 241, 0.06);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(99, 102, 241, 0.1);
+      // ---- Botón cuadrado base (idioma / tema / notificaciones) ----
+      > li.language-nav,
+      > li > button.mode,
+      > li.onhover-dropdown:not(.profile-nav) {
+        height: 40px;
+        border: 1px solid var(--ktq-border, #ece8f7);
+        background: #fff;
         border-radius: 12px;
         cursor: pointer;
-        box-shadow:
-          0 2px 8px rgba(99, 102, 241, 0.06),
-          inset 0 1px 0 rgba(255, 255, 255, 0.5);
-
-        transition: all 0.15s ease-out;
-        will-change: transform, background;
+        transition: all .15s;
 
         &:hover {
-          background: rgba(99, 102, 241, 0.12);
-          border-color: rgba(99, 102, 241, 0.2);
-          transform: translateY(-1px);
-          box-shadow:
-            0 4px 12px rgba(99, 102, 241, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.6);
-        }
-
-        &:active {
-          transform: translateY(0);
-          box-shadow: 0 1px 4px rgba(99, 102, 241, 0.08);
-        }
-
-        // ACCESSIBILITY: Focus visible for keyboard navigation
-        &:focus-visible {
-          outline: 2px solid #6366f1;
-          outline-offset: 2px;
-        }
-
-        ::ng-deep app-feather-icons svg {
-          color: #6366f1;
-          width: 18px;
-          height: 18px;
-
-          @media (min-width: 768px) {
-            width: 16px;
-            height: 16px;
-          }
-        }
-      }
-    }
-
-    // =============================================
-    // LOGOS SECTION - Katuq + Empresa
-    // =============================================
-    .header-logos-section {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-
-      .logo-link {
-        display: flex;
-        align-items: center;
-        padding: 4px 8px;
-        border-radius: 10px;
-        transition: all 0.15s ease-out;
-
-        &:hover {
-          background: rgba(99, 102, 241, 0.08);
-        }
-
-        .logo-light {
-          display: block;
-        }
-
-        .logo-dark {
-          display: none;
+          background: #faf9ff;
+          border-color: #ddd4f7;
         }
       }
 
-      // Separador vertical entre logos
-      .logo-divider {
-        width: 1px;
-        height: 24px;
-        background: linear-gradient(180deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+      > li.language-nav {
+        padding: 0 6px;
       }
 
-      // Logo de la empresa
-      .company-logo {
-        display: flex;
-        align-items: center;
-
-        ::ng-deep {
-          .horizontal-menu {
-            margin: 0;
-            padding: 0;
-
-            .row {
-              margin: 0;
-              align-items: center;
-            }
-
-            img {
-              max-height: 32px !important;
-              width: auto !important;
-              border-radius: 6px;
-            }
-          }
-        }
-      }
-    }
-
-    // Dark mode para logos section
-    :host-context(body.dark-only) &,
-    :host-context(.dark-only) & {
-      .header-logos-section {
-        .logo-link {
-          .logo-light {
-            display: none;
-          }
-          .logo-dark {
-            display: block;
-          }
-
-          &:hover {
-            background: rgba(167, 139, 250, 0.1);
-          }
-        }
-
-        .logo-divider {
-          background: linear-gradient(180deg, transparent, rgba(167, 139, 250, 0.4), transparent);
-        }
-      }
-    }
-
-    // ELIMINADO - Ya no se usa
-    .left-header {
-      display: none !important;
-    }
-
-    // =============================================
-    // NAV RIGHT - Header simplificado
-    // =============================================
-    .nav-right {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      flex: 1;
-
-      .nav-menus {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 0;
+      > li > button.mode {
+        width: 40px;
         padding: 0;
-        list-style: none;
-        flex-wrap: nowrap;
-        justify-content: flex-end;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b4fe0;
+        font-size: 15px;
 
-        @media (min-width: 768px) {
-          gap: 8px;
+        &:hover { background: #f0ecff; }
+      }
+
+      > li.onhover-dropdown:not(.profile-nav) {
+        width: 40px;
+        color: var(--ktq-ink-2, #4a4760);
+      }
+
+      // ---- Perfil (la píldora vive dentro de app-my-account) ----
+      > li.profile-nav {
+        border: none;
+        background: transparent;
+      }
+    }
+  }
+}
+
+// ================= SELECTOR DE IDIOMA (contenido interno) =================
+.page-header ::ng-deep .language-nav {
+  .translate_wrapper {
+    position: relative;
+
+    .current_lang {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 6px;
+      height: 38px;
+      font-family: inherit;
+
+      .lang {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+
+        .flag-icon {
+          width: 19px;
+          height: 14px;
+          border-radius: 2px;
+          box-shadow: 0 0 0 1px rgba(0, 0, 0, .06);
         }
 
-        li {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-          margin: 0;
+        .lang-txt {
+          font-size: 12.5px;
+          font-weight: 700;
+          color: var(--ktq-ink-2, #4a4760);
+          text-transform: uppercase;
+        }
+      }
+    }
 
-          // ✅ MOBILE-FIRST: 44x44px touch targets (WCAG 2.1 compliant)
-          height: 44px;
-          min-width: 44px;
+    .more_lang {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 190px;
+      background: #fff;
+      border: 1px solid var(--ktq-border, #ece8f7);
+      border-radius: 16px;
+      box-shadow: 0 22px 44px -24px rgba(80, 60, 180, .45);
+      padding: 6px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-6px);
+      transition: all .2s ease;
+      z-index: 50;
 
-          // Desktop: can be smaller
-          @media (min-width: 768px) {
-            height: 36px;
-            min-width: 36px;
-          }
+      &.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
 
-          > * {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-          }
+      .lang {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 11px;
+        border: none;
+        background: transparent;
+        border-radius: 11px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--ktq-ink-3, #615d78);
+        text-align: left;
+        transition: all .15s;
 
-          .header-search,
-          .mode {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            // ✅ MOBILE-FIRST: 44x44px minimum touch targets
-            width: 44px;
-            height: 44px;
-
-            // Desktop: smaller size
-            @media (min-width: 768px) {
-              width: 36px;
-              height: 36px;
-            }
-
-            // =============================================
-            // GLASSMORPHISM BUTTONS
-            // =============================================
-            border-radius: 12px;
-            cursor: pointer;
-            background: rgba(99, 102, 241, 0.06);
-            border: 1px solid rgba(99, 102, 241, 0.1);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-
-            // Sombra sutil glassmorphism
-            box-shadow:
-              0 2px 8px rgba(99, 102, 241, 0.06),
-              inset 0 1px 0 rgba(255, 255, 255, 0.5);
-
-            // GPU-accelerated transitions
-            transition: all 0.15s ease-out;
-            will-change: transform, background;
-
-            &:hover {
-              background: rgba(99, 102, 241, 0.12);
-              border-color: rgba(99, 102, 241, 0.2);
-              transform: translateY(-1px);
-              box-shadow:
-                0 4px 12px rgba(99, 102, 241, 0.12),
-                inset 0 1px 0 rgba(255, 255, 255, 0.6);
-            }
-
-            &:active {
-              transform: translateY(0);
-              box-shadow: 0 1px 4px rgba(99, 102, 241, 0.08);
-            }
-
-            // ✅ ACCESSIBILITY: Focus visible for keyboard navigation
-            &:focus-visible {
-              outline: 2px solid #6366f1;
-              outline-offset: 2px;
-            }
-
-            svg, i {
-              font-size: 18px;
-              color: #6366f1;
-
-              @media (min-width: 768px) {
-                font-size: 16px;
-              }
-            }
-          }
-
-          &.language-nav {
-            min-width: 44px; // ✅ Touch-optimized
-            padding: 0 4px;
-            border-radius: 12px;
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            transition: transform 0.15s ease-out;
-
-            @media (min-width: 768px) {
-              min-width: 38px;
-            }
-
-            // ✅ MOBILE: Hide language selector on very small screens
-            @media (max-width: 576px) {
-              display: none !important;
-            }
-
-            &:hover {
-              background: rgba(99, 102, 241, 0.12);
-              transform: scale(1.05);
-            }
-
-            &:active {
-              transform: scale(0.95);
-            }
-
-            // ✅ ACCESSIBILITY: Focus visible
-            &:focus-visible {
-              outline: 2px solid #6366f1;
-              outline-offset: 2px;
-            }
-
-            ::ng-deep app-languages .translate_wrapper {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              padding: 0;
-              background: transparent;
-              width: 100%;
-            }
-          }
-
-          // ✅ MOBILE: Hide maximize (full screen) on mobile devices
-          &.maximize {
-            @media (max-width: 991px) {
-              display: none !important;
-            }
-          }
+        .flag-icon {
+          width: 19px;
+          height: 14px;
+          border-radius: 2px;
+          box-shadow: 0 0 0 1px rgba(0, 0, 0, .06);
         }
 
-        // Estandarizar tamaño de íconos dentro del header
-        ::ng-deep app-feather-icons svg {
-          width: 18px;
-          height: 18px;
-
-          @media (min-width: 768px) {
-            width: 16px;
-            height: 16px;
-          }
+        &:hover {
+          background: var(--ktq-hover, #f4f1fd);
+          color: var(--ktq-primary-deep, #5f3fe0);
         }
       }
     }
   }
 }
 
-/* =============================================
-   DARK THEME - KATUQ GLASSMORPHISM
-   Sincronizado con sidebar dark mode
-   ============================================= */
-body.dark-only {
+// ================= NOTIFICACIONES (campana interna) =================
+.page-header ::ng-deep .onhover-dropdown:not(.profile-nav) {
+  i, .fa, .pi {
+    font-size: 15px;
+  }
+}
+
+// ================= BANNER DE SUSCRIPCIÓN =================
+.subscription-banner {
+  font-family: var(--ktq-font, 'Plus Jakarta Sans', system-ui, sans-serif);
+
+  > div {
+    font-weight: 600;
+  }
+
+  a {
+    color: inherit;
+  }
+}
+
+// ================= MODO OSCURO =================
+:host-context(body.dark-only) {
   .page-header {
-    // =============================================
-    // GLASSMORPHISM DARK - Mismo estilo que sidebar
-    // =============================================
-    background: rgba(46, 16, 101, 0.85); // #2e1065 con transparencia
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(20, 18, 28, .72);
+    border-bottom-color: #262233;
 
-    // Bordes Katuq purple
-    border-bottom: 1px solid rgba(167, 139, 250, 0.2);
-    border-left: none;
+    .header-logos-section {
+      .logo-link.katuq-logo {
+        .logo-light { display: none; }
+        .logo-dark { display: block; }
+      }
+      .logo-divider { background: #2c2740; }
+    }
 
-    // Sombra glassmorphism dark
-    box-shadow:
-      0 4px 24px rgba(0, 0, 0, 0.4),
-      0 1px 3px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(167, 139, 250, 0.1);
+    .nav-right .nav-menus {
+      > li.language-nav,
+      > li > button.mode,
+      > li.onhover-dropdown:not(.profile-nav) {
+        background: #1b1826;
+        border-color: #2c2740;
 
-    .header-wrapper {
-      .left-header {
-        border-right-color: rgba(167, 139, 250, 0.15);
+        &:hover { background: #221e33; border-color: #3a3355; }
       }
 
-      .header-logo-wrapper {
-        .logo-wrapper {
-          background: rgba(167, 139, 250, 0.1);
-          border-color: rgba(167, 139, 250, 0.2);
-        }
-
-        .toggle-sidebar {
-          background: rgba(167, 139, 250, 0.1);
-          border-color: rgba(167, 139, 250, 0.2);
-
-          &:hover {
-            background: rgba(167, 139, 250, 0.2);
-            border-color: rgba(167, 139, 250, 0.3);
-          }
-
-          ::ng-deep app-feather-icons svg {
-            color: #c4b5fd;
-          }
-        }
-      }
-
-      .nav-right .nav-menus li {
-        .header-search,
-        .mode {
-          // Glassmorphism buttons
-          background: rgba(167, 139, 250, 0.1);
-          border: 1px solid rgba(167, 139, 250, 0.2);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-          transition: all 0.15s ease-out;
-
-          &:hover {
-            background: rgba(167, 139, 250, 0.2);
-            border-color: rgba(167, 139, 250, 0.35);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.2);
-          }
-
-          &:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-          }
-
-          svg, i {
-            color: #c4b5fd; // Katuq lavender
-          }
-        }
-
-        &.language-nav {
-          &:hover {
-            background: rgba(167, 139, 250, 0.1);
-            border-radius: 12px;
-          }
-        }
-
-        &.cart-nav,
-        &.onhover-dropdown {
-          ::ng-deep {
-            .notification-box,
-            .cart-box {
-              background: rgba(167, 139, 250, 0.1);
-              border: 1px solid rgba(167, 139, 250, 0.2);
-
-              svg {
-                color: #c4b5fd;
-              }
-            }
-          }
-        }
-
-        &.profile-nav {
-          ::ng-deep {
-            .media {
-              .media-body {
-                p, span {
-                  color: #e9e4f5;
-                }
-              }
-            }
-          }
-        }
-      }
+      > li > button.mode { color: #b3a5ff; }
     }
   }
-}
 
-/* ============================================
-   SIDEBAR-HEADER INTERACTION
-   Nota: Estilos principales están en styles.scss (global)
-   Estos son fallbacks y optimizaciones específicas del componente
-   ============================================ */
+  .page-header ::ng-deep .language-nav .translate_wrapper {
+    .current_lang .lang .lang-txt { color: #d9d6e8; }
 
-/* Variables sincronizadas con sidebar y styles.scss */
-:root {
-  --sidebar-width: 280px;
-  --sidebar-collapsed-width: 80px;
-  --header-transition-speed: 0.15s;
-}
+    .more_lang {
+      background: #1b1826;
+      border-color: #2c2740;
 
-/* Header z-index debe ser menor que sidebar expandido temporalmente (1030) */
-.page-header {
-  z-index: var(--z-header, 1025);
-}
-
-/* Transiciones suaves para sidebar interaction - DESKTOP ONLY */
-@media (min-width: 992px) {
-  .page-header {
-    transition: margin-left var(--header-transition-speed) ease-out,
-                width var(--header-transition-speed) ease-out;
-  }
-
-  /* Estado con clase .temporarily-expanded aplicada directamente al header */
-  .page-header.close_icon.temporarily-expanded {
-    margin-left: var(--sidebar-width) !important;
-    width: calc(100% - var(--sidebar-width)) !important;
-  }
-}
-
-/* ✅ MOBILE-FIRST RESPONSIVE DESIGN */
-
-/* BASE STYLES: Mobile (<768px) - Already defined above with 44px touch targets */
-
-/* TABLET: 768px and up */
-@media (min-width: 768px) {
-  .page-header {
-    .header-wrapper {
-      padding: 6px 12px;
-    }
-  }
-}
-
-/* DESKTOP: 992px and up */
-@media (min-width: 992px) {
-  .page-header {
-    // Desktop-specific optimizations if needed
-  }
-}
-
-/* LARGE DESKTOP: 1200px and up */
-@media (min-width: 1200px) {
-  .page-header {
-    // Large screen optimizations if needed
-  }
-}
-
-/* Tour Navigation Button Styles */
-.tour-nav {
-  margin-right: 8px;
-  display: flex !important;
-  align-items: center;
-
-  .tour-btn {
-    font-size: 11px !important;
-    padding: 6px 10px !important;
-    border-radius: 15px !important;
-    border: none !important;
-    font-weight: 600 !important;
-    transition: all 0.2s ease !important;
-
-    &:hover {
-      transform: scale(1.05);
+      .lang {
+        color: #a9a5bf;
+        &:hover { background: #221e33; color: #cfc5ff; }
+      }
     }
   }
 }

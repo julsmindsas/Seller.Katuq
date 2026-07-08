@@ -1,11 +1,9 @@
-<ul class="horizontal-menu mb-0">
-    <div class="row">
-
-        <img [src]="getLogoUrl()" 
-             alt="logo" 
-             class="img-fluid sizelogoHeader mt-0 col-6" 
-             style="max-height: 60px; width: auto;"
-             (error)="onLogoError($event)"> 
-        <!-- <strong class="col-10 mt-2 font-size-custom">{{companyInformation?.razonSocial}}</strong> -->
-    </div>
-</ul>
+<!-- Nombre del comercio en cursiva (rediseño 2026 "Almara") + logo pequeño si existe -->
+<div class="company-brand" *ngIf="companyInformation">
+    <img *ngIf="companyInformation?.imgUrlLogo"
+         [src]="getLogoUrl()"
+         alt="logo"
+         class="company-brand-logo"
+         (error)="onLogoError($event)">
+    <span class="company-brand-name">{{ companyInformation?.nomComercial || companyInformation?.razonSocial }}</span>
+</div>

@@ -5,32 +5,57 @@
 // =============================================
 // AVATAR TRIGGER (botón compacto)
 // =============================================
+// Píldora de perfil — rediseño 2026 "Almara": avatar + nombre + chevron
 .avatar-trigger {
   cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  transition: all 0.2s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 40px;
+  padding: 3px 12px 3px 3px;
+  border: 1px solid var(--ktq-border, #ece8f7);
+  background: #fff;
+  border-radius: 99px;
+  transition: all 0.15s ease-out;
+  font-family: var(--ktq-font, 'Plus Jakarta Sans', system-ui, sans-serif);
 
   &:hover {
-    transform: scale(1.05);
+    background: #faf9ff;
+    border-color: #ddd4f7;
   }
 
   &:active {
-    transform: scale(0.95);
+    transform: scale(0.97);
+  }
+
+  .trigger-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2a2740;
+    white-space: nowrap;
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .trigger-chevron {
+    font-size: 10px;
+    color: var(--ktq-faint, #b6b2c6);
   }
 }
 
 .avatar-wrapper {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
 
   .avatar-img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(99, 102, 241, 0.3);
+    border: none;
     transition: border-color 0.2s ease;
   }
 
@@ -38,32 +63,36 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #8b6bff 0%, #c9a5ff 100%);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 16px;
-    border: 2px solid rgba(99, 102, 241, 0.3);
+    font-weight: 800;
+    font-size: 13px;
+    border: none;
   }
 
   .status-dot {
     position: absolute;
-    bottom: 2px;
-    right: 2px;
+    bottom: -1px;
+    right: -1px;
     width: 10px;
     height: 10px;
-    background: #22c55e;
+    background: #2fbf71;
     border-radius: 50%;
     border: 2px solid white;
   }
+}
 
-  &:hover {
-    .avatar-img,
-    .avatar-placeholder {
-      border-color: #6366f1;
-    }
+:host-context(body.dark-only) {
+  .avatar-trigger {
+    background: #1b1826;
+    border-color: #2c2740;
+
+    &:hover { background: #221e33; }
+
+    .trigger-name { color: #e8e5f2; }
   }
 }
 

@@ -1,8 +1,9 @@
 <form class="form-inline search-full" [class.open]="navServices.search" role="search" aria-label="Buscar en la aplicación">
   <div class="form-group w-100 mb-0">
+    <i class="fa fa-search search-lead-icon" aria-hidden="true"></i>
     <input class="form-control-plaintext" [(ngModel)]="text" [ngModelOptions]="{standalone: true}"
-           (keyup)="searchTerm(text)" type="text" autocomplete="off" placeholder="Buscar..." aria-label="Campo de búsqueda">
-    <app-feather-icons [icon]="'x'" class="close-search" (click)="searchToggle()" aria-label="Cerrar búsqueda"></app-feather-icons>
+           (keyup)="searchTerm(text)" type="text" autocomplete="off" placeholder="Buscar productos, pedidos, clientes…" aria-label="Campo de búsqueda">
+    <app-feather-icons *ngIf="text" [icon]="'x'" class="close-search" (click)="removeFix()" aria-label="Limpiar búsqueda"></app-feather-icons>
     <div class="Typeahead-menu" [class.is-open]="searchResult" *ngIf="menuItems?.length" id="search-outer" role="listbox" aria-label="Resultados de búsqueda">
       <div class="ProfileCard u-cf" *ngFor="let menuItem of menuItems | slice:0:8">
         <div class="ProfileCard-avatar">

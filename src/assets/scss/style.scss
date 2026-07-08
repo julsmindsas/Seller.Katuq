@@ -129,7 +129,10 @@ $min-contrast-ratio: 2.5;        // Allow white text on light purple
 -----------------------*/
 
 @import "themes/dark.scss";
-@import "themes/dark-sidebar.scss";
+// dark-sidebar.scss: skin oscuro del sidebar VIEJO (púrpura #2e1065 !important).
+// Retirado con el rediseño 2026 "Almara" — el dark del sidebar vive en
+// sidebar.component.scss. No borrar el archivo por si toca revertir.
+// @import "themes/dark-sidebar.scss";
 @import "themes/theme-customizer.scss";
 
 

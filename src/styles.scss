@@ -592,114 +592,42 @@ input.p-inputtext {
 }
 
 /* DARK MODE - Sidebar background Katuq púrpura */
-body.dark-only .sidebar-container {
-  background: #2e1065 !important;
-  border-color: rgba(167, 139, 250, 0.15) !important;
-}
-
-/* DARK MODE - Líneas conectoras del menú (tree style) */
-body.dark-only {
-  .menu-items::before,
-  .menu-item::before,
-  .submenu::before,
-  .submenu-item::before,
-  .sub-submenu::before,
-  .sub-submenu-item::before {
-    background: rgba(196, 181, 253, 0.5) !important;
-  }
-}
-
 /* ============================================
    SIDEBAR TEMPORARILY EXPANDED - Header Sync
    Cuando el sidebar colapsado se expande por hover
    ============================================ */
 
-// Variables sincronizadas
+// Variables sincronizadas — 260px = mismo margen que usa el theme para
+// .page-body: el header y el cuerpo quedan alineados con la tarjeta del
+// sidebar (rediseño 2026 "Almara"), sin franja muerta entre ambos.
 :root {
-  --sidebar-width: 280px;
+  --sidebar-width: 260px;
   --sidebar-collapsed-width: 80px;
   --sidebar-transition-speed: 0.15s;
 }
 
 /* ============================================
-   HEADER GLASSMORPHISM - Sobrescribe tema
+   HEADER — Rediseño 2026 "Almara" (sobrescribe tema)
+   Mismo tono del lienzo (#f4f3fa translúcido + blur): sin franja blanca
+   ni esquinas redondeadas — se funde con el fondo como en el diseño.
    ============================================ */
 .page-wrapper .page-header {
-  // GLASSMORPHISM - Igual que sidebar
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-
-  // Borde sutil
-  border-bottom: 1px solid rgba(99, 102, 241, 0.12) !important;
-
-  // BORDES REDONDEADOS - Conexión con sidebar
-  border-radius: 0 0 24px 24px !important;
-
-  @media (min-width: 992px) {
-    // Desktop: solo esquina inferior derecha
-    border-radius: 0 0 24px 0 !important;
-  }
-
-  // SOMBRA GLASSMORPHISM
-  box-shadow:
-    0 4px 24px rgba(99, 102, 241, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  background: rgba(244, 243, 250, 0.72) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid rgba(236, 232, 247, 0.7) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
-// DARK MODE - Header Glassmorphism
+// DARK MODE - Header
 body.dark-only .page-wrapper .page-header,
 .dark-only .page-wrapper .page-header {
-  background: rgba(46, 16, 101, 0.85) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-
-  border-bottom: 1px solid rgba(167, 139, 250, 0.2) !important;
-
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.4),
-    0 1px 3px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(167, 139, 250, 0.1) !important;
-}
-
-/* HEADER BUTTONS GLASSMORPHISM */
-.page-wrapper .page-header .nav-menus li {
-  .header-search,
-  .mode {
-    background: rgba(99, 102, 241, 0.06) !important;
-    border: 1px solid rgba(99, 102, 241, 0.1) !important;
-    border-radius: 12px !important;
-    backdrop-filter: blur(8px);
-    box-shadow:
-      0 2px 8px rgba(99, 102, 241, 0.06),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
-
-    &:hover {
-      background: rgba(99, 102, 241, 0.12) !important;
-      border-color: rgba(99, 102, 241, 0.2) !important;
-      transform: translateY(-1px);
-    }
-  }
-}
-
-body.dark-only .page-wrapper .page-header .nav-menus li,
-.dark-only .page-wrapper .page-header .nav-menus li {
-  .header-search,
-  .mode {
-    background: rgba(167, 139, 250, 0.1) !important;
-    border: 1px solid rgba(167, 139, 250, 0.2) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-
-    svg, i {
-      color: #c4b5fd !important;
-    }
-
-    &:hover {
-      background: rgba(167, 139, 250, 0.2) !important;
-      border-color: rgba(167, 139, 250, 0.35) !important;
-    }
-  }
+  background: rgba(20, 18, 28, 0.72) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid #262233 !important;
+  box-shadow: none !important;
 }
 
 // Estado base del header en desktop - SOBRESCRIBE estilos del tema

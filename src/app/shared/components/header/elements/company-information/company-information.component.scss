@@ -1,40 +1,57 @@
-.sizelogoHeader {
-    width: auto;
-    height: 32px; // Consistente con sidebar logo height
-    max-width: 180px;
-    display: block;
-    margin: 0;
-    object-fit: contain;
+// Marca del comercio en el header — rediseño 2026 "Almara":
+// nombre en Dancing Script (como el diseño) + logo pequeño redondeado si existe.
+.company-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
 
-    img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-}
-
-.font-size-custom {
-    font-size: x-small;
-}
-
-/* Responsive adjustments - Consistente con sidebar breakpoints */
-@media (max-width: 1199px) {
-    .sizelogoHeader {
+    .company-brand-logo {
+        width: 30px;
         height: 30px;
-        max-width: 160px;
+        border-radius: 9px;
+        object-fit: contain;
+        background: #fff;
+        border: 1px solid var(--ktq-border, #ece8f7);
+        padding: 2px;
+        flex-shrink: 0;
+    }
+
+    .company-brand-name {
+        font-family: 'Dancing Script', cursive;
+        font-size: 27px;
+        font-weight: 700;
+        color: var(--ktq-ink, #1c1a2b);
+        line-height: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+        padding-right: 4px;
+        text-transform: capitalize;
     }
 }
 
-@media (max-width: 991px) {
-    .sizelogoHeader {
-        height: 26px;
-        max-width: 140px;
+@media (max-width: 991.98px) {
+    .company-brand .company-brand-name {
+        font-size: 22px;
+        max-width: 170px;
     }
 }
 
-@media (max-width: 767px) {
-    .sizelogoHeader {
-        height: 22px;
+@media (max-width: 575.98px) {
+    .company-brand .company-brand-name {
+        font-size: 19px;
         max-width: 120px;
+    }
+}
+
+:host-context(body.dark-only) {
+    .company-brand .company-brand-name {
+        color: #f2f0fa;
+    }
+    .company-brand .company-brand-logo {
+        background: #1b1826;
+        border-color: #2c2740;
     }
 }
