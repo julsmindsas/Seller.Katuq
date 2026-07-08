@@ -405,7 +405,22 @@ export class PedidosUtilService {
         ];
 
         // Verificar que todos los arrays estén definidos (pueden ser vacíos, pero no undefined)
-        return requiredArrays.every(arr => Array.isArray(arr)) && this.empresaActual;
+        if (!requiredArrays.every(arr => Array.isArray(arr)) || !this.empresaActual) {
+            return false;
+        }
+
+        // Los datos en memoria (campos de instancia del singleton) pueden pertenecer a una
+        // empresa distinta a la logueada actualmente si hubo un cambio de sesión sin recargar
+        // la pestaña (login/logout es solo un cambio de ruta, no recarga el navegador).
+        // Sin esta verificación, la primera empresa cargada en la pestaña queda "pegada" y
+        // se sirve a cualquier empresa que inicie sesión después (fuga de datos cross-tenant).
+        const currentCompanyStr = localStorage.getItem('currentCompany');
+        const currentCompany = currentCompanyStr ? JSON.parse(currentCompanyStr) : null;
+        if (!currentCompany?.nomComercial || currentCompany.nomComercial !== this.empresaActual?.nomComercial) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
