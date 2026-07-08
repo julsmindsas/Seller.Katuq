@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import Swal from 'sweetalert2';
 import { CrmService } from '../../services/crm.service';
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
@@ -141,12 +142,23 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
   // ─── Pipeline ──────────────────────────────────────────────
 
-  changeStage(newStage: string): void {
+  changeStage(newStage: string, forceClose: boolean = false, forceReason: string = ''): void {
     const stageConfig = this.stages.find(s => s.key === newStage);
 
-    this.crmService.updatePipeline(this.entityId, { stage: newStage })
+    const payload: Record<string, any> = { stage: newStage };
+    if (forceClose) {
+      payload.forceClose = true;
+      payload.forceReason = forceReason;
+    }
+
+    this.crmService.updatePipeline(this.entityId, payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
+        if (res.blocked && res.reason === 'not_verified') {
+          this.promptForceClose(newStage);
+          return;
+        }
+
         if (res.success) {
           if (this.lead.pipeline) {
             this.lead.pipeline.stage = newStage;
@@ -154,12 +166,16 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
               this.lead.pipeline.verifiedBuyer = res.verifiedBuyer;
               this.lead.pipeline.verifiedOrderId = res.verifiedOrderId;
               this.lead.pipeline.verifiedAt = res.verifiedAt;
+              this.lead.pipeline.forcedClose = res.forcedClose;
+              this.lead.pipeline.forcedReason = res.forcedReason;
             }
           }
 
           if (stageConfig?.isWon) {
             if (res.verifiedBuyer) {
               this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+            } else if (res.forcedClose) {
+              this.messageService.add({ severity: 'warn', summary: 'Lead cerrado (forzado)', detail: 'Cierre confirmado manualmente sin pedido asociado.' });
             } else {
               this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
             }
@@ -171,6 +187,34 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
           this.loadActivities();
         }
       });
+  }
+
+  /** Lead sin compra verificada: ofrece forzar el cierre dejando constancia de la razón. */
+  private promptForceClose(newStage: string): void {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No se encontró una compra verificada',
+      text: 'No hay un pedido asociado a este cliente. Este lead no puede pasar a "Ganado" a menos que confirmes que la venta sí ocurrió (ej. pago en efectivo, documento distinto).',
+      showCancelButton: true,
+      confirmButtonText: 'Forzar cierre de todas formas',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d97706',
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Motivo del cierre forzado',
+        input: 'text',
+        inputPlaceholder: 'Ej: pago en efectivo, factura a nombre de un tercero...',
+        inputValidator: (value) => (!value ? 'Debes indicar un motivo para forzar el cierre' : undefined),
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar cierre',
+        cancelButtonText: 'Cancelar',
+      }).then(reasonResult => {
+        if (!reasonResult.isConfirmed || !reasonResult.value) return;
+        this.changeStage(newStage, true, reasonResult.value);
+      });
+    });
   }
 
   updateField(field: string, value: any): void {

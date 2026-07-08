@@ -38,10 +38,16 @@ export class CrmListComponent implements OnInit, OnDestroy {
   selectedStage: string | null = null;
   showDashboard = true; // panel "Indicadores de gestión"
 
-  // Tareas pendientes (diálogo desde el badge agregado)
+  // Tareas pendientes (diálogo desde el badge agregado, reutilizado para citas/vencidas)
   showTasksDialog = false;
+  tasksDialogTitle = 'Tareas pendientes';
   pendingTasks: CrmTask[] = [];
   loadingTasks = false;
+
+  // Conversión por vendedor (assignedTo) — se calcula sobre leads ya cargados, sin nuevos endpoints
+  showConversionDialog = false;
+  loadingConversion = false;
+  conversionRows: { assignedTo: string; total: number; won: number; lost: number; rate: number }[] = [];
 
   // Duplicados & eliminación
   showDuplicatesDialog = false;
@@ -405,13 +411,24 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   // ─── Actions ───────────────────────────────────────────────
 
-  onStageDrop(leadId: string, newStage: string): void {
+  onStageDrop(leadId: string, newStage: string, forceClose: boolean = false, forceReason: string = ''): void {
     const stageConfig = this.stages.find(s => s.key === newStage);
     const closing = !!(stageConfig && (stageConfig.isWon || stageConfig.isLost));
 
-    this.crmService.updatePipeline(leadId, { stage: newStage })
+    const payload: Record<string, any> = { stage: newStage };
+    if (forceClose) {
+      payload.forceClose = true;
+      payload.forceReason = forceReason;
+    }
+
+    this.crmService.updatePipeline(leadId, payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
+        if (res.blocked && res.reason === 'not_verified') {
+          this.promptForceClose(leadId, newStage);
+          return;
+        }
+
         if (res.success) {
           const lead = this.leads.find(l => l.id === leadId);
           if (lead) lead.stage = newStage;
@@ -423,12 +440,20 @@ export class CrmListComponent implements OnInit, OnDestroy {
               this.leadsByStage[key] = this.leadsByStage[key].filter(l => l.id !== leadId);
             }
             if (this.closedLoaded) {
-              this.closedLeads = [{ ...lead, verifiedBuyer: res.verifiedBuyer, verifiedOrderId: res.verifiedOrderId }, ...this.closedLeads];
+              this.closedLeads = [{
+                ...lead,
+                verifiedBuyer: res.verifiedBuyer,
+                verifiedOrderId: res.verifiedOrderId,
+                forcedClose: res.forcedClose,
+                forcedReason: res.forcedReason,
+              }, ...this.closedLeads];
             }
 
             if (stageConfig?.isWon) {
               if (res.verifiedBuyer) {
                 this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+              } else if (res.forcedClose) {
+                this.messageService.add({ severity: 'warn', summary: 'Lead cerrado (forzado)', detail: 'Cierre confirmado manualmente sin pedido asociado.' });
               } else {
                 this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
               }
@@ -444,6 +469,34 @@ export class CrmListComponent implements OnInit, OnDestroy {
           this.loadLeads();
         }
       });
+  }
+
+  /** Lead sin compra verificada: ofrece forzar el cierre dejando constancia de la razón. */
+  private promptForceClose(leadId: string, newStage: string): void {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No se encontró una compra verificada',
+      text: 'No hay un pedido asociado a este cliente. Este lead no puede pasar a "Ganado" a menos que confirmes que la venta sí ocurrió (ej. pago en efectivo, documento distinto).',
+      showCancelButton: true,
+      confirmButtonText: 'Forzar cierre de todas formas',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d97706',
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Motivo del cierre forzado',
+        input: 'text',
+        inputPlaceholder: 'Ej: pago en efectivo, factura a nombre de un tercero...',
+        inputValidator: (value) => (!value ? 'Debes indicar un motivo para forzar el cierre' : undefined),
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar cierre',
+        cancelButtonText: 'Cancelar',
+      }).then(reasonResult => {
+        if (!reasonResult.isConfirmed || !reasonResult.value) return;
+        this.onStageDrop(leadId, newStage, true, reasonResult.value);
+      });
+    });
   }
 
   onSearch(term: string): void {
@@ -626,12 +679,101 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   /** Abre el diálogo con las tareas pendientes del pipeline (badge agregado). */
   openPendingTasks(): void {
+    this.tasksDialogTitle = 'Tareas pendientes en total';
+    this.loadPendingTasksDialog();
+  }
+
+  /** Abre el diálogo con solo las tareas tipo 'Reunión' de los próximos 7 días (sin vencer). */
+  openWeekMeetings(): void {
+    this.tasksDialogTitle = 'Reuniones próximos 7 días';
+    const now = Date.now();
+    const in7d = now + 7 * 86400000;
+    this.loadPendingTasksDialog(t => {
+      if (t.type !== 'meeting' || !t.dueDate) return false;
+      const ms = new Date(t.dueDate).getTime();
+      return !isNaN(ms) && ms >= now && ms <= in7d;
+    });
+  }
+
+  /** Abre el diálogo con solo las tareas vencidas (cualquier tipo, dueDate < ahora). */
+  openOverdueTasks(): void {
+    this.tasksDialogTitle = 'Tareas vencidas';
+    const now = Date.now();
+    this.loadPendingTasksDialog(t => {
+      if (!t.dueDate) return false;
+      const ms = new Date(t.dueDate).getTime();
+      return !isNaN(ms) && ms < now;
+    });
+  }
+
+  /**
+   * Abre el diálogo con las tareas asignadas al usuario logueado para HOY o los próximos 7 días.
+   * No incluye vencidas a propósito: esas ya tienen su propia card ("Tareas vencidas"), que
+   * lista TODAS las asignaciones. Evita mostrar el mismo pendiente vencido en dos diálogos distintos.
+   */
+  openMyTasksToday(): void {
+    this.tasksDialogTitle = 'Mis tareas (hoy y próx. 7 días)';
+    const email = this.getCurrentUserEmail();
+    const startOfToday = new Date().setHours(0, 0, 0, 0);
+    const in7d = Date.now() + 7 * 86400000;
+    this.loadPendingTasksDialog(t => {
+      if (!email || (t.assignedTo || '').toLowerCase() !== email) return false;
+      if (!t.dueDate) return true;
+      const ms = new Date(t.dueDate).getTime();
+      return !isNaN(ms) && ms >= startOfToday && ms <= in7d;
+    });
+  }
+
+  private getCurrentUserEmail(): string | null {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return null;
+      const parsedUser = JSON.parse(raw);
+      return parsedUser?.email ? String(parsedUser.email).toLowerCase() : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /** Etiqueta de urgencia (Vencida/Hoy/Próximos 7 días/Sin fecha) para agrupar tareas en el diálogo. */
+  taskGroupLabel(task: CrmTask): { label: string; bg: string; color: string } {
+    if (!task.dueDate) return { label: 'Sin fecha', bg: '#f1f3f5', color: '#6b7280' };
+    const ms = new Date(task.dueDate).getTime();
+    if (isNaN(ms)) return { label: 'Sin fecha', bg: '#f1f3f5', color: '#6b7280' };
+    const now = Date.now();
+    const startOfToday = new Date().setHours(0, 0, 0, 0);
+    const endOfToday = new Date().setHours(23, 59, 59, 999);
+    if (ms < startOfToday) return { label: 'Vencida', bg: '#fef2f2', color: '#d12b38' };
+    if (ms <= endOfToday) return { label: 'Hoy', bg: '#fff7ed', color: '#D35400' };
+    if (ms <= now + 7 * 86400000) return { label: 'Próximos 7 días', bg: '#ede9fe', color: '#7c3aed' };
+    return { label: 'Próximamente', bg: '#f1f3f5', color: '#6b7280' };
+  }
+
+  private static readonly PRIORITY_RANK: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+
+  /** Ordena por prioridad (urgente→baja) y, dentro de la misma prioridad, por fecha de vencimiento más próxima. Sin fecha va al final. */
+  private sortTasksByPriorityAndDueDate(tasks: CrmTask[]): CrmTask[] {
+    return [...tasks].sort((a, b) => {
+      const rankA = CrmListComponent.PRIORITY_RANK[a.priority] ?? 4;
+      const rankB = CrmListComponent.PRIORITY_RANK[b.priority] ?? 4;
+      if (rankA !== rankB) return rankA - rankB;
+      const msA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+      const msB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+      return msA - msB;
+    });
+  }
+
+  private loadPendingTasksDialog(filterFn?: (task: CrmTask) => boolean): void {
     this.showTasksDialog = true;
     this.loadingTasks = true;
     this.crmService.getTasks({ status: 'pending' })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: tasks => { this.pendingTasks = tasks || []; this.loadingTasks = false; },
+        next: tasks => {
+          const filtered = filterFn ? (tasks || []).filter(filterFn) : (tasks || []);
+          this.pendingTasks = this.sortTasksByPriorityAndDueDate(filtered);
+          this.loadingTasks = false;
+        },
         error: () => { this.pendingTasks = []; this.loadingTasks = false; },
       });
   }
@@ -645,6 +787,60 @@ export class CrmListComponent implements OnInit, OnDestroy {
   goToTaskLead(task: CrmTask): void {
     this.showTasksDialog = false;
     this.router.navigate(['/crm/detail', task.entityId], { queryParams: { tab: 'tasks' } });
+  }
+
+  // ─── Conversión por vendedor ────────────────────────────────
+
+  /**
+   * Abre el diálogo de conversión por vendedor. Reutiliza `leads` (pipeline activo, ya cargado)
+   * y `closedLeads` (ganados/perdidos): si `closedLeads` aún no se cargó (el usuario nunca abrió
+   * la pestaña "Cerrados"), se dispara la MISMA petición que usa esa pestaña — no es un endpoint
+   * nuevo. Así el costo extra solo ocurre si el vendedor pide esta métrica.
+   */
+  openConversionByAgent(): void {
+    this.showConversionDialog = true;
+    if (this.closedLoaded) {
+      this.computeConversionByAgent();
+      return;
+    }
+    this.loadingConversion = true;
+    this.crmService.getLeads({ view: 'closed', limit: 200 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: res => {
+          this.closedLeads = res.data || [];
+          this.closedLoaded = true;
+          this.computeConversionByAgent();
+        },
+        error: () => { this.loadingConversion = false; },
+      });
+  }
+
+  private computeConversionByAgent(): void {
+    const wonKey = this.stages.find(s => s.isWon)?.key;
+    const lostKey = this.stages.find(s => s.isLost)?.key;
+    const map = new Map<string, { total: number; won: number; lost: number }>();
+
+    for (const lead of [...this.leads, ...this.closedLeads]) {
+      const agent = (lead.assignedTo || '').trim() || 'Sin asignar';
+      if (!map.has(agent)) map.set(agent, { total: 0, won: 0, lost: 0 });
+      const row = map.get(agent);
+      row.total++;
+      if (wonKey && lead.stage === wonKey && (lead.verifiedBuyer || lead.forcedClose)) row.won++;
+      if (lostKey && lead.stage === lostKey) row.lost++;
+    }
+
+    this.conversionRows = Array.from(map.entries())
+      .map(([assignedTo, r]) => ({
+        assignedTo,
+        total: r.total,
+        won: r.won,
+        lost: r.lost,
+        rate: r.total > 0 ? Math.round((r.won / r.total) * 100) : 0,
+      }))
+      .sort((a, b) => b.rate - a.rate || b.total - a.total);
+
+    this.loadingConversion = false;
   }
 
   // ─── Helpers ───────────────────────────────────────────────
@@ -715,6 +911,24 @@ export class CrmListComponent implements OnInit, OnDestroy {
       low: '#f1f3f5', medium: '#fff7ed', high: '#fef2f2', urgent: '#fef2f2',
     };
     return colors[priority] || '#f1f3f5';
+  }
+
+  /** Días desde el último contacto registrado (lastContactedAt); null si nunca se ha contactado. */
+  getDaysSinceContact(lead: CrmLead): number | null {
+    if (!lead.lastContactedAt) return null;
+    const ms = new Date(lead.lastContactedAt).getTime();
+    if (isNaN(ms)) return null;
+    return Math.floor((Date.now() - ms) / 86400000);
+  }
+
+  /** Badge de "hace cuánto no se contacta" para la kanban card. null si nunca se ha contactado. */
+  getContactBadge(lead: CrmLead): { label: string; bg: string; color: string } | null {
+    const days = this.getDaysSinceContact(lead);
+    if (days === null) return null;
+    const label = days <= 0 ? 'Contactado hoy' : days === 1 ? 'Hace 1 día' : `Hace ${days} días`;
+    if (days >= 30) return { label, bg: '#fef2f2', color: '#d12b38' };
+    if (days >= 14) return { label, bg: '#fff7ed', color: '#D35400' };
+    return { label, bg: '#f1f3f5', color: '#6b7280' };
   }
 
   getStageValue(stage: string): number {
