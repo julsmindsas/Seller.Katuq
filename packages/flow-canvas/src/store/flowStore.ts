@@ -23,6 +23,12 @@ export interface FlowStoreState {
     paletteFilter: string;
     rightView: RightView;
     drawerNodeId: string | null;
+    /**
+     * Provider keys (e.g. 'shopify', 'osmosis') the company has CONNECTED.
+     * `null` = unknown / not loaded yet → never show the "missing integration"
+     * warning (fail-safe: don't nag while we can't verify).
+     */
+    connectedProviders: string[] | null;
 
     // setters from outside (Web Component → React)
     setGraph: (graph: FlowGraph) => void;
@@ -33,6 +39,7 @@ export interface FlowStoreState {
     setPaletteFilter: (q: string) => void;
     setRightView: (v: RightView) => void;
     setDrawerNodeId: (id: string | null) => void;
+    setConnectedProviders: (providers: string[] | null) => void;
 
     // graph mutations
     addNode: (node: FlowNode) => void;
@@ -56,6 +63,7 @@ export const useFlowStore = create<FlowStoreState>((set, get) => ({
     paletteFilter: '',
     rightView: 'none',
     drawerNodeId: null,
+    connectedProviders: null,
 
     setGraph: (graph) => set({ graph: normalizeGraph(graph) }),
     setCatalog: (catalog) => set({ catalog }),
@@ -65,6 +73,8 @@ export const useFlowStore = create<FlowStoreState>((set, get) => ({
     setPaletteFilter: (q) => set({ paletteFilter: q }),
     setRightView: (v) => set({ rightView: v }),
     setDrawerNodeId: (id) => set({ drawerNodeId: id }),
+    setConnectedProviders: (providers) =>
+        set({ connectedProviders: Array.isArray(providers) ? providers : null }),
 
     addNode: (node) => {
         const { graph } = get();

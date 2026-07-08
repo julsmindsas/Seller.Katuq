@@ -4,11 +4,12 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import Swal from 'sweetalert2';
 import { CrmService } from '../../services/crm.service';
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
 import {
-  CrmActivity, CrmTask, getStageSeverity, getPrioritySeverity,
+  CrmActivity, CrmTask, CrmStage, getStageSeverity, getPrioritySeverity,
   ACTIVITY_TYPE_OPTIONS, TASK_TYPE_OPTIONS, PRIORITY_OPTIONS,
 } from '../../models/crm.models';
 
@@ -21,7 +22,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   lead: any = null;
   activities: CrmActivity[] = [];
   tasks: CrmTask[] = [];
-  stages: string[] = [];
+  stages: CrmStage[] = [];
   loading = true;
   activeTab = 0;
 
@@ -141,16 +142,79 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
   // ─── Pipeline ──────────────────────────────────────────────
 
-  changeStage(newStage: string): void {
-    this.crmService.updatePipeline(this.entityId, { stage: newStage })
+  changeStage(newStage: string, forceClose: boolean = false, forceReason: string = ''): void {
+    const stageConfig = this.stages.find(s => s.key === newStage);
+
+    const payload: Record<string, any> = { stage: newStage };
+    if (forceClose) {
+      payload.forceClose = true;
+      payload.forceReason = forceReason;
+    }
+
+    this.crmService.updatePipeline(this.entityId, payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
+        if (res.blocked && res.reason === 'not_verified') {
+          this.promptForceClose(newStage);
+          return;
+        }
+
         if (res.success) {
-          if (this.lead.pipeline) this.lead.pipeline.stage = newStage;
-          this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+          if (this.lead.pipeline) {
+            this.lead.pipeline.stage = newStage;
+            if (stageConfig?.isWon) {
+              this.lead.pipeline.verifiedBuyer = res.verifiedBuyer;
+              this.lead.pipeline.verifiedOrderId = res.verifiedOrderId;
+              this.lead.pipeline.verifiedAt = res.verifiedAt;
+              this.lead.pipeline.forcedClose = res.forcedClose;
+              this.lead.pipeline.forcedReason = res.forcedReason;
+            }
+          }
+
+          if (stageConfig?.isWon) {
+            if (res.verifiedBuyer) {
+              this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+            } else if (res.forcedClose) {
+              this.messageService.add({ severity: 'warn', summary: 'Lead cerrado (forzado)', detail: 'Cierre confirmado manualmente sin pedido asociado.' });
+            } else {
+              this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
+            }
+          } else if (stageConfig?.isLost) {
+            this.messageService.add({ severity: 'info', summary: 'Lead archivado como perdido' });
+          } else {
+            this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+          }
           this.loadActivities();
         }
       });
+  }
+
+  /** Lead sin compra verificada: ofrece forzar el cierre dejando constancia de la razón. */
+  private promptForceClose(newStage: string): void {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No se encontró una compra verificada',
+      text: 'No hay un pedido asociado a este cliente. Este lead no puede pasar a "Ganado" a menos que confirmes que la venta sí ocurrió (ej. pago en efectivo, documento distinto).',
+      showCancelButton: true,
+      confirmButtonText: 'Forzar cierre de todas formas',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d97706',
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Motivo del cierre forzado',
+        input: 'text',
+        inputPlaceholder: 'Ej: pago en efectivo, factura a nombre de un tercero...',
+        inputValidator: (value) => (!value ? 'Debes indicar un motivo para forzar el cierre' : undefined),
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar cierre',
+        cancelButtonText: 'Cancelar',
+      }).then(reasonResult => {
+        if (!reasonResult.isConfirmed || !reasonResult.value) return;
+        this.changeStage(newStage, true, reasonResult.value);
+      });
+    });
   }
 
   updateField(field: string, value: any): void {
@@ -297,6 +361,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     return this.lead?.pipeline?.stage || (this.lead?.entityType === 'company' ? 'registro' : 'nuevo');
   }
 
+  get visibleStages(): CrmStage[] {
+    return this.stages.filter(s => s.active !== false);
+  }
+
   get entityName(): string {
     const e = this.lead?.entity;
     if (!e) return '';
@@ -305,6 +373,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
   getStageSeverity = getStageSeverity;
   getPrioritySeverity = getPrioritySeverity;
+
+  getStageLabel(key: string): string {
+    return this.stages.find(s => s.key === key)?.label || this.capitalize(key);
+  }
 
   capitalize(s: string): string {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';

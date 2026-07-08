@@ -10,7 +10,7 @@ import { ClientTag } from '../../../ventas/clientes/services/client-config.servi
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
-import { CrmLead, CrmStats, CrmTask, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
+import { CrmLead, CrmStats, CrmStage, CrmTask, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
 
 @Component({
   selector: 'app-crm-list',
@@ -21,9 +21,15 @@ export class CrmListComponent implements OnInit, OnDestroy {
   // Data
   leads: CrmLead[] = [];
   stats: CrmStats | null = null;
-  stages: string[] = [];
+  stages: CrmStage[] = [];
   entityType = 'client';
   leadsByStage: Record<string, CrmLead[]> = {};
+
+  // Cerrados (isWon/isLost) — archivados fuera del pipeline activo
+  activeTab: 'active' | 'closed' = 'active';
+  closedLeads: CrmLead[] = [];
+  closedLoaded = false;
+  loadingClosed = false;
 
   // UI
   loading = false;
@@ -32,10 +38,16 @@ export class CrmListComponent implements OnInit, OnDestroy {
   selectedStage: string | null = null;
   showDashboard = true; // panel "Indicadores de gestión"
 
-  // Tareas pendientes (diálogo desde el badge agregado)
+  // Tareas pendientes (diálogo desde el badge agregado, reutilizado para citas/vencidas)
   showTasksDialog = false;
+  tasksDialogTitle = 'Tareas pendientes';
   pendingTasks: CrmTask[] = [];
   loadingTasks = false;
+
+  // Conversión por vendedor (assignedTo) — se calcula sobre leads ya cargados, sin nuevos endpoints
+  showConversionDialog = false;
+  loadingConversion = false;
+  conversionRows: { assignedTo: string; total: number; won: number; lost: number; rate: number }[] = [];
 
   // Duplicados & eliminación
   showDuplicatesDialog = false;
@@ -62,6 +74,10 @@ export class CrmListComponent implements OnInit, OnDestroy {
   availableColors: string[] = [];
   newTagName = '';
   newTagColor = 'violet';
+  // Modal de configuración de etapas (solo administradores)
+  canManageStages = false;
+  showStagesModal = false;
+  editableStages: CrmStage[] = [];
   readonly sourceOptions = [
     { label: 'Redes sociales', value: 'social_media' },
     { label: 'Referido', value: 'referral' },
@@ -99,6 +115,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     private router: Router,
     private corpConfig: CorporateConfigService,
   ) {
+    this.canManageStages = this.computeCanManageStages();
     this.createForm = this.fb.group({
       name:            ['', Validators.required],
       tipoDocumento:   ['CC'],
@@ -111,6 +128,17 @@ export class CrmListComponent implements OnInit, OnDestroy {
       productoInteres: [''],
       etiquetas:       [[]],
     });
+  }
+
+  private computeCanManageStages(): boolean {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return false;
+      const parsedUser = JSON.parse(raw);
+      return parsedUser?.rol === 'Administrador' || parsedUser?.rol === 'Super Administrador';
+    } catch (_) {
+      return false;
+    }
   }
 
   ngOnInit(): void {
@@ -208,7 +236,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   submitCreate(): void {
     if (this.createForm.invalid) return;
-    const firstStage = this.stages[0] || 'nuevo';
+    const firstStage = this.visibleStages[0]?.key || 'nuevo';
     const formData = { ...this.createForm.value, stage: firstStage };
 
     // Verdadero optimistic update: tarjeta visible ANTES del HTTP call
@@ -301,6 +329,27 @@ export class CrmListComponent implements OnInit, OnDestroy {
       .subscribe(stats => { this.stats = stats; });
   }
 
+  setActiveTab(tab: 'active' | 'closed'): void {
+    this.activeTab = tab;
+    if (tab === 'closed' && !this.closedLoaded) {
+      this.loadClosedLeads();
+    }
+  }
+
+  loadClosedLeads(): void {
+    this.loadingClosed = true;
+    this.crmService.getLeads({ view: 'closed', limit: 200 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: res => {
+          this.closedLeads = res.data || [];
+          this.closedLoaded = true;
+          this.loadingClosed = false;
+        },
+        error: () => { this.loadingClosed = false; },
+      });
+  }
+
   groupByStage(): void {
     let filtered = this.searchTerm
       ? this.leads.filter(l =>
@@ -326,36 +375,128 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
     this.leadsByStage = {};
     for (const stage of this.stages) {
-      this.leadsByStage[stage] = sorted.filter(l => l.stage === stage);
+      this.leadsByStage[stage.key] = sorted.filter(l => l.stage === stage.key);
     }
 
-    // Leads sin stage van al primero
-    const noStage = sorted.filter(l => !this.stages.includes(l.stage));
-    if (noStage.length > 0 && this.stages.length > 0) {
-      this.leadsByStage[this.stages[0]] = [
+    // Leads sin stage (o en una etapa desactivada) van a la primera etapa activa
+    const firstVisible = this.visibleStages[0];
+    const noStage = sorted.filter(l => !this.stages.some(s => s.key === l.stage));
+    if (noStage.length > 0 && firstVisible) {
+      this.leadsByStage[firstVisible.key] = [
         ...noStage,
-        ...(this.leadsByStage[this.stages[0]] || []),
+        ...(this.leadsByStage[firstVisible.key] || []),
       ];
     }
   }
 
+  get visibleStages(): CrmStage[] {
+    return this.stages.filter(s => s.active !== false && !s.isWon && !s.isLost);
+  }
+
+  get wonStage(): CrmStage | undefined {
+    return this.stages.find(s => s.isWon);
+  }
+
+  get lostStage(): CrmStage | undefined {
+    return this.stages.find(s => s.isLost);
+  }
+
+  /** Cierra un lead directamente desde la card del Kanban, sin abrir el detalle. */
+  quickCloseLead(lead: CrmLead, type: 'won' | 'lost', event: Event): void {
+    event.stopPropagation();
+    const target = type === 'won' ? this.wonStage : this.lostStage;
+    if (!target) return;
+    this.onStageDrop(lead.id, target.key);
+  }
+
   // ─── Actions ───────────────────────────────────────────────
 
-  onStageDrop(leadId: string, newStage: string): void {
-    this.crmService.updatePipeline(leadId, { stage: newStage })
+  onStageDrop(leadId: string, newStage: string, forceClose: boolean = false, forceReason: string = ''): void {
+    const stageConfig = this.stages.find(s => s.key === newStage);
+    const closing = !!(stageConfig && (stageConfig.isWon || stageConfig.isLost));
+
+    const payload: Record<string, any> = { stage: newStage };
+    if (forceClose) {
+      payload.forceClose = true;
+      payload.forceReason = forceReason;
+    }
+
+    this.crmService.updatePipeline(leadId, payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
+        if (res.blocked && res.reason === 'not_verified') {
+          this.promptForceClose(leadId, newStage);
+          return;
+        }
+
         if (res.success) {
-          // Update local data
           const lead = this.leads.find(l => l.id === leadId);
           if (lead) lead.stage = newStage;
-          this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+
+          if (closing && lead) {
+            // Sale del pipeline activo: se archiva en "Cerrados"
+            this.leads = this.leads.filter(l => l.id !== leadId);
+            for (const key of Object.keys(this.leadsByStage)) {
+              this.leadsByStage[key] = this.leadsByStage[key].filter(l => l.id !== leadId);
+            }
+            if (this.closedLoaded) {
+              this.closedLeads = [{
+                ...lead,
+                verifiedBuyer: res.verifiedBuyer,
+                verifiedOrderId: res.verifiedOrderId,
+                forcedClose: res.forcedClose,
+                forcedReason: res.forcedReason,
+              }, ...this.closedLeads];
+            }
+
+            if (stageConfig?.isWon) {
+              if (res.verifiedBuyer) {
+                this.messageService.add({ severity: 'success', summary: 'Lead cerrado', detail: 'Compra verificada contra los pedidos del cliente.' });
+              } else if (res.forcedClose) {
+                this.messageService.add({ severity: 'warn', summary: 'Lead cerrado (forzado)', detail: 'Cierre confirmado manualmente sin pedido asociado.' });
+              } else {
+                this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
+              }
+            } else {
+              this.messageService.add({ severity: 'info', summary: 'Lead archivado como perdido' });
+            }
+          } else {
+            this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
+          }
           this.loadStats();
         } else {
           // Revert: reload
           this.loadLeads();
         }
       });
+  }
+
+  /** Lead sin compra verificada: ofrece forzar el cierre dejando constancia de la razón. */
+  private promptForceClose(leadId: string, newStage: string): void {
+    Swal.fire({
+      icon: 'warning',
+      title: 'No se encontró una compra verificada',
+      text: 'No hay un pedido asociado a este cliente. Este lead no puede pasar a "Ganado" a menos que confirmes que la venta sí ocurrió (ej. pago en efectivo, documento distinto).',
+      showCancelButton: true,
+      confirmButtonText: 'Forzar cierre de todas formas',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d97706',
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Motivo del cierre forzado',
+        input: 'text',
+        inputPlaceholder: 'Ej: pago en efectivo, factura a nombre de un tercero...',
+        inputValidator: (value) => (!value ? 'Debes indicar un motivo para forzar el cierre' : undefined),
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar cierre',
+        cancelButtonText: 'Cancelar',
+      }).then(reasonResult => {
+        if (!reasonResult.isConfirmed || !reasonResult.value) return;
+        this.onStageDrop(leadId, newStage, true, reasonResult.value);
+      });
+    });
   }
 
   onSearch(term: string): void {
@@ -465,6 +606,66 @@ export class CrmListComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ─── Configuración de etapas del pipeline (solo administradores) ───
+  // Las etapas son predeterminadas y con nombres fijos (estándar de la industria).
+  // El comercio solo puede activar/desactivar cuáles usar, no renombrarlas ni reordenarlas.
+
+  abrirEtapasModal(): void {
+    this.editableStages = this.stages.map(s => ({ ...s }));
+    this.showStagesModal = true;
+  }
+
+  cerrarEtapasModal(): void {
+    this.showStagesModal = false;
+  }
+
+  toggleStageActive(index: number): void {
+    // El ngModel del p-inputSwitch ya actualizó stage.active al nuevo valor antes de este callback.
+    const stage = this.editableStages[index];
+    if (stage.active === false) {
+      const count = (this.leadsByStage[stage.key] || []).length;
+      if (count > 0) {
+        stage.active = true; // revertir mientras se confirma
+        Swal.fire({
+          title: `¿Desactivar "${stage.label}"?`,
+          text: `Hay ${count} lead(s) en esta etapa. Al desactivarla dejará de mostrarse en el pipeline, pero los leads conservan su información.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc2626',
+          cancelButtonColor: '#6b7280',
+          confirmButtonText: 'Sí, desactivar',
+          cancelButtonText: 'Cancelar',
+          didOpen: () => {
+            const container = document.querySelector('.swal2-container') as HTMLElement;
+            if (container) container.style.zIndex = '99999';
+          },
+        }).then(result => {
+          if (result.isConfirmed) stage.active = false;
+        });
+      }
+    }
+  }
+
+  guardarEtapas(): void {
+    if (!this.editableStages.some(s => s.active !== false)) {
+      this.messageService.add({ severity: 'warn', summary: 'Atención', detail: 'Debe quedar al menos una etapa activa.' });
+      return;
+    }
+    this.crmService.saveStages(this.editableStages).subscribe(success => {
+      if (success) {
+        this.stages = this.editableStages.map(s => ({ ...s }));
+        this.groupByStage();
+        this.showStagesModal = false;
+        this.messageService.add({
+          severity: 'success', summary: 'Configuración guardada',
+          detail: 'Etapas actualizadas correctamente.', life: 3000,
+        });
+      } else {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron guardar las etapas.' });
+      }
+    });
+  }
+
   // ─── Filtro por etiqueta (segmentación del pipeline) ───────
 
   toggleTagFilter(tagName: string): void {
@@ -478,12 +679,101 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   /** Abre el diálogo con las tareas pendientes del pipeline (badge agregado). */
   openPendingTasks(): void {
+    this.tasksDialogTitle = 'Tareas pendientes en total';
+    this.loadPendingTasksDialog();
+  }
+
+  /** Abre el diálogo con solo las tareas tipo 'Reunión' de los próximos 7 días (sin vencer). */
+  openWeekMeetings(): void {
+    this.tasksDialogTitle = 'Reuniones próximos 7 días';
+    const now = Date.now();
+    const in7d = now + 7 * 86400000;
+    this.loadPendingTasksDialog(t => {
+      if (t.type !== 'meeting' || !t.dueDate) return false;
+      const ms = new Date(t.dueDate).getTime();
+      return !isNaN(ms) && ms >= now && ms <= in7d;
+    });
+  }
+
+  /** Abre el diálogo con solo las tareas vencidas (cualquier tipo, dueDate < ahora). */
+  openOverdueTasks(): void {
+    this.tasksDialogTitle = 'Tareas vencidas';
+    const now = Date.now();
+    this.loadPendingTasksDialog(t => {
+      if (!t.dueDate) return false;
+      const ms = new Date(t.dueDate).getTime();
+      return !isNaN(ms) && ms < now;
+    });
+  }
+
+  /**
+   * Abre el diálogo con las tareas asignadas al usuario logueado para HOY o los próximos 7 días.
+   * No incluye vencidas a propósito: esas ya tienen su propia card ("Tareas vencidas"), que
+   * lista TODAS las asignaciones. Evita mostrar el mismo pendiente vencido en dos diálogos distintos.
+   */
+  openMyTasksToday(): void {
+    this.tasksDialogTitle = 'Mis tareas (hoy y próx. 7 días)';
+    const email = this.getCurrentUserEmail();
+    const startOfToday = new Date().setHours(0, 0, 0, 0);
+    const in7d = Date.now() + 7 * 86400000;
+    this.loadPendingTasksDialog(t => {
+      if (!email || (t.assignedTo || '').toLowerCase() !== email) return false;
+      if (!t.dueDate) return true;
+      const ms = new Date(t.dueDate).getTime();
+      return !isNaN(ms) && ms >= startOfToday && ms <= in7d;
+    });
+  }
+
+  private getCurrentUserEmail(): string | null {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return null;
+      const parsedUser = JSON.parse(raw);
+      return parsedUser?.email ? String(parsedUser.email).toLowerCase() : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /** Etiqueta de urgencia (Vencida/Hoy/Próximos 7 días/Sin fecha) para agrupar tareas en el diálogo. */
+  taskGroupLabel(task: CrmTask): { label: string; bg: string; color: string } {
+    if (!task.dueDate) return { label: 'Sin fecha', bg: '#f1f3f5', color: '#6b7280' };
+    const ms = new Date(task.dueDate).getTime();
+    if (isNaN(ms)) return { label: 'Sin fecha', bg: '#f1f3f5', color: '#6b7280' };
+    const now = Date.now();
+    const startOfToday = new Date().setHours(0, 0, 0, 0);
+    const endOfToday = new Date().setHours(23, 59, 59, 999);
+    if (ms < startOfToday) return { label: 'Vencida', bg: '#fef2f2', color: '#d12b38' };
+    if (ms <= endOfToday) return { label: 'Hoy', bg: '#fff7ed', color: '#D35400' };
+    if (ms <= now + 7 * 86400000) return { label: 'Próximos 7 días', bg: '#ede9fe', color: '#7c3aed' };
+    return { label: 'Próximamente', bg: '#f1f3f5', color: '#6b7280' };
+  }
+
+  private static readonly PRIORITY_RANK: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+
+  /** Ordena por prioridad (urgente→baja) y, dentro de la misma prioridad, por fecha de vencimiento más próxima. Sin fecha va al final. */
+  private sortTasksByPriorityAndDueDate(tasks: CrmTask[]): CrmTask[] {
+    return [...tasks].sort((a, b) => {
+      const rankA = CrmListComponent.PRIORITY_RANK[a.priority] ?? 4;
+      const rankB = CrmListComponent.PRIORITY_RANK[b.priority] ?? 4;
+      if (rankA !== rankB) return rankA - rankB;
+      const msA = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+      const msB = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+      return msA - msB;
+    });
+  }
+
+  private loadPendingTasksDialog(filterFn?: (task: CrmTask) => boolean): void {
     this.showTasksDialog = true;
     this.loadingTasks = true;
     this.crmService.getTasks({ status: 'pending' })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: tasks => { this.pendingTasks = tasks || []; this.loadingTasks = false; },
+        next: tasks => {
+          const filtered = filterFn ? (tasks || []).filter(filterFn) : (tasks || []);
+          this.pendingTasks = this.sortTasksByPriorityAndDueDate(filtered);
+          this.loadingTasks = false;
+        },
         error: () => { this.pendingTasks = []; this.loadingTasks = false; },
       });
   }
@@ -499,6 +789,60 @@ export class CrmListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/crm/detail', task.entityId], { queryParams: { tab: 'tasks' } });
   }
 
+  // ─── Conversión por vendedor ────────────────────────────────
+
+  /**
+   * Abre el diálogo de conversión por vendedor. Reutiliza `leads` (pipeline activo, ya cargado)
+   * y `closedLeads` (ganados/perdidos): si `closedLeads` aún no se cargó (el usuario nunca abrió
+   * la pestaña "Cerrados"), se dispara la MISMA petición que usa esa pestaña — no es un endpoint
+   * nuevo. Así el costo extra solo ocurre si el vendedor pide esta métrica.
+   */
+  openConversionByAgent(): void {
+    this.showConversionDialog = true;
+    if (this.closedLoaded) {
+      this.computeConversionByAgent();
+      return;
+    }
+    this.loadingConversion = true;
+    this.crmService.getLeads({ view: 'closed', limit: 200 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: res => {
+          this.closedLeads = res.data || [];
+          this.closedLoaded = true;
+          this.computeConversionByAgent();
+        },
+        error: () => { this.loadingConversion = false; },
+      });
+  }
+
+  private computeConversionByAgent(): void {
+    const wonKey = this.stages.find(s => s.isWon)?.key;
+    const lostKey = this.stages.find(s => s.isLost)?.key;
+    const map = new Map<string, { total: number; won: number; lost: number }>();
+
+    for (const lead of [...this.leads, ...this.closedLeads]) {
+      const agent = (lead.assignedTo || '').trim() || 'Sin asignar';
+      if (!map.has(agent)) map.set(agent, { total: 0, won: 0, lost: 0 });
+      const row = map.get(agent);
+      row.total++;
+      if (wonKey && lead.stage === wonKey && (lead.verifiedBuyer || lead.forcedClose)) row.won++;
+      if (lostKey && lead.stage === lostKey) row.lost++;
+    }
+
+    this.conversionRows = Array.from(map.entries())
+      .map(([assignedTo, r]) => ({
+        assignedTo,
+        total: r.total,
+        won: r.won,
+        lost: r.lost,
+        rate: r.total > 0 ? Math.round((r.won / r.total) * 100) : 0,
+      }))
+      .sort((a, b) => b.rate - a.rate || b.total - a.total);
+
+    this.loadingConversion = false;
+  }
+
   // ─── Helpers ───────────────────────────────────────────────
 
   getStageSeverity = getStageSeverity;
@@ -506,6 +850,10 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   capitalize(s: string): string {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+  }
+
+  getStageLabel(key: string): string {
+    return this.stages.find(s => s.key === key)?.label || this.capitalize(key);
   }
 
   getStageCount(stage: string): number {
@@ -565,6 +913,24 @@ export class CrmListComponent implements OnInit, OnDestroy {
     return colors[priority] || '#f1f3f5';
   }
 
+  /** Días desde el último contacto registrado (lastContactedAt); null si nunca se ha contactado. */
+  getDaysSinceContact(lead: CrmLead): number | null {
+    if (!lead.lastContactedAt) return null;
+    const ms = new Date(lead.lastContactedAt).getTime();
+    if (isNaN(ms)) return null;
+    return Math.floor((Date.now() - ms) / 86400000);
+  }
+
+  /** Badge de "hace cuánto no se contacta" para la kanban card. null si nunca se ha contactado. */
+  getContactBadge(lead: CrmLead): { label: string; bg: string; color: string } | null {
+    const days = this.getDaysSinceContact(lead);
+    if (days === null) return null;
+    const label = days <= 0 ? 'Contactado hoy' : days === 1 ? 'Hace 1 día' : `Hace ${days} días`;
+    if (days >= 30) return { label, bg: '#fef2f2', color: '#d12b38' };
+    if (days >= 14) return { label, bg: '#fff7ed', color: '#D35400' };
+    return { label, bg: '#f1f3f5', color: '#6b7280' };
+  }
+
   getStageValue(stage: string): number {
     return (this.leadsByStage[stage] || []).reduce((sum, l) => sum + (l.estimatedValue || 0), 0);
   }
@@ -610,7 +976,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       'Email': l.email || '',
       'Teléfono': l.phone || '',
       'NIT/Doc': l.nit || '',
-      'Etapa': this.capitalize(l.stage),
+      'Etapa': this.getStageLabel(l.stage),
       'Prioridad': l.priority || '',
       'Asignado': l.assignedTo || '',
       'Valor Estimado': l.estimatedValue || 0,
@@ -687,7 +1053,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
           if (existing) {
             // Update pipeline for existing lead
             this.crmService.updatePipeline(existing.id, {
-              stage: leadData.stage !== this.stages[0] ? leadData.stage : undefined,
+              stage: leadData.stage !== this.stages[0]?.key ? leadData.stage : undefined,
               source: leadData.source,
             }).pipe(takeUntil(this.destroy$)).subscribe();
           } else {
@@ -799,7 +1165,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       'negociacion': 'negociacion', 'negociación': 'negociacion',
       'convertido': 'convertido', 'perdido': 'perdido',
     };
-    return map[v] || this.stages[0] || 'nuevo';
+    return map[v] || this.stages[0]?.key || 'nuevo';
   }
 
   // ─── Duplicados & Eliminación ─────────────────────────────

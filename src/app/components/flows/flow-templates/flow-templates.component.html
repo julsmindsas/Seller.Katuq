@@ -69,12 +69,97 @@
       <button
         type="button"
         class="kf-btn kf-btn--primary"
-        (click)="installAndOpen(t)"
-        [disabled]="installingTemplateId === t.id"
+        (click)="openWizard(t)"
       >
-        <i class="pi" [ngClass]="installingTemplateId === t.id ? 'pi-spin pi-spinner' : 'pi-bolt'"></i>
-        Activar
+        <i class="pi pi-bolt"></i>
+        Usar plantilla
       </button>
     </li>
   </ul>
 </section>
+
+<!-- ===================== Wizard de setup ===================== -->
+<ng-template #setupModal let-modal>
+  <div class="kf-wizard">
+    <div class="kf-wizard__header">
+      <div class="kf-wizard__heading">
+        <span class="kf-wizard__eyebrow">Activar plantilla</span>
+        <h2>{{ wizardTemplate?.name }}</h2>
+      </div>
+      <button type="button" class="kf-btn kf-btn--ghost kf-wizard__close" (click)="closeWizard()" aria-label="Cerrar">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="kf-wizard__body">
+      <p class="kf-wizard__desc" *ngIf="wizardTemplate?.description">{{ wizardTemplate?.description }}</p>
+
+      <!-- Paso 1: integraciones necesarias -->
+      <section class="kf-wizard__section">
+        <h3 class="kf-wizard__section-title">
+          <i class="pi pi-link"></i> Integraciones necesarias
+        </h3>
+
+        <div *ngIf="requiredIntegrations.length === 0" class="kf-wizard__hint">
+          Esta plantilla no requiere integraciones externas.
+        </div>
+
+        <ul class="kf-wizard__integrations" *ngIf="requiredIntegrations.length > 0">
+          <li *ngFor="let it of requiredIntegrations" class="kf-wizard__integration">
+            <span class="kf-wizard__integration-name">{{ it.label }}</span>
+            <span *ngIf="!integrationsVerified" class="kf-wizard__status kf-wizard__status--unknown">
+              <i class="pi pi-question-circle"></i> sin verificar
+            </span>
+            <span *ngIf="integrationsVerified && it.connected" class="kf-wizard__status kf-wizard__status--ok">
+              <i class="pi pi-check-circle"></i> conectada
+            </span>
+            <button
+              *ngIf="integrationsVerified && !it.connected"
+              type="button"
+              class="kf-btn kf-btn--warn-solid kf-btn--sm"
+              (click)="goToIntegrations()"
+            >
+              <i class="pi pi-link"></i> Conectar
+            </button>
+          </li>
+        </ul>
+
+        <div *ngIf="!integrationsVerified && requiredIntegrations.length > 0" class="kf-wizard__hint kf-wizard__hint--muted">
+          No pudimos verificar tus integraciones. Revisá que estén conectadas en
+          <a href="javascript:void(0)" (click)="goToIntegrations()">Integraciones</a>.
+        </div>
+      </section>
+
+      <!-- Paso 2: frecuencia de sincronización -->
+      <section class="kf-wizard__section" *ngIf="pollingNodeId">
+        <h3 class="kf-wizard__section-title">
+          <i class="pi pi-clock"></i> Frecuencia de sincronización
+        </h3>
+        <div class="kf-wizard__field">
+          <select class="kf-input" [(ngModel)]="syncMinutes">
+            <option *ngFor="let opt of freqOptions" [ngValue]="opt.value">{{ opt.label }}</option>
+          </select>
+          <small class="kf-wizard__hint">Cada cuánto el flujo revisa cambios para sincronizar.</small>
+        </div>
+      </section>
+    </div>
+
+    <div class="kf-wizard__footer">
+      <button type="button" class="kf-btn" (click)="openInEditor()" [disabled]="wizardBusy">
+        <i class="pi" [ngClass]="wizardBusy ? 'pi-spin pi-spinner' : 'pi-pencil'"></i>
+        Abrir en el editor
+      </button>
+      <span class="kf-wizard__footer-spacer"></span>
+      <button
+        type="button"
+        class="kf-btn kf-btn--primary"
+        (click)="activateNow()"
+        [disabled]="wizardBusy || !canActivate"
+        [title]="!canActivate ? 'Conectá las integraciones faltantes para activar' : 'Activar el flujo'"
+      >
+        <i class="pi" [ngClass]="wizardBusy ? 'pi-spin pi-spinner' : 'pi-bolt'"></i>
+        Activar ahora
+      </button>
+    </div>
+  </div>
+</ng-template>

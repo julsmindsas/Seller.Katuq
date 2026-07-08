@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fullpi (WMS) — Manual de usuario | Katuq</title>
+<style>
+  :root {
+    --primary: #1b55e2;
+    --primary-soft: #eef3ff;
+    --ok: #1a9c6b;
+    --ok-soft: #e8f7f1;
+    --warn: #c98a06;
+    --warn-soft: #fdf6e5;
+    --danger: #c0392b;
+    --danger-soft: #fdefed;
+    --accent: #b45309;        /* Fullpi ámbar (flat, sin gradientes) */
+    --accent-soft: #fef3e2;
+    --ink: #1f2937;
+    --ink-soft: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f9fafb;
+    --card: #ffffff;
+    --code-bg: #f3f4f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink); background: var(--bg); line-height: 1.6;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header.hero {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 6px solid var(--accent);
+    border-radius: 10px; padding: 26px 30px; margin-bottom: 24px;
+  }
+  header.hero h1 { font-size: 1.5rem; margin-bottom: 6px; }
+  header.hero p { color: var(--ink-soft); }
+  .badge {
+    display: inline-block; font-size: .75rem; font-weight: 700;
+    background: var(--accent-soft); color: var(--accent);
+    border-radius: 20px; padding: 3px 12px; margin-bottom: 10px; letter-spacing: .3px;
+  }
+
+  nav.toc {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 22px; margin-bottom: 24px; font-size: .9rem;
+  }
+  nav.toc strong { display: block; margin-bottom: 6px; }
+  nav.toc a { color: var(--primary); text-decoration: none; margin-right: 18px; white-space: nowrap; display: inline-block; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  section {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 24px 28px; margin-bottom: 22px;
+  }
+  section > h2 {
+    font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent-soft);
+  }
+  section h3 { font-size: 1rem; margin: 18px 0 8px; }
+  section p { margin-bottom: 10px; font-size: .95rem; }
+  section ol, section ul { margin: 0 0 12px 22px; }
+  section li { margin-bottom: 6px; font-size: .95rem; }
+
+  .callout { border-radius: 8px; padding: 13px 16px; margin: 12px 0; font-size: .9rem; }
+  .callout.info { background: var(--primary-soft); border-left: 4px solid var(--primary); }
+  .callout.warn { background: var(--warn-soft); border-left: 4px solid var(--warn); }
+  .callout.ok { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .callout.danger { background: var(--danger-soft); border-left: 4px solid var(--danger); }
+  .callout strong:first-child { display: block; margin-bottom: 4px; }
+
+  code {
+    font-family: Consolas, "Courier New", monospace; font-size: .85em;
+    background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+  }
+  .ruta {
+    display: inline-block; background: var(--primary-soft); color: var(--primary);
+    font-weight: 600; font-size: .85rem; border-radius: 6px; padding: 2px 10px;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .88rem; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-weight: 600; }
+  .table-scroll { overflow-x: auto; }
+
+  .check-list { list-style: none; margin-left: 0 !important; }
+  .check-list li {
+    padding: 8px 12px 8px 40px; position: relative; border: 1px solid var(--line);
+    border-radius: 6px; margin-bottom: 6px; background: var(--bg); cursor: pointer;
+    user-select: none;
+  }
+  .check-list li::before {
+    content: ""; position: absolute; left: 12px; top: 11px; width: 18px; height: 18px;
+    border: 2px solid var(--ink-soft); border-radius: 4px; background: #fff;
+  }
+  .check-list li.done { color: var(--ink-soft); text-decoration: line-through; }
+  .check-list li.done::before {
+    content: "✓"; color: #fff; background: var(--ok); border-color: var(--ok);
+    display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700;
+  }
+
+  .steps { counter-reset: paso; list-style: none; margin-left: 0 !important; }
+  .steps > li {
+    counter-increment: paso; position: relative; padding-left: 44px; margin-bottom: 16px;
+  }
+  .steps > li::before {
+    content: counter(paso); position: absolute; left: 0; top: 0;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem;
+  }
+  .steps > li strong.titulo { display: block; margin-bottom: 4px; }
+
+  .flow-card {
+    border: 1px solid var(--line); border-left: 5px solid var(--accent);
+    border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; background: var(--bg);
+  }
+  .flow-card strong { display: block; font-size: .95rem; }
+  .flow-card span { font-size: .85rem; color: var(--ink-soft); }
+
+  footer { text-align: center; color: var(--ink-soft); font-size: .8rem; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <span class="badge">MANUAL DE USUARIO · TODO DESDE LA APP</span>
+  <h1>Integración Fullpi (WMS) — Guía paso a paso</h1>
+  <p>Cómo conectar Katuq con la bodega Fullpi usando solo la aplicación:
+     configurar las credenciales, probar la conexión, encender la sincronización
+     y operar el día a día. Sin comandos, sin técnicos.</p>
+</header>
+
+<nav class="toc">
+  <strong>Contenido</strong>
+  <a href="#que-hace">1. Qué hace</a>
+  <a href="#antes">2. Antes de empezar</a>
+  <a href="#configurar">3. Configurar en Integraciones</a>
+  <a href="#encender">4. Encender la sincronización</a>
+  <a href="#dia-a-dia">5. Operación del día a día</a>
+  <a href="#problemas">6. Si algo no funciona</a>
+</nav>
+
+<!-- ============================================================ -->
+<section id="que-hace">
+  <h2>1. Qué hace esta integración</h2>
+  <p>Fullpi es una bodega externa (WMS) que <strong>despacha tus pedidos por ti</strong>.
+     Conectada a Katuq, hace tres cosas solas:</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Qué</th><th>Cómo</th></tr>
+    <tr>
+      <td><strong>Envía tus pedidos a la bodega</strong></td>
+      <td>Cada pedido <em>pagado</em> (o contraentrega) que esté en la bodega "Fullpi (WMS)"
+          viaja automáticamente a Fullpi para que lo despachen. Máximo 10 minutos después de quedar pagado.</td>
+    </tr>
+    <tr>
+      <td><strong>Te trae el estado de cada envío</strong></td>
+      <td>Cuando Fullpi despacha o entrega, el pedido en Katuq cambia solo a
+          <em>Despachado</em> / <em>Entregado</em> y el cliente recibe su notificación.</td>
+    </tr>
+    <tr>
+      <td><strong>Mantiene el inventario al día</strong></td>
+      <td>Las unidades disponibles en la bodega de Fullpi se reflejan en Katuq
+          (bodega "Fullpi (WMS)") cada 30 minutos.</td>
+    </tr>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="antes">
+  <h2>2. Antes de empezar: el correo de Fullpi</h2>
+  <p>Fullpi envía por correo los datos de acceso. Ten a mano (y reclámales si falta algo):</p>
+  <ul class="check-list" data-ck="correo-usuario">
+    <li>El <strong>secret de PRUEBAS</strong> (la clave de acceso para ensayar)</li>
+    <li>El <strong>secret de PRODUCCIÓN</strong> (la clave definitiva)</li>
+    <li>El <strong>código de tu bodega</strong> en Fullpi (por ejemplo: <code>ECF1</code>)</li>
+    <li>El archivo de <strong>cobertura</strong> (a qué ciudades entregan)</li>
+    <li>La <strong>lista de estados</strong> que maneja su sistema de envíos</li>
+  </ul>
+  <div class="callout danger">
+    <strong>El secret es una clave — trátala como una contraseña</strong>
+    No la compartas por chat ni la guardes en documentos. Solo se escribe una vez,
+    en la pantalla de Integraciones (paso siguiente), y Katuq la guarda encriptada.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="configurar">
+  <h2>3. Configurar Fullpi en la app <span class="ruta">Menú → Integraciones</span></h2>
+  <ul class="steps">
+    <li>
+      <strong class="titulo">Abre Integraciones</strong>
+      En el menú lateral de Katuq entra a <strong>Integraciones</strong>.
+      Verás las tarjetas de todas las integraciones disponibles, agrupadas por categoría.
+    </li>
+    <li>
+      <strong class="titulo">Busca la tarjeta "Fullpi"</strong>
+      Está en la categoría <strong>Logística</strong> (junto a Guía Cereza, Envíame y Prindel).
+      Haz clic en <strong>Configurar</strong> — se abre el formulario.
+    </li>
+    <li>
+      <strong class="titulo">Llena el formulario</strong>
+      <div class="table-scroll">
+      <table>
+        <tr><th>Campo</th><th>Qué poner</th></tr>
+        <tr><td><strong>URL del API</strong></td><td>Ya viene puesta. Solo cámbiala si el correo de Fullpi indica otra dirección.</td></tr>
+        <tr><td><strong>Secret de autenticación</strong></td><td>Pega el secret del correo. <em>Empieza con el de PRUEBAS.</em></td></tr>
+        <tr><td><strong>Bodega Katuq</strong></td><td>Déjala como está: <code>BOD-FULLPI-1</code> (la bodega "Fullpi (WMS)" que ya existe en tu cuenta).</td></tr>
+        <tr><td><strong>Código de bodega en Fullpi</strong></td><td>El del correo (ej. <code>ECF1</code>).</td></tr>
+        <tr><td><strong>Ambiente</strong></td><td><strong>Pruebas</strong> para empezar. Se cambia a Producción al final (paso 4).</td></tr>
+      </table>
+      </div>
+    </li>
+    <li>
+      <strong class="titulo">Pulsa "Probar conexión"</strong>
+      Katuq le habla a Fullpi con tus datos en ese momento:
+      <ul>
+        <li>✅ <em>"Conexión exitosa — inventario visible"</em> → todo bien, sigue.</li>
+        <li>❌ <em>"Secret inválido (401)"</em> → el secret quedó mal pegado o Fullpi no lo ha activado. Revísalo o escríbeles.</li>
+        <li>❌ <em>"No se pudo conectar"</em> → la URL está mal; confirma la dirección con Fullpi.</li>
+      </ul>
+    </li>
+    <li>
+      <strong class="titulo">Guarda</strong>
+      Con la prueba en verde, pulsa <strong>Guardar</strong>. La tarjeta de Fullpi
+      aparecerá ahora entre tus integraciones configuradas.
+    </li>
+  </ul>
+  <div class="callout info">
+    <strong>Guardar todavía NO enciende nada</strong>
+    La configuración deja todo listo, pero la sincronización se enciende en la
+    pantalla <strong>Flows</strong> (siguiente sección). Así puedes configurar hoy y encender cuando quieras.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="encender">
+  <h2>4. Encender la sincronización <span class="ruta">Menú → Flows</span></h2>
+  <p>En <strong>Flows</strong> hay tres automatizaciones de Fullpi ya creadas (aparecen como borrador/inactivas).
+     <strong>Activarlas es el interruptor</strong> — y desactivarlas apaga esa parte al instante si algo sale mal.</p>
+  <p>Enciéndelas en este orden, verificando cada una antes de seguir:</p>
+  <div class="flow-card">
+    <strong>1º — "Fullpi → Inventario Katuq (OMS)"</strong>
+    <span>El más seguro para empezar. En la primera pasada carga todo el stock de Fullpi en la bodega
+    "Fullpi (WMS)"; después solo registra cambios. Verifica en <strong>Inventarios</strong> que las
+    cantidades coincidan con lo que Fullpi reporta antes de continuar.</span>
+  </div>
+  <div class="flow-card">
+    <strong>2º — "Fullpi ← Pedidos pagados (OMS)"</strong>
+    <span>Empieza a mandar pedidos reales a la bodega. Haz un pedido de prueba (ver sección 5)
+    y confirma con Fullpi que les llegó antes de dejarlo encendido.</span>
+  </div>
+  <div class="flow-card">
+    <strong>3º — "Fullpi → Estados de pedidos (OMS)"</strong>
+    <span>Enciéndelo junto con el anterior: es el que hace que tus pedidos pasen a
+    Despachado/Entregado y avisen al cliente.</span>
+  </div>
+  <h3>Pasar de pruebas a producción</h3>
+  <p>Cuando el ensayo esté en verde: vuelve a <span class="ruta">Integraciones</span> → tarjeta Fullpi →
+     <strong>Editar</strong> → pega el <strong>secret de PRODUCCIÓN</strong>, cambia Ambiente a
+     <strong>Producción</strong>, prueba conexión y guarda. Los flows siguen encendidos — no hay que tocarlos.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="dia-a-dia">
+  <h2>5. Operación del día a día</h2>
+  <h3>Para que un pedido lo despache Fullpi</h3>
+  <p>Solo tiene que cumplir esto (no hay botones extra):</p>
+  <ul>
+    <li>Al crearlo (venta asistida o web), su bodega debe ser <strong>"Fullpi (WMS)"</strong>.</li>
+    <li>Debe quedar <strong>pagado</strong> — o ser <strong>contraentrega</strong>.</li>
+  </ul>
+  <p>Con eso, en máximo 10 minutos el pedido viaja solo. Lo reconoces porque pasa a estado
+     <em>EnDespacho</em>.</p>
+  <h3>Hacer el pedido de prueba (recomendado al inicio)</h3>
+  <ul class="steps">
+    <li>Crea en venta asistida un pedido con <strong>un producto que exista en Fullpi</strong> y bodega "Fullpi (WMS)".</li>
+    <li>Márcalo pagado (o contraentrega).</li>
+    <li>Espera ~10 minutos → el pedido pasa a <em>EnDespacho</em>.</li>
+    <li>Confirma con tu contacto de Fullpi que la orden apareció en su sistema.</li>
+    <li>Pídele que la mueva de estado en pruebas → en la siguiente media hora tu pedido debe avanzar solo.</li>
+  </ul>
+  <h3>Dónde ver cada cosa</h3>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Qué quieres ver</th><th>Dónde</th></tr>
+    <tr><td>El estado de un pedido (EnDespacho → Despachado → Entregado)</td><td><span class="ruta">Ventas → Pedidos</span></td></tr>
+    <tr><td>El stock que Fullpi reporta</td><td><span class="ruta">Inventarios</span> → bodega "Fullpi (WMS)"</td></tr>
+    <tr><td>Si las automatizaciones corrieron bien</td><td><span class="ruta">Flows</span> → historial de ejecuciones de cada flow</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="problemas">
+  <h2>6. Si algo no funciona</h2>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Lo que ves</th><th>Qué suele ser</th><th>Qué hacer</th></tr>
+    <tr>
+      <td>La tarjeta de Fullpi no aparece en Integraciones</td>
+      <td>La app aún no tiene la última versión</td>
+      <td>Refresca con <strong>Ctrl+Shift+R</strong>. Si sigue sin salir, avisa al equipo Katuq</td>
+    </tr>
+    <tr>
+      <td>"Probar conexión" falla con secret inválido</td>
+      <td>Secret mal pegado (espacios de más) o aún no activado por Fullpi</td>
+      <td>Vuelve a pegarlo con cuidado; si persiste, confirma con Fullpi que ya está activo</td>
+    </tr>
+    <tr>
+      <td>Un pedido no viaja a Fullpi</td>
+      <td>No cumple alguna condición</td>
+      <td>Revisa: ¿bodega "Fullpi (WMS)"? ¿está pagado o es contraentrega? ¿no está cancelado?
+          ¿el flow "Pedidos pagados" está activo en Flows?</td>
+    </tr>
+    <tr>
+      <td>El pedido llegó a Fullpi pero no avanza de estado en Katuq</td>
+      <td>El flow de estados está apagado, o Fullpi usa un estado nuevo que Katuq aún no conoce</td>
+      <td>Verifica que "Estados de pedidos" esté activo. Si sigue quieto, avisa al equipo Katuq:
+          los estados nuevos quedan registrados y se agregan en minutos (a propósito, Katuq nunca
+          adivina un estado que no conoce)</td>
+    </tr>
+    <tr>
+      <td>Un producto no muestra stock de Fullpi</td>
+      <td>La referencia (SKU) del producto en Katuq no coincide con la de Fullpi</td>
+      <td>Revisa que la referencia del producto sea EXACTAMENTE la misma que usa Fullpi</td>
+    </tr>
+    <tr>
+      <td>Necesitas apagar todo YA</td>
+      <td>—</td>
+      <td><span class="ruta">Flows</span> → desactiva los 3 flows de Fullpi. Se detiene al instante y no se pierde nada:
+          al reactivar, retoma donde iba</td>
+    </tr>
+  </table>
+  </div>
+  <div class="callout ok">
+    <strong>Regla simple</strong>
+    Todo lo de Fullpi se maneja en dos pantallas: <strong>Integraciones</strong> (credenciales y datos)
+    y <strong>Flows</strong> (encender/apagar). Nada más.
+  </div>
+</section>
+
+<footer>
+  Katuq · Integración Fullpi (WMS) · Manual de usuario · 2026-07-06 — el checklist se guarda en este navegador.
+</footer>
+</div>
+
+<script>
+  document.querySelectorAll('.check-list').forEach(function (list) {
+    var key = 'fullpi-manual-usuario-' + (list.dataset.ck || 'ck');
+    var saved = [];
+    try { saved = JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { saved = []; }
+    var items = list.querySelectorAll('li');
+    items.forEach(function (li, i) {
+      if (saved.indexOf(i) >= 0) li.classList.add('done');
+      li.addEventListener('click', function () {
+        li.classList.toggle('done');
+        var done = [];
+        items.forEach(function (x, j) { if (x.classList.contains('done')) done.push(j); });
+        try { localStorage.setItem(key, JSON.stringify(done)); } catch (e) { /* noop */ }
+      });
+    });
+  });
+</script>
+</body>
+</html>

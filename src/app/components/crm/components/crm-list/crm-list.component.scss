@@ -1,4 +1,41 @@
 // ═══════════════════════════════════════════════════════════
+// Tabs: Pipeline activo / Cerrados
+// ═══════════════════════════════════════════════════════════
+
+.crm-tabs-btn-group {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.crm-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover:not(.active) {
+    background: #e5e7eb;
+    color: #374151;
+  }
+
+  &.active {
+    background: #ede9fe;
+    color: #5b21b6;
+    border-color: #ddd6fe;
+    border-left-color: #7c3aed;
+    font-weight: 600;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // Kanban Board
 // ═══════════════════════════════════════════════════════════
 
@@ -169,6 +206,10 @@
   &.action-btn-detail:hover { background: #ddd6fe; color: #6d28d9; }
   &.action-btn-delete { background: #fef2f2; color: #d12b38; }
   &.action-btn-delete:hover { background: #fee2e2; color: #b91c1c; }
+  &.action-btn-won { background: #f0fdf4; color: #27AE60; }
+  &.action-btn-won:hover { background: #dcfce7; color: #16a34a; }
+  &.action-btn-lost { background: #fef2f2; color: #d12b38; }
+  &.action-btn-lost:hover { background: #fee2e2; color: #b91c1c; }
 }
 
 // Column value
@@ -238,6 +279,7 @@
   .gu-unselectable { user-select: none !important; }
   .gu-transit { opacity: 0.3; }
 }
+
 
 // ─── Indicadores de gestión (dashboard) ─────────────────────
 .crm-dashboard {
@@ -369,6 +411,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.stage-color-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .tag-preview {

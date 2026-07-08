@@ -368,6 +368,15 @@
 
 /* === TOAST Y MENSAJES === */
 
+// El p-toast se renderiza como overlay fuera del árbol del componente (Angular lo
+// mueve al final del <body>), por eso necesita un z-index global aquí y no en el
+// SCSS del componente que lo dispara — ahí nunca aplica porque el elemento real
+// ya no es descendiente del host. Debe quedar por encima de cualquier header/sidebar
+// fijo (los más altos del layout usan hasta 100) y del mirror de dragula (9999).
+.p-toast {
+  z-index: 10000 !important;
+}
+
 .p-toast .p-toast-message {
   font-size: var(--p-font-size) !important;
 }

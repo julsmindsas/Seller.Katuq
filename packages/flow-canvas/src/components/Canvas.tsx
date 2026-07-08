@@ -105,8 +105,14 @@ export const Canvas: React.FC<CanvasProps> = ({ onSelectNode, onIntent }) => {
                     moveNode(c.id, { x: c.position.x, y: c.position.y });
                 } else if (c.type === 'remove') {
                     deleteNode(c.id);
-                } else if (c.type === 'select') {
-                    onSelectNode(c.selected ? c.id : null);
+                } else if (c.type === 'select' && c.selected) {
+                    // Solo propagamos la selección (selected:true). NO propagamos
+                    // la deselección desde onNodesChange: React Flow emite un
+                    // 'select:false' durante el mismo clic (al sincronizar el
+                    // `selected` controlado por el store) que pisaba la selección
+                    // y dejaba el nodo deseleccionado → el panel de config nunca
+                    // abría. La deselección explícita la maneja onPaneClick.
+                    onSelectNode(c.id);
                 }
             }
         },

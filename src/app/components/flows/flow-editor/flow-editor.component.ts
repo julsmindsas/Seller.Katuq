@@ -13,6 +13,7 @@ import { ToastrService } from 'ngx-toastr';
 import { FlowsService } from '../services/flows.service';
 import { FlowsStateService } from '../services/flows-state.service';
 import { FlowCanvasLoaderService } from '../services/flow-canvas-loader.service';
+import { IntegrationsService } from '../../integrations/integrations.service';
 import {
   FlowSpec,
   FlowGraph,
@@ -60,6 +61,9 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
   webhookUrl = '';
   triggerNodeId: string | null = null;
   triggerType: string | null = null;
+  // Provider keys conectados por la empresa → alimenta el banner
+  // "integración faltante" del panel de config de cada nodo.
+  connectedProviders: string[] | null = null;
 
   private destroy$ = new Subject<void>();
   private autosaveTrigger$ = new Subject<void>();
@@ -73,7 +77,8 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     private flowsService: FlowsService,
     private state: FlowsStateService,
     private loader: FlowCanvasLoaderService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private integrationsService: IntegrationsService
   ) {}
 
   ngOnInit(): void {
@@ -102,6 +107,23 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         this.catalog = catalog;
         this.state.setCatalog(catalog);
         this.pushPropsToCanvas();
+      });
+
+    // Integraciones conectadas (habilitadas) → banner "integración faltante"
+    // por nodo. Si falla, dejamos null para NO mostrar avisos falsos.
+    this.integrationsService
+      .getActiveIntegrations()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (integrations) => {
+          this.connectedProviders = (integrations || [])
+            .map((i) => (i.provider || i.type || '').toLowerCase())
+            .filter(Boolean);
+          this.pushPropsToCanvas();
+        },
+        error: () => {
+          this.connectedProviders = null;
+        }
       });
 
     // Load flow if route has id.
@@ -218,6 +240,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     el.nodeCatalog = this.catalog;
     el.runContext = this.runContext;
     el.readOnly = false;
+    el.connectedProviders = this.connectedProviders;
   }
 
   /** event handler from <katuq-flow-canvas (graphChange)>. */
@@ -282,6 +305,11 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         // Subtle UX hint — surface for first-time users only would be ideal,
         // but for now the toast is short and dismissable.
         this.toastr.success('Nodo agregado.', '', { timeOut: 1500 });
+        break;
+      case 'openIntegrations':
+        // Banner "integración faltante" → llevar a conectar el proveedor.
+        // El autosave (cada 2s) preserva el flow existente al salir.
+        this.router.navigate(['/integrations']);
         break;
     }
   }

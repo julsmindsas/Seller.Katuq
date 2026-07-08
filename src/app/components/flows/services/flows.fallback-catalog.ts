@@ -203,6 +203,160 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
     ]
   },
   {
+    "type": "fullpi-inventory-changed",
+    "category": "trigger",
+    "group": "fullpi",
+    "displayName": "Fullpi: Inventario cambiado",
+    "description": "Polling del inventario Fullpi: emite un InventoryAdjustment por cada SKU cuya cantidad cambió. Conectar a katuq-inventory-adjust.",
+    "icon": "pi pi-box",
+    "color": "#F59E0B",
+    "version": 1,
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "main",
+        "label": "CanonicalInventoryAdjustment",
+        "dataType": "item[]"
+      }
+    ],
+    "schema": {
+      "type": "object",
+      "properties": {
+        "defaultBodegaCode": {
+          "type": "string",
+          "title": "Bodega Katuq destino",
+          "description": "Business code de la bodega Katuq espejo del WMS (ej \"BOD-FULLPI-1\"). Recomendado: expression {{ $companyConfig.fullpi.bodegaCode }}."
+        },
+        "codigoBodegaWms": {
+          "type": "string",
+          "title": "Código de bodega en el WMS (filtro)",
+          "description": "Si se define (ej \"ECF1\"), solo se toman filas del inventario con ese codigoBodega. Recomendado: {{ $companyConfig.fullpi.codigoBodegaWms }}."
+        },
+        "reason": {
+          "type": "string",
+          "title": "Reason del movimiento",
+          "description": "Reason para el inventoryMovement. Debe estar en ALLOWED_REASONS del handler.",
+          "enum": [
+            "fullpi_sync",
+            "restock",
+            "manual_adjustment"
+          ],
+          "default": "fullpi_sync"
+        },
+        "intervalMinutes": {
+          "type": "integer",
+          "title": "Intervalo de polling (min)",
+          "minimum": 1,
+          "maximum": 1440,
+          "default": 30
+        },
+        "limit": {
+          "type": "integer",
+          "title": "Límite por corrida (0 = sin límite)",
+          "minimum": 0,
+          "maximum": 100000,
+          "default": 0
+        }
+      },
+      "required": [
+        "defaultBodegaCode",
+        "reason"
+      ]
+    },
+    "defaults": {
+      "reason": "fullpi_sync",
+      "intervalMinutes": 30,
+      "limit": 0
+    },
+    "tags": [
+      "fullpi",
+      "wms",
+      "inventory",
+      "stock",
+      "polling",
+      "trigger"
+    ]
+  },
+  {
+    "type": "fullpi-orders-push",
+    "category": "action",
+    "group": "fullpi",
+    "displayName": "Fullpi: Enviar pedidos pagados",
+    "description": "Barrido idempotente: envía al WMS Fullpi los pedidos pagados o contraentrega de la bodega Fullpi que aún no fueron enviados (batch). Pensado para trigger schedule-cron.",
+    "icon": "pi pi-upload",
+    "color": "#F59E0B",
+    "version": 1,
+    "inputs": [
+      {
+        "name": "main",
+        "dataType": "item[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "main",
+        "dataType": "item[]"
+      },
+      {
+        "name": "error",
+        "isError": true,
+        "dataType": "item[]"
+      }
+    ],
+    "schema": {
+      "type": "object",
+      "properties": {}
+    },
+    "defaults": {},
+    "tags": [
+      "fullpi",
+      "wms",
+      "order",
+      "push",
+      "sync"
+    ]
+  },
+  {
+    "type": "fullpi-orders-status-pull",
+    "category": "action",
+    "group": "fullpi",
+    "displayName": "Fullpi: Sincronizar estados de pedidos",
+    "description": "Pull de status_history desde el WMS Fullpi para los pedidos ya enviados no terminales. Estados desconocidos quedan en auditoría sin mover el pedido. Pensado para trigger schedule-cron.",
+    "icon": "pi pi-sync",
+    "color": "#F59E0B",
+    "version": 1,
+    "inputs": [
+      {
+        "name": "main",
+        "dataType": "item[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "main",
+        "dataType": "item[]"
+      },
+      {
+        "name": "error",
+        "isError": true,
+        "dataType": "item[]"
+      }
+    ],
+    "schema": {
+      "type": "object",
+      "properties": {}
+    },
+    "defaults": {},
+    "tags": [
+      "fullpi",
+      "wms",
+      "order",
+      "status",
+      "pull",
+      "tracking"
+    ]
+  },
+  {
     "type": "http-request",
     "category": "flow-control",
     "group": "http",

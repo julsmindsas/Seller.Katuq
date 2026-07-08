@@ -18,6 +18,7 @@ import './styles.css';
  *   - runContext: RunContext | null
  *   - readOnly: boolean
  *   - selectedNodeId: string | null
+ *   - connectedProviders: string[] | null  (provider keys the company connected)
  *
  * Events:
  *   - graphChange:  detail = FlowGraph
@@ -25,7 +26,8 @@ import './styles.css';
  *   - runRequested: detail = { triggerData?: any }
  *   - canvasIntent: detail = { intent: string, payload?: any }
  *       intents: connectionRejected | connectionCreated | nodeAdded |
- *                autoLayoutApplied | showShortcuts | installTemplate
+ *                autoLayoutApplied | showShortcuts | installTemplate |
+ *                openIntegrations ({ provider })
  */
 class KatuqFlowCanvas extends HTMLElement {
     private root: Root | null = null;
@@ -38,6 +40,7 @@ class KatuqFlowCanvas extends HTMLElement {
     private _runContext: RunContext | null = null;
     private _readOnly = false;
     private _selectedNodeId: string | null = null;
+    private _connectedProviders: string[] | null = null;
 
     // ------ property accessors (Angular property bindings hit these) ------
 
@@ -83,6 +86,14 @@ class KatuqFlowCanvas extends HTMLElement {
         return useFlowStore.getState().selectedNodeId;
     }
 
+    set connectedProviders(v: string[] | null) {
+        this._connectedProviders = Array.isArray(v) ? v : null;
+        useFlowStore.getState().setConnectedProviders(this._connectedProviders);
+    }
+    get connectedProviders(): string[] | null {
+        return useFlowStore.getState().connectedProviders;
+    }
+
     static get observedAttributes(): string[] {
         // we only support boolean read-only via attribute as a convenience.
         return ['read-only'];
@@ -112,6 +123,7 @@ class KatuqFlowCanvas extends HTMLElement {
         useFlowStore.getState().setRunContext(this._runContext);
         useFlowStore.getState().setReadOnly(this._readOnly);
         useFlowStore.getState().setSelectedNodeId(this._selectedNodeId);
+        useFlowStore.getState().setConnectedProviders(this._connectedProviders);
 
         this.root = createRoot(this.mountPoint);
         this.root.render(

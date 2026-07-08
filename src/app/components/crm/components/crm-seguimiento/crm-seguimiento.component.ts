@@ -8,6 +8,7 @@ import { CotizacionesService } from '../../../cotizaciones/cotizaciones.service'
 import { Cotizacion } from '../../../cotizaciones/modelo/cotizacion';
 
 type OverdueTask = CrmTask & { _daysOverdue: number };
+type UnreviewedTask = CrmTask & { _daysSinceReview: number };
 type SeguimientoCotizacion = Cotizacion & { _diasEsperando: number };
 
 @Component({
@@ -18,6 +19,7 @@ type SeguimientoCotizacion = Cotizacion & { _diasEsperando: number };
 export class CrmSeguimientoComponent implements OnInit, OnDestroy {
   loading = false;
   overdueTasks: OverdueTask[] = [];
+  unreviewedTasks: UnreviewedTask[] = [];
   cotizacionesSinAbrir: SeguimientoCotizacion[] = [];
   cotizacionesVistasSinCerrar: SeguimientoCotizacion[] = [];
   cotizacionesVencidas: SeguimientoCotizacion[] = [];
@@ -76,6 +78,17 @@ export class CrmSeguimientoComponent implements OnInit, OnDestroy {
             }))
             .sort((a, b) => b._daysOverdue - a._daysOverdue);
 
+          const REVIEW_THRESHOLD_DAYS = 8;
+          this.unreviewedTasks = (tasks || [])
+            .filter(t => t.status === 'pending')
+            .filter(t => !(t.dueDate && new Date(t.dueDate).getTime() < now)) // ya vencidas van solo en "Tareas vencidas"
+            .map(t => ({
+              ...t,
+              _daysSinceReview: Math.floor((now - new Date(t.lastReviewedAt || t.createdAt).getTime()) / 86400000),
+            }))
+            .filter(t => t._daysSinceReview >= REVIEW_THRESHOLD_DAYS)
+            .sort((a, b) => b._daysSinceReview - a._daysSinceReview);
+
           // Solo cotizaciones cuyo cliente coincide con un lead del CRM (documento o email).
           const relevantes = (cotizaciones.data || [])
             .filter(c => !!this.leadDeCotizacion(c))
@@ -124,6 +137,11 @@ export class CrmSeguimientoComponent implements OnInit, OnDestroy {
   }
 
   goToTask(task: CrmTask): void {
+    this.router.navigate(['/crm/detail', task.entityId], { queryParams: { tab: 'tasks' } });
+  }
+
+  goToUnreviewedTask(task: UnreviewedTask): void {
+    this.crmService.reviewTask(task.id).subscribe();
     this.router.navigate(['/crm/detail', task.entityId], { queryParams: { tab: 'tasks' } });
   }
 
