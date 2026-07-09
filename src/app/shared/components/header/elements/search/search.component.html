@@ -2,25 +2,62 @@
   <div class="form-group w-100 mb-0">
     <i class="fa fa-search search-lead-icon" aria-hidden="true"></i>
     <input class="form-control-plaintext" [(ngModel)]="text" [ngModelOptions]="{standalone: true}"
-           (keyup)="searchTerm(text)" type="text" autocomplete="off" placeholder="Buscar productos, pedidos, clientes…" aria-label="Campo de búsqueda">
-    <app-feather-icons *ngIf="text" [icon]="'x'" class="close-search" (click)="removeFix()" aria-label="Limpiar búsqueda"></app-feather-icons>
-    <div class="Typeahead-menu" [class.is-open]="searchResult" *ngIf="menuItems?.length" id="search-outer" role="listbox" aria-label="Resultados de búsqueda">
-      <div class="ProfileCard u-cf" *ngFor="let menuItem of menuItems | slice:0:8">
-        <div class="ProfileCard-avatar">
-          <app-feather-icons [icon]="menuItem.icon" class="header-search"></app-feather-icons>
-        </div>
-        <div class="ProfileCard-details">
-          <div class="ProfileCard-realName">
-            <a [routerLink]="menuItem?.path" class="realname" (click)="removeFix()" role="option">{{menuItem?.title}}</a>
-          </div>
-        </div>
+           (keyup)="searchTerm(text)" type="text" autocomplete="off"
+           placeholder="Buscar productos, pedidos, clientes…" aria-label="Campo de búsqueda">
+    <i *ngIf="isSearchingData" class="fa fa-spinner fa-spin data-spinner" aria-hidden="true"></i>
+    <app-feather-icons *ngIf="text && !isSearchingData" [icon]="'x'" class="close-search"
+                       (click)="removeFix()" aria-label="Limpiar búsqueda"></app-feather-icons>
+
+    <!-- Panel de resultados agrupados -->
+    <div class="search-panel"
+         *ngIf="searchResult && (menuItems?.length || orderResults.length || clientResults.length || isSearchingData || searchResultEmpty)"
+         role="listbox" aria-label="Resultados de búsqueda">
+
+      <!-- Pedidos -->
+      <div class="search-group" *ngIf="orderResults.length">
+        <div class="group-title"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Pedidos</div>
+        <a class="result-row" *ngFor="let o of orderResults" (click)="goToOrder(o)" role="option" tabindex="0">
+          <span class="row-icon pedido"><i class="fa fa-file-text-o" aria-hidden="true"></i></span>
+          <span class="row-body">
+            <span class="row-title">{{ o.nroPedido }}</span>
+            <span class="row-sub">{{ o.cliente?.nombres_completos || o.cliente?.nombre || 'Sin cliente' }}</span>
+          </span>
+          <span class="row-meta">${{ (o.totalPedididoConDescuento || o.totalPedido || 0) | number:'1.0-0' }}</span>
+        </a>
       </div>
-    </div>
-    <div class="Typeahead-menu" [class.is-open]="searchResultEmpty" aria-live="polite" aria-atomic="true">
-      <div class="tt-dataset tt-dataset-0">
-        <div class="EmptyMessage">
-          No se encontraron resultados.
-        </div>
+
+      <!-- Clientes -->
+      <div class="search-group" *ngIf="clientResults.length">
+        <div class="group-title"><i class="fa fa-users" aria-hidden="true"></i> Clientes</div>
+        <a class="result-row" *ngFor="let c of clientResults" (click)="goToClient(c)" role="option" tabindex="0">
+          <span class="row-icon cliente"><i class="fa fa-user" aria-hidden="true"></i></span>
+          <span class="row-body">
+            <span class="row-title">{{ clientName(c) }}</span>
+            <span class="row-sub">
+              {{ c.documento }}<span *ngIf="c.numero_celular_comprador"> · {{ c.numero_celular_comprador }}</span>
+            </span>
+          </span>
+        </a>
+      </div>
+
+      <!-- Menú -->
+      <div class="search-group" *ngIf="menuItems?.length">
+        <div class="group-title"><i class="fa fa-th-large" aria-hidden="true"></i> Menú</div>
+        <a class="result-row" *ngFor="let m of menuItems" [routerLink]="m.path"
+           (click)="onMenuNavigate()" role="option">
+          <span class="row-icon menu"><app-feather-icons [icon]="m.icon"></app-feather-icons></span>
+          <span class="row-body"><span class="row-title">{{ m.title }}</span></span>
+        </a>
+      </div>
+
+      <!-- Buscando pedidos/clientes -->
+      <div class="search-loading" *ngIf="isSearchingData && !orderResults.length && !clientResults.length">
+        <i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Buscando pedidos y clientes…
+      </div>
+
+      <!-- Sin resultados -->
+      <div class="search-empty" *ngIf="searchResultEmpty">
+        <i class="fa fa-search" aria-hidden="true"></i> No se encontraron resultados
       </div>
     </div>
   </div>

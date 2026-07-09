@@ -291,6 +291,7 @@
                     <p-table #dt
                              [value]="clientes"
                              [loading]="cargando"
+                             [globalFilterFields]="['documento','nombres_completos','apellidos_completos','correo_electronico_comprador','numero_celular_comprador','numero_celular_whatsapp']"
                              [paginator]="true"
                              [rows]="rows"
                              [totalRecords]="totalRecords"

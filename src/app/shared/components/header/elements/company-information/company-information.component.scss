@@ -19,14 +19,14 @@
 
     .company-brand-name {
         font-family: 'Dancing Script', cursive;
-        font-size: 27px;
+        font-size: 17px;
         font-weight: 700;
         color: var(--ktq-ink, #1c1a2b);
         line-height: 1;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 300px;
+        max-width: 320px;
         padding-right: 4px;
         text-transform: capitalize;
     }
@@ -34,15 +34,15 @@
 
 @media (max-width: 991.98px) {
     .company-brand .company-brand-name {
-        font-size: 22px;
-        max-width: 170px;
+        font-size: 16px;
+        max-width: 150px;
     }
 }
 
 @media (max-width: 575.98px) {
     .company-brand .company-brand-name {
-        font-size: 19px;
-        max-width: 120px;
+        font-size: 16px;
+        max-width: 110px;
     }
 }
 
