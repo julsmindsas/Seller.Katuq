@@ -98,6 +98,17 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Out of scope:** no se toca colección ni UI de clientes habituales (salvo reusar su form), no migración, no `company` (tenants), no inventario/pedidos/facturación, no importación masiva.
 - **Pendiente:** `plan.md` (cómo: colección backend en repo separado, endpoints, parametrización de `crm-list` por entityType). Backend en `katuq_admin_back_firebase` requiere coordinación de endpoints antes del frontend.
 
+### 2026-07-08 — D-086: 3 fixes de UX/datos en CRM (contador Mis tareas, conversión por rol, regresión de Seguimiento)
+
+- **Contexto:** sesión de soporte guiada por la usuaria (brendazora@almara.com.co, ALMARA FELICIDAD) probando en vivo el CRM tras el trabajo de D-082/D-083. Verificación en cada caso contra Firestore real (scripts read-only) antes de tocar código — ningún fix se basó en suposición.
+- **Fix 1 — card "Mis tareas" sin contador:** la card solo mostraba un ícono, sin número, a diferencia de las demás cards del dashboard. Se agregó `myTasksCount` (`crm-list.component.ts`) calculado con la misma lógica de filtro que ya usaba `openMyTasksToday()` (asignada a mí + vencimiento hoy→+7 días), refactorizada a un helper compartido `isMyTaskInWindow()`. Se refresca junto con `loadStats()`.
+- **Investigación descartada (falsa pista):** al inicio se sospechó que `assignedTo` en `crm_tasks` se guardaba con el ID del usuario en vez del email (por lectura del código de `getUserEmail()` en `crm.js`, que no leía `req.userInfo.email`). Verificado contra Firestore real: **el dato ya estaba correcto** — el interceptor del frontend (`http.interceptor.ts:133/142`) ya envía el header `email` con el valor real, que siempre gana en `getUserEmail()`. Se aplicó igual el fix defensivo (`req.headers.email || req.userInfo?.email || req.user`) por robustez, pero no era la causa del síntoma reportado.
+- **Fix 2 — "Conversión por vendedor" expone datos de todo el equipo a cualquier rol:** decisión de producto de la usuaria: un vendedor no debe ver el ranking de sus compañeros (fuente de conflicto interno), solo admin/super admin. Implementado: `computeConversionByAgent()` filtra `conversionRows` a la propia fila cuando `!canManageStages` (reusa el check de rol ya existente en el componente, mismo que gobierna gestión de etapas). Card y diálogo cambian de label dinámicamente ("Conversión por vendedor" / ranking completo para admin vs "Mi conversión" / solo la propia tasa para vendedor).
+- **Fix 3 — REGRESIÓN real encontrada: "Propuestas vencidas" (Seguimiento) dejó de detectar cruces con leads cerrados.** Causa: `crm-seguimiento.component.ts` carga leads con `crmService.getLeads({ limit: 300 })`, sin `view`, que desde D-082 (2026-07-06) por defecto es `view:'active'` — excluye leads en etapa `convertido`/`perdido` (archivados en la pestaña "Cerrados"). El caso real de la usuaria (lead "monika montoya", cotización `COT-2026-0630-0015` vencida) tiene el lead en etapa `convertido` → invisible para el cruce cotización↔lead → la card mostraba 0 falsamente. **Antes de D-082 esto funcionaba porque no existía el split activo/cerrado.** Fix: `getLeads({ limit: 300, view: 'all' })` — el módulo de Seguimiento necesita ver TODOS los leads (activos + cerrados) para hacer bien el cruce histórico, a diferencia del Kanban que sí debe ocultar los cerrados.
+- **Verificación:** los 3 fixes probados en vivo por la usuaria en `localhost:4200` (capturas de pantalla), incluyendo simulación de rol vendedor sin crear usuario nuevo (truco `localStorage.user.rol='VENTAS'` + reload). `ng build --configuration=production` exit 0 antes de subir (solo warnings preexistentes: CSS legacy de IE en vendor y budget de bundle, ajenos a este cambio).
+- **Commits:** FE `feature/venta-asistida-mejorada` → `fca3d051` (mergeado con 2 commits remotos sin conflicto → `263bdcc3` pusheado). BE `backend-aws-security` → `7fe2068` pusheado.
+- **Lección para specs futuras que toquen `crm_pipeline`:** cualquier módulo que necesite cruzar datos contra leads SIN filtrar por etapa (reportes, integraciones, matching histórico) debe pedir `view:'all'` explícitamente — el default `active` de `crmLeadService.list()` es correcto para el Kanban pero es una trampa silenciosa para todo lo demás. Vale la pena auditar si hay otros consumidores de `getLeads()` con el mismo problema (no se hizo en esta sesión, queda pendiente).
+
 ### 2026-05-13 — D-001: Adopción de SDD
 - **Contexto:** los dolores recurrentes en `/flows ↔ Cereza` son de requisitos no especificados.
 - **Decisión:** adoptar SDD con estructura `/SPEC-DRIVEN.md` + `/specs/`.
@@ -1103,6 +1114,23 @@ Orden = prioridad. La spec piloto siempre encabeza.
 ## 7. Bitácora de sesiones
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
+
+### 2026-07-08 (sesión — soporte guiado CRM: 3 fixes + regresión real encontrada, D-086)
+
+- Arranque de sesión: `git pull` en ambos repos (FE trajo specs 019/020/CONTRACT + rediseño catálogo; BE trajo fix helper categorías + cotizaciones) + levantados `:4200`/`:3300` (hubo que matar un `ng serve` viejo que ocupaba el puerto 4200).
+- Retomada la pregunta de "qué quedó pendiente de ayer" (ver bitácora 2026-07-07) y "qué queda pendiente del CRM" — repasado desde CONTRACT.md.
+- **Sesión de soporte en vivo** con la usuaria probando el CRM real de ALMARA FELICIDAD:
+  1. Confusión inicial entre el pill "X tareas pendientes en total" (agregado global, todo el equipo) y la card "Mis tareas" (personal, ventana 7 días) — explicado el diseño, no era bug.
+  2. Reporte de tarea nueva que no aparecía en "Mis tareas" — investigado a fondo (email, headers, Firestore directo, Network tab) hasta encontrar que **sí aparecía** en el diálogo; el problema real era que la card no mostraba número. **D-086 fix 1.**
+  3. Pregunta sobre "Conversión por vendedor" → decisión de producto de ocultar el ranking completo a vendedores. **D-086 fix 2.**
+  4. Pregunta sobre "Propuestas vencidas" (Seguimiento) → **regresión real encontrada**: dejó de funcionar desde D-082 por el default `view:'active'`. **D-086 fix 3.**
+- `ng build --configuration=production` verificado exit 0 antes de subir (primer intento con `tee` a una carpeta inexistente rompió el pipe y dio falso exit 1 — reintentado con redirección directa, confirmado real).
+- **Commiteado y pusheado en ambos repos** (ver D-086 para hashes). FE mergeado sin conflicto con 2 commits remotos nuevos (buscador global del header, docs D-084).
+- **Pendiente para la próxima sesión:**
+  1. Auditar si otros consumidores de `crmService.getLeads()` (fuera de Seguimiento) tienen el mismo problema del default `view:'active'` — no se revisó exhaustivamente.
+  2. E2E con login real de D-082 (cierre de leads con verificación de compra) y D-083 (botones rápidos Ganado/Perdido) — sigue pendiente, no se tocó esta sesión (ya estaban commiteados de antes, `f486ad43`, solo faltaba la validación manual).
+  3. Retomar spec 018 (sync tipo cliente Shopify) — 4 `[NEEDS CLARIFICATION]` abiertas, sin tocar esta sesión.
+  4. Retomar limpieza pendiente de spec 020 (índice duplicado en `firestore.indexes.json`, promover contract test de `_tmp012/` a permanente).
 
 ### 2026-05-13 (sesión 1)
 - Adoptamos SDD.
