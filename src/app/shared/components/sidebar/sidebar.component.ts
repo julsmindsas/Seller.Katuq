@@ -1611,10 +1611,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'pos': 'fa-calculator',
       'sale': 'fa-tags',
       'discount': 'fa-percent',
+      'percent': 'fa-percent',
       'price': 'fa-tag',
       'invoice': 'fa-file-text-o',
       'billing': 'fa-file-text-o',
       'quotation': 'fa-file-text-o',
+      'file-plus': 'fa-plus-square',
+      'check-square': 'fa-university',
       'order': 'fa-clipboard',
       'purchase': 'fa-shopping-cart',
       'sell': 'fa-handshake-o',
@@ -1736,6 +1739,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'phone': 'fa-phone',
       'comments': 'fa-comments',
       'chat': 'fa-comment',
+      'message-circle': 'fa-comment-o',
+      'message-square': 'fa-comments',
+      'alert-circle': 'fa-exclamation-circle',
       'bell': 'fa-bell',
       'message': 'fa-comment',
       'notification': 'fa-bell',
@@ -1926,8 +1932,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     let mappedIcon = iconMap[icon.toLowerCase()];
 
     // Si no se encuentra en el mapa, intentar con el nombre original añadiendo fa-
+    // (sin espacios — un template string con espacios generaba 3 clases CSS
+    // separadas: "fa", "-", "nombre" en vez de "fa-nombre", dejando el ícono
+    // invisible aunque el HTML "tuviera" una clase). Solo se usa si esa clase
+    // realmente existe en FontAwesome 4.7; si no, cae al icono por defecto.
     if (!mappedIcon) {
-      mappedIcon = `fa - ${icon.toLowerCase()} `;
+      const guessed = `fa-${icon.toLowerCase()}`;
+      mappedIcon = this.isValidFA4Icon(guessed) ? guessed : '';
     }
 
     // Si aún no es válido, usar icono por defecto
@@ -2641,16 +2652,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   validateAndOptimizeIcon(iconClass: string, category: string = 'default'): string {
     // Verificar cache primero
-    const cacheKey = `${iconClass} -${category} `;
+    const cacheKey = `${iconClass}-${category}`;
     if (this.iconCache.has(cacheKey)) {
       return this.iconCache.get(cacheKey)!;
     }
 
     let optimizedIcon = iconClass;
 
-    // Asegurar que tiene prefijo fa-
+    // Asegurar que tiene prefijo fa- (sin espacios — ver nota en getMenuIcon)
     if (!optimizedIcon.startsWith('fa-')) {
-      optimizedIcon = `fa - ${optimizedIcon} `;
+      optimizedIcon = `fa-${optimizedIcon}`;
     }
 
     // Verificar si es válido
