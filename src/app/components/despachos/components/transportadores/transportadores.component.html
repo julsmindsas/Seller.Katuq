@@ -213,6 +213,16 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="guiaProvider">{{ 'Guía de envío' | translate }}</label>
+                            <select class="form-control" id="guiaProvider" formControlName="guiaProvider">
+                                <option value="enviame">{{ 'Enviame (etiqueta de la transportadora)' | translate }}</option>
+                                <option value="katuq">{{ 'Katuq (guía propia, mensajero propio)' | translate }}</option>
+                            </select>
+                            <small class="text-muted d-block">{{ 'Define de dónde sale la guía al despachar con este transportador.' | translate }}</small>
+                        </div>
+                    </div>
                 </div>
                 <div class="row g-3">
                     <div class="col-md-12">

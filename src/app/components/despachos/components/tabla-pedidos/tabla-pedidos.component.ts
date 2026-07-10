@@ -48,6 +48,7 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   @Output() onEnviameTrackingDetails = new EventEmitter<Pedido>();
   @Output() onEnviameCancelShipment = new EventEmitter<Pedido>();
   @Output() onEnviameDownloadLabel = new EventEmitter<Pedido>();
+  @Output() onGenerarGuia = new EventEmitter<Pedido>();
 
   // NEW - Evidencia empacado action
   @Output() onUploadEvidenciaEmpacado = new EventEmitter<Pedido>();
@@ -363,7 +364,11 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   printLabel(pedido: Pedido): void {
     this.onPrintLabel.emit(pedido);
   }
-  
+
+  generarGuia(pedido: Pedido): void {
+    this.onGenerarGuia.emit(pedido);
+  }
+
   changeStatus(pedido: Pedido, status: number): void {
     this.onChangeStatus.emit({ pedido, status });
   }
@@ -452,7 +457,8 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
 
     const items: MenuItem[] = [
       { label: 'Imprimir Pdf', icon: 'pi pi-file-pdf', command: () => this.printPdf(pedido) },
-      { label: 'Rótulo', icon: 'pi pi-file', command: () => this.printLabel(pedido) }
+      { label: 'Rótulo', icon: 'pi pi-file', command: () => this.printLabel(pedido) },
+      { label: 'Guía de envío', icon: 'pi pi-send', command: () => this.generarGuia(pedido) }
     ];
 
     if (this.hasTags(pedido)) {

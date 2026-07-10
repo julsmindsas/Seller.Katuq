@@ -351,6 +351,16 @@ export class LogisticaServiceV2 extends BaseService {
         return this.http.post(`${this.apiUrl}/v1/logistics/shipments/label`, payload);
     }
 
+    /**
+     * Genera la GUÍA DE ENVÍO de una orden. El backend decide el proveedor según
+     * el transportador (guiaProvider): 'katuq' devuelve el PDF propio como base64
+     * (labelPdf); 'enviame' devuelve la etiqueta real del provider. Se puede forzar
+     * el proveedor con `provider`.
+     */
+    generarGuia(orderId: string, provider?: 'katuq' | 'enviame'): Observable<any> {
+        return this.http.post(`${this.apiUrl}/v1/logistica/guia`, { orderId, provider });
+    }
+
     // ========== MÉTRICAS AGREGADAS ==========
 
     /**

@@ -60,6 +60,10 @@ export class TransportadoresComponent implements OnInit, OnChanges {
       capacidadCarga: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
       pwd: ['', Validators.required],
       zonasCobertura: [[]],
+      // Origen de la guía de envío de este transportador:
+      //   'katuq'   → Katuq genera el PDF de la guía (mensajeros propios).
+      //   'enviame' → se usa la etiqueta real de enviame.io.
+      guiaProvider: ['enviame'],
     });
   }
 

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Observable, forkJoin, of, EMPTY } from 'rxjs';
 import { IntegrationsService, Integration, IntegrationCategory } from '../../../integrations/integrations.service';
 import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
+import { normalizeTransportadorName } from '../../../../shared/services/despachos/transportador.util';
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import { EstadoProceso } from '../../../ventas/modelo/pedido';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -656,9 +657,10 @@ export class OrdenesDespachoV2Component implements OnInit {
       next: (fullOrder) => {
         // Actualizar el transportador en la orden completa
         // NO guardamos el campo "estado" - se calcula dinámicamente en getEstadoProceso()
+        const transportadorLimpio = normalizeTransportadorName(transporterName);
         const orderToUpdate = {
           ...fullOrder,
-          transportador: transporterName,
+          transportador: transportadorLimpio,
           metadata: {
             ...(fullOrder.metadata || {}),
             especificacionTransportadora: {
@@ -678,7 +680,7 @@ export class OrdenesDespachoV2Component implements OnInit {
 
         if (orderToUpdate.pedidos && Array.isArray(orderToUpdate.pedidos)) {
           orderToUpdate.pedidos.forEach((pedido: any) => {
-            pedido.transportador = transporterName;
+            pedido.transportador = transportadorLimpio;
             // NO modificar pedido.estadoProceso - ya está en Despachado o Entregado
 
             // Crear observable para la actualización de este pedido
@@ -708,7 +710,7 @@ export class OrdenesDespachoV2Component implements OnInit {
               this.isDispatchingShipment = false;
 
               // Actualizar localmente
-              order.transportador = transporterName;
+              order.transportador = transportadorLimpio;
 
               Swal.fire({
                 icon: 'success',
@@ -790,7 +792,7 @@ export class OrdenesDespachoV2Component implements OnInit {
         console.log('✅ Envío creado exitosamente con Enviame.io:', result);
 
         // Actualizar el transportador en la orden
-        this.selectedOrderForDispatch.transportador = this.selectedTransporter;
+        this.selectedOrderForDispatch.transportador = normalizeTransportadorName(this.selectedTransporter);
 
         // Actualizar los pedidos a estado "Despachado"
         const pedidosSinDespachar = this.selectedOrderForDispatch.pedidos.filter((pedido: any) =>
@@ -857,7 +859,7 @@ export class OrdenesDespachoV2Component implements OnInit {
     this.logisticaService.createShipment(shipmentPayload).subscribe({
       next: () => {
         // Actualizar el transportador en la orden
-        order.transportador = this.selectedTransporter;
+        order.transportador = normalizeTransportadorName(this.selectedTransporter);
 
         // Actualizar los pedidos a estado "Despachado"
         const pedidosSinDespachar = order.pedidos.filter((pedido: any) =>

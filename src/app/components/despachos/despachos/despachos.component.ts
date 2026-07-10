@@ -43,6 +43,7 @@ import { EnviameRatesModalComponent } from "../components/enviame/rates-modal/en
 
 import "jspdf-autotable";
 import { LogisticaServiceV2 } from "../../../shared/services/despachos/logistica.service.v2";
+import { normalizeTransportadorName } from "../../../shared/services/despachos/transportador.util";
 import { FilterService, MenuItem } from "primeng/api";
 import html2pdf from "html2pdf.js";
 import { PedidoEntrega } from "../interfaces/pedido-entrega.interface";
@@ -251,6 +252,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
   transportadorSeleccionado: any;
   vendors: any;
   nroShippingOrder: any;
+  // Conteo de pedidos que quedaron fuera por estar ya despachados al re-despachar
+  // una orden; se muestra como aviso en el modal de despacho (86b8hd5wg).
+  pedidosYaDespachadosAlReDespachar: number = 0;
   triggerTransportadoraCounter: number = 0; // Signal para que el hijo abra modal transportadora
   triggerResetSavingCounter: number = 0; // Signal para resetear isSaving en el hijo
   nuevaOrdenEnvio: any;
@@ -439,7 +443,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Configurar debounce para búsqueda
     this.setupSearchDebounce();
 
-    // Inicializar fechas por defecto: 3 días atrás hasta 7 días adelante
+    // Inicializar fechas por defecto: día de hoy
     this.initializeDefaultDates();
 
     // Inicializar las columnas seleccionadas al cargar
@@ -2033,13 +2037,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   clear(table?: Table) {
-    const unaSemana = 7 * 24 * 60 * 60 * 1000;
-    this.fechaInicial = new Date(new Date().setDate(new Date().getDate() - 1));
-    this.fechaInicial.setHours(0, 0, 0, 0);
-
-    this.fechaFinal = new Date();
-    this.fechaFinal.setDate(this.fechaFinal.getDate() + 7); // Una semana desde hoy
-    this.fechaFinal.setHours(23, 59, 59, 999);
+    // Al limpiar filtros, volver al rango por defecto (hoy → hoy),
+    // coherente con la carga inicial del módulo. También sincroniza
+    // fechaInicialDate/fechaFinalDate del calendario UI.
+    this.initializeDefaultDates();
 
     // Reset pagination when clearing filters (like productos component)
     this.currentPage = 1;
@@ -3546,10 +3547,15 @@ export class DespachosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Preparar pedidos para despachar (solo los que no estén despachados)
+    // Preparar pedidos para despachar (solo los que no estén despachados).
+    // Guardamos cuántos quedaron fuera por estar ya despachados para avisarlo en
+    // el modal de despacho (evita el "se despacharon 14 y solo salieron 9" — 86b8hd5wg).
+    const totalPedidosOrden = order.pedidos.length;
     this.pedidosSeleccionados = order.pedidos.filter(
       (p) => p.estadoProceso !== "Despachado",
     );
+    this.pedidosYaDespachadosAlReDespachar =
+      totalPedidosOrden - this.pedidosSeleccionados.length;
     this.nroShippingOrder = order.nroShippingOrder;
 
     // Inicializar nuevaOrdenEnvio si no existe
@@ -3604,7 +3610,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
         }
 
         // Actualizar el estado y datos del pedido
-        pedido.transportador = result.value;
+        // result.value es la clave del select ("Nombre Apellido-telefono"); la
+        // normalizamos para NO persistir el teléfono pegado (D-083).
+        pedido.transportador = normalizeTransportadorName(result.value);
         pedido.despachador = userLite;
         pedido.fechaYHorarioDespachado = new Date().toISOString();
         pedido.estadoProceso = EstadoProceso.Despachado;
@@ -3697,8 +3705,15 @@ export class DespachosComponent implements OnInit, OnDestroy {
       metodoEnvio: this.nuevaOrdenEnvio?.metodoEnvio
     });
 
+    const avisoConteoDespacho =
+      this.pedidosYaDespachadosAlReDespachar > 0
+        ? `Nota: ${this.pedidosYaDespachadosAlReDespachar} pedido(s) de esta orden ya estaban despachados y no se vuelven a despachar. Se despacharán ${this.pedidosSeleccionados?.length ?? 0}.`
+        : undefined;
+    this.pedidosYaDespachadosAlReDespachar = 0; // reset tras leer el aviso
+
     Swal.fire({
       title: "Asignar Transportador",
+      text: avisoConteoDespacho,
       input: "select",
       inputOptions: this.vendors.reduce((acc, vendor) => {
         acc[`${vendor.nombres} ${vendor.apellidos}-${vendor.telefono}`] =
@@ -3733,7 +3748,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         const nroOrden = this.nuevaOrdenEnvio?.nroShippingOrder ?? this.nroShippingOrder;
 
         this.pedidosSeleccionados.forEach((pedido) => {
-          pedido.transportador = this.transportadorSeleccionado;
+          pedido.transportador = normalizeTransportadorName(this.transportadorSeleccionado);
           pedido.despachador = userLite;
           pedido.fechaYHorarioDespachado = new Date().toISOString();
           pedido.estadoProceso = EstadoProceso.Despachado;
@@ -3761,7 +3776,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         }
 
         this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados;
-        this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
+        this.nuevaOrdenEnvio.transportador = normalizeTransportadorName(this.transportadorSeleccionado);
 
         this.logisticaService
           .dispatchShippingOrder(this.nuevaOrdenEnvio)
@@ -4536,6 +4551,50 @@ export class DespachosComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Genera y abre la GUÍA DE ENVÍO de un pedido. El backend decide el proveedor
+   * según la configuración del transportador (guiaProvider): guía propia de Katuq
+   * (PDF base64) para mensajeros propios, o etiqueta real de Enviame. Así dejamos
+   * de depender de que Enviame tenga el PDF listo para los envíos propios.
+   */
+  descargarGuia(pedido: any): void {
+    const orderId = pedido?._id || pedido?.id;
+    if (!orderId) {
+      this.toastr.warning('No se pudo identificar el pedido.', 'Sin ID');
+      return;
+    }
+
+    this.toastr.info('Generando guía…', 'Guía de envío');
+
+    this.logisticaService.generarGuia(orderId).subscribe({
+      next: (resp: any) => {
+        const raw = resp?.labelPdf || resp?.labelUrl;
+        if (resp?.success && raw) {
+          // Soporta URL http(s), data URI o base64 crudo (PDF).
+          const finalUrl = (/^https?:\/\//i.test(raw) || raw.startsWith('data:'))
+            ? raw
+            : `data:application/pdf;base64,${raw}`;
+          const win = window.open(finalUrl, '_blank');
+          if (!win) {
+            this.toastr.error('No se pudo abrir la guía. Revisa que las ventanas emergentes no estén bloqueadas.', 'Ventana bloqueada');
+          }
+        } else {
+          this.toastr.warning(
+            resp?.error || 'No se pudo generar la guía.',
+            'Guía no disponible'
+          );
+        }
+      },
+      error: (err) => {
+        console.error('Error generando guía:', err);
+        this.toastr.error(
+          err?.error?.error || 'No se pudo generar la guía. Intenta nuevamente.',
+          'Error'
+        );
+      }
+    });
+  }
+
   descargarRotulo(pedido: any): void {
     const escapeHtml = (text: string) => (text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const recibe = `${pedido.envio?.nombres || ''} ${pedido.envio?.apellidos || ''}`.trim() || pedido.cliente?.nombres_completos || '-';
@@ -5193,9 +5252,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
       this.nuevaOrdenEnvio._metodoEnvioChanged = true;
 
       if (event.transportadora) {
-        this.nuevaOrdenEnvio.transportador = event.transportadora;
+        this.nuevaOrdenEnvio.transportador = normalizeTransportadorName(event.transportadora);
       } else if (this.transportadorSeleccionado) {
-        this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
+        this.nuevaOrdenEnvio.transportador = normalizeTransportadorName(this.transportadorSeleccionado);
       }
       this.nuevaOrdenEnvio.fecha = event.fechaFin || event.fechaInicio || new Date().toISOString();
       this.nuevaOrdenEnvio.pedidos = event.pedidos || this.pedidosSeleccionados || [];
@@ -7557,19 +7616,18 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Inicializa las fechas por defecto: 3 días atrás hasta 7 días adelante
+   * Inicializa las fechas por defecto en el día de HOY (hoy 00:00 → hoy 23:59).
+   * El usuario puede ampliar el rango manualmente si necesita otras fechas.
    */
   initializeDefaultDates(): void {
     const today = new Date();
 
-    // Crear fecha de inicio: 3 días atrás (00:00:00)
+    // Fecha de inicio: hoy (00:00:00)
     const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - 3);
     startDate.setHours(0, 0, 0, 0);
 
-    // Crear fecha final: 7 días adelante (23:59:59.999)
+    // Fecha final: hoy (23:59:59.999)
     const endDate = new Date(today);
-    endDate.setDate(endDate.getDate() + 7);
     endDate.setHours(23, 59, 59, 999);
 
     // Establecer rango de fechas por defecto
@@ -7578,7 +7636,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
     this.fechaInicialDate = new Date(startDate); // Para el calendar UI (sin modificar tiempo)
     this.fechaFinalDate = new Date(endDate);     // Para el calendar UI (sin modificar tiempo)
 
-    console.log('📅 Fechas inicializadas:', {
+    console.log('📅 Fechas inicializadas (hoy por defecto):', {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
       fechaInicialDate: this.fechaInicialDate,
