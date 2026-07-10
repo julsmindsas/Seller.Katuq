@@ -182,3 +182,11 @@ Analytics restantes, `services/reports/*`, tools IA de ventas (`getSalesToday`, 
 | 6 | Editar pedido bajando total < pagado | `crear-ventas.component.ts:3146` `faltaPorPagar=Math.max(0,…)`; `estadoPago` no se degrada salvo set explícito. | ✅ |
 
 **Matiz de vocabulario (no es bug):** flujo manual/edición usa `"Aprobado"`, integraciones usan `"Pagado"`; ambos se pintan verde (`badge-success` / `pi-check-circle`) en `list.component.html`. Ninguno se degrada por sobrepago.
+
+## F-15 — Cotizaciones anclaba el sin-IVA en el con-IVA (T-14, 2026-06-29)
+> `cotizacion-editor.component.ts` calculaba el sin-IVA **des-grossando** el con-IVA pre-guardado: `getPrecioSinIva = itemPrecio / (1 + iva/100)`, y para volumen `itemPrecio` devolvía `valorUnitarioPorVolumenConIVA`. El motor canónico hace lo contrario (ancla A): toma el **sin-IVA directo** (`tierSinIVA` = `valorUnitarioPorVolumenSinIVA`) y **nunca** confía en montos con-IVA pre-guardados.
+
+- **Impacto:** para productos con datos **incoherentes** (`sinIVA ≠ conIVA/(1+tarifa)`), cotizaciones y checkout/pedido/factura daban distinto → **mismo fantasma de spec 010**.
+- **Fix (D-063, flag-gated):** bajo `ivaCalcUnificado` ON, los getters por línea delegan a `resolverPrecioLinea` (núcleo único) vía `resolverLineaCanonica`. OFF → getters legacy → producción intacta.
+- **Por qué NO se mapea `descGlobal` a `porceDescuento`:** el modelo de descuentos de cotizaciones (por **línea** + **global**) es más rico que el de pedidos (un solo `porceDescuento`). Se delega **solo la resolución por línea** (la parte con el fantasma) y se conserva el layering de descuentos en el componente. Lock del layering: `contracts/test-cotizaciones-layering.js`.
+- **Cuidado cubierto:** el adaptador respeta el **precio manual de ítems libres** (`permitePrecioManual` del editor incluye `itemEsLibre`), que `resolverPrecioLinea` no cubre (exige `procesoComercial.permitePrecioManual`). Sin esto, las líneas libres con precio manual se romperían bajo el flag.

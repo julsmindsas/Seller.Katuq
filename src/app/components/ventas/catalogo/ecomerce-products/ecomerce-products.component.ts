@@ -18,7 +18,7 @@ import { VentasService } from "../../../../shared/services/ventas/ventas.service
 import Swal from "sweetalert2";
 import { Producto } from "../../../../shared/models/productos/Producto";
 import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
-import { parse, stringify } from "flatted";
+import { parse } from "flatted";
 import {
   FormGroup,
   FormControl,
@@ -290,6 +290,16 @@ export class EcomerceProductsComponent
         this.filtrarProductos();
       });
 
+    // El (click) sobre el host de p-treeSelect no captura la selección real de
+    // nodo (el panel de opciones se renderiza en un overlay fuera del árbol DOM
+    // del componente), así que el filtro nunca se disparaba al elegir una
+    // categoría/subcategoría. Escuchar valueChanges del control sí funciona.
+    this.filterForm.get('category').valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.filterSubject$.next();
+      });
+
     // Pipeline de carga de páginas con switchMap — cancela requests anteriores automáticamente
     this.pageRequest$
       .pipe(
@@ -533,6 +543,23 @@ export class EcomerceProductsComponent
     this.filtrarProductos();
   }
 
+  /**
+   * Recolecta recursivamente el label del nodo de categoría seleccionado y el
+   * de todas sus subcategorías (los productos solo guardan el nombre, no un ID).
+   */
+  private collectCategoryLabels(categoryNode: any): string[] {
+    if (!categoryNode || !categoryNode.label) {
+      return [];
+    }
+    const labels = [categoryNode.label.toLowerCase()];
+    if (Array.isArray(categoryNode.children)) {
+      categoryNode.children.forEach((child: any) => {
+        labels.push(...this.collectCategoryLabels(child));
+      });
+    }
+    return labels;
+  }
+
   filtrarProductos() {
     // Validar que tengamos bodega y ciudad antes de hacer la petición
     if (!this.bodega || !this.bodega.idBodega) {
@@ -556,7 +583,12 @@ export class EcomerceProductsComponent
 
     const filter = this.filterForm.value;
     filter.deliveryCity = { label: this.ciudad, value: this.ciudad };
-    filter.category = stringify(filter.category);
+    // El backend matchea por nombre de categoría (los productos no guardan un ID
+    // de categoría, solo una copia del nombre). Si se eligió una categoría principal,
+    // se incluyen también los nombres de sus subcategorías para que el filtro
+    // muestre productos de toda la rama, no solo los asignados exactamente a ese nodo.
+    filter.categoryLabels = this.collectCategoryLabels(filter.category);
+    delete filter.category;
     filter.bodega = this.bodega;
     filter.bodegaId = this.bodega.idBodega || this.bodega;
     filter.isChannelManual = true;

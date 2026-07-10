@@ -31,226 +31,370 @@
             </div>
         </div>
 
-        <div class="feature-products">
-            <div class="row">
-                <div class="col-md-6 products-total">
-                    <div class="square-product-setting d-inline-block" (click)="toggleListView(false)">
-                        <a class="icon-grid grid-layout-view" href="javascript:void(0);">
-                            <i data-feather="grid"></i>
-                        </a>
-                    </div>
-                    <div class="square-product-setting d-inline-block" (click)="toggleListView(true)">
-                        <a class="icon-grid m-0 list-layout-view" href="javascript:void(0);">
-                            <i data-feather="list"></i>
-                        </a>
-                    </div>
-                    <span class="d-none-productlist filter-toggle">
-                        {{ 'Filtros' | translate }}
-                        <span class="ml-2">
-                            <i class="toggle-data" data-feather="chevron-down"></i>
-                        </span>
-                    </span>
-                    <div class="grid-options-clean">
-                        <button class="grid-btn" [class.active]="col === '6'" (click)="gridColumn(6)" title="2 columnas">
-                            <span class="grid-icon"><span></span><span></span></span>
-                        </button>
-                        <button class="grid-btn" [class.active]="col === '4'" (click)="gridColumn(4)" title="3 columnas">
-                            <span class="grid-icon"><span></span><span></span><span></span></span>
-                        </button>
-                        <button class="grid-btn" [class.active]="col === '3'" (click)="gridColumn(3)" title="4 columnas">
-                            <span class="grid-icon"><span></span><span></span><span></span><span></span></span>
-                        </button>
-                        <button class="grid-btn" [class.active]="col === '2'" (click)="gridColumn(2)" title="6 columnas">
-                            <span class="grid-icon"><span></span><span></span><span></span><span></span><span></span><span></span></span>
-                        </button>
-                    </div>
-                    <div class="form-check form-switch d-inline-block ms-3 align-middle"
-                         title="Ocultar productos sin unidades disponibles">
-                        <input class="form-check-input" type="checkbox" id="soloConStockSwitch"
-                               [checked]="soloConStock" (change)="toggleSoloConStock()">
-                        <label class="form-check-label" for="soloConStockSwitch">{{ 'Solo con stock' | translate }}</label>
-                    </div>
-                </div>
+        <!-- ============================================================
+             LAYOUT DE CATÁLOGO — dos columnas (Bootstrap grid):
+             · Columna izquierda: panel de filtros (siempre visible en
+               desktop, drawer en mobile vía CSS global de .product-sidebar)
+             · Columna derecha: toolbar + grid de productos
+             ============================================================ -->
+        <div class="row catalog-row">
 
-                <div class="col-md-6 text-right">
-                    <!-- Indicador de carga -->
-                    <span *ngIf="cargandoProductos" class="text-muted me-3">
-                        <i class="fa fa-spinner fa-spin"></i> Cargando...
-                    </span>
-                    <!-- Contador de productos -->
-                    <span class="f-w-600 m-r-5" *ngIf="!cargandoProductos && (totalProductos > 0 || productosPaginados?.length > 0)">
-                        {{ 'Mostrando productos' | translate }}
-                        {{ productosPaginados?.length > 0 ? (paginaActual - 1) * productosPorPagina + 1 : 0 }} -
-                        {{ Math.min(paginaActual * productosPorPagina, usarPaginacionServidor ? totalProductos : productosCompletos?.length || 0) }}
-                        {{ 'de' | translate }} {{ usarPaginacionServidor ? totalProductos : productosCompletos?.length || 0 }}
-                        {{ 'Resultados' | translate }}
-                    </span>
-                    <!-- Hint: solo productos con stock para esta bodega -->
-                    <i *ngIf="!cargandoProductos && bodega?.idBodega && (totalProductos > 0 || productosPaginados?.length > 0)"
-                       class="fa fa-info-circle text-info ms-1"
-                       ngbTooltip="Solo se muestran productos con stock disponible en la bodega seleccionada. Si esperás ver más productos del catálogo, cambiá de bodega o revisá el módulo de inventario."
-                       placement="bottom"></i>
-                    <!-- Badge de modo server-side -->
-                    <span *ngIf="usarPaginacionServidor" class="badge bg-success ms-2" title="Paginación optimizada desde el servidor">
-                        <i class="fa fa-server"></i>
-                    </span>
-                    <div class="select2-drpdwn-product select-options d-inline-block">
-                        <select class="form-control btn-square" name="select">
-                            <option value="opt1">{{ 'Destacado' | translate }}</option>
-                            <option value="opt2">{{ 'Costo menor' | translate }}</option>
-                            <option value="opt3">{{ 'Costo mayor' | translate }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <form [formGroup]="filterForm">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <div class="product-sidebar">
-                            <div class="filter-section">
-                                <div class="card">
-                                    <div class="card-header" (click)="sidebarToggle()">
-                                        <h6 class="mb-0 f-w-600">{{ 'Filtros' | translate }}<span class="pull-right"><i
-                                                    class="fa fa-chevron-down toggle-data"></i></span></h6>
-                                    </div>
-                                    <div class="left-filter">
-                                        <div class="card-body filter-cards-view animate-chk">
+            <!-- ===================== SIDEBAR DE FILTROS ===================== -->
+            <div class="col-12 col-md-4 col-lg-3 catalog-sidebar-col">
+                <form [formGroup]="filterForm">
+                    <div class="product-sidebar">
+                        <div class="filter-section">
+                            <div class="card">
+                                <!-- Header (visible en desktop; oculto en mobile por CSS global) -->
+                                <div class="card-header" (click)="sidebarToggle()">
+                                    <h6 class="mb-0 f-w-600">
+                                        <i class="fa fa-sliders-h me-2"></i>{{ 'Filtros' | translate }}
+                                        <span class="pull-right"><i class="fa fa-chevron-down toggle-data"></i></span>
+                                    </h6>
+                                </div>
 
-                                            <div class="product-filter">
-                                                <div class="product-filter">
-                                                    <div class="checkbox-animated mt-0">
-                                                        <h6 class="f-w-600">{{ 'Géneros' | translate }}</h6>
-                                                        <label class="d-block"
-                                                            *ngFor="let genero of generos; let i = index; trackBy: trackByGenero">
-                                                            <input class="checkbox_animated" type="checkbox"
-                                                                [id]="'genero-' + genero.id" [value]="genero.id"
-                                                                (change)="onGenreChange($event, i)">
-                                                            <label class="form-check-label"
-                                                                [for]="'genero-' + genero.id">
-                                                                {{ genero.name }}
-                                                            </label>
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                <div class="product-filter">
-                                                    <div class="checkbox-animated mt-0">
-                                                        <h6 class="f-w-600">{{ 'Ocasiones' | translate }}</h6>
-                                                        <label class="d-block"
-                                                            *ngFor="let ocasion of ocasiones; let i = index; trackBy: trackByOcasion">
-                                                            <input class="checkbox_animated" type="checkbox"
-                                                                [id]="'ocasion-' + ocasion.id" [value]="ocasion.id"
-                                                                (change)="onOccasionChange($event, i)">
-                                                            <label class="form-check-label"
-                                                                [for]="'ocasion-' + ocasion.id">
-                                                                {{ ocasion.name }}
-                                                            </label>
-                                                        </label>
-                                                    </div>
-                                                </div>
+                                <div class="left-filter">
+                                    <div class="card-body filter-cards-view">
 
-                                                <div class="product-filter">
-                                                    <h6 class="f-w-600">{{ 'Tiempos de entrega' | translate }}</h6>
-                                                    <div class="checkbox-animated mt-0">
-                                                        <label class="d-block"
-                                                            *ngFor="let tiempo of tiempoEntrega; let i = index; trackBy: trackByTiempo">
-                                                            <input class="checkbox_animated" type="checkbox"
-                                                                [id]="'tiempo-' + tiempo.nombreInterno"
-                                                                [value]="tiempo.nombreInterno"
-                                                                (change)="onDeliveryTimeChange($event, i)">
-                                                            <label class="form-check-label"
-                                                                [for]="'tiempo-' + tiempo.nombreInterno">
-                                                                {{ tiempo.nombreInterno }}
-                                                            </label>
-                                                        </label>
-                                                    </div>
-                                                </div>
+                                        <p-accordion [multiple]="true" expandIcon="pi pi-chevron-down"
+                                            collapseIcon="pi pi-chevron-up" styleClass="filter-accordion">
 
-
-                                            </div>
-
-                                            <div class="product-filter">
-                                                <h6 class="f-w-600">{{ 'Exposición' | translate }}</h6>
-                                                <div class="checkbox-animated mt-0">
-                                                    <label class="d-block" for="chk-ani">
-                                                        <input class="form-control" class="checkbox_animated"
-                                                            id="chk-ani" type="checkbox" formControlName="isRecommended"
-                                                            (click)="filtrarProductos()">
-                                                        {{ 'Recomendado' | translate }}
-                                                    </label>
-                                                    <label class="d-block" for="chk-ani1">
-                                                        <input class="form-control" class="checkbox_animated"
-                                                            id="chk-ani1" type="checkbox" formControlName="isNew"
-                                                            (click)="filtrarProductos()">
-                                                        {{ 'Nuevo' | translate }}
-                                                    </label>
-                                                    <label class="d-block" for="chk-ani2">
-                                                        <input class="form-control" class="checkbox_animated"
-                                                            id="chk-ani2" type="checkbox" formControlName="isBestSeller"
-                                                            (click)="filtrarProductos()">
-                                                        {{ 'Más vendido' | translate }}
-                                                    </label>
-                                                    <label class="d-block" for="chk-ani3">
-                                                        <input class="form-control" class="checkbox_animated"
-                                                            id="chk-ani3" type="checkbox" formControlName="isOnSale"
-                                                            (click)="filtrarProductos()">
-                                                        {{ 'En oferta' | translate }}
-                                                    </label>
-                                                    <label class="d-block" for="chk-ani4">
-                                                        <input class="form-control" class="checkbox_animated"
-                                                            id="chk-ani4" type="checkbox"
-                                                            formControlName="hasFreeShipping"
-                                                            (click)="filtrarProductos()">
-                                                        {{ 'Con envío gratis' | translate }}
+                                            <!-- Géneros -->
+                                            <p-accordionTab [header]="'Géneros' | translate" [selected]="true"
+                                                *ngIf="generos?.length">
+                                                <div class="filter-options">
+                                                    <label class="filter-check"
+                                                        *ngFor="let genero of generos; let i = index; trackBy: trackByGenero">
+                                                        <input class="checkbox_animated" type="checkbox"
+                                                            [id]="'genero-' + genero.id" [value]="genero.id"
+                                                            (change)="onGenreChange($event, i)">
+                                                        <span>{{ genero.name }}</span>
                                                     </label>
                                                 </div>
+                                            </p-accordionTab>
 
-                                            </div>
+                                            <!-- Ocasiones (lista larga: colapsada por defecto) -->
+                                            <p-accordionTab [header]="'Ocasiones' | translate" [selected]="false"
+                                                *ngIf="ocasiones?.length">
+                                                <div class="filter-options filter-options--scroll">
+                                                    <label class="filter-check"
+                                                        *ngFor="let ocasion of ocasiones; let i = index; trackBy: trackByOcasion">
+                                                        <input class="checkbox_animated" type="checkbox"
+                                                            [id]="'ocasion-' + ocasion.id" [value]="ocasion.id"
+                                                            (change)="onOccasionChange($event, i)">
+                                                        <span>{{ ocasion.name }}</span>
+                                                    </label>
+                                                </div>
+                                            </p-accordionTab>
 
+                                            <!-- Tiempos de entrega -->
+                                            <p-accordionTab [header]="'Tiempos de entrega' | translate" [selected]="false"
+                                                *ngIf="tiempoEntrega?.length">
+                                                <div class="filter-options">
+                                                    <label class="filter-check"
+                                                        *ngFor="let tiempo of tiempoEntrega; let i = index; trackBy: trackByTiempo">
+                                                        <input class="checkbox_animated" type="checkbox"
+                                                            [id]="'tiempo-' + tiempo.nombreInterno"
+                                                            [value]="tiempo.nombreInterno"
+                                                            (change)="onDeliveryTimeChange($event, i)">
+                                                        <span>{{ tiempo.nombreInterno }}</span>
+                                                    </label>
+                                                </div>
+                                            </p-accordionTab>
 
-                                            <div class="product-filter slider-product">
-                                                <div class="product-filter slider-product">
-                                                    <h6 class="f-w-600">{{ 'Precio' | translate }}:</h6>
-                                                    <h6>{{filterForm?.get('priceRange')?.value[0] |
+                                            <!-- Exposición -->
+                                            <p-accordionTab [header]="'Exposición' | translate" [selected]="true">
+                                                <div class="filter-options">
+                                                    <label class="filter-check">
+                                                        <input class="checkbox_animated" type="checkbox"
+                                                            formControlName="isRecommended" (click)="filtrarProductos()">
+                                                        <span>{{ 'Recomendado' | translate }}</span>
+                                                    </label>
+                                                    <label class="filter-check">
+                                                        <input class="checkbox_animated" type="checkbox"
+                                                            formControlName="isNew" (click)="filtrarProductos()">
+                                                        <span>{{ 'Nuevo' | translate }}</span>
+                                                    </label>
+                                                    <label class="filter-check">
+                                                        <input class="checkbox_animated" type="checkbox"
+                                                            formControlName="isBestSeller" (click)="filtrarProductos()">
+                                                        <span>{{ 'Más vendido' | translate }}</span>
+                                                    </label>
+                                                    <label class="filter-check">
+                                                        <input class="checkbox_animated" type="checkbox"
+                                                            formControlName="isOnSale" (click)="filtrarProductos()">
+                                                        <span>{{ 'En oferta' | translate }}</span>
+                                                    </label>
+                                                    <label class="filter-check">
+                                                        <input class="checkbox_animated" type="checkbox"
+                                                            formControlName="hasFreeShipping" (click)="filtrarProductos()">
+                                                        <span>{{ 'Con envío gratis' | translate }}</span>
+                                                    </label>
+                                                </div>
+                                            </p-accordionTab>
+
+                                            <!-- Precio -->
+                                            <p-accordionTab [header]="'Precio' | translate" [selected]="true">
+                                                <div class="filter-options">
+                                                    <div class="price-range-value">
+                                                        {{filterForm?.get('priceRange')?.value[0] |
                                                         currency:'USD':'symbol':'1.0-0'}}
-                                                        -
+                                                        &ndash;
                                                         {{filterForm?.get('priceRange')?.value[1] |
-                                                        currency:'USD':'symbol':'1.0-0'}}</h6>
+                                                        currency:'USD':'symbol':'1.0-0'}}
+                                                    </div>
                                                     <p-slider formControlName="priceRange" [min]="minPrice"
                                                         [max]="maxPrice" [range]="true"
                                                         (onSlideEnd)="filtrarProductos()"></p-slider>
                                                 </div>
+                                            </p-accordionTab>
 
-                                                <div class="product-filter">
-                                                    <h6 class="f-w-600">{{ 'Categorías' | translate }}</h6>
-                                                    <p-treeSelect style="width: 50%;" [options]="categorias"
-                                                        formControlName="category"
-                                                        placeholder="{{ 'Seleccione una categoría' | translate }}"
-                                                        (click)="filtrarProductos()"></p-treeSelect>
+                                            <!-- Categorías -->
+                                            <p-accordionTab [header]="'Categorías' | translate" [selected]="true">
+                                                <div class="filter-options">
+                                                    <p-treeSelect class="w-100" [options]="categorias"
+                                                        formControlName="category" [appendTo]="'body'"
+                                                        placeholder="{{ 'Seleccione una categoría' | translate }}"></p-treeSelect>
+                                                    <p class="filter-empty-hint"
+                                                        *ngIf="!categorias || categorias.length === 0">
+                                                        {{ 'No hay categorías configuradas para este catálogo' | translate }}
+                                                    </p>
                                                 </div>
-                                                <!-- <div class="color-selector">
-                                                    <ul>
-                                                        <li class="white"></li>
-                                                        <li class="gray"></li>
-                                                        <li class="black"></li>
-                                                        <li class="orange"></li>
-                                                        <li class="green"></li>
-                                                        <li class="pink"></li>
-                                                        <li class="yellow"></li>
-                                                        <li class="blue"></li>
-                                                        <li class="red"></li>
-                                                    </ul>
-                                                </div> -->
-                                            </div>
+                                            </p-accordionTab>
 
-                                            <div class="product-filter text-center"><img
-                                                    class="img-fluid banner-product" alt="" data-original-title=""
-                                                    title="">
+                                        </p-accordion>
+
+                                        <button class="btn btn-outline-primary btn-block btn-clear-filters"
+                                            type="button" (click)="limpiarFiltros()">
+                                            <i class="fa fa-eraser me-2"></i>{{ 'Limpiar filtro' | translate }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ===================== CONTENIDO / GRID ===================== -->
+            <div class="col-12 col-md-8 col-lg-9 catalog-content-col">
+
+                <div class="feature-products">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 products-total">
+                            <div class="square-product-setting d-inline-block" (click)="toggleListView(false)">
+                                <a class="icon-grid grid-layout-view" href="javascript:void(0);">
+                                    <i data-feather="grid"></i>
+                                </a>
+                            </div>
+                            <div class="square-product-setting d-inline-block" (click)="toggleListView(true)">
+                                <a class="icon-grid m-0 list-layout-view" href="javascript:void(0);">
+                                    <i data-feather="list"></i>
+                                </a>
+                            </div>
+                            <span class="d-none-productlist filter-toggle" (click)="sidebarToggle()">
+                                {{ 'Filtros' | translate }}
+                                <span class="ml-2">
+                                    <i class="toggle-data" data-feather="chevron-down"></i>
+                                </span>
+                            </span>
+                            <div class="grid-options-clean">
+                                <button class="grid-btn" [class.active]="col === '6'" (click)="gridColumn(6)" title="2 columnas">
+                                    <span class="grid-icon"><span></span><span></span></span>
+                                </button>
+                                <button class="grid-btn" [class.active]="col === '4'" (click)="gridColumn(4)" title="3 columnas">
+                                    <span class="grid-icon"><span></span><span></span><span></span></span>
+                                </button>
+                                <button class="grid-btn" [class.active]="col === '3'" (click)="gridColumn(3)" title="4 columnas">
+                                    <span class="grid-icon"><span></span><span></span><span></span><span></span></span>
+                                </button>
+                                <button class="grid-btn" [class.active]="col === '2'" (click)="gridColumn(2)" title="6 columnas">
+                                    <span class="grid-icon"><span></span><span></span><span></span><span></span><span></span><span></span></span>
+                                </button>
+                            </div>
+                            <div class="form-check form-switch d-inline-block ms-3 align-middle"
+                                 title="Ocultar productos sin unidades disponibles">
+                                <input class="form-check-input" type="checkbox" id="soloConStockSwitch"
+                                       [checked]="soloConStock" (change)="toggleSoloConStock()">
+                                <label class="form-check-label" for="soloConStockSwitch">{{ 'Solo con stock' | translate }}</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 text-right">
+                            <!-- Indicador de carga -->
+                            <span *ngIf="cargandoProductos" class="text-muted me-3">
+                                <i class="fa fa-spinner fa-spin"></i> Cargando...
+                            </span>
+                            <!-- Contador de productos -->
+                            <span class="f-w-600 m-r-5" *ngIf="!cargandoProductos && (totalProductos > 0 || productosPaginados?.length > 0)">
+                                {{ 'Mostrando productos' | translate }}
+                                {{ productosPaginados?.length > 0 ? (paginaActual - 1) * productosPorPagina + 1 : 0 }} -
+                                {{ Math.min(paginaActual * productosPorPagina, usarPaginacionServidor ? totalProductos : productosCompletos?.length || 0) }}
+                                {{ 'de' | translate }} {{ usarPaginacionServidor ? totalProductos : productosCompletos?.length || 0 }}
+                                {{ 'Resultados' | translate }}
+                            </span>
+                            <!-- Hint: solo productos con stock para esta bodega -->
+                            <i *ngIf="!cargandoProductos && bodega?.idBodega && (totalProductos > 0 || productosPaginados?.length > 0)"
+                               class="fa fa-info-circle text-info ms-1"
+                               ngbTooltip="Solo se muestran productos con stock disponible en la bodega seleccionada. Si esperás ver más productos del catálogo, cambiá de bodega o revisá el módulo de inventario."
+                               placement="bottom"></i>
+                            <!-- Badge de modo server-side -->
+                            <span *ngIf="usarPaginacionServidor" class="badge bg-success ms-2" title="Paginación optimizada desde el servidor">
+                                <i class="fa fa-server"></i>
+                            </span>
+                            <div class="select2-drpdwn-product select-options d-inline-block">
+                                <select class="form-control btn-square" name="select">
+                                    <option value="opt1">{{ 'Destacado' | translate }}</option>
+                                    <option value="opt2">{{ 'Costo menor' | translate }}</option>
+                                    <option value="opt3">{{ 'Costo mayor' | translate }}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensajes informativos cuando faltan datos -->
+                <div *ngIf="!bodega || !bodega.idBodega" class="alert alert-warning mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-warehouse fa-2x me-3 text-warning"></i>
+                        <div>
+                            <h6 class="mb-1">{{ 'Bodega requerida' | translate }}</h6>
+                            <p class="mb-0">{{ 'Por favor seleccione una bodega para ver los productos disponibles' | translate }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div *ngIf="bodega && bodega.idBodega && (!ciudad || ciudad === 'seleccione' || ciudad.trim() === '')" class="alert alert-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-map-marker-alt fa-2x me-3 text-info"></i>
+                        <div>
+                            <h6 class="mb-1">{{ 'Ciudad de entrega requerida' | translate }}</h6>
+                            <p class="mb-0">{{ 'Por favor seleccione una ciudad de entrega para filtrar los productos disponibles' | translate }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indicador de carga principal -->
+                <div *ngIf="cargandoProductos && productosPaginados?.length === 0" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando productos...</p>
+                </div>
+
+                <!-- Mensaje de error -->
+                <div *ngIf="errorCarga && !cargandoProductos" class="alert alert-danger mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-exclamation-triangle fa-2x me-3"></i>
+                        <div>
+                            <h6 class="mb-1">Error al cargar productos</h6>
+                            <p class="mb-0">{{ errorCarga }}</p>
+                            <button class="btn btn-sm btn-outline-danger mt-2" (click)="filtrarProductos()">
+                                <i class="fa fa-refresh"></i> Reintentar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensaje cuando no hay productos -->
+                <div *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && !cargandoProductos && productosPaginados?.length === 0 && !errorCarga" class="alert alert-secondary mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-box-open fa-2x me-3 text-secondary"></i>
+                        <div>
+                            <h6 class="mb-1">{{ 'No hay productos disponibles' | translate }}</h6>
+                            <p class="mb-0">{{ 'No se encontraron productos para la bodega y ciudad seleccionadas' | translate }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="product-wrapper-grid" [class.list-view]="listView"
+                     [class.loading-overlay]="cargandoProductos && productosPaginados?.length > 0"
+                     *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosPaginados?.length > 0">
+                    <div class="row">
+                        <div [class]="'col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
+                            *ngFor="let producto of productosPaginados; trackBy: trackByProducto">
+                            <div class="card product-card-modern" [class.product-card-inactive]="producto.exposicion?.activar === false">
+                                <div class="product-box-modern">
+                                    <div class="product-img-wrapper">
+                                        <img *ngIf="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]"
+                                            class="img-fluid product-image-optimized"
+                                            [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]"
+                                            [alt]="producto.crearProducto?.titulo"
+                                            (error)="producto._imgError = true"
+                                            [hidden]="producto._imgError"
+                                            appImageOptimizer [quality]="0.3" [width]="300"
+                                            [height]="300" [lazy]="true" loading="lazy" priority>
+                                        <div *ngIf="!producto.crearProducto?.imagenesPrincipales?.[0]?.urls && !producto.crearProducto?.imagenesProductos?.[0] || producto._imgError"
+                                             class="d-flex align-items-center justify-content-center bg-light"
+                                             style="height: 200px;">
+                                            <i class="pi pi-box text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                                        </div>
+
+                                        <!-- Badge producto inactivo -->
+                                        <span *ngIf="producto.exposicion?.activar === false" class="inactive-badge">
+                                            INACTIVO
+                                        </span>
+
+                                        <!-- Badge de disponibilidad discreto -->
+                                        <span class="stock-badge-simple"
+                                              [ngClass]="{
+                                                'badge-success': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 10,
+                                                'badge-warning': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 0 && producto.disponibilidad?.cantidadDisponible <= 10,
+                                                'badge-danger': producto.disponibilidad?.inventariable && (!producto.disponibilidad?.cantidadDisponible || producto.disponibilidad?.cantidadDisponible <= 0),
+                                                'badge-info': !producto.disponibilidad?.inventariable
+                                              }">
+                                            {{ producto.disponibilidad?.inventariable ?
+                                               (producto.disponibilidad?.cantidadDisponible || 0) + ' unid.' :
+                                               'Bajo pedido' }}
+                                        </span>
+
+                                        <!-- Overlay de acciones MODERNIZADO -->
+                                        <div class="product-actions-overlay" *ngIf="producto.exposicion?.activar !== false">
+                                            <!-- Botón Quick Add: Siempre visible para agregar rápido -->
+                                            <button class="btn-action btn-action-quick"
+                                                    type="button"
+                                                    (click)="agregarRapido(producto)"
+                                                    title="Agregar rápido al carrito">
+                                                <i class="fa fa-bolt"></i>
+                                                <span class="btn-action-label">Agregar</span>
+                                            </button>
+                                            <!-- Botón Configurar: Siempre visible para abrir modal -->
+                                            <button class="btn-action btn-action-config"
+                                                    type="button"
+                                                    (click)="configurarProducto(producto)"
+                                                    title="Configurar producto">
+                                                <i class="fa fa-cog"></i>
+                                                <span class="btn-action-label">Configurar</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- DETALLES DEL PRODUCTO REDISEÑADOS -->
+                                    <div class="product-details-modern">
+                                        <!-- Header con referencia y configuración -->
+                                        <div class="product-meta">
+                                            <span class="product-reference">REF: {{producto.identificacion.referencia}}</span>
+                                            <span class="config-indicator"
+                                                  *ngIf="producto.procesoComercial?.configProcesoComercialActivo"
+                                                  title="Requiere configuración">
+                                                <i class="fa fa-cog"></i>
+                                            </span>
+                                        </div>
+
+                                        <!-- Título optimizado -->
+                                        <h4 class="product-title-modern"
+                                            title="{{producto.crearProducto.titulo}}">
+                                            {{producto.crearProducto.titulo}}
+                                        </h4>
+
+                                        <!-- Precio con mejor jerarquía (considera categoría del cliente) -->
+                                        <div class="product-pricing-modern">
+                                            <div class="price-main">
+                                                {{getPrecioParaMostrar(producto) | currency:'USD':'symbol':'1.0-0'}}
                                             </div>
-                                            <div class="product-filter text-center"><img
-                                                    class="img-fluid banner-product" alt="" data-original-title=""
-                                                    title="">
-                                                <button class="btn btn-primary btn-block" (click)="limpiarFiltros()">{{
-                                                    'Limpiar filtro' | translate }}</button>
+                                            <!-- Mostrar precio original tachado si hay descuento por categoría -->
+                                            <div class="price-discount" *ngIf="tienePrecioCategoria(producto)">
+                                                <del>{{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}</del>
                                             </div>
                                         </div>
                                     </div>
@@ -258,208 +402,58 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </form>
-        </div>
 
-        <!-- Mensajes informativos cuando faltan datos -->
-        <div *ngIf="!bodega || !bodega.idBodega" class="alert alert-warning mb-4">
-            <div class="d-flex align-items-center">
-                <i class="fa fa-warehouse fa-2x me-3 text-warning"></i>
-                <div>
-                    <h6 class="mb-1">{{ 'Bodega requerida' | translate }}</h6>
-                    <p class="mb-0">{{ 'Por favor seleccione una bodega para ver los productos disponibles' | translate }}</p>
-                </div>
-            </div>
-        </div>
+                    <div class="pagination-wrapper mt-4">
+                        <div class="row">
+                            <div class="col-12">
+                                <nav aria-label="Page navigation" class="d-flex justify-content-end">
+                                    <ul class="pagination pagination-primary">
+                                        <li class="page-item" [class.disabled]="paginaActual === 1">
+                                            <a class="page-link" href="javascript:void(0);"
+                                               (click)="cambiarPagina(1)" aria-label="First">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item" [class.disabled]="paginaActual === 1">
+                                            <a class="page-link" href="javascript:void(0);"
+                                               (click)="paginaAnterior()" aria-label="Previous">
+                                                <span aria-hidden="true">&lsaquo;</span>
+                                            </a>
+                                        </li>
 
-        <div *ngIf="bodega && bodega.idBodega && (!ciudad || ciudad === 'seleccione' || ciudad.trim() === '')" class="alert alert-info mb-4">
-            <div class="d-flex align-items-center">
-                <i class="fa fa-map-marker-alt fa-2x me-3 text-info"></i>
-                <div>
-                    <h6 class="mb-1">{{ 'Ciudad de entrega requerida' | translate }}</h6>
-                    <p class="mb-0">{{ 'Por favor seleccione una ciudad de entrega para filtrar los productos disponibles' | translate }}</p>
-                </div>
-            </div>
-        </div>
+                                        <!-- Páginas numéricas -->
+                                        <ng-container *ngFor="let page of [].constructor(totalPaginas); let i = index; trackBy: trackByIndex">
+                                            <li class="page-item" [class.active]="paginaActual === i+1"
+                                                *ngIf="(i+1 >= paginaActual - 1 && i+1 <= paginaActual + 1) ||
+                                                       i+1 === 1 || i+1 === totalPaginas">
+                                                <a class="page-link" href="javascript:void(0);"
+                                                   (click)="cambiarPagina(i+1)">{{i+1}}</a>
+                                            </li>
+                                            <li class="page-item disabled" *ngIf="(i+1 === paginaActual - 2 && i+1 > 1) ||
+                                                                                   (i+1 === paginaActual + 2 && i+1 < totalPaginas)">
+                                                <a class="page-link" href="javascript:void(0);">...</a>
+                                            </li>
+                                        </ng-container>
 
-        <!-- Indicador de carga principal -->
-        <div *ngIf="cargandoProductos && productosPaginados?.length === 0" class="text-center py-5">
-            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                <span class="visually-hidden">Cargando...</span>
-            </div>
-            <p class="mt-3 text-muted">Cargando productos...</p>
-        </div>
-
-        <!-- Mensaje de error -->
-        <div *ngIf="errorCarga && !cargandoProductos" class="alert alert-danger mb-4">
-            <div class="d-flex align-items-center">
-                <i class="fa fa-exclamation-triangle fa-2x me-3"></i>
-                <div>
-                    <h6 class="mb-1">Error al cargar productos</h6>
-                    <p class="mb-0">{{ errorCarga }}</p>
-                    <button class="btn btn-sm btn-outline-danger mt-2" (click)="filtrarProductos()">
-                        <i class="fa fa-refresh"></i> Reintentar
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mensaje cuando no hay productos -->
-        <div *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && !cargandoProductos && productosPaginados?.length === 0 && !errorCarga" class="alert alert-secondary mb-4">
-            <div class="d-flex align-items-center">
-                <i class="fa fa-box-open fa-2x me-3 text-secondary"></i>
-                <div>
-                    <h6 class="mb-1">{{ 'No hay productos disponibles' | translate }}</h6>
-                    <p class="mb-0">{{ 'No se encontraron productos para la bodega y ciudad seleccionadas' | translate }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="product-wrapper-grid" [class.list-view]="listView"
-             [class.loading-overlay]="cargandoProductos && productosPaginados?.length > 0"
-             *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosPaginados?.length > 0">
-            <div class="row">
-                <div [class]="'col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
-                    *ngFor="let producto of productosPaginados; trackBy: trackByProducto">
-                    <div class="card product-card-modern" [class.product-card-inactive]="producto.exposicion?.activar === false">
-                        <div class="product-box-modern">
-                            <div class="product-img-wrapper">
-                                <img *ngIf="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]"
-                                    class="img-fluid product-image-optimized"
-                                    [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]"
-                                    [alt]="producto.crearProducto?.titulo"
-                                    (error)="producto._imgError = true"
-                                    [hidden]="producto._imgError"
-                                    appImageOptimizer [quality]="0.3" [width]="300"
-                                    [height]="300" [lazy]="true" loading="lazy" priority>
-                                <div *ngIf="!producto.crearProducto?.imagenesPrincipales?.[0]?.urls && !producto.crearProducto?.imagenesProductos?.[0] || producto._imgError"
-                                     class="d-flex align-items-center justify-content-center bg-light"
-                                     style="height: 200px;">
-                                    <i class="pi pi-box text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
-                                </div>
-
-                                <!-- Badge producto inactivo -->
-                                <span *ngIf="producto.exposicion?.activar === false" class="inactive-badge">
-                                    INACTIVO
-                                </span>
-
-                                <!-- Badge de disponibilidad discreto -->
-                                <span class="stock-badge-simple"
-                                      [ngClass]="{
-                                        'badge-success': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 10,
-                                        'badge-warning': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 0 && producto.disponibilidad?.cantidadDisponible <= 10,
-                                        'badge-danger': producto.disponibilidad?.inventariable && (!producto.disponibilidad?.cantidadDisponible || producto.disponibilidad?.cantidadDisponible <= 0),
-                                        'badge-info': !producto.disponibilidad?.inventariable
-                                      }">
-                                    {{ producto.disponibilidad?.inventariable ?
-                                       (producto.disponibilidad?.cantidadDisponible || 0) + ' unid.' :
-                                       'Bajo pedido' }}
-                                </span>
-
-                                <!-- Overlay de acciones MODERNIZADO -->
-                                <div class="product-actions-overlay" *ngIf="producto.exposicion?.activar !== false">
-                                    <!-- Botón Quick Add: Siempre visible para agregar rápido -->
-                                    <button class="btn-action btn-action-quick"
-                                            type="button"
-                                            (click)="agregarRapido(producto)"
-                                            title="Agregar rápido al carrito">
-                                        <i class="fa fa-bolt"></i>
-                                        <span class="btn-action-label">Agregar</span>
-                                    </button>
-                                    <!-- Botón Configurar: Siempre visible para abrir modal -->
-                                    <button class="btn-action btn-action-config"
-                                            type="button"
-                                            (click)="configurarProducto(producto)"
-                                            title="Configurar producto">
-                                        <i class="fa fa-cog"></i>
-                                        <span class="btn-action-label">Configurar</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- DETALLES DEL PRODUCTO REDISEÑADOS -->
-                            <div class="product-details-modern">
-                                <!-- Header con referencia y configuración -->
-                                <div class="product-meta">
-                                    <span class="product-reference">REF: {{producto.identificacion.referencia}}</span>
-                                    <span class="config-indicator"
-                                          *ngIf="producto.procesoComercial?.configProcesoComercialActivo"
-                                          title="Requiere configuración">
-                                        <i class="fa fa-cog"></i>
-                                    </span>
-                                </div>
-
-                                <!-- Título optimizado -->
-                                <h4 class="product-title-modern"
-                                    title="{{producto.crearProducto.titulo}}">
-                                    {{producto.crearProducto.titulo}}
-                                </h4>
-
-                                <!-- Precio con mejor jerarquía (considera categoría del cliente) -->
-                                <div class="product-pricing-modern">
-                                    <div class="price-main">
-                                        {{getPrecioParaMostrar(producto) | currency:'USD':'symbol':'1.0-0'}}
-                                    </div>
-                                    <!-- Mostrar precio original tachado si hay descuento por categoría -->
-                                    <div class="price-discount" *ngIf="tienePrecioCategoria(producto)">
-                                        <del>{{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}</del>
-                                    </div>
-                                </div>
+                                        <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                                            <a class="page-link" href="javascript:void(0);"
+                                               (click)="paginaSiguiente()" aria-label="Next">
+                                                <span aria-hidden="true">&rsaquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                                            <a class="page-link" href="javascript:void(0);"
+                                               (click)="cambiarPagina(totalPaginas)" aria-label="Last">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="pagination-wrapper mt-4">
-                <div class="row">
-                    <div class="col-12">
-                        <nav aria-label="Page navigation" class="d-flex justify-content-end">
-                            <ul class="pagination pagination-primary">
-                                <li class="page-item" [class.disabled]="paginaActual === 1">
-                                    <a class="page-link" href="javascript:void(0);"
-                                       (click)="cambiarPagina(1)" aria-label="First">
-                                        <span aria-hidden="true">«</span>
-                                    </a>
-                                </li>
-                                <li class="page-item" [class.disabled]="paginaActual === 1">
-                                    <a class="page-link" href="javascript:void(0);"
-                                       (click)="paginaAnterior()" aria-label="Previous">
-                                        <span aria-hidden="true">‹</span>
-                                    </a>
-                                </li>
-
-                                <!-- Páginas numéricas -->
-                                <ng-container *ngFor="let page of [].constructor(totalPaginas); let i = index; trackBy: trackByIndex">
-                                    <li class="page-item" [class.active]="paginaActual === i+1"
-                                        *ngIf="(i+1 >= paginaActual - 1 && i+1 <= paginaActual + 1) ||
-                                               i+1 === 1 || i+1 === totalPaginas">
-                                        <a class="page-link" href="javascript:void(0);"
-                                           (click)="cambiarPagina(i+1)">{{i+1}}</a>
-                                    </li>
-                                    <li class="page-item disabled" *ngIf="(i+1 === paginaActual - 2 && i+1 > 1) ||
-                                                                           (i+1 === paginaActual + 2 && i+1 < totalPaginas)">
-                                        <a class="page-link" href="javascript:void(0);">...</a>
-                                    </li>
-                                </ng-container>
-
-                                <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
-                                    <a class="page-link" href="javascript:void(0);"
-                                       (click)="paginaSiguiente()" aria-label="Next">
-                                        <span aria-hidden="true">›</span>
-                                    </a>
-                                </li>
-                                <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
-                                    <a class="page-link" href="javascript:void(0);"
-                                       (click)="cambiarPagina(totalPaginas)" aria-label="Last">
-                                        <span aria-hidden="true">»</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
             </div>
         </div>
 

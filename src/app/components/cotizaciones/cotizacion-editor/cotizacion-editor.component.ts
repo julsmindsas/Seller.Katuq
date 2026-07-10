@@ -24,6 +24,8 @@ import { Carrito, Cliente } from "../../ventas/modelo/pedido";
 import { Producto } from "../../../shared/models/productos/Producto";
 import { ConfProductToCartComponent } from "../../ventas/catalogo/conf-product-to-cart/conf-product-to-cart.component";
 import { CrearClienteModalComponent } from "../../ventas/clientes/crear-cliente-modal/crear-cliente-modal.component";
+import { resolverPrecioLinea } from "../../../shared/services/ventas/iva-canonico";
+import { environment } from "../../../../environments/environment";
 
 /**
  * Editor de cotización — T-18 (cliente + fechas + términos).
@@ -640,8 +642,52 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return Number(precio?.precioUnitarioSinIva) || 0;
   }
 
+  /**
+   * spec 010 — flag de cálculo unificado de IVA. OFF de fábrica → producción
+   * intacta (getters legacy). Override por localStorage para QA/dark-launch.
+   * Mismo patrón que `PaymentService.ivaCalcUnificadoEnabled`.
+   */
+  private get ivaCalcUnificadoEnabled(): boolean {
+    try {
+      const ls = localStorage.getItem("IVA_CALC_UNIFICADO");
+      if (ls === "true") return true;
+      if (ls === "false") return false;
+    } catch {}
+    return (environment as any).ivaCalcUnificado === true;
+  }
+
+  /**
+   * spec 010 (T-14) — resolución canónica de la línea: { precioSinIVA, tarifa }
+   * con ancla A (IVA = sinIVA × tarifa), jerarquía manual→categoría→volumen→base.
+   * Delega en `resolverPrecioLinea` (núcleo único FE/BE), salvo el caso de precio
+   * manual de ÍTEMS LIBRES, que la regla del editor admite (`permitePrecioManual`)
+   * pero el núcleo no cubre (exige `procesoComercial.permitePrecioManual`); ese
+   * caso se resuelve aquí con el mismo ancla para no romper líneas libres.
+   */
+  private resolverLineaCanonica(item: Carrito): { precioSinIVA: number; tarifa: number } {
+    const precio = (item?.producto as any)?.precio || {};
+    const ivaManual =
+      item?._ivaManualOverride !== undefined && item?._ivaManualOverride !== null
+        ? Number(item._ivaManualOverride)
+        : null;
+    if (
+      item?._precioManualOverride !== undefined &&
+      item?._precioManualOverride !== null &&
+      this.permitePrecioManual(item)
+    ) {
+      return {
+        precioSinIVA: Number(item._precioManualOverride) || 0,
+        tarifa: ivaManual !== null ? ivaManual : Number(precio?.precioUnitarioIva) || 0,
+      };
+    }
+    const ctx = { categoriaClienteId: (this.cotizacion?.cliente as any)?.categoria?.id ?? null };
+    const r = resolverPrecioLinea(item, ctx);
+    return { precioSinIVA: Number(r.precioSinIVA) || 0, tarifa: Number(r.tarifa) || 0 };
+  }
+
   /** % de IVA vigente: override manual → volumen → del producto. */
   getIvaActual(item: Carrito): number {
+    if (this.ivaCalcUnificadoEnabled) return this.resolverLineaCanonica(item).tarifa;
     if (item?._ivaManualOverride !== undefined && item?._ivaManualOverride !== null) {
       return Number(item._ivaManualOverride);
     }
@@ -658,6 +704,13 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
    * - sin overrides, usa el precio con IVA del producto.
    */
   itemPrecio(item: Carrito): number {
+    // spec 010 (T-14): bajo el flag, el precio CON IVA se reconstruye desde el
+    // ancla canónica (sinIVA × (1+tarifa)) en vez de des-grossar un conIVA
+    // pre-guardado que puede ser incoherente.
+    if (this.ivaCalcUnificadoEnabled) {
+      const { precioSinIVA, tarifa } = this.resolverLineaCanonica(item);
+      return precioSinIVA * (1 + tarifa / 100);
+    }
     const precio = (item?.producto as any)?.precio;
     // Prioridad 0: override manual de precio (base sin IVA × (1+IVA)).
     if (
@@ -693,12 +746,20 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
 
   /** Precio unitario SIN IVA (deriva del precio con IVA y el IVA vigente). */
   getPrecioSinIva(item: Carrito): number {
+    // spec 010 (T-14): bajo el flag, el sin-IVA es el resuelto por el núcleo
+    // canónico (directo), no el des-grossado de un conIVA pre-guardado.
+    if (this.ivaCalcUnificadoEnabled) return this.resolverLineaCanonica(item).precioSinIVA;
     const iva = this.getIvaActual(item);
     return this.itemPrecio(item) / (1 + iva / 100);
   }
 
   /** Valor del IVA por unidad. */
   getValorIva(item: Carrito): number {
+    // spec 010 (T-14): bajo el flag, IVA por unidad = sinIVA × tarifa (ancla A).
+    if (this.ivaCalcUnificadoEnabled) {
+      const { precioSinIVA, tarifa } = this.resolverLineaCanonica(item);
+      return precioSinIVA * (tarifa / 100);
+    }
     return this.itemPrecio(item) - this.getPrecioSinIva(item);
   }
 

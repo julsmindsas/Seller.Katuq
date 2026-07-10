@@ -134,16 +134,16 @@
               pTooltip="Tareas asignadas a ti para hoy o los próximos 7 días. Las vencidas están en la card 'Tareas vencidas'."
               tooltipPosition="top">
               <div class="dash-label">Mis tareas</div>
-              <div class="dash-value"><i class="fa fa-user-circle-o"></i></div>
+              <div class="dash-value">{{ myTasksCount || 0 | number }}</div>
               <div class="dash-sub">hoy o próx. 7 días</div>
             </div>
             <div class="dash-card dash-cyan cursor-pointer"
               (click)="openConversionByAgent()"
-              pTooltip="Tasa de conversión (ganados / total) por vendedor asignado. Incluye leads del pipeline activo y cerrados."
+              [pTooltip]="canManageStages ? 'Tasa de conversión (ganados / total) por vendedor asignado. Incluye leads del pipeline activo y cerrados.' : 'Tu tasa de conversión (ganados / total). Incluye tus leads del pipeline activo y cerrados.'"
               tooltipPosition="top">
-              <div class="dash-label">Conversión por vendedor</div>
+              <div class="dash-label">{{ conversionCardLabel }}</div>
               <div class="dash-value"><i class="fa fa-bar-chart"></i></div>
-              <div class="dash-sub">ranking de cierre por asesor</div>
+              <div class="dash-sub">{{ canManageStages ? 'ranking de cierre por asesor' : 'tu cierre' }}</div>
             </div>
           </div>
         </div>
@@ -757,7 +757,7 @@
 </p-dialog>
 
 <!-- Conversión por vendedor -->
-<p-dialog header="Conversión por vendedor" [(visible)]="showConversionDialog"
+<p-dialog [header]="conversionCardLabel" [(visible)]="showConversionDialog"
   [modal]="true" [style]="{ width: '640px' }" [draggable]="false">
   <div class="loader-box" *ngIf="loadingConversion">
     <div class="loader-8"></div>

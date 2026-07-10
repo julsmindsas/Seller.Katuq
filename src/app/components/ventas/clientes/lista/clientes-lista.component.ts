@@ -5,7 +5,7 @@ import { DatePipe } from '@angular/common';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
 import { MessageService } from 'primeng/api';
 import * as XLSX from 'xlsx';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { DataStoreService } from '../../../../shared/services/dataStoreService';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { HttpClient } from '@angular/common/http';
@@ -66,9 +66,13 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     availableTagsForFilter: ClientTag[] = [];
     selectedTagNames: string[] = [];
 
+    // Término entrante del buscador global del header (?buscar=)
+    private pendingGlobalSearch: string = '';
+
     constructor(
         private modalService: NgbModal,
         private router: Router,
+        private route: ActivatedRoute,
         private clienteService: MaestroService,
         private storeService: DataStoreService,
         private fb: FormBuilder,
@@ -93,6 +97,18 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.cargarClientes();
+
+        // Entrada desde el buscador global del header (?buscar=documento|nombre):
+        // prefiltra la tabla. Reacciona aunque ya estemos en esta ruta.
+        this.route.queryParams.subscribe(params => {
+            const buscar = (params['buscar'] || '').toString().trim();
+            if (buscar) {
+                this.globalFilterValue = buscar;
+                this.pendingGlobalSearch = buscar;
+                this.applyPendingGlobalSearch();
+            }
+        });
+
         this.clientConfig.loadClientTags().subscribe(tags => {
             this.availableTagsForFilter = tags;
         });
@@ -156,6 +172,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 this.clientes = clientes;
                 this.totalRecords = clientes.length;
                 this.cargando = false;
+                // Si veníamos del buscador global, aplicar el filtro ya con datos.
+                this.applyPendingGlobalSearch();
             },
             error: (error) => {
                 console.error(error);
@@ -627,6 +645,19 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         const value = (event.target as HTMLInputElement).value;
         this.globalFilterValue = value;
         this.searchSubject.next(value);
+    }
+
+    // Aplica el término entrante del buscador global del header cuando ya hay
+    // datos y la tabla existe (la tabla se crea en ngAfterViewInit; los clientes
+    // llegan por red — el que llegue de último dispara el filtro).
+    private applyPendingGlobalSearch(): void {
+        if (!this.pendingGlobalSearch || this.cargando) return;
+        setTimeout(() => {
+            if (this.dt && this.pendingGlobalSearch) {
+                this.dt.filterGlobal(this.pendingGlobalSearch, 'contains');
+                this.pendingGlobalSearch = '';
+            }
+        });
     }
 
     toggleActionMenu(event: Event, cliente: any): void {

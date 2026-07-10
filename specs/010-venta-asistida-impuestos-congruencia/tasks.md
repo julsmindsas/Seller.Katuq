@@ -26,10 +26,10 @@
   - ✅ `checkout.component.ts`: `checkPriceScale()`/`checkIVAPrice()` delegan a `this.payment.*(this.pedido)` (legacy de `checkIVAPrice` queda inalcanzable, se limpia en T-18).
   - ✅ `pedidos.util.service.ts`: `checkIVAPrice()` usa `calcularTotalesCanonico` directo bajo el flag (NO se inyecta `PaymentService` para evitar **ciclo de DI**: PaymentService ya depende de PedidosUtilService). Cubre al agente IA.
   - ⏭️ `carrito.component.ts`: `checkPriceScale(item)` es **por ítem** (display) y ya tiene el fix D-046 (tier de volumen en override) → se deja; no es el total del pedido.
-- 🔄 **T-14** `cotizacion-editor.component.ts`, `orden-venta.component.ts`, `list.component.ts` delegan al mismo núcleo. Verificar checkout = doc persistido (E2E).
+- ✅ **T-14** `cotizacion-editor.component.ts`, `orden-venta.component.ts`, `list.component.ts` delegan al mismo núcleo.
   - ✅ `list.component.ts` (D-061): `checkPriceScale`/`checkIVAPrice` delegan a `PaymentService` (−234 líneas de copia legacy). Mató el bug D-046 del listado (DAD-010760: 485.450 → 434.777).
   - ⏭️ `orden-venta.component.ts`: el getter `totalImpuestos` solo **lee** `pedido.totalImpuesto` (no calcula) → nada que delegar.
-  - ⏭️ `cotizacion-editor.component.ts`: usa `descGlobal` (%) en vez de `porceDescuento`; delegar a `calcularTotalesCanonico` requiere **mapear el descuento** primero. Sus getters ya están D-046-correctos → se difiere a un paso con el mapeo (no urgente).
+  - ✅ `cotizacion-editor.component.ts` (D-063, 2026-06-29): los getters por línea (`getIvaActual`/`getPrecioSinIva`/`getValorIva`/`itemPrecio`) delegan a `resolverPrecioLinea` del núcleo canónico vía adaptador `resolverLineaCanonica`, **detrás del flag** `ivaCalcUnificado` (OFF → getters legacy intactos). **NO se mapea `descGlobal`**: se mantiene el modelo de descuentos línea+global del componente y solo se cambia el **ancla por línea** (antes des-grossaba conIVA → F-15; ahora sinIVA directo). El adaptador respeta la regla de **precio manual de ítems libres** (que el núcleo no cubre). Lock: `contracts/test-cotizaciones-layering.js` (caso trabajado línea+global PASS). tsc/ng serve limpio.
 
 ## Fase E — POS delega al mismo punto
 - ⬜ **T-15** `pos-carrito`, `pos-checkout`, `pos-service/pos-pedidos.util`, `pos-checkout.service`, `factura-tirilla` delegan a `PaymentService`/núcleo. E2E POS: tirilla = pedido.

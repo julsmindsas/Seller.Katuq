@@ -45,9 +45,9 @@ export class ListComponent implements OnInit, OnChanges {
       ]
     }
     else {
-      this.data.push(
+      this.data.unshift(
         {
-          "data": { "nombre": "Nueva categoria ", "imagen": "", "posicion": this.data.length +1, "activo": true },
+          "data": { "nombre": "Nueva categoria ", "imagen": "", "posicion": this.data.length + 1, "activo": true },
           "children": []
         }
       )
@@ -84,7 +84,7 @@ export class ListComponent implements OnInit, OnChanges {
       node.children = [];
     }
     const hijo = Object.assign({}, { "data": { "nombre": "Nueva categoria ", "imagen":"", "posicion": node.children.length, "activo": true } });
-    node.children.push(hijo);
+    node.children.unshift(hijo);
     this.cdr.detectChanges();
     this.cdr.markForCheck();
     this.data = [...this.data];

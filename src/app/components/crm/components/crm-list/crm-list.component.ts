@@ -43,6 +43,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
   tasksDialogTitle = 'Tareas pendientes';
   pendingTasks: CrmTask[] = [];
   loadingTasks = false;
+  myTasksCount = 0;
 
   // Conversión por vendedor (assignedTo) — se calcula sobre leads ya cargados, sin nuevos endpoints
   showConversionDialog = false;
@@ -327,6 +328,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     this.crmService.getStats()
       .pipe(takeUntil(this.destroy$))
       .subscribe(stats => { this.stats = stats; });
+    this.loadMyTasksCount();
   }
 
   setActiveTab(tab: 'active' | 'closed'): void {
@@ -713,15 +715,28 @@ export class CrmListComponent implements OnInit, OnDestroy {
    */
   openMyTasksToday(): void {
     this.tasksDialogTitle = 'Mis tareas (hoy y próx. 7 días)';
+    this.loadPendingTasksDialog(t => this.isMyTaskInWindow(t));
+  }
+
+  /** Asignada a mí y con vencimiento entre hoy y +7 días (o sin fecha). Excluye vencidas a propósito (van en "Tareas vencidas"). */
+  private isMyTaskInWindow(t: CrmTask): boolean {
     const email = this.getCurrentUserEmail();
+    if (!email || (t.assignedTo || '').toLowerCase() !== email) return false;
+    if (!t.dueDate) return true;
     const startOfToday = new Date().setHours(0, 0, 0, 0);
     const in7d = Date.now() + 7 * 86400000;
-    this.loadPendingTasksDialog(t => {
-      if (!email || (t.assignedTo || '').toLowerCase() !== email) return false;
-      if (!t.dueDate) return true;
-      const ms = new Date(t.dueDate).getTime();
-      return !isNaN(ms) && ms >= startOfToday && ms <= in7d;
-    });
+    const ms = new Date(t.dueDate).getTime();
+    return !isNaN(ms) && ms >= startOfToday && ms <= in7d;
+  }
+
+  /** Cuenta mis tareas pendientes dentro de la ventana, para el número en la card "Mis tareas". */
+  private loadMyTasksCount(): void {
+    this.crmService.getTasks({ status: 'pending' })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: tasks => { this.myTasksCount = (tasks || []).filter(t => this.isMyTaskInWindow(t)).length; },
+        error: () => { this.myTasksCount = 0; },
+      });
   }
 
   private getCurrentUserEmail(): string | null {
@@ -830,7 +845,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       if (lostKey && lead.stage === lostKey) row.lost++;
     }
 
-    this.conversionRows = Array.from(map.entries())
+    let rows = Array.from(map.entries())
       .map(([assignedTo, r]) => ({
         assignedTo,
         total: r.total,
@@ -840,7 +855,20 @@ export class CrmListComponent implements OnInit, OnDestroy {
       }))
       .sort((a, b) => b.rate - a.rate || b.total - a.total);
 
+    // Solo admin/super admin ve el ranking completo — un vendedor ve únicamente su propia fila
+    // para no exponer el desempeño de sus compañeros (fuente de conflicto interno).
+    if (!this.canManageStages) {
+      const email = this.getCurrentUserEmail();
+      rows = rows.filter(r => r.assignedTo.toLowerCase() === email);
+    }
+
+    this.conversionRows = rows;
     this.loadingConversion = false;
+  }
+
+  /** Título de la card/diálogo de conversión: ranking completo para admin, solo la propia tasa para vendedor. */
+  get conversionCardLabel(): string {
+    return this.canManageStages ? 'Conversión por vendedor' : 'Mi conversión';
   }
 
   // ─── Helpers ───────────────────────────────────────────────

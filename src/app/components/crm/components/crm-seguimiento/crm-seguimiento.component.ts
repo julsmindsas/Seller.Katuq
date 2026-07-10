@@ -49,7 +49,10 @@ export class CrmSeguimientoComponent implements OnInit, OnDestroy {
   load(): void {
     this.loading = true;
     forkJoin({
-      leads: this.crmService.getLeads({ limit: 300 }),
+      // view: 'all' — este módulo cruza cotizaciones contra CUALQUIER lead (incluye
+      // Ganado/Perdido, archivados desde D-082); con el default 'active' un lead ya
+      // cerrado desaparecía del cruce y sus propuestas vencidas dejaban de detectarse.
+      leads: this.crmService.getLeads({ limit: 300, view: 'all' }),
       tasks: this.crmService.getTasks({ status: 'pending' }),
       // Sin filtro de "estado": el backend usa paginación real de Firestore (rápida).
       // Filtrando por estado, en cambio, escanea toda la colección en memoria.

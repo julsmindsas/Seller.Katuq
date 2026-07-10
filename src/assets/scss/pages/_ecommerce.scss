@@ -184,6 +184,14 @@
     }
   }
 
+  // Estado "abierto": lo usa el DRAWER MOBILE (≤767.98px) para mostrar el
+  // panel de filtros deslizante. En desktop los filtros se muestran SIEMPRE
+  // como columna estática (ver media query min-width:768px más abajo), por lo
+  // que esta clase es irrelevante en desktop. Se eliminó el antiguo hack de
+  // `float` + `margin-left` + `min-height` fijo: el sidebar vivía dentro de un
+  // `.col-*` (flex-item = BFC) y el float nunca lograba ponerse al lado del
+  // grid, que está en otra rama del DOM. Ahora el layout de dos columnas se
+  // arma con el grid nativo de Bootstrap (.catalog-row > col-md-4 + col-md-8).
   &.sidebaron {
     .product-sidebar {
       .filter-section {
@@ -192,20 +200,37 @@
             z-index: 1;
             opacity: 1;
             visibility: visible;
-            position: absolute;
+            position: static;
             width: 100%;
             background-color: white;
-            top: 53px;
             height: auto;
           }
         }
       }
     }
+  }
+}
 
-    .product-grid {
-      .product-wrapper-grid {
-        margin-left: calc(25% + 9px);
-        min-height: 1623px;
+/* =============================================================
+   DESKTOP (≥768px): panel de filtros SIEMPRE visible, en columna
+   estática dentro del grid de Bootstrap. Sin float ni absolute —
+   cada acordeón crece/colapsa en flujo normal, todas las secciones
+   siempre alcanzables (fix del bug de secciones inaccesibles).
+   ============================================================= */
+@media (min-width: 768px) {
+  .product-wrapper {
+    .product-sidebar {
+      .filter-section {
+        .card {
+          .left-filter {
+            opacity: 1;
+            visibility: visible;
+            position: static;
+            height: auto;
+            z-index: auto;
+            width: 100%;
+          }
+        }
       }
     }
   }
