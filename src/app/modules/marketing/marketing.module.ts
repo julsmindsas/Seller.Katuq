@@ -5,6 +5,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { NgxEchartsModule } from 'ngx-echarts';
 
 import { MarketingDashboardComponent } from './components/marketing-dashboard/marketing-dashboard.component';
+import { CampanaWhatsappComponent } from './components/campana-whatsapp/campana-whatsapp.component';
 import { MarketingService } from './services/marketing.service';
 import { MarketingGuard } from './guards/marketing.guard';
 
@@ -12,6 +13,11 @@ const routes: Routes = [
   {
     path: '',
     component: MarketingDashboardComponent,
+    canActivate: [MarketingGuard],
+  },
+  {
+    path: 'campanas/whatsapp',
+    component: CampanaWhatsappComponent,
     canActivate: [MarketingGuard],
   },
 ];
@@ -25,7 +31,7 @@ const routes: Routes = [
  * la misma librería del dashboard gerencial (chart.js NO está instalado).
  */
 @NgModule({
-  declarations: [MarketingDashboardComponent],
+  declarations: [MarketingDashboardComponent, CampanaWhatsappComponent],
   imports: [
     CommonModule,
     FormsModule,

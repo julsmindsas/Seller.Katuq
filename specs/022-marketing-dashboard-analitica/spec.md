@@ -45,7 +45,8 @@ Un comerciante abre "Marketing" en el menú y ve, para SU empresa y un rango de 
 - Fallo de una fuente (ej. WhatsApp) degrada solo su tarjeta, no el dashboard completo.
 
 ## 6. Out of scope (explícito)
-- Envío de campañas (WhatsApp/email/SMS), automatizaciones, recuperación de carritos, editor de plantillas, constructor de segmentos — fases 2+ del módulo.
+- ~~Envío de campañas WhatsApp~~ → **INCORPORADO como fase 2 (D-091, 2026-07-12)**: wizard audiencia CRM → plantilla HSM → confirmación con saldo → envío secuencial vía `start-conversation` (débito server-side). Quedan para fase 3: historial/persistencia de campañas, runner backend (envío que sobreviva al navegador), programación, tope >100.
+- Campañas email/SMS, automatizaciones, recuperación de carritos, editor de plantillas, constructor de segmentos avanzado — fases 3+.
 - Integración con plataformas publicitarias externas (Meta/Google Ads) y por tanto CAC/ROI con gasto real.
 - Tracking de apertura/clic de emails (spec 010 no lo captura hoy).
 - Persistir eventos de marketing nuevos (colección nueva) — regla del repo: no colecciones nuevas en el MVP.
