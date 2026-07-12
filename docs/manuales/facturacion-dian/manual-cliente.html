@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facturación Electrónica DIAN — Guía para tu empresa | Katuq</title>
+<style>
+  :root {
+    --primary: #1b55e2;
+    --primary-soft: #eef3ff;
+    --ok: #1a9c6b;
+    --ok-soft: #e8f7f1;
+    --warn: #c98a06;
+    --warn-soft: #fdf6e5;
+    --danger: #c0392b;
+    --danger-soft: #fdefed;
+    --ink: #1f2937;
+    --ink-soft: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f9fafb;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header.hero {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--primary);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+  }
+  header.hero h1 { font-size: 1.6rem; margin-bottom: 6px; }
+  header.hero p.sub { color: var(--ink-soft); font-size: 1rem; }
+  .badge {
+    display: inline-block; font-size: .75rem; font-weight: 600;
+    background: var(--primary-soft); color: var(--primary);
+    border-radius: 20px; padding: 3px 12px; margin-bottom: 12px;
+    letter-spacing: .3px;
+  }
+
+  .progress-box {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px 20px; margin-bottom: 28px;
+    display: flex; align-items: center; gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  }
+  .progress-track {
+    flex: 1; height: 10px; background: var(--line);
+    border-radius: 6px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%; background: var(--ok);
+    border-radius: 6px; transition: width .35s ease;
+  }
+  .progress-label { font-size: .85rem; font-weight: 600; color: var(--ink-soft); white-space: nowrap; }
+
+  .split {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px;
+  }
+  @media (max-width: 640px) { .split { grid-template-columns: 1fr; } }
+  .split .col {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px;
+  }
+  .split .col.tu { border-left: 5px solid var(--warn); }
+  .split .col.katuq { border-left: 5px solid var(--ok); }
+  .split h3 { font-size: 1rem; margin-bottom: 10px; }
+  .split ul { list-style: none; }
+  .split li { padding: 5px 0 5px 26px; position: relative; font-size: .92rem; }
+  .split .tu li::before { content: "✋"; position: absolute; left: 0; }
+  .split .katuq li::before { content: "✅"; position: absolute; left: 0; }
+
+  .step {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; margin-bottom: 18px; overflow: hidden;
+  }
+  .step-head {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 22px; cursor: pointer; user-select: none;
+  }
+  .step-head:hover { background: var(--primary-soft); }
+  .step-num {
+    flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
+    background: var(--primary); color: #fff; font-weight: 700; font-size: 1.05rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step.done .step-num { background: var(--ok); }
+  .step.done .step-num::before { content: "✓"; }
+  .step.done .step-num span { display: none; }
+  .step-title { flex: 1; }
+  .step-title h2 { font-size: 1.1rem; }
+  .step-title .meta { font-size: .8rem; color: var(--ink-soft); }
+  .step-check { display: flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--ink-soft); }
+  .step-check input { width: 22px; height: 22px; accent-color: var(--ok); cursor: pointer; }
+  .step-body { padding: 0 22px 22px 76px; display: none; }
+  .step.open .step-body { display: block; }
+  @media (max-width: 640px) { .step-body { padding-left: 22px; } }
+
+  .step-body p { margin-bottom: 12px; font-size: .95rem; }
+  .step-body ol { margin: 0 0 14px 20px; }
+  .step-body ol li { margin-bottom: 8px; font-size: .95rem; }
+  .step-body ul.plain { margin: 0 0 14px 20px; }
+  .step-body ul.plain li { margin-bottom: 6px; font-size: .95rem; }
+
+  .callout {
+    border-radius: 8px; padding: 14px 16px; margin: 14px 0; font-size: .9rem;
+  }
+  .callout.info { background: var(--primary-soft); border-left: 4px solid var(--primary); }
+  .callout.warn { background: var(--warn-soft); border-left: 4px solid var(--warn); }
+  .callout.ok { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .callout.danger { background: var(--danger-soft); border-left: 4px solid var(--danger); }
+  .callout strong:first-child { display: block; margin-bottom: 4px; }
+
+  .linkbox {
+    display: inline-block; background: var(--primary-soft); color: var(--primary);
+    font-family: Consolas, monospace; font-size: .85rem;
+    padding: 6px 12px; border-radius: 6px; margin: 4px 0; word-break: break-all;
+    text-decoration: none;
+  }
+  .linkbox:hover { text-decoration: underline; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .9rem; }
+  th, td { border: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-weight: 600; }
+  .table-scroll { overflow-x: auto; }
+
+  .faq { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 22px; margin-top: 28px; }
+  .faq h2 { font-size: 1.2rem; padding: 14px 0 6px; }
+  details { border-bottom: 1px solid var(--line); padding: 12px 0; }
+  details:last-child { border-bottom: none; }
+  summary { cursor: pointer; font-weight: 600; font-size: .95rem; }
+  details p { margin-top: 8px; font-size: .92rem; color: var(--ink-soft); }
+
+  footer { margin-top: 40px; text-align: center; font-size: .8rem; color: var(--ink-soft); }
+
+  @media print {
+    .progress-box { position: static; }
+    .step-body { display: block !important; }
+    .step-head { cursor: default; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="badge">GUÍA PARA TU EMPRESA · 5 PASOS</span>
+    <h1>Activa tu Facturación Electrónica con la DIAN</h1>
+    <p class="sub">
+      Katuq va a emitir tus facturas electrónicas directamente ante la DIAN.
+      Para eso la ley exige unos trámites que <strong>solo tú (o tu contador) puedes hacer</strong>,
+      porque son a nombre de tu empresa. Esta guía te lleva de la mano — y todo lo técnico
+      lo hacemos nosotros.
+    </p>
+  </header>
+
+  <div class="progress-box">
+    <div class="progress-track"><div class="progress-fill" id="pfill"></div></div>
+    <div class="progress-label" id="plabel">0 de 5 pasos</div>
+  </div>
+
+  <div class="split">
+    <div class="col tu">
+      <h3>Lo que haces TÚ (una sola vez)</h3>
+      <ul>
+        <li>Actualizar el RUT (responsabilidad 52)</li>
+        <li>Comprar tu certificado de firma digital</li>
+        <li>Registrarte en el portal DIAN (te acompañamos)</li>
+        <li>Pedir tu resolución de numeración</li>
+        <li>Entregarnos 4 datos por canal seguro</li>
+      </ul>
+    </div>
+    <div class="col katuq">
+      <h3>Lo que hace KATUQ por ti</h3>
+      <ul>
+        <li>Registro técnico del software ante la DIAN</li>
+        <li>Set de pruebas de habilitación completo</li>
+        <li>Generación, firma y envío de cada factura</li>
+        <li>PDF con QR y envío al comprador</li>
+        <li>Monitoreo, reintentos y soporte</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PASO 1 -->
+  <div class="step" data-step="1">
+    <div class="step-head" onclick="toggleStep(this)">
+      <div class="step-num"><span>1</span></div>
+      <div class="step-title">
+        <h2>Actualiza tu RUT: responsabilidad 52</h2>
+        <div class="meta">⏱ 1 día hábil · Lo hace tu contador o tú en MUISCA · Costo: $0</div>
+      </div>
+      <label class="step-check" onclick="event.stopPropagation()">
+        Listo <input type="checkbox" onchange="markStep(this)">
+      </label>
+    </div>
+    <div class="step-body">
+      <p>
+        Tu RUT debe tener la responsabilidad <strong>52 — Facturador electrónico</strong>.
+        Sin ella, la DIAN no deja avanzar con nada de lo demás.
+      </p>
+      <ol>
+        <li>Pídele a tu contador que verifique la casilla 53 del RUT.</li>
+        <li>Si no aparece el código <strong>52</strong>, se agrega actualizando el RUT en
+          <a class="linkbox" href="https://muisca.dian.gov.co" target="_blank">muisca.dian.gov.co</a>
+          (Actualización RUT → Responsabilidades).</li>
+      </ol>
+      <div class="callout info">
+        <strong>💡 ¿Ya facturas electrónicamente con otro sistema?</strong>
+        Entonces ya tienes la responsabilidad 52 y probablemente el certificado del paso 2. Marca este paso y sigue.
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 2 -->
+  <div class="step" data-step="2">
+    <div class="step-head" onclick="toggleStep(this)">
+      <div class="step-num"><span>2</span></div>
+      <div class="step-title">
+        <h2>Compra tu certificado de firma digital</h2>
+        <div class="meta">⏱ 1–3 días hábiles · Costo aproximado: $200.000–$600.000 COP/año (verifica con la entidad)</div>
+      </div>
+      <label class="step-check" onclick="event.stopPropagation()">
+        Listo <input type="checkbox" onchange="markStep(this)">
+      </label>
+    </div>
+    <div class="step-body">
+      <p>
+        Cada factura electrónica se firma digitalmente <strong>a nombre de tu empresa</strong>.
+        Para eso necesitas un certificado digital emitido por una entidad certificadora
+        acreditada en Colombia (ONAC). Katuq lo custodia de forma segura y firma tus facturas con él.
+      </p>
+      <p><strong>Qué pedir exactamente:</strong></p>
+      <ul class="plain">
+        <li>Certificado de <strong>persona jurídica</strong> (o de representante legal) para <strong>facturación electrónica</strong>.</li>
+        <li>En formato <strong>archivo .p12 / .pfx</strong> (también lo llaman "certificado en software"). <strong>No</strong> compres el de token físico USB.</li>
+        <li>Vigencia recomendada: 1 año o más (renovable).</li>
+      </ul>
+      <p><strong>Entidades certificadoras conocidas:</strong> Certicámara, GSE, Andes SCD. Cualquiera acreditada por ONAC sirve.</p>
+      <div class="callout warn">
+        <strong>⚠️ Guarda bien la contraseña del certificado.</strong>
+        La entidad te entrega el archivo .p12 y una contraseña. Necesitaremos ambos en el paso 5.
+        Si la pierdes, toca reexpedir el certificado (tiene costo).
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 3 -->
+  <div class="step" data-step="3">
+    <div class="step-head" onclick="toggleStep(this)">
+      <div class="step-num"><span>3</span></div>
+      <div class="step-title">
+        <h2>Regístrate como facturador en el portal DIAN</h2>
+        <div class="meta">⏱ 30 minutos · En videollamada con Katuq · Costo: $0</div>
+      </div>
+      <label class="step-check" onclick="event.stopPropagation()">
+        Listo <input type="checkbox" onchange="markStep(this)">
+      </label>
+    </div>
+    <div class="step-body">
+      <p>
+        Este paso se hace en el portal de <strong>habilitación</strong> de facturación electrónica de la DIAN.
+        El acceso llega por un <strong>token al correo registrado en tu RUT</strong> — por eso tienes que estar tú.
+        <strong>Agenda una videollamada con nosotros</strong> y lo hacemos juntos en 30 minutos: tú entras, nosotros te decimos exactamente dónde hacer clic.
+      </p>
+      <ol>
+        <li>Entra a
+          <a class="linkbox" href="https://catalogo-vpfe-hab.dian.gov.co/User/Login" target="_blank">catalogo-vpfe-hab.dian.gov.co</a>
+          y elige ingreso como <strong>Empresa</strong> (NIT + cédula del representante legal).</li>
+        <li>Revisa el correo del RUT: la DIAN envía un enlace/token de acceso.</li>
+        <li>Ya adentro, en <strong>Registro y habilitación</strong>, te registras como <strong>Facturador electrónico</strong>.</li>
+        <li>En <strong>modo de operación</strong> seleccionamos <strong>Software propio</strong> — aquí Katuq te dicta el nombre del software y el PIN que debes digitar.</li>
+        <li>La DIAN genera un <strong>Identificador de Software (Software ID)</strong> y un <strong>Set de pruebas (TestSetId)</strong>. Katuq toma nota de ambos en la llamada — con eso nosotros seguimos.</li>
+      </ol>
+      <div class="callout ok">
+        <strong>✅ A partir de aquí Katuq trabaja solo.</strong>
+        Con el Software ID y el set de pruebas, nuestro equipo ejecuta todas las pruebas técnicas
+        que la DIAN exige (envío de facturas y notas de prueba hasta que el set quede "Aceptado").
+        No tienes que hacer nada mientras tanto.
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 4 -->
+  <div class="step" data-step="4">
+    <div class="step-head" onclick="toggleStep(this)">
+      <div class="step-num"><span>4</span></div>
+      <div class="step-title">
+        <h2>Solicita tu resolución de numeración</h2>
+        <div class="meta">⏱ 15 minutos · Lo hace tu contador o tú en MUISCA · Costo: $0</div>
+      </div>
+      <label class="step-check" onclick="event.stopPropagation()">
+        Listo <input type="checkbox" onchange="markStep(this)">
+      </label>
+    </div>
+    <div class="step-body">
+      <p>
+        La DIAN autoriza los números que llevarán tus facturas (un prefijo y un rango, por ejemplo
+        <strong>FEKQ 1 al 50.000</strong>). Se solicita en MUISCA:
+      </p>
+      <ol>
+        <li>Entra a <a class="linkbox" href="https://muisca.dian.gov.co" target="_blank">muisca.dian.gov.co</a> → <strong>Numeración de facturación</strong> → <strong>Solicitar autorización de numeración</strong>.</li>
+        <li>Tipo: <strong>Factura electrónica de venta</strong>.</li>
+        <li>Define un <strong>prefijo</strong> (sugerimos uno corto y propio, ej. las iniciales de tu marca), el <strong>rango</strong> (para no quedarte corto: 50.000 o más) y la <strong>vigencia</strong> (normalmente 24 meses — se renueva antes de vencer).</li>
+        <li>Descarga el <strong>PDF de la resolución</strong>: ahí está el número de resolución, prefijo, rango y fechas.</li>
+      </ol>
+      <div class="callout info">
+        <strong>💡 ¿Vas a tener varias sedes o puntos de venta?</strong>
+        Cuéntanos antes de pedir la numeración: a veces conviene un prefijo por sede. Te asesoramos sin costo.
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 5 -->
+  <div class="step" data-step="5">
+    <div class="step-head" onclick="toggleStep(this)">
+      <div class="step-num"><span>5</span></div>
+      <div class="step-title">
+        <h2>Entrégale a Katuq el paquete de activación</h2>
+        <div class="meta">⏱ 10 minutos · Por el canal seguro que te indicamos (nunca por WhatsApp/email abierto)</div>
+      </div>
+      <label class="step-check" onclick="event.stopPropagation()">
+        Listo <input type="checkbox" onchange="markStep(this)">
+      </label>
+    </div>
+    <div class="step-body">
+      <p>Con estas 4 cosas activamos tu facturación. Tu asesor de Katuq te comparte un enlace seguro para subirlas:</p>
+      <div class="table-scroll">
+      <table>
+        <tr><th>#</th><th>Qué</th><th>De dónde sale</th></tr>
+        <tr><td>1</td><td>Archivo del certificado (<strong>.p12 / .pfx</strong>) + su contraseña</td><td>Paso 2 (entidad certificadora)</td></tr>
+        <tr><td>2</td><td>PDF de la <strong>resolución de numeración</strong></td><td>Paso 4 (MUISCA)</td></tr>
+        <tr><td>3</td><td>Datos fiscales: razón social, NIT con dígito de verificación, dirección, municipio, régimen de IVA y responsabilidades fiscales</td><td>Tu RUT (primera página)</td></tr>
+        <tr><td>4</td><td>Correo donde quieres recibir copia de tus facturas emitidas</td><td>Tú decides</td></tr>
+      </table>
+      </div>
+      <div class="callout danger">
+        <strong>🔒 Seguridad primero.</strong>
+        El certificado y su contraseña son como las llaves de tu chequera: <strong>solo</strong> súbelos
+        por el canal seguro que te da tu asesor. Katuq nunca te los pedirá por WhatsApp, ni por
+        correo abierto, ni por teléfono.
+      </div>
+      <div class="callout ok">
+        <strong>🎉 ¿Y después?</strong>
+        Katuq termina las pruebas con la DIAN, activa tu empresa en producción y hacemos juntos
+        tu primera factura real. Desde ese momento, cada venta en Katuq genera su factura
+        electrónica automáticamente: firmada, validada por la DIAN y enviada a tu cliente con PDF y QR.
+      </div>
+    </div>
+  </div>
+
+  <div class="faq">
+    <h2>Preguntas frecuentes</h2>
+    <details>
+      <summary>¿Cuánto se demora todo el proceso?</summary>
+      <p>Si tienes el RUT al día, típicamente <strong>1 a 2 semanas</strong>: lo que más tarda es la entrega del certificado digital (1–3 días) y las pruebas de habilitación que Katuq ejecuta ante la DIAN (2–5 días). Los pasos tuyos suman menos de 2 horas en total.</p>
+    </details>
+    <details>
+      <summary>¿Esto tiene costo con la DIAN?</summary>
+      <p>No. Todos los trámites ante la DIAN son gratuitos. Lo único que pagas a un tercero es el certificado de firma digital (paso 2), que es anual.</p>
+    </details>
+    <details>
+      <summary>Ya facturo electrónicamente con otro software, ¿qué cambia?</summary>
+      <p>Es más fácil: ya tienes responsabilidad 52 y certificado. Solo hay que registrar a Katuq como tu nuevo software propio en el portal DIAN (paso 3), pedir un rango de numeración nuevo o trasladar el vigente (paso 4) y entregarnos el paquete (paso 5). Coordinamos la fecha de corte para que no queden facturas en el aire.</p>
+    </details>
+    <details>
+      <summary>¿Katuq puede hacer los trámites por mí?</summary>
+      <p>Los acompañamos todos, pero el ingreso al portal DIAN y la compra del certificado son personales de tu empresa (el token llega al correo del RUT y el certificado se expide a tu nombre). Por eso el paso 3 lo hacemos juntos en videollamada.</p>
+    </details>
+    <details>
+      <summary>¿Qué pasa si se me acaba la numeración o se vence la resolución?</summary>
+      <p>Katuq monitorea tu consumo de numeración y te avisa con anticipación para renovar en MUISCA (mismo paso 4). Nunca dejamos que llegues a cero sin aviso.</p>
+    </details>
+    <details>
+      <summary>¿Las notas crédito (devoluciones) también salen electrónicas?</summary>
+      <p>Sí. Katuq genera facturas, notas crédito y notas débito electrónicas, todas validadas por la DIAN con el mismo sistema.</p>
+    </details>
+  </div>
+
+  <footer>
+    Katuq · Facturación Electrónica DIAN · Guía del cliente · v1 — julio 2026<br>
+    ¿Dudas? Escríbele a tu asesor de Katuq. Documento interno de referencia: manual-katuq.html
+  </footer>
+</div>
+
+<script>
+  const KEY = 'katuq-dian-cliente-steps';
+  const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+  document.querySelectorAll('.step').forEach(step => {
+    const n = step.dataset.step;
+    const cb = step.querySelector('input[type=checkbox]');
+    if (saved[n]) { cb.checked = true; step.classList.add('done'); }
+  });
+  updateProgress();
+
+  function toggleStep(head) {
+    head.parentElement.classList.toggle('open');
+  }
+  function markStep(cb) {
+    const step = cb.closest('.step');
+    step.classList.toggle('done', cb.checked);
+    const state = {};
+    document.querySelectorAll('.step').forEach(s => {
+      state[s.dataset.step] = s.querySelector('input[type=checkbox]').checked;
+    });
+    localStorage.setItem(KEY, JSON.stringify(state));
+    updateProgress();
+  }
+  function updateProgress() {
+    const total = document.querySelectorAll('.step').length;
+    const done = document.querySelectorAll('.step.done').length;
+    document.getElementById('pfill').style.width = (done / total * 100) + '%';
+    document.getElementById('plabel').textContent = done + ' de ' + total + ' pasos';
+  }
+  // Abrir el primer paso no completado
+  const firstOpen = document.querySelector('.step:not(.done)');
+  if (firstOpen) firstOpen.classList.add('open');
+</script>
+</body>
+</html>
