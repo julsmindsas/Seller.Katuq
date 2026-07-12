@@ -1,60 +1,29 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { CanActivate, Router } from '@angular/router';
 import { FeatureFlagsService } from '../../../shared/services/feature-flags.service';
 
 /**
- * Marketing Guard
- * Protege el acceso al módulo de marketing
- * Solo permite acceso si el feature flag está habilitado
+ * Marketing Guard — protege el módulo detrás del flag ENABLE_MARKETING_MODULE.
+ *
+ * La autenticación la resuelve AuthGuard en la ruta padre (routes.ts); aquí
+ * solo se valida el flag. Nota: la versión previa leía
+ * `sessionStorage.currentUser.role` — patrón inexistente en esta app
+ * (el usuario vive en localStorage['user'] con `rol` en español).
  */
 @Injectable()
 export class MarketingGuard implements CanActivate {
-  
   constructor(
     private featureFlags: FeatureFlagsService,
-    private router: Router
+    private router: Router,
   ) {}
-  
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Observable<boolean> | Promise<boolean> | boolean {
-    
-    // Verificar si el módulo está habilitado
+
+  canActivate(): boolean {
     const isEnabled = this.featureFlags.isEnabled('ENABLE_MARKETING_MODULE');
-    
     if (!isEnabled) {
-      console.warn('⚠️ Acceso denegado al módulo de Marketing - Feature deshabilitada');
-      // Redirigir al dashboard principal
-      this.router.navigate(['/dashboard']);
+      console.warn('⚠️ Módulo de Marketing deshabilitado (ENABLE_MARKETING_MODULE)');
+      this.router.navigate(['/dashboard/default']);
       return false;
     }
-    
-    // Verificar permisos del usuario (si es necesario)
-    const userRole = this.getUserRole();
-    const allowedRoles = ['admin', 'marketing', 'seller'];
-    
-    if (!allowedRoles.includes(userRole)) {
-      console.warn('⚠️ Acceso denegado al módulo de Marketing - Rol no autorizado');
-      this.router.navigate(['/dashboard']);
-      return false;
-    }
-    
     return true;
-  }
-  
-  /**
-   * Obtiene el rol del usuario actual
-   */
-  private getUserRole(): string {
-    try {
-      const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-      return currentUser.role?.toLowerCase() || 'guest';
-    } catch (error) {
-      console.error('Error obteniendo rol del usuario:', error);
-      return 'guest';
-    }
   }
 }

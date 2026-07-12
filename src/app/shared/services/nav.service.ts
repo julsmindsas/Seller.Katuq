@@ -549,6 +549,13 @@ export class NavService implements OnDestroy {
     // MARKETING
     { headTitle1: "Marketing" },
     {
+      title: "Dashboard de Marketing",
+      icon: "bar-chart-2",
+      type: "link",
+      path: "/marketing",
+      active: false,
+    },
+    {
       title: "Conversaciones WhatsApp",
       icon: "message-circle",
       type: "link",

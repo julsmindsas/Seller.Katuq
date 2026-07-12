@@ -20,6 +20,7 @@ import {
   calcularTotalesCanonico,
   baseExcluidaCanonica,
 } from "./iva-canonico"; // Núcleo canónico spec 010 (espejo del backend)
+import { AuthService } from "../firebase/auth.service";
 
 declare var WidgetCheckout: any;
 
@@ -38,11 +39,14 @@ export class PaymentService extends BaseService {
     private pedidoUtilService: PedidosUtilService,
     httpClient: HttpClient,
     private sanitizer: DomSanitizer,
+    private authService: AuthService,
   ) {
     super(httpClient);
 
-    const user = localStorage.getItem("user");
-    if (user) {
+    // isLoggedIn valida token+expiración (no solo presencia) — evita 403 al
+    // iniciar la app con localStorage['user'] viejo (ver constructor de este
+    // servicio disparado por TOOL_REGISTRARS_INITIALIZER en cada bootstrap).
+    if (this.authService.isLoggedIn) {
       // Cargar zonas de facturación y maestros al iniciar el servicio si es necesario
       // O cargarlos bajo demanda en getHtmlContent
       this.loadInitialData();

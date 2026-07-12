@@ -18,6 +18,7 @@ import {
 import { NOTIFICATION_TEMPLATES, NOTIFICATION_CONFIG } from './notification.config';
 import { NotificationService } from '../notification.service';
 import { NotificationPreferencesService } from './notification-preferences.service';
+import { AuthService } from '../firebase/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -51,7 +52,8 @@ export class NotificationManagerService {
     private db: AngularFireDatabase,
     private legacyNotificationService: NotificationService,
     private toastr: ToastrService,
-    private preferencesService: NotificationPreferencesService
+    private preferencesService: NotificationPreferencesService,
+    private authService: AuthService
   ) {
     this.initializeService();
     this.setupOnlineDetection();
@@ -81,15 +83,20 @@ export class NotificationManagerService {
     try {
       // Obtener información del usuario actual
       await this.loadCurrentUser();
-      
+
       // Cargar notificaciones desde caché local
       this.loadLocalNotifications();
-      
-      // Cargar notificaciones existentes desde el backend
-      await this.loadExistingNotifications();
 
-      // Configurar escucha en Firebase Realtime Database (solo nuevas en tiempo real)
-      this.setupFirebaseListener();
+      // Sin sesión válida (token ausente/expirado) no hay backend/Firebase que
+      // consultar — este servicio es un singleton root que se construye en
+      // cada bootstrap de la app (incluso en /login con localStorage viejo).
+      if (this.authService.isLoggedIn) {
+        // Cargar notificaciones existentes desde el backend
+        await this.loadExistingNotifications();
+
+        // Configurar escucha en Firebase Realtime Database (solo nuevas en tiempo real)
+        this.setupFirebaseListener();
+      }
 
       // Configurar procesamiento de eventos
       this.setupEventProcessing();

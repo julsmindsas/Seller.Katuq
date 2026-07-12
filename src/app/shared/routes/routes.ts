@@ -313,4 +313,13 @@ export const content: Routes = [
     canActivate: [AuthGuard],
     data: { title: "Conversaciones WhatsApp" },
   },
+  {
+    path: "marketing",
+    loadChildren: () =>
+      import("../../modules/marketing/marketing.module").then(
+        (m) => m.MarketingModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Marketing" },
+  },
 ];

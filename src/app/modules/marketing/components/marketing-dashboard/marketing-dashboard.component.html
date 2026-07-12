@@ -1,0 +1,151 @@
+<div class="container-fluid marketing-dashboard">
+  <!-- Encabezado + filtro de fechas -->
+  <div class="row align-items-end mb-3">
+    <div class="col-md-5">
+      <h4 class="mb-0">Dashboard de Marketing</h4>
+      <small class="text-muted">Adquisición, embudo CRM y actividad WhatsApp — datos reales de tu empresa</small>
+    </div>
+    <div class="col-md-7">
+      <div class="d-flex gap-2 justify-content-md-end align-items-end flex-wrap">
+        <div>
+          <label class="form-label mb-1 small">Desde</label>
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="fechaInicio" />
+        </div>
+        <div>
+          <label class="form-label mb-1 small">Hasta</label>
+          <input type="date" class="form-control form-control-sm" [(ngModel)]="fechaFin" />
+        </div>
+        <button class="btn btn-primary btn-sm" (click)="cargarTodo()" [disabled]="loadingCore">
+          <i class="fa fa-refresh me-1"></i>Aplicar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs ventas/pedidos -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card accent-primary">
+        <ng-container *ngIf="!loadingCore; else miniLoading">
+          <ng-container *ngIf="kpis && !errorCore; else noData">
+            <span class="stat-label">Ventas del período</span>
+            <span class="stat-value">{{ kpis.ventasTotales | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+            <span class="stat-sub" [class.text-success]="kpis.crecimientoVentas >= 0" [class.text-danger]="kpis.crecimientoVentas < 0">
+              {{ kpis.crecimientoVentas >= 0 ? '▲' : '▼' }} {{ kpis.crecimientoVentas }}% vs período anterior
+            </span>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card accent-info">
+        <ng-container *ngIf="!loadingCore; else miniLoading">
+          <ng-container *ngIf="kpis && !errorCore; else noData">
+            <span class="stat-label">Pedidos</span>
+            <span class="stat-value">{{ kpis.totalPedidos }}</span>
+            <span class="stat-sub">{{ kpis.pedidosAprobados }} aprobados ({{ kpis.tasaConversion }}%)</span>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card accent-success">
+        <ng-container *ngIf="!loadingCore; else miniLoading">
+          <ng-container *ngIf="kpis && !errorCore; else noData">
+            <span class="stat-label">Ticket promedio</span>
+            <span class="stat-value">{{ kpis.ticketPromedio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+            <span class="stat-sub">sobre pedidos con venta</span>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card accent-warning">
+        <ng-container *ngIf="!loadingWa; else miniLoading">
+          <ng-container *ngIf="!errorWa; else noData">
+            <span class="stat-label">WhatsApp</span>
+            <span class="stat-value">{{ waTotal }}</span>
+            <span class="stat-sub">
+              conversaciones · <strong>{{ waSinResponder }}</strong> recientes sin responder
+              <a routerLink="/notificaciones/whatsapp/inbox" class="ms-1">ver inbox</a>
+            </span>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Ventas por día -->
+    <div class="col-lg-8">
+      <div class="panel-card">
+        <div class="panel-title">Ventas por día</div>
+        <div *ngIf="loadingCore" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
+        <div *ngIf="!loadingCore && errorCore" class="panel-empty">No disponible</div>
+        <div *ngIf="!loadingCore && !errorCore && !ventasChartOptions" class="panel-empty">Sin ventas en el período</div>
+        <div *ngIf="!loadingCore && ventasChartOptions" echarts [options]="ventasChartOptions" class="ventas-chart"></div>
+      </div>
+    </div>
+
+    <!-- Ventas por canal -->
+    <div class="col-lg-4">
+      <div class="panel-card">
+        <div class="panel-title">Ventas por canal</div>
+        <div *ngIf="loadingCore" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
+        <div *ngIf="!loadingCore && (errorCore || canales.length === 0)" class="panel-empty">Sin datos de canal en el período</div>
+        <table *ngIf="!loadingCore && canales.length > 0" class="table table-sm mb-0 canales-table">
+          <thead>
+            <tr><th>Canal</th><th class="text-end">Ventas</th><th class="text-end">Pedidos</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of canales">
+              <td>{{ c.canal }}</td>
+              <td class="text-end">{{ c.ventas | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+              <td class="text-end">{{ c.pedidos }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Embudo CRM -->
+    <div class="col-lg-8">
+      <div class="panel-card">
+        <div class="panel-title">
+          Embudo CRM
+          <a routerLink="/crm" class="small ms-2">ir al CRM</a>
+        </div>
+        <div *ngIf="loadingCrm" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
+        <div *ngIf="!loadingCrm && (errorCrm || funnel.length === 0)" class="panel-empty">Sin leads en el CRM todavía</div>
+        <div *ngIf="!loadingCrm && funnel.length > 0" class="funnel">
+          <div class="funnel-row" *ngFor="let f of funnel">
+            <span class="funnel-label" [class.fw-bold]="f.isWon">{{ f.label }}</span>
+            <div class="funnel-bar-track">
+              <div class="funnel-bar" [style.width.%]="f.pct" [style.background]="f.color || null" [class.is-won]="f.isWon"></div>
+            </div>
+            <span class="funnel-count">{{ f.count }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen CRM -->
+    <div class="col-lg-4">
+      <div class="panel-card">
+        <div class="panel-title">Gestión comercial</div>
+        <div *ngIf="loadingCrm" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
+        <div *ngIf="!loadingCrm && !crmStats" class="panel-empty">No disponible</div>
+        <ul *ngIf="!loadingCrm && crmStats" class="crm-summary list-unstyled mb-0">
+          <li><span>Leads totales</span><strong>{{ crmStats.total }}</strong></li>
+          <li *ngIf="crmStats.nuevos30d != null"><span>Nuevos (30 días)</span><strong>{{ crmStats.nuevos30d }}</strong></li>
+          <li><span>Valor del pipeline</span><strong>{{ crmStats.totalValue | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong></li>
+          <li><span>Tareas pendientes</span><strong>{{ crmStats.tasksPending }}</strong></li>
+          <li><span>Tareas vencidas</span><strong [class.text-danger]="crmStats.tasksOverdue > 0">{{ crmStats.tasksOverdue }}</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #miniLoading><span class="stat-label"><i class="fa fa-spinner fa-spin"></i> Cargando…</span></ng-template>
+  <ng-template #noData><span class="stat-label">No disponible</span></ng-template>
+</div>

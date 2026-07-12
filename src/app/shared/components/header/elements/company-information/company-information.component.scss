@@ -1,5 +1,5 @@
 // Marca del comercio en el header — rediseño 2026 "Almara":
-// nombre en Dancing Script (como el diseño) + logo pequeño redondeado si existe.
+// nombre en la tipografía del rediseño (Plus Jakarta Sans) + logo pequeño redondeado si existe.
 .company-brand {
     display: flex;
     align-items: center;
@@ -18,7 +18,7 @@
     }
 
     .company-brand-name {
-        font-family: 'Dancing Script', cursive;
+        font-family: var(--ktq-font);
         font-size: 17px;
         font-weight: 700;
         color: var(--ktq-ink, #1c1a2b);

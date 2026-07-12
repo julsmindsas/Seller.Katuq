@@ -15,6 +15,7 @@ import {
   SubscriptionRecordResponse
 } from '../models/subscription.model';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './firebase/auth.service';
 
 /**
  * Subscription Service
@@ -34,9 +35,14 @@ export class SubscriptionService {
   private usageSubject = new BehaviorSubject<SubscriptionUsage | null>(null);
   public usage$ = this.usageSubject.asObservable();
 
-  constructor(private http: HttpClient) {
-    this.loadSubscriptionStatus().subscribe();
-    this.getUsageStats().subscribe();
+  constructor(private http: HttpClient, private authService: AuthService) {
+    // No disparar llamadas autenticadas sin sesión válida (se ejecuta en cada
+    // bootstrap de la app, incluso en /login) — los consumidores reales
+    // (sidebar, header, usage-widget) vuelven a pedir estos datos al montar.
+    if (this.authService.isLoggedIn) {
+      this.loadSubscriptionStatus().subscribe();
+      this.getUsageStats().subscribe();
+    }
   }
 
   /**

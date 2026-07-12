@@ -13,7 +13,7 @@ export class FeatureFlagsService {
   // Flags de características - Por defecto desactivadas para seguridad
   private static readonly FLAGS = {
     ENABLE_ADVANCED_NOTIFICATIONS: false,     // Sistema avanzado de notificaciones
-    ENABLE_MARKETING_MODULE: false,           // Módulo de marketing
+    ENABLE_MARKETING_MODULE: true,            // Módulo de marketing — MVP dashboard read-only (spec 022, D-090)
     ENABLE_WHATSAPP_INTEGRATION: false,       // Integración con WhatsApp Business API
     ENABLE_SMS_NOTIFICATIONS: false,          // Notificaciones SMS
     ENABLE_PUSH_NOTIFICATIONS: false,         // Push notifications del navegador
