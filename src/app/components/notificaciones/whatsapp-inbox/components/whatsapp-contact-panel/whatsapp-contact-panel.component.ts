@@ -1,3 +1,4 @@
+import { environment } from "../../../../../../environments/environment";
 import { Component, Input, OnChanges, SimpleChanges } from "@angular/core";
 import { forkJoin } from "rxjs";
 import { ToastrService } from "ngx-toastr";
@@ -227,7 +228,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
       whatsappPhoneHash: this.profile.phoneHash,
     };
 
-    fetch("http://localhost:3300/v1/crm/leads/import", {
+    fetch(environment.urlApi + "/v1/crm/leads/import", {
       method: "POST",
       headers,
       body: JSON.stringify(body),
@@ -296,7 +297,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
       "Content-Type": "application/json",
       "Accept": "application/json",
     };
-    const base = "http://localhost:3300/v1/whatsapp/conversations/" +
+    const base = environment.urlApi + "/v1/whatsapp/conversations/" +
       encodeURIComponent(hash);
     Promise.all([
       fetch(base + "/profile", { headers }).then((r) =>

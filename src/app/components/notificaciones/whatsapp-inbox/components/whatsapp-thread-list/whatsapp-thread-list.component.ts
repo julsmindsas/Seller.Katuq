@@ -1,3 +1,4 @@
+import { environment } from "../../../../../../environments/environment";
 import {
   Component,
   EventEmitter,
@@ -94,13 +95,13 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
       "Accept": "application/json",
     };
     // Best-effort sync (ignoramos error).
-    fetch("http://localhost:3300/v1/whatsapp/sync-inbound", {
+    fetch(environment.urlApi + "/v1/whatsapp/sync-inbound", {
       method: "POST",
       headers,
     }).catch(() => undefined);
     // Refresh de threads.
     const qs = this.searchQuery ? `?search=${encodeURIComponent(this.searchQuery)}` : "";
-    fetch("http://localhost:3300/v1/whatsapp/conversations" + qs, { headers })
+    fetch(environment.urlApi + "/v1/whatsapp/conversations" + qs, { headers })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((resp: any) => {
         const items = resp?.items || [];
@@ -244,7 +245,7 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
       'Accept': 'application/json',
     };
     const qs = this.searchQuery ? `?search=${encodeURIComponent(this.searchQuery)}` : '';
-    fetch('http://localhost:3300/v1/whatsapp/conversations' + qs, { headers })
+    fetch(environment.urlApi + '/v1/whatsapp/conversations' + qs, { headers })
       .then((r) => r.ok ? r.json() : Promise.reject(r))
       .then((resp: any) => {
         const items = resp?.items || [];
