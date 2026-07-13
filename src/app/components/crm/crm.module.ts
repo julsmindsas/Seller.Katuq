@@ -26,6 +26,7 @@ import { DragulaModule } from 'ng2-dragula';
 import { InputSwitchModule } from 'primeng/inputswitch';
 
 import { CrmListComponent } from './components/crm-list/crm-list.component';
+import { LeadFormModalComponent } from './components/lead-form-modal/lead-form-modal.component';
 import { CrmDetailComponent } from './components/crm-detail/crm-detail.component';
 import { CrmSeguimientoComponent } from './components/crm-seguimiento/crm-seguimiento.component';
 
@@ -41,6 +42,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     InputTextModule, InputTextareaModule, InputNumberModule,
     CardModule, ToolbarModule, TooltipModule, SkeletonModule,
     BadgeModule, MenuModule, DragulaModule, InputSwitchModule,
+    LeadFormModalComponent,
   ],
   providers: [MessageService, ConfirmationService],
 })

@@ -210,6 +210,10 @@
   &.action-btn-won:hover { background: #dcfce7; color: #16a34a; }
   &.action-btn-lost { background: #fef2f2; color: #d12b38; }
   &.action-btn-lost:hover { background: #fee2e2; color: #b91c1c; }
+  &.action-btn-block { background: #fffbeb; color: #d97706; }
+  &.action-btn-block:hover { background: #fef3c7; color: #b45309; }
+  &.action-btn-unblock { background: #f0fdf4; color: #16a34a; }
+  &.action-btn-unblock:hover { background: #dcfce7; color: #15803d; }
 }
 
 // Column value
@@ -245,6 +249,10 @@
   &.action-btn-wa:hover { background: #dcfce7; color: #16a34a; }
   &.action-btn-delete-table { background: #fef2f2; color: #d12b38; }
   &.action-btn-delete-table:hover { background: #fee2e2; color: #b91c1c; }
+  &.action-btn-block-table { background: #fffbeb; color: #d97706; }
+  &.action-btn-block-table:hover { background: #fef3c7; color: #b45309; }
+  &.action-btn-unblock-table { background: #f0fdf4; color: #16a34a; }
+  &.action-btn-unblock-table:hover { background: #dcfce7; color: #15803d; }
 }
 
 .cursor-pointer { cursor: pointer; }

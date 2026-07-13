@@ -142,13 +142,22 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
   // ─── Pipeline ──────────────────────────────────────────────
 
-  changeStage(newStage: string, forceClose: boolean = false, forceReason: string = ''): void {
+  changeStage(newStage: string, forceClose: boolean = false, forceReason: string = '', lostReason: string = ''): void {
     const stageConfig = this.stages.find(s => s.key === newStage);
+
+    // Etapa perdida: pedir el motivo antes de archivar (control + reactivación).
+    if (stageConfig?.isLost && !lostReason) {
+      this.promptLostReason(newStage);
+      return;
+    }
 
     const payload: Record<string, any> = { stage: newStage };
     if (forceClose) {
       payload.forceClose = true;
       payload.forceReason = forceReason;
+    }
+    if (lostReason) {
+      payload.lostReason = lostReason;
     }
 
     this.crmService.updatePipeline(this.entityId, payload)
@@ -180,6 +189,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
               this.messageService.add({ severity: 'warn', summary: 'Lead cerrado', detail: 'No se encontró un pedido asociado. Verifica manualmente.' });
             }
           } else if (stageConfig?.isLost) {
+            if (this.lead.pipeline) { this.lead.pipeline.lostReason = res.lostReason ?? lostReason; }
             this.messageService.add({ severity: 'info', summary: 'Lead archivado como perdido' });
           } else {
             this.messageService.add({ severity: 'success', summary: 'Etapa actualizada' });
@@ -214,6 +224,24 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
         if (!reasonResult.isConfirmed || !reasonResult.value) return;
         this.changeStage(newStage, true, reasonResult.value);
       });
+    });
+  }
+
+  /** Etapa perdida: pide el motivo de la pérdida antes de archivar el lead. */
+  private promptLostReason(newStage: string): void {
+    Swal.fire({
+      icon: 'question',
+      title: 'Motivo de la pérdida',
+      input: 'text',
+      inputPlaceholder: 'Ej: precio, se fue con la competencia, no respondió, fuera de presupuesto...',
+      inputValidator: (value) => (!value ? 'Indica por qué se perdió el lead' : undefined),
+      showCancelButton: true,
+      confirmButtonText: 'Marcar como perdido',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    }).then(result => {
+      if (!result.isConfirmed || !result.value) return;
+      this.changeStage(newStage, false, '', result.value);
     });
   }
 

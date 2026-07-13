@@ -54,6 +54,10 @@ export interface CrmLead {
   forcedReason?: string;
   forcedBy?: string;
   forcedAt?: string;
+  // Motivo de pérdida (etapa isLost) — para control y reactivación posterior
+  lostReason?: string;
+  lostBy?: string;
+  lostAt?: string;
 }
 
 export interface CrmActivity {

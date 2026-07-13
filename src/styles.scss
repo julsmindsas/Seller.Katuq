@@ -104,6 +104,26 @@ app-notification-center .notification-panel {
   z-index: 9999 !important;
 }
 
+// Toast de PrimeNG SIEMPRE por encima del header sticky (z-index 1025) y de
+// cualquier overlay propio (9998-10001). Los toasts (Exportar, Duplicados,
+// etc.) deben quedar topmost. El !important vence el z-index inline dinámico
+// que PrimeNG (autoZIndex) asigna, que por defecto cae por debajo del header.
+.p-toast {
+  z-index: 100000 !important;
+}
+
+// El header (.page-header) es `position: sticky` con `backdrop-filter`, lo que
+// crea un stacking context propio: aunque el toast tenga mayor z-index, queda
+// atrapado detrás de la barra en la zona de solape. Fix robusto e independiente
+// del stacking: bajar los toasts anclados ARRIBA para que empiecen por debajo
+// del header (~60px) — sin solape espacial no hay nada que los tape. Los toasts
+// anclados abajo (bottom-*) no se tocan.
+.p-toast.p-toast-top-right,
+.p-toast.p-toast-top-left,
+.p-toast.p-toast-top-center {
+  top: calc(74px + env(safe-area-inset-top, 0px)) !important;
+}
+
 body {
     font-family: $font-roboto, sans-serif !important;
 }

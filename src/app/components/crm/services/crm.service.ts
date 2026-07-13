@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -10,6 +10,15 @@ export class CrmService {
   private readonly base = `${environment.urlApi}/v1/crm`;
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Fuerza el contexto CRM a 'corporate' (header x-crm-entity). Lo usa el
+   * listado de Clientes Corporativos para crear/editar SIEMPRE sobre
+   * corporate_clients + crm_pipeline, sin depender del flag por empresa.
+   */
+  private corporateOpts(force?: boolean): { headers?: HttpHeaders } {
+    return force ? { headers: new HttpHeaders({ 'x-crm-entity': 'corporate' }) } : {};
+  }
 
   // ─── Leads ──────────────────────────────────────────────────
 
@@ -32,8 +41,14 @@ export class CrmService {
       .pipe(catchError(() => of({ success: false })));
   }
 
-  updateLead(id: string, data: Record<string, any>): Observable<any> {
-    return this.http.put<any>(`${this.base}/leads/${id}`, data)
+  updateLead(id: string, data: Record<string, any>, forceCorporate?: boolean): Observable<any> {
+    return this.http.put<any>(`${this.base}/leads/${id}`, data, this.corporateOpts(forceCorporate))
+      .pipe(catchError(() => of({ success: false })));
+  }
+
+  /** Bloquea/desbloquea el lead (soft-block). No borra el registro. */
+  setLeadActive(id: string, active: boolean, forceCorporate?: boolean): Observable<any> {
+    return this.http.put<any>(`${this.base}/leads/${id}/estado`, { active }, this.corporateOpts(forceCorporate))
       .pipe(catchError(() => of({ success: false })));
   }
 
@@ -82,8 +97,8 @@ export class CrmService {
       .pipe(catchError(() => of({ success: false })));
   }
 
-  createLead(data: Record<string, any>): Observable<any> {
-    return this.http.post<any>(`${this.base}/leads`, data)
+  createLead(data: Record<string, any>, forceCorporate?: boolean): Observable<any> {
+    return this.http.post<any>(`${this.base}/leads`, data, this.corporateOpts(forceCorporate))
       .pipe(catchError(() => of({ success: false })));
   }
 

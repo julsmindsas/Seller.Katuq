@@ -281,8 +281,9 @@
                       (click)="quickCloseLead(lead, 'lost', $event)">
                       <i class="fa fa-times"></i>
                     </a>
-                    <a class="action-btn-pill action-btn-delete" (click)="deleteSingleLead(lead, $event)">
-                      <i class="fa fa-trash"></i>
+                    <a class="action-btn-pill" [ngClass]="lead.activo ? 'action-btn-block' : 'action-btn-unblock'"
+                      [pTooltip]="lead.activo ? 'Bloquear' : 'Desbloquear'" (click)="toggleBloqueoLead(lead, $event)">
+                      <i class="fa" [ngClass]="lead.activo ? 'fa-lock' : 'fa-unlock'"></i>
                     </a>
                   </div>
 
@@ -300,10 +301,12 @@
                       pTooltip="Último contacto registrado (lastContactedAt)" tooltipPosition="top">
                       <i class="fa fa-clock-o me-1"></i>{{ cb.label }}
                     </span>
-                    <span class="stat-badge badge-sm"
+                    <span class="stat-badge badge-sm" style="cursor:pointer;"
                       [style.background-color]="lead.activo ? '#f0fdf4' : '#fef2f2'"
-                      [style.color]="lead.activo ? '#27AE60' : '#d12b38'">
-                      {{ lead.activo ? 'activo' : 'inactivo' }}
+                      [style.color]="lead.activo ? '#27AE60' : '#d12b38'"
+                      [pTooltip]="lead.activo ? 'Click para bloquear' : 'Click para desbloquear'" tooltipPosition="top"
+                      (click)="toggleBloqueoLead(lead, $event)">
+                      {{ lead.activo ? 'activo' : 'bloqueado' }}
                     </span>
                   </div>
                 </div>
@@ -380,10 +383,12 @@
                     [style]="{'font-size':'0.75rem'}"></p-tag>
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
-                  <span class="stat-badge badge-sm"
+                  <span class="stat-badge badge-sm" style="cursor:pointer;"
                     [style.background-color]="lead.activo ? '#f0fdf4' : '#fef2f2'"
-                    [style.color]="lead.activo ? '#27AE60' : '#d12b38'">
-                    {{ lead.activo ? 'activo' : 'inactivo' }}
+                    [style.color]="lead.activo ? '#27AE60' : '#d12b38'"
+                    [pTooltip]="lead.activo ? 'Click para bloquear' : 'Click para desbloquear'" tooltipPosition="top"
+                    (click)="toggleBloqueoLead(lead, $event)">
+                    {{ lead.activo ? 'activo' : 'bloqueado' }}
                   </span>
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
@@ -415,8 +420,9 @@
                     <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn" pTooltip="Correo"><i class="fa fa-envelope-o"></i></a>
                     <a *ngIf="lead.phone" [href]="'https://wa.me/' + lead.phone" target="_blank"
                       class="action-btn action-btn-wa" pTooltip="WhatsApp"><i class="fa fa-whatsapp"></i></a>
-                    <a class="action-btn action-btn-delete-table" (click)="deleteSingleLead(lead, $event)"
-                      pTooltip="Eliminar"><i class="fa fa-trash"></i></a>
+                    <a class="action-btn" [ngClass]="lead.activo ? 'action-btn-block-table' : 'action-btn-unblock-table'"
+                      (click)="toggleBloqueoLead(lead, $event)"
+                      [pTooltip]="lead.activo ? 'Bloquear' : 'Desbloquear'"><i class="fa" [ngClass]="lead.activo ? 'fa-lock' : 'fa-unlock'"></i></a>
                   </div>
                 </td>
               </tr>
@@ -478,7 +484,17 @@
                     style="background-color:#fff7ed; color:#c2410c;">
                     <i class="fa fa-exclamation-triangle me-1"></i>Sin verificar
                   </span>
-                  <small class="text-muted" *ngIf="lead.verifiedBuyer === undefined">—</small>
+                  <div *ngIf="lead.forcedReason" class="text-muted" style="font-size:0.72rem; margin-top:3px;"
+                    [pTooltip]="'Cierre forzado por ' + (lead.forcedBy || 'usuario') + (lead.forcedAt ? (' · ' + (lead.forcedAt | date:'short')) : '')"
+                    tooltipPosition="top">
+                    <i class="fa fa-comment-o me-1" style="color:#8b5cf6;"></i>Motivo: {{ lead.forcedReason }}
+                  </div>
+                  <div *ngIf="lead.lostReason" class="text-muted" style="font-size:0.72rem; margin-top:3px;"
+                    [pTooltip]="'Perdido por ' + (lead.lostBy || 'usuario') + (lead.lostAt ? (' · ' + (lead.lostAt | date:'short')) : '')"
+                    tooltipPosition="top">
+                    <i class="fa fa-times-circle me-1" style="color:#dc2626;"></i>Motivo pérdida: {{ lead.lostReason }}
+                  </div>
+                  <small class="text-muted" *ngIf="lead.verifiedBuyer === undefined && !lead.forcedReason && !lead.lostReason">—</small>
                 </td>
                 <td><small>{{ lead.lastContactedAt ? (lead.lastContactedAt | date:'short') : '-' }}</small></td>
                 <td>
@@ -511,112 +527,8 @@
 </div>
 
 <!-- ═══════ DIALOG CREAR LEAD ═══════ -->
-<p-dialog header="Nuevo lead" [(visible)]="showCreateDialog"
-  [modal]="true" [style]="{width: '480px'}" [closable]="true" [draggable]="false">
-
-  <form [formGroup]="createForm" autocomplete="off">
-    <div class="row g-3 mt-1">
-
-      <div class="col-12">
-        <label class="form-label fw-semibold">Nombre completo <span class="text-danger">*</span></label>
-        <input pInputText formControlName="name" placeholder="Ej: Laura Gómez" class="w-100" />
-        <small class="text-danger d-block mt-1"
-          *ngIf="createForm.get('name')?.invalid && createForm.get('name')?.touched">
-          El nombre es obligatorio
-        </small>
-      </div>
-
-      <div class="col-12 col-sm-6">
-        <label class="form-label fw-semibold">Correo electrónico</label>
-        <input pInputText formControlName="email" placeholder="correo@ejemplo.com" class="w-100" />
-        <small class="text-danger d-block mt-1"
-          *ngIf="createForm.get('email')?.invalid && createForm.get('email')?.touched">
-          Correo inválido
-        </small>
-      </div>
-
-      <div class="col-12 col-sm-6">
-        <label class="form-label fw-semibold">Teléfono / WhatsApp</label>
-        <input pInputText formControlName="phone" placeholder="3142087654" class="w-100" />
-      </div>
-
-      <div class="col-12 col-sm-5">
-        <label class="form-label fw-semibold">Tipo de documento</label>
-        <p-dropdown formControlName="tipoDocumento" [options]="tipoDocOptions"
-          optionLabel="label" optionValue="value"
-          styleClass="w-100" appendTo="body"></p-dropdown>
-      </div>
-
-      <div class="col-12 col-sm-7">
-        <label class="form-label fw-semibold">Número de documento</label>
-        <input pInputText formControlName="nit" placeholder="Ej: 1045234567" class="w-100" />
-      </div>
-
-      <div class="col-12">
-        <label class="form-label fw-semibold">
-          <i class="fa fa-tag me-1" style="color:#8b5cf6;"></i>¿Qué le vas a vender?
-        </label>
-        <textarea pInputTextarea formControlName="productoInteres" rows="2"
-          placeholder="Ej: Plan básico de ventas por WhatsApp, arreglos florales por catálogo digital, suscripción mensual..."
-          class="w-100" style="resize:none; font-size:0.875rem;"></textarea>
-        <small class="text-muted">Describe el producto o servicio que le vas a ofrecer a este lead.</small>
-      </div>
-
-      <div class="col-12 col-sm-6">
-        <label class="form-label fw-semibold">Valor estimado (COP)</label>
-        <p-inputNumber formControlName="estimatedValue" [useGrouping]="true" mode="currency" currency="COP"
-          locale="es-CO" placeholder="Opcional" styleClass="w-100"></p-inputNumber>
-      </div>
-
-      <div class="col-12 col-sm-6">
-        <label class="form-label fw-semibold">¿Cómo nos conoció?</label>
-        <p-dropdown formControlName="source" [options]="sourceOptions"
-          optionLabel="label" optionValue="value"
-          styleClass="w-100" appendTo="body"></p-dropdown>
-      </div>
-
-      <div class="col-12 col-sm-6">
-        <label class="form-label fw-semibold">Prioridad</label>
-        <p-dropdown formControlName="priority" [options]="priorityOpts"
-          optionLabel="label" optionValue="value"
-          styleClass="w-100" appendTo="body"></p-dropdown>
-      </div>
-
-      <!-- Etiquetas para segmentar el lead -->
-      <div class="col-12">
-        <div class="d-flex align-items-center justify-content-between mb-1">
-          <label class="form-label fw-semibold mb-0">
-            <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>Etiquetas
-          </label>
-          <button pButton type="button" label="Configurar" icon="pi pi-cog"
-            class="p-button-text p-button-sm" (click)="abrirConfigModal()"
-            pTooltip="Crear o eliminar etiquetas para segmentar tus leads" tooltipPosition="top"></button>
-        </div>
-        <div class="tags-picker" *ngIf="clientTagsCatalog.length > 0">
-          <span *ngFor="let tag of clientTagsCatalog" class="tag-chip"
-            [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
-            [style.background-color]="tieneEtiqueta(tag.name) ? getTagBgColor(tag.color) : ''"
-            [style.color]="tieneEtiqueta(tag.name) ? getTagFgColor(tag.color) : ''"
-            (click)="toggleEtiqueta(tag.name)">
-            <i class="pi pi-check me-1" *ngIf="tieneEtiqueta(tag.name)"></i>{{ tag.name }}
-          </span>
-        </div>
-        <div class="tags-empty-hint" *ngIf="clientTagsCatalog.length === 0">
-          <i class="pi pi-info-circle me-1"></i>No hay etiquetas configuradas. Usa "Configurar" para crear la primera.
-        </div>
-      </div>
-
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <button pButton label="Cancelar" icon="pi pi-times" class="p-button-text p-button-secondary"
-      (click)="showCreateDialog = false" [disabled]="creating"></button>
-    <button pButton label="Crear lead" icon="pi pi-plus" class="p-button-primary"
-      (click)="submitCreate()" [disabled]="createForm.invalid || creating"
-      [loading]="creating"></button>
-  </ng-template>
-</p-dialog>
+<!-- Diálogo "Nuevo lead" migrado a LeadFormModalComponent (modal compartido con
+     el listado de Clientes Corporativos). Ver openCreateDialog(). -->
 
 <!-- ═══════ DIALOG DUPLICADOS ═══════ -->
 <p-dialog header="Limpiar leads duplicados" [(visible)]="showDuplicatesDialog"
@@ -704,7 +616,7 @@
               </td>
               <td>
                 <span [style.color]="lead.activo ? '#27AE60' : '#d12b38'">
-                  {{ lead.activo ? 'activo' : 'inactivo' }}
+                  {{ lead.activo ? 'activo' : 'bloqueado' }}
                 </span>
               </td>
             </tr>

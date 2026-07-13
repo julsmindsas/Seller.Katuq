@@ -100,8 +100,9 @@
                   style="height:36px; border:1px solid #e9ecef; border-radius:6px; padding:0 0.65rem; font-size:0.85rem;">
               </div>
 
-              <!-- Crédito y plazo de pago (spec 014 — CxC/Cartera) -->
-              <div class="col-12 col-sm-6">
+              <!-- Crédito y plazo de pago (spec 014 — CxC/Cartera).
+                   Oculto para corporativos: son prospectos del CRM, aún no manejan cartera. -->
+              <div class="col-12 col-sm-6" *ngIf="target !== 'corporate'">
                 <label class="form-label-modern">
                   <i class="pi pi-credit-card me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Cupo de crédito" | translate }}
                 </label>
@@ -109,7 +110,7 @@
                   placeholder="0" class="w-100">
                 <small class="text-muted">{{ "0 = sin cupo. Se usa en Cartera (CxC)." | translate }}</small>
               </div>
-              <div class="col-12 col-sm-6">
+              <div class="col-12 col-sm-6" *ngIf="target !== 'corporate'">
                 <label class="form-label-modern">
                   <i class="pi pi-clock me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Plazo de pago (días)" | translate }}
                 </label>

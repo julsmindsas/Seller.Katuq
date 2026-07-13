@@ -7,9 +7,20 @@
       <h2 class="corp-title">Clientes corporativos</h2>
       <p class="corp-subtitle">Prospectos B2B que alimentan el CRM. Lista independiente de los clientes habituales.</p>
     </div>
-    <button class="btn btn-primary" (click)="openCrearModal()">
-      <i class="pi pi-plus"></i> Nuevo corporativo
-    </button>
+    <div class="corp-header-actions">
+      <button class="btn btn-outline-success" (click)="exportarExcel()" [disabled]="!corporativos.length"
+              pTooltip="Exportar a Excel" tooltipPosition="bottom">
+        <i class="pi pi-download"></i> Exportar
+      </button>
+      <button class="btn btn-outline-secondary" (click)="fileInput.click()"
+              pTooltip="Importar desde Excel (.xlsx, .csv)" tooltipPosition="bottom">
+        <i class="pi pi-upload"></i> Importar
+      </button>
+      <input #fileInput type="file" accept=".xlsx,.xls,.csv" hidden (change)="onFileImport($event)" />
+      <button class="btn btn-primary" (click)="openCrearModal()">
+        <i class="pi pi-plus"></i> Nuevo corporativo
+      </button>
+    </div>
   </div>
 
   <!-- Toolbar: búsqueda + filtros de estado -->
@@ -65,9 +76,17 @@
             {{ c.estado === 'bloqueado' ? 'Bloqueado' : 'Activo' }}
           </span>
         </td>
-        <td class="text-center">
-          <button class="icon-btn" title="Editar" (click)="editarCorporativo(c)"><i class="pi pi-pencil"></i></button>
-          <button class="icon-btn danger" title="Eliminar" (click)="eliminarCorporativo(c)"><i class="pi pi-trash"></i></button>
+        <td class="text-center action-buttons-table">
+          <button type="button" class="btn btn-sm btn-action btn-action-info"
+                  pTooltip="Editar" tooltipPosition="top" (click)="editarCorporativo(c)">
+            <i class="icofont icofont-pencil-alt-5"></i>
+          </button>
+          <button type="button"
+                  [class]="'btn btn-sm btn-action ' + (c.estado === 'bloqueado' ? 'btn-action-success' : 'btn-action-warn')"
+                  [pTooltip]="c.estado === 'bloqueado' ? 'Desbloquear' : 'Bloquear'" tooltipPosition="top"
+                  (click)="toggleBloqueo(c)">
+            <i class="fa" [ngClass]="c.estado === 'bloqueado' ? 'fa-unlock' : 'fa-lock'"></i>
+          </button>
         </td>
       </tr>
     </ng-template>

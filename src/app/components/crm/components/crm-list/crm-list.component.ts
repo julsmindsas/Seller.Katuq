@@ -5,7 +5,9 @@ import { Subject, forkJoin } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { DragulaService } from 'ng2-dragula';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CrmService } from '../../services/crm.service';
+import { LeadFormModalComponent } from '../lead-form-modal/lead-form-modal.component';
 import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import Swal from 'sweetalert2';
@@ -115,6 +117,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     private dragulaService: DragulaService,
     private router: Router,
     private corpConfig: CorporateConfigService,
+    private ngbModal: NgbModal,
   ) {
     this.canManageStages = this.computeCanManageStages();
     this.createForm = this.fb.group({
@@ -230,15 +233,17 @@ export class CrmListComponent implements OnInit, OnDestroy {
   // ─── Data ──────────────────────────────────────────────────
 
   openCreateDialog(): void {
-    this.etiquetasSeleccionadas = [];
-    this.createForm.reset({ source: 'other', priority: 'medium', tipoDocumento: 'CC', etiquetas: [] });
-    this.showCreateDialog = true;
+    // Fuente única: mismo modal que usa el listado de Clientes Corporativos.
+    const ref = this.ngbModal.open(LeadFormModalComponent, { size: 'lg', centered: true });
+    ref.componentInstance.isEdit = false;
+    ref.componentInstance.title = 'Nuevo lead';
+    ref.componentInstance.tagsCatalog = this.clientTagsCatalog;
+    ref.result.then((value) => { if (value) this.submitCreate(value); }).catch(() => {});
   }
 
-  submitCreate(): void {
-    if (this.createForm.invalid) return;
+  submitCreate(value: any): void {
     const firstStage = this.visibleStages[0]?.key || 'nuevo';
-    const formData = { ...this.createForm.value, stage: firstStage };
+    const formData = { ...value, stage: firstStage };
 
     // Verdadero optimistic update: tarjeta visible ANTES del HTTP call
     const tempId = 'temp-' + Date.now();
@@ -281,7 +286,6 @@ export class CrmListComponent implements OnInit, OnDestroy {
           // Rollback: quitar la tarjeta optimista
           this.leads = this.leads.filter(l => l.id !== tempId);
           this.groupByStage();
-          this.showCreateDialog = true;
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el lead. Revisa que el backend esté corriendo.' });
         }
       });
@@ -413,14 +417,23 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   // ─── Actions ───────────────────────────────────────────────
 
-  onStageDrop(leadId: string, newStage: string, forceClose: boolean = false, forceReason: string = ''): void {
+  onStageDrop(leadId: string, newStage: string, forceClose: boolean = false, forceReason: string = '', lostReason: string = ''): void {
     const stageConfig = this.stages.find(s => s.key === newStage);
     const closing = !!(stageConfig && (stageConfig.isWon || stageConfig.isLost));
+
+    // Etapa perdida: pedir el motivo antes de archivar (control + reactivación).
+    if (stageConfig?.isLost && !lostReason) {
+      this.promptLostReason(leadId, newStage);
+      return;
+    }
 
     const payload: Record<string, any> = { stage: newStage };
     if (forceClose) {
       payload.forceClose = true;
       payload.forceReason = forceReason;
+    }
+    if (lostReason) {
+      payload.lostReason = lostReason;
     }
 
     this.crmService.updatePipeline(leadId, payload)
@@ -448,6 +461,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
                 verifiedOrderId: res.verifiedOrderId,
                 forcedClose: res.forcedClose,
                 forcedReason: res.forcedReason,
+                lostReason: res.lostReason ?? lostReason,
               }, ...this.closedLeads];
             }
 
@@ -498,6 +512,28 @@ export class CrmListComponent implements OnInit, OnDestroy {
         if (!reasonResult.isConfirmed || !reasonResult.value) return;
         this.onStageDrop(leadId, newStage, true, reasonResult.value);
       });
+    });
+  }
+
+  /** Etapa perdida: pide el motivo de la pérdida antes de archivar el lead. */
+  private promptLostReason(leadId: string, newStage: string): void {
+    Swal.fire({
+      icon: 'question',
+      title: 'Motivo de la pérdida',
+      input: 'text',
+      inputPlaceholder: 'Ej: precio, se fue con la competencia, no respondió, fuera de presupuesto...',
+      inputValidator: (value) => (!value ? 'Indica por qué se perdió el lead' : undefined),
+      showCancelButton: true,
+      confirmButtonText: 'Marcar como perdido',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    }).then(result => {
+      if (!result.isConfirmed || !result.value) {
+        // Canceló: revertir el movimiento visual del tablero.
+        this.loadLeads();
+        return;
+      }
+      this.onStageDrop(leadId, newStage, false, '', result.value);
     });
   }
 
@@ -1315,6 +1351,44 @@ export class CrmListComponent implements OnInit, OnDestroy {
             },
           });
       },
+    });
+  }
+
+  /**
+   * Bloquea/desbloquea el lead (soft-block, conserva historial en el CRM).
+   * Pide confirmación y persiste vía `estado` (corporate/client) o `activo`
+   * (company) — el backend resuelve cuál según el entityType del contexto.
+   */
+  toggleBloqueoLead(lead: CrmLead, event?: Event): void {
+    event?.stopPropagation();
+    const bloquear = lead.activo !== false;
+    Swal.fire({
+      icon: bloquear ? 'warning' : 'question',
+      title: `¿${bloquear ? 'Bloquear' : 'Desbloquear'} a "${lead.name}"?`,
+      text: bloquear
+        ? 'Se marcará como bloqueado pero se conserva su historial en el CRM. Podrás reactivarlo cuando quieras.'
+        : 'Volverá a estar activo.',
+      showCancelButton: true,
+      confirmButtonColor: bloquear ? '#d97706' : '#16a34a',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: bloquear ? 'Sí, bloquear' : 'Sí, desbloquear',
+      cancelButtonText: 'Cancelar',
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.crmService.setLeadActive(lead.id, !bloquear)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((res) => {
+          if (res && res.success) {
+            lead.activo = !bloquear;
+            this.messageService.add({
+              severity: 'success',
+              summary: bloquear ? 'Bloqueado' : 'Desbloqueado',
+              detail: `"${lead.name}" ${bloquear ? 'bloqueado' : 'reactivado'}`,
+            });
+          } else {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cambiar el estado' });
+          }
+        });
     });
   }
 

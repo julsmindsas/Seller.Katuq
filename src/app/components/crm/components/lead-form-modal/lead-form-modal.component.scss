@@ -1,0 +1,33 @@
+.tags-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+  font-size: 0.8rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #c4b5fd;
+  }
+
+  &.tag-chip-selected {
+    border-color: transparent;
+    font-weight: 600;
+  }
+}
+
+.tags-empty-hint {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
