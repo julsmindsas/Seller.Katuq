@@ -1,3 +1,4 @@
+import { environment } from "../../../../../../environments/environment";
 import {
   AfterViewChecked,
   Component,
@@ -367,12 +368,12 @@ export class WhatsappThreadDetailComponent
     };
     // Antes del refresh, pedir al backend que sincronice inbounds desde Kapso
     // (best-effort, ignoramos errores). Sandbox local sin webhook expuesto.
-    fetch("http://localhost:3300/v1/whatsapp/sync-inbound", {
+    fetch(environment.urlApi + "/v1/whatsapp/sync-inbound", {
       method: "POST",
       headers,
     }).catch(() => undefined);
     fetch(
-      "http://localhost:3300/v1/whatsapp/conversations/" +
+      environment.urlApi + "/v1/whatsapp/conversations/" +
         encodeURIComponent(hash) +
         "/messages",
       { headers },
@@ -470,7 +471,7 @@ export class WhatsappThreadDetailComponent
       "Content-Type": "application/json",
       "Accept": "application/json",
     };
-    const base = "http://localhost:3300/v1/whatsapp/conversations/" +
+    const base = environment.urlApi + "/v1/whatsapp/conversations/" +
       encodeURIComponent(hash);
     Promise.all([
       fetch(base + "/messages", { headers }).then((r) =>

@@ -1,0 +1,138 @@
+// Campaña WhatsApp (spec 022 fase 2) — mismo lenguaje visual plano del dashboard.
+
+.campana-whatsapp {
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+
+.panel-card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 1rem;
+
+  .panel-loading,
+  .panel-empty {
+    color: #adb5bd;
+    font-size: 0.85rem;
+    padding: 1.5rem 0;
+    text-align: center;
+  }
+}
+
+// ---- Indicador de pasos ----
+.steps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .step {
+    font-size: 0.78rem;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: #f1f3f5;
+    color: #868e96;
+    border-left: 3px solid transparent;
+
+    &.active {
+      background: #e7edff;
+      color: #4c6fff;
+      font-weight: 600;
+      border-left-color: #4c6fff;
+    }
+
+    &.done {
+      background: #e6f6ea;
+      color: #28a745;
+    }
+  }
+}
+
+// ---- Audiencia ----
+.audiencia-tabla {
+  max-height: 380px;
+  overflow-y: auto;
+
+  table {
+    font-size: 0.84rem;
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      color: #6c757d;
+    }
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// ---- Variables de plantilla ----
+.variable-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  .variable-tag {
+    font-family: monospace;
+    font-size: 0.78rem;
+    background: #f1f3f5;
+    border-radius: 4px;
+    padding: 3px 8px;
+    color: #495057;
+    white-space: nowrap;
+  }
+
+  .variable-mode {
+    max-width: 180px;
+  }
+}
+
+// ---- Vista previa WhatsApp ----
+.wa-preview {
+  background: #e7fbe3;
+  border: 1px solid #c8ecc0;
+  border-radius: 8px;
+  border-top-left-radius: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  color: #212529;
+  white-space: pre-wrap;
+  max-width: 420px;
+}
+
+// ---- Confirmación ----
+.resumen-item {
+  border: 1px solid #e9ecef;
+  border-left: 4px solid #4c6fff;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+
+  span {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: #6c757d;
+  }
+
+  strong {
+    font-size: 1.15rem;
+  }
+
+  &.insuficiente {
+    border-left-color: #dc3545;
+
+    strong { color: #dc3545; }
+  }
+}
+
+.resultados-tabla {
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 0.84rem;
+}

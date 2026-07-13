@@ -6,6 +6,7 @@ import {
   Output,
   SimpleChanges,
 } from "@angular/core";
+import { environment } from "../../../../../../environments/environment";
 
 interface KapsoTemplate {
   id: string;
@@ -106,7 +107,8 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
     const headers = this._authHeaders();
     const phoneNorm = this._normalizePhone(this.phone);
 
-    fetch("http://localhost:3300/v1/whatsapp/start-conversation", {
+    // Fix: apuntaba a http://localhost:3300 hardcodeado — roto en producción.
+    fetch(`${environment.urlApi}/v1/whatsapp/start-conversation`, {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -140,7 +142,7 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
     this.loadingTemplates = true;
     this.templates = [];
     const headers = this._authHeaders();
-    fetch("http://localhost:3300/v1/whatsapp/kapso-templates", { headers })
+    fetch(`${environment.urlApi}/v1/whatsapp/kapso-templates`, { headers })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((resp: any) => {
         this.templates = resp.items || [];
