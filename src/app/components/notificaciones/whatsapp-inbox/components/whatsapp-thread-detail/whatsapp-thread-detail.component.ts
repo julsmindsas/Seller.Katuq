@@ -411,9 +411,19 @@ export class WhatsappThreadDetailComponent
             status: m.status || (m.direction === "inbound" ? "delivered" : "sent"),
             mediaPlaceholder: false,
           }));
+        const prevCount = this.messages.length;
         this.messages = items as any;
         this.feedItems = this.buildFeedItems(items as any);
         this.needsScroll = true;
+        // Si llegaron ENTRANTES nuevos con el chat abierto, marcarlos vistos
+        // de una — antes el badge de la lista crecía aunque el operador
+        // estuviera leyendo el hilo ("abro el chat y no se quitan").
+        const nuevosInbound = (items as any[])
+          .slice(prevCount)
+          .some((m: any) => m.direction === "inbound");
+        if (items.length > prevCount && nuevosInbound) {
+          this.markAsRead();
+        }
       })
       .catch(() => undefined);
   }
