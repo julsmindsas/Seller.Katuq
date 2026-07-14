@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -32,10 +32,8 @@ interface ResultadoEnvio {
   error?: string;
 }
 
-/** Tope de destinatarios por campaña en el MVP (envío secuencial front-driven). */
-const MAX_DESTINATARIOS = 100;
-/** Pausa entre envíos para respetar el throttle "send" del backend. */
-const DELAY_ENTRE_ENVIOS_MS = 700;
+/** Tope por campaña = límite por request del API de Broadcasts de Kapso. */
+const MAX_DESTINATARIOS = 1000;
 
 /**
  * Campaña de WhatsApp (spec 022 fase 2 — D-091).
@@ -53,7 +51,7 @@ const DELAY_ENTRE_ENVIOS_MS = 700;
   templateUrl: './campana-whatsapp.component.html',
   styleUrls: ['./campana-whatsapp.component.scss'],
 })
-export class CampanaWhatsappComponent implements OnInit {
+export class CampanaWhatsappComponent implements OnInit, OnDestroy {
   readonly MAX_DESTINATARIOS = MAX_DESTINATARIOS;
 
   paso: 1 | 2 | 3 = 1;
@@ -79,12 +77,20 @@ export class CampanaWhatsappComponent implements OnInit {
 
   // --- Paso 3: confirmación + envío ---
   nombreCampana = '';
+  /** [D-097] Momento de envío: ya mismo o programado. */
+  cuandoEnviar: 'ahora' | 'programar' = 'ahora';
+  fechaProgramada = ''; // datetime-local
   balance: WhatsappBalance | null = null;
   loadingBalance = false;
   enviando = false;
   envioTerminado = false;
   progreso = 0;
   resultados: ResultadoEnvio[] = [];
+  /** Estado del broadcast lanzado (server-side, Kapso). */
+  broadcastStatus = '';
+  broadcastMensaje = '';
+  broadcastErrores: string[] = [];
+  private pollTimer: any = null;
 
   constructor(
     private crm: CrmService,
@@ -312,44 +318,104 @@ export class CampanaWhatsappComponent implements OnInit {
     return !!this.balance && this.balance.balanceCOP < this.costoEstimado;
   }
 
-  async enviarCampana(): Promise<void> {
+  /** ¿La programación es inválida (modo programar sin fecha futura)? */
+  get programacionInvalida(): boolean {
+    if (this.cuandoEnviar !== 'programar') return false;
+    if (!this.fechaProgramada) return true;
+    return new Date(this.fechaProgramada).getTime() <= Date.now();
+  }
+
+  /**
+   * [D-097 fase 3] Lanza la campaña vía Kapso Broadcasts: UNA llamada al
+   * backend (crea broadcast + destinatarios con variables por contacto +
+   * envía o programa + debita saldo). El envío corre server-side — cerrar
+   * el navegador ya no lo detiene. El progreso se consulta por polling.
+   */
+  enviarCampana(): void {
     const t = this.selectedTemplate;
-    if (!t || this.enviando || this.saldoInsuficiente) return;
+    if (!t || this.enviando || this.saldoInsuficiente || this.programacionInvalida) return;
 
     const lote = this.seleccionados.slice(0, MAX_DESTINATARIOS);
     this.enviando = true;
     this.envioTerminado = false;
     this.resultados = [];
     this.progreso = 0;
+    this.broadcastStatus = '';
+    this.broadcastMensaje = '';
+    this.broadcastErrores = [];
 
-    // [D-096] Etiqueta de campaña: agrupa los envíos en el historial.
     const nombre = this.nombreCampana.trim() || `${t.name} ${new Date().toISOString().slice(0, 10)}`;
     const slug = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
     const campaignId = `${slug}-${Date.now().toString(36)}`;
+    const scheduledAt = this.cuandoEnviar === 'programar'
+      ? new Date(this.fechaProgramada).toISOString()
+      : undefined;
 
-    for (let i = 0; i < lote.length; i++) {
-      const dest = lote[i];
-      const variables = this.variableConfigs.map((cfg) => this.resolverVariable(cfg, dest));
-      try {
-        await this.marketing
-          .startConversation(dest.phone, t.name, t.language, variables, campaignId, nombre)
-          .toPromise();
-        this.resultados.push({ nombre: dest.nombre, phone: dest.phone, ok: true });
-      } catch (err: any) {
-        const msg = err?.error?.message || err?.message || 'Error de envío';
-        this.resultados.push({ nombre: dest.nombre, phone: dest.phone, ok: false, error: msg });
-        // Si el backend reporta falta de saldo, no seguir quemando el lote.
-        if (String(msg).toLowerCase().includes('saldo')) break;
-      }
-      this.progreso = Math.round(((i + 1) / lote.length) * 100);
-      if (i < lote.length - 1) {
-        await this.pausa(DELAY_ENTRE_ENVIOS_MS);
-      }
+    const recipients = lote.map((dest) => ({
+      phone: dest.phone,
+      variables: this.variableConfigs.map((cfg) => this.resolverVariable(cfg, dest)),
+    }));
+
+    this.marketing
+      .launchBroadcast({ name: nombre, templateId: t.id, templateName: t.name, recipients, scheduledAt, campaignId })
+      .subscribe({
+        next: (r) => {
+          this.broadcastErrores = r.erroresKapso || [];
+          if (scheduledAt) {
+            this.enviando = false;
+            this.envioTerminado = true;
+            this.broadcastStatus = 'scheduled';
+            this.progreso = 100;
+            this.broadcastMensaje = `Campaña programada para ${new Date(scheduledAt).toLocaleString('es-CO')} — ${r.destinatarios} contactos. Puedes cerrar esta página.`;
+            this.cargarBalance();
+          } else {
+            this.broadcastStatus = r.status || 'sending';
+            this.broadcastMensaje = `Enviando a ${r.destinatarios} contactos desde el servidor — puedes cerrar esta página, el envío continúa.`;
+            this.pollProgreso(r.broadcastId, lote.length);
+          }
+        },
+        error: (err) => {
+          this.enviando = false;
+          this.envioTerminado = true;
+          this.broadcastStatus = 'failed';
+          this.broadcastMensaje = err?.error?.message || err?.message || 'No se pudo lanzar la campaña.';
+        },
+      });
+  }
+
+  /** Polling del progreso del broadcast (cada 3s, máx ~3 min). */
+  private pollProgreso(broadcastId: string, total: number, intentos = 0): void {
+    if (intentos > 60) {
+      this.enviando = false;
+      this.envioTerminado = true;
+      this.broadcastMensaje = 'El envío sigue en curso en el servidor — revisa el historial en unos minutos.';
+      return;
     }
+    this.pollTimer = setTimeout(() => {
+      this.marketing.getBroadcastStatus(broadcastId).subscribe({
+        next: (s) => {
+          const tot = s.totalRecipients || total;
+          this.progreso = tot > 0 ? Math.round((s.sentCount / tot) * 100) : 0;
+          this.broadcastStatus = s.status;
+          if (s.status === 'completed' || s.status === 'failed' || s.status === 'stopped') {
+            this.enviando = false;
+            this.envioTerminado = true;
+            this.progreso = s.status === 'completed' ? 100 : this.progreso;
+            this.broadcastMensaje = s.status === 'completed'
+              ? `Campaña enviada: ${s.sentCount} de ${tot} mensajes.`
+              : `El envío terminó con estado "${s.status}" (${s.sentCount}/${tot}).`;
+            this.cargarBalance();
+          } else {
+            this.pollProgreso(broadcastId, total, intentos + 1);
+          }
+        },
+        error: () => this.pollProgreso(broadcastId, total, intentos + 1),
+      });
+    }, 3000);
+  }
 
-    this.enviando = false;
-    this.envioTerminado = true;
-    this.cargarBalance(); // refrescar saldo tras la campaña
+  ngOnDestroy(): void {
+    if (this.pollTimer) clearTimeout(this.pollTimer);
   }
 
   get enviadosOk(): number {

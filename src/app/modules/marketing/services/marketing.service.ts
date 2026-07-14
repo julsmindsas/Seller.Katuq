@@ -113,4 +113,50 @@ export class MarketingService extends BaseService {
   getCampaigns(): Observable<{ items: CampaignSummary[]; totalCount: number }> {
     return this.get<{ items: CampaignSummary[]; totalCount: number }>('/v1/whatsapp/campaigns');
   }
+
+  /**
+   * [D-097 fase 3] Lanza la campaña vía Kapso Broadcasts: envío server-side
+   * (sobrevive al navegador), variables por destinatario y programación.
+   */
+  launchBroadcast(payload: {
+    name: string;
+    templateId: string;
+    templateName: string;
+    recipients: Array<{ phone: string; variables: string[] }>;
+    scheduledAt?: string;
+    campaignId?: string;
+  }): Observable<BroadcastLaunchResult> {
+    return this.post<BroadcastLaunchResult>('/v1/whatsapp/campaigns/broadcast', payload);
+  }
+
+  /** Progreso de un broadcast en Kapso. */
+  getBroadcastStatus(id: string): Observable<BroadcastStatus> {
+    return this.get<BroadcastStatus>(`/v1/whatsapp/campaigns/broadcast/${encodeURIComponent(id)}`);
+  }
+}
+
+/** Respuesta de POST /v1/whatsapp/campaigns/broadcast. */
+export interface BroadcastLaunchResult {
+  success: boolean;
+  broadcastId: string;
+  status: string;
+  scheduledAt: string | null;
+  destinatarios: number;
+  duplicados: number;
+  erroresKapso: string[];
+  costoCOP: number;
+  balanceAfter?: number;
+  campaignId: string;
+  message?: string;
+}
+
+/** Respuesta de GET /v1/whatsapp/campaigns/broadcast/:id. */
+export interface BroadcastStatus {
+  broadcastId: string;
+  status: string; // draft|scheduled|sending|stopped|completed|failed
+  totalRecipients: number;
+  sentCount: number;
+  scheduledAt: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
 }
