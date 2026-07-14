@@ -6,7 +6,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, of } from "rxjs";
-import { catchError, delay, map } from "rxjs/operators";
+import { catchError, delay, map, retry } from "rxjs/operators";
 
 import { environment } from "../../../../environments/environment";
 import { BaseService } from "../../../shared/services/base.service";
@@ -207,7 +207,12 @@ export class WhatsappInboxService extends BaseService {
    * Marcar hilo como visto por el operador.
    *
    * Real: `PATCH /v1/whatsapp/conversations/:phoneHash/viewed`.
-   * Fallback: `{ updated: 1 }` para que el demo no quede colgado.
+   *
+   * [D-105] SIN fallback mock: el mock fingía éxito y enmascaró fallos reales
+   * (el CORS sin PATCH de D-095 vivió semanas gracias a esto). Ahora: 1 retry
+   * a los 2s y si aún falla se loguea FUERTE en consola — el badge se
+   * "resucita" en el próximo poll de la lista, que es el comportamiento
+   * honesto (el hilo sigue sin leer en el servidor).
    *
    * Usamos `http.patch` directo porque `BaseService` no expone `patch`, pero
    * el `HttpClient` inyectado ya pasa por el interceptor del proyecto.
@@ -216,13 +221,22 @@ export class WhatsappInboxService extends BaseService {
     const url = `${environment.urlApi}/v1/whatsapp/conversations/${encodeURIComponent(
       phoneHash,
     )}/viewed`;
-    const mock: { updated: number } = { updated: 1 };
 
     return this.http.patch<{ updated: number }>(url, {}).pipe(
+      retry({ count: 1, delay: 2000 }),
       map((response: { updated: number }) =>
-        response && typeof response.updated === "number" ? response : mock,
+        response && typeof response.updated === "number"
+          ? response
+          : { updated: 0 },
       ),
-      catchError(() => of(mock).pipe(delay(this.MOCK_DELAY_MS))),
+      catchError((err) => {
+        // eslint-disable-next-line no-console
+        console.error(
+          `[whatsapp-inbox] markThreadViewed FALLÓ para ${phoneHash.slice(0, 12)}… — el hilo seguirá como no-leído`,
+          err?.status || err?.message || err,
+        );
+        return of({ updated: 0 });
+      }),
     );
   }
 
