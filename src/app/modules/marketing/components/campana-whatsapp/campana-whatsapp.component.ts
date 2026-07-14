@@ -58,7 +58,11 @@ export class CampanaWhatsappComponent implements OnInit {
 
   paso: 1 | 2 | 3 = 1;
 
-  // --- Paso 1: audiencia (CRM) ---
+  // --- Paso 1: audiencia ---
+  /** Fuente de audiencia: clientes registrados (default — siempre tienen
+   *  teléfono) o leads del CRM. */
+  fuente: 'clientes' | 'crm' = 'clientes';
+  filtroNombre = '';
   loadingAudiencia = false;
   errorAudiencia = false;
   stages: CrmStage[] = [];
@@ -94,6 +98,44 @@ export class CampanaWhatsappComponent implements OnInit {
   // Paso 1 — Audiencia
   // =====================================================================
   cargarAudiencia(): void {
+    if (this.fuente === 'clientes') {
+      this.cargarClientes();
+    } else {
+      this.cargarLeadsCrm();
+    }
+  }
+
+  /** Audiencia desde clientes registrados (default). */
+  private cargarClientes(): void {
+    this.loadingAudiencia = true;
+    this.errorAudiencia = false;
+    this.marketing.getClients().subscribe({
+      next: (data: any[]) => {
+        const rows = Array.isArray(data) ? data : [];
+        const mapped = rows.map((c) => ({
+          leadId: c.cd || c.id || c.documento || '',
+          nombre:
+            [c.nombres_completos, c.apellidos_completos].filter(Boolean).join(' ').trim() ||
+            c.nombre || 'Sin nombre',
+          phone: this.normalizarPhone(
+            c.numero_celular_whatsapp || c.numero_celular_comprador || c.telefono || c.celular,
+          ),
+          email: (c.correo_electronico_comprador || c.email || '').trim().toLowerCase(),
+          selected: false,
+        }));
+        this.leadsSinTelefono = mapped.filter((d) => !d.phone).length;
+        this.destinatarios = mapped.filter((d) => !!d.phone);
+        this.loadingAudiencia = false;
+      },
+      error: () => {
+        this.errorAudiencia = true;
+        this.loadingAudiencia = false;
+      },
+    });
+  }
+
+  /** Audiencia desde leads del CRM (con etapa opcional). */
+  private cargarLeadsCrm(): void {
     this.loadingAudiencia = true;
     this.errorAudiencia = false;
 
@@ -126,8 +168,23 @@ export class CampanaWhatsappComponent implements OnInit {
     });
   }
 
+  onFuenteChange(): void {
+    this.filtroNombre = '';
+    this.destinatarios = [];
+    this.cargarAudiencia();
+  }
+
   onEtapaChange(): void {
     this.cargarAudiencia();
+  }
+
+  /** Destinatarios visibles según el filtro de búsqueda local. */
+  get destinatariosVisibles(): Destinatario[] {
+    const q = (this.filtroNombre || '').trim().toLowerCase();
+    if (!q) return this.destinatarios;
+    return this.destinatarios.filter(
+      (d) => d.nombre.toLowerCase().includes(q) || d.phone.includes(q),
+    );
   }
 
   toggleTodos(checked: boolean): void {

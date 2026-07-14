@@ -52,6 +52,15 @@ export class MarketingService extends BaseService {
     return this.get<ThreadsPage>('/v1/whatsapp/conversations');
   }
 
+  /**
+   * Clientes registrados del comercio — fuente principal de audiencia para
+   * campañas (los leads CRM suelen venir sin teléfono). Mismo endpoint que el
+   * módulo Clientes (`maestro.service`).
+   */
+  getClients(): Observable<any[]> {
+    return this.get<any[]>('/v1/clients/all');
+  }
+
   /** Plantillas HSM APPROVED del WABA del comercio. */
   getKapsoTemplates(): Observable<{ items: KapsoTemplate[] }> {
     return this.get<{ items: KapsoTemplate[] }>('/v1/whatsapp/kapso-templates');
