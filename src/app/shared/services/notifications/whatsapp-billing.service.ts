@@ -98,6 +98,27 @@ export interface WhatsappHealth {
   details?: string;
 }
 
+/** [D-106] Saldo prepago SMS. */
+export interface NotifSmsBalance {
+  balanceCOP: number;
+  priceCOP: number;
+  totalRecargadoHistoricoCOP: number;
+  totalConsumidoHistoricoCOP: number;
+  accountStatus: string;
+  billingEnabled: boolean;
+}
+
+/** [D-106] Datos del checkout Wompi devueltos por el backend. */
+export interface NotifTopupCheckout {
+  success: boolean;
+  reference: string;
+  integrity: string;
+  amountInCents: number;
+  currency: string;
+  publicKey: string;
+  channel: 'whatsapp' | 'sms';
+}
+
 /**
  * Servicio HTTP para el medidor de saldo de WhatsApp Business.
  * Extiende BaseService (Artículo IX: nunca HttpClient directo en componentes).
@@ -123,9 +144,22 @@ export class WhatsappBillingService extends BaseService {
     return this.get<WhatsappUsageResponse>(`${this.basePath}/usage${query}`);
   }
 
-  /** Recarga de saldo en COP. */
+  /** Recarga de saldo en COP (manual/admin — legacy). */
   topup(payload: WhatsappTopupRequest): Observable<WhatsappTopupResponse> {
     return this.post<WhatsappTopupResponse>(`${this.basePath}/topup`, payload);
+  }
+
+  /** [D-106] Saldo prepago SMS (separado del de WhatsApp). */
+  getSmsBalance(): Observable<NotifSmsBalance> {
+    return this.get<NotifSmsBalance>(`${this.basePath}/sms-balance`);
+  }
+
+  /**
+   * [D-106] Genera los datos del checkout Wompi para recargar saldo (WhatsApp
+   * o SMS). El saldo se acredita cuando el webhook confirma el pago.
+   */
+  topupCheckout(channel: 'whatsapp' | 'sms', amountCOP: number): Observable<NotifTopupCheckout> {
+    return this.post<NotifTopupCheckout>(`${this.basePath}/topup/checkout`, { channel, amountCOP });
   }
 
   /** Reclama el bonus de bienvenida (única vez por empresa). */
