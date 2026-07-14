@@ -559,7 +559,7 @@ export class NavService implements OnDestroy {
       title: "Campañas WhatsApp",
       icon: "send",
       type: "link",
-      path: "/marketing/campanas/whatsapp",
+      path: "/marketing/campanas",
       active: false,
     },
     {

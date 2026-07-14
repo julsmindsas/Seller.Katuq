@@ -32,6 +32,23 @@ export interface StartConversationResult {
   error?: string;
 }
 
+/** Resumen de campaña (GET /v1/whatsapp/campaigns — agregado desde usage, D-096). */
+export interface CampaignSummary {
+  campaignId: string;
+  campaignName: string;
+  templateName: string | null;
+  enviados: number;
+  destinatarios: number;
+  costoCOP: number;
+  mocks: number;
+  firstAt: string | null;
+  lastAt: string | null;
+  convertidos: number;
+  /** % de destinatarios con pedido en los 30 días post-envío. */
+  tasaConversion: number;
+  ventasAtribuidasCOP: number;
+}
+
 /**
  * Marketing Service — dashboard + campañas WhatsApp (spec 022).
  *
@@ -80,12 +97,20 @@ export class MarketingService extends BaseService {
     templateName: string,
     languageCode: string,
     variables: string[],
+    campaignId?: string,
+    campaignName?: string,
   ): Observable<StartConversationResult> {
     return this.post<StartConversationResult>('/v1/whatsapp/start-conversation', {
       phone,
       templateName,
       languageCode,
       variables,
+      ...(campaignId ? { campaignId, campaignName } : {}),
     });
+  }
+
+  /** Historial de campañas con tasa de conversión (D-096). */
+  getCampaigns(): Observable<{ items: CampaignSummary[]; totalCount: number }> {
+    return this.get<{ items: CampaignSummary[]; totalCount: number }>('/v1/whatsapp/campaigns');
   }
 }

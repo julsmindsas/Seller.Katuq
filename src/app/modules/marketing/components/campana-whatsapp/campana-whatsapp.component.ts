@@ -78,6 +78,7 @@ export class CampanaWhatsappComponent implements OnInit {
   variableConfigs: VariableConfig[] = [];
 
   // --- Paso 3: confirmación + envío ---
+  nombreCampana = '';
   balance: WhatsappBalance | null = null;
   loadingBalance = false;
   enviando = false;
@@ -277,6 +278,11 @@ export class CampanaWhatsappComponent implements OnInit {
 
   irAConfirmacion(): void {
     if (!this.plantillaLista) return;
+    if (!this.nombreCampana.trim()) {
+      const t = this.selectedTemplate;
+      const hoy = new Date().toISOString().slice(0, 10);
+      this.nombreCampana = `${t?.name || 'Campaña'} ${hoy}`;
+    }
     this.paso = 3;
     this.cargarBalance();
   }
@@ -316,12 +322,17 @@ export class CampanaWhatsappComponent implements OnInit {
     this.resultados = [];
     this.progreso = 0;
 
+    // [D-096] Etiqueta de campaña: agrupa los envíos en el historial.
+    const nombre = this.nombreCampana.trim() || `${t.name} ${new Date().toISOString().slice(0, 10)}`;
+    const slug = nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+    const campaignId = `${slug}-${Date.now().toString(36)}`;
+
     for (let i = 0; i < lote.length; i++) {
       const dest = lote[i];
       const variables = this.variableConfigs.map((cfg) => this.resolverVariable(cfg, dest));
       try {
         await this.marketing
-          .startConversation(dest.phone, t.name, t.language, variables)
+          .startConversation(dest.phone, t.name, t.language, variables, campaignId, nombre)
           .toPromise();
         this.resultados.push({ nombre: dest.nombre, phone: dest.phone, ok: true });
       } catch (err: any) {

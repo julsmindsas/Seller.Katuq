@@ -6,6 +6,7 @@ import { NgxEchartsModule } from 'ngx-echarts';
 
 import { MarketingDashboardComponent } from './components/marketing-dashboard/marketing-dashboard.component';
 import { CampanaWhatsappComponent } from './components/campana-whatsapp/campana-whatsapp.component';
+import { CampanasHistorialComponent } from './components/campanas-historial/campanas-historial.component';
 import { MarketingService } from './services/marketing.service';
 import { MarketingGuard } from './guards/marketing.guard';
 
@@ -13,6 +14,11 @@ const routes: Routes = [
   {
     path: '',
     component: MarketingDashboardComponent,
+    canActivate: [MarketingGuard],
+  },
+  {
+    path: 'campanas',
+    component: CampanasHistorialComponent,
     canActivate: [MarketingGuard],
   },
   {
@@ -31,7 +37,7 @@ const routes: Routes = [
  * la misma librería del dashboard gerencial (chart.js NO está instalado).
  */
 @NgModule({
-  declarations: [MarketingDashboardComponent, CampanaWhatsappComponent],
+  declarations: [MarketingDashboardComponent, CampanaWhatsappComponent, CampanasHistorialComponent],
   imports: [
     CommonModule,
     FormsModule,

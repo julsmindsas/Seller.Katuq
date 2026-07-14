@@ -1,0 +1,70 @@
+// Historial de campañas (D-096) — mismo lenguaje visual plano del módulo.
+
+.campanas-historial {
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-left: 4px solid #adb5bd;
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+
+  &.accent-primary { border-left-color: #4c6fff; }
+  &.accent-info    { border-left-color: #17a2b8; }
+  &.accent-success { border-left-color: #28a745; }
+  &.accent-warning { border-left-color: #ffb200; }
+
+  .stat-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6c757d;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #212529;
+  }
+
+  .stat-sub {
+    font-size: 0.75rem;
+    color: #6c757d;
+  }
+}
+
+.panel-card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 1rem;
+
+  .panel-loading,
+  .panel-empty {
+    color: #adb5bd;
+    font-size: 0.85rem;
+    padding: 1.5rem 0;
+    text-align: center;
+  }
+}
+
+table {
+  font-size: 0.84rem;
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}

@@ -1,0 +1,86 @@
+<div class="container-fluid campanas-historial">
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+      <h4 class="mb-0">Campañas de WhatsApp</h4>
+      <small class="text-muted">Historial y conversión — un contacto "convierte" si compra dentro de los 30 días después del envío</small>
+    </div>
+    <div class="d-flex gap-2">
+      <a routerLink="/marketing" class="btn btn-outline-secondary btn-sm">← Dashboard</a>
+      <button class="btn btn-outline-secondary btn-sm" (click)="cargar()" [disabled]="loading"><i class="fa fa-refresh"></i></button>
+      <a routerLink="/marketing/campanas/whatsapp" class="btn btn-primary btn-sm"><i class="fa fa-paper-plane me-1"></i>Nueva campaña</a>
+    </div>
+  </div>
+
+  <!-- Totales -->
+  <div class="row g-3 mb-3" *ngIf="campanas.length > 0">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card accent-primary">
+        <span class="stat-label">Campañas</span>
+        <span class="stat-value">{{ campanas.length }}</span>
+        <span class="stat-sub">{{ totalEnviados }} mensajes enviados</span>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card accent-info">
+        <span class="stat-label">Contactos alcanzados</span>
+        <span class="stat-value">{{ totalDestinatarios }}</span>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card accent-success">
+        <span class="stat-label">Tasa de conversión</span>
+        <span class="stat-value">{{ tasaGlobal }}%</span>
+        <span class="stat-sub">{{ totalConvertidos }} compraron tras la campaña</span>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card accent-warning">
+        <span class="stat-label">Ventas atribuidas</span>
+        <span class="stat-value">{{ totalVentasAtribuidas | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="stat-sub">pedidos de contactos alcanzados (30 días)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-card">
+    <div *ngIf="loading" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando campañas…</div>
+    <div *ngIf="!loading && error" class="panel-empty">No se pudo cargar el historial</div>
+    <div *ngIf="!loading && !error && campanas.length === 0" class="panel-empty">
+      Aún no has enviado campañas.
+      <a routerLink="/marketing/campanas/whatsapp">Crea la primera</a> — desde aquí verás cuántos contactos compraron después de cada envío.
+    </div>
+
+    <div class="table-responsive" *ngIf="!loading && campanas.length > 0">
+      <table class="table table-sm table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Campaña</th>
+            <th>Fecha</th>
+            <th>Plantilla</th>
+            <th class="text-end">Contactos</th>
+            <th class="text-end">Enviados</th>
+            <th class="text-end">Costo</th>
+            <th class="text-end">Convirtieron</th>
+            <th class="text-end">Tasa</th>
+            <th class="text-end">Ventas atribuidas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of campanas">
+            <td class="fw-semibold">{{ c.campaignName }}</td>
+            <td class="text-muted">{{ c.firstAt ? (c.firstAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</td>
+            <td class="text-muted">{{ c.templateName || '—' }}</td>
+            <td class="text-end">{{ c.destinatarios }}</td>
+            <td class="text-end">{{ c.enviados }}<span *ngIf="c.mocks > 0" class="text-muted small"> ({{ c.mocks }} prueba)</span></td>
+            <td class="text-end">{{ c.costoCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+            <td class="text-end">{{ c.convertidos }}</td>
+            <td class="text-end">
+              <span class="badge" [class.bg-success]="c.tasaConversion >= 10" [class.bg-secondary]="c.tasaConversion < 10">{{ c.tasaConversion }}%</span>
+            </td>
+            <td class="text-end">{{ c.ventasAtribuidasCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -133,6 +133,12 @@
 
   <!-- ============ PASO 3: CONFIRMAR + ENVIAR ============ -->
   <div *ngIf="paso === 3" class="panel-card">
+    <div class="row mb-3" *ngIf="!envioTerminado">
+      <div class="col-md-6">
+        <label class="form-label small mb-1">Nombre de la campaña <span class="text-muted">(para el historial)</span></label>
+        <input type="text" class="form-control form-control-sm" [(ngModel)]="nombreCampana" maxlength="120" [disabled]="enviando" />
+      </div>
+    </div>
     <div class="row g-3 mb-3" *ngIf="!envioTerminado">
       <div class="col-md-4">
         <div class="resumen-item">
@@ -189,7 +195,7 @@
 
     <div class="d-flex justify-content-between">
       <button class="btn btn-outline-secondary btn-sm" [disabled]="enviando" (click)="volverAlPaso(2)" *ngIf="!envioTerminado">← Mensaje</button>
-      <a *ngIf="envioTerminado" routerLink="/marketing" class="btn btn-outline-secondary btn-sm">Volver al dashboard</a>
+      <a *ngIf="envioTerminado" routerLink="/marketing/campanas" class="btn btn-primary btn-sm"><i class="fa fa-bar-chart me-1"></i>Ver historial de campañas</a>
       <button *ngIf="!envioTerminado" class="btn btn-success btn-sm" [disabled]="enviando || saldoInsuficiente || loadingBalance" (click)="enviarCampana()">
         <i class="fa fa-paper-plane me-1"></i>Enviar a {{ seleccionados.length }} contactos
       </button>
