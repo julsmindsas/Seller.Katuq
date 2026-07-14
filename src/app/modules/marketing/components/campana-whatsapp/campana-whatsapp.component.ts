@@ -361,6 +361,13 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (r) => {
           this.broadcastErrores = r.erroresKapso || [];
+          const excluidos = (r as any).excluidosNoContactar || 0;
+          if (excluidos > 0) {
+            this.broadcastErrores = [
+              `${excluidos} contacto(s) excluido(s): pidieron no ser contactados.`,
+              ...this.broadcastErrores,
+            ];
+          }
           if (scheduledAt) {
             this.enviando = false;
             this.envioTerminado = true;

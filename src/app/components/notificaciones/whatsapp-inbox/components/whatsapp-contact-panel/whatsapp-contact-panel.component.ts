@@ -27,6 +27,9 @@ import {
 export class WhatsappContactPanelComponent implements OnChanges {
   @Input() phoneHash: string | null = null;
 
+  /** [D-098] Guardando el cambio de "no contactar". */
+  togglingOptOut = false;
+
   profile: ContactProfile | null = null;
   orders: Order[] = [];
   loading = false;
@@ -97,6 +100,47 @@ export class WhatsappContactPanelComponent implements OnChanges {
     const range = this.wideRangeParams();
     const name = this.profile?.clienteNombre;
     return name ? { buscar: name, ...range } : range;
+  }
+
+  /**
+   * [D-098] Alterna "no contactar" del contacto (opt-out de marketing).
+   * El backend resuelve el teléfono desde el hash y actualiza la lista del
+   * comercio — campañas y envíos de plantilla lo excluyen automáticamente.
+   */
+  toggleOptOut(): void {
+    if (!this.phoneHash || !this.profile || this.togglingOptOut) return;
+    const nuevo = !this.profile.optedOut;
+    this.togglingOptOut = true;
+
+    const userStr = localStorage.getItem("user") || "{}";
+    let token = "", company = "", nit = "", email = "", authCode = "";
+    try {
+      const u = JSON.parse(userStr);
+      token = u.token || ""; company = u.company || ""; nit = u.nit || "";
+      email = u.email || ""; authCode = u.authorizationCode || "";
+    } catch {}
+    fetch(
+      environment.urlApi + "/v1/whatsapp/conversations/" +
+        encodeURIComponent(this.phoneHash) + "/optout",
+      {
+        method: "PATCH",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "company": company,
+          "user": nit,
+          "usage-code": authCode,
+          "email": email,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ optedOut: nuevo }),
+      },
+    )
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then(() => {
+        if (this.profile) this.profile = { ...this.profile, optedOut: nuevo };
+      })
+      .catch(() => undefined)
+      .finally(() => (this.togglingOptOut = false));
   }
 
   /**
@@ -317,6 +361,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
           hasOrderHistory: !!profResp?.hasOrderHistory,
           lead: profResp?.lead || null,
           ratingDraft: profResp?.ratingDraft || null,
+          optedOut: !!profResp?.optedOut,
         };
         const orders = (ordersResp?.items || []).map((o: any) => ({
           orderId: o.id,

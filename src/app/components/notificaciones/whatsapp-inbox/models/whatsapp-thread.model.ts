@@ -116,6 +116,8 @@ export interface ContactProfile {
   isClienteRegistrado: boolean;
   lead?: ContactProfileLead | null;
   ratingDraft?: ContactProfileRatingDraft | null;
+  /** [D-098] true = el contacto pidió no recibir mensajes de marketing. */
+  optedOut?: boolean;
 }
 
 /**

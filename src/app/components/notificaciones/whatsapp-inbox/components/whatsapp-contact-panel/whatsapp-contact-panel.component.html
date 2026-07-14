@@ -49,6 +49,22 @@
           Abrir lead en CRM →
         </a>
       </div>
+
+      <!-- [D-098] Opt-out de marketing -->
+      <div class="contact-panel__optout">
+        <span *ngIf="profile.optedOut" class="contact-panel__optout-badge">🚫 No contactar</span>
+        <button
+          type="button"
+          class="contact-panel__optout-btn"
+          [class.is-active]="profile.optedOut"
+          [disabled]="togglingOptOut"
+          (click)="toggleOptOut()"
+          [title]="profile.optedOut ? 'Volver a permitir campañas y plantillas a este contacto' : 'Excluir a este contacto de campañas y plantillas'"
+        >
+          <span *ngIf="togglingOptOut">Guardando…</span>
+          <span *ngIf="!togglingOptOut">{{ profile.optedOut ? 'Permitir mensajes de nuevo' : 'Marcar como "No contactar"' }}</span>
+        </button>
+      </div>
     </details>
 
     <!-- Sección 2: Historial de pedidos -->

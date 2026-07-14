@@ -364,3 +364,47 @@ $accent-crm: #b8860b;        // dorado opaco
     }
   }
 }
+
+// [D-098] Opt-out de marketing
+.contact-panel__optout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+
+  &-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #dc3545;
+    background: #fdecec;
+    border: 1px solid #f5c2c7;
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+
+  &-btn {
+    font-size: 0.74rem;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    color: #6c757d;
+    border-radius: 4px;
+    padding: 3px 10px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: #dc3545;
+      color: #dc3545;
+    }
+
+    &.is-active {
+      border-color: #28a745;
+      color: #28a745;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  }
+}
