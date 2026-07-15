@@ -9,3 +9,6 @@
 
 <!-- Solo mostrar el floating button si NO estamos en una ruta pública Y el usuario está autenticado -->
 <app-floating-button *ngIf="!isPublicRoute && authService.isLoggedIn"></app-floating-button>
+
+<!-- Modal "¿Qué hay de nuevo?" — se muestra una sola vez por usuario (localStorage) -->
+<app-novedad-modal></app-novedad-modal>

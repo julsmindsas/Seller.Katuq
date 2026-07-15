@@ -185,3 +185,9 @@ katuq-ec2-access/
 # Documentos comerciales (cotizaciones/propuestas en la raiz) — no van al repo de codigo
 /Cotizacion_*.pdf
 /Propuesta_*.pdf
+
+# Videos de novedades (usar Firebase Storage en prod; no versionar binarios)
+src/assets/novedades/*.mp4
+
+# Backups locales de sesiones (no versionar)
+.backups/

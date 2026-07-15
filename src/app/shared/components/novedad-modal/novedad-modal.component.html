@@ -1,0 +1,44 @@
+<div class="nov-overlay" *ngIf="visible && novedad" (click)="cerrar()">
+  <div class="nov-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="nov-close" (click)="cerrar()" aria-label="Cerrar">
+      <i class="pi pi-times"></i>
+    </button>
+
+    <!-- Media -->
+    <div class="nov-media" *ngIf="novedad.tipo !== 'texto'">
+      <video
+        *ngIf="novedad.tipo === 'video'"
+        [src]="novedad.url"
+        [poster]="novedad.poster || null"
+        controls
+        autoplay
+        muted
+        loop
+        playsinline
+      ></video>
+      <img *ngIf="novedad.tipo === 'imagen'" [src]="novedad.url" [alt]="novedad.titulo" />
+    </div>
+
+    <!-- Cuerpo -->
+    <div class="nov-body">
+      <span class="nov-badge">✨ {{ 'Novedad' | translate }}</span>
+      <h3 class="nov-title">{{ novedad.titulo }}</h3>
+      <p class="nov-desc" *ngIf="novedad.descripcion">{{ novedad.descripcion }}</p>
+
+      <div class="nov-actions">
+        <a
+          *ngIf="novedad.cta"
+          class="nov-btn nov-btn--ghost"
+          [href]="novedad.cta.link"
+          target="_blank"
+          rel="noopener"
+          (click)="cerrar()"
+          >{{ novedad.cta.label }}</a
+        >
+        <button type="button" class="nov-btn nov-btn--primary" (click)="cerrar()">
+          {{ 'Entendido' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
