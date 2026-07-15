@@ -4,29 +4,15 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(20, 20, 20, 0.3);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px); /* Para compatibilidad con Safari */
+  background:
+    radial-gradient(circle at center, rgba(124, 92, 255, 0.28) 0%, rgba(124, 92, 255, 0) 62%),
+    rgba(18, 16, 26, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); /* Para compatibilidad con Safari */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999; /* Asegura que esté por encima de otros elementos */
-}
-
-.overlay svg {
-  width: 20vw; /* 20% del ancho de la ventana */
-  height: auto; /* Mantiene la proporción */
-  max-width: 150px; /* Tamaño máximo */
-  max-height: 150px;
-  animation: pulse 2.5s infinite cubic-bezier(0.66, 0, 0.34, 1);
-}
-
-@media (max-width: 600px) {
-  .overlay svg {
-    width: 40vw; /* 40% del ancho de la ventana en pantallas pequeñas */
-    max-width: 100px; /* Tamaño máximo reducido */
-    max-height: 100px;
-  }
 }
 
 .sr-only {
@@ -41,40 +27,124 @@
   border: 0;
 }
 
-@keyframes colorChange {
+/* "Cadena de suministro" — un camión viaja de proveedor a bodega a cliente
+   sobre una ruta punteada, encendiendo cada nodo al pasar. Íconos Font
+   Awesome 4.7 (ya cargados globalmente en index.html), sin assets externos.
+   Plano, un solo morado de marca (--ktq-primary), sin SVG con transforms. */
+.route-loader {
+  position: relative;
+  width: 260px;
+  height: 56px;
+}
+
+.route-track {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  right: 10px;
+  height: 3px;
+  transform: translateY(-50%);
+  background-image: linear-gradient(
+    to right,
+    rgba(124, 92, 255, 0.3) 0 8px,
+    transparent 8px 16px
+  );
+  background-size: 16px 3px;
+  background-repeat: repeat-x;
+}
+
+.route-node {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 21px;
+  color: rgba(124, 92, 255, 0.35);
+  animation: nodePulse 2.2s ease-in-out infinite;
+}
+
+.route-node--1 {
+  left: 11px;
+  animation-delay: -1.1s;
+}
+
+.route-node--2 {
+  left: 50%;
+  animation-delay: -0.24s;
+}
+
+.route-node--3 {
+  left: calc(100% - 11px);
+  animation-delay: 0.62s;
+}
+
+.route-truck {
+  position: absolute;
+  top: 50%;
+  left: 4%;
+  font-size: 25px;
+  color: #7c5cff;
+  transform: translate(-50%, -50%);
+  animation: truckMove 2.2s ease-in-out infinite;
+}
+
+@keyframes nodePulse {
   0%,
   100% {
-    fill: #00fcd6;
+    color: rgba(124, 92, 255, 0.35);
+    transform: translate(-50%, -50%) scale(1);
   }
   50% {
-    fill: #9b00ff;
+    color: #7c5cff;
+    transform: translate(-50%, -50%) scale(1.35);
   }
 }
 
-@keyframes colorChange2 {
-  0%,
+@keyframes truckMove {
+  0% {
+    left: 4%;
+    opacity: 1;
+  }
+  78% {
+    left: 96%;
+    opacity: 1;
+  }
+  86% {
+    left: 96%;
+    opacity: 0;
+  }
+  87% {
+    left: 4%;
+    opacity: 0;
+  }
   100% {
-    fill: #9b00ff;
-  }
-  50% {
-    fill: #00fcd6;
+    left: 4%;
+    opacity: 1;
   }
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    transform: scale(1);
+@media (max-width: 600px) {
+  .route-loader {
+    width: 210px;
+    height: 48px;
   }
-  50% {
-    transform: scale(1.05);
+
+  .route-node {
+    font-size: 18px;
+  }
+
+  .route-truck {
+    font-size: 21px;
   }
 }
 
-#path1 {
-  animation: colorChange 2s infinite linear;
-}
-
-#path4 {
-  animation: colorChange2 3s infinite linear;
+:host-context(body.dark-only) {
+  .route-track {
+    background-image: linear-gradient(
+      to right,
+      rgba(158, 133, 255, 0.35) 0 6px,
+      transparent 6px 12px
+    );
+    background-size: 12px 2px;
+    background-repeat: repeat-x;
+  }
 }
