@@ -9,11 +9,28 @@
                     <div class="loader-8"></div>
                 </div>
 
-                <!-- Header Compacto -->
-                <div class="row col-12 mx-2 my-1">
-                    <div class="col-6">
-                        <h5 class="text-left fc-secondary fw-bold mb-0">{{ "Pedidos" | translate }}</h5>
-                        <small class="text-left text-muted">{{ "Listado de pedidos" | translate }}</small>
+                <!-- Header Compacto (rediseño 1b) -->
+                <div class="pedidos-topbar">
+                    <div class="pedidos-topbar__title">
+                        <h5 class="pedidos-topbar__h">{{ "Pedidos" | translate }}</h5>
+                        <small class="pedidos-topbar__sub">
+                            {{ "Listado de pedidos" | translate }} ·
+                            <b>{{ totalRecords || orders.length }}</b> {{ "resultados" | translate }}
+                        </small>
+                    </div>
+                    <div class="pedidos-topbar__actions">
+                        <div class="pedidos-viewtoggle" role="group" aria-label="Cambiar vista">
+                            <button type="button" class="pedidos-viewtoggle__btn"
+                                    [class.is-active]="modoVista === 'split'"
+                                    (click)="modoVista = 'split'">
+                                <i class="pi pi-th-large"></i> {{ "Panel" | translate }}
+                            </button>
+                            <button type="button" class="pedidos-viewtoggle__btn"
+                                    [class.is-active]="modoVista === 'tabla'"
+                                    (click)="modoVista = 'tabla'">
+                                <i class="pi pi-table"></i> {{ "Tabla" | translate }}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -21,23 +38,7 @@
                     <div class="">
                         <div class="">
                             <div class="p-2">
-                                    <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="pageSize"
-                                        [showCurrentPageReport]="true" [rowsPerPageOptions]="[5,10,25,50]"
-                                        [loading]="loading" [reorderableColumns]="true" [scrollable]="true"
-                                        [scrollHeight]="'flex'"
-                                        [paginator]="true"
-                                        [lazy]="usePagination"
-                                        (onLazyLoad)="loadLazy($event)"
-                                        (onFilter)="onTableFilter($event)"
-                                        [totalRecords]="totalRecords"
-                                        [(first)]="first"
-                                    currentPageReportTemplate="{{'Mostrando {first} a {last} de {totalRecords} pedidos' | translate}}"
-                                    [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
-                                        styleClass="p-datatable p-datatable-gridlines p-datatable-striped responsive-paginator"
-                                        [tableStyle]="{ 'min-width': '14rem', 'padding':'2px' }"
-                                        style="font-size: 0.65em; table-layout: fixed;">
-                                    <!-- CAPTION: Filtros compartidos -->
-                                    <ng-template pTemplate="caption">
+                                    <!-- ====== FILTROS + MÉTRICAS (rediseño 1b: fuera de la tabla, visibles en ambas vistas) ====== -->
                                         <app-shared-filters
                                             #sharedFilters
                                             [estadosPagoOptions]="estadosPagoOptions"
@@ -64,7 +65,7 @@
                                             (estadoProcesoChange)="onSharedEstadoProcesoChange($event)"
                                             (datePresetChange)="onSharedDatePresetChange($event)"
                                             (columnSelectionChange)="onSharedColumnSelectionChange($event)"
-                                            (filterAction)="refrescar(dt1)"
+                                            (filterAction)="refrescar()"
                                             (exportAction)="exportarExcel()"
                                             (clearAllFilters)="onSharedClearAllFilters()"
                                             (clearSpecificFilter)="onSharedClearSpecificFilter($event)"
@@ -272,7 +273,340 @@
                                             </div>
                                         </div>
                                     </div>
-                                    </ng-template>
+                                    <!-- (fin filtros / métricas) -->
+
+                                    <!-- ================= VISTA SPLIT (lista + panel de detalle) — rediseño 1b ================= -->
+                                    <div *ngIf="modoVista === 'split' && !isFromProduction" class="pedidos-split">
+
+                                        <!-- ===== Columna maestra: lista de pedidos ===== -->
+                                        <div class="pedidos-list-pane">
+                                            <div class="pedidos-list-pane__head">
+                                                <div class="pedidos-list-pane__titlerow">
+                                                    <span class="pedidos-list-pane__title">{{ 'Pedidos' | translate }}</span>
+                                                    <span class="pedidos-list-pane__count">{{ totalRecords || orders.length }}</span>
+                                                </div>
+                                                <div class="pedidos-triage">
+                                                    <button type="button" class="pedidos-triage__chip is-active" (click)="onMetricClick('all')">
+                                                        {{ 'Todos' | translate }} · {{ getTotalPedidos() }}
+                                                    </button>
+                                                    <button type="button" class="pedidos-triage__chip pedidos-triage__chip--danger" (click)="onMetricClick('urgentes')">
+                                                        {{ 'Urgentes' | translate }} · {{ getPedidosUrgentesCount() }}
+                                                    </button>
+                                                    <button type="button" class="pedidos-triage__chip pedidos-triage__chip--warning" (click)="onMetricClick('pendientesPago')">
+                                                        {{ 'Pend. pago' | translate }} · {{ getPendientesPagoCount() }}
+                                                    </button>
+                                                    <button type="button" class="pedidos-triage__chip" (click)="onMetricClick('SinProducir')">
+                                                        {{ 'Sin producir' | translate }} · {{ getProcesoCount('SinProducir') }}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div *ngIf="loading" class="pedidos-list-pane__loading">
+                                                <i class="pi pi-spin pi-spinner"></i> {{ 'Cargando…' | translate }}
+                                            </div>
+
+                                            <div class="pedidos-list-scroll">
+                                                <div *ngFor="let pedido of orders; trackBy: trackByIndex"
+                                                     class="pedido-row"
+                                                     [class.is-active]="pedidoDetalle?.nroPedido === pedido.nroPedido"
+                                                     (click)="seleccionarPedidoDetalle(pedido)">
+                                                    <span class="pedido-row__avatar" [style.background]="getAvatarColor(getClienteNombre(pedido))">
+                                                        {{ getAvatarInitial(getClienteNombre(pedido)) }}
+                                                    </span>
+                                                    <div class="pedido-row__main">
+                                                        <div class="pedido-row__top">
+                                                            <span class="pedido-row__nro">{{ pedido.nroPedido }}</span>
+                                                            <span *ngIf="isPedidoUrgente(pedido)" class="pedido-row__urg">URG</span>
+                                                            <i *ngIf="isPedidoCongelado(pedido)" class="fa fa-snowflake-o pedido-row__frozen"
+                                                               [title]="'Pedido congelado' | translate"></i>
+                                                        </div>
+                                                        <div class="pedido-row__cliente">{{ getClienteNombre(pedido) }}</div>
+                                                        <div class="pedido-row__badges">
+                                                            <span class="modern-badge pedido-pill"
+                                                                [ngClass]="{
+                                                                    'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
+                                                                    'badge-success': pedido?.estadoPago === 'Aprobado',
+                                                                    'badge-info': pedido?.estadoPago === 'PreAprobado',
+                                                                    'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
+                                                                }">{{ getPaymentStatusDisplay(pedido?.estadoPago).short }}</span>
+                                                            <span class="modern-badge pedido-pill"
+                                                                [ngClass]="{
+                                                                    'badge-secondary': pedido?.estadoProceso === 'SinProducir',
+                                                                    'badge-info': pedido?.estadoProceso === 'EnProduccion' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                                    'badge-primary': pedido?.estadoProceso === 'Empacado',
+                                                                    'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                                    'badge-success': pedido?.estadoProceso === 'Entregado',
+                                                                    'badge-danger': pedido?.estadoProceso === 'Rechazado',
+                                                                    'badge-dark': pedido?.estadoProceso === 'Cerrado'
+                                                                }">{{ getStatusDisplay(pedido?.estadoProceso).short }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="pedido-row__right">
+                                                        <div class="pedido-row__valor">{{ pedido.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+                                                        <div class="pedido-row__fecha">{{ convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega) }}</div>
+                                                    </div>
+                                                </div>
+
+                                                <div *ngIf="!loading && orders.length === 0" class="pedidos-empty-list">
+                                                    <i class="pi pi-inbox"></i>
+                                                    <span>{{ 'No hay pedidos' | translate }}</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="pedidos-pager" *ngIf="usePagination && totalRecords > pageSize">
+                                                <button type="button" class="pedidos-pager__btn" [disabled]="first === 0"
+                                                        (click)="onSplitPageChange({ first: (first - pageSize) < 0 ? 0 : first - pageSize, rows: pageSize })">
+                                                    <i class="pi pi-chevron-left"></i>
+                                                </button>
+                                                <span class="pedidos-pager__info">
+                                                    {{ first + 1 }}–{{ (first + pageSize) > totalRecords ? totalRecords : (first + pageSize) }} {{ 'de' | translate }} {{ totalRecords }}
+                                                </span>
+                                                <button type="button" class="pedidos-pager__btn" [disabled]="(first + pageSize) >= totalRecords"
+                                                        (click)="onSplitPageChange({ first: first + pageSize, rows: pageSize })">
+                                                    <i class="pi pi-chevron-right"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- ===== Columna detalle: panel del pedido seleccionado ===== -->
+                                        <div class="pedidos-detail-pane">
+                                            <ng-container *ngIf="pedidoDetalle; else detalleVacio">
+                                                <div class="pedido-detail">
+                                                    <!-- header -->
+                                                    <div class="pedido-detail__head">
+                                                        <span class="pedido-detail__avatar" [style.background]="getAvatarColor(getClienteNombre(pedidoDetalle))">
+                                                            {{ getAvatarInitial(getClienteNombre(pedidoDetalle)) }}
+                                                        </span>
+                                                        <div class="pedido-detail__id">
+                                                            <div class="pedido-detail__cliente">
+                                                                {{ getClienteNombre(pedidoDetalle) }}
+                                                                <span *ngIf="isPedidoUrgente(pedidoDetalle)" class="pedido-row__urg">⚠ {{ 'URGENTE' | translate }}</span>
+                                                            </div>
+                                                            <div class="pedido-detail__meta">
+                                                                <span class="pedido-detail__nro">{{ pedidoDetalle.nroPedido }}</span>
+                                                                <span class="pedido-detail__entrega">
+                                                                    {{ 'Entrega' | translate }} {{ convertFechaEntregaString(pedidoDetalle?.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega) }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="pedido-detail__total">
+                                                            <span class="pedido-detail__total-label">{{ 'TOTAL' | translate }}</span>
+                                                            <span class="pedido-detail__total-value">{{ pedidoDetalle.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="pedido-detail__body">
+                                                        <!-- badges de estado -->
+                                                        <div class="pedido-detail__badges">
+                                                            <span class="modern-badge pedido-pill"
+                                                                [ngClass]="{
+                                                                    'badge-warning': pedidoDetalle?.estadoPago === 'Pendiente' || pedidoDetalle?.estadoPago === 'Pospendiente',
+                                                                    'badge-success': pedidoDetalle?.estadoPago === 'Aprobado',
+                                                                    'badge-info': pedidoDetalle?.estadoPago === 'PreAprobado',
+                                                                    'badge-danger': pedidoDetalle?.estadoPago === 'Rechazado' || pedidoDetalle?.estadoPago === 'Cancelado' || pedidoDetalle?.estadoPago === 'Precancelado'
+                                                                }">{{ 'Pago' | translate }}: {{ getPaymentStatusDisplay(pedidoDetalle?.estadoPago).short }}</span>
+                                                            <span class="modern-badge pedido-pill"
+                                                                [ngClass]="{
+                                                                    'badge-secondary': pedidoDetalle?.estadoProceso === 'SinProducir',
+                                                                    'badge-info': pedidoDetalle?.estadoProceso === 'EnProduccion' || pedidoDetalle?.estadoProceso === 'ProducidoTotalmente' || pedidoDetalle?.estadoProceso === 'ProducidoParcialmente',
+                                                                    'badge-primary': pedidoDetalle?.estadoProceso === 'Empacado',
+                                                                    'badge-warning': pedidoDetalle?.estadoProceso === 'Despachado' || pedidoDetalle?.estadoProceso === 'ParaDespachar',
+                                                                    'badge-success': pedidoDetalle?.estadoProceso === 'Entregado',
+                                                                    'badge-danger': pedidoDetalle?.estadoProceso === 'Rechazado',
+                                                                    'badge-dark': pedidoDetalle?.estadoProceso === 'Cerrado'
+                                                                }">{{ 'Proceso' | translate }}: {{ getStatusDisplay(pedidoDetalle?.estadoProceso).short }}</span>
+                                                            <span *ngIf="isPedidoCongelado(pedidoDetalle)" class="pedido-frozen-chip">
+                                                                <i class="fa fa-snowflake-o"></i> {{ 'Congelado' | translate }}
+                                                            </span>
+                                                            <span class="pedido-valid-chip">{{ 'Validación' | translate }}: {{ pedidoDetalle.validacion ? ('Sí' | translate) : ('No' | translate) }}</span>
+                                                        </div>
+
+                                                        <!-- línea de progreso -->
+                                                        <div class="pedido-timeline" *ngIf="getProgresoCompletados(pedidoDetalle?.estadoProceso) >= 0">
+                                                            <div class="pedido-timeline__label">{{ 'PROGRESO DEL PEDIDO' | translate }}</div>
+                                                            <div class="pedido-timeline__track">
+                                                                <div class="pedido-timeline__step"
+                                                                     *ngFor="let paso of ['Producido','Empacado','Despachado','Entregado']; let i = index"
+                                                                     [class.is-done]="i < getProgresoCompletados(pedidoDetalle?.estadoProceso)"
+                                                                     [class.is-now]="i === getProgresoCompletados(pedidoDetalle?.estadoProceso)">
+                                                                    <span class="pedido-timeline__dot">
+                                                                        <i *ngIf="i < getProgresoCompletados(pedidoDetalle?.estadoProceso)" class="pi pi-check"></i>
+                                                                    </span>
+                                                                    <span class="pedido-timeline__steplabel">{{ paso | translate }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="pedido-timeline pedido-timeline--rejected" *ngIf="getProgresoCompletados(pedidoDetalle?.estadoProceso) === -1">
+                                                            <i class="pi pi-times-circle"></i> {{ 'Pedido rechazado' | translate }}
+                                                        </div>
+
+                                                        <!-- desglose de valores (columnas financieras de la tabla) -->
+                                                        <div class="pedido-detail__sectionlabel">{{ 'DESGLOSE' | translate }}</div>
+                                                        <div class="pedido-desglose">
+                                                            <div class="pedido-desglose__row"><span>{{ 'Valor bruto' | translate }}</span><b>{{ pedidoDetalle.totalPedidoSinDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.totalDescuento"><span>{{ 'Descuento' | translate }}</span><b class="is-neg">− {{ pedidoDetalle.totalDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'Domicilio' | translate }}</span><b>{{ pedidoDetalle.totalEnvio | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'Subtotal' | translate }}</span><b>{{ getSubtotalConDomicilio(pedidoDetalle) | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row"><span>{{ 'IVA' | translate }}</span><b>{{ pedidoDetalle.totalImpuesto | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row pedido-desglose__row--total"><span>{{ 'Total' | translate }}</span><b>{{ pedidoDetalle.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.anticipo"><span>{{ 'Anticipo' | translate }}</span><b>{{ pedidoDetalle.anticipo | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                            <div class="pedido-desglose__row" *ngIf="pedidoDetalle.faltaPorPagar"><span>{{ 'Falta por pagar' | translate }}</span><b class="is-warn">{{ pedidoDetalle.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                                        </div>
+
+                                                        <!-- datos del pedido (resto de columnas de la tabla) -->
+                                                        <div class="pedido-detail__sectionlabel">{{ 'DATOS DEL PEDIDO' | translate }}</div>
+                                                        <div class="pedido-datos">
+                                                            <div class="pedido-datos__item">
+                                                                <span class="pedido-datos__k">{{ 'Factura' | translate }}</span>
+                                                                <span class="pedido-datos__v">
+                                                                    <a *ngIf="pedidoDetalle.nroFactura && (pedidoDetalle.pdfUrlInvoice || pedidoDetalle.facturacionElectronica?.pdfUrl)"
+                                                                       [href]="pedidoDetalle.pdfUrlInvoice || pedidoDetalle.facturacionElectronica?.pdfUrl" target="_blank">
+                                                                        <i class="pi pi-file-pdf"></i> {{ pedidoDetalle.nroFactura }}
+                                                                    </a>
+                                                                    <span *ngIf="pedidoDetalle.nroFactura && !(pedidoDetalle.pdfUrlInvoice || pedidoDetalle.facturacionElectronica?.pdfUrl)">{{ pedidoDetalle.nroFactura }}</span>
+                                                                    <span *ngIf="!pedidoDetalle.nroFactura" class="is-muted">—</span>
+                                                                </span>
+                                                            </div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Fecha de compra' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.fechaCreacion ? (pedidoDetalle.fechaCreacion | date:'dd/MM/yyyy') : '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Canal' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.channel?.name || 'Regular' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Vendedor' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.asesorAsignado?.name || '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Forma de entrega' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega || '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Horario' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega || '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Ciudad' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.envio?.ciudad || '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Zona de entrega' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.envio?.zonaCobro || '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Despachador' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.despachador?.name || '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Transportador' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.transportador || '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Despachado' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.fechaYHorarioDespachado ? (pedidoDetalle.fechaYHorarioDespachado | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+                                                            <div class="pedido-datos__item"><span class="pedido-datos__k">{{ 'Última impresión' | translate }}</span><span class="pedido-datos__v">{{ pedidoDetalle.ultimaImpresion ? (pedidoDetalle.ultimaImpresion | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+                                                        </div>
+
+                                                        <!-- productos -->
+                                                        <div class="pedido-detail__sectionlabel">{{ 'PRODUCTOS' | translate }} · {{ pedidoDetalle.carrito?.length || 0 }}</div>
+                                                        <div class="pedido-detail__productos">
+                                                            <div *ngFor="let item of pedidoDetalle.carrito; trackBy: trackByCartItem" class="pedido-prod">
+                                                                <img class="pedido-prod__img"
+                                                                     [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                                                                     [alt]="item.producto?.crearProducto?.titulo || 'Producto'" />
+                                                                <div class="pedido-prod__info">
+                                                                    <div class="pedido-prod__name">{{ item.producto?.crearProducto?.titulo }}</div>
+                                                                    <div class="pedido-prod__qty">{{ 'Cantidad' | translate }}: {{ item.cantidad }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- acciones rápidas -->
+                                                        <div class="pedido-detail__sectionlabel">{{ 'ACCIONES' | translate }}</div>
+                                                        <div class="pedido-actions">
+                                                            <button type="button" class="pedido-action" (click)="pdfOrder(modalContent, pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-pdf"><i class="fa fa-file-pdf-o"></i></span>
+                                                                <span class="pedido-action__txt"><b>{{ 'Imprimir PDF' | translate }}</b><small>{{ 'Generar documento' | translate }}</small></span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" (click)="generarOrdenVenta(pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-ov"><i class="fa fa-file-text-o"></i></span>
+                                                                <span class="pedido-action__txt"><b>{{ 'Orden de Venta' | translate }}</b><small>{{ 'Documento profesional' | translate }}</small></span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction" (click)="editDatosClientes(clientesModal, pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-cli"><i class="fa fa-user"></i></span>
+                                                                <span class="pedido-action__txt"><b>{{ 'Editar Cliente' | translate }}</b><small>{{ 'Datos del cliente' | translate }}</small></span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction"
+                                                                    [disabled]="!canEditBilling(pedidoDetalle)" [class.is-locked]="!canEditBilling(pedidoDetalle)"
+                                                                    (click)="editDatosFacturacion(datosFacturacionModal, pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-fac"><i class="fa fa-credit-card"></i></span>
+                                                                <span class="pedido-action__txt"><b>{{ 'Facturación' | translate }}</b><small>{{ 'Datos de factura' | translate }}</small></span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction && !isPedidoPOS(pedidoDetalle)" (click)="editNotas(notasModal, pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-not"><i class="fa fa-sticky-note"></i></span>
+                                                                <span class="pedido-action__txt"><b>{{ 'Editar Notas' | translate }}</b><small>{{ 'Agregar o modificar' | translate }}</small></span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" (click)="editarEstadoPago(cambioEstadoPagoModal, pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-pay"><i class="fa fa-credit-card-alt"></i></span>
+                                                                <span class="pedido-action__txt"><b>{{ 'Estado de Pago' | translate }}</b><small>{{ 'Cambiar estado' | translate }}</small></span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction"
+                                                                    [disabled]="!canAddProducts(pedidoDetalle)" [class.is-locked]="!canAddProducts(pedidoDetalle)"
+                                                                    (click)="addProductToCart(recompraModal, pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-add"><i class="fa fa-shopping-cart"></i></span>
+                                                                <span class="pedido-action__txt">
+                                                                    <b>{{ 'Agregar Productos' | translate }}</b>
+                                                                    <small *ngIf="canAddProducts(pedidoDetalle)">{{ 'Añadir al pedido' | translate }}</small>
+                                                                    <small *ngIf="!canAddProducts(pedidoDetalle)">{{ 'Congelado' | translate }} · {{ pedidoDetalle?.estadoProceso }}</small>
+                                                                </span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction"
+                                                                    [disabled]="!canEditDeliveryAddressByDeliveryType(pedidoDetalle)" [class.is-locked]="!canEditDeliveryAddressByDeliveryType(pedidoDetalle)"
+                                                                    (click)="editDatosEntrega(datosEnregaModal, pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-dir"><i class="fa fa-map-marker"></i></span>
+                                                                <span class="pedido-action__txt">
+                                                                    <b>{{ 'Editar Dirección' | translate }}</b>
+                                                                    <small *ngIf="canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ 'Dirección de entrega' | translate }}</small>
+                                                                    <small *ngIf="!canEditDeliveryAddressByDeliveryType(pedidoDetalle)">{{ 'Solo domicilios' | translate }}</small>
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- footer -->
+                                                    <div class="pedido-detail__footer">
+                                                        <button type="button" class="pedido-detail__btn pedido-detail__btn--ghost" (click)="verHistorialPedido(pedidoDetalle)">
+                                                            <i class="pi pi-history"></i> {{ 'Historial' | translate }}
+                                                        </button>
+                                                        <button type="button" class="pedido-detail__btn pedido-detail__btn--primary" (click)="openOptionsModal(pedidoDetalle)">
+                                                            <i class="pi pi-ellipsis-h"></i> {{ 'Más opciones' | translate }}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </ng-container>
+
+                                            <ng-template #detalleVacio>
+                                                <div class="pedidos-detail-empty">
+                                                    <div class="pedidos-detail-empty__icon"><i class="pi pi-shopping-cart"></i></div>
+                                                    <div class="pedidos-detail-empty__title">{{ 'Selecciona un pedido' | translate }}</div>
+                                                    <div class="pedidos-detail-empty__sub">{{ 'Elige un pedido de la lista para ver su detalle y acciones' | translate }}</div>
+                                                </div>
+                                            </ng-template>
+                                        </div>
+                                    </div>
+
+                                    <!-- ===== Footer de métricas (resumen/totales de la tabla original) ===== -->
+                                    <div *ngIf="modoVista === 'split' && !isFromProduction" class="pedidos-footer-metrics">
+                                        <div class="pfm-group">
+                                            <span class="pfm-group__label">{{ 'RESUMEN' | translate }}</span>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Pedidos' | translate }}</span><b class="pfm-item__v">{{ getTotalPedidos() }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Clientes' | translate }}</span><b class="pfm-item__v">{{ getClientesUnicos() }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Ciudades' | translate }}</span><b class="pfm-item__v">{{ getCiudadesUnicas() }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Vendedores' | translate }}</span><b class="pfm-item__v">{{ getVendedoresUnicos() }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Validados' | translate }}</span><b class="pfm-item__v pfm-ok">{{ getValidacionCount() }}</b></div>
+                                        </div>
+                                        <div class="pfm-group">
+                                            <span class="pfm-group__label">{{ 'VALORES' | translate }}</span>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Bruto' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateValorBruto() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Desc.' | translate }}</span><b class="pfm-item__v pfm-warn">{{ getFilteredCalculateDescuento() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Envío' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateEnvio() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Subtotal' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateSubtotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'IVA' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotalImpuestos() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item pfm-item--total"><span class="pfm-item__k">{{ 'TOTAL' | translate }}</span><b class="pfm-item__v">{{ getFilteredCalculateTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Anticipo' | translate }}</span><b class="pfm-item__v pfm-info">{{ getFilteredCalculateAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                            <div class="pfm-item"><span class="pfm-item__k">{{ 'Pendiente' | translate }}</span><b class="pfm-item__v pfm-danger">{{ getFilteredCalculateFaltaPorPagar() | currency:'COP':'symbol-narrow':'1.0-0' }}</b></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ================= VISTA TABLA (fallback: tabla original completa) ================= -->
+                                    <p-table #dt1 *ngIf="modoVista === 'tabla' || isFromProduction" [value]="orders" dataKey="nroPedido" [rows]="pageSize"
+                                        [showCurrentPageReport]="true" [rowsPerPageOptions]="[5,10,25,50]"
+                                        [loading]="loading" [reorderableColumns]="true" [scrollable]="true"
+                                        [scrollHeight]="'flex'"
+                                        [paginator]="true"
+                                        [lazy]="usePagination"
+                                        (onLazyLoad)="loadLazy($event)"
+                                        (onFilter)="onTableFilter($event)"
+                                        [totalRecords]="totalRecords"
+                                        [(first)]="first"
+                                    currentPageReportTemplate="{{'Mostrando {first} a {last} de {totalRecords} pedidos' | translate}}"
+                                    [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
+                                        styleClass="p-datatable p-datatable-gridlines p-datatable-striped responsive-paginator"
+                                        [tableStyle]="{ 'min-width': '14rem', 'padding':'2px' }"
+                                        style="font-size: 0.65em; table-layout: fixed;">
 
                                     <!-- HEADER: Dos filas (títulos y filtros) -->
                                     <ng-template *ngIf="!isFromProduction" pTemplate="header">
