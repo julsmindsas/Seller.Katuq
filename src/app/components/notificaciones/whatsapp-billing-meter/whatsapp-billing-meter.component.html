@@ -66,9 +66,9 @@
 
       <!-- Acciones -->
       <div class="wa-actions">
-        <button type="button" class="btn-topup" (click)="openTopupModal()">
+        <button type="button" class="btn-topup" (click)="openTopupModal('whatsapp')">
           <app-feather-icons [icon]="'plus-circle'"></app-feather-icons>
-          <span>Recargar saldo</span>
+          <span>Recargar con tarjeta / PSE</span>
         </button>
 
         <button
@@ -85,42 +85,76 @@
     </div>
   </div>
 
-  <!-- Modal de recarga -->
+  <!-- [D-106] Tarjeta de saldo SMS (separado) -->
+  <div *ngIf="!isLoadingSms && smsBalance" class="wa-card wa-card--main" style="margin-top: 1rem;">
+    <div class="wa-card__header">
+      <div class="wa-card__title">
+        <app-feather-icons [icon]="'smartphone'"></app-feather-icons>
+        <span>Saldo SMS</span>
+      </div>
+    </div>
+    <div class="wa-card__body">
+      <div class="wa-balance">
+        <div class="wa-balance__amount">
+          {{ smsBalance.balanceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}
+        </div>
+        <div class="wa-balance__sub">
+          Precio por SMS:
+          <strong>{{ smsBalance.priceCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          — equivale a ~{{ smsEquivalentMessages | number:'1.0-0' }} SMS
+        </div>
+      </div>
+      <div *ngIf="!smsBalance.billingEnabled" class="wa-banner wa-banner--warn">
+        <app-feather-icons [icon]="'info'"></app-feather-icons>
+        <span>El cobro de SMS aún no está activo para tu comercio; los SMS se envían sin descontar saldo por ahora.</span>
+      </div>
+      <div class="wa-actions">
+        <button type="button" class="btn-topup" (click)="openTopupModal('sms')">
+          <app-feather-icons [icon]="'plus-circle'"></app-feather-icons>
+          <span>Recargar SMS con tarjeta / PSE</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de recarga (Wompi real) -->
   <div *ngIf="showTopupModal" class="wa-modal-backdrop" (click)="closeTopupModal()">
     <div class="wa-modal" (click)="$event.stopPropagation()">
       <div class="wa-modal__header">
-        <h5 class="wa-modal__title">Recargar saldo WhatsApp</h5>
+        <h5 class="wa-modal__title">Recargar saldo {{ topupChannel === 'sms' ? 'SMS' : 'WhatsApp' }}</h5>
         <button type="button" class="wa-modal__close" (click)="closeTopupModal()" [disabled]="isToppingUp">
           <app-feather-icons [icon]="'x'"></app-feather-icons>
         </button>
       </div>
       <div class="wa-modal__body">
-        <label class="wa-field-label" for="wa-topup-amount">Monto (COP)</label>
+        <label class="wa-field-label" for="wa-topup-amount">Monto a recargar (COP)</label>
         <input
           id="wa-topup-amount"
           type="number"
           class="wa-input"
           [(ngModel)]="topupAmount"
           [min]="minTopupAmount"
-          step="1000"
+          step="10000"
           placeholder="50000" />
-        <p class="wa-field-helper">Mínimo $50.000 primera vez</p>
+        <p class="wa-field-helper">Mínimo $50.000. Pagas con tarjeta, PSE o Nequi vía Wompi.</p>
 
-        <label class="wa-field-label mt-3" for="wa-topup-notes">Notas (opcional)</label>
-        <textarea
-          id="wa-topup-notes"
-          class="wa-textarea"
-          rows="2"
-          [(ngModel)]="topupNotes"
-          placeholder="Referencia interna, motivo de la recarga, etc."></textarea>
+        <div class="wa-actions" style="gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+          <button type="button" class="btn-bonus" (click)="topupAmount = 50000">$50.000</button>
+          <button type="button" class="btn-bonus" (click)="topupAmount = 100000">$100.000</button>
+          <button type="button" class="btn-bonus" (click)="topupAmount = 200000">$200.000</button>
+        </div>
+
+        <p *ngIf="topupStatusMsg" class="wa-field-helper" style="margin-top: 12px; color: #4c6fff; font-weight: 600;">
+          {{ topupStatusMsg }}
+        </p>
       </div>
       <div class="wa-modal__footer">
         <button type="button" class="btn-cancel" (click)="closeTopupModal()" [disabled]="isToppingUp">
           Cancelar
         </button>
         <button type="button" class="btn-confirm" (click)="confirmTopup()" [disabled]="isToppingUp">
-          <span *ngIf="!isToppingUp">Confirmar recarga</span>
-          <span *ngIf="isToppingUp">Procesando...</span>
+          <span *ngIf="!isToppingUp">Pagar {{ topupAmount | currency:'COP':'symbol-narrow':'1.0-0' }} con Wompi</span>
+          <span *ngIf="isToppingUp">Procesando…</span>
         </button>
       </div>
     </div>

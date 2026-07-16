@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../shared/services/firebase/auth.service';
 import { ServiciosService } from '../../shared/services/servicios.service';
 import { UtilsService } from '../../shared/services/utils.service';
@@ -26,17 +26,54 @@ export class LoginComponent implements OnInit {
     private service: ServiciosService,
     private utils: UtilsService,
     private fb: FormBuilder,
-    private route: ActivatedRoute) {
-    
+    private route: ActivatedRoute,
+    private router: Router) {
+
       this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required] //contraseña jarango
 
     });
-  
+
   }
 
   ngOnInit() {
+    this.redirectIfLoggedIn();
+  }
+
+  /**
+   * Si ya hay una sesión válida, no mostrar el login: redirigir al mismo
+   * destino por rol que aplica handleSignInSuccess (auth.service). isLoggedIn
+   * ya valida token (formato JWT) y expiración; si la sesión es inválida la
+   * limpia y retorna false, dejando ver el login normalmente.
+   */
+  private redirectIfLoggedIn(): void {
+    if (!this.authService.isLoggedIn) {
+      return;
+    }
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+
+      if (user?.mustChangePassword) {
+        this.router.navigate(['/change-password']);
+        return;
+      }
+      if (user?.rol === 'Super Administrador') {
+        this.router.navigate(['/superadmin/clientes']);
+        return;
+      }
+      if (user?.rol === 'Administrador' && user?.company === 'Julsmind') {
+        this.router.navigate(['/dashboards']);
+        return;
+      }
+
+      const destino = (user?.bienvenidaPath && typeof user.bienvenidaPath === 'string')
+        ? user.bienvenidaPath
+        : '/welcome';
+      this.router.navigate([destino]);
+    } catch {
+      // user corrupto en localStorage: quedarse en el login
+    }
   }
 
   showPassword() {

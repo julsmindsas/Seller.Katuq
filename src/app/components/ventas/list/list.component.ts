@@ -213,7 +213,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Usar requestAnimationFrame en lugar de setTimeout para carga más rápida
       requestAnimationFrame(() => {
-        if (this.orders.length === 0 && this.totalRecords === 0 && this.table) {
+        if (this.orders.length === 0 && this.totalRecords === 0 && (this.table || this.modoVista === "split")) {
           this.loadLazy({
             first: 0,
             rows: this.pageSize
@@ -1669,6 +1669,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   allBillingZone: any;
   selectedOrder: any;
   modalVisible = false;
+
+  // ====== Rediseño 1b: vista split (lista + panel de detalle) ======
+  // Solo presentación. 'split' = lista + panel (diseño nuevo); 'tabla' = tabla original (fallback).
+  modoVista: "split" | "tabla" = "split";
+  pedidoDetalle: any = null;
+  private readonly avatarPalette = [
+    "#7C5CFF", "#2196F3", "#1E874B", "#E8820C",
+    "#9C27B0", "#0EA5A0", "#D64545", "#5A6B78",
+  ];
 
   // Propiedades para modal de detalle entrega
   detalleEntregaVisible = false;
@@ -3902,7 +3911,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.refrescar(table);
   }
 
-  refrescar(table: Table) {
+  refrescar(table?: Table) {
     this.refrescarDatos(true); // Forzar refresco
     // table.clear();
   }
@@ -4106,6 +4115,77 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   getPaymentStatusDisplay(status: string): { short: string; full: string } {
     return ListOrdersComponent.PAGO_STATUS_MAP[status] || { short: status, full: status };
+  }
+
+  // ============================================================
+  // Helpers rediseño 1b (solo presentación — vista lista + panel)
+  // ============================================================
+
+  /** Selecciona un pedido para mostrarlo en el panel de detalle (no toca selectedOrder del modal). */
+  seleccionarPedidoDetalle(pedido: any): void {
+    this.pedidoDetalle = pedido;
+  }
+
+  /** Nombre completo del cliente para la lista y el panel. */
+  getClienteNombre(pedido: any): string {
+    if (!pedido?.cliente) return "Sin cliente";
+    const nombre = `${pedido.cliente.nombres_completos || ""} ${pedido.cliente.apellidos_completos || ""}`.trim();
+    return nombre || "Sin cliente";
+  }
+
+  /** Inicial para el avatar. */
+  getAvatarInitial(nombre: string): string {
+    const s = (nombre || "").trim();
+    return s ? s.charAt(0).toUpperCase() : "?";
+  }
+
+  /** Color determinístico del avatar según la inicial. */
+  getAvatarColor(nombre: string): string {
+    const s = (nombre || "?").trim() || "?";
+    const idx = s.charCodeAt(0) % this.avatarPalette.length;
+    return this.avatarPalette[idx];
+  }
+
+  /** Urgencia por pedido (misma lógica que getPedidosUrgentesCount, pero individual). */
+  isPedidoUrgente(pedido: any): boolean {
+    const estadosNoCompletados = [
+      "SinProducir", "EnProduccion", "ProducidoParcialmente",
+      "ProducidoTotalmente", "Empacado", "ParaDespachar", "Despachado",
+    ];
+    if (!pedido || !estadosNoCompletados.includes(pedido.estadoProceso)) return false;
+    if (!pedido.fechaEntrega) return false;
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
+    const fe = new Date(pedido.fechaEntrega); fe.setHours(0, 0, 0, 0);
+    return fe.getTime() <= manana.getTime();
+  }
+
+  /**
+   * Cuántos hitos del progreso (Producido → Empacado → Despachado → Entregado)
+   * están completos (0..4). -1 = rechazado. Alimenta la línea de tiempo del panel.
+   */
+  getProgresoCompletados(estadoProceso: string): number {
+    switch (estadoProceso) {
+      case "Entregado":
+      case "Cerrado":
+        return 4;
+      case "Despachado":
+        return 3;
+      case "Empacado":
+      case "ParaDespachar":
+        return 2;
+      case "ProducidoTotalmente":
+        return 1;
+      case "Rechazado":
+        return -1;
+      default:
+        return 0; // SinProducir, EnProduccion, ProducidoParcialmente
+    }
+  }
+
+  /** Cambio de página desde el p-paginator del panel de lista (equivale a onLazyLoad). */
+  onSplitPageChange(event: any): void {
+    this.loadLazy({ first: event.first, rows: event.rows } as LazyLoadEvent);
   }
 
   /**

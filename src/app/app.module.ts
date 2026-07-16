@@ -17,6 +17,7 @@ import { LoadingBarRouterModule } from '@ngx-loading-bar/router';
 import { LoadingBarModule } from '@ngx-loading-bar/core';
 import { environment } from '../environments/environment';
 import { AppComponent } from './app.component';
+import { NovedadModalComponent } from './shared/components/novedad-modal/novedad-modal.component';
 import { LoginModule } from '../app/auth/login/login.module';
 // import { ServiceWorkerModule } from '@angular/service-worker'; // SW desactivado (2026-03-25)
 import { TreeTableModule } from 'primeng/treetable';
@@ -81,7 +82,8 @@ export function HttpLoaderFactory(http: HttpClient) {
     ChatFormComponent,
     TermsConditionsComponent,
     PrivacyPolicyComponent,
-    SubscriptionCallbackComponent
+    SubscriptionCallbackComponent,
+    NovedadModalComponent
   ],
   exports: [
   ],
