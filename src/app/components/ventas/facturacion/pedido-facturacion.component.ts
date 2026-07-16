@@ -162,8 +162,14 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       // Agregar el nuevo dato
       nuevaLista.push(datosFacturacionElec);
 
-      // Actualizar la lista
-      this.datosFacturacionElectronica = nuevaLista;
+      // Spec 024: mutar en el lugar (no reasignar) — `datosFacturacionElectronica`
+      // es un @Input() bindeado en un solo sentido desde el padre; reasignarlo
+      // rompe la referencia y el padre la vuelve a pisar en el siguiente ciclo
+      // de CD (mismo patrón ya arreglado para edición más abajo en este archivo).
+      if (!this.datosFacturacionElectronica) {
+        this.datosFacturacionElectronica = [];
+      }
+      this.datosFacturacionElectronica.splice(0, this.datosFacturacionElectronica.length, ...nuevaLista);
 
       // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
       this.formulario.controls["cd"].setValue(res.cd);
