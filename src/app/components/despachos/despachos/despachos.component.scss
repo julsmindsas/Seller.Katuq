@@ -2232,3 +2232,340 @@ $border-radius: 8px;
     max-width: 180px;
   }
 }
+
+// =====================================================================
+// RESTYLE — "Pedidos Tabla.dc.html" (Claude Design) — barra de filtros
+// Empareja el look del mockup usando el acento de marca Katuq. Scopeado a
+// esta vista con :host ::ng-deep app-shared-filters -> NO afecta a
+// ventas/list ni ordenes-despacho-v2 (que comparten el mismo componente).
+// Solo estilos; sin tocar HTML/lógica del componente compartido.
+// =====================================================================
+:host ::ng-deep app-shared-filters {
+
+  // Card contenedora: radio 20px, sombra suave, padding 16px, gap 10px.
+  // El mockup NO tiene línea de acento arriba -> se oculta.
+  .filters-inline-row {
+    border-radius: 20px !important;
+    box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04) !important;
+    padding: 16px !important;
+    gap: 10px !important;
+
+    &::before {
+      display: none !important;
+    }
+  }
+
+  // --- Campos "rellenos" gris-claro (como el mockup #F7F8FC) -------------
+  // Buscador: crece para ocupar el ancho disponible (flex:1), fondo relleno,
+  // ícono inline sin caja, radio 12px.
+  .filter-search {
+    flex: 1 1 220px !important;
+    width: auto !important;
+    max-width: none !important;
+    background: $katuq-gray-50 !important;
+    border: 1px solid $katuq-gray-200 !important;
+    border-radius: 12px !important;
+
+    .p-inputgroup-addon {
+      background: transparent !important;
+      border: none !important;
+      color: $katuq-gray-500 !important;
+    }
+
+    // El autocomplete trae width:180px inline -> forzamos que llene el hueco
+    .p-autocomplete {
+      width: 100% !important;
+    }
+    .p-autocomplete .p-inputtext {
+      width: 100% !important;
+      background: transparent !important;
+      border: none !important;
+    }
+
+    &:focus-within {
+      border-color: $katuq-primary !important;
+      background: #fff !important;
+      box-shadow: 0 0 0 3px rgba($katuq-primary, 0.15) !important;
+    }
+
+    &:focus-within .p-inputgroup-addon {
+      color: $katuq-primary !important;
+    }
+
+    .p-inputgroup-addon i.pi-spin {
+      color: $katuq-primary !important;
+    }
+  }
+
+  // Dropdowns (Rápido / Estado Pago / Estado Proceso): relleno gris, radio 12px,
+  // ancho mínimo mayor, texto gris-medio 600 y chevron gris (como el mockup)
+  .p-dropdown {
+    background: $katuq-gray-50 !important;
+    border: 1px solid $katuq-gray-200 !important;
+    border-radius: 12px !important;
+    min-width: 132px !important;
+    display: inline-flex !important;
+    align-items: center;
+
+    .p-dropdown-label {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      color: $katuq-gray-600 !important;
+      display: flex;
+      align-items: center;
+
+      &.p-placeholder {
+        color: $katuq-gray-600 !important;
+      }
+    }
+
+    .p-dropdown-trigger {
+      color: $katuq-gray-500 !important;
+      width: 2.2rem;
+    }
+
+    &:not(.p-disabled):hover,
+    &:not(.p-disabled).p-focus {
+      border-color: $katuq-primary !important;
+    }
+
+    &:not(.p-disabled).p-focus {
+      box-shadow: 0 0 0 3px rgba($katuq-primary, 0.15) !important;
+    }
+  }
+
+  // Altura uniforme de todos los campos (~44px) para el look "chunky" del mockup
+  .filter-search,
+  .p-dropdown,
+  .p-calendar .p-inputtext,
+  .p-calendar .p-datepicker-trigger {
+    min-height: 44px !important;
+  }
+
+  // Los botones (Filtrar / exportar / config) igualan la altura de los campos
+  .btn-sm {
+    height: 44px !important;
+  }
+
+  // Calendarios: input relleno gris a la izquierda + botón morado integrado
+  .p-calendar {
+    .p-inputtext {
+      background: $katuq-gray-50 !important;
+      border: 1px solid $katuq-gray-200 !important;
+      border-right: none !important;
+      border-radius: 12px 0 0 12px !important;
+
+      &:enabled:hover,
+      &:enabled:focus {
+        border-color: $katuq-gray-200 !important;
+        box-shadow: none !important;
+      }
+    }
+
+    // Botón del calendario: cuadro morado a la derecha (como en el mockup)
+    .p-datepicker-trigger {
+      background: $katuq-primary !important;
+      border-color: $katuq-primary !important;
+      color: #fff !important;
+      border-radius: 0 12px 12px 0 !important;
+
+      &:enabled:hover {
+        background: $katuq-primary-dark !important;
+        border-color: $katuq-primary-dark !important;
+      }
+    }
+  }
+
+  // Botón "Filtrar": morado de marca con sombra
+  .btn-sm.btn-primary {
+    background: $katuq-primary !important;
+    border-color: $katuq-primary !important;
+    border-radius: 12px !important;
+    box-shadow: 0 6px 16px rgba($katuq-primary, 0.28) !important;
+
+    &:hover:not(:disabled) {
+      background: $katuq-primary-dark !important;
+      border-color: $katuq-primary-dark !important;
+    }
+  }
+
+  // Botón exportar (Excel): verde con sombra, cuadrado redondeado
+  .btn-sm.btn-success {
+    border-radius: 12px !important;
+    box-shadow: 0 6px 16px rgba($katuq-success, 0.25) !important;
+  }
+
+  // Botón config avanzada (engranaje): gris claro + icono morado
+  .btn-sm.btn-secondary {
+    background: $katuq-gray-50 !important;
+    border-color: $katuq-gray-200 !important;
+    color: $katuq-primary !important;
+    border-radius: 12px !important;
+
+    i { color: $katuq-primary !important; }
+
+    &:hover:not(:disabled) {
+      background: $katuq-gray-100 !important;
+      border-color: $katuq-gray-300 !important;
+    }
+  }
+
+  // Contador de filtros activos: gradiente morado
+  .count-badge {
+    background: linear-gradient(135deg, $katuq-primary, $katuq-primary-dark) !important;
+    box-shadow: 0 2px 4px rgba($katuq-primary, 0.3) !important;
+  }
+
+  // Tags de filtros activos (panel avanzado): tinte morado suave
+  .filter-tag {
+    border-color: $katuq-primary-border !important;
+    background: $katuq-primary-bg !important;
+    color: $katuq-primary-dark !important;
+  }
+}
+
+// =====================================================================
+// RESTYLE — "Pedidos Tabla.dc.html" (Claude Design) — botones de acciones
+// Header de acciones (Generar Orden / Acciones) al estilo del mockup:
+//  · Generar Orden -> morado sólido, radio 12px, peso 800, sombra
+//  · Acciones (splitButton) -> BLANCO con texto gris y borde claro
+// Scopeado al header de despachos; solo estilos, sin tocar lógica.
+// =====================================================================
+:host ::ng-deep .metrics-actions-bar .actions-group {
+
+  // Base: todos los botones más "chunky" y redondeados como el mockup
+  .p-button {
+    height: 40px;
+    border-radius: 12px !important;
+    font-weight: 800 !important;
+    font-size: 0.84rem !important;
+    gap: 0.5rem;
+  }
+
+  // "Generar Orden": morado de marca sólido con sombra
+  > button.p-button-primary,
+  .p-button.p-button-primary {
+    background: $katuq-primary !important;
+    border-color: $katuq-primary !important;
+    color: #fff !important;
+    box-shadow: 0 6px 16px rgba($katuq-primary, 0.28) !important;
+
+    &:hover:not(:disabled) {
+      background: $katuq-primary-dark !important;
+      border-color: $katuq-primary-dark !important;
+      box-shadow: 0 8px 20px rgba($katuq-primary, 0.35) !important;
+    }
+
+    .p-button-icon { color: #fff !important; }
+  }
+
+  // "Acciones" (p-splitButton): blanco, texto gris, borde claro (outlined light)
+  .p-splitbutton {
+    box-shadow: none !important;
+
+    .p-button {
+      background: #fff !important;
+      border: 1px solid $katuq-gray-200 !important;
+      color: $katuq-gray-600 !important;
+      box-shadow: none !important;
+
+      .p-button-icon,
+      .p-button-label { color: $katuq-gray-600 !important; }
+
+      &:hover:not(:disabled) {
+        background: $katuq-gray-50 !important;
+        border-color: $katuq-gray-300 !important;
+        color: $katuq-primary !important;
+
+        .p-button-icon,
+        .p-button-label { color: $katuq-primary !important; }
+      }
+    }
+
+    // Botón principal (label) redondeado a la izquierda, chevron a la derecha
+    .p-splitbutton-defaultbutton {
+      border-top-left-radius: 12px !important;
+      border-bottom-left-radius: 12px !important;
+      border-right: none !important;
+    }
+    .p-splitbutton-menubutton {
+      border-top-right-radius: 12px !important;
+      border-bottom-right-radius: 12px !important;
+    }
+  }
+
+  // Botón kebab móvil: circular gris claro con icono morado
+  .p-button.p-button-text {
+    background: $katuq-gray-50 !important;
+    border-radius: 12px !important;
+    color: $katuq-primary !important;
+  }
+}
+
+// =====================================================================
+// RESTYLE — chips de métricas como TARJETAS (igual que /ventas/pedidos)
+// Total, EP, EMP, PD, ER, ENT, URG, PC pasan de "pill horizontal" a
+// "tarjeta vertical": label gris en mayúsculas arriba + número grande en
+// color de acento abajo, sobre fondo pastel. Sin ícono. Réplica de la receta
+// de ventas/list (.metrics-breadcrumb-panel .metric-chip). Solo estilos.
+// =====================================================================
+.metrics-actions-bar .metrics-chips-row {
+  gap: 8px !important;
+
+  .metric-chip {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 2px;
+    padding: 8px 14px;
+    min-width: 78px;
+    max-width: none !important;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    box-shadow: none;
+
+    // El diseño no usa iconos en las tarjetas
+    > i { display: none !important; }
+
+    // Label (nombre completo) arriba, gris, mayúsculas
+    .metric-label,
+    .metric-label-full {
+      display: inline !important;
+      order: 1;
+      font-size: 10px !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.5px !important;
+      text-transform: uppercase;
+      color: $katuq-gray-500 !important;
+    }
+    .metric-label-short { display: none !important; }
+
+    // Número grande abajo, en el color de acento del chip (hereda)
+    .metric-badge {
+      order: 2;
+      font-size: 17px !important;
+      font-weight: 800 !important;
+      color: inherit !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      min-width: 0 !important;
+      height: auto !important;
+      line-height: 1.1 !important;
+    }
+
+    // Hover suave tipo tarjeta (sin borde de color duro ni expansión)
+    &:hover:not(.metric-chip-info-only) {
+      max-width: none !important;
+      padding: 8px 14px !important;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px -8px rgba(50, 40, 110, 0.35) !important;
+      border-color: rgba(0, 0, 0, 0.06) !important;
+    }
+  }
+
+  // Ocultar separadores "/" y divisores entre chips (el diseño no los usa)
+  .separator,
+  .metric-divider { display: none !important; }
+}

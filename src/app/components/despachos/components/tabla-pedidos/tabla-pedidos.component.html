@@ -162,6 +162,7 @@
                                                     'pi-eye': pedido?.estadoPago === 'PreAprobado',
                                                     'pi-times-circle': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                 }"></i>
+                                                <span class="status-dot"></span>
                                                 {{ getPaymentStatusDisplay(pedido?.estadoPago).short }}
                                             </span>
                                         </td>
@@ -174,7 +175,7 @@
                                                     tooltipPosition="top"
                                                     [ngClass]="{
                                                         'badge-secondary': pedido?.estadoProceso === 'SinProducir',
-                                                        'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                        'badge-info': pedido?.estadoProceso === 'EnProduccion' || pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
                                                         'badge-primary': pedido?.estadoProceso === 'Empacado',
                                                         'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
                                                         'badge-success': pedido?.estadoProceso === 'Entregado',
@@ -183,13 +184,14 @@
                                                     }">
                                                     <i class="status-icon pi" [ngClass]="{
                                                         'pi-circle': pedido?.estadoProceso === 'SinProducir',
-                                                        'pi-cog': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                        'pi-cog': pedido?.estadoProceso === 'EnProduccion' || pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
                                                         'pi-box': pedido?.estadoProceso === 'Empacado',
                                                         'pi-truck': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
                                                         'pi-check-circle': pedido?.estadoProceso === 'Entregado',
                                                         'pi-times-circle': pedido?.estadoProceso === 'Rechazado',
                                                         'pi-lock': pedido?.estadoProceso === 'Cerrado'
                                                     }"></i>
+                                                    <span class="status-dot"></span>
                                                     {{ getStatusDisplay(pedido?.estadoProceso).short }}
                                                     <button *ngIf="getNextState(pedido.estadoProceso)"
                                                             pButton type="button"
@@ -231,6 +233,7 @@
                                         <!-- Cliente con notas -->
                                         <td *ngIf="col.field === 'cliente'" class="text-nowrap col-cliente" [attr.data-label]="col.header | translate">
                                             <div class="d-flex align-items-center">
+                                                <span class="client-avatar">{{ (pedido.cliente?.nombres_completos?.trim() || pedido.cliente?.apellidos_completos?.trim() || '?').charAt(0) }}</span>
                                                 <span>{{ pedido.cliente?.nombres_completos }} {{ pedido.cliente?.apellidos_completos }}</span>
                                                 <button pButton pRipple type="button" icon="pi pi-info-circle" 
                                                     class="p-button-rounded p-button-text p-button-sm ms-1" 

@@ -1703,3 +1703,292 @@ $border-radius: 6px;
   }
 }
 
+// =====================================================================
+// RESTYLE — "Pedidos Tabla.dc.html" (Claude Design)
+// Adaptación fiel del mockup usando el acento de marca Katuq ($katuq-primary)
+// y la tipografía existente. Solo estilos + marcado decorativo (status-dot,
+// client-avatar); no se toca ningún binding, evento ni método del componente.
+// =====================================================================
+
+// Card contenedora: esquinas 20px + sombra suave (look del mockup)
+.tabla-pedidos-container {
+  > .card {
+    border-radius: 20px !important;
+    box-shadow: 0 1px 3px rgba(30, 35, 60, 0.06) !important;
+    overflow: hidden;
+    border: 1px solid $katuq-gray-200 !important;
+  }
+}
+
+// Quitar el borde/rejilla propio de la datatable (p-datatable-gridlines) para
+// que NO se sume al borde redondeado de la card => elimina el "doble borde".
+// Se conservan solo los separadores horizontales de fila, como en el mockup.
+:host ::ng-deep .p-datatable.p-datatable-gridlines {
+  .p-datatable-wrapper {
+    border: 0 !important;
+  }
+
+  .p-datatable-header,
+  .p-datatable-footer,
+  .p-datatable-thead > tr > th,
+  .p-datatable-tbody > tr > td,
+  .p-datatable-tfoot > tr > td {
+    border-width: 0 0 1px 0 !important;   // solo línea inferior (separador de fila)
+  }
+
+  // La última fila no necesita separador: la card ya cierra el contenedor
+  .p-datatable-tbody > tr:last-child > td {
+    border-bottom-width: 0 !important;
+  }
+}
+
+:host ::ng-deep .p-datatable {
+
+  // Cabecera aireada, etiquetas gris-azuladas 800 en mayúsculas
+  .p-datatable-thead > tr > th,
+  tr.p-table-tr-th > th {
+    background-color: $katuq-gray-50 !important;
+    border-bottom: 1px solid $katuq-gray-200 !important;
+
+    span {
+      color: $katuq-gray-500 !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.5px !important;
+    }
+  }
+
+  // Filas: hover y selección con tinte primario suave; cebra sutil
+  .p-datatable-tbody > tr {
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: rgba($katuq-primary, 0.05) !important;
+    }
+
+    &.table-row-odd {
+      background-color: $katuq-gray-50;
+    }
+
+    &.p-highlight,
+    &.p-highlight:hover {
+      background-color: $katuq-primary-bg !important;
+    }
+  }
+
+  // Checkbox de selección: cuadrado redondeado, check en color primario
+  .p-checkbox .p-checkbox-box {
+    border-radius: 6px !important;
+    border: 2px solid $katuq-gray-300;
+
+    &.p-highlight {
+      border-radius: 6px !important;
+      background: $katuq-primary !important;
+      border-color: $katuq-primary !important;
+    }
+  }
+
+  // Paginador con botones tipo "pill"
+  .p-paginator {
+    border: none;
+    background: transparent;
+
+    .p-paginator-page,
+    .p-paginator-first,
+    .p-paginator-prev,
+    .p-paginator-next,
+    .p-paginator-last {
+      border-radius: 9px !important;
+      border: 1px solid $katuq-gray-200;
+      min-width: 34px;
+      height: 34px;
+      margin: 0 2px;
+
+      &.p-highlight {
+        background: $katuq-primary !important;
+        border-color: $katuq-primary !important;
+        color: #fff !important;
+        font-weight: 800;
+      }
+    }
+  }
+}
+
+// Botón de Detalles (chevron): chip cuadrado redondeado con icono primario
+:host ::ng-deep {
+  td[class*="text-center"] > .p-button.p-button-plain,
+  .p-row-toggler {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 9px !important;
+    background: $katuq-gray-100 !important;
+    color: $katuq-primary !important;
+
+    &:hover {
+      background: $katuq-primary-bg !important;
+      color: $katuq-primary-dark !important;
+    }
+  }
+
+  // Botón de Opciones (kebab): icono gris discreto, sin fondo (como el mockup)
+  .col-opciones .p-button.p-button-rounded {
+    width: 30px !important;
+    height: 30px !important;
+    background: transparent !important;
+    color: $katuq-gray-400 !important;
+
+    &:hover {
+      background: $katuq-gray-100 !important;
+      color: $katuq-gray-600 !important;
+    }
+  }
+}
+
+// Nº de pedido: peso fuerte y color primario oscuro (destaca en la fila)
+:host ::ng-deep .col-nroPedido {
+  font-weight: 800 !important;
+  color: $katuq-primary-dark !important;
+}
+
+// Badges de Estado (Pago / Proceso) en formato "pill" ajustada al contenido.
+// Se conserva el ICONO de estado (pi-check-circle, pi-truck, etc.) como
+// indicador y se oculta el punto para evitar el look "icono + punto + texto".
+// Se quita el min/max-width fijo que estiraba la pastilla.
+:host ::ng-deep .modern-badge {
+  border-radius: 999px !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+  padding: 5px 12px !important;
+
+  .status-dot { display: none !important; }
+
+  // Todos los estados en pastel claro (como el mockup). Empacado, SinProducir
+  // y Cerrado se veían oscuros/saturados -> se fuerzan a pastel suave.
+  &.badge-primary {          // Empacado -> cian pastel
+    background-color: $badge-empacado-bg !important;
+    color: $badge-empacado-text !important;
+    border: 1px solid $badge-empacado-border !important;
+    .status-icon { color: $badge-empacado-text !important; }
+  }
+
+  &.badge-secondary {        // Sin Producir -> gris pastel
+    background-color: $badge-sinproducir-bg !important;
+    color: $badge-sinproducir-text !important;
+    border: 1px solid $badge-sinproducir-border !important;
+    .status-icon { color: $badge-sinproducir-text !important; }
+  }
+
+  &.badge-dark {             // Cerrado -> gris claro (antes gris-700 oscuro)
+    background-color: $katuq-gray-100 !important;
+    color: $katuq-gray-700 !important;
+    border: 1px solid $katuq-gray-300 !important;
+    .status-icon { color: $katuq-gray-700 !important; }
+  }
+
+  &.badge-info {             // En Prod. / Producido -> morado pastel
+    background-color: $badge-producido-bg !important;
+    color: $badge-producido-text !important;
+    border: 1px solid $badge-producido-border !important;
+    .status-icon { color: $badge-producido-text !important; }
+  }
+
+  // El botón de cambio rápido dentro del pill hereda el color del texto
+  .estado-next-btn {
+    background: rgba(0, 0, 0, 0.06) !important;
+    color: inherit !important;
+    &:hover { background: rgba(0, 0, 0, 0.12) !important; }
+  }
+}
+
+// Avatar circular con inicial del cliente
+:host ::ng-deep .col-cliente .client-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  background: $katuq-primary;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.72rem;
+  margin-right: 0.5rem;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+// Toolbar (caption): la línea superior "Pedidos para Despachar" + controles.
+// Se le da respiración y se alinean todos los controles a 40px, como el mockup.
+:host ::ng-deep .p-datatable-header {
+  padding: 0 !important;                 // el padding real lo pone .table-header-actions
+  background: #fff !important;
+}
+
+:host ::ng-deep .table-header-actions {
+  padding: 0.25rem 1.15rem 0.6rem !important;   // menos padding arriba
+  min-height: 48px;
+  gap: 0.6rem;
+
+  // Título como el mockup: peso 700, tamaño moderado (no 800/grande)
+  h6 {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.2px;
+    color: $katuq-gray-800 !important;
+  }
+
+  // Grupo de controles a la derecha, alineado verticalmente
+  > .d-flex {
+    gap: 0.6rem !important;
+  }
+
+  // Botones-chip (refrescar / limpiar): 40x40, cuadrado redondeado
+  .p-button.p-button-text.p-button-secondary {
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: $katuq-gray-50 !important;
+    border: 1px solid $katuq-gray-200 !important;
+    border-radius: 12px !important;
+    color: $katuq-primary !important;
+
+    .p-button-icon {
+      font-size: 1rem !important;
+    }
+
+    &:hover {
+      background-color: $katuq-primary-bg !important;
+      border-color: $katuq-primary-border !important;
+    }
+  }
+
+  // Selector de columnas: misma altura y estética de "pill" gris
+  .p-multiselect {
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 12px !important;
+    background: $katuq-gray-50 !important;
+    border: 1px solid $katuq-gray-200 !important;
+
+    .p-multiselect-label {
+      display: flex;
+      align-items: center;
+      padding: 0 0.9rem !important;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: $katuq-gray-600;
+    }
+
+    .p-multiselect-trigger {
+      width: 2.25rem;
+      color: $katuq-gray-400;
+    }
+  }
+}
+
