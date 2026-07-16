@@ -1720,3 +1720,56 @@ Orden = prioridad. La spec piloto siempre encabeza.
   - **Pendiente:** el pedido **descontó inventario** (`inventoryMovement gcgHZTHKoxgtlv4icnbO`: −1 de `aFzGeqaZvILhZAclHFas` en `BOD-003`) y **NADA lo revierte** — no existe estado "Anulado" en `EstadoProceso` ni función de anular en el backend; ningún camino devuelve stock. El usuario lo ajusta. La app SÍ tiene el camino correcto: `POST /v1/orders/restore-product-inventory` → `inventoryService.restoreProductStock`.
 - **Práctica de trabajo (regla nueva):** no validar features de escritura contra **ALMARA FELICIDAD** (tenant productivo con operación en vivo). Usar empresa de pruebas o levantar el backend contra el emulador (`FIRESTORE_EMULATOR_HOST`), como ya hacen los contract tests, que saltan integración cuando no lo detectan.
 - **Verificación:** build Angular verde. E2E de UI a cargo del usuario. **Numeración:** se tomó **D-111** (siguiente libre tras D-110).
+
+### 2026-07-16 — D-112: MarketingGuard con autorización por rol (campañas debitan saldo real)
+
+- **Contexto:** auditoría de marketing + conversaciones WhatsApp (esta sesión). `MarketingGuard` solo validaba el flag `ENABLE_MARKETING_MODULE` (hardcoded `true`); el chequeo de rol previo se eliminó por leer un patrón inexistente (`sessionStorage.currentUser.role`) y no se reemplazó → **cualquier usuario autenticado podía lanzar campañas que debitan saldo prepago**.
+- **Decisión:** Administrador / Super Administrador siempre entran; otros roles solo si el maestro "Roles y permisos" les asignó algún path `/marketing` (`localStorage['authorizedMenuItems']` — la MISMA fuente con la que `NavService` filtra el menú, no un mecanismo nuevo). El menú ya se filtraba solo; el hueco era la ruta por URL directa.
+- **Nota:** `AdminGuard` (superadmin) tampoco valida rol — solo sesión. NO se tocó; candidato a D-XXX propio.
+- **Verificación:** `tsc --noEmit` proyecto completo: 0 errores.
+
+### 2026-07-16 — D-113: Fix opt-out "No contactar" — fallaba SIEMPRE en silencio
+
+- **Bug (D-098):** `whatsappConversations.js:714` llamaba `conversationsService.resolvePhoneFromHash(...)`, pero la función solo se exporta bajo `_internals` (el reply sí usa `._internals.`, línea 412) → TypeError → 500 en el 100% de los `PATCH /:hash/optout`. El front tragaba el error con `.catch(()=>undefined)`: el operador creía marcar "no contactar" pero nunca se persistía y las campañas seguían llegando.
+- **Fix:** una línea backend (`._internals.resolvePhoneFromHash`) + toastr de error en `whatsapp-contact-panel` (la UI solo se actualiza en éxito, eso ya estaba bien).
+- **Sin datos legacy que migrar:** como nunca persistió, `optOutPhones` está vacío o solo con entradas de `start-conversation`/broadcast (esos caminos sí funcionaban).
+
+### 2026-07-16 — D-114: Teléfono canónico E.164 en conversaciones — mata hilos duplicados 10 vs 12 dígitos
+
+- **Bug (secuela de D-103):** `whatsapp_usage` legacy guarda celulares CO a 10 dígitos; `whatsapp_inbound` guarda E.164 (57+10). `getThreads` agrupaba por igualdad exacta del string → el MISMO cliente salía como DOS hilos (dos `phoneHash`), y la ventana 24h del reply daba falso `OUTSIDE_24H_WINDOW` (buscaba inbound con el teléfono de 10 dígitos que nunca matchea).
+- **Decisión — canónica = E.164 sin `+`:** regla `^3\d{9}$` (celular CO a 10 dígitos) → prefijo `57`; el resto queda en dígitos puros. NO se canonicaliza a 10 dígitos porque rompería los `phoneHash` existentes de los hilos activos (12 dígitos), los ratings (`whatsapp_contact_ratings/{company}_{hash}`) y los links guardados en CRM.
+- **Implementación (`whatsappConversationsService.js`):** `canonicalPhone()` + `phoneQueryVariants()` + `queryDocsByPhone()` (query de igualdad por variante, merge dedup por doc.id — sin índice compuesto). Agrupamiento, `getMessages`, `getContactProfile`, `markThreadViewed` y `resolvePhoneFromHash` operan sobre la canónica; las queries por teléfono ven AMBOS formatos. `matchPhoneFromSnaps` acepta el hash canónico Y el hash del valor crudo (compat con links/ratings viejos) pero SIEMPRE devuelve la canónica → el reply envía y valida ventana con E.164.
+- **SIN backfill:** los docs legacy de 10 dígitos quedan como están; la capa de lectura los reconcilia. Un backfill de `whatsapp_usage` sería cosmético y arriesgado (colección con billing).
+- **Verificación:** `node --check` en servicio y router + smoke test de `canonicalPhone`/`phoneQueryVariants`/`matchPhoneFromSnaps` (CO 10↔12, USA intacto, fijo 601 intacto, hash legacy resuelve a canónica, cross-tenant null). Sin tests previos del servicio. E2E contra sandbox a cargo del usuario.
+- **Numeración:** se tomaron **D-112..D-114** (siguientes libres tras D-111).
+
+### 2026-07-16 — D-115: Billing de campañas coherente — el ledger cuadra con el débito
+
+- **Bugs (D-097):** (1) el débito era `added × price` (lo que Kapso aceptó) pero se escribía 1 fila de usage con `costoCOP=price` por CADA destinatario → con duplicados/rechazos el historial mostraba más costo del cobrado; (2) si el débito fallaba post-lanzamiento (saldo cambió entre pre-check y débito), solo quedaba un `console.error` — envío sin cobro invisible; (3) programadas escribían `sentAt` al PROGRAMAR → la ventana de conversión de 30 días (D-096) arrancaba antes del envío real.
+- **Fixes (`routers/whatsapp.js` broadcast + `whatsappUsageService.registerBatch` + `GET /campaigns`):**
+  1. **Dedup server-side** por teléfono (el wizard ya dedupeaba, pero el endpoint no puede confiar en el cliente) — `duplicados` en la respuesta suma locales + Kapso.
+  2. **Prorrateo exacto:** la suma de `costoCOP` de las filas = exactamente lo debitado (base + remanente distribuido en las primeras filas). Con added==filas equivale al precio pleno por fila.
+  3. **Débito fallido:** un retry; si persiste → fila auditable `type=broadcast_debit_failed` vía `registerFailure` (SIN campaignId — no ensucia el historial) con el monto adeudado para conciliación. NO se fuerza sobregiro (cambiar la semántica de saldo requiere decisión aparte).
+  4. **`scheduledFor`** (ISO) en las filas de programadas (whitelist de registerBatch ampliada); la agregación de `/campaigns` usa `scheduledFor || sentAt` como inicio de ventana.
+
+### 2026-07-16 — D-116: Inbound ruteado por dueño del número (phone_number_id)
+
+- **Riesgo (secuela de D-094):** `persistInbound` infería el/los company SOLO por outbound reciente (30d) al `from`, ignorando `metadata.phone_number_id`. Para el número compartido es by-design, pero un comercio con **número propio** (`ownCredentials`) también recibía atribución por inferencia → otra empresa que le hubiera escrito al mismo cliente veía sus respuestas (fuga cross-tenant).
+- **Fix (`whatsappWebhook.js`):** `companiesByOwnPhoneNumber(pnid)` — si el `phone_number_id` del inbound pertenece a un comercio con `ownCredentials.enabled` (query `integration_configs` por `ownCredentials.phoneNumberId`, que se guarda en claro), el mensaje es SOLO suyo. Número compartido (o sin metadata, o query falla) → cae a la inferencia D-094 como antes. El poller pasa el pnid efectivo, así que la misma regla aplica a sandbox.
+
+### 2026-07-16 — D-117: Dieta de consumo — inbox y campañas dejan de re-leer todo el historial
+
+- **Problema:** cada tick de cada operador (lista 10s + chat 8s) re-leía TODO `whatsapp_usage`+`whatsapp_inbound` del comercio (getThreads/getMessages/resolvePhoneFromHash sin filtro de fecha), disparaba `sync-inbound` (poll a Kapso con creds globales, sin throttle), y `GET /campaigns` escaneaba todo usage. Coste Firestore O(historial) × operadores × polls — mismo patrón de la lentitud diagnosticada en julio.
+- **Fixes:**
+  1. **Ventana 90 días** en getThreads/getMessages(head)/resolvePhoneFromHash (`companyScopedSnap`, alineada con el TTL de inbound) y en `GET /campaigns` (`?days=` hasta 365). **Fallback automático al scan completo** si el índice no está desplegado (warning en logs) — nada se rompe pre-deploy.
+  2. **2 índices nuevos** en `firestore.indexes.json`: `whatsapp_usage(company ASC, sentAt ASC)` y `whatsapp_inbound(company ASC, receivedAt ASC)`. **Requiere `firebase deploy --only firestore:indexes`.**
+  3. **Polling consciente:** lista y chat NO pollean con `document.hidden` (pestaña oculta).
+  4. **`sync-inbound` contenido:** throttle `listado`; **no-op si `KAPSO_WEBHOOK_SECRET` está configurado** (en prod el webhook ya entrega los mensajes — el poller era redundante y arriesgaba 429); cooldown de 15s por número en el poller; y el poller ahora usa las **credenciales propias del comercio** si existen (antes solo servía para el número compartido). El companyHint SOLO resuelve credenciales — la atribución sigue en persistInbound (D-116/D-094).
+- **Efecto lateral aceptado:** hilos sin actividad en 90 días salen de la lista del buzón (el detalle de un hilo activo sí muestra su historial completo — las queries por teléfono siguen sin límite de fecha, son por-contacto y chicas).
+
+### 2026-07-16 — D-118: Reply idempotente por clientMessageId
+
+- **Bug:** el `notificationId` del reply incluía `Date.now()` → un doble-POST (retry de red, doble submit) generaba DOS envíos reales; solo lo frenaba el flag `sending` del front.
+- **Fix:** el composer genera un `clientMessageId` **estable por mensaje lógico** (se reusa si el operador reintenta el MISMO texto tras un error; texto editado → id nuevo). Backend: claim in-memory TTL 5 min por `${company}:${phoneHash}:${clientMessageId}` ANTES de llamar a Kapso (se libera si el envío falla, para permitir reintento legítimo); duplicado → 200 `{duplicate:true}` con el kapsoMessageId original. El `notificationId=reply-<clientMessageId>` determinístico dedupea también el ledger entre reinicios. Mismo criterio in-memory que whatsappThrottle (sin cache extra).
+- **También en esta sesión (limpieza D-097):** borrado el código muerto del envío secuencial del wizard (`ResultadoEnvio`, `resultados`, `enviadosOk/Error`, `pausa()`, `.resultados-tabla`) y actualizado el comentario de cabecera que aún decía "cerrar la pestaña detiene el envío". `MarketingService.startConversation` se conserva con nota de legado (el endpoint lo usa el inbox).
+- **Verificación (D-115..D-118):** `node --check` en los 6 archivos backend tocados + smoke test (canonicalización, hash legacy→canónico, prorrateo exacto suma == débito) + `tsc --noEmit` proyecto completo: 0 errores. E2E sandbox a cargo del usuario. **Numeración:** D-115..D-118 (siguientes tras D-114 de esta misma sesión).
