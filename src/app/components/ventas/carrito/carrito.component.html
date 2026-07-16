@@ -179,11 +179,29 @@
 
     <!-- Footer: cupón + resumen -->
     <div class="cart-footer">
-      <div class="coupon-row">
+      <!-- Sin código aplicado: input + botón -->
+      <div class="coupon-row" *ngIf="!descuentoAplicado">
         <i class="pi pi-ticket"></i>
         <input [(ngModel)]="cupon" type="text"
-               placeholder="Código de cupón">
-        <button (click)="validarCuponYAplica()" [disabled]="!cupon">Aplicar</button>
+               placeholder="Código de descuento"
+               (keyup.enter)="validarCuponYAplica()"
+               [disabled]="aplicandoCupon">
+        <button (click)="validarCuponYAplica()" [disabled]="!cupon || aplicandoCupon">
+          {{ aplicandoCupon ? 'Validando...' : 'Aplicar' }}
+        </button>
+      </div>
+
+      <!-- Código aplicado: chip con nombre + quitar -->
+      <div class="coupon-row applied" *ngIf="descuentoAplicado">
+        <i class="pi pi-check-circle text-success"></i>
+        <span class="coupon-applied-info">
+          <span class="badge bg-success">{{ descuentoAplicado.codigoPersonalizado }}</span>
+          <small *ngIf="descuentoAplicado.nombre">&nbsp;{{ descuentoAplicado.nombre }}</small>
+          <small *ngIf="descuentoAplicado.tipo === 'envio_gratis'" class="text-success">&nbsp;· Envío gratis</small>
+        </span>
+        <button class="btn-quitar" (click)="quitarDescuento()" title="Quitar descuento">
+          <i class="pi pi-times"></i>
+        </button>
       </div>
 
       <div class="cart-summary">
@@ -192,7 +210,7 @@
           <span>{{getTotalProductPriceInCart() | currency:'USD':'symbol':'1.0-0'}}</span>
         </div>
         <div class="summary-line discount" *ngIf="valorDescuento > 0">
-          <span>Descuento</span>
+          <span>Descuento<span *ngIf="descuentoAplicado"> ({{ descuentoAplicado.codigoPersonalizado }})</span></span>
           <span>− {{valorDescuento | currency:'USD':'symbol':'1.0-0'}}</span>
         </div>
         <div class="summary-line total">

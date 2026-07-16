@@ -2,7 +2,7 @@ import { Component, Input, OnInit, EventEmitter, Output } from "@angular/core";
 import { CartSingletonService } from "../../../shared/services/ventas/cart.singleton.service";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
-import { Pedido } from "../modelo/pedido";
+import { Pedido, DescuentoAplicado } from "../modelo/pedido";
 import { ToastrService } from "ngx-toastr";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 
@@ -16,6 +16,9 @@ export class CarritoComponent implements OnInit {
   cupon: string = '';
   valorDescuento: number = 0;
   porcentajeDescuento: number = 0;
+  // Descuento del módulo Descuentos y Promociones actualmente aplicado.
+  descuentoAplicado: DescuentoAplicado | null = null;
+  aplicandoCupon: boolean = false;
   rangoPreciosActual1: any = null;
   precioproducto: number = 0;
   preciosAdiciones: number = 0;
@@ -454,40 +457,111 @@ export class CarritoComponent implements OnInit {
     });
   }
 
-  async validarCuponYAplica(): Promise<void> {
+  /**
+   * Valida el código contra el módulo Descuentos y Promociones
+   * (/v1/descuentos-promociones/aplicar-codigo) y lo aplica al carrito.
+   * El resultado se guarda en this.pedido.descuentoAplicado para que el backend
+   * registre la redención al crear la orden.
+   */
+  validarCuponYAplica(): void {
     if (!this.cupon) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Por favor ingrese un código de cupón',
-      });
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Por favor ingrese un código de descuento' });
       return;
     }
 
-    this.service.validateCupon({ code: this.cupon }).subscribe({
-      next: (value) => {
-        if (!value || value.length === 0) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Cupón no válido',
-          });
+    const totalCarrito = this.getTotalProductPriceInCart();
+    const clienteId =
+      this.pedido?.cliente?.documento ||
+      this.pedido?.cliente?.correo_electronico_comprador ||
+      '';
+
+    this.aplicandoCupon = true;
+    this.service.aplicarCodigoDescuento({
+      codigoPersonalizado: this.cupon,
+      clienteId,
+      totalCarrito,
+      // Un solo código a la vez en este flujo; si ya hay uno, se reemplaza.
+      codigosActivos: [],
+    }).subscribe({
+      next: (res) => {
+        this.aplicandoCupon = false;
+        if (!res || !res.descuentoId) {
+          Swal.fire({ icon: 'error', title: 'Código no válido', text: 'No se pudo aplicar el código' });
           return;
         }
-
-        this.valorDescuento = 0;
-        this.porcentajeDescuento = parseFloat(value[0]?.valor) || 0;
-        this.pedido.porceDescuento = this.porcentajeDescuento;
-        this.valorDescuento = (this.getTotalProductPriceInCart() * this.porcentajeDescuento) / 100;
+        this.aplicarResultadoDescuento(res);
       },
       error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Ocurrió un error al validar el cupón',
-        });
+        this.aplicandoCupon = false;
+        const msg = err?.error?.message || 'No se pudo aplicar el código';
+        Swal.fire({ icon: 'error', title: 'Código no válido', text: msg });
       },
     });
+  }
+
+  /**
+   * Mapea la respuesta del backend a los campos de descuento del pedido según el
+   * tipo. El backend recalcula totales: usa porceDescuento si es porcentaje, o
+   * totalDescuento (monto fijo) en caso contrario.
+   */
+  private aplicarResultadoDescuento(res: any): void {
+    const monto = Number(res.montoDescuento) || 0;
+
+    this.descuentoAplicado = {
+      descuentoId: res.descuentoId,
+      codigoPersonalizado: res.codigoPersonalizado || this.cupon.toUpperCase(),
+      tipo: res.tipo,
+      valor: Number(res.valor) || 0,
+      montoDescuento: monto,
+      nombre: res.nombre || '',
+      clienteId:
+        this.pedido?.cliente?.documento ||
+        this.pedido?.cliente?.correo_electronico_comprador ||
+        '',
+    };
+
+    // Persistir en el pedido para que viaje a /orders/create.
+    this.pedido.descuentoAplicado = this.descuentoAplicado;
+    this.pedido.cuponAplicado = this.descuentoAplicado.codigoPersonalizado;
+
+    if (res.tipo === 'porcentaje') {
+      this.porcentajeDescuento = Number(res.valor) || 0;
+      this.pedido.porceDescuento = this.porcentajeDescuento;
+      this.pedido.totalDescuento = monto;
+      this.valorDescuento = monto;
+    } else if (res.tipo === 'valor_fijo') {
+      this.porcentajeDescuento = 0;
+      this.pedido.porceDescuento = 0;
+      this.pedido.totalDescuento = monto;
+      this.valorDescuento = monto;
+    } else if (res.tipo === 'envio_gratis') {
+      // El descuento sobre productos es 0; el envío gratis se maneja en checkout.
+      this.porcentajeDescuento = 0;
+      this.pedido.porceDescuento = 0;
+      this.pedido.totalDescuento = 0;
+      this.valorDescuento = 0;
+    }
+
+    const detalle =
+      res.tipo === 'envio_gratis'
+        ? 'Envío gratis aplicado.'
+        : `Descuento aplicado: ${monto.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}`;
+    this.toastrService.success(detalle, res.nombre || 'Código aplicado');
+  }
+
+  /** Quita el descuento aplicado y limpia los campos del pedido. */
+  quitarDescuento(): void {
+    this.descuentoAplicado = null;
+    this.cupon = '';
+    this.valorDescuento = 0;
+    this.porcentajeDescuento = 0;
+    if (this.pedido) {
+      this.pedido.descuentoAplicado = undefined;
+      this.pedido.cuponAplicado = undefined;
+      this.pedido.porceDescuento = 0;
+      this.pedido.totalDescuento = 0;
+    }
+    this.toastrService.info('Descuento removido', '');
   }
   
   // Método para mostrar las notas existentes
