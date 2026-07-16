@@ -1259,6 +1259,29 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
+    // Confirmación no bloqueante si el producto no está activado (spec 023
+    // T-09): el usuario puede continuar igual, o volver a activarlo. No se
+    // fuerza `activar:true` — hay comercios que precargan catálogo antes de
+    // lanzar y sí quieren crear productos inactivos a propósito.
+    if (this.exposicion.value.activar !== true) {
+      const confirmacion = await Swal.fire({
+        title: "Producto no activado",
+        text: "Este producto no será visible en el catálogo hasta que lo actives. ¿Deseas continuar de todas formas?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Continuar sin activar",
+        cancelButtonText: "Volver y activar",
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        showCloseButton: true,
+      });
+      if (!confirmacion.isConfirmed) {
+        this.saving = false;
+        this.activeTabIndex = 4; // Tab "Exposición"
+        return;
+      }
+    }
+
     this.procesoComercial.controls["variablesForm"].setValue(
       stringify(this.variables),
     );

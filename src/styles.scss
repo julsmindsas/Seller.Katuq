@@ -60,7 +60,11 @@ select.tipo-doc-select {
   font-size: 0.875rem;
   border: 1px solid #ced4da;
   border-radius: 6px;
-  padding: 0 0.65rem;
+  // El padding-right reserva el espacio de la flecha SVG de .form-select
+  // (Bootstrap la pinta en `right 0.75rem center`, 16px). Con el shorthand
+  // `0 0.65rem` el texto de las opciones largas ("CC - Cédula de ciudadanía")
+  // pasaba POR DEBAJO de la flecha.
+  padding: 0 2.25rem 0 0.65rem;
   color: #495057;
   background-color: #fff;
   // Solo la flecha SVG de Bootstrap (.form-select). Sin appearance:auto
@@ -69,6 +73,10 @@ select.tipo-doc-select {
   -webkit-appearance: none;
   -moz-appearance: none;
   width: 100%;
+  // Si aun así no cabe (select angosto), corta con puntos suspensivos en vez
+  // de chocar contra la flecha.
+  text-overflow: ellipsis;
+  white-space: nowrap;
   // Estado bloqueado (edición): mismo look que el input de Número de
   // Documento deshabilitado — sin flecha, gris plano y no editable.
   // Se usa una clase en vez de :disabled porque el guardado lee
@@ -80,6 +88,8 @@ select.tipo-doc-select {
     color: #6b7280;
     cursor: not-allowed;
     pointer-events: none;
+    // Sin flecha no hay que reservarle espacio.
+    padding-right: 0.65rem;
   }
   &:focus {
     border-color: #8b5cf6;

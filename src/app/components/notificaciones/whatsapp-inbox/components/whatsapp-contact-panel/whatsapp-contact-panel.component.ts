@@ -139,7 +139,14 @@ export class WhatsappContactPanelComponent implements OnChanges {
       .then(() => {
         if (this.profile) this.profile = { ...this.profile, optedOut: nuevo };
       })
-      .catch(() => undefined)
+      .catch(() => {
+        this.toastr.error(
+          nuevo
+            ? "No se pudo marcar el contacto como 'No contactar'. Intenta de nuevo."
+            : "No se pudo quitar la marca de 'No contactar'. Intenta de nuevo.",
+          "No contactar",
+        );
+      })
       .finally(() => (this.togglingOptOut = false));
   }
 

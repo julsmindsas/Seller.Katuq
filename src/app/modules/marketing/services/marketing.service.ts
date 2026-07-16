@@ -90,7 +90,9 @@ export class MarketingService extends BaseService {
 
   /**
    * Envía una plantilla a UN destinatario (Kapso envía + backend debita saldo
-   * y persiste usage). La campaña itera este método secuencialmente.
+   * y persiste usage). Legado del envío secuencial pre-D-097: las campañas ya
+   * NO lo iteran (van por launchBroadcast). Se conserva porque el endpoint
+   * sigue vivo (lo usa el inbox para iniciar conversación fuera de ventana).
    */
   startConversation(
     phone: string,

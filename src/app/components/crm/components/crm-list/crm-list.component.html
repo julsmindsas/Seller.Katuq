@@ -273,6 +273,16 @@
                     <a class="action-btn-pill action-btn-detail" (click)="viewDetail(lead)">
                       <i class="fa fa-external-link me-1"></i>Ver
                     </a>
+                    <a class="action-btn-pill action-btn-cotizar"
+                      pTooltip="Cotizar con los datos del lead (no lo vuelve cliente)"
+                      (click)="cotizarDesdeLead(lead, $event)">
+                      <i class="fa fa-file-text-o me-1"></i>Cotizar
+                    </a>
+                    <a class="action-btn-pill action-btn-pedido"
+                      pTooltip="Convertir en cliente y tomar el pedido"
+                      (click)="crearPedidoDesdeLead(lead, $event)">
+                      <i class="fa fa-shopping-cart me-1"></i>Pedido
+                    </a>
                     <a *ngIf="wonStage" class="action-btn-pill action-btn-won" pTooltip="Marcar como Ganado"
                       (click)="quickCloseLead(lead, 'won', $event)">
                       <i class="fa fa-check"></i>
@@ -420,6 +430,10 @@
                     <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn" pTooltip="Correo"><i class="fa fa-envelope-o"></i></a>
                     <a *ngIf="lead.phone" [href]="'https://wa.me/' + lead.phone" target="_blank"
                       class="action-btn action-btn-wa" pTooltip="WhatsApp"><i class="fa fa-whatsapp"></i></a>
+                    <a class="action-btn action-btn-cotizar-table" pTooltip="Cotizar (no lo vuelve cliente)"
+                      (click)="cotizarDesdeLead(lead, $event)"><i class="fa fa-file-text-o"></i></a>
+                    <a class="action-btn action-btn-pedido-table" pTooltip="Convertir en cliente y tomar el pedido"
+                      (click)="crearPedidoDesdeLead(lead, $event)"><i class="fa fa-shopping-cart"></i></a>
                     <a class="action-btn" [ngClass]="lead.activo ? 'action-btn-block-table' : 'action-btn-unblock-table'"
                       (click)="toggleBloqueoLead(lead, $event)"
                       [pTooltip]="lead.activo ? 'Bloquear' : 'Desbloquear'"><i class="fa" [ngClass]="lead.activo ? 'fa-lock' : 'fa-unlock'"></i></a>
@@ -503,9 +517,17 @@
                   </small>
                 </td>
                 <td>
-                  <a class="action-btn" (click)="viewDetail(lead)" pTooltip="Ver detalle">
-                    <i class="fa fa-eye"></i>
-                  </a>
+                  <div class="d-flex gap-2 align-items-center">
+                    <a class="action-btn" (click)="viewDetail(lead)" pTooltip="Ver detalle">
+                      <i class="fa fa-eye"></i>
+                    </a>
+                    <!-- Un lead cerrado sigue siendo vendible: al ganado se le
+                         puede recomprar, al perdido se le puede reactivar. -->
+                    <a class="action-btn action-btn-cotizar-table" pTooltip="Cotizar (no lo vuelve cliente)"
+                      (click)="cotizarDesdeLead(lead, $event)"><i class="fa fa-file-text-o"></i></a>
+                    <a class="action-btn action-btn-pedido-table" pTooltip="Convertir en cliente y tomar el pedido"
+                      (click)="crearPedidoDesdeLead(lead, $event)"><i class="fa fa-shopping-cart"></i></a>
+                  </div>
                 </td>
               </tr>
             </ng-template>

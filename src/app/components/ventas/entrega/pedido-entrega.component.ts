@@ -284,7 +284,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Dirección y Ciudad son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
       return;
     }
-    this.datosEntregas = [];
+    // Spec 024: mutar en el lugar (no reasignar) — `datosEntregas` es un
+    // @Input() bindeado en un solo sentido desde el padre; reasignarlo rompe
+    // la referencia y el padre la vuelve a pisar en el siguiente ciclo de CD.
+    this.datosEntregas.splice(0, this.datosEntregas.length);
     const datosEntreg = {
       alias: this.alias_entrega,
       nombres: this.nombres_entrega,
@@ -348,18 +351,21 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
               Array.isArray(clientRes.datosEntrega)
             ) {
               const ciudadFiltro = this.pedidoGral?.envio?.ciudad;
+              let nuevas = clientRes.datosEntrega;
               if (ciudadFiltro) {
                 const filtradas = clientRes.datosEntrega.filter((x) => x.ciudad == ciudadFiltro);
                 // Si hay direcciones para la ciudad, mostrar esas; si no, mostrar todas
-                this.datosEntregas = filtradas.length > 0 ? filtradas : clientRes.datosEntrega;
+                nuevas = filtradas.length > 0 ? filtradas : clientRes.datosEntrega;
                 this.datosEntregaNoEncontradosParaCiudadSeleccionada = filtradas.length === 0;
               } else {
                 // Sin ciudad seleccionada, mostrar todas las direcciones
-                this.datosEntregas = clientRes.datosEntrega;
                 this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
               }
+              // Spec 024: actualizar en-place para que Angular no sobreescriba
+              // con el array viejo del padre (mismo patrón que editarDatosEntrega()).
+              this.datosEntregas.splice(0, this.datosEntregas.length, ...nuevas);
             } else {
-              this.datosEntregas = [];
+              this.datosEntregas.splice(0, this.datosEntregas.length);
             }
 
             // Cerrar modal si está abierto

@@ -1,8 +1,10 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { FormGroup, FormBuilder, Validators } from "@angular/forms";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
+import { map } from "rxjs/operators";
 import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
 import { CorporateClientsService } from "../services/corporate-clients.service";
+import { CrmService } from "../../../crm/services/crm.service";
 import { ClientConfigService, ClientTag } from "../services/client-config.service";
 import { InfoIndicativos } from "../../../../../Mock/indicativosPais";
 import Swal from "sweetalert2";
@@ -17,14 +19,39 @@ export class CrearClienteModalComponent implements OnInit {
   @Input() isEdit: boolean = false;
   @Input() documentoPrellenado: string = "";
   /**
+   * Datos iniciales al CREAR (en edición se usa `clienteData`). Pensado para
+   * promover un lead del CRM a cliente: se precarga lo que ya se sabe y el
+   * usuario solo completa lo que falte (D-111). Acepta la forma cliente.
+   */
+  @Input() prefill: any = null;
+  /**
+   * `false` → el modal NO guarda: valida y devuelve el valor con
+   * `action: 'draft'`, y el caller decide. Lo usa la cotización de un lead
+   * (D-111): su cliente es una COPIA embebida que aún no existe en `clients`,
+   * así que editarla no debe crear ni actualizar nada.
+   */
+  @Input() persist: boolean = true;
+  /**
    * Destino de persistencia. 'client' (default) usa la colección de clientes
-   * habituales; 'corporate' persiste en la lista de clientes corporativos que
-   * alimenta el CRM (spec 011). El resto del formulario es idéntico.
+   * habituales; 'corporate' persiste vía CRM (corporate_clients + crm_pipeline,
+   * spec 011). El formulario es idéntico en ambos casos (D-110).
    */
   @Input() target: 'client' | 'corporate' = 'client';
+  /** Encabezado del modal. Por defecto habla de "Cliente". */
+  @Input() title: string = "";
+  /**
+   * Catálogo de etiquetas a mostrar. Si el caller no lo pasa, se cargan las de
+   * clientes. Corporativos tiene catálogo PROPIO y lo inyecta por aquí, para no
+   * mezclar los dos catálogos (spec 011).
+   */
+  @Input() tagsCatalog: ClientTag[] | null = null;
 
   formulario: FormGroup;
   indicativos: any[] = [];
+  /** "Cliente" | "Corporativo" — solo afecta textos, no los campos. */
+  get entityLabel(): string {
+    return this.target === 'corporate' ? 'Corporativo' : 'Cliente';
+  }
   clientTypes: { label: string; value: string }[] = [];
   clientTagsCatalog: ClientTag[] = [];
   etiquetasSeleccionadas: string[] = [];
@@ -49,6 +76,7 @@ export class CrearClienteModalComponent implements OnInit {
     private fb: FormBuilder,
     private maestroService: MaestroService,
     private corpService: CorporateClientsService,
+    private crmService: CrmService,
     public activeModal: NgbActiveModal,
     private infoIndicativos: InfoIndicativos,
     private clientConfig: ClientConfigService,
@@ -58,9 +86,13 @@ export class CrearClienteModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.indicativos = this.infoIndicativos.datos;
-    this.clientConfig.loadClientTags().subscribe((tags) => {
-      this.clientTagsCatalog = tags;
-    });
+    if (this.tagsCatalog) {
+      this.clientTagsCatalog = this.tagsCatalog;
+    } else {
+      this.clientConfig.loadClientTags().subscribe((tags) => {
+        this.clientTagsCatalog = tags;
+      });
+    }
     this.maestroService.consultarTiposClienteActivos().subscribe({
       next: (tipos: any) => {
         this.clientTypes = Array.isArray(tipos)
@@ -70,8 +102,9 @@ export class CrearClienteModalComponent implements OnInit {
         // (evita el race con el setTimeout de abajo, que corre antes de esta
         // respuesta HTTP). El tipo puede venir en `tipoCliente` (string) o, en
         // clientes legacy, en `categoria.nombre`.
-        if (this.isEdit && this.clienteData) {
-          const tipoActual = this.clienteData.tipoCliente || this.clienteData.categoria?.nombre || '';
+        const origen = this.isEdit ? this.clienteData : this.prefill;
+        if (origen) {
+          const tipoActual = origen.tipoCliente || origen.categoria?.nombre || '';
           if (tipoActual) {
             this.formulario.controls['tipoCliente'].setValue(tipoActual);
           }
@@ -147,6 +180,28 @@ export class CrearClienteModalComponent implements OnInit {
           creditLimit: 0,
           payTermDays: 0,
         });
+
+        // Precarga al crear (D-111): sobre los defaults, sin pisarlos con vacíos.
+        if (this.prefill) {
+          const limpio: any = {};
+          Object.entries(this.prefill).forEach(([k, v]) => {
+            if (v !== null && v !== undefined && v !== "" && this.formulario.get(k)) limpio[k] = v;
+          });
+          this.formulario.patchValue(limpio);
+
+          const tipoDoc = this.normalizeTipoDoc(this.prefill.tipo_documento_comprador);
+          this.tipoDocSeleccionado = tipoDoc;
+          this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
+
+          this.etiquetasSeleccionadas = Array.isArray(this.prefill.etiquetas)
+            ? [...this.prefill.etiquetas]
+            : [];
+          this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
+
+          // Marca los campos faltantes para que el usuario vea de una qué debe
+          // completar, en vez de descubrirlo al presionar Guardar.
+          this.marcarControlesComoTocados();
+        }
       }
     });
   }
@@ -327,6 +382,12 @@ export class CrearClienteModalComponent implements OnInit {
         : null,
     };
 
+    // Modo borrador: sin persistencia, el caller se queda con el valor.
+    if (!this.persist) {
+      this.activeModal.close({ cliente: clienteData, action: 'draft' });
+      return;
+    }
+
     if (this.isEdit) {
       this.ejecutarEdicion(clienteData);
     } else {
@@ -335,22 +396,42 @@ export class CrearClienteModalComponent implements OnInit {
   }
 
   // ── Persistencia según target (client | corporate) ──────────────────
+  //
+  // Corporativos NO usa /v1/corporate-clients/create: esa ruta solo escribe la
+  // entidad, y el corporativo quedaría sin su doc en `crm_pipeline` (tarjeta
+  // huérfana en el kanban). Persiste vía CRM con forceCorporate, que escribe
+  // ambos. La búsqueda por documento sí usa corpService (es solo lectura).
   private lookupByDocument(documento: string) {
     return this.target === 'corporate'
       ? this.corpService.getByDocument(documento)
       : this.maestroService.getClientByDocument({ documento });
   }
 
+  /**
+   * CrmService atrapa los errores HTTP y emite `{success:false}` por el canal de
+   * éxito. Sin esto, un fallo mostraría "¡Cliente creado!" y cerraría el modal.
+   */
+  private failOnCrmError<T>(source: any) {
+    return source.pipe(
+      map((res: any) => {
+        if (res && res.success === false) throw new Error('crm_persist_failed');
+        return res as T;
+      }),
+    );
+  }
+
   private persistCreate(clienteData: any) {
-    return this.target === 'corporate'
-      ? this.corpService.crear(clienteData)
-      : this.maestroService.createClient(clienteData);
+    if (this.target !== 'corporate') return this.maestroService.createClient(clienteData);
+    return this.failOnCrmError<any>(this.crmService.createLead(clienteData, true)).pipe(
+      // Normaliza la respuesta del CRM ({success, data:{entityId}}) a la forma
+      // que espera crearCliente().
+      map((res: any) => ({ cliente: { ...clienteData, cd: res?.data?.entityId } })),
+    );
   }
 
   private persistEdit(payload: any) {
-    return this.target === 'corporate'
-      ? this.corpService.editar(payload)
-      : this.maestroService.editClient(payload);
+    if (this.target !== 'corporate') return this.maestroService.editClient(payload);
+    return this.failOnCrmError<any>(this.crmService.updateLead(payload.cd, payload, true));
   }
 
   private ejecutarEdicion(clienteData: any) {
@@ -364,7 +445,7 @@ export class CrearClienteModalComponent implements OnInit {
               ? (resultadoLookup[0] || payload)
               : (resultadoLookup || payload);
             Swal.fire({
-              title: '¡Cliente actualizado!',
+              title: `¡${this.entityLabel} actualizado!`,
               text: `${clienteActualizado.nombres_completos} ${clienteActualizado.apellidos_completos || ''} fue actualizado exitosamente.`,
               icon: 'success',
               timer: 2500,
@@ -381,7 +462,7 @@ export class CrearClienteModalComponent implements OnInit {
         });
       },
       error: () => {
-        Swal.fire("Error", "Ocurrió un error al actualizar el cliente", "error");
+        Swal.fire("Error", `Ocurrió un error al actualizar el ${this.entityLabel.toLowerCase()}`, "error");
       },
     });
   }
@@ -393,9 +474,9 @@ export class CrearClienteModalComponent implements OnInit {
         if (res && !esArrayVacio) {
           const clienteEncontrado = Array.isArray(res) ? res[0] : res;
           Swal.fire({
-            title: "Cliente ya registrado",
+            title: `${this.entityLabel} ya registrado`,
             html: `<p>El documento <strong>${clienteData.documento}</strong> ya está registrado.</p>
-                   <p><strong>Cliente:</strong> ${clienteEncontrado.nombres_completos} ${clienteEncontrado.apellidos_completos || ""}</p>`,
+                   <p><strong>${this.entityLabel}:</strong> ${clienteEncontrado.nombres_completos} ${clienteEncontrado.apellidos_completos || ""}</p>`,
             icon: "info",
             confirmButtonText: "Entendido",
           }).then(() => {
@@ -414,7 +495,7 @@ export class CrearClienteModalComponent implements OnInit {
       next: (response: any) => {
         const clienteCreado = response.cliente || response || clienteData;
         Swal.fire({
-          title: '¡Cliente creado!',
+          title: `¡${this.entityLabel} creado!`,
           text: `${clienteCreado.nombres_completos || clienteData.nombres_completos} fue guardado exitosamente.`,
           icon: 'success',
           timer: 2500,
@@ -426,7 +507,7 @@ export class CrearClienteModalComponent implements OnInit {
         this.activeModal.close({ cliente: { ...clienteData, ...clienteCreado }, action: 'created' });
       },
       error: () => {
-        Swal.fire("Error", "Ocurrió un error al crear el cliente", "error");
+        Swal.fire("Error", `Ocurrió un error al crear el ${this.entityLabel.toLowerCase()}`, "error");
       },
     });
   }

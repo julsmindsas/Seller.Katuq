@@ -3,6 +3,7 @@ import { Router } from "@angular/router";
 import Swal from "sweetalert2";
 import { CartSingletonService } from "src/app/shared/services/ventas/cart.singleton.service";
 import { BodegaService } from "src/app/shared/services/bodegas/bodega.service";
+import { LeadToSalesService } from "../crm/services/lead-to-sales.service";
 import { Cotizacion } from "./modelo/cotizacion";
 
 /**
@@ -20,7 +21,8 @@ export class CotizacionConvertService {
   constructor(
     private cartService: CartSingletonService,
     private bodegaService: BodegaService,
-    private router: Router
+    private router: Router,
+    private leadToSales: LeadToSalesService
   ) {}
 
   /** True si la cotización puede convertirse (aceptada y no convertida aún). */
@@ -153,6 +155,17 @@ export class CotizacionConvertService {
       };
     });
 
+    // El cliente DEBE existir en `clients` antes de navegar: crear-ventas lo
+    // busca por documento y, si no lo encuentra, muestra "No encontrado" y
+    // descarta este contexto en silencio (el carrito nunca cargaría).
+    //
+    // Cotizaciones nacidas del CRM (D-111) traen una COPIA de los datos del
+    // lead, que aún no es cliente — cotizar no promueve. Aquí sí: el cliente
+    // aceptó y vamos a pedir. Para cotizaciones normales el cliente ya existe y
+    // esto es un no-op (asegurarCliente es idempotente).
+    const documento = await this.leadToSales.asegurarCliente(cot.cliente);
+    if (!documento) return false;
+
     // Cliente para la venta asistida (el checkout lo lee de sessionStorage).
     try {
       sessionStorage.setItem("cliente", JSON.stringify(cot.cliente));
@@ -169,7 +182,6 @@ export class CotizacionConvertService {
       sessionStorage.setItem("cotizacionOrigen", JSON.stringify({ id: cot.id, nro: cot.nroCotizacion }));
     } catch { /* noop */ }
 
-    const documento = (cot.cliente as any)?.documento || "";
     this.router.navigate(["/ventas/crear-ventas"], { queryParams: { documento } });
     return true;
   }

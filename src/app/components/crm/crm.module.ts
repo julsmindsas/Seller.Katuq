@@ -25,6 +25,9 @@ import { MenuModule } from 'primeng/menu';
 import { DragulaModule } from 'ng2-dragula';
 import { InputSwitchModule } from 'primeng/inputswitch';
 
+// El botón "Pedido" (D-111) promueve el lead con el formulario de cliente.
+// Igual que cotizaciones: se importa el módulo compartido, NO VentasModule.
+import { ClientesSharedModule } from '../ventas/clientes/clientes-shared.module';
 import { CrmListComponent } from './components/crm-list/crm-list.component';
 import { LeadFormModalComponent } from './components/lead-form-modal/lead-form-modal.component';
 import { CrmDetailComponent } from './components/crm-detail/crm-detail.component';
@@ -42,7 +45,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     InputTextModule, InputTextareaModule, InputNumberModule,
     CardModule, ToolbarModule, TooltipModule, SkeletonModule,
     BadgeModule, MenuModule, DragulaModule, InputSwitchModule,
-    LeadFormModalComponent,
+    LeadFormModalComponent, ClientesSharedModule,
   ],
   providers: [MessageService, ConfirmationService],
 })
