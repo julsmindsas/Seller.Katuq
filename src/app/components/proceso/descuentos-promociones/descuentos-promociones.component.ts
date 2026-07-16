@@ -3,6 +3,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
 import { CrearDescuentoPromocionComponent } from './crear-descuento-promocion/crear-descuento-promocion.component';
+import { HistorialRedencionesComponent } from './historial-redenciones/historial-redenciones.component';
 
 @Component({
   selector: 'app-descuentos-promociones',
@@ -93,6 +94,20 @@ export class DescuentosPromocionesComponent implements OnInit {
         });
       }
     });
+  }
+
+  /** true si el código ya tiene al menos una redención. */
+  fueRedimido(row: any): boolean {
+    return (row?.usosActuales || 0) > 0;
+  }
+
+  /** Abre el modal con el historial de redenciones del código. */
+  verHistorial(row: any) {
+    const modalRef = this.modalService.open(HistorialRedencionesComponent, {
+      size: 'lg',
+      centered: true
+    });
+    modalRef.componentInstance.descuento = row;
   }
 
   updateFilter(event: any) {

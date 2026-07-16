@@ -1,3 +1,4 @@
+
 <div class="modal-header">
   <h5 class="modal-title">{{ mostrarCrear ? 'Crear Descuento' : 'Editar Descuento' }}</h5>
   <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
@@ -84,7 +85,7 @@
       <div class="col-md-6">
         <div class="mb-3">
           <label class="form-label fw-bold">Aplica a <span class="text-danger">*</span></label>
-          <select class="form-control" formControlName="aplicaA">
+          <select class="form-control" formControlName="aplicaA" (change)="onAplicaAChange()">
             <option *ngFor="let op of aplicaAOpciones" [value]="op.value">{{ op.label }}</option>
           </select>
         </div>
@@ -97,6 +98,42 @@
           <small class="text-muted">
             Número máximo de veces que este código puede usarse en total.
           </small>
+        </div>
+      </div>
+
+      <!-- Fila 4b: Target de aplicación (aparece según "Aplica a") -->
+      <div class="col-md-12" *ngIf="aplicaASeleccionado === 'categoria'">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Categoría específica <span class="text-danger">*</span></label>
+          <ng-select [items]="categorias" bindLabel="path" bindValue="nombre"
+            formControlName="categoriaNombre" placeholder="Selecciona una categoría"
+            [clearable]="true" notFoundText="Sin categorías">
+          </ng-select>
+          <small class="text-danger"
+            *ngIf="form.get('categoriaNombre')?.invalid && form.get('categoriaNombre')?.touched">
+            Selecciona una categoría
+          </small>
+          <small class="text-muted d-block">El descuento aplicará a productos de esta categoría.</small>
+        </div>
+      </div>
+
+      <div class="col-md-12" *ngIf="aplicaASeleccionado === 'producto_especifico'">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Producto específico <span class="text-danger">*</span></label>
+          <ng-select [items]="productosBuscados" bindLabel="titulo" bindValue="cd"
+            formControlName="productoId" placeholder="Escribe para buscar producto..."
+            [typeahead]="productoInput$" [loading]="productoLoading" [minTermLength]="2"
+            typeToSearchText="Escribe al menos 2 caracteres..." notFoundText="Sin resultados"
+            [clearable]="true" (change)="onProductoChange($event)">
+            <ng-template ng-option-tmp let-item="item">
+              {{ item.titulo }} <small class="text-muted">({{ item.referencia }})</small>
+            </ng-template>
+          </ng-select>
+          <small class="text-danger"
+            *ngIf="form.get('productoId')?.invalid && form.get('productoId')?.touched">
+            Selecciona un producto
+          </small>
+          <small class="text-muted d-block">El descuento aplicará a este producto.</small>
         </div>
       </div>
 
