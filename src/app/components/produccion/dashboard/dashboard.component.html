@@ -1,11 +1,11 @@
-<app-breadcrumb [title]="'Produccion'" [items]="['Produccion/Tablero']" [active_item]="'Tablero'"></app-breadcrumb>
+<!-- <app-breadcrumb [title]="'Produccion'" [items]="['Produccion/Tablero']" [active_item]="'Tablero'"></app-breadcrumb> -->
 
 <!-- Sección principal -->
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-12">
             <!-- Card principal -->
-            <div class="card shadow-sm border-0 mb-4">
+            <div class="card shadow-sm border-0 mb-4 mt-2">
                 <!-- Loader -->
                 <div class="loader-box" *ngIf="loading">
                     <div class="loader-8"></div>
@@ -14,39 +14,33 @@
                 <!-- Header del módulo -->
                 <div
                     class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="mb-1 fw-bold text-dark"><i class="pi pi-box me-2"></i>Producción</h4>
-                        <p class="text-muted small mb-0">Gestión de producción y seguimiento de artículos</p>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="module-header-icon">
+                            <i class="pi pi-box"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1 fw-bold text-dark">Producción</h4>
+                            <p class="text-muted small mb-0">Gestión de producción y seguimiento de artículos</p>
+                        </div>
                     </div>
 
-                    <!-- Botón de recomendaciones KAI -->
-                    <button pButton type="button" icon="pi pi-brain" label="Recomendaciones KAI"
-                        class="p-button-info p-button-sm" (click)="mostrarRecomendacionesProduccion()"></button>
+                    <!-- Botón de recomendaciones KAI (oculto temporalmente) -->
+                    <!-- <button pButton type="button" icon="pi pi-brain" label="Recomendaciones KAI"
+                        class="p-button-info p-button-sm" (click)="mostrarRecomendacionesProduccion()"></button> -->
+
+                    <!-- Botón Mostrar/Ocultar Métricas -->
+                    <button type="button" class="btn-metrics-toggle" (click)="toggleMetrics()"
+                        [attr.aria-expanded]="showMetrics">
+                        <i class="pi" [ngClass]="showMetrics ? 'pi-eye-slash' : 'pi-eye'"></i>
+                        {{ showMetrics ? 'Ocultar Métricas' : 'Mostrar Métricas' }}
+                    </button>
                 </div>
 
 
                 <!-- Panel de KPI avanzados de producción -->
-                <div class="metrics-container p-3 mb-3 border-bottom bg-white" *ngIf="!loading">
-                    <!-- Botón para mostrar/ocultar métricas -->
-                    <div class="row mb-2">
-                        <div class="col-12 d-flex justify-content-between align-items-center">
-                            <h6 class="fw-bold text-primary mb-0">
-                                <i class="pi pi-chart-line me-2"></i>
-                                Métricas Avanzadas de Producción
-                            </h6>
-                            <button 
-                                type="button" 
-                                class="btn btn-outline-primary btn-sm" 
-                                (click)="toggleMetrics()"
-                                [attr.aria-expanded]="showMetrics">
-                                <i class="pi" [ngClass]="showMetrics ? 'pi-eye-slash' : 'pi-eye'"></i>
-                                {{ showMetrics ? 'Ocultar Métricas' : 'Mostrar Métricas' }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Sección de métricas (colapsable) -->
-                    <div class="row" *ngIf="showMetrics">
+                <div class="metrics-container p-3 mb-3 border-bottom bg-white" *ngIf="!loading && showMetrics">
+                    <!-- Sección de métricas (se muestra/oculta desde el header del módulo) -->
+                    <div class="row">
                         <div class="col-12 mb-3">
                             <div class="text-muted small mb-3">
                                 Vista detallada del estado y eficiencia de producción
@@ -219,7 +213,8 @@
                         <!-- TAB DE ENSAMBLE -->
                         <p-tabPanel header="Ensamble">
                             <!-- Filtros modernos -->
-                            <div class="modern-filters-container">
+                            <!-- mx-3 mt-3 compensa el padding que se le quito al p-tabview-panels -->
+                            <div class="modern-filters-container mx-3 mt-3">
                                 <!-- Header compacto y colapsable -->
                                 <div class="filters-compact-header">
                                     <div class="d-flex justify-content-between align-items-center">

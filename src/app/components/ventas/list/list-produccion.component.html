@@ -1,10 +1,8 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12 p-2">
-      <div class="card">
-        <div class="card-body">
+<!-- Se renderiza embebido dentro de la card de list.component (rediseno unificado):
+     sin container/card propios para no anidar envolturas ni recortar el ancho. -->
+<div class="produccion-embedded">
           <!-- Selector de columnas -->
-          <div class="d-flex align-items-center mb-3">
+          <div class="d-flex align-items-center mb-1">
             <label class="me-2 fw-bold">Columnas:</label>
             <p-multiSelect [options]="displayedColumns" [(ngModel)]="selectedColumns" optionLabel="header"
               defaultLabel="Seleccionar columnas" selectedItemsLabel="{0} columnas seleccionadas"
@@ -14,10 +12,11 @@
           </div>
 
           <!-- Panel de Métricas Estilo Breadcrumb -->
-          <div class="metrics-breadcrumb-panel bg-white border-top border-bottom py-2 px-3 mb-3">
+          <div class="metrics-breadcrumb-panel bg-white border-top border-bottom py-2 px-3 mb-1">
             <div class="d-flex flex-wrap align-items-center gap-2">
               <!-- Total Productos -->
               <div class="metric-chip metric-chip-primary"
+                   [class.active]="selectedEstadoFilter === 'all'"
                    (click)="onMetricClick('all')"
                    pTooltip="{{ 'Ver todos los productos' | translate }}"
                    tooltipPosition="top">
@@ -30,6 +29,7 @@
 
               <!-- Sin Producir -->
               <div class="metric-chip metric-chip-secondary metric-chip-compact"
+                   [class.active]="selectedEstadoFilter === 'SinProducir'"
                    (click)="onMetricClick('SinProducir')"
                    pTooltip="{{ 'Filtrar productos sin producir' | translate }}"
                    tooltipPosition="top">
@@ -43,6 +43,7 @@
 
               <!-- En Producción -->
               <div class="metric-chip metric-chip-info metric-chip-compact"
+                   [class.active]="selectedEstadoFilter === 'EnProduccion'"
                    (click)="onMetricClick('EnProduccion')"
                    pTooltip="{{ 'Filtrar productos en producción' | translate }}"
                    tooltipPosition="top">
@@ -56,6 +57,7 @@
 
               <!-- Producido Parcialmente -->
               <div class="metric-chip metric-chip-warning metric-chip-compact"
+                   [class.active]="selectedEstadoFilter === 'ProducidoParcialmente'"
                    (click)="onMetricClick('ProducidoParcialmente')"
                    pTooltip="{{ 'Filtrar productos producidos parcialmente' | translate }}"
                    tooltipPosition="top">
@@ -69,6 +71,7 @@
 
               <!-- Producido Totalmente -->
               <div class="metric-chip metric-chip-success metric-chip-compact"
+                   [class.active]="selectedEstadoFilter === 'ProducidoTotalmente'"
                    (click)="onMetricClick('ProducidoTotalmente')"
                    pTooltip="{{ 'Filtrar productos producidos totalmente' | translate }}"
                    tooltipPosition="top">
@@ -82,6 +85,7 @@
 
               <!-- Para Despachar -->
               <div class="metric-chip metric-chip-packed metric-chip-compact"
+                   [class.active]="selectedEstadoFilter === 'ParaDespachar'"
                    (click)="onMetricClick('ParaDespachar')"
                    pTooltip="{{ 'Filtrar productos listos para despachar' | translate }}"
                    tooltipPosition="top">
@@ -89,6 +93,48 @@
                 <span class="metric-label-short">PD</span>
                 <span class="metric-label-full">P/ Despachar</span>
                 <span class="metric-badge">{{ getProcesoCount('ParaDespachar') }}</span>
+              </div>
+
+              <span class="separator">/</span>
+
+              <!-- Empacado -->
+              <div class="metric-chip metric-chip-primary metric-chip-compact"
+                   [class.active]="selectedEstadoFilter === 'Empacado'"
+                   (click)="onMetricClick('Empacado')"
+                   pTooltip="{{ 'Filtrar productos empacados' | translate }}"
+                   tooltipPosition="top">
+                <i class="pi pi-inbox"></i>
+                <span class="metric-label-short">EM</span>
+                <span class="metric-label-full">Empacado</span>
+                <span class="metric-badge">{{ getProcesoCount('Empacado') }}</span>
+              </div>
+
+              <span class="separator">/</span>
+
+              <!-- Despachado -->
+              <div class="metric-chip metric-chip-warning metric-chip-compact"
+                   [class.active]="selectedEstadoFilter === 'Despachado'"
+                   (click)="onMetricClick('Despachado')"
+                   pTooltip="{{ 'Filtrar productos despachados' | translate }}"
+                   tooltipPosition="top">
+                <i class="pi pi-truck"></i>
+                <span class="metric-label-short">DE</span>
+                <span class="metric-label-full">Despachado</span>
+                <span class="metric-badge">{{ getProcesoCount('Despachado') }}</span>
+              </div>
+
+              <span class="separator">/</span>
+
+              <!-- Entregado -->
+              <div class="metric-chip metric-chip-success metric-chip-compact"
+                   [class.active]="selectedEstadoFilter === 'Entregado'"
+                   (click)="onMetricClick('Entregado')"
+                   pTooltip="{{ 'Filtrar productos entregados' | translate }}"
+                   tooltipPosition="top">
+                <i class="pi pi-check-circle"></i>
+                <span class="metric-label-short">EN</span>
+                <span class="metric-label-full">Entregado</span>
+                <span class="metric-badge">{{ getProcesoCount('Entregado') }}</span>
               </div>
             </div>
           </div>
@@ -515,8 +561,12 @@
                     'badge-warning': row?.estadoProceso === 'Despachado' || row?.estadoProceso === 'ParaDespachar',
                     'badge-success': row?.estadoProceso === 'Entregado',
                     'badge-danger': row?.estadoProceso === 'Rechazado',
-                    'badge-dark': row?.estadoProceso === 'Cerrado'
-                  }">
+                    'badge-dark': row?.estadoProceso === 'Cerrado',
+                    'badge-clickable': canAdvanceEstado(row)
+                  }"
+                  (click)="confirmAdvanceEstado(row)"
+                  [pTooltip]="canAdvanceEstado(row) ? ('Clic para avanzar a ' + ESTADO_PRODUCCION_LABELS[getNextEstadoProceso(row.estadoProceso)]) : ''"
+                  tooltipPosition="top">
                     <i class="status-icon pi" [ngClass]="{
                       'pi-circle': row?.estadoProceso === 'SinProducir',
                       'pi-cog': row?.estadoProceso === 'EnProduccion' || row?.estadoProceso === 'Producido' || row?.estadoProceso === 'ProducidoTotalmente' || row?.estadoProceso === 'ProducidoParcialmente',
@@ -527,6 +577,7 @@
                       'pi-lock': row?.estadoProceso === 'Cerrado'
                     }"></i>
                     {{ row?.estadoProceso }}
+                    <i *ngIf="canAdvanceEstado(row)" class="pi pi-chevron-right status-advance-icon"></i>
                   </span>
                 </td>
 
@@ -623,10 +674,12 @@
               </tr>
             </ng-template>
           </p-table>
-        </div>
-      </div>
-    </div>
-  </div>
+
+          <!-- Ayuda: cambio de estado en línea (rediseño 1a) -->
+          <div *ngIf="isFromProduction" class="advance-hint">
+            <i class="pi pi-info-circle"></i>
+            Haz clic en la etiqueta de estado para avanzar el pedido a la siguiente fase.
+          </div>
 </div>
 
 <!-- Custom Image Viewer Modal -->

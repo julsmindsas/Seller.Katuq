@@ -5438,6 +5438,11 @@ $pd-chip-border: #e9e7f3;
     color: $pd-muted;
     b { color: $pd-ink; font-weight: 700; }
   }
+
+  // En produccion el subtitulo no se muestra, asi que la franja se ajusta al titulo.
+  &--compact {
+    padding: 6px 12px 2px;
+  }
 }
 .pedidos-viewtoggle {
   display: inline-flex;

@@ -54,6 +54,7 @@ export class SharedFiltersComponent implements OnInit {
   @Input() showDateFilters: boolean = true;
   @Input() showStatusFilters: boolean = true;
   @Input() showExportButton: boolean = true;
+  @Input() showAdvancedButton: boolean = true;
   @Input() exportDisabled: boolean = false;
   @Input() searchPlaceholder: string = 'Buscar pedido...';
   @Input() filterButtonLabel: string = 'Filtrar';

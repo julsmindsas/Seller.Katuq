@@ -699,3 +699,215 @@
     max-width: 180px;
   }
 }
+
+/* ========================================
+   Contenedor embebido en la card de list.component
+   Sustituye al container-fluid/card/card-body propios, que anidaban
+   envolturas y recortaban el ancho util de la tabla.
+   ======================================== */
+.produccion-embedded {
+  width: 100%;
+}
+
+/* ========================================
+   Selector de filas por pagina del paginador
+   PrimeNG lo renderiza internamente, de ahi el ::ng-deep. Acotado a
+   .modern-prod-table para no alcanzar otros dropdowns de la app.
+   ======================================== */
+::ng-deep .modern-prod-table .p-paginator .p-paginator-rpp-options {
+  min-width: 4.5rem;
+  width: 4.5rem;
+  height: 2rem;
+
+  .p-dropdown-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0 0 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .p-dropdown-trigger {
+    width: 1.75rem;
+  }
+}
+
+/* ========================================
+   REDISEÑO 1a — Etiqueta de estado accionable
+   ======================================== */
+.modern-badge.badge-clickable {
+  cursor: pointer;
+
+  .status-advance-icon {
+    font-size: 0.55rem;
+    margin-left: 0.25rem;
+    opacity: 0.7;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.advance-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #9a98ac;
+
+  i {
+    font-size: 0.85rem;
+  }
+}
+
+/* ============================================================================
+   Migas de pan (metricas) — mismo estilo que /ventas/pedidos
+   Portado de list.component.scss (bloque "Miga de pan / tira de metricas
+   superior al estilo del diseno"). Se toma SOLO la capa visual: no se copian
+   los bloques de ancho completo ni el que fuerza el rotulo largo, para que
+   los chips conserven su tamano compacto y sus abreviaturas (SP, EP, PP...).
+   Si se ajusta el estilo alla, conviene reflejarlo aqui.
+   ============================================================================ */
+.metrics-breadcrumb-panel {
+  border-top: none !important;
+  border-bottom: 1px solid #f1f0f7 !important;
+  background: #fff !important;
+  padding: 6px 16px 12px !important;
+
+  .d-flex { gap: 8px !important; row-gap: 8px !important; }
+
+  .metric-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    background: #faf9fe;
+    border: 1px solid #eeecf7;
+    border-radius: 10px;
+    padding: 6px 12px;
+    min-width: auto;
+    box-shadow: none;
+    transition: transform .12s ease, box-shadow .12s ease;
+
+    > i { display: none; }  /* el diseno no usa iconos en los chips */
+
+    .metric-label,
+    .metric-label-full,
+    .metric-label-short {
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: #a09cbc;
+      order: 1;
+    }
+    .metric-badge {
+      order: 2;
+      font-size: 15px;
+      font-weight: 800;
+      color: #5F3FE0;
+      background: transparent !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      min-width: 0 !important;
+      line-height: 1.1;
+    }
+    &:hover { transform: translateY(-1px); box-shadow: 0 6px 14px -8px rgba(50,40,110,.35); }
+  }
+
+  /* colores por tipo (fondo suave + valor con acento) */
+  .metric-chip.metric-chip-primary  { background:#efe9ff; .metric-badge{color:#5F3FE0;} }
+  .metric-chip.metric-chip-secondary{ background:#eef0f3; .metric-badge{color:#5A6B78;} .metric-label,.metric-label-full,.metric-label-short{color:#7c8a95;} }
+  .metric-chip.metric-chip-packed   { background:#f3e9fb; .metric-badge{color:#8E27B0;} }
+  .metric-chip.metric-chip-warning  { background:#FFF1DF; .metric-badge{color:#D9820A;} }
+  .metric-chip.metric-chip-success  { background:#E6F7EE; .metric-badge{color:#1E874B;} }
+  .metric-chip.metric-chip-info     { background:#E7F1FF; .metric-badge{color:#1E6FD9;} }
+  .metric-chip.metric-chip-danger   { background:#FDECEC; .metric-badge{color:#D64545;} }
+
+  .metric-divider {
+    width: 1px;
+    align-self: stretch;
+    background: #eceaf4;
+    margin: 2px 4px;
+  }
+  .separator { display: none; }
+
+  /* REDISENO 1a — Chip de filtro activo.
+     Va despues del bloque portado para ganarle en cascada. Usa el acento
+     saturado de la misma paleta en vez del oscuro previo, que desentonaba
+     entre los chips pastel. */
+  .metric-chip.active {
+    background: #5F3FE0 !important;
+    border-color: #5F3FE0 !important;
+
+    .metric-label,
+    .metric-label-full,
+    .metric-label-short {
+      color: rgba(255, 255, 255, 0.78) !important;
+    }
+    .metric-badge {
+      color: #ffffff !important;
+    }
+  }
+}
+
+/* ============================================================================
+   Migas de pan a ancho completo — igual que /ventas/pedidos
+   Portado de list.component.scss (bloque "metricas tamano estandar y ocupando
+   todo el ancho"). Del bloque que le sigue alla se toma UNICAMENTE la
+   liberacion del max-width, que es lo que deja que los chips se estiren; se
+   deja fuera el intercambio de rotulos, para conservar las abreviaturas.
+   ============================================================================ */
+.metrics-breadcrumb-panel {
+  padding: 8px 18px 14px !important;
+
+  > .d-flex {
+    width: 100%;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+  }
+
+  .metric-divider { display: none !important; }
+  .separator { display: none !important; }
+
+  .metric-chip {
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 11px 14px;
+    gap: 3px;
+
+    .metric-label,
+    .metric-label-full,
+    .metric-label-short {
+      font-size: 11px;
+      letter-spacing: .4px;
+    }
+    .metric-badge {
+      font-size: 19px;
+      white-space: nowrap;
+    }
+  }
+
+  /* El chip compacto capa su ancho (max-width: 80px / 65px); sin liberarlo
+     el flex no puede estirarlo. */
+  .metric-chip,
+  .metric-chip-sm,
+  .metric-chip-compact,
+  .metric-chip-sm.metric-chip-compact {
+    max-width: none !important;
+  }
+
+  /* El :hover del chip compacto vuelve a capar el ancho (250px), lo que
+     encogeria un chip ya estirado. Se neutraliza el cap, pero se conserva su
+     intercambio de rotulo corto -> largo, que es comportamiento existente. */
+  .metric-chip:hover {
+    max-width: none !important;
+    padding: 11px 14px !important;
+  }
+}

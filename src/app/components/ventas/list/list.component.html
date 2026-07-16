@@ -1,25 +1,30 @@
 <!-- <app-breadcrumb [title]="'Lista pedidos' | translate" [items]="['Gestor de Pedidos' | translate]" [active_item]="'Pedidos' | translate"></app-breadcrumb> -->
-<div class="container-fluid">
+<div class="container-fluid" [class.px-0]="isFromProduction">
     <div class="row">
-        <div class="col-sm-12 p-2">
-            <br />
-            <div class="card">
+        <div class="col-sm-12" [ngClass]="isFromProduction ? 'p-0' : 'p-2'">
+            <br *ngIf="!isFromProduction" />
+            <div class="card" [class.mb-0]="isFromProduction">
 
                 <div class="loader-box" *ngIf="cargando">
                     <div class="loader-8"></div>
                 </div>
 
                 <!-- Header Compacto (rediseño 1b) -->
-                <div class="pedidos-topbar">
+                <div class="pedidos-topbar" [class.pedidos-topbar--compact]="isFromProduction">
                     <div class="pedidos-topbar__title">
                         <h5 class="pedidos-topbar__h">{{ "Pedidos" | translate }}</h5>
-                        <small class="pedidos-topbar__sub">
+                        <!-- En produccion este contador es de pedidos, pero la tabla de abajo
+                             lista lineas de producto: dos cifras distintas que confundian. -->
+                        <small class="pedidos-topbar__sub" *ngIf="!isFromProduction">
                             {{ "Listado de pedidos" | translate }} ·
                             <b>{{ totalRecords || orders.length }}</b> {{ "resultados" | translate }}
                         </small>
                     </div>
                     <div class="pedidos-topbar__actions">
-                        <div class="pedidos-viewtoggle" role="group" aria-label="Cambiar vista">
+                        <!-- En produccion la vista siempre la pinta app-list-produccion-orders,
+                             asi que el toggle Panel/Tabla no aplica. -->
+                        <div class="pedidos-viewtoggle" role="group" aria-label="Cambiar vista"
+                             *ngIf="!isFromProduction">
                             <button type="button" class="pedidos-viewtoggle__btn"
                                     [class.is-active]="modoVista === 'split'"
                                     (click)="modoVista = 'split'">
@@ -49,6 +54,7 @@
                                             [showDateFilters]="true"
                                             [showStatusFilters]="true"
                                             [showExportButton]="true"
+                                            [showAdvancedButton]="!isFromProduction"
                                             [exportDisabled]="orders.length == 0"
                                             [searchPlaceholder]="'Buscar pedido por número...'"
                                             [filterButtonLabel]="'Filtrar'"
@@ -592,7 +598,9 @@
                                     </div>
 
                                     <!-- ================= VISTA TABLA (fallback: tabla original completa) ================= -->
-                                    <p-table #dt1 *ngIf="modoVista === 'tabla' || isFromProduction" [value]="orders" dataKey="nroPedido" [rows]="pageSize"
+                                    <!-- En produccion esta tabla renderizaba vacia (header/body van con *ngIf="!isFromProduction")
+                                         y lo unico visible era su paginador. Condicion previa: "modoVista === 'tabla' || isFromProduction". -->
+                                    <p-table #dt1 *ngIf="modoVista === 'tabla' && !isFromProduction" [value]="orders" dataKey="nroPedido" [rows]="pageSize"
                                         [showCurrentPageReport]="true" [rowsPerPageOptions]="[5,10,25,50]"
                                         [loading]="loading" [reorderableColumns]="true" [scrollable]="true"
                                         [scrollHeight]="'flex'"
@@ -1679,6 +1687,15 @@
                             </tr>
                         </ng-template>
                         </p-table>
+
+                        <!-- ===== VISTA PRODUCCION (unificada dentro de esta misma card) =====
+                             Los filtros de arriba actuan sobre esta tabla, por eso comparten card. -->
+                        <app-list-produccion-orders *ngIf="isFromProduction"
+                            [isFromProduction]="isFromProduction" [pedidos]="orders"
+                            [displayedColumns]="displayedColumnsProduccion" [selectedColumns]="selectedColumnsProduccion"
+                            (onPrintProduct)="onPrintProduct($event)" (onOptions)="onOptionsProduccion($event)"
+                            (onColumnSelectionChange)="onColumnSelectionChangeProduccion($event)">
+                        </app-list-produccion-orders>
                     </div>
                 </div>
             </div>
@@ -2577,17 +2594,10 @@
 
 <!--Fin Modales-->
 
-<div *ngIf="isFromProduction; else normalList">
-    <app-list-produccion-orders [isFromProduction]="isFromProduction" [pedidos]="orders"
-        [displayedColumns]="displayedColumnsProduccion" [selectedColumns]="selectedColumnsProduccion"
-        (onPrintProduct)="onPrintProduct($event)" (onOptions)="onOptionsProduccion($event)"
-        (onColumnSelectionChange)="onColumnSelectionChangeProduccion($event)">
-    </app-list-produccion-orders>
-</div>
-<ng-template #normalList>
-    <!-- Aquí va la tabla original (todo el contenido actual de la tabla) -->
-    <!-- ... existente ... -->
-</ng-template>
+<!-- app-list-produccion-orders se movio dentro de la card principal (junto a los filtros
+     que lo controlan). Antes se renderizaba aqui, suelto y despues de los modales, lo que
+     producia dos cards separadas. -->
+
 <!-- 
   ========================================================================
   NUEVO MODAL: Historial de Estados del Pedido

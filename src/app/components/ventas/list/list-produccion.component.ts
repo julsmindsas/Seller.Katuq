@@ -19,6 +19,7 @@ import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import { ToastrService } from "ngx-toastr";
 import { Table } from "primeng/table";
 import { FilterService } from "primeng/api";
+import Swal from "sweetalert2";
 
 @Component({
   selector: "app-list-produccion-orders",
@@ -48,6 +49,25 @@ export class ListProduccionComponent implements OnInit, OnChanges {
   // Properties for Image Viewer
   imageViewerVisible = false;
   selectedImageUrl = "";
+
+  // Estado seleccionado en los chips de métricas (para resaltar el filtro activo)
+  selectedEstadoFilter: string = "all";
+
+  // Secuencia de avance de fase de producción (rediseño 1a)
+  readonly ESTADO_PRODUCCION_ORDER = [
+    "SinProducir",
+    "EnProduccion",
+    "ProducidoParcialmente",
+    "ProducidoTotalmente",
+    "ParaDespachar",
+  ];
+  readonly ESTADO_PRODUCCION_LABELS: { [key: string]: string } = {
+    SinProducir: "Sin producir",
+    EnProduccion: "En producción",
+    ProducidoParcialmente: "Producido parcial",
+    ProducidoTotalmente: "Producido total",
+    ParaDespachar: "Listo para despachar",
+  };
 
   constructor(
     private ventasService: VentasService,
@@ -437,6 +457,7 @@ export class ListProduccionComponent implements OnInit, OnChanges {
    * Maneja el click en las métricas breadcrumb para aplicar filtros
    */
   onMetricClick(estado: string): void {
+    this.selectedEstadoFilter = estado;
     if (estado === 'all') {
       // Limpiar todos los filtros de la tabla
       this.dt1.clear();
@@ -444,6 +465,75 @@ export class ListProduccionComponent implements OnInit, OnChanges {
       // Aplicar filtro de estado de proceso usando el filter API de PrimeNG
       this.dt1.filter(estado, 'estadoProceso', 'equals');
     }
+  }
+
+  /**
+   * Devuelve la siguiente fase de producción, o null si el pedido ya está en la fase final.
+   */
+  getNextEstadoProceso(estadoActual: string): string | null {
+    const index = this.ESTADO_PRODUCCION_ORDER.indexOf(estadoActual);
+    if (index === -1 || index === this.ESTADO_PRODUCCION_ORDER.length - 1) {
+      return null;
+    }
+    return this.ESTADO_PRODUCCION_ORDER[index + 1];
+  }
+
+  /**
+   * La etiqueta de estado solo es accionable dentro de producción y si queda fase siguiente.
+   */
+  canAdvanceEstado(row: any): boolean {
+    return this.isFromProduction && !!this.getNextEstadoProceso(row?.estadoProceso);
+  }
+
+  /**
+   * Pide confirmación y, si se acepta, avanza el pedido a la siguiente fase de producción.
+   */
+  confirmAdvanceEstado(row: any): void {
+    if (!this.canAdvanceEstado(row)) {
+      return;
+    }
+    const siguienteEstado = this.getNextEstadoProceso(row.estadoProceso);
+    const labelActual =
+      this.ESTADO_PRODUCCION_LABELS[row.estadoProceso] || row.estadoProceso;
+    const labelSiguiente =
+      this.ESTADO_PRODUCCION_LABELS[siguienteEstado] || siguienteEstado;
+
+    Swal.fire({
+      icon: "question",
+      title: "¿Avanzar estado del pedido?",
+      html: `Pedido <b>${row.nroPedido}</b><br>${labelActual} &rarr; <b>${labelSiguiente}</b>`,
+      showCancelButton: true,
+      confirmButtonText: "Sí, avanzar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#6D28D9",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.advanceEstadoProceso(row, siguienteEstado);
+      }
+    });
+  }
+
+  private advanceEstadoProceso(row: any, siguienteEstado: string): void {
+    const estadoAnterior = row.pedidoOriginal.estadoProceso;
+    row.pedidoOriginal.estadoProceso = siguienteEstado;
+
+    this.ventasService.editOrder(row.pedidoOriginal).subscribe({
+      next: () => {
+        row.estadoProceso = siguienteEstado;
+        this.toastrService.success(
+          `Pedido ${row.nroPedido} → ${this.ESTADO_PRODUCCION_LABELS[siguienteEstado]}`,
+          "Estado actualizado",
+        );
+      },
+      error: () => {
+        // Revertir el cambio optimista si el backend rechaza la actualización
+        row.pedidoOriginal.estadoProceso = estadoAnterior;
+        this.toastrService.error(
+          "No se pudo actualizar el estado del pedido",
+          "Error",
+        );
+      },
+    });
   }
 
   calculateTotalQuantity(): number {
