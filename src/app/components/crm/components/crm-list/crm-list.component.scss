@@ -204,6 +204,12 @@
   &.action-btn-wa:hover { background: #dcfce7; color: #16a34a; }
   &.action-btn-detail { background: #ede9fe; color: #7c3aed; }
   &.action-btn-detail:hover { background: #ddd6fe; color: #6d28d9; }
+  // Cotizar: lleva los datos del lead al editor, sin volverlo cliente (D-111).
+  &.action-btn-cotizar { background: #ecfeff; color: #0e7490; }
+  &.action-btn-cotizar:hover { background: #cffafe; color: #155e75; }
+  // Pedido: promueve el lead a cliente y abre la venta asistida (D-111).
+  &.action-btn-pedido { background: #e8f0fe; color: #1d4ed8; }
+  &.action-btn-pedido:hover { background: #d7e3fc; color: #1e40af; }
   &.action-btn-delete { background: #fef2f2; color: #d12b38; }
   &.action-btn-delete:hover { background: #fee2e2; color: #b91c1c; }
   &.action-btn-won { background: #f0fdf4; color: #27AE60; }
@@ -253,6 +259,11 @@
   &.action-btn-block-table:hover { background: #fef3c7; color: #b45309; }
   &.action-btn-unblock-table { background: #f0fdf4; color: #16a34a; }
   &.action-btn-unblock-table:hover { background: #dcfce7; color: #15803d; }
+  // Cotizar / Pedido (D-111) — mismos colores que sus pills del kanban.
+  &.action-btn-cotizar-table { background: #ecfeff; color: #0e7490; }
+  &.action-btn-cotizar-table:hover { background: #cffafe; color: #155e75; }
+  &.action-btn-pedido-table { background: #e8f0fe; color: #1d4ed8; }
+  &.action-btn-pedido-table:hover { background: #d7e3fc; color: #1e40af; }
 }
 
 .cursor-pointer { cursor: pointer; }

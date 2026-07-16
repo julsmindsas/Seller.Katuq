@@ -8,13 +8,15 @@ import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import { CorporateClientsService } from '../services/corporate-clients.service';
 import { CrmService } from '../../../crm/services/crm.service';
-import { LeadFormModalComponent, LeadTag } from '../../../crm/components/lead-form-modal/lead-form-modal.component';
+import { ClientTag } from '../services/client-config.service';
+import { CrearClienteModalComponent } from '../crear-cliente-modal/crear-cliente-modal.component';
 
 /**
  * Listado de Clientes Corporativos (spec 011).
  * Lista propia (colección `corporate_clients`) que alimenta el CRM. No toca la
  * lista de clientes habituales. Reusa `CrearClienteModalComponent` con
- * target='corporate' para crear/editar (incluye etiquetas).
+ * target='corporate' para crear/editar — el MISMO formulario que "Crear cliente"
+ * del listado de Clientes (D-110), con el catálogo de etiquetas de corporativos.
  */
 @Component({
   selector: 'app-clientes-corporativos',
@@ -29,7 +31,7 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
   cargando = true;
   globalFilterValue = '';
   selectedEstadoFilter: 'todos' | 'activo' | 'bloqueado' = 'todos';
-  tagsCatalog: LeadTag[] = [];
+  tagsCatalog: ClientTag[] = [];
 
   private searchSubject = new Subject<string>();
 
@@ -260,43 +262,34 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Abre el MISMO formulario que "Crear cliente" del listado de Clientes
+   * (D-110), con target='corporate': persiste vía CRM (corporate_clients +
+   * crm_pipeline) y muestra el catálogo de etiquetas propio de corporativos.
+   * El modal se encarga de validar, deduplicar por documento y guardar.
+   */
   openCrearModal(): void {
-    const modalRef = this.modalService.open(LeadFormModalComponent, { size: 'lg', centered: true });
+    const modalRef = this.modalService.open(CrearClienteModalComponent, { size: 'lg', centered: true });
     modalRef.componentInstance.isEdit = false;
+    modalRef.componentInstance.target = 'corporate';
     modalRef.componentInstance.title = 'Nuevo corporativo';
     modalRef.componentInstance.tagsCatalog = this.tagsCatalog;
 
-    modalRef.result.then((value) => {
-      if (!value) return;
-      // Persistir vía CRM (corporate_clients + crm_pipeline) forzando corporate.
-      this.crmService.createLead(value, true).subscribe((res) => {
-        if (res && res.success) {
-          this.messageService.add({ severity: 'success', summary: '¡Corporativo creado!', detail: value.name });
-          this.cargarCorporativos();
-        } else {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el cliente corporativo' });
-        }
-      });
+    modalRef.result.then((res) => {
+      if (res?.action === 'created') this.cargarCorporativos();
     }).catch(() => {});
   }
 
   editarCorporativo(cliente: any): void {
-    const modalRef = this.modalService.open(LeadFormModalComponent, { size: 'lg', centered: true });
+    const modalRef = this.modalService.open(CrearClienteModalComponent, { size: 'lg', centered: true });
     modalRef.componentInstance.isEdit = true;
+    modalRef.componentInstance.target = 'corporate';
     modalRef.componentInstance.title = 'Editar corporativo';
-    modalRef.componentInstance.leadData = cliente;
+    modalRef.componentInstance.clienteData = cliente;
     modalRef.componentInstance.tagsCatalog = this.tagsCatalog;
 
-    modalRef.result.then((value) => {
-      if (!value) return;
-      this.crmService.updateLead(cliente.cd, value, true).subscribe((res) => {
-        if (res && res.success) {
-          this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Cliente corporativo actualizado' });
-          this.cargarCorporativos();
-        } else {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar' });
-        }
-      });
+    modalRef.result.then((res) => {
+      if (res?.action === 'updated') this.cargarCorporativos();
     }).catch(() => {});
   }
 
