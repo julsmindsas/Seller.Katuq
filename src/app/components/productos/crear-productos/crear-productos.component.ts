@@ -83,7 +83,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   file$: Observable<File>;
   files: File | null = null;
-  fileImg: { img: File; tipo: string; }[] = [];
+  fileImg: { img: File; tipo: string; preview?: string; }[] = [];
   filesNames: string[] = [];
   croppedImage: any = "";
   carrouselImg: any[] = [];
@@ -2153,14 +2153,12 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   removePendingImage(index: number) {
     this.fileImg.splice(index, 1);
-    this.carrouselImg.splice(index, 1);
     this.filesNames.splice(index, 1);
     this.cdr.detectChanges();
   }
 
   private resetImageStates(event: any) {
     this.fileImg = [];
-    this.carrouselImg = [];
     this.filesNames = [];
     event.target.value = "";
   }
@@ -2170,18 +2168,22 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       const originalFile = selectedFiles[i];
       const processedFile = await this.convertToWebP(originalFile);
 
-      this.fileImg.push({ img: processedFile, tipo: tipoImagen });
+      const entry = { img: processedFile, tipo: tipoImagen, preview: undefined };
+      this.fileImg.push(entry);
       this.filesNames.push(processedFile.name);
 
-      await this.generatePreviewImage(processedFile);
+      await this.generatePreviewImage(processedFile, entry);
     }
   }
 
-  private async generatePreviewImage(file: File): Promise<void> {
+  private async generatePreviewImage(
+    file: File,
+    entry: { img: File; tipo: string; preview?: string },
+  ): Promise<void> {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (ev: any) => {
-        this.carrouselImg.push(ev.target.result);
+        entry.preview = ev.target.result;
         resolve();
       };
       reader.readAsDataURL(file);
@@ -2407,7 +2409,6 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   private loadImageData() {
     if (Array.isArray(this.edit.crearProducto.imagenesPrincipales)) {
       this.crearProducto.get("imagenesPrincipales").setValue(this.edit.crearProducto.imagenesPrincipales);
-      this.carrouselImg = this.edit.crearProducto.imagenesPrincipales.map((p) => p.urls);
     } else {
       this.edit.crearProducto.imagenesPrincipales = [];
       this.crearProducto.controls["imagenesPrincipales"].setValue([]);
