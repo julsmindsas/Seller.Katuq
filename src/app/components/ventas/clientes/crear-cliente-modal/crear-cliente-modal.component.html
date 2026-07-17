@@ -5,8 +5,8 @@
       <div class="header-title">
         <i class="pi" [ngClass]="isEdit ? 'pi-user-edit' : 'pi-user-plus'" style="color:#8b5cf6;"></i>
         <div>
-          <h5>{{ isEdit ? 'Editar Cliente' : 'Crear Nuevo Cliente' }}</h5>
-          <p>{{ isEdit ? 'Actualiza los datos del cliente' : 'Completa los datos para registrar un nuevo cliente' }}</p>
+          <h5>{{ title || (isEdit ? 'Editar ' + entityLabel : 'Crear Nuevo ' + entityLabel) }}</h5>
+          <p>{{ (isEdit ? 'Actualiza los datos del ' : 'Completa los datos para registrar un nuevo ') + entityLabel.toLowerCase() }}</p>
         </div>
       </div>
       <button type="button" class="btn-close-modern" aria-label="Close" (click)="activeModal.dismiss()">
@@ -100,9 +100,10 @@
                   style="height:36px; border:1px solid #e9ecef; border-radius:6px; padding:0 0.65rem; font-size:0.85rem;">
               </div>
 
-              <!-- Crédito y plazo de pago (spec 014 — CxC/Cartera).
-                   Oculto para corporativos: son prospectos del CRM, aún no manejan cartera. -->
-              <div class="col-12 col-sm-6" *ngIf="target !== 'corporate'">
+              <!-- Crédito y plazo de pago (spec 014 — CxC/Cartera). Visibles
+                   también para corporativos (D-110): el formulario es el mismo
+                   para poder conectarlo con Finanzas. -->
+              <div class="col-12 col-sm-6">
                 <label class="form-label-modern">
                   <i class="pi pi-credit-card me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Cupo de crédito" | translate }}
                 </label>
@@ -110,7 +111,7 @@
                   placeholder="0" class="w-100">
                 <small class="text-muted">{{ "0 = sin cupo. Se usa en Cartera (CxC)." | translate }}</small>
               </div>
-              <div class="col-12 col-sm-6" *ngIf="target !== 'corporate'">
+              <div class="col-12 col-sm-6">
                 <label class="form-label-modern">
                   <i class="pi pi-clock me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Plazo de pago (días)" | translate }}
                 </label>
@@ -253,7 +254,7 @@
     </button>
     <button pButton type="button"
       [icon]="isEdit ? 'pi pi-check' : 'pi pi-save'"
-      [label]="(isEdit ? 'Actualizar Cliente' : 'Crear Cliente') | translate"
+      [label]="((isEdit ? 'Actualizar ' : 'Crear ') | translate) + entityLabel"
       class="p-button-primary"
       (click)="guardarCliente()">
     </button>

@@ -87,6 +87,10 @@ export class WhatsappThreadDetailComponent
   composerText = "";
   /** Lock visual durante el POST /reply. */
   sending = false;
+  /** [D-118] Id idempotente del mensaje en curso (se reusa en reintentos). */
+  private pendingClientMessageId: string | null = null;
+  /** [D-118] Texto al que corresponde pendingClientMessageId. */
+  private pendingForText: string | null = null;
   /** Dropdown de plantillas abierto/cerrado. */
   templatesOpen = false;
   /** 6 plantillas rápidas con sandboxBody ya renderizado. */
@@ -287,10 +291,20 @@ export class WhatsappThreadDetailComponent
       return;
     }
     const hash = this.phoneHash;
+    // [D-118] Id estable por mensaje lógico: si el envío falla (o el operador
+    // no sabe si salió) y reintenta el MISMO texto, se reusa el id y el
+    // backend no dispara un segundo mensaje real. Texto editado → id nuevo.
+    if (!this.pendingClientMessageId || this.pendingForText !== text) {
+      this.pendingClientMessageId =
+        `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+      this.pendingForText = text;
+    }
     this.sending = true;
     this.inbox
-      .sendReply(hash, text)
+      .sendReply(hash, text, this.pendingClientMessageId)
       .then(() => {
+        this.pendingClientMessageId = null;
+        this.pendingForText = null;
         this.composerText = "";
         this.sending = false;
         this.toastr.success("Mensaje enviado", "WhatsApp");
@@ -438,6 +452,9 @@ export class WhatsappThreadDetailComponent
       return;
     }
     this.refreshSub = interval(8000).subscribe(() => {
+      // [D-117] Pestaña oculta → no pollear (cada tick cuesta lecturas
+      // Firestore del hilo completo); al volver, el siguiente tick refresca.
+      if (document.hidden) return;
       if (this.sending) return;
       if ((this.composerText || "").trim().length > 0) return;
       this.refreshMessages();

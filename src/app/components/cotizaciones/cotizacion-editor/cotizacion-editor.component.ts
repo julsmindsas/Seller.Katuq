@@ -24,6 +24,7 @@ import { Carrito, Cliente } from "../../ventas/modelo/pedido";
 import { Producto } from "../../../shared/models/productos/Producto";
 import { ConfProductToCartComponent } from "../../ventas/catalogo/conf-product-to-cart/conf-product-to-cart.component";
 import { CrearClienteModalComponent } from "../../ventas/clientes/crear-cliente-modal/crear-cliente-modal.component";
+import { LeadToSalesService } from "../../crm/services/lead-to-sales.service";
 import { resolverPrecioLinea } from "../../../shared/services/ventas/iva-canonico";
 import { environment } from "../../../../environments/environment";
 
@@ -134,6 +135,27 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     this.recalcularVencimiento();
     this.cotizacion.vendedor = this.vendedorActual();
     this.cargarTerminosDefault();
+    this.aplicarClienteDesdeCrmSiAplica();
+  }
+
+  /**
+   * Cliente precargado desde el botón "Cotizar" del CRM (D-111). El lead vive
+   * en `corporate_clients`, así que el buscador de clientes NUNCA lo
+   * encontraría: el CRM lo entrega por sessionStorage. Puede ser un cliente
+   * real (si el lead ya lo era) o la copia de los datos del lead — la
+   * cotización guarda una copia embebida, no un vínculo, así que ambas sirven.
+   * Se consume una sola vez para que no reaparezca en la próxima cotización.
+   */
+  private aplicarClienteDesdeCrmSiAplica(): void {
+    const raw = sessionStorage.getItem(LeadToSalesService.COTIZACION_CLIENTE_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(LeadToSalesService.COTIZACION_CLIENTE_KEY);
+    try {
+      const cliente = JSON.parse(raw);
+      if (cliente) this.seleccionarCliente(cliente);
+    } catch {
+      // Payload corrupto: la cotización sigue normal, con el buscador manual.
+    }
   }
 
   private cargar(id: string): void {
@@ -308,6 +330,12 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     ref.componentInstance.isEdit = true;
     ref.componentInstance.clienteData = this.cotizacion.cliente;
     const cdPrevio = (this.cotizacion.cliente as any)?.cd || (this.cotizacion.cliente as any)?.id;
+    // Sin `cd` el cliente es una copia que aún no existe en `clients` — típico
+    // de una cotización nacida de un lead del CRM (D-111). Editar esa copia NO
+    // debe persistir: solo actualiza los datos de esta cotización. Además
+    // /v1/clients/edit sin cd busca por documento y, si no hay match, no puede
+    // hacer nada. El cliente nacerá al convertir la cotización en pedido.
+    ref.componentInstance.persist = !!cdPrevio;
     ref.result.then(
       (result: any) => {
         if (result && result.cliente) {

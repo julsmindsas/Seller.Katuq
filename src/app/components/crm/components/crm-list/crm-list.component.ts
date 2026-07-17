@@ -7,6 +7,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { DragulaService } from 'ng2-dragula';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CrmService } from '../../services/crm.service';
+import { LeadToSalesService } from '../../services/lead-to-sales.service';
 import { LeadFormModalComponent } from '../lead-form-modal/lead-form-modal.component';
 import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
@@ -118,6 +119,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     private router: Router,
     private corpConfig: CorporateConfigService,
     private ngbModal: NgbModal,
+    private leadToSales: LeadToSalesService,
   ) {
     this.canManageStages = this.computeCanManageStages();
     this.createForm = this.fb.group({
@@ -413,6 +415,28 @@ export class CrmListComponent implements OnInit, OnDestroy {
     const target = type === 'won' ? this.wonStage : this.lostStage;
     if (!target) return;
     this.onStageDrop(lead.id, target.key);
+  }
+
+  /**
+   * Convierte el lead en cliente normal y abre la venta asistida con sus datos
+   * (D-111). NO mueve la etapa: hacer clic aquí no garantiza la venta — el
+   * usuario puede abandonar el asistente. Cuando el pedido exista de verdad,
+   * "Ganado" quedará verificado solo (markVerifiedBuyer cruza el documento
+   * contra `orders`), sin pedir cierre forzado.
+   */
+  crearPedidoDesdeLead(lead: CrmLead, event: Event): void {
+    event.stopPropagation();
+    this.leadToSales.iniciarPedido(lead);
+  }
+
+  /**
+   * Abre una cotización con los datos del lead (D-111). A diferencia de Pedido,
+   * NO lo vuelve cliente: cotizar no es vender. La cotización guarda una copia
+   * del cliente, no un vínculo, así que no necesita que exista en `clients`.
+   */
+  cotizarDesdeLead(lead: CrmLead, event: Event): void {
+    event.stopPropagation();
+    this.leadToSales.iniciarCotizacion(lead);
   }
 
   // ─── Actions ───────────────────────────────────────────────

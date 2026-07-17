@@ -53,7 +53,6 @@ import { AsentarpagomanualComponent } from "./asentarpagomanual/asentarpagomanua
 import { AutoCompleteModule } from "primeng/autocomplete";
 import { ClientesListaComponent } from "./clientes/lista/clientes-lista.component";
 import { ClientesCorporativosComponent } from "./clientes/corporativos/clientes-corporativos.component";
-import { LeadFormModalComponent } from "../crm/components/lead-form-modal/lead-form-modal.component";
 import { CargaVentasComponent } from "./carga-ventas/carga-ventas.component";
 import { HttpClientModule } from "@angular/common/http";
 import { VoiceInteractionModule } from "../../shared/components/voice-interaction/voice-interaction.module";
@@ -92,7 +91,6 @@ import { GlobalMetricsComponent } from "./clientes/global-metrics/global-metrics
     NgSelectModule,
     CommonModule,
     SharedModule,
-    LeadFormModalComponent,
     VentasRoutingModule,
     NgxDatatableModule,
     TabViewModule,
