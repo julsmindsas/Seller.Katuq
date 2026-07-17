@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import { Pedido, DescuentoAplicado } from "../modelo/pedido";
 import { ToastrService } from "ngx-toastr";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { parse as flattedParse } from "flatted";
 
 @Component({
   selector: "app-carrito",
@@ -482,6 +483,9 @@ export class CarritoComponent implements OnInit {
       totalCarrito,
       // Un solo código a la vez en este flujo; si ya hay uno, se reemplaza.
       codigosActivos: [],
+      // Líneas del carrito → el backend aplica el descuento solo a la
+      // categoría/producto objetivo cuando el código es dirigido ("Aplica a").
+      items: this.construirItemsCarrito(),
     }).subscribe({
       next: (res) => {
         this.aplicandoCupon = false;
@@ -524,14 +528,15 @@ export class CarritoComponent implements OnInit {
     this.pedido.descuentoAplicado = this.descuentoAplicado;
     this.pedido.cuponAplicado = this.descuentoAplicado.codigoPersonalizado;
 
-    if (res.tipo === 'porcentaje') {
+    // Un código DIRIGIDO (categoría/producto) trae `monto` ya calculado SOLO
+    // sobre la base elegible. Debe mapearse como monto fijo para que el backend
+    // NO lo recalcule como porcentaje sobre todo el carrito (sobre-aplicaría).
+    const esDirigido = res.aplicaA && res.aplicaA !== 'todos_los_productos';
+
+    if (res.tipo === 'porcentaje' && !esDirigido) {
+      // Porcentaje sobre todo el carrito: el backend recalcula por porcentaje.
       this.porcentajeDescuento = Number(res.valor) || 0;
       this.pedido.porceDescuento = this.porcentajeDescuento;
-      this.pedido.totalDescuento = monto;
-      this.valorDescuento = monto;
-    } else if (res.tipo === 'valor_fijo') {
-      this.porcentajeDescuento = 0;
-      this.pedido.porceDescuento = 0;
       this.pedido.totalDescuento = monto;
       this.valorDescuento = monto;
     } else if (res.tipo === 'envio_gratis') {
@@ -540,6 +545,13 @@ export class CarritoComponent implements OnInit {
       this.pedido.porceDescuento = 0;
       this.pedido.totalDescuento = 0;
       this.valorDescuento = 0;
+    } else {
+      // valor_fijo, o CUALQUIER código dirigido (categoría/producto): el monto
+      // ya viene calculado sobre la base elegible → tratar como monto fijo.
+      this.porcentajeDescuento = 0;
+      this.pedido.porceDescuento = 0;
+      this.pedido.totalDescuento = monto;
+      this.valorDescuento = monto;
     }
 
     const detalle =
@@ -547,6 +559,51 @@ export class CarritoComponent implements OnInit {
         ? 'Envío gratis aplicado.'
         : `Descuento aplicado: ${monto.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}`;
     this.toastrService.success(detalle, res.nombre || 'Código aplicado');
+  }
+
+  /**
+   * Construye las líneas del carrito para el enforcement de "Aplica a" en el
+   * backend: por cada ítem, su referencia, sus categorías (nombres) y el precio
+   * total de la línea. Reusa el mismo cálculo de getTotalProductPriceInCart.
+   */
+  private construirItemsCarrito(): Array<{ productoReferencia: string; categorias: string[]; precioLinea: number }> {
+    if (!this.productos || this.productos.length === 0) return [];
+    return this.productos.map((item) => {
+      const precioBase = Number(this.checkPriceScale(item)) || 0;
+      const precioAdiciones = Number(this.calculateAdicionesPrice(item?.configuracion?.adiciones)) || 0;
+      const precioPreferencias = Number(this.calculatePreferenciasPrice(item?.configuracion?.preferencias)) || 0;
+      const cantidad = Number(item?.cantidad) || 0;
+      const precioLinea = (precioBase + precioAdiciones + precioPreferencias) * cantidad;
+      return {
+        productoReferencia: item?.producto?.identificacion?.referencia || '',
+        categorias: this.resolverCategoriasProducto(item?.producto),
+        precioLinea: isNaN(precioLinea) ? 0 : precioLinea,
+      };
+    });
+  }
+
+  /**
+   * Extrae los nombres de categoría de un producto de forma tolerante al
+   * formato (string flatted, objeto ya parseado, o el shape [ref, {label}]).
+   * Devuelve nombres en minúscula; [] si no se puede resolver.
+   */
+  private resolverCategoriasProducto(prod: any): string[] {
+    const raw = prod?.categorias ?? prod?.crearProducto?.categorias;
+    if (!raw) return [];
+    let arbol: any = raw;
+    if (typeof raw === 'string') {
+      try { arbol = flattedParse(raw); } catch { try { arbol = JSON.parse(raw); } catch { return []; } }
+    }
+    const nombres = new Set<string>();
+    const visitar = (nodo: any) => {
+      if (!nodo || typeof nodo !== 'object') return;
+      const n = nodo?.data?.nombre ?? nodo?.nombre ?? nodo?.label;
+      if (n && typeof n === 'string') nombres.add(n.trim().toLowerCase());
+      if (Array.isArray(nodo?.children)) nodo.children.forEach(visitar);
+    };
+    if (Array.isArray(arbol)) arbol.forEach(visitar);
+    else visitar(arbol);
+    return Array.from(nombres);
   }
 
   /** Quita el descuento aplicado y limpia los campos del pedido. */
