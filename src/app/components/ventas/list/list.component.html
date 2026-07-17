@@ -521,6 +521,11 @@
                                                                 <span class="pedido-action__icon ico-fac"><i class="fa fa-credit-card"></i></span>
                                                                 <span class="pedido-action__txt"><b>{{ 'Facturación' | translate }}</b><small>{{ 'Datos de factura' | translate }}</small></span>
                                                             </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction && puedeFacturarSiigo(pedidoDetalle)"
+                                                                    (click)="facturarPedidoSiigo(pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-invoice"><i class="pi pi-file-export"></i></span>
+                                                                <span class="pedido-action__txt"><b>{{ 'Facturar' | translate }}</b><small>{{ 'Generar factura electrónica' | translate }}</small></span>
+                                                            </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && !isPedidoPOS(pedidoDetalle)" (click)="editNotas(notasModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="fa fa-sticky-note"></i></span>
                                                                 <span class="pedido-action__txt"><b>{{ 'Editar Notas' | translate }}</b><small>{{ 'Agregar o modificar' | translate }}</small></span>
