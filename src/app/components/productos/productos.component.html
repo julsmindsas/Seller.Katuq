@@ -9,36 +9,33 @@
                 </div>
 
                 <!-- Header Katuq Standard -->
-                <div class="module-header px-4 py-3 border-bottom"
-                     style="background: #f8fafc; border-left: 4px solid #8b5cf6;">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap">
-                        <div class="mb-2 mb-md-0">
-                            <h4 class="mb-1 fw-bold text-dark">
-                                <i class="pi pi-box me-2" style="color: #8b5cf6;"></i>{{ "Gestión de Productos" | translate }}
-                            </h4>
-                            <p class="text-muted small mb-0">
-                                {{ "Administra tu catálogo de productos" | translate }}
-                            </p>
+                <div class="module-header pk-header px-4 py-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-3 mb-2 mb-md-0">
+                            <span class="pk-header-icon">
+                                <i class="pi pi-box"></i>
+                            </span>
+                            <div>
+                                <h4 class="pk-title mb-0">{{ "Gestión de Productos" | translate }}</h4>
+                                <p class="pk-subtitle mb-0">{{ "Administra tu catálogo de productos" | translate }}</p>
+                            </div>
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <button type="button" class="btn btn-sm"
-                                    style="background: #8b5cf6; color: white; border-color: #8b5cf6;"
+                            <button type="button" class="pk-btn pk-btn-primary"
                                     (click)="crearProducto()">
-                                <i class="pi pi-plus me-1"></i>{{ "Crear Producto" | translate }}
+                                <i class="pi pi-plus"></i>{{ "Crear Producto" | translate }}
                             </button>
                             <!-- Split: Importar Excel + dropdown integraciones -->
-                            <div class="btn-group" ngbDropdown>
-                                <button type="button" class="btn btn-outline-primary btn-sm"
-                                        style="border-color: #8b5cf6; color: #8b5cf6;"
+                            <div class="btn-group pk-split" ngbDropdown>
+                                <button type="button" class="pk-btn pk-btn-outline pk-split-main"
                                         (click)="openImportModal()">
-                                    <i class="pi pi-upload me-1"></i>{{ "Importar" | translate }}
+                                    <i class="pi pi-upload pk-ico-accent"></i>{{ "Importar" | translate }}
                                 </button>
                                 <button type="button"
-                                        class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-toggle-split"
-                                        style="border-color: #8b5cf6; color: #8b5cf6;"
+                                        class="pk-split-toggle dropdown-toggle dropdown-toggle-split"
                                         ngbDropdownToggle>
                                 </button>
-                                <div ngbDropdownMenu>
+                                <div ngbDropdownMenu class="pk-menu">
                                     <button ngbDropdownItem (click)="openImportModal()">
                                         <i class="pi pi-file-excel me-1"></i>Importar desde Excel
                                     </button>
@@ -60,20 +57,19 @@
                                     </button>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-outline-primary btn-sm"
-                                    style="border-color: #8b5cf6; color: #8b5cf6;"
+                            <button type="button" class="pk-btn pk-btn-outline"
                                     (click)="exportToExcel()">
-                                <i class="pi pi-file-excel me-1"></i>{{ "Exportar" | translate }}
+                                <i class="pi pi-download pk-ico-success"></i>{{ "Exportar" | translate }}
                             </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                            <button type="button" class="pk-btn-icon"
                                     (click)="showColConfigDialog = true"
                                     ngbTooltip="Configurar columnas">
                                 <i class="pi pi-table"></i>
                             </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm"
+                            <button type="button" class="pk-btn pk-btn-danger-soft"
                                     (click)="limpiarProductosComercio()"
                                     ngbTooltip="Eliminar todos los productos del comercio">
-                                <i class="pi pi-trash me-1"></i>Eliminar Base de Datos
+                                <i class="pi pi-trash"></i>Eliminar Base de Datos
                             </button>
                         </div>
                     </div>
@@ -84,8 +80,8 @@
                     <!-- ====== SISTEMA DE FILTROS ====== -->
                     <div class="filtros-wrapper mb-3">
 
-                        <!-- Fila 1: Búsqueda -->
-                        <div class="filter-search-row mb-2">
+                        <!-- Fila 1: Búsqueda + contador -->
+                        <div class="filter-search-row mb-2 d-flex align-items-center gap-3">
                             <div class="input-group search-input-group">
                                 <select class="form-select form-select-sm search-criteria-select fw-semibold"
                                     [(ngModel)]="filtros.searchBy"
@@ -119,6 +115,11 @@
                                     <i class="pi pi-times"></i>
                                 </button>
                             </div>
+                            <span class="pk-count ms-auto" *ngIf="totalItems > 0 || cargando">
+                                <span *ngIf="cargando" class="spinner-border spinner-border-sm text-secondary me-1" style="width:12px;height:12px"></span>
+                                <strong>{{ totalItems | number }}</strong>
+                                <span class="pk-count-label">prod.</span>
+                            </span>
                         </div>
 
                         <!-- Fila 2: Tira de filtros (scrollable, sin wrap) -->
@@ -188,13 +189,6 @@
                                 (click)="limpiarFiltros()" ngbTooltip="Limpiar filtros">
                                 <i class="pi pi-times"></i> Limpiar
                             </button>
-
-                            <!-- Contador (al final de la tira) -->
-                            <span class="fs-count ms-auto" *ngIf="totalItems > 0 || cargando">
-                                <span *ngIf="cargando" class="spinner-border spinner-border-sm text-secondary me-1" style="width:10px;height:10px"></span>
-                                <strong>{{ totalItems | number }}</strong>
-                                <span class="text-muted"> prod.</span>
-                            </span>
                         </div>
 
                         <!-- Fila 3: Filtros secundarios (desplegable compacto) -->
@@ -361,31 +355,30 @@
                     </div> -->
 
                     <!-- Barra de acciones masivas — visible cuando hay selección -->
-                    <div *ngIf="selectedProductos.length > 0"
-                        class="d-flex align-items-center gap-2 flex-wrap p-2 mb-2 rounded border border-primary bg-primary-subtle">
-                        <span class="fw-semibold text-primary me-2">
-                            <i class="icofont icofont-check-alt me-1"></i>
+                    <div *ngIf="selectedProductos.length > 0" class="pk-bulkbar mb-2">
+                        <span class="pk-bulkbar-count me-2">
+                            <i class="pi pi-check-square me-1"></i>
                             {{ selectedProductos.length }} seleccionado{{ selectedProductos.length !== 1 ? 's' : '' }}
                         </span>
-                        <button class="btn btn-sm btn-success" (click)="accionMasiva('activar')" [disabled]="ejecutandoAccionMasiva">
-                            <i class="icofont icofont-check me-1"></i>Activar
+                        <button class="pk-btn-sm pk-btn-sm-success" (click)="accionMasiva('activar')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="pi pi-check"></i>Activar
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" (click)="accionMasiva('desactivar')" [disabled]="ejecutandoAccionMasiva">
-                            <i class="icofont icofont-close me-1"></i>Desactivar
+                        <button class="pk-btn-sm pk-btn-sm-danger-outline" (click)="accionMasiva('desactivar')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="pi pi-times"></i>Desactivar
                         </button>
-                        <button class="btn btn-sm btn-info" (click)="accionMasiva('disponible')" [disabled]="ejecutandoAccionMasiva">
-                            <i class="icofont icofont-check-circled me-1"></i>Disponible
+                        <button class="pk-btn-sm pk-btn-sm-info" (click)="accionMasiva('disponible')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="pi pi-check-circle"></i>Disponible
                         </button>
-                        <button class="btn btn-sm btn-secondary" (click)="accionMasiva('agotado')" [disabled]="ejecutandoAccionMasiva">
-                            <i class="icofont icofont-minus-circle me-1"></i>Agotado
+                        <button class="pk-btn-sm pk-btn-sm-muted" (click)="accionMasiva('agotado')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="pi pi-minus-circle"></i>Agotado
                         </button>
-                        <button class="btn btn-sm btn-danger" (click)="accionMasiva('eliminar')" [disabled]="ejecutandoAccionMasiva">
-                            <i class="icofont icofont-trash me-1"></i>Eliminar
+                        <button class="pk-btn-sm pk-btn-sm-danger" (click)="accionMasiva('eliminar')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="pi pi-trash"></i>Eliminar
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary ms-auto" (click)="selectedProductos = []">
-                            <i class="icofont icofont-close me-1"></i>Deseleccionar
+                        <button class="pk-btn-sm pk-btn-sm-ghost ms-auto" (click)="selectedProductos = []">
+                            <i class="pi pi-times"></i>Deseleccionar
                         </button>
-                        <span *ngIf="ejecutandoAccionMasiva" class="ms-2">
+                        <span *ngIf="ejecutandoAccionMasiva" class="ms-2 pk-subtitle">
                             <i class="fa fa-spinner fa-spin me-1"></i>Procesando…
                         </span>
                     </div>
@@ -403,7 +396,7 @@
                         [totalRecords]="totalItems"
                         [sortField]="'crearProducto.titulo'"
                         [sortOrder]="1"
-                        styleClass="p-datatable-gridlines p-datatable-sm"
+                        styleClass="pk-table p-datatable-sm"
                         (onLazyLoad)="onPageChange($event)"
                         [lazy]="true"
                         [tableStyle]="{ 'min-width': '10rem' }"
@@ -429,7 +422,7 @@
                                 </th>
 
                                 <th
-                                    class="text-center"
+                                    class="text-center col-titulo"
                                     pSortableColumn="crearProducto.titulo"
                                 >
                                     {{ "Título" | translate }}
@@ -523,7 +516,7 @@
                                     {{ "Tipo" | translate }}
                                 </th> -->
 
-                                <th class="text-center" style="width: 120px">
+                                <th class="text-center" style="width: 90px">
                                     {{ "Acciones" | translate }}
                                 </th>
                             </tr>
@@ -552,14 +545,10 @@
                                                 ?.imagenesPrincipales[0]?.urls
                                         "
                                         [alt]="row.crearProducto?.titulo"
-                                        width="50"
-                                        height="50"
-                                        class="product-thumbnail"
-                                        style="
-                                            cursor: pointer;
-                                            border-radius: 8px;
-                                            object-fit: cover;
-                                        "
+                                        width="52"
+                                        height="52"
+                                        class="product-thumbnail pk-thumb"
+                                        style="cursor: pointer; object-fit: cover;"
                                         (click)="viewProduct(row)"
                                     />
                                     <img
@@ -570,9 +559,10 @@
                                         "
                                         src="assets/img/placeholder.png"
                                         [alt]="row.crearProducto?.titulo"
-                                        width="50"
-                                        height="50"
-                                        style="border-radius: 8px; opacity: 0.5"
+                                        width="52"
+                                        height="52"
+                                        class="pk-thumb"
+                                        style="opacity: 0.5"
                                     />
                                 </td>
 
@@ -587,22 +577,20 @@
                                                 style="display:inline-block; width:10px; height:10px; border-radius:50%; flex-shrink:0; cursor:help;">
                                             </span>
                                         </ng-container>
-                                        <span class="fw-semibold">{{ row.crearProducto?.titulo }}</span>
+                                        <span class="pk-row-title">{{ row.crearProducto?.titulo }}</span>
                                     </div>
                                 </td>
 
                                 <!-- Referencia (solo en desktop) -->
                                 <td *ngIf="!isMobile && isColVisible('referencia')" class="text-center">
-                                    <span class="text-muted">{{
+                                    <span class="pk-ref">{{
                                         row.identificacion?.referencia || "N/A"
                                     }}</span>
                                 </td>
 
                                 <!-- Categoría (solo en desktop) -->
                                 <td *ngIf="!isMobile && isColVisible('categoria')" class="text-center">
-                                    <span *ngIf="row.categorias?.label"
-                                        class="badge rounded-pill bg-light text-dark border"
-                                        style="font-size:0.75rem;">
+                                    <span *ngIf="row.categorias?.label" class="pk-chip-neutral">
                                         {{ row.categorias?.label }}
                                     </span>
                                     <span *ngIf="!row.categorias?.label" class="text-muted small">—</span>
@@ -612,22 +600,19 @@
                                 <td *ngIf="!isMobile && isColVisible('canales')" class="text-center">
                                     <div class="d-flex flex-wrap gap-1 justify-content-center">
                                         <span *ngIf="row.exposicion?.soloPos"
-                                            class="badge rounded-pill bg-warning text-dark"
-                                            style="font-size:0.7rem;"
+                                            class="pk-pill pk-pill-warning"
                                             ngbTooltip="Solo Punto de Venta">
-                                            <i class="icofont icofont-cash-on-delivery me-1"></i>POS
+                                            <i class="pi pi-shopping-bag"></i>POS
                                         </span>
                                         <span *ngIf="row.exposicion?.activar && !row.exposicion?.soloPos"
-                                            class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle"
-                                            style="font-size:0.7rem;"
+                                            class="pk-pill pk-pill-blue"
                                             ngbTooltip="Catálogo Web">
-                                            <i class="icofont icofont-web me-1"></i>Web
+                                            <i class="pi pi-globe"></i>Web
                                         </span>
                                         <span *ngIf="row.integrations?.shopify?.id"
-                                            class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle"
-                                            style="font-size:0.7rem;"
+                                            class="pk-pill pk-pill-success"
                                             ngbTooltip="Sincronizado con Shopify">
-                                            <i class="icofont icofont-brand-shopify me-1"></i>Shopify
+                                            <i class="pi pi-shopping-cart"></i>Shopify
                                         </span>
                                         <span *ngIf="!row.exposicion?.activar && !row.exposicion?.soloPos && !row.integrations?.shopify?.id"
                                             class="text-muted small">—</span>
@@ -636,38 +621,36 @@
 
                                 <!-- Estado Activo (solo en desktop) — toggle inline -->
                                 <td *ngIf="!isMobile && isColVisible('estado')" class="text-center">
-                                    <span *ngIf="row._guardandoEstado" class="badge bg-secondary">
-                                        <i class="fa fa-spinner fa-spin me-1"></i>Guardando…
+                                    <span *ngIf="row._guardandoEstado" class="pk-pill pk-pill-muted">
+                                        <i class="fa fa-spinner fa-spin"></i>Guardando…
                                     </span>
                                     <span *ngIf="!row._guardandoEstado"
-                                        class="badge cursor-pointer"
-                                        [class.bg-success]="row.exposicion?.activar === true"
-                                        [class.bg-danger]="row.exposicion?.activar !== true"
-                                        style="cursor:pointer"
+                                        class="pk-pill pk-pill-toggle"
+                                        [class.pk-pill-success]="row.exposicion?.activar === true"
+                                        [class.pk-pill-danger]="row.exposicion?.activar !== true"
                                         ngbTooltip="Clic para {{ row.exposicion?.activar ? 'desactivar' : 'activar' }}"
                                         (click)="toggleEstado(row)">
-                                        <i class="icofont me-1"
-                                            [class.icofont-check]="row.exposicion?.activar === true"
-                                            [class.icofont-close]="row.exposicion?.activar !== true"></i>
+                                        <i class="pi"
+                                            [class.pi-check]="row.exposicion?.activar === true"
+                                            [class.pi-times]="row.exposicion?.activar !== true"></i>
                                         {{ row.exposicion?.activar ? ('Activo' | translate) : ('Inactivo' | translate) }}
                                     </span>
                                 </td>
 
                                 <!-- Disponibilidad (solo en desktop) — toggle inline -->
                                 <td *ngIf="!isMobile && isColVisible('disponibilidad')" class="text-center">
-                                    <span *ngIf="row._guardandoDisp" class="badge bg-secondary">
-                                        <i class="fa fa-spinner fa-spin me-1"></i>Guardando…
+                                    <span *ngIf="row._guardandoDisp" class="pk-pill pk-pill-muted">
+                                        <i class="fa fa-spinner fa-spin"></i>Guardando…
                                     </span>
                                     <span *ngIf="!row._guardandoDisp"
-                                        class="badge"
-                                        [class.bg-info]="row.exposicion?.disponible === true"
-                                        [class.bg-secondary]="row.exposicion?.disponible !== true"
-                                        style="cursor:pointer"
+                                        class="pk-pill pk-pill-toggle"
+                                        [class.pk-pill-info]="row.exposicion?.disponible === true"
+                                        [class.pk-pill-muted]="row.exposicion?.disponible !== true"
                                         ngbTooltip="Clic para marcar como {{ row.exposicion?.disponible ? 'agotado' : 'disponible' }}"
                                         (click)="toggleDisponibilidad(row)">
-                                        <i class="icofont me-1"
-                                            [class.icofont-check-circled]="row.exposicion?.disponible === true"
-                                            [class.icofont-minus-circle]="row.exposicion?.disponible !== true"></i>
+                                        <i class="pi"
+                                            [class.pi-check-circle]="row.exposicion?.disponible === true"
+                                            [class.pi-minus-circle]="row.exposicion?.disponible !== true"></i>
                                         {{ row.exposicion?.disponible ? ('Disponible' | translate) : ('No disponible' | translate) }}
                                     </span>
                                 </td>
@@ -678,18 +661,15 @@
                                         *ngIf="
                                             row.crearProducto?.paraProduccion
                                         "
-                                        class="badge bg-warning text-dark"
+                                        class="pk-pill pk-pill-warning"
                                     >
-                                        <i
-                                            class="icofont icofont-settings-alt me-1"
-                                        ></i
-                                        >{{ "Sí" | translate }}
+                                        <i class="pi pi-cog"></i>{{ "Sí" | translate }}
                                     </span>
                                     <span
                                         *ngIf="
                                             !row.crearProducto?.paraProduccion
                                         "
-                                        class="badge bg-light text-dark"
+                                        class="pk-pill pk-pill-muted"
                                     >
                                         {{ "No" | translate }}
                                     </span>
@@ -697,7 +677,7 @@
 
                                 <!-- Precio unitario con IVA (solo en desktop) -->
                                 <td *ngIf="!isMobile && isColVisible('precio')" class="text-end">
-                                    <span class="fw-bold text-primary"
+                                    <span class="pk-price"
                                         ngbTooltip="Sin IVA: {{ (row.precio?.precioUnitarioSinIva || 0) | currency:'USD':'symbol':'1.0-0' }} | IVA {{ row.precio?.precioUnitarioIva || 0 }}%"
                                         placement="top">
                                         {{ (row.precio?.precioUnitarioConIva || 0) | currency:'USD':'symbol':'1.0-0' }}
@@ -706,7 +686,7 @@
 
                                 <!-- Fecha editado (solo en desktop) -->
                                 <td *ngIf="!isMobile && isColVisible('ultimaEdicion')" class="text-center">
-                                    <small class="text-muted">{{
+                                    <small class="pk-date">{{
                                         toDate(row.date_edit)
                                             ? (toDate(row.date_edit)
                                               | date: "dd/MM/yyyy")
@@ -726,49 +706,38 @@
                                     </span>
                                 </td> -->
 
-                                <!-- Acciones -->
-                                <td class="text-center action-buttons-table">
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-action btn-action-info"
-                                        placement="top"
-                                        ngbTooltip="{{ 'Editar' | translate }}"
-                                        (click)="editarProducto(row)"
-                                    >
-                                        <i
-                                            class="icofont icofont-pencil-alt-5"
-                                        ></i>
-                                    </button>
-                                    <!-- Botón Dropshipping - OCULTO -->
-                                    <!-- <button type="button"
-                                            class="btn btn-sm btn-action btn-action-purple"
+                                <!-- Acciones — menú kebab -->
+                                <td class="text-center">
+                                    <div class="pk-actions" ngbDropdown container="body" placement="bottom-right top-right" display="dynamic">
+                                        <button
+                                            type="button"
+                                            class="pk-actions-btn"
+                                            ngbDropdownToggle
                                             placement="top"
-                                            ngbTooltip="{{ 'Dropshipping' | translate }}"
-                                            (click)="configurarDropshipping(row)">
-                                        <i class="icofont icofont-truck-loaded"></i>
-                                    </button> -->
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-action btn-action-success"
-                                        placement="top"
-                                        ngbTooltip="{{
-                                            'Duplicar' | translate
-                                        }}"
-                                        (click)="duplicarProducto(row)"
-                                    >
-                                        <i class="icofont icofont-copy"></i>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-action btn-action-danger"
-                                        placement="top"
-                                        ngbTooltip="{{
-                                            'Eliminar' | translate
-                                        }}"
-                                        (click)="eliminarProducto(row)"
-                                    >
-                                        <i class="icofont icofont-trash"></i>
-                                    </button>
+                                            ngbTooltip="{{ 'Acciones' | translate }}"
+                                        >
+                                            <i class="pi pi-ellipsis-v"></i>
+                                        </button>
+                                        <div ngbDropdownMenu class="pk-actions-menu">
+                                            <button ngbDropdownItem type="button" (click)="editarProducto(row)">
+                                                <i class="pi pi-pencil pk-ico-accent"></i>{{ 'Editar' | translate }}
+                                            </button>
+                                            <button ngbDropdownItem type="button" (click)="viewProduct(row)">
+                                                <i class="pi pi-eye pk-ico-success"></i>{{ 'Ver detalle' | translate }}
+                                            </button>
+                                            <button ngbDropdownItem type="button" (click)="duplicarProducto(row)">
+                                                <i class="pi pi-copy pk-ico-info"></i>{{ 'Duplicar' | translate }}
+                                            </button>
+                                            <!-- Botón Dropshipping - OCULTO -->
+                                            <!-- <button ngbDropdownItem type="button" (click)="configurarDropshipping(row)">
+                                                <i class="pi pi-truck"></i>{{ 'Dropshipping' | translate }}
+                                            </button> -->
+                                            <div class="dropdown-divider"></div>
+                                            <button ngbDropdownItem type="button" class="pk-item-danger" (click)="eliminarProducto(row)">
+                                                <i class="pi pi-trash"></i>{{ 'Eliminar' | translate }}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         </ng-template>

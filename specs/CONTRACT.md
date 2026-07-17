@@ -1206,6 +1206,14 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-07-16 (sesión — rediseño UX/UI pantalla Gestión de Productos desde Claude Design)
+
+- Importado el mockup `Gestión de Productos.dc.html` desde el proyecto de Claude Design (`cef2b209-…`) vía DesignSync y aplicado a `/productos` como cambio **solo UX/UI** (cero cambios de lógica/TS/servicios; solo `productos.component.html` + `.scss`).
+- Nueva paleta de tokens del diseño (acento `#6C4CE0`, superficies `#F7F8FC`, bordes `#ECEDF3`): header con icono en tile morado + botones rediseñados (Crear sólido con sombra, Importar split, Exportar, config columnas, Eliminar BD en rojo suave), búsqueda estilo pill con contador de productos a la derecha, filtros/chips redondeados, barra de acciones masivas morada suave, tabla PrimeNG sin gridlines con th uppercase y columna Título destacada, badges convertidos a pills suaves (estado/disponibilidad siguen siendo toggles clicables), paginador redondeado.
+- **Acciones por fila: los 3 botones inline (editar/duplicar/eliminar) pasaron a menú kebab** (`ngbDropdown container="body"`) con Editar / **Ver detalle** (reusa `viewProduct()`, antes solo accesible clicando la imagen) / Duplicar / Eliminar — mismos métodos existentes, sin lógica nueva.
+- No requirió spec (no toca 360 ni backend). `npm run build` verificado exit 0 (solo warnings preexistentes de CommonJS en otros módulos).
+- **Pendiente:** validación visual en navegador por el usuario + commit.
+
 ### 2026-07-08 (sesión — soporte guiado CRM: 3 fixes + regresión real encontrada, D-086)
 
 - Arranque de sesión: `git pull` en ambos repos (FE trajo specs 019/020/CONTRACT + rediseño catálogo; BE trajo fix helper categorías + cotizaciones) + levantados `:4200`/`:3300` (hubo que matar un `ng serve` viejo que ocupaba el puerto 4200).
