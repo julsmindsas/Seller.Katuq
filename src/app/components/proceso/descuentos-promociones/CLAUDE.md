@@ -1,6 +1,7 @@
 # Descuentos y Promociones — Bitácora de trabajo
 
-> Sesión: **2026-07-15** · Rama (ambos repos): `feature/descuentos-promociones`
+> Sesiones: **2026-07-15** (MVP end-to-end) · **2026-07-16** (Feature A: enforcement "Aplica a")
+> Rama (ambos repos): `feature/descuentos-promociones`
 > Repos: `Seller.Katuq` (frontend Angular) + `katuq_admin_back_firebase` (backend Node/Express/Firestore)
 
 Este documento resume TODO lo trabajado hoy en el módulo Descuentos y Promociones:
@@ -136,8 +137,9 @@ Sin ese objeto, la orden se crea igual (100% retrocompatible). El backend usa
   online con link de pago, un código con límite se consume aunque el cliente no
   pague. Endurecer con gate `estadoPago=Pagado` / webhook de pasarela = follow-up.
 - **Producto específico = 1 solo producto** (no lista).
-- **"Aplica a" es informativo** — se guarda pero NO se valida en checkout (el
-  descuento sigue aplicando sobre todo el carrito).
+- ~~**"Aplica a" es informativo** — se guarda pero NO se valida en checkout.~~
+  **SUPERSEDED (2026-07-16, Feature A):** ahora SÍ se aplica solo a la
+  categoría/producto objetivo. Ver sección 9.
 - **Historial en modal** al hacer clic (no row-expansion).
 
 ---
@@ -150,6 +152,8 @@ Sin ese objeto, la orden se crea igual (100% retrocompatible). El backend usa
 | frontend | `711efdd5` | integrar código de descuento en carrito de ventas |
 | backend | `8a5eb31` | target de aplicación + detalle de orden en redención |
 | frontend | `60a72950` | selector de categoría/producto + historial de redenciones |
+| backend | `ce425b2` | (Feature A) enforcement de "Aplica a" en aplicar-codigo |
+| frontend | `efcef55b` | (Feature A) carrito envía items para enforcement de "Aplica a" |
 
 Los builds de Angular pasaron con **exit 0** en cada tanda. Commits **locales**
 (sin push al momento de escribir esto).
@@ -161,8 +165,69 @@ Los builds de Angular pasaron con **exit 0** en cada tanda. Commits **locales**
 - **Deploy backend** (EC2/PM2, sin hot-reload): `git pull && cd functions &&
   npm install && pm2 restart katuq-api`. Sin esto, las redenciones nuevas no
   capturan `detalleOrden` (el modal las muestra igual, con "—" en productos).
-- **Push** de ambas ramas cuando se apruebe.
+- **Push** de ambas ramas cuando se apruebe (incluye ahora los commits de Feature A
+  `ce425b2` backend / `efcef55b` frontend — sin push todavía).
 - Cero real del costo de envío para `envio_gratis` en el checkout.
-- (Opcional) Enforcement de `aplicaA` en checkout (validar que el carrito
-  contenga la categoría/producto y aplicar el descuento solo a esos ítems).
+- ✅ ~~Enforcement de `aplicaA` en checkout~~ → **HECHO (Feature A, 2026-07-16)**. Ver sección 9.
+- **Feature B (pendiente, no iniciado):** promociones automáticas de catálogo
+  (producto ya rebajado sin código). Requiere: modelo/CRUD (código vs promoción),
+  precio promocional en catálogo, aplicación automática en checkout y regla de
+  acumulación código+promoción. Es desarrollo nuevo y más grande.
 - (Opcional) Gate de pago para la redención en ventas online.
+- Zona horaria en vigencia: `aplicarCodigo` compara `hoy` en UTC → off-by-~5h en
+  bordes de medianoche vs America/Bogota. Y porcentaje sin tope 100%. Menores, no
+  bloquean (hallados en revisión pre-deploy 2026-07-16).
+
+---
+
+## 9. Sesión 2026-07-16 — Feature A: enforcement de "Aplica a"
+
+**Requerimiento (del grupo):** que un código con `aplicaA = categoria` o
+`producto_especifico` descuente **solo** los ítems elegibles del carrito, no todo.
+Antes "Aplica a" se guardaba pero no se validaba (ver decisión SUPERSEDED en §6).
+
+### 9.1 Backend — `controllers/descuentosPromociones.js` → `aplicarCodigo`
+- Acepta un nuevo campo `items` en el body: `[{ productoReferencia, categorias, precioLinea }]`.
+- Calcula la **base elegible** según `aplicaA`:
+  - `todos_los_productos` → base = `totalCarrito` (comportamiento previo).
+  - `producto_especifico` → suma de `precioLinea` de líneas cuya `productoReferencia`
+    coincide con `descuento.productoReferencia` (case-insensitive).
+  - `categoria` → suma de `precioLinea` de líneas cuyo array `categorias` incluye
+    `descuento.categoriaNombre` (pertenencia, case-insensitive).
+- Si el código es dirigido y `baseAplicada <= 0` → **HTTP 400** con mensaje claro
+  ("Este código aplica solo a … y no tienes esos productos en el carrito").
+- `montoDescuento` se calcula **sobre `baseAplicada`**, no sobre el total.
+- La respuesta agrega `aplicaA` y `baseAplicada` (contexto para el frontend).
+- **Retrocompatible:** sin `items`, cae al total del carrito.
+- El chequeo de `montoMinimo` sigue evaluándose sobre el total del carrito (a propósito).
+
+### 9.2 Frontend
+- `shared/services/ventas/ventas.service.ts` → `aplicarCodigoDescuento` ahora envía `items`.
+- `components/ventas/carrito/carrito.component.ts`:
+  - `construirItemsCarrito()` — arma las líneas reusando el cálculo de precio de
+    `getTotalProductPriceInCart` (base + adiciones + preferencias) × cantidad.
+  - `resolverCategoriasProducto(prod)` — extrae nombres de categoría del producto,
+    tolerante al formato (string `flatted` / JSON / objeto); recorre `data.nombre`
+    / `nombre` / `label` y `children`. Import: `parse as flattedParse` de `flatted`.
+  - **Corrección clave en `aplicarResultadoDescuento`:** un código **dirigido**
+    (`res.aplicaA !== 'todos_los_productos'`) se mapea como **monto fijo ya
+    calculado** (`porceDescuento=0`, `totalDescuento=monto`). Así el backend de
+    órdenes (`orderCalculationService.js`, rama `else`) aplica exactamente ese monto
+    y NO lo recalcula como % sobre TODO el subtotal (que sobre-aplicaría).
+
+### 9.3 Decisión de diseño
+- **Resolución de categorías en el FRONTEND** (que ya conoce el árbol y parsea
+  `flatted`), backend hace solo un chequeo de pertenencia por string. Evita lecturas
+  extra de Firestore en el checkout y no depende de parsear `flatted` en el server.
+- `producto_especifico` matchea por `referencia` (100% confiable). `categoria`
+  matchea por nombre; si un producto no trae `categorias`, esa línea no cuenta como
+  elegible (seguro/explícito: no sobre-descuenta).
+
+### 9.4 No se tocó
+- `orders.js`, `services/descuentosService.js` (redención) ni el contrato de la orden.
+  Feature A reusa la rama de monto fijo existente.
+
+### 9.5 Verificación
+- `node --check` backend OK · Angular `Compiled successfully` · backend local
+  reiniciado (puerto 3300), `aplicar-codigo` responde 401 (montado). Prueba
+  end-to-end en navegador quedó lista para correr (front apuntando a localhost:3300).
