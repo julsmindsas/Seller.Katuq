@@ -1908,12 +1908,12 @@
 					<div class="row">
 						<div class="col-sm-6">
 							<button *ngIf="mostrarCrear" class="btn btn-lg btn-primary" (click)="guardarProductos()"
-								[disabled]="uploadingImages">Guardar</button>
+								[disabled]="saving || uploadingImages || procesandoImagenes">Guardar</button>
 							<button class="btn btn-lg btn-primary" (click)="viewProduct()">Vista
 								Previa</button>
 
 							<button *ngIf="!mostrarCrear" class="btn btn-lg btn-primary"
-								(click)="editarProducto()">Editar producto</button>
+								(click)="editarProducto()" [disabled]="saving || uploadingImages || procesandoImagenes">Editar producto</button>
 
 						</div>
 

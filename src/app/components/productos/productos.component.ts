@@ -59,7 +59,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   filtros = {
     texto: '',
     searchBy: 'referencia',
-    estado: 'activo',
+    estado: '',
     disponibilidad: '',
     tipoProducto: '',
     precioDesde: null as number | null,
@@ -97,7 +97,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   hasActiveFilters(): boolean {
     return !!(
       this.filtros.texto ||
-      (this.filtros.estado && this.filtros.estado !== 'activo') ||
+      this.filtros.estado ||
       this.filtros.disponibilidad ||
       this.filtros.tipoProducto ||
       this.filtros.precioDesde != null ||
@@ -687,12 +687,12 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.cargarDatosFiltrados();
   }
 
-  // Limpiar filtros — restaura al estado default (estado=activo)
+  // Limpiar filtros — restaura al estado default (sin filtro de estado, muestra activos e inactivos)
   limpiarFiltros() {
     this.filtros = {
       texto: '',
       searchBy: 'referencia',
-      estado: 'activo',
+      estado: '',
       disponibilidad: '',
       tipoProducto: '',
       precioDesde: null,

@@ -214,6 +214,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'marca', header: 'Marca', required: false, example: 'MiMarca' },
       { field: 'codigoBarras', header: 'Codigo de Barras', required: false, example: '7701234567890' },
       { field: 'categoria', header: 'Categoria', required: false, example: 'Ropa' },
+      { field: 'categoriaConsecutivo', header: 'Id Categoria', required: false, example: '1005' },
       { field: 'cantidadMinVenta', header: 'Cantidad Minima Venta', required: false, example: '1' },
       { field: 'inventarioSeguridad', header: 'Inventario Seguridad', required: false, example: '10' },
       { field: 'garantiasProducto', header: 'Garantias', required: false, example: 'Garantia de 1 año' },
@@ -269,6 +270,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'marca': 'Marca',
       'codigoBarras': 'Codigo de Barras',
       'categoria': 'Categoria/Grupo/Linea/Familia',
+      'categoriaConsecutivo': 'Id Categoria (enlace a SIIGO, opcional)',
       'garantiasProducto': 'Garantias',
       'caracAdicionales': 'Caracteristicas Adicionales',
       'tipoEntrega': 'Tipo/Forma de Entrega',
@@ -321,6 +323,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'imagen', header: 'URL Imagen', required: false, example: 'https://example.com/imagen.jpg' },
       { field: 'activo', header: 'Activo', required: false, example: 'SI' },
       { field: 'posicion', header: 'Posición', required: false, example: '1' },
+      { field: 'consecutivo', header: 'Id Categoria', required: false, example: '1005' },
     ],
     fieldLabels: {
       'categoria_nivel1': 'Nombre de Categoría',
@@ -331,6 +334,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'imagen': 'URL de Imagen',
       'activo': 'Activo (SI/NO)',
       'posicion': 'Posición / Orden',
+      'consecutivo': 'Id Categoria (enlace a SIIGO, opcional)',
     }
   };
 
@@ -1136,7 +1140,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'lineaProducto': 'categoriaNombre',
       'familia': 'categoriaNombre',
       'clasificacion': 'categoriaNombre',
-      'tipo': 'categoriaNombre'
+      'tipo': 'categoriaNombre',
+      'categoriaConsecutivo': 'categoriaConsecutivo',
+      'idCategoria': 'categoriaConsecutivo',
+      'consecutivo': 'categoriaConsecutivo',
     };
 
     const targetPath = fieldMappings[field];

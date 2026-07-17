@@ -39,7 +39,7 @@ export class ListComponent implements OnInit, OnChanges {
     if (this.data.length == 0) {
       this.data = [
         {
-          "data": { "nombre": "Nueva categoria ", "imagen": "", "posicion": 1, "activo": true },
+          "data": { "nombre": "Nueva categoria ", "imagen": "", "posicion": 1, "activo": true, "consecutivo": null },
           "children": []
         }
       ]
@@ -47,7 +47,7 @@ export class ListComponent implements OnInit, OnChanges {
     else {
       this.data.unshift(
         {
-          "data": { "nombre": "Nueva categoria ", "imagen": "", "posicion": this.data.length + 1, "activo": true },
+          "data": { "nombre": "Nueva categoria ", "imagen": "", "posicion": this.data.length + 1, "activo": true, "consecutivo": null },
           "children": []
         }
       )
@@ -83,7 +83,7 @@ export class ListComponent implements OnInit, OnChanges {
     if (node.children == undefined) {
       node.children = [];
     }
-    const hijo = Object.assign({}, { "data": { "nombre": "Nueva categoria ", "imagen":"", "posicion": node.children.length, "activo": true } });
+    const hijo = Object.assign({}, { "data": { "nombre": "Nueva categoria ", "imagen":"", "posicion": node.children.length, "activo": true, "consecutivo": null } });
     node.children.unshift(hijo);
     this.cdr.detectChanges();
     this.cdr.markForCheck();

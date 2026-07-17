@@ -144,7 +144,7 @@
                             <span class="fs-divider"></span>
 
                             <!-- Estado -->
-                            <select class="fs-select" [class.fs-active]="filtros.estado && filtros.estado !== 'activo'"
+                            <select class="fs-select" [class.fs-active]="!!filtros.estado"
                                 [(ngModel)]="filtros.estado" (change)="onFiltroChange()">
                                 <option value="">Estado</option>
                                 <option value="activo">Activo</option>

@@ -166,6 +166,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   kaiForm: FormGroup;
   kaiProductPrompt: any;
   uploadingImages: boolean = false;
+  procesandoImagenes: boolean = false;
   saving: boolean = false;
   referenciaError: string = '';
   validandoReferencia: boolean = false;
@@ -627,7 +628,12 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    await this.processSelectedFiles(selectedFiles, tipoImagen);
+    this.procesandoImagenes = true;
+    try {
+      await this.processSelectedFiles(selectedFiles, tipoImagen);
+    } finally {
+      this.procesandoImagenes = false;
+    }
     this.cdr.detectChanges();
   }
 
@@ -1362,6 +1368,12 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
   async editarProducto() {
+    // Evitar múltiples envíos (mismo guard que guardarProductos)
+    if (this.saving) {
+      return;
+    }
+    this.saving = true;
+
     let preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
     let preciosVolumenSinPrecio = preciosVolumen.controls.filter(
       (p) => p.get("valorUnitarioPorVolumenSinIVA").value == 0,
@@ -1372,6 +1384,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         "Todos los precios por volumen deben tener un valor",
         "error",
       );
+      this.saving = false;
       return;
     }
 
@@ -1382,6 +1395,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         "El producto debe tener obligatoriamente al menos una imagen principal",
         "error",
       );
+      this.saving = false;
       return;
     }
 
@@ -1390,6 +1404,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       await this.uploadPendingImages();
     } catch (e) {
       Swal.fire("Error", "No se pudieron subir las imágenes. Intente de nuevo.", "error");
+      this.saving = false;
       return;
     }
 
@@ -1452,19 +1467,26 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.edit = formGeneralEditar;
     sessionStorage.setItem("infoForms", JSON.stringify(this.edit));
 
-    this.service.editProductByReference(formGeneralEditar).subscribe((res) => {
-      console.log(res);
-      if (res) {
-        Swal.fire("Editato", "Producto editado correctamente", "success");
-        // Limpiar arrays DESPUÉS de que el servidor confirme éxito
-        this.filesPaths = [];
-        this.fileUrls = [];
-        this.files = null;
-        this.fileImg = [];
-        this.filesNames = [];
-      } else {
-        Swal.fire("Error", "Error al editar el producto", "error");
-      }
+    this.service.editProductByReference(formGeneralEditar).subscribe({
+      next: (res) => {
+        this.saving = false;
+        if (res) {
+          Swal.fire("Editado", "Producto editado correctamente", "success");
+          // Limpiar arrays DESPUÉS de que el servidor confirme éxito
+          this.filesPaths = [];
+          this.fileUrls = [];
+          this.files = null;
+          this.fileImg = [];
+          this.filesNames = [];
+        } else {
+          Swal.fire("Error", "Error al editar el producto", "error");
+        }
+      },
+      error: (error) => {
+        this.saving = false;
+        console.error(error);
+        Swal.fire("Error guardando!", error?.error?.error || error?.error?.msg || "No se pudo editar el producto. Intente de nuevo.", "error");
+      },
     });
   }
   onRadioClick() {
