@@ -179,20 +179,31 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       this.formulario.controls["datosEntrega"].setValue(res.datosEntrega);
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
-      this.service.editClient(this.formulario.value).subscribe((r) => {
-        // Cerrar modal si está abierto
-        this.modalService.dismissAll();
+      this.service.editClient(this.formulario.value).subscribe({
+        next: (r) => {
+          // Cerrar modal si está abierto
+          this.modalService.dismissAll();
 
-        Swal.fire({
-          title: "Guardado!",
-          text: "Datos de facturación guardados con éxito",
-          icon: "success",
-          confirmButtonText: "Ok",
-          timer: 2000,
-        });
+          Swal.fire({
+            title: "Guardado!",
+            text: "Datos de facturación guardados con éxito",
+            icon: "success",
+            confirmButtonText: "Ok",
+            timer: 2000,
+          });
 
-        // Limpiar TODOS los campos del formulario
-        this.limpiarVariables();
+          // Limpiar TODOS los campos del formulario
+          this.limpiarVariables();
+        },
+        error: (err) => {
+          console.error("Error al guardar dirección de facturación:", err);
+          Swal.fire({
+            title: "Error",
+            text: "No se pudo guardar la dirección de facturación. Intente nuevamente.",
+            icon: "error",
+            confirmButtonText: "Ok",
+          });
+        },
       });
     });
   }

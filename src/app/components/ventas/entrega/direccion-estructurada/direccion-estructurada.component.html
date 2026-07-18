@@ -288,7 +288,7 @@
 
 <div class="modal-footer">
   <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
-  <button type="button" class="btn btn-primary" [disabled]="!validarDireccionColombiana()" (click)="generarDireccion()">
-    {{ direccionActual ? 'Actualizar' : 'Aplicar' }}
+  <button type="button" class="btn btn-primary" [disabled]="!validarDireccionColombiana() || geocodificando" (click)="generarDireccion()">
+    {{ geocodificando ? 'Buscando coordenadas...' : (direccionActual ? 'Actualizar' : 'Aplicar') }}
   </button>
 </div>
