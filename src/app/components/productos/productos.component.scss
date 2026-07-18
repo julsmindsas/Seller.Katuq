@@ -1,3 +1,33 @@
+// ====================================================
+// GESTIÓN DE PRODUCTOS — rediseño UX/UI (Claude Design)
+// Tokens del diseño "Gestión de Productos.dc.html"
+// ====================================================
+
+// Paleta
+$pk-accent: #6C4CE0;
+$pk-accent-hover: #5b3fc9;
+$pk-accent-soft: #EEE9FD;
+$pk-accent-border: #E2D9FB;
+$pk-bg-soft: #F7F8FC;
+$pk-border: #ECEDF3;
+$pk-border-2: #E4E5EE;
+$pk-row-divider: #F0F1F6;
+$pk-text-dark: #2A2E3C;
+$pk-text-mid: #52586B;
+$pk-text-grey: #8A90A2;
+$pk-text-light: #9199AC;
+$pk-danger: #E0483F;
+$pk-danger-soft: #FCE9E8;
+$pk-danger-border: #F6D4D2;
+$pk-success: #17994F;
+$pk-success-soft: #E3F6EC;
+$pk-info: #1E90B8;
+$pk-info-soft: #E7F5FB;
+$pk-blue: #2F6FE0;
+$pk-blue-soft: #E7F0FD;
+$pk-warning: #E0891B;
+$pk-warning-soft: #FDF1DD;
+
 .modal-fullscreen {
     width: 100%;
     height: 100%;
@@ -12,126 +42,41 @@
 :global .swal-wide {
     width: 600px !important;
     max-width: 90vw !important;
-    
+
     .swal2-html-container {
         line-height: 1.6;
-        
+
         p {
             margin-bottom: 8px;
-            
+
             &:last-child {
                 margin-bottom: 0;
             }
         }
-        
+
         hr {
             margin: 15px 0;
             border: none;
             border-top: 1px solid #e0e0e0;
         }
     }
-    
+
     .swal2-actions {
         gap: 15px;
-        
+
         .swal2-confirm,
         .swal2-cancel {
             min-width: 120px;
             font-weight: 500;
             border-radius: 6px;
             padding: 8px 16px;
-            
+
             i {
                 margin-right: 5px;
             }
         }
     }
 }
-
-// Estilos para los botones de acción
-.action-buttons {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    justify-content: center;
-    
-    i {
-        font-size: 18px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        padding: 5px;
-        border-radius: 4px;
-        
-        &:hover {
-            transform: scale(1.1);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        &.icofont-pencil-alt-5 {
-            color: #a78bfa !important;
-            
-            &:hover {
-                background-color: rgba(0, 123, 255, 0.1);
-            }
-        }
-        
-        &.icofont-copy {
-            color: #28a745 !important;
-            
-            &:hover {
-                background-color: rgba(40, 167, 69, 0.1);
-            }
-        }
-        
-        &.icofont-trash {
-            color: #dc3545 !important;
-            
-            &:hover {
-                background-color: rgba(220, 53, 69, 0.1);
-            }
-        }
-    }
-}
-
-// Mejoras generales para la tabla
-.p-datatable {
-    .p-datatable-tbody {
-        tr {
-            transition: background-color 0.2s ease;
-
-            &:hover {
-                background-color: rgba(0, 0, 0, 0.02);
-            }
-        }
-
-        td {
-            vertical-align: middle;
-
-            img {
-                border-radius: 4px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                transition: transform 0.2s ease;
-
-                &:hover {
-                    transform: scale(1.05);
-                }
-            }
-        }
-    }
-}
-
-// ============================================
-// ESTILOS MODERNOS ESTILO DESPACHOS
-// ============================================
-
-// Variables
-$primary-color: #2196F3;
-$success-color: #66BB6A;
-$info-color: #42A5F5;
-$warning-color: #FFA726;
-$danger-color: #FF5252;
-$secondary-color: #78909C;
-$border-radius: 8px;
 
 // Animaciones
 @keyframes rotate {
@@ -144,26 +89,159 @@ $border-radius: 8px;
     to { opacity: 1; }
 }
 
-// Estilo del encabezado del módulo
-.module-header {
-    background: linear-gradient(to right, white, #fafafa);
-    border-radius: $border-radius $border-radius 0 0;
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
 
-    h5 {
-        font-size: 1.3rem;
+// ====================================================
+// ENCABEZADO DEL MÓDULO
+// ====================================================
+.pk-header {
+    background: #fff;
+    border-left: 4px solid $pk-accent;
+    border-bottom: 1px solid $pk-row-divider !important;
+}
 
-        i {
-            font-size: 1.1rem;
-        }
+.pk-header-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: $pk-accent-soft;
+    color: $pk-accent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i { font-size: 1.3rem; }
+}
+
+.pk-title {
+    font-weight: 800;
+    font-size: 1.35rem;
+    color: $pk-text-dark;
+    line-height: 1.1;
+}
+
+.pk-subtitle {
+    font-size: 0.82rem;
+    color: $pk-text-grey;
+    font-weight: 600;
+}
+
+// ====================================================
+// BOTONES DEL HEADER
+// ====================================================
+.pk-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border-radius: 12px;
+    padding: 9px 14px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    line-height: 1;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+
+    i { font-size: 0.85rem; }
+
+    &:active { transform: translateY(1px); }
+}
+
+.pk-btn-primary {
+    background: $pk-accent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
+
+    &:hover { background: $pk-accent-hover; color: #fff; }
+}
+
+.pk-btn-outline {
+    background: #fff;
+    color: $pk-text-mid;
+    border-color: $pk-border-2;
+
+    &:hover { background: $pk-bg-soft; border-color: #d3d6e2; color: $pk-text-dark; }
+}
+
+.pk-btn-danger-soft {
+    background: $pk-danger-soft;
+    color: $pk-danger;
+    border-color: $pk-danger-border;
+
+    &:hover { background: #fadbd9; color: $pk-danger; }
+}
+
+.pk-btn-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid $pk-border-2;
+    color: $pk-accent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+
+    &:hover { background: $pk-accent-soft; border-color: $pk-accent-border; }
+}
+
+// Split "Importar"
+.pk-split {
+    .pk-split-main {
+        border-radius: 12px 0 0 12px;
+        border-right: none;
     }
 
-    p {
-        opacity: 0.8;
-        margin-left: 2rem;
+    .pk-split-toggle {
+        width: 32px;
+        background: $pk-bg-soft;
+        border: 1px solid $pk-border-2;
+        border-radius: 0 12px 12px 0;
+        color: $pk-text-light;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+
+        &:hover { background: $pk-accent-soft; color: $pk-accent; }
     }
 }
 
-// Loader mejorado
+// Iconos con color de acento dentro de botones
+.pk-ico-accent { color: $pk-accent; }
+.pk-ico-success { color: $pk-success; }
+.pk-ico-info { color: $pk-blue; }
+
+// Menú dropdown del header (importar)
+.pk-menu {
+    border: 1px solid $pk-border;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(30, 35, 60, 0.16);
+    padding: 6px;
+
+    .dropdown-item {
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: $pk-text-mid;
+        padding: 9px 12px;
+
+        &:hover { background: $pk-bg-soft; color: $pk-accent; }
+        &:disabled { opacity: 0.6; }
+    }
+}
+
+// ====================================================
+// LOADER
+// ====================================================
 .loader-box {
     position: absolute;
     inset: 0;
@@ -172,7 +250,7 @@ $border-radius: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: $border-radius;
+    border-radius: 8px;
 }
 
 .loader-box .loader-8 {
@@ -186,19 +264,21 @@ $border-radius: 8px;
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 2px solid $primary-color;
+    border: 2px solid $pk-accent;
     border-right-color: transparent;
     animation: rotate 1s infinite linear;
     position: absolute;
 }
 
-// Estilos para Botón de Acción Flotante (FAB)
+// ====================================================
+// FAB móvil
+// ====================================================
 .btn-fab {
     position: fixed;
     bottom: 25px;
     right: 25px;
     z-index: 1050;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 24px rgba(108, 76, 224, 0.4);
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -206,179 +286,101 @@ $border-radius: 8px;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    background: $pk-accent !important;
+    border-color: $pk-accent !important;
 
-    i {
-        font-size: 1.5rem;
-    }
+    i { font-size: 1.5rem; }
 
     &:hover {
         transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        background: $pk-accent-hover !important;
     }
 }
-
-// Badges modernos para productos (estilo breadcrumb chips)
-.badge {
-    font-size: 0.75rem;
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    border: 1.5px solid transparent;
-    transition: all 0.2s ease;
-
-    i {
-        font-size: 0.7rem;
-        opacity: 0.9;
-    }
-
-    // Activo (verde estilo breadcrumb)
-    &.bg-success {
-        background-color: #e8f5e9 !important;
-        color: #2e7d32 !important;
-        border-color: #a5d6a7 !important;
-    }
-
-    // Inactivo (rojo estilo breadcrumb)
-    &.bg-danger {
-        background-color: #ffebee !important;
-        color: #c62828 !important;
-        border-color: #ef9a9a !important;
-    }
-
-    // Disponible (info/cyan estilo breadcrumb)
-    &.bg-info {
-        background-color: #e1f5fe !important;
-        color: #0277bd !important;
-        border-color: #81d4fa !important;
-    }
-
-    // Producción (warning/naranja estilo breadcrumb)
-    &.bg-warning {
-        background-color: #fff3e0 !important;
-        color: #ef6c00 !important;
-        border-color: #ffcc80 !important;
-    }
-
-    // No disponible (gris estilo breadcrumb)
-    &.bg-secondary {
-        background-color: #f5f5f5 !important;
-        color: #616161 !important;
-        border-color: #e0e0e0 !important;
-    }
-
-    // No produce (light)
-    &.bg-light {
-        background-color: #fafafa !important;
-        color: #757575 !important;
-        border: 1.5px solid #e0e0e0 !important;
-    }
-
-    // Hover effect
-    &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-}
-
-// Badges específicos para tipos de producto
-.badge-product-traditional {
-    background-color: #e3f2fd;
-    color: #1976d2;
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    border: 1px solid #bbdefb;
-
-    i {
-        font-size: 0.7rem;
-    }
-}
-
-.badge-product-dropshipping {
-    background-color: #e1f5fe;
-    color: #0277bd;
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    border: 1px solid #b3e5fc;
-
-    i {
-        font-size: 0.7rem;
-    }
-}
-
-// ============================================
-// FILTROS — SEARCH BAR + PILLS
-// ============================================
 
 // ====================================================
-// SISTEMA DE FILTROS — diseño compacto
+// SISTEMA DE FILTROS
 // ====================================================
 
 // Barra de búsqueda
 .search-input-group {
-    border-radius: 6px;
+    border-radius: 12px;
     overflow: hidden;
-    border: 1px solid #dee2e6;
+    border: 1px solid $pk-border;
+    background: $pk-bg-soft;
+    max-width: 640px;
     transition: box-shadow 0.2s, border-color 0.2s;
 
     &:focus-within {
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
-        border-color: #a78bfa;
+        box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+        border-color: $pk-accent-border;
     }
 
     .search-criteria-select {
-        max-width: 120px;
+        max-width: 130px;
         border: none;
-        border-right: 1px solid #dee2e6;
-        background-color: #f8f9fa;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #495057;
+        border-right: 1px solid $pk-border-2;
+        background-color: transparent;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: $pk-text-mid;
         &:focus { box-shadow: none; }
+    }
+
+    .input-group-text {
+        background: transparent !important;
+        border: none;
     }
 
     .form-control {
         border: none;
-        font-size: 0.85rem;
-        &:focus { box-shadow: none; }
-        &::placeholder { color: #adb5bd; font-size: 0.83rem; }
+        background: transparent;
+        font-size: 0.86rem;
+        &:focus { box-shadow: none; background: transparent; }
+        &::placeholder { color: $pk-text-light; font-size: 0.84rem; }
     }
 
     .btn-outline-secondary {
         border: none;
-        color: #adb5bd;
-        &:hover { color: #6c757d; background: transparent; }
+        color: $pk-text-light;
+        &:hover { color: $pk-text-mid; background: transparent; }
     }
+}
+
+// Contador de productos (a la derecha de la búsqueda)
+.pk-count {
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    strong {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: $pk-accent;
+    }
+}
+
+.pk-count-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: $pk-text-grey;
+    margin-left: 3px;
 }
 
 // --------------------------------------------------
 // Tira de filtros: variables compartidas
 // --------------------------------------------------
-$fs-height: 30px;
-$fs-font: 0.78rem;
-$fs-radius: 5px;
-$fs-border: #dee2e6;
-$fs-active-color: #5b21b6;
-$fs-active-bg: #f0ebff;
-$fs-active-border: #a78bfa;
+$fs-height: 36px;
+$fs-font: 0.82rem;
+$fs-radius: 10px;
+$fs-border: $pk-border;
+$fs-active-color: $pk-accent;
+$fs-active-bg: $pk-accent-soft;
+$fs-active-border: $pk-accent-border;
 
 // Fila principal (no wrapping, scroll horizontal si es necesario)
 .filter-strip {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     overflow-x: auto;
     scrollbar-width: none;
     padding-bottom: 2px;
@@ -391,24 +393,31 @@ $fs-active-border: #a78bfa;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 4px;
-    padding: 6px 8px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
+    gap: 6px;
+    padding: 10px 12px;
+    background: $pk-bg-soft;
+    border: 1px solid $pk-border;
+    border-radius: 12px;
     margin-bottom: 6px;
     animation: slideDown 0.15s ease;
+
+    // sobre el panel gris, los selects van blancos para distinguirse
+    .fs-select:not(.fs-active):not(.fs-active-sub) {
+        background: #fff;
+        border-color: $pk-border-2;
+    }
 }
 
 // Select base (usado en ambas filas)
 .fs-select {
     height: $fs-height;
     font-size: $fs-font;
+    font-weight: 600;
     border: 1px solid $fs-border;
     border-radius: $fs-radius;
-    background: #fff;
-    color: #495057;
-    padding: 0 20px 0 8px;
+    background: $pk-bg-soft;
+    color: $pk-text-mid;
+    padding: 0 22px 0 12px;
     cursor: pointer;
     white-space: nowrap;
     appearance: auto;
@@ -418,21 +427,15 @@ $fs-active-border: #a78bfa;
     &:focus {
         outline: none;
         border-color: $fs-active-border;
-        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+        box-shadow: 0 0 0 2px rgba(108, 76, 224, 0.15);
     }
 
-    &.fs-active {
-        border-color: $fs-active-border;
-        background: $fs-active-bg;
-        color: $fs-active-color;
-        font-weight: 600;
-    }
-
+    &.fs-active,
     &.fs-active-sub {
         border-color: $fs-active-border;
         background: $fs-active-bg;
         color: $fs-active-color;
-        font-weight: 600;
+        font-weight: 700;
     }
 }
 
@@ -440,9 +443,9 @@ $fs-active-border: #a78bfa;
 .fs-divider {
     display: inline-block;
     width: 1px;
-    height: 18px;
-    background: #dee2e6;
-    margin: 0 2px;
+    height: 22px;
+    background: $pk-border-2;
+    margin: 0 3px;
     flex-shrink: 0;
 }
 
@@ -450,27 +453,28 @@ $fs-active-border: #a78bfa;
 .fs-btn-more {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     height: $fs-height;
-    padding: 0 10px;
+    padding: 0 14px;
     font-size: $fs-font;
-    font-weight: 500;
-    border: 1px solid $fs-border;
+    font-weight: 700;
+    border: 1px solid $pk-border-2;
     border-radius: $fs-radius;
     background: #fff;
-    color: #6c757d;
+    color: $pk-text-mid;
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
     transition: all 0.15s;
 
-    &:hover { border-color: #adb5bd; color: #495057; }
+    > .pi-filter { color: $pk-accent; }
+
+    &:hover { border-color: #d3d6e2; background: $pk-bg-soft; }
 
     &--active {
         border-color: $fs-active-border;
         background: $fs-active-bg;
         color: $fs-active-color;
-        font-weight: 600;
     }
 }
 
@@ -479,12 +483,12 @@ $fs-active-border: #a78bfa;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
+    width: 17px;
+    height: 17px;
     font-size: 0.65rem;
-    font-weight: 700;
+    font-weight: 800;
     border-radius: 50%;
-    background: $fs-active-color;
+    background: $pk-accent;
     color: #fff;
 }
 
@@ -492,26 +496,20 @@ $fs-active-border: #a78bfa;
 .fs-btn-clear {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 5px;
     height: $fs-height;
-    padding: 0 8px;
+    padding: 0 14px;
     font-size: $fs-font;
-    border: 1px solid #f5c2c7;
+    font-weight: 700;
+    border: 1px solid $pk-danger-border;
     border-radius: $fs-radius;
-    background: #fff5f5;
-    color: #b02a37;
+    background: #fff;
+    color: $pk-danger;
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
     transition: all 0.15s;
-    &:hover { background: #f8d7da; }
-}
-
-// Contador de resultados (al extremo derecho de la tira)
-.fs-count {
-    font-size: $fs-font;
-    white-space: nowrap;
-    flex-shrink: 0;
+    &:hover { background: $pk-danger-soft; }
 }
 
 // Inputs de precio en la fila secundaria
@@ -523,17 +521,18 @@ $fs-active-border: #a78bfa;
 }
 
 .fs-price-input {
-    width: 72px;
+    width: 76px;
     height: $fs-height;
     font-size: $fs-font;
     border: 1px solid $fs-border;
     border-radius: $fs-radius;
-    padding: 0 6px;
+    background: #fff;
+    padding: 0 8px;
     text-align: right;
     &:focus {
         outline: none;
         border-color: $fs-active-border;
-        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+        box-shadow: 0 0 0 2px rgba(108, 76, 224, 0.15);
     }
 }
 
@@ -542,43 +541,44 @@ $fs-active-border: #a78bfa;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 5px;
-    min-height: 24px;
-    margin-top: 4px;
+    gap: 6px;
+    min-height: 26px;
+    margin-top: 6px;
 }
 
 // Chip de filtro activo
 .filter-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.74rem;
-    font-weight: 500;
-    padding: 2px 8px 2px 10px;
-    border-radius: 20px;
-    background: #ede9fe;
-    color: $fs-active-color;
-    border: 1px solid #c4b5fd;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 5px 10px 5px 13px;
+    border-radius: 999px;
+    background: $pk-accent-soft;
+    color: $pk-accent;
+    border: 1px solid $pk-accent-border;
 }
 
 // Chip de vista guardada
 .filter-view-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.74rem;
-    padding: 2px 8px 2px 10px;
-    border-radius: 20px;
-    background: #f8f9fa;
-    color: #495057;
-    border: 1px solid #dee2e6;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 10px 5px 13px;
+    border-radius: 999px;
+    background: $pk-bg-soft;
+    color: $pk-text-mid;
+    border: 1px solid $pk-border-2;
     cursor: pointer;
 
     &--active {
-        background: #e0e7ff;
-        color: #3730a3;
-        border-color: #a5b4fc;
-        font-weight: 600;
+        background: $pk-accent-soft;
+        color: $pk-accent;
+        border-color: $pk-accent-border;
+        font-weight: 800;
     }
 }
 
@@ -587,7 +587,7 @@ $fs-active-border: #a78bfa;
     border: none;
     padding: 0;
     line-height: 1;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: inherit;
     opacity: 0.6;
     cursor: pointer;
@@ -597,132 +597,407 @@ $fs-active-border: #a78bfa;
 .fs-btn-save {
     display: inline-flex;
     align-items: center;
-    height: 24px;
-    padding: 0 8px;
-    font-size: 0.74rem;
-    border: 1px solid #c4b5fd;
-    border-radius: 20px;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+    border: 1px solid $pk-border-2;
+    border-radius: 9px;
     background: #fff;
-    color: $fs-active-color;
+    color: $pk-accent;
     cursor: pointer;
-    &:hover { background: $fs-active-bg; }
+    &:hover { background: $pk-accent-soft; border-color: $pk-accent-border; }
 }
 
 .fs-views-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: $pk-text-light;
+}
+
+// ====================================================
+// BARRA DE ACCIONES MASIVAS
+// ====================================================
+.pk-bulkbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: $pk-accent-soft;
+    border: 1px solid $pk-accent-border;
+    animation: slideDown 0.15s ease;
+}
+
+.pk-bulkbar-count {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: $pk-accent;
+    white-space: nowrap;
+}
+
+.pk-btn-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 10px;
+    padding: 7px 12px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    line-height: 1;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+
+    i { font-size: 0.75rem; }
+
+    &:disabled { opacity: 0.55; cursor: default; }
+}
+
+.pk-btn-sm-success   { background: $pk-success-soft; color: $pk-success; border-color: #bfe8d0; &:hover:not(:disabled) { background: #d3f0e0; } }
+.pk-btn-sm-danger    { background: $pk-danger; color: #fff; &:hover:not(:disabled) { background: #c93b33; } }
+.pk-btn-sm-danger-outline { background: #fff; color: $pk-danger; border-color: $pk-danger-border; &:hover:not(:disabled) { background: $pk-danger-soft; } }
+.pk-btn-sm-info      { background: $pk-info-soft; color: $pk-info; border-color: #c4e6f2; &:hover:not(:disabled) { background: #d6eef7; } }
+.pk-btn-sm-muted     { background: #F1F2F5; color: $pk-text-mid; border-color: $pk-border-2; &:hover:not(:disabled) { background: #e7e8ee; } }
+.pk-btn-sm-ghost     { background: #fff; color: $pk-text-mid; border-color: $pk-border-2; &:hover:not(:disabled) { background: $pk-bg-soft; } }
+
+// ====================================================
+// PILLS Y CHIPS DE LA TABLA
+// ====================================================
+.pk-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    line-height: 1;
+
+    i { font-size: 0.72rem; }
+}
+
+.pk-pill-toggle {
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(30, 35, 60, 0.12);
+    }
+}
+
+.pk-pill-success { background: $pk-success-soft; color: $pk-success; }
+.pk-pill-danger  { background: $pk-danger-soft; color: $pk-danger; }
+.pk-pill-info    { background: $pk-info-soft; color: $pk-info; }
+.pk-pill-blue    { background: $pk-blue-soft; color: $pk-blue; }
+.pk-pill-warning { background: $pk-warning-soft; color: $pk-warning; }
+.pk-pill-muted   { background: #F1F2F5; color: $pk-text-grey; }
+
+// Chip rectangular de categoría
+.pk-chip-neutral {
+    display: inline-block;
+    background: #F1F2F5;
+    color: $pk-text-mid;
     font-size: 0.72rem;
-    color: #adb5bd;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 8px;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
 }
 
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
+// Textos de celdas
+.pk-row-title {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: $pk-text-dark;
 }
 
-// Estilos para el input de búsqueda (legacy - mantenido para compatibilidad)
-.search-input {
-    &:focus {
-        border-color: #ced4da;
-        box-shadow: none;
-    }
-
-    &::placeholder {
-        color: #6c757d;
-        font-style: italic;
-    }
+.pk-ref {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #6B7280;
 }
 
-// Thumbnails de productos
+.pk-price {
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: $pk-blue;
+}
+
+.pk-date {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: $pk-text-light;
+}
+
+// Miniatura de producto
+.pk-thumb {
+    border-radius: 12px;
+    border: 1px solid $pk-border;
+}
+
 .product-thumbnail {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(30, 35, 60, 0.08);
     transition: all 0.3s ease;
 
     &:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-        transform: scale(1.1);
+        box-shadow: 0 4px 16px rgba(30, 35, 60, 0.18);
+        transform: scale(1.08);
     }
 }
 
-// Mejoras para botones de acción en tabla
-.action-buttons-table {
+// Checkboxes de selección
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    border: 2px solid #CBD0DD;
+    cursor: pointer;
+
+    &:checked,
+    &:indeterminate {
+        background-color: $pk-accent;
+        border-color: $pk-accent;
+    }
+
+    &:focus {
+        border-color: $pk-accent-border;
+        box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.15);
+    }
+}
+
+// ====================================================
+// MENÚ KEBAB DE ACCIONES (fila)
+// ====================================================
+.pk-actions {
     display: flex;
-    gap: 0.5rem;
     justify-content: center;
+}
+
+.pk-actions-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: $pk-bg-soft;
+    border: 1px solid $pk-border;
+    color: $pk-text-light;
+    cursor: pointer;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
 
-    .btn-action {
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        border-radius: 50%;
-        display: inline-flex;
+    i { font-size: 0.95rem; }
+
+    &:hover,
+    &[aria-expanded="true"] {
+        background: $pk-accent-soft;
+        border-color: $pk-accent-border;
+        color: $pk-accent;
+    }
+
+    // sin caret de bootstrap
+    &.dropdown-toggle::after { display: none; }
+}
+
+// El menú se adjunta a <body> (container="body") → estilos globales
+::ng-deep .pk-actions-menu {
+    min-width: 188px;
+    border: 1px solid #ECEDF3;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(30, 35, 60, 0.16);
+    padding: 6px;
+    z-index: 1060;
+
+    .dropdown-item {
+        display: flex;
         align-items: center;
-        justify-content: center;
-        border: none;
-        transition: all 0.2s ease;
-        background-color: transparent;
+        gap: 10px;
+        border-radius: 10px;
+        padding: 9px 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #52586B;
 
-        i {
-            font-size: 1rem;
+        i { font-size: 0.85rem; }
+
+        &:hover { background: #F7F5FE; color: #6C4CE0; }
+
+        &.pk-item-danger {
+            color: #E0483F;
+            i { color: #E0483F; }
+            &:hover { background: #FDECEB; color: #E0483F; }
+        }
+    }
+
+    .dropdown-divider {
+        margin: 4px 6px;
+        border-color: #F0F1F6;
+    }
+
+    .pk-ico-accent { color: #6C4CE0; }
+    .pk-ico-success { color: #17994F; }
+    .pk-ico-info { color: #2F6FE0; }
+}
+
+// ====================================================
+// TABLA (PrimeNG) — estilo limpio del diseño
+// ====================================================
+:host ::ng-deep .pk-table {
+    .p-datatable-thead > tr > th {
+        background: $pk-bg-soft;
+        color: $pk-text-light;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border: none;
+        border-bottom: 1px solid $pk-border;
+        padding: 13px 12px;
+
+        .p-sortable-column-icon {
+            color: #B7BCCB;
+            font-size: 0.7rem;
+        }
+
+        &.p-highlight {
+            background: $pk-accent-soft;
+            color: $pk-accent;
+
+            .p-sortable-column-icon { color: $pk-accent; }
+        }
+
+        &.col-titulo {
+            background: $pk-accent-soft;
+            color: $pk-accent;
+
+            .p-sortable-column-icon { color: $pk-accent; }
         }
 
         &:hover {
-            transform: scale(1.15);
+            background: #eef0f7;
+            color: $pk-text-mid;
         }
 
-        &.btn-action-info {
-            color: #c4b5fd;
+        &.col-titulo:hover,
+        &.p-highlight:hover {
+            background: #e4dcfa;
+            color: $pk-accent;
+        }
+    }
 
-            &:hover {
-                background-color: rgba(23, 162, 184, 0.1);
+    .p-datatable-tbody > tr {
+        transition: background-color 0.15s ease;
+
+        > td {
+            border: none;
+            border-bottom: 1px solid $pk-row-divider;
+            padding: 11px 12px;
+            vertical-align: middle;
+        }
+
+        &:hover { background: #FAFAFE; }
+    }
+
+    // Paginador
+    .p-paginator {
+        border: none;
+        padding: 14px 8px 4px;
+        background: transparent;
+
+        .p-paginator-current {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: $pk-text-grey;
+        }
+
+        .p-paginator-pages .p-paginator-page,
+        .p-paginator-first,
+        .p-paginator-prev,
+        .p-paginator-next,
+        .p-paginator-last {
+            min-width: 34px;
+            height: 34px;
+            margin: 0 3px;
+            border-radius: 9px;
+            border: 1px solid $pk-border-2;
+            background: #fff;
+            color: $pk-text-mid;
+            font-weight: 700;
+            font-size: 0.82rem;
+            transition: background 0.15s, border-color 0.15s;
+
+            &:not(.p-disabled):hover {
+                background: $pk-bg-soft;
+                border-color: #d3d6e2;
             }
         }
 
-        &.btn-action-purple {
-            color: #9c27b0;
-
-            &:hover {
-                background-color: rgba(156, 39, 176, 0.1);
-            }
+        .p-paginator-pages .p-paginator-page.p-highlight {
+            background: $pk-accent;
+            border-color: $pk-accent;
+            color: #fff;
         }
 
-        &.btn-action-success {
-            color: #28a745;
-
-            &:hover {
-                background-color: rgba(40, 167, 69, 0.1);
-            }
+        .p-dropdown {
+            border-radius: 9px;
+            border-color: $pk-border-2;
         }
+    }
 
-        &.btn-action-danger {
-            color: #dc3545;
+    // Loader overlay de la tabla
+    .p-datatable-loading-overlay {
+        background: rgba(255, 255, 255, 0.6);
+    }
 
-            &:hover {
-                background-color: rgba(220, 53, 69, 0.1);
-            }
-        }
+    // Mensaje vacío + resumen
+    .p-datatable-emptymessage td {
+        text-align: center;
+        padding: 28px 12px;
+        color: $pk-text-grey;
+        font-weight: 600;
+    }
+
+    .p-datatable-footer,
+    .p-datatable-summary {
+        background: transparent;
+        border: none;
+        color: $pk-text-grey;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 8px 12px;
     }
 }
 
 // Card con sombra suave
 .card.shadow-sm {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04) !important;
+    border: 1px solid $pk-border !important;
     transition: box-shadow 0.3s ease;
 
     &:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+        box-shadow: 0 4px 16px rgba(30, 35, 60, 0.08) !important;
     }
 }
 
-// Responsive
+// ====================================================
+// RESPONSIVE
+// ====================================================
 @media (max-width: 768px) {
-    .module-header {
-        flex-direction: column !important;
-        align-items: flex-start !important;
+    .pk-header {
+        > div { flex-direction: column !important; align-items: flex-start !important; }
+    }
 
-        > div:last-child {
-            margin-top: 1rem;
-            width: 100%;
-        }
+    .pk-btn {
+        padding: 8px 11px;
+        font-size: 0.76rem;
     }
 
     .btn-fab {
@@ -731,50 +1006,28 @@ $fs-active-border: #a78bfa;
         width: 50px;
         height: 50px;
 
-        i {
-            font-size: 1.3rem;
-        }
+        i { font-size: 1.3rem; }
     }
 
-    .btn-sm {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-    }
+    .filter-search-row {
+        flex-wrap: wrap;
 
-    .action-buttons-table {
-        gap: 0.25rem;
-
-        .btn-action {
-            width: 28px;
-            height: 28px;
-
-            i {
-                font-size: 0.9rem;
-            }
-        }
+        .pk-count { width: 100%; text-align: right; }
     }
 }
 
 @media (max-width: 576px) {
-    .module-header h5 {
-        font-size: 1.1rem;
-    }
+    .pk-title { font-size: 1.1rem; }
 
-    .badge {
+    .pk-pill {
         font-size: 0.7rem;
-        padding: 0.25rem 0.5rem;
-    }
-
-    .search-input-group .search-input {
-        font-size: 0.8rem;
+        padding: 5px 9px;
     }
 
     .btn-fab {
         width: 48px;
         height: 48px;
 
-        i {
-            font-size: 1.2rem;
-        }
+        i { font-size: 1.2rem; }
     }
 }

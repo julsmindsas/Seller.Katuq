@@ -1206,6 +1206,14 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-07-16 (sesión — rediseño UX/UI pantalla Gestión de Productos desde Claude Design)
+
+- Importado el mockup `Gestión de Productos.dc.html` desde el proyecto de Claude Design (`cef2b209-…`) vía DesignSync y aplicado a `/productos` como cambio **solo UX/UI** (cero cambios de lógica/TS/servicios; solo `productos.component.html` + `.scss`).
+- Nueva paleta de tokens del diseño (acento `#6C4CE0`, superficies `#F7F8FC`, bordes `#ECEDF3`): header con icono en tile morado + botones rediseñados (Crear sólido con sombra, Importar split, Exportar, config columnas, Eliminar BD en rojo suave), búsqueda estilo pill con contador de productos a la derecha, filtros/chips redondeados, barra de acciones masivas morada suave, tabla PrimeNG sin gridlines con th uppercase y columna Título destacada, badges convertidos a pills suaves (estado/disponibilidad siguen siendo toggles clicables), paginador redondeado.
+- **Acciones por fila: los 3 botones inline (editar/duplicar/eliminar) pasaron a menú kebab** (`ngbDropdown container="body"`) con Editar / **Ver detalle** (reusa `viewProduct()`, antes solo accesible clicando la imagen) / Duplicar / Eliminar — mismos métodos existentes, sin lógica nueva.
+- No requirió spec (no toca 360 ni backend). `npm run build` verificado exit 0 (solo warnings preexistentes de CommonJS en otros módulos).
+- **Pendiente:** validación visual en navegador por el usuario + commit.
+
 ### 2026-07-08 (sesión — soporte guiado CRM: 3 fixes + regresión real encontrada, D-086)
 
 - Arranque de sesión: `git pull` en ambos repos (FE trajo specs 019/020/CONTRACT + rediseño catálogo; BE trajo fix helper categorías + cotizaciones) + levantados `:4200`/`:3300` (hubo que matar un `ng serve` viejo que ocupaba el puerto 4200).
@@ -1892,3 +1900,6 @@ Orden = prioridad. La spec piloto siempre encabeza.
   - **No se tocó `zona_cobro`/`valor_zona_cobro`** — hacerlos obligatorios sin más análisis bloquearía ciudades que genuinamente no tienen zona de cobro configurada en el sistema (regresión peor que el bug actual). Queda fuera de esta sesión.
 - **Verificación:** frontend recompiló limpio (`Compiled successfully`) tras los cambios. **Pendiente:** prueba end-to-end en navegador (crear dirección de envío, confirmar sin geocodificar manualmente, verificar que igual se guarda con coordenadas aproximadas y aparece en el listado).
 - **Nada commiteado.** Cambios adicionales en working tree: frontend `direccion-estructurada.component.ts`, `direccion-estructurada.component.html`.
+
+### 2026-07-16/17 (sesión — OMS multi-bodega Cereza: análisis + configuración en prod)
+- **D-110 — Bodegas Cereza 1/1A/1B: el sync multi-bodega YA FUNCIONABA; lo que faltaba era configuración, no código (2026-07-16/17, tareas ClickUp wdu9v76ekm/wdu9v76ekn):** análisis contra prod (read-only, autorizado) demostró que la "implementación base" está completa: el payload de Osmosis trae `stock[]` por `storage_code`, `_syncInventory` escribe `inventory` por bodega y `_resolveIdBodega` auto-creó `BOD-CEREZA-1A` (01-jul), `BOD-CEREZA-1B` (01-jul) y `BOD-CEREZA-51` (07-jul) — los findings de mayo (solo BOD-CEREZA-1) estaban desactualizados. Sync activo verificado (corrida 16-jul 13:58): 1=4,641 prod/492,067 und; 1A=1,030/32,875; 1B=732/23,616; 51=56/17,371. **Cambios aplicados en prod (datos, no código; con autorización manual):** renombre de las 3 bodegas ("Guía Cereza — Medellín/Bogotá/Cali" — prefijo para no chocar con las Aliaddo 001 BOGOTA/003 MEDELLIN/005 CALI) + `ciudadesCobertura` con DANE (05001/11001/76001) + asociación de 1A/1B al canal Venta Asistida vía `channelWarehouseAssociations` (docId `${channelId}_${bodegaDocId}`; la 1 ya estaba). Verificado simulando el endpoint real (`/bodegas/channels/:name/associated-bodegas-by-name`): las 3 dentro de las 12 del canal. Renombrar es seguro: TODO el sistema opera por `idBodega`/`osmosisStorageCode`, el nombre es solo display y el sync no lo re-escribe. **Abiertos:** (a) storage "51" de Cereza sin identificar (preguntar a OMS); (b) validación funcional del usuario en venta asistida (criterio de cierre/cobro de ambas tareas); (c) el array legacy `channels.bodegasAsociadas` está vacío y NO se usa — la fuente de verdad es `channelWarehouseAssociations`.
