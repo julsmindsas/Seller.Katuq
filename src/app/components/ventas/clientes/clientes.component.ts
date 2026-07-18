@@ -1256,30 +1256,39 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       documento: this.documentoBusqueda.nativeElement.value
     }
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      (res.datosFacturacionElectronica || []).forEach(x => {
-        this.datosFacturacionElectronica.push(x)
-      })
-      this.datosFacturacionElectronica.push(datosFacturacionElec)
-      this.formulario.controls['datosFacturacionElectronica'].setValue(this.datosFacturacionElectronica);
-      this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
-      this.formulario.controls['notas'].setValue(res.notas)
-      this.formulario.controls['estado'].setValue(res.estado)
-      this.service.editClient(this.formulario.value).subscribe(r => {
-        if (this.notaModalRef) { this.notaModalRef.close(); }
-        Swal.fire({
-          title: 'Guardado!',
-          text: 'Guardado con éxito',
-          icon: 'success',
-          confirmButtonText: 'Ok'
+    this.service.getClientByDocument(data).subscribe({
+      next: (res: any) => {
+        (res.datosFacturacionElectronica || []).forEach(x => {
+          this.datosFacturacionElectronica.push(x)
+        })
+        this.datosFacturacionElectronica.push(datosFacturacionElec)
+        this.formulario.controls['datosFacturacionElectronica'].setValue(this.datosFacturacionElectronica);
+        this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
+        this.formulario.controls['notas'].setValue(res.notas)
+        this.formulario.controls['estado'].setValue(res.estado)
+        this.service.editClient(this.formulario.value).subscribe({
+          next: (r: any) => {
+            if (this.notaModalRef) { this.notaModalRef.close(); }
+            Swal.fire({
+              title: 'Guardado!',
+              text: 'Guardado con éxito',
+              icon: 'success',
+              confirmButtonText: 'Ok'
+            });
+            this.facturacionElectronica = false
+            this.alias_facturacion = ""
+            this.razon_social = ""
+            this.tipo_documento_facturacion = ""
+            this.numero_documento_facturacion = ""
+          },
+          error: (error) => {
+            Swal.fire({ title: 'Error al guardar', text: error?.error?.error || error?.message || 'No se pudieron guardar los datos de facturación', icon: 'error', confirmButtonText: 'Ok' });
+          }
         });
-        this.facturacionElectronica = false
-        this.alias_facturacion = ""
-        this.razon_social = ""
-        this.tipo_documento_facturacion = ""
-        this.numero_documento_facturacion = ""
-      });
-
+      },
+      error: (error) => {
+        Swal.fire({ title: 'Error', text: 'No se pudo cargar el cliente para agregar los datos de facturación', icon: 'error', confirmButtonText: 'Ok' });
+      }
     })
   }
   guardarDatosEntrega() {
@@ -1313,18 +1322,28 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     };
     const data = { documento: this.documentoBusqueda.nativeElement.value };
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      (res.datosEntrega || []).forEach((x: any) => { this.datosEntregas.push(x); });
-      this.datosEntregas.push(datosEntreg);
-      this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
-      this.formulario.controls['datosEntrega'].setValue(this.datosEntregas);
-      this.formulario.controls['notas'].setValue(res.notas);
-      this.formulario.controls['estado'].setValue(res.estado);
-      this.service.editClient(this.formulario.value).subscribe(r => {
-        if (this.notaModalRef) { this.notaModalRef.close(); }
-        Swal.fire({ title: 'Guardado!', text: 'Guardado con éxito', icon: 'success', confirmButtonText: 'Ok' });
-        this.limpiarVariablesEntrega();
-      });
+    this.service.getClientByDocument(data).subscribe({
+      next: (res: any) => {
+        (res.datosEntrega || []).forEach((x: any) => { this.datosEntregas.push(x); });
+        this.datosEntregas.push(datosEntreg);
+        this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
+        this.formulario.controls['datosEntrega'].setValue(this.datosEntregas);
+        this.formulario.controls['notas'].setValue(res.notas);
+        this.formulario.controls['estado'].setValue(res.estado);
+        this.service.editClient(this.formulario.value).subscribe({
+          next: (r: any) => {
+            if (this.notaModalRef) { this.notaModalRef.close(); }
+            Swal.fire({ title: 'Guardado!', text: 'Guardado con éxito', icon: 'success', confirmButtonText: 'Ok' });
+            this.limpiarVariablesEntrega();
+          },
+          error: (error) => {
+            Swal.fire({ title: 'Error al guardar', text: error?.error?.error || error?.message || 'No se pudieron guardar los datos de entrega', icon: 'error', confirmButtonText: 'Ok' });
+          }
+        });
+      },
+      error: (error) => {
+        Swal.fire({ title: 'Error', text: 'No se pudo cargar el cliente para agregar los datos de entrega', icon: 'error', confirmButtonText: 'Ok' });
+      }
     });
   }
   desbloquear() {

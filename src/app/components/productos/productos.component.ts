@@ -801,8 +801,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
           <p><strong>Referencia actual:</strong> ${row.identificacion?.referencia || 'Sin referencia'}</p>
           <hr>
           <p style="color: #666; font-size: 14px;">
-            Se creará una copia exacta del producto con una nueva referencia.<br>
-            <strong>Nueva referencia:</strong> ${row.identificacion?.referencia || 'REF'}-COPY-${new Date().getTime().toString().slice(-4)}
+            Se creará una copia exacta del producto con una nueva referencia (formato <strong>${row.identificacion?.referencia || 'REF'}-COPIA-XXXXXX</strong>).<br>
+            El sufijo final se genera al confirmar y se mostrará en el siguiente paso.
           </p>
         </div>
       `,

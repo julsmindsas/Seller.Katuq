@@ -340,7 +340,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       this.formulario.controls["datosEntrega"].setValue(this.datosEntregas);
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
-      this.service.editClient(this.formulario.value).subscribe((r) => {
+      this.service.editClient(this.formulario.value).subscribe({
+        next: (r) => {
         // Recargar los datos de entrega del servidor
         this.service
           .getClientByDocument({ documento: this.documentoBusqueda })
@@ -410,6 +411,16 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.searchQueryCiudadDane = "";
         this.municipiosDane = [];
         this.filteredResults = [];
+        },
+        error: (err) => {
+          console.error("Error al guardar dirección de entrega:", err);
+          Swal.fire({
+            title: "Error",
+            text: "No se pudo guardar la dirección. Intente nuevamente.",
+            icon: "error",
+            confirmButtonText: "Ok",
+          });
+        },
       });
     });
   }

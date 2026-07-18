@@ -563,11 +563,14 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  // Geocodifica la dirección actual
-  geocodificarDireccion(): void {
+  // Geocodifica la dirección actual. Devuelve una promesa que SIEMPRE resuelve
+  // (nunca rechaza) — geocodeDireccion() ya tiene un fallback de último recurso
+  // que nunca falla, así que esto permite esperar el resultado desde
+  // generarDireccion() sin necesidad de manejar un caso de rechazo.
+  geocodificarDireccion(): Promise<void> {
     // Solo geocodificar si el formulario es válido y hay una ciudad
     if (!this.direccionForm.valid || !this.direccionForm.get("ciudad")?.value) {
-      return;
+      return Promise.resolve();
     }
 
     this.geocodificando = true;
@@ -576,44 +579,48 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     const direccion = this.vistaPrevia;
     const ciudad = this.direccionForm.get("ciudad")?.value;
 
-    this.geocodingService.geocodeDireccion(direccion, ciudad).subscribe({
-      next: (respuesta) => {
-        this.geocodificando = false;
-        this.geocodingQuality = respuesta.quality;
+    return new Promise<void>((resolve) => {
+      this.geocodingService.geocodeDireccion(direccion, ciudad).subscribe({
+        next: (respuesta) => {
+          this.geocodificando = false;
+          this.geocodingQuality = respuesta.quality;
 
-        // Guardar coordenadas
-        this.latitud = respuesta.latitud;
-        this.longitud = respuesta.longitud;
+          // Guardar coordenadas
+          this.latitud = respuesta.latitud;
+          this.longitud = respuesta.longitud;
 
-        // Construir URL de verificación en Google Maps
-        const ciudad = this.direccionForm.get('ciudad')?.value || '';
-        const query = encodeURIComponent(`${this.vistaPrevia}, ${ciudad}, Colombia`);
-        this.urlGoogleMaps = `https://www.google.com/maps/search/?api=1&query=${query}`;
+          // Construir URL de verificación en Google Maps
+          const ciudad = this.direccionForm.get('ciudad')?.value || '';
+          const query = encodeURIComponent(`${this.vistaPrevia}, ${ciudad}, Colombia`);
+          this.urlGoogleMaps = `https://www.google.com/maps/search/?api=1&query=${query}`;
 
-        // Actualizar el campo de coordenadas
-        this.direccionForm
-          .get("coordenadas")
-          ?.setValue(`${this.latitud}, ${this.longitud}`);
+          // Actualizar el campo de coordenadas
+          this.direccionForm
+            .get("coordenadas")
+            ?.setValue(`${this.latitud}, ${this.longitud}`);
 
-        // Actualizar el marcador en el mapa
-        this.actualizarMarcador();
+          // Actualizar el marcador en el mapa
+          this.actualizarMarcador();
 
-        if (respuesta.quality < 70) {
+          if (respuesta.quality < 70) {
+            this.errorGeocodificacion = true;
+            this.mensajeError =
+              "Las coordenadas pueden no ser exactas. Verifica y ajusta la ubicación en el mapa.";
+          }
+          resolve();
+        },
+        error: (error) => {
+          console.error("Error al geocodificar:", error);
+          this.geocodificando = false;
           this.errorGeocodificacion = true;
           this.mensajeError =
-            "Las coordenadas pueden no ser exactas. Verifica y ajusta la ubicación en el mapa.";
-        }
-      },
-      error: (error) => {
-        console.error("Error al geocodificar:", error);
-        this.geocodificando = false;
-        this.errorGeocodificacion = true;
-        this.mensajeError =
-          "No se pudo obtener la ubicación. Verifica la dirección o búscala en Google Maps.";
-        const ciudad = this.direccionForm.get('ciudad')?.value || '';
-        const query = encodeURIComponent(`${this.vistaPrevia}, ${ciudad}, Colombia`);
-        this.urlGoogleMaps = `https://www.google.com/maps/search/?api=1&query=${query}`;
-      },
+            "No se pudo obtener la ubicación. Verifica la dirección o búscala en Google Maps.";
+          const ciudad = this.direccionForm.get('ciudad')?.value || '';
+          const query = encodeURIComponent(`${this.vistaPrevia}, ${ciudad}, Colombia`);
+          this.urlGoogleMaps = `https://www.google.com/maps/search/?api=1&query=${query}`;
+          resolve();
+        },
+      });
     });
   }
 
@@ -712,8 +719,11 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Genera una dirección estructurada y cierra el modal
-  generarDireccion(): void {
+  // Genera una dirección estructurada y cierra el modal.
+  // Las coordenadas son obligatorias: si el usuario confirma sin haber buscado
+  // coordenadas manualmente (botón o clic en el mapa), se geocodifica acá mismo
+  // antes de cerrar — así el campo nunca queda vacío/undefined en el backend.
+  async generarDireccion(): Promise<void> {
     if (!this.validarDireccionColombiana()) {
       this.mensajeError =
         "Por favor revisa los datos ingresados. Algunos campos contienen información inválida.";
@@ -721,6 +731,16 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     }
 
     this.actualizarVistaPrevia();
+
+    if (!this.direccionForm.get("coordenadas")?.value) {
+      await this.geocodificarDireccion();
+    }
+
+    if (!this.direccionForm.get("coordenadas")?.value) {
+      this.mensajeError =
+        "No se pudieron obtener las coordenadas de la dirección. Intenta buscarlas de nuevo o marca un punto en el mapa antes de confirmar.";
+      return;
+    }
 
     // Preparar datos básicos para Colombia
     const datosCompletos = {
