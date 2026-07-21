@@ -1516,3 +1516,54 @@
   }
 }
 
+
+/* ============================================================
+   Popover "Existencias por bodega" (badge de stock del catálogo)
+   container="body" → estilos globales via ::ng-deep
+   ============================================================ */
+::ng-deep .stock-bodegas-popover {
+  .popover-header {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.45rem 0.75rem;
+  }
+  .popover-body {
+    padding: 0.4rem 0.5rem;
+    min-width: 220px;
+  }
+}
+
+::ng-deep .stock-bodegas-pop {
+  .sbp-loading,
+  .sbp-empty {
+    font-size: 0.78rem;
+    color: #6c757d;
+    padding: 0.25rem 0.35rem;
+  }
+  .sbp-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0.28rem 0.35rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+
+    &:nth-child(odd) { background: rgba(0, 0, 0, 0.03); }
+    &.sbp-actual {
+      background: rgba(115, 102, 255, 0.12);
+      font-weight: 700;
+      small { color: #7366ff; font-weight: 600; }
+    }
+  }
+  .sbp-nombre {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sbp-cantidad {
+    font-weight: 700;
+    flex: none;
+  }
+}

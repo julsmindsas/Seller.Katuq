@@ -7,8 +7,46 @@
 			<div class="card">
 				<!-- <form cForm [formGroup]="formGeneral"> -->
 
-				<div class="card-body" [ngClass]="{'dropshipping-config-mode': isDropshippingConfigMode}">
-					<p-tabView [scrollable]="true" [(activeIndex)]="activeTabIndex" (onChange)="onTabChange($event)">
+				<div class="card-body mp-body" [ngClass]="{'dropshipping-config-mode': isDropshippingConfigMode}">
+					<!-- Encabezado maestro de productos -->
+					<div class="mp-header">
+						<div class="mp-header__left">
+							<div class="mp-header__tile"><i class="pi pi-box"></i></div>
+							<div class="mp-header__title-wrap">
+								<span class="mp-header__crumb">Productos <i class="pi pi-angle-right"></i> <em>{{ mostrarCrear ? 'Nuevo producto' : 'Editar producto' }}</em></span>
+								<h2 class="mp-header__title">{{ mostrarCrear ? 'Crear producto' : 'Editar producto' }}</h2>
+							</div>
+						</div>
+						<div class="mp-header__actions">
+							<button class="btn mp-btn mp-btn--ghost" (click)="viewProduct()">
+								<i class="pi pi-eye"></i> Vista Previa
+							</button>
+							<button *ngIf="mostrarCrear" class="btn mp-btn mp-btn--primary" (click)="guardarProductos()"
+								[disabled]="saving || uploadingImages || procesandoImagenes">
+								<i class="pi" [ngClass]="(saving || uploadingImages || procesandoImagenes) ? 'pi-spin pi-spinner' : 'pi-check'"></i>
+								Guardar
+							</button>
+							<button *ngIf="!mostrarCrear" class="btn mp-btn mp-btn--primary" (click)="editarProducto()"
+								[disabled]="saving || uploadingImages || procesandoImagenes">
+								<i class="pi" [ngClass]="(saving || uploadingImages || procesandoImagenes) ? 'pi-spin pi-spinner' : 'pi-check'"></i>
+								Editar producto
+							</button>
+						</div>
+					</div>
+
+					<!-- Barra de progreso: cuenta obligatorios válidos por formGroup (sin lógica en el .ts) -->
+					<div class="mp-progress"
+						*ngIf="{ done: (crearProducto.valid ? 1 : 0) + (precio.valid ? 1 : 0) + (Dimensiones.valid ? 1 : 0) + (disponibilidad.valid ? 1 : 0) + (identificacion.valid ? 1 : 0) + (categoriasForm.valid ? 1 : 0) } as prog">
+						<div class="mp-progress__track">
+							<div class="mp-progress__fill" [style.width.%]="prog.done * 100 / 6"></div>
+						</div>
+						<span class="mp-progress__pct">{{ prog.done * 100 / 6 | number:'1.0-0' }}% completo</span>
+						<span class="mp-progress__pill" [class.is-ok]="prog.done === 6">
+							{{ prog.done === 6 ? 'Todo listo para publicar' : (6 - prog.done) + ' obligatorios pendientes' }}
+						</span>
+					</div>
+
+					<p-tabView [(activeIndex)]="activeTabIndex" (onChange)="onTabChange($event)">
 						<p-tabPanel header="K.A.I">
 							<form [formGroup]="kaiForm">
 								<div class="container mt-4">
@@ -1905,19 +1943,8 @@
 
 					</p-tabView>
 
-					<div class="row">
-						<div class="col-sm-6">
-							<button *ngIf="mostrarCrear" class="btn btn-lg btn-primary" (click)="guardarProductos()"
-								[disabled]="saving || uploadingImages || procesandoImagenes">Guardar</button>
-							<button class="btn btn-lg btn-primary" (click)="viewProduct()">Vista
-								Previa</button>
+					<!-- Acciones (Guardar / Vista Previa / Editar) movidas al encabezado mp-header -->
 
-							<button *ngIf="!mostrarCrear" class="btn btn-lg btn-primary"
-								(click)="editarProducto()" [disabled]="saving || uploadingImages || procesandoImagenes">Editar producto</button>
-
-						</div>
-
-					</div>
 
 				</div>
 				<!-- </form> -->

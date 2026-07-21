@@ -335,6 +335,19 @@ export class InventarioService {
     return this.http.get<Bodega[]>(`${this.apiUrl}/bodegas/all`);
   }
 
+  /** Stock de un producto en TODAS las bodegas del comercio (popover de venta asistida). */
+  getStockProductoEnBodegas(productoId: string): Observable<{
+    productoId: string;
+    stockTotal: number;
+    bodegas: { idBodega: string; nombre: string; cantidad: number }[];
+  }> {
+    return this.http.get<{
+      productoId: string;
+      stockTotal: number;
+      bodegas: { idBodega: string; nombre: string; cantidad: number }[];
+    }>(`${this.apiUrl}/inventory/producto-bodegas/${encodeURIComponent(productoId)}`);
+  }
+
   getProductosBodega(bodegaId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/bodegas/${bodegaId}/productos`);
   }
