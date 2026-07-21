@@ -254,6 +254,7 @@ export class WhatsappInboxService extends BaseService {
   sendReply(
     phoneHash: string,
     text: string,
+    clientMessageId?: string,
   ): Promise<{ id?: string; sentAt?: string; status?: string }> {
     const userStr = localStorage.getItem("user") || "{}";
     let token = "";
@@ -283,10 +284,15 @@ export class WhatsappInboxService extends BaseService {
     const url =
       `${environment.urlApi}/v1/whatsapp/conversations/` +
       `${encodeURIComponent(phoneHash)}/reply`;
+    // [D-118] Id idempotente: lo genera el componente (estable por mensaje
+    // lógico, se reusa en reintentos del mismo texto). Fallback por-llamada
+    // para otros callers.
+    const msgId = clientMessageId ||
+      `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
     return fetch(url, {
       method: "POST",
       headers,
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, clientMessageId: msgId }),
     }).then((r) => {
       if (!r.ok) {
         return r

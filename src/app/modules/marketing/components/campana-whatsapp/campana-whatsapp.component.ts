@@ -25,26 +25,19 @@ interface VariableConfig {
   value: string;
 }
 
-interface ResultadoEnvio {
-  nombre: string;
-  phone: string;
-  ok: boolean;
-  error?: string;
-}
-
 /** Tope por campaña = límite por request del API de Broadcasts de Kapso. */
 const MAX_DESTINATARIOS = 1000;
 
 /**
- * Campaña de WhatsApp (spec 022 fase 2 — D-091).
+ * Campaña de WhatsApp (spec 022 fase 2 — D-091; envío server-side D-097).
  *
- * Wizard: 1) audiencia desde CRM → 2) plantilla HSM aprobada + variables
- * (fijas o personalizadas con el nombre) → 3) confirmación con costo estimado
- * vs saldo prepago → envío secuencial reutilizando `start-conversation`
- * (Kapso + débito $priceCOP/msg server-side, mismo camino que el inbox).
- *
- * MVP consciente: sin persistencia de campaña (no colecciones nuevas) — los
- * resultados viven en la pantalla; cerrar la pestaña detiene el envío.
+ * Wizard: 1) audiencia (clientes o leads CRM) → 2) plantilla HSM aprobada +
+ * variables (fijas o personalizadas con el nombre) → 3) confirmación con
+ * costo estimado vs saldo prepago → UNA llamada a POST /campaigns/broadcast
+ * (Kapso Broadcasts: crea + destinatarios + envía o programa + debita,
+ * todo server-side). El envío sobrevive al navegador; el front solo pollea
+ * el progreso. Sin colección de campañas: el historial se agrega desde
+ * whatsapp_usage por campaignId (D-096).
  */
 @Component({
   selector: 'app-campana-whatsapp',
@@ -85,7 +78,6 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
   enviando = false;
   envioTerminado = false;
   progreso = 0;
-  resultados: ResultadoEnvio[] = [];
   /** Estado del broadcast lanzado (server-side, Kapso). */
   broadcastStatus = '';
   broadcastMensaje = '';
@@ -338,7 +330,6 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
     const lote = this.seleccionados.slice(0, MAX_DESTINATARIOS);
     this.enviando = true;
     this.envioTerminado = false;
-    this.resultados = [];
     this.progreso = 0;
     this.broadcastStatus = '';
     this.broadcastMensaje = '';
@@ -425,14 +416,6 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
     if (this.pollTimer) clearTimeout(this.pollTimer);
   }
 
-  get enviadosOk(): number {
-    return this.resultados.filter((r) => r.ok).length;
-  }
-
-  get enviadosError(): number {
-    return this.resultados.filter((r) => !r.ok).length;
-  }
-
   volverAlPaso(p: 1 | 2): void {
     if (this.enviando) return;
     this.paso = p;
@@ -503,9 +486,5 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
     if (digits.length < 10) return '';
     // Celular colombiano de 10 dígitos sin indicativo → prepone 57 (mismo criterio del inbox).
     return digits.length === 10 && digits.startsWith('3') ? `57${digits}` : digits;
-  }
-
-  private pausa(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

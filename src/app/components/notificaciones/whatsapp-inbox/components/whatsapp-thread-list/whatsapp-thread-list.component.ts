@@ -56,7 +56,11 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
     // Polling cada 10s: refresca la lista para que aparezcan badges/preview
     // de hilos con mensajes nuevos sin necesidad de tener ese hilo abierto.
     // Solo se hace si no estás escribiendo en el buscador (para no molestar).
+    // [D-117] Con la pestaña oculta NO se pollea (cada tick re-lee el universo
+    // usage+inbound del comercio en Firestore); al volver, el siguiente tick
+    // refresca.
     this.refreshSub = interval(10000).subscribe(() => {
+      if (document.hidden) return;
       if ((this.searchQuery || "").trim().length === 0) {
         this.fetchThreadsSilent();
       }

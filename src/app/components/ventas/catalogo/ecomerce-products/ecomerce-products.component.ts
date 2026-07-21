@@ -30,6 +30,7 @@ import { ConfProductToCartComponent } from "../conf-product-to-cart/conf-product
 import { After } from "v8";
 import { PedidosUtilService } from "../../service/pedidos.util.service";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { InventarioService } from "../../../../shared/services/inventarios/inventario.service";
 import { CartSingletonService } from "../../../../shared/services/ventas/cart.singleton.service";
 import { ToastrService } from "ngx-toastr";
 
@@ -136,8 +137,52 @@ export class EcomerceProductsComponent
     private pedidoUtilService: PedidosUtilService,
     private cartService: CartSingletonService,
     private toastrService: ToastrService,
+    private inventarioService: InventarioService,
   ) {
     this.initForm();
+  }
+
+  // ====== Existencias por bodega (popover del badge de stock) ======
+  /** Estado del popover abierto (solo hay uno a la vez por hover). */
+  stockBodegasActual: {
+    productoId: string;
+    cargando: boolean;
+    error: boolean;
+    bodegas: { idBodega: string; nombre: string; cantidad: number }[];
+  } | null = null;
+  private stockBodegasCache = new Map<string, { idBodega: string; nombre: string; cantidad: number }[]>();
+
+  /** Carga (con caché) las existencias del producto en todas las bodegas. */
+  cargarStockPorBodegas(producto: any): void {
+    const id = producto?.cd;
+    if (!id || producto?.disponibilidad?.inventariable === false) return;
+
+    const cacheado = this.stockBodegasCache.get(id);
+    if (cacheado) {
+      this.stockBodegasActual = { productoId: id, cargando: false, error: false, bodegas: cacheado };
+      return;
+    }
+
+    this.stockBodegasActual = { productoId: id, cargando: true, error: false, bodegas: [] };
+    this.inventarioService.getStockProductoEnBodegas(id).subscribe({
+      next: (resp) => {
+        const bodegas = (resp?.bodegas || []).filter((b) => b.cantidad > 0);
+        this.stockBodegasCache.set(id, bodegas);
+        if (this.stockBodegasActual?.productoId === id) {
+          this.stockBodegasActual = { productoId: id, cargando: false, error: false, bodegas };
+        }
+      },
+      error: () => {
+        if (this.stockBodegasActual?.productoId === id) {
+          this.stockBodegasActual = { productoId: id, cargando: false, error: true, bodegas: [] };
+        }
+      },
+    });
+  }
+
+  /** true si la fila del popover corresponde a la bodega actualmente seleccionada. */
+  esBodegaActual(idBodega: string): boolean {
+    return !!this.bodega?.idBodega && this.bodega.idBodega === idBodega;
   }
 
   ngAfterViewInit(): void {

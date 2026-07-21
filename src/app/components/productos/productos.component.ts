@@ -59,7 +59,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   filtros = {
     texto: '',
     searchBy: 'referencia',
-    estado: 'activo',
+    estado: '',
     disponibilidad: '',
     tipoProducto: '',
     precioDesde: null as number | null,
@@ -97,7 +97,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   hasActiveFilters(): boolean {
     return !!(
       this.filtros.texto ||
-      (this.filtros.estado && this.filtros.estado !== 'activo') ||
+      this.filtros.estado ||
       this.filtros.disponibilidad ||
       this.filtros.tipoProducto ||
       this.filtros.precioDesde != null ||
@@ -687,12 +687,12 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.cargarDatosFiltrados();
   }
 
-  // Limpiar filtros — restaura al estado default (estado=activo)
+  // Limpiar filtros — restaura al estado default (sin filtro de estado, muestra activos e inactivos)
   limpiarFiltros() {
     this.filtros = {
       texto: '',
       searchBy: 'referencia',
-      estado: 'activo',
+      estado: '',
       disponibilidad: '',
       tipoProducto: '',
       precioDesde: null,
@@ -801,8 +801,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
           <p><strong>Referencia actual:</strong> ${row.identificacion?.referencia || 'Sin referencia'}</p>
           <hr>
           <p style="color: #666; font-size: 14px;">
-            Se creará una copia exacta del producto con una nueva referencia.<br>
-            <strong>Nueva referencia:</strong> ${row.identificacion?.referencia || 'REF'}-COPY-${new Date().getTime().toString().slice(-4)}
+            Se creará una copia exacta del producto con una nueva referencia (formato <strong>${row.identificacion?.referencia || 'REF'}-COPIA-XXXXXX</strong>).<br>
+            El sufijo final se genera al confirmar y se mostrará en el siguiente paso.
           </p>
         </div>
       `,
@@ -823,35 +823,11 @@ export class ProductosComponent implements OnInit, OnDestroy {
     });
   }
 
-  private async copiarImagenesEnStorage(imagenes: any[]): Promise<any[]> {
-    if (!imagenes?.length) return [];
-    const resultado = [];
-    for (const img of imagenes) {
-      if (!img?.urls) { resultado.push(img); continue; }
-      try {
-        const blob = await fetch(img.urls).then(r => r.blob());
-        const timestamp = new Date().getTime();
-        const nombreOriginal = img.nombreImagen || img.path?.split('/').pop() || `imagen_${timestamp}`;
-        const partes = nombreOriginal.split('.');
-        const ext = partes.length > 1 ? partes.pop() : 'jpg';
-        const nuevaNombre = `${partes.join('.')}_copia_${timestamp}.${ext}`;
-        const nuevaRuta = `Productos/${nuevaNombre}`;
-        await this.storage.upload(nuevaRuta, blob);
-        const nuevaUrl = await this.storage.ref(nuevaRuta).getDownloadURL().toPromise();
-        resultado.push({ ...img, urls: nuevaUrl, path: nuevaRuta, nombreImagen: nuevaNombre });
-      } catch {
-        // Si falla la copia, se conserva la referencia original
-        resultado.push({ ...img, path: undefined });
-      }
-    }
-    return resultado;
-  }
-
   private async ejecutarDuplicacion(row) {
     // Mostrar loading
     Swal.fire({
       title: 'Duplicando producto...',
-      text: 'Copiando imágenes y creando el producto. Por favor espera.',
+      text: 'Creando el producto. Por favor espera.',
       allowOutsideClick: false,
       showConfirmButton: false,
       didOpen: () => { Swal.showLoading(); }
@@ -897,12 +873,11 @@ export class ProductosComponent implements OnInit, OnDestroy {
       productoDuplicado.identificacion.codigoBarras = `${productoDuplicado.identificacion.codigoBarras}-${timestamp}`;
     }
 
-    // Copiar archivos de imagen en Storage para que el duplicado sea independiente del original
+    // Las imágenes referencian una URL de Storage única por producto: el duplicado
+    // no puede heredarlas, debe quedar sin imágenes hasta que el usuario suba las suyas.
     if (productoDuplicado.crearProducto) {
-      productoDuplicado.crearProducto.imagenesPrincipales =
-        await this.copiarImagenesEnStorage(productoDuplicado.crearProducto.imagenesPrincipales || []);
-      productoDuplicado.crearProducto.imagenesSecundarias =
-        await this.copiarImagenesEnStorage(productoDuplicado.crearProducto.imagenesSecundarias || []);
+      productoDuplicado.crearProducto.imagenesPrincipales = [];
+      productoDuplicado.crearProducto.imagenesSecundarias = [];
     }
 
     this.service.createProduct(productoDuplicado).subscribe({
@@ -924,6 +899,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
               <p><strong>Nuevo título:</strong> ${productoDuplicado.crearProducto?.titulo}</p>
               <p><strong>Nueva referencia:</strong> <span style="color:#28a745; font-weight:bold;">${productoDuplicado.identificacion?.referencia}</span></p>
               <p class="text-warning"><i class="fa fa-info-circle"></i> El producto quedó <strong>inactivo</strong>. Actívalo después de revisarlo.</p>
+              <p class="text-warning"><i class="fa fa-info-circle"></i> El duplicado no incluye imágenes. Súbelas de nuevo antes de activarlo.</p>
             </div>
           `,
           icon: 'success',

@@ -335,14 +335,22 @@
                                             INACTIVO
                                         </span>
 
-                                        <!-- Badge de disponibilidad discreto -->
+                                        <!-- Badge de disponibilidad discreto.
+                                             Hover: popover con existencias en TODAS las bodegas (OMS wdu9v76ekp). -->
                                         <span class="stock-badge-simple"
                                               [ngClass]="{
                                                 'badge-success': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 10,
                                                 'badge-warning': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 0 && producto.disponibilidad?.cantidadDisponible <= 10,
                                                 'badge-danger': producto.disponibilidad?.inventariable && (!producto.disponibilidad?.cantidadDisponible || producto.disponibilidad?.cantidadDisponible <= 0),
                                                 'badge-info': !producto.disponibilidad?.inventariable
-                                              }">
+                                              }"
+                                              [ngbPopover]="stockBodegasTpl"
+                                              popoverTitle="{{ 'Existencias por bodega' | translate }}"
+                                              popoverClass="stock-bodegas-popover"
+                                              triggers="mouseenter:mouseleave"
+                                              container="body"
+                                              [disablePopover]="producto.disponibilidad?.inventariable === false"
+                                              (mouseenter)="cargarStockPorBodegas(producto)">
                                             {{ producto.disponibilidad?.inventariable ?
                                                (producto.disponibilidad?.cantidadDisponible || 0) + ' unid.' :
                                                'Bajo pedido' }}
@@ -471,6 +479,30 @@
         <div class="modal-body">
             <app-conf-product-to-cart #confProduct [producto]="productoSeleccionado"
                 [isRebuy]="isRebuy"></app-conf-product-to-cart>
+        </div>
+    </ng-template>
+
+    <!-- Contenido del popover "Existencias por bodega" (compartido; solo hay un hover a la vez) -->
+    <ng-template #stockBodegasTpl>
+        <div class="stock-bodegas-pop">
+            <div *ngIf="stockBodegasActual?.cargando" class="sbp-loading">
+                <i class="fa fa-circle-o-notch fa-spin me-1"></i> {{ 'Consultando…' | translate }}
+            </div>
+            <div *ngIf="stockBodegasActual && !stockBodegasActual.cargando && stockBodegasActual.error" class="sbp-empty">
+                {{ 'No se pudo consultar el inventario' | translate }}
+            </div>
+            <ng-container *ngIf="stockBodegasActual && !stockBodegasActual.cargando && !stockBodegasActual.error">
+                <div *ngFor="let b of stockBodegasActual.bodegas" class="sbp-row" [class.sbp-actual]="esBodegaActual(b.idBodega)">
+                    <span class="sbp-nombre">
+                        {{ b.nombre }}
+                        <small *ngIf="esBodegaActual(b.idBodega)">({{ 'actual' | translate }})</small>
+                    </span>
+                    <span class="sbp-cantidad">{{ b.cantidad }}</span>
+                </div>
+                <div *ngIf="!stockBodegasActual.bodegas.length" class="sbp-empty">
+                    {{ 'Sin existencias en ninguna bodega' | translate }}
+                </div>
+            </ng-container>
         </div>
     </ng-template>
 </div>

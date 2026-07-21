@@ -172,3 +172,372 @@ td {
   pointer-events: none;
   user-select: none;
 }
+
+// =====================================================================
+// Rediseño "Maestro de Productos" (mockup Claude Design)
+// Solo estilos: convierte el p-tabView a layout de nav lateral + panel.
+// =====================================================================
+:host {
+  --mp-accent: #6a4dfb;
+  --mp-grad: linear-gradient(135deg, #7b5bff, #6338f0);
+  --mp-text: #211d33;
+  --mp-text-2: #8b879f;
+  --mp-text-3: #a7a3bd;
+  --mp-input-bg: #fbfaff;
+  --mp-nav-bg: #fcfbff;
+  --mp-border: #e6e3f0;
+  --mp-sep: #f0eef7;
+  --mp-ok: #16a34a;
+  --mp-ok-bg: #e7f8ee;
+  --mp-warn: #e08a1e;
+  --mp-warn-bg: #fdf1dc;
+  --mp-req: #f0416c;
+}
+
+@keyframes mp-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+// --- Card contenedora (solo la externa, no las anidadas) ---
+:host > .container-fluid > .row > .col-sm-12 > .card {
+  border: none;
+  border-radius: 22px;
+  box-shadow: 0 6px 30px rgba(30, 20, 60, .06);
+  max-width: 1360px;
+  margin: 0 auto;
+  overflow: visible; // no recortar popups de ng-select / p-treeSelect
+}
+
+.mp-body {
+  padding: 0;
+}
+
+// --- Encabezado ---
+.mp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 24px 30px 18px;
+  border-bottom: 1px solid var(--mp-sep);
+}
+
+.mp-header__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mp-header__tile {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  background: var(--mp-grad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 23px;
+  box-shadow: 0 8px 18px rgba(107, 78, 251, .32);
+}
+
+.mp-header__crumb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--mp-text-2);
+
+  .pi { font-size: 11px; }
+  em { font-style: normal; font-weight: 600; color: var(--mp-accent); }
+}
+
+.mp-header__title {
+  margin: 3px 0 0;
+  font-size: 23px;
+  font-weight: 800;
+  color: var(--mp-text);
+}
+
+.mp-header__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .18s ease;
+
+  .pi { font-size: 14px; }
+
+  &--primary {
+    background: var(--mp-grad);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(107, 78, 251, .32);
+
+    &:hover:not(:disabled) { filter: brightness(1.05); }
+    &:disabled { opacity: .6; cursor: default; box-shadow: none; }
+  }
+
+  &--ghost {
+    background: #fff;
+    color: var(--mp-text);
+    border-color: #e4e1f0;
+
+    &:hover:not(:disabled) { border-color: var(--mp-accent); color: var(--mp-accent); }
+  }
+}
+
+// --- Barra de progreso ---
+.mp-progress {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 30px;
+  border-bottom: 1px solid var(--mp-sep);
+}
+
+.mp-progress__track {
+  flex: 1 1 200px;
+  min-width: 150px;
+  height: 9px;
+  border-radius: 99px;
+  background: #efedf6;
+  overflow: hidden;
+}
+
+.mp-progress__fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #7b5bff, #22c07a);
+  transition: width .45s ease;
+}
+
+.mp-progress__pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mp-text-2);
+}
+
+.mp-progress__pill {
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--mp-warn-bg);
+  color: var(--mp-warn);
+
+  &.is-ok { background: var(--mp-ok-bg); color: var(--mp-ok); }
+}
+
+// --- Inputs / labels dentro del maestro ---
+.mp-body {
+  .form-control,
+  .form-select,
+  select.form-control,
+  textarea.form-control {
+    border: 1.5px solid var(--mp-border);
+    border-radius: 12px;
+    background: var(--mp-input-bg);
+    padding: 12px 14px;
+    font-size: 14.5px;
+    color: var(--mp-text);
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+
+    &:focus {
+      border-color: var(--mp-accent);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(107, 78, 251, .1);
+      outline: none;
+    }
+  }
+
+  .form-label {
+    font-weight: 700;
+    color: var(--mp-text);
+    font-size: 13.5px;
+    margin-bottom: 6px;
+  }
+
+  h4, h5, h6 {
+    color: var(--mp-text);
+    font-weight: 800;
+  }
+  h4 { font-size: 19px; }
+  h5 { font-size: 16px; }
+  h6 { font-size: 13.5px; }
+
+  .redasteris { color: var(--mp-req); }
+}
+
+// --- p-tabView -> nav lateral + panel ---
+:host ::ng-deep .p-tabview {
+  display: flex;
+  align-items: stretch;
+  border: none;
+}
+
+// Columna de navegación
+:host ::ng-deep .p-tabview .p-tabview-nav-container {
+  flex: 0 0 274px;
+  width: 274px;
+  background: var(--mp-nav-bg);
+  border-right: 1px solid var(--mp-sep);
+}
+
+:host ::ng-deep .p-tabview .p-tabview-nav-content {
+  width: 100%;
+  overflow: visible;
+}
+
+:host ::ng-deep .p-tabview .p-tabview-nav {
+  position: relative;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 14px;
+  background: transparent;
+  border: none;
+  counter-reset: mp-step;
+}
+
+// Etiqueta de sección
+:host ::ng-deep .p-tabview .p-tabview-nav::before {
+  content: "SECCIONES DEL PRODUCTO";
+  display: block;
+  padding: 6px 10px 12px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  color: var(--mp-text-3);
+}
+
+:host ::ng-deep .p-tabview .p-tabview-nav li {
+  margin: 0;
+}
+
+:host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--mp-text-2);
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: all .18s ease;
+}
+
+// Badge numerado por sección (contador CSS, robusto ante tabs condicionales)
+:host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link::before {
+  counter-increment: mp-step;
+  content: counter(mp-step);
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--mp-sep);
+  color: var(--mp-text-2);
+  font-size: 12.5px;
+  font-weight: 800;
+  transition: all .18s ease;
+}
+
+:host ::ng-deep .p-tabview .p-tabview-nav li:not(.p-highlight) .p-tabview-nav-link:hover {
+  background: #fff;
+  color: var(--mp-text);
+}
+
+:host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link:focus-visible {
+  outline: 2px solid rgba(107, 78, 251, .45);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+// Sección activa
+:host ::ng-deep .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  background: #fff;
+  color: var(--mp-text);
+  border-color: #eee7ff;
+  box-shadow: 0 3px 12px rgba(107, 78, 251, .12);
+}
+
+:host ::ng-deep .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link::before {
+  background: var(--mp-grad);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(107, 78, 251, .35);
+}
+
+// Barra de tinta horizontal (no aplica en vertical)
+:host ::ng-deep .p-tabview .p-tabview-ink-bar {
+  display: none;
+}
+
+// Panel de campos
+:host ::ng-deep .p-tabview .p-tabview-panels {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 26px 30px 30px;
+  background: #fff;
+  border: none;
+}
+
+:host ::ng-deep .p-tabview .p-tabview-panel {
+  animation: mp-rise .35s ease;
+}
+
+// --- Responsive: <992px nav horizontal + campos a 1 columna ---
+@media (max-width: 991.98px) {
+  :host ::ng-deep .p-tabview {
+    flex-direction: column;
+  }
+  :host ::ng-deep .p-tabview .p-tabview-nav-container {
+    flex: 0 0 auto;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--mp-sep);
+  }
+  :host ::ng-deep .p-tabview .p-tabview-nav {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 12px;
+  }
+  :host ::ng-deep .p-tabview .p-tabview-nav::before {
+    display: none;
+  }
+  :host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link {
+    white-space: nowrap;
+  }
+  :host ::ng-deep .p-tabview .p-tabview-panels {
+    padding: 20px 16px;
+  }
+  .mp-header,
+  .mp-progress {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  // Campos a una sola columna
+  .mp-body [class*="col-md-"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}

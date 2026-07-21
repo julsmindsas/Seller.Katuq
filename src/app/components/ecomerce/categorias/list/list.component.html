@@ -76,11 +76,12 @@
                         <p-treeTable [value]="data" [style]="{'width':'100%'}">
                             <ng-template pTemplate="header">
                                 <tr>
-                                    <th class="text-center" style="width: 30%">{{'Nombre' | translate}}</th>
-                                    <th class="text-center" style="width: 20%">{{'Imagen' | translate}}</th>
+                                    <th class="text-center" style="width: 25%">{{'Nombre' | translate}}</th>
+                                    <th class="text-center" style="width: 15%">{{'Imagen' | translate}}</th>
                                     <th class="text-center" style="width: 10%">{{'Posición' | translate}}</th>
-                                    <th class="text-center" style="width: 15%">{{'Activo' | translate}}</th>
-                                    <th class="text-center" style="width: 20%">{{'Acciones' | translate}}</th>
+                                    <th class="text-center" style="width: 12%">{{'Id Categoria' | translate}}</th>
+                                    <th class="text-center" style="width: 13%">{{'Activo' | translate}}</th>
+                                    <th class="text-center" style="width: 25%">{{'Acciones' | translate}}</th>
                                 </tr>
                             </ng-template>
                             <ng-template pTemplate="body" let-rowNode let-node="node">
@@ -124,6 +125,19 @@
                                             <ng-template pTemplate="output">
                                                 <span
                                                     ngbTooltip="Doble clic para cambiar la posición">{{node.data.posicion}}</span>
+                                            </ng-template>
+                                        </p-treeTableCellEditor>
+                                    </td>
+                                    <td class="text-center" ttEditableColumn [ngClass]="{'p-toggler-column': true}">
+                                        <p-treeTableCellEditor>
+                                            <ng-template pTemplate="input">
+                                                <input class="text-center" pInputText type="number" [(ngModel)]="node.data.consecutivo"
+                                                    [ngStyle]="{'width': '100%', 'font-size': '1.1rem', 'padding': '8px'}"
+                                                    style="border-color: black;" placeholder="Id Categoria SIIGO">
+                                            </ng-template>
+                                            <ng-template pTemplate="output">
+                                                <span
+                                                    ngbTooltip="Doble clic para asignar el Id Categoria (enlace a SIIGO)">{{node.data.consecutivo ?? '-'}}</span>
                                             </ng-template>
                                         </p-treeTableCellEditor>
                                     </td>

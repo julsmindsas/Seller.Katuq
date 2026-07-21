@@ -6,6 +6,7 @@ import { environment } from '../../../../environments/environment';
 import * as XLSX from 'xlsx';
 import { ColumnMappingService } from '../../services/import/column-mapping.service';
 import {
+  ColumnMapping,
   ColumnMappingResult,
   ColumnMappingRequest,
   ImportResult,
@@ -163,6 +164,178 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
   acceptedFormats = '.xlsx,.xls,.json';
 
+  // Plantilla UNIFICADA estándar de clientes (todas las empresas usan la misma).
+  // Mapea cada encabezado (normalizado) al campo destino, usando los nombres EXACTOS
+  // que leen los formularios de Facturación y Entrega (ej: facturación usa `correo`,
+  // entrega usa `codigoPV`) para que los datos carguen bien en sus respectivos forms.
+  // '__regimenIva' y '__etiquetas' se guardan como ETIQUETAS (no como campos nuevos).
+  private readonly STANDARD_CUSTOMER_HEADERS: { [normHeader: string]: string } = {
+    // Datos básicos del cliente (fuente única de documento / tipo doc / correo / nombre / celular)
+    'nombre/razon social': 'nombres_completos',
+    'tipo': 'tipo_documento_comprador',
+    'cedula/nit': 'documento',
+    'digito verificacion': '__digitoVerificacion',
+    'correo electronico': 'correo_electronico_comprador',
+    'correo electronico de contacto comercial': 'correo_electronico_comprador',
+    'celular/whatsapp': 'numero_celular_comprador',
+    // Datos de facturación. Lo único propio es la dirección; nombre/tipoDoc/documento/correo
+    // se auto-rellenan desde los básicos (estas claves quedan solo como override opcional).
+    'direccion facturacion': 'datosFacturacionElectronica.direccion',
+    'alias facturacion': 'datosFacturacionElectronica.alias',
+    'razon social facturacion': 'datosFacturacionElectronica.nombres',
+    'tipo documento facturacion': 'datosFacturacionElectronica.tipoDocumento',
+    'documento facturacion': 'datosFacturacionElectronica.documento',
+    'correo electronico facturacion': 'datosFacturacionElectronica.correo',
+    // Datos de entrega (nombres de campo del formulario)
+    'alias entrega': 'datosEntrega.alias',
+    'nombres entrega': 'datosEntrega.nombres',
+    'apellidos entrega': 'datosEntrega.apellidos',
+    'celular entrega': 'datosEntrega.celular',
+    'direccion de entrega': 'datosEntrega.direccionEntrega',
+    'barrio': 'datosEntrega.barrio',
+    'unidad/conjunto': 'datosEntrega.nombreUnidad',
+    'especificaciones internas': 'datosEntrega.especificacionesInternas',
+    'observaciones': 'datosEntrega.observaciones',
+    'pais': 'datosEntrega.pais',
+    'departamento': 'datosEntrega.departamento',
+    'ciudad': 'datosEntrega.ciudad',
+    'codigo postal': 'datosEntrega.codigoPV',
+    // Etiquetas
+    'tipo de regimen iva': '__regimenIva',
+    'etiquetas': '__etiquetas',
+  };
+
+  // Se activa cuando el archivo subido coincide con la plantilla estándar de clientes.
+  private standardCustomerTemplate = false;
+  // normHeader → nombre real de la columna en el archivo subido.
+  private standardColResolver: { [normHeader: string]: string } = {};
+
+  /** Normaliza un encabezado para matching: minúsculas, sin acentos, espacios colapsados.
+   *  También corrige mojibake (UTF-8 leído como Latin-1 cuando Excel abre un CSV sin BOM). */
+  private normHeader(h: string): string {
+    return String(h == null ? '' : h)
+      .toLowerCase()
+      // Mojibake común: é→ã©, ó→ã³, á→ã¡, í→ã­, ñ→ã±, ú→ãº
+      .replace(/ã©/g, 'e').replace(/ã³/g, 'o').replace(/ã¡/g, 'a')
+      .replace(/ã­/g, 'i').replace(/ã±/g, 'n').replace(/ãº/g, 'u')
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9 /]+/g, '') // limpia cualquier resto no-ASCII (©, ³, etc.)
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * Si las columnas del archivo coinciden con la plantilla estándar de clientes,
+   * construye el mapeo determinísticamente (sin IA). Devuelve null si no aplica.
+   */
+  private buildStandardCustomerMapping(): ColumnMappingResult | null {
+    if (this.type !== 'customer') return null;
+    const resolver: { [k: string]: string } = {};
+    const mappings: { [k: string]: ColumnMapping } = {};
+    let matched = 0;
+    for (const col of this.sourceColumns) {
+      const nh = this.normHeader(col);
+      const field = this.STANDARD_CUSTOMER_HEADERS[nh];
+      if (field && !resolver[nh]) {
+        resolver[nh] = col;
+        if (!mappings[field]) {
+          mappings[field] = { sourceColumn: col, confidence: 100, reasoning: 'Plantilla estándar Katuq' };
+        }
+        matched++;
+      }
+    }
+    const hasKey = !!resolver['nombre/razon social'] && !!resolver['cedula/nit'];
+    if (!hasKey || matched < 4) { this.standardCustomerTemplate = false; return null; }
+    this.standardColResolver = resolver;
+    this.standardCustomerTemplate = true;
+    return {
+      success: true,
+      type: 'customer',
+      mappings,
+      unmappedRequired: [],
+      warnings: [],
+      suggestions: [],
+      metadata: { columnsAnalyzed: this.sourceColumns.length, sampleRowsUsed: 0, timestamp: new Date().toISOString() },
+    };
+  }
+
+  /**
+   * Transform propio de la plantilla estándar: construye cada cliente con la estructura
+   * EXACTA que leen los formularios — datosFacturacionElectronica[] y datosEntrega[] como
+   * arrays con los nombres de campo del form (facturación usa `correo`, entrega `codigoPV`).
+   * El backend preserva los arrays tal cual. Las etiquetas se separan por coma y el
+   * régimen de IVA se agrega como una etiqueta más.
+   */
+  private transformStandardCustomerTemplate(rows: any[]): any[] {
+    const resolver = this.standardColResolver;
+    return rows.map(row => {
+      const g = (normKey: string): string => {
+        const colName = resolver[normKey];
+        if (!colName) return '';
+        const v = row[colName];
+        return v == null ? '' : String(v).trim();
+      };
+
+      const nombres = g('nombre/razon social');
+      const tipoDoc = g('tipo');
+      // Documento: si viene el dígito de verificación en columna aparte, se concatena
+      // con guión (815003461 + 2 → "815003461-2"). Idempotente si ya trae guión.
+      const docBase = g('cedula/nit');
+      const dv = g('digito verificacion');
+      const doc = (docBase && dv && !docBase.includes('-')) ? `${docBase}-${dv}` : docBase;
+      const correoCom = g('correo electronico') || g('correo electronico de contacto comercial');
+      const cel = g('celular/whatsapp');
+
+      // Etiquetas: régimen IVA (si viene) + columna "Etiquetas" separada por coma.
+      const regimenIva = g('tipo de regimen iva');
+      const etiquetasRaw = g('etiquetas');
+      const etiquetas = [
+        ...(regimenIva ? [regimenIva] : []),
+        ...etiquetasRaw.split(',').map(s => s.trim()).filter(s => s !== ''),
+      ];
+
+      // Facturación: identidad se auto-rellena desde los básicos (sin redundancia en la
+      // plantilla); lo propio es la dirección de facturación.
+      const datosFacturacion = {
+        alias: g('alias facturacion') || 'Principal',
+        nombres: g('razon social facturacion') || nombres,
+        tipoDocumento: g('tipo documento facturacion') || tipoDoc,
+        documento: g('documento facturacion') || doc,
+        correo: g('correo electronico facturacion') || correoCom,
+        direccion: g('direccion facturacion'),
+      };
+
+      const datosEntrega = {
+        alias: g('alias entrega') || 'Principal',
+        nombres: g('nombres entrega') || nombres,
+        apellidos: g('apellidos entrega'),
+        indicativoCel: '57',
+        celular: g('celular entrega') || cel,
+        direccionEntrega: g('direccion de entrega'),
+        barrio: g('barrio'),
+        nombreUnidad: g('unidad/conjunto'),
+        especificacionesInternas: g('especificaciones internas'),
+        observaciones: g('observaciones'),
+        pais: g('pais') || 'Colombia',
+        departamento: g('departamento'),
+        ciudad: g('ciudad'),
+        codigoPV: g('codigo postal'),
+      };
+
+      return {
+        nombres_completos: nombres,
+        tipo_documento_comprador: tipoDoc,
+        documento: doc,
+        correo_electronico_comprador: correoCom,
+        numero_celular_comprador: cel,
+        etiquetas: Array.from(new Set(etiquetas)),
+        datosFacturacionElectronica: [datosFacturacion],
+        datosEntrega: [datosEntrega],
+      };
+    });
+  }
+
   // Configurations for each type
   private customerConfig: ImportConfig = {
     title: 'Importar Clientes',
@@ -170,32 +343,62 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     payloadKey: 'customers',
     maxFileSize: 5000000, // 5MB
     templateColumns: [
-      { field: 'documento', header: 'Documento/NIT', required: true, example: '1234567890' },
-      { field: 'nombres_completos', header: 'Nombres Completos', required: true, example: 'Juan Perez' },
-      { field: 'correo_electronico_comprador', header: 'Email', required: true, example: 'juan@example.com' },
-      { field: 'numero_celular_comprador', header: 'Celular', required: true, example: '3001234567' },
-      { field: 'tipo_documento_comprador', header: 'Tipo Documento', required: false, example: 'CC' },
-      { field: 'ciudad', header: 'Ciudad', required: false, example: 'Bogota' },
-      { field: 'direccion', header: 'Direccion', required: false, example: 'Calle 123 #45-67' }
+      // ── Datos básicos del cliente (documento, tipo doc y correo van UNA sola vez;
+      //    se reutilizan automáticamente en facturación y entrega) ──
+      { field: 'nombres_completos', header: 'Nombre/Razon Social', required: true, example: 'TRIADA EMA S.A.' },
+      { field: 'tipo_documento_comprador', header: 'Tipo', required: false, example: 'NIT' },
+      { field: 'documento', header: 'Cédula/NIT', required: true, example: '815003461' },
+      { field: '__digitoVerificacion', header: 'Digito Verificación', required: false, example: '2' },
+      { field: 'correo_electronico_comprador', header: 'Correo Electrónico', required: true, example: 'contacto@empresa.com' },
+      { field: 'numero_celular_comprador', header: 'Celular/Whatsapp', required: true, example: '3001234567' },
+      // ── Dirección de facturación (la del cliente) ──
+      { field: 'datosFacturacionElectronica.direccion', header: 'Dirección Facturación', required: false, example: 'Calle 10 # 20 - 30' },
+      // ── Datos de entrega (dirección de entrega + detalles) ──
+      { field: 'datosEntrega.direccionEntrega', header: 'Direccion De Entrega', required: false, example: 'Calle 123 # 45 - 67' },
+      { field: 'datosEntrega.barrio', header: 'Barrio', required: false, example: 'El Poblado' },
+      { field: 'datosEntrega.nombreUnidad', header: 'Unidad/Conjunto', required: false, example: 'Torre 4 Apto 514' },
+      { field: 'datosEntrega.especificacionesInternas', header: 'Especificaciones Internas', required: false, example: '' },
+      { field: 'datosEntrega.observaciones', header: 'Observaciones', required: false, example: '' },
+      { field: 'datosEntrega.pais', header: 'Pais', required: false, example: 'Colombia' },
+      { field: 'datosEntrega.departamento', header: 'Departamento', required: false, example: 'Antioquia' },
+      { field: 'datosEntrega.ciudad', header: 'Ciudad', required: false, example: 'Medellin' },
+      { field: 'datosEntrega.codigoPV', header: 'Codigo Postal', required: false, example: '050021' },
+      // ── Etiquetas (el régimen de IVA se guarda como etiqueta; en "Etiquetas" van varias separadas por coma) ──
+      { field: '__regimenIva', header: 'Tipo de regimen IVA', required: false, example: 'Responsable de IVA' },
+      { field: '__etiquetas', header: 'Etiquetas', required: false, example: 'VIP, Frecuente' }
     ],
     fieldLabels: {
+      // Básicos
       'documento': 'Documento/NIT',
-      'nombres_completos': 'Nombres Completos',
-      'correo_electronico_comprador': 'Correo Electronico',
-      'numero_celular_comprador': 'Numero de Celular',
+      '__digitoVerificacion': 'Dígito de Verificación',
+      'nombres_completos': 'Nombre/Razón Social',
+      'correo_electronico_comprador': 'Correo Contacto Comercial',
+      'numero_celular_comprador': 'Celular/Whatsapp',
       'tipo_documento_comprador': 'Tipo de Documento',
-      'datosFacturacionElectronica.tipoDocumento': 'Tipo Documento (Facturacion)',
-      'datosFacturacionElectronica.documento': 'Documento (Facturacion)',
-      'datosFacturacionElectronica.nombres': 'Nombres (Facturacion)',
-      'datosFacturacionElectronica.correoElectronico': 'Email (Facturacion)',
-      'datosFacturacionElectronica.celular': 'Celular (Facturacion)',
-      'datosFacturacionElectronica.direccion': 'Direccion (Facturacion)',
-      'datosFacturacionElectronica.ciudad': 'Ciudad (Facturacion)',
-      'datosFacturacionElectronica.departamento': 'Departamento (Facturacion)',
-      'datosFacturacionElectronica.pais': 'Pais (Facturacion)',
-      'datosEntrega.direccion': 'Direccion de Entrega',
-      'datosEntrega.ciudad': 'Ciudad de Entrega',
-      'datosEntrega.departamento': 'Departamento de Entrega'
+      // Facturación (nombres del formulario)
+      'datosFacturacionElectronica.direccion': 'Dirección (Facturación)',
+      'datosFacturacionElectronica.alias': 'Alias (Facturación)',
+      'datosFacturacionElectronica.nombres': 'Razón Social (Facturación)',
+      'datosFacturacionElectronica.tipoDocumento': 'Tipo Documento (Facturación)',
+      'datosFacturacionElectronica.documento': 'Documento (Facturación)',
+      'datosFacturacionElectronica.correo': 'Correo (Facturación)',
+      // Entrega (nombres del formulario)
+      'datosEntrega.alias': 'Alias (Entrega)',
+      'datosEntrega.nombres': 'Nombres (Entrega)',
+      'datosEntrega.apellidos': 'Apellidos (Entrega)',
+      'datosEntrega.celular': 'Celular (Entrega)',
+      'datosEntrega.direccionEntrega': 'Dirección (Entrega)',
+      'datosEntrega.barrio': 'Barrio (Entrega)',
+      'datosEntrega.nombreUnidad': 'Unidad/Conjunto (Entrega)',
+      'datosEntrega.especificacionesInternas': 'Especificaciones (Entrega)',
+      'datosEntrega.observaciones': 'Observaciones (Entrega)',
+      'datosEntrega.pais': 'País (Entrega)',
+      'datosEntrega.departamento': 'Departamento (Entrega)',
+      'datosEntrega.ciudad': 'Ciudad (Entrega)',
+      'datosEntrega.codigoPV': 'Código Postal (Entrega)',
+      // Etiquetas
+      '__regimenIva': 'Régimen de IVA (etiqueta)',
+      '__etiquetas': 'Etiquetas'
     }
   };
 
@@ -214,6 +417,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'marca', header: 'Marca', required: false, example: 'MiMarca' },
       { field: 'codigoBarras', header: 'Codigo de Barras', required: false, example: '7701234567890' },
       { field: 'categoria', header: 'Categoria', required: false, example: 'Ropa' },
+      { field: 'categoriaConsecutivo', header: 'Id Categoria', required: false, example: '1005' },
       { field: 'cantidadMinVenta', header: 'Cantidad Minima Venta', required: false, example: '1' },
       { field: 'inventarioSeguridad', header: 'Inventario Seguridad', required: false, example: '10' },
       { field: 'garantiasProducto', header: 'Garantias', required: false, example: 'Garantia de 1 año' },
@@ -269,6 +473,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'marca': 'Marca',
       'codigoBarras': 'Codigo de Barras',
       'categoria': 'Categoria/Grupo/Linea/Familia',
+      'categoriaConsecutivo': 'Id Categoria (enlace a SIIGO, opcional)',
       'garantiasProducto': 'Garantias',
       'caracAdicionales': 'Caracteristicas Adicionales',
       'tipoEntrega': 'Tipo/Forma de Entrega',
@@ -321,6 +526,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'imagen', header: 'URL Imagen', required: false, example: 'https://example.com/imagen.jpg' },
       { field: 'activo', header: 'Activo', required: false, example: 'SI' },
       { field: 'posicion', header: 'Posición', required: false, example: '1' },
+      { field: 'consecutivo', header: 'Id Categoria', required: false, example: '1005' },
     ],
     fieldLabels: {
       'categoria_nivel1': 'Nombre de Categoría',
@@ -331,6 +537,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'imagen': 'URL de Imagen',
       'activo': 'Activo (SI/NO)',
       'posicion': 'Posición / Orden',
+      'consecutivo': 'Id Categoria (enlace a SIIGO, opcional)',
     }
   };
 
@@ -465,6 +672,20 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.isAnalyzingColumns = true;
 
     try {
+      // Atajo determinístico: si es la plantilla estándar de clientes, mapear directo (sin IA).
+      const standard = this.buildStandardCustomerMapping();
+      if (standard) {
+        this.mappingResult = standard;
+        this.showMappingPreview = true;
+        this.prepareMappingFields();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Plantilla estándar detectada',
+          detail: `Se mapearon ${Object.keys(standard.mappings).length} columnas automáticamente.`
+        });
+        return;
+      }
+
       const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
       // Enviar hasta 10 filas de muestra para mejor detección de patrones
       const sampleRows = this.columnMappingService.getSampleRows(this.parsedData, 10);
@@ -633,7 +854,11 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       console.log('[ImportModal] 🏢 Company:', companyId);
       console.log('[ImportModal] 🔄 Transformando datos con mapeo...');
 
-      const transformedData = this.transformDataWithMapping(this.parsedData, this.confirmedMappings, this.mappingResult?.mappings);
+      // Plantilla estándar de clientes → transform propio (estructura exacta de los forms).
+      // Otros archivos → transform genérico basado en el mapeo (KAI/manual).
+      const transformedData = (this.type === 'customer' && this.standardCustomerTemplate)
+        ? this.transformStandardCustomerTemplate(this.parsedData)
+        : this.transformDataWithMapping(this.parsedData, this.confirmedMappings, this.mappingResult?.mappings);
 
       console.log('[ImportModal] ✅ Datos transformados:', transformedData.length, 'registros');
       console.log('[ImportModal] 📋 Muestra de datos transformados (primeros 3):', JSON.stringify(transformedData.slice(0, 3), null, 2));
@@ -1136,7 +1361,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'lineaProducto': 'categoriaNombre',
       'familia': 'categoriaNombre',
       'clasificacion': 'categoriaNombre',
-      'tipo': 'categoriaNombre'
+      'tipo': 'categoriaNombre',
+      'categoriaConsecutivo': 'categoriaConsecutivo',
+      'idCategoria': 'categoriaConsecutivo',
+      'consecutivo': 'categoriaConsecutivo',
     };
 
     const targetPath = fieldMappings[field];
@@ -1186,9 +1414,15 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   downloadTemplate(): void {
     if (!this.config) return;
 
-    const headers = this.config.templateColumns.map(col => col.header).join(',');
-    const example = this.config.templateColumns.map(col => col.example).join(',');
-    const csvContent = `${headers}\n${example}`;
+    // Escape CSV: encierra en comillas si el valor tiene coma, comillas o salto de línea.
+    const esc = (v: any) => {
+      const s = String(v == null ? '' : v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const headers = this.config.templateColumns.map(col => esc(col.header)).join(',');
+    const example = this.config.templateColumns.map(col => esc(col.example)).join(',');
+    // BOM UTF-8: hace que Excel abra el CSV como UTF-8 y NO corrompa los acentos.
+    const csvContent = '﻿' + `${headers}\n${example}`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -1215,6 +1449,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.showMappingPreview = false;
     this.mappingFields = [];
     this.availableColumns = [];
+    this.standardCustomerTemplate = false;
+    this.standardColResolver = {};
   }
 
   getFieldLabel(katuqField: string): string {
