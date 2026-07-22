@@ -114,6 +114,10 @@ Bootstrap 5 + PrimeNG 14 + ng-bootstrap. SweetAlert2 para diálogos de confirmac
 3. Deduplicar con Set de `"${normalizedId}_${inv.idBodega}"` — si ya existe, SKIP
 Sin esto, los totales se inflan ~60%. Ver `calcularMetricasPorBodega` en `controllers/inventory.js` como referencia del patrón.
 
+**REGLA CRÍTICA — AISLAMIENTO PRODUCTOS/PRECIOS (D-134)**: inventario puede leer `products` para resolver docId, referencia, SKU y nombre, pero NUNCA puede crear, editar, activar o desactivar productos/variantes, títulos, imágenes, categorías, flags comerciales, precios, precios por cliente o listas de precios. En Shopify solo puede mutar `InventoryLevel`/cantidad. Si no resuelve el producto, reporta y omite; no lo crea desde inventario.
+
+OH MY STORE tiene dos flows mixtos activos hacia Shopify: `cereza-products-to-shopify-a5156643` (producto Katuq + producto Shopify + stock + Price Lists) y `katuq-web-to-shopify` (producto Shopify + stock no-Cereza). No aumentar su frecuencia, límite o cobertura para corregir stock. La publicación ampliada de existencias debe ir por camino stock-only, flag por empresa y kill switch independientes.
+
 ## Flujos críticos
 
 ### Pedido → Inventario
@@ -153,6 +157,7 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
 - **KAI (Genkit)** para IA, no llamadas directas a Gemini API. Flujos en `kai/functions/src/agents/`.
 - **ADK** para agentes multi-departamento con AG-UI protocol. No mezclar ADK con Genkit.
 - **Firestore transactions** para operaciones de inventario — evitar race conditions.
+- **Write-set inventario cerrado**: `inventory`, `inventoryMovement`, idempotencia/auditoría permitida e `InventoryLevel` Shopify. `products` y precios permanecen read-only.
 - **Multi-tenancy**: todas las queries filtradas por `companyId`.
 - `formaEntrega` en despachos SIEMPRE de `carrito[0].configuracion.datosEntrega.formaEntrega`.
 - `precioUnitarioIva` es un string porcentaje — verificar `_calculadoEnBackend` y `_precioManualOverride` antes de editar lógica de precios.
@@ -168,5 +173,7 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
 | Asumir causa de bug sin datos | Usar endpoint de diagnóstico primero |
 | Firestore doc ID en `idBodega` | Movimientos huérfanos, totales incorrectos |
 | Sumar `inventory` sin normalizar `productoId` | Doble conteo ~60% — hay docs con docId Y referencia para mismo producto+bodega |
+| Reusar un flow mixto producto/precio para ampliar stock | Ejecuta también catálogo, imágenes o Price Lists y viola D-134 |
+| Crear/corregir producto desde inventario | Puede pisar maestros y precios productivos |
 | `setTimeout` para sync parent-child | Race conditions — usar callbacks/flags |
 | Filtrar `active !== false` sin mostrar inactivos | Datos ocultos, confusión de usuario |

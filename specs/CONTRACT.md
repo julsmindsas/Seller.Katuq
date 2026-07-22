@@ -1941,3 +1941,26 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Nota de proceso:** esta sesión no pasó por `/opsx:propose` pese a la adopción de OpenSpec (D-130) el mismo día — cambio acotado a un módulo no-360 (cotizaciones), decidido con el usuario vía `AskUserQuestion` antes de implementar; se registra aquí de forma retroactiva por la ceremonia mínima de CONTRACT.md.
 - **Pendiente sin resolver en esta sesión:** el usuario mencionó otra tarea relacionada ("link separado del body para que no generara errores") que no se pudo ubicar en ClickUp (búsquedas sin resultado / error transitorio del servidor de búsqueda) — queda pendiente de que el usuario la señale directamente.
 - **Nada commiteado.** Cambios en working tree: frontend `cotizacion-editor.component.{ts,html,scss}`, `cotizacion-publica.component.{html,scss}`, `cotizacion-publica.service.ts`; backend `controllers/cotizaciones.js`.
+### 2026-07-22 — D-133: Push Osmosis multibodega + carrier, con fallo cerrado (propuesta pendiente)
+
+- **Origen:** cambio OpenSpec `osmosis-push-multibodega-carrier`, diagnóstico real OMS del 2026-07-22.
+- **Decisión de seguridad:** `items[].warehouse` se resuelve únicamente desde `warehouses.osmosisStorageCode` dentro de la empresa. Si la bodega no está mapeada, no se usa bodega default ni heurística: el push se bloquea y queda visible para operación.
+- **Carrier:** `config.defaultCarrierCode` es obligatorio antes de llamar a Cereza. El valor real de OMS sigue siendo un bloqueante externo y debe confirmarse con el proveedor antes del canario.
+- **Éxito:** sin identificador externo de Osmosis no hay despacho exitoso. Un fallo no puede cerrar el pedido como despachado.
+- **Estado:** propuesta y diseño validados; cero código o configuración productiva aplicada por esta decisión.
+
+### 2026-07-22 — D-134: Programa OpenSpec de estabilización de inventario (especificaciones en revisión)
+
+- **Contexto:** el usuario pidió estabilizar el core de inventarios sin poner en riesgo OH MY STORE, considerando Venta Asistida, movimientos/historial, ajustes, traslados, Shopify, Cereza/Osmosis, Logística/Despachos, `/flows`, fecha de corte y el ingreso de Almacén Bombas.
+- **Decisión de arquitectura:** no se hará un mega-cambio. El programa se divide en cinco cambios OpenSpec encadenados:
+  1. `establish-inventory-safety-baseline` — conciliación de solo lectura y rollout seguro.
+  2. `stabilize-inventory-ledger` — saldo Katuq + `inventoryMovement` atómico y motivos del enum vigente.
+  3. `stabilize-order-inventory-lifecycle` — Venta Asistida, Shopify pagado/pago tardío, despacho, cambios y reversas.
+  4. `stabilize-provider-stock-sync` — stock físico externo en sombra y publicación Shopify completa, incluido cero.
+  5. `enable-inventory-cutoff-reporting` — consulta/exportación por fecha con nivel de certeza.
+- **Secuencia de tenants:** OH MY STORE sombra → canario → completo; luego Almacén Bombas con solo capacidades aplicables; después los demás comercios uno por uno. Nunca activación global.
+- **Guardarraíl:** no se corrigen cantidades, no se borran duplicados y no se crean tareas de implementación en ClickUp hasta que el usuario apruebe las specs. Después de aprobar, cada sección de `tasks.md` se convierte en trabajo trazable dentro del plan maestro ClickUp existente `wdu9v770d1`, reutilizando las tareas ya abiertas.
+- **Aislamiento obligatorio agregado por el usuario:** el programa de inventario puede leer `products` para resolver identidad, referencia y nombre, pero no puede modificar productos ni variantes, ni títulos, imágenes, categorías, flags comerciales, precios, precios por cliente o listas de precios. La publicación a Shopify se limita al nivel de existencias de la ubicación; cualquier cambio de catálogo o precios requiere otra spec independiente.
+- **Hallazgo productivo de flows (solo lectura, 2026-07-22):** OH MY STORE tiene activos `cereza-products-to-shopify-a5156643` (cada 5 min: upsert Katuq + upsert Shopify + stock + price lists) y `katuq-web-to-shopify` (cada 10 min: productos no-Cereza, upsert Shopify + stock). Son los únicos flows encontrados con `shopify-product-upsert`, `shopify-inventory-adjust`, `shopify-pricelist-sync` o bulk sync. **Decisión:** no aumentar frecuencia/cobertura ni editar sus ramas de catálogo/precios para estabilizar inventario; la publicación ampliada de existencias tendrá camino, flags y kill switch independientes y solo mutará InventoryLevel.
+- **Checkpoint abierto:** confirmar si un pedido Shopify no pagado debe dejar el saldo Katuq intacto hasta `orders/paid` (regla propuesta) o reservar antes del pago. Esta decisión cambia spec, diseño y tareas.
+- **Estado:** proposal/design/specs creados y validados con `openspec validate --strict`; listos para checkpoint humano. Sin cambios de código, Firestore, cron, flow ni ClickUp.

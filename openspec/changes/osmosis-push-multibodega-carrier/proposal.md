@@ -10,8 +10,8 @@ Cindy (OMS) reporta que los pedidos de prueba con bodega discriminada "no llegan
 
 ## What Changes
 
-- **A. Warehouse por fuente de verdad**: helper compartido `resolveCerezaWarehouseCode(companyId, bodegaId)` → busca `warehouses` (company + idBodega) y devuelve `osmosisStorageCode`; fallback 1: bodega default de `integration_configs` (`config.bodegaCode`) resuelta igual; fallback 2: heurística actual (compat). Se usa en los DOS caminos de push (service + flow node).
-- **B. `carrier_code` configurable por comercio**: nuevo campo `config.defaultCarrierCode` en `integration_configs/<company>_osmosis` (canónica EN, Artículo XV). El payload lo incluye siempre que exista. Valor real para OMS: **pendiente confirmar** (probe a la API con autorización, o respuesta de Cereza).
+- **A. Warehouse por fuente de verdad y fallo cerrado**: helper compartido `resolveCerezaWarehouseCode(companyId, bodegaId)` → busca `warehouses` (company + `idBodega`) y devuelve `osmosisStorageCode`. Si la bodega del pedido no tiene mapping, **no se adivina ni se usa la bodega default**: el push se bloquea con atención operativa. Se usa en los DOS caminos de push (service + flow node).
+- **B. `carrier_code` obligatorio y configurable por comercio**: nuevo campo `config.defaultCarrierCode` en `integration_configs/<company>_osmosis` (canónica EN, Artículo XV). Si falta, el sistema bloquea antes de llamar a Cereza y muestra el motivo. Valor real para OMS: **pendiente confirmar** (probe a la API con autorización, o respuesta de Cereza).
 - **C. Visibilidad del fallo (cero FE nuevo)**: al fallar un push, además del error en `integrations.osmosis`, marcar `requiereAtencionLogistica: true` + nota en `notasPedido.notasFacturacionPagos` — la lista de pedidos **ya** pinta ese triángulo de atención con tooltip (patrón existente).
 
 ## Impact
@@ -20,10 +20,11 @@ Cindy (OMS) reporta que los pedidos de prueba con bodega discriminada "no llegan
 - Código: `functions/services/integrations/osmosis/osmosisOrderService.js`, `functions/services/flows/nodes/osmosis/osmosis-order-create.action.js`, helper nuevo en `functions/services/integrations/osmosis/`.
 - Config prod: `integration_configs` de OH MY STORE (agregar `defaultCarrierCode`).
 - Sin colecciones nuevas; multi-tenant (nada hardcodeado, requisito duro del CONTRACT).
-- Decisión a registrar: el siguiente **D-XXX libre** (D-132+, ver nota de colisión 2026-07-22) en CONTRACT.md al aplicar.
+- Decisión reservada: **D-133** en CONTRACT.md.
 
 ## Riesgos / no-objetivos
 
 - No tocamos el pull de estados ni el sync de productos.
-- BOD-102 (no-Cereza) queda cayendo al default (`bodegaCode`→storage `1`) con warn — si OMS quiere bloquear pushes desde bodegas no-Cereza, es decisión aparte.
-- El valor de `carrier_code` es dato de negocio de Cereza: sin él, la tarea 4 no se puede cerrar (bloqueante externo).
+- No modificamos productos, variantes, precios ni listas de precios en Katuq, Cereza o Shopify.
+- BOD-102 u otra bodega no mapeada queda bloqueada; no se despacha desde una bodega distinta por conveniencia.
+- El valor de `carrier_code` es dato de negocio de Cereza: sin él, el cambio no puede entrar en canario (bloqueante externo).

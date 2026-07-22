@@ -30,6 +30,24 @@ El flujo SDD se opera con **OpenSpec** (CLI `openspec`, carpeta `/openspec/`, co
 ### Reglas vinculantes en openspec/config.yaml (D-131)
 **`openspec/config.yaml` define reglas por artefacto (proposal/design/specs/tasks) que TODA sesión debe cumplir, use o no los comandos `/opsx:*`** — son el contrato de trabajo del proyecto: constitución + D-XXX obligatorio, no colecciones/"v2" sin aprobación, HTTP solo via BaseService, reglas de inventario (idBodega business code, dedup, transacciones), EARS ≤3 páginas, un-cambio-a-la-vez en módulos sensibles, build sin errores para cerrar, `--dry-run` en backfills. Leerlas al iniciar sesión.
 
+### Guardarraíl crítico — Inventario NO modifica productos ni precios (D-134)
+
+Los cambios de inventario pueden **leer** `products` únicamente para resolver identidad, docId, referencia, SKU y nombre. **NUNCA** pueden crear, editar, activar o desactivar:
+
+- productos o variantes;
+- títulos, descripciones, imágenes, categorías o flags comerciales;
+- precio base, precios por tipo de cliente o listas de precios;
+- catálogo o Price Lists de Shopify.
+
+En Shopify, una operación de inventario solo puede mutar el `InventoryLevel`/cantidad de la ubicación objetivo. Si el producto o la variante no se puede resolver inequívocamente, se registra la inconsistencia y se omite la escritura; jamás se crea o corrige el producto desde inventarios.
+
+OH MY STORE tiene dos flows mixtos activos que **no se amplían ni se modifican para estabilizar stock**:
+
+1. `cereza-products-to-shopify-a5156643` (cada 5 min): `katuq-product-upsert` + `shopify-product-upsert` + `shopify-inventory-adjust` + `shopify-pricelist-sync`.
+2. `katuq-web-to-shopify` (cada 10 min): `shopify-product-upsert` + `shopify-inventory-adjust` para no-Cereza.
+
+La publicación nueva/ampliada de existencias debe usar un camino **stock-only**, con feature flag por empresa, modo sombra y kill switch independientes. No aumentar frecuencia, límite o cobertura de los flows mixtos porque volvería a ejecutar producto, imágenes y precios. Toda tarea de inventario/Shopify incluye contract test del write-set y falla si escribe `products`, catálogo, precios o Price Lists.
+
 ### Tema de diseño canónico (D-131)
 **`openspec/specs/design-system/spec.md`** define el tema visual canónico, extraído de la pantalla "Todos los pedidos" (la más cercana al manual de marca): acento `#5F3FE0`, ink `#211F3A`, superficies lila, semánticos en par fuerte/fondo-suave, radios 16/11/20px, sombras violeta difusas, labels UPPERCASE muted, **plano sin gradientes**. Toda UI nueva o rediseño la cumple; prohibidos los primaries paralelos (`#2196f3`, `#4361ee`, `#2563eb`, `#5c6ac4`, `#667eea`). Discrepancia abierta con `_katuq-tokens.scss` (`#8b5cf6`): se resuelve vía propuesta OpenSpec antes de migraciones masivas. El backend (`katuq_admin_back_firebase`) tiene su propio OpenSpec + CLAUDE.md con las reglas equivalentes.
 
@@ -226,6 +244,7 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
 - `formaEntrega` en despachos SIEMPRE de `carrito[0].configuracion.datosEntrega.formaEntrega`.
 - `precioUnitarioIva` es un string porcentaje — verificar `_calculadoEnBackend` y `_precioManualOverride` antes de editar lógica de precios.
 - **`inventoryService.js`** es de alto impacto: afecta POS, ventas, fulfillment y Shopify. Trazar flujo completo antes de modificar.
+- **Write-set de inventario cerrado**: solo `inventory`, `inventoryMovement`, idempotencia/auditoría permitida e `InventoryLevel` Shopify. `products` y precios son read-only para este dominio.
 
 ## Anti-patterns
 
@@ -237,5 +256,7 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
 | Asumir causa de bug sin datos | Usar endpoint de diagnóstico primero |
 | Firestore doc ID en `idBodega` | Movimientos huérfanos, totales incorrectos |
 | Sumar `inventory` sin normalizar `productoId` | Doble conteo ~60% — hay docs con docId Y referencia para mismo producto+bodega |
+| Reusar un flow mixto de producto/precios para ampliar sync de stock | Reejecuta catálogo, imágenes o Price Lists y viola el aislamiento D-134 |
+| Crear/corregir producto desde una operación de inventario | Mezcla dominios y puede pisar maestros o precios de producción |
 | `setTimeout` para sync parent-child | Race conditions — usar callbacks/flags |
 | Filtrar `active !== false` sin mostrar inactivos | Datos ocultos, confusión de usuario |
