@@ -1,0 +1,51 @@
+schema: spec-driven
+
+# Contexto del proyecto — se muestra a la IA al crear artefactos
+context: |
+  Katuq Seller — plataforma e-commerce multi-tenant para vendedores (Colombia).
+  Stack: Angular 14 + PrimeNG 14 + Bootstrap 5 + SCSS. Backend Express/Node en EC2
+  (back.katuq.com, repo separado katuq_admin_back_firebase). Firestore + Realtime DB.
+  IA: KAI (Genkit) y ADK (Python) — no llamadas directas a Gemini.
+
+  Metodología previa: SDD propio (leer /SPEC-DRIVEN.md y /specs/CONTRACT.md al iniciar).
+  /specs/CONTRACT.md sigue siendo el registro de decisiones (D-XXX) y bitácora.
+  /specs/constitution.md tiene 15 artículos inmutables que TODA propuesta debe respetar.
+  Datos reales verificados de OH MY STORE en /specs/002-flows-osmosis-shopify-marco/findings.md
+  — nunca asumir desde docs viejos sin verificar contra Firestore real.
+
+  Reglas duras:
+  - Canónica de integraciones en INGLÉS: integrations.<provider> (Artículo XV v2).
+  - inventory/inventoryMovement usan business code en idBodega (BOD-001), NUNCA Firestore doc ID.
+  - Al sumar inventory: normalizar productoId (referencia→docId) y deduplicar, o se infla ~60%.
+  - Multi-tenancy: toda query filtrada por company. Nunca HttpClient directo en componentes.
+  - Firestore transactions para inventario. Scripts de backfill siempre con --dry-run primero.
+  - Español para comunicación y specs; código y campos canónicos en inglés.
+
+  Diseño/UI: el tema canónico está en openspec/specs/design-system/spec.md (extraído de
+  la pantalla "Todos los pedidos", la más cercana al manual de marca). Acento #5F3FE0,
+  tinta #211F3A, superficies lila, semánticos en par fuerte/fondo-suave, radios 16/11/20px,
+  sombras violeta difusas, labels UPPERCASE muted, estilo plano SIN gradientes.
+  NO usar: azul Material #2196f3, índigo #4361ee, azul #2563eb, morados Polaris #5c6ac4/#667eea.
+
+rules:
+  proposal:
+    - Verificar contra la constitución (/specs/constitution.md) y registrar la decisión como D-XXX en /specs/CONTRACT.md
+    - Si toca el 360 (Osmosis/Shopify/Webhook/inventario), citar findings.md reales, no asumir
+    - Si toca UI, cumplir openspec/specs/design-system/spec.md (tema "Todos los pedidos") y justificar cualquier desviación
+    - No proponer colecciones Firestore nuevas ni endpoints/módulos "v2" sin aprobación explícita del usuario
+    - Incluir sección de No-goals y de riesgos sobre módulos sensibles (orders/inventory/consecutivos)
+  design:
+    - "UI: usar los tokens y patrones de openspec/specs/design-system/spec.md — acento #5F3FE0, semánticos par fuerte/fondo-suave, plano SIN gradientes; prohibidos #2196f3, #4361ee, #2563eb, #5c6ac4, #667eea"
+    - "HTTP siempre via servicios Angular que extienden BaseService — nunca HttpClient directo en componentes (el interceptor agrega auth)"
+    - Componentes con SRP en módulos pequeños lazy-loaded; nada monolítico
+    - Sin capas de cache nuevas (optimizar queries/índices en origen) y sin setTimeout para sincronizar parent-child (usar callbacks/flags)
+    - "Inventario: operaciones con transacciones Firestore; idBodega SIEMPRE business code (BOD-001), nunca doc ID; al sumar inventory normalizar productoId y deduplicar"
+  specs:
+    - Máximo 3 páginas por spec (Artículo XIII); si crece, partir en sub-specs
+    - Requisitos en formato EARS, sin decisiones de tecnología (eso va en design)
+    - "Canónica de integraciones en INGLÉS: integrations.<provider>, jamás integraciones (Artículo XV v2)"
+  tasks:
+    - Tareas atómicas y paralelizables; módulos sensibles (orders/inventory/consecutivos) un cambio a la vez con diff y aprobación explícita antes de aplicar
+    - Toda tarea de código cierra con build/compilación sin errores; no se avanza con el build roto
+    - Leer los archivos afectados antes de editarlos; nada de fixes a ciegas
+    - Scripts de backfill o migración de datos siempre con --dry-run como primera tarea

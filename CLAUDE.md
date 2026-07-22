@@ -20,6 +20,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. **`tasks.md`** — pasos atómicos paralelizables. Checkpoint humano antes de implementar.
 4. **`implement`** — código que respeta las tasks aprobadas. Cualquier desvío se registra en CONTRACT.md.
 
+### Tooling: OpenSpec (desde 2026-07-22, D-130)
+El flujo SDD se opera con **OpenSpec** (CLI `openspec`, carpeta `/openspec/`, comandos `/opsx:*`):
+- **`/opsx:propose "<idea>"`** — crea la propuesta en `openspec/changes/<slug>/` (proposal + specs + tasks). Equivale a las fases 1–3; cada artefacto pasa checkpoint humano.
+- **`/opsx:apply`** — implementa las tasks aprobadas (fase 4).
+- **`/opsx:archive`** — al terminar, consolida los deltas en `openspec/specs/` (fuente de verdad viva).
+- Las specs previas en `/specs/001-…/002-…` quedan como histórico aprobado; **CONTRACT.md y constitution.md siguen siendo canon** — OpenSpec instrumenta el método, no lo reemplaza.
+
+### Reglas vinculantes en openspec/config.yaml (D-131)
+**`openspec/config.yaml` define reglas por artefacto (proposal/design/specs/tasks) que TODA sesión debe cumplir, use o no los comandos `/opsx:*`** — son el contrato de trabajo del proyecto: constitución + D-XXX obligatorio, no colecciones/"v2" sin aprobación, HTTP solo via BaseService, reglas de inventario (idBodega business code, dedup, transacciones), EARS ≤3 páginas, un-cambio-a-la-vez en módulos sensibles, build sin errores para cerrar, `--dry-run` en backfills. Leerlas al iniciar sesión.
+
+### Tema de diseño canónico (D-131)
+**`openspec/specs/design-system/spec.md`** define el tema visual canónico, extraído de la pantalla "Todos los pedidos" (la más cercana al manual de marca): acento `#5F3FE0`, ink `#211F3A`, superficies lila, semánticos en par fuerte/fondo-suave, radios 16/11/20px, sombras violeta difusas, labels UPPERCASE muted, **plano sin gradientes**. Toda UI nueva o rediseño la cumple; prohibidos los primaries paralelos (`#2196f3`, `#4361ee`, `#2563eb`, `#5c6ac4`, `#667eea`). Discrepancia abierta con `_katuq-tokens.scss` (`#8b5cf6`): se resuelve vía propuesta OpenSpec antes de migraciones masivas. El backend (`katuq_admin_back_firebase`) tiene su propio OpenSpec + CLAUDE.md con las reglas equivalentes.
+
 ### Ceremonia mínima por sesión
 - **Al iniciar**: leer CONTRACT.md + última spec activa.
 - **Al decidir algo no trivial**: registrar como D-XXX en CONTRACT.md con fecha y razón. Decisiones revertidas se marcan SUPERSEDED, no se borran.
@@ -202,7 +215,7 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
 - **Sin console.log de telemetría**: usar colecciones Firestore de auditoría o observabilidad estructurada.
 - **Nunca eliminar auth middleware** del backend ni el interceptor del frontend.
 - **CRM es híbrido**: sirve tanto para Katuq mismo (empresas como leads) como para cada empresa (sus clientes como leads).
-- **SCSS de diseño**: no usar gradientes en cards/stats — estilo plano con `border-left` de color acento.
+- **SCSS de diseño**: no usar gradientes en cards/stats — estilo plano tintado según `openspec/specs/design-system/spec.md` (chips con fondo suave + borde lila; el patrón viejo de `border-left` de acento queda superseded por D-131).
 - **Módulos con SRP**: evitar componentes monolíticos; separar en módulos pequeños con responsabilidad única.
 - **Servicios Angular para HTTP**: nunca `HttpClient` directo en componentes — el interceptor agrega auth headers.
 - **Strategy Pattern en backend** para integraciones (providers + managers).
