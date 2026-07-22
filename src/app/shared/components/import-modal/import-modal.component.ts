@@ -178,9 +178,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     'correo electronico': 'correo_electronico_comprador',
     'correo electronico de contacto comercial': 'correo_electronico_comprador',
     'celular/whatsapp': 'numero_celular_comprador',
-    // Datos de facturación. Lo único propio es la dirección; nombre/tipoDoc/documento/correo
-    // se auto-rellenan desde los básicos (estas claves quedan solo como override opcional).
-    'direccion facturacion': 'datosFacturacionElectronica.direccion',
+    // Datos de facturación. Lo único propio es el correo (puede diferir del comercial);
+    // nombre/tipoDoc/documento se auto-rellenan desde los básicos (override opcional).
     'alias facturacion': 'datosFacturacionElectronica.alias',
     'razon social facturacion': 'datosFacturacionElectronica.nombres',
     'tipo documento facturacion': 'datosFacturacionElectronica.tipoDocumento',
@@ -296,14 +295,13 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       ];
 
       // Facturación: identidad se auto-rellena desde los básicos (sin redundancia en la
-      // plantilla); lo propio es la dirección de facturación.
+      // plantilla); lo propio es el correo de facturación (puede diferir del comercial).
       const datosFacturacion = {
         alias: g('alias facturacion') || 'Principal',
         nombres: g('razon social facturacion') || nombres,
         tipoDocumento: g('tipo documento facturacion') || tipoDoc,
         documento: g('documento facturacion') || doc,
         correo: g('correo electronico facturacion') || correoCom,
-        direccion: g('direccion facturacion'),
       };
 
       const datosEntrega = {
@@ -351,8 +349,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: '__digitoVerificacion', header: 'Digito Verificación', required: false, example: '2' },
       { field: 'correo_electronico_comprador', header: 'Correo Electrónico', required: true, example: 'contacto@empresa.com' },
       { field: 'numero_celular_comprador', header: 'Celular/Whatsapp', required: true, example: '3001234567' },
-      // ── Dirección de facturación (la del cliente) ──
-      { field: 'datosFacturacionElectronica.direccion', header: 'Dirección Facturación', required: false, example: 'Calle 10 # 20 - 30' },
+      // ── Datos de facturación (correo propio; nombre/documento se heredan del básico) ──
+      { field: 'datosFacturacionElectronica.correo', header: 'Correo Electrónico Facturación', required: false, example: 'facturacion@empresa.com' },
       // ── Datos de entrega (dirección de entrega + detalles) ──
       { field: 'datosEntrega.direccionEntrega', header: 'Direccion De Entrega', required: false, example: 'Calle 123 # 45 - 67' },
       { field: 'datosEntrega.barrio', header: 'Barrio', required: false, example: 'El Poblado' },
@@ -376,7 +374,6 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'numero_celular_comprador': 'Celular/Whatsapp',
       'tipo_documento_comprador': 'Tipo de Documento',
       // Facturación (nombres del formulario)
-      'datosFacturacionElectronica.direccion': 'Dirección (Facturación)',
       'datosFacturacionElectronica.alias': 'Alias (Facturación)',
       'datosFacturacionElectronica.nombres': 'Razón Social (Facturación)',
       'datosFacturacionElectronica.tipoDocumento': 'Tipo Documento (Facturación)',
