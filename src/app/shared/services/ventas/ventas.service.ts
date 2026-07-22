@@ -240,13 +240,33 @@ export class VentasService extends BaseService {
     // Capturar el estado anterior para comparar cambios
     const previousOrder = { ...order };
 
-    return this.post<any>('/v1/orders/edit', order).pipe(
+    // Lock optimista: enviar en `_baseVersion` la versión (date_upd) con la que se cargó el
+    // pedido. Si en el servidor la BD ya avanzó, responde 409 (otra persona editó en medio).
+    const payload: any = { ...order, _baseVersion: (order as any).date_upd || null };
+
+    return this.post<any>('/v1/orders/edit', payload).pipe(
       tap((response) => {
-        if (response && response.success) {
+        // Adoptar la nueva versión que devuelve el servidor para futuras ediciones del mismo objeto.
+        const nuevoDateUpd =
+          response && (response.date_upd || (response.details && response.details.date_upd));
+        if (nuevoDateUpd) {
+          (order as any).date_upd = nuevoDateUpd;
+        }
+        if (response && (response.success || (response.details && response.details.success))) {
           const updatedOrder = response.order || order;
           this.triggerOrderUpdatedNotifications(previousOrder, updatedOrder);
         }
-      })
+      }),
+      catchError((err) => {
+        // Conflicto de concurrencia: traducir a un error claro para la UI.
+        if (err && err.status === 409) {
+          const msg =
+            (err.error && err.error.error) ||
+            'El pedido cambió mientras lo editabas. Recarga la lista e intenta de nuevo.';
+          return throwError(() => ({ ...err, message: msg, isStaleWrite: true }));
+        }
+        return throwError(() => err);
+      }),
     );
   }
 
