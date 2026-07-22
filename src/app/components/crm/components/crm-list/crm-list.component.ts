@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subject, forkJoin } from 'rxjs';
+import { Subject, forkJoin, Observable } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { DragulaService } from 'ng2-dragula';
@@ -1086,6 +1086,39 @@ export class CrmListComponent implements OnInit, OnDestroy {
     this.messageService.add({ severity: 'success', summary: 'Exportado', detail: `${data.length} leads exportados` });
   }
 
+  // ─── Plantilla de importación ─────────────────────────────
+
+  /**
+   * Columnas de la plantilla de importación de leads. SOLO las que el
+   * detector (`detectColumnMapping`) lee y guarda como campos del lead —
+   * así lo que el usuario descarga encaja 1-a-1 con lo que se importa.
+   */
+  private readonly CRM_TEMPLATE_COLUMNS: { header: string; example: string }[] = [
+    { header: 'Nombre', example: 'Comercializadora El Progreso S.A.S' }, // ÚNICO obligatorio
+    { header: 'NIT/Documento', example: '900123456-7' },                // identidad (B2B)
+    { header: 'Email', example: 'contacto@elprogreso.com' },            // contacto + dedup
+    { header: 'Teléfono', example: '3001234567' },                      // contacto + dedup (+57 auto)
+    { header: 'Etapa', example: 'contactado' },                         // ubica en el pipeline
+    { header: 'Fuente', example: 'Facebook' },                          // social_media / web / manual
+  ];
+
+  downloadCrmTemplate(): void {
+    const headers = this.CRM_TEMPLATE_COLUMNS.map(c => c.header);
+    const example = this.CRM_TEMPLATE_COLUMNS.map(c => c.example);
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+    ws['!cols'] = headers.map(() => ({ wch: 24 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Plantilla Leads');
+    XLSX.writeFile(wb, 'plantilla-leads-crm.xlsx');
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Plantilla descargada',
+      detail: 'Completa la plantilla (solo "Nombre" es obligatorio) y súbela con Importar.',
+    });
+  }
+
   // ─── Import ────────────────────────────────────────────────
 
   onFileImport(event: any): void {
@@ -1108,7 +1141,6 @@ export class CrmListComponent implements OnInit, OnDestroy {
         const columns = Object.keys(rows[0]);
         const mapping = this.detectColumnMapping(columns);
 
-        let imported = 0;
         let skipped = 0;
         const total = rows.length;
 
@@ -1116,19 +1148,23 @@ export class CrmListComponent implements OnInit, OnDestroy {
           severity: 'info', summary: 'Importando', detail: `Procesando ${total} registros...`,
         });
 
-        rows.forEach((row, i) => {
+        // Cada fila válida genera una operación HTTP. Con forkJoin esperamos a
+        // TODAS y contamos éxitos/fallos según la respuesta real del backend
+        // ({ success: false } en error) — no a ciegas como antes.
+        const ops: Observable<any>[] = [];
+
+        rows.forEach((row) => {
           const name = this.getRowValue(row, mapping.name);
           if (!name) { skipped++; return; }
 
           const leadData: any = {
             name,
+            nit: this.getRowValue(row, mapping.nit) || null,
             email: this.getRowValue(row, mapping.email) || null,
             phone: this.cleanPhone(this.getRowValue(row, mapping.phone)),
             source: this.detectSource(row, mapping),
             stage: this.mapImportStage(this.getRowValue(row, mapping.stage)),
             priority: 'medium',
-            // Extra data from Facebook Ads or custom formats
-            notes: this.buildImportNotes(row, mapping),
           };
 
           // Check if exists by email or phone
@@ -1140,28 +1176,45 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
           if (existing) {
             // Update pipeline for existing lead
-            this.crmService.updatePipeline(existing.id, {
+            ops.push(this.crmService.updatePipeline(existing.id, {
               stage: leadData.stage !== this.stages[0]?.key ? leadData.stage : undefined,
               source: leadData.source,
-            }).pipe(takeUntil(this.destroy$)).subscribe();
+            }));
           } else {
             // Create new lead via import endpoint
-            this.crmService.importLead(leadData)
-              .pipe(takeUntil(this.destroy$)).subscribe();
+            ops.push(this.crmService.importLead(leadData));
           }
-          imported++;
         });
 
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Importación completada',
-          detail: `${imported} procesados, ${skipped} sin nombre (omitidos)`,
-          life: 5000,
-        });
+        if (ops.length === 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Nada para importar',
+            detail: `0 procesados, ${skipped} sin nombre (omitidos). Revisa que la columna de nombre coincida con la plantilla.`,
+            life: 6000,
+          });
+          event.target.value = '';
+          return;
+        }
 
-        // Reload after a delay to let backend process
-        setTimeout(() => this.loadLeads(), 2000);
-        setTimeout(() => this.loadStats(), 2500);
+        // Esperar TODAS las operaciones y reportar el conteo real.
+        forkJoin(ops).pipe(takeUntil(this.destroy$)).subscribe(results => {
+          const ok = results.filter(r => r && r.success !== false).length;
+          const failed = results.length - ok;
+
+          this.messageService.add({
+            severity: failed === 0 ? 'success' : (ok === 0 ? 'error' : 'warn'),
+            summary: failed === 0 ? 'Importación completada' : 'Importación con errores',
+            detail: `${ok} importados`
+              + (failed ? `, ${failed} fallidos` : '')
+              + (skipped ? `, ${skipped} sin nombre (omitidos)` : ''),
+            life: 6000,
+          });
+
+          // Reload after backend processes
+          setTimeout(() => this.loadLeads(), 1500);
+          setTimeout(() => this.loadStats(), 2000);
+        });
       } catch (err) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo leer el archivo' });
       }
@@ -1189,14 +1242,10 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
     return {
       name: find(['nombre completo', 'nombre_completo', 'full name', 'nombre', 'name', 'empresa', 'company']),
+      nit: find(['nit', 'documento', 'cedula', 'cédula', 'identificacion', 'identificación', 'tax id', 'rut']),
       email: find(['correo', 'email', 'e-mail', 'mail']),
       phone: find(['teléfono', 'telefono', 'número de teléfono', 'numero de telefono', 'phone', 'celular', 'cel', 'whatsapp']),
       stage: find(['etapa', 'stage', 'lead status', 'lead_status', 'status', 'estado']),
-      role: find(['rol', 'role', 'cargo', 'cuál es tu rol']),
-      employees: find(['personas', 'empleados', 'employees', 'cuántas personas']),
-      operating: find(['operación', 'operacion', 'operating', 'actualmente']),
-      campaign: find(['campaign name', 'campaign_name', 'campaña']),
-      adName: find(['ad name', 'ad_name', 'anuncio']),
       source: find(['platform', 'plataforma', 'fuente', 'source']),
     };
   }
@@ -1225,23 +1274,6 @@ export class CrmListComponent implements OnInit, OnDestroy {
     if (platform.includes('facebook') || platform.includes('instagram') || campaign) return 'social_media';
     if (platform.includes('google')) return 'web';
     return 'manual';
-  }
-
-  private buildImportNotes(row: any, mapping: Record<string, string | null>): string {
-    const parts: string[] = [];
-    const role = this.getRowValue(row, mapping.role);
-    const employees = this.getRowValue(row, mapping.employees);
-    const operating = this.getRowValue(row, mapping.operating);
-    const campaign = this.getRowValue(row, mapping.campaign);
-    const adName = this.getRowValue(row, mapping.adName);
-
-    if (role) parts.push(`Rol: ${role}`);
-    if (employees) parts.push(`Empleados: ${employees}`);
-    if (operating) parts.push(`En operación: ${operating}`);
-    if (campaign) parts.push(`Campaña: ${campaign}`);
-    if (adName) parts.push(`Anuncio: ${adName}`);
-
-    return parts.join(' | ');
   }
 
   private mapImportStage(value: string): string {

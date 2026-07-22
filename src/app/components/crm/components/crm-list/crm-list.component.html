@@ -33,6 +33,10 @@
                 pTooltip="Exportar a Excel" tooltipPosition="bottom" [disabled]="leads.length === 0">
                 <i class="fa fa-download"></i>
               </button>
+              <button class="btn btn-outline-info btn-sm" (click)="downloadCrmTemplate()"
+                pTooltip="Descargar plantilla de importación" tooltipPosition="bottom">
+                <i class="fa fa-file-excel-o"></i>
+              </button>
               <button class="btn btn-outline-secondary btn-sm" (click)="fileInput.click()"
                 pTooltip="Importar desde Excel" tooltipPosition="bottom">
                 <i class="fa fa-upload"></i>
