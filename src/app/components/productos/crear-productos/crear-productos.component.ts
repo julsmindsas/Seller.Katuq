@@ -2192,10 +2192,23 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
       const entry = { img: processedFile, tipo: tipoImagen, preview: undefined };
       this.fileImg.push(entry);
-      this.filesNames.push(processedFile.name);
+      // Nombre único para el path de Storage: dos imágenes con el mismo nombre
+      // original (muy común al subir varias fotos de golpe, ej. re-subir todas
+      // las imágenes de un producto recién duplicado) pisaban el mismo archivo
+      // en Storage y quedaban con el mismo `path` en el array — deleteImg()
+      // filtra por `path`, así que no podía distinguir cuál borrar.
+      this.filesNames.push(this.buildUniqueFileName(processedFile.name));
 
       await this.generatePreviewImage(processedFile, entry);
     }
+  }
+
+  private buildUniqueFileName(originalName: string): string {
+    const dotIndex = originalName.lastIndexOf('.');
+    const base = dotIndex > -1 ? originalName.substring(0, dotIndex) : originalName;
+    const ext = dotIndex > -1 ? originalName.substring(dotIndex) : '';
+    const uniqueSuffix = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+    return `${base}-${uniqueSuffix}${ext}`;
   }
 
   private async generatePreviewImage(

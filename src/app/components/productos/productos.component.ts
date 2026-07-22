@@ -885,9 +885,13 @@ export class ProductosComponent implements OnInit, OnDestroy {
         Swal.close();
         this.cargarDatos();
 
-        const productoGuardado = response?.product || response?.data || productoDuplicado;
+        // El backend responde el producto guardado directamente (res.send(product)),
+        // no envuelto en .product/.data — hay que usar `response` tal cual para
+        // reflejar el cd y la referencia REALES (el backend puede renombrar la
+        // referencia si detecta colisión, ver controllers/productos.js).
+        const productoGuardado = response?.cd ? response : productoDuplicado;
         this.toastr.success(
-          `"${productoDuplicado.crearProducto?.titulo}" creado como inactivo`,
+          `"${productoGuardado.crearProducto?.titulo}" creado como inactivo`,
           'Producto duplicado',
           { timeOut: 5000 }
         );
@@ -896,8 +900,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
           title: '¡Producto duplicado!',
           html: `
             <div style="text-align:left; margin: 16px 0;">
-              <p><strong>Nuevo título:</strong> ${productoDuplicado.crearProducto?.titulo}</p>
-              <p><strong>Nueva referencia:</strong> <span style="color:#28a745; font-weight:bold;">${productoDuplicado.identificacion?.referencia}</span></p>
+              <p><strong>Nuevo título:</strong> ${productoGuardado.crearProducto?.titulo}</p>
+              <p><strong>Nueva referencia:</strong> <span style="color:#28a745; font-weight:bold;">${productoGuardado.identificacion?.referencia}</span></p>
               <p class="text-warning"><i class="fa fa-info-circle"></i> El producto quedó <strong>inactivo</strong>. Actívalo después de revisarlo.</p>
               <p class="text-warning"><i class="fa fa-info-circle"></i> El duplicado no incluye imágenes. Súbelas de nuevo antes de activarlo.</p>
             </div>
