@@ -168,9 +168,12 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             next: (clientes: any) => {
                 console.log('[clientes/all] total:', clientes?.length);
                 console.log('[clientes/all] primer registro:', clientes?.[0]);
-                this.clientesOriginales = clientes; // Guardar datos originales
-                this.clientes = clientes;
-                this.totalRecords = clientes.length;
+                // Ordenar por fecha de creación desc: los clientes recién creados/importados
+                // aparecen de primeros (el backend /clients/all no ordena).
+                const ordenados = this.ordenarPorReciente(clientes || []);
+                this.clientesOriginales = ordenados; // Guardar datos originales
+                this.clientes = ordenados;
+                this.totalRecords = ordenados.length;
                 this.cargando = false;
                 // Si veníamos del buscador global, aplicar el filtro ya con datos.
                 this.applyPendingGlobalSearch();
@@ -609,6 +612,23 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             life: 5000
         });
       }
+    }
+
+    // Convierte date_add (timestamp Firestore, ISO, epoch o Date) a milisegundos para ordenar.
+    private fechaMs(fecha: any): number {
+        if (!fecha) return 0;
+        if (typeof fecha === 'object' && (fecha._seconds != null || fecha.seconds != null)) {
+            const secs = fecha._seconds != null ? fecha._seconds : fecha.seconds;
+            const nanos = fecha._nanoseconds != null ? fecha._nanoseconds : (fecha.nanoseconds || 0);
+            return secs * 1000 + nanos / 1e6;
+        }
+        const t = new Date(fecha).getTime();
+        return isNaN(t) ? 0 : t;
+    }
+
+    // Ordena por fecha de creación descendente (más recientes primero).
+    private ordenarPorReciente(lista: any[]): any[] {
+        return [...lista].sort((a, b) => this.fechaMs(b?.date_add) - this.fechaMs(a?.date_add));
     }
 
     formatearFecha(fecha: any): string {

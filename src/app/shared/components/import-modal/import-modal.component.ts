@@ -177,13 +177,22 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     'digito verificacion': '__digitoVerificacion',
     'correo electronico': 'correo_electronico_comprador',
     'correo electronico de contacto comercial': 'correo_electronico_comprador',
+    // Dos teléfonos separados: propio (llamadas) y WhatsApp. Se aceptan alias
+    // y la columna combinada antigua ('celular/whatsapp') por compatibilidad.
+    'telefono propio': 'numero_celular_comprador',
+    'celular': 'numero_celular_comprador',
     'celular/whatsapp': 'numero_celular_comprador',
-    // Datos de facturación. Lo único propio es el correo (puede diferir del comercial);
-    // nombre/tipoDoc/documento se auto-rellenan desde los básicos (override opcional).
+    'telefono whatsapp': 'numero_celular_whatsapp',
+    'whatsapp': 'numero_celular_whatsapp',
+    // Datos de facturación (razón social, tipo doc, NIT/documento y correo). Pueden
+    // diferir del básico — el NIT de facturación suele ser distinto. Si se dejan
+    // vacíos, heredan del básico. Sin teléfono (no se usa en facturación).
     'alias facturacion': 'datosFacturacionElectronica.alias',
     'razon social facturacion': 'datosFacturacionElectronica.nombres',
     'tipo documento facturacion': 'datosFacturacionElectronica.tipoDocumento',
     'documento facturacion': 'datosFacturacionElectronica.documento',
+    'documento/nit facturacion': 'datosFacturacionElectronica.documento',
+    'nit facturacion': 'datosFacturacionElectronica.documento',
     'correo electronico facturacion': 'datosFacturacionElectronica.correo',
     // Datos de entrega (nombres de campo del formulario)
     'alias entrega': 'datosEntrega.alias',
@@ -192,7 +201,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     'celular entrega': 'datosEntrega.celular',
     'direccion de entrega': 'datosEntrega.direccionEntrega',
     'barrio': 'datosEntrega.barrio',
+    'nombre unidad / edificio': 'datosEntrega.nombreUnidad',
     'unidad/conjunto': 'datosEntrega.nombreUnidad',
+    'torre / apto / oficina': 'datosEntrega.especificacionesInternas',
     'especificaciones internas': 'datosEntrega.especificacionesInternas',
     'observaciones': 'datosEntrega.observaciones',
     'pais': 'datosEntrega.pais',
@@ -200,6 +211,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     'ciudad': 'datosEntrega.ciudad',
     'codigo postal': 'datosEntrega.codigoPV',
     // Etiquetas
+    'regimen iva etiqueta': '__regimenIva',
     'tipo de regimen iva': '__regimenIva',
     'etiquetas': '__etiquetas',
   };
@@ -284,10 +296,13 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       const dv = g('digito verificacion');
       const doc = (docBase && dv && !docBase.includes('-')) ? `${docBase}-${dv}` : docBase;
       const correoCom = g('correo electronico') || g('correo electronico de contacto comercial');
-      const cel = g('celular/whatsapp');
+      // Teléfono propio (llamadas) y WhatsApp por separado. Si solo viene uno,
+      // WhatsApp cae al propio (convención previa: no dejar el WhatsApp vacío).
+      const cel = g('telefono propio') || g('celular') || g('celular/whatsapp');
+      const whatsapp = g('telefono whatsapp') || g('whatsapp') || cel;
 
       // Etiquetas: régimen IVA (si viene) + columna "Etiquetas" separada por coma.
-      const regimenIva = g('tipo de regimen iva');
+      const regimenIva = g('regimen iva etiqueta') || g('tipo de regimen iva');
       const etiquetasRaw = g('etiquetas');
       const etiquetas = [
         ...(regimenIva ? [regimenIva] : []),
@@ -300,7 +315,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         alias: g('alias facturacion') || 'Principal',
         nombres: g('razon social facturacion') || nombres,
         tipoDocumento: g('tipo documento facturacion') || tipoDoc,
-        documento: g('documento facturacion') || doc,
+        documento: g('documento facturacion') || g('documento/nit facturacion') || g('nit facturacion') || doc,
         correo: g('correo electronico facturacion') || correoCom,
       };
 
@@ -312,8 +327,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         celular: g('celular entrega') || cel,
         direccionEntrega: g('direccion de entrega'),
         barrio: g('barrio'),
-        nombreUnidad: g('unidad/conjunto'),
-        especificacionesInternas: g('especificaciones internas'),
+        nombreUnidad: g('nombre unidad / edificio') || g('unidad/conjunto'),
+        especificacionesInternas: g('torre / apto / oficina') || g('especificaciones internas'),
         observaciones: g('observaciones'),
         pais: g('pais') || 'Colombia',
         departamento: g('departamento'),
@@ -327,6 +342,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         documento: doc,
         correo_electronico_comprador: correoCom,
         numero_celular_comprador: cel,
+        numero_celular_whatsapp: whatsapp,
         etiquetas: Array.from(new Set(etiquetas)),
         datosFacturacionElectronica: [datosFacturacion],
         datosEntrega: [datosEntrega],
@@ -348,21 +364,27 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'documento', header: 'Cédula/NIT', required: true, example: '815003461' },
       { field: '__digitoVerificacion', header: 'Digito Verificación', required: false, example: '2' },
       { field: 'correo_electronico_comprador', header: 'Correo Electrónico', required: true, example: 'contacto@empresa.com' },
-      { field: 'numero_celular_comprador', header: 'Celular/Whatsapp', required: true, example: '3001234567' },
-      // ── Datos de facturación (correo propio; nombre/documento se heredan del básico) ──
+      { field: 'numero_celular_comprador', header: 'Teléfono Propio', required: true, example: '3001234567' },
+      { field: 'numero_celular_whatsapp', header: 'Teléfono WhatsApp', required: false, example: '3007654321' },
+      // ── Datos de facturación (pueden diferir del básico; el NIT de facturación suele
+      //    ser distinto). Si se dejan vacíos, heredan del básico. Sin teléfono. ──
+      { field: 'datosFacturacionElectronica.nombres', header: 'Razón Social Facturación', required: false, example: 'TRIADA EMA S.A.' },
+      { field: 'datosFacturacionElectronica.tipoDocumento', header: 'Tipo Documento Facturación', required: false, example: 'NIT' },
+      { field: 'datosFacturacionElectronica.documento', header: 'Documento/NIT Facturación', required: false, example: '901555444-3' },
       { field: 'datosFacturacionElectronica.correo', header: 'Correo Electrónico Facturación', required: false, example: 'facturacion@empresa.com' },
       // ── Datos de entrega (dirección de entrega + detalles) ──
       { field: 'datosEntrega.direccionEntrega', header: 'Direccion De Entrega', required: false, example: 'Calle 123 # 45 - 67' },
       { field: 'datosEntrega.barrio', header: 'Barrio', required: false, example: 'El Poblado' },
-      { field: 'datosEntrega.nombreUnidad', header: 'Unidad/Conjunto', required: false, example: 'Torre 4 Apto 514' },
-      { field: 'datosEntrega.especificacionesInternas', header: 'Especificaciones Internas', required: false, example: '' },
+      { field: 'datosEntrega.nombreUnidad', header: 'Nombre Unidad / Edificio', required: false, example: 'Conjunto Los Robles' },
+      { field: 'datosEntrega.especificacionesInternas', header: 'Torre / Apto / Oficina', required: false, example: 'Torre 4 Apto 514' },
       { field: 'datosEntrega.observaciones', header: 'Observaciones', required: false, example: '' },
       { field: 'datosEntrega.pais', header: 'Pais', required: false, example: 'Colombia' },
       { field: 'datosEntrega.departamento', header: 'Departamento', required: false, example: 'Antioquia' },
       { field: 'datosEntrega.ciudad', header: 'Ciudad', required: false, example: 'Medellin' },
       { field: 'datosEntrega.codigoPV', header: 'Codigo Postal', required: false, example: '050021' },
-      // ── Etiquetas (el régimen de IVA se guarda como etiqueta; en "Etiquetas" van varias separadas por coma) ──
-      { field: '__regimenIva', header: 'Tipo de regimen IVA', required: false, example: 'Responsable de IVA' },
+      // ── Etiquetas (ambas se guardan en el array `etiquetas` del cliente). El régimen
+      //    de IVA es una etiqueta más; tiene su propia columna para asegurar el valor estándar. ──
+      { field: '__regimenIva', header: 'Régimen IVA (etiqueta)', required: false, example: 'Responsable de IVA' },
       { field: '__etiquetas', header: 'Etiquetas', required: false, example: 'VIP, Frecuente' }
     ],
     fieldLabels: {
@@ -371,7 +393,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       '__digitoVerificacion': 'Dígito de Verificación',
       'nombres_completos': 'Nombre/Razón Social',
       'correo_electronico_comprador': 'Correo Contacto Comercial',
-      'numero_celular_comprador': 'Celular/Whatsapp',
+      'numero_celular_comprador': 'Teléfono Propio',
+      'numero_celular_whatsapp': 'Teléfono WhatsApp',
       'tipo_documento_comprador': 'Tipo de Documento',
       // Facturación (nombres del formulario)
       'datosFacturacionElectronica.alias': 'Alias (Facturación)',
@@ -386,8 +409,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'datosEntrega.celular': 'Celular (Entrega)',
       'datosEntrega.direccionEntrega': 'Dirección (Entrega)',
       'datosEntrega.barrio': 'Barrio (Entrega)',
-      'datosEntrega.nombreUnidad': 'Unidad/Conjunto (Entrega)',
-      'datosEntrega.especificacionesInternas': 'Especificaciones (Entrega)',
+      'datosEntrega.nombreUnidad': 'Nombre Unidad / Edificio (Entrega)',
+      'datosEntrega.especificacionesInternas': 'Torre / Apto / Oficina (Entrega)',
       'datosEntrega.observaciones': 'Observaciones (Entrega)',
       'datosEntrega.pais': 'País (Entrega)',
       'datosEntrega.departamento': 'Departamento (Entrega)',
