@@ -581,11 +581,19 @@ export class DespachosComponent implements OnInit, OnDestroy {
     if (this.useOptimizedLoading) {
       // Cargar pedidos Y métricas globales en paralelo
       // Pasar filtros de fecha a las métricas para que coincidan con los pedidos mostrados
-      // Convertir fechas a formato ISO (YYYY-MM-DD) para el API
+      // Convertir fechas a formato YYYY-MM-DD para el API.
+      // IMPORTANTE: usar los componentes LOCALES (no toISOString, que pasa a UTC).
+      // fechaFinal es fin-de-día local (23:59); en UTC-5 toISOString rueda al día
+      // siguiente y mandaba el corte un día corrido (bug 86ba77nrd).
       const formatDateForApi = (date: any): string | undefined => {
         if (!date) return undefined;
         if (typeof date === 'string') return date.split('T')[0];
-        if (date instanceof Date) return date.toISOString().split('T')[0];
+        if (date instanceof Date) {
+          const y = date.getFullYear();
+          const m = String(date.getMonth() + 1).padStart(2, '0');
+          const d = String(date.getDate()).padStart(2, '0');
+          return `${y}-${m}-${d}`;
+        }
         return undefined;
       };
 
@@ -3226,8 +3234,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Width of the document
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Starting y position — texto en la parte inferior
-    let yPos = 14;
+    // Área de contenido de la tarjeta (unidad cm, página 15x23).
+    // El contenido arranca en yStart y NO debe invadir el pie pre-impreso.
+    const yStart = 14;
+    const yBottomLimit = 21.5; // límite inferior seguro (evita montarse con el pie de la tarjeta)
 
     // Función helper para capitalizar cada palabra (Title Case)
     const toTitleCase = (texto: string): string => {
@@ -3289,41 +3299,60 @@ export class DespachosComponent implements OnInit, OnDestroy {
       return textoLimpio;
     };
 
-    // Agregar el campo "Para:" solo si existe
-    if (tarjeta.para && tarjeta.para.trim() !== '') {
-      const paraLabelWidth = doc.getTextWidth("Para:");
-      doc.text("Para:", (pageWidth - paraLabelWidth) / 2, yPos);
-      yPos += 0.6; // Espacio fijo entre label y texto
+    // Construye el layout (posiciones relativas a yStart) para un tamaño de fuente
+    // dado. Los espaciados escalan con la fuente para reducir todo de forma uniforme.
+    const baseFont = 12;
+    const buildLayout = (fontSize: number): { ops: Array<{ text: string; y: number }>; totalHeight: number } => {
+      doc.setFontSize(fontSize);
+      const k = fontSize / baseFont; // factor de escala de los espaciados
+      const ops: Array<{ text: string; y: number }> = [];
+      let y = 0;
 
-      const paraTexto = toTitleCase(limpiarTexto(tarjeta.para));
-      const paraTextWidth = doc.getTextWidth(paraTexto);
-      doc.text(paraTexto, (pageWidth - paraTextWidth) / 2, yPos);
-      yPos += 1.5; // Espacio fijo después del texto "Para"
+      // Para
+      if (tarjeta.para && tarjeta.para.trim() !== '') {
+        ops.push({ text: 'Para:', y });
+        y += 0.6 * k;
+        ops.push({ text: toTitleCase(limpiarTexto(tarjeta.para)), y });
+        y += 1.5 * k;
+      }
+
+      // Mensaje (el ancho de wrap depende del tamaño de fuente actual)
+      if (tarjeta.mensaje && tarjeta.mensaje.trim() !== '') {
+        const lineas = doc.splitTextToSize(limpiarTexto(tarjeta.mensaje), 12);
+        lineas.forEach((line: string) => {
+          ops.push({ text: line, y });
+          y += 0.5 * k;
+        });
+        y += 1.0 * k;
+      }
+
+      // De
+      if (tarjeta.de && tarjeta.de.trim() !== '') {
+        ops.push({ text: 'De:', y });
+        y += 0.6 * k;
+        ops.push({ text: toTitleCase(limpiarTexto(tarjeta.de)), y });
+      }
+
+      return { ops, totalHeight: y };
+    };
+
+    // Auto-ajuste: si el contenido no cabe en el área disponible, reducir la fuente
+    // (y con ella los espaciados) hasta que quepa, para que un mensaje largo no se
+    // "moche" ni se monte sobre el pie de la tarjeta. (ClickUp wdu9v75ptc)
+    const maxHeight = yBottomLimit - yStart;
+    let fontSize = baseFont;
+    let layout = buildLayout(fontSize);
+    while (layout.totalHeight > maxHeight && fontSize > 7) {
+      fontSize = Math.max(7, fontSize - 0.5);
+      layout = buildLayout(fontSize);
     }
 
-    // Agregar el campo "mensaje" en el centro
-    if (tarjeta.mensaje && tarjeta.mensaje.trim() !== '') {
-      const mensajeTexto = limpiarTexto(tarjeta.mensaje);
-      const splitMensaje = doc.splitTextToSize(mensajeTexto, 12); // Reducir ancho para mejor ajuste
-
-      splitMensaje.forEach((line) => {
-        const lineWidth = doc.getTextWidth(line);
-        doc.text(line, (pageWidth - lineWidth) / 2, yPos);
-        yPos += 0.5; // Espacio fijo entre líneas del mensaje
-      });
-      yPos += 1.0; // Espacio fijo después del mensaje completo
-    }
-
-    // Agregar el campo "De:" solo si existe
-    if (tarjeta.de && tarjeta.de.trim() !== '') {
-      const deLabelWidth = doc.getTextWidth("De:");
-      doc.text("De:", (pageWidth - deLabelWidth) / 2, yPos);
-      yPos += 0.6; // Espacio fijo entre label y texto
-
-      const deTexto = toTitleCase(limpiarTexto(tarjeta.de));
-      const deTextWidth = doc.getTextWidth(deTexto);
-      doc.text(deTexto, (pageWidth - deTextWidth) / 2, yPos);
-    }
+    // Dibujar el contenido centrado con el tamaño de fuente final.
+    doc.setFontSize(fontSize);
+    layout.ops.forEach((op) => {
+      const lineWidth = doc.getTextWidth(op.text);
+      doc.text(op.text, (pageWidth - lineWidth) / 2, yStart + op.y);
+    });
 
     // Generar el blob y abrir en una nueva ventana
     const blobUrl = doc.output("bloburl");
@@ -3860,6 +3889,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
     const order = event.pedido;
     order.estadoProceso = event.nuevoEstado;
     order.date_edit = new Date().toISOString();
+    // Intención EXPLÍCITA del usuario: el backend honra este cambio de estado (incluido un
+    // retroceso manual) en vez de bloquearlo como escritura obsoleta. NO marcar en guardados
+    // genéricos del pedido — solo aquí, donde el usuario elige el estado a propósito.
+    order._estadoProcesoExplicitlyChanged = true;
 
     const userLite = this.getCurrentUser();
     if (userLite) {
@@ -3876,11 +3909,18 @@ export class DespachosComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
+          delete order._estadoProcesoExplicitlyChanged;
           this.toastr.success(`Pedido ${order.nroPedido} → ${event.nuevoEstado}`);
           this.refrescarDatos(false);
         },
         error: (err) => {
-          this.toastr.error(`Error al cambiar estado: ${err.message || 'Error'}`);
+          delete order._estadoProcesoExplicitlyChanged;
+          if (err && err.isStaleWrite) {
+            this.toastr.warning(err.message);
+            this.refrescarDatos(false); // recargar para traer el estado real
+          } else {
+            this.toastr.error(`Error al cambiar estado: ${err.message || 'Error'}`);
+          }
         }
       });
   }
@@ -3890,21 +3930,43 @@ export class DespachosComponent implements OnInit, OnDestroy {
     for (const pedido of event.pedidos) {
       pedido.estadoProceso = event.nuevoEstado;
       pedido.date_edit = new Date().toISOString();
+      // Intención explícita del usuario (ver onQuickStateChange).
+      pedido._estadoProcesoExplicitlyChanged = true;
     }
     // Usar editOrder secuencialmente para cada pedido
     let completed = 0;
+    let conflictos = 0;
+    const total = event.pedidos.length;
+    const finalizar = () => {
+      if (completed + conflictos === total) {
+        if (conflictos > 0) {
+          this.toastr.warning(`${conflictos} pedido(s) cambiaron mientras editabas; se recargó la lista.`);
+        }
+        if (completed > 0) {
+          this.toastr.success(`${completed} pedidos cambiados a ${event.nuevoEstado}`);
+        }
+        this.refrescarDatos(false);
+      }
+    };
     for (const pedido of event.pedidos) {
       this.ventasService.editOrder(pedido)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
+            delete pedido._estadoProcesoExplicitlyChanged;
             completed++;
-            if (completed === event.pedidos.length) {
-              this.toastr.success(`${completed} pedidos cambiados a ${event.nuevoEstado}`);
-              this.refrescarDatos(false);
-            }
+            finalizar();
           },
-          error: (err) => console.error('Error batch estado:', err)
+          error: (err) => {
+            delete pedido._estadoProcesoExplicitlyChanged;
+            if (err && err.isStaleWrite) {
+              conflictos++;
+            } else {
+              console.error('Error batch estado:', err);
+              conflictos++;
+            }
+            finalizar();
+          }
         });
     }
   }
@@ -3939,6 +4001,14 @@ export class DespachosComponent implements OnInit, OnDestroy {
   // Impresión batch - imprime cada pedido secuencialmente
 
   onDespachoExpressDispatch(event: { grupos: Array<{ pedidos: string[]; transportadorId: string; transportadorNombre: string; metodoEnvio: string; zona: string }> }): void {
+    // Capturar los pedidos ANTES de despachar/refrescar: refrescar() recarga
+    // this.orders y saca los ya despachados, por lo que la impresión quedaba en
+    // blanco al filtrar this.orders después. (Tarea 86b8h02pv: "rutas en blanco").
+    const pedidosSnapshot = new Map<string, any>();
+    for (const o of this.orders) {
+      if (o?._id) pedidosSnapshot.set(o._id, o);
+    }
+
     this.dispatchRulesService.batchDispatch(event.grupos)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -3963,7 +4033,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
           // Auto-imprimir cada orden creada con impresión nativa (instantánea)
           if (result.ordenesCreadas?.length > 0) {
-            this.imprimirOrdenesExpressNativa(event.grupos, result.ordenesCreadas);
+            this.imprimirOrdenesExpressNativa(event.grupos, result.ordenesCreadas, pedidosSnapshot);
           }
         },
         error: (err) => {
@@ -3976,7 +4046,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
   private imprimirOrdenesExpressNativa(
     grupos: Array<{ pedidos: string[]; transportadorNombre: string }>,
-    ordenesCreadas: Array<{ nroShippingOrder: number; pedidosCount: number; transportador: string; zona: string }>
+    ordenesCreadas: Array<{ nroShippingOrder: number; pedidosCount: number; transportador: string; zona: string }>,
+    pedidosSnapshot?: Map<string, any>
   ): void {
     // Pequeño delay para que el modal se cierre primero
     setTimeout(() => {
@@ -3985,7 +4056,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
         const grupo = grupos[i];
         if (!orden || !grupo) continue;
 
-        const pedidosParaImprimir = this.orders.filter(o => grupo.pedidos.includes(o._id));
+        // Resolver los pedidos desde el snapshot (tomado antes de refrescar); si no
+        // está, caer a this.orders. Evita rutas en blanco cuando el listado ya se recargó.
+        const pedidosParaImprimir = grupo.pedidos
+          .map(id => pedidosSnapshot?.get(id) || this.orders.find(o => o._id === id))
+          .filter(Boolean);
         if (pedidosParaImprimir.length > 0) {
           this.imprimirOrdenNativa(pedidosParaImprimir, String(orden.nroShippingOrder), orden.transportador);
         }

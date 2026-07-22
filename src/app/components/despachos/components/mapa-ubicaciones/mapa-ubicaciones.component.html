@@ -1,90 +1,100 @@
 <div class="mapa-ubicaciones-container">
   <!-- Header del mapa -->
-  <div class="mapa-header d-flex justify-content-between align-items-center mb-3" *ngIf="mostrarControles">
-    <div>
-      <h6 class="mb-1">{{ 'Mapa de Ubicaciones' | translate }}</h6>
-      <small class="text-muted">{{ 'Seguimiento en tiempo real de entregas' | translate }}</small>
-    </div>
-    <div class="d-flex align-items-center gap-2">
-      <!-- Indicador de tiempo real -->
-      <div class="d-flex align-items-center" *ngIf="tiempoReal">
-        <div class="status-indicator active me-2"></div>
-        <small class="text-success">{{ 'Tiempo Real' | translate }}</small>
+  <div class="mapa-header" *ngIf="mostrarControles">
+    <div class="mapa-header__brand">
+      <span class="mapa-header__icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+          <line x1="8" y1="2" x2="8" y2="18"></line>
+          <line x1="16" y1="6" x2="16" y2="22"></line>
+        </svg>
+      </span>
+      <div>
+        <div class="mapa-header__title">{{ 'Mapa de Ubicaciones' | translate }}</div>
+        <div class="mapa-header__subtitle">{{ 'Seguimiento en tiempo real de entregas' | translate }}</div>
       </div>
-      
+    </div>
+
+    <div class="mapa-header__actions">
+      <!-- Indicador de tiempo real -->
+      <span class="mapa-pill mapa-pill--live" *ngIf="tiempoReal">
+        <span class="mapa-pill__dot"></span>{{ 'Tiempo Real' | translate }}
+      </span>
+
       <!-- Botón para ajustar vista -->
-      <button type="button" 
-        class="btn btn-sm btn-outline-secondary"
+      <button type="button"
+        class="mapa-iconbtn"
         (click)="ajustarVistaAMarcadores()"
         title="{{ 'Ajustar vista a todas las ubicaciones' | translate }}">
-        <i class="pi pi-search-plus"></i>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+        </svg>
       </button>
 
       <!-- Toggle para mensajeros -->
-      <div class="form-check form-switch ms-2" title="{{ 'Mostrar/Ocultar mensajeros' | translate }}">
-        <input class="form-check-input"
-               type="checkbox"
-               role="switch"
-               id="toggleMensajeros"
-               [checked]="mostrarMensajeros"
-               (change)="toggleMensajeros($event)">
-        <label class="form-check-label" for="toggleMensajeros">
-          <i class="pi pi-user"></i>
-        </label>
-      </div>
+      <label class="mapa-toggle" title="{{ 'Mostrar/Ocultar mensajeros' | translate }}">
+        <input type="checkbox" [checked]="mostrarMensajeros" (change)="toggleMensajeros($event)">
+        <span class="mapa-toggle__track"><span class="mapa-toggle__thumb"></span></span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </label>
 
       <!-- Toggle para zonas de entrega -->
-      <div class="form-check form-switch ms-2" title="{{ 'Mostrar/Ocultar zonas de entrega' | translate }}" *ngIf="configuracionZonas.zonas.length > 0">
-        <input class="form-check-input"
-               type="checkbox"
-               role="switch"
-               id="toggleZonas"
-               [checked]="mostrarZonasEntrega"
-               (change)="toggleZonasEntrega($event)">
-        <label class="form-check-label" for="toggleZonas">
-          <i class="pi pi-map"></i>
-        </label>
-      </div>
+      <label class="mapa-toggle" title="{{ 'Mostrar/Ocultar zonas de entrega' | translate }}"
+        *ngIf="configuracionZonas.zonas.length > 0">
+        <input type="checkbox" [checked]="mostrarZonasEntrega" (change)="toggleZonasEntrega($event)">
+        <span class="mapa-toggle__track"><span class="mapa-toggle__thumb"></span></span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+          <line x1="8" y1="2" x2="8" y2="18"></line>
+          <line x1="16" y1="6" x2="16" y2="22"></line>
+        </svg>
+      </label>
     </div>
   </div>
 
   <!-- Leyenda de estados -->
-  <div class="mapa-leyenda mb-3" *ngIf="mostrarControles">
-    <div class="d-flex flex-wrap gap-3">
-      <div class="d-flex align-items-center">
-        <div class="leyenda-item despachado me-2"></div>
-        <small>{{ 'En Ruta' | translate }} ({{ contadorDespachados }})</small>
-      </div>
-      <div class="d-flex align-items-center">
-        <div class="leyenda-item para-despachar me-2"></div>
-        <small>{{ 'Para Despachar' | translate }} ({{ contadorParaDespachar }})</small>
-      </div>
-      <div class="d-flex align-items-center">
-        <div class="leyenda-item empacado me-2"></div>
-        <small>{{ 'Empacado' | translate }} ({{ contadorEmpacados }})</small>
-      </div>
-      <div class="d-flex align-items-center">
-        <div class="leyenda-item producido me-2"></div>
-        <small>{{ 'Producido' | translate }} ({{ contadorProducidos }})</small>
-      </div>
-      <div class="d-flex align-items-center" *ngIf="mostrarMensajeros && mensajeros.length > 0">
-        <div class="leyenda-item mensajero me-2"></div>
-        <small>{{ 'Mensajero' | translate }} ({{ mensajeros.length }})</small>
-      </div>
-      <div class="d-flex align-items-center" *ngIf="mostrarZonasEntrega && tieneZonasActivas">
-        <div class="leyenda-item zona-entrega me-2"></div>
-        <small>{{ 'Zonas de Entrega' | translate }} ({{ contadorZonasActivas }})</small>
-      </div>
+  <div class="mapa-leyenda" *ngIf="mostrarControles">
+    <div class="mapa-leyenda__item">
+      <span class="leyenda-item despachado"></span>
+      <span class="mapa-leyenda__label">{{ 'En Ruta' | translate }} <b>({{ contadorDespachados }})</b></span>
+    </div>
+    <div class="mapa-leyenda__item">
+      <span class="leyenda-item para-despachar"></span>
+      <span class="mapa-leyenda__label">{{ 'Para Despachar' | translate }} <b>({{ contadorParaDespachar }})</b></span>
+    </div>
+    <div class="mapa-leyenda__item">
+      <span class="leyenda-item empacado"></span>
+      <span class="mapa-leyenda__label">{{ 'Empacado' | translate }} <b>({{ contadorEmpacados }})</b></span>
+    </div>
+    <div class="mapa-leyenda__item">
+      <span class="leyenda-item producido"></span>
+      <span class="mapa-leyenda__label">{{ 'Producido' | translate }} <b>({{ contadorProducidos }})</b></span>
+    </div>
+    <div class="mapa-leyenda__item" *ngIf="mostrarMensajeros && mensajeros.length > 0">
+      <span class="leyenda-item mensajero"></span>
+      <span class="mapa-leyenda__label">{{ 'Mensajero' | translate }} <b>({{ mensajeros.length }})</b></span>
+    </div>
+    <div class="mapa-leyenda__item" *ngIf="mostrarZonasEntrega && tieneZonasActivas">
+      <span class="leyenda-item zona-entrega"></span>
+      <span class="mapa-leyenda__label">{{ 'Zonas de Entrega' | translate }} <b>({{ contadorZonasActivas }})</b></span>
     </div>
   </div>
 
   <!-- Contenedor del mapa -->
   <div class="mapa-wrapper">
-    <div #mapaContainer 
+    <div #mapaContainer
       class="mapa-container"
       [style.height]="altura">
     </div>
-    
+
     <!-- Overlay de carga inicial -->
     <div class="mapa-loading" *ngIf="!leafletCargado">
       <div class="text-center">
@@ -94,7 +104,7 @@
         <p class="text-muted">{{ 'Cargando mapa interactivo...' | translate }}</p>
       </div>
     </div>
-    
+
     <!-- Overlay de geocodificación -->
     <div class="geocoding-overlay" *ngIf="geocodingInProgress && leafletCargado">
       <div class="geocoding-content">
@@ -104,7 +114,7 @@
             <i class="pi pi-map-marker"></i>
           </div>
         </div>
-        
+
         <div class="geocoding-text mt-3">
           <h6 class="text-white mb-2">
             <i class="pi pi-spin pi-spinner me-2"></i>
@@ -113,31 +123,31 @@
           <p class="text-white-50 small mb-3">
             {{ 'Convirtiendo direcciones a coordenadas del mapa' | translate }}
           </p>
-          
+
           <!-- Barra de progreso -->
           <div class="progress geocoding-progress-bar">
-            <div class="progress-bar geocoding-progress bg-success" 
+            <div class="progress-bar geocoding-progress bg-success"
                  [style.width.%]="geocodingProgress"
                  [attr.aria-valuenow]="geocodingProgress"
-                 aria-valuemin="0" 
+                 aria-valuemin="0"
                  aria-valuemax="100">
               {{ geocodingProgress | number:'1.0-0' }}%
             </div>
           </div>
         </div>
-        
+
         <!-- Efectos visuales adicionales -->
         <div class="geocoding-effects">
-          <div class="geocoding-dot" 
+          <div class="geocoding-dot"
                *ngFor="let dot of [1,2,3,4,5]; let i = index"
                [style.animation-delay.s]="i * 0.2">
           </div>
         </div>
       </div>
     </div>
-    
+
     <!-- Indicador de nuevos marcadores -->
-    <div class="new-markers-indicator" 
+    <div class="new-markers-indicator"
          *ngIf="!geocodingInProgress && leafletCargado && configuracion.ubicaciones.length > ultimosLocationsProcesados">
       <div class="new-markers-content">
         <i class="pi pi-check-circle text-success me-2"></i>
@@ -154,45 +164,76 @@
       <p class="text-muted small">
         {{ 'No se pudo inicializar el mapa. Verifique su conexión a internet.' | translate }}
       </p>
-      <button type="button" 
+      <button type="button"
         class="btn btn-sm btn-outline-primary"
         (click)="cargarLeaflet()">
         <i class="pi pi-refresh me-1"></i>{{ 'Reintentar' | translate }}
       </button>
     </div>
   </div>
-  
+
   <!-- Barra de progreso inferior durante geocodificación -->
   <div class="geocoding-bottom-progress" *ngIf="geocodingInProgress">
     <div class="progress-line" [style.width.%]="geocodingProgress"></div>
   </div>
 
-  <!-- Panel de información rápida -->
-  <div class="mapa-info mt-3" *ngIf="mostrarControles && configuracion.ubicaciones.length > 0">
-    <div class="row g-2">
-      <div class="col-6 col-md-3">
-        <div class="info-card text-center p-2 bg-light rounded">
-          <div class="fw-bold text-primary">{{ configuracion.ubicaciones.length }}</div>
-          <small class="text-muted">{{ 'Total Pedidos' | translate }}</small>
-        </div>
+  <!-- Panel de estadísticas rápidas -->
+  <div class="mapa-stats" *ngIf="mostrarControles && configuracion.ubicaciones.length > 0">
+    <div class="stat-card stat-card--primary">
+      <span class="stat-card__icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+      </span>
+      <div>
+        <div class="stat-card__value">{{ configuracion.ubicaciones.length }}</div>
+        <div class="stat-card__label">{{ 'Total Pedidos' | translate }}</div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="info-card text-center p-2 bg-light rounded">
-          <div class="fw-bold text-success">{{ contadorEnRuta }}</div>
-          <small class="text-muted">{{ 'En Ruta' | translate }}</small>
-        </div>
+    </div>
+
+    <div class="stat-card stat-card--success">
+      <span class="stat-card__icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="3" width="15" height="13"></rect>
+          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+          <circle cx="5.5" cy="18.5" r="2.5"></circle>
+          <circle cx="18.5" cy="18.5" r="2.5"></circle>
+        </svg>
+      </span>
+      <div>
+        <div class="stat-card__value">{{ contadorEnRuta }}</div>
+        <div class="stat-card__label">{{ 'En Ruta' | translate }}</div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="info-card text-center p-2 bg-light rounded">
-          <div class="fw-bold text-warning">{{ contadorPendientes }}</div>
-          <small class="text-muted">{{ 'Pendientes' | translate }}</small>
-        </div>
+    </div>
+
+    <div class="stat-card stat-card--warning">
+      <span class="stat-card__icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </span>
+      <div>
+        <div class="stat-card__value">{{ contadorPendientes }}</div>
+        <div class="stat-card__label">{{ 'Pendientes' | translate }}</div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="info-card text-center p-2 bg-light rounded">
-          <div class="fw-bold text-info">{{ tiempoPromedioEstimado }}</div>
-          <small class="text-muted">{{ 'Min Promedio' | translate }}</small>
-        </div>
+    </div>
+
+    <div class="stat-card stat-card--info">
+      <span class="stat-card__icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+        </svg>
+      </span>
+      <div>
+        <div class="stat-card__value">{{ tiempoPromedioEstimado }}</div>
+        <div class="stat-card__label">{{ 'Min Promedio' | translate }}</div>
       </div>
     </div>
   </div>
@@ -216,7 +257,7 @@
                 'bg-primary': ubicacion.estado === 'ProducidoTotalmente'
               }">{{ ubicacion.estado }}</span>
             </div>
-            
+
             <div class="small text-muted">
               <div class="mb-1">
                 <i class="pi pi-map-marker me-1"></i>{{ ubicacion.direccion }}

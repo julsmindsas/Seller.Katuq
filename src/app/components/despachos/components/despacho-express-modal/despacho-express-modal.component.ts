@@ -230,12 +230,44 @@ export class DespachoExpressModalComponent implements OnInit, OnChanges, OnDestr
     if (!this.canDispatch) return;
 
     this.dispatching = true;
-    const gruposPayload = this.grupos.map(g => ({
-      pedidos: g.pedidos.map(p => p._id),
-      transportadorId: g.transportadorId,
-      transportadorNombre: g.transportadorNombre,
-      metodoEnvio: g.metodoEnvio,
-      zona: `${g.ciudad} - ${g.zona}`,
+
+    // Consolidar por mensajero: los grupos por zona que van al MISMO transportador
+    // y método de envío se fusionan en UNA sola ruta/orden. El backend crea una
+    // shipping order por grupo recibido, así que la fusión se hace aquí.
+    // (Tarea 86b8h02pv: "si van un solo mensajero debe ser una sola ruta").
+    const consolidado = new Map<string, {
+      pedidos: string[];
+      transportadorId: string;
+      transportadorNombre: string;
+      metodoEnvio: string;
+      zonas: string[];
+    }>();
+
+    for (const g of this.grupos) {
+      const mergeKey = `${g.transportadorId}|${g.metodoEnvio}`;
+      const zonaLabel = `${g.ciudad} - ${g.zona}`;
+
+      if (!consolidado.has(mergeKey)) {
+        consolidado.set(mergeKey, {
+          pedidos: [],
+          transportadorId: g.transportadorId,
+          transportadorNombre: g.transportadorNombre,
+          metodoEnvio: g.metodoEnvio,
+          zonas: [],
+        });
+      }
+
+      const entry = consolidado.get(mergeKey)!;
+      entry.pedidos.push(...g.pedidos.map(p => p._id));
+      if (!entry.zonas.includes(zonaLabel)) entry.zonas.push(zonaLabel);
+    }
+
+    const gruposPayload = Array.from(consolidado.values()).map(e => ({
+      pedidos: e.pedidos,
+      transportadorId: e.transportadorId,
+      transportadorNombre: e.transportadorNombre,
+      metodoEnvio: e.metodoEnvio,
+      zona: e.zonas.join(', '),
     }));
 
     this.onDispatch.emit({ grupos: gruposPayload });

@@ -88,17 +88,17 @@
             </button>
           </div>
           
-          <div class="cell">
+          <div class="cell col-orden">
             <span class="cell-label">{{ 'Nro. Orden' | translate }}:</span>
             <span class="order-number">{{ order.nroShippingOrder || 'N/A' }}</span>
           </div>
-          
-          <div class="cell">
+
+          <div class="cell col-fecha">
             <span class="cell-label">{{ 'Fecha' | translate }}:</span>
             <span class="order-date">{{ formatDate(order.fecha) }}</span>
           </div>
-          
-          <div class="cell">
+
+          <div class="cell col-transportador">
             <span class="cell-label">{{ 'Transportador' | translate }}:</span>
             <div class="d-flex align-items-center gap-2">
               <span class="badge" [ngClass]="getShippingMethodBadgeClass(order)">
@@ -108,12 +108,12 @@
             </div>
           </div>
           
-          <div class="cell">
+          <div class="cell col-pedidos">
             <span class="cell-label">{{ 'Pedidos' | translate }}:</span>
             <span class="badge bg-primary">{{ getPedidosCount(order) }}</span>
           </div>
-          
-          <div class="cell">
+
+          <div class="cell col-estado">
             <span class="cell-label">{{ 'Estado' | translate }}:</span>
             <span class="badge"
                   [ngClass]="{
@@ -131,9 +131,9 @@
             </span>
           </div>
           
-          <div class="cell">
+          <div class="cell col-total">
             <span class="cell-label">{{ 'Total a Cobrar' | translate }}:</span>
-            <span class="total-amount">{{ getFaltaPorPagarSum(order) | currency:'COP':'symbol':'1.0-0' }}</span>
+            <span class="total-amount" [class.total-zero]="getFaltaPorPagarSum(order) <= 0">{{ getFaltaPorPagarSum(order) | currency:'COP':'symbol':'1.0-0' }}</span>
           </div>
           
           <div class="cell actions-cell">
