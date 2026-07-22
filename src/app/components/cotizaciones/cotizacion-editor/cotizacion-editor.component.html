@@ -203,7 +203,13 @@
           <div class="cot-line-row cot-line-head">
             <span class="cl-prod">Producto</span>
             <span class="cl-cant">Cant.</span>
-            <span class="cl-precio">Precio</span>
+            <span class="cl-precio">Precio / IVA / Desc.</span>
+            <span class="cl-bruto">Valor Bruto</span>
+            <span class="cl-desc-monto">Descuento</span>
+            <span class="cl-sin-iva">Precio Unitario (sin IVA)</span>
+            <span class="cl-pct-iva">Porcentaje IVA</span>
+            <span class="cl-valor-iva">Valor IVA</span>
+            <span class="cl-total-iva">Precio unitario Total(con IVA)</span>
             <span class="cl-sub">Subtotal</span>
             <span class="cl-acc"></span>
           </div>
@@ -264,10 +270,6 @@
                       <option [ngValue]="19">19%</option>
                     </select>
                   </div>
-                  <div class="cl-price-break">
-                    + {{ getValorIva(item) | currency:'COP':'symbol-narrow':'1.0-0' }} IVA
-                    = {{ itemPrecio(item) | currency:'COP':'symbol-narrow':'1.0-0' }}
-                  </div>
                   <div class="cl-price-orig" *ngIf="tieneOverride(item)">
                     <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</s>
                     <span class="cl-price-orig-iva">(IVA {{ (item.producto?.precio?.precioUnitarioIva) || 0 }}%)</span>
@@ -290,9 +292,8 @@
                       <option [ngValue]="19">19%</option>
                     </select>
                   </div>
-                  <div class="cl-price-break" *ngIf="item._ivaManualOverride !== undefined && item._ivaManualOverride !== null">
-                    + {{ getValorIva(item) | currency:'COP':'symbol-narrow':'1.0-0' }} IVA
-                    <s class="cl-price-orig">{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</s>
+                  <div class="cl-price-orig" *ngIf="item._ivaManualOverride !== undefined && item._ivaManualOverride !== null">
+                    <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</s>
                   </div>
                 </div>
               </ng-template>
@@ -313,6 +314,14 @@
                 </div>
               </div>
             </span>
+            <span class="cl-bruto">{{ getValorBruto(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="cl-desc-monto">
+              {{ descLineaPct(item) > 0 ? (getDescuentoUnitario(item) | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}
+            </span>
+            <span class="cl-sin-iva">{{ getPrecioSinIvaNeto(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="cl-pct-iva">{{ getIvaActual(item) }}%</span>
+            <span class="cl-valor-iva">{{ getValorIvaNeto(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="cl-total-iva">{{ getPrecioTotalConIvaNeto(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
             <span class="cl-sub">
               <span class="cl-sub-net">{{ itemSubtotal(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
               <s class="cl-sub-orig" *ngIf="descLineaPct(item) > 0">
@@ -462,10 +471,13 @@
           <tr>
             <th>Descripción</th>
             <th>Cant.</th>
-            <th>Precio</th>
-            <th>Desc.</th>
-            <th>IVA</th>
-            <th>Total</th>
+            <th>Valor Bruto</th>
+            <th>Descuento</th>
+            <th>Precio Unitario (sin IVA)</th>
+            <th>Porcentaje IVA</th>
+            <th>Valor IVA</th>
+            <th>Precio unitario Total(con IVA)</th>
+            <th>Subtotal</th>
           </tr>
         </thead>
         <tbody>
@@ -475,9 +487,12 @@
               <span class="doc-ref" *ngIf="itemReferencia(it)"> · Ref: {{ itemReferencia(it) }}</span>
             </td>
             <td>{{ it.cantidad }}</td>
-            <td>{{ docPrecioUnit(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td>{{ descLineaPct(it) > 0 ? (descLineaPct(it) + '%') : '—' }}</td>
+            <td>{{ getValorBruto(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td>{{ descLineaPct(it) > 0 ? (getDescuentoUnitario(it) | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</td>
+            <td>{{ getPrecioSinIvaNeto(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td>{{ getIvaActual(it) }}%</td>
+            <td>{{ getValorIvaNeto(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td>{{ getPrecioTotalConIvaNeto(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td>{{ itemSubtotal(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
         </tbody>

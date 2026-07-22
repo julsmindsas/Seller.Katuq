@@ -791,6 +791,38 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return this.itemPrecio(item) - this.getPrecioSinIva(item);
   }
 
+  // ---- Desglose numérico por línea (ClickUp wdu9v75qpz) ----
+  // Getters puramente derivados para mostrar el desglose Bruto→Descuento→Neto→IVA→Total
+  // en columnas separadas. No reemplazan itemPrecio/getPrecioSinIva/getValorIva/itemSubtotal
+  // (que siguen siendo la fuente de verdad de precio y totales) — son solo su descomposición
+  // para pantalla. Matemáticamente consistentes: getPrecioTotalConIvaNeto(item) * cantidad
+  // == itemSubtotal(item), porque (1-d)*(1+r) == (1+r)*(1-d).
+
+  /** Valor Bruto: precio unitario sin IVA, antes del descuento de línea. */
+  getValorBruto(item: Carrito): number {
+    return this.getPrecioSinIva(item);
+  }
+
+  /** Descuento de línea en moneda (el campo guardado es el % 0–100). */
+  getDescuentoUnitario(item: Carrito): number {
+    return this.getValorBruto(item) * (this.descLineaPct(item) / 100);
+  }
+
+  /** Precio Unitario (sin IVA), ya neto del descuento de línea. */
+  getPrecioSinIvaNeto(item: Carrito): number {
+    return this.getValorBruto(item) - this.getDescuentoUnitario(item);
+  }
+
+  /** Valor IVA por unidad, calculado sobre el precio ya neto del descuento. */
+  getValorIvaNeto(item: Carrito): number {
+    return this.getPrecioSinIvaNeto(item) * (this.getIvaActual(item) / 100);
+  }
+
+  /** Precio Unitario Total (con IVA), ya neto del descuento de línea. */
+  getPrecioTotalConIvaNeto(item: Carrito): number {
+    return this.getPrecioSinIvaNeto(item) + this.getValorIvaNeto(item);
+  }
+
   /** ¿La línea tiene algún override manual (precio o IVA)? */
   tieneOverride(item: Carrito): boolean {
     return (

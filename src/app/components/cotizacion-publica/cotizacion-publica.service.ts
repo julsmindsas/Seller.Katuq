@@ -7,6 +7,13 @@ import { BaseService } from "../../shared/services/base.service";
 export interface CotizacionPublicaItem {
   titulo: string;
   cantidad: number;
+  /** Desglose numérico por unidad (ClickUp wdu9v75qpz) — todos netos del descuento de línea salvo valorBruto. */
+  valorBruto: number;
+  descuentoPct: number;
+  descuentoUnitario: number;
+  precioUnitarioSinIva: number;
+  porcentajeIva: number;
+  valorIva: number;
   precioUnitarioConIva: number;
   subtotal: number;
 }

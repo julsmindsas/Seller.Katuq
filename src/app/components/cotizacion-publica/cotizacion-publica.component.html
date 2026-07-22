@@ -50,27 +50,39 @@
     </div>
 
     <!-- Tabla de ítems -->
-    <table class="cp-table">
-      <thead>
-        <tr>
-          <th>Descripción</th>
-          <th class="cp-c">Cant.</th>
-          <th class="cp-r">V. Unit.</th>
-          <th class="cp-r">Subtotal</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let it of cot.items">
-          <td>{{ it.titulo }}</td>
-          <td class="cp-c">{{ it.cantidad }}</td>
-          <td class="cp-r">{{ money(it.precioUnitarioConIva) }}</td>
-          <td class="cp-r">{{ money(it.subtotal) }}</td>
-        </tr>
-        <tr *ngIf="!cot.items?.length">
-          <td colspan="4" class="cp-muted cp-c">Sin ítems.</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="cp-table-scroll">
+      <table class="cp-table">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th class="cp-c">Cant.</th>
+            <th class="cp-r">Valor Bruto</th>
+            <th class="cp-r">Descuento</th>
+            <th class="cp-r">Precio Unitario (sin IVA)</th>
+            <th class="cp-r">Porcentaje IVA</th>
+            <th class="cp-r">Valor IVA</th>
+            <th class="cp-r">Precio unitario Total(con IVA)</th>
+            <th class="cp-r">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let it of cot.items">
+            <td>{{ it.titulo }}</td>
+            <td class="cp-c">{{ it.cantidad }}</td>
+            <td class="cp-r">{{ money(it.valorBruto) }}</td>
+            <td class="cp-r">{{ it.descuentoPct > 0 ? money(it.descuentoUnitario) : '—' }}</td>
+            <td class="cp-r">{{ money(it.precioUnitarioSinIva) }}</td>
+            <td class="cp-r">{{ it.porcentajeIva }}%</td>
+            <td class="cp-r">{{ money(it.valorIva) }}</td>
+            <td class="cp-r">{{ money(it.precioUnitarioConIva) }}</td>
+            <td class="cp-r">{{ money(it.subtotal) }}</td>
+          </tr>
+          <tr *ngIf="!cot.items?.length">
+            <td colspan="9" class="cp-muted cp-c">Sin ítems.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Totales -->
     <div class="cp-totales">
