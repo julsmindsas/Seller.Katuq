@@ -31,7 +31,7 @@ import { HttpInterceptor2 } from '../app/shared/services/interceptor/http.interc
 import { NotificationService } from './shared/services/notification.service';
 import { CartSingletonService } from './shared/services/ventas/cart.singleton.service';
 import { KatuqintelligenceService } from './shared/services/katuqintelligence/katuqintelligence.service';
-import * as Sentry from '@sentry/angular';
+import { GlobalErrorHandler } from './shared/handlers/global-error.handler';
 import { LoaderComponent } from './components/loader/loader.component';
 import { LoaderInterceptor } from './shared/services/interceptor/loader.interceptor';
 import { NotificationrlService } from './shared/services/notificationrl.service';
@@ -151,11 +151,12 @@ export function HttpLoaderFactory(http: HttpClient) {
       useFactory: (injector: Injector) => injector.get(PosCheckoutService),
       deps: [Injector]
     },
-    // Sentry captura todo error no manejado de Angular. logErrors mantiene
-    // el console.error para que en desarrollo se sigan viendo igual que antes.
+    // GlobalErrorHandler: recarga una vez ante ChunkLoadError (bundle viejo tras
+    // deploy → página en blanco, wdu9v76w1g) y delega el resto a Sentry, que sigue
+    // capturando todo error no manejado (showDialog:false, logErrors:true).
     {
       provide: ErrorHandler,
-      useValue: Sentry.createErrorHandler({ showDialog: false, logErrors: true })
+      useClass: GlobalErrorHandler
     }
   ],
   bootstrap: [AppComponent]
