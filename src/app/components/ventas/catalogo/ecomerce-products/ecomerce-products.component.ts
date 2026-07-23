@@ -1005,32 +1005,45 @@ export class EcomerceProductsComponent
   }
 
   /**
-   * Obtiene el precio a mostrar para un producto, considerando la categoría del cliente
-   * Si el cliente tiene categoría y el producto tiene precio para esa categoría, muestra ese precio
-   * Si no, muestra el precio estándar
+   * Obtiene el precio a mostrar para un producto. Jerarquía:
+   *  1. Precio por categoría de cliente (negociado) — si aplica.
+   *  2. Precio promocional automático de catálogo (Feature B) — si aplica.
+   *  3. Precio estándar.
    */
   getPrecioParaMostrar(producto: Producto): number {
     if (!this._clienteCacheInitialized) this.refreshClienteCache();
 
+    // 1. Precio negociado por categoría de cliente (tiene prioridad).
     const categoriaId = this._cachedCategoriaClienteId;
-    if (!categoriaId) {
-      return producto?.precio?.precioUnitarioConIva || 0;
+    if (categoriaId) {
+      const preciosPorTipo = producto?.preciosPorTipoCliente;
+      if (preciosPorTipo && Array.isArray(preciosPorTipo)) {
+        const precioCategoria = preciosPorTipo.find(
+          (p: any) => p.tipoClienteId === categoriaId && p.activo === true
+        );
+        if (precioCategoria) {
+          return precioCategoria.precioConIva || producto?.precio?.precioUnitarioConIva || 0;
+        }
+      }
     }
 
-    const preciosPorTipo = producto?.preciosPorTipoCliente;
-    if (!preciosPorTipo || !Array.isArray(preciosPorTipo) || preciosPorTipo.length === 0) {
-      return producto?.precio?.precioUnitarioConIva || 0;
+    // 2. Precio promocional automático (Feature B).
+    if (this.tienePrecioPromocional(producto)) {
+      return producto.precioPromocional as number;
     }
 
-    const precioCategoria = preciosPorTipo.find(
-      (p: any) => p.tipoClienteId === categoriaId && p.activo === true
-    );
-
-    if (precioCategoria) {
-      return precioCategoria.precioConIva || producto?.precio?.precioUnitarioConIva || 0;
-    }
-
+    // 3. Precio estándar.
     return producto?.precio?.precioUnitarioConIva || 0;
+  }
+
+  /**
+   * Feature B — el producto trae un precio promocional vigente (inyectado por el
+   * backend del catálogo) y es realmente menor que el precio estándar.
+   */
+  tienePrecioPromocional(producto: Producto): boolean {
+    const promo = producto?.precioPromocional;
+    const base = producto?.precio?.precioUnitarioConIva;
+    return typeof promo === 'number' && typeof base === 'number' && promo < base;
   }
 
   /**

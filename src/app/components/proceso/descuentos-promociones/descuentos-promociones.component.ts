@@ -40,12 +40,13 @@ export class DescuentosPromocionesComponent implements OnInit {
     });
   }
 
-  openCrearModal() {
+  openCrearModal(naturaleza: 'codigo' | 'promocion' = 'codigo') {
     const modalRef = this.modalService.open(CrearDescuentoPromocionComponent, {
       size: 'lg',
       centered: true
     });
     modalRef.componentInstance.mostrarCrear = true;
+    modalRef.componentInstance.naturaleza = naturaleza;
 
     modalRef.result.then((result) => {
       if (result === 'success') {

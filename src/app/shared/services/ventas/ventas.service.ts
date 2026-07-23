@@ -217,7 +217,7 @@ export class VentasService extends BaseService {
     clienteId?: string;
     totalCarrito: number;
     codigosActivos?: string[];
-    items?: Array<{ productoReferencia: string; categorias: string[]; precioLinea: number }>;
+    items?: Array<{ productoReferencia: string; categorias: string[]; precioLinea: number; enPromocion?: boolean }>;
   }) {
     return this.post<any>('/v1/descuentos-promociones/aplicar-codigo', payload);
   }

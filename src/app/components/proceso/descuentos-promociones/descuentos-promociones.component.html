@@ -24,10 +24,15 @@
           <div class="col-6 p-3" style="text-align: end">
             <input type="text" class="form-control d-inline-block w-auto mr-2"
               placeholder="{{ 'Buscar nombre o código...' | translate }}" (input)="updateFilter($event)">
-            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="openCrearModal()">
-              <i placement="top" ngbTooltip="Nuevo" style="font-size: 18px; color: white; cursor: pointer;"
+            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="openCrearModal('codigo')">
+              <i placement="top" ngbTooltip="Nuevo código" style="font-size: 18px; color: white; cursor: pointer;"
                  class="icofont icofont-plus"></i>&nbsp;
               <span style="color: white">{{ "Crear Descuento" | translate }}</span>
+            </button>
+            <button class="btn btn-info btn-previous ml-2 mb-2" type="button" (click)="openCrearModal('promocion')">
+              <i placement="top" ngbTooltip="Nueva promoción automática" style="font-size: 18px; color: white; cursor: pointer;"
+                 class="icofont icofont-tag"></i>&nbsp;
+              <span style="color: white">{{ "Crear Promoción" | translate }}</span>
             </button>
           </div>
         </div>
@@ -65,7 +70,12 @@
             <ng-template pTemplate="body" let-row>
               <tr>
                 <td>{{ row.nombre }}</td>
-                <td class="text-center"><span class="badge bg-secondary fw-bold">{{ row.codigoPersonalizado }}</span></td>
+                <td class="text-center">
+                  <span *ngIf="row.naturaleza !== 'promocion'" class="badge bg-secondary fw-bold">{{ row.codigoPersonalizado }}</span>
+                  <span *ngIf="row.naturaleza === 'promocion'" class="badge bg-info text-dark">
+                    <i class="icofont icofont-tag"></i>&nbsp;{{ "Promoción automática" | translate }}
+                  </span>
+                </td>
                 <td class="text-center">
                   {{ row.tipo === 'porcentaje' ? row.valor + '%' :
                      row.tipo === 'valor_fijo' ? '$' + (row.valor | number) :

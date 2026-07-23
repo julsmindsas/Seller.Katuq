@@ -1,10 +1,21 @@
 
 <div class="modal-header">
-  <h5 class="modal-title">{{ mostrarCrear ? 'Crear Descuento' : 'Editar Descuento' }}</h5>
+  <h5 class="modal-title">
+    {{ mostrarCrear ? 'Crear ' : 'Editar ' }}{{ esPromocion ? 'Promoción' : 'Descuento' }}
+  </h5>
   <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
 </div>
 
 <div class="modal-body">
+  <!-- Banner explicativo del modo promoción automática -->
+  <div class="alert alert-info d-flex align-items-center mb-3" *ngIf="esPromocion">
+    <i class="icofont icofont-tag me-2" style="font-size: 20px;"></i>
+    <span>
+      <b>Promoción automática:</b> se aplica sola en el catálogo y el checkout,
+      sin que el cliente escriba ningún código. Apunta a una categoría o a un producto.
+    </span>
+  </div>
+
   <form [formGroup]="form">
     <div class="row g-4">
 
@@ -19,7 +30,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
           <label class="form-label fw-bold">Código personalizado <span class="text-danger">*</span></label>
           <input type="text" class="form-control text-uppercase"
@@ -42,7 +53,7 @@
         <div class="mb-3">
           <label class="form-label fw-bold">Tipo de descuento <span class="text-danger">*</span></label>
           <select class="form-control" formControlName="tipo">
-            <option *ngFor="let t of tiposDescuento" [value]="t.value">{{ t.label }}</option>
+            <option *ngFor="let t of tiposDisponibles" [value]="t.value">{{ t.label }}</option>
           </select>
         </div>
       </div>
@@ -82,15 +93,15 @@
       </div>
 
       <!-- Fila 4: Aplica a / Límite global -->
-      <div class="col-md-6">
+      <div [class]="esPromocion ? 'col-md-12' : 'col-md-6'">
         <div class="mb-3">
           <label class="form-label fw-bold">Aplica a <span class="text-danger">*</span></label>
           <select class="form-control" formControlName="aplicaA" (change)="onAplicaAChange()">
-            <option *ngFor="let op of aplicaAOpciones" [value]="op.value">{{ op.label }}</option>
+            <option *ngFor="let op of aplicaADisponibles" [value]="op.value">{{ op.label }}</option>
           </select>
         </div>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
           <label class="form-label fw-bold">Límite de usos global</label>
           <input type="number" class="form-control" formControlName="limiteUsos"
@@ -137,8 +148,8 @@
         </div>
       </div>
 
-      <!-- Fila 5: Monto mínimo / Límite por cliente (CAMPOS NUEVOS) -->
-      <div class="col-md-6">
+      <!-- Fila 5: Monto mínimo / Límite por cliente (solo códigos, no promociones) -->
+      <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
           <label class="form-label fw-bold">Monto mínimo de orden</label>
           <div class="input-group">
@@ -151,7 +162,7 @@
           </small>
         </div>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
           <label class="form-label fw-bold">Límite de usos por cliente</label>
           <input type="number" class="form-control" formControlName="limiteUsosPorCliente"
@@ -184,7 +195,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-6" *ngIf="!esPromocion">
         <div class="mb-3">
           <label class="form-label d-block fw-bold mb-2">¿Combinable con otros códigos?</label>
           <div class="d-flex align-items-center">

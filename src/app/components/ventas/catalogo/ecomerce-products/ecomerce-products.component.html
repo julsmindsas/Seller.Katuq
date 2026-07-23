@@ -390,14 +390,19 @@
                                     {{producto.crearProducto.titulo}}
                                 </h4>
 
-                                <!-- Precio con mejor jerarquía (considera categoría del cliente) -->
+                                <!-- Precio con mejor jerarquía (categoría de cliente / promoción automática) -->
                                 <div class="product-pricing-modern">
                                     <div class="price-main">
                                         {{getPrecioParaMostrar(producto) | currency:'USD':'symbol':'1.0-0'}}
                                     </div>
-                                    <!-- Mostrar precio original tachado si hay descuento por categoría -->
-                                    <div class="price-discount" *ngIf="tienePrecioCategoria(producto)">
+                                    <!-- Precio original tachado: por precio de categoría o por promoción automática -->
+                                    <div class="price-discount" *ngIf="tienePrecioCategoria(producto) || tienePrecioPromocional(producto)">
                                         <del>{{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}</del>
+                                        <span *ngIf="tienePrecioPromocional(producto)" class="badge bg-danger promo-badge">
+                                            {{ producto.promocionAplicada?.tipo === 'porcentaje'
+                                                ? '-' + producto.promocionAplicada?.valor + '%'
+                                                : 'OFERTA' }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>

@@ -15,6 +15,9 @@ import Swal from 'sweetalert2';
 export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
   @Input() mostrarCrear: boolean = true;
   @Input() descuentoData: any;
+  // Discriminador (Feature B): 'codigo' = cupón que el cliente escribe;
+  // 'promocion' = descuento automático de catálogo (sin código).
+  @Input() naturaleza: 'codigo' | 'promocion' = 'codigo';
 
   form: FormGroup;
 
@@ -30,6 +33,23 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
     { label: 'Producto específico', value: 'producto_especifico' }
   ];
 
+  /** true cuando el registro es una promoción automática (sin código). */
+  get esPromocion(): boolean { return this.naturaleza === 'promocion'; }
+
+  /** Una promoción no admite "envío gratis" (D-B4). */
+  get tiposDisponibles() {
+    return this.esPromocion
+      ? this.tiposDescuento.filter(t => t.value !== 'envio_gratis')
+      : this.tiposDescuento;
+  }
+
+  /** Una promoción siempre apunta a categoría o producto (D-B5, sin "todos"). */
+  get aplicaADisponibles() {
+    return this.esPromocion
+      ? this.aplicaAOpciones.filter(o => o.value !== 'todos_los_productos')
+      : this.aplicaAOpciones;
+  }
+
   // ── Target de aplicación ────────────────────────────────────────────────
   categorias: { nombre: string; path: string }[] = [];   // categorías aplanadas del árbol
   productosBuscados: { cd: string; titulo: string; referencia: string }[] = [];
@@ -44,6 +64,7 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
   ) {
     this.form = this.fb.group({
       id: [''],
+      naturaleza: ['codigo'],
       nombre: ['', Validators.required],
       descripcion: [''],
       codigoPersonalizado: ['', Validators.required],
@@ -72,6 +93,8 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
 
     if (this.descuentoData) {
       this.mostrarCrear = false;
+      // Al editar, la naturaleza viene del registro existente (inmutable).
+      this.naturaleza = this.descuentoData.naturaleza || 'codigo';
       this.form.patchValue(this.descuentoData);
 
       // Prealimentar el ng-select de producto para que muestre el seleccionado.
@@ -84,8 +107,34 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
       }
     }
 
+    // Reflejar la naturaleza en el form (se envía al backend).
+    this.form.get('naturaleza')?.setValue(this.naturaleza);
+
+    // Reconfigurar el formulario si es una promoción automática.
+    if (this.esPromocion) {
+      this.configurarComoPromocion();
+    }
+
     // Ajustar validadores según aplicaA actual, SIN limpiar valores existentes.
     this.aplicarValidadoresTarget(false);
+  }
+
+  /**
+   * Adapta el formulario al modo promoción: el código deja de ser requerido y
+   * se fuerzan tipo/aplicaA a valores válidos para una promoción (D-B4/D-B5).
+   */
+  private configurarComoPromocion(): void {
+    const codCtrl = this.form.get('codigoPersonalizado');
+    codCtrl?.clearValidators();
+    codCtrl?.setValue(null);
+    codCtrl?.updateValueAndValidity();
+
+    if (this.form.get('tipo')?.value === 'envio_gratis') {
+      this.form.get('tipo')?.setValue('porcentaje');
+    }
+    if (this.form.get('aplicaA')?.value === 'todos_los_productos') {
+      this.form.get('aplicaA')?.setValue('categoria');
+    }
   }
 
   ngOnDestroy(): void {
@@ -204,13 +253,14 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
       Swal.fire('Error', 'Por favor complete todos los campos requeridos', 'error');
       return;
     }
+    const entidad = this.esPromocion ? 'promoción' : 'descuento';
     this.service.createDescuentoPromocion(this.form.value).subscribe({
       next: () => {
-        Swal.fire('¡Creado!', 'El descuento fue creado exitosamente.', 'success')
+        Swal.fire('¡Creado!', `La ${entidad} fue creada exitosamente.`, 'success')
           .then(() => this.activeModal.close('success'));
       },
       error: (err) => {
-        const msg = err?.error?.message || 'No se pudo crear el descuento.';
+        const msg = err?.error?.message || `No se pudo crear la ${entidad}.`;
         Swal.fire('Error', msg, 'error');
       }
     });

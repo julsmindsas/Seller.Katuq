@@ -195,6 +195,16 @@ export class PaymentService extends BaseService {
   }
 
   // Calcula el subtotal (suma de precios base sin IVA)
+  /**
+   * Feature B — el producto trae precio promocional vigente (inyectado por el
+   * backend del catálogo) y realmente menor que el precio estándar con IVA.
+   */
+  tienePromoLinea(producto: any): boolean {
+    const promo = producto?.precioPromocional;
+    const base = producto?.precio?.precioUnitarioConIva;
+    return typeof promo === 'number' && typeof base === 'number' && promo < base;
+  }
+
   checkPriceScale(pedido: Pedido | POSPedido): number {
     let totalPrecioSinIVADef = 0;
     if (!pedido?.carrito) return 0;
@@ -219,6 +229,13 @@ export class PaymentService extends BaseService {
       // 🔒 PRIORIDAD 1: Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
       else if (producto?._precioAplicadoPorCategoria) {
         totalItemSinIVA = precioUnitarioSinIva * cantidad;
+      }
+      // 🔖 PRIORIDAD 2: Feature B — precio promocional automático de catálogo.
+      // precioPromocional viene CON IVA; se deriva el sin-IVA con la tasa de la línea.
+      else if (this.tienePromoLinea(producto)) {
+        const ivaRate = (Number(producto?.precio?.precioUnitarioIva) || 0) / 100;
+        const promoSinIva = (Number(producto.precioPromocional) || 0) / (1 + ivaRate);
+        totalItemSinIVA = promoSinIva * cantidad;
       } else if (preciosVolumen.length > 0) {
         let precioVolumenEncontrado = false;
         // Filtrar solo rangos con límites válidos definidos
@@ -366,6 +383,11 @@ export class PaymentService extends BaseService {
         precioConIvaItem = Number(precioCategoria.precioConIva) || 0;
         porcentajeIvaItemStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaUnitario;
         // No aplicar precios por volumen cuando hay precio por categoría
+      }
+      // 🔖 PRIORIDAD 2: Feature B — precio promocional automático (con IVA ya rebajado).
+      // La promo no cambia el % de IVA del producto, solo el precio.
+      else if (this.tienePromoLinea(producto)) {
+        precioConIvaItem = Number(producto.precioPromocional) || 0;
       } else if (preciosVolumen.length > 0) {
         // Filtrar solo rangos con límites válidos definidos
         const rangosValidos = preciosVolumen.filter((x: any) => {

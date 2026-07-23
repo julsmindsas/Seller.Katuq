@@ -280,7 +280,22 @@ export class CarritoComponent implements OnInit {
       }
       return precioSinIva * (1 + itemCarrito._ivaManualOverride / 100);
     }
+    // Feature B — precio promocional automático de catálogo (con IVA ya rebajado).
+    // Precedencia: overrides manuales > precio por categoría de cliente > promoción.
+    if (!itemCarrito.producto?._precioAplicadoPorCategoria && this.tienePromo(itemCarrito.producto)) {
+      return Number(itemCarrito.producto.precioPromocional) || 0;
+    }
     return this.getProductPriceWithScale(itemCarrito);
+  }
+
+  /**
+   * Feature B — el producto trae un precio promocional vigente (inyectado por el
+   * backend del catálogo) y realmente menor que el precio estándar con IVA.
+   */
+  tienePromo(producto: any): boolean {
+    const promo = producto?.precioPromocional;
+    const base = producto?.precio?.precioUnitarioConIva;
+    return typeof promo === 'number' && typeof base === 'number' && promo < base;
   }
 
   permitePrecioManual(itemCarrito: any): boolean {
@@ -566,7 +581,7 @@ export class CarritoComponent implements OnInit {
    * backend: por cada ítem, su referencia, sus categorías (nombres) y el precio
    * total de la línea. Reusa el mismo cálculo de getTotalProductPriceInCart.
    */
-  private construirItemsCarrito(): Array<{ productoReferencia: string; categorias: string[]; precioLinea: number }> {
+  private construirItemsCarrito(): Array<{ productoReferencia: string; categorias: string[]; precioLinea: number; enPromocion: boolean }> {
     if (!this.productos || this.productos.length === 0) return [];
     return this.productos.map((item) => {
       const precioBase = Number(this.checkPriceScale(item)) || 0;
@@ -578,6 +593,9 @@ export class CarritoComponent implements OnInit {
         productoReferencia: item?.producto?.identificacion?.referencia || '',
         categorias: this.resolverCategoriasProducto(item?.producto),
         precioLinea: isNaN(precioLinea) ? 0 : precioLinea,
+        // Feature B / Fase 4 (D-B2): marca las líneas ya en promoción para que el
+        // backend NO acumule el código sobre ellas.
+        enPromocion: this.tienePromo(item?.producto),
       };
     });
   }

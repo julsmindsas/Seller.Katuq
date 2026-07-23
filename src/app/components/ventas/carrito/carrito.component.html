@@ -77,6 +77,13 @@
               <ng-template #soloIvaEditable>
                 <div class="price-editable">
                   <span class="price-value">{{checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</span>
+                  <!-- Feature B — precio original tachado + badge cuando hay promoción automática -->
+                  <div class="price-original" *ngIf="tienePromo(itemCarrito.producto)">
+                    <s>{{ itemCarrito?.producto?.precio?.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0' }}</s>
+                    <span class="badge bg-danger ms-1">{{ itemCarrito?.producto?.promocionAplicada?.tipo === 'porcentaje'
+                        ? '-' + itemCarrito?.producto?.promocionAplicada?.valor + '%'
+                        : 'OFERTA' }}</span>
+                  </div>
                   <select class="iva-select"
                           [ngModel]="getIvaActual(itemCarrito)"
                           (ngModelChange)="onIvaManualChange(itemCarrito, $event)">

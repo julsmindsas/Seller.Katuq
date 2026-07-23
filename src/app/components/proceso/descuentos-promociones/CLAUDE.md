@@ -231,3 +231,168 @@ Antes "Aplica a" se guardaba pero no se validaba (ver decisión SUPERSEDED en §
 - `node --check` backend OK · Angular `Compiled successfully` · backend local
   reiniciado (puerto 3300), `aplicar-codigo` responde 401 (montado). Prueba
   end-to-end en navegador quedó lista para correr (front apuntando a localhost:3300).
+
+## 10. Feature B — Promociones automáticas de catálogo (2026-07-22)
+
+**Objetivo:** descuentos automáticos SIN código — el producto aparece ya rebajado
+en el catálogo y se aplica solo en el checkout. Contrario a los códigos (Feature A),
+que el cliente debe escribir.
+
+### 10.1 Decisiones cerradas con el usuario
+- **D-B1** — Modelo por **discriminador** `naturaleza: 'codigo' | 'promocion'` en la
+  MISMA colección `descuentosPromociones` (no colección aparte). Reutiliza CRUD,
+  validaciones y vigencia.
+- **D-B2** — **No acumulable:** un código NO descuenta sobre ítems que ya tienen
+  precio promocional (Fase 4).
+- **D-B3** — MVP solo **POS / venta asistida** (no toca 360 Woo/Shopify).
+- **D-B4** — Una promoción solo admite `tipo` **porcentaje** o **valor_fijo** (no envío gratis).
+- **D-B5** — Una promoción siempre apunta a **categoría** o **producto_especifico**
+  (no `todos_los_productos` / store-wide).
+
+### 10.2 Fase 1 — Modelo + CRUD (backend) — HECHO
+`controllers/descuentosPromociones.js`:
+- **`create`** acepta `naturaleza` (default `'codigo'`, retrocompatible). Si
+  `'promocion'`: no exige `codigoPersonalizado`, salta la unicidad de código, y
+  valida D-B4/D-B5 + target obligatorio (categoriaId o productoId). Persiste
+  `naturaleza`; en promociones fuerza a null los campos de código
+  (`codigoPersonalizado`, `limiteUsos`, `limiteUsosPorCliente`, `montoMinimo`) y
+  `combinable=false`.
+- **`getAll`** normaliza `naturaleza` (legacy sin campo → `'codigo'`) y admite filtro
+  opcional `?naturaleza=codigo|promocion` (en memoria, sin índices nuevos).
+- **`edit`** — `naturaleza` es **inmutable** (`delete resto.naturaleza`): no se puede
+  convertir un código en promoción ni al revés.
+- Verificación: `node -c` OK; 6/6 casos de rechazo (mock req/res, sin escribir a
+  Firestore) PASS (D-B4, D-B5, target requerido, campos requeridos); backend
+  reiniciado limpio en :3300.
+
+### 10.3 Fase 1 — Form admin (frontend) — HECHO
+- **`crear-descuento-promocion.component.ts`**: `@Input naturaleza` ('codigo'|'promocion');
+  getters `esPromocion`, `tiposDisponibles` (sin envío gratis en promo, D-B4),
+  `aplicaADisponibles` (sin "todos" en promo, D-B5); control `naturaleza` en el form;
+  `configurarComoPromocion()` quita el required del código, lo pone null y fuerza
+  tipo/aplicaA válidos; al editar la naturaleza se lee del registro (inmutable).
+  Mensajes de éxito dicen "promoción" según el modo.
+- **`crear-descuento-promocion.component.html`**: título dinámico; banner info del modo
+  promoción; oculta con `*ngIf="!esPromocion"` el campo Código, Límite global, Monto
+  mínimo, Límite por cliente y Combinable; selects usan `tiposDisponibles`/`aplicaADisponibles`.
+- **`descuentos-promociones.component.ts`**: `openCrearModal(naturaleza)` pasa la naturaleza al modal.
+- **`descuentos-promociones.component.html`**: 2º botón "Crear Promoción" (btn-info, icono tag);
+  la columna Código muestra badge "Promoción automática" cuando `row.naturaleza==='promocion'`.
+- Verificación: `ng serve` AOT `Compiled successfully` (15 builds, 0 errores), front HTTP 200.
+  Prueba end-to-end en navegador PENDIENTE (bloqueada por credenciales de login).
+
+### 10.4 Fase 2 — Precio promocional en catálogo (backend) — HECHO
+- **NUEVO `services/productPromoHelper.js`** (espejo de `productStockHelper`):
+  - `obtenerPromocionesVigentes(company)` → lee `descuentosPromociones` con
+    `naturaleza='promocion' + activo=true` (SOLO igualdad, sin índice compuesto);
+    filtra vigencia por fechas en memoria; indexa en 2 Maps: `porProducto` (cd) y
+    `porCategoria` (categoriaNombre.toLowerCase()).
+  - `aplicarPromocion(producto, indice)` → match por `producto.cd` (prioridad) o por
+    categoría; setea `precioPromocional` + `promocionAplicada` {promocionId, nombre,
+    tipo, valor, aplicaA, precioBase}. Solo enriquece si el precio realmente baja.
+  - `calcularPrecioPromocional(base, promo)` → % o valor_fijo, redondea a entero, piso 0.
+  - `extraerCategoriasProducto(prod)` → replica la extracción del índice de búsqueda
+    (`JSON.parse` tolerante de `producto.categorias`, `[1].label`/`.label`).
+  - `enrichProductsWithPromos(products, company)` → punto de entrada; nunca rompe el
+    catálogo (ante error devuelve productos intactos); retrocompatible.
+- **Enganchado** en ambos endpoints del catálogo, justo tras `enrichProductsWithStock`:
+  - `controllers/productosPaginated.js` (`getAllByFilterPaginated`, ~línea 730).
+  - `controllers/productos.js` (`quickSearch`, ~línea 2395).
+- Precio base usado: `precio.precioUnitarioConIva` (con IVA, canónico para display).
+- Verificación: `node -c` OK en los 3 archivos; **17/17** casos de lógica pura PASS
+  (cálculo %/valor_fijo, extracción de categoría, match producto/categoría + prioridad,
+  sin-match intacto); backend reiniciado limpio en :3300.
+- Contrato para el frontend: cada producto puede traer `precioPromocional` (número) y
+  `promocionAplicada`. Si NO vienen, no hay promo → pintar precio normal (retrocompatible).
+
+### 10.5 Fase 2 — Precio tachado en catálogo (frontend) — HECHO
+- **`shared/models/productos/Producto.ts`**: campos opcionales `precioPromocional?: number`
+  y `promocionAplicada?: PromocionAplicada` (nueva interfaz exportada).
+- **`ventas/catalogo/ecomerce-products/ecomerce-products.component.ts`**:
+  - `getPrecioParaMostrar()` reescrito con jerarquía: precio por categoría de cliente >
+    precio promocional automático (Feature B) > precio estándar.
+  - NUEVO `tienePrecioPromocional(producto)` → true si `precioPromocional` es número y
+    menor que `precio.precioUnitarioConIva`.
+- **`ecomerce-products.component.html`** (card, ~línea 399): el precio tachado ahora
+  aparece si `tienePrecioCategoria || tienePrecioPromocional`; badge rojo `.promo-badge`
+  con `-N%` (porcentaje) u "OFERTA" (valor_fijo).
+- **`ecomerce-products.component.scss`**: estilo `.promo-badge` (tamaño/peso).
+- Verificación: `ng serve` AOT recompiló el módulo de ventas `Compiled successfully`
+  (valida el acceso a los campos nuevos en el template). Prueba visual PENDIENTE
+  (requiere login — ya desbloqueado — y crear una promoción de prueba).
+
+### 10.6 Fase 3 — Aplicación automática en checkout (backend) — HECHO
+**Decisión de diseño:** `calculateOrderTotals` se deja SÍNCRONO (se invoca en ~8 sitios;
+volverlo async era riesgoso). Las promos se pre-aplican a las líneas ANTES de recalcular.
+- **`services/productPromoHelper.js`**:
+  - `buscarPromocionParaProducto(producto, indice)` (extraído del match: cd > categoría).
+  - `calcularPrecioLineaPromocional(producto, promo)` → precio unitario en sus 2 bases;
+    porcentaje aplica % a ambas; valor_fijo resta el monto al precio CON IVA (igual que el
+    catálogo, Fase 2) y deriva el sin-IVA con la tasa de la línea. Devuelve null si no baja.
+  - `aplicarPromocionesACarrito(carrito, company)` (async) → setea en cada línea elegible
+    `_precioPromocional` (unitario SIN IVA) + `_promocionAplicada` {promocionId, nombre, tipo,
+    valor, bases}. Respeta `_precioManualOverride` explícito (no lo pisa). Nunca lanza.
+- **`services/orderCalculationService.js`** (money path):
+  - `getSubTotalPedido` y `getTotalImpuesto` ahora PREFIEREN `_precioPromocional` cuando está
+    presente (override de base y de volumen — no se acumulan). El IVA% del producto se mantiene.
+  - Retrocompatible: sin el flag, el cálculo es idéntico al anterior (probado).
+- **`controllers/orders.js`** (`exports.create`, ~línea 4705): `await aplicarPromocionesACarrito(
+  newOrderData.carrito, newOrderData.company)` ANTES de `calculateOrderTotals`. La promo se
+  CONGELA en la orden (snapshot) → recalcular después usa el precio guardado, no la promo vigente.
+- Verificación: `node -c` OK en los 3 archivos; **17/17** casos del money path PASS (IVA 19%):
+  sin promo intacto (119.000), promo % → 95.200 (=119.000×0.8, coincide catálogo), valor_fijo
+  equivalente, cantidad ×2, y promo+código (apila — lo restringe Fase 4). Backend reiniciado limpio.
+- **Pendiente Fase 3 frontend:** el carrito de venta asistida (`PaymentService`) debería aplicar
+  la misma promo para que el total mostrado al vendedor coincida con el que persiste el backend.
+
+### 10.7 Fase 4 — No acumulación código+promo (backend) — HECHO (D-B2)
+Un código NO descuenta sobre líneas que ya tienen promoción automática.
+- **`services/orderCalculationService.js`** (autoritativo):
+  - `getSubTotalPedido(pedido, {excluirPromocionados})` — nueva opción que salta las líneas
+    con `_precioPromocional`.
+  - `calculateOrderTotals` — el descuento de código se calcula sobre `baseDescontable`
+    (= subtotal SIN líneas en promo). `porceDescuento` aplica sobre esa base; el descuento
+    fijo (`totalDescuento`) se **capa** a esa base.
+  - `getTotalImpuesto` — `factorDesc = lineaEnPromo ? 1 : (1 - porceDescuento)`: el IVA de una
+    línea en promo NO recibe el descuento de código (producto + adiciones + preferencias).
+- **`controllers/descuentosPromociones.js`** (`aplicarCodigo`, preview): los ítems marcados
+  `enPromocion===true` se excluyen de la base en los 3 modos (producto/categoría/todos).
+  Retrocompatible: sin el flag, comportamiento igual que antes.
+- Verificación: `node -c` OK; **22/22** money-path PASS (incluye: solo-promo→descuento 0 y
+  total intacto; carrito mixto→código solo sobre la línea normal, IVA 32.300; fijo capado;
+  regresión sin promo idéntica). Backend reiniciado.
+- **Pendiente Fase 4 frontend:** `carrito.component` (`construirItemsCarrito`) debe enviar
+  `enPromocion: !!producto.precioPromocional` por ítem a `aplicar-codigo` para que el
+  descuento PREVIEW del carrito coincida con el que persiste el backend.
+
+### 10.8 Fase 3 + 4 — Frontend del carrito de venta asistida — HECHO
+- **`components/ventas/carrito/carrito.component.ts`**:
+  - `tienePromo(producto)` → true si `precioPromocional` (número) < `precio.precioUnitarioConIva`.
+  - `checkPriceScale()` (precio unitario CON IVA) ahora devuelve `producto.precioPromocional`
+    cuando hay promo y no hay precio por categoría de cliente. Precedencia: override manual >
+    precio por categoría > promoción. Esto arregla de golpe precio por línea, subtotal
+    (`getTotalProductPriceInCart`) y `precioLinea` de `construirItemsCarrito` (todos usan checkPriceScale).
+  - `construirItemsCarrito()` ahora envía `enPromocion: this.tienePromo(producto)` por ítem (Fase 4 front).
+- **`carrito.component.html`** (bloque `#soloIvaEditable`): precio original tachado + badge rojo
+  (`-N%` / "OFERTA") cuando `tienePromo`.
+- **`shared/services/ventas/ventas.service.ts`**: el tipo de `items` en `aplicarCodigoDescuento`
+  incluye `enPromocion?: boolean`.
+- **`shared/services/ventas/payment.service.ts`** (resumen/factura): `tienePromoLinea(producto)`;
+  `checkPriceScale` (subtotal sin IVA) deriva el sin-IVA = `precioPromocional/(1+iva)`; `checkIVAPrice`
+  usa `precioPromocional` como precio con IVA de la línea. Ambos como capa tras el precio por categoría.
+- Verificación: `ng serve` AOT `Compiled successfully` (módulo de ventas + servicios recompilados, 0 errores).
+- **Gap menor conocido (solo display frontend):** en `checkIVAPrice`, si se aplica un código % (`porceDescuento`)
+  Y hay una línea en promo simultáneamente, el desglose de IVA del front aún multiplica esa línea por
+  `(1 - porceDescuento)` (acumularía en el DISPLAY). El BACKEND ya lo excluye (autoritativo), así que la
+  orden persistida es correcta; es solo una diferencia visual en ese caso combinado. Follow-up: aplicar
+  `factorDesc` por línea en `checkIVAPrice` como en `orderCalculationService`.
+
+### 10.9 Feature B — estado
+- **Fases 1–4: COMPLETAS backend + frontend.** Todo compila; backend con 45 casos unit PASS.
+- **PENDIENTE:** prueba end-to-end en navegador (login ya arreglado): crear promo → verla en
+  catálogo (tachado) → agregar al carrito (precio promo + badge) → checkout aplica promo →
+  un código no acumula sobre esa línea.
+- Nada commiteado aún (a la espera de autorización del usuario).
+- **Fase 3:** aplicación automática en `orderCalculationService` (checkout POS).
+- **Fase 4:** regla de no acumulación (D-B2) — excluir líneas en promo de la base
+  elegible de un código.
