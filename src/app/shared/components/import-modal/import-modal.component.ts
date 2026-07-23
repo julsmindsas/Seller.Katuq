@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import * as XLSX from 'xlsx';
 import { ColumnMappingService } from '../../services/import/column-mapping.service';
+import { resolverNombreApellido } from '../../utils/nombre-apellido.util';
 import {
   ColumnMapping,
   ColumnMappingResult,
@@ -172,6 +173,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   private readonly STANDARD_CUSTOMER_HEADERS: { [normHeader: string]: string } = {
     // Datos básicos del cliente (fuente única de documento / tipo doc / correo / nombre / celular)
     'nombre/razon social': 'nombres_completos',
+    'apellidos': 'apellidos_completos',
+    'apellidos completos': 'apellidos_completos',
     'tipo': 'tipo_documento_comprador',
     'cedula/nit': 'documento',
     'digito verificacion': '__digitoVerificacion',
@@ -288,8 +291,14 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         return v == null ? '' : String(v).trim();
       };
 
-      const nombres = g('nombre/razon social');
+      const nombreRaw = g('nombre/razon social');
       const tipoDoc = g('tipo');
+      // Persona natural: si la columna "Apellidos" viene vacía se parte el nombre
+      // completo. Con tipo NIT no se toca (razón social). El formulario de cliente
+      // exige apellidos, así que sin esto el registro importado no se puede editar
+      // sin retipearlos a mano. Ver shared/utils/nombre-apellido.util.
+      const { nombres, apellidos } = resolverNombreApellido(
+        nombreRaw, g('apellidos') || g('apellidos completos'), tipoDoc);
       // Documento: si viene el dígito de verificación en columna aparte, se concatena
       // con guión (815003461 + 2 → "815003461-2"). Idempotente si ya trae guión.
       const docBase = g('cedula/nit');
@@ -309,20 +318,27 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         ...etiquetasRaw.split(',').map(s => s.trim()).filter(s => s !== ''),
       ];
 
+      // Facturación tiene UN solo campo de nombre ("Razón Social / Nombre"), que el
+      // formulario arma como nombres + apellidos → aquí va el nombre COMPLETO, no
+      // el de pila suelto.
+      const nombreCompleto = [nombres, apellidos].filter(Boolean).join(' ');
+
       // Facturación: identidad se auto-rellena desde los básicos (sin redundancia en la
       // plantilla); lo propio es el correo de facturación (puede diferir del comercial).
       const datosFacturacion = {
         alias: g('alias facturacion') || 'Principal',
-        nombres: g('razon social facturacion') || nombres,
+        nombres: g('razon social facturacion') || nombreCompleto,
         tipoDocumento: g('tipo documento facturacion') || tipoDoc,
         documento: g('documento facturacion') || g('documento/nit facturacion') || g('nit facturacion') || doc,
         correo: g('correo electronico facturacion') || correoCom,
       };
 
+      // Entrega SÍ tiene nombres y apellidos separados en el formulario: si no
+      // vienen columnas propias de entrega, heredan los del cliente ya separados.
       const datosEntrega = {
         alias: g('alias entrega') || 'Principal',
         nombres: g('nombres entrega') || nombres,
-        apellidos: g('apellidos entrega'),
+        apellidos: g('apellidos entrega') || apellidos,
         indicativoCel: '57',
         celular: g('celular entrega') || cel,
         direccionEntrega: g('direccion de entrega'),
@@ -338,6 +354,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
       return {
         nombres_completos: nombres,
+        apellidos_completos: apellidos,
         tipo_documento_comprador: tipoDoc,
         documento: doc,
         correo_electronico_comprador: correoCom,
@@ -360,6 +377,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       // ── Datos básicos del cliente (documento, tipo doc y correo van UNA sola vez;
       //    se reutilizan automáticamente en facturación y entrega) ──
       { field: 'nombres_completos', header: 'Nombre/Razon Social', required: true, example: 'TRIADA EMA S.A.' },
+      // Persona natural: apellidos van acá. Si se deja vacía y el tipo NO es NIT,
+      // el importador parte el nombre completo (heurística Colombia).
+      { field: 'apellidos_completos', header: 'Apellidos', required: false, example: '' },
       { field: 'tipo_documento_comprador', header: 'Tipo', required: false, example: 'NIT' },
       { field: 'documento', header: 'Cédula/NIT', required: true, example: '815003461' },
       { field: '__digitoVerificacion', header: 'Digito Verificación', required: false, example: '2' },
@@ -372,7 +392,11 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'datosFacturacionElectronica.tipoDocumento', header: 'Tipo Documento Facturación', required: false, example: 'NIT' },
       { field: 'datosFacturacionElectronica.documento', header: 'Documento/NIT Facturación', required: false, example: '901555444-3' },
       { field: 'datosFacturacionElectronica.correo', header: 'Correo Electrónico Facturación', required: false, example: 'facturacion@empresa.com' },
-      // ── Datos de entrega (dirección de entrega + detalles) ──
+      // ── Datos de entrega (contacto que recibe + dirección + detalles). Si los
+      //    nombres/apellidos de entrega se dejan vacíos, heredan los del cliente. ──
+      { field: 'datosEntrega.nombres', header: 'Nombres Entrega', required: false, example: '' },
+      { field: 'datosEntrega.apellidos', header: 'Apellidos Entrega', required: false, example: '' },
+      { field: 'datosEntrega.celular', header: 'Celular Entrega', required: false, example: '' },
       { field: 'datosEntrega.direccionEntrega', header: 'Direccion De Entrega', required: false, example: 'Calle 123 # 45 - 67' },
       { field: 'datosEntrega.barrio', header: 'Barrio', required: false, example: 'El Poblado' },
       { field: 'datosEntrega.nombreUnidad', header: 'Nombre Unidad / Edificio', required: false, example: 'Conjunto Los Robles' },
@@ -392,6 +416,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'documento': 'Documento/NIT',
       '__digitoVerificacion': 'Dígito de Verificación',
       'nombres_completos': 'Nombre/Razón Social',
+      'apellidos_completos': 'Apellidos',
       'correo_electronico_comprador': 'Correo Contacto Comercial',
       'numero_celular_comprador': 'Teléfono Propio',
       'numero_celular_whatsapp': 'Teléfono WhatsApp',

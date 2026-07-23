@@ -36,8 +36,8 @@ export class CrmService {
       .pipe(catchError(() => of({ success: false, data: null })));
   }
 
-  updatePipeline(id: string, data: Record<string, any>): Observable<any> {
-    return this.http.put<any>(`${this.base}/leads/${id}/pipeline`, data)
+  updatePipeline(id: string, data: Record<string, any>, forceCorporate?: boolean): Observable<any> {
+    return this.http.put<any>(`${this.base}/leads/${id}/pipeline`, data, this.corporateOpts(forceCorporate))
       .pipe(catchError(() => of({ success: false })));
   }
 

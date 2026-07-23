@@ -14,6 +14,7 @@ import { CorporateConfigService } from '../../../ventas/clientes/services/corpor
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import { CrmLead, CrmStats, CrmStage, CrmTask, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
+import { resolverNombreApellido } from '../../../../shared/utils/nombre-apellido.util';
 
 @Component({
   selector: 'app-crm-list',
@@ -1093,20 +1094,26 @@ export class CrmListComponent implements OnInit, OnDestroy {
    * detector (`detectColumnMapping`) lee y guarda como campos del lead —
    * así lo que el usuario descarga encaja 1-a-1 con lo que se importa.
    */
-  private readonly CRM_TEMPLATE_COLUMNS: { header: string; example: string }[] = [
-    { header: 'Nombre', example: 'Comercializadora El Progreso S.A.S' }, // ÚNICO obligatorio
-    { header: 'NIT/Documento', example: '900123456-7' },                // identidad (B2B)
-    { header: 'Email', example: 'contacto@elprogreso.com' },            // contacto + dedup
-    { header: 'Teléfono', example: '3001234567' },                      // contacto + dedup (+57 auto)
-    { header: 'Etapa', example: 'contactado' },                         // ubica en el pipeline
-    { header: 'Fuente', example: 'Facebook' },                          // social_media / web / manual
+  private readonly CRM_TEMPLATE_COLUMNS: { header: string; examples: [string, string] }[] = [
+    // Dos filas de ejemplo: por el pipeline entran tanto personas naturales
+    // (la mayoría de `corporate_clients` son CC) como razones sociales.
+    { header: 'Nombre', examples: ['Juan Carlos', 'Comercializadora El Progreso S.A.S'] }, // ÚNICO obligatorio
+    { header: 'Apellidos', examples: ['Pérez García', ''] },            // vacío si es empresa
+    { header: 'NIT/Documento', examples: ['1012345678', '900123456-7'] },
+    { header: 'Tipo Documento', examples: ['CC', 'NIT'] },              // decide si se parte el nombre
+    { header: 'Email', examples: ['juan.perez@correo.com', 'contacto@elprogreso.com'] },
+    { header: 'Teléfono', examples: ['3001234567', '3009876543'] },     // contacto + dedup (+57 auto)
+    { header: 'Etapa', examples: ['contactado', 'propuesta'] },         // ubica en el pipeline
+    { header: 'Fuente', examples: ['Facebook', 'referido'] },           // social_media / web / manual
   ];
 
   downloadCrmTemplate(): void {
     const headers = this.CRM_TEMPLATE_COLUMNS.map(c => c.header);
-    const example = this.CRM_TEMPLATE_COLUMNS.map(c => c.example);
-
-    const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+    const ws = XLSX.utils.aoa_to_sheet([
+      headers,
+      this.CRM_TEMPLATE_COLUMNS.map(c => c.examples[0]),
+      this.CRM_TEMPLATE_COLUMNS.map(c => c.examples[1]),
+    ]);
     ws['!cols'] = headers.map(() => ({ wch: 24 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Plantilla Leads');
@@ -1115,7 +1122,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: 'Plantilla descargada',
-      detail: 'Completa la plantilla (solo "Nombre" es obligatorio) y súbela con Importar.',
+      detail: 'Solo "Nombre" es obligatorio. Trae 2 filas de ejemplo (persona natural y empresa): bórralas antes de importar.',
+      life: 6000,
     });
   }
 
@@ -1154,11 +1162,22 @@ export class CrmListComponent implements OnInit, OnDestroy {
         const ops: Observable<any>[] = [];
 
         rows.forEach((row) => {
-          const name = this.getRowValue(row, mapping.name);
-          if (!name) { skipped++; return; }
+          const nombreRaw = this.getRowValue(row, mapping.name);
+          if (!nombreRaw) { skipped++; return; }
+
+          // Persona natural sin columna "Apellidos": se parte el nombre completo.
+          // Con tipo NIT no se toca (razón social). Ver nombre-apellido.util.
+          const tipoDocumento = this.getRowValue(row, mapping.tipoDocumento);
+          const { nombres: name, apellidos } = resolverNombreApellido(
+            nombreRaw,
+            this.getRowValue(row, mapping.apellidos),
+            tipoDocumento,
+          );
 
           const leadData: any = {
             name,
+            apellidos: apellidos || null,
+            tipoDocumento: tipoDocumento || null,
             nit: this.getRowValue(row, mapping.nit) || null,
             email: this.getRowValue(row, mapping.email) || null,
             phone: this.cleanPhone(this.getRowValue(row, mapping.phone)),
@@ -1167,11 +1186,14 @@ export class CrmListComponent implements OnInit, OnDestroy {
             priority: 'medium',
           };
 
-          // Check if exists by email or phone
+          // Check if exists by email or phone. El nombre se compara COMPLETO:
+          // tras el split `name` es solo el nombre de pila, y los leads legacy
+          // guardan el nombre entero en `name` → compararlos crearía duplicados.
+          const fullName = [name, apellidos].filter(Boolean).join(' ').toLowerCase();
           const existing = this.leads.find(l =>
             (leadData.email && l.email?.toLowerCase() === leadData.email.toLowerCase()) ||
             (leadData.phone && l.phone === leadData.phone) ||
-            (l.name?.toLowerCase() === name.toLowerCase())
+            (l.name?.toLowerCase() === fullName)
           );
 
           if (existing) {
@@ -1230,8 +1252,12 @@ export class CrmListComponent implements OnInit, OnDestroy {
    * Handles: Facebook Ads, Katuq export, generic CSV, any format.
    */
   private detectColumnMapping(columns: string[]): Record<string, string | null> {
-    const find = (patterns: string[]): string | null => {
+    // `except` evita que una columna ya asignada se robe otro campo: "Tipo
+    // Documento" contiene la palabra "documento", así que sin esto podría
+    // quedar mapeada como el NIT si el usuario reordena las columnas.
+    const find = (patterns: string[], except: (string | null)[] = []): string | null => {
       for (const col of columns) {
+        if (except.includes(col)) continue;
         const lower = col.toLowerCase().replace(/[_\-\.]/g, ' ').trim();
         for (const p of patterns) {
           if (lower.includes(p)) return col;
@@ -1240,12 +1266,20 @@ export class CrmListComponent implements OnInit, OnDestroy {
       return null;
     };
 
+    const tipoDocumento = find(['tipo documento', 'tipo de documento', 'tipo doc', 'tipo_documento']);
+    const apellidos = find(['apellidos', 'apellido', 'last name', 'surname']);
+
     return {
-      name: find(['nombre completo', 'nombre_completo', 'full name', 'nombre', 'name', 'empresa', 'company']),
-      nit: find(['nit', 'documento', 'cedula', 'cédula', 'identificacion', 'identificación', 'tax id', 'rut']),
+      name: find(['nombre completo', 'nombre_completo', 'full name', 'nombre', 'name', 'empresa', 'company'], [apellidos]),
+      apellidos,
+      tipoDocumento,
+      nit: find(['nit', 'documento', 'cedula', 'cédula', 'identificacion', 'identificación', 'tax id', 'rut'], [tipoDocumento]),
       email: find(['correo', 'email', 'e-mail', 'mail']),
       phone: find(['teléfono', 'telefono', 'número de teléfono', 'numero de telefono', 'phone', 'celular', 'cel', 'whatsapp']),
-      stage: find(['etapa', 'stage', 'lead status', 'lead_status', 'status', 'estado']),
+      // OJO: nada de 'estado'/'status' genéricos. El export de Corporativos trae
+      // una columna "Estado" (Activo/Bloqueado) que se colaba como etapa y
+      // aterrizaba el lead en un stage inexistente del pipeline de clientes.
+      stage: find(['etapa', 'stage', 'lead status', 'lead_status']),
       source: find(['platform', 'plataforma', 'fuente', 'source']),
     };
   }

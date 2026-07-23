@@ -3,13 +3,14 @@ import { Table } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, forkJoin } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { concatMap, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import { CorporateClientsService } from '../services/corporate-clients.service';
 import { CrmService } from '../../../crm/services/crm.service';
 import { ClientTag } from '../services/client-config.service';
 import { CrearClienteModalComponent } from '../crear-cliente-modal/crear-cliente-modal.component';
+import { resolverNombreApellido } from '../../../../shared/utils/nombre-apellido.util';
 
 /**
  * Listado de Clientes Corporativos (spec 011).
@@ -103,6 +104,111 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
 
   // ─── Exportar / Importar Excel ──────────────────────────────
 
+  /**
+   * Plantilla de importación de corporativos. Es un SUPERSET de la del CRM
+   * (`crm-list`): las 6 primeras columnas usan encabezados que el detector del
+   * CRM también reconoce, así un mismo archivo sirve para ambos módulos —
+   * escriben en la misma colección (`corporate_clients` + `crm_pipeline`).
+   *
+   * Las 5 últimas son propias del corporativo: el backend ya las mapea en
+   * `_mapEntityData` (createLead/updateLead), solo faltaba leerlas del Excel.
+   */
+  private readonly CORP_TEMPLATE_COLUMNS: { header: string; examples: [string, string] }[] = [
+    // Dos filas de ejemplo a propósito: la mayoría de los corporativos reales son
+    // personas naturales (CC), no razones sociales — la plantilla tiene que
+    // mostrar que ambos casos caben.
+    { header: 'Nombre / Razón social', examples: ['Juan Carlos', 'Comercializadora El Progreso S.A.S'] }, // ÚNICO obligatorio
+    { header: 'Apellidos', examples: ['Pérez García', ''] },             // vacío en persona jurídica
+    { header: 'NIT/Documento', examples: ['1012345678', '900123456-7'] },
+    { header: 'Tipo Documento', examples: ['CC', 'NIT'] },
+    { header: 'Email', examples: ['juan.perez@correo.com', 'contacto@elprogreso.com'] },
+    { header: 'Teléfono', examples: ['3001234567', '3009876543'] },
+    { header: 'Etiquetas', examples: ['CRÉDITO', 'Mayorista, CONTADO'] },  // coma-separadas
+    { header: 'Etapa', examples: ['contactado', 'propuesta'] },            // crm_pipeline.stage
+    { header: 'Fuente', examples: ['referido', 'evento'] },                // crm_pipeline.source
+    { header: 'Cupo de crédito (COP)', examples: ['1000000', '5000000'] }, // creditLimit
+    { header: 'Plazo de pago (días)', examples: ['15', '30'] },            // payTermDays
+    { header: 'Tipo de cliente', examples: ['Detal', 'Distribuidor'] },    // tipoCliente
+  ];
+
+  /**
+   * Etapas admitidas en importación (CLIENT_STAGES del backend) MENOS
+   * `convertido`: esa etapa es `isWon` y el kanban solo la concede tras cruzar
+   * contra `orders` reales (`markVerifiedBuyer`). `createLead` NO hace esa
+   * verificación, así que permitirla por Excel dejaría fabricar cierres ganados
+   * y ensuciaría la métrica de conversión. Se degrada a `negociacion`.
+   */
+  private readonly IMPORT_STAGES = ['nuevo', 'contactado', 'calificado', 'propuesta', 'negociacion', 'perdido'];
+  private readonly STAGE_FALLBACK = 'negociacion';
+
+  /** SOURCES del backend (crmConstants.js). Lo que no calce cae en `manual`. */
+  private readonly IMPORT_SOURCES = ['web', 'referido', 'evento', 'cold_call', 'social_media', 'ecommerce', 'manual'];
+
+  /** Genera y descarga la plantilla .xlsx con encabezados + fila de ejemplo. */
+  descargarPlantilla(): void {
+    const ws = XLSX.utils.aoa_to_sheet([
+      this.CORP_TEMPLATE_COLUMNS.map((c) => c.header),
+      this.CORP_TEMPLATE_COLUMNS.map((c) => c.examples[0]),
+      this.CORP_TEMPLATE_COLUMNS.map((c) => c.examples[1]),
+    ]);
+    ws['!cols'] = this.CORP_TEMPLATE_COLUMNS.map(() => ({ wch: 26 }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Plantilla Corporativos');
+    XLSX.writeFile(wb, 'plantilla-clientes-corporativos.xlsx');
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Plantilla descargada',
+      detail: 'Solo "Nombre / Razón social" es obligatorio. Trae 2 filas de ejemplo (persona natural y empresa): bórralas antes de importar.',
+      life: 7000,
+    });
+  }
+
+  /** Normaliza la etapa del Excel a una clave válida del pipeline. */
+  private mapEtapa(raw: string): { stage: string | null; clamped: boolean } {
+    const v = (raw || '').toString().trim().toLowerCase()
+      .replace(/ó/g, 'o').replace(/é/g, 'e');
+    if (!v) return { stage: null, clamped: false };
+    // Etiquetas visibles del kanban → clave interna.
+    const alias: Record<string, string> = {
+      'propuesta enviada': 'propuesta',
+      'cerrado ganado': 'convertido',
+      'cerrado perdido': 'perdido',
+      'ganado': 'convertido',
+      'negociacion': 'negociacion',
+    };
+    const key = alias[v] || v;
+    if (this.IMPORT_STAGES.includes(key)) return { stage: key, clamped: false };
+    // `convertido` es la única que se degrada avisando; el resto es basura → default.
+    if (key === 'convertido') return { stage: this.STAGE_FALLBACK, clamped: true };
+    return { stage: null, clamped: false };
+  }
+
+  /** Normaliza la fuente del Excel a una clave de SOURCES. */
+  private mapFuente(raw: string): string | null {
+    const v = (raw || '').toString().trim().toLowerCase();
+    if (!v) return null;
+    if (this.IMPORT_SOURCES.includes(v)) return v;
+    if (v.includes('facebook') || v.includes('instagram') || v.includes('redes')) return 'social_media';
+    if (v.includes('google') || v.includes('web') || v.includes('sitio')) return 'web';
+    if (v.includes('refer') || v.includes('recomend')) return 'referido';
+    if (v.includes('evento') || v.includes('feria')) return 'evento';
+    if (v.includes('fria') || v.includes('fría') || v.includes('call')) return 'cold_call';
+    if (v.includes('ecommerce') || v.includes('tienda')) return 'ecommerce';
+    return 'manual';
+  }
+
+  /**
+   * Monto/entero desde Excel tolerando separadores de miles ("5.000.000",
+   * "5,000,000", "$ 5000000"). Devuelve undefined si la celda venía vacía, para
+   * distinguir "no lo mandó" de "lo puso en 0".
+   */
+  private toEntero(raw: string): number | undefined {
+    const digits = (raw || '').toString().replace(/[^\d]/g, '');
+    if (!digits) return undefined;
+    const n = Number(digits);
+    return isNaN(n) ? undefined : n;
+  }
+
   /** Exporta el listado actual de corporativos a un .xlsx. */
   exportarExcel(): void {
     if (!this.corporativos.length) {
@@ -113,13 +219,14 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
       'Tipo Documento': c.tipo_documento_comprador || 'CC',
       'Documento': c.documento || '',
       'Nombre / Razón social': c.nombres_completos || '',
+      'Apellidos': c.apellidos_completos || '',
       'Correo': c.correo_electronico_comprador || '',
       'Teléfono': c.numero_celular_comprador || '',
       'Etiquetas': Array.isArray(c.etiquetas) ? c.etiquetas.join(', ') : '',
       'Estado': c.estado === 'bloqueado' ? 'Bloqueado' : 'Activo',
     }));
     const ws = XLSX.utils.json_to_sheet(data);
-    ws['!cols'] = [{ wch: 16 }, { wch: 16 }, { wch: 28 }, { wch: 28 }, { wch: 16 }, { wch: 22 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 16 }, { wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 28 }, { wch: 16 }, { wch: 22 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Corporativos');
     const ts = new Date().toISOString().slice(0, 10);
@@ -160,57 +267,98 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
         const seen = new Set<string>();
         let skipped = 0;
         let dupInFile = 0;
+        let clampedStages = 0;
         rows.forEach((row) => {
-          const name = pick(row, ['nombre / razón social', 'nombre', 'razón social', 'razon social', 'nombres_completos', 'nombre completo']);
-          if (!name) { skipped++; return; }
-          const documento = pick(row, ['documento', 'nit', 'nit/doc', 'número de documento', 'numero de documento']);
+          const nombreRaw = pick(row, ['nombre / razón social', 'nombre', 'razón social', 'razon social', 'nombres_completos', 'nombre completo']);
+          if (!nombreRaw) { skipped++; return; }
+          const documento = pick(row, ['documento', 'nit', 'nit/documento', 'nit/doc', 'número de documento', 'numero de documento']);
           const tipoDocumento = pick(row, ['tipo documento', 'tipo_documento', 'tipo doc']);
+
+          // Persona natural: si no vino "Apellidos" se parte el nombre completo.
+          // Con tipo NIT no se toca (razón social). Ver nombre-apellido.util.
+          const { nombres: name, apellidos } = resolverNombreApellido(
+            nombreRaw,
+            pick(row, ['apellidos', 'apellido', 'apellidos completos', 'apellidos_completos']),
+            tipoDocumento,
+          );
           const email = pick(row, ['correo', 'correo electrónico', 'correo electronico', 'email', 'e-mail']);
           const phone = pick(row, ['teléfono', 'telefono', 'celular', 'whatsapp', 'phone']);
           const etiquetasRaw = pick(row, ['etiquetas', 'tags']);
           const etiquetas = etiquetasRaw ? etiquetasRaw.split(',').map((s) => s.trim()).filter(Boolean) : [];
 
-          // Dedup dentro del propio archivo: si otra fila ya usó este documento o
-          // nombre, se omite (evita crear/actualizar el mismo registro 2 veces).
+          // Columnas propias del corporativo (superset sobre la plantilla del CRM).
+          const etapa = this.mapEtapa(pick(row, ['etapa', 'stage', 'etapa del pipeline']));
+          if (etapa.clamped) clampedStages++;
+          const fuente = this.mapFuente(pick(row, ['fuente', 'source', 'origen', 'plataforma']));
+          const creditLimit = this.toEntero(pick(row, ['cupo de crédito (cop)', 'cupo de credito (cop)', 'cupo de crédito', 'cupo de credito', 'cupo', 'credit limit']));
+          const payTermDays = this.toEntero(pick(row, ['plazo de pago (días)', 'plazo de pago (dias)', 'plazo de pago', 'plazo', 'pay term days']));
+          const tipoCliente = pick(row, ['tipo de cliente', 'tipo cliente', 'tipocliente']);
+
+          // Dedup y búsqueda del existente van SIEMPRE por el nombre completo,
+          // nunca por `name` suelto: tras el split `name` es solo el nombre de
+          // pila, y compararlo contra registros legacy (que guardan el nombre
+          // entero en `nombres_completos`) crearía duplicados.
+          const fullName = [name, apellidos].filter(Boolean).join(' ');
           const keys: string[] = [];
           if (documento) keys.push('doc:' + norm(documento));
-          keys.push('name:' + norm(name));
+          keys.push('name:' + norm(fullName));
           if (keys.some((k) => seen.has(k))) { dupInFile++; return; }
           keys.forEach((k) => seen.add(k));
 
+          const nombreDe = (c: any) => norm([c.nombres_completos, c.apellidos_completos].filter(Boolean).join(' '));
           const existing = this.corporativos.find((c) =>
             (documento && norm(c.documento) === norm(documento)) ||
-            norm(c.nombres_completos) === norm(name));
+            nombreDe(c) === norm(fullName) ||
+            norm(c.nombres_completos) === norm(fullName));
 
           if (existing) {
             // Actualiza. Merge con lo actual: los campos vacíos del Excel
             // conservan el valor existente (el backend mapea vacío→null y lo
-            // borraría). NO se envía priority/source para no pisar el pipeline.
-            tasks.push({
-              op: 'update',
-              obs: this.crmService.updateLead(existing.cd, {
-                name,
-                nit: documento || existing.documento || null,
-                tipoDocumento: tipoDocumento || existing.tipo_documento_comprador || 'CC',
-                email: email || existing.correo_electronico_comprador || null,
-                phone: phone || existing.numero_celular_comprador || null,
-                etiquetas: etiquetas.length ? etiquetas : (existing.etiquetas || []),
-              }, true),
-            });
+            // borraría). `priority` no se toca para no pisar el pipeline; la
+            // fuente sí se respeta si el archivo la trae.
+            const payload: any = {
+              name,
+              apellidos_completos: apellidos || existing.apellidos_completos || null,
+              nit: documento || existing.documento || null,
+              tipoDocumento: tipoDocumento || existing.tipo_documento_comprador || 'CC',
+              email: email || existing.correo_electronico_comprador || null,
+              phone: phone || existing.numero_celular_comprador || null,
+              etiquetas: etiquetas.length ? etiquetas : (existing.etiquetas || []),
+            };
+            if (fuente) payload.source = fuente;
+            if (tipoCliente) payload.tipoCliente = tipoCliente;
+            if (creditLimit !== undefined) payload.creditLimit = creditLimit;
+            if (payTermDays !== undefined) payload.payTermDays = payTermDays;
+
+            // La etapa NO viaja en updateLead (`updateLeadEntity` solo toca la
+            // entidad + priority/source). Se encadena a /pipeline, que además
+            // deja la actividad `stage_change` en la bitácora del lead.
+            let obs = this.crmService.updateLead(existing.cd, payload, true);
+            if (etapa.stage) {
+              obs = obs.pipe(
+                concatMap((res: any) =>
+                  this.crmService.updatePipeline(existing.cd, { stage: etapa.stage }, true)
+                    .pipe(map(() => res))),
+              );
+            }
+            tasks.push({ op: 'update', obs });
           } else {
-            tasks.push({
-              op: 'create',
-              obs: this.crmService.createLead({
-                name,
-                nit: documento || null,
-                tipoDocumento: tipoDocumento || 'CC',
-                email: email || null,
-                phone: phone || null,
-                etiquetas,
-                source: 'other',
-                priority: 'medium',
-              }, true),
-            });
+            const payload: any = {
+              name,
+              apellidos_completos: apellidos || null,
+              nit: documento || null,
+              tipoDocumento: tipoDocumento || 'CC',
+              email: email || null,
+              phone: phone || null,
+              etiquetas,
+              source: fuente || 'manual',
+              priority: 'medium',
+            };
+            if (etapa.stage) payload.stage = etapa.stage;
+            if (tipoCliente) payload.tipoCliente = tipoCliente;
+            if (creditLimit !== undefined) payload.creditLimit = creditLimit;
+            if (payTermDays !== undefined) payload.payTermDays = payTermDays;
+            tasks.push({ op: 'create', obs: this.crmService.createLead(payload, true) });
           }
         });
 
@@ -234,6 +382,7 @@ export class ClientesCorporativosComponent implements OnInit, OnDestroy {
             const parts = [`${created} creados`, `${updated} actualizados`];
             if (dupInFile) parts.push(`${dupInFile} duplicados en archivo`);
             if (skipped) parts.push(`${skipped} sin nombre`);
+            if (clampedStages) parts.push(`${clampedStages} con etapa "convertido" → "negociación" (requiere compra verificada)`);
             if (failed) parts.push(`${failed} con error`);
             this.messageService.add({
               severity: failed ? 'warn' : 'success',
