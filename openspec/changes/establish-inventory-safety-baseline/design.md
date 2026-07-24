@@ -40,9 +40,9 @@ Alternativa descartada: generalizar el `MAX-WINS` temporal de D-026. Fue una def
 
 Por producto–bodega se presentan: saldo observado en `inventory`, variación respaldada por `inventoryMovement`, efecto esperado por pedidos y estado del proveedor en `integrations.<provider>`. Una diferencia se reporta; no se compensa por suposición.
 
-### 4. Se reutilizan capacidades existentes
+### 4. Se reutilizan capacidades existentes sin introducir escrituras en la línea base
 
-El cálculo vive detrás del diagnóstico actual y persiste metadatos de ejecución en `inventory_audit`. No se crea colección nueva ni endpoint `v2`. Las consultas se paginan y siempre filtran por `company`.
+El cálculo vive detrás del diagnóstico actual. La ejecución de Gate 0 es estrictamente read-only: sus metadatos, corte y resultados se guardan en el manifiesto del respaldo y en la evidencia OpenSpec, no en Firestore. Si más adelante se requiere auditoría persistida, será una operación separada y explícita que solo podrá escribir metadatos en `inventory_audit`. No se crea colección nueva ni endpoint `v2`. Las consultas siempre filtran por `company` o `companyId`, según el contrato de cada colección.
 
 La colección `products` se consulta únicamente para resolver identidad, referencia y nombre. Esta fase no escribe productos ni toca estructuras de precio. Un producto faltante se reporta como inconsistencia; no se crea ni se corrige desde inventarios.
 
@@ -52,7 +52,7 @@ Las banderas se guardan en configuración existente por empresa, con alcance opc
 
 ## Rollout gates
 
-1. **Gate 0 — preparación:** backup lógico verificable, flags `off`, corte probado y baseline capturado.
+1. **Gate 0 — preparación:** export de infraestructura + respaldo lógico por empresa, manifiesto con conteos e integridad, restauración de muestra en ambiente aislado, flags `off`, corte probado y baseline capturado. Si hubo movimientos después del corte, el respaldo se repite justo antes de la ventana.
 2. **Gate 1 — OMS sombra:** al menos un ciclo completo de cada cron relevante y tres conciliaciones diarias, sin escrituras de inventario por la nueva lógica.
 3. **Gate 2 — OMS canario:** una bodega o cohorte pequeña y un escritor por vez.
 4. **Gate 3 — OMS completo:** cero doble descuento, cero saldo sin movimiento, cero movimiento sin saldo y ningún despacho exitoso sin ID externo durante la ventana acordada.

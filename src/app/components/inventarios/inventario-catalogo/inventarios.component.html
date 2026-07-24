@@ -30,14 +30,14 @@
                                     (click)="cargarInventarioConsolidado()"
                                     [disabled]="loadingConsolidado"
                                     pTooltip="Actualizar datos"></button>
-                            <!-- Botón Reparar Inventario (corrige duplicados/idBodega/huérfanos) -->
+                            <!-- Gate 0: solo simula la reparación; no modifica saldos -->
                             <button pButton type="button"
                                     icon="pi pi-wrench"
                                     class="p-button-rounded p-button-outlined p-button-warning"
                                     style="width: 2.5rem; height: 2.5rem;"
                                     (click)="repararInventario()"
                                     [disabled]="loadingConsolidado || reparandoInventario"
-                                    pTooltip="Reparar inventario (deduplicar, corregir idBodega, eliminar huérfanos)"
+                                    pTooltip="Diagnosticar posibles reparaciones (sin modificar inventario)"
                                     tooltipPosition="bottom"></button>
                             <!-- Botón Eliminar Inventario (temporal/admin) -->
                             <button pButton type="button"

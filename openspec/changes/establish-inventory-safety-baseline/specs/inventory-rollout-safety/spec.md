@@ -2,6 +2,24 @@
 
 ## ADDED Requirements
 
+### Requirement: Respaldo recuperable antes de escribir
+THE system SHALL bloquear cualquier reparación, migración o activación que escriba inventario hasta contar con un respaldo de infraestructura y un respaldo lógico por empresa, ambos identificados con proyecto, fecha de corte, colecciones, cantidades y evidencia de integridad. El alcance SHALL incluir saldos, movimientos e historial —incluidas colecciones legacy—, bodegas y la configuración de integraciones o flows necesaria para interpretar esos saldos. El respaldo MUST NOT modificar productos, listas de precios ni precios.
+
+#### Scenario: No existe ensayo de restauración
+- **GIVEN** respaldos creados pero no restaurados en un ambiente aislado
+- **WHEN** se intenta habilitar una escritura nueva para OH MY STORE
+- **THEN** el Gate 0 permanece bloqueado
+
+#### Scenario: Respaldo completo y comprobado
+- **GIVEN** los dos respaldos, conteos e integridad verificados y una restauración de muestra exitosa en un ambiente aislado
+- **WHEN** el responsable revisa el Gate 0
+- **THEN** puede autorizar únicamente el siguiente paso en sombra o canario definido
+
+#### Scenario: El respaldo quedó viejo
+- **GIVEN** que hubo movimientos después de crear el respaldo
+- **WHEN** se acerca la ventana de activación
+- **THEN** se toma un nuevo corte y se verifican nuevamente sus conteos antes de continuar
+
 ### Requirement: Activación apagada por defecto
 THE system SHALL mantener apagado por defecto todo comportamiento nuevo que pueda cambiar cantidades o estados operativos.
 

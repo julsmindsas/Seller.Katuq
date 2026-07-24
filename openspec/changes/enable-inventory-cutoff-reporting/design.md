@@ -36,6 +36,8 @@ saldoCorte = saldoAncla - suma(deltas posteriores al corte y hasta el ancla)
 
 También puede avanzarse desde un ancla histórica certificada. Se elige la ruta con cobertura demostrada. Sin ancla o con huecos, el resultado no es certificado.
 
+Una exportación administrada normal de Firestore no basta como ancla: Google advierte que no es una foto exacta del inicio y puede incluir cambios ocurridos durante la operación. El gate aceptable es una exportación PITR con `snapshot-time`, que representa una vista consistente del instante indicado, seguida de verificación de operación completa y restore aislado. Requiere confirmar primero que PITR esté habilitado y que el instante solicitado esté dentro de su ventana. Fuente oficial: https://firebase.google.com/docs/firestore/manage-data/export-import
+
 ### 3. La certificación es por fila y global
 
 Cada producto–bodega recibe `certified`, `ambiguous` o `incomplete`, con causas. El reporte global solo es certificado si todas las filas incluidas lo son. No se ocultan filas dudosas para mejorar el indicador.
@@ -63,12 +65,13 @@ El reporte puede leer referencia, nombre y precio únicamente como columnas info
 ## Migration Plan
 
 1. Definir la fecha inicial certificable desde los gates del ledger.
-2. Construir fixtures con saldo ancla y movimientos completos/incompletos.
-3. Implementar consulta en modo interno y comparar contra reconstrucción manual.
-4. Habilitar vista para OMS con etiqueta de confianza; todavía sin uso contable oficial.
-5. Validar cortes conocidos con operación OMS.
-6. Habilitar exportación usando el mismo servicio.
-7. Repetir validación en Almacén Bombas antes de otros comercios.
+2. Confirmar PITR y capturar una exportación con `snapshot-time` en una ventana aprobada.
+3. Construir fixtures con saldo ancla y movimientos completos/incompletos.
+4. Implementar consulta en modo interno y comparar contra reconstrucción manual.
+5. Habilitar vista para OMS con etiqueta de confianza; todavía sin uso contable oficial.
+6. Validar cortes conocidos con operación OMS.
+7. Habilitar exportación usando el mismo servicio.
+8. Repetir validación en Almacén Bombas antes de otros comercios.
 
 ## Rollback
 

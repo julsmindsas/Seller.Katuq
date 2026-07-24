@@ -348,29 +348,29 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
 
   repararInventario(): void {
     Swal.fire({
-      title: 'Reparar inventario',
+      title: 'Diagnosticar reparación',
       html: `
         <div class="text-start">
-          <p>Esta operación analiza el inventario y corrige inconsistencias:</p>
+          <p>Esta operación <b>solo analiza</b> el inventario. No cambia ni elimina cantidades.</p>
           <ul>
-            <li><b>Deduplicar:</b> normaliza <code>idBodega</code> usando el business code (ej. <code>BOD-001</code>) cuando se está usando el Firestore docId.</li>
-            <li><b>Bodegas huérfanas:</b> elimina registros cuyo <code>idBodega</code> ya no existe.</li>
-            <li><b>Productos fantasma:</b> elimina registros cuyo producto fue eliminado.</li>
+            <li><b>Bodegas:</b> muestra cuáles necesitarían normalizar su código.</li>
+            <li><b>Bodegas huérfanas:</b> muestra cuáles quedarían para revisión.</li>
+            <li><b>Productos fantasma:</b> muestra cuáles quedarían para revisión.</li>
           </ul>
-          <p class="text-muted small">Es una operación reversible solo restaurando desde un backup. Se audita en <code>inventory_audit</code>.</p>
+          <p class="text-muted small">La reparación real está bloqueada hasta comprobar respaldo y restauración.</p>
         </div>
       `,
-      icon: 'question',
+      icon: 'info',
       showCancelButton: true,
-      confirmButtonText: 'Sí, reparar',
+      confirmButtonText: 'Analizar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#f59e0b',
+      confirmButtonColor: '#5F3FE0',
     }).then((result) => {
       if (!result.isConfirmed) return;
       this.reparandoInventario = true;
       Swal.fire({
-        title: 'Reparando inventario…',
-        html: 'Esto puede tomar varios segundos.',
+        title: 'Analizando inventario…',
+        html: 'No se está modificando ningún dato.',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
       });
@@ -380,16 +380,16 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
           const corregidos = resp?.corregidos ?? resp?.fixCount ?? 0;
           const eliminados = resp?.eliminados ?? resp?.deleteCount ?? 0;
           Swal.fire({
-            title: '✅ Reparación completa',
+            title: 'Plan de reparación (sin cambios)',
             html: `
               <div class="text-start">
-                <p><b>${corregidos}</b> registro(s) con <code>idBodega</code> corregido.</p>
-                <p><b>${eliminados}</b> registro(s) huérfanos eliminados.</p>
+                <p><b>${corregidos}</b> registro(s) necesitarían corregir <code>idBodega</code>.</p>
+                <p><b>${eliminados}</b> registro(s) necesitarían revisión antes de eliminar.</p>
+                <p class="text-muted small mb-0">No se cambió ni se eliminó nada.</p>
               </div>
             `,
-            icon: 'success',
+            icon: 'info',
           });
-          this.recargarInventarioConsolidado();
         },
         error: (err) => {
           this.reparandoInventario = false;
