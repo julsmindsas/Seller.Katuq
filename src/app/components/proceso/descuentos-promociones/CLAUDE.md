@@ -396,3 +396,53 @@ Un código NO descuenta sobre líneas que ya tienen promoción automática.
 - **Fase 3:** aplicación automática en `orderCalculationService` (checkout POS).
 - **Fase 4:** regla de no acumulación (D-B2) — excluir líneas en promo de la base
   elegible de un código.
+
+## 11. Sesión 2026-07-24 — Spec 010 SDD (integración e2e + gaps + ampliaciones)
+
+Se formalizó todo bajo **SDD**: `Seller.Katuq/specs/010-assisted-sale-discounts-promotions/`
+(`spec.md`/`plan.md`/`tasks.md` approved). Decisiones en CONTRACT.md: **D-044** (apertura
+retroactiva, ratifica D-B1..D-B5), **D-045** (clarifications), **D-046** (plan+tasks), **D-047**
+(ampliaciones del e2e). Feature A/B quedan como groundwork `[AS-BUILT]`.
+
+### 11.1 Gaps cerrados (G1–G4)
+- **G1** — `payment.service.checkIVAPrice`: flag `lineaEnPromo` (solo rama de promoción) +
+  `factorDesc = lineaEnPromo ? 1 : Math.max(0, 1 - porceDescuento)` en producto/adiciones/
+  preferencias → el desglose del vendedor coincide con el pedido persistido cuando un código %
+  coexiste con una línea en promo. Se removió el `console.log` de telemetría. Espeja `orderCalculationService.getTotalImpuesto`.
+- **G2** — envío gratis lleva el costo de envío a 0. Señal `descuentoAplicado.tipo==='envio_gratis'`
+  (sin campo nuevo): backend `orderCalculationService` (envío 0 + sin IVA de envío), y front en
+  `carrito.aplicarResultadoDescuento` + guardas en `checkout.ts:797` y `pedido-facturacion:587` +
+  `checkIVAPrice` (excluye IVA de envío).
+- **G3** — vigencia en hora **America/Bogotá**: NUEVO `functions/services/fechaColombia.js` (`hoyBogota()`
+  vía `Intl`). Reemplaza UTC en `descuentosPromociones.js` (aplicarCodigo) y `productPromoHelper.js`
+  (obtenerPromocionesVigentes).
+- **G4** — tope 100% en porcentaje: `create`/`edit` rechazan 400 `El porcentaje no puede exceder 100%`
+  + guards `Math.min`/`Math.max(0,…)` en `orderCalculationService` y `checkIVAPrice`.
+
+### 11.2 Bugs hallados en el e2e (corregidos)
+- **Promo por categoría rechazada** (`categoriaId` requerido): la validación exigía `categoriaId`
+  pero el form/matching usan `categoriaNombre`. Ahora valida `categoriaNombre` (id opcional).
+- **Promos invisibles en catálogos**: `enrichProductsWithPromos` faltaba en `productosPaginated.handleBodegaPagination`
+  (venta asistida filtra por bodega) y en `productos.getAll` (`GET /v1/productos/all`, módulo Productos).
+  Enganchado en ambos + display de promo (tachado + badge) en la tabla del módulo Productos.
+
+### 11.3 Ampliaciones (a pedido del usuario)
+- **Historial de redención de PROMOCIONES** (paridad con códigos): NUEVO
+  `services/descuentosService.registrarRedencionesPromociones` (agrupa líneas por `_promocionAplicada`,
+  reutiliza `registrarRedencion`, idempotente por `${ordenId}_${promocionId}`, incrementa `usosActuales`;
+  sin `limiteUsos` → no auto-agota). Enganchado no-bloqueante en `orders.js exports.create`. El modal de
+  historial muestra badge "Promoción" cuando no hay código; la lista admin ya exponía Historial/Redimido(N).
+- **Endurecimiento** `productPromoHelper.calcularPrecioLineaPromocional`: deriva `sinIVA` desde `conIVA`
+  cuando falta (productos de Osmosis), con `IVA_DEFAULT=19` — la promo se aplica en checkout aunque
+  el `sinIVA` no venga (fuera del flujo UI). Verificado que NO había doble descuento (promo una vez;
+  código nunca sobre líneas en promo).
+
+### 11.4 Pruebas (backend, ejecutables sin emulador)
+`npm run test:descuentos-money-path` (26/26) · `test:fecha-bogota` (7/7) · `test:descuentos-validacion`
+(4/4) · `test:promo-line-price` (12/12). Frontend: `payment.service.spec.ts` (karma, 4/4 — requiere
+habilitar jasmine types + quill, ver nota de entorno en `tasks.md`). `diag-promo-match.js` = diagnóstico
+read-only reusable del match por categoría.
+
+### 11.5 Pendiente
+- Prueba e2e final en navegador con productos de precio normal (IDO PURPLE + PANTY MALASIA + código 10%).
+- Deploy EC2 (PEM) + PRs (base back `backend-aws-security`, front `main`) — sigue bloqueado.

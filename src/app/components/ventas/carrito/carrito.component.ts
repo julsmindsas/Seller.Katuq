@@ -555,11 +555,15 @@ export class CarritoComponent implements OnInit {
       this.pedido.totalDescuento = monto;
       this.valorDescuento = monto;
     } else if (res.tipo === 'envio_gratis') {
-      // El descuento sobre productos es 0; el envío gratis se maneja en checkout.
+      // El descuento sobre productos es 0. G2 (spec 010): el envío gratis lleva el
+      // costo de envío a cero. Se cerea aquí para el display inmediato; los setters
+      // de envío (checkout/facturación) y el backend respetan el mismo flag
+      // (pedido.descuentoAplicado.tipo === 'envio_gratis') sin importar el orden.
       this.porcentajeDescuento = 0;
       this.pedido.porceDescuento = 0;
       this.pedido.totalDescuento = 0;
       this.valorDescuento = 0;
+      this.pedido.totalEnvio = 0;
     } else {
       // valor_fijo, o CUALQUIER código dirigido (categoría/producto): el monto
       // ya viene calculado sobre la base elegible → tratar como monto fijo.

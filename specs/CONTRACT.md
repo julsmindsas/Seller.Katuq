@@ -36,6 +36,8 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | **006** | **harmony-vendedor-filter** | **done** | Daniel | Filtro server-side multi-source por vendedor: orders por `asesor_email`, accounting_documents/balances por `vendedor_id` con fallback a `vendedor_nombre`. JWT con `vendedorIdWO/NombreWO`. Política estricta sin mapeo → 0 docs. Form crear-usuarios con dropdown autocomplete desde `/v1/reports/sellers/wo`. E2E PASS Harmony LUZ MARIA = 24 docs subset. |
 | **007** | **user-admin-credentials-delete** | **done** | Daniel | Normaliza contraseña en crear/editar usuarios y habilita eliminar usuario desde `/usuarios` con validación de empresa. |
 | **008** | **cotizaciones-mvp** | **tasks in-progress (Bloque 0 done)** | — | Módulo de Cotizaciones, Fase 1: listado + métricas + export + editor (cliente, fechas, productos con popup de config y precio/IVA editable, totales, términos, estados, guardar borrador, PDF, WhatsApp, vendedor). Colección propia, NO toca inventario/pedidos. **Existe implementación previa** (backend completo + rama frontend `origin/cotizaciones`) → se adopta/ajusta backend y se construye frontend fresco (ver D-040/D-041). Sub-fases: 008.2 conversión a pedido, 008.3 portal de aprobación por correo. |
+| **009** | **customer-metrics-detalle-cliente** | **backend done + 15 tests; frontend pendiente flag** | Daniel | 4 métricas de solo-lectura en la ficha del cliente + lista paginada. Endpoint `GET /v1/orders/customer-summary` con query proyectada (sin carrito). Sin colección paralela ni índices nuevos. Feature flag `ENABLE_CUSTOMER_METRICS`. Ver D-043. |
+| **010** | **assisted-sale-discounts-promotions** | **implement done (G1–G4 + fixes e2e + ampliaciones) — pendiente e2e final navegador + deploy** | equipo Katuq + Claude | Formaliza bajo SDD la integración de **códigos** (Feature A) y **promociones automáticas** (Feature B) en la venta asistida. Retroactiva: ratifica A/B como groundwork (criterios `[AS-BUILT]`) + trabajo nuevo: verificación e2e en navegador + cierre de gaps (desglose vs persistido, envío_gratis, vigencia UTC→Bogotá, tope 100%). Rama `feature/descuentos-promociones` (ambos repos). Ver D-044. |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -382,6 +384,43 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Rollout:** feature flag `ENABLE_CUSTOMER_METRICS` (frontend, default OFF) → rollback = apagar flag.
 - **Estado:** spec/plan/tasks creados; backend implementado + 15 tests verdes (10 unit + 5 contract). Frontend (servicio + subcomponente `app-customer-metrics`) implementado, pendiente validar build + activar flag.
 
+### 2026-07-24 — D-044: Apertura spec 010 — integración descuentos/promociones en venta asistida (formalización retroactiva bajo SDD)
+- **Contexto:** Feature A (códigos con enforcement de "Aplica a") y Feature B (promociones automáticas de catálogo) se construyeron y pushearon en la rama `feature/descuentos-promociones` (backend `720d6aa`/`ce425b2`, frontend `742c4e0a`/`efcef55b`) **fuera de la ceremonia SDD**. Su intención nunca quedó como criterios verificables → viola de facto el Artículo I ("spec primero"). Las decisiones D-B1..D-B5 se tomaron con el usuario pero solo vivían en la bitácora del módulo (`components/proceso/descuentos-promociones/CLAUDE.md`), no en el contrato vivo.
+- **Decisión de alcance (elegida por el usuario, 2026-07-24):** la spec 010 es **retroactiva + gaps**. Formaliza A/B como *groundwork ya entregado* con criterios EARS marcados `[AS-BUILT]` (que el e2e debe validar) y añade el trabajo `[NEW]`: verificación end-to-end real en navegador (nunca corrida) + cierre de brechas conocidas (desglose mostrado vs pedido persistido en caso código%+promo; envío_gratis→cero; vigencia UTC→America/Bogotá; tope 100% en porcentaje).
+  - **Alternativas descartadas:** "solo hacia adelante" (dejaría A/B sin cubrir en la cadena SDD, contra Art. XIV "si no está escrito, no pasó"); "dos specs 010+011" (más ceremonia y checkpoints sin beneficio claro para un feature ya construido).
+- **Ratificación de decisiones informales de Feature B (antes solo en bitácora del módulo):**
+  - **D-B1** — discriminador `naturaleza: 'codigo' | 'promocion'` en la MISMA colección `descuentosPromociones` (no colección aparte).
+  - **D-B2** — NO acumulable: un código no descuenta sobre líneas ya en promoción.
+  - **D-B3** — MVP solo POS/venta asistida (no toca 360 Woo/Shopify).
+  - **D-B4** — una promoción solo admite tipo porcentaje o valor_fijo (no envío gratis).
+  - **D-B5** — una promoción siempre apunta a categoría o producto_específico (no store-wide).
+- **Excepción de flujo SDD registrada:** como en D-007 (spec 001), se documenta que el código de A/B ya existía al abrir la spec; las decisiones técnicas normalmente del `plan.md` están dispersas en el código y en la bitácora del módulo. El `plan.md` de 010 se enfocará en el trabajo `[NEW]` (e2e + gaps), no en re-planear A/B.
+- **Abierto para el checkpoint de la spec (§8 del spec.md):** Q-01 (¿vigencia y tope 100% entran en 010 o follow-up?), Q-02 (gate de pago para redención online), Q-03 (cobertura del e2e: solo local vs también prod tras deploy).
+- **Estado:** `specs/010-assisted-sale-discounts-promotions/spec.md` creado en `draft`. Pendiente checkpoint humano antes de redactar `plan.md`.
+
+### 2026-07-24 — D-045: Clarifications spec 010 resueltas + spec aprobada
+- **Q-01 (gaps de vigencia y tope 100%):** → **DENTRO de 010.** La comparación de vigencia pasa a hora local America/Bogotá (hoy usa UTC → off-by-~5h en bordes de medianoche) y el descuento porcentual se topa a 100% (hoy sin tope → un código >100% daría subtotal negativo). Razón: cambios acotados que cierran bugs de borde reales.
+- **Q-02 (gate de pago para redención online):** → **FOLLOW-UP (fuera de alcance de 010).** El MVP sigue registrando la redención al crear la orden. Riesgo asumido: un código con límite se consume aunque el cliente no pague en ventas con link de pago. Endurecer con `estadoPago=Pagado`/webhook de pasarela queda como spec/sub-spec futura.
+- **Q-03 (cobertura del e2e):** → **SOLO LOCAL por ahora.** Verificación end-to-end contra `OH MY STORE` en local (back :3300 + front :4200). Validación contra producción diferida hasta desbloquear el deploy en EC2 (PEM).
+- **Decisión:** con las 3 clarifications resueltas, la spec 010 pasa a **approved**. Habilita redactar `plan.md` (enfocado en el trabajo `[NEW]`: e2e + los 4 gaps; NO re-planea A/B, que es groundwork `[AS-BUILT]`).
+
+### 2026-07-24 — D-046: Plan 010 aprobado + tasks generadas
+- **Plan (`plan.md`) aprobado en checkpoint humano.** Alcance del plan = SOLO trabajo `[NEW]` (A/B es `[AS-BUILT]`, no se re-planea). Cuatro gaps acotados con trazabilidad a criterio EARS:
+  - **G1** — `checkIVAPrice` (front): `factorDesc` por línea = `tienePromoLinea ? 1 : (1-porceDescuento)`, espejando `orderCalculationService`; corrige el desglose cuando código% coexiste con una línea en promo (`payment.service.ts:~421`). Incluye retirar el `console.log` de telemetría (Art. VII/XI).
+  - **G2** — envío gratis → costo de envío a cero en checkout (front).
+  - **G3** — vigencia en America/Bogotá (offset fijo −05:00, sin dependencia nueva) en `aplicarCodigo` (`descuentosPromociones.js:337`) y `productPromoHelper.obtenerPromocionesVigentes`.
+  - **G4** — tope 100% en porcentaje: 400 en `create`/`edit` + guard en cálculo.
+- **Gates de constitución:** todos sí/n-a; ningún "no" que requiera enmienda. Excepción de flujo ya cubierta por D-044 (A/B preexistente).
+- **Tasks (`tasks.md`) generadas:** T-01..T-11. Orden: regresión primero (T-01/T-02 congelan el caso código%+promo antes de tocar G1), luego G1–G4 en paralelo donde no colisionan, E2E local (T-10, checklist de 6 pasos contra OH MY STORE), cierre (T-11). DoD excluye deploy EC2/PRs y validación en prod (Q-03 diferida).
+- **Estado:** spec+plan+tasks `approved`. Habilitada la fase **implement**.
+
+### 2026-07-24 — D-047: Historial de redención de promociones automáticas (Feature B) + fixes de enganche del catálogo (durante e2e de spec 010)
+- **Contexto:** validando la spec 010 end-to-end en navegador (T-10), el usuario reportó que las promociones automáticas no se veían en los catálogos y pidió que el historial de promociones registre cada vez que alguien las aprovecha (paridad con los códigos).
+- **BUG-E2E-01 (create promo por categoría):** la validación D-B5 exigía `categoriaId`, pero el formulario y TODO el matching (`productPromoHelper`/`aplicarCodigo`) usan `categoriaNombre`. Fix: validar `categoriaNombre` (id opcional).
+- **BUG-E2E-02 (promos invisibles en catálogos):** `enrichProductsWithPromos` faltaba en dos rutas reales: `handleBodegaPagination` (el catálogo de venta asistida filtra por bodega) y `getAll` (`GET /v1/productos/all`, módulo de Productos). Enganchado en ambas + display nuevo en la tabla del módulo de Productos (tachado + badge). Confirmado por el usuario. El matching por nombre de categoría ya era correcto (verificado read-only con `scripts/diag-promo-match.js`).
+- **Ampliación de comportamiento (la decisión de fondo):** las promociones automáticas ahora dejan **historial de redención** como los códigos. NUEVO `services/descuentosService.registrarRedencionesPromociones` — agrupa las líneas de la orden por `_promocionAplicada`, reutiliza `registrarRedencion` (misma colección `redencioneDescuentos`), idempotente por `${ordenId}_${promocionId}`, incrementa `usosActuales`. Las promociones no tienen `limiteUsos` → no hay auto-agotamiento (solo conteo). Enganchado NO bloqueante en `controllers/orders.js exports.create` tras la redención de código. Frontend: el modal de historial muestra badge "Promoción" cuando no hay código; la lista admin ya exponía Historial/Redimido(N) para todas las filas.
+- **Nota SDD:** esta ampliación excede el alcance original de la spec 010 (que era integración + gaps). Se registra aquí y en `tasks.md`; el criterio EARS correspondiente se añade a `spec.md` (§4). Trabajo hecho en sesión interactiva con el usuario conduciendo el e2e.
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
@@ -416,6 +455,24 @@ Orden = prioridad. La spec piloto siempre encabeza.
 ## 7. Bitácora de sesiones
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
+
+### 2026-07-24 (sesión apertura spec 010 — descuentos/promociones bajo SDD)
+- Retomamos el feature de descuentos y promociones. Ambos repos en `feature/descuentos-promociones`, limpios; Feature A y B ya commiteados y pusheados (backend `720d6aa`, frontend `742c4e0a`).
+- Decisión del usuario: la integración descuentos↔venta asistida se formaliza bajo SDD como **spec 010 retroactiva + gaps** (ver **D-044**). Se ratifican D-B1..D-B5 (antes solo en la bitácora del módulo) en el contrato vivo.
+- Creado `specs/010-assisted-sale-discounts-promotions/spec.md` (`draft`): criterios EARS `[AS-BUILT]` (códigos, promociones, no-acumulación — ya entregados) + `[NEW]` (e2e en navegador + gaps: desglose vs persistido, envío_gratis, vigencia UTC→Bogotá, tope 100%). Roadmap actualizado con filas 009 y 010.
+- Checkpoint spec superado (Q-01=dentro, Q-02=follow-up, Q-03=solo local → **D-045**), spec `approved`.
+- Redactado `plan.md` (4 gaps G1–G4 + e2e) → checkpoint del plan superado (**D-046**) → redactado `tasks.md` (T-01..T-11). spec+plan+tasks `approved`.
+- Fase **implement** completada en esta misma sesión (larga, interactiva):
+  - **G1–G4** cerrados y verificados con pruebas backend ejecutables: `test:descuentos-money-path` 26/26,
+    `test:fecha-bogota` 7/7, `test:descuentos-validacion` 4/4, `test:promo-line-price` 12/12; front `payment.service.spec` 4/4.
+  - **e2e en navegador** (servidores locales) destapó y corrigió: promo por categoría rechazada (`categoriaId`→`categoriaNombre`),
+    promos invisibles en catálogos (enganche faltante en `handleBodegaPagination` y `getAll` + display en módulo Productos).
+    Usuario confirmó que ya se ven en ambos catálogos.
+  - **Ampliaciones (D-047):** historial de redención de promociones + endurecimiento de `calcularPrecioLineaPromocional`
+    (deriva sinIVA). Verificado que NO había doble descuento (revisión de órdenes reales ORE-000463/464).
+  - Bitácora del módulo actualizada (sección 11): `components/proceso/descuentos-promociones/CLAUDE.md`.
+- **Pendiente:** prueba e2e final en navegador con productos de precio normal; deploy EC2 (PEM) + PRs (base back `backend-aws-security`, front `main`). Commit a la espera de autorización del usuario.
+- **Nota entorno:** el harness de karma del frontend estaba inoperante (`quill` no declarado en package.json, `@types/jasmine` sin instalar + comentado en `tsconfig.spec.json`, 2 specs huérfanos `visual`/`visual3d`). Se sorteó con instalaciones `--no-save` para correr el spec; recomendación registrada en `tasks.md` para dejarlo operativo (decisión del equipo).
 
 ### 2026-05-13 (sesión 1)
 - Adoptamos SDD.
