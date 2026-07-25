@@ -344,7 +344,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         console.warn(`[produccion] ${yaSalieron.length} pedido(s) del tablero ya salieron: ${listado}`);
 
         if (this.hayCapturaPendiente()) {
-          // Hay avance sin guardar: no se toca la pantalla, solo se avisa.
+          // Hay avance sin guardar: no se recarga nada para no borrarle lo que
+          // lleva escrito; solo se avisa.
           this.toastr.warning(
             `${yaSalieron.length} pedido(s) en pantalla ya fueron despachados o entregados. Guarda lo que llevas y refresca.`,
             'Pedidos desactualizados',
@@ -353,15 +354,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
 
-        // Sin captura pendiente: se refresca solo. Como el backend ya no los
-        // devuelve, desaparecen del tablero sin intervención del operario.
+        // Sin captura pendiente: recarga en segundo plano, SIN loader. Como el
+        // backend ya no devuelve los pedidos que salieron, desaparecen solos.
         this.toastr.info(
           `${yaSalieron.length} pedido(s) ya salieron de producción y se retiraron del tablero.`,
           'Tablero actualizado',
           { timeOut: 6000 }
         );
-        this.refrescarDatos();
-        this.refrescarDatosEnsamble();
+        this.refrescarDatos(true);
+        this.refrescarDatosEnsamble(true);
       },
       error: (err) => {
         console.warn('[produccion] Vigilancia de estados falló:', err?.message || err);
@@ -376,23 +377,28 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showMetrics = !this.showMetrics;
   }
 
-  async refrescarDatos() {
+  /**
+   * @param silencioso true = recarga en segundo plano sin mostrar el loader.
+   * Lo usa la vigilancia de estados: el tablero se actualiza solo, sin taparle
+   * la pantalla al operario ni interrumpir lo que está haciendo.
+   */
+  async refrescarDatos(silencioso: boolean = false) {
     const filter = {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
       estadosPago: ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
       company: JSON.parse(localStorage.getItem("currentCompany") || '{}').nomComercial || ''
     }
-    this.loading = true;
+    if (!silencioso) { this.loading = true; }
     const context = this;
     this.produccionService.getOrdersByFiltersFlatProduct(filter).subscribe(
       (data) => {
-        this.loading = false;
+        if (!silencioso) { this.loading = false; }
         this.orderResponse = data;
         this.orders = data.orders;
       },
       (error) => {
-        this.loading = false;
+        if (!silencioso) { this.loading = false; }
         console.error('Error al cargar los datos:', error);
       }
     );
@@ -673,7 +679,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ventasService.editMultipleOrders({ orders: orders }).subscribe(
       (data) => {
         console.log('editMultipleOrders: Success response:', data);
-        this.refrescarDatos();
+        // Silencioso: el aviso de resultado ya informa, el loader solo estorba.
+        this.refrescarDatos(true);
 
         // El backend responde 200 aunque haya rechazado pedidos (retrocesos de
         // estado, órdenes inexistentes...). Sin esto se mostraba "actualizados
@@ -905,7 +912,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return resultado;
   }
 
-  refrescarDatosEnsamble() {
+  /**
+   * @param silencioso true = recarga en segundo plano sin mostrar el loader ni
+   * resetear la vista. Lo usa la vigilancia de estados.
+   */
+  refrescarDatosEnsamble(silencioso: boolean = false) {
     let fechaInicial = this.fechaInicial;
     let fechaFinal = this.fechaFinal;
 
@@ -1240,7 +1251,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         console.log('✅ [DEBUG] Filtro re-aplicado:', this.ordersEnsamble.length, 'órdenes filtradas');
       }
 
-      this.loading = false;
+      // En modo silencioso no se toca el loader: la recarga de fondo no debe
+      // apagar un indicador que pertenezca a otra carga en curso.
+      if (!silencioso) { this.loading = false; }
 
       // Después de cargar los datos, clasificar los pedidos
       this.clasificarPedidosPorUrgencia();
