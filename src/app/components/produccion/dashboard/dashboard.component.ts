@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { Table } from 'primeng/table';
 import { PaymentService } from 'src/app/shared/services/ventas/payment.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -30,14 +30,25 @@ import { environment } from '../../../../environments/environment';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { ProduccionDirectService } from 'src/app/shared/services/produccion/produccion-direct.service';
+import { ToastrService } from 'ngx-toastr';
 
+/**
+ * Estados en los que el pedido ya salió físicamente. Registrar producción sobre
+ * ellos no tiene sentido y el backend rechaza cualquier retroceso de estado,
+ * descartando el lote completo (se perdía el historial de piezas registrado).
+ */
+const ESTADOS_PEDIDO_YA_SALIDO: string[] = [
+  EstadoProceso.Despachado,
+  EstadoProceso.Entregado,
+  EstadoProceso.Cerrado,
+];
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit, AfterViewInit {
+export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('clientes', { static: false }) clientes: ClientesComponent;
   @ViewChild('entrega', { static: false }) entrega: PedidoEntregaComponent;
@@ -167,7 +178,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     private utilService: UtilsService,
     private filterService: FilterService,
     private changeDetectorRef: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private toastr: ToastrService
   ) {
     this.registerCustomFilters();
 
@@ -272,6 +284,89 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.loadFiltersFromStorage();
 
     this.refrescarDatosEnsamble();
+    this.iniciarVigilanciaDeEstados();
+  }
+
+  ngOnDestroy(): void {
+    this.detenerVigilanciaDeEstados();
+  }
+
+  // ── Vigilancia de estados en segundo plano ─────────────────────────────────
+  // El tablero suele quedar abierto horas. Mientras tanto otras áreas despachan
+  // o entregan pedidos, y esta pantalla seguía mostrándolos como pendientes de
+  // producir. Cada intervalo se consultan los estados frescos (consulta liviana,
+  // sin carrito) y se retiran los que ya salieron.
+  private vigilanciaEstadosHandle: any = null;
+  private readonly INTERVALO_VIGILANCIA_ESTADOS_MS = 45000;
+
+  private iniciarVigilanciaDeEstados(): void {
+    this.detenerVigilanciaDeEstados();
+    this.vigilanciaEstadosHandle = setInterval(
+      () => this.verificarEstadosEnSegundoPlano(),
+      this.INTERVALO_VIGILANCIA_ESTADOS_MS
+    );
+  }
+
+  private detenerVigilanciaDeEstados(): void {
+    if (this.vigilanciaEstadosHandle) {
+      clearInterval(this.vigilanciaEstadosHandle);
+      this.vigilanciaEstadosHandle = null;
+    }
+  }
+
+  /**
+   * ¿El operario tiene piezas escritas sin guardar? Si es así no se refresca
+   * solo, para no borrarle el avance; únicamente se le avisa.
+   */
+  private hayCapturaPendiente(): boolean {
+    return (this.ordersEnsamble || []).some((pedido: any) =>
+      (pedido?.detallePedido || []).some((d: any) => Number(d?.piezasProducidas) > 0)
+    );
+  }
+
+  private verificarEstadosEnSegundoPlano(): void {
+    const ids = (this.orderResponse?.ordersRaw || [])
+      .map((o: any) => o?._id)
+      .filter(Boolean);
+
+    if (ids.length === 0 || this.loading) { return; }
+
+    this.ventasService.getEstadosActuales(ids).subscribe({
+      next: (resp) => {
+        const yaSalieron = (resp?.estados || []).filter(
+          (e) => ESTADOS_PEDIDO_YA_SALIDO.includes(e.estadoProceso)
+        );
+        if (yaSalieron.length === 0) { return; }
+
+        const listado = yaSalieron
+          .map((e) => `${e.nroPedido || e._id} (${e.estadoProceso})`)
+          .join(', ');
+        console.warn(`[produccion] ${yaSalieron.length} pedido(s) del tablero ya salieron: ${listado}`);
+
+        if (this.hayCapturaPendiente()) {
+          // Hay avance sin guardar: no se toca la pantalla, solo se avisa.
+          this.toastr.warning(
+            `${yaSalieron.length} pedido(s) en pantalla ya fueron despachados o entregados. Guarda lo que llevas y refresca.`,
+            'Pedidos desactualizados',
+            { timeOut: 8000 }
+          );
+          return;
+        }
+
+        // Sin captura pendiente: se refresca solo. Como el backend ya no los
+        // devuelve, desaparecen del tablero sin intervención del operario.
+        this.toastr.info(
+          `${yaSalieron.length} pedido(s) ya salieron de producción y se retiraron del tablero.`,
+          'Tablero actualizado',
+          { timeOut: 6000 }
+        );
+        this.refrescarDatos();
+        this.refrescarDatosEnsamble();
+      },
+      error: (err) => {
+        console.warn('[produccion] Vigilancia de estados falló:', err?.message || err);
+      }
+    });
   }
 
   /**
@@ -521,10 +616,92 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
     console.log(`editMultipleOrders: Processing ${orders.length} orders`);
 
+    // Revalidación previa: el tablero pudo quedar abierto mientras alguien
+    // despachaba o entregaba estos pedidos. Se consultan los estados frescos y
+    // se excluyen los que ya salieron, para no mandar un retroceso que el
+    // backend rechazaría descartando todo el lote.
+    const ids = orders.map((o: any) => o?._id).filter(Boolean);
+    if (ids.length === 0) {
+      this.enviarLoteAEditar(orders);
+      return;
+    }
+
+    this.ventasService.getEstadosActuales(ids).subscribe({
+      next: (resp) => {
+        const estadoActualPorId = new Map<string, string>();
+        (resp?.estados || []).forEach((e) => estadoActualPorId.set(e._id, e.estadoProceso));
+
+        const excluidos: string[] = [];
+        const validos = orders.filter((o: any) => {
+          const estadoFresco = estadoActualPorId.get(o._id);
+          if (estadoFresco && ESTADOS_PEDIDO_YA_SALIDO.includes(estadoFresco)) {
+            excluidos.push(`${o.nroPedido || o._id} (${estadoFresco})`);
+            return false;
+          }
+          return true;
+        });
+
+        if (excluidos.length > 0) {
+          console.warn('[produccion] Pedidos excluidos del lote por estar ya despachados/entregados:', excluidos);
+          Swal.fire({
+            icon: 'warning',
+            title: `${excluidos.length} pedido(s) ya salieron`,
+            html: `<div style="text-align:left"><p>Estos pedidos fueron despachados o entregados mientras tenías el tablero abierto, así que <b>no</b> se les registró producción:</p>
+                   <ul>${excluidos.map(e => `<li>${e}</li>`).join('')}</ul></div>`,
+            showConfirmButton: true
+          });
+        }
+
+        if (validos.length === 0) {
+          this.refrescarDatos();
+          this.refrescarDatosEnsamble();
+          return;
+        }
+
+        this.enviarLoteAEditar(validos);
+      },
+      error: (err) => {
+        // Si la revalidación falla no se bloquea la operación: el backend
+        // mantiene su propio guard de retrocesos.
+        console.warn('[produccion] No se pudo revalidar estados, se envía el lote igual:', err?.message || err);
+        this.enviarLoteAEditar(orders);
+      }
+    });
+  }
+
+  private enviarLoteAEditar(orders: Pedido[]) {
     this.ventasService.editMultipleOrders({ orders: orders }).subscribe(
       (data) => {
         console.log('editMultipleOrders: Success response:', data);
         this.refrescarDatos();
+
+        // El backend responde 200 aunque haya rechazado pedidos (retrocesos de
+        // estado, órdenes inexistentes...). Sin esto se mostraba "actualizados
+        // correctamente" y el operario repetía el trabajo creyendo que guardó.
+        const noActualizadas: any[] = data?.noActualizadas || [];
+        if (noActualizadas.length > 0) {
+          const nroPorId = new Map<string, string>();
+          orders.forEach((o: any) => {
+            if (o?._id) { nroPorId.set(o._id, o.nroPedido || o._id); }
+          });
+
+          const detalle = noActualizadas
+            .map((n: any) => `<li><b>${nroPorId.get(n._id) || n._id}</b>: ${n.error || 'no se pudo actualizar'}</li>`)
+            .join('');
+
+          const actualizadas = data?.updatedIds?.length ?? 0;
+          Swal.fire({
+            icon: actualizadas > 0 ? 'warning' : 'error',
+            title: actualizadas > 0
+              ? `${actualizadas} pedido(s) guardado(s), ${noActualizadas.length} sin guardar`
+              : `No se guardó ningún pedido (${noActualizadas.length})`,
+            html: `<div style="text-align:left"><p>Estos pedidos <b>no</b> se actualizaron:</p><ul>${detalle}</ul>
+                   <p style="margin-top:10px">Si ya fueron despachados o entregados, su producción no se puede modificar desde este tablero.</p></div>`,
+            showConfirmButton: true
+          });
+          return;
+        }
+
         Swal.fire({
           icon: 'success',
           title: 'Pedidos actualizados correctamente',
@@ -1639,7 +1816,15 @@ export class DashboardComponent implements OnInit, AfterViewInit {
                     return carritoItem && carritoItem.estadoProcesoProducto === EstadoProceso.ProducidoTotalmente;
                   });
 
-                  if (allProductsProduced) {
+                  // Si el pedido ya salió (despachado/entregado/cerrado) se guarda el
+                  // avance de producción pero NO se recalcula su estado: bajarlo a
+                  // "ProducidoParcialmente" es un retroceso que el backend rechaza,
+                  // descartando el lote completo junto con el historial de piezas.
+                  if (ESTADOS_PEDIDO_YA_SALIDO.includes(orderToUpdate.estadoProceso)) {
+                    console.warn(
+                      `[produccion] Pedido ${orderToUpdate.nroPedido} está en '${orderToUpdate.estadoProceso}': se conserva su estado y solo se guarda el avance de producción.`
+                    );
+                  } else if (allProductsProduced) {
                     orderToUpdate.estadoProceso = EstadoProceso.ProducidoTotalmente;
                   } else {
                     //validar si almenos un producto es diferente de sin producir

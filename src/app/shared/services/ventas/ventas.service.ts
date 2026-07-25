@@ -274,6 +274,18 @@ export class VentasService extends BaseService {
     return this.post<any>('/v1/orders/edit-multiple-orders', orders);
   }
 
+  /**
+   * Consulta liviana (read-only) del estado actual de un set de pedidos.
+   * Devuelve solo estados, sin arrastrar el carrito. La usa el tablero de
+   * producción para detectar pedidos que se despacharon o entregaron mientras
+   * la pantalla estaba abierta.
+   */
+  getEstadosActuales(ids: string[]): Observable<{
+    estados: { _id: string; nroPedido: string; estadoProceso: string; estadoPago: string }[]
+  }> {
+    return this.post<any>('/v1/orders/estados-actuales', { ids });
+  }
+
   getOrders() {
     const empresaActual = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     const id = empresaActual.nomComercial;
