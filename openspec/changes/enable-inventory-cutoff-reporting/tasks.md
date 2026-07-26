@@ -9,9 +9,9 @@
 
 ## 2. Exportación
 
-- [ ] 2.1 Extender el endpoint/export existente con `fechaCorte`, empresa obligatoria, paginación/cursor y metadatos de confianza.
-- [ ] 2.2 Mantener las columnas operativas actuales y agregar saldo al corte, nivel de confianza, cobertura y causa de inconsistencia.
-- [ ] 2.3 Garantizar que exportar no escriba inventario, productos, precios, pedidos ni configuración.
+- [x] 2.1 Extender el endpoint/export existente con `fechaCorte`, empresa obligatoria, paginación/cursor y metadatos de confianza.
+- [x] 2.2 Mantener las columnas operativas actuales y agregar saldo al corte, nivel de confianza, cobertura y causa de inconsistencia.
+- [x] 2.3 Garantizar que exportar no escriba inventario, productos, precios, pedidos ni configuración.
 
 ## 3. Verificación y entrega
 

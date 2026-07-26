@@ -173,6 +173,61 @@ export interface InventarioConsolidadoResponse {
   };
 }
 
+export type InventarioCorteEstado = 'certified' | 'ambiguous' | 'incomplete';
+
+export interface InventarioCorteFila {
+  key: string;
+  productId: string | null;
+  referencia: string;
+  nombre: string;
+  idBodega: string | null;
+  bodegaNombre: string;
+  anchorQuantity: number | null;
+  quantityAtCutoff: number | null;
+  quantityMode: 'chained' | 'estimate';
+  status: InventarioCorteEstado;
+  causes: string[];
+  warnings: string[];
+  movementCount: number;
+}
+
+export interface InventarioCorteResponse {
+  success: boolean;
+  company: string;
+  timezone: 'America/Bogota';
+  mode: string;
+  snapshotConsistency: 'ATOMIC_VERIFIED' | 'SEQUENTIAL_LIVE_READ';
+  cutoffAt: string;
+  anchorAt: string;
+  anchorVerified: boolean;
+  certifiedFrom: string | null;
+  minimumCertifiableAt: string | null;
+  certified: boolean;
+  statusCounts: Record<InventarioCorteEstado, number>;
+  causeCounts: { [cause: string]: number };
+  coverage: {
+    rows: number;
+    filteredRows: number;
+    movementsAfterCutoff: number;
+    movementsWithBeforeAfter: number;
+    movementsWithoutDate: number;
+    sourceReads: {
+      inventory: number;
+      inventoryMovement: number;
+      products: number;
+      warehouses: number;
+    };
+  };
+  rows: InventarioCorteFila[];
+  pagination: {
+    limit: number;
+    returned: number;
+    total: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -326,6 +381,8 @@ export class InventarioService {
     stockFilter?: string;
     onlyWithStock?: boolean;
     soloInventariables?: boolean;
+    fechaCorte?: string;
+    status?: InventarioCorteEstado;
   } = {}): Observable<Blob> {
     let params = new HttpParams();
     if (options.bodega) params = params.set('bodega', options.bodega);
@@ -334,11 +391,34 @@ export class InventarioService {
     if (options.stockFilter) params = params.set('stockFilter', options.stockFilter);
     if (options.onlyWithStock !== undefined) params = params.set('onlyWithStock', String(options.onlyWithStock));
     if (options.soloInventariables !== undefined) params = params.set('soloInventariables', String(options.soloInventariables));
+    if (options.fechaCorte) params = params.set('fechaCorte', options.fechaCorte);
+    if (options.status) params = params.set('status', options.status);
 
     return this.http.get(`${this.apiUrl}/inventory/export-excel`, {
       params,
       responseType: 'blob',
     });
+  }
+
+  consultarInventarioCorte(options: {
+    fechaCorte: string;
+    bodega?: string;
+    search?: string;
+    status?: InventarioCorteEstado;
+    limit?: number;
+    cursor?: string;
+  }): Observable<InventarioCorteResponse> {
+    let params = new HttpParams().set('fechaCorte', options.fechaCorte);
+    if (options.bodega) params = params.set('bodega', options.bodega);
+    if (options.search) params = params.set('search', options.search);
+    if (options.status) params = params.set('status', options.status);
+    if (options.limit) params = params.set('limit', String(options.limit));
+    if (options.cursor) params = params.set('cursor', options.cursor);
+
+    return this.http.get<InventarioCorteResponse>(
+      `${this.apiUrl}/inventory/cutoff-report`,
+      { params },
+    );
   }
 
   obtenerInventarioConsolidado(options: {

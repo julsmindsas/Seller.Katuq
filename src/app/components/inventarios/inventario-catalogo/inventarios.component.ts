@@ -12,6 +12,8 @@ import {
   InventarioService,
   ProductoConsolidado,
   BodegaConsolidada,
+  InventarioCorteEstado,
+  InventarioCorteResponse,
 } from "../../../shared/services/inventarios/inventario.service";
 import { TourService } from "../../../shared/services/tour.service";
 import { FulfillmentService } from "../../../shared/services/fulfillment/fulfillment.service";
@@ -206,8 +208,30 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       icon: 'pi pi-file-excel',
       command: () => this.exportarConsolidadoExcel(),
     },
+    {
+      label: 'Ver inventario por fecha',
+      icon: 'pi pi-calendar',
+      command: () => this.abrirInventarioCorte(),
+    },
   ];
   exportandoExcel = false;
+
+  // ============== INVENTARIO POR FECHA DE CORTE (SOLO LECTURA) ==============
+  cutoffDialogVisible = false;
+  cutoffLoading = false;
+  cutoffExportando = false;
+  fechaCorteInventario = '';
+  maxFechaCorteInventario = '';
+  cutoffStatusFilter: InventarioCorteEstado | '' = '';
+  cutoffStatusOptions = [
+    { label: 'Todos', value: '' },
+    { label: 'Certificado', value: 'certified' },
+    { label: 'Ambiguo', value: 'ambiguous' },
+    { label: 'Incompleto', value: 'incomplete' },
+  ];
+  cutoffReport: InventarioCorteResponse | null = null;
+  cutoffPageIndex = 0;
+  cutoffCursorHistory: Array<string | null> = [null];
 
   // Filtros para vista consolidada
   filtrosConsolidados = {
@@ -439,6 +463,8 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.maxFechaCorteInventario = this.fechaBogota(-1);
+    this.fechaCorteInventario = this.maxFechaCorteInventario;
     this.empresaActual = JSON.parse(
       localStorage.getItem("currentCompany") ?? "{}",
     );
@@ -777,6 +803,135 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
         this.exportandoExcel = false;
       },
     });
+  }
+
+  private fechaBogota(offsetDays = 0): string {
+    const date = new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000);
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Bogota',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(date);
+    const value = (type: string) => parts.find((part) => part.type === type)?.value || '';
+    return `${value('year')}-${value('month')}-${value('day')}`;
+  }
+
+  abrirInventarioCorte(): void {
+    this.cutoffDialogVisible = true;
+    this.consultarInventarioCorte(true);
+  }
+
+  consultarInventarioCorte(resetPagination = true): void {
+    if (!this.fechaCorteInventario || this.cutoffLoading) return;
+    if (resetPagination) {
+      this.cutoffPageIndex = 0;
+      this.cutoffCursorHistory = [null];
+    }
+
+    this.cutoffLoading = true;
+    const cursor = this.cutoffCursorHistory[this.cutoffPageIndex] || undefined;
+    this.inventarioService.consultarInventarioCorte({
+      fechaCorte: this.fechaCorteInventario,
+      bodega: this.filtrosConsolidados.bodegaId || undefined,
+      search: this.filtrosConsolidados.busqueda?.trim() || undefined,
+      status: this.cutoffStatusFilter || undefined,
+      limit: 100,
+      cursor,
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (report) => {
+        this.cutoffReport = report;
+        if (report.pagination.nextCursor) {
+          this.cutoffCursorHistory[this.cutoffPageIndex + 1] = report.pagination.nextCursor;
+        } else {
+          this.cutoffCursorHistory = this.cutoffCursorHistory.slice(0, this.cutoffPageIndex + 1);
+        }
+        this.cutoffLoading = false;
+      },
+      error: (error) => {
+        this.cutoffLoading = false;
+        this.cutoffReport = null;
+        this.toastr.error(
+          error?.error?.error || 'No se pudo reconstruir el inventario para esa fecha',
+          'Inventario por fecha',
+        );
+      },
+    });
+  }
+
+  paginaAnteriorCorte(): void {
+    if (this.cutoffPageIndex <= 0 || this.cutoffLoading) return;
+    this.cutoffPageIndex -= 1;
+    this.consultarInventarioCorte(false);
+  }
+
+  paginaSiguienteCorte(): void {
+    if (!this.cutoffReport?.pagination?.hasMore || this.cutoffLoading) return;
+    this.cutoffPageIndex += 1;
+    this.consultarInventarioCorte(false);
+  }
+
+  exportarInventarioCorte(): void {
+    if (!this.fechaCorteInventario || this.cutoffExportando) return;
+    this.cutoffExportando = true;
+    this.inventarioService.exportarInventarioExcel({
+      fechaCorte: this.fechaCorteInventario,
+      bodega: this.filtrosConsolidados.bodegaId || undefined,
+      search: this.filtrosConsolidados.busqueda?.trim() || undefined,
+      status: this.cutoffStatusFilter || undefined,
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `inventario_corte_${this.fechaCorteInventario}.xlsx`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+        this.cutoffExportando = false;
+        this.toastr.success('El Excel conserva la confianza y las causas de cada fila', 'Corte exportado');
+      },
+      error: (error) => {
+        this.cutoffExportando = false;
+        this.toastr.error(error?.error?.error || 'No se pudo exportar el corte', 'Inventario por fecha');
+      },
+    });
+  }
+
+  etiquetaEstadoCorte(status: InventarioCorteEstado): string {
+    if (status === 'certified') return 'Certificado';
+    if (status === 'ambiguous') return 'Ambiguo';
+    return 'Incompleto';
+  }
+
+  claseEstadoCorte(status: InventarioCorteEstado): string {
+    if (status === 'certified') return 'bg-success';
+    if (status === 'ambiguous') return 'bg-warning text-dark';
+    return 'bg-secondary';
+  }
+
+  causasCorteEnTexto(causes: string[]): string {
+    const labels: { [key: string]: string } = {
+      ANCHOR_NOT_VERIFIED: 'La foto base todavía no está certificada',
+      CERTIFIED_FROM_NOT_DEFINED: 'No se ha definido desde cuándo la historia está completa',
+      CUTOFF_BEFORE_CERTIFIED_FROM: 'La fecha es anterior al período confiable',
+      DUPLICATE_INVENTORY_CONFLICT: 'Hay dos saldos distintos para el mismo producto y bodega',
+      DUPLICATE_WAREHOUSE_CODE: 'El código de bodega está repetido',
+      FIRESTORE_WAREHOUSE_ID_IN_LEDGER: 'Un movimiento guardó el identificador interno de la bodega',
+      MOVEMENT_CHAIN_GAP: 'La cadena de movimientos tiene un salto',
+      MOVEMENT_DELTA_MISMATCH: 'Un movimiento no coincide con su antes y después',
+      MOVEMENT_MISSING_BEFORE_AFTER: 'Falta el saldo anterior o posterior de un movimiento',
+      MOVEMENT_MISSING_DATE: 'Hay un movimiento sin fecha',
+      MOVEMENT_MISSING_REASON: 'Hay un movimiento sin motivo',
+      UNKNOWN_PRODUCT: 'El producto no se pudo identificar',
+      UNKNOWN_WAREHOUSE_CODE: 'La bodega no se pudo identificar',
+    };
+    return (causes || []).map((cause) => labels[cause] || cause).join('. ');
   }
 
   /** Suma del valor a costo (stock × costoUnitario) respetando los filtros activos. */
