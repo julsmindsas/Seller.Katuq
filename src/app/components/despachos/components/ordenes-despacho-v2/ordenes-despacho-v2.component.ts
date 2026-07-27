@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnInit, Output, Input, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, forkJoin, of, EMPTY } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { IntegrationsService, Integration, IntegrationCategory } from '../../../integrations/integrations.service';
 import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
 import { normalizeTransportadorName } from '../../../../shared/services/despachos/transportador.util';
@@ -657,6 +658,120 @@ export class OrdenesDespachoV2Component implements OnInit {
 
     // Flujo normal para otros transportadores (crear shipment)
     this.createShipmentDirectly();
+  }
+
+  /**
+   * ¿Esta orden salió por Guía Cereza y por lo tanto se le puede cancelar el
+   * envío? Solo tiene sentido si algún pedido conserva el vínculo con Cereza.
+   */
+  puedeCancelarEnvioCereza(order: any): boolean {
+    const transportador = String(order?.transportador || '').toLowerCase();
+    if (!transportador.includes('osmosis') && !transportador.includes('cereza')) {
+      return false;
+    }
+    return (order?.pedidos || []).some((p: any) => this.getOsmosisOrderId(p));
+  }
+
+  /** Id del envío en Cereza que tenga el pedido (si sigue vinculado). */
+  private getOsmosisOrderId(pedido: any): number | string | null {
+    const integ = pedido?.integrations?.osmosis || pedido?.integraciones?.osmosis || {};
+    return integ.osmosisOrderId || integ.orderId || integ.id || null;
+  }
+
+  /**
+   * Cancela en Cereza el envío de la orden y deja los pedidos listos para
+   * volver a despacharse con la transportadora correcta.
+   */
+  cancelarEnvioCereza(order: any): void {
+    const pedidosConEnvio = (order?.pedidos || []).filter((p: any) => this.getOsmosisOrderId(p));
+
+    if (pedidosConEnvio.length === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin envío activo',
+        text: 'Esta orden no tiene envíos activos en Guía Cereza.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: `Cancelar envío de la orden ${order.nroShippingOrder}`,
+      html: `
+        <div style="text-align:left">
+          <p>Se le avisará a <b>Guía Cereza</b> que cancele
+             ${pedidosConEnvio.length === 1 ? 'este envío' : `estos ${pedidosConEnvio.length} envíos`},
+             y ${pedidosConEnvio.length === 1 ? 'el pedido volverá' : 'los pedidos volverán'}
+             a <b>En Despacho</b> para poder despacharlos de nuevo.</p>
+          <p style="margin-top:10px">Cuéntanos el motivo:</p>
+        </div>
+      `,
+      input: 'text',
+      inputPlaceholder: 'Ej: salió con la transportadora equivocada',
+      inputValidator: (valor) => (!valor || !valor.trim() ? 'Escribe el motivo para dejar registro' : null),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar envío',
+      cancelButtonText: 'No',
+      confirmButtonColor: '#D64545',
+    }).then((res) => {
+      if (!res.isConfirmed) { return; }
+      this.ejecutarCancelacionCereza(order, pedidosConEnvio, String(res.value).trim());
+    });
+  }
+
+  private ejecutarCancelacionCereza(order: any, pedidos: any[], motivo: string): void {
+    this.isDispatchingShipment = true;
+
+    const llamadas = pedidos.map((p: any) =>
+      this.integrationsService.cancelarEnvioCereza(p.cd || p._id || p.id, motivo).pipe(
+        map((r: any) => ({ ok: true, nroPedido: p.nroPedido, r })),
+        catchError((e: any) => of({
+          ok: false,
+          nroPedido: p.nroPedido,
+          error: e?.error?.message || e?.message || 'no se pudo cancelar',
+        })),
+      ),
+    );
+
+    forkJoin(llamadas).subscribe({
+      next: (resultados: any[]) => {
+        this.isDispatchingShipment = false;
+
+        const fallidos = resultados.filter((x) => !x.ok);
+        if (fallidos.length > 0) {
+          const detalle = fallidos
+            .map((f) => `<li><b>${f.nroPedido}</b>: ${f.error}</li>`)
+            .join('');
+          Swal.fire({
+            icon: resultados.length > fallidos.length ? 'warning' : 'error',
+            title: 'Cancelación incompleta',
+            html: `<div style="text-align:left"><p>No se pudo cancelar:</p><ul>${detalle}</ul>
+                   <p style="margin-top:10px">Guía Cereza sigue teniendo esos envíos activos.</p></div>`,
+            confirmButtonText: 'Entendido'
+          });
+        } else {
+          Swal.fire({
+            icon: 'success',
+            title: 'Envío cancelado',
+            text: 'Guía Cereza fue notificada. Ya puedes despachar de nuevo con la transportadora correcta.',
+            timer: 2600,
+            showConfirmButton: false
+          });
+        }
+
+        this.loadInitialOrders();
+      },
+      error: (err) => {
+        this.isDispatchingShipment = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al cancelar',
+          text: err?.error?.message || err?.message || 'No se pudo cancelar el envío en Guía Cereza.',
+          confirmButtonText: 'Entendido'
+        });
+      },
+    });
   }
 
   /**

@@ -1660,4 +1660,28 @@ export class IntegrationsService {
       { headers: this.getApiHeaders() },
     );
   }
+
+  /**
+   * Cancela en Guía Cereza el envío de un pedido y lo deja listo para volver a
+   * despacharse (queda en "En Despacho", conservando su orden de envío).
+   * Se usa cuando salió con la transportadora o la bodega equivocada.
+   * Backend: POST /v1/osmosis/orders/:id/cancel-shipment
+   *
+   * @param katuqOrderId  cd Firestore del pedido (no nroPedido)
+   */
+  cancelarEnvioCereza(
+    katuqOrderId: string,
+    motivo: string,
+  ): Observable<{ success: boolean; osmosisOrderId?: number; estadoProceso?: string; message?: string }> {
+    return this.http.post<{
+      success: boolean;
+      osmosisOrderId?: number;
+      estadoProceso?: string;
+      message?: string;
+    }>(
+      `${environment.urlApi}/v1/osmosis/orders/${katuqOrderId}/cancel-shipment`,
+      { motivo },
+      { headers: this.getApiHeaders() },
+    );
+  }
 }

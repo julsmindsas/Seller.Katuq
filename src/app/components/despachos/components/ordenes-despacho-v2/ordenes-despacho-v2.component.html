@@ -173,10 +173,16 @@
                       title="{{ 'Despachar' | translate }}">
                 <i class="pi pi-send"></i>
               </button>
+              <button *ngIf="puedeCancelarEnvioCereza(order)"
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="cancelarEnvioCereza(order)"
+                      title="{{ 'Cancelar envío en Guía Cereza y volver a despachar' | translate }}">
+                <i class="pi pi-times-circle"></i>
+              </button>
             </div>
           </div>
         </div>
-        
+
         <!-- Fila expandida con detalles -->
         <div class="row-details" *ngIf="isRowExpanded(order)">
           <div class="details-content">
@@ -343,6 +349,12 @@
                     class="btn btn-outline-warning btn-sm"
                     (click)="dispatchOrder(order)">
               <i class="pi pi-send me-1"></i>{{ 'Despachar' | translate }}
+            </button>
+            <button *ngIf="puedeCancelarEnvioCereza(order)"
+                    class="btn btn-outline-danger btn-sm"
+                    (click)="cancelarEnvioCereza(order)"
+                    title="{{ 'Cancelar envío en Guía Cereza y volver a despachar' | translate }}">
+              <i class="pi pi-times-circle me-1"></i>{{ 'Cancelar envío' | translate }}
             </button>
           </div>
         </div>
