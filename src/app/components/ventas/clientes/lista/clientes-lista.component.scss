@@ -4,7 +4,7 @@
 // ===================================
 
 // Variables
-$primary-color: #667eea;
+$primary-color: #6c4ce0;
 $success-color: #2dce89;
 $danger-color: #f5365c;
 $warning-color: #fb6340;
@@ -21,7 +21,7 @@ $border-radius: 8px;
     h5 {
         font-size: 1.1rem !important;
         font-weight: 800 !important;
-        color: #8b5cf6 !important;
+        color: #6c4ce0 !important;
 
         i {
             font-size: 1.1rem;
@@ -176,13 +176,13 @@ $border-radius: 8px;
     background-color: #f8f9fa;
 
     h6 {
-        color: #8b5cf6;
+        color: #6c4ce0;
         font-weight: 700;
     }
 }
 
 .card-header h6 {
-    color: #8b5cf6;
+    color: #6c4ce0;
     font-weight: 700;
 }
 
@@ -282,7 +282,7 @@ $border-radius: 8px;
         border: 1px solid #bee5eb;
 
         i {
-            color: #c4b5fd;
+            color: #eee9fd;
         }
 
         &:hover {
@@ -322,8 +322,8 @@ $border-radius: 8px;
     transition: all 0.15s ease;
 
     &:hover {
-        background-color: #7c3aed;
-        border-color: #7c3aed;
+        background-color: #533bc4;
+        border-color: #533bc4;
         transform: scale(1.05);
 
         .pi { color: #fff; }
@@ -331,7 +331,7 @@ $border-radius: 8px;
 
     .pi {
         font-size: 0.8rem;
-        color: #7c3aed;
+        color: #533bc4;
     }
 }
 
@@ -378,7 +378,7 @@ $border-radius: 8px;
             font-size: 0.85rem;
             width: 1rem;
             text-align: center;
-            color: #7c3aed;
+            color: #533bc4;
             transition: color 0.12s;
         }
 
@@ -425,7 +425,7 @@ $border-radius: 8px;
 
             // Fila activa
             &.row-active {
-                background-color: rgba(#2196F3, 0.05) !important;
+                background-color: rgba(#6c4ce0, 0.05) !important;
             }
         }
     }
@@ -471,14 +471,14 @@ $border-radius: 8px;
 }
 
 .detail-title {
-    color: #8b5cf6;
+    color: #6c4ce0;
     font-weight: 700;
     margin-bottom: 1rem;
     border-bottom: 1px solid #ede9fe;
     padding-bottom: 0.5rem;
 
     i {
-        color: #8b5cf6;
+        color: #6c4ce0;
     }
 }
 
@@ -668,7 +668,7 @@ $border-radius: 8px;
     // Table Header (Column Headers)
     .p-datatable-thead > tr > th {
       background: #f4f3ff;
-      color: #8b5cf6;
+      color: #6c4ce0;
       font-weight: 700;
       text-transform: uppercase;
       font-size: 0.75rem;
@@ -684,13 +684,13 @@ $border-radius: 8px;
 
       // Sort Icon
       .p-sortable-column-icon {
-        color: #a78bfa;
+        color: #8c6bff;
         margin-left: $clientes-spacing-xs;
         font-size: 0.75rem;
       }
 
       &.p-highlight {
-        background: #8b5cf6;
+        background: #6c4ce0;
         color: $clientes-white;
 
         .p-sortable-column-icon {
@@ -729,7 +729,7 @@ $border-radius: 8px;
         }
 
         &.p-highlight {
-          background: rgba(#8b5cf6, 0.08);
+          background: rgba(#6c4ce0, 0.08);
           color: $clientes-dark;
         }
 
@@ -1421,7 +1421,7 @@ $border-radius: 8px;
 
     &.active {
         color: #5b21b6;
-        border-bottom-color: #8b5cf6;
+        border-bottom-color: #6c4ce0;
         font-weight: 600;
     }
 }
@@ -1490,18 +1490,18 @@ $border-radius: 8px;
 // BOTÓN GESTIONAR ETIQUETAS (header)
 // ===================================
 ::ng-deep .btn-tags-cfg.p-button.p-button-outlined {
-    color: #8b5cf6 !important;
-    border-color: #8b5cf6 !important;
+    color: #6c4ce0 !important;
+    border-color: #6c4ce0 !important;
     background: transparent !important;
 
     &:hover {
         background: #f5f3ff !important;
-        border-color: #7c3aed !important;
-        color: #7c3aed !important;
+        border-color: #533bc4 !important;
+        color: #533bc4 !important;
     }
 
     .p-button-icon {
-        color: #8b5cf6 !important;
+        color: #6c4ce0 !important;
     }
 }
 
@@ -1542,7 +1542,7 @@ $border-radius: 8px;
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    background: linear-gradient(135deg, #6c4ce0, #8c6bff);
     color: #fff;
     font-size: 1.2rem;
     font-weight: 700;
@@ -1557,7 +1557,7 @@ $border-radius: 8px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #8b5cf6;
+    color: #6c4ce0;
     margin-bottom: 0.5rem;
 }
 
@@ -1578,7 +1578,7 @@ $border-radius: 8px;
 
     i {
         font-size: 0.8rem;
-        color: #8b5cf6;
+        color: #6c4ce0;
         margin-top: 2px;
         flex-shrink: 0;
     }

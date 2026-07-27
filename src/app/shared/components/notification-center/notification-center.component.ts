@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewChecked, Renderer2 } from '@angular/core';
+import { Router } from '@angular/router';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -83,7 +84,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   constructor(
     private notificationManager: NotificationManagerService,
     private preferencesService: NotificationPreferencesService,
-    private renderer: Renderer2
+    private renderer: Renderer2,
+    private router: Router
   ) {
     this.setupSearchDebouncing();
   }
@@ -308,13 +310,15 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   /**
    * Marca una notificación como leída
    */
-  public async markAsRead(notification: KatuqNotification): Promise<void> {
-    if (notification.status !== NotificationStatus.READ && notification.id) {
-      await this.notificationManager.markAsRead(notification.id);
-      // Actualizar estado local inmediatamente para feedback visual rápido
-      notification.status = NotificationStatus.READ;
-      notification.readAt = new Date();
+  public async markAsRead(notification: KatuqNotification): Promise<boolean> {
+    if (notification.status === NotificationStatus.READ || !notification.id) {
+      return true;
     }
+
+    // El servicio publica la lista actualizada solo si el servidor confirmó.
+    // No se marca a mano en pantalla: eso era lo que hacía ver como leída una
+    // notificación que en realidad no se había guardado.
+    return this.notificationManager.markAsRead(notification.id);
   }
 
   /**
@@ -337,16 +341,16 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    * Maneja click en una notificación
    */
   public async onNotificationClick(notification: KatuqNotification): Promise<void> {
-    // Marcar como leída y esperar a que se complete
+    // Marcar como leída y esperar a que el servidor confirme antes de navegar:
+    // si se navega primero, la petición se cancela y la notificación queda sin leer.
     await this.markAsRead(notification);
 
     // Navegar si tiene URL de acción
     if (notification.actionUrl) {
       // Cerrar el panel antes de navegar
       this.closePanel();
-      // Usar Router para navegación interna si es posible
       if (notification.actionUrl.startsWith('/')) {
-        window.location.href = notification.actionUrl;
+        this.router.navigateByUrl(notification.actionUrl);
       } else {
         window.open(notification.actionUrl, '_blank');
       }
@@ -584,15 +588,9 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    * Confirma limpiar todas las notificaciones
    */
   public async confirmClearAll(): Promise<void> {
-    try {
-      const deletePromises = this.notifications.map(notification => 
-        this.notificationManager.deleteNotification(notification.id!)
-      );
-      
-      await Promise.all(deletePromises);
+    const ok = await this.notificationManager.clearAllNotifications();
+    if (ok) {
       this.showClearConfirm = false;
-    } catch (error) {
-      console.error('Error limpiando notificaciones:', error);
     }
   }
 

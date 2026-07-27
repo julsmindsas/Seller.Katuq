@@ -1,3 +1,11 @@
+:host {
+  // Reskin: palette morado de Cotizaciones. Re-tiñe todos los var(--primary-*) del componente.
+  --primary-color: #6c4ce0;
+  --primary-light: #8c6bff;
+  --primary-dark: #533bc4;
+  --primary-rgb: 108, 76, 224;
+}
+
 .modal-fullscreen {
   display: block !important;
   width: 100% !important;
@@ -425,14 +433,14 @@
 
     // Botón Configurar - Azul para productos con configuración
     &.btn-action-config {
-      background: linear-gradient(135deg, #4361ee 0%, #3730a3 100%);
+      background: linear-gradient(135deg, #2f6fe0 0%, #2256c0 100%);
       color: white;
       border: 1px solid rgba(255, 255, 255, 0.2);
 
       &:hover {
-        background: linear-gradient(135deg, #3730a3 0%, #312e81 100%);
+        background: linear-gradient(135deg, #2256c0 0%, #1c48a0 100%);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
+        box-shadow: 0 4px 12px rgba(47, 111, 224, 0.4);
       }
     }
   }
@@ -1426,7 +1434,7 @@
     }
 
     &.active {
-      background: #4361ee;
+      background: var(--primary-color);
 
       .grid-icon span {
         background: white;

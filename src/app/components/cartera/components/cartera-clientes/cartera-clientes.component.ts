@@ -25,6 +25,19 @@ interface AgingSegment {
   monto: number;
 }
 
+/** Entrada de la leyenda de antigüedad (los 4 rangos, con o sin monto). */
+interface AgingLegendItem {
+  cssClass: string;
+  short: string;
+  monto: number;
+}
+
+/** Etiqueta de riesgo derivada de los datos que ya trae el cliente. */
+interface RiesgoMeta {
+  label: string;
+  cssClass: string;
+}
+
 /**
  * Spec 014 — CxC. Tab "Cartera por Cliente" (CA-09 / CA-11).
  * Recibe la respuesta agregada por @Input y filtra client-side (búsqueda,
@@ -125,7 +138,52 @@ export class CarteraClientesComponent implements OnChanges {
     return Math.max(0, Math.min(100, pct));
   }
 
+  // ── Identidad visual de la tarjeta ────────────────────────────────────────
+  /** Colores de avatar (se elige uno estable a partir del documento). */
+  private static readonly AVATAR_COLORS = [
+    '#6C4CE0', '#2F6FE0', '#17994F', '#E0891B', '#D6455B', '#0E9BA4', '#8B5CF6',
+  ];
+
+  /** Inicial del nombre para el avatar. */
+  initial(cliente: CarteraCliente): string {
+    const nombre = (cliente.nombre || '').trim();
+    return nombre ? nombre.charAt(0).toUpperCase() : '?';
+  }
+
+  /** Color de avatar estable por cliente (mismo documento → mismo color). */
+  avatarColor(cliente: CarteraCliente): string {
+    const key = cliente.documento || cliente.nombre || '';
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+      hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+    }
+    const colors = CarteraClientesComponent.AVATAR_COLORS;
+    return colors[hash % colors.length];
+  }
+
+  /**
+   * Etiqueta de riesgo del cliente. NO agrega reglas nuevas: reordena en una
+   * píldora lo que ya se calcula server-side (excede cupo, vencido, % de cupo).
+   */
+  riesgo(cliente: CarteraCliente): RiesgoMeta {
+    if (cliente.excedeCupo) return { label: 'Excede cupo', cssClass: 'cx-risk-danger' };
+    if ((cliente.vencido || 0) > 0) return { label: 'Vencida', cssClass: 'cx-risk-vencida' };
+    if (cliente.cupoUsadoPct != null && cliente.cupoUsadoPct >= 80) {
+      return { label: 'Cupo alto', cssClass: 'cx-risk-warning' };
+    }
+    return { label: 'Al día', cssClass: 'cx-risk-ok' };
+  }
+
   // ── Mini-barra de aging ───────────────────────────────────────────────────
+  /** Los 4 rangos con su monto, para la leyenda bajo la barra. */
+  agingLegend(cliente: CarteraCliente): AgingLegendItem[] {
+    return this.agingBuckets.map((b) => ({
+      cssClass: b.cssClass,
+      short: b.short,
+      monto: cliente.aging?.[b.key] || 0,
+    }));
+  }
+
   agingSegments(cliente: CarteraCliente): AgingSegment[] {
     const total = cliente.saldoPendiente || 0;
     if (total <= 0) return [];

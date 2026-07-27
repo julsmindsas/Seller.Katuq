@@ -1,0 +1,3772 @@
+// =============================================================================
+// Venta asistida (pantalla única) — Fase 4 (estilo)
+// Reskin al lenguaje visual del EDITOR DE COTIZACIÓN: dos columnas
+// (tarjetas a la izquierda + panel de pago pegajoso a la derecha), plano,
+// acento morado #6C4CE0, sin gradientes (design-system D-131).
+//
+// Reglas:
+//  - Solo se estiliza el LAYOUT, las TARJETAS contenedoras y los elementos
+//    INLINE propios de esta pantalla (búsqueda/registro de cliente, filtros de
+//    productos, sidebar de carrito, selector de forma de entrega, tabs, etc.).
+//  - Los componentes hijos (app-carrito, app-checkout, pedido-entrega,
+//    app-pedido-facturacion, app-ecomerce-products) traen su propio SCSS. Al
+//    final de este archivo hay un bloque de reskin ACOTADO a esta pantalla vía
+//    `:host ::ng-deep app-<hijo> { … }`: como el atributo de host solo existe en
+//    venta-asistida-unica, esas reglas aplican SOLO a las instancias dentro de
+//    esta pantalla (el wizard crear-ventas y cualquier otro uso quedan intactos).
+//    NO se editan los .scss/.html de los hijos.
+//  - El ::ng-deep del buscador PrimeNG p-autoComplete (inline de esta pantalla)
+//    y el bloque que compacta app-checkout (.va-col-side) se conservan.
+// =============================================================================
+
+@import '../../../shared/styles/katuq-comercial';
+
+:host {
+  @include kc-tokens;
+  font-family: var(--kc-font-body);
+  color: var(--kc-ink);
+  display: block;
+}
+
+// -----------------------------------------------------------------------------
+// Lienzo de la pantalla
+// -----------------------------------------------------------------------------
+.va-page {
+  // Sin tope de ancho: con el menú lateral desplegado el tope de 1400px dejaba
+  // una franja muerta a cada lado y la pantalla quedaba corrida respecto del
+  // encabezado y del resto de módulos, que sí ocupan todo el área de contenido.
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 22px 24px 44px;
+  font-family: var(--kc-font-body);
+  font-feature-settings: "tnum" 1;
+
+  @media (max-width: 640px) {
+    padding: 16px 14px 32px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Encabezado (título + Preventa + barra de contexto del cliente)
+// -----------------------------------------------------------------------------
+.va-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+// Encabezado de página (card con borde de acento izquierdo — marco del mockup)
+.va-page-head {
+  @include kc-card;
+  border-left: 4px solid var(--kc-accent);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.va-page-head-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.va-page-ic {
+  @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash));
+  width: 36px;
+  height: 36px;
+}
+
+.va-page-head-text {
+  min-width: 0;
+}
+
+.va-page-head-titlerow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.va-page-sub {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kc-muted);
+  margin-top: 2px;
+}
+
+.va-page-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+// Botón "Descartar" (rojo suave)
+.va-discard-btn {
+  @include kc-btn-base;
+  padding: 9px 14px;
+  font-size: 12.5px;
+  background: var(--kc-red-wash);
+  color: #e0483f;
+  border-color: #f6d4d2;
+
+  &:hover:not(:disabled) { filter: brightness(0.98); }
+}
+
+.va-title {
+  font-family: var(--kc-font-head);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--kc-ink);
+
+  &.fc-secondary { color: var(--kc-ink); }
+}
+
+// En el encabezado de página el título es más compacto (20px, como el mockup).
+.va-page-head .va-title {
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+// Chip "Preventa #…"
+.va-page-head-titlerow .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--kc-accent-wash) !important;
+  color: var(--kc-accent-ink) !important;
+  font-family: var(--kc-font-body);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+
+// (La barra de contexto del cliente se eliminó del template: duplicaba nombre,
+// tipo y lista de precios que ya muestra la card "Cliente". Sus estilos
+// .client-context-bar / .ccb-* se retiraron con ella.)
+
+// -----------------------------------------------------------------------------
+// Layout dos columnas APROX. IGUALES (marco del mockup)
+// -----------------------------------------------------------------------------
+// El mockup usa `repeat(auto-fit, minmax(520px, 1fr))`: dos columnas del mismo
+// ancho, no 1fr + 440px. Con el lienzo de 1400px caben exactamente dos (520·2 +
+// 16 de gap < ancho disponible) y por debajo de ~1090px el propio auto-fit
+// colapsa a una sola columna; la media query lo deja explícito.
+// En el panel derecho se COMPACTA el app-checkout: se oculta su acordeón de
+// datos (Cliente/Envío/Facturación ya están en los cards de la izquierda) y su
+// header/estimado, dejando solo totales + formas de pago + Comprar y pagar.
+.va-layout {
+  display: grid;
+  // Antes: repeat(auto-fit, minmax(520px, 1fr)). Con el menú lateral desplegado
+  // el área útil baja de 1056px y auto-fit colapsaba a UNA columna: las tarjetas
+  // se estiraban de lado a lado y "Resumen y Pago" se iba hasta abajo.
+  // Ahora las columnas son explícitas (nunca colapsan solas) y el panel de pago
+  // tiene ancho acotado, como en el editor de cotización.
+  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 400px);
+  gap: 16px;
+  align-items: start;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.va-col-main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.va-col-side {
+  position: sticky;
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+
+  @media (max-width: 1100px) {
+    position: static;
+  }
+
+  // Compactar el checkout dentro del panel lateral y ocultar lo redundante:
+  // - acordeón de datos (Cliente/Envío/Facturación ya están en los cards de la izquierda)
+  // - lista de productos (ya está en el card Carrito)
+  // - header y estimado de entrega. Queda solo: totales + formas de pago + Comprar y pagar.
+  ::ng-deep app-checkout {
+    .checkout-header,
+    .delivery-estimate,
+    .title-box,
+    .products-container {
+      display: none !important;
+    }
+    .checkout .row > .col-lg-6:first-child {
+      display: none !important;
+    }
+    .checkout .row > .col-lg-6:last-child {
+      flex: 0 0 100% !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Tarjeta de sección + encabezado + chip de ícono + badge "Requerido"
+// -----------------------------------------------------------------------------
+.va-card {
+  @include kc-card;
+  border-radius: 18px;          // mockup: 18px (el mixin trae 20px)
+  padding: 20px 22px;
+
+  @media (max-width: 640px) {
+    padding: 18px 16px;
+  }
+}
+
+.va-card-head {
+  @include kc-card-head;
+  padding: 15px 22px;           // mockup: banda de 15px de alto
+  margin-bottom: 16px;
+
+  .va-card-title {
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 17px;            // mockup: 17px
+    color: var(--kc-ink);
+  }
+
+  // En móvil la card baja a 18px/16px de padding: la banda del encabezado tiene
+  // que morir exactamente en el borde redondeado (antes sobresalía 6px por lado
+  // porque el mixin fija margin: -20px -22px).
+  @media (max-width: 640px) {
+    margin: -18px -16px 16px;
+    padding: 14px 16px;
+  }
+}
+
+// Chip de ícono — morado por defecto; se especializa por sección más abajo.
+.va-ic {
+  @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash));
+}
+
+// Cliente (1) morado · Productos (2) verde · Carrito (3) naranja · Envío (4) azul
+.va-col-main .va-card:nth-of-type(2) .va-ic {
+  color: var(--kc-green);
+  background: var(--kc-green-wash);
+}
+.va-col-main .va-card:nth-of-type(3) .va-ic {
+  color: var(--kc-orange);
+  background: var(--kc-orange-wash);
+}
+.va-col-main .va-card:nth-of-type(4) .va-ic {
+  color: var(--kc-blue);
+  background: var(--kc-blue-wash);
+}
+// Panel derecho (Resumen y Pago) morado
+.va-col-side .va-ic {
+  color: var(--kc-accent);
+  background: var(--kc-accent-wash);
+}
+
+// Badge "Requerido" (junto al título, no empujado a la derecha)
+.va-req {
+  background: var(--kc-red-wash);
+  color: #e0483f;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 11px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+// Rótulo decorativo "Paso N de 4" (a la derecha del encabezado)
+.va-step {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kc-muted2);
+  white-space: nowrap;
+}
+
+// --- Encabezado del card CARRITO (marco del mockup) --------------------------
+// El carrito NO lleva rótulo de paso: badge lila con el conteo junto al título
+// y acción de texto "Vaciar" (rojo + papelera) empujada a la derecha.
+.va-cart-count {
+  background: var(--kc-accent-wash);
+  color: var(--kc-accent);
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 4px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.va-cart-clear {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #e0483f;
+  font-family: var(--kc-font-body);
+  font-weight: 800;
+  font-size: 12.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.14s ease;
+
+  svg { flex-shrink: 0; }
+
+  &:hover { background: var(--kc-red-wash); }
+}
+
+// =============================================================================
+// SECCIÓN CLIENTE — buscador, barra inline, formulario y notas
+// =============================================================================
+.step1-search-section {
+  .search-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+
+    @media (max-width: 560px) {
+      flex-direction: column;
+    }
+  }
+
+  .autocomplete-container {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+
+    .search-icon-left {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--kc-muted);
+      font-size: 14px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .search-loading {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--kc-accent);
+      z-index: 2;
+    }
+  }
+
+  // Botón "Nuevo Cliente"
+  .new-client-btn {
+    @include kc-btn-primary;
+    flex: 0 0 auto;
+    white-space: nowrap;
+
+    @media (max-width: 560px) {
+      width: 100%;
+    }
+  }
+}
+
+// Barra compacta del cliente seleccionado
+.client-inline-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &.client-just-created {
+    border-color: #cbebd8;
+    background: var(--kc-green-wash);
+  }
+
+  .client-ok-icon {
+    color: var(--kc-green);
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .client-inline-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+    font-size: 13px;
+    color: var(--kc-ink2);
+  }
+
+  .client-inline-name {
+    font-weight: 800;
+    color: var(--kc-ink);
+  }
+
+  .client-inline-sep { color: var(--kc-muted2); }
+
+  .client-inline-meta,
+  .client-inline-doc {
+    color: var(--kc-muted);
+    font-weight: 600;
+
+    i { margin-right: 3px; opacity: 0.8; }
+  }
+
+  .client-inline-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .category-inline-select {
+    border: 1px solid var(--kc-line);
+    border-radius: 10px;
+    background: #fff;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--kc-ink2);
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: var(--kc-accent);
+      box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+    }
+  }
+
+  .edit-inline-btn {
+    @include kc-icon-btn;
+
+    &:hover {
+      border-color: var(--kc-accent);
+      color: var(--kc-accent);
+      background: var(--kc-accent-wash);
+    }
+  }
+}
+
+// Formulario de crear/editar cliente
+.step1-form-section {
+  border: 1px solid var(--kc-line);
+  border-radius: 16px;
+  background: var(--kc-canvas);
+  overflow: hidden;
+
+  .form-header {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 14px 18px;
+    background: #fff;
+    border-bottom: 1px solid var(--kc-line2);
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--kc-ink);
+
+    i { color: var(--kc-accent); }
+  }
+
+  .form-body { padding: 18px; }
+
+  .form-section {
+    & + .form-section { margin-top: 18px; }
+  }
+
+  .section-title {
+    @include kc-label;
+    margin-bottom: 12px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+
+    @media (max-width: 720px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+
+    &.span-2 { grid-column: span 2; }
+    &.span-full { grid-column: 1 / -1; }
+
+    @media (max-width: 720px) {
+      &.span-2 { grid-column: span 2; }
+    }
+
+    label {
+      @include kc-label;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .required { color: var(--kc-red); }
+  }
+
+  .field-input,
+  .country-code {
+    @include kc-input;
+    background: #fff;
+    width: 100%;
+  }
+
+  .phone-input {
+    display: flex;
+    gap: 8px;
+
+    .country-code {
+      flex: 0 0 92px;
+      width: 92px;
+    }
+
+    .field-input { flex: 1 1 auto; }
+  }
+
+  .whatsapp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 7px;
+
+    label { margin: 0; }
+  }
+
+  .checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--kc-ink2);
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+
+    input { accent-color: var(--kc-accent); }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--kc-line2);
+  }
+
+  .btn-cancel { @include kc-btn-ghost; }
+  .btn-save { @include kc-btn-primary; }
+}
+
+// Notas del cliente (colapsable)
+.step1-notes-section {
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  overflow: hidden;
+
+  .notes-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--kc-canvas);
+    border: none;
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--kc-ink2);
+    cursor: pointer;
+
+    i:first-child { color: var(--kc-accent); }
+
+    .notes-chevron {
+      margin-left: auto;
+      color: var(--kc-muted2);
+      font-size: 12px;
+    }
+  }
+
+  .notes-count-badge {
+    background: var(--kc-accent-wash);
+    color: var(--kc-accent-ink);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  .notes-body {
+    padding: 14px 16px;
+    border-top: 1px solid var(--kc-line2);
+  }
+
+  .notes-input-area {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+
+    textarea {
+      @include kc-input;
+      flex: 1 1 auto;
+      resize: vertical;
+      min-height: 44px;
+      line-height: 1.5;
+    }
+
+    button {
+      @include kc-btn-primary;
+      flex: 0 0 auto;
+    }
+  }
+
+  .notes-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .note-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--kc-canvas);
+    border: 1px solid var(--kc-line);
+    border-radius: 11px;
+
+    .note-content {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .note-date {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--kc-muted2);
+    }
+
+    .note-text {
+      font-size: 13.5px;
+      color: var(--kc-ink);
+    }
+
+    .note-delete {
+      @include kc-icon-btn;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+
+      &:hover {
+        border-color: var(--kc-red);
+        background: var(--kc-red-wash);
+        color: var(--kc-red);
+      }
+    }
+  }
+
+  .notes-empty {
+    margin-top: 10px;
+    text-align: center;
+    color: var(--kc-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+// =============================================================================
+// SECCIÓN PRODUCTOS — barra de filtros, contenedor de catálogo, sidebar carrito
+// =============================================================================
+.step2-filters-section {
+  margin-bottom: 18px;
+
+  .filters-row {
+    // Flex y no grid: la fila debe reacomodarse según el ancho REAL de la columna
+    // (que cambia al desplegar el menú lateral), no según el ancho de la ventana.
+    // Con grid + media query los tres filtros se apretaban y "Buscar productos"
+    // quedaba con la etiqueta partida en dos líneas.
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    flex: 1 1 190px;
+
+    // El buscador pide más aire: si no cabe, baja a su propia fila completa.
+    &.filter-search {
+      flex: 2 1 260px;
+    }
+
+    &.filter-disabled {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+  }
+
+  .filter-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .filter-label {
+    @include kc-label;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+
+    i { color: var(--kc-accent); font-size: 12px; }
+  }
+
+  .filter-select,
+  .search-input,
+  .dane-input,
+  .dane-depto {
+    @include kc-input;
+    width: 100%;
+    cursor: pointer;
+
+    &.has-value {
+      border-color: #cbc0f2;
+      background: #fff;
+    }
+  }
+
+  .filter-completed .filter-select.has-value {
+    border-color: var(--kc-green);
+  }
+
+  // Toggle DANE
+  .dane-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--kc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+
+    input { accent-color: var(--kc-accent); }
+  }
+
+  .filter-search {
+    .search-wrapper {
+      position: relative;
+
+      > i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--kc-muted);
+        font-size: 13px;
+        pointer-events: none;
+      }
+
+      .search-input {
+        cursor: text;
+        padding-left: 38px;
+      }
+    }
+  }
+
+  // Búsqueda DANE
+  .dane-wrapper {
+    position: relative;
+
+    .dane-inputs {
+      display: flex;
+      gap: 8px;
+
+      .dane-input { flex: 1 1 auto; }
+      .dane-depto { flex: 0 0 120px; width: 120px; }
+    }
+
+    .dane-selected {
+      margin-top: 7px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #0a7d56;
+
+      i { color: var(--kc-green); }
+    }
+
+    .dane-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      margin-top: 4px;
+      background: var(--kc-surface);
+      border: 1px solid var(--kc-line);
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(20, 20, 40, 0.12);
+      max-height: 260px;
+      overflow-y: auto;
+
+      .dane-item {
+        padding: 10px 14px;
+        font-size: 13px;
+        color: var(--kc-ink);
+        cursor: pointer;
+        border-bottom: 1px solid var(--kc-line2);
+
+        &:last-child { border-bottom: none; }
+        &:hover { background: var(--kc-canvas); }
+
+        span { color: var(--kc-muted); }
+      }
+    }
+
+    .dane-loading {
+      position: absolute;
+      right: 14px;
+      top: 34px;
+      color: var(--kc-accent);
+    }
+  }
+
+  // ÚNICO aviso de estado vacío (falta bodega / ciudad) — bloque ámbar del
+  // mockup: chip de ícono 30px + título 13.5px + subtítulo 12.5px.
+  .filters-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 13px 16px;
+    background: #fdf6e9;
+    border: 1px solid #f7e2be;
+    border-radius: 12px;
+
+    .fs-ic {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      border-radius: 9px;
+      background: #fbebd1;
+      color: var(--kc-orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .fs-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .fs-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #a9660d;
+    }
+
+    .fs-sub {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #b98430;
+    }
+  }
+}
+
+// Contenedor del catálogo (el mini-carrito lateral se eliminó del template)
+.step2-layout-container {
+  min-width: 0;
+}
+
+.step2-products-area {
+  min-width: 0;
+}
+
+// El catálogo (app-ecomerce-products) va DIRECTO dentro de la card "Productos":
+// ya no hay marco Bootstrap intermedio. Su .container-fluid.product-wrapper trae
+// el padding lateral de Bootstrap, que sumado al de la card estrechaba la tabla.
+:host ::ng-deep app-ecomerce-products > .container-fluid.product-wrapper {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+// =============================================================================
+// SECCIÓN CARRITO — acordeón de notas del pedido
+// (el rótulo interno "Productos seleccionados" se eliminó del template: bajo el
+//  encabezado de la card va directamente la tabla del carrito, como el mockup)
+// =============================================================================
+
+.step3-notes-accordion {
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  overflow: hidden;
+
+  .accordion-toggle {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--kc-canvas);
+    border: none;
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--kc-ink2);
+    cursor: pointer;
+
+    i:first-child { color: var(--kc-accent); }
+
+    .accordion-chevron {
+      margin-left: auto;
+      color: var(--kc-muted2);
+      font-size: 12px;
+    }
+  }
+
+  .accordion-body {
+    padding: 14px 16px;
+    border-top: 1px solid var(--kc-line2);
+  }
+}
+
+// Contenedor neutro: los hijos reskineados controlan su propio padding.
+.section-content {
+  min-width: 0;
+
+  &.no-padding { padding: 0; }
+}
+
+// =============================================================================
+// SECCIÓN ENVÍO Y FACTURACIÓN — selector forma de entrega + tabs + estado
+// =============================================================================
+.step4-consolidated {
+
+  // Selector de forma de entrega — 2 tarjetas radio grandes (marco del mockup)
+  .forma-entrega-selector-container {
+    .fe-label {
+      @include kc-label;
+      margin-bottom: 9px;
+    }
+
+    .fe-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+
+      @media (max-width: 540px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .fe-card {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      width: 100%;
+      text-align: left;
+      border: 2px solid var(--kc-line);
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color 0.12s ease, background 0.12s ease;
+
+      &:hover { border-color: #d9cffb; }
+
+      .fe-card-ic {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f2f5;
+        color: var(--kc-muted);
+        font-size: 15px;
+      }
+
+      .fe-card-text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .fe-card-title {
+        font-weight: 800;
+        font-size: 14px;
+        color: var(--kc-ink);
+      }
+
+      .fe-card-sub {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--kc-muted2);
+      }
+
+      .fe-card-radio {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        border: 2px solid #cfd3df;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 10px;
+      }
+
+      &.fe-card--active {
+        border-color: var(--kc-accent);
+        background: var(--kc-accent-wash);
+
+        .fe-card-ic {
+          background: var(--kc-accent);
+          color: #fff;
+        }
+        .fe-card-title { color: var(--kc-accent-ink); }
+        .fe-card-radio {
+          border-color: var(--kc-accent);
+          background: var(--kc-accent);
+        }
+      }
+    }
+
+    .fe-hint {
+      margin-top: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--kc-muted);
+
+      i { color: var(--kc-muted); }
+    }
+  }
+
+  // Nota informativa PLANA (reemplaza los dos `alert alert-info` de Bootstrap)
+  .va-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 11px 14px;
+    background: var(--kc-canvas);
+    border: 1px solid var(--kc-line);
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--kc-ink2);
+
+    > i {
+      color: var(--kc-accent);
+      font-size: 13px;
+      line-height: 1.5;
+      flex-shrink: 0;
+    }
+
+    strong { color: var(--kc-ink); font-weight: 800; }
+  }
+
+  // Tabs Envío / Facturación — SEGMENTADO (mismo patrón que el resto de la
+  // pantalla): track #F1F2F5 ajustado al contenido, activa en blanco con acento
+  // y sombra suave, sin la línea inferior que cruzaba toda la card.
+  .step4-tabs {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+    background: #f1f2f5;
+    border: 1px solid var(--kc-line);
+    border-radius: 12px;
+    margin-bottom: 18px;
+
+    .nav-item { margin: 0; }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      border-bottom: none;
+      border-radius: 9px;
+      padding: 9px 16px;
+      background: transparent;
+      font-family: var(--kc-font-body);
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--kc-ink2);
+      cursor: pointer;
+      transition: color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+
+      &:hover:not(.active) { color: var(--kc-accent); }
+
+      &.active {
+        background: #fff;
+        color: var(--kc-accent);
+        border-bottom-color: transparent;
+        box-shadow: 0 1px 3px rgba(30, 35, 60, 0.12);
+      }
+
+      .tab-badge {
+        display: inline-flex;
+        color: var(--kc-green);
+        font-size: 12px;
+      }
+    }
+  }
+
+  .step4-tab-content {
+    padding-top: 2px;
+  }
+}
+
+// =============================================================================
+// CONFIRMACIÓN DEL PEDIDO (estado final) + acciones
+// =============================================================================
+.step6-section {
+  @include kc-card;
+  padding: 20px 22px;
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: -20px -22px 18px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--kc-line2);
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--kc-ink);
+
+    &.section-header-success i { color: var(--kc-green); }
+
+    .order-badge {
+      margin-left: auto;
+      background: var(--kc-green-wash);
+      color: #0a7d56;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 999px;
+    }
+  }
+}
+
+.step6-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+
+  .btn-primary {
+    background: var(--kc-accent);
+    border-color: var(--kc-accent);
+    border-radius: 12px;
+    font-weight: 800;
+    box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
+
+    &:hover { filter: brightness(1.05); }
+  }
+
+  .btn-outline-secondary {
+    border-radius: 12px;
+    border-color: #d9dbe6;
+    color: var(--kc-ink2);
+    font-weight: 800;
+
+    &:hover {
+      background: var(--kc-canvas);
+      color: var(--kc-ink);
+    }
+  }
+}
+
+// =============================================================================
+// MODALES (crear datos de entrega / facturación) — restyle ligero on-brand
+// =============================================================================
+.modal-header {
+  border-bottom: 1px solid var(--kc-line2);
+
+  .modal-title {
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--kc-ink);
+
+    i { color: var(--kc-accent); }
+  }
+}
+
+.modal-body {
+  .form-label {
+    @include kc-label;
+    margin-bottom: 6px;
+  }
+
+  .form-control,
+  .form-select {
+    @include kc-input;
+    background: #fff;
+  }
+}
+
+.modal-footer {
+  border-top: 1px solid var(--kc-line2);
+
+  .btn-success {
+    background: var(--kc-accent);
+    border-color: var(--kc-accent);
+    border-radius: 11px;
+    font-weight: 800;
+
+    &:hover { filter: brightness(1.05); }
+  }
+
+  .btn-outline-secondary {
+    border-radius: 11px;
+    border-color: #d9dbe6;
+    color: var(--kc-ink2);
+    font-weight: 800;
+  }
+}
+
+// =============================================================================
+// PrimeNG p-autoComplete del buscador de cliente (widget INLINE de esta
+// pantalla, NO un componente hijo app-*). Único ::ng-deep del archivo.
+// =============================================================================
+:host ::ng-deep .cliente-autocomplete-full {
+  display: block;
+  width: 100%;
+
+  .p-autocomplete { width: 100%; display: block; }
+
+  .p-inputtext {
+    width: 100%;
+    border: 1px solid var(--kc-line);
+    border-radius: 12px;
+    background: var(--kc-canvas);
+    padding: 12px 40px 12px 40px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--kc-font-body);
+    color: var(--kc-ink);
+
+    &::placeholder { color: #9aa0b2; }
+
+    &:enabled:focus {
+      outline: none;
+      border-color: var(--kc-accent);
+      box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+      background: #fff;
+    }
+  }
+
+  .p-autocomplete-clear-icon { color: var(--kc-muted2); right: 14px; }
+}
+
+// Panel/opciones del autocomplete (se renderiza inline dentro del componente)
+:host ::ng-deep .cliente-autocomplete-full .p-autocomplete-panel,
+:host ::ng-deep .p-autocomplete-panel {
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(20, 20, 40, 0.12);
+  overflow: hidden;
+
+  .p-autocomplete-items { padding: 6px; }
+
+  .p-autocomplete-item {
+    border-radius: 10px;
+    padding: 0;
+
+    &:hover,
+    &.p-highlight { background: var(--kc-accent-wash); }
+  }
+
+  .cliente-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+  }
+
+  .cliente-avatar {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 11px;
+    background: var(--kc-accent-wash);
+    color: var(--kc-accent-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cliente-nombre {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--kc-ink);
+  }
+
+  .cliente-contacto-line,
+  .cliente-documento {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--kc-muted);
+  }
+
+  .badge-doc {
+    background: var(--kc-canvas);
+    border: 1px solid var(--kc-line);
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-weight: 700;
+    color: var(--kc-ink2);
+  }
+
+  .empty-results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    color: var(--kc-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+// =============================================================================
+// HIJOS REUTILIZADOS — reskin ACOTADO a esta pantalla (:host ::ng-deep app-<hijo>)
+//
+// El atributo de host solo existe en <venta-asistida-unica>, por lo que estas
+// reglas afectan ÚNICAMENTE las instancias de los hijos dentro de esta pantalla:
+// el wizard crear-ventas y cualquier otro uso quedan intactos. No se editan los
+// .scss/.html de los hijos. Cada regla se cualifica con el selector de elemento
+// (app-ecomerce-products / app-carrito / app-checkout) para ganar especificidad
+// al SCSS propio del hijo SIN recurrir a !important. Acento #6C4CE0, precios en
+// verde #17994F, plano sin gradientes (design-system D-131).
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// CATÁLOGO (app-ecomerce-products) — tarjetas grid tipo mockup + toolbar plana
+// Clases reales targeteadas: .product-card-modern, .product-img-wrapper,
+// .product-image-optimized, .stock-badge-simple(.badge-success/warning/danger/info),
+// .product-actions-overlay, .btn-action(.btn-action-quick/.btn-action-config),
+// .product-details-modern, .product-reference, .product-title-modern,
+// .product-pricing-modern .price-main, .feature-products .square-product-setting,
+// .select2-drpdwn-product .form-control, .form-check-input, .grid-options-clean
+// .grid-btn, .pagination-wrapper .page-item/.page-link.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-ecomerce-products {
+
+  // Marco de la tarjeta: borde 1px línea, radio 16px, plano (sin translate ni sombra dura)
+  .product-card-modern {
+    border: 1px solid var(--kc-line);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+
+    &:hover {
+      transform: none;
+      border-color: #e2d9fb;
+      box-shadow: 0 6px 18px rgba(108, 76, 224, 0.10);
+    }
+  }
+
+  // Área de imagen: ~148px, fondo lila-gris, separador inferior, radio superior 16px
+  .product-img-wrapper {
+    height: 150px;
+    background: var(--kc-canvas);
+    border-bottom: 1px solid var(--kc-line2);
+    border-radius: 16px 16px 0 0;
+
+    .product-image-optimized { padding: 0.85rem; }
+  }
+
+  // Chip de stock: plano y semántico (par color fuerte / fondo suave)
+  .stock-badge-simple {
+    border: none;
+    box-shadow: none;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 3px 9px;
+    background: #eef0f4;
+    color: var(--kc-muted);
+
+    &.badge-success { background: var(--kc-green-wash);  color: #0a7d56; }
+    &.badge-warning { background: var(--kc-orange-wash); color: #a9660d; }
+    &.badge-danger  { background: var(--kc-red-wash);    color: #e0483f; }
+    &.badge-info    { background: var(--kc-accent-wash); color: var(--kc-accent-ink); }
+  }
+
+  // Overlay de acciones (aparece en hover): velo plano + botones on-brand
+  .product-actions-overlay {
+    background: rgba(33, 31, 58, 0.45);
+
+    .btn-action {
+      border-radius: 10px;
+      box-shadow: none;
+      backdrop-filter: none;
+      font-family: var(--kc-font-body);
+      font-weight: 800;
+
+      // "Agregar" (quick add) — morado suave plano
+      &.btn-action-quick {
+        background: var(--kc-accent-wash);
+        color: var(--kc-accent);
+        border: 1px solid #e2d9fb;
+
+        i { color: var(--kc-accent); }
+
+        &:hover {
+          background: var(--kc-accent);
+          color: #fff;
+          transform: none;
+          box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
+          i { color: #fff; }
+        }
+      }
+
+      // "Configurar" — blanco plano con borde
+      &.btn-action-config {
+        background: #fff;
+        color: var(--kc-ink2);
+        border: 1px solid #e4e5ee;
+
+        &:hover {
+          background: var(--kc-canvas);
+          color: var(--kc-accent);
+          transform: none;
+          box-shadow: none;
+        }
+      }
+    }
+  }
+
+  // Detalles: referencia (Baloo muted), nombre 13.5px, precio verde Baloo
+  .product-details-modern {
+    .product-reference {
+      font-family: var(--kc-font-head);
+      color: var(--kc-muted2);
+      letter-spacing: 0.3px;
+    }
+
+    .product-title-modern {
+      font-family: var(--kc-font-body);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--kc-ink);
+    }
+
+    .product-pricing-modern .price-main {
+      font-family: var(--kc-font-head);
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--kc-green);
+    }
+  }
+
+  // Toolbar (grid/lista · orden · columnas · switch stock) — redondeada y plana
+  .feature-products {
+    .products-total .square-product-setting {
+      border-radius: 11px;
+      border-color: var(--kc-line);
+    }
+
+    .select2-drpdwn-product .form-control {
+      border-radius: 11px;
+      border-color: var(--kc-line);
+      background: var(--kc-canvas);
+      font-weight: 700;
+      color: var(--kc-ink2);
+    }
+
+    .form-check-input {
+      cursor: pointer;
+
+      &:checked {
+        background-color: var(--kc-accent);
+        border-color: var(--kc-accent);
+      }
+    }
+  }
+
+  .grid-options-clean {
+    background: var(--kc-canvas);
+    border: 1px solid var(--kc-line);
+    border-radius: 11px;
+
+    .grid-btn.active { background: var(--kc-accent); }
+  }
+
+  // Paginación plana on-brand
+  .pagination-wrapper .pagination .page-item {
+    .page-link {
+      border-radius: 10px;
+      color: var(--kc-ink2);
+
+      &:hover {
+        transform: none;
+        box-shadow: none;
+        background: var(--kc-accent-wash);
+        border-color: #e2d9fb;
+        color: var(--kc-accent);
+      }
+    }
+
+    &.active .page-link {
+      background: var(--kc-accent);
+      border-color: var(--kc-accent);
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CARRITO (app-carrito) — tabla limpia tipo mockup
+// Clases reales targeteadas: .cart-table thead tr/th, .item-info .item-meta
+// (.item-name/.item-sku), .subtotal-value, .item-actions .act-btn.act-danger,
+// .cart-footer, .cart-summary .summary-line.total.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-carrito {
+
+  // Encabezado de tabla: banda gris lila, uppercase muted
+  .cart-table thead tr { background: var(--kc-canvas); }
+  .cart-table thead th { color: var(--kc-muted2); }
+
+  // Nombre + referencia (ref en Baloo)
+  .item-info .item-meta {
+    .item-name { font-weight: 700; }
+    .item-sku {
+      font-family: var(--kc-font-head);
+      color: var(--kc-muted2);
+      font-weight: 600;
+    }
+  }
+
+  // Subtotal en Baloo
+  .subtotal-value { font-family: var(--kc-font-head); }
+
+  // Botón quitar: rojo suave permanente (mockup #FCE9E8)
+  .item-actions .act-btn.act-danger {
+    background: var(--kc-red-wash);
+    border-color: #f6d4d2;
+    color: #e0483f;
+
+    &:hover:not(:disabled) {
+      background: #f9dcda;
+      border-color: #f2c2bf;
+      color: var(--kc-red);
+    }
+  }
+
+  // Pie/resumen con banda lila (#F7F5FE) y total en acento
+  .cart-footer {
+    background: #f7f5fe;
+    border-top-color: #e2d9fb;
+
+    .cart-summary .summary-line.total {
+      border-top-color: #e2d9fb;
+      span:last-child { color: var(--kc-accent); }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// PAGO (app-checkout) — totales, banda TOTAL A PAGAR, formas de pago y botón.
+// La compactación (ocultar acordeón/lista/estimado/header) vive en .va-col-side
+// y se CONSERVA; esto solo acerca lo visible al mockup.
+// Clases reales targeteadas: .sub-total > li:last-child (.count),
+// form.needs-validation h5, .payment-tabs .nav-link.active, .payment-method-card,
+// .payment-radio:checked + .payment-method-card, .order-place .btn.btn-primary.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-checkout {
+
+  // Banda "TOTAL A PAGAR": lila #EEE9FD, valor en acento
+  .sub-total > li:last-child {
+    background: var(--kc-accent-wash);
+    border-radius: 14px;
+
+    .count {
+      color: var(--kc-accent);
+      font-family: var(--kc-font-head);
+    }
+  }
+
+  // Encabezado "Formas de Pago"
+  form.needs-validation > h5 {
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--kc-ink);
+
+    i { color: var(--kc-accent); }
+  }
+
+  // Tabs de formas de pago (activa = acento)
+  .payment-tabs .nav-link.active {
+    color: var(--kc-accent);
+    border-bottom-color: var(--kc-accent);
+  }
+
+  // Tarjeta de método de pago (seleccionada = borde + wash acento)
+  .payment-method-card {
+    border-radius: 12px;
+    border-color: var(--kc-line);
+  }
+
+  .payment-radio:checked + .payment-method-card {
+    background: var(--kc-accent-wash);
+    border-color: var(--kc-accent);
+    box-shadow: 0 0 0 1px var(--kc-accent);
+  }
+
+  // Botón "Comprar y pagar" — morado con sombra
+  .order-place .btn.btn-primary {
+    background: var(--kc-accent);
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(108, 76, 224, 0.30);
+
+    &:hover:not(:disabled) { filter: brightness(1.05); }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Refuerzo del acercamiento: reglas que perdían especificidad contra el SCSS
+// propio del hijo. Se fuerzan con !important, solo dentro de esta pantalla.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-carrito {
+  .cart-table thead tr,
+  .cart-table thead th {
+    background: #f7f8fc !important;
+  }
+
+  .item-actions .act-btn.act-danger {
+    background: #fce9e8 !important;
+    border-color: #f6d4d2 !important;
+    color: #d6455b !important;
+  }
+
+  .cart-footer {
+    background: #f7f5fe !important;
+    border-top: 1px solid #e2d9fb !important;
+  }
+
+  .cart-summary .summary-line.total span:last-child {
+    color: #6c4ce0 !important;
+  }
+}
+
+:host ::ng-deep app-checkout {
+  .order-place .btn,
+  .order-place .btn.btn-primary {
+    background: #6c4ce0 !important;
+    border-color: #6c4ce0 !important;
+    color: #fff !important;
+  }
+
+  .payment-tabs .nav-link.active {
+    color: #6c4ce0 !important;
+    border-bottom-color: #6c4ce0 !important;
+  }
+
+  .payment-radio:checked + .payment-method-card {
+    border-color: #6c4ce0 !important;
+    background: #eee9fd !important;
+  }
+
+  .sub-total > li:last-child,
+  .sub-total > li:last-child .count {
+    color: #6c4ce0 !important;
+  }
+  .sub-total > li:last-child { background: #eee9fd !important; }
+}
+
+// =============================================================================
+// TAREA 1 — CATÁLOGO EN MODO LISTA = TABLA DE PRODUCTOS (estilo Cotizaciones)
+//
+// En esta pantalla el catálogo se fuerza a `listView=true` desde el .ts, así que
+// el contenedor real `.product-wrapper-grid` siempre lleva la clase `.list-view`.
+// El hijo NO tiene un layout de lista propio: en modo lista sólo cambia cada
+// columna a ancho completo pero conserva la MISMA tarjeta (imagen arriba, detalle
+// abajo). Aquí la reconstruimos como una TABLA: contenedor con borde y radio,
+// cada producto = una fila con separador, thumbnail 52px, nombre + referencia,
+// chip de stock, precio verde y botón "Agregar" morado suave.
+//
+// Técnica: en la fila aplanamos `.product-img-wrapper` y `.product-details-modern`
+// con `display: contents` para promover sus hojas (imagen, chip de stock, overlay
+// de acciones, referencia, título, precio) al mismo contenedor flex
+// `.product-box-modern`, y las ordenamos en columnas con `order`. Los combinadores
+// usan descendencia (no `>`) porque `display:contents` NO altera el árbol del DOM.
+//
+// Clases REALES targeteadas (todas existen en el HTML del catálogo en modo lista):
+//   .product-wrapper-grid, .product-wrapper-grid > .row,
+//   .row > [class*="col-"] (columnas de producto), .card.product-card-modern,
+//   .product-box-modern, .product-img-wrapper, .product-image-optimized,
+//   .product-img-wrapper > .bg-light (placeholder sin imagen), .inactive-badge,
+//   .stock-badge-simple(.badge-success/.badge-warning/.badge-danger/.badge-info),
+//   .product-actions-overlay .btn-action(.btn-action-quick/.btn-action-config)
+//   .btn-action-label, .product-details-modern, .product-meta .product-reference,
+//   .config-indicator, .product-title-modern, .product-pricing-modern .price-main,
+//   .price-discount del, .pagination-wrapper (se deja intacto).
+// =============================================================================
+:host ::ng-deep app-ecomerce-products .product-wrapper-grid {
+
+  // --- Contenedor tipo tabla: envuelve la fila de productos (NO la paginación) ---
+  > .row {
+    margin: 0 !important;              // mata los gutters negativos de Bootstrap
+    border: 1px solid #ecedf3;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+  }
+
+  // Cada columna de producto ocupa la fila completa (una fila por producto en
+  // cualquier breakpoint, sin depender de que gane col-xl-12).
+  > .row > [class*="col-"] {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  // --- La tarjeta se aplana a una FILA de tabla ---
+  .product-card-modern {
+    border: 0 !important;
+    border-radius: 0 !important;
+    border-top: 1px solid #f0f1f6 !important;   // separador entre filas
+    box-shadow: none !important;
+    height: auto !important;
+    background: #fff;
+    transition: background 0.12s ease;
+
+    &:hover {
+      transform: none !important;
+      box-shadow: none !important;
+      border-color: transparent !important;
+      background: #faf9ff;                       // hover suave del mockup
+
+      .product-image-optimized { transform: none !important; }
+    }
+  }
+
+  // La primera fila no lleva separador superior (lo aporta el borde del contenedor).
+  > .row > [class*="col-"]:first-child .product-card-modern {
+    border-top: 0 !important;
+  }
+
+  // --- La fila: flex horizontal, celdas alineadas ---
+  .product-box-modern {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 14px;
+    padding: 11px 16px;
+    min-height: 76px;
+  }
+
+  // Aplanamos los dos contenedores para promover sus hijos al flex de la fila.
+  .product-img-wrapper,
+  .product-details-modern {
+    display: contents !important;
+  }
+
+  // ---- Celda 1: thumbnail 52px redondeado ----
+  .product-image-optimized {
+    order: 1;
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px;
+    flex: 0 0 52px;
+    padding: 0 !important;
+    object-fit: cover !important;
+    border-radius: 11px;
+    border: 1px solid #ecedf3;
+    background: #f7f8fc;
+    transform: none !important;
+  }
+
+  // Placeholder cuando no hay imagen (div .bg-light con height:200px inline)
+  .product-img-wrapper > .bg-light {
+    order: 1;
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px;
+    flex: 0 0 52px;
+    border-radius: 11px;
+    border: 1px solid #ecedf3;
+    background: #f7f8fc !important;
+
+    i { font-size: 1.3rem !important; }
+  }
+
+  // Badge "INACTIVO" (raro): queda como chip pequeño junto al thumbnail
+  .inactive-badge {
+    order: 1;
+    position: static !important;
+    box-shadow: none !important;
+    align-self: center;
+  }
+
+  // ---- Celda 2: nombre (columna flexible) ----
+  .product-title-modern {
+    order: 2;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 !important;
+    height: auto !important;
+    max-height: 2.8em;
+    font-family: var(--kc-font-body);
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #2a2e3c;
+    -webkit-line-clamp: 2;
+  }
+
+  // ---- Celda 3: referencia (Baloo muted) ----
+  .product-meta {
+    order: 3;
+    flex: 0 0 auto;
+    margin: 0 !important;
+    gap: 6px;
+
+    .product-reference {
+      font-family: var(--kc-font-head);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #9199ac;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .config-indicator {
+      width: 22px;
+      height: 22px;
+      box-shadow: none !important;
+    }
+  }
+
+  // ---- Celda 4: chip de stock (plano, hereda tintes suaves del bloque grid) ----
+  // !important para neutralizar las reglas compactas del hijo en col-lg-2.
+  .stock-badge-simple {
+    order: 4;
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    flex: 0 0 auto;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 999px;
+    font-size: 11.5px !important;
+    font-weight: 800;
+    padding: 3px 11px !important;
+    white-space: nowrap;
+    background: #eef0f4;
+    color: #8a90a2;
+
+    &.badge-success { background: #e3f6ec !important; color: #17994f !important; }
+    &.badge-warning { background: #fdf1dd !important; color: #a9660d !important; }
+    &.badge-danger  { background: #fdeceb !important; color: #d6455b !important; }
+    &.badge-info    { background: #eee9fd !important; color: #533bc4 !important; }
+  }
+
+  // ---- Celda 5: precio (verde Baloo, alineado a la derecha) ----
+  .product-pricing-modern {
+    order: 5;
+    flex: 0 0 auto;
+    margin: 0 !important;
+    min-width: 92px;
+    justify-content: flex-end;
+    text-align: right;
+
+    // !important: el hijo baja el precio a 1rem en col-lg-2 con !important.
+    .price-main {
+      font-family: var(--kc-font-head);
+      font-size: 17px !important;
+      font-weight: 800;
+      color: #17994f;
+      white-space: nowrap;
+    }
+
+    .price-discount del { font-size: 0.75rem; color: #9e9e9e; }
+  }
+
+  // ---- Celda 6: acciones (Agregar + Configurar), pinneadas a la derecha ----
+  .product-actions-overlay {
+    order: 6;
+    position: static !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    background: none !important;
+    border-top: 0 !important;
+    padding: 0 !important;
+    width: auto;
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
+
+    .btn-action {
+      flex: 0 0 auto !important;
+      flex-direction: row !important;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 38px;
+      min-height: 0 !important;
+      padding: 0 14px !important;
+      border-radius: 10px !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      font-family: var(--kc-font-body);
+      font-weight: 800;
+      font-size: 12.5px;
+
+      i { font-size: 13px !important; width: auto !important; height: auto !important; }
+    }
+
+    // "Agregar" — morado suave plano, con la ETIQUETA SIEMPRE VISIBLE.
+    // El hijo la esconde cuando la columna es col-lg-2 (que es el estado por
+    // defecto: `listView=false; col="2"`), dejando solo un iconito redondo de
+    // 28px. Aquí la recuperamos con !important porque esa regla del hijo
+    // (`[_nghost] .col-lg-2 .product-actions-overlay .btn-action .btn-action-label`)
+    // gana en especificidad.
+    .btn-action-quick {
+      width: auto !important;
+      min-width: 0 !important;
+      height: 38px !important;
+      border-radius: 10px !important;
+      padding: 0 15px !important;
+      gap: 7px !important;
+      background: #eee9fd !important;
+      color: #6c4ce0 !important;
+      border: 1px solid #e2d9fb !important;
+
+      .btn-action-label {
+        display: inline !important;
+        font-size: 12.5px !important;
+        font-weight: 800 !important;
+        line-height: 1;
+      }
+
+      i { color: #6c4ce0 !important; }
+
+      &:hover {
+        background: #6c4ce0 !important;
+        color: #fff !important;
+        border-color: #6c4ce0 !important;
+        transform: none !important;
+        box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28) !important;
+        i { color: #fff !important; }
+      }
+    }
+
+    // "Configurar" — botón icónico blanco (label oculto para no romper la fila)
+    .btn-action-config {
+      width: 38px !important;
+      height: 38px !important;
+      border-radius: 10px !important;
+      padding: 0 !important;
+      background: #fff !important;
+      color: #6c4ce0 !important;
+      border: 1px solid #e4e5ee !important;
+
+      i { color: #6c4ce0 !important; }
+      .btn-action-label { display: none !important; }
+
+      &:hover {
+        background: #f7f8fc !important;
+        border-color: #e2d9fb !important;
+        transform: none !important;
+        box-shadow: none !important;
+      }
+    }
+  }
+
+  // Paginación: fuera de la "tabla"; sólo un respiro superior.
+  .pagination-wrapper { margin-top: 16px; }
+
+  // En pantallas angostas la fila envuelve; el precio y acciones bajan sin romperse.
+  @media (max-width: 560px) {
+    .product-box-modern { flex-wrap: wrap; }
+    .product-title-modern { flex: 1 1 100%; order: 2; }
+    .product-meta   { order: 3; }
+    .stock-badge-simple { order: 4; }
+    .product-pricing-modern { order: 5; margin-left: auto !important; }
+    .product-actions-overlay { order: 6; }
+  }
+}
+
+// =============================================================================
+// TAREA 2 — CHECKOUT "bien bonito" (complemento; conserva compactado + refuerzo)
+//
+// El SCSS propio de app-checkout ya está bastante on-brand (usa #6C4CE0, radio 14,
+// banda TOTAL A PAGAR en lila, botón morado con sombra). Aquí SOLO pulimos: filas
+// de totales más limpias, banda TOTAL A PAGAR con label uppercase + valor Baloo
+// grande, tabs con hover, tarjetas de método con hover/seleccionada nítida, y
+// badges de seguridad discretos. Especificidad alta (`:host ::ng-deep app-checkout`)
+// para ganar al hijo sin !important salvo donde el hijo pinta color/box propio.
+// Clases REALES: .sub-total li (span/.count), .two-column-list (.title/.value),
+// .payment-tabs .nav-link(.active), .payment-method-label, .payment-method-card,
+// .payment-radio:checked, .payment-security, .security-badges .security-badge.
+// =============================================================================
+:host ::ng-deep app-checkout {
+
+  // --- Filas de totales: label muted, valor ink, respiración pareja ---
+  .sub-total li {
+    padding: 8px 2px;
+
+    span:first-child { color: #8a90a2; font-weight: 700; }
+    .count { color: #2a2e3c; }
+  }
+  .sub-total li:not(:last-child) { border-bottom-color: #f0f1f6; }
+
+  // Banda "TOTAL A PAGAR": label uppercase acento + valor Baloo grande
+  .sub-total > li:last-child {
+    align-items: center;
+    padding: 14px 16px;
+    margin-top: 12px;
+
+    span:first-child {
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #533bc4 !important;
+    }
+    .count { font-size: 1.65rem; line-height: 1; }
+  }
+
+  // Desglose de IVA: caja lila-gris plana
+  .two-column-list {
+    background: #f7f8fc;
+    border: 1px solid #f0f1f6;
+
+    li:not(:last-child) { border-bottom-color: #f0f1f6; }
+    .value { color: #52586b; }
+  }
+
+  // --- Tabs de Formas de Pago: hover suave, activa acento ---
+  .payment-tabs { border-bottom-color: #f0f1f6; }
+  .payment-tabs .nav-link {
+    border-radius: 9px 9px 0 0;
+    &:hover { color: #6c4ce0; background: #f6f4ff; }
+  }
+  .payment-tabs .nav-link.active {
+    color: #6c4ce0;
+    border-bottom-color: #6c4ce0;
+    background: transparent;
+  }
+
+  // --- Tarjetas de método de pago ---
+  .payment-method-card {
+    border-radius: 12px;
+    border-color: #ecedf3;
+    background: #f7f8fc;
+    min-height: 68px;
+  }
+  .payment-method-label:hover .payment-method-card {
+    border-color: #e2d9fb;
+    background: #f6f4ff;
+  }
+  // Seleccionada = borde + wash acento + check (el hijo ya pone el check FA)
+  .payment-radio:checked + .payment-method-card {
+    background: #eee9fd;
+    border-color: #6c4ce0;
+    box-shadow: 0 0 0 1px #6c4ce0;
+  }
+
+  // --- Badges de seguridad discretos (fila muted, sin caja) ---
+  .payment-security {
+    background: transparent;
+    border: none;
+    padding: 6px 0 0;
+    margin-top: 12px;
+  }
+  .security-badges { gap: 16px; }
+  .security-badge {
+    flex-direction: row;
+    gap: 6px;
+
+    i { color: #9199ac; font-size: 0.82rem; margin: 0; }
+    span { color: #9199ac; font-size: 0.72rem; font-weight: 700; }
+  }
+
+  // Botón "Comprar y pagar": ancho completo, morado con sombra (refuerza al hijo)
+  .order-place .btn.btn-primary {
+    width: 100%;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(108, 76, 224, 0.30);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Fix: en la tabla del catálogo (vista lista) el NOMBRE del producto quedaba
+// colapsado a 0px por el reflow display:contents. Lo hacemos visible y con ancho
+// para que sea la columna principal de la fila.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-ecomerce-products .product-wrapper-grid .product-card-modern {
+  // !important en tamaño/alto: el hijo los baja a 0.8rem / 2.4em con !important
+  // cuando la columna es col-lg-2 (estado por defecto del catálogo).
+  .product-title-modern {
+    display: block !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 160px !important;
+    order: 2;
+    margin: 0 14px !important;
+    font-family: var(--kc-font-body);
+    font-size: 13.5px !important;
+    height: auto !important;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #2a2e3c;
+    white-space: normal;
+    text-align: left;
+  }
+
+  // La referencia también se encoge a 0.65rem !important en col-lg-2.
+  .product-meta .product-reference {
+    font-size: 11.5px !important;
+  }
+}
+
+// =============================================================================
+// TAREA 3 — "Resumen y Pago" afinado al MOCKUP (dos tarjetas dentro del panel)
+//
+// El panel derecho ya vive en un `.va-card` del padre con su header chip morado +
+// "Resumen y Pago" (venta-asistida-unica.component.html:683-688). Dentro, el
+// app-checkout compactado (acordeón/lista/estimado ya ocultos en .va-col-side, se
+// CONSERVA) queda como DOS bloques-tarjeta:
+//   CARD A = resumen de totales (`.sub-total`) rematado por la BANDA lila TOTAL A
+//            PAGAR, con la caja de desglose de IVA (`.two-column-list`).
+//   CARD B = "Formas de Pago" (`form.needs-validation`), separada con borde
+//            superior + espacio; track de tabs segmentado, tarjetas de método en
+//            FILA tipo radio, caja de seguridad y botón "Comprar y pagar".
+//
+// Este bloque va AL FINAL del archivo: con misma especificidad que "TAREA 2"
+// (`:host ::ng-deep app-checkout`) el orden de fuente hace que estas reglas ganen;
+// se usa `!important` donde el hijo (checkout.component.scss) pinta color, borde,
+// grid o pseudo-elemento propio. Plano, sin gradientes (D-131). Acento #6C4CE0,
+// verde #17994F, azul #2F6FE0.
+//
+// Clases REALES targeteadas (todas existen en checkout.component.html):
+//   .order-box, ul.sub-total, .sub-total > li, .sub-total > li:last-child (.count),
+//   .two-column-list (.title/.value), form.needs-validation (> h5),
+//   ul.payment-tabs.nav-tabs, .payment-tabs .nav-item, .payment-tabs .nav-link(.active),
+//   .payment-grid, .payment-option, .payment-method-label, .payment-radio(:checked),
+//   .payment-method-card (i / span), .payment-security, .security-badges,
+//   .security-badge (i / span), .order-place .btn.btn-primary.
+// =============================================================================
+:host ::ng-deep app-checkout {
+
+  // --- CARD A · filas de resumen: label #52586B 13.5px + valor Baloo 15px ink ---
+  .sub-total > li {
+    padding: 9px 2px;
+    align-items: baseline;
+
+    > span:first-child {
+      color: #52586b !important;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    > .count {
+      font-family: var(--kc-font-head) !important;
+      font-size: 15px !important;
+      font-weight: 700 !important;
+      color: #211f3a !important;
+    }
+  }
+  // Separadores punteados suaves entre filas (no bajo la banda ni la caja IVA)
+  .sub-total > li:not(:last-child) {
+    border-bottom: 1px dashed #ecedf3 !important;
+  }
+
+  // --- CARD A · caja de desglose de IVA: #F7F8FC / borde #ECEDF3 radio 11 ---
+  .two-column-list {
+    background: #f7f8fc !important;
+    border: 1px solid #ecedf3 !important;
+    border-radius: 11px !important;
+    padding: 4px 4px !important;
+    margin: 10px 0 !important;
+
+    li { padding: 7px 12px; }
+    li:not(:last-child) { border-bottom: 1px dashed #ecedf3 !important; }
+
+    .title {
+      color: #8a90a2 !important;
+      font-weight: 700 !important;
+      font-size: 12.5px;
+    }
+    .value {
+      color: #211f3a !important;          // valor Baloo ink (no morado del hijo)
+      font-family: var(--kc-font-head) !important;
+      font-weight: 700 !important;
+      font-size: 12.5px;
+    }
+  }
+
+  // --- CARD A · footer: BANDA lila PLANA "TOTAL A PAGAR" + total 30px Baloo ---
+  .sub-total > li:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #eee9fd !important;       // lila plano (D-131, sin gradiente)
+    border: none !important;
+    border-radius: 14px !important;
+    padding: 16px 18px !important;
+    margin-top: 14px !important;
+
+    > span:first-child {
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-size: 14px !important;
+      font-weight: 800 !important;
+      color: #533bc4 !important;
+    }
+    > .count {
+      font-family: var(--kc-font-head) !important;
+      font-size: 30px !important;
+      font-weight: 800 !important;
+      line-height: 1 !important;
+      color: #6c4ce0 !important;          // acento
+    }
+  }
+
+  // =========================================================================
+  // CARD B · "Formas de Pago" — separación visual de tarjeta (borde + espacio)
+  // =========================================================================
+  form.needs-validation {
+    margin-top: 22px !important;
+    padding-top: 20px;
+    border-top: 1px solid #ecedf3;
+  }
+
+  // Encabezado "Formas de Pago" (ícono acento + título Baloo)
+  form.needs-validation > h5 {
+    font-family: var(--kc-font-head) !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    color: #211f3a !important;
+    margin-bottom: 14px !important;
+
+    i { color: #6c4ce0 !important; }
+  }
+
+  // --- Tabs segmentados: track #F1F2F5, borde #ECEDF3, radio 11, padding 4 ---
+  .payment-tabs {
+    display: flex !important;
+    flex-wrap: nowrap;
+    gap: 4px !important;
+    padding: 4px !important;
+    background: #f1f2f5 !important;
+    border: 1px solid #ecedf3 !important;
+    border-bottom: 1px solid #ecedf3 !important;   // anula el subrayado del hijo/BS
+    border-radius: 11px !important;
+    overflow: hidden;
+  }
+
+  .payment-tabs .nav-item {
+    flex: 1 1 0 !important;
+    min-width: 0;
+    margin: 0 !important;
+  }
+
+  .payment-tabs .nav-link {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px !important;
+    border: none !important;
+    border-bottom: none !important;                // sin subrayado (segmentado)
+    border-radius: 8px !important;
+    background: transparent !important;
+    font-family: var(--kc-font-body);
+    font-weight: 700 !important;
+    font-size: 12.5px !important;
+    color: #52586b !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+
+    i { margin-right: 0 !important; }
+
+    &:hover:not(.active) { color: #6c4ce0 !important; }
+  }
+
+  // Tab activa = fondo blanco + acento + sombra suave (sin subrayado)
+  .payment-tabs .nav-link.active {
+    background: #ffffff !important;
+    color: #6c4ce0 !important;
+    border-bottom: none !important;
+    border-bottom-color: transparent !important;
+    box-shadow: 0 1px 3px rgba(33, 31, 58, 0.10),
+                0 0 0 1px rgba(108, 76, 224, 0.06);
+  }
+
+  // --- Rejilla de métodos = UNA COLUMNA (filas tipo radio) ---
+  .payment-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding-top: 14px !important;
+  }
+
+  .payment-option { position: relative; }
+  .payment-method-label { display: block; margin: 0; }
+
+  // Tarjeta de método = FILA: border 2px #ECEDF3 radio 12 padding 13x15,
+  // contenido a la IZQUIERDA (chip logo + nombre), radio 19px a la derecha.
+  .payment-method-card {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    text-align: left !important;
+    padding: 13px 46px 13px 15px !important;   // deja aire a la derecha p/ el radio
+    min-height: 0 !important;
+    height: auto !important;
+    border: 2px solid #ecedf3 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    transition: border-color 0.14s ease, background 0.14s ease;
+  }
+
+  .payment-method-label:hover .payment-method-card {
+    border-color: #e2d9fb !important;
+    background: #faf9ff !important;
+  }
+
+  // Chip-logo 32px a la izquierda
+  .payment-method-card i {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px;
+    flex: 0 0 32px;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: #f1f2f5 !important;
+    color: #6c4ce0 !important;
+    font-size: 0.95rem !important;
+  }
+
+  // Nombre del método a la izquierda (13.5px / 800), hint no existe en el DOM
+  .payment-method-card span {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    text-align: left !important;
+    font-size: 13.5px !important;
+    font-weight: 800 !important;
+    color: #211f3a !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // Círculo de radio (19px) a la derecha — anillo por defecto; el glyph de check
+  // (invisible) queda centrado por flex y se muestra al seleccionar.
+  .payment-method-card::before {
+    content: "\f00c" !important;                 // check (oculto: color transparente)
+    font-family: "Font Awesome 5 Free" !important;
+    font-weight: 900 !important;
+    font-size: 0.6rem !important;
+    position: absolute !important;
+    right: 15px !important;
+    top: 50% !important;
+    left: auto !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+    width: 19px !important;
+    height: 19px !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+    border: 2px solid #cfd3df !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    color: transparent !important;
+  }
+
+  // SELECCIONADA: borde acento + fondo #EEE9FD + círculo acento con check blanco
+  .payment-radio:checked + .payment-method-card {
+    border-color: #6c4ce0 !important;
+    background: #eee9fd !important;
+    box-shadow: none !important;
+  }
+  .payment-radio:checked + .payment-method-card i {
+    background: #ffffff !important;
+    color: #6c4ce0 !important;
+  }
+  .payment-radio:checked + .payment-method-card span {
+    color: #533bc4 !important;
+  }
+  .payment-radio:checked + .payment-method-card::before {
+    content: "\f00c" !important;
+    right: 15px !important;
+    top: 50% !important;
+    left: auto !important;
+    transform: translateY(-50%) !important;
+    width: 19px !important;
+    height: 19px !important;
+    font-size: 0.6rem !important;
+    border: 2px solid #6c4ce0 !important;
+    background: #6c4ce0 !important;
+    color: #ffffff !important;
+  }
+  .payment-radio:focus + .payment-method-card {
+    box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.15) !important;
+  }
+
+  // --- Caja de seguridad: #F7F8FC, badges en fila (Seguro verde / resto azul) ---
+  .payment-security {
+    background: #f7f8fc !important;
+    border: 1px solid #ecedf3 !important;
+    border-radius: 11px !important;
+    padding: 12px 14px !important;
+    margin-top: 16px !important;
+    text-align: left !important;
+  }
+  .security-badges {
+    justify-content: flex-start !important;
+    gap: 18px !important;
+    flex-wrap: wrap;
+  }
+  .security-badge {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 7px;
+
+    i { margin: 0 !important; font-size: 0.85rem !important; }
+    span { font-size: 0.74rem !important; font-weight: 800 !important; }
+  }
+  // "Pago Seguro" verde #17994F · "Datos Protegidos"/"Múltiples Métodos" azul #2F6FE0
+  .security-badge:first-child i,
+  .security-badge:first-child span { color: #17994f !important; }
+  .security-badge:not(:first-child) i,
+  .security-badge:not(:first-child) span { color: #2f6fe0 !important; }
+
+  // --- Botón "Comprar y pagar": ancho completo, acento, radio 13, texto 15px 800 ---
+  .order-place { margin-top: 18px !important; }
+  .order-place .btn.btn-primary {
+    width: 100% !important;
+    border-radius: 13px !important;
+    padding: 0.9rem 1.5rem !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    box-shadow: 0 8px 20px rgba(108, 76, 224, 0.30) !important;
+  }
+}
+
+// =============================================================================
+// TAREA 4 — CATÁLOGO SIN COLUMNA DE FILTROS (marco del mockup)
+//
+// En el mockup el catálogo NO tiene sidebar de filtros a la izquierda: los
+// filtros viven detrás de un botón "Filtros" en la toolbar y la tabla de
+// productos ocupa TODO el ancho de la card.
+//
+// Polaridad real del hijo (ecomerce-products): `openSidebar` arranca en `false`
+// y `sidebarToggle()` lo alterna; el HTML pinta `.sidebaron` en `.product-wrapper`
+// cuando es `true`. En DESKTOP esa clase era irrelevante porque
+// `assets/scss/pages/_ecommerce.scss` (media min-width:768px) fuerza
+// `.left-filter { visibility: visible; height: auto }` y la columna
+// `.catalog-sidebar-col` (col-md-4/col-lg-3) se pintaba SIEMPRE.
+//
+// Aquí, y SOLO dentro de esta pantalla (`:host ::ng-deep`), convertimos
+// `.sidebaron` en el interruptor real: mientras NO esté puesta, ocultamos la
+// columna de filtros y damos ancho completo al contenido. Al pulsar "Filtros"
+// (span `.filter-toggle`, ya cableado a `sidebarToggle()`), la clase aparece,
+// estas reglas dejan de aplicar y el layout Bootstrap original vuelve solo.
+// No se toca el .html/.scss/.ts del hijo ni el `openSidebar` desde el padre.
+// =============================================================================
+:host ::ng-deep app-ecomerce-products {
+
+  // --- Estado por defecto (filtros colapsados): tabla a ancho completo ---
+  .product-wrapper:not(.sidebaron) {
+    .catalog-sidebar-col {
+      display: none !important;
+    }
+
+    .catalog-content-col {
+      flex: 0 0 100% !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+  }
+
+  // --- Botón "Filtros" de la toolbar: visible siempre en esta pantalla ---
+  // El tema global lo esconde en desktop (`.d-none-productlist { display:none }`),
+  // así que aquí lo recuperamos y lo vestimos como el botón del mockup.
+  .feature-products .products-total .filter-toggle.d-none-productlist {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    margin: 0 !important;
+    padding: 9px 15px;
+    border: 1px solid var(--kc-line);
+    border-radius: 11px;
+    background: var(--kc-canvas);
+    color: var(--kc-ink2);
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 12.5px;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+
+    // Ícono de "sliders" (el hijo solo trae el chevron)
+    &::before {
+      content: "\f1de";
+      font-family: "Font Awesome 5 Free";
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    &:hover {
+      background: var(--kc-accent-wash);
+      border-color: #e2d9fb;
+      color: var(--kc-accent);
+    }
+
+    .ml-2 { margin: 0 !important; display: inline-flex; }
+    svg, i { width: 13px; height: 13px; }
+  }
+
+  // Filtros abiertos → el botón queda en estado "activo" (acento plano)
+  .product-wrapper.sidebaron .feature-products .products-total .filter-toggle.d-none-productlist {
+    background: var(--kc-accent-wash);
+    border-color: var(--kc-accent);
+    color: var(--kc-accent);
+  }
+}
+
+// =============================================================================
+// TAREA 5 — "Formas de Pago": la lista deja de ser interminable
+//
+// El número de métodos sale de `categoriasFormasPago` (configuración de la
+// empresa): con ~16, una tarjeta por fila arma una torre de >1000px y el botón
+// "Comprar y pagar" queda a medio kilómetro de scroll. Reducir la cantidad es
+// configuración, no CSS; aquí la lista pasa a rejilla compacta de 2 columnas y
+// se le pone tope de alto con scroll suave PROPIO, así siguen todos accesibles
+// sin descuadrar la columna derecha.
+// Va al FINAL para ganar por orden de fuente a los bloques previos de igual
+// especificidad (`:host ::ng-deep app-checkout`).
+// =============================================================================
+:host ::ng-deep app-checkout {
+
+  // Nada dentro del panel puede generar scroll horizontal
+  .order-box,
+  form.needs-validation { max-width: 100%; }
+
+  // --- Tabs COMPACTOS: envuelven, chips pequeños, sin recorte ---
+  .payment-tabs {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    padding: 4px !important;
+    overflow: visible !important;
+  }
+
+  .payment-tabs .nav-item {
+    flex: 0 1 auto !important;
+    min-width: 0;
+  }
+
+  .payment-tabs .nav-link {
+    gap: 5px;
+    padding: 6px 10px !important;
+    font-size: 11.5px !important;
+    line-height: 1.2;
+    border-radius: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    i {
+      font-size: 11.5px !important;
+      margin-right: 0 !important;
+    }
+  }
+
+  // --- Rejilla de métodos: 2 columnas + alto máximo con scroll interno ---
+  .payment-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
+    gap: 8px !important;
+    padding: 13px 4px 2px 0 !important;
+    max-height: 296px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+
+    // Barra de scroll discreta (mismo gris de la línea)
+    scrollbar-width: thin;
+    scrollbar-color: #d7dae5 transparent;
+
+    &::-webkit-scrollbar { width: 8px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb {
+      background: #d7dae5;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    &::-webkit-scrollbar-thumb:hover { background: #c2c5d4; background-clip: padding-box; }
+  }
+
+  // --- Fila de método compacta (cabe de a dos por línea) ---
+  .payment-method-card {
+    max-width: 100%;
+    gap: 10px !important;
+    padding: 10px 36px 10px 12px !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  .payment-method-card i {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px;
+    flex: 0 0 28px;
+    font-size: 0.85rem !important;
+  }
+
+  .payment-method-card span {
+    font-size: 13px !important;
+    line-height: 1.25;
+  }
+
+  .payment-method-card::before,
+  .payment-radio:checked + .payment-method-card::before {
+    right: 11px !important;
+    width: 17px !important;
+    height: 17px !important;
+  }
+}
+
+// =============================================================================
+// TAREA 6 — CATÁLOGO: toolbar limpia, paginación plana y filtros horizontales
+//
+// Todo aquí es CSS scopeado a esta pantalla (`:host ::ng-deep`): el .html/.scss
+// del hijo (app-ecomerce-products) NO se toca.
+// =============================================================================
+:host ::ng-deep app-ecomerce-products {
+
+  // ---------------------------------------------------------------------------
+  // Toolbar (.feature-products) — se queda con lo del mockup:
+  //   izquierda: botón "Filtros" + contador de resultados
+  //   derecha:   switch "Solo con stock" + select de orden
+  // Se retiran los controles que no existen en el mockup y que además salían
+  // ROTOS o deformaban la tabla:
+  //   · .square-product-setting (cuadrícula/lista): usan <i data-feather> y
+  //     feather.replace() solo corre una vez en ContentComponent.ngAfterViewInit,
+  //     mucho antes de que el catálogo se monte → dos cajas 40x40 vacías.
+  //   · .grid-options-clean (2/3/4/6 columnas): cambian `col`, y con ello las
+  //     reglas compactas del hijo, redimensionando la tabla de golpe. La tabla
+  //     de esta pantalla es siempre de una fila por producto.
+  //   · .badge.bg-success (paginación servidor) y el tooltip .fa-info-circle.
+  // ---------------------------------------------------------------------------
+  .feature-products {
+    .products-total .square-product-setting,
+    .grid-options-clean,
+    .badge.bg-success,
+    .fa-info-circle {
+      display: none !important;
+    }
+
+    // Una sola fila flex con TODOS los controles: las dos columnas Bootstrap se
+    // aplanan con `display: contents` para poder ordenarlos como el mockup
+    // (izquierda: Filtros + "N resultados" · derecha: Solo con stock + orden).
+    // `.products-total` y `.col-md-6.text-right` solo aportan layout, ningún
+    // fondo ni borde propio, así que aplanarlas no pierde estilo.
+    > .row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px 12px;
+      margin: 0 !important;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--kc-line2);
+    }
+
+    > .row > .products-total,
+    > .row > .col-md-6.text-right {
+      display: contents !important;
+    }
+
+    .products-total .filter-toggle { order: 1; }
+
+    // Contador "Mostrando productos N - M de T Resultados"
+    .col-md-6.text-right .f-w-600 {
+      order: 2;
+      margin: 0 !important;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--kc-muted);
+    }
+
+    // Indicador "Cargando…"
+    .col-md-6.text-right .text-muted {
+      order: 3;
+      margin: 0 !important;
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .select2-drpdwn-product { order: 5; }
+
+    // Switch "Solo con stock" vestido como el chip del mockup.
+    // `margin-left: auto` empuja este control y el select de orden a la derecha.
+    .form-check.form-switch {
+      order: 4;
+      display: inline-flex !important;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 0 auto !important;
+      padding: 7px 13px;
+      background: var(--kc-canvas);
+      border: 1px solid var(--kc-line);
+      border-radius: 11px;
+
+      .form-check-input {
+        float: none;
+        margin: 0;
+        width: 34px;
+        height: 20px;
+        cursor: pointer;
+        border-color: #d7dae5;
+
+        &:checked {
+          background-color: var(--kc-accent);
+          border-color: var(--kc-accent);
+        }
+        &:focus { box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.15); }
+      }
+
+      .form-check-label {
+        margin: 0;
+        font-size: 12.5px;
+        font-weight: 800;
+        color: var(--kc-ink2);
+        white-space: nowrap;
+        cursor: pointer;
+      }
+    }
+
+    // Select de orden
+    .select2-drpdwn-product {
+      margin: 0 !important;
+
+      .form-control {
+        min-width: 138px;
+        padding: 8px 13px;
+        border: 1px solid var(--kc-line);
+        border-radius: 11px;
+        background: var(--kc-canvas);
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--kc-ink2);
+        cursor: pointer;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Paginación — botones planos 32x32 radio 9, activo acento (mockup).
+  // El rótulo "Página X de Y" no existe en el DOM del hijo y no se puede
+  // inyectar por CSS: se deja solo el bloque de botones.
+  // ---------------------------------------------------------------------------
+  .pagination-wrapper {
+    nav { padding: 0; }
+
+    .pagination {
+      gap: 5px;
+      margin: 0;
+    }
+
+    .page-item {
+      margin: 0;
+
+      .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 32px;
+        padding: 0 8px;
+        margin: 0;
+        border: 1px solid #e4e5ee;
+        border-radius: 9px;
+        background: #fff;
+        color: var(--kc-ink2);
+        font-family: var(--kc-font-body);
+        font-weight: 700;
+        font-size: 13px;
+        line-height: 1;
+        box-shadow: none;
+
+        &:hover {
+          transform: none;
+          box-shadow: none;
+          background: var(--kc-accent-wash);
+          border-color: #e2d9fb;
+          color: var(--kc-accent);
+        }
+      }
+
+      &.active .page-link {
+        background: var(--kc-accent);
+        border-color: var(--kc-accent);
+        color: #fff;
+        font-weight: 800;
+        transform: none;
+        box-shadow: none;
+      }
+
+      &.disabled .page-link {
+        background: #fff;
+        border-color: #e4e5ee;
+        color: #c4c8d4;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Filtros ABIERTOS — panel HORIZONTAL de ancho completo bajo la toolbar,
+  // no la columna Bootstrap col-md-4/col-lg-3 a la izquierda que estrujaba la
+  // tabla en una card de ~660px.
+  // ---------------------------------------------------------------------------
+  .product-wrapper.sidebaron {
+    .catalog-row { display: block; }
+
+    .catalog-sidebar-col {
+      flex: 0 0 100% !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      padding: 0 !important;
+      margin-bottom: 14px;
+    }
+
+    .catalog-content-col {
+      flex: 0 0 100% !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      padding: 0 !important;
+    }
+
+    .product-sidebar .card {
+      border: 1px solid var(--kc-line);
+      border-radius: 14px;
+      background: #fbfcfe;
+      box-shadow: none;
+      margin: 0;
+    }
+
+    .product-sidebar .card-header {
+      background: transparent;
+      border-bottom: 1px solid var(--kc-line2);
+      padding: 12px 16px;
+
+      h6 {
+        font-family: var(--kc-font-head);
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--kc-ink);
+      }
+
+      i { color: var(--kc-accent); }
+    }
+
+    .filter-cards-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      padding: 16px 18px;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CARRITO VACÍO (app-carrito .cart-empty) — caja punteada del mockup.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-carrito {
+  .cart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin: 0;
+    padding: 34px 20px;
+    border: 2px dashed #e4e5ee;
+    border-radius: 14px;
+    background: #fbfcfe;
+
+    i {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: #f1f2f5;
+      color: #b7bccb;
+      font-size: 1.35rem;
+      margin: 0 0 4px;
+      opacity: 1;
+    }
+
+    p {
+      margin: 4px 0 0;
+      font-weight: 800;
+      font-size: 14.5px;
+      color: #6b7280;
+    }
+
+    small {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #9aa0b2;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ENVÍO (pedido-entrega) — reskin al lenguaje de la pantalla.
+// El hijo trae 14 usos hardcodeados de #8b5cf6 (violeta en disputa por D-131,
+// NO el acento #6C4CE0) y varios gradientes INLINE; por eso aquí hace falta
+// !important (una declaración !important de hoja de estilos gana al atributo
+// style sin !important). Solo se reviste; no se cambia estructura ni lógica.
+// -----------------------------------------------------------------------------
+:host ::ng-deep pedido-entrega {
+
+  // Encabezado "Direcciones de Entrega" — chip azul del mockup
+  .entrega-header__title i {
+    color: var(--kc-blue) !important;
+  }
+
+  .entrega-header__title h5 {
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--kc-ink) !important;
+  }
+
+  // Botones secundarios (Importar / Cargar / Plantilla): blancos con borde
+  .entrega-header__actions .btn.btn-outline-secondary {
+    background: #fff !important;
+    border: 1px solid #e4e5ee !important;
+    color: var(--kc-ink2) !important;
+    border-radius: 10px !important;
+    font-weight: 700;
+    font-size: 12.5px;
+
+    &:hover:not(:disabled) {
+      background: var(--kc-canvas) !important;
+      border-color: #e2d9fb !important;
+      color: var(--kc-accent) !important;
+    }
+  }
+
+  // Botón principal "Nueva Dirección" (inline #8b5cf6 → acento #6C4CE0)
+  .entrega-header__actions .btn[style*="8b5cf6"],
+  .btn[style*="background-color: #8b5cf6"] {
+    background-color: var(--kc-accent) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(108, 76, 224, 0.24) !important;
+  }
+
+  // Tarjeta de la dirección seleccionada: verde PLANO (sin gradiente)
+  .selected-address-card {
+    background: var(--kc-green-wash) !important;
+    border: 1px solid #cbebd8 !important;
+    border-radius: 14px !important;
+  }
+
+  // Aviso "no hay direcciones para la ciudad": ámbar plano
+  .alert.alert-warning {
+    background: var(--kc-orange-wash) !important;
+    border: 1px solid #f7e2be !important;
+    border-left: 3px solid var(--kc-orange) !important;
+    border-radius: 12px !important;
+    color: #a9660d !important;
+    font-size: 13px;
+    font-weight: 600;
+
+    i { color: var(--kc-orange) !important; }
+  }
+
+  // Íconos sueltos en violeta prohibido → acento
+  i[style*="8b5cf6"] {
+    color: var(--kc-accent) !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FIX del desglose de IVA en el panel de pago:
+// el <ul.two-column-list> vive dentro de un <li> flex, por lo que se encogía a
+// ~155px y partía las etiquetas en dos líneas (filas de 53px). Se fuerza a ancho
+// completo, filas compactas de una sola línea y sin tinte heredado de la banda
+// "TOTAL A PAGAR" (que se colaba en su última fila).
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-checkout {
+  .sub-total > li:has(.two-column-list) {
+    display: block !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .two-column-list {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    margin: 6px 0 !important;
+    padding: 10px 12px !important;
+    background: #f7f8fc !important;
+    border: 1px solid #ecedf3 !important;
+    border-radius: 11px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .two-column-list > li {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    white-space: nowrap;
+  }
+
+  .two-column-list > li .title {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #8a90a2 !important;
+    white-space: nowrap !important;
+  }
+
+  .two-column-list > li .value {
+    font-family: var(--kc-font-head) !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #6b7280 !important;
+    white-space: nowrap !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Resumen y Pago con el aspecto del diseño (SIN ocultar nada):
+//  · filas limpias (sin punteados), etiqueta muted + valor grande oscuro
+//  · el desglose de IVA se mantiene VISIBLE
+//  · banda TOTAL A PAGAR a sangre completa, valor grande en acento
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-checkout {
+  // Filas del resumen
+  .sub-total > li {
+    border: none !important;
+    padding: 12px 0 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #52586b !important;
+  }
+
+  .sub-total > li > span:first-child {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #52586b !important;
+  }
+
+  .sub-total > li .count {
+    font-family: var(--kc-font-head) !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: #2a2e3c !important;
+  }
+
+  // Separador antes de la fila de impuestos (como el diseño)
+  .sub-total > li:nth-last-child(2) {
+    border-top: 1px solid #f0f1f6 !important;
+    margin-top: 8px !important;
+    padding-top: 18px !important;
+  }
+
+  // Banda TOTAL A PAGAR — a sangre completa dentro de la tarjeta
+  .sub-total > li:last-child {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    margin: 18px -1.4rem 0 !important;
+    padding: 20px 1.4rem !important;
+    border-radius: 0 !important;
+    background: #eee9fd !important;
+    border-top: 1px solid #e2d9fb !important;
+  }
+
+  .sub-total > li:last-child > span:first-child {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px !important;
+    text-transform: uppercase !important;
+    color: #2a2e3c !important;
+  }
+
+  .sub-total > li:last-child .count {
+    font-family: var(--kc-font-head) !important;
+    font-size: 34px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    color: #6c4ce0 !important;
+  }
+
+  // "Formas de Pago" queda como segunda tarjeta, separada de la banda
+  form.needs-validation {
+    margin-top: 20px !important;
+    padding-top: 4px !important;
+    border-top: none !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Resumen y Pago con el aspecto del diseño (SIN quitar elementos):
+//  · filas limpias (sin punteados), etiqueta muted + valor grande oscuro
+//  · el desglose de IVA se mantiene visible, discreto, dentro de su caja
+//  · banda TOTAL A PAGAR a sangre completa con el valor grande en acento
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-checkout {
+  // Filas del resumen
+  .sub-total > li {
+    border: none !important;
+    padding: 12px 0 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #52586b !important;
+  }
+
+  .sub-total > li > span:first-child {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #52586b !important;
+  }
+
+  .sub-total > li .count {
+    font-family: var(--kc-font-head) !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: #2a2e3c !important;
+  }
+
+  // Caja del desglose de IVA: se conserva, más discreta y compacta
+  .sub-total > li:has(.two-column-list) {
+    padding: 4px 0 !important;
+  }
+
+  // Separador antes de la fila de total de impuestos (como el diseño)
+  .sub-total > li:nth-last-child(2) {
+    border-top: 1px solid #f0f1f6 !important;
+    margin-top: 8px !important;
+    padding-top: 18px !important;
+  }
+
+  // Banda TOTAL A PAGAR — a sangre completa dentro de la tarjeta
+  .sub-total > li:last-child {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    margin: 18px -1.4rem 0 !important;
+    padding: 20px 1.4rem !important;
+    border-radius: 0 !important;
+    background: #eee9fd !important;
+    border-top: 1px solid #e2d9fb !important;
+  }
+
+  .sub-total > li:last-child > span:first-child {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px !important;
+    text-transform: uppercase !important;
+    color: #2a2e3c !important;
+  }
+
+  .sub-total > li:last-child .count {
+    font-family: var(--kc-font-head) !important;
+    font-size: 34px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    color: #6c4ce0 !important;
+  }
+
+  // "Formas de Pago" queda como segunda tarjeta, separada de la banda
+  form.needs-validation {
+    margin-top: 20px !important;
+    padding-top: 4px !important;
+    border-top: none !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Menos padding en el panel: el checkout venía con su propia tarjeta
+// (.checkout-details) dentro de la card de la pantalla, sumando 3 niveles de
+// relleno. Se aplana: la card de la pantalla es la única tarjeta.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-checkout {
+  .checkout {
+    margin-top: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .checkout-details {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    position: static !important;
+    background: transparent !important;
+  }
+
+  .order-box {
+    padding: 0 !important;
+  }
+
+  // Filas un poco más compactas
+  .sub-total > li {
+    padding: 9px 0 !important;
+  }
+
+  .sub-total > li:nth-last-child(2) {
+    margin-top: 4px !important;
+    padding-top: 14px !important;
+  }
+
+  // La banda del total va a sangre respecto al padding de la card (22px)
+  .sub-total > li:last-child {
+    margin: 14px -22px 0 !important;
+    padding: 18px 22px !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// COMPACTAR el panel de Resumen y Pago: cada fila traía margin-bottom:20px
+// (+18px de padding) = 60px por fila, y el gutter de Bootstrap metía 40px extra
+// arriba. Se elimina ese aire para que se lea como el diseño.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-checkout {
+  .checkout .row {
+    margin: 0 !important;
+  }
+
+  .checkout .row > .col-lg-6:last-child {
+    padding: 0 !important;
+  }
+
+  .sub-total {
+    margin: 0 !important;
+  }
+
+  .sub-total > li {
+    margin: 0 !important;
+    padding: 8px 0 !important;
+  }
+
+  // Separación mínima antes de la fila de impuestos
+  .sub-total > li:nth-last-child(2) {
+    margin-top: 2px !important;
+    padding-top: 12px !important;
+  }
+
+  // Caja del desglose de IVA pegada a su fila
+  .sub-total > li:has(.two-column-list) {
+    padding: 2px 0 !important;
+  }
+
+  .two-column-list {
+    margin: 4px 0 !important;
+    padding: 9px 12px !important;
+    gap: 4px !important;
+  }
+
+  // Banda del total, sin aire de más
+  .sub-total > li:last-child {
+    margin: 10px -22px 0 !important;
+    padding: 16px 22px !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// PEGAR el contenido a los márgenes de la card: se acumulaban 74px por lado
+// (22 de la card + 12 del .container-fluid + 40 de .checkout-details).
+// Se dejan solo los 22px de la card.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-checkout {
+  .container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .checkout-details {
+    padding: 0 !important;
+  }
+
+  .checkout {
+    padding: 0 !important;
+  }
+}
+
+// La card del panel derecho también respira menos por dentro
+.va-col-side .va-card {
+  padding: 18px 18px !important;
+}
+
+:host ::ng-deep app-checkout .sub-total > li:last-child {
+  margin-left: -18px !important;
+  margin-right: -18px !important;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+}
+
+// -----------------------------------------------------------------------------
+// Ajustes finos pedidos: menos padding en las cards, buscador de cliente más
+// alto (venía en 30px con letra de 11px) y botón "Nuevo Cliente" a la misma
+// altura para que queden parejos.
+// -----------------------------------------------------------------------------
+.va-card {
+  padding: 18px !important;
+}
+
+// --- Cliente: input y botón parejos ---
+.autocomplete-container {
+  ::ng-deep .p-autocomplete,
+  ::ng-deep .p-autocomplete-input,
+  input {
+    height: 42px !important;
+    font-size: 14px !important;
+  }
+
+  ::ng-deep .p-autocomplete-input,
+  input {
+    padding: 0 14px 0 38px !important;
+    border-radius: 12px !important;
+  }
+}
+
+.new-client-btn {
+  height: 42px !important;
+  padding: 0 16px !important;
+  font-size: 13px !important;
+}
+
+// --- Carrito: sin tanto aire ---
+:host ::ng-deep app-carrito {
+  .cart-empty {
+    padding: 24px 16px !important;
+  }
+
+  .cart-table thead th {
+    padding: 10px 12px !important;
+  }
+
+  .cart-row td {
+    padding: 10px 12px !important;
+  }
+
+  .cart-footer {
+    padding: 12px 14px !important;
+  }
+}
+
+// --- Catálogo: pegado a los márgenes de su card ---
+:host ::ng-deep app-ecomerce-products {
+  > .container-fluid,
+  .container-fluid.product-wrapper {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .product-wrapper-grid {
+    padding: 0 !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FIX FUNCIONAL: el botón "Agregar" del catálogo se salía de la fila (x=893 con
+// la fila terminando en 850) y quedaba cortado por overflow:hidden, así que no
+// se podía añadir al carrito. Se permite que el nombre encoja y se ancla el
+// bloque de acciones al final de la fila.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-ecomerce-products .product-wrapper-grid {
+  .product-card-modern {
+    overflow: visible !important;
+  }
+
+  .product-box-modern {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    gap: 10px !important;
+    padding-right: 4px !important;
+  }
+
+  // El nombre es lo único que cede espacio
+  .product-title-modern {
+    flex: 1 1 auto !important;
+    min-width: 80px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .product-meta,
+  .product-reference,
+  .stock-badge-simple,
+  .product-pricing-modern,
+  .product-pricing-modern .price-main {
+    flex: 0 0 auto !important;
+  }
+
+  // Acciones ancladas a la derecha, dentro de la fila
+  .product-actions-overlay {
+    position: static !important;
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+    inset: auto !important;
+    background: transparent !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    gap: 6px !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// La fila del catálogo sumaba 695px en 628px disponibles y empujaba el botón
+// "Agregar" fuera. Se permite que el nombre y la referencia cedan espacio
+// (misma especificidad que las reglas previas, ganando por orden de fuente).
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-ecomerce-products .product-wrapper-grid .product-card-modern {
+  .product-box-modern {
+    gap: 8px !important;
+  }
+
+  .product-title-modern {
+    min-width: 70px !important;
+    flex: 1 1 auto !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .product-meta {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .product-pricing-modern {
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+  }
+
+  .product-actions-overlay {
+    margin-left: auto !important;
+    flex: 0 0 auto !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Tope de altura para la lista del catálogo: scrollea dentro de su propia caja
+// en vez de estirar la página. La toolbar (Filtros / Solo con stock) y la
+// paginación quedan fuera del área que scrollea.
+// -----------------------------------------------------------------------------
+:host ::ng-deep app-ecomerce-products .product-wrapper-grid > .row {
+  max-height: 380px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #d7d9e3;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #c2c5d4;
+    background-clip: padding-box;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Carga por sección en vez de overlay global (el overlay se silencia desde el
+// .ts con LoaderService.suppressGlobalLoader()). El bloque de carga propio del
+// catálogo se muestra como ESQUELETO (filas shimmer) en lugar de un spinner.
+// -----------------------------------------------------------------------------
+@keyframes va-skeleton-shimmer {
+  0% { background-position: -420px 0; }
+  100% { background-position: 420px 0; }
+}
+
+:host ::ng-deep app-ecomerce-products {
+  // Bloque "Cargando productos..." del hijo
+  .text-center.py-5:has(.spinner-border) {
+    padding: 0 !important;
+    text-align: left !important;
+
+    // Se ocultan spinner y texto: en su lugar van las filas fantasma
+    .spinner-border,
+    p {
+      display: none !important;
+    }
+
+    &::before {
+      content: "";
+      display: block;
+      height: 300px;
+      border-radius: 14px;
+      background-color: #f4f5f9;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        #f4f5f9 0,
+        #f4f5f9 58px,
+        #ffffff 58px,
+        #ffffff 60px
+      );
+      position: relative;
+      overflow: hidden;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.65) 50%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      background-size: 420px 100%;
+      background-repeat: no-repeat;
+      animation: va-skeleton-shimmer 1.1s linear infinite;
+      pointer-events: none;
+    }
+  }
+
+  // El contenedor necesita posición para el shimmer
+  .product-wrapper-grid {
+    position: relative;
+  }
+}
+
+// =============================================================================
+// FIX — Botón "Comprar y pagar": la etiqueta quedaba invisible
+//
+// El reset global (_reset.scss) pinta TODO <span *ngIf> con
+// `span.ng-star-inserted { color: $secondary-color }` (#4555D1). Dentro del
+// botón morado ese azul-violeta se confunde con el fondo y el texto desaparece.
+// No se toca el reset (es global y afecta a toda la app): se neutraliza solo
+// aquí, en el botón de esta pantalla.
+// =============================================================================
+:host ::ng-deep app-checkout .order-place .btn {
+  &,
+  span,
+  span.ng-star-inserted,
+  i {
+    color: #ffffff !important;
+  }
+
+  // Estado deshabilitado legible: en vez de bajar la opacidad del morado
+  // (texto blanco lavado), fondo lila muy suave con texto gris-lila.
+  &:disabled,
+  &[disabled] {
+    background: #ece7fb !important;
+    border-color: #ece7fb !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    cursor: not-allowed;
+
+    &,
+    span,
+    span.ng-star-inserted,
+    i {
+      color: #9a92bd !important;
+    }
+  }
+}
+
+// =============================================================================
+// CONFIRMACIÓN DEL PEDIDO — tras crear, el formulario se oculta y esto es lo
+// único que queda en pantalla. Debe leerse como un acuse claro.
+// =============================================================================
+.step6-section.step6-success {
+  // El encabezado de la app es fijo: sin este margen el scroll automático deja
+  // la banda verde de confirmación tapada por la barra superior.
+  scroll-margin-top: 84px;
+  background: #ffffff;
+  border: 1px solid #dff0e5;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(33, 31, 58, 0.06);
+
+  .section-header.section-header-success {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    background: #e9f8ef;
+    border-bottom: 1px solid #dff0e5;
+    font-family: var(--kc-font-head);
+    font-size: 17px;
+    font-weight: 700;
+    color: #14804a;
+
+    i {
+      font-size: 20px;
+      color: #17994f;
+    }
+
+    .order-badge {
+      margin-left: auto;
+      background: #ffffff;
+      border: 1px solid #cfeadb;
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-family: var(--kc-font-body);
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #14804a;
+      white-space: nowrap;
+    }
+  }
+
+  .section-content {
+    padding: 18px 20px;
+  }
+}
+
+.step6-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 28px;
+
+  .btn {
+    border-radius: 13px;
+    padding: 0.75rem 1.6rem;
+    font-family: var(--kc-font-body);
+    font-size: 14.5px;
+    font-weight: 800;
+  }
+
+  .btn-primary {
+    background: var(--kc-accent);
+    border-color: var(--kc-accent);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(108, 76, 224, 0.28);
+
+    &:hover { filter: brightness(1.05); }
+  }
+
+  .btn-outline-secondary {
+    background: #fff;
+    border-color: var(--kc-line);
+    color: var(--kc-ink);
+
+    &:hover {
+      border-color: var(--kc-accent);
+      color: var(--kc-accent);
+      background: #f6f4ff;
+    }
+  }
+}

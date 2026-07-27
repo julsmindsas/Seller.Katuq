@@ -1,4 +1,4 @@
-$primary:      #8b5cf6;
+$primary:      #6c4ce0;
 $primary-bg:   #ede9fe;
 $border-color: #e9ecef;
 $text-dark:    #333;
@@ -114,7 +114,7 @@ $bg-light:     #f8f9fa;
       height: 22px;
       border-radius: 6px;
       background: $primary-bg;
-      color: #7c3aed;
+      color: #533bc4;
       font-size: 0.75rem;
     }
 
@@ -225,8 +225,8 @@ $bg-light:     #f8f9fa;
       border-color: $primary;
 
       &:hover:not(:disabled) {
-        background: #7c3aed;
-        border-color: #7c3aed;
+        background: #533bc4;
+        border-color: #533bc4;
       }
 
       &:disabled {
@@ -284,7 +284,7 @@ $bg-light:     #f8f9fa;
   user-select: none;
 
   &:hover {
-    border-color: #a78bfa;
+    border-color: #8c6bff;
     background: #f5f3ff;
     color: #5b21b6;
   }

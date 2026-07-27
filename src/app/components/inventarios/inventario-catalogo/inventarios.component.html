@@ -2,206 +2,161 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-12">
-            <!-- Card principal -->
-            <div class="card shadow-sm">
+            <!-- Contenedor principal -->
+            <div class="inv-shell">
                 <!-- Loader -->
                 <div class="loader-box" *ngIf="cargando || loadingConsolidado">
                     <div class="loader-8"></div>
                 </div>
 
-                <!-- Header moderno estilo Katuq - Minimalista -->
-                <div class="module-header px-4 py-3 border-bottom"
-                     style="background: #f8fafc; border-left: 4px solid #5c6ac4;">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap">
-                        <div class="mb-2 mb-md-0">
-                            <h4 class="mb-1 fw-bold text-dark">
-                                <i class="pi pi-th-large me-2 text-primary"></i>{{ 'Inventario Consolidado' | translate }}
-                            </h4>
-                            <p class="text-muted small mb-0">
-                                {{ 'Vista unificada de stock en todas tus bodegas' | translate }}
-                            </p>
+                <!-- Encabezado del módulo -->
+                <div class="inv-header">
+                    <div class="inv-header-id">
+                        <span class="inv-header-icon"><i class="pi pi-th-large"></i></span>
+                        <div>
+                            <div class="inv-header-title">{{ 'Inventario Consolidado' | translate }}</div>
+                            <div class="inv-header-sub">{{ 'Vista unificada de stock en todas tus bodegas' | translate }}</div>
                         </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <!-- Botón Refrescar -->
-                            <button pButton type="button"
-                                    icon="pi pi-refresh"
-                                    class="p-button-rounded p-button-outlined"
-                                    style="border-color: #5c6ac4; color: #5c6ac4; width: 2.5rem; height: 2.5rem;"
-                                    (click)="cargarInventarioConsolidado()"
-                                    [disabled]="loadingConsolidado"
-                                    pTooltip="Actualizar datos"></button>
-                            <!-- Botón Reparar Inventario (corrige duplicados/idBodega/huérfanos) -->
-                            <button pButton type="button"
-                                    icon="pi pi-wrench"
-                                    class="p-button-rounded p-button-outlined p-button-warning"
-                                    style="width: 2.5rem; height: 2.5rem;"
-                                    (click)="repararInventario()"
-                                    [disabled]="loadingConsolidado || reparandoInventario"
-                                    pTooltip="Reparar inventario (deduplicar, corregir idBodega, eliminar huérfanos)"
-                                    tooltipPosition="bottom"></button>
-                            <!-- Botón Eliminar Inventario (temporal/admin) -->
-                            <button pButton type="button"
-                                    icon="pi pi-trash"
-                                    class="p-button-rounded p-button-outlined p-button-danger"
-                                    style="width: 2.5rem; height: 2.5rem;"
-                                    (click)="eliminarTodoElInventario()"
-                                    [disabled]="loadingConsolidado"
-                                    pTooltip="Eliminar todo el inventario del comercio"
-                                    tooltipPosition="bottom"></button>
-                            <!-- Botón Importar Inventario -->
-                            <button pButton type="button"
-                                    icon="pi pi-upload"
-                                    label="Importar"
-                                    class="p-button-outlined p-button-sm"
-                                    style="border-color: #5c6ac4; color: #5c6ac4;"
-                                    (click)="showImportModal = true"
-                                    pTooltip="Importar inventario desde Excel"
-                                    tooltipPosition="bottom"></button>
-                            <!-- Botón Análisis IA -->
-                            <button pButton type="button"
-                                    icon="pi pi-bolt"
-                                    label="IA"
-                                    class="p-button-sm"
-                                    style="background: #5c6ac4; border-color: #5c6ac4;"
-                                    (click)="analizarConIA()"
-                                    [disabled]="analizandoIA || loadingConsolidado || bodegasConsolidadas.length === 0"
-                                    [loading]="analizandoIA"
-                                    pTooltip="Analizar inventario con IA"
-                                    tooltipPosition="bottom"></button>
-                            <!-- Dropdown Acciones -->
-                            <p-menu #accionesMenu [model]="accionesMenuItems" [popup]="true" [appendTo]="'body'"></p-menu>
-                            <button pButton type="button"
-                                    icon="pi pi-ellipsis-v"
-                                    label="Acciones"
-                                    class="p-button-outlined p-button-sm"
-                                    (click)="accionesMenu.toggle($event)"
-                                    [disabled]="loadingConsolidado"
-                                    pTooltip="Acciones disponibles (exportar, etc.)"
-                                    tooltipPosition="bottom"></button>
-                            <!-- Última análisis IA -->
-                            <span *ngIf="iaLastAnalysis" class="badge d-flex align-items-center gap-1"
-                                  style="background: #e8eaf6; color: #5c6ac4; font-size: 0.75rem;">
-                                <i class="pi pi-clock"></i>
-                                {{ iaLastAnalysis | date:'shortTime' }}
-                            </span>
-                        </div>
+                    </div>
+
+                    <div class="inv-header-actions">
+                        <!-- Refrescar -->
+                        <button type="button" class="inv-iconbtn"
+                                (click)="cargarInventarioConsolidado()"
+                                [disabled]="loadingConsolidado"
+                                pTooltip="Actualizar datos" tooltipPosition="bottom">
+                            <i class="pi" [ngClass]="loadingConsolidado ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+                        </button>
+
+                        <!-- Reparar inventario (deduplicar, corregir idBodega, huérfanos) -->
+                        <button type="button" class="inv-iconbtn is-warning"
+                                (click)="repararInventario()"
+                                [disabled]="loadingConsolidado || reparandoInventario"
+                                pTooltip="Reparar inventario (deduplicar, corregir idBodega, eliminar huérfanos)"
+                                tooltipPosition="bottom">
+                            <i class="pi" [ngClass]="reparandoInventario ? 'pi-spin pi-spinner' : 'pi-wrench'"></i>
+                        </button>
+
+                        <!-- Eliminar todo el inventario (admin) -->
+                        <button type="button" class="inv-iconbtn is-danger"
+                                (click)="eliminarTodoElInventario()"
+                                [disabled]="loadingConsolidado"
+                                pTooltip="Eliminar todo el inventario del comercio"
+                                tooltipPosition="bottom">
+                            <i class="pi pi-trash"></i>
+                        </button>
+
+                        <!-- Importar -->
+                        <button type="button" class="inv-btn"
+                                (click)="showImportModal = true"
+                                pTooltip="Importar inventario desde Excel" tooltipPosition="bottom">
+                            <i class="pi pi-upload inv-ico-accent"></i>
+                            Importar
+                        </button>
+
+                        <!-- Análisis con IA -->
+                        <button type="button" class="inv-btn is-primary"
+                                (click)="analizarConIA()"
+                                [disabled]="analizandoIA || loadingConsolidado || bodegasConsolidadas.length === 0"
+                                pTooltip="Analizar inventario con IA" tooltipPosition="bottom">
+                            <i class="pi" [ngClass]="analizandoIA ? 'pi-spin pi-spinner' : 'pi-bolt'"></i>
+                            IA
+                        </button>
+
+                        <!-- Acciones -->
+                        <p-menu #accionesMenu [model]="accionesMenuItems" [popup]="true" [appendTo]="'body'"></p-menu>
+                        <button type="button" class="inv-btn is-accent"
+                                (click)="accionesMenu.toggle($event)"
+                                [disabled]="loadingConsolidado"
+                                pTooltip="Acciones disponibles (exportar, etc.)" tooltipPosition="bottom">
+                            <i class="pi pi-ellipsis-v"></i>
+                            Acciones
+                        </button>
+
+                        <!-- Hora del último análisis IA -->
+                        <span *ngIf="iaLastAnalysis" class="inv-iachip">
+                            <i class="pi pi-clock"></i>
+                            {{ iaLastAnalysis | date:'shortTime' }}
+                        </span>
                     </div>
                 </div>
 
-                <!-- Barra de estadísticas -->
-                <div class="stats-bar px-4 py-3 bg-light border-bottom" *ngIf="productosConsolidados.length > 0">
-                    <div class="row g-2">
-                        <!-- Valor Total del Inventario - DESTACADO -->
-                        <div class="col-lg-2 col-md-6">
-                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #5c6ac4 !important;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h3 class="mb-0 fw-bold" style="color: #5c6ac4;">{{ formatearValorAbreviado(getMetricaValorTotal()) }}</h3>
-                                        <small class="text-muted">Valor Total Inventario</small>
-                                    </div>
-                                    <i class="pi pi-dollar" style="font-size: 1.75rem; opacity: 0.4; color: #5c6ac4;"></i>
-                                </div>
-                            </div>
+                <!-- Indicadores -->
+                <div class="inv-stats" *ngIf="productosConsolidados.length > 0">
+                    <div class="inv-stat is-accent">
+                        <div class="inv-stat-body">
+                            <div class="inv-stat-value">{{ formatearValorAbreviado(getMetricaValorTotal()) }}</div>
+                            <div class="inv-stat-label">Valor total inventario</div>
                         </div>
-                        <!-- Total Productos -->
-                        <div class="col-lg-2 col-md-6">
-                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-primary border-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h3 class="mb-0 fw-bold text-primary">{{ totalItems }}</h3>
-                                        <small class="text-muted">SKUs</small>
-                                    </div>
-                                    <i class="pi pi-box text-primary" style="font-size: 1.5rem; opacity: 0.4;"></i>
-                                </div>
-                            </div>
+                        <i class="pi pi-dollar"></i>
+                    </div>
+
+                    <div class="inv-stat is-blue">
+                        <div class="inv-stat-body">
+                            <div class="inv-stat-value">{{ totalItems | number }}</div>
+                            <div class="inv-stat-label">SKUs</div>
                         </div>
-                        <!-- Unidades en Stock -->
-                        <div class="col-lg-2 col-md-4">
-                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-success border-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h3 class="mb-0 fw-bold text-success">{{ getMetricaUnidades() | number }}</h3>
-                                        <small class="text-muted">Unidades</small>
-                                    </div>
-                                    <i class="pi pi-check-circle text-success" style="font-size: 1.5rem; opacity: 0.4;"></i>
-                                </div>
-                            </div>
+                        <i class="pi pi-box"></i>
+                    </div>
+
+                    <div class="inv-stat is-green">
+                        <div class="inv-stat-body">
+                            <div class="inv-stat-value">{{ getMetricaUnidades() | number }}</div>
+                            <div class="inv-stat-label">Unidades</div>
                         </div>
-                        <!-- Stock Bajo -->
-                        <div class="col-lg-2 col-md-4">
-                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-warning border-2 cursor-pointer"
-                                 (click)="filtrosConsolidados.estadoStock = 'bajos'; aplicarFiltrosYResetear()"
-                                 pTooltip="Click para filtrar">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h3 class="mb-0 fw-bold text-warning">{{ getMetricaProductosBajoStock() }}</h3>
-                                        <small class="text-muted">Stock Bajo</small>
-                                    </div>
-                                    <i class="pi pi-exclamation-triangle text-warning" style="font-size: 1.5rem; opacity: 0.4;"></i>
-                                </div>
-                            </div>
+                        <i class="pi pi-check-circle"></i>
+                    </div>
+
+                    <div class="inv-stat is-amber is-clickable"
+                         (click)="filtrosConsolidados.estadoStock = 'bajos'; aplicarFiltrosYResetear()"
+                         pTooltip="Click para filtrar">
+                        <div class="inv-stat-body">
+                            <div class="inv-stat-value">{{ getMetricaProductosBajoStock() | number }}</div>
+                            <div class="inv-stat-label">Stock bajo</div>
                         </div>
-                        <!-- Agotados -->
-                        <div class="col-lg-2 col-md-4">
-                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-danger border-2 cursor-pointer"
-                                 (click)="filtrosConsolidados.estadoStock = 'agotados'; aplicarFiltrosYResetear()"
-                                 pTooltip="Click para filtrar">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h3 class="mb-0 fw-bold text-danger">{{ getMetricaProductosSinStock() }}</h3>
-                                        <small class="text-muted">Agotados</small>
-                                    </div>
-                                    <i class="pi pi-times-circle text-danger" style="font-size: 1.5rem; opacity: 0.4;"></i>
-                                </div>
-                            </div>
+                        <i class="pi pi-exclamation-triangle"></i>
+                    </div>
+
+                    <div class="inv-stat is-red is-clickable"
+                         (click)="filtrosConsolidados.estadoStock = 'agotados'; aplicarFiltrosYResetear()"
+                         pTooltip="Click para filtrar">
+                        <div class="inv-stat-body">
+                            <div class="inv-stat-value">{{ getMetricaProductosSinStock() | number }}</div>
+                            <div class="inv-stat-label">Agotados</div>
                         </div>
-                        <!-- Sin inventario -->
-                        <div class="col-lg-2 col-md-4">
-                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-secondary border-2 cursor-pointer"
-                                 (click)="filtrosConsolidados.estadoStock = 'sinInventario'; aplicarFiltrosYResetear()"
-                                 pTooltip="Referencias sin ningún registro de inventario">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h3 class="mb-0 fw-bold text-secondary">{{ getMetricaSinInventario() }}</h3>
-                                        <small class="text-muted">Sin inventario</small>
-                                    </div>
-                                    <i class="pi pi-inbox text-secondary" style="font-size: 1.5rem; opacity: 0.4;"></i>
-                                </div>
-                            </div>
+                        <i class="pi pi-times-circle"></i>
+                    </div>
+
+                    <div class="inv-stat is-gray is-clickable"
+                         (click)="filtrosConsolidados.estadoStock = 'sinInventario'; aplicarFiltrosYResetear()"
+                         pTooltip="Referencias sin ningún registro de inventario">
+                        <div class="inv-stat-body">
+                            <div class="inv-stat-value">{{ getMetricaSinInventario() | number }}</div>
+                            <div class="inv-stat-label">Sin inventario</div>
                         </div>
+                        <i class="pi pi-inbox"></i>
                     </div>
                 </div>
 
-                <!-- Panel de Resumen IA - Se muestra después del análisis -->
-                <div class="ia-summary-bar px-4 py-2 border-bottom animate__animated animate__fadeIn"
-                     *ngIf="iaMetricasGlobales?.saludInventario"
+                <!-- Resumen del análisis con IA -->
+                <div class="inv-ia" *ngIf="iaMetricasGlobales?.saludInventario"
                      [ngClass]="{
-                         'bg-success': iaMetricasGlobales.saludInventario === 'BUENA',
-                         'bg-warning': iaMetricasGlobales.saludInventario === 'REGULAR',
-                         'bg-danger': iaMetricasGlobales.saludInventario === 'CRITICA'
-                     }"
-                     style="background: linear-gradient(90deg, var(--bg-color, #28a745) 0%, rgba(255,255,255,0.9) 100%);">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="badge fs-6 text-white"
-                                  [ngClass]="{
-                                      'bg-success': iaMetricasGlobales.saludInventario === 'BUENA',
-                                      'bg-warning text-dark': iaMetricasGlobales.saludInventario === 'REGULAR',
-                                      'bg-danger': iaMetricasGlobales.saludInventario === 'CRITICA'
-                                  }">
-                                <i class="pi pi-bolt me-1"></i>
-                                Salud: {{ iaMetricasGlobales.saludInventario }}
-                            </span>
-                            <span *ngIf="iaMetricasGlobales.bodegaCritica" class="text-danger fw-semibold bg-white px-2 py-1 rounded">
-                                <i class="pi pi-exclamation-triangle me-1"></i>
-                                Bodega crítica: {{ getNombreBodegaById(iaMetricasGlobales.bodegaCritica) }}
-                            </span>
-                        </div>
-                        <div class="text-dark small fst-italic flex-grow-1 text-end bg-white bg-opacity-75 px-2 py-1 rounded" style="max-width: 60%;">
-                            <i class="pi pi-info-circle me-1"></i>
-                            {{ iaMetricasGlobales.resumenEjecutivo }}
-                        </div>
-                    </div>
+                         'is-good': iaMetricasGlobales.saludInventario === 'BUENA',
+                         'is-regular': iaMetricasGlobales.saludInventario === 'REGULAR',
+                         'is-critical': iaMetricasGlobales.saludInventario === 'CRITICA'
+                     }">
+                    <span class="inv-ia-badge">
+                        <i class="pi pi-bolt"></i>
+                        Salud: {{ iaMetricasGlobales.saludInventario }}
+                    </span>
+                    <span *ngIf="iaMetricasGlobales.bodegaCritica" class="inv-ia-warn">
+                        <i class="pi pi-exclamation-triangle"></i>
+                        Bodega crítica: {{ getNombreBodegaById(iaMetricasGlobales.bodegaCritica) }}
+                    </span>
+                    <span class="inv-ia-text">
+                        <i class="pi pi-info-circle"></i>
+                        {{ iaMetricasGlobales.resumenEjecutivo }}
+                    </span>
                 </div>
 
                 <div class="card-body">
@@ -210,30 +165,24 @@
                         <!-- Tab 1: Inventario Consolidado (NUEVO) -->
                         <p-tabPanel header="Inventario Consolidado" leftIcon="pi pi-th-large">
 
-                            <!-- Barra de Filtros - Diseño limpio -->
-                            <div class="filters-bar mb-3 p-3 bg-white rounded border shadow-sm">
-                                <!-- Fila 1: Filtros -->
-                                <div class="row g-2 align-items-end mb-2">
+                            <!-- Barra de filtros -->
+                            <div class="inv-filters">
+                                <div class="inv-filters-row">
                                     <!-- Buscador -->
-                                    <div class="col-6 col-md-3">
-                                        <label class="form-label small text-muted mb-1">
-                                            <i class="pi pi-search me-1"></i>Buscar
-                                        </label>
-                                        <input pInputText
-                                               type="text"
+                                    <div class="inv-field">
+                                        <label for="inv-buscar"><i class="pi pi-search"></i>Buscar</label>
+                                        <input id="inv-buscar" type="text"
                                                [(ngModel)]="filtrosConsolidados.busqueda"
                                                (input)="onBusquedaConsolidadoInput()"
                                                (keyup.enter)="aplicarFiltrosYResetear()"
-                                               placeholder="Nombre o referencia..."
-                                               class="w-100 p-inputtext-sm">
+                                               placeholder="Nombre o referencia…"
+                                               autocomplete="off">
                                     </div>
 
-                                    <!-- Estado de Stock -->
-                                    <div class="col-6 col-md-2">
-                                        <label class="form-label small text-muted mb-1">
-                                            <i class="pi pi-chart-bar me-1"></i>Estado
-                                        </label>
-                                        <select class="form-select form-select-sm"
+                                    <!-- Estado de stock -->
+                                    <div class="inv-field">
+                                        <label for="inv-estado"><i class="pi pi-chart-bar"></i>Estado</label>
+                                        <select id="inv-estado"
                                                 [(ngModel)]="filtrosConsolidados.estadoStock"
                                                 (change)="aplicarFiltrosYResetear()">
                                             <option value="">Todos</option>
@@ -245,24 +194,20 @@
                                         </select>
                                     </div>
 
-                                    <!-- Filtro por Bodega -->
-                                    <div class="col-6 col-md-2">
-                                        <label class="form-label small text-muted mb-1">
-                                            <i class="pi pi-box me-1"></i>Bodega
-                                        </label>
-                                        <select class="form-select form-select-sm"
+                                    <!-- Bodega -->
+                                    <div class="inv-field">
+                                        <label for="inv-bodega"><i class="pi pi-box"></i>Bodega</label>
+                                        <select id="inv-bodega"
                                                 [(ngModel)]="filtrosConsolidados.bodegaId"
                                                 (change)="aplicarFiltrosYResetear()">
                                             <option *ngFor="let b of opcionesBodegasFiltro" [value]="b.value">{{ b.label }}</option>
                                         </select>
                                     </div>
 
-                                    <!-- Filtro Fulfillment -->
-                                    <div class="col-6 col-md-2" *ngIf="fulfillmentEnabled">
-                                        <label class="form-label small text-muted mb-1">
-                                            <i class="pi pi-cloud me-1"></i>Fulfillment
-                                        </label>
-                                        <select class="form-select form-select-sm"
+                                    <!-- Fulfillment -->
+                                    <div class="inv-field" *ngIf="fulfillmentEnabled">
+                                        <label for="inv-fulfillment"><i class="pi pi-cloud"></i>Fulfillment</label>
+                                        <select id="inv-fulfillment"
                                                 [(ngModel)]="filtrosConsolidados.fulfillment"
                                                 (change)="aplicarFiltrosYResetear()">
                                             <option value="">Todos</option>
@@ -271,115 +216,93 @@
                                         </select>
                                     </div>
 
-                                    <!-- Limpiar filtros -->
-                                    <div class="col-auto">
-                                        <button pButton type="button"
-                                                icon="pi pi-filter-slash"
-                                                class="p-button-sm p-button-text p-button-secondary"
+                                    <div class="inv-filters-end">
+                                        <button type="button" class="inv-iconbtn"
                                                 (click)="limpiarFiltrosConsolidados()"
                                                 [disabled]="!hayFiltrosActivos()"
-                                                pTooltip="Limpiar filtros">
+                                                pTooltip="Limpiar filtros" tooltipPosition="bottom">
+                                            <i class="pi pi-filter-slash"></i>
                                         </button>
-                                    </div>
-
-                                    <!-- Contador -->
-                                    <div class="col-auto ms-auto">
-                                        <span class="badge py-2 px-3"
-                                              style="background: #5c6ac4; font-size: 0.85rem;">
-                                            {{ productosConsolidadosFiltrados.length }}
-                                            <span class="d-none d-sm-inline text-white-50">/ {{ productosConsolidados.length }}</span>
+                                        <span class="inv-counter">
+                                            {{ productosConsolidadosFiltrados.length | number }}
+                                            <span>/ {{ productosConsolidados.length | number }}</span>
                                         </span>
                                     </div>
                                 </div>
 
-                                <!-- Fila 2: Acciones (solo si hay fulfillment) -->
-                                <div class="d-flex align-items-center gap-2 pt-2 border-top" *ngIf="fulfillmentEnabled">
-                                    <!-- Sync por bodega -->
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="text-muted small d-none d-md-inline">
-                                            <i class="pi pi-sync me-1"></i>Sincronizar:
-                                        </span>
-                                        <p-dropdown [options]="getBodegasConFulfillment()"
-                                                    [(ngModel)]="bodegaSyncSeleccionada"
-                                                    optionLabel="nombre"
-                                                    placeholder="Bodega..."
-                                                    [style]="{'min-width': '150px'}"
-                                                    styleClass="p-inputtext-sm"
-                                                    [showClear]="true"
-                                                    appendTo="body">
-                                        </p-dropdown>
-                                        <button pButton type="button"
-                                                icon="pi pi-sync"
-                                                [label]="syncingAllProducts ? syncAllProgress.current + '/' + syncAllProgress.total : 'Bodega'"
-                                                class="p-button-sm p-button-outlined"
-                                                style="border-color: #5c6ac4; color: #5c6ac4;"
-                                                (click)="syncBodegaDesdeConsolidada()"
-                                                [disabled]="syncingAllProducts || !bodegaSyncSeleccionada"
-                                                [loading]="syncingAllProducts"
-                                                pTooltip="Sincronizar productos de esta bodega">
-                                        </button>
-                                        <button pButton type="button"
-                                                icon="pi pi-cloud-download"
-                                                [label]="syncingAllProducts ? '' : 'Todo'"
-                                                class="p-button-sm"
-                                                style="background: #5c6ac4; border-color: #5c6ac4;"
-                                                (click)="syncAllProductsFulfillment()"
-                                                [disabled]="syncingAllProducts"
-                                                [loading]="syncingAllProducts"
-                                                pTooltip="Sincronizar todos los productos con fulfillment">
-                                        </button>
-                                    </div>
+                                <!-- Acciones: sincronización con fulfillment + exportar -->
+                                <div class="inv-filters-actions" *ngIf="fulfillmentEnabled">
+                                    <span class="inv-filters-actions-label">
+                                        <i class="pi pi-sync"></i>Sincronizar:
+                                    </span>
+                                    <p-dropdown [options]="getBodegasConFulfillment()"
+                                                [(ngModel)]="bodegaSyncSeleccionada"
+                                                optionLabel="nombre"
+                                                placeholder="Bodega…"
+                                                [style]="{'min-width': '160px'}"
+                                                styleClass="inv-dropdown"
+                                                [showClear]="true"
+                                                appendTo="body">
+                                    </p-dropdown>
+                                    <button type="button" class="inv-btn"
+                                            (click)="syncBodegaDesdeConsolidada()"
+                                            [disabled]="syncingAllProducts || !bodegaSyncSeleccionada"
+                                            pTooltip="Sincronizar productos de esta bodega" tooltipPosition="bottom">
+                                        <i class="pi" [ngClass]="syncingAllProducts ? 'pi-spin pi-spinner' : 'pi-sync'"></i>
+                                        {{ syncingAllProducts ? syncAllProgress.current + '/' + syncAllProgress.total : 'Bodega' }}
+                                    </button>
+                                    <button type="button" class="inv-btn is-primary"
+                                            (click)="syncAllProductsFulfillment()"
+                                            [disabled]="syncingAllProducts"
+                                            pTooltip="Sincronizar todos los productos con fulfillment" tooltipPosition="bottom">
+                                        <i class="pi" [ngClass]="syncingAllProducts ? 'pi-spin pi-spinner' : 'pi-cloud-download'"></i>
+                                        {{ syncingAllProducts ? '' : 'Todo' }}
+                                    </button>
 
-                                    <!-- Separador visual -->
-                                    <div class="vr mx-2 d-none d-md-block" style="height: 24px;"></div>
+                                    <span class="inv-filters-sep"></span>
 
-                                    <!-- Exportar -->
-                                    <button pButton type="button"
-                                            icon="pi pi-file-excel"
-                                            label="Excel"
-                                            class="p-button-sm p-button-outlined"
-                                            style="border-color: #5c6ac4; color: #5c6ac4;"
+                                    <button type="button" class="inv-btn"
                                             (click)="exportarExcelConsolidado()"
                                             [disabled]="productosConsolidadosFiltrados.length === 0"
-                                            pTooltip="Exportar a Excel">
+                                            pTooltip="Exportar a Excel" tooltipPosition="bottom">
+                                        <i class="pi pi-file-excel inv-ico-green"></i>
+                                        Excel
                                     </button>
                                 </div>
 
-                                <!-- Fila 2 alternativa: Solo Excel si no hay fulfillment -->
-                                <div class="d-flex align-items-center gap-2 pt-2 border-top" *ngIf="!fulfillmentEnabled">
-                                    <button pButton type="button"
-                                            icon="pi pi-file-excel"
-                                            label="Exportar Excel"
-                                            class="p-button-sm p-button-outlined"
-                                            style="border-color: #5c6ac4; color: #5c6ac4;"
+                                <!-- Acciones sin fulfillment: solo exportar -->
+                                <div class="inv-filters-actions" *ngIf="!fulfillmentEnabled">
+                                    <button type="button" class="inv-btn"
                                             (click)="exportarExcelConsolidado()"
                                             [disabled]="productosConsolidadosFiltrados.length === 0">
+                                        <i class="pi pi-file-excel inv-ico-green"></i>
+                                        Exportar Excel
                                     </button>
                                 </div>
 
-                                <!-- Indicadores de filtros activos -->
-                                <div class="mt-2 d-flex flex-wrap gap-1" *ngIf="hayFiltrosActivos()">
-                                    <span class="badge bg-info" *ngIf="filtrosConsolidados.busqueda">
-                                        <i class="pi pi-search me-1"></i>"{{ filtrosConsolidados.busqueda }}"
-                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.busqueda = ''; aplicarFiltrosYResetear()"></i>
+                                <!-- Filtros activos -->
+                                <div class="inv-chips" *ngIf="hayFiltrosActivos()">
+                                    <span class="inv-chip" *ngIf="filtrosConsolidados.busqueda">
+                                        <i class="pi pi-search"></i>"{{ filtrosConsolidados.busqueda }}"
+                                        <i class="pi pi-times inv-chip-x" (click)="filtrosConsolidados.busqueda = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
-                                    <span class="badge bg-warning text-dark" *ngIf="filtrosConsolidados.estadoStock">
-                                        <i class="pi pi-chart-bar me-1"></i>{{ filtrosConsolidados.estadoStock }}
-                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.estadoStock = ''; aplicarFiltrosYResetear()"></i>
+                                    <span class="inv-chip is-amber" *ngIf="filtrosConsolidados.estadoStock">
+                                        <i class="pi pi-chart-bar"></i>{{ filtrosConsolidados.estadoStock }}
+                                        <i class="pi pi-times inv-chip-x" (click)="filtrosConsolidados.estadoStock = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
-                                    <span class="badge bg-secondary" *ngIf="filtrosConsolidados.bodegaId">
-                                        <i class="pi pi-box me-1"></i>{{ getNombreBodegaById(filtrosConsolidados.bodegaId) }}
-                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.bodegaId = ''; aplicarFiltrosYResetear()"></i>
+                                    <span class="inv-chip" *ngIf="filtrosConsolidados.bodegaId">
+                                        <i class="pi pi-box"></i>{{ getNombreBodegaById(filtrosConsolidados.bodegaId) }}
+                                        <i class="pi pi-times inv-chip-x" (click)="filtrosConsolidados.bodegaId = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
-                                    <span class="badge bg-primary" *ngIf="filtrosConsolidados.fulfillment">
-                                        <i class="pi pi-cloud me-1"></i>{{ filtrosConsolidados.fulfillment === 'con' ? 'Con enlace' : 'Sin enlace' }}
-                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.fulfillment = ''; aplicarFiltrosYResetear()"></i>
+                                    <span class="inv-chip is-blue" *ngIf="filtrosConsolidados.fulfillment">
+                                        <i class="pi pi-cloud"></i>{{ filtrosConsolidados.fulfillment === 'con' ? 'Con enlace' : 'Sin enlace' }}
+                                        <i class="pi pi-times inv-chip-x" (click)="filtrosConsolidados.fulfillment = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
                                 </div>
                             </div>
 
                             <!-- Tabla Consolidada con Columnas Dinámicas por Bodega -->
-                            <div class="table-container mb-4">
+                            <div class="inv-tablecard">
                                 <p-table #dtConsolidado
                                          [value]="productosConsolidadosFiltrados"
                                          [lazy]="true"
@@ -390,7 +313,7 @@
                                          [rowsPerPageOptions]="[10,20,50,100]"
                                          [showCurrentPageReport]="true"
                                          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
-                                         styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
+                                         styleClass="p-datatable-sm inv-table"
                                          [responsive]="true"
                                          [loading]="loadingConsolidado"
                                          [scrollable]="true"
@@ -411,7 +334,7 @@
                                             <!-- Columna Nombre -->
                                             <th style="min-width: 200px;">Nombre</th>
                                             <!-- Columna Total (después del nombre) -->
-                                            <th style="width: 80px;" class="text-center text-primary fw-bold">TOTAL</th>
+                                            <th style="width: 90px;" class="text-center inv-col-total">Total</th>
                                             <!-- Columnas Dinámicas por Bodega -->
                                             <th *ngFor="let bodega of bodegasConsolidadas"
                                                 style="width: 100px; max-width: 100px; vertical-align: middle;"
@@ -447,17 +370,15 @@
                                             </th>
                                         </tr>
                                         <!-- Fila de Métricas por Bodega (Diseño Limpio) -->
-                                        <tr class="border-bottom" style="font-size: 0.8rem; background: #f8fafc;">
+                                        <tr class="inv-metrics-row">
                                             <!-- Columnas fijas vacías -->
                                             <th style="width: 50px;"></th>
                                             <th style="width: 70px;"></th>
                                             <th style="width: 120px;"></th>
-                                            <th style="min-width: 200px;"></th>
+                                            <th style="min-width: 200px;" class="inv-metrics-caption">Totales</th>
                                             <!-- Columna Total -->
-                                            <th style="width: 80px;" class="text-center py-2">
-                                                <span class="text-primary fw-bold">
-                                                    {{ getMetricaUnidades() | number }}
-                                                </span>
+                                            <th style="width: 90px;" class="text-center inv-col-total">
+                                                <span class="inv-metrics-total">{{ getMetricaUnidades() | number }}</span>
                                             </th>
                                             <!-- Total por cada Bodega -->
                                             <th *ngFor="let bodega of bodegasConsolidadas"
@@ -502,43 +423,47 @@
                                         <tr>
                                             <!-- Expandir -->
                                             <td class="text-center">
-                                                <button pButton pRipple type="button"
-                                                        [icon]="producto.expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                                                        class="p-button-text p-button-rounded p-button-sm"
-                                                        (click)="toggleExpansion(producto)">
+                                                <button type="button" class="inv-expand"
+                                                        [class.is-open]="producto.expanded"
+                                                        (click)="toggleExpansion(producto)"
+                                                        [attr.aria-expanded]="producto.expanded">
+                                                    <i class="pi pi-chevron-right"></i>
                                                 </button>
                                             </td>
                                             <!-- Imagen -->
                                             <td class="text-center" style="vertical-align: middle;">
-                                                <div style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background-color: #f8f9fa; border-radius: 4px; overflow: hidden;">
+                                                <div class="inv-thumb">
                                                     <img *ngIf="producto.imagen"
                                                          [src]="producto.imagen"
                                                          [alt]="producto.nombre"
-                                                         style="width: 100%; height: 100%; object-fit: cover;"
                                                          (error)="producto.imagen = null">
-                                                    <i *ngIf="!producto.imagen" class="pi pi-box text-muted" style="font-size: 1.2rem;"></i>
+                                                    <i *ngIf="!producto.imagen" class="pi pi-box"></i>
                                                 </div>
                                             </td>
                                             <!-- Referencia -->
                                             <td>
-                                                <span class="font-monospace small">{{ producto.referencia || '-' }}</span>
+                                                <span class="inv-ref">{{ producto.referencia || '—' }}</span>
                                             </td>
                                             <!-- Nombre -->
                                             <td>
-                                                <span class="fw-semibold">{{ producto.nombre }}</span>
+                                                <span class="inv-name">{{ producto.nombre }}</span>
                                             </td>
                                             <!-- Total (después del nombre) -->
-                                            <td class="text-center" style="vertical-align: middle;">
-                                                <span class="fw-bold text-primary" style="font-size: 1.1rem;">{{ producto.stockTotal }}</span>
+                                            <td class="text-center inv-col-total">
+                                                <span class="inv-total-pill"
+                                                      [ngClass]="{
+                                                          'is-zero': producto.stockTotal === 0,
+                                                          'is-low': producto.stockTotal > 0 && producto.stockTotal <= 5
+                                                      }">{{ producto.stockTotal | number }}</span>
                                             </td>
                                             <!-- Stock por cada Bodega -->
                                             <td *ngFor="let bodega of bodegasConsolidadas" class="text-center" style="vertical-align: middle;">
-                                                <span class="fw-semibold" [ngClass]="{
-                                                    'text-muted': getStockBodega(producto, bodega.id) === 0,
-                                                    'text-warning': getStockBodega(producto, bodega.id) > 0 && getStockBodega(producto, bodega.id) <= 5,
-                                                    'text-success': getStockBodega(producto, bodega.id) > 5
+                                                <span class="inv-stock" [ngClass]="{
+                                                    'is-zero': getStockBodega(producto, bodega.id) === 0,
+                                                    'is-low': getStockBodega(producto, bodega.id) > 0 && getStockBodega(producto, bodega.id) <= 5,
+                                                    'is-ok': getStockBodega(producto, bodega.id) > 5
                                                 }">
-                                                    {{ getStockBodega(producto, bodega.id) }}
+                                                    {{ getStockBodega(producto, bodega.id) | number }}
                                                 </span>
                                             </td>
                                             <!-- Costo Unitario (siempre visible: $0 si no asignado para detectar gaps) -->
@@ -584,11 +509,10 @@
                                             <!-- Acciones -->
                                             <td class="text-center" style="width: 60px;">
                                                 <p-menu #rowMenu [model]="rowMenuItems" [popup]="true" [appendTo]="'body'"></p-menu>
-                                                <button pButton pRipple type="button"
-                                                        icon="pi pi-ellipsis-v"
-                                                        class="p-button-rounded p-button-text p-button-sm"
+                                                <button type="button" class="inv-rowmenu"
                                                         (click)="onRowMenuClick($event, rowMenu, producto)"
-                                                        pTooltip="Acciones">
+                                                        pTooltip="Acciones" tooltipPosition="left">
+                                                    <i class="pi pi-ellipsis-v"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -596,44 +520,44 @@
                                         <!-- Row Expansion - Detalles por Bodega -->
                                         <tr *ngIf="producto.expanded">
                                             <td [attr.colspan]="bodegasConsolidadas.length + tiposClienteActivos.length + 9" class="p-0">
-                                                <div class="p-3 bg-light">
+                                                <div class="inv-expansion">
                                                     <!-- Loader mientras carga fulfillment -->
-                                                    <div *ngIf="producto.fulfillmentLoading" class="text-center py-3">
-                                                        <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem;"></i>
-                                                        <p class="mt-2 mb-0">Cargando datos de fulfillment...</p>
+                                                    <div *ngIf="producto.fulfillmentLoading" class="inv-exp-loading">
+                                                        <i class="pi pi-spin pi-spinner"></i>
+                                                        Cargando datos de fulfillment…
                                                     </div>
 
                                                     <!-- SIN FULFILLMENT: Solo mostrar stock Katuq -->
                                                     <div *ngIf="!fulfillmentEnabled && !producto.fulfillmentLoading">
-                                                        <h6 class="mb-3">
-                                                            <i class="pi pi-warehouse me-2"></i>
-                                                            Stock por Bodega - {{ producto.nombre }}
-                                                        </h6>
-                                                        <table class="table table-sm table-bordered mb-0">
-                                                            <thead class="table-light">
+                                                        <div class="inv-exp-title">
+                                                            <span class="inv-exp-icon"><i class="pi pi-warehouse"></i></span>
+                                                            Stock por bodega — {{ producto.nombre }}
+                                                        </div>
+                                                        <table class="inv-exp-table">
+                                                            <thead>
                                                                 <tr>
                                                                     <th>Bodega</th>
-                                                                    <th>Tipo</th>
+                                                                    <th class="text-center">Tipo</th>
                                                                     <th class="text-center">Stock</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 <tr *ngFor="let bodega of bodegasConsolidadas">
                                                                     <td>{{ bodega.nombre }}</td>
-                                                                    <td>{{ bodega.tipo }}</td>
+                                                                    <td class="text-center"><span class="inv-tipo">{{ bodega.tipo }}</span></td>
                                                                     <td class="text-center">
-                                                                        <span class="fw-semibold" [ngClass]="{
-                                                                            'text-muted': getStockBodega(producto, bodega.id) === 0,
-                                                                            'text-warning': getStockBodega(producto, bodega.id) > 0 && getStockBodega(producto, bodega.id) <= 5,
-                                                                            'text-success': getStockBodega(producto, bodega.id) > 5
-                                                                        }">{{ getStockBodega(producto, bodega.id) }}</span>
+                                                                        <span class="inv-stock" [ngClass]="{
+                                                                            'is-zero': getStockBodega(producto, bodega.id) === 0,
+                                                                            'is-low': getStockBodega(producto, bodega.id) > 0 && getStockBodega(producto, bodega.id) <= 5,
+                                                                            'is-ok': getStockBodega(producto, bodega.id) > 5
+                                                                        }">{{ getStockBodega(producto, bodega.id) | number }}</span>
                                                                     </td>
                                                                 </tr>
                                                             </tbody>
-                                                            <tfoot class="table-primary">
-                                                                <tr>
-                                                                    <td colspan="2"><strong>TOTAL</strong></td>
-                                                                    <td class="text-center"><strong>{{ producto.stockTotal }}</strong></td>
+                                                            <tfoot>
+                                                                <tr class="inv-exp-total">
+                                                                    <td colspan="2">TOTAL</td>
+                                                                    <td class="text-center">{{ producto.stockTotal | number }}</td>
                                                                 </tr>
                                                             </tfoot>
                                                         </table>
@@ -641,18 +565,16 @@
 
                                                     <!-- CON FULFILLMENT: Comparativa Katuq vs Fulfillment -->
                                                     <div *ngIf="fulfillmentEnabled && !producto.fulfillmentLoading">
-                                                        <h6 class="mb-3">
-                                                            <i class="pi pi-sync me-2"></i>
-                                                            Comparación Stock - {{ producto.nombre }}
-                                                            <span class="badge bg-info ms-2" *ngIf="producto.fulfillmentId">
-                                                                <i class="pi pi-cloud me-1"></i>{{ fulfillmentProviderName }}
+                                                        <div class="inv-exp-title">
+                                                            <span class="inv-exp-icon"><i class="pi pi-sync"></i></span>
+                                                            Comparación de stock — {{ producto.nombre }}
+                                                            <span class="inv-chip is-blue" *ngIf="producto.fulfillmentId">
+                                                                <i class="pi pi-cloud"></i>{{ fulfillmentProviderName }}
                                                             </span>
-                                                            <span class="badge bg-secondary ms-2" *ngIf="!producto.fulfillmentId">
-                                                                Sin enlace a fulfillment
-                                                            </span>
-                                                        </h6>
-                                                        <table class="table table-sm table-bordered mb-0" *ngIf="producto.fulfillmentId">
-                                                            <thead class="table-light">
+                                                            <span class="inv-chip" *ngIf="!producto.fulfillmentId">Sin enlace a fulfillment</span>
+                                                        </div>
+                                                        <table class="inv-exp-table" *ngIf="producto.fulfillmentId">
+                                                            <thead>
                                                                 <tr>
                                                                     <th>Bodega Katuq</th>
                                                                     <th class="text-center">Stock Katuq</th>
@@ -694,10 +616,10 @@
                                                                     </td>
                                                                 </tr>
                                                             </tbody>
-                                                            <tfoot class="table-primary">
-                                                                <tr>
-                                                                    <td><strong>TOTAL</strong></td>
-                                                                    <td class="text-center"><strong>{{ producto.stockTotal }}</strong></td>
+                                                            <tfoot>
+                                                                <tr class="inv-exp-total">
+                                                                    <td>TOTAL</td>
+                                                                    <td class="text-center">{{ producto.stockTotal | number }}</td>
                                                                     <td></td>
                                                                     <td class="text-center">
                                                                         <strong *ngIf="producto.fulfillmentStock">
@@ -717,8 +639,8 @@
                                                             </tfoot>
                                                         </table>
                                                         <!-- Mensaje si no tiene fulfillment -->
-                                                        <div *ngIf="!producto.fulfillmentId" class="alert alert-secondary mb-0">
-                                                            <i class="pi pi-info-circle me-2"></i>
+                                                        <div *ngIf="!producto.fulfillmentId" class="inv-note">
+                                                            <i class="pi pi-info-circle"></i>
                                                             Este producto no está enlazado a {{ fulfillmentProviderName }}.
                                                             Stock disponible solo en Katuq: <strong>{{ producto.stockTotal }}</strong> unidades.
                                                         </div>
@@ -732,8 +654,10 @@
                                     <ng-template pTemplate="emptymessage">
                                         <tr>
                                             <td [attr.colspan]="bodegasConsolidadas.length + 9" class="text-center py-5">
-                                                <i class="pi pi-inbox text-muted" style="font-size: 3rem;"></i>
-                                                <p class="mt-3 mb-0 text-muted">No hay productos en el inventario</p>
+                                                <div class="inv-empty">
+                                                    <i class="pi pi-inbox"></i>
+                                                    <div class="inv-empty-title">No hay productos en el inventario</div>
+                                                </div>
                                             </td>
                                         </tr>
                                     </ng-template>
@@ -1493,87 +1417,61 @@
 <p-dialog [(visible)]="syncModalVisible"
           [modal]="true"
           [closable]="true"
-          [style]="{width: '480px'}"
+          [style]="{width: '500px'}"
+          styleClass="inv-dialog"
           [header]="'Sincronizar con ' + fulfillmentProviderName"
           (onHide)="closeSyncModal()">
 
     <!-- Producto -->
-    <div class="text-center mb-4" *ngIf="productoSyncSeleccionado">
-        <img *ngIf="productoSyncSeleccionado.imagen"
-             [src]="productoSyncSeleccionado.imagen"
-             class="rounded mb-2"
-             style="width: 64px; height: 64px; object-fit: cover;">
-        <div *ngIf="!productoSyncSeleccionado.imagen"
-             class="d-flex align-items-center justify-content-center bg-light rounded mb-2 mx-auto"
-             style="width: 64px; height: 64px;">
-            <i class="pi pi-box text-muted" style="font-size: 1.5rem;"></i>
+    <div class="inv-dlg-product" *ngIf="productoSyncSeleccionado">
+        <div class="inv-thumb">
+            <img *ngIf="productoSyncSeleccionado.imagen" [src]="productoSyncSeleccionado.imagen" [alt]="productoSyncSeleccionado.nombre">
+            <i *ngIf="!productoSyncSeleccionado.imagen" class="pi pi-box"></i>
         </div>
-        <h6 class="mb-1 fw-bold">{{ productoSyncSeleccionado.nombre }}</h6>
-        <small class="text-muted">{{ productoSyncSeleccionado.referencia }}</small>
+        <div class="inv-dlg-product-id">
+            <div class="inv-name">{{ productoSyncSeleccionado.nombre }}</div>
+            <div class="inv-ref">{{ productoSyncSeleccionado.referencia || '—' }}</div>
+        </div>
     </div>
 
     <!-- Loading -->
-    <div *ngIf="loadingSyncModal && !errorSyncModal" class="text-center py-4">
-        <i class="pi pi-spin pi-spinner text-primary" style="font-size: 2.5rem;"></i>
-        <p class="mt-3 text-muted mb-0">Consultando {{ fulfillmentProviderName }}...</p>
+    <div *ngIf="loadingSyncModal && !errorSyncModal" class="inv-exp-loading inv-dlg-loading">
+        <i class="pi pi-spin pi-spinner"></i>
+        Consultando {{ fulfillmentProviderName }}…
     </div>
 
     <!-- Error -->
-    <div *ngIf="errorSyncModal && !loadingSyncModal" class="alert alert-danger text-center">
-        <i class="pi pi-exclamation-triangle me-2"></i>
+    <div *ngIf="errorSyncModal && !loadingSyncModal" class="inv-dlg-warn">
+        <i class="pi pi-exclamation-triangle"></i>
         {{ errorSyncModal }}
     </div>
 
     <!-- Comparativa de Stock -->
-    <div *ngIf="!loadingSyncModal && !errorSyncModal" class="row text-center g-3">
-        <!-- Katuq -->
-        <div class="col-4">
-            <div class="border rounded p-3 h-100">
-                <small class="text-muted d-block mb-2 fw-semibold">KATUQ</small>
-                <span class="fs-2 fw-bold text-primary d-block">{{ stockKatuqTotal }}</span>
-                <small class="text-muted">unidades</small>
-            </div>
+    <div *ngIf="!loadingSyncModal && !errorSyncModal" class="inv-dlg-tiles">
+        <div class="inv-dlg-tile is-accent">
+            <div class="inv-dlg-tile-label">Katuq</div>
+            <div class="inv-dlg-tile-value">{{ stockKatuqTotal | number }}</div>
+            <div class="inv-dlg-tile-hint">unidades</div>
         </div>
-
-        <!-- Aliaddo -->
-        <div class="col-4">
-            <div class="border rounded p-3 h-100" style="border-color: #ff991f !important;">
-                <small class="text-muted d-block mb-2 fw-semibold">{{ fulfillmentProviderName | uppercase }}</small>
-                <span class="fs-2 fw-bold d-block" style="color: #ff991f;">{{ stockAliaddoTotal }}</span>
-                <small class="text-muted">unidades</small>
-            </div>
+        <div class="inv-dlg-tile is-orange">
+            <div class="inv-dlg-tile-label">{{ fulfillmentProviderName }}</div>
+            <div class="inv-dlg-tile-value">{{ stockAliaddoTotal | number }}</div>
+            <div class="inv-dlg-tile-hint">unidades</div>
         </div>
-
-        <!-- Diferencia -->
-        <div class="col-4">
-            <div class="border rounded p-3 h-100"
-                 [ngClass]="{
-                     'border-success': diferenciaSyncTotal > 0,
-                     'border-danger': diferenciaSyncTotal < 0,
-                     'border-secondary': diferenciaSyncTotal === 0
-                 }">
-                <small class="text-muted d-block mb-2 fw-semibold">DIFERENCIA</small>
-                <span class="fs-2 fw-bold d-block"
-                      [ngClass]="{
-                          'text-success': diferenciaSyncTotal > 0,
-                          'text-danger': diferenciaSyncTotal < 0,
-                          'text-secondary': diferenciaSyncTotal === 0
-                      }">
-                    {{ diferenciaSyncTotal > 0 ? '+' : '' }}{{ diferenciaSyncTotal }}
-                </span>
-                <small class="text-muted">unidades</small>
-            </div>
+        <div class="inv-dlg-tile"
+             [ngClass]="{'is-green': diferenciaSyncTotal > 0, 'is-red': diferenciaSyncTotal < 0, 'is-gray': diferenciaSyncTotal === 0}">
+            <div class="inv-dlg-tile-label">Diferencia</div>
+            <div class="inv-dlg-tile-value">{{ diferenciaSyncTotal > 0 ? '+' : '' }}{{ diferenciaSyncTotal | number }}</div>
+            <div class="inv-dlg-tile-hint">unidades</div>
         </div>
     </div>
 
     <!-- Desglose por Bodega (si hay warehouses) -->
     <div *ngIf="!loadingSyncModal && !errorSyncModal && bodegasDesglose.length > 0" class="mt-4">
-        <h6 class="text-muted mb-2">
-            <i class="pi pi-list me-2"></i>Desglose por Bodega
-        </h6>
-        <div class="table-responsive border rounded" style="max-height: 200px; overflow-y: auto;">
-            <table class="table table-sm mb-0">
-                <thead class="table-light sticky-top">
+        <div class="inv-detail-title"><i class="pi pi-list"></i>Desglose por bodega</div>
+        <div class="inv-dlg-scroll">
+            <table class="inv-exp-table">
+                <thead>
                     <tr>
                         <th>Bodega</th>
                         <th class="text-center">Katuq</th>
@@ -1582,18 +1480,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let item of bodegasDesglose"
-                        [class.table-warning]="item.diferencia !== 0">
+                    <tr *ngFor="let item of bodegasDesglose">
                         <td>{{ item.nombre }}</td>
-                        <td class="text-center fw-semibold">{{ item.stockKatuq }}</td>
-                        <td class="text-center fw-semibold">{{ item.stockAliaddo }}</td>
+                        <td class="text-center">{{ item.stockKatuq | number }}</td>
+                        <td class="text-center">{{ item.stockAliaddo | number }}</td>
                         <td class="text-center">
-                            <span class="badge"
-                                  [ngClass]="{
-                                      'bg-success': item.diferencia > 0,
-                                      'bg-danger': item.diferencia < 0,
-                                      'bg-secondary': item.diferencia === 0
-                                  }">
+                            <span class="inv-dif"
+                                  [ngClass]="{'is-green': item.diferencia > 0, 'is-red': item.diferencia < 0, 'is-gray': item.diferencia === 0}">
                                 {{ item.diferencia > 0 ? '+' : '' }}{{ item.diferencia }}
                             </span>
                         </td>
@@ -1604,38 +1497,33 @@
     </div>
 
     <!-- Mensaje de Estado -->
-    <div *ngIf="!loadingSyncModal && !errorSyncModal" class="text-center mt-4">
-        <p *ngIf="diferenciaSyncTotal > 0" class="text-success mb-0 fw-semibold">
-            <i class="pi pi-arrow-up me-1"></i>
+    <div *ngIf="!loadingSyncModal && !errorSyncModal" class="inv-dlg-status">
+        <span *ngIf="diferenciaSyncTotal > 0" class="inv-dlg-pill is-green">
+            <i class="pi pi-arrow-up"></i>
             {{ fulfillmentProviderName }} tiene {{ diferenciaSyncTotal }} unidades más
-        </p>
-        <p *ngIf="diferenciaSyncTotal < 0" class="text-danger mb-0 fw-semibold">
-            <i class="pi pi-arrow-down me-1"></i>
+        </span>
+        <span *ngIf="diferenciaSyncTotal < 0" class="inv-dlg-pill is-red">
+            <i class="pi pi-arrow-down"></i>
             {{ fulfillmentProviderName }} tiene {{ diferenciaSyncTotal * -1 }} unidades menos
-        </p>
-        <p *ngIf="diferenciaSyncTotal === 0 && !hayDiferenciasPorBodega" class="text-success mb-0 fw-semibold">
-            <i class="pi pi-check-circle me-1"></i>
+        </span>
+        <span *ngIf="diferenciaSyncTotal === 0 && !hayDiferenciasPorBodega" class="inv-dlg-pill is-green">
+            <i class="pi pi-check-circle"></i>
             Stock sincronizado correctamente
-        </p>
-        <p *ngIf="diferenciaSyncTotal === 0 && hayDiferenciasPorBodega" class="text-warning mb-0 fw-semibold">
-            <i class="pi pi-exclamation-triangle me-1"></i>
-            Total igual pero hay diferencias por bodega - Requiere sincronización
-        </p>
+        </span>
+        <span *ngIf="diferenciaSyncTotal === 0 && hayDiferenciasPorBodega" class="inv-dlg-pill is-amber">
+            <i class="pi pi-exclamation-triangle"></i>
+            Total igual pero hay diferencias por bodega — requiere sincronización
+        </span>
     </div>
 
     <!-- Footer -->
     <ng-template pTemplate="footer">
-        <button pButton
-                label="Cancelar"
-                class="p-button-text"
-                (click)="closeSyncModal()">
-        </button>
-        <button pButton
-                [label]="!hayDiferenciasPorBodega && diferenciaSyncTotal === 0 ? 'Ya está sincronizado' : 'Sincronizar bodegas (' + bodegasConDiferenciaCount + ')'"
-                [icon]="!hayDiferenciasPorBodega && diferenciaSyncTotal === 0 ? 'pi pi-check' : 'pi pi-sync'"
+        <button type="button" class="inv-btn" (click)="closeSyncModal()">Cancelar</button>
+        <button type="button" class="inv-btn is-primary"
                 [disabled]="loadingSyncModal || (!hayDiferenciasPorBodega && diferenciaSyncTotal === 0) || errorSyncModal"
-                [loading]="loadingSyncModal"
                 (click)="ejecutarSincronizacion()">
+            <i class="pi" [ngClass]="loadingSyncModal ? 'pi-spin pi-spinner' : (!hayDiferenciasPorBodega && diferenciaSyncTotal === 0 ? 'pi-check' : 'pi-sync')"></i>
+            {{ !hayDiferenciasPorBodega && diferenciaSyncTotal === 0 ? 'Ya está sincronizado' : 'Sincronizar bodegas (' + bodegasConDiferenciaCount + ')' }}
         </button>
     </ng-template>
 </p-dialog>
@@ -1644,55 +1532,46 @@
 <p-dialog [(visible)]="syncBodegaModalVisible"
           [modal]="true"
           [closable]="true"
-          [style]="{width: '800px', maxHeight: '90vh'}"
-          [header]="'Sincronizar Bodega: ' + (bodegaSyncSeleccionada?.nombre || '')"
+          [style]="{width: '820px', maxHeight: '90vh'}"
+          styleClass="inv-dialog"
+          [header]="'Sincronizar bodega: ' + (bodegaSyncSeleccionada?.nombre || '')"
           (onHide)="cerrarModalSyncBodega()">
 
     <!-- Loading -->
-    <div *ngIf="loadingSyncBodegaModal" class="text-center py-5">
-        <i class="pi pi-spin pi-spinner text-primary" style="font-size: 3rem;"></i>
-        <p class="mt-3 mb-0">Consultando stock en {{ fulfillmentProviderName }}...</p>
-        <p class="text-muted small">{{ productosSyncBodega.length }} productos cargados</p>
+    <div *ngIf="loadingSyncBodegaModal" class="inv-exp-loading inv-dlg-loading">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>
+            Consultando stock en {{ fulfillmentProviderName }}…
+            <small>{{ productosSyncBodega.length }} productos cargados</small>
+        </span>
     </div>
 
     <!-- Contenido -->
     <div *ngIf="!loadingSyncBodegaModal">
         <!-- Resumen -->
-        <div class="row mb-4">
-            <div class="col-3 text-center">
-                <div class="p-3 bg-light rounded">
-                    <h3 class="mb-0 text-primary">{{ resumenSyncBodega.total }}</h3>
-                    <small class="text-muted">Productos</small>
-                </div>
+        <div class="inv-dlg-tiles is-four">
+            <div class="inv-dlg-tile is-accent">
+                <div class="inv-dlg-tile-label">Productos</div>
+                <div class="inv-dlg-tile-value">{{ resumenSyncBodega.total | number }}</div>
             </div>
-            <div class="col-3 text-center">
-                <div class="p-3 bg-light rounded">
-                    <h3 class="mb-0" [ngClass]="{'text-warning': resumenSyncBodega.conDiferencia > 0, 'text-success': resumenSyncBodega.conDiferencia === 0}">
-                        {{ resumenSyncBodega.conDiferencia }}
-                    </h3>
-                    <small class="text-muted">Con diferencia</small>
-                </div>
+            <div class="inv-dlg-tile" [ngClass]="resumenSyncBodega.conDiferencia > 0 ? 'is-amber' : 'is-green'">
+                <div class="inv-dlg-tile-label">Con diferencia</div>
+                <div class="inv-dlg-tile-value">{{ resumenSyncBodega.conDiferencia | number }}</div>
             </div>
-            <div class="col-3 text-center">
-                <div class="p-3 bg-light rounded">
-                    <h3 class="mb-0" [ngClass]="{'text-danger': resumenSyncBodega.totalDiferencia < 0, 'text-success': resumenSyncBodega.totalDiferencia >= 0}">
-                        {{ resumenSyncBodega.totalDiferencia > 0 ? '+' : '' }}{{ resumenSyncBodega.totalDiferencia }}
-                    </h3>
-                    <small class="text-muted">Diferencia total</small>
-                </div>
+            <div class="inv-dlg-tile" [ngClass]="resumenSyncBodega.totalDiferencia < 0 ? 'is-red' : 'is-green'">
+                <div class="inv-dlg-tile-label">Diferencia total</div>
+                <div class="inv-dlg-tile-value">{{ resumenSyncBodega.totalDiferencia > 0 ? '+' : '' }}{{ resumenSyncBodega.totalDiferencia | number }}</div>
             </div>
-            <div class="col-3 text-center">
-                <div class="p-3 bg-light rounded">
-                    <h3 class="mb-0 text-secondary">{{ resumenSyncBodega.sinEnlace }}</h3>
-                    <small class="text-muted">Sin datos FF</small>
-                </div>
+            <div class="inv-dlg-tile is-gray">
+                <div class="inv-dlg-tile-label">Sin datos FF</div>
+                <div class="inv-dlg-tile-value">{{ resumenSyncBodega.sinEnlace | number }}</div>
             </div>
         </div>
 
         <!-- Tabla de productos -->
-        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-            <table class="table table-sm table-hover mb-0">
-                <thead class="table-light sticky-top">
+        <div class="inv-dlg-scroll is-tall">
+            <table class="inv-exp-table">
+                <thead>
                     <tr>
                         <th>Referencia</th>
                         <th>Producto</th>
@@ -1703,27 +1582,21 @@
                 </thead>
                 <tbody>
                     <tr *ngFor="let producto of productosSyncBodega"
-                        [ngClass]="{'table-warning': producto.diferencia !== null && producto.diferencia !== 0}">
-                        <td class="font-monospace small">{{ producto.referencia || '-' }}</td>
+                        [class.is-diff]="producto.diferencia !== null && producto.diferencia !== 0">
+                        <td><span class="inv-ref">{{ producto.referencia || '—' }}</span></td>
                         <td>{{ producto.nombre }}</td>
-                        <td class="text-center fw-bold">{{ producto.stockKatuq }}</td>
+                        <td class="text-center">{{ producto.stockKatuq | number }}</td>
                         <td class="text-center">
-                            <span *ngIf="producto.stockFulfillment !== null" class="fw-bold text-primary">
-                                {{ producto.stockFulfillment }}
-                            </span>
-                            <span *ngIf="producto.stockFulfillment === null" class="text-muted">-</span>
+                            <span *ngIf="producto.stockFulfillment !== null">{{ producto.stockFulfillment | number }}</span>
+                            <span *ngIf="producto.stockFulfillment === null" class="inv-dim">—</span>
                         </td>
                         <td class="text-center">
                             <span *ngIf="producto.diferencia !== null"
-                                  class="badge"
-                                  [ngClass]="{
-                                      'bg-success': producto.diferencia === 0,
-                                      'bg-warning text-dark': producto.diferencia! > 0,
-                                      'bg-danger': producto.diferencia! < 0
-                                  }">
+                                  class="inv-dif"
+                                  [ngClass]="{'is-green': producto.diferencia === 0, 'is-amber': producto.diferencia! > 0, 'is-red': producto.diferencia! < 0}">
                                 {{ producto.diferencia! > 0 ? '+' : '' }}{{ producto.diferencia }}
                             </span>
-                            <span *ngIf="producto.diferencia === null" class="text-muted">-</span>
+                            <span *ngIf="producto.diferencia === null" class="inv-dim">—</span>
                         </td>
                     </tr>
                 </tbody>
@@ -1731,153 +1604,28 @@
         </div>
 
         <!-- Info -->
-        <div class="alert alert-info mt-3 mb-0 small" *ngIf="resumenSyncBodega.conDiferencia > 0">
-            <i class="pi pi-info-circle me-2"></i>
+        <div class="inv-note mt-3" *ngIf="resumenSyncBodega.conDiferencia > 0">
+            <i class="pi pi-info-circle"></i>
             Se ajustará el stock de Katuq para que coincida con {{ fulfillmentProviderName }}.
         </div>
-        <div class="alert alert-success mt-3 mb-0 small" *ngIf="resumenSyncBodega.conDiferencia === 0 && resumenSyncBodega.total > 0">
-            <i class="pi pi-check-circle me-2"></i>
+        <div class="inv-note is-green mt-3" *ngIf="resumenSyncBodega.conDiferencia === 0 && resumenSyncBodega.total > 0">
+            <i class="pi pi-check-circle"></i>
             Todos los productos ya están sincronizados.
         </div>
     </div>
 
     <!-- Footer -->
     <ng-template pTemplate="footer">
-        <button pButton
-                label="Cancelar"
-                icon="pi pi-times"
-                class="p-button-text"
-                (click)="cerrarModalSyncBodega()">
-        </button>
-        <button pButton
-                [label]="resumenSyncBodega.conDiferencia === 0 ? 'Ya sincronizado' : 'Sincronizar ' + resumenSyncBodega.conDiferencia + ' productos'"
-                [icon]="resumenSyncBodega.conDiferencia === 0 ? 'pi pi-check' : 'pi pi-sync'"
+        <button type="button" class="inv-btn" (click)="cerrarModalSyncBodega()">Cancelar</button>
+        <button type="button" class="inv-btn"
+                [ngClass]="resumenSyncBodega.conDiferencia === 0 ? 'is-green' : 'is-primary'"
                 [disabled]="loadingSyncBodegaModal || resumenSyncBodega.conDiferencia === 0"
-                [loading]="syncingAllProducts"
-                class="p-button-warning"
                 (click)="confirmarSyncBodegaModal()">
+            <i class="pi" [ngClass]="syncingAllProducts ? 'pi-spin pi-spinner' : (resumenSyncBodega.conDiferencia === 0 ? 'pi-check' : 'pi-sync')"></i>
+            {{ resumenSyncBodega.conDiferencia === 0 ? 'Ya sincronizado' : 'Sincronizar ' + resumenSyncBodega.conDiferencia + ' productos' }}
         </button>
     </ng-template>
 </p-dialog>
-
-<!-- Estilos adicionales - Colores profesionales -->
-<style>
-    /* Botón de IA con gradiente púrpura elegante */
-    .ia-analysis-btn {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        border: none !important;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        transition: all 0.3s ease;
-    }
-
-    .ia-analysis-btn:hover:not(:disabled) {
-        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        transform: translateY(-2px);
-    }
-
-    .ia-analysis-btn:disabled {
-        background: linear-gradient(135deg, #a0aec0 0%, #718096 100%) !important;
-        box-shadow: none;
-    }
-
-    .ia-analysis-btn .pi-bolt {
-        font-size: 1.1rem;
-    }
-
-    .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 2rem;
-    }
-
-    /* Estados de stock con colores profesionales */
-    .outofstock {
-        font-weight: bold;
-        color: #bf2600 !important;
-    }
-
-    .lowstock {
-        font-weight: bold;
-        color: #974f0c !important;
-    }
-
-    .instock {
-        font-weight: bold;
-        color: #006644 !important;
-    }
-
-    /* Estilos para la vista consolidada */
-    .stat-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-    }
-
-    /* Estilos para el modal de sincronización */
-    .sync-modal .p-dialog-content {
-        padding: 0 !important;
-    }
-
-    .sync-modal-content {
-        padding: 1.5rem;
-    }
-
-    .bodegas-table-container table {
-        margin-bottom: 0;
-    }
-
-    .bodegas-table-container thead th {
-        background: #f8f9fa;
-        font-weight: 600;
-        font-size: 0.875rem;
-    }
-
-    .bodegas-table-container tbody tr {
-        transition: background-color 0.15s ease;
-    }
-
-    .bodegas-table-container tbody tr:hover {
-        background-color: #f4f5f7 !important;
-    }
-
-    .bodegas-table-container tbody tr.table-active {
-        background-color: #ebecf0 !important;
-    }
-
-    .selection-summary {
-        border: 1px solid #dfe1e6;
-    }
-
-    .bg-success-subtle {
-        background-color: #e3fcef !important;
-    }
-
-    .border-success {
-        border-color: #36b37e !important;
-    }
-
-    /* Mejoras para la tabla consolidada */
-    ::ng-deep .p-datatable .p-datatable-thead > tr > th {
-        font-weight: 600;
-        font-size: 0.85rem;
-        padding: 0.75rem 0.5rem;
-    }
-
-    ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
-        padding: 0.5rem;
-        vertical-align: middle;
-    }
-
-    /* Cursor para filas clickeables */
-    .cursor-pointer {
-        cursor: pointer;
-    }
-</style>
 
 <!-- Modal de Importacion de Inventario -->
 <app-import-modal
@@ -1889,15 +1637,32 @@
 <!-- Dialog Ajuste Rápido de Inventario -->
 <p-dialog
     [(visible)]="ajusteVisible"
-    [header]="(ajusteTipo === 'INGRESO' ? 'Ingresar stock — ' : 'Retirar stock — ') + (ajusteProducto?.nombre || '')"
+    [header]="ajusteTipo === 'INGRESO' ? 'Ingresar stock' : 'Retirar stock'"
     [modal]="true"
-    [style]="{width: '420px'}"
+    [style]="{width: '440px'}"
+    styleClass="inv-dialog"
     [closable]="!ajusteGuardando">
 
-    <div class="p-fluid" *ngIf="ajusteProducto">
-        <div class="field mb-3">
-            <label class="font-semibold mb-1 d-block">Bodega</label>
-            <select class="form-select" [(ngModel)]="ajusteBodegaId" [disabled]="ajusteGuardando">
+    <div *ngIf="ajusteProducto">
+        <!-- Producto -->
+        <div class="inv-dlg-product">
+            <div class="inv-thumb">
+                <img *ngIf="ajusteProducto.imagen" [src]="ajusteProducto.imagen" [alt]="ajusteProducto.nombre">
+                <i *ngIf="!ajusteProducto.imagen" class="pi pi-box"></i>
+            </div>
+            <div class="inv-dlg-product-id">
+                <div class="inv-name">{{ ajusteProducto.nombre }}</div>
+                <div class="inv-ref">{{ ajusteProducto.referencia || '—' }}</div>
+            </div>
+            <span class="inv-dlg-tipo" [ngClass]="ajusteTipo === 'INGRESO' ? 'is-ingreso' : 'is-salida'">
+                <i class="pi" [ngClass]="ajusteTipo === 'INGRESO' ? 'pi-plus-circle' : 'pi-minus-circle'"></i>
+                {{ ajusteTipo === 'INGRESO' ? 'Ingreso' : 'Retiro' }}
+            </span>
+        </div>
+
+        <div class="inv-field mb-3">
+            <label for="ajuste-bodega"><i class="pi pi-box"></i>Bodega</label>
+            <select id="ajuste-bodega" [(ngModel)]="ajusteBodegaId" [disabled]="ajusteGuardando">
                 <option value="">Seleccionar bodega</option>
                 <option *ngFor="let b of bodegas" [value]="b.idBodega">
                     {{ b.nombre }} ({{ b.idBodega }})
@@ -1905,37 +1670,50 @@
             </select>
         </div>
 
-        <div class="field mb-3">
-            <label class="font-semibold mb-1 d-block">Cantidad</label>
-            <input type="number" class="form-control" [(ngModel)]="ajusteCantidad" min="1"
+        <div class="inv-field mb-3">
+            <label for="ajuste-cantidad"><i class="pi pi-hashtag"></i>Cantidad</label>
+            <input id="ajuste-cantidad" type="number" [(ngModel)]="ajusteCantidad" min="1"
                    [disabled]="ajusteGuardando">
         </div>
 
-        <div class="field mb-3">
-            <label class="font-semibold mb-1 d-block">Observaciones</label>
-            <input type="text" class="form-control" [(ngModel)]="ajusteObservaciones"
-                   [placeholder]="ajusteTipo === 'INGRESO' ? 'Motivo del ingreso...' : 'Motivo del retiro...'"
+        <div class="inv-field mb-3">
+            <label for="ajuste-obs"><i class="pi pi-pencil"></i>Observaciones</label>
+            <input id="ajuste-obs" type="text" [(ngModel)]="ajusteObservaciones"
+                   [placeholder]="ajusteTipo === 'INGRESO' ? 'Motivo del ingreso…' : 'Motivo del retiro…'"
                    [disabled]="ajusteGuardando">
         </div>
 
-        <!-- Stock actual en la bodega seleccionada -->
-        <div *ngIf="ajusteBodegaId" class="mb-3 p-2 rounded" style="background: #f8fafc;">
-            <small class="text-muted">Stock actual en esta bodega:
-                <strong>{{ getStockBodega(ajusteProducto, ajusteBodegaId) }}</strong> unidades
-            </small>
+        <!-- Resumen del movimiento en la bodega seleccionada -->
+        <div *ngIf="ajusteBodegaId" class="inv-dlg-summary">
+            <span>Stock actual
+                <strong>{{ getStockBodega(ajusteProducto, ajusteBodegaId) | number }}</strong>
+            </span>
+            <i class="pi pi-arrow-right"></i>
+            <span>Quedaría en
+                <strong [class.is-negative]="ajusteTipo === 'SALIDA' && getStockBodega(ajusteProducto, ajusteBodegaId) - ajusteCantidad < 0">
+                    {{ (ajusteTipo === 'INGRESO'
+                        ? getStockBodega(ajusteProducto, ajusteBodegaId) + (ajusteCantidad || 0)
+                        : getStockBodega(ajusteProducto, ajusteBodegaId) - (ajusteCantidad || 0)) | number }}
+                </strong>
+            </span>
+        </div>
+        <div *ngIf="ajusteBodegaId && ajusteTipo === 'SALIDA' && getStockBodega(ajusteProducto, ajusteBodegaId) - ajusteCantidad < 0"
+             class="inv-dlg-warn">
+            <i class="pi pi-exclamation-triangle"></i>
+            Estás retirando más unidades de las disponibles en esta bodega.
         </div>
     </div>
 
     <ng-template pTemplate="footer">
-        <button pButton type="button" label="Cancelar" icon="pi pi-times"
-                class="p-button-text" (click)="ajusteVisible = false"
-                [disabled]="ajusteGuardando"></button>
-        <button pButton type="button"
-                [label]="ajusteTipo === 'INGRESO' ? 'Ingresar' : 'Retirar'"
-                [icon]="ajusteTipo === 'INGRESO' ? 'pi pi-plus' : 'pi pi-minus'"
-                [class]="ajusteTipo === 'INGRESO' ? 'p-button-success' : 'p-button-danger'"
+        <button type="button" class="inv-btn" (click)="ajusteVisible = false" [disabled]="ajusteGuardando">
+            Cancelar
+        </button>
+        <button type="button" class="inv-btn"
+                [ngClass]="ajusteTipo === 'INGRESO' ? 'is-green' : 'is-red'"
                 (click)="guardarAjuste()"
-                [disabled]="ajusteGuardando || !ajusteBodegaId || ajusteCantidad < 1"
-                [loading]="ajusteGuardando"></button>
+                [disabled]="ajusteGuardando || !ajusteBodegaId || ajusteCantidad < 1">
+            <i class="pi" [ngClass]="ajusteGuardando ? 'pi-spin pi-spinner' : (ajusteTipo === 'INGRESO' ? 'pi-plus' : 'pi-minus')"></i>
+            {{ ajusteTipo === 'INGRESO' ? 'Ingresar' : 'Retirar' }}
+        </button>
     </ng-template>
 </p-dialog>

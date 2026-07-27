@@ -16,6 +16,7 @@ import { MaestroService } from "src/app/shared/services/maestros/maestro.service
 @Component({
   selector: "app-pedido-facturacion",
   templateUrl: "pedido-facturacion.component.html",
+  styleUrls: ["pedido-facturacion.component.scss"],
 })
 export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   // datosFacturacionElectronica: any[];

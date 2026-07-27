@@ -1,0 +1,747 @@
+<!--
+  Venta asistida en una sola pantalla — Fase 2.
+  Transplante VERBATIM de las 6 secciones del wizard (crear-ventas) a un layout plano
+  de dos columnas. Ningún binding se cambia. El shell <aw-wizard #wizard> OCULTO queda
+  al final del template para que los @ViewChild heredados resuelvan de forma natural.
+-->
+<div class="va-page container-fluid ventas-mobile">
+
+  <!-- ===================== HEADER ===================== -->
+  <div class="va-header">
+    <!-- Encabezado de página: card con borde de acento a la izquierda (marco del mockup) -->
+    <div class="va-page-head">
+      <div class="va-page-head-main">
+        <span class="va-page-ic">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+        </span>
+        <div class="va-page-head-text">
+          <div class="va-page-head-titlerow">
+            <h1 class="va-title mb-0">Venta asistida</h1>
+            <span class="badge">Preventa #{{pedidoGral?.nroPedido || 'TEMP-000000'}}</span>
+          </div>
+          <div class="va-page-sub">Arma el pedido con el cliente en línea y cobra al instante</div>
+        </div>
+      </div>
+      <div class="va-page-head-actions">
+        <button type="button" class="va-discard-btn" (click)="nuevoPedido()" *ngIf="!showPedidoConfirm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          Descartar
+        </button>
+      </div>
+    </div>
+
+    <!--
+      La barra de contexto del cliente se retiró: repetía nombre/tipo/lista de
+      precios que ya muestra la card "Cliente" (paso 1). El mockup no la tiene.
+    -->
+  </div>
+
+  <!-- ===================== LAYOUT DOS COLUMNAS ===================== -->
+  <div class="va-layout" *ngIf="!showPedidoConfirm">
+
+    <!-- =============== COLUMNA IZQUIERDA: TARJETAS =============== -->
+    <div class="va-col-main">
+
+      <!-- ---------------- TARJETA: CLIENTE ---------------- -->
+      <section class="va-card">
+        <!-- Encabezado tipo tarjeta Cliente (estilo Cotización) -->
+        <div class="va-card-head">
+          <span class="va-ic">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </span>
+          <span class="va-card-title">Cliente</span>
+          <span class="va-req" *ngIf="!encontrado">Requerido</span>
+          <span class="va-step">Paso 1 de 4</span>
+        </div>
+
+        <!-- Buscador de clientes con Autocompletado PrimeNG -->
+        <div class="step1-search-section mb-4">
+          <div class="search-row">
+            <div class="autocomplete-container">
+              <i class="fa fa-search search-icon-left"></i>
+              <p-autoComplete
+                [(ngModel)]="selectedClienteAutocomplete"
+                [suggestions]="clienteSuggestions"
+                (completeMethod)="searchClientesAutocomplete($event)"
+                (onSelect)="onClienteAutocompleteSelect($event)"
+                (onClear)="onClienteAutocompleteClear()"
+                field="displayLabel"
+                [minLength]="3"
+                [forceSelection]="false"
+                [showClear]="true"
+                placeholder="Buscar por documento, nombre, correo o celular..."
+                styleClass="cliente-autocomplete-full"
+                inputStyleClass="cliente-input"
+              >
+                <ng-template let-cliente pTemplate="item">
+                  <div class="cliente-item">
+                    <div class="cliente-avatar">
+                      <i class="fa {{ cliente.tipo_documento_comprador === 'CC-NIT' ? 'fa-building' : 'fa-user' }}"></i>
+                    </div>
+                    <div class="cliente-info">
+                      <div class="cliente-nombre">
+                        {{ cliente.nombres_completos }}
+                      </div>
+                      <div class="cliente-contacto-line" *ngIf="cliente.tipo_documento_comprador === 'CC-NIT' && cliente.apellidos_completos">
+                        <i class="fa fa-id-badge"></i> {{ cliente.apellidos_completos }}
+                      </div>
+                      <div class="cliente-documento">
+                        <span class="badge-doc">{{ cliente.documento }}</span>
+                        <span class="cliente-contacto" *ngIf="cliente.numero_celular_comprador">
+                          <i class="fa fa-phone"></i> {{ cliente.numero_celular_comprador }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </ng-template>
+                <ng-template pTemplate="empty">
+                  <div class="empty-results">
+                    <i class="fa fa-user-slash"></i>
+                    <span>No se encontraron clientes</span>
+                  </div>
+                </ng-template>
+              </p-autoComplete>
+              <span class="search-loading" *ngIf="isSearchingCliente">
+                <i class="fa fa-circle-notch fa-spin"></i>
+              </span>
+            </div>
+
+            <!-- Botón nuevo cliente -->
+            <button class="new-client-btn" (click)="mostrarFormularioNuevoCliente()">
+              <i class="fa fa-plus"></i>
+              <span>Nuevo Cliente</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cliente seleccionado - Barra compacta inline -->
+        <div *ngIf="encontrado" class="client-inline-bar mb-3"
+             [ngClass]="{'client-just-created': clienteRecienCreado}">
+          <i class="fa fa-check-circle client-ok-icon"></i>
+          <div class="client-inline-info">
+            <span class="client-inline-name">
+              <i class="fa {{ clienteEsEmpresa ? 'fa-building' : 'fa-user' }} me-1" style="font-size:0.8rem;opacity:0.7"></i>
+              {{ clienteNombreEmpresa }}
+            </span>
+            <ng-container *ngIf="clienteEsEmpresa && clienteNombreContacto">
+              <span class="client-inline-sep">·</span>
+              <span class="client-inline-meta">
+                <i class="fa fa-id-badge"></i> {{ clienteNombreContacto }}
+              </span>
+            </ng-container>
+            <span class="client-inline-sep">·</span>
+            <span class="client-inline-doc">
+              {{ pedidoGral.cliente?.tipo_documento_comprador }} {{ pedidoGral.cliente?.documento }}
+            </span>
+            <ng-container *ngIf="pedidoGral.cliente?.numero_celular_comprador">
+              <span class="client-inline-sep">·</span>
+              <span class="client-inline-meta">
+                <i class="fa fa-phone"></i> +{{ pedidoGral.cliente?.indicativo_celular_comprador }} {{ pedidoGral.cliente?.numero_celular_comprador }}
+              </span>
+            </ng-container>
+            <ng-container *ngIf="pedidoGral.cliente?.correo_electronico_comprador">
+              <span class="client-inline-sep">·</span>
+              <span class="client-inline-meta">
+                <i class="fa fa-envelope"></i> {{ pedidoGral.cliente?.correo_electronico_comprador }}
+              </span>
+            </ng-container>
+          </div>
+          <div class="client-inline-actions">
+            <select *ngIf="tiposCliente.length > 0" class="category-inline-select"
+                    (change)="onCategoriaClienteChange($event)"
+                    [disabled]="cargandoTiposCliente"
+                    #categoriaSelect>
+              <option value="" [selected]="!categoriaClienteSeleccionada">Sin categoría</option>
+              <option *ngFor="let tipo of tiposCliente"
+                      [value]="tipo.id"
+                      [selected]="categoriaClienteSeleccionada?.id === tipo.id">
+                {{ tipo.descripcion || tipo.nombre }}
+              </option>
+            </select>
+            <button class="edit-inline-btn" (click)="abrirFormularioEdicion()">
+              <i class="fa fa-pencil"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Formulario para crear/editar cliente - Diseño limpio -->
+        <div *ngIf="mostrarFormularioCliente" class="step1-form-section mb-4" [@slideInOut]>
+          <div class="form-header">
+            <i class="fa" [ngClass]="{'fa-edit': encontrado, 'fa-user-plus': !encontrado}"></i>
+            <span>{{ encontrado ? 'Editar Cliente' : 'Nuevo Cliente' }}</span>
+          </div>
+
+          <form [formGroup]="formulario" class="form-body">
+            <!-- Información personal -->
+            <div class="form-section">
+              <div class="section-title">Información Personal</div>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>Tipo Doc. <span class="required">*</span></label>
+                  <select class="field-input" formControlName="tipo_documento_comprador">
+                    <option value="CC-NIT">CC-NIT</option>
+                    <option value="PA">PA</option>
+                    <option value="TI">TI</option>
+                  </select>
+                </div>
+                <div class="form-field span-2">
+                  <label>Documento <span class="required">*</span></label>
+                  <input class="field-input" type="text" formControlName="documento" placeholder="Número de documento" />
+                </div>
+                <div class="form-field span-2">
+                  <label>Nombres <span class="required">*</span></label>
+                  <input class="field-input" type="text" formControlName="nombres_completos" placeholder="Nombres completos" />
+                </div>
+                <div class="form-field span-2">
+                  <label>Apellidos <span class="required">*</span></label>
+                  <input class="field-input" type="text" formControlName="apellidos_completos" placeholder="Apellidos completos" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de contacto -->
+            <div class="form-section">
+              <div class="section-title">Información de Contacto</div>
+              <div class="form-grid">
+                <div class="form-field span-2">
+                  <label>Celular <span class="required">*</span></label>
+                  <div class="phone-input">
+                    <select class="country-code" formControlName="indicativo_celular_comprador">
+                      <option value="57">+57</option>
+                      <option *ngFor="let item of indicativos" value="{{ item.phone_code }}">+{{ item.phone_code }}</option>
+                    </select>
+                    <input class="field-input" type="text" formControlName="numero_celular_comprador" placeholder="Número" />
+                  </div>
+                </div>
+                <div class="form-field span-2">
+                  <label>Email <span class="required">*</span></label>
+                  <input class="field-input" type="email" formControlName="correo_electronico_comprador" placeholder="correo@ejemplo.com" />
+                </div>
+                <div class="form-field span-full">
+                  <div class="whatsapp-header">
+                    <label>WhatsApp</label>
+                    <label class="checkbox-label">
+                      <input #whatsapp type="checkbox" (change)="replicarWhatsApp($event)">
+                      <span>Mismo número de celular</span>
+                    </label>
+                  </div>
+                  <div class="phone-input">
+                    <select class="country-code" formControlName="indicativo_celular_whatsapp">
+                      <option value="57">+57</option>
+                      <option *ngFor="let item of indicativos" value="{{ item.phone_code }}">+{{ item.phone_code }}</option>
+                    </select>
+                    <input class="field-input" type="text" formControlName="numero_celular_whatsapp" placeholder="Número de WhatsApp" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="form-actions">
+              <button type="button" class="btn-cancel" (click)="cancelarEdicionCliente()">
+                Cancelar
+              </button>
+              <button *ngIf="!encontrado" type="button" class="btn-save" (click)="crearClienteRapido()"
+                [disabled]="formulario.invalid || creandoCliente">
+                <span *ngIf="creandoCliente" class="spinner-border spinner-border-sm"></span>
+                {{ creandoCliente ? 'Guardando...' : 'Guardar Cliente' }}
+              </button>
+              <button *ngIf="encontrado" type="button" class="btn-save" (click)="editarCliente()"
+                [disabled]="formulario.invalid">
+                Actualizar Cliente
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Notas del Cliente - Colapsable -->
+        <div *ngIf="encontrado" class="step1-notes-section mb-3">
+          <button type="button" class="notes-toggle-btn" (click)="notasClienteExpanded = !notasClienteExpanded">
+            <i class="fa fa-comment-alt"></i>
+            <span>Notas del cliente</span>
+            <span class="notes-count-badge" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length">
+              {{ pedidoGral.notasPedido.notasCliente.length }}
+            </span>
+            <i class="fa notes-chevron" [ngClass]="notasClienteExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+          </button>
+          <div *ngIf="notasClienteExpanded" class="notes-body">
+            <form [formGroup]="notasClienteForm" (ngSubmit)="onSubmitCliente()" class="notes-input-area">
+              <textarea formControlName="nota" placeholder="Agregar nota sobre el cliente..." rows="2"></textarea>
+              <button type="submit" [disabled]="notasClienteForm.invalid">
+                <i class="fa fa-plus"></i> Agregar
+              </button>
+            </form>
+            <div class="notes-list" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length > 0">
+              <div class="note-item" *ngFor="let nota of pedidoGral.notasPedido?.notasCliente; let i = index">
+                <div class="note-content">
+                  <span class="note-date">{{ nota.fecha | date:'dd/MM/yy HH:mm' }}</span>
+                  <span class="note-text">{{ nota.nota }}</span>
+                </div>
+                <button class="note-delete" (click)="eliminarNotaCliente(i)">
+                  <i class="fa fa-times"></i>
+                </button>
+              </div>
+            </div>
+            <div class="notes-empty" *ngIf="!pedidoGral?.notasPedido?.notasCliente?.length">
+              Sin notas registradas
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------- TARJETA: PRODUCTOS ---------------- -->
+      <section class="va-card">
+        <div class="va-card-head">
+          <span class="va-ic">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          </span>
+          <span class="va-card-title">Productos</span>
+          <span class="va-step">Paso 2 de 4</span>
+        </div>
+
+        <!-- BARRA DE FILTROS - Siempre visible en pantalla plana (gate currentStepIndex removido) -->
+        <div class="step2-filters-section">
+          <div class="filters-row">
+            <!-- Bodega -->
+            <div class="filter-item" [class.filter-completed]="selectedWarehouse">
+              <label class="filter-label">
+                <i class="fa fa-warehouse"></i>
+                Bodega
+              </label>
+              <select class="filter-select"
+                      (change)="onWarehouseChange($event)"
+                      [class.has-value]="selectedWarehouse">
+                <option value="">Seleccionar...</option>
+                <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+                  {{ bodega.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Ciudad -->
+            <div class="filter-item" [class.filter-completed]="selectedCity && selectedCity !== 'seleccione'" [class.filter-disabled]="!selectedWarehouse">
+              <div class="filter-label-row">
+                <label class="filter-label">
+                  <i class="fa fa-map-marker-alt"></i>
+                  Ciudad
+                </label>
+                <label class="dane-toggle" *ngIf="selectedWarehouse">
+                  <input type="checkbox" [(ngModel)]="usarDaneCiudadEntrega">
+                  <span>DANE</span>
+                </label>
+              </div>
+
+              <!-- Selector normal -->
+              <ng-container *ngIf="!usarDaneCiudadEntrega">
+                <select class="filter-select"
+                        (change)="onSelectCity($event)"
+                        [class.has-value]="selectedCity && selectedCity !== 'seleccione'"
+                        [disabled]="!selectedWarehouse">
+                  <option value="seleccione">Seleccionar...</option>
+                  <option *ngFor="let ciudad of empresaActual.ciudadess.ciudadesEntrega"
+                          [value]="ciudad.value"
+                          [selected]="selectedCity === ciudad.value">
+                    {{ ciudad.label }}
+                  </option>
+                </select>
+              </ng-container>
+
+              <!-- Búsqueda DANE -->
+              <ng-container *ngIf="usarDaneCiudadEntrega">
+                <div class="dane-wrapper">
+                  <div class="dane-inputs">
+                    <input type="text" class="dane-input"
+                           [(ngModel)]="searchQueryCiudadDane"
+                           placeholder="Buscar municipio..."
+                           (input)="buscarMunicipioDane(searchQueryCiudadDane)"
+                           [disabled]="!selectedWarehouse">
+                    <select class="dane-depto"
+                            [(ngModel)]="departamentoDaneSeleccionado"
+                            (ngModelChange)="onDepartamentoDaneChange($event)"
+                            [disabled]="!selectedWarehouse">
+                      <option value="">Depto</option>
+                      <option *ngFor="let depto of departamentosDane" [value]="depto">{{ depto }}</option>
+                    </select>
+                  </div>
+                  <div *ngIf="selectedCity && selectedCity !== 'seleccione'" class="dane-selected">
+                    <i class="fa fa-check"></i> {{ selectedCity }}
+                  </div>
+                  <div *ngIf="municipiosDane.length > 0" class="dane-results">
+                    <div *ngFor="let municipio of municipiosDane" class="dane-item" (click)="seleccionarMunicipioDane(municipio)">
+                      {{ municipio.nombre }} <span>- {{ municipio.departamento }}</span>
+                    </div>
+                  </div>
+                  <div *ngIf="cargandoCiudadesDane" class="dane-loading">
+                    <i class="fa fa-spinner fa-spin"></i>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+
+            <!-- Búsqueda de productos -->
+            <div class="filter-item filter-search" [class.filter-disabled]="!selectedCity || selectedCity === 'seleccione'">
+              <label class="filter-label">
+                <i class="fa fa-search"></i>
+                Buscar productos
+              </label>
+              <div class="search-wrapper">
+                <i class="fa fa-search"></i>
+                <input type="search" class="search-input"
+                       placeholder="Nombre o referencia..."
+                       (keyup)="onProductSearch($event)"
+                       [disabled]="!selectedCity || selectedCity === 'seleccione'">
+              </div>
+            </div>
+          </div>
+
+          <!--
+            ÚNICO mensaje de estado cuando falta bodega o ciudad (marco ámbar del
+            mockup: chip de ícono + título + subtítulo). El aviso azul duplicado
+            se eliminó y el catálogo ya no se monta con la ciudad centinela, así
+            que el hijo tampoco pinta su propio "Ciudad de entrega requerida".
+          -->
+          <!--
+            Sin cliente no se pueden elegir productos: los precios dependen del
+            tipo de cliente. Es la misma garantía que daba el wizard al poner
+            Cliente como paso 1 antes de Productos.
+          -->
+          <div class="filters-status" *ngIf="!pedidoGral?.cliente">
+            <span class="fs-ic"><i class="fa fa-user"></i></span>
+            <div class="fs-text">
+              <span class="fs-title">Selecciona primero un cliente</span>
+              <span class="fs-sub">Los precios dependen del tipo de cliente, por eso el catálogo se habilita después.</span>
+            </div>
+          </div>
+
+          <div class="filters-status" *ngIf="pedidoGral?.cliente && (!selectedWarehouse || !selectedCity || selectedCity === 'seleccione')">
+            <span class="fs-ic"><i class="fa fa-exclamation-circle"></i></span>
+            <div class="fs-text">
+              <span class="fs-title" *ngIf="!selectedWarehouse">Selecciona una bodega y ciudad para ver el catálogo</span>
+              <span class="fs-title" *ngIf="selectedWarehouse && (!selectedCity || selectedCity === 'seleccione')">
+                Selecciona una ciudad para ver el catálogo
+              </span>
+              <span class="fs-sub">El stock disponible depende de la bodega elegida.</span>
+            </div>
+          </div>
+        </div>
+
+        <!--
+          Catálogo DIRECTO dentro de la card "Productos": se eliminó el marco
+          Bootstrap intermedio (card + card-header "Catálogo de Productos" +
+          card-body) que producía una card-dentro-de-card con cuerpo vacío y un
+          segundo título. También se retiró el mini-carrito lateral (el carrito
+          es su propia card, paso 3) que ya estaba oculto por CSS.
+        -->
+        <div class="step2-layout-container">
+          <div class="step2-products-area">
+            <app-ecomerce-products #products
+              [ciudadSelector]="empresaActual?.ciudadess?.ciudadesEntrega"
+              [selectedCity]="selectedCity"
+              [ciudad]="selectedCity"
+              [bodega]="bodega"
+              [mostrarBuscador]="false"
+              [isRebuy]="false"
+              (citySelected)="onCitySelect($event)"
+              *ngIf="pedidoGral && pedidoGral.cliente && bodega && selectedCity && selectedCity !== 'seleccione'">
+            </app-ecomerce-products>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------- TARJETA: CARRITO ---------------- -->
+      <section class="va-card">
+        <div class="va-card-head">
+          <span class="va-ic">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+          </span>
+          <span class="va-card-title">Carrito</span>
+          <!-- Marco del mockup: badge lila con el conteo + acción "Vaciar" a la derecha.
+               El carrito NO lleva rótulo de paso. -->
+          <span class="va-cart-count" *ngIf="tieneProductosEnCarrito">{{cantidadItemsCarrito}} ítem(s)</span>
+          <button type="button" class="va-cart-clear" *ngIf="tieneProductosEnCarrito" (click)="vaciarCarrito()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+            Vaciar
+          </button>
+        </div>
+
+        <!--
+          Sin rótulo interno "Productos seleccionados": duplicaba el título de la
+          card. Bajo el encabezado va directamente la tabla del carrito (mockup).
+        -->
+        <div class="step3-section mb-4">
+          <div class="section-content no-padding">
+            <app-carrito #carrito [pedido]="pedidoGral" (notaAgregada)="onNotaAgregada($event)" *ngIf="pedidoGral"></app-carrito>
+          </div>
+        </div>
+
+        <!-- Notas del pedido - Acordeón -->
+        <div class="step3-notes-accordion mb-4">
+          <button type="button" class="accordion-toggle" (click)="notasPedidoExpanded = !notasPedidoExpanded">
+            <i class="fa fa-comment-alt"></i>
+            <span>Notas del pedido</span>
+            <i class="fa accordion-chevron" [ngClass]="notasPedidoExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+          </button>
+          <div *ngIf="notasPedidoExpanded" class="accordion-body">
+            <app-notas #notaspedidos [pedido]="pedidoGral" [carrito]="carrito1" [isEdit]="isEditing"
+              (notasActualizadas)="onNotasActualizadas($event)" *ngIf="pedidoGral"></app-notas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------- TARJETA: ENVÍO Y FACTURACIÓN ---------------- -->
+      <section class="va-card">
+        <div class="va-card-head">
+          <span class="va-ic">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+          </span>
+          <span class="va-card-title">Envío y Facturación</span>
+          <span class="va-step">Paso 3 de 4</span>
+        </div>
+
+        <!-- TABS para Envío y Facturación - Diseño compacto -->
+        <div class="step4-consolidated">
+
+          <!-- Selector de Forma de Entrega (solo si no está configurada previamente) -->
+          <!-- Marco del mockup: 2 tarjetas radio grandes, cableadas a la misma
+               lógica (formasEntregaOptions / onFormaEntregaChange / selectedFormaEntrega). -->
+          <div class="forma-entrega-selector-container mb-4" *ngIf="mostrarSelectorFormaEntrega">
+            <div class="fe-label">Forma de entrega</div>
+            <div class="fe-cards">
+              <button *ngFor="let opcion of formasEntregaOptions"
+                type="button"
+                class="fe-card"
+                [class.fe-card--active]="selectedFormaEntrega === opcion.value"
+                (click)="onFormaEntregaChange(opcion.value)">
+                <span class="fe-card-ic"><i class="fa {{opcion.icon}}"></i></span>
+                <span class="fe-card-text">
+                  <span class="fe-card-title">{{opcion.label}}</span>
+                  <span class="fe-card-sub">{{ opcion.value === 'Recoge' ? 'Sin costo de envío' : 'Se cobra según la ciudad' }}</span>
+                </span>
+                <span class="fe-card-radio">
+                  <i class="fa fa-check" *ngIf="selectedFormaEntrega === opcion.value"></i>
+                </span>
+              </button>
+            </div>
+            <div class="fe-hint">
+              <i class="fa fa-info-circle me-1"></i>
+              Seleccione cómo desea recibir el pedido
+            </div>
+          </div>
+
+          <!--
+            Avisos aplanados a nota discreta (.va-note): sin `alert alert-info` de
+            Bootstrap ni el border-left inline #8b5cf6 (violeta prohibido D-131,
+            que además ganaba a la regla del SCSS por ser inline).
+          -->
+          <div class="va-note mb-4" *ngIf="!mostrarSelectorFormaEntrega">
+            <i class="fa fa-info-circle"></i>
+            <span>
+              <strong>Forma de entrega ya configurada:</strong> Este pedido ya tiene su forma de entrega definida.
+              <ng-container *ngIf="selectedFormaEntrega === 'Recoge'">El cliente recogerá en tienda.</ng-container>
+              <ng-container *ngIf="selectedFormaEntrega === 'Domicilio'">Se enviará a domicilio.</ng-container>
+            </span>
+          </div>
+
+          <div class="va-note mb-3" *ngIf="esRecogeEnTienda">
+            <i class="fa fa-info-circle"></i>
+            <span>
+              <strong>Recoge en Tienda:</strong> No se requieren datos de envío. Por favor configure los datos de facturación.
+            </span>
+          </div>
+
+          <!-- Tabs de navegación Envío / Facturación -->
+          <ul class="nav step4-tabs" role="tablist">
+            <li class="nav-item" role="presentation" *ngIf="!esRecogeEnTienda">
+              <button class="nav-link active" id="tab-envio" data-bs-toggle="tab" data-bs-target="#panel-envio"
+                      type="button" role="tab" aria-controls="panel-envio" aria-selected="true">
+                <i class="fa fa-truck me-2"></i>Envío
+                <span class="tab-badge" *ngIf="pedidoGral?.envio">
+                  <i class="fa fa-check-circle"></i>
+                </span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" [class.active]="esRecogeEnTienda" id="tab-facturacion" data-bs-toggle="tab" data-bs-target="#panel-facturacion"
+                      type="button" role="tab" aria-controls="panel-facturacion" [attr.aria-selected]="esRecogeEnTienda">
+                <i class="fa fa-file-invoice me-2"></i>Facturación
+                <span class="tab-badge" *ngIf="pedidoGral?.facturacion">
+                  <i class="fa fa-check-circle"></i>
+                </span>
+              </button>
+            </li>
+          </ul>
+
+          <!-- Contenido de las tabs -->
+          <div class="tab-content step4-tab-content">
+            <!-- Panel Envío -->
+            <div class="tab-pane fade show active" id="panel-envio" role="tabpanel"
+                 aria-labelledby="tab-envio" *ngIf="!esRecogeEnTienda">
+              <pedido-entrega #entrega [pedidoGral]="pedidoGral" [formulario]="formulario"
+                [datosEntregas]="datosEntregas" [documentoBusqueda]="documentoBuscar"
+                [direccionEntrega]="direccion_facturacion" [paisInicial]="pais" [departamentoInicial]="departamento"
+                [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
+                [datosEntregaNoEncontradosParaCiudadSeleccionada]="datosEntregaNoEncontradosParaCiudadSeleccionada"
+                (overridePedido)="overridePedido($event)" [activeIndex]="0" *ngIf="pedidoGral">
+              </pedido-entrega>
+            </div>
+
+            <!-- Panel Facturación -->
+            <div class="tab-pane fade" [class.show]="esRecogeEnTienda" [class.active]="esRecogeEnTienda"
+                 id="panel-facturacion" role="tabpanel" aria-labelledby="tab-facturacion">
+              <app-pedido-facturacion #facturacion [pedidoGral]="pedidoGral" [formulario]="formulario"
+                [datosFacturacionElectronica]="datosFacturacionElectronica"
+                [direccionFacturacion]="direccion_facturacion" [paisInicial]="pais"
+                [departamentoInicial]="departamento" [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
+                (overridePedido)="overridePedido($event)" [generarFactura]="generarFacturaElectronica"
+                (generarFacturaChange)="onGenerarFacturaChange($event)"
+                [documentoBusqueda]="documentoBuscar" [activeIndex]="0" *ngIf="pedidoGral">
+              </app-pedido-facturacion>
+            </div>
+          </div>
+
+          <!--
+            Sin barra de estado al pie: el check de completitud ya lo comunica el
+            .tab-badge dentro de cada pestaña (el mockup no la tiene).
+          -->
+        </div>
+      </section>
+
+    </div>
+
+    <!-- =============== COLUMNA DERECHA: RESUMEN Y PAGO =============== -->
+    <div class="va-col-side">
+      <div class="va-card">
+        <div class="va-card-head">
+          <span class="va-ic">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          </span>
+          <span class="va-card-title">Resumen y Pago</span>
+          <span class="va-step">Paso 4</span>
+        </div>
+        <div class="section-content">
+          <app-checkout #resumen [pedido]="pedidoGral" [allBillingZone]="allBillingZone"
+            [formaEntregaYaDefinida]="pedidoSinConfiguracion"
+            (comprarYPagar)="onComprarYPagar($event)" *ngIf="pedidoGral"></app-checkout>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===================== CONFIRMACIÓN DEL PEDIDO ===================== -->
+  <!-- Confirmación del pedido -->
+  <div *ngIf="showPedidoConfirm" id="va-confirmacion" class="step6-section step6-success mb-4">
+    <div class="section-header section-header-success">
+      <i class="fa fa-check-circle"></i>
+      <span>¡Pedido Procesado Exitosamente!</span>
+      <span class="order-badge">Pedido #{{pedidoGral?.nroPedido || 'N/A'}}</span>
+    </div>
+    <div class="section-content">
+      <!-- Componente de confirmación que muestra el HTML del pedido -->
+      <app-confirm #confirmacion [pedido]="pedidoGral" *ngIf="pedidoGral"></app-confirm>
+    </div>
+  </div>
+
+  <!-- Acciones finales - Diseño mejorado -->
+  <div *ngIf="showPedidoConfirm" class="step6-actions">
+    <button class="btn btn-outline-secondary btn-lg" type="button" (click)="imprimirPedido()">
+      <i class="fa fa-print me-2"></i>
+      Imprimir Pedido
+    </button>
+    <button class="btn btn-primary btn-lg" type="button" (click)="nuevoPedido()">
+      <i class="fa fa-plus-circle me-2"></i>
+      Crear Nuevo Pedido
+    </button>
+  </div>
+
+</div>
+
+<!-- ===================== MODALES (renombrados #entregaModal / #facturacionModal) ===================== -->
+<!-- Modal para crear datos de entrega -->
+<ng-template #entregaModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-truck me-2"></i>Crear Datos de Entrega</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+  </div>
+  <div class="modal-body">
+    <div class="row g-3">
+      <div class="col-sm-12">
+        <label class="form-label" for="alias_entrega">Referencia Para Datos de Entrega</label>
+        <input class="form-control" type="text" id="alias_entrega" [(ngModel)]="alias_entrega" />
+      </div>
+
+      <div class="col-sm-6">
+        <label class="form-label" for="nombres_entrega">Nombres:</label>
+        <input class="form-control" type="text" id="nombres_entrega" [(ngModel)]="nombres_entrega" />
+      </div>
+
+      <div class="col-sm-6">
+        <label class="form-label" for="apellidos_entrega">Apellidos:</label>
+        <input class="form-control" type="text" id="apellidos_entrega" [(ngModel)]="apellidos_entrega" />
+      </div>
+
+      <div class="col-sm-12">
+        <label class="form-label" for="numero_celular_entrega">Número de Celular:</label>
+        <div class="input-group">
+          <span class="input-group-text bg-light select-container" style="min-width: 90px;">
+            <select class="form-select form-select-sm border-0 bg-transparent custom-select-sm"
+              [(ngModel)]="indicativo_entrega">
+              <option value="57" selected>+57</option>
+              <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+                +{{ item.phone_code }}
+              </option>
+            </select>
+          </span>
+          <input class="form-control" type="text" id="numero_celular_entrega" [(ngModel)]="celular_entrega"
+            placeholder="Número de celular" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
+      <i class="fa fa-times me-1"></i> Cancelar
+    </button>
+    <button type="button" class="btn btn-success" (click)="guardarDatosEntrega()">
+      <i class="fa fa-save me-1"></i> Guardar
+    </button>
+  </div>
+</ng-template>
+
+<!-- Modal para crear datos de facturación -->
+<ng-template #facturacionModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title"><i class="fa fa-file-invoice me-2"></i>Crear Datos de Facturación
+    </h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+  </div>
+  <div class="modal-body">
+    <!-- Contenido del modal de facturación -->
+    <!-- ... (Se mantiene el mismo contenido actual) ... -->
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
+      <i class="fa fa-times me-1"></i> Cancelar
+    </button>
+    <button type="button" class="btn btn-success" (click)="guardarDatosFacturacion()">
+      <i class="fa fa-save me-1"></i> Guardar
+    </button>
+  </div>
+</ng-template>
+
+<!--
+  Shell de wizard OCULTO y SIEMPRE en el DOM (sin *ngIf) para que
+  @ViewChild('wizard') mywizard y @ViewChild(WizardComponent) wizard
+  resuelvan de forma natural y las llamadas heredadas a
+  this.mywizard.goToNextStep() nunca lancen.
+-->
+<div style="display: none" aria-hidden="true">
+  <aw-wizard #wizard>
+    <aw-wizard-step></aw-wizard-step>
+    <aw-wizard-step></aw-wizard-step>
+    <aw-wizard-step></aw-wizard-step>
+    <aw-wizard-step></aw-wizard-step>
+    <aw-wizard-step></aw-wizard-step>
+    <aw-wizard-step></aw-wizard-step>
+  </aw-wizard>
+</div>

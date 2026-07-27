@@ -1,35 +1,44 @@
-/* Variables para unificación visual */
+// Checkout de venta asistida — reskin con el lenguaje visual de Cotizaciones.
+// Reskin puro por estilos: el HTML y todos los bindings quedan intactos.
+@import '../../../shared/styles/katuq-comercial';
+
+/* Paleta unificada (acento morado de Cotizaciones). Se define --primary-rgb
+   —que antes faltaba— para que todos los rgba(var(--primary-rgb)) usen el morado. */
 :root {
-  --primary-color: #4361ee;
-  --primary-light: #738efc;
-  --primary-dark: #3a56d4;
-  --secondary-color: #2ec4b6;
-  --success-color: #06d6a0;
-  --warning-color: #ffd166;
-  --danger-color: #ef476f;
-  --light-color: #f8f9fa;
-  --dark-color: #212529;
-  --gray-100: #f8f9fa;
-  --gray-200: #e9ecef;
-  --gray-300: #dee2e6;
-  --gray-400: #ced4da;
-  --gray-500: #adb5bd;
-  --gray-600: #6c757d;
-  --gray-700: #495057;
-  --gray-800: #343a40;
-  --border-radius: 0.5rem;
-  --transition: all 0.3s ease;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --primary-color: #6c4ce0;
+  --primary-light: #8c6bff;
+  --primary-dark: #533bc4;
+  --primary-rgb: 108, 76, 224;
+  --secondary-color: #14b8a6;
+  --success-color: #17994f;
+  --warning-color: #e0891b;
+  --danger-color: #d6455b;
+  --light-color: #f7f8fc;
+  --dark-color: #2a2e3c;
+  --gray-100: #f7f8fc;
+  --gray-200: #ecedf3;
+  --gray-300: #e4e5ee;
+  --gray-400: #d7d9e3;
+  --gray-500: #9199ac;
+  --gray-600: #8a90a2;
+  --gray-700: #52586b;
+  --gray-800: #2a2e3c;
+  --border-radius: 0.75rem;
+  --transition: all 0.2s ease;
+  --shadow-sm: 0 1px 3px rgba(30, 35, 60, 0.04);
+  --shadow: 0 1px 3px rgba(30, 35, 60, 0.06);
+  --shadow-lg: 0 12px 30px rgba(30, 35, 60, 0.12);
 }
 
 /* Estilos generales del checkout */
 .checkout {
+  @include kc-tokens;
   margin-top: 1.5rem !important;
-  max-width: 1200px;
+  max-width: 1240px;
   margin-left: auto;
   margin-right: auto;
+  font-family: var(--kc-font-body);
+  color: var(--kc-ink);
 }
 
 /* Encabezado de resumen */
@@ -41,49 +50,57 @@
 
 .checkout-header h4 {
   color: var(--gray-800);
-  font-weight: 600;
-  font-size: 1.25rem;
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 1.4rem;
 }
+
+.checkout-header .text-primary { color: var(--primary-color) !important; }
 
 .order-number .badge {
-  font-size: 0.9rem;
-  padding: 0.5rem 0.75rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.85rem;
+  font-weight: 800;
+  border-radius: 999px;
+  background: var(--kc-accent-wash) !important;
+  color: var(--primary-color) !important;
 }
 
-/* Indicador de fecha estimada de entrega - más prominente */
+/* Indicador de fecha estimada de entrega */
 .delivery-estimate {
   margin-bottom: 1.5rem;
 }
 
 .delivery-estimate .card {
-  border: none;
-  border-left: 4px solid var(--primary-color);
-  background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.03);
+  border: 1px solid var(--gray-200) !important;
+  border-radius: 18px;
+  background-color: var(--surface, #fff);
   box-shadow: var(--shadow-sm);
 }
 
 .delivery-estimate .card:hover {
-  background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.05);
+  background-color: #faf9ff;
 }
 
 .delivery-icon {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.1);
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background-color: var(--kc-accent-wash);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--primary-color);
 }
 
-/* Selector de forma de entrega global */
+/* Selector de forma de entrega */
 .forma-entrega-selector {
   .selector-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--gray-700);
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     display: block;
   }
 
@@ -94,54 +111,64 @@
 
   .forma-entrega-btn {
     flex: 1;
-    padding: 0.6rem 1rem;
+    padding: 0.7rem 1rem;
     font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 800;
     color: var(--gray-600);
-    background-color: var(--gray-100);
-    border: 2px solid var(--gray-200);
-    border-radius: var(--border-radius) !important;
+    background-color: #fff;
+    border: 1px solid var(--gray-300);
+    border-radius: 12px !important;
     transition: var(--transition);
     display: flex;
     align-items: center;
     justify-content: center;
 
-    i {
-      font-size: 1rem;
-    }
+    i { font-size: 1rem; }
 
     &:hover {
-      background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.05);
+      background-color: #faf9ff;
       border-color: var(--primary-light);
       color: var(--primary-color);
     }
 
     &.active {
-      background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.1);
+      background-color: var(--primary-color);
       border-color: var(--primary-color);
-      color: var(--primary-color);
-      font-weight: 600;
-      box-shadow: 0 2px 8px rgba(67, 97, 238, 0.2);
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
 
-      i {
-        color: var(--primary-color);
-      }
+      i { color: #fff; }
     }
 
     &:focus {
-      box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+      box-shadow: 0 0 0 0.2rem rgba(108, 76, 224, 0.15);
     }
   }
 }
 
-/* Responsive para el selector de forma de entrega */
+.forma-entrega-info {
+  .selector-label {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+  }
+
+  .badge.bg-primary {
+    background: var(--primary-color) !important;
+    border-radius: 999px;
+    font-weight: 800;
+  }
+}
+
 @media (max-width: 767.98px) {
   .forma-entrega-selector {
     margin-top: 1rem;
 
-    .btn-group {
-      flex-direction: column;
-    }
+    .btn-group { flex-direction: column; }
 
     .forma-entrega-btn {
       width: 100%;
@@ -151,38 +178,39 @@
   }
 }
 
-/* Estilos para acordeón */
+/* Acordeón */
 .accordion-item {
   border: none;
   background-color: transparent;
   margin-bottom: 1rem;
-  border-radius: var(--border-radius);
+  border-radius: 16px;
   overflow: hidden;
 }
 
 .accordion-header {
-  background-color: var(--gray-100);
+  background-color: transparent;
   margin-bottom: 0;
-  border-radius: var(--border-radius);
+  border-radius: 16px;
 }
 
 .accordion-button {
   padding: 1rem 1.25rem;
-  font-weight: 600;
-  font-size: 1rem;
+  font-family: var(--kc-font-head);
+  font-weight: 700;
+  font-size: 1.05rem;
   color: var(--gray-800);
-  background-color: white;
+  background-color: #fff;
   border: 1px solid var(--gray-200);
-  border-radius: var(--border-radius) !important;
+  border-radius: 16px !important;
   box-shadow: var(--shadow-sm);
   transition: var(--transition);
 }
 
 .accordion-button:not(.collapsed) {
   color: var(--primary-color);
-  background-color: white;
+  background-color: #fff;
   box-shadow: var(--shadow);
-  border-color: rgba(var(--primary-rgb, 67, 97, 238), 0.2);
+  border-color: #e2d9fb;
   border-bottom-left-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
 }
@@ -193,46 +221,72 @@
 }
 
 .accordion-button:focus {
-  box-shadow: 0 0 0 0.15rem rgba(var(--primary-rgb, 67, 97, 238), 0.15);
-  border-color: rgba(var(--primary-rgb, 67, 97, 238), 0.25);
+  box-shadow: 0 0 0 0.15rem rgba(108, 76, 224, 0.15);
+  border-color: #e2d9fb;
 }
 
 .accordion-body {
-  background-color: white;
+  background-color: #fff;
   padding: 1.25rem;
   border: 1px solid var(--gray-200);
   border-top: none;
-  border-bottom-left-radius: var(--border-radius);
-  border-bottom-right-radius: var(--border-radius);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
 }
 
-/* Estilos para las secciones colapsadas (resumen) */
+/* Resumen colapsado */
 .accordion-summary {
   display: flex;
   align-items: center;
   margin-left: 1rem;
-  font-size: 0.85rem;
-  font-weight: normal;
+  font-size: 0.82rem;
+  font-weight: 600;
   color: var(--gray-600);
 }
 
 .accordion-summary span {
   margin-right: 0.5rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   max-width: 200px;
 }
 
 .accordion-summary span.complete {
   color: var(--success-color);
+  font-weight: 800;
   margin-left: 0.5rem;
+}
+
+/* form-control-static (valores de solo lectura) */
+.accordion-body-content {
+  padding: 0 0.5rem;
+
+  label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--gray-600);
+
+    strong { font-weight: 800; }
+  }
+
+  .form-control-static {
+    margin: 4px 0 0;
+    padding: 9px 12px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gray-800);
+  }
 }
 
 /* Checkout resumen (columna derecha) */
 .checkout-details {
-  background-color: white;
-  border-radius: var(--border-radius);
+  background-color: #fff;
+  border-radius: 20px;
   box-shadow: var(--shadow);
   height: 100%;
   border: 1px solid var(--gray-200);
@@ -241,7 +295,7 @@
 }
 
 .order-box {
-  padding: 1.25rem;
+  padding: 1.35rem 1.4rem;
 }
 
 .title-box {
@@ -253,40 +307,37 @@
 .title-box h4 {
   margin-bottom: 0;
   color: var(--gray-800);
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-family: var(--kc-font-head);
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
-/* Nueva sección de productos en tarjetas */
+/* Productos */
 .products-container {
-  max-height: 200px;
+  max-height: 220px;
   overflow-y: auto;
   margin-bottom: 1.25rem;
   padding-right: 0.5rem;
 }
 
 .product-card {
-  padding: 0.75rem;
+  padding: 0.8rem 0.9rem;
   background-color: var(--gray-100);
-  border-radius: 0.5rem;
-  margin-bottom: 0.75rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  margin-bottom: 0.6rem;
   transition: var(--transition);
-  }
-
-.product-card:hover {
-  background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.03);
 }
 
-.product-info {
-  display: flex;
-  flex-direction: column;
-}
+.product-card:hover { background-color: #faf9ff; }
+
+.product-info { display: flex; flex-direction: column; }
 
 .product-name {
-  font-weight: 600;
+  font-weight: 800;
   color: var(--gray-800);
   margin-bottom: 0.25rem;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
 }
 
 .product-details {
@@ -294,14 +345,13 @@
   justify-content: space-between;
   color: var(--gray-600);
   font-size: 0.85rem;
+  font-weight: 600;
 }
 
-.quantity {
-  color: var(--gray-600);
-}
+.quantity { color: var(--gray-600); }
 
 .price {
-  font-weight: 600;
+  font-weight: 800;
   color: var(--primary-color);
 }
 
@@ -309,6 +359,7 @@
 .sub-total {
   list-style-type: none;
   padding-left: 0;
+  margin-bottom: 0;
 }
 
 .sub-total li {
@@ -316,6 +367,10 @@
   justify-content: space-between;
   padding: 0.5rem 0;
   font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gray-700);
+
+  .count { font-family: var(--kc-font-head); font-weight: 700; color: var(--gray-800); }
 }
 
 .sub-total li:not(:last-child) {
@@ -323,50 +378,58 @@
 }
 
 .sub-total li:last-child {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--primary-color);
-  border-top: 2px solid var(--primary-color);
-  margin-top: 0.5rem;
-  padding-top: 0.75rem;
-  padding-bottom: 0;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--gray-800);
+  border: none;
+  background: var(--kc-accent-wash);
+  border-radius: 14px;
+  margin-top: 0.75rem;
+  padding: 0.9rem 1rem;
+
+  .count {
+    color: var(--primary-color);
+    font-family: var(--kc-font-head);
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
 }
 
-/* Lista de dos columnas mejorada */
-  .two-column-list {
-    list-style-type: none;
-    padding: 0;
+/* Lista de dos columnas (desglose IVA) */
+.two-column-list {
+  list-style-type: none;
+  padding: 0;
   margin: 0.5rem 0;
-  background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.03);
-  border-radius: 0.375rem;
-  }
-  
-  .two-column-list li {
-    display: flex;
-    justify-content: space-between;
-  padding: 6px 10px;
+  background-color: var(--gray-100);
+  border-radius: 10px;
+}
+
+.two-column-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
   font-size: 0.8rem;
 }
 
 .two-column-list li:not(:last-child) {
-  border-bottom: 1px dashed rgba(var(--primary-rgb, 67, 97, 238), 0.1);
-  }
-  
-  .two-column-list .title {
-    flex: 1;
-    text-align: left;
-  font-weight: 500;
-  color: var(--gray-600);
-  }
-  
-  .two-column-list .value {
-    flex: 1;
-    text-align: right;
-  color: var(--primary-color);
-  font-weight: 600;
+  border-bottom: 1px dashed var(--gray-200);
 }
 
-/* Nuevos estilos para tabs de métodos de pago */
+.two-column-list .title {
+  flex: 1;
+  text-align: left;
+  font-weight: 600;
+  color: var(--gray-600);
+}
+
+.two-column-list .value {
+  flex: 1;
+  text-align: right;
+  color: var(--primary-color);
+  font-weight: 800;
+}
+
+/* Tabs de métodos de pago */
 .payment-tabs {
   border-bottom: 1px solid var(--gray-200);
   display: flex;
@@ -376,22 +439,15 @@
   gap: 0.25rem;
 }
 
-.payment-tabs::-webkit-scrollbar {
-  height: 3px;
-}
+.payment-tabs::-webkit-scrollbar { height: 3px; }
+.payment-tabs::-webkit-scrollbar-thumb { background-color: var(--gray-300); border-radius: 10px; }
 
-.payment-tabs::-webkit-scrollbar-thumb {
-  background-color: var(--gray-300);
-  border-radius: 10px;
-}
-
-.payment-tabs .nav-item {
-  flex: 0 0 auto;
-}
+.payment-tabs .nav-item { flex: 0 0 auto; }
 
 .payment-tabs .nav-link {
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1rem;
   font-size: 0.85rem;
+  font-weight: 700;
   color: var(--gray-600);
   border: none;
   border-bottom: 2px solid transparent;
@@ -401,16 +457,13 @@
   align-items: center;
 }
 
-.payment-tabs .nav-link i {
-  margin-right: 0.5rem;
-  font-size: 0.9rem;
-}
+.payment-tabs .nav-link i { margin-right: 0.5rem; font-size: 0.9rem; }
 
 .payment-tabs .nav-link.active {
   color: var(--primary-color);
   background-color: transparent;
   border-bottom: 2px solid var(--primary-color);
-  font-weight: 600;
+  font-weight: 800;
 }
 
 /* Rejilla de métodos de pago */
@@ -421,9 +474,7 @@
   padding-top: 0.5rem;
 }
 
-.payment-option {
-  position: relative;
-}
+.payment-option { position: relative; }
 
 .payment-method-label {
   display: block;
@@ -432,25 +483,21 @@
   position: relative;
 }
 
-.payment-radio {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-}
+.payment-radio { position: absolute; opacity: 0; cursor: pointer; }
 
 .payment-method-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 0.5rem;
-  border-radius: var(--border-radius);
+  padding: 0.85rem 0.5rem;
+  border-radius: 12px;
   background-color: var(--gray-100);
   border: 1px solid var(--gray-200);
   transition: var(--transition);
   text-align: center;
   height: 100%;
-  min-height: 70px;
+  min-height: 72px;
 }
 
 .payment-method-card i {
@@ -461,6 +508,7 @@
 
 .payment-method-card span {
   font-size: 0.8rem;
+  font-weight: 700;
   color: var(--gray-700);
   white-space: nowrap;
   overflow: hidden;
@@ -469,23 +517,23 @@
 }
 
 .payment-radio:checked + .payment-method-card {
-  background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.05);
+  background-color: var(--kc-accent-wash);
   border-color: var(--primary-color);
 }
 
 .payment-radio:checked + .payment-method-card i,
 .payment-radio:checked + .payment-method-card span {
   color: var(--primary-color);
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .payment-radio:checked + .payment-method-card::before {
-  content: "\f058"; /* Font Awesome check circle */
+  content: "\f058";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: -6px;
+  right: -6px;
   color: var(--primary-color);
   background-color: white;
   border-radius: 50%;
@@ -493,14 +541,14 @@
 }
 
 .payment-radio:focus + .payment-method-card {
-  box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb, 67, 97, 238), 0.15);
+  box-shadow: 0 0 0 0.2rem rgba(108, 76, 224, 0.15);
 }
 
 /* Información de seguridad */
 .payment-security {
-  background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.03);
-  border-radius: var(--border-radius);
-  padding: 0.75rem;
+  background-color: var(--gray-100);
+  border-radius: 12px;
+  padding: 0.85rem;
   margin-top: 1rem;
   text-align: center;
   border: none;
@@ -511,14 +559,10 @@
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
-.security-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+.security-badge { display: flex; flex-direction: column; align-items: center; }
 
 .security-badge i {
   font-size: 1rem;
@@ -529,7 +573,7 @@
 .security-badge span {
   font-size: 0.7rem;
   color: var(--gray-700);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 /* Botón de compra */
@@ -540,42 +584,40 @@
 
 .order-place .btn {
   width: 100%;
-  padding: 0.75rem 2rem;
+  padding: 0.9rem 2rem;
+  font-family: var(--kc-font-body);
   font-size: 1rem;
-  font-weight: 600;
-  border-radius: 0.375rem;
+  font-weight: 800;
+  border-radius: 14px;
+  border: none;
+  background: var(--primary-color);
+  color: #fff;
   transition: var(--transition);
-  box-shadow: 0 2px 4px rgba(67, 97, 238, 0.2);
+  box-shadow: 0 8px 20px rgba(108, 76, 224, 0.3);
 }
 
 .order-place .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+  box-shadow: 0 10px 24px rgba(108, 76, 224, 0.38);
 }
 
-.order-place .btn:active {
-  transform: translateY(1px);
+.order-place .btn:active { transform: translateY(1px); }
+
+.order-place .btn:disabled {
+  opacity: 0.55;
+  box-shadow: none;
+  transform: none;
 }
 
-/* Animación de carga para procesamiento de pago */
 @keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-  100% {
-    opacity: 1;
-  }
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
 }
 
-.processing {
-  animation: pulse 1.5s infinite;
-  pointer-events: none;
-}
+.processing { animation: pulse 1.5s infinite; pointer-events: none; }
 
-/* Estilos para los resúmenes dentro de los acordeones */
+/* Resúmenes dentro de los acordeones */
 .info-summary {
   display: flex;
   flex-wrap: wrap;
@@ -584,9 +626,11 @@
 
 .info-summary-item {
   background-color: var(--gray-100);
-  padding: 0.4rem 0.75rem;
-  border-radius: 0.25rem;
+  border: 1px solid var(--gray-200);
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
   font-size: 0.8rem;
+  font-weight: 700;
   color: var(--gray-700);
   display: inline-flex;
   align-items: center;
@@ -598,60 +642,31 @@
   color: var(--primary-color);
 }
 
-/* Media Queries para Responsive */
+/* Media Queries */
 @media (max-width: 991.98px) {
-  .checkout-details {
-    margin-top: 1.5rem;
-    position: static;
-  }
-  
-  .accordion-summary {
-    display: none;
-  }
-  
-  .accordion-button {
-    font-size: 0.95rem;
-    padding: 0.75rem 1rem;
-  }
-
-  .payment-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  }
+  .checkout-details { margin-top: 1.5rem; position: static; }
+  .accordion-summary { display: none; }
+  .accordion-button { font-size: 0.98rem; padding: 0.85rem 1rem; }
+  .payment-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 }
 
 @media (max-width: 767.98px) {
-  .checkout {
-    margin-top: 0.5rem !important;
-  }
-  
-  .order-place .btn {
-    font-size: 0.95rem;
-  }
-  
-  .checkout-header h4 {
-    font-size: 1.1rem;
-  }
-  
-  .info-summary {
-    display: none;
-  }
-
-  .payment-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .checkout { margin-top: 0.5rem !important; }
+  .order-place .btn { font-size: 0.95rem; }
+  .checkout-header h4 { font-size: 1.2rem; }
+  .info-summary { display: none; }
+  .payment-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Modificaciones para el acordeón */
-.accordion-button.collapsed {
-  border-radius: var(--border-radius);
-}
+/* Acordeón: puntito indicador */
+.accordion-button.collapsed { border-radius: 16px; }
 
 .accordion-button::before {
   content: '';
   width: 18px;
   height: 18px;
   margin-right: 12px;
-  background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.1);
+  background-color: var(--kc-accent-wash);
   border-radius: 50%;
   flex-shrink: 0;
   display: flex;
@@ -660,77 +675,56 @@
 }
 
 .accordion-button:not(.collapsed)::before {
-  background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.2);
+  background-color: var(--primary-color);
 }
 
-.accordion-body-content {
-  padding: 0 0.5rem;
-}
-
-/* Estilo para error/validación */
+/* Error / validación */
 .text-danger {
   color: var(--danger-color) !important;
   font-size: 0.85rem;
 }
 
 .alert {
-  padding: 0.75rem 1rem;
-  border-radius: var(--border-radius);
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
 }
 
 .alert-danger {
-  background-color: rgba(239, 71, 111, 0.1);
+  background-color: var(--danger-wash, #fce9e8);
   color: var(--danger-color);
   border-left: 3px solid var(--danger-color);
 }
 
-.alert i {
-  margin-right: 0.5rem;
+.alert i { margin-right: 0.5rem; }
+
+@media (max-width: 576px) {
+  .payment-tabs { padding-bottom: 2px; }
+  .payment-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+  .payment-method-card { padding: 0.5rem; min-height: 60px; }
+  .payment-method-card i { font-size: 1rem; margin-bottom: 0.25rem; }
 }
 
-/* Añadir overflow para tabs en móviles */
-@media (max-width: 576px) {
-  .payment-tabs {
-    padding-bottom: 2px;
-  }
-  
-  .payment-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-  
-  .payment-method-card {
-    padding: 0.5rem;
-    min-height: 60px;
-  }
-  
-  .payment-method-card i {
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-  }
-  }
-
-// Estilos para la sección de notas
+// Sección de notas
 .notes-section {
   .notes-section-title {
     font-size: 1rem;
-    font-weight: 600;
-    color: #495057;
+    font-weight: 800;
+    color: var(--gray-700);
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e9ecef;
+    border-bottom: 2px solid var(--gray-200);
   }
 
   .notes-list {
     .note-item {
-      background: #f8f9fa;
-      border-radius: 8px;
+      background: var(--gray-100);
+      border-radius: 12px;
       padding: 1rem;
       margin-bottom: 1rem;
-      border-left: 4px solid #a78bfa;
+      border-left: 4px solid var(--primary-color);
 
       .note-header {
         display: flex;
@@ -740,22 +734,22 @@
 
         .note-date {
           font-size: 0.85rem;
-          color: #6c757d;
-          font-weight: 500;
+          color: var(--gray-600);
+          font-weight: 700;
         }
 
         .note-product {
           font-size: 0.85rem;
-          color: #a78bfa;
-          font-weight: 600;
-          background: rgba(0, 123, 255, 0.1);
-          padding: 0.25rem 0.5rem;
-          border-radius: 4px;
+          color: var(--primary-color);
+          font-weight: 800;
+          background: var(--kc-accent-wash);
+          padding: 0.25rem 0.6rem;
+          border-radius: 999px;
         }
       }
 
       .note-content {
-        color: #495057;
+        color: var(--gray-700);
         line-height: 1.5;
         margin-bottom: 0.75rem;
       }
@@ -763,8 +757,8 @@
       .note-attachments {
         .attachments-title {
           font-size: 0.85rem;
-          color: #6c757d;
-          font-weight: 500;
+          color: var(--gray-600);
+          font-weight: 700;
           margin-bottom: 0.75rem;
           display: flex;
           align-items: center;
@@ -777,9 +771,9 @@
 
           .attachment-item {
             position: relative;
-            border-radius: 6px;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(30, 35, 60, 0.1);
 
             .attachment-preview {
               position: relative;
@@ -790,17 +784,8 @@
               align-items: center;
               justify-content: center;
 
-              .attachment-image {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-              }
-
-              .attachment-video {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-              }
+              .attachment-image { width: 100%; height: 100%; object-fit: cover; }
+              .attachment-video { width: 100%; height: 100%; object-fit: cover; }
 
               .attachment-document {
                 display: flex;
@@ -809,13 +794,9 @@
                 justify-content: center;
                 text-align: center;
                 padding: 1rem;
-                color: #6c757d;
+                color: var(--gray-600);
 
-                i {
-                  font-size: 2rem;
-                  margin-bottom: 0.5rem;
-                  color: #a78bfa;
-                }
+                i { font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-color); }
 
                 .attachment-name {
                   font-size: 0.75rem;
@@ -826,10 +807,7 @@
 
               .attachment-overlay {
                 position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
+                inset: 0;
                 background: rgba(0, 0, 0, 0.7);
                 display: flex;
                 align-items: center;
@@ -837,15 +815,10 @@
                 opacity: 0;
                 transition: opacity 0.2s ease;
 
-                .btn {
-                  padding: 0.25rem 0.5rem;
-                  font-size: 0.75rem;
-                }
+                .btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
               }
 
-              &:hover .attachment-overlay {
-                opacity: 1;
-              }
+              &:hover .attachment-overlay { opacity: 1; }
             }
           }
         }
@@ -854,25 +827,11 @@
   }
 }
 
-// Responsive para archivos adjuntos
 @media (max-width: 768px) {
-  .notes-section {
-    .notes-list {
-      .note-item {
-        .note-attachments {
-          .attachments-grid {
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 0.5rem;
+  .notes-section .notes-list .note-item .note-attachments .attachments-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.5rem;
 
-            .attachment-item {
-              .attachment-preview {
-                height: 100px;
-              }
-            }
-          }
-        }
-      }
-    }
+    .attachment-item .attachment-preview { height: 100px; }
   }
 }
-  

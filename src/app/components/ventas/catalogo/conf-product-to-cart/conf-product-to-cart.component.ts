@@ -83,6 +83,23 @@ export class ConfProductToCartComponent
   adicionesPreferencias: any;
   public activeAccordionPanel: string = "datosEntregaPanel,preferenciasPanel,tarjetasPanel,adicionesPanel,cantidadPanel";
 
+  /**
+   * Navegación de secciones del modal (solo presentación, no altera la lógica):
+   * marca la píldora activa y hace scroll hasta la sección. Todas las secciones
+   * siguen abiertas para no destruir los controles del formulario.
+   */
+  public seccionActiva: string = "datosEntregaPanel";
+
+  public irASeccion(panelId: string): void {
+    this.seccionActiva = panelId;
+    setTimeout(() => {
+      const el = document.getElementById("sec-" + panelId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 0);
+  }
+
   // Propiedades para controlar el colapso de textos
   public mostrarDescripcionCompleta: boolean = false;
   public mostrarDetallesCompletos: boolean = false;

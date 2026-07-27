@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, fromEvent, merge } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, fromEvent, merge } from 'rxjs';
 import { filter, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { HttpClient } from '@angular/common/http';
@@ -19,6 +19,7 @@ import { NOTIFICATION_TEMPLATES, NOTIFICATION_CONFIG } from './notification.conf
 import { NotificationService } from '../notification.service';
 import { NotificationPreferencesService } from './notification-preferences.service';
 import { AuthService } from '../firebase/auth.service';
+import { SecurityService } from '../security/security.service';
 
 @Injectable({
   providedIn: 'root'
@@ -32,16 +33,26 @@ export class NotificationManagerService {
   // Subject para nuevos eventos de notificación
   private notificationEvents$ = new Subject<NotificationEvent>();
 
-  // Cache local de notificaciones
+  // Notificaciones de la empresa (Realtime DB + API). El servidor manda.
+  private remoteNotifications: KatuqNotification[] = [];
+  // Notificaciones generadas en el propio navegador (triggerNotification).
   private localNotifications: KatuqNotification[] = [];
+
   private throttleCache = new Map<string, number>();
-  private toastThrottleCache = new Map<string, number>();
-  private static readonly TOAST_THROTTLE_MS = 5 * 60 * 1000; // 5 minutos
-  
+  // Ids que ya mostraron toast — evita repetir el aviso emergente.
+  private toastedIds = new Set<string>();
+  // El primer snapshot solo pinta la campana; no lanza toasts de lo ya existente.
+  private firstSnapshotDone = false;
+  private static readonly MAX_TOASTS_PER_BATCH = 3;
+
   // Estado del usuario actual
   private currentUserId: string | null = null;
   private currentUserRole: UserRole = UserRole.SELLER;
   private currentCompanyId: string | null = null;
+
+  // Identidad de la sesión activa (empresa|usuario). Si cambia, se reinicia todo.
+  private sessionKey: string | null = null;
+  private rtdbSubscription: Subscription | null = null;
 
   // Configuración
   private isOnline = true;
@@ -53,10 +64,17 @@ export class NotificationManagerService {
     private legacyNotificationService: NotificationService,
     private toastr: ToastrService,
     private preferencesService: NotificationPreferencesService,
-    private authService: AuthService
+    private authService: AuthService,
+    private securityService: SecurityService
   ) {
     this.initializeService();
     this.setupOnlineDetection();
+
+    // Al iniciar sesión la empresa se guarda unos milisegundos después de
+    // navegar al dashboard; aquí se engancha la campana en cuanto llega.
+    this.securityService.companyInformation$.subscribe(() => {
+      this.syncSession();
+    });
   }
 
   // Observables públicos
@@ -77,71 +95,146 @@ export class NotificationManagerService {
   }
 
   /**
-   * Inicializa el servicio de notificaciones
+   * Inicializa el servicio de notificaciones.
+   * Este servicio es un singleton root: se construye una sola vez por carga de
+   * la app, incluso estando en /login. Por eso el arranque real de la escucha
+   * vive en syncSession(), que se puede volver a llamar cuando cambia la sesión.
    */
   private async initializeService(): Promise<void> {
     try {
-      // Obtener información del usuario actual
-      await this.loadCurrentUser();
-
-      // Cargar notificaciones desde caché local
-      this.loadLocalNotifications();
-
-      // Sin sesión válida (token ausente/expirado) no hay backend/Firebase que
-      // consultar — este servicio es un singleton root que se construye en
-      // cada bootstrap de la app (incluso en /login con localStorage viejo).
-      if (this.authService.isLoggedIn) {
-        // Cargar notificaciones existentes desde el backend
-        await this.loadExistingNotifications();
-
-        // Configurar escucha en Firebase Realtime Database (solo nuevas en tiempo real)
-        this.setupFirebaseListener();
-      }
-
-      // Configurar procesamiento de eventos
+      // Configurar procesamiento de eventos (independiente de la sesión)
       this.setupEventProcessing();
-      
       this.isInitialized = true;
+
+      await this.syncSession();
     } catch (error) {
       console.error('❌ Error inicializando NotificationManager:', error);
     }
   }
 
   /**
-   * Carga la información del usuario actual
+   * Sincroniza el servicio con la sesión actual del navegador.
+   *
+   * Es idempotente y barato: si la empresa y el usuario no cambiaron, no hace
+   * nada. Se llama al arrancar y en cada navegación, de modo que iniciar sesión
+   * (que navega sin recargar la página) conecte la campana, y cerrar sesión
+   * la apague junto con la escucha de la empresa anterior.
    */
-  private async loadCurrentUser(): Promise<void> {
+  public async syncSession(): Promise<void> {
+    if (!this.authService.isLoggedIn) {
+      if (this.sessionKey !== null) {
+        this.teardownSession();
+      }
+      return;
+    }
+
+    const { companyId, userId, userRole } = this.readSessionIdentity();
+    if (!companyId || !userId) {
+      return; // sesión a medio armar (aún no se guardó la empresa)
+    }
+
+    const nextKey = `${companyId}|${userId}`;
+    if (nextKey === this.sessionKey) {
+      return; // misma sesión, nada que hacer
+    }
+
+    // Cambió el usuario o la empresa: cortar lo anterior antes de arrancar.
+    this.teardownSession();
+
+    this.currentCompanyId = companyId;
+    this.currentUserId = userId;
+    this.currentUserRole = userRole;
+    this.sessionKey = nextKey;
+
+    this.loadLocalNotifications();
+    this.emitNotifications();
+
+    await this.loadExistingNotifications();
+    this.setupFirebaseListener();
+  }
+
+  /**
+   * Apaga la escucha y borra de memoria lo de la sesión anterior.
+   */
+  private teardownSession(): void {
+    if (this.rtdbSubscription) {
+      this.rtdbSubscription.unsubscribe();
+      this.rtdbSubscription = null;
+    }
+
+    this.remoteNotifications = [];
+    this.localNotifications = [];
+    this.toastedIds.clear();
+    this.throttleCache.clear();
+    this.firstSnapshotDone = false;
+
+    this.sessionKey = null;
+    this.currentCompanyId = null;
+    this.currentUserId = null;
+    this.currentUserRole = UserRole.SELLER;
+
+    this.notificationsSubject.next([]);
+    this.unreadCountSubject.next(0);
+  }
+
+  /**
+   * Lee la identidad de la sesión desde el almacenamiento del navegador.
+   */
+  private readSessionIdentity(): { companyId: string | null; userId: string | null; userRole: UserRole } {
     try {
-      // Intentar primero localStorage (más común en la app)
       let currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      // Fallback a sessionStorage si no hay datos en localStorage
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
       if (!currentCompany.nomComercial && !currentCompany.nit) {
         currentCompany = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
       }
-      
-      if (!currentUser.id && !currentUser.email) {
-        currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
-      }
-      
-      // Extraer IDs con múltiples fallbacks
-      this.currentCompanyId = currentCompany.nomComercial || currentCompany.nit || currentCompany.id || null;
-      this.currentUserId = currentUser.id || currentUser.uid || currentUser.email || 'default_user';
-      this.currentUserRole = this.determineUserRole(currentUser);
-      
-      console.log('👤 Usuario cargado:', {
-        userId: this.currentUserId,
-        role: this.currentUserRole,
-        company: this.currentCompanyId,
-        companyData: currentCompany
-      });
+
+      return {
+        companyId: currentCompany.nomComercial || currentCompany.nit || currentCompany.id || null,
+        userId: currentUser.email || currentUser.id || currentUser.uid || null,
+        userRole: this.determineUserRole(currentUser)
+      };
     } catch (error) {
-      console.error('Error cargando usuario actual:', error);
-      // Valores por defecto
-      this.currentUserId = 'default_user';
-      this.currentUserRole = UserRole.SELLER;
+      console.error('Error leyendo la sesión actual:', error);
+      return { companyId: null, userId: null, userRole: UserRole.SELLER };
     }
+  }
+
+  /**
+   * Recalcula la lista visible (empresa + locales) y la publica.
+   */
+  private emitNotifications(): void {
+    const byId = new Map<string, KatuqNotification>();
+    for (const notification of this.remoteNotifications) {
+      if (notification.id) byId.set(notification.id, notification);
+    }
+    for (const notification of this.localNotifications) {
+      if (notification.id && !byId.has(notification.id)) byId.set(notification.id, notification);
+    }
+
+    const all = Array.from(byId.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    this.notificationsSubject.next(all);
+    this.updateUnreadCount(all);
+  }
+
+  /**
+   * Indica si una notificación vive en el servidor (campana de la empresa).
+   */
+  private isRemoteId(notificationId: string): boolean {
+    return notificationId.startsWith('actualizacion_');
+  }
+
+  /** Id en Realtime DB a partir del id interno. */
+  private toFirebaseKey(notificationId: string): string {
+    return notificationId.replace('actualizacion_', '');
+  }
+
+  /** URL base de los endpoints de la campana para la empresa activa. */
+  private sellerEndpoint(): string | null {
+    if (!this.currentCompanyId) return null;
+    return `${NOTIFICATION_CONFIG.api.baseUrl}${NOTIFICATION_CONFIG.api.endpoints.seller}/${encodeURIComponent(this.currentCompanyId)}`;
   }
 
   /**
@@ -163,214 +256,177 @@ export class NotificationManagerService {
   }
 
   /**
-   * Carga notificaciones existentes desde el backend API
+   * Carga el historial de la campana desde el backend.
+   * El backend ya devuelve solo lo visible para este usuario y con `read`
+   * resuelto individualmente.
    */
   private async loadExistingNotifications(): Promise<void> {
-    if (!this.currentCompanyId) return;
+    const endpoint = this.sellerEndpoint();
+    if (!endpoint) return;
 
     try {
-      const endpoint = `${NOTIFICATION_CONFIG.api.baseUrl}${NOTIFICATION_CONFIG.api.endpoints.seller}/${encodeURIComponent(this.currentCompanyId)}?limit=50`;
-      const response: any = await this.http.get(endpoint).toPromise();
+      const response: any = await this.http.get(`${endpoint}?limit=50`).toPromise();
+      if (!response?.success || !Array.isArray(response.notifications)) return;
 
-      if (!response?.success || !response.notifications?.length) return;
+      this.remoteNotifications = response.notifications.map((raw: any) =>
+        this.toKatuqNotification(raw, raw.id)
+      );
 
-      for (const raw of response.notifications) {
-        const id = 'actualizacion_' + raw.id;
-        if (this.localNotifications.some(n => n.id === id)) continue;
-
-        const notification: KatuqNotification = {
-          id,
-          type: this.mapLegacyType(raw.type),
-          title: this.extractTitle(raw),
-          message: raw.message || raw.type || 'Notificación',
-          data: {
-            orderId: raw.data?.orderId || raw.data?.nroPedido,
-            cliente: raw.data?.cliente,
-            total: raw.data?.total,
-            originalType: raw.type,
-            firebaseId: raw.id,
-            ...raw.data
-          },
-          userId: this.currentUserId || undefined,
-          userRole: this.currentUserRole,
-          companyId: this.currentCompanyId || undefined,
-          channels: [NotificationChannel.IN_APP],
-          priority: raw.priority === 'CRITICAL' ? NotificationPriority.CRITICAL
-                  : raw.priority === 'HIGH' ? NotificationPriority.HIGH
-                  : NotificationPriority.NORMAL,
-          status: raw.read ? NotificationStatus.READ : NotificationStatus.PENDING,
-          createdAt: new Date(raw.timestamp || raw.createdAt || Date.now()),
-          readAt: raw.read ? new Date() : undefined,
-          actionUrl: raw.actionUrl || undefined,
-          actionText: raw.actionText || undefined,
-          icon: raw.icon || undefined,
-          color: raw.color || undefined
-        };
-
-        this.localNotifications.push(notification);
-      }
+      // El historial ya está en pantalla: no se debe toastear al abrir la app.
+      this.remoteNotifications.forEach(n => this.toastedIds.add(n.id!));
 
       this.saveLocalNotifications();
-      const sorted = [...this.localNotifications].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      this.notificationsSubject.next(sorted);
-      this.updateUnreadCount(sorted);
-
-      console.log(`✅ ${response.notifications.length} notificaciones existentes cargadas desde API`);
+      this.emitNotifications();
     } catch (error) {
-      console.warn('⚠️ No se pudieron cargar notificaciones existentes (no crítico):', error);
+      console.warn('⚠️ No se pudo cargar el historial de notificaciones:', error);
     }
   }
 
   /**
-   * Configura la escucha de notificaciones en Firebase
+   * Convierte una notificación cruda (Realtime DB o API) al formato interno.
+   */
+  private toKatuqNotification(raw: any, firebaseKey: string): KatuqNotification {
+    const data = raw.data || {};
+
+    return {
+      id: 'actualizacion_' + firebaseKey,
+      type: this.mapLegacyType(raw.type),
+      title: this.extractTitle(raw),
+      message: raw.message || raw.type || 'Nueva notificación',
+      data: {
+        orderId: data.orderId || data.nroPedido || raw.orderId,
+        cliente: data.cliente || raw.cliente,
+        total: data.total || raw.total,
+        originalType: raw.type,
+        firebaseId: firebaseKey,
+        ...data
+      },
+
+      userId: this.currentUserId || undefined,
+      userRole: this.currentUserRole,
+      companyId: this.currentCompanyId || undefined,
+
+      channels: [NotificationChannel.IN_APP],
+      priority: raw.priority === 'CRITICAL' ? NotificationPriority.CRITICAL
+              : raw.priority === 'HIGH' ? NotificationPriority.HIGH
+              : NotificationPriority.NORMAL,
+      status: raw.read ? NotificationStatus.READ : NotificationStatus.PENDING,
+
+      createdAt: new Date(raw.timestamp || raw.createdAt || Date.now()),
+      readAt: raw.read ? new Date(raw.readAt || Date.now()) : undefined,
+
+      // Acción y navegación (enviados por el backend)
+      actionUrl: raw.actionUrl || undefined,
+      actionText: raw.actionText || undefined,
+      icon: raw.icon || undefined,
+      color: raw.color || undefined
+    };
+  }
+
+  /**
+   * Configura la escucha en tiempo real de la campana.
+   * Única fuente: ActualizacionTicket{empresa} en Realtime Database.
    */
   private setupFirebaseListener(): void {
-    console.log('🔔 NotificationManager: Configurando listeners de Firebase...');
-    
-    // Solo escuchar ActualizacionTicket (Realtime DB) — única fuente de verdad
-    // notification_queue en RTDB removido: el backend ya no escribe ahí
-    this.listenToActualizacionTicket();
-  }
+    const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+    const companyName = companyData?.nomComercial;
 
-  /**
-   * Escucha la ruta nueva de notificaciones (notification_queue)
-   */
-  private listenToNotificationQueue(): void {
-    if (!this.currentCompanyId) {
-      console.log('⚠️ No hay companyId para notification_queue');
+    if (!companyName) {
+      console.warn('⚠️ Sin nombre de empresa: la campana no puede escuchar en tiempo real');
       return;
     }
 
-    const notificationsPath = 'notification_queue';
-    console.log('🔔 Escuchando notification_queue para company:', this.currentCompanyId);
-    
-    this.db.list(notificationsPath, ref => 
-      ref.orderByChild('company').equalTo(this.currentCompanyId)
+    const notificationPath = 'ActualizacionTicket' + companyName;
+    const userKey = this.userKeyForNotifications();
+
+    // Solo las 100 más recientes: el nodo de la empresa puede acumular semanas.
+    this.rtdbSubscription = this.db.list(notificationPath, ref =>
+      ref.orderByChild('timestamp').limitToLast(100)
     )
       .snapshotChanges()
-      .subscribe((snapshots) => {
-        console.log('📨 Notificaciones de notification_queue:', snapshots.length);
-        
-        const firebaseNotifications = snapshots.map((snapshot) => {
-          const data: any = snapshot.payload.val();
-          const id = snapshot.key;
-          return { 
-            id, 
-            ...data,
-            createdAt: new Date(data.createdAt),
-            readAt: data.readAt ? new Date(data.readAt) : undefined,
-            scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : undefined,
-            expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined
-          } as KatuqNotification;
-        });
-
-        this.processFirebaseNotifications(firebaseNotifications, 'notification_queue');
+      .subscribe({
+        next: (snapshots) => this.applySnapshot(snapshots, userKey),
+        error: (error) => console.error('❌ Error escuchando notificaciones:', error)
       });
   }
 
   /**
-   * Escucha la ruta legacy de notificaciones (ActualizacionTicket)
+   * Llave del usuario dentro de la notificación.
+   * Debe generar exactamente lo mismo que el backend (resolveUserKey).
    */
-  private listenToActualizacionTicket(): void {
-    // Obtener company data del localStorage
-    const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+  private userKeyForNotifications(): string {
+    return (this.currentUserId || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[.#$/\[\]]/g, '_')
+      .slice(0, 200);
+  }
 
-    if (!companyData || !companyData.nomComercial) {
-      console.log('⚠️ No hay datos de empresa para ActualizacionTicket');
+  /**
+   * Reconstruye la lista de la empresa a partir del snapshot completo.
+   * Lo que este usuario eliminó no entra, y "leída" sale de su propio registro
+   * (readBy), no del de sus compañeros.
+   */
+  private applySnapshot(snapshots: any[], userKey: string): void {
+    const visibles: KatuqNotification[] = [];
+    const nuevasSinLeer: KatuqNotification[] = [];
+
+    for (const snapshot of snapshots) {
+      const value: any = snapshot.payload.val() || {};
+      const key: string = snapshot.key;
+
+      // Eliminada por este usuario → no se muestra
+      if (value.deletedBy && value.deletedBy[userKey]) continue;
+
+      // Leída por este usuario, o con el campo global anterior a este cambio
+      const leida = !!(value.readBy && value.readBy[userKey]) || value.read === true;
+
+      const notification = this.toKatuqNotification({ ...value, read: leida }, key);
+
+      // Respetar las preferencias por tipo del usuario
+      if (!this.preferencesService.shouldSendNotification(notification.type, NotificationChannel.IN_APP)) {
+        continue;
+      }
+
+      visibles.push(notification);
+
+      if (!leida && !this.toastedIds.has(notification.id!)) {
+        nuevasSinLeer.push(notification);
+      }
+    }
+
+    this.remoteNotifications = visibles;
+    this.saveLocalNotifications();
+    this.emitNotifications();
+
+    this.announceNewNotifications(nuevasSinLeer);
+  }
+
+  /**
+   * Muestra el aviso emergente de lo que acaba de llegar.
+   * El primer snapshot no avisa: sería repetir todo lo que ya estaba en la campana.
+   */
+  private announceNewNotifications(nuevas: KatuqNotification[]): void {
+    nuevas.forEach(n => this.toastedIds.add(n.id!));
+
+    if (!this.firstSnapshotDone) {
+      this.firstSnapshotDone = true;
       return;
     }
 
-    const notificationPath = 'ActualizacionTicket' + companyData.nomComercial;
-    console.log('🔔 Escuchando ActualizacionTicket en:', notificationPath);
+    if (nuevas.length === 0) return;
 
-    // IDs ya procesados para evitar duplicados
-    const processedIds = new Set<string>();
+    const mostrar = nuevas.slice(0, NotificationManagerService.MAX_TOASTS_PER_BATCH);
+    mostrar.forEach(n => this.showInAppNotification(n));
 
-    this.db.list(notificationPath)
-      .snapshotChanges()
-      .subscribe((snapshots) => {
-        console.log('📨 Notificaciones de ActualizacionTicket:', snapshots.length);
-
-        const notifications = snapshots.map((snapshot) => {
-          const data: any = snapshot.payload.val();
-          const id = snapshot.key;
-          return { id, ...data };
-        });
-
-        // Ordenar por timestamp (más recientes primero)
-        const sorted = notifications.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-        // Procesar TODAS las notificaciones no leídas que no hayamos procesado aún
-        const unprocessed = sorted.filter((n) => !n.read && !processedIds.has(n.id));
-
-        for (const newNotification of unprocessed) {
-          processedIds.add(newNotification.id);
-
-          console.log('🔔 Nueva notificación de ActualizacionTicket:', newNotification.type, newNotification.id);
-
-          // Convertir al formato KatuqNotification
-          const katuqNotification: KatuqNotification = {
-            id: 'actualizacion_' + newNotification.id,
-            type: this.mapLegacyType(newNotification.type),
-            title: this.extractTitle(newNotification),
-            message: newNotification.message || newNotification.type || 'Nueva notificación',
-            data: {
-              orderId: newNotification.orderId,
-              cliente: newNotification.cliente,
-              total: newNotification.total,
-              originalType: newNotification.type,
-              firebaseId: newNotification.id,
-              ...newNotification
-            },
-
-            userId: this.currentUserId || undefined,
-            userRole: this.currentUserRole,
-            companyId: this.currentCompanyId || undefined,
-
-            channels: [NotificationChannel.IN_APP],
-            priority: newNotification.priority === 'CRITICAL' ? NotificationPriority.CRITICAL
-                    : newNotification.priority === 'HIGH' ? NotificationPriority.HIGH
-                    : NotificationPriority.NORMAL,
-            status: newNotification.read ? NotificationStatus.READ : NotificationStatus.PENDING,
-
-            createdAt: new Date(newNotification.timestamp || Date.now()),
-            readAt: newNotification.read ? new Date() : undefined,
-
-            // Accion y navegacion (enviados por el backend)
-            actionUrl: newNotification.actionUrl || undefined,
-            actionText: newNotification.actionText || undefined,
-            icon: newNotification.icon || undefined,
-            color: newNotification.color || undefined
-          };
-
-          // Agregar a notificaciones locales
-          this.addLocalNotification(katuqNotification);
-        }
+    const restantes = nuevas.length - mostrar.length;
+    if (restantes > 0) {
+      this.toastr.info(`Tienes ${restantes} notificaciones más sin leer`, 'Notificaciones', {
+        timeOut: 5000,
+        progressBar: true,
+        closeButton: true
       });
-  }
-
-  /**
-   * Procesa notificaciones de Firebase (común para ambas rutas)
-   */
-  private processFirebaseNotifications(notifications: KatuqNotification[], source: string): void {
-    console.log(`📥 Procesando ${notifications.length} notificaciones de ${source}`);
-    
-    // Filtrar notificaciones relevantes para el usuario actual
-    const relevantNotifications = notifications.filter(notification => 
-      this.isNotificationRelevantForUser(notification)
-    );
-
-    // Mergear con notificaciones locales
-    const allNotifications = this.mergeNotifications(relevantNotifications, this.localNotifications);
-    
-    // Ordenar por fecha de creación (más recientes primero)
-    allNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-    this.notificationsSubject.next(allNotifications);
-    this.updateUnreadCount(allNotifications);
-
-    // Procesar nuevas notificaciones para mostrar toasts
-    this.processNewNotifications(allNotifications);
+    }
   }
 
   /**
@@ -432,7 +488,7 @@ export class NotificationManagerService {
   }
 
   /**
-   * Agrega una notificación local sin duplicar
+   * Agrega una notificación generada en este navegador (sin duplicar).
    */
   private addLocalNotification(notification: KatuqNotification): void {
     // Verificar preferencias del usuario — si el tipo está deshabilitado, no agregar
@@ -440,102 +496,28 @@ export class NotificationManagerService {
       return;
     }
 
-    // Verificar si ya existe
-    const exists = this.localNotifications.some(n => n.id === notification.id);
-    if (!exists) {
-      this.localNotifications.push(notification);
-      this.saveLocalNotifications();
-      
-      // Actualizar observable
-      const allNotifications = [...this.localNotifications];
-      allNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      
-      this.notificationsSubject.next(allNotifications);
-      this.updateUnreadCount(allNotifications);
-      
-      // Mostrar toast si es nueva
-      if (notification.status !== NotificationStatus.READ) {
-        this.showInAppNotification(notification);
-      }
+    const exists = this.localNotifications.some(n => n.id === notification.id)
+      || this.remoteNotifications.some(n => n.id === notification.id);
+    if (exists) return;
+
+    this.localNotifications.push(notification);
+    this.saveLocalNotifications();
+    this.emitNotifications();
+
+    if (notification.status !== NotificationStatus.READ && !this.toastedIds.has(notification.id!)) {
+      this.toastedIds.add(notification.id!);
+      this.showInAppNotification(notification);
     }
   }
 
   /**
-   * Verifica si una notificación es relevante para el usuario actual
-   */
-  private isNotificationRelevantForUser(notification: KatuqNotification): boolean {
-    // Filtrar por usuario específico
-    if (notification.userId && notification.userId !== this.currentUserId) {
-      return false;
-    }
-
-    // Filtrar por rol de usuario
-    const template = NOTIFICATION_TEMPLATES[notification.type];
-    if (template && !template.targetRoles.includes(this.currentUserRole)) {
-      return false;
-    }
-
-    // Filtrar por compañía
-    if (notification.companyId && notification.companyId !== this.currentCompanyId) {
-      return false;
-    }
-
-    // Filtrar notificaciones expiradas
-    if (notification.expiresAt && notification.expiresAt < new Date()) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Mergea notificaciones de diferentes fuentes eliminando duplicados
-   */
-  private mergeNotifications(firebase: KatuqNotification[], local: KatuqNotification[]): KatuqNotification[] {
-    const merged = [...firebase];
-    const firebaseIds = new Set(firebase.map(n => n.id));
-
-    // Añadir notificaciones locales que no estén en Firebase
-    local.forEach(localNotification => {
-      if (!firebaseIds.has(localNotification.id)) {
-        merged.push(localNotification);
-      }
-    });
-
-    return merged;
-  }
-
-  /**
-   * Procesa nuevas notificaciones para mostrar toasts
-   */
-  private processNewNotifications(notifications: KatuqNotification[]): void {
-    const currentNotifications = this.notificationsSubject.getValue();
-    const currentIds = new Set(currentNotifications.map(n => n.id));
-
-    notifications.forEach(notification => {
-      if (!currentIds.has(notification.id) && notification.status !== NotificationStatus.READ) {
-        this.showInAppNotification(notification);
-      }
-    });
-  }
-
-  /**
-   * Muestra una notificación in-app (toast emergente).
-   * Throttle por tipo: solo 1 toast por tipo cada 5 min para evitar spam.
-   * La notificación siempre se guarda en la campana (addLocalNotification),
-   * este método solo controla el popup visual.
+   * Muestra el aviso emergente (toast) de una notificación.
+   * No se repite el mismo aviso: el control de "ya avisado" es por notificación,
+   * no por tipo, para no tragarse pedidos seguidos.
    */
   private showInAppNotification(notification: KatuqNotification): void {
     if (!notification.channels.includes(NotificationChannel.IN_APP)) return;
 
-    // Throttle por tipo: solo mostrar 1 toast por tipo cada 5 min
-    const lastShown = this.toastThrottleCache.get(notification.type);
-    if (lastShown && (Date.now() - lastShown) < NotificationManagerService.TOAST_THROTTLE_MS) {
-      return;
-    }
-    this.toastThrottleCache.set(notification.type, Date.now());
-
-    // Toast emergente real via ToastrService
     const title = notification.title || 'Notificación';
     const message = notification.message || '';
     const toastrOpts = { timeOut: 5000, progressBar: true, closeButton: true };
@@ -755,14 +737,7 @@ export class NotificationManagerService {
    * Envía notificación in-app (local)
    */
   private async sendInAppNotification(notification: KatuqNotification): Promise<void> {
-    this.localNotifications.push(notification);
-    this.saveLocalNotifications();
-    
-    // Actualizar el observable de notificaciones
-    const allNotifications = this.mergeNotifications([], this.localNotifications);
-    this.notificationsSubject.next(allNotifications);
-    
-    this.showInAppNotification(notification);
+    this.addLocalNotification(notification);
   }
 
   /**
@@ -838,34 +813,55 @@ export class NotificationManagerService {
     console.log('Push notification pendiente de implementar:', notification);
   }
 
+  /** Clave del caché: una por empresa + usuario, para no mezclar sesiones. */
+  private cacheKey(): string {
+    return `katuq_notifications_${this.sessionKey || 'sin_sesion'}`;
+  }
+
   /**
-   * Carga notificaciones del cache local
+   * Carga el caché local (solo para pintar algo mientras responde el servidor).
    */
   private loadLocalNotifications(): void {
+    this.remoteNotifications = [];
+    this.localNotifications = [];
+
     try {
-      const stored = localStorage.getItem(`katuq_notifications_${this.currentUserId}`);
-      if (stored) {
-        this.localNotifications = JSON.parse(stored).map((n: any) => ({
-          ...n,
-          createdAt: new Date(n.createdAt),
-          scheduledFor: n.scheduledFor ? new Date(n.scheduledFor) : undefined,
-          expiresAt: n.expiresAt ? new Date(n.expiresAt) : undefined,
-          readAt: n.readAt ? new Date(n.readAt) : undefined
-        }));
+      const stored = localStorage.getItem(this.cacheKey());
+      if (!stored) return;
+
+      const parsed: KatuqNotification[] = JSON.parse(stored).map((n: any) => ({
+        ...n,
+        createdAt: new Date(n.createdAt),
+        scheduledFor: n.scheduledFor ? new Date(n.scheduledFor) : undefined,
+        expiresAt: n.expiresAt ? new Date(n.expiresAt) : undefined,
+        readAt: n.readAt ? new Date(n.readAt) : undefined
+      }));
+
+      for (const notification of parsed) {
+        if (!notification.id) continue;
+        if (this.isRemoteId(notification.id)) {
+          this.remoteNotifications.push(notification);
+        } else {
+          this.localNotifications.push(notification);
+        }
       }
     } catch (error) {
       console.error('Error cargando notificaciones locales:', error);
+      this.remoteNotifications = [];
       this.localNotifications = [];
     }
   }
 
   /**
-   * Guarda notificaciones en cache local
+   * Guarda en caché las 100 MÁS RECIENTES (antes cortaba por orden de llegada,
+   * o sea guardaba las más viejas y perdía las nuevas).
    */
   private saveLocalNotifications(): void {
+    if (!this.sessionKey) return;
+
     try {
-      // Limitar a las últimas 100 notificaciones para no saturar el localStorage
-      const toSave = this.localNotifications
+      const toSave = [...this.remoteNotifications, ...this.localNotifications]
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
         .slice(0, 100)
         .map(n => ({
           ...n,
@@ -875,7 +871,7 @@ export class NotificationManagerService {
           readAt: n.readAt?.toISOString()
         }));
 
-      localStorage.setItem(`katuq_notifications_${this.currentUserId}`, JSON.stringify(toSave));
+      localStorage.setItem(this.cacheKey(), JSON.stringify(toSave));
     } catch (error) {
       console.error('Error guardando notificaciones locales:', error);
     }
@@ -928,125 +924,131 @@ export class NotificationManagerService {
   }
 
   /**
-   * Marca una notificación como leída
+   * Marca una notificación como leída (solo para el usuario actual).
+   * Si el servidor no confirma, NO se cambia la pantalla y se avisa: antes
+   * fallaba en silencio y al recargar volvía a aparecer sin leer.
    */
-  public async markAsRead(notificationId: string): Promise<void> {
+  public async markAsRead(notificationId: string): Promise<boolean> {
+    const local = this.localNotifications.find(n => n.id === notificationId);
+    if (local) {
+      local.status = NotificationStatus.READ;
+      local.readAt = new Date();
+      this.saveLocalNotifications();
+      this.emitNotifications();
+      return true;
+    }
+
+    const endpoint = this.sellerEndpoint();
+    if (!endpoint || !this.isRemoteId(notificationId)) return false;
+
     try {
-      // Actualizar localmente
-      const notification = this.localNotifications.find(n => n.id === notificationId);
-      if (notification) {
-        notification.status = NotificationStatus.READ;
-        notification.readAt = new Date();
-        this.saveLocalNotifications();
-      }
+      const key = this.toFirebaseKey(notificationId);
+      await this.http.post(`${endpoint}/${encodeURIComponent(key)}/read`, {}).toPromise();
 
-      // Actualizar en Firebase — detectar si viene de ActualizacionTicket o notification_queue
-      if (this.currentCompanyId) {
-        if (notificationId.startsWith('actualizacion_')) {
-          const firebaseKey = notificationId.replace('actualizacion_', '');
-          const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-          const companyName = companyData?.nomComercial;
-          if (companyName && firebaseKey) {
-            const rtdbPath = `ActualizacionTicket${companyName}/${firebaseKey}`;
-            await this.db.object(rtdbPath).update({ read: true, readAt: new Date().toISOString() });
-          }
-        } else {
-          const notificationsPath = `notification_queue/${notificationId}`;
-          await this.db.object(notificationsPath).update({
-            status: NotificationStatus.READ,
-            readAt: new Date().toISOString()
-          });
-        }
-      }
-
-      // Actualizar el observable
-      const current = this.notificationsSubject.getValue();
-      const updated = current.map(n => 
-        n.id === notificationId 
+      this.remoteNotifications = this.remoteNotifications.map(n =>
+        n.id === notificationId
           ? { ...n, status: NotificationStatus.READ, readAt: new Date() }
           : n
       );
-      this.notificationsSubject.next(updated);
-      this.updateUnreadCount(updated);
-
+      this.saveLocalNotifications();
+      this.emitNotifications();
+      return true;
     } catch (error) {
       console.error('Error marcando notificación como leída:', error);
+      this.toastr.error('No se pudo marcar la notificación como leída', 'Notificaciones');
+      return false;
     }
   }
 
   /**
-   * Marca todas las notificaciones como leídas
+   * Marca todas como leídas para el usuario actual (una sola llamada).
    */
-  public async markAllAsRead(): Promise<void> {
-    const notifications = this.notificationsSubject.getValue();
-    const unreadIds = notifications
-      .filter(n => n.status !== NotificationStatus.READ)
-      .map(n => n.id);
+  public async markAllAsRead(): Promise<boolean> {
+    const now = new Date();
 
-    const markPromises = unreadIds.map(id => this.markAsRead(id!));
-    await Promise.allSettled(markPromises);
+    this.localNotifications = this.localNotifications.map(n =>
+      n.status === NotificationStatus.READ ? n : { ...n, status: NotificationStatus.READ, readAt: now }
+    );
+
+    const endpoint = this.sellerEndpoint();
+    const hayRemotasSinLeer = this.remoteNotifications.some(n => n.status !== NotificationStatus.READ);
+
+    if (!endpoint || !hayRemotasSinLeer) {
+      this.saveLocalNotifications();
+      this.emitNotifications();
+      return true;
+    }
+
+    try {
+      await this.http.post(`${endpoint}/read-all`, {}).toPromise();
+
+      this.remoteNotifications = this.remoteNotifications.map(n =>
+        n.status === NotificationStatus.READ ? n : { ...n, status: NotificationStatus.READ, readAt: now }
+      );
+      this.saveLocalNotifications();
+      this.emitNotifications();
+      return true;
+    } catch (error) {
+      console.error('Error marcando todas las notificaciones como leídas:', error);
+      this.toastr.error('No se pudieron marcar las notificaciones como leídas', 'Notificaciones');
+      this.saveLocalNotifications();
+      this.emitNotifications();
+      return false;
+    }
   }
 
   /**
-   * Elimina una notificación
+   * Elimina una notificación de la campana del usuario actual.
+   * No la borra para los demás y solo desaparece de la pantalla si el servidor
+   * confirmó el borrado.
    */
-  public async deleteNotification(notificationId: string): Promise<void> {
-    try {
-      // Eliminar localmente
+  public async deleteNotification(notificationId: string): Promise<boolean> {
+    const esLocal = this.localNotifications.some(n => n.id === notificationId);
+    if (esLocal) {
       this.localNotifications = this.localNotifications.filter(n => n.id !== notificationId);
       this.saveLocalNotifications();
+      this.emitNotifications();
+      return true;
+    }
 
-      // Eliminar de Firebase — detectar ruta correcta
-      if (this.currentCompanyId) {
-        if (notificationId.startsWith('actualizacion_')) {
-          const firebaseKey = notificationId.replace('actualizacion_', '');
-          const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-          const companyName = companyData?.nomComercial;
-          if (companyName && firebaseKey) {
-            await this.db.object(`ActualizacionTicket${companyName}/${firebaseKey}`).remove();
-          }
-        } else {
-          await this.db.object(`notification_queue/${notificationId}`).remove();
-        }
-      }
+    const endpoint = this.sellerEndpoint();
+    if (!endpoint || !this.isRemoteId(notificationId)) return false;
 
-      // Actualizar observable
-      const current = this.notificationsSubject.getValue();
-      const updated = current.filter(n => n.id !== notificationId);
-      this.notificationsSubject.next(updated);
-      this.updateUnreadCount(updated);
+    try {
+      const key = this.toFirebaseKey(notificationId);
+      await this.http.delete(`${endpoint}/${encodeURIComponent(key)}`).toPromise();
 
+      this.remoteNotifications = this.remoteNotifications.filter(n => n.id !== notificationId);
+      this.saveLocalNotifications();
+      this.emitNotifications();
+      return true;
     } catch (error) {
       console.error('Error eliminando notificación:', error);
+      this.toastr.error('No se pudo eliminar la notificación', 'Notificaciones');
+      return false;
     }
   }
 
   /**
-   * Limpia todas las notificaciones
+   * Vacía la campana del usuario actual (no toca la de sus compañeros).
    */
-  public async clearAllNotifications(): Promise<void> {
-    try {
-      // Limpiar notificaciones locales
-      this.localNotifications = [];
-      this.saveLocalNotifications();
+  public async clearAllNotifications(): Promise<boolean> {
+    const endpoint = this.sellerEndpoint();
 
-      // Eliminar individualmente todas las notificaciones de la compañía actual
-      if (this.currentCompanyId) {
-        const currentNotifications = this.notificationsSubject.getValue();
-        const deletePromises = currentNotifications.map(notification => 
-          this.db.object(`notification_queue/${notification.id}`).remove()
-        );
-        await Promise.allSettled(deletePromises);
+    try {
+      if (endpoint && this.remoteNotifications.length > 0) {
+        await this.http.delete(endpoint).toPromise();
       }
 
-      // Actualizar observables
-      this.notificationsSubject.next([]);
-      this.unreadCountSubject.next(0);
-
-      console.log('✅ Todas las notificaciones han sido eliminadas');
+      this.remoteNotifications = [];
+      this.localNotifications = [];
+      this.saveLocalNotifications();
+      this.emitNotifications();
+      return true;
     } catch (error) {
       console.error('❌ Error limpiando todas las notificaciones:', error);
-      throw error;
+      this.toastr.error('No se pudieron eliminar las notificaciones', 'Notificaciones');
+      return false;
     }
   }
 
@@ -1110,19 +1112,14 @@ export class NotificationManagerService {
    */
   public cleanupExpiredNotifications(): void {
     const now = new Date();
-    const current = this.notificationsSubject.getValue();
-    
-    const active = current.filter(n => !n.expiresAt || n.expiresAt > now);
-    
-    if (active.length !== current.length) {
-      this.notificationsSubject.next(active);
-      this.updateUnreadCount(active);
-      
-      // Actualizar cache local
-      this.localNotifications = this.localNotifications.filter(n => 
-        !n.expiresAt || n.expiresAt > now
-      );
+    const vigente = (n: KatuqNotification) => !n.expiresAt || n.expiresAt > now;
+
+    const antes = this.localNotifications.length;
+    this.localNotifications = this.localNotifications.filter(vigente);
+
+    if (this.localNotifications.length !== antes) {
       this.saveLocalNotifications();
+      this.emitNotifications();
     }
   }
 

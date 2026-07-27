@@ -15,6 +15,9 @@ import Swal from 'sweetalert2';
 import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
 import { TreasuryAlert } from '../../../../shared/services/treasury/treasury.models';
 
+/** Chips de pedidos afectados que se muestran antes de colapsar en "+N más". */
+const MAX_PEDIDOS_VISIBLES = 12;
+
 /**
  * Spec 013 — Tesorería MVP. Tab "Alertas" (T-19, CA-11/12).
  * Lista alertas de duplicado (referencia / archivo). "Ir a revisar" lleva a la
@@ -81,6 +84,16 @@ export class AlertasTesoreriaComponent implements OnChanges, OnDestroy {
 
   tipoLabel(alert: TreasuryAlert): string {
     return alert?.alertType === 'duplicate_file' ? 'Comprobante repetido' : 'Referencia repetida';
+  }
+
+  /** Primeros pedidos afectados que se muestran como chips. */
+  pedidosVisibles(alert: TreasuryAlert): string[] {
+    return (alert?.orderIds || []).slice(0, MAX_PEDIDOS_VISIBLES);
+  }
+
+  /** Cuántos pedidos afectados quedan fuera de los chips visibles. */
+  pedidosRestantes(alert: TreasuryAlert): number {
+    return Math.max(0, (alert?.orderIds?.length || 0) - MAX_PEDIDOS_VISIBLES);
   }
 
   irARevisar(): void {

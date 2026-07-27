@@ -2,66 +2,140 @@
 
 :host {
   display: block;
+  background: #f5f6fb;
 }
 
 .tk-page {
-  padding: 1rem 1.25rem 1.5rem;
+  padding: 22px 28px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
+// ── Encabezado ────────────────────────────────────────────────────────────
 .tk-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 0.9rem;
+  gap: 16px;
+}
+.tk-header-id {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.tk-header-chip {
+  @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash));
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  font-size: 20px;
 }
 .tk-page-title {
   margin: 0;
-  font-weight: 700;
-  color: $katuq-purple-700;
-  font-size: 1.15rem;
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--kc-accent);
 }
 .tk-page-sub {
-  margin: 0.2rem 0 0;
-  font-size: 0.82rem;
-  color: $katuq-gray-500;
+  margin: 5px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kc-muted);
 }
 .tk-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: $katuq-purple-700;
-  background: $katuq-purple-50;
-  border: 1px solid $katuq-purple-200;
-  border-radius: 20px;
-  padding: 0.35rem 0.95rem;
-  cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
-  &:hover:not(:disabled) { background: $katuq-purple-100; box-shadow: 0 1px 4px rgba(109, 40, 217, 0.12); }
-  &:disabled { opacity: 0.6; cursor: default; }
+  @include kc-btn-base;
+  background: #fff;
+  border-color: #e2d9fb;
+  color: var(--kc-accent);
+  &:hover:not(:disabled) { background: var(--kc-accent-wash); }
 }
 
-// p-tabView tuning
-.tk-tabs {
-  margin-top: 1rem;
-  ::ng-deep .p-tabview-nav { flex-wrap: wrap; }
-}
+// ── Barra de pestañas (p-tabView como píldoras) ───────────────────────────
+:host ::ng-deep .tk-tabs {
+  &.p-tabview {
+    .p-tabview-nav-container { border: none; }
 
-.tk-tab-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  margin-left: 0.4rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: 10px;
-  background: $katuq-purple-100;
-  color: $katuq-purple-700;
-  &.tk-tab-badge-danger { background: $katuq-danger-light; color: $katuq-danger-text; }
+    .p-tabview-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      background: var(--kc-surface);
+      border: 1px solid var(--kc-line);
+      border-radius: 16px;
+      padding: 6px;
+      box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+
+      li {
+        margin: 0;
+
+        .p-tabview-nav-link {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          padding: 11px 20px;
+          margin: 0;
+          border: none;
+          border-radius: 11px;
+          background: transparent;
+          color: var(--kc-muted);
+          font-family: var(--kc-font-body);
+          font-weight: 800;
+          font-size: 13.5px;
+          transition: background 0.15s ease, color 0.15s ease;
+
+          &:not(.p-disabled):focus {
+            box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.14);
+          }
+          i { font-size: 15px; }
+        }
+
+        &:not(.p-highlight):not(.p-disabled):hover .p-tabview-nav-link {
+          background: var(--kc-canvas);
+          color: var(--kc-ink2);
+        }
+
+        &.p-highlight .p-tabview-nav-link {
+          background: var(--kc-accent-wash);
+          color: var(--kc-accent);
+          box-shadow: 0 1px 3px rgba(108, 76, 224, 0.14);
+        }
+      }
+    }
+
+    .p-tabview-ink-bar { display: none; }
+
+    .p-tabview-panels {
+      background: transparent;
+      border: none;
+      padding: 18px 0 0;
+      color: inherit;
+    }
+  }
+
+  .tk-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: 999px;
+    background: #f1f2f5;
+    color: var(--kc-muted);
+
+    &.tk-tab-badge-danger { background: var(--kc-red-wash); color: var(--kc-red); }
+  }
+
+  li.p-highlight .tk-tab-badge {
+    background: #fff;
+    color: var(--kc-accent);
+
+    &.tk-tab-badge-danger { background: var(--kc-red-wash); color: var(--kc-red); }
+  }
 }

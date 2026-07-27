@@ -329,7 +329,10 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "ventas/crear-ventas", title: "Venta asistida", type: "link", icon: "shopping-bag" },
+        { path: "ventas/venta-asistida", title: "Venta asistida", type: "link", icon: "shopping-bag" },
+        // Wizard original de 6 pasos. Se deja accesible como respaldo hasta que la
+        // pantalla única quede validada con un pedido real.
+        { path: "ventas/crear-ventas", title: "Venta asistida (pasos)", type: "link", icon: "list" },
         { path: "ventas/carga-ventas", title: "Ventas masivas", type: "link", icon: "upload" },
         { path: "ventas/ventas-pos", title: "Ventas POS", type: "link", icon: "monitor" },
       ],

@@ -2,9 +2,12 @@
 
   <!-- Encabezado -->
   <div class="cx-header">
-    <div>
-      <h4 class="cx-page-title"><i class="pi pi-chart-line me-2"></i>Cartera (CxC)</h4>
-      <p class="cx-page-sub">Cuánto te debe cada cliente, hace cuánto y la antigüedad de la deuda.</p>
+    <div class="cx-header-id">
+      <span class="cx-header-icon"><i class="pi pi-chart-line"></i></span>
+      <div>
+        <h4 class="cx-page-title">Cartera (CxC)</h4>
+        <p class="cx-page-sub">Cuánto te debe cada cliente, hace cuánto y la antigüedad de la deuda.</p>
+      </div>
     </div>
     <button type="button" class="cx-refresh" (click)="load()" [disabled]="loading"
             aria-label="Actualizar cartera">
@@ -32,24 +35,24 @@
   </div>
 
   <!-- Contenido -->
-  <p-tabView *ngIf="data && !loading && !error && !forbidden"
-             [activeIndex]="activeIndex" (onChange)="onTabChange($event)" styleClass="cx-tabs">
+  <ng-container *ngIf="data && !loading && !error && !forbidden">
 
-    <p-tabPanel>
-      <ng-template pTemplate="header">
-        <i class="pi pi-users me-2"></i>
+    <!-- Pestañas (segmented control) -->
+    <div class="cx-tabs" role="tablist">
+      <button type="button" role="tab" class="cx-tab" [class.is-active]="activeIndex === 0"
+              [attr.aria-selected]="activeIndex === 0" (click)="onTabChange({ index: 0 })">
+        <i class="pi pi-users"></i>
         <span>Cartera por Cliente</span>
-      </ng-template>
-      <app-cartera-clientes [data]="data"></app-cartera-clientes>
-    </p-tabPanel>
-
-    <p-tabPanel>
-      <ng-template pTemplate="header">
-        <i class="pi pi-clock me-2"></i>
+      </button>
+      <button type="button" role="tab" class="cx-tab" [class.is-active]="activeIndex === 1"
+              [attr.aria-selected]="activeIndex === 1" (click)="onTabChange({ index: 1 })">
+        <i class="pi pi-clock"></i>
         <span>Aging (Antigüedad)</span>
-      </ng-template>
-      <app-cartera-aging [data]="data"></app-cartera-aging>
-    </p-tabPanel>
+      </button>
+    </div>
 
-  </p-tabView>
+    <app-cartera-clientes *ngIf="activeIndex === 0" [data]="data"></app-cartera-clientes>
+    <app-cartera-aging    *ngIf="activeIndex === 1" [data]="data"></app-cartera-aging>
+
+  </ng-container>
 </div>

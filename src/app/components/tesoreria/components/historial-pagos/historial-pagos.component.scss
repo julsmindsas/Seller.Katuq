@@ -2,6 +2,73 @@
 
 :host { display: block; }
 
-.tk-hist-wrap { padding-top: 0.25rem; }
-.tk-table { font-size: 0.82rem; }
-.tk-money { font-weight: 600; font-family: 'Courier New', monospace; }
+.tk-hist-wrap {
+  @include tk-panel;
+}
+
+:host ::ng-deep .tk-table.p-datatable {
+  @include tk-table-skin;
+}
+
+.tk-cell-order {
+  font-weight: 800;
+  font-size: 13.5px;
+  color: #4f5bd5;
+}
+.tk-cell-date {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kc-ink2);
+}
+.tk-cell-user {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kc-muted2);
+  word-break: break-word;
+}
+
+// Método de pago (chip de ícono + nombre)
+.tk-method {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--kc-ink2);
+}
+.tk-method-chip {
+  @include kc-icon-chip(var(--kc-orange), var(--kc-orange-wash));
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+// Referencia (chip; clickable si hay comprobante)
+.tk-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 9px;
+  padding: 6px 11px;
+  font-family: var(--kc-font-head);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kc-ink2);
+}
+.tk-ref-link {
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+
+  i { color: var(--kc-accent); font-size: 12px; }
+  &:hover { border-color: #e2d9fb; background: var(--kc-accent-wash); }
+}
+
+.tk-money {
+  font-family: var(--kc-font-head);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--kc-green);
+}

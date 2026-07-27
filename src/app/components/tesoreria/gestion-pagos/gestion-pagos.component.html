@@ -2,9 +2,12 @@
 
   <!-- Encabezado -->
   <div class="tk-header">
-    <div>
-      <h4 class="tk-page-title"><i class="pi pi-wallet me-2"></i>Gestión de pagos</h4>
-      <p class="tk-page-sub">Verifica comprobantes, aprueba o rechaza pagos y controla la cartera pendiente.</p>
+    <div class="tk-header-id">
+      <span class="tk-header-chip" aria-hidden="true"><i class="pi pi-wallet"></i></span>
+      <div>
+        <h4 class="tk-page-title">Gestión de pagos</h4>
+        <p class="tk-page-sub">Verifica comprobantes, aprueba o rechaza pagos y controla la cartera pendiente.</p>
+      </div>
     </div>
     <button type="button" class="tk-refresh" (click)="loadMetrics()" [disabled]="loadingMetrics"
             aria-label="Actualizar indicadores">
@@ -47,9 +50,7 @@
     </div>
     <div class="tk-card" [ngClass]="metrics.alertasActivas.cantidad > 0 ? 'tk-accent-red' : 'tk-accent-gray'">
       <div class="tk-label">Alertas activas</div>
-      <div class="tk-value" [style.color]="metrics.alertasActivas.cantidad > 0 ? '#dc2626' : '#374151'">
-        {{ metrics.alertasActivas.cantidad | number }}
-      </div>
+      <div class="tk-value">{{ metrics.alertasActivas.cantidad | number }}</div>
       <div class="tk-sub">posibles duplicados</div>
     </div>
     <div class="tk-card tk-accent-gray">
@@ -64,7 +65,7 @@
 
     <p-tabPanel>
       <ng-template pTemplate="header">
-        <i class="pi pi-hourglass me-2"></i>
+        <i class="pi pi-hourglass"></i>
         <span>Por revisar</span>
         <span *ngIf="metrics?.porRevisar?.cantidad" class="tk-tab-badge">{{ metrics?.porRevisar?.cantidad }}</span>
       </ng-template>
@@ -79,7 +80,7 @@
 
     <p-tabPanel>
       <ng-template pTemplate="header">
-        <i class="pi pi-inbox me-2"></i>
+        <i class="pi pi-inbox"></i>
         <span>Sin pago</span>
       </ng-template>
       <app-tabla-pagos-pedidos
@@ -93,7 +94,7 @@
 
     <p-tabPanel>
       <ng-template pTemplate="header">
-        <i class="pi pi-times-circle me-2"></i>
+        <i class="pi pi-times-circle"></i>
         <span>Rechazados</span>
       </ng-template>
       <app-tabla-pagos-pedidos
@@ -107,7 +108,7 @@
 
     <p-tabPanel>
       <ng-template pTemplate="header">
-        <i class="pi pi-list me-2"></i>
+        <i class="pi pi-list"></i>
         <span>Historial</span>
       </ng-template>
       <app-historial-pagos *ngIf="activeIndex === 3" [active]="activeIndex === 3"></app-historial-pagos>
@@ -115,7 +116,7 @@
 
     <p-tabPanel>
       <ng-template pTemplate="header">
-        <i class="pi pi-flag me-2"></i>
+        <i class="pi pi-flag"></i>
         <span>Alertas</span>
         <span *ngIf="metrics?.alertasActivas?.cantidad" class="tk-tab-badge tk-tab-badge-danger">{{ metrics?.alertasActivas?.cantidad }}</span>
       </ng-template>

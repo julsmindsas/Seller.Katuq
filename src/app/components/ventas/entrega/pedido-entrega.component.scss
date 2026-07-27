@@ -1,5 +1,9 @@
 @import '../../../../../assets/scss/utils/katuq-tokens';
 
+// Reskin: alinear el acento al morado de Cotizaciones (#6C4CE0), sin migrar los tokens globales.
+$katuq-primary: #6c4ce0;
+$katuq-primary-light: #8c6bff;
+
 /* === Section layout === */
 .entrega-section {
   padding: 0.5rem 0;

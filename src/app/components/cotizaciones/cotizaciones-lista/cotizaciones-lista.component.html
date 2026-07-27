@@ -1,244 +1,279 @@
 <div class="container-fluid cotizaciones-lista">
   <!-- Encabezado / breadcrumb -->
-  <div class="page-title">
-    <div class="row">
-      <div class="col-12 col-sm-6">
-        <h3>Listado de Cotizaciones</h3>
-      </div>
-      <div class="col-12 col-sm-6">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item">
-            <a routerLink="/dashboards"><i class="fa fa-home"></i></a>
-          </li>
-          <li class="breadcrumb-item">Gestión Comercial</li>
-          <li class="breadcrumb-item active">Cotizaciones</li>
-        </ol>
+  <div class="cotz-head">
+    <div class="cotz-head-main">
+      <span class="cotz-head-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="13" y2="17"></line></svg>
+      </span>
+      <div>
+        <h3 class="cotz-title">Listado de Cotizaciones</h3>
+        <div class="cotz-subtitle">Gestiona propuestas y conviértelas en pedidos</div>
       </div>
     </div>
+    <ol class="breadcrumb cotz-breadcrumb">
+      <li class="breadcrumb-item">
+        <a routerLink="/dashboards" aria-label="Inicio">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </a>
+      </li>
+      <li class="breadcrumb-item">Gestión Comercial</li>
+      <li class="breadcrumb-item active">Cotizaciones</li>
+    </ol>
   </div>
 
   <!-- KPIs -->
-  <div class="row kpis-row">
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card kpi-card kpi-cotizado">
-        <div class="card-body">
-          <div class="kpi-label">Cotizado (este mes)</div>
-          <div class="kpi-value">{{ money(metrics?.cotizadoMes) }}</div>
-        </div>
+  <div class="kpis-row">
+    <div class="kpi-card kpi-cotizado">
+      <span class="kpi-bar"></span>
+      <div class="kpi-main">
+        <div class="kpi-label">Cotizado (este mes)</div>
+        <div class="kpi-value">{{ money(metrics?.cotizadoMes) }}</div>
+        <div class="kpi-sub">total emitido</div>
       </div>
+      <span class="kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+      </span>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card kpi-card kpi-pipeline">
-        <div class="card-body">
-          <div class="kpi-label">Pipeline activo</div>
-          <div class="kpi-value">{{ money(metrics?.pipelineActivo) }}</div>
-          <div class="kpi-sub">enviadas + aceptadas</div>
-        </div>
+
+    <div class="kpi-card kpi-pipeline">
+      <span class="kpi-bar"></span>
+      <div class="kpi-main">
+        <div class="kpi-label">Pipeline activo</div>
+        <div class="kpi-value">{{ money(metrics?.pipelineActivo) }}</div>
+        <div class="kpi-sub">enviadas + aceptadas</div>
       </div>
+      <span class="kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+      </span>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card kpi-card kpi-conversion">
-        <div class="card-body">
-          <div class="kpi-label">Tasa de conversión</div>
-          <div class="kpi-value">{{ metrics ? (metrics.tasaConversion + '%') : '—' }}</div>
-          <div class="kpi-sub">cotización → pedido</div>
-        </div>
+
+    <div class="kpi-card kpi-conversion">
+      <span class="kpi-bar"></span>
+      <div class="kpi-main">
+        <div class="kpi-label">Tasa de conversión</div>
+        <div class="kpi-value">{{ metrics ? (metrics.tasaConversion + '%') : '—' }}</div>
+        <div class="kpi-sub">cotización → pedido</div>
       </div>
+      <span class="kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+      </span>
     </div>
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="card kpi-card kpi-borradores">
-        <div class="card-body">
-          <div class="kpi-label">Borradores</div>
-          <div class="kpi-value">{{ metrics ? metrics.borradores : '—' }}</div>
-          <div class="kpi-sub">pendientes de enviar</div>
-        </div>
+
+    <div class="kpi-card kpi-borradores">
+      <span class="kpi-bar"></span>
+      <div class="kpi-main">
+        <div class="kpi-label">Borradores</div>
+        <div class="kpi-value">{{ metrics ? metrics.borradores : '—' }}</div>
+        <div class="kpi-sub">pendientes de enviar</div>
       </div>
+      <span class="kpi-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg>
+      </span>
     </div>
   </div>
 
   <!-- Filtros -->
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h5 class="mb-0">Filtros de Búsqueda</h5>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary btn-sm" (click)="exportar()" [disabled]="exporting">
-              <i class="fa fa-download me-1"></i>
-              {{ exporting ? "Exportando…" : "Exportar" }}
-            </button>
-            <button class="btn btn-primary btn-sm" (click)="nuevaCotizacion()">
-              <i class="fa fa-plus me-1"></i>
-              Nueva Cotización
-            </button>
-          </div>
+  <div class="cotz-card filtros-card">
+    <div class="cotz-card-head">
+      <div class="cotz-card-head-title">
+        <span class="head-ic">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+        </span>
+        <span class="head-txt">Filtros de Búsqueda</span>
+      </div>
+      <div class="cotz-card-head-actions">
+        <button type="button" class="btn-ghost" (click)="exportar()" [disabled]="exporting">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#17994F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          {{ exporting ? "Exportando…" : "Exportar" }}
+        </button>
+        <button type="button" class="btn-accent" (click)="nuevaCotizacion()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Nueva Cotización
+        </button>
+      </div>
+    </div>
+    <div class="filtros-body">
+      <div class="filtro-field">
+        <div class="filtro-label">Buscar</div>
+        <div class="filtro-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0B2" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+          <input
+            type="text"
+            placeholder="Número, cliente, documento o pedido"
+            [value]="q"
+            (input)="onSearch($any($event.target).value)"
+          />
         </div>
-        <div class="card-body">
-          <div class="row g-3 align-items-end">
-            <div class="col-md-4">
-              <label class="form-label">Buscar</label>
-              <input
-                type="text"
-                class="form-control"
-                placeholder="Número, cliente, documento o pedido"
-                [value]="q"
-                (input)="onSearch($any($event.target).value)"
-              />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">N° Pedido</label>
-              <input
-                type="text"
-                class="form-control"
-                placeholder="Ej. DAD-0345"
-                [value]="filtroPedido"
-                (input)="onPedidoSearch($any($event.target).value)"
-              />
-            </div>
-            <div class="col-md-5">
-              <label class="form-label d-block">Estado</label>
-              <div class="chips">
-                <button
-                  *ngFor="let chip of chips"
-                  type="button"
-                  class="chip"
-                  [class.active]="filtroEstado === chip.value"
-                  (click)="setEstado(chip.value)"
-                >
-                  {{ chip.label }}<span *ngIf="chipCount(chip.value) !== null"> ({{ chipCount(chip.value) }})</span>
-                </button>
-              </div>
-            </div>
-          </div>
+      </div>
+      <div class="filtro-field">
+        <div class="filtro-label">N° Pedido</div>
+        <div class="filtro-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA0B2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg>
+          <input
+            type="text"
+            placeholder="Ej. DAD-0345"
+            [value]="filtroPedido"
+            (input)="onPedidoSearch($any($event.target).value)"
+          />
+        </div>
+      </div>
+      <div class="filtro-field filtro-estado">
+        <div class="filtro-label">Estado</div>
+        <div class="chips">
+          <button
+            *ngFor="let chip of chips"
+            type="button"
+            class="chip"
+            [class.active]="filtroEstado === chip.value"
+            (click)="setEstado(chip.value)"
+          >
+            {{ chip.label }}<span class="chip-count" *ngIf="chipCount(chip.value) !== null"> ({{ chipCount(chip.value) }})</span>
+          </button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Tabla -->
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">
-            Cotizaciones
-            <span class="badge bg-secondary ms-1">{{ total }} total</span>
-          </h5>
-          <div *ngIf="loading" class="spinner-border spinner-border-sm text-primary" role="status">
-            <span class="visually-hidden">Cargando…</span>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle mb-0">
-              <thead>
-                <tr>
-                  <th role="button" (click)="sortBy('nroCotizacion')">Número</th>
-                  <th role="button" (click)="sortBy('cliente')">Cliente</th>
-                  <th role="button" (click)="sortBy('fechaEmision')">Emisión</th>
-                  <th role="button" (click)="sortBy('fechaVencimiento')">Válida hasta</th>
-                  <th class="text-end" role="button" (click)="sortBy('total')">Total</th>
-                  <th>Estado</th>
-                  <th role="button" (click)="sortBy('pedidoGenerado')">Pedido</th>
-                  <th class="text-end">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngIf="loading">
-                  <td colspan="8" class="text-center text-muted py-4">Cargando…</td>
-                </tr>
-                <tr *ngIf="!loading && error">
-                  <td colspan="8" class="text-center text-danger py-4">{{ error }}</td>
-                </tr>
-                <tr *ngIf="!loading && !error && cotizaciones.length === 0">
-                  <td colspan="8" class="text-center py-5">
-                    <i class="fa fa-file-text-o fa-2x text-muted mb-2 d-block"></i>
-                    <div class="text-muted mb-2">No hay cotizaciones que coincidan con el filtro.</div>
-                    <button class="btn btn-primary btn-sm" (click)="nuevaCotizacion()">
-                      <i class="fa fa-plus me-1"></i> Crear cotización
-                    </button>
-                  </td>
-                </tr>
-                <tr
-                  *ngFor="let c of cotizaciones; trackBy: trackById"
-                  class="cot-row"
-                  role="button"
-                  (click)="abrir(c)"
-                >
-                  <td><strong>{{ c.nroCotizacion || "—" }}</strong></td>
-                  <td>
-                    <div class="fw-semibold">{{ clienteNombre(c) }}</div>
-                    <small class="text-muted">{{ clienteSub(c) }}</small>
-                  </td>
-                  <td>{{ fecha(c.fechaEmision || c.fechaCreacion) }}</td>
-                  <td><span [ngClass]="validezClase(c)">{{ fecha(c.fechaVencimiento) }}</span></td>
-                  <td class="text-end"><strong>{{ money(c.total) }}</strong></td>
-                  <td>
-                    <span class="badge" [ngClass]="getEstadoClass(c.estadoCotizacion)">
-                      {{ estadoLabel(c.estadoCotizacion) }}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      *ngIf="c.pedidoGenerado; else sinPedido"
-                      type="button"
-                      class="btn btn-sm btn-link p-0 cot-pedido-link"
-                      title="Ver el pedido generado"
-                      (click)="verPedido(c, $event)"
-                    >
-                      🧾 {{ c.pedidoGenerado }}
-                    </button>
-                    <ng-template #sinPedido><span class="text-muted">—</span></ng-template>
-                  </td>
-                  <td class="text-end">
-                    <div class="btn-group btn-group-sm" role="group" (click)="$event.stopPropagation()">
-                      <button class="btn btn-outline-primary" title="Abrir / Editar" (click)="abrir(c)">
-                        <i class="fa fa-edit"></i>
-                      </button>
-                      <button class="btn btn-outline-info" title="Duplicar" (click)="duplicar(c, $event)">
-                        <i class="fa fa-copy"></i>
-                      </button>
-                      <button
-                        *ngIf="puedeConvertir(c)"
-                        class="btn btn-outline-success"
-                        title="Convertir a pedido"
-                        (click)="convertir(c, $event)"
-                      >
-                        <i class="fa fa-shopping-cart"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Paginación -->
-          <div
-            *ngIf="!loading && cotizaciones.length > 0"
-            class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2"
-          >
-            <small class="text-muted">{{ total }} cotización(es)</small>
-            <nav *ngIf="totalPages > 1">
-              <ul class="pagination pagination-sm mb-0">
-                <li class="page-item" [class.disabled]="page <= 1">
-                  <a class="page-link" href="javascript:void(0)" (click)="irPagina(page - 1)">
-                    <i class="fa fa-angle-left"></i>
-                  </a>
-                </li>
-                <li class="page-item disabled">
-                  <span class="page-link">Página {{ page }} de {{ totalPages }}</span>
-                </li>
-                <li class="page-item" [class.disabled]="page >= totalPages">
-                  <a class="page-link" href="javascript:void(0)" (click)="irPagina(page + 1)">
-                    <i class="fa fa-angle-right"></i>
-                  </a>
-                </li>
-              </ul>
-            </nav>
-          </div>
-        </div>
+  <div class="cotz-card tabla-card">
+    <div class="cotz-card-head">
+      <div class="cotz-card-head-title">
+        <span class="head-txt lg">Cotizaciones</span>
+        <span class="count-pill">{{ total }} Total</span>
       </div>
+      <div class="cotz-card-head-actions">
+        <div *ngIf="loading" class="spinner-border spinner-border-sm" role="status">
+          <span class="visually-hidden">Cargando…</span>
+        </div>
+        <button type="button" class="icon-btn" title="Refrescar" (click)="cargar()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="tabla-scroll">
+      <table class="cotz-table">
+        <thead>
+          <tr>
+            <th role="button" (click)="sortBy('nroCotizacion')">
+              Número <span class="sort-caret" [class.on]="sortKey==='nroCotizacion'" [class.desc]="sortKey==='nroCotizacion' && sortDir===-1"></span>
+            </th>
+            <th role="button" (click)="sortBy('cliente')">
+              Cliente <span class="sort-caret" [class.on]="sortKey==='cliente'" [class.desc]="sortKey==='cliente' && sortDir===-1"></span>
+            </th>
+            <th role="button" (click)="sortBy('fechaEmision')">
+              Emisión <span class="sort-caret" [class.on]="sortKey==='fechaEmision'" [class.desc]="sortKey==='fechaEmision' && sortDir===-1"></span>
+            </th>
+            <th role="button" (click)="sortBy('fechaVencimiento')">
+              Válida hasta <span class="sort-caret" [class.on]="sortKey==='fechaVencimiento'" [class.desc]="sortKey==='fechaVencimiento' && sortDir===-1"></span>
+            </th>
+            <th class="ta-right" role="button" (click)="sortBy('total')">
+              Total <span class="sort-caret" [class.on]="sortKey==='total'" [class.desc]="sortKey==='total' && sortDir===-1"></span>
+            </th>
+            <th class="ta-center">Estado</th>
+            <th class="ta-center" role="button" (click)="sortBy('pedidoGenerado')">
+              Pedido <span class="sort-caret" [class.on]="sortKey==='pedidoGenerado'" [class.desc]="sortKey==='pedidoGenerado' && sortDir===-1"></span>
+            </th>
+            <th class="ta-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="8" class="state-cell">Cargando…</td>
+          </tr>
+          <tr *ngIf="!loading && error">
+            <td colspan="8" class="state-cell error">{{ error }}</td>
+          </tr>
+          <tr *ngIf="!loading && !error && cotizaciones.length === 0">
+            <td colspan="8" class="state-cell empty">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <div class="empty-txt">No hay cotizaciones que coincidan con el filtro.</div>
+              <button type="button" class="btn-accent sm" (click)="nuevaCotizacion()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Crear cotización
+              </button>
+            </td>
+          </tr>
+
+          <tr
+            *ngFor="let c of cotizaciones; let i = index; trackBy: trackById"
+            class="cot-row"
+            role="button"
+            (click)="abrir(c)"
+          >
+            <td>
+              <div class="num-wrap">
+                <span class="num-dot" [attr.data-estado]="c.estadoCotizacion"></span>
+                <span class="num-text">{{ c.nroCotizacion || "—" }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="cli-wrap">
+                <span class="cli-avatar" [ngClass]="'av-' + (i % 3)">{{ clienteNombre(c).charAt(0) }}</span>
+                <div class="cli-info">
+                  <div class="cli-name">{{ clienteNombre(c) }}</div>
+                  <div class="cli-sub">{{ clienteSub(c) }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="td-emision">{{ fecha(c.fechaEmision || c.fechaCreacion) }}</td>
+            <td>
+              <span class="valida" [ngClass]="validezClase(c)">{{ fecha(c.fechaVencimiento) }}</span>
+            </td>
+            <td class="ta-right td-total">{{ money(c.total) }}</td>
+            <td class="ta-center">
+              <span class="estado-pill" [attr.data-estado]="c.estadoCotizacion">
+                <span class="dot"></span>{{ estadoLabel(c.estadoCotizacion) }}
+              </span>
+            </td>
+            <td class="ta-center">
+              <button
+                *ngIf="c.pedidoGenerado; else sinPedido"
+                type="button"
+                class="pedido-link"
+                title="Ver el pedido generado"
+                (click)="verPedido(c, $event)"
+              >
+                🧾 {{ c.pedidoGenerado }}
+              </button>
+              <ng-template #sinPedido><span class="td-dash">—</span></ng-template>
+            </td>
+            <td class="ta-center">
+              <div class="acciones" (click)="$event.stopPropagation()">
+                <button type="button" class="acc-btn edit" title="Abrir / Editar" (click)="abrir(c)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg>
+                </button>
+                <button type="button" class="acc-btn dup" title="Duplicar" (click)="duplicar(c, $event)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+                <button
+                  *ngIf="puedeConvertir(c)"
+                  type="button"
+                  class="acc-btn conv"
+                  title="Convertir en pedido"
+                  (click)="convertir(c, $event)"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div *ngIf="!loading && cotizaciones.length > 0" class="tabla-foot">
+      <div class="foot-count"><b>{{ total }}</b> cotización(es)</div>
+      <nav *ngIf="totalPages > 1" class="pager">
+        <button type="button" class="pager-btn" [disabled]="page <= 1" (click)="irPagina(page - 1)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <span class="pager-info">Página {{ page }} de {{ totalPages }}</span>
+        <button type="button" class="pager-btn" [disabled]="page >= totalPages" (click)="irPagina(page + 1)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </nav>
     </div>
   </div>
 </div>

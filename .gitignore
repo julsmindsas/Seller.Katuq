@@ -191,3 +191,6 @@ src/assets/novedades/*.mp4
 
 # Backups locales de sesiones (no versionar)
 .backups/
+
+# Grafo de conocimiento generado por Graphify (artefacto local, se regenera)
+graphify-out/

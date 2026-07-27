@@ -239,7 +239,7 @@
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: #8b5cf6;
+    color: #6c4ce0;
   }
 
   tbody tr:hover {
@@ -295,7 +295,7 @@
       text-transform: uppercase;
       font-size: $clientes-font-size-small;
       letter-spacing: 0.5px;
-      color: #8b5cf6;
+      color: #6c4ce0;
       padding: $clientes-spacing-md;
       border-bottom: 2px solid $clientes-border-light;
       white-space: nowrap;
@@ -339,7 +339,7 @@
   margin-bottom: $clientes-spacing-lg;
 
   .nav-link {
-    color: #8b5cf6;
+    color: #6c4ce0;
     font-weight: 700;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -353,14 +353,14 @@
     margin-bottom: -2px;
 
     &:hover:not(.active) {
-      color: #7c3aed;
+      color: #533bc4;
       background: $clientes-bg-light;
     }
 
     &.active {
-      color: #8b5cf6;
+      color: #6c4ce0;
       background: $clientes-white;
-      border-bottom: 3px solid #8b5cf6;
+      border-bottom: 3px solid #6c4ce0;
 
       &:after {
         content: '';
@@ -369,7 +369,7 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: #8b5cf6;
+        background: #6c4ce0;
         border-radius: $clientes-border-radius-pill $clientes-border-radius-pill 0 0;
       }
     }
@@ -664,7 +664,7 @@ input[type="checkbox"] {
   h5 {
     font-size: 1.1rem !important;
     font-weight: 800 !important;
-    color: #8b5cf6 !important;
+    color: #6c4ce0 !important;
 
     i {
       font-size: 1.1rem;
@@ -692,7 +692,7 @@ input[type="checkbox"] {
       transition: all 0.2s ease;
 
       &:focus {
-        border-color: #667eea !important;
+        border-color: #6c4ce0 !important;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
       }
     }
@@ -705,7 +705,7 @@ input[type="checkbox"] {
       transition: all 0.2s ease;
 
       &:focus {
-        border-color: #667eea !important;
+        border-color: #6c4ce0 !important;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
       }
     }
@@ -726,7 +726,7 @@ input[type="checkbox"] {
   transition: all 0.3s ease;
 
   &:hover {
-    border-color: #667eea;
+    border-color: #6c4ce0;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
   }
 
@@ -745,7 +745,7 @@ input[type="checkbox"] {
       height: 22px;
       border-radius: 6px;
       background: #ede9fe;
-      color: #7c3aed;
+      color: #533bc4;
       font-size: 0.75rem;
     }
 
@@ -753,7 +753,7 @@ input[type="checkbox"] {
       margin: 0;
       font-size: 0.85rem;
       font-weight: 700;
-      color: #8b5cf6;
+      color: #6c4ce0;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -835,7 +835,7 @@ input[type="checkbox"] {
   padding: 1rem;
   background-color: #f0f2ff;
   border-radius: 6px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #6c4ce0;
 
   .checkbox-group {
     display: flex;
@@ -852,18 +852,18 @@ input[type="checkbox"] {
       margin: 0;
 
       &:checked {
-        background-color: #667eea;
-        border-color: #667eea;
+        background-color: #6c4ce0;
+        border-color: #6c4ce0;
       }
 
       &:focus {
         outline: none;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        border-color: #667eea;
+        border-color: #6c4ce0;
       }
 
       &:hover {
-        border-color: #667eea;
+        border-color: #6c4ce0;
       }
     }
 
@@ -941,7 +941,7 @@ input[type="checkbox"] {
     transition: all 0.2s ease;
 
     &:focus {
-      border-color: #667eea !important;
+      border-color: #6c4ce0 !important;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
     }
 
@@ -974,9 +974,9 @@ input[type="checkbox"] {
     &:hover { background: #e9ecef; color: #2F2F3B; }
   }
   &.btn-tbl-primary {
-    background: #8b5cf6;
+    background: #6c4ce0;
     color: #fff;
-    &:hover { background: #7c3aed; }
+    &:hover { background: #533bc4; }
   }
   &.btn-tbl-danger {
     background: #fee2e2;
@@ -1008,16 +1008,16 @@ input[type="checkbox"] {
   i { font-size: 0.8rem; }
 
   &.btn-client-primary {
-    background: #8b5cf6;
+    background: #6c4ce0;
     color: #fff;
-    &:hover { background: #7c3aed; }
+    &:hover { background: #533bc4; }
   }
 
   &.btn-client-neutral {
     background: #fff;
     color: #495057;
     border: 1px solid #dee2e6;
-    &:hover { background: #f8f9fa; border-color: #8b5cf6; color: #8b5cf6; }
+    &:hover { background: #f8f9fa; border-color: #6c4ce0; color: #6c4ce0; }
   }
 
   &.btn-client-danger {
@@ -1050,7 +1050,7 @@ input[type="checkbox"] {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #8b5cf6;
+      color: #6c4ce0;
       padding: 0.6rem 0.875rem;
       border-bottom: 2px solid #ddd6fe;
       white-space: nowrap;
@@ -1098,8 +1098,8 @@ input[type="checkbox"] {
 
 .btn-tbl-edit {
   background: #ede9fe;
-  color: #7c3aed;
-  &:hover { background: #7c3aed; color: #fff; }
+  color: #533bc4;
+  &:hover { background: #533bc4; color: #fff; }
 }
 
 .btn-tbl-delete {
@@ -1190,7 +1190,7 @@ input[type="checkbox"] {
 
   &:hover {
     background: #ddd6fe;
-    border-color: #c4b5fd;
+    border-color: #eee9fd;
   }
 
   // quitar la flecha nativa del ngbDropdownToggle
@@ -1224,7 +1224,7 @@ input[type="checkbox"] {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #8b5cf6;
+  background: #6c4ce0;
   color: #fff;
   display: grid;
   place-items: center;
@@ -1256,7 +1256,7 @@ input[type="checkbox"] {
 
   i {
     font-size: 0.72rem;
-    color: #a78bfa;
+    color: #8c6bff;
   }
 }
 
@@ -1347,7 +1347,7 @@ input[type="checkbox"] {
   user-select: none;
 
   &:hover {
-    border-color: #a78bfa;
+    border-color: #8c6bff;
     background: #f5f3ff;
     color: #5b21b6;
   }
@@ -1442,7 +1442,7 @@ input[type="checkbox"] {
     .col-toggle-check {
       width: 15px;
       height: 15px;
-      accent-color: #7c3aed;
+      accent-color: #533bc4;
       cursor: pointer;
       flex-shrink: 0;
       pointer-events: none;
@@ -1454,14 +1454,14 @@ input[type="checkbox"] {
 // BOTÓN GESTIONAR ETIQUETAS (header)
 // ==============================================
 ::ng-deep .btn-tags-cfg.p-button.p-button-outlined {
-  color: #8b5cf6 !important;
-  border-color: #8b5cf6 !important;
+  color: #6c4ce0 !important;
+  border-color: #6c4ce0 !important;
   background: transparent !important;
 
   &:hover {
     background: #f5f3ff !important;
-    border-color: #7c3aed !important;
-    color: #7c3aed !important;
+    border-color: #533bc4 !important;
+    color: #533bc4 !important;
   }
 }
 
@@ -1492,7 +1492,7 @@ input[type="checkbox"] {
 
   .dialog-header-icon {
     font-size: 1.1rem !important;
-    color: #8b5cf6 !important;
+    color: #6c4ce0 !important;
   }
 
   .dialog-header-title {

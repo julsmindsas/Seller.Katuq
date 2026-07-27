@@ -1,5 +1,9 @@
 <div class="modal-header">
+    <span class="cfg-head-ic">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+    </span>
     <h4 class="modal-title">{{'Configuración del producto' | translate}}</h4>
+    <span class="cfg-head-ref" *ngIf="producto?.identificacion?.referencia">{{producto?.identificacion?.referencia}}</span>
 </div>
 <div class="container-fluid modal-body">
     <div>
@@ -424,14 +428,41 @@
                             <small class="text-muted mt-2">{{'Preparando configuración...' | translate}}</small>
                         </div>
                     </div>
-                    <ngb-accordion #acc="ngbAccordion" [activeIds]="activeAccordionPanel" class="custom-accordion" 
+                    <!-- Navegación de secciones (mockup): solo presentación, salta a cada sección -->
+                    <div class="cfg-secnav">
+                        <button type="button" class="cfg-secnav-pill" [class.active]="seccionActiva === 'datosEntregaPanel'"
+                                (click)="irASeccion('datosEntregaPanel')">
+                            <span class="cfg-secnav-dot">1</span> {{'Entrega' | translate}}
+                        </button>
+                        <button type="button" class="cfg-secnav-pill" *ngIf="producto?.procesoComercial?.aceptaVariable"
+                                [class.active]="seccionActiva === 'preferenciasPanel'"
+                                (click)="irASeccion('preferenciasPanel')">
+                            <span class="cfg-secnav-dot">2</span> {{'Preferencias' | translate}}
+                        </button>
+                        <button type="button" class="cfg-secnav-pill" *ngIf="producto?.procesoComercial?.llevaTarjeta"
+                                [class.active]="seccionActiva === 'tarjetasPanel'"
+                                (click)="irASeccion('tarjetasPanel')">
+                            <span class="cfg-secnav-dot">3</span> {{'Tarjetas' | translate}}
+                        </button>
+                        <button type="button" class="cfg-secnav-pill" *ngIf="producto?.procesoComercial?.aceptaAdiciones"
+                                [class.active]="seccionActiva === 'adicionesPanel'"
+                                (click)="irASeccion('adicionesPanel')">
+                            <span class="cfg-secnav-dot">4</span> {{'Adiciones' | translate}}
+                        </button>
+                        <button type="button" class="cfg-secnav-pill" [class.active]="seccionActiva === 'cantidadPanel'"
+                                (click)="irASeccion('cantidadPanel')">
+                            <span class="cfg-secnav-dot">5</span> {{'Cantidad' | translate}}
+                        </button>
+                    </div>
+
+                    <ngb-accordion #acc="ngbAccordion" [activeIds]="activeAccordionPanel" class="custom-accordion"
                                    [ngClass]="{'disabled-accordion': errorCargaDatosMaestros || !datosMaestrosCargados || isConfigLoading}">
                     <!-- Sección 1: Datos entrega -->
                     <ngb-panel id="datosEntregaPanel">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center justify-content-between w-100">
+                            <div id="sec-datosEntregaPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-calendar me-2"></i> {{'DATOS PARA LA ENTREGA' | translate}}
+                                    <i class="fa fa-calendar me-2"></i> {{'Datos para la entrega' | translate}}
                                 </button>
                                 <span *ngIf="datosEntrega.valid"
                                     class="badge bg-success me-4 d-flex align-items-center">
@@ -512,7 +543,7 @@
                                 <!-- Sección de personalización -->
                                 <div *ngIf="hasAceptaOcasion || hasAceptaGenero || producto?.procesoComercial?.aceptaComentarios || producto?.procesoComercial.aceptaColorDecoracion"
                                     class="mt-4">
-                                    <h5 class="section-title">{{'OBSERVACIONES DE PERSONALIZACIÓN' | translate}}</h5>
+                                    <h5 class="section-title">{{'Personalización' | translate}}</h5>
 
                                     <!-- Ocasión -->
                                     <div *ngIf="hasAceptaOcasion" class="form-group">
@@ -580,9 +611,9 @@
                     <!-- Sección 2: Preferencias -->
                     <ngb-panel id="preferenciasPanel" *ngIf="producto?.procesoComercial?.aceptaVariable">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center justify-content-between w-100">
+                            <div id="sec-preferenciasPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-list-alt me-2"></i> {{'PREFERENCIAS DEL PRODUCTO' | translate}}
+                                    <i class="fa fa-list-alt me-2"></i> {{'Preferencias del producto' | translate}}
                                 </button>
                                 <span *ngIf="getVariablesControls().length > 0 && hasPreferencia()"
                                     class="badge bg-success me-4 d-flex align-items-center">
@@ -699,9 +730,9 @@
                     <!-- Sección 3: Tarjetas -->
                     <ngb-panel id="tarjetasPanel" *ngIf="producto?.procesoComercial?.llevaTarjeta">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center justify-content-between w-100">
+                            <div id="sec-tarjetasPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-gift me-2"></i> {{'TARJETAS' | translate}} <span
+                                    <i class="fa fa-gift me-2"></i> {{'Tarjetas' | translate}} <span
                                         *ngIf="!SinTarjeta">({{tarjetas.length}})</span>
                                 </button>
                                 <span *ngIf="SinTarjeta || tarjetas.length > 0"
@@ -714,9 +745,9 @@
                             <div class="row">
                                 <div class="col-sm-12">
                                     <div class="d-flex align-items-center">
-                                        <h5 class="m-15" *ngIf="!SinTarjeta">{{'TARJETAS' | translate}}
+                                        <h5 class="m-15" *ngIf="!SinTarjeta">{{'Tarjetas' | translate}}
                                             ({{tarjetas.length}})</h5>
-                                        <h5 class="m-15" *ngIf="SinTarjeta">{{'SIN TARJETAS' | translate}} </h5>
+                                        <h5 class="m-15" *ngIf="SinTarjeta">{{'Sin tarjetas' | translate}} </h5>
                                         <button class="btn btn-sm btn-primary ms-2" *ngIf="!SinTarjeta"
                                             title="{{'Agregar otra tarjeta' | translate}}" (click)="agregarTarjeta()">
                                             <i class="fa fa-plus me-1"></i> {{'Agregar' | translate}}
@@ -801,9 +832,9 @@
                     <!-- Sección 4: Adiciones -->
                     <ngb-panel id="adicionesPanel" *ngIf="producto?.procesoComercial?.aceptaAdiciones">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center justify-content-between w-100">
+                            <div id="sec-adicionesPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-plus-circle me-2"></i> {{'ADICIONES' | translate}}
+                                    <i class="fa fa-plus-circle me-2"></i> {{'Adiciones' | translate}}
                                 </button>
                                 <span *ngIf="hasAdicion()" class="badge bg-success me-4 d-flex align-items-center">
                                     <i class="fa fa-check me-1"></i> {{getAdicionesCount()}}
@@ -928,9 +959,9 @@
                     <!-- Sección 5: Cantidad -->
                     <ngb-panel id="cantidadPanel">
                         <ng-template ngbPanelHeader>
-                            <div class="d-flex align-items-center justify-content-between w-100">
+                            <div id="sec-cantidadPanel" class="d-flex align-items-center justify-content-between w-100">
                                 <button ngbPanelToggle class="accordion-button">
-                                    <i class="fa fa-shopping-basket me-2"></i> {{'CANTIDAD' | translate}}
+                                    <i class="fa fa-shopping-basket me-2"></i> {{'Cantidad' | translate}}
                                 </button>
                                 <span *ngIf="cantidad > 0" class="badge bg-primary me-4 d-flex align-items-center">
                                     {{cantidad}}
@@ -994,86 +1025,11 @@
                 </div>
 
                 <!-- Botón flotante mejorado para agregar al carrito -->
-                <div class="cart-floating-container" [class.minimized]="isCartMinimized" [class.expanded]="isCartExpanded">
-                    <!-- Botón de minimizar/maximizar -->
-                    <button class="minimize-toggle" (click)="toggleMinimizeCart()" *ngIf="!isCartMinimized">
-                        <i class="fa fa-chevron-down"></i>
-                    </button>
-                    
-                    <!-- Vista compacta (siempre visible) -->
-                    <div class="cart-compact-view">
-                        <div class="compact-info" (click)="toggleExpandCart()">
-                            <div class="compact-price">
-                                {{ (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}
-                            </div>
-                            <div class="compact-quantity" *ngIf="(sumar1() || 1) > 1">
-                                x{{ sumar1() || 1 }}
-                            </div>
-                        </div>
-                        
-                        <button class="btn-compact-cart" type="button" (click)="addToCar()" 
-                                [disabled]="isCartButtonDisabled()"
-                                [class]="getCompactCartButtonClass()">
-                            <i class="fa fa-shopping-basket"></i>
-                            <span class="d-none d-sm-inline ms-1">
-                                {{errorCargaDatosMaestros ? 'Error de configuración' : 
-                                  (isEdit ? 'Actualizar' : (isStockUnavailable() ? 'Sin stock' : 'Agregar')) | translate}}
-                            </span>
-                        </button>
-                    </div>
-
-                    <!-- Vista expandida (opcional) -->
-                    <div class="cart-expanded-view" *ngIf="isCartExpanded && !isCartMinimized">
-                        <div class="price-summary-expanded">
-                            <div class="price-row">
-                                <div class="price-label">{{'Producto:' | translate}}</div>
-                                <div class="price-value">{{ precioproducto * (sumar1() || 1) |
-                                    currency:'USD':'symbol':'1.0-0' }}</div>
-                            </div>
-                            <div class="price-row" *ngIf="getTotalPrecioTotalConIva() > 0">
-                                <div class="price-label">{{'Adiciones:' | translate}}</div>
-                                <div class="price-value">{{ (getBigTotalProductWithPreferenceAndAdictions() -
-                                    precioproducto) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mensajes de error/información -->
-                    <div *ngIf="isCartButtonDisabled() && !isCartMinimized" class="cart-error-info">
-                        <div class="error-message" *ngIf="errorCargaDatosMaestros">
-                            <i class="fa fa-exclamation-triangle"></i>
-                            <span>{{'Error de configuración' | translate}}</span>
-                            <button (click)="reintentarCargaDatosMaestros()" class="btn-debug" title="{{'Reintentar carga' | translate}}">
-                                <i class="fa fa-refresh"></i>
-                            </button>
-                        </div>
-                        <div class="error-message" *ngIf="isStockUnavailable() && !errorCargaDatosMaestros">
-                            <i class="fa fa-exclamation-triangle"></i>
-                            <span>{{'Sin stock' | translate}}</span>
-                        </div>
-                        <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (!formasEntregaProducto || formasEntregaProducto.length === 0) && producto?.procesoComercial?.llevaCalendario">
-                            <i class="fa fa-truck"></i>
-                            <span class="d-none d-sm-inline">{{'Sin formas de entrega' | translate}}</span>
-                        </div>
-                        <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (formasEntregaProducto && formasEntregaProducto.length > 0)">
-                            <i class="fa fa-info-circle"></i>
-                            <span class="d-none d-sm-inline">{{'Faltan campos' | translate}}</span>
-                            <button (click)="showDebugInfo()" class="btn-debug">
-                                <i class="fa fa-bug"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Botón para expandir cuando está minimizado -->
-                    <button class="expand-button" (click)="toggleMinimizeCart()" *ngIf="isCartMinimized">
-                        <i class="fa fa-shopping-basket"></i>
-                        <span class="price-badge">{{ (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}</span>
-                    </button>
-                </div>
+                
             </div>
         </div>
     </div>
-</div>
+
 <div class="card mt-3">
     <div class="row product-page-main">
         <div class="col-sm-12">
@@ -1175,3 +1131,87 @@
         </div>
     </div>
 </div>
+</div>
+
+
+<!-- FOOTER del modal (antes flotaba sobre la ventana) -->
+<div class="cart-floating-container" [class.minimized]="isCartMinimized" [class.expanded]="isCartExpanded">
+                    <!-- Botón de minimizar/maximizar -->
+                    <button class="minimize-toggle" (click)="toggleMinimizeCart()" *ngIf="!isCartMinimized">
+                        <i class="fa fa-chevron-down"></i>
+                    </button>
+                    
+                    <!-- Vista compacta (siempre visible) -->
+                    <div class="cart-compact-view">
+                        <div class="compact-info" (click)="toggleExpandCart()">
+                            <div class="compact-price">
+                                {{ (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}
+                            </div>
+                            <div class="compact-quantity" *ngIf="(sumar1() || 1) > 1">
+                                x{{ sumar1() || 1 }}
+                            </div>
+                        </div>
+                        
+                        <button class="cfg-footer-cancel" type="button" (click)="dismissCurrentModal()">
+                            {{'Cancelar' | translate}}
+                        </button>
+
+                        <button class="btn-compact-cart" type="button" (click)="addToCar()"
+                                [disabled]="isCartButtonDisabled()"
+                                [class]="getCompactCartButtonClass()">
+                            <i class="fa fa-shopping-basket"></i>
+                            <span class="d-none d-sm-inline ms-1">
+                                {{errorCargaDatosMaestros ? 'Error de configuración' : 
+                                  (isEdit ? 'Actualizar' : (isStockUnavailable() ? 'Sin stock' : 'Agregar')) | translate}}
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Vista expandida (opcional) -->
+                    <div class="cart-expanded-view" *ngIf="isCartExpanded && !isCartMinimized">
+                        <div class="price-summary-expanded">
+                            <div class="price-row">
+                                <div class="price-label">{{'Producto:' | translate}}</div>
+                                <div class="price-value">{{ precioproducto * (sumar1() || 1) |
+                                    currency:'USD':'symbol':'1.0-0' }}</div>
+                            </div>
+                            <div class="price-row" *ngIf="getTotalPrecioTotalConIva() > 0">
+                                <div class="price-label">{{'Adiciones:' | translate}}</div>
+                                <div class="price-value">{{ (getBigTotalProductWithPreferenceAndAdictions() -
+                                    precioproducto) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mensajes de error/información -->
+                    <div *ngIf="isCartButtonDisabled() && !isCartMinimized" class="cart-error-info">
+                        <div class="error-message" *ngIf="errorCargaDatosMaestros">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            <span>{{'Error de configuración' | translate}}</span>
+                            <button (click)="reintentarCargaDatosMaestros()" class="btn-debug" title="{{'Reintentar carga' | translate}}">
+                                <i class="fa fa-refresh"></i>
+                            </button>
+                        </div>
+                        <div class="error-message" *ngIf="isStockUnavailable() && !errorCargaDatosMaestros">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            <span>{{'Sin stock' | translate}}</span>
+                        </div>
+                        <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (!formasEntregaProducto || formasEntregaProducto.length === 0) && producto?.procesoComercial?.llevaCalendario">
+                            <i class="fa fa-truck"></i>
+                            <span class="d-none d-sm-inline">{{'Sin formas de entrega' | translate}}</span>
+                        </div>
+                        <div class="error-message" *ngIf="!isStockUnavailable() && !errorCargaDatosMaestros && (formasEntregaProducto && formasEntregaProducto.length > 0)">
+                            <i class="fa fa-info-circle"></i>
+                            <span class="d-none d-sm-inline">{{'Faltan campos' | translate}}</span>
+                            <button (click)="showDebugInfo()" class="btn-debug">
+                                <i class="fa fa-bug"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botón para expandir cuando está minimizado -->
+                    <button class="expand-button" (click)="toggleMinimizeCart()" *ngIf="isCartMinimized">
+                        <i class="fa fa-shopping-basket"></i>
+                        <span class="price-badge">{{ (getBigTotalProductWithPreferenceAndAdictions()) * (sumar1() || 1) | currency:'USD':'symbol':'1.0-0' }}</span>
+                    </button>
+                </div>

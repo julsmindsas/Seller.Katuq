@@ -4,6 +4,7 @@ import { SharedModule } from "../../../app/shared/shared.module";
 import { NgxDatatableModule } from "@swimlane/ngx-datatable";
 import { VentasRoutingModule } from "./ventas-routing.module";
 import { CrearVentasComponent } from "./crear-ventas/crear-ventas.component";
+import { VentaAsistidaUnicaComponent } from "./venta-asistida-unica/venta-asistida-unica.component";
 import { TabViewModule } from "primeng/tabview";
 import { NgSelectModule } from "@ng-select/ng-select";
 import { ArchwizardModule } from "angular-archwizard";
@@ -139,6 +140,7 @@ import { GlobalMetricsComponent } from "./clientes/global-metrics/global-metrics
     PedidoEntregaComponent,
     ListOrdersComponent,
     CrearVentasComponent,
+    VentaAsistidaUnicaComponent,
     ClientesComponent,
     QuickViewComponent,
     EcomerceProductsComponent,

@@ -1,47 +1,83 @@
 // ==========================================================================
-// Spec 013 — Tesorería MVP. Estilos compartidos del módulo.
-// Estilo PLANO (sin gradientes en cards/stats) — border-left de color acento.
+// Spec 013 — Tesorería. Estilos compartidos del módulo.
+// Rediseño 2026-07-26: adopta el lenguaje visual comercial (mismo acento y
+// mismas primitivas que Cotizaciones) — plano, sin gradientes en cards/stats.
 // Se @importa desde el scss de cada componente (encapsulación de Angular).
 // ==========================================================================
 @import '../../../assets/scss/utils/katuq-tokens';
+@import '../../shared/styles/katuq-comercial';
+
+:host {
+  @include kc-tokens;
+  font-family: var(--kc-font-body);
+}
 
 // ── Grid de KPI cards ─────────────────────────────────────────────────────
 .tk-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 0.75rem;
+  gap: 12px;
 
-  @media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 1400px) { grid-template-columns: repeat(3, 1fr); }
   @media (max-width: 768px)  { grid-template-columns: repeat(2, 1fr); }
 }
 
 .tk-card {
-  background: #fff;
-  border: 1px solid $katuq-gray-200;
-  border-left: 4px solid $katuq-gray-300;
-  border-radius: $card-radius;
-  padding: 0.75rem 0.9rem;
-  min-height: 84px;
+  @include kc-card;
+  position: relative;
+  overflow: hidden;
+  padding: 16px 18px;
+  min-height: 92px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+
+  // Banda de acento a la izquierda (reemplaza el border-left)
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: var(--tk-bar, #{$katuq-gray-300});
+  }
 }
 
-.tk-accent-green  { border-left-color: $katuq-success-dark; }
-.tk-accent-orange { border-left-color: $katuq-warning-dark; }
-.tk-accent-purple { border-left-color: $katuq-purple-600; }
-.tk-accent-blue   { border-left-color: #2563eb; }
-.tk-accent-red    { border-left-color: $katuq-danger-dark; }
-.tk-accent-gray   { border-left-color: $katuq-gray-300; }
+.tk-accent-green  { --tk-bar: var(--kc-green);  --tk-fg: var(--kc-green); }
+.tk-accent-orange { --tk-bar: var(--kc-orange); --tk-fg: var(--kc-orange); }
+.tk-accent-purple { --tk-bar: var(--kc-accent); --tk-fg: var(--kc-accent); }
+.tk-accent-blue   { --tk-bar: var(--kc-blue);   --tk-fg: var(--kc-blue); }
+.tk-accent-red    { --tk-bar: var(--kc-red);    --tk-fg: var(--kc-red); }
+.tk-accent-gray   { --tk-bar: #17b0b0;          --tk-fg: var(--kc-ink2); }
 
-.tk-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; color: $katuq-gray-500; margin-bottom: 0.2rem; }
-.tk-value { font-size: 1.25rem; font-weight: 700; color: $katuq-gray-800; line-height: 1.2; }
-.tk-sub   { font-size: 0.72rem; color: $katuq-gray-500; margin-top: 0.15rem; }
+.tk-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--kc-muted2);
+}
+.tk-value {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.1;
+  margin-top: 6px;
+  color: var(--tk-fg, var(--kc-ink));
+  word-break: break-word;
+}
+.tk-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kc-muted2);
+  margin-top: 4px;
+}
 
 // ── Skeleton shimmer ──────────────────────────────────────────────────────
 .tk-skel {
-  border-left-color: #e5e7eb;
-  background: linear-gradient(90deg, #f3f4f6 25%, #e9ebee 37%, #f3f4f6 63%);
+  --tk-bar: #e9eaf1;
+  background: linear-gradient(90deg, #f4f5f9 25%, #eceef4 37%, #f4f5f9 63%);
   background-size: 400% 100%;
   animation: tk-shimmer 1.3s ease-in-out infinite;
 }
@@ -50,170 +86,230 @@
   100% { background-position: 0 0; }
 }
 
-// ── Badges de estado de pago (tokens $badge-pago-*) ───────────────────────
+// ── Badges de estado de pago (píldoras planas) ────────────────────────────
 .tk-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  border-radius: 20px;
-  padding: 0.15rem 0.6rem;
-  border: 1px solid transparent;
+  @include kc-pill(var(--kc-ink2), var(--kc-canvas));
   white-space: nowrap;
-  line-height: 1.4;
+  line-height: 1.3;
+
+  i { font-size: 11px; }
 }
-.tk-badge-pendiente    { background: $badge-pago-pendiente-bg;   color: $badge-pago-pendiente-text;   border-color: $badge-pago-pendiente-border; }
-.tk-badge-pospendiente { background: $badge-pago-pendiente-bg;   color: $badge-pago-pendiente-text;   border-color: $badge-pago-pendiente-border; }
-.tk-badge-preaprobado  { background: $badge-pago-preaprobado-bg; color: $badge-pago-preaprobado-text; border-color: $badge-pago-preaprobado-border; }
-.tk-badge-aprobado     { background: $badge-pago-aprobado-bg;    color: $badge-pago-aprobado-text;    border-color: $badge-pago-aprobado-border; }
-.tk-badge-rechazado    { background: $badge-pago-rechazado-bg;   color: $badge-pago-rechazado-text;   border-color: $badge-pago-rechazado-border; }
-.tk-badge-cancelado    { background: $katuq-gray-100;            color: $katuq-gray-600;              border-color: $katuq-gray-300; }
+.tk-badge-pendiente,
+.tk-badge-pospendiente { color: var(--kc-orange); background: var(--kc-orange-wash); }
+.tk-badge-preaprobado  { color: var(--kc-accent); background: var(--kc-accent-wash); }
+.tk-badge-aprobado     { color: var(--kc-green);  background: var(--kc-green-wash); }
+.tk-badge-rechazado    { color: var(--kc-red);    background: var(--kc-red-wash); }
+.tk-badge-cancelado    { color: var(--kc-muted);  background: #f1f2f5; }
 
 .tk-badge-clickable {
   cursor: pointer;
   transition: box-shadow 0.15s ease, transform 0.15s ease;
-  &:hover { box-shadow: 0 1px 5px rgba(0, 0, 0, 0.14); transform: translateY(-1px); }
+  &:hover { box-shadow: 0 3px 10px rgba(30, 35, 60, 0.12); transform: translateY(-1px); }
 }
 
 // ── Barra de progreso de pago (anticipo / total) ──────────────────────────
 .tk-progress {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  min-width: 130px;
+  gap: 7px;
+  min-width: 150px;
 }
 .tk-progress-track {
   width: 100%;
   height: 7px;
-  background: $katuq-gray-200;
-  border-radius: 6px;
+  background: var(--kc-line);
+  border-radius: 999px;
   overflow: hidden;
 }
 .tk-progress-fill {
   height: 100%;
-  border-radius: 6px;
-  background: $katuq-success;
+  border-radius: 999px;
+  background: var(--kc-green);
   transition: width 0.25s ease;
-  &.is-partial { background: $katuq-warning; }
-  &.is-empty   { background: $katuq-gray-300; }
+  &.is-partial { background: var(--kc-orange); }
+  &.is-empty   { background: var(--kc-line); }
 }
 .tk-progress-label {
-  font-size: 0.68rem;
-  color: $katuq-gray-600;
-  font-family: 'Courier New', monospace;
+  font-family: var(--kc-font-head);
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--kc-ink2);
   white-space: nowrap;
+}
+.tk-progress-paid {
+  color: var(--kc-muted2);
+  &.is-partial { color: var(--kc-orange); }
+  &.is-full    { color: var(--kc-green); }
 }
 
 // ── Banners de alerta y notas ─────────────────────────────────────────────
 .tk-alert-danger {
-  border: 1px solid $badge-pago-rechazado-border;
-  border-left: 4px solid $katuq-danger;
-  background: $katuq-danger-light;
-  color: $katuq-danger-text;
-  border-radius: 8px;
-  padding: 0.7rem 0.9rem;
-  font-size: 0.85rem;
+  border: 1px solid #f7d4d2;
+  background: var(--kc-red-wash);
+  color: var(--kc-red);
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
 }
 .tk-alert-warning {
-  border: 1px solid #fde68a;
-  border-left: 4px solid $katuq-warning-dark;
-  background: $katuq-warning-light;
-  color: $katuq-warning-text;
-  border-radius: 8px;
-  padding: 0.7rem 0.9rem;
-  font-size: 0.85rem;
+  border: 1px solid #f6e2c0;
+  background: var(--kc-orange-wash);
+  color: var(--kc-orange);
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
 }
 .tk-note {
-  font-size: 0.78rem;
-  color: $katuq-gray-600;
-  background: $katuq-gray-50;
-  border: 1px dashed $katuq-gray-300;
-  border-radius: 8px;
-  padding: 0.55rem 0.75rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kc-ink2);
+  background: var(--kc-canvas);
+  border: 1px dashed #e4e5ee;
+  border-radius: 12px;
+  padding: 11px 14px;
 }
 .tk-reject-reason {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.74rem;
-  color: $katuq-danger-text;
-  font-weight: 500;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kc-red);
 }
 
 // ── Toolbar de filtros ────────────────────────────────────────────────────
 .tk-toolbar {
-  display: flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  padding: 0.6rem 0.2rem 0.8rem;
+  display: grid;
+  grid-template-columns: 1fr 200px 180px 180px;
+  gap: 16px;
+  align-items: end;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--kc-line2);
+
+  @media (max-width: 1100px) { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 640px)  { grid-template-columns: 1fr; }
 }
 .tk-field {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 8px;
+  min-width: 0;
+
   label {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: $katuq-gray-500;
-    font-weight: 600;
+    @include kc-label;
+    font-size: 11.5px;
+    margin: 0;
   }
-  input, select {
-    height: 34px;
-    border: 1px solid $katuq-gray-300;
-    border-radius: 6px;
-    padding: 0 0.6rem;
-    font-size: 0.85rem;
-    color: $katuq-gray-800;
-    background: #fff;
-    &:focus { outline: none; border-color: $katuq-primary; box-shadow: $focus-ring; }
+  input,
+  select {
+    @include kc-input;
+    width: 100%;
+    height: 44px;
+  }
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239aa0b2' stroke-width='2.4' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    font-weight: 700;
+    color: var(--kc-ink2);
+    cursor: pointer;
+  }
+  input[type='date'] {
+    font-weight: 600;
+    &::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.55;
+      filter: invert(31%) sepia(60%) saturate(3500%) hue-rotate(246deg) brightness(90%);
+    }
   }
 }
-.tk-field-search { flex: 1 1 220px; }
+.tk-field-search { min-width: 0; }
 
 // ── Resumen / totales de la selección ─────────────────────────────────────
 .tk-summary {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.25rem;
-  padding: 0.75rem 1rem;
-  background: $katuq-gray-50;
-  border: 1px solid $katuq-gray-200;
-  border-top: 2px solid $katuq-primary;
-  border-radius: 0 0 8px 8px;
-  font-size: 0.82rem;
-  strong { color: $katuq-gray-800; }
-  .tk-summary-value { font-family: 'Courier New', monospace; font-weight: 700; }
+  gap: 22px;
+  padding: 14px 22px;
+  @include kc-total-band;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kc-ink2);
+
+  strong {
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    color: var(--kc-ink2);
+  }
+  .tk-summary-value {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    color: var(--kc-accent);
+    margin-left: 4px;
+  }
 }
 
 // ── Estados vacíos y error ────────────────────────────────────────────────
 .tk-empty {
-  text-align: center;
-  padding: 2.5rem 1rem;
-  color: $katuq-gray-500;
-  i { font-size: 2rem; display: block; margin-bottom: 0.5rem; color: $katuq-gray-400; }
+  @include kc-empty-box;
+  border: none;
+  background: transparent;
+
+  i {
+    font-size: 26px;
+    color: #b7bccb;
+  }
 }
 .tk-error {
-  margin: 0.25rem 0;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid #fcd34d;
-  border-left: 4px solid $katuq-warning-dark;
-  border-radius: 8px;
-  background: #fffbeb;
-  color: $katuq-warning-text;
-  font-size: 0.85rem;
+  border: 1px solid #f6e2c0;
+  background: var(--kc-orange-wash);
+  color: var(--kc-orange);
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+
+  .btn-link {
+    color: var(--kc-accent);
+    font-weight: 800;
+    text-decoration: underline;
+  }
 }
 
-// ── Botón primario / acciones de fila ─────────────────────────────────────
+// ── Panel y skin de tabla ─────────────────────────────────────────────────
+// Viven en el lenguaje visual comercial compartido; aquí solo se re-exponen
+// con los nombres del módulo para no tocar los scss de los componentes.
+@mixin tk-panel      { @include kc-panel; }
+@mixin tk-table-skin { @include kc-table-skin; }
+
+// ── Botones de acción de fila ─────────────────────────────────────────────
 .tk-btn-sm {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.65rem;
-  border-radius: 6px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  white-space: nowrap;
+  @include kc-btn-base;
+  padding: 9px 15px;
+  border-radius: 11px;
+  font-size: 12.5px;
+
+  &.btn-primary {
+    background: var(--kc-accent);
+    border-color: var(--kc-accent);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(108, 76, 224, 0.24);
+    &:hover:not(:disabled) { background: var(--kc-accent-ink); border-color: var(--kc-accent-ink); }
+  }
+  &.btn-outline-primary {
+    background: #fff;
+    border-color: #e2d9fb;
+    color: var(--kc-accent);
+    &:hover:not(:disabled) { background: var(--kc-accent-wash); }
+  }
+  &.btn-outline-secondary {
+    background: #fff;
+    border-color: #cbebd8;
+    color: var(--kc-green);
+    &:hover:not(:disabled) { background: var(--kc-green-wash); }
+  }
 }

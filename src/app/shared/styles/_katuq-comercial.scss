@@ -1,0 +1,352 @@
+// =============================================================================
+// KATUQ · Lenguaje visual comercial (extraído del rediseño de Cotizaciones)
+// Fuente compartida para reutilizar el mismo look en venta asistida
+// (carrito, checkout, etc.) sin repetir estilos.
+//
+// Acento: #6C4CE0 (el mismo de Cotizaciones). Plano, sin gradientes (D-131).
+// Uso en un componente:
+//   @import '../../../shared/styles/katuq-comercial';
+//   :host { @include kc-tokens; }
+//   .mi-card { @include kc-card; }
+// =============================================================================
+
+@mixin kc-tokens {
+  --kc-accent: #6c4ce0;
+  --kc-accent-ink: #533bc4;
+  --kc-accent-wash: #eee9fd;
+  --kc-ink: #2a2e3c;
+  --kc-ink2: #52586b;
+  --kc-muted: #8a90a2;
+  --kc-muted2: #9199ac;
+  --kc-line: #ecedf3;
+  --kc-line2: #f0f1f6;
+  --kc-canvas: #f7f8fc;
+  --kc-surface: #fff;
+
+  --kc-green: #17994f;
+  --kc-green-wash: #e3f6ec;
+  --kc-blue: #2f6fe0;
+  --kc-blue-wash: #e7f0fd;
+  --kc-orange: #e0891b;
+  --kc-orange-wash: #fdf1dd;
+  --kc-red: #d6455b;
+  --kc-red-wash: #fce9e8;
+
+  --kc-font-head: "Baloo 2", "Plus Jakarta Sans", system-ui, sans-serif;
+  --kc-font-body: "Nunito", "Inter", system-ui, -apple-system, sans-serif;
+}
+
+// Tarjeta base
+@mixin kc-card {
+  background: var(--kc-surface);
+  border: 1px solid var(--kc-line);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+}
+
+// Encabezado de tarjeta con banda inferior (usar dentro de una tarjeta con padding 20px 22px)
+@mixin kc-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: -20px -22px 18px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--kc-line2);
+  font-family: var(--kc-font-head);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--kc-ink);
+}
+
+// Chip de ícono (38x38) — pasar el par color/fondo
+@mixin kc-icon-chip($fg, $bg) {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: $fg;
+  background: $bg;
+}
+
+// Etiqueta de campo (uppercase muted)
+@mixin kc-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--kc-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// Input / control de formulario
+@mixin kc-input {
+  border: 1px solid var(--kc-line);
+  border-radius: 12px;
+  background: var(--kc-canvas);
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--kc-ink);
+
+  &::placeholder { color: #9aa0b2; }
+
+  &:focus {
+    outline: none;
+    border-color: var(--kc-accent);
+    box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+    background: #fff;
+  }
+}
+
+// Botones
+@mixin kc-btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-family: var(--kc-font-body);
+  font-weight: 800;
+  font-size: 13.5px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: filter 0.12s ease, background 0.12s ease;
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+@mixin kc-btn-primary {
+  @include kc-btn-base;
+  background: var(--kc-accent);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
+
+  &:hover:not(:disabled) { filter: brightness(1.05); }
+}
+
+@mixin kc-btn-ghost {
+  @include kc-btn-base;
+  background: var(--kc-surface);
+  border-color: #e4e5ee;
+  color: var(--kc-ink2);
+
+  &:hover:not(:disabled) { background: var(--kc-canvas); }
+}
+
+// Botón de ícono cuadrado
+@mixin kc-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  color: var(--kc-muted2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+// Encabezado de tabla (thead th)
+@mixin kc-th {
+  padding: 15px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--kc-muted2);
+  text-transform: uppercase;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+// Píldora de estado — pasar el par color/fondo
+@mixin kc-pill($fg, $bg) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: $fg;
+  background: $bg;
+}
+
+// Chip de sugerencia / tag
+@mixin kc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: var(--kc-ink2);
+  border: 1px solid #e4e5ee;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover { border-color: var(--kc-accent); }
+}
+
+// Banda de Total (tinte plano lila, sin gradiente)
+@mixin kc-total-band {
+  background: var(--kc-accent-wash);
+  border-top: 1px solid #e2d9fb;
+
+  .kc-total-value,
+  strong {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    color: var(--kc-accent);
+  }
+}
+
+// Caja de estado vacío (dashed)
+@mixin kc-empty-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--kc-muted);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 40px 20px;
+  text-align: center;
+  border: 2px dashed #e4e5ee;
+  border-radius: 16px;
+  background: #fbfcfe;
+}
+
+// Ícono grande centrado para el estado vacío (52x52)
+@mixin kc-empty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  background: #f1f2f5;
+  color: #b7bccb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Tarjeta contenedora de una tabla (filtros + tabla + totales dentro del mismo borde)
+@mixin kc-panel {
+  @include kc-card;
+  overflow: hidden;
+}
+
+// Skin de p-table de PrimeNG: limpia, sin grilla ni zebra.
+// Usar dentro de un ::ng-deep que apunte a la tabla, p. ej.
+//   :host ::ng-deep .mi-tabla.p-datatable { @include kc-table-skin; }
+@mixin kc-table-skin {
+  .p-datatable-table { min-width: 100%; }
+
+  .p-datatable-thead > tr > th {
+    @include kc-th;
+    background: var(--kc-canvas);
+    border: none;
+    border-bottom: 1px solid var(--kc-line2);
+
+    &.text-center { text-align: center; }
+    &.text-end    { text-align: right; }
+  }
+
+  .p-datatable-tbody > tr {
+    background: var(--kc-surface);
+    color: var(--kc-ink);
+    transition: background 0.12s ease;
+
+    > td {
+      padding: 14px 12px;
+      border: none;
+      border-top: 1px solid var(--kc-line2);
+      font-size: 13.5px;
+      vertical-align: middle;
+    }
+    &:hover { background: #fbfbfe; }
+  }
+
+  .p-datatable-emptymessage > td { border-top: 1px solid var(--kc-line2); }
+
+  // Paginador
+  .p-paginator {
+    background: var(--kc-surface);
+    border: none;
+    border-top: 1px solid var(--kc-line2);
+    padding: 14px 22px;
+    color: var(--kc-muted);
+    font-size: 13px;
+    font-weight: 600;
+
+    .p-paginator-current { color: var(--kc-muted); font-weight: 600; }
+
+    .p-paginator-pages .p-paginator-page,
+    .p-paginator-first,
+    .p-paginator-prev,
+    .p-paginator-next,
+    .p-paginator-last {
+      min-width: 34px;
+      height: 34px;
+      margin: 0 3px;
+      border: 1px solid #e4e5ee;
+      border-radius: 9px;
+      background: #fff;
+      color: var(--kc-ink2);
+      font-weight: 700;
+      font-size: 13.5px;
+
+      &:not(.p-disabled):not(.p-highlight):hover {
+        background: var(--kc-canvas);
+        border-color: #d9dbe6;
+        color: var(--kc-accent);
+      }
+      &.p-highlight {
+        background: var(--kc-accent);
+        border-color: var(--kc-accent);
+        color: #fff;
+      }
+    }
+
+    .p-dropdown {
+      height: 34px;
+      border: 1px solid var(--kc-line);
+      border-radius: 10px;
+      background: var(--kc-canvas);
+      align-items: center;
+
+      .p-dropdown-label {
+        padding: 0 4px 0 12px;
+        font-weight: 800;
+        font-size: 13px;
+        color: var(--kc-ink2);
+        display: flex;
+        align-items: center;
+      }
+      &:not(.p-disabled).p-focus { box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12); }
+    }
+  }
+
+  .p-datatable-loading-overlay { background: rgba(255, 255, 255, 0.65); }
+}
+
+// Píldora de estado plana con punto de color. Pasar el par color/fondo.
+@mixin kc-status-pill($fg, $bg) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: $bg;
+  color: $fg;
+  border: none;
+  border-radius: 999px;
+  box-shadow: none;
+  font-weight: 800;
+  white-space: nowrap;
+}

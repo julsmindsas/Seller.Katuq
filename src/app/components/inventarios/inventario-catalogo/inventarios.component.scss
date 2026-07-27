@@ -25,27 +25,6 @@ $border-radius: 8px;
     to { transform: rotate(360deg); }
 }
 
-// ===================================
-// MODULE HEADER ESTILO KATUQ
-// ===================================
-.module-header {
-    background: linear-gradient(to right, white, #fafafa);
-    transition: all 0.3s ease;
-
-    h5 {
-        font-size: 1.3rem;
-        color: #495057;
-
-        i {
-            font-size: 1.1rem;
-        }
-    }
-
-    p {
-        opacity: 0.85;
-    }
-}
-
 // Estilos generales
 .card {
     animation: fadeIn 0.3s ease;
@@ -1225,69 +1204,6 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   }
 }
 
-// =====================================================
-// BARRA DE FILTROS - VISTA CONSOLIDADA
-// =====================================================
-.filters-bar {
-  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
-
-  &:hover {
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .form-label {
-    font-weight: 600;
-    font-size: 0.75rem;
-    color: #495057;
-    margin-bottom: 0.35rem;
-  }
-
-  // Badges de filtros activos
-  .badge {
-    font-size: 0.75rem !important;
-    padding: 0.35rem 0.6rem !important;
-    border-radius: 20px !important;
-    font-weight: 500 !important;
-
-    i.pi-times {
-      font-size: 0.6rem;
-      opacity: 0.7;
-      transition: opacity 0.2s;
-
-      &:hover {
-        opacity: 1;
-      }
-    }
-  }
-}
-
-// Estilos para p-input-icon-left de PrimeNG
-:host ::ng-deep {
-  .filters-bar {
-    .p-input-icon-left {
-      display: block;
-      position: relative;
-
-      > i {
-        position: absolute;
-        top: 50%;
-        left: 0.75rem;
-        transform: translateY(-50%);
-        color: #6c757d;
-        z-index: 1;
-      }
-
-      > .p-inputtext {
-        padding-left: 2.5rem;
-        width: 100%;
-      }
-    }
-  }
-}
-
 // Cursor pointer utility
 .cursor-pointer {
   cursor: pointer;
@@ -1303,100 +1219,1051 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   }
 }
 
-// Stat cards clickables
-.stat-card.cursor-pointer {
-  &::after {
-    content: '\e967'; // pi-filter icon unicode
-    font-family: 'primeicons';
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 0.65rem;
-    color: #adb5bd;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
+// =============================================================================
+// REDISEÑO 2026-07-26 — Inventario Consolidado
+// Adopta el lenguaje visual comercial (mismo acento y primitivas que
+// Cotizaciones, Tesorería y Cartera). Plano, sin gradientes.
+// Solo estilo: la lógica y los datos de la vista no cambian.
+// =============================================================================
+@import '../../../shared/styles/katuq-comercial';
 
-  &:hover::after {
-    opacity: 1;
+:host {
+  @include kc-tokens;
+  font-family: var(--kc-font-body);
+}
+
+// Contenedor de la vista (antes era una .card blanca envolviendo todo)
+.inv-shell {
+  position: relative; // ancla del loader
+  padding: 6px 0 18px;
+
+  > .card-body { padding: 16px 0 0; }
+}
+
+// ── Encabezado del módulo ─────────────────────────────────────────────────
+.inv-header {
+  @include kc-card;
+  border-left: 4px solid var(--kc-accent);
+  border-radius: 18px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.inv-header-id {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.inv-header-icon {
+  @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash));
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+.inv-header-title {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 19px;
+  line-height: 1.1;
+  color: var(--kc-ink);
+}
+.inv-header-sub {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kc-muted);
+  margin-top: 2px;
+}
+.inv-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+// Botón cuadrado de solo ícono
+.inv-iconbtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  color: var(--kc-accent);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: filter 0.12s ease, background 0.12s ease;
+
+  i { font-size: 15px; }
+
+  &:hover:not(:disabled) { background: var(--kc-accent-wash); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &.is-warning {
+    background: var(--kc-orange-wash);
+    border-color: #f7e2be;
+    color: var(--kc-orange);
+    &:hover:not(:disabled) { filter: brightness(0.97); }
+  }
+  &.is-danger {
+    background: #fce9e8;
+    border-color: #f6d4d2;
+    color: #e0483f;
+    &:hover:not(:disabled) { filter: brightness(0.97); }
   }
 }
 
-// Estilos para dropdowns de PrimeNG
-:host ::ng-deep {
-  .filters-bar {
-    .p-dropdown {
-      width: 100%;
-      border: 1px solid #dee2e6;
-      border-radius: 6px;
-      transition: all 0.2s;
+// Botón con texto
+.inv-btn {
+  @include kc-btn-ghost;
+  padding: 10px 16px;
+  font-size: 13px;
 
-      &:hover {
-        border-color: #b3b3b3;
-      }
+  i { font-size: 14px; }
 
-      &.p-focus {
-        border-color: $primary-color;
-        box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.15);
-      }
+  &.is-primary {
+    background: var(--kc-accent);
+    border-color: var(--kc-accent);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(108, 76, 224, 0.28);
+    &:hover:not(:disabled) { filter: brightness(1.05); background: var(--kc-accent); }
+  }
+  &.is-accent {
+    color: var(--kc-accent);
+    border-color: #e2d9fb;
+    &:hover:not(:disabled) { background: var(--kc-accent-wash); }
+  }
+}
+.inv-ico-accent { color: var(--kc-accent); }
+.inv-ico-green  { color: var(--kc-green); }
 
-      .p-dropdown-label {
-        font-size: 0.875rem;
-        padding: 0.5rem 0.75rem;
-      }
+.inv-iachip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--kc-accent-wash);
+  color: var(--kc-accent);
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-size: 12px;
+  font-weight: 800;
+}
 
-      .p-dropdown-trigger {
-        width: 2rem;
+// ── Indicadores ───────────────────────────────────────────────────────────
+.inv-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+
+  @media (max-width: 1400px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 768px)  { grid-template-columns: repeat(2, 1fr); }
+}
+.inv-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 13px;
+  padding: 11px 13px;
+  background: var(--inv-wash, var(--kc-canvas));
+  border: 1px solid var(--inv-border, var(--kc-line));
+
+  > i {
+    font-size: 20px;
+    color: var(--inv-fg, var(--kc-ink));
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+
+  &.is-clickable {
+    cursor: pointer;
+    transition: filter 0.12s ease;
+    &:hover { filter: brightness(0.98); }
+  }
+}
+.inv-stat-body { min-width: 0; }
+.inv-stat-value {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.1;
+  color: var(--inv-fg, var(--kc-ink));
+  font-variant-numeric: tabular-nums;
+}
+.inv-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--kc-muted);
+  margin-top: 2px;
+}
+
+.inv-stat.is-accent { --inv-wash: var(--kc-accent-wash); --inv-border: #e2d9fb; --inv-fg: var(--kc-accent); }
+.inv-stat.is-blue   { --inv-wash: var(--kc-blue-wash);   --inv-border: #d3e3fb; --inv-fg: var(--kc-blue); }
+.inv-stat.is-green  { --inv-wash: var(--kc-green-wash);  --inv-border: #cbebd8; --inv-fg: var(--kc-green); }
+.inv-stat.is-amber  { --inv-wash: #fdf6dc;               --inv-border: #f4e7b5; --inv-fg: #c99a0f; }
+.inv-stat.is-red    { --inv-wash: #fce9e8;               --inv-border: #f6d4d2; --inv-fg: #e0483f; }
+.inv-stat.is-gray   { --inv-wash: var(--kc-canvas);      --inv-border: var(--kc-line); --inv-fg: var(--kc-ink2); }
+
+// ── Resumen del análisis con IA ───────────────────────────────────────────
+.inv-ia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--inv-border, var(--kc-line));
+  background: var(--inv-wash, var(--kc-canvas));
+
+  &.is-good     { --inv-wash: var(--kc-green-wash);  --inv-border: #cbebd8; --inv-fg: var(--kc-green); }
+  &.is-regular  { --inv-wash: #fdf6dc;               --inv-border: #f4e7b5; --inv-fg: #c99a0f; }
+  &.is-critical { --inv-wash: #fce9e8;               --inv-border: #f6d4d2; --inv-fg: #e0483f; }
+}
+.inv-ia-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: var(--inv-fg, var(--kc-ink));
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+.inv-ia-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: #e0483f;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+.inv-ia-text {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 7px;
+  flex: 1;
+  min-width: 200px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kc-ink2);
+  font-style: italic;
+
+  i { margin-top: 2px; color: var(--kc-muted2); font-style: normal; }
+}
+
+// ── Barra de filtros ──────────────────────────────────────────────────────
+.inv-filters {
+  @include kc-card;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+.inv-filters-row {
+  display: grid;
+  grid-template-columns: 1.4fr 200px 1fr auto;
+  gap: 16px;
+  align-items: end;
+
+  @media (max-width: 1200px) { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 640px)  { grid-template-columns: 1fr; }
+}
+.inv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+
+  label {
+    @include kc-label;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+
+    i { font-size: 12px; }
+  }
+
+  input,
+  select {
+    @include kc-input;
+    width: 100%;
+    height: 44px;
+    font-weight: 600;
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239aa0b2' stroke-width='2.4' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+}
+.inv-filters-end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.inv-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--kc-accent-wash);
+  color: var(--kc-accent);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+
+  span { color: #a79ad9; }
+}
+
+.inv-filters-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--kc-line2);
+}
+.inv-filters-actions-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--kc-muted);
+
+  @media (max-width: 768px) { display: none; }
+}
+.inv-filters-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--kc-line);
+  margin: 0 4px;
+
+  @media (max-width: 768px) { display: none; }
+}
+
+// Chips de filtros activos
+.inv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.inv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  color: var(--kc-ink2);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+
+  i { font-size: 11px; }
+
+  &.is-amber { background: #fdf6dc; border-color: #f4e7b5; color: #c99a0f; }
+  &.is-blue  { background: var(--kc-blue-wash); border-color: #d3e3fb; color: var(--kc-blue); }
+}
+.inv-chip-x {
+  cursor: pointer;
+  opacity: 0.6;
+  &:hover { opacity: 1; }
+}
+
+// ── Tabla consolidada ─────────────────────────────────────────────────────
+.inv-tablecard {
+  @include kc-card;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.inv-ref {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 13px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+.inv-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--kc-ink);
+  line-height: 1.35;
+}
+
+.inv-thumb {
+  width: 46px;
+  height: 46px;
+  border-radius: 11px;
+  overflow: hidden;
+  border: 1px solid var(--kc-line);
+  background: var(--kc-canvas);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+  i { font-size: 18px; color: #b7bccb; }
+}
+
+// Píldora del total por producto
+.inv-total-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  background: var(--kc-accent-wash);
+  color: var(--kc-accent);
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 15px;
+  padding: 4px 11px;
+  border-radius: 999px;
+
+  &.is-zero { background: #f1f2f5; color: #9aa0b2; }
+  &.is-low  { background: #fdf6dc; color: #c99a0f; }
+}
+
+// Stock por bodega
+.inv-stock {
+  font-weight: 700;
+  font-size: 13.5px;
+
+  &.is-zero { color: #c4c8d4; }
+  &.is-low  { color: #c99a0f; }
+  &.is-ok   { color: var(--kc-green); }
+}
+
+// Botón de expansión de fila
+.inv-expand {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  color: var(--kc-muted2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  i { font-size: 11px; transition: transform 0.18s ease; }
+
+  &:hover { border-color: var(--kc-accent); color: var(--kc-accent); }
+
+  &.is-open {
+    background: var(--kc-accent-wash);
+    border-color: #e2d9fb;
+    color: var(--kc-accent);
+    i { transform: rotate(90deg); }
+  }
+}
+
+// Botón de menú de la fila
+.inv-rowmenu {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  color: var(--kc-muted2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  i { font-size: 13px; }
+
+  &:hover { background: var(--kc-accent-wash); border-color: #e2d9fb; color: var(--kc-accent); }
+}
+
+// Estado vacío de la tabla
+.inv-empty {
+  @include kc-empty-box;
+  border: none;
+  background: transparent;
+
+  i { @include kc-empty-icon; font-size: 22px; }
+  .inv-empty-title {
+    font-family: var(--kc-font-head);
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--kc-ink);
+  }
+}
+
+// ── Detalle expandido ─────────────────────────────────────────────────────
+.inv-expansion {
+  background: #fbfcfe;
+  padding: 20px 24px 22px 62px;
+
+  @media (max-width: 768px) { padding: 16px; }
+}
+.inv-exp-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--kc-muted);
+  padding: 12px 0;
+}
+.inv-exp-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  font-family: var(--kc-font-head);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--kc-ink);
+}
+.inv-exp-icon {
+  @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash));
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 13px;
+}
+.inv-exp-table {
+  width: 100%;
+  max-width: 1080px;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  overflow: hidden;
+
+  th {
+    @include kc-th;
+    padding: 12px 18px;
+    background: var(--kc-canvas);
+    font-size: 10.5px;
+
+    &.text-center { text-align: center; }
+    &.text-end    { text-align: right; }
+  }
+
+  td {
+    padding: 12px 18px;
+    border-top: 1px solid var(--kc-line2);
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--kc-ink2);
+  }
+
+  .inv-exp-total td {
+    background: var(--kc-accent-wash);
+    border-top: 2px solid #e2d9fb;
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--kc-ink);
+
+    &.text-center { color: var(--kc-accent); font-size: 16px; }
+  }
+}
+.inv-tipo {
+  display: inline-block;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  color: var(--kc-ink2);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 11px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+}
+.inv-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kc-ink2);
+
+  i { color: var(--kc-muted2); }
+}
+
+// ── PrimeNG: tabla consolidada ────────────────────────────────────────────
+:host ::ng-deep .inv-table {
+  .p-datatable-thead > tr > th {
+    @include kc-th;
+    background: var(--kc-canvas);
+    border: none;
+    border-bottom: 1px solid var(--kc-line);
+    padding: 14px 12px;
+
+    &.text-center { text-align: center; }
+    &.text-end    { text-align: right; }
+  }
+
+  // Columna Total destacada
+  .inv-col-total {
+    color: var(--kc-accent) !important;
+    background: #f3efff !important;
+  }
+
+  // Segunda fila del encabezado: totales por columna
+  .p-datatable-thead > tr.inv-metrics-row > th {
+    background: #fbfcfe;
+    border-top: 1px solid var(--kc-line2);
+    border-bottom: 1px solid var(--kc-line);
+    padding: 11px 12px;
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--kc-ink2);
+    text-transform: none;
+    letter-spacing: 0;
+
+    &.inv-col-total { background: #f7f5fe !important; }
+    &.inv-metrics-caption {
+      font-family: var(--kc-font-body);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #b7bccb;
+    }
+  }
+  .inv-metrics-total {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--kc-accent);
+  }
+
+  .p-datatable-tbody > tr {
+    background: #fff;
+
+    > td {
+      border: none;
+      border-top: 1px solid var(--kc-line2);
+      padding: 12px;
+      font-size: 13.5px;
+      color: var(--kc-ink2);
+      vertical-align: middle;
+    }
+
+    &:hover > td { background: #fbfcfe; }
+  }
+
+  .p-paginator {
+    border: none;
+    border-top: 1px solid var(--kc-line2);
+    background: #fff;
+    padding: 14px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--kc-muted);
+
+    .p-paginator-current { color: var(--kc-muted); font-weight: 600; }
+
+    .p-paginator-pages .p-paginator-page {
+      min-width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      border: 1px solid #e4e5ee;
+      color: var(--kc-ink2);
+      font-weight: 700;
+      margin: 0 2px;
+
+      &.p-highlight {
+        background: var(--kc-accent);
+        border-color: var(--kc-accent);
+        color: #fff;
       }
     }
 
-    .p-inputtext {
-      font-size: 0.875rem;
-      border: 1px solid #dee2e6;
-      border-radius: 6px;
-      padding: 0.5rem 0.75rem;
-      transition: all 0.2s;
-
-      &:hover {
-        border-color: #b3b3b3;
-      }
-
-      &:focus {
-        border-color: $primary-color;
-        box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.15);
-      }
+    .p-paginator-first,
+    .p-paginator-prev,
+    .p-paginator-next,
+    .p-paginator-last {
+      min-width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      border: 1px solid #e4e5ee;
+      color: var(--kc-ink2);
+      margin: 0 2px;
     }
   }
 }
 
-// Responsive para filtros
-@media screen and (max-width: 768px) {
-  .filters-bar {
-    .row.g-2 > div {
-      margin-bottom: 0.5rem;
+// ── PrimeNG: pestañas de la vista ─────────────────────────────────────────
+// Control segmentado del diseño (píldoras dentro de una cápsula blanca).
+:host ::ng-deep .inv-shell > .card-body > .p-tabview {
+  .p-tabview-nav {
+    @include kc-card;
+    display: inline-flex;
+    gap: 4px;
+    padding: 6px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    max-width: 100%;
+    overflow-x: auto;
+
+    li .p-tabview-nav-link {
+      @include kc-btn-base;
+      background: transparent;
+      border: none;
+      color: var(--kc-muted);
+      padding: 11px 22px;
+      border-radius: 11px;
+      margin: 0;
+
+      &:hover { background: var(--kc-canvas); color: var(--kc-ink2); }
+      &:focus { box-shadow: none; }
     }
 
-    .badge {
-      font-size: 0.7rem !important;
-      padding: 0.25rem 0.5rem !important;
+    li.p-highlight .p-tabview-nav-link {
+      background: var(--kc-accent-wash);
+      color: var(--kc-accent);
+      box-shadow: 0 1px 3px rgba(108, 76, 224, 0.14);
+    }
+
+    .p-tabview-ink-bar { display: none; }
+  }
+
+  .p-tabview-panels {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+}
+
+// Dropdown de bodega para sincronizar (PrimeNG) — mismo look que los selects
+:host ::ng-deep .inv-dropdown.p-dropdown {
+  border: 1px solid var(--kc-line);
+  border-radius: 12px;
+  background: var(--kc-canvas);
+  height: 42px;
+  align-items: center;
+
+  .p-dropdown-label {
+    font-family: var(--kc-font-body);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--kc-ink);
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+  }
+
+  .p-dropdown-label.p-placeholder { color: #9aa0b2; }
+
+  &:not(.p-disabled):hover { border-color: #d9d5ee; }
+  &:not(.p-disabled).p-focus {
+    border-color: var(--kc-accent);
+    box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+  }
+}
+
+// ── Diálogos (ajuste rápido + sincronización) ─────────────────────────────
+:host ::ng-deep .inv-dialog.p-dialog {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(30, 35, 60, 0.18);
+  border: none;
+
+  .p-dialog-header {
+    background: #fff;
+    border-bottom: 1px solid var(--kc-line2);
+    padding: 18px 22px;
+
+    .p-dialog-title {
+      font-family: var(--kc-font-head);
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--kc-ink);
+    }
+
+    .p-dialog-header-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      color: var(--kc-muted2);
+
+      &:hover { background: var(--kc-canvas); color: var(--kc-ink2); }
     }
   }
 
-  .stats-bar {
-    .stat-card {
-      padding: 0.75rem !important;
-
-      h3, h4 {
-        font-size: 1.1rem !important;
-      }
-
-      small {
-        font-size: 0.65rem !important;
-      }
-
-      i {
-        font-size: 1.25rem !important;
-      }
-    }
+  .p-dialog-content {
+    background: #fff;
+    padding: 20px 22px;
+    font-family: var(--kc-font-body);
+    color: var(--kc-ink2);
   }
+
+  .p-dialog-footer {
+    background: #fbfcfe;
+    border-top: 1px solid var(--kc-line2);
+    padding: 14px 22px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+}
+
+// Variantes de color del botón con texto (verde para ingresos, rojo para retiros)
+.inv-btn.is-green {
+  background: var(--kc-green);
+  border-color: var(--kc-green);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(23, 153, 79, 0.24);
+  &:hover:not(:disabled) { filter: brightness(1.05); background: var(--kc-green); }
+}
+.inv-btn.is-red {
+  background: #e0483f;
+  border-color: #e0483f;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(224, 72, 63, 0.24);
+  &:hover:not(:disabled) { filter: brightness(1.05); background: #e0483f; }
+}
+
+// Cabecera de producto dentro del diálogo
+.inv-dlg-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.inv-dlg-product-id {
+  flex: 1;
+  min-width: 0;
+
+  .inv-name { font-size: 14px; }
+  .inv-ref { margin-top: 2px; }
+}
+.inv-dlg-tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+
+  &.is-ingreso { background: var(--kc-green-wash); color: var(--kc-green); }
+  &.is-salida  { background: #fce9e8; color: #e0483f; }
+}
+
+// Resumen "stock actual → quedaría en"
+.inv-dlg-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kc-muted);
+
+  strong {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--kc-ink);
+    margin-left: 4px;
+
+    &.is-negative { color: #e0483f; }
+  }
+
+  > i { color: var(--kc-muted2); font-size: 12px; }
+}
+
+// Advertencia dentro del diálogo
+.inv-dlg-warn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #fce9e8;
+  border: 1px solid #f6d4d2;
+  border-radius: 12px;
+  padding: 11px 14px;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #9c2f28;
+
+  i { color: #e0483f; flex-shrink: 0; }
+}
+
+// Tiles de comparación (Katuq / proveedor / diferencia)
+.inv-dlg-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+
+  &.is-four {
+    grid-template-columns: repeat(4, 1fr);
+    margin-bottom: 16px;
+
+    @media (max-width: 640px) { grid-template-columns: repeat(2, 1fr); }
+  }
+}
+.inv-dlg-tile {
+  border-radius: 13px;
+  padding: 14px 12px;
+  text-align: center;
+  background: var(--inv-wash, var(--kc-canvas));
+  border: 1px solid var(--inv-border, var(--kc-line));
+
+  &.is-accent { --inv-wash: var(--kc-accent-wash); --inv-border: #e2d9fb; --inv-fg: var(--kc-accent); }
+  &.is-orange { --inv-wash: var(--kc-orange-wash); --inv-border: #f7e2be; --inv-fg: var(--kc-orange); }
+  &.is-green  { --inv-wash: var(--kc-green-wash);  --inv-border: #cbebd8; --inv-fg: var(--kc-green); }
+  &.is-amber  { --inv-wash: #fdf6dc;               --inv-border: #f4e7b5; --inv-fg: #c99a0f; }
+  &.is-red    { --inv-wash: #fce9e8;               --inv-border: #f6d4d2; --inv-fg: #e0483f; }
+  &.is-gray   { --inv-wash: var(--kc-canvas);      --inv-border: var(--kc-line); --inv-fg: var(--kc-ink2); }
+}
+.inv-dlg-tile-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--kc-muted2);
+}
+.inv-dlg-tile-value {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1.15;
+  margin-top: 6px;
+  color: var(--inv-fg, var(--kc-ink));
+  font-variant-numeric: tabular-nums;
+}
+.inv-dlg-tile-hint {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--kc-muted);
+  margin-top: 2px;
+}
+
+// Título de sección dentro del diálogo
+.inv-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--kc-muted2);
+  margin-bottom: 10px;
+
+  i { font-size: 12px; }
+}
+
+// Contenedor con scroll para tablas del diálogo
+.inv-dlg-scroll {
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: 14px;
+
+  &.is-tall { max-height: 380px; }
+
+  .inv-exp-table {
+    max-width: none;
+
+    thead th { position: sticky; top: 0; z-index: 1; }
+  }
+
+  // Fila con diferencia pendiente
+  tr.is-diff td { background: #fdf9ec; }
+}
+
+// Píldora de diferencia (+N / -N / 0)
+.inv-dif {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 12.5px;
+
+  &.is-green { background: var(--kc-green-wash); color: var(--kc-green); }
+  &.is-amber { background: #fdf6dc; color: #c99a0f; }
+  &.is-red   { background: #fce9e8; color: #e0483f; }
+  &.is-gray  { background: #f1f2f5; color: #9aa0b2; }
+}
+.inv-dim { color: #c4c8d4; font-weight: 600; }
+
+// Estado final de la comparación (píldora centrada)
+.inv-dlg-status {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+.inv-dlg-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 800;
+
+  &.is-green { background: var(--kc-green-wash); color: var(--kc-green); }
+  &.is-amber { background: #fdf6dc; color: #c99a0f; }
+  &.is-red   { background: #fce9e8; color: #e0483f; }
+}
+
+// Loading centrado del diálogo
+.inv-dlg-loading {
+  justify-content: center;
+  padding: 28px 0;
+  font-size: 14px;
+
+  i { font-size: 22px; color: var(--kc-accent); }
+
+  small {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--kc-muted2);
+    margin-top: 2px;
+  }
+}
+
+// Nota verde (todo sincronizado)
+.inv-note.is-green {
+  background: var(--kc-green-wash);
+  border-color: #cbebd8;
+  color: var(--kc-green);
+
+  i { color: var(--kc-green); }
 }

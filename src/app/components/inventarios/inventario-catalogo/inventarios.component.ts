@@ -1098,7 +1098,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
              <ul style="text-align:left;">${bodegasSinStock.map(b => `<li>${b}</li>`).join('')}</ul>`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#5c6ac4',
+      confirmButtonColor: '#6C4CE0',
       cancelButtonText: 'Cancelar',
       confirmButtonText: 'Quitar',
     }).then((result) => {
@@ -2560,7 +2560,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
           showCancelButton: true,
           confirmButtonText: "Sí, sincronizar todo",
           cancelButtonText: "Cancelar",
-          confirmButtonColor: "#7c3aed",
+          confirmButtonColor: "#6C4CE0",
         }).then((result) => {
           if (result.isConfirmed) {
             this.ejecutarSyncMasivo(productosConFF);
@@ -2806,7 +2806,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       showCancelButton: true,
       confirmButtonText: "Sí, inicializar",
       cancelButtonText: "Cancelar",
-      confirmButtonColor: "#3085d6",
+      confirmButtonColor: "#6C4CE0",
     }).then((result) => {
       if (result.isConfirmed) {
         this.ejecutarInitInventory();

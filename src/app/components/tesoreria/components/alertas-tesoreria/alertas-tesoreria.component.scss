@@ -2,97 +2,221 @@
 
 :host { display: block; }
 
-.tk-alertas-wrap { padding: 0.5rem 0.25rem; }
+.tk-alertas-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
+// ── Barra superior ────────────────────────────────────────────────────────
 .tk-alertas-bar {
+  @include kc-card;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 22px;
+}
+.tk-alertas-id {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.tk-alertas-chip {
+  @include kc-icon-chip(var(--kc-red), var(--kc-red-wash));
+  width: 36px;
+  height: 36px;
 }
 .tk-alertas-title {
-  font-size: 0.85rem;
+  font-family: var(--kc-font-head);
   font-weight: 700;
-  color: $katuq-purple-700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  font-size: 18px;
+  color: var(--kc-ink);
 }
-.tk-alertas-actions { display: flex; gap: 0.5rem; }
-.tk-toggle-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.78rem;
+.tk-alertas-sub {
+  margin-top: 2px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: $katuq-purple-700;
-  background: $katuq-purple-50;
-  border: 1px solid $katuq-purple-200;
-  border-radius: 20px;
-  padding: 0.3rem 0.8rem;
-  cursor: pointer;
-  transition: background 0.15s;
-  &:hover:not(:disabled) { background: $katuq-purple-100; }
-  &:disabled { opacity: 0.6; cursor: default; }
+  color: var(--kc-muted2);
+}
+.tk-alertas-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tk-toggle-btn {
+  @include kc-btn-base;
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 13px;
+  background: #fff;
+  border-color: #e4e5ee;
+  color: var(--kc-ink2);
+
+  &.is-on {
+    background: var(--kc-accent);
+    border-color: var(--kc-accent);
+    color: #fff;
+  }
+  &:hover:not(:disabled):not(.is-on) { background: var(--kc-canvas); }
+}
+.tk-icon-btn {
+  @include kc-icon-btn;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  color: var(--kc-accent);
+
+  &:hover:not(:disabled) { background: var(--kc-accent-wash); border-color: #e2d9fb; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
 }
 
-.tk-alert-list { display: flex; flex-direction: column; gap: 0.6rem; }
+// ── Tarjeta de alerta ─────────────────────────────────────────────────────
+.tk-alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
 .tk-alert-item {
+  @include kc-card;
+  position: relative;
+  overflow: hidden;
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  border: 1px solid $katuq-gray-200;
-  border-left: 4px solid $katuq-warning-dark;
-  border-radius: 8px;
-  background: #fff;
-  &.sev-high { border-left-color: $katuq-danger; background: #fffafa; }
-  &.is-resolved { opacity: 0.65; border-left-color: $katuq-gray-300; }
+  gap: 18px;
+  padding: 20px 24px 20px 28px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: var(--tk-sev, var(--kc-orange));
+  }
+
+  &.sev-high   { --tk-sev: var(--kc-red); }
+  &.sev-medium { --tk-sev: var(--kc-orange); }
+  &.is-resolved { --tk-sev: #d4d4d8; opacity: 0.7; }
+
+  @media (max-width: 768px) { flex-direction: column; gap: 12px; }
 }
-.tk-alert-icon {
-  color: $katuq-warning-dark;
-  font-size: 1.1rem;
-  padding-top: 0.1rem;
-  .sev-high & { color: $katuq-danger; }
+
+.tk-alert-body {
+  flex: 1;
+  min-width: 0;
 }
-.tk-alert-body { flex: 1; min-width: 0; }
 .tk-alert-top {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   flex-wrap: wrap;
-  margin-bottom: 0.25rem;
+  gap: 11px;
+  margin-bottom: 10px;
 }
-.tk-alert-type { font-weight: 700; color: $katuq-gray-800; font-size: 0.85rem; }
-.tk-sev-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
+.tk-alert-icon {
+  @include kc-icon-chip(var(--tk-sev), var(--kc-orange-wash));
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
-  padding: 0.05rem 0.5rem;
-  &.sev-high { background: $katuq-danger-light; color: $katuq-danger-text; }
-  &.sev-medium { background: $katuq-warning-light; color: $katuq-warning-text; }
+  font-size: 15px;
+
+  .sev-high & { background: var(--kc-red-wash); }
+}
+.tk-alert-type {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--kc-ink);
+}
+.tk-sev-badge {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  border-radius: 999px;
+  padding: 4px 11px;
+
+  &.sev-high   { background: var(--kc-red-wash);    color: var(--kc-red); }
+  &.sev-medium { background: var(--kc-orange-wash); color: var(--kc-orange); }
 }
 .tk-resolved-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: $katuq-success-text;
-  background: $katuq-success-light;
-  border-radius: 10px;
-  padding: 0.05rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 4px 11px;
+  background: var(--kc-green-wash);
+  color: var(--kc-green);
 }
-.tk-alert-msg { font-size: 0.85rem; color: $katuq-gray-700; }
-.tk-alert-meta {
+.tk-alert-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--kc-muted2);
+}
+.tk-alert-msg {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--kc-ink2);
+}
+
+// Pedidos afectados
+.tk-alert-orders {
+  margin-top: 14px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.tk-alert-orders-title {
+  @include kc-label;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--kc-muted2);
+  margin-bottom: 9px;
+}
+.tk-alert-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 0.35rem;
-  font-size: 0.74rem;
-  color: $katuq-gray-500;
-  i { margin-right: 0.2rem; }
+  gap: 7px;
 }
+.tk-order-chip {
+  background: var(--kc-accent-wash);
+  color: var(--kc-accent);
+  font-family: var(--kc-font-head);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 11px;
+  border-radius: 8px;
+
+  &.is-more { background: #f1f2f5; color: var(--kc-muted); }
+}
+
 .tk-alert-buttons {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 8px;
   flex-shrink: 0;
+  width: 158px;
+
+  .tk-btn-sm {
+    width: 100%;
+    padding: 11px 16px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    flex-direction: row;
+  }
 }

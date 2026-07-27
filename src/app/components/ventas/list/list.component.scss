@@ -6407,3 +6407,174 @@ $pd-chip-border: #e9e7f3;
 @media (max-width: 991px) {
   .pedidos-list-pane { position: static; max-height: 460px; }
 }
+
+// =============================================================================
+// VISTA TABLA — rediseño del proyecto de diseño ("Pedidos Tabla")
+// Solo presentación y SOLO dentro de .pedidos-tabla-card, para no tocar la
+// vista Panel ni la de producción, que comparten clases (.modern-badge, etc.).
+// Se usa !important donde los estilos legacy de este mismo archivo también lo
+// usan; no hay forma de ganarles solo con especificidad.
+// =============================================================================
+@import '../../../shared/styles/katuq-comercial';
+
+.pedidos-tabla-card {
+  @include kc-tokens;
+  @include kc-card;
+  // A propósito SIN overflow:hidden — recortaría los overlays de filtro por
+  // columna. Las esquinas se redondean en el wrapper y en el paginador.
+  overflow: visible;
+  font-family: var(--kc-font-body);
+  margin-top: 4px;
+}
+
+:host ::ng-deep .pedidos-tabla-card {
+  .pedidos-tabla.p-datatable {
+    @include kc-table-skin;
+    font-size: 0.72rem;
+
+    // Esquinas de la tarjeta (el card no recorta, ver comentario arriba)
+    .p-datatable-wrapper { border-radius: 20px 20px 0 0; }
+    .p-paginator { border-radius: 0 0 20px 20px; }
+
+    // ── Encabezado ──────────────────────────────────────────────────────
+    .p-datatable-thead > tr > th {
+      background: var(--kc-canvas) !important;
+      border: none !important;
+      border-bottom: 1px solid var(--kc-line2) !important;
+      color: var(--kc-muted2);
+      font-family: var(--kc-font-body);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 13px 8px !important;
+
+      .p-sortable-column-icon {
+        color: #b7bccb;
+        font-size: 0.7rem;
+      }
+      &.p-highlight,
+      &.p-highlight .p-sortable-column-icon { color: var(--kc-accent); }
+
+      .p-column-filter-menu-button {
+        width: 22px;
+        height: 22px;
+        color: #b7bccb;
+        &:hover { color: var(--kc-accent); background: var(--kc-accent-wash); }
+        &.p-column-filter-menu-button-active { color: var(--kc-accent); background: var(--kc-accent-wash); }
+      }
+    }
+    .p-datatable-thead > tr > th.p-sortable-column:not(.p-highlight):hover {
+      background: #f1f2f8 !important;
+      color: var(--kc-ink2);
+    }
+
+    // ── Filas ───────────────────────────────────────────────────────────
+    .p-datatable-tbody > tr {
+      background: var(--kc-surface);
+
+      > td {
+        border: none !important;
+        border-top: 1px solid var(--kc-line2) !important;
+        padding: 11px 8px !important;
+        font-size: 13px;
+        color: var(--kc-ink2);
+      }
+      &:hover > td { background: #fbfbfe; }
+    }
+    // La zebra viene del tema; se apaga para el look plano del diseño.
+    .p-datatable-tbody > tr:nth-child(even) { background: var(--kc-surface); }
+
+    // Botón de expandir fila
+    .p-row-toggler {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: #f1f2f5;
+      color: var(--kc-accent);
+      &:hover { background: var(--kc-accent-wash); }
+    }
+  }
+
+  // ── Nº de pedido ──────────────────────────────────────────────────────
+  .pedido-number-cell .pedido-number {
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 13.5px;
+    letter-spacing: 0.2px;
+    color: #4f5bd5;
+    background: none;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+  }
+  .pedido-alerta-icon { color: var(--kc-orange); }
+
+  // ── Cliente con avatar ────────────────────────────────────────────────
+  .cliente-cell .cliente-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .cliente-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 800;
+    font-size: 11.5px;
+    flex-shrink: 0;
+  }
+  .cliente-nombre {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--kc-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // ── Píldoras de estado (pago y proceso) ───────────────────────────────
+  .modern-badge {
+    @include kc-status-pill(var(--kc-muted), #f1f2f5);
+    font-size: 11.5px;
+    padding: 5px 11px;
+    letter-spacing: 0.2px;
+    text-transform: none;
+
+    .status-icon { font-size: 10px; margin-right: 0; color: currentColor; }
+
+    &.badge-success   { @include kc-status-pill(var(--kc-green), var(--kc-green-wash)); }
+    &.badge-warning   { @include kc-status-pill(var(--kc-orange), var(--kc-orange-wash)); }
+    &.badge-danger    { @include kc-status-pill(var(--kc-red), var(--kc-red-wash)); }
+    &.badge-info      { @include kc-status-pill(#4f5bd5, #eaecfb); }
+    &.badge-primary   { @include kc-status-pill(var(--kc-accent), var(--kc-accent-wash)); }
+    &.badge-secondary { @include kc-status-pill(var(--kc-muted), #f1f2f5); }
+    &.badge-dark      { @include kc-status-pill(#fff, #52586b); }
+  }
+
+  // ── Columnas de dinero ────────────────────────────────────────────────
+  .td-money,
+  .money-cell {
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--kc-ink2);
+    text-align: right;
+  }
+
+  // ── Botones de acción de fila ─────────────────────────────────────────
+  .options-cell .p-button.p-button-text,
+  .options-cell .p-button.p-button-rounded {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    color: var(--kc-muted2);
+    &:hover { background: var(--kc-accent-wash); color: var(--kc-accent); }
+  }
+}

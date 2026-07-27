@@ -1,6 +1,6 @@
 :root {
-  --primary-color: #4361ee;
-  --primary-light: #738efc;
+  --primary-color: #6c4ce0;
+  --primary-light: #8c6bff;
   --primary-dark: #3a56d4;
   --secondary-color: #2ec4b6;
   --secondary-light: #57e5d9;
@@ -119,7 +119,7 @@ html {
     padding: 1.25rem 1.5rem;
     
     .fc-secondary {
-      color: #4361ee;
+      color: #6c4ce0;
       font-weight: 600;
 }
 
@@ -141,7 +141,7 @@ html {
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   &:focus {
-    border-color: #4361ee;
+    border-color: #6c4ce0;
     box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
   }
 }
@@ -192,8 +192,8 @@ html {
     }
 
 .btn-primary {
-  background-color: #4361ee;
-  border-color: #4361ee;
+  background-color: #6c4ce0;
+  border-color: #6c4ce0;
 
   &:hover, &:active, &:focus {
     background-color: #3a56d4;
@@ -217,7 +217,7 @@ html {
   }
 
   &:focus:not(:disabled) {
-    outline: 3px solid #4361ee;
+    outline: 3px solid #6c4ce0;
     outline-offset: 2px;
     background-color: #05c290;
   }
@@ -249,7 +249,7 @@ html {
   }
 
   &:focus:not(:disabled) {
-    outline: 3px solid #4361ee;
+    outline: 3px solid #6c4ce0;
     outline-offset: 2px;
     background-color: #6c757d;
     color: white;
@@ -371,7 +371,7 @@ html {
      ========================================== */
   &.current {
     .step-text {
-      color: #4361ee;
+      color: #6c4ce0;
       font-weight: 700;
       font-size: 0.95rem;
       text-transform: uppercase;
@@ -385,7 +385,7 @@ html {
         left: 0;
         width: 100%;
         height: 3px;
-        background: #4361ee;
+        background: #6c4ce0;
         border-radius: 2px;
         animation: stepPulse 2s ease-in-out infinite;
       }
@@ -987,7 +987,7 @@ html {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 
   &:hover {
-    border-color: #4361ee;
+    border-color: #6c4ce0;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
   }
 
@@ -1305,7 +1305,7 @@ html {
   }
 
   &:focus:not(:disabled) {
-    outline: 3px solid #4361ee;
+    outline: 3px solid #6c4ce0;
     outline-offset: 2px;
     background-color: #05c290;
   }
@@ -1544,7 +1544,7 @@ html {
 
   i {
     font-size: 4rem;
-    color: var(--primary-color, #4361ee);
+    color: var(--primary-color, #6c4ce0);
     opacity: 0.3;
     margin-bottom: 1.5rem;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -1596,7 +1596,7 @@ html {
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--primary-color, #4361ee);
+  color: var(--primary-color, #6c4ce0);
   pointer-events: none;
 }
 
@@ -2223,7 +2223,7 @@ html {
 
 // ============================================================================
 // PASO 1 - ESTILOS LIMPIOS Y COHESIVOS
-// Paleta: Grises neutros + un solo color de acento (#4361ee)
+// Paleta: Grises neutros + un solo color de acento (#6c4ce0)
 // ============================================================================
 
 // Variables locales para paso 1
@@ -2231,7 +2231,7 @@ $step1-border: #e5e7eb;
 $step1-bg: #f9fafb;
 $step1-text: #374151;
 $step1-text-light: #6b7280;
-$step1-accent: #4361ee;
+$step1-accent: #6c4ce0;
 $step1-accent-light: rgba(67, 97, 238, 0.1);
 $step1-success: #10b981;
 $step1-radius: 8px;
@@ -2511,7 +2511,7 @@ $step1-radius: 8px;
       align-items: center;
       gap: 4px;
       font-size: 0.78rem;
-      color: #4361ee;
+      color: #6c4ce0;
       margin-top: 2px;
 
       i { font-size: 0.72rem; }
@@ -4454,7 +4454,7 @@ $step7-success-border: rgba(16, 185, 129, 0.3);
   }
 
   .ccb-icon {
-    color: #4361ee;
+    color: #6c4ce0;
     font-size: 0.85rem;
     opacity: 0.75;
     flex-shrink: 0;
@@ -4481,7 +4481,7 @@ $step7-success-border: rgba(16, 185, 129, 0.3);
 
   .ccb-badge {
     background: #e0e7ff;
-    color: #3730a3;
+    color: #533bc4;
     border-radius: 4px;
     padding: 0.1rem 0.5rem;
     font-size: 0.75rem;
@@ -4504,5 +4504,46 @@ $step7-success-border: rgba(16, 185, 129, 0.3);
     background: #c7d2fe;
     margin: 0 0.625rem 0 0;
     flex-shrink: 0;
+  }
+}
+
+/* Encabezado tipo tarjeta (estilo Cotización) para los pasos del wizard */
+.va-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f0f1f6;
+
+  .va-ic {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: #eee9fd;
+    color: #6c4ce0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .va-card-title {
+    font-family: "Baloo 2", "Plus Jakarta Sans", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 19px;
+    color: #2a2e3c;
+  }
+
+  .va-req {
+    margin-left: auto;
+    background: #fce9e8;
+    color: #e0483f;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 11px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
   }
 }

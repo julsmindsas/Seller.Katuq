@@ -5,20 +5,55 @@
 }
 
 .tk-tabla-wrap {
-  padding-top: 0.25rem;
+  @include tk-panel;
 }
 
-.tk-table {
-  font-size: 0.82rem;
+:host ::ng-deep .tk-table.p-datatable {
+  @include tk-table-skin;
 }
 
+// ── Celdas ────────────────────────────────────────────────────────────────
+.tk-cell-order {
+  font-weight: 800;
+  font-size: 13.5px;
+  letter-spacing: 0.2px;
+  color: #4f5bd5;
+}
 .tk-cell-strong {
-  font-weight: 600;
-  color: $katuq-gray-800;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--kc-ink);
 }
 .tk-cell-muted {
-  font-size: 0.75rem;
-  color: $katuq-gray-500;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kc-muted2);
+  margin-top: 2px;
+}
+.tk-cell-seller {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kc-ink2);
+}
+
+.tk-client {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.tk-client-info { min-width: 0; }
+.tk-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  font-size: 12.5px;
+  flex-shrink: 0;
 }
 
 .mt-1 {

@@ -223,7 +223,7 @@
       white-space: nowrap;
 
       &.primary {
-        background-color: #4361ee;
+        background-color: #6c4ce0;
         color: white;
         
         &:hover {
@@ -343,7 +343,7 @@
     width: 100%;
     height: 100%;
     border: none;
-    background-color: #4361ee;
+    background-color: #6c4ce0;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -954,8 +954,8 @@
     border-radius: 0.2rem;
     
     &.btn-primary {
-      background-color: #4361ee;
-      border-color: #4361ee;
+      background-color: #6c4ce0;
+      border-color: #6c4ce0;
       
       &:hover {
         background-color: #0b5ed7;
@@ -1045,7 +1045,7 @@
         margin-left: 0.5rem;
         
         &[title*="Reintentar"] {
-          color: #4361ee;
+          color: #6c4ce0;
           
           &:hover {
             color: #0b5ed7;
@@ -1113,5 +1113,943 @@
   ng-select {
     border-color: #ffc107;
     background-color: rgba(255, 193, 7, 0.05);
+  }
+}
+// =============================================================================
+// REDISEÑO del modal "Configurar producto" (mockup Katuq).
+// Solo estilos: no se quitó ningún control ni se tocó la lógica.
+// Acento #6C4CE0, plano sin gradientes, Baloo para títulos / Nunito para texto.
+// =============================================================================
+@import '../../../../shared/styles/katuq-comercial';
+
+:host {
+  @include kc-tokens;
+  font-family: var(--kc-font-body);
+  color: var(--kc-ink);
+}
+
+// ---- Header ----
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 22px !important;
+  background: #fff;
+  border-bottom: 1px solid var(--kc-line) !important;
+
+  .cfg-head-ic {
+    @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash));
+  }
+
+  .modal-title {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 19px;
+    color: var(--kc-ink);
+    margin: 0;
+  }
+
+  .cfg-head-ref {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    color: var(--kc-accent);
+    background: var(--kc-accent-wash);
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+}
+
+// ---- Lienzo del modal ----
+.modal-body {
+  background: var(--kc-canvas);
+  padding: 18px !important;
+}
+
+// ---- Tarjetas ----
+.modal-body .card {
+  @include kc-card;
+  border-radius: 18px !important;
+  margin-bottom: 14px;
+
+  > .card-body {
+    padding: 16px 18px;
+  }
+
+  > .card-header {
+    background: #fff;
+    border-bottom: 1px solid var(--kc-line2);
+    border-radius: 18px 18px 0 0;
+    padding: 14px 18px;
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--kc-ink);
+  }
+}
+
+// ---- Columna izquierda: producto ----
+.product-title {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--kc-ink);
+  line-height: 1.15;
+}
+
+.product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+
+  .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--kc-canvas);
+    border: 1px solid var(--kc-line);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--kc-ink2);
+  }
+
+  .meta-label {
+    @include kc-label;
+    font-size: 11px;
+  }
+}
+
+// ---- Títulos de sección numerados ----
+.section-title,
+.section-heading {
+  font-family: var(--kc-font-head) !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  color: var(--kc-ink) !important;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px !important;
+}
+
+// ---- Formularios ----
+.modal-body {
+  label,
+  .form-check-label,
+  .col-form-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--kc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .form-check-label {
+    text-transform: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--kc-ink2);
+    letter-spacing: 0;
+  }
+
+  .form-control,
+  .form-select,
+  select.form-control,
+  textarea.form-control {
+    border: 1px solid var(--kc-line);
+    border-radius: 12px;
+    background: var(--kc-canvas);
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--kc-ink);
+
+    &:focus {
+      border-color: var(--kc-accent);
+      box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+      background: #fff;
+    }
+  }
+
+  .form-control-sm {
+    padding: 7px 11px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .form-check-input:checked {
+    background-color: var(--kc-accent);
+    border-color: var(--kc-accent);
+  }
+}
+
+// ---- Botones ----
+.modal-body {
+  .btn-primary {
+    background: var(--kc-accent) !important;
+    border-color: var(--kc-accent) !important;
+    color: #fff !important;
+    font-weight: 800;
+    border-radius: 11px;
+  }
+
+  .btn-outline-secondary,
+  .btn-outline-primary,
+  .btn-light {
+    border-radius: 11px;
+    font-weight: 700;
+  }
+
+  .toggle-text-btn {
+    color: var(--kc-accent);
+    font-weight: 800;
+  }
+}
+
+// ---- Tablas internas limpias ----
+.modal-body table.table {
+  thead th {
+    @include kc-th;
+    background: var(--kc-canvas);
+    border: none;
+    border-bottom: 1px solid var(--kc-line2);
+  }
+
+  tbody td {
+    border: none;
+    border-top: 1px solid var(--kc-line2);
+    font-size: 13px;
+    vertical-align: middle;
+  }
+}
+
+// ---- Pestañas (ngbNav) ----
+.modal-body .nav-tabs {
+  border-bottom: 1px solid var(--kc-line);
+  gap: 4px;
+
+  .nav-link {
+    border: none;
+    border-radius: 10px 10px 0 0;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--kc-muted);
+
+    &.active {
+      color: var(--kc-accent);
+      background: var(--kc-accent-wash);
+    }
+  }
+
+  .feature-check {
+    color: var(--kc-green);
+    margin-left: 6px;
+  }
+}
+
+// ---- Barra flotante de carrito = footer del mockup ----
+.btn-compact-cart {
+  @include kc-btn-primary;
+  border-radius: 13px !important;
+  padding: 13px 20px !important;
+  font-size: 15px !important;
+}
+
+.compact-info {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  color: var(--kc-accent);
+}
+
+.minimize-toggle,
+.expand-button {
+  @include kc-icon-btn;
+}
+
+// ---- Mensajes ----
+.error-message,
+.invalid-feedback {
+  color: var(--kc-red);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.modal-body .alert {
+  border-radius: 12px;
+  border: 1px solid var(--kc-line);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+// =============================================================================
+// FOOTER como el mockup: la barra de carrito deja de flotar en la esquina y se
+// ancla al pie del modal, a lo ancho, con TOTAL grande + estado + acciones.
+// (Solo estilos: los controles y su lógica son los mismos.)
+// =============================================================================
+.cart-floating-container {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  top: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  border-radius: 0 !important;
+  border: none !important;
+  border-top: 1px solid var(--kc-line) !important;
+  background: #fff !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 -6px 24px rgba(30, 35, 60, 0.08) !important;
+  z-index: 1100 !important;
+
+  .cart-compact-view {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 14px 22px;
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+
+  // TOTAL grande en acento, con su rótulo
+  .compact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 0 0 auto;
+
+    &::before {
+      content: "Total";
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--kc-muted2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .compact-price {
+      font-family: var(--kc-font-head) !important;
+      font-weight: 800 !important;
+      font-size: 26px !important;
+      line-height: 1.1 !important;
+      color: var(--kc-accent) !important;
+    }
+
+    .compact-quantity {
+      font-size: 12.5px !important;
+      font-weight: 800 !important;
+      color: var(--kc-muted) !important;
+    }
+  }
+
+  .btn-compact-cart {
+    @include kc-btn-primary;
+    border-radius: 12px !important;
+    padding: 12px 22px !important;
+    font-size: 13.5px !important;
+
+    &.disabled,
+    &:disabled {
+      background: #cfc7f5 !important;
+      box-shadow: none !important;
+    }
+  }
+
+  // Aviso de campos faltantes con el look ámbar del mockup
+  .cart-error-info {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 22px 12px;
+    border: none !important;
+    background: transparent !important;
+
+    .error-message {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      background: #fdf6e9;
+      border: 1px solid #f7e2be;
+      border-radius: 11px;
+      padding: 9px 14px;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #a9660d;
+    }
+  }
+
+  .cart-expanded-view {
+    max-width: 1320px;
+    margin: 0 auto;
+    background: var(--kc-canvas) !important;
+    border-top: 1px solid var(--kc-line2) !important;
+    padding: 12px 22px !important;
+  }
+
+  .minimize-toggle {
+    top: 8px !important;
+    right: 14px !important;
+    position: absolute !important;
+  }
+
+  // Estado minimizado: vuelve a ser un botón redondo discreto
+  &.minimized {
+    left: auto !important;
+    right: 20px !important;
+    bottom: 20px !important;
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 50% !important;
+    border-top: none !important;
+    box-shadow: 0 8px 20px rgba(108, 76, 224, 0.35) !important;
+  }
+}
+
+// El modal deja espacio para el footer fijo
+.modal-body {
+  padding-bottom: 96px !important;
+}
+
+// =============================================================================
+// Navegación de secciones + encabezados limpios (mockup)
+// =============================================================================
+.cfg-secnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--kc-line);
+  border-radius: 16px;
+  margin-bottom: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.cfg-secnav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 15px;
+  border: 1px solid #e4e5ee;
+  background: #fff;
+  color: var(--kc-ink2);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--kc-font-body);
+  font-weight: 800;
+  font-size: 12.5px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  .cfg-secnav-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #f1f2f5;
+    border: 2px solid #e4e5ee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--kc-muted);
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    border-color: #e2d9fb;
+    color: var(--kc-accent);
+  }
+
+  &.active {
+    background: var(--kc-accent-wash);
+    border-color: #e2d9fb;
+    color: var(--kc-accent);
+
+    .cfg-secnav-dot {
+      background: var(--kc-accent);
+      border-color: var(--kc-accent);
+      color: #fff;
+    }
+  }
+}
+
+// ---- Encabezados de sección del acordeón: limpios como el mockup ----
+.custom-accordion {
+  .accordion-item,
+  .card {
+    border: 1px solid var(--kc-line) !important;
+    border-radius: 18px !important;
+    overflow: hidden;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+  }
+
+  .accordion-header,
+  .card-header {
+    background: #fff !important;
+    border-bottom: 1px solid var(--kc-line2) !important;
+    padding: 4px 8px !important;
+  }
+
+  .accordion-button {
+    background: transparent !important;
+    color: var(--kc-ink) !important;
+    font-family: var(--kc-font-head) !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    text-transform: none !important;
+    box-shadow: none !important;
+    padding: 12px 14px !important;
+
+    &::after {
+      filter: none;
+    }
+
+    i {
+      color: var(--kc-accent);
+    }
+  }
+
+  .badge.bg-success {
+    background: var(--kc-green-wash) !important;
+    color: var(--kc-green) !important;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 11px;
+  }
+
+  .accordion-body {
+    background: #fff;
+    padding: 16px 18px !important;
+  }
+}
+
+// ---- Botón Cancelar del footer (mockup) ----
+.cart-floating-container .cfg-footer-cancel {
+  @include kc-btn-ghost;
+  padding: 12px 20px !important;
+  font-size: 13.5px !important;
+  border-radius: 12px !important;
+  margin-right: 10px;
+
+  &:hover {
+    border-color: #f6d4d2 !important;
+    color: #e0483f !important;
+  }
+}
+
+.cart-floating-container .cart-compact-view {
+  .btn-compact-cart,
+  .cfg-footer-cancel {
+    flex: 0 0 auto;
+  }
+}
+
+// ---- Zona de subir imagen tipo dropzone (mockup) ----
+.modal-body input[type="file"].form-control,
+.modal-body input[type="file"] {
+  border: 2px dashed #e4e5ee !important;
+  border-radius: 14px !important;
+  background: #fbfcfe !important;
+  padding: 18px 16px !important;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--kc-muted);
+
+  &:hover {
+    border-color: var(--kc-accent) !important;
+    background: #faf9ff !important;
+  }
+}
+
+// ---- Stepper de cantidad grande ----
+.quantity-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  padding: 5px;
+
+  button {
+    width: 38px !important;
+    height: 38px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    color: var(--kc-accent) !important;
+    font-weight: 800;
+    box-shadow: 0 1px 2px rgba(30, 35, 60, 0.06);
+
+    &:hover:not(:disabled) {
+      background: var(--kc-accent) !important;
+      color: #fff !important;
+    }
+  }
+
+  span {
+    min-width: 54px !important;
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--kc-ink);
+  }
+}
+
+// ---- Tarjetas (Tarjeta #1, #2…) ----
+.modal-body .card.p-3,
+.modal-body .card.p-2 {
+  border-radius: 14px !important;
+  border: 1px solid var(--kc-line) !important;
+  background: var(--kc-canvas) !important;
+  box-shadow: none !important;
+
+  h5 {
+    font-family: var(--kc-font-head);
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--kc-ink);
+  }
+}
+
+// ---- Stepper de cantidad real (.qty-box > .input-group) como el mockup ----
+.qty-box {
+  .input-group {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    background: var(--kc-canvas);
+    border: 1px solid var(--kc-line);
+    border-radius: 14px;
+    padding: 5px;
+    width: auto !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .btn,
+  .btn-outline-secondary {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    flex: 0 0 40px !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 11px !important;
+    background: #fff !important;
+    color: var(--kc-accent) !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(30, 35, 60, 0.06);
+
+    &:hover:not(:disabled) {
+      background: var(--kc-accent) !important;
+      color: #fff !important;
+    }
+
+    &:disabled {
+      color: var(--kc-muted2) !important;
+      background: #f1f2f5 !important;
+      box-shadow: none;
+    }
+  }
+
+  input.form-control,
+  .input-number {
+    width: 84px !important;
+    flex: 0 0 84px !important;
+    height: 40px !important;
+    padding: 0 8px !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-family: var(--kc-font-head) !important;
+    font-weight: 800 !important;
+    font-size: 19px !important;
+    color: var(--kc-ink) !important;
+    text-align: center !important;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    &[type="number"] {
+      -moz-appearance: textfield;
+    }
+  }
+}
+
+// El contenedor del stepper se quedaba en 128px y aplastaba el número: se le da
+// ancho propio y al input un mínimo real.
+.qty-box {
+  width: auto !important;
+
+  .input-group {
+    width: 210px !important;
+    min-width: 210px !important;
+    justify-content: space-between;
+  }
+
+  input.form-control,
+  .input-number {
+    min-width: 84px !important;
+    width: 84px !important;
+  }
+}
+
+// =============================================================================
+// El footer va DENTRO del modal (antes quedaba fijo al borde de la ventana).
+// Ahora es el pie del propio modal: ancho del modal, pegado abajo.
+// =============================================================================
+.cart-floating-container {
+  position: sticky !important;
+  bottom: 0 !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  border-radius: 0 0 16px 16px !important;
+  border-top: 1px solid var(--kc-line) !important;
+  box-shadow: 0 -6px 20px rgba(30, 35, 60, 0.06) !important;
+  z-index: 10 !important;
+
+  .cart-compact-view,
+  .cart-error-info,
+  .cart-expanded-view {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  &.minimized {
+    position: sticky !important;
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 0 0 16px 16px !important;
+  }
+}
+
+// El cuerpo ya no necesita reservar espacio para una barra flotante
+.modal-body {
+  padding-bottom: 18px !important;
+}
+
+
+.cart-floating-container {
+  position: relative !important;
+  bottom: auto !important;
+  flex: 0 0 auto !important;
+}
+
+// =============================================================================
+// Detalles: footer en UNA sola línea (Total + aviso + acciones) y chips del
+// producto más discretos para que no coman visibilidad.
+// =============================================================================
+.cart-floating-container {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  padding: 10px 18px !important;
+
+  .cart-compact-view {
+    flex: 1 1 auto !important;
+    padding: 0 !important;
+    gap: 12px !important;
+  }
+
+  // El aviso deja de ir en una fila aparte: entra en la misma línea
+  .cart-error-info {
+    order: 2;
+    flex: 0 1 auto !important;
+    padding: 0 !important;
+    border: none !important;
+
+    .error-message {
+      padding: 7px 12px !important;
+      font-size: 11.5px !important;
+      white-space: nowrap;
+    }
+  }
+
+  .compact-info {
+    .compact-price {
+      font-size: 22px !important;
+    }
+  }
+
+  .cfg-footer-cancel,
+  .btn-compact-cart {
+    padding: 10px 18px !important;
+    font-size: 13px !important;
+  }
+
+  .minimize-toggle {
+    display: none !important;
+  }
+}
+
+// Chips del producto: más pequeños y sin ocupar tanto alto
+.product-meta {
+  gap: 6px !important;
+  margin-top: 10px !important;
+
+  .meta-item {
+    padding: 4px 10px !important;
+    font-size: 11.5px !important;
+    gap: 5px !important;
+  }
+
+  .meta-label {
+    font-size: 10px !important;
+  }
+}
+
+
+// =============================================================================
+// Nav de secciones fija al hacer scroll, delgada y translúcida (no tapa nada)
+// =============================================================================
+.cfg-secnav {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 20 !important;
+  padding: 8px 10px !important;
+  margin: 0 0 12px !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 14px !important;
+  box-shadow: 0 4px 14px rgba(30, 35, 60, 0.06);
+}
+
+.cfg-secnav-pill {
+  padding: 7px 12px !important;
+  font-size: 11.5px !important;
+  gap: 6px !important;
+
+  .cfg-secnav-dot {
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 9px !important;
+  }
+}
+
+// =============================================================================
+// Tarjeta del producto alineada al diseño: imagen grande a lo ancho, título,
+// chips, precio y descripción en bloque.
+// =============================================================================
+.product-compact-info {
+  padding-top: 4px;
+}
+
+:host ::ng-deep ks-carousel {
+  display: block;
+  width: 100%;
+
+  .carousel,
+  .carousel-container,
+  figure,
+  img {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  img {
+    height: 240px !important;
+    object-fit: contain !important;
+    background: var(--kc-canvas);
+    border-radius: 16px;
+  }
+}
+
+.product-page-details {
+  .product-title {
+    font-size: 19px;
+    line-height: 1.25;
+    margin-bottom: 4px;
+  }
+}
+
+// Precio y acción en una línea, alineados
+.modal-body .col-xl-6:first-child {
+  .card-body > section:last-of-type {
+    padding-top: 4px;
+  }
+}
+
+// Descripción como bloque del mockup
+.product-description,
+.descripcion-producto {
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--kc-ink2);
+}
+
+// =============================================================================
+// El modal es pantalla completa: se reparte en columna (encabezado + cuerpo con
+// scroll propio + pie). Así la nav de secciones SÍ queda fija al hacer scroll y
+// el footer queda siempre visible al pie. Sin max-height (eso rompía el cuerpo).
+// =============================================================================
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.modal-header {
+  flex: 0 0 auto;
+}
+
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto !important;
+}
+
+.cart-floating-container {
+  flex: 0 0 auto !important;
+  position: relative !important;
+}
+
+// =============================================================================
+// Imagen del producto proporcionada (se había ido a 240px y desalineaba la
+// tarjeta) y miniaturas discretas.
+// =============================================================================
+:host ::ng-deep ks-carousel {
+  img {
+    height: 170px !important;
+    object-fit: contain !important;
+  }
+
+  // Tira de miniaturas: pequeña, no compite con la imagen principal
+  .previews-container img,
+  .preview-image {
+    height: 46px !important;
+    width: 46px !important;
+    border-radius: 9px !important;
+    object-fit: cover !important;
+  }
+}
+
+// La franja de características ahora vive dentro del cuerpo: se ve como card
+.card.mt-3 .features-tabs {
+  .form-check {
+    margin-bottom: 10px;
   }
 }

@@ -24,6 +24,12 @@ import { CambiarEstadoPagoComponent } from '../cambiar-estado-pago/cambiar-estad
 
 type TablaModo = 'porRevisar' | 'sinPago' | 'rechazados';
 
+/** Paleta de avatares de cliente (solo presentación, ciclada por índice de fila). */
+const AVATAR_PALETTE = [
+  '#6c4ce0', '#14b8a6', '#2f6fe0', '#c43e74',
+  '#e0891b', '#17994f', '#4f5bd5', '#8b3fd1', '#17b0b0',
+];
+
 /**
  * Spec 013 — Tesorería MVP.
  * Tabla lazy server-side de pedidos filtrados por estadoPago (preset por pestaña).
@@ -210,6 +216,24 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     if (pct <= 0) return 'is-empty';
     if (pct >= 100) return '';
     return 'is-partial';
+  }
+
+  /** Color del monto ya abonado: gris si no hay pago, ámbar parcial, verde completo. */
+  pagadoClase(pedido: any): string {
+    const pct = this.progresoPct(pedido);
+    if (pct <= 0) return '';
+    return pct >= 100 ? 'is-full' : 'is-partial';
+  }
+
+  /** Inicial del cliente para el avatar de la fila (solo presentación). */
+  inicialCliente(pedido: any): string {
+    const nombre = this.clienteNombre(pedido).trim();
+    return nombre && nombre !== '—' ? nombre.charAt(0).toUpperCase() : '?';
+  }
+
+  /** Color del avatar por posición en la página (solo presentación). */
+  avatarColor(index: number): string {
+    return AVATAR_PALETTE[(index || 0) % AVATAR_PALETTE.length];
   }
 
   /** Último pago de PagosAsentados que sigue en verificación "Pendiente". */

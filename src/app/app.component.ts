@@ -219,6 +219,10 @@ export class AppComponent implements OnInit, OnDestroy {
       )
       .subscribe(() => {
         this.checkPublicRoute();
+        // La campana se engancha aquí: iniciar y cerrar sesión navegan sin
+        // recargar la página, así que el servicio (singleton) no se enteraba
+        // del cambio de usuario/empresa. Es idempotente: si no cambió, no hace nada.
+        this.notificationManager.syncSession();
       });
 
     // Errores globales (window.onerror / unhandledrejection) los captura

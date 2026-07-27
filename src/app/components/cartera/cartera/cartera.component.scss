@@ -1,50 +1,91 @@
 @import '../cartera-shared';
 
 :host {
+  @include kc-tokens;
   display: block;
+  font-family: var(--kc-font-body);
+  background: #f5f6fb;
 }
 
 .cx-page {
-  padding: 1rem 1.25rem 1.5rem;
+  padding: 22px 28px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  @media (max-width: 768px) { padding: 16px 14px 32px; }
 }
 
+// ── Encabezado ────────────────────────────────────────────────────────────
 .cx-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 0.9rem;
+  gap: 16px;
+}
+.cx-header-id {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.cx-header-icon {
+  @include kc-icon-chip(var(--kc-accent), var(--kc-accent-wash));
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  font-size: 20px;
 }
 .cx-page-title {
   margin: 0;
-  font-weight: 700;
-  color: $katuq-purple-700;
-  font-size: 1.15rem;
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--kc-accent);
 }
 .cx-page-sub {
-  margin: 0.2rem 0 0;
-  font-size: 0.82rem;
-  color: $katuq-gray-500;
+  margin: 5px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kc-muted);
 }
 .cx-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: $katuq-purple-700;
-  background: $katuq-purple-50;
-  border: 1px solid $katuq-purple-200;
-  border-radius: 20px;
-  padding: 0.35rem 0.95rem;
-  cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
-  &:hover:not(:disabled) { background: $katuq-purple-100; box-shadow: 0 1px 4px rgba(109, 40, 217, 0.12); }
-  &:disabled { opacity: 0.6; cursor: default; }
+  @include kc-btn-ghost;
+  color: var(--kc-accent);
+  border-color: #e2d9fb;
+  padding: 11px 18px;
+
+  &:hover:not(:disabled) { background: var(--kc-accent-wash); }
 }
 
+// ── Pestañas ──────────────────────────────────────────────────────────────
 .cx-tabs {
-  margin-top: 1rem;
-  ::ng-deep .p-tabview-nav { flex-wrap: wrap; }
+  @include kc-card;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 16px;
+  align-self: flex-start;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.cx-tab {
+  @include kc-btn-base;
+  background: transparent;
+  color: var(--kc-muted);
+  padding: 11px 22px;
+  border-radius: 11px;
+  white-space: nowrap;
+
+  i { font-size: 14px; }
+
+  &:hover:not(.is-active) { background: var(--kc-canvas); color: var(--kc-ink2); }
+
+  &.is-active {
+    background: var(--kc-accent-wash);
+    color: var(--kc-accent);
+    box-shadow: 0 1px 3px rgba(108, 76, 224, 0.12);
+  }
 }

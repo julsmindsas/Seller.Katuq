@@ -33,31 +33,36 @@
            [rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true"
            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos"
            [scrollable]="true" scrollHeight="calc(100vh - 430px)"
-           styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped tk-table">
+           styleClass="tk-table">
 
     <ng-template pTemplate="header">
       <tr>
         <th style="min-width: 150px">Pedido</th>
-        <th style="min-width: 170px">Cliente</th>
-        <th style="min-width: 160px">Pago</th>
-        <th class="text-center" style="min-width: 130px">Estado</th>
+        <th style="min-width: 200px">Cliente</th>
+        <th style="min-width: 180px">Pago</th>
+        <th class="text-center" style="min-width: 140px">Estado</th>
         <th style="min-width: 140px">Vendedor</th>
-        <th class="text-center" style="min-width: 150px">Acciones</th>
+        <th class="text-center" style="min-width: 160px">Acciones</th>
       </tr>
     </ng-template>
 
-    <ng-template pTemplate="body" let-pedido>
+    <ng-template pTemplate="body" let-pedido let-i="rowIndex">
       <tr>
         <!-- Pedido: nro + fecha -->
         <td>
-          <div class="tk-cell-strong">{{ pedido?.nroPedido }}</div>
+          <div class="tk-cell-order">{{ pedido?.nroPedido }}</div>
           <div class="tk-cell-muted">{{ pedido?.fechaCreacion | date:'dd/MM/yyyy' }}</div>
         </td>
 
         <!-- Cliente -->
         <td>
-          <div class="tk-cell-strong">{{ clienteNombre(pedido) }}</div>
-          <div class="tk-cell-muted" *ngIf="pedido?.cliente?.documento">{{ pedido?.cliente?.documento }}</div>
+          <div class="tk-client">
+            <span class="tk-avatar" [style.background]="avatarColor(i)" aria-hidden="true">{{ inicialCliente(pedido) }}</span>
+            <div class="tk-client-info">
+              <div class="tk-cell-strong">{{ clienteNombre(pedido) }}</div>
+              <div class="tk-cell-muted" *ngIf="pedido?.cliente?.documento">{{ pedido?.cliente?.documento }}</div>
+            </div>
+          </div>
         </td>
 
         <!-- Pago: barra anticipo/total -->
@@ -68,7 +73,9 @@
                    [style.width.%]="progresoPct(pedido)"></div>
             </div>
             <div class="tk-progress-label">
-              {{ pedido?.anticipo | currency:'COP':'symbol-narrow':'1.0-0' }}
+              <span class="tk-progress-paid" [ngClass]="pagadoClase(pedido)">
+                {{ pedido?.anticipo | currency:'COP':'symbol-narrow':'1.0-0' }}
+              </span>
               / {{ pedido?.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}
             </div>
           </div>
@@ -90,26 +97,26 @@
 
         <!-- Vendedor -->
         <td>
-          <span class="tk-cell-muted">{{ pedido?.asesorAsignado?.name || '—' }}</span>
+          <span class="tk-cell-seller">{{ pedido?.asesorAsignado?.name || '—' }}</span>
         </td>
 
         <!-- Acciones según estado -->
         <td class="text-center">
           <button *ngIf="mode === 'porRevisar'" type="button"
-                  class="btn btn-sm btn-primary tk-btn-sm"
+                  class="btn btn-primary tk-btn-sm"
                   [disabled]="!puedeRevisar(pedido)"
                   (click)="abrirRevisar(pedido)">
             <i class="pi pi-search"></i> Revisar
           </button>
 
           <button *ngIf="mode === 'sinPago'" type="button"
-                  class="btn btn-sm btn-outline-primary tk-btn-sm"
+                  class="btn btn-primary tk-btn-sm"
                   (click)="abrirRegistrar(pedido)">
-            <i class="pi pi-plus-circle"></i> Registrar pago
+            <i class="pi pi-plus"></i> Registrar pago
           </button>
 
           <button *ngIf="mode === 'rechazados'" type="button"
-                  class="btn btn-sm btn-outline-primary tk-btn-sm"
+                  class="btn btn-primary tk-btn-sm"
                   (click)="abrirRegistrar(pedido)">
             <i class="pi pi-refresh"></i> Nuevo pago
           </button>

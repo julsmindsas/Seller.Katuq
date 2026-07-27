@@ -5412,12 +5412,28 @@ export class DespachosComponent implements OnInit, OnDestroy {
           Swal.fire(
             "Error",
             "Hubo un problema al actualizar la orden de envío: " +
-            (error.message || "Error desconocido"),
+            this.mensajeErrorOrdenEnvio(error),
             "error",
           );
         },
       });
     }
+  }
+
+  // El backend responde 409 DUPLICATE_SHIPPING (pedido ya en una orden de envío viva)
+  // y 403 CARRIER_OFFLINE con mensaje en error.error; mostrarlo en vez del texto
+  // genérico del HttpErrorResponse.
+  private mensajeErrorOrdenEnvio(error: any): string {
+    const backendError = error?.error;
+    if (backendError?.code === "DUPLICATE_SHIPPING") {
+      const detalle = (backendError.pedidos || [])
+        .map((p: any) => `${p.nroPedido} (orden ${p.shippingOrder})`)
+        .join(", ");
+      return detalle
+        ? `${backendError.message} Pedidos: ${detalle}.`
+        : backendError.message;
+    }
+    return backendError?.message || error?.message || "Error desconocido";
   }
 
   /**
@@ -5528,7 +5544,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
         Swal.fire(
           "Error",
-          "Hubo un problema al crear la orden: " + (error.message || "Error desconocido"),
+          "Hubo un problema al crear la orden: " + this.mensajeErrorOrdenEnvio(error),
           "error"
         );
       },
@@ -5589,7 +5605,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         Swal.fire(
           "Error",
           "Hubo un problema al crear la orden de envío: " +
-          (error.message || "Error desconocido"),
+          this.mensajeErrorOrdenEnvio(error),
           "error",
         );
       },

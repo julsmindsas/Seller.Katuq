@@ -1,0 +1,99 @@
+// Facturación de venta asistida — reskin con el lenguaje visual de Cotizaciones.
+// El HTML trae estilos inline (morado #8b5cf6) y botones Bootstrap (.btn-primary azul):
+// se alinean por CSS con !important donde el inline manda, sin tocar la lógica.
+@import '../../../shared/styles/katuq-comercial';
+
+:host {
+  @include kc-tokens;
+  // Re-tiñe los `var(--katuq-primary, #8b5cf6)` inline del componente (p. ej. el ícono del header).
+  --katuq-primary: #6c4ce0;
+  font-family: var(--kc-font-body);
+  color: var(--kc-ink);
+}
+
+.facturacion-section {
+  h5 {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    color: var(--kc-ink);
+  }
+}
+
+/* Botones primarios de Bootstrap -> acento morado */
+.btn-primary {
+  background: var(--kc-accent) !important;
+  border-color: var(--kc-accent) !important;
+  color: #fff !important;
+  font-weight: 800;
+  border-radius: 11px;
+
+  &:hover { filter: brightness(1.05); }
+}
+
+.btn-outline-secondary,
+.btn-outline-danger,
+.btn-outline-dark {
+  border-radius: 11px;
+  font-weight: 700;
+}
+
+/* Tarjetas de datos de facturación */
+.billing-card {
+  border-radius: 12px !important;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(108, 76, 224, 0.1);
+    border-color: #e2d9fb !important;
+  }
+
+  .badge {
+    background: var(--kc-accent-wash) !important;
+    color: var(--kc-accent) !important;
+    border-color: #e2d9fb !important;
+    font-weight: 800;
+    border-radius: 999px;
+  }
+}
+
+.selected-billing-card {
+  border-radius: 12px !important;
+}
+
+/* Formularios */
+.form-label {
+  font-weight: 800;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--kc-muted);
+}
+
+.form-control,
+.form-select,
+select.form-control {
+  border-radius: 10px;
+  border-color: var(--kc-line);
+
+  &:focus {
+    border-color: var(--kc-accent);
+    box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+  }
+}
+
+.form-check-input:checked {
+  background-color: var(--kc-accent);
+  border-color: var(--kc-accent);
+}
+
+/* Encabezado de los modales (gradiente inline -> tinte plano morado) */
+.modal-header {
+  background: var(--kc-accent) !important;
+
+  .modal-title { font-family: var(--kc-font-head); font-weight: 700; }
+}
+
+.modal-footer,
+.modal-body {
+  .form-label { color: var(--kc-muted); }
+}

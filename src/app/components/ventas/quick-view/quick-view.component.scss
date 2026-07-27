@@ -1,1 +1,10 @@
 @import '~bootstrap/dist/css/bootstrap.min.css';
+
+// Reskin: botón principal al acento morado de Cotizaciones.
+.btn-primary {
+  background: #6c4ce0 !important;
+  border-color: #6c4ce0 !important;
+  color: #fff !important;
+
+  &:hover { filter: brightness(1.05); }
+}

@@ -1,32 +1,37 @@
 :host {
-  --ink: #16161f;
-  --ink2: #3c3e52;
-  --muted: #7a7f95;
-  --line: #e8e9f1;
+  // Paleta del rediseño "Cotización Editor"
+  --ink: #2a2e3c;
+  --ink2: #52586b;
+  --muted: #8a90a2;
+  --muted2: #9199ac;
+  --line: #ecedf3;
   --line2: #f0f1f6;
-  --canvas: #f5f6fa;
+  --canvas: #f7f8fc;
   --surface: #fff;
-  --primary: #5a45e0;
-  --primary-ink: #4734c2;
-  --primary-wash: #efedfc;
-  --money: #0e9f6e;
-  --money-wash: #e6f7f0;
-  --warn: #b9760f;
-  --warn-wash: #fbf0db;
+  --primary: #6c4ce0;
+  --primary-ink: #533bc4;
+  --primary-wash: #eee9fd;
+  --money: #17994f;
+  --money-wash: #e3f6ec;
+  --warn: #e0891b;
+  --warn-wash: #fdf1dd;
   --danger: #d6455b;
-  --danger-wash: #fbe7ea;
-  --blue: #2f6fed;
-  --blue-wash: #e7eefc;
+  --danger-wash: #fce9e8;
+  --blue: #2f6fe0;
+  --blue-wash: #e7f0fd;
+
+  --font-head: "Baloo 2", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Nunito", "Inter", system-ui, -apple-system, sans-serif;
 
   display: block;
   color: var(--ink);
 }
 
 .cot-wrap {
-  max-width: 1180px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 22px;
-  font-family: "Inter", system-ui, sans-serif;
+  padding: 22px 24px 44px;
+  font-family: var(--font-body);
   font-feature-settings: "tnum" 1;
 }
 
@@ -35,28 +40,30 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 14px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 
   .cot-head-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
   }
 
   h1 {
-    font-family: "Plus Jakarta Sans", sans-serif;
-    font-size: 20px;
+    font-family: var(--font-head);
+    font-size: 28px;
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     margin: 0;
+    color: var(--ink);
+    line-height: 1;
   }
 
   .ednum {
-    color: var(--muted);
-    font-weight: 600;
-    font-size: 13px;
+    color: var(--muted2);
+    font-weight: 700;
+    font-size: 15px;
   }
 
   .cot-pedido-chip {
@@ -64,10 +71,10 @@
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    font-weight: 700;
-    padding: 5px 11px;
-    border-radius: 20px;
-    background: var(--money-wash, #e6f7f0);
+    font-weight: 800;
+    padding: 6px 13px;
+    border-radius: 999px;
+    background: var(--money-wash);
     color: #0a7d56;
     border: 1px solid transparent;
     cursor: pointer;
@@ -86,12 +93,14 @@
 .cot-back {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 8px 12px;
-  font-weight: 600;
+  border: 1px solid #e4e5ee;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 13.5px;
   color: var(--ink2);
   cursor: pointer;
 
@@ -103,49 +112,66 @@
 .estado-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 
   .estado-select {
     width: auto;
-    min-width: 120px;
+    min-width: 150px;
+    border: 1px solid #e4e5ee;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 700;
+    color: var(--ink2);
+    background-color: #fff;
   }
 }
 
 .estado-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 11px;
-  border-radius: 20px;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 999px;
   background: var(--warn-wash);
   color: var(--warn);
   text-transform: capitalize;
+
+  &::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
 
   &.estado-borrador { background: var(--warn-wash); color: var(--warn); }
   &.estado-enviada { background: var(--blue-wash); color: var(--blue); }
   &.estado-aceptada { background: var(--money-wash); color: #0a7d56; }
   &.estado-rechazada { background: var(--danger-wash); color: var(--danger); }
-  &.estado-vencida { background: var(--line2); color: var(--muted); }
-  &.estado-convertida { background: #ece9ff; color: var(--primary-ink); }
+  &.estado-vencida { background: var(--warn-wash); color: var(--warn); }
+  &.estado-convertida { background: var(--primary-wash); color: var(--primary-ink); }
 }
 
 .cot-loading {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 32px;
+  border-radius: 18px;
+  padding: 40px;
   color: var(--muted);
+  text-align: center;
+  font-weight: 600;
 }
 
 // ---- Layout 2 columnas ----
 .cot-grid {
   display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 18px;
+  grid-template-columns: 1fr 400px;
+  gap: 20px;
   align-items: start;
 
-  @media (max-width: 880px) {
+  @media (max-width: 980px) {
     grid-template-columns: 1fr;
   }
 }
@@ -153,18 +179,18 @@
 .col-main {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
   min-width: 0;
 }
 
 .col-side {
   position: sticky;
-  top: 16px;
+  top: 18px;
   display: flex;
   flex-direction: column;
   gap: 14px;
 
-  @media (max-width: 880px) {
+  @media (max-width: 980px) {
     position: static;
   }
 }
@@ -173,36 +199,87 @@
 .cot-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px 18px;
+  border-radius: 20px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
 }
 
 .cot-card-head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
+  margin: -20px -22px 18px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--line2);
 
   h2 {
-    font-family: "Plus Jakarta Sans", sans-serif;
-    font-size: 14px;
+    font-family: var(--font-head);
+    font-size: 19px;
     font-weight: 700;
     margin: 0;
     color: var(--ink);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
   }
+
+  // Botón "Ítem libre" en la cabecera de Productos.
+  .cot-link {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--primary-wash);
+    color: var(--primary);
+    border: 1px solid #e2d9fb;
+    border-radius: 11px;
+    padding: 9px 15px;
+    font-weight: 800;
+    font-size: 13px;
+
+    &:hover {
+      color: var(--primary-ink);
+      filter: brightness(0.98);
+    }
+  }
+}
+
+// Chips de ícono por sección
+.cc-ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.cc-ic-cli { background: var(--primary-wash); color: var(--primary); }
+  &.cc-ic-vig { background: var(--blue-wash); color: var(--blue); }
+  &.cc-ic-prod { background: var(--money-wash); color: var(--money); }
+  &.cc-ic-term { background: var(--warn-wash); color: var(--warn); }
+}
+
+// Badge "Requerido" (cliente)
+.cc-req {
+  margin-left: auto;
+  background: var(--danger-wash);
+  color: #e0483f;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 11px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .cot-link {
   background: none;
   border: none;
   color: var(--primary);
-  font-weight: 600;
-  font-size: 12px;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
   padding: 0;
 
@@ -220,39 +297,58 @@
 .cot-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 1 1 200px;
   min-width: 160px;
 
   label {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 800;
     color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  .form-control {
+  .form-control,
+  .form-select {
     border: 1px solid var(--line);
-    border-radius: 9px;
+    border-radius: 12px;
+    background: var(--canvas);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+
+    &:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+      background: #fff;
+    }
   }
 
   &.cot-field-sm {
-    flex: 0 0 130px;
-    min-width: 110px;
+    flex: 0 0 150px;
+    min-width: 120px;
   }
 }
 
 .cot-hint {
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--muted2);
+  font-size: 12.5px;
+  font-weight: 600;
 }
 
 .cot-readonly {
-  padding: 9px 12px;
-  background: var(--line2);
-  border: 1px solid var(--line);
-  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+  background: #f1f2f5;
+  border: 1px solid #e4e5ee;
+  border-radius: 12px;
   color: var(--ink2);
   font-size: 14px;
+  font-weight: 700;
 }
 
 .cot-vendedor {
@@ -261,12 +357,20 @@
 
 .cot-notas {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 14px;
+  background: var(--canvas);
+  padding: 16px 18px;
   line-height: 1.6;
-  font-size: 13px;
+  font-size: 14px;
+
+  &:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+    background: #fff;
+  }
 }
 
-/* --- Picker de cliente / producto --- */
+/* --- Picker de cliente / producto (preservado) --- */
 .cot-cliente-search,
 .cot-prod-search {
   position: relative;
@@ -285,7 +389,7 @@
   margin-top: 4px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: 14px;
   box-shadow: 0 12px 30px rgba(20, 20, 40, 0.12);
   max-height: 320px;
   overflow-y: auto;
@@ -307,7 +411,7 @@
   background: none;
   border: none;
   border-bottom: 1px solid var(--line2);
-  padding: 11px 14px;
+  padding: 12px 14px;
   cursor: pointer;
 
   &:last-child {
@@ -320,7 +424,7 @@
 
   .cot-sugg-name {
     font-size: 13.5px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ink);
   }
 
@@ -350,17 +454,17 @@
   padding: 4px 0;
 
   .cot-cliente-avatar {
-    width: 42px;
-    height: 42px;
-    flex: 0 0 42px;
-    border-radius: 11px;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border-radius: 12px;
     background: var(--primary-wash);
     color: var(--primary-ink);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-family: "Plus Jakarta Sans", sans-serif;
+    font-family: var(--font-head);
     text-transform: uppercase;
   }
 
@@ -371,7 +475,7 @@
 
   .cot-cliente-name {
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--ink);
   }
 
@@ -382,6 +486,7 @@
     margin-top: 6px;
     font-size: 12px;
     color: var(--muted);
+    font-weight: 600;
   }
 
   .cot-cliente-card-actions {
@@ -395,9 +500,17 @@
 
 /* Acción "crear cliente" bajo el buscador. */
 .cot-cliente-actions {
-  margin-top: 8px;
+  margin-top: 14px;
   display: flex;
   justify-content: flex-start;
+
+  .cot-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 800;
+    font-size: 13.5px;
+  }
 }
 
 /* Indicador de tipo de cliente (segmentación / precio por tipo). */
@@ -423,14 +536,37 @@
   }
 }
 
-/* --- Productos / líneas --- */
+/* --- Productos / líneas (preservado) --- */
 .cot-empty-lines {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   color: var(--muted);
-  font-size: 13px;
-  padding: 16px 0;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 40px 20px;
   text-align: center;
-  border: 1.5px dashed var(--line);
-  border-radius: 10px;
+  border: 2px dashed #e4e5ee;
+  border-radius: 16px;
+  background: #fbfcfe;
+
+  .cot-empty-ic {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    background: #f1f2f5;
+    color: #b7bccb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cot-empty-sub {
+    font-size: 13px;
+    color: var(--muted2);
+    font-weight: 600;
+  }
 }
 
 .cot-lines {
@@ -460,6 +596,15 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     align-items: center;
+
+    // Los encabezados numéricos heredan white-space:nowrap y se desbordan
+    // montándose sobre la columna vecina (p. ej. Total sobre Subtotal).
+    // En la fila de encabezado permitimos wrap para que cada rótulo quepa.
+    span {
+      white-space: normal;
+      line-height: 1.2;
+      padding-top: 0;
+    }
   }
 
   .cl-prod {
@@ -520,7 +665,7 @@
     padding-top: 6px;
   }
 
-  // ---- Desglose numérico de solo lectura (ClickUp wdu9v75qpz) ----
+  // ---- Desglose numérico de solo lectura ----
   .cl-bruto,
   .cl-desc-monto,
   .cl-sin-iva,
@@ -653,21 +798,48 @@
   }
 }
 
+// Inputs pequeños de la tabla de líneas (mantener compactos, no heredar el padding grande de .cot-field)
+.cot-line-row .form-control-sm,
+.cot-line-row .form-select-sm {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 13px;
+  background: #fff;
+}
+
 // ============ COLUMNA LATERAL: resumen + acciones ============
 .cot-summary {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px 18px;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+  padding: 20px 22px 0;
+  overflow: hidden;
 
   .sum-row {
     display: flex;
     justify-content: space-between;
-    font-size: 13.5px;
-    padding: 5px 0;
+    font-size: 14.5px;
+    padding: 7px 0;
+    color: var(--ink2);
+    font-weight: 600;
+
+    span:last-child {
+      font-family: var(--font-head);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--ink);
+    }
 
     &.muted {
       color: var(--muted);
+
+      span:last-child {
+        font-family: var(--font-body);
+        font-size: 14px;
+        color: var(--muted);
+      }
     }
   }
 
@@ -676,66 +848,79 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    font-size: 13px;
-    padding: 5px 0;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink2);
+    padding: 9px 0;
 
     .in-pct {
       display: flex;
       align-items: center;
       border: 1px solid var(--line);
-      border-radius: 7px;
-      padding: 0 7px;
-      background: var(--surface);
-      width: 78px;
+      border-radius: 11px;
+      padding: 0 12px;
+      background: var(--canvas);
+      width: 88px;
 
       input {
         border: none;
         outline: none;
         width: 100%;
-        padding: 6px 0;
+        padding: 9px 0;
         text-align: right;
         background: none;
+        font-weight: 800;
+        color: var(--ink);
       }
 
       span {
         color: var(--muted);
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: 800;
       }
     }
   }
 
+  // Banda de Total (tinte plano lila, sin gradiente — design system D-131)
   .sum-total {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1.5px solid var(--line);
+    margin: 12px -22px 0;
+    padding: 20px 22px;
+    background: var(--primary-wash);
+    border-top: 1px solid #e2d9fb;
 
     span {
-      font-weight: 600;
-      color: var(--ink2);
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--ink);
     }
 
     strong {
-      font-family: "Plus Jakarta Sans", sans-serif;
-      font-size: 24px;
+      font-family: var(--font-head);
+      font-size: 34px;
       font-weight: 800;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
+      color: var(--primary);
+      line-height: 1;
     }
   }
 
   .sum-foot {
-    margin: 8px 0 0;
-    font-size: 12px;
-    color: var(--muted);
+    margin: 0 -22px;
+    padding: 0 22px 16px;
+    background: var(--primary-wash);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #7a6bc0;
   }
 }
 
 .cot-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 
   .cot-divider {
     height: 1px;
@@ -748,14 +933,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 9px;
   width: 100%;
-  padding: 11px 14px;
-  border-radius: 10px;
-  font-weight: 600;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-family: var(--font-body);
+  font-weight: 800;
   cursor: pointer;
   border: 1px solid transparent;
-  font-size: 14px;
+  font-size: 14.5px;
 
   &:disabled {
     opacity: 0.55;
@@ -765,15 +951,16 @@
   &.primary {
     background: var(--primary);
     color: #fff;
+    box-shadow: 0 8px 20px rgba(108, 76, 224, 0.3);
 
     &:hover:not(:disabled) {
-      background: var(--primary-ink);
+      filter: brightness(1.05);
     }
   }
 
   &.ghost {
     background: var(--surface);
-    border-color: var(--line);
+    border-color: #e4e5ee;
     color: var(--ink2);
 
     &:hover:not(:disabled) {
@@ -782,21 +969,27 @@
   }
 
   &.wa {
-    background: #25d366;
-    color: #063d24;
+    background: var(--money-wash);
+    color: var(--money);
+    border-color: #cbebd8;
+
+    &:hover:not(:disabled) {
+      filter: brightness(0.98);
+    }
   }
 
   &.light {
-    background: var(--line2);
-    color: var(--ink2);
+    background: transparent;
+    color: var(--muted2);
+    font-weight: 800;
 
     &:hover:not(:disabled) {
-      background: var(--line);
+      color: var(--ink2);
     }
   }
 }
 
-// ============ DOCUMENTO (vista previa + PDF) ============
+// ============ DOCUMENTO (vista previa + PDF) — preservado sin cambios ============
 .cot-doc {
   background: #fff;
   color: var(--ink);
