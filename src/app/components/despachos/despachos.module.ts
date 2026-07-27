@@ -60,6 +60,7 @@ import { ZonaGestionModalComponent } from "./components/zona-gestion-modal/zona-
 
 // Componentes de Enviame.io y Tracking Multiprovider
 import { EnviameRatesModalComponent } from "./components/enviame/rates-modal/enviame-rates-modal.component";
+import { CerezaCarrierModalComponent } from "./components/cereza/carrier-modal/cereza-carrier-modal.component";
 import { EnviameCancelModalComponent } from "./components/enviame/cancel-modal/enviame-cancel-modal.component";
 import { TrackingDetailsModalComponent } from "./components/enviame/tracking-details/tracking-details-modal.component";
 import { OsmosisOrderExtrasComponent } from "./components/osmosis-order-extras/osmosis-order-extras.component";
@@ -142,6 +143,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     ZonaGestionModalComponent,
     // Componentes de Enviame.io y Tracking Multiprovider
     EnviameRatesModalComponent,
+    CerezaCarrierModalComponent,
     EnviameCancelModalComponent,
     TrackingDetailsModalComponent,
     OsmosisOrderExtrasComponent,

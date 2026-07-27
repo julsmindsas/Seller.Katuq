@@ -8,6 +8,7 @@ import { VentasService } from "../../../../shared/services/ventas/ventas.service
 import { IntegrationsService, Integration, IntegrationCategory } from '../../../integrations/integrations.service';
 import { DialogService } from 'primeng/dynamicdialog';
 import { EnviameRatesModalComponent } from '../enviame/rates-modal/enviame-rates-modal.component';
+import { CerezaCarrierModalComponent } from '../cereza/carrier-modal/cereza-carrier-modal.component';
 import { DispatchRulesService } from '../../services/dispatch-rules.service';
 import Swal from "sweetalert2";
 
@@ -2549,6 +2550,14 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       provider: selectedIntegration?.provider || selectedIntegration?.type
     });
 
+    // Guía Cereza: no cotiza, pero exige elegir transportadora (su API pide
+    // carrier_code desde el 2026-07-21). La ciudad la resuelve el backend desde
+    // el pedido, así que el operador solo escoge con qué transportadora sale.
+    if (this.selectedTransporter === 'osmosis') {
+      this.abrirModalCerezaParaTransportadora();
+      return;
+    }
+
     // Enviame siempre requiere modal de cotización, independientemente de isModalRate
     if (this.selectedTransporter === 'enviame' || selectedIntegration?.isModalRate === true) {
       if (this.selectedTransporter === 'enviame') {
@@ -2577,6 +2586,112 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
         this.isSaving = false;
       });
     }
+  }
+
+  /**
+   * Guía Cereza: elegir transportadora y despachar.
+   *
+   * A diferencia de Enviame no hay cotización — Cereza despacha desde sus
+   * bodegas y solo necesita saber con qué transportadora sale (`carrier_code`).
+   * El destino se resuelve en el backend con la ciudad del pedido.
+   */
+  private abrirModalCerezaParaTransportadora(): void {
+    if (!this.pedidosSeleccionados || this.pedidosSeleccionados.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin pedidos',
+        text: 'Agrega al menos un pedido antes de despachar con Guía Cereza.',
+        confirmButtonText: 'Entendido'
+      });
+      this.isSaving = false;
+      return;
+    }
+
+    const modalRef = this.dialogService.open(CerezaCarrierModalComponent, {
+      data: { pedidos: this.pedidosSeleccionados },
+      header: 'Elige la transportadora',
+      width: '520px',
+      modal: true,
+      dismissableMask: false,
+      closeOnEscape: true,
+      styleClass: 'cereza-carrier-modal'
+    });
+
+    // El operador ya puede interactuar: no dejamos el botón bloqueado detrás.
+    this.isSaving = false;
+
+    modalRef.onClose.pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (!result?.confirmed || !result?.carrierCode) {
+        return; // canceló
+      }
+      this.despacharConCereza(result.carrierCode, result.carrierName);
+    });
+  }
+
+  /**
+   * Envía los pedidos seleccionados a Cereza con la transportadora elegida.
+   */
+  private despacharConCereza(carrierCode: string, carrierName: string): void {
+    this.isSaving = true;
+
+    const payload = {
+      companyId: this.getCompanyId(),
+      provider: 'osmosis',
+      shippingOrder: {
+        nroShippingOrder: this.nroShippingOrder || 'TEMP',
+        fecha: this.ordenEnvioForm.get('fechaFin')?.value || new Date(),
+        metodoEnvio: 'osmosis'
+      },
+      // Cada pedido lleva su transportadora: el backend la usa como carrier_code
+      // y, si no viniera, caería en la configurada por defecto de la empresa.
+      shipments: this.pedidosSeleccionados.map((pedido) => ({
+        pedido,
+        options: { carrierCode }
+      })),
+      globalOptions: {}
+    };
+
+    this.logisticaService.createShipment(payload).subscribe({
+      next: (response: any) => {
+        this.isSaving = false;
+
+        const resultados: any[] = response?.results || [];
+        const fallidos = resultados.filter((r) => r && r.success === false);
+        const exitosos = resultados.length - fallidos.length;
+
+        if (fallidos.length > 0) {
+          const detalle = fallidos
+            .map((r) => `<li><b>${r.nroPedido || 'pedido'}</b>: ${r.error || r.message || 'no se pudo despachar'}</li>`)
+            .join('');
+          Swal.fire({
+            icon: exitosos > 0 ? 'warning' : 'error',
+            title: exitosos > 0
+              ? `${exitosos} despachado(s), ${fallidos.length} con problema`
+              : 'No se pudo despachar',
+            html: `<div style="text-align:left"><ul>${detalle}</ul></div>`,
+            confirmButtonText: 'Entendido'
+          });
+          return;
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Despacho enviado!',
+          text: `Los pedidos salieron a Guía Cereza con ${carrierName}.`,
+          confirmButtonText: 'Listo'
+        }).then(() => this.closeModal());
+      },
+      error: (error: any) => {
+        this.isSaving = false;
+        console.error('Error al despachar con Cereza:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al despachar',
+          text: error?.error?.message || error?.message || 'No se pudo enviar el despacho a Guía Cereza.',
+          confirmButtonText: 'Entendido'
+        });
+      }
+    });
   }
 
   /**

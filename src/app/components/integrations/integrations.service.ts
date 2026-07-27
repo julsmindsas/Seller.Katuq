@@ -1636,4 +1636,28 @@ export class IntegrationsService {
       { headers: this.getApiHeaders() },
     );
   }
+
+  /**
+   * Transportadoras de Guía Cereza para elegir al despachar. Cereza exige el
+   * `carrier_code` al crear la orden; la ciudad se resuelve sola desde el
+   * pedido, así que esto es lo único que el operador escoge.
+   *
+   * `defaultCarrierCode` es la que la empresa tiene configurada — el modal la
+   * preselecciona para que despachar siga siendo un clic.
+   * Backend: GET /v1/osmosis/catalogs/carriers (cacheado 30 min)
+   */
+  getCerezaCarriers(): Observable<{
+    success: boolean;
+    carriers: { code: string; name: string }[];
+    defaultCarrierCode?: string | null;
+  }> {
+    return this.http.get<{
+      success: boolean;
+      carriers: { code: string; name: string }[];
+      defaultCarrierCode?: string | null;
+    }>(
+      `${environment.urlApi}/v1/osmosis/catalogs/carriers`,
+      { headers: this.getApiHeaders() },
+    );
+  }
 }

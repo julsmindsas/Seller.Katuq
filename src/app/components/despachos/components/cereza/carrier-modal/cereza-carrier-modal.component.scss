@@ -1,0 +1,207 @@
+// Tema canónico (openspec/specs/design-system/spec.md): acento morado, tinta,
+// superficies lila, plano sin gradientes, labels UPPERCASE muted.
+$cz-accent: #5F3FE0;
+$cz-accent-2: #7C5CFF;
+$cz-ink: #211F3A;
+$cz-muted: #8f8bab;
+$cz-line: #ececf4;
+$cz-chip-bg: #f5f4fa;
+$cz-chip-border: #e9e7f3;
+
+.cz-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: $cz-ink;
+}
+
+/* ---- Estados (cargando / error) ---- */
+.cz-estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 34px 18px;
+  text-align: center;
+  color: $cz-muted;
+  font-size: 12.5px;
+
+  i { font-size: 22px; color: $cz-accent; }
+
+  &--error {
+    .cz-estado__icono {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: #FDECEC;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      i { color: #D64545; font-size: 26px; }
+    }
+    p { color: $cz-ink; }
+  }
+}
+
+/* ---- Encabezado ---- */
+.cz-encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cz-label {
+  display: block;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  color: $cz-muted;
+}
+
+.cz-sub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: $cz-muted;
+}
+
+.cz-chip {
+  flex: none;
+  background: #efe9ff;
+  border: 1px solid $cz-chip-border;
+  color: $cz-accent;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---- Buscador ---- */
+.cz-buscador {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  i {
+    position: absolute;
+    left: 12px;
+    color: $cz-muted;
+    font-size: 13px;
+  }
+
+  input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px 0 34px;
+    border-radius: 10px;
+    border: 1px solid $cz-chip-border;
+    background: $cz-chip-bg;
+    color: $cz-ink;
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color .15s ease;
+
+    &:focus { border-color: $cz-accent-2; }
+    &::placeholder { color: $cz-muted; }
+  }
+}
+
+/* ---- Lista ---- */
+.cz-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.cz-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s ease, border-color .15s ease;
+
+  &:hover { background: #faf9ff; }
+
+  &.is-active {
+    background: rgba(124, 92, 255, .09);
+    border-color: #d9cffb;
+  }
+
+  &__radio i {
+    font-size: 16px;
+    color: $cz-muted;
+  }
+  &.is-active &__radio i { color: $cz-accent; }
+
+  &__nombre {
+    flex: 1;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  &__codigo {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1E6FD9;
+  }
+}
+
+.cz-vacio {
+  padding: 22px 8px;
+  text-align: center;
+  font-size: 12.5px;
+  color: $cz-muted;
+}
+
+/* ---- Pie ---- */
+.cz-pie {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid $cz-line;
+}
+
+.cz-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 11px;
+  padding: 9px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease, box-shadow .15s ease;
+
+  &--ghost {
+    background: #fff;
+    border: 1px solid #e4e2ef;
+    color: #5b5878;
+    &:hover { background: $cz-chip-bg; }
+  }
+
+  &--primario {
+    background: $cz-accent;
+    border: 1px solid $cz-accent;
+    color: #fff;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+    &:hover:not(:disabled) { background: #4a2fc0; }
+    &:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  }
+}
