@@ -649,9 +649,12 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   canCancelEnviameShipment(pedido: Pedido): boolean {
     if (!this.isEnviameShipment(pedido)) return false;
 
-    // Check if we have shipping tracking information
-    const shippingNumber = pedido.shippingOrder;
-    if (!shippingNumber) return false;
+    // Sin el id del envío en Enviame no hay nada que cancelar contra su API.
+    // Antes se validaba `shippingOrder` (consecutivo interno de Katuq), así que
+    // el botón salía en pedidos sin datos del envío y la cancelación fallaba.
+    const envio: any = (pedido as any).shippment || {};
+    const shipmentId = envio.shipmentId ?? envio.id;
+    if (!shipmentId) return false;
 
     // Use helper to check cancellation possibility based on current status
     const currentStatus = pedido.estadoProceso?.toString();
@@ -719,7 +722,11 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    const trackingNumber = pedido.shippingOrder;
+    // Guía real del envío para el título; `shippingOrder` es el consecutivo
+    // interno de Katuq y confundía al operador (mismo criterio que la descarga
+    // de etiqueta, que ya usaba shippment.trackingNumber).
+    const envio: any = (pedido as any).shippment || {};
+    const trackingNumber = envio.trackingNumber || pedido.shippingOrder;
 
     const ref = this.dialogService.open(EnviameCancelModalComponent, {
       header: `Cancelar Envío Enviame.io - ${trackingNumber}`,

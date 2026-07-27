@@ -103,10 +103,27 @@ export class EnviameCancelModalComponent implements OnInit {
       finalReason = selectedReason ? selectedReason.label : formData.reason;
     }
 
+    // El backend cancela contra la API de Enviame con el id del envío
+    // (`/deliveries/{shipmentId}/cancel`). Antes se enviaba `shippingOrder`, que
+    // es el consecutivo interno de Katuq, y encima bajo el nombre
+    // `trackingNumber`: el backend nunca recibía `shipmentId` y respondía 400.
+    const envio = this.pedido?.shippment || {};
+    const shipmentId = envio.shipmentId ?? '';
+
+    if (!shipmentId) {
+      this.cancelling = false;
+      this.toastr.error(
+        'Este pedido no tiene guardado el identificador del envío de Enviame, así que no se puede cancelar desde acá.',
+        'Falta el identificador del envío'
+      );
+      return;
+    }
+
     const cancelRequest: EnviameCancelRequest = {
       companyId: this.companyId,
       provider: 'enviame',
-      trackingNumber: this.pedido.shippingOrder || '',
+      shipmentId,
+      trackingNumber: envio.trackingNumber || '',
       reason: finalReason,
       options: {
         notes: formData.notes,

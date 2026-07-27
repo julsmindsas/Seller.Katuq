@@ -314,10 +314,18 @@ export class LogisticaServiceV2 extends BaseService {
      * Cancelar envío creado
      * @param payload Datos para cancelación
      */
+    /**
+     * Cancela un envío en el proveedor logístico.
+     *
+     * `shipmentId` es el identificador DEL PROVEEDOR (para Enviame,
+     * `pedido.shippment.shipmentId`), que es lo que el backend exige. El
+     * `trackingNumber` (guía del transportador) viaja solo como referencia.
+     */
     cancelShipment(payload: {
         companyId: string;
         provider: string;
-        trackingNumber: string;
+        shipmentId: string | number;
+        trackingNumber?: string;
         reason?: string;
         options?: any;
     }): Observable<any> {

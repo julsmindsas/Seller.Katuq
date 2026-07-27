@@ -178,7 +178,14 @@ export interface EnviameCreateShipmentResponse {
 export interface EnviameCancelRequest {
   companyId: string;
   provider: string;
-  trackingNumber: string;
+  /**
+   * Identificador del envío EN ENVIAME (`pedido.shippment.shipmentId`), que es
+   * lo que el backend usa para llamar a su API (`/deliveries/{id}/cancel`).
+   * No confundir con `shippingOrder`, que es el consecutivo interno de Katuq.
+   */
+  shipmentId: string | number;
+  /** Guía del transportador. Informativa: sirve para mostrarla y auditar. */
+  trackingNumber?: string;
   reason?: string;
   options?: any;
 }

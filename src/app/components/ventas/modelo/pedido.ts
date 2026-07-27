@@ -188,7 +188,20 @@ export interface TrackingEvent {
 }
 
 export interface Shippment {
+  /**
+   * Identificador del envío EN EL PROVEEDOR (Enviame lo llama shipmentId). Es
+   * el que se usa para cancelar o rastrear contra su API — no confundir con
+   * `pedido.shippingOrder`, que es el consecutivo interno de Katuq.
+   */
+  shipmentId?: number | string;
+  /** Guía del transportador final (Coordinadora, Servientrega...). */
   trackingNumber?: string;
+  /** URL del PDF de la etiqueta. */
+  labelPdf?: string;
+  /** Transportador que realmente lleva el paquete. */
+  carrier?: string;
+  /** Servicio contratado (ecommerce, std...). */
+  service?: string;
   status?: string;
   canCancel?: boolean;
   canTrack?: boolean;
