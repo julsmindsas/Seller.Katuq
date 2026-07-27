@@ -8,6 +8,7 @@ import { VentasService } from '../../../../shared/services/ventas/ventas.service
 import { EstadoProceso } from '../../../ventas/modelo/pedido';
 import { DialogService } from 'primeng/dynamicdialog';
 import { EnviameRatesModalComponent } from '../enviame/rates-modal/enviame-rates-modal.component';
+import { CerezaCarrierModalComponent } from '../cereza/carrier-modal/cereza-carrier-modal.component';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -63,6 +64,8 @@ export class OrdenesDespachoV2Component implements OnInit {
 
   // Modal específico de opciones Enviame
   showEnviameOptionsModal: boolean = false;
+  /** Transportadora elegida para el despacho por Guía Cereza (solo ese proveedor). */
+  cerezaCarrierCode: string | null = null;
   enviameSelectedOption: 'quote' | 'other' | '' = '';
   showAlternativeTransporters: boolean = false;
 
@@ -316,6 +319,7 @@ export class OrdenesDespachoV2Component implements OnInit {
     if (this.isTransportadoraOrder(order)) {
       this.selectedOrderForDispatch = order;
       this.selectedTransporter = '';
+      this.cerezaCarrierCode = null; // no arrastrar la elección de otro despacho
       this.showTransporterModal = true;
     } else {
       this.onDispatchOrder.emit(order);
@@ -642,8 +646,44 @@ export class OrdenesDespachoV2Component implements OnInit {
       return;
     }
 
+    // Guía Cereza exige carrier_code al crear la orden: el operador elige con
+    // qué transportadora sale. El destino lo resuelve el backend desde el
+    // pedido, así que no se le pregunta nada más.
+    if (this.selectedTransporter === 'osmosis') {
+      this.showTransporterModal = false;
+      this.elegirTransportadoraCereza();
+      return;
+    }
+
     // Flujo normal para otros transportadores (crear shipment)
     this.createShipmentDirectly();
+  }
+
+  /**
+   * Abre la selección de transportadora de Guía Cereza y, al confirmar,
+   * despacha con la elegida.
+   */
+  private elegirTransportadoraCereza(): void {
+    const modalRef = this.dialogService.open(CerezaCarrierModalComponent, {
+      data: { pedidos: this.selectedOrderForDispatch?.pedidos || [] },
+      header: 'Elige la transportadora',
+      width: '520px',
+      modal: true,
+      dismissableMask: false,
+      closeOnEscape: true,
+      styleClass: 'cereza-carrier-modal'
+    });
+
+    modalRef.onClose.subscribe((result: any) => {
+      if (!result?.confirmed || !result?.carrierCode) {
+        // Canceló: se reabre la selección de transportadora para no dejarlo
+        // en un limbo sin saber qué pasó con el despacho.
+        this.showTransporterModal = true;
+        return;
+      }
+      this.cerezaCarrierCode = result.carrierCode;
+      this.createShipmentDirectly();
+    });
   }
 
   /**
@@ -852,6 +892,9 @@ export class OrdenesDespachoV2Component implements OnInit {
       },
       options: {
         normalizeResponse: false,
+        // Solo aplica a Guía Cereza; los demás proveedores lo ignoran. Si no
+        // viene, el backend usa la transportadora configurada para la empresa.
+        ...(this.cerezaCarrierCode ? { carrierCode: this.cerezaCarrierCode } : {}),
       },
     };
 
