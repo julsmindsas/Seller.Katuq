@@ -367,15 +367,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
         this.guardarFiltros();
         const trimmed = texto?.trim();
         if (trimmed && trimmed.length >= 2) {
-          return this.service.quickSearchProducts(trimmed, 100, this.filtros.searchBy);
+          return this.service.quickSearchProducts(trimmed, this.pageSize, this.filtros.searchBy, this.currentPage);
         }
         return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, undefined, this.sortField ?? undefined, this.sortOrder);
       }),
       takeUntil(this.destroy$)
     ).subscribe({
       next: (response: any) => {
-        if (response?.products && !response?.pagination) {
-          // Respuesta de quickSearch
+        if (response?.searchBy !== undefined) {
+          // Respuesta de quickSearch (identificada por el campo searchBy, exclusivo de este endpoint)
           let products: any[] = response.products || [];
           if (this.filtros.estado === 'activo') products = products.filter(p => p.exposicion?.activar === true);
           else if (this.filtros.estado === 'inactivo') products = products.filter(p => p.exposicion?.activar === false);
@@ -386,8 +386,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
           const normalized = this.normalizeProducts(products);
           this.temp = [...normalized];
           this.rows = normalized;
-          this.totalItems = normalized.length;
-          this.totalPages = 1;
+          this.totalItems = response.pagination?.totalItems ?? normalized.length;
+          this.totalPages = response.pagination?.totalPages ?? 1;
           this.lastDocId = null;
         } else {
           // Respuesta de getProductsFiltered
@@ -475,8 +475,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
     if (this.filtros.tipoProducto) chips.push({ label: `Tipo: ${this.filtros.tipoProducto}`, key: 'tipoProducto' });
     if (this.filtros.precioDesde != null) chips.push({ label: `Desde $${this.filtros.precioDesde}`, key: 'precioDesde' });
     if (this.filtros.precioHasta != null) chips.push({ label: `Hasta $${this.filtros.precioHasta}`, key: 'precioHasta' });
-    if (this.filtros.requiereProduccion) chips.push({ label: `Producción: ${this.filtros.requiereProduccion === 'si' ? 'Sí' : 'No'}`, key: 'requiereProduccion' });
-    if (this.filtros.inventariable) chips.push({ label: `Inventariable: ${this.filtros.inventariable === 'si' ? 'Sí' : 'No'}`, key: 'inventariable' });
+    if (this.filtros.requiereProduccion) chips.push({ label: `Producción: ${this.filtros.requiereProduccion === 'true' ? 'Sí' : 'No'}`, key: 'requiereProduccion' });
+    if (this.filtros.inventariable) chips.push({ label: `Inventariable: ${this.filtros.inventariable === 'true' ? 'Sí' : 'No'}`, key: 'inventariable' });
     if (this.filtros.ultimaEdicion) chips.push({ label: `Edición: ${this.filtros.ultimaEdicion}`, key: 'ultimaEdicion' });
     if (this.filtros.completitud === 'completo') chips.push({ label: 'Completos', key: 'completitud' });
     if (this.filtros.completitud === 'parcial') chips.push({ label: 'Parciales', key: 'completitud' });
@@ -594,13 +594,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
     const texto = this.filtros.texto?.trim();
     if (texto && texto.length >= 2) {
-      // Usar quick search indexado (prefix search por referencia + título)
-      // Evita el limit(500) in-memory que perdía productos como ALM-804
-      this.service.quickSearchProducts(texto, 100, this.filtros.searchBy)
+      // Usar quick search indexado (búsqueda por campo vía searchBy).
+      // Paginado real (page/pageSize) — antes topaba en 100 resultados y
+      // fijaba totalPages=1, dejando el paginador inutilizable.
+      this.service.quickSearchProducts(texto, this.pageSize, this.filtros.searchBy, this.currentPage)
         .subscribe({
           next: (response: any) => {
             let products: any[] = response.products || [];
-            // Aplicar filtros adicionales activos en memoria
+            // Aplicar filtros adicionales activos en memoria (sobre la página recibida)
             if (this.filtros.estado === 'activo') {
               products = products.filter(p => p.exposicion?.activar === true);
             } else if (this.filtros.estado === 'inactivo') {
@@ -618,8 +619,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
             const normalized = this.normalizeProducts(products);
             this.temp = [...normalized];
             this.rows = normalized;
-            this.totalItems = normalized.length;
-            this.totalPages = 1;
+            this.totalItems = response.pagination?.totalItems ?? normalized.length;
+            this.totalPages = response.pagination?.totalPages ?? 1;
             this.lastDocId = null;
             this.cargando = false;
           },

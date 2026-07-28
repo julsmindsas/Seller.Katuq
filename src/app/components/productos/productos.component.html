@@ -231,14 +231,14 @@
                             <select class="fs-select" [class.fs-active]="filtros.requiereProduccion"
                                 [(ngModel)]="filtros.requiereProduccion" (change)="onFiltroChange()">
                                 <option value="">Producción</option>
-                                <option value="si">Requiere prod.</option>
-                                <option value="no">Sin producción</option>
+                                <option value="true">Requiere prod.</option>
+                                <option value="false">Sin producción</option>
                             </select>
                             <select class="fs-select" [class.fs-active]="filtros.inventariable"
                                 [(ngModel)]="filtros.inventariable" (change)="onFiltroChange()">
                                 <option value="">Inventariable</option>
-                                <option value="si">Sí</option>
-                                <option value="no">No</option>
+                                <option value="true">Sí</option>
+                                <option value="false">No</option>
                             </select>
                             <select class="fs-select" [class.fs-active]="filtros.aceptaAdiciones"
                                 [(ngModel)]="filtros.aceptaAdiciones" (change)="onFiltroChange()">

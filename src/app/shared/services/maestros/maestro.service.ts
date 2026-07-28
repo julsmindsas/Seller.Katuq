@@ -235,11 +235,12 @@ export class MaestroService {
   public bulkPatchProductos(ids: string[], accion: 'activar' | 'desactivar' | 'disponible' | 'agotado' | 'eliminar'): Observable<any> {
     return this.http.patch<any>(this.urlBase + '/v1/productos/bulk-patch', { ids, accion }, this.httpOptions);
   }
-  quickSearchProducts(q: string, limit: number = 50, searchBy: string = 'referencia'): Observable<any> {
+  quickSearchProducts(q: string, limit: number = 50, searchBy: string = 'referencia', page: number = 1): Observable<any> {
     const params = new HttpParams()
       .set('q', q.trim())
       .set('limit', limit.toString())
-      .set('searchBy', searchBy);
+      .set('searchBy', searchBy)
+      .set('page', page.toString());
     return this.http.get<any>(this.urlBase + '/v1/productos/search/quick', { params });
   }
 
