@@ -243,7 +243,7 @@ export class MaestroService {
     return this.http.get<any>(this.urlBase + '/v1/productos/search/quick', { params });
   }
 
-  getProductsFiltered(filtros: any, pageSize: number, currentPage: number, lastDocId?: string): Observable<any> {
+  getProductsFiltered(filtros: any, pageSize: number, currentPage: number, lastDocId?: string, sortField?: string, sortOrder?: number): Observable<any> {
     let params = new HttpParams()
       .set('page', currentPage.toString())
       .set('pageSize', pageSize.toString());
@@ -267,6 +267,7 @@ export class MaestroService {
     if (filtros.aceptaCalendario) params = params.set('aceptaCalendario', filtros.aceptaCalendario);
     if (filtros.permitePrecioManual) params = params.set('permitePrecioManual', filtros.permitePrecioManual);
     if (lastDocId) params = params.set('lastDocId', lastDocId);
+    if (sortField) params = params.set('sortField', sortField).set('sortOrder', String(sortOrder ?? 1));
 
     return this.http.get<any>(this.urlBase + '/v1/productos/all', { params });
   }

@@ -41,6 +41,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
   totalItems = 0;
   totalPages = 0;
   lastDocId: string | null = null;
+  sortField: string | null = null;
+  sortOrder: number = 1;
 
   userRol: any;
   userNit: any;
@@ -215,6 +217,36 @@ export class ProductosComponent implements OnInit, OnDestroy {
     return col ? col.visible : true;
   }
 
+  // Ordena en el cliente los resultados de quickSearch (ya están todos en
+  // memoria, no hay round-trip al backend para esa rama). Misma whitelist
+  // de campos que SORTABLE_FIELDS en controllers/productos.js#getAll.
+  private ordenarProductos(products: any[]): any[] {
+    if (!this.sortField) return products;
+    const dir = this.sortOrder === -1 ? -1 : 1;
+    const getVal = (row: any): any => {
+      switch (this.sortField) {
+        case 'crearProducto.titulo': return (row.crearProducto?.titulo || '').toLowerCase();
+        case 'identificacion.referencia': return (row.identificacion?.referencia || '').toLowerCase();
+        case 'categorias.label': return (row.categorias?.label || '').toLowerCase();
+        case 'exposicion.activar': return !!row.exposicion?.activar;
+        case 'exposicion.disponible': return !!row.exposicion?.disponible;
+        case 'crearProducto.paraProduccion': return !!row.crearProducto?.paraProduccion;
+        case 'precio.precioUnitarioConIva': return row.precio?.precioUnitarioConIva ?? 0;
+        case 'date_edit': return row.date_edit ? new Date(row.date_edit).getTime() : 0;
+        default: return null;
+      }
+    };
+    return [...products].sort((a, b) => {
+      const av = getVal(a);
+      const bv = getVal(b);
+      let cmp: number;
+      if (typeof av === 'string') cmp = av.localeCompare(bv);
+      else if (typeof av === 'boolean') cmp = (av === bv) ? 0 : (av ? 1 : -1);
+      else cmp = (av ?? 0) - (bv ?? 0);
+      return cmp * dir;
+    });
+  }
+
   private normalizeProducts(products: any[]): any[] {
     return products.map(p => {
       if (p.categorias && typeof p.categorias === 'string') {
@@ -337,7 +369,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
         if (trimmed && trimmed.length >= 2) {
           return this.service.quickSearchProducts(trimmed, 100, this.filtros.searchBy);
         }
-        return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage);
+        return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, undefined, this.sortField ?? undefined, this.sortOrder);
       }),
       takeUntil(this.destroy$)
     ).subscribe({
@@ -350,6 +382,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
           if (this.filtros.disponibilidad === 'disponible') products = products.filter(p => p.exposicion?.disponible === true);
           else if (this.filtros.disponibilidad === 'agotado') products = products.filter(p => p.exposicion?.disponible === false);
           if (this.filtros.tipoProducto) products = products.filter(p => p.crearProducto?.tipoProducto === this.filtros.tipoProducto);
+          products = this.ordenarProductos(products);
           const normalized = this.normalizeProducts(products);
           this.temp = [...normalized];
           this.rows = normalized;
@@ -380,7 +413,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
         this.resetPaginacion();
         this.cargando = true;
         this.guardarFiltros();
-        return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage);
+        return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, undefined, this.sortField ?? undefined, this.sortOrder);
       }),
       takeUntil(this.destroy$)
     ).subscribe({
@@ -581,6 +614,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
             if (this.filtros.tipoProducto) {
               products = products.filter(p => p.crearProducto?.tipoProducto === this.filtros.tipoProducto);
             }
+            products = this.ordenarProductos(products);
             const normalized = this.normalizeProducts(products);
             this.temp = [...normalized];
             this.rows = normalized;
@@ -595,7 +629,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
           }
         });
     } else {
-      this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, this.lastDocId ?? undefined)
+      this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, this.lastDocId ?? undefined, this.sortField ?? undefined, this.sortOrder)
         .subscribe({
           next: (response: any) => {
             const normalized = this.normalizeProducts(response.products);
@@ -760,11 +794,19 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   onPageChange(event: any) {
     const newPageSize = event.rows;
-    const newCurrentPage = Math.floor(event.first / event.rows) + 1;
+    let newCurrentPage = Math.floor(event.first / event.rows) + 1;
+    const newSortField = event.sortField || null;
+    const newSortOrder = event.sortOrder === -1 ? -1 : 1;
 
-    if (newPageSize !== this.pageSize || newCurrentPage !== this.currentPage) {
+    const sortChanged = newSortField !== this.sortField || newSortOrder !== this.sortOrder;
+    if (sortChanged) newCurrentPage = 1;
+
+    if (newPageSize !== this.pageSize || newCurrentPage !== this.currentPage || sortChanged) {
       this.pageSize = newPageSize;
       this.currentPage = newCurrentPage;
+      this.sortField = newSortField;
+      this.sortOrder = newSortOrder;
+      this.lastDocId = null;
       this.cargarConFiltros();
     }
   }
