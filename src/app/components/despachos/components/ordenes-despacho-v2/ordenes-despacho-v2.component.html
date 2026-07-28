@@ -372,89 +372,94 @@
 </div>
 
 <!-- Modal de transportadores (copiado del original) -->
-<div class="modal-overlay" *ngIf="showTransporterModal" (click)="closeTransporterModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <div class="modal-header-custom">
-      <h5>{{ 'Seleccionar Transportador' | translate }}</h5>
-      <button type="button" class="btn-close-custom" (click)="closeTransporterModal()">
+<div class="modal-overlay goe-tr-overlay" *ngIf="showTransporterModal" (click)="closeTransporterModal()">
+  <div class="goe-tr" (click)="$event.stopPropagation()">
+
+    <!-- header -->
+    <div class="goe-tr__head">
+      <span class="goe-tr__icon"><i class="pi pi-truck"></i></span>
+      <div class="goe-tr__title-wrap">
+        <div class="goe-tr__title">{{ 'Seleccionar Transportador' | translate }}</div>
+        <div class="goe-tr__sub">
+          <ng-container *ngIf="selectedOrderForDispatch?.nroShippingOrder">
+            Orden <b>#{{ selectedOrderForDispatch?.nroShippingOrder }}</b> ·
+          </ng-container>
+          requiere transportadora externa
+        </div>
+      </div>
+      <button type="button" class="goe-close" (click)="closeTransporterModal()">
         <i class="pi pi-times"></i>
       </button>
     </div>
-    
-    <div class="modal-body-custom">
-      <div class="mb-3">
-        <div class="alert alert-info border-0 mb-4">
-          <div class="d-flex align-items-center">
-            <i class="pi pi-info-circle me-2"></i>
-            <div>
-              <span>{{ 'Esta orden requiere transportadora externa. Seleccione el transportador:' | translate }}</span>
-              <strong class="ms-1">{{ selectedOrderForDispatch?.nroShippingOrder }}</strong>
-            </div>
-          </div>
-        </div>
 
-        <div class="form-group">
-          <label class="form-label fw-semibold mb-3">
-            <i class="pi pi-truck me-2 text-primary"></i>
-            {{ 'Transportadoras Integradas Disponibles' | translate }}
-          </label>
+    <!-- body -->
+    <div class="goe-tr__body">
 
-          <!-- Transportadores Integrados (SOLO INTEGRADOS, NO VENDORS LOCALES) -->
-          <div class="transporters-list">
-            <div *ngFor="let transporter of availableTransporters; let i = index"
-                 class="transporter-card"
-                 [class.transporter-selected]="selectedTransporter === (transporter.provider || transporter.type)"
-                 (click)="selectedTransporter = transporter.provider || transporter.type">
-              <div class="transporter-radio">
-                <input class="form-check-input"
-                       type="radio"
-                       [(ngModel)]="selectedTransporter"
-                       [value]="transporter.provider || transporter.type"
-                       [id]="'transporter_' + i">
-              </div>
-              <div class="transporter-icon">
-                <i class="pi pi-send"></i>
-              </div>
-              <div class="transporter-content">
-                <div class="transporter-name">{{ getTransporterDisplayName(transporter) }}</div>
-                <div class="transporter-description">{{ 'Integración configurada' | translate }}</div>
-              </div>
-              <div class="transporter-status">
-                <span *ngIf="transporter.enabled" class="badge bg-success">
-                  <i class="pi pi-check me-1"></i>{{ 'Activo' | translate }}
-                </span>
-                <span *ngIf="!transporter.enabled" class="badge bg-warning text-dark">
-                  <i class="pi pi-exclamation-triangle me-1"></i>{{ 'Inactivo' | translate }}
-                </span>
-              </div>
-            </div>
+      <div class="goe-tr__section">
+        <span class="goe-tr__section-icon"><i class="pi pi-truck"></i></span>
+        <span class="goe-tr__section-title">Transportadoras integradas</span>
+        <span class="goe-count goe-count--accent">{{ availableTransporters.length }}</span>
+        <span class="goe-tr__estado" *ngIf="todasTransportadorasOperativas">
+          <span class="goe-tr__dot"></span>Todas operativas
+        </span>
+      </div>
+
+      <div class="goe-tr__list" *ngIf="availableTransporters.length > 0">
+        <div *ngFor="let transporter of availableTransporters; let i = index"
+             class="goe-tr__card"
+             [class.is-active]="selectedTransporter === (transporter.provider || transporter.type)"
+             (click)="selectedTransporter = transporter.provider || transporter.type">
+
+          <span class="goe-tr__radio"><span class="goe-tr__radio-dot"></span></span>
+
+          <span class="goe-tr__logo" [style.background]="colorTransportadora(transporter)">
+            {{ inicialTransportadora(transporter) }}
+          </span>
+
+          <div class="goe-tr__info">
+            <div class="goe-tr__name">{{ getTransporterDisplayName(transporter) }}</div>
+            <div class="goe-tr__desc">{{ 'Integración configurada' | translate }}</div>
           </div>
 
-          <!-- Mensaje si no hay transportadores configurados -->
-          <div *ngIf="availableTransporters.length === 0" class="alert alert-warning border-0 mt-3">
-            <div class="d-flex align-items-start">
-              <i class="pi pi-exclamation-triangle me-2 mt-1"></i>
-              <div>
-                <strong>No hay transportadoras configuradas</strong>
-                <p class="mb-0 mt-1 small">Por favor configura al menos una integración de transportadora en el sistema.</p>
-              </div>
-            </div>
-          </div>
+          <span class="goe-pill goe-pill--pagado" *ngIf="transporter.enabled">
+            <i class="pi pi-check"></i> Activo
+          </span>
+          <span class="goe-pill goe-pill--warn" *ngIf="!transporter.enabled">
+            <i class="pi pi-exclamation-triangle"></i> Inactivo
+          </span>
         </div>
       </div>
+
+      <!-- Sin integraciones -->
+      <div class="goe-empty" *ngIf="availableTransporters.length === 0">
+        <span class="goe-empty__icon"><i class="pi pi-exclamation-triangle"></i></span>
+        <span class="goe-empty__title">No hay transportadoras configuradas</span>
+        <span class="goe-empty__sub">Configura al menos una integración de transportadora en el sistema.</span>
+      </div>
+
+      <!-- Resumen de la elección -->
+      <div class="goe-tr__resumen" *ngIf="selectedTransporter">
+        <span class="goe-tr__resumen-icon"><i class="pi pi-check"></i></span>
+        <span>Se despachará con <b>{{ nombreTransportadoraElegida }}</b>.</span>
+      </div>
     </div>
-    
-    <div class="modal-footer-custom">
-      <button type="button" class="btn btn-secondary" (click)="closeTransporterModal()">
-        {{ 'Cancelar' | translate }}
-      </button>
-      <button type="button" 
-              class="btn btn-primary" 
-              (click)="confirmDispatchWithTransporter()"
-              [disabled]="!selectedTransporter || isDispatchingShipment">
-        <span *ngIf="isDispatchingShipment" class="spinner-border spinner-border-sm me-2"></span>
-        {{ 'Confirmar Despacho' | translate }}
-      </button>
+
+    <!-- footer -->
+    <div class="goe-tr__foot">
+      <span class="goe-tr__hint">
+        {{ selectedTransporter ? 'Listo para despachar' : 'Selecciona una transportadora para continuar' }}
+      </span>
+      <div class="goe-tr__actions">
+        <button type="button" class="goe-btn goe-btn--ghost" (click)="closeTransporterModal()">
+          {{ 'Cancelar' | translate }}
+        </button>
+        <button type="button" class="goe-btn goe-btn--primario"
+                (click)="confirmDispatchWithTransporter()"
+                [disabled]="!selectedTransporter || isDispatchingShipment">
+          <i class="pi" [ngClass]="isDispatchingShipment ? 'pi-spin pi-spinner' : 'pi-send'"></i>
+          {{ 'Confirmar Despacho' | translate }}
+        </button>
+      </div>
     </div>
   </div>
 </div>

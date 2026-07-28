@@ -131,6 +131,34 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   // Zone grouping
   groupByZona: boolean = true;
 
+  // ── Vista de tarjetas (rediseño) ──────────────────────────────────────────
+  // Reemplaza la tabla de disponibles. Lo que la tabla resolvía con filtros por
+  // columna y paginación se cubre acá con un buscador único y carga por lotes.
+
+  /**
+   * Vista de los pedidos disponibles. Tarjetas por defecto; la tabla conserva
+   * filtros por columna, selector de columnas y paginación para quien la
+   * prefiera (mismo patrón de "Todos los pedidos"). Se recuerda la elección.
+   */
+  vistaPedidos: 'tarjetas' | 'tabla' =
+    (localStorage.getItem('goe:vistaPedidos') as 'tarjetas' | 'tabla') || 'tarjetas';
+
+  cambiarVistaPedidos(vista: 'tarjetas' | 'tabla'): void {
+    this.vistaPedidos = vista;
+    try { localStorage.setItem('goe:vistaPedidos', vista); } catch { /* modo privado */ }
+  }
+
+  /** Texto del buscador: filtra por nro. pedido, cliente, ciudad y dirección. */
+  busquedaPedidos = '';
+  /** Cuántas tarjetas se muestran; sube al hacer scroll (antes: paginador). */
+  loteVisible = 30;
+  private readonly TAMANIO_LOTE = 30;
+
+  /** Paleta de avatares por inicial de cliente (misma idea que en pedidos). */
+  private readonly COLORES_AVATAR = [
+    '#7C5CFF', '#1E6FD9', '#1E874B', '#D9820A', '#8E27B0', '#0EA5A0', '#D64545', '#5A6B78',
+  ];
+
   // Modal específico de opciones Enviame
   showEnviameOptionsModal: boolean = false;
   enviameSelectedOption: 'quote' | 'other' | '' = '';
@@ -737,6 +765,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   actualizarPedidosDisponibles(): void {
     this.pedidosDisponibles = this.loadPedidosDisponibles();
+    this.recalcularVistaPedidos();
   }
 
   loadPedidosDisponibles(): Pedido[] {
@@ -922,6 +951,173 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     const ciudad = pedido.envio?.ciudad || pedido.ciudad || 'Sin ciudad';
     const zona = pedido.envio?.zonaCobro || pedido.zonaCobro || 'Sin zona';
     return `${ciudad} - ${zona}`;
+  }
+
+  // ── Datos para la vista de tarjetas ───────────────────────────────────────
+  //
+  // Se calculan UNA vez por cambio real (nueva carga de pedidos, búsqueda o
+  // lote) y se guardan en propiedades. Con getters, Angular los reevaluaba en
+  // cada ciclo de detección y devolvía arrays nuevos, así que el *ngFor
+  // destruía y recreaba las tarjetas todo el tiempo: además del costo, el botón
+  // que el operario estaba pulsando desaparecía entre el mousedown y el mouseup
+  // y el clic se perdía.
+
+  /** Disponibles que pasan el buscador (fuente del conteo y del lote). */
+  pedidosFiltrados: any[] = [];
+  /** Disponibles agrupados por zona, ya recortados al lote visible. */
+  zonasDisponibles: { nombre: string; pedidos: any[] }[] = [];
+  /** ¿Quedan pedidos sin mostrar? (sustituye al paginador) */
+  hayMasPedidos = false;
+
+  /**
+   * Rearma la vista de tarjetas. La tabla agrupaba con
+   * `rowGroupMode="subheader"`; acá se hace explícito.
+   */
+  private recalcularVistaPedidos(): void {
+    const termino = (this.busquedaPedidos || '').trim().toLowerCase();
+
+    // Mismos campos que buscaba la tabla (globalFilterFields).
+    this.pedidosFiltrados = !termino
+      ? this.pedidosDisponibles
+      : this.pedidosDisponibles.filter((p: any) =>
+        [p.nroPedido, p.clienteNombre, p.ciudadNombre, p.direccionEntregaNombre]
+          .some((valor) => String(valor ?? '').toLowerCase().includes(termino)));
+
+    const visibles = this.pedidosFiltrados.slice(0, this.loteVisible);
+    const porZona = new Map<string, any[]>();
+    visibles.forEach((p: any) => {
+      const zona = p.zonaKey || this.getZonaKey(p) || 'Sin zona';
+      if (!porZona.has(zona)) { porZona.set(zona, []); }
+      porZona.get(zona)!.push(p);
+    });
+
+    this.zonasDisponibles = Array.from(porZona.entries())
+      .map(([nombre, pedidos]) => ({ nombre, pedidos }));
+    this.hayMasPedidos = this.pedidosFiltrados.length > this.loteVisible;
+  }
+
+  /** trackBy para que Angular reutilice las tarjetas en vez de recrearlas. */
+  trackPorPedido(_i: number, pedido: any): string {
+    return pedido?.nroPedido || String(_i);
+  }
+
+  trackPorZona(_i: number, zona: { nombre: string }): string {
+    return zona?.nombre || String(_i);
+  }
+
+  /** Carga el siguiente lote al llegar al final de la lista. */
+  cargarMasPedidos(): void {
+    this.loteVisible += this.TAMANIO_LOTE;
+    this.recalcularVistaPedidos();
+  }
+
+  onBuscarPedidos(): void {
+    this.loteVisible = this.TAMANIO_LOTE; // al filtrar, se vuelve al primer lote
+    this.recalcularVistaPedidos();
+  }
+
+  limpiarBusqueda(): void {
+    this.busquedaPedidos = '';
+    this.onBuscarPedidos();
+  }
+
+  /**
+   * Valor del pedido (lo que vale la mercancía). Distinto de `faltaPorPagar`,
+   * que es lo que el mensajero debe cobrar contra entrega y da $0 cuando el
+   * pedido ya está pagado.
+   *
+   * OJO: `totalPedididoConDescuento` lleva un typo histórico en el modelo
+   * canónico y NO se corrige — es el campo real en Firestore.
+   */
+  valorPedido(pedido: any): number {
+    return Number(
+      pedido?.totalPedididoConDescuento
+      ?? pedido?.totalPedidoConDescuento
+      ?? pedido?.subtotal
+      ?? pedido?.totalPedidoSinDescuento
+      ?? 0,
+    ) || 0;
+  }
+
+  /** ¿Queda saldo por cobrar al entregar? */
+  tieneSaldoPorCobrar(pedido: any): boolean {
+    return Number(pedido?.faltaPorPagar || 0) > 0;
+  }
+
+  /** Suma del valor de los pedidos de la orden (mercancía despachada). */
+  get totalDespachado(): number {
+    return this.pedidosSeleccionados.reduce(
+      (suma: number, p: any) => suma + this.valorPedido(p), 0,
+    );
+  }
+
+  // ── Modal "Seleccionar Transportador" ─────────────────────────────────────
+
+  /** Inicial para el logo de la transportadora. */
+  inicialTransportadora(transporter: any): string {
+    const nombre = String(this.getTransporterDisplayName(transporter) || '').trim();
+    return nombre ? nombre.charAt(0).toUpperCase() : '?';
+  }
+
+  /** Color estable del logo: la misma transportadora siempre igual. */
+  colorTransportadora(transporter: any): string {
+    const clave = String(transporter?.provider || transporter?.type || '');
+    let suma = 0;
+    for (let i = 0; i < clave.length; i++) { suma += clave.charCodeAt(i); }
+    return this.COLORES_AVATAR[suma % this.COLORES_AVATAR.length];
+  }
+
+  /** ¿Todas las integraciones están habilitadas? */
+  get todasTransportadorasOperativas(): boolean {
+    return this.availableTransporters?.length > 0
+      && this.availableTransporters.every((t: any) => t.enabled);
+  }
+
+  /** Nombre de la transportadora elegida, para el resumen del modal. */
+  get nombreTransportadoraElegida(): string {
+    if (!this.selectedTransporter) { return ''; }
+    const elegida = this.availableTransporters?.find(
+      (t: any) => (t.provider || t.type) === this.selectedTransporter,
+    );
+    return elegida ? this.getTransporterDisplayName(elegida) : this.selectedTransporter;
+  }
+
+  /** Inicial del cliente para el avatar. */
+  inicialCliente(pedido: any): string {
+    const nombre = String(pedido?.clienteNombre || '').trim();
+    return nombre ? nombre.charAt(0).toUpperCase() : '?';
+  }
+
+  /** Color estable del avatar: mismo cliente, mismo color. */
+  colorAvatar(pedido: any): string {
+    const nombre = String(pedido?.clienteNombre || pedido?.nroPedido || '');
+    let suma = 0;
+    for (let i = 0; i < nombre.length; i++) { suma += nombre.charCodeAt(i); }
+    return this.COLORES_AVATAR[suma % this.COLORES_AVATAR.length];
+  }
+
+  // ── Resumen de la orden (panel derecho) ───────────────────────────────────
+
+  /** Zonas distintas cubiertas por los pedidos seleccionados. */
+  get zonasCubiertas(): number {
+    const zonas = new Set(
+      this.pedidosSeleccionados.map((p: any) => p.zonaKey || this.getZonaKey(p)),
+    );
+    return zonas.size;
+  }
+
+  /** Seleccionados cuyo pago aún no está aprobado. */
+  get pedidosPendientesPago(): number {
+    return this.pedidosSeleccionados.filter(
+      (p: any) => String(p.estadoPago || '').toLowerCase() !== 'aprobado',
+    ).length;
+  }
+
+  /** Total a cobrar de la orden (mismo criterio que el pipe de la tabla). */
+  get totalACobrar(): number {
+    return this.pedidosSeleccionados.reduce(
+      (suma: number, p: any) => suma + (Number(p.faltaPorPagar) || 0), 0,
+    );
   }
 
   addZoneGroup(zonaKey: string): void {

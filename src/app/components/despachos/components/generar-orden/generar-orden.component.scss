@@ -1086,3 +1086,570 @@ img.product-thumbnail[src^="data:image/svg"] {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border: none !important;
 }
+
+// =============================================================================
+// REDISEÑO "Generar Orden de Envío" (prefijo goe-)
+// Tema canónico de openspec/specs/design-system/spec.md — el mismo de "Todos
+// los pedidos": acento #5F3FE0, tinta #211F3A, superficies lila, plano sin
+// gradientes, labels UPPERCASE muted.
+// =============================================================================
+$goe-accent:      #5F3FE0;
+$goe-accent-2:    #7C5CFF;
+$goe-ink:         #211F3A;
+$goe-muted:       #8f8bab;
+$goe-line:        #ececf4;
+$goe-line-soft:   #f1f0f7;
+$goe-chip-bg:     #f5f4fa;
+$goe-chip-border: #e9e7f3;
+$goe-ok:          #1E874B;
+$goe-ok-bg:       #E6F7EE;
+$goe-warn:        #D9820A;
+$goe-warn-bg:     #FFF1DF;
+$goe-danger:      #D64545;
+$goe-danger-bg:   #FDECEC;
+$goe-info:        #1E6FD9;
+$goe-info-bg:     #E7F1FF;
+
+// ---- Header ----
+.goe-header {
+  display: flex; align-items: center; gap: 15px;
+  padding: 16px 22px; background: #fff; border-bottom: 1px solid $goe-line;
+
+  &__icon {
+    width: 38px; height: 38px; border-radius: 11px; flex: none;
+    background: #efe9ff; color: $goe-accent;
+    display: flex; align-items: center; justify-content: center;
+    i { font-size: 17px; }
+  }
+  &__text { flex: 1; min-width: 0; }
+  &__title {
+    margin: 0; font-size: 20px; font-weight: 800; color: $goe-ink; line-height: 1.1;
+  }
+  &__nro { color: $goe-muted; font-weight: 700; font-size: 15px; margin-left: 6px; }
+  &__sub { font-size: 12.5px; color: $goe-muted; font-weight: 700; margin-top: 2px; }
+}
+
+.goe-chip {
+  display: inline-flex; align-items: center; gap: 7px; flex: none;
+  background: $goe-chip-bg; color: $goe-muted;
+  font-weight: 800; font-size: 12.5px; padding: 8px 14px; border-radius: 999px;
+  &--ok { background: $goe-ok-bg; color: $goe-ok; }
+  i { font-size: 12px; }
+}
+
+.goe-close {
+  width: 38px; height: 38px; border-radius: 11px; flex: none;
+  background: $goe-chip-bg; border: 1px solid $goe-chip-border; color: #6B7280;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease, color .15s ease;
+  &:hover { background: $goe-danger-bg; border-color: #F6D4D2; color: $goe-danger; }
+}
+
+// ---- Segmented método de envío ----
+.goe-seg {
+  display: flex; gap: 4px; background: $goe-chip-bg;
+  border: 1px solid $goe-chip-border; border-radius: 10px; padding: 4px;
+
+  &__btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 15px; border: none; background: transparent; color: $goe-muted;
+    border-radius: 9px; cursor: pointer; font-weight: 800; font-size: 13px;
+    transition: background .15s ease, color .15s ease;
+    &:hover { color: $goe-ink; }
+    &.is-active {
+      background: #fff; color: $goe-accent;
+      box-shadow: 0 1px 3px rgba(30, 20, 80, .12);
+    }
+  }
+}
+
+// ---- Buscador ----
+.goe-search-wrap { flex: 1; min-width: 220px; }
+.goe-search {
+  position: relative; display: flex; align-items: center;
+  background: $goe-chip-bg; border: 1px solid $goe-chip-border;
+  border-radius: 10px; height: 40px; padding: 0 12px;
+  transition: border-color .15s ease;
+  &:focus-within { border-color: $goe-accent-2; }
+
+  > i { color: $goe-muted; font-size: 13px; flex: none; }
+  input {
+    flex: 1; border: none; background: transparent; outline: none;
+    padding: 0 10px; font-size: 12.5px; color: $goe-ink;
+    &::placeholder { color: $goe-muted; }
+  }
+  &__clear {
+    border: none; background: transparent; color: $goe-muted;
+    cursor: pointer; padding: 4px; display: flex;
+    &:hover { color: $goe-danger; }
+  }
+}
+
+// ---- Panel ----
+.goe-panel {
+  background: #fff; border: 1px solid $goe-line; border-radius: 16px;
+  padding: 16px 18px; margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, .04);
+
+  &--sel { background: #faf9fe; }
+
+  &__head {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 13px;
+  }
+  &__title { font-size: 16px; font-weight: 800; color: $goe-ink; }
+  &__actions { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+}
+
+.goe-count {
+  background: $goe-chip-bg; color: #52586B;
+  font-size: 11.5px; font-weight: 800; padding: 4px 11px; border-radius: 999px;
+  &--accent { background: #efe9ff; color: $goe-accent; }
+  &--warn   { background: $goe-warn-bg; color: $goe-warn; }
+  &--soft   { background: transparent; color: $goe-muted; font-weight: 700; padding-left: 0; }
+}
+
+// ---- Botones ----
+.goe-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  border-radius: 10px; padding: 8px 14px; cursor: pointer;
+  font-weight: 800; font-size: 12.5px; transition: background .15s ease, color .15s ease;
+  i { font-size: 11px; }
+
+  &--soft {
+    background: #efe9ff; color: $goe-accent; border: 1px solid #e2d9fb;
+    &:hover:not(:disabled) { background: $goe-accent; color: #fff; border-color: $goe-accent; }
+  }
+  &--ghost {
+    background: #fff; color: $goe-accent; border: 1px solid $goe-chip-border;
+    &:hover:not(:disabled) { background: $goe-accent; color: #fff; border-color: $goe-accent; }
+  }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+// ---- Zonas ----
+.goe-zonas { display: flex; flex-direction: column; gap: 16px; }
+
+.goe-zona {
+  &__head {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f3f1fb; border: 1px solid $goe-chip-border;
+    border-radius: 12px; padding: 10px 14px; margin-bottom: 9px;
+    > i { color: $goe-accent; font-size: 13px; }
+  }
+  &__name  { font-weight: 800; font-size: 13px; color: #4A3B8F; }
+  &__count {
+    background: #fff; color: $goe-accent; font-size: 11px; font-weight: 800;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  &__add { margin-left: auto; }
+}
+
+// ---- Tarjeta de pedido ----
+.goe-cards { display: flex; flex-direction: column; gap: 8px; }
+
+.goe-card {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border: 1px solid $goe-line; border-radius: 13px;
+  padding: 12px 14px; transition: border-color .15s ease, background .15s ease;
+  &:hover { border-color: #e2d9fb; background: #faf9ff; }
+
+  &--sel {
+    border-color: #e2d9fb; border-left: 4px solid $goe-accent;
+    &.is-movido { border-left-color: $goe-warn; }
+  }
+
+  &__orden {
+    font-weight: 800; font-size: 13px; color: #b7bccb; flex: none;
+  }
+  &__body { flex: 1; min-width: 0; }
+  &__row {
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  }
+  &__nro {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 700; font-size: 12.5px; color: $goe-info;
+  }
+  &__cliente { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  &__nombre { font-weight: 700; font-size: 12.5px; color: $goe-ink; }
+  &__dir {
+    display: flex; align-items: center; gap: 6px; margin-top: 5px;
+    font-size: 12px; font-weight: 600; color: $goe-muted;
+    i { font-size: 11px; color: #b7bccb; }
+  }
+  &__meta {
+    display: flex; align-items: center; gap: 12px; margin-top: 7px; flex-wrap: wrap;
+  }
+  &__actions { display: flex; flex-direction: column; gap: 6px; flex: none; }
+}
+
+.goe-avatar {
+  width: 24px; height: 24px; border-radius: 50%; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 10.5px;
+}
+
+.goe-valor { font-weight: 800; font-size: 13.5px; color: $goe-ok; }
+
+.goe-meta {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 700; color: $goe-muted;
+  i { font-size: 11px; color: #b7bccb; }
+  &.is-urgente { color: $goe-danger; i { color: $goe-danger; } }
+}
+
+// ---- Pills de estado ----
+.goe-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: .3px;
+  background: $goe-chip-bg; color: #52586B;
+  i { font-size: 9px; }
+
+  &--urgente { background: $goe-danger-bg; color: $goe-danger; }
+  &--info    { background: $goe-info-bg;   color: $goe-info; }
+  &--warn    { background: $goe-warn-bg;   color: $goe-warn; }
+
+  // Compatibilidad con getEstadoPagoClass() (bg-success / bg-warning / ...)
+  &.bg-success, &.badge-success { background: $goe-ok-bg !important;     color: $goe-ok !important; }
+  &.bg-warning, &.badge-warning { background: $goe-warn-bg !important;   color: $goe-warn !important; }
+  &.bg-danger,  &.badge-danger  { background: $goe-danger-bg !important; color: $goe-danger !important; }
+  &.bg-info,    &.badge-info    { background: $goe-info-bg !important;   color: $goe-info !important; }
+  &.text-dark { color: inherit !important; }
+}
+
+// ---- Botones de icono ----
+.goe-icon {
+  width: 34px; height: 34px; border-radius: 10px; flex: none;
+  background: $goe-chip-bg; border: 1px solid $goe-chip-border; color: $goe-muted;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+  i { font-size: 14px; }
+
+  &:hover:not(:disabled) { border-color: #e2d9fb; color: $goe-accent; }
+  &:disabled { opacity: .45; cursor: not-allowed; }
+
+  &--add {
+    background: $goe-ok-bg; border-color: #cbebd8; color: $goe-ok;
+    &:hover:not(:disabled) { background: $goe-ok; color: #fff; border-color: $goe-ok; }
+  }
+  &--remove {
+    &:hover { background: $goe-danger-bg; border-color: #f6d4d2; color: $goe-danger; }
+  }
+}
+
+// ---- Ver más (sustituye al paginador) ----
+.goe-more {
+  width: 100%; margin-top: 12px;
+  background: $goe-chip-bg; border: 1px solid $goe-chip-border; color: $goe-accent;
+  border-radius: 11px; padding: 10px; cursor: pointer;
+  font-weight: 800; font-size: 12.5px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  &:hover { background: #efe9ff; }
+}
+
+// ---- Empty states ----
+.goe-empty {
+  border: 2px dashed #e4e5ee; border-radius: 16px; padding: 34px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  background: #fbfcfe; text-align: center;
+
+  &__icon {
+    width: 52px; height: 52px; border-radius: 15px;
+    background: #f3f1fb; color: $goe-accent;
+    display: flex; align-items: center; justify-content: center;
+    i { font-size: 22px; }
+    &--ok { background: $goe-ok-bg; color: $goe-ok; }
+  }
+  &__title { font-weight: 800; font-size: 14px; color: #52586B; }
+  &__sub { font-size: 12.5px; color: $goe-muted; font-weight: 600; }
+}
+
+// ---- Resumen de la orden ----
+.goe-resumen {
+  margin-top: 14px; background: #fff;
+  border: 1px solid $goe-line; border-radius: 14px; overflow: hidden;
+
+  &__row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 11px 16px; border-bottom: 1px solid $goe-line-soft;
+    span { font-size: 13px; font-weight: 600; color: #52586B; }
+    strong {
+      font-size: 15px; font-weight: 800; color: $goe-ink;
+      &.is-warn { color: $goe-warn; }
+    }
+  }
+  &__total {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    padding: 14px 16px; background: #efe9ff; border-top: 1px solid #e2d9fb;
+    span { font-weight: 800; font-size: 14px; color: $goe-ink; }
+    strong { font-weight: 800; font-size: 22px; color: $goe-accent; line-height: 1; }
+  }
+}
+
+// ---- Footer ----
+.goe-footer-info {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  margin-right: auto;
+}
+
+.goe-footer-total {
+  &__label {
+    display: block; font-size: 10.5px; font-weight: 800; color: $goe-muted;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  &__value {
+    font-weight: 800; font-size: 22px; color: $goe-accent; line-height: 1.15;
+    small { font-size: 12.5px; font-weight: 800; color: $goe-muted; margin-left: 8px; }
+  }
+}
+
+.goe-aviso {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: $goe-chip-bg; border: 1px solid $goe-chip-border; color: $goe-muted;
+  border-radius: 11px; padding: 9px 13px; font-size: 12.5px; font-weight: 800;
+  i { font-size: 13px; }
+  &--warn { background: $goe-warn-bg; border-color: #f7e2be; color: #A9660D; }
+}
+
+@media (max-width: 768px) {
+  .goe-header { flex-wrap: wrap; }
+  .goe-chip { order: 3; width: 100%; justify-content: center; }
+  .goe-card { flex-wrap: wrap; }
+  .goe-card__actions { flex-direction: row; width: 100%; justify-content: flex-end; }
+  .goe-footer-info { width: 100%; }
+}
+
+// ---- Split de dos paneles (disponibles | orden) ----
+// Como en el diseño: lado a lado en escritorio, apilados en pantallas chicas.
+.goe-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
+  gap: 14px;
+  align-items: start;
+
+  // Cada panel scrollea por su cuenta: la lista de disponibles puede ser larga
+  // y no debe empujar el resumen de la orden fuera de la vista.
+  > div > .goe-panel {
+    max-height: calc(100vh - 330px);
+    min-height: 260px;
+    overflow-y: auto;
+  }
+
+  // El panel de la orden queda fijo al hacer scroll en la columna izquierda.
+  .seccion-pedidos-seleccionados { position: sticky; top: 0; }
+}
+
+@media (max-width: 1100px) {
+  .goe-split {
+    grid-template-columns: 1fr;
+    > div > .goe-panel { max-height: none; }
+    .seccion-pedidos-seleccionados { position: static; }
+  }
+}
+
+// ---- Toggle de vista (tarjetas / tabla) ----
+// Mismo patrón que el conmutador Panel/Tabla de "Todos los pedidos".
+.goe-viewtoggle {
+  display: flex; gap: 4px; background: $goe-chip-bg;
+  border: 1px solid $goe-chip-border; border-radius: 10px; padding: 3px;
+
+  &__btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 11px; border: none; background: transparent; color: $goe-muted;
+    border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 12px;
+    transition: background .15s ease, color .15s ease;
+    i { font-size: 12px; }
+    &:hover { color: $goe-ink; }
+    &.is-active {
+      background: #fff; color: $goe-accent;
+      box-shadow: 0 1px 3px rgba(30, 20, 80, .12);
+    }
+  }
+}
+
+// Valor de la mercancía (distinto del saldo por cobrar)
+.goe-valor-pedido {
+  font-weight: 800; font-size: 13.5px; color: $goe-ink;
+}
+
+// "Pagado": no hay nada que cobrar contra entrega
+.goe-pill--pagado {
+  background: $goe-ok-bg; color: $goe-ok;
+}
+
+// La tabla necesita todo el ancho: en esa vista el split se vuelve una columna
+.goe-tabla { margin-top: 4px; }
+
+// En vista tabla los paneles se apilan: la tabla necesita el ancho completo
+// para sus columnas y filtros.
+.goe-split--full {
+  grid-template-columns: 1fr;
+  > div > .goe-panel { max-height: none; }
+  .seccion-pedidos-seleccionados { position: static; }
+}
+
+// ---- Vista TABLA con el tema canónico ----
+// Se tematiza PrimeNG dentro del scope del componente (patrón del proyecto).
+.goe-tabla {
+  & {
+    .p-datatable {
+      font-family: inherit;
+
+      .p-datatable-thead > tr > th {
+        background: #fff;
+        border: none;
+        border-bottom: 1px solid $goe-line;
+        color: $goe-muted;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        padding: 11px 12px;
+      }
+
+      // Fila de filtros
+      .p-datatable-thead > tr:nth-child(2) > th {
+        border-bottom: 1px solid $goe-line-soft;
+        padding: 8px 10px;
+      }
+
+      .p-column-filter,
+      input.p-inputtext {
+        width: 100%;
+        height: 34px;
+        background: $goe-chip-bg;
+        border: 1px solid $goe-chip-border;
+        border-radius: 9px;
+        padding: 0 10px;
+        font-size: 12px;
+        color: $goe-ink;
+        box-shadow: none;
+        transition: border-color .15s ease;
+        &:focus { border-color: $goe-accent-2; box-shadow: none; }
+        &::placeholder { color: $goe-muted; font-weight: 600; }
+      }
+
+      .p-datatable-tbody > tr {
+        background: #fff;
+        transition: background .15s ease;
+        &:hover { background: #faf9ff !important; }
+
+        > td {
+          border: none;
+          border-bottom: 1px solid $goe-line-soft;
+          padding: 11px 12px;
+          font-size: 12.5px;
+          color: $goe-ink;
+        }
+      }
+
+      // Nro. de pedido en monospace, como en las tarjetas
+      .p-datatable-tbody > tr > td:first-child {
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-weight: 700;
+        color: $goe-info;
+      }
+
+      .p-sortable-column:focus { box-shadow: none; }
+      .p-sortable-column-icon { color: #b7bccb; font-size: 11px; }
+
+      // Paginador
+      .p-paginator {
+        background: transparent;
+        border: none;
+        padding: 12px 4px 2px;
+        color: $goe-muted;
+        font-size: 12.5px;
+        font-weight: 700;
+
+        .p-paginator-pages .p-paginator-page,
+        .p-paginator-first, .p-paginator-prev,
+        .p-paginator-next, .p-paginator-last {
+          min-width: 32px; height: 32px;
+          border-radius: 9px;
+          color: $goe-muted;
+          &:not(.p-highlight):hover { background: $goe-chip-bg; color: $goe-accent; }
+        }
+        .p-paginator-pages .p-paginator-page.p-highlight {
+          background: #efe9ff; color: $goe-accent; font-weight: 800;
+        }
+        .p-dropdown {
+          height: 32px;
+          border-radius: 9px;
+          border-color: $goe-chip-border;
+          background: $goe-chip-bg;
+        }
+      }
+    }
+
+    // Badges de estado de pago con el par semántico del tema
+    .badge {
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      &.bg-success { background: $goe-ok-bg !important;     color: $goe-ok !important; }
+      &.bg-warning { background: $goe-warn-bg !important;   color: $goe-warn !important; }
+      &.bg-danger  { background: $goe-danger-bg !important; color: $goe-danger !important; }
+      &.bg-info    { background: $goe-info-bg !important;   color: $goe-info !important; }
+      &.text-dark  { color: inherit !important; }
+    }
+
+    // Botones de acción de la fila
+    .p-button.p-button-text {
+      width: 32px; height: 32px;
+      border-radius: 9px;
+      color: $goe-muted;
+      &:enabled:hover { background: $goe-chip-bg; color: $goe-accent; }
+      &.p-button-success { color: $goe-ok; &:enabled:hover { background: $goe-ok-bg; } }
+      &.p-button-danger  { color: $goe-danger; &:enabled:hover { background: $goe-danger-bg; } }
+    }
+
+    .p-button.p-button-outlined {
+      border-radius: 9px;
+      border-color: $goe-chip-border;
+      color: $goe-accent;
+      &:enabled:hover { background: #efe9ff; border-color: #e2d9fb; }
+    }
+
+    .fecha-entrega .pi,
+    .fecha-entrega { font-weight: 700; font-size: 12px; }
+    .fecha-entrega.urgente { color: $goe-danger; }
+  }
+
+  // Encabezado de zona dentro de la tabla
+  &__zona {
+    padding: 0 0 8px !important;
+    background: transparent !important;
+    border-bottom: none !important;
+
+    .goe-zona__head { margin-bottom: 0; }
+  }
+}
+
+// Refuerzo: Bootstrap define .badge.bg-* con alta precedencia, así que se
+// apunta directo a la celda de la tabla para que gane el par semántico.
+.goe-tabla .p-datatable-tbody > tr > td {
+  .badge.bg-warning, .badge.bg-warning.text-dark {
+    background-color: $goe-warn-bg !important; color: $goe-warn !important;
+  }
+  .badge.bg-success { background-color: $goe-ok-bg !important;     color: $goe-ok !important; }
+  .badge.bg-danger  { background-color: $goe-danger-bg !important; color: $goe-danger !important; }
+  .badge.bg-info    { background-color: $goe-info-bg !important;   color: $goe-info !important; }
+  .badge.bg-secondary, .badge.bg-light {
+    background-color: $goe-chip-bg !important; color: #52586B !important;
+  }
+}
+
+// Nro. de pedido: monospace azul, igual que en las tarjetas.
+.goe-tabla .p-datatable-tbody > tr > td:first-child {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-weight: 700 !important;
+  color: $goe-info !important;
+  letter-spacing: -.2px;
+}
+
+
+@import '../../styles/transportador-modal';

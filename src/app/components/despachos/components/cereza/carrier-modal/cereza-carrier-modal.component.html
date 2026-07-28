@@ -1,75 +1,94 @@
-<div class="cz-modal">
+<!-- Mismo lenguaje del modal "Seleccionar Transportador": el contenedor y el
+     título los pone el diálogo, así que acá va solo el cuerpo y el pie. -->
+<div class="goe-tr goe-tr--embebido">
 
   <!-- Cargando -->
-  <div class="cz-estado" *ngIf="cargando">
+  <div class="goe-tr__cargando" *ngIf="cargando">
     <i class="pi pi-spin pi-spinner"></i>
     <p>Consultando transportadoras de Guía Cereza...</p>
   </div>
 
   <!-- Error -->
-  <div class="cz-estado cz-estado--error" *ngIf="!cargando && error">
-    <div class="cz-estado__icono"><i class="pi pi-exclamation-triangle"></i></div>
-    <p>{{ error }}</p>
-    <button type="button" class="cz-btn cz-btn--ghost" (click)="reintentar()">
+  <div class="goe-empty" *ngIf="!cargando && error">
+    <span class="goe-empty__icon"><i class="pi pi-exclamation-triangle"></i></span>
+    <span class="goe-empty__title">{{ error }}</span>
+    <button type="button" class="goe-btn goe-btn--ghost" (click)="reintentar()">
       <i class="pi pi-refresh"></i> Reintentar
     </button>
   </div>
 
-  <!-- Listado -->
   <ng-container *ngIf="!cargando && !error">
+    <div class="goe-tr__body">
 
-    <div class="cz-encabezado">
-      <div>
-        <span class="cz-label">Despacho por Guía Cereza</span>
-        <p class="cz-sub">
-          La ciudad de entrega se toma del pedido. Solo elige con qué transportadora sale.
+      <div class="goe-tr__section">
+        <span class="goe-tr__section-icon"><i class="pi pi-truck"></i></span>
+        <span class="goe-tr__section-title">Transportadoras de Guía Cereza</span>
+        <span class="goe-count goe-count--accent">{{ carriers.length }}</span>
+        <span class="goe-tr__estado" *ngIf="cantidadPedidos > 0">
+          {{ cantidadPedidos }} pedido{{ cantidadPedidos === 1 ? '' : 's' }}
+        </span>
+      </div>
+
+      <p class="goe-tr__nota">
+        La ciudad de entrega se toma del pedido. Solo elige con qué transportadora sale.
+      </p>
+
+      <!-- Buscador: son ~105, conviene filtrar -->
+      <div class="goe-search">
+        <i class="pi pi-search"></i>
+        <input type="text"
+               [(ngModel)]="busqueda"
+               (input)="filtrar()"
+               placeholder="Buscar transportadora..."
+               autocomplete="off" />
+        <button type="button" class="goe-search__clear" *ngIf="busqueda" (click)="busqueda = ''; filtrar()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+
+      <div class="goe-tr__list goe-tr__list--scroll">
+        <div *ngFor="let carrier of carriersFiltrados"
+             class="goe-tr__card"
+             [class.is-active]="seleccionada?.code === carrier.code"
+             (click)="seleccionar(carrier)">
+
+          <span class="goe-tr__radio"><span class="goe-tr__radio-dot"></span></span>
+
+          <span class="goe-tr__logo" [style.background]="colorCarrier(carrier)">
+            {{ carrier.name.charAt(0).toUpperCase() }}
+          </span>
+
+          <div class="goe-tr__info">
+            <div class="goe-tr__name">{{ carrier.name }}</div>
+            <div class="goe-tr__desc">Código {{ carrier.code }}</div>
+          </div>
+        </div>
+
+        <p class="goe-tr__vacio" *ngIf="carriersFiltrados.length === 0">
+          Ninguna transportadora coincide con "{{ busqueda }}"
         </p>
       </div>
-      <span class="cz-chip" *ngIf="cantidadPedidos > 0">
-        {{ cantidadPedidos }} pedido{{ cantidadPedidos === 1 ? '' : 's' }}
+
+      <!-- Resumen de la elección -->
+      <div class="goe-tr__resumen" *ngIf="seleccionada">
+        <span class="goe-tr__resumen-icon"><i class="pi pi-check"></i></span>
+        <span>Se despachará con <b>{{ seleccionada.name }}</b>.</span>
+      </div>
+    </div>
+
+    <div class="goe-tr__foot">
+      <span class="goe-tr__hint">
+        {{ seleccionada ? 'Listo para despachar' : 'Selecciona una transportadora para continuar' }}
       </span>
+      <div class="goe-tr__actions">
+        <button type="button" class="goe-btn goe-btn--ghost" (click)="cancelar()">Cancelar</button>
+        <button type="button" class="goe-btn goe-btn--primario"
+                [disabled]="!seleccionada"
+                (click)="confirmar()">
+          <i class="pi pi-send"></i>
+          Despachar
+        </button>
+      </div>
     </div>
-
-    <div class="cz-buscador">
-      <i class="pi pi-search"></i>
-      <input
-        type="text"
-        [(ngModel)]="busqueda"
-        (input)="filtrar()"
-        placeholder="Buscar transportadora..."
-        autocomplete="off" />
-    </div>
-
-    <div class="cz-lista">
-      <button
-        type="button"
-        class="cz-item"
-        *ngFor="let carrier of carriersFiltrados"
-        [class.is-active]="seleccionada?.code === carrier.code"
-        (click)="seleccionar(carrier)">
-        <span class="cz-item__radio">
-          <i class="pi" [ngClass]="seleccionada?.code === carrier.code ? 'pi-check-circle' : 'pi-circle'"></i>
-        </span>
-        <span class="cz-item__nombre">{{ carrier.name }}</span>
-        <span class="cz-item__codigo">{{ carrier.code }}</span>
-      </button>
-
-      <p class="cz-vacio" *ngIf="carriersFiltrados.length === 0">
-        Ninguna transportadora coincide con "{{ busqueda }}"
-      </p>
-    </div>
-
-    <div class="cz-pie">
-      <button type="button" class="cz-btn cz-btn--ghost" (click)="cancelar()">Cancelar</button>
-      <button
-        type="button"
-        class="cz-btn cz-btn--primario"
-        [disabled]="!seleccionada"
-        (click)="confirmar()">
-        <i class="pi pi-send"></i>
-        Despachar{{ seleccionada ? ' con ' + seleccionada.name : '' }}
-      </button>
-    </div>
-
   </ng-container>
 </div>

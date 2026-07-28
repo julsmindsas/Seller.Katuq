@@ -87,6 +87,18 @@ export class CerezaCarrierModalComponent implements OnInit {
     this.seleccionada = carrier;
   }
 
+  /** Paleta estable para el logo: la misma transportadora, el mismo color. */
+  private readonly COLORES = [
+    '#7C5CFF', '#1E6FD9', '#1E874B', '#D9820A', '#8E27B0', '#0EA5A0', '#D64545', '#5A6B78',
+  ];
+
+  colorCarrier(carrier: CerezaCarrier): string {
+    const clave = String(carrier?.code || carrier?.name || '');
+    let suma = 0;
+    for (let i = 0; i < clave.length; i++) { suma += clave.charCodeAt(i); }
+    return this.COLORES[suma % this.COLORES.length];
+  }
+
   confirmar(): void {
     if (!this.seleccionada) {
       this.toastr.warning('Selecciona una transportadora para continuar.', 'Falta la transportadora');

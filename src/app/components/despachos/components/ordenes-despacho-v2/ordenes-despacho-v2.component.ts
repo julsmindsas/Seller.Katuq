@@ -660,6 +660,42 @@ export class OrdenesDespachoV2Component implements OnInit {
     this.createShipmentDirectly();
   }
 
+  // ── Modal "Seleccionar Transportador" ─────────────────────────────────────
+
+  /** Paleta estable para el logo de cada transportadora. */
+  private readonly COLORES_TRANSPORTADORA = [
+    '#7C5CFF', '#1E6FD9', '#1E874B', '#D9820A', '#8E27B0', '#0EA5A0', '#D64545', '#5A6B78',
+  ];
+
+  /** Inicial para el logo de la transportadora. */
+  inicialTransportadora(transporter: any): string {
+    const nombre = String(this.getTransporterDisplayName(transporter) || '').trim();
+    return nombre ? nombre.charAt(0).toUpperCase() : '?';
+  }
+
+  /** Color estable: la misma transportadora siempre con el mismo color. */
+  colorTransportadora(transporter: any): string {
+    const clave = String(transporter?.provider || transporter?.type || '');
+    let suma = 0;
+    for (let i = 0; i < clave.length; i++) { suma += clave.charCodeAt(i); }
+    return this.COLORES_TRANSPORTADORA[suma % this.COLORES_TRANSPORTADORA.length];
+  }
+
+  /** ¿Todas las integraciones están habilitadas? */
+  get todasTransportadorasOperativas(): boolean {
+    return this.availableTransporters?.length > 0
+      && this.availableTransporters.every((t: any) => t.enabled);
+  }
+
+  /** Nombre de la transportadora elegida, para el resumen del modal. */
+  get nombreTransportadoraElegida(): string {
+    if (!this.selectedTransporter) { return ''; }
+    const elegida = this.availableTransporters?.find(
+      (t: any) => (t.provider || t.type) === this.selectedTransporter,
+    );
+    return elegida ? this.getTransporterDisplayName(elegida) : this.selectedTransporter;
+  }
+
   /**
    * ¿Esta orden salió por Guía Cereza y por lo tanto se le puede cancelar el
    * envío? Solo tiene sentido si algún pedido conserva el vínculo con Cereza.
@@ -997,9 +1033,16 @@ export class OrdenesDespachoV2Component implements OnInit {
 
   createShipmentDirectly(): void {
     const order = this.selectedOrderForDispatch;
+    const usuario = localStorage.getItem('user');
+
     const shipmentPayload = {
       companyId: order?.companyId || order?.company || '',
       provider: this.selectedTransporter,
+      // El backend guarda transportador, fecha y despachador en la misma
+      // escritura con la que marca el pedido como despachado. Así no depende
+      // de una segunda llamada que puede chocar con el lock optimista.
+      transportador: normalizeTransportadorName(this.selectedTransporter),
+      despachador: usuario ? JSON.parse(usuario) : null,
       order: {
         nroShippingOrder: order?.nroShippingOrder,
         fecha: order?.fecha,
@@ -1433,6 +1476,20 @@ export class OrdenesDespachoV2Component implements OnInit {
             observer.complete();
           },
           error: (error) => {
+            // Conflicto de versión: NO es una falla. Al crear el envío, el
+            // servidor ya dejó el pedido despachado con su guía, transportador
+            // y fecha; la copia que tiene la pantalla quedó vieja y el lock
+            // optimista la rechaza. Antes esto disparaba el aviso engañoso de
+            // "Despacho Parcial" sobre pedidos que habían salido bien.
+            if (error?.isStaleWrite) {
+              console.info(
+                `ℹ️ Pedido ${pedido.nroPedido || pedido.referencia}: el despacho ya lo actualizó en el servidor`
+              );
+              observer.next(void 0);
+              observer.complete();
+              return;
+            }
+
             console.error(`❌ Error actualizando pedido ${pedido.nroPedido || pedido.referencia}:`, error);
             // Revertir usando el estado original guardado
             pedido.estadoProceso = estadoOriginal;

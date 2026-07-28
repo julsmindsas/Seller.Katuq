@@ -1,0 +1,205 @@
+// Estilos del modal "Seleccionar Transportador".
+// Compartido por generar-orden y ordenes-despacho-v2: ambos abren el mismo
+// modal, y cada componente carga sus propios estilos (el de generar-orden solo
+// se inyecta si esa pantalla llegó a abrirse).
+$goe-accent: #5F3FE0;
+$goe-ink: #211F3A;
+$goe-muted: #8f8bab;
+$goe-line: #ececf4;
+$goe-chip-bg: #f5f4fa;
+$goe-chip-border: #e9e7f3;
+$goe-ok: #1E874B;
+$goe-ok-bg: #E6F7EE;
+$goe-warn: #D9820A;
+$goe-warn-bg: #FFF1DF;
+$goe-danger: #D64545;
+$goe-danger-bg: #FDECEC;
+$goe-info: #1E6FD9;
+
+// =============================================================================
+// Modal "Seleccionar Transportador" (prefijo goe-tr-)
+// Mismo tema canónico. El diseño original traía costo, calificación y tiempo de
+// entrega: no se implementan porque la app no tiene esos datos en este punto
+// (la cotización de Enviame ocurre después de elegir).
+// =============================================================================
+.goe-tr-overlay {
+  background: rgba(35, 39, 51, .55);
+}
+
+.goe-tr {
+  width: 100%;
+  max-width: 640px;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 24px 64px rgba(20, 24, 40, .28);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  // ---- Header ----
+  &__head {
+    display: flex; align-items: center; gap: 13px;
+    padding: 18px 22px; border-bottom: 1px solid $goe-line;
+  }
+  &__icon {
+    width: 40px; height: 40px; border-radius: 12px; flex: none;
+    background: #efe9ff; color: $goe-accent;
+    display: flex; align-items: center; justify-content: center;
+    i { font-size: 18px; }
+  }
+  &__title-wrap { flex: 1; min-width: 0; }
+  &__title { font-weight: 800; font-size: 19px; color: $goe-ink; line-height: 1.1; }
+  &__sub {
+    font-size: 12.5px; color: $goe-muted; font-weight: 600; margin-top: 2px;
+    b { color: $goe-info; }
+  }
+
+  // ---- Body ----
+  &__body {
+    padding: 18px 22px 20px;
+    display: flex; flex-direction: column; gap: 15px;
+  }
+
+  &__section {
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  }
+  &__section-icon { color: $goe-accent; display: flex; i { font-size: 15px; } }
+  &__section-title { font-weight: 800; font-size: 14.5px; color: $goe-ink; }
+  &__estado {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 700; color: $goe-ok;
+  }
+  &__dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #22C55E;
+  }
+
+  // ---- Tarjetas ----
+  &__list { display: flex; flex-direction: column; gap: 9px; }
+
+  &__card {
+    display: flex; align-items: center; gap: 14px;
+    background: #fff; border: 2px solid $goe-line; border-radius: 15px;
+    padding: 13px 16px; cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+
+    &:hover { border-color: #e2d9fb; background: #faf9ff; }
+    &.is-active {
+      background: #f7f5fe;
+      border-color: $goe-accent;
+
+      .goe-tr__radio { border-color: $goe-accent; }
+      .goe-tr__radio-dot { background: $goe-accent; }
+    }
+  }
+
+  &__radio {
+    width: 20px; height: 20px; border-radius: 50%; flex: none;
+    border: 2px solid #cbd0dd; background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s ease;
+  }
+  &__radio-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: transparent;
+    transition: background .15s ease;
+  }
+
+  &__logo {
+    width: 42px; height: 42px; border-radius: 12px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 16px;
+  }
+
+  &__info { flex: 1; min-width: 0; }
+  &__name { font-weight: 800; font-size: 15px; color: $goe-ink; }
+  &__desc { font-size: 12px; font-weight: 700; color: $goe-muted; margin-top: 3px; }
+
+  // ---- Resumen ----
+  &__resumen {
+    display: flex; align-items: center; gap: 12px;
+    background: #f7f5fe; border: 1px solid #e2d9fb; border-radius: 14px;
+    padding: 13px 16px;
+    font-size: 13.5px; font-weight: 700; color: #52586B;
+    b { color: $goe-ink; }
+  }
+  &__resumen-icon {
+    width: 32px; height: 32px; border-radius: 10px; flex: none;
+    background: #fff; color: $goe-accent;
+    display: flex; align-items: center; justify-content: center;
+    i { font-size: 14px; }
+  }
+
+  // ---- Footer ----
+  &__foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 15px 22px; border-top: 1px solid $goe-line; background: #fbfcfe;
+    flex-wrap: wrap;
+  }
+  &__hint { font-size: 12.5px; color: $goe-muted; font-weight: 700; }
+  &__actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+}
+
+@media (max-width: 600px) {
+  .goe-tr__foot { flex-direction: column; align-items: stretch; }
+  .goe-tr__actions { margin-left: 0; justify-content: flex-end; }
+}
+
+// Piezas compartidas que el modal usa (definidas también en generar-orden;
+// acá se repiten para que el parcial funcione por sí solo).
+.goe-close {
+  width: 34px; height: 34px; border-radius: 10px; flex: none;
+  background: $goe-chip-bg; border: 1px solid $goe-chip-border; color: #6B7280;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease, color .15s ease;
+  &:hover { background: $goe-danger-bg; border-color: #F6D4D2; color: $goe-danger; }
+}
+
+.goe-count {
+  background: $goe-chip-bg; color: #52586B;
+  font-size: 11.5px; font-weight: 800; padding: 4px 11px; border-radius: 999px;
+  &--accent { background: #efe9ff; color: $goe-accent; }
+}
+
+.goe-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: .3px;
+  background: $goe-chip-bg; color: #52586B;
+  i { font-size: 9px; }
+  &--pagado { background: $goe-ok-bg; color: $goe-ok; }
+  &--warn   { background: $goe-warn-bg; color: $goe-warn; }
+}
+
+.goe-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  border-radius: 11px; padding: 10px 18px; cursor: pointer;
+  font-weight: 800; font-size: 13px;
+  transition: background .15s ease, color .15s ease;
+  i { font-size: 13px; }
+
+  &--ghost {
+    background: #fff; color: #5b5878; border: 1px solid #e4e2ef;
+    &:hover:not(:disabled) { background: $goe-chip-bg; }
+  }
+  &--primario {
+    background: $goe-accent; border: 1px solid $goe-accent; color: #fff;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, .7);
+    &:hover:not(:disabled) { background: #4a2fc0; }
+    &:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+  }
+}
+
+.goe-empty {
+  border: 2px dashed #e4e5ee; border-radius: 16px; padding: 30px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  background: #fbfcfe; text-align: center;
+
+  &__icon {
+    width: 52px; height: 52px; border-radius: 15px;
+    background: $goe-warn-bg; color: $goe-warn;
+    display: flex; align-items: center; justify-content: center;
+    i { font-size: 22px; }
+  }
+  &__title { font-weight: 800; font-size: 14px; color: #52586B; }
+  &__sub { font-size: 12.5px; color: $goe-muted; font-weight: 600; }
+}

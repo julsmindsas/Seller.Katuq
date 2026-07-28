@@ -1,13 +1,21 @@
 <div class="modal-content modern-modal">
-    <!-- HEADER MINIMALISTA -->
-    <div class="modal-header modern-header">
-        <div class="header-content">
-            <h4 class="modal-title">
+    <!-- HEADER -->
+    <div class="modal-header goe-header">
+        <span class="goe-header__icon"><i class="pi pi-truck"></i></span>
+        <div class="goe-header__text">
+            <h4 class="goe-header__title">
                 {{ isEditMode ? "Editar Orden de Envío" : ("Generar Orden de Envío" | translate) }}
-                <span *ngIf="isEditMode" class="modal-subtitle">#{{ nroShippingOrder }}</span>
+                <span *ngIf="isEditMode" class="goe-header__nro">#{{ nroShippingOrder }}</span>
             </h4>
+            <div class="goe-header__sub">Selecciona los pedidos y define cómo se despachan</div>
         </div>
-        <button type="button" class="btn-close-modern" aria-label="Close" (click)="closeModal()">
+        <span class="goe-chip" [class.goe-chip--ok]="pedidosSeleccionados.length > 0">
+            <i class="pi" [ngClass]="pedidosSeleccionados.length > 0 ? 'pi-check' : 'pi-info-circle'"></i>
+            {{ pedidosSeleccionados.length > 0
+                ? pedidosSeleccionados.length + ' pedido(s) en la orden'
+                : 'Sin pedidos seleccionados' }}
+        </span>
+        <button type="button" class="goe-close" aria-label="Close" (click)="closeModal()">
             <i class="pi pi-times"></i>
         </button>
     </div>
@@ -56,17 +64,17 @@
                     <!-- MÉTODO DE ENVÍO -->
                     <div class="config-compact-section">
                         <label class="config-compact-label">Método de Envío</label>
-                        <div class="config-compact-methods">
+                        <div class="goe-seg">
                             <button type="button"
-                                    class="method-compact"
-                                    [class.selected]="ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
+                                    class="goe-seg__btn"
+                                    [class.is-active]="ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
                                     (click)="seleccionarMetodo('mensajeroPropio')">
                                 <i class="pi pi-user"></i>
                                 <span>{{ "Mensajero" | translate }}</span>
                             </button>
                             <button type="button"
-                                    class="method-compact"
-                                    [class.selected]="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'"
+                                    class="goe-seg__btn"
+                                    [class.is-active]="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'"
                                     (click)="seleccionarMetodo('transportadora')">
                                 <i class="pi pi-send"></i>
                                 <span>{{ "Transportadora" | translate }}</span>
@@ -74,54 +82,183 @@
                         </div>
                     </div>
 
+                    <!-- BUSCADOR: reemplaza los filtros por columna de la tabla.
+                         Busca en nro. pedido, cliente, ciudad y dirección. -->
+                    <div class="config-compact-section goe-search-wrap" *ngIf="metodoEnvio">
+                        <label class="config-compact-label">Buscar</label>
+                        <div class="goe-search">
+                            <i class="pi pi-search"></i>
+                            <input type="text"
+                                   [(ngModel)]="busquedaPedidos"
+                                   [ngModelOptions]="{ standalone: true }"
+                                   (input)="onBuscarPedidos()"
+                                   placeholder="Nro. pedido, cliente, dirección o ciudad…"
+                                   autocomplete="off" />
+                            <button type="button" class="goe-search__clear"
+                                    *ngIf="busquedaPedidos"
+                                    (click)="limpiarBusqueda()"
+                                    title="Limpiar búsqueda">
+                                <i class="pi pi-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
 
-                <!-- SECCIÓN: Pedidos disponibles -->
-                <div class="seccion-pedidos-disponibles" *ngIf="metodoEnvio">
-                    <div class="card modern-card">
-                        <div class="card-header-modern">
-                            <div class="table-header-compact">
-                                <h5 class="table-title-compact">
-                                    {{ "Pedidos Disponibles" | translate }}
-                                    <span class="count-badge">{{ pedidosDisponibles.length }}</span>
-                                </h5>
+                <!-- Dos paneles lado a lado: disponibles | orden (se apilan en móvil) -->
+                <div class="goe-split" [class.goe-split--full]="vistaPedidos === 'tabla'" *ngIf="metodoEnvio">
 
-                                <div class="table-controls-compact">
-                                    <!-- Agregar todos button -->
-                                    <button pButton type="button" label="Agregar todos" icon="pi pi-plus-circle"
-                                        class="p-button-sm p-button-text"
-                                        (click)="addAllPedidos()"
-                                        [disabled]="pedidosDisponibles.length === 0"></button>
+                <!-- SECCIÓN: Pedidos disponibles (tarjetas agrupadas por zona) -->
+                <div class="seccion-pedidos-disponibles">
+                    <div class="goe-panel">
+                        <div class="goe-panel__head">
+                            <span class="goe-panel__title">{{ "Pedidos Disponibles" | translate }}</span>
+                            <span class="goe-count">{{ pedidosDisponibles.length }}</span>
+                            <span class="goe-count goe-count--soft" *ngIf="busquedaPedidos && pedidosFiltrados.length !== pedidosDisponibles.length">
+                                {{ pedidosFiltrados.length }} en la búsqueda
+                            </span>
 
-                                    <!-- Filtro mostrar pedidos en órdenes -->
-                                    <div class="form-check form-switch compact-switch">
-                                        <input class="form-check-input" type="checkbox" id="mostrarPedidosEnOrdenes"
-                                            [(ngModel)]="mostrarPedidosEnOrdenes" [ngModelOptions]="{ standalone: true }"
-                                            (change)="onToggleMostrarPedidosEnOrdenes()" />
-                                        <label class="form-check-label" for="mostrarPedidosEnOrdenes">
-                                            Mostrar en órdenes
-                                        </label>
-                                    </div>
-
-                                    <!-- Selector de columnas (compacto) -->
-                                    <p-multiSelect [options]="displayedColumns"
-                                        [(ngModel)]="selectedColumns"
-                                        optionLabel="header"
-                                        [style]="{ width: '150px' }"
-                                        placeholder="Columnas"
-                                        [ngModelOptions]="{ standalone: true }"
-                                        (onChange)="onColumnSelectionChange()">
-                                    </p-multiSelect>
+                            <div class="goe-panel__actions">
+                                <!-- Vista tarjetas / tabla (mismo patrón que "Todos los pedidos") -->
+                                <div class="goe-viewtoggle">
+                                    <button type="button" class="goe-viewtoggle__btn"
+                                            [class.is-active]="vistaPedidos === 'tarjetas'"
+                                            (click)="cambiarVistaPedidos('tarjetas')"
+                                            title="Ver como tarjetas">
+                                        <i class="pi pi-th-large"></i> Tarjetas
+                                    </button>
+                                    <button type="button" class="goe-viewtoggle__btn"
+                                            [class.is-active]="vistaPedidos === 'tabla'"
+                                            (click)="cambiarVistaPedidos('tabla')"
+                                            title="Ver como tabla">
+                                        <i class="pi pi-table"></i> Tabla
+                                    </button>
                                 </div>
-                            </div>
 
-                            <div class="empty-state-compact" *ngIf="pedidosDisponibles.length === 0">
-                                <i class="pi pi-inbox"></i>
-                                <p>{{ "No hay pedidos disponibles" | translate }}</p>
-                                <small *ngIf="!mostrarPedidosEnOrdenes">Activa "Mostrar en órdenes" para ver todos</small>
+                                <!-- Selector de columnas: solo aplica a la tabla -->
+                                <p-multiSelect *ngIf="vistaPedidos === 'tabla'"
+                                    [options]="displayedColumns"
+                                    [(ngModel)]="selectedColumns"
+                                    optionLabel="header"
+                                    [style]="{ width: '150px' }"
+                                    placeholder="Columnas"
+                                    [ngModelOptions]="{ standalone: true }"
+                                    (onChange)="onColumnSelectionChange()">
+                                </p-multiSelect>
+
+                                <div class="form-check form-switch compact-switch">
+                                    <input class="form-check-input" type="checkbox" id="mostrarPedidosEnOrdenes"
+                                        [(ngModel)]="mostrarPedidosEnOrdenes" [ngModelOptions]="{ standalone: true }"
+                                        (change)="onToggleMostrarPedidosEnOrdenes()" />
+                                    <label class="form-check-label" for="mostrarPedidosEnOrdenes">
+                                        Mostrar en órdenes
+                                    </label>
+                                </div>
+                                <button type="button" class="goe-btn goe-btn--soft"
+                                        (click)="addAllPedidos()"
+                                        [disabled]="pedidosDisponibles.length === 0">
+                                    <i class="pi pi-plus"></i> Agregar todos
+                                </button>
                             </div>
                         </div>
 
+                        <!-- Sin pedidos -->
+                        <div class="goe-empty" *ngIf="pedidosDisponibles.length === 0">
+                            <span class="goe-empty__icon goe-empty__icon--ok"><i class="pi pi-check"></i></span>
+                            <span class="goe-empty__title">No hay pedidos disponibles</span>
+                            <span class="goe-empty__sub" *ngIf="!mostrarPedidosEnOrdenes">Activa "Mostrar en órdenes" para ver todos</span>
+                        </div>
+
+                        <!-- La búsqueda no encontró nada -->
+                        <div class="goe-empty" *ngIf="pedidosDisponibles.length > 0 && pedidosFiltrados.length === 0">
+                            <span class="goe-empty__icon"><i class="pi pi-search"></i></span>
+                            <span class="goe-empty__title">Ningún pedido coincide con "{{ busquedaPedidos }}"</span>
+                            <button type="button" class="goe-btn goe-btn--ghost" (click)="limpiarBusqueda()">Limpiar búsqueda</button>
+                        </div>
+
+                        <!-- Zonas -->
+                        <div class="goe-zonas" *ngIf="vistaPedidos === 'tarjetas' && pedidosFiltrados.length > 0">
+                            <div class="goe-zona" *ngFor="let zona of zonasDisponibles; trackBy: trackPorZona">
+                                <div class="goe-zona__head">
+                                    <i class="pi pi-map-marker"></i>
+                                    <span class="goe-zona__name">{{ zona.nombre }}</span>
+                                    <span class="goe-zona__count">{{ zona.pedidos.length }}</span>
+                                    <button type="button" class="goe-btn goe-btn--ghost goe-zona__add"
+                                            (click)="addZoneGroup(zona.nombre)">
+                                        <i class="pi pi-plus"></i> Agregar grupo
+                                    </button>
+                                </div>
+
+                                <div class="goe-cards">
+                                    <div class="goe-card" *ngFor="let pedido of zona.pedidos; trackBy: trackPorPedido">
+                                        <div class="goe-card__body">
+                                            <div class="goe-card__row">
+                                                <span class="goe-card__nro">{{ pedido.nroPedido }}</span>
+                                                <span class="goe-pill" [ngClass]="getEstadoPagoClass(pedido.estadoPago)">
+                                                    {{ pedido.estadoPago }}
+                                                </span>
+                                                <span class="goe-pill goe-pill--urgente" *ngIf="esEntregaUrgente(pedido)">HOY</span>
+                                                <span class="goe-pill goe-pill--info" *ngIf="pedidoExisteEnOrden(pedido)">En otra orden</span>
+                                            </div>
+
+                                            <div class="goe-card__cliente">
+                                                <span class="goe-avatar" [style.background]="colorAvatar(pedido)">{{ inicialCliente(pedido) }}</span>
+                                                <span class="goe-card__nombre">{{ getNestedProperty(pedido, "cliente") }}</span>
+                                            </div>
+
+                                            <div class="goe-card__dir">
+                                                <i class="pi pi-map-marker"></i>
+                                                {{ getNestedProperty(pedido, "direccionEntrega") }} · {{ getNestedProperty(pedido, "ciudad") }}
+                                            </div>
+
+                                            <div class="goe-card__meta">
+                                                <span class="goe-valor-pedido">{{ valorPedido(pedido) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span class="goe-valor" *ngIf="tieneSaldoPorCobrar(pedido)">
+                                                    Cobrar {{ pedido.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                </span>
+                                                <span class="goe-pill goe-pill--pagado" *ngIf="!tieneSaldoPorCobrar(pedido)">Pagado</span>
+                                                <span class="goe-meta" [class.is-urgente]="esEntregaUrgente(pedido)">
+                                                    <i class="pi pi-calendar"></i>
+                                                    {{ formatDateCompact(pedido.fechaEntrega) || 'No asignada' }}
+                                                </span>
+                                                <span class="goe-meta">
+                                                    <i class="pi pi-clock"></i>
+                                                    {{ pedido.horarioEntrega || 'No especificado' }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="goe-card__actions">
+                                            <button type="button" class="goe-icon goe-icon--add"
+                                                    (click)="agregarPedido(pedido)"
+                                                    [disabled]="pedidoYaSeleccionado(pedido)"
+                                                    pTooltip="{{ 'Agregar' | translate }}" tooltipPosition="left">
+                                                <i class="pi pi-plus"></i>
+                                            </button>
+                                            <button type="button" class="goe-icon"
+                                                    (click)="verDetallesPedido(pedido)"
+                                                    pTooltip="{{ 'Detalles' | translate }}" tooltipPosition="left">
+                                                <i class="pi pi-info-circle"></i>
+                                            </button>
+                                            <button type="button" class="goe-icon" *ngIf="pedidoExisteEnOrden(pedido)"
+                                                    (click)="verDetallesOrdenExistente(pedido)"
+                                                    pTooltip="Ver orden" tooltipPosition="left">
+                                                <i class="pi pi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Carga por lotes: sustituye al paginador de la tabla -->
+                            <button type="button" class="goe-more" *ngIf="hayMasPedidos" (click)="cargarMasPedidos()">
+                                <i class="pi pi-angle-down"></i>
+                                Ver más pedidos ({{ pedidosFiltrados.length - loteVisible }} restantes)
+                            </button>
+                        </div>
+
+                        <!-- VISTA TABLA: la de siempre, con filtros por columna y paginación -->
+                        <div class="goe-tabla" *ngIf="vistaPedidos === 'tabla'">
                         <div class="table-responsive" *ngIf="pedidosDisponibles.length > 0">
                             <p-table #dt [value]="pedidosDisponibles" styleClass="p-datatable-sm p-datatable-compact"
                                 [paginator]="true" [rows]="15" [rowsPerPageOptions]="[15, 30, 50]"
@@ -201,15 +338,14 @@
 
                                 <ng-template pTemplate="groupheader" let-pedido>
                                     <tr>
-                                        <td [attr.colspan]="selectedColumns.length + 2" style="background: #f0f4ff; font-weight: 600; padding: 8px 12px;">
-                                            <div style="display: flex; align-items: center; justify-content: space-between;">
-                                                <span>
-                                                    <i class="pi pi-map-marker" style="color: #6366f1; margin-right: 6px;"></i>
-                                                    {{pedido.zonaKey}}
-                                                </span>
-                                                <button pButton type="button" label="Agregar grupo" icon="pi pi-plus"
-                                                        class="p-button-sm p-button-outlined"
-                                                        (click)="addZoneGroup(pedido.zonaKey)"></button>
+                                        <td [attr.colspan]="selectedColumns.length + 2" class="goe-tabla__zona">
+                                            <div class="goe-zona__head">
+                                                <i class="pi pi-map-marker"></i>
+                                                <span class="goe-zona__name">{{ pedido.zonaKey }}</span>
+                                                <button type="button" class="goe-btn goe-btn--ghost goe-zona__add"
+                                                        (click)="addZoneGroup(pedido.zonaKey)">
+                                                    <i class="pi pi-plus"></i> Agregar grupo
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -279,159 +415,131 @@
                                 </ng-template>
                             </p-table>
                         </div>
-                    </div>
-                </div>
-
-                <!-- SECCIÓN: Pedidos seleccionados -->
-                <div class="seccion-pedidos-seleccionados" *ngIf="pedidosSeleccionados.length > 0">
-                    <div class="card modern-card">
-                        <div class="card-header-modern">
-                            <div class="table-header-compact">
-                                <h5 class="table-title-compact">
-                                    {{ "Pedidos Seleccionados" | translate }}
-                                    <span class="count-badge">{{ pedidosSeleccionados.length }}</span>
-                                    <span *ngIf="hayPedidosMovidos" class="count-badge badge-warning-compact">
-                                        {{ contarPedidosMovidos() }} movidos
-                                    </span>
-                                </h5>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <p-table #dtSelected [value]="pedidosSeleccionados" styleClass="p-datatable-sm p-datatable-compact">
-                                    <ng-template pTemplate="header">
-                                        <tr>
-                                            <th>{{ "Pedido" | translate }}</th>
-                                            <th>{{ "Cliente" | translate }}</th>
-                                            <th>{{ "Ciudad" | translate }}</th>
-                                            <th class="fecha-entrega-column">{{ "Fecha de Entrega" | translate }}</th>
-                                            <th>{{ "Horario" | translate }}</th>
-                                            <th>{{ "Valor" | translate }}</th>
-                                            <th>{{ "Estado" | translate }}</th>
-                                            <th class="actions-col">{{ "Acción" | translate }}</th>
-                                        </tr>
-                                        <tr>
-                                            <th>
-                                                <input pInputText type="text" class="p-column-filter"
-                                                    placeholder="Filtrar pedido"
-                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
-                                                    (input)="dtSelected.filter($any($event.target).value, 'nroPedido', 'contains')" />
-                                            </th>
-                                            <th>
-                                                <input pInputText type="text" class="p-column-filter"
-                                                    placeholder="Filtrar cliente"
-                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
-                                                    (input)="dtSelected.filter($any($event.target).value, 'clienteNombre', 'contains')" />
-                                            </th>
-                                            <th>
-                                                <input pInputText type="text" class="p-column-filter"
-                                                    placeholder="Filtrar ciudad"
-                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
-                                                    (input)="dtSelected.filter($any($event.target).value, 'ciudadNombre', 'contains')" />
-                                            </th>
-                                            <th class="fecha-entrega-column">
-                                                <input pInputText type="text" class="p-column-filter"
-                                                    placeholder="Filtrar fecha"
-                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
-                                                    (input)="dtSelected.filter($any($event.target).value, 'fechaEntrega', 'contains')" />
-                                            </th>
-                                            <th>
-                                                <input pInputText type="text" class="p-column-filter"
-                                                    placeholder="Filtrar horario"
-                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
-                                                    (input)="dtSelected.filter($any($event.target).value, 'horarioEntrega', 'contains')" />
-                                            </th>
-                                            <th>
-                                                <input pInputText type="number" class="p-column-filter"
-                                                    placeholder="Filtrar valor"
-                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
-                                                    (input)="dtSelected.filter($any($event.target).value, 'faltaPorPagar', 'gte')" />
-                                            </th>
-                                            <th>
-                                                <!-- No filter for status -->
-                                            </th>
-                                            <th class="actions-col">
-                                                <button pButton type="button" icon="pi pi-filter-slash"
-                                                    class="p-button-outlined p-button-sm"
-                                                    pTooltip="Limpiar filtros"
-                                                    tooltipPosition="top"
-                                                    (click)="dtSelected.clear()"
-                                                    [style]="{'width': '100%'}">
-                                                </button>
-                                            </th>
-                                        </tr>
-                                    </ng-template>
-
-                                    <ng-template pTemplate="body" let-pedido>
-                                        <tr [class.row-moved]="esPedidoMovido(pedido)">
-                                            <td>
-                                                <strong>{{ pedido.nroPedido }}</strong>
-                                                <i *ngIf="esPedidoMovido(pedido)" class="pi pi-refresh ms-1 text-muted"
-                                                   style="font-size: 0.75rem;" title="Pedido movido"></i>
-                                            </td>
-                                            <td>{{ getNestedProperty(pedido, "cliente") }}</td>
-                                            <td>{{ getNestedProperty(pedido, "ciudad") }}</td>
-                                            <td class="fecha-entrega-column">
-                                                <span class="fecha-entrega" [class.urgente]="esEntregaUrgente(pedido)">
-                                                    <i class="pi pi-calendar me-1"></i>
-                                                    {{ formatDateCompact(pedido.fechaEntrega) || 'No asignada' }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-info text-dark">
-                                                    <i class="pi pi-clock me-1"></i>
-                                                    {{ pedido.horarioEntrega || 'No especificado' }}
-                                                </span>
-                                            </td>
-                                            <td>{{ pedido.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                                            <td>
-                                                <span *ngIf="esPedidoMovido(pedido)" class="badge-compact badge-compact-warning">
-                                                    Orden {{ getOrdenAnteriorPedido(pedido) }}
-                                                </span>
-                                                <span *ngIf="!esPedidoMovido(pedido)" class="badge-compact badge-compact-success">
-                                                    Normal
-                                                </span>
-                                            </td>
-                                            <td class="actions-col">
-                                                <button pButton type="button"
-                                                    class="p-button-sm p-button-danger p-button-text"
-                                                    icon="pi pi-trash"
-                                                    (click)="retirarPedido(pedido)"
-                                                    pTooltip="{{ 'Retirar' | translate }}"
-                                                    tooltipPosition="top">
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </ng-template>
-
-                                    <ng-template pTemplate="footer">
-                                        <tr class="footer-total">
-                                            <td colspan="5" class="text-end">
-                                                <strong>{{ "Total:" | translate }}</strong>
-                                            </td>
-                                            <td>
-                                                <strong>{{ pedidosSeleccionados | totalValorACobrar | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-                                            </td>
-                                            <td colspan="2"></td>
-                                        </tr>
-                                    </ng-template>
-                                </p-table>
-                            </div>
-
-                            <!-- Advertencia pedidos movidos (compacta) -->
-                            <div *ngIf="hayPedidosMovidos" class="alert-compact alert-compact-warning">
-                                <i class="pi pi-exclamation-triangle"></i>
-                                <span>Los pedidos movidos serán removidos de sus órdenes anteriores al guardar</span>
-                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- SECCIÓN: Pedidos seleccionados (tarjetas + resumen) -->
+                <div class="seccion-pedidos-seleccionados">
+                    <div class="goe-panel goe-panel--sel">
+                        <div class="goe-panel__head">
+                            <span class="goe-panel__title">{{ "Pedidos Seleccionados" | translate }}</span>
+                            <span class="goe-count goe-count--accent">{{ pedidosSeleccionados.length }}</span>
+                            <span class="goe-count goe-count--warn" *ngIf="hayPedidosMovidos">
+                                {{ contarPedidosMovidos() }} movidos
+                            </span>
+                        </div>
+
+                        <!-- Orden vacía -->
+                        <div class="goe-empty" *ngIf="pedidosSeleccionados.length === 0">
+                            <span class="goe-empty__icon"><i class="pi pi-truck"></i></span>
+                            <span class="goe-empty__title">La orden está vacía</span>
+                            <span class="goe-empty__sub">
+                                Agrega pedidos desde la izquierda con <b>+</b>, o usa "Agregar grupo" para sumar una zona completa.
+                            </span>
+                        </div>
+
+                        <div class="goe-cards goe-cards--sel" *ngIf="pedidosSeleccionados.length > 0">
+                            <div class="goe-card goe-card--sel" *ngFor="let pedido of pedidosSeleccionados; let i = index; trackBy: trackPorPedido"
+                                 [class.is-movido]="esPedidoMovido(pedido)">
+                                <span class="goe-card__orden">{{ (i + 1) | number:'2.0-0' }}</span>
+
+                                <div class="goe-card__body">
+                                    <div class="goe-card__row">
+                                        <span class="goe-card__nro">{{ pedido.nroPedido }}</span>
+                                        <span class="goe-card__nombre">{{ getNestedProperty(pedido, "cliente") }}</span>
+                                        <span class="goe-pill goe-pill--warn" *ngIf="esPedidoMovido(pedido)">
+                                            <i class="pi pi-refresh"></i> Orden {{ getOrdenAnteriorPedido(pedido) }}
+                                        </span>
+                                    </div>
+
+                                    <div class="goe-card__meta">
+                                        <span class="goe-meta">
+                                            <i class="pi pi-map-marker"></i>
+                                            {{ getNestedProperty(pedido, "ciudad") }}
+                                        </span>
+                                        <span class="goe-meta" [class.is-urgente]="esEntregaUrgente(pedido)">
+                                            <i class="pi pi-calendar"></i>
+                                            {{ formatDateCompact(pedido.fechaEntrega) || 'No asignada' }}
+                                        </span>
+                                        <span class="goe-meta">
+                                            <i class="pi pi-clock"></i>
+                                            {{ pedido.horarioEntrega || 'No especificado' }}
+                                        </span>
+                                        <span class="goe-valor-pedido">{{ valorPedido(pedido) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                        <span class="goe-valor" *ngIf="tieneSaldoPorCobrar(pedido)">
+                                            Cobrar {{ pedido.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                        </span>
+                                        <span class="goe-pill goe-pill--pagado" *ngIf="!tieneSaldoPorCobrar(pedido)">Pagado</span>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="goe-icon goe-icon--remove"
+                                        (click)="retirarPedido(pedido)"
+                                        pTooltip="{{ 'Retirar' | translate }}" tooltipPosition="left">
+                                    <i class="pi pi-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Resumen de la orden -->
+                        <div class="goe-resumen" *ngIf="pedidosSeleccionados.length > 0">
+                            <div class="goe-resumen__row">
+                                <span>Pedidos en la orden</span>
+                                <strong>{{ pedidosSeleccionados.length }}</strong>
+                            </div>
+                            <div class="goe-resumen__row">
+                                <span>Zonas cubiertas</span>
+                                <strong>{{ zonasCubiertas }}</strong>
+                            </div>
+                            <div class="goe-resumen__row">
+                                <span>Pendientes de pago</span>
+                                <strong [class.is-warn]="pedidosPendientesPago > 0">{{ pedidosPendientesPago }}</strong>
+                            </div>
+                            <div class="goe-resumen__row">
+                                <span>Valor despachado</span>
+                                <strong>{{ totalDespachado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+                            </div>
+                            <div class="goe-resumen__total">
+                                <span>Total a cobrar</span>
+                                <strong>{{ pedidosSeleccionados | totalValorACobrar | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Advertencia pedidos movidos -->
+                        <div *ngIf="hayPedidosMovidos" class="alert-compact alert-compact-warning">
+                            <i class="pi pi-exclamation-triangle"></i>
+                            <span>Los pedidos movidos serán removidos de sus órdenes anteriores al guardar</span>
+                        </div>
+                    </div>
+                </div>
+
+                </div><!-- /.goe-split -->
+
             </form>
         </div>
     </div>
 
-    <!-- FOOTER MINIMALISTA -->
+    <!-- FOOTER -->
     <div class="modal-footer modern-footer">
+        <!-- Resumen: total y avisos -->
+        <div class="goe-footer-info">
+            <div class="goe-footer-total">
+                <span class="goe-footer-total__label">Total a cobrar</span>
+                <span class="goe-footer-total__value">
+                    {{ pedidosSeleccionados | totalValorACobrar | currency:'COP':'symbol-narrow':'1.0-0' }}
+                    <small>{{ pedidosSeleccionados.length }} pedido(s)</small>
+                </span>
+            </div>
+            <div class="goe-aviso" *ngIf="pedidosSeleccionados.length === 0">
+                <i class="pi pi-info-circle"></i> Agrega al menos un pedido
+            </div>
+            <div class="goe-aviso goe-aviso--warn" *ngIf="pedidosSeleccionados.length > 0 && pedidosPendientesPago > 0">
+                <i class="pi pi-exclamation-circle"></i>
+                {{ pedidosPendientesPago }} pedido(s) con pago pendiente
+            </div>
+        </div>
+
         <div class="footer-actions">
             <button pButton type="button"
                 class="p-button-text btn-footer"
@@ -959,61 +1067,91 @@
 </div>
 
 <!-- Modal transportadoras -->
-<div class="modal-overlay" *ngIf="showTransporterModal" (click)="closeTransporterModal()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-        <div class="modal-header-custom">
-            <h5>{{ 'Seleccionar Transportadora Integrada' | translate }}</h5>
-            <button type="button" class="btn-close-custom" (click)="closeTransporterModal()">
+<div class="modal-overlay goe-tr-overlay" *ngIf="showTransporterModal" (click)="closeTransporterModal()">
+    <div class="goe-tr" (click)="$event.stopPropagation()">
+
+        <!-- header -->
+        <div class="goe-tr__head">
+            <span class="goe-tr__icon"><i class="pi pi-truck"></i></span>
+            <div class="goe-tr__title-wrap">
+                <div class="goe-tr__title">{{ 'Seleccionar Transportador' | translate }}</div>
+                <div class="goe-tr__sub">
+                    <ng-container *ngIf="nroShippingOrder">Orden <b>#{{ nroShippingOrder }}</b> · </ng-container>
+                    requiere transportadora externa
+                </div>
+            </div>
+            <button type="button" class="goe-close" (click)="closeTransporterModal()">
                 <i class="pi pi-times"></i>
             </button>
         </div>
 
-        <div class="modal-body-custom">
-            <div class="alert alert-info mb-4">
-                <i class="pi pi-info-circle me-2"></i>
-                <span>{{ 'Seleccione una transportadora integrada para esta orden de envío.' | translate }}</span>
+        <!-- body -->
+        <div class="goe-tr__body">
+
+            <div class="goe-tr__section">
+                <span class="goe-tr__section-icon"><i class="pi pi-truck"></i></span>
+                <span class="goe-tr__section-title">Transportadoras integradas</span>
+                <span class="goe-count goe-count--accent">{{ availableTransporters.length }}</span>
+                <span class="goe-tr__estado" *ngIf="todasTransportadorasOperativas">
+                    <span class="goe-tr__dot"></span>Todas operativas
+                </span>
             </div>
 
-            <div class="transporters-list">
+            <div class="goe-tr__list" *ngIf="availableTransporters.length > 0">
                 <div *ngFor="let transporter of availableTransporters; let i = index"
-                     class="transporter-card"
-                     [class.transporter-selected]="selectedTransporter === (transporter.provider || transporter.type)"
+                     class="goe-tr__card"
+                     [class.is-active]="selectedTransporter === (transporter.provider || transporter.type)"
                      (click)="selectedTransporter = transporter.provider || transporter.type">
-                    <input class="form-check-input"
-                           type="radio"
-                           [(ngModel)]="selectedTransporter"
-                           [value]="transporter.provider || transporter.type"
-                           [id]="'transporter_generar_' + i">
-                    <div class="transporter-icon">
-                        <i class="pi pi-send"></i>
+
+                    <span class="goe-tr__radio">
+                        <span class="goe-tr__radio-dot"></span>
+                    </span>
+
+                    <span class="goe-tr__logo" [style.background]="colorTransportadora(transporter)">
+                        {{ inicialTransportadora(transporter) }}
+                    </span>
+
+                    <div class="goe-tr__info">
+                        <div class="goe-tr__name">{{ getTransporterDisplayName(transporter) }}</div>
+                        <div class="goe-tr__desc">{{ 'Integración configurada' | translate }}</div>
                     </div>
-                    <div class="transporter-content">
-                        <div class="transporter-name">{{ getTransporterDisplayName(transporter) }}</div>
-                        <div class="transporter-description">{{ 'Integración configurada' | translate }}</div>
-                    </div>
-                    <span *ngIf="transporter.enabled" class="badge bg-success">
-                        <i class="pi pi-check me-1"></i>{{ 'Activo' | translate }}
+
+                    <span class="goe-pill goe-pill--pagado" *ngIf="transporter.enabled">
+                        <i class="pi pi-check"></i> Activo
                     </span>
                 </div>
             </div>
 
-            <div *ngIf="availableTransporters.length === 0" class="alert alert-warning mt-3">
-                <i class="pi pi-exclamation-triangle me-2"></i>
-                <strong>No hay transportadoras configuradas</strong>
-                <p class="mb-0 mt-1 small">Por favor configura al menos una integración de transportadora en el sistema.</p>
+            <!-- Sin integraciones -->
+            <div class="goe-empty" *ngIf="availableTransporters.length === 0">
+                <span class="goe-empty__icon"><i class="pi pi-exclamation-triangle"></i></span>
+                <span class="goe-empty__title">No hay transportadoras configuradas</span>
+                <span class="goe-empty__sub">Configura al menos una integración de transportadora en el sistema.</span>
+            </div>
+
+            <!-- Resumen de la elección -->
+            <div class="goe-tr__resumen" *ngIf="selectedTransporter">
+                <span class="goe-tr__resumen-icon"><i class="pi pi-check"></i></span>
+                <span>Se despachará con <b>{{ nombreTransportadoraElegida }}</b>.</span>
             </div>
         </div>
 
-        <div class="modal-footer-custom">
-            <button type="button" class="btn btn-secondary" (click)="closeTransporterModal(true)">
-                {{ 'Cancelar' | translate }}
-            </button>
-            <button type="button" class="btn btn-primary"
-                    (click)="confirmTransporterSelection()"
-                    [disabled]="!selectedTransporter">
-                <i class="pi pi-check me-2"></i>
-                {{ 'Confirmar Selección' | translate }}
-            </button>
+        <!-- footer -->
+        <div class="goe-tr__foot">
+            <span class="goe-tr__hint">
+                {{ selectedTransporter ? 'Listo para despachar' : 'Selecciona una transportadora para continuar' }}
+            </span>
+            <div class="goe-tr__actions">
+                <button type="button" class="goe-btn goe-btn--ghost" (click)="closeTransporterModal(true)">
+                    {{ 'Cancelar' | translate }}
+                </button>
+                <button type="button" class="goe-btn goe-btn--primario"
+                        (click)="confirmTransporterSelection()"
+                        [disabled]="!selectedTransporter">
+                    <i class="pi pi-send"></i>
+                    {{ 'Confirmar Despacho' | translate }}
+                </button>
+            </div>
         </div>
     </div>
 </div>
