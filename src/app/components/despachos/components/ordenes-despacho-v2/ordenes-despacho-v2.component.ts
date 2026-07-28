@@ -708,6 +708,55 @@ export class OrdenesDespachoV2Component implements OnInit {
     return (order?.pedidos || []).some((p: any) => this.getOsmosisOrderId(p));
   }
 
+  // ── Espera de confirmación de Guía Cereza ─────────────────────────────────
+  //
+  // Al despachar por Cereza el pedido queda "En Despacho": Cereza ya lo tiene
+  // pero todavía no lo despachó. Pasa a "Despachado" cuando Cereza avisa, y eso
+  // suele tardar cerca de un minuto. Sin señal en pantalla el operador no sabe
+  // si esperar o si algo se atascó, así que se muestra desde cuándo se espera y
+  // se marca en rojo lo que ya lleva demasiado.
+
+  /** Minutos a partir de los cuales la espera deja de ser normal. */
+  private readonly ESPERA_CEREZA_LIMITE_MIN = 15;
+
+  /** ¿La orden está esperando que Cereza confirme el despacho? */
+  esperandoConfirmacionCereza(order: any): boolean {
+    const transportador = String(order?.transportador || '').toLowerCase();
+    if (!transportador.includes('osmosis') && !transportador.includes('cereza')) {
+      return false;
+    }
+    const estado = this.getEstadoProceso(order);
+    return estado === 'En Despacho' || estado === 'EnDespacho';
+  }
+
+  /** Minutos que lleva la orden esperando el aviso de Cereza (0 si no se sabe). */
+  private minutosEsperandoCereza(order: any): number {
+    const pedidos = order?.pedidos || [];
+    const fechas = pedidos
+      .map((p: any) => p?.fechaYHorarioDespachado || p?.date_edit)
+      .filter(Boolean)
+      .map((f: any) => new Date(f).getTime())
+      .filter((t: number) => !isNaN(t));
+
+    if (fechas.length === 0) { return 0; }
+    return Math.max(0, Math.floor((Date.now() - Math.max(...fechas)) / 60000));
+  }
+
+  /** Texto del aviso: cuánto lleva esperando. */
+  textoEsperaCereza(order: any): string {
+    const min = this.minutosEsperandoCereza(order);
+    if (min <= 0)  { return 'Cereza aún no confirma'; }
+    if (min === 1) { return 'Cereza aún no confirma · hace 1 min'; }
+    if (min < 60)  { return `Cereza aún no confirma · hace ${min} min`; }
+    const horas = Math.floor(min / 60);
+    return `Cereza aún no confirma · hace ${horas} h`;
+  }
+
+  /** ¿La espera ya se pasó de lo razonable y conviene revisarla? */
+  esperaCerezaDemorada(order: any): boolean {
+    return this.minutosEsperandoCereza(order) >= this.ESPERA_CEREZA_LIMITE_MIN;
+  }
+
   /** Id del envío en Cereza que tenga el pedido (si sigue vinculado). */
   private getOsmosisOrderId(pedido: any): number | string | null {
     const integ = pedido?.integrations?.osmosis || pedido?.integraciones?.osmosis || {};

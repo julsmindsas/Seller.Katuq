@@ -129,8 +129,21 @@
                   }">
               {{ getEstadoProceso(order) }}
             </span>
+
+            <!-- Cereza confirma el despacho por su cuenta y tarda cerca de un
+                 minuto: se avisa desde cuándo se espera para no quedarse
+                 mirando la pantalla. -->
+            <span class="espera-cereza"
+                  *ngIf="esperandoConfirmacionCereza(order)"
+                  [class.espera-cereza--demorada]="esperaCerezaDemorada(order)"
+                  [title]="esperaCerezaDemorada(order)
+                    ? 'Cereza se está demorando más de lo normal en confirmar. Puedes cancelar el envío y volver a despacharlo.'
+                    : 'Cereza ya recibió la orden. El estado pasa a Despachado cuando ella confirme.'">
+              <i class="pi" [ngClass]="esperaCerezaDemorada(order) ? 'pi-exclamation-triangle' : 'pi-clock'"></i>
+              {{ textoEsperaCereza(order) }}
+            </span>
           </div>
-          
+
           <div class="cell col-total">
             <span class="cell-label">{{ 'Total a Cobrar' | translate }}:</span>
             <span class="total-amount" [class.total-zero]="getFaltaPorPagarSum(order) <= 0">{{ getFaltaPorPagarSum(order) | currency:'COP':'symbol':'1.0-0' }}</span>
@@ -253,9 +266,20 @@
                     }">
                 {{ getEstadoProceso(order) }}
               </span>
+
+              <!-- Misma señal de espera que en la vista de tabla. -->
+              <span class="espera-cereza"
+                    *ngIf="esperandoConfirmacionCereza(order)"
+                    [class.espera-cereza--demorada]="esperaCerezaDemorada(order)"
+                    [title]="esperaCerezaDemorada(order)
+                      ? 'Cereza se está demorando más de lo normal en confirmar. Puedes cancelar el envío y volver a despacharlo.'
+                      : 'Cereza ya recibió la orden. El estado pasa a Despachado cuando ella confirme.'">
+                <i class="pi" [ngClass]="esperaCerezaDemorada(order) ? 'pi-exclamation-triangle' : 'pi-clock'"></i>
+                {{ textoEsperaCereza(order) }}
+              </span>
             </div>
           </div>
-          
+
           <div class="card-body">
             <div class="order-detail">
               <span class="badge" [ngClass]="getShippingMethodBadgeClass(order)">
