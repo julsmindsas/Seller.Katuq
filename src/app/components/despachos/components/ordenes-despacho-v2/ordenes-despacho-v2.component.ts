@@ -742,14 +742,21 @@ export class OrdenesDespachoV2Component implements OnInit {
     return Math.max(0, Math.floor((Date.now() - Math.max(...fechas)) / 60000));
   }
 
-  /** Texto del aviso: cuánto lleva esperando. */
-  textoEsperaCereza(order: any): string {
+  /**
+   * Explicación completa, para el tooltip. La columna del estado mide 100px,
+   * así que en pantalla solo cabe "Sin confirmar": el detalle va acá.
+   */
+  detalleEsperaCereza(order: any): string {
     const min = this.minutosEsperandoCereza(order);
-    if (min <= 0)  { return 'Cereza aún no confirma'; }
-    if (min === 1) { return 'Cereza aún no confirma · hace 1 min'; }
-    if (min < 60)  { return `Cereza aún no confirma · hace ${min} min`; }
-    const horas = Math.floor(min / 60);
-    return `Cereza aún no confirma · hace ${horas} h`;
+
+    let desde = 'Guía Cereza todavía no confirma el despacho';
+    if (min === 1)      { desde += ' (hace 1 minuto)'; }
+    else if (min < 60)  { desde += ` (hace ${min} minutos)`; }
+    else if (min > 0)   { desde += ` (hace ${Math.floor(min / 60)} horas)`; }
+
+    return this.esperaCerezaDemorada(order)
+      ? `${desde}. Se está demorando más de lo normal: puedes cancelar el envío y volver a despacharlo.`
+      : `${desde}. Ya recibió la orden; el estado pasa a Despachado cuando ella avise, normalmente en un par de minutos.`;
   }
 
   /** ¿La espera ya se pasó de lo razonable y conviene revisarla? */

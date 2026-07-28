@@ -136,11 +136,9 @@
             <span class="espera-cereza"
                   *ngIf="esperandoConfirmacionCereza(order)"
                   [class.espera-cereza--demorada]="esperaCerezaDemorada(order)"
-                  [title]="esperaCerezaDemorada(order)
-                    ? 'Cereza se está demorando más de lo normal en confirmar. Puedes cancelar el envío y volver a despacharlo.'
-                    : 'Cereza ya recibió la orden. El estado pasa a Despachado cuando ella confirme.'">
+                  [title]="detalleEsperaCereza(order)">
               <i class="pi" [ngClass]="esperaCerezaDemorada(order) ? 'pi-exclamation-triangle' : 'pi-clock'"></i>
-              {{ textoEsperaCereza(order) }}
+              <span class="espera-cereza__txt">Sin confirmar</span>
             </span>
           </div>
 
@@ -271,11 +269,9 @@
               <span class="espera-cereza"
                     *ngIf="esperandoConfirmacionCereza(order)"
                     [class.espera-cereza--demorada]="esperaCerezaDemorada(order)"
-                    [title]="esperaCerezaDemorada(order)
-                      ? 'Cereza se está demorando más de lo normal en confirmar. Puedes cancelar el envío y volver a despacharlo.'
-                      : 'Cereza ya recibió la orden. El estado pasa a Despachado cuando ella confirme.'">
+                    [title]="detalleEsperaCereza(order)">
                 <i class="pi" [ngClass]="esperaCerezaDemorada(order) ? 'pi-exclamation-triangle' : 'pi-clock'"></i>
-                {{ textoEsperaCereza(order) }}
+                <span class="espera-cereza__txt">Sin confirmar</span>
               </span>
             </div>
           </div>

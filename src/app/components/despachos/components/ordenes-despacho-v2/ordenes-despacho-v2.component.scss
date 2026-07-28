@@ -1287,28 +1287,40 @@
 
 /* ========== ESPERA DE CONFIRMACIÓN DE GUÍA CEREZA ==========
    Cereza confirma el despacho por su cuenta, con cerca de un minuto de
-   retraso. Este chip dice desde cuándo se espera para que nadie se quede
-   mirando la pantalla, y se pone en rojo cuando la espera se pasa del
-   cuarto de hora. Plano y tintado, según el tema de la app. */
+   retraso. Este chip avisa que todavía no confirmó, para que nadie se quede
+   mirando la pantalla, y se pone en rojo cuando la espera se pasa del cuarto
+   de hora. El detalle (desde cuándo, qué hacer) va en el tooltip: la columna
+   del estado mide 100px y el texto largo se salía encima del total. */
 .espera-cereza {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  margin-left: 0.4rem;
-  padding: 0.2rem 0.55rem;
+  gap: 0.25rem;
+  margin-top: 0.2rem;
+  padding: 0.12rem 0.4rem;
   border-radius: 999px;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  line-height: 1.3;
-  white-space: nowrap;
+  line-height: 1.25;
   cursor: help;
+
+  // No debe crecer más que su celda: era lo que lo montaba sobre el total.
+  align-self: flex-start;
+  max-width: 100%;
+  overflow: hidden;
 
   background: #FFF4E0;
   border: 1px solid #F5D9A6;
   color: #8A5A00;
 
   i {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
+    flex: none;
+  }
+
+  &__txt {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &--demorada {
@@ -1316,10 +1328,4 @@
     border-color: #F3C2C2;
     color: #A32222;
   }
-}
-
-/* En la tarjeta el chip va debajo del estado, no al lado */
-.order-status .espera-cereza {
-  margin-left: 0;
-  margin-top: 0.3rem;
 }
