@@ -232,7 +232,7 @@
 
     .table-header {
       display: grid;
-      grid-template-columns: 32px 1fr 0.8fr 1.2fr 60px 100px 100px 110px;
+      grid-template-columns: 32px 1fr 0.8fr 1fr 60px 140px 100px 110px;
       gap: 0.5rem;
       background: $katuq-gray-50;
       padding: 0.85rem 0.9rem;
@@ -263,7 +263,7 @@
 
       .row-main {
         display: grid;
-        grid-template-columns: 32px 1fr 0.8fr 1.2fr 60px 100px 100px 110px;
+        grid-template-columns: 32px 1fr 0.8fr 1fr 60px 140px 100px 110px;
         gap: 0.5rem;
         align-items: center;
         padding: 0.55rem 0.9rem;
@@ -759,7 +759,7 @@
   .table-view .modern-table {
     .table-header,
     .table-row .row-main {
-      grid-template-columns: 32px 1fr 0.8fr 1fr 60px 90px 90px 100px;
+      grid-template-columns: 32px 1fr 0.75fr 0.9fr 60px 125px 90px 100px;
     }
   }
 }
@@ -1294,11 +1294,11 @@
 .espera-cereza {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  margin-top: 0.2rem;
-  padding: 0.12rem 0.4rem;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.65rem;
+  font-size: 0.73rem;
   font-weight: 600;
   line-height: 1.25;
   cursor: help;
@@ -1313,7 +1313,7 @@
   color: #8A5A00;
 
   i {
-    font-size: 0.6rem;
+    font-size: 0.7rem;
     flex: none;
   }
 
