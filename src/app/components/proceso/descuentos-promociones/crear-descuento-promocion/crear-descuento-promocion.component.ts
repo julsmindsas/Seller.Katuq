@@ -56,6 +56,7 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
   productoInput$ = new Subject<string>();
   productoLoading = false;
   private productoSub?: Subscription;
+  private tipoSub?: Subscription;
 
   constructor(
     private fb: FormBuilder,
@@ -117,6 +118,28 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
 
     // Ajustar validadores según aplicaA actual, SIN limpiar valores existentes.
     this.aplicarValidadoresTarget(false);
+
+    // El "Valor" no aplica cuando el tipo es "Envío gratis": limpiar su required
+    // para que el campo oculto no deje el formulario inválido de forma invisible.
+    this.aplicarValidadoresValor(this.form.get('tipo')?.value);
+    this.tipoSub = this.form.get('tipo')?.valueChanges
+      .subscribe((tipo) => this.aplicarValidadoresValor(tipo));
+  }
+
+  /**
+   * "Envío gratis" no lleva valor: se quita el required (el campo se oculta en el
+   * template). Para porcentaje/valor_fijo se restauran required + min(0).
+   */
+  private aplicarValidadoresValor(tipo: string): void {
+    const valorCtrl = this.form.get('valor');
+    if (!valorCtrl) return;
+    if (tipo === 'envio_gratis') {
+      valorCtrl.clearValidators();
+      valorCtrl.setValue(0, { emitEvent: false });
+    } else {
+      valorCtrl.setValidators([Validators.required, Validators.min(0)]);
+    }
+    valorCtrl.updateValueAndValidity({ emitEvent: false });
   }
 
   /**
@@ -139,6 +162,7 @@ export class CrearDescuentoPromocionComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.productoSub?.unsubscribe();
+    this.tipoSub?.unsubscribe();
   }
 
   get tipoSeleccionado() { return this.form.get('tipo')?.value; }
