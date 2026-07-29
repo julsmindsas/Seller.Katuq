@@ -43,7 +43,6 @@ import { ImagesManagerComponent } from './components/images-manager/images-manag
 import { CompanyInformationComponent } from './components/header/elements/company-information/company-information.component';
 import { SecurityService } from './services/security/security.service';
 import { KatuqIntelligenceComponent } from './components/katuq-intelligence/katuq-intelligence.component';
-import { ImagenService } from './utils/image.service';
 import { ImageProxyService } from './services/image-proxy.service';
 import { FacturacionIntegracionService } from './services/integraciones/facturas/facturacion.service'
 import { BlankComponent } from './components/layout/blank/blank.component';
@@ -163,7 +162,13 @@ import { DialogModule } from 'primeng/dialog';
     LayoutService,
     NgpThemeService,
     SecurityService,
-    ImagenService,
+    // ImagenService NO va acá: al declararlo en los providers de SharedModule se
+    // instancia en el injector de cada módulo lazy, y como SharedModule también
+    // importa HttpClientModule (que registra su propio HTTP_INTERCEPTORS para
+    // XSRF), ese injector local TAPA los interceptores del root — las peticiones
+    // salían sin Authorization/company y el backend respondía 401. Con
+    // `providedIn: 'root'` en el servicio queda un único singleton con el
+    // HttpClient del root, que sí pasa por HttpInterceptor2.
     ImageProxyService,
     FacturacionIntegracionService,
     KatuqIntelligenceService,

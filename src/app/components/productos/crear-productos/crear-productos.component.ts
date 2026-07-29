@@ -28,7 +28,6 @@ import {
 } from "ngx-dropzone-wrapper";
 import Swal from "sweetalert2";
 
-import { AngularFireStorage } from "@angular/fire/compat/storage";
 import { Observable, Subscription } from "rxjs";
 import { parse, stringify } from "flatted";
 import { TreeNode } from "primeng/api";
@@ -44,7 +43,8 @@ import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { ProcesoConCentroTrabajo } from "../../empresas/model/produccion/procesoconcentrotrabajo";
 import { UtilsService } from "../../../shared/services/utils.service";
 import { KatuqintelligenceService } from "../../../shared/services/katuqintelligence/katuqintelligence.service";
-import { ImagenService } from "../../../shared/utils/image.service";
+import { ArchivoSubido, ImagenService } from "../../../shared/utils/image.service";
+import { HttpEventType } from "@angular/common/http";
 import { error } from "console";
 
 // Dropshipping imports
@@ -153,7 +153,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   categoriasForm: any;
   cd: any;
   flag: any = [];
-  filesPaths: { name: string; pathName: string; tipo: string; }[] = [];
+  filesPaths: { name: string; pathName: string; tipo: string; url?: string; }[] = [];
   fileUrls: { urls: string; nombreImagen: string; path: string; tipo: string; }[] = [];
   pathParentRoute: any;
   moduloVariable: FormGroup;
@@ -198,7 +198,6 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     private modalService: NgbModal,
     private fb: FormBuilder,
     private service: MaestroService,
-    public storage: AngularFireStorage,
     private cdr: ChangeDetectorRef,
     public activeModal: NgbActiveModal,
     private router: Router,
@@ -653,41 +652,75 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       showConfirmButton: false,
       allowOutsideClick: false,
     });
-    let progressPercent: number = 0;
-    let base: number = 100 / this.fileImg.length;
+    const total = this.fileImg.length;
     for (let index = 0; index < this.fileImg.length; index++) {
-      // var referencia = this.storage.storage.ref('Medios/' + `${this.filesNames[index]}`);
       if (!this.filesNames[index]) {
         console.log("Nombre de archivo no definido en el índice:", index);
         continue; // Omite la iteración actual si el nombre es undefined
       }
-      var uploading = this.storage.upload(
-        "Productos/" + `${this.filesNames[index]}`,
-        this.fileImg[index].img,
-      );
-      this.filesPaths.push({
-        name: this.filesNames[index],
-        pathName: "Productos/" + `${this.filesNames[index]}`,
-        tipo: this.fileImg[index].tipo,
-      });
-      var progress = (await uploading).state;
 
-      uploading.percentageChanges().subscribe((percentage) => {
-        progressPercent += percentage / this.fileImg.length;
-        const progressEl = document.getElementById("progressbar");
-        if (progressEl) {
-          (progressEl as HTMLElement).style.width = progressPercent + "%";
-        }
-        this.flag.push(progress);
+      try {
+        const subida = await this.subirImagenConBarra(
+          this.fileImg[index].img,
+          this.filesNames[index],
+          (pct) => {
+            const progressEl = document.getElementById("progressbar");
+            if (progressEl) {
+              progressEl.style.width = Math.round(((index + pct / 100) / total) * 100) + "%";
+            }
+          },
+        );
 
-        if (parseInt(progressPercent.toString()) == 100) {
-          this.uploadingImages = false;
-          Swal.close();
-          this.resultImg();
-          this.cdr.detectChanges();
-        }
-      });
+        this.filesPaths.push({
+          name: this.filesNames[index],
+          pathName: subida.path,
+          tipo: this.fileImg[index].tipo,
+          url: subida.url,
+        });
+        this.flag.push("success");
+      } catch (error) {
+        console.error("Error subiendo imagen", error);
+        this.flag.push("error");
+      }
     }
+
+    this.uploadingImages = false;
+    Swal.close();
+    this.resultImg();
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Sube una imagen a través del backend (`/v1/media/upload`) reportando avance.
+   * La subida directa a Firebase Storage desde el navegador responde 403 porque
+   * la app no tiene sesión de Firebase Auth.
+   */
+  private subirImagenConBarra(
+    file: File,
+    nombre: string,
+    onProgress: (porcentaje: number) => void,
+  ): Promise<ArchivoSubido> {
+    return new Promise<ArchivoSubido>((resolve, reject) => {
+      this.imageService.subirImagenConProgreso(file, nombre).subscribe({
+        next: (event) => {
+          const pct = ImagenService.porcentaje(event);
+          if (pct !== null) {
+            onProgress(pct);
+            return;
+          }
+          if (event.type === HttpEventType.Response) {
+            onProgress(100);
+            const body = event.body;
+            if (!body?.url) {
+              reject(new Error("El backend no devolvió la URL de la imagen"));
+              return;
+            }
+            resolve(body);
+          }
+        },
+        error: (error) => reject(error),
+      });
+    });
   }
 
   private async uploadPendingImages(): Promise<void> {
@@ -707,31 +740,36 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       allowOutsideClick: false,
     });
 
-    const nuevosFilesPaths: { name: string; pathName: string; tipo: string }[] = [];
-
-    for (let i = 0; i < this.fileImg.length; i++) {
-      if (!this.filesNames[i]) continue;
-      const path = 'Productos/' + this.filesNames[i];
-      const task = this.storage.upload(path, this.fileImg[i].img);
-
-      const sub = task.percentageChanges().subscribe(pct => {
-        const progreso = ((i + (pct || 0) / 100) / total) * 100;
-        const el = document.getElementById('progressbar');
-        if (el) el.style.width = Math.round(progreso) + '%';
-      });
-
-      await task;
-      sub.unsubscribe();
-      nuevosFilesPaths.push({ name: this.filesNames[i], pathName: path, tipo: this.fileImg[i].tipo });
-    }
-
-    // Obtener URLs de descarga
+    const nuevosFilesPaths: { name: string; pathName: string; tipo: string; url: string }[] = [];
+    // El backend responde con la URL de descarga, no hace falta pedirla aparte.
     const nuevosUrls: { urls: string; nombreImagen: string; path: string; tipo: string }[] = [];
-    for (const img of nuevosFilesPaths) {
-      const url = await new Promise<string>((resolve, reject) => {
-        this.storage.ref(img.pathName).getDownloadURL().subscribe(resolve, reject);
-      });
-      nuevosUrls.push({ urls: url, nombreImagen: img.name, path: img.pathName, tipo: img.tipo });
+
+    try {
+      for (let i = 0; i < this.fileImg.length; i++) {
+        if (!this.filesNames[i]) continue;
+
+        const subida = await this.subirImagenConBarra(
+          this.fileImg[i].img,
+          this.filesNames[i],
+          (pct) => {
+            const progreso = ((i + pct / 100) / total) * 100;
+            const el = document.getElementById('progressbar');
+            if (el) el.style.width = Math.round(progreso) + '%';
+          },
+        );
+
+        nuevosFilesPaths.push({ name: this.filesNames[i], pathName: subida.path, tipo: this.fileImg[i].tipo, url: subida.url });
+        nuevosUrls.push({
+          urls: subida.url,
+          nombreImagen: this.filesNames[i],
+          path: subida.path,
+          tipo: this.fileImg[i].tipo,
+        });
+      }
+    } catch (error: any) {
+      this.uploadingImages = false;
+      Swal.close();
+      throw new Error(error?.error?.error || error?.message || 'error desconocido');
     }
 
     this.filesPaths = [...this.filesPaths, ...nuevosFilesPaths];
@@ -1129,15 +1167,12 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   guardarRegistrosEnFirebase() {
     // this.carrouselImg = [];
-    this.filesPaths.forEach((img) => {
-      this.storage
-        .ref(img.pathName)
-        .getDownloadURL()
-        .subscribe((url) => {
-          console.log("URL de descarga:", url);
-          // this.images.push({
+    // La URL la devuelve el backend al subir; ya no se consulta a Storage.
+    this.filesPaths
+      .filter((img) => !!img.url)
+      .forEach((img) => {
           const media = {
-            urls: url,
+            urls: img.url,
             nombreImagen: img.name,
             path: img.pathName,
             tipo: img.tipo,
@@ -1175,8 +1210,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
             }
             this.editarProducto();
           }
-        });
-    });
+      });
   }
 
   validarReferenciaEnBlur(): void {
@@ -1325,8 +1359,12 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     // Subir imágenes pendientes antes de crear el producto
     try {
       await this.uploadPendingImages();
-    } catch (e) {
-      Swal.fire("Error", "No se pudieron subir las imágenes. Intente de nuevo.", "error");
+    } catch (e: any) {
+      Swal.fire(
+        "Error",
+        `No se pudieron subir las imágenes: ${e?.message || 'error desconocido'}. Intente de nuevo.`,
+        "error",
+      );
       this.saving = false;
       return;
     }
@@ -1402,8 +1440,12 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     // Subir imágenes pendientes antes de editar
     try {
       await this.uploadPendingImages();
-    } catch (e) {
-      Swal.fire("Error", "No se pudieron subir las imágenes. Intente de nuevo.", "error");
+    } catch (e: any) {
+      Swal.fire(
+        "Error",
+        `No se pudieron subir las imágenes: ${e?.message || 'error desconocido'}. Intente de nuevo.`,
+        "error",
+      );
       this.saving = false;
       return;
     }

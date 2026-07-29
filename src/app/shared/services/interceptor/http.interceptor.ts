@@ -124,13 +124,19 @@ export class HttpInterceptor2 implements HttpInterceptor {
 
         let headers = {};
 
+        // En un envío multipart (FormData) el Content-Type lo tiene que poner el
+        // navegador porque incluye el boundary; forzar application/json rompe la
+        // subida de archivos.
+        const esFormData = request.body instanceof FormData;
+        const contentType = esFormData ? {} : { 'Content-Type': 'application/json' };
+
         if (company) {
           headers = {
             "Authorization": 'Bearer ' + token,
             "company": user?.company,
             'user': user?.nit,
             'usage-code': user?.authorizationCode,
-            'Content-Type': 'application/json',
+            ...contentType,
             'Accept': 'application/json',
             'email': user.email,
             'Access-Control-Allow-Origin': environment.urlPermitidas
@@ -139,7 +145,7 @@ export class HttpInterceptor2 implements HttpInterceptor {
           headers = {
             "Authorization": 'Bearer ' + token,
             'user': user?.nit,
-            'Content-Type': 'application/json',
+            ...contentType,
             'Accept': 'application/json',
             'email': user.email,
             'Access-Control-Allow-Origin': environment.urlPermitidas
