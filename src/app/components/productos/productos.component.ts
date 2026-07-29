@@ -17,8 +17,8 @@ import { FulfillmentService } from '../../shared/services/fulfillment/fulfillmen
 import { ToastrService } from 'ngx-toastr';
 import { IntegrationsService } from '../integrations/integrations.service';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
+import { EMPTY, of } from 'rxjs';
 import { parse as flatedParse } from 'flatted';
 
 const FILTROS_SESSION_KEY = 'productos_filtros';
@@ -38,6 +38,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
   // Paginación
   pageSize = 10;
   currentPage = 1;
+  // Offset del paginador. Lo posee el COMPONENTE y va bindeado a [first] de la
+  // p-table. Antes no estaba bindeado y la tabla se lo guardaba internamente:
+  // cualquier recarga que volviera a página 1 (cambiar un filtro del botón Más,
+  // buscar, limpiar) dejaba el paginador resaltando la página vieja mientras los
+  // datos ya eran los de la página 1. Peor aún, volver a hacer clic en esa misma
+  // página NO emite onLazyLoad (PrimeNG ignora el clic sobre la página activa),
+  // así que la tabla quedaba trabada mostrando la primera página por más que la
+  // numeración dijera otra cosa.
+  first = 0;
   totalItems = 0;
   totalPages = 0;
   lastDocId: string | null = null;
@@ -192,7 +201,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
     { label: 'Estado',             key: 'estado',             selected: true,  getValue: (r: any) => r.disponibilidad?.activar ? 'Activo' : 'Inactivo' },
     { label: 'Marca',              key: 'marca',              selected: false, getValue: (r: any) => r.identificacion?.marca || '' },
     { label: 'Inventariable',      key: 'inventariable',      selected: false, getValue: (r: any) => r.disponibilidad?.inventariable ? 'Sí' : 'No' },
-    { label: 'Requiere Producción',key: 'requiereProduccion', selected: false, getValue: (r: any) => r.procesoComercial?.requiereProduccion ? 'Sí' : 'No' },
+    // Mismo campo que usa el filtro "Producción": `procesoComercial.requiereProduccion`
+    // no existe en la base, así que esta columna exportaba 'No' para todos.
+    { label: 'Requiere Producción',key: 'requiereProduccion', selected: false, getValue: (r: any) => r.crearProducto?.paraProduccion ? 'Sí' : 'No' },
     { label: 'Tiempo de Entrega',  key: 'tiempoEntrega',      selected: false, getValue: (r: any) => r.disponibilidad?.tiempoEntrega || '' },
     { label: 'Peso (kg)',          key: 'peso',               selected: false, getValue: (r: any) => r.dimensiones?.pesoUnitarioProductoKg || '' },
     { label: 'Tags',               key: 'tags',               selected: false, getValue: (r: any) => (r.crearProducto?.etiquetas || []).join(', ') },
@@ -366,10 +377,19 @@ export class ProductosComponent implements OnInit, OnDestroy {
         this.cargando = true;
         this.guardarFiltros();
         const trimmed = texto?.trim();
-        if (trimmed && trimmed.length >= 2) {
-          return this.service.quickSearchProducts(trimmed, this.pageSize, this.filtros.searchBy, this.currentPage);
-        }
-        return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, undefined, this.sortField ?? undefined, this.sortOrder);
+        const request$ = (trimmed && trimmed.length >= 2)
+          ? this.service.quickSearchProducts(trimmed, this.pageSize, this.filtros.searchBy, this.currentPage)
+          : this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, undefined, this.sortField ?? undefined, this.sortOrder);
+
+        // El error se atrapa DENTRO del switchMap a propósito: si escapa hasta el
+        // subscribe, RxJS cierra la suscripción y el Subject queda emitiendo al
+        // vacío — el buscador se muere hasta recargar la página. Basta un backend
+        // caído o un 500 puntual para dejarlo inservible el resto de la sesión.
+        return request$.pipe(catchError(err => {
+          console.error('Error en búsqueda:', err);
+          this.cargando = false;
+          return EMPTY;
+        }));
       }),
       takeUntil(this.destroy$)
     ).subscribe({
@@ -399,10 +419,6 @@ export class ProductosComponent implements OnInit, OnDestroy {
           this.lastDocId = response.pagination.lastDocId;
         }
         this.cargando = false;
-      },
-      error: (err) => {
-        console.error('Error en búsqueda:', err);
-        this.cargando = false;
       }
     });
 
@@ -413,7 +429,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
         this.resetPaginacion();
         this.cargando = true;
         this.guardarFiltros();
-        return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, undefined, this.sortField ?? undefined, this.sortOrder);
+        // Mismo blindaje que el buscador: el error no puede escapar del switchMap
+        // o la tira de filtros deja de responder para el resto de la sesión.
+        return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, undefined, this.sortField ?? undefined, this.sortOrder)
+          .pipe(catchError(err => {
+            console.error('Error al aplicar filtros:', err);
+            this.cargando = false;
+            return EMPTY;
+          }));
       }),
       takeUntil(this.destroy$)
     ).subscribe({
@@ -424,10 +447,6 @@ export class ProductosComponent implements OnInit, OnDestroy {
         this.totalItems = response.pagination.totalItems;
         this.totalPages = response.pagination.totalPages;
         this.lastDocId = response.pagination.lastDocId;
-        this.cargando = false;
-      },
-      error: (err) => {
-        console.error('Error al aplicar filtros:', err);
         this.cargando = false;
       }
     });
@@ -458,6 +477,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   private resetPaginacion(): void {
     this.currentPage = 1;
+    this.first = 0;
     this.lastDocId = null;
   }
 
@@ -497,6 +517,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   get hayFiltrosActivos(): boolean {
     return this.activeChips.length > 0;
+  }
+
+  // `activeChips` es un getter: devuelve un array NUEVO con objetos NUEVOS en
+  // cada ciclo de detección de cambios. Sin trackBy el *ngFor los ve como items
+  // distintos y destruye/recrea todos los <button> en cada tick — el mousedown
+  // sobre la × pasa sobre un nodo que ya no existe al soltar el mouse, así que
+  // el navegador nunca llega a emitir 'click' y el chip parece no responder.
+  trackChip(_index: number, chip: { key: string }): string {
+    return chip.key;
   }
 
   get searchPlaceholder(): string {
@@ -794,17 +823,21 @@ export class ProductosComponent implements OnInit, OnDestroy {
   // Cambiar página
 
   onPageChange(event: any) {
-    const newPageSize = event.rows;
-    let newCurrentPage = Math.floor(event.first / event.rows) + 1;
+    const newPageSize = event.rows || this.pageSize;
+    let newFirst = event.first ?? 0;
+    let newCurrentPage = Math.floor(newFirst / newPageSize) + 1;
     const newSortField = event.sortField || null;
     const newSortOrder = event.sortOrder === -1 ? -1 : 1;
 
     const sortChanged = newSortField !== this.sortField || newSortOrder !== this.sortOrder;
-    if (sortChanged) newCurrentPage = 1;
+    // Al reordenar se vuelve al principio: la página N del orden viejo no tiene
+    // nada que ver con la página N del nuevo.
+    if (sortChanged) { newCurrentPage = 1; newFirst = 0; }
 
     if (newPageSize !== this.pageSize || newCurrentPage !== this.currentPage || sortChanged) {
       this.pageSize = newPageSize;
       this.currentPage = newCurrentPage;
+      this.first = newFirst;
       this.sortField = newSortField;
       this.sortOrder = newSortOrder;
       this.lastDocId = null;

@@ -583,6 +583,15 @@ $fs-active-border: $pk-accent-border;
 }
 
 .chip-remove {
+    // Área de click propia: con `padding: 0` el blanco real de la × eran ~8px
+    // y era fácil errarle y pegarle al span del chip, que no tiene handler.
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-right: -3px;
+    border-radius: 50%;
     background: none;
     border: none;
     padding: 0;
@@ -591,7 +600,7 @@ $fs-active-border: $pk-accent-border;
     color: inherit;
     opacity: 0.6;
     cursor: pointer;
-    &:hover { opacity: 1; }
+    &:hover { opacity: 1; background: rgba(0, 0, 0, 0.06); }
 }
 
 .fs-btn-save {

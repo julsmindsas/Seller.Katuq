@@ -296,7 +296,7 @@
                         <!-- Fila 4: Chips activos + vistas guardadas -->
                         <div class="filter-status" *ngIf="activeChips.length > 0 || savedViews.length > 0">
                             <ng-container *ngIf="activeChips.length > 0">
-                                <span *ngFor="let chip of activeChips" class="filter-chip">
+                                <span *ngFor="let chip of activeChips; trackBy: trackChip" class="filter-chip">
                                     {{ chip.label }}
                                     <button type="button" class="chip-remove" (click)="removerChip(chip.key)">×</button>
                                 </span>
@@ -393,6 +393,7 @@
                         [loading]="cargando"
                         [rowsPerPageOptions]="[10, 20, 50, 100]"
                         [rows]="pageSize"
+                        [first]="first"
                         [totalRecords]="totalItems"
                         styleClass="pk-table p-datatable-sm"
                         (onLazyLoad)="onPageChange($event)"
