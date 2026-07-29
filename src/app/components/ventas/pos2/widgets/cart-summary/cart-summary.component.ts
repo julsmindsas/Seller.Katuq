@@ -13,6 +13,17 @@ export class CartSummaryComponent {
   constructor(public cartService: CartService) { }
 
   /**
+   * Total del ticket como NÚMERO, solo para mostrarlo con separadores de miles.
+   * OJO: no se toca getPOSSubTotal(); pos-order-creator hace
+   * parseFloat(getPOSSubTotal().replace('$','')) al crear el pedido, así que
+   * cambiar el formato del servicio rompería el monto de la orden.
+   */
+  get totalNumerico(): number {
+    const raw = this.cartService.getPOSSubTotal();
+    return parseFloat(String(raw ?? '0').replace(/[^0-9.-]/g, '')) || 0;
+  }
+
+  /**
    * Aplica un cupón de descuento (funcionalidad pendiente)
    */
   applyCoupon(): void {

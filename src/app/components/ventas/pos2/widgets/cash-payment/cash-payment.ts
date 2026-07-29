@@ -14,7 +14,19 @@ export class CashPaymentComponent {
   amountPaid: number = 0;    // Monto entregado por el cliente
   change: number = 0;        // Cambio a devolver
 
+  /** Denominaciones de billete colombianas para los atajos del modal. */
+  readonly billetes: number[] = [5000, 10000, 20000, 50000, 100000];
+
   constructor(public activeModal: NgbActiveModal) {}
+
+  /**
+   * Atajo de billete: escribe el monto recibido y recalcula el cambio con el
+   * mismo calculateChange() de siempre. Solo evita digitar.
+   */
+  establecerRecibido(valor: number): void {
+    this.amountPaid = valor;
+    this.calculateChange();
+  }
 
   calculateChange() {
     if (this.amountPaid >= this.totalAmount) {

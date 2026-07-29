@@ -1,29 +1,18 @@
-<div class="card">
+<!--
+  Franja de categorías del POS (mockup "Ventas POS").
+  Antes era un carrusel con autoplay dentro de una tarjeta: robaba altura al
+  catálogo y se movía solo mientras el cajero buscaba. Ahora es una tira de
+  chips con scroll horizontal. La lista sigue siendo la misma (imagesRect).
+-->
+<div class="cat-strip">
+  <span class="cat-strip-label">{{ 'Categorías' | translate }}</span>
 
-
-    <!-- <app-card [headerTitle]="'Product Categories'" [padding]="false" [rightSideDetails]="true" [cardBodyClass]="'pt-0'"> -->
-    
-        <div class="card-header card-no-border header-top p-2 m-0"><!----><!---->
-            <h5 class="fc-primary">{{'Categorías' | translate }}</h5>
-            <a class="c-o-light" [routerLink]="['/categorias']" header3>{{ 'Ver todas' | translate }}</a>
-        </div>
-    
-  
-    <div class="slider-wrapper arrow-round" style="padding: 0px 10px; margin: 0px;">
-
-        <p-carousel [value]="imagesRect" [numVisible]="7" [numScroll]="1" [circular]="true" [showIndicators]="false"
-            [showNavigators]="false" [responsiveOptions]="responsiveOptions" [autoplayInterval]="3000">
-            <ng-template let-item pTemplate="item">
-                <div class="prueba">
-                    <a class="shop-box">
-                        <img [src]="item.image" class="card-img-top category-img" alt="Categoría">
-                    </a>
-                    <span class="m-t-5 category-title f-w-300 text-gray fs-12">{{item.title}}</span>
-                </div>
-            </ng-template>
-        </p-carousel>
-
+  <div class="cat-strip-rail">
+    <div class="cat-chip" *ngFor="let item of imagesRect" [title]="item.title">
+      <img [src]="item.image" class="cat-chip-img" alt="Categoría">
+      <span class="cat-chip-title">{{ item.title }}</span>
     </div>
-    <!-- </app-card> -->
+  </div>
 
+  <a class="cat-strip-all" [routerLink]="['/categorias']">{{ 'Ver todas' | translate }}</a>
 </div>

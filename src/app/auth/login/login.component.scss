@@ -53,7 +53,8 @@ $font-family-primary:
 // Left Side - Brand Image (Desktop only)
 .login-brand-section {
     flex: 1;
-    background-image: url("/assets/images/login/login-logo.svg");
+    // La imagen la define el modificador (--actual / --nueva) para poder
+    // comparar las dos piezas. Ver login.component.ts (?fondo=actual).
     background-position: center center;
     background-size: cover;
     background-repeat: no-repeat;
@@ -656,4 +657,35 @@ $font-family-primary:
 .login-main {
     // Deprecated - will be removed in future versions
     // Use .login-form-wrapper instead
+}
+
+// ==========================================
+// PIEZA GRÁFICA DEL PANEL IZQUIERDO
+//
+// Se conservan las dos para poder compararlas en vivo:
+//   /login              → nueva ("Tu operación, conectada de principio a fin")
+//   /login?fondo=actual → la anterior (login-logo.svg)
+// ==========================================
+
+// --- pieza anterior ---
+.login-brand-section--actual {
+    background-image: url("/assets/images/login/login-logo.svg");
+    background-position: center center;
+}
+
+// --- pieza nueva ---
+.login-brand-section--nueva {
+    // JPEG y no el PNG original: el PNG pesa 4,2 MB y congelaba el renderizador
+    // al pintarlo a pantalla completa. Mismo tamaño (1854x1688), 0,66 MB.
+    background-image: url("/assets/images/login/login-hero-operacion.jpg");
+    // Es casi cuadrada (1854x1688) y el panel es una columna alta: anclada a la
+    // izquierda-arriba se conserva el titular y la escena de bodega.
+    background-position: left top;
+    background-color: #0f1b34;
+
+    // La pieza ya trae su propio panel oscuro detrás del titular; el degradado
+    // del diseño anterior le bajaba el contraste al texto ya impreso.
+    &::before {
+        display: none;
+    }
 }

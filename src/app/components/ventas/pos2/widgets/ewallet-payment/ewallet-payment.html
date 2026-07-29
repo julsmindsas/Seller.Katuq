@@ -1,13 +1,30 @@
-<!-- e-wallet-payment.component.html -->
+<!--
+  Pago con E-wallet (piel Katuq). Mismo campo emailOrPhone y mismo
+  confirmPayment(); solo cambia la presentación.
+-->
 <div class="modal-header">
-    <h4 class="modal-title">Pago con E-wallet</h4>
-    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+  <h4 class="modal-title">
+    <span class="ew-chip">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path></svg>
+    </span>
+    Pago con E-wallet
+  </h4>
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="ew-field">
+    <label for="emailOrPhone">Correo electrónico o teléfono</label>
+    <input type="text" id="emailOrPhone" [(ngModel)]="emailOrPhone" class="form-control"
+           placeholder="correo@ejemplo.com o 300 000 0000" />
+    <span class="ew-hint">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      A este dato se le asocia el pago de la billetera.
+    </span>
   </div>
-  <div class="modal-body">
-    <label for="emailOrPhone">Correo Electrónico o Teléfono:</label>
-    <input type="text" id="emailOrPhone" [(ngModel)]="emailOrPhone" class="form-control" />
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
-    <button type="button" class="btn btn-primary" (click)="confirmPayment()">Confirmar Pago</button>
-  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-primary" (click)="confirmPayment()">Confirmar pago</button>
+</div>

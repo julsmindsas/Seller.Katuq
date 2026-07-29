@@ -13,6 +13,7 @@ import { BreadcrumbComponent } from './components/breadcrumb/breadcrumb.componen
 import { FeatherIconsComponent } from './components/feather-icons/feather-icons.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { HeaderComponent } from './components/header/header.component';
+import { AvisoActualizacionComponent } from './components/aviso-actualizacion/aviso-actualizacion.component';
 import { ContentComponent } from './components/layout/content/content.component';
 import { FullComponent } from './components/layout/full/full.component';
 import { LoaderComponent } from './components/loader/loader.component';
@@ -87,6 +88,7 @@ import { DialogModule } from 'primeng/dialog';
 @NgModule({
   declarations: [
     HeaderComponent,
+    AvisoActualizacionComponent,
     FooterComponent,
     SidebarComponent,
     ContentComponent,

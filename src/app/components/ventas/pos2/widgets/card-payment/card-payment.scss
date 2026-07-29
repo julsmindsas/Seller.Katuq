@@ -77,3 +77,126 @@
   background-color: #f8f9fc;
   border-top: 1px solid #e3e6f0;
 } 
+// =============================================================================
+// Piel Katuq del modal de métodos electrónicos (mockup "Ventas POS").
+// =============================================================================
+@import '../../../../../shared/styles/katuq-modal';
+
+:host {
+  @include kc-tokens;
+  @include km-modal;
+}
+
+.cd-chip { @include km-title-chip(var(--kc-blue), var(--kc-blue-wash)); }
+
+.payment-methods-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cd-cat-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 10px;
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--kc-ink);
+  text-transform: none;
+  letter-spacing: normal;
+
+  i {
+    color: var(--kc-accent);
+    font-size: 14px;
+  }
+}
+
+.payment-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 9px;
+}
+
+// Cada método es un botón real: área de toque completa y foco accesible.
+.payment-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1.5px solid var(--kc-line);
+  border-radius: 14px;
+  padding: 14px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: #c9b9f7;
+    background: #f6f4ff;
+    box-shadow: 0 6px 18px rgba(108, 76, 224, 0.12);
+  }
+
+  &:active { transform: translateY(1px); }
+}
+
+.payment-option-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+}
+
+.payment-option-name {
+  font-family: var(--kc-font-body);
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--kc-ink2);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.cd-empty {
+  border: 2px dashed #e4e5ee;
+  border-radius: 16px;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: #fbfcfe;
+  text-align: center;
+}
+
+.cd-empty-ic {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  background: #f1f2f5;
+  color: #b7bccb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cd-empty-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.cd-empty-sub {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #9aa0b2;
+  max-width: 320px;
+  line-height: 1.55;
+}

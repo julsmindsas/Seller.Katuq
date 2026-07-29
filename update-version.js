@@ -83,6 +83,38 @@ function updateVersion(filePath, isBeta = true) {
   return newVersion;
 }
 
+/**
+ * Publica la versión recién generada como archivo estático.
+ *
+ * La app compilada lleva su versión "quemada" en el bundle (environment.version);
+ * este JSON es la única forma de saber, sin recargar, qué versión está publicada
+ * en el servidor. VersionCheckService lo consulta cada cierto tiempo y compara.
+ *
+ * `notas` es opcional: si se llena a mano antes de publicar, el aviso de
+ * actualización muestra el detalle de novedades.
+ */
+function writeVersionJson(version) {
+  const outPath = path.join(__dirname, 'src', 'assets', 'version.json');
+
+  // Conservar las notas que ya estuvieran escritas para esta publicación.
+  let notas = [];
+  try {
+    const previo = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+    if (Array.isArray(previo.notas)) notas = previo.notas;
+  } catch (e) {
+    // No existe todavía o está corrupto: se crea desde cero.
+  }
+
+  const payload = {
+    version,
+    publicada: new Date().toISOString(),
+    notas,
+  };
+
+  fs.writeFileSync(outPath, JSON.stringify(payload, null, 2) + '\n');
+  console.log(`Versión publicada en assets/version.json: ${version}`);
+}
+
 // Rutas de los archivos
 const envPath = path.join(__dirname, 'src', 'environments', 'environment.ts');
 const envProdPath = path.join(__dirname, 'src', 'environments', 'environment.prod.ts');
@@ -90,6 +122,9 @@ const envProdPath = path.join(__dirname, 'src', 'environments', 'environment.pro
 // Actualizar ambos archivos
 const devVersion = updateVersion(envPath);
 const prodVersion = updateVersion(envProdPath);
+
+// Exponer la versión de producción como archivo estático para el aviso in-app.
+writeVersionJson(prodVersion);
 
 console.log('');
 console.log('🚀 Actualización de versiones completada');

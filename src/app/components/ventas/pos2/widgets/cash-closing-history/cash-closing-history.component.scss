@@ -501,3 +501,305 @@
     }
   }
 } 
+// =============================================================================
+// PIEL KATUQ DEL HISTORIAL DE CIERRES (mockup "Ventas POS")
+// Solo cosmética: la consulta, los filtros y la impresión quedan igual.
+// =============================================================================
+@import '../../../../../shared/styles/katuq-modal';
+
+:host {
+  @include kc-tokens;
+  @include km-modal;
+}
+
+.cash-closing-history {
+  font-family: var(--kc-font-body);
+  color: var(--kc-ink);
+}
+
+.cash-closing-history .modal-title {
+  gap: 0;
+}
+
+// --- selector de fechas -----------------------------------------------------
+.fecha-selector {
+  background: var(--kc-canvas) !important;
+  border: 1px solid var(--kc-line);
+  border-radius: 16px !important;
+
+  .form-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--kc-muted2);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .input-group-text,
+  .btn-outline-secondary {
+    background: #fff;
+    border-color: var(--kc-line);
+    color: var(--kc-accent);
+    border-radius: 0 12px 12px 0;
+  }
+}
+
+.calendar-icon { color: var(--kc-accent); }
+
+// --- tarjetas de resumen ----------------------------------------------------
+.summary-card,
+.sales-summary-card,
+.card {
+  border: 1px solid var(--kc-line);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+}
+
+.card > .card-header {
+  background: #fff;
+  border-bottom: 1px solid var(--kc-line);
+  border-radius: 16px 16px 0 0;
+  padding: 14px 18px;
+}
+
+.section-title,
+.company-title {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  color: var(--kc-ink);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.section-subtitle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kc-muted);
+}
+
+// --- cifras -----------------------------------------------------------------
+.stats-container,
+.counts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.stat-item,
+.count-box {
+  flex: 1 1 140px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.stat-label,
+.count-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--kc-muted2);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.stat-value,
+.count-value {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--kc-ink);
+  line-height: 1.1;
+}
+
+// --- lista de cierres -------------------------------------------------------
+.closing-item {
+  background: #fff;
+  border: 1px solid var(--kc-line);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.closing-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: #fbfcfe;
+  border-bottom: 1px solid var(--kc-line2);
+}
+
+.closing-date {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 14.5px;
+  color: var(--kc-ink);
+}
+
+.closing-user {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--kc-muted);
+}
+
+.closing-total {
+  margin-left: auto;
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--kc-accent);
+}
+
+.closing-body { padding: 14px 16px; }
+
+// --- tablas y badges --------------------------------------------------------
+.table {
+  font-family: var(--kc-font-body);
+
+  thead th,
+  &.table-light thead th {
+    background: #fbfcfe !important;
+    border-bottom: 1px solid var(--kc-line2);
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--kc-muted2);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  tbody td {
+    border-bottom: 1px solid #f5f6fa;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--kc-ink2);
+    vertical-align: middle;
+  }
+
+  &.table-hover tbody tr:hover > * { background: #fbfaff; }
+}
+
+.badge {
+  font-family: var(--kc-font-body);
+  font-weight: 800;
+  font-size: 11px;
+  padding: 5px 11px;
+  border-radius: 999px;
+
+  &.bg-primary {
+    background: var(--kc-accent-wash) !important;
+    color: var(--kc-accent) !important;
+  }
+}
+
+.alert {
+  border-radius: 14px;
+  border-width: 1px;
+  font-size: 13px;
+  font-weight: 700;
+
+  &.alert-info {
+    background: var(--kc-blue-wash);
+    border-color: #cfe0fb;
+    color: #1f56b0;
+  }
+
+  &.alert-warning {
+    background: var(--kc-orange-wash);
+    border-color: #f7e2be;
+    color: #a9660d;
+  }
+}
+
+.spinner-border { color: var(--kc-accent); }
+
+// =============================================================================
+// REFUERZO — las reglas propias del archivo ganaban por especificidad
+//
+// Medido en pantalla: el título salía a 14.4px con #2c3e50, las etiquetas sin
+// peso y los botones en el azul de Bootstrap (#0d6efd) con radio 6px.
+// =============================================================================
+.cash-closing-history {
+
+  .modal-header .modal-title {
+    font-family: var(--kc-font-head) !important;
+    font-weight: 800 !important;
+    font-size: 18px !important;
+    color: var(--kc-ink) !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+  }
+
+  .fecha-selector .form-label,
+  .form-label {
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    color: var(--kc-muted2) !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+  }
+
+  .btn {
+    border-radius: 12px !important;
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 13px;
+    box-shadow: none !important;
+  }
+
+  .btn.btn-outline-primary,
+  .btn.btn-outline-primary:focus {
+    background-color: #fff !important;
+    color: var(--kc-accent) !important;
+    border-color: #e2d9fb !important;
+  }
+
+  .btn.btn-outline-primary:hover {
+    background-color: var(--kc-accent-wash) !important;
+    border-color: var(--kc-accent) !important;
+    color: var(--kc-accent) !important;
+  }
+
+  .btn.btn-primary,
+  .btn.btn-primary:hover,
+  .btn.btn-primary:focus {
+    background-color: var(--kc-accent) !important;
+    border-color: var(--kc-accent) !important;
+    color: #fff !important;
+  }
+
+  .btn.btn-outline-secondary,
+  .btn.btn-outline-secondary:focus {
+    background-color: #fff !important;
+    color: var(--kc-ink2) !important;
+    border-color: #e4e5ee !important;
+  }
+
+  // El botón del datepicker va pegado al input: conserva el radio a la derecha.
+  .input-group .btn.btn-outline-secondary {
+    border-radius: 0 12px 12px 0 !important;
+  }
+
+  .section-title,
+  .company-title,
+  .closing-date {
+    font-family: var(--kc-font-head) !important;
+    font-weight: 800 !important;
+    color: var(--kc-ink) !important;
+    text-transform: none !important;
+  }
+
+  .stat-value,
+  .count-value,
+  .closing-total {
+    font-family: var(--kc-font-head) !important;
+    font-weight: 800 !important;
+  }
+
+  .closing-total { color: var(--kc-accent) !important; }
+}

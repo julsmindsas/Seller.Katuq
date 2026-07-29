@@ -1,0 +1,59 @@
+<!doctype html>
+<!--
+  Página temporal SOLO para comparar las dos piezas del login sin cerrar sesión
+  (/login redirige a /welcome cuando hay sesión activa).
+  Reproduce la geometría real de .login-brand-section: columna flex:1, 100vh,
+  background-size: cover.
+  Se puede borrar cuando ya no haga falta.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comparar fondo del login</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Nunito, system-ui, sans-serif; background: #f5f6fb; }
+
+    .barra {
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 16px; background: #fff; border-bottom: 1px solid #ecedf3;
+      font-weight: 800; font-size: 13px; color: #52586b;
+    }
+    .barra a {
+      color: #6c4ce0; text-decoration: none; padding: 6px 12px;
+      border: 1px solid #e2d9fb; border-radius: 10px; background: #f6f4ff;
+    }
+
+    /* Geometría idéntica al login real */
+    .login-container { display: flex; min-height: calc(100vh - 45px); background: #fff; }
+    .brand { flex: 1; min-height: calc(100vh - 45px); background-size: cover; background-repeat: no-repeat; }
+    .nueva  { background-image: url('/assets/images/login/login-hero-operacion.jpg'); background-position: left top; background-color: #0f1b34; }
+    .actual { background-image: url('/assets/images/login/login-logo.svg'); background-position: center center; }
+    .form {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      color: #9aa0b2; text-align: center;
+    }
+    .form b { display: block; font-size: 20px; color: #2a2e3c; }
+  </style>
+</head>
+<body>
+  <div class="barra">
+    <span>Fondo del login —</span>
+    <a href="?v=nueva">Nueva</a>
+    <a href="?v=actual">Actual</a>
+    <span id="cual"></span>
+  </div>
+
+  <div class="login-container">
+    <div class="brand" id="brand"></div>
+    <div class="form"><div><b>Ingresa a tu cuenta</b><span>(aquí va el formulario)</span></div></div>
+  </div>
+
+  <script>
+    var v = new URLSearchParams(location.search).get('v') || 'nueva';
+    document.getElementById('brand').className = 'brand ' + (v === 'actual' ? 'actual' : 'nueva');
+    document.getElementById('cual').textContent = v === 'actual' ? 'viendo: la de ahora' : 'viendo: la nueva';
+  </script>
+</body>
+</html>

@@ -1,3 +1,7 @@
+@import '../../../shared/styles/katuq-comercial';
+
+:host { @include kc-tokens; display: block; }
+
 .cash-closing-btn,
 .action-buttons {
   position: static;
@@ -168,119 +172,475 @@ $calc-radius:     16px;
 }
 // ─────────────────────────────────────────────────────────────────
 
-.pos-header {
+// =============================================================================
+// MARCO DE PANTALLA COMPLETA (mockup "Ventas POS")
+//
+// El POS es una pantalla de caja: la barra superior, el catálogo y el ticket
+// tienen que verse a la vez, sin scroll de página. El scroll vive dentro del
+// catálogo y dentro de la lista del ticket.
+// =============================================================================
+.pos-shell {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  margin-bottom: 20px;
+  // Alto de la ventana menos el encabezado de la app.
+  height: calc(100vh - 92px);
+  min-height: 560px;
+  background: #f5f6fb;
+  border: 1px solid var(--kc-line);
+  border-radius: 20px;
+  overflow: hidden;
+  font-family: var(--kc-font-body);
+  color: #232733;
 
-  // En pantallas grandes, organizar en fila
-  @media (min-width: 992px) {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 20px;
+}
+
+// ---------------------------------------------------------------- barra sup.
+.pos-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 11px 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--kc-line);
+  flex-shrink: 0;
+}
+
+.pos-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.pos-brand-ic {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--kc-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(108, 76, 224, 0.32);
+}
+
+.pos-brand-title {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 14.5px;
+  color: var(--kc-ink);
+  line-height: 1;
+}
+
+.pos-brand-sub {
+  font-size: 10.5px;
+  color: var(--kc-muted2);
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.pos-bodega {
+  flex: 1;
+  min-width: 240px;
+}
+
+// ------------------------------------------------- acciones de la barra sup.
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border-radius: 11px;
+    padding: 9px 14px;
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 12.5px;
+    white-space: nowrap;
+    border: 1px solid var(--kc-line);
+    box-shadow: none;
+    transition: filter 0.15s ease, border-color 0.15s ease;
+
+    i {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+      filter: brightness(0.98);
+    }
   }
 
-  .warehouse-selector {
-    flex: 1;
-    width: 100%;
-    position: relative;
+  // Historial y Pedidos: neutros con ícono de color (no bloques saturados).
+  .history-btn,
+  .history-btn:hover,
+  .pedidos-btn,
+  .pedidos-btn:hover {
+    background: #fff;
+    color: var(--kc-ink2);
+    border-color: #e4e5ee;
+  }
 
-    ::ng-deep {
-      .ng-select {
-        .ng-select-container {
-          background-color: #fff;
-          border: 1px solid #ced4da;
-          border-radius: 4px;
-          min-height: 38px;
-          padding: 0 8px;
-        }
+  .history-btn i { color: var(--kc-accent); }
+  .pedidos-btn i { color: var(--kc-blue); }
 
-        .ng-dropdown-panel {
-          .ng-option {
-            padding: 8px 12px;
-            &.ng-option-selected {
-              background-color: #e9ecef;
-              color: #495057;
-              font-weight: 500;
-              order: -1;
-            }
-          }
-        }
-      }
-    }
+  .history-btn:hover,
+  .pedidos-btn:hover { border-color: #c9b9f7; }
+
+  // Cierre de caja: acción de dinero → ámbar suave, no verde sólido.
+  .cash-closing-btn,
+  .cash-closing-btn:hover {
+    background: var(--kc-orange-wash);
+    color: var(--kc-orange);
+    border-color: #f7e2be;
+  }
+}
+
+// La calculadora se alinea con los demás botones de la barra.
+.calc-fab {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--kc-accent-wash);
+  color: var(--kc-accent);
+  box-shadow: none;
+  font-size: 15px;
+
+  &:hover {
+    background: #e2d9fb;
+    transform: none;
+  }
+
+  &--active {
+    background: var(--kc-accent);
+    color: #fff;
+  }
+}
+
+// ---------------------------------------------------------------- cuerpo
+.pos-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+
+}
+
+.pos-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+.pos-ticket {
+  width: 392px;
+  flex-shrink: 0;
+  min-height: 0;
+  background: #fff;
+  border-left: 1px solid var(--kc-line);
+  display: flex;
+  flex-direction: column;
+
+}
+
+// =============================================================================
+// REFUERZO — el tema global gana por especificidad
+//
+// .btn-info / .btn-primary del tema pintaban Historial y Cierre de Caja de
+// morado sólido, y los encabezados llegan con text-transform del tema. Se
+// suben los selectores en lugar de tocar los estilos globales.
+// =============================================================================
+.pos-topbar .action-buttons {
+
+  .btn.history-btn,
+  .btn.history-btn:hover,
+  .btn.history-btn:focus,
+  .btn.pedidos-btn,
+  .btn.pedidos-btn:hover,
+  .btn.pedidos-btn:focus {
+    background-color: #fff !important;
+    background-image: none !important;
+    color: var(--kc-ink2) !important;
+    border-color: #e4e5ee !important;
+    box-shadow: none !important;
+  }
+
+  .btn.history-btn i { color: var(--kc-accent) !important; }
+  .btn.pedidos-btn i { color: var(--kc-blue) !important; }
+
+  .btn.history-btn:hover,
+  .btn.pedidos-btn:hover { border-color: #c9b9f7 !important; }
+
+  .btn.cash-closing-btn,
+  .btn.cash-closing-btn:hover,
+  .btn.cash-closing-btn:focus {
+    background-color: var(--kc-orange-wash) !important;
+    background-image: none !important;
+    color: var(--kc-orange) !important;
+    border-color: #f7e2be !important;
+    box-shadow: none !important;
+  }
+
+  .btn.cash-closing-btn:hover { border-color: #eccf9c !important; }
+}
+
+// =============================================================================
+// MÓVIL Y TABLET (mockup "Ventas POS")
+//
+// En pantalla angosta el ticket no cabe al lado del catálogo y apilarlo debajo
+// obliga a recorrer TODO el catálogo para ver el total. Patrón del mockup:
+// catálogo a pantalla completa + barra inferior fija con el total, y el ticket
+// como hoja que sube a un toque.
+// =============================================================================
+
+// Encabezado de la hoja y barra inferior: invisibles en escritorio.
+.pos-sheet-head,
+.pos-sheet-veil,
+.pos-mobilebar {
+  display: none;
+}
+
+@media (max-width: 1000px) {
+
+  // Nada de alto calculado: el encabezado de la app mide 77px en escritorio
+  // pero 189px en móvil (se parte en varias filas), así que cualquier
+  // calc(100vh - N) queda mal y empujaba la barra del total fuera de pantalla.
+  // En móvil la página scrollea normal y la barra se ancla al viewport.
+  .pos-shell {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    border-radius: 16px;
+    // Aire para que la barra fija no tape el final del catálogo.
+    padding-bottom: 84px;
+  }
+
+  // El chip de marca solo, en una fila casi vacía, se veía roto.
+  .pos-brand { display: none; }
+
+  // --- barra superior compacta -------------------------------------------
+  .pos-topbar {
+    gap: 9px;
+    padding: 9px 12px;
+  }
+
+  // El rótulo "Ventas POS" es decorativo: en móvil manda la bodega.
+  .pos-brand-text { display: none; }
+
+  .pos-bodega {
+    flex: 1 1 100%;
+    min-width: 0;
+    order: 3;
   }
 
   .action-buttons {
-    display: flex;
-    gap: 10px;
-    flex-shrink: 0;
-    align-self: flex-end;
+    margin-left: auto;
+    gap: 6px;
 
-    @media (min-width: 992px) {
-      align-self: flex-start;
-    }
+    // Botones a solo ícono: los tres rótulos no caben y parten la barra.
+    .btn {
+      padding: 9px 11px;
+      font-size: 0;
+      gap: 0;
 
-    .cash-closing-btn,
-    .history-btn {
-      padding: 8px 16px;
-      border-radius: 4px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-
-      i {
-        font-size: 1.1rem;
-      }
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      &:active {
-        transform: translateY(0);
-        box-shadow: none;
-      }
-    }
-
-    .cash-closing-btn {
-      background-color: #28a745;
-      border-color: #28a745;
-      color: white;
-
-      &:hover {
-        background-color: #218838;
-        border-color: #1e7e34;
-      }
-    }
-
-    .pedidos-btn {
-      background-color: #8b5cf6;
-      border-color: #8b5cf6;
-      color: white;
-
-      &:hover {
-        background-color: #7c3aed;
-        border-color: #7c3aed;
-      }
-    }
-
-    .history-btn {
-      background-color: #c4b5fd;
-      border-color: #c4b5fd;
-      color: white;
-
-      &:hover {
-        background-color: #138496;
-        border-color: #117a8b;
-      }
+      i { font-size: 15px; }
     }
   }
+
+  // --- cuerpo -------------------------------------------------------------
+  .pos-body {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .pos-main {
+    flex: none;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+  }
+
+  // --- ticket como hoja inferior -----------------------------------------
+  //
+  // NO ocupa toda la pantalla a propósito: .page-body tiene z-index: 1 y crea
+  // un contexto de apilamiento, así que nada de adentro puede taparse sobre el
+  // encabezado (z-index 1025) por más z-index que se le ponga. Una hoja que
+  // sube desde abajo no necesita hacerlo, y deja el encabezado accesible.
+  .pos-ticket {
+    position: fixed;
+    left: 0;
+    right: 0;
+    // Encima de la navegación inferior de la app (65px): si no, los métodos de
+    // pago del pie del ticket quedaban tapados por ella.
+    bottom: 65px;
+    top: auto;
+    z-index: 1050;
+    width: 100%;
+    // Deja libre la franja del encabezado de la app: como está confinada por
+    // el z-index de .page-body, la hoja NO puede pintarse encima, así que su
+    // barra de título (con el botón de volver) quedaba tapada. Medido: el
+    // encabezado llega a 187px en móvil cuando además se muestra el aviso de
+    // versión, así que se reservan 200px.
+    height: calc(100vh - 265px);
+    min-height: 340px;
+    max-height: calc(100vh - 265px);
+    border-left: none;
+    transform: translateY(calc(100% + 65px));
+    transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 -10px 40px rgba(20, 24, 40, 0.22);
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+
+    &.is-open { transform: translateY(0); }
+
+    // Dentro de la hoja: encabezado fijo arriba y el checkout ocupa el resto
+    // con su propio scroll (totales y pago siguen anclados abajo).
+    app-pos-checkout {
+      flex: 1;
+      min-height: 0;
+    }
+  }
+
+  .pos-sheet-veil {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background: rgba(20, 24, 40, 0.38);
+  }
+
+  .pos-sheet-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--kc-line);
+    flex-shrink: 0;
+    background: #fff;
+  }
+
+  .pos-sheet-back {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: var(--kc-canvas);
+    border: 1px solid var(--kc-line);
+    color: var(--kc-ink2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .pos-sheet-title {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--kc-ink);
+  }
+
+  .pos-sheet-count {
+    margin-left: auto;
+    background: var(--kc-accent-wash);
+    color: var(--kc-accent);
+    font-size: 12px;
+    font-weight: 800;
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+
+  // --- barra inferior fija ------------------------------------------------
+  // Anclada al viewport, POR ENCIMA de la navegación inferior de la app (que
+  // es fixed, mide 65px y usa z-index 1000). Así el total se ve siempre, sin
+  // depender del alto del encabezado.
+  .pos-mobilebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 65px;
+    z-index: 900;
+    padding: 10px 12px;
+    background: #fff;
+    border-top: 1px solid var(--kc-line);
+    box-shadow: 0 -6px 20px rgba(30, 35, 60, 0.07);
+  }
+
+  .pos-mobilebar-total {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pos-mobilebar-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--kc-muted2);
+    letter-spacing: 0.4px;
+  }
+
+  .pos-mobilebar-amount {
+    display: block;
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 23px;
+    color: var(--kc-accent);
+    line-height: 1.05;
+  }
+
+  .pos-mobilebar-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #fff;
+    color: var(--kc-ink2);
+    border: 1px solid #e4e5ee;
+    border-radius: 13px;
+    padding: 12px 15px;
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 13.5px;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    svg { color: var(--kc-accent); }
+
+    &--pay {
+      background: var(--kc-accent);
+      color: #fff;
+      border-color: var(--kc-accent);
+      box-shadow: 0 6px 16px rgba(108, 76, 224, 0.3);
+
+      svg { color: #fff; }
+    }
+  }
+}
+
+// Teléfono estrecho: solo el botón de cobrar, con ícono el de ver ticket.
+@media (max-width: 560px) {
+  .pos-mobilebar-btn {
+    padding: 12px 13px;
+
+    &:not(.pos-mobilebar-btn--pay) {
+      font-size: 0;
+      gap: 0;
+    }
+  }
+
+  .pos-mobilebar-amount { font-size: 20px; }
 }

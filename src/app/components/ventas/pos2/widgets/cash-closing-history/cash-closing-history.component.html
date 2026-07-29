@@ -3,7 +3,7 @@
     <h4 class="modal-title">Historial de Cierres de Caja</h4>
     <div>
       <button type="button" class="btn btn-outline-primary me-2" (click)="imprimirHistorial()">
-        <i class="bi bi-printer"></i> Imprimir
+        <i class="fa fa-print"></i> Imprimir
       </button>
       <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
     </div>
@@ -24,7 +24,7 @@
             #dpInicio="ngbDatepicker"
           >
           <button class="btn btn-outline-secondary calendar-icon" type="button" (click)="dpInicio.toggle()">
-            <i class="bi bi-calendar"></i>
+            <i class="fa fa-calendar"></i>
           </button>
         </div>
       </div>
@@ -40,13 +40,13 @@
             #dpFin="ngbDatepicker"
           >
           <button class="btn btn-outline-secondary calendar-icon" type="button" (click)="dpFin.toggle()">
-            <i class="bi bi-calendar"></i>
+            <i class="fa fa-calendar"></i>
           </button>
         </div>
       </div>
       <div class="col-md-2 mb-2 mb-md-0 text-end">
         <button type="button" class="btn btn-primary w-100" (click)="buscarHistorial()">
-          <i class="bi bi-search"></i> Buscar
+          <i class="fa fa-search"></i> Buscar
         </button>
       </div>
     </form>
@@ -99,7 +99,9 @@
           
           <div class="mt-3 users-section">
             <span class="text-muted">Usuarios que realizaron cierre:</span>
-            <strong class="ms-2">{{ historyData.resumenGeneral.usuariosCierre.join(', ') || 'Ninguno' }}</strong>
+            <!-- Si la respuesta no trae usuariosCierre, .join() lanzaba y tumbaba
+                 el render completo del historial. Se protege el arreglo. -->
+            <strong class="ms-2">{{ (historyData.resumenGeneral.usuariosCierre || []).join(', ') || 'Ninguno' }}</strong>
           </div>
         </div>
       </div>
@@ -115,20 +117,20 @@
                 <div class="row align-items-center">
                   <div class="col-md-4">
                     <div class="closing-date">
-                      <i class="bi bi-calendar-check me-2"></i>
+                      <i class="fa fa-calendar-check-o me-2"></i>
                       <span>{{ formatShortDate(item.fecha) }}</span>
                     </div>
                   </div>
                   <div class="col-md-4 text-center">
                     <div class="closing-user">
-                      <i class="bi bi-person me-2"></i>
+                      <i class="fa fa-user me-2"></i>
                       <span>{{ item.usuarioCierre }}</span>
                     </div>
                   </div>
                   <div class="col-md-4 text-end">
                     <div class="closing-total text-success">
                       <span>Total: {{ formatCurrency(item.totalVentas) }}</span>
-                      <i class="bi bi-graph-up-arrow ms-2"></i>
+                      <i class="fa fa-line-chart ms-2"></i>
                     </div>
                   </div>
                 </div>
@@ -163,7 +165,7 @@
                       </div>
                       <div class="col-md-6">
                         <div class="observation-box p-2 h-100">
-                          <h6 class="mb-2"><i class="bi bi-chat-left-text me-2"></i>Observaciones:</h6>
+                          <h6 class="mb-2"><i class="fa fa-comment-o me-2"></i>Observaciones:</h6>
                           <p class="mb-0">{{ item.observaciones || 'Sin observaciones registradas' }}</p>
                         </div>
                       </div>
@@ -188,7 +190,7 @@
                       </div>
                       <div class="col-md-3 col-6 mb-3">
                         <div class="payment-total-item">
-                          <i class="bi bi-tags me-2 text-danger"></i>
+                          <i class="fa fa-tags me-2 text-danger"></i>
                           <span class="d-block payment-method-label">Descuentos</span>
                           <strong class="d-block payment-amount">{{ formatCurrency(item.totalDescuentos) }}</strong>
                         </div>
@@ -254,7 +256,7 @@
                     </div>
                     <ng-template #noPedidos>
                       <div class="alert alert-info no-orders text-center">
-                        <i class="bi bi-info-circle me-2"></i>
+                        <i class="fa fa-info-circle me-2"></i>
                         No hay pedidos registrados para este cierre.
                       </div>
                     </ng-template>
@@ -267,14 +269,14 @@
       </div>
       <ng-template #noHistory>
         <div class="alert alert-info no-data" role="alert">
-          <i class="bi bi-exclamation-circle me-2"></i>
+          <i class="fa fa-exclamation-circle me-2"></i>
           No se encontraron registros de cierres de caja para el periodo seleccionado.
         </div>
       </ng-template>
 
     </div>
     <div *ngIf="!historyData && !loading" class="alert alert-warning no-data" role="alert">
-      <i class="bi bi-exclamation-triangle me-2"></i>
+      <i class="fa fa-exclamation-triangle me-2"></i>
       No hay datos disponibles para mostrar.
     </div>
   </div>

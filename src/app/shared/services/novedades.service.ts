@@ -27,13 +27,13 @@ export class NovedadesService {
    */
   private readonly novedades: Novedad[] = [
     {
-      id: '2026-07-pedidos-rediseno',
+      id: '2026-07-venta-asistida-rediseno',
       tipo: 'video',
-      titulo: '¡Nuevo diseño de Pedidos! 🎉',
+      titulo: '¡Venta asistida estrena diseño! 🎉',
       descripcion:
-        'Estrenamos la vista Panel: lista + detalle en una sola pantalla. Toda la info del pedido a la vista (progreso, desglose, datos, productos y acciones), métricas a todo el ancho y filtros renovados. ¿Prefieres la tabla? Un clic y vuelve.',
-      url: 'https://ultimamilla-uploads-prod.s3.amazonaws.com/katuq/novedades/pedidos-novedad.mp4',
-      fecha: '2026-07-15',
+        'Armas todo el pedido en una sola pantalla: cliente, catálogo, carrito, envío y pago quedan a la vista mientras avanzas. El resumen te acompaña todo el proceso, así ves el total sin perder el contexto.',
+      url: 'https://ultimamilla-uploads-prod.s3.amazonaws.com/katuq/novedades/venta-asistida-novedad.mp4',
+      fecha: '2026-07-27',
     },
   ];
 

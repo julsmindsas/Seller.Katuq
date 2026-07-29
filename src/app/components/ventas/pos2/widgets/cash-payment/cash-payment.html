@@ -1,25 +1,60 @@
-<!-- cash-payment.component.html -->
+<!--
+  Pago en efectivo (mockup "Ventas POS", bloque de caja).
+  Los campos y la lógica son los mismos: totalAmount, amountPaid, change,
+  calculateChange() y confirmPayment(). Se añaden atajos de billete, que solo
+  escriben amountPaid y llaman al mismo calculateChange().
+-->
 <div class="modal-header">
-  <h4 class="modal-title">Pago en Efectivo</h4>
+  <h4 class="modal-title">
+    <span class="cp-chip">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle><line x1="6" y1="12" x2="6.01" y2="12"></line><line x1="18" y1="12" x2="18.01" y2="12"></line></svg>
+    </span>
+    Pago en efectivo
+  </h4>
   <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
 </div>
+
 <div class="modal-body">
-  <label for="totalAmount">Monto Total:</label>
-  <input type="number" id="totalAmount" [value]="totalAmount" disabled class="form-control" />
 
-  <label for="amountPaid">Monto Entregado:</label>
-  <input
-    type="number"
-    id="amountPaid"
-    [(ngModel)]="amountPaid"
-    (input)="calculateChange()"
-    class="form-control"
-  />
+  <!-- Total a cobrar: el número que manda -->
+  <div class="cp-total">
+    <span class="km-amount-label">Total a cobrar</span>
+    <span class="km-amount-value">${{ totalAmount | number: '1.0-0' }}</span>
+  </div>
 
-  <label for="change">Cambio:</label>
-  <input type="number" id="change" [value]="change" disabled class="form-control" />
+  <!-- Monto entregado -->
+  <div class="cp-field">
+    <label for="amountPaid">Monto entregado</label>
+    <div class="cp-input-money">
+      <span class="cp-input-prefix">$</span>
+      <input type="number" id="amountPaid" [(ngModel)]="amountPaid"
+             (input)="calculateChange()" class="form-control" placeholder="0" />
+    </div>
+  </div>
+
+  <!-- Atajos: evitan el cálculo mental y los errores de digitación -->
+  <div class="cp-quick">
+    <button type="button" class="cp-quick-btn cp-quick-btn--exact" (click)="establecerRecibido(totalAmount)">
+      Exacto
+    </button>
+    <button type="button" class="cp-quick-btn" *ngFor="let b of billetes" (click)="establecerRecibido(b)">
+      ${{ b | number: '1.0-0' }}
+    </button>
+  </div>
+
+  <!-- Cambio -->
+  <div class="cp-change" [class.is-short]="amountPaid < totalAmount">
+    <span class="cp-change-label">{{ amountPaid < totalAmount ? 'Falta' : 'Cambio' }}</span>
+    <span class="cp-change-value">
+      ${{ (amountPaid < totalAmount ? (totalAmount - amountPaid) : change) | number: '1.0-0' }}
+    </span>
+  </div>
 </div>
+
 <div class="modal-footer">
   <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss()">Cancelar</button>
-  <button type="button" class="btn btn-primary" (click)="confirmPayment()">Confirmar Pago</button>
+  <button type="button" class="btn btn-primary" [disabled]="amountPaid < totalAmount"
+          (click)="confirmPayment()">
+    Confirmar pago
+  </button>
 </div>

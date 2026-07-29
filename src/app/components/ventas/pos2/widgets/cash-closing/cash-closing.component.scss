@@ -749,3 +749,360 @@
     }
   }
 } 
+// =============================================================================
+// PIEL KATUQ DEL CIERRE DE CAJA (mockup "Ventas POS")
+//
+// Solo cosmética sobre la estructura existente: no se toca el flujo de pasos
+// ni el cálculo del informe. Se unifican acento, tipografías, radios y el trato
+// plano del sistema de diseño (sin gradientes, D-131).
+// =============================================================================
+@import '../../../../../shared/styles/katuq-modal';
+
+:host {
+  @include kc-tokens;
+  @include km-modal;
+}
+
+.cash-closing-container {
+  font-family: var(--kc-font-body);
+  color: var(--kc-ink);
+  background: var(--kc-canvas);
+}
+
+.cash-closing-container .main-card,
+.cash-closing-container .summary-card,
+.cash-closing-container .panel-container {
+  background: #fff;
+  border: 1px solid var(--kc-line);
+  border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04);
+}
+
+.cash-closing-container .main-card > .card-header,
+.cash-closing-container .panel-header {
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid var(--kc-line);
+  border-radius: 18px 18px 0 0;
+
+  h4, h5, h6 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--kc-ink);
+    text-transform: none;
+    letter-spacing: normal;
+
+    i { color: var(--kc-accent); }
+  }
+}
+
+.cash-closing-container .main-card > .card-body,
+.cash-closing-container .panel-body {
+  padding: 20px;
+}
+
+// --- pasos ------------------------------------------------------------------
+.cash-closing-container .steps-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cash-closing-container .step {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1.5px solid var(--kc-line);
+  border-radius: 14px;
+
+  &.active {
+    border-color: var(--kc-accent);
+    background: var(--kc-accent-wash);
+
+    .step-number {
+      background: var(--kc-accent);
+      color: #fff;
+    }
+
+    .step-content h6 { color: var(--kc-accent-ink); }
+  }
+
+  &.completed {
+    border-color: #cbebd8;
+    background: var(--kc-green-wash);
+
+    .step-number {
+      background: var(--kc-green);
+      color: #fff;
+    }
+
+    .step-content h6 { color: var(--kc-green); }
+  }
+
+  &.disabled {
+    opacity: 0.55;
+  }
+}
+
+.cash-closing-container .step-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--kc-canvas);
+  color: var(--kc-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.cash-closing-container .step-content {
+  min-width: 0;
+
+  h6 {
+    margin: 0;
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--kc-ink);
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  p {
+    margin: 2px 0 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--kc-muted);
+    line-height: 1.35;
+  }
+}
+
+.cash-closing-container .step-connector {
+  height: 2px;
+  min-width: 14px;
+  flex: 0 1 26px;
+  background: var(--kc-line);
+  border-radius: 2px;
+}
+
+// --- filas del informe ------------------------------------------------------
+.cash-closing-container .informe-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--kc-line2);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--kc-ink2);
+
+  &:last-child { border-bottom: none; }
+
+  &.total {
+    margin-top: 8px;
+    padding: 12px 15px;
+    border: 1px solid #e2d9fb;
+    border-radius: 13px;
+    background: var(--kc-accent-wash);
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 17px;
+    color: var(--kc-accent);
+  }
+}
+
+.diferencia {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+}
+
+.card-divider,
+.separator-line {
+  border: none;
+  border-top: 1px solid var(--kc-line);
+  margin: 16px 0;
+}
+
+// --- tablas -----------------------------------------------------------------
+.cash-closing-container .table {
+  font-family: var(--kc-font-body);
+
+  thead th {
+    background: #fbfcfe;
+    border-bottom: 1px solid var(--kc-line2);
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--kc-muted2);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  tbody td {
+    border-bottom: 1px solid #f5f6fa;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--kc-ink2);
+    vertical-align: middle;
+  }
+
+  &.table-striped tbody tr:nth-of-type(odd) > * {
+    background: #fbfaff;
+  }
+}
+
+// --- botones ----------------------------------------------------------------
+.btn {
+  border-radius: 12px;
+  font-family: var(--kc-font-body);
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: none;
+}
+
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--kc-accent) !important;
+  border-color: var(--kc-accent) !important;
+  color: #fff !important;
+}
+
+.btn-success,
+.btn-success:hover,
+.btn-success:focus {
+  background-color: var(--kc-green) !important;
+  border-color: var(--kc-green) !important;
+  color: #fff !important;
+}
+
+.btn-outline-primary,
+.btn-outline-primary:focus {
+  background: #fff;
+  color: var(--kc-accent);
+  border-color: #e2d9fb;
+
+  &:hover {
+    background: var(--kc-accent-wash);
+    color: var(--kc-accent);
+    border-color: var(--kc-accent);
+  }
+}
+
+.btn-outline-secondary,
+.btn-outline-secondary:focus {
+  background: #fff;
+  color: var(--kc-ink2);
+  border-color: #e4e5ee;
+
+  &:hover {
+    background: var(--kc-canvas);
+    color: var(--kc-ink);
+    border-color: #c9b9f7;
+  }
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 820px) {
+  .steps-container { flex-direction: column; align-items: stretch; }
+  .step-connector { display: none; }
+  .main-card > .card-body,
+  .panel-body { padding: 14px; }
+}
+
+// Refuerzo puntual: estas tres las pintaba el bloque original del archivo con
+// azul #3498db y el gris de tarjeta del tema anterior.
+.cash-closing-container {
+  .step.active .step-number {
+    background: var(--kc-accent) !important;
+    border-radius: 10px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+    box-shadow: none !important;
+  }
+
+  .step.completed .step-number {
+    background: var(--kc-green) !important;
+    border-radius: 10px !important;
+    width: 32px !important;
+    height: 32px !important;
+    box-shadow: none !important;
+  }
+
+  .step .step-number {
+    border-radius: 10px !important;
+    width: 32px !important;
+    height: 32px !important;
+    box-shadow: none !important;
+  }
+
+  .main-card > .card-header {
+    background: #fff !important;
+    border-bottom-color: var(--kc-line) !important;
+    padding: 16px 20px !important;
+
+    h4 {
+      font-size: 18px !important;
+      color: var(--kc-ink) !important;
+
+      i {
+        color: var(--kc-accent) !important;
+        font-size: 17px;
+      }
+    }
+  }
+
+  .panel-header {
+    background: #fbfcfe !important;
+    border-bottom: 1px solid var(--kc-line2) !important;
+  }
+}
+
+// El encabezado de "Resumen de Ventas" quedaba 42px más corto que su tarjeta y
+// dejaba una franja gris a la derecha: hereda un margen del estilo anterior.
+.cash-closing-container {
+  .panel-container,
+  .summary-card {
+    overflow: hidden;
+  }
+
+  .panel-header {
+    margin: 0 !important;
+    width: auto !important;
+    border-radius: 18px 18px 0 0 !important;
+  }
+}
+
+// La franja gris venía de una regla @media screen sobre #imprimible que le
+// daba padding 20px, borde y radio propios al segundo panel. Se iguala al resto
+// (el aire lo pone .panel-body). Va dentro de @media screen para no tocar la
+// impresión del reporte.
+@media screen {
+  .cash-closing-container #imprimible {
+    padding: 0 !important;
+    margin: 0 0 1.5rem !important;
+    border: 1px solid var(--kc-line) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 1px 3px rgba(30, 35, 60, 0.04) !important;
+  }
+}

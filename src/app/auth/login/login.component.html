@@ -1,7 +1,13 @@
 <div class="login-container">
-  <!-- Brand Section - Background image (Desktop only) -->
-  <div class="login-brand-section">
-    <!-- Background image is set in CSS -->
+  <!-- Brand Section - Background image (Desktop only)
+       Se pueden comparar las dos piezas sin recompilar:
+         /login              → imagen nueva ("Tu operación, conectada")
+         /login?fondo=actual → la que estaba antes
+  -->
+  <div class="login-brand-section"
+       [class.login-brand-section--nueva]="fondoNuevo"
+       [class.login-brand-section--actual]="!fondoNuevo">
+    <!-- La imagen se pone desde CSS -->
   </div>
 
   <!-- Form Section - Always visible, responsive -->

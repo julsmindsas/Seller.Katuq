@@ -1,148 +1,281 @@
-<div class="card">
-    <div class="card-header card-no-border p-3">
-        <div class="main-product-wrapper">
-            <div class="product-header">
-                <h5 class="fc-primary">{{ 'Productos' | translate }}</h5>
-                <p class="f-m-light mt-1 text-gray f-w-500 fs-16">{{ 'Encuentra todos los productos disponibles.' |
-                    translate }}</p>
-            </div>
-            <div class="product-body">
-                <div class="input-group product-search">
-                    <span class="input-group-text">
-                        <i data-feather="search" height="16" width="16" class="fc-gray"></i>
-                    </span>
-                    <input class="form-control" autocomplete="off" type="text" placeholder="{{'Buscar producto...' | translate}}" #searchInputElement
-                        list="datalistOptionsSearch" id="exampleDataList1" [(ngModel)]="searchQuery"
-                        (input)="searchStores()" (keyup.enter)="onSearchEnter()">
-                    <!-- <datalist id="datalistOptionsSearch">
-                        <option value="Bluetooth Calling Smartwatch"></option>
-                        <option value="Microsoft Surface Laptop"></option>
-                        <option value="Gaming Over Ear Headphone"></option>
-                        <option value="Apple iPhone 14 Plus"></option>
-                    </datalist> -->
-                </div>
-                <div class="form-check mt-2">
-                    <input class="form-check-input" type="checkbox" id="barcodeModeCheck" [(ngModel)]="isBarcodeMode" (change)="onBarcodeModeChange()">
-                    <label class="form-check-label" for="barcodeModeCheck">
-                        {{ 'Modo código de barras' | translate }}
-                    </label>
-                </div>
-            </div>
-        </div>
+<!--
+  Catálogo del POS (mockup "Ventas POS").
+  Dos modos sobre los mismos datos y los mismos bindings:
+   · Catálogo → rejilla de productos.
+   · Escáner  → campo grande, acuse del último código y tabla de escaneos.
+  Se conservan searchQuery/searchStores/onSearchEnter, isBarcodeMode/
+  onBarcodeModeChange, paginatedProducts, updateQuantity, addToCart y la
+  paginación. El estado nuevo (ultimoEscaneado / escaneoError) es solo visual.
+-->
+<div class="pos-catalog">
+
+  <!-- ===================== BARRA DE BÚSQUEDA + MODO ===================== -->
+  <div class="cat-toolbar">
+
+    <div class="cat-searchbox">
+    <div class="cat-search" [class.cat-search--scan]="isBarcodeMode">
+      <span class="cat-search-ic">
+        <svg *ngIf="!isBarcodeMode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+        <svg *ngIf="isBarcodeMode" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="4" y2="18"></line><line x1="7.5" y1="6" x2="7.5" y2="18"></line><line x1="11" y1="6" x2="11" y2="18"></line><line x1="15" y1="6" x2="15" y2="18"></line><line x1="18" y1="6" x2="18" y2="18"></line><line x1="20.5" y1="6" x2="20.5" y2="18"></line></svg>
+      </span>
+
+      <input class="form-control cat-search-input" autocomplete="off" type="text"
+        placeholder="{{ (isBarcodeMode ? 'Escanea el código…' : 'Buscar por nombre o referencia…') | translate }}"
+        #searchInputElement list="datalistOptionsSearch" id="exampleDataList1"
+        [(ngModel)]="searchQuery" (input)="searchStores()" (keyup.enter)="onSearchEnter()"
+        (focus)="onBuscadorFocus()" (keyup.escape)="cerrarSugerencias()">
+
+      <span class="cat-search-hint" *ngIf="isBarcodeMode">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg>
+        Enter agrega
+      </span>
+
+      <span class="cat-search-busy" *ngIf="buscandoSugerencias">
+        <i class="fa fa-circle-notch fa-spin"></i>
+      </span>
     </div>
-    <div class="card-body main-our-product">
-        <!-- Mensaje cuando no hay bodega seleccionada -->
-        <div class="alert alert-warning d-flex align-items-center" role="alert"
-             *ngIf="products.length === 0 && paginatedProducts.length === 0">
-            <i class="fa fa-warehouse fa-2x me-3"></i>
-            <div>
-                <h5 class="alert-heading mb-1">Bodega requerida</h5>
-                <p class="mb-0">Por favor selecciona una bodega en la parte superior para ver los productos disponibles y sus cantidades en stock.</p>
-            </div>
-        </div>
 
-        <!-- Productos Paginados -->
-        <div class="row g-3">
-            <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4"
-                *ngFor="let product of paginatedProducts; track product;let i = index">
-                <div class="our-product-wrapper h-100 widget-hover shadow-sm rounded">
-                    <!-- Imagen del producto con badge de disponibilidad -->
-                    <div class="our-product-img position-relative">
-                        <div class="image-placeholder" *ngIf="!imageLoaded[product._id]">
-                            <i class="fa fa-spinner fa-spin"></i>
-                        </div>
-                        <img [src]="getProductImageUrl(product)" [alt]="product.crearProducto?.titulo || 'Producto'"
-                            appImageOptimizer [quality]="0.2" [width]="300" [height]="300" [lazy]="true" loading="lazy"
-                            priority class="product-image" [class.loaded]="imageLoaded[product._id]"
-                            (load)="handleImageLoad($event, product._id)" (error)="handleImageError($event)">
-                        <span class="position-absolute top-0 end-0 m-2 badge stock-badge"
-                              [ngClass]="{
-                                'bg-success': product.disponibilidad?.inventariable && product.disponibilidad?.cantidadDisponible > 10,
-                                'bg-warning': product.disponibilidad?.inventariable && product.disponibilidad?.cantidadDisponible > 0 && product.disponibilidad?.cantidadDisponible <= 10,
-                                'bg-danger': product.disponibilidad?.inventariable && (!product.disponibilidad?.cantidadDisponible || product.disponibilidad?.cantidadDisponible <= 0),
-                                'bg-info': !product.disponibilidad?.inventariable
-                              }">
-                            {{ product.disponibilidad?.inventariable ? 
-                               'Disponibilidad: ' + (product.disponibilidad?.cantidadDisponible || 0) : 
-                               'No inventariable' }}
-                        </span>
-                    </div>
-
-                    <div class="our-product-content p-3">
-                        <!-- Referencia como etiqueta pequeña -->
-                        <div class="mb-1">
-                            <small class="text-muted ref-badge">{{ product?.identificacion?.referencia }}</small>
-                        </div>
-                        
-                        <!-- Título del producto -->
-                        <h6 class="f-14 f-w-600 pt-1 producto-titulo text-truncate" 
-                            title="{{ product.crearProducto?.titulo || 'Producto sin nombre' }}">
-                            {{ product.crearProducto?.titulo || 'Producto sin nombre' }}
-                        </h6>
-
-                        <!-- Contenedor para precio -->
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <h6 class="txt-primary precio-producto m-0">
-                                ${{ product.precio?.precioUnitarioConIva | number: '1.2-2' }}
-                            </h6>
-                        </div>
-
-                        <!-- Controles de cantidad y botón añadir (reducidos) -->
-                        <div class="controls-container mt-2">
-                            <div class="d-flex align-items-center">
-                                <div class="add-quantity-small me-2">
-                                    <i class="fa fa-minus decrement-btn icono-pos"
-                                       (click)="updateQuantity(-1, product)"></i>
-                                    <span class="cantidad-value">{{ product.cantidad }}</span>
-                                    <i class="fa fa-plus increment-btn icono-pos"
-                                       (click)="updateQuantity(1, product)"></i>
-                                </div>
-                                <button class="btn btn-sm btn-primary" (click)="addToCart(product)">
-                                    <i class="fa fa-cart-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Paginación -->
-        <div class="pagination-container d-flex justify-content-center mt-4" *ngIf="totalPages > 1">
-            <nav aria-label="Navegación de productos">
-                <ul class="pagination">
-                    <!-- Botón anterior -->
-                    <li class="page-item" [ngClass]="{'disabled': currentPage === 1}">
-                        <a class="page-link" href="javascript:void(0)" aria-label="Anterior" (click)="prevPage()">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                    
-                    <!-- Páginas numeradas (mostrando máx. 5 páginas) -->
-                    <ng-container *ngFor="let page of pages">
-                        <li *ngIf="page >= currentPage - 2 && page <= currentPage + 2" 
-                            class="page-item" [ngClass]="{'active': page === currentPage}">
-                            <a class="page-link" href="javascript:void(0)" (click)="goToPage(page)">{{ page }}</a>
-                        </li>
-                    </ng-container>
-                    
-                    <!-- Botón siguiente -->
-                    <li class="page-item" [ngClass]="{'disabled': currentPage === totalPages}">
-                        <a class="page-link" href="javascript:void(0)" aria-label="Siguiente" (click)="nextPage()">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-
-        <!-- Mensaje de no productos -->
-        <div class="text-center py-5" *ngIf="filteredProduct.length === 0">
-            <div class="mb-3">
-                <i class="fa fa-search fa-3x text-muted"></i>
-            </div>
-            <h5 class="text-muted">{{ 'No se encontraron productos' | translate }}</h5>
-            <p>{{ 'Intenta con otra búsqueda o filtro' | translate }}</p>
-        </div>
+    <!-- Autocompletado: coincidencias de la bodega + del catálogo completo -->
+    <div class="cat-suggest" *ngIf="!isBarcodeMode && mostrarSugerencias && sugerencias.length">
+      <button type="button" class="cat-suggest-row" *ngFor="let s of sugerencias"
+              (click)="seleccionarSugerencia(s)">
+        <span class="cat-suggest-thumb">
+          <img [src]="getProductImageUrl(s)" [alt]="s.crearProducto?.titulo || 'Producto'">
+        </span>
+        <span class="cat-suggest-main">
+          <span class="cat-suggest-name">{{ s.crearProducto?.titulo || 'Producto sin nombre' }}</span>
+          <span class="cat-suggest-ref">{{ s?.identificacion?.referencia }}</span>
+        </span>
+        <span class="cat-suggest-right">
+          <span class="cat-suggest-price">${{ s.precio?.precioUnitarioConIva | number: '1.0-0' }}</span>
+          <span class="cat-suggest-stock"
+                [class.is-out]="esInventariable(s) && stockSugerencia(s) <= 0"
+                [class.is-low]="esInventariable(s) && stockSugerencia(s) > 0 && stockSugerencia(s) <= 10">
+            {{ esInventariable(s) ? stockSugerencia(s) + ' disp.' : 'Sin inventario' }}
+          </span>
+        </span>
+      </button>
     </div>
+    </div>
+
+    <!-- Modo: escribe el mismo isBarcodeMode del checkbox original y llama al
+         mismo onBarcodeModeChange() que lo persiste en localStorage. -->
+    <div class="cat-mode">
+      <button type="button" class="cat-mode-btn" [class.is-active]="!isBarcodeMode"
+        (click)="isBarcodeMode = false; onBarcodeModeChange()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+        {{ 'Catálogo' | translate }}
+      </button>
+      <button type="button" class="cat-mode-btn" [class.is-active]="isBarcodeMode"
+        (click)="isBarcodeMode = true; onBarcodeModeChange()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 5V3h2"></path><path d="M19 3h2v2"></path><path d="M21 19v2h-2"></path><path d="M5 21H3v-2"></path><line x1="7" y1="8" x2="7" y2="16"></line><line x1="10.5" y1="8" x2="10.5" y2="16"></line><line x1="14" y1="8" x2="14" y2="16"></line><line x1="17" y1="8" x2="17" y2="16"></line></svg>
+        {{ 'Escáner' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- =========================================================== -->
+  <!-- MODO A · CATÁLOGO                                            -->
+  <!-- =========================================================== -->
+  <ng-container *ngIf="!isBarcodeMode">
+
+    <div class="cat-meta" *ngIf="paginatedProducts.length">
+      <span class="cat-meta-count">{{ filteredProduct.length }} productos</span>
+      <span class="cat-meta-tip">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7h18v-7a2 2 0 0 0-2-2h-4"></path><path d="M9 3h6v8H9z"></path></svg>
+        Ajusta la cantidad y pulsa Agregar
+      </span>
+    </div>
+
+    <div class="cat-scroll">
+
+      <!-- Sin bodega seleccionada -->
+      <div class="cat-notice" role="alert"
+           *ngIf="products.length === 0 && paginatedProducts.length === 0">
+        <span class="cat-notice-ic">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+        </span>
+        <div class="cat-notice-text">
+          <h5 class="cat-notice-title">Bodega requerida</h5>
+          <p class="cat-notice-body">Selecciona una bodega arriba para ver los productos disponibles y su stock.</p>
+        </div>
+      </div>
+
+      <!-- Rejilla -->
+      <div class="cat-grid">
+        <div class="cat-card" *ngFor="let product of paginatedProducts; track product; let i = index">
+
+          <div class="cat-card-thumb">
+            <div class="cat-card-ph" *ngIf="!imageLoaded[product._id]">
+              <i class="fa fa-spinner fa-spin"></i>
+            </div>
+            <img [src]="getProductImageUrl(product)" [alt]="product.crearProducto?.titulo || 'Producto'"
+              appImageOptimizer [quality]="0.2" [width]="300" [height]="300" [lazy]="true" loading="lazy"
+              priority class="product-image" [class.loaded]="imageLoaded[product._id]"
+              (load)="handleImageLoad($event, product._id)" (error)="handleImageError($event)">
+
+            <span class="cat-stock"
+                  [ngClass]="{
+                    'cat-stock--ok': product.disponibilidad?.inventariable && product.disponibilidad?.cantidadDisponible > 10,
+                    'cat-stock--low': product.disponibilidad?.inventariable && product.disponibilidad?.cantidadDisponible > 0 && product.disponibilidad?.cantidadDisponible <= 10,
+                    'cat-stock--out': product.disponibilidad?.inventariable && (!product.disponibilidad?.cantidadDisponible || product.disponibilidad?.cantidadDisponible <= 0),
+                    'cat-stock--na': !product.disponibilidad?.inventariable
+                  }">
+              {{ product.disponibilidad?.inventariable ?
+                 (product.disponibilidad?.cantidadDisponible || 0) + ' disp.' :
+                 'No inventariable' }}
+            </span>
+          </div>
+
+          <div class="cat-card-body">
+            <span class="cat-card-ref">{{ product?.identificacion?.referencia }}</span>
+            <span class="cat-card-title" title="{{ product.crearProducto?.titulo || 'Producto sin nombre' }}">
+              {{ product.crearProducto?.titulo || 'Producto sin nombre' }}
+            </span>
+          </div>
+
+          <!-- Pie: precio arriba, cantidad y "Agregar" abajo en una fila propia
+               para que el botón sea grande y legible (antes iba apretado al
+               lado del stepper). -->
+          <div class="cat-card-foot">
+            <div class="cat-card-priceline">
+              <span class="cat-card-price">${{ product.precio?.precioUnitarioConIva | number: '1.0-0' }}</span>
+              <div class="cat-qty">
+                <button type="button" class="cat-qty-btn" (click)="updateQuantity(-1, product)" aria-label="Quitar uno">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+                <span class="cat-qty-value">{{ product.cantidad }}</span>
+                <button type="button" class="cat-qty-btn" (click)="updateQuantity(1, product)" aria-label="Sumar uno">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+              </div>
+            </div>
+
+            <button class="cat-add" type="button" (click)="addToCart(product)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+              Agregar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sin resultados de búsqueda. Si además no hay bodega, arriba ya se
+           explica eso; no tiene sentido mostrar los dos mensajes a la vez. -->
+      <div class="cat-empty" *ngIf="filteredProduct.length === 0 && products.length > 0">
+        <span class="cat-empty-ic">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+        </span>
+        <span class="cat-empty-title">{{ 'No se encontraron productos' | translate }}</span>
+        <span class="cat-empty-sub">{{ 'Intenta con otra búsqueda o filtro' | translate }}</span>
+      </div>
+    </div>
+
+    <div class="cat-pager" *ngIf="totalPages > 1">
+      <nav aria-label="Navegación de productos">
+        <ul class="pagination">
+          <li class="page-item" [ngClass]="{'disabled': currentPage === 1}">
+            <a class="page-link" href="javascript:void(0)" aria-label="Anterior" (click)="prevPage()">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+
+          <ng-container *ngFor="let page of pages">
+            <li *ngIf="page >= currentPage - 2 && page <= currentPage + 2"
+                class="page-item" [ngClass]="{'active': page === currentPage}">
+              <a class="page-link" href="javascript:void(0)" (click)="goToPage(page)">{{ page }}</a>
+            </li>
+          </ng-container>
+
+          <li class="page-item" [ngClass]="{'disabled': currentPage === totalPages}">
+            <a class="page-link" href="javascript:void(0)" aria-label="Siguiente" (click)="nextPage()">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </ng-container>
+
+  <!-- =========================================================== -->
+  <!-- MODO B · ESCÁNER                                             -->
+  <!-- =========================================================== -->
+  <div class="scan-pane" *ngIf="isBarcodeMode">
+
+    <!-- El código no estaba precargado: se está consultando el catálogo -->
+    <div class="scan-looking" *ngIf="buscandoCodigo">
+      <i class="fa fa-circle-notch fa-spin"></i>
+      <span>Ese código no está entre los productos cargados. Consultando el catálogo…</span>
+    </div>
+
+    <!-- Código no encontrado -->
+    <div class="scan-error" *ngIf="escaneoError">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      <span class="scan-error-text">{{ escaneoError }}</span>
+      <button type="button" class="scan-error-close" (click)="limpiarErrorEscaneo()" aria-label="Cerrar aviso">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <!-- Acuse grande del último escaneo -->
+    <div class="scan-last" *ngIf="ultimoEscaneado">
+      <span class="scan-last-thumb">
+        <img [src]="getProductImageUrl(ultimoEscaneado)" [alt]="ultimoEscaneado.crearProducto?.titulo || 'Producto'">
+      </span>
+      <div class="scan-last-main">
+        <span class="scan-last-badge">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          AGREGADO
+        </span>
+        <div class="scan-last-title">{{ ultimoEscaneado.crearProducto?.titulo || 'Producto sin nombre' }}</div>
+        <div class="scan-last-ref">{{ ultimoEscaneado?.identificacion?.referencia }}</div>
+      </div>
+      <div class="scan-last-right">
+        <div class="scan-last-price">${{ ultimoEscaneado.precio?.precioUnitarioConIva | number: '1.0-0' }}</div>
+        <div class="scan-last-qty">× {{ ultimoEscaneadoCantidad }}</div>
+      </div>
+    </div>
+
+    <!-- Tabla de escaneos de esta venta (= líneas del ticket) -->
+    <div class="scan-log">
+      <div class="scan-log-head">
+        <span class="scan-log-title">Escaneos de esta venta</span>
+        <span class="scan-log-count">{{ cartService.posCartItems.length }}</span>
+      </div>
+
+      <div class="scan-log-body">
+        <table class="scan-table" *ngIf="cartService.posCartItems.length">
+          <thead>
+            <tr>
+              <th class="scan-th-ok"></th>
+              <th>Referencia</th>
+              <th>Producto</th>
+              <th class="scan-th-num">Cant.</th>
+              <th class="scan-th-num">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of cartService.posCartItems">
+              <td class="scan-td-ok">
+                <span class="scan-ok">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </span>
+              </td>
+              <td class="scan-td-ref">{{ item?.identificacion?.referencia }}</td>
+              <td class="scan-td-name">{{ item.crearProducto?.titulo || 'Producto sin nombre' }}</td>
+              <td class="scan-td-num"><span class="scan-qty">×{{ item.cantidad }}</span></td>
+              <td class="scan-td-num scan-td-total">${{ totalLinea(item) | number: '1.0-0' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="scan-log-empty" *ngIf="!cartService.posCartItems.length">
+          <span class="scan-log-empty-ic">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="4" y2="18"></line><line x1="7.5" y1="6" x2="7.5" y2="18"></line><line x1="11" y1="6" x2="11" y2="18"></line><line x1="15" y1="6" x2="15" y2="18"></line><line x1="18" y1="6" x2="18" y2="18"></line><line x1="20.5" y1="6" x2="20.5" y2="18"></line></svg>
+          </span>
+          <span class="scan-log-empty-title">Los códigos escaneados aparecen aquí</span>
+          <span class="scan-log-empty-sub">Dispara el lector sobre el producto o escribe el código y presiona Enter.</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

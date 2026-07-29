@@ -1,0 +1,195 @@
+// =============================================================================
+// KATUQ · Piel compartida de modales (lenguaje visual comercial)
+//
+// Misma paleta y tipografías que _katuq-comercial: acento #6C4CE0, Baloo 2 en
+// títulos, Nunito en cuerpo, plano sin gradientes (D-131).
+//
+// Uso en un componente que ES el contenido de un modal (NgbModal):
+//   @import '../../../shared/styles/katuq-modal';
+//   :host { @include kc-tokens; @include km-modal; }
+//
+// El contenido del modal vive en el template del componente, así que los
+// estilos con encapsulación por defecto sí alcanzan .modal-header/.modal-body.
+// El .modal-content (que crea ng-bootstrap) se redondea con la clase global
+// `katuq-modal` que se pasa en modalDialogClass, o desde styles.scss.
+// =============================================================================
+
+@import 'katuq-comercial';
+
+@mixin km-modal {
+  display: block;
+  font-family: var(--kc-font-body);
+  color: var(--kc-ink);
+
+  // ------------------------------------------------------------- encabezado
+  .modal-header {
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--kc-line);
+    background: #fff;
+
+    .modal-title {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin: 0;
+      font-family: var(--kc-font-head);
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--kc-ink);
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .btn-close {
+      margin: 0;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background-color: var(--kc-canvas);
+      background-size: 11px;
+      border: 1px solid var(--kc-line);
+      opacity: 1;
+
+      &:hover {
+        background-color: #fdeceb;
+        border-color: #f6d4d2;
+      }
+
+      &:focus { box-shadow: none; }
+    }
+  }
+
+  // ------------------------------------------------------------------ cuerpo
+  .modal-body {
+    padding: 20px;
+    background: #fff;
+
+    label,
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--kc-muted2);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .form-control,
+    .form-select {
+      border: 1.5px solid var(--kc-line);
+      border-radius: 12px;
+      padding: 10px 13px;
+      font-family: var(--kc-font-body);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--kc-ink);
+      background: #fff;
+
+      &::placeholder {
+        color: #a8aebe;
+        font-weight: 500;
+      }
+
+      &:focus {
+        border-color: var(--kc-accent);
+        box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
+      }
+
+      &:disabled,
+      &[readonly] {
+        background: var(--kc-canvas);
+        color: var(--kc-ink2);
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------- pie
+  .modal-footer {
+    gap: 8px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--kc-line);
+    background: #fbfcfe;
+
+    > * { margin: 0; }
+
+    .btn {
+      border-radius: 13px;
+      padding: 10px 20px;
+      font-family: var(--kc-font-body);
+      font-weight: 800;
+      font-size: 14px;
+      border: 1px solid transparent;
+      box-shadow: none;
+    }
+
+    .btn-secondary,
+    .btn-secondary:hover,
+    .btn-secondary:focus {
+      background: #fff !important;
+      color: var(--kc-ink2) !important;
+      border-color: #e4e5ee !important;
+    }
+
+    .btn-secondary:hover { border-color: #c9b9f7 !important; }
+
+    .btn-primary,
+    .btn-primary:hover,
+    .btn-primary:focus {
+      background: var(--kc-accent) !important;
+      color: #fff !important;
+      border-color: var(--kc-accent) !important;
+    }
+
+    .btn-primary:hover { filter: brightness(1.07); }
+
+    .btn-primary:disabled {
+      background: #ece7fb !important;
+      border-color: #ece7fb !important;
+      color: #9a92bd !important;
+      opacity: 1;
+    }
+  }
+}
+
+// Chip de ícono para el título del modal.
+@mixin km-title-chip($fg: var(--kc-accent), $bg: var(--kc-accent-wash)) {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: $bg;
+  color: $fg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+// Fila etiqueta/valor destacada (montos dentro del modal).
+@mixin km-amount-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--kc-accent-wash);
+  border: 1px solid #e2d9fb;
+  border-radius: 13px;
+  padding: 12px 15px;
+
+  .km-amount-label {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--kc-ink);
+  }
+
+  .km-amount-value {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 26px;
+    color: var(--kc-accent);
+    line-height: 1;
+  }
+}

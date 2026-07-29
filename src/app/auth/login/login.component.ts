@@ -13,6 +13,12 @@ import { environment } from '../../../environments/environment';
 })
 export class LoginComponent implements OnInit {
 
+  /**
+   * Pieza gráfica del panel izquierdo. Se dejan las dos para poder compararlas:
+   * por defecto la nueva, y con ?fondo=actual se ve la anterior.
+   */
+  public fondoNuevo = true;
+
   public show: boolean = false;
   public loginForm: FormGroup;
   public errorMessage: any;
@@ -38,6 +44,10 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit() {
+    // ?fondo=actual muestra la pieza anterior; sin parámetro, la nueva.
+    this.fondoNuevo =
+      this.route.snapshot.queryParamMap.get('fondo') !== 'actual';
+
     this.redirectIfLoggedIn();
   }
 

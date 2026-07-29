@@ -1,11 +1,138 @@
-/* cash-payment.component.css */
+// =============================================================================
+// Modal de pago en efectivo — piel Katuq (mockup "Ventas POS")
+// =============================================================================
+@import '../../../../../shared/styles/katuq-modal';
+
+:host {
+  @include kc-tokens;
+  @include km-modal;
+}
+
+.cp-chip { @include km-title-chip(var(--kc-green), var(--kc-green-wash)); }
+
 .modal-body {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cp-total { @include km-amount-row; }
+
+.cp-field label {
+  margin-bottom: 6px;
+}
+
+// Campo de dinero con el signo dentro: se lee como un monto, no como un número.
+.cp-input-money {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid var(--kc-line);
+  border-radius: 13px;
+  padding: 4px 14px;
+  background: #fff;
+
+  &:focus-within {
+    border-color: var(--kc-accent);
+    box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.12);
   }
-  
-  input[disabled] {
-    background-color: #f0f0f0;
-    cursor: not-allowed;
+
+  .cp-input-prefix {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--kc-muted2);
+    flex-shrink: 0;
   }
+
+  .form-control {
+    border: none;
+    border-radius: 0;
+    padding: 8px 0;
+    font-family: var(--kc-font-head);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--kc-ink);
+    background: transparent;
+
+    &:focus {
+      border: none;
+      box-shadow: none;
+      background: transparent;
+    }
+  }
+}
+
+// --- atajos de billete -----------------------------------------------------
+.cp-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.cp-quick-btn {
+  flex: 1 1 88px;
+  background: #fff;
+  border: 1px solid #e4e5ee;
+  border-radius: 11px;
+  padding: 10px 8px;
+  font-family: var(--kc-font-head);
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--kc-ink2);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: #c9b9f7;
+    color: var(--kc-accent);
+    background: #f6f4ff;
+  }
+
+  &:active { transform: translateY(1px); }
+
+  &--exact {
+    background: var(--kc-accent-wash);
+    border-color: #e2d9fb;
+    color: var(--kc-accent);
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+
+    &:hover { background: #e2d9fb; }
+  }
+}
+
+// --- cambio ----------------------------------------------------------------
+.cp-change {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 15px;
+  border-radius: 13px;
+  background: var(--kc-green-wash);
+  border: 1px solid #cbebd8;
+
+  .cp-change-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--kc-green);
+  }
+
+  .cp-change-value {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--kc-green);
+    line-height: 1;
+  }
+
+  // Falta plata: el cajero tiene que verlo antes de darle a confirmar.
+  &.is-short {
+    background: #fdeceb;
+    border-color: #f6d4d2;
+
+    .cp-change-label,
+    .cp-change-value { color: #d6455b; }
+  }
+}

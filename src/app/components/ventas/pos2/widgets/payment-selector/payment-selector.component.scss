@@ -95,3 +95,138 @@
     margin-bottom: 0;
   }
 } 
+// =============================================================================
+// MÉTODOS DE PAGO ANCLADOS AL PIE DEL TICKET (mockup "Ventas POS")
+//
+// Tres tarjetas en una fila, siempre visibles bajo el total. Se conservan los
+// tres botones y sus handlers (handleCashPayment / handleCardPayment /
+// handleEWalletPayment) y el estado selectedMethod.
+// =============================================================================
+@import '../../../../../shared/styles/katuq-comercial';
+
+:host { @include kc-tokens; display: block; }
+
+.card.payment-methods-sticky {
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--kc-line);
+  border-radius: 0;
+  box-shadow: none;
+  background: #fff;
+
+  &:hover { box-shadow: none; }
+
+  > .card-header {
+    padding: 11px 16px 0 !important;
+    border: none;
+    background: transparent;
+
+    h5 {
+      font-family: var(--kc-font-head);
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--kc-ink);
+    }
+  }
+
+  > .card-body {
+    padding: 9px 16px 14px !important;
+  }
+}
+
+.payment-methods-sticky .payment-options {
+  margin-top: 0;
+  text-align: left;
+}
+
+.payment-methods-sticky .icons {
+  display: flex;
+  gap: 7px;
+  margin-top: 0;
+}
+
+.payment-methods-sticky .icon {
+  flex: 1;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 6px;
+  background: #fff;
+  border: 1.5px solid var(--kc-line);
+  border-radius: 12px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    background: #f6f4ff;
+    border-color: #c9b9f7;
+  }
+
+  &.selected {
+    background: var(--kc-accent-wash);
+    border-color: var(--kc-accent);
+    box-shadow: none;
+  }
+
+  img {
+    width: 26px;
+    height: 26px;
+    margin-bottom: 0;
+  }
+
+  &:hover img { transform: none; }
+
+  span {
+    margin-top: 0;
+    font-family: var(--kc-font-body);
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--kc-ink2);
+    text-align: center;
+    line-height: 1.25;
+  }
+
+  &.selected span {
+    color: var(--kc-accent);
+    font-weight: 800;
+  }
+}
+
+@media (max-width: 768px) {
+  .payment-methods-sticky .icons {
+    flex-direction: row;
+  }
+
+  .payment-methods-sticky .icon {
+    flex-direction: column;
+    width: auto;
+
+    img { margin-right: 0; width: 24px; height: 24px; }
+  }
+}
+
+// El tema global aplica text-transform a los encabezados de tarjeta; en el
+// ticket queremos el texto tal cual se escribió.
+:host .card > .card-header h5 {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+// El rótulo "E-wallet" se cortaba: se deja partir en dos líneas.
+.payment-methods-sticky .icon span {
+  white-space: normal !important;
+  word-break: break-word;
+  hyphens: auto;
+  font-size: 11px;
+}
+
+// Pago en móvil: tarjetas más altas, el dedo no es un puntero.
+@media (max-width: 1000px) {
+  .payment-methods-sticky .icon {
+    padding: 14px 8px;
+
+    img { width: 30px; height: 30px; }
+    span { font-size: 12px; }
+  }
+}

@@ -1,93 +1,107 @@
-/* warehouse-selector.component.scss */
+/* warehouse-selector.component.scss
+ *
+ * Selector de bodega del POS, rediseñado como una píldora de una sola línea
+ * (mockup "Ventas POS"): ícono + etiqueta BODEGA + select + confirmación.
+ * Antes ocupaba tres filas apiladas y empujaba el catálogo hacia abajo.
+ */
+@import '../../../../../shared/styles/katuq-comercial';
+
+:host { @include kc-tokens; display: block; }
+
 .warehouse-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   width: 100%;
-  
-  .selector-row {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  font-family: var(--kc-font-body);
+}
+
+.selector-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: #f3efff;
+  border: 1px solid #e2d9fb;
+  border-radius: 12px;
+  padding: 6px 12px 6px 8px;
+}
+
+.ws-ic {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--kc-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.warehouse-selector .selector-row h3.warehouse-title {
+  margin: 0 !important;
+  font-size: 9.5px !important;
+  line-height: 1.2 !important;
+  font-weight: 800;
+  color: #9c8fd4;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.select-container {
+  flex: 1;
+  min-width: 190px;
+
+  select {
     width: 100%;
-    
-    .warehouse-title {
-      margin-bottom: 0;
-      font-weight: 500;
-      font-size: 1.1rem;
-      color: #495057;
-    }
-    
-    .select-container {
-      margin-bottom: 0;
-      width: 100%;
-      
-      select {
-        width: 100%;
-        padding: 8px 12px;
-        border-radius: 4px;
-        border: 1px solid #ced4da;
-        background-color: #fff;
-        font-size: 0.95rem;
-        
-        &:focus {
-          outline: none;
-          border-color: #a78bfa;
-          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-      }
-    }
-  }
-  
-  .selected-warehouse {
-    padding: 8px 12px;
-    background-color: #e7f3ff;
-    border: 1px solid #b3d9ff;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    color: #495057;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    
-    i {
-      color: #a78bfa;
-      font-size: 1rem;
-    }
-    
-    strong {
-      font-weight: 600;
+    padding: 7px 10px;
+    border-radius: 9px;
+    border: 1px solid #e2d9fb;
+    background-color: #fff;
+    font-family: var(--kc-font-body);
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--kc-accent);
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+      border-color: var(--kc-accent);
+      box-shadow: 0 0 0 3px rgba(108, 76, 224, 0.14);
     }
   }
 }
 
-// Estilo para pantallas más grandes - solo el título y select en línea
-@media (min-width: 768px) {
-  .warehouse-selector {
-    gap: 12px;
-    
-    .selector-row {
-      flex-direction: row;
-      align-items: center;
-      gap: 15px;
-      
-      .warehouse-title {
-        white-space: nowrap;
-        min-width: max-content;
-        flex-shrink: 0;
-      }
-      
-      .select-container {
-        flex: 1;
-        width: auto;
-      }
-    }
-    
-    // La bodega seleccionada SIEMPRE debajo, nunca al lado
-    .selected-warehouse {
-      width: 100%;
-      margin-top: 0;
-    }
+// Confirmación de la bodega activa: chip verde compacto, no un bloque aparte.
+.selected-warehouse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 230px;
+  padding: 5px 11px;
+  background: var(--kc-green-wash);
+  border: 1px solid #cbebd8;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--kc-green);
+  flex-shrink: 0;
+
+  i {
+    color: var(--kc-green);
+    font-size: 12px;
+    flex-shrink: 0;
   }
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 760px) {
+  .selector-row { padding: 8px 10px; }
+  .select-container { min-width: 100%; }
+  .selected-warehouse { max-width: 100%; }
 }

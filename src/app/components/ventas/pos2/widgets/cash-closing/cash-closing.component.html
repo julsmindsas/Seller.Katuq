@@ -1,14 +1,14 @@
 <div class="cash-closing-container">
   <div class="card main-card">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h4><i class="bi bi-cash-stack me-2"></i>Cierre de Caja</h4>
+      <h4><i class="fa fa-money me-2"></i>Cierre de Caja</h4>
       <div class="header-actions" *ngIf="informe.totalVentas > 0">
         <div class="btn-group">
           <button type="button" class="btn btn-outline-primary btn-sm" (click)="imprimir()">
-            <i class="bi bi-printer me-1"></i> Imprimir PC
+            <i class="fa fa-print me-1"></i> Imprimir PC
           </button>
           <button type="button" class="btn btn-outline-secondary btn-sm" (click)="imprimirPOS()">
-            <i class="bi bi-receipt me-1"></i> Imprimir POS
+            <i class="fa fa-file-text-o me-1"></i> Imprimir POS
           </button>
         </div>
       </div>
@@ -45,7 +45,7 @@
         <!-- Panel de selección de fechas -->
         <div class="panel-container mb-4">
           <div class="panel-header">
-            <h5><i class="bi bi-calendar-range me-2"></i>Período de Cierre</h5>
+            <h5><i class="fa fa-calendar-o me-2"></i>Período de Cierre</h5>
           </div>
           <div class="panel-body">
             <div class="row">
@@ -53,7 +53,7 @@
                 <div class="form-group mb-3">
                   <label for="fechaCierre" class="form-label">Fecha Inicio</label>
                   <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+                    <span class="input-group-text"><i class="fa fa-calendar"></i></span>
                     <input type="date" class="form-control" id="fechaCierre" [(ngModel)]="fechaCierre" name="fechaCierre">
                   </div>
                 </div>
@@ -62,7 +62,7 @@
                 <div class="form-group mb-3">
                   <label for="fechaFin" class="form-label">Fecha Fin</label>
                   <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+                    <span class="input-group-text"><i class="fa fa-calendar"></i></span>
                     <input type="date" class="form-control" id="fechaFin" [(ngModel)]="fechaFin" name="fechaFin">
                   </div>
                 </div>
@@ -70,7 +70,7 @@
             </div>
             <div class="button-action text-end mt-2" *ngIf="!mostrarBotonCompletar">
               <button type="submit" class="btn btn-primary">
-                <i class="bi bi-calculator me-2"></i>Calcular Resumen
+                <i class="fa fa-calculator me-2"></i>Calcular Resumen
               </button>
             </div>
           </div>
@@ -90,13 +90,13 @@
           </div>
           
           <div class="panel-header">
-            <h5><i class="bi bi-graph-up me-2"></i>Resumen de Ventas</h5>
+            <h5><i class="fa fa-line-chart me-2"></i>Resumen de Ventas</h5>
           </div>
           <div class="panel-body">
             <div class="row">
               <div class="col-md-5">
                 <div class="summary-card">
-                  <h6><i class="bi bi-credit-card me-2"></i>Formas de pago</h6>
+                  <h6><i class="fa fa-credit-card me-2"></i>Formas de pago</h6>
                   <div class="card-divider"></div>
                   <div class="informe-item" *ngFor="let formaPago of formasPago">
                     <span>{{formaPago.nombre}}:</span>
@@ -110,7 +110,7 @@
               </div>
               <div class="col-md-7" *ngIf="mostrarBotonCompletar">
                 <div class="summary-card">
-                  <h6><i class="bi bi-cash me-2"></i>Datos del Cierre</h6>
+                  <h6><i class="fa fa-money me-2"></i>Datos del Cierre</h6>
                   <div class="card-divider"></div>
                   <div class="row">
                     <div class="col-md-6">
@@ -146,7 +146,7 @@
 
             <!-- Tabla de Productos -->
             <div class="productos-section mt-4">
-              <h6><i class="bi bi-box-seam me-2"></i>Productos Vendidos ({{informe.totalProductos}})</h6>
+              <h6><i class="fa fa-cube me-2"></i>Productos Vendidos ({{informe.totalProductos}})</h6>
               <div class="table-responsive">
                 <table class="table table-sm table-striped">
                   <thead>
@@ -201,10 +201,10 @@
         
         <div class="button-group mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="modal.dismissAll()">
-            <i class="bi bi-x-circle me-2"></i>Cancelar
+            <i class="fa fa-times-circle me-2"></i>Cancelar
           </button>
           <button type="button" class="btn btn-success" *ngIf="mostrarBotonCompletar" (click)="completarCierre()">
-            <i class="bi bi-check-circle me-2"></i>Completar Cierre
+            <i class="fa fa-check-circle me-2"></i>Completar Cierre
           </button>
         </div>
       </form>

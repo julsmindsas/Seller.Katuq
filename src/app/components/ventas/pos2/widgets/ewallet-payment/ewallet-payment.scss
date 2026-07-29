@@ -1,0 +1,21 @@
+// Modal de pago con E-wallet — piel Katuq.
+@import '../../../../../shared/styles/katuq-modal';
+
+:host {
+  @include kc-tokens;
+  @include km-modal;
+}
+
+.ew-chip { @include km-title-chip(var(--kc-blue), var(--kc-blue-wash)); }
+
+.ew-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kc-muted);
+
+  svg { flex-shrink: 0; color: var(--kc-muted2); }
+}

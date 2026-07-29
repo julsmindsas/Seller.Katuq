@@ -430,6 +430,30 @@ export class InventarioService {
     return this.http.get(`${this.apiUrl}/productos/search/quick`, { params });
   }
 
+  /**
+   * Respaldo del escáner del POS.
+   *
+   * `/inventory/bodega/{id}?loadAll=true` trae como máximo 500 productos, así
+   * que un código válido puede no estar entre los precargados. Este método
+   * pregunta por ese código al catálogo completo. La respuesta viene enriquecida
+   * con `stockPorBodega`, que es lo que debe usarse en el POS: `cantidadDisponible`
+   * llega como stock TOTAL de todas las bodegas y vender contra ese número
+   * permitiría despachar existencias de otra bodega.
+   *
+   * Solo productos activos (no se pasa incluirInactivos).
+   */
+  buscarCodigoParaPOS(
+    codigo: string,
+    searchBy: 'codigoBarras' | 'general' = 'codigoBarras',
+    limit: number = 5
+  ): Observable<any> {
+    const params = new HttpParams()
+      .set('q', codigo)
+      .set('searchBy', searchBy)
+      .set('limit', limit.toString());
+    return this.http.get(`${this.apiUrl}/productos/search/quick`, { params });
+  }
+
   getMovimientoDetalle(id: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/movimiento/${id}`);
   }

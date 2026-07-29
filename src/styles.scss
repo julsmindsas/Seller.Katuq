@@ -1579,3 +1579,28 @@ ngb-modal-window .modal-dialog:has(.cliente-modal) .modal-content {
   color: #2563eb !important;
 }
 
+
+/* =============================================================================
+   Contenedor de los modales con piel Katuq.
+
+   ng-bootstrap crea .modal-content FUERA del componente, así que su radio y su
+   sombra no se pueden fijar desde el SCSS del hijo. Se activa pasando
+   modalDialogClass: 'katuq-modal' al abrirlo.
+   ============================================================================= */
+.katuq-modal .modal-content {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(20, 24, 40, 0.24);
+}
+
+.katuq-modal .modal-body {
+  /* Modales largos (cierre de caja) scrollean por dentro, no la página. */
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .katuq-modal .modal-content { border-radius: 16px; }
+  .katuq-modal .modal-body { max-height: calc(100vh - 170px); }
+}

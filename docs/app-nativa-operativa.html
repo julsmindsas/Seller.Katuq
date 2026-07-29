@@ -1,0 +1,921 @@
+<title>Apps nativas de Katuq — operación + marketplace</title>
+
+<style>
+  :root {
+    --ground: #ffffff;
+    --surface: #faf9fe;
+    --surface-2: #f3f1fb;
+    --ink: #211f3a;
+    --ink-soft: #45416b;
+    --muted: #8f8bab;
+    --muted-2: #9995b3;
+    --line: #ececf4;
+    --line-soft: #f1f0f7;
+    --chip-bg: #f5f4fa;
+    --chip-border: #e9e7f3;
+    --accent: #5f3fe0;
+    --accent-2: #7c5cff;
+    --accent-wash: #efe9ff;
+
+    --ok: #1e874b;      --ok-bg: #e6f7ee;
+    --warn: #d9820a;    --warn-bg: #fff1df;
+    --bad: #d64545;     --bad-bg: #fdecec;
+    --info: #1e6fd9;    --info-bg: #e7f1ff;
+    --slate: #5a6b78;   --slate-bg: #eef0f3;
+    --plum: #8e27b0;    --plum-bg: #f3e9fb;
+
+    --shadow-panel: 0 1px 3px rgba(30, 20, 80, .05);
+    --shadow-lift: 0 6px 14px -8px rgba(50, 40, 110, .35);
+
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #131126; --surface: #1b1834; --surface-2: #221e40;
+      --ink: #eceaf6; --ink-soft: #c6c2dd; --muted: #9995b3; --muted-2: #85809f;
+      --line: #2c2850; --line-soft: #262247; --chip-bg: #221e40; --chip-border: #322d59;
+      --accent: #9a7cff; --accent-2: #b9a5ff; --accent-wash: #251f4a;
+      --ok: #4fd18b; --ok-bg: #14311f; --warn: #f0ac4a; --warn-bg: #3a2a10;
+      --bad: #ff8f8f; --bad-bg: #3d1c20; --info: #78adff; --info-bg: #16294a;
+      --slate: #a9b6c0; --slate-bg: #262b33; --plum: #d79bee; --plum-bg: #2e1a38;
+      --shadow-panel: 0 1px 3px rgba(0, 0, 0, .4);
+      --shadow-lift: 0 6px 16px -8px rgba(0, 0, 0, .7);
+    }
+  }
+
+  :root[data-theme="light"] {
+    --ground: #ffffff; --surface: #faf9fe; --surface-2: #f3f1fb;
+    --ink: #211f3a; --ink-soft: #45416b; --muted: #8f8bab; --muted-2: #9995b3;
+    --line: #ececf4; --line-soft: #f1f0f7; --chip-bg: #f5f4fa; --chip-border: #e9e7f3;
+    --accent: #5f3fe0; --accent-2: #7c5cff; --accent-wash: #efe9ff;
+    --ok: #1e874b; --ok-bg: #e6f7ee; --warn: #d9820a; --warn-bg: #fff1df;
+    --bad: #d64545; --bad-bg: #fdecec; --info: #1e6fd9; --info-bg: #e7f1ff;
+    --slate: #5a6b78; --slate-bg: #eef0f3; --plum: #8e27b0; --plum-bg: #f3e9fb;
+    --shadow-panel: 0 1px 3px rgba(30, 20, 80, .05);
+    --shadow-lift: 0 6px 14px -8px rgba(50, 40, 110, .35);
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #131126; --surface: #1b1834; --surface-2: #221e40;
+    --ink: #eceaf6; --ink-soft: #c6c2dd; --muted: #9995b3; --muted-2: #85809f;
+    --line: #2c2850; --line-soft: #262247; --chip-bg: #221e40; --chip-border: #322d59;
+    --accent: #9a7cff; --accent-2: #b9a5ff; --accent-wash: #251f4a;
+    --ok: #4fd18b; --ok-bg: #14311f; --warn: #f0ac4a; --warn-bg: #3a2a10;
+    --bad: #ff8f8f; --bad-bg: #3d1c20; --info: #78adff; --info-bg: #16294a;
+    --slate: #a9b6c0; --slate-bg: #262b33; --plum: #d79bee; --plum-bg: #2e1a38;
+    --shadow-panel: 0 1px 3px rgba(0, 0, 0, .4);
+    --shadow-lift: 0 6px 16px -8px rgba(0, 0, 0, .7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 22px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 46px;
+  }
+
+  p, li { color: var(--ink-soft); }
+  .wrap > section > p, .wrap > section > ul { max-width: var(--measure); }
+  strong { color: var(--ink); font-weight: 700; }
+
+  .eyebrow {
+    text-transform: uppercase;
+    font-size: 10.5px; font-weight: 800; letter-spacing: .8px;
+    color: var(--muted); margin: 0 0 10px;
+  }
+
+  h1 {
+    font-size: clamp(30px, 5.2vw, 42px); line-height: 1.12; font-weight: 800;
+    letter-spacing: -.6px; margin: 0 0 14px; text-wrap: balance; color: var(--ink);
+  }
+  h2 {
+    font-size: clamp(20px, 3vw, 25px); font-weight: 800; letter-spacing: -.3px;
+    margin: 0 0 6px; text-wrap: balance; color: var(--ink);
+  }
+  h3 { font-size: 16.5px; font-weight: 800; margin: 26px 0 10px; color: var(--ink); }
+
+  .lede {
+    font-size: 18px; line-height: 1.55; color: var(--ink-soft);
+    max-width: var(--measure); margin: 0;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: 22px; }
+
+  .verdict {
+    border: 1px solid var(--chip-border); background: var(--surface);
+    border-radius: 16px; padding: 22px 24px; box-shadow: var(--shadow-panel);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .verdict__line {
+    font-size: clamp(19px, 2.9vw, 23px); font-weight: 800; line-height: 1.32;
+    color: var(--accent); margin: 0; text-wrap: balance;
+  }
+  .verdict p { margin: 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 12px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--chip-border);
+    border-radius: 10px; padding: 13px 15px; transition: transform .15s ease;
+  }
+  .stat:hover { transform: translateY(-1px); }
+  .stat__k {
+    display: block; text-transform: uppercase; font-size: 9.5px; font-weight: 800;
+    letter-spacing: .7px; color: var(--muted); margin-bottom: 5px;
+  }
+  .stat__v {
+    display: block; font-size: 21px; font-weight: 800; color: var(--accent);
+    font-variant-numeric: tabular-nums; line-height: 1.15;
+  }
+  .stat__n { display: block; font-size: 12px; color: var(--muted-2); margin-top: 3px; }
+
+  /* matriz de proyectos */
+  .matrix { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 12px; }
+  .cell {
+    border: 1px solid var(--chip-border); border-radius: 12px; padding: 16px 17px;
+    background: var(--surface); display: flex; flex-direction: column; gap: 5px;
+  }
+  .cell__p {
+    text-transform: uppercase; font-size: 9.5px; font-weight: 800; letter-spacing: .7px;
+    color: var(--muted);
+  }
+  .cell__t { font-size: 15.5px; font-weight: 800; color: var(--ink); }
+  .cell__s { font-size: 13.5px; color: var(--muted-2); }
+  .cell--ops { border-color: var(--accent); }
+  .cell--mkt { border-color: var(--plum); }
+  .cell--mkt .cell__t { color: var(--plum); }
+  .cell--ops .cell__t { color: var(--accent); }
+
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--chip-border); border-radius: 12px;
+    padding: 17px 18px; display: flex; flex-direction: column; gap: 6px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
+  .card p { margin: 0; font-size: 14.5px; }
+  .card__t { font-size: 15px; font-weight: 800; color: var(--ink); margin: 0; }
+
+  .pill {
+    display: inline-block; text-transform: uppercase; font-size: 9.5px; font-weight: 800;
+    letter-spacing: .6px; padding: 4px 10px; border-radius: 20px; white-space: nowrap;
+  }
+  .pill--in   { color: var(--ok);     background: var(--ok-bg); }
+  .pill--out  { color: var(--slate);  background: var(--slate-bg); }
+  .pill--high { color: var(--bad);    background: var(--bad-bg); }
+  .pill--mid  { color: var(--warn);   background: var(--warn-bg); }
+  .pill--acc  { color: var(--accent); background: var(--accent-wash); }
+  .pill--info { color: var(--info);   background: var(--info-bg); }
+  .pill--mkt  { color: var(--plum);   background: var(--plum-bg); }
+
+  .scroll { overflow-x: auto; border-radius: 12px; border: 1px solid var(--chip-border); }
+  table { border-collapse: collapse; width: 100%; min-width: 540px; background: var(--surface); }
+  th {
+    text-align: left; text-transform: uppercase; font-size: 9.5px; font-weight: 800;
+    letter-spacing: .7px; color: var(--muted); padding: 12px 15px;
+    border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  td {
+    padding: 12px 15px; border-bottom: 1px solid var(--line-soft);
+    font-size: 14.5px; color: var(--ink-soft); vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+  td.name { color: var(--ink); font-weight: 600; }
+  td.tot { color: var(--accent); font-weight: 800; font-family: var(--mono); white-space: nowrap; }
+  code {
+    font-family: var(--mono); font-size: .87em; background: var(--chip-bg);
+    border: 1px solid var(--chip-border); border-radius: 5px; padding: 1px 5px; color: var(--info);
+  }
+
+  .phases { display: flex; flex-direction: column; gap: 12px; }
+  .phase {
+    background: var(--surface); border: 1px solid var(--chip-border); border-radius: 12px;
+    padding: 17px 19px; display: grid; grid-template-columns: 46px 1fr auto;
+    gap: 14px; align-items: start;
+  }
+  .phase__n {
+    font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accent);
+    background: var(--accent-wash); border-radius: 9px; padding: 7px 0; text-align: center;
+  }
+  .phase__b { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .phase__b p { margin: 0; font-size: 14.5px; }
+  .phase__t { font-size: 15.5px; font-weight: 800; color: var(--ink); margin: 0; }
+  .phase__w {
+    font-family: var(--mono); font-size: 12.5px; font-weight: 700; color: var(--ink);
+    background: var(--chip-bg); border: 1px solid var(--chip-border);
+    border-radius: 20px; padding: 5px 12px; white-space: nowrap;
+  }
+  .phase--pilot { border-color: var(--accent); }
+
+  @media (max-width: 620px) {
+    .phase { grid-template-columns: 40px 1fr; }
+    .phase__w { grid-column: 2; justify-self: start; }
+  }
+
+  ul.clean { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 11px; }
+  ul.clean > li { padding-left: 17px; position: relative; font-size: 15px; }
+  ul.clean > li::before {
+    content: ""; position: absolute; left: 0; top: .62em;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2);
+  }
+
+  .note {
+    border-left: 3px solid var(--accent); background: var(--surface-2);
+    border-radius: 0 11px 11px 0; padding: 14px 18px;
+    font-size: 14.5px; color: var(--ink-soft);
+  }
+  .note p { margin: 0; }
+  .note p + p { margin-top: 8px; }
+  .note--warn { border-left-color: var(--warn); }
+  .note--mkt { border-left-color: var(--plum); }
+
+  footer.foot { border-top: 1px solid var(--line); padding-top: 20px; font-size: 13px; color: var(--muted); }
+  footer.foot p { margin: 0 0 6px; color: var(--muted); font-size: 13px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Katuq · Análisis de viabilidad · revisión 4 · 28 de julio de 2026</p>
+      <h1>Apps nativas de Katuq: operación y marketplace</h1>
+      <p class="lede">
+        Dos apps confirmadas —una para el comercio y otra para el consumidor, tipo Rappi—,
+        cada una nativa por plataforma. El marketplace es una apuesta comercial declarada, y
+        <strong>Katuq cobra y después liquida</strong> al comercio: la decisión que más
+        cambia la forma del proyecto.
+      </p>
+    </div>
+
+    <div class="verdict">
+      <p class="eyebrow">Veredicto</p>
+      <p class="verdict__line">
+        Esto deja de ser un proyecto de app y pasa a ser un programa de producto.
+      </p>
+      <p>
+        Complejidad <strong>alta</strong>, por multiplicación —<strong>dos productos con
+        públicos opuestos por dos plataformas nativas son cuatro bases de código</strong>— y
+        ahora también por el frente regulatorio que abre el recaudo: cobrar y liquidar saca a
+        Katuq del rol de software y lo mete en el de intermediario financiero. La sorpresa
+        buena es que el marketplace tiene más camino andado que la app operativa.
+      </p>
+    </div>
+
+    <div class="matrix">
+      <div class="cell cell--ops">
+        <span class="cell__p">Producto 1 · personal del comercio</span>
+        <span class="cell__t">Operación · iOS</span>
+        <span class="cell__s">Swift, proyecto propio</span>
+      </div>
+      <div class="cell cell--ops">
+        <span class="cell__p">Producto 1 · personal del comercio</span>
+        <span class="cell__t">Operación · Android</span>
+        <span class="cell__s">Kotlin, proyecto propio</span>
+      </div>
+      <div class="cell cell--mkt">
+        <span class="cell__p">Producto 2 · consumidor final</span>
+        <span class="cell__t">Marketplace · iOS</span>
+        <span class="cell__s">Swift, proyecto propio</span>
+      </div>
+      <div class="cell cell--mkt">
+        <span class="cell__p">Producto 2 · consumidor final</span>
+        <span class="cell__t">Marketplace · Android</span>
+        <span class="cell__s">Kotlin, proyecto propio</span>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">Decisión 1</p>
+    <h2>Sale picking y packing</h2>
+    <p>
+      Anotado, con una consecuencia que conviene tener presente. Picking y packing era el
+      piloto propuesto precisamente porque construía barato dos cimientos que después se
+      usan en todas partes: <strong>el escáner de código de barras y la cola de escritura
+      sin señal</strong>. Al sacarlo, esos cimientos no desaparecen: se mudan a la fase de
+      bodega, donde inventario los sigue necesitando, y ahí cuestan más porque ya no hay una
+      superficie pequeña donde equivocarse gratis.
+    </p>
+    <div class="note">
+      <p>
+        <strong>Piloto de reemplazo propuesto: “cobro en calle”</strong> — cartera más
+        tesorería. Son 2.756 líneas en web entre las dos, usan cámara para la foto del
+        comprobante —algo que ya se está forzando desde el navegador—, se ven en la caja de
+        inmediato, y validan sesión, cámara, push y el tema visual antes de comprometer el
+        presupuesto grande.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Decisión 2</p>
+    <h2>Nativo por plataforma</h2>
+    <p>
+      Es tu decisión y la tomaste sabiendo el costo, así que no la discuto. Sí te propongo
+      lo único que la hace sostenible en el tiempo:
+      <strong>que diverjan en la interfaz y no diverjan en la plomería.</strong>
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <p class="card__t">Un contrato de API, dos clientes generados</p>
+        <p>El contrato se define una sola vez y de ahí se generan los clientes de Swift y de Kotlin. Si se escribe a mano dos veces van a divergir, y esos son los bugs más caros de encontrar.</p>
+      </div>
+      <div class="card">
+        <p class="card__t">Un archivo de tokens de diseño</p>
+        <p>El tema de Katuq traducido a móvil una vez —colores, tipografía, radios, semánticos— y consumido por ambas plataformas.</p>
+      </div>
+      <div class="card">
+        <p class="card__t">Una especificación de pantallas por producto</p>
+        <p>No dos. Lo que cambia entre plataformas es cómo se siente, no qué hace.</p>
+      </div>
+      <div class="card">
+        <p class="card__t">Regla para estimar</p>
+        <p>La segunda plataforma cuesta entre 60% y 70% de la primera: el diseño y las decisiones ya están resueltos, lo que se rehace es la capa de interfaz.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Decisión 3</p>
+    <h2>Entra el marketplace</h2>
+    <p>
+      Aquí está el cambio de fondo, y hay que nombrarlo con claridad:
+      <strong>es otro público</strong>. La app de operación la usa el personal del comercio
+      —ve pedidos, producción, tesorería, inventario—. El marketplace lo usa alguien que
+      quiere comprar. Meterlos en el mismo binario significa una sola ficha en la tienda
+      hablándole a dos públicos opuestos, calificaciones mezcladas, y un consumidor que abre
+      la app y se encuentra tableros de producción.
+    </p>
+    <div class="note note--warn">
+      <p>
+        <strong>Es una apuesta comercial declarada.</strong> No se valida demanda antes de
+        construir: la app tiene dos trabajos —que el comercio gestione y que se venda— y el
+        marketplace es lo que convierte a Katuq de “el software del comercio” en “un canal
+        que además le vende”. Eso cambia la relación con quien hoy paga, y es la jugada que
+        se decidió hacer.
+      </p>
+      <p>
+        Que sea apuesta no cambia <em>si</em> se hace. Cambia <strong>cómo se
+        estructura</strong>: hay que poder probarla barato y temprano, y decidir de antemano
+        con qué señales se escala o se mata.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Alcance</p>
+    <h2>Qué entra en la app de operación</h2>
+    <p>
+      Corte tomado del menú real, ya sin picking y packing. Operativo es lo que se hace todos
+      los días, de pie, con el teléfono en la mano.
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Módulo</th><th>Peso en web</th><th>Decisión</th><th>Por qué</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">Venta asistida y pedidos</td><td class="num">55.941</td><td><span class="pill pill--in">Entra</span></td><td>Tomar el pedido donde está el cliente</td></tr>
+          <tr><td class="name">Despachos y entregas</td><td class="num">32.605</td><td><span class="pill pill--in">Entra</span></td><td>Evidencia: foto, firma, ubicación</td></tr>
+          <tr><td class="name">POS y POS V2</td><td class="num">15.726</td><td><span class="pill pill--in">Entra</span></td><td>Mostrador y tablet; POS V2 ya está aislado</td></tr>
+          <tr><td class="name">Inventario operativo</td><td class="num">11.992</td><td><span class="pill pill--in">Entra</span></td><td>Conteo, ajuste, traslado, recepción</td></tr>
+          <tr><td class="name">Producción</td><td class="num">8.106</td><td><span class="pill pill--in">Entra</span></td><td>Tablero de piso, avanzar estado</td></tr>
+          <tr><td class="name">Conversaciones WhatsApp</td><td class="num">4.377</td><td><span class="pill pill--in">Entra</span></td><td>Responder desde el teléfono</td></tr>
+          <tr><td class="name">CRM</td><td class="num">4.326</td><td><span class="pill pill--in">Entra</span></td><td>Notas de visita y tareas</td></tr>
+          <tr><td class="name">Cotizaciones</td><td class="num">3.190</td><td><span class="pill pill--in">Entra</span></td><td>Cotizar en sitio y enviar</td></tr>
+          <tr><td class="name">Tesorería</td><td class="num">1.878</td><td><span class="pill pill--acc">Piloto</span></td><td>Pago con foto del comprobante</td></tr>
+          <tr><td class="name">Cartera</td><td class="num">878</td><td><span class="pill pill--acc">Piloto</span></td><td>Saldo del cliente en la visita</td></tr>
+          <tr><td class="name">Picking y packing</td><td class="num">1.608</td><td><span class="pill pill--out">Sale</span></td><td>Retirado del alcance por ahora</td></tr>
+          <tr><td class="name">Integraciones, productos, flows, precios, usuarios</td><td class="num">41.098</td><td><span class="pill pill--out">Fuera</span></td><td>Configuración: se hace sentado, la web ya la resuelve</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Marketplace</p>
+    <h2>Cuatro de las siete piezas ya existen</h2>
+    <p>
+      Esta fue la sorpresa de la investigación. El ruteo de inventario por canal no solo
+      existe: su propio comentario en el código dice, textual,
+      <em>“ventas web, marketplaces”</em>. Alguien ya lo pensó.
+    </p>
+
+    <h3>Ya construido</h3>
+    <div class="grid-2">
+      <div class="card">
+        <p><span class="pill pill--in">Listo</span></p>
+        <p class="card__t">Ruteo de inventario por canal</p>
+        <p><code>updateByChannel()</code> descuenta existencias resolviendo canal → bodegas asociadas. Está escrito pensando en marketplaces.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--in">Listo</span></p>
+        <p class="card__t">El marketplace es un canal más</p>
+        <p>La colección <code>channels</code> ya existe por empresa con nombre, tipo, estado y bodegas asociadas. No hace falta modelo nuevo.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--in">Listo</span></p>
+        <p class="card__t">Visibilidad del producto ya modelada</p>
+        <p>El objeto <code>Exposicion</code> tiene activar, disponible, <code>soloPos</code>, destacado, oferta, nuevo y etiquetas. El concepto de “dónde se muestra” ya existe: falta una bandera más.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--in">Listo</span></p>
+        <p class="card__t">Proyección de catálogo</p>
+        <p>El índice de búsqueda de productos ya arma una vista liviana con exposición, disponibilidad, categorías y precio. Es exactamente la forma que necesita un catálogo publicado.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--in">Listo</span></p>
+        <p class="card__t">Cobertura por ciudad</p>
+        <p>Ya se resuelve qué bodega atiende dónde: es lo que decide qué comercio le aparece a cada consumidor.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--in">Listo</span></p>
+        <p class="card__t">Pasarela por comercio</p>
+        <p>Las credenciales se resuelven por empresa con respaldo a las de plataforma. El cobro puede ir a la pasarela del comercio o a la de Katuq: los dos caminos existen.</p>
+      </div>
+    </div>
+
+    <h3>Falta construir</h3>
+    <ul class="clean">
+      <li><strong>Catálogo entre empresas.</strong> Es el cambio más profundo: hoy toda consulta va filtrada por empresa, y eso es una invariante del sistema. Un marketplace la invierte.</li>
+      <li><strong>Identidad de consumidor.</strong> Hoy los clientes son registros, no cuentas: no existe forma de que un consumidor final inicie sesión.</li>
+      <li><strong>Liquidación y comisión</strong> a los comercios.</li>
+      <li><strong>Las apps de consumidor</strong> en sí, en las dos plataformas.</li>
+      <li><strong>Reseñas, moderación y soporte</strong> de la vitrina.</li>
+    </ul>
+
+    <div class="note note--mkt" style="margin-top:18px">
+      <p>
+        <strong>La propuesta que protege la plataforma:</strong> el marketplace nunca lee los
+        datos operativos del comercio. Lee una <strong>proyección publicada</strong>, aparte
+        y de solo lectura, a la que cada comercio entra producto por producto reusando la
+        exposición que ya existe.
+      </p>
+      <p>
+        Resuelve tres cosas de una: la invariante de multi-empresa no se debilita en el
+        camino operativo, la búsqueda es rápida porque consulta un índice hecho para eso, y
+        el comercio mantiene el control de qué expone. El pedido entra por el canal
+        marketplace y de ahí recorre la tubería que ya existe.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">En contra</p>
+    <h2>Lo que sigue costando</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Obstáculo</th><th>Detalle</th><th>Gravedad</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="name">Sesión de 24 horas sin renovación</td>
+            <td>En nativo saca al usuario a media jornada, todos los días. Primer motivo de desinstalación de una app operativa</td>
+            <td><span class="pill pill--high">Alta</span></td>
+          </tr>
+          <tr>
+            <td class="name">Endpoints hechos para pantalla grande</td>
+            <td>El catálogo por bodega llegó a 45 s por página antes del arreglo. En 3G dentro de una bodega, eso no carga</td>
+            <td><span class="pill pill--high">Alta</span></td>
+          </tr>
+          <tr>
+            <td class="name">La lógica de plata está espejada</td>
+            <td>Hoy vive en dos lugares que deben dar idéntico. Con dos plataformas nativas serían <strong>cuatro</strong></td>
+            <td><span class="pill pill--high">Alta</span></td>
+          </tr>
+          <tr>
+            <td class="name">El escáner y el offline se encarecen</td>
+            <td>Sin picking como piloto, se construyen dentro de la fase de bodega en vez de en una superficie pequeña</td>
+            <td><span class="pill pill--mid">Media</span></td>
+          </tr>
+          <tr>
+            <td class="name">No hay diseño móvil</td>
+            <td>El tema canónico es de escritorio, y hoy conviven cuatro “primarios” distintos en la aplicación</td>
+            <td><span class="pill pill--mid">Media</span></td>
+          </tr>
+          <tr>
+            <td class="name">Multi-país aterriza encima</td>
+            <td>Todo lo que se construya recibirá moneda con par y tasa, e impuestos por país</td>
+            <td><span class="pill pill--mid">Media</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note" style="margin-top:16px">
+      <p>
+        El tercer punto se agrava con la decisión de nativo por plataforma: replicar el
+        cálculo sería mantenerlo en cuatro lugares.
+        <strong>Por eso la regla de que ninguna app calcula plata pasa de recomendable a
+        obligatoria.</strong>
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">La apuesta</p>
+    <h2>Cómo probarla sin pagarla entera</h2>
+    <p>
+      Si el marketplace es una apuesta y no la respuesta a una demanda medida, el peor plan
+      posible es el que solo se puede evaluar cuando ya está todo construido. Dos propuestas.
+    </p>
+
+    <h3>La vitrina sale primero en web, no en app</h3>
+    <p>
+      Es la propuesta más importante de todo el documento.
+      <strong>Lo caro del marketplace no son las apps: es la espalda.</strong> La proyección
+      de catálogo entre empresas, la identidad de consumidor, el checkout con ruteo de cobro
+      y la liquidación hay que construirlos igual, y son los mismos sin importar si el
+      consumidor entra por web o por app. Las apps nativas son la capa de presentación.
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th></th><th>Probar la apuesta con web</th><th>Probar la apuesta con apps nativas</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name">Tiempo hasta la primera señal real</td>
+            <td class="tot">5–6 meses</td>
+            <td class="num">14–20 meses</td>
+          </tr>
+          <tr>
+            <td class="name">Qué se tira si falla</td>
+            <td>La vitrina web</td>
+            <td>Dos apps nativas completas</td>
+          </tr>
+          <tr>
+            <td class="name">Qué se conserva si funciona</td>
+            <td><strong>Toda la espalda</strong></td>
+            <td>Toda la espalda</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note note--mkt" style="margin-top:16px">
+      <p>
+        <strong>Esto no contradice la decisión de nativo.</strong> La contradiría si dijera
+        “el marketplace es web para siempre”. Dice otra cosa: el argumento de que lo nativo
+        destaca es fuerte cuando alguien ya usa el producto todos los días —que es el caso
+        de la app de operación— y es débil cuando todavía nadie sabe que la vitrina existe.
+        Lo nativo del marketplace se justifica <em>después</em> de la señal, y para entonces
+        se construye sabiendo qué pantallas importan de verdad.
+      </p>
+    </div>
+
+    <h3>Definir de antemano cuándo se escala y cuándo se mata</h3>
+    <p>
+      Una apuesta sin criterio de salida no es apuesta: es un compromiso indefinido.
+      Propuesta de señales, a ponerles cifra y fecha con números tuyos antes de arrancar.
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <p><span class="pill pill--mkt">Primera alarma</span></p>
+        <p class="card__t">¿Los comercios publican?</p>
+        <p>Qué porcentaje de comercios invitados publica al menos un mínimo de productos en los primeros 60 días. Esta señal llega <strong>antes</strong> que la del consumidor: si nadie publica, no hay vitrina que optimizar.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--mkt">Demanda</span></p>
+        <p class="card__t">¿Los consumidores compran?</p>
+        <p>Pedidos por comercio publicado al mes, y recompra. Es la señal que dice si la vitrina tiene tráfico propio o solo escaparate.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--mkt">Negocio</span></p>
+        <p class="card__t">¿Aporta venta nueva?</p>
+        <p>Qué porcentaje de las ventas del comercio pasa por el canal marketplace. Distingue venta incremental de canibalización de la que ya hacía por su cuenta.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--high">Disciplina</span></p>
+        <p class="card__t">Criterio de muerte explícito</p>
+        <p>Escrito antes de empezar y con fecha. Es lo que separa una apuesta de un compromiso indefinido.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">El modelo de dinero</p>
+    <h2>Katuq cobra y después liquida</h2>
+    <p>
+      Es la decisión más consecuente de todo el programa, porque saca a Katuq del rol de
+      software y lo mete en el de intermediario financiero. No la discuto — la dimensiono,
+      porque tiene consecuencias que no son de código.
+    </p>
+    <div class="note note--warn">
+      <p>
+        Nada de esta sección reemplaza asesoría legal ni contable. Son los frentes que hay
+        que poner sobre la mesa de un abogado y un contador <strong>antes de mover el primer
+        peso</strong>.
+      </p>
+    </div>
+
+    <h3>La regla que evita convertirse en entidad vigilada</h3>
+    <p>
+      <strong>El dinero nunca debe quedarse en una cuenta bancaria de Katuq.</strong> Si la
+      plata de terceros pasa por cuentas propias, Katuq entra en terreno de recaudo de
+      dineros ajenos, con obligaciones de prevención de lavado —conocimiento del cliente,
+      monitoreo, reporte de operaciones sospechosas— que aplican a quien recibe, traslada y
+      entrega dinero. Ese camino existe, pero es un negocio distinto al que estás
+      construyendo.
+    </p>
+    <div class="note">
+      <p>
+        <strong>La forma práctica de evitarlo:</strong> que el dinero se mueva siempre sobre
+        los rieles de la pasarela, que ya es entidad regulada. Katuq lleva <strong>el
+        libro</strong> —quién le debe cuánto a quién— pero no la <strong>custodia</strong>.
+      </p>
+      <p>
+        Y hay una noticia concreta: <strong>Wompi, que ya es la pasarela del proyecto, tiene
+        una API de Pagos a Terceros</strong> para dispersar pagos a cuentas bancarias en
+        Colombia, individualmente o por lotes. Es exactamente el riel de liquidación que hace
+        falta, del lado del proveedor que ya se está usando.
+      </p>
+    </div>
+
+    <h3>Quién le factura al consumidor</h3>
+    <p>
+      En Colombia, un marketplace que recauda por cuenta del comercio se estructura como un
+      <strong>contrato de mandato</strong>, con una forma de facturación definida: la factura
+      la emite el mandatario —Katuq— pero debe <strong>separar con claridad lo que
+      corresponde al comercio de la comisión de Katuq</strong>. El marco es el Decreto 1625
+      de 2016 y la Resolución DIAN 000165 de 2023.
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <p><span class="pill pill--in">A favor</span></p>
+        <p class="card__t">Es la misma resolución que ya se está usando</p>
+        <p>La facturación DIAN directa se construyó sobre ese mismo marco. El trabajo no se bota: se extiende. Pero <strong>facturación por mandato es un modo distinto</strong> y hay que soportarlo explícitamente al construir el documento.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--high">Riesgo</span></p>
+        <p class="card__t">Facturar mal infla el ingreso de Katuq</p>
+        <p>Si la venta del comercio entra como ingreso propio en vez de recaudo por cuenta ajena, los estados financieros reflejan plata que no es tuya, con su efecto tributario. Error caro y silencioso.</p>
+      </div>
+    </div>
+
+    <h3>Lo que hay que construir que antes no estaba</h3>
+    <p>Cobrar y liquidar no es “checkout más un botón”. Es un libro contable pequeño.</p>
+    <ul class="clean">
+      <li><strong>Saldo por comercio</strong> — cuánto se le debe, acumulado por pedido cobrado.</li>
+      <li><strong>Corrida de liquidación</strong> — periodicidad, mínimo de dispersión, y dispersión efectiva contra la API de pagos a terceros.</li>
+      <li><strong>Comisión y retenciones</strong> — cálculo, registro y su propia factura.</li>
+      <li><strong>Devoluciones y contracargos</strong> — si cobró Katuq, devuelve Katuq, y después lo descuenta del saldo del comercio. Es el caso que siempre se olvida y el que más duele.</li>
+      <li><strong>Conciliación</strong> entre pasarela, pedidos y liquidaciones. Sin esto no hay cómo responderle a un comercio que reclama.</li>
+    </ul>
+    <div class="note" style="margin-top:16px">
+      <p>
+        <strong>Hay patrón interno que copiar:</strong> el servicio de saldo prepago de
+        WhatsApp ya resuelve exactamente esta forma —documento de saldo por empresa,
+        historial de movimientos, transacciones atómicas contra carreras, alertas por
+        umbral—. El saldo del comercio es el mismo patrón en sentido contrario: acumula en
+        vez de debitar.
+      </p>
+      <p>
+        <strong>Efecto en el plan:</strong> la espalda mínima crece. No se puede salir en
+        vivo con plata real sin saldo y sin liquidación, porque los comercios tienen que
+        cobrar desde el primer pedido. <strong>M-0 pasa de 8–12 a 12–16 semanas.</strong>
+      </p>
+    </div>
+
+    <h3>Choque con el programa multi-país</h3>
+    <p>
+      Este es el punto que no se ve de entrada: <strong>la app de operación viaja fácil entre
+      países; el marketplace que recauda, no.</strong> Cobrar dinero en un país exige
+      presencia legal y medios de cobro locales, y en los dos mercados de la apuesta
+      multi-país eso pesa distinto — en Venezuela el cobro en divisas tiene su propio
+      impuesto y su propio régimen cambiario. Conviene que el diseño permita, por país,
+      entrar <strong>solo con operación</strong> o con un marketplace donde el comercio cobre
+      por su cuenta, en vez de asumir que Katuq siempre recauda.
+    </p>
+  </section>
+
+  <section>
+    <p class="eyebrow">Propuestas</p>
+    <h2>Seis reglas que sostienen el programa</h2>
+    <div class="grid-2">
+      <div class="card">
+        <p><span class="pill pill--acc">Obligatoria</span></p>
+        <p class="card__t">Ninguna app calcula plata</p>
+        <p>Arma el carrito, lo manda, el backend devuelve totales resueltos y formateados. Mata el problema de los espejos y hace que multi-país no toque ninguna app.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--acc">Alcance</span></p>
+        <p class="card__t">Offline por niveles</p>
+        <p>Solo en línea: venta asistida, cotizaciones, tesorería, marketplace. Lectura en caché: pedidos, cartera, producción, catálogo. Cola de escritura: solo inventario, que ya es idempotente por contrato.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--acc">Backend</span></p>
+        <p class="card__t">Endpoints móviles, no una API nueva</p>
+        <p>Lecturas que devuelven la tarjeta ya armada. Regla: ninguna pantalla de lista hace más de una llamada.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--acc">Mantenimiento</span></p>
+        <p class="card__t">El contrato se escribe una vez</p>
+        <p>De ahí se generan los clientes de Swift y Kotlin. Es lo que evita que cuatro bases de código se conviertan en cuatro productos distintos con el mismo nombre.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--mkt">Marketplace</span></p>
+        <p class="card__t">Proyección publicada, nunca datos operativos</p>
+        <p>La invariante de multi-empresa no se toca en el camino operativo. El comercio decide qué publica.</p>
+      </div>
+      <div class="card">
+        <p><span class="pill pill--mkt">Marketplace</span></p>
+        <p class="card__t">Es un canal, no un modelo nuevo</p>
+        <p>Reusa <code>channels</code> y <code>Exposicion</code>. Sin colecciones nuevas, que además es regla del proyecto.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Plan</p>
+    <h2>Dos vías en paralelo</h2>
+
+    <h3>Vía A · Operación</h3>
+    <div class="phases">
+      <div class="phase phase--pilot">
+        <div class="phase__n">00</div>
+        <div class="phase__b">
+          <p class="phase__t">Piloto · cobro en calle</p>
+          <p>Cartera y tesorería con foto del comprobante. Superficie mínima, resultado visible en la caja, y valida sesión, cámara, push y tema en las dos plataformas.</p>
+        </div>
+        <div class="phase__w">7–10 sem</div>
+      </div>
+      <div class="phase">
+        <div class="phase__n">01</div>
+        <div class="phase__b">
+          <p class="phase__t">El día del vendedor</p>
+          <p>Pedidos, venta asistida completa y cotizaciones. Venta asistida sola es cerca del 40% de la fase.</p>
+        </div>
+        <div class="phase__w">17–24 sem</div>
+      </div>
+      <div class="phase">
+        <div class="phase__n">02</div>
+        <div class="phase__b">
+          <p class="phase__t">El día de la bodega</p>
+          <p>Inventario operativo y producción. Aquí se construyen el escáner y el offline que antes traía el piloto.</p>
+        </div>
+        <div class="phase__w">14–20 sem</div>
+      </div>
+      <div class="phase">
+        <div class="phase__n">03</div>
+        <div class="phase__b">
+          <p class="phase__t">El día del despacho</p>
+          <p>Despachos, guías y entrega con evidencia: foto, firma y ubicación.</p>
+        </div>
+        <div class="phase__w">10–14 sem</div>
+      </div>
+      <div class="phase">
+        <div class="phase__n">BE</div>
+        <div class="phase__b">
+          <p class="phase__t">Backend, desde el día uno</p>
+          <p>Token de refresco, capa de endpoints móviles y push por rol. No espera al móvil: lo bloquea.</p>
+        </div>
+        <div class="phase__w">5–7 sem</div>
+      </div>
+    </div>
+
+    <h3>Vía B · Marketplace, estructurada como apuesta</h3>
+    <div class="phases">
+      <div class="phase">
+        <div class="phase__n">M0</div>
+        <div class="phase__b">
+          <p class="phase__t">Espalda mínima</p>
+          <p>Proyección de catálogo entre empresas, identidad de consumidor, checkout, y el libro de saldo por comercio con su corrida de liquidación. Es la parte que se conserva pase lo que pase.</p>
+        </div>
+        <div class="phase__w">12–16 sem</div>
+      </div>
+      <div class="phase phase--pilot">
+        <div class="phase__n">M1</div>
+        <div class="phase__b">
+          <p class="phase__t">Vitrina web · aquí se mide la apuesta</p>
+          <p>Catálogo, búsqueda, producto, carrito, pago y seguimiento. Sin una línea de Swift ni de Kotlin, y responde las dos preguntas que deciden todo.</p>
+        </div>
+        <div class="phase__w">6–8 sem</div>
+      </div>
+      <div class="phase">
+        <div class="phase__n">·</div>
+        <div class="phase__b">
+          <p class="phase__t">Punto de decisión: escalar o matar</p>
+          <p>Según las señales acordadas. Antes este punto caía a los 8–12 meses; ahora cae a los 5–6.</p>
+        </div>
+        <div class="phase__w">mes 5–6</div>
+      </div>
+      <div class="phase">
+        <div class="phase__n">M2</div>
+        <div class="phase__b">
+          <p class="phase__t">Espalda completa</p>
+          <p>Comisión y retenciones, devoluciones y contracargos, conciliación, reseñas, moderación y panel del comercio en la web.</p>
+        </div>
+        <div class="phase__w">8–12 sem</div>
+      </div>
+      <div class="phase">
+        <div class="phase__n">M3</div>
+        <div class="phase__b">
+          <p class="phase__t">Apps nativas de consumidor</p>
+          <p>Las dos plataformas, construidas ya sabiendo qué pantallas importan de verdad.</p>
+        </div>
+        <div class="phase__w">20–28 sem</div>
+      </div>
+    </div>
+
+    <div class="stats" style="margin-top:22px">
+      <div class="stat">
+        <span class="stat__k">Piloto de operación</span>
+        <span class="stat__v">7–10</span>
+        <span class="stat__n">semanas, dos plataformas</span>
+      </div>
+      <div class="stat">
+        <span class="stat__k">Hasta medir la apuesta</span>
+        <span class="stat__v">5–6</span>
+        <span class="stat__n">meses, con vitrina web</span>
+      </div>
+      <div class="stat">
+        <span class="stat__k">Operación completa</span>
+        <span class="stat__v">12–17</span>
+        <span class="stat__n">meses</span>
+      </div>
+      <div class="stat">
+        <span class="stat__k">Todo, dos equipos</span>
+        <span class="stat__v">14–19</span>
+        <span class="stat__n">meses · en secuencia: 24–33</span>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:16px">
+      <p>
+        <strong>Supuestos.</strong> Un desarrollador por plataforma a tiempo completo, medio
+        de backend por vía, y contrato de API compartido. La segunda plataforma se estima al
+        65% de la primera. No incluye pruebas con usuarios en piso, publicación en tiendas,
+        administración de dispositivos ni operación del marketplace. Son estimaciones de
+        planeación, no compromisos.
+      </p>
+    </div>
+
+    <h3>El orden que recomiendo</h3>
+    <p>Las dos vías corren en paralelo, cada una con su punto de decisión temprano.</p>
+    <ul class="clean">
+      <li><strong>Piloto de cobro en calle</strong> (vía A). Barato, se ve en la caja, y valida las cuatro bases de código y la forma de trabajar antes de comprometer nada grande.</li>
+      <li><strong>Backend de operación desde el día uno.</strong> Bloquea todo lo demás de la vía A.</li>
+      <li><strong>Definir el modelo de dinero con abogado y contador</strong>, antes de escribir la espalda: condiciona cómo se factura y dónde vive la plata.</li>
+      <li><strong>Espalda mínima del marketplace</strong> (vía B), en paralelo. Es lo que se conserva pase lo que pase.</li>
+      <li><strong>Vitrina web y medición de la apuesta.</strong> Punto de decisión a los 5–6 meses.</li>
+      <li><strong>El día del vendedor</strong> (vía A). Es donde está el valor operativo.</li>
+      <li><strong>Apps nativas de consumidor</strong>, solo después de que la apuesta muestre señal.</li>
+      <li><strong>Bodega y despacho al final.</strong></li>
+    </ul>
+  </section>
+
+  <section>
+    <p class="eyebrow">Antes de arrancar</p>
+    <h2>Decisiones abiertas</h2>
+    <ul class="clean">
+      <li><strong>¿Bajo qué figura legal recauda Katuq?</strong> Es la pregunta para un abogado, no para resolver internamente. De ella cuelgan la estructura de facturación por mandato y si Katuq queda como sujeto de obligaciones de prevención de lavado.</li>
+      <li><strong>¿Katuq toca el dinero o solo lleva el libro?</strong> La recomendación es que la custodia se quede en la pasarela. Confirmarlo cambia el perfil regulatorio del proyecto entero.</li>
+      <li><strong>¿La comisión es porcentaje plano, por categoría o por comercio?</strong> Define el modelo de datos de la liquidación desde el primer día.</li>
+      <li><strong>¿Cuáles son los números de la apuesta?</strong> Las señales hay que ponerles cifra y fecha antes de arrancar, no después.</li>
+      <li><strong>¿Las dos plataformas a la vez, o Android primero?</strong> La operación de piso casi siempre es Android y suele ser equipo de la empresa; el consumidor final es mixto. Se puede escalonar distinto por producto.</li>
+      <li><strong>¿Quién administra los dispositivos</strong> de la operación? No es código, pero frena lanzamientos.</li>
+    </ul>
+  </section>
+
+  <section>
+    <p class="eyebrow">Riesgos</p>
+    <h2>Dónde se hunde un programa así</h2>
+    <ul class="clean">
+      <li><strong>El alcance se multiplicó.</strong> Dos productos por dos plataformas. La forma conocida de fracasar es empezar los cuatro a la vez.</li>
+      <li><strong>El riesgo propio de la apuesta es el centro comercial vacío.</strong> No es técnico: es que los comercios no publiquen. Esa señal llega antes que la del consumidor y es la primera que hay que vigilar.</li>
+      <li><strong>Canibalización.</strong> Si el marketplace solo mueve al canal Katuq la venta que el comercio ya hacía por su cuenta, no aporta venta nueva y sí agrega costo.</li>
+      <li><strong>El frente regulatorio del recaudo puede frenar el lanzamiento entero</strong>, y no se resuelve programando. Si se descubre tarde no se arregla con una versión nueva: se para la operación. Va con abogado desde el principio, en paralelo al código.</li>
+      <li><strong>Devoluciones y contracargos son el caso olvidado.</strong> Si cobró Katuq, devuelve Katuq y después lo descuenta del saldo del comercio. Si no está desde el diseño, aparece como incidente contable.</li>
+      <li><strong>Cuatro bases de código divergen solas.</strong> Sin contrato de API y tokens de diseño compartidos, en un año son cuatro productos distintos con el mismo nombre.</li>
+      <li><strong>El marketplace toca la invariante de multi-empresa.</strong> Si se resuelve abriendo consultas entre empresas en el camino operativo en vez de con una proyección aparte, se debilita lo que hoy separa a un comercio de otro. Eso no es negociable.</li>
+      <li><strong>La lentitud conocida de la API se vuelve visible</strong> en un teléfono con mala señal.</li>
+      <li><strong>Multi-país aterriza encima.</strong> Si alguna app calcula plata por su cuenta, hay que reescribirla en cuatro lugares.</li>
+      <li><strong>Módulos sensibles siguen sensibles.</strong> Inventario y pedidos mantienen la regla del proyecto: un cambio a la vez, con aprobación explícita.</li>
+    </ul>
+  </section>
+
+  <footer class="foot">
+    <p>Los pesos por módulo son líneas de <code>.ts</code> y <code>.html</code> del frontend actual, contadas el 28 de julio de 2026. Se usan como proxy de superficie funcional, no como trabajo a portar.</p>
+    <p>Documento equivalente en el repositorio: <code>docs/app-nativa-operativa.md</code>.</p>
+  </footer>
+
+</div>

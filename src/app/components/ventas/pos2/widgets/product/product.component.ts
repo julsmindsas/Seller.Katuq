@@ -1,16 +1,21 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CartService } from '../../../../../shared/services/cart.service';
 import { MaestroService } from '../../../../../shared/services/maestros/maestro.service';
 import { InventarioService } from '../../../../../shared/services/inventarios/inventario.service';
 import { ImageOptimizerDirective } from '../../../../../shared/directives/image-optimizer.directive';
 import { ImageCacheService } from '../../../../../shared/services/image-cache.service';
 
+/** Máximo de filas del desplegable de autocompletado. */
+const LIMITE_SUGERENCIAS = 8;
+
 @Component({
   selector: 'app-product',
   templateUrl: './product.component.html',
   styleUrls: ['./product.component.scss'],
 })
-export class ProductComponent implements OnInit {
+export class ProductComponent implements OnInit, OnDestroy {
   @ViewChild('searchInputElement') searchInput: ElementRef | undefined;
 
   public products: any[] = [];
@@ -18,6 +23,27 @@ export class ProductComponent implements OnInit {
   public paginatedProducts: any[] = []; // Productos paginados para mostrar
   public searchQuery: string = '';
   public isBarcodeMode: boolean = false; // Nueva propiedad para el modo código de barras
+
+  // --- Estado SOLO de presentación del modo escáner -------------------------
+  // No participa en la lógica de carrito ni de stock: alimenta la tarjeta de
+  // "último escaneado" y el aviso de código no encontrado. Lo que se agrega al
+  // carrito lo sigue decidiendo addToCart() igual que antes.
+  public ultimoEscaneado: any = null;
+  public ultimoEscaneadoCantidad: number = 0;
+  // Mensaje completo ya redactado (código inexistente o sin existencias).
+  public escaneoError: string | null = null;
+  // Verdadero mientras se consulta el catálogo completo del backend.
+  public buscandoCodigo: boolean = false;
+
+  // --- Autocompletado del buscador (modo catálogo) --------------------------
+  // Muestra coincidencias mientras se escribe: primero las de la bodega ya
+  // cargada (instantáneo) y luego se completa con el catálogo del backend,
+  // porque la bodega solo trae 500 productos.
+  public sugerencias: any[] = [];
+  public mostrarSugerencias: boolean = false;
+  public buscandoSugerencias: boolean = false;
+  private readonly sugerenciaInput$ = new Subject<string>();
+  private sugerenciaSub?: Subscription;
   public imageLoaded: { [key: string]: boolean } = {};
   public defaultImage: string = 'assets/images/placeholders/product-not-found.svg'; // Añade una imagen por defecto
   public filter = {
@@ -35,7 +61,8 @@ export class ProductComponent implements OnInit {
     public cartService: CartService,
     private maestroService: MaestroService,
     private inventarioService: InventarioService,
-    private imageCacheService: ImageCacheService
+    private imageCacheService: ImageCacheService,
+    private elementRef: ElementRef
   ) {
   }
 
@@ -47,6 +74,28 @@ export class ProductComponent implements OnInit {
     }
     // Limpiar caché antiguo al iniciar
     this.imageCacheService.clearCache();
+
+    // El complemento del autocompletado va contra el backend: se espera a que
+    // el cajero deje de escribir para no disparar una petición por tecla.
+    this.sugerenciaSub = this.sugerenciaInput$
+      .pipe(debounceTime(320), distinctUntilChanged())
+      .subscribe((termino) => this.completarSugerenciasDesdeBackend(termino));
+  }
+
+  ngOnDestroy(): void {
+    if (this.sugerenciaSub) {
+      this.sugerenciaSub.unsubscribe();
+    }
+  }
+
+  /** Cierra el autocompletado al hacer clic fuera del buscador. */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.mostrarSugerencias) return;
+    const caja = this.elementRef.nativeElement.querySelector('.cat-searchbox');
+    if (caja && !caja.contains(event.target as Node)) {
+      this.mostrarSugerencias = false;
+    }
   }
 
   async handleImageLoad(event: any, productId: string) {
@@ -200,19 +249,24 @@ export class ProductComponent implements OnInit {
     }
   }
 
-  addToCart(product: any) {
+  // Devuelve true si el producto realmente entró al carrito. Las mismas reglas
+  // de antes; solo se informa el resultado para que la UI no diga "agregado"
+  // cuando el stock lo impidió.
+  addToCart(product: any): boolean {
     // Si el producto no es inventariable, agregar directamente al carrito
     if (!product.disponibilidad?.inventariable) {
       this.cartService.posAddToCart(product);
-      return;
+      return true;
     }
 
     // Si es inventariable, validar stock
     const stockDisponible = product.disponibilidad?.cantidadDisponible ?? 0;
     if (stockDisponible >= product.cantidad) {
       this.cartService.posAddToCart(product);
+      return true;
     } else {
       console.warn(`No hay suficiente stock para ${product.crearProducto?.titulo}. Disponible: ${stockDisponible}`);
+      return false;
     }
   }
 
@@ -222,6 +276,121 @@ export class ProductComponent implements OnInit {
     this.filter['search'] = this.filter['search'].replace(/'/g, '-');
 
     this.filterDetails();
+
+    // El autocompletado solo aplica al modo catálogo; en escáner el Enter manda.
+    if (!this.isBarcodeMode) {
+      this.actualizarSugerencias();
+    } else {
+      this.cerrarSugerencias();
+    }
+  }
+
+  // ===========================================================================
+  // AUTOCOMPLETADO DEL BUSCADOR (modo catálogo)
+  // ===========================================================================
+
+  /**
+   * Arma la lista de sugerencias: primero lo que ya está cargado de la bodega
+   * (respuesta instantánea) y, si son pocas, se completa con el catálogo del
+   * backend — la bodega solo trae 500 productos.
+   */
+  private actualizarSugerencias(): void {
+    const termino = (this.searchQuery || '').trim();
+
+    if (termino.length < 2) {
+      this.cerrarSugerencias();
+      return;
+    }
+
+    this.sugerencias = this.filteredProduct.slice(0, LIMITE_SUGERENCIAS);
+    this.mostrarSugerencias = true;
+
+    if (this.sugerencias.length < LIMITE_SUGERENCIAS) {
+      this.buscandoSugerencias = true;
+      this.sugerenciaInput$.next(termino);
+    } else {
+      this.buscandoSugerencias = false;
+    }
+  }
+
+  /** Completa las sugerencias con productos del catálogo que no están cargados. */
+  private completarSugerenciasDesdeBackend(termino: string): void {
+    // El endpoint exige mínimo 2 caracteres.
+    if (!termino || termino.length < 2 || this.isBarcodeMode) {
+      this.buscandoSugerencias = false;
+      return;
+    }
+
+    const idBodega = this.obtenerBodegaActiva();
+
+    this.inventarioService.buscarCodigoParaPOS(termino, 'general', LIMITE_SUGERENCIAS).subscribe({
+      next: (r: any) => {
+        this.buscandoSugerencias = false;
+
+        // Si el cajero siguió escribiendo, esta respuesta ya no aplica.
+        if ((this.searchQuery || '').trim() !== termino) return;
+
+        const yaListadas = new Set(
+          this.sugerencias.map((p) => p?.identificacion?.referencia).filter(Boolean)
+        );
+
+        const delCatalogo = (r?.products || [])
+          .filter((p: any) => !yaListadas.has(p?.identificacion?.referencia))
+          .map((p: any) => this.adaptarProductoDelCatalogo(p, idBodega));
+
+        this.sugerencias = [...this.sugerencias, ...delCatalogo].slice(0, LIMITE_SUGERENCIAS);
+        this.mostrarSugerencias = this.sugerencias.length > 0;
+      },
+      error: () => {
+        // Sin conexión al catálogo se queda con las sugerencias locales.
+        this.buscandoSugerencias = false;
+      }
+    });
+  }
+
+  /** Agrega la sugerencia elegida por la misma puerta de siempre: addToCart(). */
+  seleccionarSugerencia(producto: any): void {
+    const agregado = this.addToCart(producto);
+
+    if (agregado) {
+      this.ultimoEscaneado = producto;
+      this.ultimoEscaneadoCantidad = producto.cantidad || 1;
+      this.escaneoError = null;
+    } else {
+      const disponible = producto?.disponibilidad?.cantidadDisponible ?? 0;
+      const nombre = producto?.crearProducto?.titulo || 'Producto';
+      this.escaneoError = `${nombre} — sin existencias en esta bodega (disponible: ${disponible})`;
+    }
+
+    this.searchQuery = '';
+    this.cerrarSugerencias();
+    this.filterDetails();
+
+    if (this.searchInput && this.searchInput.nativeElement) {
+      this.searchInput.nativeElement.focus();
+    }
+  }
+
+  /** Reabre el desplegable al enfocar si ya hay término escrito. */
+  onBuscadorFocus(): void {
+    if (!this.isBarcodeMode && (this.searchQuery || '').trim().length >= 2) {
+      this.actualizarSugerencias();
+    }
+  }
+
+  cerrarSugerencias(): void {
+    this.mostrarSugerencias = false;
+    this.buscandoSugerencias = false;
+    this.sugerencias = [];
+  }
+
+  /** Stock a mostrar/validar para una sugerencia. */
+  stockSugerencia(producto: any): number {
+    return producto?.disponibilidad?.cantidadDisponible ?? 0;
+  }
+
+  esInventariable(producto: any): boolean {
+    return producto?.disponibilidad?.inventariable !== false;
   }
 
   onSearchEnter(): void {
@@ -277,16 +446,36 @@ export class ProductComponent implements OnInit {
       }
 
       if (firstMatch) {
-        this.addToCart(firstMatch);
-        this.searchQuery = '';
-        this.searchStores();
-        if (this.searchInput && this.searchInput.nativeElement) {
-          this.searchInput.nativeElement.focus();
+        const agregado = this.addToCart(firstMatch);
+
+        // Acuse visual del escaneo (solo presentación). Si el stock impidió
+        // agregarlo, se avisa en vez de mostrar el acuse verde.
+        if (agregado) {
+          this.ultimoEscaneado = firstMatch;
+          this.ultimoEscaneadoCantidad = firstMatch.cantidad || 1;
+          this.escaneoError = null;
+        } else {
+          this.ultimoEscaneado = null;
+          const disponible = firstMatch.disponibilidad?.cantidadDisponible ?? 0;
+          const nombre = firstMatch.crearProducto?.titulo || trimmedQuery;
+          this.escaneoError = `${nombre} — sin existencias en esta bodega (disponible: ${disponible})`;
         }
+
       } else {
-        // Si no se encuentra ninguna coincidencia en modo código de barras,
-        // searchStores utilizará el searchQuery actual para filtrar la lista (probablemente mostrando "no encontrado").
-        this.searchStores();
+        // No está entre los productos precargados de la bodega (máximo 500).
+        // Antes de darlo por inexistente se consulta el catálogo completo.
+        this.ultimoEscaneado = null;
+        this.escaneoError = null;
+        this.buscarCodigoEnBackend(trimmedQuery);
+      }
+
+      // En modo escáner el campo SIEMPRE queda vacío y con el foco tras Enter,
+      // haya coincidido o no: el cajero dispara el lector otra vez de una, sin
+      // borrar el código anterior a mano.
+      this.searchQuery = '';
+      this.searchStores();
+      if (this.searchInput && this.searchInput.nativeElement) {
+        this.searchInput.nativeElement.focus();
       }
 
     } else { // Si no es modo barcode, o el query está vacío
@@ -297,6 +486,140 @@ export class ProductComponent implements OnInit {
   // Nueva función para manejar el cambio del checkbox y guardar en localStorage
   onBarcodeModeChange(): void {
     localStorage.setItem('isBarcodeMode', JSON.stringify(this.isBarcodeMode));
+    // Al cambiar de modo se limpia el acuse del escaneo anterior y se deja el
+    // cursor listo en el campo (el cajero escanea sin tocar el mouse).
+    this.ultimoEscaneado = null;
+    this.escaneoError = null;
+    setTimeout(() => {
+      if (this.searchInput && this.searchInput.nativeElement) {
+        this.searchInput.nativeElement.focus();
+      }
+    }, 0);
+  }
+
+
+  /**
+   * Respaldo del escáner: busca el código en el catálogo COMPLETO del backend
+   * cuando no aparece entre los productos precargados de la bodega.
+   *
+   * El endpoint de inventario por bodega tiene tope de 500 productos, así que
+   * sin esto un código válido se reportaba como inexistente.
+   *
+   * Reglas que se respetan:
+   *  - El stock que manda es el de LA BODEGA ACTIVA (stockPorBodega[idBodega]),
+   *    nunca el total del catálogo: vender contra el total permitiría despachar
+   *    existencias que están en otra bodega.
+   *  - El alta al carrito sigue pasando por addToCart(), con sus validaciones.
+   */
+  private buscarCodigoEnBackend(codigo: string): void {
+    const idBodega = this.obtenerBodegaActiva();
+    if (!idBodega) {
+      this.escaneoError = `El código “${codigo}” no está cargado y no hay bodega seleccionada`;
+      return;
+    }
+
+    this.buscandoCodigo = true;
+
+    // Primero por código de barras exacto; si no hay, por referencia/título.
+    this.inventarioService.buscarCodigoParaPOS(codigo, 'codigoBarras', 5).subscribe({
+      next: (r: any) => {
+        const encontrados = r?.products || [];
+        if (encontrados.length > 0) {
+          this.procesarProductoDelBackend(encontrados[0], codigo, idBodega);
+          return;
+        }
+        this.inventarioService.buscarCodigoParaPOS(codigo, 'general', 5).subscribe({
+          next: (r2: any) => {
+            const alt = r2?.products || [];
+            if (alt.length > 0) {
+              this.procesarProductoDelBackend(alt[0], codigo, idBodega);
+            } else {
+              this.buscandoCodigo = false;
+              this.escaneoError = `El código “${codigo}” no existe en el catálogo`;
+            }
+          },
+          error: () => {
+            this.buscandoCodigo = false;
+            this.escaneoError = `No se pudo consultar el código “${codigo}”. Revisa la conexión.`;
+          }
+        });
+      },
+      error: () => {
+        this.buscandoCodigo = false;
+        this.escaneoError = `No se pudo consultar el código “${codigo}”. Revisa la conexión.`;
+      }
+    });
+  }
+
+  /**
+   * Adapta el producto que devuelve el catálogo a la forma que usa el POS y lo
+   * manda por la misma puerta de siempre: addToCart().
+   */
+  private procesarProductoDelBackend(encontrado: any, codigo: string, idBodega: string): void {
+    this.buscandoCodigo = false;
+
+    const producto = this.adaptarProductoDelCatalogo(encontrado, idBodega);
+    const disponible = producto.disponibilidad.cantidadDisponible;
+
+    if (this.addToCart(producto)) {
+      this.ultimoEscaneado = producto;
+      this.ultimoEscaneadoCantidad = producto.cantidad;
+      this.escaneoError = null;
+    } else {
+      this.ultimoEscaneado = null;
+      const nombre = producto.crearProducto?.titulo || codigo;
+      this.escaneoError = `${nombre} — sin existencias en esta bodega (disponible: ${disponible})`;
+    }
+  }
+
+  /**
+   * Adapta un producto del catálogo a la forma que usa el POS.
+   *
+   * CLAVE: el stock que queda es el de LA BODEGA ACTIVA (stockPorBodega), no el
+   * `cantidadDisponible` que llega del backend — ese es el total de TODAS las
+   * bodegas y vender contra él permitiría comprometer existencias ajenas.
+   */
+  private adaptarProductoDelCatalogo(encontrado: any, idBodega: string | null): any {
+    const inventariable = encontrado?.disponibilidad?.inventariable !== false;
+    // stockPorBodega viene indexado por el business code de la bodega (BOD-00X).
+    const stockBodega = idBodega ? (encontrado?.stockPorBodega?.[idBodega] ?? 0) : 0;
+    const disponible = inventariable
+      ? stockBodega
+      : (encontrado?.disponibilidad?.cantidadDisponible ?? 0);
+
+    return {
+      ...encontrado,
+      _id: encontrado?.cd || encontrado?._id,
+      cantidad: 1,
+      disponibilidad: {
+        ...(encontrado?.disponibilidad || {}),
+        inventariable,
+        cantidadDisponible: disponible,
+      },
+    };
+  }
+
+  /** Business code (BOD-00X) de la bodega activa del POS. */
+  private obtenerBodegaActiva(): string | null {
+    try {
+      const raw = localStorage.getItem('warehousePOS');
+      const bodega = raw ? JSON.parse(raw) : null;
+      return bodega?.idBodega || null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Descarta el aviso de código no encontrado (solo presentación). */
+  limpiarErrorEscaneo(): void {
+    this.escaneoError = null;
+  }
+
+  /** Total de una línea del ticket, para la tabla de escaneos. */
+  totalLinea(item: any): number {
+    const precio = item?.precio?.precioUnitarioConIva || 0;
+    const cantidad = item?.cantidad || 0;
+    return precio * cantidad;
   }
 
   /**

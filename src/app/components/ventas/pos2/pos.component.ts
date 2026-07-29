@@ -28,6 +28,34 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
     private router: Router
   ) {}
 
+  // ─── TICKET EN MÓVIL ──────────────────────────────────────────────────
+  // En pantallas angostas el ticket no cabe al lado del catálogo: se abre como
+  // hoja desde la barra inferior. Solo estado de presentación.
+  public ticketAbierto = false;
+
+  abrirTicket(): void {
+    this.ticketAbierto = true;
+  }
+
+  cerrarTicket(): void {
+    this.ticketAbierto = false;
+  }
+
+  /** Líneas en el ticket, para la barra inferior. */
+  get itemsEnTicket(): number {
+    return this.cartService.posCartItems?.length || 0;
+  }
+
+  /**
+   * Total del ticket como número, solo para mostrarlo con separadores.
+   * No se toca getPOSSubTotal(): pos-order-creator lo parsea para armar el monto
+   * del pedido y cambiar su formato rompería la orden.
+   */
+  get totalTicket(): number {
+    const raw = this.cartService.getPOSSubTotal();
+    return parseFloat(String(raw ?? '0').replace(/[^0-9.-]/g, '')) || 0;
+  }
+
   ngOnInit(): void {
     // Debug logging para verificar contexto de empresa
     const currentCompanyStr = localStorage.getItem("currentCompany");
@@ -123,7 +151,8 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
       centered: true,
       size: 'xl',
       backdrop: 'static',
-      keyboard: false
+      keyboard: false,
+      modalDialogClass: 'katuq-modal'
     });
   }
 
@@ -132,7 +161,8 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
       centered: true,
       size: 'xl',
       backdrop: 'static',
-      keyboard: false
+      keyboard: false,
+      modalDialogClass: 'katuq-modal'
     });
   }
 

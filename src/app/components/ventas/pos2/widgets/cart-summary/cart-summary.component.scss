@@ -165,3 +165,433 @@
 .f-w-600 {
   font-weight: 600;
 } 
+// =============================================================================
+// LÍNEAS DEL TICKET (mockup "Ventas POS")
+//
+// La lista scrollea sola y los totales quedan anclados abajo: en una caja el
+// total y el botón de cobrar no pueden desaparecer al agregar productos.
+// Sin cambios de lógica — mismos bindings del carrito.
+// =============================================================================
+@import '../../../../../shared/styles/katuq-comercial';
+
+:host {
+  @include kc-tokens;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.card.cart-summary-sticky {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #fff;
+
+  > .card-header {
+    flex-shrink: 0;
+    padding: 12px 16px 8px !important;
+    border: none;
+    background: transparent;
+
+    h5 {
+      font-family: var(--kc-font-head);
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--kc-ink);
+    }
+  }
+
+  > .card-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+  }
+}
+
+// --- lista + cupón --------------------------------------------------------
+.cart-summary-sticky .order-quantity {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0 !important;
+  border-bottom: none !important;
+}
+
+.cart-summary-sticky .cart-items-container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 16px;
+
+  &::-webkit-scrollbar { width: 8px; }
+  &::-webkit-scrollbar-thumb {
+    background: #d7d9e3;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+.cart-summary-sticky .order-details-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f6fa;
+}
+
+.cart-summary-sticky .order-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  overflow: hidden;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.cart-summary-sticky .category-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cart-summary-sticky .order-details-right {
+  flex: 1;
+  min-width: 0;
+
+  h6 {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--kc-ink);
+    line-height: 1.3;
+    margin-bottom: 2px !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .last-order-detail {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    h6 {
+      font-family: var(--kc-font-head);
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--kc-accent);
+      margin: 0 !important;
+    }
+
+    .trash-remove {
+      color: #d3d7e1;
+      font-size: 12.5px;
+      padding: 4px;
+      border-radius: 7px;
+
+      &:hover { background: #fdeceb; color: #e0483f; }
+    }
+  }
+}
+
+.cart-summary-sticky .right-details {
+  margin-bottom: 0 !important;
+  flex-shrink: 0;
+}
+
+.cart-summary-sticky .touchspin-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line);
+  border-radius: 9px;
+  padding: 2px;
+
+  .btn-touchspin {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: #fff;
+    border: none;
+    color: var(--kc-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    i { font-size: 9px; }
+    &:hover { background: var(--kc-accent-wash); }
+  }
+
+  .input-touchspin {
+    min-width: 26px;
+    text-align: center;
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 13.5px;
+    color: var(--kc-ink) !important;
+    background: transparent;
+    border: none;
+  }
+}
+
+// --- carrito vacío --------------------------------------------------------
+.cart-summary-sticky .empty-cart {
+  padding: 40px 20px;
+
+  .empty-cart-content img {
+    max-width: 110px;
+    opacity: 0.75;
+  }
+
+  h6 {
+    font-weight: 800;
+    font-size: 14px;
+    color: #6b7280 !important;
+  }
+}
+
+// --- cupón ----------------------------------------------------------------
+.cart-summary-sticky .coupon-code {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--kc-line);
+  background: #fbfcfe;
+
+  .input-group-text {
+    background: #fff;
+    border: 1px solid #e4e5ee;
+    border-right: none;
+    border-radius: 10px 0 0 10px;
+    color: #9aa0b2;
+  }
+
+  .form-control {
+    border: 1px solid #e4e5ee;
+    border-left: none;
+    border-right: none;
+    font-size: 12.5px;
+    font-weight: 600;
+
+    &:focus {
+      box-shadow: none;
+      border-color: #e4e5ee;
+    }
+  }
+
+  .btn {
+    background: #f1f2f5 !important;
+    color: var(--kc-ink2) !important;
+    border: 1px solid #e4e5ee;
+    border-radius: 0 10px 10px 0;
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 12.5px;
+
+    &:hover { background: var(--kc-accent-wash) !important; color: var(--kc-accent) !important; }
+  }
+}
+
+// --- totales anclados -----------------------------------------------------
+.cart-summary-sticky .total-item {
+  flex-shrink: 0;
+  margin-top: 0 !important;
+  padding: 11px 16px 13px;
+  background: #fbfcfe;
+  border-top: 1px solid var(--kc-line);
+
+  .item-number {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    border: none !important;
+
+    span:first-child {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    span:last-child {
+      font-family: var(--kc-font-head);
+      font-weight: 700;
+      font-size: 13.5px;
+      color: var(--kc-ink2);
+    }
+  }
+
+  // Última fila = TOTAL: banda lila, el número más grande de la pantalla.
+  .item-number:last-child {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--kc-accent-wash);
+    border: 1px solid #e2d9fb;
+    border-radius: 13px;
+    padding: 11px 14px !important;
+    margin-top: 9px;
+
+    span,
+    .f-w-600 {
+      font-family: var(--kc-font-body);
+      font-weight: 800;
+      font-size: 14.5px;
+      color: var(--kc-ink);
+    }
+
+    h6,
+    h6.f-w-600,
+    h6.txt-primary {
+      font-family: var(--kc-font-head) !important;
+      font-weight: 800 !important;
+      font-size: 26px !important;
+      color: var(--kc-accent) !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      text-transform: none !important;
+    }
+  }
+}
+
+
+// El tema global aplica text-transform a los encabezados de tarjeta; en el
+// ticket queremos el texto tal cual se escribió.
+:host .card > .card-header h5 {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+// =============================================================================
+// AJUSTES DE ALTO — medidos en pantalla
+//
+// El ticket mide ~744px: con los totales anclados abajo, la lista se quedaba
+// en 40px y el estado vacío (281px) salía cortado. Se le da un piso a la lista,
+// se compacta el bloque vacío y se apretan las filas de totales.
+// =============================================================================
+:host .card.cart-summary-sticky {
+  margin: 0 !important;   // el tema añade margin-bottom: 20px
+}
+
+// El piso de 132px hacía que lista + cupón (182px) no cupieran en los ~141px
+// de .order-quantity: el cupón se salía y se pintaba ENCIMA de los totales.
+// Con un piso menor y overflow controlado, quien cede altura es la lista.
+.cart-summary-sticky .order-quantity {
+  overflow: hidden;
+}
+
+.cart-summary-sticky .cart-items-container {
+  min-height: 70px;
+}
+
+.cart-summary-sticky .coupon-code {
+  flex-shrink: 0;
+}
+
+.cart-summary-sticky .empty-cart {
+  padding: 16px 16px 18px;
+
+  .empty-cart-content img {
+    max-width: 74px;
+  }
+
+  h6 {
+    margin-top: 6px;
+    font-size: 13.5px;
+  }
+}
+
+.cart-summary-sticky .total-item {
+  padding: 9px 16px 12px;
+
+  .item-number {
+    padding: 3px 0;
+  }
+}
+
+// El cupón no necesita tanto aire; el total y el pago mandan.
+.cart-summary-sticky .coupon-code {
+  padding: 8px 16px;
+}
+
+// Estado vacío compacto (mockup): ícono + título + pista, sin el GIF de 241px.
+.cart-summary-sticky .empty-cart {
+  padding: 22px 18px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .empty-cart-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    text-align: center;
+  }
+}
+
+.cart-summary-sticky .empty-cart-ic {
+  width: 52px;
+  height: 52px;
+  border-radius: 17px;
+  background: var(--kc-canvas);
+  color: #c9cedb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-summary-sticky .empty-cart-title {
+  margin: 0 !important;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: #6b7280 !important;
+}
+
+.cart-summary-sticky .empty-cart-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9aa0b2;
+  line-height: 1.5;
+  max-width: 230px;
+}
+
+// En la hoja de móvil hay pantalla completa: la lista puede mostrar más
+// líneas antes de scrollear y los toques son más grandes.
+@media (max-width: 1000px) {
+  .cart-summary-sticky .cart-items-container {
+    min-height: 140px;
+    padding: 0 14px;
+  }
+
+  .cart-summary-sticky .touchspin-wrapper .btn-touchspin {
+    width: 30px;
+    height: 30px;
+  }
+
+  .cart-summary-sticky .order-details-wrapper {
+    padding: 12px 0;
+  }
+}

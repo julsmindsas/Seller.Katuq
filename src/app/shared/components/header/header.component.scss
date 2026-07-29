@@ -303,3 +303,64 @@
     }
   }
 }
+
+// =============================================================================
+// Aviso de versión nueva — centrado real en la barra
+//
+// En el flujo normal quedaba pegado al logo (su centro caía en 569 con el del
+// encabezado en 981), porque la columna solo crecía lo que medía la píldora.
+// Se centra contra el ancho del encabezado con posicionamiento absoluto.
+// =============================================================================
+.page-header .header-wrapper {
+  position: relative;
+}
+
+.header-actualizacion {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  padding: 0 !important;
+  // Nunca debe pisar el logo de la izquierda ni el menú de la derecha.
+  max-width: min(620px, calc(100% - 640px));
+  pointer-events: none;   // el hueco vacío no debe robar clics
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+// Por debajo de este ancho ya no queda espacio libre en el centro: el aviso
+// vuelve al flujo, en su propia fila y ocupando el ancho disponible.
+@media (max-width: 1400px) {
+  .header-actualizacion {
+    position: static;
+    transform: none;
+    max-width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
+// En móvil el encabezado ya va apretado: el aviso pasa a una segunda línea
+// completa para no empujar el logo ni el menú fuera de la pantalla.
+@media (max-width: 767px) {
+  .page-header .header-wrapper {
+    flex-wrap: wrap;
+  }
+
+  // El logo y los controles siguen compartiendo la primera fila; el aviso baja
+  // completo a la segunda. Sin esto el encabezado crecía a tres filas (174px).
+  .header-logos-section { order: 1; }
+  .nav-right { order: 2; }
+
+  .header-actualizacion {
+    order: 9 !important;
+    flex: 0 0 100% !important;
+    max-width: 100%;
+    justify-content: center;
+    padding: 0 8px 8px !important;
+  }
+}

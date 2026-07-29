@@ -42,13 +42,15 @@
           </div>
         </div>
         
-        <!-- Carrito vacío -->
+        <!-- Carrito vacío. El GIF antiguo medía 241px y no cabía en la franja
+             de la lista; se reemplaza por el estado vacío del mockup. -->
         <div *ngIf="!(cartService.posCartItems && cartService.posCartItems.length)" class="empty-cart">
           <div class="empty-cart-wrapper">
-            <div class="empty-cart-content">
-              <img src="assets/images/order-trash.gif" alt="order-trash">
-            </div>
-            <h6 class="text-gray">{{ 'Tu carrito está vacío' | translate }}</h6>
+            <span class="empty-cart-ic">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            </span>
+            <h6 class="empty-cart-title">{{ 'Tu carrito está vacío' | translate }}</h6>
+            <span class="empty-cart-sub">Escanea un código o agrega un producto del catálogo.</span>
           </div>
         </div>
       </div>
@@ -84,11 +86,11 @@
       </div>
       <div class="item-number border-bottom">
         <span class="text-gray">Subtotal</span>
-        <span>{{ cartService.getPOSSubTotal() }}</span>
+        <span>${{ totalNumerico | number:'1.2-2' }}</span>
       </div>
       <div class="item-number pt-3 pb-0">
         <span class="f-w-600">Total</span>
-        <h6 class="f-w-600 txt-primary">{{ cartService.getPOSSubTotal() }}</h6>
+        <h6 class="f-w-600 txt-primary">${{ totalNumerico | number:'1.2-2' }}</h6>
       </div>
     </div>
   </div>

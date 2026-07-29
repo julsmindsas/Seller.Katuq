@@ -402,3 +402,152 @@
     gap: 8px;
   }
 }
+
+// =============================================================================
+// COMPACTACIÓN PARA EL TICKET DEL POS (mockup "Ventas POS")
+//
+// En la pantalla de caja el cliente es una franja superior, no una tarjeta:
+// se le quita el marco, se reduce el alto y la ficha del cliente elegido pasa
+// a una sola línea. Todos los controles y bindings quedan intactos.
+// =============================================================================
+@import '../../../../../shared/styles/katuq-comercial';
+
+:host { @include kc-tokens; display: block; }
+
+.card.customer-sticky {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--kc-line);
+  box-shadow: none;
+  margin: 0;
+  background: #fff;
+
+  > .card-header {
+    padding: 11px 16px 0 !important;
+    border: none;
+    background: transparent;
+  }
+
+  > .card-body {
+    padding: 9px 16px 12px !important;
+  }
+}
+
+.card.customer-sticky .header-top {
+  h5 {
+    font-family: var(--kc-font-head);
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--kc-ink);
+
+    i { color: var(--kc-accent); }
+  }
+
+  .btn-nuevo-cliente {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--kc-accent-wash);
+    color: var(--kc-accent);
+    border: 1px solid #e2d9fb;
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-family: var(--kc-font-body);
+    font-weight: 800;
+    font-size: 12px;
+
+    &:hover { background: #e2d9fb; }
+  }
+}
+
+.card.customer-sticky .search-section {
+  gap: 9px;
+}
+
+// Ficha del cliente seleccionado: una línea, sin bloque de contacto apilado.
+.card.customer-sticky .cliente-card {
+  margin-top: 9px;
+  border-radius: 12px;
+  border: 1px solid #cbebd8;
+  background: var(--kc-green-wash);
+  padding: 9px 11px;
+
+  .cliente-card-header {
+    padding: 0 0 6px;
+    border: none;
+    background: transparent;
+
+    .cliente-status {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--kc-green);
+      letter-spacing: 0.3px;
+
+      i { color: var(--kc-green); }
+    }
+
+    .btn-action {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #cbebd8;
+      color: var(--kc-ink2);
+      font-size: 11px;
+
+      &:hover { border-color: var(--kc-accent); color: var(--kc-accent); }
+
+      &.btn-action-danger:hover { border-color: #f6d4d2; color: #d6455b; }
+    }
+  }
+
+  .cliente-card-body { padding: 0; }
+
+  .cliente-avatar-lg {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--kc-green);
+    font-size: 14px;
+  }
+
+  .cliente-name {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--kc-ink);
+    line-height: 1.25;
+  }
+
+  .cliente-doc {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--kc-ink2);
+  }
+
+  // El teléfono y el correo caben en una línea; no necesitan una fila cada uno.
+  .cliente-contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin-top: 7px;
+    padding-top: 7px;
+    border-top: 1px dashed #b9dfc9;
+
+    .contact-item {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #3f7a58;
+      margin: 0;
+
+      i { color: var(--kc-green); font-size: 11px; }
+    }
+  }
+}
+
+// El tema global aplica text-transform a los encabezados de tarjeta; en el
+// ticket queremos el texto tal cual se escribió.
+:host .card > .card-header h5 {
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}

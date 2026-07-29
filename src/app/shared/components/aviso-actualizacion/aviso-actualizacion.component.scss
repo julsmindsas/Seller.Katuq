@@ -1,0 +1,292 @@
+// =============================================================================
+// Aviso de versión nueva — píldora en la barra superior
+// (mockup "Banner Actualizacion", variante "En contexto").
+// =============================================================================
+@import '../../styles/katuq-comercial';
+
+:host {
+  @include kc-tokens;
+  display: block;
+  min-width: 0;
+}
+
+.act-pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f7f5fe;
+  border: 1px solid #e4dcfc;
+  border-radius: 999px;
+  padding: 6px 8px 6px 13px;
+  box-shadow: 0 2px 8px rgba(108, 76, 224, 0.09);
+  font-family: var(--kc-font-body);
+  max-width: 100%;
+  min-width: 0;
+
+  &--busy {
+    padding-right: 18px;
+  }
+}
+
+// Punto con latido: llama la atención sin bloquear nada.
+.act-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--kc-accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: act-pulse 2.2s infinite;
+}
+
+@keyframes act-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(108, 76, 224, 0.45); }
+  70%  { box-shadow: 0 0 0 12px rgba(108, 76, 224, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(108, 76, 224, 0); }
+}
+
+.act-spin {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid #e4dcfc;
+  border-top-color: var(--kc-accent);
+  flex-shrink: 0;
+  animation: act-spin 0.9s linear infinite;
+}
+
+@keyframes act-spin {
+  to { transform: rotate(360deg); }
+}
+
+// El texto es lo que cede cuando falta espacio; el botón nunca se corta.
+.act-texto {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.act-linea1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.act-version {
+  font-weight: 800;
+  font-size: 13.5px;
+  color: var(--kc-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.act-badge {
+  background: var(--kc-accent-wash);
+  color: var(--kc-accent);
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.act-linea2 {
+  font-size: 11.5px;
+  color: var(--kc-muted);
+  font-weight: 600;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.act-sep {
+  width: 1px;
+  height: 26px;
+  background: #e4dcfc;
+  flex-shrink: 0;
+}
+
+.act-notas-btn {
+  background: transparent;
+  border: none;
+  color: var(--kc-accent);
+  font-family: var(--kc-font-body);
+  font-weight: 800;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 6px 4px;
+
+  &:hover { color: var(--kc-accent-ink); }
+}
+
+.act-actualizar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--kc-accent);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 17px;
+  font-family: var(--kc-font-body);
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(108, 76, 224, 0.32);
+  flex-shrink: 0;
+  transition: filter 0.15s ease;
+
+  &:hover { filter: brightness(1.07); }
+  &:active { transform: translateY(1px); }
+}
+
+.act-cerrar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: #b5a9de;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &:hover {
+    background: var(--kc-accent-wash);
+    color: var(--kc-accent);
+  }
+}
+
+// ------------------------------------------------------------------- notas
+.act-notas-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1200;
+  width: 380px;
+  max-width: 88vw;
+  background: #fff;
+  border: 1px solid var(--kc-line);
+  border-left: 4px solid var(--kc-accent);
+  border-radius: 16px;
+  box-shadow: 0 14px 36px rgba(30, 35, 60, 0.18);
+  padding: 15px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 340px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.act-notas-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--kc-line2);
+}
+
+.act-notas-titulo {
+  font-family: var(--kc-font-head);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--kc-ink);
+}
+
+.act-notas-fecha {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--kc-muted2);
+  white-space: nowrap;
+}
+
+.act-nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.act-tag {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  min-width: 60px;
+  text-align: center;
+
+  &--nuevo   { background: var(--kc-accent-wash); color: var(--kc-accent); }
+  &--mejora  { background: var(--kc-blue-wash);   color: var(--kc-blue); }
+  &--corrige { background: var(--kc-green-wash);  color: var(--kc-green); }
+}
+
+.act-nota-texto {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kc-ink2);
+  line-height: 1.5;
+}
+
+// --------------------------------------------------------------- responsive
+// En pantallas medianas el subtítulo y "Ver notas" sobran antes que el botón.
+@media (max-width: 1200px) {
+  .act-linea2 { display: none; }
+}
+
+@media (max-width: 992px) {
+  .act-notas-btn { display: none; }
+  .act-pill { gap: 9px; padding-left: 9px; }
+  .act-version { font-size: 12.5px; }
+}
+
+// En teléfono el aviso va en su propia fila (ver header.component.scss), así
+// que el texto SÍ cabe; lo que se ajusta es el tamaño.
+@media (max-width: 767px) {
+  .act-pill {
+    width: 100%;
+    max-width: 460px;
+    gap: 9px;
+    padding: 6px 7px 6px 10px;
+  }
+
+  // En 378px "Actualización 2026.07.29.1" se cortaba a "Actualización 2…";
+  // el número es el dato útil, la palabra sobra.
+  .act-version { font-size: 12.5px; }
+  .act-version-pre { display: none; }
+  .act-linea2 { display: none; }
+
+  .act-actualizar {
+    padding: 8px 14px;
+    font-size: 12.5px;
+  }
+
+  // Anclado al centro y limitado al ancho de la pantalla: antes se desbordaba
+  // por la derecha al abrirlo en móvil.
+  .act-notas-pop {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100vw - 24px);
+    max-width: 420px;
+  }
+}
+
+// Pantallas muy angostas: sin subtítulo ni separador, solo lo esencial.
+@media (max-width: 400px) {
+  .act-sep { display: none; }
+  .act-badge { display: none; }
+}

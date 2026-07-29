@@ -140,7 +140,11 @@ export class PosCheckoutService {
    * Abre el modal de pago en efectivo
    */
   private openCashPaymentModal(): void {
-    const modalRef = this.modal.open(CashPaymentComponent, { size: "md" });
+    const modalRef = this.modal.open(CashPaymentComponent, {
+      size: "md",
+      centered: true,
+      modalDialogClass: "katuq-modal",
+    });
     const total = this.cartService.getPOSSubTotal();
     const valor = parseFloat(total?.replace("$", "") || "0");
 
@@ -166,6 +170,7 @@ export class PosCheckoutService {
       size: "lg",
       centered: true,
       backdrop: "static",
+      modalDialogClass: "katuq-modal",
     });
 
     modalRef.result.then(
@@ -190,7 +195,11 @@ export class PosCheckoutService {
    * Abre el modal de pago con billetera electrónica
    */
   private openEWalletPaymentModal(): void {
-    const modalRef = this.modal.open(EWalletPaymentComponent, { size: "md" });
+    const modalRef = this.modal.open(EWalletPaymentComponent, {
+      size: "md",
+      centered: true,
+      modalDialogClass: "katuq-modal",
+    });
 
     modalRef.result.then(
       (result: any) => {
