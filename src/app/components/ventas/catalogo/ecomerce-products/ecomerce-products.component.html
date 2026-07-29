@@ -351,6 +351,13 @@
                                        'Bajo pedido' }}
                                 </span>
 
+                                <!-- Sticker de promoción automática (insignia según % de la promo) -->
+                                <img *ngIf="getPromoBadgeImg(producto) as promoBadge"
+                                     class="promo-sticker"
+                                     [src]="promoBadge"
+                                     [alt]="'-' + producto.promocionAplicada?.valor + '% OFF'"
+                                     loading="lazy">
+
                                 <!-- Overlay de acciones MODERNIZADO -->
                                 <div class="product-actions-overlay" *ngIf="producto.exposicion?.activar !== false">
                                     <!-- Botón Quick Add: Siempre visible para agregar rápido -->
@@ -398,10 +405,9 @@
                                     <!-- Precio original tachado: por precio de categoría o por promoción automática -->
                                     <div class="price-discount" *ngIf="tienePrecioCategoria(producto) || tienePrecioPromocional(producto)">
                                         <del>{{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}</del>
-                                        <span *ngIf="tienePrecioPromocional(producto)" class="badge bg-danger promo-badge">
-                                            {{ producto.promocionAplicada?.tipo === 'porcentaje'
-                                                ? '-' + producto.promocionAplicada?.valor + '%'
-                                                : 'OFERTA' }}
+                                        <!-- Solo valor fijo conserva el badge de texto; el porcentaje se muestra como sticker sobre la foto -->
+                                        <span *ngIf="tienePrecioPromocional(producto) && !getPromoBadgeImg(producto)" class="badge bg-danger promo-badge">
+                                            OFERTA
                                         </span>
                                     </div>
                                 </div>

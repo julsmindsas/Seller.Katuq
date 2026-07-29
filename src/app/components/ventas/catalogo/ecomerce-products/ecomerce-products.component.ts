@@ -1046,6 +1046,28 @@ export class EcomerceProductsComponent
     return typeof promo === 'number' && typeof base === 'number' && promo < base;
   }
 
+  /** Insignias gráficas disponibles (sprite recortado en src/assets/images/promo). */
+  private static readonly PROMO_BADGES = [20, 30, 40, 50, 60, 70, 80];
+
+  /**
+   * Feature B — ruta de la insignia gráfica de descuento a mostrar como sticker
+   * sobre la foto del producto. Usa el porcentaje puesto al crear la promoción;
+   * si ese porcentaje no tiene insignia propia (ej. 10%), cae a la más cercana.
+   * Devuelve null si la promo no es de tipo porcentaje (valor fijo → sin sticker).
+   */
+  getPromoBadgeImg(producto: Producto): string | null {
+    if (!this.tienePrecioPromocional(producto)) return null;
+    const promo: any = producto?.promocionAplicada;
+    if (!promo || promo.tipo !== 'porcentaje') return null;
+    const valor = Number(promo.valor);
+    if (!isFinite(valor) || valor <= 0) return null;
+    const badges = EcomerceProductsComponent.PROMO_BADGES;
+    const cercana = badges.reduce((prev, cur) =>
+      Math.abs(cur - valor) < Math.abs(prev - valor) ? cur : prev
+    );
+    return `assets/images/promo/badge-${cercana}.png`;
+  }
+
   /**
    * Verifica si el producto tiene un precio especial por categoría de cliente
    */
