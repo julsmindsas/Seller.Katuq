@@ -2313,4 +2313,129 @@ Con esto la Fase 1 de la Vía A del programa (`docs/app-nativa-operativa.md` §9
 **Verificado contra el backend real:** lista, filtro por estado, detalle, métricas y términos base de empresa decodifican exacto (fechas ISO con y sin milisegundos, vendedor, cliente, renglones y subtotales). **Verificado en pantalla** (`CotizacionesTests`, TEST SUCCEEDED): lista con métricas y chips de estado, detalle con productos y totales, y la pantalla de nueva cotización con los términos de la empresa ya precargados.
 
 **Detalle de comportamiento:** en la lista, una cotización vencida se marca como tal aunque el estado guardado diga "Enviada" — el backend solo recalcula la expiración al abrir el detalle. También se muestra si el cliente ya abrió el link público y cuántas veces, que es la señal más útil del módulo para hacer seguimiento.
+
+#### Adenda D-139 (2026-07-29) — Bodega en iOS (arranque de la Fase 2) + cuatro hallazgos de producción
+
+Nueva pestaña **Bodega**, de **solo consulta**: existencias por bodega (con buscador y filtro de agotados), movimientos de los últimos 30 días y desglose de "dónde está" un producto en todas las bodegas.
+
+**Escribir inventario queda deliberadamente fuera.** `inventoryService` afecta POS, ventas, fulfillment y Shopify a la vez, y el proyecto exige trazar el flujo completo y aprobación explícita antes de tocarlo. Consultar no arriesga nada y es lo que se necesita estando parado en la bodega. Ajustes, traslados y conteo siguen en la web.
+
+**Reorganización de la barra de pestañas.** iOS colapsa en "Más" a partir de la sexta, así que Cartera pasó a convivir con Cobrar bajo un selector (ambas son el mismo momento de la visita, y Cartera sigue apareciendo solo para roles de tesorería). Eso liberó el espacio para Bodega. Quedan cinco: Vender · Pedidos · Cobrar · Bodega · Cuenta.
+
+**Cuatro hallazgos verificados contra producción, todos anteriores a esta app:**
+
+1. **`inventoryMovement` guarda el doc ID de Firestore en `idBodega`, no el código de negocio.** 9 de 9 movimientos de la empresa demo, incluido el que generó el pedido `ort-000147` de hoy. Es exactamente el anti-patrón que el CLAUDE.md del proyecto marca como crítico ("movimientos huérfanos, totales incorrectos"). La app muestra la bodega leyendo `bodegaDoc`, que sí trae el código y el nombre.
+2. **`GET /v1/inventory/historial/bodega/:idBodega` está caído** — responde `FAILED_PRECONDITION` porque falta un índice compuesto de Firestore (`inventoryMovement`: company + idBodega + createdAt). La web no lo usa (usa `/historial` con rango de fechas), así que pasó inadvertido. Aunque se creara el índice **no encontraría nada**, porque filtra por el `idBodega` que según el punto 1 trae el doc ID. Los dos defectos hay que arreglarlos juntos.
+3. **`GET /v1/inventory/historial/producto/:idProducto` devuelve un error crudo de Firestore** ("Cannot use undefined as a Firestore value") en vez de validar sus parámetros.
+4. **El inventario de la empresa demo está descuadrado en 44,34% (`driftStatus: critical`).** 247 de 557 productos inventariables muestran en `cantidadDisponible` más existencias de las que hay en `inventory`; el peor, SET INTENSE, dice 514 y tiene 183. La app lo avisa en pantalla porque significa que el catálogo puede estar ofreciendo cosas agotadas. **La app nunca usa `cantidadDisponible` para vender** — el catálogo usa `stockPorBodega`, que es el stock real.
+
+**Bug propio encontrado y corregido en pantalla:** el backend devuelve el producto de un renglón de inventario unas veces en `producto` (documento completo) y otras en `productoDoc` (solo el bloque comercial, con `titulo` y `referencia` en la raíz) — la bodega "1" manda el primero y la "001" el segundo. Leer solo `producto` dejaba bodegas enteras mostrando "Producto sin nombre".
+
+**Nota sobre la propia verificación:** la primera versión de la prueba aceptaba el estado vacío como resultado válido y por eso pasó en verde con la pantalla abriendo en una bodega sin nada, y luego con todos los renglones sin nombre. Ambos defectos se vieron **mirando la captura**, no en el verde de la prueba. Las aserciones se endurecieron: ahora exigen renglones con unidades, prohíben "Producto sin nombre" y verifican que los movimientos resuelvan el nombre de la bodega. Una prueba que acepta el caso vacío no prueba nada.
+
+**Comportamiento añadido:** la pantalla no abre en una bodega vacía. Si la primera de la lista no tiene existencias (en esta empresa, Pereira), busca una sola vez la primera que sí tenga; después manda siempre lo que el usuario elija, aunque esté vacía.
+
+#### Adenda D-139 (2026-07-29) — Producción en iOS: tablero + avance de estado (cierra la Fase 2)
+
+Tercer panel de la pestaña Bodega: **Producción**. Un renglón por producto-dentro-de-pedido (no por pedido), que es como trabaja el piso, con filtros por estado y avance de estado desde el teléfono. Diff mostrado y aprobado por el usuario antes de aplicar.
+
+**Cómo escribe, y por qué así:**
+
+- El cuerpo lleva **solo `_id` y `estadoProceso`** — nada de carrito, cliente ni montos. Un avance de estado no puede pisar otros campos del pedido por accidente.
+- **Revalida el estado real justo antes de escribir** (`POST /v1/orders/estados-actuales`). Entre que se carga el tablero y el operario toca el botón, el pedido pudo despacharse desde otro lado.
+- **Un pedido por llamada, no en lote.** En lote un rechazo deja al operario sin saber cuál falló ni en qué quedó cada uno. Es más lento a propósito.
+- La UI solo ofrece las transiciones de `allowedTransitions`, copiadas literales del backend; los estados consumados no ofrecen ninguna.
+
+**Cómo se consiguió con qué validar, sin tocar maestros.** El tablero de la empresa demo salía vacío: **0 de 358 productos tienen `paraProduccion`**. La opción evaluada era marcar un producto, pero al leer `productos.edit` aparecieron dos razones para no hacerlo: el update es **merge superficial** (mandar `crearProducto` parcial habría borrado título, descripción e imágenes) y **dispara sincronización con e-commerce**. El camino usado en su lugar: el tablero lee `paraProduccion` del **snapshot del producto dentro del carrito del pedido**, no de la colección `products` — así que basta crear un pedido de prueba con ese campo en el snapshot. **Ningún producto fue modificado** (verificado después: sigue en `None`).
+
+**Ciclo completo ejecutado contra producción** con los pedidos de prueba `ort-000148` y `ort-000149`: avance `SinProducir → EnProduccion → Despachado` aplicado y confirmado, y **retroceso crítico `Despachado → EnProduccion` bloqueado por el backend** con el mensaje "Retroceso no permitido… Estado consumado". El estado quedó intacto tras el intento.
+
+**Dos bugs propios encontrados al ejecutar, ya corregidos:**
+
+1. El cuerpo iba como arreglo pelado; el backend lee `req.body.orders` y respondía "Se requiere un array de órdenes para actualizar". La escritura **nunca habría funcionado**.
+2. La respuesta real es `{msg, updatedIds, noActualizadas}` — el modelo esperaba `actualizadas`, así que un avance exitoso se habría reportado como no confirmado.
+
+**Bug de UI corregido:** el diálogo de acciones usaba `isPresented: .constant(...)`. Con un binding constante SwiftUI no puede cerrar la hoja y ni siquiera dibuja el cancelar — el operario quedaba atrapado sin más salida que elegir un estado. Ahora son bindings reales. (Aparte: cuando iOS lo presenta como popover no dibuja "Cancelar" por diseño y se cierra tocando fuera; eso no es un defecto.)
+
+**Hallazgo sobre las reglas del backend:** para `demo@kaiimport.com` el retroceso **no crítico** `EnProduccion → SinProducir` **sí se aplica** — `editBatch` se salta la validación de `allowedTransitions` cuando el usuario está en `authorizedEmails`, y solo deja un warning. Es decir, para usuarios autorizados **la salvaguarda de la app es la única barrera** contra retrocesos accidentales desde el teléfono. La app es deliberadamente más estricta que el backend en ese punto.
+
+**⚠️ Hallazgo de seguridad — `/v1/productos/edit` no tiene autenticación.** En `routers/productos.js` el middleware está comentado con la nota "auth comentado para dev local", y así está **en producción**: un POST sin token responde 400 por validación de negocio, no 401. Lo mismo en `/create` y `/delete`. Verificado sin explotarlo (no se hizo ninguna escritura sin token). Contradice de frente la regla del proyecto "nunca eliminar auth middleware del backend". **Requiere arreglo urgente** — cualquiera con la URL puede crear, editar o borrar productos de cualquier empresa.
+
+**Verificado en pantalla** (`ProduccionTests`, TEST SUCCEEDED): el tablero pinta el renglón, el diálogo ofrece exactamente las cinco transiciones válidas desde "Sin producir", no ofrece retrocesos ni saltos inválidos, y cierra bien. Las suites `InventarioTests`, `CotizacionesTests` y `ConfiguracionProductoTests` siguen pasando tras la reorganización de pestañas.
+
+#### Adenda D-139 (2026-07-29) — Notas del pedido por área (cierra el hueco de coordinación entre áreas)
+
+Hasta ahora la app escribía tres notas (observación por línea, observación de envío y nota al mensajero) pero **ignoraba `notasPedido`**, el sistema de notas por área de la web: cinco buzones separados —cliente, producción, despachos, entregas, facturación y pagos— con autor y fecha. Consecuencia: el vendedor en la calle no veía lo que había dejado dicho despachos, y el tablero de piso no mostraba las notas de producción.
+
+**Entregado:** lectura y escritura de los cinco buzones. Se entra desde el detalle del pedido (con un resumen de la última nota de cada área) y desde cada renglón del tablero de producción, que abre directo en su propio buzón. La nota al mensajero se muestra en el mismo panel, aunque viva en otro campo, porque para quien lee es una nota más.
+
+**No hay endpoint de notas.** Se guardan con `POST /v1/orders/edit` mandando **solo `_id` y `notasPedido`**. Verificado que el estado del pedido y los totales quedan intactos: el `update` de Firestore mezcla a nivel de campo raíz, así que incluir más campos solo abriría la puerta a pisar datos del servidor sin necesidad. **Comprobado en aislamiento** con un pedido nuevo (`ort-000150`): guardar solo notas no altera `estadoProceso`.
+
+**El objeto anidado se reemplaza completo**, así que antes de guardar se relee el pedido y la nota se agrega sobre lo que hay — si no, se borrarían los otros cuatro buzones. La relectura usa `/v1/orders/search` y no el filtro de la lista, porque `filterflatproduct` omite `notasPedido` en su proyección.
+
+**Ciclo completo verificado contra producción:** notas sembradas por API, leídas en la app, y una escrita **desde la app** (`ort-000149`, buzón de entregas) que aparece en el backend con el usuario correcto. Los buzones no se mezclan y los contadores por área cuadran.
+
+**Tolerancia comprobada** con casos construidos: `notasPedido` nulo, con un texto en vez de un objeto, y con un buzón que trae basura mezclada con una nota válida. En los tres el pedido sigue decodificando —importante porque `Order` usa decodificación sintetizada y un error ahí lo haría desaparecer de la lista— y las notas sin texto se descartan para no pintar renglones en blanco.
+
+**Falta (no estaba en "lo básico"):** los archivos adjuntos de las notas (`NotaArchivo`) no se leen ni se suben.
+
+**Defecto encontrado en la propia prueba de producción, corregido.** La suite decía "esta prueba no escribe" y **sí escribía**: cerraba el diálogo con `app.tap()`, que toca el CENTRO de la pantalla — justo donde están los botones de estado— y en una corrida avanzó `ort-000149` de `SinProducir` a `EnDespacho` sin que nadie lo pidiera. Ahora toca el borde izquierdo, compara el estado antes y después, y falla si cambió. Se detectó revisando por qué un pedido tenía un estado que nadie le había puesto — no por un test rojo.
+
+**Nota de organización:** `DateFormatter.katuqCorta` vivía dentro de `CotizacionDetailView`; se movió a `Shared/Formatting/DateFormatters.swift`. Un formateador en una vista arrastra todo el sistema de diseño y bloquea las pruebas de modelos fuera del simulador.
+
+**Estado al cierre:** build limpio (`clean build`, cero errores y cero advertencias) y cinco suites en verde: `NotasTests`, `ProduccionTests`, `InventarioTests`, `CotizacionesTests`, `ConfiguracionProductoTests`. Se corrigieron además tres advertencias viejas en `AdicionModels` (`as?` sobre un opcional que `try?` ya había aplanado).
+
+#### Adenda D-139 (2026-07-29) — Filtros en "Todos los pedidos"
+
+La lista traía siempre los últimos 30 días sin más control que la búsqueda por texto. Ahora tiene las funciones básicas de la pantalla equivalente de la web:
+
+- **Estado de proceso** (los once de `estadosProcesoOptions`) y **estado de pago** (los siete de `estadosPagoOptions`), combinables entre sí.
+- **Rango de tiempo**: 7, 30 o 90 días. No se ofrece "todo el histórico" a propósito — es un teléfono.
+- **Sobre qué fecha aplica el rango**: creación o entrega (`tipoFecha`).
+- **Orden fijo por fecha de creación descendente** (`sortField` + `sortOrder: -1`): lo recién hecho primero, que es lo que se busca en la calle.
+- Resumen de cuántos pedidos y con qué rango, y un **Limpiar** que solo aparece si hay algo puesto.
+
+**Detalles del contrato del endpoint, verificados uno por uno contra producción:** `estadoProceso` espera el comodín `"Todos"` cuando no se filtra; `estadosPago` debe **omitirse** (mandarlo vacío no devuelve nada); `fechaFinal` lleva un día de margen o un pedido con entrega para hoy queda fuera. Comprobado que cada combinación devuelve exactamente lo pedido: solo `Despachado` → 37 pedidos todos despachados; solo pago `Pendiente` → 46 todos pendientes; ambos juntos → 27; 7 días trae menos que 30; la búsqueda por número devuelve el pedido exacto.
+
+**Decisión de diseño:** estado y pago van en **menús**, no en chips. Once y siete opciones en una fila horizontal dejan la mayoría fuera de pantalla — además de ser incómodo, el tap fallaba con "Activation point invalid" en las pruebas, que fue la señal de que la UI estaba mal. Los chips quedaron solo para rango y tipo de fecha, que son cinco y sí caben. Las etiquetas de tipo de fecha se acortaron a "Creación"/"Entrega" porque con "Por creación"/"Por entrega" el último se cortaba.
+
+La barra de filtros vive **fuera** de la lista, para que no desaparezca al hacer scroll ni cuando no hay resultados: si se fuera con la lista, un filtro sin resultados dejaría al usuario sin forma de quitarlo. La paginación también descarta repetidos, porque entre página y página pueden entrar pedidos nuevos y correr el offset.
+
+**Verificado en pantalla** (`PedidosFiltrosTests`, TEST SUCCEEDED): filtro de estado, filtro de pago encima del anterior, cambio de rango (7 ≤ 30), cambio a fecha de entrega, y que Limpiar devuelve la lista al estado inicial. Es de solo lectura. Las otras cinco suites siguen en verde y el `clean build` no tiene errores ni advertencias.
 >>>>>>> Stashed changes
+
+### 2026-07-29 — D-141: Catálogos digitales compartibles por link, con carrito del comprador
+
+**Qué se decidió.** El vendedor arma un catálogo con los productos que quiera y lo comparte por un link público. El comprador lo abre sin cuenta, arma su carrito y lo envía; **eso crea una cotización** para el vendedor, que la revisa en la app y la convierte en pedido con el flujo que ya existe. **Ambas decisiones las aprobó el usuario explícitamente**: el destino del carrito (cotización, no pedido directo) y la colección nueva.
+
+**Colección nueva `catalogos` — aprobada expresamente.** `openspec/config.yaml` prohíbe proponer colecciones Firestore nuevas sin aprobación del usuario. Se pidió y se dio. La alternativa evaluada era guardar el catálogo como una cotización con una bandera, y se descartó porque contaminaría las métricas de cotizaciones ("cotizado del mes" contaría catálogos) y volvería ambiguo el modelo. Campos: `nombre`, `descripcion`, `company`, `vendedorEmail`, `productoIds`, `activo`, `fechaVencimiento`, `publicToken`, `vistasCount`, `solicitudesCount`.
+
+**Se reutilizó la infraestructura de links públicos que ya existía** para cotizaciones, en vez de inventar otra: `publicToken` de 192 bits con `crypto.randomBytes(24)`, endpoint público con `express-rate-limit`, y ruta web fuera del `AuthGuard`. El link queda `https://sellercenter.katuq.com/cat/<token>`.
+
+**Solo se guardan los ids de producto, no una copia.** El precio, el nombre y la disponibilidad se leen del maestro cada vez que se publica la vitrina, así que el catálogo nunca muestra datos congelados. Si el vendedor cambia un precio, el catálogo lo refleja solo.
+
+**Reglas de seguridad del endpoint público, todas verificadas ejecutando el controlador:**
+- **Los precios NUNCA se aceptan del comprador.** Se probó mandando `precioConIva: 1` y `total: 1`: el backend ignoró esos campos y guardó los $127.500 del maestro. Sin esto, cualquiera pediría a $1 manipulando la petición.
+- Solo se aceptan productos que estén en el catálogo del token: un producto ajeno responde 400.
+- La vitrina **no expone** `company`, `vendedorEmail`, contadores internos, stock ni costo. Del stock solo sale un booleano `disponible`.
+- Un catálogo apagado o vencido responde **404** y no revela que existió.
+- Rate limit separado: 120 por 15 min para mirar, **10 por 15 min para enviar** — enviar es una escritura.
+- Validaciones: nombre obligatorio, al menos un contacto (teléfono o correo), cantidades entre 1 y 999, máximo 200 productos por catálogo.
+- Aislamiento entre empresas comprobado: otra `company` no ve el catálogo ni puede generar su token.
+
+**Verificación: 30 comprobaciones en verde** ejecutando el controlador real contra la Firestore de la empresa demo (con `req`/`res` simulados, sin servidor ni middleware). Incluye el ciclo completo: crear catálogo → generar token → vitrina pública → solicitud del comprador → cotización `COT-2026-0729-0002/0003` en estado `enviada`, trazada al catálogo con `catalogoId` y con el contacto del comprador en `notasPedido.notasCliente`.
+
+**Contrato backend↔app validado**: las respuestas reales del controlador se decodificaron con los modelos Swift de la app (lista, detalle y vitrina), incluido el armado del link y el conteo de productos ocultos por falta de existencias.
+
+**Lo que quedó construido, en tres repos:**
+- **Backend**: `controllers/catalogos.js` + `routers/catalogos.js`, montado en `/v1/catalogos`. Sintaxis verificada con `node --check`.
+- **Web**: módulo `catalogo-publico` en la ruta `/cat/:token`, con vitrina, carrito y formulario de contacto. Estilos propios (no importa el tema del panel: la abre alguien de fuera y tiene que cargar liviana). Compila y genera su chunk lazy.
+- **iOS**: pestaña Catálogos dentro de Pedidos, con crear, listar, detalle, generar link, compartir y encender/apagar. `clean build` sin errores ni advertencias.
+
+**Detalle de UX que salió de los datos:** la vitrina oculta los productos agotados, así que un catálogo de 3 productos puede mostrar 2. La app le avisa al vendedor —"1 sin existencias: el comprador no los ve"— porque si no parecería que el catálogo perdió productos.
+
+**⚠️ FALTA DESPLEGAR EL BACKEND.** Los endpoints `/v1/catalogos/*` **no existen en producción**: el código está solo en local. Hasta desplegar, la pestaña Catálogos de la app y la ruta `/cat/:token` de la web dan error. Por eso **no hay verificación en pantalla del módulo**, solo del contrato. El despliegue toca EC2 y no se hizo sin autorización.
+
+**Nota de riesgo del método:** para probar se levantó el backend local, que **arrancó los crones de sync** (inventario y Osmosis, cada 30 min) contra la Firestore real. Se detuvo de inmediato y se pasó a ejecutar el controlador directamente. **No volver a levantar el backend local sin apagar los crones**, o se duplica trabajo con producción.
+
+**Hereda el defecto de cotizaciones:** el total de la cotización que genera el catálogo lo calcula `cotizaciones.js:calcularTotales`, que trata `valorIva` como porcentaje siendo pesos. Con los productos de la empresa demo (IVA 0) no se manifiesta, pero en una empresa con IVA el total llegaría inflado. Es el mismo defecto ya registrado; arreglarlo cubre los dos caminos.
