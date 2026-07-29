@@ -112,6 +112,36 @@ export class ProductDetailsComponent implements OnInit {
     }
   
   }
+  // Los campos de texto largo (descripción, características, garantías…) se
+  // guardan como HTML: los escribe el editor enriquecido y las integraciones, y
+  // hay productos donde llegó un DOCUMENTO ENTERO (`<!DOCTYPE html><html><head>
+  // <title>…`). Interpolados con {{ }} salían en crudo, con las etiquetas a la
+  // vista. Renderizarlos directo tampoco basta: el saneador de Angular descarta
+  // <head>/<title> pero CONSERVA su texto, así que el título del documento se
+  // colaba como primer párrafo. Acá se recorta el envoltorio antes de pintar.
+  // El texto plano se escapa y se le respetan los saltos de línea.
+  htmlLimpio(valor: any): string {
+    const texto = (valor ?? '').toString().trim();
+    if (!texto) return '';
+
+    const pareceHtml = /<[a-z!/][\s\S]*>/i.test(texto);
+    if (!pareceHtml) {
+      const escapado = texto
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      return escapado.replace(/\r?\n/g, '<br>');
+    }
+
+    let html = texto
+      .replace(/<!DOCTYPE[^>]*>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<head[\s\S]*?<\/head>/gi, '')   // se lleva el <title> con él
+      .replace(/<\/?(?:html|body|section)[^>]*>/gi, '');
+
+    return html.trim();
+  }
+
   selectPreviewImage(idx: number): void {
     const images: any[] = this.producto?.crearProducto?.imagenesPrincipales || [];
     if (images[idx]) {
@@ -136,9 +166,11 @@ export class ProductDetailsComponent implements OnInit {
       next: (results: any[]) => {
    
         console.log(results,'resultados')
-        this.ocasiones = results[0];
-        this.generos = results[1];
-        this.formasPago = results[2];
+        // Los maestros pueden venir null si el endpoint responde vacío; abajo se
+        // filtra sobre ellos, y `null.filter` tumbaría el modal entero.
+        this.ocasiones = results[0] || [];
+        this.generos = results[1] || [];
+        this.formasPago = results[2] || [];
         // this.categorias = parse((results[6] as any[])[0].categoria).map(p => {
         //   return {
         //     label: p.data.nombre,
@@ -163,11 +195,28 @@ export class ProductDetailsComponent implements OnInit {
         //   }
         // });
         
-    this.generosProducto = this.generos.filter((p: { id: number }) => this.producto.procesoComercial.genero.find((g: number) => g == p.id));
-    this.ocasionesProducto = this.ocasiones.filter((p: { id: string }) => this.producto.procesoComercial.ocasion.find((g: string) => g == p.id));
-    this.formasPagoProducto=this.formasPago.filter((p: { id: string })=> this.producto.procesoComercial.pago.find((g: string) => g == p.id));
-    this.variablesProducto = parse(this.producto.procesoComercial.variablesForm);
-       
+        // Un producto sin género/ocasión/formas de pago (importados, productos
+        // viejos, o uno recién creado en el editor) dejaba estos campos en
+        // undefined y `undefined.find(...)` reventaba ACÁ, dentro del next() del
+        // forkJoin: el throw no lo atrapa el error() de al lado — es para errores
+        // del observable, no para excepciones síncronas del handler — así que se
+        // perdía el modal completo, no solo la pestaña de Proceso Comercial.
+        // `getAllFilters()` corre en ngOnInit sin condición, o sea que afectaba
+        // por igual a la vista rápida del listado y a la vista previa del editor.
+        const proceso = this.producto?.procesoComercial || {};
+        const generosSel = Array.isArray(proceso.genero) ? proceso.genero : [];
+        const ocasionesSel = Array.isArray(proceso.ocasion) ? proceso.ocasion : [];
+        const pagosSel = Array.isArray(proceso.pago) ? proceso.pago : [];
+
+        // `some` y no `find`: find devuelve el ELEMENTO, así que un id válido pero
+        // falsy (0, '') hacía que la opción se descartara del listado.
+        this.generosProducto = this.generos.filter((p: { id: number }) => generosSel.some((g: number) => g == p.id));
+        this.ocasionesProducto = this.ocasiones.filter((p: { id: string }) => ocasionesSel.some((g: string) => g == p.id));
+        this.formasPagoProducto = this.formasPago.filter((p: { id: string }) => pagosSel.some((g: string) => g == p.id));
+
+        // `variablesForm` es un string en formato flatted. Vacío o malformado
+        // hacía que parse() lanzara y se llevara el modal por delante.
+        this.variablesProducto = this.parseVariables(proceso.variablesForm);
       },
       error: (error) => {
         Swal.fire({
@@ -179,6 +228,17 @@ export class ProductDetailsComponent implements OnInit {
       }
     });
   }
+
+  private parseVariables(variablesForm: any): any[] {
+    if (!variablesForm) return [];
+    if (Array.isArray(variablesForm)) return variablesForm;
+    try {
+      const parsed = parse(variablesForm);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
 
   configurarProducto(arg0: any) {
     throw new Error('Method not implemented.');

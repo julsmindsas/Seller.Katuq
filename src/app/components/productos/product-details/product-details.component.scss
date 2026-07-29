@@ -1,4 +1,228 @@
+// ng-bootstrap proyecta el COMPONENTE dentro de `.modal-content`, así que entre
+// ese contenedor flex y los `.modal-header/.modal-body/.modal-footer` quedan dos
+// elementos intermedios: el host `<app-product-details>` y el `<div *ngIf>` que
+// elige la variante. Bootstrap arma el modal scrollable con `.modal-content` en
+// `display:flex` + `overflow:hidden` y el body en `flex:1; overflow-y:auto`, pero
+// esa cadena solo funciona entre padre e hijo DIRECTO. Con los dos intermedios el
+// body nunca recibía altura acotada: crecía todo lo que hiciera falta y el
+// `overflow:hidden` del `.modal-content` recortaba lo que sobraba — el pie con
+// "Cerrar" / "Editar producto" quedaba fuera de la pantalla, invisible.
+// `display: contents` saca a los dos intermedios del árbol de layout sin tocar el
+// DOM: header, body y footer pasan a ser hijos flex efectivos de `.modal-content`.
+:host {
+    display: contents;
+}
 
+.pd-modal-wrapper {
+    display: contents;
+}
+
+// La descripción viene con HTML propio (h1..h3, listas, párrafos) y con tamaños
+// pensados para la ficha pública, no para un modal. Se normalizan acá para que no
+// desarme la columna, y se le deja scroll propio: sin tope, una descripción larga
+// empujaba el resto del contenido fuera de la vista.
+.pd-descripcion {
+    max-height: 190px;
+    overflow-y: auto;
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 10px;
+
+    ::ng-deep {
+        h1, h2, h3, h4, h5, h6 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0 0 0.35rem;
+        }
+
+        p, ul, ol {
+            margin: 0 0 0.5rem;
+        }
+
+        ul, ol {
+            padding-left: 1.1rem;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        *:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+// ---- Detalle en dos columnas (vista previa desde el editor) ----
+// Antes cada dato era una fila de `col-sm-4` (etiqueta) + `col-sm-8` (valor) sin
+// ninguna separación: en pantalla quedaba un bloque continuo de texto donde no se
+// distinguía dónde terminaba un campo y empezaba el siguiente. Acá cada dato es
+// una celda con su propio borde, y las etiquetas van en mayúscula tenue para que
+// el valor sea lo que resalta.
+$pd-borde: #E8E4F5;
+$pd-acento: #5F3FE0;
+$pd-ink: #211F3A;
+
+.pd-dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    border: 1px solid $pd-borde;
+    border-radius: 11px;
+    overflow: hidden;
+
+    @media (max-width: 767.98px) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.pd-item {
+    padding: 0.6rem 0.85rem;
+    border-bottom: 1px solid $pd-borde;
+    border-right: 1px solid $pd-borde;
+    min-width: 0;
+
+    // La segunda columna de cada fila no lleva borde derecho.
+    &:nth-child(2n) {
+        border-right: 0;
+    }
+
+    @media (max-width: 767.98px) {
+        border-right: 0;
+    }
+
+    dt {
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #8A85A6;
+        margin-bottom: 0.15rem;
+    }
+
+    dd {
+        margin: 0;
+        font-size: 0.85rem;
+        color: $pd-ink;
+        word-break: break-word;
+    }
+}
+
+// Los campos de texto largo ocupan la fila entera.
+.pd-item-full {
+    grid-column: 1 / -1;
+    border-right: 0;
+}
+
+.pd-unidad {
+    color: #8A85A6;
+    font-size: 0.75rem;
+}
+
+.pd-vacio {
+    color: #B0ABC4;
+}
+
+// Contenido enriquecido dentro del detalle: mismo tratamiento que la descripción
+// de la vista rápida, con scroll propio para que un texto largo no estire la
+// pestaña entera.
+.pd-richtext {
+    max-height: 220px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.45;
+
+    ::ng-deep {
+        h1, h2, h3, h4, h5, h6 {
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin: 0.5rem 0 0.25rem;
+        }
+
+        p, ul, ol {
+            margin: 0 0 0.45rem;
+        }
+
+        ul, ol {
+            padding-left: 1.1rem;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        *:first-child {
+            margin-top: 0;
+        }
+
+        *:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+.pd-bool {
+    display: inline-block;
+    padding: 0.05rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    background: #F1EFF7;
+    color: #8A85A6;
+
+    &.pd-bool-si {
+        background: #E8F7EF;
+        color: #1E7F4F;
+    }
+}
+
+.pd-chip {
+    display: inline-block;
+    padding: 0.1rem 0.55rem;
+    margin: 0 0.25rem 0.25rem 0;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: #F4F1FE;
+    border: 1px solid #E4DDFB;
+    color: $pd-acento;
+}
+
+.pd-subtitulo {
+    margin: 1rem 0 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #8A85A6;
+}
+
+.pd-tabla {
+    border: 1px solid $pd-borde;
+    border-radius: 11px;
+    overflow: hidden;
+    font-size: 0.8rem;
+
+    thead th {
+        background: #F4F1FE;
+        color: $pd-ink;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border-bottom: 1px solid $pd-borde;
+        white-space: nowrap;
+    }
+}
+
+.pd-precio-destacado {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: $pd-acento;
+}
 
 .modal-fullscreen {
     width: 100%;
