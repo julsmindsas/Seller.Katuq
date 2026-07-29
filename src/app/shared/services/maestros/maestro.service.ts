@@ -210,6 +210,11 @@ export class MaestroService {
     return this.http.post(this.urlBase + '/v1/descuentos-promociones/remove', descuento, this.httpOptions);
   }
 
+  /** Borrado FÍSICO — solo permitido si ya está inhabilitado (conserva historial). */
+  public deletePermanentDescuentoPromocion(descuento: any) {
+    return this.http.post(this.urlBase + '/v1/descuentos-promociones/delete-permanent', descuento, this.httpOptions);
+  }
+
   // HISTORIAL DE REDENCIONES — solo lectura desde el admin
   public consultarRedenciones(descuentoId: string) {
     return this.http.get(

@@ -120,10 +120,17 @@
                     style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                     class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
                   </i>
-                  <i placement="top" ngbTooltip="{{ 'Desactivar' | translate }}"
+                  <i *ngIf="row.activo !== false" placement="top" ngbTooltip="{{ 'Inhabilitar' | translate }}"
                     style="font-size: 18px; margin-left: 10px; cursor: pointer;"
                     class="icofont icofont-trash fc-danger" (click)="eliminar(row)">
                   </i>
+                  <button *ngIf="row.activo === false" type="button"
+                    class="btn btn-sm btn-danger"
+                    style="margin-left: 10px; padding: 2px 8px;"
+                    placement="top" ngbTooltip="{{ 'Eliminar permanentemente' | translate }}"
+                    (click)="eliminarPermanente(row)">
+                    <i class="fa fa-trash"></i>&nbsp;{{ 'Eliminar' | translate }}
+                  </button>
                 </td>
               </tr>
             </ng-template>

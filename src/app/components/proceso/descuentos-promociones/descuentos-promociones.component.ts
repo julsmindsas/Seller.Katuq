@@ -97,6 +97,36 @@ export class DescuentosPromocionesComponent implements OnInit {
     });
   }
 
+  /**
+   * Borrado permanente (físico). Solo disponible cuando el registro ya está
+   * inhabilitado (activo === false). El historial de redenciones se conserva.
+   */
+  eliminarPermanente(row: any) {
+    const entidad = row.naturaleza === 'promocion' ? 'la promoción' : 'el código';
+    Swal.fire({
+      title: '¿Eliminar permanentemente?',
+      text: `"${row.nombre}" se eliminará de forma definitiva y no se podrá recuperar. El historial de redenciones se conservará.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.service.deletePermanentDescuentoPromocion({ id: row.id }).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', `Se eliminó ${entidad} permanentemente`, 'success');
+            this.cargarDatos();
+          },
+          error: (error) => {
+            const msg = error?.error?.message || `No se pudo eliminar ${entidad}`;
+            Swal.fire('Error', msg, 'error');
+          }
+        });
+      }
+    });
+  }
+
   /** true si el código ya tiene al menos una redención. */
   fueRedimido(row: any): boolean {
     return (row?.usosActuales || 0) > 0;
