@@ -12,8 +12,10 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { TableModule } from 'primeng/table';
 
+import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 @NgModule({
-    imports: [EcommerceRoutingModule,
+    imports: [
+    ImagenProductoPipe,EcommerceRoutingModule,
         FormsModule,
         CommonModule,
         SharedModule,

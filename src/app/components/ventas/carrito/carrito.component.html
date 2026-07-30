@@ -29,7 +29,7 @@
               <div class="item-info">
                 <div class="item-thumb">
                   <img *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
-                    [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+                    [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls | imagenProducto"
                     [alt]="itemCarrito?.producto?.crearProducto?.titulo"
                     appImageOptimizer [quality]="0.3" [width]="44" [height]="44" [lazy]="true" loading="lazy">
                   <div class="item-thumb-empty" *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length == 0">

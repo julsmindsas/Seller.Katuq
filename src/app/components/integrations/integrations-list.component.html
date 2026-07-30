@@ -1,412 +1,426 @@
-<div class="container-fluid integrations-list">
-  <!-- Dashboard widgets compacto -->
-  <div class="row integration-dashboard-compact mb-3">
-    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
-      <div class="stat-card-compact">
-        <i class="fa fa-plug stat-icon-compact bg-primary"></i>
-        <div class="stat-content-compact">
-          <span class="stat-number">{{getTotalIntegrationsCount()}}</span>
-          <span class="stat-label">Total</span>
+<div class="kx-integraciones">
+
+  <!-- ===== ENCABEZADO + INDICADORES (una sola tarjeta) ===== -->
+  <section class="kx-card kx-hero">
+    <div class="kx-hero__top">
+      <div class="kx-hero__title">
+        <span class="kx-chip-icon">
+          <i class="fa fa-plug"></i>
+        </span>
+        <div>
+          <h1>Integraciones</h1>
+          <p>Conecta pasarelas, transportadoras y facturación a Katuq</p>
+        </div>
+      </div>
+
+      <div class="kx-hero__actions">
+        <span *ngIf="uiHelper.isAnyLoading()" class="kx-spin" title="Cargando">
+          <i class="fa fa-spinner fa-spin"></i>
+        </span>
+
+        <div class="kx-segmented" role="group" aria-label="Modo de vista">
+          <button type="button" [class.is-on]="viewMode === 'grid'" (click)="setViewMode('grid')" title="Vista de tarjetas">
+            <i class="fa fa-th-large"></i>
+          </button>
+          <button type="button" [class.is-on]="viewMode === 'list'" (click)="setViewMode('list')" title="Vista de lista">
+            <i class="fa fa-list"></i>
+          </button>
+        </div>
+
+        <div ngbDropdown class="d-inline-block">
+          <button type="button" class="kx-btn kx-btn--primary" id="addIntegrationDropdown" ngbDropdownToggle>
+            <i class="fa fa-plus"></i>
+            <span>Nueva integración</span>
+          </button>
+          <div ngbDropdownMenu aria-labelledby="addIntegrationDropdown" class="kx-menu">
+            <h6 class="dropdown-header">Selecciona una categoría</h6>
+            <div class="dropdown-divider"></div>
+            <button type="button" ngbDropdownItem *ngFor="let category of categories"
+                    (click)="openIntegrationConfigByCategory(category)">
+              <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+              {{ getCategoryLabel(category) }}
+            </button>
+          </div>
+        </div>
+
+        <button type="button" class="kx-btn kx-btn--icon" (click)="openTutorial()" title="Ayuda">
+          <i class="fa fa-question-circle"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="kx-kpis">
+      <div class="kx-kpi kx-kpi--accent">
+        <span class="kx-kpi__icon"><i class="fa fa-plug"></i></span>
+        <div>
+          <div class="kx-kpi__value">{{ getTotalIntegrationsCount() }}</div>
+          <div class="kx-kpi__label">Conectadas</div>
+        </div>
+      </div>
+      <div class="kx-kpi kx-kpi--green">
+        <span class="kx-kpi__icon"><i class="fa fa-check-circle"></i></span>
+        <div>
+          <div class="kx-kpi__value">{{ getActiveIntegrationsCount() }}</div>
+          <div class="kx-kpi__label">Activas</div>
+        </div>
+      </div>
+      <div class="kx-kpi kx-kpi--orange">
+        <span class="kx-kpi__icon"><i class="fa fa-exclamation-triangle"></i></span>
+        <div>
+          <div class="kx-kpi__value">{{ getPendingCredentialsCount() }}</div>
+          <div class="kx-kpi__label">Sin credencial</div>
+        </div>
+      </div>
+      <div class="kx-kpi kx-kpi--blue">
+        <span class="kx-kpi__icon"><i class="fa fa-bolt"></i></span>
+        <div>
+          <div class="kx-kpi__value">{{ getRecentTransactionsCount() }}</div>
+          <div class="kx-kpi__label">Transacciones 24 h</div>
         </div>
       </div>
     </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
-      <div class="stat-card-compact">
-        <i class="fa fa-check-circle stat-icon-compact bg-success"></i>
-        <div class="stat-content-compact">
-          <span class="stat-number">{{getActiveIntegrationsCount()}}</span>
-          <span class="stat-label">Activas</span>
-        </div>
+  </section>
+
+  <!-- ===== AVISO: ACTIVAS SIN CREDENCIAL ===== -->
+  <section class="kx-aviso" *ngIf="!loading && getPendingCredentialsCount() > 0">
+    <span class="kx-aviso__icon"><i class="fa fa-exclamation-triangle"></i></span>
+    <div class="kx-aviso__texto">
+      <div class="kx-aviso__titulo">
+        {{ getPendingCredentialsCount() }}
+        {{ getPendingCredentialsCount() === 1 ? 'integración activa sin credencial' : 'integraciones activas sin credencial' }}
       </div>
+      <p>Están encendidas pero no pueden procesar nada hasta que configures sus llaves de API.</p>
     </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
-      <div class="stat-card-compact">
-        <i class="fa fa-exclamation-triangle stat-icon-compact bg-warning"></i>
-        <div class="stat-content-compact">
-          <span class="stat-number">{{getErroredIntegrationsCount()}}</span>
-          <span class="stat-label">Con Errores</span>
-        </div>
+    <button type="button" class="kx-btn kx-btn--warn" (click)="togglePendingOnly()">
+      <i class="fa" [ngClass]="pendingOnly ? 'fa-times' : 'fa-key'"></i>
+      {{ pendingOnly ? 'Ver todas' : 'Ver solo esas' }}
+    </button>
+  </section>
+
+  <!-- ===== FILTROS ===== -->
+  <section class="kx-card kx-filtros" *ngIf="!loading && integrations.length > 0">
+    <div class="kx-buscador">
+      <i class="fa fa-search"></i>
+      <input type="text" placeholder="Buscar por nombre o proveedor…"
+             [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      <button type="button" *ngIf="searchTerm" (click)="onSearchChange('')" title="Borrar búsqueda">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+
+    <div class="kx-chips">
+      <button type="button" class="kx-chip" [class.is-on]="filterStatus === 'all' && !pendingOnly"
+              (click)="onStatusFilterChange('all'); pendingOnly = false">
+        Todas <span class="kx-chip__n">{{ getTotalIntegrationsCount() }}</span>
+      </button>
+      <button type="button" class="kx-chip kx-chip--green" [class.is-on]="filterStatus === 'active'"
+              (click)="onStatusFilterChange('active')">
+        Activas <span class="kx-chip__n">{{ getActiveIntegrationsCount() }}</span>
+      </button>
+      <button type="button" class="kx-chip kx-chip--muted" [class.is-on]="filterStatus === 'inactive'"
+              (click)="onStatusFilterChange('inactive')">
+        Inactivas <span class="kx-chip__n">{{ getInactiveIntegrationsCount() }}</span>
+      </button>
+      <button type="button" class="kx-chip kx-chip--orange" [class.is-on]="pendingOnly"
+              (click)="togglePendingOnly()">
+        Sin credencial <span class="kx-chip__n">{{ getPendingCredentialsCount() }}</span>
+      </button>
+    </div>
+
+    <select class="kx-select" [ngModel]="filterCategory" (ngModelChange)="onCategoryChange($event)"
+            aria-label="Filtrar por categoría">
+      <option [ngValue]="null">Todas las categorías</option>
+      <option *ngFor="let category of categories" [value]="category">
+        {{ getCategoryLabel(category) }}
+      </option>
+    </select>
+
+    <button type="button" class="kx-btn kx-btn--limpiar" *ngIf="isFiltered()" (click)="resetFilters()">
+      <i class="fa fa-times"></i> Limpiar
+    </button>
+  </section>
+
+  <!-- ===== CARGANDO ===== -->
+  <section class="kx-card kx-estado" *ngIf="loading">
+    <div class="kx-estado__spinner"></div>
+    <p>Cargando integraciones…</p>
+  </section>
+
+  <!-- ===== ERROR ===== -->
+  <section class="kx-error" *ngIf="errorMessage && !loading">
+    <span class="kx-aviso__icon"><i class="fa fa-exclamation-circle"></i></span>
+    <div class="kx-aviso__texto">
+      <div class="kx-aviso__titulo">No se pudieron cargar las integraciones</div>
+      <p>{{ errorMessage }}</p>
+    </div>
+    <button type="button" class="kx-btn kx-btn--danger" (click)="loadIntegrations()">
+      <i class="fa fa-refresh"></i> Reintentar
+    </button>
+  </section>
+
+  <!-- ===== SIN NINGUNA INTEGRACIÓN: CATÁLOGO ===== -->
+  <div class="kx-catalogo" *ngIf="!loading && !errorMessage && integrations.length === 0">
+    <div class="kx-card kx-vacio">
+      <span class="kx-vacio__icon"><i class="fa fa-plug"></i></span>
+      <h2>Empieza a integrar</h2>
+      <p>Aún no has conectado nada. Elige del catálogo para que Katuq hable con tus otras herramientas.</p>
+    </div>
+
+    <section class="kx-seccion" *ngFor="let category of categories"
+             [hidden]="!availableIntegrations[category] || availableIntegrations[category].length === 0">
+      <header class="kx-seccion__head">
+        <span class="kx-chip-icon kx-chip-icon--sm">
+          <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+        </span>
+        <h2>{{ getCategoryLabel(category) }}</h2>
+        <span class="kx-pill">{{ getAvailableCount(category) }}</span>
+        <span class="kx-rule"></span>
+      </header>
+
+      <div class="kx-grid">
+        <article class="kx-card kx-disponible" *ngFor="let integration of availableIntegrations[category]"
+                 (click)="configureIntegration(integration, category, $event)">
+          <div class="kx-disponible__head">
+            <img [src]="uiHelper.getLogo(integration.id) || integration.logo" [alt]="integration.name"
+                 class="kx-logo" (error)="uiHelper.onImgError($event, integration.id)">
+            <div>
+              <h3>{{ integration.name }}</h3>
+              <span class="kx-badge" *ngIf="isFeatured(integration)">DESTACADO</span>
+            </div>
+          </div>
+          <p class="kx-disponible__desc">{{ integration.description }}</p>
+          <div class="kx-disponible__foot">
+            <span class="kx-btn kx-btn--ghost"><i class="fa fa-plus"></i> Configurar</span>
+          </div>
+        </article>
       </div>
-    </div>
-    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
-      <div class="stat-card-compact">
-        <i class="fa fa-bolt stat-icon-compact bg-info"></i>
-        <div class="stat-content-compact">
-          <span class="stat-number">{{getRecentTransactionsCount()}}</span>
-          <span class="stat-label">Trans. 24h</span>
-        </div>
-      </div>
-    </div>
+    </section>
   </div>
 
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header-compact">
-          <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <h5 class="card-title-compact mb-0">
-              <i class="fa fa-puzzle-piece"></i> Integraciones
-            </h5>
-            <div class="header-actions-compact">
-              <div *ngIf="uiHelper.isAnyLoading()" class="loading-indicator-compact">
-                <i class="fa fa-spinner fa-spin"></i>
-              </div>
+  <!-- ===== VISTA DE TARJETAS ===== -->
+  <div *ngIf="!loading && integrations.length > 0 && viewMode === 'grid'">
+    <section class="kx-seccion" *ngFor="let category of categories" [hidden]="!shouldShowCategory(category)">
+      <header class="kx-seccion__head">
+        <span class="kx-chip-icon kx-chip-icon--sm">
+          <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+        </span>
+        <h2>{{ getCategoryLabel(category) }}</h2>
+        <span class="kx-pill">{{ countIntegrationsInCategory(category) }}</span>
+        <span class="kx-rule"></span>
+        <button type="button" class="kx-btn kx-btn--ghost" (click)="openIntegrationConfigByCategory(category)">
+          <i class="fa fa-plus"></i> Añadir
+        </button>
+      </header>
 
-              <div class="btn-group btn-group-sm mr-1">
-                <button class="btn btn-outline-secondary btn-sm" [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')" title="Vista Grid">
-                  <i class="fa fa-th-large"></i>
-                </button>
-                <button class="btn btn-outline-secondary btn-sm" [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')" title="Vista Lista">
-                  <i class="fa fa-list"></i>
-                </button>
+      <div class="kx-grid">
+        <article *ngFor="let integration of getFilteredIntegrationsByCategory(category); trackBy: trackByIntegration"
+                 class="kx-card kx-int"
+                 [class.is-off]="!integration.enabled"
+                 [class.is-ok]="integration.enabled && hasCredential(integration)"
+                 [class.is-pend]="integration.enabled && !hasCredential(integration)"
+                 (click)="openIntegrationConfig(integration)">
+
+          <div class="kx-int__head">
+            <span class="kx-logo-box">
+              <img *ngIf="uiHelper.getLogo(integration.type) && !uiHelper.hasImageError(integration.type)"
+                   [src]="uiHelper.getLogo(integration.type)" [alt]="integration.name"
+                   (error)="handleImageError($event)" [attr.data-integration-id]="integration.id">
+              <span *ngIf="!uiHelper.getLogo(integration.type) || uiHelper.hasImageError(integration.type)"
+                    class="kx-logo-box__inicial">{{ getInitial(integration) }}</span>
+            </span>
+
+            <div class="kx-int__id">
+              <div class="kx-int__nombre">
+                <span [title]="integration.name">{{ integration.name }}</span>
+                <span class="kx-badge" *ngIf="isFeatured(integration)">DESTACADO</span>
               </div>
-              <div ngbDropdown class="d-inline-block mr-1">
-                <button class="btn btn-primary btn-sm" id="addIntegrationDropdown" ngbDropdownToggle>
-                  <i class="fa fa-plus"></i> <span class="d-none d-md-inline">Nueva</span>
-                </button>
-                <div ngbDropdownMenu aria-labelledby="addIntegrationDropdown">
-                  <h6 class="dropdown-header">Selecciona una categoría</h6>
-                  <div class="dropdown-divider"></div>
-                  <button ngbDropdownItem *ngFor="let category of categories" (click)="openIntegrationConfigByCategory(category)">
-                    <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-                    {{ getCategoryLabel(category) }}
-                  </button>
-                </div>
-              </div>
-              <button class="btn btn-light btn-sm" (click)="openTutorial()" title="Ayuda">
-                <i class="fa fa-question-circle"></i>
-              </button>
+              <div class="kx-int__prov">{{ getIntegrationTypeName(integration.type) }}</div>
             </div>
-          </div>
-        </div>
 
-        <div class="card-body-compact">
-          <!-- Filtros compactos -->
-          <div class="filters-compact mb-3">
-            <div class="row g-2">
-              <div class="col-lg-5 col-md-12">
-                <div class="input-group input-group-sm">
-                  <span class="input-group-text">
-                    <i class="fa fa-search"></i>
-                  </span>
-                  <input type="text" class="form-control form-control-sm" placeholder="Buscar..."
-                    [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-                  <button class="btn btn-outline-secondary btn-sm" type="button" (click)="onSearchChange('')" *ngIf="searchTerm">
-                    <i class="fa fa-times"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="col-lg-3 col-md-6 col-sm-6">
-                <select class="form-select form-select-sm form-control form-control-sm" [ngModel]="filterCategory" (ngModelChange)="onCategoryChange($event)">
-                  <option [ngValue]="null">Todas</option>
-                  <option *ngFor="let category of categories" [value]="category">
-                    {{ getCategoryLabel(category) }}
-                  </option>
-                </select>
-              </div>
-              <div class="col-lg-2 col-md-4 col-sm-4">
-                <select class="form-select form-select-sm form-control form-control-sm" [ngModel]="filterStatus" (ngModelChange)="onStatusFilterChange($event)">
-                  <option value="all">Todos</option>
-                  <option value="active">Activas</option>
-                  <option value="inactive">Inactivas</option>
-                </select>
-              </div>
-              <div class="col-lg-2 col-md-2 col-sm-2">
-                <button class="btn btn-outline-secondary btn-sm w-100" (click)="resetFilters()" title="Limpiar filtros">
-                  <i class="fa fa-refresh"></i> <span class="d-none d-lg-inline">Limpiar</span>
-                </button>
-              </div>
-            </div>
+            <span class="kx-dot" [class.is-live]="integration.enabled"
+                  [title]="integration.enabled ? 'Activa' : 'Inactiva'"></span>
           </div>
 
-          <!-- Loading -->
-          <div *ngIf="loading" class="text-center py-4">
-            <div class="spinner-container">
-              <div class="spinner"></div>
-              <p class="mt-3">🔄 Cargando integraciones...</p>
-            </div>
+          <div class="kx-int__chips">
+            <span class="kx-tag" [ngClass]="integration.enabled ? 'kx-tag--green' : 'kx-tag--muted'">
+              <span class="kx-tag__dot"></span>{{ integration.enabled ? 'Activa' : 'Inactiva' }}
+            </span>
+            <span class="kx-tag kx-tag--blue" [ngClass]="getEnvironmentClass(integration)">
+              <i class="fa fa-globe"></i> {{ getEnvironmentName(integration) }}
+            </span>
+            <span class="kx-tag" [ngClass]="hasCredential(integration) ? 'kx-tag--green' : 'kx-tag--orange'">
+              <i class="fa" [ngClass]="hasCredential(integration) ? 'fa-check' : 'fa-exclamation-triangle'"></i>
+              {{ hasCredential(integration) ? getMaskedCredential(integration) : 'Falta credencial' }}
+            </span>
           </div>
 
-          <!-- Error -->
-          <div *ngIf="errorMessage && !loading" class="alert alert-danger">
-            <i class="fa fa-exclamation-circle mr-2"></i> {{ errorMessage }}
-            <button type="button" class="btn btn-sm btn-danger float-right" (click)="loadIntegrations()">Reintentar</button>
+          <div class="kx-int__act">
+            <i class="fa fa-clock-o"></i> {{ getActivityText(integration) }}
           </div>
 
-          <!-- Empty State / Catalog -->
-          <div *ngIf="!loading && !errorMessage && integrations.length === 0" class="empty-state-catalog">
-              <div class="empty-state-header">
-                  <div class="empty-state-icon">
-                      <i class="fa fa-plug"></i>
-                  </div>
-                  <h2>Empieza a Integrar</h2>
-                  <p class="text-muted">Aún no has configurado ninguna integración. Explora nuestro catálogo para conectar tu negocio.</p>
-              </div>
+          <div class="kx-int__foot">
+            <button type="button"
+                    class="kx-btn"
+                    [ngClass]="hasCredential(integration) ? 'kx-btn--suave' : 'kx-btn--primary'"
+                    (click)="editIntegration(integration, $event); $event.stopPropagation();">
+              <i class="fa" [ngClass]="hasCredential(integration) ? 'fa-pencil' : 'fa-key'"></i>
+              {{ hasCredential(integration) ? 'Editar' : 'Configurar' }}
+            </button>
 
-              <div *ngFor="let category of categories" class="category-section" [hidden]="!availableIntegrations[category] || availableIntegrations[category].length === 0">
-                  <div class="category-header">
-                      <h5>
-                          <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-                          {{ getCategoryLabel(category) }}
-                      </h5>
-                  </div>
-                  <div class="available-integrations-grid">
-                      <div *ngFor="let integration of availableIntegrations[category]" class="available-card" (click)="configureIntegration(integration, category, $event)">
-                          <div class="available-card-header">
-                              <img [src]="uiHelper.getLogo(integration.id) || integration.logo"
-                                   [alt]="integration.name"
-                                   class="available-logo"
-                                   (error)="uiHelper.onImgError($event, integration.id)">
-                              <div class="available-card-name">
-                                  <h6>{{ integration.name }}</h6>
-                                  <span *ngIf="isFeatured(integration)" class="badge-popular">Destacado</span>
-                              </div>
-                          </div>
-                          <p class="available-card-desc">{{ integration.description }}</p>
-                          <div class="available-card-footer">
-                              <button class="btn btn-sm btn-outline-primary">
-                                  <i class="fa fa-plus"></i> Configurar
-                              </button>
-                          </div>
-                      </div>
-                  </div>
-              </div>
+            <button type="button" class="kx-switch" [class.is-on]="integration.enabled"
+                    [disabled]="isOperationLoading('toggle', integration.id)"
+                    (click)="toggleIntegrationStatus(integration, $event); $event.stopPropagation();"
+                    [title]="integration.enabled ? 'Desactivar' : 'Activar'">
+              <span class="kx-switch__bola"></span>
+            </button>
+
+            <button type="button" class="kx-ico" title="Probar conexión"
+                    [disabled]="isOperationLoading('test', integration.id)"
+                    (click)="testIntegration(integration, $event); $event.stopPropagation();">
+              <i class="fa" [ngClass]="isOperationLoading('test', integration.id) ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
+            </button>
+
+            <button type="button" class="kx-ico" *ngIf="integration.type === 'shopify'"
+                    title="Dashboard de Shopify" (click)="navigateToShopifyDashboard($event)">
+              <i class="fa fa-tachometer"></i>
+            </button>
+            <button type="button" class="kx-ico"
+                    *ngIf="integration.type !== 'shopify' && hasDashboard(integration)"
+                    title="Ver dashboard" (click)="goToDashboard(integration, $event); $event.stopPropagation();">
+              <i class="fa fa-tachometer"></i>
+            </button>
+
+            <button type="button" class="kx-ico kx-ico--danger" title="Eliminar"
+                    [disabled]="isOperationLoading('delete', integration.id)"
+                    (click)="deleteIntegration(integration, $event); $event.stopPropagation();">
+              <i class="fa" [ngClass]="isOperationLoading('delete', integration.id) ? 'fa-spinner fa-spin' : 'fa-trash'"></i>
+            </button>
           </div>
+        </article>
 
-          <!-- Grid View -->
-          <div *ngIf="!loading && integrations.length > 0 && viewMode === 'grid'" class="integration-grid">
-            <div *ngFor="let category of categories" class="integration-category" [hidden]="!shouldShowCategory(category)">
-              <div class="category-header">
-                <h5>
-                  <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-                  {{ getCategoryLabel(category) }}
-                  <span class="badge badge-pill badge-light">{{ countIntegrationsInCategory(category) }}</span>
-                </h5>
-                <button class="btn btn-sm btn-primary" (click)="openIntegrationConfigByCategory(category)">
-                  <i class="fa fa-plus"></i> Añadir
-                </button>
-              </div>
+        <!-- Ranura para añadir: deja claro qué va en esta sección -->
+        <button type="button" class="kx-ranura" (click)="openIntegrationConfigByCategory(category)">
+          <span class="kx-ranura__icon"><i class="fa fa-plus"></i></span>
+          <span class="kx-ranura__t">Añadir {{ getCategorySingular(category) }}</span>
+          <span class="kx-ranura__s">{{ getAvailableCount(category) }} disponibles</span>
+        </button>
+      </div>
+    </section>
+  </div>
 
-              <div class="row">
-                <div *ngFor="let integration of getFilteredIntegrationsByCategory(category); trackBy: trackByIntegration" class="col-md-6 col-xl-4 mb-4">
-                  <div class="integration-card-v2"
-                       [ngClass]="{
-                         'is-active': integration.enabled,
-                         'is-inactive': !integration.enabled,
-                         'has-error': hasError(integration),
-                         'is-featured': isFeatured(integration)
-                       }"
-                       (click)="openIntegrationConfig(integration)">
-
-                    <!-- Card Border Accent -->
-                    <div class="card-accent" [style.background]="uiHelper.getCategoryColor(integration.type)"></div>
-
-                    <!-- Card Header -->
-                    <div class="card-header-v2">
-                      <div class="logo-wrapper">
-                        <img *ngIf="uiHelper.getLogo(integration.type) && !uiHelper.hasImageError(integration.type)"
-                             [src]="uiHelper.getLogo(integration.type)"
-                             [alt]="integration.name"
-                             class="logo"
-                             (error)="handleImageError($event)"
-                             [attr.data-integration-id]="integration.id">
-                        <div *ngIf="!uiHelper.getLogo(integration.type) || uiHelper.hasImageError(integration.type)"
-                             class="icon-fallback"
-                             [style.background]="uiHelper.getCategoryColor(integration.type)">
-                          <i [class]="uiHelper.getIntegrationIcon(integration.type)"></i>
-                        </div>
-                      </div>
-                      <div class="title-group">
-                        <h5 class="name">{{ integration.name }}</h5>
-                        <p class="type">{{ getIntegrationTypeName(integration.type) }}</p>
-                      </div>
-                      <div class="status-light" [ngClass]="integration.enabled ? 'is-active' : 'is-inactive'" [title]="integration.enabled ? 'Activo' : 'Inactivo'"></div>
-                    </div>
-
-                    <!-- Card Body -->
-                    <div class="card-body-v2">
-                      <div class="info-grid">
-                        <div class="info-item">
-                          <span class="label">Estado</span>
-                          <span class="value status-badge" [ngClass]="integration.enabled ? 'status-active' : 'status-inactive'">
-                            {{ integration.enabled ? 'Activo' : 'Inactivo' }}
-                          </span>
-                        </div>
-                        <div class="info-item">
-                          <span class="label">Ambiente</span>
-                          <span class="value environment-badge" [ngClass]="getEnvironmentClass(integration)">
-                            {{ getEnvironmentName(integration) }}
-                          </span>
-                        </div>
-                        <div class="info-item">
-                          <span class="label">Última Actividad</span>
-                          <span class="value">{{ isDateValid(integration.updatedAt) ? (integration.updatedAt | date:'dd MMM, HH:mm') : 'N/A' }}</span>
-                        </div>
-                        <div class="info-item">
-                          <span class="label">Credencial</span>
-                          <span class="value credential-masked">{{ getMaskedCredential(integration) }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Card Footer with Actions -->
-                    <div class="card-footer-v2">
-                      <div class="action-group">
-                        <button class="action-btn" (click)="toggleIntegrationStatus(integration, $event); $event.stopPropagation();" [title]="integration.enabled ? 'Desactivar' : 'Activar'">
-                          <i class="fa" [ngClass]="integration.enabled ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
-                        </button>
-                        <button class="action-btn" (click)="testIntegration(integration, $event); $event.stopPropagation();" title="Probar Conexión" [disabled]="isOperationLoading('test', integration.id)">
-                          <i class="fa" [ngClass]="isOperationLoading('test', integration.id) ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
-                        </button>
-                        <button class="action-btn" *ngIf="integration.type === 'shopify'" (click)="navigateToShopifyDashboard($event)" title="Dashboard Shopify">
-                          <i class="fa fa-tachometer-alt"></i>
-                        </button>
-                        <button *ngIf="integration.type !== 'shopify' && hasDashboard(integration)" class="action-btn" (click)="goToDashboard(integration, $event); $event.stopPropagation();" title="Ver dashboard de esta integración">
-                          <i class="fa fa-tachometer"></i>
-                        </button>
-                        <button class="action-btn" (click)="editIntegration(integration, $event); $event.stopPropagation();" title="Editar">
-                          <i class="fa fa-pencil"></i>
-                        </button>
-                        <button class="action-btn action-btn-danger" (click)="deleteIntegration(integration, $event); $event.stopPropagation();" title="Eliminar" [disabled]="isOperationLoading('delete', integration.id)">
-                          <i class="fa" [ngClass]="isOperationLoading('delete', integration.id) ? 'fa-spinner fa-spin' : 'fa-trash'"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- List View -->
-          <div *ngIf="!loading && integrations.length > 0 && viewMode === 'list'" class="integration-list-view">
-            <div class="table-responsive">
-              <table class="table table-hover integration-table">
-                <thead>
-                  <tr>
-                    <th class="sortable" (click)="sortBy('name')">
-                      <i class="fa fa-tag"></i> Nombre
-                      <i *ngIf="sortField === 'name'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                    </th>
-                    <th class="sortable" (click)="sortBy('type')">
-                      <i class="fa fa-plug"></i> Tipo
-                      <i *ngIf="sortField === 'type'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                    </th>
-                    <th class="sortable" (click)="sortBy('category')">
-                      <i class="fa fa-folder-open"></i> Categoría
-                      <i *ngIf="sortField === 'category'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                    </th>
-                    <th class="sortable" (click)="sortBy('enabled')">
-                      <i class="fa fa-toggle-on"></i> Estado
-                      <i *ngIf="sortField === 'enabled'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                    </th>
-                    <th class="sortable" (click)="sortBy('updatedAt')">
-                      <i class="fa fa-calendar"></i> Actualizado
-                      <i *ngIf="sortField === 'updatedAt'" class="fa" [ngClass]="sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down'"></i>
-                    </th>
-                    <th><i class="fa fa-cog"></i> Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngIf="getSortedAndFilteredIntegrations().length === 0">
-                    <td colspan="6" class="text-center text-warning">
-                      ⚠️ No hay integraciones que coincidan con los filtros actuales
-                    </td>
-                  </tr>
-
-                  <tr *ngFor="let integration of getSortedAndFilteredIntegrations(); trackBy: trackByIntegration" (click)="openIntegrationConfig(integration)" class="integration-row">
-                    <td data-label="Nombre">
-                      <div class="integration-name-cell">
-                        <img *ngIf="uiHelper.getLogo(integration.type) && !uiHelper.hasImageError(integration.type)"
-                             [src]="uiHelper.getLogo(integration.type)"
-                             [alt]="integration.name"
-                             class="integration-logo-sm"
-                             (error)="handleImageError($event)"
-                             [attr.data-integration-id]="integration.id">
-                        <div *ngIf="!uiHelper.getLogo(integration.type) || uiHelper.hasImageError(integration.type)"
-                             class="integration-icon integration-icon-sm"
-                             [class]="integration.type"
-                             [style.background]="uiHelper.getCategoryColor(integration.type)">
-                          <i [class]="uiHelper.getIntegrationIcon(integration.type)"></i>
-                        </div>
-                        <span>{{integration.name}}</span>
-                      </div>
-                    </td>
-                    <td data-label="Tipo">{{getIntegrationTypeName(integration.type)}}</td>
-                    <td data-label="Categoría">
-                      <span class="category-pill" [ngClass]="'category-' + integration.category">
-                        {{ getCategoryLabel(integration.category) }}
-                      </span>
-                    </td>
-                    <td data-label="Estado">
-                      <span class="status-badge" [ngClass]="integration.enabled ? 'active' : 'inactive'">
-                        <i class="fa" [ngClass]="integration.enabled ? 'fa-check-circle' : 'fa-times-circle'"></i>
-                        {{integration.enabled ? 'Activo' : 'Inactivo'}}
-                      </span>
-                    </td>
-                    <td data-label="Actualizado">
-                      <span class="date-cell">{{isDateValid(integration.updatedAt) ? (integration.updatedAt | date:'dd/MM/yyyy HH:mm') : 'N/A'}}</span>
-                    </td>
-                    <td data-label="Acciones">
-                      <div class="action-buttons">
-                        <button class="btn btn-sm btn-info" (click)="editIntegration(integration, $event)" title="Editar">
-                          <i class="fa fa-edit"></i>
-                        </button>
-                        <button type="button"
-                                class="btn btn-sm btn-outline-success"
-                                [class.loading]="isOperationLoading('test', integration.id)"
-                                [disabled]="isOperationLoading('test', integration.id)"
-                                (click)="testIntegration(integration, $event)"
-                                title="Probar conexión">
-                          <i class="fa fa-check"></i>
-                        </button>
-                        <button type="button"
-                                class="btn btn-sm"
-                                [class.loading]="isOperationLoading('toggle', integration.id)"
-                                [disabled]="isOperationLoading('toggle', integration.id)"
-                                [ngClass]="integration.enabled ? 'btn-warning' : 'btn-success'"
-                                (click)="toggleIntegrationStatus(integration, $event)"
-                                [title]="integration.enabled ? 'Desactivar' : 'Activar'">
-                          <i class="fa" [ngClass]="integration.enabled ? 'fa-pause' : 'fa-play'"></i>
-                        </button>
-                        <button *ngIf="hasDashboard(integration)" type="button"
-                                class="btn btn-sm btn-outline-primary"
-                                (click)="goToDashboard(integration, $event)"
-                                title="Ver dashboard de esta integración">
-                          <i class="fa fa-tachometer"></i>
-                        </button>
-                        <button type="button"
-                                class="btn btn-sm btn-outline-danger"
-                                [class.loading]="isOperationLoading('delete', integration.id)"
-                                [disabled]="isOperationLoading('delete', integration.id)"
-                                (click)="deleteIntegration(integration, $event)"
-                                title="Eliminar">
-                          <i class="fa fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Empty Search Results -->
-          <div *ngIf="!loading && searchTerm && getSortedAndFilteredIntegrations().length === 0" class="text-center py-4">
-            <div class="empty-search">
-              <i class="fa fa-search fa-2x text-muted mb-3"></i>
-              <h4>No se encontraron integraciones</h4>
-              <p class="text-muted">No hay resultados para "{{ searchTerm }}"</p>
-              <button class="btn btn-outline-primary mt-2" (click)="resetFilters()">
-                <i class="fa fa-times"></i> Limpiar filtros
-              </button>
-            </div>
-          </div>
-        </div>
+  <!-- ===== VISTA DE LISTA ===== -->
+  <section class="kx-card kx-lista" *ngIf="!loading && integrations.length > 0 && viewMode === 'list'">
+    <div class="kx-lista__scroll">
+      <div class="kx-fila kx-fila--head">
+        <span class="kx-fila__logo"></span>
+        <button type="button" class="kx-fila__nombre kx-orden" (click)="onSort('name')">
+          Integración
+          <i class="fa" *ngIf="ordenCampo === 'name'" [ngClass]="ordenAscendente ? 'fa-sort-up' : 'fa-sort-down'"></i>
+        </button>
+        <button type="button" class="kx-fila__estado kx-orden" (click)="onSort('status')">
+          Estado
+          <i class="fa" *ngIf="ordenCampo === 'status'" [ngClass]="ordenAscendente ? 'fa-sort-up' : 'fa-sort-down'"></i>
+        </button>
+        <button type="button" class="kx-fila__amb kx-orden" (click)="onSort('type')">
+          Ambiente
+          <i class="fa" *ngIf="ordenCampo === 'type'" [ngClass]="ordenAscendente ? 'fa-sort-up' : 'fa-sort-down'"></i>
+        </button>
+        <span class="kx-fila__cred">Credencial</span>
+        <button type="button" class="kx-fila__act kx-orden kx-orden--der" (click)="onSort('lastModified')">
+          Actividad
+          <i class="fa" *ngIf="ordenCampo === 'lastModified'" [ngClass]="ordenAscendente ? 'fa-sort-up' : 'fa-sort-down'"></i>
+        </button>
+        <span class="kx-fila__acc">Acciones</span>
       </div>
 
+      <div class="kx-fila kx-fila--vacia" *ngIf="getSortedAndFilteredIntegrations().length === 0">
+        <i class="fa fa-filter"></i> Ninguna integración coincide con los filtros actuales
+      </div>
+
+      <div class="kx-fila" *ngFor="let integration of getSortedAndFilteredIntegrations(); trackBy: trackByIntegration"
+           (click)="openIntegrationConfig(integration)">
+        <span class="kx-fila__logo">
+          <span class="kx-logo-box kx-logo-box--sm">
+            <img *ngIf="uiHelper.getLogo(integration.type) && !uiHelper.hasImageError(integration.type)"
+                 [src]="uiHelper.getLogo(integration.type)" [alt]="integration.name"
+                 (error)="handleImageError($event)" [attr.data-integration-id]="integration.id">
+            <span *ngIf="!uiHelper.getLogo(integration.type) || uiHelper.hasImageError(integration.type)"
+                  class="kx-logo-box__inicial">{{ getInitial(integration) }}</span>
+          </span>
+        </span>
+
+        <span class="kx-fila__nombre">
+          <span class="kx-int__nombre">
+            <span>{{ integration.name }}</span>
+            <span class="kx-badge" *ngIf="isFeatured(integration)">DESTACADO</span>
+          </span>
+          <span class="kx-int__prov">{{ getIntegrationTypeName(integration.type) }}</span>
+        </span>
+
+        <span class="kx-fila__estado">
+          <span class="kx-tag" [ngClass]="integration.enabled ? 'kx-tag--green' : 'kx-tag--muted'">
+            <span class="kx-tag__dot"></span>{{ integration.enabled ? 'Activa' : 'Inactiva' }}
+          </span>
+        </span>
+
+        <span class="kx-fila__amb">
+          <span class="kx-tag kx-tag--blue" [ngClass]="getEnvironmentClass(integration)">
+            {{ getEnvironmentName(integration) }}
+          </span>
+        </span>
+
+        <span class="kx-fila__cred">
+          <span class="kx-tag" [ngClass]="hasCredential(integration) ? 'kx-tag--green' : 'kx-tag--orange'">
+            <i class="fa" [ngClass]="hasCredential(integration) ? 'fa-check' : 'fa-exclamation-triangle'"></i>
+            {{ hasCredential(integration) ? getMaskedCredential(integration) : 'Falta credencial' }}
+          </span>
+        </span>
+
+        <span class="kx-fila__act">{{ getActivityText(integration) }}</span>
+
+        <span class="kx-fila__acc">
+          <button type="button" class="kx-btn"
+                  [ngClass]="hasCredential(integration) ? 'kx-btn--suave' : 'kx-btn--primary'"
+                  (click)="editIntegration(integration, $event); $event.stopPropagation();">
+            <i class="fa" [ngClass]="hasCredential(integration) ? 'fa-pencil' : 'fa-key'"></i>
+            {{ hasCredential(integration) ? 'Editar' : 'Configurar' }}
+          </button>
+          <button type="button" class="kx-switch" [class.is-on]="integration.enabled"
+                  [disabled]="isOperationLoading('toggle', integration.id)"
+                  (click)="toggleIntegrationStatus(integration, $event); $event.stopPropagation();"
+                  [title]="integration.enabled ? 'Desactivar' : 'Activar'">
+            <span class="kx-switch__bola"></span>
+          </button>
+          <button type="button" class="kx-ico" title="Probar conexión"
+                  [disabled]="isOperationLoading('test', integration.id)"
+                  (click)="testIntegration(integration, $event); $event.stopPropagation();">
+            <i class="fa" [ngClass]="isOperationLoading('test', integration.id) ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
+          </button>
+          <button type="button" class="kx-ico" *ngIf="hasDashboard(integration)" title="Ver dashboard"
+                  (click)="goToDashboard(integration, $event); $event.stopPropagation();">
+            <i class="fa fa-tachometer"></i>
+          </button>
+          <button type="button" class="kx-ico kx-ico--danger" title="Eliminar"
+                  [disabled]="isOperationLoading('delete', integration.id)"
+                  (click)="deleteIntegration(integration, $event); $event.stopPropagation();">
+            <i class="fa" [ngClass]="isOperationLoading('delete', integration.id) ? 'fa-spinner fa-spin' : 'fa-trash'"></i>
+          </button>
+        </span>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <!-- ===== BÚSQUEDA SIN RESULTADOS ===== -->
+  <section class="kx-card kx-vacio" *ngIf="!loading && integrations.length > 0 && isFiltered() && getSortedAndFilteredIntegrations().length === 0">
+    <span class="kx-vacio__icon"><i class="fa fa-search"></i></span>
+    <h2>Sin resultados</h2>
+    <p *ngIf="searchTerm">No hay integraciones que coincidan con “{{ searchTerm }}”.</p>
+    <p *ngIf="!searchTerm">Ninguna integración coincide con los filtros actuales.</p>
+    <button type="button" class="kx-btn kx-btn--primary" (click)="resetFilters()">
+      <i class="fa fa-times"></i> Limpiar filtros
+    </button>
+  </section>
 </div>
 
 <!-- Tutorial/Tooltip -->

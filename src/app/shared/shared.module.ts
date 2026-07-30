@@ -85,6 +85,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DialogModule } from 'primeng/dialog';
 
+import { ImagenProductoPipe } from './pipes/imagen-producto.pipe';
 @NgModule({
   declarations: [
     HeaderComponent,
@@ -137,6 +138,7 @@ import { DialogModule } from 'primeng/dialog';
     // ChatFormComponent
   ],
   imports: [
+    ImagenProductoPipe,
     CommonModule,
     RouterModule,
     FormsModule,
@@ -193,6 +195,9 @@ import { DialogModule } from 'primeng/dialog';
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
+    // Se reexporta para que cualquier módulo que importe SharedModule pueda
+    // resolver las imágenes de producto sin volver a declararlo.
+    ImagenProductoPipe,
     LoaderComponent,
     BreadcrumbComponent,
     FeatherIconsComponent,

@@ -313,7 +313,7 @@
                         </td>
                         <td>
                             <img height="50" width="50" class="shadow-4"
-                                [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls"
+                                [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls | imagenProducto"
                                 [alt]="item.producto?.crearProducto?.imagenesPrincipales[0].nombreImagen" />
                         </td>
                         <td>{{ item.producto?.crearProducto?.titulo }}</td>

@@ -541,7 +541,8 @@
                                         "
                                         [src]="
                                             row.crearProducto
-                                                ?.imagenesPrincipales[0]?.urls
+                                                ?.imagenesPrincipales?.[0]?.urls
+                                                | imagenProducto
                                         "
                                         [alt]="row.crearProducto?.titulo"
                                         width="52"

@@ -585,7 +585,7 @@
                   <div class="sidebar-cart-items">
                     <div class="cart-item" *ngFor="let item of productosCarritoSidebar; let i = index">
                       <div class="cart-item-image">
-                        <img [src]="item?.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholder.png'"
+                        <img [src]="item?.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholder.png'"
                              [alt]="item?.producto?.crearProducto?.titulo"
                              (error)="$event.target.style.display='none'">
                         <div class="cart-item-no-image" *ngIf="!item?.producto?.crearProducto?.imagenesPrincipales?.length">

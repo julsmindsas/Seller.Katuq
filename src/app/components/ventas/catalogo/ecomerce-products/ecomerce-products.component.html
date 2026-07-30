@@ -318,7 +318,7 @@
                                     <div class="product-img-wrapper">
                                         <img *ngIf="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]"
                                             class="img-fluid product-image-optimized"
-                                            [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]"
+                                            [src]="(producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]) | imagenProducto"
                                             [alt]="producto.crearProducto?.titulo"
                                             (error)="producto._imgError = true"
                                             [hidden]="producto._imgError"

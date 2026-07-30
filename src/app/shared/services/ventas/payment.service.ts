@@ -4,6 +4,7 @@ import { HttpClient } from "@angular/common/http";
 import { environment } from "../../../../environments/environment";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { DatePipe } from "@angular/common";
+import { urlImagenAbsoluta } from "../../utils/imagen-producto";
 import { PedidosUtilService } from "../../../components/ventas/service/pedidos.util.service";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { POSPedido } from "../../../components/pos/pos-modelo/pedido";
@@ -154,28 +155,20 @@ export class PaymentService extends BaseService {
    * @returns URL absoluta válida o null si no hay imagen
    */
   private getValidImageUrl(imageUrl: string | undefined | null): string | null {
-    if (!imageUrl || imageUrl.trim() === '') return null;
+    // Las rutas de producto son relativas y pertenecen al CDN de Osmosis, no a
+    // nuestro dominio: resolverlas contra `window.location.origin` traía el HTML
+    // de la aplicación en vez de la foto, y el PDF salía con el hueco.
+    const absoluta = urlImagenAbsoluta(imageUrl);
+    if (!absoluta) return null;
 
-    // Si es una URL completa (http:// o https://), usarla directamente
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
+    // Los assets propios sí van contra nuestro dominio, y en un PDF tienen que
+    // ir completos porque no hay página contra la cual resolverlos.
+    if (absoluta.startsWith('assets/') || absoluta.startsWith('/assets/')) {
+      const ruta = absoluta.startsWith('/') ? absoluta : `/${absoluta}`;
+      return `${window.location.origin}${ruta}`;
     }
 
-    // Si es una ruta relativa, convertirla a absoluta usando el origin actual
-    // Esto es crítico para PDFs, que necesitan URLs completas
-    if (imageUrl.startsWith('assets/') || imageUrl.startsWith('/assets/')) {
-      const baseUrl = window.location.origin;
-      const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-      return `${baseUrl}${cleanPath}`;
-    }
-
-    // Si empieza con '/' pero no es assets, también convertir a absoluta
-    if (imageUrl.startsWith('/')) {
-      return `${window.location.origin}${imageUrl}`;
-    }
-
-    // Si no es ninguno de los casos anteriores, asumir que es relativa al root
-    return `${window.location.origin}/${imageUrl}`;
+    return absoluta;
   }
 
   /**
@@ -1234,9 +1227,11 @@ export class PaymentService extends BaseService {
       const configuracion = item?.configuracion;
       // Asegurar que cantidad sea numérico
       const cantidad = Number(item?.cantidad) || 0;
+      // Pasa por getValidImageUrl como las adiciones y preferencias: la ruta de
+      // producto suele venir relativa y sin resolver el PDF sale con el hueco.
       const imagenUrl =
-        producto?.crearProducto?.imagenesPrincipales?.[0]?.urls ??
-        "assets/images/default-product.png"; // Imagen por defecto
+        this.getValidImageUrl(producto?.crearProducto?.imagenesPrincipales?.[0]?.urls) ??
+        this.getValidImageUrl("assets/images/default-product.png");
       const tituloProducto =
         producto?.crearProducto?.titulo ?? "Producto no disponible";
       const referenciaProducto = producto?.identificacion?.referencia ?? "N/A";

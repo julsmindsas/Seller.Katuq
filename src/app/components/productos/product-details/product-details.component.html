@@ -47,7 +47,7 @@
         <div class="d-flex flex-wrap gap-2 justify-content-center mb-3"
              *ngIf="(producto?.crearProducto?.imagenesPrincipales?.length || 0) > 1">
           <img *ngFor="let img of producto?.crearProducto?.imagenesPrincipales; let i = index"
-               [src]="img.urls"
+               [src]="img.urls | imagenProducto"
                width="56" height="56"
                class="rounded border"
                [class.border-primary]="i === currentPreviewIdx"

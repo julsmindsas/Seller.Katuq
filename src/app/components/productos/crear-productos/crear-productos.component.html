@@ -243,7 +243,7 @@
 										<div class="col-md-2 item"
 											*ngFor="let img of crearProducto.value.imagenesPrincipales; let i = index">
 											<div class="card" style="width: 10rem;">
-												<img src="{{img.urls}}" class="card-img-top" alt="Image"
+												<img src="{{img.urls | imagenProducto}}" class="card-img-top" alt="Image"
 													style="width: 100%; height: auto;">
 												<div class="text-center" style="font-size:0.7rem; color:#666; padding:2px;">Guardada</div>
 												<button class="btn btn-danger btn-sm" (click)="deleteImg(img?.path,i)">

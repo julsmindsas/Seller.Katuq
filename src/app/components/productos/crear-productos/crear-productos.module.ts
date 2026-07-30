@@ -22,8 +22,10 @@ import { PickListModule } from 'primeng/picklist';
 
 
 
+import { ImagenProductoPipe } from '../../../shared/pipes/imagen-producto.pipe';
 @NgModule({
   imports: [
+    ImagenProductoPipe,
     NgSelectModule,
     CommonModule,
     DropdownModule,

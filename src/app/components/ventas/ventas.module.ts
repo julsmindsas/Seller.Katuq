@@ -87,8 +87,10 @@ import { ImportModalModule } from "../../shared/components/import-modal/import-m
 import { CustomerMetricsComponent } from "./clientes/customer-metrics/customer-metrics.component";
 import { GlobalMetricsComponent } from "./clientes/global-metrics/global-metrics.component";
 
+import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 @NgModule({
   imports: [
+    ImagenProductoPipe,
     NgSelectModule,
     CommonModule,
     SharedModule,

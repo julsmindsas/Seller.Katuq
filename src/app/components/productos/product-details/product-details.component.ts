@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { forkJoin } from 'rxjs';
 
 
+import { IMAGEN_PRODUCTO_POR_DEFECTO, urlImagenAbsoluta } from '../../../shared/utils/imagen-producto';
 @Component({
   selector: 'app-product-details',
   templateUrl: './product-details.component.html',
@@ -70,10 +71,15 @@ export class ProductDetailsComponent implements OnInit {
     this.productCare = ((crearProd.cuidadoConsumo || '').split('\n')).map((line: string) => `- ${line}`).join('\n');
     this.productGuarantee = ((crearProd.garantiasProducto || '').split('\n')).map((line: string) => `- ${line}`).join('\n');
     this.productRestrictions = ((crearProd.restriccionesProducto || '').split('\n')).map((line: string) => `- ${line}`).join('\n');
-    this.imagesRect = images.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls }));
+    this.imagesRect = images.map((x, index) => {
+      const url = urlImagenAbsoluta(x.urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO;
+      return new Image(index, { img: url }, { img: url });
+    });
 
     // Quick preview image state
-    this.currentPreviewImage = images.length > 0 ? images[0].urls : 'assets/img/placeholder.png';
+    this.currentPreviewImage = images.length > 0
+      ? (urlImagenAbsoluta(images[0].urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO)
+      : 'assets/img/placeholder.png';
     this.currentPreviewIdx = 0;
     if(this.fromProductCreate){
       this.libConfigCarouselFixed = {
@@ -146,7 +152,7 @@ export class ProductDetailsComponent implements OnInit {
     const images: any[] = this.producto?.crearProducto?.imagenesPrincipales || [];
     if (images[idx]) {
       this.currentPreviewIdx = idx;
-      this.currentPreviewImage = images[idx].urls;
+      this.currentPreviewImage = urlImagenAbsoluta(images[idx].urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO;
     }
   }
 

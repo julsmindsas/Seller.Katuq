@@ -447,10 +447,105 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   resetFilters(): void {
     this.stateService.resetFilters();
     this.selectedCategory = null;
+    this.pendingOnly = false;
   }
 
   getTopCategories(limit: number = 3): IntegrationCategory[] {
     return this.categories.slice(0, limit);
+  }
+
+  // ===========================================================================
+  // Helpers de PRESENTACIÓN del rediseño (solo derivan de datos ya cargados;
+  // no consultan al backend ni alteran el estado de las integraciones).
+  // ===========================================================================
+
+  /** Una integración con credencial realmente configurada. */
+  hasCredential(integration: Integration): boolean {
+    const masked = this.getMaskedCredential(integration);
+    return !!masked && masked !== "No configurado";
+  }
+
+  /**
+   * Activas pero sin credencial: están encendidas y no pueden procesar nada.
+   * Es el caso que el aviso superior destaca.
+   */
+  getPendingCredentialsCount(): number {
+    return this.integrations.filter(
+      (i) => i.enabled && !this.hasCredential(i),
+    ).length;
+  }
+
+  /** Filtra el listado a las que les falta credencial (botón del aviso). */
+  togglePendingOnly(): void {
+    this.pendingOnly = !this.pendingOnly;
+  }
+
+  pendingOnly = false;
+
+  /** Inicial para el recuadro de logo cuando no hay imagen. */
+  getInitial(integration: Integration): string {
+    const nombre = (integration.name || integration.type || "?").trim();
+    return nombre.charAt(0).toUpperCase();
+  }
+
+  /** Frase de actividad en vez de un "N/A" que no le dice nada a nadie. */
+  getActivityText(integration: Integration): string {
+    if (!this.isDateValid(integration.updatedAt)) {
+      return "Sin actividad registrada aún";
+    }
+    const fecha = new Date(integration.updatedAt as string);
+    const minutos = Math.floor((Date.now() - fecha.getTime()) / 60000);
+    if (minutos < 1) return "Actualizada hace un momento";
+    if (minutos < 60) return `Actualizada hace ${minutos} min`;
+    const horas = Math.floor(minutos / 60);
+    if (horas < 24) return `Actualizada hace ${horas} h`;
+    const dias = Math.floor(horas / 24);
+    if (dias === 1) return "Actualizada ayer";
+    if (dias < 30) return `Actualizada hace ${dias} días`;
+    return `Actualizada el ${fecha.toLocaleDateString("es-CO", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })}`;
+  }
+
+  /** Cuántas integraciones de esa categoría quedan por conectar. */
+  getAvailableCount(category: IntegrationCategory): number {
+    return this.availableIntegrations?.[category]?.length || 0;
+  }
+
+  /** Nombre en singular para el recuadro de "Añadir…" de cada sección. */
+  getCategorySingular(category: IntegrationCategory): string {
+    const label = this.getCategoryLabel(category);
+    return label ? label.toLowerCase() : "integración";
+  }
+
+  getInactiveIntegrationsCount(): number {
+    return this.integrations.filter((i) => !i.enabled).length;
+  }
+
+  /**
+   * Orden vigente, leído del servicio de estado — que es quien realmente ordena.
+   * Las propiedades locales `sortBy`/`sortField`/`sortDirection` nunca se
+   * sincronizaron, así que los indicadores del diseño anterior no reflejaban
+   * nada; estos getters sí.
+   */
+  get ordenCampo(): string {
+    return this.stateService.currentState?.ui?.sortBy || "name";
+  }
+
+  get ordenAscendente(): boolean {
+    return (this.stateService.currentState?.ui?.sortDirection || "asc") === "asc";
+  }
+
+  /** Hay algún filtro puesto (habilita el botón de limpiar). */
+  isFiltered(): boolean {
+    return (
+      !!this.searchTerm ||
+      !!this.filterCategory ||
+      this.filterStatus !== "all" ||
+      this.pendingOnly
+    );
   }
 
   // Propiedades adicionales requeridas por el template
@@ -819,7 +914,13 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   // Métodos de debugging mejorados para el template
   getSortedAndFilteredIntegrations(): Integration[] {
-    return this.filteredIntegrations;
+    return this.applyPendingOnly(this.filteredIntegrations);
+  }
+
+  /** Capa extra del aviso "sin credencial"; no toca los filtros del servicio. */
+  private applyPendingOnly(lista: Integration[]): Integration[] {
+    if (!this.pendingOnly) return lista;
+    return lista.filter((i) => !this.hasCredential(i));
   }
 
   isDateValid(date: string | undefined | null): boolean {
@@ -832,7 +933,9 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   getFilteredIntegrationsByCategory(
     category: IntegrationCategory,
   ): Integration[] {
-    return this.filteredIntegrations.filter((i) => i.category === category);
+    return this.applyPendingOnly(this.filteredIntegrations).filter(
+      (i) => i.category === category,
+    );
   }
 
   shouldShowCategory(category: IntegrationCategory): boolean {

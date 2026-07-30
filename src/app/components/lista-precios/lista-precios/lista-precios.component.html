@@ -104,7 +104,7 @@
                     </td>
                     <td class="text-center">
                       <img
-                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
                         [alt]="producto.crearProducto?.titulo"
                         appImageFallback
                         width="50"
@@ -323,7 +323,7 @@
                   <tr>
                     <td class="text-center">
                       <img
-                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
                         [alt]="producto.crearProducto?.titulo"
                         appImageFallback
                         width="50" height="50"
@@ -418,7 +418,7 @@
                   <tr>
                     <td class="text-center">
                       <img
-                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
                         [alt]="producto.crearProducto?.titulo"
                         appImageFallback
                         width="50" height="50"
@@ -522,7 +522,7 @@
                   <tr>
                     <td class="text-center">
                       <img
-                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
                         [alt]="producto.crearProducto?.titulo"
                         appImageFallback
                         width="50" height="50"

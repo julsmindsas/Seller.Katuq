@@ -19,6 +19,10 @@ import {
 } from "../../../../shared/models/productos/Producto";
 import { AngularFireStorage } from "@angular/fire/compat/storage";
 import { CarouselLibConfig, Image } from "@ks89/angular-modal-gallery";
+import {
+  IMAGEN_PRODUCTO_POR_DEFECTO,
+  urlImagenAbsoluta,
+} from "../../../../shared/utils/imagen-producto";
 import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
 import {
   AbstractControl,
@@ -1068,9 +1072,14 @@ export class ConfProductToCartComponent
 
     if (this.producto && this.producto.crearProducto) {
       // Inicializar array de imágenes principales
+      // `urls` puede venir relativa (Osmosis); sin absolutizarla el visor
+      // muestra el hueco. Ver shared/utils/imagen-producto.
       this.imagesRect =
         this.producto.crearProducto.imagenesPrincipales?.map(
-          (x, index) => new Image(index, { img: x.urls }, { img: x.urls }),
+          (x, index) => {
+            const url = urlImagenAbsoluta(x.urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO;
+            return new Image(index, { img: url }, { img: url });
+          },
         ) || [];
       
       // Agregar imágenes secundarias con índices únicos
@@ -1080,7 +1089,10 @@ export class ConfProductToCartComponent
       
       const imagenesPrincipalesCount = this.imagesRect.length;
       this.producto.crearProducto.imagenesSecundarias
-        ?.map((x, index) => new Image(imagenesPrincipalesCount + index, { img: x.urls }, { img: x.urls }))
+        ?.map((x, index) => {
+          const url = urlImagenAbsoluta(x.urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO;
+          return new Image(imagenesPrincipalesCount + index, { img: url }, { img: url });
+        })
         .forEach((image) => {
           this.imagesRect.push(image);
         });
@@ -2404,7 +2416,7 @@ export class ConfProductToCartComponent
       (x) => x.titulo == adicion,
     );
     if (!adiciones) return "assets/images/other-images/sinimagen.webp";
-    return adiciones?.imagenPrincipal[0]?.urls;
+    return urlImagenAbsoluta(adiciones?.imagenPrincipal?.[0]?.urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO;
   }
 
   selectedProductPreferenceForNgSelect(event: any, item: FormControl) {
@@ -2854,7 +2866,7 @@ export class ConfProductToCartComponent
       valorIva: adicion.precioIva || 0,
       porcentajeIva: adicion.porcentajeIVA || 0,
       precioTotalConIva: adicion.precioTotal || 0,
-      imagen: adicion.imagenPrincipal?.[0]?.urls || 'assets/images/other-images/sinimagen.webp',
+      imagen: urlImagenAbsoluta(adicion.imagenPrincipal?.[0]?.urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO,
       tipo: "adicion",
       cantidad: 1,
       paraProduccion: true,

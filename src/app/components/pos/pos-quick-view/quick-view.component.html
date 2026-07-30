@@ -3,7 +3,7 @@
     <div class="modal-header product-modal">
       <div class="product-box row">
         <div class="product-img col-md-6"><img class="img-fluid"
-            [src]="producto.crearProducto.imagenesPrincipales[0]?.urls" alt=""></div>
+            [src]="producto.crearProducto.imagenesPrincipales[0]?.urls | imagenProducto" alt=""></div>
         <div class="product-details col-md-6 text-start">
           <div class="product-page-details">
             <h3>{{producto?.crearProducto?.titulo}}</h3>

@@ -1,14 +1,28 @@
-<div [ngClass]="{'modal-content': isModalMode}">
-  <div *ngIf="isModalMode" class="modern-modal-header-compact">
-    <div class="header-content-compact">
-      <div class="header-icon-compact">
-        <i class="fa fa-puzzle-piece"></i>
-      </div>
-      <div class="header-text-compact">
-        <h2 class="header-title-compact">{{editingIntegrationId ? 'Editar' : 'Configurar'}} Integración</h2>
-      </div>
+<div [ngClass]="{'modal-content': isModalMode}" class="kx-modal-int">
+  <div *ngIf="isModalMode" class="kx-mh">
+    <span class="kx-mh__icon"><i class="fa fa-plug"></i></span>
+    <div class="kx-mh__txt">
+      <h2>{{ editingIntegrationId ? 'Editar integración' : 'Configurar integración' }}</h2>
+      <p *ngIf="!editingIntegrationId">
+        {{ showOnlyForm ? 'Paso 2 de 2 · ingresa las llaves de API' : 'Paso 1 de 2 · elige qué quieres conectar' }}
+      </p>
+      <p *ngIf="editingIntegrationId">Actualiza las llaves y el ambiente de esta conexión</p>
     </div>
-    <button type="button" class="modern-close-btn" aria-label="Close" (click)="cancel()">
+
+    <!-- Riel de pasos: dice de una cuánto falta -->
+    <div class="kx-pasos" *ngIf="!editingIntegrationId">
+      <span class="kx-paso" [class.is-cur]="!showOnlyForm" [class.is-done]="showOnlyForm">
+        <span class="kx-paso__n"><i class="fa fa-check" *ngIf="showOnlyForm"></i><ng-container *ngIf="!showOnlyForm">1</ng-container></span>
+        Plataforma
+      </span>
+      <span class="kx-paso__barra" [class.is-done]="showOnlyForm"></span>
+      <span class="kx-paso" [class.is-cur]="showOnlyForm">
+        <span class="kx-paso__n">2</span>
+        Credenciales
+      </span>
+    </div>
+
+    <button type="button" class="kx-mh__x" aria-label="Cerrar" (click)="cancel()">
       <i class="fa fa-times"></i>
     </button>
   </div>
@@ -34,115 +48,134 @@
         <button class="close-btn" (click)="clearStatus()">×</button>
       </div>
 
-      <!-- Integration Type Selection -->
-      <div class="card platform-selection-compact">
-        <h3><i class="fa fa-plug"></i> Seleccione plataforma a integrar</h3>
-        <div class="integration-list-compact">
-          <div *ngFor="let type of integrationTypes" class="integration-card-compact"
-            [ngClass]="{'active': selectedIntegrationType === type.id}" (click)="onSelectIntegrationType(type.id)">
-            <div class="integration-icon-compact">
-              <i class="fa" [ngClass]="{
-              'fa-shopping-bag': type.id === 'shopify',
-              'fa-credit-card': type.id === 'wompi' || type.id === 'epayco',
-              'fa-paypal': type.id === 'paypal',
-              'fa-handshake': type.id === 'partners_logistics',
-              'fa-whatsapp': type.id === 'whatsapp_kapso'
-            }"></i>
-            </div>
-            <div class="integration-name-compact">{{type.name}}</div>
-            <div class="integration-type-compact">
-              {{type.id === 'shopify' ? 'Tienda online' :
-                type.id === 'partners_logistics' ? 'Logística y envíos' :
-                type.id === 'whatsapp_kapso' ? 'Comunicaciones' :
-                'Pasarela de pago'}}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Plugin Store Header Compacto -->
-      <div class="plugin-store-header-compact">
-        <div class="store-title">
-          <h3><i class="fa fa-store"></i> Tienda de Integraciones</h3>
-          <p>Explora y configura las integraciones disponibles</p>
-        </div>
-        <div class="store-search">
-          <div class="search-box-modern">
-            <i class="fa fa-search"></i>
-            <input type="text" placeholder="Buscar..." #searchInput [(ngModel)]="searchTerm">
-          </div>
-        </div>
-      </div>
-
-      <!-- Category Pills Compacto -->
-      <div class="category-pills-compact">
-        <div class="pills-container">
-          <button *ngFor="let category of categories" class="category-pill" [class.active]="selectedCategory === category"
-            (click)="selectCategory(category)">
-            <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-            <span>{{ categoryLabels[category] }}</span>
+      <!-- ===== PASO 1 · CATÁLOGO =====
+           Antes había DOS selectores para la misma decisión (una lista corta
+           arriba y la tienda abajo) y el buscador no filtraba nada: la
+           cuadrícula leía el catálogo directo e ignoraba `searchTerm`. -->
+      <div class="kx-barra">
+        <div class="kx-buscar" [class.is-on]="searchTerm">
+          <i class="fa fa-search"></i>
+          <input type="text" placeholder="Buscar Shopify, Wompi, Siigo…"
+                 [(ngModel)]="searchTerm"
+                 [ngModelOptions]="{standalone: true}" autocomplete="off" />
+          <button type="button" *ngIf="searchTerm" (click)="searchTerm = ''" title="Borrar">
+            <i class="fa fa-times"></i>
           </button>
         </div>
+
+        <button type="button" class="kx-toggle" (click)="mostrarProximamente = !mostrarProximamente">
+          <span class="kx-toggle__sw" [class.is-on]="mostrarProximamente"><span></span></span>
+          Ver próximamente
+        </button>
       </div>
 
-      <!-- Plugin Store Grid Compacto -->
-      <div class="plugin-store-grid-compact">
-        <div class="grid-container">
-          <div *ngFor="let integration of availableIntegrations[selectedCategory]" class="plugin-card-compact"
-            [class.selected]="selectedIntegrationType === integration.id"
-            [class.inactive]="!integration.active"
-            (click)="integration.active && onSelectIntegrationType(integration.id)">
+      <div class="kx-cats">
+        <button type="button" class="kx-cat" [class.is-on]="categoriaEstaActiva(null)"
+                (click)="elegirCategoria(null)">
+          <i class="fa fa-th"></i> Todas
+          <span class="kx-cat__n">{{ contarCategoria(null) }}</span>
+        </button>
+        <button type="button" class="kx-cat" *ngFor="let category of categories"
+                [class.is-on]="categoriaEstaActiva(category)" (click)="elegirCategoria(category)">
+          <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
+          {{ categoryLabels[category] }}
+          <span class="kx-cat__n">{{ contarCategoria(category) }}</span>
+        </button>
+      </div>
 
-            <div class="plugin-header">
-              <div class="plugin-logo">
-                <img [src]="integration.logo" [alt]="integration.name" (error)="onImageError($event, integration)"
-                  style="display: block;">
+      <div class="kx-catalogo">
+        <div class="kx-cat-grid" *ngIf="getCatalogoVisible().length > 0">
+          <div *ngFor="let integration of getCatalogoVisible(); trackBy: trackById"
+               class="kx-plat"
+               [class.is-sel]="selectedIntegrationType === integration.id && integration.active"
+               [class.is-soon]="!integration.active"
+               (click)="elegirPlataforma(integration)">
+
+            <div class="kx-plat__top">
+              <span class="kx-plat__logo">
+                <img [src]="integration.logo" [alt]="integration.name"
+                     (error)="onImageError($event, integration)" style="display: block;">
                 <i class="fa fallback-icon" [ngClass]="getIntegrationIcon(integration.id)" style="display: none;"></i>
+              </span>
+              <div class="kx-plat__id">
+                <h4>{{ integration.name }}</h4>
+                <span class="kx-plat__cat">{{ integration.categoriaLabel }}</span>
               </div>
-              <div class="plugin-badges">
-                <span class="badge badge-coming-soon" *ngIf="!integration.active">Próximamente</span>
-                <span class="badge badge-popular"
-                  *ngIf="integration.active && ['shopify', 'wompi', 'paypal'].includes(integration.id)">Popular</span>
-                <span class="badge badge-recommended"
-                  *ngIf="integration.active && ['stripe', 'woocommerce'].includes(integration.id)">Recomendado</span>
-              </div>
+              <span class="kx-tagx kx-tagx--soon" *ngIf="!integration.active">PRÓXIMAMENTE</span>
+              <span class="kx-tagx" *ngIf="integration.active && ['shopify','wompi','paypal'].includes(integration.id)">Popular</span>
+              <span class="kx-tagx kx-tagx--rec" *ngIf="integration.active && ['stripe','woocommerce'].includes(integration.id)">Recomendado</span>
             </div>
 
-            <div class="plugin-info">
-              <h4 class="plugin-name">{{ integration.name }}</h4>
-              <p class="plugin-description">{{ integration.description }}</p>
-            </div>
+            <p class="kx-plat__desc">{{ integration.description }}</p>
 
-            <div class="plugin-footer">
-              <div class="plugin-rating" *ngIf="integration.active">
-                <i class="fa fa-star"></i>
-                <i class="fa fa-star"></i>
-                <i class="fa fa-star"></i>
-                <i class="fa fa-star"></i>
-                <i class="fa fa-star-o"></i>
-                <span class="rating-text">4.2</span>
-              </div>
-              <div class="plugin-rating" *ngIf="!integration.active">
-                <span class="coming-soon-text"><i class="fa fa-clock-o"></i> Disponible pronto</span>
-              </div>
-              <button class="install-btn" *ngIf="integration.active && selectedIntegrationType !== integration.id">
-                <i class="fa fa-plus"></i> Configurar
-              </button>
-              <button class="selected-btn" *ngIf="integration.active && selectedIntegrationType === integration.id">
-                <i class="fa fa-check"></i> Seleccionado
-              </button>
-              <button class="disabled-btn" *ngIf="!integration.active" disabled>
-                <i class="fa fa-lock"></i> No disponible
-              </button>
+            <div class="kx-plat__pie">
+              <span class="kx-plat__soon" *ngIf="!integration.active">
+                <i class="fa fa-clock-o"></i> Disponible pronto
+              </span>
+              <span class="kx-plat__ok" *ngIf="integration.active && selectedIntegrationType === integration.id">
+                <i class="fa fa-check"></i> Seleccionada
+              </span>
             </div>
           </div>
+        </div>
+
+        <div class="kx-sin" *ngIf="getCatalogoVisible().length === 0">
+          <span class="kx-sin__icon"><i class="fa fa-search"></i></span>
+          <strong *ngIf="searchTerm">Sin resultados para “{{ searchTerm }}”</strong>
+          <strong *ngIf="!searchTerm">No hay integraciones en esta categoría</strong>
+          <span>¿Falta una integración? Escríbenos y la evaluamos.</span>
+        </div>
+      </div>
+
+      <!-- Pie del paso 1 -->
+      <div class="kx-pie" *ngIf="isModalMode">
+        <span class="kx-pie__hint">
+          {{ puedeContinuar() ? plataformaElegida.name + ' seleccionada' : 'Elige una plataforma para continuar' }}
+        </span>
+        <div class="kx-pie__acc">
+          <button type="button" class="kx-b kx-b--suave" (click)="cancel()">Cancelar</button>
+          <button type="button" class="kx-b kx-b--primary" [disabled]="!puedeContinuar()"
+                  (click)="continuarAlFormulario()">
+            Continuar <i class="fa fa-arrow-right"></i>
+          </button>
         </div>
       </div>
     </ng-container>
 
-    <!-- Configuration view -->
+    <!-- ===== PASO 2 · qué elegiste, y cómo cambiarlo ===== -->
     <ng-container *ngIf="showOnlyForm">
-      <div class="back-navigation">
+      <div class="kx-elegida" *ngIf="plataformaElegida as plat">
+        <span class="kx-elegida__logo">
+          <img [src]="plat.logo" [alt]="plat.name" (error)="onImageError($event, plat)" style="display: block;">
+          <i class="fa fallback-icon" [ngClass]="getIntegrationIcon(plat.id)" style="display: none;"></i>
+        </span>
+        <div class="kx-elegida__txt">
+          <span class="kx-elegida__nom">
+            <strong>{{ plat.name }}</strong>
+            <button type="button" class="kx-elegida__cambiar" *ngIf="!editingIntegrationId"
+                    (click)="backToSelection()">Cambiar</button>
+          </span>
+          <span class="kx-elegida__hint">{{ plat.description || plat.categoriaLabel }}</span>
+        </div>
+
+        <!-- Diagnósticos que antes vivían en una segunda banda con el mismo título -->
+        <div class="kx-diag">
+          <span class="kx-diag__b" *ngIf="editingIntegrationId" [title]="'ID: ' + editingIntegrationId">
+            <i class="fa fa-hashtag"></i> {{ editingIntegrationId }}
+          </span>
+          <button type="button" class="kx-diag__b" [ngClass]="getHealthStatusClass()"
+                  (click)="refreshHealthCheck()" title="Estado del sistema · clic para actualizar">
+            <i class="fa" [ngClass]="getHealthStatusIcon()"></i> {{ getHealthStatusText() }}
+          </button>
+          <button type="button" class="kx-diag__b" [ngClass]="getValidationStatusClass()"
+                  [disabled]="validationInProgress"
+                  (click)="forceValidation()" title="Estado de validación · clic para validar">
+            <i class="fa" [ngClass]="getValidationStatusIcon()"></i> {{ getValidationStatusText() }}
+          </button>
+        </div>
+      </div>
+
+      <div class="back-navigation" *ngIf="!plataformaElegida">
         <button class="btn-back" (click)="backToSelection()">
           <i class="fa fa-arrow-left"></i>
           <span>Volver a integraciones</span>
@@ -157,40 +190,9 @@
 
     <!-- Integration Form -->
     <div class="card" *ngIf="(showOnlyForm || editingIntegrationId) && !isWhatsappKapso">
-      <div class="card-header">
-        <h3>
-          <i class="fa" [ngClass]="{
-          'fa-shopping-bag': selectedIntegrationType === 'shopify',
-          'fa-credit-card': selectedIntegrationType === 'wompi' || selectedIntegrationType === 'epayco',
-          'fa-paypal': selectedIntegrationType === 'paypal',
-          'fa-whatsapp': selectedIntegrationType === 'whatsapp_kapso'
-        }"></i>
-          {{editingIntegrationId ? 'Editar' : 'Configurar'}}
-          {{getIntegrationTypeName()}}
-        </h3>
-        <div class="integration-badges">
-          <span class="badge" *ngIf="editingIntegrationId">ID: {{editingIntegrationId}}</span>
-
-          <!-- Health Check Status -->
-          <div class="badge health-status" [ngClass]="getHealthStatusClass()" title="Estado del sistema">
-            <i class="fa" [ngClass]="getHealthStatusIcon()"></i>
-            {{getHealthStatusText()}}
-            <button class="btn btn-link btn-sm" (click)="refreshHealthCheck()" title="Actualizar estado">
-              <i class="fa fa-refresh"></i>
-            </button>
-          </div>
-
-          <!-- Validation Status -->
-          <div class="badge validation-status" [ngClass]="getValidationStatusClass()" title="Estado de validación">
-            <i class="fa" [ngClass]="getValidationStatusIcon()"></i>
-            {{getValidationStatusText()}}
-            <button class="btn btn-link btn-sm" (click)="forceValidation()" title="Validar ahora"
-              *ngIf="!validationInProgress">
-              <i class="fa fa-check"></i>
-            </button>
-          </div>
-        </div>
-      </div>
+      <!-- La cabecera con el título y los indicadores se fusionó arriba, en la
+           barra de contexto: decía "Configurar Shopify" justo debajo de una
+           barra que ya mostraba Shopify. -->
 
       <!-- Real-time Validation Feedback -->
       <div class="validation-feedback-panel"
@@ -265,59 +267,60 @@
             <span *ngIf="!integrationForm.get('testMode')?.value">Modo de producción: Las transacciones serán procesadas</span>
           </div>
         </div>
-        <!-- Configuración General -->
-        <div class="card mb-4">
-          <div class="card-header bg-light">
-            <h6 class="mb-0">
-              <i class="fa fa-cog me-2"></i>Configuración General
-            </h6>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-lg-8 col-md-7 mb-3">
-                <label for="name" class="form-label fw-semibold">
-                  <i class="fa fa-tag me-2 text-primary"></i>Nombre de la integración <span class="text-danger">*</span>
-                </label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="fa fa-tag"></i></span>
-                  <input type="text"
-                         class="form-control"
-                         id="name"
-                         formControlName="name"
-                         placeholder="Nombre descriptivo para identificar esta integración"
-                         [class.is-invalid]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
-                </div>
-                <div class="invalid-feedback" *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
-                  El nombre es obligatorio
-                </div>
-              </div>
-
-              <div class="col-lg-4 col-md-5 mb-3 d-flex align-items-end">
-                <div class="w-100">
-                  <label class="form-label fw-semibold">
-                    <i class="fa fa-power-off me-2 text-primary"></i>Estado
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text">
-                      <i class="fa" [ngClass]="integrationForm.get('enabled')?.value ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'"></i>
-                    </span>
-                    <div class="form-control d-flex align-items-center">
-                      <div class="form-check form-switch mb-0">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               id="integration-enabled"
-                               formControlName="enabled">
-                        <label class="form-check-label fw-semibold ms-2" for="integration-enabled">
-                          {{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="form-text">Habilitar o deshabilitar esta integración</div>
-                </div>
-              </div>
+        <!-- Nombre + ambiente: dos decisiones en una fila, sin tarjeta anidada -->
+        <div class="kx-fila2">
+          <div class="kx-campo">
+            <label for="name">
+              Nombre de la integración <span class="kx-req">*</span>
+            </label>
+            <div class="kx-input" [class.is-mal]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
+              <i class="fa fa-tag"></i>
+              <input type="text" id="name" formControlName="name"
+                     placeholder="Ej.: Tienda principal">
+            </div>
+            <div class="kx-campo__hint" *ngIf="!(integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched)">
+              Para distinguirla si conectas varias cuentas.
+            </div>
+            <div class="kx-campo__error" *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
+              El nombre es obligatorio
             </div>
           </div>
+
+          <!-- Solo se ofrece si este proveedor realmente guarda el ambiente -->
+          <div class="kx-campo" *ngIf="integrationForm.get('environment')">
+            <label>Ambiente</label>
+            <div class="kx-radios">
+              <button type="button" class="kx-radio"
+                      [class.is-on]="integrationForm.get('environment')?.value === 'production'"
+                      (click)="integrationForm.get('environment')?.setValue('production')">
+                <span class="kx-radio__p"><span></span></span>
+                <span>
+                  <strong>Producción</strong>
+                  <small>Movimientos reales</small>
+                </span>
+              </button>
+              <button type="button" class="kx-radio"
+                      [class.is-on]="integrationForm.get('environment')?.value !== 'production'"
+                      (click)="integrationForm.get('environment')?.setValue('staging')">
+                <span class="kx-radio__p"><span></span></span>
+                <span>
+                  <strong>Pruebas</strong>
+                  <small>Sin dinero real</small>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Encabezado de credenciales. El cifrado es real y verificado:
+             /v1/integration/config → IntegrationConfigService.saveConfig →
+             encryptSecrets (AES-256-GCM). -->
+        <div class="kx-credhead">
+          <span class="kx-credhead__t">Credenciales de API</span>
+          <span class="kx-rulex"></span>
+          <span class="kx-credhead__lock">
+            <i class="fa fa-lock"></i> Se guardan cifradas
+          </span>
         </div>
 
         <!-- Shopify Fields -->
@@ -2808,29 +2811,65 @@
           </div>
         </div>
 
+        <!-- Probar antes de guardar, no después -->
+        <div class="kx-prueba" [ngClass]="'kx-prueba--' + pruebaConexion">
+          <span class="kx-prueba__icon">
+            <i class="fa" [ngClass]="pruebaConexion === 'ok' ? 'fa-check' : (pruebaConexion === 'error' ? 'fa-exclamation-triangle' : 'fa-bolt')"></i>
+          </span>
+          <div class="kx-prueba__txt">
+            <strong *ngIf="pruebaConexion === 'idle'">Prueba la conexión antes de guardar</strong>
+            <strong *ngIf="pruebaConexion === 'ok'">Conexión verificada</strong>
+            <strong *ngIf="pruebaConexion === 'error'">La conexión falló</strong>
+            <span *ngIf="pruebaConexion === 'idle'">Verificamos las llaves contra el proveedor para que no quede activa sin funcionar.</span>
+            <span *ngIf="pruebaConexion === 'ok'">Las llaves responden correctamente. Ya puedes guardar.</span>
+            <span *ngIf="pruebaConexion === 'error'">Revisa las llaves y el ambiente; el detalle está en el mensaje de arriba.</span>
+          </div>
+          <button type="button" class="kx-b kx-b--suave"
+                  (click)="testConnection()"
+                  [disabled]="integrationForm.invalid || isTesting || isLoadingEdit">
+            <i class="fa" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
+            {{ isTesting ? 'Probando…' : (pruebaConexion === 'idle' ? 'Probar' : 'Probar de nuevo') }}
+          </button>
+
+          <!-- Activar va acá, pegado a la verificación: es la decisión que
+               depende de ella. Se avisa si se activa sin probar, pero no se
+               bloquea — hay integraciones que no exponen prueba de conexión. -->
+          <div class="kx-activar" *ngIf="integrationForm.get('enabled')">
+            <button type="button" class="kx-sw" [class.is-on]="integrationForm.get('enabled')?.value"
+                    (click)="integrationForm.get('enabled')?.setValue(!integrationForm.get('enabled')?.value)"
+                    [title]="integrationForm.get('enabled')?.value ? 'Se guardará activa' : 'Se guardará inactiva'">
+              <span></span>
+            </button>
+            <div class="kx-activar__txt">
+              <strong>{{ integrationForm.get('enabled')?.value ? 'Se activará al guardar' : 'Se guardará inactiva' }}</strong>
+              <span *ngIf="integrationForm.get('enabled')?.value && pruebaConexion !== 'ok'">
+                Aún no has verificado la conexión: puede quedar activa sin funcionar.
+              </span>
+              <span *ngIf="integrationForm.get('enabled')?.value && pruebaConexion === 'ok'">
+                Conexión verificada, queda lista para procesar.
+              </span>
+              <span *ngIf="!integrationForm.get('enabled')?.value">
+                Puedes activarla más tarde desde el listado.
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- Form Actions -->
-        <div class="integration-actions-footer">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <button type="button" class="btn btn-outline-light text-muted" (click)="resetForm()">
-                <i class="fa fa-times me-2"></i>Cancelar
-              </button>
-            </div>
-            <div class="d-flex gap-3">
-              <button type="button"
-                      class="btn btn-info"
-                      (click)="testConnection()"
-                      [disabled]="integrationForm.invalid || isTesting || isLoadingEdit">
-                <i class="fa me-2" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
-                {{isTesting ? 'Probando...' : 'Probar conexión'}}
-              </button>
-              <button type="submit"
-                      class="btn btn-primary btn-lg px-4"
-                      [disabled]="integrationForm.invalid || isSaving || isLoadingEdit">
-                <i class="fa me-2" [ngClass]="(isSaving || isLoadingEdit) ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-                {{isLoadingEdit ? 'Cargando datos...' : isSaving ? 'Guardando...' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar integración')}}
-              </button>
-            </div>
+        <div class="kx-pie kx-pie--form">
+          <span class="kx-pie__hint">
+            {{ pruebaConexion === 'ok' ? 'Conexión verificada · lista para guardar' : 'Las llaves se guardan cifradas' }}
+          </span>
+          <div class="kx-pie__acc">
+            <button type="button" class="kx-b kx-b--suave" *ngIf="!editingIntegrationId" (click)="backToSelection()">
+              <i class="fa fa-arrow-left"></i> Atrás
+            </button>
+            <button type="button" class="kx-b kx-b--suave" (click)="cancel()">Cancelar</button>
+            <button type="submit" class="kx-b kx-b--guardar"
+                    [disabled]="integrationForm.invalid || isSaving || isLoadingEdit">
+              <i class="fa" [ngClass]="(isSaving || isLoadingEdit) ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+              {{ isLoadingEdit ? 'Cargando datos…' : isSaving ? 'Guardando…' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar y activar') }}
+            </button>
           </div>
         </div>
       </form>

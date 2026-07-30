@@ -240,7 +240,7 @@
                             <div class="product-box">
                                 <div class="product-img" style="position:relative;">
                                     <img class="img-fluid fixed-size"
-                                        [src]="producto.crearProducto?.imagenesPrincipales[0]?.urls" alt="">
+                                        [src]="producto.crearProducto?.imagenesPrincipales[0]?.urls | imagenProducto" alt="">
                                     <!-- Nuevo botón de acción rápida -->
                                     <!-- <button class="quick-add-btn" (click)="quickAddToCart(producto, $event)">
                                         <i class="fa fa-shopping-cart"></i>

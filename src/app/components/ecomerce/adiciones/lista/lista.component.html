@@ -33,7 +33,7 @@
                         [sorts]="[{ prop: 'posicion', dir: 'asc' }]">
                         <ngx-datatable-column name="{{'' | translate}}">
                             <ng-template let-row="row" ngx-datatable-cell-template>
-                                <img *ngIf="row.imagenPrincipal.length > 0" src="{{row.imagenPrincipal[0]?.urls}}"
+                                <img *ngIf="row.imagenPrincipal.length > 0" src="{{row.imagenPrincipal[0]?.urls | imagenProducto}}"
                                     alt="{{ row.titulo }}" width="50" height="50">
                                 <img *ngIf="row.imagenPrincipal.length == 0" src="" alt="{{ row.titulo }}" width="100"
                                     height="100">
@@ -116,7 +116,7 @@
                             <ng-template pTemplate="body" let-row>
                               <tr>
                                 <td>
-                                  <img *ngIf="row.imagenPrincipal.length > 0" [src]="row.imagenPrincipal[0]?.urls" [alt]="row.titulo" width="50" height="50">
+                                  <img *ngIf="row.imagenPrincipal.length > 0" [src]="row.imagenPrincipal[0]?.urls | imagenProducto" [alt]="row.titulo" width="50" height="50">
                                   <img *ngIf="row.imagenPrincipal.length == 0" src="" [alt]="row.titulo" width="100" height="100">
                                 </td>
                                 <td>{{ row.titulo }}</td>

@@ -200,7 +200,7 @@
                         <ng-template let-producto pTemplate="item">
                             <div class="d-flex align-items-center gap-3 py-2">
                                 <img *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
-                                     [src]="producto.crearProducto.imagenesPrincipales[0].urls"
+                                     [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto"
                                      alt="Producto"
                                      style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px;">
                                 <div *ngIf="!producto.crearProducto?.imagenesPrincipales?.length"
@@ -267,7 +267,7 @@
                             <!-- Imagen -->
                             <td class="text-center">
                                 <img *ngIf="item.producto.crearProducto?.imagenesPrincipales?.length > 0"
-                                     [src]="item.producto.crearProducto.imagenesPrincipales[0].urls"
+                                     [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto"
                                      alt="Imagen del producto"
                                      style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px;"
                                      class="img-thumbnail">
