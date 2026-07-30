@@ -809,7 +809,12 @@ export class CheckOutComponent implements OnInit, OnChanges {
       
       // Calcular valores monetarios del pedido
       this.pedido.totalDescuento = this.pedidoUtilService.getDiscount();
-      this.pedido.totalEnvio = this.pedidoUtilService.getShippingCost(this.allBillingZone);
+      // G2 (spec 010): un código de envío gratis fuerza el costo de envío a 0,
+      // sin importar la zona seleccionada.
+      this.pedido.totalEnvio =
+        this.pedido?.descuentoAplicado?.tipo === 'envio_gratis'
+          ? 0
+          : this.pedidoUtilService.getShippingCost(this.allBillingZone);
 
       // Calcular impuestos
       const ivaBreakdown = this.checkIVAPrice();

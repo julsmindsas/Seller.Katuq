@@ -61,6 +61,20 @@ export interface Producto {
   dropshippingConfig?: DropshippingProductConfig; // Configuración dropshipping opcional
   preciosPorTipoCliente?: PrecioPorTipoCliente[]; // Lista de precios por tipo de cliente
   _precioAplicadoPorCategoria?: PrecioAplicadoPorCategoria; // Auditoría de precio aplicado por categoría (temporal, no se guarda en BD)
+  /** Feature B — precio unitario con IVA ya rebajado por una promoción automática vigente (lo inyecta el backend del catálogo). */
+  precioPromocional?: number;
+  /** Feature B — metadatos de la promoción automática aplicada al producto en el catálogo. */
+  promocionAplicada?: PromocionAplicada;
+}
+
+/** Feature B — promoción automática de catálogo aplicada a un producto. */
+export interface PromocionAplicada {
+  promocionId: string;
+  nombre?: string;
+  tipo: 'porcentaje' | 'valor_fijo';
+  valor: number;
+  aplicaA?: 'categoria' | 'producto_especifico';
+  precioBase: number;
 }
 
 export interface ProductoCarrito {

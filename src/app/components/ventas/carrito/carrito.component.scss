@@ -376,6 +376,34 @@
       &:hover:not(:disabled) { filter: brightness(1.05); }
       &:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
     }
+
+    &.applied {
+      .coupon-applied-info {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        font-size: 0.78rem;
+        color: var(--kc-ink);
+
+        .badge { font-size: 0.72rem; }
+      }
+
+      .btn-quitar {
+        height: 26px;
+        width: 26px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 1px solid var(--kc-line);
+        border-radius: 5px;
+        color: var(--kc-muted);
+        cursor: pointer;
+
+        &:hover { color: #dc3545; border-color: #dc3545; }
+      }
+    }
   }
 
   .cart-summary {

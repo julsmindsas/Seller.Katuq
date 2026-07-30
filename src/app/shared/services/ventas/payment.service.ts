@@ -217,6 +217,16 @@ export class PaymentService extends BaseService {
   }
 
   // Calcula el subtotal (suma de precios base sin IVA)
+  /**
+   * Feature B — el producto trae precio promocional vigente (inyectado por el
+   * backend del catálogo) y realmente menor que el precio estándar con IVA.
+   */
+  tienePromoLinea(producto: any): boolean {
+    const promo = producto?.precioPromocional;
+    const base = producto?.precio?.precioUnitarioConIva;
+    return typeof promo === 'number' && typeof base === 'number' && promo < base;
+  }
+
   checkPriceScale(pedido: Pedido | POSPedido): number {
     // spec 010 — punto único de cálculo (detrás de feature flag)
     if (this.ivaCalcUnificadoEnabled) {
@@ -245,6 +255,13 @@ export class PaymentService extends BaseService {
       // 🔒 PRIORIDAD 1: Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
       else if (producto?._precioAplicadoPorCategoria) {
         totalItemSinIVA = precioUnitarioSinIva * cantidad;
+      }
+      // 🔖 PRIORIDAD 2: Feature B — precio promocional automático de catálogo.
+      // precioPromocional viene CON IVA; se deriva el sin-IVA con la tasa de la línea.
+      else if (this.tienePromoLinea(producto)) {
+        const ivaRate = (Number(producto?.precio?.precioUnitarioIva) || 0) / 100;
+        const promoSinIva = (Number(producto.precioPromocional) || 0) / (1 + ivaRate);
+        totalItemSinIVA = promoSinIva * cantidad;
       } else if (preciosVolumen.length > 0) {
         let precioVolumenEncontrado = false;
         // Filtrar solo rangos con límites válidos definidos
@@ -382,6 +399,12 @@ export class PaymentService extends BaseService {
       let precioConIvaItem =
         Number(producto?.precio?.precioUnitarioConIva) || 0; // Precio unitario con IVA para cálculo base
 
+      // Feature B / no acumulación (D-B2): true SOLO cuando la línea se precia por
+      // promoción automática (rama de prioridad 2), no por precio manual ni por
+      // categoría. Una línea en promo NO recibe el descuento de un código en su IVA
+      // (factorDesc=1), espejando services/orderCalculationService.getTotalImpuesto.
+      let lineaEnPromo = false;
+
       // Variables de precio por categoría (declaradas fuera para acceso en debug log)
       const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
       const precioCategoria = categoriaClienteId
@@ -404,6 +427,12 @@ export class PaymentService extends BaseService {
         precioConIvaItem = Number(precioCategoria.precioConIva) || 0;
         porcentajeIvaItemStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaUnitario;
         // No aplicar precios por volumen cuando hay precio por categoría
+      }
+      // 🔖 PRIORIDAD 2: Feature B — precio promocional automático (con IVA ya rebajado).
+      // La promo no cambia el % de IVA del producto, solo el precio.
+      else if (this.tienePromoLinea(producto)) {
+        precioConIvaItem = Number(producto.precioPromocional) || 0;
+        lineaEnPromo = true;
       } else if (preciosVolumen.length > 0) {
         // Filtrar solo rangos con límites válidos definidos
         const rangosValidos = preciosVolumen.filter((x: any) => {
@@ -430,11 +459,15 @@ export class PaymentService extends BaseService {
       // precioConIvaItem = (Number(producto?.precio?.precioUnitarioConIva) || 0);
       // }
 
+      // Feature B / no acumulación (D-B2): una línea en promoción automática NO
+      // recibe el descuento del código (factorDesc=1); el resto sí (1 - porceDescuento).
+      // Guard G4 (spec 010): factorDesc nunca negativo (porcentaje > 100% legacy).
+      const factorDesc = lineaEnPromo ? 1 : Math.max(0, 1 - porceDescuento);
       // Calcular valor total con IVA del producto principal (antes de descuento)
       let valorTotalConIvaProducto = precioConIvaItem * cantidad;
       // Aplicar descuento al valor con IVA
       let valorTotalConIvaProductoConDesc =
-        valorTotalConIvaProducto * (1 - porceDescuento);
+        valorTotalConIvaProducto * factorDesc;
       // Calcular el valor del IVA correspondiente a este producto con descuento
       // IVA = TotalConDesc / (1 + %IVA) * %IVA
       // Asegurar que porcentajeIvaNum sea numérico y válido para división
@@ -451,18 +484,6 @@ export class PaymentService extends BaseService {
           itemCarrito,
         );
       }
-
-      // 🔍 DEBUG: Log para verificar clasificación de IVA
-      console.log('🧾 checkIVAPrice - Item:', {
-        titulo: producto?.crearProducto?.titulo,
-        categoriaClienteId,
-        precioCategoria: precioCategoria ? { porcentajeIva: precioCategoria.porcentajeIva, precioConIva: precioCategoria.precioConIva } : null,
-        porcentajeIvaItemStr,
-        porcentajeIvaUnitario,
-        valorIvaItem,
-        precioConIvaItem,
-        preciosPorTipoClienteCount: preciosPorTipoCliente.length
-      });
 
       // Acumular solo si valorIvaItem es un número válido
       if (!isNaN(valorIvaItem)) {
@@ -498,7 +519,7 @@ export class PaymentService extends BaseService {
           const valorAdicionConIva =
             (Number(adicion.precioTotalConIva) || 0) * cantidad;
           const valorAdicionConIvaConDesc =
-            valorAdicionConIva * (1 - porceDescuento);
+            valorAdicionConIva * factorDesc;
           const porcentajeAdicionStr = (adicion.porcentajeIva ?? 0).toString();
           const porcentajeAdicionNum =
             (Number(adicion.porcentajeIva) || 0) / 100;
@@ -550,7 +571,7 @@ export class PaymentService extends BaseService {
             const valorPreferenciaConIva =
               (Number(preferencia.precioTotalConIva) || 0) * cantidad;
             const valorPreferenciaConIvaConDesc =
-              valorPreferenciaConIva * (1 - porceDescuento);
+              valorPreferenciaConIva * factorDesc;
             const porcentajePreferenciaStr = (
               preferencia.porcentajeIva ?? "0"
             ).toString();
@@ -600,14 +621,18 @@ export class PaymentService extends BaseService {
     });
 
     // Calcular IVA del envío (domicilio)
+    // G2 (spec 010): con un código de envío gratis no hay costo de envío → sin IVA
+    // de envío (consistente con orderCalculationService.getTotalImpuesto del backend).
+    const envioGratis = (pedido as any)?.descuentoAplicado?.tipo === 'envio_gratis';
     // Asegurar valores numéricos
-    const costoEnvioConIva =
-      Number(
-        this.pedidoUtilService.getShippingTaxCostInvoice(
-          this.allBillingZone,
-          pedido,
-        ),
-      ) || 0;
+    const costoEnvioConIva = envioGratis
+      ? 0
+      : Number(
+          this.pedidoUtilService.getShippingTaxCostInvoice(
+            this.allBillingZone,
+            pedido,
+          ),
+        ) || 0;
     const porcentajeIvaEnvioStr =
       this.pedidoUtilService.getShippingTaxValueInvoice(
         this.allBillingZone,

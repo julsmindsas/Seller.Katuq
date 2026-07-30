@@ -2,9 +2,10 @@ import { Component, Input, OnInit, EventEmitter, Output } from "@angular/core";
 import { CartSingletonService } from "../../../shared/services/ventas/cart.singleton.service";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
-import { Pedido } from "../modelo/pedido";
+import { Pedido, DescuentoAplicado } from "../modelo/pedido";
 import { ToastrService } from "ngx-toastr";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { parse as flattedParse } from "flatted";
 
 @Component({
   selector: "app-carrito",
@@ -16,6 +17,9 @@ export class CarritoComponent implements OnInit {
   cupon: string = '';
   valorDescuento: number = 0;
   porcentajeDescuento: number = 0;
+  // Descuento del módulo Descuentos y Promociones actualmente aplicado.
+  descuentoAplicado: DescuentoAplicado | null = null;
+  aplicandoCupon: boolean = false;
   rangoPreciosActual1: any = null;
   precioproducto: number = 0;
   preciosAdiciones: number = 0;
@@ -276,6 +280,11 @@ export class CarritoComponent implements OnInit {
       }
       return precioSinIva * (1 + itemCarrito._ivaManualOverride / 100);
     }
+    // Feature B — precio promocional automático de catálogo (con IVA ya rebajado).
+    // Precedencia: overrides manuales > precio por categoría de cliente > promoción.
+    if (!itemCarrito.producto?._precioAplicadoPorCategoria && this.tienePromo(itemCarrito.producto)) {
+      return Number(itemCarrito.producto.precioPromocional) || 0;
+    }
     return this.getProductPriceWithScale(itemCarrito);
   }
 
@@ -295,6 +304,16 @@ export class CarritoComponent implements OnInit {
     const tierIva = Number(rango?.valorIVAPorVolumen) || 0;
     if (conIva > 0) return conIva / (1 + tierIva / 100);
     return Number(precioFallback?.precioUnitarioSinIva) || 0;
+  }
+
+  /**
+   * Feature B — el producto trae un precio promocional vigente (inyectado por el
+   * backend del catálogo) y realmente menor que el precio estándar con IVA.
+   */
+  tienePromo(producto: any): boolean {
+    const promo = producto?.precioPromocional;
+    const base = producto?.precio?.precioUnitarioConIva;
+    return typeof promo === 'number' && typeof base === 'number' && promo < base;
   }
 
   permitePrecioManual(itemCarrito: any): boolean {
@@ -472,40 +491,174 @@ export class CarritoComponent implements OnInit {
     });
   }
 
-  async validarCuponYAplica(): Promise<void> {
+  /**
+   * Valida el código contra el módulo Descuentos y Promociones
+   * (/v1/descuentos-promociones/aplicar-codigo) y lo aplica al carrito.
+   * El resultado se guarda en this.pedido.descuentoAplicado para que el backend
+   * registre la redención al crear la orden.
+   */
+  validarCuponYAplica(): void {
     if (!this.cupon) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Por favor ingrese un código de cupón',
-      });
+      Swal.fire({ icon: 'error', title: 'Error', text: 'Por favor ingrese un código de descuento' });
       return;
     }
 
-    this.service.validateCupon({ code: this.cupon }).subscribe({
-      next: (value) => {
-        if (!value || value.length === 0) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Cupón no válido',
-          });
+    const totalCarrito = this.getTotalProductPriceInCart();
+    const clienteId =
+      this.pedido?.cliente?.documento ||
+      this.pedido?.cliente?.correo_electronico_comprador ||
+      '';
+
+    this.aplicandoCupon = true;
+    this.service.aplicarCodigoDescuento({
+      codigoPersonalizado: this.cupon,
+      clienteId,
+      totalCarrito,
+      // Un solo código a la vez en este flujo; si ya hay uno, se reemplaza.
+      codigosActivos: [],
+      // Líneas del carrito → el backend aplica el descuento solo a la
+      // categoría/producto objetivo cuando el código es dirigido ("Aplica a").
+      items: this.construirItemsCarrito(),
+    }).subscribe({
+      next: (res) => {
+        this.aplicandoCupon = false;
+        if (!res || !res.descuentoId) {
+          Swal.fire({ icon: 'error', title: 'Código no válido', text: 'No se pudo aplicar el código' });
           return;
         }
-
-        this.valorDescuento = 0;
-        this.porcentajeDescuento = parseFloat(value[0]?.valor) || 0;
-        this.pedido.porceDescuento = this.porcentajeDescuento;
-        this.valorDescuento = (this.getTotalProductPriceInCart() * this.porcentajeDescuento) / 100;
+        this.aplicarResultadoDescuento(res);
       },
       error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Ocurrió un error al validar el cupón',
-        });
+        this.aplicandoCupon = false;
+        const msg = err?.error?.message || 'No se pudo aplicar el código';
+        Swal.fire({ icon: 'error', title: 'Código no válido', text: msg });
       },
     });
+  }
+
+  /**
+   * Mapea la respuesta del backend a los campos de descuento del pedido según el
+   * tipo. El backend recalcula totales: usa porceDescuento si es porcentaje, o
+   * totalDescuento (monto fijo) en caso contrario.
+   */
+  private aplicarResultadoDescuento(res: any): void {
+    const monto = Number(res.montoDescuento) || 0;
+
+    this.descuentoAplicado = {
+      descuentoId: res.descuentoId,
+      codigoPersonalizado: res.codigoPersonalizado || this.cupon.toUpperCase(),
+      tipo: res.tipo,
+      valor: Number(res.valor) || 0,
+      montoDescuento: monto,
+      nombre: res.nombre || '',
+      clienteId:
+        this.pedido?.cliente?.documento ||
+        this.pedido?.cliente?.correo_electronico_comprador ||
+        '',
+    };
+
+    // Persistir en el pedido para que viaje a /orders/create.
+    this.pedido.descuentoAplicado = this.descuentoAplicado;
+    this.pedido.cuponAplicado = this.descuentoAplicado.codigoPersonalizado;
+
+    // Un código DIRIGIDO (categoría/producto) trae `monto` ya calculado SOLO
+    // sobre la base elegible. Debe mapearse como monto fijo para que el backend
+    // NO lo recalcule como porcentaje sobre todo el carrito (sobre-aplicaría).
+    const esDirigido = res.aplicaA && res.aplicaA !== 'todos_los_productos';
+
+    if (res.tipo === 'porcentaje' && !esDirigido) {
+      // Porcentaje sobre todo el carrito: el backend recalcula por porcentaje.
+      this.porcentajeDescuento = Number(res.valor) || 0;
+      this.pedido.porceDescuento = this.porcentajeDescuento;
+      this.pedido.totalDescuento = monto;
+      this.valorDescuento = monto;
+    } else if (res.tipo === 'envio_gratis') {
+      // El descuento sobre productos es 0. G2 (spec 010): el envío gratis lleva el
+      // costo de envío a cero. Se cerea aquí para el display inmediato; los setters
+      // de envío (checkout/facturación) y el backend respetan el mismo flag
+      // (pedido.descuentoAplicado.tipo === 'envio_gratis') sin importar el orden.
+      this.porcentajeDescuento = 0;
+      this.pedido.porceDescuento = 0;
+      this.pedido.totalDescuento = 0;
+      this.valorDescuento = 0;
+      this.pedido.totalEnvio = 0;
+    } else {
+      // valor_fijo, o CUALQUIER código dirigido (categoría/producto): el monto
+      // ya viene calculado sobre la base elegible → tratar como monto fijo.
+      this.porcentajeDescuento = 0;
+      this.pedido.porceDescuento = 0;
+      this.pedido.totalDescuento = monto;
+      this.valorDescuento = monto;
+    }
+
+    const detalle =
+      res.tipo === 'envio_gratis'
+        ? 'Envío gratis aplicado.'
+        : `Descuento aplicado: ${monto.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}`;
+    this.toastrService.success(detalle, res.nombre || 'Código aplicado');
+  }
+
+  /**
+   * Construye las líneas del carrito para el enforcement de "Aplica a" en el
+   * backend: por cada ítem, su referencia, sus categorías (nombres) y el precio
+   * total de la línea. Reusa el mismo cálculo de getTotalProductPriceInCart.
+   */
+  private construirItemsCarrito(): Array<{ productoReferencia: string; categorias: string[]; precioLinea: number; enPromocion: boolean }> {
+    if (!this.productos || this.productos.length === 0) return [];
+    return this.productos.map((item) => {
+      const precioBase = Number(this.checkPriceScale(item)) || 0;
+      const precioAdiciones = Number(this.calculateAdicionesPrice(item?.configuracion?.adiciones)) || 0;
+      const precioPreferencias = Number(this.calculatePreferenciasPrice(item?.configuracion?.preferencias)) || 0;
+      const cantidad = Number(item?.cantidad) || 0;
+      const precioLinea = (precioBase + precioAdiciones + precioPreferencias) * cantidad;
+      return {
+        productoReferencia: item?.producto?.identificacion?.referencia || '',
+        categorias: this.resolverCategoriasProducto(item?.producto),
+        precioLinea: isNaN(precioLinea) ? 0 : precioLinea,
+        // Feature B / Fase 4 (D-B2): marca las líneas ya en promoción para que el
+        // backend NO acumule el código sobre ellas.
+        enPromocion: this.tienePromo(item?.producto),
+      };
+    });
+  }
+
+  /**
+   * Extrae los nombres de categoría de un producto de forma tolerante al
+   * formato (string flatted, objeto ya parseado, o el shape [ref, {label}]).
+   * Devuelve nombres en minúscula; [] si no se puede resolver.
+   */
+  private resolverCategoriasProducto(prod: any): string[] {
+    const raw = prod?.categorias ?? prod?.crearProducto?.categorias;
+    if (!raw) return [];
+    let arbol: any = raw;
+    if (typeof raw === 'string') {
+      try { arbol = flattedParse(raw); } catch { try { arbol = JSON.parse(raw); } catch { return []; } }
+    }
+    const nombres = new Set<string>();
+    const visitar = (nodo: any) => {
+      if (!nodo || typeof nodo !== 'object') return;
+      const n = nodo?.data?.nombre ?? nodo?.nombre ?? nodo?.label;
+      if (n && typeof n === 'string') nombres.add(n.trim().toLowerCase());
+      if (Array.isArray(nodo?.children)) nodo.children.forEach(visitar);
+    };
+    if (Array.isArray(arbol)) arbol.forEach(visitar);
+    else visitar(arbol);
+    return Array.from(nombres);
+  }
+
+  /** Quita el descuento aplicado y limpia los campos del pedido. */
+  quitarDescuento(): void {
+    this.descuentoAplicado = null;
+    this.cupon = '';
+    this.valorDescuento = 0;
+    this.porcentajeDescuento = 0;
+    if (this.pedido) {
+      this.pedido.descuentoAplicado = undefined;
+      this.pedido.cuponAplicado = undefined;
+      this.pedido.porceDescuento = 0;
+      this.pedido.totalDescuento = 0;
+    }
+    this.toastrService.info('Descuento removido', '');
   }
   
   // Método para mostrar las notas existentes
