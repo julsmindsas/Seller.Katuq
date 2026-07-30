@@ -219,6 +219,19 @@ export class DaneCodesService {
   }
 
   /**
+   * Obtener TODOS los municipios de Colombia (base DANE completa).
+   * Spec 011: alimenta la acción "seleccionar todos los municipios (N)".
+   */
+  getTodosLosMunicipios(): Observable<MunicipioDane[]> {
+    return of(MUNICIPIOS_COLOMBIA);
+  }
+
+  /** Cantidad total de municipios en la base DANE. */
+  getTotalMunicipios(): number {
+    return MUNICIPIOS_COLOMBIA.length;
+  }
+
+  /**
    * Validar si un código DANE existe
    */
   isValidCodigoDane(codigo: string): boolean {
