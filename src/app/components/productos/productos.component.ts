@@ -65,6 +65,13 @@ export class ProductosComponent implements OnInit, OnDestroy {
   isMobile = false;
   empresaActual: any;
   ultimasLetras: any;
+  /**
+   * Habilita el botón "Eliminar Base de Datos". Solo la familia Administrador.
+   * Es únicamente para no ofrecer la acción a quien no puede ejecutarla: la
+   * autorización real la impone el backend (requireRole en
+   * routers/productos.js), porque el localStorage lo edita cualquiera.
+   */
+  puedeEliminarBaseDatos = false;
 
   // ---- Sistema de Filtros ----
   filtros = {
@@ -342,6 +349,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.empresaActual = currentCompany ? JSON.parse(currentCompany) : {};
     const texto = this.empresaActual.nomComercial.toString();
     this.ultimasLetras = texto.substring(texto.length - 3);
+    this.puedeEliminarBaseDatos = this.esRolAdministrador();
 
     // Cargar opciones de tipo/tiempo de entrega y categorías para filtros
     this.service.getTipoEntrega().subscribe((r: any) => { this.tiposEntrega = r || []; });
@@ -1667,10 +1675,46 @@ export class ProductosComponent implements OnInit, OnDestroy {
   // ============== MÉTODOS ADMINISTRATIVOS ==============
 
   /**
+   * True si el rol de la sesión pertenece a la familia Administrador.
+   * Mismo criterio que `requireRole` en el backend: se normaliza (sin tildes,
+   * minúsculas) y se busca "administrador" como palabra, así entran tanto
+   * "Administrador" como "Super Administrador".
+   */
+  private esRolAdministrador(): boolean {
+    try {
+      const userString = localStorage.getItem('user');
+      if (!userString) { return false; }
+
+      const rol = JSON.parse(userString)?.rol;
+      const normalizado = String(rol || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+      return /(^|[^a-z0-9])administrador([^a-z0-9]|$)/.test(normalizado);
+    } catch {
+      // Sesión ilegible: se niega. Es una acción irreversible, falla cerrada.
+      return false;
+    }
+  }
+
+  /**
    * Elimina FÍSICAMENTE todos los productos del comercio actual
    * ⚠️ OPERACIÓN DESTRUCTIVA - USO ADMINISTRATIVO/DESARROLLO
    */
   limpiarProductosComercio(): void {
+    // El botón ya está oculto para no-admins; esto cubre el caso de llegar acá
+    // por otra vía (atajo, estado viejo del componente).
+    if (!this.esRolAdministrador()) {
+      Swal.fire(
+        'Acción no permitida',
+        'Solo un Administrador puede eliminar la base de datos de productos.',
+        'warning',
+      );
+      return;
+    }
+
     const companyName = this.empresaActual?.nomComercial;
 
     if (!companyName) {

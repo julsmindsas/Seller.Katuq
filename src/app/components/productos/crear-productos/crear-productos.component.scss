@@ -343,6 +343,37 @@ td {
   &.is-ok { background: var(--mp-ok-bg); color: var(--mp-ok); }
 }
 
+// Atajos a las secciones que faltan: evitan tener que buscarlas a mano.
+.mp-progress__jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1 1 100%;
+}
+
+.mp-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 99px;
+  border: 1px solid #f2dfc0;
+  background: var(--mp-warn-bg);
+  color: var(--mp-warn);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s ease;
+
+  .pi { font-size: 10px; }
+
+  &:hover {
+    background: #fff;
+    border-color: var(--mp-accent);
+    color: var(--mp-accent);
+  }
+}
+
 // --- Inputs / labels dentro del maestro ---
 .mp-body {
   .form-control,
@@ -502,6 +533,326 @@ td {
 
 :host ::ng-deep .p-tabview .p-tabview-panel {
   animation: mp-rise .35s ease;
+}
+
+// =====================================================================
+// Alineación de los campos dentro de cada sección
+//
+// El contenido de los tabs usa columnas Bootstrap sueltas (col-md-3, col-md-4,
+// col-md-6 mezcladas en la misma fila), así que las columnas no cuadraban entre
+// filas y los campos quedaban de anchos distintos y desalineados.
+//
+// En vez de reescribir las ~40 filas del template una por una, se convierte cada
+// `.row` de los paneles en un grid de columnas iguales con ancho mínimo. Así el
+// ancho lo decide el espacio disponible y no la clase que le tocó a cada campo:
+// todo queda alineado en filas y columnas parejas, y responsive sin media query.
+// =====================================================================
+:host ::ng-deep .p-tabview .p-tabview-panels {
+  .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+    gap: 16px 20px;
+    margin: 0 0 4px;
+
+    > [class*="col-"] {
+      // Neutraliza el ancho/padding de Bootstrap: ahora manda el grid.
+      flex: none;
+      width: auto;
+      max-width: none;
+      padding-left: 0;
+      padding-right: 0;
+      margin-bottom: 0;
+    }
+
+    // Los que sí son de ancho completo siguen siéndolo.
+    > .col-12,
+    > .col-sm-12,
+    > .col-md-12,
+    > .col-lg-12 {
+      grid-column: 1 / -1;
+    }
+
+    // Todo hijo que NO sea una columna Bootstrap ocupa la fila completa:
+    // títulos de sección, párrafos de nota, tablas y contenedores propios
+    // (ej. `.grid-container-exposicion`). Sin esta regla quedaban encajonados
+    // en una sola columna del grid y el contenido se comprimía a un tercio del
+    // ancho disponible — el mismo síntoma que se venía a arreglar.
+    > *:not([class*="col-"]) {
+      grid-column: 1 / -1;
+    }
+
+    // ...salvo un botón suelto, que va en su línea pero con su ancho natural.
+    > .btn {
+      justify-self: start;
+    }
+  }
+
+  // Excepción: la galería de miniaturas de la sección Imágenes no son campos,
+  // son tarjetas de ~160px. Con el mínimo de 235px de los campos quedaban muy
+  // separadas entre sí. Es la única `.row` dentro de un `.form-group`.
+  .form-group > .row {
+    grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+    gap: 14px;
+  }
+
+  // Filas de "etiqueta + casilla" (Exposición, Canales de Venta): el patrón es
+  // col-sm-2 para el label y col-sm-10 para el checkbox, así que la etiqueta se
+  // deja angosta en vez de ocupar media fila.
+  //
+  // Es una mejora progresiva a propósito: si el navegador no soportara `:has`,
+  // la fila se queda en columnas iguales — más ancha de lo ideal, pero alineada
+  // y legible. No hay nada que dependa de esto para funcionar.
+  .row:has(> .col-sm-2) {
+    grid-template-columns: minmax(130px, 210px) 1fr;
+    align-items: center;
+    gap: 8px 14px;
+  }
+
+  // Los checkbox venían sin estilo: 13px del navegador y sin color de marca.
+  input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--mp-accent);
+    cursor: pointer;
+  }
+
+  // Título de sección, tanto dentro de un `.row` como suelto en el form
+  // (ej. "Precio Por Rango / Volumen", que lleva el botón de añadir al lado).
+  h4,
+  h5,
+  h6 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 18px 0 14px;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--mp-sep);
+
+    // El botón que va pegado al título no debe heredar el tamaño del heading.
+    .btn {
+      margin-left: auto !important;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+  }
+
+  // El primer título del panel no necesita separación arriba.
+  form > h4:first-child,
+  form > h5:first-child,
+  form > h6:first-child,
+  .row:first-child > h4,
+  .row:first-child > h5,
+  .row:first-child > h6 {
+    margin-top: 0;
+  }
+
+  // Campo: label arriba, control abajo, error debajo — altura consistente.
+  .form-label {
+    display: block;
+  }
+
+  .error-message,
+  .form-text {
+    margin-top: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  // Marca en rojo CUALQUIER control obligatorio sin llenar que el usuario ya
+  // tocó, tenga o no un mensaje de error propio en el template.
+  //
+  // Hace falta porque varios obligatorios tienen `Validators.required` pero su
+  // mensaje está comentado o nunca se escribió (`cantidadDisponible`,
+  // `referencia`, `codigoBarras`, `categorias`): invalidaban la sección sin
+  // ninguna señal visible y parecía que el problema estaba en los campos que sí
+  // se habían llenado.
+  .form-control.ng-invalid.ng-touched,
+  .form-select.ng-invalid.ng-touched,
+  select.ng-invalid.ng-touched,
+  textarea.ng-invalid.ng-touched {
+    border-color: var(--mp-req);
+    background: #fff6f8;
+
+    &:focus {
+      border-color: var(--mp-req);
+      box-shadow: 0 0 0 4px rgba(240, 65, 108, .12);
+    }
+  }
+
+  // ng-select y p-treeSelect no exponen .form-control; se marcan por su wrapper.
+  .ng-select.ng-invalid.ng-touched .ng-select-container,
+  ::ng-deep .p-treeselect.ng-invalid.ng-touched {
+    border-color: var(--mp-req) !important;
+  }
+
+  // Ayuda de llenado: qué se espera en el campo, debajo del control.
+  .mp-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--mp-text-3);
+  }
+
+  // Cuando el campo está en error, el mensaje manda sobre la ayuda.
+  .error-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    color: var(--mp-req);
+
+    &::before {
+      content: "\26A0";
+      font-size: 11px;
+      line-height: 1.35;
+    }
+  }
+
+  // Los textarea de una línea (Título, Características) venían del alto por
+  // defecto del navegador y descuadraban la fila contra los input normales.
+  textarea.form-control {
+    min-height: 46px;
+    resize: vertical;
+  }
+}
+
+// =====================================================================
+// Tablas
+//
+// Problemas que había: la de "Precio por volumen" tenía 6 encabezados para 7
+// celdas (la columna de borrar no tenía <th>), así que de esa columna en
+// adelante el encabezado no correspondía al dato de abajo — es el "columnas
+// encima de otras". Además `.currencyDivInfo` mete font-size 22px, que dentro
+// de una celda desalinea toda la fila.
+// =====================================================================
+:host ::ng-deep .p-tabview .p-tabview-panels {
+  .table-responsive {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    overflow: auto;
+    background: #fff;
+  }
+
+  table.table {
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+    width: 100%;
+    vertical-align: middle;
+
+    > thead > tr > th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #faf9fe;
+      border: none;
+      border-bottom: 1px solid var(--mp-border);
+      padding: 11px 12px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      color: var(--mp-text-2);
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    > tbody > tr > td,
+    > tbody > tr > th {
+      border: none;
+      border-bottom: 1px solid var(--mp-sep);
+      padding: 10px 12px;
+      font-weight: 500;
+      vertical-align: middle;
+      background: transparent;
+    }
+
+    > tbody > tr:last-child > td,
+    > tbody > tr:last-child > th {
+      border-bottom: none;
+    }
+
+    > tbody > tr:hover > td,
+    > tbody > tr:hover > th {
+      background: #faf9ff;
+    }
+
+    // Controles dentro de celdas: compactos y sin desbordar la columna.
+    .form-control,
+    select.form-control {
+      padding: 8px 10px;
+      font-size: 13px;
+      border-radius: 9px;
+      min-width: 110px;
+    }
+
+    // Dentro de tablas los montos van al tamaño del cuerpo, alineados a la
+    // derecha como cualquier número. El 22px es para los totales del formulario.
+    .currencyDivInfo {
+      font-size: 14px;
+      text-align: right;
+      display: block;
+      white-space: nowrap;
+    }
+  }
+}
+
+// Celda de acciones: botones parejos y sin envolver.
+:host ::ng-deep .p-tabview .p-tabview-panels table.table {
+  .btn {
+    padding: 7px 11px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  td .btn + .btn {
+    margin-left: 6px;
+  }
+}
+
+// p-treeTable de "Proceso Comercial": mismo criterio que las tablas normales.
+:host ::ng-deep .p-treetable {
+  .p-treetable-wrapper {
+    border: 1px solid var(--mp-border);
+    border-radius: 14px;
+    overflow: auto;
+  }
+
+  th {
+    background: #faf9fe !important;
+    border: none !important;
+    border-bottom: 1px solid var(--mp-border) !important;
+    padding: 11px 12px !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: var(--mp-text-2) !important;
+    white-space: nowrap;
+  }
+
+  td {
+    border: none !important;
+    border-bottom: 1px solid var(--mp-sep) !important;
+    padding: 9px 12px !important;
+    vertical-align: middle !important;
+  }
+
+  // Los inputs traían `style="border-color: black"` inline; se suaviza el resto
+  // para que no se vea como una hoja de cálculo.
+  input.p-inputtext {
+    border-radius: 9px;
+    padding: 7px 10px;
+    font-size: 13px;
+    background: var(--mp-input-bg);
+  }
 }
 
 // --- Responsive: <992px nav horizontal + campos a 1 columna ---

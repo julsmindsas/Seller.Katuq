@@ -66,7 +66,10 @@
                                     ngbTooltip="Configurar columnas">
                                 <i class="pi pi-table"></i>
                             </button>
+                            <!-- Acción irreversible: solo familia Administrador.
+                                 El backend la valida igual (requireRole). -->
                             <button type="button" class="pk-btn pk-btn-danger-soft"
+                                    *ngIf="puedeEliminarBaseDatos"
                                     (click)="limpiarProductosComercio()"
                                     ngbTooltip="Eliminar todos los productos del comercio">
                                 <i class="pi pi-trash"></i>Eliminar Base de Datos
