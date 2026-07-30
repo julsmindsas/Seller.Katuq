@@ -2498,3 +2498,51 @@ El usuario reportó que sus productos salían bloqueados con el aviso "véndelo 
 **Verificado en pantalla** (`ConfiguracionProductoTests`, reescrita, TEST SUCCEEDED): el producto ya no está deshabilitado, aparecen Tallas y Colores, sin elegir no deja agregar, al elegir M y Rojo se habilita, y ambas llegan al carrito como `Tallas: M` y `Colores: Rojo`. `NavegacionVentaTests` y `CotizacionesTests` siguen pasando.
 
 **Queda fuera**: subir archivos e imágenes, y la fecha de agenda. Ya no bloquean — se avisan y se anotan en el pedido.
+
+### 2026-07-30 — D-142: Se cierra el agujero de autenticación en `/v1/productos/*`
+
+**El defecto.** En `functions/routers/productos.js` el middleware de autenticación estaba comentado con la nota *"auth comentado para dev local"*, y así quedó desplegado en producción. Un `POST` sin token **entraba al controlador** y fallaba por validación de negocio (400), no por autenticación (401). Cualquiera con la URL podía **crear, editar o borrar productos de cualquier empresa** — el `company` sale de un header libre. Contradecía de frente la regla del proyecto de nunca quitar el auth middleware.
+
+**Se cerró en seis endpoints**: `/edit`, `/create`, `/delete`, `/create-multiple` (escritura masiva), `/all` y `/all/filter` (estos dos exponían el catálogo completo de cualquier empresa).
+
+**Cómo se comprobó que no rompía la web ANTES de tocarlo.** El método vale para cualquier cambio de auth futuro:
+1. El interceptor del frontend está registrado global en `app.module` y agrega `Authorization: Bearer` a **todas** las peticiones de `HttpClient` — incluso a las que usan `http.post` directo en vez de `BaseService`, que es el caso de `maestro.service.ts`.
+2. En los logs de producción, las **130 llamadas a `/create`** y las **4 a `/all/filter`** vienen de navegadores vía nginx (`IP: ::ffff:127.0.0.1` con User Agent de Chrome/Safari). Ninguna de scripts. `/create-multiple` y `GET /all` no registran **ni una** llamada.
+3. El middleware se probó por separado, sin levantar el servidor (que arrancaría los crones): bloquea sin header, con token vacío, con token sin `Bearer` y con `Bearer` basura.
+
+**Verificado tras desplegar** (`e97d834`): los seis responden **401 sin token** —antes daban 400, que era la señal de que entraban al controlador— y con token siguen funcionando (`all/filter` devuelve los 557 productos de la empresa demo).
+
+**Quedan dos pendientes a propósito**: `/all/filter/paginated` y `/all/filter/count`. Son el catálogo de alto tráfico y se dejan para una segunda tanda, para no arriesgar el listado de productos de todas las empresas en el mismo cambio. Su situación es idéntica y el mismo método de verificación aplica.
+
+#### Adenda D-141 (2026-07-30) — El mismo fix de imágenes, ahora en el panel web
+
+Se llevó al frontend la corrección que ya estaba en el backend de catálogos y en la app iOS: las rutas relativas de Osmosis no cargan porque el rewrite de Firebase devuelve HTML en vez de la foto. Se agregó `shared/utils/imagen-producto.ts` —helper compartido que resuelve contra `images2.guiacereza.com` y deja intactas las URLs absolutas, `data:` y los assets locales, cayendo a `imagenesSecundarias` si no hay principales— y se aplicó en `getProductImageUrl` del catálogo del POS2 y `getCartItemImageUrl` del resumen del carrito, que son los que hoy se ven vacíos.
+
+Siguen con la ruta cruda `traslados`, la galería de `conf-product-to-cart` y `payment.service`; el helper ya está listo para ellos.
+
+**Estado del frontend:** compila sin errores y el CDN quedó en el bundle, pero **sigue sin desplegar** — ni este fix ni la vitrina de catálogos están en producción.
+
+### 2026-07-30 — D-143: El total de las cotizaciones salía ~200 veces más alto en productos con IVA
+
+**El defecto.** `cotizaciones.js:calcularTotales` usaba `precio.valorIva` —que es el IVA **en pesos**— como si fuera la tarifa en porcentaje, y además anclaba el subtotal en `precioUnitarioConIva`, que ya lleva IVA, para volver a sumárselo. Un producto de **$100.000 al 19% daba un total de $22.729.000** en vez de $119.000.
+
+**Por qué pasó inadvertido:** solo se manifiesta con IVA distinto de cero, y en la empresa demo los 557 productos tienen IVA 0. Con IVA 0 ambas versiones daban lo mismo.
+
+**Cuatro defectos más en la misma función:** ignoraba el precio manual, los precios por volumen y por tipo de cliente; ignoraba `descGlobal`; ignoraba las adiciones y preferencias de cada línea (que es por donde viajan las opciones de talla y color); y leía `item.descuento` cuando el editor guarda `item.descuentoLinea`, así que el descuento de línea no se aplicaba nunca.
+
+**La corrección** replica la **misma matemática del editor web** (`cotizacion-editor.component.ts`, sección T-21), que es hoy la fuente de verdad, y toma el precio con `resolverPrecioLinea` — el resolutor canónico que ya usan los pedidos y que conoce precio manual, categoría de cliente y volumen. No se inventó un cálculo nuevo: se dejó de tener un tercer camino propio.
+
+```
+base       = precioSinIVA × cantidad          ← ancla SIN IVA, no con IVA
+descLinea  = base × descuentoLinea%
+ivaLinea   = base × (1 − descuentoLinea%) × tarifa%
+descGlobal = (Σbase − ΣdescLinea) × descGlobal%
+impuesto   = ΣivaLinea × (1 − descGlobal%)
+total      = (Σbase − descTotal) + impuesto
+```
+
+**Verificado ejecutando el controlador real contra Firestore**, antes de desplegar: $100.000 al 19% da **119.000**; con 10% de descuento de línea y 5% global sobre 2 unidades da **203.490** (base 171.000 + IVA 32.490); respeta un precio manual de 80.000 → 95.200; las preferencias suman a la base y a su IVA; y **sigue sin pisar los totales cuando el frontend los envía**, que es como opera la web hoy. Las cotizaciones de prueba se borraron después.
+
+**Confirmado en producción** (`5ce2912`): la misma cotización que antes habría dado 22.729.000 devuelve 119.000, y el catálogo digital —que genera cotizaciones por este mismo camino— sigue funcionando.
+
+**Alcance real del arreglo:** afecta a las cotizaciones creadas **sin totales**, es decir las del catálogo digital y las de cualquier integración por API. Las que crea la web seguían saliendo bien porque el frontend manda sus propios totales. Las cotizaciones ya guardadas no cambian: el cálculo solo corre al crear o editar.
