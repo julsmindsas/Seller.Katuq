@@ -2624,3 +2624,19 @@ total      = (Σbase − descTotal) + impuesto
 **Verificación final antes de subir.** Build de producción del frontend exit 0 (los cuatro "error" del log son warnings: el hack de estrella de IE7 en un CSS de vendor, preexistente). Backend: 17 archivos sin errores de sintaxis y las cuatro suites en verde. Se cruzaron las rutas de descuentos que llama el frontend contra las que expone el router del backend —los siete calzan exactos, y los siete pasan por el middleware de auth—, porque cada repo se mergeó por separado. Se eliminó `imagenpromo.webp`, un archivo de 26 KB que la rama de descuentos dejó suelto en la raíz del repositorio sin una sola referencia. Los métodos que se conservaron de ambos lados en el carrito se verificaron en uso; no quedó código muerto, marcadores ni archivos `.orig`/`.rej`.
 
 **Estado:** ambos repos subidos. Frontend pusheado a `feature/venta-asistida-mejorada` (`1c06c135`). El backend lo subió una **sesión paralela trabajando sobre el mismo working copy**: pusheó `5c5233d` —la versión del merge que todavía cargaba los tres archivos de inventario— y luego hizo `reset` a `origin`, descartando el `97bde30` ya limpio. El contenido quedó correcto (se verificó una a una que las resoluciones sobrevivieran, incluida la variable inexistente que reventaba el catálogo por bodega), pero el commit de merge del backend **queda con los tres archivos de inventario adentro**; no se reescribió porque es historia ya publicada en la rama de producción y hay otra sesión trabajando encima. Nada se desplegó: subir no despliega, el backend en EC2 se actualiza a mano. Puntos de retorno locales en `backup/pre-merge-descuentos-front` y `backup/pre-merge-descuentos-back`.
+
+#### Adenda D-142 (2026-07-30) — Cierre completo: ninguna ruta de productos queda sin auth
+
+Segunda y última tanda. Se cerraron `/all/filter/paginated` y `/all/filter/count`, que se habían dejado fuera del primer cambio por ser el catálogo de alto tráfico — no valía la pena arriesgar el listado de productos de todas las empresas en la misma tanda.
+
+**Se confirmó antes de tocarlos** que el cierre anterior no había roto nada: cero rechazos por autenticación en los logs de producción desde ese deploy, y cero llamadas sin token a los seis ya cerrados. Estos dos registraban 2 y 0 llamadas, ambas desde un navegador vía nginx.
+
+**Verificado tras desplegar** (`79536e7`): los **ocho** endpoints responden 401 sin token, y con token el catálogo sigue devolviendo sus 20 productos por página, el conteo responde y la búsqueda rápida también. Ya no queda ninguna ruta sin `auth` en `routers/productos.js`.
+
+#### Adenda D-144 (2026-07-30) — Estado desplegado y verificado
+
+**Backend** en `79536e7`. **Frontend** en `2026.07.30.6`, con el CDN de imágenes y la vitrina de catálogos confirmados **dentro de los chunks servidos** (no solo en el build local: se resolvió el mapa del runtime y se buscó en los chunks, porque los módulos son lazy y no viven en `main`).
+
+**El link público del catálogo funciona de punta a punta**: la página responde 200, el endpoint devuelve los productos con su precio, y las fotos cargan de verdad — `image/jpeg` e `image/png`, no el HTML que devolvía el rewrite antes del arreglo.
+
+**Aviso sobre sesiones paralelas.** Durante esta sesión, otra sesión sobre la misma rama: (1) incluyó cambios míos sin commitear dentro de un commit suyo, perdiendo el mensaje que explicaba el defecto de `idBodega`; y (2) rehízo el merge, dejando mi copia local **con el defecto de vuelta** mientras `origin` tenía la versión correcta. Se detectó comparando ambos lados campo por campo antes de desplegar. Aprendizaje: en repos con sesiones paralelas hay que commitear los archivos propios **apenas se editan**, y verificar `origin` contra el working copy antes de dar nada por subido.
