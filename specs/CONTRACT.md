@@ -2640,3 +2640,17 @@ Segunda y última tanda. Se cerraron `/all/filter/paginated` y `/all/filter/coun
 **El link público del catálogo funciona de punta a punta**: la página responde 200, el endpoint devuelve los productos con su precio, y las fotos cargan de verdad — `image/jpeg` e `image/png`, no el HTML que devolvía el rewrite antes del arreglo.
 
 **Aviso sobre sesiones paralelas.** Durante esta sesión, otra sesión sobre la misma rama: (1) incluyó cambios míos sin commitear dentro de un commit suyo, perdiendo el mensaje que explicaba el defecto de `idBodega`; y (2) rehízo el merge, dejando mi copia local **con el defecto de vuelta** mientras `origin` tenía la versión correcta. Se detectó comparando ambos lados campo por campo antes de desplegar. Aprendizaje: en repos con sesiones paralelas hay que commitear los archivos propios **apenas se editan**, y verificar `origin` contra el working copy antes de dar nada por subido.
+
+### 2026-07-30 — D-145: Blindaje anti-duplicados en facturación Siigo (timeout DIAN generaba facturas duplicadas timbradas)
+
+**Incidente (hoy, 20:39–21:07 UTC, OH MY STORE):** el `POST /v1/invoices` de Siigo (que timbra en DIAN con `stamp.send=true`) se demoró más de los 30s de timeout. El resto del API de Siigo respondía normal — el problema era solo la emisión DIAN. Consecuencias: (1) el retry automático del provider re-POSTeaba una operación **no idempotente** — el 409 `duplicated_document` de ORE-000515 probó que el primer POST sí había creado la factura; (2) el asesor reintentó ORE-000514 seis veces (hasta ~24 POSTs) generando duplicadas que hubo que anular manualmente en Siigo; (3) nada de esto quedó registrado en Katuq — solo logs pm2 y una notificación RTDB con mensaje engañoso ("verifica los datos del cliente").
+
+**Decisión — 5 piezas en el backend (`accountingManager.js`, `siigoProvider.js`, `accountingController.js`):**
+
+1. **Lock transaccional por pedido** en `createInvoiceFromOrder`: rechaza con `ALREADY_INVOICED` si el pedido ya tiene `facturacionElectronica.invoiceId`, y con `INVOICING_IN_PROGRESS` si hay un `facturacionEnProceso` con menos de 3 min. Se libera al terminar (éxito o error).
+2. **POST de factura con timeout de 120s y `retryAttempts: 0`** (`config.invoiceTimeout` para override por empresa). `#makeRequest` ahora acepta `retryAttempts: 0` como valor válido (antes el `||` lo colapsaba a 3). El retry con backoff queda solo para operaciones idempotentes.
+3. **Recuperación post-fallo**: ante `NETWORK_ERROR` o `DUPLICATED_DOCUMENT`, antes de reportar error se busca en Siigo (`listInvoices` por cliente + fecha Colombia + total) y si la factura ya existe se vincula al pedido como éxito con flag `recovered: true`.
+4. **409 categorizado como `DUPLICATED_DOCUMENT`** en `#categorizeError` (antes caía en `UNKNOWN_ERROR`).
+5. **Telemetría persistente**: colección `accounting_invoice_errors` (company, orderId, nroPedido, provider, type error/recovered, errorCode, mensaje) + la notificación `INVOICE_FAILED` ahora dice la causa real y distingue los guards (warning) de los errores (danger).
+
+Aplica también a World Office (el lock vive en el manager); la recuperación por búsqueda es solo Siigo por ahora.
