@@ -31,6 +31,8 @@ export class CatalogoPublicoComponent implements OnInit {
 
   carrito: LineaCarrito[] = [];
   mostrandoCarrito = false;
+  /** Filtro local: la vitrina ya trae todos los productos, no hace falta ir al servidor. */
+  filtro = "";
 
   // Datos de contacto
   nombre = "";
@@ -73,6 +75,18 @@ export class CatalogoPublicoComponent implements OnInit {
             : "No pudimos cargar el catálogo. Intenta de nuevo en un momento.";
       },
     });
+  }
+
+  /** Productos que pasan el filtro, por título o referencia. */
+  get productosFiltrados(): CatalogoPublicoProducto[] {
+    const todos = this.catalogo?.productos || [];
+    const texto = this.filtro.trim().toLowerCase();
+    if (!texto) return todos;
+    return todos.filter(
+      (p) =>
+        p.titulo.toLowerCase().includes(texto) ||
+        (p.referencia || "").toLowerCase().includes(texto)
+    );
   }
 
   // ── Carrito ────────────────────────────────────────────────────────────────

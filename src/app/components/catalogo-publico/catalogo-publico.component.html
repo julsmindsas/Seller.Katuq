@@ -1,133 +1,199 @@
-<div class="cat-pub">
+<div class="vit">
 
   <!-- Cargando -->
-  <div class="cat-pub__estado" *ngIf="cargando">
-    <div class="cat-pub__spinner"></div>
-    <p>Cargando catálogo…</p>
+  <div class="vit__estado" *ngIf="cargando">
+    <div class="vit__spinner"></div>
+    <p class="vit__muted">Cargando catálogo…</p>
   </div>
 
   <!-- Enlace inválido, apagado o vencido -->
-  <div class="cat-pub__estado" *ngIf="!cargando && error">
-    <div class="cat-pub__icono">🔒</div>
+  <div class="vit__estado" *ngIf="!cargando && error">
+    <div class="vit__estado-ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="4" y="10" width="16" height="10" rx="2" />
+        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+      </svg>
+    </div>
     <h2>{{ error }}</h2>
-    <p class="cat-pub__muted">Pídele al vendedor un enlace nuevo.</p>
+    <p class="vit__muted">Pídele al vendedor un enlace nuevo.</p>
   </div>
 
-  <!-- Confirmación después de enviar -->
-  <div class="cat-pub__estado" *ngIf="referencia">
-    <div class="cat-pub__icono">✅</div>
+  <!-- Confirmación -->
+  <div class="vit__estado" *ngIf="referencia">
+    <div class="vit__estado-ic vit__estado-ic--ok">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 6 9 17l-5-5" />
+      </svg>
+    </div>
     <h2>Recibimos tu pedido</h2>
-    <p class="cat-pub__ref" *ngIf="referencia">{{ referencia }}</p>
-    <p class="cat-pub__muted">El vendedor te contactará para confirmar precios y entrega.</p>
+    <p class="vit__ref">{{ referencia }}</p>
+    <p class="vit__muted">El vendedor te contactará para confirmar precios y entrega.</p>
   </div>
 
   <!-- Vitrina -->
   <ng-container *ngIf="!cargando && !error && !referencia && catalogo">
-    <header class="cat-pub__header">
+    <header class="vit__head">
       <h1>{{ catalogo.nombre }}</h1>
       <p *ngIf="catalogo.descripcion">{{ catalogo.descripcion }}</p>
     </header>
 
-    <section class="cat-pub__grid">
-      <article class="cat-pub__card" *ngFor="let p of catalogo.productos">
-        <div class="cat-pub__img" [class.cat-pub__img--vacia]="!p.imagen">
+    <!-- Buscador pegajoso: con catálogos largos, bajar hasta encontrar algo
+         es lo que más cansa en un teléfono. -->
+    <div class="vit__barra-busca">
+      <div class="vit__busca">
+        <span class="vit__busca-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+          </svg>
+        </span>
+        <input
+          class="vit__busca-input"
+          type="search"
+          placeholder="Buscar producto"
+          autocomplete="off"
+          [(ngModel)]="filtro"
+          name="filtro"
+          aria-label="Buscar producto" />
+        <button
+          type="button"
+          class="vit__busca-x"
+          *ngIf="filtro"
+          (click)="filtro = ''"
+          aria-label="Limpiar búsqueda">✕</button>
+      </div>
+      <p class="vit__conteo">
+        {{ productosFiltrados.length }}
+        {{ productosFiltrados.length === 1 ? 'producto' : 'productos' }}
+      </p>
+    </div>
+
+    <p class="vit__vacio" *ngIf="productosFiltrados.length === 0">
+      Nada coincide con “{{ filtro }}”.
+    </p>
+
+    <section class="vit__grid">
+      <article
+        class="vit__card"
+        *ngFor="let p of productosFiltrados"
+        [class.vit__card--activa]="cantidadDe(p) > 0">
+
+        <div class="vit__thumb">
           <img *ngIf="p.imagen" [src]="p.imagen" [alt]="p.titulo" loading="lazy" />
-          <span *ngIf="!p.imagen">Sin foto</span>
+          <span class="vit__thumb-ph" *ngIf="!p.imagen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m6 15 3.5-3.5 2.5 2.5L16 10l3 4" />
+            </svg>
+          </span>
+          <!-- Contador sobre la foto: se ve sin leer nada qué ya está en el pedido -->
+          <span class="vit__badge" *ngIf="cantidadDe(p) > 0">{{ cantidadDe(p) }}</span>
         </div>
 
-        <div class="cat-pub__info">
+        <div class="vit__card-body">
+          <p class="vit__ref-prod" *ngIf="p.referencia">{{ p.referencia }}</p>
           <h3>{{ p.titulo }}</h3>
-          <p class="cat-pub__precio">{{ p.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+        </div>
 
-          <!-- Sumar y restar en el mismo lugar: es como se arma un carrito
-               en el teléfono sin abrir otra pantalla. -->
-          <div class="cat-pub__acciones">
-            <button
-              type="button"
-              class="cat-pub__btn cat-pub__btn--agregar"
-              *ngIf="cantidadDe(p) === 0"
-              (click)="agregar(p)">
-              Agregar
-            </button>
+        <div class="vit__card-foot">
+          <span class="vit__precio">{{ p.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
 
-            <div class="cat-pub__stepper" *ngIf="cantidadDe(p) > 0">
-              <button type="button" (click)="quitar(p)" aria-label="Quitar uno">−</button>
-              <span>{{ cantidadDe(p) }}</span>
-              <button type="button" (click)="agregar(p)" aria-label="Agregar uno">+</button>
-            </div>
+          <button
+            type="button"
+            class="vit__add"
+            *ngIf="cantidadDe(p) === 0"
+            (click)="agregar(p)">
+            Agregar
+          </button>
+
+          <div class="vit__qty" *ngIf="cantidadDe(p) > 0">
+            <button type="button" (click)="quitar(p)" aria-label="Quitar uno">−</button>
+            <span>{{ cantidadDe(p) }}</span>
+            <button type="button" (click)="agregar(p)" aria-label="Agregar uno">+</button>
           </div>
         </div>
       </article>
     </section>
 
     <!-- Barra flotante del carrito -->
-    <div class="cat-pub__barra" *ngIf="totalItems > 0 && !mostrandoCarrito">
-      <div>
+    <div class="vit__cta" *ngIf="totalItems > 0 && !mostrandoCarrito">
+      <div class="vit__cta-info">
         <strong>{{ totalItems }}</strong>
-        {{ totalItems === 1 ? 'producto' : 'productos' }}
-        <span class="cat-pub__muted">· {{ totalEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        <span class="vit__muted">{{ totalItems === 1 ? 'producto' : 'productos' }}</span>
+        <span class="vit__cta-total">{{ totalEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
       </div>
-      <button type="button" class="cat-pub__btn cat-pub__btn--primario" (click)="mostrandoCarrito = true">
+      <button type="button" class="vit__btn vit__btn--primario" (click)="mostrandoCarrito = true">
         Continuar
       </button>
     </div>
 
-    <!-- Carrito y datos de contacto -->
-    <div class="cat-pub__hoja" *ngIf="mostrandoCarrito">
-      <div class="cat-pub__hoja-cont">
-        <div class="cat-pub__hoja-head">
+    <!-- Carrito + contacto -->
+    <div class="vit__hoja" *ngIf="mostrandoCarrito" (click)="mostrandoCarrito = false">
+      <div class="vit__hoja-cont" (click)="$event.stopPropagation()">
+        <div class="vit__hoja-asa"></div>
+
+        <div class="vit__hoja-head">
           <h2>Tu pedido</h2>
-          <button type="button" class="cat-pub__cerrar" (click)="mostrandoCarrito = false" aria-label="Cerrar">✕</button>
+          <button type="button" class="vit__cerrar" (click)="mostrandoCarrito = false" aria-label="Cerrar">✕</button>
         </div>
 
-        <ul class="cat-pub__lista">
+        <ul class="vit__lista">
           <li *ngFor="let l of carrito">
-            <span class="cat-pub__lista-tit">{{ l.cantidad }} × {{ l.producto.titulo }}</span>
-            <span class="cat-pub__lista-val">
-              {{ l.producto.precioConIva * l.cantidad | currency:'COP':'symbol-narrow':'1.0-0' }}
-            </span>
-            <div class="cat-pub__stepper cat-pub__stepper--sm">
+            <div class="vit__lista-info">
+              <span class="vit__lista-tit">{{ l.producto.titulo }}</span>
+              <span class="vit__muted">
+                {{ l.cantidad }} × {{ l.producto.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}
+              </span>
+            </div>
+            <div class="vit__qty vit__qty--sm">
               <button type="button" (click)="quitar(l.producto)" aria-label="Quitar uno">−</button>
+              <span>{{ l.cantidad }}</span>
               <button type="button" (click)="agregar(l.producto)" aria-label="Agregar uno">+</button>
             </div>
           </li>
         </ul>
 
-        <p class="cat-pub__aviso">
-          Los valores son de referencia. El vendedor confirma el total, el envío y la forma de pago.
+        <div class="vit__total">
+          <span>Estimado</span>
+          <strong>{{ totalEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+
+        <p class="vit__aviso">
+          El vendedor confirma el total, el envío y la forma de pago.
         </p>
 
-        <div class="cat-pub__form">
+        <div class="vit__form">
           <label>
-            Tu nombre <span aria-hidden="true">*</span>
+            Tu nombre <span class="vit__req">*</span>
             <input type="text" [(ngModel)]="nombre" name="nombre" maxlength="120" autocomplete="name" />
           </label>
-          <label>
-            Teléfono
-            <input type="tel" [(ngModel)]="telefono" name="telefono" maxlength="30" autocomplete="tel" />
-          </label>
-          <label>
-            Correo
-            <input type="email" [(ngModel)]="email" name="email" maxlength="120" autocomplete="email" />
-          </label>
-          <p class="cat-pub__hint">Déjanos al menos un teléfono o un correo para contactarte.</p>
+          <div class="vit__form-fila">
+            <label>
+              Teléfono
+              <input type="tel" [(ngModel)]="telefono" name="telefono" maxlength="30" autocomplete="tel" />
+            </label>
+            <label>
+              Correo
+              <input type="email" [(ngModel)]="email" name="email" maxlength="120" autocomplete="email" />
+            </label>
+          </div>
+          <p class="vit__hint">Con un teléfono o un correo nos basta para contactarte.</p>
           <label>
             ¿Algo que debamos saber?
             <textarea [(ngModel)]="mensaje" name="mensaje" rows="2" maxlength="500"></textarea>
           </label>
         </div>
 
-        <p class="cat-pub__error" *ngIf="errorEnvio">{{ errorEnvio }}</p>
+        <p class="vit__error" *ngIf="errorEnvio">{{ errorEnvio }}</p>
 
         <button
           type="button"
-          class="cat-pub__btn cat-pub__btn--primario cat-pub__btn--full"
+          class="vit__btn vit__btn--primario vit__btn--full"
           [disabled]="!puedeEnviar"
           (click)="enviar()">
           {{ enviando ? 'Enviando…' : 'Enviar pedido' }}
         </button>
-        <button type="button" class="cat-pub__btn cat-pub__btn--texto cat-pub__btn--full" (click)="vaciar()">
-          Vaciar
+        <button type="button" class="vit__btn vit__btn--texto vit__btn--full" (click)="vaciar()">
+          Vaciar pedido
         </button>
       </div>
     </div>

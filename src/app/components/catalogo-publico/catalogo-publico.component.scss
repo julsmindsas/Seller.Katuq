@@ -1,104 +1,241 @@
 /**
- * Vitrina pública del catálogo. Sigue el tema canónico del design system
- * (acento #5F3FE0, ink #211F3A, superficies lila, plano sin gradientes).
- * No se importan los estilos del panel porque esta página la abre alguien de
- * fuera: tiene que cargar liviana en un teléfono con mala señal.
+ * Vitrina pública del catálogo.
+ *
+ * Mismo lenguaje visual que el POS moderno (`ventas/pos2`): rejilla densa de
+ * tarjetas con foto, borde fino, radio 15px, hover con sombra violeta, precio
+ * en el acento y stepper compacto. Los tokens se copian en vez de importar
+ * `_katuq-comercial` a propósito: esta página la abre alguien de fuera, sin
+ * cuenta, y no debe arrastrar el peso del sistema del panel.
  */
-$acento: #5f3fe0;
-$acento-2: #7c5cff;
-$ink: #211f3a;
-$muted: #8f8bab;
-$linea: #ececf4;
-$superficie: #faf9fe;
-$chip: #f5f4fa;
+:host {
+  --vt-accent: #6c4ce0;
+  --vt-accent-ink: #533bc4;
+  --vt-accent-wash: #eee9fd;
+  --vt-ink: #2a2e3c;
+  --vt-ink2: #52586b;
+  --vt-muted: #8a90a2;
+  --vt-line: #ecedf3;
+  --vt-canvas: #f7f8fc;
+  --vt-green: #17994f;
+  --vt-danger: #d64545;
+  --vt-danger-wash: #fdecec;
+}
 
-.cat-pub {
+.vit {
   min-height: 100vh;
-  background: $superficie;
-  color: $ink;
+  background: var(--vt-canvas);
+  color: var(--vt-ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  padding-bottom: 96px;
+  padding-bottom: 104px;
 
+  &__muted { color: var(--vt-muted); }
+
+  // ---------------------------------------------------------------- estados
   &__estado {
-    min-height: 70vh;
+    min-height: 78vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     padding: 32px 24px;
+    gap: 6px;
 
-    h2 { font-size: 20px; font-weight: 800; margin: 12px 0 4px; }
-    p { margin: 0; }
+    h2 { font-size: 19px; font-weight: 800; margin: 10px 0 0; }
+    p { margin: 0; font-size: 14px; }
   }
 
-  &__icono { font-size: 44px; }
+  &__estado-ic {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--vt-accent-wash);
+    color: var(--vt-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg { width: 27px; height: 27px; }
+
+    &--ok { background: #e3f6ec; color: var(--vt-green); }
+  }
 
   &__ref {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 15px;
     font-weight: 700;
-    color: $acento;
-    margin: 6px 0 10px;
+    color: var(--vt-accent);
+    margin: 4px 0 2px !important;
   }
-
-  &__muted { color: $muted; font-size: 14px; }
 
   &__spinner {
     width: 30px; height: 30px;
-    border: 3px solid $linea;
-    border-top-color: $acento;
+    border: 3px solid var(--vt-line);
+    border-top-color: var(--vt-accent);
     border-radius: 50%;
-    animation: cat-giro .8s linear infinite;
+    animation: vit-giro .8s linear infinite;
   }
 
-  &__header {
-    padding: 28px 20px 16px;
-    h1 { font-size: 24px; font-weight: 800; margin: 0 0 4px; }
-    p { margin: 0; color: $muted; font-size: 14px; }
+  // ---------------------------------------------------------------- cabecera
+  &__head {
+    padding: 26px 16px 12px;
+
+    h1 { font-size: 23px; font-weight: 800; margin: 0 0 3px; letter-spacing: -0.2px; }
+    p { margin: 0; color: var(--vt-muted); font-size: 13.5px; }
   }
 
+  // Buscador pegajoso — con muchos productos es lo que evita el scroll infinito.
+  &__barra-busca {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--vt-canvas);
+    padding: 8px 16px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--vt-line);
+  }
+
+  &__busca {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: #fff;
+    border: 2px solid var(--vt-line);
+    border-radius: 13px;
+    padding: 7px 12px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+
+    &:focus-within {
+      border-color: var(--vt-accent);
+      box-shadow: 0 0 0 3px rgba(108, 76, 224, .1);
+    }
+  }
+
+  &__busca-ic {
+    display: flex;
+    color: var(--vt-muted);
+    svg { width: 17px; height: 17px; }
+  }
+
+  &__busca-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    // 15px o más: por debajo de eso iOS hace zoom al enfocar el campo.
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--vt-ink);
+    font-family: inherit;
+    &:focus { outline: none; }
+    &::-webkit-search-cancel-button { display: none; }
+  }
+
+  &__busca-x {
+    border: 0; background: transparent;
+    color: var(--vt-muted); cursor: pointer;
+    font-size: 13px; padding: 0 2px;
+  }
+
+  &__conteo {
+    margin: 0;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--vt-muted);
+    white-space: nowrap;
+  }
+
+  &__vacio {
+    text-align: center;
+    color: var(--vt-muted);
+    font-size: 14px;
+    padding: 36px 24px;
+    margin: 0;
+  }
+
+  // ---------------------------------------------------------------- rejilla
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
-    padding: 0 20px;
+    // Mismo minmax que el POS: dos columnas cómodas en un teléfono, más en
+    // pantallas grandes, sin que la tarjeta se deforme.
+    grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+    gap: 11px;
+    padding: 12px 16px 0;
   }
 
   &__card {
     background: #fff;
-    border: 1px solid $linea;
-    border-radius: 16px;
-    overflow: hidden;
+    border: 1.5px solid var(--vt-line);
+    border-radius: 15px;
+    padding: 9px;
     display: flex;
     flex-direction: column;
+    gap: 8px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+
+    &:hover {
+      border-color: #c9b9f7;
+      box-shadow: 0 6px 18px rgba(108, 76, 224, .14);
+    }
+
+    // Lo que ya está en el pedido se distingue sin leer el número.
+    &--activa {
+      border-color: var(--vt-accent);
+      box-shadow: 0 4px 14px rgba(108, 76, 224, .12);
+    }
   }
 
-  &__img {
+  &__thumb {
+    position: relative;
     aspect-ratio: 1;
-    background: $chip;
+    border-radius: 11px;
+    background: var(--vt-canvas);
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
 
     img { width: 100%; height: 100%; object-fit: cover; }
-    &--vacia span { color: $muted; font-size: 12px; }
   }
 
-  &__info {
-    padding: 10px 12px 12px;
+  &__thumb-ph {
+    color: #c9cedb;
+    svg { width: 30px; height: 30px; }
+  }
+
+  &__badge {
+    position: absolute;
+    top: 6px; right: 6px;
+    min-width: 21px; height: 21px;
+    padding: 0 5px;
+    border-radius: 11px;
+    background: var(--vt-accent);
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__card-body {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
     flex: 1;
+    min-width: 0;
 
     h3 {
-      font-size: 13.5px;
-      font-weight: 700;
+      font-size: 12.5px;
+      font-weight: 800;
       margin: 0;
-      line-height: 1.3;
-      // Dos líneas máximo: con títulos largos las tarjetas quedaban de
-      // alturas muy distintas y la grilla se veía desordenada.
+      line-height: 1.25;
+      // Dos líneas fijas: con títulos largos las tarjetas quedaban de
+      // alturas distintas y la rejilla se veía desordenada.
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -106,118 +243,184 @@ $chip: #f5f4fa;
     }
   }
 
-  &__precio { font-size: 15px; font-weight: 800; color: $acento; margin: 0; }
-
-  &__acciones { margin-top: auto; }
-
-  &__btn {
-    border: 0;
-    border-radius: 11px;
-    font-size: 13px;
+  &__ref-prod {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 9.5px;
     font-weight: 700;
-    padding: 9px 14px;
-    cursor: pointer;
-    font-family: inherit;
-
-    &--agregar { width: 100%; background: $chip; color: $ink; }
-    &--primario { background: $acento; color: #fff; }
-    &--texto { background: transparent; color: $muted; }
-    &--full { width: 100%; }
-    &:disabled { background: $muted; cursor: not-allowed; }
+    color: #b7bccb;
+    letter-spacing: .3px;
+    margin: 0;
   }
 
-  &__stepper {
+  &__card-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  &__precio {
+    font-size: 15.5px;
+    font-weight: 800;
+    color: var(--vt-accent);
+    line-height: 1;
+  }
+
+  &__add {
+    width: 100%;
+    border: 0;
+    border-radius: 9px;
+    background: var(--vt-accent-wash);
+    color: var(--vt-accent-ink);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    padding: 8px;
+    cursor: pointer;
+    transition: background .12s ease;
+    &:hover { background: #e5dcfc; }
+  }
+
+  // Stepper compacto, igual que en la caja del POS.
+  &__qty {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    background: $chip;
-    border-radius: 11px;
-    padding: 4px;
+    background: var(--vt-canvas);
+    border: 1px solid var(--vt-line);
+    border-radius: 9px;
+    padding: 3px;
 
     button {
-      width: 28px; height: 28px;
-      border: 0; border-radius: 8px;
-      background: #fff; color: $ink;
-      font-size: 16px; font-weight: 700;
+      width: 26px; height: 26px;
+      border: 0; border-radius: 7px;
+      background: #fff;
+      color: var(--vt-accent);
+      font-size: 16px; font-weight: 800;
+      line-height: 1;
       cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
     }
-    span { font-size: 14px; font-weight: 700; }
+    span { font-size: 13.5px; font-weight: 800; }
 
-    &--sm { padding: 2px; button { width: 24px; height: 24px; font-size: 14px; } }
+    &--sm {
+      padding: 2px;
+      gap: 6px;
+      button { width: 23px; height: 23px; font-size: 14px; }
+    }
   }
 
-  // Barra flotante: el carrito tiene que estar siempre a la vista sin tapar
-  // los productos.
-  &__barra {
+  // ------------------------------------------------------------- barra carrito
+  &__cta {
     position: fixed;
     left: 12px; right: 12px; bottom: 12px;
     background: #fff;
-    border: 1px solid $linea;
-    border-radius: 16px;
-    box-shadow: 0 8px 28px rgba(95, 63, 224, .16);
-    padding: 12px 14px;
+    border: 1.5px solid var(--vt-line);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(42, 46, 60, .16);
+    padding: 11px 13px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    font-size: 14px;
   }
 
+  &__cta-info {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    font-size: 13px;
+    min-width: 0;
+
+    strong { font-size: 16px; font-weight: 800; }
+  }
+
+  &__cta-total {
+    font-weight: 800;
+    color: var(--vt-accent);
+    white-space: nowrap;
+  }
+
+  // ---------------------------------------------------------------- hoja
   &__hoja {
     position: fixed;
     inset: 0;
-    background: rgba(33, 31, 58, .35);
+    background: rgba(42, 46, 60, .4);
     display: flex;
     align-items: flex-end;
-    z-index: 10;
+    z-index: 20;
   }
 
   &__hoja-cont {
     background: #fff;
     width: 100%;
-    max-height: 90vh;
+    max-height: 92vh;
     overflow-y: auto;
     border-radius: 20px 20px 0 0;
-    padding: 18px 20px 24px;
+    padding: 10px 18px 26px;
+  }
+
+  &__hoja-asa {
+    width: 38px; height: 4px;
+    border-radius: 2px;
+    background: var(--vt-line);
+    margin: 0 auto 12px;
   }
 
   &__hoja-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+
     h2 { font-size: 18px; font-weight: 800; margin: 0; }
   }
 
   &__cerrar {
-    border: 0; background: $chip; color: $ink;
+    border: 0; background: var(--vt-canvas);
+    color: var(--vt-ink2);
     width: 30px; height: 30px; border-radius: 50%;
-    font-size: 14px; cursor: pointer;
+    font-size: 13px; cursor: pointer;
   }
 
   &__lista {
     list-style: none;
-    margin: 0 0 10px;
+    margin: 0 0 12px;
     padding: 0;
 
     li {
-      display: grid;
-      grid-template-columns: 1fr auto auto;
+      display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: space-between;
+      gap: 12px;
       padding: 9px 0;
-      border-bottom: 1px solid $linea;
-      font-size: 13.5px;
+      border-bottom: 1px solid var(--vt-line);
     }
   }
 
-  &__lista-val { font-weight: 700; }
+  &__lista-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    font-size: 12.5px;
+  }
+
+  &__lista-tit { font-weight: 700; }
+
+  &__total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0 12px;
+    font-size: 14px;
+
+    strong { font-size: 19px; font-weight: 800; color: var(--vt-accent); }
+  }
 
   &__aviso {
     font-size: 12px;
-    color: $muted;
-    background: $chip;
+    color: var(--vt-ink2);
+    background: var(--vt-accent-wash);
     border-radius: 11px;
     padding: 9px 11px;
     margin: 0 0 14px;
@@ -229,36 +432,77 @@ $chip: #f5f4fa;
     gap: 10px;
     margin-bottom: 12px;
 
-    label { font-size: 12px; font-weight: 700; color: $muted; display: flex; flex-direction: column; gap: 4px; }
+    label {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--vt-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      letter-spacing: .2px;
+      flex: 1;
+      min-width: 0;
+    }
 
     input, textarea {
       font-family: inherit;
-      font-size: 15px; // 15px+ evita que iOS haga zoom al enfocar el campo
-      font-weight: 500;
-      color: $ink;
-      border: 1px solid $linea;
+      font-size: 15px; // ver nota de iOS arriba
+      font-weight: 600;
+      color: var(--vt-ink);
+      border: 2px solid var(--vt-line);
       border-radius: 11px;
-      padding: 10px 12px;
+      padding: 9px 11px;
       background: #fff;
-      &:focus { outline: 2px solid $acento-2; outline-offset: 1px; }
+      width: 100%;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: var(--vt-accent);
+        box-shadow: 0 0 0 3px rgba(108, 76, 224, .1);
+      }
     }
     textarea { resize: vertical; }
   }
 
-  &__hint { font-size: 11.5px; color: $muted; margin: -4px 0 0; }
+  &__form-fila {
+    display: flex;
+    gap: 10px;
+  }
+
+  &__req { color: var(--vt-danger); }
+
+  &__hint { font-size: 11px; color: var(--vt-muted); margin: -4px 0 0; }
 
   &__error {
-    font-size: 13px;
-    font-weight: 600;
-    color: #d64545;
-    background: #fdecec;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--vt-danger);
+    background: var(--vt-danger-wash);
     border-radius: 11px;
     padding: 9px 11px;
+    margin: 0 0 10px;
+  }
+
+  &__btn {
+    border: 0;
+    border-radius: 11px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 800;
+    padding: 10px 16px;
+    cursor: pointer;
+
+    &--primario { background: var(--vt-accent); color: #fff; }
+    &--texto { background: transparent; color: var(--vt-muted); }
+    &--full { width: 100%; padding: 13px; margin-top: 4px; }
+    &:disabled { background: #c9cedb; cursor: not-allowed; }
   }
 }
 
-@keyframes cat-giro { to { transform: rotate(360deg); } }
+@keyframes vit-giro { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .cat-pub__spinner { animation: none; }
+  .vit__spinner { animation: none; }
+  .vit__card { transition: none; }
 }
