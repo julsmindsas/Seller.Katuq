@@ -850,7 +850,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private checkInvoicingIntegration(): void {
     // Verificar proveedores contables: SIIGO y World Office
-    const accountingProviders = ['siigo', 'world_office'];
+    const accountingProviders = ['dian', 'siigo', 'world_office'];
     let found = false;
 
     const checkProvider = (index: number) => {
@@ -874,6 +874,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             isConfigured = isActive && providerConfig?.username;
           } else if (provider === 'world_office') {
             isConfigured = isActive && (providerConfig?.apiToken || providerConfig?.idEmpresa);
+          } else if (provider === 'dian') {
+            isConfigured = isActive && !!providerConfig?.issuer?.nit && !!providerConfig?.environment;
           }
 
           console.log(`🔍 [Facturación] ${provider}: active=${isActive}, configured=${isConfigured}, config keys=${Object.keys(providerConfig || {}).join(',')}`);
@@ -904,6 +906,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const names: { [key: string]: string } = {
       'siigo': 'Siigo',
       'world_office': 'World Office',
+      'dian': 'DIAN directo',
       'alegra': 'Alegra'
     };
     return names[this.activeAccountingProvider] || 'Sistema Contable';

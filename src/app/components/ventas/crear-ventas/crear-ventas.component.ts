@@ -816,7 +816,7 @@ export class CrearVentasComponent
    * Verifica proveedores contables (Siigo, World Office) en orden de prioridad.
    */
   cargarConfiguracionSiigo(): void {
-    const accountingProviders = ['siigo', 'world_office'];
+    const accountingProviders = ['dian', 'siigo', 'world_office'];
     let found = false;
 
     const checkProvider = (index: number) => {
@@ -849,6 +849,9 @@ export class CrearVentasComponent
             isConfigured = isActive && !!(providerConfig?.apiToken || providerConfig?.idEmpresa);
             hasAutoInvoicing = providerConfig?.enableAutoInvoicing === true ||
                                providerConfig?.facturacionAutomatica === true;
+          } else if (provider === 'dian') {
+            isConfigured = isActive && !!providerConfig?.issuer?.nit && !!providerConfig?.environment;
+            hasAutoInvoicing = providerConfig?.enableAutoInvoicing === true;
           }
 
           if (isConfigured && !found) {
@@ -883,6 +886,7 @@ export class CrearVentasComponent
     const names: { [key: string]: string } = {
       'siigo': 'Siigo',
       'world_office': 'World Office',
+      'dian': 'DIAN directo',
       'alegra': 'Alegra'
     };
     return names[provider] || 'Sistema Contable';
@@ -922,9 +926,9 @@ export class CrearVentasComponent
     }
 
     // Usar endpoint async de Siigo o genérico para otros proveedores
-    const invoiceCall = provider === 'world_office'
-      ? this.integrationsService.createAccountingInvoiceFromOrder(provider, orderId, options)
-      : this.integrationsService.createSiigoInvoiceFromOrderAsync(orderId, options);
+    const invoiceCall = provider === 'siigo'
+      ? this.integrationsService.createSiigoInvoiceFromOrderAsync(orderId, options)
+      : this.integrationsService.createAccountingInvoiceFromOrder(provider, orderId, options);
 
     invoiceCall.subscribe({
         next: (response: any) => {
