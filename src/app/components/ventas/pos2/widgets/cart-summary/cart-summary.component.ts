@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CartService } from '../../../../../shared/services/cart.service';
+import { imagenDeProducto } from '../../../../../shared/utils/imagen-producto';
 
 @Component({
   selector: 'app-cart-summary',
@@ -42,15 +43,8 @@ export class CartSummaryComponent {
    * @returns URL de la imagen o imagen por defecto si no existe
    */
   getCartItemImageUrl(item: any): string {
-    // Verificar que existan todas las propiedades necesarias
-    if (item?.crearProducto?.imagenesPrincipales && 
-        Array.isArray(item.crearProducto.imagenesPrincipales) &&
-        item.crearProducto.imagenesPrincipales.length > 0 &&
-        item.crearProducto.imagenesPrincipales[0]?.urls) {
-      return item.crearProducto.imagenesPrincipales[0].urls;
-    }
-    
-    // Si no hay imagen disponible, retornar imagen por defecto
-    return this.defaultImage;
+    // La ruta que guarda Osmosis es relativa y no carga servida tal cual:
+    // `imagenDeProducto` la resuelve contra el CDN. Ver shared/utils.
+    return imagenDeProducto(item, this.defaultImage);
   }
 } 

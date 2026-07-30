@@ -2439,3 +2439,62 @@ La barra de filtros vive **fuera** de la lista, para que no desaparezca al hacer
 **Nota de riesgo del método:** para probar se levantó el backend local, que **arrancó los crones de sync** (inventario y Osmosis, cada 30 min) contra la Firestore real. Se detuvo de inmediato y se pasó a ejecutar el controlador directamente. **No volver a levantar el backend local sin apagar los crones**, o se duplica trabajo con producción.
 
 **Hereda el defecto de cotizaciones:** el total de la cotización que genera el catálogo lo calcula `cotizaciones.js:calcularTotales`, que trata `valorIva` como porcentaje siendo pesos. Con los productos de la empresa demo (IVA 0) no se manifiesta, pero en una empresa con IVA el total llegaría inflado. Es el mismo defecto ya registrado; arreglarlo cubre los dos caminos.
+
+#### Adenda D-141 (2026-07-29) — Las fotos de producto nunca cargaban + vitrina con el lenguaje del POS moderno
+
+**Defecto de raíz encontrado y corregido.** Osmosis guarda la ruta **relativa** de la imagen (`/osmosis/products/0/38583/abc.png`) y buena parte del catálogo la tiene así, sin host, porque se sincronizó antes de que `osmosisProductSyncService` empezara a guardar la URL absoluta. Servida tal cual:
+
+- **En la web**: el navegador la resolvía contra el propio dominio y el rewrite `** → /index.html` de Firebase devolvía **HTML de 127 KB** en vez de la foto — el `<img>` fallaba en silencio. Se comprobó con `content-type: text/html`.
+- **En la app iOS**: no era una URL válida, así que no se pedía nada.
+
+El CDN correcto es **`images2.guiacereza.com`** (el mismo que ya usa el servicio de sync). Se normaliza **al leer**, en el backend del catálogo y en la app; las URLs ya absolutas y las de Firebase Storage se dejan intactas, y si el producto no tiene imágenes principales se cae a las secundarias. Verificado con 60 productos reales: **52 resuelven su foto** (HTTP 200, `image/jpeg`/`image/png`) y los 8 restantes no tienen imagen en el maestro. Confirmado en producción tras el deploy (`ba522c0`).
+
+**El mismo defecto sigue vivo en el panel web**: `getProductImageUrl` del POS2 (`ventas/pos2/widgets/product`) devuelve la ruta cruda, así que ahí tampoco se ven las fotos. No se tocó — es el mismo arreglo de una línea, pendiente de decisión.
+
+**La app iOS no mostraba ninguna imagen** (cero usos de `AsyncImage`). Se agregó `ProductoThumb`, un componente con marcador de posición que trata "no hay foto" y "la foto falló" igual, para que nunca se vea un hueco roto. Se usa en el catálogo de venta asistida, el carrito, el selector al armar un catálogo y el detalle del catálogo.
+
+**Vitrina rediseñada con el lenguaje del POS moderno** (`ventas/pos2`), a pedido del usuario: rejilla `auto-fill` de 158px, tarjetas con borde de 1.5px y radio 15, hover con sombra violeta, foto cuadrada con el contador encima, precio en el acento y stepper compacto. Se añadió un **buscador pegajoso** que la vitrina no tenía —con catálogos largos era scroll infinito— y las tarjetas con producto ya en el pedido se resaltan con el borde del acento. Los tokens del POS se copian en vez de importar `_katuq-comercial` a propósito: la página la abre alguien sin cuenta y no debe arrastrar el peso del panel.
+
+**Configurar los productos desde el dispositivo** (también a pedido): `EditarProductosCatalogoView`, accesible desde el botón "Editar" del panel de productos del detalle. Agrega y quita buscando en el catálogo real, y solo habilita guardar si de verdad cambió algo, para no mandar una escritura vacía. Al guardar manda la lista completa de `productoIds`; el backend reemplaza ese campo y deja el resto del catálogo intacto.
+
+**Nota de rendimiento:** las fotos de Osmosis pesan entre 200 KB y 1 MB cada una. Con 20 productos son varios MB en datos móviles. Se usa carga diferida (`loading="lazy"` y `AsyncImage`), pero convendría pedir miniaturas a Cereza o meter un redimensionador.
+
+**Estado:** backend desplegado y verificado en producción. **El frontend NO está desplegado** — la vitrina compila en su chunk (87 KB) pero el deploy quedó detenido por decisión del usuario, así que `/cat/:token` todavía no existe en producción.
+
+#### Adenda D-139 (2026-07-29) — Bug de navegación reportado por el usuario: el teclado atrapaba la pantalla
+
+**Lo que reportó**, textual: *"en la pantalla de venta asistida cuando seleccionas una bodega y quieres escribir no tienes manera de retroceder"*.
+
+**Dos defectos reales detrás de eso:**
+
+1. **El teclado no tenía salida.** Ninguna pantalla con buscador dentro de un `ScrollView` cerraba el teclado: no al deslizar, no tocando fuera, y sin botón. Solo el login tenía `scrollDismissesKeyboard`. El vendedor elegía bodega, tocaba el campo de cliente y quedaba con media pantalla tapada, sin ver los resultados ni poder volver.
+2. **El selector de bodega empujaba el buscador fuera de pantalla.** Con las cinco bodegas listadas, el panel de cliente quedaba abajo, y con el teclado abierto no se veía ni la bodega elegida ni el resultado de la búsqueda.
+
+**Arreglado así:**
+
+- Modificador reutilizable `tecladoDescartable()` con **dos salidas**, porque la gente intenta ambas: deslizar la lista cierra el teclado siguiendo el dedo (`.interactively`), y un botón **"Listo"** sobre el teclado para quien busca un botón. Cierra el foco sin `@FocusState` por pantalla, así se aplica igual en cualquier vista. Aplicado a las **cinco** pantallas con buscador: inicio de venta, catálogo, bodega, crear catálogo y editar productos del catálogo.
+- Con la bodega elegida, el selector **se colapsa a una línea** ("DESPACHA DESDE · nombre") con un botón **"Cambiar"** que devuelve la lista completa. Al cambiar se cierra el teclado primero: si el foco seguía en el buscador, la lista aparecía detrás del teclado.
+
+**Verificado en pantalla** (`NavegacionVentaTests`, TEST SUCCEEDED): el teclado se abre, el botón "Listo" existe y lo cierra de verdad (se comprueba que `keyboards` desaparece), el resumen de bodega ofrece "Cambiar", al tocarlo vuelve la lista completa, y al elegir otra bodega se vuelve a colapsar. `ConfiguracionProductoTests` y `CotizacionesTests` siguen pasando.
+
+**Nota sobre otro pedido del usuario:** pidió *"que se pueda configurar desde el dispositivo los productos que se pueden agregar en el catálogo de venta asistida"* y se implementó como editar los productos de un catálogo digital. Lo que quería era **desbloquear los productos con candado** (los de `aceptaVariable`). Se midió el alcance real: **1 de 433 productos** está bloqueado (BODY ENIGMATIC) y **ninguno** por calendario o archivo. Al investigar apareció el dato que lo hace viable: las opciones elegidas del árbol de variables viajan al carrito como **`configuracion.preferencias`**, el mismo arreglo que la app ya envía — así que faltaría parsear `variablesForm` (serializado con `flatted`) y ofrecer las opciones. El usuario decidió dejarlo por ahora.
+
+#### Adenda D-139 (2026-07-30) — Los productos con opciones ya se venden desde la app (se retira el bloqueo)
+
+El usuario reportó que sus productos salían bloqueados con el aviso "véndelo desde Katuq web". En la empresa demo solo **1 de 497** lo estaba, así que se confirmó que él trabaja sobre su empresa real, donde los productos con tallas y colores son la norma. Pidió implementar el panel de opciones, y eso se hizo.
+
+**Se implementó el lector del árbol de variables.** `procesoComercial.variablesForm` viene serializado con la librería **flatted**: un arreglo donde **todo string es un índice** a otra posición del mismo arreglo (así se serializan las referencias circulares del árbol de PrimeNG, que tiene `parent` apuntando al padre). Los textos también viven en el arreglo, así que `"13"` no es el texto "13" sino el contenido de la posición 13. Se escribió `Flatted.desaplanar` en Swift, con corte de ciclos por conjunto de visitados y descartando `parent`, que solo sirve para el ciclo.
+
+**Lo que hizo el trabajo viable**: las opciones elegidas viajan al carrito como **`configuracion.preferencias`**, el mismo arreglo que la app ya enviaba para las adiciones. No hubo que inventar nada en el formato del pedido — solo leer el árbol y mandar `"Tallas: M"`, `"Colores: Rojo"` como preferencias, con su `valorUnitarioSinIva` y `porcentajeIva`, que es de donde el backend las suma al total.
+
+**Verificado contra el árbol real** de BODY ENIGMATIC: se leen los cuatro grupos —Tallas (M, L), Colores (Rosa, Rojo), Comentario (texto) y Adjunto (archivo)— con sus tipos correctos. El parser devuelve vacío sin reventar ante `nil`, texto vacío, `[]`, `[[]]` y basura que no es JSON.
+
+**El bloqueo se retiró del todo.** Antes un solo grupo de tipo archivo dejaba el producto entero sin venderse. Ahora se captura todo lo que sí se puede y **lo que falta queda escrito en el pedido**: la observación de la línea recibe "PENDIENTE de completar en Katuq web: Adjunto." — así producción se entera en vez de recibir un pedido incompleto en silencio. En el catálogo, el candado se reemplazó por un aviso de qué quedará pendiente.
+
+**Sí se exige elegir** en cada grupo de opciones: sin talla ni color, producción no sabría qué fabricar, así que el botón Agregar queda deshabilitado hasta completarlas. El sobrecosto de cada opción se muestra en su chip, porque si una talla cuesta más hay que verlo antes de elegirla.
+
+**Bug encontrado por la prueba, no por lectura:** los grupos se construían con `let id = UUID()` dentro de una propiedad **calculada**, así que cada acceso a `gruposVariables` generaba ids nuevos y la opción elegida nunca coincidía con el grupo al validar — el botón Agregar no se habilitaba nunca. Se cambió a ids derivados del contenido (`titulo`, y `grupo/opción`). Es el tipo de defecto que compila perfecto y falla en silencio.
+
+**Verificado en pantalla** (`ConfiguracionProductoTests`, reescrita, TEST SUCCEEDED): el producto ya no está deshabilitado, aparecen Tallas y Colores, sin elegir no deja agregar, al elegir M y Rojo se habilita, y ambas llegan al carrito como `Tallas: M` y `Colores: Rojo`. `NavegacionVentaTests` y `CotizacionesTests` siguen pasando.
+
+**Queda fuera**: subir archivos e imágenes, y la fecha de agenda. Ya no bloquean — se avisan y se anotan en el pedido.
