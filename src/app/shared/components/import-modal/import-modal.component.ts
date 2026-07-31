@@ -243,6 +243,71 @@ export class ImportModalComponent implements OnInit, OnDestroy {
    * Si las columnas del archivo coinciden con la plantilla estándar de clientes,
    * construye el mapeo determinísticamente (sin IA). Devuelve null si no aplica.
    */
+  /**
+   * Coincidencias exactas entre los encabezados del archivo y los de la
+   * plantilla activa. Sin IA: comparación de nombres normalizados.
+   */
+  private matchTemplateHeaders(): { [field: string]: ColumnMapping } {
+    const mappings: { [field: string]: ColumnMapping } = {};
+    if (!this.config) return mappings;
+
+    const porEncabezado = new Map<string, string>();
+    for (const col of this.config.templateColumns) {
+      porEncabezado.set(this.normHeader(col.header), col.field);
+    }
+
+    for (const col of this.sourceColumns) {
+      const field = porEncabezado.get(this.normHeader(col));
+      if (field && !mappings[field]) {
+        mappings[field] = {
+          sourceColumn: col,
+          confidence: 100,
+          reasoning: 'Coincide con la plantilla estándar de Katuq',
+        };
+      }
+    }
+    return mappings;
+  }
+
+  private construirResultadoMapeo(mappings: { [field: string]: ColumnMapping }): ColumnMappingResult {
+    return {
+      success: true,
+      type: this.type,
+      mappings,
+      unmappedRequired: [],
+      warnings: [],
+      suggestions: [],
+      metadata: {
+        columnsAnalyzed: this.sourceColumns.length,
+        sampleRowsUsed: 0,
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
+  /**
+   * Atajo determinístico para la plantilla de PRODUCTOS, equivalente al que ya
+   * existía para clientes.
+   *
+   * Los encabezados de la plantilla son fijos y son los mismos que produce el
+   * export de productos, así que reconocerlos no necesita IA. Gana en tres
+   * frentes: el archivo exportado se reimporta sin intervención, es instantáneo
+   * y no gasta llamadas al modelo, y el importador deja de depender de que KAI
+   * esté arriba (en local KAI ni siquiera corre: vive en otro repo, puerto 3890).
+   *
+   * Devuelve null si el archivo no se parece a la plantilla, para que lo
+   * resuelva KAI como hasta ahora.
+   */
+  private buildStandardProductMapping(): ColumnMappingResult | null {
+    if (this.type !== 'product') return null;
+
+    const mappings = this.matchTemplateHeaders();
+    // Sin referencia y sin título no es nuestra plantilla: que decida KAI.
+    if (!mappings['referencia'] || !mappings['titulo']) return null;
+
+    return this.construirResultadoMapeo(mappings);
+  }
+
   private buildStandardCustomerMapping(): ColumnMappingResult | null {
     if (this.type !== 'customer') return null;
     const resolver: { [k: string]: string } = {};
@@ -452,26 +517,46 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     endpoint: '/v1/onboarding/import-products',
     payloadKey: 'products',
     maxFileSize: 50000000, // 50MB para importaciones masivas
+    // Contrato de columnas compartido con el EXPORT de productos
+    // (`components/productos/productos.component.ts` → `exportColumnas`).
+    // Los encabezados son idénticos allá y acá, para que el ciclo
+    // exportar → corregir en Excel → reimportar funcione: el import hace upsert
+    // por referencia. Si cambiás un encabezado acá, cambialo allá también.
+    //
+    // Cada encabezado dice qué se escribe en la celda: `(SI/NO)` en los
+    // booleanos y la unidad en los numéricos.
+    //
+    // NO va `Cantidad Disponible`: escribía en `disponibilidad.cantidadDisponible`,
+    // que es un campo muerto (nadie lo lee). El stock real vive en la colección
+    // `inventory` por bodega y se carga con "Importar inventario", que sí resuelve
+    // referencia → producto y bodega.
     templateColumns: [
-      { field: 'referencia', header: 'Referencia/SKU', required: true, example: 'PROD001' },
+      { field: 'referencia', header: 'Referencia (SKU)', required: true, example: 'PROD001' },
+      { field: 'codigoBarras', header: 'Codigo de Barras', required: false, example: '7701234567890' },
       { field: 'titulo', header: 'Titulo', required: true, example: 'Camiseta Basica' },
       { field: 'descripcion', header: 'Descripcion', required: false, example: 'Camiseta de algodon' },
-      { field: 'precioUnitarioSinIva', header: 'Precio Sin IVA', required: true, example: '50000' },
-      { field: 'valorIva', header: 'IVA (%)', required: false, example: '19' },
-      { field: 'cantidadDisponible', header: 'Cantidad Disponible', required: false, example: '100' },
       { field: 'marca', header: 'Marca', required: false, example: 'MiMarca' },
-      { field: 'codigoBarras', header: 'Codigo de Barras', required: false, example: '7701234567890' },
       { field: 'categoria', header: 'Categoria', required: false, example: 'Ropa' },
-      { field: 'categoriaConsecutivo', header: 'Id Categoria', required: false, example: '1005' },
-      { field: 'cantidadMinVenta', header: 'Cantidad Minima Venta', required: false, example: '1' },
-      { field: 'inventarioSeguridad', header: 'Inventario Seguridad', required: false, example: '10' },
-      { field: 'garantiasProducto', header: 'Garantias', required: false, example: 'Garantia de 1 año' },
-      { field: 'caracAdicionales', header: 'Caracteristicas Adicionales', required: false, example: 'Material 100% algodon' },
-      { field: 'tipoEntrega', header: 'Tipo de Entrega', required: false, example: 'Envio nacional' },
-      { field: 'tiempoEntrega', header: 'Tiempo de Entrega', required: false, example: '3-5 dias' },
+      { field: 'categoriaConsecutivo', header: 'Id Categoria (opcional, enlace a SIIGO)', required: false, example: '1005' },
+      { field: 'precioUnitarioSinIva', header: 'Precio sin IVA', required: true, example: '50000' },
+      { field: 'valorIva', header: 'IVA (%)', required: false, example: '19' },
+      { field: 'cantidadMinVenta', header: 'Cantidad Minima de Venta', required: false, example: '1' },
+      { field: 'inventarioSeguridad', header: 'Inventario de Seguridad', required: false, example: '10' },
+      { field: 'inventariable', header: 'Inventariable (SI/NO)', required: false, example: 'SI' },
       { field: 'activar', header: 'Activo (SI/NO)', required: false, example: 'SI' },
       { field: 'disponible', header: 'Disponible (SI/NO)', required: false, example: 'SI' },
-      { field: 'seProduceInternamente', header: 'Se Produce? (SI/NO)', required: false, example: 'NO' },
+      { field: 'tipoEntrega', header: 'Tipo de Entrega', required: false, example: 'Envio a domicilio y recoge' },
+      { field: 'tiempoEntrega', header: 'Tiempo de Entrega (dias)', required: false, example: '3' },
+      { field: 'largoProductoCm', header: 'Largo (cm)', required: false, example: '30' },
+      { field: 'altoProductoCm', header: 'Alto (cm)', required: false, example: '10' },
+      { field: 'anchoProductoCm', header: 'Ancho (cm)', required: false, example: '20' },
+      { field: 'pesoUnitarioProductoKg', header: 'Peso (kg)', required: false, example: '0.5' },
+      { field: 'etiquetas', header: 'Etiquetas (separadas por coma)', required: false, example: 'algodon, basica, unisex' },
+      { field: 'garantiasProducto', header: 'Garantias', required: false, example: 'Garantia de 1 año' },
+      { field: 'caracAdicionales', header: 'Caracteristicas Adicionales', required: false, example: 'Material 100% algodon' },
+      { field: 'restriccionesProducto', header: 'Restricciones', required: false, example: 'No apto para menores de 3 años' },
+      { field: 'cuidadoConsumo', header: 'Cuidado y Consumo', required: false, example: 'Lavar en agua fria' },
+      { field: 'seProduceInternamente', header: 'Requiere Produccion (SI/NO)', required: false, example: 'NO' },
       { field: 'integraConProduccion', header: 'Integra Software Produccion? (SI/NO)', required: false, example: 'NO' },
       { field: 'tiempoProduccion', header: 'Tiempo Produccion', required: false, example: '3 dias' },
       { field: 'softwareProduccion', header: 'Software Produccion', required: false, example: 'ERP Interno' }
@@ -507,14 +592,25 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'exposicion.masvendido': 'Mas Vendido',
       'marketplace.puntoDeVenta': 'Disponible en POS',
       'marketplace.paginaWeb': 'Disponible en Web',
-      'referencia': 'Referencia/SKU',
+      'referencia': 'Referencia (SKU)',
       'titulo': 'Titulo',
       'descripcion': 'Descripcion',
-      'precioUnitarioSinIva': 'Precio Sin IVA',
+      'precioUnitarioSinIva': 'Precio sin IVA',
       'valorIva': 'IVA (%)',
-      'cantidadDisponible': 'Cantidad Disponible',
-      'cantidadMinVenta': 'Cantidad Minima Venta',
-      'inventarioSeguridad': 'Inventario Seguridad',
+      'cantidadDisponible': 'Cantidad Disponible (se ignora: el stock va por Importar inventario)',
+      'cantidadMinVenta': 'Cantidad Minima de Venta',
+      'inventarioSeguridad': 'Inventario de Seguridad',
+      'inventariable': 'Inventariable (SI/NO)',
+      'largoProductoCm': 'Largo (cm)',
+      'altoProductoCm': 'Alto (cm)',
+      'anchoProductoCm': 'Ancho (cm)',
+      'pesoUnitarioProductoKg': 'Peso (kg)',
+      'etiquetas': 'Etiquetas (separadas por coma)',
+      'dimensiones.largoProductoCm': 'Largo (cm)',
+      'dimensiones.altoProductoCm': 'Alto (cm)',
+      'dimensiones.anchoProductoCm': 'Ancho (cm)',
+      'dimensiones.pesoUnitarioProductoKg': 'Peso (kg)',
+      'exposicion.etiquetas': 'Etiquetas (separadas por coma)',
       'marca': 'Marca',
       'codigoBarras': 'Codigo de Barras',
       'categoria': 'Categoria/Grupo/Linea/Familia',
@@ -523,9 +619,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'caracAdicionales': 'Caracteristicas Adicionales',
       'tipoEntrega': 'Tipo/Forma de Entrega',
       'tiempoEntrega': 'Tiempo/Plazo de Entrega',
-      'activar': 'Activo',
-      'disponible': 'Disponible',
-      'seProduceInternamente': 'Se Produce Internamente',
+      'activar': 'Activo (SI/NO)',
+      'disponible': 'Disponible (SI/NO)',
+      'seProduceInternamente': 'Requiere Produccion (SI/NO)',
       'integraConProduccion': 'Integra con Software de Produccion',
       'tiempoProduccion': 'Tiempo de Produccion',
       'softwareProduccion': 'Software de Produccion',
@@ -731,6 +827,20 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // Mismo atajo, para la plantilla de productos.
+      const estandarProductos = this.buildStandardProductMapping();
+      if (estandarProductos) {
+        this.mappingResult = estandarProductos;
+        this.showMappingPreview = true;
+        this.prepareMappingFields();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Plantilla estándar detectada',
+          detail: `Se mapearon ${Object.keys(estandarProductos.mappings).length} columnas automáticamente, sin necesidad de análisis.`
+        });
+        return;
+      }
+
       const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
       // Enviar hasta 10 filas de muestra para mejor detección de patrones
       const sampleRows = this.columnMappingService.getSampleRows(this.parsedData, 10);
@@ -758,10 +868,28 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
     } catch (error: any) {
       console.error('Error analyzing columns with KAI:', error);
+
+      // KAI caído NO puede dejar el importador sin salida. Antes se mostraba el
+      // error y `showMappingPreview` quedaba en false: el usuario se quedaba
+      // atascado en el paso 1, sin forma de continuar. El mapeo automático es
+      // una ayuda, no un requisito — la pantalla de mapeo permite asignar las
+      // columnas a mano.
+      //
+      // Se abre igual, precargada con lo que se pueda reconocer por nombre de
+      // columna (si el archivo salió del export de Katuq, eso ya es todo).
+      const porNombre = this.matchTemplateHeaders();
+      this.mappingResult = this.construirResultadoMapeo(porNombre);
+      this.showMappingPreview = true;
+      this.prepareMappingFields();
+
+      const reconocidas = Object.keys(porNombre).length;
       this.messageService.add({
-        severity: 'error',
-        summary: 'Error en Analisis',
-        detail: error?.error?.message || 'No se pudo analizar el archivo con KAI'
+        severity: 'warn',
+        summary: 'Mapeo automático no disponible',
+        detail: reconocidas > 0
+          ? `No se pudo contactar a KAI, pero se reconocieron ${reconocidas} columnas por su nombre. Revisá el mapeo y completá lo que falte a mano.`
+          : 'No se pudo contactar a KAI. Asigná las columnas a mano; el resto de la importación funciona igual.',
+        life: 10000
       });
     } finally {
       this.isAnalyzingColumns = false;
@@ -917,7 +1045,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       let totalCreated = 0;
       let totalUpdated = 0;
       let totalFailed = 0;
+      let totalOmitted = 0;
       const allErrors: string[] = [];
+      const allOmitted: string[] = [];
 
       console.log(`[ImportModal] 📦 Enviando en ${totalBatches} lotes de ${BATCH_SIZE} (${transformedData.length} total)`);
 
@@ -958,6 +1088,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
           totalCreated += data.created || 0;
           totalUpdated += data.updated || 0;
           totalFailed += data.failed || 0;
+          // Omitidos por el modo elegido ("solo crear nuevos" / "solo
+          // actualizar existentes"). No son fallas, pero hay que contarlos y
+          // decirlos: si no, el usuario ve "0 procesados" sin ninguna
+          // explicación de por qué su archivo no hizo nada.
+          totalOmitted += data.omitted || 0;
+          if (data.omittedDetails?.length) allOmitted.push(...data.omittedDetails);
           if (data.errors?.length) allErrors.push(...data.errors);
 
           // Notificar progreso entre lotes
@@ -999,12 +1135,24 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         detail = `${this.importResult.success} ${entity} procesados`;
       }
       if (totalFailed > 0) detail += `, ${totalFailed} fallidos`;
+      if (totalOmitted > 0) {
+        const porModo = this.importMode === 'create'
+          ? 'ya existían y elegiste "Solo crear nuevos"'
+          : 'no existían en el catálogo y elegiste "Solo actualizar existentes"';
+        detail += `. Se omitieron ${totalOmitted} porque ${porModo}`;
+        console.info('[ImportModal] Filas omitidas por el modo elegido:', allOmitted);
+      }
       if (totalBatches > 1) detail += ` (${totalBatches} lotes)`;
 
       this.messageService.add({
-        severity: 'success',
-        summary: 'Importacion Completada',
-        detail
+        // Si NO se escribió nada y todo quedó omitido, no es un éxito: el
+        // usuario tiene que enterarse de que su archivo no cambió nada.
+        severity: (totalCreated + totalUpdated) === 0 && totalOmitted > 0 ? 'warn' : 'success',
+        summary: (totalCreated + totalUpdated) === 0 && totalOmitted > 0
+          ? 'No se importó nada'
+          : 'Importacion Completada',
+        detail,
+        life: totalOmitted > 0 ? 10000 : 5000
       });
 
       this.importComplete.emit(this.importResult);
@@ -1156,6 +1304,17 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
         this.calculateDerivedFields(transformedRow);
 
+        // La columna "Requiere Produccion (SI/NO)" entra por
+        // `procesoComercial.seProduceInternamente`, pero el campo que lee la
+        // lista de productos es `crearProducto.paraProduccion`. Se sincronizan
+        // acá, ANTES de los flags globales, para que el toggle "todos para
+        // producción" siga ganando sobre lo que diga el Excel.
+        if (transformedRow.procesoComercial?.seProduceInternamente !== undefined) {
+          transformedRow.crearProducto = transformedRow.crearProducto || {};
+          transformedRow.crearProducto.paraProduccion =
+            !!transformedRow.procesoComercial.seProduceInternamente;
+        }
+
         // Aplicar flags globales de produccion si estan activos
         if (this.todosParaProduccion) {
           transformedRow.seProduceInternamente = true;
@@ -1191,10 +1350,17 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         transformedRow.marketplace.paginaWeb = true;
         transformedRow.marketplace.puntoDeVenta = true;
 
-        // Exposicion activa por defecto
+        // Exposición: NO se fuerza nada acá.
+        //
+        // Antes estas dos líneas ponían `activar = true` y `disponible = true`
+        // de forma incondicional, y corrían DESPUÉS de aplicar el mapeo: las
+        // columnas "Activo (SI/NO)" y "Disponible (SI/NO)" de la plantilla se
+        // leían, se convertían… y se pisaban. Todo el catálogo entraba activo y
+        // disponible dijera lo que dijera el Excel.
+        //
+        // El valor por defecto (activo/disponible) ya viene de PRODUCT_DEFAULTS,
+        // así que quien no traiga la columna sigue entrando activo igual que antes.
         transformedRow.exposicion = transformedRow.exposicion || {};
-        transformedRow.exposicion.activar = true;
-        transformedRow.exposicion.disponible = true;
         transformedRow.exposicion.activo = true;
       }
 
@@ -1321,6 +1487,21 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       return 0;
     }
 
+    // Etiquetas: en el Excel van separadas por coma, el producto las guarda
+    // como arreglo (`exposicion.etiquetas`).
+    if (katuqField === 'etiquetas' || katuqField === 'tags' || katuqField === 'exposicion.etiquetas') {
+      if (Array.isArray(value)) return value;
+      return String(value)
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean);
+    }
+
+    // Dimensiones y peso se dejan TAL CUAL (string), igual que cuando se crea el
+    // producto a mano. No se pasan por el limpiador numérico a propósito: ese
+    // limpiador borra las comas antes de parsear, así que un peso "0,5" se
+    // convertiría en 5. Mientras eso no se arregle, mejor no ampliarle el alcance.
+
     // Tiempo de entrega: convertir texto a minDias (numero)
     if (katuqField === 'tiempoEntrega' || katuqField === 'disponibilidad.tiempoEntrega') {
       if (typeof value === 'number') return value;
@@ -1385,6 +1566,29 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'caracAdicionales': 'crearProducto.caracAdicionales',
       'restriccionesProducto': 'crearProducto.restriccionesProducto',
       'cuidadoConsumo': 'crearProducto.cuidadoConsumo',
+      'inventariable': 'disponibilidad.inventariable',
+      // Dimensiones: sin estas entradas las columnas de la plantilla se
+      // descartaban en silencio (un campo plano sin mapeo NO se escribe), y el
+      // producto importado quedaba sin medidas ni peso — o sea, imposible de
+      // cotizar para envío.
+      'largoProductoCm': 'dimensiones.largoProductoCm',
+      'altoProductoCm': 'dimensiones.altoProductoCm',
+      'anchoProductoCm': 'dimensiones.anchoProductoCm',
+      'pesoUnitarioProductoKg': 'dimensiones.pesoUnitarioProductoKg',
+      'largo': 'dimensiones.largoProductoCm',
+      'alto': 'dimensiones.altoProductoCm',
+      'ancho': 'dimensiones.anchoProductoCm',
+      'peso': 'dimensiones.pesoUnitarioProductoKg',
+      'etiquetas': 'exposicion.etiquetas',
+      'tags': 'exposicion.etiquetas',
+      // Producción: estas cuatro estaban en la plantilla pero sin mapeo, así que
+      // lo que el usuario escribía se perdía. `seProduceInternamente` alimenta
+      // además `crearProducto.paraProduccion`, que es el campo que lee la lista
+      // de productos (se completa en el post-proceso, más abajo).
+      'seProduceInternamente': 'procesoComercial.seProduceInternamente',
+      'integraConProduccion': 'procesoComercial.integraConProduccion',
+      'tiempoProduccion': 'procesoComercial.tiempoProduccion',
+      'softwareProduccion': 'procesoComercial.softwareProduccion',
       'activar': 'exposicion.activar',
       'disponible': 'exposicion.disponible',
       'posicion': 'exposicion.posicion',
@@ -1456,29 +1660,48 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Descarga la plantilla de ejemplo en **.xlsx**.
+   *
+   * Antes salía en CSV, y el uploader sólo acepta `.xlsx,.xls,.json`
+   * (`acceptedFormats`): la app entregaba una plantilla que después se negaba a
+   * recibir. Quien la llenaba y la subía se topaba con un rechazo sin
+   * explicación, o creía que la plantilla no existía.
+   *
+   * La hoja lleva dos filas: los encabezados y una fila de ejemplo. Los
+   * encabezados son los mismos que usa el export de productos, así que un
+   * archivo exportado sirve como plantilla ya llena.
+   */
   downloadTemplate(): void {
     if (!this.config) return;
 
-    // Escape CSV: encierra en comillas si el valor tiene coma, comillas o salto de línea.
-    const esc = (v: any) => {
-      const s = String(v == null ? '' : v);
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    };
-    const headers = this.config.templateColumns.map(col => esc(col.header)).join(',');
-    const example = this.config.templateColumns.map(col => esc(col.example)).join(',');
-    // BOM UTF-8: hace que Excel abra el CSV como UTF-8 y NO corrompa los acentos.
-    const csvContent = '﻿' + `${headers}\n${example}`;
+    const entidad = this.type === 'customer' ? 'clientes'
+      : this.type === 'inventory' ? 'inventario'
+      : this.type === 'category' ? 'categorias'
+      : 'productos';
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `plantilla_${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'}_katuq.csv`;
-    link.click();
+    const headers = this.config.templateColumns.map(col => col.header);
+    const example = this.config.templateColumns.map(col => col.example ?? '');
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+    // Ancho de columna según el encabezado: sin esto los títulos largos
+    // ("Etiquetas (separadas por coma)") salen cortados y no se entiende qué va.
+    ws['!cols'] = headers.map(h => ({ wch: Math.max(14, Math.min(40, String(h).length + 2)) }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+    XLSX.writeFile(wb, `plantilla_${entidad}_katuq.xlsx`);
+
+    const requeridas = this.config.templateColumns
+      .filter(col => col.required)
+      .map(col => col.header)
+      .join(', ');
 
     this.messageService.add({
       severity: 'success',
-      summary: 'Plantilla Descargada',
-      detail: `Completa la plantilla con tus ${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'} y subela para importar`
+      summary: 'Plantilla descargada',
+      detail: `Completa la plantilla y subela para importar. Columnas obligatorias: ${requeridas || 'ninguna'}.`,
+      life: 8000
     });
   }
 

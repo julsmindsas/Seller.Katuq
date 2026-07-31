@@ -34,16 +34,30 @@
 						</div>
 					</div>
 
-					<!-- Barra de progreso: cuenta obligatorios válidos por formGroup (sin lógica en el .ts) -->
+					<!-- Progreso de obligatorios. Incluye la imagen principal, que no vive
+						 en un validador del form (puede estar subida o solo encolada), y
+						 lista las secciones pendientes como atajos para no tener que
+						 descubrirlas al intentar guardar. -->
 					<div class="mp-progress"
-						*ngIf="{ done: (crearProducto.valid ? 1 : 0) + (precio.valid ? 1 : 0) + (Dimensiones.valid ? 1 : 0) + (disponibilidad.valid ? 1 : 0) + (identificacion.valid ? 1 : 0) + (categoriasForm.valid ? 1 : 0) } as prog">
+						*ngIf="{ total: totalSeccionesObligatorias, pend: seccionesPendientes } as prog">
 						<div class="mp-progress__track">
-							<div class="mp-progress__fill" [style.width.%]="prog.done * 100 / 6"></div>
+							<div class="mp-progress__fill"
+								[style.width.%]="(prog.total - prog.pend.length) * 100 / prog.total"></div>
 						</div>
-						<span class="mp-progress__pct">{{ prog.done * 100 / 6 | number:'1.0-0' }}% completo</span>
-						<span class="mp-progress__pill" [class.is-ok]="prog.done === 6">
-							{{ prog.done === 6 ? 'Todo listo para publicar' : (6 - prog.done) + ' obligatorios pendientes' }}
+						<span class="mp-progress__pct">
+							{{ (prog.total - prog.pend.length) * 100 / prog.total | number:'1.0-0' }}% completo
 						</span>
+						<span class="mp-progress__pill" [class.is-ok]="prog.pend.length === 0">
+							{{ prog.pend.length === 0
+								? 'Todo listo para publicar'
+								: prog.pend.length + (prog.pend.length === 1 ? ' sección pendiente' : ' secciones pendientes') }}
+						</span>
+						<div class="mp-progress__jumps" *ngIf="prog.pend.length">
+							<button type="button" class="mp-jump" *ngFor="let sec of prog.pend"
+								(click)="irASeccion(sec)" [title]="'Ir a ' + sec">
+								<i class="pi pi-arrow-right"></i>{{ sec }}
+							</button>
+						</div>
 					</div>
 
 					<p-tabView [(activeIndex)]="activeTabIndex" (onChange)="onTabChange($event)">
@@ -96,46 +110,50 @@
 								</div>
 								<div class="row">
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Título<span
+										<label class="form-label" for="prodTitulo">Título<span
 												class="redasteris">*</span></label>
-										<textarea formControlName="titulo" class="form-control" id="Nombre" type="text"
-											placeholder="Nombre" required=""> </textarea>
-
+										<textarea formControlName="titulo" class="form-control" id="prodTitulo"
+											type="text" placeholder="Ej: Camiseta algodón cuello redondo"
+											required=""></textarea>
 										<div *ngIf="crearProducto.controls['titulo'].invalid && crearProducto.controls['titulo'].touched"
 											class="error-message">
-											Campo requerido
+											Escribí el nombre del producto
 										</div>
+										<small class="mp-hint" *ngIf="crearProducto.controls['titulo'].valid || !crearProducto.controls['titulo'].touched">
+											Nombre con el que se ve en el catálogo. Concreto y sin códigos.
+										</small>
 									</div>
 
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Fecha Inicial</label>
+										<label class="form-label" for="prodFechaInicial">Fecha Inicial</label>
 										<input formControlName="fechaInicial" class="form-control"
-											id="validationCustom01" type="date" placeholder="Descripcion" />
-
-										<!-- <div *ngIf="crearProducto.controls['fechaInicial'].invalid && crearProducto.controls['fechaInicial'].touched"
-											class="error-message">
-											Campo requerido
-										</div> -->
+											id="prodFechaInicial" type="date" />
+										<small class="mp-hint">
+											Opcional. Desde cuándo se puede vender. Vacío = disponible ya.
+										</small>
 									</div>
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Fecha final</label>
-										<input formControlName="fechaFinal" class="form-control" id="validationCustom01"
-											type="date" placeholder="Descripcion" />
-										<!-- <div *ngIf="crearProducto.controls['fechaFinal'].invalid && crearProducto.controls['fechaFinal'].touched"
-											class="error-message">
-											Campo requerido
-										</div> -->
+										<label class="form-label" for="prodFechaFinal">Fecha final</label>
+										<input formControlName="fechaFinal" class="form-control" id="prodFechaFinal"
+											type="date" />
+										<small class="mp-hint">
+											Opcional. Hasta cuándo se vende. Vacío = sin vencimiento.
+										</small>
 									</div>
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Características
+										<label class="form-label" for="prodCaracAdicionales">Características
 											Adicionales <span class="redasteris">*</span></label>
 										<textarea formControlName="caracAdicionales" class="form-control"
-											id="validationCustom01" type="text" placeholder="Caracteristicas"
-											required=""> </textarea>
+											id="prodCaracAdicionales" type="text"
+											placeholder="Ej: 100% algodón, tallas S a XL, 3 colores"
+											required=""></textarea>
 										<div *ngIf="crearProducto.controls['caracAdicionales'].invalid && crearProducto.controls['caracAdicionales'].touched"
 											class="error-message">
-											Campo requerido
+											Indicá al menos una característica
 										</div>
+										<small class="mp-hint" *ngIf="crearProducto.controls['caracAdicionales'].valid || !crearProducto.controls['caracAdicionales'].touched">
+											Material, medidas, tallas, colores. Lo que no va en la descripción.
+										</small>
 									</div>
 
 								</div>
@@ -156,25 +174,21 @@
 
 								<div class="row">
 									<div class="col-md-12 mb-3">
-										<div class="row">
-											<div class="col-md-3">
-												<label class="form-label" for="validationCustom01">
-													Descripción y contenido<span class="redasteris">*</span>
-												</label>
-											</div>
-
-											<div class="col-md-7 text-end">
-											</div>
-										</div>
-										<div class="row">
-											<div class="col-md-12">
-												<ckeditor formControlName="descripcion" [editor]="ClassicEditor"
-													data="<p>Descripcion</p>"></ckeditor>
-												<div *ngIf="crearProducto.controls['descripcion'].invalid && crearProducto.controls['descripcion'].touched"
-													class="error-message">
-													Campo requerido
-												</div>
-											</div>
+										<label class="form-label">
+											Descripción y contenido<span class="redasteris">*</span>
+										</label>
+										<!-- La ayuda va ARRIBA del editor: el ckeditor es una caja alta y
+											 vacía, así que un mensaje debajo quedaba lejísimos de su
+											 etiqueta y parecía pertenecer al campo siguiente. -->
+										<small class="mp-hint" style="margin-top:0;margin-bottom:7px">
+											Texto que ve el cliente en la ficha: qué es, para qué sirve y qué incluye.
+											Podés usar negrita y listas.
+										</small>
+										<ckeditor formControlName="descripcion" [editor]="ClassicEditor"
+											data="<p>Descripcion</p>"></ckeditor>
+										<div *ngIf="crearProducto.controls['descripcion'].invalid && crearProducto.controls['descripcion'].touched"
+											class="error-message">
+											Falta la descripción — escribila en el editor de arriba
 										</div>
 									</div>
 								</div>
@@ -182,37 +196,47 @@
 
 
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Garantías propias del
-											producto><span class="redasteris">*</span></label>
+										<label class="form-label" for="prodGarantias">Garantías propias del
+											producto<span class="redasteris">*</span></label>
 										<textarea formControlName="garantiasProducto" class="form-control"
-											id="validationCustom01" type="text" placeholder="Garantias"
+											id="prodGarantias" type="text" placeholder="Ej: 6 meses por defectos de fábrica"
 											required=""></textarea>
 										<div *ngIf="crearProducto.controls['garantiasProducto'].invalid && crearProducto.controls['garantiasProducto'].touched"
 											class="error-message">
-											Campo requerido
+											Indicá la garantía. Si no tiene, escribí "Sin garantía"
 										</div>
+										<small class="mp-hint" *ngIf="crearProducto.controls['garantiasProducto'].valid || !crearProducto.controls['garantiasProducto'].touched">
+											Plazo y qué cubre. Si el producto no tiene, escribí "Sin garantía".
+										</small>
 									</div>
 									<div class="col-md-3 mb-3">
 										<label class="form-label"
-											for="validationCustom01">Condiciones/Restricciones<span
+											for="prodRestricciones">Condiciones/Restricciones<span
 												class="redasteris">*</span></label>
 										<textarea formControlName="restriccionesProducto" class="form-control"
-											id="Nombre" type="text" placeholder="Condiciones" required=""> </textarea>
+											id="prodRestricciones" type="text"
+											placeholder="Ej: No se acepta cambio por talla" required=""></textarea>
 										<div *ngIf="crearProducto.controls['restriccionesProducto'].invalid && crearProducto.controls['restriccionesProducto'].touched"
 											class="error-message">
-											Campo requerido
+											Indicá las condiciones. Si no hay, escribí "Ninguna"
 										</div>
+										<small class="mp-hint" *ngIf="crearProducto.controls['restriccionesProducto'].valid || !crearProducto.controls['restriccionesProducto'].touched">
+											Límites de venta, cambio o devolución. Si no hay, escribí "Ninguna".
+										</small>
 									</div>
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Como debe cuidarse /
+										<label class="form-label" for="prodCuidado">Como debe cuidarse /
 											consumirse<span class="redasteris">*</span></label>
 										<textarea formControlName="cuidadoConsumo" class="form-control"
-											id="validationCustom01" type="text" placeholder="Cuidado"
+											id="prodCuidado" type="text" placeholder="Ej: Lavar a máquina en agua fría"
 											required=""></textarea>
 										<div *ngIf="crearProducto.controls['cuidadoConsumo'].invalid && crearProducto.controls['cuidadoConsumo'].touched"
 											class="error-message">
-											Campo requerido
+											Indicá el cuidado o consumo. Si no aplica, escribí "No aplica"
 										</div>
+										<small class="mp-hint" *ngIf="crearProducto.controls['cuidadoConsumo'].valid || !crearProducto.controls['cuidadoConsumo'].touched">
+											Lavado, conservación o modo de uso. Si no aplica, escribí "No aplica".
+										</small>
 									</div>
 								</div>
 							</form>
@@ -330,10 +354,6 @@
 										(click)="addRow()"> Añadir precio por
 										Volumen +</button>
 								</h4>
-								<div class="row">
-									<div class="col-sm 12">
-									</div>
-								</div>
 								<div class="table-responsive">
 
 									<table class="table">
@@ -346,7 +366,10 @@
 												<th scope="col">Valor IVA</th>
 												<th scope="col">Precio unitario Total(con
 													IVA)</th>
-
+												<!-- Faltaba: el <tbody> tiene 7 celdas y el encabezado
+													 solo declaraba 6, así que de acá en adelante cada
+													 columna quedaba bajo el título de la anterior. -->
+												<th scope="col" class="text-center">Quitar</th>
 											</tr>
 										</thead>
 										<tbody formArrayName="preciosVolumen">
@@ -418,44 +441,49 @@
 							<form [formGroup]="Dimensiones">
 								<div class="row">
 									<h5>Dimensiones</h5>
+									<p class="mp-hint" style="margin:0">
+										Medidas del producto empacado. Las usa la transportadora para cotizar el
+										envío, así que conviene que sean reales. Si no aplica, poné 0.
+									</p>
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Largo(cm.) <span
+										<label class="form-label" for="dimLargo">Largo(cm.) <span
 												class="redasteris">*</span> </label>
-										<input formControlName="largoProductoCm" class="form-control" id="Nombre"
-											type="number" placeholder="cm." required="" />
+										<input formControlName="largoProductoCm" class="form-control" id="dimLargo"
+											type="number" min="0" placeholder="Ej: 30" required="" />
 										<div *ngIf="Dimensiones.controls['largoProductoCm'].invalid && Dimensiones.controls['largoProductoCm'].touched"
 											class="error-message">
-											Campo requerido
+											Poné el largo en centímetros (0 si no aplica)
 										</div>
 									</div>
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Alto(cm.) <span
+										<label class="form-label" for="dimAlto">Alto(cm.) <span
 												class="redasteris">*</span></label>
 										<input formControlName="altoProductoCm" class="form-control"
-											id="validationCustom01" type="number" placeholder="cm." required="" />
+											id="dimAlto" type="number" min="0" placeholder="Ej: 5" required="" />
 										<div *ngIf="Dimensiones.controls['altoProductoCm'].invalid && Dimensiones.controls['altoProductoCm'].touched"
 											class="error-message">
-											Campo requerido
+											Poné el alto en centímetros (0 si no aplica)
 										</div>
 									</div>
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Ancho(cm.)<span
+										<label class="form-label" for="dimAncho">Ancho(cm.)<span
 												class="redasteris">*</span></label>
 										<input formControlName="anchoProductoCm" class="form-control"
-											id="validationCustom01" type="number" placeholder="cm." required="" />
+											id="dimAncho" type="number" min="0" placeholder="Ej: 20" required="" />
 										<div *ngIf="Dimensiones.controls['anchoProductoCm'].invalid && Dimensiones.controls['anchoProductoCm'].touched"
 											class="error-message">
-											Campo requerido
+											Poné el ancho en centímetros (0 si no aplica)
 										</div>
 									</div>
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Peso de la
+										<label class="form-label" for="dimPeso">Peso de la
 											unidad(kg.)<span class="redasteris">*</span></label>
 										<input formControlName="pesoUnitarioProductoKg" class="form-control"
-											id="validationCustom01" type="number" placeholder="kg." required="" />
+											id="dimPeso" type="number" min="0" step="0.01" placeholder="Ej: 0.35"
+											required="" />
 										<div *ngIf="Dimensiones.controls['pesoUnitarioProductoKg'].invalid && Dimensiones.controls['pesoUnitarioProductoKg'].touched"
 											class="error-message">
-											Campo requerido
+											Poné el peso en kilogramos (0 si no aplica)
 										</div>
 									</div>
 								</div>
@@ -466,55 +494,81 @@
 								<h5>Disponibilidad</h5>
 								<div class="row ">
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Tipo de entrega<span
+										<label class="form-label" for="dispTipoEntrega">Tipo de entrega<span
 												class="redasteris">*</span>
 										</label>
-										<select formControlName="tipoEntrega" class="form-control" required="">
+										<select formControlName="tipoEntrega" id="dispTipoEntrega"
+											class="form-control" required="">
 											<option value="seleccione" selected disabled>Seleccione</option>
 											<option *ngFor="let item of formaEntrega" value="{{item.nombreInterno}}">
 												{{item.nombreInterno}}</option>
 										</select>
-
+										<small class="mp-hint">
+											Cómo llega al cliente (domicilio, recoge en tienda…). Se configura en
+											Maestros.
+										</small>
 									</div>
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Tiempo de entrega <span
+										<label class="form-label" for="dispTiempoEntrega">Tiempo de entrega <span
 												class="redasteris">*</span>
 										</label>
-										<select formControlName="tiempoEntrega" class="form-control">
+										<select formControlName="tiempoEntrega" id="dispTiempoEntrega"
+											class="form-control">
 											<option value="seleccione" selected disabled>Seleccione</option>
 											<option *ngFor="let item of tiempoEntrega" [value]="item.nombreInterno">
 												{{item.nombreInterno}}</option>
 										</select>
+										<small class="mp-hint">
+											Cuánto tarda desde que se confirma el pedido.
+										</small>
 									</div>
 									<!-- "Cantidad disponible global" removida — el stock se gestiona desde /inventario/inventario-catalogo -->
 									<input formControlName="cantidadDisponible" type="hidden" />
 									<div class="col-md-3 mb-3">
-										<label class="form-label" for="validationCustom01">Cantidad Mínima de
+										<label class="form-label" for="dispCantidadMin">Cantidad Mínima de
 											Venta <span class="redasteris">*</span></label>
 										<input formControlName="cantidadMinVenta" class="form-control"
-											id="validationCustom01" type="number" placeholder="Descripción"
+											id="dispCantidadMin" type="number" min="1" placeholder="Ej: 1"
 											required="" />
 										<div *ngIf="disponibilidad.controls['cantidadMinVenta'].invalid && disponibilidad.controls['cantidadMinVenta'].touched"
 											class="error-message">
-											Campo requerido
+											Poné cuántas unidades como mínimo. Si se vende de a una, escribí 1
 										</div>
+										<small class="mp-hint" *ngIf="disponibilidad.controls['cantidadMinVenta'].valid || !disponibilidad.controls['cantidadMinVenta'].touched">
+											Unidades mínimas por pedido. Lo normal es 1.
+										</small>
 									</div>
 								</div>
 								<div class="row">
 
-									<div class="col-md-3 mb-3 form-control">
-										<label class="form-label" for="validationCustom01">Inventario de
+									<!-- Este contenedor tenía la clase `form-control`, o sea que un <div>
+										 se pintaba como si fuera un campo de texto y envolvía label +
+										 input + checkbox adentro. -->
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="dispInvSeguridad">Inventario de
 											Seguridad <span class="redasteris">*</span></label>
 										<input formControlName="inventarioSeguridad" class="form-control"
-											id="validationCustom01" type="number" placeholder="Descripción"
+											id="dispInvSeguridad" type="number" min="0" placeholder="Ej: 0"
 											required="" />
 										<div *ngIf="disponibilidad.controls['inventarioSeguridad'].invalid && disponibilidad.controls['inventarioSeguridad'].touched"
 											class="error-message">
-											Campo requerido
+											Poné el stock de reserva. Si no manejás reserva, escribí 0
 										</div>
-										<label class="form-label">¿Este producto es inventariable?</label>
-										<input id="Nombre" type="checkbox" placeholder="12344554" required=""
-											formControlName="inventariable" />
+										<small class="mp-hint" *ngIf="disponibilidad.controls['inventarioSeguridad'].valid || !disponibilidad.controls['inventarioSeguridad'].touched">
+											Unidades que se reservan y no se ofrecen a la venta. Si no aplica, 0.
+										</small>
+									</div>
+									<div class="col-md-3 mb-3">
+										<label class="form-label" for="dispInventariable">¿Este producto es
+											inventariable?</label>
+										<div>
+											<input id="dispInventariable" type="checkbox"
+												formControlName="inventariable" />
+										</div>
+										<small class="mp-hint">
+											Marcado = se le descuenta stock en cada venta. Sin marcar = servicio o
+											producto sin control de existencias.
+										</small>
 									</div>
 
 								</div>
@@ -535,16 +589,23 @@
 												<option value="externo" selected>Manual</option>
 												<option value="propio">Automática</option>
 											</select>
+											<small class="mp-hint">
+												Manual = la escribís vos. Automática = la genera el sistema.
+											</small>
 										</div>
 										<div class="col-md-3 mb-3">
 
-											<label class="form-label" for="validationCustom01">Referencia <span
+											<label class="form-label" for="referencia">Referencia <span
 													class="redasteris">*</span></label>
 
 											<input #referencia formControlName="referencia" class="form-control"
-												id="referencia" type="text" placeholder="12344554" required=""
+												id="referencia" type="text" placeholder="Ej: CAM-ALG-001" required=""
 												[class.is-invalid]="referenciaError"
 												(blur)="generarCodigoBarras(); validarReferenciaEnBlur()" />
+											<div *ngIf="identificacion.controls['referencia'].invalid && identificacion.controls['referencia'].touched && !referenciaError"
+												class="error-message">
+												Escribí la referencia del producto
+											</div>
 											<span class="input-group-text ms-1" *ngIf="validandoReferencia">
 												<i class="fa fa-spinner fa-spin text-muted"></i>
 											</span>
@@ -554,6 +615,9 @@
 											<div class="valid-feedback d-block text-success" *ngIf="!validandoReferencia && !referenciaError && identificacion.getRawValue().referencia">
 												<i class="fa fa-check-circle"></i> Referencia disponible
 											</div>
+											<small class="mp-hint" *ngIf="!referenciaError && !identificacion.getRawValue().referencia">
+												Código único con el que identificás el producto. No se puede repetir.
+											</small>
 										</div>
 									</div>
 									<h5>Código de barras</h5>
@@ -574,12 +638,24 @@
 									</div>
 									<div class="col-md-3 mb-3">
 
-										<label class="form-label" for="validationCustom01">Nro Código Barras
+										<!-- Lleva asterisco porque el control SÍ tiene Validators.required.
+											 Sin él parecía opcional y, si la autogeneración no corría,
+											 invalidaba "Identificación" sin ninguna señal. -->
+										<label class="form-label" for="idCodigoBarras">Nro Código Barras <span
+												class="redasteris">*</span>
 										</label>
 
 										<input #codigoBarra formControlName="codigoBarras" class="form-control"
-											id="Nombre" type="text" placeholder="12344554" required=""
-											(blur)="generarCodigoBarrasByCodigoBarras()" />
+											id="idCodigoBarras" type="text" placeholder="Ej: 7701234567890"
+											required="" (blur)="generarCodigoBarrasByCodigoBarras()" />
+										<div *ngIf="identificacion.controls['codigoBarras'].invalid && identificacion.controls['codigoBarras'].touched"
+											class="error-message">
+											Falta el código de barras. Se genera solo al salir del campo
+											Referencia, o escribilo a mano
+										</div>
+										<small class="mp-hint" *ngIf="identificacion.controls['codigoBarras'].valid || !identificacion.controls['codigoBarras'].touched">
+											Se autocompleta desde la Referencia. Si tenés el EAN real, pegalo acá.
+										</small>
 									</div>
 									<div class="col-md-4">
 										<h6>*Código barras sugerido</h6>
@@ -591,14 +667,17 @@
 
 									<h5>Marca</h5>
 									<div class="col-md-4 mb-3">
-										<label class="form-label" for="validationCustom01">Marca <span
+										<label class="form-label" for="idMarca">Marca <span
 												class="redasteris">*</span></label>
-										<input formControlName="marca" class="form-control" id="validationCustom01"
-											type="text" placeholder="Descripción" required="" />
+										<input formControlName="marca" class="form-control" id="idMarca"
+											type="text" placeholder="Ej: Adidas" required="" />
 										<div *ngIf="identificacion.controls['marca'].invalid && identificacion.controls['marca'].touched"
 											class="error-message">
-											Campo requerido
+											Escribí la marca. Si no tiene, poné el nombre de tu comercio
 										</div>
+										<small class="mp-hint" *ngIf="identificacion.controls['marca'].valid || !identificacion.controls['marca'].touched">
+											Fabricante o marca comercial. Si es propio, el nombre de tu comercio.
+										</small>
 									</div>
 
 
@@ -995,6 +1074,14 @@
 
 									<p-treeSelect [options]="categorias" formControlName="categorias"
 										placeholder="Seleccione una categoria"></p-treeSelect>
+									<div *ngIf="categoriasForm.controls['categorias'].invalid && categoriasForm.controls['categorias'].touched"
+										class="error-message">
+										Elegí una categoría del árbol
+									</div>
+									<small class="mp-hint" *ngIf="categoriasForm.controls['categorias'].valid || !categoriasForm.controls['categorias'].touched">
+										Define dónde aparece el producto en el catálogo. Se administran en
+										Maestros &gt; Categorías.
+									</small>
 								</div>
 							</form>
 						</p-tabPanel>

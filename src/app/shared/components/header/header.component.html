@@ -38,12 +38,6 @@
       </div>
     </div>
 
-    <!-- Aviso de versión nueva: solo aparece si el servidor publicó una
-         versión distinta a la cargada (VersionCheckService). -->
-    <div class="header-actualizacion col d-flex align-items-center justify-content-center px-2">
-      <app-aviso-actualizacion></app-aviso-actualizacion>
-    </div>
-
     <!-- NAV RIGHT - Elementos esenciales -->
     <div class="nav-right col pull-right right-header p-0 ms-auto">
       <ul class="nav-menus">
@@ -73,6 +67,14 @@
         </li>
       </ul>
     </div>
+  </div>
+
+  <!-- Aviso de versión nueva: solo aparece si el servidor publicó una versión
+       distinta a la cargada (VersionCheckService). Va FUERA de .header-wrapper,
+       en su propia franja: dentro de la fila le robaba ancho al buscador y a las
+       acciones de la derecha. Cuando no hay actualización no ocupa alto. -->
+  <div class="header-actualizacion-franja">
+    <app-aviso-actualizacion></app-aviso-actualizacion>
   </div>
 </div>
 <!-- Page Header Ends -->

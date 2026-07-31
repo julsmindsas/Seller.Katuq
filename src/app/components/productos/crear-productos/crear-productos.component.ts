@@ -31,6 +31,7 @@ import Swal from "sweetalert2";
 import { Observable, Subscription } from "rxjs";
 import { parse, stringify } from "flatted";
 import { TreeNode } from "primeng/api";
+import { TabView } from "primeng/tabview";
 import { Router } from "@angular/router";
 import {
   NgbActiveModal,
@@ -176,6 +177,27 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   activeTabIndex = 0;
   isDropshippingConfigMode = false;
 
+  /**
+   * Referencia al p-tabView para resolver pestañas por NOMBRE.
+   *
+   * Los índices no se pueden cablear: "Dropshipping", "Pedidos relacionados" e
+   * "Historial de cambios" son condicionales, así que el índice de todo lo que
+   * viene después cambia según el producto. Ya había dos índices desfasados por
+   * esto (`activateDropshippingTab` apuntaba a Identificación, y el retorno de
+   * "producto no activado" caía en Dimensiones en vez de Exposición).
+   */
+  @ViewChild(TabView) private tabView?: TabView;
+
+  /** Secciones con obligatorios, en el orden en que aparecen en el tabView. */
+  private readonly seccionesObligatorias: { tab: string; grupo: () => FormGroup }[] = [
+    { tab: 'Datos básicos', grupo: () => this.crearProducto },
+    { tab: 'Precio', grupo: () => this.precio },
+    { tab: 'Dimensiones', grupo: () => this.Dimensiones },
+    { tab: 'Disponibilidad', grupo: () => this.disponibilidad },
+    { tab: 'Identificación', grupo: () => this.identificacion },
+    { tab: 'Categorías', grupo: () => this.categoriasForm },
+  ];
+
   // Pestaña: Pedidos relacionados
   pedidosRelacionados: any[] = [];
   loadingPedidos = false;
@@ -283,8 +305,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.crearProducto = this.fb.group({
       titulo: ["", Validators.required],
       descripcion: ["", Validators.required],
-      fechaInicial: ["", [Validators.required]],
-      fechaFinal: ["", [Validators.required]],
+      // Las fechas de vigencia NO son obligatorias: la etiqueta no lleva
+      // asterisco y su mensaje de error está comentado en el template desde
+      // siempre. Con `Validators.required` invalidaban "Datos básicos" en
+      // silencio — el usuario llenaba todo lo marcado con * y la sección
+      // seguía apareciendo como pendiente sin ningún campo en rojo.
+      fechaInicial: [""],
+      fechaFinal: [""],
       caracAdicionales: ["", [Validators.required]],
       garantiasProducto: ["", [Validators.required]],
       restriccionesProducto: ["", [Validators.required]],
@@ -314,7 +341,12 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.disponibilidad = this.fb.group({
       tipoEntrega: ["seleccione", [Validators.required]],
       tiempoEntrega: ["seleccione", [Validators.required]],
-      cantidadDisponible: ["", Validators.required],
+      // Sin `Validators.required`: el campo se quitó de la UI (ahora es un input
+      // hidden — el stock se gestiona desde /inventario/inventario-catalogo) y
+      // NADIE lo asigna en el código. Con el validador puesto, el grupo
+      // "Disponibilidad" quedaba inválido para siempre y era imposible
+      // completar la sección: no hay ningún control donde llenarlo.
+      cantidadDisponible: [""],
       cantidadMinVenta: ["", [Validators.required]],
       inventarioSeguridad: ["", [Validators.required]],
       inventariable: [true],
@@ -542,8 +574,14 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         }
       },
       error(err) {
-        Swal.fire("Error", "Error al obtener los procesos", "error");
-        console.log(err);
+        // Maestro opcional: los procesos de producción solo alimentan el selector
+        // del módulo variable. Si fallan, crear/editar producto sigue funcionando,
+        // así que no se bloquea el modal con un Swal en cada apertura.
+        context.procesosProduccion = [];
+        console.warn(
+          `[crear-productos] No se pudieron cargar los procesos de producción (HTTP ${err?.status ?? "?"} en /v1/procesos/all). El formulario continúa sin ellos.`,
+          err,
+        );
       },
     });
 
@@ -938,8 +976,299 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   activateDropshippingTab(): void {
-    // Activar el tab de Dropshipping (índice 6, después de: Información, Precios, Dimensiones, Disponibilidad, Exposición, Proceso Comercial)
-    this.activeTabIndex = 6;
+    this.irATab('Dropshipping');
+  }
+
+  // ============== NAVEGACIÓN Y VALIDACIÓN DEL TABVIEW ==============
+
+  /** Índice actual de una pestaña por su header. -1 si no está renderizada. */
+  private indiceTab(header: string): number {
+    const objetivo = header.trim().toLowerCase();
+    const tabs = this.tabView?.tabs || [];
+    return tabs.findIndex(
+      (t) => (t.header || '').trim().toLowerCase() === objetivo,
+    );
+  }
+
+  /** Lleva al usuario a la pestaña indicada. No hace nada si no existe. */
+  private irATab(header: string): void {
+    const i = this.indiceTab(header);
+    if (i >= 0) {
+      this.activeTabIndex = i;
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Etiquetas legibles de los campos inválidos de un FormGroup. Se usan para
+   * decirle al usuario QUÉ le falta, no solo que "algo" falta.
+   */
+  private camposInvalidos(grupo: FormGroup): string[] {
+    if (!grupo) { return []; }
+    return Object.keys(grupo.controls)
+      .filter((nombre) => grupo.get(nombre)?.invalid)
+      .map((nombre) => this.etiquetaCampo(nombre));
+  }
+
+  /** camelCase del formControlName → texto legible ("caracAdicionales" → "Carac adicionales"). */
+  private etiquetaCampo(nombre: string): string {
+    const legibles: Record<string, string> = {
+      titulo: 'Título',
+      caracAdicionales: 'Características adicionales',
+      precioUnitarioSinIva: 'Precio unitario (sin IVA)',
+      precioUnitarioIva: 'Porcentaje IVA',
+      imagenesPrincipales: 'Imagen principal',
+    };
+    if (legibles[nombre]) { return legibles[nombre]; }
+    const conEspacios = nombre.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
+    return conEspacios.charAt(0).toUpperCase() + conEspacios.slice(1);
+  }
+
+  /**
+   * True si hay al menos una imagen principal, ya subida o pendiente de subir.
+   * Lee el control directo (no `.value` del grupo, que reconstruye el objeto
+   * completo) porque esto se evalúa desde el template en cada ciclo.
+   */
+  private tieneImagenPrincipal(): boolean {
+    const yaSubidas = this.crearProducto?.get('imagenesPrincipales')?.value;
+    const pendientes = this.fileImg.some((f) => f.tipo === 'principal');
+    return (Array.isArray(yaSubidas) && yaSubidas.length > 0) || pendientes;
+  }
+
+  /**
+   * ¿Falta la referencia del producto?
+   *
+   * Va por fuera de la validez del formGroup porque `referencia` es un control
+   * DESHABILITADO (`disable()` al construir `identificacion`: en modo automático
+   * la genera el sistema), y Angular excluye los controles deshabilitados de la
+   * validez del grupo. Su `Validators.required` no protege nada — `identificacion`
+   * daba válido con la referencia vacía, y el backend recibía `undefined` y
+   * reventaba con un 500 al usarla en un `.where()` de Firestore.
+   *
+   * Se lee con `getRawValue()`, que sí incluye los deshabilitados.
+   *
+   * Es una lectura PURA a propósito: la llama el template en cada ciclo de
+   * detección de cambios, así que no puede tener efectos secundarios. Generar la
+   * referencia acá (setValue) provocaría un bucle de detección de cambios.
+   */
+  private faltaReferencia(): boolean {
+    return !this.identificacion?.getRawValue()?.referencia;
+  }
+
+  /**
+   * Genera la referencia automática si falta. Se llama SOLO desde el guardado,
+   * no desde el template, por lo dicho en `faltaReferencia`.
+   *
+   * Existe para no dejar un obligatorio imposible de llenar: en modo automático
+   * el input está deshabilitado y el usuario no tendría dónde escribir nada.
+   */
+  private asegurarReferencia(): void {
+    if (
+      this.faltaReferencia() &&
+      this.identificacion?.get('tipoReferencia')?.value === 'propio'
+    ) {
+      this.generateAutoReference();
+    }
+  }
+
+  /**
+   * Prefijo + consecutivo de la referencia automática, en un solo lugar.
+   *
+   * Antes esta expresión estaba repetida en cuatro sitios y `generateAutoReference`
+   * la envolvía en un `if (this.ultimasLetras && ...)` que, cuando el prefijo aún
+   * no estaba cargado, NO generaba nada y tampoco avisaba: la referencia quedaba
+   * vacía en silencio. Acá el prefijo se resuelve con respaldo, así que siempre
+   * devuelve una referencia utilizable.
+   *
+   * OJO: el consecutivo es `cantidad de productos + 1`, no una secuencia de
+   * emisión. Si se borra un producto el contador retrocede y puede repetir una
+   * referencia ya usada; en ese caso el backend asigna una aleatoria. Arreglarlo
+   * de raíz requiere un contador persistente y va aparte.
+   */
+  private construirReferenciaAutomatica(): string {
+    const prefijo =
+      this.ultimasLetras ||
+      (JSON.parse(localStorage.getItem('currentCompany') || '{}')?.nomComercial || 'PRD')
+        .toString()
+        .replace(' ', '')
+        .substring(0, 3);
+    return `${prefijo}-${(this.totalProducts + 1).toString().padStart(6, '0')}`;
+  }
+
+  /**
+   * `identificacion` lista para mandar al backend.
+   *
+   * `referencia` y `codigoBarras` son controles DESHABILITADOS. `getRawValue()`
+   * sí los incluye, pero con el valor que tengan — y si ese valor es `undefined`
+   * (pasa cuando alguno de los `setValue(this.edit.identificacion?.referencia)`
+   * corre sin `edit` cargado, que es el caso de un producto nuevo)
+   * `JSON.stringify` BORRA la clave al serializar el POST. El backend recibía el
+   * producto sin referencia y respondía 400 MISSING_PRODUCT_REFERENCE aunque la
+   * pantalla mostrara la referencia bien puesta.
+   *
+   * Se notaba como "no guarda al primer click": ese primer intento fallaba, pero
+   * de paso poblaba la referencia, así que el segundo click sí pasaba.
+   */
+  private identificacionParaGuardar(): any {
+    const raw = this.identificacion.getRawValue();
+    if (!raw.referencia) {
+      this.asegurarReferencia();
+      raw.referencia =
+        this.identificacion.getRawValue()?.referencia || this.construirReferenciaAutomatica();
+    }
+    if (!raw.codigoBarras) {
+      raw.codigoBarras = raw.referencia;
+    }
+    return raw;
+  }
+
+  /**
+   * Secciones obligatorias incompletas, en el orden en que aparecen en el
+   * tabView. Alimenta la barra de progreso del encabezado, que ahora sí incluye
+   * la imagen principal y la referencia: antes contaba solo los 6 formGroup y
+   * podía decir "Todo listo para publicar" mientras el guardado fallaba.
+   */
+  get seccionesPendientes(): string[] {
+    const pendientes = this.seccionesObligatorias
+      .filter((s) => {
+        const grupo = s.grupo();
+        return grupo && grupo.invalid;
+      })
+      .map((s) => s.tab);
+
+    if (!this.tieneImagenPrincipal()) {
+      pendientes.push('Imágenes');
+    }
+    if (this.faltaReferencia() && pendientes.indexOf('Identificación') === -1) {
+      pendientes.push('Identificación');
+    }
+
+    return pendientes.sort((a, b) => this.indiceTab(a) - this.indiceTab(b));
+  }
+
+  /**
+   * Total de secciones obligatorias: los formGroup + la imagen principal.
+   * La referencia no suma una unidad aparte porque cuenta dentro de
+   * "Identificación", que ya está en `seccionesObligatorias`.
+   */
+  get totalSeccionesObligatorias(): number {
+    return this.seccionesObligatorias.length + 1;
+  }
+
+  /** Handler del template: salta a una sección pendiente desde el encabezado. */
+  irASeccion(header: string): void {
+    this.irATab(header);
+  }
+
+  /**
+   * Valida TODO el formulario de una vez y, si falta algo, lleva al usuario a la
+   * sección con problemas listando todas las pendientes.
+   *
+   * Antes cada validación se hacía suelta y solo mostraba el mensaje: si estabas
+   * en "Datos básicos" y faltaba la imagen (sección 3), el error no te decía
+   * dónde estaba ni te llevaba — tocaba salir a buscarla a mano.
+   *
+   * Rigor distinto según el modo, a propósito:
+   *
+   * - `crear`: bloquea. Un producto nuevo nace completo.
+   * - `editar`: avisa y deja decidir. El guardado original NUNCA validó la
+   *   validez de los formGroup (solo la imagen), así que hay productos vivos en
+   *   la base que no cumplen los obligatorios de hoy. Bloquear al editar los
+   *   volvería intocables: no podrías corregirle el precio a un producto viejo
+   *   sin antes llenarle campos que no existían cuando se creó.
+   *
+   * La imagen principal sí bloquea en los dos modos, porque eso ya era así.
+   *
+   * @returns true si se puede continuar con el guardado.
+   */
+  private async validarAntesDeGuardar(modo: 'crear' | 'editar'): Promise<boolean> {
+    // Última oportunidad de generar la referencia automática antes de decidir
+    // si falta. Acá sí se puede: no estamos dentro de la detección de cambios.
+    this.asegurarReferencia();
+
+    const pendientes: { tab: string; detalle: string[] }[] = [];
+
+    for (const seccion of this.seccionesObligatorias) {
+      const grupo = seccion.grupo();
+      if (!grupo || grupo.valid) { continue; }
+      // Marca los controles como "touched" para que se pinten los campos y se
+      // muestren sus mensajes de error al volver a la sección.
+      grupo.markAllAsTouched();
+      pendientes.push({ tab: seccion.tab, detalle: this.camposInvalidos(grupo) });
+    }
+
+    // La imagen principal no vive en un validador del form: se valida aparte
+    // porque puede estar subida o solo encolada en `fileImg`.
+    const faltaImagen = !this.tieneImagenPrincipal();
+    if (faltaImagen) {
+      pendientes.push({ tab: 'Imágenes', detalle: ['Al menos una imagen principal'] });
+    }
+
+    // La referencia se valida aparte (ver faltaReferencia). Si falta, se anexa
+    // al detalle de "Identificación" en vez de crear una segunda entrada.
+    if (this.faltaReferencia()) {
+      const yaListada = pendientes.find((p) => p.tab === 'Identificación');
+      const detalle = 'Referencia (en modo automático se genera sola; si no aparece, '
+        + 'poné Tipo Referencia en "Manual" y escribila)';
+      if (yaListada) {
+        yaListada.detalle.push(detalle);
+      } else {
+        pendientes.push({ tab: 'Identificación', detalle: [detalle] });
+      }
+    }
+
+    if (pendientes.length === 0) { return true; }
+
+    // Se ordenan como aparecen en el tabView para que "la primera pendiente"
+    // sea de verdad la primera que el usuario ve.
+    pendientes.sort((a, b) => this.indiceTab(a.tab) - this.indiceTab(b.tab));
+
+    const listado = pendientes
+      .map(
+        (p) =>
+          `<li style="margin-bottom:6px"><strong>${p.tab}</strong>` +
+          (p.detalle.length ? `<br><span style="color:#8b879f">${p.detalle.join(', ')}</span>` : '') +
+          `</li>`,
+      )
+      .join('');
+
+    const cuerpo = `<ul style="text-align:left;padding-left:20px;margin:0">${listado}</ul>`;
+    const bloquea = modo === 'crear' || faltaImagen;
+
+    if (bloquea) {
+      const encabezado = faltaImagen && modo === 'editar'
+        ? 'Falta la imagen principal'
+        : 'No se puede guardar todavía. Revisá estas secciones:';
+      await Swal.fire({
+        title: 'Faltan datos obligatorios',
+        html: `<p style="margin-bottom:10px">${encabezado}</p>${cuerpo}`,
+        icon: 'warning',
+        confirmButtonText: `Ir a "${pendientes[0].tab}"`,
+        confirmButtonColor: '#6a4dfb',
+      });
+      this.irATab(pendientes[0].tab);
+      return false;
+    }
+
+    // Modo editar sin problemas de imagen: se avisa pero la decisión es del usuario.
+    const respuesta = await Swal.fire({
+      title: 'Hay datos obligatorios sin llenar',
+      html:
+        `<p style="margin-bottom:10px">Podés guardar los cambios igual, o completar estas secciones primero:</p>${cuerpo}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Guardar cambios igual',
+      cancelButtonText: `Ir a "${pendientes[0].tab}"`,
+      confirmButtonColor: '#6a4dfb',
+      cancelButtonColor: '#8b879f',
+      reverseButtons: true,
+    });
+
+    if (!respuesta.isConfirmed) {
+      this.irATab(pendientes[0].tab);
+      return false;
+    }
+    return true;
   }
 
   getPageTitle(): string {
@@ -1276,14 +1605,9 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     //   return;
     // }
 
-    // Validar si el producto tiene imágenes principales (ya subidas o pendientes)
-    const tieneImagenesPrincipalesPendientes = this.fileImg.some(f => f.tipo === 'principal');
-    if ((!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) && !tieneImagenesPrincipalesPendientes) {
-      Swal.fire(
-        "Error",
-        "El producto debe tener obligatoriamente al menos una imagen principal",
-        "error",
-      );
+    // Valida todas las secciones de una vez y navega a la primera pendiente.
+    // Al crear se exige todo: el producto nace completo.
+    if (!(await this.validarAntesDeGuardar('crear'))) {
       this.saving = false;
       return;
     }
@@ -1317,7 +1641,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       });
       if (!confirmacion.isConfirmed) {
         this.saving = false;
-        this.activeTabIndex = 4; // Tab "Exposición"
+        this.irATab('Exposición');
         return;
       }
     }
@@ -1334,7 +1658,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       this.disponibilidad.value,
     );
     this.formGeneral.controls["identificacion"].setValue(
-      this.identificacion.getRawValue(),
+      this.identificacionParaGuardar(),
     );
     this.formGeneral.controls["exposicion"].setValue(this.exposicion.value);
     this.formGeneral.controls["procesoComercial"].setValue(
@@ -1372,8 +1696,18 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     // Sincronizar imagenesPrincipales ya subidas al formGeneral
     this.formGeneral.controls["crearProducto"].setValue(this.crearProducto.value);
 
+    // El payload se arma en el ÚLTIMO momento, después del await de imágenes.
+    // En ese hueco corre detección de cambios, y cualquier binding del template
+    // con efectos secundarios puede pisar `formGeneral` — es exactamente lo que
+    // hacía `getKatuqPrompt()`. Tomar acá la identificación directo del
+    // formulario deja el guardado a salvo de eso, aunque aparezca otro caso.
+    const payload = {
+      ...this.formGeneral.value,
+      identificacion: this.identificacionParaGuardar(),
+    };
+
     const context = this;
-    this.service.createProduct(this.formGeneral.value).subscribe({
+    this.service.createProduct(payload).subscribe({
       next(r: any) {
         // Pasamos a modo edición con el objeto retornado
         context.edit = r;
@@ -1412,27 +1746,22 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     }
     this.saving = true;
 
-    let preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
-    let preciosVolumenSinPrecio = preciosVolumen.controls.filter(
-      (p) => p.get("valorUnitarioPorVolumenSinIVA").value == 0,
-    );
-    if (preciosVolumenSinPrecio.length > 0) {
-      Swal.fire(
-        "Error",
-        "Todos los precios por volumen deben tener un valor",
-        "error",
-      );
-      this.saving = false;
-      return;
-    }
+    // Precios por volumen en 0: NO bloquea, igual que al crear.
+    //
+    // `guardarProductos` tiene esta misma validación comentada a propósito
+    // ("permitir precios en 0"), así que un producto nace perfectamente válido
+    // con sus precios por volumen en 0. Dejarla viva sólo acá volvía el editar
+    // MÁS estricto que el crear: el producto quedaba intocable — no se podía
+    // corregir ni un campo de Datos básicos sin antes llenar unos precios por
+    // volumen que nunca se pidieron. Es justo lo contrario de la regla acordada
+    // (estricto al crear, permisivo al editar).
+    //
+    // Si algún día los precios por volumen deben ser obligatorios, va en el
+    // ALTA y con el campo marcado, no como bloqueo sorpresa al editar.
 
-    const tieneImagenesPrincipalesPendientesEdit = this.fileImg.some(f => f.tipo === 'principal');
-    if ((!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) && !tieneImagenesPrincipalesPendientesEdit) {
-      Swal.fire(
-        "Error",
-        "El producto debe tener obligatoriamente al menos una imagen principal",
-        "error",
-      );
+    // Al editar avisa pero no bloquea (salvo la imagen), para no dejar
+    // intocables los productos viejos que no cumplen los obligatorios de hoy.
+    if (!(await this.validarAntesDeGuardar('editar'))) {
       this.saving = false;
       return;
     }
@@ -1453,8 +1782,6 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.procesoComercial.controls["variablesForm"].setValue(
       stringify(this.variables),
     );
-    this.identificacion.value.referencia =
-      this.identificacion.get("referencia").value;
     this.formGeneral.controls["crearProducto"].setValue(
       this.crearProducto.value,
     );
@@ -1463,8 +1790,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.formGeneral.controls["disponibilidad"].setValue(
       this.disponibilidad.value,
     );
+    // Antes acá se inyectaba la referencia a mano sobre `this.identificacion.value`
+    // (que excluye los controles deshabilitados). Se reemplaza por el helper, que
+    // además cubre el caso `undefined` que borraba la clave al serializar.
     this.formGeneral.controls["identificacion"].setValue(
-      this.identificacion.value,
+      this.identificacionParaGuardar(),
     );
     this.formGeneral.controls["exposicion"].setValue(this.exposicion.value);
     this.formGeneral.controls["otrosProcesos"].controls[
@@ -1852,8 +2182,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.formGeneral.controls["disponibilidad"].setValue(
       this.disponibilidad.value,
     );
+    // getRawValue y no `.value`: `.value` deja fuera `referencia` y
+    // `codigoBarras` (deshabilitados) y dejaba `formGeneral` sin referencia.
     this.formGeneral.controls["identificacion"].setValue(
-      this.identificacion.value,
+      this.identificacion.getRawValue(),
     );
     this.formGeneral.controls["exposicion"].setValue(this.exposicion.value);
     this.formGeneral.controls["procesoComercial"].setValue(
@@ -2049,31 +2381,45 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     //   this.carrouselImg = [...this.carrouselImg, ...productWithKatuq.crearProducto.imagenesSecundarias.map(p => { return p.urls; })];
   }
 
+  /**
+   * Arma el prompt de KAI. **No debe tener efectos secundarios**: el template lo
+   * invoca con `[katuqIntelligencePrompt]="getKatuqPrompt()"`, o sea que corre
+   * en CADA ciclo de detección de cambios, en momentos que nadie controla.
+   *
+   * Antes volcaba todos los subformularios dentro de `formGeneral` con
+   * `setValue`. El daño lo hacía esta línea:
+   *
+   *     formGeneral.controls['identificacion'].setValue(this.identificacion.value)
+   *
+   * `.value` EXCLUYE los controles deshabilitados (`referencia`, `codigoBarras`),
+   * así que dejaba la identificación sin referencia. Como `guardarProductos`
+   * tiene un `await uploadPendingImages()` entre que arma el payload y que lo
+   * envía, la detección de cambios corría en ese hueco y borraba la referencia
+   * recién puesta → 400 MISSING_PRODUCT_REFERENCE en el primer click. El
+   * segundo click funcionaba porque para entonces `referencia` ya había quedado
+   * habilitada y `.value` sí la incluía.
+   *
+   * Ahora arma una copia local y `formGeneral` no se toca.
+   */
   getKatuqPrompt() {
-    this.procesoComercial.controls["variablesForm"].setValue(
-      stringify(this.variables),
-    );
-    this.formGeneral.controls["crearProducto"].setValue(
-      this.crearProducto.value,
-    );
-    this.formGeneral.controls["precio"].setValue(this.precio.value);
-    this.formGeneral.controls["dimensiones"].setValue(this.Dimensiones.value);
-    this.formGeneral.controls["disponibilidad"].setValue(
-      this.disponibilidad.value,
-    );
-    this.formGeneral.controls["identificacion"].setValue(
-      this.identificacion.value,
-    );
-    this.formGeneral.controls["exposicion"].setValue(this.exposicion.value);
-    this.formGeneral.controls["procesoComercial"].setValue(
-      this.procesoComercial.value,
-    );
-    this.formGeneral.controls["dropshippingConfig"].setValue(this.dropshippingConfig.value);
-    this.formGeneral.controls["marketplace"].setValue(this.marketplace.value);
-    this.formGeneral.controls["ciudades"].setValue(this.ciudades.value);
-    this.formGeneral.controls["categorias"].setValue(
-      stringify(this.categoriasForm.controls["categorias"].value),
-    );
+    const snapshotProducto = {
+      ...this.formGeneral.value,
+      crearProducto: this.crearProducto.value,
+      precio: this.precio.value,
+      dimensiones: this.Dimensiones.value,
+      disponibilidad: this.disponibilidad.value,
+      // getRawValue: la referencia también le sirve al prompt.
+      identificacion: this.identificacion.getRawValue(),
+      exposicion: this.exposicion.value,
+      procesoComercial: {
+        ...this.procesoComercial.value,
+        variablesForm: stringify(this.variables),
+      },
+      dropshippingConfig: this.dropshippingConfig.value,
+      marketplace: this.marketplace.value,
+      ciudades: this.ciudades.value,
+      categorias: stringify(this.categoriasForm.controls["categorias"].value),
+    };
     // ${this.kaiForm?.get('photoToAnalize')?.value != '' ? 'DescripcionImagen:' + '{descripcionImagen}' : ''}
 
     // ${this.kaiForm?.get('photoToAnalize')?.value != '' ? 'Debes generar todo basado en donde dice "DescripcionImagen"' : ''}
@@ -2089,7 +2435,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       Para los precios deben ser sin puntos ni comas, solo decimales
       y me debes devolver solamente el json con la siguiente estructura llenos:
 
-      ${JSON.stringify(this.formGeneral.value)}
+      ${JSON.stringify(snapshotProducto)}
       `;
 
     const kaiInstructions = this.kaiProductPrompt?.replace(
@@ -2107,12 +2453,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private generateAutoReference() {
-    if (this.ultimasLetras && this.totalProducts !== undefined) {
-      const autoReference = this.ultimasLetras + "-" + (this.totalProducts + 1).toString().padStart(6, "0");
-      this.identificacion.controls["referencia"].setValue(autoReference);
-      this.identificacion.controls["codigoBarras"].setValue(autoReference);
-      this.generarCodigoBarras();
-    }
+    const autoReference = this.construirReferenciaAutomatica();
+    this.identificacion.controls["referencia"].setValue(autoReference);
+    this.identificacion.controls["codigoBarras"].setValue(autoReference);
+    this.generarCodigoBarras();
   }
 
   private isEditMode(): boolean {
@@ -2126,17 +2470,15 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     const productoId = this.edit?.cd || this.cd;
     if (!productoId) return;
 
-    // Determinar índices de las pestañas según el orden definido en HTML
-    // Se identifican por el header text via event o buscando el tabIndex
-    const tabHeaders = document.querySelectorAll('.p-tabview-nav li');
-    if (tabHeaders && tabHeaders[tabIndex]) {
-      const headerText = tabHeaders[tabIndex].textContent?.trim() || '';
-      if (headerText.includes('Pedidos') && !this.pedidosCargados) {
-        this.cargarPedidosRelacionados(productoId);
-      }
-      if (headerText.includes('Historial') && !this.historialCargado) {
-        this.cargarHistorial(productoId);
-      }
+    // Se identifica la pestaña por su header (no por índice: hay pestañas
+    // condicionales que corren la numeración). Antes se leía del DOM con
+    // querySelectorAll; el tabView ya tiene la lista renderizada.
+    const header = (this.tabView?.tabs?.[tabIndex]?.header || '').trim();
+    if (header.includes('Pedidos') && !this.pedidosCargados) {
+      this.cargarPedidosRelacionados(productoId);
+    }
+    if (header.includes('Historial') && !this.historialCargado) {
+      this.cargarHistorial(productoId);
     }
   }
 

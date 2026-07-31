@@ -39,6 +39,9 @@
                                     <button ngbDropdownItem (click)="openImportModal()">
                                         <i class="pi pi-file-excel me-1"></i>Importar desde Excel
                                     </button>
+                                    <button ngbDropdownItem (click)="descargarPlantillaProductos()">
+                                        <i class="pi pi-download me-1"></i>Descargar plantilla de ejemplo
+                                    </button>
                                     <div class="dropdown-divider" *ngIf="fulfillmentEnabled"></div>
                                     <button ngbDropdownItem *ngIf="fulfillmentEnabled"
                                             [disabled]="importandoProductosFulfillment"
@@ -66,7 +69,10 @@
                                     ngbTooltip="Configurar columnas">
                                 <i class="pi pi-table"></i>
                             </button>
+                            <!-- Acción irreversible: solo familia Administrador.
+                                 El backend la valida igual (requireRole). -->
                             <button type="button" class="pk-btn pk-btn-danger-soft"
+                                    *ngIf="puedeEliminarBaseDatos"
                                     (click)="limpiarProductosComercio()"
                                     ngbTooltip="Eliminar todos los productos del comercio">
                                 <i class="pi pi-trash"></i>Eliminar Base de Datos
@@ -797,6 +803,7 @@
 
 <!-- Import Modal -->
 <app-import-modal
+    #importModal
     [(visible)]="showImportModal"
     type="product"
     (importComplete)="onImportComplete($event)"
@@ -837,6 +844,16 @@
                     <label class="form-check-label" [for]="'expCol_' + col.key">{{ col.label }}</label>
                 </div>
             </div>
+        </div>
+
+        <!-- Solo aparece si el archivo va incompleto, que es el único caso en que
+             esto le importa a alguien. -->
+        <div *ngIf="columnasSinMarcar > 0" class="alert alert-warning py-2 mt-3 mb-0 small">
+            <i class="pi pi-exclamation-triangle me-1"></i>
+            Vas a dejar por fuera <strong>{{ columnasSinMarcar }}</strong>
+            {{ columnasSinMarcar === 1 ? 'columna' : 'columnas' }}. Para consultar los datos está bien,
+            pero <strong>no vuelvas a subir este archivo por Importar</strong>: al importar se guarda el
+            producto completo, así que esos campos perderían su valor actual.
         </div>
     </div>
     <ng-template pTemplate="footer">

@@ -238,7 +238,32 @@
 
   <!-- Footer Actions -->
   <ng-template pTemplate="footer">
-    <div class="modal-footer-actions">
+    <!-- El pie va en DOS bloques apilados. Antes el panel de "Opciones de
+         producción" era un `w-100` metido dentro de la misma fila flex que los
+         botones: al ser un ítem más de la fila, aplastaba a "Cancelar" hasta
+         cortarle el texto y, como el flex estira por defecto, los botones
+         tomaban la altura del panel y salían como bloques enormes. -->
+    <div class="modal-footer-wrap">
+
+      <!-- Opciones de produccion (solo productos) — bloque propio, sobre los botones -->
+      <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading"
+           class="produccion-panel">
+        <h6>
+          <i class="fa fa-cogs me-2"></i>Opciones de producción
+        </h6>
+        <div class="d-flex flex-column gap-2">
+          <label>
+            <input type="checkbox" [(ngModel)]="todosParaProduccion">
+            <span>Todos los productos se producen internamente</span>
+          </label>
+          <label>
+            <input type="checkbox" [(ngModel)]="todosIntegranProduccion">
+            <span>Aptos para integración con software de producción</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer-actions">
       <!-- Cancel button -->
       <button
         pButton
@@ -261,26 +286,6 @@
         (click)="confirmAllMappings()"
         [disabled]="mappingFields.length === 0">
       </button>
-
-      <!-- Opciones de produccion (solo productos) -->
-      <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading"
-           class="w-100 mb-3 p-3" style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px;">
-        <h6 style="font-size: 0.8rem; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
-          <i class="fa fa-cogs me-2" style="color: #8b5cf6;"></i>Opciones de produccion
-        </h6>
-        <div class="d-flex flex-column gap-2">
-          <label class="d-flex align-items-center gap-2" style="cursor: pointer; font-size: 0.82rem;">
-            <input type="checkbox" [(ngModel)]="todosParaProduccion"
-                   style="width: 18px; height: 18px; accent-color: #8b5cf6;">
-            <span>Todos los productos se producen internamente</span>
-          </label>
-          <label class="d-flex align-items-center gap-2" style="cursor: pointer; font-size: 0.82rem;">
-            <input type="checkbox" [(ngModel)]="todosIntegranProduccion"
-                   style="width: 18px; height: 18px; accent-color: #8b5cf6;">
-            <span>Aptos para integracion con software de produccion</span>
-          </label>
-        </div>
-      </div>
 
       <!-- Import button -->
       <button
@@ -326,7 +331,8 @@
         class="p-button-success"
         (click)="visible = false; visibleChange.emit(false)">
       </button>
-    </div>
+      </div><!-- /.modal-footer-actions -->
+    </div><!-- /.modal-footer-wrap -->
   </ng-template>
 
 </p-dialog>
