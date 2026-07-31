@@ -179,17 +179,102 @@
   }
 }
 
+// Pie del modal: el panel de opciones va apilado ENCIMA de los botones, nunca
+// como un ítem más de su fila.
+.modal-footer-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .modal-footer-actions {
   display: flex;
   justify-content: flex-end;
+  // `center` y no el `stretch` por defecto: si un hermano es más alto, los
+  // botones crecían hasta su altura y salían como bloques enormes.
+  align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+
+  button {
+    // Que no se aplasten hasta cortar el texto ("Cancel…").
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
 
   @media (max-width: 768px) {
     flex-direction: column;
+    align-items: stretch;
 
     button {
       width: 100%;
     }
+  }
+}
+
+// Panel de opciones de producción (antes con estilos en línea sobre un `w-100`
+// que rompía la fila de botones).
+.produccion-panel {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: left;
+
+  h6 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+
+    i {
+      color: #8b5cf6;
+    }
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: #0f172a;
+    margin-bottom: 0;
+  }
+
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    accent-color: #8b5cf6;
+    flex: 0 0 auto;
+  }
+}
+
+// Modo de importación: los títulos de las opciones salían ilegibles (casi
+// blancos sobre el fondo claro) mientras las descripciones se veían bien. Se
+// fija el color acá para no depender de estilos de afuera.
+.import-mode-selector {
+  text-align: left;
+
+  .fw-semibold,
+  .form-check-label > span {
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  .form-check-label {
+    cursor: pointer;
+    color: #0f172a;
+  }
+
+  .form-check {
+    // Que las tres opciones no se peguen ni se corten en pantallas angostas.
+    min-width: 240px;
+    flex: 1 1 240px;
+  }
+
+  small {
+    color: #64748b !important;
   }
 }
 

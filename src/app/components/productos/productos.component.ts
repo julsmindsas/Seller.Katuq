@@ -30,6 +30,10 @@ const FILTROS_SESSION_KEY = 'productos_filtros';
 })
 export class ProductosComponent implements OnInit, OnDestroy {
   @ViewChild(DatatableComponent, { static: false }) table: DatatableComponent;
+  // Modal de importación: se usa para descargar la plantilla desde el menú
+  // "Importar" sin abrirlo. Sin tipar para no acoplar este componente al módulo
+  // compartido; sólo se le llama `downloadTemplate()`, con guarda previa.
+  @ViewChild('importModal') importModal: any;
 
   cargando = false;
   rows = [];
@@ -196,24 +200,59 @@ export class ProductosComponent implements OnInit, OnDestroy {
   exportando = false;        // export en progreso (trayendo todas las páginas)
   exportProgress = 0;        // productos traídos hasta ahora
   exportTotal = 0;           // total esperado (según la paginación)
+  /**
+   * Columnas del export. **Contrato compartido con el importador**
+   * (`shared/components/import-modal` → `productConfig.templateColumns`): los
+   * encabezados son idénticos a los de la plantilla de importación, para que el
+   * ciclo exportar → corregir en Excel → reimportar funcione (el import hace
+   * upsert por referencia). Si cambiás un encabezado acá, cambialo allá también.
+   *
+   * Los encabezados dicen qué se escribe: `(SI/NO)` en los booleanos, la unidad
+   * en los numéricos. Sin eso nadie sabe qué poner en la celda.
+   *
+   * Dos columnas no son simétricas, a propósito:
+   *  - `Precio con IVA` es solo de salida (al importar se recalcula).
+   *  - `Id Categoria` es solo de entrada (el producto no lo guarda; sirve para
+   *    enlazar con SIIGO al crear la categoría).
+   *
+   * Todas arrancan seleccionadas porque reimportar un export PARCIAL pisa los
+   * campos ausentes con los valores por defecto — ver la advertencia del diálogo.
+   */
   exportColumnas = [
-    { label: 'Referencia',         key: 'referencia',         selected: true,  getValue: (r: any) => r.identificacion?.referencia || '' },
-    { label: 'Título',             key: 'titulo',             selected: true,  getValue: (r: any) => r.crearProducto?.titulo || '' },
-    { label: 'Descripción',        key: 'descripcion',        selected: false, getValue: (r: any) => r.crearProducto?.descripcion || '' },
-    { label: 'Categoría',          key: 'categoria',          selected: true,  getValue: (r: any) => r.categorias?.label || '' },
-    { label: 'Precio con IVA',     key: 'precioConIva',       selected: true,  getValue: (r: any) => r.precio?.precioUnitarioConIva || 0 },
-    { label: 'Precio sin IVA',     key: 'precioSinIva',       selected: false, getValue: (r: any) => r.precio?.precioUnitarioSinIva || 0 },
-    { label: '% IVA',              key: 'porcentajeIva',      selected: false, getValue: (r: any) => r.precio?.precioUnitarioIva || '0' },
-    { label: 'Stock disponible',   key: 'stock',              selected: true,  getValue: (r: any) => r.disponibilidad?.cantidadDisponible ?? 0 },
-    { label: 'Estado',             key: 'estado',             selected: true,  getValue: (r: any) => r.disponibilidad?.activar ? 'Activo' : 'Inactivo' },
-    { label: 'Marca',              key: 'marca',              selected: false, getValue: (r: any) => r.identificacion?.marca || '' },
-    { label: 'Inventariable',      key: 'inventariable',      selected: false, getValue: (r: any) => r.disponibilidad?.inventariable ? 'Sí' : 'No' },
-    // Mismo campo que usa el filtro "Producción": `procesoComercial.requiereProduccion`
-    // no existe en la base, así que esta columna exportaba 'No' para todos.
-    { label: 'Requiere Producción',key: 'requiereProduccion', selected: false, getValue: (r: any) => r.crearProducto?.paraProduccion ? 'Sí' : 'No' },
-    { label: 'Tiempo de Entrega',  key: 'tiempoEntrega',      selected: false, getValue: (r: any) => r.disponibilidad?.tiempoEntrega || '' },
-    { label: 'Peso (kg)',          key: 'peso',               selected: false, getValue: (r: any) => r.dimensiones?.pesoUnitarioProductoKg || '' },
-    { label: 'Tags',               key: 'tags',               selected: false, getValue: (r: any) => (r.crearProducto?.etiquetas || []).join(', ') },
+    { label: 'Referencia (SKU)',                key: 'referencia',         selected: true, getValue: (r: any) => r.identificacion?.referencia || '' },
+    { label: 'Codigo de Barras',                key: 'codigoBarras',       selected: true, getValue: (r: any) => r.identificacion?.codigoBarras || '' },
+    { label: 'Titulo',                          key: 'titulo',             selected: true, getValue: (r: any) => r.crearProducto?.titulo || '' },
+    { label: 'Descripcion',                     key: 'descripcion',        selected: true, getValue: (r: any) => r.crearProducto?.descripcion || '' },
+    { label: 'Marca',                           key: 'marca',              selected: true, getValue: (r: any) => r.identificacion?.marca || '' },
+    { label: 'Categoria',                       key: 'categoria',          selected: true, getValue: (r: any) => r.categorias?.label || '' },
+    { label: 'Precio sin IVA',                  key: 'precioSinIva',       selected: true, getValue: (r: any) => r.precio?.precioUnitarioSinIva || 0 },
+    { label: 'IVA (%)',                         key: 'porcentajeIva',      selected: true, getValue: (r: any) => r.precio?.precioUnitarioIva || '0' },
+    { label: 'Precio con IVA',                  key: 'precioConIva',       selected: true, getValue: (r: any) => r.precio?.precioUnitarioConIva || 0 },
+    // `exposicion.activar`, NO `disponibilidad.activar`: ese campo no existe y
+    // la columna exportaba "Inactivo" para todos los productos.
+    { label: 'Activo (SI/NO)',                  key: 'activo',             selected: true, getValue: (r: any) => (r.exposicion?.activar ? 'SI' : 'NO') },
+    { label: 'Disponible (SI/NO)',              key: 'disponible',         selected: true, getValue: (r: any) => (r.exposicion?.disponible ? 'SI' : 'NO') },
+    { label: 'Inventariable (SI/NO)',           key: 'inventariable',      selected: true, getValue: (r: any) => (r.disponibilidad?.inventariable ? 'SI' : 'NO') },
+    { label: 'Cantidad Minima de Venta',        key: 'cantidadMinVenta',   selected: true, getValue: (r: any) => r.disponibilidad?.cantidadMinVenta ?? '' },
+    { label: 'Inventario de Seguridad',         key: 'inventarioSeguridad',selected: true, getValue: (r: any) => r.disponibilidad?.inventarioSeguridad ?? '' },
+    { label: 'Tipo de Entrega',                 key: 'tipoEntrega',        selected: true, getValue: (r: any) => r.disponibilidad?.tipoEntrega || '' },
+    { label: 'Tiempo de Entrega (dias)',        key: 'tiempoEntrega',      selected: true, getValue: (r: any) => r.disponibilidad?.tiempoEntrega ?? '' },
+    { label: 'Largo (cm)',                      key: 'largo',              selected: true, getValue: (r: any) => r.dimensiones?.largoProductoCm || '' },
+    { label: 'Alto (cm)',                       key: 'alto',               selected: true, getValue: (r: any) => r.dimensiones?.altoProductoCm || '' },
+    { label: 'Ancho (cm)',                      key: 'ancho',              selected: true, getValue: (r: any) => r.dimensiones?.anchoProductoCm || '' },
+    { label: 'Peso (kg)',                       key: 'peso',               selected: true, getValue: (r: any) => r.dimensiones?.pesoUnitarioProductoKg || '' },
+    // Las etiquetas viven en `exposicion`, no en `crearProducto`: la columna
+    // "Tags" leía un campo inexistente y salía vacía siempre.
+    { label: 'Etiquetas (separadas por coma)',  key: 'etiquetas',          selected: true, getValue: (r: any) => (r.exposicion?.etiquetas || []).join(', ') },
+    { label: 'Garantias',                       key: 'garantias',          selected: true, getValue: (r: any) => r.crearProducto?.garantiasProducto || '' },
+    { label: 'Caracteristicas Adicionales',     key: 'caracAdicionales',   selected: true, getValue: (r: any) => r.crearProducto?.caracAdicionales || '' },
+    { label: 'Restricciones',                   key: 'restricciones',      selected: true, getValue: (r: any) => r.crearProducto?.restriccionesProducto || '' },
+    { label: 'Cuidado y Consumo',               key: 'cuidadoConsumo',     selected: true, getValue: (r: any) => r.crearProducto?.cuidadoConsumo || '' },
+    { label: 'Requiere Produccion (SI/NO)',     key: 'requiereProduccion', selected: true, getValue: (r: any) => (r.crearProducto?.paraProduccion ? 'SI' : 'NO') },
+    // Stock: NO va acá. `disponibilidad.cantidadDisponible` es un campo muerto
+    // (nadie lo asigna) — el stock real vive en la colección `inventory` por
+    // bodega, y se exporta/importa desde Inventario. Exportarlo desde acá
+    // devolvía 0 para todo el catálogo, que parece un dato y no lo es.
   ];
 
   // Column configuration
@@ -1340,7 +1379,20 @@ export class ProductosComponent implements OnInit, OnDestroy {
           this.toastr.warning('No hay productos para exportar.', 'Exportar');
           return;
         }
-        this.generarExcelExport(todos, cols, false);
+        // Fuera del `.catch` de abajo: un fallo armando el .xlsx no es un fallo
+        // trayendo los productos, y reportarlo como tal manda a buscar el
+        // problema al lado equivocado (pasó con el límite de 32.767 caracteres
+        // de Excel: decía "no se pudieron traer los productos" con las 2.134
+        // páginas ya descargadas y en memoria).
+        try {
+          this.generarExcelExport(todos, cols, false);
+        } catch (e: any) {
+          console.error('[Export] Error generando el archivo:', e);
+          this.toastr.error(
+            `No se pudo generar el archivo: ${e?.message || 'error desconocido'}`,
+            'Exportar',
+          );
+        }
       })
       .catch(err => {
         this.exportando = false;
@@ -1379,13 +1431,60 @@ export class ProductosComponent implements OnInit, OnDestroy {
     return this.normalizeProducts(all);
   }
 
+  /**
+   * Tope de caracteres por celda de Excel. No es un límite de la librería: es
+   * del formato. Pasarse hace que `json_to_sheet` lance
+   * "Text length must not exceed 32767 characters" y se cae TODO el export.
+   */
+  private static readonly EXCEL_MAX_CELDA = 32767;
+
+  /**
+   * Recorta un valor al tope de Excel.
+   *
+   * Pasa con descripciones que traen HTML del editor enriquecido, a veces con
+   * imágenes embebidas en base64: una sola descripción se come el límite. Antes
+   * eso reventaba la exportación completa del catálogo y el usuario no tenía
+   * forma de saber cuál producto la causaba.
+   */
+  private recortarParaExcel(valor: any): any {
+    if (typeof valor !== 'string' || valor.length <= ProductosComponent.EXCEL_MAX_CELDA) {
+      return valor;
+    }
+    const aviso = '… [texto recortado por exceder el límite de Excel]';
+    return valor.slice(0, ProductosComponent.EXCEL_MAX_CELDA - aviso.length) + aviso;
+  }
+
   /** Arma y descarga el .xlsx con las columnas elegidas. */
   private generarExcelExport(source: any[], cols: any[], hasSelected: boolean): void {
+    let celdasRecortadas = 0;
+    const productosRecortados = new Set<string>();
+
     const data = source.map(row => {
       const obj: any = {};
-      cols.forEach(col => { obj[col.label] = col.getValue(row); });
+      cols.forEach(col => {
+        const original = col.getValue(row);
+        const recortado = this.recortarParaExcel(original);
+        if (recortado !== original) {
+          celdasRecortadas++;
+          productosRecortados.add(row.identificacion?.referencia || row.cd || '¿?');
+        }
+        obj[col.label] = recortado;
+      });
       return obj;
     });
+
+    if (celdasRecortadas > 0) {
+      const refs = [...productosRecortados];
+      console.warn('[Export] Celdas recortadas por el límite de Excel en:', refs);
+      this.toastr.warning(
+        `${celdasRecortadas} ${celdasRecortadas === 1 ? 'celda superaba' : 'celdas superaban'} el máximo que admite Excel y se recortaron ` +
+        `(${refs.slice(0, 3).join(', ')}${refs.length > 3 ? ` y ${refs.length - 3} más` : ''}). ` +
+        'El archivo se descargó igual. No reimportes estas filas: guardarían el texto recortado.',
+        'Exportar',
+        { timeOut: 12000 },
+      );
+    }
+
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Productos');
@@ -1402,6 +1501,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.exportColumnas.forEach(c => c.selected = selected);
   }
 
+  /**
+   * Columnas desmarcadas. Alimenta el aviso del diálogo de exportar, que solo
+   * tiene sentido cuando el archivo sale incompleto: reimportar un export
+   * parcial pisa los campos ausentes.
+   */
+  get columnasSinMarcar(): number {
+    return this.exportColumnas.filter(c => !c.selected).length;
+  }
+
   trackById(index: number, item: any): any {
     return item?.key || index;
   }
@@ -1410,6 +1518,26 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   openImportModal(): void {
     this.showImportModal = true;
+  }
+
+  /**
+   * Descarga la plantilla de ejemplo SIN abrir el importador.
+   *
+   * Delega en el modal a propósito: la definición de columnas vive en un solo
+   * lugar (`import-modal.component.ts` → `productConfig.templateColumns`), así
+   * que la plantilla nunca se desincroniza de lo que el importador espera.
+   * Funciona con el modal cerrado porque su `config` se arma en el `ngOnInit`
+   * del componente, y el componente está siempre presente en el template.
+   */
+  descargarPlantillaProductos(): void {
+    if (typeof this.importModal?.downloadTemplate !== 'function') {
+      this.toastr.error(
+        'No se pudo generar la plantilla. Recarga la página e intenta de nuevo.',
+        'Plantilla',
+      );
+      return;
+    }
+    this.importModal.downloadTemplate();
   }
 
   onImportComplete(result: ImportResult): void {

@@ -1072,6 +1072,57 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /**
+   * Prefijo + consecutivo de la referencia automática, en un solo lugar.
+   *
+   * Antes esta expresión estaba repetida en cuatro sitios y `generateAutoReference`
+   * la envolvía en un `if (this.ultimasLetras && ...)` que, cuando el prefijo aún
+   * no estaba cargado, NO generaba nada y tampoco avisaba: la referencia quedaba
+   * vacía en silencio. Acá el prefijo se resuelve con respaldo, así que siempre
+   * devuelve una referencia utilizable.
+   *
+   * OJO: el consecutivo es `cantidad de productos + 1`, no una secuencia de
+   * emisión. Si se borra un producto el contador retrocede y puede repetir una
+   * referencia ya usada; en ese caso el backend asigna una aleatoria. Arreglarlo
+   * de raíz requiere un contador persistente y va aparte.
+   */
+  private construirReferenciaAutomatica(): string {
+    const prefijo =
+      this.ultimasLetras ||
+      (JSON.parse(localStorage.getItem('currentCompany') || '{}')?.nomComercial || 'PRD')
+        .toString()
+        .replace(' ', '')
+        .substring(0, 3);
+    return `${prefijo}-${(this.totalProducts + 1).toString().padStart(6, '0')}`;
+  }
+
+  /**
+   * `identificacion` lista para mandar al backend.
+   *
+   * `referencia` y `codigoBarras` son controles DESHABILITADOS. `getRawValue()`
+   * sí los incluye, pero con el valor que tengan — y si ese valor es `undefined`
+   * (pasa cuando alguno de los `setValue(this.edit.identificacion?.referencia)`
+   * corre sin `edit` cargado, que es el caso de un producto nuevo)
+   * `JSON.stringify` BORRA la clave al serializar el POST. El backend recibía el
+   * producto sin referencia y respondía 400 MISSING_PRODUCT_REFERENCE aunque la
+   * pantalla mostrara la referencia bien puesta.
+   *
+   * Se notaba como "no guarda al primer click": ese primer intento fallaba, pero
+   * de paso poblaba la referencia, así que el segundo click sí pasaba.
+   */
+  private identificacionParaGuardar(): any {
+    const raw = this.identificacion.getRawValue();
+    if (!raw.referencia) {
+      this.asegurarReferencia();
+      raw.referencia =
+        this.identificacion.getRawValue()?.referencia || this.construirReferenciaAutomatica();
+    }
+    if (!raw.codigoBarras) {
+      raw.codigoBarras = raw.referencia;
+    }
+    return raw;
+  }
+
+  /**
    * Secciones obligatorias incompletas, en el orden en que aparecen en el
    * tabView. Alimenta la barra de progreso del encabezado, que ahora sí incluye
    * la imagen principal y la referencia: antes contaba solo los 6 formGroup y
@@ -1607,7 +1658,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       this.disponibilidad.value,
     );
     this.formGeneral.controls["identificacion"].setValue(
-      this.identificacion.getRawValue(),
+      this.identificacionParaGuardar(),
     );
     this.formGeneral.controls["exposicion"].setValue(this.exposicion.value);
     this.formGeneral.controls["procesoComercial"].setValue(
@@ -1645,8 +1696,18 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     // Sincronizar imagenesPrincipales ya subidas al formGeneral
     this.formGeneral.controls["crearProducto"].setValue(this.crearProducto.value);
 
+    // El payload se arma en el ÚLTIMO momento, después del await de imágenes.
+    // En ese hueco corre detección de cambios, y cualquier binding del template
+    // con efectos secundarios puede pisar `formGeneral` — es exactamente lo que
+    // hacía `getKatuqPrompt()`. Tomar acá la identificación directo del
+    // formulario deja el guardado a salvo de eso, aunque aparezca otro caso.
+    const payload = {
+      ...this.formGeneral.value,
+      identificacion: this.identificacionParaGuardar(),
+    };
+
     const context = this;
-    this.service.createProduct(this.formGeneral.value).subscribe({
+    this.service.createProduct(payload).subscribe({
       next(r: any) {
         // Pasamos a modo edición con el objeto retornado
         context.edit = r;
@@ -1685,19 +1746,18 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     }
     this.saving = true;
 
-    let preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
-    let preciosVolumenSinPrecio = preciosVolumen.controls.filter(
-      (p) => p.get("valorUnitarioPorVolumenSinIVA").value == 0,
-    );
-    if (preciosVolumenSinPrecio.length > 0) {
-      Swal.fire(
-        "Error",
-        "Todos los precios por volumen deben tener un valor",
-        "error",
-      );
-      this.saving = false;
-      return;
-    }
+    // Precios por volumen en 0: NO bloquea, igual que al crear.
+    //
+    // `guardarProductos` tiene esta misma validación comentada a propósito
+    // ("permitir precios en 0"), así que un producto nace perfectamente válido
+    // con sus precios por volumen en 0. Dejarla viva sólo acá volvía el editar
+    // MÁS estricto que el crear: el producto quedaba intocable — no se podía
+    // corregir ni un campo de Datos básicos sin antes llenar unos precios por
+    // volumen que nunca se pidieron. Es justo lo contrario de la regla acordada
+    // (estricto al crear, permisivo al editar).
+    //
+    // Si algún día los precios por volumen deben ser obligatorios, va en el
+    // ALTA y con el campo marcado, no como bloqueo sorpresa al editar.
 
     // Al editar avisa pero no bloquea (salvo la imagen), para no dejar
     // intocables los productos viejos que no cumplen los obligatorios de hoy.
@@ -1722,8 +1782,6 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.procesoComercial.controls["variablesForm"].setValue(
       stringify(this.variables),
     );
-    this.identificacion.value.referencia =
-      this.identificacion.get("referencia").value;
     this.formGeneral.controls["crearProducto"].setValue(
       this.crearProducto.value,
     );
@@ -1732,8 +1790,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.formGeneral.controls["disponibilidad"].setValue(
       this.disponibilidad.value,
     );
+    // Antes acá se inyectaba la referencia a mano sobre `this.identificacion.value`
+    // (que excluye los controles deshabilitados). Se reemplaza por el helper, que
+    // además cubre el caso `undefined` que borraba la clave al serializar.
     this.formGeneral.controls["identificacion"].setValue(
-      this.identificacion.value,
+      this.identificacionParaGuardar(),
     );
     this.formGeneral.controls["exposicion"].setValue(this.exposicion.value);
     this.formGeneral.controls["otrosProcesos"].controls[
@@ -2121,8 +2182,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.formGeneral.controls["disponibilidad"].setValue(
       this.disponibilidad.value,
     );
+    // getRawValue y no `.value`: `.value` deja fuera `referencia` y
+    // `codigoBarras` (deshabilitados) y dejaba `formGeneral` sin referencia.
     this.formGeneral.controls["identificacion"].setValue(
-      this.identificacion.value,
+      this.identificacion.getRawValue(),
     );
     this.formGeneral.controls["exposicion"].setValue(this.exposicion.value);
     this.formGeneral.controls["procesoComercial"].setValue(
@@ -2318,31 +2381,45 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     //   this.carrouselImg = [...this.carrouselImg, ...productWithKatuq.crearProducto.imagenesSecundarias.map(p => { return p.urls; })];
   }
 
+  /**
+   * Arma el prompt de KAI. **No debe tener efectos secundarios**: el template lo
+   * invoca con `[katuqIntelligencePrompt]="getKatuqPrompt()"`, o sea que corre
+   * en CADA ciclo de detección de cambios, en momentos que nadie controla.
+   *
+   * Antes volcaba todos los subformularios dentro de `formGeneral` con
+   * `setValue`. El daño lo hacía esta línea:
+   *
+   *     formGeneral.controls['identificacion'].setValue(this.identificacion.value)
+   *
+   * `.value` EXCLUYE los controles deshabilitados (`referencia`, `codigoBarras`),
+   * así que dejaba la identificación sin referencia. Como `guardarProductos`
+   * tiene un `await uploadPendingImages()` entre que arma el payload y que lo
+   * envía, la detección de cambios corría en ese hueco y borraba la referencia
+   * recién puesta → 400 MISSING_PRODUCT_REFERENCE en el primer click. El
+   * segundo click funcionaba porque para entonces `referencia` ya había quedado
+   * habilitada y `.value` sí la incluía.
+   *
+   * Ahora arma una copia local y `formGeneral` no se toca.
+   */
   getKatuqPrompt() {
-    this.procesoComercial.controls["variablesForm"].setValue(
-      stringify(this.variables),
-    );
-    this.formGeneral.controls["crearProducto"].setValue(
-      this.crearProducto.value,
-    );
-    this.formGeneral.controls["precio"].setValue(this.precio.value);
-    this.formGeneral.controls["dimensiones"].setValue(this.Dimensiones.value);
-    this.formGeneral.controls["disponibilidad"].setValue(
-      this.disponibilidad.value,
-    );
-    this.formGeneral.controls["identificacion"].setValue(
-      this.identificacion.value,
-    );
-    this.formGeneral.controls["exposicion"].setValue(this.exposicion.value);
-    this.formGeneral.controls["procesoComercial"].setValue(
-      this.procesoComercial.value,
-    );
-    this.formGeneral.controls["dropshippingConfig"].setValue(this.dropshippingConfig.value);
-    this.formGeneral.controls["marketplace"].setValue(this.marketplace.value);
-    this.formGeneral.controls["ciudades"].setValue(this.ciudades.value);
-    this.formGeneral.controls["categorias"].setValue(
-      stringify(this.categoriasForm.controls["categorias"].value),
-    );
+    const snapshotProducto = {
+      ...this.formGeneral.value,
+      crearProducto: this.crearProducto.value,
+      precio: this.precio.value,
+      dimensiones: this.Dimensiones.value,
+      disponibilidad: this.disponibilidad.value,
+      // getRawValue: la referencia también le sirve al prompt.
+      identificacion: this.identificacion.getRawValue(),
+      exposicion: this.exposicion.value,
+      procesoComercial: {
+        ...this.procesoComercial.value,
+        variablesForm: stringify(this.variables),
+      },
+      dropshippingConfig: this.dropshippingConfig.value,
+      marketplace: this.marketplace.value,
+      ciudades: this.ciudades.value,
+      categorias: stringify(this.categoriasForm.controls["categorias"].value),
+    };
     // ${this.kaiForm?.get('photoToAnalize')?.value != '' ? 'DescripcionImagen:' + '{descripcionImagen}' : ''}
 
     // ${this.kaiForm?.get('photoToAnalize')?.value != '' ? 'Debes generar todo basado en donde dice "DescripcionImagen"' : ''}
@@ -2358,7 +2435,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       Para los precios deben ser sin puntos ni comas, solo decimales
       y me debes devolver solamente el json con la siguiente estructura llenos:
 
-      ${JSON.stringify(this.formGeneral.value)}
+      ${JSON.stringify(snapshotProducto)}
       `;
 
     const kaiInstructions = this.kaiProductPrompt?.replace(
@@ -2376,12 +2453,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private generateAutoReference() {
-    if (this.ultimasLetras && this.totalProducts !== undefined) {
-      const autoReference = this.ultimasLetras + "-" + (this.totalProducts + 1).toString().padStart(6, "0");
-      this.identificacion.controls["referencia"].setValue(autoReference);
-      this.identificacion.controls["codigoBarras"].setValue(autoReference);
-      this.generarCodigoBarras();
-    }
+    const autoReference = this.construirReferenciaAutomatica();
+    this.identificacion.controls["referencia"].setValue(autoReference);
+    this.identificacion.controls["codigoBarras"].setValue(autoReference);
+    this.generarCodigoBarras();
   }
 
   private isEditMode(): boolean {
