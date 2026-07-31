@@ -2326,6 +2326,20 @@
                         </div>
                     </button>
 
+                    <!-- Editar IVA de una línea (OpenSpec edit-order-line-iva, D-135) -->
+                    <button *ngIf="!isFromProduction && (canModifyProducts(selectedOrder) || isAdminUser())" class="option-btn" type="button"
+                        (click)="abrirModalEditarIva(selectedOrder); closeOptionsModal()"
+                        [pTooltip]="'Cambiar el IVA de un producto de este pedido'"
+                        tooltipPosition="left">
+                        <div class="option-icon edit-discount-icon">
+                            <i class="fa fa-percent"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Editar IVA' | translate }}</span>
+                            <small class="option-description">{{ 'Modificar IVA de un producto' | translate }}</small>
+                        </div>
+                    </button>
+
                     <!-- Eliminar Pedido (Solo usuarios autorizados) -->
                     <button *ngIf="canDeleteOrder() && !isFromProduction" class="option-btn danger-btn" type="button"
                         (click)="confirmDeleteOrder(selectedOrder); closeOptionsModal()">
@@ -2678,6 +2692,31 @@
       Cerrar
     </button>
   </ng-template>
+
+</p-dialog>
+
+<!--
+  ========================================================================
+  MODAL: Editar IVA de una línea de un pedido ya creado
+  ========================================================================
+  OpenSpec `edit-order-line-iva` (D-135). NO MODIFICA ningún modal existente.
+-->
+<p-dialog
+  [(visible)]="showEditarIvaModal"
+  [header]="'Editar IVA - ' + (pedidoIvaEditando?.nroPedido || 'Pedido')"
+  [modal]="true"
+  [closable]="true"
+  [dismissableMask]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width: '520px', maxWidth: '95vw'}"
+  (onHide)="cerrarModalEditarIva()">
+
+  <app-editar-iva-linea-pedido
+    [pedido]="pedidoIvaEditando"
+    (ivaActualizado)="onIvaLineaActualizada($event)"
+    (cerrar)="cerrarModalEditarIva()">
+  </app-editar-iva-linea-pedido>
 
 </p-dialog>
 

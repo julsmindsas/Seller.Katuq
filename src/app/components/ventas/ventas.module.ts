@@ -86,6 +86,7 @@ import { OrdenVentaComponent } from "./orden-venta/orden-venta.component";
 import { ImportModalModule } from "../../shared/components/import-modal/import-modal.module";
 import { CustomerMetricsComponent } from "./clientes/customer-metrics/customer-metrics.component";
 import { GlobalMetricsComponent } from "./clientes/global-metrics/global-metrics.component";
+import { EditarIvaLineaPedidoComponent } from "./editar-iva-linea-pedido/editar-iva-linea-pedido.component";
 
 @NgModule({
   imports: [
@@ -170,6 +171,7 @@ import { GlobalMetricsComponent } from "./clientes/global-metrics/global-metrics
     OrdenVentaComponent, // NUEVO: 2025-10-21 - Componente de orden de venta profesional
     CustomerMetricsComponent, // Spec 009 - métricas del cliente en su ficha
     GlobalMetricsComponent, // Panel de métricas globales de clientes (top del listado)
+    EditarIvaLineaPedidoComponent, // OpenSpec edit-order-line-iva (D-135) - editar IVA de línea post-creación
   ],
   exports: [
     CrearVentasComponent,

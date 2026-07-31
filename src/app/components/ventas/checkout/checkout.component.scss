@@ -355,6 +355,16 @@
   color: var(--primary-color);
 }
 
+.desc-linea-badge {
+  font-weight: 800;
+  font-size: 0.72rem;
+  color: var(--success-color);
+  background: rgba(23, 153, 79, 0.12);
+  border-radius: 6px;
+  padding: 1px 6px;
+  margin-left: 4px;
+}
+
 /* Subtotal y totales */
 .sub-total {
   list-style-type: none;

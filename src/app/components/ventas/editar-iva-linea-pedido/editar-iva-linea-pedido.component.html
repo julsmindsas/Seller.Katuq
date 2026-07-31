@@ -1,0 +1,39 @@
+<div class="eiv-container">
+  <p class="eiv-hint" *ngIf="!pedido">Selecciona un pedido para editar el IVA de una línea.</p>
+
+  <ng-container *ngIf="pedido">
+    <p class="eiv-hint">Elige la línea del pedido a la que quieres cambiar el IVA.</p>
+
+    <div class="eiv-lineas">
+      <button
+        type="button"
+        class="eiv-linea"
+        *ngFor="let linea of lineas; let i = index"
+        [class.eiv-linea--activa]="lineaSeleccionadaIndex === i"
+        (click)="seleccionarLinea(i)">
+        <div class="eiv-linea__info">
+          <span class="eiv-linea__titulo">{{ linea?.producto?.crearProducto?.titulo || 'Producto sin nombre' }}</span>
+          <span class="eiv-linea__ref">Ref. {{ linea?.producto?.identificacion?.referencia || 'N/A' }} · Cant. {{ linea?.cantidad }}</span>
+        </div>
+        <span class="eiv-chip">{{ ivaActualDeLinea(linea) }}% IVA</span>
+      </button>
+    </div>
+
+    <div class="eiv-edicion" *ngIf="lineaSeleccionadaIndex !== null">
+      <label class="eiv-label">Nuevo IVA para esta línea</label>
+      <select class="eiv-select" [(ngModel)]="nuevoIva">
+        <option *ngFor="let iva of ivasPermitidos" [ngValue]="iva">{{ iva }}%</option>
+      </select>
+    </div>
+
+    <div class="eiv-error" *ngIf="error">{{ error }}</div>
+
+    <div class="eiv-acciones">
+      <button type="button" class="eiv-btn eiv-btn--ghost" (click)="cancelar()" [disabled]="guardando">Cancelar</button>
+      <button type="button" class="eiv-btn eiv-btn--primary" (click)="guardar()" [disabled]="!puedeGuardar()">
+        <i class="fa fa-spinner fa-spin me-1" *ngIf="guardando"></i>
+        Guardar IVA
+      </button>
+    </div>
+  </ng-container>
+</div>

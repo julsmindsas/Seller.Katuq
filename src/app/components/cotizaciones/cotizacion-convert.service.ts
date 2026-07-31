@@ -152,6 +152,11 @@ export class CotizacionConvertService {
         cantidad: item.cantidad || cfg.cantidad || 1,
         _precioManualOverride: item._precioManualOverride,
         _ivaManualOverride: item._ivaManualOverride,
+        // openspec/changes/add-order-line-discount: el descuento por línea de la
+        // cotización debe sobrevivir la conversión — antes se perdía en silencio
+        // (el cliente aceptaba un precio con descuento y el pedido facturaba el
+        // precio lleno). El vendedor sigue pudiendo editarlo en el carrito.
+        descuentoLinea: item.descuentoLinea,
       };
     });
 

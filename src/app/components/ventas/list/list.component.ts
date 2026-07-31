@@ -9426,6 +9426,68 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.historyError = null;
   }
 
+  // ========================================================================
+  // Editar IVA de una línea de un pedido ya creado
+  // ========================================================================
+  // OpenSpec `edit-order-line-iva` (D-135). El componente hijo solo envía la
+  // intención al backend; los totales recalculados vienen ya persistidos en
+  // la respuesta (motor canónico spec010), no se recalcula nada aquí.
+
+  showEditarIvaModal: boolean = false;
+  pedidoIvaEditando: Pedido | null = null;
+
+  /**
+   * Abre el modal para editar el IVA de una línea de un pedido ya creado.
+   * Mismo permiso que editar el pedido (canModifyProducts || isAdminUser).
+   */
+  abrirModalEditarIva(pedido: Pedido): void {
+    if (!pedido || !pedido._id) {
+      this.toastrService.error("No se puede editar el IVA de este pedido", "Error");
+      return;
+    }
+    if (!this.canModifyProducts(pedido) && !this.isAdminUser()) {
+      this.toastrService.warning(
+        `No se puede editar el IVA. El pedido está en estado: ${pedido.estadoProceso}`,
+        "Pedido Congelado",
+      );
+      return;
+    }
+    this.pedidoIvaEditando = pedido;
+    this.showEditarIvaModal = true;
+  }
+
+  cerrarModalEditarIva(): void {
+    this.showEditarIvaModal = false;
+    this.pedidoIvaEditando = null;
+  }
+
+  /**
+   * El backend ya recalculó y persistió los totales — no se recalcula nada aquí.
+   * Se mutan en sitio `orders`/`selectedOrder` con la respuesta del backend (para que un PDF
+   * generado inmediatamente después ya muestre el IVA nuevo, sin esperar al refresh) y ADEMÁS
+   * se fuerza `refrescarDatos(true)` — un refresh sin forzar puede descartarse en silencio por
+   * el throttle de 5s de `refrescarDatos()` y dejar la lista con el IVA viejo.
+   */
+  onIvaLineaActualizada(ordenActualizada: any): void {
+    if (ordenActualizada && ordenActualizada._id) {
+      const enLista = this.orders?.find((p: any) => p._id === ordenActualizada._id);
+      if (enLista) {
+        Object.assign(enLista, ordenActualizada);
+      }
+      if (this.selectedOrder && this.selectedOrder._id === ordenActualizada._id) {
+        Object.assign(this.selectedOrder, ordenActualizada);
+      }
+    }
+
+    this.toastrService.success("IVA de la línea actualizado exitosamente", "IVA Actualizado", {
+      timeOut: 3000,
+      progressBar: true,
+      positionClass: "toast-bottom-right",
+    });
+    this.cerrarModalEditarIva();
+    this.refrescarDatos(true);
+  }
+
   /**
    * Limpia notas de producción huérfanas de un pedido.
    * Las notas huérfanas son aquellas que referencian productos que ya no existen en el carrito.

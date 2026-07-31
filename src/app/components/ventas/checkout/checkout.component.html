@@ -636,6 +636,7 @@
                   <div class="product-details">
                     <span class="quantity">{{item?.cantidad}} × </span>
                     <span class="price">{{checkPriceScaleProd(item) | currency:'USD':'symbol':'1.0-0'}}</span>
+                    <span class="desc-linea-badge" *ngIf="item?.descuentoLinea > 0">-{{item.descuentoLinea}}%</span>
                   </div>
                 </div>
               </div>

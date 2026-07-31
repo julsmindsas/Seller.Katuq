@@ -70,7 +70,10 @@
           <td class="col-codigo">{{ getReferencia(item) }}</td>
           <td class="col-descripcion">{{ getNombreProducto(item) }}</td>
           <td class="col-cantidad">{{ item.cantidad || 0 }}</td>
-          <td class="col-unitario">{{ getPrecioUnitario(item) | currency:'COP':'':'1.0-0' }}</td>
+          <td class="col-unitario">
+            {{ getPrecioUnitario(item) | currency:'COP':'':'1.0-0' }}
+            <span class="desc-linea-badge" *ngIf="descLineaPct(item) > 0">-{{ descLineaPct(item) }}%</span>
+          </td>
           <td class="col-total">{{ calcularTotalProducto(item) | currency:'COP':'':'1.0-0' }}</td>
         </tr>
         <tr *ngIf="!pedido?.carrito || pedido.carrito.length === 0">

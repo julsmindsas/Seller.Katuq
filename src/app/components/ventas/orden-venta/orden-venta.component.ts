@@ -128,13 +128,32 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene el precio unitario del producto respetando la jerarquía:
+   * Obtiene el precio unitario del producto, YA NETO del descuento de línea
+   * (`item.descuentoLinea`, 0-100) — mismo patrón que
+   * `carrito.component.ts::checkPriceScale`: el bruto se resuelve por la
+   * jerarquía de precio (manual → categoría → volumen → base) y el descuento
+   * se aplica multiplicando el resultado final, sin importar la fuente.
+   */
+  getPrecioUnitario(item: any): number {
+    const precioBruto = this.getPrecioUnitarioBruto(item);
+    const descLineaFrac = this.descLineaPct(item) / 100;
+    return precioBruto * (1 - descLineaFrac);
+  }
+
+  /** % de descuento de línea (0-100), saneado. */
+  descLineaPct(item: any): number {
+    const d = Number(item?.descuentoLinea) || 0;
+    return Math.min(100, Math.max(0, d));
+  }
+
+  /**
+   * Precio unitario del producto SIN descuento de línea, respetando la jerarquía:
    * 1. Precio manual override
    * 2. Precio por categoría de cliente
    * 3. Precio por volumen
    * 4. Precio base
    */
-  getPrecioUnitario(item: any): number {
+  private getPrecioUnitarioBruto(item: any): number {
     if (!item || !item.producto) return 0;
 
     const producto = item.producto;

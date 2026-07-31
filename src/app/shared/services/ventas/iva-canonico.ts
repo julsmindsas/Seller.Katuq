@@ -128,6 +128,7 @@ export const calcularTotalesCanonico = (order: any): TotalesCanonicos => {
   const carrito = Array.isArray(order?.carrito) ? order.carrito : [];
 
   let subtotalProductos = 0;
+  let subtotalNeto = 0;
   let totalImpuesto = 0;
   const desglose: { [k: string]: number } = { "0": 0, "5": 0, "8": 0, "19": 0 };
   const addDesglose = (tarifa: number, monto: number) => {
@@ -140,13 +141,19 @@ export const calcularTotalesCanonico = (order: any): TotalesCanonicos => {
     if (cantidad <= 0) continue;
 
     const { precioSinIVA, tarifa } = resolverPrecioLinea(item, ctx);
+    // Descuento de línea (0-100, opcional) compuesto con el global: aditivo —
+    // sin descuentoLinea, factorDescuento = (1-porceDesc), idéntico al cálculo previo.
+    const descLineaFrac = Math.min(1, Math.max(0, _num(item?.descuentoLinea) / 100));
+    const factorDescuento = (1 - descLineaFrac) * (1 - porceDesc);
+
     const lineaSinIVA = precioSinIVA * cantidad;
     subtotalProductos += lineaSinIVA;
-    const ivaLinea = lineaSinIVA * (tarifa / 100) * (1 - porceDesc);
+    subtotalNeto += lineaSinIVA * factorDescuento;
+    const ivaLinea = lineaSinIVA * factorDescuento * (tarifa / 100);
     totalImpuesto += ivaLinea;
     addDesglose(tarifa, ivaLinea);
 
-    // Adiciones y preferencias: misma ancla (sinIVA × su tarifa)
+    // Adiciones y preferencias: misma ancla (sinIVA × su tarifa), mismo descuento de línea+global
     for (const grupo of ["adiciones", "preferencias"]) {
       const lista = item?.configuracion?.[grupo];
       if (!Array.isArray(lista)) continue;
@@ -154,14 +161,15 @@ export const calcularTotalesCanonico = (order: any): TotalesCanonicos => {
         const extraSin = _num(extra?.valorUnitarioSinIva) * cantidad;
         const extraTarifa = _num(extra?.porcentajeIva);
         subtotalProductos += extraSin;
-        const ivaExtra = extraSin * (extraTarifa / 100) * (1 - porceDesc);
+        subtotalNeto += extraSin * factorDescuento;
+        const ivaExtra = extraSin * factorDescuento * (extraTarifa / 100);
         totalImpuesto += ivaExtra;
         addDesglose(extraTarifa, ivaExtra);
       }
     }
   }
 
-  const descuento = subtotalProductos * porceDesc;
+  const descuento = subtotalProductos - subtotalNeto;
 
   // Envío (D-058)
   const totalEnvio = _num(order?.totalEnvio);
@@ -202,13 +210,15 @@ export const baseExcluidaCanonica = (order: any): number => {
     const cantidad = _num(item?.cantidad);
     if (cantidad <= 0) continue;
     const { precioSinIVA, tarifa } = resolverPrecioLinea(item, ctx);
-    if (Math.round(_num(tarifa)) === 0) excluida += precioSinIVA * cantidad * (1 - porceDesc);
+    const descLineaFrac = Math.min(1, Math.max(0, _num(item?.descuentoLinea) / 100));
+    const factorDescuento = (1 - descLineaFrac) * (1 - porceDesc);
+    if (Math.round(_num(tarifa)) === 0) excluida += precioSinIVA * cantidad * factorDescuento;
     for (const grupo of ["adiciones", "preferencias"]) {
       const lista = item?.configuracion?.[grupo];
       if (!Array.isArray(lista)) continue;
       for (const extra of lista) {
         if (Math.round(_num(extra?.porcentajeIva)) === 0)
-          excluida += _num(extra?.valorUnitarioSinIva) * cantidad * (1 - porceDesc);
+          excluida += _num(extra?.valorUnitarioSinIva) * cantidad * factorDescuento;
       }
     }
   }

@@ -286,6 +286,39 @@ export class VentasService extends BaseService {
     return this.post<any>('/v1/orders/estados-actuales', { ids });
   }
 
+  /**
+   * Edita el IVA manual de UNA línea de un pedido ya creado (OpenSpec edit-order-line-iva, D-135).
+   * Endpoint dedicado: el backend recalcula y persiste subtotal/IVA/total con el motor canónico —
+   * este método NO recalcula nada en el cliente, solo envía la intención y refresca con la respuesta.
+   */
+  editarIvaLineaPedido(
+    orderId: string,
+    lineIndex: number,
+    productoCd: string,
+    ivaManual: number,
+    baseVersion: string | null,
+  ): Observable<any> {
+    const payload = {
+      orderId,
+      lineIndex,
+      productoCd,
+      ivaManual,
+      _baseVersion: baseVersion || null,
+    };
+    return this.post<any>('/v1/orders/edit-linea-iva', payload).pipe(
+      catchError((err) => {
+        if (err && err.status === 409) {
+          const code = err.error && err.error.code;
+          const defaultMsg =
+            (err.error && err.error.error) ||
+            'El pedido cambió mientras lo editabas. Recarga e intenta de nuevo.';
+          return throwError(() => ({ ...err, message: defaultMsg, isStaleWrite: code === 'STALE_WRITE', code }));
+        }
+        return throwError(() => err);
+      }),
+    );
+  }
+
   getOrders() {
     const empresaActual = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     const id = empresaActual.nomComercial;

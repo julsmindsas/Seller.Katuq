@@ -1276,6 +1276,18 @@ export class PaymentService extends BaseService {
         }
       }
 
+      // Descuento de línea (item.descuentoLinea, 0-100, opcional) — mismo patrón que
+      // carrito.component.ts::checkPriceScale y orden-venta.component.ts::getPrecioUnitario:
+      // se aplica multiplicando el precio ya resuelto por la jerarquía, sin importar la
+      // fuente (manual, categoría, volumen o base). Cubre tanto la comanda ("Precio Unit")
+      // como el email (Total por producto), que comparten estas mismas variables.
+      const descLineaFrac = Math.min(100, Math.max(0, Number(item?.descuentoLinea) || 0)) / 100;
+      if (descLineaFrac > 0) {
+        precioUnitarioSinIva *= (1 - descLineaFrac);
+        precioUnitarioConIva *= (1 - descLineaFrac);
+        valorIva *= (1 - descLineaFrac);
+      }
+
       // Totales por cantidad (respetando precio unitario en las columnas unitarias)
       const valorIvaTotalProducto = valorIva * cantidad;
       const totalConIvaProducto = precioUnitarioConIva * cantidad;

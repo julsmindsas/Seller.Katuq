@@ -243,7 +243,38 @@ export class CarritoComponent implements OnInit {
     }, 0);
   }
 
+  /**
+   * Precio unitario CON IVA de la línea, YA NETO del descuento de línea
+   * (`itemCarrito.descuentoLinea`, 0-100). El descuento se aplica multiplicando
+   * el resultado final por (1-descLinea/100) sin importar la fuente del precio
+   * (manual, IVA override, volumen, categoría o base) — misma composición que
+   * el backend (`orderCalculationService.js::calcularTotalesPedido`): aplicar el
+   * descuento antes o después del IVA es matemáticamente equivalente para un
+   * único porcentaje ((1-d)×(1+r) == (1+r)×(1-d)), así que no hay riesgo de
+   * doble conteo ni de perder la escala de volumen vigente (lección D-046).
+   */
   checkPriceScale(itemCarrito: any): number {
+    const precioBruto = this.checkPriceScaleBruto(itemCarrito);
+    const descLineaFrac = this.descLineaPct(itemCarrito) / 100;
+    return precioBruto * (1 - descLineaFrac);
+  }
+
+  /** % de descuento de línea (0-100), saneado. */
+  descLineaPct(itemCarrito: any): number {
+    const d = Number(itemCarrito?.descuentoLinea) || 0;
+    return Math.min(100, Math.max(0, d));
+  }
+
+  onDescLineaChange(itemCarrito: any, value: any): void {
+    if (!itemCarrito) return;
+    let d = Number(value);
+    if (isNaN(d) || d < 0) d = 0;
+    if (d > 100) d = 100;
+    itemCarrito.descuentoLinea = d;
+    this.carsingleton.updateProductQuantity(itemCarrito);
+  }
+
+  private checkPriceScaleBruto(itemCarrito: any): number {
     if (!itemCarrito?.producto?.precio) return 0;
     // Si tiene precio manual override Y el producto permite precio manual, calcular base + IVA
     if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null

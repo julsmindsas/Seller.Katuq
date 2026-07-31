@@ -67,7 +67,14 @@
                     + {{getValorIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}} IVA
                     = {{checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}
                   </div>
-                  <div class="price-original" *ngIf="itemCarrito._precioManualOverride !== undefined || itemCarrito._ivaManualOverride !== undefined">
+                  <div class="price-descuento-linea">
+                    <label>Desc. %</label>
+                    <input class="desc-linea-input" type="number"
+                           [ngModel]="descLineaPct(itemCarrito)"
+                           (ngModelChange)="onDescLineaChange(itemCarrito, $event)"
+                           [min]="0" [max]="100" step="1">
+                  </div>
+                  <div class="price-original" *ngIf="itemCarrito._precioManualOverride !== undefined || itemCarrito._ivaManualOverride !== undefined || descLineaPct(itemCarrito) > 0">
                     <s>{{getProductPriceWithScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</s>
                     <span>(IVA {{itemCarrito?.producto?.precio?.precioUnitarioIva || 0}}%)</span>
                   </div>
@@ -88,7 +95,14 @@
                   <div class="price-breakdown" *ngIf="itemCarrito._ivaManualOverride !== undefined">
                     + {{getValorIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}} IVA
                   </div>
-                  <div class="price-original" *ngIf="itemCarrito._ivaManualOverride !== undefined">
+                  <div class="price-descuento-linea">
+                    <label>Desc. %</label>
+                    <input class="desc-linea-input" type="number"
+                           [ngModel]="descLineaPct(itemCarrito)"
+                           (ngModelChange)="onDescLineaChange(itemCarrito, $event)"
+                           [min]="0" [max]="100" step="1">
+                  </div>
+                  <div class="price-original" *ngIf="itemCarrito._ivaManualOverride !== undefined || descLineaPct(itemCarrito) > 0">
                     <s>{{getProductPriceWithScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</s>
                     <span>(IVA orig. {{itemCarrito?.producto?.precio?.precioUnitarioIva || 0}}%)</span>
                   </div>

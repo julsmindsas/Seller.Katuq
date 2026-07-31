@@ -542,10 +542,13 @@ export class CheckOutComponent implements OnInit, OnChanges {
       item.configuracion.preferencias.forEach(preferencia => {
         totalPreferenciasSinIVA += preferencia?.valorUnitarioSinIva || 0;
       });
-      totalItemSinIVA += totalPreferenciasSinIVA * cantidad; 
+      totalItemSinIVA += totalPreferenciasSinIVA * cantidad;
     }
 
-    return totalItemSinIVA;
+    // Descuento de línea (item.descuentoLinea, 0-100, opcional) — mismo patrón
+    // que carrito.component.ts::checkPriceScale, aplicado al final del cálculo.
+    const descLineaFrac = Math.min(100, Math.max(0, Number(item?.descuentoLinea) || 0)) / 100;
+    return totalItemSinIVA * (1 - descLineaFrac);
   }
 
   /**
