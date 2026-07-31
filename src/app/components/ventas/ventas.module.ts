@@ -88,8 +88,10 @@ import { CustomerMetricsComponent } from "./clientes/customer-metrics/customer-m
 import { GlobalMetricsComponent } from "./clientes/global-metrics/global-metrics.component";
 import { EditarIvaLineaPedidoComponent } from "./editar-iva-linea-pedido/editar-iva-linea-pedido.component";
 
+import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 @NgModule({
   imports: [
+    ImagenProductoPipe,
     NgSelectModule,
     CommonModule,
     SharedModule,

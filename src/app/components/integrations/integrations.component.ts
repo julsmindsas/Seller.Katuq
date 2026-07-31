@@ -1227,6 +1227,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.integrationsService.testIntegration(integration.type, integration.credentials).subscribe({
       next: (result) => {
         this.isTesting = false;
+        this.pruebaConexion = result.success ? 'ok' : 'error';
         if (result.success) {
           this.showStatus('success', '✅ Conexión exitosa: ' + result.message);
 
@@ -1241,6 +1242,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isTesting = false;
+        this.pruebaConexion = 'error';
         this.showStatus('error', '❌ Error al probar la conexión: ' + error.message);
       }
     });
@@ -1619,6 +1621,126 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   // Método para cambiar la categoría seleccionada
   selectCategory(category: IntegrationCategory): void {
     this.selectedCategory = category;
+  }
+
+  // ===========================================================================
+  // Rediseño del modal (2 pasos: elegir plataforma → credenciales).
+  // Todo esto deriva del catálogo que ya carga `integrationsService`; no hay
+  // consultas nuevas ni cambios en cómo se guarda una integración.
+  // ===========================================================================
+
+  /** Muestra también las plataformas que aún no están disponibles. */
+  mostrarProximamente = true;
+
+  /** `true` = catálogo completo; `false` = solo `selectedCategory`. */
+  verTodasCategorias = true;
+
+  /** Resultado de la última prueba de conexión, para el aviso del paso 2. */
+  pruebaConexion: "idle" | "ok" | "error" = "idle";
+
+  elegirCategoria(category: IntegrationCategory | null): void {
+    if (category === null) {
+      this.verTodasCategorias = true;
+      return;
+    }
+    this.verTodasCategorias = false;
+    this.selectCategory(category);
+  }
+
+  categoriaEstaActiva(category: IntegrationCategory | null): boolean {
+    if (category === null) return this.verTodasCategorias;
+    return !this.verTodasCategorias && this.selectedCategory === category;
+  }
+
+  /**
+   * Catálogo plano de la categoría en curso (o de todas), con la etiqueta de
+   * categoría adjunta: los ítems no la traen, va como llave del mapa.
+   */
+  private catalogoBase(): any[] {
+    const fuente = this.availableIntegrations || {};
+    const conCategoria = (cat: IntegrationCategory) =>
+      (fuente[cat] || []).map((p: any) => ({
+        ...p,
+        categoriaLabel: this.categoryLabels?.[cat] || cat,
+      }));
+
+    if (!this.verTodasCategorias) {
+      return conCategoria(this.selectedCategory);
+    }
+    return this.categories.reduce(
+      (acc: any[], cat: IntegrationCategory) => acc.concat(conCategoria(cat)),
+      [],
+    );
+  }
+
+  /**
+   * Lo que se pinta en la cuadrícula. El buscador antes no filtraba nada:
+   * la plantilla leía `availableIntegrations` directo e ignoraba `searchTerm`.
+   */
+  getCatalogoVisible(): any[] {
+    const texto = (this.searchTerm || "").trim().toLowerCase();
+    return this.catalogoBase().filter((p: any) => {
+      if (!this.mostrarProximamente && !p.active) return false;
+      if (!texto) return true;
+      return (
+        (p.name || "").toLowerCase().includes(texto) ||
+        (p.description || "").toLowerCase().includes(texto)
+      );
+    });
+  }
+
+  contarCategoria(category: IntegrationCategory | null): number {
+    const fuente = this.availableIntegrations || {};
+    const lista =
+      category === null
+        ? this.categories.reduce(
+            (acc: any[], c: IntegrationCategory) => acc.concat(fuente[c] || []),
+            [],
+          )
+        : fuente[category] || [];
+    return lista.filter((p: any) => this.mostrarProximamente || p.active).length;
+  }
+
+  /** La plataforma marcada, con sus datos del catálogo. */
+  get plataformaElegida(): any | null {
+    if (!this.selectedIntegrationType) return null;
+    const fuente = this.availableIntegrations || {};
+    for (const cat of this.categories) {
+      const hit = (fuente[cat] || []).find(
+        (p: any) => p.id === this.selectedIntegrationType,
+      );
+      if (hit) return { ...hit, categoriaLabel: this.categoryLabels?.[cat] || cat };
+    }
+    return null;
+  }
+
+  /**
+   * Marca la plataforma SIN saltar al formulario. `onSelectIntegrationType`
+   * avanza de una; acá se separa elegir de continuar para poder comparar
+   * antes de comprometerse (y para que el pie diga qué quedó elegido).
+   */
+  elegirPlataforma(integration: any): void {
+    if (!integration?.active) return;
+    if (this.selectedIntegrationType === integration.id) return;
+    this.selectedIntegrationType = integration.id;
+    this.pruebaConexion = "idle";
+    this.resetForm();
+    this.validationResult = null;
+    this.credentialStrength = null;
+  }
+
+  puedeContinuar(): boolean {
+    return !!this.plataformaElegida && this.plataformaElegida.active === true;
+  }
+
+  continuarAlFormulario(): void {
+    if (!this.puedeContinuar()) return;
+    this.showOnlyForm = true;
+  }
+
+  /** Inicial para el recuadro cuando el logo no carga. */
+  inicialDe(nombre: string): string {
+    return (nombre || "?").trim().charAt(0).toUpperCase();
   }
 
   // Método para manejar errores de imágenes

@@ -1095,32 +1095,67 @@ export class EcomerceProductsComponent
   }
 
   /**
-   * Obtiene el precio a mostrar para un producto, considerando la categoría del cliente
-   * Si el cliente tiene categoría y el producto tiene precio para esa categoría, muestra ese precio
-   * Si no, muestra el precio estándar
+   * Obtiene el precio a mostrar para un producto. Jerarquía:
+   *  1. Precio por categoría de cliente (negociado) — si aplica.
+   *  2. Precio promocional automático de catálogo (Feature B) — si aplica.
+   *  3. Precio estándar.
    */
   getPrecioParaMostrar(producto: Producto): number {
     if (!this._clienteCacheInitialized) this.refreshClienteCache();
 
+    // 1. Precio negociado por categoría de cliente (tiene prioridad).
     const categoriaId = this._cachedCategoriaClienteId;
-    if (!categoriaId) {
-      return producto?.precio?.precioUnitarioConIva || 0;
+    if (categoriaId) {
+      const preciosPorTipo = producto?.preciosPorTipoCliente;
+      if (preciosPorTipo && Array.isArray(preciosPorTipo)) {
+        const precioCategoria = preciosPorTipo.find(
+          (p: any) => p.tipoClienteId === categoriaId && p.activo === true
+        );
+        if (precioCategoria) {
+          return precioCategoria.precioConIva || producto?.precio?.precioUnitarioConIva || 0;
+        }
+      }
     }
 
-    const preciosPorTipo = producto?.preciosPorTipoCliente;
-    if (!preciosPorTipo || !Array.isArray(preciosPorTipo) || preciosPorTipo.length === 0) {
-      return producto?.precio?.precioUnitarioConIva || 0;
+    // 2. Precio promocional automático (Feature B).
+    if (this.tienePrecioPromocional(producto)) {
+      return producto.precioPromocional as number;
     }
 
-    const precioCategoria = preciosPorTipo.find(
-      (p: any) => p.tipoClienteId === categoriaId && p.activo === true
-    );
-
-    if (precioCategoria) {
-      return precioCategoria.precioConIva || producto?.precio?.precioUnitarioConIva || 0;
-    }
-
+    // 3. Precio estándar.
     return producto?.precio?.precioUnitarioConIva || 0;
+  }
+
+  /**
+   * Feature B — el producto trae un precio promocional vigente (inyectado por el
+   * backend del catálogo) y es realmente menor que el precio estándar.
+   */
+  tienePrecioPromocional(producto: Producto): boolean {
+    const promo = producto?.precioPromocional;
+    const base = producto?.precio?.precioUnitarioConIva;
+    return typeof promo === 'number' && typeof base === 'number' && promo < base;
+  }
+
+  /** Insignias gráficas disponibles (sprite recortado en src/assets/images/promo). */
+  private static readonly PROMO_BADGES = [20, 30, 40, 50, 60, 70, 80];
+
+  /**
+   * Feature B — ruta de la insignia gráfica de descuento a mostrar como sticker
+   * sobre la foto del producto. Usa el porcentaje puesto al crear la promoción;
+   * si ese porcentaje no tiene insignia propia (ej. 10%), cae a la más cercana.
+   * Devuelve null si la promo no es de tipo porcentaje (valor fijo → sin sticker).
+   */
+  getPromoBadgeImg(producto: Producto): string | null {
+    if (!this.tienePrecioPromocional(producto)) return null;
+    const promo: any = producto?.promocionAplicada;
+    if (!promo || promo.tipo !== 'porcentaje') return null;
+    const valor = Number(promo.valor);
+    if (!isFinite(valor) || valor <= 0) return null;
+    const badges = EcomerceProductsComponent.PROMO_BADGES;
+    const cercana = badges.reduce((prev, cur) =>
+      Math.abs(cur - valor) < Math.abs(prev - valor) ? cur : prev
+    );
+    return `assets/images/promo/badge-${cercana}.png`;
   }
 
   /**

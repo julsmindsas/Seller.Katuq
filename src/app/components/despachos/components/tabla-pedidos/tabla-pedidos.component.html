@@ -434,7 +434,7 @@
                                                     </td>
                                                     <td style="width: 60px; text-align: center;">
                                                         <img style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;"
-                                                            [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls"
+                                                            [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto"
                                                             [alt]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.nombreImagen" />
                                                     </td>
                                                     <td>{{ item.producto?.crearProducto?.titulo }}</td>

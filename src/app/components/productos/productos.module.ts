@@ -16,8 +16,10 @@ import { ImportModalModule } from '../../shared/components/import-modal/import-m
 
 import 'hammerjs';
 import 'mousetrap';
+import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 @NgModule({
   imports: [
+    ImagenProductoPipe,
     CommonModule,
     SharedModule,
     ProductosRoutingModule,

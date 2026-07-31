@@ -7,6 +7,7 @@ import { NgxStarRatingModule } from "ngx-star-rating";
 import { SharedModule } from "../../../shared/shared.module";
 import { ConfProductToCartComponent } from "./conf-product-to-cart/conf-product-to-cart.component";
 
+import { ImagenProductoPipe } from '../../../shared/pipes/imagen-producto.pipe';
 /**
  * Módulo compartido de catálogo (spec 008 — T-19, decisión D-CLAR/Opción A).
  *
@@ -23,6 +24,7 @@ import { ConfProductToCartComponent } from "./conf-product-to-cart/conf-product-
  */
 @NgModule({
   imports: [
+    ImagenProductoPipe,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

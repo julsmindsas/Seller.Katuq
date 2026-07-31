@@ -182,6 +182,18 @@ const routes: Routes = [
       }
     ]
   },
+  // Vitrina pública de catálogos (D-141). Fuera del AuthGuard a propósito: la
+  // abre el comprador, que no tiene cuenta en Katuq.
+  {
+    path: 'cat',
+    component: BlankComponent,
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./components/catalogo-publico/catalogo-publico.module').then(m => m.CatalogoPublicoModule),
+      }
+    ]
+  },
   {
     path: '',
     component: ContentComponent,

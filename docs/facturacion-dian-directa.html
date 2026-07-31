@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Diagnóstico y plan de habilitación para facturación electrónica directa de Katuq ante la DIAN.">
+  <title>Katuq · Facturación directa DIAN</title>
+  <style>
+    :root {
+      --ink: #182230;
+      --muted: #667085;
+      --line: #e4e7ec;
+      --paper: #ffffff;
+      --canvas: #f5f7fb;
+      --blue: #2251b5;
+      --blue-strong: #173c8f;
+      --blue-soft: #eaf0ff;
+      --amber: #b86a00;
+      --amber-soft: #fff4df;
+      --green: #147a57;
+      --green-soft: #e8f7f0;
+      --red: #b42318;
+      --red-soft: #ffebe9;
+      --shadow: 0 18px 50px rgba(21, 34, 56, .08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .shell { width: min(1180px, calc(100% - 36px)); margin: 0 auto; }
+    .hero {
+      color: #fff;
+      background:
+        radial-gradient(circle at 80% 10%, rgba(107, 163, 255, .36), transparent 32%),
+        linear-gradient(135deg, #142b62 0%, #2251b5 54%, #17806d 100%);
+      padding: 38px 0 42px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #dce7ff;
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #77e0b3;
+      box-shadow: 0 0 0 5px rgba(119, 224, 179, .16);
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 820px; margin: 16px 0 13px; font-size: clamp(2.15rem, 5vw, 4.4rem); line-height: .98; letter-spacing: -.055em; }
+    .hero-copy { max-width: 760px; color: #e4ebff; font-size: 1.08rem; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 25px; }
+    .hero-meta span { padding: 8px 12px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(255,255,255,.1); color: #f2f6ff; font-size: .85rem; }
+
+    main { padding: 30px 0 70px; }
+    .toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 22px; }
+    .toolbar-copy { color: var(--muted); font-size: .92rem; }
+    .toolbar-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .toolbar button { border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 9px 13px; font-weight: 700; }
+    .toolbar button:hover, .toolbar button:focus-visible { border-color: var(--blue); color: var(--blue); outline: none; }
+    .toolbar button.primary { border-color: var(--blue); background: var(--blue); color: #fff; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+    .summary-card, .panel, .task-card, .source-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: var(--shadow); }
+    .summary-card { padding: 18px; }
+    .summary-label { color: var(--muted); font-size: .8rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .summary-number { margin: 3px 0 2px; font-size: 2rem; font-weight: 850; letter-spacing: -.05em; }
+    .summary-note { color: var(--muted); font-size: .82rem; }
+    .summary-card.done .summary-number { color: var(--green); }
+    .summary-card.attention .summary-number { color: var(--amber); }
+    .summary-card.blocked .summary-number { color: var(--red); }
+
+    .progress-panel { padding: 20px 22px; margin-bottom: 28px; background: #101f45; color: #fff; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .progress-head { display: flex; justify-content: space-between; gap: 14px; align-items: center; }
+    .progress-head strong { font-size: 1.05rem; }
+    .progress-value { color: #9edcc5; font-weight: 850; }
+    .progress-track { height: 10px; margin-top: 13px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.15); }
+    .progress-bar { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #74a3ff, #7ce0b4); transition: width .25s ease; }
+
+    .section-heading { display: flex; justify-content: space-between; gap: 15px; align-items: end; margin: 35px 0 14px; }
+    .section-heading h2 { margin-bottom: 0; font-size: 1.55rem; letter-spacing: -.03em; }
+    .section-heading p { max-width: 610px; margin-bottom: 0; color: var(--muted); font-size: .94rem; }
+    .task-list { display: grid; gap: 13px; }
+    .task-card { display: grid; grid-template-columns: auto 1fr auto; gap: 13px; align-items: start; padding: 17px 18px; box-shadow: none; }
+    .task-card[hidden] { display: none; }
+    .task-card input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--green); }
+    .task-card h3 { margin-bottom: 4px; font-size: 1rem; }
+    .task-card p { margin-bottom: 8px; color: var(--muted); font-size: .9rem; }
+    .task-card.done { background: var(--green-soft); border-color: #b9e6d1; }
+    .task-card.done h3 { text-decoration: line-through; text-decoration-color: #76b99c; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; padding: 5px 9px; border-radius: 999px; font-size: .72rem; font-weight: 850; letter-spacing: .03em; }
+    .badge.done { background: var(--green-soft); color: var(--green); }
+    .badge.pending { background: var(--amber-soft); color: var(--amber); }
+    .badge.blocked { background: var(--red-soft); color: var(--red); }
+    .badge.external { background: var(--blue-soft); color: var(--blue); }
+
+    .two-col { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; }
+    .panel { padding: 22px; box-shadow: none; }
+    .panel h2 { margin-bottom: 8px; font-size: 1.25rem; letter-spacing: -.025em; }
+    .panel > p { color: var(--muted); font-size: .92rem; }
+    .steps { display: grid; gap: 13px; margin: 18px 0 0; padding: 0; list-style: none; counter-reset: steps; }
+    .steps li { display: grid; grid-template-columns: 32px 1fr; gap: 11px; align-items: start; }
+    .steps li::before { counter-increment: steps; content: counter(steps); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: var(--blue-soft); color: var(--blue); font-weight: 850; }
+    .steps strong { display: block; margin-bottom: 2px; font-size: .94rem; }
+    .steps span { color: var(--muted); font-size: .87rem; }
+    .notice { padding: 14px 15px; border-left: 4px solid var(--amber); border-radius: 10px; background: var(--amber-soft); color: #6f4300; font-size: .88rem; }
+    .notice strong { color: #6a3b00; }
+    .summary-notice { margin: -10px 0 28px; }
+    .secure { border-left-color: var(--red); background: var(--red-soft); color: #7e241b; }
+    .secure strong { color: #8e1e14; }
+
+    .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 18px; }
+    .flow-step { position: relative; min-height: 105px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: #fbfcff; }
+    .flow-step:not(:last-child)::after { content: "→"; position: absolute; top: 37px; right: -17px; z-index: 1; color: #9aa6bd; font-size: 1.25rem; }
+    .flow-step b { display: block; color: var(--blue); font-size: .76rem; letter-spacing: .08em; text-transform: uppercase; }
+    .flow-step strong { display: block; margin-top: 8px; font-size: .9rem; }
+    .flow-step span { display: block; margin-top: 4px; color: var(--muted); font-size: .77rem; }
+
+    .sources { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+    .source-card { padding: 16px; box-shadow: none; }
+    .source-card b { display: block; margin-bottom: 5px; font-size: .9rem; }
+    .source-card p { margin-bottom: 0; color: var(--muted); font-size: .82rem; }
+    .source-card a { display: inline-block; margin-top: 9px; font-size: .82rem; font-weight: 750; }
+
+    footer { padding: 28px 0 10px; color: var(--muted); font-size: .78rem; }
+    .small { color: var(--muted); font-size: .82rem; }
+    .code { padding: 2px 6px; border-radius: 6px; background: #eef1f6; color: #344054; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8em; }
+
+    @media (max-width: 900px) {
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: repeat(3, 1fr); }
+      .flow-step:nth-child(3)::after { display: none; }
+    }
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 24px, 560px); }
+      .hero { padding-top: 28px; }
+      h1 { font-size: 2.6rem; }
+      .summary-grid, .sources, .flow { grid-template-columns: 1fr; }
+      .flow-step:not(:last-child)::after { display: none; }
+      .task-card { grid-template-columns: auto 1fr; }
+      .task-card .badge { grid-column: 2; justify-self: start; }
+      .section-heading { display: block; }
+      .section-heading p { margin-top: 6px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .hero { padding: 20px 0; color: #000; background: #fff; border-bottom: 2px solid #111; }
+      .hero .eyebrow, .hero-copy, .hero-meta span { color: #333; }
+      .hero-meta span { border-color: #bbb; background: #fff; }
+      .toolbar, .progress-panel { display: none; }
+      .summary-card, .panel, .task-card, .source-card { box-shadow: none; }
+      .task-card { break-inside: avoid; }
+      a { color: #000; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="shell">
+      <div class="eyebrow">Diagnóstico ejecutivo · 30 julio 2026</div>
+      <h1>Katuq directo ante la DIAN.</h1>
+      <p class="hero-copy">Mapa de lo que ya está construido, lo que falta para emitir documentos electrónicos y los trámites que deben obtenerse para operar con seguridad.</p>
+      <div class="hero-meta">
+        <span>Sin SIIGO ni World Office</span>
+        <span>Facturas · NC · ND</span>
+        <span>Motor fiscal + libro contable</span>
+        <span>Piloto DIAN aún no habilitado</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="toolbar">
+      <div class="toolbar-copy">Marca las tareas a medida que se completen. Consulta también el <a href="manuales/facturacion-dian/manual-tramites-dian.html">manual detallado de trámites DIAN</a>.</div>
+      <div class="toolbar-actions">
+        <button type="button" data-filter="all">Todas</button>
+        <button type="button" data-filter="pending">Pendientes</button>
+        <button type="button" data-filter="done">Completadas</button>
+        <button type="button" class="primary" id="print">Imprimir / PDF</button>
+      </div>
+    </div>
+
+    <section class="summary-grid" aria-label="Resumen de avance">
+      <article class="summary-card done"><div class="summary-label">Software verificado</div><div class="summary-number" id="built-count">0</div><div class="summary-note">piezas completadas localmente</div></article>
+      <article class="summary-card attention"><div class="summary-label">Software pendiente</div><div class="summary-number" id="pending-count">0</div><div class="summary-note">trabajos de implementación</div></article>
+      <article class="summary-card blocked"><div class="summary-label">Bloqueado externo</div><div class="summary-number" id="external-count">0</div><div class="summary-note">trámites o credenciales</div></article>
+      <article class="summary-card"><div class="summary-label">Avance del plan</div><div class="summary-number" id="percent-count">0%</div><div class="summary-note">checklist de implementación</div></article>
+    </section>
+
+    <section class="progress-panel" aria-label="Avance del checklist">
+      <div class="progress-head"><strong>Avance general</strong><span class="progress-value" id="progress-label">0 de 0</span></div>
+      <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+    </section>
+
+    <div class="notice summary-notice"><strong>Lectura correcta del avance:</strong> CUFE, UBL de factura y XAdES pasan pruebas locales. Todavía no existe una factura de Katuq aceptada de punta a punta por la DIAN; esa aceptación solo se confirma al ejecutar el set oficial de habilitación.</div>
+
+    <section>
+      <div class="section-heading">
+        <div><h2>1. Lo que falta en Katuq</h2><p>El núcleo técnico ya tiene una parte importante, pero todavía no es un circuito directo DIAN de punta a punta.</p></div>
+      </div>
+      <div class="task-list" id="software-tasks">
+        <article class="task-card" data-status="done"><input type="checkbox" aria-label="Marcar CUFE como completado" checked><div><h3>CUFE y reglas de cálculo</h3><p>Implementado y verificado con casos de prueba locales.</p></div><span class="badge done">HECHO</span></article>
+        <article class="task-card" data-status="done"><input type="checkbox" aria-label="Marcar UBL factura como completado" checked><div><h3>XML UBL de factura</h3><p>Generación de factura con totales, impuestos, QR y controles de consistencia.</p></div><span class="badge done">HECHO</span></article>
+        <article class="task-card" data-status="done"><input type="checkbox" aria-label="Marcar firma digital como completado" checked><div><h3>Firma XAdES</h3><p>Firmador y validación independiente de firma/digests en pruebas locales.</p></div><span class="badge done">HECHO</span></article>
+        <article class="task-card" data-status="done"><input type="checkbox" aria-label="Cliente SOAP DIAN implementado" checked><div><h3>Cliente SOAP directo de la DIAN</h3><p>Implementado y verificado offline: SOAP 1.2, WS-Security X.509, ZIP oficial, <span class="code">SendBillSync</span>, <span class="code">SendTestSetAsync</span>, <span class="code">GetStatus</span> y <span class="code">GetStatusZip</span>. La conexión real se valida cuando la empresa entregue certificado, Software ID, PIN y TestSetId.</p></div><span class="badge done">HECHO EN CÓDIGO</span></article>
+        <article class="task-card" data-status="done"><input type="checkbox" aria-label="Proveedor DIAN habilitado en código" checked><div><h3>Proveedor <span class="code">dian</span> en backend y ventas</h3><p>Implementado: esquema por empresa, secretos cifrados, validaciones, nombres técnicos anuales y conexión con el flujo normal de ventas. No se activa ni se emite hasta registrar las credenciales y completar habilitación DIAN.</p></div><span class="badge done">HECHO EN CÓDIGO</span></article>
+        <article class="task-card" data-status="done"><input type="checkbox" aria-label="Notas crédito y débito implementadas" checked><div><h3>Notas crédito y notas débito</h3><p>Implementadas y verificadas offline: XML UBL, CUDE con Software PIN, referencia obligatoria al CUFE original, causales DIAN, impuestos y firma XAdES. Falta conectarlas al flujo de ventas y validarlas con credenciales reales.</p></div><span class="badge done">HECHO EN CÓDIGO</span></article>
+        <article class="task-card" data-status="pending"><input type="checkbox" aria-label="Completar entrega de documentos"><div><h3>Entrega al adquirente</h3><p>PDF/QR, XML firmado, AttachedDocument, correo, reenvío, consulta y trazabilidad. El documento se entrega como validado únicamente después de la respuesta satisfactoria de la DIAN.</p></div><span class="badge pending">PENDIENTE</span></article>
+        <article class="task-card" data-status="pending"><input type="checkbox" aria-label="Completar módulo contable"><div><h3>Módulo contable de partida doble</h3><p>Plan de cuentas, asientos automáticos, IVA y retenciones, CxC/CxP, pagos, libros diario y mayor, balances por tercero, cierres, auditoría y estados financieros. Facturar no equivale todavía a llevar contabilidad completa.</p></div><span class="badge pending">PENDIENTE</span></article>
+        <article class="task-card" data-status="pending"><input type="checkbox" aria-label="Definir documentos electrónicos posteriores"><div><h3>Documentos y eventos de una segunda etapa</h3><p>Definir alcance para documento soporte, eventos de recepción/aceptación, nómina electrónica y RADIAN. No bloquean el piloto básico de factura de venta, pero sí un módulo fiscal integral.</p></div><span class="badge pending">FASE POSTERIOR</span></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <div><h2>2. Lo que debes obtener fuera del código</h2><p>Estos elementos los entrega o habilita la empresa y la DIAN. No se pueden inventar en el sistema.</p></div>
+      </div>
+      <div class="task-list" id="external-tasks">
+        <article class="task-card" data-status="external"><input type="checkbox" aria-label="Obtener RUT actualizado"><div><h3>RUT y datos de registro vigentes</h3><p>Verifica ante la DIAN los datos del NIT que emitirá: correo del representante o contribuyente, razón social, dirección y actividad económica. La fecha de inicio de producción actualiza el RUT dentro del proceso DIAN.</p></div><span class="badge external">TRÁMITE DIAN</span></article>
+        <article class="task-card" data-status="external"><input type="checkbox" aria-label="Obtener certificado digital"><div><h3>Certificado digital de firma</h3><p>Adquiérelo con una entidad de certificación digital acreditada por la ONAC, vigente y emitido para el firmante correspondiente. Custodia archivo y contraseña en un gestor de secretos, nunca en chat ni Git.</p></div><span class="badge external">CERTIFICADORA ONAC</span></article>
+        <article class="task-card" data-status="external"><input type="checkbox" aria-label="Registrar software ante DIAN"><div><h3>Registro como facturador y modo de operación</h3><p>En el portal de Habilitación formaliza el registro y configura “Software propio/Desarrollo propio”. DIAN genera los rangos de prueba del modo de operación.</p></div><span class="badge external">TRÁMITE DIAN</span></article>
+        <article class="task-card" data-status="external"><input type="checkbox" aria-label="Obtener TestSetId"><div><h3>Set de pruebas y <span class="code">TestSetId</span></h3><p>Con el software registrado, conserva ID, PIN, URL/identificador del set y rangos de prueba; Katuq debe enviar el conjunto exigido hasta quedar HABILITADO sin errores.</p></div><span class="badge external">TRÁMITE DIAN</span></article>
+        <article class="task-card" data-status="external"><input type="checkbox" aria-label="Obtener fecha de inicio"><div><h3>Fecha de inicio de producción</h3><p>Se informa después de superar el set de pruebas. Este paso habilita el tránsito operativo y actualiza el RUT según el proceso DIAN.</p></div><span class="badge external">DESPUÉS DE PRUEBAS</span></article>
+        <article class="task-card" data-status="external"><input type="checkbox" aria-label="Obtener resolución de numeración"><div><h3>Numeración de producción y contingencia</h3><p>Ya habilitado, solicita en MUISCA la autorización de Factura Electrónica y Talonario por inconvenientes tecnológicos; luego asocia los prefijos y rangos al software.</p></div><span class="badge external">TRÁMITE DIAN</span></article>
+        <article class="task-card" data-status="external"><input type="checkbox" aria-label="Obtener clave técnica"><div><h3>Clave técnica de los rangos autorizados</h3><p>Obtén o consulta la clave técnica asociada a la numeración de producción y guárdala como secreto por empresa. Es necesaria para calcular el CUFE real.</p></div><span class="badge external">TRÁMITE DIAN</span></article>
+        <article class="task-card" data-status="external"><input type="checkbox" aria-label="Definir modelo legal por tenant"><div><h3>Modelo legal por empresa</h3><p>Para ventas de Katuq, emite el NIT de Katuq. Para tenants, cada empresa continúa siendo el facturador. Antes de ofrecer generación/transmisión centralizada a terceros, debe definirse formalmente si Katuq requiere habilitación como Proveedor Tecnológico.</p></div><span class="badge external">DECISIÓN LEGAL</span></article>
+      </div>
+    </section>
+
+    <section class="two-col">
+      <article class="panel">
+        <h2>Cómo obtener cada cosa</h2>
+        <p>Ruta práctica para preparar el piloto de Katuq.</p>
+        <ol class="steps">
+          <li><div><strong>Definir quién emite</strong><span>Confirmar si el primer piloto será Katuq con su propio NIT o una empresa cliente.</span></div></li>
+          <li><div><strong>Verificar RUT</strong><span>Entrar a DIAN/MUISCA, confirmar datos y correo del representante o contribuyente y descargar el RUT vigente.</span></div></li>
+          <li><div><strong>Comprar el certificado</strong><span>Contratar firma digital empresarial con una certificadora acreditada por ONAC y custodiarla en secretos.</span></div></li>
+          <li><div><strong>Registrar el modo de operación</strong><span>En Habilitación, formalizar el registro y seleccionar Software propio/Desarrollo propio para obtener rangos de prueba.</span></div></li>
+          <li><div><strong>Ejecutar el set de pruebas</strong><span>Enviar con TestSetId desde Katuq, corregir rechazos y guardar evidencia hasta adquirir estado HABILITADO.</span></div></li>
+          <li><div><strong>Informar inicio de producción</strong><span>Después de aprobar pruebas, registrar la fecha de inicio solicitada por DIAN.</span></div></li>
+          <li><div><strong>Solicitar numeración productiva</strong><span>Tramitar Factura Electrónica y Talonario de contingencia; asociar prefijos y obtener la clave técnica.</span></div></li>
+          <li><div><strong>Empezar controladamente</strong><span>Separar habilitación/producción, activar rangos y operar con monitoreo, reintentos y soporte.</span></div></li>
+        </ol>
+      </article>
+
+      <article class="panel">
+        <h2>Datos que debemos preparar</h2>
+        <p>La configuración debe estar separada por empresa y ambiente.</p>
+        <ul class="steps" style="counter-reset:none">
+          <li><div><strong>Empresa emisora</strong><span>NIT, dígito de verificación, razón social, responsabilidades, dirección, municipio, correo y establecimiento.</span></div></li>
+          <li><div><strong>Numeración</strong><span>Tipo de documento, prefijo, rango inicial/final, consecutivo actual, resolución, fechas y clave técnica.</span></div></li>
+          <li><div><strong>Integración DIAN</strong><span>SoftwareID, PIN, TestSetId, ambiente y certificado. Cada tenant y ambiente deben estar aislados; los secretos van solo al gestor seguro.</span></div></li>
+          <li><div><strong>Comprador</strong><span>Identificación y nombre/razón social según el caso; pedir correo cuando se requiera entrega electrónica.</span></div></li>
+          <li><div><strong>Contabilidad</strong><span>Plan de cuentas, cuentas de ingreso, IVA, retenciones, cartera, inventario, costos y reglas de contabilización.</span></div></li>
+        </ul>
+        <div class="notice secure"><strong>Regla de seguridad:</strong> no guardar certificados, contraseñas, PIN, SoftwareID ni llaves privadas en este HTML, el repositorio o conversaciones.</div>
+      </article>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <div><h2>3. Secuencia de implementación</h2><p>El orden evita activar ventas antes de tener aceptación DIAN y trazabilidad contable.</p></div>
+      </div>
+      <div class="flow" aria-label="Secuencia de implementación">
+        <div class="flow-step"><b>01 · Modelo</b><strong>NIT y alcance</strong><span>Katuq propio o tenants.</span></div>
+        <div class="flow-step"><b>02 · DIAN</b><strong>Habilitación</strong><span>Software, set y rangos.</span></div>
+        <div class="flow-step"><b>03 · Motor</b><strong>Emisión directa</strong><span>UBL, firma y SOAP.</span></div>
+        <div class="flow-step"><b>04 · Contable</b><strong>Asientos</strong><span>Impuestos, cartera y cierre.</span></div>
+        <div class="flow-step"><b>05 · Operación</b><strong>Piloto</strong><span>Ventas reales monitoreadas.</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <div><h2>Fuentes oficiales y marco</h2><p>Revisar siempre la versión vigente antes de solicitar habilitación o poner producción.</p></div>
+      </div>
+      <div class="sources">
+        <article class="source-card"><b>Cómo ser facturador electrónico</b><p>Ruta de registro, modo de operación, pruebas, inicio, numeración y asociación de rangos.</p><a href="https://www.dian.gov.co/impuestos/factura-electronica/como-hacerlo/Paginas/ser-facturador-electronico.aspx" target="_blank" rel="noopener">Abrir DIAN ↗</a></article>
+        <article class="source-card"><b>Documentación técnica</b><p>Anexo técnico, caja de herramientas y guía de consumo de servicios web.</p><a href="https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/documentacion-tecnica/" target="_blank" rel="noopener">Abrir documentación ↗</a></article>
+        <article class="source-card"><b>Resolución DIAN 227 de 2025</b><p>Marco consolidado vigente para facturación electrónica y proveedores tecnológicos.</p><a href="https://normograma.dian.gov.co/dian/compilacion/docs/resolucion_dian_0227_2025.htm" target="_blank" rel="noopener">Abrir norma ↗</a></article>
+      </div>
+    </section>
+
+    <footer>Documento de trabajo de Katuq. Este tablero organiza el proyecto; la validación legal, tributaria y de habilitación corresponde a la empresa emisora y a la DIAN.</footer>
+  </main>
+
+  <script>
+    (function () {
+      var storageKey = 'katuq-dian-checklist-v1';
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.task-card'));
+      var softwareCards = Array.prototype.slice.call(document.querySelectorAll('#software-tasks .task-card'));
+      var externalCards = Array.prototype.slice.call(document.querySelectorAll('#external-tasks .task-card'));
+      var saved = {};
+      try { saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch (e) { saved = {}; }
+
+      cards.forEach(function (card) {
+        var checkbox = card.querySelector('input');
+        var key = card.querySelector('h3').textContent.trim();
+        if (Object.prototype.hasOwnProperty.call(saved, key)) checkbox.checked = saved[key];
+        checkbox.addEventListener('change', function () {
+          saved[key] = checkbox.checked;
+          try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch (e) {}
+          render();
+        });
+      });
+
+      function render() {
+        var completed = cards.filter(function (card) { return card.querySelector('input').checked; }).length;
+        var total = cards.length;
+        var built = softwareCards.filter(function (card) { return card.querySelector('input').checked; }).length;
+        var pending = softwareCards.length - built;
+        var external = externalCards.filter(function (card) { return !card.querySelector('input').checked; }).length;
+        var percent = total ? Math.round(completed / total * 100) : 0;
+        document.getElementById('built-count').textContent = built;
+        document.getElementById('pending-count').textContent = pending;
+        document.getElementById('external-count').textContent = external;
+        document.getElementById('percent-count').textContent = percent + '%';
+        document.getElementById('progress-label').textContent = completed + ' de ' + total;
+        document.getElementById('progress-bar').style.width = percent + '%';
+        cards.forEach(function (card) { card.classList.toggle('done', card.querySelector('input').checked); });
+      }
+
+      document.querySelectorAll('[data-filter]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var filter = button.dataset.filter;
+          cards.forEach(function (card) {
+            var done = card.querySelector('input').checked;
+            card.hidden = filter === 'done' ? !done : filter === 'pending' ? done : false;
+          });
+        });
+      });
+      document.getElementById('print').addEventListener('click', function () { window.print(); });
+      render();
+    }());
+  </script>
+</body>
+</html>

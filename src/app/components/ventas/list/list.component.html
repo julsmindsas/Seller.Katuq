@@ -491,7 +491,7 @@
                                                         <div class="pedido-detail__productos">
                                                             <div *ngFor="let item of pedidoDetalle.carrito; trackBy: trackByCartItem" class="pedido-prod">
                                                                 <img class="pedido-prod__img"
-                                                                     [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                                                                     [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
                                                                      [alt]="item.producto?.crearProducto?.titulo || 'Producto'" />
                                                                 <div class="pedido-prod__info">
                                                                     <div class="pedido-prod__name">{{ item.producto?.crearProducto?.titulo }}</div>
@@ -1340,7 +1340,7 @@
                                                                     <!-- Información principal del producto en una sola fila -->
                                                                     <div class="product-main-info">
                                                                         <div class="product-image">
-                                                                            <img [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                                                                            <img [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
                                                                                  [alt]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.nombreImagen || 'Producto'"
                                                                                  class="product-thumb" />
                                                                         </div>

@@ -17,7 +17,7 @@
         <div class="col-auto">
           <img
             *ngIf="producto?.crearProducto?.imagenesPrincipales?.length > 0"
-            [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
+            [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto"
             [alt]="producto?.crearProducto?.titulo"
             width="60"
             height="60"

@@ -541,7 +541,8 @@
                                         "
                                         [src]="
                                             row.crearProducto
-                                                ?.imagenesPrincipales[0]?.urls
+                                                ?.imagenesPrincipales?.[0]?.urls
+                                                | imagenProducto
                                         "
                                         [alt]="row.crearProducto?.titulo"
                                         width="52"
@@ -676,11 +677,29 @@
 
                                 <!-- Precio unitario con IVA (solo en desktop) -->
                                 <td *ngIf="!isMobile && isColVisible('precio')" class="text-end">
-                                    <span class="pk-price"
-                                        ngbTooltip="Sin IVA: {{ (row.precio?.precioUnitarioSinIva || 0) | currency:'USD':'symbol':'1.0-0' }} | IVA {{ row.precio?.precioUnitarioIva || 0 }}%"
-                                        placement="top">
-                                        {{ (row.precio?.precioUnitarioConIva || 0) | currency:'USD':'symbol':'1.0-0' }}
-                                    </span>
+                                    <!-- Feature B: si el producto/categoría está en promoción vigente, precio tachado + promo + badge -->
+                                    <ng-container *ngIf="row.precioPromocional && row.precioPromocional < (row.precio?.precioUnitarioConIva || 0); else precioNormal">
+                                        <div class="d-flex flex-column align-items-end">
+                                            <span class="text-muted text-decoration-line-through small">
+                                                {{ (row.precio?.precioUnitarioConIva || 0) | currency:'USD':'symbol':'1.0-0' }}
+                                            </span>
+                                            <span class="fw-bold text-danger"
+                                                ngbTooltip="Promoción: {{ row.promocionAplicada?.nombre }}"
+                                                placement="top">
+                                                {{ row.precioPromocional | currency:'USD':'symbol':'1.0-0' }}
+                                                <span class="badge bg-danger ms-1">
+                                                    {{ row.promocionAplicada?.tipo === 'porcentaje' ? ('-' + row.promocionAplicada?.valor + '%') : 'OFERTA' }}
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </ng-container>
+                                    <ng-template #precioNormal>
+                                        <span class="pk-price"
+                                            ngbTooltip="Sin IVA: {{ (row.precio?.precioUnitarioSinIva || 0) | currency:'USD':'symbol':'1.0-0' }} | IVA {{ row.precio?.precioUnitarioIva || 0 }}%"
+                                            placement="top">
+                                            {{ (row.precio?.precioUnitarioConIva || 0) | currency:'USD':'symbol':'1.0-0' }}
+                                        </span>
+                                    </ng-template>
                                 </td>
 
                                 <!-- Fecha editado (solo en desktop) -->

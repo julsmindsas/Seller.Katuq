@@ -31,7 +31,7 @@
                         <div class="cart-image">
                           <img class="img-fluid"
                             *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
-                            [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+                            [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls | imagenProducto"
                             alt="{{ itemCarrito?.producto?.crearProducto?.titulo }}">
                         </div>
                       </td>
@@ -153,7 +153,7 @@
                 <!-- Imagen en la parte superior -->
                 <img class="card-img-top" 
                      *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
-                     [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+                     [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls | imagenProducto"
                      alt="{{ itemCarrito?.producto?.crearProducto?.titulo }}">
                 <div class="card-body">
                   <h6 class="card-title">{{ itemCarrito?.producto?.crearProducto?.titulo }}</h6>

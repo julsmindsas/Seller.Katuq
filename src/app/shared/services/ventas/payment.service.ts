@@ -4,6 +4,7 @@ import { HttpClient } from "@angular/common/http";
 import { environment } from "../../../../environments/environment";
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { DatePipe } from "@angular/common";
+import { urlImagenAbsoluta } from "../../utils/imagen-producto";
 import { PedidosUtilService } from "../../../components/ventas/service/pedidos.util.service";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { POSPedido } from "../../../components/pos/pos-modelo/pedido";
@@ -154,28 +155,20 @@ export class PaymentService extends BaseService {
    * @returns URL absoluta válida o null si no hay imagen
    */
   private getValidImageUrl(imageUrl: string | undefined | null): string | null {
-    if (!imageUrl || imageUrl.trim() === '') return null;
+    // Las rutas de producto son relativas y pertenecen al CDN de Osmosis, no a
+    // nuestro dominio: resolverlas contra `window.location.origin` traía el HTML
+    // de la aplicación en vez de la foto, y el PDF salía con el hueco.
+    const absoluta = urlImagenAbsoluta(imageUrl);
+    if (!absoluta) return null;
 
-    // Si es una URL completa (http:// o https://), usarla directamente
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
+    // Los assets propios sí van contra nuestro dominio, y en un PDF tienen que
+    // ir completos porque no hay página contra la cual resolverlos.
+    if (absoluta.startsWith('assets/') || absoluta.startsWith('/assets/')) {
+      const ruta = absoluta.startsWith('/') ? absoluta : `/${absoluta}`;
+      return `${window.location.origin}${ruta}`;
     }
 
-    // Si es una ruta relativa, convertirla a absoluta usando el origin actual
-    // Esto es crítico para PDFs, que necesitan URLs completas
-    if (imageUrl.startsWith('assets/') || imageUrl.startsWith('/assets/')) {
-      const baseUrl = window.location.origin;
-      const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-      return `${baseUrl}${cleanPath}`;
-    }
-
-    // Si empieza con '/' pero no es assets, también convertir a absoluta
-    if (imageUrl.startsWith('/')) {
-      return `${window.location.origin}${imageUrl}`;
-    }
-
-    // Si no es ninguno de los casos anteriores, asumir que es relativa al root
-    return `${window.location.origin}/${imageUrl}`;
+    return absoluta;
   }
 
   /**
@@ -217,6 +210,16 @@ export class PaymentService extends BaseService {
   }
 
   // Calcula el subtotal (suma de precios base sin IVA)
+  /**
+   * Feature B — el producto trae precio promocional vigente (inyectado por el
+   * backend del catálogo) y realmente menor que el precio estándar con IVA.
+   */
+  tienePromoLinea(producto: any): boolean {
+    const promo = producto?.precioPromocional;
+    const base = producto?.precio?.precioUnitarioConIva;
+    return typeof promo === 'number' && typeof base === 'number' && promo < base;
+  }
+
   checkPriceScale(pedido: Pedido | POSPedido): number {
     // spec 010 — punto único de cálculo (detrás de feature flag)
     if (this.ivaCalcUnificadoEnabled) {
@@ -245,6 +248,13 @@ export class PaymentService extends BaseService {
       // 🔒 PRIORIDAD 1: Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
       else if (producto?._precioAplicadoPorCategoria) {
         totalItemSinIVA = precioUnitarioSinIva * cantidad;
+      }
+      // 🔖 PRIORIDAD 2: Feature B — precio promocional automático de catálogo.
+      // precioPromocional viene CON IVA; se deriva el sin-IVA con la tasa de la línea.
+      else if (this.tienePromoLinea(producto)) {
+        const ivaRate = (Number(producto?.precio?.precioUnitarioIva) || 0) / 100;
+        const promoSinIva = (Number(producto.precioPromocional) || 0) / (1 + ivaRate);
+        totalItemSinIVA = promoSinIva * cantidad;
       } else if (preciosVolumen.length > 0) {
         let precioVolumenEncontrado = false;
         // Filtrar solo rangos con límites válidos definidos
@@ -382,6 +392,12 @@ export class PaymentService extends BaseService {
       let precioConIvaItem =
         Number(producto?.precio?.precioUnitarioConIva) || 0; // Precio unitario con IVA para cálculo base
 
+      // Feature B / no acumulación (D-B2): true SOLO cuando la línea se precia por
+      // promoción automática (rama de prioridad 2), no por precio manual ni por
+      // categoría. Una línea en promo NO recibe el descuento de un código en su IVA
+      // (factorDesc=1), espejando services/orderCalculationService.getTotalImpuesto.
+      let lineaEnPromo = false;
+
       // Variables de precio por categoría (declaradas fuera para acceso en debug log)
       const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
       const precioCategoria = categoriaClienteId
@@ -404,6 +420,12 @@ export class PaymentService extends BaseService {
         precioConIvaItem = Number(precioCategoria.precioConIva) || 0;
         porcentajeIvaItemStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaUnitario;
         // No aplicar precios por volumen cuando hay precio por categoría
+      }
+      // 🔖 PRIORIDAD 2: Feature B — precio promocional automático (con IVA ya rebajado).
+      // La promo no cambia el % de IVA del producto, solo el precio.
+      else if (this.tienePromoLinea(producto)) {
+        precioConIvaItem = Number(producto.precioPromocional) || 0;
+        lineaEnPromo = true;
       } else if (preciosVolumen.length > 0) {
         // Filtrar solo rangos con límites válidos definidos
         const rangosValidos = preciosVolumen.filter((x: any) => {
@@ -430,11 +452,15 @@ export class PaymentService extends BaseService {
       // precioConIvaItem = (Number(producto?.precio?.precioUnitarioConIva) || 0);
       // }
 
+      // Feature B / no acumulación (D-B2): una línea en promoción automática NO
+      // recibe el descuento del código (factorDesc=1); el resto sí (1 - porceDescuento).
+      // Guard G4 (spec 010): factorDesc nunca negativo (porcentaje > 100% legacy).
+      const factorDesc = lineaEnPromo ? 1 : Math.max(0, 1 - porceDescuento);
       // Calcular valor total con IVA del producto principal (antes de descuento)
       let valorTotalConIvaProducto = precioConIvaItem * cantidad;
       // Aplicar descuento al valor con IVA
       let valorTotalConIvaProductoConDesc =
-        valorTotalConIvaProducto * (1 - porceDescuento);
+        valorTotalConIvaProducto * factorDesc;
       // Calcular el valor del IVA correspondiente a este producto con descuento
       // IVA = TotalConDesc / (1 + %IVA) * %IVA
       // Asegurar que porcentajeIvaNum sea numérico y válido para división
@@ -451,18 +477,6 @@ export class PaymentService extends BaseService {
           itemCarrito,
         );
       }
-
-      // 🔍 DEBUG: Log para verificar clasificación de IVA
-      console.log('🧾 checkIVAPrice - Item:', {
-        titulo: producto?.crearProducto?.titulo,
-        categoriaClienteId,
-        precioCategoria: precioCategoria ? { porcentajeIva: precioCategoria.porcentajeIva, precioConIva: precioCategoria.precioConIva } : null,
-        porcentajeIvaItemStr,
-        porcentajeIvaUnitario,
-        valorIvaItem,
-        precioConIvaItem,
-        preciosPorTipoClienteCount: preciosPorTipoCliente.length
-      });
 
       // Acumular solo si valorIvaItem es un número válido
       if (!isNaN(valorIvaItem)) {
@@ -498,7 +512,7 @@ export class PaymentService extends BaseService {
           const valorAdicionConIva =
             (Number(adicion.precioTotalConIva) || 0) * cantidad;
           const valorAdicionConIvaConDesc =
-            valorAdicionConIva * (1 - porceDescuento);
+            valorAdicionConIva * factorDesc;
           const porcentajeAdicionStr = (adicion.porcentajeIva ?? 0).toString();
           const porcentajeAdicionNum =
             (Number(adicion.porcentajeIva) || 0) / 100;
@@ -550,7 +564,7 @@ export class PaymentService extends BaseService {
             const valorPreferenciaConIva =
               (Number(preferencia.precioTotalConIva) || 0) * cantidad;
             const valorPreferenciaConIvaConDesc =
-              valorPreferenciaConIva * (1 - porceDescuento);
+              valorPreferenciaConIva * factorDesc;
             const porcentajePreferenciaStr = (
               preferencia.porcentajeIva ?? "0"
             ).toString();
@@ -600,14 +614,18 @@ export class PaymentService extends BaseService {
     });
 
     // Calcular IVA del envío (domicilio)
+    // G2 (spec 010): con un código de envío gratis no hay costo de envío → sin IVA
+    // de envío (consistente con orderCalculationService.getTotalImpuesto del backend).
+    const envioGratis = (pedido as any)?.descuentoAplicado?.tipo === 'envio_gratis';
     // Asegurar valores numéricos
-    const costoEnvioConIva =
-      Number(
-        this.pedidoUtilService.getShippingTaxCostInvoice(
-          this.allBillingZone,
-          pedido,
-        ),
-      ) || 0;
+    const costoEnvioConIva = envioGratis
+      ? 0
+      : Number(
+          this.pedidoUtilService.getShippingTaxCostInvoice(
+            this.allBillingZone,
+            pedido,
+          ),
+        ) || 0;
     const porcentajeIvaEnvioStr =
       this.pedidoUtilService.getShippingTaxValueInvoice(
         this.allBillingZone,
@@ -1209,9 +1227,11 @@ export class PaymentService extends BaseService {
       const configuracion = item?.configuracion;
       // Asegurar que cantidad sea numérico
       const cantidad = Number(item?.cantidad) || 0;
+      // Pasa por getValidImageUrl como las adiciones y preferencias: la ruta de
+      // producto suele venir relativa y sin resolver el PDF sale con el hueco.
       const imagenUrl =
-        producto?.crearProducto?.imagenesPrincipales?.[0]?.urls ??
-        "assets/images/default-product.png"; // Imagen por defecto
+        this.getValidImageUrl(producto?.crearProducto?.imagenesPrincipales?.[0]?.urls) ??
+        this.getValidImageUrl("assets/images/default-product.png");
       const tituloProducto =
         producto?.crearProducto?.titulo ?? "Producto no disponible";
       const referenciaProducto = producto?.identificacion?.referencia ?? "N/A";

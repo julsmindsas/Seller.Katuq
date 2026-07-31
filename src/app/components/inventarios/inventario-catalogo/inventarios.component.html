@@ -904,7 +904,7 @@
                                     <td style="width: 80px; min-width: 80px;" class="text-center vertical-align: middle;" [frozen]="true">
                                         <div style="width: 50px; height: 50px; display: inline-flex; align-items: center; justify-content: center; background-color: #f8f9fa; border-radius: 4px; overflow: hidden;">
                                             <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
-                                                [src]="row.crearProducto.imagenesPrincipales[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                                                [src]="row.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
                                                 (error)="$event.target.src='assets/images/placeholders/product-not-found.svg'"
                                                 [alt]="row.crearProducto?.titulo"
                                                 style="width: 100%; height: 100%; object-fit: cover;"

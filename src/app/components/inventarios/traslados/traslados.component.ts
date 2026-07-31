@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { ToastrService } from 'ngx-toastr';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
+import { urlImagenAbsoluta } from '../../../shared/utils/imagen-producto';
 import { Bodega } from '../../../shared/models/inventarios/bodega.model';
 
 interface ProductoTraslado {
@@ -131,7 +132,7 @@ export class TrasladosComponent implements OnInit {
     this.productosTraslado.push({
       productoId: prod.cd,
       titulo: prod.crearProducto?.titulo || 'Sin nombre',
-      imagen: prod.crearProducto?.imagenesPrincipales?.[0]?.urls || null,
+      imagen: urlImagenAbsoluta(prod.crearProducto?.imagenesPrincipales?.[0]?.urls),
       referencia: prod.identificacion?.referencia || '',
       stockDisponible: item.cantidad || 0,
       cantidad: 1

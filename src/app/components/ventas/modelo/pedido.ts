@@ -5,6 +5,16 @@ import {
 import { UserLite } from "../../../shared/models/User/UserLite";
 import { PagoInformation } from "../../pos/pos-modelo/pedido";
 
+export interface DescuentoAplicado {
+  descuentoId: string;
+  codigoPersonalizado: string;
+  tipo?: "porcentaje" | "valor_fijo" | "envio_gratis";
+  valor?: number;
+  montoDescuento: number;
+  nombre?: string;
+  clienteId?: string;
+}
+
 export interface Pedido {
   quienRecibio?: string;
   parentesco?: string;
@@ -35,6 +45,11 @@ export interface Pedido {
   carrito?: Carrito[];
   formaDePago?: string;
   cuponAplicado?: string;
+  // Código de descuento/promoción aplicado en el carrito (módulo Descuentos y
+  // Promociones). Lo puebla el carrito tras validar contra
+  // /v1/descuentos-promociones/aplicar-codigo. El backend lo usa al crear la
+  // orden para registrar la redención (incrementa usos y auto-agota).
+  descuentoAplicado?: DescuentoAplicado;
   totalPedidoSinDescuento?: number;
   totalEnvio?: number;
   totalDescuento?: number;

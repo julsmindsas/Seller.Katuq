@@ -204,6 +204,24 @@ export class VentasService extends BaseService {
     return this.post<any>('/v1/cupones/validatecupon', cupon);
   }
 
+  /**
+   * Valida y aplica un código del módulo Descuentos y Promociones en el
+   * checkout. No escribe redención (eso ocurre al crear la orden).
+   * payload: { codigoPersonalizado, clienteId, totalCarrito, codigosActivos?, items? }
+   * `items` (líneas del carrito) permite al backend aplicar el descuento solo a
+   * la categoría/producto objetivo cuando el código es dirigido.
+   * respuesta: { descuentoId, codigoPersonalizado, tipo, valor, montoDescuento, nombre, aplicaA, baseAplicada }
+   */
+  aplicarCodigoDescuento(payload: {
+    codigoPersonalizado: string;
+    clienteId?: string;
+    totalCarrito: number;
+    codigosActivos?: string[];
+    items?: Array<{ productoReferencia: string; categorias: string[]; precioLinea: number; enPromocion?: boolean }>;
+  }) {
+    return this.post<any>('/v1/descuentos-promociones/aplicar-codigo', payload);
+  }
+
   createOrder(orderTemplate: { order: Pedido; emailHtml?: any }) {
     return this.post<any>('/v1/orders/create', orderTemplate).pipe(
       catchError((error) => {

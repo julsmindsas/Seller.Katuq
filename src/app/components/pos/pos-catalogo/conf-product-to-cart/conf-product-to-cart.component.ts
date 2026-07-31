@@ -17,6 +17,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import { firstValueFrom } from 'rxjs';
 
+import { IMAGEN_PRODUCTO_POR_DEFECTO, urlImagenAbsoluta } from '../../../../shared/utils/imagen-producto';
 @Component({
   selector: 'app-conf-product-to-cart',
   templateUrl: './conf-product-to-cart.component.html',
@@ -497,11 +498,18 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
 
     if (this.producto) {
 
-      this.imagesRect = this.producto.crearProducto.imagenesPrincipales.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls }));
+      this.imagesRect = this.producto.crearProducto.imagenesPrincipales.map((x, index) => {
+        // `urls` puede venir relativa (Osmosis): sin absolutizar, el visor queda en blanco.
+        const url = urlImagenAbsoluta(x.urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO;
+        return new Image(index, { img: url }, { img: url });
+      });
       if (!this.producto.crearProducto.imagenesSecundarias) {
         this.producto.crearProducto.imagenesSecundarias = [];
       }
-      this.producto.crearProducto.imagenesSecundarias.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls })).forEach((image) => {
+      this.producto.crearProducto.imagenesSecundarias.map((x, index) => {
+        const url = urlImagenAbsoluta(x.urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO;
+        return new Image(index, { img: url }, { img: url });
+      }).forEach((image) => {
         this.imagesRect.push(image);
       });
 
@@ -924,7 +932,7 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
   getImgAdicion(adicion: any) {
     const adiciones = this.adicionesPreferencias.find(x => x.titulo == adicion);
     if (!adiciones) return 'assets/images/other-images/sinimagen.webp';
-    return adiciones?.imagenPrincipal[0]?.urls;
+    return urlImagenAbsoluta(adiciones?.imagenPrincipal?.[0]?.urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO;
   }
 
 
@@ -1043,7 +1051,7 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
       valorIva: adicion.precioIva || 0,
       porcentajeIva: adicion.porcentajeIVA || 0,
       precioTotalConIva: adicion.precioTotal || 0,
-      imagen: adicion.imagenPrincipal[0]?.urls,
+      imagen: urlImagenAbsoluta(adicion.imagenPrincipal?.[0]?.urls),
       tipo: 'adicion',
       cantidad: 1,
       paraProduccion: true,

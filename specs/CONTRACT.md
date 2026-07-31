@@ -66,6 +66,8 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | **023** | **fix-busqueda-productos-catalogo-grande** | **implementación T-01..T-10 done — T-11 (smoke-test navegador + commit) pendiente** | — | Bug real reportado por OH MY STORE ("producto creado no aparece en el catálogo"): el producto SÍ existe y está activo — la causa era que `productos.js:getAll` traía máx. 500 docs SIN `orderBy` antes de filtrar en memoria por `searchTerm`/`categoria`/etc.; con 8.368 productos en OH MY STORE, una búsqueda exacta podía dar 0 resultados en falso. **Fix implementado y verificado con datos reales**: `getSearchIndex` ampliado (objetos completos `exposicionObj`/`disponibilidadObj`/`procesoComercialObj` + `categoriasRaw`/`precioUnitarioConIva`/`shopifyId`) + `getAll` reescrito (filtros nativos vía IDs sin cap ∩ filtros in-memory sobre el índice completo sin cap, hidrata solo la página visible). Los 4 hallazgos secundarios también resueltos: `warnings[].code=PRODUCT_REFERENCE_CHANGED` (scope `company`), embedding update en try/catch propio (nunca 500), `warnings[].code=PRODUCT_INVENTORY_PENDING`, confirmación SweetAlert2 no bloqueante en "Activar". Auditoría T-05 cerró gaps reales de invalidación de cache (bulkPatch/createMultiple/deleteAllByCompany/importPrecios/limpiarPrecios/updatePreciosTipoCliente + sync Osmosis/Shopify/WooCommerce/fulfillment externos, antes sin acceso a las funciones de invalidación). Verificado real contra OH MY STORE (solo lectura): `EX-CLA-6028-ANESTY-30ML` ahora aparece; filtros nativos con conteos coherentes (8.368 total, 6.938 activos). Sin feature flag (fixes aditivos, bajo riesgo). Ver `023/{spec,plan,findings,tasks}.md`. **T-11 cerrado (2026-07-16)**: usuario confirmó en navegador que la búsqueda funciona. Listo para commit. |
 | **024** | **fix-direcciones-no-refrescan-venta-asistida** | **done — verificado en navegador** | — | Bug reportado por el usuario: al crear una dirección de envío o de facturación electrónica en venta asistida, muchas veces no aparece de inmediato en el listado seleccionable — hay que volver al paso 1, recargar el cliente y avanzar de nuevo. **Causa raíz**: `datosEntregas`/`datosFacturacionElectronica` son `@Input()` bindeados en un solo sentido desde `crear-ventas.component`; los métodos de CREAR dirección (`guardarDatosEntrega`, `guardarDatosFacturacionElectronica`) reasignaban el array (`this.datosEntregas = ...`) en vez de mutarlo en el lugar, así que el padre lo pisaba con la referencia vieja en el siguiente ciclo de detección de cambios. Los métodos de EDITAR ya tenían este mismo fix (commit `4df0972`, `splice(0, length, ...nuevos)`) pero nunca se aplicó a los de crear. **Fix**: mismo patrón `splice()` aplicado a los 2 métodos de creación. Sin cambios de backend/contrato. Ver `024/{spec,plan,tasks}.md`. **T-03 cerrado (2026-07-16)**: usuario confirmó en navegador ambos flujos (crear entrega + crear facturación) sin regresión en edición. Listo para commit. |
 | **025** | **multi-pais-multi-moneda** | **investigación cerrada — propuesta Ola 0 en draft** | Daniel | Programa para que Katuq opere en varios países y monedas, empezando por Suramérica. Hallazgos con evidencia `file:line` + requisitos regulatorios 2026 verificados contra fuentes públicas en `openspec/changes/enable-multi-country-multi-currency/findings.md`. **Hallazgo central: Katuq no tiene concepto de moneda** — no la persiste la orden ni el precio, y el impuesto se guarda con las 4 tarifas de IVA colombiano como llaves fijas. **Alcance y mercados confirmados (adenda D-137): un comercio opera en su país; objetivo = Venezuela y Brasil por demanda comercial.** Orden real: **Base → Venezuela → Brasil**, con Ecuador y Perú como olas posteriores (la recomendación técnica era al revés y queda registrada). Ola 0 = perfil de país + moneda con par y tasa congelada + motor de N tributos por línea en dos momentos (producto y liquidación) + tipo de documento fiscal por canal; gate = fixtures dorados de la spec 010 sin modificar. Ambos mercados van por tercero autorizado (imprenta digital SENIAT / socio de API fiscal), no por emisión propia. Camino crítico no-código: homologación SENIAT (Providencia 000121). Ver D-137 y su adenda. |
+| **009** ⚠️ | **customer-metrics-detalle-cliente** | **backend done + 15 tests; frontend pendiente flag** | Daniel | 4 métricas de solo-lectura en la ficha del cliente + lista paginada. Endpoint `GET /v1/orders/customer-summary` con query proyectada (sin carrito). Sin colección paralela ni índices nuevos. Feature flag `ENABLE_CUSTOMER_METRICS`. Ver D-043. **Número en colisión con `009-whatsapp-kapso-notifications-marco` — pendiente renumerar (ver D-144).** |
+| **010** ⚠️ | **assisted-sale-discounts-promotions** | **implement done (G1–G4 + fixes e2e + ampliaciones) — pendiente e2e final navegador + deploy** | equipo Katuq + Claude | Formaliza bajo SDD la integración de **códigos** (Feature A) y **promociones automáticas** (Feature B) en la venta asistida. Retroactiva: ratifica A/B como groundwork (criterios `[AS-BUILT]`) + trabajo nuevo: verificación e2e en navegador + cierre de gaps (desglose vs persistido, envío_gratis, vigencia UTC→Bogotá, tope 100%). Rama `feature/descuentos-promociones` (ambos repos). Ver D-044. **Número en colisión con `010-venta-asistida-impuestos-congruencia` y con `010-notificaciones-pedido-unificadas` — pendiente renumerar (ver D-144).** |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -1169,6 +1171,42 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Misma sesión, continuación:** el usuario preguntó si el fix de búsqueda (reusar `searchIndexCache`) podría afectar el objetivo de "productos rápidos" — respondido con evidencia: `searchIndexCache` usa field-mask liviano (12 campos, no el documento completo) + cache 5min + invalidación en writes, ya probado en prod con los 8.368 productos de OH MY STORE vía `quickSearch` — es MÁS liviano que el `.limit(500)` de documentos completos que hace hoy `getAll`, no un riesgo de performance. El usuario pidió **ampliar el alcance de 023 a "resolver todo lo posible"** — las 2 `[NEEDS CLARIFICATION]` quedaron resueltas y los 4 hallazgos secundarios (antes out-of-scope) pasan a estar en scope de la misma spec (secciones EARS 4.2-4.5 de `spec.md`, actualizado). `spec.md` marcada **approved**.
 - **`plan.md` entregado (2026-07-14):** gate contra constitución sin ningún "no". Diseño central: ampliar el field-mask de `searchIndexCache` (Fase A) + reescribir la rama `needsInMemory` de `getAll` para resolver candidatos sobre el índice completo sin cap, paginar, e hidratar solo la página visible (Fase B) — luego auditoría de invalidación de cache (Fase C), fix de scope `company` en referencia duplicada con `warnings[].code=PRODUCT_REFERENCE_CHANGED` (Fase D), separar try/catch del embedding para nunca devolver 500 con el producto ya creado (Fase E), `warnings[].code=PRODUCT_INVENTORY_PENDING` cuando falta stock (Fase F), confirmación SweetAlert2 no bloqueante para "Activar" en frontend (Fase G), testing (Fase H), rollout sin feature flag por ser cambios aditivos de bajo riesgo con canary manual contra OH MY STORE (Fase I). Contratos HTTP: campos aditivos `truncated`/`warnings[]`, sin romper compatibilidad. **No se tocó código de producción** — solo `specs/023.../plan.md` + `CONTRACT.md`.
 - **`tasks.md` entregado (2026-07-14):** 11 tareas atómicas — T-01/T-02 contract tests first (Art. VIII); T-03→T-04 cadena del fix central de búsqueda (ampliar índice → reescribir `getAll`); T-05 auditoría de invalidación de cache; T-06/T-07/T-08 en paralelo (referencia duplicada scope company, try/catch embedding separado, warning de inventario pendiente); T-09 frontend (confirmación SweetAlert2 no bloqueante); T-10 regresión + verificación real del caso reportado; T-11 smoke-test canary contra OH MY STORE + cierre, **commit solo con autorización explícita**. El usuario dio luz verde a seguir ("si de una") — **listo para implementar.** No se tocó código de producción todavía — solo `specs/023.../tasks.md` + `CONTRACT.md`.
+### 2026-07-24 — D-044: Apertura spec 010 — integración descuentos/promociones en venta asistida (formalización retroactiva bajo SDD)
+- **Contexto:** Feature A (códigos con enforcement de "Aplica a") y Feature B (promociones automáticas de catálogo) se construyeron y pushearon en la rama `feature/descuentos-promociones` (backend `720d6aa`/`ce425b2`, frontend `742c4e0a`/`efcef55b`) **fuera de la ceremonia SDD**. Su intención nunca quedó como criterios verificables → viola de facto el Artículo I ("spec primero"). Las decisiones D-B1..D-B5 se tomaron con el usuario pero solo vivían en la bitácora del módulo (`components/proceso/descuentos-promociones/CLAUDE.md`), no en el contrato vivo.
+- **Decisión de alcance (elegida por el usuario, 2026-07-24):** la spec 010 es **retroactiva + gaps**. Formaliza A/B como *groundwork ya entregado* con criterios EARS marcados `[AS-BUILT]` (que el e2e debe validar) y añade el trabajo `[NEW]`: verificación end-to-end real en navegador (nunca corrida) + cierre de brechas conocidas (desglose mostrado vs pedido persistido en caso código%+promo; envío_gratis→cero; vigencia UTC→America/Bogotá; tope 100% en porcentaje).
+  - **Alternativas descartadas:** "solo hacia adelante" (dejaría A/B sin cubrir en la cadena SDD, contra Art. XIV "si no está escrito, no pasó"); "dos specs 010+011" (más ceremonia y checkpoints sin beneficio claro para un feature ya construido).
+- **Ratificación de decisiones informales de Feature B (antes solo en bitácora del módulo):**
+  - **D-B1** — discriminador `naturaleza: 'codigo' | 'promocion'` en la MISMA colección `descuentosPromociones` (no colección aparte).
+  - **D-B2** — NO acumulable: un código no descuenta sobre líneas ya en promoción.
+  - **D-B3** — MVP solo POS/venta asistida (no toca 360 Woo/Shopify).
+  - **D-B4** — una promoción solo admite tipo porcentaje o valor_fijo (no envío gratis).
+  - **D-B5** — una promoción siempre apunta a categoría o producto_específico (no store-wide).
+- **Excepción de flujo SDD registrada:** como en D-007 (spec 001), se documenta que el código de A/B ya existía al abrir la spec; las decisiones técnicas normalmente del `plan.md` están dispersas en el código y en la bitácora del módulo. El `plan.md` de 010 se enfocará en el trabajo `[NEW]` (e2e + gaps), no en re-planear A/B.
+- **Abierto para el checkpoint de la spec (§8 del spec.md):** Q-01 (¿vigencia y tope 100% entran en 010 o follow-up?), Q-02 (gate de pago para redención online), Q-03 (cobertura del e2e: solo local vs también prod tras deploy).
+- **Estado:** `specs/010-assisted-sale-discounts-promotions/spec.md` creado en `draft`. Pendiente checkpoint humano antes de redactar `plan.md`.
+
+### 2026-07-24 — D-045: Clarifications spec 010 resueltas + spec aprobada
+- **Q-01 (gaps de vigencia y tope 100%):** → **DENTRO de 010.** La comparación de vigencia pasa a hora local America/Bogotá (hoy usa UTC → off-by-~5h en bordes de medianoche) y el descuento porcentual se topa a 100% (hoy sin tope → un código >100% daría subtotal negativo). Razón: cambios acotados que cierran bugs de borde reales.
+- **Q-02 (gate de pago para redención online):** → **FOLLOW-UP (fuera de alcance de 010).** El MVP sigue registrando la redención al crear la orden. Riesgo asumido: un código con límite se consume aunque el cliente no pague en ventas con link de pago. Endurecer con `estadoPago=Pagado`/webhook de pasarela queda como spec/sub-spec futura.
+- **Q-03 (cobertura del e2e):** → **SOLO LOCAL por ahora.** Verificación end-to-end contra `OH MY STORE` en local (back :3300 + front :4200). Validación contra producción diferida hasta desbloquear el deploy en EC2 (PEM).
+- **Decisión:** con las 3 clarifications resueltas, la spec 010 pasa a **approved**. Habilita redactar `plan.md` (enfocado en el trabajo `[NEW]`: e2e + los 4 gaps; NO re-planea A/B, que es groundwork `[AS-BUILT]`).
+
+### 2026-07-24 — D-046: Plan 010 aprobado + tasks generadas
+- **Plan (`plan.md`) aprobado en checkpoint humano.** Alcance del plan = SOLO trabajo `[NEW]` (A/B es `[AS-BUILT]`, no se re-planea). Cuatro gaps acotados con trazabilidad a criterio EARS:
+  - **G1** — `checkIVAPrice` (front): `factorDesc` por línea = `tienePromoLinea ? 1 : (1-porceDescuento)`, espejando `orderCalculationService`; corrige el desglose cuando código% coexiste con una línea en promo (`payment.service.ts:~421`). Incluye retirar el `console.log` de telemetría (Art. VII/XI).
+  - **G2** — envío gratis → costo de envío a cero en checkout (front).
+  - **G3** — vigencia en America/Bogotá (offset fijo −05:00, sin dependencia nueva) en `aplicarCodigo` (`descuentosPromociones.js:337`) y `productPromoHelper.obtenerPromocionesVigentes`.
+  - **G4** — tope 100% en porcentaje: 400 en `create`/`edit` + guard en cálculo.
+- **Gates de constitución:** todos sí/n-a; ningún "no" que requiera enmienda. Excepción de flujo ya cubierta por D-044 (A/B preexistente).
+- **Tasks (`tasks.md`) generadas:** T-01..T-11. Orden: regresión primero (T-01/T-02 congelan el caso código%+promo antes de tocar G1), luego G1–G4 en paralelo donde no colisionan, E2E local (T-10, checklist de 6 pasos contra OH MY STORE), cierre (T-11). DoD excluye deploy EC2/PRs y validación en prod (Q-03 diferida).
+- **Estado:** spec+plan+tasks `approved`. Habilitada la fase **implement**.
+
+### 2026-07-24 — D-047: Historial de redención de promociones automáticas (Feature B) + fixes de enganche del catálogo (durante e2e de spec 010)
+- **Contexto:** validando la spec 010 end-to-end en navegador (T-10), el usuario reportó que las promociones automáticas no se veían en los catálogos y pidió que el historial de promociones registre cada vez que alguien las aprovecha (paridad con los códigos).
+- **BUG-E2E-01 (create promo por categoría):** la validación D-B5 exigía `categoriaId`, pero el formulario y TODO el matching (`productPromoHelper`/`aplicarCodigo`) usan `categoriaNombre`. Fix: validar `categoriaNombre` (id opcional).
+- **BUG-E2E-02 (promos invisibles en catálogos):** `enrichProductsWithPromos` faltaba en dos rutas reales: `handleBodegaPagination` (el catálogo de venta asistida filtra por bodega) y `getAll` (`GET /v1/productos/all`, módulo de Productos). Enganchado en ambas + display nuevo en la tabla del módulo de Productos (tachado + badge). Confirmado por el usuario. El matching por nombre de categoría ya era correcto (verificado read-only con `scripts/diag-promo-match.js`).
+- **Ampliación de comportamiento (la decisión de fondo):** las promociones automáticas ahora dejan **historial de redención** como los códigos. NUEVO `services/descuentosService.registrarRedencionesPromociones` — agrupa las líneas de la orden por `_promocionAplicada`, reutiliza `registrarRedencion` (misma colección `redencioneDescuentos`), idempotente por `${ordenId}_${promocionId}`, incrementa `usosActuales`. Las promociones no tienen `limiteUsos` → no hay auto-agotamiento (solo conteo). Enganchado NO bloqueante en `controllers/orders.js exports.create` tras la redención de código. Frontend: el modal de historial muestra badge "Promoción" cuando no hay código; la lista admin ya exponía Historial/Redimido(N) para todas las filas.
+- **Nota SDD:** esta ampliación excede el alcance original de la spec 010 (que era integración + gaps). Se registra aquí y en `tasks.md`; el criterio EARS correspondiente se añade a `spec.md` (§4). Trabajo hecho en sesión interactiva con el usuario conduciendo el e2e.
 
 ## 4. Cambios de alcance (scope changes)
 
@@ -1206,6 +1244,24 @@ Orden = prioridad. La spec piloto siempre encabeza.
 ## 7. Bitácora de sesiones
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
+
+### 2026-07-24 (sesión apertura spec 010 — descuentos/promociones bajo SDD)
+- Retomamos el feature de descuentos y promociones. Ambos repos en `feature/descuentos-promociones`, limpios; Feature A y B ya commiteados y pusheados (backend `720d6aa`, frontend `742c4e0a`).
+- Decisión del usuario: la integración descuentos↔venta asistida se formaliza bajo SDD como **spec 010 retroactiva + gaps** (ver **D-044**). Se ratifican D-B1..D-B5 (antes solo en la bitácora del módulo) en el contrato vivo.
+- Creado `specs/010-assisted-sale-discounts-promotions/spec.md` (`draft`): criterios EARS `[AS-BUILT]` (códigos, promociones, no-acumulación — ya entregados) + `[NEW]` (e2e en navegador + gaps: desglose vs persistido, envío_gratis, vigencia UTC→Bogotá, tope 100%). Roadmap actualizado con filas 009 y 010.
+- Checkpoint spec superado (Q-01=dentro, Q-02=follow-up, Q-03=solo local → **D-045**), spec `approved`.
+- Redactado `plan.md` (4 gaps G1–G4 + e2e) → checkpoint del plan superado (**D-046**) → redactado `tasks.md` (T-01..T-11). spec+plan+tasks `approved`.
+- Fase **implement** completada en esta misma sesión (larga, interactiva):
+  - **G1–G4** cerrados y verificados con pruebas backend ejecutables: `test:descuentos-money-path` 26/26,
+    `test:fecha-bogota` 7/7, `test:descuentos-validacion` 4/4, `test:promo-line-price` 12/12; front `payment.service.spec` 4/4.
+  - **e2e en navegador** (servidores locales) destapó y corrigió: promo por categoría rechazada (`categoriaId`→`categoriaNombre`),
+    promos invisibles en catálogos (enganche faltante en `handleBodegaPagination` y `getAll` + display en módulo Productos).
+    Usuario confirmó que ya se ven en ambos catálogos.
+  - **Ampliaciones (D-047):** historial de redención de promociones + endurecimiento de `calcularPrecioLineaPromocional`
+    (deriva sinIVA). Verificado que NO había doble descuento (revisión de órdenes reales ORE-000463/464).
+  - Bitácora del módulo actualizada (sección 11): `components/proceso/descuentos-promociones/CLAUDE.md`.
+- **Pendiente:** prueba e2e final en navegador con productos de precio normal; deploy EC2 (PEM) + PRs (base back `backend-aws-security`, front `main`). Commit a la espera de autorización del usuario.
+- **Nota entorno:** el harness de karma del frontend estaba inoperante (`quill` no declarado en package.json, `@types/jasmine` sin instalar + comentado en `tsconfig.spec.json`, 2 specs huérfanos `visual`/`visual3d`). Se sorteó con instalaciones `--no-save` para correr el spec; recomendación registrada en `tasks.md` para dejarlo operativo (decisión del equipo).
 
 ### 2026-07-16 (sesión — rediseño UX/UI pantalla Gestión de Productos desde Claude Design)
 
@@ -2313,12 +2369,14 @@ Con esto la Fase 1 de la Vía A del programa (`docs/app-nativa-operativa.md` §9
 
 **Detalle de comportamiento:** en la lista, una cotización vencida se marca como tal aunque el estado guardado diga "Enviada" — el backend solo recalcula la expiración al abrir el detalle. También se muestra si el cliente ya abrió el link público y cuántas veces, que es la señal más útil del módulo para hacer seguimiento.
 
-> **⚠️ Colisiones de numeración sin resolver (D-135 ×3, D-137 ×3, D-138 ×2, D-139 ×2):** no se renumeran unilateralmente — mismo precedente que D-093/D-130-131: el ID de referencia real es el título completo, no el número.
+> **⚠️ Colisiones de numeración sin resolver (D-135 ×3, D-137 ×3, D-138 ×2, D-139 ×2, D-141 ×2, D-142 ×2):** no se renumeran unilateralmente — mismo precedente que D-093/D-130-131: el ID de referencia real es el título completo, no el número.
 > - **D-135** tiene tres entradas independientes: "Tablero de producción..." (2026-07-25, arriba), "Campana de notificaciones..." (2026-07-26, arriba) y "Editar IVA manual de una línea de un pedido..." (2026-07-24, abajo — `openspec/changes/edit-order-line-iva/` referencia "D-135" por número, así que esa propuesta no se renombra sin que quien la retome actualice las referencias cruzadas).
 > - **D-137** tiene tres entradas: "Subida de imágenes de producto..." (arriba), "Apertura del programa multi-país/multi-moneda..." (arriba, mismo día, sesión distinta) y "Ordenamiento por columnas roto..." (abajo — documentación retroactiva de un fix ya commiteado y mergeado en `origin` antes de esta sesión bajar cambios; el número se le había asignado en la sesión que lo implementó, sin coordinación con las otras dos).
 > - **D-138** tiene dos entradas: "Filtros del botón 'Más' y paginador del listado de productos" y "Programa de apps nativas — operación por plataforma + marketplace" (ambas 2026-07-28, sesiones distintas).
 > - **D-139** tiene dos entradas: "El modal de 'Ver detalle' / 'Vista previa' de productos..." y "Arranque de código — piloto iOS 'Cobro en calle'" (ambas 2026-07-28, sesiones distintas).
-> Siguiente número libre: **D-141**.
+> - **D-141** tiene dos entradas: "Descuento por producto (línea del carrito) en venta asistida" (2026-07-29, abajo — esta sesión, `openspec/changes/add-order-line-discount/`) y "Catálogos digitales compartibles por link, con carrito del comprador" (2026-07-29, abajo — sesión distinta, mergeada a `origin` mientras esta sesión trabajaba sin haber bajado cambios todavía).
+> - **D-142** tiene dos entradas: "Descuento por línea en PDF de orden de venta y correo/comanda de venta asistida" (2026-07-30, abajo — esta sesión, `openspec/changes/fix-order-line-discount-pdf-email/`, continuación directa de D-141 ×2 primera entrada) y "Se cierra el agujero de autenticación en `/v1/productos/*`" (2026-07-30, abajo — sesión distinta). Detectado al mezclar `origin/feature/venta-asistida-mejorada` con este trabajo — el número se había asignado en esta sesión sin haber bajado cambios todavía.
+> Siguiente número libre: **D-146**.
 
 ### 2026-07-24 — D-135: Editar IVA manual de una línea de un pedido ya creado (propuesta pendiente)
 
@@ -2370,4 +2428,291 @@ Con esto la Fase 1 de la Vía A del programa (`docs/app-nativa-operativa.md` §9
 - **Decisión de diseño:** mismo patrón ya validado en `carrito.component.ts::checkPriceScale` — la jerarquía de precio existente NO se toca (se renombra a "bruto" internamente donde aplica), y el resultado final se multiplica por `(1 - descuentoLinea/100)`. Se descartó reconstruir el precio desde el campo horneado `precioEfectivoSinIva` del backend porque la tarifa de IVA persistida por línea (`precioUnitarioIva`) solo se actualiza cuando el flag `IVA_PERSIST_CANONICAL=true` está encendido (hoy OFF) — reconstruir CON IVA desde ahí habría sido frágil. Aplicar el descuento antes o después del IVA es matemáticamente equivalente para un único porcentaje, mismo razonamiento ya usado en D-141.
 - **Implementado:** `orden-venta.component.ts` (split `getPrecioUnitario` en bruto + descuento, nuevo helper `descLineaPct`) + `orden-venta.component.html`/`.scss` (badge `-X%` junto a "P. Unit.", mismo patrón que `checkout.component.html`); `payment.service.ts` (descuento aplicado sobre `precioUnitarioSinIva`/`precioUnitarioConIva`/`valorIva` en el único punto donde se resuelven, antes de derivar los totales por producto — corrige comanda y email a la vez, sin badge visual ahí por estar fuera del alcance registrado en la spec delta). `npx tsc --noEmit` limpio (0 errores) tras cada cambio.
 - **Pendiente:** verificación manual en navegador (generar PDF y correo/comanda de un pedido real con descuento de línea, confirmar que el detalle por línea cuadra con los totales) — bloqueada en esta sesión por el mismo problema de red del Chrome remoto documentado en D-137 (no alcanza `localhost:4200`). Registrar `wdu9v75qq6` como resuelta en ClickUp solo después de esa verificación.
-- **Estado:** implementado, `tsc` limpio. **Sin commitear aún** (pendiente que el usuario revise y verifique en navegador antes de commit/push).
+- **Estado:** implementado, `tsc` limpio, commiteado. Pendiente verificar en navegador antes de cerrar `wdu9v75qq6` en ClickUp.
+
+#### Adenda D-139 (2026-07-29) — Bodega en iOS (arranque de la Fase 2) + cuatro hallazgos de producción
+
+Nueva pestaña **Bodega**, de **solo consulta**: existencias por bodega (con buscador y filtro de agotados), movimientos de los últimos 30 días y desglose de "dónde está" un producto en todas las bodegas.
+
+**Escribir inventario queda deliberadamente fuera.** `inventoryService` afecta POS, ventas, fulfillment y Shopify a la vez, y el proyecto exige trazar el flujo completo y aprobación explícita antes de tocarlo. Consultar no arriesga nada y es lo que se necesita estando parado en la bodega. Ajustes, traslados y conteo siguen en la web.
+
+**Reorganización de la barra de pestañas.** iOS colapsa en "Más" a partir de la sexta, así que Cartera pasó a convivir con Cobrar bajo un selector (ambas son el mismo momento de la visita, y Cartera sigue apareciendo solo para roles de tesorería). Eso liberó el espacio para Bodega. Quedan cinco: Vender · Pedidos · Cobrar · Bodega · Cuenta.
+
+**Cuatro hallazgos verificados contra producción, todos anteriores a esta app:**
+
+1. **`inventoryMovement` guarda el doc ID de Firestore en `idBodega`, no el código de negocio.** 9 de 9 movimientos de la empresa demo, incluido el que generó el pedido `ort-000147` de hoy. Es exactamente el anti-patrón que el CLAUDE.md del proyecto marca como crítico ("movimientos huérfanos, totales incorrectos"). La app muestra la bodega leyendo `bodegaDoc`, que sí trae el código y el nombre.
+2. **`GET /v1/inventory/historial/bodega/:idBodega` está caído** — responde `FAILED_PRECONDITION` porque falta un índice compuesto de Firestore (`inventoryMovement`: company + idBodega + createdAt). La web no lo usa (usa `/historial` con rango de fechas), así que pasó inadvertido. Aunque se creara el índice **no encontraría nada**, porque filtra por el `idBodega` que según el punto 1 trae el doc ID. Los dos defectos hay que arreglarlos juntos.
+3. **`GET /v1/inventory/historial/producto/:idProducto` devuelve un error crudo de Firestore** ("Cannot use undefined as a Firestore value") en vez de validar sus parámetros.
+4. **El inventario de la empresa demo está descuadrado en 44,34% (`driftStatus: critical`).** 247 de 557 productos inventariables muestran en `cantidadDisponible` más existencias de las que hay en `inventory`; el peor, SET INTENSE, dice 514 y tiene 183. La app lo avisa en pantalla porque significa que el catálogo puede estar ofreciendo cosas agotadas. **La app nunca usa `cantidadDisponible` para vender** — el catálogo usa `stockPorBodega`, que es el stock real.
+
+**Bug propio encontrado y corregido en pantalla:** el backend devuelve el producto de un renglón de inventario unas veces en `producto` (documento completo) y otras en `productoDoc` (solo el bloque comercial, con `titulo` y `referencia` en la raíz) — la bodega "1" manda el primero y la "001" el segundo. Leer solo `producto` dejaba bodegas enteras mostrando "Producto sin nombre".
+
+**Nota sobre la propia verificación:** la primera versión de la prueba aceptaba el estado vacío como resultado válido y por eso pasó en verde con la pantalla abriendo en una bodega sin nada, y luego con todos los renglones sin nombre. Ambos defectos se vieron **mirando la captura**, no en el verde de la prueba. Las aserciones se endurecieron: ahora exigen renglones con unidades, prohíben "Producto sin nombre" y verifican que los movimientos resuelvan el nombre de la bodega. Una prueba que acepta el caso vacío no prueba nada.
+
+**Comportamiento añadido:** la pantalla no abre en una bodega vacía. Si la primera de la lista no tiene existencias (en esta empresa, Pereira), busca una sola vez la primera que sí tenga; después manda siempre lo que el usuario elija, aunque esté vacía.
+
+#### Adenda D-139 (2026-07-29) — Producción en iOS: tablero + avance de estado (cierra la Fase 2)
+
+Tercer panel de la pestaña Bodega: **Producción**. Un renglón por producto-dentro-de-pedido (no por pedido), que es como trabaja el piso, con filtros por estado y avance de estado desde el teléfono. Diff mostrado y aprobado por el usuario antes de aplicar.
+
+**Cómo escribe, y por qué así:**
+
+- El cuerpo lleva **solo `_id` y `estadoProceso`** — nada de carrito, cliente ni montos. Un avance de estado no puede pisar otros campos del pedido por accidente.
+- **Revalida el estado real justo antes de escribir** (`POST /v1/orders/estados-actuales`). Entre que se carga el tablero y el operario toca el botón, el pedido pudo despacharse desde otro lado.
+- **Un pedido por llamada, no en lote.** En lote un rechazo deja al operario sin saber cuál falló ni en qué quedó cada uno. Es más lento a propósito.
+- La UI solo ofrece las transiciones de `allowedTransitions`, copiadas literales del backend; los estados consumados no ofrecen ninguna.
+
+**Cómo se consiguió con qué validar, sin tocar maestros.** El tablero de la empresa demo salía vacío: **0 de 358 productos tienen `paraProduccion`**. La opción evaluada era marcar un producto, pero al leer `productos.edit` aparecieron dos razones para no hacerlo: el update es **merge superficial** (mandar `crearProducto` parcial habría borrado título, descripción e imágenes) y **dispara sincronización con e-commerce**. El camino usado en su lugar: el tablero lee `paraProduccion` del **snapshot del producto dentro del carrito del pedido**, no de la colección `products` — así que basta crear un pedido de prueba con ese campo en el snapshot. **Ningún producto fue modificado** (verificado después: sigue en `None`).
+
+**Ciclo completo ejecutado contra producción** con los pedidos de prueba `ort-000148` y `ort-000149`: avance `SinProducir → EnProduccion → Despachado` aplicado y confirmado, y **retroceso crítico `Despachado → EnProduccion` bloqueado por el backend** con el mensaje "Retroceso no permitido… Estado consumado". El estado quedó intacto tras el intento.
+
+**Dos bugs propios encontrados al ejecutar, ya corregidos:**
+
+1. El cuerpo iba como arreglo pelado; el backend lee `req.body.orders` y respondía "Se requiere un array de órdenes para actualizar". La escritura **nunca habría funcionado**.
+2. La respuesta real es `{msg, updatedIds, noActualizadas}` — el modelo esperaba `actualizadas`, así que un avance exitoso se habría reportado como no confirmado.
+
+**Bug de UI corregido:** el diálogo de acciones usaba `isPresented: .constant(...)`. Con un binding constante SwiftUI no puede cerrar la hoja y ni siquiera dibuja el cancelar — el operario quedaba atrapado sin más salida que elegir un estado. Ahora son bindings reales. (Aparte: cuando iOS lo presenta como popover no dibuja "Cancelar" por diseño y se cierra tocando fuera; eso no es un defecto.)
+
+**Hallazgo sobre las reglas del backend:** para `demo@kaiimport.com` el retroceso **no crítico** `EnProduccion → SinProducir` **sí se aplica** — `editBatch` se salta la validación de `allowedTransitions` cuando el usuario está en `authorizedEmails`, y solo deja un warning. Es decir, para usuarios autorizados **la salvaguarda de la app es la única barrera** contra retrocesos accidentales desde el teléfono. La app es deliberadamente más estricta que el backend en ese punto.
+
+**⚠️ Hallazgo de seguridad — `/v1/productos/edit` no tiene autenticación.** En `routers/productos.js` el middleware está comentado con la nota "auth comentado para dev local", y así está **en producción**: un POST sin token responde 400 por validación de negocio, no 401. Lo mismo en `/create` y `/delete`. Verificado sin explotarlo (no se hizo ninguna escritura sin token). Contradice de frente la regla del proyecto "nunca eliminar auth middleware del backend". **Requiere arreglo urgente** — cualquiera con la URL puede crear, editar o borrar productos de cualquier empresa.
+
+**Verificado en pantalla** (`ProduccionTests`, TEST SUCCEEDED): el tablero pinta el renglón, el diálogo ofrece exactamente las cinco transiciones válidas desde "Sin producir", no ofrece retrocesos ni saltos inválidos, y cierra bien. Las suites `InventarioTests`, `CotizacionesTests` y `ConfiguracionProductoTests` siguen pasando tras la reorganización de pestañas.
+
+#### Adenda D-139 (2026-07-29) — Notas del pedido por área (cierra el hueco de coordinación entre áreas)
+
+Hasta ahora la app escribía tres notas (observación por línea, observación de envío y nota al mensajero) pero **ignoraba `notasPedido`**, el sistema de notas por área de la web: cinco buzones separados —cliente, producción, despachos, entregas, facturación y pagos— con autor y fecha. Consecuencia: el vendedor en la calle no veía lo que había dejado dicho despachos, y el tablero de piso no mostraba las notas de producción.
+
+**Entregado:** lectura y escritura de los cinco buzones. Se entra desde el detalle del pedido (con un resumen de la última nota de cada área) y desde cada renglón del tablero de producción, que abre directo en su propio buzón. La nota al mensajero se muestra en el mismo panel, aunque viva en otro campo, porque para quien lee es una nota más.
+
+**No hay endpoint de notas.** Se guardan con `POST /v1/orders/edit` mandando **solo `_id` y `notasPedido`**. Verificado que el estado del pedido y los totales quedan intactos: el `update` de Firestore mezcla a nivel de campo raíz, así que incluir más campos solo abriría la puerta a pisar datos del servidor sin necesidad. **Comprobado en aislamiento** con un pedido nuevo (`ort-000150`): guardar solo notas no altera `estadoProceso`.
+
+**El objeto anidado se reemplaza completo**, así que antes de guardar se relee el pedido y la nota se agrega sobre lo que hay — si no, se borrarían los otros cuatro buzones. La relectura usa `/v1/orders/search` y no el filtro de la lista, porque `filterflatproduct` omite `notasPedido` en su proyección.
+
+**Ciclo completo verificado contra producción:** notas sembradas por API, leídas en la app, y una escrita **desde la app** (`ort-000149`, buzón de entregas) que aparece en el backend con el usuario correcto. Los buzones no se mezclan y los contadores por área cuadran.
+
+**Tolerancia comprobada** con casos construidos: `notasPedido` nulo, con un texto en vez de un objeto, y con un buzón que trae basura mezclada con una nota válida. En los tres el pedido sigue decodificando —importante porque `Order` usa decodificación sintetizada y un error ahí lo haría desaparecer de la lista— y las notas sin texto se descartan para no pintar renglones en blanco.
+
+**Falta (no estaba en "lo básico"):** los archivos adjuntos de las notas (`NotaArchivo`) no se leen ni se suben.
+
+**Defecto encontrado en la propia prueba de producción, corregido.** La suite decía "esta prueba no escribe" y **sí escribía**: cerraba el diálogo con `app.tap()`, que toca el CENTRO de la pantalla — justo donde están los botones de estado— y en una corrida avanzó `ort-000149` de `SinProducir` a `EnDespacho` sin que nadie lo pidiera. Ahora toca el borde izquierdo, compara el estado antes y después, y falla si cambió. Se detectó revisando por qué un pedido tenía un estado que nadie le había puesto — no por un test rojo.
+
+**Nota de organización:** `DateFormatter.katuqCorta` vivía dentro de `CotizacionDetailView`; se movió a `Shared/Formatting/DateFormatters.swift`. Un formateador en una vista arrastra todo el sistema de diseño y bloquea las pruebas de modelos fuera del simulador.
+
+**Estado al cierre:** build limpio (`clean build`, cero errores y cero advertencias) y cinco suites en verde: `NotasTests`, `ProduccionTests`, `InventarioTests`, `CotizacionesTests`, `ConfiguracionProductoTests`. Se corrigieron además tres advertencias viejas en `AdicionModels` (`as?` sobre un opcional que `try?` ya había aplanado).
+
+#### Adenda D-139 (2026-07-29) — Filtros en "Todos los pedidos"
+
+La lista traía siempre los últimos 30 días sin más control que la búsqueda por texto. Ahora tiene las funciones básicas de la pantalla equivalente de la web:
+
+- **Estado de proceso** (los once de `estadosProcesoOptions`) y **estado de pago** (los siete de `estadosPagoOptions`), combinables entre sí.
+- **Rango de tiempo**: 7, 30 o 90 días. No se ofrece "todo el histórico" a propósito — es un teléfono.
+- **Sobre qué fecha aplica el rango**: creación o entrega (`tipoFecha`).
+- **Orden fijo por fecha de creación descendente** (`sortField` + `sortOrder: -1`): lo recién hecho primero, que es lo que se busca en la calle.
+- Resumen de cuántos pedidos y con qué rango, y un **Limpiar** que solo aparece si hay algo puesto.
+
+**Detalles del contrato del endpoint, verificados uno por uno contra producción:** `estadoProceso` espera el comodín `"Todos"` cuando no se filtra; `estadosPago` debe **omitirse** (mandarlo vacío no devuelve nada); `fechaFinal` lleva un día de margen o un pedido con entrega para hoy queda fuera. Comprobado que cada combinación devuelve exactamente lo pedido: solo `Despachado` → 37 pedidos todos despachados; solo pago `Pendiente` → 46 todos pendientes; ambos juntos → 27; 7 días trae menos que 30; la búsqueda por número devuelve el pedido exacto.
+
+**Decisión de diseño:** estado y pago van en **menús**, no en chips. Once y siete opciones en una fila horizontal dejan la mayoría fuera de pantalla — además de ser incómodo, el tap fallaba con "Activation point invalid" en las pruebas, que fue la señal de que la UI estaba mal. Los chips quedaron solo para rango y tipo de fecha, que son cinco y sí caben. Las etiquetas de tipo de fecha se acortaron a "Creación"/"Entrega" porque con "Por creación"/"Por entrega" el último se cortaba.
+
+La barra de filtros vive **fuera** de la lista, para que no desaparezca al hacer scroll ni cuando no hay resultados: si se fuera con la lista, un filtro sin resultados dejaría al usuario sin forma de quitarlo. La paginación también descarta repetidos, porque entre página y página pueden entrar pedidos nuevos y correr el offset.
+
+**Verificado en pantalla** (`PedidosFiltrosTests`, TEST SUCCEEDED): filtro de estado, filtro de pago encima del anterior, cambio de rango (7 ≤ 30), cambio a fecha de entrega, y que Limpiar devuelve la lista al estado inicial. Es de solo lectura. Las otras cinco suites siguen en verde y el `clean build` no tiene errores ni advertencias.
+
+### 2026-07-29 — D-141: Catálogos digitales compartibles por link, con carrito del comprador
+
+**Qué se decidió.** El vendedor arma un catálogo con los productos que quiera y lo comparte por un link público. El comprador lo abre sin cuenta, arma su carrito y lo envía; **eso crea una cotización** para el vendedor, que la revisa en la app y la convierte en pedido con el flujo que ya existe. **Ambas decisiones las aprobó el usuario explícitamente**: el destino del carrito (cotización, no pedido directo) y la colección nueva.
+
+**Colección nueva `catalogos` — aprobada expresamente.** `openspec/config.yaml` prohíbe proponer colecciones Firestore nuevas sin aprobación del usuario. Se pidió y se dio. La alternativa evaluada era guardar el catálogo como una cotización con una bandera, y se descartó porque contaminaría las métricas de cotizaciones ("cotizado del mes" contaría catálogos) y volvería ambiguo el modelo. Campos: `nombre`, `descripcion`, `company`, `vendedorEmail`, `productoIds`, `activo`, `fechaVencimiento`, `publicToken`, `vistasCount`, `solicitudesCount`.
+
+**Se reutilizó la infraestructura de links públicos que ya existía** para cotizaciones, en vez de inventar otra: `publicToken` de 192 bits con `crypto.randomBytes(24)`, endpoint público con `express-rate-limit`, y ruta web fuera del `AuthGuard`. El link queda `https://sellercenter.katuq.com/cat/<token>`.
+
+**Solo se guardan los ids de producto, no una copia.** El precio, el nombre y la disponibilidad se leen del maestro cada vez que se publica la vitrina, así que el catálogo nunca muestra datos congelados. Si el vendedor cambia un precio, el catálogo lo refleja solo.
+
+**Reglas de seguridad del endpoint público, todas verificadas ejecutando el controlador:**
+- **Los precios NUNCA se aceptan del comprador.** Se probó mandando `precioConIva: 1` y `total: 1`: el backend ignoró esos campos y guardó los $127.500 del maestro. Sin esto, cualquiera pediría a $1 manipulando la petición.
+- Solo se aceptan productos que estén en el catálogo del token: un producto ajeno responde 400.
+- La vitrina **no expone** `company`, `vendedorEmail`, contadores internos, stock ni costo. Del stock solo sale un booleano `disponible`.
+- Un catálogo apagado o vencido responde **404** y no revela que existió.
+- Rate limit separado: 120 por 15 min para mirar, **10 por 15 min para enviar** — enviar es una escritura.
+- Validaciones: nombre obligatorio, al menos un contacto (teléfono o correo), cantidades entre 1 y 999, máximo 200 productos por catálogo.
+- Aislamiento entre empresas comprobado: otra `company` no ve el catálogo ni puede generar su token.
+
+**Verificación: 30 comprobaciones en verde** ejecutando el controlador real contra la Firestore de la empresa demo (con `req`/`res` simulados, sin servidor ni middleware). Incluye el ciclo completo: crear catálogo → generar token → vitrina pública → solicitud del comprador → cotización `COT-2026-0729-0002/0003` en estado `enviada`, trazada al catálogo con `catalogoId` y con el contacto del comprador en `notasPedido.notasCliente`.
+
+**Contrato backend↔app validado**: las respuestas reales del controlador se decodificaron con los modelos Swift de la app (lista, detalle y vitrina), incluido el armado del link y el conteo de productos ocultos por falta de existencias.
+
+**Lo que quedó construido, en tres repos:**
+- **Backend**: `controllers/catalogos.js` + `routers/catalogos.js`, montado en `/v1/catalogos`. Sintaxis verificada con `node --check`.
+- **Web**: módulo `catalogo-publico` en la ruta `/cat/:token`, con vitrina, carrito y formulario de contacto. Estilos propios (no importa el tema del panel: la abre alguien de fuera y tiene que cargar liviana). Compila y genera su chunk lazy.
+- **iOS**: pestaña Catálogos dentro de Pedidos, con crear, listar, detalle, generar link, compartir y encender/apagar. `clean build` sin errores ni advertencias.
+
+**Detalle de UX que salió de los datos:** la vitrina oculta los productos agotados, así que un catálogo de 3 productos puede mostrar 2. La app le avisa al vendedor —"1 sin existencias: el comprador no los ve"— porque si no parecería que el catálogo perdió productos.
+
+**⚠️ FALTA DESPLEGAR EL BACKEND.** Los endpoints `/v1/catalogos/*` **no existen en producción**: el código está solo en local. Hasta desplegar, la pestaña Catálogos de la app y la ruta `/cat/:token` de la web dan error. Por eso **no hay verificación en pantalla del módulo**, solo del contrato. El despliegue toca EC2 y no se hizo sin autorización.
+
+**Nota de riesgo del método:** para probar se levantó el backend local, que **arrancó los crones de sync** (inventario y Osmosis, cada 30 min) contra la Firestore real. Se detuvo de inmediato y se pasó a ejecutar el controlador directamente. **No volver a levantar el backend local sin apagar los crones**, o se duplica trabajo con producción.
+
+**Hereda el defecto de cotizaciones:** el total de la cotización que genera el catálogo lo calcula `cotizaciones.js:calcularTotales`, que trata `valorIva` como porcentaje siendo pesos. Con los productos de la empresa demo (IVA 0) no se manifiesta, pero en una empresa con IVA el total llegaría inflado. Es el mismo defecto ya registrado; arreglarlo cubre los dos caminos.
+
+#### Adenda D-141 (2026-07-29) — Las fotos de producto nunca cargaban + vitrina con el lenguaje del POS moderno
+
+**Defecto de raíz encontrado y corregido.** Osmosis guarda la ruta **relativa** de la imagen (`/osmosis/products/0/38583/abc.png`) y buena parte del catálogo la tiene así, sin host, porque se sincronizó antes de que `osmosisProductSyncService` empezara a guardar la URL absoluta. Servida tal cual:
+
+- **En la web**: el navegador la resolvía contra el propio dominio y el rewrite `** → /index.html` de Firebase devolvía **HTML de 127 KB** en vez de la foto — el `<img>` fallaba en silencio. Se comprobó con `content-type: text/html`.
+- **En la app iOS**: no era una URL válida, así que no se pedía nada.
+
+El CDN correcto es **`images2.guiacereza.com`** (el mismo que ya usa el servicio de sync). Se normaliza **al leer**, en el backend del catálogo y en la app; las URLs ya absolutas y las de Firebase Storage se dejan intactas, y si el producto no tiene imágenes principales se cae a las secundarias. Verificado con 60 productos reales: **52 resuelven su foto** (HTTP 200, `image/jpeg`/`image/png`) y los 8 restantes no tienen imagen en el maestro. Confirmado en producción tras el deploy (`ba522c0`).
+
+**El mismo defecto sigue vivo en el panel web**: `getProductImageUrl` del POS2 (`ventas/pos2/widgets/product`) devuelve la ruta cruda, así que ahí tampoco se ven las fotos. No se tocó — es el mismo arreglo de una línea, pendiente de decisión.
+
+**La app iOS no mostraba ninguna imagen** (cero usos de `AsyncImage`). Se agregó `ProductoThumb`, un componente con marcador de posición que trata "no hay foto" y "la foto falló" igual, para que nunca se vea un hueco roto. Se usa en el catálogo de venta asistida, el carrito, el selector al armar un catálogo y el detalle del catálogo.
+
+**Vitrina rediseñada con el lenguaje del POS moderno** (`ventas/pos2`), a pedido del usuario: rejilla `auto-fill` de 158px, tarjetas con borde de 1.5px y radio 15, hover con sombra violeta, foto cuadrada con el contador encima, precio en el acento y stepper compacto. Se añadió un **buscador pegajoso** que la vitrina no tenía —con catálogos largos era scroll infinito— y las tarjetas con producto ya en el pedido se resaltan con el borde del acento. Los tokens del POS se copian en vez de importar `_katuq-comercial` a propósito: la página la abre alguien sin cuenta y no debe arrastrar el peso del panel.
+
+**Configurar los productos desde el dispositivo** (también a pedido): `EditarProductosCatalogoView`, accesible desde el botón "Editar" del panel de productos del detalle. Agrega y quita buscando en el catálogo real, y solo habilita guardar si de verdad cambió algo, para no mandar una escritura vacía. Al guardar manda la lista completa de `productoIds`; el backend reemplaza ese campo y deja el resto del catálogo intacto.
+
+**Nota de rendimiento:** las fotos de Osmosis pesan entre 200 KB y 1 MB cada una. Con 20 productos son varios MB en datos móviles. Se usa carga diferida (`loading="lazy"` y `AsyncImage`), pero convendría pedir miniaturas a Cereza o meter un redimensionador.
+
+**Estado:** backend desplegado y verificado en producción. **El frontend NO está desplegado** — la vitrina compila en su chunk (87 KB) pero el deploy quedó detenido por decisión del usuario, así que `/cat/:token` todavía no existe en producción.
+
+#### Adenda D-139 (2026-07-29) — Bug de navegación reportado por el usuario: el teclado atrapaba la pantalla
+
+**Lo que reportó**, textual: *"en la pantalla de venta asistida cuando seleccionas una bodega y quieres escribir no tienes manera de retroceder"*.
+
+**Dos defectos reales detrás de eso:**
+
+1. **El teclado no tenía salida.** Ninguna pantalla con buscador dentro de un `ScrollView` cerraba el teclado: no al deslizar, no tocando fuera, y sin botón. Solo el login tenía `scrollDismissesKeyboard`. El vendedor elegía bodega, tocaba el campo de cliente y quedaba con media pantalla tapada, sin ver los resultados ni poder volver.
+2. **El selector de bodega empujaba el buscador fuera de pantalla.** Con las cinco bodegas listadas, el panel de cliente quedaba abajo, y con el teclado abierto no se veía ni la bodega elegida ni el resultado de la búsqueda.
+
+**Arreglado así:**
+
+- Modificador reutilizable `tecladoDescartable()` con **dos salidas**, porque la gente intenta ambas: deslizar la lista cierra el teclado siguiendo el dedo (`.interactively`), y un botón **"Listo"** sobre el teclado para quien busca un botón. Cierra el foco sin `@FocusState` por pantalla, así se aplica igual en cualquier vista. Aplicado a las **cinco** pantallas con buscador: inicio de venta, catálogo, bodega, crear catálogo y editar productos del catálogo.
+- Con la bodega elegida, el selector **se colapsa a una línea** ("DESPACHA DESDE · nombre") con un botón **"Cambiar"** que devuelve la lista completa. Al cambiar se cierra el teclado primero: si el foco seguía en el buscador, la lista aparecía detrás del teclado.
+
+**Verificado en pantalla** (`NavegacionVentaTests`, TEST SUCCEEDED): el teclado se abre, el botón "Listo" existe y lo cierra de verdad (se comprueba que `keyboards` desaparece), el resumen de bodega ofrece "Cambiar", al tocarlo vuelve la lista completa, y al elegir otra bodega se vuelve a colapsar. `ConfiguracionProductoTests` y `CotizacionesTests` siguen pasando.
+
+**Nota sobre otro pedido del usuario:** pidió *"que se pueda configurar desde el dispositivo los productos que se pueden agregar en el catálogo de venta asistida"* y se implementó como editar los productos de un catálogo digital. Lo que quería era **desbloquear los productos con candado** (los de `aceptaVariable`). Se midió el alcance real: **1 de 433 productos** está bloqueado (BODY ENIGMATIC) y **ninguno** por calendario o archivo. Al investigar apareció el dato que lo hace viable: las opciones elegidas del árbol de variables viajan al carrito como **`configuracion.preferencias`**, el mismo arreglo que la app ya envía — así que faltaría parsear `variablesForm` (serializado con `flatted`) y ofrecer las opciones. El usuario decidió dejarlo por ahora.
+
+#### Adenda D-139 (2026-07-30) — Los productos con opciones ya se venden desde la app (se retira el bloqueo)
+
+El usuario reportó que sus productos salían bloqueados con el aviso "véndelo desde Katuq web". En la empresa demo solo **1 de 497** lo estaba, así que se confirmó que él trabaja sobre su empresa real, donde los productos con tallas y colores son la norma. Pidió implementar el panel de opciones, y eso se hizo.
+
+**Se implementó el lector del árbol de variables.** `procesoComercial.variablesForm` viene serializado con la librería **flatted**: un arreglo donde **todo string es un índice** a otra posición del mismo arreglo (así se serializan las referencias circulares del árbol de PrimeNG, que tiene `parent` apuntando al padre). Los textos también viven en el arreglo, así que `"13"` no es el texto "13" sino el contenido de la posición 13. Se escribió `Flatted.desaplanar` en Swift, con corte de ciclos por conjunto de visitados y descartando `parent`, que solo sirve para el ciclo.
+
+**Lo que hizo el trabajo viable**: las opciones elegidas viajan al carrito como **`configuracion.preferencias`**, el mismo arreglo que la app ya enviaba para las adiciones. No hubo que inventar nada en el formato del pedido — solo leer el árbol y mandar `"Tallas: M"`, `"Colores: Rojo"` como preferencias, con su `valorUnitarioSinIva` y `porcentajeIva`, que es de donde el backend las suma al total.
+
+**Verificado contra el árbol real** de BODY ENIGMATIC: se leen los cuatro grupos —Tallas (M, L), Colores (Rosa, Rojo), Comentario (texto) y Adjunto (archivo)— con sus tipos correctos. El parser devuelve vacío sin reventar ante `nil`, texto vacío, `[]`, `[[]]` y basura que no es JSON.
+
+**El bloqueo se retiró del todo.** Antes un solo grupo de tipo archivo dejaba el producto entero sin venderse. Ahora se captura todo lo que sí se puede y **lo que falta queda escrito en el pedido**: la observación de la línea recibe "PENDIENTE de completar en Katuq web: Adjunto." — así producción se entera en vez de recibir un pedido incompleto en silencio. En el catálogo, el candado se reemplazó por un aviso de qué quedará pendiente.
+
+**Sí se exige elegir** en cada grupo de opciones: sin talla ni color, producción no sabría qué fabricar, así que el botón Agregar queda deshabilitado hasta completarlas. El sobrecosto de cada opción se muestra en su chip, porque si una talla cuesta más hay que verlo antes de elegirla.
+
+**Bug encontrado por la prueba, no por lectura:** los grupos se construían con `let id = UUID()` dentro de una propiedad **calculada**, así que cada acceso a `gruposVariables` generaba ids nuevos y la opción elegida nunca coincidía con el grupo al validar — el botón Agregar no se habilitaba nunca. Se cambió a ids derivados del contenido (`titulo`, y `grupo/opción`). Es el tipo de defecto que compila perfecto y falla en silencio.
+
+**Verificado en pantalla** (`ConfiguracionProductoTests`, reescrita, TEST SUCCEEDED): el producto ya no está deshabilitado, aparecen Tallas y Colores, sin elegir no deja agregar, al elegir M y Rojo se habilita, y ambas llegan al carrito como `Tallas: M` y `Colores: Rojo`. `NavegacionVentaTests` y `CotizacionesTests` siguen pasando.
+
+**Queda fuera**: subir archivos e imágenes, y la fecha de agenda. Ya no bloquean — se avisan y se anotan en el pedido.
+
+### 2026-07-30 — D-142: Se cierra el agujero de autenticación en `/v1/productos/*`
+
+**El defecto.** En `functions/routers/productos.js` el middleware de autenticación estaba comentado con la nota *"auth comentado para dev local"*, y así quedó desplegado en producción. Un `POST` sin token **entraba al controlador** y fallaba por validación de negocio (400), no por autenticación (401). Cualquiera con la URL podía **crear, editar o borrar productos de cualquier empresa** — el `company` sale de un header libre. Contradecía de frente la regla del proyecto de nunca quitar el auth middleware.
+
+**Se cerró en seis endpoints**: `/edit`, `/create`, `/delete`, `/create-multiple` (escritura masiva), `/all` y `/all/filter` (estos dos exponían el catálogo completo de cualquier empresa).
+
+**Cómo se comprobó que no rompía la web ANTES de tocarlo.** El método vale para cualquier cambio de auth futuro:
+1. El interceptor del frontend está registrado global en `app.module` y agrega `Authorization: Bearer` a **todas** las peticiones de `HttpClient` — incluso a las que usan `http.post` directo en vez de `BaseService`, que es el caso de `maestro.service.ts`.
+2. En los logs de producción, las **130 llamadas a `/create`** y las **4 a `/all/filter`** vienen de navegadores vía nginx (`IP: ::ffff:127.0.0.1` con User Agent de Chrome/Safari). Ninguna de scripts. `/create-multiple` y `GET /all` no registran **ni una** llamada.
+3. El middleware se probó por separado, sin levantar el servidor (que arrancaría los crones): bloquea sin header, con token vacío, con token sin `Bearer` y con `Bearer` basura.
+
+**Verificado tras desplegar** (`e97d834`): los seis responden **401 sin token** —antes daban 400, que era la señal de que entraban al controlador— y con token siguen funcionando (`all/filter` devuelve los 557 productos de la empresa demo).
+
+**Quedan dos pendientes a propósito**: `/all/filter/paginated` y `/all/filter/count`. Son el catálogo de alto tráfico y se dejan para una segunda tanda, para no arriesgar el listado de productos de todas las empresas en el mismo cambio. Su situación es idéntica y el mismo método de verificación aplica.
+
+#### Adenda D-141 (2026-07-30) — El mismo fix de imágenes, ahora en el panel web
+
+Se llevó al frontend la corrección que ya estaba en el backend de catálogos y en la app iOS: las rutas relativas de Osmosis no cargan porque el rewrite de Firebase devuelve HTML en vez de la foto. Se agregó `shared/utils/imagen-producto.ts` —helper compartido que resuelve contra `images2.guiacereza.com` y deja intactas las URLs absolutas, `data:` y los assets locales, cayendo a `imagenesSecundarias` si no hay principales— y se aplicó en `getProductImageUrl` del catálogo del POS2 y `getCartItemImageUrl` del resumen del carrito, que son los que hoy se ven vacíos.
+
+Siguen con la ruta cruda `traslados`, la galería de `conf-product-to-cart` y `payment.service`; el helper ya está listo para ellos.
+
+**Estado del frontend:** compila sin errores y el CDN quedó en el bundle, pero **sigue sin desplegar** — ni este fix ni la vitrina de catálogos están en producción.
+
+### 2026-07-30 — D-143: El total de las cotizaciones salía ~200 veces más alto en productos con IVA
+
+**El defecto.** `cotizaciones.js:calcularTotales` usaba `precio.valorIva` —que es el IVA **en pesos**— como si fuera la tarifa en porcentaje, y además anclaba el subtotal en `precioUnitarioConIva`, que ya lleva IVA, para volver a sumárselo. Un producto de **$100.000 al 19% daba un total de $22.729.000** en vez de $119.000.
+
+**Por qué pasó inadvertido:** solo se manifiesta con IVA distinto de cero, y en la empresa demo los 557 productos tienen IVA 0. Con IVA 0 ambas versiones daban lo mismo.
+
+**Cuatro defectos más en la misma función:** ignoraba el precio manual, los precios por volumen y por tipo de cliente; ignoraba `descGlobal`; ignoraba las adiciones y preferencias de cada línea (que es por donde viajan las opciones de talla y color); y leía `item.descuento` cuando el editor guarda `item.descuentoLinea`, así que el descuento de línea no se aplicaba nunca.
+
+**La corrección** replica la **misma matemática del editor web** (`cotizacion-editor.component.ts`, sección T-21), que es hoy la fuente de verdad, y toma el precio con `resolverPrecioLinea` — el resolutor canónico que ya usan los pedidos y que conoce precio manual, categoría de cliente y volumen. No se inventó un cálculo nuevo: se dejó de tener un tercer camino propio.
+
+```
+base       = precioSinIVA × cantidad          ← ancla SIN IVA, no con IVA
+descLinea  = base × descuentoLinea%
+ivaLinea   = base × (1 − descuentoLinea%) × tarifa%
+descGlobal = (Σbase − ΣdescLinea) × descGlobal%
+impuesto   = ΣivaLinea × (1 − descGlobal%)
+total      = (Σbase − descTotal) + impuesto
+```
+
+**Verificado ejecutando el controlador real contra Firestore**, antes de desplegar: $100.000 al 19% da **119.000**; con 10% de descuento de línea y 5% global sobre 2 unidades da **203.490** (base 171.000 + IVA 32.490); respeta un precio manual de 80.000 → 95.200; las preferencias suman a la base y a su IVA; y **sigue sin pisar los totales cuando el frontend los envía**, que es como opera la web hoy. Las cotizaciones de prueba se borraron después.
+
+**Confirmado en producción** (`5ce2912`): la misma cotización que antes habría dado 22.729.000 devuelve 119.000, y el catálogo digital —que genera cotizaciones por este mismo camino— sigue funcionando.
+
+**Alcance real del arreglo:** afecta a las cotizaciones creadas **sin totales**, es decir las del catálogo digital y las de cualquier integración por API. Las que crea la web seguían saliendo bien porque el frontend manda sus propios totales. Las cotizaciones ya guardadas no cambian: el cálculo solo corre al crear o editar.
+
+### 2026-07-30 — D-144: Se integra descuentos y promociones a las ramas madre de ambos repos
+
+**Qué se hizo.** `feature/descuentos-promociones` se mergeó a su rama de origen en cada repo: en el frontend a `feature/venta-asistida-mejorada` (traía 10 commits propios y le faltaban 187 de la madre) y en el backend a `backend-aws-security` (7 propios, 130 de retraso). Merge de verdad (`--no-ff`), no rebase: la rama de descuentos sigue existiendo con su historia y los dos padres quedan visibles.
+
+**Los conflictos no fueron el problema; el auto-merge sí.** Los seis conflictos declarados (cuatro en front, dos en back) se resolvieron combinando ambos lados. Lo que hubo que cazar fueron **dos defectos que git fusionó en silencio, sin marcar conflicto**:
+
+1. **`productosPaginated.js` habría reventado en runtime.** La rama de descuentos llamaba `enrichProductsWithPromos(paginatedProducts, …)`, pero la madre había reestructurado esa función y la variable ahora se llama `products`. `paginatedProducts` quedó como referencia a una variable inexistente — y era la **única** aparición en todo el archivo. Es el catálogo por bodega de venta asistida: habría fallado en la primera página que pidiera.
+2. **El carrito no compilaba.** El SCSS de descuentos usa `$c-text`, `$c-border` y `$c-muted`, variables que definía al inicio de su propio archivo; el rediseño de la madre borró esas definiciones y pasó a los tokens `--kc-*`. Se mapearon a `--kc-ink`, `--kc-line` y `--kc-muted`. No se reintrodujeron las viejas a propósito: entre ellas venía `$c-accent: #4361ee`, uno de los primaries paralelos que el tema canónico prohíbe.
+
+**Decisiones de fondo al resolver.** En el catálogo y en el listado de productos, la madre había reestructurado el HTML y descuentos traía la versión anterior completa más sus añadidos; se conservó la estructura de la madre y se **injertaron** solo las piezas de promoción (sticker sobre la foto, precio tachado, badge de oferta), en vez de aceptar el bloque entero y perder el rediseño. En el controlador de descuentos convivían dos estilos de validación: los helpers `normalizarDescuento`/`validarDescuento` de la madre y las validaciones inline de descuentos. Se quedaron los helpers —cubren todo lo inline y son más estrictos, incluido el tope de 100%— y se conservaron encima las reglas que solo existen en descuentos (una promoción no admite envío gratis y siempre apunta a categoría o producto). El editar quedó con la lista blanca de campos de la madre, **ampliada** con los cinco campos de destino de la promoción: sin eso, editar una promoción habría descartado su categoría o producto en silencio.
+
+**Dos endurecimientos, no parches.** La prueba del tope 100% comparaba el texto exacto del mensaje y ahora responde el del helper. Cambiar el string y seguir no bastaba: dos de sus cuatro casos afirmaban "el mensaje NO es el del tope", así que con el texto desalineado **habrían pasado por vacío**, sin poder detectar una regresión nunca más. Se alineó el mensaje y los cuatro casos pasaron a preguntar por status y mensaje juntos, de modo que si el texto vuelve a cambiar fallan los dos primeros y obligan a corregirlo. Aparte, el código se guardaba sin recortar espacios mientras el editar sí recortaba: un código creado con un espacio de más nunca habría casado al redimirse. Se recortó al crear y al aplicar.
+
+**Verificación:** frontend `npm run build` exit 0, sin errores. Backend, las cuatro suites de la propia rama de descuentos en verde: money-path 26/26, vigencia Bogotá 7/7, precio de línea con promo 12/12, tope 100% 4/4.
+
+**Colisiones de numeración que quedan abiertas (no se tocaron).** Al unir los roadmaps, `009` y `010` existen en ambas ramas con contenidos distintos: `009-whatsapp-kapso-notifications-marco` vs `009-customer-metrics-detalle-cliente`, y `010-venta-asistida-impuestos-congruencia` vs `010-assisted-sale-discounts-promotions` (y ya había un tercer `010-notificaciones-pedido-unificadas`). El precedente del proyecto es renumerar al mergear, pero eso implica renombrar carpetas de specs y sus referencias en ambos repos, así que **se dejó marcado con ⚠️ en el roadmap y la renumeración queda como decisión pendiente**, no se hizo por cuenta propia. Lo mismo con `D-044` a `D-047`, que cada rama usó para decisiones distintas: ambas bitácoras se conservaron completas.
+
+**Daño preexistente encontrado y reparado.** El contrato ya venía con marcadores de conflicto de un `git stash pop` **commiteados** en la rama madre (`<<<<<<< Updated upstream` … `>>>>>>> Stashed changes`), congelando 391 líneas de bitácora entre ellos. No lo causó este merge. Se quitaron solo los marcadores y se conservó el contenido de ambos lados, sin perder nada; queda visible que `D-137` está usado dos veces con contenidos distintos.
+
+**Lo que NO entró.** Durante el merge del backend, tres archivos de otra sesión en curso (`controllers/inventory.js`, `services/inventoryService.js` y un script nuevo `scripts/backfill-idbodega-movimientos.js`, todos sobre la convención de `idBodega` en movimientos) estaban sin commitear y quedaron arrastrados por un `git add -A`. Se sacaron del commit de merge y se devolvieron al working tree tal como estaban, sin commitear: es un cambio de inventario, y esos van de a uno y con spec aprobada.
+
+**Verificación final antes de subir.** Build de producción del frontend exit 0 (los cuatro "error" del log son warnings: el hack de estrella de IE7 en un CSS de vendor, preexistente). Backend: 17 archivos sin errores de sintaxis y las cuatro suites en verde. Se cruzaron las rutas de descuentos que llama el frontend contra las que expone el router del backend —los siete calzan exactos, y los siete pasan por el middleware de auth—, porque cada repo se mergeó por separado. Se eliminó `imagenpromo.webp`, un archivo de 26 KB que la rama de descuentos dejó suelto en la raíz del repositorio sin una sola referencia. Los métodos que se conservaron de ambos lados en el carrito se verificaron en uso; no quedó código muerto, marcadores ni archivos `.orig`/`.rej`.
+
+**Estado:** ambos repos subidos. Frontend pusheado a `feature/venta-asistida-mejorada` (`1c06c135`). El backend lo subió una **sesión paralela trabajando sobre el mismo working copy**: pusheó `5c5233d` —la versión del merge que todavía cargaba los tres archivos de inventario— y luego hizo `reset` a `origin`, descartando el `97bde30` ya limpio. El contenido quedó correcto (se verificó una a una que las resoluciones sobrevivieran, incluida la variable inexistente que reventaba el catálogo por bodega), pero el commit de merge del backend **queda con los tres archivos de inventario adentro**; no se reescribió porque es historia ya publicada en la rama de producción y hay otra sesión trabajando encima. Nada se desplegó: subir no despliega, el backend en EC2 se actualiza a mano. Puntos de retorno locales en `backup/pre-merge-descuentos-front` y `backup/pre-merge-descuentos-back`.
+
+#### Adenda D-142 (2026-07-30) — Cierre completo: ninguna ruta de productos queda sin auth
+
+Segunda y última tanda. Se cerraron `/all/filter/paginated` y `/all/filter/count`, que se habían dejado fuera del primer cambio por ser el catálogo de alto tráfico — no valía la pena arriesgar el listado de productos de todas las empresas en la misma tanda.
+
+**Se confirmó antes de tocarlos** que el cierre anterior no había roto nada: cero rechazos por autenticación en los logs de producción desde ese deploy, y cero llamadas sin token a los seis ya cerrados. Estos dos registraban 2 y 0 llamadas, ambas desde un navegador vía nginx.
+
+**Verificado tras desplegar** (`79536e7`): los **ocho** endpoints responden 401 sin token, y con token el catálogo sigue devolviendo sus 20 productos por página, el conteo responde y la búsqueda rápida también. Ya no queda ninguna ruta sin `auth` en `routers/productos.js`.
+
+#### Adenda D-144 (2026-07-30) — Estado desplegado y verificado
+
+**Backend** en `79536e7`. **Frontend** en `2026.07.30.6`, con el CDN de imágenes y la vitrina de catálogos confirmados **dentro de los chunks servidos** (no solo en el build local: se resolvió el mapa del runtime y se buscó en los chunks, porque los módulos son lazy y no viven en `main`).
+
+**El link público del catálogo funciona de punta a punta**: la página responde 200, el endpoint devuelve los productos con su precio, y las fotos cargan de verdad — `image/jpeg` e `image/png`, no el HTML que devolvía el rewrite antes del arreglo.
+
+**Aviso sobre sesiones paralelas.** Durante esta sesión, otra sesión sobre la misma rama: (1) incluyó cambios míos sin commitear dentro de un commit suyo, perdiendo el mensaje que explicaba el defecto de `idBodega`; y (2) rehízo el merge, dejando mi copia local **con el defecto de vuelta** mientras `origin` tenía la versión correcta. Se detectó comparando ambos lados campo por campo antes de desplegar. Aprendizaje: en repos con sesiones paralelas hay que commitear los archivos propios **apenas se editan**, y verificar `origin` contra el working copy antes de dar nada por subido.
+
+### 2026-07-30 — D-145: Blindaje anti-duplicados en facturación Siigo (timeout DIAN generaba facturas duplicadas timbradas)
+
+**Incidente (hoy, 20:39–21:07 UTC, OH MY STORE):** el `POST /v1/invoices` de Siigo (que timbra en DIAN con `stamp.send=true`) se demoró más de los 30s de timeout. El resto del API de Siigo respondía normal — el problema era solo la emisión DIAN. Consecuencias: (1) el retry automático del provider re-POSTeaba una operación **no idempotente** — el 409 `duplicated_document` de ORE-000515 probó que el primer POST sí había creado la factura; (2) el asesor reintentó ORE-000514 seis veces (hasta ~24 POSTs) generando duplicadas que hubo que anular manualmente en Siigo; (3) nada de esto quedó registrado en Katuq — solo logs pm2 y una notificación RTDB con mensaje engañoso ("verifica los datos del cliente").
+
+**Decisión — 5 piezas en el backend (`accountingManager.js`, `siigoProvider.js`, `accountingController.js`):**
+
+1. **Lock transaccional por pedido** en `createInvoiceFromOrder`: rechaza con `ALREADY_INVOICED` si el pedido ya tiene `facturacionElectronica.invoiceId`, y con `INVOICING_IN_PROGRESS` si hay un `facturacionEnProceso` con menos de 3 min. Se libera al terminar (éxito o error).
+2. **POST de factura con timeout de 120s y `retryAttempts: 0`** (`config.invoiceTimeout` para override por empresa). `#makeRequest` ahora acepta `retryAttempts: 0` como valor válido (antes el `||` lo colapsaba a 3). El retry con backoff queda solo para operaciones idempotentes.
+3. **Recuperación post-fallo**: ante `NETWORK_ERROR` o `DUPLICATED_DOCUMENT`, antes de reportar error se busca en Siigo (`listInvoices` por cliente + fecha Colombia + total) y si la factura ya existe se vincula al pedido como éxito con flag `recovered: true`.
+4. **409 categorizado como `DUPLICATED_DOCUMENT`** en `#categorizeError` (antes caía en `UNKNOWN_ERROR`).
+5. **Telemetría persistente**: colección `accounting_invoice_errors` (company, orderId, nroPedido, provider, type error/recovered, errorCode, mensaje) + la notificación `INVOICE_FAILED` ahora dice la causa real y distingue los guards (warning) de los errores (danger).
+
+Aplica también a World Office (el lock vive en el manager); la recuperación por búsqueda es solo Siigo por ahora.

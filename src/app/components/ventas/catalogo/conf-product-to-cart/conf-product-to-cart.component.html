@@ -868,7 +868,7 @@
                                                             [ngClass]="{ 'active': item?.seleccionado }">
                                                             <div class="media d-flex align-items-center">
 
-                                                                <img [src]="item.imagenPrincipal?.[0]?.urls || 'assets/images/other-images/sinimagen.webp'"
+                                                                <img [src]="item.imagenPrincipal?.[0]?.urls | imagenProducto"
                                                                     [alt]="item.titulo" appImageOptimizer
                                                                     [quality]="0.3" [width]="300" [height]="300"
                                                                     [lazy]="true" loading="lazy" priority

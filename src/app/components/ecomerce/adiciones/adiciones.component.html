@@ -67,7 +67,7 @@
                                         <div class="col-md-3 item"
                                             *ngFor="let img of additionForm.value.imagenPrincipal; let i = index">
                                             <div class="card" style="width: 10rem;">
-                                                <img src="{{img.urls}}" class="card-img-top" alt="Image"
+                                                <img src="{{img.urls | imagenProducto}}" class="card-img-top" alt="Image"
                                                     style="width: 100%; height: auto;">
                                                 <button class="btn btn-danger btn-sm" (click)="deleteImg(img.path, i)">
                                                     {{'Eliminar' | translate}}

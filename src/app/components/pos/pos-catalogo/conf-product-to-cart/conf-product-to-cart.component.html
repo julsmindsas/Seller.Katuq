@@ -691,7 +691,7 @@
                                                                 [ngClass]="{ 'active': item?.seleccionado }">
                                                                 <div class="media"><img
                                                                         class="align-self-center img-fluid img-60"
-                                                                        src="{{item.imagenPrincipal[0]?.urls}}" alt="#"
+                                                                        src="{{item.imagenPrincipal[0]?.urls | imagenProducto}}" alt="#"
                                                                         alt="#">
                                                                     <div class="media-body ms-3">
                                                                         <div class="product-name">

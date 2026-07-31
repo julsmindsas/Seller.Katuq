@@ -11,7 +11,7 @@
   <li class="mt-0" *ngFor="let item of cartData">
     <div class="d-flex position-relative">
       <img class="img-fluid rounded-circle me-3 img-60"
-        src="{{item?.producto?.crearProducto?.imagenesPrincipales[0].urls}}" alt="">
+        src="{{item?.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto}}" alt="">
       <div class="media-body">
         <span>{{item?.producto.crearProducto?.titulo}}</span>
         <!-- <p>Yellow(#fcb102)</p> -->

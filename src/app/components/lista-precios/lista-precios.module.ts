@@ -19,8 +19,10 @@ import { MenuModule } from 'primeng/menu';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ReactiveFormsModule } from '@angular/forms';
 
+import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 @NgModule({
   imports: [
+    ImagenProductoPipe,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

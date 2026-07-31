@@ -33,8 +33,10 @@ import { CustomPrimeNGWizardComponent } from "./custom-primeng-wizard/custom-pri
 import { WizardStepDirective } from "./custom-primeng-wizard/wizard-step.directive";
 import { StepsModule } from 'primeng/steps';
 
+import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 @NgModule({
   imports: [
+    ImagenProductoPipe,
     NgSelectModule,
     CommonModule,
     SharedModule,

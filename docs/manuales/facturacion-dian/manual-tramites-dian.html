@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Manual paso a paso para habilitar Katuq como software propio de facturación electrónica ante la DIAN.">
+  <title>Manual de trámites DIAN · Katuq</title>
+  <style>
+    :root {
+      --ink:#172033; --muted:#667085; --line:#dde3ec; --paper:#fff; --bg:#f4f7fb;
+      --navy:#132a5e; --blue:#2356ba; --blue-soft:#eaf0ff; --green:#147a57;
+      --green-soft:#e8f7f0; --amber:#a85f00; --amber-soft:#fff3dc; --red:#a8241a;
+      --red-soft:#ffebe9; --radius:16px; --shadow:0 16px 45px rgba(20,35,60,.08);
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;color:var(--ink);background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+    a{color:var(--blue);text-underline-offset:3px} button,input{font:inherit} button{cursor:pointer}
+    .shell{width:min(1080px,calc(100% - 32px));margin:auto}
+    .hero{padding:42px 0;color:#fff;background:linear-gradient(135deg,var(--navy),var(--blue) 62%,#187965)}
+    .kicker{font-size:.78rem;font-weight:850;letter-spacing:.11em;text-transform:uppercase;color:#dce7ff}
+    h1{max-width:800px;margin:12px 0 14px;font-size:clamp(2.2rem,5vw,4.2rem);line-height:1;letter-spacing:-.055em}
+    .hero p{max-width:780px;margin:0;color:#e7edff;font-size:1.06rem}
+    .hero-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.hero-meta span{padding:7px 11px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(255,255,255,.09);font-size:.82rem}
+    main{padding:26px 0 70px}
+    .actions{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;padding:13px 15px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.96);box-shadow:var(--shadow)}
+    .actions p{margin:0;color:var(--muted);font-size:.86rem}.actions div{display:flex;gap:8px}.actions button{padding:8px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;font-weight:750}.actions .primary{border-color:var(--blue);background:var(--blue);color:#fff}
+    .progress{margin-bottom:24px;padding:19px 20px;border-radius:var(--radius);background:#101f45;color:#fff}.progress-head{display:flex;justify-content:space-between;gap:12px}.progress strong{font-size:.95rem}.progress span{color:#99dec1;font-weight:850}.track{height:9px;margin-top:11px;border-radius:999px;background:rgba(255,255,255,.15);overflow:hidden}.fill{width:0;height:100%;background:linear-gradient(90deg,#76a3ff,#79dfb2);transition:width .25s}
+    .notice{margin:18px 0;padding:15px 17px;border-left:4px solid var(--amber);border-radius:11px;background:var(--amber-soft);color:#704000;font-size:.9rem}.notice strong{color:#613600}.notice.danger{border-color:var(--red);background:var(--red-soft);color:#7b251e}.notice.info{border-color:var(--blue);background:var(--blue-soft);color:#24457f}.notice.ok{border-color:var(--green);background:var(--green-soft);color:#195b45}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:24px 0}.panel,.step,.source{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow)}.panel{padding:20px}.panel h2{margin:0 0 9px;font-size:1.2rem}.panel ul{margin:0;padding-left:20px}.panel li{margin:6px 0;font-size:.9rem}
+    .section-title{margin:35px 0 13px}.section-title h2{margin:0;font-size:1.55rem;letter-spacing:-.035em}.section-title p{margin:5px 0 0;color:var(--muted);font-size:.92rem}
+    .steps{display:grid;gap:13px}.step{overflow:hidden;box-shadow:none}.step-head{display:grid;grid-template-columns:44px 1fr auto;gap:13px;align-items:center;padding:17px 18px}.num{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:var(--blue-soft);color:var(--blue);font-weight:900}.step h3{margin:0 0 3px;font-size:1.03rem}.meta{color:var(--muted);font-size:.8rem}.check{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:.78rem}.check input{width:21px;height:21px;accent-color:var(--green)}.step-body{padding:0 18px 18px 75px}.step-body p{margin:0 0 10px;font-size:.91rem}.step-body ol,.step-body ul{margin:8px 0 12px;padding-left:20px}.step-body li{margin:7px 0;font-size:.9rem}.step.done{border-color:#b9e5d0;background:var(--green-soft)}.step.done .num{background:var(--green);color:#fff}.step.done h3{text-decoration:line-through;text-decoration-color:#76b99c}
+    .evidence{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.evidence div{padding:11px;border:1px solid var(--line);border-radius:11px;background:#fbfcff}.evidence b{display:block;font-size:.76rem;color:var(--blue);text-transform:uppercase;letter-spacing:.05em}.evidence span{display:block;margin-top:4px;font-size:.82rem;color:var(--muted)}
+    table{width:100%;border-collapse:collapse;font-size:.86rem}th,td{padding:10px;border:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f1f4f8}.table-wrap{overflow:auto}.tag{display:inline-block;padding:3px 7px;border-radius:999px;background:var(--blue-soft);color:var(--blue);font-size:.7rem;font-weight:850}.secret{background:var(--red-soft);color:var(--red)}
+    .sources{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.source{padding:16px;box-shadow:none}.source b{display:block}.source p{margin:5px 0;color:var(--muted);font-size:.82rem}.source a{font-size:.82rem;font-weight:750}
+    footer{padding-top:30px;color:var(--muted);font-size:.78rem}
+    @media(max-width:760px){.split,.sources,.evidence{grid-template-columns:1fr}.step-head{grid-template-columns:42px 1fr}.check{grid-column:2}.step-body{padding-left:18px}.actions{position:static}}
+    @media print{body{background:#fff}.hero{padding:18px 0;color:#000;background:#fff;border-bottom:2px solid #111}.hero p,.kicker{color:#333}.hero-meta span{border-color:#aaa;background:#fff}.actions,.progress{display:none}.panel,.step,.source{box-shadow:none}.step{break-inside:avoid}.step-body{display:block}.notice{break-inside:avoid}a{color:#000}}
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="shell">
+      <div class="kicker">Manual oficial de trabajo · revisión 30 julio 2026</div>
+      <h1>Habilitar Katuq directo ante la DIAN.</h1>
+      <p>Guía operativa para el piloto de Katuq como software propio: qué debe hacer la empresa, qué hace el equipo técnico y qué evidencia conservar antes de emitir la primera factura real.</p>
+      <div class="hero-meta"><span>Desarrollo propio</span><span>8 facturas + 1 NC + 1 ND</span><span>Sin credenciales en chat</span><span>Imprimible a PDF</span></div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="actions">
+      <p>El avance se guarda únicamente en este navegador.</p>
+      <div><button type="button" id="reset">Reiniciar</button><button type="button" class="primary" id="print">Imprimir / PDF</button></div>
+    </div>
+    <section class="progress" aria-label="Avance del manual"><div class="progress-head"><strong>Avance de habilitación</strong><span id="progress-label">0 de 8</span></div><div class="track"><div class="fill" id="progress-fill"></div></div></section>
+
+    <div class="notice danger"><strong>Alcance del piloto:</strong> este manual parte de Katuq facturando sus propias ventas con su NIT. No se debe activar transmisión para empresas clientes hasta resolver formalmente si Katuq operará como software adquirido por cada empresa o si debe habilitarse como Proveedor Tecnológico.</div>
+    <div class="notice info"><strong>Corrección importante:</strong> no agregues manualmente la responsabilidad 52 como primer paso. Según la guía vigente de la DIAN, después de quedar HABILITADO se informa la fecha de inicio y el sistema actualiza automáticamente el RUT con esa responsabilidad.</div>
+
+    <section class="split">
+      <article class="panel"><h2>Responsabilidad de la empresa</h2><ul><li>Acceso al correo registrado en el RUT.</li><li>Ingreso al portal DIAN y MUISCA.</li><li>Compra y custodia del certificado digital.</li><li>Definir fecha de inicio, prefijos y rangos.</li><li>Aprobar la primera factura real.</li></ul></article>
+      <article class="panel"><h2>Responsabilidad de Katuq</h2><ul><li>Registrar/configurar el software acompañado por la empresa.</li><li>Generar, firmar y enviar el set técnico.</li><li>Corregir rechazos hasta estado HABILITADO.</li><li>Configurar ambientes, secretos y numeración.</li><li>Monitorear validaciones, rangos y vencimientos.</li></ul></article>
+    </section>
+
+    <div class="section-title"><h2>Ruta paso a paso</h2><p>El orden importa: la numeración productiva se solicita después de superar las pruebas y registrar el inicio de operación.</p></div>
+    <section class="steps" id="steps">
+      <article class="step"><div class="step-head"><div class="num">1</div><div><h3>Confirmar el NIT emisor y el modelo</h3><div class="meta">Decisión interna · antes de entrar a la DIAN</div></div><label class="check">Listo <input type="checkbox" aria-label="Completar paso 1"></label></div><div class="step-body"><p>Para el primer piloto, el emisor debe ser Katuq y todos los documentos deben llevar el NIT, razón social y certificado de Katuq.</p><ul><li>Confirmar representante legal y responsable del trámite.</li><li>Definir que el modo de operación será <strong>Software propio / Desarrollo propio</strong>.</li><li>No mezclar certificados, rangos ni credenciales de otra empresa.</li></ul><div class="evidence"><div><b>Evidencia</b><span>NIT y razón social confirmados.</span></div><div><b>Responsable</b><span>Representante y contador.</span></div><div><b>Entrega a Katuq</b><span>RUT vigente, sin secretos.</span></div></div></div></article>
+
+      <article class="step"><div class="step-head"><div class="num">2</div><div><h3>Verificar RUT y correo de acceso</h3><div class="meta">DIAN/MUISCA · trámite gratuito</div></div><label class="check">Listo <input type="checkbox" aria-label="Completar paso 2"></label></div><div class="step-body"><p>Revisa que el RUT tenga correctos los datos del representante legal o contribuyente, especialmente el correo electrónico. El token de acceso llegará a ese correo.</p><ol><li>Ingresa a <a href="https://muisca.dian.gov.co" target="_blank" rel="noopener">MUISCA</a>.</li><li>Descarga el RUT vigente y verifica razón social, NIT, dirección, actividad y correo.</li><li>Si el correo está desactualizado, corrígelo antes de continuar.</li></ol><div class="notice info"><strong>No forzar la responsabilidad 52:</strong> la DIAN la agrega automáticamente con la fecha de inicio después de la habilitación.</div></div></article>
+
+      <article class="step"><div class="step-head"><div class="num">3</div><div><h3>Adquirir el certificado digital</h3><div class="meta">Entidad certificadora acreditada por ONAC · costo variable</div></div><label class="check">Listo <input type="checkbox" aria-label="Completar paso 3"></label></div><div class="step-body"><p>El desarrollo propio necesita un certificado de firma digital vigente. Debe permitir firma automatizada y contener la llave privada.</p><ul><li>Solicita un certificado para la empresa o firmante correspondiente, apto para facturación electrónica.</li><li>Pide formato software <strong>.p12 o .pfx</strong>, no un token USB.</li><li>Verifica vigencia, cadena de certificación, no repudio y acceso a CRL.</li><li>Guarda archivo y contraseña separados en un gestor de secretos.</li></ul><div class="notice danger"><strong>Nunca envíes el certificado o contraseña por chat, WhatsApp, correo abierto ni los subas a Git.</strong></div></div></article>
+
+      <article class="step"><div class="step-head"><div class="num">4</div><div><h3>Registrarse y configurar el modo de operación</h3><div class="meta">Portal de Habilitación DIAN · requiere token por correo</div></div><label class="check">Listo <input type="checkbox" aria-label="Completar paso 4"></label></div><div class="step-body"><ol><li>Ingresa al <a href="https://catalogo-vpfe-hab.dian.gov.co/User/Login" target="_blank" rel="noopener">portal de Habilitación</a> como empresa o persona.</li><li>Solicita el token y abre el enlace recibido en el correo del RUT.</li><li>Formaliza el registro como facturador.</li><li>Sal y vuelve a entrar para que el sistema actualice el estado.</li><li>En <strong>Participantes → Facturador → Configurar modos de operación</strong>, agrega Software propio/Desarrollo propio y registra Katuq.</li></ol><p>El sistema genera rangos de prueba y presenta la información técnica del software.</p></div></article>
+
+      <article class="step"><div class="step-head"><div class="num">5</div><div><h3>Guardar el paquete de habilitación</h3><div class="meta">Salida del portal · canal seguro</div></div><label class="check">Listo <input type="checkbox" aria-label="Completar paso 5"></label></div><div class="step-body"><p>Conserva exactamente los datos mostrados por el portal. No deben quedar en capturas públicas ni conversaciones.</p><div class="table-wrap"><table><thead><tr><th>Dato</th><th>Uso</th><th>Protección</th></tr></thead><tbody><tr><td>Software ID</td><td>Identifica el software ante DIAN.</td><td><span class="tag secret">SECRETO</span></td></tr><tr><td>PIN del software</td><td>Genera el SoftwareSecurityCode.</td><td><span class="tag secret">SECRETO</span></td></tr><tr><td>TestSetId</td><td>Asocia los envíos al set oficial.</td><td><span class="tag">RESTRINGIDO</span></td></tr><tr><td>Rangos de prueba / URL</td><td>Configura el ambiente de habilitación.</td><td><span class="tag">RESTRINGIDO</span></td></tr><tr><td>Certificado y contraseña</td><td>Firma UBL y mensajes SOAP.</td><td><span class="tag secret">SECRETO CRÍTICO</span></td></tr></tbody></table></div></div></article>
+
+      <article class="step"><div class="step-head"><div class="num">6</div><div><h3>Ejecutar el set oficial de pruebas</h3><div class="meta">Lo ejecuta Katuq · ambiente de habilitación</div></div><label class="check">Listo <input type="checkbox" aria-label="Completar paso 6"></label></div><div class="step-body"><p>La guía DIAN vigente publica para desarrollo propio un set de <strong>8 facturas electrónicas, 1 nota débito y 1 nota crédito</strong>, validadas sin error.</p><ol><li>Katuq genera y firma los UBL con el certificado del emisor.</li><li>Empaqueta los XML y consume <strong>SendTestSetAsync</strong> con el TestSetId.</li><li>Con el ZipKey consulta <strong>GetStatusZip</strong>.</li><li>Corrige reglas rechazadas y repite hasta completar el set consecutivamente.</li><li>En el portal se confirma el cambio de Registrado a <strong>HABILITADO</strong>.</li></ol><div class="notice ok"><strong>Salida obligatoria:</strong> evidencia del set HABILITADO y relación de documentos aceptados. Un HTTP 200 o un ZipKey por sí solos no demuestran habilitación.</div></div></article>
+
+      <article class="step"><div class="step-head"><div class="num">7</div><div><h3>Informar inicio y obtener numeración productiva</h3><div class="meta">Solo después de quedar HABILITADO</div></div><label class="check">Listo <input type="checkbox" aria-label="Completar paso 7"></label></div><div class="step-body"><ol><li>En Habilitación, registra la <strong>fecha de inicio de operación</strong>. La DIAN actualiza automáticamente el RUT con responsabilidad 52.</li><li>En MUISCA solicita autorización para <strong>Factura Electrónica de venta</strong> y <strong>Factura de talonario o papel para contingencia</strong>.</li><li>Descarga la autorización y verifica número, prefijo, rango y vigencia.</li><li>En el portal “Facturando Electrónicamente”, usa <strong>Asociar prefijos</strong> para el rango electrónico.</li><li>Configura el rango de talonario de contingencia directamente en Katuq.</li><li>Consulta/obtén la <strong>clave técnica</strong> de cada rango electrónico y guárdala como secreto.</li></ol><div class="notice info"><strong>Vigencia:</strong> la autorización de numeración tiene una vigencia máxima de dos años. Si el rango se agota, debe solicitarse una nueva autorización.</div></div></article>
+
+      <article class="step"><div class="step-head"><div class="num">8</div><div><h3>Activar producción con una factura controlada</h3><div class="meta">Sesión conjunta empresa + Katuq</div></div><label class="check">Listo <input type="checkbox" aria-label="Completar paso 8"></label></div><div class="step-body"><ul><li>Separar configuración y secretos de habilitación y producción.</li><li>Validar certificado, Software ID/PIN, clave técnica, resolución y consecutivo inicial.</li><li>Emitir una factura real de bajo riesgo y esperar respuesta <strong>válida</strong> de la DIAN.</li><li>Verificar CUFE, ApplicationResponse, XML firmado, PDF/QR y entrega al comprador.</li><li>Confirmar auditoría, alertas de certificado y alertas de consumo/vencimiento de rango.</li><li>Probar nota crédito asociada antes de declarar finalizado el piloto.</li></ul><div class="notice danger"><strong>No-go:</strong> no entregar una factura como “validada por la DIAN” si la respuesta está pendiente, rechazada o no puede verificarse.</div></div></article>
+    </section>
+
+    <div class="section-title"><h2>Paquete final que debe quedar archivado</h2><p>La empresa conserva los documentos legales; Katuq conserva configuración y secretos en almacenes separados.</p></div>
+    <section class="table-wrap"><table><thead><tr><th>Elemento</th><th>Quién lo obtiene</th><th>Dónde debe quedar</th></tr></thead><tbody><tr><td>RUT vigente y evidencia de responsabilidad 52 posterior al inicio</td><td>Empresa</td><td>Archivo tributario de la empresa</td></tr><tr><td>Certificado .p12/.pfx y contraseña</td><td>Empresa</td><td>Gestor de secretos, separados</td></tr><tr><td>Software ID, PIN y TestSetId</td><td>Empresa + Katuq</td><td>Secretos/configuración por ambiente</td></tr><tr><td>Evidencia del set HABILITADO</td><td>Katuq</td><td>Expediente del piloto</td></tr><tr><td>Autorización de numeración y contingencia</td><td>Empresa</td><td>Archivo tributario + configuración</td></tr><tr><td>Clave técnica y rangos asociados</td><td>Empresa + Katuq</td><td>Gestor de secretos/configuración</td></tr><tr><td>Primera factura, XML, PDF y respuesta DIAN</td><td>Katuq</td><td>Auditoría fiscal del documento</td></tr></tbody></table></section>
+
+    <div class="section-title"><h2>Fuentes oficiales consultadas</h2><p>Consulta realizada el 30 de julio de 2026. Las pantallas de DIAN pueden cambiar; las obligaciones se validan contra la norma y el anexo vigentes.</p></div>
+    <section class="sources">
+      <article class="source"><b>Proceso de registro y habilitación</b><p>Registro, token, modo de operación, rangos de prueba, fecha de inicio, numeración y prefijos.</p><a href="https://www.dian.gov.co/impuestos/factura-electronica/como-hacerlo/Paginas/ser-facturador-electronico.aspx" target="_blank" rel="noopener">Abrir DIAN ↗</a></article>
+      <article class="source"><b>Requerimientos para ser facturador</b><p>Ruta exacta del portal, set 8+1+1 y actualización automática del RUT.</p><a href="https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/requerimientos-para-ser-facturador-electronico/" target="_blank" rel="noopener">Abrir requisitos ↗</a></article>
+      <article class="source"><b>Documentación técnica v1.9</b><p>Anexo, caja de herramientas 2026 y guía de consumo de Web Services.</p><a href="https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/documentacion-tecnica/" target="_blank" rel="noopener">Abrir documentación ↗</a></article>
+      <article class="source"><b>Norma compilada</b><p>Numeración, claves técnicas, facturador directo y requisitos de Proveedor Tecnológico.</p><a href="https://normograma.dian.gov.co/dian/compilacion/docs/resolucion_dian_0227_2025.htm" target="_blank" rel="noopener">Abrir Resolución 227 de 2025 ↗</a></article>
+    </section>
+
+    <footer>Manual operativo Katuq · No reemplaza asesoría tributaria o jurídica · No contiene ni debe contener credenciales reales.</footer>
+  </main>
+
+  <script>
+    (function(){
+      var key='katuq-dian-manual-tramites-v1';
+      var boxes=Array.prototype.slice.call(document.querySelectorAll('#steps input[type="checkbox"]'));
+      var saved=[]; try{saved=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){saved=[]}
+      boxes.forEach(function(box,index){if(saved[index])box.checked=true;box.addEventListener('change',function(){store();render()})});
+      function store(){try{localStorage.setItem(key,JSON.stringify(boxes.map(function(box){return box.checked})))}catch(e){}}
+      function render(){var done=boxes.filter(function(box){return box.checked}).length;var percent=Math.round(done/boxes.length*100);document.getElementById('progress-label').textContent=done+' de '+boxes.length;document.getElementById('progress-fill').style.width=percent+'%';boxes.forEach(function(box){box.closest('.step').classList.toggle('done',box.checked)})}
+      document.getElementById('print').addEventListener('click',function(){window.print()});
+      document.getElementById('reset').addEventListener('click',function(){boxes.forEach(function(box){box.checked=false});store();render()});
+      render();
+    }());
+  </script>
+</body>
+</html>

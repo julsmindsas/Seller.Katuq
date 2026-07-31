@@ -599,8 +599,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         // Quitar la dirección de facturación
         this.pedidoGral.facturacion = undefined;
         
-        // Recalcular el costo de envío (domicilio) si es necesario
-        if (this.pedidoGral.envio && this.pedidoGral.envio.zonaCobro) {
+        // Recalcular el costo de envío (domicilio) si es necesario.
+        // G2 (spec 010): un código de envío gratis fuerza el envío a 0.
+        if (this.pedidoGral?.descuentoAplicado?.tipo === 'envio_gratis') {
+          this.pedidoGral.totalEnvio = 0;
+        } else if (this.pedidoGral.envio && this.pedidoGral.envio.zonaCobro) {
           // Si hay zona de cobro, recalcular el costo de envío
           this.pedidoGral.totalEnvio = this.calcularCostoEnvio(this.pedidoGral.envio.zonaCobro);
         } else {

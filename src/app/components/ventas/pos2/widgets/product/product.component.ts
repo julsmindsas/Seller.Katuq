@@ -6,6 +6,7 @@ import { MaestroService } from '../../../../../shared/services/maestros/maestro.
 import { InventarioService } from '../../../../../shared/services/inventarios/inventario.service';
 import { ImageOptimizerDirective } from '../../../../../shared/directives/image-optimizer.directive';
 import { ImageCacheService } from '../../../../../shared/services/image-cache.service';
+import { imagenDeProducto } from '../../../../../shared/utils/imagen-producto';
 
 /** Máximo de filas del desplegable de autocompletado. */
 const LIMITE_SUGERENCIAS = 8;
@@ -716,15 +717,8 @@ export class ProductComponent implements OnInit, OnDestroy {
    * @returns URL de la imagen o imagen por defecto si no existe
    */
   getProductImageUrl(product: any): string {
-    // Verificar que existan todas las propiedades necesarias
-    if (product?.crearProducto?.imagenesPrincipales && 
-        Array.isArray(product.crearProducto.imagenesPrincipales) &&
-        product.crearProducto.imagenesPrincipales.length > 0 &&
-        product.crearProducto.imagenesPrincipales[0]?.urls) {
-      return product.crearProducto.imagenesPrincipales[0].urls;
-    }
-    
-    // Si no hay imagen disponible, retornar imagen por defecto
-    return this.defaultImage;
+    // La ruta que guarda Osmosis es relativa y no carga servida tal cual:
+    // `imagenDeProducto` la resuelve contra el CDN. Ver shared/utils.
+    return imagenDeProducto(product, this.defaultImage);
   }
 }

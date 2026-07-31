@@ -42,8 +42,10 @@ import { CentralAbastecimientoComponent } from './central-abastecimiento/central
 import { BodegaDetalleComponent } from './bodega-detalle/bodega-detalle.component';
 import { SiigoBodegaMappingComponent } from './siigo-bodega-mapping/siigo-bodega-mapping.component';
 
+import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 @NgModule({
     imports: [
+    ImagenProductoPipe,
         InventariosRoutingModule,
         ImportModalModule,
         CommonModule,
