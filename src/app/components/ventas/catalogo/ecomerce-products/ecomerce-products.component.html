@@ -218,6 +218,12 @@
                                        [checked]="soloConStock" (change)="toggleSoloConStock()">
                                 <label class="form-check-label" for="soloConStockSwitch">{{ 'Solo con stock' | translate }}</label>
                             </div>
+                            <div class="form-check form-switch d-inline-block ms-3 align-middle"
+                                 title="Los productos no inventariables no se asignan a una bodega">
+                                <input class="form-check-input" type="checkbox" id="mostrarNoInventariablesSwitch"
+                                       [checked]="mostrarNoInventariables" (change)="toggleMostrarNoInventariables()">
+                                <label class="form-check-label" for="mostrarNoInventariablesSwitch">Mostrar no inventariables</label>
+                            </div>
                         </div>
 
                         <div class="col-md-6 text-right">
@@ -234,7 +240,7 @@
                                 {{ 'Resultados' | translate }}
                             </span>
                             <!-- Hint: solo productos con stock para esta bodega -->
-                            <i *ngIf="!cargandoProductos && bodega?.idBodega && (totalProductos > 0 || productosPaginados?.length > 0)"
+                            <i *ngIf="!cargandoProductos && bodega?.idBodega && !mostrarNoInventariables && (totalProductos > 0 || productosPaginados?.length > 0)"
                                class="fa fa-info-circle text-info ms-1"
                                ngbTooltip="Solo se muestran productos con stock disponible en la bodega seleccionada. Si esperás ver más productos del catálogo, cambiá de bodega o revisá el módulo de inventario."
                                placement="bottom"></i>

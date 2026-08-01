@@ -101,6 +101,13 @@ export class EcomerceProductsComponent
   // 8.2k productos → ~2.3k con stock) y evita ofrecer productos invendibles.
   public soloConStock: boolean = true;
 
+  /**
+   * Los productos no inventariables no pertenecen a una bodega. Se mantienen
+   * ocultos por defecto para que no se mezclen con el catálogo de la bodega
+   * seleccionada; el vendedor puede incluirlos explícitamente cuando aplique.
+   */
+  public mostrarNoInventariables: boolean = false;
+
   // Cache de precio por categoría del cliente (evita parsear sessionStorage en cada CD cycle)
   private _cachedCategoriaClienteId: string | null = null;
   private _clienteCacheInitialized: boolean = false;
@@ -639,6 +646,7 @@ export class EcomerceProductsComponent
     filter.isChannelManual = true;
     filter.estado = 'activo';
     filter.onlyWithStock = this.soloConStock;
+    filter.includeNonInventariables = this.mostrarNoInventariables;
 
     // Guardar filtros actuales
     this.filtrosActuales = { ...filter };
@@ -706,6 +714,12 @@ export class EcomerceProductsComponent
   /** Toggle "Solo con stock": recarga el catálogo con/sin productos agotados */
   toggleSoloConStock(): void {
     this.soloConStock = !this.soloConStock;
+    this.filtrarProductos();
+  }
+
+  /** Toggle "Mostrar no inventariables": los incluye/excluye del catálogo de la bodega */
+  toggleMostrarNoInventariables(): void {
+    this.mostrarNoInventariables = !this.mostrarNoInventariables;
     this.filtrarProductos();
   }
 
@@ -850,6 +864,7 @@ export class EcomerceProductsComponent
       this.filtrosActuales.isChannelManual = true;
       this.filtrosActuales.estado = 'activo';
       this.filtrosActuales.onlyWithStock = this.soloConStock;
+      this.filtrosActuales.includeNonInventariables = this.mostrarNoInventariables;
     }
 
     this.filtrosActuales.searchTerm = searchTerm;
