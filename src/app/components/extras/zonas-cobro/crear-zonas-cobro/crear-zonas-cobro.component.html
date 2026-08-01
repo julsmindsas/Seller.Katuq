@@ -48,10 +48,17 @@
                 <option *ngFor="let depto of departamentosDane" [value]="depto">{{ depto }}</option>
               </select>
             </div>
-            <div class="col-md-3 d-flex align-items-end">
-              <span class="badge bg-info text-white p-2" *ngIf="zonasCorbroForm.get('ciudad').value !== 'Seleccione'">
-                <i class="fa fa-check"></i> {{ zonasCorbroForm.get('ciudad').value }}
-              </span>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                      [disabled]="!departamentoSeleccionado" (click)="agregarTodosDelDepartamento()"
+                      title="Agregar todos los municipios del departamento filtrado">
+                <i class="fa fa-plus"></i> Todos del depto.
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                      (click)="seleccionarTodosMunicipios()"
+                      title="Seleccionar todos los municipios del país">
+                <i class="fa fa-globe"></i> Todos ({{ totalMunicipios }})
+              </button>
             </div>
           </div>
 
@@ -79,23 +86,43 @@
 
           <hr *ngIf="usarDane">
 
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <label class="form-label" for="ciudad">Ciudad</label>&nbsp;
-              <span type="button" class="help" placement="top"
-                ngbPopover="{{'Selecciona la ciudad asociada a la zona de cobro.' | translate}}">
-                <i class="icon-help-alt fc-primary" style="cursor: pointer;"></i>
-              </span>
-              <!-- Select para ciudades de empresa (cuando no usa DANE) -->
-              <select class="form-control" id="ciudad" formControlName="ciudad" *ngIf="!usarDane">
-                <option value="Seleccione" selected disabled>Seleccione</option>
-                <option *ngFor="let item of ciudades" [value]="item.label">{{item.label}}</option>
-              </select>
-              <!-- Input readonly cuando usa DANE -->
-              <input class="form-control" type="text" formControlName="ciudad" readonly *ngIf="usarDane"
-                     placeholder="Seleccione un municipio arriba">
+          <!-- Municipios seleccionados (spec 011) -->
+          <div class="row mb-3">
+            <div class="col-12">
+              <label class="form-label">Municipios seleccionados ({{ totalSeleccionados() }})</label>
+
+              <!-- Modo empresa (sin DANE): elegir ciudad del catálogo y agregarla -->
+              <div class="input-group mb-2" *ngIf="!usarDane">
+                <select class="form-control" #ciudadEmpresa>
+                  <option value="">Seleccione una ciudad...</option>
+                  <option *ngFor="let item of ciudades" [value]="item.label">{{ item.label }}</option>
+                </select>
+                <button class="btn btn-outline-primary" type="button" (click)="agregarCiudadEmpresa(ciudadEmpresa.value)">
+                  <i class="fa fa-plus"></i> Agregar
+                </button>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2 p-2 border rounded" style="min-height:46px; max-height:160px; overflow-y:auto;">
+                <span *ngIf="totalSeleccionados() === 0" class="text-muted">Busca y agrega municipios arriba…</span>
+
+                <!-- Municipio base (edición): no removible -->
+                <span *ngIf="editando && municipioBase" class="badge bg-primary text-white p-2">
+                  <i class="fa fa-map-marker"></i> {{ municipioBase.nombre }}
+                  <small *ngIf="municipioBase.departamento"> - {{ municipioBase.departamento }}</small>
+                  <span class="ms-1" style="opacity:.7;">(principal)</span>
+                </span>
+
+                <!-- Municipios agregados: removibles -->
+                <span *ngFor="let m of municipiosSeleccionados" class="badge bg-secondary text-white p-2">
+                  {{ m.nombre }}<small *ngIf="m.departamento"> - {{ m.departamento }}</small>
+                  <i class="fa fa-times ms-2" style="cursor:pointer;" (click)="quitarMunicipio(m)"></i>
+                </span>
+              </div>
             </div>
-            <div class="col-md-4 mb-3">
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
               <label class="form-label" for="nombreZonaCobro">Nombre Zona Cobro</label>&nbsp;
               <span type="button" class="help" placement="top"
                 ngbPopover="{{'Ingresa el nombre de la zona de cobro.' | translate}}">
@@ -103,7 +130,7 @@
               </span>
               <input class="form-control" type="text" id="nombreZonaCobro" formControlName="nombreZonaCobro">
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-6 mb-3">
               <label class="form-label" for="valorZonaCobro">Valor Zona Cobro</label>&nbsp;
               <span type="button" class="help" placement="top"
                 ngbPopover="{{'Ingresa el valor base de la zona de cobro.' | translate}}">
@@ -153,7 +180,8 @@
   
   <div class="modal-footer">
     <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
-    <button type="button" class="btn btn-primary" (click)="editando ? editar() : guardar()" [disabled]="!zonasCorbroForm.valid">
-      <i class="icofont icofont-save"></i>&nbsp; {{ editando ? 'Guardar cambios' : 'Guardar' }}
+    <button type="button" class="btn btn-primary" (click)="editando ? editar() : guardar()" [disabled]="guardando || !puedeGuardar()">
+      <i class="icofont icofont-save"></i>&nbsp;
+      {{ guardando ? 'Guardando…' : (editando ? 'Guardar cambios' : ('Guardar' + (totalSeleccionados() > 1 ? ' (' + totalSeleccionados() + ')' : ''))) }}
     </button>
   </div>
