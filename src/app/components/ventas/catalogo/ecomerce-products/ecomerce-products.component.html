@@ -182,12 +182,12 @@
                 <div class="feature-products">
                     <div class="row align-items-center">
                         <div class="col-md-6 products-total">
-                            <div class="square-product-setting d-inline-block" (click)="toggleListView(false)">
+                            <div class="square-product-setting d-inline-block" [class.active]="!listView" (click)="toggleListView(false)">
                                 <a class="icon-grid grid-layout-view" href="javascript:void(0);">
                                     <i data-feather="grid"></i>
                                 </a>
                             </div>
-                            <div class="square-product-setting d-inline-block" (click)="toggleListView(true)">
+                            <div class="square-product-setting d-inline-block" [class.active]="listView" (click)="toggleListView(true)">
                                 <a class="icon-grid m-0 list-layout-view" href="javascript:void(0);">
                                     <i data-feather="list"></i>
                                 </a>
@@ -199,17 +199,14 @@
                                 </span>
                             </span>
                             <div class="grid-options-clean">
-                                <button class="grid-btn" [class.active]="col === '6'" (click)="gridColumn(6)" title="2 columnas">
-                                    <span class="grid-icon"><span></span><span></span></span>
-                                </button>
                                 <button class="grid-btn" [class.active]="col === '4'" (click)="gridColumn(4)" title="3 columnas">
                                     <span class="grid-icon"><span></span><span></span><span></span></span>
                                 </button>
                                 <button class="grid-btn" [class.active]="col === '3'" (click)="gridColumn(3)" title="4 columnas">
                                     <span class="grid-icon"><span></span><span></span><span></span><span></span></span>
                                 </button>
-                                <button class="grid-btn" [class.active]="col === '2'" (click)="gridColumn(2)" title="6 columnas">
-                                    <span class="grid-icon"><span></span><span></span><span></span><span></span><span></span><span></span></span>
+                                <button class="grid-btn" [class.active]="col === '5'" (click)="gridColumn(5)" title="5 columnas">
+                                    <span class="grid-icon"><span></span><span></span><span></span><span></span><span></span></span>
                                 </button>
                             </div>
                             <div class="form-check form-switch d-inline-block ms-3 align-middle"
@@ -313,11 +310,11 @@
                     </div>
                 </div>
 
-                <div class="product-wrapper-grid" [class.list-view]="listView"
+                <div class="product-wrapper-grid" [class.list-view]="listView" [class.grid-five-columns]="col === '5' && !listView"
                      [class.loading-overlay]="cargandoProductos && productosPaginados?.length > 0"
                      *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosPaginados?.length > 0">
                     <div class="row">
-                        <div [class]="'col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
+                        <div [class]="col === '5' ? 'catalog-product-col col-lg-3 col-md-4 col-sm-6 col-12' : 'catalog-product-col col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
                             *ngFor="let producto of productosPaginados; trackBy: trackByProducto">
                             <div class="card product-card-modern" [class.product-card-inactive]="producto.exposicion?.activar === false">
                                 <div class="product-box-modern">

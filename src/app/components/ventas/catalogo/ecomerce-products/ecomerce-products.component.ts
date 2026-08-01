@@ -11,8 +11,8 @@ import {
   SimpleChanges,
   OnDestroy,
 } from "@angular/core";
-import { Subject, of, forkJoin } from "rxjs";
-import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError, filter } from "rxjs/operators";
+import { Subject, of, forkJoin, EMPTY, Observable } from "rxjs";
+import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError, filter, expand, map, last } from "rxjs/operators";
 import { QuickViewComponent } from "../../quick-view/quick-view.component";
 import { VentasService } from "../../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
@@ -60,8 +60,8 @@ export class EcomerceProductsComponent
   @Input() mostrarBuscador: boolean = false;
 
   openSidebar: boolean = false;
-  col: string;
-  listView: any;
+  col: string = "3";
+  listView: boolean = false;
   productos: Producto[];
   categorias: any[];
   empresaActual: any;
@@ -132,6 +132,9 @@ export class EcomerceProductsComponent
 
   // Subject para carga de páginas — switchMap cancela requests anteriores automáticamente
   private pageRequest$ = new Subject<{ filters: any; page: number; pageSize: number }>();
+
+  /** Curso que inicia cada página para el conjunto actual de filtros. */
+  private coursePageCursors = new Map<number, string | null>([[1, null]]);
 
   // Cache de filtros actuales para paginación
   private filtrosActuales: any = null;
@@ -206,7 +209,7 @@ export class EcomerceProductsComponent
       this.initForm();
     }
     this.listView = false;
-    this.col = "2";
+    this.col = "3";
     this.obtenerFiltros();
     // Refrescar cache de cliente al recargar todo
     this.refreshClienteCache();
@@ -360,7 +363,8 @@ export class EcomerceProductsComponent
           this.errorCarga = null;
         }),
         switchMap(({ filters, page, pageSize }) =>
-          this.ventasService.getProductsByFilterPaginated(filters, page, pageSize).pipe(
+          this.obtenerPaginaServidor(filters, page, pageSize).pipe(
+            map(result => ({ response: result.response, requestedPage: result.page })),
             catchError(error => {
               console.error(`❌ Error cargando página ${page}:`, error);
               this.errorCarga = "Error al cargar productos. Intente nuevamente.";
@@ -376,13 +380,19 @@ export class EcomerceProductsComponent
         filter(response => response !== null),
         takeUntil(this.destroy$)
       )
-      .subscribe((response: any) => {
+      .subscribe(({ response, requestedPage }: any) => {
         this.productosPaginados = response.products || [];
         this.productos = this.productosPaginados;
         this.temp = [...this.productosPaginados];
         this.totalProductos = response.pagination?.totalItems || 0;
-        this.totalPaginas = response.pagination?.totalPages || 0;
-        this.paginaActual = response.pagination?.currentPage || 1;
+        // El conteo de una bodega puede ser una estimación. Si el cursor ya
+        // indicó que no hay más resultados, no ofrecemos páginas inexistentes.
+        this.totalPaginas = response.pagination?.hasNext === false
+          ? requestedPage
+          : response.pagination?.totalPages || 0;
+        // El API de bodega pagina por cursor. `currentPage` allí es una
+        // estimación, por lo que la fuente de verdad es la página solicitada.
+        this.paginaActual = requestedPage;
         this.cargandoProductos = false;
       });
 
@@ -650,6 +660,7 @@ export class EcomerceProductsComponent
 
     // Guardar filtros actuales
     this.filtrosActuales = { ...filter };
+    this.resetPageCursors();
 
     // Reiniciar a página 1 con nuevos filtros
     this.paginaActual = 1;
@@ -673,6 +684,54 @@ export class EcomerceProductsComponent
       page: pagina,
       pageSize: this.productosPorPagina,
     });
+  }
+
+  /** Reinicia el recorrido de cursores al cambiar filtros o tamaño de página. */
+  private resetPageCursors(): void {
+    this.coursePageCursors.clear();
+    this.coursePageCursors.set(1, null);
+  }
+
+  /**
+   * El endpoint es cursor-based: `page` por sí solo no cambia el resultado.
+   * Conservamos los cursores ya obtenidos y, si el usuario salta a una página
+   * aún no visitada, recorremos solo las páginas intermedias necesarias.
+   */
+  private obtenerPaginaServidor(filters: any, requestedPage: number, pageSize: number): Observable<{ response: any; page: number }> {
+    const knownPages = Array.from(this.coursePageCursors.keys())
+      .filter(page => page <= requestedPage);
+    const startPage = knownPages.length ? Math.max(...knownPages) : 1;
+
+    return this.solicitarPaginaConCursor(filters, startPage, pageSize).pipe(
+      expand(({ response, page }) => {
+        const nextCursor = response.pagination?.nextCursor;
+        if (nextCursor) {
+          this.coursePageCursors.set(page + 1, nextCursor);
+        }
+
+        if (page >= requestedPage || !nextCursor) {
+          return EMPTY;
+        }
+        return this.solicitarPaginaConCursor(filters, page + 1, pageSize);
+      }),
+      // Si el conteo estimado permitía saltar más allá de la última página,
+      // devolvemos la última página real en vez de dejar el catálogo cargando.
+      last(),
+    );
+  }
+
+  private solicitarPaginaConCursor(filters: any, page: number, pageSize: number): Observable<{ response: any; page: number }> {
+    const requestFilters = { ...filters };
+    const cursor = this.coursePageCursors.get(page);
+    if (cursor) {
+      requestFilters.cursor = cursor;
+    } else {
+      delete requestFilters.cursor;
+    }
+
+    return this.ventasService.getProductsByFilterPaginated(requestFilters, page, pageSize).pipe(
+      map(response => ({ response, page })),
+    );
   }
 
   /**
@@ -869,6 +928,7 @@ export class EcomerceProductsComponent
 
     this.filtrosActuales.searchTerm = searchTerm;
     this.paginaActual = 1;
+    this.resetPageCursors();
     this.cargarPaginaServidor(1);
   }
 
@@ -979,6 +1039,7 @@ export class EcomerceProductsComponent
    */
   cambiarProductosPorPagina(cantidad: number) {
     this.productosPorPagina = cantidad;
+    this.resetPageCursors();
     this.configurarPaginacion();
   }
 
