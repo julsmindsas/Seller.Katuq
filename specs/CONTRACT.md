@@ -2301,6 +2301,35 @@ Continúa D-139. Al probar el modal en el navegador aparecieron errores de conte
   - `GET /v1/productos/search/quick?q=...&limit=...&searchBy=all` (`controllers/productos.js:quickSearch`) — devuelve el producto completo con precio y **stock real ya inyectado** (`enrichProductsWithStock`, `disponibilidad.cantidadDisponible`). `searchBy=all` busca por referencia, título, marca o código de barras — más útil para un vendedor que el default histórico (`referencia` sola).
 - **UX nativa deliberadamente distinta al wizard web:** en vez de 3 pantallas separadas con "siguiente", el catálogo y el carrito viven en una sola pantalla con una barra flotante de carrito (patrón e-commerce estándar) — el wizard de pasos separados de la web no se portó literalmente, según el principio ya establecido de "menos pasos, pensado para una mano".
 - **Regla D-138 aplicada:** el subtotal por línea y el total del carrito son solo multiplicación/suma de precios que el backend ya resolvió (`precio.precioUnitarioConIva`) — no se deriva IVA, descuentos ni precio por tipo de cliente/volumen. Esa resolución real solo ocurre server-side una vez exista un pedido de verdad, que es checkout (fuera de esta entrega).
+
+### 2026-08-02 — D-147: El aviso de "celdas recortadas" al exportar productos era por etiquetas duplicadas, no por descripciones
+
+**Síntoma.** Exportando el catálogo de ALMARA salía el aviso: *"2 celdas superaban el máximo que admite Excel y se recortaron (ALM-3111, ALM-4178). No reimportes estas filas"*. El recorte a 32.767 caracteres (D-146) hacía su trabajo — el archivo se descargaba — pero dejaba dos filas no reimportables.
+
+**Diagnóstico contra datos reales, no por inspección de código.** La hipótesis inicial (descripciones con HTML del editor enriquecido e imágenes en base64, que es lo que decía el propio comentario de `recortarParaExcel`) resultó **falsa**: esos dos productos tienen descripciones de 903 y 1.007 caracteres, con **cero** `<img>` y cero base64. La celda que se pasaba de largo era **`Etiquetas (separadas por coma)`**, con 34.550 y 35.687 caracteres.
+
+**Causa raíz — un generador de IA que se trabó en un bucle.** Los 6 productos afectados del catálogo tienen entre 747 y 1.055 etiquetas, de las cuales solo 72 a 126 son distintas:
+
+| Ref | Etiquetas | Únicas | Último `date_edit` |
+|---|---|---|---|
+| ALM-3245 | 1.055 | 81 | 2026-02-12 |
+| ALM-2184 | 909 | 72 | 2026-05-22 |
+| ALM-000308 | 901 | 84 | 2026-02-12 |
+| ALM-4178 | 831 | 93 | 2026-02-12 |
+| ALM-000318 | 770 | 111 | 2025-01-31 |
+| ALM-3111 | 747 | 126 | 2026-02-12 |
+
+Las primeras 25 a 85 etiquetas son sensatas y todas distintas; a partir de ahí el generador cicla sobre una plantilla (`"regalo para el día del director de seguridad"` ×46, `"Regalo para personas que me hacen amar"` ×83) y la última queda cortada a media frase (`"regalo para el día del"`), señal de que la generación topó su propio límite. **No es un proceso que corrió varias veces**: se verificó que la lista no aparece repetida en bloque (el primer elemento no reaparece nunca). **Tampoco se escribieron a mano**: `crear-productos.component.ts:2110` deduplica al agregar con Enter. No se identificó el generador en el código actual — el único `autoTags` que existe (`shopify-product-upsert.action.js:330`) deduplica con `Set` y escribe del lado de Shopify, no en `exposicion.etiquetas`. Apunta a un enriquecimiento por IA anterior o un script de una sola vez.
+
+**Decisión: deduplicar en vez de truncar.** Quitar repetidos no pierde información; truncar sí corta contenido real.
+
+- `productos.component.ts` — nuevo helper `ProductosComponent.etiquetasUnicas()` (dedup preservando orden, con `trim` y descarte de vacíos), usado por la columna de etiquetas del export.
+- `import-modal.component.ts` — el mapeo de etiquetas de **productos** ahora deduplica, alineándolo con el importador de **clientes**, que ya lo hacía (`:428`). Era el único de los tres caminos (alta manual, import clientes, import productos) que no deduplicaba. Efecto colateral deseado: reimportar un export limpia el producto (747 → 126 etiquetas).
+- El recorte a 32.767 **se conserva como red de seguridad** — su valor original sigue vigente: sin él, una sola celda pasada de largo revienta el export completo del catálogo. Se corrigió su comentario, que atribuía la causa a las descripciones.
+
+**Verificación sobre los 25.506 productos de TODAS las empresas** (lectura pura, sin escrituras): antes, 2 celdas excedían el límite (ambas de ALMARA); después de deduplicar, **0**. ALM-4178 pasa de 35.687 → 3.088 caracteres y ALM-3111 de 34.550 → 4.327. Frontend compilando en verde.
+
+**Lo que NO se hizo, a propósito.** No se tocaron los 6 documentos en Firestore: son de un tenant productivo (ALMARA FELICIDAD) y limpiar el dato de origen es una escritura masiva que merece su propio script con `--dry-run`. Con la deduplicación en export e import, el síntoma desaparece sin tocar producción, y reimportar limpia el documento por el camino normal. Queda anotado como deuda: **(a)** los 6 productos siguen con etiquetas basura en base, y **(b)** no se identificó qué proceso las generó — si vuelve a correr, volverán a aparecer.
 - **Verificación:** BUILD SUCCEEDED; pantalla inicial de "Vender" confirmada por captura real en simulador. La búsqueda de cliente/catálogo se verificó **contra la API real por `curl`** (mismo shape que decodifican los modelos Swift), pero el recorrido completo de tap-buscar-agregar-ver carrito no se repitió con automatización de UI (ya documentada como intermitente en Xcode 27 beta). No se debe dar por "100% verificado end-to-end" hasta confirmar ese recorrido con Xcode estable o en dispositivo real.
 - **Estado del programa iOS a la fecha:** Cobro en calle (Cartera + Tesorería) ✅ verificado end-to-end real. Pedidos (lista + detalle) ✅ verificado con datos reales. Venta asistida mínima (cliente + catálogo + carrito) ✅ construida y verificada por capas (API real + render inicial), pendiente recorrido interactivo completo. Cuatro bugs reales encontrados y corregidos en total: hash de contraseña, entitlements de Keychain, URL con query string, labels PascalCase.
 
@@ -2427,7 +2456,7 @@ Con esto la Fase 1 de la Vía A del programa (`docs/app-nativa-operativa.md` §9
 > - **D-141** tiene dos entradas: "Descuento por producto (línea del carrito) en venta asistida" (2026-07-29, abajo — esta sesión, `openspec/changes/add-order-line-discount/`) y "Catálogos digitales compartibles por link, con carrito del comprador" (2026-07-29, abajo — sesión distinta, mergeada a `origin` mientras esta sesión trabajaba sin haber bajado cambios todavía).
 > - **D-142** tiene dos entradas: "Descuento por línea en PDF de orden de venta y correo/comanda de venta asistida" (2026-07-30, abajo — esta sesión, `openspec/changes/fix-order-line-discount-pdf-email/`, continuación directa de D-141 ×2 primera entrada) y "Se cierra el agujero de autenticación en `/v1/productos/*`" (2026-07-30, abajo — sesión distinta). Detectado al mezclar `origin/feature/venta-asistida-mejorada` con este trabajo — el número se había asignado en esta sesión sin haber bajado cambios todavía.
 > - **D-146** tiene dos entradas: "Merge de D-135/141/142 con la rama de descuentos/promociones..." (2026-07-30, abajo — esta sesión, registro del merge) y "El botón Guardar de productos fallaba siempre al primer click..." (2026-07-30, abajo — sesión distinta, mergeada a `origin` en un segundo round mientras esta sesión ya estaba resolviendo el primero).
-> Siguiente número libre: **D-147**.
+> Siguiente número libre: **D-148**.
 
 ### 2026-07-24 — D-135: Editar IVA manual de una línea de un pedido ya creado (propuesta pendiente)
 
