@@ -4064,13 +4064,10 @@ export class CrearVentasComponent
    * La bodega elegida NO se borra, para no perderla al volver.
    */
   onCatalogoSinInventarioChange(activo: boolean): void {
+    // Solo se cambia la bandera: el catálogo la recibe por @Input y reacciona
+    // solo. Asignarla también a mano sobre el hijo saltaría la detección de
+    // cambios de Angular y el modo no se recargaría.
     this.catalogoSinInventario = activo;
-
-    // El @Input del catálogo se actualiza solo; acá solo se replica el estado
-    // cuando el componente ya está instanciado.
-    if (this.productos) {
-      this.productos.soloNoInventariables = activo;
-    }
   }
 
   onWarehouseChange(event: Event): void {

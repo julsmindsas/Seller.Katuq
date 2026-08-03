@@ -397,6 +397,16 @@ export class EcomerceProductsComponent
         this.cargandoProductos = false;
       });
 
+    // Catálogo sin inventario: no depende de bodega ni ciudad, así que se
+    // carga en cuanto el componente arranca. Va acá y no en `ngOnChanges`
+    // porque recién en este punto existe la suscripción a `pageRequest$`
+    // (ver la nota del primer ciclo en `ngOnChanges`).
+    if (this.soloNoInventariables) {
+      this._initialLoadTriggered = true;
+      this.filtrarProductos();
+      return;
+    }
+
     // Inicializar y cargar productos si tenemos bodega y ciudad
     if (
       this.bodega &&
@@ -1095,7 +1105,13 @@ export class EcomerceProductsComponent
 
     // Al entrar o salir del catálogo sin inventario se recarga de una vez:
     // es un modo distinto, no un filtro más sobre lo ya cargado.
-    if (changes["soloNoInventariables"] && this.filterForm) {
+    //
+    // OJO con el primer ciclo: si el modo se activa sin bodega, el componente
+    // recién se crea acá, y `ngOnChanges` corre ANTES de `ngOnInit` — o sea,
+    // antes de que exista la suscripción a `pageRequest$`. Pedir la página en
+    // ese momento la manda a un Subject sin oyentes y se pierde: el catálogo
+    // se quedaba cargando para siempre. En ese caso la dispara `ngOnInit`.
+    if (changes["soloNoInventariables"] && !changes["soloNoInventariables"].firstChange && this.filterForm) {
       this.productosPaginados = [];
       this.totalProductos = 0;
       this.paginaActual = 1;
