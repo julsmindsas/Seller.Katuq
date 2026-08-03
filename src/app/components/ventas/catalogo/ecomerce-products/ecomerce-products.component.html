@@ -209,17 +209,14 @@
                                     <span class="grid-icon"><span></span><span></span><span></span><span></span><span></span></span>
                                 </button>
                             </div>
+                            <!-- "Solo con stock" no aplica al catálogo sin inventario:
+                                 esos productos se venden bajo pedido, no tienen unidades. -->
                             <div class="form-check form-switch d-inline-block ms-3 align-middle"
+                                 *ngIf="!soloNoInventariables"
                                  title="Ocultar productos sin unidades disponibles">
                                 <input class="form-check-input" type="checkbox" id="soloConStockSwitch"
                                        [checked]="soloConStock" (change)="toggleSoloConStock()">
                                 <label class="form-check-label" for="soloConStockSwitch">{{ 'Solo con stock' | translate }}</label>
-                            </div>
-                            <div class="form-check form-switch d-inline-block ms-3 align-middle"
-                                 title="Los productos no inventariables no se asignan a una bodega">
-                                <input class="form-check-input" type="checkbox" id="mostrarNoInventariablesSwitch"
-                                       [checked]="mostrarNoInventariables" (change)="toggleMostrarNoInventariables()">
-                                <label class="form-check-label" for="mostrarNoInventariablesSwitch">Mostrar no inventariables</label>
                             </div>
                         </div>
 
@@ -237,7 +234,7 @@
                                 {{ 'Resultados' | translate }}
                             </span>
                             <!-- Hint: solo productos con stock para esta bodega -->
-                            <i *ngIf="!cargandoProductos && bodega?.idBodega && !mostrarNoInventariables && (totalProductos > 0 || productosPaginados?.length > 0)"
+                            <i *ngIf="!cargandoProductos && bodega?.idBodega && !soloNoInventariables && (totalProductos > 0 || productosPaginados?.length > 0)"
                                class="fa fa-info-circle text-info ms-1"
                                ngbTooltip="Solo se muestran productos con stock disponible en la bodega seleccionada. Si esperás ver más productos del catálogo, cambiá de bodega o revisá el módulo de inventario."
                                placement="bottom"></i>
@@ -256,8 +253,9 @@
                     </div>
                 </div>
 
-                <!-- Mensajes informativos cuando faltan datos -->
-                <div *ngIf="!bodega || !bodega.idBodega" class="alert alert-warning mb-4">
+                <!-- Mensajes informativos cuando faltan datos. En el catálogo sin
+                     inventario no aplican: esos productos no dependen de bodega. -->
+                <div *ngIf="!soloNoInventariables && (!bodega || !bodega.idBodega)" class="alert alert-warning mb-4">
                     <div class="d-flex align-items-center">
                         <i class="fa fa-warehouse fa-2x me-3 text-warning"></i>
                         <div>
@@ -267,7 +265,7 @@
                     </div>
                 </div>
 
-                <div *ngIf="bodega && bodega.idBodega && (!ciudad || ciudad === 'seleccione' || ciudad.trim() === '')" class="alert alert-info mb-4">
+                <div *ngIf="!soloNoInventariables && bodega && bodega.idBodega && (!ciudad || ciudad === 'seleccione' || ciudad.trim() === '')" class="alert alert-info mb-4">
                     <div class="d-flex align-items-center">
                         <i class="fa fa-map-marker-alt fa-2x me-3 text-info"></i>
                         <div>
@@ -300,19 +298,20 @@
                 </div>
 
                 <!-- Mensaje cuando no hay productos -->
-                <div *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && !cargandoProductos && productosPaginados?.length === 0 && !errorCarga" class="alert alert-secondary mb-4">
+                <div *ngIf="(soloNoInventariables || (bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '')) && !cargandoProductos && productosPaginados?.length === 0 && !errorCarga" class="alert alert-secondary mb-4">
                     <div class="d-flex align-items-center">
                         <i class="fa fa-box-open fa-2x me-3 text-secondary"></i>
                         <div>
                             <h6 class="mb-1">{{ 'No hay productos disponibles' | translate }}</h6>
-                            <p class="mb-0">{{ 'No se encontraron productos para la bodega y ciudad seleccionadas' | translate }}</p>
+                            <p class="mb-0" *ngIf="!soloNoInventariables">{{ 'No se encontraron productos para la bodega y ciudad seleccionadas' | translate }}</p>
+                            <p class="mb-0" *ngIf="soloNoInventariables">{{ 'No hay productos sin inventario en el catálogo' | translate }}</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="product-wrapper-grid" [class.list-view]="listView" [class.grid-five-columns]="col === '5' && !listView"
                      [class.loading-overlay]="cargandoProductos && productosPaginados?.length > 0"
-                     *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosPaginados?.length > 0">
+                     *ngIf="(soloNoInventariables || (bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '')) && productosPaginados?.length > 0">
                     <div class="row">
                         <div [class]="col === '5' ? 'catalog-product-col col-lg-3 col-md-4 col-sm-6 col-12' : 'catalog-product-col col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
                             *ngFor="let producto of productosPaginados; trackBy: trackByProducto">

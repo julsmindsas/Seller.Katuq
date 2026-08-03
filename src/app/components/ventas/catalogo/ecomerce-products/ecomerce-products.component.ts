@@ -102,11 +102,12 @@ export class EcomerceProductsComponent
   public soloConStock: boolean = true;
 
   /**
-   * Los productos no inventariables no pertenecen a una bodega. Se mantienen
-   * ocultos por defecto para que no se mezclen con el catálogo de la bodega
-   * seleccionada; el vendedor puede incluirlos explícitamente cuando aplique.
+   * Modo "catálogo sin inventario": muestra SOLO los productos no
+   * inventariables (los que se venden bajo pedido). No dependen de ninguna
+   * bodega, por eso este modo no exige seleccionarla — se activa desde la
+   * barra de filtros, al lado de Bodega y Ciudad.
    */
-  public mostrarNoInventariables: boolean = false;
+  @Input() soloNoInventariables: boolean = false;
 
   // Cache de precio por categoría del cliente (evita parsear sessionStorage en cada CD cycle)
   private _cachedCategoriaClienteId: string | null = null;
@@ -623,40 +624,53 @@ export class EcomerceProductsComponent
   }
 
   filtrarProductos() {
-    // Validar que tengamos bodega y ciudad antes de hacer la petición
-    if (!this.bodega || !this.bodega.idBodega) {
-      console.warn("No hay bodega seleccionada para filtrar productos");
-      return;
-    }
+    // Modo "catálogo sin inventario": los productos no inventariables no
+    // pertenecen a ninguna bodega, así que acá NO se exige bodega. La ciudad
+    // sigue siendo opcional: si hay, filtra por cobertura de entrega.
+    if (!this.soloNoInventariables) {
+      // Validar que tengamos bodega y ciudad antes de hacer la petición
+      if (!this.bodega || !this.bodega.idBodega) {
+        console.warn("No hay bodega seleccionada para filtrar productos");
+        return;
+      }
 
-    if (
-      !this.ciudad ||
-      this.ciudad === "seleccione" ||
-      this.ciudad.trim() === ""
-    ) {
-      console.warn("No hay ciudad seleccionada para filtrar productos");
-      // Mostrar mensaje al usuario si es necesario
-      this.toastrService.warning(
-        "Por favor seleccione una ciudad antes de buscar productos",
-        "Ciudad requerida",
-      );
-      return;
+      if (
+        !this.ciudad ||
+        this.ciudad === "seleccione" ||
+        this.ciudad.trim() === ""
+      ) {
+        console.warn("No hay ciudad seleccionada para filtrar productos");
+        // Mostrar mensaje al usuario si es necesario
+        this.toastrService.warning(
+          "Por favor seleccione una ciudad antes de buscar productos",
+          "Ciudad requerida",
+        );
+        return;
+      }
     }
 
     const filter = this.filterForm.value;
-    filter.deliveryCity = { label: this.ciudad, value: this.ciudad };
+    if (this.ciudad && this.ciudad !== "seleccione" && this.ciudad.trim() !== "") {
+      filter.deliveryCity = { label: this.ciudad, value: this.ciudad };
+    }
     // El backend matchea por nombre de categoría (los productos no guardan un ID
     // de categoría, solo una copia del nombre). Si se eligió una categoría principal,
     // se incluyen también los nombres de sus subcategorías para que el filtro
     // muestre productos de toda la rama, no solo los asignados exactamente a ese nodo.
     filter.categoryLabels = this.collectCategoryLabels(filter.category);
     delete filter.category;
-    filter.bodega = this.bodega;
-    filter.bodegaId = this.bodega.idBodega || this.bodega;
+    if (this.soloNoInventariables) {
+      // Sin bodega: el backend resuelve el catálogo de no inventariables.
+      delete filter.bodega;
+      delete filter.bodegaId;
+      filter.soloNoInventariables = true;
+    } else {
+      filter.bodega = this.bodega;
+      filter.bodegaId = this.bodega.idBodega || this.bodega;
+      filter.onlyWithStock = this.soloConStock;
+    }
     filter.isChannelManual = true;
     filter.estado = 'activo';
-    filter.onlyWithStock = this.soloConStock;
-    filter.includeNonInventariables = this.mostrarNoInventariables;
 
     // Guardar filtros actuales
     this.filtrosActuales = { ...filter };
@@ -773,12 +787,6 @@ export class EcomerceProductsComponent
   /** Toggle "Solo con stock": recarga el catálogo con/sin productos agotados */
   toggleSoloConStock(): void {
     this.soloConStock = !this.soloConStock;
-    this.filtrarProductos();
-  }
-
-  /** Toggle "Mostrar no inventariables": los incluye/excluye del catálogo de la bodega */
-  toggleMostrarNoInventariables(): void {
-    this.mostrarNoInventariables = !this.mostrarNoInventariables;
     this.filtrarProductos();
   }
 
@@ -917,13 +925,18 @@ export class EcomerceProductsComponent
   private buscarConFiltrosPaginados(searchTerm: string): void {
     if (!this.filtrosActuales) {
       this.filtrosActuales = this.filterForm.value;
-      this.filtrosActuales.deliveryCity = { label: this.ciudad, value: this.ciudad };
-      this.filtrosActuales.bodega = this.bodega;
-      this.filtrosActuales.bodegaId = this.bodega?.idBodega || this.bodega;
+      if (this.ciudad && this.ciudad !== 'seleccione' && this.ciudad.trim() !== '') {
+        this.filtrosActuales.deliveryCity = { label: this.ciudad, value: this.ciudad };
+      }
+      if (this.soloNoInventariables) {
+        this.filtrosActuales.soloNoInventariables = true;
+      } else {
+        this.filtrosActuales.bodega = this.bodega;
+        this.filtrosActuales.bodegaId = this.bodega?.idBodega || this.bodega;
+        this.filtrosActuales.onlyWithStock = this.soloConStock;
+      }
       this.filtrosActuales.isChannelManual = true;
       this.filtrosActuales.estado = 'activo';
-      this.filtrosActuales.onlyWithStock = this.soloConStock;
-      this.filtrosActuales.includeNonInventariables = this.mostrarNoInventariables;
     }
 
     this.filtrosActuales.searchTerm = searchTerm;
@@ -1079,6 +1092,17 @@ export class EcomerceProductsComponent
   ngOnChanges(changes: SimpleChanges): void {
     const bodegaChanged = changes["bodega"] && !changes["bodega"].firstChange;
     const ciudadChanged = changes["ciudad"] && !changes["ciudad"].firstChange;
+
+    // Al entrar o salir del catálogo sin inventario se recarga de una vez:
+    // es un modo distinto, no un filtro más sobre lo ya cargado.
+    if (changes["soloNoInventariables"] && this.filterForm) {
+      this.productosPaginados = [];
+      this.totalProductos = 0;
+      this.paginaActual = 1;
+      this.filtrosActuales = null;
+      this.filtrarProductos();
+      return;
+    }
 
     // Si cargarTodo() ya disparó filtrarProductos(), saltar este ciclo
     if (this._skipNextOnChanges && (bodegaChanged || ciudadChanged)) {

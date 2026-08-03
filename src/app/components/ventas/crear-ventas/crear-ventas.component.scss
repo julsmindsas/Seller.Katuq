@@ -3234,6 +3234,50 @@ $step1-radius: 8px;
       }
     }
 
+    // Catálogo sin inventario — se ubica antes de Bodega porque estos
+    // productos no dependen de ninguna: al activarlo el catálogo aparece solo.
+    .filter-item--modo {
+      flex: 0 0 auto;
+      min-width: 150px;
+    }
+
+    .modo-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      height: 40px;
+      padding: 0 0.75rem;
+      border: 1px solid $step1-border;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 0.8125rem;
+      color: $step1-text-light;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+
+      &:hover {
+        border-color: #5F3FE0;
+      }
+
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: #5F3FE0;
+      }
+
+      span {
+        font-weight: 500;
+        white-space: nowrap;
+      }
+    }
+
+    .filter-item--modo.filter-completed .modo-toggle {
+      border-color: #5F3FE0;
+      background: rgba(95, 63, 224, 0.06);
+      color: #211F3A;
+    }
+
     .filter-select {
       height: 40px;
       padding: 0 0.75rem;
