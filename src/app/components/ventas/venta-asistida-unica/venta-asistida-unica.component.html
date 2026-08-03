@@ -302,15 +302,32 @@
         <!-- BARRA DE FILTROS - Siempre visible en pantalla plana (gate currentStepIndex removido) -->
         <div class="step2-filters-section">
           <div class="filters-row">
+            <!-- Catálogo sin inventario: productos que se venden bajo pedido.
+                 No pertenecen a ninguna bodega, por eso va antes del selector
+                 y al activarlo muestra los productos de una vez. -->
+            <div class="filter-item filter-item--modo" [class.filter-completed]="catalogoSinInventario">
+              <label class="filter-label">
+                <i class="fa fa-cubes"></i>
+                Modo
+              </label>
+              <label class="modo-toggle" title="Muestra solo los productos que se venden bajo pedido, sin depender de una bodega">
+                <input type="checkbox"
+                       [ngModel]="catalogoSinInventario"
+                       (ngModelChange)="onCatalogoSinInventarioChange($event)">
+                <span>Sin inventario</span>
+              </label>
+            </div>
+
             <!-- Bodega -->
-            <div class="filter-item" [class.filter-completed]="selectedWarehouse">
+            <div class="filter-item" [class.filter-completed]="selectedWarehouse" [class.filter-disabled]="catalogoSinInventario">
               <label class="filter-label">
                 <i class="fa fa-warehouse"></i>
                 Bodega
               </label>
               <select class="filter-select"
                       (change)="onWarehouseChange($event)"
-                      [class.has-value]="selectedWarehouse">
+                      [class.has-value]="selectedWarehouse"
+                      [disabled]="catalogoSinInventario">
                 <option value="">Seleccionar...</option>
                 <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
                   {{ bodega.nombre }}
@@ -389,7 +406,7 @@
                 <input type="search" class="search-input"
                        placeholder="Nombre o referencia..."
                        (keyup)="onProductSearch($event)"
-                       [disabled]="!selectedCity || selectedCity === 'seleccione'">
+                       [disabled]="!catalogoSinInventario && (!selectedCity || selectedCity === 'seleccione')">
               </div>
             </div>
           </div>
@@ -413,7 +430,15 @@
             </div>
           </div>
 
-          <div class="filters-status" *ngIf="pedidoGral?.cliente && (!selectedWarehouse || !selectedCity || selectedCity === 'seleccione')">
+          <div class="filters-status" *ngIf="pedidoGral?.cliente && catalogoSinInventario">
+            <span class="fs-ic"><i class="fa fa-cubes"></i></span>
+            <div class="fs-text">
+              <span class="fs-title">Catálogo sin inventario</span>
+              <span class="fs-sub">Productos que se venden bajo pedido: no dependen de una bodega.</span>
+            </div>
+          </div>
+
+          <div class="filters-status" *ngIf="pedidoGral?.cliente && !catalogoSinInventario && (!selectedWarehouse || !selectedCity || selectedCity === 'seleccione')">
             <span class="fs-ic"><i class="fa fa-exclamation-circle"></i></span>
             <div class="fs-text">
               <span class="fs-title" *ngIf="!selectedWarehouse">Selecciona una bodega y ciudad para ver el catálogo</span>
@@ -439,10 +464,11 @@
               [selectedCity]="selectedCity"
               [ciudad]="selectedCity"
               [bodega]="bodega"
+              [soloNoInventariables]="catalogoSinInventario"
               [mostrarBuscador]="false"
               [isRebuy]="false"
               (citySelected)="onCitySelect($event)"
-              *ngIf="pedidoGral && pedidoGral.cliente && bodega && selectedCity && selectedCity !== 'seleccione'">
+              *ngIf="pedidoGral && pedidoGral.cliente && (catalogoSinInventario || (bodega && selectedCity && selectedCity !== 'seleccione'))">
             </app-ecomerce-products>
           </div>
         </div>

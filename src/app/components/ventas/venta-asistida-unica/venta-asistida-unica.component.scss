@@ -799,6 +799,37 @@
     input { accent-color: var(--kc-accent); }
   }
 
+  // Catálogo sin inventario — va antes de Bodega porque estos productos no
+  // dependen de ninguna: al activarlo el catálogo aparece de una vez.
+  .filter-item--modo {
+    flex: 0 0 auto;
+    min-width: 160px;
+  }
+
+  .modo-toggle {
+    @include kc-input;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+
+    input {
+      accent-color: var(--kc-accent);
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  .filter-item--modo.filter-completed .modo-toggle {
+    border-color: var(--kc-accent);
+    background: rgba(95, 63, 224, 0.06);
+  }
+
   .filter-search {
     .search-wrapper {
       position: relative;
