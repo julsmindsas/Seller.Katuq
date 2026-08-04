@@ -1,0 +1,192 @@
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: var(--theme-primary, #7366ff);
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+// Cada opción del dropdown de búsqueda (ng-select) — imagen + nombre +
+// descripción, para reconocer el producto visualmente antes de elegirlo.
+::ng-deep .combo-opcion-producto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+
+  .combo-opcion-thumb {
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    object-fit: cover;
+  }
+
+  .combo-opcion-thumb-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    background: #f9fafb;
+    font-size: 14px;
+  }
+
+  .combo-opcion-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .combo-opcion-titulo {
+    font-weight: 700;
+    font-size: 13px;
+    color: #211f3a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .combo-opcion-desc {
+    font-size: 11.5px;
+    color: #8b8fa3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// Lista de productos seleccionados del combo — imagen + nombre + descripción,
+// mismo lenguaje visual que el listado de administración de productos.
+.combo-productos-list {
+  margin-top: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+
+  .combo-productos-list-header {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .combo-producto-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+
+    & + .combo-producto-row {
+      border-top: 1px solid #f0f0f2;
+    }
+  }
+
+  .combo-producto-thumb {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    object-fit: cover;
+  }
+
+  .combo-producto-thumb-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    background: #f9fafb;
+  }
+
+  .combo-producto-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .combo-producto-titulo {
+    font-weight: 800;
+    font-size: 13.5px;
+    color: #211f3a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .combo-producto-ref {
+    font-size: 11.5px;
+    color: #8b8fa3;
+    font-weight: 600;
+  }
+
+  .combo-producto-desc {
+    font-size: 12px;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .combo-producto-quitar {
+    flex: none;
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+
+    &:hover { color: #d33; }
+  }
+}

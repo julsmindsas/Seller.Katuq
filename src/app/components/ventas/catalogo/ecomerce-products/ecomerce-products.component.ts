@@ -60,6 +60,9 @@ export class EcomerceProductsComponent
   @Input() mostrarBuscador: boolean = false;
 
   openSidebar: boolean = false;
+  // Colapso horizontal del panel de filtros en desktop (independiente del
+  // drawer mobile de openSidebar/sidebarToggle) — libera espacio para el grid.
+  filtrosColapsados: boolean = false;
   col: string;
   listView: any;
   productos: Producto[];
@@ -71,6 +74,10 @@ export class EcomerceProductsComponent
   ocasiones: any[];
   generos: any[];
   formasPago: any[];
+  // Maestro de combos (D-147) — picker con buscador, sin precio propio.
+  combos: any[] = [];
+  combosFiltrados: any[] = [];
+  comboFiltro: string = '';
   filterForm: FormGroup;
   minPrice: number = 0;
   maxPrice: number = 10000000;
@@ -438,6 +445,9 @@ export class EcomerceProductsComponent
         this.generos = data.generos;
         this.formasPago = data.formasPago;
         this.categorias = data.categorias;
+        // Solo combos activos en el catálogo de venta — un combo desactivado
+        // no debe seguir siendo un atajo utilizable.
+        this.combos = (data.combos || []).filter((c: any) => c.activo !== false);
         this._filtrosCargados = true;
       });
   }
@@ -712,6 +722,11 @@ export class EcomerceProductsComponent
   sidebarToggle() {
     this.openSidebar = !this.openSidebar;
     this.col = "3";
+  }
+
+  /** Colapsa/expande horizontalmente el panel de filtros en desktop. */
+  toggleFiltrosColapsados(): void {
+    this.filtrosColapsados = !this.filtrosColapsados;
   }
 
   toggleListView(val) {
@@ -1286,6 +1301,33 @@ export class EcomerceProductsComponent
       return;
     }
 
+    // 2-6. Resolver cantidad/precio/entrega por defecto y agregar al carrito —
+    // lógica compartida con agregarCombo() (D-147), extraída sin cambiar el
+    // comportamiento observable de este método.
+    this.agregarProductoAlCarritoInterno(producto);
+  }
+
+  /**
+   * Agrega un producto individual al carrito resolviendo cantidad mínima,
+   * precio por categoría de cliente y datos de entrega por defecto. Extraído
+   * de `agregarRapido` para ser reusado también por `agregarCombo` (D-147) —
+   * `agregarRapido` sigue llamándolo con el mismo comportamiento de antes.
+   *
+   * `opts.requiereConfiguracionPendiente`: cuando viene de un combo y el
+   * producto SÍ requiere configuración, se agrega igual (no se abre modal,
+   * no se interrumpe el agregado del resto del combo) pero sin `configuracion`
+   * resuelta y marcado con `_requiereConfiguracionPendiente` para que el
+   * carrito lo señale con un pill/banner.
+   *
+   * `opts.mostrarToast`: agregarCombo lo pone en `false` para mostrar un
+   * único toast resumen al final, en vez de uno por producto del combo.
+   */
+  private agregarProductoAlCarritoInterno(
+    producto: Producto,
+    opts: { requiereConfiguracionPendiente?: boolean; mostrarToast?: boolean } = {}
+  ): void {
+    const mostrarToast = opts.mostrarToast !== false;
+
     // 2. Obtener la cantidad mínima de venta
     const cantidadMinima = producto.disponibilidad?.cantidadMinVenta || 1;
 
@@ -1310,8 +1352,13 @@ export class EcomerceProductsComponent
     };
 
     // 5. Crear el objeto para el carrito con datosEntrega incluidos
-    // Estructura compatible con el carrito existente
-    const productoCompra = {
+    // Estructura compatible con el carrito existente. `configuracion` SIEMPRE
+    // lleva la forma completa (con arrays vacíos por defecto) — carrito.component.html
+    // accede a `configuracion.adiciones`/`.preferencias` sin optional chaining
+    // en varios puntos; un combo con producto que requiere configuración NO
+    // pone `configuracion: null`, solo marca `_requiereConfiguracionPendiente`
+    // para que el pill lo señale — la config real se completa después.
+    const productoCompra: any = {
       producto: productoConPrecio,
       configuracion: {
         producto: productoConPrecio,
@@ -1323,6 +1370,9 @@ export class EcomerceProductsComponent
       },
       cantidad: cantidadMinima
     };
+    if (opts.requiereConfiguracionPendiente) {
+      productoCompra._requiereConfiguracionPendiente = true;
+    }
 
     // 6. Agregar al carrito - DIFERENCIADO POR MODO
     const nombreProducto = producto.crearProducto?.titulo || 'Producto';
@@ -1337,15 +1387,17 @@ export class EcomerceProductsComponent
         precioUnitario: precioMostrar
       });
 
-      this.toastrService.success(
-        `${nombreProducto} x${cantidadMinima} agregado al pedido ($${precioMostrar.toLocaleString('es-CO')})`,
-        'Agregado al pedido',
-        {
-          timeOut: 3000,
-          progressBar: true,
-          positionClass: 'toast-bottom-right'
-        }
-      );
+      if (mostrarToast) {
+        this.toastrService.success(
+          `${nombreProducto} x${cantidadMinima} agregado al pedido ($${precioMostrar.toLocaleString('es-CO')})`,
+          'Agregado al pedido',
+          {
+            timeOut: 3000,
+            progressBar: true,
+            positionClass: 'toast-bottom-right'
+          }
+        );
+      }
 
       // Cerrar todos los modales pasando el producto configurado
       this.modalService.dismissAll(productoCompra);
@@ -1353,23 +1405,118 @@ export class EcomerceProductsComponent
       // MODO NORMAL: Agregar al carrito global (CartSingletonService)
       this.cartService.addToCart(productoCompra);
 
-      this.toastrService.success(
-        `${nombreProducto} x${cantidadMinima} agregado ($${precioMostrar.toLocaleString('es-CO')})`,
-        'Agregado al carrito',
-        {
-          timeOut: 3000,
-          progressBar: true,
-          positionClass: 'toast-bottom-right'
-        }
-      );
+      if (mostrarToast) {
+        this.toastrService.success(
+          `${nombreProducto} x${cantidadMinima} agregado ($${precioMostrar.toLocaleString('es-CO')})`,
+          'Agregado al carrito',
+          {
+            timeOut: 3000,
+            progressBar: true,
+            positionClass: 'toast-bottom-right'
+          }
+        );
+      }
 
       console.log('⚡ QuickAdd: Producto agregado al carrito:', {
         titulo: nombreProducto,
         cantidad: cantidadMinima,
         precioUnitario: precioMostrar,
         tienePrecioCategoria: !!productoConPrecio._precioAplicadoPorCategoria,
-        datosEntrega: datosEntregaPorDefecto
+        datosEntrega: datosEntregaPorDefecto,
+        requiereConfiguracionPendiente: !!opts.requiereConfiguracionPendiente
       });
     }
+  }
+
+  /** Abre el picker de combos (buscador + lista) — escala a cualquier cantidad de combos. */
+  abrirCombosPicker(tpl: TemplateRef<any>): void {
+    this.comboFiltro = '';
+    this.combosFiltrados = this.combos;
+    this.modalService.open(tpl, { centered: true, size: 'md', scrollable: true });
+  }
+
+  /** Filtra los combos del picker por nombre (client-side, la lista ya está cargada en memoria). */
+  filtrarCombos(): void {
+    const term = (this.comboFiltro || '').toLowerCase().trim();
+    this.combosFiltrados = !term
+      ? this.combos
+      : this.combos.filter((c: any) => (c.nombre || '').toLowerCase().includes(term));
+  }
+
+  /**
+   * Agrega al carrito todos los productos asociados a un combo (D-147), como
+   * líneas normales e independientes — NO crea una línea "combo" colapsada ni
+   * calcula un precio propio; el total emerge de sumar las líneas agregadas.
+   *
+   * Los productos del combo se resuelven por ID directo contra Firestore
+   * (`getProductsByIds`), no contra `this.productos` (el catálogo de venta
+   * asistida es paginado/buscado — un producto del combo puede no estar en la
+   * página cargada en este momento).
+   */
+  agregarCombo(combo: any): void {
+    if (this.isRebuy) {
+      this.toastrService.info('Los combos no están disponibles en modo recompra.', 'Combo');
+      return;
+    }
+
+    const ids: string[] = (combo?.productos || [])
+      .map((p: any) => p.productoId)
+      .filter((id: any) => !!id);
+
+    if (ids.length === 0) {
+      return;
+    }
+
+    this.maestroService.getProductsByIds(ids).subscribe({
+      next: (res: any) => {
+        const productosResueltos: Producto[] = res?.products || [];
+        const mapaPorId = new Map(productosResueltos.map((p: any) => [p.cd, p]));
+
+        let agregados = 0;
+        let pendientesConfig = 0;
+        let noDisponibles = 0;
+
+        ids.forEach((id) => {
+          const producto = mapaPorId.get(id);
+          // Producto ya no existe o está inactivo: se omite del agregado sin
+          // bloquear el resto del combo (D-147).
+          if (!producto) {
+            noDisponibles++;
+            return;
+          }
+
+          if (this.requiereConfiguracion(producto)) {
+            this.agregarProductoAlCarritoInterno(producto, {
+              requiereConfiguracionPendiente: true,
+              mostrarToast: false
+            });
+            pendientesConfig++;
+          } else {
+            this.agregarProductoAlCarritoInterno(producto, { mostrarToast: false });
+          }
+          agregados++;
+        });
+
+        // Toast único de resumen (no uno por producto del combo).
+        const nombreCombo = combo?.nombre || 'Combo';
+        let mensaje = `${agregados} producto(s) de "${nombreCombo}" agregados al carrito`;
+        if (pendientesConfig > 0) {
+          mensaje += ` (${pendientesConfig} requiere${pendientesConfig > 1 ? 'n' : ''} configuración — revisa el carrito)`;
+        }
+        if (noDisponibles > 0) {
+          mensaje += `. ${noDisponibles} producto(s) del combo ya no están disponibles y no se agregaron.`;
+        }
+
+        this.toastrService.success(mensaje, 'Combo agregado', {
+          timeOut: 5000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        });
+      },
+      error: (err) => {
+        console.error('Error al resolver productos del combo:', err);
+        this.toastrService.error('No se pudo agregar el combo', 'Error');
+      }
+    });
   }
 }

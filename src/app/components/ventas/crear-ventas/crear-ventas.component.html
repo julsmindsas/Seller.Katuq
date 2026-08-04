@@ -598,9 +598,16 @@
                           <span class="cart-item-qty">x{{item?.cantidad || 1}}</span>
                           <span class="cart-item-price">${{(item?.producto?.precio?.precioUnitarioConIva || 0) | number:'1.0-0'}}</span>
                         </div>
+                        <!-- Pill "Requiere configuración" (D-147): línea agregada desde un
+                             combo que necesita completarse antes de cerrar la venta. -->
+                        <button *ngIf="item?._requiereConfiguracionPendiente" type="button"
+                          class="cart-item-config-pill" (click)="completarConfiguracionPendienteSidebar(item)"
+                          title="Este producto necesita configuración adicional. Click para completarla.">
+                          <i class="fa fa-exclamation-triangle"></i> Requiere configuración
+                        </button>
                       </div>
                       <button class="cart-item-remove" (click)="eliminarDelCarritoSidebar(item)" title="Eliminar">
-                        <i class="fa fa-trash-alt"></i>
+                        <i class="fa fa-trash"></i>
                       </button>
                     </div>
                   </div>
@@ -684,7 +691,12 @@
                   <i class="fa fa-arrow-left"></i>
                   Volver a Productos
                 </button>
+                <div class="footer-message" *ngIf="tieneConfiguracionPendiente">
+                  <i class="fa fa-info-circle"></i>
+                  Completa la configuración pendiente de los productos marcados para continuar
+                </div>
                 <button class="next-step-btn" type="button" awNextStep
+                  [disabled]="tieneConfiguracionPendiente"
                   (click)="reviewStepAndExecute(3)">
                   Datos de Envío
                   <i class="fa fa-arrow-right"></i>

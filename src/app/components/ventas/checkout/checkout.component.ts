@@ -796,7 +796,27 @@ export class CheckOutComponent implements OnInit, OnChanges {
       this.mostrarError("Por favor, seleccione una forma de pago.");
       return;
     }
-    
+
+    // D-147: bloquea el checkout si quedó alguna línea de un combo sin
+    // completar su configuración (calendario, variable, tarjeta, adiciones,
+    // etc.) — no existía ningún otro punto de validación de "producto sin
+    // configurar" en este flujo (confirmado leyendo este archivo completo).
+    // Se bloquea, no se advierte solamente: vender sin esa configuración
+    // puede dejar producción/fulfillment sin datos que ya no se pueden pedir
+    // después del pago.
+    const lineasPendientes = (this.pedido?.carrito || []).filter(
+      (item: any) => item?._requiereConfiguracionPendiente === true
+    );
+    if (lineasPendientes.length > 0) {
+      const nombres = lineasPendientes
+        .map((item: any) => item?.producto?.crearProducto?.titulo || 'Producto')
+        .join(', ');
+      this.mostrarError(
+        `Completa la configuración de: ${nombres} antes de continuar. Estos productos vinieron de un combo y necesitan datos adicionales.`
+      );
+      return;
+    }
+
     // Evitar múltiples clicks
     if (this.isProcessingPayment) {
       return;

@@ -19,6 +19,7 @@ interface MaestrosData {
     formasPago: any[];
     categorias: any[];
     adiciones: any[];
+    combos: any[];
 }
 
 interface RawMaestrosData {
@@ -30,6 +31,7 @@ interface RawMaestrosData {
     formasPago: any;
     categorias: any;
     adiciones: any;
+    combos: any;
 }
 
 interface MaestrosState {
@@ -68,6 +70,7 @@ export class PedidosUtilService {
     private formasPago: any[] = [];
     private categorias: any[] = [];
     private adiciones: any[] = [];
+    private combos: any[] = [];
     
     // Observable para controlar la limpieza de recursos
     private destroy$ = new BehaviorSubject<boolean>(false);
@@ -250,6 +253,12 @@ export class PedidosUtilService {
                         console.warn('Error cargando adiciones:', error);
                         return of([]);
                     })
+                ),
+                combos: this.maestroService.getCombos().pipe(
+                    catchError(error => {
+                        console.warn('Error cargando combos:', error);
+                        return of([]);
+                    })
                 )
         }).pipe(
             map((results: RawMaestrosData): MaestrosData => {
@@ -261,6 +270,7 @@ export class PedidosUtilService {
                     generos: Array.isArray(results.generos) ? results.generos : [],
                     formasPago: Array.isArray(results.formasPago) ? results.formasPago : [],
                     adiciones: Array.isArray(results.adiciones) ? results.adiciones : [],
+                    combos: Array.isArray(results.combos) ? results.combos : [],
                     categorias: []
                 };
 
@@ -299,6 +309,7 @@ export class PedidosUtilService {
                 this.formasPago = results.formasPago || [];
                 this.categorias = results.categorias || [];
                 this.adiciones = results.adiciones || [];
+                this.combos = results.combos || [];
 
                 const maestrosData = {
                     empresaActual: this.empresaActual,
@@ -309,7 +320,8 @@ export class PedidosUtilService {
                     generos: this.generos,
                     formasPago: this.formasPago,
                     categorias: this.categorias,
-                    adiciones: this.adiciones
+                    adiciones: this.adiciones,
+                    combos: this.combos
                 };
 
                 // Emitir los datos actualizados
@@ -404,7 +416,8 @@ export class PedidosUtilService {
             this.generos,
             this.formasPago,
             this.categorias,
-            this.adiciones
+            this.adiciones,
+            this.combos
         ];
 
         // Verificar que todos los arrays estén definidos (pueden ser vacíos, pero no undefined)
@@ -439,7 +452,8 @@ export class PedidosUtilService {
             generos: this.generos || [],
             formasPago: this.formasPago || [],
             categorias: this.categorias || [],
-            adiciones: this.adiciones || []
+            adiciones: this.adiciones || [],
+            combos: this.combos || []
         };
     }
 

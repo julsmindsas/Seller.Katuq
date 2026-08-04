@@ -40,8 +40,18 @@
         <div class="row catalog-row">
 
             <!-- ===================== SIDEBAR DE FILTROS ===================== -->
-            <div class="col-12 col-md-4 col-lg-3 catalog-sidebar-col">
-                <form [formGroup]="filterForm">
+            <div class="col-12 col-md-4 col-lg-3 catalog-sidebar-col" [class.catalog-sidebar-col-collapsed]="filtrosColapsados">
+
+                <!-- Handle para colapsar horizontalmente el panel (solo desktop —
+                     en mobile el drawer ya lo maneja sidebarToggle()/openSidebar). -->
+                <button type="button" class="filtros-collapse-handle d-none d-md-flex"
+                    (click)="toggleFiltrosColapsados()"
+                    [attr.title]="filtrosColapsados ? ('Mostrar filtros' | translate) : ('Ocultar filtros' | translate)">
+                    <i class="fa fa-sliders-h filtros-collapse-icon"></i>
+                    <i class="fa filtros-collapse-chevron" [ngClass]="filtrosColapsados ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+                </button>
+
+                <form [formGroup]="filterForm" [class.d-none]="filtrosColapsados">
                     <div class="product-sidebar">
                         <div class="filter-section">
                             <div class="card">
@@ -177,7 +187,17 @@
             </div>
 
             <!-- ===================== CONTENIDO / GRID ===================== -->
-            <div class="col-12 col-md-8 col-lg-9 catalog-content-col">
+            <div class="col-12 col-md-8 col-lg-9 catalog-content-col" [class.catalog-content-col-expanded]="filtrosColapsados">
+
+                <!-- Botón "Combos" (D-147): abre un picker con buscador — no una fila de
+                     chips, para que escale igual de bien con 5 o con 1000 combos. -->
+                <div class="combos-trigger-row mb-2" *ngIf="combos?.length">
+                    <button type="button" class="btn-combos-trigger" (click)="abrirCombosPicker(combosPickerModal)">
+                        <i class="icofont icofont-fast-delivery"></i>
+                        <span>{{ 'Combos' | translate }}</span>
+                        <span class="combos-trigger-badge">{{ combos.length }}</span>
+                    </button>
+                </div>
 
                 <div class="feature-products">
                     <div class="row align-items-center">
@@ -481,6 +501,33 @@
     <app-quick-view #quickView></app-quick-view>
 
     <!-- <app-conf-product-to-cart #confProduct> </app-conf-product-to-cart> -->
+
+    <!-- Picker de combos (D-147): buscador + lista scrolleable, escala a
+         cualquier cantidad de combos sin comerse el espacio del catálogo. -->
+    <ng-template #combosPickerModal let-modal>
+        <div class="modal-header">
+            <h5 class="modal-title">{{ 'Combos' | translate }}</h5>
+            <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+        </div>
+        <div class="modal-body combos-picker-body">
+            <input type="text" class="form-control mb-3" placeholder="{{ 'Buscar combo...' | translate }}"
+                [(ngModel)]="comboFiltro" (ngModelChange)="filtrarCombos()" [ngModelOptions]="{standalone: true}"
+                autofocus>
+            <div class="combos-picker-list">
+                <div class="combos-picker-row" *ngFor="let combo of combosFiltrados"
+                    (click)="agregarCombo(combo); modal.dismiss()">
+                    <div class="combos-picker-icon"><i class="icofont icofont-fast-delivery"></i></div>
+                    <div class="combos-picker-info">
+                        <span class="combos-picker-nombre">{{ combo.nombre }}</span>
+                        <span class="combos-picker-count">{{ combo.productos?.length || 0 }} producto(s)</span>
+                    </div>
+                </div>
+                <div class="combos-picker-empty" *ngIf="combosFiltrados.length === 0">
+                    {{ 'Sin combos que coincidan con la búsqueda.' | translate }}
+                </div>
+            </div>
+        </div>
+    </ng-template>
 
     <ng-template #confProductToCartModal let-modal>
         <div class="modal-header">

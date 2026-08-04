@@ -19,6 +19,8 @@ import { CrearTipoClienteComponent } from './tipos-cliente/crear-tipo-cliente/cr
 import { DescuentosPromocionesComponent } from './descuentos-promociones/descuentos-promociones.component';
 import { CrearDescuentoPromocionComponent } from './descuentos-promociones/crear-descuento-promocion/crear-descuento-promocion.component';
 import { HistorialRedencionesComponent } from './descuentos-promociones/historial-redenciones/historial-redenciones.component';
+import { CombosComponent } from './combos/combos.component';
+import { CrearComboComponent } from './combos/crear-combo/crear-combo.component';
 import { TableModule } from 'primeng/table';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -47,7 +49,9 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     CrearTipoClienteComponent,
     DescuentosPromocionesComponent,
     CrearDescuentoPromocionComponent,
-    HistorialRedencionesComponent
+    HistorialRedencionesComponent,
+    CombosComponent,
+    CrearComboComponent
   ]
 })
 export class ProcesoModule { }

@@ -437,6 +437,28 @@ export class MaestroService {
   public getCategorias() {
     return this.http.get(this.urlBase + '/v1/categorias/all', this.httpOptions);
   }
+  // Maestro de combos (D-147) — un combo no tiene precio propio.
+  public getCombos() {
+    return this.http.get(this.urlBase + '/v1/combos/all', this.httpOptions);
+  }
+  public createCombo(data: any) {
+    return this.http.post(this.urlBase + '/v1/combos/create', data, this.httpOptions);
+  }
+  public editCombo(data: any) {
+    return this.http.post(this.urlBase + '/v1/combos/edit', data, this.httpOptions);
+  }
+  public removeCombo(id: string) {
+    return this.http.post(this.urlBase + '/v1/combos/remove', { id }, this.httpOptions);
+  }
+  public deletePermanentCombo(id: string) {
+    return this.http.post(this.urlBase + '/v1/combos/delete-permanent', { id }, this.httpOptions);
+  }
+  // Batch fetch de productos por id — el catálogo de venta asistida es
+  // paginado/buscado, así que los productos de un combo no necesariamente
+  // están ya cargados en memoria (D-147).
+  public getProductsByIds(ids: string[]) {
+    return this.http.post(this.urlBase + '/v1/productos/by-ids', { ids }, this.httpOptions);
+  }
   public createAdiciones(adicion: any) {
     return this.http.post(this.urlBase + '/v1/adiciones/create', adicion);
   }

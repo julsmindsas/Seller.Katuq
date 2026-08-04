@@ -6,6 +6,8 @@ import { Pedido, DescuentoAplicado } from "../modelo/pedido";
 import { ToastrService } from "ngx-toastr";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { parse as flattedParse } from "flatted";
+import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
+import { ConfProductToCartComponent } from "../catalogo/conf-product-to-cart/conf-product-to-cart.component";
 
 @Component({
   selector: "app-carrito",
@@ -39,7 +41,8 @@ export class CarritoComponent implements OnInit {
     private carsingleton: CartSingletonService,
     private service: VentasService,
     private toastrService: ToastrService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private modalService: NgbModal
   ) {}
 
   ngOnInit(): void {
@@ -74,6 +77,46 @@ export class CarritoComponent implements OnInit {
   removeThisProduct(producto: any): void {
     if (!producto) return;
     this.carsingleton.removeProduct(producto);
+  }
+
+  /**
+   * Completa la configuración de una línea agregada desde un combo (D-147)
+   * que quedó marcada `_requiereConfiguracionPendiente`. Reabre
+   * `ConfProductToCartComponent` en modo edición (mismo patrón que
+   * `cotizacion-editor.component.ts::editarCliente`, aplicado aquí a
+   * `isEdit`/`configuracionCarrito`) — el resultado ACTUALIZA la línea
+   * existente vía `updateProductQuantity`, no agrega un ítem duplicado.
+   */
+  completarConfiguracionPendiente(item: any): void {
+    if (!item) return;
+
+    const ref = this.modalService.open(ConfProductToCartComponent, {
+      centered: true,
+      size: "xl",
+      scrollable: true,
+      windowClass: "modal-fullscreen",
+    });
+    const inst = ref.componentInstance as ConfProductToCartComponent;
+    inst.producto = item.producto;
+    inst.isEdit = true;
+    inst.configuracionCarrito = item;
+    inst.modalRef = ref;
+
+    ref.result.then(
+      () => { /* close() no se usa en este flujo — el resultado llega por dismiss */ },
+      (resultado: any) => {
+        // dismissCurrentModal(ProductoCompra) → llega como "reason" del dismiss.
+        if (resultado && resultado.producto) {
+          this.carsingleton.updateProductQuantity({
+            ...resultado,
+            cartItemId: item.cartItemId,
+            // Sin esto el merge de updateProductQuantity conservaría el flag
+            // anterior (true), porque `resultado` no trae esta clave.
+            _requiereConfiguracionPendiente: false
+          });
+        }
+      }
+    );
   }
   
   agregarNotaProduccion(producto: any): void {

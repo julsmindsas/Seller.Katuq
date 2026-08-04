@@ -1,0 +1,127 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    {{ mostrarCrear ? 'Crear Combo' : 'Editar Combo' }}
+  </h5>
+  <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <div class="alert alert-info d-flex align-items-center mb-3">
+    <i class="icofont icofont-info-circle me-2" style="font-size: 20px;"></i>
+    <span>
+      <b>Sin precio propio:</b> al agregar el combo en venta asistida se agregan los productos
+      seleccionados como líneas normales del carrito. El total es siempre la suma de esos productos.
+      Si necesitas un precio especial, usa un código de descuento existente.
+    </span>
+  </div>
+
+  <form [formGroup]="form">
+    <div class="row g-4">
+
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="nombre"
+            placeholder="Ej: Combo Desayuno">
+          <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" class="text-danger">
+            Este campo es requerido
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label d-block fw-bold mb-2">Estado</label>
+          <div class="d-flex align-items-center">
+            <label class="toggle-switch me-3">
+              <input type="checkbox" formControlName="activo">
+              <span class="slider round"></span>
+            </label>
+            <span class="text-muted">{{ form.get('activo')?.value ? 'Activo' : 'Inactivo' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Productos del combo <span class="text-danger">*</span></label>
+          <ng-select [items]="productosBuscados" bindLabel="titulo"
+            [multiple]="true" [(ngModel)]="productosSeleccionados" [ngModelOptions]="{standalone: true}"
+            [compareWith]="compararProducto" [hideSelected]="true"
+            placeholder="Escribe para buscar y agregar productos..."
+            [typeahead]="productoInput$" [loading]="productoLoading" [minTermLength]="2"
+            typeToSearchText="Escribe al menos 2 caracteres..." notFoundText="Sin resultados"
+            [clearable]="true" [selectableGroup]="false">
+            <!-- Cada opción del dropdown se ve como una fila del listado de
+                 productos (imagen + nombre + descripción) para que se pueda
+                 reconocer el producto visualmente, no solo por el nombre. -->
+            <ng-template ng-option-tmp let-item="item">
+              <div class="combo-opcion-producto">
+                <img *ngIf="item.imagen" [src]="item.imagen | imagenProducto" [alt]="item.titulo"
+                  class="combo-opcion-thumb">
+                <div *ngIf="!item.imagen" class="combo-opcion-thumb combo-opcion-thumb-empty">
+                  <i class="icofont icofont-box"></i>
+                </div>
+                <div class="combo-opcion-info">
+                  <span class="combo-opcion-titulo">{{ item.titulo }} <small class="text-muted">({{ item.referencia }})</small></span>
+                  <span class="combo-opcion-desc" *ngIf="descripcionPlana(item) as desc">{{ desc }}</span>
+                </div>
+              </div>
+            </ng-template>
+            <ng-template ng-label-tmp let-item="item" let-clear="clear">
+              {{ item.titulo }}
+              <span class="ng-value-icon right" (click)="clear(item)">×</span>
+            </ng-template>
+          </ng-select>
+          <small class="text-danger" *ngIf="productosSeleccionados.length === 0">
+            Selecciona al menos 1 producto
+          </small>
+          <small class="text-muted d-block">
+            Al hacer click en el combo desde venta asistida, se agregan todos estos productos al carrito.
+          </small>
+        </div>
+
+        <!-- Lista de productos seleccionados, mismo lenguaje visual (imagen +
+             nombre + descripción) que el listado de administración de productos. -->
+        <div class="combo-productos-list" *ngIf="productosSeleccionados.length > 0">
+          <div class="combo-productos-list-header">
+            {{ productosSeleccionados.length }} producto(s) seleccionado(s)
+            <span *ngIf="cargandoSeleccionados" class="spinner-border spinner-border-sm ms-2" role="status"></span>
+          </div>
+          <div class="combo-producto-row" *ngFor="let item of productosSeleccionados">
+            <img *ngIf="item.imagen" [src]="item.imagen | imagenProducto" [alt]="item.titulo"
+              class="combo-producto-thumb">
+            <div *ngIf="!item.imagen" class="combo-producto-thumb combo-producto-thumb-empty">
+              <i class="icofont icofont-box"></i>
+            </div>
+            <div class="combo-producto-info">
+              <span class="combo-producto-titulo">{{ item.titulo }}</span>
+              <span class="combo-producto-ref">{{ item.referencia }}</span>
+              <span class="combo-producto-desc" *ngIf="descripcionPlana(item) as desc">{{ desc }}</span>
+            </div>
+            <button type="button" class="combo-producto-quitar" (click)="quitarProducto(item)"
+              ngbTooltip="Quitar del combo">
+              <i class="icofont icofont-close"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Descripción</label>
+          <textarea class="form-control" formControlName="descripcion" rows="2"
+            placeholder="Descripción interna del combo..."></textarea>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-primary" (click)="mostrarCrear ? guardar() : editar()">
+    {{ mostrarCrear ? 'Crear' : 'Guardar cambios' }}
+  </button>
+</div>

@@ -39,6 +39,13 @@
                 <div class="item-meta">
                   <span class="item-name">{{ itemCarrito?.producto?.crearProducto?.titulo }}</span>
                   <span class="item-sku">{{ itemCarrito?.producto?.identificacion?.referencia || 'N/A' }}</span>
+                  <!-- Pill de configuración pendiente (D-147): línea agregada desde un
+                       combo que requiere configuración adicional antes de cerrar la venta. -->
+                  <button *ngIf="itemCarrito?._requiereConfiguracionPendiente" type="button"
+                    class="config-pendiente-pill" (click)="completarConfiguracionPendiente(itemCarrito)"
+                    ngbTooltip="Este producto necesita configuración adicional. Click para completarla.">
+                    <i class="pi pi-exclamation-triangle"></i> Requiere configuración
+                  </button>
                 </div>
               </div>
             </td>

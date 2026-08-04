@@ -36,6 +36,7 @@ import {
   Channel,
 } from "../modelo/pedido";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
+import { ConfProductToCartComponent } from "../catalogo/conf-product-to-cart/conf-product-to-cart.component";
 import { NotasComponent } from "../notas/notas/notas.component";
 import { CheckOutComponent } from "../checkout/checkout.component";
 import { ConfirmComponent } from "../confirm/confirm.component";
@@ -274,6 +275,14 @@ export class CrearVentasComponent
    * Se actualiza automáticamente cuando cambia el carrito.
    */
   public tieneProductosEnCarrito: boolean = false;
+
+  /**
+   * D-147: true si alguna línea del carrito viene de un combo y todavía
+   * requiere configuración — bloquea el botón "Datos de Envío" (no solo
+   * advierte) para no dejar avanzar el wizard con datos de producción
+   * incompletos.
+   */
+  public tieneConfiguracionPendiente: boolean = false;
 
   /**
    * Variables para el Sidebar del Carrito (Fase 2 - Quick View)
@@ -602,6 +611,9 @@ export class CrearVentasComponent
       (products) => {
         // Actualizar la variable reactiva para habilitar/deshabilitar el botón
         this.tieneProductosEnCarrito = products && products.length > 0;
+        this.tieneConfiguracionPendiente = !!(products || []).some(
+          (item: any) => item?._requiereConfiguracionPendiente === true
+        );
 
         // **FASE 2: Actualizar sidebar del carrito**
         this.productosCarritoSidebar = products || [];
@@ -630,6 +642,11 @@ export class CrearVentasComponent
             // Preservar precios custom por pedido (no modifica el producto original)
             _precioManualOverride: item._precioManualOverride,
             _ivaManualOverride: item._ivaManualOverride,
+            // D-147: sin esto el guard de checkout.component.ts nunca detecta
+            // líneas de combo con configuración pendiente — el flag se perdía
+            // al reconstruir este array con una whitelist de campos.
+            cartItemId: item.cartItemId,
+            _requiereConfiguracionPendiente: item._requiereConfiguracionPendiente,
           }));
 
           // Forzar detección de cambios para actualizar la UI y notificar al componente de notas
@@ -648,6 +665,9 @@ export class CrearVentasComponent
     // Inicializar tieneProductosEnCarrito con el estado actual del carrito
     const carritoActual = this.cartService.productInCart.value;
     this.tieneProductosEnCarrito = carritoActual && carritoActual.length > 0;
+    this.tieneConfiguracionPendiente = !!(carritoActual || []).some(
+      (item: any) => item?._requiereConfiguracionPendiente === true
+    );
 
     // Verificar si hay una ciudad seleccionada previamente en localStorage
     const ciudadGuardada = localStorage.getItem("selectedCity");
@@ -2804,6 +2824,26 @@ export class CrearVentasComponent
     }
 
     if (index == 3) {
+      // D-147: no avanzar de Carrito a Envío si queda una línea de combo sin
+      // configurar — mismo guard que ya bloquea el pago final en
+      // checkout.component.ts::gotToPaymentOrder(), pero aplicado más temprano
+      // para no dejar que el vendedor avance varios pasos antes de enterarse.
+      const carritoActual = this.cartService.productInCart.value || [];
+      const lineasPendientes = carritoActual.filter(
+        (item: any) => item?._requiereConfiguracionPendiente === true
+      );
+      if (lineasPendientes.length > 0) {
+        const nombres = lineasPendientes
+          .map((item: any) => item?.producto?.crearProducto?.titulo || 'Producto')
+          .join(', ');
+        Swal.fire({
+          title: "Configuración pendiente",
+          text: `Completa la configuración de: ${nombres} antes de continuar. Estos productos vinieron de un combo y necesitan datos adicionales.`,
+          icon: "warning",
+        });
+        return;
+      }
+
       // Paso de Carrito hacia Envío - Preparar datos de envío
       if (this.pedidoGral.cliente) {
         // Si hay cliente, intentar cargar sus datos de envío
@@ -4825,6 +4865,42 @@ export class CrearVentasComponent
    */
   eliminarDelCarritoSidebar(item: any): void {
     this.cartService.removeProduct(item);
+  }
+
+  /**
+   * Completa la configuración de una línea agregada desde un combo (D-147)
+   * que quedó marcada `_requiereConfiguracionPendiente`, desde el sidebar del
+   * carrito. Mismo patrón que `CarritoComponent.completarConfiguracionPendiente`:
+   * reabre `ConfProductToCartComponent` en modo edición y actualiza la línea
+   * existente en vez de duplicarla.
+   */
+  completarConfiguracionPendienteSidebar(item: any): void {
+    if (!item) return;
+
+    const ref = this.modalService.open(ConfProductToCartComponent, {
+      centered: true,
+      size: "xl",
+      scrollable: true,
+      windowClass: "modal-fullscreen",
+    });
+    const inst = ref.componentInstance as ConfProductToCartComponent;
+    inst.producto = item.producto;
+    inst.isEdit = true;
+    inst.configuracionCarrito = item;
+    inst.modalRef = ref;
+
+    ref.result.then(
+      () => { /* dismiss sin resultado (cancelado) → no hacer nada */ },
+      (resultado: any) => {
+        if (resultado && resultado.producto) {
+          this.cartService.updateProductQuantity({
+            ...resultado,
+            cartItemId: item.cartItemId,
+            _requiereConfiguracionPendiente: false
+          });
+        }
+      }
+    );
   }
 
   /**

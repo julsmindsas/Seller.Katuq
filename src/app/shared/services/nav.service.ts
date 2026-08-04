@@ -688,6 +688,7 @@ export class NavService implements OnDestroy {
         { path: "proceso/generos", title: "Géneros", type: "link", icon: "users" },
         { path: "proceso/tipos-cliente", title: "Tipos de Cliente", type: "link", icon: "user-check" },
         { path: "proceso/descuentos-promociones", title: "Descuentos y Promociones", type: "link", icon: "percent" },
+        { path: "proceso/combos", title: "Combos", type: "link", icon: "package" },
       ],
     },
     {

@@ -739,6 +739,54 @@
   @media (min-width: 768px) {
     // pequeña separación respecto del grid de productos
     padding-right: 1.25rem;
+    position: relative;
+    transition: flex-basis 0.2s ease, max-width 0.2s ease, padding 0.2s ease;
+  }
+}
+
+// Handle para colapsar/expandir el panel de filtros — solo tiene efecto en
+// desktop (mobile sigue usando el drawer de openSidebar/sidebarToggle).
+// Relleno con el color primario (no solo un contorno) + ícono de filtros
+// arriba de la flecha, para que se note que es "el control de filtros" y
+// no un simple separador decorativo.
+.filtros-collapse-handle {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 30px;
+  height: 64px;
+  border: none;
+  border-radius: 0 10px 10px 0;
+  background: var(--primary-color, #6c4ce0);
+  color: #fff;
+  cursor: pointer;
+  position: absolute;
+  top: 12px;
+  right: -30px;
+  z-index: 2;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);
+  transition: background 0.15s ease, width 0.15s ease;
+
+  .filtros-collapse-icon { font-size: 13px; }
+  .filtros-collapse-chevron { font-size: 11px; opacity: 0.85; }
+
+  &:hover {
+    background: var(--primary-dark, #533bc4);
+    width: 34px;
+  }
+}
+
+@media (min-width: 768px) {
+  .catalog-sidebar-col-collapsed {
+    flex: 0 0 30px;
+    max-width: 30px;
+    padding-right: 0;
+  }
+
+  .catalog-content-col-expanded {
+    flex: 0 0 calc(100% - 30px);
+    max-width: calc(100% - 30px);
   }
 }
 
@@ -1597,5 +1645,103 @@
   .sbp-cantidad {
     font-weight: 700;
     flex: none;
+  }
+}
+
+// Botón "Combos" del catálogo (D-147) — abre un picker con buscador; plano,
+// sin gradientes, tema morado ya re-tintado en :host de este componente.
+.combos-trigger-row {
+  .btn-combos-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--primary-color, #6c4ce0);
+    background: rgba(var(--primary-rgb, 108, 76, 224), 0.06);
+    color: var(--primary-color, #6c4ce0);
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    i { font-size: 14px; }
+
+    &:hover { background: rgba(var(--primary-rgb, 108, 76, 224), 0.14); }
+  }
+
+  .combos-trigger-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--primary-color, #6c4ce0);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+  }
+}
+
+// Picker de combos (modal): buscador + lista scrolleable, escala a cualquier N.
+.combos-picker-body {
+  .combos-picker-list {
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .combos-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+
+    & + .combos-picker-row { border-top: 1px solid #f0f0f2; }
+
+    &:hover { background: rgba(var(--primary-rgb, 108, 76, 224), 0.08); }
+  }
+
+  .combos-picker-icon {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--primary-rgb, 108, 76, 224), 0.10);
+    color: var(--primary-color, #6c4ce0);
+  }
+
+  .combos-picker-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .combos-picker-nombre {
+    font-weight: 700;
+    font-size: 14px;
+    color: #211f3a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .combos-picker-count {
+    font-size: 12px;
+    color: #8b8fa3;
+  }
+
+  .combos-picker-empty {
+    padding: 24px 8px;
+    text-align: center;
+    color: #8b8fa3;
+    font-size: 13.5px;
   }
 }
