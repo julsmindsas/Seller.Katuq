@@ -243,7 +243,12 @@ export class ProductosComponent implements OnInit, OnDestroy {
     { label: 'Peso (kg)',                       key: 'peso',               selected: true, getValue: (r: any) => r.dimensiones?.pesoUnitarioProductoKg || '' },
     // Las etiquetas viven en `exposicion`, no en `crearProducto`: la columna
     // "Tags" leía un campo inexistente y salía vacía siempre.
-    { label: 'Etiquetas (separadas por coma)',  key: 'etiquetas',          selected: true, getValue: (r: any) => (r.exposicion?.etiquetas || []).join(', ') },
+    // Deduplicadas: hay productos con la MISMA etiqueta repetida decenas de veces
+    // (ALM-3111 tenía 747 etiquetas y solo 126 distintas), lo que inflaba la celda
+    // por encima del límite de Excel y disparaba el recorte. Una etiqueta repetida
+    // no aporta nada, así que quitarlas no pierde información — a diferencia de
+    // truncar, que sí corta contenido real. Ver `recortarParaExcel`.
+    { label: 'Etiquetas (separadas por coma)',  key: 'etiquetas',          selected: true, getValue: (r: any) => ProductosComponent.etiquetasUnicas(r.exposicion?.etiquetas).join(', ') },
     { label: 'Garantias',                       key: 'garantias',          selected: true, getValue: (r: any) => r.crearProducto?.garantiasProducto || '' },
     { label: 'Caracteristicas Adicionales',     key: 'caracAdicionales',   selected: true, getValue: (r: any) => r.crearProducto?.caracAdicionales || '' },
     { label: 'Restricciones',                   key: 'restricciones',      selected: true, getValue: (r: any) => r.crearProducto?.restriccionesProducto || '' },
@@ -1432,6 +1437,23 @@ export class ProductosComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Etiquetas sin repetidos, conservando el orden original.
+   *
+   * `exposicion.etiquetas` puede traer la misma etiqueta muchas veces: en ALMARA
+   * hay 6 productos generados por una IA que se trabó en un bucle (747 a 1.055
+   * etiquetas, entre 72 y 126 distintas, la última cortada a media frase). El
+   * formulario de producto ya deduplica al agregar a mano (`crear-productos`
+   * → `onEnter`) y el importador de clientes también; productos era el que
+   * faltaba, tanto al exportar como al importar.
+   */
+  static etiquetasUnicas(etiquetas: any): string[] {
+    if (!Array.isArray(etiquetas)) { return []; }
+    return Array.from(new Set(
+      etiquetas.map(e => String(e ?? '').trim()).filter(e => e !== '')
+    ));
+  }
+
+  /**
    * Tope de caracteres por celda de Excel. No es un límite de la librería: es
    * del formato. Pasarse hace que `json_to_sheet` lance
    * "Text length must not exceed 32767 characters" y se cae TODO el export.
@@ -1439,12 +1461,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
   private static readonly EXCEL_MAX_CELDA = 32767;
 
   /**
-   * Recorta un valor al tope de Excel.
+   * Recorta un valor al tope de Excel. Es una RED DE SEGURIDAD, no la solución:
+   * sin esto, una sola celda pasada de largo revienta la exportación completa
+   * del catálogo y el usuario no tiene forma de saber qué producto la causó.
    *
-   * Pasa con descripciones que traen HTML del editor enriquecido, a veces con
-   * imágenes embebidas en base64: una sola descripción se come el límite. Antes
-   * eso reventaba la exportación completa del catálogo y el usuario no tenía
-   * forma de saber cuál producto la causaba.
+   * El único caso visto en producción fue la columna de etiquetas repetidas,
+   * y ese se ataja antes en `etiquetasUnicas` — recortar pierde contenido,
+   * deduplicar no. Si este aviso vuelve a aparecer es por un campo distinto:
+   * revisar cuál antes de asumir que es la descripción.
    */
   private recortarParaExcel(valor: any): any {
     if (typeof valor !== 'string' || valor.length <= ProductosComponent.EXCEL_MAX_CELDA) {

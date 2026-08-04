@@ -264,6 +264,13 @@ export class CrearVentasComponent
   public bodega: any = null;
   isChannelManual: boolean = true;
 
+  /**
+   * Catálogo sin inventario: muestra solo los productos que se venden bajo
+   * pedido. No pertenecen a ninguna bodega, así que al activarlo el catálogo
+   * aparece de una vez, sin exigir bodega ni ciudad.
+   */
+  public catalogoSinInventario: boolean = false;
+
   // Formulario y propiedades para notas de cliente
   notasClienteForm: FormGroup;
   fechaActual: Date;
@@ -4088,6 +4095,19 @@ export class CrearVentasComponent
         this.toastrService.error("Error al cargar las bodegas", "Error");
       },
     });
+  }
+
+  /**
+   * Entra o sale del catálogo sin inventario. Es un modo, no un filtro: al
+   * activarlo se muestran los productos que se venden bajo pedido (que no
+   * pertenecen a ninguna bodega) y el selector de bodega queda inhabilitado.
+   * La bodega elegida NO se borra, para no perderla al volver.
+   */
+  onCatalogoSinInventarioChange(activo: boolean): void {
+    // Solo se cambia la bandera: el catálogo la recibe por @Input y reacciona
+    // solo. Asignarla también a mano sobre el hijo saltaría la detección de
+    // cambios de Angular y el modo no se recargaría.
+    this.catalogoSinInventario = activo;
   }
 
   onWarehouseChange(event: Event): void {

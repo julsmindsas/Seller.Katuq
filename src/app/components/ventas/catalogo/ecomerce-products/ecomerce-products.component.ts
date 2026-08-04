@@ -11,8 +11,8 @@ import {
   SimpleChanges,
   OnDestroy,
 } from "@angular/core";
-import { Subject, of, forkJoin } from "rxjs";
-import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError, filter } from "rxjs/operators";
+import { Subject, of, forkJoin, EMPTY, Observable } from "rxjs";
+import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError, filter, expand, map, last } from "rxjs/operators";
 import { QuickViewComponent } from "../../quick-view/quick-view.component";
 import { VentasService } from "../../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
@@ -63,8 +63,8 @@ export class EcomerceProductsComponent
   // Colapso horizontal del panel de filtros en desktop (independiente del
   // drawer mobile de openSidebar/sidebarToggle) — libera espacio para el grid.
   filtrosColapsados: boolean = false;
-  col: string;
-  listView: any;
+  col: string = "3";
+  listView: boolean = false;
   productos: Producto[];
   categorias: any[];
   empresaActual: any;
@@ -108,6 +108,14 @@ export class EcomerceProductsComponent
   // 8.2k productos → ~2.3k con stock) y evita ofrecer productos invendibles.
   public soloConStock: boolean = true;
 
+  /**
+   * Modo "catálogo sin inventario": muestra SOLO los productos no
+   * inventariables (los que se venden bajo pedido). No dependen de ninguna
+   * bodega, por eso este modo no exige seleccionarla — se activa desde la
+   * barra de filtros, al lado de Bodega y Ciudad.
+   */
+  @Input() soloNoInventariables: boolean = false;
+
   // Cache de precio por categoría del cliente (evita parsear sessionStorage en cada CD cycle)
   private _cachedCategoriaClienteId: string | null = null;
   private _clienteCacheInitialized: boolean = false;
@@ -132,6 +140,9 @@ export class EcomerceProductsComponent
 
   // Subject para carga de páginas — switchMap cancela requests anteriores automáticamente
   private pageRequest$ = new Subject<{ filters: any; page: number; pageSize: number }>();
+
+  /** Curso que inicia cada página para el conjunto actual de filtros. */
+  private coursePageCursors = new Map<number, string | null>([[1, null]]);
 
   // Cache de filtros actuales para paginación
   private filtrosActuales: any = null;
@@ -206,7 +217,7 @@ export class EcomerceProductsComponent
       this.initForm();
     }
     this.listView = false;
-    this.col = "2";
+    this.col = "3";
     this.obtenerFiltros();
     // Refrescar cache de cliente al recargar todo
     this.refreshClienteCache();
@@ -360,7 +371,8 @@ export class EcomerceProductsComponent
           this.errorCarga = null;
         }),
         switchMap(({ filters, page, pageSize }) =>
-          this.ventasService.getProductsByFilterPaginated(filters, page, pageSize).pipe(
+          this.obtenerPaginaServidor(filters, page, pageSize).pipe(
+            map(result => ({ response: result.response, requestedPage: result.page })),
             catchError(error => {
               console.error(`❌ Error cargando página ${page}:`, error);
               this.errorCarga = "Error al cargar productos. Intente nuevamente.";
@@ -376,15 +388,31 @@ export class EcomerceProductsComponent
         filter(response => response !== null),
         takeUntil(this.destroy$)
       )
-      .subscribe((response: any) => {
+      .subscribe(({ response, requestedPage }: any) => {
         this.productosPaginados = response.products || [];
         this.productos = this.productosPaginados;
         this.temp = [...this.productosPaginados];
         this.totalProductos = response.pagination?.totalItems || 0;
-        this.totalPaginas = response.pagination?.totalPages || 0;
-        this.paginaActual = response.pagination?.currentPage || 1;
+        // El conteo de una bodega puede ser una estimación. Si el cursor ya
+        // indicó que no hay más resultados, no ofrecemos páginas inexistentes.
+        this.totalPaginas = response.pagination?.hasNext === false
+          ? requestedPage
+          : response.pagination?.totalPages || 0;
+        // El API de bodega pagina por cursor. `currentPage` allí es una
+        // estimación, por lo que la fuente de verdad es la página solicitada.
+        this.paginaActual = requestedPage;
         this.cargandoProductos = false;
       });
+
+    // Catálogo sin inventario: no depende de bodega ni ciudad, así que se
+    // carga en cuanto el componente arranca. Va acá y no en `ngOnChanges`
+    // porque recién en este punto existe la suscripción a `pageRequest$`
+    // (ver la nota del primer ciclo en `ngOnChanges`).
+    if (this.soloNoInventariables) {
+      this._initialLoadTriggered = true;
+      this.filtrarProductos();
+      return;
+    }
 
     // Inicializar y cargar productos si tenemos bodega y ciudad
     if (
@@ -616,42 +644,57 @@ export class EcomerceProductsComponent
   }
 
   filtrarProductos() {
-    // Validar que tengamos bodega y ciudad antes de hacer la petición
-    if (!this.bodega || !this.bodega.idBodega) {
-      console.warn("No hay bodega seleccionada para filtrar productos");
-      return;
-    }
+    // Modo "catálogo sin inventario": los productos no inventariables no
+    // pertenecen a ninguna bodega, así que acá NO se exige bodega. La ciudad
+    // sigue siendo opcional: si hay, filtra por cobertura de entrega.
+    if (!this.soloNoInventariables) {
+      // Validar que tengamos bodega y ciudad antes de hacer la petición
+      if (!this.bodega || !this.bodega.idBodega) {
+        console.warn("No hay bodega seleccionada para filtrar productos");
+        return;
+      }
 
-    if (
-      !this.ciudad ||
-      this.ciudad === "seleccione" ||
-      this.ciudad.trim() === ""
-    ) {
-      console.warn("No hay ciudad seleccionada para filtrar productos");
-      // Mostrar mensaje al usuario si es necesario
-      this.toastrService.warning(
-        "Por favor seleccione una ciudad antes de buscar productos",
-        "Ciudad requerida",
-      );
-      return;
+      if (
+        !this.ciudad ||
+        this.ciudad === "seleccione" ||
+        this.ciudad.trim() === ""
+      ) {
+        console.warn("No hay ciudad seleccionada para filtrar productos");
+        // Mostrar mensaje al usuario si es necesario
+        this.toastrService.warning(
+          "Por favor seleccione una ciudad antes de buscar productos",
+          "Ciudad requerida",
+        );
+        return;
+      }
     }
 
     const filter = this.filterForm.value;
-    filter.deliveryCity = { label: this.ciudad, value: this.ciudad };
+    if (this.ciudad && this.ciudad !== "seleccione" && this.ciudad.trim() !== "") {
+      filter.deliveryCity = { label: this.ciudad, value: this.ciudad };
+    }
     // El backend matchea por nombre de categoría (los productos no guardan un ID
     // de categoría, solo una copia del nombre). Si se eligió una categoría principal,
     // se incluyen también los nombres de sus subcategorías para que el filtro
     // muestre productos de toda la rama, no solo los asignados exactamente a ese nodo.
     filter.categoryLabels = this.collectCategoryLabels(filter.category);
     delete filter.category;
-    filter.bodega = this.bodega;
-    filter.bodegaId = this.bodega.idBodega || this.bodega;
+    if (this.soloNoInventariables) {
+      // Sin bodega: el backend resuelve el catálogo de no inventariables.
+      delete filter.bodega;
+      delete filter.bodegaId;
+      filter.soloNoInventariables = true;
+    } else {
+      filter.bodega = this.bodega;
+      filter.bodegaId = this.bodega.idBodega || this.bodega;
+      filter.onlyWithStock = this.soloConStock;
+    }
     filter.isChannelManual = true;
     filter.estado = 'activo';
-    filter.onlyWithStock = this.soloConStock;
 
     // Guardar filtros actuales
     this.filtrosActuales = { ...filter };
+    this.resetPageCursors();
 
     // Reiniciar a página 1 con nuevos filtros
     this.paginaActual = 1;
@@ -675,6 +718,54 @@ export class EcomerceProductsComponent
       page: pagina,
       pageSize: this.productosPorPagina,
     });
+  }
+
+  /** Reinicia el recorrido de cursores al cambiar filtros o tamaño de página. */
+  private resetPageCursors(): void {
+    this.coursePageCursors.clear();
+    this.coursePageCursors.set(1, null);
+  }
+
+  /**
+   * El endpoint es cursor-based: `page` por sí solo no cambia el resultado.
+   * Conservamos los cursores ya obtenidos y, si el usuario salta a una página
+   * aún no visitada, recorremos solo las páginas intermedias necesarias.
+   */
+  private obtenerPaginaServidor(filters: any, requestedPage: number, pageSize: number): Observable<{ response: any; page: number }> {
+    const knownPages = Array.from(this.coursePageCursors.keys())
+      .filter(page => page <= requestedPage);
+    const startPage = knownPages.length ? Math.max(...knownPages) : 1;
+
+    return this.solicitarPaginaConCursor(filters, startPage, pageSize).pipe(
+      expand(({ response, page }) => {
+        const nextCursor = response.pagination?.nextCursor;
+        if (nextCursor) {
+          this.coursePageCursors.set(page + 1, nextCursor);
+        }
+
+        if (page >= requestedPage || !nextCursor) {
+          return EMPTY;
+        }
+        return this.solicitarPaginaConCursor(filters, page + 1, pageSize);
+      }),
+      // Si el conteo estimado permitía saltar más allá de la última página,
+      // devolvemos la última página real en vez de dejar el catálogo cargando.
+      last(),
+    );
+  }
+
+  private solicitarPaginaConCursor(filters: any, page: number, pageSize: number): Observable<{ response: any; page: number }> {
+    const requestFilters = { ...filters };
+    const cursor = this.coursePageCursors.get(page);
+    if (cursor) {
+      requestFilters.cursor = cursor;
+    } else {
+      delete requestFilters.cursor;
+    }
+
+    return this.ventasService.getProductsByFilterPaginated(requestFilters, page, pageSize).pipe(
+      map(response => ({ response, page })),
+    );
   }
 
   /**
@@ -859,16 +950,23 @@ export class EcomerceProductsComponent
   private buscarConFiltrosPaginados(searchTerm: string): void {
     if (!this.filtrosActuales) {
       this.filtrosActuales = this.filterForm.value;
-      this.filtrosActuales.deliveryCity = { label: this.ciudad, value: this.ciudad };
-      this.filtrosActuales.bodega = this.bodega;
-      this.filtrosActuales.bodegaId = this.bodega?.idBodega || this.bodega;
+      if (this.ciudad && this.ciudad !== 'seleccione' && this.ciudad.trim() !== '') {
+        this.filtrosActuales.deliveryCity = { label: this.ciudad, value: this.ciudad };
+      }
+      if (this.soloNoInventariables) {
+        this.filtrosActuales.soloNoInventariables = true;
+      } else {
+        this.filtrosActuales.bodega = this.bodega;
+        this.filtrosActuales.bodegaId = this.bodega?.idBodega || this.bodega;
+        this.filtrosActuales.onlyWithStock = this.soloConStock;
+      }
       this.filtrosActuales.isChannelManual = true;
       this.filtrosActuales.estado = 'activo';
-      this.filtrosActuales.onlyWithStock = this.soloConStock;
     }
 
     this.filtrosActuales.searchTerm = searchTerm;
     this.paginaActual = 1;
+    this.resetPageCursors();
     this.cargarPaginaServidor(1);
   }
 
@@ -979,6 +1077,7 @@ export class EcomerceProductsComponent
    */
   cambiarProductosPorPagina(cantidad: number) {
     this.productosPorPagina = cantidad;
+    this.resetPageCursors();
     this.configurarPaginacion();
   }
 
@@ -1018,6 +1117,23 @@ export class EcomerceProductsComponent
   ngOnChanges(changes: SimpleChanges): void {
     const bodegaChanged = changes["bodega"] && !changes["bodega"].firstChange;
     const ciudadChanged = changes["ciudad"] && !changes["ciudad"].firstChange;
+
+    // Al entrar o salir del catálogo sin inventario se recarga de una vez:
+    // es un modo distinto, no un filtro más sobre lo ya cargado.
+    //
+    // OJO con el primer ciclo: si el modo se activa sin bodega, el componente
+    // recién se crea acá, y `ngOnChanges` corre ANTES de `ngOnInit` — o sea,
+    // antes de que exista la suscripción a `pageRequest$`. Pedir la página en
+    // ese momento la manda a un Subject sin oyentes y se pierde: el catálogo
+    // se quedaba cargando para siempre. En ese caso la dispara `ngOnInit`.
+    if (changes["soloNoInventariables"] && !changes["soloNoInventariables"].firstChange && this.filterForm) {
+      this.productosPaginados = [];
+      this.totalProductos = 0;
+      this.paginaActual = 1;
+      this.filtrosActuales = null;
+      this.filtrarProductos();
+      return;
+    }
 
     // Si cargarTodo() ya disparó filtrarProductos(), saltar este ciclo
     if (this._skipNextOnChanges && (bodegaChanged || ciudadChanged)) {

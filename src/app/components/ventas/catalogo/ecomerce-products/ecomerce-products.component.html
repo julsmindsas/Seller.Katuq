@@ -202,12 +202,12 @@
                 <div class="feature-products">
                     <div class="row align-items-center">
                         <div class="col-md-6 products-total">
-                            <div class="square-product-setting d-inline-block" (click)="toggleListView(false)">
+                            <div class="square-product-setting d-inline-block" [class.active]="!listView" (click)="toggleListView(false)">
                                 <a class="icon-grid grid-layout-view" href="javascript:void(0);">
                                     <i data-feather="grid"></i>
                                 </a>
                             </div>
-                            <div class="square-product-setting d-inline-block" (click)="toggleListView(true)">
+                            <div class="square-product-setting d-inline-block" [class.active]="listView" (click)="toggleListView(true)">
                                 <a class="icon-grid m-0 list-layout-view" href="javascript:void(0);">
                                     <i data-feather="list"></i>
                                 </a>
@@ -219,20 +219,20 @@
                                 </span>
                             </span>
                             <div class="grid-options-clean">
-                                <button class="grid-btn" [class.active]="col === '6'" (click)="gridColumn(6)" title="2 columnas">
-                                    <span class="grid-icon"><span></span><span></span></span>
-                                </button>
                                 <button class="grid-btn" [class.active]="col === '4'" (click)="gridColumn(4)" title="3 columnas">
                                     <span class="grid-icon"><span></span><span></span><span></span></span>
                                 </button>
                                 <button class="grid-btn" [class.active]="col === '3'" (click)="gridColumn(3)" title="4 columnas">
                                     <span class="grid-icon"><span></span><span></span><span></span><span></span></span>
                                 </button>
-                                <button class="grid-btn" [class.active]="col === '2'" (click)="gridColumn(2)" title="6 columnas">
-                                    <span class="grid-icon"><span></span><span></span><span></span><span></span><span></span><span></span></span>
+                                <button class="grid-btn" [class.active]="col === '5'" (click)="gridColumn(5)" title="5 columnas">
+                                    <span class="grid-icon"><span></span><span></span><span></span><span></span><span></span></span>
                                 </button>
                             </div>
+                            <!-- "Solo con stock" no aplica al catálogo sin inventario:
+                                 esos productos se venden bajo pedido, no tienen unidades. -->
                             <div class="form-check form-switch d-inline-block ms-3 align-middle"
+                                 *ngIf="!soloNoInventariables"
                                  title="Ocultar productos sin unidades disponibles">
                                 <input class="form-check-input" type="checkbox" id="soloConStockSwitch"
                                        [checked]="soloConStock" (change)="toggleSoloConStock()">
@@ -254,7 +254,7 @@
                                 {{ 'Resultados' | translate }}
                             </span>
                             <!-- Hint: solo productos con stock para esta bodega -->
-                            <i *ngIf="!cargandoProductos && bodega?.idBodega && (totalProductos > 0 || productosPaginados?.length > 0)"
+                            <i *ngIf="!cargandoProductos && bodega?.idBodega && !soloNoInventariables && (totalProductos > 0 || productosPaginados?.length > 0)"
                                class="fa fa-info-circle text-info ms-1"
                                ngbTooltip="Solo se muestran productos con stock disponible en la bodega seleccionada. Si esperás ver más productos del catálogo, cambiá de bodega o revisá el módulo de inventario."
                                placement="bottom"></i>
@@ -273,8 +273,9 @@
                     </div>
                 </div>
 
-                <!-- Mensajes informativos cuando faltan datos -->
-                <div *ngIf="!bodega || !bodega.idBodega" class="alert alert-warning mb-4">
+                <!-- Mensajes informativos cuando faltan datos. En el catálogo sin
+                     inventario no aplican: esos productos no dependen de bodega. -->
+                <div *ngIf="!soloNoInventariables && (!bodega || !bodega.idBodega)" class="alert alert-warning mb-4">
                     <div class="d-flex align-items-center">
                         <i class="fa fa-warehouse fa-2x me-3 text-warning"></i>
                         <div>
@@ -284,7 +285,7 @@
                     </div>
                 </div>
 
-                <div *ngIf="bodega && bodega.idBodega && (!ciudad || ciudad === 'seleccione' || ciudad.trim() === '')" class="alert alert-info mb-4">
+                <div *ngIf="!soloNoInventariables && bodega && bodega.idBodega && (!ciudad || ciudad === 'seleccione' || ciudad.trim() === '')" class="alert alert-info mb-4">
                     <div class="d-flex align-items-center">
                         <i class="fa fa-map-marker-alt fa-2x me-3 text-info"></i>
                         <div>
@@ -317,21 +318,22 @@
                 </div>
 
                 <!-- Mensaje cuando no hay productos -->
-                <div *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && !cargandoProductos && productosPaginados?.length === 0 && !errorCarga" class="alert alert-secondary mb-4">
+                <div *ngIf="(soloNoInventariables || (bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '')) && !cargandoProductos && productosPaginados?.length === 0 && !errorCarga" class="alert alert-secondary mb-4">
                     <div class="d-flex align-items-center">
                         <i class="fa fa-box-open fa-2x me-3 text-secondary"></i>
                         <div>
                             <h6 class="mb-1">{{ 'No hay productos disponibles' | translate }}</h6>
-                            <p class="mb-0">{{ 'No se encontraron productos para la bodega y ciudad seleccionadas' | translate }}</p>
+                            <p class="mb-0" *ngIf="!soloNoInventariables">{{ 'No se encontraron productos para la bodega y ciudad seleccionadas' | translate }}</p>
+                            <p class="mb-0" *ngIf="soloNoInventariables">{{ 'No hay productos sin inventario en el catálogo' | translate }}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="product-wrapper-grid" [class.list-view]="listView"
+                <div class="product-wrapper-grid" [class.list-view]="listView" [class.grid-five-columns]="col === '5' && !listView"
                      [class.loading-overlay]="cargandoProductos && productosPaginados?.length > 0"
-                     *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosPaginados?.length > 0">
+                     *ngIf="(soloNoInventariables || (bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '')) && productosPaginados?.length > 0">
                     <div class="row">
-                        <div [class]="'col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
+                        <div [class]="col === '5' ? 'catalog-product-col col-lg-3 col-md-4 col-sm-6 col-12' : 'catalog-product-col col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
                             *ngFor="let producto of productosPaginados; trackBy: trackByProducto">
                             <div class="card product-card-modern" [class.product-card-inactive]="producto.exposicion?.activar === false">
                                 <div class="product-box-modern">

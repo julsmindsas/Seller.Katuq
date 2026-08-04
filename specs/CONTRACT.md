@@ -68,6 +68,7 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | **025** | **multi-pais-multi-moneda** | **investigación cerrada — propuesta Ola 0 en draft** | Daniel | Programa para que Katuq opere en varios países y monedas, empezando por Suramérica. Hallazgos con evidencia `file:line` + requisitos regulatorios 2026 verificados contra fuentes públicas en `openspec/changes/enable-multi-country-multi-currency/findings.md`. **Hallazgo central: Katuq no tiene concepto de moneda** — no la persiste la orden ni el precio, y el impuesto se guarda con las 4 tarifas de IVA colombiano como llaves fijas. **Alcance y mercados confirmados (adenda D-137): un comercio opera en su país; objetivo = Venezuela y Brasil por demanda comercial.** Orden real: **Base → Venezuela → Brasil**, con Ecuador y Perú como olas posteriores (la recomendación técnica era al revés y queda registrada). Ola 0 = perfil de país + moneda con par y tasa congelada + motor de N tributos por línea en dos momentos (producto y liquidación) + tipo de documento fiscal por canal; gate = fixtures dorados de la spec 010 sin modificar. Ambos mercados van por tercero autorizado (imprenta digital SENIAT / socio de API fiscal), no por emisión propia. Camino crítico no-código: homologación SENIAT (Providencia 000121). Ver D-137 y su adenda. |
 | **009** ⚠️ | **customer-metrics-detalle-cliente** | **backend done + 15 tests; frontend pendiente flag** | Daniel | 4 métricas de solo-lectura en la ficha del cliente + lista paginada. Endpoint `GET /v1/orders/customer-summary` con query proyectada (sin carrito). Sin colección paralela ni índices nuevos. Feature flag `ENABLE_CUSTOMER_METRICS`. Ver D-043. **Número en colisión con `009-whatsapp-kapso-notifications-marco` — pendiente renumerar (ver D-144).** |
 | **010** ⚠️ | **assisted-sale-discounts-promotions** | **implement done (G1–G4 + fixes e2e + ampliaciones) — pendiente e2e final navegador + deploy** | equipo Katuq + Claude | Formaliza bajo SDD la integración de **códigos** (Feature A) y **promociones automáticas** (Feature B) en la venta asistida. Retroactiva: ratifica A/B como groundwork (criterios `[AS-BUILT]`) + trabajo nuevo: verificación e2e en navegador + cierre de gaps (desglose vs persistido, envío_gratis, vigencia UTC→Bogotá, tope 100%). Rama `feature/descuentos-promociones` (ambos repos). Ver D-044. **Número en colisión con `010-venta-asistida-impuestos-congruencia` y con `010-notificaciones-pedido-unificadas` — pendiente renumerar (ver D-144).** |
+| **011** | **billing-zones-multi-municipality** | **draft — pendiente checkpoint** | equipo Katuq + Claude | Alta múltiple de zonas de cobro: el campo Ciudad del modal pasa de un municipio a **multi-select (chips)** + agregar todos los de un departamento / todos los del país (DANE). Al guardar crea **una zona por municipio** (mismo nombre/valor/impuesto), **omite duplicados** (mismo municipio+nombre) con resumen; multi-select también en edición. Rama `feature/zonas-de-cobro` (ambos repos). Ver D-048. **Número en colisión con `011-crm-clientes-corporativos` — pendiente renumerar (ver D-144).** |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -1208,6 +1209,34 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Ampliación de comportamiento (la decisión de fondo):** las promociones automáticas ahora dejan **historial de redención** como los códigos. NUEVO `services/descuentosService.registrarRedencionesPromociones` — agrupa las líneas de la orden por `_promocionAplicada`, reutiliza `registrarRedencion` (misma colección `redencioneDescuentos`), idempotente por `${ordenId}_${promocionId}`, incrementa `usosActuales`. Las promociones no tienen `limiteUsos` → no hay auto-agotamiento (solo conteo). Enganchado NO bloqueante en `controllers/orders.js exports.create` tras la redención de código. Frontend: el modal de historial muestra badge "Promoción" cuando no hay código; la lista admin ya exponía Historial/Redimido(N) para todas las filas.
 - **Nota SDD:** esta ampliación excede el alcance original de la spec 010 (que era integración + gaps). Se registra aquí y en `tasks.md`; el criterio EARS correspondiente se añade a `spec.md` (§4). Trabajo hecho en sesión interactiva con el usuario conduciendo el e2e.
 
+### 2026-07-30 — D-048: Apertura spec 011 — alta múltiple de zonas de cobro por municipio
+- **Contexto:** el módulo de zonas de cobro (`extras/zonas-cobro`) nunca se formalizó bajo SDD. Hoy el modal "Crear zona de cobro" fija UN municipio (campo Ciudad de solo lectura, elegido desde el buscador DANE); configurar tarifas para muchos municipios obliga a repetir el formulario decenas/cientos de veces. El usuario pidió convertir Ciudad en un multi-select y crear una zona por municipio en un solo guardado.
+- **Decisión:** abrir **spec 011 `billing-zones-multi-municipality`** (draft). Alcance: campo Ciudad → multi-select de municipios (chips removibles) + acción "agregar todos los del departamento" + "seleccionar todos (DANE)"; al guardar, crear una zona por municipio con el mismo nombre/valor/impuesto; edición individual posterior intacta.
+- **Clarifications resueltas con el usuario (2026-07-30):**
+  - **Duplicados = OMITIR con advertencia:** si un municipio ya tiene zona con el MISMO nombre de zona, no se crea (no se sobrescribe) y se cuenta como omitida; al final se muestra resumen creadas/omitidas. Un municipio SÍ puede tener varias zonas con nombres distintos.
+  - **Multi-select también en EDICIÓN:** al editar, se precarga el municipio de la zona y se pueden agregar municipios adicionales (que se crean como zonas nuevas, con la misma regla de omitir duplicados).
+- **Fuera de alcance:** cambiar el esquema (1 zona = 1 municipio se mantiene), tarifas por peso/valor, reglas de cobertura, import por archivo, cambiar consumidores (checkout/pedidos/analítica), renombrar la colección, control de acceso por rol, y los demás gaps del módulo (lookup case-sensitive, etc.) salvo la invalidación mínima de caché.
+- **Ramas:** `feature/zonas-de-cobro` en ambos repos (frontend desde `feature/descuentos-promociones` porque el workspace SDD `specs/` no está en `main`; backend desde `backend-aws-security`).
+- **Abierto para el checkpoint de la spec (§8):** municipio base no removible en edición; umbral de confirmación; nivel de detalle del resumen; disponibilidad inmediata en checkout (invalidar caché).
+- **Estado:** `specs/011-billing-zones-multi-municipality/spec.md` en `draft`. Pendiente checkpoint humano antes de redactar `plan.md`.
+
+### 2026-07-30 — D-049: Clarifications spec 011 resueltas + spec aprobada
+- **Edición — municipio base:** NO removible (para eliminar una zona se usa la acción de borrar; en edición solo se agregan municipios adicionales).
+- **Umbral de confirmación:** confirmación solo en acciones masivas (agregar todos los de un departamento / seleccionar todos los municipios). Alta manual de pocos municipios sin confirmación.
+- **Detalle del resumen:** conteos (creadas / omitidas / fallidas) + opción de ver el detalle de cuáles municipios.
+- **Disponibilidad inmediata:** SÍ — tras el alta se invalida/refresca la caché local de zonas para que las nuevas queden disponibles (p. ej. en checkout) sin recargar. Cierra, solo para este flujo, el gap de caché stale detectado en el mapeo del módulo.
+- **Decisión:** con las 4 clarifications resueltas, la spec 011 pasa a **approved**. Habilita redactar `plan.md` (stack, contratos, fases, gates vs constitución) — pendiente del OK del usuario para arrancar esa fase.
+
+### 2026-07-30 — D-050: Plan 011 aprobado + decisiones técnicas del alta masiva
+- **Alta masiva vía endpoint batch backend** (no loop frontend): nuevo `POST /v1/zonascobro/create-batch` que recibe la lista de municipios y crea todas las zonas en una petición, con `writeBatch` por chunks de 500 (~1122 = 3 chunks). Razón: rendimiento y consistencia; ~1122 requests HTTP sería frágil. Alternativa descartada: loop frontend sobre `/create`.
+- **Validación de duplicados autoritativa server-side:** el backend verifica `company + ciudad + nombreZonaCobro` (normalizado trim+lower, solo dentro de este flujo) contra las zonas de la empresa cargadas en memoria (sin índice compuesto nuevo; las zonas por empresa son pocas). Omite duplicados (no sobrescribe), los reporta en `omitidas`. Idempotente. Alternativa descartada: validar solo en frontend (falla con caché stale/concurrencia).
+- **Whitelist de campos en el batch:** escribe solo los campos del esquema `zonacobro` (no replica el defecto del `create` legacy que persiste `req.body` completo). El `create` legacy NO se corrige aquí (fuera de alcance).
+- **Cálculo de impuesto/total en servidor** (misma fórmula que el modal: impuesto = valor×%; total = valor+impuesto); no se confía en los montos del cliente.
+- **Sin feature flag** (mejora aditiva de UI + endpoint aditivo); rollback = revertir commits. `create/edit/delete` actuales intactos.
+- **Gate Art. IX = parcial (documentado, sin enmienda):** el módulo `extras/zonas-cobro` es Angular 14 legacy (NgModule + reactive forms + `*ngIf`); se sigue su patrón por consistencia en vez de reescribir a signals/standalone.
+- **Nota OpenSpec (backend):** el repo backend usa OpenSpec (`/openspec/`); esta decisión se registra en `CONTRACT.md` como canon compartido. Espejar en `openspec/changes/` queda opcional a criterio del equipo backend.
+- **Decisión:** `plan.md` de 011 pasa a **approved**. Habilita generar `tasks.md` (checkpoint humano antes de implementar).
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
@@ -1244,6 +1273,27 @@ Orden = prioridad. La spec piloto siempre encabeza.
 ## 7. Bitácora de sesiones
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
+
+### 2026-07-30 (spec 011 — alta múltiple de zonas de cobro)
+- Fix previo (spec 010): historial de redenciones — "Total pedido" ahora se calcula desde el carrito
+  (mercancía con IVA − descuentos, sin envío) porque los campos de total persistidos podían estar corruptos
+  (ORE-000494). Commit backend `8defb17` en `feature/descuentos-promociones` (pusheado). Sin backfill.
+- Abrimos módulo **zonas de cobro** bajo SDD como **spec 011**. Ciclo completo en una sesión: spec (D-048) →
+  clarifications + approved (D-049) → plan + decisiones técnicas approved (D-050) → tasks approved → implement.
+- Ramas nuevas `feature/zonas-de-cobro` en ambos repos (front desde `feature/descuentos-promociones` porque
+  `specs/` no está en `main`; back desde `backend-aws-security`).
+- **Implementado (T-01..T-07):** BACK endpoint `POST /v1/zonascobro/create-batch` (`services/zonasCobroBatch.js`
+  puro + `controllers/zonascobro.js`/`routers` + contract test `test:zonascobro-batch` **12/12 verde**); FRONT
+  modal `crear-zonas-cobro` con multi-select de municipios (chips), agregar-todos-depto / seleccionar-todos con
+  confirmación, guardar single/lote, edición con base fija + añadidos, resumen creadas/omitidas/fallidas,
+  invalidación de caché `allBillingZone`; servicio batch + `getTodosLosMunicipios`; unit spec (T-07, no corre por
+  harness karma inoperante). Front compila OK (`Compiled successfully`).
+- **Pendiente:** **T-08 e2e en navegador** (lo prueba el usuario) + verificación read-only en Firestore + T-09
+  cierre. Commits de esta sesión hechos con autorización del usuario (implementación, e2e pendiente).
+- **Gotchas de entorno (anotados en memoria):** (1) el frontend `main` NO tiene `specs/` — no basar ramas SDD en
+  main. (2) `src/environments/environment.ts` está gitignoreado en ramas feature pero trackeado en `main`; pasar
+  por main lo borró — se restauró apuntando a `localhost:3300` + props faltantes. (3) tras cambiar el back a
+  `backend-aws-security` hubo que `npm install` (dep nueva `@sentry/node`).
 
 ### 2026-07-24 (sesión apertura spec 010 — descuentos/promociones bajo SDD)
 - Retomamos el feature de descuentos y promociones. Ambos repos en `feature/descuentos-promociones`, limpios; Feature A y B ya commiteados y pusheados (backend `720d6aa`, frontend `742c4e0a`).
@@ -2251,6 +2301,35 @@ Continúa D-139. Al probar el modal en el navegador aparecieron errores de conte
   - `GET /v1/productos/search/quick?q=...&limit=...&searchBy=all` (`controllers/productos.js:quickSearch`) — devuelve el producto completo con precio y **stock real ya inyectado** (`enrichProductsWithStock`, `disponibilidad.cantidadDisponible`). `searchBy=all` busca por referencia, título, marca o código de barras — más útil para un vendedor que el default histórico (`referencia` sola).
 - **UX nativa deliberadamente distinta al wizard web:** en vez de 3 pantallas separadas con "siguiente", el catálogo y el carrito viven en una sola pantalla con una barra flotante de carrito (patrón e-commerce estándar) — el wizard de pasos separados de la web no se portó literalmente, según el principio ya establecido de "menos pasos, pensado para una mano".
 - **Regla D-138 aplicada:** el subtotal por línea y el total del carrito son solo multiplicación/suma de precios que el backend ya resolvió (`precio.precioUnitarioConIva`) — no se deriva IVA, descuentos ni precio por tipo de cliente/volumen. Esa resolución real solo ocurre server-side una vez exista un pedido de verdad, que es checkout (fuera de esta entrega).
+
+### 2026-08-02 — D-147: El aviso de "celdas recortadas" al exportar productos era por etiquetas duplicadas, no por descripciones
+
+**Síntoma.** Exportando el catálogo de ALMARA salía el aviso: *"2 celdas superaban el máximo que admite Excel y se recortaron (ALM-3111, ALM-4178). No reimportes estas filas"*. El recorte a 32.767 caracteres (D-146) hacía su trabajo — el archivo se descargaba — pero dejaba dos filas no reimportables.
+
+**Diagnóstico contra datos reales, no por inspección de código.** La hipótesis inicial (descripciones con HTML del editor enriquecido e imágenes en base64, que es lo que decía el propio comentario de `recortarParaExcel`) resultó **falsa**: esos dos productos tienen descripciones de 903 y 1.007 caracteres, con **cero** `<img>` y cero base64. La celda que se pasaba de largo era **`Etiquetas (separadas por coma)`**, con 34.550 y 35.687 caracteres.
+
+**Causa raíz — un generador de IA que se trabó en un bucle.** Los 6 productos afectados del catálogo tienen entre 747 y 1.055 etiquetas, de las cuales solo 72 a 126 son distintas:
+
+| Ref | Etiquetas | Únicas | Último `date_edit` |
+|---|---|---|---|
+| ALM-3245 | 1.055 | 81 | 2026-02-12 |
+| ALM-2184 | 909 | 72 | 2026-05-22 |
+| ALM-000308 | 901 | 84 | 2026-02-12 |
+| ALM-4178 | 831 | 93 | 2026-02-12 |
+| ALM-000318 | 770 | 111 | 2025-01-31 |
+| ALM-3111 | 747 | 126 | 2026-02-12 |
+
+Las primeras 25 a 85 etiquetas son sensatas y todas distintas; a partir de ahí el generador cicla sobre una plantilla (`"regalo para el día del director de seguridad"` ×46, `"Regalo para personas que me hacen amar"` ×83) y la última queda cortada a media frase (`"regalo para el día del"`), señal de que la generación topó su propio límite. **No es un proceso que corrió varias veces**: se verificó que la lista no aparece repetida en bloque (el primer elemento no reaparece nunca). **Tampoco se escribieron a mano**: `crear-productos.component.ts:2110` deduplica al agregar con Enter. No se identificó el generador en el código actual — el único `autoTags` que existe (`shopify-product-upsert.action.js:330`) deduplica con `Set` y escribe del lado de Shopify, no en `exposicion.etiquetas`. Apunta a un enriquecimiento por IA anterior o un script de una sola vez.
+
+**Decisión: deduplicar en vez de truncar.** Quitar repetidos no pierde información; truncar sí corta contenido real.
+
+- `productos.component.ts` — nuevo helper `ProductosComponent.etiquetasUnicas()` (dedup preservando orden, con `trim` y descarte de vacíos), usado por la columna de etiquetas del export.
+- `import-modal.component.ts` — el mapeo de etiquetas de **productos** ahora deduplica, alineándolo con el importador de **clientes**, que ya lo hacía (`:428`). Era el único de los tres caminos (alta manual, import clientes, import productos) que no deduplicaba. Efecto colateral deseado: reimportar un export limpia el producto (747 → 126 etiquetas).
+- El recorte a 32.767 **se conserva como red de seguridad** — su valor original sigue vigente: sin él, una sola celda pasada de largo revienta el export completo del catálogo. Se corrigió su comentario, que atribuía la causa a las descripciones.
+
+**Verificación sobre los 25.506 productos de TODAS las empresas** (lectura pura, sin escrituras): antes, 2 celdas excedían el límite (ambas de ALMARA); después de deduplicar, **0**. ALM-4178 pasa de 35.687 → 3.088 caracteres y ALM-3111 de 34.550 → 4.327. Frontend compilando en verde.
+
+**Lo que NO se hizo, a propósito.** No se tocaron los 6 documentos en Firestore: son de un tenant productivo (ALMARA FELICIDAD) y limpiar el dato de origen es una escritura masiva que merece su propio script con `--dry-run`. Con la deduplicación en export e import, el síntoma desaparece sin tocar producción, y reimportar limpia el documento por el camino normal. Queda anotado como deuda: **(a)** los 6 productos siguen con etiquetas basura en base, y **(b)** no se identificó qué proceso las generó — si vuelve a correr, volverán a aparecer.
 - **Verificación:** BUILD SUCCEEDED; pantalla inicial de "Vender" confirmada por captura real en simulador. La búsqueda de cliente/catálogo se verificó **contra la API real por `curl`** (mismo shape que decodifican los modelos Swift), pero el recorrido completo de tap-buscar-agregar-ver carrito no se repitió con automatización de UI (ya documentada como intermitente en Xcode 27 beta). No se debe dar por "100% verificado end-to-end" hasta confirmar ese recorrido con Xcode estable o en dispositivo real.
 - **Estado del programa iOS a la fecha:** Cobro en calle (Cartera + Tesorería) ✅ verificado end-to-end real. Pedidos (lista + detalle) ✅ verificado con datos reales. Venta asistida mínima (cliente + catálogo + carrito) ✅ construida y verificada por capas (API real + render inicial), pendiente recorrido interactivo completo. Cuatro bugs reales encontrados y corregidos en total: hash de contraseña, entitlements de Keychain, URL con query string, labels PascalCase.
 
@@ -2377,7 +2456,8 @@ Con esto la Fase 1 de la Vía A del programa (`docs/app-nativa-operativa.md` §9
 > - **D-141** tiene dos entradas: "Descuento por producto (línea del carrito) en venta asistida" (2026-07-29, abajo — esta sesión, `openspec/changes/add-order-line-discount/`) y "Catálogos digitales compartibles por link, con carrito del comprador" (2026-07-29, abajo — sesión distinta, mergeada a `origin` mientras esta sesión trabajaba sin haber bajado cambios todavía).
 > - **D-142** tiene dos entradas: "Descuento por línea en PDF de orden de venta y correo/comanda de venta asistida" (2026-07-30, abajo — esta sesión, `openspec/changes/fix-order-line-discount-pdf-email/`, continuación directa de D-141 ×2 primera entrada) y "Se cierra el agujero de autenticación en `/v1/productos/*`" (2026-07-30, abajo — sesión distinta). Detectado al mezclar `origin/feature/venta-asistida-mejorada` con este trabajo — el número se había asignado en esta sesión sin haber bajado cambios todavía.
 > - **D-146** tiene dos entradas: "Merge de D-135/141/142 con la rama de descuentos/promociones..." (2026-07-30, abajo — esta sesión, registro del merge) y "El botón Guardar de productos fallaba siempre al primer click..." (2026-07-30, abajo — sesión distinta, mergeada a `origin` en un segundo round mientras esta sesión ya estaba resolviendo el primero).
-> Siguiente número libre: **D-148** (D-147 asignado 2026-08-03 a "Gestión de combos en venta asistida", sin colisión — ver entrada abajo).
+> - **D-147** tiene dos entradas: "El aviso de 'celdas recortadas' al exportar productos era por etiquetas duplicadas, no por descripciones" (2026-08-02, abajo — sesión distinta, ya mergeada a `origin` antes de que esta sesión bajara cambios) y "Gestión de combos en venta asistida..." (2026-08-03, abajo — esta sesión, `openspec/changes/add-combo-quick-add/`). El número se asignó en esta sesión sin haber bajado cambios de `origin` todavía — detectado recién al mezclar.
+> Siguiente número libre: **D-148**.
 
 ### 2026-07-24 — D-135: Editar IVA manual de una línea de un pedido ya creado (propuesta pendiente)
 

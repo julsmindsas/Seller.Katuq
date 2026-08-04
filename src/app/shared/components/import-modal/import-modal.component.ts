@@ -1488,13 +1488,16 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     }
 
     // Etiquetas: en el Excel van separadas por coma, el producto las guarda
-    // como arreglo (`exposicion.etiquetas`).
+    // como arreglo (`exposicion.etiquetas`). Se deduplican, igual que en el
+    // importador de clientes (`buildStandardCustomerMapping`) y que en el
+    // formulario de producto: una etiqueta repetida no aporta nada y ya hubo
+    // productos con la misma etiqueta 80 veces, al punto de reventar el límite
+    // de celda de Excel al exportarlos.
     if (katuqField === 'etiquetas' || katuqField === 'tags' || katuqField === 'exposicion.etiquetas') {
-      if (Array.isArray(value)) return value;
-      return String(value)
-        .split(',')
-        .map(t => t.trim())
-        .filter(Boolean);
+      const lista = Array.isArray(value)
+        ? value.map(t => String(t ?? '').trim())
+        : String(value).split(',').map(t => t.trim());
+      return Array.from(new Set(lista.filter(Boolean)));
     }
 
     // Dimensiones y peso se dejan TAL CUAL (string), igual que cuando se crea el
