@@ -2458,7 +2458,146 @@ Con esto la Fase 1 de la Vía A del programa (`docs/app-nativa-operativa.md` §9
 > - **D-142** tiene dos entradas: "Descuento por línea en PDF de orden de venta y correo/comanda de venta asistida" (2026-07-30, abajo — esta sesión, `openspec/changes/fix-order-line-discount-pdf-email/`, continuación directa de D-141 ×2 primera entrada) y "Se cierra el agujero de autenticación en `/v1/productos/*`" (2026-07-30, abajo — sesión distinta). Detectado al mezclar `origin/feature/venta-asistida-mejorada` con este trabajo — el número se había asignado en esta sesión sin haber bajado cambios todavía.
 > - **D-146** tiene dos entradas: "Merge de D-135/141/142 con la rama de descuentos/promociones..." (2026-07-30, abajo — esta sesión, registro del merge) y "El botón Guardar de productos fallaba siempre al primer click..." (2026-07-30, abajo — sesión distinta, mergeada a `origin` en un segundo round mientras esta sesión ya estaba resolviendo el primero).
 > - **D-147** tiene dos entradas: "El aviso de 'celdas recortadas' al exportar productos era por etiquetas duplicadas, no por descripciones" (2026-08-02, abajo — sesión distinta, ya mergeada a `origin` antes de que esta sesión bajara cambios) y "Gestión de combos en venta asistida..." (2026-08-03, abajo — esta sesión, `openspec/changes/add-combo-quick-add/`). El número se asignó en esta sesión sin haber bajado cambios de `origin` todavía — detectado recién al mezclar.
-> Siguiente número libre: **D-149** (D-148 usado el 2026-08-04, ver entrada "Direcciones de envío... mismatch de grafía de ciudad").
+> - **D-148** tiene dos entradas: "El importador de productos completa las pestañas que faltaban, y las categorías pasan a tener un solo maestro" (2026-08-04, abajo — esta sesión) y "Direcciones de envío 'desaparecen' en venta asistida — mismatch de grafía de ciudad entre catálogos" (2026-08-04, abajo — sesión distinta, ya en `origin` antes de que esta sesión bajara cambios). Detectado al rebasar contra `origin/feature/venta-asistida-mejorada` el 2026-08-05.
+> - **D-149** tiene dos entradas: "El selector de 'filas por página' de Productos mostraba solo 2 de sus 4 opciones" (2026-08-05, abajo — esta sesión) y "Despacho Enviame usa el transportador elegido en la cotización + soporte de transporte propio contratado" (2026-08-05, abajo — sesión distinta, `64d4dcc2`+`2696f30c`, pusheada a `origin` mientras esta sesión ya tenía su commit hecho). Detectado al intentar pushear: el `push` fue rechazado, y recién ahí apareció el número repetido.
+> Siguiente número libre: **D-150**.
+
+### 2026-08-05 — D-149: El selector de "filas por página" de Productos mostraba solo 2 de sus 4 opciones
+
+**Reporte del usuario (con pantallazo):** en el paginador de Productos, el selector de cantidad de filas solo ofrecía 10 y 20, y el scroll dentro del desplegable no hacía nada.
+
+**No faltaban opciones — se estaban recortando.** `[rowsPerPageOptions]` ya tenía las cuatro (`[10, 20, 50, 100]`, `productos.component.html:404`). El panel del `p-dropdown` se renderiza **inline**, dentro del `.card.shadow-sm` que lleva `overflow: hidden` para redondear sus esquinas (`productos.component.scss:987-989`). El paginador es lo último de la tarjeta y el panel abre hacia abajo, así que la tarjeta cortaba todo lo que sobresalía: 50 y 100 quedaban fuera del área visible.
+
+Y por eso el scroll tampoco servía: el panel **no desborda** — 4 opciones ≈ 160px contra los 200px de `dropdownScrollHeight` de PrimeNG 14 —, así que no hay nada que scrollear. Lo que desbordaba era la tarjeta, no el panel. Es la clase de síntoma que se lee como "falta contenido" cuando en realidad es un recorte de un ancestro.
+
+**Fix:** `paginatorDropdownAppendTo="body"` en la `p-table`. Saca el panel del árbol de la tarjeta y deja de estar sujeto a su `overflow`. Mismo patrón que ya usan otros dropdowns del proyecto (ver la nota de `.p-overlay` en `styles.scss`). Un atributo, sin tocar SCSS: bajarle el `overflow: hidden` a la tarjeta habría roto el redondeo de esquinas en todas las tablas del módulo.
+
+**Alcance deliberadamente acotado:** la misma combinación (tabla paginada dentro de tarjeta con `overflow: hidden`) existe en CRM, despachos, inventarios, listas de precios y varios módulos más. **No se tocaron** — un cambio a la vez en módulos sensibles. Si el síntoma aparece en otra pantalla, el arreglo es idéntico.
+
+**Verificación:** `ng serve` recompiló limpio. **No probado en navegador por esta sesión** — el usuario dijo que lo probaba él.
+
+#### Dos decisiones del usuario: dejar como está
+
+- **El Id Categoría del importador de categorías se aplica al nivel más profundo de la fila, y así se queda.** Reportado como bug ("importa todo menos el Id Categoría"); se verificó contra Firestore (`categorias/R3BQqxl2yGbLiDAs308k`, ALMARA FELICIDAD) que el valor **sí entra** — quedó en `Camisetas` (nivel 3), el nodo más profundo de la fila importada. Es el comportamiento de **D-125** y su razón sigue en pie: en el formato por niveles el nombre del nivel 1 se repite en muchas filas, así que aplicarle ahí el id lo dejaría con el de la última fila procesada, un valor arbitrario según el orden del Excel. Para asignárselo a una categoría raíz se usa una fila con solo el Nivel 1 lleno — ese camino ya funciona (`onboarding.js:2808` creando, `:2825` actualizando). Usuario avisado; decidió no cambiarlo ni documentarlo en la plantilla.
+- **`MAX_PAGE_SIZE` sigue en 100.** El tope es del backend (`productosPaginated.js:55`, aplicado con `Math.min` en `:553-556`, silencioso), no del selector: ofrecer 200 dejaría el paginador diciendo una cosa y el servidor devolviendo otra. El motivo es costo de lectura en Firestore — el endpoint pide `pageSize * 3` documentos por vuelta (`:685`) porque parte de los filtros se resuelven en memoria. El export no está limitado (`fetchAllProductosParaExport` pagina de a 100, 6 en paralelo).
+
+**Deuda anotada, NO arreglada (el usuario la dejó pasar):** en `importCategories`, rama por niveles, `imagen` y `posicion` **sí** se copian al nivel 1 aunque la fila tenga niveles 2 y 3 (`onboarding.js:2802-2811`), mientras que `consecutivo` no; y al nivel 2 no se copian nunca (`:2842`). Esa asimetría es lo que hace que la categoría raíz se vea con imagen y posición pero con `-` en Id Categoría, y fue lo que disparó el reporte. El helper canónico `categoriaTreeHelper.resolverRuta:116` ya lo hace bien (`imagen: esUltimo ? opts.imagen : ""`); alinear las tres columnas ahí dejaría los dos importadores con la misma regla.
+
+**Defecto chico detectado de paso, sin tocar:** `consecutivo` pasa por `parseInt` (`onboarding.js:2785`). Un Id no numérico queda `NaN` y, como se escribe bajo `if (consecutivo)`, **se descarta en silencio, sin error ni reporte**. El `0` también. Solo afecta a quien use ids de SIIGO no numéricos.
+
+**Higiene pendiente:** quedó colgando en el árbol de categorías de ALMARA FELICIDAD (tenant productivo) la rama de prueba `Ropa > Hombre > Camisetas`, de importar la plantilla con su fila de ejemplo desde localhost. Recordatorio de la regla dura: localhost aísla el proceso, no los datos.
+
+### 2026-08-04 — D-148: El importador de productos completa las pestañas que faltaban, y las categorías pasan a tener un solo maestro
+
+**Pedido del usuario:** a la plantilla de importación de productos le faltaban columnas de casi todas las pestañas del formulario. Al analizarlo aparecieron tres capas de problema, y el alcance se acordó con el usuario antes de tocar código (regla suya para este módulo).
+
+#### Capa 1 — Las 17 columnas que faltaban (plantilla: 29 → 46)
+
+| Pestaña | Columnas nuevas |
+|---|---|
+| Datos básicos | Fecha Inicial, Fecha Final |
+| Categorías | Subcategoria (Nivel 2), Sub-subcategoria (Nivel 3) |
+| Exposición | Posicion, En Oferta, Recomendado, Destacado, Nuevo, Mas Vendido |
+| Canales de venta | Seller Center, Pagina Web, Punto de Venta |
+| Ciudad | Cobertura Nacional Origen, Cobertura Nacional Entrega, Ciudades de Origen, Ciudades de Entrega |
+
+Las dos de ciudades se agregaron porque **no existía ninguna columna de ciudad**: el código buscaba un campo `ciudad` que nunca llegaba, así que la heurística de cobertura nacional jamás se disparaba.
+
+**Regla de las casillas (decisión del usuario):** `SI` → chuleado, `NO` → sin chulear, **celda vacía → sin chulear**. Antes una celda vacía se saltaba la columna y dejaba el valor por defecto. Solo aplica si la columna existe en el archivo; el export siempre escribe SI o NO explícito, así que reimportar un export no cambia nada.
+
+**Conversiones nuevas:** las fechas llegan como serial numérico de Excel (el archivo se lee sin `cellDates`), así que "01/01/2026" entraba como `46023` y el `<input type="date">` salía vacío — ahora se normaliza a `AAAA-MM-DD` aceptando serial, ISO y d/m/a. Las ciudades se parten por comas a `[{value, label}]`, la forma exacta del selector, para que se vean como chips sin tocar nada.
+
+#### Capa 2 — Tres bloques del backend pisaban lo que mandaba el Excel
+
+`importProducts` forzaba sus banderas a `true` **después** del spread: leía la columna, la convertía… y la sobrescribía.
+
+- Canales de venta: los tres a `true` incondicional (backend y frontend).
+- Cobertura nacional: `(x === true) || true` — **devuelve `true` siempre**, pasara lo que pasara.
+- Exposición: `activo`/`activar`/`disponible` a `true`, lo que ya anulaba las columnas *Activo* y *Disponible* que existían desde antes.
+
+Se quitó el forzado en los tres. Los valores por defecto son los mismos, así que quien no traiga esas columnas entra igual que antes; en particular `ciudades` mantiene la cobertura nacional en `true` por defecto (era el efecto real del bug) para no dejar catálogos sin ciudades. `exposicion.activo` **no se borró**: es el flag canónico V2 que lee el mapper de Shopify (sin él el producto se publica como DRAFT) y el trigger de flows — ahora espeja `activar` en vez de estar clavado.
+
+#### Capa 3 — Había dos maestros de categorías conviviendo
+
+En el mismo documento de la colección `categorias`:
+
+- `categoria` (singular, árbol de 3 niveles con flatted) ← pantalla de categorías, importador de categorías, Osmosis. **Es el que lee el formulario de producto.**
+- `categorias` (plural, lista plana de 1 nivel) ← importador de **productos**, onboarding.
+
+Nadie los reconciliaba. Consecuencias: las categorías creadas por el importador de productos **no aparecían nunca** en el árbol del formulario, y el producto quedaba con la categoría en un formato **sin `label`** — de ahí la columna Categoría vacía en el listado y en el export para todo lo importado.
+
+**Decisión: el árbol (`categoria`) es la fuente de verdad única.** Nuevo `services/categoriaTreeHelper.js` con buscar-o-crear ruta de 3 niveles; lo usan los dos importadores. `importProducts` dejó de escribir en el plural.
+
+**La identidad de una categoría es su nombre dentro de su ruta, no un id** — verificado contra la pantalla de categorías, que crea los nodos como `{nombre, imagen, posicion, activo, consecutivo}`, sin id. El `uuid` que el importador de productos inventaba era un id fantasma que además se regeneraba en cada importación de categorías, rompiendo el vínculo con los productos ya cargados. Los ids del array plano ahora se derivan de la ruta y son estables entre corridas.
+
+**División de responsabilidades acordada:** el importador de categorías **diseña** la taxonomía (jerarquía, orden, imagen, Id Categoria — cosas que una fila de producto no puede expresar); el de productos solo **asigna** una ruta, y si no existe la crea "flaca" (solo el nombre) y la reporta. El orden recomendado es categorías primero, pero **no es obligatorio**: en la práctica el cliente manda un solo Excel, y obligar a dos pasos hace que la gente se salte el importador.
+
+#### Arreglos del importador de categorías
+
+1. **Formato mixto perdía los niveles 2 y 3 en silencio.** `hasPadreFormat` era un `some()` global: bastaba **una** fila con "Categoría Padre" para mandar todo el archivo a la rama padre, que nunca lee `categoria_nivel2`/`nivel3`. Ahora manda el formato mayoritario y se reporta qué quedó fuera.
+2. **`_codigo` se borraba al guardar**, pero el índice por código lo necesita en la SIGUIENTE importación: un segundo archivo que referenciara padres por código no resolvía ninguno. Ahora se persiste.
+3. **Árbol corrupto = pérdida total del maestro.** Si no se podía parsear, arrancaba vacío y lo pisaba. Ahora **aborta con 409**, igual que ya hacía Osmosis. Mismo criterio agregado a `importProducts`.
+4. **`mode` ignorado**: el modal ofrecía "Solo crear nuevos" / "Solo actualizar existentes" y el backend actualizaba igual. Ahora se respeta y se reportan las omitidas aparte de las fallidas.
+
+#### Avisos y trazabilidad del trabajo pendiente
+
+- **Antes de importar** (pantalla de mapeo, el único momento en que todavía se puede arreglar el Excel): aviso si no hay columna de categoría mapeada o si hay filas sin categoría. **Avisa, no bloquea** — un producto sin categoría se vende igual y al mismo precio; hay que tildar "Entiendo, importar igual".
+- **Después de importar**: qué categorías nacieron del archivo (para completarles orden/imagen/Id Categoria) y cuántos productos quedaron sin categoría.
+- **Opción "Sin categoría" en el filtro del listado**, porque el aviso sin forma de encontrar esos productos no sirve de nada.
+
+#### Sobre precios y categorías — se aclaró una premisa equivocada
+
+El usuario preguntó si sin categorías "los precios coinciden". **No: el precio de un producto no depende de su categoría en ningún punto.** La palabra está sobrecargada: `orderCalculationService.resolverPrecioLinea` tiene una rama que el código llama `fuentePrecio: "categoria"`, pero lee `order.cliente.categoria.id` — el **tipo de cliente** (colección `tiposPrecios`), no la categoría del producto. El importador de listas de precios agrupa por referencia y no toca categorías.
+
+Lo que sí depende de la categoría del producto: el filtro del catálogo (`categoriasIndex`) y la segmentación de descuentos/promociones. Orden real de carga: **bodegas → tipos de cliente → productos → inventario → listas de precios**. Categorías no es requisito previo.
+
+#### Efectos colaterales
+
+- **Export simétrico**: las 17 columnas nuevas más 3 de producción que estaban en la plantilla pero no en el export (reimportar un export las dejaba en blanco). Contrato cerrado: 46 y 46, con las dos asimetrías documentadas de siempre (`Id Categoria` solo entrada, `Precio con IVA` solo salida).
+- **`normalizeProducts` conserva la ruta de categoría** (de `ruta` o caminando la cadena de `parent` antes de descartarla), para poder exportar los 3 niveles también en productos cargados a mano.
+- **El índice de búsqueda del backend usa `categoriasIndex`** como fuente confiable de "tiene categoría". El heurístico anterior (`JSON.parse` + `cat[1].label`) falla para casi todo lo creado desde el formulario manual, así que el chip de Completitud marcaba como incompletos a productos bien categorizados.
+- **Bug del botón eliminar de la pantalla de categorías**: `deleteChild` hacía `node.children.indexOf(node)` —buscaba el nodo dentro de sí mismo—, que siempre da `-1`, y `splice(-1, 1)` borra el **último** elemento. Resultado: una subcategoría con hijos perdía su último hijo, y una hoja no se borraba; en los dos casos el mensaje decía "eliminada con éxito". Esa rama se alcanzaba **siempre** con categorías importadas, porque el importador las serializa con `children: []`.
+
+#### Estado
+
+Frontend compila; backend arranca en 3300. Probado el helper del árbol (crear ruta de 3 niveles, reusar sin duplicar respetando capitalización, ramas hermanas, nivel vacío que corta la ruta, round-trip de serialización, detección de árbol corrupto) y las conversiones de valores (serial de Excel, ISO, d/m/a, casillas, listas de ciudades). **No se ejecutó una importación real contra Firestore**: localhost escribe en producción, así que el E2E queda para el usuario en la UI.
+
+#### Adenda D-148 (2026-08-04, tarde) — lo que apareció al probarlo en pantalla
+
+Todo lo de abajo salió de la prueba real del usuario, no de leer código. Vale como recordatorio de que este importador nunca se había usado de punta a punta.
+
+**El módulo de Categorías estaba inutilizable, por dos fallas que se sumaban.** El botón `+` "parecía no hacer nada": el TreeTable de PrimeNG solo dibuja los hijos de un nodo **expandido** y `addChild` nunca expandía el padre, así que la subcategoría se creaba invisible; y la pantalla **nunca tuvo `<p-toast>`** ni `ToastModule`, así que todos sus mensajes (crear, eliminar, guardar, errores de carga) se emitían al vacío. Sin señal visual y sin el nodo a la vista, el botón se leía como muerto.
+
+**Textos destructivos que no decían qué borraban.** Todas las filas decían "Eliminar esta categoría", incluidas las subcategorías: parada sobre una subcategoría parecía que iba a borrar la categoría padre entera. Ahora los textos dicen el nivel real y el diálogo nombra el nodo, su padre y **cuántos descendientes se lleva**. También: el botón Confirmar del diálogo era rojo hasta para guardar, y `nodeToDelete` no se limpiaba nunca. Se bloqueó el 4º nivel (el formulario de producto solo mapea 3 y del cuarto en adelante devuelve nodos vacíos).
+
+**Bucle infinito de detección de cambios — pestaña congelada.** Al arreglar el sello "Obligatorio" se agregó `get camposObligatorios()` enlazado con `[requiredFields]`: un getter devuelve un arreglo NUEVO en cada ciclo → `ngOnChanges` del hijo → reconstruye `mappingRows` → la tabla se redibuja → otro ciclo. "La página no responde", sin botón de Importar (la pantalla de mapeo nunca llegaba a dibujarse) y sin poder ni cancelar. **Regla: nada de getters que construyan objetos/arreglos si van enlazados a un `@Input`.** Se pasó a campo calculado una vez y se blindó `ColumnMappingPreviewComponent.ngOnChanges` para que solo reprocese si cambió algo de verdad.
+
+**El sello "Obligatorio" salía en TODAS las filas.** Se deducía con `!unmappedRequired.includes(campo)` — la lista de obligatorios **sin mapear**; como toda fila de esa tabla ya está mapeada, la respuesta era siempre `true`. Ahora los obligatorios vienen de la plantilla. Además la tabla tenía diccionarios de etiquetas propios solo para clientes y productos: con categorías mostraba `categoria_nivel1` crudo.
+
+**Categorías e inventario llamaban a KAI SIEMPRE.** El atajo determinístico existía solo para clientes y productos; con la propia plantilla descargada —encabezados idénticos, nada que deducir— igual se esperaba a que KAI fallara, y recién ahí aparecía el mapeo por nombre. Se generalizó el atajo y se le puso **techo de 12s** a KAI del lado del navegador (el proxy le daba 60s, y ese `timeout` está pasado como opción de `fetch`, que no la soporta: no limitaba nada). Además la pantalla afirmaba "KAI ha sugerido los siguientes mapeos" mientras el aviso de al lado decía que no se pudo contactar a KAI, y el título salía duplicado.
+
+**Plantilla de categorías: se leía al revés.** El nivel 1 se llamaba solo "Nombre" y, al lado de "Categoría Padre", se entendía que el padre era la principal y "Nombre" una subcategoría. Es al revés. Los dos formatos (por niveles / por padre) son **excluyentes**, y "Categoría Padre" traía `Ropa` de ejemplo: invitaba justo al error que hace descartar los niveles 2 y 3. Ahora se llama `DEJAR VACÍA - Categoría Padre (otro formato)`, va última y sin ejemplo; las opcionales lo dicen en el encabezado; y el libro trae una hoja **"Instrucciones"** (columna / si es obligatoria / qué va / ejemplo). El importador busca la hoja `Plantilla` por nombre para no importar la ayuda como datos.
+
+**Precios por volumen (pedido nuevo del usuario).** No estaban en el importador. Van en **hoja aparte** `Precios por volumen` (un producto tiene N rangos, no entran como columnas de su fila), con los títulos EXACTOS de la tabla del formulario: `Referencia (SKU)`, `Numero de unidades Inicial`, `Numero limite de Unidades`, `Precio Unitario (sin IVA)`, `Porcentaje IVA`. `Valor IVA` y `Precio unitario Total (con IVA)` no se piden: se calculan, igual que en el formulario — y `valorUnitarioPorVolumenIva` **sí se usa al cobrar** (`priceCalculations.js:94`), así que no puede quedar en 0. Se replican las validaciones del backend (límite ≥ inicial, sin solapamiento) y las filas malas se descartan reportando fila y motivo. Se agregó la misma hoja al **export**: sin ella, reimportar un export borraba todos los rangos.
+
+**Tipo y tiempo de entrega no llegaban nunca — y no era el select.** Los dos son maestros **por empresa y con texto libre** (`tipoentrega`, `tiemposentrega`), y el `<option>` compara contra `nombreInterno`. Valores reales en producción: `nacional`, `express`, `DOMICILIO`, `PEDIDO AL POR MAYOR`; y en tiempos `1_2`, `24_horas`, `Solicítalo con 1 día` (ALMARA). El importador tenía **valores inventados** (`SOLO DOMICILIO`, `ENVIO A DOMICILIO Y RECOGE`) que no existen en ninguna empresa, y para el tiempo devolvía un **número** contra un select que espera texto: iba a fallar siempre, en todas las empresas. Ahora se homologa contra el maestro real (tolerante a mayúsculas, tildes y `_`/`-`/espacio; para tiempos también por `minDias`), se guarda el `nombreInterno` exacto y, si no coincide, **se deja vacío y se reporta antes de importar** con las opciones válidas de la empresa. Decisión: **no** auto-crear opciones de entrega (a diferencia de categorías) — definen cómo se despacha y no deben nacer de un typo. La plantilla ahora completa el ejemplo con una opción real y lista todas las válidas en "Instrucciones".
+
+**Limpieza de datos:** se borró de ALMARA FELICIDAD la subcategoría de prueba `Dia de la Madre > "Nueva categoria "` (con respaldo del árbol previo). De paso se detectó que **39 empresas tienen una categoría raíz con nombre vacío**, todas con `posicion: 2` y sin hijos — patrón de un proceso automático, no de una persona. **No se tocaron**: es limpieza aparte y conviene identificar primero qué las genera.
+
+#### Estado al cierre del 2026-08-04
+
+Front compila, back arranca. **Sin desplegar.** Probado en pantalla por el usuario: categorías (crear/eliminar sub, importar) OK; productos importa "casi todo" OK.
+
+**Lo único que quedó fallando y es el punto de retoma:** las **ciudades**. El usuario importó con `Cobertura Nacional Origen/Entrega = SI` y en el formulario el toggle aparece **desactivado**. Falta reproducir el caso: verificar si el archivo tenía las columnas (se agregaron en esta sesión y él venía usando una plantilla vieja), si el valor llega al backend y si `loadEditData` lo lee bien. Ojo con la lógica acordada: cobertura nacional en SI **limpia** la lista de ciudades, igual que el toggle en pantalla.
+
+**Pendientes que quedan anotados, fuera de alcance:**
+- **El primer renglón de "precio por volumen" no es un tramo**: es un espejo del precio base, forzado a `1 a 1` y con las cantidades deshabilitadas (`initializePreciosPorVolumenIfNeeded`). Nada lo dice en pantalla y el campo se deja escribir y vuelve solo a 1: parece roto. Además `[disabled]="i === 0"` en el template es el anti-patrón de reactive forms (no aplica de verdad). **Sospecha sin verificar:** al deshabilitar esos controles, `.value` los excluye al guardar, así que ese renglón podría persistirse sin `numeroUnidadesInicial`/`Limite`; si es así, `orderCalculationService` lo lee como `0..Infinity` y ese tramo se traga cualquier cantidad, anulando los descuentos por volumen. **Confirmar contra productos reales antes de tocar nada.**
+- **Límite de rango vacío = comportamiento distinto según el camino**: `orderCalculationService` lo toma como `Infinity` y `priceCalculations` no encuentra el tramo. Por eso el importador exige los dos números.
+- **Las promociones automáticas por categoría casi no aplican.** `productPromoHelper.js:30-45` usa `JSON.parse` + el heurístico `cat[1].label` que la Spec 020 ya documentó como roto: falla para productos del formulario manual, del importador y de WooCommerce. Asimetría peligrosa: los **códigos de descuento** por categoría sí funcionan (los resuelve el frontend, que parsea bien). El arreglo es que delegue en `categoriaIndexHelper` o lea `categoriasIndex`.
+- **Los 4 endpoints `import-*` de `routers/onboarding.js` siguen sin `auth`** (productos, clientes, inventario, categorías), mientras el resto del router sí lo tiene.
+- **Guardar desde la pantalla de categorías es *borrar + crear*** el documento completo, sin transacción y con payload stale del cliente: compite con importaciones y con Osmosis.
+- **El paso de categorías del onboarding apunta a `/v1/category/create`, ruta que no existe** (el backend solo monta `/v1/categorias`): ese wizard da 404 en silencio y no guarda nada.
+- Las categorías creadas antes por el importador de productos siguen en el campo plano; migrarlas al árbol requiere script con `--dry-run`.
 
 ### 2026-07-24 — D-135: Editar IVA manual de una línea de un pedido ya creado (propuesta pendiente)
 
@@ -2969,3 +3108,19 @@ Arreglo en **dos capas**, a propósito: (a) `getKatuqPrompt` ya no muta nada, ar
 - **CORRECCIÓN mismo día (aviso del usuario "ya había adelantado mucho"):** gran parte del trabajo de precios YA estaba hecho desde junio y en prod (commit BE `138def3`, 2026-06-06; la evidencia vivía en la memoria del proyecto padre `shopify-ohmystore-basic-markets-pricing`, no en la de este repo — por eso esta sesión no lo vio al inicio): (a) price list **Mayorista con 7.518 precios** cargados vía `scripts/sync-market-prices.js`; (b) **139/139 clientes mayoristas enrolados** como B2B Company+Location en las conditions del Market Mayorista vía `scripts/sync-b2b-companies.js` (OMS es plan Basic: el pricing va Company→Market conditions→Catalog→Price List, no B2B catalogs directos); (c) **nodo `shopify-pricelist-sync` ya dentro del flow activo** `cereza-products-to-shopify` (verificado read-only 2026-07-22 en el hallazgo de D-134) → cambios de precio de Cereza refrescan solos cada 5 min. **La decisión de transporte queda CERRADA: Price Lists nativas** (CreaCTA confirmó en su informe que su arquitectura las lee; los tags `precio_*` del piloto no se formalizan). Ambos changes OpenSpec re-escritos para reflejar esto; el alcance real pendiente es: backfill Modelo (85 vs 7.631), nodo pricelist en el flow no-Cereza, propagación de cambios de precio manuales, metafield `katuq.tipo_cliente` a toda la base y automatizar el enrolamiento de clientes nuevos (hoy script manual). Rama BE `feature/018-shopify-customer-sync` (worktree `-wt-018`) existe pero sin código aún.
 - **EJECUTADO 2026-07-23: backend del tipo de cliente construido + backfill CORRIDO en prod.** En la rama `feature/018-shopify-customer-sync` (commits `2830958` + `b2165bf`, pusheados, SIN deploy del proceso): `services/shopify/customerTypeService.js` (lógica compartida: regla única `categoria.nombre||tipoCliente`, email `correo_electronico_comprador`, buscar por email → `customerCreate` si falta → `metafieldsSet` katuq.tipo_cliente + katuq.customer_id; borra el metafield si el cliente pierde el tipo; write-set cerrado), nodo `shopify-customer-upsert.action.js` (registrado en index.js/node-catalog.ts/nodeCatalog.json), `scripts/backfill-shopify-customer-types.js` (dry-run default) y contract test `scripts/test-customer-type-contract.js` (9/9 PASS, falla si toca products/precios/price-lists/inventario). **Backfill corrido en EC2 en árbol de trabajo AISLADO** (`git worktree` separado + symlinks a node_modules/.env/serviceAccountKey; el dir vivo quedó intacto en `backend-aws-security @ 73cae23`, pm2 nunca reiniciado): dry-run → **bug detectado y corregido** (campo `cd` legacy vacío en algunos docs de `clients` pisaba el `doc.id` real vía `Object.assign` → 27 falsos "sin-id"; fix: `cd=doc.id` siempre gana) → apply: **575 clientes escaneados, 137 estampados (4 customers creados con identidad mínima), 438 sin email, 0 errores**. Verificado directo contra Shopify (tatianaam6@gmail.com→Mayoristas customer 7314412798158; prueba.modelos@katuq.com→Modelos 7359209308366). **Pendiente:** forward sync (trigger `katuq-customer-changed` polling sobre `clients`, preferido a emitir desde clients.js para no tocar controller vivo), webhook `customers/create`, enrolamiento B2B automático de clientes nuevos, y desplegar el nodo cuando se arme el flow.
 - **EJECUTADO mismo día (autorizado por Daniel, fuera de auto-mode): backfill de precios Modelo COMPLETADO en prod.** `sync-market-prices.js --tier modelo` en EC2 prod (13.222.206.185): dry-run primero (8.402 escaneados, 4.284 productos cargarían, 1.750 sin precio modelo, 0 errores, 1 anomalía conocida OHM-814=$1 que Daniel aceptó incluir — Katuq fuente de verdad), luego `--apply`: **5.578 precios de variante cargados, 0 errores**. Verificado contra Shopify: price list **Modelo pasó de 85 → 5.583** fixed prices; Mayorista está en 7.609 (creció sola desde los 7.518 de junio vía el nodo `shopify-pricelist-sync` del flow — evidencia de que el refresco automático funciona). Con esto el pendiente 1 de CreaCTA queda cubierto para ambos perfiles en el universo Shopify-linked; quedan los huecos ya especificados (no-Cereza, cambios manuales, cobertura vs no-linkeados).
+
+### 2026-08-05 — D-149: Despacho Enviame usa el transportador elegido en la cotización + soporte de transporte propio contratado
+
+**Origen:** el despacho con Enviame fallaba de forma encadenada y ningún pedido de ALMACEN BOMBAS lograba generar guía. Diagnóstico SDD en local contra la API real de Enviame (repo backend, `openspec/changes/fix-enviame-carrier-despacho/`).
+
+**Causa raíz (validada con prueba de aislamiento directa a la API):** el payload de creación de envío mandaba `carrier_service` con el **código del transportador** (p.ej. `"COIT"`) en vez de un código de servicio válido → Enviame respondía `400 { "data": "MS: [\"No informado\"]" }` (MS = carrier_service). Con `carrier_service` vacío, Enviame crea la guía (probado: identifier + PDF; guías de prueba eliminadas por `DELETE /deliveries/{id}`). Errores previos en la cadena, ya resueltos antes: bodega no registrada (`warehouse_code "01"` → `BOD-001`) y transportador no contratado (la cuenta 200695 solo tiene contratado COIT/"Transporte Interno", verificable en `GET /api/s1/v1/companies/{id}/carriers`; `/api/v1/prices` devuelve couriers genéricos NO contratados y NO incluye COIT).
+
+**Fix (solo `functions/services/shippingProviders/enviameProvider.js`, genérico y config-driven, SIN códigos quemados):**
+- `#mapOrderToPayload`: se prioriza el transportador elegido en la cotización (`selectedService.carrierCode`), con `config.carrier_code` solo como fallback en despacho directo. Regla genérica: si el servicio resuelto coincide con el `carrier_code`, se manda `carrier_service = ""`. Se usa `??` para respetar un `serviceCode` vacío explícito. Corregido bug de campo `config.defaultCarrier` (camelCase inexistente) → `config.carrier_code`. Eliminada la rama muerta `USE_DATA_MOKE_LOGISTICS` (tenía `'COIT'`/`'express'` quemados).
+- `getRates`: hace una sola consulta a `/carriers` (contratados) y la reutiliza para dos cosas. (1) **Filtra la cotización a solo transportadores contratados** — `/prices` devuelve couriers genéricos que la cuenta puede no tener contratados y que al despachar fallan con "does not belongs to company"; fail-open: si `/carriers` falla, no filtra. (2) **Inyecta el transporte propio** si `config.carrier_code` está contratado y no vino en `/prices` (precio 0), pero solo cuando la integración NO está en producción (`config.environment !== "production"`), porque es un transportador de pruebas. Consecuencia conocida: una cuenta sin ningún courier contratado (p.ej. solo COIT de pruebas) queda con cotización vacía en producción — correcto, es tema de datos (contratar carriers en Enviame), no de código. Ej.: ALMARA/Yavalva (cuenta 118533) pasan de mostrar 6 couriers a solo los 3 contratados (COO, SEC, ITR).
+
+**Validación multi-tenant (3 empresas usan Enviame):** ALMACEN BOMBAS (`carrier_code=COIT`) → inyecta COIT ✅; ALMARA FELICIDAD (`COO`, ya en `/prices`) → sin cambios ✅; Yavalva (`COOT`, typo no contratado) → no inyecta nada ✅. Verificado que el despacho usa el transportador elegido (elige SEC→manda SEC, elige COO→manda COO), no el default. Prueba e2e con "Transporte Interno" creó guía real (identifier + PDF, luego borrada).
+
+**Estado:** implementado y verificado en local (backend `:3300`); **commiteado en `backend-aws-security`, sin deploy todavía** (pendiente `pm2 restart katuq-api` en prod `13.222.206.185`). Artefactos SDD en `openspec/changes/fix-enviame-carrier-despacho/` (4/4, `openspec validate` OK).
+
+**Follow-ups (fuera de alcance de este cambio):** (a) bug de integridad — el pedido se marca "Despachado" aunque `createShipment` falle (afectó BAS-000009/10/11); (b) dato mal configurado `carrier_code="COOT"` de Yavalva (corrección de datos, debería ser COO o COIT). No toca auth, inventario, Shopify, Osmosis ni el 360.

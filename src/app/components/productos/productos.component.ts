@@ -192,6 +192,16 @@ export class ProductosComponent implements OnInit, OnDestroy {
   loadingProveedores = false;
   mostrarSoloDropshipping = false;
 
+  /**
+   * Valor centinela del filtro "Sin categoría" (D-148).
+   *
+   * Va como valor del mismo `<select>` de Categoría en vez de como filtro
+   * aparte porque son mutuamente excluyentes: o filtrás por una categoría, o
+   * filtrás por las que no tienen. El backend lo reconoce por este mismo
+   * string — si cambia acá, cambiarlo en `controllers/productos.js#getAll`.
+   */
+  static readonly SIN_CATEGORIA = '__SIN_CATEGORIA__';
+
   // Import modal
   showImportModal: boolean = false;
 
@@ -224,7 +234,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
     { label: 'Titulo',                          key: 'titulo',             selected: true, getValue: (r: any) => r.crearProducto?.titulo || '' },
     { label: 'Descripcion',                     key: 'descripcion',        selected: true, getValue: (r: any) => r.crearProducto?.descripcion || '' },
     { label: 'Marca',                           key: 'marca',              selected: true, getValue: (r: any) => r.identificacion?.marca || '' },
-    { label: 'Categoria',                       key: 'categoria',          selected: true, getValue: (r: any) => r.categorias?.label || '' },
+    { label: 'Fecha Inicial (AAAA-MM-DD)',      key: 'fechaInicial',       selected: true, getValue: (r: any) => r.crearProducto?.fechaInicial || '' },
+    { label: 'Fecha Final (AAAA-MM-DD)',        key: 'fechaFinal',         selected: true, getValue: (r: any) => r.crearProducto?.fechaFinal || '' },
+    // Los 3 niveles del árbol de categorías. `ruta` la arma `normalizeProducts`;
+    // si el producto no la tiene (dato viejo), cae al `label` en el nivel 1 —
+    // que es exactamente lo que exportaba esta columna antes.
+    { label: 'Categoria',                       key: 'categoria',          selected: true, getValue: (r: any) => r.categorias?.ruta?.[0] || r.categorias?.label || '' },
+    { label: 'Subcategoria (Nivel 2)',          key: 'subcategoria',       selected: true, getValue: (r: any) => r.categorias?.ruta?.[1] || '' },
+    { label: 'Sub-subcategoria (Nivel 3)',      key: 'subsubcategoria',    selected: true, getValue: (r: any) => r.categorias?.ruta?.[2] || '' },
     { label: 'Precio sin IVA',                  key: 'precioSinIva',       selected: true, getValue: (r: any) => r.precio?.precioUnitarioSinIva || 0 },
     { label: 'IVA (%)',                         key: 'porcentajeIva',      selected: true, getValue: (r: any) => r.precio?.precioUnitarioIva || '0' },
     { label: 'Precio con IVA',                  key: 'precioConIva',       selected: true, getValue: (r: any) => r.precio?.precioUnitarioConIva || 0 },
@@ -254,6 +271,28 @@ export class ProductosComponent implements OnInit, OnDestroy {
     { label: 'Restricciones',                   key: 'restricciones',      selected: true, getValue: (r: any) => r.crearProducto?.restriccionesProducto || '' },
     { label: 'Cuidado y Consumo',               key: 'cuidadoConsumo',     selected: true, getValue: (r: any) => r.crearProducto?.cuidadoConsumo || '' },
     { label: 'Requiere Produccion (SI/NO)',     key: 'requiereProduccion', selected: true, getValue: (r: any) => (r.crearProducto?.paraProduccion ? 'SI' : 'NO') },
+    // Estas tres estaban en la plantilla de importación pero no acá, así que
+    // reimportar un export las dejaba en blanco (el import escribe el producto
+    // completo: lo que no viene en el Excel vuelve al valor por defecto).
+    { label: 'Integra Software Produccion? (SI/NO)', key: 'integraProduccion', selected: true, getValue: (r: any) => (r.procesoComercial?.integraConProduccion ? 'SI' : 'NO') },
+    { label: 'Tiempo Produccion',               key: 'tiempoProduccion',   selected: true, getValue: (r: any) => r.procesoComercial?.tiempoProduccion || '' },
+    { label: 'Software Produccion',             key: 'softwareProduccion', selected: true, getValue: (r: any) => r.procesoComercial?.softwareProduccion || '' },
+    // Exposición, canales y ciudad (D-148). Se exportan SI/NO explícito —
+    // nunca celda vacía — porque en la importación una casilla vacía significa
+    // "sin chulear", y un export con blancos volvería atrás los chuleados.
+    { label: 'Posicion',                        key: 'posicion',           selected: true, getValue: (r: any) => r.exposicion?.posicion ?? '' },
+    { label: 'En Oferta (SI/NO)',               key: 'oferta',             selected: true, getValue: (r: any) => (r.exposicion?.oferta ? 'SI' : 'NO') },
+    { label: 'Recomendado (SI/NO)',             key: 'recomendado',        selected: true, getValue: (r: any) => (r.exposicion?.recomendado ? 'SI' : 'NO') },
+    { label: 'Destacado (SI/NO)',               key: 'destacado',          selected: true, getValue: (r: any) => (r.exposicion?.destacado ? 'SI' : 'NO') },
+    { label: 'Nuevo (SI/NO)',                   key: 'nuevo',              selected: true, getValue: (r: any) => (r.exposicion?.nuevo ? 'SI' : 'NO') },
+    { label: 'Mas Vendido (SI/NO)',             key: 'masvendido',         selected: true, getValue: (r: any) => (r.exposicion?.masvendido ? 'SI' : 'NO') },
+    { label: 'Seller Center (SI/NO)',           key: 'sellerCenter',       selected: true, getValue: (r: any) => (r.marketplace?.sellerCenter ? 'SI' : 'NO') },
+    { label: 'Pagina Web (SI/NO)',              key: 'paginaWeb',          selected: true, getValue: (r: any) => (r.marketplace?.paginaWeb ? 'SI' : 'NO') },
+    { label: 'Punto de Venta (SI/NO)',          key: 'puntoDeVenta',       selected: true, getValue: (r: any) => (r.marketplace?.puntoDeVenta ? 'SI' : 'NO') },
+    { label: 'Cobertura Nacional Origen (SI/NO)',  key: 'coberturaNacionalOrigen',  selected: true, getValue: (r: any) => (r.ciudades?.coberturaNacionalOrigen ? 'SI' : 'NO') },
+    { label: 'Cobertura Nacional Entrega (SI/NO)', key: 'coberturaNacionalEntrega', selected: true, getValue: (r: any) => (r.ciudades?.coberturaNacionalEntrega ? 'SI' : 'NO') },
+    { label: 'Ciudades de Origen (separadas por coma)',  key: 'ciudadesOrigen',  selected: true, getValue: (r: any) => ProductosComponent.nombresCiudades(r.ciudades?.ciudadesOrigen) },
+    { label: 'Ciudades de Entrega (separadas por coma)', key: 'ciudadesEntrega', selected: true, getValue: (r: any) => ProductosComponent.nombresCiudades(r.ciudades?.ciudadesEntrega) },
     // Stock: NO va acá. `disponibilidad.cantidadDisponible` es un campo muerto
     // (nadie lo asigna) — el stock real vive en la colección `inventory` por
     // bodega, y se exporta/importa desde Inventario. Exportarlo desde acá
@@ -309,16 +348,48 @@ export class ProductosComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Ruta completa de la categoría, de la raíz al nodo elegido.
+   *
+   * El producto guarda UN nodo (el que el usuario eligió en el árbol), así que
+   * si eligió una sub-subcategoría el `label` dice "Camisetas" y se pierde
+   * "Ropa > Hombre". Dos formas de recuperarla:
+   *  - `ruta`: la escribe el importador (D-148), ya lista.
+   *  - cadena de `parent`: la deja el formulario manual al serializar con
+   *    flatted. Hay que leerla ACÁ, antes de descartar `parent` para poder
+   *    hacer JSON.stringify sin referencias circulares.
+   * Sin esto, el export de Subcategoría / Sub-subcategoría saldría vacío para
+   * todo lo cargado a mano.
+   */
+  private static rutaCategoria(nodo: any): string[] {
+    if (!nodo) return [];
+    if (Array.isArray(nodo.ruta) && nodo.ruta.length) {
+      return nodo.ruta.map((r: any) => String(r ?? '')).filter(Boolean);
+    }
+    const nombres: string[] = [];
+    let actual = nodo;
+    const vistos = new Set<any>();
+    while (actual && !vistos.has(actual)) {
+      vistos.add(actual);
+      const nombre = actual.label || actual.data?.nombre;
+      if (nombre) nombres.unshift(String(nombre));
+      actual = actual.parent;
+    }
+    return nombres;
+  }
+
   private normalizeProducts(products: any[]): any[] {
     return products.map(p => {
       if (p.categorias && typeof p.categorias === 'string') {
         try {
           const parsed = flatedParse(p.categorias);
+          const ruta = ProductosComponent.rutaCategoria(parsed);
           // Reconstruir sin referencias circulares (parent) para que JSON.stringify funcione
           p.categorias = {
-            label: parsed.label,
+            label: parsed.label ?? parsed.data?.nombre ?? '',
             data: parsed.data,
             children: (parsed.children || []).map((c: any) => ({ label: c.label, data: c.data })),
+            ruta,
           };
         } catch { }
       }
@@ -553,7 +624,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
     if (this.filtros.completitud === 'completo') chips.push({ label: 'Completos', key: 'completitud' });
     if (this.filtros.completitud === 'parcial') chips.push({ label: 'Parciales', key: 'completitud' });
     if (this.filtros.completitud === 'incompleto') chips.push({ label: 'Incompletos', key: 'completitud' });
-    if (this.filtros.categoria) chips.push({ label: `Cat: ${this.filtros.categoria}`, key: 'categoria' });
+    if (this.filtros.categoria) {
+      chips.push({
+        label: this.filtros.categoria === ProductosComponent.SIN_CATEGORIA
+          ? 'Sin categoría'
+          : `Cat: ${this.filtros.categoria}`,
+        key: 'categoria',
+      });
+    }
     if (this.filtros.subcategoria) chips.push({ label: `Sub: ${this.filtros.subcategoria}`, key: 'subcategoria' });
     const expMap: any = { oferta: 'Oferta', nuevo: 'Nuevo', destacado: 'Destacado', recomendado: 'Recomendado', masvendido: 'Más vendido' };
     if (this.filtros.exposicion) chips.push({ label: expMap[this.filtros.exposicion] || this.filtros.exposicion, key: 'exposicion' });
@@ -1446,6 +1524,21 @@ export class ProductosComponent implements OnInit, OnDestroy {
    * → `onEnter`) y el importador de clientes también; productos era el que
    * faltaba, tanto al exportar como al importar.
    */
+  /**
+   * "Bogotá, Medellín" a partir de la lista de ciudades del producto.
+   *
+   * El selector guarda `{value, label}`, pero hay datos viejos con strings
+   * planos: se contemplan los dos para no exportar "[object Object]".
+   */
+  static nombresCiudades(ciudades: any): string {
+    if (!Array.isArray(ciudades)) return '';
+    const nombres = ciudades
+      .map(c => (c && typeof c === 'object' ? (c.label ?? c.value ?? '') : c))
+      .map(c => String(c ?? '').trim())
+      .filter(Boolean);
+    return Array.from(new Set(nombres)).join(', ');
+  }
+
   static etiquetasUnicas(etiquetas: any): string[] {
     if (!Array.isArray(etiquetas)) { return []; }
     return Array.from(new Set(
@@ -1512,6 +1605,39 @@ export class ProductosComponent implements OnInit, OnDestroy {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Productos');
+
+    // Segunda hoja: los precios por volumen, una fila por rango (D-148).
+    //
+    // No caben en la fila del producto porque son N por producto. Van con los
+    // MISMOS encabezados que la tabla del formulario y que la hoja de la
+    // plantilla de importación, para que exportar → corregir → reimportar
+    // conserve los rangos. Sin esta hoja, reimportar un export los borraba:
+    // el import escribe el producto completo y lo que no viene vuelve al valor
+    // por defecto (`preciosVolumen: []`).
+    //
+    // "Valor IVA" y "Precio unitario Total (con IVA)" no se exportan: son
+    // calculados, y traerlos invitaría a editarlos a mano.
+    const filasVolumen: any[] = [];
+    source.forEach(row => {
+      const rangos = row.precio?.preciosVolumen;
+      if (!Array.isArray(rangos) || !rangos.length) return;
+      const ref = row.identificacion?.referencia || '';
+      rangos.forEach((r: any) => {
+        filasVolumen.push({
+          'Referencia (SKU)': ref,
+          'Numero de unidades Inicial': r.numeroUnidadesInicial ?? '',
+          'Numero limite de Unidades': r.numeroUnidadesLimite ?? '',
+          'Precio Unitario (sin IVA)': r.valorUnitarioPorVolumenSinIVA ?? '',
+          'Porcentaje IVA': r.valorIVAPorVolumen ?? '',
+        });
+      });
+    });
+    if (filasVolumen.length > 0) {
+      const wsVol = XLSX.utils.json_to_sheet(filasVolumen);
+      wsVol['!cols'] = [{ wch: 20 }, { wch: 28 }, { wch: 28 }, { wch: 24 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, wsVol, 'Precios por volumen');
+    }
+
     const hasFilters = Object.values(this.filtros).some(v => v !== '' && v !== null && v !== 'activo');
     const suffix = hasSelected
       ? `_seleccionados(${source.length})`

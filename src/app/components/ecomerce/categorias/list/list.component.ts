@@ -79,58 +79,185 @@ export class ListComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Agrega una subcategoría al nodo.
+   *
+   * `expanded = true` es imprescindible: el TreeTable de PrimeNG solo dibuja
+   * los hijos de un nodo EXPANDIDO. Sin esto la subcategoría se creaba bien
+   * pero quedaba escondida bajo una fila colapsada, y como esta pantalla
+   * tampoco tenía `<p-toast>` (los mensajes se emitían al vacío), el botón
+   * parecía no hacer absolutamente nada.
+   *
+   * El hijo se crea con `children: []` y `parent` para que quede igual que el
+   * resto del árbol: sin `parent`, eliminarlo antes del primer re-dibujado no
+   * encontraría la lista de hermanos.
+   */
   addChild(node: TreeNode) {
+    if (!this.puedeAgregarHijo(node)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Máximo 3 niveles',
+        detail: 'El catálogo maneja categoría, subcategoría y sub-subcategoría. Un cuarto nivel no se puede elegir en el producto ni importar.',
+        life: 6000,
+      });
+      return;
+    }
     if (node.children == undefined) {
       node.children = [];
     }
-    const hijo = Object.assign({}, { "data": { "nombre": "Nueva categoria ", "imagen":"", "posicion": node.children.length, "activo": true, "consecutivo": null } });
+    const hijo: TreeNode = {
+      data: {
+        nombre: 'Nueva categoria ',
+        imagen: '',
+        posicion: node.children.length + 1,
+        activo: true,
+        consecutivo: null,
+      },
+      children: [],
+      parent: node,
+    };
+    const tipoHijo = this.nombreNivelHijo(node);
     node.children.unshift(hijo);
+    node.expanded = true;
+
+    this.data = [...this.data];
     this.cdr.detectChanges();
     this.cdr.markForCheck();
-    this.data = [...this.data];
-    
-    this.showSuccess('Subcategoría creada con éxito');
+
+    this.showSuccess(`${tipoHijo.charAt(0).toUpperCase() + tipoHijo.slice(1)} creada dentro de "${node.data?.nombre ?? ''}"`);
+  }
+
+  /** Profundidad del nodo en el árbol: 1 = categoría, 2 = subcategoría, 3 = sub-subcategoría. */
+  nivelDe(node: TreeNode): number {
+    let nivel = 1;
+    let actual: any = node;
+    const vistos = new Set<any>();
+    while (actual?.parent && !vistos.has(actual)) {
+      vistos.add(actual);
+      nivel++;
+      actual = actual.parent;
+    }
+    return nivel;
+  }
+
+  /**
+   * Cómo se llama lo que hay en esta fila, según su profundidad.
+   *
+   * Todas las filas mostraban "categoría", incluidas las subcategorías: el
+   * botón de eliminar decía "Eliminar esta categoría" estando parado sobre una
+   * subcategoría, y daba la impresión de que iba a borrar la categoría padre
+   * entera. Es un texto, pero sobre un botón destructivo sin deshacer.
+   */
+  nombreNivel(node: TreeNode): string {
+    const nivel = this.nivelDe(node);
+    if (nivel === 1) return 'categoría';
+    if (nivel === 2) return 'subcategoría';
+    return 'sub-subcategoría';
+  }
+
+  nombreNivelHijo(node: TreeNode): string {
+    const nivel = this.nivelDe(node);
+    if (nivel === 1) return 'subcategoría';
+    return 'sub-subcategoría';
+  }
+
+  /**
+   * El árbol solo admite 3 niveles: el formulario de producto
+   * (`crear-productos.processCategorias`) mapea categoría → subcategoría →
+   * sub-subcategoría y del cuarto en adelante devuelve nodos vacíos. La
+   * plantilla de importación tampoco tiene columna para un cuarto nivel.
+   * Crearlo dejaría datos que ninguna otra pantalla sabe leer.
+   */
+  puedeAgregarHijo(node: TreeNode): boolean {
+    return this.nivelDe(node) < 3;
+  }
+
+  /** Cuenta descendientes, para avisar cuántos se llevaría por delante un borrado. */
+  private contarDescendientes(node: TreeNode): number {
+    const hijos = (node?.children || []) as TreeNode[];
+    return hijos.reduce((acc, h) => acc + 1 + this.contarDescendientes(h), 0);
   }
 
   // Display confirmation dialog before deletion
   confirmDelete(node) {
     this.nodeToDelete = node;
-    this.confirmationMessage = '¿Está seguro que desea eliminar esta categoría? Esta acción no se puede deshacer.';
-    
+
+    // El mensaje NOMBRA lo que se va a borrar y de dónde cuelga. Antes decía
+    // "esta categoría" para todo, sin decir cuál: parado sobre una
+    // subcategoría no había forma de saber si iba a borrarla a ella o a su
+    // categoría padre.
+    const tipo = this.nombreNivel(node);
+    const nombre = String(node?.data?.nombre ?? '').trim() || '(sin nombre)';
+    const padre = String((node as any)?.parent?.data?.nombre ?? '').trim();
+    const descendientes = this.contarDescendientes(node);
+
+    let msg = `¿Eliminar la ${tipo} "${nombre}"`;
+    if (padre) msg += ` de "${padre}"`;
+    msg += '?';
+    if (descendientes > 0) {
+      msg += ` Se eliminarán también sus ${descendientes} ${descendientes === 1 ? 'subcategoría' : 'subcategorías'}.`;
+    }
+    msg += ' Esta acción no se puede deshacer.';
+    this.confirmationMessage = msg;
+
     this.modalService.open(this.confirmationDialog, { centered: true }).result.then((result) => {
       if (result === 'confirm') {
         this.deleteChild(this.nodeToDelete);
       }
-    }, (reason) => {
-      // Dialog dismissed
+      this.nodeToDelete = null;
+    }, () => {
+      this.nodeToDelete = null; // cerrado sin confirmar
     });
   }
 
+  /**
+   * Elimina un nodo de su lista de hermanos.
+   *
+   * Antes había una tercera rama, para el caso "tiene padre Y tiene children",
+   * que hacía `node.children.indexOf(node)` — o sea, buscaba el nodo DENTRO DE
+   * SÍ MISMO. Eso siempre da -1, y `splice(-1, 1)` borra el ÚLTIMO elemento:
+   *  · subcategoría hoja (`children: []`) → no borraba nada,
+   *  · subcategoría con hijos → borraba su último hijo,
+   * y en los dos casos el toast decía "eliminada con éxito".
+   *
+   * Esa rama se alcanzaba siempre con categorías importadas, porque el
+   * importador serializa todos los nodos con `children: []`.
+   *
+   * La colección de la que hay que sacar el nodo es siempre la misma: los
+   * hermanos. Si no tiene padre, son las raíces.
+   */
   deleteChild(node) {
-    if (node.parent == null) {
-      const index = this.data.indexOf(node);
-      this.data.splice(index, 1);
+    const tipo = this.nombreNivel(node);
+    const nombre = String(node?.data?.nombre ?? '').trim() || '(sin nombre)';
+    const hermanos = node.parent ? node.parent.children : this.data;
+    if (!Array.isArray(hermanos)) return;
+
+    const index = hermanos.indexOf(node);
+    if (index === -1) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'No se pudo eliminar',
+        detail: `La ${tipo} "${nombre}" ya no está en el árbol. Recargá la pantalla e intentá de nuevo.`,
+      });
+      return;
     }
-    else if (node.children == undefined) {
-      const index = node.parent.children.indexOf(node);
-      node.parent.children.splice(index, 1);
-    }
-    else {
-      const index = node.children.indexOf(node);
-      node.children.splice(index, 1);
-    }
+    hermanos.splice(index, 1);
 
     this.data = [...this.data];
     this.cdr.detectChanges();
     this.cdr.markForCheck();
-    
-    this.showSuccess('Categoría eliminada con éxito');
+
+    this.showSuccess(`${tipo.charAt(0).toUpperCase() + tipo.slice(1)} "${nombre}" eliminada. Recordá guardar.`);
   }
 
   // Display confirmation dialog before saving
   confirmSave() {
+    // Limpiar el nodo pendiente: el diálogo es el mismo para borrar y para
+    // guardar, y si quedara marcado el botón Confirmar saldría en rojo de
+    // borrado sobre una acción que no borra nada.
+    this.nodeToDelete = null;
     this.confirmationMessage = '¿Está seguro que desea guardar todos los cambios realizados?';
-    
+
     this.modalService.open(this.confirmationDialog, { centered: true }).result.then((result) => {
       if (result === 'confirm') {
         this.guardar();

@@ -250,6 +250,142 @@
   }
 }
 
+// Aviso de categorías antes de importar (D-148). Mismo patrón plano tintado
+// que `.produccion-panel`, en ámbar porque es una advertencia y no una opción.
+.aviso-categorias {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: left;
+
+  h6 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+
+    i {
+      color: #d97706;
+    }
+  }
+
+  p {
+    font-size: 0.82rem;
+    color: #0f172a;
+  }
+
+  .aviso-detalle {
+    font-size: 0.78rem;
+    color: #475569;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0;
+  }
+
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    accent-color: #d97706;
+    flex: 0 0 auto;
+  }
+}
+
+// Resumen de la hoja de precios por volumen (D-148).
+.volumen-panel {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.82rem;
+  color: #0f172a;
+
+  h6 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5rem;
+
+    i { color: #8b5cf6; }
+  }
+
+  &.con-error {
+    background: #fffbeb;
+    border-color: #fde68a;
+
+    h6 i { color: #d97706; }
+  }
+
+  .volumen-errores {
+    margin: 0.25rem 0 0.5rem 0;
+    padding-left: 1.1rem;
+    max-height: 8rem;
+    overflow-y: auto;
+
+    li {
+      font-size: 0.78rem;
+      line-height: 1.4;
+      color: #475569;
+    }
+  }
+
+  .volumen-detalle {
+    font-size: 0.78rem;
+    color: #475569;
+  }
+}
+
+// Trabajo pendiente de categorías, en la pantalla de resultado (D-148).
+.pendientes-categorias {
+  margin-top: 1rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .pendiente-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #0f172a;
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+
+    i {
+      color: #8b5cf6;
+      margin-top: 0.15rem;
+      flex: 0 0 auto;
+    }
+
+    em {
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    &.aviso {
+      background: #fffbeb;
+      border-color: #fde68a;
+
+      i {
+        color: #d97706;
+      }
+    }
+  }
+}
+
 // Modo de importación: los títulos de las opciones salían ilegibles (casi
 // blancos sobre el fondo claro) mientras las descripciones se veían bien. Se
 // fija el color acá para no depender de estilos de afuera.
