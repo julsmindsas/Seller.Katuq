@@ -487,6 +487,7 @@
           <strong>COTIZACIÓN</strong>
           <span>{{ cotizacion.nroCotizacion || '(borrador)' }}</span>
           <span *ngIf="fechaVencimiento">Válida hasta: {{ fechaVencimiento }}</span>
+          <span *ngIf="vendedorMetaDoc">Atendido por: {{ vendedorMetaDoc }}</span>
           <span class="doc-pedido" *ngIf="cotizacion.pedidoGenerado">Pedido: {{ cotizacion.pedidoGenerado }}</span>
         </div>
       </div>
@@ -557,6 +558,12 @@
         alt="Katuq"
         class="doc-banner doc-banner-ad"
         crossorigin="anonymous">
+
+      <footer class="doc-footer">
+        Cotización generada por {{ empresaNombre }} · usando
+        <a href="https://katuq.com" target="_blank" rel="noopener">Katuq.com</a>.
+        ¿Quieres generar la tuya? <a href="https://katuq.com" target="_blank" rel="noopener">Contáctanos</a>.
+      </footer>
     </div>
   </ng-template>
 

@@ -234,6 +234,13 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return (v && (v.nombre || v.email)) || "—";
   }
 
+  /** Vendedor para el documento: nombre · correo. */
+  get vendedorMetaDoc(): string {
+    const v = this.cotizacion.vendedor;
+    if (!v) return "";
+    return [v.nombre, v.email].filter(Boolean).join(" · ");
+  }
+
   /**
    * Navega al pedido generado a partir de esta cotización (deep-link a la lista
    * de pedidos filtrada por nroPedido — ver ListOrdersComponent, query `nroPedido`).
@@ -1036,14 +1043,20 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return (e && ((e as any).nombreComercio || e.razonSocial)) || "Cotización";
   }
 
-  /** Línea secundaria del encabezado: razón social · NIT (si difiere). */
+  /**
+   * Línea secundaria del encabezado: razón social · NIT (si difiere).
+   * El NIT sale de `currentCompany` (empresa), NO de `user` — `user.nit` es el
+   * documento del vendedor logueado, no el de la empresa (ClickUp wdu9v75tux/wdu9v75tv2).
+   * Mismo origen y formato (`nit-dv`) que `orden-venta.component.ts::getNitFormateado`.
+   */
   get empresaMeta(): string {
     const e = this.security.getCompanyInformationLogged();
     const razon = (e && e.razonSocial) || "";
     let nit = "";
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      nit = user && user.nit ? `NIT ${user.nit}` : "";
+      const empresa = JSON.parse(localStorage.getItem("currentCompany") || "{}");
+      const dv = empresa?.digitoVerificacion || "";
+      nit = empresa?.nit ? `NIT ${empresa.nit}${dv ? "-" + dv : ""}` : "";
     } catch {
       nit = "";
     }
