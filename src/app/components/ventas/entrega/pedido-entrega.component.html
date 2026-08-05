@@ -53,9 +53,11 @@
         class="alert alert-warning mb-3 mt-3"
         style="border-left: 4px solid #D35400; border-radius: 8px;"
     >
-        <i class="fa fa-exclamation-triangle me-2"></i> No hay direcciones
-        registradas para la ciudad seleccionada. Se muestran todas las
-        direcciones disponibles. Seleccione una o cree una nueva.
+        <i class="fa fa-exclamation-triangle me-2"></i> Este cliente no tiene
+        direcciones registradas en <strong>{{ pedidoGral?.envio?.ciudad || ciudad }}</strong>.
+        Se muestran todas sus direcciones (pueden ser de otras ciudades) — si
+        buscas una que acabas de crear, probablemente sí se guardó, solo que
+        es para otra ciudad.
     </div>
 
     <!-- Currently selected address (highlighted card) -->
@@ -497,6 +499,34 @@
                 />
             </div>
         </div>
+
+        <!-- Ciudades ya configuradas por la empresa (spec fix-direcciones-ciudad-mismatch-venta-asistida) -->
+        <div class="row mb-3" *ngIf="ciudadesEntregaEmpresa && ciudadesEntregaEmpresa.length > 0">
+            <div class="col-12">
+                <label class="form-label">
+                    <i class="fa fa-building"></i> Ciudades configuradas en tu empresa
+                </label>
+                <div class="d-flex flex-wrap gap-2">
+                    <span
+                        *ngFor="let c of ciudadesEntregaEmpresa"
+                        class="badge border p-2"
+                        [class.bg-light]="c.value !== ciudad_municipio_entrega"
+                        [class.text-dark]="c.value !== ciudad_municipio_entrega"
+                        [style.background]="c.value === ciudad_municipio_entrega ? '#ede9fe' : null"
+                        [style.color]="c.value === ciudad_municipio_entrega ? '#5b21b6' : null"
+                        style="cursor: pointer;"
+                        (click)="seleccionarCiudadEmpresa(c)"
+                    >
+                        {{ c.label }}
+                    </span>
+                </div>
+                <small class="text-muted">Elegir una de aquí asegura que la dirección aparezca en el listado filtrado por ciudad del paso de selección de productos.</small>
+            </div>
+        </div>
+
+        <small class="text-muted d-block mb-2" *ngIf="ciudadesEntregaEmpresa && ciudadesEntregaEmpresa.length > 0">
+            ¿La ciudad que necesitas no está arriba? Búscala abajo — la dirección se guardará igual, pero no aparecerá en el listado filtrado hasta que esa ciudad se seleccione en el paso de productos.
+        </small>
 
         <!-- Buscador DANE de municipios -->
         <div class="row mb-3">

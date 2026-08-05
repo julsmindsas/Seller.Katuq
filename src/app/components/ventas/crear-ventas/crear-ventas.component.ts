@@ -22,6 +22,7 @@ import { InfoIndicativos } from "../../../../Mock/indicativosPais";
 import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
 import { DaneCodesService } from "../../../shared/services/dane-codes.service";
 import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
+import { normalizarCiudad } from "../../../shared/utils/ciudad.util";
 import { QuickViewComponent } from "../quick-view/quick-view.component";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
@@ -2464,12 +2465,17 @@ export class CrearVentasComponent
 
     // Filtrar direcciones de entrega por la ciudad seleccionada silenciosamente
     if (this.originalDataEntregas && this.originalDataEntregas.length > 0) {
-      this.datosEntregas =
-        this.originalDataEntregas.filter(
-          (x) => x.ciudad === this.selectedCity,
-        ) || [];
-      this.datosEntregaNoEncontradosParaCiudadSeleccionada =
-        this.datosEntregas.length === 0;
+      const ciudadFiltro = normalizarCiudad(this.selectedCity);
+      const filtradas = this.originalDataEntregas.filter(
+        (x) => normalizarCiudad(x.ciudad) === ciudadFiltro,
+      );
+      // Spec fix-direcciones-ciudad-mismatch-venta-asistida: si no hay match
+      // para la ciudad, mostrar TODAS las direcciones del cliente (igual que
+      // aplicarFiltroCiudadEntrega) en vez de dejar la lista vacía — antes no
+      // había fallback aquí, así que un mismatch de ciudad dejaba el listado
+      // literalmente vacío sin ningún aviso.
+      this.datosEntregas = filtradas.length > 0 ? filtradas : this.originalDataEntregas;
+      this.datosEntregaNoEncontradosParaCiudadSeleccionada = filtradas.length === 0;
       this.activarDatosEntrega =
         this.datosEntregaNoEncontradosParaCiudadSeleccionada;
     } else {
@@ -4755,9 +4761,12 @@ export class CrearVentasComponent
       return;
     }
 
-    // Filtrar por ciudad seleccionada
+    // Filtrar por ciudad seleccionada (comparación normalizada: sin tildes,
+    // sin distinguir mayúsculas y sin el sufijo "D.C." — ver
+    // shared/utils/ciudad.util.ts)
+    const ciudadFiltro = normalizarCiudad(this.selectedCity);
     const direccionesFiltradas = this.originalDataEntregas.filter(
-      (x) => x.ciudad === this.selectedCity,
+      (x) => normalizarCiudad(x.ciudad) === ciudadFiltro,
     );
 
     if (direccionesFiltradas.length > 0) {
@@ -4768,13 +4777,14 @@ export class CrearVentasComponent
       this.datosEntregas = this.utils.deepClone(this.originalDataEntregas);
       this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
 
-      // Mostrar mensaje informativo
+      // Mostrar mensaje informativo — deja claro que probablemente SÍ se
+      // guardaron, solo que son de otra ciudad (no se perdieron datos)
       this.toastrService.info(
-        `No se encontraron direcciones registradas para ${this.selectedCity}. Se muestran todas las direcciones disponibles.`,
+        `Este cliente no tiene direcciones registradas en ${this.selectedCity}. Se muestran todas sus direcciones (pueden ser de otras ciudades) — si buscas una que acabas de crear, probablemente sí se guardó pero para otra ciudad.`,
         "Información de Entrega",
         {
           closeButton: true,
-          timeOut: 5000,
+          timeOut: 7000,
           positionClass: "toast-bottom-right",
         },
       );

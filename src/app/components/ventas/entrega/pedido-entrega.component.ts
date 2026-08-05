@@ -16,6 +16,7 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { DireccionEstructuradaComponent } from "./direccion-estructurada/direccion-estructurada.component";
 import { DaneCodesService } from "../../../shared/services/dane-codes.service";
 import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
+import { normalizarCiudad } from "../../../shared/utils/ciudad.util";
 
 @Component({
   selector: "pedido-entrega",
@@ -84,6 +85,14 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   @Input() departamentoInicial: string = "";
   @Input() ciudad: string = "";
   @Input() codigoPostal: string = "";
+
+  /**
+   * Ciudades configuradas por la empresa activa (`empresaActual.ciudadess.ciudadesEntrega`).
+   * Elegir una de aquí al crear una dirección garantiza el mismo string que
+   * `selectedCity` usa para filtrar — el buscador DANE sigue disponible para
+   * una ciudad que la empresa todavía no tenga configurada.
+   */
+  @Input() ciudadesEntregaEmpresa: { value: string; label: string }[] = [];
 
   //ouput override pedido emiter
   @Output() overridePedido = new EventEmitter<Pedido>();
@@ -354,7 +363,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
               const ciudadFiltro = this.pedidoGral?.envio?.ciudad;
               let nuevas = clientRes.datosEntrega;
               if (ciudadFiltro) {
-                const filtradas = clientRes.datosEntrega.filter((x) => x.ciudad == ciudadFiltro);
+                const ciudadFiltroNorm = normalizarCiudad(ciudadFiltro);
+                const filtradas = clientRes.datosEntrega.filter((x) => normalizarCiudad(x.ciudad) === ciudadFiltroNorm);
                 // Si hay direcciones para la ciudad, mostrar esas; si no, mostrar todas
                 nuevas = filtradas.length > 0 ? filtradas : clientRes.datosEntrega;
                 this.datosEntregaNoEncontradosParaCiudadSeleccionada = filtradas.length === 0;
@@ -532,7 +542,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
               let nuevas = clientRes.datosEntrega;
               // Filtrar por ciudad si hay un pedido con envío definido
               if (this.pedidoGral?.envio?.ciudad) {
-                const filtradas = nuevas.filter((x) => x.ciudad == this.pedidoGral.envio.ciudad);
+                const ciudadFiltroNorm = normalizarCiudad(this.pedidoGral.envio.ciudad);
+                const filtradas = nuevas.filter((x) => normalizarCiudad(x.ciudad) === ciudadFiltroNorm);
                 if (filtradas.length > 0) nuevas = filtradas;
               }
               // Actualizar en-place para que Angular no sobreescriba con el array viejo del padre
@@ -1110,6 +1121,28 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       this.municipiosDane = resultados;
       this.cargandoCiudadesDane = false;
     });
+  }
+
+  /**
+   * Selecciona una ciudad de las ya configuradas por la empresa activa
+   * (`ciudadesEntregaEmpresa`). Usar el mismo `value` que la empresa tiene
+   * en `ciudadess.ciudadesEntrega` garantiza que esta dirección haga match
+   * exacto con `selectedCity` en el filtro del paso de selección de
+   * productos, sin depender de si esa ciudad vino originalmente del
+   * catálogo DANE o del catálogo legacy.
+   */
+  seleccionarCiudadEmpresa(item: { value: string; label: string }): void {
+    if (!item) return;
+    this.pais_entrega = this.pais_entrega || 'Colombia';
+    this.ciudad_municipio_entrega = item.value;
+    this.ciudades1 = [item.value];
+
+    // Limpiar zona de cobro antes de cargar las nuevas opciones
+    this.zona_cobro = "";
+    this.valor_zona_cobro = "";
+    this.filteredResults = [];
+
+    this.idBillingZone('');
   }
 
   /**

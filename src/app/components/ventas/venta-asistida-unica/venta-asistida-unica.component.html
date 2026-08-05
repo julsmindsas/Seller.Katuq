@@ -607,6 +607,7 @@
                 [direccionEntrega]="direccion_facturacion" [paisInicial]="pais" [departamentoInicial]="departamento"
                 [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
                 [datosEntregaNoEncontradosParaCiudadSeleccionada]="datosEntregaNoEncontradosParaCiudadSeleccionada"
+                [ciudadesEntregaEmpresa]="empresaActual?.ciudadess?.ciudadesEntrega"
                 (overridePedido)="overridePedido($event)" [activeIndex]="0" *ngIf="pedidoGral">
               </pedido-entrega>
             </div>
