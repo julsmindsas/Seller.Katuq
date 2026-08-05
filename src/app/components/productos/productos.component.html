@@ -135,6 +135,10 @@
                             <select class="fs-select" [class.fs-active]="filtros.categoria"
                                 [(ngModel)]="filtros.categoria" (change)="onCategoriaChange()">
                                 <option value="">Categoría</option>
+                                <!-- Sale del trabajo pendiente que reporta el importador (D-148).
+                                     Sin esta opción, el aviso "38 productos sin categoría" no
+                                     tenía forma de resolverse: no había manera de encontrarlos. -->
+                                <option value="__SIN_CATEGORIA__">⚠️ Sin categoría</option>
                                 <option *ngFor="let c of categoriasList" [value]="c.label">{{ c.label }}</option>
                             </select>
 

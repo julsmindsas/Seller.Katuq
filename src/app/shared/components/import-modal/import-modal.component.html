@@ -74,13 +74,23 @@
 
   <!-- Step 3: Column Mapping -->
   <div class="mapping-step" *ngIf="showMappingPreview && !importResult && !isAnalyzingColumns && !isUploading">
+    <!-- El texto dice de dónde salió el mapeo de verdad. Antes afirmaba siempre
+         "KAI ha sugerido los siguientes mapeos", incluso cuando el aviso de al
+         lado decía que no se pudo contactar a KAI: dos mensajes que se
+         contradicen en la misma pantalla. -->
     <div class="step-header">
       <h4>
-        <i class="pi pi-sparkles mr-2"></i>
-        Mapeo Inteligente de Columnas
+        <i class="mr-2" [ngClass]="origenMapeo === 'kai' ? 'pi pi-sparkles' : 'pi pi-check-square'"></i>
+        Mapeo de Columnas
       </h4>
-      <p class="text-muted">
-        KAI ha sugerido los siguientes mapeos. Puedes ajustarlos manualmente si es necesario.
+      <p class="text-muted" *ngIf="origenMapeo === 'kai'">
+        KAI analizó {{ sourceColumns.length }} columnas de tu archivo y sugirió estos mapeos.
+        Revisá que cada columna apunte al campo correcto; podés cambiar cualquiera.
+      </p>
+      <p class="text-muted" *ngIf="origenMapeo === 'plantilla'">
+        Se reconocieron {{ getMappedCount() }} de {{ sourceColumns.length }} columnas por su nombre,
+        porque el archivo usa la plantilla de Katuq. Revisá que cada columna apunte al campo
+        correcto; podés cambiar cualquiera.
       </p>
     </div>
 
@@ -101,6 +111,9 @@
         [mappingResult]="mappingResult"
         [sourceColumns]="sourceColumns"
         [type]="type"
+        [requiredFields]="camposObligatorios"
+        [origenMapeo]="origenMapeo"
+        [fieldLabels]="etiquetasCampos"
         (mappingsAdjusted)="onMappingsAdjusted($event)"
         (mappingsConfirmed)="onMappingsConfirmed($event)">
       </app-column-mapping-preview>
@@ -205,6 +218,32 @@
         </p-accordion>
       </div>
 
+      <!-- Trabajo pendiente de categorías (D-148). Va en la pantalla de
+           resultado y no en un toast: el toast se cierra y se olvida. -->
+      <div class="pendientes-categorias"
+           *ngIf="type === 'product' && (categoriasCreadasEnImport.length > 0 || productosSinCategoria > 0)">
+        <div *ngIf="categoriasCreadasEnImport.length > 0" class="pendiente-item">
+          <i class="pi pi-folder-open"></i>
+          <span>
+            <strong>{{ categoriasCreadasEnImport.length }}</strong>
+            {{ categoriasCreadasEnImport.length === 1 ? 'categoría nueva creada' : 'categorías nuevas creadas' }}
+            desde este archivo: <em>{{ categoriasCreadasEnImport.join(', ') }}</em>.
+            Quedaron solo con el nombre — completales orden, imagen e Id Categoría en
+            <strong>Categorías de productos</strong>.
+          </span>
+        </div>
+        <div *ngIf="productosSinCategoria > 0" class="pendiente-item aviso">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>
+            <strong>{{ productosSinCategoria }}</strong>
+            {{ productosSinCategoria === 1 ? 'producto quedó' : 'productos quedaron' }} sin categoría.
+            Se venden igual, pero no salen al filtrar por categoría ni califican para promociones
+            segmentadas. Encontralos en el listado con el filtro
+            <strong>Categoría: Sin categoría</strong>.
+          </span>
+        </div>
+      </div>
+
       <div class="batch-info mt-3" *ngIf="importResult.batchId">
         <small class="text-muted">
           <i class="pi pi-tag mr-1"></i>Batch: {{ importResult.batchId }}
@@ -244,6 +283,83 @@
          cortarle el texto y, como el flex estira por defecto, los botones
          tomaban la altura del panel y salían como bloques enormes. -->
     <div class="modal-footer-wrap">
+
+      <!-- Aviso de categorías (solo productos) — D-148.
+           Va ACÁ, antes de importar, porque es el único momento en que el
+           usuario todavía puede arreglar el Excel. Avisa, no bloquea: un
+           producto sin categoría se vende igual y al mismo precio. -->
+      <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading && debeAvisarCategoria"
+           class="aviso-categorias">
+        <h6>
+          <i class="pi pi-exclamation-triangle me-2"></i>Productos sin categoría
+        </h6>
+        <p class="mb-2">{{ textoAvisoCategoria }}</p>
+        <p class="aviso-detalle mb-2">
+          Se van a importar igual y se venden sin problema, pero no vas a poder filtrarlos por
+          categoría ni aplicarles promociones segmentadas por categoría.
+          Lo recomendable es importar primero las categorías, o completar la columna en el archivo.
+        </p>
+        <label>
+          <input type="checkbox" [(ngModel)]="avisoCategoriaAceptado">
+          <span>Entiendo, importar igual</span>
+        </label>
+      </div>
+
+      <!-- Entrega: valores del Excel que no existen en el maestro de la empresa.
+           Se avisa ACÁ, antes de importar, que es cuando todavía se puede
+           corregir el archivo o crear la opción en Maestros. -->
+      <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading && entregaSinHomologar.length > 0"
+           class="volumen-panel con-error">
+        <h6>
+          <i class="pi pi-truck me-2"></i>Tipo y tiempo de entrega sin coincidencia
+        </h6>
+        <p class="mb-1">
+          Estos valores del archivo no existen en los maestros de tu empresa, así que esos
+          productos van a quedar con el campo <strong>vacío</strong>:
+        </p>
+        <ul class="volumen-errores">
+          <li *ngFor="let e of entregaSinHomologar">{{ e }}</li>
+        </ul>
+        <p class="mb-1 volumen-detalle" *ngIf="opcionesTipoEntrega.length">
+          <strong>Tipos de entrega válidos:</strong> {{ opcionesTipoEntrega.join(' · ') }}
+        </p>
+        <p class="mb-1 volumen-detalle" *ngIf="opcionesTiempoEntrega.length">
+          <strong>Tiempos de entrega válidos:</strong> {{ opcionesTiempoEntrega.join(' · ') }}
+        </p>
+        <p class="mb-0 volumen-detalle">
+          Corregí el Excel con uno de esos valores, o creá la opción que falta en
+          <strong>Maestros</strong> y volvé a subir el archivo.
+        </p>
+      </div>
+
+      <!-- Precios por volumen: qué se leyó de la hoja aparte y qué quedó mal.
+           Los rangos afectan lo que se cobra, así que un problema acá no puede
+           pasar en silencio ni descubrirse recién al vender. -->
+      <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading && (productosConVolumen > 0 || erroresVolumen.length > 0)"
+           class="volumen-panel" [class.con-error]="erroresVolumen.length > 0">
+        <h6>
+          <i class="pi pi-dollar me-2"></i>Precios por volumen
+        </h6>
+        <p class="mb-1" *ngIf="productosConVolumen > 0">
+          Se leyeron rangos para <strong>{{ productosConVolumen }}</strong>
+          {{ productosConVolumen === 1 ? 'producto' : 'productos' }} desde la hoja
+          «Precios por volumen».
+        </p>
+        <div *ngIf="erroresVolumen.length > 0">
+          <p class="mb-1">
+            <strong>{{ erroresVolumen.length }}</strong>
+            {{ erroresVolumen.length === 1 ? 'fila se va a ignorar' : 'filas se van a ignorar' }}:
+          </p>
+          <ul class="volumen-errores">
+            <li *ngFor="let e of erroresVolumen.slice(0, 8)">{{ e }}</li>
+            <li *ngIf="erroresVolumen.length > 8">…y {{ erroresVolumen.length - 8 }} más.</li>
+          </ul>
+          <p class="mb-0 volumen-detalle">
+            El resto se importa normalmente. Corregí esas filas y volvé a subir el archivo
+            si querés que esos rangos también entren.
+          </p>
+        </div>
+      </div>
 
       <!-- Opciones de produccion (solo productos) — bloque propio, sobre los botones -->
       <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading"

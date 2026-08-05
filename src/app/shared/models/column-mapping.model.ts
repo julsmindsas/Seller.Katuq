@@ -99,4 +99,10 @@ export interface TemplateColumn {
   header: string;
   required: boolean;
   example: string;
+  /**
+   * Explicación en una línea, para la hoja "Instrucciones" de la plantilla
+   * descargable. Sin esto, quien abre el archivo tiene que adivinar qué va en
+   * cada celda a partir del encabezado y del ejemplo.
+   */
+  help?: string;
 }
