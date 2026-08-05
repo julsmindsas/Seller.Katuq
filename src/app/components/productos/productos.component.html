@@ -393,7 +393,19 @@
                         </span>
                     </div>
 
-                    <!-- La tabla de PrimeNG -->
+                    <!-- La tabla de PrimeNG.
+
+                         `paginatorDropdownAppendTo="body"`: el panel del selector "filas por
+                         página" se renderiza INLINE dentro del `.card.shadow-sm`, que tiene
+                         `overflow: hidden` para redondear sus esquinas
+                         (productos.component.scss). El paginador es lo último de la tarjeta y
+                         el panel abre hacia abajo, así que la tarjeta le recortaba todo lo que
+                         sobresalía: solo se veían 10 y 20; 50 y 100 quedaban fuera. Tampoco
+                         servía hacer scroll — el panel no desborda (4 opciones ≈ 160px contra
+                         los 200px de `dropdownScrollHeight`), lo que desbordaba era la
+                         tarjeta. Sacándolo al `body` deja de estar sujeto al recorte; es el
+                         mismo patrón que ya usan otros dropdowns del proyecto (ver la nota de
+                         `.p-overlay` en styles.scss). -->
                     <p-table
                         #dt
                         [value]="rows"
@@ -402,6 +414,7 @@
                         [scrollable]="true"
                         [loading]="cargando"
                         [rowsPerPageOptions]="[10, 20, 50, 100]"
+                        paginatorDropdownAppendTo="body"
                         [rows]="pageSize"
                         [first]="first"
                         [totalRecords]="totalItems"

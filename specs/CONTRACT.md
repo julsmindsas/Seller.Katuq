@@ -2458,7 +2458,32 @@ Con esto la Fase 1 de la Vía A del programa (`docs/app-nativa-operativa.md` §9
 > - **D-146** tiene dos entradas: "Merge de D-135/141/142 con la rama de descuentos/promociones..." (2026-07-30, abajo — esta sesión, registro del merge) y "El botón Guardar de productos fallaba siempre al primer click..." (2026-07-30, abajo — sesión distinta, mergeada a `origin` en un segundo round mientras esta sesión ya estaba resolviendo el primero).
 > - **D-147** tiene dos entradas: "El aviso de 'celdas recortadas' al exportar productos era por etiquetas duplicadas, no por descripciones" (2026-08-02, abajo — sesión distinta, ya mergeada a `origin` antes de que esta sesión bajara cambios) y "Gestión de combos en venta asistida..." (2026-08-03, abajo — esta sesión, `openspec/changes/add-combo-quick-add/`). El número se asignó en esta sesión sin haber bajado cambios de `origin` todavía — detectado recién al mezclar.
 > - **D-148** tiene dos entradas: "El importador de productos completa las pestañas que faltaban, y las categorías pasan a tener un solo maestro" (2026-08-04, abajo — esta sesión) y "Direcciones de envío 'desaparecen' en venta asistida — mismatch de grafía de ciudad entre catálogos" (2026-08-04, abajo — sesión distinta, ya en `origin` antes de que esta sesión bajara cambios). Detectado al rebasar contra `origin/feature/venta-asistida-mejorada` el 2026-08-05.
-> Siguiente número libre: **D-149**.
+> Siguiente número libre: **D-150**.
+
+### 2026-08-05 — D-149: El selector de "filas por página" de Productos mostraba solo 2 de sus 4 opciones
+
+**Reporte del usuario (con pantallazo):** en el paginador de Productos, el selector de cantidad de filas solo ofrecía 10 y 20, y el scroll dentro del desplegable no hacía nada.
+
+**No faltaban opciones — se estaban recortando.** `[rowsPerPageOptions]` ya tenía las cuatro (`[10, 20, 50, 100]`, `productos.component.html:404`). El panel del `p-dropdown` se renderiza **inline**, dentro del `.card.shadow-sm` que lleva `overflow: hidden` para redondear sus esquinas (`productos.component.scss:987-989`). El paginador es lo último de la tarjeta y el panel abre hacia abajo, así que la tarjeta cortaba todo lo que sobresalía: 50 y 100 quedaban fuera del área visible.
+
+Y por eso el scroll tampoco servía: el panel **no desborda** — 4 opciones ≈ 160px contra los 200px de `dropdownScrollHeight` de PrimeNG 14 —, así que no hay nada que scrollear. Lo que desbordaba era la tarjeta, no el panel. Es la clase de síntoma que se lee como "falta contenido" cuando en realidad es un recorte de un ancestro.
+
+**Fix:** `paginatorDropdownAppendTo="body"` en la `p-table`. Saca el panel del árbol de la tarjeta y deja de estar sujeto a su `overflow`. Mismo patrón que ya usan otros dropdowns del proyecto (ver la nota de `.p-overlay` en `styles.scss`). Un atributo, sin tocar SCSS: bajarle el `overflow: hidden` a la tarjeta habría roto el redondeo de esquinas en todas las tablas del módulo.
+
+**Alcance deliberadamente acotado:** la misma combinación (tabla paginada dentro de tarjeta con `overflow: hidden`) existe en CRM, despachos, inventarios, listas de precios y varios módulos más. **No se tocaron** — un cambio a la vez en módulos sensibles. Si el síntoma aparece en otra pantalla, el arreglo es idéntico.
+
+**Verificación:** `ng serve` recompiló limpio. **No probado en navegador por esta sesión** — el usuario dijo que lo probaba él.
+
+#### Dos decisiones del usuario: dejar como está
+
+- **El Id Categoría del importador de categorías se aplica al nivel más profundo de la fila, y así se queda.** Reportado como bug ("importa todo menos el Id Categoría"); se verificó contra Firestore (`categorias/R3BQqxl2yGbLiDAs308k`, ALMARA FELICIDAD) que el valor **sí entra** — quedó en `Camisetas` (nivel 3), el nodo más profundo de la fila importada. Es el comportamiento de **D-125** y su razón sigue en pie: en el formato por niveles el nombre del nivel 1 se repite en muchas filas, así que aplicarle ahí el id lo dejaría con el de la última fila procesada, un valor arbitrario según el orden del Excel. Para asignárselo a una categoría raíz se usa una fila con solo el Nivel 1 lleno — ese camino ya funciona (`onboarding.js:2808` creando, `:2825` actualizando). Usuario avisado; decidió no cambiarlo ni documentarlo en la plantilla.
+- **`MAX_PAGE_SIZE` sigue en 100.** El tope es del backend (`productosPaginated.js:55`, aplicado con `Math.min` en `:553-556`, silencioso), no del selector: ofrecer 200 dejaría el paginador diciendo una cosa y el servidor devolviendo otra. El motivo es costo de lectura en Firestore — el endpoint pide `pageSize * 3` documentos por vuelta (`:685`) porque parte de los filtros se resuelven en memoria. El export no está limitado (`fetchAllProductosParaExport` pagina de a 100, 6 en paralelo).
+
+**Deuda anotada, NO arreglada (el usuario la dejó pasar):** en `importCategories`, rama por niveles, `imagen` y `posicion` **sí** se copian al nivel 1 aunque la fila tenga niveles 2 y 3 (`onboarding.js:2802-2811`), mientras que `consecutivo` no; y al nivel 2 no se copian nunca (`:2842`). Esa asimetría es lo que hace que la categoría raíz se vea con imagen y posición pero con `-` en Id Categoría, y fue lo que disparó el reporte. El helper canónico `categoriaTreeHelper.resolverRuta:116` ya lo hace bien (`imagen: esUltimo ? opts.imagen : ""`); alinear las tres columnas ahí dejaría los dos importadores con la misma regla.
+
+**Defecto chico detectado de paso, sin tocar:** `consecutivo` pasa por `parseInt` (`onboarding.js:2785`). Un Id no numérico queda `NaN` y, como se escribe bajo `if (consecutivo)`, **se descarta en silencio, sin error ni reporte**. El `0` también. Solo afecta a quien use ids de SIIGO no numéricos.
+
+**Higiene pendiente:** quedó colgando en el árbol de categorías de ALMARA FELICIDAD (tenant productivo) la rama de prueba `Ropa > Hombre > Camisetas`, de importar la plantilla con su fila de ejemplo desde localhost. Recordatorio de la regla dura: localhost aísla el proceso, no los datos.
 
 ### 2026-08-04 — D-148: El importador de productos completa las pestañas que faltaban, y las categorías pasan a tener un solo maestro
 
