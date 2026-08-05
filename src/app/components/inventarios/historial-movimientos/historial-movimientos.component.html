@@ -315,7 +315,7 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <i class="pi pi-calendar text-primary me-2"></i>
-                                        <span>{{movimiento.fecha._seconds * 1000 | date:'dd/MM/yyyy'}}</span>
+                                        <span>{{fechaMovimiento(movimiento) | date:'dd/MM/yyyy'}}</span>
                                     </div>
                                 </td>
 
@@ -456,7 +456,7 @@
                                                     <div class="detail-row">
                                                         <span class="detail-label">Fecha y Hora:</span>
                                                         <span class="detail-value">
-                                                            {{movimiento.fecha._seconds * 1000 | date:'dd/MM/yyyy HH:mm:ss'}}
+                                                            {{fechaMovimiento(movimiento) | date:'dd/MM/yyyy HH:mm:ss'}}
                                                         </span>
                                                     </div>
                                                     <div class="detail-row">

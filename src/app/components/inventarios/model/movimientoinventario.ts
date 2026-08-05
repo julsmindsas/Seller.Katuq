@@ -41,15 +41,19 @@ export interface Movimiento {
     ordenCompraId: string | null;
     company: string;
     usuario: string;
-    fecha: Timestamp;
+    fecha: Timestamp | string | Date | null;
+    fechaISO?: string | null;
+    fechaFuente?: string | null;
     producto: Producto;
     bodega: Bodega;
 }
 
 // Marca el formato de las fechas (timestamp)
 export interface Timestamp {
-    _seconds: number;
-    _nanoseconds: number;
+    _seconds?: number;
+    _nanoseconds?: number;
+    seconds?: number;
+    nanoseconds?: number;
 }
 
 // Representa la información del producto en el movimiento
@@ -233,4 +237,3 @@ export interface Bodega {
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
-
