@@ -59,10 +59,10 @@ El primer backfill será `--dry-run` y clasificará qué documentos pueden mapea
 ## Migration Plan
 
 1. Congelar nuevos escritores en `inventoryProductHistory` y mover la analítica a lectura compatible de `inventoryMovement`.
-2. Crear el servicio transaccional canónico detrás de una bandera apagada.
+2. Crear el servicio transaccional canónico detrás de una bandera apagada y un alcance de bodega explícito; la ausencia o contradicción del alcance conserva legacy.
 3. Migrar un escritor por vez: ajustes/traslados, Venta Asistida/POS, canales, devoluciones, imports y providers.
 4. Ejecutar contract tests, integración, E2E y build en cada escritor antes del siguiente.
-5. Observar en OMS sombra/canario; repetir en Almacén Bombas y otros tenants según gates.
+5. Observar en OMS sombra/canario usando una auditoría agregada por corrida, sin detalle de producto; repetir en Almacén Bombas y otros tenants según gates.
 6. Ejecutar dry-run del enriquecimiento histórico. Cualquier aplicación requiere otro checkpoint y backup.
 
 ## Rollback

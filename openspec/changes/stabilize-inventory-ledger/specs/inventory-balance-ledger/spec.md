@@ -68,6 +68,19 @@ THE system SHALL escribir movimientos nuevos únicamente en `inventoryMovement` 
 - **WHEN** se calcula analítica de inventario
 - **THEN** los incluye sin depender de nuevos registros en la colección legada
 
+### Requirement: Rollout limitado a bodegas explícitas
+THE system SHALL aplicar un escritor nuevo de inventario únicamente a business codes de bodega declarados para la empresa, o a todas las bodegas solo mediante una promoción total explícita. Un alcance ausente o contradictorio SHALL conservar el camino anterior.
+
+#### Scenario: Canario de una bodega
+- **GIVEN** un producto informado para dos bodegas y una allowlist que contiene solo una
+- **WHEN** corre la sincronización en modo transaccional
+- **THEN** únicamente la bodega autorizada usa saldo+movimiento atómico y la otra conserva el escritor anterior
+
+#### Scenario: Modo transaccional sin alcance
+- **GIVEN** una configuración transaccional sin allowlist y sin promoción total explícita
+- **WHEN** se procesa stock
+- **THEN** ninguna bodega usa el escritor nuevo y la falta de alcance queda observable
+
 ### Requirement: Compatibilidad histórica honesta
 THE system SHALL tolerar los campos históricos conocidos al leer y SHALL identificar como incompleto cualquier movimiento que no pueda normalizarse con evidencia.
 
