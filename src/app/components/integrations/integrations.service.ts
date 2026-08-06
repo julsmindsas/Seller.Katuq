@@ -437,6 +437,16 @@ export class IntegrationsService {
   /**
    * Obtener integraciones por categoría con cache
    */
+  /**
+   * Proveedores de categoría LOGISTICS que AÚN no tienen estrategia de despacho
+   * en el backend (logisticsManager): ofrecerlos como transportadora termina en
+   * "proveedor no soportado". Fullpi entra aquí hasta que exista su proveedor
+   * de despacho por-pedido (revisión D-156, hallazgo A / Fase 2 del roadmap WMS).
+   * Las 4 pantallas de despachos consumen este método, así que este es el único
+   * punto de filtro.
+   */
+  private static readonly LOGISTICS_SIN_DESPACHO: string[] = ["fullpi"];
+
   getIntegrationsByCategory(
     category: IntegrationCategory,
   ): Observable<Integration[]> {
@@ -446,7 +456,14 @@ export class IntegrationsService {
       () =>
         this.getIntegrations().pipe(
           map((integrations) =>
-            (integrations || []).filter((i) => i.category === category),
+            (integrations || []).filter(
+              (i) =>
+                i.category === category &&
+                !(
+                  category === IntegrationCategory.LOGISTICS &&
+                  IntegrationsService.LOGISTICS_SIN_DESPACHO.includes(i.provider)
+                ),
+            ),
           ),
         ),
       3 * 60 * 1000, // 3 minutos TTL
