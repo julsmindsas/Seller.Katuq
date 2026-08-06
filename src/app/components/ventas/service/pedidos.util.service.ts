@@ -799,6 +799,21 @@ export class PedidosUtilService {
         return totalConDescuento;
     }
 
+    /**
+     * Spec 011 v2: una zona de cobro es un PAQUETE (un registro con sus municipios).
+     * El envío se resuelve por NOMBRE de zona (el vendedor la elige por nombre), ya
+     * no por (ciudad + nombre). La ciudad del pedido queda como dato informativo.
+     */
+    private encontrarZonaPorNombre(allBillingZone: any[], zonaNombre: any): any {
+        if (!allBillingZone || !Array.isArray(allBillingZone) || !zonaNombre) {
+            return null;
+        }
+        const target = zonaNombre.toString().toLowerCase().trim();
+        return allBillingZone.find(
+            (item) => (item?.nombreZonaCobro?.toString().toLowerCase().trim()) === target
+        ) || null;
+    }
+
     getShippingCost(allBillingZone): number {
         // Si es "Recoge en Tienda", el envío es 0
         if (this.pedido?.formaEntrega?.toLowerCase()?.includes('recoge')) {
@@ -815,94 +830,30 @@ export class PedidosUtilService {
             return this.pedido.envio.valorZonaCobro;
         }
 
-        // Intentar buscar en allBillingZone si está disponible
-        if (allBillingZone && Array.isArray(allBillingZone) && allBillingZone.length > 0) {
-            if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
-                const ciudadPedido = this.pedido.envio.ciudad?.toString().toLowerCase().trim();
-                const zonaPedido = this.pedido.envio.zonaCobro?.toString().toLowerCase().trim();
-
-                const valorFlete = allBillingZone.filter((item) => {
-                    const ciudadItem = item.ciudad?.toString().toLowerCase().trim();
-                    const zonaItem = item.nombreZonaCobro?.toString().toLowerCase().trim();
-                    return ciudadItem === ciudadPedido && zonaItem === zonaPedido;
-                });
-
-                if (valorFlete.length > 0) {
-                    return valorFlete[0].valorZonaCobro || 0;
-                }
-            }
-        }
-
-        return 0;
+        // Buscar la zona por nombre en allBillingZone (modelo paquete).
+        const zona = this.encontrarZonaPorNombre(allBillingZone, this.pedido?.envio?.zonaCobro);
+        return zona ? (zona.valorZonaCobro || 0) : 0;
     }
     getShippingTaxCost(allBillingZone): number {
         // Si es "Recoge en Tienda", no hay impuesto de envío
         if (this.pedido?.formaEntrega?.toLowerCase()?.includes('recoge')) {
             return 0;
         }
-
-        if (!allBillingZone || !Array.isArray(allBillingZone) || allBillingZone.length === 0) {
-            return 0;
-        }
-
-        if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
-            const ciudadPedido = this.pedido.envio.ciudad?.toString().toLowerCase().trim();
-            const zonaPedido = this.pedido.envio.zonaCobro?.toString().toLowerCase().trim();
-
-            const valorFlete = allBillingZone.filter((item) => {
-                const ciudadItem = item.ciudad?.toString().toLowerCase().trim();
-                const zonaItem = item.nombreZonaCobro?.toString().toLowerCase().trim();
-                return ciudadItem === ciudadPedido && zonaItem === zonaPedido;
-            });
-
-            if (valorFlete.length > 0) {
-                return valorFlete[0].impuesto || 0;
-            }
-        }
-        return 0;
+        const zona = this.encontrarZonaPorNombre(allBillingZone, this.pedido?.envio?.zonaCobro);
+        return zona ? (zona.impuesto || 0) : 0;
     }
     getShippingTaxCostInvoice(allBillingZone, pedido): number {
-        if (!allBillingZone || !Array.isArray(allBillingZone)) {
-            return 0;
-        }
-
-        if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
-            const valorFlete = allBillingZone.filter((item => item.ciudad === pedido.envio?.ciudad && item.nombreZonaCobro === pedido.envio?.zonaCobro))
-            if (valorFlete.length > 0)
-                return valorFlete[0].impuesto;
-            else
-                return 0;
-        }
-        return 0;
+        const zona = this.encontrarZonaPorNombre(allBillingZone, pedido?.envio?.zonaCobro);
+        return zona ? (zona.impuesto || 0) : 0;
     }
     getShippingTaxValue(allBillingZone): string {
-        if (!allBillingZone || !Array.isArray(allBillingZone)) {
-            return "";
-        }
-
-        if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
-            const valorFlete = allBillingZone.filter((item => item.ciudad === this.pedido.envio?.ciudad && item.nombreZonaCobro === this.pedido.envio?.zonaCobro))
-            if (valorFlete.length > 0)
-                return valorFlete[0].impuestoZonaCobro;
-            else
-                return "";
-        }
-        return "";
+        const zona = this.encontrarZonaPorNombre(allBillingZone, this.pedido?.envio?.zonaCobro);
+        return zona ? zona.impuestoZonaCobro : "";
     }
 
     getShippingTaxValueInvoice(allBillingZone, pedido): string {
-        if (!allBillingZone || !Array.isArray(allBillingZone)) {
-            return "";
-        }
-
-        if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
-            const valorFlete = allBillingZone.filter((item => item.ciudad === pedido.envio?.ciudad && item.nombreZonaCobro === pedido.envio?.zonaCobro))
-            if (valorFlete.length > 0)
-                return valorFlete[0].impuestoZonaCobro;
-            else
-                return "";
-        }
-        return "";
+        const zona = this.encontrarZonaPorNombre(allBillingZone, pedido?.envio?.zonaCobro);
+        return zona ? zona.impuestoZonaCobro : "";
     }
 
     getDiscount(): number {

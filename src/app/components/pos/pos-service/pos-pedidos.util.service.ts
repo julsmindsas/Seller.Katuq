@@ -242,28 +242,28 @@ export class POSPedidosUtilService {
         return (this.getSubtotal() + shipinCost) - this.getDiscount();
     }
 
-    getShippingTaxCostInvoice(allBillingZone,pedido): number {
-        if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
-
-            const valorFlete = allBillingZone.filter((item => item.ciudad === pedido.envio?.ciudad && item.nombreZonaCobro === pedido.envio?.zonaCobro))
-            if (valorFlete.length > 0)
-                return valorFlete[0].impuesto;
-            else
-                return 0;
+    /**
+     * Spec 011 v2: el envío se resuelve por NOMBRE de zona (modelo paquete), ya no
+     * por (ciudad + nombre). La ciudad del pedido queda como dato informativo.
+     */
+    private encontrarZonaPorNombre(allBillingZone: any[], zonaNombre: any): any {
+        if (!allBillingZone || !Array.isArray(allBillingZone) || !zonaNombre) {
+            return null;
         }
-        return 0;
+        const target = zonaNombre.toString().toLowerCase().trim();
+        return allBillingZone.find(
+            (item) => (item?.nombreZonaCobro?.toString().toLowerCase().trim()) === target
+        ) || null;
     }
-  
-    getShippingTaxValueInvoice(allBillingZone,pedido): string {
-        if (pedido && pedido.envio?.zonaCobro && pedido.envio?.ciudad) {
 
-            const valorFlete = allBillingZone.filter((item => item.ciudad === pedido.envio?.ciudad && item.nombreZonaCobro === pedido.envio?.zonaCobro))
-            if (valorFlete.length > 0)
-                return valorFlete[0].impuestoZonaCobro;
-            else
-                return "";
-        }
-        return "";
+    getShippingTaxCostInvoice(allBillingZone,pedido): number {
+        const zona = this.encontrarZonaPorNombre(allBillingZone, pedido?.envio?.zonaCobro);
+        return zona ? (zona.impuesto || 0) : 0;
+    }
+
+    getShippingTaxValueInvoice(allBillingZone,pedido): string {
+        const zona = this.encontrarZonaPorNombre(allBillingZone, pedido?.envio?.zonaCobro);
+        return zona ? zona.impuestoZonaCobro : "";
     }
 
     getDiscount(): number {

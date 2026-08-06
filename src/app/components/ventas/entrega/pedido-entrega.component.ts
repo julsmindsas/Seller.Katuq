@@ -8,6 +8,7 @@ import {
 } from "@angular/core";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
+import { zonaCubreCiudad } from "../../../shared/util/zona-cobro.util";
 import { Pedido } from "../modelo/pedido";
 import { InfoIndicativos } from "../../../../Mock/indicativosPais";
 import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
@@ -697,10 +698,9 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     }
 
     try {
+      // Spec 011 v2: la zona es un paquete; se cubre la ciudad si está en municipios[].
       context.filteredResults = context.allBillingZone.filter(
-        (item) =>
-          item.ciudad &&
-          item.ciudad.toLowerCase().trim() === ciudad.toLowerCase().trim(),
+        (item) => zonaCubreCiudad(item, ciudad),
       );
 
       console.log(`Zonas encontradas para ${ciudad}:`, context.filteredResults);

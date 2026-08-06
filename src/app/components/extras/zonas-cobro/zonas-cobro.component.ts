@@ -1,36 +1,27 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { Router } from '@angular/router';
-import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
+import { Component, OnInit } from '@angular/core';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CrearZonasCobroComponent } from './crear-zonas-cobro/crear-zonas-cobro.component';
+import { ZonaCobro, normalizeZonasCobro } from 'src/app/shared/util/zona-cobro.util';
 
+/**
+ * Lista de zonas de cobro (spec 011 v2, T-08). Una fila por zona-paquete
+ * (nombre, valor, impuesto, total, nº municipios). El detalle expandible muestra
+ * los municipios que cubre, con buscador. Tolera docs legacy vía normalizeZonasCobro.
+ */
 @Component({
   selector: 'app-zonas-cobro',
   templateUrl: './zonas-cobro.component.html',
   styleUrls: ['./zonas-cobro.component.scss']
 })
 export class ZonasCobroComponent implements OnInit {
-  @ViewChild(DatatableComponent, { static: false }) table: DatatableComponent;
-
   cargando = false;
-  rows = [];
-  temp = [];
-  ColumnMode = ColumnMode;
-  isMobile = false;
-
-  columns = [
-    { field: 'ciudad', header: 'Ciudad' },
-    { field: 'nombreZonaCobro', header: 'Nombre' },
-    { field: 'valorZonaCobro', header: 'Valor' },
-    { field: 'impuestoZonaCobro', header: 'Porcentaje Imp' },
-    { field: 'impuesto', header: 'Impuesto' },
-    { field: 'total', header: 'Total' }
-  ];
+  rows: ZonaCobro[] = [];
+  // Buscador de municipios por zona expandida (keyed por cd).
+  filtroMunicipio: { [cd: string]: string } = {};
 
   constructor(
-    private router: Router,
     private service: MaestroService,
     private modalService: NgbModal
   ) {
@@ -41,47 +32,49 @@ export class ZonasCobroComponent implements OnInit {
     sessionStorage.removeItem('billingZoneEdit');
   }
 
-  cargarDatos() {
+  cargarDatos(): void {
     this.cargando = true;
     this.service.getBillingZone().subscribe((x: any) => {
-      const datos = x;
-      this.temp = [...datos];
+      this.rows = normalizeZonasCobro(x || []);
       this.cargando = false;
-      this.rows = datos;
-      this.cargando = false;
-    });
+    }, () => { this.cargando = false; });
   }
 
-  crearZonaCobro() {
+  /** Municipios de una zona filtrados por el buscador de su detalle. */
+  municipiosFiltrados(row: ZonaCobro): any[] {
+    const q = (this.filtroMunicipio[row.cd] || '').trim().toLowerCase();
+    const munis = row.municipios || [];
+    if (!q) { return munis; }
+    return munis.filter(m =>
+      (m.ciudad || '').toLowerCase().includes(q) ||
+      (m.departamento || '').toLowerCase().includes(q) ||
+      (m.codigoDane || '').toLowerCase().includes(q)
+    );
+  }
+
+  crearZonaCobro(): void {
     sessionStorage.removeItem('billingZoneEdit');
     this.openZonasCobroModal();
   }
 
-  edit(row) {
-    sessionStorage.setItem("billingZoneEdit", JSON.stringify(row));
+  edit(row: ZonaCobro): void {
+    sessionStorage.setItem('billingZoneEdit', JSON.stringify(row));
     this.openZonasCobroModal();
   }
 
-  openZonasCobroModal() {
+  openZonasCobroModal(): void {
     const modalRef = this.modalService.open(CrearZonasCobroComponent, {
-      size: 'lg',
-      backdrop: 'static',
-      keyboard: false
+      size: 'lg', backdrop: 'static', keyboard: false
     });
-
     modalRef.result.then((result) => {
-      if (result === 'success') {
-        this.cargarDatos(); // Recargar los datos después de cerrar el modal
-      }
-    }, (reason) => {
-      // Manejar el cierre del modal si es necesario
-    });
+      if (result === 'success') { this.cargarDatos(); }
+    }, () => { /* cierre sin cambios */ });
   }
 
-  deleteBillingZone(row) {
+  deleteBillingZone(row: ZonaCobro): void {
     Swal.fire({
       title: '¿Está seguro de eliminar esta zona de cobro?',
-      text: 'Esta acción no se puede revertir',
+      text: `Se eliminará "${row.nombreZonaCobro}" con sus ${row.municipios?.length || 0} municipios.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
@@ -89,12 +82,8 @@ export class ZonasCobroComponent implements OnInit {
       reverseButtons: true
     }).then((result) => {
       if (result.isConfirmed) {
-        this.service.deleteBillingZone(row).subscribe(r => {
-          Swal.fire(
-            'Eliminado!',
-            'La zona de cobro ha sido eliminada.',
-            'success'
-          );
+        this.service.deleteBillingZone(row).subscribe(() => {
+          Swal.fire('Eliminado!', 'La zona de cobro ha sido eliminada.', 'success');
           this.cargarDatos();
         });
       }

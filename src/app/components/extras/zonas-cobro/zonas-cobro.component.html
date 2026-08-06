@@ -1,5 +1,3 @@
-
-
 <div class="container-fluid">
   <div class="row">
     <div class="col-sm-12 p-2">
@@ -17,7 +15,7 @@
           <div class="col-6">
             <p class="text-left fc-secondary fs-24 m-0 p-0">Zonas de Cobro</p>
             <p class="text-left text-muted fs-18 m-0 p-0">
-              Usadas en la venta para definir las zonas de entrega y el valor de la entrega para estas zonas.
+              Cada zona agrupa los municipios que cubre y el valor de la entrega para esos municipios.
             </p>
           </div>
 
@@ -36,52 +34,92 @@
         <!-- FIN Header Standar -->
 
         <div class="card-body custom-datatable" *ngIf="!cargando">
-         
 
-          <p-table #dt [columns]="columns" [value]="rows" [paginator]="true" [rows]="10" [resizableColumns]="true"
-            [scrollable]="true" scrollHeight="flex" [loading]="cargando" [rowsPerPageOptions]="[10, 20, 50]"
-            styleClass="p-datatable-gridlines p-datatable-striped" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true">
+          <p-table #dt [value]="rows" dataKey="cd" [paginator]="true" [rows]="10"
+            [scrollable]="true" scrollHeight="flex" [rowsPerPageOptions]="[10, 20, 50]"
+            styleClass="p-datatable-gridlines p-datatable-striped" [tableStyle]="{ 'min-width': '20rem' }"
+            [rowHover]="true">
 
             <ng-template pTemplate="header">
               <tr>
-                <th *ngFor="let col of columns" [pSortableColumn]="col.field" class="text-center">
-                  {{ col.header | translate }}
-                  <p-sortIcon [field]="col.field"></p-sortIcon>
-                </th>
-                <th class="text-center">
-                  {{ 'Acciones' | translate }}
-                </th>
+                <th style="width: 3rem"></th>
+                <th [pSortableColumn]="'nombreZonaCobro'" class="text-center">{{ 'Nombre' | translate }} <p-sortIcon [field]="'nombreZonaCobro'"></p-sortIcon></th>
+                <th [pSortableColumn]="'valorZonaCobro'" class="text-center">{{ 'Valor' | translate }} <p-sortIcon [field]="'valorZonaCobro'"></p-sortIcon></th>
+                <th class="text-center">{{ 'Porcentaje Imp' | translate }}</th>
+                <th class="text-center">{{ 'Impuesto' | translate }}</th>
+                <th class="text-center">{{ 'Total' | translate }}</th>
+                <th class="text-center">{{ 'Municipios' | translate }}</th>
+                <th class="text-center">{{ 'Acciones' | translate }}</th>
               </tr>
             </ng-template>
 
-            <ng-template pTemplate="body" let-row let-columns="columns">
+            <ng-template pTemplate="body" let-row let-expanded="expanded">
               <tr>
-                <td *ngFor="let col of columns" class="text-center">
-                  {{ col.field === 'valorZonaCobro' || col.field === 'impuesto' || col.field === 'total' ? (row[col.field] | currency) : row[col.field] }}
-                  {{ col.field === 'impuestoZonaCobro' ? '%' : '' }}
+                <td class="text-center">
+                  <a href="javascript:void(0)" [pRowToggler]="row" class="fc-primary"
+                    ngbTooltip="Ver municipios" placement="top">
+                    <i [class]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" style="font-size: 14px;"></i>
+                  </a>
+                </td>
+                <td class="text-center">{{ row.nombreZonaCobro }}</td>
+                <td class="text-center">{{ row.valorZonaCobro | currency }}</td>
+                <td class="text-center">{{ row.impuestoZonaCobro }} %</td>
+                <td class="text-center">{{ row.impuesto | currency }}</td>
+                <td class="text-center">{{ row.total | currency }}</td>
+                <td class="text-center">
+                  <span class="badge bg-info text-white">{{ row.municipios?.length || 0 }}</span>
                 </td>
                 <td class="text-center">
                   <i placement="top" ngbTooltip="{{'Edit' | translate}}"
                     style="font-size: 18px; margin-left: 10px; cursor: pointer;"
-                    class="icofont icofont-pencil-alt-5 fc-primary" (click)="edit(row)">
-                  </i>
+                    class="icofont icofont-pencil-alt-5 fc-primary" (click)="edit(row)"></i>
                   <i placement="top" ngbTooltip="{{'Eliminar' | translate}}"
                     style="font-size: 18px; margin-left: 10px; cursor: pointer;" class="icofont icofont-trash fc-danger"
-                    (click)="deleteBillingZone(row)">
-                  </i>
+                    (click)="deleteBillingZone(row)"></i>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="rowexpansion" let-row>
+              <tr>
+                <td colspan="8">
+                  <div class="p-3">
+                    <div class="row mb-2">
+                      <div class="col-md-5">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text"><i class="fa fa-search"></i></span>
+                          <input type="text" class="form-control" placeholder="Buscar municipio en esta zona…"
+                            [(ngModel)]="filtroMunicipio[row.cd]">
+                        </div>
+                      </div>
+                      <div class="col-md-7 text-md-end text-muted">
+                        {{ municipiosFiltrados(row).length }} de {{ row.municipios?.length || 0 }} municipios
+                      </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2" style="max-height: 220px; overflow-y: auto;">
+                      <span *ngFor="let m of municipiosFiltrados(row)" class="badge bg-light text-dark border p-2">
+                        <strong>{{ m.ciudad }}</strong>
+                        <small class="text-muted" *ngIf="m.departamento"> - {{ m.departamento }}</small>
+                        <small class="text-muted" *ngIf="m.codigoDane"> ({{ m.codigoDane }})</small>
+                      </span>
+                      <span *ngIf="municipiosFiltrados(row).length === 0" class="text-muted">
+                        Sin municipios que coincidan.
+                      </span>
+                    </div>
+                  </div>
                 </td>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="7">{{ 'No hay datos disponibles' | translate }}</td>
+                <td colspan="8">{{ 'No hay datos disponibles' | translate }}</td>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="summary">
               <div class="flex align-items-center justify-content-between">
-                Total en esta consulta: {{rows ? rows.length : 0 }} registros.
+                Total en esta consulta: {{ rows ? rows.length : 0 }} zonas.
               </div>
             </ng-template>
           </p-table>

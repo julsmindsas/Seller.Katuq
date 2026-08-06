@@ -105,14 +105,7 @@
               <div class="d-flex flex-wrap gap-2 p-2 border rounded" style="min-height:46px; max-height:160px; overflow-y:auto;">
                 <span *ngIf="totalSeleccionados() === 0" class="text-muted">Busca y agrega municipios arriba…</span>
 
-                <!-- Municipio base (edición): no removible -->
-                <span *ngIf="editando && municipioBase" class="badge bg-primary text-white p-2">
-                  <i class="fa fa-map-marker"></i> {{ municipioBase.nombre }}
-                  <small *ngIf="municipioBase.departamento"> - {{ municipioBase.departamento }}</small>
-                  <span class="ms-1" style="opacity:.7;">(principal)</span>
-                </span>
-
-                <!-- Municipios agregados: removibles -->
+                <!-- Municipios de la zona: todos removibles -->
                 <span *ngFor="let m of municipiosSeleccionados" class="badge bg-secondary text-white p-2">
                   {{ m.nombre }}<small *ngIf="m.departamento"> - {{ m.departamento }}</small>
                   <i class="fa fa-times ms-2" style="cursor:pointer;" (click)="quitarMunicipio(m)"></i>
@@ -182,6 +175,6 @@
     <button type="button" class="btn btn-secondary" (click)="activeModal.dismiss('Cancel click')">Cancelar</button>
     <button type="button" class="btn btn-primary" (click)="editando ? editar() : guardar()" [disabled]="guardando || !puedeGuardar()">
       <i class="icofont icofont-save"></i>&nbsp;
-      {{ guardando ? 'Guardando…' : (editando ? 'Guardar cambios' : ('Guardar' + (totalSeleccionados() > 1 ? ' (' + totalSeleccionados() + ')' : ''))) }}
+      {{ guardando ? 'Guardando…' : (editando ? 'Guardar cambios' : ('Guardar' + (totalSeleccionados() >= 1 ? ' (' + totalSeleccionados() + ' municipios)' : ''))) }}
     </button>
   </div>

@@ -1,92 +1,157 @@
-# Spec 011 — Alta múltiple de zonas de cobro por municipio
+# Spec 011 — Zonas de cobro como paquete (una zona = varios municipios)
 
-> Estado: draft | in-review | **approved** | superseded
+> Estado: draft | in-review | **approved (v2)** | superseded
 > Autor(es): equipo Katuq + Claude
-> Última actualización: 2026-07-30 (clarifications §8 resueltas — ver D-049)
+> Última actualización: 2026-08-05 (revisión v2 — modelo paquete; aprobada en checkpoint; ver D-051)
+>
+> **⚠️ Esta es la revisión v2.** La v1 (una zona = un municipio, alta en lote que crea N documentos)
+> se implementó y se validó parcialmente (T-01..T-07), pero el testing la rechazó: crear una zona
+> "seleccionar todos" generaba ~1078 filas (una por municipio), imposible de mantener. La v2 cambia el
+> **modelo de datos**: una zona de cobro es **un paquete** con la lista de municipios adentro.
+> El multi-select de municipios (chips) construido en v1 se **reutiliza**; cambia dónde se guarda.
 
 ## 1. Contexto / Por qué
-Hoy una zona de cobro se crea de a un municipio por vez: el operador busca UN municipio en la base DANE, lo fija en el campo "Ciudad" (solo lectura) y guarda. Configurar una tarifa de envío para muchos municipios (un departamento entero, o todo el país) obliga a repetir el formulario decenas o cientos de veces. Necesitamos crear/ajustar zonas de cobro para varios municipios en una sola acción.
+En v1, cada municipio de una zona quedaba como un **documento independiente** con el mismo nombre/valor
+repetido. Configurar una tarifa para un departamento o el país entero generaba decenas o cientos de filas
+idénticas salvo la ciudad (el testing reportó ~1078 registros para una sola zona). Consecuencias:
+- **Mantenimiento inviable:** cambiar el valor de una zona obliga a editar N documentos.
+- **Lista ilegible:** la pantalla principal muestra N filas por zona en vez de una.
+- **Dato redundante:** el precio, que es **uno por zona**, se repite en cada municipio.
+
+El modelo correcto del dominio es: *una zona de cobro nombrada, con un valor, que **cubre un conjunto de
+municipios***. Es decir, un paquete.
 
 ## 2. Objetivo de negocio
-Un operador configura zonas de cobro para muchos municipios (hasta el total nacional) en un solo guardado, reduciendo el alta de N formularios a una sola operación, sin crear duplicados y con un resumen claro de lo creado y lo omitido.
+Un operador crea/edita una **zona de cobro como un solo registro** que agrupa muchos municipios, con un valor
+único editable en un solo lugar. En la venta, el vendedor elige la zona por su nombre y el sistema resuelve la
+tarifa de envío; los municipios son un detalle interno de la zona, no filas sueltas.
 
 ## 3. User stories
-- Como **operador de logística** quiero **seleccionar varios municipios y crear una zona de cobro para cada uno con el mismo nombre, valor e impuesto en una sola acción** para **no repetir el formulario decenas de veces**.
-- Como **operador** quiero **agregar de golpe todos los municipios de un departamento, o todos los del país** para **configurar tarifas planas rápido**.
-- Como **operador** quiero **que no se creen zonas duplicadas y ver cuántas se crearon y cuántas se omitieron** para **confiar en el resultado del alta masiva**.
-- Como **operador** quiero **ajustar después el valor o impuesto de un municipio puntual editándolo** para **casos donde una ciudad requiere una tarifa distinta**.
+- Como **operador de logística** quiero **crear una zona de cobro y elegir varios municipios que quedan
+  guardados dentro de esa misma zona (un solo registro)** para **no generar cientos de filas repetidas**.
+- Como **operador** quiero **agregar de golpe todos los municipios de un departamento, o todos los del país**
+  a una zona **para configurar coberturas amplias rápido**.
+- Como **operador** quiero **cambiar el valor de una zona en un solo lugar y que aplique a todos sus
+  municipios** para **mantenerla sin editar cientos de registros**.
+- Como **operador** quiero **agregar o quitar municipios de una zona ya creada** para **ajustar su cobertura**.
+- Como **operador** quiero **que un mismo municipio pueda pertenecer a más de una zona** para **casos como una
+  promoción de envío que cubre solo algunos municipios de otra zona**.
+- Como **vendedor** quiero **elegir la zona de cobro por su nombre en la venta** y que **el sistema aplique su
+  tarifa de envío**, sin ver el listado completo de municipios.
 
 ## 4. Criterios de aceptación (notación EARS)
 
-**Selección de municipios**
-- THE system SHALL permitir seleccionar múltiples municipios en el formulario de zona de cobro, mostrando cada municipio seleccionado como una etiqueta removible.
-- WHEN el operador busca y elige un municipio, THE system SHALL agregarlo a la selección solo si no está ya presente (sin duplicar dentro de la selección).
-- WHEN el operador remueve la etiqueta de un municipio, THE system SHALL quitarlo de la selección.
-- WHERE hay un departamento elegido en el filtro, THE system SHALL ofrecer una acción para agregar a la selección todos los municipios de ese departamento, sin duplicar los ya presentes.
-- WHERE la base oficial de municipios (DANE) está activa, THE system SHALL ofrecer una acción para agregar a la selección todos los municipios disponibles, indicando la cantidad total.
+**Modelo de zona (paquete)**
+- THE system SHALL representar una zona de cobro como **un único registro** por empresa, identificado por su
+  **nombre de zona**, que contiene un **valor**, un **porcentaje de impuesto** y una **lista de municipios**
+  (cada uno con su ciudad, código DANE y departamento).
+- THE system SHALL calcular impuesto y total de la zona una sola vez (impuesto = valor × porcentaje;
+  total = valor + impuesto), aplicables a toda la zona.
+- THE system SHALL impedir crear dos zonas con el **mismo nombre** dentro de la misma empresa (el nombre es la
+  identidad de la zona); IF el operador intenta crear una zona con un nombre ya existente, THEN THE system SHALL
+  rechazarlo indicando que ya existe.
 
-**Creación / guardado en lote**
-- WHEN el operador guarda con uno o más municipios seleccionados, THE system SHALL crear una zona de cobro por cada municipio seleccionado usando el mismo nombre de zona, valor e impuesto ingresados en el formulario.
-- THE system SHALL registrar en cada zona creada el municipio, su código DANE y su departamento correspondientes (los de cada municipio seleccionado, no los del filtro).
-- THE system SHALL calcular el impuesto y el total de cada zona de forma idéntica a la creación individual actual (impuesto = valor × porcentaje; total = valor + impuesto).
-- IF un municipio seleccionado ya tiene una zona de cobro con el mismo nombre de zona, THEN THE system SHALL omitir su creación (no sobrescribir) y contarlo como omitido.
-- WHEN termina el guardado en lote, THE system SHALL informar un resumen con los conteos de zonas creadas, omitidas por ya existir y fallidas, y SHALL permitir ver el detalle de cuáles municipios se omitieron o fallaron.
-- IF la creación de una o más zonas del lote falla, THEN THE system SHALL continuar con las restantes y reportar cuántas fallaron, sin abortar el lote completo por un error individual.
-- WHERE el lote proviene de una acción masiva (agregar todos los municipios de un departamento, o seleccionar todos los municipios), THE system SHALL pedir confirmación mostrando la cantidad de zonas a crear antes de ejecutar. (Un alta manual de pocos municipios no requiere confirmación.)
-- WHEN termina un alta o edición que crea zonas, THE system SHALL refrescar/invalidar la caché local de zonas de la sesión, de modo que las zonas recién creadas queden disponibles (p. ej. en el checkout) sin recargar la página.
+**Selección de municipios (alta y edición)**
+- THE system SHALL permitir seleccionar múltiples municipios, mostrando cada uno como una etiqueta removible.
+- WHEN el operador elige un municipio, THE system SHALL agregarlo a la zona solo si no está ya en **esa** zona
+  (sin duplicar el mismo municipio dentro de la misma zona).
+- WHERE hay un departamento elegido, THE system SHALL ofrecer agregar todos los municipios de ese departamento,
+  sin duplicar los ya presentes en la zona.
+- WHERE la base oficial (DANE) está activa, THE system SHALL ofrecer agregar todos los municipios disponibles,
+  indicando la cantidad total.
+- WHERE una acción agrega muchos municipios de golpe (todo un departamento / todos los del país), THE system
+  SHALL pedir confirmación mostrando la cantidad antes de aplicarla.
+
+**Creación / guardado (un solo registro)**
+- WHEN el operador guarda una zona nueva con uno o más municipios, THE system SHALL crear **una sola** zona de
+  cobro con esos municipios adentro, usando el nombre, valor e impuesto ingresados.
+- THE system SHALL registrar en la zona el municipio, código DANE y departamento de **cada** municipio
+  seleccionado (no los del filtro).
+- THE system SHALL crear y consultar zonas únicamente dentro de la empresa activa (multi-tenant), sin confiar
+  en datos del cliente para determinar la empresa.
 
 **Edición**
-- WHERE se edita una zona existente, THE system SHALL precargar su municipio en la selección y permitir agregar municipios adicionales.
-- WHILE se edita una zona existente, THE system SHALL mantener el municipio original como no removible (para eliminar esa zona se usa la acción de borrar, no quitarlo de la selección).
-- WHEN el operador guarda en modo edición, THE system SHALL actualizar la zona en edición con el nombre/valor/impuesto ingresados y crear una zona nueva para cada municipio adicional, aplicando la misma regla de omitir duplicados (mismo municipio + mismo nombre de zona).
-- THE system SHALL permitir editar de forma individual el valor o impuesto de cualquier zona de cobro (una zona = un municipio), para tarifas particulares.
+- WHERE se edita una zona existente, THE system SHALL precargar su nombre, valor, impuesto y **todos** sus
+  municipios, y permitir modificar cualquiera de ellos.
+- WHEN el operador cambia el valor o el impuesto de la zona y guarda, THE system SHALL aplicarlo a **toda** la
+  zona en una sola operación (un registro actualizado), sin necesidad de editar municipio por municipio.
+- WHEN el operador agrega o quita municipios de una zona y guarda, THE system SHALL actualizar la lista de
+  municipios de esa zona en consecuencia.
+- THE system SHALL permitir que un mismo municipio esté presente en **varias zonas distintas** (con nombres
+  distintos); crear o editar una zona NO SHALL impedirlo por el hecho de que el municipio ya esté en otra zona.
 
-**Aislamiento**
-- THE system SHALL crear y consultar zonas de cobro únicamente dentro de la empresa activa (multi-tenant), sin confiar en datos del cliente para determinar la empresa.
+**Consumo en la venta (checkout / POS)**
+- WHEN el vendedor selecciona una zona de cobro por su nombre en la venta, THE system SHALL resolver la tarifa
+  de envío a partir del **valor de esa zona** (y su impuesto), no de un documento por-municipio.
+- THE system SHALL mantener disponible la zona recién creada/editada para la venta sin requerir recargar la
+  página (invalidar/refrescar la caché local de zonas).
+
+**Migración de datos existentes**
+- WHERE ya existen zonas creadas con el modelo anterior (un documento por municipio), THE system SHALL
+  consolidarlas en zonas-paquete agrupando por nombre de zona, preservando el conjunto de municipios y el valor,
+  sin pérdida de cobertura. (La estrategia y el manejo de conflictos de valor se definen en el plan; se ejecuta
+  con verificación en seco previa.)
 
 ## 5. Requisitos no funcionales
 
 ### 5.1 Performance
-- El alta masiva (hasta el total nacional de municipios) SHALL ejecutarse como una sola operación coordinada (no N interacciones del usuario) y no debe congelar la interfaz; debe dar retroalimentación de progreso o de finalización.
+- Crear/editar una zona con hasta el total nacional de municipios SHALL ser **una sola escritura** (un
+  documento con la lista embebida) y no debe congelar la interfaz.
 
 ### 5.2 Seguridad
-- Requiere autenticación y aislamiento por empresa. Validar entradas: valor ≥ 0; porcentaje de impuesto entre 0 y 100; nombre de zona no vacío; al menos un municipio seleccionado.
+- Requiere autenticación y aislamiento por empresa. Validar entradas: valor ≥ 0; porcentaje entre 0 y 100;
+  nombre de zona no vacío y único por empresa; al menos un municipio.
 
 ### 5.3 Observabilidad
-- El resultado del lote (creadas / omitidas / fallidas) queda registrado de forma estructurada para diagnóstico, sin datos sensibles en claro.
+- El resultado de crear/editar/migrar queda registrado de forma estructurada para diagnóstico, sin datos
+  sensibles en claro.
 
 ### 5.4 Accesibilidad (UI)
-- Las etiquetas de municipio y sus controles de remoción deben ser operables por teclado; el selector debe ser navegable por teclado; el estado (seleccionado/omitido) no debe comunicarse solo por color.
+- Las etiquetas de municipio y sus controles de remoción son operables por teclado; el selector es navegable
+  por teclado; el estado no se comunica solo por color. En la lista, el detalle de municipios de una zona es
+  expandible/accesible por teclado.
 
 ### 5.5 Resiliencia
-- Idempotencia: reintentar un guardado no debe duplicar zonas (la regla de omitir-duplicados lo garantiza). Un fallo parcial no debe dejar la operación en un estado ambiguo: se informa qué se creó y qué no.
+- Idempotencia: reintentar un guardado no debe duplicar la zona ni sus municipios. La migración debe poder
+  reejecutarse sin duplicar (agrupa por nombre; verificación en seco previa).
 
 ## 6. Out of scope (explícito)
-- Cambiar el modelo de datos: una zona sigue siendo **un municipio** (el multi-select es una comodidad de alta/edición, no un cambio de esquema).
 - Tarifas por peso/valor, reglas de cobertura por transportador, o importación desde archivo.
-- Cambiar cómo el checkout / los pedidos / la analítica consumen las zonas de cobro.
-- Renombrar la colección de zonas o migrar datos existentes.
+- **Selección automática de zona por la ciudad del cliente** en el checkout: por ahora el vendedor elige la
+  zona por nombre (confirmado). Deducir la zona a partir de la ciudad queda para una spec futura.
+- Precio distinto **por municipio dentro de la misma zona**: una zona tiene un valor único; para cobrar
+  distinto a un municipio se lo pone en **otra** zona (solapamiento permitido).
+- Renombrar la colección `zonacobro`.
 - Control de acceso por rol para quién puede crear/editar zonas (posible spec aparte).
-- Corregir el lookup case-sensitive u otros gaps detectados en el mapeo del módulo (posible spec aparte), salvo la invalidación de caché mínima que exige el criterio de que las zonas recién creadas queden disponibles.
+- Otros gaps del módulo (lookup case-sensitive, etc.) salvo lo que exige este cambio (match por nombre de zona
+  en el consumo + invalidación de caché).
 
 ## 7. Dependencias
-- Módulo de zonas de cobro existente (CRUD actual) y la base oficial de municipios (DANE) ya integrada en el formulario.
-- Ninguna spec previa bloquea; no depende de proveedores externos.
+- Módulo de zonas de cobro existente (CRUD + multi-select de municipios de v1) y la base DANE ya integrada.
+- Consumidores del valor de envío: `pedidos.util.service` (checkout) y `pos-pedidos.util.service` (POS), que
+  hoy emparejan por `(ciudad, nombreZonaCobro)` y deben pasar a resolver por nombre de zona.
+- Datos existentes en `zonacobro` (modelo v1 por-municipio) a migrar.
 
-## 8. Clarifications (resueltas 2026-07-30 — D-049)
-- [x] **Edición — municipio base:** NO removible. Solo se pueden agregar municipios adicionales; para eliminar la zona se usa la acción de borrar.
-- [x] **Umbral de confirmación:** confirmación solo en acciones masivas (agregar todos los del departamento / seleccionar todos). Alta manual de pocos municipios sin confirmación.
-- [x] **Detalle del resumen:** conteos (creadas/omitidas/fallidas) + opción de ver el detalle de cuáles.
-- [x] **Disponibilidad inmediata:** SÍ, invalidar/refrescar la caché local tras el alta para que las nuevas zonas queden disponibles sin recargar.
+## 8. Clarifications (resueltas 2026-08-05 — D-051)
+- [x] **Valor por zona:** único para toda la zona, editable en un solo lugar; aplica a todos sus municipios.
+- [x] **Solapamiento:** un municipio PUEDE estar en varias zonas (con nombres distintos). No se limita.
+- [x] **Selección en la venta:** el vendedor elige la zona por nombre (por ahora; no auto-deducción por ciudad).
 
 ## 9. Riesgos identificados
-- **R-01:** Crear ~1122 zonas de una vez genera muchas escrituras → riesgo de lentitud, timeout o costo. Mitigación: operación por lotes del lado servidor + confirmación con conteo + feedback de progreso (se define en el plan).
-- **R-02:** La caché local de zonas del navegador puede quedar desactualizada tras el alta masiva → el checkout no vería las nuevas hasta refrescar. Mitigación: invalidar/refrescar la caché tras el lote (ligado al 4º [NEEDS CLARIFICATION]).
-- **R-03:** Seleccionar "todos" por error dispara un alta masiva no deseada. Mitigación: confirmación obligatoria con la cantidad.
+- **R-01 (migración):** consolidar los ~1078 (testing) + 257 (OH MY STORE) documentos por-municipio en
+  paquetes. Si existieran documentos con el **mismo nombre pero distinto valor**, hay conflicto a resolver.
+  Mitigación: script con **verificación en seco** obligatoria (Art. constitución) que reporte conflictos antes
+  de aplicar; regla de consolidación definida en el plan.
+- **R-02 (consumo de envío):** cambiar el emparejamiento de `(ciudad + nombre)` a **nombre de zona** en
+  checkout y POS puede afectar el cálculo de flete de pedidos en curso. Mitigación: cubrir ambos consumidores,
+  pruebas de contrato del lookup, y validar en navegador antes de cerrar.
+- **R-03 (reversión de decisión aprobada):** v2 revierte D-048/D-050 ya implementados. Mitigación: registrar la
+  reversión (D-051), conservar la rama, y migrar en vez de borrar.
 
 ## 10. Métricas de éxito post-launch
-- El alta de zonas para una empresa nueva pasa de N formularios individuales a **1 acción** (medible en soporte/onboarding).
-- **0 zonas duplicadas** (mismo municipio + mismo nombre) creadas por el flujo de lote, en el primer mes.
+- Una zona de cobro que cubre un departamento/país es **1 registro** en la lista (no N filas).
+- Cambiar el valor de una zona es **1 edición** (antes: N).
+- **0 zonas con nombre duplicado** por empresa; **0 municipios duplicados** dentro de una zona.
 
 ---
 
@@ -95,4 +160,5 @@ Un operador configura zonas de cobro para muchos municipios (hasta el total naci
 - [x] Cada criterio EARS es testeable de forma binaria.
 - [x] NFRs cubren al menos performance, seguridad, observabilidad.
 - [x] Out of scope explícito.
-- [x] Bloque `[NEEDS CLARIFICATION]` resuelto.
+- [x] Clarifications resueltas.
+- [ ] **Checkpoint humano (pendiente):** aprobar esta revisión v2 antes de redactar `plan.md`.

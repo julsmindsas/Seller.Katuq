@@ -455,12 +455,10 @@ export class MaestroService {
   public deleteBillingZone(adicion: any) {
     return this.http.post(this.urlBase + '/v1/zonascobro/delete', adicion);
   }
-  // Spec 011 (D-050): alta múltiple — crea una zona por municipio en el backend.
-  // payload: { nombreZonaCobro, valorZonaCobro, impuestoZonaCobro, municipios[] }
-  // respuesta: { creadas, omitidas[], fallidas[] }
-  public createBillingZonesBatch(payload: any) {
-    return this.http.post(this.urlBase + '/v1/zonascobro/create-batch', payload);
-  }
+  // Spec 011 v2 (D-051/D-052): una zona de cobro es un PAQUETE.
+  // create/edit reciben { nombreZonaCobro, valorZonaCobro, impuestoZonaCobro, municipios[] }
+  // y el backend crea/actualiza UN documento con la lista de municipios adentro.
+  // (El endpoint `create-batch` de v1 fue eliminado — ver D-052.)
   public getAdiciones() {
     return this.http.get(this.urlBase + '/v1/adiciones/all', this.httpOptions);
   }
