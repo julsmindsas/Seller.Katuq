@@ -2,7 +2,7 @@
 
 ## 0. Preparación (sin producción)
 - [x] 0.1 Revisar en la rama desplegada qué gates existen por bodega vs solo por empresa (`inventoryRolloutConfig`, config Osmosis `inventoryLedgerWarehouseCodes`/`inventoryLedgerAllWarehouses`) y documentar la matriz real de banderas.
-- [ ] 0.2 Definir con Daniel el umbral de promoción (propuesto: 5 corridas sombra consecutivas sin divergencias no explicadas, mínimo 7 días).
+- [x] 0.2 Umbral de promoción DEFINIDO con Daniel (2026-08-07, "dale"): 5 corridas sombra consecutivas sin divergencias no explicadas, mínimo 7 días.
 
 ## 1. Etapa A — Sombra en OMS (config, reversible)
 - [x] 1.1 `companyConfig/OH MY STORE`: flags de sombra para ajustes y traslados. Verificar con un ajuste de prueba que el saldo lo siga escribiendo legacy y quede resumen en `inventory_audit`.
