@@ -44,3 +44,30 @@
   opacity: 0.55;
   font-style: italic;
 }
+
+// Imagen del método (spec 014)
+.logo-miniatura {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.logo-preview {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.logo-preview-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #b0b0b0;
+  font-size: 22px;
+}

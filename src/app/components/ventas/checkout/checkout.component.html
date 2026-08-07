@@ -728,7 +728,11 @@
                         <input class="payment-radio" [id]="opcionPago.cd" type="radio" [value]="opcionPago.cd"
                           formControlName="opcionSeleccionada" />
                         <div class="payment-method-card">
-                          <i [class]="getPaymentMethodIcon(opcionPago.nombre)"></i>
+                          <img *ngIf="opcionPago.logo && !logoFallido.has(opcionPago.cd)" [src]="opcionPago.logo"
+                            [alt]="opcionPago.nombre" class="payment-method-img"
+                            (error)="onPaymentImgError(opcionPago.cd)" />
+                          <i *ngIf="!opcionPago.logo || logoFallido.has(opcionPago.cd)"
+                            [class]="getPaymentMethodIcon(opcionPago.nombre)"></i>
                           <span title="{{opcionPago.nombre}}">{{opcionPago.nombre}}</span>
                         </div>
                       </label>

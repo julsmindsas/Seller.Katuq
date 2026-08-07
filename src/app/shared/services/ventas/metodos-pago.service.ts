@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
+import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { Observable, forkJoin, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { last, map, switchMap } from 'rxjs/operators';
 
 import { MaestroService } from '../maestros/maestro.service';
 import {
@@ -8,6 +9,7 @@ import {
   FormaPagoRaw,
   MetodoPagoUnificado,
   fusionarMetodosPorCanal,
+  validarImagenMetodoPago,
 } from '../../util/metodo-pago.util';
 
 /**
@@ -20,7 +22,34 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class MetodosPagoService {
-  constructor(private maestro: MaestroService) {}
+  constructor(
+    private maestro: MaestroService,
+    private storage: AngularFireStorage,
+  ) {}
+
+  /** Valida un archivo de imagen para el logo del método (delega en la lógica pura del util). */
+  validarImagen(file: { name?: string; type?: string; size?: number } | null): string | null {
+    return validarImagenMetodoPago(file);
+  }
+
+  /**
+   * Sube una imagen a Firebase Storage en `metodosPago/{company}/{ts}_{nombre}` y
+   * resuelve la URL de descarga. La empresa sale de `localStorage['user']` (multi-tenant).
+   */
+  subirImagen(file: File): Observable<string> {
+    let company = 'sin-company';
+    try {
+      company = JSON.parse(localStorage.getItem('user') || '{}').company || company;
+    } catch { /* usa el default */ }
+    const safe = (file.name || 'imagen').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `metodosPago/${company}/${Date.now()}_${safe}`;
+    const ref = this.storage.ref(path);
+    const task = this.storage.upload(path, file);
+    return task.snapshotChanges().pipe(
+      last(), // espera a que termine la subida
+      switchMap(() => ref.getDownloadURL() as Observable<string>),
+    );
+  }
 
   /** Lee ambos canales en paralelo y devuelve la lista fusionada (una fila por método). */
   getMetodosUnificados(): Observable<MetodoPagoUnificado[]> {
@@ -119,7 +148,7 @@ export class MetodosPagoService {
     metodo: MetodoPagoUnificado,
     cambios: Partial<Pick<
       MetodoPagoUnificado,
-      'nombre' | 'online' | 'integracion' | 'descripcionCorreoElectronico' | 'recordatorioCobro'
+      'nombre' | 'online' | 'integracion' | 'descripcionCorreoElectronico' | 'recordatorioCobro' | 'logo'
     >>,
   ): Observable<any> {
     const ops: Observable<any>[] = [];
@@ -135,6 +164,8 @@ export class MetodosPagoService {
           descripcionCorreoElectronico:
             cambios.descripcionCorreoElectronico ?? metodo.descripcionCorreoElectronico,
           recordatorioCobro: cambios.recordatorioCobro ?? metodo.recordatorioCobro,
+          // `logo` se propaga solo si viene en cambios (incluye '' para quitarla); si no, conserva el actual.
+          logo: cambios.logo !== undefined ? cambios.logo : metodo.logo,
         };
         ops.push(this.editEnCanal(canal, payload));
       }
@@ -154,6 +185,7 @@ export class MetodosPagoService {
       integracion: string;
       descripcionCorreoElectronico?: string;
       recordatorioCobro?: string;
+      logo?: string;
     },
     canales: { ecommerce?: { posicion?: number }; pos?: { posicion?: number } },
   ): Observable<any> {
@@ -194,6 +226,7 @@ export class MetodosPagoService {
       activo,
       descripcionCorreoElectronico: metodo.descripcionCorreoElectronico,
       recordatorioCobro: metodo.recordatorioCobro,
+      logo: metodo.logo || '',
     };
   }
 
@@ -205,6 +238,7 @@ export class MetodosPagoService {
       integracion: string;
       descripcionCorreoElectronico?: string;
       recordatorioCobro?: string;
+      logo?: string;
     },
     posicion?: number,
   ): any {
@@ -217,6 +251,7 @@ export class MetodosPagoService {
       activo: true,
       descripcionCorreoElectronico: base.descripcionCorreoElectronico ?? '',
       recordatorioCobro: base.recordatorioCobro ?? '',
+      logo: base.logo ?? '',
     };
   }
 }

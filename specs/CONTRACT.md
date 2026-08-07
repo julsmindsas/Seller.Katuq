@@ -44,6 +44,8 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 | **013** | **payment-method-unique-selection** | **done (D-062) — E2E 4/4; selección por cd + id=docId** | equipo Katuq + Claude | **Tarea 2/6 del lote pagos.** Bug: si dos formas de pago comparten `id`, en el checkout se marcan **varias a la vez** (radios `[value]="id"` con mismo valor → todas `:checked`) y puede guardarse el `formaDePago` equivocado; igual en asentar-pago-manual (e-com y POS). Fix: identificar la forma por **`cd`** (docId único), no por `id`, en los 3 consumidores + **auto-generar `id` único** al crear (id es solo interno) + reporte de duplicados existentes. Rama `feature/pagos-metodos-unificados`. Ver D-059. |
 
+| **014** | **payment-method-image** | **done (D-066) — E2E OK; imagen en tabla/checkout/POS (reutiliza `logo`)** | equipo Katuq + Claude | **Tarea 3/6 del lote pagos.** Cada método de pago muestra **una imagen** (subida a Storage, URL en el método) consistente en **todos los canales** (e-com + POS). Hoy es inconsistente: checkout usa font-icon por nombre, POS usa `assets/{slug}.svg`. Alcance: subir/cambiar/quitar imagen en la pantalla de métodos + mostrarla en checkout y POS con respaldo neutro + invalidar caché. Una sola imagen por método (no por canal). Rama `feature/pagos-metodos-unificados`. Ver D-063. |
+
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
 ---
@@ -622,6 +624,45 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Sin backfill (D-060):** los ids duplicados existentes quedan inertes; el reconciliador los reporta para
   limpieza opcional. Deploy a cargo del equipo. Commit con autorización; push pendiente de OK.
 - Entregable ClickUp: `clickup/feature-pagos-metodos-unificados__tarea-2-id-unico-formas-pago.md`.
+
+### 2026-08-06 — D-063: Apertura spec 014 (imagen visual del método de pago)
+- **Contexto:** Tarea 3/6. Hoy la imagen del método es inconsistente entre canales (checkout = font-icon por
+  nombre; POS = `assets/images/payment/{slug}.svg`) y no se administra. El modelo ya tiene un campo `logo`.
+- **Clarifications con el negocio:** (1) la imagen se **sube como archivo** (a Storage; se guarda la URL en el
+  método); (2) **una sola imagen** por método, igual en todos los canales.
+- **Alcance:** subir/cambiar/quitar imagen en la pantalla única (spec 012); mostrarla en checkout (e-com) y
+  card-payment (POS) con **respaldo neutro** si falta; invalidar caché al guardar; multi-tenant.
+- **Fuera de alcance:** imagen por canal, biblioteca de logos pre-cargados, edición de imagen, logo en
+  correos/PDF.
+- **Rama:** misma del lote `feature/pagos-metodos-unificados`. Numeración: próxima decisión D-064.
+- **Estado:** `specs/014-payment-method-image/spec.md` en `draft`. Pendiente **checkpoint humano**.
+
+### 2026-08-06 — D-064: Aprobación spec 014 + reutilizar `logo` + límites por defecto
+- **Decisión:** spec 014 **aprobada**. Se **reutiliza el campo `logo`** del método (no se añade `imagenUrl`).
+  Límites por defecto: **≤ 2 MB**, formatos **png/jpg/jpeg/webp/svg**. Habilitada la redacción de `plan.md`.
+- **Storage:** `AngularFireStorage` (`@angular/fire/compat/storage`), ya usado en asentar-pago-manual.
+- **Siguiente:** `plan.md` (helper de subida en `MetodosPagoService`, campo `logo` en modelo/servicio, upload
+  en el modal, miniatura en la lista, render en checkout/POS con respaldo) → checkpoint antes de `tasks.md`.
+
+### 2026-08-06 — D-065: Aprobación plan 014
+- **Decisión:** plan 014 **aprobado**. Reutiliza `logo`; subida a Storage `metodosPago/{company}/...` vía
+  `AngularFireStorage`; `validarImagen` (pura); render en checkout/POS con respaldo; sin cambios de backend.
+- **OQ-1 resuelta:** la imagen se **sube al guardar** el modal (no al seleccionar).
+- **Siguiente:** `tasks.md` → checkpoint final antes de implementar.
+
+### 2026-08-06 — D-066: Cierre spec 014 (Tarea 3/6 del lote pagos) — implementación done + E2E OK
+- **Entregado en `feature/pagos-metodos-unificados` (solo FRONT; backend intacto):**
+  - `metodo-pago.util.ts`: `logo` en el modelo + `validarImagenMetodoPago` (pura, png/jpg/webp/svg ≤2 MB).
+  - `MetodosPagoService`: inyecta `AngularFireStorage`; `subirImagen` a `metodosPago/{company}/{ts}_{name}`;
+    `logo` en buildCreate/buildCanal/guardarConfigGlobal.
+  - Pantalla única: modal con subir/preview/quitar (sube al guardar) + **miniatura** en la lista.
+  - Checkout: `<img>` del `logo` con **respaldo al ícono** (`logoFallido`); POS: `getPaymentIconPath` antepone
+    `metodo.logo` (respaldo `onImgError` existente).
+- **Reutiliza el campo `logo`** (D-064): sin colección/campo nuevo, sin cambios de backend.
+- **E2E navegador (usuario): OK** — subir imagen → miniatura en la lista + **misma imagen en checkout y POS**;
+  validación de archivo; respaldo cuando no hay imagen; cambiar/quitar sin recargar. **Storage rules OK** (RT-01 no se materializó).
+- **Test:** validador `validarImagenMetodoPago` 9/9 (ts-node). Deploy front a cargo del equipo.
+- Entregable ClickUp: `clickup/feature-pagos-metodos-unificados__tarea-3-imagen-metodo-pago.md`.
 
 ## 4. Cambios de alcance (scope changes)
 

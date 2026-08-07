@@ -46,7 +46,11 @@
               <tbody>
                 <tr *ngFor="let m of filtrados; trackBy: trackByClave"
                   [class.fila-inhabilitada]="estaInhabilitado(m)">
-                  <td>{{ m.nombre }}</td>
+                  <td>
+                    <img *ngIf="m.logo" [src]="m.logo" [alt]="m.nombre" class="logo-miniatura"
+                      (error)="onLogoError($event)" />
+                    {{ m.nombre }}
+                  </td>
                   <td>{{ m.online }}</td>
                   <td class="text-center">{{ m.integracion }}</td>
 
@@ -153,6 +157,27 @@
               <option value="Si">{{ 'Si' | translate }}</option>
               <option value="No">{{ 'No' | translate }}</option>
             </select>
+          </div>
+        </div>
+
+        <!-- Imagen / logo del método (spec 014) -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>{{ 'Imagen del método' | translate }}</label>
+            <div class="d-flex align-items-center" style="gap: 12px">
+              <img *ngIf="previewImagen" [src]="previewImagen" alt="{{ 'Imagen del método' | translate }}"
+                class="logo-preview" />
+              <span *ngIf="!previewImagen" class="logo-preview logo-preview-empty">
+                <i class="icofont icofont-image"></i>
+              </span>
+              <div>
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  class="form-control form-control-sm" (change)="onArchivoSeleccionado($event)" />
+                <small class="text-muted">{{ 'PNG, JPG, WEBP o SVG. Máx 2 MB.' | translate }}</small>
+                <button *ngIf="previewImagen" type="button" class="btn btn-link btn-sm text-danger p-0 d-block"
+                  (click)="quitarImagenActual()">{{ 'Quitar imagen' | translate }}</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -147,6 +147,13 @@ export class CheckOutComponent implements OnInit, OnChanges {
    * @param metodo Nombre del método de pago
    * @returns Clase CSS para el icono FontAwesome
    */
+  /** Métodos cuyo logo falló al cargar → caen al ícono (respaldo neutro). Spec 014. */
+  logoFallido = new Set<string>();
+
+  onPaymentImgError(cd: string): void {
+    if (cd) this.logoFallido.add(cd);
+  }
+
   getPaymentMethodIcon(metodo: string): string {
     const nombre = metodo.toLowerCase();
     

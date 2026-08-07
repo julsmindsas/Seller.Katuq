@@ -21,6 +21,8 @@ export interface FormaPagoRaw {
   recordatorioCobro?: string;
   id?: string;
   company?: string;
+  /** URL de la imagen/logo del método (spec 014). */
+  logo?: string;
   [k: string]: any;
 }
 
@@ -48,8 +50,30 @@ export interface MetodoPagoUnificado {
   integracion: string;
   descripcionCorreoElectronico: string;
   recordatorioCobro: string;
+  /** URL de la imagen/logo del método (config global, misma en todos los canales). Spec 014. */
+  logo: string;
   ecommerce: EstadoCanal;
   pos: EstadoCanal;
+}
+
+/** Tipos MIME aceptados y tamaño máximo del logo del método de pago (spec 014). */
+export const IMAGEN_TIPOS = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml'];
+export const IMAGEN_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+
+/**
+ * Valida un archivo de imagen para el logo del método (spec 014). Lógica pura:
+ * devuelve un mensaje de error o `null` si es válido. Acepta png/jpg/jpeg/webp/svg ≤ 2 MB.
+ * Un `File` del navegador satisface la firma estructural.
+ */
+export function validarImagenMetodoPago(
+  file: { name?: string; type?: string; size?: number } | null,
+): string | null {
+  if (!file) return 'No se seleccionó ningún archivo.';
+  const extOk = /\.(png|jpe?g|webp|svg)$/i.test(file.name || '');
+  const tipoOk = !!file.type && IMAGEN_TIPOS.includes(file.type);
+  if (!tipoOk && !extOk) return 'Formato no válido. Usa png, jpg, webp o svg.';
+  if ((file.size || 0) > IMAGEN_MAX_BYTES) return 'La imagen supera el límite de 2 MB.';
+  return null;
 }
 
 /** Normaliza un nombre para usarlo como clave de fusión: trim, minúsculas, espacios colapsados. */
@@ -119,6 +143,7 @@ export function fusionarMetodosPorCanal(
       integracion: String(base.integracion ?? 'No'),
       descripcionCorreoElectronico: String(base.descripcionCorreoElectronico ?? ''),
       recordatorioCobro: String(base.recordatorioCobro ?? ''),
+      logo: String(base.logo ?? ''),
       ecommerce: estadoDesde(entrada.ecommerce),
       pos: estadoDesde(entrada.pos),
     });

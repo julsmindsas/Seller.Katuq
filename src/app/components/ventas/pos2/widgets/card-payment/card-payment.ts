@@ -79,6 +79,7 @@ export class CardPaymentComponent implements OnInit {
    * Determina la ruta del ícono para un método de pago
    */
   getPaymentIconPath(metodo: any): string {
+    if (metodo?.logo) return metodo.logo; // imagen subida del método (spec 014)
     if (metodo?.iconPath) return metodo.iconPath;
     // Generar slug a partir del nombre para buscar svg en assets/images/payment/{slug}.svg
     const slug = (metodo?.nombre || 'default')

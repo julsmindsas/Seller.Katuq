@@ -1,6 +1,7 @@
 import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Observable, of } from 'rxjs';
 import { MetodosPagoService } from 'src/app/shared/services/ventas/metodos-pago.service';
 import { CanalPago, MetodoPagoUnificado } from 'src/app/shared/util/metodo-pago.util';
 import { PedidosUtilService } from 'src/app/components/ventas/service/pedidos.util.service';
@@ -30,6 +31,11 @@ export class MetodosPagoComponent implements OnInit {
   form: FormGroup;
   editando = false;
   metodoEditando: MetodoPagoUnificado | null = null;
+
+  // Imagen del método (spec 014): archivo elegido, previsualización y bandera de "quitar".
+  archivoImagen: File | null = null;
+  previewImagen: string | null = null;
+  quitarImagen = false;
 
   /** Opciones de clasificación (mismas del form anterior de formas de pago). */
   clasificaciones: string[] = [
@@ -120,6 +126,7 @@ export class MetodosPagoComponent implements OnInit {
   abrirCrear(): void {
     this.editando = false;
     this.metodoEditando = null;
+    this.resetImagen(null);
     this.form.reset({
       nombre: '',
       online: this.clasificaciones[1],
@@ -137,6 +144,7 @@ export class MetodosPagoComponent implements OnInit {
   abrirEditar(metodo: MetodoPagoUnificado): void {
     this.editando = true;
     this.metodoEditando = metodo;
+    this.resetImagen(metodo.logo || null);
     this.form.reset({
       nombre: metodo.nombre,
       online: metodo.online || this.clasificaciones[1],
@@ -151,6 +159,44 @@ export class MetodosPagoComponent implements OnInit {
     this.modalService.open(this.modalForm, { size: 'lg', centered: true });
   }
 
+  // --- Imagen del método (spec 014) --------------------------------------
+
+  /** Reinicia el estado de imagen del modal; `logoActual` es la URL a previsualizar (o null). */
+  private resetImagen(logoActual: string | null): void {
+    this.archivoImagen = null;
+    this.previewImagen = logoActual;
+    this.quitarImagen = false;
+  }
+
+  onArchivoSeleccionado(event: any): void {
+    const file: File = event?.target?.files?.[0];
+    if (!file) return;
+    const err = this.service.validarImagen(file);
+    if (err) {
+      Swal.fire('Imagen no válida', err, 'warning');
+      event.target.value = '';
+      return;
+    }
+    this.archivoImagen = file;
+    this.quitarImagen = false;
+    const reader = new FileReader();
+    reader.onload = () => { this.previewImagen = reader.result as string; };
+    reader.readAsDataURL(file);
+  }
+
+  quitarImagenActual(): void {
+    this.archivoImagen = null;
+    this.previewImagen = null;
+    this.quitarImagen = true;
+  }
+
+  /** Resuelve el logo a persistir: sube el archivo nuevo, '' si se quitó, o undefined (sin cambio). */
+  private resolverLogo(): Observable<string | undefined> {
+    if (this.archivoImagen) return this.service.subirImagen(this.archivoImagen);
+    if (this.quitarImagen) return of('');
+    return of(undefined);
+  }
+
   guardarModal(modal: any): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -158,37 +204,43 @@ export class MetodosPagoComponent implements OnInit {
     }
     const v = this.form.value;
 
-    if (this.editando && this.metodoEditando) {
-      // Edita la config global; disponibilidad/posición se manejan en la tabla.
-      this.cargando = true;
-      this.service
-        .guardarConfigGlobal(this.metodoEditando, {
-          nombre: v.nombre,
-          online: v.online,
-          integracion: v.integracion,
-          descripcionCorreoElectronico: v.descripcionCorreoElectronico,
-          recordatorioCobro: v.recordatorioCobro,
-        })
-        .subscribe({
-          next: () => {
-            modal.close();
-            this.trasMutacion();
-          },
-          error: (e) => this.manejarError(e),
-        });
-      return;
-    }
-
-    // Crear: al menos un canal.
-    if (!v.dispEcommerce && !v.dispPos) {
+    // Validación de canales para crear (antes de subir la imagen).
+    if (!this.editando && !v.dispEcommerce && !v.dispPos) {
       Swal.fire('Falta canal', 'Selecciona al menos un canal (E-commerce o POS).', 'warning');
       return;
     }
+
+    this.cargando = true;
+    this.resolverLogo().subscribe({
+      next: (logo) => this.persistirModal(modal, v, logo),
+      error: () => {
+        this.cargando = false;
+        Swal.fire('Error', 'No se pudo subir la imagen', 'error');
+      },
+    });
+  }
+
+  private persistirModal(modal: any, v: any, logo: string | undefined): void {
+    if (this.editando && this.metodoEditando) {
+      const cambios: any = {
+        nombre: v.nombre,
+        online: v.online,
+        integracion: v.integracion,
+        descripcionCorreoElectronico: v.descripcionCorreoElectronico,
+        recordatorioCobro: v.recordatorioCobro,
+      };
+      if (logo !== undefined) cambios.logo = logo; // incluye '' para quitarla
+      this.service.guardarConfigGlobal(this.metodoEditando, cambios).subscribe({
+        next: () => { modal.close(); this.trasMutacion(); },
+        error: (e) => this.manejarError(e),
+      });
+      return;
+    }
+
     const canales: { ecommerce?: { posicion?: number }; pos?: { posicion?: number } } = {};
     if (v.dispEcommerce) canales.ecommerce = { posicion: this.numOrUndef(v.posEcommerce) };
     if (v.dispPos) canales.pos = { posicion: this.numOrUndef(v.posPos) };
 
-    this.cargando = true;
     this.service
       .crearMetodo(
         {
@@ -197,14 +249,12 @@ export class MetodosPagoComponent implements OnInit {
           integracion: v.integracion,
           descripcionCorreoElectronico: v.descripcionCorreoElectronico,
           recordatorioCobro: v.recordatorioCobro,
+          logo: logo || '',
         },
         canales,
       )
       .subscribe({
-        next: () => {
-          modal.close();
-          this.trasMutacion();
-        },
+        next: () => { modal.close(); this.trasMutacion(); },
         error: (e) => this.manejarError(e),
       });
   }
@@ -279,6 +329,12 @@ export class MetodosPagoComponent implements OnInit {
 
   etiquetaCanal(canal: CanalPago): string {
     return canal === 'ecommerce' ? 'E-commerce' : 'POS';
+  }
+
+  /** Oculta la miniatura si la imagen falla al cargar (respaldo neutro). Spec 014. */
+  onLogoError(ev: Event): void {
+    const img = ev.target as HTMLImageElement;
+    img.style.display = 'none';
   }
 
   trackByClave(_i: number, m: MetodoPagoUnificado): string {
