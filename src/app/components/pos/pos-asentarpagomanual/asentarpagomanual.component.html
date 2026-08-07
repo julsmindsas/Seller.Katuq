@@ -56,7 +56,7 @@
             <div class="form-group">
                 <label for="formaPago">Forma de pago:</label>
                 <select id="formaPago" formControlName="formaPago" class="form-control">
-                    <option *ngFor="let formaPago of formasPago" [value]="formaPago.id">{{formaPago.nombre}}</option>
+                    <option *ngFor="let formaPago of formasPago" [value]="formaPago.cd">{{formaPago.nombre}}</option>
                 </select>
                 <div *ngIf="transaccionForm.get('formaPago').touched && transaccionForm.get('formaPago').errors"
                     class="alert alert-danger">

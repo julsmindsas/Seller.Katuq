@@ -42,6 +42,8 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 | **012** | **payment-methods-unified-screen** | **done (D-058) — E2E OK + borrado 2 pasos; deploy a cargo del equipo** | equipo Katuq + Claude | **Tarea 1/6 del lote "módulo pagos".** Consolidar en **una sola pantalla** la gestión de métodos de pago (hoy duplicada: e-com `pagos` + POS `formaPagosPos`), con **disponibilidad por canal** (activar/desactivar cada método por canal e-commerce/POS de forma independiente). Reemplaza las dos pantallas actuales → consolida/migra las dos colecciones. Solo canales e-com y POS (otros fuera). Rama `feature/pagos-metodos-unificados`. Ver D-054. |
 
+| **013** | **payment-method-unique-selection** | **done (D-062) — E2E 4/4; selección por cd + id=docId** | equipo Katuq + Claude | **Tarea 2/6 del lote pagos.** Bug: si dos formas de pago comparten `id`, en el checkout se marcan **varias a la vez** (radios `[value]="id"` con mismo valor → todas `:checked`) y puede guardarse el `formaDePago` equivocado; igual en asentar-pago-manual (e-com y POS). Fix: identificar la forma por **`cd`** (docId único), no por `id`, en los 3 consumidores + **auto-generar `id` único** al crear (id es solo interno) + reporte de duplicados existentes. Rama `feature/pagos-metodos-unificados`. Ver D-059. |
+
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
 ---
@@ -576,6 +578,50 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - Entregable ClickUp guardado en `clickup/feature-pagos-metodos-unificados__tarea-1-pantalla-unica-metodos-pago.md`.
 
 ---
+
+### 2026-08-06 — D-059: Apertura spec 013 (selección de método de pago sin conflicto por id repetido)
+- **Contexto:** Tarea 2/6. Bug reportado: dos formas de pago con el mismo `id` hacen que en el checkout se
+  "activen varias a la vez". Diagnóstico: el checkout enlaza los radios con `[id]/[for]/[value]="opcionPago.id"`
+  y resuelve el método con `filter(fp => fp.id === sel)`; con `id` repetido, varios radios quedan `:checked` y
+  el método resuelto es ambiguo. Mismo patrón en `asentarpagomanual` (e-com) y `pos-asentarpagomanual` (POS).
+- **Clarifications resueltas con el negocio:** (1) el `id` se **auto-genera único** al crear (el operador no lo
+  escribe); (2) el `id` es **solo interno** (no contabilidad/reportes/externos) → seguro basar la selección en
+  `cd` (docId único) y auto-generar el id.
+- **Enfoque:** (A) raíz — usar `cd` como identidad de selección/registro en los 3 consumidores (corrige aun con
+  datos duplicados existentes); (B) prevención — auto-generar `id` único al crear; (C) detección — el script de
+  reconciliación reporta ids duplicados existentes. Backfill de ids existentes = open question (por defecto solo reportar).
+- **Rama:** misma del lote `feature/pagos-metodos-unificados` (ambos repos). Numeración: próxima decisión D-060.
+- **Estado:** `specs/013-payment-method-unique-selection/spec.md` en `draft`. Pendiente **checkpoint humano**.
+
+### 2026-08-06 — D-060: Aprobación spec 013 + backfill = solo reportar
+- **Decisión:** spec 013 **aprobada**. El **backfill de ids duplicados existentes NO se hace**: solo se
+  **reportan** (script de reconciliación). Con la selección basada en `cd`, los ids repetidos actuales quedan
+  inertes; el reporte permite limpieza manual opcional. Habilitada la redacción de `plan.md`.
+- **Siguiente:** `plan.md` (auto-generación del id en el backend, cambio a `cd` en los 3 consumidores, reporte
+  de duplicados) → checkpoint antes de `tasks.md`.
+
+### 2026-08-06 — D-061: Aprobación plan 013
+- **Decisión:** plan 013 **aprobado**. Enfoque: (A) selección por `cd` en checkout + asentar-pago-manual e-com
+  y POS (POS pasa a guardar el nombre resuelto); (B) backend auto-genera `id=docId` en create; (C) reconciliador
+  reporta ids duplicados. Sin colección/endpoint nuevo.
+- **OQ-1 resuelta:** el contract test del auto-id se **agrega al `test:pagos-metodos` existente**.
+- **Siguiente:** `tasks.md` → checkpoint final antes de implementar.
+
+### 2026-08-06 — D-062: Cierre spec 013 (Tarea 2/6 del lote pagos) — implementación done + E2E OK
+- **Entregado en `feature/pagos-metodos-unificados` (ambos repos)**, sin colección/endpoint nuevo:
+  - **BACK:** `controllers/pagos.js` (`createPagos`/`createPagosPOS` crean con `id = docId` → único por
+    construcción) + `services/pagosUnicidad.js` (`idsDuplicados`) + `test:pagos-metodos` **10/10** (3 casos
+    nuevos) + `reconciliar-metodos-pago.js` amplía a reportar `[ID DUPLICADO]` por empresa+canal.
+  - **FRONT:** selección por **`cd`** (docId único) en los 3 consumidores — `checkout` (radios + default +
+    resolución), `asentarpagomanual` e-com (option value + find) y `pos-asentarpagomanual` (option value +
+    guarda el nombre resuelto, corrige que antes guardaba el id crudo; preselección tolerante en edición).
+- **Causa concreta hallada por el reconciliador:** en OH MY STORE, `id="4"` compartido por **CXC NOMINA** y
+  **BOLD** → provocaba la selección múltiple en el checkout. Ahora inerte (selección por `cd`).
+- **E2E navegador (usuario): 4/4** — checkout marca solo la elegida (CXC NOMINA vs BOLD), orden guarda el
+  `formaDePago` correcto, asentar pago manual e-com y POS registran el método correcto, forma nueva → id=docId.
+- **Sin backfill (D-060):** los ids duplicados existentes quedan inertes; el reconciliador los reporta para
+  limpieza opcional. Deploy a cargo del equipo. Commit con autorización; push pendiente de OK.
+- Entregable ClickUp: `clickup/feature-pagos-metodos-unificados__tarea-2-id-unico-formas-pago.md`.
 
 ## 4. Cambios de alcance (scope changes)
 

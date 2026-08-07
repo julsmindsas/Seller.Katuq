@@ -227,9 +227,10 @@ export class CheckOutComponent implements OnInit, OnChanges {
           this.activePaymentTab = this.categoriasFormasPago[0].categoria;
         }
         
-        // Establecer una opción por defecto si hay disponible
+        // Establecer una opción por defecto si hay disponible.
+        // Identidad por `cd` (docId único), no por `id` (que puede repetirse). Spec 013.
         if (this.formasPago && this.formasPago.length > 0) {
-          this.form.get('opcionSeleccionada')?.setValue(this.formasPago[0].id);
+          this.form.get('opcionSeleccionada')?.setValue(this.formasPago[0].cd);
         }
         
         this.ref.detectChanges();
@@ -836,9 +837,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
       })));
       console.groupEnd();
 
-      // Asignar forma de pago
+      // Asignar forma de pago — resolver por `cd` (docId único), no por `id` (que puede repetirse). Spec 013.
       let opcionSeleccionadaId = this.form.value.opcionSeleccionada;
-      let opcionSeleccionada = this.formasPago?.filter(formaPago => formaPago.id === opcionSeleccionadaId);
+      let opcionSeleccionada = this.formasPago?.filter(formaPago => formaPago.cd === opcionSeleccionadaId);
 
       if (opcionSeleccionada && opcionSeleccionada.length > 0) {
         this.pedido.formaDePago = opcionSeleccionada[0].nombre;

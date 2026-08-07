@@ -724,8 +724,8 @@
 
                   <div class="payment-grid">
                     <div *ngFor="let opcionPago of categoria.formasPago" class="payment-option">
-                      <label class="payment-method-label" [for]="opcionPago.id">
-                        <input class="payment-radio" [id]="opcionPago.id" type="radio" [value]="opcionPago.id"
+                      <label class="payment-method-label" [for]="opcionPago.cd">
+                        <input class="payment-radio" [id]="opcionPago.cd" type="radio" [value]="opcionPago.cd"
                           formControlName="opcionSeleccionada" />
                         <div class="payment-method-card">
                           <i [class]="getPaymentMethodIcon(opcionPago.nombre)"></i>

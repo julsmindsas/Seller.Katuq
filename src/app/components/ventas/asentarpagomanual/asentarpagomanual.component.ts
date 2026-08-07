@@ -164,8 +164,9 @@ export class AsentarpagomanualComponent implements OnInit {
         faltaPorPagarAnterior: this.pedido.faltaPorPagar
       });
       const formaPagoSeleccionada = this.transaccionForm.get("formaPago")?.value;
+      // Resolver por `cd` (docId único), no por `id` (que puede repetirse). Spec 013.
       const formaPagoObj = Array.isArray(this.formasPago)
-        ? this.formasPago.find((f: any) => f?.id == formaPagoSeleccionada)
+        ? this.formasPago.find((f: any) => f?.cd == formaPagoSeleccionada)
         : null;
       const formaPagoNombre: string = (formaPagoObj?.nombre || formaPagoSeleccionada || '').toString();
 

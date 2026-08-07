@@ -150,7 +150,7 @@
                       class="form-control"
                       [class.is-invalid]="transaccionForm.get('formaPago')?.touched && transaccionForm.get('formaPago')?.errors">
                 <option value="">{{ 'Seleccionar forma de pago' | translate }}</option>
-                <option *ngFor="let formaPago of formasPago" [value]="formaPago.id">
+                <option *ngFor="let formaPago of formasPago" [value]="formaPago.cd">
                   {{formaPago.nombre}}
                 </option>
               </select>

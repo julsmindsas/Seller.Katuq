@@ -114,7 +114,7 @@ export class POSAsentarpagomanualComponent implements OnInit {
 
               const transacionPago: Pago = {
                 fecha: this.transaccionForm.get('fecha').value,
-                formaPago: this.transaccionForm.get('formaPago').value,
+                formaPago: this.nombreFormaPagoSeleccionada(),
                 valor: this.transaccionForm.get('valor').value,
                 numeroPedido: this.pedido.nroPedido,
                 numeroComprobante: this.transaccionForm.get('numeroComprobante').value,
@@ -171,10 +171,34 @@ export class POSAsentarpagomanualComponent implements OnInit {
   }
 
 
+  /**
+   * Resuelve el NOMBRE de la forma de pago a partir del `cd` seleccionado en el form.
+   * Antes se guardaba el valor crudo (el `id`, que puede repetirse); ahora se guarda el
+   * nombre resuelto por `cd` (docId único), consistente con checkout y e-com. Spec 013.
+   */
+  private nombreFormaPagoSeleccionada(): string {
+    const cd = this.transaccionForm.get('formaPago')?.value;
+    const obj = Array.isArray(this.formasPago)
+      ? this.formasPago.find((f: any) => f?.cd == cd)
+      : null;
+    return (obj?.nombre || cd || '').toString();
+  }
+
+  /**
+   * Para preseleccionar en edición: casa el valor guardado (cd nuevo, o nombre/id legado)
+   * contra el `cd` de la opción, para no romper registros previos. Spec 013.
+   */
+  private cdParaPreseleccion(valorGuardado: any): any {
+    if (!Array.isArray(this.formasPago)) return valorGuardado;
+    const match = this.formasPago.find((f: any) =>
+      f?.cd == valorGuardado || f?.nombre == valorGuardado || f?.id == valorGuardado);
+    return match?.cd ?? valorGuardado;
+  }
+
   editarPago(pago: Pago) {
 
     this.transaccionForm.get('fecha').setValue(pago.fecha);
-    this.transaccionForm.get('formaPago').setValue(pago.formaPago);
+    this.transaccionForm.get('formaPago').setValue(this.cdParaPreseleccion(pago.formaPago));
     this.transaccionForm.get('valor').setValue(pago.valor);
     this.transaccionForm.get('numeroComprobante').setValue(pago.numeroComprobante);
     this.transaccionForm.get('archivo').setValue(pago.archivo);
@@ -183,7 +207,7 @@ export class POSAsentarpagomanualComponent implements OnInit {
     const transacionPago: Pago = this.pedido.PagosAsentados.find(x => x.fecha == pago.fecha && x.valor == pago.valor && x.numeroComprobante == pago.numeroComprobante);
 
     transacionPago.fecha = this.transaccionForm.get('fecha').value;
-    transacionPago.formaPago = this.transaccionForm.get('formaPago').value;
+    transacionPago.formaPago = this.nombreFormaPagoSeleccionada();
     transacionPago.valor = this.transaccionForm.get('valor').value;
     transacionPago.numeroComprobante = this.transaccionForm.get('numeroComprobante').value;
     transacionPago.archivo = this.transaccionForm.get('archivo').value;
