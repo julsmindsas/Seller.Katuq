@@ -658,13 +658,10 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
+        // Spec 012: una sola entrada. Apunta a la ruta AUTORIZADA `extras/formasPago`
+        // (que el usuario ya tiene en authorizedMenuItems) y ésta redirige a
+        // `extras/metodos-pago` (pantalla única). Así no se rompe el filtro de permisos.
         { path: "extras/formasPago", title: "Métodos de pago", type: "link", icon: "dollar-sign" },
-        {
-          path: "extras/pos/formasPago",
-          title: "Métodos de pago POS",
-          type: "link",
-          icon: "monitor",
-        },
       ],
     },
     {

@@ -91,6 +91,22 @@ export class PedidosUtilService {
     }
 
     /**
+     * Refresca la caché en memoria de formas de pago (e-commerce). Lo invoca la
+     * pantalla de administración de métodos de pago al guardar, para que el checkout
+     * refleje los cambios sin recargar la página (Spec 012, T-11).
+     */
+    public refrescarFormasPago(): void {
+        this.maestroService.consultarFormaPago().pipe(
+            takeUntil(this.destroy$),
+            catchError(() => of([]))
+        ).subscribe((formasPago: any) => {
+            if (Array.isArray(formasPago)) {
+                this.formasPago = formasPago;
+            }
+        });
+    }
+
+    /**
      * Pre-carga datos críticos para el mercado colombiano
      */
     private warmupCriticalData(): void {

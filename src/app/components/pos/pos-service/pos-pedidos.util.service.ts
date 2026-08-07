@@ -27,6 +27,21 @@ export class POSPedidosUtilService {
         this.getAllMaestros();
     }
 
+    /**
+     * Refresca la caché en memoria de formas de pago (POS). Lo invoca la pantalla de
+     * administración de métodos de pago al guardar, para que el POS refleje los
+     * cambios sin recargar la página (Spec 012, T-11).
+     */
+    public refrescarFormasPago(): void {
+        this.maestroService.consultarFormaPagoPOS().subscribe({
+            next: (formasPago: any) => {
+                this.formasPago = formasPago;
+                this.getAllMaestro$();
+            },
+            error: () => { /* no romper si falla el refresco */ },
+        });
+    }
+
     convertFechaEntregaString(fechaEntrega: { day: number, month: number, year: number }) {
         if (!fechaEntrega) {
             return '';

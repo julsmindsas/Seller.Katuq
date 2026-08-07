@@ -1,0 +1,46 @@
+.pos-input {
+  width: 72px;
+  display: inline-block;
+  text-align: center;
+}
+
+// Estado disponible por canal: no se comunica solo por color (texto Sí/No + ícono de check).
+.switch-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  margin: 0;
+
+  input[type='checkbox'] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+  }
+
+  .estado {
+    font-weight: 600;
+    color: #9aa0a6; // "No" — gris
+    min-width: 26px;
+    text-align: left;
+
+    &.on {
+      color: #2e7d32; // "Sí" — verde
+    }
+
+    &.on::before {
+      content: '✓ ';
+    }
+  }
+}
+
+.accion {
+  font-size: 18px;
+  margin: 0 6px;
+  cursor: pointer;
+}
+
+.fila-inhabilitada {
+  opacity: 0.55;
+  font-style: italic;
+}

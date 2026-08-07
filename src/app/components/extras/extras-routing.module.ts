@@ -1,29 +1,20 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { FormasPagoComponent } from './formas-pago/formas-pago.component';
-import { CrearFormasPagoComponent } from './formas-pago/crear-formas-pago/crear-formas-pago.component';
 import { ZonasCobroComponent } from './zonas-cobro/zonas-cobro.component';
 import { CrearZonasCobroComponent } from './zonas-cobro/crear-zonas-cobro/crear-zonas-cobro.component';
-import { POSFormasPagoComponent } from './pos/formas-pago/formas-pago.component';
-import { POSCrearFormasPagoComponent } from './pos/formas-pago/crear-formas-pago/crear-formas-pago.component';
+import { MetodosPagoComponent } from './metodos-pago/metodos-pago.component';
 
 const routes: Routes = [
+  // Pantalla única de métodos de pago (Spec 012). Reemplaza las dos pantallas viejas.
   {
-    path: 'formasPago',
-    component: FormasPagoComponent
+    path: 'metodos-pago',
+    component: MetodosPagoComponent
   },
-  {
-    path: 'formasPago/crearFormasPago',
-    component: CrearFormasPagoComponent
-  },
-  {
-    path: 'pos/formasPago',
-    component: POSFormasPagoComponent
-  },
-  {
-    path: 'pos/formasPago/crearFormasPago',
-    component: POSCrearFormasPagoComponent
-  },
+  // Redirecciones de las pantallas anteriores (e-commerce y POS) → pantalla única.
+  { path: 'formasPago', redirectTo: 'metodos-pago', pathMatch: 'full' },
+  { path: 'formasPago/crearFormasPago', redirectTo: 'metodos-pago', pathMatch: 'full' },
+  { path: 'pos/formasPago', redirectTo: 'metodos-pago', pathMatch: 'full' },
+  { path: 'pos/formasPago/crearFormasPago', redirectTo: 'metodos-pago', pathMatch: 'full' },
   {
     path: 'zonasCobro',
     component: ZonasCobroComponent

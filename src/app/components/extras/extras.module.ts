@@ -12,6 +12,7 @@ import { CrearZonasCobroComponent } from './zonas-cobro/crear-zonas-cobro/crear-
 import { TableModule } from 'primeng/table';
 import { POSCrearFormasPagoComponent } from './pos/formas-pago/crear-formas-pago/crear-formas-pago.component'
 import { POSFormasPagoComponent } from './pos/formas-pago/formas-pago.component'
+import { MetodosPagoComponent } from './metodos-pago/metodos-pago.component';
 
 
 @NgModule({
@@ -30,7 +31,8 @@ import { POSFormasPagoComponent } from './pos/formas-pago/formas-pago.component'
     POSFormasPagoComponent,
     CrearFormasPagoComponent,
     ZonasCobroComponent,
-    CrearZonasCobroComponent
+    CrearZonasCobroComponent,
+    MetodosPagoComponent
   ]
 })
 export class ExtrasModule { }

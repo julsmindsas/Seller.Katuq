@@ -40,6 +40,8 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | **010** | **assisted-sale-discounts-promotions** | **implement done (G1–G4 + fixes e2e + ampliaciones) — pendiente e2e final navegador + deploy** | equipo Katuq + Claude | Formaliza bajo SDD la integración de **códigos** (Feature A) y **promociones automáticas** (Feature B) en la venta asistida. Retroactiva: ratifica A/B como groundwork (criterios `[AS-BUILT]`) + trabajo nuevo: verificación e2e en navegador + cierre de gaps (desglose vs persistido, envío_gratis, vigencia UTC→Bogotá, tope 100%). Rama `feature/descuentos-promociones` (ambos repos). Ver D-044. |
 | **011** | **billing-zones-multi-municipality** | **v2 implement done — e2e 6/6 PASS; migración de prod a cargo de cada tienda (ver D-053)** | equipo Katuq + Claude | **Revisión v2 (D-051):** el testing rechazó la v1 (creaba ~1078 filas, una por municipio). Ahora una zona de cobro es **un paquete**: un solo registro con la lista de municipios **adentro**, valor único editable, un municipio puede estar en varias zonas, el vendedor elige la zona por nombre en la venta. En alcance: cambio de esquema + migración de datos + consumo de envío por nombre de zona (checkout/POS). Supersede el modelo de D-048/D-050. Rama `feature/zonas-de-cobro` (ambos repos). |
 
+| **012** | **payment-methods-unified-screen** | **done (D-058) — E2E OK + borrado 2 pasos; deploy a cargo del equipo** | equipo Katuq + Claude | **Tarea 1/6 del lote "módulo pagos".** Consolidar en **una sola pantalla** la gestión de métodos de pago (hoy duplicada: e-com `pagos` + POS `formaPagosPos`), con **disponibilidad por canal** (activar/desactivar cada método por canal e-commerce/POS de forma independiente). Reemplaza las dos pantallas actuales → consolida/migra las dos colecciones. Solo canales e-com y POS (otros fuera). Rama `feature/pagos-metodos-unificados`. Ver D-054. |
+
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
 ---
@@ -484,6 +486,97 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Pendiente no bloqueante:** T-11 unit front (harness karma inoperante, igual que spec 010); migración de producción a cargo de cada equipo.
 - **Decisión:** implementación de spec 011 v2 **done**; código sellado en `feature/zonas-de-cobro` para que los equipos desplieguen. Spec/plan/tasks marcados aprobados-v2.
 
+### 2026-08-06 — D-054: Apertura spec 012 (pantalla única de métodos de pago) + arranque del lote "módulo pagos"
+- **Contexto:** el negocio pidió 6 tareas sobre el **módulo de pagos**. La #1 es consolidar la gestión de
+  métodos de pago —hoy duplicada en dos pantallas (`extras/formasPago` e-com / colección `pagos`, y
+  `extras/pos/formasPago` POS / colección `formaPagosPos`)— en **una sola pantalla** con disponibilidad por
+  canal (e-commerce y POS).
+- **Clarifications resueltas con el negocio (checkpoint previo a la spec):**
+  (1) "activar/dispersar por canal" = **disponibilidad por canal** (toggle independiente por canal), NO
+  dispersión/split de fondos; (2) canales cubiertos = **solo e-commerce y POS** (otros quedan fuera);
+  (3) la pantalla única **reemplaza** las dos actuales → hay que **consolidar/migrar** las dos colecciones.
+- **Decisión de ramas:** módulo independiente. **Frontend** `feature/pagos-metodos-unificados` creada desde
+  `feature/zonas-de-cobro` (NO desde `main`, para conservar `specs/` + `environment.ts` de dev — gotcha SDD).
+  **Backend** se ramificará desde `backend-aws-security` al llegar a implementación (misma base que zonas).
+- **Numeración:** spec **012** = primera del lote; próxima decisión libre = **D-055**.
+- **Estado:** `specs/012-payment-methods-unified-screen/spec.md` en `draft` con 4 preguntas en
+  `[NEEDS CLARIFICATION]`. Pendiente **checkpoint humano** antes de redactar `plan.md`.
+
+### 2026-08-06 — D-055: Aprobación spec 012 + clarifications resueltas
+- **Decisión:** spec 012 **aprobada** en checkpoint humano. Habilitada la redacción de `plan.md`.
+- **Clarifications cerradas por el negocio:**
+  (1) **Posición por canal** — el orden de un método puede diferir entre e-commerce y POS (preserva lo actual).
+  (2) **Integración global** — la pasarela (ej. Wompi) se asocia al método, igual en todos los canales.
+  (3) **Inhabilitar, no borrar** — "eliminar" en la pantalla = borrado lógico `activo=false` (conserva
+  historial, rehabilitable); sin borrado físico (evita romper pedidos históricos que referencian por nombre).
+  (4) **Migración** — la regla de resolución de conflictos (mismo nombre, campos distintos) se define en el
+  `plan.md` y el **dry-run reporta** los conflictos antes de aplicar.
+- **Siguiente:** redactar `plan.md` (contratos de endpoints, modelo unificado, estrategia de migración,
+  gates vs constitución) → nuevo checkpoint antes de `tasks.md`.
+
+### 2026-08-06 — D-056: Aprobación plan 012 — enfoque B (sin colección nueva)
+- **Decisión:** plan 012 **aprobado**. Se implementa el **enfoque B**: la pantalla única es una vista
+  fusionada sobre las **dos colecciones existentes** (`pagos` e-com, `formaPagosPos` POS); la disponibilidad
+  por canal = presencia+`activo` en la colección del canal; posición por canal = campo `posicion` existente.
+  **No se crea colección nueva ni endpoint v2** (no dispara el gate del backend). "Eliminar" = **inhabilitar**
+  (`activo=false`). Los ~16 consumidores de `/v1/pagos/all` y `/pos/all` NO se tocan.
+- **Enfoque A descartado** para esta tarea (colección unificada `paymentMethods` + migración destructiva):
+  correcto a largo plazo pero desproporcionado y dispara el gate. Se puede retomar en spec futura.
+- **OQ resueltas:** OQ-1 = B; OQ-2 = ruta/menú **`extras/metodos-pago`** (reemplaza ambas); OQ-3 = unicidad
+  de nombre por **empresa+canal** (409 dentro de la colección del canal).
+- **Cambios backend mínimos (endurecer endpoints existentes, vía `/opsx:propose`, NO v2):** unicidad de nombre
+  (409) en `create`/`pos/create`; inhabilitar en vez de borrado físico.
+- **Migración = no-op de datos** (la disponibilidad ya está en qué colección vive el método); sólo script
+  read-only de reconciliación (dry-run) que reporta incoherencias.
+- **Siguiente:** `tasks.md` → checkpoint final antes de implementar.
+
+### 2026-08-06 — Nota de desviación (Art. IX — estilo Angular): signals/@if no aplican en Angular 14
+- **Contexto:** el Artículo IX de la constitución pide componentes standalone, **signals** y control flow
+  nativo **`@if/@for`** en código nuevo. El proyecto está en **Angular 14 + PrimeNG 14** (verificado en
+  `package.json`: `@angular/core ^14.3.0`), donde signals (16+) y `@if/@for` (17+) **no existen**.
+- **Desviación aceptada:** el componente `extras/metodos-pago` se implementa con el estilo real del código —
+  componente declarado en `ExtrasModule`, `*ngIf/*ngFor`, propiedades de clase y RxJS— igual que las
+  pantallas de formas de pago que reemplaza. Es una imposibilidad de versión, no una preferencia.
+- **Retiro:** cuando el proyecto migre a Angular ≥17, el código nuevo adopta `@if/@for` y signals. Sin dueño
+  de esa migración por ahora; se revisita al actualizar Angular.
+
+### 2026-08-06 — D-057: Borrado físico en 2 pasos para métodos de pago (SC-012-01)
+- **Contexto:** el usuario validó la pantalla (T-13) y pidió poder **borrar** un método una vez inhabilitado.
+- **Decisión:** implementar el patrón de 2 pasos (como Descuentos, [[sesion-2026-07-28-e2e-y-features]]):
+  inhabilitar (papelera) → luego "Eliminar definitivamente" (borrado físico con confirmación).
+- **Backend:** guardarraíl en `delete`/`deletePOS` de `controllers/pagos.js` — **409 `{error:'metodo_activo'}`
+  si el doc sigue activo**; solo borra si `activo` ≠ true. Se reusan los endpoints físicos existentes
+  (`/v1/pagos/delete`, `/v1/pagos/pos/delete`), cuyos únicos llamadores eran las 2 pantallas viejas (ya
+  redirigidas). No hay endpoint ni colección nueva.
+- **Frontend:** `MetodosPagoService.eliminarDefinitivo()` (borra el doc en cada canal donde exista) + acción
+  🗑 en la pantalla visible **solo** cuando el método está inhabilitado + Swal de confirmación (rojo).
+- **Seguridad:** los pedidos históricos guardan el método por **nombre** (no por id), así que el borrado
+  físico no rompe historial. El guardarraíl impide borrar un método aún activo.
+
+### 2026-08-06 — D-058: Cierre spec 012 (Tarea 1/6 del lote pagos) — implementación done + E2E OK
+- **Entregado en `feature/pagos-metodos-unificados` (ambos repos)**, enfoque B (sin colección nueva ni endpoint v2):
+  - **BACK:** `controllers/pagos.js` (unicidad 409 por empresa+canal en create; guardarraíl 409 `metodo_activo`
+    en delete físico) + `services/pagosUnicidad.js` (lógica pura) + `scripts/test-pagos-unicidad-contract.js`
+    (npm `test:pagos-metodos` **7/7**) + `scripts/reconciliar-metodos-pago.js` read-only (npm
+    `reconciliar:metodos-pago`) + propuesta OpenSpec `openspec/changes/payment-methods-unified-screen/`.
+  - **FRONT:** `shared/util/metodo-pago.util.ts` (fusión por nombre; test autónomo ts-node **9/9**, cazó bug de
+    clave de canal) + `shared/services/ventas/metodos-pago.service.ts` + pantalla `components/extras/metodos-pago/`
+    (tabla 1 fila/método, toggles + posición por canal, crear/editar config, inhabilitar/rehabilitar,
+    **eliminar definitivo en 2 pasos**) + routing (`extras/metodos-pago` + redirect de las 4 rutas viejas) +
+    menú NavService consolidado + invalidación de caché de formas de pago en checkout y POS.
+- **E2E navegador (usuario): OK** — crear solo-POS, activar e-com, posición por canal, inhabilitar/rehabilitar,
+  409 nombre duplicado, checkout/POS sin recargar, y **borrado en 2 pasos** (SC-012-01) verificado.
+- **⚠️ GOTCHA registrado (fix T-10):** el sidebar filtra por `authorizedMenuItems` (permisos); una ruta NUEVA
+  se oculta. Solución aplicada: el menú apunta a la ruta vieja AUTORIZADA `extras/formasPago` que **redirige** a
+  la nueva. **Aplica a las 5 tareas restantes del lote.**
+- **Hallazgo del dry-run (reconciliación):** en OH MY STORE hay **29 docs en `pagos` sin `company`** (huérfanos:
+  Wompi, Nequi, PayPal, etc.) que no cargan en ninguna empresa → saneamiento a cargo del equipo. NO bloquea.
+- **Pendiente no bloqueante:** unit karma (harness inoperante, como specs 010/011). Deploy a cargo del equipo
+  (backend por EC2/PM2 tras `/opsx:apply`; front por Firebase Hosting). **Commit hecho con autorización; push pendiente de OK.**
+- Entregable ClickUp guardado en `clickup/feature-pagos-metodos-unificados__tarea-1-pantalla-unica-metodos-pago.md`.
+
+---
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
@@ -498,6 +591,18 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Cambio:** el testing rechazó el modelo v1 (N documentos por zona). El alcance cambia el **modelo de datos** y suma **migración** + **cambio en el consumo de envío** (checkout/POS), todo lo cual estaba explícitamente *fuera de alcance* en la v1. Ver **D-051**.
 - **Impacto en spec:** reescritura de §1, §4 (EARS), §6 (out-of-scope), §8-§10. Criterios EARS nuevos (modelo paquete, valor único editable, solapamiento, consumo por nombre de zona, migración).
 - **Impacto en implementación:** el endpoint `create-batch` (D-050) y el alta N-docs se reemplazan; el multi-select de v1 se reutiliza. Se registra antes de tocar código nuevo (Art. I).
+
+---
+
+### 2026-08-06 — SC-012-01: Métodos de pago suma borrado físico en 2 pasos (además de inhabilitar)
+- **Spec afectada:** 012-payment-methods-unified-screen.
+- **Cambio:** la spec original decidió "eliminar = inhabilitar, sin borrado físico" (D-055 Q4). Tras validar la
+  pantalla en navegador, el usuario pidió que un método **inhabilitado** también se pueda **borrar
+  definitivamente**. Se adopta el **patrón de 2 pasos** de Descuentos: papelera = inhabilitar; una vez
+  inhabilitado, aparece "Eliminar definitivamente" (borrado físico con confirmación).
+- **Impacto en spec:** §4 añade 2 criterios EARS (borrado físico solo si inhabilitado + guardarraíl si activo);
+  §8 Q4 revisado. Sin cambio en el resto del alcance.
+- **Registrado antes de tocar código nuevo (Art. I).** Ver D-057.
 
 ---
 
