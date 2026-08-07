@@ -18,7 +18,9 @@ CUANDO un origen (osmosis, ajuste manual, traslado, fulfillment, pedido) esté e
 - ENTONCES lo reporta como `blocked: AMBIGUOUS_INVENTORY_IDENTITY` Y el escritor legacy continúa.
 
 ### Requirement: Promoción por origen con umbral y reversa por bandera
-La promoción de un origen a `transactional` DEBERÁ (SHALL) hacerse por empresa (y por bodega donde el gate lo soporte), SOLO tras N corridas sombra consecutivas sin divergencias no explicadas de ese origen, Y la reversa DEBERÁ (SHALL) ser volver la bandera a `legacy` sin despliegue de código.
+La promoción de un origen a `transactional` DEBERÁ (SHALL) hacerse por empresa y por ORIGEN (`companyConfig.inventoryLedgerModes[origen]`), SOLO tras N corridas sombra consecutivas sin divergencias no explicadas de ese origen, Y la reversa DEBERÁ (SHALL) ser volver la bandera a `legacy` sin despliegue de código.
+
+**Precisión de auditoría (2026-08-06, sesión inventario-roadmap):** la granularidad POR BODEGA solo existe en el camino de Osmosis/Cereza (`inventoryLedgerWarehouseCodes` en su config); para manual/traslados/pedidos el gate real es empresa+origen. Extender canario por bodega a esos orígenes sería código nuevo y queda FUERA de esta fase.
 
 #### Scenario: orden de promoción
 - La secuencia canónica es: ajustes manuales → traslados → fulfillment (setTo) → pedidos. No se promueve un origen si el anterior no lleva al menos 3 días transaccional estable.
