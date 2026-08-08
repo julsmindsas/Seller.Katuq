@@ -1582,7 +1582,7 @@ export class CrearVentasComponent
     if (typeof this.selectedClienteAutocomplete === "string") {
       valorBusqueda = this.selectedClienteAutocomplete.trim();
     } else if (this.selectedClienteAutocomplete?.documento) {
-      valorBusqueda = this.selectedClienteAutocomplete.documento;
+      valorBusqueda = this.selectedClienteAutocomplete.documento.trim();
     }
 
     this.documentoBuscar = valorBusqueda;
@@ -1750,7 +1750,7 @@ export class CrearVentasComponent
       console.log("🎯 Cliente seleccionado del autocompletado:", cliente);
 
       // Simular la búsqueda normal con el documento del cliente
-      this.documentoBuscar = cliente.documento;
+      this.documentoBuscar = (cliente.documento || "").trim();
 
       // Asignar el cliente al pedido
       this.pedidoGral.cliente = cliente;
@@ -3822,7 +3822,7 @@ export class CrearVentasComponent
     this.creandoCliente = true;
 
     // Primero verificar si el cliente ya existe por documento
-    const documentoCliente = this.formulario.value.documento;
+    const documentoCliente = (this.formulario.value.documento || "").trim();
     this.service.getClientByDocument({ documento: documentoCliente }).subscribe({
       next: (res: any) => {
         // Verificar si el cliente ya existe
@@ -3961,6 +3961,7 @@ export class CrearVentasComponent
     // Recopilar datos mínimos para la creación del cliente
     const clienteData = {
       ...this.formulario.value,
+      documento: (this.formulario.value.documento || "").trim(),
       datosFacturacionElectronica:
         this.formulario.value.datosFacturacionElectronica || [],
       datosEntrega: this.formulario.value.datosEntrega || [],
