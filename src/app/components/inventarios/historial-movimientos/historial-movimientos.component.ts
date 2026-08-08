@@ -15,7 +15,7 @@ import { MessageService } from "primeng/api";
 import * as XLSX from "xlsx";
 import { Bodega } from "../../../shared/models/inventarios/bodega.model";
 import { MovimientosResponse, Movimiento } from "../model/movimientoinventario";
-import { Subject, of } from "rxjs";
+import { Observable, Subject, of } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap, map, catchError } from "rxjs/operators";
 
 @Component({
@@ -261,9 +261,11 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
         filtrosParaBackend.search = this.globalFilterValue.trim();
       }
 
-      // Agregar paginación
-      if (event) {
-        filtrosParaBackend.limit = event.rows;
+      // La primera página y las siguientes deben usar el mismo tamaño.
+      // Si la primera consulta cae al default 20 del backend mientras la tabla
+      // muestra 10, el cursor de la página 2 salta diez movimientos.
+      filtrosParaBackend.limit = event?.rows || this.rows;
+      if (this.lastDoc) {
         filtrosParaBackend.lastDoc = this.lastDoc;
       }
 
@@ -288,6 +290,56 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
         },
       });
     }
+  }
+
+  fechaMovimiento(movimiento: Movimiento): Date | null {
+    const raw: any = movimiento?.fechaISO || movimiento?.fecha;
+    if (!raw) return null;
+    if (raw instanceof Date) return isNaN(raw.getTime()) ? null : raw;
+
+    if (raw.__type === "timestamp" && raw.value != null) {
+      const serialized = new Date(raw.value);
+      return isNaN(serialized.getTime()) ? null : serialized;
+    }
+
+    const seconds = raw._seconds ?? raw.seconds;
+    if (typeof seconds === "number") {
+      const nanoseconds = raw._nanoseconds ?? raw.nanoseconds ?? 0;
+      return new Date((seconds * 1000) + Math.floor(nanoseconds / 1000000));
+    }
+
+    if (typeof raw === "string" || typeof raw === "number") {
+      const parsed = new Date(raw);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    return null;
+  }
+
+  private cargarMovimientosParaExportar(
+    filtros: any,
+    acumulados: Movimiento[] = [],
+    cursor: string = "",
+  ): Observable<Movimiento[]> {
+    const pagina = {
+      ...filtros,
+      limit: 200,
+      lastDoc: cursor || undefined,
+    };
+
+    return this.inventarioService.getHistorialMovimientos(pagina).pipe(
+      switchMap((response: MovimientosResponse) => {
+        const movimientos = [...acumulados, ...(response.movimientos || [])];
+        const siguiente = response.pagination?.lastDoc || "";
+        const continuar = response.pagination?.hasMore
+          && !!siguiente
+          && siguiente !== cursor;
+
+        return continuar
+          ? this.cargarMovimientosParaExportar(filtros, movimientos, siguiente)
+          : of(movimientos);
+      }),
+    );
   }
 
   exportarExcel(): void {
@@ -329,6 +381,16 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
         || filtros.bodega._id;
     }
 
+    if (this.selectedTipoFilter !== "todos") {
+      filtrosParaBackend.tipo = this.selectedTipoFilter === "ingreso"
+        ? "INGRESO"
+        : "SALIDA";
+    }
+
+    if (this.globalFilterValue?.trim()) {
+      filtrosParaBackend.search = this.globalFilterValue.trim();
+    }
+
     // Mostrar mensaje de carga
     this.messageService.add({
       severity: "info",
@@ -337,11 +399,20 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
       life: 3000,
     });
 
-    this.inventarioService.getHistorialMovimientos(filtrosParaBackend).subscribe({
-      next: (response: MovimientosResponse) => {
-        const datosExcel = (response.movimientos || []).map((movimiento) => ({
+    this.cargarMovimientosParaExportar(filtrosParaBackend).subscribe({
+      next: (movimientos: Movimiento[]) => {
+        const direction = filtrosParaBackend.orderDirection === "asc" ? 1 : -1;
+        const movimientosOrdenados = [...movimientos].sort((a, b) => {
+          if (filtrosParaBackend.orderBy === "cantidad") {
+            return ((Number(a.cantidad) || 0) - (Number(b.cantidad) || 0)) * direction;
+          }
+          const aTime = this.fechaMovimiento(a)?.getTime() || 0;
+          const bTime = this.fechaMovimiento(b)?.getTime() || 0;
+          return (aTime - bTime) * direction;
+        });
+        const datosExcel = movimientosOrdenados.map((movimiento) => ({
           Fecha: this.datePipe.transform(
-            movimiento.fecha._seconds * 1000,
+            this.fechaMovimiento(movimiento),
             "dd/MM/yyyy HH:mm",
           ),
           Producto: movimiento.productDoc?.titulo || "N/A",
@@ -518,7 +589,7 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
     const datosExcel = [
       {
         Fecha: this.datePipe.transform(
-          movimiento.fecha._seconds * 1000,
+          this.fechaMovimiento(movimiento),
           "dd/MM/yyyy HH:mm",
         ),
         Producto: movimiento.producto?.crearProducto?.titulo || "N/A",

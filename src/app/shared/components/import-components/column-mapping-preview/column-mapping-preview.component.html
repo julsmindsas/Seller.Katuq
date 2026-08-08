@@ -1,15 +1,8 @@
 <div class="column-mapping-preview" *ngIf="mappingResult">
-  <!-- Header con informacion general -->
-  <div class="mapping-header">
-    <h4 class="mapping-title">
-      <i class="pi pi-sparkles mr-2"></i>
-      Mapeo Inteligente de Columnas
-    </h4>
-    <p class="mapping-subtitle">
-      KAI ha analizado {{ mappingResult.metadata?.columnsAnalyzed }} columnas usando
-      {{ mappingResult.metadata?.sampleRowsUsed }} filas de ejemplo
-    </p>
-  </div>
+  <!-- El encabezado ("Mapeo de Columnas" + de dónde salió) lo pone el modal,
+       que también lo necesita para la vista de tarjetas del móvil. Acá había
+       un segundo encabezado idéntico, así que en escritorio el título salía
+       DOS veces, uno debajo del otro. -->
 
   <!-- Mensajes de advertencia sobre campos requeridos sin mapear -->
   <p-message

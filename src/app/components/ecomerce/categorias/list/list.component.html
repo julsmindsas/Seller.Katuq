@@ -1,4 +1,9 @@
 <!-- <app-breadcrumb [title]="'Categorias'" [items]="['Maestros']" [active_item]="'Categorias'"></app-breadcrumb> -->
+
+<!-- Faltaba: el componente emitía mensajes con su propio MessageService pero no
+     había dónde pintarlos, así que ninguna acción de esta pantalla daba señal. -->
+<p-toast [position]="position"></p-toast>
+
 <div class="container-fluid category-management">
     <div class="row">
         <div class="col-sm-12">
@@ -148,13 +153,20 @@
                                         <small *ngIf="node.data.activo" class="text-success ml-2">Activo</small>
                                         <small *ngIf="!node.data.activo" class="text-muted ml-2">Inactivo</small>
                                     </td>
+                                    <!-- Los textos dicen el NIVEL de esta fila. Antes todas decían
+                                         "categoría", así que el basurero de una subcategoría decía
+                                         "Eliminar esta categoría" y parecía que iba a borrar la
+                                         categoría padre completa. -->
                                     <td class="text-center">
                                         <button class="action-icon-button add-button" (click)="addChild(node)"
-                                            aria-label="Agregar subcategoría" ngbTooltip="Agregar una subcategoría">
+                                            *ngIf="puedeAgregarHijo(node)"
+                                            [attr.aria-label]="'Agregar ' + nombreNivelHijo(node) + ' dentro de ' + node.data.nombre"
+                                            [ngbTooltip]="'Agregar una ' + nombreNivelHijo(node) + ' dentro de «' + node.data.nombre + '»'">
                                             <i class="pi pi-plus"></i>
                                         </button>
                                         <button class="action-icon-button delete-button" (click)="confirmDelete(node)"
-                                            aria-label="Eliminar esta categoría" ngbTooltip="Eliminar esta categoría">
+                                            [attr.aria-label]="'Eliminar la ' + nombreNivel(node) + ' ' + node.data.nombre"
+                                            [ngbTooltip]="'Eliminar la ' + nombreNivel(node) + ' «' + node.data.nombre + '»'">
                                             <i class="pi pi-trash"></i>
                                         </button>
                                     </td>
@@ -188,6 +200,9 @@
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-lg mr-2" (click)="modal.dismiss()">Cancelar</button>
-        <button type="button" class="btn btn-danger btn-lg" (click)="modal.close('confirm')">Confirmar</button>
+        <!-- Rojo solo cuando se está por borrar; guardar no es destructivo. -->
+        <button type="button" class="btn btn-lg"
+            [ngClass]="nodeToDelete ? 'btn-danger' : 'btn-success'"
+            (click)="modal.close('confirm')">Confirmar</button>
     </div>
 </ng-template>

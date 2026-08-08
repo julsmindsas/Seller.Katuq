@@ -173,6 +173,61 @@ export interface InventarioConsolidadoResponse {
   };
 }
 
+export type InventarioCorteEstado = 'certified' | 'ambiguous' | 'incomplete';
+
+export interface InventarioCorteFila {
+  key: string;
+  productId: string | null;
+  referencia: string;
+  nombre: string;
+  idBodega: string | null;
+  bodegaNombre: string;
+  anchorQuantity: number | null;
+  quantityAtCutoff: number | null;
+  quantityMode: 'chained' | 'estimate';
+  status: InventarioCorteEstado;
+  causes: string[];
+  warnings: string[];
+  movementCount: number;
+}
+
+export interface InventarioCorteResponse {
+  success: boolean;
+  company: string;
+  timezone: 'America/Bogota';
+  mode: string;
+  snapshotConsistency: 'ATOMIC_VERIFIED' | 'SEQUENTIAL_LIVE_READ';
+  cutoffAt: string;
+  anchorAt: string;
+  anchorVerified: boolean;
+  certifiedFrom: string | null;
+  minimumCertifiableAt: string | null;
+  certified: boolean;
+  statusCounts: Record<InventarioCorteEstado, number>;
+  causeCounts: { [cause: string]: number };
+  coverage: {
+    rows: number;
+    filteredRows: number;
+    movementsAfterCutoff: number;
+    movementsWithBeforeAfter: number;
+    movementsWithoutDate: number;
+    sourceReads: {
+      inventory: number;
+      inventoryMovement: number;
+      products: number;
+      warehouses: number;
+    };
+  };
+  rows: InventarioCorteFila[];
+  pagination: {
+    limit: number;
+    returned: number;
+    total: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -181,6 +236,10 @@ export class InventarioService {
   private firebaseApiUrl = '';
 
   constructor(private http: HttpClient) { }
+
+  private createOperationKey(scope: string): string {
+    return `${scope}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  }
 
   /**
    * Registra un movimiento de inventario en el sistema
@@ -217,17 +276,40 @@ export class InventarioService {
     return this.http.post(`${this.apiUrl}/katuqintelligence/kai/inventory-analysis`, datos);
   }
 
-  ingresarProductos(bodegaId: string, productos: any[], tipoMovimiento: TipoMovimientoInventario, observaciones: string): Observable<any> {
-    const url = `${this.apiUrl}/inventory/ingresar-multiples`;
+  ingresarProductos(
+    bodegaId: string,
+    productos: any[],
+    tipoMovimiento: TipoMovimientoInventario,
+    observaciones: string,
+    operationKey: string = this.createOperationKey('manual-inventory')
+  ): Observable<any> {
     const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'x-idempotency-key': operationKey
     });
 
+    // Un producto usa la ruta individual; varios conservan la ruta de lote.
+    // El backend decide por empresa si corre legacy, sombra o transaccional.
+    if (productos.length === 1) {
+      const producto = productos[0];
+      return this.http.post(`${this.apiUrl}/inventory/ingresar`, {
+        bodegaId,
+        productoId: producto.productoId,
+        cantidad: producto.cantidad,
+        tipoMovimiento,
+        observaciones,
+        ordenCompraId: producto.ordenCompraId || null,
+        operationKey
+      }, { headers });
+    }
+
+    const url = `${this.apiUrl}/inventory/ingresar-multiples`;
     return this.http.post(url, {
       bodegaId,
       productos,
       tipoMovimiento,
-      observaciones
+      observaciones,
+      operationKey
     }, { headers });
   }
 
@@ -236,10 +318,18 @@ export class InventarioService {
    * @param productId ID del producto
    * @returns Observable con el historial de movimientos
    */
-  obtenerHistorialMovimientos(productId: string): Observable<MovimientoInventario[]> {
-    const url = `${this.apiUrl}/inventory/movimientos/${productId}`;
+  obtenerHistorialMovimientos(productId: string): Observable<{
+    movimientos: MovimientoInventario[];
+    lastDoc: string | null;
+    hasMore: boolean;
+  }> {
+    const url = `${this.apiUrl}/inventory/historial/producto/${encodeURIComponent(productId)}`;
 
-    return this.http.get<MovimientoInventario[]>(url);
+    return this.http.get<{
+      movimientos: MovimientoInventario[];
+      lastDoc: string | null;
+      hasMore: boolean;
+    }>(url);
   }
 
   /**
@@ -247,10 +337,18 @@ export class InventarioService {
    * @param bodegaId ID de la bodega
    * @returns Observable con el historial de movimientos
    */
-  obtenerMovimientosPorBodega(bodegaId: string): Observable<MovimientoInventario[]> {
-    const url = `${this.apiUrl}/inventory/movimientos/bodega/${bodegaId}`;
+  obtenerMovimientosPorBodega(bodegaId: string): Observable<{
+    movimientos: MovimientoInventario[];
+    lastDoc: string | null;
+    hasMore: boolean;
+  }> {
+    const url = `${this.apiUrl}/inventory/historial/bodega/${encodeURIComponent(bodegaId)}`;
 
-    return this.http.get<MovimientoInventario[]>(url);
+    return this.http.get<{
+      movimientos: MovimientoInventario[];
+      lastDoc: string | null;
+      hasMore: boolean;
+    }>(url);
   }
 
   /**
@@ -283,6 +381,8 @@ export class InventarioService {
     stockFilter?: string;
     onlyWithStock?: boolean;
     soloInventariables?: boolean;
+    fechaCorte?: string;
+    status?: InventarioCorteEstado;
   } = {}): Observable<Blob> {
     let params = new HttpParams();
     if (options.bodega) params = params.set('bodega', options.bodega);
@@ -291,11 +391,34 @@ export class InventarioService {
     if (options.stockFilter) params = params.set('stockFilter', options.stockFilter);
     if (options.onlyWithStock !== undefined) params = params.set('onlyWithStock', String(options.onlyWithStock));
     if (options.soloInventariables !== undefined) params = params.set('soloInventariables', String(options.soloInventariables));
+    if (options.fechaCorte) params = params.set('fechaCorte', options.fechaCorte);
+    if (options.status) params = params.set('status', options.status);
 
     return this.http.get(`${this.apiUrl}/inventory/export-excel`, {
       params,
       responseType: 'blob',
     });
+  }
+
+  consultarInventarioCorte(options: {
+    fechaCorte: string;
+    bodega?: string;
+    search?: string;
+    status?: InventarioCorteEstado;
+    limit?: number;
+    cursor?: string;
+  }): Observable<InventarioCorteResponse> {
+    let params = new HttpParams().set('fechaCorte', options.fechaCorte);
+    if (options.bodega) params = params.set('bodega', options.bodega);
+    if (options.search) params = params.set('search', options.search);
+    if (options.status) params = params.set('status', options.status);
+    if (options.limit) params = params.set('limit', String(options.limit));
+    if (options.cursor) params = params.set('cursor', options.cursor);
+
+    return this.http.get<InventarioCorteResponse>(
+      `${this.apiUrl}/inventory/cutoff-report`,
+      { params },
+    );
   }
 
   obtenerInventarioConsolidado(options: {
@@ -353,7 +476,16 @@ export class InventarioService {
   }
 
   realizarTraslado(traslado: Traslado): Observable<any> {
-    return this.http.post(`${this.apiUrl}/inventory/traslados`, traslado);
+    const operationKey =
+      (traslado as any).operationKey || this.createOperationKey('inventory-transfer');
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'x-idempotency-key': operationKey
+    });
+    return this.http.post(`${this.apiUrl}/inventory/traslados`, {
+      ...traslado,
+      operationKey
+    }, { headers });
   }
 
   getHistorialMovimientos(filtros: {
@@ -402,12 +534,6 @@ export class InventarioService {
     }
 
     return this.http.get<MovimientosResponse>(`${this.apiUrl}/inventory/historial`, { params });
-  }
-
-  exportarExcelHistorial(filtros: any): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/exportar-historial`, filtros, {
-      responseType: 'blob'
-    });
   }
 
   getProductos(pageSize: number = 100): Observable<any> {
@@ -492,8 +618,8 @@ export class InventarioService {
   }
 
   /**
-   * Repara el inventario corrigiendo idBodega y eliminando huérfanos.
-   * @param options Flags para activar/desactivar cada tipo de corrección.
+   * Simula la reparación del inventario sin escribir datos (Gate 0 D-134).
+   * La aplicación real permanece bloqueada hasta verificar backup y restore.
    */
   repararInventario(options: {
     corregirBodegas?: boolean;
@@ -504,6 +630,7 @@ export class InventarioService {
       corregirBodegas: String(options.corregirBodegas ?? true),
       eliminarBodegasHuerfanas: String(options.eliminarBodegasHuerfanas ?? true),
       eliminarProductosFantasma: String(options.eliminarProductosFantasma ?? true),
+      apply: 'false',
     };
     return this.http.post(`${this.apiUrl}/inventory/reparar`, {}, { params });
   }

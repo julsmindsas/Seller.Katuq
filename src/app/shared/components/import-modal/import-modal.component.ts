@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import * as XLSX from 'xlsx';
 import { ColumnMappingService } from '../../services/import/column-mapping.service';
+import { MaestroService } from '../../services/maestros/maestro.service';
 import { resolverNombreApellido } from '../../utils/nombre-apellido.util';
 import {
   ColumnMapping,
@@ -93,8 +94,14 @@ const PRODUCT_DEFAULTS = {
   ciudades: {
     ciudadesOrigen: [],
     ciudadesEntrega: [],
-    coberturaNacionalOrigen: false,
-    coberturaNacionalEntrega: false
+    // Por defecto en `true` a propósito, aunque el formulario manual arranque
+    // en `false`: hasta D-148 el backend forzaba la cobertura nacional a `true`
+    // en TODO producto importado (`(x === true) || true`, que da true siempre).
+    // Ahora la columna del Excel manda, pero quien no traiga la columna tiene
+    // que seguir entrando como antes — si no, una importación sin esa columna
+    // dejaría el catálogo sin ciudades de origen ni de entrega.
+    coberturaNacionalOrigen: true,
+    coberturaNacionalEntrega: true
   },
   procesoComercial: {
     aceptaOcasion: false,
@@ -152,12 +159,93 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   confirmedMappings: { [katuqField: string]: string } = {};
   showMappingPreview = false;
 
+  /**
+   * De dónde salió el mapeo que se está mostrando: `kai` si lo sugirió el
+   * modelo, `plantilla` si se reconocieron los encabezados por su nombre
+   * (archivo bajado de la plantilla, o un export de Katuq).
+   */
+  origenMapeo: 'kai' | 'plantilla' = 'kai';
+
+  /**
+   * Campos que la plantilla activa marca como obligatorios. Se lo pasa a la
+   * tabla de mapeo, que antes lo deducía mal y sellaba TODAS las filas como
+   * "Obligatorio".
+   *
+   * ⚠️ Es un CAMPO, no un getter, y tiene que seguir siéndolo. Como getter
+   * devolvía un arreglo NUEVO en cada llamada, y al estar enlazado con
+   * `[requiredFields]` Angular lo evalúa en cada ciclo de detección de
+   * cambios: referencia nueva → `ngOnChanges` del hijo → el hijo reconstruye
+   * `mappingRows` (otro arreglo nuevo) → la tabla se redibuja → otro ciclo…
+   * Bucle infinito de detección de cambios, que congela la pestaña entera
+   * ("La página no responde"). Se calcula una sola vez, al cargar la config.
+   */
+  camposObligatorios: string[] = [];
+
+  /** Etiquetas legibles de la plantilla activa. Campo, no getter, por lo mismo. */
+  etiquetasCampos: { [key: string]: string } = {};
+
   // Produccion: checkboxes globales
   todosParaProduccion = false;
   todosIntegranProduccion = false;
 
   // Import mode: create-only, update-only, or upsert (default)
   importMode: 'create' | 'update' | 'upsert' = 'upsert';
+
+  // --- Categorías: aviso antes y resumen después (D-148) ---
+  //
+  // El buen orden es importar categorías primero y productos después, pero NO
+  // es un requisito técnico: un producto sin categoría se vende igual y al
+  // mismo precio. Lo que pierde es aparecer al filtrar por categoría y
+  // calificar para promociones segmentadas por categoría. Por eso esto AVISA,
+  // nunca bloquea.
+  /** El usuario ya vio el aviso y eligió importar igual. */
+  avisoCategoriaAceptado = false;
+  /** Categorías que nacieron del último archivo importado (solo el nombre). */
+  categoriasCreadasEnImport: string[] = [];
+  /** Productos del último archivo que entraron sin categoría. */
+  productosSinCategoria = 0;
+
+  /**
+   * Filas del archivo sin categoría. `-1` = no hay columna de categoría mapeada.
+   *
+   * Memoizado: el getter lo consume el template a través de
+   * `debeAvisarCategoria`, o sea que Angular lo evalúa en CADA ciclo de
+   * detección de cambios. Recorrer 5.000 filas del Excel en cada ciclo colgaría
+   * el modal. Se recalcula solo cuando cambia el archivo o el mapeo.
+   */
+  private _sinCategoriaCache: { firma: string; valor: number } | null = null;
+
+  get filasSinCategoria(): number {
+    if (this.type !== 'product' || !this.parsedData.length) return 0;
+    const col = this.confirmedMappings['categoria'];
+    const firma = `${this.parsedData.length}|${col ?? ''}`;
+    if (this._sinCategoriaCache?.firma === firma) return this._sinCategoriaCache.valor;
+
+    const valor = !col
+      ? -1
+      : this.parsedData.filter(row => {
+          const v = this.getRowValue(row, col);
+          return v === undefined || v === null || String(v).trim() === '';
+        }).length;
+
+    this._sinCategoriaCache = { firma, valor };
+    return valor;
+  }
+
+  /** ¿Hay que mostrar el aviso de categorías antes de importar? */
+  get debeAvisarCategoria(): boolean {
+    if (this.type !== 'product' || this.avisoCategoriaAceptado) return false;
+    return this.filasSinCategoria !== 0;
+  }
+
+  get textoAvisoCategoria(): string {
+    const total = this.parsedData.length;
+    const sin = this.filasSinCategoria;
+    if (sin === -1) {
+      return `Ninguna columna quedó asignada a Categoría, así que los ${total} productos van a entrar sin categoría.`;
+    }
+    return `${sin} de ${total} filas no tienen categoría.`;
+  }
 
   // Mobile: Mapping Fields for Cards
   mappingFields: MappingField[] = [];
@@ -304,6 +392,33 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     const mappings = this.matchTemplateHeaders();
     // Sin referencia y sin título no es nuestra plantilla: que decida KAI.
     if (!mappings['referencia'] || !mappings['titulo']) return null;
+
+    return this.construirResultadoMapeo(mappings);
+  }
+
+  /**
+   * Atajo determinístico para las plantillas que NO tienen uno propio:
+   * categorías e inventario.
+   *
+   * Clientes y productos ya lo tenían (`buildStandardCustomerMapping` /
+   * `buildStandardProductMapping`) y por eso "importan de una". Categorías e
+   * inventario no, así que llamaban a KAI SIEMPRE — incluso con un archivo
+   * bajado de la propia plantilla, donde los encabezados coinciden exactos y
+   * no hay nada que deducir. El usuario se quedaba mirando "analizando" hasta
+   * que la llamada fallaba, y recién ahí aparecía este mismo mapeo por nombre.
+   *
+   * Se acepta el atajo solo si TODOS los campos obligatorios de la plantilla
+   * quedaron reconocidos; si falta alguno, el archivo no es la plantilla y que
+   * lo resuelva KAI.
+   */
+  private buildStandardGenericMapping(): ColumnMappingResult | null {
+    if (this.type !== 'category' && this.type !== 'inventory') return null;
+    if (!this.config) return null;
+
+    const mappings = this.matchTemplateHeaders();
+    const obligatorios = this.config.templateColumns.filter(c => c.required).map(c => c.field);
+    const faltaAlguno = obligatorios.some(f => !mappings[f]);
+    if (faltaAlguno || Object.keys(mappings).length < 2) return null;
 
     return this.construirResultadoMapeo(mappings);
   }
@@ -531,22 +646,34 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     // `inventory` por bodega y se carga con "Importar inventario", que sí resuelve
     // referencia → producto y bodega.
     templateColumns: [
-      { field: 'referencia', header: 'Referencia (SKU)', required: true, example: 'PROD001' },
+      { field: 'referencia', header: 'Referencia (SKU)', required: true, example: 'PROD001' , help: "El código único del producto. Es la llave: si ya existe, el producto se actualiza en vez de duplicarse." },
       { field: 'codigoBarras', header: 'Codigo de Barras', required: false, example: '7701234567890' },
-      { field: 'titulo', header: 'Titulo', required: true, example: 'Camiseta Basica' },
+      { field: 'titulo', header: 'Titulo', required: true, example: 'Camiseta Basica' , help: "El nombre del producto tal como lo ve el cliente." },
       { field: 'descripcion', header: 'Descripcion', required: false, example: 'Camiseta de algodon' },
       { field: 'marca', header: 'Marca', required: false, example: 'MiMarca' },
-      { field: 'categoria', header: 'Categoria', required: false, example: 'Ropa' },
-      { field: 'categoriaConsecutivo', header: 'Id Categoria (opcional, enlace a SIIGO)', required: false, example: '1005' },
-      { field: 'precioUnitarioSinIva', header: 'Precio sin IVA', required: true, example: '50000' },
+      { field: 'fechaInicial', header: 'Fecha Inicial (AAAA-MM-DD)', required: false, example: '2026-01-01' , help: "Desde cuándo se vende. Formato AAAA-MM-DD (2026-01-31)." },
+      { field: 'fechaFinal', header: 'Fecha Final (AAAA-MM-DD)', required: false, example: '2026-12-31' , help: "Hasta cuándo se vende. Formato AAAA-MM-DD." },
+      // Categorías: los tres niveles del árbol. Nivel 2 y 3 son opcionales —
+      // las empresas que no manejan subcategorías dejan las celdas vacías y
+      // el producto queda colgado del nivel que sí llenaron.
+      { field: 'categoria', header: 'Categoria', required: false, example: 'Ropa' , help: "La categoría principal. Si no existe, se crea sola y se te avisa al terminar." },
+      { field: 'subcategoria', header: 'Subcategoria (Nivel 2)', required: false, example: 'Hombre' , help: "Opcional. Solo si tu empresa maneja subcategorías; si no, dejala vacía." },
+      { field: 'subsubcategoria', header: 'Sub-subcategoria (Nivel 3)', required: false, example: 'Camisetas' , help: "Opcional. Tercer nivel del árbol de categorías." },
+      { field: 'categoriaConsecutivo', header: 'Id Categoria (opcional, enlace a SIIGO)', required: false, example: '1005' , help: "Solo si enlazás la categoría con SIIGO. Si no usás SIIGO, dejala vacía." },
+      { field: 'precioUnitarioSinIva', header: 'Precio sin IVA', required: true, example: '50000' , help: "Precio base, sin impuesto. El precio con IVA lo calcula el sistema." },
       { field: 'valorIva', header: 'IVA (%)', required: false, example: '19' },
       { field: 'cantidadMinVenta', header: 'Cantidad Minima de Venta', required: false, example: '1' },
       { field: 'inventarioSeguridad', header: 'Inventario de Seguridad', required: false, example: '10' },
       { field: 'inventariable', header: 'Inventariable (SI/NO)', required: false, example: 'SI' },
       { field: 'activar', header: 'Activo (SI/NO)', required: false, example: 'SI' },
       { field: 'disponible', header: 'Disponible (SI/NO)', required: false, example: 'SI' },
-      { field: 'tipoEntrega', header: 'Tipo de Entrega', required: false, example: 'Envio a domicilio y recoge' },
-      { field: 'tiempoEntrega', header: 'Tiempo de Entrega (dias)', required: false, example: '3' },
+      // Los dos son SELECTS que se llenan del maestro de la empresa, y cada
+      // empresa define los suyos con texto libre. El ejemplo se completa con
+      // una opción REAL de la empresa al descargar la plantilla; el que había
+      // acá ("Envio a domicilio y recoge", "3") no existe en ninguna y hacía
+      // que el campo entrara vacío.
+      { field: 'tipoEntrega', header: 'Tipo de Entrega', required: false, example: '', help: 'Tiene que ser una de las opciones de tu empresa (ver abajo). Se configuran en Maestros.' },
+      { field: 'tiempoEntrega', header: 'Tiempo de Entrega', required: false, example: '', help: 'Tiene que ser una de las opciones de tu empresa (ver abajo). Se configuran en Maestros.' },
       { field: 'largoProductoCm', header: 'Largo (cm)', required: false, example: '30' },
       { field: 'altoProductoCm', header: 'Alto (cm)', required: false, example: '10' },
       { field: 'anchoProductoCm', header: 'Ancho (cm)', required: false, example: '20' },
@@ -559,7 +686,25 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'seProduceInternamente', header: 'Requiere Produccion (SI/NO)', required: false, example: 'NO' },
       { field: 'integraConProduccion', header: 'Integra Software Produccion? (SI/NO)', required: false, example: 'NO' },
       { field: 'tiempoProduccion', header: 'Tiempo Produccion', required: false, example: '3 dias' },
-      { field: 'softwareProduccion', header: 'Software Produccion', required: false, example: 'ERP Interno' }
+      { field: 'softwareProduccion', header: 'Software Produccion', required: false, example: 'ERP Interno' },
+      // --- Exposición (las casillas de la pestaña Exposición del formulario) ---
+      { field: 'posicion', header: 'Posicion', required: false, example: '1' },
+      { field: 'oferta', header: 'En Oferta (SI/NO)', required: false, example: 'NO' },
+      { field: 'recomendado', header: 'Recomendado (SI/NO)', required: false, example: 'NO' },
+      { field: 'destacado', header: 'Destacado (SI/NO)', required: false, example: 'NO' },
+      { field: 'nuevo', header: 'Nuevo (SI/NO)', required: false, example: 'SI' },
+      { field: 'masvendido', header: 'Mas Vendido (SI/NO)', required: false, example: 'NO' },
+      // --- Canales de venta ---
+      { field: 'sellerCenter', header: 'Seller Center (SI/NO)', required: false, example: 'SI' },
+      { field: 'paginaWeb', header: 'Pagina Web (SI/NO)', required: false, example: 'SI' },
+      { field: 'puntoDeVenta', header: 'Punto de Venta (SI/NO)', required: false, example: 'SI' },
+      // --- Ciudad ---
+      // Si la cobertura nacional va en SI, la lista de ciudades se ignora
+      // (mismo comportamiento que el toggle en pantalla, que limpia la lista).
+      { field: 'coberturaNacionalOrigen', header: 'Cobertura Nacional Origen (SI/NO)', required: false, example: 'SI' , help: "SI = se despacha desde todo el país (y se ignora la lista de ciudades de origen)." },
+      { field: 'coberturaNacionalEntrega', header: 'Cobertura Nacional Entrega (SI/NO)', required: false, example: 'SI' , help: "SI = se entrega a todo el país (y se ignora la lista de ciudades de entrega)." },
+      { field: 'ciudadesOrigen', header: 'Ciudades de Origen (separadas por coma)', required: false, example: 'Bogota, Medellin' , help: "Ciudades desde donde se despacha, separadas por coma. Se ignora si la cobertura nacional de origen va en SI." },
+      { field: 'ciudadesEntrega', header: 'Ciudades de Entrega (separadas por coma)', required: false, example: 'Bogota, Cali' , help: "Ciudades a donde se entrega, separadas por coma. Se ignora si la cobertura nacional de entrega va en SI." }
     ],
     fieldLabels: {
       'identificacion.referencia': 'Referencia/SKU',
@@ -614,9 +759,30 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'marca': 'Marca',
       'codigoBarras': 'Codigo de Barras',
       'categoria': 'Categoria/Grupo/Linea/Familia',
+      'subcategoria': 'Subcategoria (Nivel 2)',
+      'subsubcategoria': 'Sub-subcategoria (Nivel 3)',
       'categoriaConsecutivo': 'Id Categoria (enlace a SIIGO, opcional)',
+      'fechaInicial': 'Fecha Inicial',
+      'fechaFinal': 'Fecha Final',
+      'crearProducto.fechaInicial': 'Fecha Inicial',
+      'crearProducto.fechaFinal': 'Fecha Final',
+      'posicion': 'Posicion',
+      'oferta': 'En Oferta (SI/NO)',
+      'recomendado': 'Recomendado (SI/NO)',
+      'destacado': 'Destacado (SI/NO)',
+      'nuevo': 'Nuevo (SI/NO)',
+      'masvendido': 'Mas Vendido (SI/NO)',
+      'sellerCenter': 'Seller Center (SI/NO)',
+      'paginaWeb': 'Pagina Web (SI/NO)',
+      'puntoDeVenta': 'Punto de Venta (SI/NO)',
+      'coberturaNacionalOrigen': 'Cobertura Nacional Origen (SI/NO)',
+      'coberturaNacionalEntrega': 'Cobertura Nacional Entrega (SI/NO)',
+      'ciudadesOrigen': 'Ciudades de Origen (separadas por coma)',
+      'ciudadesEntrega': 'Ciudades de Entrega (separadas por coma)',
       'garantiasProducto': 'Garantias',
       'caracAdicionales': 'Caracteristicas Adicionales',
+      'restriccionesProducto': 'Restricciones',
+      'cuidadoConsumo': 'Cuidado y Consumo',
       'tipoEntrega': 'Tipo/Forma de Entrega',
       'tiempoEntrega': 'Tiempo/Plazo de Entrega',
       'activar': 'Activo (SI/NO)',
@@ -658,23 +824,69 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     endpoint: '/v1/onboarding/import-categories',
     payloadKey: 'categories',
     maxFileSize: 5000000,
+    // ⚠️ Dos formas EXCLUYENTES de expresar la misma jerarquía. Hay que elegir
+    // una para todo el archivo; mezclarlas hace que se ignore la otra:
+    //
+    //  A) Por niveles — una fila = una ruta completa:
+    //     | Categoría (Nivel 1) | Subcategoría (Nivel 2) | Sub-subcategoría |
+    //     | Ropa                | Hombre                 | Camisetas        |
+    //
+    //  B) Por padre — una fila = una categoría, que apunta a la de arriba:
+    //     | Categoría (Nivel 1) | Código | Categoría Padre |
+    //     | Ropa                | ROPA   |                 |
+    //     | Hombre              | HOM    | Ropa            |
+    //     | Camisetas           | CAM    | Hombre          |
+    //
+    // El encabezado del nivel 1 decía solo "Nombre", y al lado de "Categoría
+    // Padre" se leía como si el padre fuera la categoría principal y "Nombre"
+    // una subcategoría. Es al revés: el nivel 1 ES la categoría principal.
     templateColumns: [
-      { field: 'categoria_nivel1', header: 'Nombre', required: true, example: 'Ropa' },
-      { field: 'codigo', header: 'Código', required: false, example: 'ROPa' },
-      { field: 'categoria_nivel2', header: 'Subcategoría (Nivel 2)', required: false, example: 'Hombre' },
-      { field: 'categoria_nivel3', header: 'Sub-subcategoría (Nivel 3)', required: false, example: 'Camisetas' },
-      { field: 'categoria_padre', header: 'Categoría Padre (nombre o código)', required: false, example: 'Ropa' },
-      { field: 'imagen', header: 'URL Imagen', required: false, example: 'https://example.com/imagen.jpg' },
-      { field: 'activo', header: 'Activo', required: false, example: 'SI' },
-      { field: 'posicion', header: 'Posición', required: false, example: '1' },
-      { field: 'consecutivo', header: 'Id Categoria', required: false, example: '1005' },
+      {
+        field: 'categoria_nivel1', header: 'Categoría (Nivel 1)', required: true, example: 'Ropa',
+        help: 'La categoría principal. Es lo único obligatorio: sin esto la fila no dice qué categoría estás creando.',
+      },
+      {
+        field: 'categoria_nivel2', header: 'Subcategoría (Nivel 2) - opcional', required: false, example: 'Hombre',
+        help: 'Cuelga de la categoría del Nivel 1. Dejala vacía si esa categoría no tiene subcategorías.',
+      },
+      {
+        field: 'categoria_nivel3', header: 'Sub-subcategoría (Nivel 3) - opcional', required: false, example: 'Camisetas',
+        help: 'Cuelga de la subcategoría del Nivel 2. Es el último nivel que maneja el catálogo.',
+      },
+      {
+        field: 'codigo', header: 'Código - opcional', required: false, example: 'ROPA',
+        help: 'Código interno tuyo para la categoría. No lo usa el catálogo; sirve para referenciarla desde otro archivo.',
+      },
+      {
+        field: 'imagen', header: 'URL Imagen - opcional', required: false, example: 'https://ejemplo.com/imagen.jpg',
+        help: 'Dirección web de la imagen de la categoría.',
+      },
+      {
+        field: 'activo', header: 'Activo (SI/NO) - opcional', required: false, example: 'SI',
+        help: 'SI o NO. Si la dejás vacía, la categoría entra activa.',
+      },
+      {
+        field: 'posicion', header: 'Posición - opcional', required: false, example: '1',
+        help: 'En qué orden aparece dentro de su nivel. Vacío = al final.',
+      },
+      {
+        field: 'consecutivo', header: 'Id Categoria - opcional', required: false, example: '1005',
+        help: 'Solo si enlazás esta categoría con SIIGO. Si no usás SIIGO, dejala vacía.',
+      },
+      // Va ÚLTIMA y con el nombre más explícito posible: es de un formato
+      // alternativo y llenarla junto con los niveles hace que el importador
+      // procese el archivo por el otro camino y descarte los niveles 2 y 3.
+      {
+        field: 'categoria_padre', header: 'DEJAR VACÍA - Categoría Padre (otro formato)', required: false, example: '',
+        help: 'NO la llenes si usás las columnas de Nivel 1/2/3. Es una forma ALTERNATIVA de armar el árbol, para archivos que vienen de otro sistema: una fila por categoría, indicando de cuál cuelga. Usá una forma o la otra, nunca las dos.',
+      },
     ],
     fieldLabels: {
-      'categoria_nivel1': 'Nombre de Categoría',
+      'categoria_nivel1': 'Categoría principal (Nivel 1)',
       'codigo': 'Código / Referencia',
       'categoria_nivel2': 'Subcategoría (Nivel 2)',
       'categoria_nivel3': 'Sub-subcategoría (Nivel 3)',
-      'categoria_padre': 'Categoría Padre (nombre o código)',
+      'categoria_padre': 'Categoría Padre (otro formato — dejar vacía)',
       'imagen': 'URL de Imagen',
       'activo': 'Activo (SI/NO)',
       'posicion': 'Posición / Orden',
@@ -685,11 +897,101 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   constructor(
     private messageService: MessageService,
     private http: HttpClient,
-    private columnMappingService: ColumnMappingService
+    private columnMappingService: ColumnMappingService,
+    private maestroService: MaestroService
   ) {}
 
   ngOnInit(): void {
     this.loadConfig();
+    this.cargarMaestrosEntrega();
+  }
+
+  /**
+   * Maestros de entrega de la empresa (`/v1/tipoentrega/all`,
+   * `/v1/tiemposentrega/all`).
+   *
+   * Los dos campos son SELECTS en el formulario y sus opciones salen de estas
+   * colecciones, **definidas por empresa y con texto libre**: hay empresas con
+   * `nacional`/`express`/`estandar` y otras con `DOMICILIO` o `PEDIDO AL POR
+   * MAYOR`; en tiempos hay `1_2`, `24_horas` y hasta `Solicítalo con 1 día`.
+   *
+   * Antes el importador escribía valores INVENTADOS (`SOLO DOMICILIO`,
+   * `ENVIO A DOMICILIO Y RECOGE`, o un número para el tiempo), que no existen
+   * en el maestro de ninguna empresa. El producto quedaba con un valor que el
+   * select no puede mostrar, así que los dos campos salían vacíos siempre.
+   */
+  private tiposEntrega: any[] = [];
+  private tiemposEntrega: any[] = [];
+  /** Valores del Excel que no existen en el maestro, para reportarlos. */
+  entregaSinHomologar: string[] = [];
+
+  private cargarMaestrosEntrega(): void {
+    if (this.type !== 'product') return;
+    this.maestroService.getTipoEntrega().subscribe({
+      next: (r: any) => {
+        this.tiposEntrega = Array.isArray(r) ? r : [];
+        this.opcionesTipoEntrega = this.tiposEntrega.map(t => t?.nombreInterno).filter(Boolean);
+      },
+      error: () => { this.tiposEntrega = []; this.opcionesTipoEntrega = []; },
+    });
+    this.maestroService.getTiempoEntrega().subscribe({
+      next: (r: any) => {
+        this.tiemposEntrega = Array.isArray(r) ? r : [];
+        this.opcionesTiempoEntrega = this.tiemposEntrega.map(t => t?.nombreInterno).filter(Boolean);
+      },
+      error: () => { this.tiemposEntrega = []; this.opcionesTiempoEntrega = []; },
+    });
+  }
+
+  /**
+   * Opciones válidas de la empresa, para mostrarlas cuando algo no coincide.
+   *
+   * Campos y no getters: van enlazados al template y un getter que arma un
+   * arreglo nuevo en cada ciclo de detección de cambios ya congeló esta
+   * pantalla una vez. Se llenan al cargar los maestros.
+   */
+  opcionesTipoEntrega: string[] = [];
+  opcionesTiempoEntrega: string[] = [];
+
+  /**
+   * Busca el valor del Excel dentro del maestro y devuelve el `nombreInterno`
+   * EXACTO, que es contra lo que compara el `<option>` del formulario.
+   *
+   * Match tolerante: sin mayúsculas, sin tildes y tratando `_`, `-` y espacios
+   * como equivalentes, así "1-2" encuentra "1_2" y "Solicitalo con 1 dia"
+   * encuentra "Solicítalo con 1 día". Se busca por `nombreInterno` y también
+   * por el nombre visible, porque en la pantalla de Maestros se ven los dos.
+   */
+  private homologarEntrega(valor: any, maestro: any[], porDias = false): string | null {
+    const crudo = String(valor ?? '').trim();
+    if (!crudo || !maestro.length) return null;
+
+    const norm = (s: any) => String(s ?? '')
+      .toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[_\-\s]+/g, ' ')
+      .trim();
+
+    const objetivo = norm(crudo);
+    const exacto = maestro.find(m => norm(m?.nombreInterno) === objetivo || norm(m?.nombre) === objetivo);
+    if (exacto?.nombreInterno) return exacto.nombreInterno;
+
+    // Tiempo de entrega: si el Excel trae un número suelto ("3"), se busca la
+    // opción cuyos días mínimos coincidan. Es lo que la gente escribe.
+    if (porDias) {
+      const n = parseInt(crudo, 10);
+      if (!isNaN(n)) {
+        const porMinDias = maestro.find(m => Number(m?.minDias) === n);
+        if (porMinDias?.nombreInterno) return porMinDias.nombreInterno;
+      }
+    }
+
+    // Último intento: que uno contenga al otro ("domicilio" ↔ "SOLO DOMICILIO").
+    const parcial = maestro.find(m => {
+      const ni = norm(m?.nombreInterno);
+      return ni && (ni.includes(objetivo) || objetivo.includes(ni));
+    });
+    return parcial?.nombreInterno || null;
   }
 
   ngOnDestroy(): void {
@@ -707,6 +1009,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     } else {
       this.config = this.productConfig;
     }
+    // Una sola vez por config: la referencia tiene que ser estable porque va
+    // enlazada a un @Input (ver el comentario de `camposObligatorios`).
+    this.camposObligatorios = this.config.templateColumns
+      .filter(col => col.required)
+      .map(col => col.field);
+    this.etiquetasCampos = this.config.fieldLabels || {};
   }
 
   onDialogShow(): void {
@@ -730,6 +1038,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.mappingResult = null;
     this.confirmedMappings = {};
     this.showMappingPreview = false;
+    this.avisoCategoriaAceptado = false;
+    this.categoriasCreadasEnImport = [];
+    this.productosSinCategoria = 0;
+    this.preciosVolumenPorRef.clear();
+    this.erroresVolumen = [];
+    this.productosConVolumen = 0;
     this.mappingFields = [];
     this.availableColumns = [];
     this.importMode = 'upsert';
@@ -759,6 +1073,127 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.previewFile(file);
   }
 
+  /**
+   * Nombre de la hoja de precios por volumen y sus encabezados.
+   *
+   * Los títulos son EXACTAMENTE los de la tabla del formulario ("Añadir precio
+   * por volumen"), para no tener que traducir entre lo que se ve en pantalla y
+   * lo que se escribe en el Excel.
+   *
+   * "Valor IVA" y "Precio unitario Total (con IVA)" NO están: en el formulario
+   * tampoco se escriben, se calculan al poner el precio sin IVA y el
+   * porcentaje. Pedirlos a mano obligaría a hacer la cuenta, y un error ahí
+   * entra directo al cobro.
+   */
+  static readonly HOJA_VOLUMEN = 'Precios por volumen';
+  static readonly COLS_VOLUMEN = {
+    referencia: 'Referencia (SKU)',
+    desde: 'Numero de unidades Inicial',
+    hasta: 'Numero limite de Unidades',
+    precioSinIva: 'Precio Unitario (sin IVA)',
+    porcentajeIva: 'Porcentaje IVA',
+  };
+
+  /** referencia → rangos de precio por volumen leídos del archivo. */
+  private preciosVolumenPorRef = new Map<string, any[]>();
+  /** Problemas encontrados en la hoja de rangos, para avisarlos antes de importar. */
+  erroresVolumen: string[] = [];
+  /** Cuántos productos del archivo traen rangos. */
+  productosConVolumen = 0;
+
+  private aNumero(v: any): number | null {
+    if (v === undefined || v === null || String(v).trim() === '') return null;
+    if (typeof v === 'number') return isFinite(v) ? v : null;
+    const limpio = String(v).replace(/[^\d.,-]/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(',', '.');
+    const n = parseFloat(limpio);
+    return isNaN(n) ? null : n;
+  }
+
+  /**
+   * Lee la hoja de precios por volumen y la valida.
+   *
+   * Se replican las dos reglas que el backend ya aplica
+   * (`utils/priceCalculations.js` → validación de rangos): el límite no puede
+   * ser menor que el inicial, y dos rangos del mismo producto no se pueden
+   * solapar. Un archivo con rangos superpuestos cobraría distinto según cuál
+   * se evalúe primero, y eso es plata.
+   */
+  private leerHojaPreciosVolumen(workbook: XLSX.WorkBook): void {
+    this.preciosVolumenPorRef.clear();
+    this.erroresVolumen = [];
+    this.productosConVolumen = 0;
+    if (this.type !== 'product') return;
+
+    const C = ImportModalComponent.COLS_VOLUMEN;
+    const nombreHoja = workbook.SheetNames.find(
+      n => this.normHeader(n) === this.normHeader(ImportModalComponent.HOJA_VOLUMEN),
+    );
+    if (!nombreHoja) return;
+
+    const filas: any[] = XLSX.utils.sheet_to_json(workbook.Sheets[nombreHoja]);
+    if (!filas.length) return;
+
+    filas.forEach((fila, i) => {
+      const nroFila = i + 2; // +1 por el encabezado, +1 porque Excel cuenta desde 1
+      const ref = String(this.getRowValue(fila, C.referencia) ?? '').trim();
+      const desde = this.aNumero(this.getRowValue(fila, C.desde));
+      const hasta = this.aNumero(this.getRowValue(fila, C.hasta));
+      const sinIva = this.aNumero(this.getRowValue(fila, C.precioSinIva));
+      const pctIva = this.aNumero(this.getRowValue(fila, C.porcentajeIva)) ?? 0;
+
+      // Fila totalmente vacía: se ignora sin ruido (Excel suele dejarlas).
+      if (!ref && desde === null && hasta === null && sinIva === null) return;
+
+      if (!ref) {
+        this.erroresVolumen.push(`Fila ${nroFila}: falta la Referencia (SKU), no se sabe a qué producto pertenece el rango.`);
+        return;
+      }
+      if (desde === null || hasta === null || sinIva === null) {
+        this.erroresVolumen.push(`Fila ${nroFila} (${ref}): faltan datos. Se necesitan unidades inicial, límite y precio sin IVA.`);
+        return;
+      }
+      if (hasta < desde) {
+        this.erroresVolumen.push(`Fila ${nroFila} (${ref}): el límite (${hasta}) es menor que el inicial (${desde}).`);
+        return;
+      }
+
+      const previos = this.preciosVolumenPorRef.get(ref) || [];
+      const solapa = previos.find(
+        r => !(hasta < r.numeroUnidadesInicial || r.numeroUnidadesLimite < desde),
+      );
+      if (solapa) {
+        this.erroresVolumen.push(
+          `Fila ${nroFila} (${ref}): el rango ${desde}-${hasta} se cruza con ${solapa.numeroUnidadesInicial}-${solapa.numeroUnidadesLimite}. Los rangos no se pueden superponer.`,
+        );
+        return;
+      }
+
+      // Las dos derivadas se calculan igual que en el formulario. `valorIVAPorVolumen`
+      // es el PORCENTAJE y `valorUnitarioPorVolumenIva` el valor en pesos — este
+      // último lo multiplica por cantidad el cálculo del pedido, así que no puede
+      // quedar en cero.
+      const ivaEnPesos = sinIva * (pctIva / 100);
+      previos.push({
+        numeroUnidadesInicial: desde,
+        numeroUnidadesLimite: hasta,
+        valorUnitarioPorVolumenSinIVA: sinIva,
+        valorIVAPorVolumen: pctIva,
+        valorUnitarioPorVolumenIva: ivaEnPesos,
+        valorUnitarioPorVolumenConIVA: sinIva + ivaEnPesos,
+      });
+      this.preciosVolumenPorRef.set(ref, previos);
+    });
+
+    // Orden por rango: el cálculo recorre el arreglo y toma el primero que
+    // encaja, así que conviene que estén de menor a mayor.
+    this.preciosVolumenPorRef.forEach(rangos =>
+      rangos.sort((a, b) => a.numeroUnidadesInicial - b.numeroUnidadesInicial),
+    );
+    this.productosConVolumen = this.preciosVolumenPorRef.size;
+
+    console.log(`[ImportModal] 💲 Precios por volumen: ${this.productosConVolumen} productos, ${this.erroresVolumen.length} problemas`);
+  }
+
   private async previewFile(file: File): Promise<void> {
     const reader = new FileReader();
 
@@ -772,8 +1207,19 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         } else {
           const arrayBuffer = e.target.result;
           const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          data = XLSX.utils.sheet_to_json(firstSheet);
+          // La plantilla trae dos hojas: "Plantilla" (los datos) e
+          // "Instrucciones" (la ayuda de cada columna). Se busca la de datos
+          // por nombre y solo se cae a la primera si no está: si alguien mueve
+          // las hojas en Excel, se importaría la ayuda como si fueran filas.
+          const hojaDatos = workbook.SheetNames.find(n => n.trim().toLowerCase() === 'plantilla')
+            ?? workbook.SheetNames[0];
+          data = XLSX.utils.sheet_to_json(workbook.Sheets[hojaDatos]);
+
+          // Hoja opcional de precios por volumen (D-148). Un producto puede
+          // tener N rangos, así que no entran como columnas de la fila del
+          // producto: van en su propia hoja, una fila por rango, enlazadas por
+          // referencia — igual que se ven en el formulario.
+          this.leerHojaPreciosVolumen(workbook);
         }
 
         if (data.length === 0) {
@@ -817,6 +1263,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       const standard = this.buildStandardCustomerMapping();
       if (standard) {
         this.mappingResult = standard;
+        this.origenMapeo = 'plantilla';
         this.showMappingPreview = true;
         this.prepareMappingFields();
         this.messageService.add({
@@ -831,12 +1278,28 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       const estandarProductos = this.buildStandardProductMapping();
       if (estandarProductos) {
         this.mappingResult = estandarProductos;
+        this.origenMapeo = 'plantilla';
         this.showMappingPreview = true;
         this.prepareMappingFields();
         this.messageService.add({
           severity: 'success',
           summary: 'Plantilla estándar detectada',
           detail: `Se mapearon ${Object.keys(estandarProductos.mappings).length} columnas automáticamente, sin necesidad de análisis.`
+        });
+        return;
+      }
+
+      // Mismo atajo para categorías e inventario, que no tenían uno propio.
+      const estandarGenerico = this.buildStandardGenericMapping();
+      if (estandarGenerico) {
+        this.mappingResult = estandarGenerico;
+        this.origenMapeo = 'plantilla';
+        this.showMappingPreview = true;
+        this.prepareMappingFields();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Plantilla estándar detectada',
+          detail: `Se mapearon ${Object.keys(estandarGenerico.mappings).length} columnas automáticamente, sin necesidad de análisis.`
         });
         return;
       }
@@ -853,9 +1316,31 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         companyId: company.cd || company._id
       };
 
-      this.mappingResult = await this.columnMappingService
-        .suggestColumnMapping(request, company.nomComercial || company.nombre)
-        .toPromise() || null;
+      // Techo de espera. El proxy del backend le da 60s a KAI, y si KAI no
+      // responde (o ni siquiera está levantado) la pantalla se quedaba
+      // "analizando" todo ese rato sin ninguna salida. El mapeo automático es
+      // una ayuda: pasados 12s conviene mucho más caer al reconocimiento por
+      // nombre y dejar que la persona ajuste lo que falte, que hacerla esperar.
+      const KAI_TIMEOUT_MS = 12000;
+      let kaiTimeoutHandle: any = null;
+      const kaiTimeout = new Promise<never>((_, reject) => {
+        kaiTimeoutHandle = setTimeout(
+          () => reject(new Error(`KAI no respondió en ${KAI_TIMEOUT_MS / 1000}s`)),
+          KAI_TIMEOUT_MS,
+        );
+      });
+
+      this.origenMapeo = 'kai';
+      try {
+        this.mappingResult = await Promise.race([
+          this.columnMappingService
+            .suggestColumnMapping(request, company.nomComercial || company.nombre)
+            .toPromise(),
+          kaiTimeout,
+        ]) as ColumnMappingResult || null;
+      } finally {
+        clearTimeout(kaiTimeoutHandle);
+      }
 
       this.showMappingPreview = true;
       this.prepareMappingFields();
@@ -878,6 +1363,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       // Se abre igual, precargada con lo que se pueda reconocer por nombre de
       // columna (si el archivo salió del export de Katuq, eso ya es todo).
       const porNombre = this.matchTemplateHeaders();
+      this.origenMapeo = 'plantilla';
       this.mappingResult = this.construirResultadoMapeo(porNombre);
       this.showMappingPreview = true;
       this.prepareMappingFields();
@@ -896,6 +1382,36 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Revisa los valores de entrega del archivo contra el maestro ANTES de
+   * importar, que es cuando todavía se puede corregir el Excel (o crear la
+   * opción que falta en Maestros). Si se dejara para el momento de importar,
+   * el usuario se enteraría con los productos ya guardados y los campos vacíos.
+   */
+  private revisarEntregaContraMaestro(): void {
+    this.entregaSinHomologar = [];
+    if (this.type !== 'product' || !this.parsedData.length) return;
+
+    const mapeos = this.mappingResult?.mappings || {};
+    const revisar = (campo: string, maestro: any[], etiqueta: string, porDias = false) => {
+      const columna = mapeos[campo]?.sourceColumn;
+      if (!columna || !maestro.length) return;
+      const distintos = new Set<string>();
+      this.parsedData.forEach(fila => {
+        const v = String(this.getRowValue(fila, columna) ?? '').trim();
+        if (v) distintos.add(v);
+      });
+      distintos.forEach(v => {
+        if (!this.homologarEntrega(v, maestro, porDias)) {
+          if (!this.entregaSinHomologar.includes(`${etiqueta}: "${v}"`)) this.entregaSinHomologar.push(`${etiqueta}: "${v}"`);
+        }
+      });
+    };
+
+    revisar('tipoEntrega', this.tiposEntrega, 'Tipo de entrega');
+    revisar('tiempoEntrega', this.tiemposEntrega, 'Tiempo de entrega', true);
+  }
+
   private prepareMappingFields(): void {
     console.log('[ImportModal] 🔧 Preparando campos de mapeo...');
     console.log('[ImportModal] 📊 mappingResult:', this.mappingResult);
@@ -909,6 +1425,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       label: col,
       value: col
     }));
+
+    this.revisarEntregaContraMaestro();
 
     console.log('[ImportModal] 📋 Columnas disponibles:', this.availableColumns);
     console.log('[ImportModal] 🗺️ Mappings del resultado:', this.mappingResult.mappings);
@@ -1007,6 +1525,20 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Aviso de categorías (D-148): hay que marcarlo antes de seguir. No es un
+    // bloqueo de verdad —basta con tildar "Entiendo, importar igual"— pero
+    // obliga a leerlo. El importador se usa una sola vez, al arrancar una
+    // empresa: no hay repetición que genere el hábito de acordarse.
+    if (this.debeAvisarCategoria) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Revisá el aviso de categorías',
+        detail: 'Marcá "Entiendo, importar igual" para continuar, o volvé y completá la columna Categoria.',
+        life: 8000
+      });
+      return;
+    }
+
     this.isUploading = true;
     this.importTotalRecords = this.parsedData.length;
 
@@ -1048,6 +1580,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       let totalOmitted = 0;
       const allErrors: string[] = [];
       const allOmitted: string[] = [];
+      // Trabajo pendiente que deja la importación de productos (D-148).
+      // Se acumula entre lotes: el backend los reporta por lote.
+      const categoriasCreadas = new Set<string>();
+      let totalSinCategoria = 0;
 
       console.log(`[ImportModal] 📦 Enviando en ${totalBatches} lotes de ${BATCH_SIZE} (${transformedData.length} total)`);
 
@@ -1095,6 +1631,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
           totalOmitted += data.omitted || 0;
           if (data.omittedDetails?.length) allOmitted.push(...data.omittedDetails);
           if (data.errors?.length) allErrors.push(...data.errors);
+          if (data.categoriasCreadas?.length) {
+            data.categoriasCreadas.forEach((c: string) => categoriasCreadas.add(c));
+          }
+          totalSinCategoria += data.sinCategoria || 0;
 
           // Notificar progreso entre lotes
           if (totalBatches > 1) {
@@ -1122,6 +1662,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         created: totalCreated || undefined,
         updated: totalUpdated || undefined
       };
+
+      // Trabajo pendiente de categorías (D-148). Va en la pantalla de
+      // resultado, no en un toast: el toast se cierra y el usuario se entera
+      // semanas después, cuando arma una promo por categoría y no le aplica.
+      this.categoriasCreadasEnImport = [...categoriasCreadas];
+      this.productosSinCategoria = totalSinCategoria;
 
       const entity = this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : this.type === 'category' ? 'categorías' : 'productos';
       let detail = '';
@@ -1274,6 +1820,17 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         }
 
         if (value === undefined || value === null || String(value).trim() === '') {
+          // Casilla con la celda vacía = SIN CHULEAR, no "dejá el valor por
+          // defecto". Es la lectura natural de un checkbox y es la regla que
+          // pidió el usuario para la pestaña Exposición ("SI se chulea, NO
+          // queda vacío"). Solo aplica si la columna EXISTE en el archivo: si
+          // no está mapeada, nunca se llega acá y manda el default.
+          // El export siempre escribe SI o NO explícito, así que reimportar un
+          // export no cambia nada.
+          if (this.type === 'product' && this.esCasilla(katuqField)) {
+            this.setNestedValue(transformedRow, katuqField, false, index);
+            return;
+          }
           // Aun sin valor del Excel, aplicar defaultValue si existe
           if (fullMapping?.defaultValue !== undefined) {
             this.setNestedValue(transformedRow, katuqField, fullMapping.defaultValue, index);
@@ -1304,6 +1861,16 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
         this.calculateDerivedFields(transformedRow);
 
+        // Precios por volumen desde la hoja aparte (D-148). Se enganchan por
+        // referencia, después de `calculateDerivedFields` para que la
+        // referencia ya esté resuelta (puede venir autogenerada).
+        const refProducto = String(transformedRow.identificacion?.referencia ?? '').trim();
+        const rangos = this.preciosVolumenPorRef.get(refProducto);
+        if (rangos?.length) {
+          transformedRow.precio = transformedRow.precio || {};
+          transformedRow.precio.preciosVolumen = rangos.map(r => ({ ...r }));
+        }
+
         // La columna "Requiere Produccion (SI/NO)" entra por
         // `procesoComercial.seProduceInternamente`, pero el campo que lee la
         // lista de productos es `crearProducto.paraProduccion`. Se sincronizan
@@ -1329,39 +1896,50 @@ export class ImportModalComponent implements OnInit, OnDestroy {
           transformedRow.procesoComercial.integraConProduccion = true;
         }
 
-        // Detectar cobertura nacional en campo ciudad
+        // --- Ciudad (D-148) ---
+        transformedRow.ciudades = transformedRow.ciudades || {};
+
+        // Atajo histórico: una columna suelta "ciudad" que dice "todas" /
+        // "nacional" activa las dos coberturas. Se conserva para archivos
+        // viejos, pero ahora pierde contra las columnas explícitas de abajo.
         const ciudadVal = (
           transformedRow.ciudad ||
           transformedRow.ciudadOrigen ||
           transformedRow.disponibilidad?.ciudadOrigen || ''
         ).toString().toLowerCase().trim();
         const esNacional = ['todas', 'todo el pais', 'nacional', 'cobertura nacional', 'todo el país', 'all', 'todos'].includes(ciudadVal);
-        if (esNacional) {
-          transformedRow.ciudades = transformedRow.ciudades || {};
-          transformedRow.ciudades.coberturaNacionalOrigen = true;
-          transformedRow.ciudades.coberturaNacionalEntrega = true;
-          transformedRow.ciudades.ciudadesOrigen = [];
-          transformedRow.ciudades.ciudadesEntrega = [];
+        const trajoColumnaOrigen = mappings['coberturaNacionalOrigen'] !== undefined;
+        const trajoColumnaEntrega = mappings['coberturaNacionalEntrega'] !== undefined;
+        if (esNacional && !trajoColumnaOrigen) transformedRow.ciudades.coberturaNacionalOrigen = true;
+        if (esNacional && !trajoColumnaEntrega) transformedRow.ciudades.coberturaNacionalEntrega = true;
+
+        // Cobertura nacional gana sobre la lista de ciudades, igual que el
+        // toggle de la pantalla, que limpia la selección al activarse.
+        if (transformedRow.ciudades.coberturaNacionalOrigen) transformedRow.ciudades.ciudadesOrigen = [];
+        if (transformedRow.ciudades.coberturaNacionalEntrega) transformedRow.ciudades.ciudadesEntrega = [];
+        // Y al revés: si el Excel listó ciudades y NO dijo nada de cobertura
+        // nacional, cargar una lista con la cobertura prendida no tendría
+        // efecto visible en el formulario.
+        if (!trajoColumnaOrigen && transformedRow.ciudades.ciudadesOrigen?.length) {
+          transformedRow.ciudades.coberturaNacionalOrigen = false;
+        }
+        if (!trajoColumnaEntrega && transformedRow.ciudades.ciudadesEntrega?.length) {
+          transformedRow.ciudades.coberturaNacionalEntrega = false;
         }
 
-        // Canales de venta siempre activos
+        // --- Canales de venta y exposición: el Excel manda (D-148) ---
+        //
+        // Acá había dos bloques que forzaban los tres canales y `activo` a
+        // `true` DESPUÉS de aplicar el mapeo: las columnas se leían, se
+        // convertían… y se pisaban. Los valores por defecto ya vienen de
+        // PRODUCT_DEFAULTS (los tres canales en true), así que quien no traiga
+        // las columnas entra igual que antes.
         transformedRow.marketplace = transformedRow.marketplace || {};
-        transformedRow.marketplace.sellerCenter = true;
-        transformedRow.marketplace.paginaWeb = true;
-        transformedRow.marketplace.puntoDeVenta = true;
-
-        // Exposición: NO se fuerza nada acá.
-        //
-        // Antes estas dos líneas ponían `activar = true` y `disponible = true`
-        // de forma incondicional, y corrían DESPUÉS de aplicar el mapeo: las
-        // columnas "Activo (SI/NO)" y "Disponible (SI/NO)" de la plantilla se
-        // leían, se convertían… y se pisaban. Todo el catálogo entraba activo y
-        // disponible dijera lo que dijera el Excel.
-        //
-        // El valor por defecto (activo/disponible) ya viene de PRODUCT_DEFAULTS,
-        // así que quien no traiga la columna sigue entrando activo igual que antes.
         transformedRow.exposicion = transformedRow.exposicion || {};
-        transformedRow.exposicion.activo = true;
+        // `activo` es el flag canónico V2 que lee el mapper de Shopify (sin él
+        // el producto se publica como DRAFT). Espeja `activar`, que es lo que
+        // dice la columna "Activo (SI/NO)".
+        transformedRow.exposicion.activo = transformedRow.exposicion.activar !== false;
       }
 
       if (index === 0) {
@@ -1441,21 +2019,108 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Columnas del Excel que son CASILLAS (chuleables) en el formulario.
+   *
+   * Es una constante de clase y no una variable local porque
+   * `transformDataWithMapping` también la necesita: una casilla con la celda
+   * VACÍA significa "sin chulear" (false), no "usá el valor por defecto". Ver
+   * `esCasilla()`.
+   */
+  private static readonly BOOLEAN_FIELDS = [
+    'activar', 'disponible', 'recomendado', 'destacado', 'oferta', 'nuevo',
+    'masvendido', 'paraProduccion', 'inventariable', 'sellerCenter',
+    'paginaWeb', 'puntoDeVenta', 'exposicion.activar', 'exposicion.disponible',
+    'exposicion.recomendado', 'exposicion.destacado', 'exposicion.oferta',
+    'exposicion.nuevo', 'exposicion.masvendido', 'crearProducto.paraProduccion',
+    'disponibilidad.inventariable', 'marketplace.sellerCenter',
+    'marketplace.paginaWeb', 'marketplace.puntoDeVenta',
+    'coberturaNacionalOrigen', 'coberturaNacionalEntrega',
+    'ciudades.coberturaNacionalOrigen', 'ciudades.coberturaNacionalEntrega',
+  ];
+
+  /** Columnas de fecha: el formulario usa `<input type="date">` → 'AAAA-MM-DD'. */
+  private static readonly DATE_FIELDS = [
+    'fechaInicial', 'fechaFinal',
+    'crearProducto.fechaInicial', 'crearProducto.fechaFinal',
+  ];
+
+  /** Columnas de ciudades: texto separado por comas → [{value, label}]. */
+  private static readonly CITY_LIST_FIELDS = [
+    'ciudadesOrigen', 'ciudadesEntrega',
+    'ciudades.ciudadesOrigen', 'ciudades.ciudadesEntrega',
+  ];
+
+  private esCasilla(katuqField: string): boolean {
+    return ImportModalComponent.BOOLEAN_FIELDS.includes(katuqField);
+  }
+
+  /**
+   * Normaliza una fecha del Excel a 'AAAA-MM-DD'.
+   *
+   * El archivo se lee sin `cellDates`, así que una celda con formato de fecha
+   * llega como NÚMERO (serial de Excel: días desde 1899-12-30), no como texto.
+   * Sin esta conversión, "01/01/2026" entraba al producto como "46023" y el
+   * `<input type="date">` del formulario lo mostraba vacío.
+   *
+   * Acepta además texto ISO ('2026-01-31') y d/m/a ('31/01/2026'). Si no
+   * reconoce el formato devuelve el texto tal cual, para no perder el dato.
+   */
+  private toFechaISO(value: any): string {
+    if (value === undefined || value === null || String(value).trim() === '') return '';
+
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      return value.toISOString().split('T')[0];
+    }
+
+    // Serial de Excel. El epoch es 1899-12-30 (no 1900-01-01) por el bug
+    // histórico del año bisiesto 1900 que Excel arrastra a propósito.
+    if (typeof value === 'number' && isFinite(value) && value > 0 && value < 2958466) {
+      const ms = Math.round(value * 86400000);
+      const d = new Date(Date.UTC(1899, 11, 30) + ms);
+      return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+    }
+
+    const texto = String(value).trim();
+
+    // Ya viene ISO (con o sin hora)
+    const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+
+    // d/m/a o d-m-a (formato colombiano). Año de 2 dígitos → 20xx.
+    const dma = texto.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+    if (dma) {
+      const dia = dma[1].padStart(2, '0');
+      const mes = dma[2].padStart(2, '0');
+      const anio = dma[3].length === 2 ? `20${dma[3]}` : dma[3];
+      return `${anio}-${mes}-${dia}`;
+    }
+
+    const parsed = new Date(texto);
+    if (!isNaN(parsed.getTime())) return parsed.toISOString().split('T')[0];
+
+    return texto;
+  }
+
+  /**
+   * "Bogota, Medellin" → [{value:'Bogota',label:'Bogota'}, …]
+   *
+   * Es la forma EXACTA que guarda el selector de ciudades del formulario
+   * (`seleccionarMunicipioDaneOrigen`), así que lo importado se ve como chips
+   * seleccionados sin que el usuario toque nada.
+   */
+  private toListaCiudades(value: any): { value: string; label: string }[] {
+    const nombres = Array.isArray(value)
+      ? value.map(v => (v && typeof v === 'object' ? (v.label ?? v.value ?? '') : v))
+      : String(value ?? '').split(',');
+    const limpias = nombres.map(n => String(n ?? '').trim()).filter(Boolean);
+    return Array.from(new Set(limpias)).map(n => ({ value: n, label: n }));
+  }
+
+  /**
    * Convierte el valor según el tipo de campo esperado
    */
   private convertFieldValue(katuqField: string, value: any): any {
-    // Campos booleanos
-    const booleanFields = [
-      'activar', 'disponible', 'recomendado', 'destacado', 'oferta', 'nuevo',
-      'masvendido', 'paraProduccion', 'inventariable', 'sellerCenter',
-      'paginaWeb', 'puntoDeVenta', 'exposicion.activar', 'exposicion.disponible',
-      'exposicion.recomendado', 'exposicion.destacado', 'exposicion.oferta',
-      'exposicion.nuevo', 'exposicion.masvendido', 'crearProducto.paraProduccion',
-      'disponibilidad.inventariable', 'marketplace.sellerCenter',
-      'marketplace.paginaWeb', 'marketplace.puntoDeVenta'
-    ];
-
-    if (booleanFields.includes(katuqField)) {
+    if (ImportModalComponent.BOOLEAN_FIELDS.includes(katuqField)) {
       if (typeof value === 'boolean') return value;
       if (typeof value === 'string') {
         const lower = value.toLowerCase().trim();
@@ -1487,6 +2152,16 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       return 0;
     }
 
+    // Fechas de vigencia: el Excel las manda como serial numérico
+    if (ImportModalComponent.DATE_FIELDS.includes(katuqField)) {
+      return this.toFechaISO(value);
+    }
+
+    // Ciudades: texto separado por comas → [{value, label}] como el selector
+    if (ImportModalComponent.CITY_LIST_FIELDS.includes(katuqField)) {
+      return this.toListaCiudades(value);
+    }
+
     // Etiquetas: en el Excel van separadas por coma, el producto las guarda
     // como arreglo (`exposicion.etiquetas`). Se deduplican, igual que en el
     // importador de clientes (`buildStandardCustomerMapping`) y que en el
@@ -1505,33 +2180,27 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     // limpiador borra las comas antes de parsear, así que un peso "0,5" se
     // convertiría en 5. Mientras eso no se arregle, mejor no ampliarle el alcance.
 
-    // Tiempo de entrega: convertir texto a minDias (numero)
+    // Tiempo y tipo de entrega: se homologan contra el MAESTRO DE LA EMPRESA.
+    //
+    // Antes había acá dos tablas de valores escritos a mano
+    // (`SOLO DOMICILIO`, `ENVIO A DOMICILIO Y RECOGE`, y números para el
+    // tiempo). Ninguno existe en el maestro de ninguna empresa, y el select
+    // del formulario compara contra `nombreInterno`: el producto quedaba con
+    // un valor que la lista no puede mostrar y los dos campos salían vacíos
+    // SIEMPRE. Ahora se busca la opción real; si no aparece, se deja vacío y
+    // se reporta, en vez de guardar un valor fantasma.
     if (katuqField === 'tiempoEntrega' || katuqField === 'disponibilidad.tiempoEntrega') {
-      if (typeof value === 'number') return value;
-      const lower = String(value).toLowerCase().trim();
-      // Mapeo de texto comun a minDias
-      if (['inmediato', 'inmediata', 'immediate', '0', 'hoy', 'mismo dia'].includes(lower)) return 0;
-      if (['1', '1-2', '1_2', '1-2 dias', '1 dia', '1 a 2'].includes(lower)) return 1;
-      if (['3', '3-5', '3_5', '3-5 dias', '3 a 5'].includes(lower)) return 3;
-      if (['5', '5-7', '5_7', '5-7 dias', '5 a 7', 'una semana', '1 semana'].includes(lower)) return 5;
-      if (['7', '7-10', '7_10', '7-10 dias'].includes(lower)) return 7;
-      if (['10', '10-15', '10_15'].includes(lower)) return 10;
-      if (['15', '15-20', '15_20'].includes(lower)) return 15;
-      // Si es un numero directo
-      const parsed = parseInt(lower);
-      if (!isNaN(parsed)) return parsed;
-      // Default: inmediato
-      return 0;
+      const encontrado = this.homologarEntrega(value, this.tiemposEntrega, true);
+      if (encontrado) return encontrado;
+      if (String(value ?? '').trim() && !this.entregaSinHomologar.includes(`Tiempo de entrega: "${value}"`)) this.entregaSinHomologar.push(`Tiempo de entrega: "${value}"`);
+      return '';
     }
 
-    // Tipo de entrega: normalizar texto a nombreInterno
     if (katuqField === 'tipoEntrega' || katuqField === 'disponibilidad.tipoEntrega') {
-      const lower = String(value).toLowerCase().trim();
-      if (['domicilio', 'envio', 'envío', 'delivery', 'envio a domicilio', 'solo domicilio'].includes(lower)) return 'SOLO DOMICILIO';
-      if (['recoge', 'recogida', 'pickup', 'tienda', 'solo recoge', 'punto de venta'].includes(lower)) return 'SOLO RECOGE';
-      if (['ambos', 'domicilio y recoge', 'envio y recoge', 'todos'].includes(lower)) return 'ENVIO A DOMICILIO Y RECOGE';
-      // Si ya viene con el valor correcto, dejarlo
-      return value;
+      const encontrado = this.homologarEntrega(value, this.tiposEntrega);
+      if (encontrado) return encontrado;
+      if (String(value ?? '').trim() && !this.entregaSinHomologar.includes(`Tipo de entrega: "${value}"`)) this.entregaSinHomologar.push(`Tipo de entrega: "${value}"`);
+      return '';
     }
 
     return value;
@@ -1617,6 +2286,28 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'categoriaConsecutivo': 'categoriaConsecutivo',
       'idCategoria': 'categoriaConsecutivo',
       'consecutivo': 'categoriaConsecutivo',
+      // Subcategoría y sub-subcategoría (D-148). Viajan planas al backend, que
+      // resuelve la ruta completa contra el árbol canónico de categorías.
+      'subcategoria': 'subcategoriaNombre',
+      'subcategoría': 'subcategoriaNombre',
+      'subcategory': 'subcategoriaNombre',
+      'categoria_nivel2': 'subcategoriaNombre',
+      'subsubcategoria': 'subsubcategoriaNombre',
+      'subsubcategoría': 'subsubcategoriaNombre',
+      'subsubcategory': 'subsubcategoriaNombre',
+      'categoria_nivel3': 'subsubcategoriaNombre',
+      // Vigencia (pestaña Datos básicos)
+      'fechaInicial': 'crearProducto.fechaInicial',
+      'fechaFinal': 'crearProducto.fechaFinal',
+      // Canales de venta (pestaña Canales de Venta)
+      'sellerCenter': 'marketplace.sellerCenter',
+      'paginaWeb': 'marketplace.paginaWeb',
+      'puntoDeVenta': 'marketplace.puntoDeVenta',
+      // Ciudad (pestaña Ciudad)
+      'coberturaNacionalOrigen': 'ciudades.coberturaNacionalOrigen',
+      'coberturaNacionalEntrega': 'ciudades.coberturaNacionalEntrega',
+      'ciudadesOrigen': 'ciudades.ciudadesOrigen',
+      'ciudadesEntrega': 'ciudades.ciudadesEntrega',
     };
 
     const targetPath = fieldMappings[field];
@@ -1684,7 +2375,14 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       : 'productos';
 
     const headers = this.config.templateColumns.map(col => col.header);
-    const example = this.config.templateColumns.map(col => col.example ?? '');
+    // El ejemplo de tipo/tiempo de entrega sale del maestro REAL de la empresa:
+    // son las únicas dos columnas cuyos valores válidos cambian de empresa a
+    // empresa, y un ejemplo inventado hace que el campo entre vacío.
+    const example = this.config.templateColumns.map(col => {
+      if (col.field === 'tipoEntrega') return this.opcionesTipoEntrega[0] ?? '';
+      if (col.field === 'tiempoEntrega') return this.opcionesTiempoEntrega[0] ?? '';
+      return col.example ?? '';
+    });
 
     const ws = XLSX.utils.aoa_to_sheet([headers, example]);
     // Ancho de columna según el encabezado: sin esto los títulos largos
@@ -1693,6 +2391,68 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
+
+    // Segunda hoja: qué es cada columna y si hay que llenarla.
+    //
+    // Con 46 columnas en productos y dos formatos posibles en categorías, el
+    // encabezado solo no alcanza: quien abre el archivo tenía que deducir de un
+    // ejemplo de una celda si algo era obligatorio, opcional o directamente de
+    // otro formato. Va DENTRO del archivo a propósito — se llena en Excel,
+    // lejos de la pantalla donde estaría la ayuda.
+    const instrucciones: string[][] = [
+      ['Columna', '¿Hay que llenarla?', 'Qué va acá', 'Ejemplo'],
+      ...this.config.templateColumns.map(col => [
+        col.header,
+        col.required ? 'OBLIGATORIA' : 'Opcional',
+        col.help || '',
+        String(col.example ?? ''),
+      ]),
+    ];
+    const wsAyuda = XLSX.utils.aoa_to_sheet(instrucciones);
+    wsAyuda['!cols'] = [{ wch: 42 }, { wch: 18 }, { wch: 95 }, { wch: 24 }];
+    XLSX.utils.book_append_sheet(wb, wsAyuda, 'Instrucciones');
+
+    // Las opciones válidas de entrega van en la ayuda, con los valores REALES
+    // de la empresa: son las únicas columnas donde no alcanza con un ejemplo
+    // genérico, porque cada empresa define las suyas en Maestros.
+    if (this.type === 'product' && (this.opcionesTipoEntrega.length || this.opcionesTiempoEntrega.length)) {
+      XLSX.utils.sheet_add_aoa(wsAyuda, [
+        [],
+        ['OPCIONES VÁLIDAS DE TU EMPRESA', '', '', ''],
+        ['Tipo de Entrega', '', this.opcionesTipoEntrega.join('  ·  ') || '(no hay ninguna configurada en Maestros)', ''],
+        ['Tiempo de Entrega', '', this.opcionesTiempoEntrega.join('  ·  ') || '(no hay ninguna configurada en Maestros)', ''],
+        ['', '', 'Tienen que coincidir con estas opciones. Si escribís otra cosa, el campo queda vacío y el importador te avisa antes de importar. Para agregar opciones nuevas, andá a Maestros.', ''],
+      ], { origin: -1 });
+    }
+
+    // Hoja de precios por volumen (solo productos). Va aparte porque un
+    // producto puede tener N rangos y no entran como columnas de su fila.
+    // Es OPCIONAL: quien no maneje precio por volumen la deja vacía.
+    if (this.type === 'product') {
+      const C = ImportModalComponent.COLS_VOLUMEN;
+      const wsVol = XLSX.utils.aoa_to_sheet([
+        [C.referencia, C.desde, C.hasta, C.precioSinIva, C.porcentajeIva],
+        ['PROD001', 1, 10, 50000, 19],
+        ['PROD001', 11, 50, 45000, 19],
+      ]);
+      wsVol['!cols'] = [{ wch: 20 }, { wch: 28 }, { wch: 28 }, { wch: 24 }, { wch: 16 }];
+      XLSX.utils.book_append_sheet(wb, wsVol, ImportModalComponent.HOJA_VOLUMEN);
+
+      // La ayuda de esta hoja va al final de "Instrucciones", donde la persona
+      // ya está mirando qué significa cada columna.
+      XLSX.utils.sheet_add_aoa(wsAyuda, [
+        [],
+        [`HOJA "${ImportModalComponent.HOJA_VOLUMEN}" (opcional)`, '', '', ''],
+        ['', '', 'Una fila por rango. Un mismo producto puede tener varios: se repite su Referencia (SKU) en cada fila. Si no manejás precio por volumen, dejá la hoja vacía o borrá las filas de ejemplo.', ''],
+        [C.referencia, 'OBLIGATORIA', 'A qué producto pertenece el rango. Tiene que coincidir con la Referencia (SKU) de la hoja "Plantilla".', 'PROD001'],
+        [C.desde, 'OBLIGATORIA', 'Desde cuántas unidades aplica este precio.', '1'],
+        [C.hasta, 'OBLIGATORIA', 'Hasta cuántas unidades aplica. No puede ser menor que el inicial, y dos rangos del mismo producto no se pueden cruzar.', '10'],
+        [C.precioSinIva, 'OBLIGATORIA', 'Precio por unidad dentro de ese rango, sin IVA.', '50000'],
+        [C.porcentajeIva, 'Opcional', 'Porcentaje de IVA del rango. Vacío = 0.', '19'],
+        ['', '', 'El Valor IVA y el Precio unitario Total (con IVA) NO se escriben: se calculan solos, igual que en el formulario.', ''],
+      ], { origin: -1 });
+    }
+
     XLSX.writeFile(wb, `plantilla_${entidad}_katuq.xlsx`);
 
     const requeridas = this.config.templateColumns
@@ -1718,6 +2478,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.mappingResult = null;
     this.confirmedMappings = {};
     this.showMappingPreview = false;
+    this.avisoCategoriaAceptado = false;
+    this.categoriasCreadasEnImport = [];
+    this.productosSinCategoria = 0;
+    this.preciosVolumenPorRef.clear();
+    this.erroresVolumen = [];
+    this.productosConVolumen = 0;
     this.mappingFields = [];
     this.availableColumns = [];
     this.standardCustomerTemplate = false;
