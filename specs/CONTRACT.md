@@ -2459,8 +2459,8 @@ Con esto la Fase 1 de la Vía A del programa (`docs/app-nativa-operativa.md` §9
 > - **D-146** tiene dos entradas: "Merge de D-135/141/142 con la rama de descuentos/promociones..." (2026-07-30, abajo — esta sesión, registro del merge) y "El botón Guardar de productos fallaba siempre al primer click..." (2026-07-30, abajo — sesión distinta, mergeada a `origin` en un segundo round mientras esta sesión ya estaba resolviendo el primero).
 > - **D-147** tiene dos entradas: "El aviso de 'celdas recortadas' al exportar productos era por etiquetas duplicadas, no por descripciones" (2026-08-02, abajo — sesión distinta, ya mergeada a `origin` antes de que esta sesión bajara cambios) y "Gestión de combos en venta asistida..." (2026-08-03, abajo — esta sesión, `openspec/changes/add-combo-quick-add/`). El número se asignó en esta sesión sin haber bajado cambios de `origin` todavía — detectado recién al mezclar.
 > - **D-148** tiene dos entradas: "El importador de productos completa las pestañas que faltaban, y las categorías pasan a tener un solo maestro" (2026-08-04, abajo — esta sesión) y "Direcciones de envío 'desaparecen' en venta asistida — mismatch de grafía de ciudad entre catálogos" (2026-08-04, abajo — sesión distinta, ya en `origin` antes de que esta sesión bajara cambios). Detectado al rebasar contra `origin/feature/venta-asistida-mejorada` el 2026-08-05.
-> - **D-149** tiene dos entradas: "El selector de 'filas por página' de Productos mostraba solo 2 de sus 4 opciones" (2026-08-05, abajo — esta sesión) y "Despacho Enviame usa el transportador elegido en la cotización + soporte de transporte propio contratado" (2026-08-05, abajo — sesión distinta, `64d4dcc2`+`2696f30c`, pusheada a `origin` mientras esta sesión ya tenía su commit hecho). Detectado al intentar pushear: el `push` fue rechazado, y recién ahí apareció el número repetido.
-> Siguiente número libre: **D-150**.
+> - **D-149** tiene TRES entradas: "El selector de 'filas por página' de Productos mostraba solo 2 de sus 4 opciones" (2026-08-05, abajo), "Despacho Enviame usa el transportador elegido en la cotización + soporte de transporte propio contratado" (2026-08-05, abajo, `64d4dcc2`+`2696f30c`) y "Cotizaciones: NIT, vendedor y pie de página en el documento" (2026-08-05, abajo — sesión distinta, `1dde5ff6`, detectada recién al bajar 26 commits de `origin` el 2026-08-08).
+> Siguiente número libre: **D-162** (D-161 es el más alto usado, ver "Inventario Fullpi ENCENDIDO sobre el andamiaje nuevo").
 
 ### 2026-08-05 — D-149: El selector de "filas por página" de Productos mostraba solo 2 de sus 4 opciones
 
@@ -3205,3 +3205,46 @@ Daniel ordenó "hacer lo necesario para traer los datos de inventario de Fullpi 
 - **Baseline verificado exacto contra el WMS**: 221 filas → 219 aterrizadas (2 filas sin bodega/cantidad descartadas por diseño), 219 docs de inventario, 8.499 unidades, 0 identidades no canónicas; JCR4001 = 91/45/48 en las tres espejo (el caso que faltaba en el consolidado). 219/219 movimientos con razón y antes/después. Verificador diario: CORRIDA LIMPIA.
 - Ledger: `fullpi_sync` cae al origen `import` del rollout — hoy legacy (el escritor del nodo), promovible por bandera cuando le llegue el turno en la Fase 1.
 - Sigue pendiente de Fullpi: qué ciudad es cada ECF (renombrar espejos), sufijo "-OFF" y archivo de cobertura.
+
+### 2026-08-05 — D-149: Cotizaciones: NIT, vendedor y pie de página en el documento
+
+**Origen:** 3 tareas ClickUp bajo el tracker `wdu9v75jw1` ("TESTER PANTALLA DE COTIZACIONES", carpeta MODO CRITICO, asignado a Julian Navarro) — `wdu9v75tux`/`wdu9v75tv2` ("no está trayendo el NIT correcto" / "sale mi número de documento en el NIT de la empresa al imprimir la cotización"), `wdu9v75tw4` ("que salga el nombre del vendedor y el correo"), `wdu9v75tw7` ("poner enunciado en el pdf y link 'Cotización generada por...'"). Auditoría previa (solo lectura) de las 10 subtareas pendientes del tracker confirmó que 4 ya estaban implementadas (no reflejado en ClickUp) y que estas 3 eran bugs/gaps reales vigentes en el código.
+
+**Cambios, todos en `src/app/components/cotizaciones/cotizacion-editor/` (frontend, sin tocar backend):**
+- **NIT (wdu9v75tux/wdu9v75tv2):** `empresaMeta` leía `user.nit` de `localStorage` — ese campo es el documento del vendedor logueado, no el NIT de la empresa (causa raíz confirmada del bug). Corregido para leer `currentCompany.nit` + `digitoVerificacion`, mismo origen y formato (`nit-dv`) que ya usa el PDF real de pedidos (`orden-venta.component.ts::getNitFormateado`).
+- **Vendedor (wdu9v75tw4):** el nombre/correo del vendedor logueado ya se capturaba (`vendedorActual()`) y se mostraba en el formulario lateral del editor, pero nunca en el documento/PDF que ve el cliente. Nuevo getter `vendedorMetaDoc` + línea "Atendido por: …" en el encabezado del documento (`docTpl`).
+- **Pie de página (wdu9v75tw7):** agregado footer "Cotización generada por {empresa} · usando Katuq.com. ¿Quieres generar la tuya? Contáctanos." con links a `https://katuq.com`, reusando el mismo patrón visual ya existente en la landing pública de aprobación (`cotizacion-publica.component.html:151`, spec 008.3) en vez de inventar uno nuevo.
+
+**No-objetivo explícito (a pedido del usuario):** queda pendiente, sin tocar, el bug del "valor tachado" (`itemPrecioOriginal()` ignora precio por categoría/volumen previo al override manual) — es un bug real distinto, se aborda en una sesión futura.
+
+**Verificación:** `ng serve` (dev server local) recompiló "Compiled successfully" tras cada cambio, sin errores de plantilla ni de tipos. **Pendiente: prueba visual en navegador** (generar/previsualizar una cotización real y confirmar NIT, vendedor y pie de página).
+
+**Nota de numeración (detectada al bajar cambios el 2026-08-08):** este D-149 es el tercero con ese número — ver colisión documentada arriba. Siguiente número libre tras este merge: **D-162**.
+
+### 2026-08-08 — D-162: `clients.documento` sin trim causaba direcciones "desaparecidas" y clientes duplicados en venta asistida
+
+**Reporte del usuario:** en el paso "Envío y datos" de venta asistida, las direcciones de envío/facturación parecían desaparecer sin poder reproducirlo de forma determinística; además, el botón "Guardar" no aparecía al crear una dirección de facturación (no de envío).
+
+**Botón de Facturación invisible — diagnosticado, NO arreglado (queda para sesión futura):** `pedido-facturacion.component.scss` estiliza `.btn-primary` con `background: var(--kc-accent) !important` y `--kc-accent` solo existe en `:host` (mixin `kc-tokens`). Como el modal se abre con `NgbModal.open()` (ng-bootstrap lo cuelga de `document.body`, fuera del subárbol del host), la variable CSS no hereda ahí dentro → `var()` inválida → `background` cae a `transparent` pero `color:#fff !important` sí aplica → texto blanco invisible sobre fondo transparente. Mismo patrón sin fallback también en `.modal-header`, `.form-control:focus` y `.form-check-input:checked` de ese archivo. Fix propuesto y no aplicado: agregar fallback a cada `var()` (`var(--kc-accent, #6c4ce0)`).
+
+**Direcciones "desaparecidas" — causa raíz encontrada y arreglada.** El usuario reprodujo el caso real (CAFÉ ESCOBAR, cliente Julio Sampedro, documento `70079110`) y capturó las 3 llamadas de red al guardar una dirección de envío: `POST /clients/doc` → `POST /clients/edit` → `POST /clients/doc`, con `documento: "70079110  "` (dos espacios al final) en las tres. La segunda llamada a `/clients/doc` (post-edit, usada para refrescar el estado local) respondió `[]`.
+
+Cadena causal: `createClient`/`editClient` (`clients.js`) nunca trimeaban `documento` antes de escribir a Firestore → un cliente creado alguna vez con espacio de más queda "sucio" para siempre. `getClientByDocument` sí trimea el término de búsqueda pero compara contra el valor guardado (sucio) con `where('documento','==', ...)` exacto → no matchea → responde `[]`. El frontend (`pedido-entrega.component.ts:379`) trata esa respuesta vacía como "el cliente legítimamente no tiene direcciones" y hace `this.datosEntregas.splice(0, this.datosEntregas.length)` — vacía la lista local aunque el dato sí esté guardado en Firestore. Solo pasa al **crear** una dirección nueva; `editarDatosEntrega()` (editar una ya existente) no tiene ese `else` destructivo, por eso el síntoma es específico a ese flujo.
+
+**Fix de código (sin lógica de negocio nueva, solo trim):**
+- Backend `clients.js::createClient` — trim de `documento` antes de `.add()`.
+- Backend `clients.js::editClient` — trim antes del `where` y antes de escribir, en las dos ramas (por `cd` y por fallback de documento).
+- Frontend `crear-ventas.component.ts:1585,1753` (selección desde autocompletado) y `:3825,3962` (creación de cliente nuevo) — trim antes de mandar al backend. Heredado automáticamente por `venta-asistida-unica.component.ts` (extiende la clase).
+
+**Hallazgo colateral — el mismo bug generó clientes duplicados.** Al fallar la búsqueda por el mismatch de espacio, el flujo de "crear cliente rápido" interpretaba "no encontrado" como "cliente nuevo" y creaba un segundo doc para la misma persona (verificado: dos docs de Julio Sampedro, mismo correo/celular, creados 18 min aparte — uno con la dirección real de prueba, otro con dirección/facturación placeholder auto-generada).
+
+**Backfill ejecutado en producción** (`functions/scripts/backfill-trim-documento-clients.js`, `--dry-run` primero siempre): el script indexa TODOS los clientes por empresa+documento-ya-trimeado para detectar de antemano si limpiar un doc lo dejaría idéntico a otro de la misma empresa (colisión) — esos se excluyen automáticamente, nunca se tocan a ciegas. Corrida en dos pasos:
+1. Solo CAFÉ ESCOBAR: 8/9 corregidos, 1 excluido a mano (el duplicado de Julio Sampedro, pendiente de fusión manual).
+2. Todas las empresas: **536/536 corregidos** de 576 sucios detectados (11.732 clientes totales) — **573 de los 576 estaban concentrados en ALMARA FELICIDAD** (1 cada uno en OH MY STORE y DEL RANCHO GREEN). **40 quedaron con colisión, sin tocar** — requieren fusión manual caso por caso; incluye un grupo de 6 clientes de ALMARA con `documento` vacío/solo-espacios (no es typo, son clientes cargados sin documento real).
+
+**Pendiente, fuera de alcance de esta sesión (a pedido del usuario, "dejemoslo asi"):**
+- Fix de estilos del botón de Facturación (arriba).
+- Fusión/decisión sobre los 40 clientes con colisión de documento (incluye el duplicado de Julio Sampedro en CAFÉ ESCOBAR, `np3b1t143zVvV7LvIV0G`, con dirección/facturación placeholder).
+- El `else` destructivo de `pedido-entrega.component.ts:379` sigue existiendo — ya no lo dispara este bug puntual, pero cualquier otro fallo de lookup futuro seguiría vaciando `datosEntregas` en silencio. Candidato a hardening aparte (avisar en vez de vaciar).
+
+**Verificación:** backend reinició limpio en `:3300` con el fix; frontend recompiló "Compiled successfully" tras cada edición. Usuario confirmó en pantalla que el caso de Café Escobar ya funciona tras el backfill.
