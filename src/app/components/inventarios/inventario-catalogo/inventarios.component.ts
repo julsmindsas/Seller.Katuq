@@ -13,6 +13,7 @@ import {
   ProductoConsolidado,
   BodegaConsolidada,
   InventarioCorteEstado,
+  InventarioCorteFila,
   InventarioCorteResponse,
 } from "../../../shared/services/inventarios/inventario.service";
 import { TourService } from "../../../shared/services/tour.service";
@@ -231,7 +232,12 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   ];
   cutoffReport: InventarioCorteResponse | null = null;
   cutoffPageIndex = 0;
-  cutoffCursorHistory: Array<string | null> = [null];
+  cutoffAllRows: InventarioCorteFila[] = [];
+  readonly cutoffPageSize = 100;
+
+  get cutoffTotalPages(): number {
+    return Math.max(1, Math.ceil(this.cutoffAllRows.length / this.cutoffPageSize));
+  }
 
   // Filtros para vista consolidada
   filtrosConsolidados = {
@@ -826,33 +832,30 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     if (!this.fechaCorteInventario || this.cutoffLoading) return;
     if (resetPagination) {
       this.cutoffPageIndex = 0;
-      this.cutoffCursorHistory = [null];
     }
 
     this.cutoffLoading = true;
-    const cursor = this.cutoffCursorHistory[this.cutoffPageIndex] || undefined;
     this.inventarioService.consultarInventarioCorte({
       fechaCorte: this.fechaCorteInventario,
       bodega: this.filtrosConsolidados.bodegaId || undefined,
       search: this.filtrosConsolidados.busqueda?.trim() || undefined,
       status: this.cutoffStatusFilter || undefined,
-      limit: 100,
-      cursor,
+      // El backend hace la reconstrucción costosa una sola vez. Las páginas
+      // siguientes se muestran desde esta respuesta, sin volver a leer Firestore.
+      paginate: false,
     })
     .pipe(takeUntil(this.destroy$))
     .subscribe({
       next: (report) => {
+        this.cutoffAllRows = [...(report.rows || [])];
         this.cutoffReport = report;
-        if (report.pagination.nextCursor) {
-          this.cutoffCursorHistory[this.cutoffPageIndex + 1] = report.pagination.nextCursor;
-        } else {
-          this.cutoffCursorHistory = this.cutoffCursorHistory.slice(0, this.cutoffPageIndex + 1);
-        }
+        this.actualizarPaginaCorte();
         this.cutoffLoading = false;
       },
       error: (error) => {
         this.cutoffLoading = false;
         this.cutoffReport = null;
+        this.cutoffAllRows = [];
         this.toastr.error(
           error?.error?.error || 'No se pudo reconstruir el inventario para esa fecha',
           'Inventario por fecha',
@@ -864,13 +867,35 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   paginaAnteriorCorte(): void {
     if (this.cutoffPageIndex <= 0 || this.cutoffLoading) return;
     this.cutoffPageIndex -= 1;
-    this.consultarInventarioCorte(false);
+    this.actualizarPaginaCorte();
   }
 
   paginaSiguienteCorte(): void {
     if (!this.cutoffReport?.pagination?.hasMore || this.cutoffLoading) return;
     this.cutoffPageIndex += 1;
-    this.consultarInventarioCorte(false);
+    this.actualizarPaginaCorte();
+  }
+
+  private actualizarPaginaCorte(): void {
+    if (!this.cutoffReport) return;
+
+    const total = this.cutoffAllRows.length;
+    const ultimaPagina = Math.max(0, Math.ceil(total / this.cutoffPageSize) - 1);
+    this.cutoffPageIndex = Math.min(Math.max(this.cutoffPageIndex, 0), ultimaPagina);
+
+    const inicio = this.cutoffPageIndex * this.cutoffPageSize;
+    const rows = this.cutoffAllRows.slice(inicio, inicio + this.cutoffPageSize);
+    this.cutoffReport = {
+      ...this.cutoffReport,
+      rows,
+      pagination: {
+        limit: this.cutoffPageSize,
+        returned: rows.length,
+        total,
+        hasMore: inicio + rows.length < total,
+        nextCursor: null,
+      },
+    };
   }
 
   exportarInventarioCorte(): void {

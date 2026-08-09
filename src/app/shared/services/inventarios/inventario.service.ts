@@ -407,6 +407,7 @@ export class InventarioService {
     status?: InventarioCorteEstado;
     limit?: number;
     cursor?: string;
+    paginate?: boolean;
   }): Observable<InventarioCorteResponse> {
     let params = new HttpParams().set('fechaCorte', options.fechaCorte);
     if (options.bodega) params = params.set('bodega', options.bodega);
@@ -414,6 +415,7 @@ export class InventarioService {
     if (options.status) params = params.set('status', options.status);
     if (options.limit) params = params.set('limit', String(options.limit));
     if (options.cursor) params = params.set('cursor', options.cursor);
+    if (options.paginate !== undefined) params = params.set('paginate', String(options.paginate));
 
     return this.http.get<InventarioCorteResponse>(
       `${this.apiUrl}/inventory/cutoff-report`,
