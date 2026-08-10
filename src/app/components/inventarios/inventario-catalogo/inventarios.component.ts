@@ -961,17 +961,34 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Si TODAS las filas de la página comparten exactamente la misma explicación,
-   * se muestra una sola vez encima de la tabla y la columna se oculta —
-   * repetirla idéntica en cada fila era puro ruido visual.
+   * La explicación mayoritaria de la página se dice UNA vez encima de la tabla;
+   * en las filas solo se señala lo que se aparta de ella. Repetir el mismo
+   * texto idéntico cien veces era puro ruido visual.
    */
-  causaComunCorte(report: InventarioCorteResponse): string | null {
+  causaComunCorte(report: InventarioCorteResponse): { texto: string; cuenta: number; total: number; hayDistintas: boolean } | null {
     const rows = report?.rows || [];
     if (rows.length < 2) return null;
-    const primera = this.causasCorteEnTexto(rows[0]?.causes);
-    if (!primera) return null;
-    const todasIguales = rows.every((row) => this.causasCorteEnTexto(row?.causes) === primera);
-    return todasIguales ? primera : null;
+    const conteo = new Map<string, number>();
+    for (const row of rows) {
+      const texto = this.causasCorteEnTexto(row?.causes);
+      if (!texto) continue;
+      conteo.set(texto, (conteo.get(texto) || 0) + 1);
+    }
+    let moda = '';
+    let cuenta = 0;
+    for (const [texto, n] of conteo) {
+      if (n > cuenta) { moda = texto; cuenta = n; }
+    }
+    if (!moda || cuenta < 2) return null;
+    return { texto: moda, cuenta, total: rows.length, hayDistintas: cuenta < rows.length };
+  }
+
+  /** Texto de la fila solo si se aparta de la novedad mayoritaria de la página. */
+  novedadDistintaCorte(row: { causes?: string[] }, report: InventarioCorteResponse): string {
+    const texto = this.causasCorteEnTexto(row?.causes);
+    const comun = this.causaComunCorte(report);
+    if (comun && texto === comun.texto) return '';
+    return texto;
   }
 
   causasCorteEnTexto(causes: string[]): string {

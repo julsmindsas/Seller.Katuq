@@ -1724,7 +1724,11 @@
 
         <p *ngIf="causaComunCorte(report) as causaComun" class="corte-causa-comun">
             <i class="pi pi-info-circle"></i>
-            Todas las filas comparten la misma novedad: <strong>{{ causaComun }}</strong>.
+            <span>
+                {{ causaComun.cuenta === causaComun.total ? 'Todas las filas de esta página comparten la misma novedad' : causaComun.cuenta + ' de ' + causaComun.total + ' filas comparten la misma novedad' }}:
+                <strong>{{ causaComun.texto }}</strong>.
+                <ng-container *ngIf="causaComun.hayDistintas"> Abajo solo se señalan las filas que se apartan.</ng-container>
+            </span>
         </p>
 
         <div class="corte-tabla">
@@ -1736,7 +1740,7 @@
                         <th>Bodega</th>
                         <th class="text-end">Cantidad al corte</th>
                         <th>Confianza</th>
-                        <th *ngIf="!causaComunCorte(report)">Explicación</th>
+                        <th *ngIf="!causaComunCorte(report) || causaComunCorte(report)?.hayDistintas">{{ causaComunCorte(report) ? 'Novedad distinta' : 'Explicación' }}</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-row>
@@ -1753,7 +1757,10 @@
                                 {{ etiquetaEstadoCorte(row.status) }}
                             </span>
                         </td>
-                        <td *ngIf="!causaComunCorte(report)" class="corte-explicacion">{{ causasCorteEnTexto(row.causes) || 'Sin novedades' }}</td>
+                        <td *ngIf="!causaComunCorte(report) || causaComunCorte(report)?.hayDistintas" class="corte-explicacion">
+                            <ng-container *ngIf="causaComunCorte(report); else explicacionCompleta">{{ novedadDistintaCorte(row, report) || '—' }}</ng-container>
+                            <ng-template #explicacionCompleta>{{ causasCorteEnTexto(row.causes) || 'Sin novedades' }}</ng-template>
+                        </td>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
