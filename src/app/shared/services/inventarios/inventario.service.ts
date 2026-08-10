@@ -7,6 +7,40 @@ import { TipoMovimientoInventario } from '../../../components/inventarios/enums/
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
 
+export type EstadoOrdenCompra = 'abierta' | 'parcial' | 'recibida' | 'anulada';
+
+export interface LineaOrdenCompra {
+  productoId: string;
+  referencia: string | null;
+  descripcion: string | null;
+  cantidad: number;
+  recibido: number;
+  costoUnitario: number;
+}
+
+export interface PendienteOrdenCompra {
+  productoId: string;
+  referencia: string | null;
+  pedido: number;
+  recibido: number;
+  pendiente: number;
+  /** Lo que el proveedor mandó de más. */
+  excedente: number;
+}
+
+export interface OrdenCompra {
+  id: string;
+  idBodega: string;
+  proveedor: { nombre: string; nit: string | null };
+  lineas: LineaOrdenCompra[];
+  pendientes?: PendienteOrdenCompra[];
+  estado: EstadoOrdenCompra;
+  total: number;
+  observaciones: string | null;
+  creadoPor?: string;
+  createdAt?: any;
+}
+
 export type CriterioConteo = 'valor' | 'movimiento' | 'sin_contar' | 'ubicacion';
 export type EstadoConteo = 'abierta' | 'contada' | 'aplicada' | 'cancelada';
 
@@ -649,6 +683,37 @@ export class InventarioService {
   /** Asigna (o quita, con null) el lugar donde vive un producto en una bodega. */
   asignarUbicacionProducto(bodega: string, productoId: string, ubicacion: string | null): Observable<any> {
     return this.http.put(`${this.apiUrl}/inventory/producto-ubicacion`, { bodega, productoId, ubicacion });
+  }
+
+  // --- Órdenes de compra ---
+
+  crearOrdenCompra(orden: {
+    proveedor: { nombre: string; nit?: string };
+    bodega: string;
+    lineas: { productoId: string; referencia?: string; descripcion?: string; cantidad: number; costoUnitario?: number }[];
+    observaciones?: string;
+  }): Observable<OrdenCompra> {
+    return this.http.post<OrdenCompra>(`${this.apiUrl}/inventory/ordenes-compra`, orden);
+  }
+
+  listarOrdenesCompra(options: { bodega?: string; pendientes?: boolean } = {}): Observable<{ ordenes: OrdenCompra[] }> {
+    let params = new HttpParams();
+    if (options.bodega) params = params.set('bodega', options.bodega);
+    if (options.pendientes !== undefined) params = params.set('pendientes', String(options.pendientes));
+    return this.http.get<{ ordenes: OrdenCompra[] }>(`${this.apiUrl}/inventory/ordenes-compra`, { params });
+  }
+
+  obtenerOrdenCompra(id: string): Observable<OrdenCompra> {
+    return this.http.get<OrdenCompra>(`${this.apiUrl}/inventory/ordenes-compra/${id}`);
+  }
+
+  /** Anota lo que llegó contra la orden. La entrada de stock va por su camino. */
+  registrarRecepcionOrden(id: string, recibidas: { productoId: string; cantidad: number }[]): Observable<any> {
+    return this.http.put(`${this.apiUrl}/inventory/ordenes-compra/${id}/recepcion`, { recibidas });
+  }
+
+  anularOrdenCompra(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/inventory/ordenes-compra/${id}`);
   }
 
   // --- Conteos cíclicos ---

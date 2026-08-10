@@ -1,0 +1,428 @@
+// Órdenes de compra — tema canónico Katuq: acento #5F3FE0, plano, radios 16/11/20.
+
+$acento: #5F3FE0;
+$acento-ink: #4930B8;
+$acento-suave: #EFEAFD;
+$ink: #211F3A;
+$muted: #6E6A8A;
+$faint: #9B97B5;
+$borde: #E7E3F5;
+$fondo: #F6F4FB;
+$tarjeta: #FFFFFF;
+$ok: #0F8A4D;
+$ok-suave: #E4F3EB;
+$aviso: #D3790F;
+$aviso-suave: #FBEFDE;
+$critico: #C2266E;
+$critico-suave: #F9E4EE;
+$sombra: 0 10px 30px rgba(95, 63, 224, .08);
+
+.oc-pagina {
+  padding: 24px;
+  background: $fondo;
+  min-height: 100%;
+  color: $ink;
+  font-size: 14px;
+}
+
+.oc-encabezado { margin-bottom: 20px; }
+
+.oc-titulo {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+
+  h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: -.01em; }
+  p { margin: 0; color: $muted; max-width: 64ch; }
+}
+
+.oc-icono {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: $acento-suave;
+  color: $acento-ink;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  flex: none;
+}
+
+.oc-aviso {
+  border-radius: 11px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+
+  &--error { background: $critico-suave; color: $critico; }
+}
+
+.oc-tarjeta {
+  background: $tarjeta;
+  border: 1px solid $borde;
+  border-radius: 16px;
+  box-shadow: $sombra;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+
+  h2 { font-size: 17px; font-weight: 650; margin: 0 0 14px; }
+}
+
+.oc-form {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: $muted;
+  }
+
+  select, input {
+    border: 1px solid $borde;
+    border-radius: 11px;
+    padding: 9px 13px;
+    font-size: 13px;
+    color: $ink;
+    background: $tarjeta;
+    min-width: 210px;
+
+    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
+  }
+}
+
+.oc-criterios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.oc-criterio {
+  text-align: left;
+  border: 1px solid $borde;
+  background: $fondo;
+  border-radius: 11px;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  strong { font-size: 13.5px; color: $ink; }
+  span { font-size: 12px; color: $muted; }
+
+  &.activo { border-color: $acento; background: $acento-suave; strong { color: $acento-ink; } }
+  &:focus-visible { outline: 2px solid $acento; outline-offset: 2px; }
+}
+
+.oc-boton {
+  border: none;
+  border-radius: 11px;
+  padding: 10px 18px;
+  background: $acento;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+
+  &--suave { background: $acento-suave; color: $acento-ink; }
+  &--fuerte { background: $aviso; }
+  &:disabled { opacity: .55; cursor: default; }
+  &:focus-visible { outline: 2px solid $acento-ink; outline-offset: 2px; }
+}
+
+.oc-detalle-cabeza {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+
+  h2 { margin: 0 0 2px; }
+}
+
+.oc-sub { font-size: 12.5px; color: $muted; }
+
+.oc-marcadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.oc-marcador {
+  border: 1px solid $borde;
+  border-radius: 11px;
+  padding: 12px 14px;
+  background: $fondo;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  &--alerta { border-color: $aviso; background: $aviso-suave; }
+}
+
+.oc-etiqueta {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.oc-pie { font-size: 11.5px; color: $faint; }
+
+.oc-tabla-marco { overflow-x: auto; }
+
+.oc-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+  font-size: 13px;
+
+  thead th {
+    text-align: left;
+    font-size: 10.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: $muted;
+    font-weight: 700;
+    padding: 10px 14px;
+    background: #FBFAFE;
+    border-bottom: 1px solid $borde;
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 8px 14px;
+    border-bottom: 1px solid $borde;
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.exacta { background: rgba(15, 138, 77, .04); }
+  tbody tr.sobra { background: rgba(211, 121, 15, .05); }
+  tbody tr.falta { background: rgba(194, 38, 110, .05); }
+
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  thead th.num { text-align: right; }
+}
+
+.oc-referencia { font-weight: 600; }
+.oc-ubicacion {
+  font-size: 12px;
+  background: $acento-suave;
+  color: $acento-ink;
+  border-radius: 20px;
+  padding: 2px 9px;
+  font-weight: 600;
+}
+.oc-sin-ubicacion { font-size: 12px; color: $faint; font-style: italic; }
+
+.oc-input {
+  width: 92px;
+  border: 1px solid $borde;
+  border-radius: 8px;
+  padding: 6px 9px;
+  text-align: right;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: $ink;
+
+  &:focus { outline: 2px solid $acento; outline-offset: 1px; }
+  &:disabled { background: $fondo; color: $faint; }
+}
+
+.oc-dif {
+  font-weight: 700;
+
+  &.exacta { color: $ok; }
+  &.sobra { color: $aviso; }
+  &.falta { color: $critico; }
+}
+
+.oc-pendiente { color: $faint; }
+
+.oc-chip {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 4px 11px;
+  border-radius: 20px;
+
+  &.estado-abierta { background: $acento-suave; color: $acento-ink; }
+  &.estado-contada { background: $aviso-suave; color: $aviso; }
+  &.estado-aplicada { background: $ok-suave; color: $ok; }
+  &.estado-cancelada { background: $fondo; color: $faint; }
+}
+
+.oc-accion {
+  border: 1px solid $acento;
+  background: $acento-suave;
+  color: $acento-ink;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.oc-acciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.oc-vacio {
+  color: $muted;
+  padding: 22px;
+  text-align: center;
+  border: 1px dashed $borde;
+  border-radius: 11px;
+}
+
+.oc-nota {
+  color: $faint;
+  font-size: 12.5px;
+  max-width: 78ch;
+  margin: 14px 0 0;
+}
+
+@media (max-width: 640px) {
+  .oc-pagina { padding: 16px; }
+  .oc-form select, .oc-form input { min-width: 100%; }
+}
+
+// Atajos entre módulos: el menú lateral depende de permisos por rol, así que
+// las pantallas nuevas también se alcanzan desde aquí.
+.atajos-modulos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #6E6A8A;
+    background: #FFFFFF;
+    border: 1px solid #E7E3F5;
+    border-radius: 20px;
+    padding: 6px 14px;
+
+    &:hover { color: #4930B8; background: #EFEAFD; border-color: #5F3FE0; }
+    &.activo { color: #4930B8; background: #EFEAFD; border-color: #5F3FE0; }
+  }
+}
+
+.oc-form {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: $muted;
+
+    &.ancho { flex: 1 1 320px; }
+  }
+
+  input {
+    border: 1px solid $borde;
+    border-radius: 11px;
+    padding: 9px 13px;
+    font-size: 13px;
+    color: $ink;
+    min-width: 220px;
+
+    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
+  }
+}
+
+.oc-buscador {
+  position: relative;
+  margin-bottom: 14px;
+
+  input {
+    width: 100%;
+    border: 1px solid $borde;
+    border-radius: 11px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: $ink;
+
+    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
+  }
+}
+
+.oc-resultados {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  border: 1px solid $borde;
+  border-radius: 11px;
+  background: $tarjeta;
+  max-height: 260px;
+  overflow-y: auto;
+
+  li {
+    padding: 9px 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-bottom: 1px solid $borde;
+
+    strong { font-size: 13px; }
+    span { font-size: 12px; color: $muted; }
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: $acento-suave; }
+  }
+}
+
+.oc-buscando { font-size: 12px; color: $muted; }
+
+.oc-desc { display: block; font-size: 12px; color: $muted; }
+.oc-falta { color: $aviso; font-weight: 700; }
+.oc-completo { color: $ok; font-size: 12px; font-weight: 600; }
+.oc-total { margin-right: auto; font-size: 15px; }
+
+.oc-detalle-acciones { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+.oc-quitar {
+  border: none;
+  background: none;
+  color: $faint;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 6px;
+
+  &:hover { color: $critico; background: $critico-suave; }
+}
+
+.oc-chip {
+  &.estado-abierta { background: $acento-suave; color: $acento-ink; }
+  &.estado-parcial { background: $aviso-suave; color: $aviso; }
+  &.estado-recibida { background: $ok-suave; color: $ok; }
+  &.estado-anulada { background: $fondo; color: $faint; }
+}

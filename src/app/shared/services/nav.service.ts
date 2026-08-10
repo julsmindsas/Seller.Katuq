@@ -530,6 +530,12 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "check-square",
         },
+        {
+          path: "inventario/ordenes-compra",
+          title: "Órdenes de compra",
+          type: "link",
+          icon: "shopping-cart",
+        },
       ],
     },
     {
