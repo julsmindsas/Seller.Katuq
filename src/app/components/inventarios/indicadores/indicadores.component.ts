@@ -60,7 +60,7 @@ export class IndicadoresComponent implements OnInit {
         this.bodegas = (bodegas || []).filter((b: any) => b?.idBodega);
         // Arrancar por una bodega concreta: el informe de todas recorre el
         // catálogo entero y se demora. El usuario elige ampliar.
-        this.bodegaSeleccionada = this.bodegas[0]?.idBodega || '';
+        this.bodegaSeleccionada = this.bodegaPedidaEnLaUrl() || this.bodegas[0]?.idBodega || '';
         this.consultar();
       },
       error: () => {
@@ -141,6 +141,16 @@ export class IndicadoresComponent implements OnInit {
         fila.productoId.toLowerCase().includes(termino)
       );
     });
+  }
+
+
+  /**
+   * Bodega pedida en la dirección (?bodega=BOD-001). Sirve para llegar desde
+   * la lista de bodegas ya enfocado en una, sin volver a escogerla.
+   */
+  private bodegaPedidaEnLaUrl(): string {
+    const pedida = new URLSearchParams(window.location.search).get('bodega') || '';
+    return this.bodegas.some((b: any) => b.idBodega === pedida) ? pedida : '';
   }
 
   nombreBodega(idBodega: string): string {
@@ -228,4 +238,5 @@ export interface IndicadoresInformeVista extends IndicadoresInventarioResponse {
     coberturaBaja: number;
     skusSinCosto: number;
   };
+
 }

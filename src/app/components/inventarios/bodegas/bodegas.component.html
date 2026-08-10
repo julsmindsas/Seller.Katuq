@@ -160,6 +160,21 @@
                                            [queryParams]="{ bodegaId: bodega.idBodega }">
                                             <i class="fa fa-list-ul" style="color: #8b5cf6;"></i>
                                         </a>
+                                        <a class="btn-icon" ngbTooltip="Indicadores de esta bodega" placement="top"
+                                           [routerLink]="['/inventario/indicadores']"
+                                           [queryParams]="{ bodega: bodega.idBodega }">
+                                            <i class="fa fa-line-chart" style="color: #5F3FE0;"></i>
+                                        </a>
+                                        <a class="btn-icon" ngbTooltip="Mapa de esta bodega" placement="top"
+                                           [routerLink]="['/inventario/ubicaciones']"
+                                           [queryParams]="{ bodega: bodega.idBodega }">
+                                            <i class="fa fa-th" style="color: #5F3FE0;"></i>
+                                        </a>
+                                        <a class="btn-icon" ngbTooltip="Contar esta bodega" placement="top"
+                                           [routerLink]="['/inventario/conteos']"
+                                           [queryParams]="{ bodega: bodega.idBodega }">
+                                            <i class="fa fa-check-square-o" style="color: #5F3FE0;"></i>
+                                        </a>
                                         <button class="btn-icon btn-icon-edit" ngbTooltip="Editar" placement="top"
                                                 (click)="abrirModalEditar(bodega)">
                                             <i class="fa fa-pencil"></i>

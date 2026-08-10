@@ -49,7 +49,7 @@ export class ConteosComponent implements OnInit {
     this.inventarioService.getBodegas().subscribe({
       next: (bodegas) => {
         this.bodegas = (bodegas || []).filter((b: any) => b?.idBodega);
-        this.bodegaSeleccionada = this.bodegas[0]?.idBodega || '';
+        this.bodegaSeleccionada = this.bodegaPedidaEnLaUrl() || this.bodegas[0]?.idBodega || '';
         this.cargarSesiones();
       },
       error: () => {
@@ -255,6 +255,16 @@ export class ConteosComponent implements OnInit {
     });
   }
 
+
+  /**
+   * Bodega pedida en la dirección (?bodega=BOD-001). Sirve para llegar desde
+   * la lista de bodegas ya enfocado en una, sin volver a escogerla.
+   */
+  private bodegaPedidaEnLaUrl(): string {
+    const pedida = new URLSearchParams(window.location.search).get('bodega') || '';
+    return this.bodegas.some((b: any) => b.idBodega === pedida) ? pedida : '';
+  }
+
   nombreBodega(idBodega: string): string {
     const bodega = this.bodegas.find((b: any) => b.idBodega === idBodega);
     return (bodega as any)?.nombre || idBodega;
@@ -268,4 +278,5 @@ export class ConteosComponent implements OnInit {
   etiquetaCriterio(criterio: string): string {
     return this.criterios.find((c) => c.valor === criterio)?.label || criterio;
   }
+
 }
