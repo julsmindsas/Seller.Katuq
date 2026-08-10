@@ -7,6 +7,54 @@ import { TipoMovimientoInventario } from '../../../components/inventarios/enums/
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
 
+export type CriterioConteo = 'valor' | 'movimiento' | 'sin_contar' | 'ubicacion';
+export type EstadoConteo = 'abierta' | 'contada' | 'aplicada' | 'cancelada';
+
+export interface LineaConteo {
+  productoId: string;
+  referencia: string | null;
+  ubicacion: string | null;
+  /** Lo que el sistema dice que debería haber. */
+  esperado: number;
+  /** Lo que el operario contó. null = todavía no lo ha contado. */
+  contado: number | null;
+  diferencia?: number | null;
+  estado?: 'exacta' | 'sobra' | 'falta' | 'sin_contar';
+}
+
+export interface ResumenConteo {
+  lineas: number;
+  contadas: number;
+  sinContar: number;
+  exactas: number;
+  conDiferencia: number;
+  /** Exactitud por líneas que coinciden (IRA). null si no se ha contado nada. */
+  exactitud: number | null;
+  unidadesSobran: number;
+  unidadesFaltan: number;
+}
+
+export interface AjustePropuesto {
+  productoId: string;
+  referencia: string | null;
+  ubicacion: string | null;
+  cantidadAnterior: number;
+  cantidadNueva: number;
+  diferencia: number;
+}
+
+export interface SesionConteo {
+  id: string;
+  idBodega: string;
+  criterio: CriterioConteo;
+  estado: EstadoConteo;
+  lineas?: LineaConteo[];
+  resumen: ResumenConteo;
+  ajustesPropuestos?: AjustePropuesto[];
+  creadoPor?: string;
+  createdAt?: any;
+}
+
 /** Una ubicación del catálogo de la bodega. */
 export interface UbicacionCatalogo {
   codigo: string;
@@ -601,6 +649,32 @@ export class InventarioService {
   /** Asigna (o quita, con null) el lugar donde vive un producto en una bodega. */
   asignarUbicacionProducto(bodega: string, productoId: string, ubicacion: string | null): Observable<any> {
     return this.http.put(`${this.apiUrl}/inventory/producto-ubicacion`, { bodega, productoId, ubicacion });
+  }
+
+  // --- Conteos cíclicos ---
+
+  /** Arma el conteo del día para una bodega según el criterio elegido. */
+  crearConteo(bodega: string, criterio: CriterioConteo, tamano: number): Observable<SesionConteo> {
+    return this.http.post<SesionConteo>(`${this.apiUrl}/inventory/conteos`, { bodega, criterio, tamano });
+  }
+
+  listarConteos(bodega?: string): Observable<{ sesiones: SesionConteo[] }> {
+    let params = new HttpParams();
+    if (bodega) params = params.set('bodega', bodega);
+    return this.http.get<{ sesiones: SesionConteo[] }>(`${this.apiUrl}/inventory/conteos`, { params });
+  }
+
+  obtenerConteo(id: string): Observable<SesionConteo> {
+    return this.http.get<SesionConteo>(`${this.apiUrl}/inventory/conteos/${id}`);
+  }
+
+  /** Guarda lo contado. No ajusta inventario. */
+  registrarConteo(id: string, lineas: { productoId: string; contado: number | null }[]): Observable<any> {
+    return this.http.put(`${this.apiUrl}/inventory/conteos/${id}`, { lineas });
+  }
+
+  cerrarConteo(id: string, aplicado: boolean): Observable<any> {
+    return this.http.post(`${this.apiUrl}/inventory/conteos/${id}/cerrar`, { aplicado });
   }
 
   obtenerInventarioConsolidado(options: {

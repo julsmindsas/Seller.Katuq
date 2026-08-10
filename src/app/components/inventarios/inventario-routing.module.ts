@@ -9,6 +9,7 @@ import { CentralAbastecimientoComponent } from './central-abastecimiento/central
 import { BodegaDetalleComponent } from './bodega-detalle/bodega-detalle.component';
 import { IndicadoresComponent } from './indicadores/indicadores.component';
 import { UbicacionesComponent } from './ubicaciones/ubicaciones.component';
+import { ConteosComponent } from './conteos/conteos.component';
 
 
 const routes: Routes = [
@@ -47,6 +48,10 @@ const routes: Routes = [
     {
         path: 'ubicaciones',
         component: UbicacionesComponent
+    },
+    {
+        path: 'conteos',
+        component: ConteosComponent
     }
 ];
 

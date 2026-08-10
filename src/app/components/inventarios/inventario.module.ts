@@ -43,6 +43,7 @@ import { BodegaDetalleComponent } from './bodega-detalle/bodega-detalle.componen
 import { SiigoBodegaMappingComponent } from './siigo-bodega-mapping/siigo-bodega-mapping.component';
 import { IndicadoresComponent } from './indicadores/indicadores.component';
 import { UbicacionesComponent } from './ubicaciones/ubicaciones.component';
+import { ConteosComponent } from './conteos/conteos.component';
 
 import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
 @NgModule({
@@ -91,7 +92,8 @@ import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
         BodegaDetalleComponent,
         SiigoBodegaMappingComponent,
         IndicadoresComponent,
-        UbicacionesComponent
+        UbicacionesComponent,
+        ConteosComponent
     ],
     providers: [NgbActiveModal, ModalGalleryService, ImageOptimizerDirective, ConfirmationService],
 })

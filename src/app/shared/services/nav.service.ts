@@ -524,6 +524,12 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "map",
         },
+        {
+          path: "inventario/conteos",
+          title: "Conteos de inventario",
+          type: "link",
+          icon: "check-square",
+        },
       ],
     },
     {
