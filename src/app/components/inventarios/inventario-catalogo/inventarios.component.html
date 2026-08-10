@@ -1722,7 +1722,7 @@
             </div>
         </div>
 
-        <p *ngIf="causaComunCorte(report) as causaComun" class="corte-causa-comun">
+        <p *ngIf="cutoffCausaComun as causaComun" class="corte-causa-comun">
             <i class="pi pi-info-circle"></i>
             <span>
                 {{ causaComun.cuenta === causaComun.total ? 'Todas las filas de esta página comparten la misma novedad' : causaComun.cuenta + ' de ' + causaComun.total + ' filas comparten la misma novedad' }}:
@@ -1740,10 +1740,10 @@
                         <th>Bodega</th>
                         <th class="text-end">Cantidad al corte</th>
                         <th>Confianza</th>
-                        <th *ngIf="!causaComunCorte(report) || causaComunCorte(report)?.hayDistintas">{{ causaComunCorte(report) ? 'Novedad distinta' : 'Explicación' }}</th>
+                        <th *ngIf="!cutoffCausaComun || cutoffCausaComun.hayDistintas">{{ cutoffCausaComun ? 'Novedad distinta' : 'Explicación' }}</th>
                     </tr>
                 </ng-template>
-                <ng-template pTemplate="body" let-row>
+                <ng-template pTemplate="body" let-row let-i="rowIndex">
                     <tr>
                         <td class="corte-ref">{{ row.referencia || row.productId || 'Sin identificar' }}</td>
                         <td>{{ row.nombre || 'Producto sin nombre disponible' }}</td>
@@ -1757,9 +1757,8 @@
                                 {{ etiquetaEstadoCorte(row.status) }}
                             </span>
                         </td>
-                        <td *ngIf="!causaComunCorte(report) || causaComunCorte(report)?.hayDistintas" class="corte-explicacion">
-                            <ng-container *ngIf="causaComunCorte(report); else explicacionCompleta">{{ novedadDistintaCorte(row, report) || '—' }}</ng-container>
-                            <ng-template #explicacionCompleta>{{ causasCorteEnTexto(row.causes) || 'Sin novedades' }}</ng-template>
+                        <td *ngIf="!cutoffCausaComun || cutoffCausaComun.hayDistintas" class="corte-explicacion">
+                            {{ cutoffNovedadesFila[i] || (cutoffCausaComun ? '—' : 'Sin novedades') }}
                         </td>
                     </tr>
                 </ng-template>

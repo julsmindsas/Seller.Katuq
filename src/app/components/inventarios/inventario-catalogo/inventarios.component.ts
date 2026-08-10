@@ -905,6 +905,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
 
     const inicio = this.cutoffPageIndex * this.cutoffPageSize;
     const rows = this.cutoffAllRows.slice(inicio, inicio + this.cutoffPageSize);
+    this.calcularNovedadesPaginaCorte(rows);
     this.cutoffReport = {
       ...this.cutoffReport,
       rows,
@@ -962,15 +963,22 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
 
   /**
    * La explicación mayoritaria de la página se dice UNA vez encima de la tabla;
-   * en las filas solo se señala lo que se aparta de ella. Repetir el mismo
-   * texto idéntico cien veces era puro ruido visual.
+   * en las filas solo se señala lo que se aparta de ella. Se calcula UNA sola
+   * vez al armar cada página (nunca desde la plantilla: con 100 filas, una
+   * función en el template se re-ejecuta miles de veces por ciclo de cambio
+   * y congela la pestaña).
    */
-  causaComunCorte(report: InventarioCorteResponse): { texto: string; cuenta: number; total: number; hayDistintas: boolean } | null {
-    const rows = report?.rows || [];
-    if (rows.length < 2) return null;
+  cutoffCausaComun: { texto: string; cuenta: number; total: number; hayDistintas: boolean } | null = null;
+  cutoffNovedadesFila: string[] = [];
+
+  private calcularNovedadesPaginaCorte(rows: Array<{ causes?: string[] }>): void {
+    this.cutoffCausaComun = null;
+    const textos = rows.map((row) => this.causasCorteEnTexto(row?.causes));
+    this.cutoffNovedadesFila = textos;
+    if (rows.length < 2) return;
+
     const conteo = new Map<string, number>();
-    for (const row of rows) {
-      const texto = this.causasCorteEnTexto(row?.causes);
+    for (const texto of textos) {
       if (!texto) continue;
       conteo.set(texto, (conteo.get(texto) || 0) + 1);
     }
@@ -979,16 +987,11 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     for (const [texto, n] of conteo) {
       if (n > cuenta) { moda = texto; cuenta = n; }
     }
-    if (!moda || cuenta < 2) return null;
-    return { texto: moda, cuenta, total: rows.length, hayDistintas: cuenta < rows.length };
-  }
+    if (!moda || cuenta < 2) return;
 
-  /** Texto de la fila solo si se aparta de la novedad mayoritaria de la página. */
-  novedadDistintaCorte(row: { causes?: string[] }, report: InventarioCorteResponse): string {
-    const texto = this.causasCorteEnTexto(row?.causes);
-    const comun = this.causaComunCorte(report);
-    if (comun && texto === comun.texto) return '';
-    return texto;
+    this.cutoffCausaComun = { texto: moda, cuenta, total: rows.length, hayDistintas: cuenta < rows.length };
+    // La columna solo marca lo que se aparta de la mayoría.
+    this.cutoffNovedadesFila = textos.map((texto) => (texto === moda ? '' : texto));
   }
 
   causasCorteEnTexto(causes: string[]): string {
