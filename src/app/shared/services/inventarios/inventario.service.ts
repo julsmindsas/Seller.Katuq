@@ -7,6 +7,46 @@ import { TipoMovimientoInventario } from '../../../components/inventarios/enums/
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
 
+/** Una fila de disponibilidad: el mismo producto visto de tres maneras. */
+export interface FilaDisponibilidad {
+  productoId: string;
+  referencia: string | null;
+  idBodega: string;
+  /** Lo que se puede vender (el saldo, nunca negativo). */
+  disponible: number;
+  /** Vendido que sigue en el estante porque el pedido no ha salido. */
+  comprometido: number;
+  /** Lo que un operario contaría hoy: disponible + comprometido. */
+  fisicoEsperado: number;
+  /** Unidades vendidas sin respaldo (saldo negativo). */
+  deudaDeRegistro: number;
+  sobrecomprometido: boolean;
+  /** Hay compromiso pero ni siquiera existe fila de inventario. */
+  sinFilaDeInventario?: boolean;
+}
+
+export interface ResumenDisponibilidadBodega {
+  skus: number;
+  disponible: number;
+  comprometido: number;
+  fisicoEsperado: number;
+  sobrecomprometidos: number;
+  skusConCompromiso: number;
+}
+
+export interface DisponibilidadBodega {
+  idBodega: string;
+  resumen: ResumenDisponibilidadBodega;
+  filas: FilaDisponibilidad[];
+}
+
+export interface DisponibilidadResponse {
+  company: string;
+  pedidosAbiertos: number;
+  advertencias: string[];
+  bodegas: DisponibilidadBodega[];
+}
+
 /** Fila de indicadores: un producto en una bodega. */
 export interface IndicadorProducto {
   productoId: string;
@@ -493,6 +533,19 @@ export class InventarioService {
 
     return this.http.get<IndicadoresInventarioResponse>(
       `${this.apiUrl}/inventory/kpi`,
+      { params },
+    );
+  }
+
+  /**
+   * Disponible vs comprometido vs físico en estante. Read-only.
+   */
+  consultarDisponibilidad(options: { bodega?: string } = {}): Observable<DisponibilidadResponse> {
+    let params = new HttpParams();
+    if (options.bodega) params = params.set('bodega', options.bodega);
+
+    return this.http.get<DisponibilidadResponse>(
+      `${this.apiUrl}/inventory/disponibilidad`,
       { params },
     );
   }

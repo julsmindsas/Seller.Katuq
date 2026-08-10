@@ -131,6 +131,35 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
 
   &.chip-ok { background: $ok-suave; color: $ok; }
   &.chip-aviso { background: $aviso-suave; color: $aviso; }
+  &.chip-acento { background: $acento-suave; color: $acento-ink; }
+}
+
+.kpi-vistas {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid $borde;
+}
+
+.kpi-vista {
+  border: none;
+  background: none;
+  color: $muted;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 11px 11px 0 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  margin-bottom: -1px;
+
+  &.activa { color: $acento-ink; border-bottom-color: $acento; background: $acento-suave; }
+  &:focus-visible { outline: 2px solid $acento; outline-offset: -2px; }
+}
+
+.kpi-alerta {
+  color: $critico;
+  font-weight: 600;
 }
 
 .kpi-tarjetas {

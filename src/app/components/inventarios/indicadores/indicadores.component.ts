@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import {
+  DisponibilidadBodega,
+  DisponibilidadResponse,
+  FilaDisponibilidad,
   IndicadorProducto,
   IndicadoresBodega,
   IndicadoresInventarioResponse,
@@ -8,6 +11,7 @@ import {
 import { Bodega } from '../../../shared/models/inventarios/bodega.model';
 
 type Foco = 'todos' | 'agotandose' | 'quietos' | 'sinCosto';
+type Vista = 'indicadores' | 'disponibilidad';
 
 /**
  * Indicadores de bodega: para cuántos días alcanza lo que hay, qué tan rápido
@@ -39,6 +43,12 @@ export class IndicadoresComponent implements OnInit {
 
   informe: IndicadoresInformeVista | null = null;
 
+  vista: Vista = 'indicadores';
+  disponibilidad: DisponibilidadResponse | null = null;
+  cargandoDisponibilidad = false;
+  errorDisponibilidad: string | null = null;
+  soloComprometidos = true;
+
   foco: Foco = 'todos';
   busqueda = '';
 
@@ -58,6 +68,13 @@ export class IndicadoresComponent implements OnInit {
         this.consultar();
       },
     });
+  }
+
+  /** Cambió la bodega o la ventana: lo que esté a la vista se recalcula. */
+  alCambiarFiltro(): void {
+    this.disponibilidad = null;
+    if (this.vista === 'disponibilidad') this.consultarDisponibilidad();
+    else this.consultar();
   }
 
   consultar(): void {
@@ -81,6 +98,49 @@ export class IndicadoresComponent implements OnInit {
           this.cargando = false;
         },
       });
+  }
+
+  cambiarVista(vista: Vista): void {
+    this.vista = vista;
+    if (vista === 'disponibilidad' && !this.disponibilidad) this.consultarDisponibilidad();
+  }
+
+  consultarDisponibilidad(): void {
+    this.cargandoDisponibilidad = true;
+    this.errorDisponibilidad = null;
+
+    this.inventarioService
+      .consultarDisponibilidad({ bodega: this.bodegaSeleccionada || undefined })
+      .subscribe({
+        next: (respuesta) => {
+          this.disponibilidad = respuesta;
+          this.cargandoDisponibilidad = false;
+        },
+        error: (err) => {
+          this.errorDisponibilidad =
+            err?.error?.message || 'No se pudo calcular la disponibilidad. Intente de nuevo.';
+          this.disponibilidad = null;
+          this.cargandoDisponibilidad = false;
+        },
+      });
+  }
+
+  /**
+   * Por defecto solo se muestran los productos con algo apartado: son los
+   * únicos donde disponible y físico difieren, que es de lo que trata esta
+   * vista. El resto se puede ver quitando el filtro.
+   */
+  filasDisponibilidad(bodega: DisponibilidadBodega): FilaDisponibilidad[] {
+    const termino = this.busqueda.trim().toLowerCase();
+
+    return bodega.filas.filter((fila) => {
+      if (this.soloComprometidos && fila.comprometido === 0 && !fila.sobrecomprometido) return false;
+      if (!termino) return true;
+      return (
+        (fila.referencia || '').toLowerCase().includes(termino) ||
+        fila.productoId.toLowerCase().includes(termino)
+      );
+    });
   }
 
   nombreBodega(idBodega: string): string {
