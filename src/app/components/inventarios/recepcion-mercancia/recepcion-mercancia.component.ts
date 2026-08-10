@@ -40,6 +40,10 @@ export class RecepcionMercanciaComponent implements OnInit {
     INGRESO_PRODUCCION: 'Ingreso por Produccion',
     INGRESO_AJUSTE: 'Ingreso por Ajuste de inventario',
     INGRESO_MOVIMIENTO: 'Ingreso por movimientos entre bodegas',
+    // Una devolución de cliente no es un ajuste ni una compra: tiene su propio
+    // motivo en el libro (`returned`), y con eso los informes pueden restarla
+    // de la demanda en vez de contarla como venta.
+    INGRESO_DEVOLUCION_CLIENTE: 'Ingreso por devolucion de cliente',
     SALIDA_INVENTARIO_FISICO: 'Salida por inventario fisico',
     SALIDA_VENTA_POS: 'Salida por venta POS',
     SALIDA_VENTA_ASISTIDA: 'Salida por venta Asistida',
