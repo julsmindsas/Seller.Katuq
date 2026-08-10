@@ -1,0 +1,356 @@
+// Mapa de la bodega — tema canónico Katuq: acento #5F3FE0, plano, radios 16/11/20.
+
+$acento: #5F3FE0;
+$acento-ink: #4930B8;
+$acento-suave: #EFEAFD;
+$ink: #211F3A;
+$muted: #6E6A8A;
+$faint: #9B97B5;
+$borde: #E7E3F5;
+$fondo: #F6F4FB;
+$tarjeta: #FFFFFF;
+$ok: #0F8A4D;
+$ok-suave: #E4F3EB;
+$aviso: #D3790F;
+$aviso-suave: #FBEFDE;
+$critico: #C2266E;
+$critico-suave: #F9E4EE;
+$sombra: 0 10px 30px rgba(95, 63, 224, .08);
+
+.ubi-pagina {
+  padding: 24px;
+  background: $fondo;
+  min-height: 100%;
+  color: $ink;
+  font-size: 14px;
+}
+
+.ubi-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.ubi-titulo {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+
+  h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: -.01em; }
+  p { margin: 0; color: $muted; max-width: 58ch; }
+}
+
+.ubi-icono {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: $acento-suave;
+  color: $acento-ink;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  flex: none;
+}
+
+.ubi-controles { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.ubi-select,
+.ubi-buscar {
+  border: 1px solid $borde;
+  border-radius: 11px;
+  padding: 9px 13px;
+  background: $tarjeta;
+  color: $ink;
+  font-size: 13px;
+  min-width: 200px;
+
+  &:focus { outline: 2px solid $acento; outline-offset: 1px; }
+}
+
+.ubi-boton {
+  border: none;
+  border-radius: 11px;
+  padding: 9px 16px;
+  background: $acento;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+
+  &--suave { background: $acento-suave; color: $acento-ink; }
+  &:disabled { opacity: .6; cursor: default; }
+  &:focus-visible { outline: 2px solid $acento-ink; outline-offset: 2px; }
+}
+
+.ubi-aviso {
+  border-radius: 11px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+
+  &--error { background: $critico-suave; color: $critico; }
+}
+
+.ubi-cargando { color: $muted; padding: 28px 0; }
+
+.ubi-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.ubi-tarjeta {
+  background: $tarjeta;
+  border: 1px solid $borde;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: $sombra;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  &--alerta { border-color: $aviso; background: $aviso-suave; }
+}
+
+.ubi-etiqueta {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.ubi-numero {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.015em;
+}
+
+.ubi-pie { font-size: 12px; color: $faint; }
+
+.ubi-editor {
+  background: $tarjeta;
+  border: 1px solid $borde;
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: $sombra;
+  margin-bottom: 18px;
+
+  h2 { font-size: 16px; margin: 0 0 4px; }
+}
+
+.ubi-ayuda {
+  color: $muted;
+  font-size: 13px;
+  margin: 0 0 12px;
+  max-width: 70ch;
+
+  code {
+    background: $acento-suave;
+    color: $acento-ink;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: .92em;
+  }
+}
+
+.ubi-generador {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: $muted;
+    font-weight: 600;
+  }
+
+  input {
+    border: 1px solid $borde;
+    border-radius: 11px;
+    padding: 8px 12px;
+    font-size: 13px;
+    width: 150px;
+    color: $ink;
+
+    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
+  }
+}
+
+.ubi-filtros { margin-bottom: 14px; }
+.ubi-buscar { min-width: 320px; }
+
+.ubi-bloque {
+  background: $tarjeta;
+  border: 1px solid $borde;
+  border-radius: 16px;
+  box-shadow: $sombra;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+
+  &--pendiente { border-color: $aviso; }
+}
+
+.ubi-bloque-cabeza {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+
+  h2 { font-size: 16px; font-weight: 650; margin: 0; }
+}
+
+.ubi-codigo {
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+.ubi-chip {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 4px 11px;
+  border-radius: 20px;
+
+  &.chip-aviso { background: $aviso-suave; color: $aviso; }
+  &.chip-ok { background: $ok-suave; color: $ok; }
+}
+
+.ubi-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid $borde;
+    border-radius: 11px;
+    background: $fondo;
+  }
+}
+
+.ubi-referencia { font-weight: 600; margin-right: 10px; }
+.ubi-cantidad { color: $muted; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+.ubi-accion {
+  border: 1px solid $acento;
+  background: $acento-suave;
+  color: $acento-ink;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:disabled { opacity: .6; cursor: default; }
+}
+
+.ubi-rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.ubi-celda {
+  border: 1px solid $borde;
+  border-radius: 11px;
+  padding: 12px 14px;
+  background: $fondo;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &--ocupada { background: $acento-suave; border-color: $acento; }
+  &--inactiva { opacity: .55; }
+}
+
+.ubi-celda-codigo {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+
+.ubi-celda-desc { margin: 0; font-size: 12px; color: $muted; }
+.ubi-celda-libre { font-size: 12px; color: $faint; }
+
+.ubi-celda-productos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 12.5px;
+    background: $tarjeta;
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+}
+
+.ubi-quitar,
+.ubi-sacar {
+  border: none;
+  background: none;
+  color: $faint;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+  border-radius: 6px;
+
+  &:hover { color: $critico; background: $critico-suave; }
+  &:disabled { opacity: .4; cursor: default; }
+}
+
+.ubi-vacio {
+  color: $muted;
+  padding: 22px;
+  text-align: center;
+  border: 1px dashed $borde;
+  border-radius: 11px;
+}
+
+.ubi-nota {
+  color: $faint;
+  font-size: 12.5px;
+  max-width: 78ch;
+  margin: 18px 0 0;
+}
+
+@media (max-width: 640px) {
+  .ubi-pagina { padding: 16px; }
+  .ubi-select, .ubi-buscar { min-width: 100%; }
+  .ubi-controles { width: 100%; }
+}

@@ -1,0 +1,174 @@
+<div class="ubi-pagina">
+
+  <header class="ubi-encabezado">
+    <div class="ubi-titulo">
+      <span class="ubi-icono"><i class="pi pi-map"></i></span>
+      <div>
+        <h1>Mapa de la bodega</h1>
+        <p>Dónde vive cada producto, para que cualquiera pueda encontrarlo y guardarlo.</p>
+      </div>
+    </div>
+
+    <div class="ubi-controles">
+      <select class="ubi-select" [(ngModel)]="bodegaSeleccionada" (change)="consultar()" [disabled]="cargando">
+        <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+          {{ bodega.nombre || bodega.idBodega }}
+        </option>
+      </select>
+      <button class="ubi-boton ubi-boton--suave" (click)="mostrarEditor = !mostrarEditor">
+        <i class="pi pi-th-large"></i> {{ mostrarEditor ? 'Ocultar catálogo' : 'Crear ubicaciones' }}
+      </button>
+      <button class="ubi-boton" (click)="consultar()" [disabled]="cargando || guardando">
+        <i class="pi" [ngClass]="(cargando || guardando) ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+        Actualizar
+      </button>
+    </div>
+  </header>
+
+  <div class="ubi-aviso ubi-aviso--error" *ngIf="error">
+    <i class="pi pi-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <div class="ubi-cargando" *ngIf="cargando && !mapa">Leyendo la bodega…</div>
+
+  <ng-container *ngIf="mapa as m">
+
+    <section class="ubi-tarjetas">
+      <article class="ubi-tarjeta">
+        <span class="ubi-etiqueta">Ubicaciones</span>
+        <strong class="ubi-numero">{{ m.resumen.ubicacionesDefinidas | number }}</strong>
+        <span class="ubi-pie">{{ m.resumen.ubicacionesOcupadas | number }} con producto</span>
+      </article>
+      <article class="ubi-tarjeta">
+        <span class="ubi-etiqueta">Productos ubicados</span>
+        <strong class="ubi-numero">{{ m.resumen.productosUbicados | number }}</strong>
+        <span class="ubi-pie">Se pueden buscar por estante</span>
+      </article>
+      <article class="ubi-tarjeta" [class.ubi-tarjeta--alerta]="m.resumen.productosSinUbicar > 0">
+        <span class="ubi-etiqueta">Sin lugar asignado</span>
+        <strong class="ubi-numero">{{ m.resumen.productosSinUbicar | number }}</strong>
+        <span class="ubi-pie">Hay que buscarlos a ojo</span>
+      </article>
+    </section>
+
+    <!-- Editor del catálogo -->
+    <section class="ubi-editor" *ngIf="mostrarEditor">
+      <h2>Crear ubicaciones en bloque</h2>
+      <p class="ubi-ayuda">
+        Se crean como <code>ZONA-ESTANTE-POSICIÓN</code>. Nadie escribe doscientos renglones a mano.
+      </p>
+      <div class="ubi-generador">
+        <label>
+          <span>Zona</span>
+          <input type="text" [(ngModel)]="zonaNueva" maxlength="12" placeholder="A" />
+        </label>
+        <label>
+          <span>Estantes</span>
+          <input type="number" [(ngModel)]="estantesNuevos" min="1" max="99" />
+        </label>
+        <label>
+          <span>Posiciones por estante</span>
+          <input type="number" [(ngModel)]="posicionesNuevas" min="1" max="99" />
+        </label>
+        <button class="ubi-boton" (click)="generarEnBloque()" [disabled]="guardando">
+          Crear {{ (estantesNuevos || 0) * (posicionesNuevas || 0) }} ubicaciones
+        </button>
+      </div>
+    </section>
+
+    <div class="ubi-filtros">
+      <input class="ubi-buscar" type="text" [(ngModel)]="busqueda"
+             placeholder="Buscar por ubicación o referencia…" />
+    </div>
+
+    <!-- Productos sin lugar: primero, porque son los que hacen perder tiempo -->
+    <section class="ubi-bloque ubi-bloque--pendiente" *ngIf="productosSinUbicar().length > 0">
+      <header class="ubi-bloque-cabeza">
+        <h2>Sin lugar asignado</h2>
+        <span class="ubi-chip chip-aviso">{{ productosSinUbicar().length }} productos</span>
+      </header>
+      <ul class="ubi-lista">
+        <li *ngFor="let producto of productosSinUbicar()">
+          <div>
+            <span class="ubi-referencia">{{ producto.referencia || producto.productoId }}</span>
+            <span class="ubi-cantidad">{{ producto.cantidad | number }} unidades</span>
+          </div>
+          <button class="ubi-accion" (click)="ubicarProducto(producto)" [disabled]="guardando">
+            Asignar lugar
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Ubicaciones usadas que nadie dio de alta -->
+    <section class="ubi-bloque ubi-bloque--pendiente" *ngIf="m.fueraDeCatalogo.length > 0">
+      <header class="ubi-bloque-cabeza">
+        <h2>Usadas pero no dadas de alta</h2>
+        <span class="ubi-chip chip-aviso">{{ m.fueraDeCatalogo.length }}</span>
+      </header>
+      <p class="ubi-ayuda">
+        Hay productos guardados en estas ubicaciones, pero no están en el catálogo de la bodega.
+        Existen en la realidad: agréguelas para que aparezcan en las rutas.
+      </p>
+      <ul class="ubi-lista">
+        <li *ngFor="let fuera of m.fueraDeCatalogo">
+          <div>
+            <span class="ubi-referencia">{{ fuera.codigo }}</span>
+            <span class="ubi-cantidad">{{ fuera.productos.length }} productos</span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- El mapa -->
+    <section class="ubi-bloque">
+      <header class="ubi-bloque-cabeza">
+        <h2>{{ nombreBodega(m.idBodega) }}</h2>
+        <span class="ubi-codigo">{{ m.idBodega }}</span>
+      </header>
+
+      <div class="ubi-vacio" *ngIf="ubicacionesVisibles().length === 0">
+        <ng-container *ngIf="m.resumen.ubicacionesDefinidas === 0">
+          Esta bodega todavía no tiene ubicaciones. Use «Crear ubicaciones» para armar el mapa.
+        </ng-container>
+        <ng-container *ngIf="m.resumen.ubicacionesDefinidas > 0">
+          Ninguna ubicación coincide con la búsqueda.
+        </ng-container>
+      </div>
+
+      <div class="ubi-rejilla">
+        <article class="ubi-celda" *ngFor="let ubicacion of ubicacionesVisibles()"
+                 [class.ubi-celda--ocupada]="ubicacion.productos.length > 0"
+                 [class.ubi-celda--inactiva]="!ubicacion.activa">
+          <header>
+            <span class="ubi-celda-codigo">{{ ubicacion.codigo }}</span>
+            <button class="ubi-quitar" (click)="quitarUbicacion(ubicacion.codigo)"
+                    [disabled]="guardando" title="Quitar del catálogo">
+              <i class="pi pi-times"></i>
+            </button>
+          </header>
+          <p class="ubi-celda-desc" *ngIf="ubicacion.descripcion">{{ ubicacion.descripcion }}</p>
+
+          <ul class="ubi-celda-productos" *ngIf="ubicacion.productos.length > 0">
+            <li *ngFor="let producto of ubicacion.productos">
+              <span>{{ producto.referencia || producto.productoId }}</span>
+              <span class="ubi-cantidad">{{ producto.cantidad | number }}</span>
+              <button class="ubi-sacar" (click)="quitarDeUbicacion(producto)" [disabled]="guardando"
+                      title="Quitar de esta ubicación">
+                <i class="pi pi-minus"></i>
+              </button>
+            </li>
+          </ul>
+
+          <span class="ubi-celda-libre" *ngIf="ubicacion.productos.length === 0">Libre</span>
+        </article>
+      </div>
+    </section>
+
+    <p class="ubi-nota">
+      La ubicación dice dónde vive un producto dentro de la bodega. No reparte el stock entre
+      estantes: la cantidad sigue siendo la de la bodega completa.
+    </p>
+
+  </ng-container>
+</div>

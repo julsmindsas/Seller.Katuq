@@ -7,6 +7,43 @@ import { TipoMovimientoInventario } from '../../../components/inventarios/enums/
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
 
+/** Una ubicación del catálogo de la bodega. */
+export interface UbicacionCatalogo {
+  codigo: string;
+  zona: string;
+  estante: string | null;
+  posicion: string | null;
+  nivel: string | null;
+  descripcion: string | null;
+  activa: boolean;
+}
+
+export interface ProductoEnUbicacion {
+  productoId: string;
+  referencia: string | null;
+  cantidad: number;
+  ubicacion: string | null;
+}
+
+export interface UbicacionConProductos extends UbicacionCatalogo {
+  productos: ProductoEnUbicacion[];
+}
+
+export interface UbicacionesBodegaResponse {
+  idBodega: string;
+  nombre: string;
+  ubicaciones: UbicacionConProductos[];
+  /** Usadas por el inventario pero no dadas de alta en el catálogo. */
+  fueraDeCatalogo: { codigo: string; productos: ProductoEnUbicacion[] }[];
+  sinUbicar: ProductoEnUbicacion[];
+  resumen: {
+    ubicacionesDefinidas: number;
+    ubicacionesOcupadas: number;
+    productosUbicados: number;
+    productosSinUbicar: number;
+  };
+}
+
 /** Una fila de disponibilidad: el mismo producto visto de tres maneras. */
 export interface FilaDisponibilidad {
   productoId: string;
@@ -548,6 +585,22 @@ export class InventarioService {
       `${this.apiUrl}/inventory/disponibilidad`,
       { params },
     );
+  }
+
+  /** Mapa de ubicaciones de una bodega: catálogo, qué hay en cada una y qué falta ubicar. */
+  consultarUbicaciones(bodega: string): Observable<UbicacionesBodegaResponse> {
+    const params = new HttpParams().set('bodega', bodega);
+    return this.http.get<UbicacionesBodegaResponse>(`${this.apiUrl}/inventory/ubicaciones`, { params });
+  }
+
+  /** Guarda el catálogo completo de ubicaciones de una bodega. */
+  guardarUbicaciones(bodega: string, ubicaciones: UbicacionCatalogo[], forzar = false): Observable<any> {
+    return this.http.put(`${this.apiUrl}/inventory/ubicaciones`, { bodega, ubicaciones, forzar });
+  }
+
+  /** Asigna (o quita, con null) el lugar donde vive un producto en una bodega. */
+  asignarUbicacionProducto(bodega: string, productoId: string, ubicacion: string | null): Observable<any> {
+    return this.http.put(`${this.apiUrl}/inventory/producto-ubicacion`, { bodega, productoId, ubicacion });
   }
 
   obtenerInventarioConsolidado(options: {

@@ -518,6 +518,12 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "trending-up",
         },
+        {
+          path: "inventario/ubicaciones",
+          title: "Mapa de la bodega",
+          type: "link",
+          icon: "map",
+        },
       ],
     },
     {
