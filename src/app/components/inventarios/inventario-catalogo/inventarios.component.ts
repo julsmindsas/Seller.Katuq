@@ -955,9 +955,23 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   }
 
   claseEstadoCorte(status: InventarioCorteEstado): string {
-    if (status === 'certified') return 'bg-success';
-    if (status === 'ambiguous') return 'bg-warning text-dark';
-    return 'bg-secondary';
+    if (status === 'certified') return 'is-cert';
+    if (status === 'ambiguous') return 'is-amb';
+    return 'is-inc';
+  }
+
+  /**
+   * Si TODAS las filas de la página comparten exactamente la misma explicación,
+   * se muestra una sola vez encima de la tabla y la columna se oculta —
+   * repetirla idéntica en cada fila era puro ruido visual.
+   */
+  causaComunCorte(report: InventarioCorteResponse): string | null {
+    const rows = report?.rows || [];
+    if (rows.length < 2) return null;
+    const primera = this.causasCorteEnTexto(rows[0]?.causes);
+    if (!primera) return null;
+    const todasIguales = rows.every((row) => this.causasCorteEnTexto(row?.causes) === primera);
+    return todasIguales ? primera : null;
   }
 
   causasCorteEnTexto(causes: string[]): string {
