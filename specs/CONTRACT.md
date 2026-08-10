@@ -3250,3 +3250,17 @@ Cadena causal: `createClient`/`editClient` (`clients.js`) nunca trimeaban `docum
 **Verificación:** backend reinició limpio en `:3300` con el fix; frontend recompiló "Compiled successfully" tras cada edición. Usuario confirmó en pantalla que el caso de Café Escobar ya funciona tras el backfill.
 
 **Addendum D-161/corte (2026-08-09):** Por orden de Daniel se subió el lote pendiente del corte por fecha (trabajo de la sesión del corte): backend `80f9eef` desplegado con restart limpio (paginate para carga única, tipo ENTRADA/SALIDA por delta real en el escritor de flows — protege el sync Fullpi en bajadas de stock —, signo conservado en movementDelta) y frontend `2026.08.09.1` publicado desde worktree limpio (pantalla trae el conjunto una vez y pagina local). Verificación funcional real: corte al 2026-08-08 de BOD-FULLPI-1 devuelve 75 filas en una carga, JCR4001=91, etiquetado honesto (estimate/incomplete hasta que exista ancla certificada — Fase 3). Los archivos de onboarding sucios del mismo working tree NO se tocaron.
+
+## D-163 (2026-08-10) — Tablero único de cierre + seis decisiones de Daniel en un día
+
+Daniel (estresado por pendientes dispersos) fijó la regla: existe UN tablero único de cierre de inventario (artifact) que toda sesión actualiza antes de cerrar; todo reporte termina con lista finita de pendientes con dueño y palabra que los cierra. Guardado en memoria persistente.
+
+Decisiones del día (vía preguntas directas):
+1. **Candado de bodegas: "dale"** → implementado por la sesión roadmap y DESPLEGADO (409 con conteo y oferta de archivado; 8/8 test; smoke real: 9 de 13 bodegas OMS quedan protegidas).
+2. **Bodegas huérfanas (596 OMS / 183 Escobar): "déjalas así"** → cerrado por decisión, sin acción.
+3. **Clave de cifrado propia: "después"** → pendiente de Daniel, sin fecha.
+4. **Duplicados al escribir: "dale"** → regla del mayor también en el escritor de flows (sesión roadmap), DESPLEGADO.
+5. **Verificación diaria: "con los flows"** → construido y ACTIVO: `dailyObservationService` (única casa de la lógica), nodo `katuq-inventory-observe`, flow `inventario-verificacion-diaria-oms` con schedule-cron 4:30am Bogotá; evidencia `inventory_observation` en inventory_audit; CLI queda como envoltorio del mismo servicio (commit 3f47fd5, desplegado, smoke E2E verificado y limpiado, observación de hoy registrada).
+6. **Menús de inventario a 73 roles: "todavía no"** → pendiente de Daniel (las pantallas nuevas existen pero la mayoría de roles no las ve; script con dry-run listo).
+
+Además hoy la sesión roadmap desplegó (con mi restart): indicadores KPI, disponibilidad, ubicaciones y conteos cíclicos — ver su registro. Carriles de archivos pactados entre sesiones para no chocar.
