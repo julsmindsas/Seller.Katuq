@@ -340,3 +340,29 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
   .kpi-controles { width: 100%; }
   .kpi-select { flex: 1 1 100%; }
 }
+
+// Atajos entre módulos: el menú lateral depende de permisos por rol, así que
+// las pantallas nuevas también se alcanzan desde aquí.
+.atajos-modulos {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #6E6A8A;
+    background: #FFFFFF;
+    border: 1px solid #E7E3F5;
+    border-radius: 20px;
+    padding: 6px 14px;
+
+    &:hover { color: #4930B8; background: #EFEAFD; border-color: #5F3FE0; }
+    &.activo { color: #4930B8; background: #EFEAFD; border-color: #5F3FE0; }
+  }
+}

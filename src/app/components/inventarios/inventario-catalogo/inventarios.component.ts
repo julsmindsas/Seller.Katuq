@@ -214,6 +214,26 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       icon: 'pi pi-calendar',
       command: () => this.abrirInventarioCorte(),
     },
+    { separator: true },
+    // Atajos a los módulos nuevos. Van aquí porque el menú lateral se arma con
+    // los permisos guardados de cada rol: una pantalla nueva no aparece ahí
+    // hasta que se autorice rol por rol. Las rutas, en cambio, funcionan para
+    // cualquiera que haya iniciado sesión.
+    {
+      label: 'Indicadores de bodega',
+      icon: 'pi pi-chart-line',
+      command: () => this.router.navigate(['/inventario/indicadores']),
+    },
+    {
+      label: 'Mapa de la bodega',
+      icon: 'pi pi-map',
+      command: () => this.router.navigate(['/inventario/ubicaciones']),
+    },
+    {
+      label: 'Conteos de inventario',
+      icon: 'pi pi-check-square',
+      command: () => this.router.navigate(['/inventario/conteos']),
+    },
   ];
   exportandoExcel = false;
 
