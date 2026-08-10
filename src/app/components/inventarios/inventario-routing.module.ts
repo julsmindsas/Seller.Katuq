@@ -7,6 +7,7 @@ import { TrasladosComponent } from './traslados/traslados.component';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 import { CentralAbastecimientoComponent } from './central-abastecimiento/central-abastecimiento.component';
 import { BodegaDetalleComponent } from './bodega-detalle/bodega-detalle.component';
+import { IndicadoresComponent } from './indicadores/indicadores.component';
 
 
 const routes: Routes = [
@@ -37,6 +38,10 @@ const routes: Routes = [
     {
         path: 'bodega-detalle',
         component: BodegaDetalleComponent
+    },
+    {
+        path: 'indicadores',
+        component: IndicadoresComponent
     }
 ];
 

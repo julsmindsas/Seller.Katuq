@@ -512,6 +512,12 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "activity",
         },
+        {
+          path: "inventario/indicadores",
+          title: "Indicadores de bodega",
+          type: "link",
+          icon: "trending-up",
+        },
       ],
     },
     {

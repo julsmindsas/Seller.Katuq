@@ -7,6 +7,62 @@ import { TipoMovimientoInventario } from '../../../components/inventarios/enums/
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
 
+/** Fila de indicadores: un producto en una bodega. */
+export interface IndicadorProducto {
+  productoId: string;
+  referencia: string | null;
+  nombre: string | null;
+  idBodega: string;
+  /** Saldo contable para efectos del informe (los negativos cuentan como 0). */
+  saldo: number;
+  /** Saldo tal como está guardado, incluido el negativo. */
+  saldoReal: number;
+  saldoNegativo: boolean;
+  demandaNeta: number;
+  consumoDiario: number;
+  /** null = sin demanda en la ventana; no es cero. */
+  coberturaDias: number | null;
+  coberturaTopeada: boolean;
+  rotacionAnual: number | null;
+  inmovilizado: boolean;
+  costoUnitario: number;
+  sinCosto: boolean;
+  valorCosto: number;
+}
+
+export interface ResumenIndicadoresBodega {
+  skus: number;
+  unidades: number;
+  valorCosto: number;
+  sinExistencias: number;
+  coberturaBaja: number;
+  inmovilizados: number;
+  valorInmovilizado: number;
+  demandaNeta: number;
+  coberturaDiasBodega: number | null;
+  coberturaTopeada: boolean;
+  rotacionAnualBodega: number | null;
+  skusSinCosto: number;
+  unidadesSinCosto: number;
+  skusEnNegativo: number;
+}
+
+export interface IndicadoresBodega {
+  idBodega: string;
+  resumen: ResumenIndicadoresBodega;
+  filas: IndicadorProducto[];
+}
+
+export interface IndicadoresInventarioResponse {
+  company: string;
+  ventana: { dias: number; desde: string; hasta: string };
+  /** 'exacta' solo si todo tiene costo y toda salida tiene motivo. */
+  confianza: 'exacta' | 'parcial';
+  advertencias: string[];
+  coberturaBajaDias: number;
+  bodegas: IndicadoresBodega[];
+}
+
 /**
  * Interfaz para producto en vista consolidada de inventario
  */
@@ -419,6 +475,24 @@ export class InventarioService {
 
     return this.http.get<InventarioCorteResponse>(
       `${this.apiUrl}/inventory/cutoff-report`,
+      { params },
+    );
+  }
+
+  /**
+   * Indicadores de bodega: cobertura en días, rotación, inmovilizados y
+   * valorizado a costo. Read-only, derivado del libro de movimientos.
+   */
+  consultarIndicadoresInventario(options: {
+    bodega?: string;
+    dias?: number;
+  } = {}): Observable<IndicadoresInventarioResponse> {
+    let params = new HttpParams();
+    if (options.bodega) params = params.set('bodega', options.bodega);
+    if (options.dias) params = params.set('dias', String(options.dias));
+
+    return this.http.get<IndicadoresInventarioResponse>(
+      `${this.apiUrl}/inventory/kpi`,
       { params },
     );
   }

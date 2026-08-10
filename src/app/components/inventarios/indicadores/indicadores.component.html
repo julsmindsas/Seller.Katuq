@@ -1,0 +1,155 @@
+<div class="kpi-pagina">
+
+  <header class="kpi-encabezado">
+    <div class="kpi-titulo">
+      <span class="kpi-icono"><i class="pi pi-chart-line"></i></span>
+      <div>
+        <h1>Indicadores de bodega</h1>
+        <p>Para cuántos días alcanza, qué tan rápido rota, qué plata está quieta y cuánto vale a costo.</p>
+      </div>
+    </div>
+
+    <div class="kpi-controles">
+      <select class="kpi-select" [(ngModel)]="bodegaSeleccionada" (change)="consultar()" [disabled]="cargando">
+        <option value="">Todas las bodegas (más lento)</option>
+        <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+          {{ bodega.nombre || bodega.idBodega }}
+        </option>
+      </select>
+
+      <select class="kpi-select" [(ngModel)]="dias" (change)="consultar()" [disabled]="cargando">
+        <option *ngFor="let opcion of opcionesVentana" [value]="opcion.value">{{ opcion.label }}</option>
+      </select>
+
+      <button class="kpi-boton" (click)="consultar()" [disabled]="cargando">
+        <i class="pi" [ngClass]="cargando ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+        {{ cargando ? 'Calculando…' : 'Actualizar' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="kpi-aviso kpi-aviso--error" *ngIf="error">
+    <i class="pi pi-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <div class="kpi-cargando" *ngIf="cargando && !informe">
+    Leyendo el libro de movimientos…
+  </div>
+
+  <ng-container *ngIf="informe as inf">
+
+    <div class="kpi-confianza" [class.kpi-confianza--parcial]="inf.confianza === 'parcial'">
+      <span class="kpi-chip" [ngClass]="inf.confianza === 'exacta' ? 'chip-ok' : 'chip-aviso'">
+        {{ inf.confianza === 'exacta' ? 'Dato exacto' : 'Dato parcial' }}
+      </span>
+      <span class="kpi-ventana">Demanda medida sobre los últimos {{ inf.ventana.dias }} días</span>
+      <ul class="kpi-advertencias" *ngIf="inf.advertencias?.length">
+        <li *ngFor="let advertencia of inf.advertencias">{{ advertencia }}</li>
+      </ul>
+    </div>
+
+    <section class="kpi-tarjetas">
+      <article class="kpi-tarjeta">
+        <span class="kpi-etiqueta">Valor a costo</span>
+        <strong class="kpi-numero">{{ inf.total.valorCosto | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        <span class="kpi-pie" *ngIf="inf.total.skusSinCosto > 0">
+          {{ inf.total.skusSinCosto }} productos sin costo quedan por fuera
+        </span>
+        <span class="kpi-pie" *ngIf="inf.total.skusSinCosto === 0">Todo lo que hay tiene costo</span>
+      </article>
+
+      <article class="kpi-tarjeta">
+        <span class="kpi-etiqueta">Unidades</span>
+        <strong class="kpi-numero">{{ inf.total.unidades | number }}</strong>
+        <span class="kpi-pie">{{ inf.total.skus | number }} productos con registro</span>
+      </article>
+
+      <article class="kpi-tarjeta kpi-tarjeta--accionable" (click)="cambiarFoco('agotandose')"
+               [class.kpi-tarjeta--activa]="foco === 'agotandose'">
+        <span class="kpi-etiqueta">Se agotan pronto</span>
+        <strong class="kpi-numero">{{ inf.total.coberturaBaja | number }}</strong>
+        <span class="kpi-pie">Menos de {{ inf.coberturaBajaDias }} días de cobertura</span>
+      </article>
+
+      <article class="kpi-tarjeta kpi-tarjeta--accionable" (click)="cambiarFoco('quietos')"
+               [class.kpi-tarjeta--activa]="foco === 'quietos'">
+        <span class="kpi-etiqueta">Plata quieta</span>
+        <strong class="kpi-numero">{{ inf.total.valorInmovilizado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        <span class="kpi-pie">{{ inf.total.inmovilizados | number }} productos sin una sola venta</span>
+      </article>
+    </section>
+
+    <div class="kpi-filtros">
+      <input class="kpi-buscar" type="text" [(ngModel)]="busqueda"
+             placeholder="Buscar por referencia o nombre…" />
+      <div class="kpi-focos">
+        <button class="kpi-foco" [class.activo]="foco === 'todos'" (click)="foco = 'todos'">Todos</button>
+        <button class="kpi-foco" [class.activo]="foco === 'agotandose'" (click)="cambiarFoco('agotandose')">Se agotan</button>
+        <button class="kpi-foco" [class.activo]="foco === 'quietos'" (click)="cambiarFoco('quietos')">Quietos</button>
+        <button class="kpi-foco" [class.activo]="foco === 'sinCosto'" (click)="cambiarFoco('sinCosto')">Sin costo</button>
+      </div>
+    </div>
+
+    <section class="kpi-bodega" *ngFor="let bodega of inf.bodegas">
+      <header class="kpi-bodega-cabeza">
+        <div>
+          <h2>{{ nombreBodega(bodega.idBodega) }}</h2>
+          <span class="kpi-codigo">{{ bodega.idBodega }}</span>
+        </div>
+        <div class="kpi-bodega-datos">
+          <span><b>{{ bodega.resumen.unidades | number }}</b> unidades</span>
+          <span><b>{{ bodega.resumen.valorCosto | currency:'COP':'symbol-narrow':'1.0-0' }}</b> a costo</span>
+          <span>Cobertura <b>{{ textoCobertura(bodega.resumen.coberturaDiasBodega, bodega.resumen.coberturaTopeada) }}</b></span>
+          <span>Rotación <b>{{ textoRotacion(bodega.resumen.rotacionAnualBodega) }}</b></span>
+        </div>
+      </header>
+
+      <div class="kpi-tabla-marco">
+        <table class="kpi-tabla">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="num">Existencias</th>
+              <th class="num">Vendido</th>
+              <th class="num">Cobertura</th>
+              <th class="num">Rotación</th>
+              <th class="num">Valor a costo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fila of filasVisibles(bodega)">
+              <td>
+                <span class="kpi-referencia">{{ fila.referencia || fila.productoId }}</span>
+                <span class="kpi-nombre" *ngIf="fila.nombre">{{ fila.nombre }}</span>
+                <span class="kpi-marca" *ngIf="fila.saldoNegativo">
+                  Saldo en negativo ({{ fila.saldoReal }}) — deuda de registro
+                </span>
+              </td>
+              <td class="num">{{ fila.saldo | number }}</td>
+              <td class="num">{{ fila.demandaNeta | number }}</td>
+              <td class="num">
+                <span class="kpi-pastilla" [ngClass]="claseCobertura(fila)">
+                  {{ textoCobertura(fila.coberturaDias, fila.coberturaTopeada) }}
+                </span>
+              </td>
+              <td class="num">{{ textoRotacion(fila.rotacionAnual) }}</td>
+              <td class="num">
+                <span *ngIf="!fila.sinCosto">{{ fila.valorCosto | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                <span class="kpi-sin-costo" *ngIf="fila.sinCosto">Sin costo</span>
+              </td>
+            </tr>
+            <tr *ngIf="filasVisibles(bodega).length === 0">
+              <td colspan="6" class="kpi-vacio">Ningún producto cumple el filtro en esta bodega.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="kpi-nota">
+      La demanda se cuenta solo con ventas y devoluciones. Traslados, ajustes y sincronizaciones
+      mueven stock pero no son demanda: contarlos haría ver corta una cobertura que no lo es.
+    </p>
+
+  </ng-container>
+</div>
