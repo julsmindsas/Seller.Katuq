@@ -1,0 +1,134 @@
+<div class="mb-inbox">
+  <!-- Estado de conexión: lo primero que el usuario necesita entender -->
+  <div class="mb-aviso mb-aviso--alerta" *ngIf="!cargandoConexion && !conectado">
+    <div class="mb-aviso__texto">
+      <span class="mb-aviso__titulo" *ngIf="necesitaReconectar">
+        La conexión con {{ canalLabel }} se venció
+      </span>
+      <span class="mb-aviso__titulo" *ngIf="!necesitaReconectar">
+        Todavía no has conectado {{ canalLabel }}
+      </span>
+      <span class="mb-aviso__detalle" *ngIf="necesitaReconectar">
+        Mientras tanto no llegan mensajes nuevos. Vuelve a conectarla para seguir recibiendo.
+      </span>
+      <span class="mb-aviso__detalle" *ngIf="!necesitaReconectar">
+        Conecta tu cuenta para empezar a recibir los mensajes aquí.
+      </span>
+    </div>
+    <button type="button" class="mb-btn mb-btn--primario" (click)="irAConexion()">
+      {{ necesitaReconectar ? 'Reconectar' : 'Conectar' }}
+    </button>
+  </div>
+
+  <div class="mb-cols">
+    <!-- Columna 1: hilos -->
+    <aside class="mb-lista">
+      <header class="mb-lista__head">
+        <span class="mb-lista__titulo">{{ canalLabel }}</span>
+        <span class="mb-lista__conteo" *ngIf="hilos.length">{{ hilos.length }}</span>
+      </header>
+
+      <div class="mb-vacio" *ngIf="!cargandoHilos && hilos.length === 0">
+        <div class="mb-vacio__icono"><i class="pi pi-inbox"></i></div>
+        <p class="mb-vacio__titulo">Sin conversaciones todavía</p>
+        <p class="mb-vacio__sub">
+          Cuando alguien te escriba por {{ canalLabel }}, la conversación aparece aquí.
+        </p>
+      </div>
+
+      <p class="mb-cargando" *ngIf="cargandoHilos">Cargando conversaciones…</p>
+
+      <button
+        type="button"
+        class="mb-hilo"
+        *ngFor="let h of hilos; trackBy: trackHilo"
+        [class.is-activa]="hiloActivo?.identidadHash === h.identidadHash"
+        (click)="abrirHilo(h)"
+      >
+        <span class="mb-hilo__avatar">{{ (h.contactoNombre || '?').charAt(0) }}</span>
+        <span class="mb-hilo__cuerpo">
+          <span class="mb-hilo__nombre">{{ h.contactoNombre || 'Contacto de ' + canalLabel }}</span>
+          <span class="mb-hilo__snippet">{{ h.ultimoMensajeResumen }}</span>
+        </span>
+        <span class="mb-hilo__cerrada" *ngIf="!h.ventana.abierta" title="Fuera de las 24 horas">
+          <i class="pi pi-clock"></i>
+        </span>
+      </button>
+    </aside>
+
+    <!-- Columna 2: conversación -->
+    <section class="mb-chat">
+      <div class="mb-vacio mb-vacio--centro" *ngIf="!hiloActivo">
+        <div class="mb-vacio__icono"><i class="pi pi-comments"></i></div>
+        <p class="mb-vacio__titulo">Elige una conversación</p>
+      </div>
+
+      <ng-container *ngIf="hiloActivo">
+        <header class="mb-chat__head">
+          <span class="mb-chat__nombre">{{ nombreContacto }}</span>
+          <span class="mb-chat__canal">{{ canalLabel }}</span>
+        </header>
+
+        <div class="mb-chat__mensajes">
+          <p class="mb-cargando" *ngIf="cargandoMensajes">Cargando mensajes…</p>
+          <div
+            class="mb-msg"
+            *ngFor="let m of mensajes; trackBy: trackMensaje"
+            [class.mb-msg--mio]="m.direccion === 'outbound'"
+          >
+            <span class="mb-msg__burbuja">
+              <span *ngIf="m.body">{{ m.body }}</span>
+              <span class="mb-msg__adjunto" *ngIf="!m.body && m.mediaUrl">
+                <i class="pi pi-paperclip"></i> Archivo adjunto
+              </span>
+              <span class="mb-msg__fallido" *ngIf="m.estado === 'failed'">
+                No se envió
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <!-- La ventana de 24 h: se explica siempre, no solo cuando falla -->
+        <div class="mb-ventana" [class.mb-ventana--cerrada]="!ventana?.abierta" *ngIf="ventana">
+          <i class="pi" [ngClass]="ventana.abierta ? 'pi-clock' : 'pi-lock'"></i>
+          <span>{{ textoVentana }}</span>
+        </div>
+
+        <div class="mb-aviso mb-aviso--error" *ngIf="avisoEnvio">
+          <span class="mb-aviso__detalle">{{ avisoEnvio }}</span>
+        </div>
+
+        <form class="mb-responder" (ngSubmit)="enviar()">
+          <textarea
+            class="mb-responder__campo"
+            [(ngModel)]="borrador"
+            name="borrador"
+            rows="2"
+            [disabled]="!ventana?.abierta || enviando"
+            [placeholder]="
+              ventana?.abierta
+                ? 'Escribe tu respuesta…'
+                : 'No puedes responder hasta que te escriban de nuevo'
+            "
+          ></textarea>
+          <button
+            type="submit"
+            class="mb-btn mb-btn--primario"
+            [disabled]="!puedeEnviar"
+          >
+            {{ enviando ? 'Enviando…' : 'Enviar' }}
+          </button>
+        </form>
+      </ng-container>
+    </section>
+
+    <!-- Columna 3: contacto -->
+    <aside class="mb-panel" *ngIf="hiloActivo">
+      <app-meta-contact-panel
+        [canal]="canal"
+        [identidadHash]="hiloActivo.identidadHash"
+        [nombrePerfil]="hiloActivo.contactoNombre"
+      ></app-meta-contact-panel>
+    </aside>
+  </div>
+</div>

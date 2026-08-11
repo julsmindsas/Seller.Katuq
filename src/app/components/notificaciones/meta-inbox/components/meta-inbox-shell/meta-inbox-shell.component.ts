@@ -1,0 +1,199 @@
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+import { MetaInboxService } from '../../meta-inbox.service';
+import {
+  META_CANAL_LABEL,
+  MetaCanal,
+  MetaConexion,
+  MetaHilo,
+  MetaMensaje,
+  MetaVentana,
+} from '../../models/meta-thread.model';
+
+/**
+ * Buzón de Meta — una sola implementación para Instagram y Messenger.
+ *
+ * Las dos entradas de menú montan este mismo componente y el canal se deriva de
+ * la URL. Para el usuario son dos buzones distintos; para el código es uno solo.
+ */
+@Component({
+  selector: 'app-meta-inbox-shell',
+  templateUrl: './meta-inbox-shell.component.html',
+  styleUrls: ['./meta-inbox-shell.component.scss'],
+})
+export class MetaInboxShellComponent implements OnInit, OnDestroy {
+  canal: MetaCanal = 'instagram';
+  canalLabel = '';
+
+  conexion: MetaConexion | null = null;
+  cargandoConexion = true;
+
+  hilos: MetaHilo[] = [];
+  cargandoHilos = false;
+
+  hiloActivo: MetaHilo | null = null;
+  mensajes: MetaMensaje[] = [];
+  ventana: MetaVentana | null = null;
+  cargandoMensajes = false;
+
+  borrador = '';
+  enviando = false;
+  avisoEnvio: string | null = null;
+
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private router: Router,
+    private servicio: MetaInboxService,
+  ) {}
+
+  ngOnInit(): void {
+    // El canal sale de la URL (`/notificaciones/instagram/inbox`), no de una
+    // config aparte: así no puede quedar desincronizado con la ruta ni con el
+    // menú. La misma pantalla sirve los dos buzones.
+    this.canal = this.router.url.includes('/facebook/') ? 'facebook' : 'instagram';
+    this.canalLabel = META_CANAL_LABEL[this.canal];
+    this.reiniciar();
+    this.cargarConexion();
+    this.cargarHilos();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private reiniciar(): void {
+    this.hilos = [];
+    this.hiloActivo = null;
+    this.mensajes = [];
+    this.ventana = null;
+    this.borrador = '';
+    this.avisoEnvio = null;
+  }
+
+  private cargarConexion(): void {
+    this.cargandoConexion = true;
+    this.servicio
+      .obtenerConexiones()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((c) => {
+        this.conexion = c ? c[this.canal] : null;
+        this.cargandoConexion = false;
+      });
+  }
+
+  private cargarHilos(): void {
+    this.cargandoHilos = true;
+    this.servicio
+      .listarHilos(this.canal)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((items) => {
+        this.hilos = items;
+        this.cargandoHilos = false;
+      });
+  }
+
+  get conectado(): boolean {
+    return this.conexion?.estado === 'conectado';
+  }
+
+  get necesitaReconectar(): boolean {
+    return this.conexion?.estado === 'reconectar';
+  }
+
+  abrirHilo(hilo: MetaHilo): void {
+    this.hiloActivo = hilo;
+    this.avisoEnvio = null;
+    this.borrador = '';
+    this.cargandoMensajes = true;
+
+    this.servicio
+      .mensajesDeHilo(this.canal, hilo.identidadHash)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((r) => {
+        this.mensajes = r.items;
+        this.ventana = r.ventana;
+        this.cargandoMensajes = false;
+      });
+  }
+
+  irAConexion(): void {
+    this.router.navigate(['/integrations']);
+  }
+
+  /**
+   * Texto de la ventana en lenguaje llano. La API habla de "messaging window";
+   * el operador necesita saber si puede escribir y hasta cuándo.
+   */
+  get textoVentana(): string {
+    if (!this.ventana) return '';
+    if (!this.ventana.abierta) {
+      return `Ya pasaron 24 horas desde el último mensaje. Para poder responderle, ${this.nombreContacto} tiene que escribirte de nuevo.`;
+    }
+    const min = this.ventana.minutosRestantes;
+    if (min >= 120) return `Tienes ${Math.floor(min / 60)} horas para responder.`;
+    if (min >= 60) return 'Tienes alrededor de una hora para responder.';
+    return `Te quedan ${min} minutos para responder.`;
+  }
+
+  get nombreContacto(): string {
+    return this.hiloActivo?.contactoNombre || 'el contacto';
+  }
+
+  get puedeEnviar(): boolean {
+    return (
+      Boolean(this.ventana?.abierta) &&
+      this.borrador.trim().length > 0 &&
+      !this.enviando
+    );
+  }
+
+  enviar(): void {
+    if (!this.puedeEnviar || !this.hiloActivo) return;
+
+    const texto = this.borrador.trim();
+    this.enviando = true;
+    this.avisoEnvio = null;
+
+    this.servicio
+      .responder(this.canal, this.hiloActivo.identidadHash, texto)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((r) => {
+        this.enviando = false;
+        if (r.enviado) {
+          this.borrador = '';
+          this.abrirHilo(this.hiloActivo!);
+          return;
+        }
+        this.avisoEnvio = this.explicarFallo(r.motivo);
+      });
+  }
+
+  /** Traduce el motivo técnico a algo que el operador entienda y pueda actuar. */
+  private explicarFallo(motivo?: string): string {
+    switch (motivo) {
+      case 'ventana_cerrada':
+        return `Pasaron más de 24 horas desde el último mensaje. ${this.nombreContacto} tiene que escribirte de nuevo para que puedas responderle.`;
+      case 'sin_conexion':
+        return `La cuenta de ${this.canalLabel} no está conectada. Conéctala en Integraciones.`;
+      case 'contacto_desconocido':
+        return 'No pudimos identificar a este contacto para responderle. Pídele que te escriba de nuevo.';
+      case 'rechazado_por_meta':
+        return `${this.canalLabel} no aceptó el mensaje. Revisa que la cuenta siga conectada.`;
+      default:
+        return 'No se pudo enviar el mensaje. Intenta de nuevo.';
+    }
+  }
+
+  trackHilo(_: number, h: MetaHilo): string {
+    return h.identidadHash;
+  }
+
+  trackMensaje(_: number, m: MetaMensaje): string {
+    return m.id;
+  }
+}

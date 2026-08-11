@@ -1,0 +1,307 @@
+/* Buzones de Meta — tema canónico "Todos los pedidos"
+   (openspec/specs/design-system/spec.md): acento #5F3FE0, ink #211F3A,
+   radios 16/11/20, sombras violeta difusas, plano sin gradientes. */
+
+$acento: #5f3fe0;
+$acento-2: #7c5cff;
+$ink: #211f3a;
+$muted: #8f8bab;
+$linea: #ececf4;
+$chip-bg: #f5f4fa;
+$chip-borde: #e9e7f3;
+$superficie: #faf9fe;
+$alerta: #d9820a;
+$alerta-bg: #fff1df;
+$error: #d64545;
+$error-bg: #fdecec;
+
+.mb-inbox {
+  padding: 16px;
+  color: $ink;
+}
+
+.mb-aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+
+  &--alerta {
+    background: $alerta-bg;
+    border: 1px solid rgba(217, 130, 10, 0.25);
+  }
+  &--error {
+    background: $error-bg;
+    border: 1px solid rgba(214, 69, 69, 0.25);
+    margin: 8px 0 0;
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  &__titulo {
+    font-weight: 800;
+    font-size: 13.5px;
+  }
+  &__detalle {
+    font-size: 12.5px;
+    color: #6b6786;
+  }
+}
+
+.mb-btn {
+  border: none;
+  border-radius: 11px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &--primario {
+    background: $acento;
+    color: #fff;
+    box-shadow: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
+    &:hover:not(:disabled) { background: #4a2fc0; }
+    &:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+  }
+}
+
+.mb-cols {
+  display: grid;
+  grid-template-columns: 320px 1fr 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+.mb-lista,
+.mb-chat,
+.mb-panel {
+  background: #fff;
+  border: 1px solid $linea;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(30, 20, 80, 0.04);
+}
+
+.mb-lista {
+  overflow: hidden;
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid $linea;
+  }
+  &__titulo {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $muted;
+  }
+  &__conteo {
+    background: #efe9ff;
+    color: $acento;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+}
+
+.mb-hilo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #f1f0f7;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 11px;
+  transition: background 0.12s ease;
+
+  &:hover { background: #faf9ff; }
+  &.is-activa {
+    background: rgba(124, 92, 255, 0.09);
+    border-color: #d9cffb;
+  }
+
+  &__avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: $acento-2;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    text-transform: uppercase;
+    flex: 0 0 auto;
+  }
+  &__cuerpo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  &__nombre {
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__snippet {
+    font-size: 12px;
+    color: $muted;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__cerrada { color: $muted; font-size: 12px; }
+}
+
+.mb-chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid $linea;
+  }
+  &__nombre { font-size: 16px; font-weight: 800; }
+  &__canal {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $muted;
+  }
+  &__mensajes {
+    flex: 1;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    max-height: 460px;
+  }
+}
+
+.mb-msg {
+  display: flex;
+  &--mio { justify-content: flex-end; }
+
+  &__burbuja {
+    max-width: 72%;
+    padding: 9px 14px;
+    border-radius: 14px;
+    background: $chip-bg;
+    border: 1px solid $chip-borde;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  &--mio &__burbuja {
+    background: #efe9ff;
+    border-color: #d9cffb;
+  }
+  &__adjunto { color: $muted; }
+  &__fallido {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: $error;
+  }
+}
+
+/* La ventana de 24 h se explica siempre, no solo al fallar. */
+.mb-ventana {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 18px;
+  padding: 9px 14px;
+  border-radius: 11px;
+  font-size: 12.5px;
+  background: $superficie;
+  border: 1px solid $chip-borde;
+  color: #6b6786;
+
+  &--cerrada {
+    background: $alerta-bg;
+    border-color: rgba(217, 130, 10, 0.25);
+    color: #7a5307;
+  }
+}
+
+.mb-responder {
+  display: flex;
+  gap: 10px;
+  padding: 14px 18px;
+  align-items: flex-end;
+
+  &__campo {
+    flex: 1;
+    resize: none;
+    background: $chip-bg;
+    border: 1px solid $chip-borde;
+    border-radius: 11px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: inherit;
+    color: $ink;
+
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+    &:focus { outline: none; border-color: $acento-2; }
+  }
+}
+
+.mb-vacio {
+  padding: 32px 20px;
+  text-align: center;
+
+  &--centro { margin: auto; }
+
+  &__icono {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: #f3f1fb;
+    color: $acento;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    margin: 0 auto 12px;
+  }
+  &__titulo { font-size: 15px; font-weight: 800; margin: 0 0 4px; }
+  &__sub { font-size: 12.5px; color: $muted; margin: 0; }
+}
+
+.mb-cargando {
+  padding: 16px;
+  font-size: 12.5px;
+  color: $muted;
+  margin: 0;
+}
+
+@media (max-width: 1200px) {
+  .mb-cols { grid-template-columns: 280px 1fr; }
+  .mb-panel { grid-column: 1 / -1; }
+}
+
+@media (max-width: 820px) {
+  .mb-cols { grid-template-columns: 1fr; }
+}
