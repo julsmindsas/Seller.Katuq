@@ -97,8 +97,10 @@
             <th>Proveedor</th>
             <th>Contacto</th>
             <th>Condiciones</th>
+            <th>Cómo cumple</th>
             <th class="num">Compras</th>
             <th class="num">Se le debe</th>
+            <th class="num">Falta pagar</th>
             <th></th>
           </tr>
         </thead>
@@ -116,6 +118,15 @@
               <span class="prv-sub" *ngIf="!proveedor.contacto && !proveedor.telefono && !proveedor.correo">—</span>
             </td>
             <td>{{ textoCredito(proveedor.diasCredito) }}</td>
+            <td>
+              <!-- Lo que se demora de verdad, no lo que prometió. -->
+              <span [class.prv-alerta]="seDemoraDeMas(proveedor)">{{ textoEntrega(proveedor) }}</span>
+              <span class="prv-sub" *ngIf="cumplimientoDe(proveedor) as c">
+                <span *ngIf="c.completitudPromedio !== null">
+                  entrega {{ (c.completitudPromedio * 100) | number:'1.0-0' }}% de lo pedido</span>
+                <span *ngIf="c.conDevolucion"> · {{ c.conDevolucion }} con devolución</span>
+              </span>
+            </td>
             <td class="num">{{ saldoDe(proveedor)?.ordenes || 0 }}</td>
             <td class="num">
               <span *ngIf="saldoDe(proveedor) as saldo" [class.prv-alerta]="saldo.conExceso > 0">
@@ -123,6 +134,11 @@
                 <span class="prv-sub" *ngIf="saldo.conExceso > 0">Facturó de más en {{ saldo.conExceso }}</span>
               </span>
               <span class="prv-sub" *ngIf="!saldoDe(proveedor)">Sin compras</span>
+            </td>
+            <td class="num">
+              <span *ngIf="saldoDe(proveedor) as saldo">
+                {{ (saldo.porPagar || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
+              </span>
             </td>
             <td class="num">
               <button class="prv-accion" (click)="abrirEdicion(proveedor)">Editar</button>

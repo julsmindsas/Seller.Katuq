@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
 import {
+  CumplimientoProveedor,
   InventarioService,
   Proveedor,
   SaldoProveedor,
@@ -25,6 +26,7 @@ export class ProveedoresComponent implements OnInit {
 
   proveedores: Proveedor[] = [];
   saldos: SaldoProveedor[] = [];
+  cumplimientos: CumplimientoProveedor[] = [];
   totalPorFacturar = 0;
 
   busqueda = '';
@@ -71,6 +73,13 @@ export class ProveedoresComponent implements OnInit {
         },
       });
 
+    // El cumplimiento también va aparte y por la misma razón: si el cálculo
+    // falla, la pantalla sigue sirviendo para administrar proveedores.
+    this.inventarioService.cumplimientoProveedores().subscribe({
+      next: (r) => { this.cumplimientos = r.proveedores || []; },
+      error: () => { this.cumplimientos = []; },
+    });
+
     // El saldo se pide aparte: si falla, la lista igual sirve.
     this.inventarioService.consultarSaldoProveedores().subscribe({
       next: (respuesta) => {
@@ -91,6 +100,39 @@ export class ProveedoresComponent implements OnInit {
       this.saldos.find((s) => !s.proveedorId && s.nombre === proveedor.nombre) ||
       null
     );
+  }
+
+  /** Cómo ha cumplido este proveedor, si ya se le compró. */
+  cumplimientoDe(proveedor: Proveedor): CumplimientoProveedor | null {
+    return (
+      this.cumplimientos.find((c) => c.proveedorId === proveedor.id) ||
+      this.cumplimientos.find((c) => !c.proveedorId && c.nombre === proveedor.nombre) ||
+      null
+    );
+  }
+
+  /**
+   * Lo que se demora de verdad contra lo que prometió. Es el dato que convierte
+   * los días de entrega en algo medido y no en un acuerdo de palabra.
+   */
+  textoEntrega(proveedor: Proveedor): string {
+    const c = this.cumplimientoDe(proveedor);
+    const prometido = Number(proveedor.diasEntrega) || 0;
+
+    if (!c || c.diasPromedio === null) {
+      return prometido ? `${prometido} días acordados` : 'sin medir';
+    }
+
+    const real = `${c.diasPromedio} días reales`;
+    if (!prometido) return real;
+    if (c.diasPromedio > prometido) return `${real} (prometió ${prometido})`;
+    return `${real} · cumple`;
+  }
+
+  seDemoraDeMas(proveedor: Proveedor): boolean {
+    const c = this.cumplimientoDe(proveedor);
+    const prometido = Number(proveedor.diasEntrega) || 0;
+    return !!c && c.diasPromedio !== null && prometido > 0 && c.diasPromedio > prometido;
   }
 
   abrirNuevo(): void {

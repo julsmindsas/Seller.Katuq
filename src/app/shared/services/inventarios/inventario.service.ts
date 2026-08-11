@@ -55,6 +55,8 @@ export interface FilaReposicion {
   sugerido: number;
   horizonteDias: number;
   diasEntrega: number;
+  /** De dónde salió ese plazo: observado > acordado > supuesto. */
+  origenDeLosDias?: 'observado' | 'acordado' | 'supuesto';
   diasEntregaSupuesto: boolean;
   /** Se agota antes de que llegue el pedido. */
   urgente: boolean;
@@ -138,6 +140,23 @@ export interface LineaOrdenCompra {
   costoUnitario: number;
   /** Porcentaje. Solo para saber cuánto va a facturar el proveedor. */
   ivaPct?: number;
+}
+
+export interface CumplimientoProveedor {
+  proveedorId: string | null;
+  nombre: string;
+  ordenes: number;
+  entregadas: number;
+  /** Órdenes puestas y todavía sin recibir. No son incumplimiento. */
+  sinRecibir: number;
+  /** null = todavía no ha entregado nada; no es cero. */
+  diasPromedio: number | null;
+  diasPeor: number | null;
+  /** Solo con dos o más entregas: con una hay anécdota, no comportamiento. */
+  diasObservados: number | null;
+  completitudPromedio: number | null;
+  completas: number;
+  conDevolucion: number;
 }
 
 export interface PrecioProveedor {
@@ -892,6 +911,11 @@ export class InventarioService {
     motivo?: string,
   ): Observable<any> {
     return this.http.post(`${this.apiUrl}/ordenes-compra/${id}/devolucion`, { devueltas, motivo });
+  }
+
+  /** Cuánto se demora de verdad cada proveedor y cuánto entrega completo. */
+  cumplimientoProveedores(): Observable<{ proveedores: CumplimientoProveedor[] }> {
+    return this.http.get<{ proveedores: CumplimientoProveedor[] }>(`${this.apiUrl}/ordenes-compra/cumplimiento`);
   }
 
   /** A quién y a cómo se le ha comprado un producto. */
