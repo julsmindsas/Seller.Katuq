@@ -227,6 +227,167 @@ export class OrdenesCompraComponent implements OnInit {
     return Math.max((Number(linea.recibido) || 0) - (Number(linea.cantidad) || 0), 0);
   }
 
+  /**
+   * Devuelve mercancía al proveedor: primero sale del inventario, después se
+   * anota contra la orden — el mismo orden que en la recepción, y por la misma
+   * razón: si falla lo segundo, el stock ya quedó bien y se dice.
+   */
+  async devolverAlProveedor(): Promise<void> {
+    if (!this.orden) return;
+
+    const conRecibido = this.orden.lineas.filter(
+      (l) => (Number(l.recibido) || 0) - (Number(l.devuelto) || 0) > 0,
+    );
+    if (conRecibido.length === 0) {
+      Swal.fire('Nada que devolver', 'De esta orden no ha llegado mercancía.', 'info');
+      return;
+    }
+
+    const opciones = conRecibido
+      .map((l) => {
+        const disponible = (Number(l.recibido) || 0) - (Number(l.devuelto) || 0);
+        return `<div style="display:flex;gap:8px;align-items:center;margin:6px 0">
+          <span style="flex:1;text-align:left">${l.referencia || l.productoId}
+            <small style="color:#6E6A8A"> (llegaron ${disponible})</small></span>
+          <input id="dev-${l.productoId}" type="number" min="0" max="${disponible}"
+                 class="swal2-input" style="width:90px;margin:0" placeholder="0">
+        </div>`;
+      })
+      .join('');
+
+    const { value: datos } = await Swal.fire({
+      title: 'Devolver al proveedor',
+      html: opciones + '<input id="dev-motivo" class="swal2-input" placeholder="Motivo (averiado, no conforme…)">',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Devolver',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const devueltas = conRecibido
+          .map((l) => ({
+            productoId: l.productoId,
+            cantidad: Number((document.getElementById(`dev-${l.productoId}`) as HTMLInputElement)?.value) || 0,
+          }))
+          .filter((d) => d.cantidad > 0);
+
+        if (devueltas.length === 0) {
+          Swal.showValidationMessage('Escriba cuántas unidades devuelve');
+          return false;
+        }
+        return {
+          devueltas,
+          motivo: (document.getElementById('dev-motivo') as HTMLInputElement)?.value?.trim() || '',
+        };
+      },
+    });
+
+    if (!datos) return;
+
+    this.guardando = true;
+
+    try {
+      await this.inventarioService
+        .ingresarProductos(
+          this.orden.idBodega,
+          datos.devueltas,
+          TipoMovimientoInventario.SALIDA_DEVOLUCION_PROVEEDOR,
+          `Devolución al proveedor · orden ${this.orden.id}${datos.motivo ? ' · ' + datos.motivo : ''}`,
+        )
+        .toPromise();
+    } catch (err: any) {
+      this.guardando = false;
+      const leido = leerErrorInventario(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'No salió del inventario',
+        html: leido.motivo ? `<p>${leido.motivo}</p>` : 'No se pudo registrar la salida.',
+        confirmButtonColor: '#5F3FE0',
+      });
+      return;
+    }
+
+    this.inventarioService.registrarDevolucionOrden(this.orden.id, datos.devueltas, datos.motivo).subscribe({
+      next: () => {
+        this.guardando = false;
+        this.abrirOrden(this.orden!.id);
+        Swal.fire({ icon: 'success', title: 'Devolución registrada', timer: 1600, showConfirmButton: false });
+      },
+      error: (err) => {
+        this.guardando = false;
+        Swal.fire({
+          icon: 'warning',
+          title: 'Salió del inventario, la orden no se anotó',
+          text:
+            (err?.error?.message || 'Falló al anotar contra la orden.') +
+            ' Revise la orden antes de volver a devolver, para no sacar dos veces.',
+        });
+      },
+    });
+  }
+
+  /** A quién y a cómo se le ha comprado este producto. */
+  verPrecios(linea: LineaOrdenCompra): void {
+    this.inventarioService.preciosDeProducto(linea.productoId).subscribe({
+      next: (datos) => {
+        if (datos.proveedores.length === 0) {
+          Swal.fire('Sin historia', 'Este producto no se le ha comprado a nadie todavía.', 'info');
+          return;
+        }
+
+        const filas = datos.proveedores
+          .map(
+            (p, i) => `<tr>
+              <td style="text-align:left;padding:6px 8px">${i === 0 && datos.resumen.comparable ? '⭐ ' : ''}${p.proveedor}</td>
+              <td style="text-align:right;padding:6px 8px">$${p.ultimoCosto.toLocaleString('es-CO')}</td>
+              <td style="text-align:right;padding:6px 8px;color:#6E6A8A">${p.compras}</td>
+            </tr>`,
+          )
+          .join('');
+
+        Swal.fire({
+          title: linea.referencia || 'Precios de compra',
+          html:
+            `<table style="width:100%;font-size:13px"><thead><tr>
+               <th style="text-align:left;padding:6px 8px">Proveedor</th>
+               <th style="text-align:right;padding:6px 8px">Último precio</th>
+               <th style="text-align:right;padding:6px 8px">Compras</th>
+             </tr></thead><tbody>${filas}</tbody></table>` +
+            (datos.resumen.comparable
+              ? `<p style="margin-top:12px;font-size:13px">Comprarle a ${datos.resumen.masCaro?.proveedor} en vez de a
+                 ${datos.resumen.masBarato?.proveedor} cuesta
+                 <strong>$${datos.resumen.diferencia.toLocaleString('es-CO')} más por unidad</strong>
+                 (${Math.round(datos.resumen.diferenciaPct)}%).</p>`
+              : '<p style="margin-top:12px;font-size:13px;color:#6E6A8A">Un solo proveedor: no hay con qué comparar.</p>'),
+          width: 560,
+          confirmButtonColor: '#5F3FE0',
+        });
+      },
+      error: (err) => Swal.fire('Error', err?.error?.message || 'No se pudieron consultar los precios.', 'error'),
+    });
+  }
+
+  /**
+   * Manda la orden al proveedor por WhatsApp. Hoy se dicta por teléfono: el
+   * texto lleva lo que se pide, para que no haya que repetirlo.
+   */
+  enviarPorWhatsapp(): void {
+    if (!this.orden) return;
+
+    const proveedor = this.proveedores.find((p) => p.id === this.orden?.proveedorId);
+    const lineas = this.orden.lineas
+      .map((l) => `• ${l.cantidad} x ${l.referencia || l.productoId}${l.descripcion ? ' — ' + l.descripcion : ''}`)
+      .join('\n');
+
+    const texto =
+      `Orden de compra\n${this.orden.proveedor?.nombre || ''}\n\n${lineas}\n\n` +
+      `Total: ${(this.orden.total || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })}\n` +
+      `Entregar en: ${this.nombreBodega(this.orden.idBodega)}`;
+
+    // Sin teléfono, wa.me abre el selector de contacto en vez de fallar.
+    const telefono = String(proveedor?.telefono || '').replace(/\D/g, '');
+    window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(texto)}`, '_blank');
+  }
+
   /** Anota un pago al proveedor. No mueve inventario ni cambia la factura. */
   async registrarPago(): Promise<void> {
     if (!this.orden) return;

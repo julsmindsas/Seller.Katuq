@@ -504,3 +504,21 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
   font-size: 12px;
   color: $muted;
 }
+
+// El historial de precios se consulta desde la línea, que es donde alguien se
+// pregunta si le están cobrando bien.
+.oc-precios {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border: 1px solid $borde;
+  border-radius: 999px;
+  background: transparent;
+  color: $acento;
+  font-size: 11px;
+  cursor: pointer;
+
+  &:hover { background: $acento-suave; }
+}

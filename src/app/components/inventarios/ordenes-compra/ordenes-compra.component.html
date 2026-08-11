@@ -182,6 +182,7 @@
             <th>Producto</th>
             <th class="num">Pedido</th>
             <th class="num">Ya recibido</th>
+            <th class="num">Devuelto</th>
             <th class="num">Falta</th>
             <th class="num">Llegó ahora</th>
           </tr>
@@ -191,9 +192,16 @@
             <td>
               <span class="oc-referencia">{{ linea.referencia || linea.productoId }}</span>
               <span class="oc-desc">{{ linea.descripcion }}</span>
+              <button class="oc-precios" (click)="verPrecios(linea)" title="A quién y a cómo se le ha comprado">
+                <i class="pi pi-tag"></i> precios
+              </button>
             </td>
             <td class="num">{{ linea.cantidad | number }}</td>
             <td class="num">{{ linea.recibido | number }}</td>
+            <td class="num">
+              <span class="oc-exceso" *ngIf="linea.devuelto">{{ linea.devuelto | number }}</span>
+              <span *ngIf="!linea.devuelto">—</span>
+            </td>
             <td class="num">
               <span class="oc-falta" *ngIf="pendienteDe(linea) > 0">{{ pendienteDe(linea) | number }}</span>
               <span class="oc-exceso" *ngIf="excedenteDe(linea) > 0" title="Llegaron más unidades de las que se pidieron">

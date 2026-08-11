@@ -13,5 +13,9 @@ export enum TipoMovimientoInventario {
     SALIDA_VENTA_ASISTIDA = 'Salida por venta Asistida',
     SALIDA_OBSEQUIO = 'Salida por obsequio',
     SALIDA_AJUSTE = 'Salida por ajuste de inventario',
-    SALIDA_ROBO = 'Salida por robo'
+    SALIDA_ROBO = 'Salida por robo',
+    // Devolver AL proveedor no es lo mismo que recibir DE un cliente, aunque las
+    // dos digan "devolución": el backend la clasifica aparte para que no reste
+    // demanda y la sugerencia de compra no pida menos de lo que hay que reponer.
+    SALIDA_DEVOLUCION_PROVEEDOR = 'Salida por devolucion a proveedor'
 }

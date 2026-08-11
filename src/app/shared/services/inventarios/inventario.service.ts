@@ -113,6 +113,8 @@ export interface CuentaOrden {
   adicionales?: number;
   /** Lo que el proveedor puede cobrar por lo entregado: mercancía + IVA + flete. */
   esperado?: number;
+  /** Lo que se le devolvió, en plata: debería volver como nota crédito. */
+  devuelto?: number;
   facturado: number;
   porFacturar: number;
   facturadoDeMas: boolean;
@@ -131,9 +133,37 @@ export interface LineaOrdenCompra {
   descripcion: string | null;
   cantidad: number;
   recibido: number;
+  /** Devuelto al proveedor. Deja de contar como recibido, pero no se borra. */
+  devuelto?: number;
   costoUnitario: number;
   /** Porcentaje. Solo para saber cuánto va a facturar el proveedor. */
   ivaPct?: number;
+}
+
+export interface PrecioProveedor {
+  proveedorId: string | null;
+  proveedor: string;
+  compras: number;
+  unidades: number;
+  ultimoCosto: number;
+  ultimaFecha: string | null;
+  mejorCosto: number;
+  peorCosto: number;
+}
+
+export interface PreciosDeProducto {
+  productoId: string;
+  proveedores: PrecioProveedor[];
+  resumen: {
+    proveedoresDistintos: number;
+    comprasRegistradas: number;
+    masBarato: { proveedor: string; costo: number } | null;
+    masCaro: { proveedor: string; costo: number } | null;
+    diferencia: number;
+    diferenciaPct: number;
+    /** false = un solo proveedor: no hay con qué comparar. */
+    comparable: boolean;
+  };
 }
 
 export interface PendienteOrdenCompra {
@@ -141,6 +171,8 @@ export interface PendienteOrdenCompra {
   referencia: string | null;
   pedido: number;
   recibido: number;
+  /** Lo que se le devolvió al proveedor. */
+  devuelto?: number;
   pendiente: number;
   /** Lo que el proveedor mandó de más. */
   excedente: number;
@@ -851,6 +883,21 @@ export class InventarioService {
     if (opciones.dias) params = params.set('dias', String(opciones.dias));
     if (opciones.cobertura) params = params.set('cobertura', String(opciones.cobertura));
     return this.http.get<SugerenciaReposicion>(`${this.apiUrl}/ordenes-compra/sugerencia`, { params });
+  }
+
+  /** Anota lo que se le devuelve al proveedor. La salida de stock va aparte. */
+  registrarDevolucionOrden(
+    id: string,
+    devueltas: { productoId: string; cantidad: number }[],
+    motivo?: string,
+  ): Observable<any> {
+    return this.http.post(`${this.apiUrl}/ordenes-compra/${id}/devolucion`, { devueltas, motivo });
+  }
+
+  /** A quién y a cómo se le ha comprado un producto. */
+  preciosDeProducto(productoId: string): Observable<PreciosDeProducto> {
+    const params = new HttpParams().set('producto', productoId);
+    return this.http.get<PreciosDeProducto>(`${this.apiUrl}/ordenes-compra/precios`, { params });
   }
 
   /** Anota que la plata salió. No mueve inventario ni cambia la factura. */
