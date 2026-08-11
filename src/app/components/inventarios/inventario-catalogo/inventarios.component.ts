@@ -3,6 +3,7 @@ import { Router } from "@angular/router";
 import { NgbModal, NgbModalOptions } from "@ng-bootstrap/ng-bootstrap";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import Swal from "sweetalert2";
+import { leerErrorInventario } from 'src/app/shared/utils/error-inventario';
 import { ProductDetailsComponent } from "../../productos/product-details/product-details.component";
 import { Producto } from "../../../shared/models/productos/Producto";
 import { MovimientoInventario } from "../model/movimientoinventario";
@@ -1444,8 +1445,22 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
         this.recargarInventarioConsolidado();
       },
       error: (err: any) => {
-        this.toastr.error(err?.error?.error || 'Error al ajustar inventario', 'Error');
+        const leido = leerErrorInventario(err);
         this.ajusteGuardando = false;
+        if (leido.esNoInventariable) {
+          this.ajusteVisible = false;
+          Swal.fire({
+            icon: 'warning',
+            title: 'Este producto no lleva inventario',
+            html:
+              `<p><strong>${this.ajusteProducto?.nombre || 'El producto'}</strong> está marcado como ` +
+              `<strong>no inventariable</strong>, así que no admite ingresos ni retiros de stock.</p>` +
+              `<p class="text-muted mb-0">Para que lleve stock, cámbialo en la ficha del producto.</p>`,
+            confirmButtonColor: '#5F3FE0',
+          });
+          return;
+        }
+        this.toastr.error(leido.motivo || 'Error al ajustar inventario', 'Error');
       }
     });
   }

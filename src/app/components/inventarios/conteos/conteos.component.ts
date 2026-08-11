@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
+import { leerErrorInventario } from 'src/app/shared/utils/error-inventario';
 import {
   CriterioConteo,
   InventarioService,
@@ -186,6 +187,7 @@ export class ConteosComponent implements OnInit {
     this.guardando = true;
     let aplicados = 0;
     const fallidos: string[] = [];
+    const motivosFallo = new Set<string>();
 
     for (const ajuste of ajustes) {
       const esIngreso = ajuste.diferencia > 0;
@@ -204,7 +206,11 @@ export class ConteosComponent implements OnInit {
           .toPromise();
         aplicados++;
       } catch (error) {
+        // Se conserva el PORQUÉ, no solo cuál falló: un listado de referencias
+        // sin motivo obliga a adivinar qué pasó con cada una.
+        const leido = leerErrorInventario(error);
         fallidos.push(ajuste.referencia || ajuste.productoId);
+        if (leido.motivo) motivosFallo.add(leido.motivo);
       }
     }
 
@@ -231,8 +237,11 @@ export class ConteosComponent implements OnInit {
       title: 'Quedó a medias',
       html:
         `<p>Se ajustaron ${aplicados} de ${ajustes.length}.</p>` +
-        `<p class="text-muted small">No se pudo con: ${fallidos.join(', ')}. ` +
-        `El conteo sigue abierto para que no se pierda lo contado.</p>`,
+        `<p class="text-muted small">No se pudo con: ${fallidos.join(', ')}.</p>` +
+        (motivosFallo.size
+          ? `<p class="text-muted small mb-0"><strong>Motivo:</strong> ${[...motivosFallo].join(' · ')}</p>`
+          : '') +
+        `<p class="text-muted small mb-0">El conteo sigue abierto para que no se pierda lo contado.</p>`,
     });
   }
 

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
+import { leerErrorInventario } from 'src/app/shared/utils/error-inventario';
 import {
   InventarioService,
   LineaOrdenCompra,
@@ -269,7 +270,15 @@ export class OrdenesCompraComponent implements OnInit {
         .toPromise();
     } catch (err: any) {
       this.guardando = false;
-      Swal.fire('No entró el inventario', err?.error?.message || 'No se pudo registrar la entrada.', 'error');
+      const leido = leerErrorInventario(err);
+      Swal.fire({
+        icon: leido.esNoInventariable ? 'warning' : 'error',
+        title: leido.esNoInventariable ? 'Un producto no lleva inventario' : 'No entró el inventario',
+        html: leido.motivo
+          ? `<p>${leido.motivo}</p>` + (leido.sugerencia ? `<p class="text-muted mb-0">${leido.sugerencia}</p>` : '')
+          : 'No se pudo registrar la entrada.',
+        confirmButtonColor: '#5F3FE0',
+      });
       return;
     }
 

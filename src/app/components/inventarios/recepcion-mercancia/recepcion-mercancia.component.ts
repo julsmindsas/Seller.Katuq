@@ -5,6 +5,8 @@ import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
 import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
+import { leerErrorInventario } from 'src/app/shared/utils/error-inventario';
 import { ConfirmationService } from 'primeng/api';
 import { MovimientoInventario } from '../model/movimientoinventario';
 import { Producto } from '../../../shared/models/productos/Producto';
@@ -229,37 +231,49 @@ export class RecepcionMercanciaComponent implements OnInit {
    * lleva al editor de productos para reconfigurarlo.
    */
   private mostrarErrorRecepcion(error: any): void {
-    const backendMsg: string =
-      error?.error?.error || error?.error?.message || error?.message || '';
 
-    // Patrón emitido por el backend (controllers/inventory.js):
-    //   "Producto <id> es no-inventariable y no admite ajustes de stock."
-    const matchNoInv = /Producto\s+(\S+)\s+es no-inventariable/i.exec(backendMsg);
-    if (matchNoInv) {
-      const productoId = matchNoInv[1];
-      const item = this.productos.find(
-        p => p.producto?.cd === productoId || p.id === productoId
-      );
+    // El backend usa dos redacciones para el mismo caso y solo una nombra el
+    // producto; `leerErrorInventario` entiende ambas. Cuando no viene el id,
+    // el culpable es el único producto de la línea que se intentó guardar.
+    const leido = leerErrorInventario(error);
+    if (leido.esNoInventariable) {
+      const productoId = leido.productoId;
+      const item = productoId
+        ? this.productos.find(p => p.producto?.cd === productoId || p.id === productoId)
+        : (this.productos.length === 1 ? this.productos[0] : undefined);
       const nombre =
         item?.producto?.crearProducto?.titulo ||
         item?.producto?.identificacion?.referencia ||
         productoId;
 
-      const toast = this.toastr.error(
-        `<div>El producto <strong>${nombre}</strong> está marcado como <strong>no inventariable</strong> y no admite ajustes de stock.</div>` +
-        `<div class="mt-2"><u>Clic aquí para reconfigurarlo</u></div>`,
-        'No se puede ajustar el inventario',
-        { enableHtml: true, tapToDismiss: false, closeButton: true, timeOut: 8000 }
-      );
-      toast.onTap.subscribe(() => this.abrirEditorProducto(item?.producto));
+      Swal.fire({
+        icon: 'warning',
+        title: 'Este producto no lleva inventario',
+        html:
+          `<p><strong>${nombre}</strong> está marcado como <strong>no inventariable</strong>, ` +
+          `así que no admite ingresos ni retiros de stock.</p>` +
+          `<p class="text-muted mb-0">Para que lleve stock, cámbialo en la ficha del producto. ` +
+          `Si solo quieres asociarlo a una bodega, usa «Agregar a bodega».</p>`,
+        showCancelButton: true,
+        confirmButtonText: 'Abrir ficha del producto',
+        cancelButtonText: 'Entendido',
+        confirmButtonColor: '#5F3FE0',
+      }).then((r) => {
+        if (r.isConfirmed) this.abrirEditorProducto(item?.producto);
+      });
       return;
     }
 
-    // Cualquier otro error: mostrar el mensaje real del backend.
-    this.toastr.error(
-      backendMsg || 'Error al guardar la recepción de mercancía',
-      'Error'
-    );
+    // Cualquier otro error: el motivo del backend, con su instrucción debajo.
+    Swal.fire({
+      icon: 'error',
+      title: 'No se guardó la recepción',
+      html: leido.motivo
+        ? `<p>${leido.motivo}</p>` +
+          (leido.sugerencia ? `<p class="text-muted mb-0">${leido.sugerencia}</p>` : '')
+        : 'No se pudo guardar la recepción de mercancía.',
+      confirmButtonColor: '#5F3FE0',
+    });
   }
 
   /**
