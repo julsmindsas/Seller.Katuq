@@ -3381,6 +3381,26 @@ Cambio OpenSpec: `openspec/changes/mvp-compras/`.
 
 ---
 
+## D-170 (2026-08-11) — Buzones de Instagram y Facebook, aditivos y con vínculo manual de contacto
+
+**Qué se decidió.** Instagram Direct y Messenger entran como **dos buzones nuevos e independientes** (`/notificaciones/instagram/inbox`, `/notificaciones/facebook/inbox`), conectados **directo con la API de Meta** — sin Chatwoot ni intermediario. El buzón de WhatsApp y el canal Kapso **no se tocan ni se reemplazan**: siguen vivos cobrando por conversación. Los tres quedan agrupados bajo un solo elemento de menú, "Mensajes", conservando la ruta actual de WhatsApp.
+
+**Por qué no se generalizó el buzón existente.** La identidad del hilo de WhatsApp es `phoneHash`, y de ahí cuelgan la ruta, el perfil de contacto, el opt-out y el cobro. Instagram y Messenger no tienen teléfono (usan IGSID y PSID). Generalizarlo obligaba a reemplazar la identidad en un módulo que mueve plata; se prefirió aditivo. El webhook nuevo (`/v1/meta/webhook`) es un archivo aparte aunque comparta el formato `entry[]` de Meta: un error ahí no puede tumbar la recepción de Kapso.
+
+**Colección nueva (aprobada explícitamente por Daniel).** Una sola: `meta_messages`, compartida por los dos canales con campo `canal` — mismo modelo de Meta, misma identidad; la separación vive en la consulta, no en el almacenamiento. Las **conexiones de cuenta NO usan colección nueva**: reutilizan `integration_configs/{company}_meta_{canal}`, y los contactos cuelgan como **subcolección** `contactos` (un mapa `hash -> dato` en el documento habría reventado el límite de 1 MB de Firestore con unos miles de conversaciones, tumbando la recepción).
+
+**Vínculo de contacto: manual, con puerta abierta a IA.** Meta no entrega teléfono, así que el cliente **no se puede resolver solo** — la spec original daba por hecho que sí y estaba equivocada. El operador vincula el hilo con un cliente a mano; recién ahí el panel muestra lead y pedidos. Cada vínculo guarda `origen` (`manual` hoy; `sugerido_ia` mañana) para que una sugerencia automática futura entre como propuesta a confirmar y nunca se auto-aplique. Se descartó emparejar por parecido de nombre: mostrarle al operador los pedidos del cliente equivocado, en un buzón donde se habla de plata, es peor que no mostrar ninguno.
+
+**Ventana de 24 horas como requisito, no como riesgo.** Al decidirse que la primera entrega **lee y responde**, el buzón debe mostrar cuánto queda de ventana y bloquear el envío al expirar, explicándolo en lenguaje llano. Si no, el operador escribe al vacío.
+
+**Trampa encontrada al verificar en navegador.** El menú se filtra comparando **texto exacto** contra `authorizedMenuItems` (que viene de `userData.menu` al iniciar sesión). La ruta de WhatsApp está registrada **con barra inicial**; al convertirla en hijo sin la barra se borró del menú de una empresa que sí la tenía autorizada. Corregido. Consecuencia operativa: **las rutas de Instagram y Facebook hay que darlas de alta en los roles**, o el feature se despliega invisible.
+
+**Estado de Meta.** App `katuq` (`2191585237986547`, negocio Julsmind) ya tiene Messenger, Instagram y Webhooks agregados, pero está en **modo Desarrollo** y los tres permisos de mensajería están en **acceso estándar, sin revisión solicitada y con cero llamadas a la API**. Katuq es proveedor de tecnología (sus clientes conectan sus propias cuentas), así que exige verificación de negocio y de acceso, más revisión con screencast por permiso. Hasta 25 usuarios de prueba no requieren revisión: se construye contra ellos y de ahí sale el screencast.
+
+**Fuera de alcance.** El bot que recibe pedidos por WhatsApp (toca órdenes, va en propuesta aparte).
+
+Cambio OpenSpec: `openspec/changes/add-buzones-instagram-facebook/`.
+
 ## D-169 (2026-08-10) — Bug: el Exportar de Lista de Precios nunca terminaba
 
 **Síntoma** (reportado por Monica en la pestaña Precio unitario): se abre el modal "Preparando exportación", se queda pensando y el Excel nunca baja. **No era de esa pestaña** — el problema estaba en la carga del catálogo, común a las cuatro.
@@ -3445,3 +3465,11 @@ Pendiente cerrado con hallazgo: la columna "Valor" queda vacía porque **el WMS 
 Asimetría documentada en el cliente: se CREA con `products` (inglés) y se CONSULTA en `productos` (español). Buscar `products` en la respuesta devuelve undefined — nos habría costado tiempo más adelante.
 
 **Estado de la integración Fullpi: COMPLETA en sus cuatro patas** — catálogo recreado, inventario cada 30 min multi-bodega, despacho de pedidos desde logística, y pull de estados. Quedan las órdenes de prueba 3,4,5,7,8,9 por eliminar de su lado.
+
+## D-167 (2026-08-11) — Despacho a Fullpi ESTRENADO con pedido real + elegibilidad de pago decidida
+
+Primer despacho REAL desde el módulo de logística: **ORE-000546 → WMS id 10**, `pushSource: despacho-manual`, pedido en EnDespacho. Antes falló dos veces (16:47, 16:54) con "El pedido no está pago ni es contraentrega": ese pedido es **CXC NÓMINA con saldo pendiente**, y mi candado —heredado del barrido automático— bloqueaba ventas legítimas a crédito.
+
+**Decisión de Daniel:** en el despacho MANUAL manda quien despacha; solo se conservan los bloqueos duros (cancelado, sin nroPedido). Si el pedido va sin pagar queda un log `pushed_sin_pago` con estadoPago, formaDePago y saldo. El barrido AUTOMÁTICO sigue exigiendo pagado/contraentrega **y** `ordersPushEnabled` (D-157) — ahí nadie supervisa. Desplegado en `36fb000`.
+
+**Falsa alarma del mismo día:** Daniel reportó "el desplegado no me carga" con `MIME type text/html` + `global is not defined`. El sitio estaba sano (verificado en Chrome limpio: 2026.08.11.11 carga con datos); era caché del navegador pidiendo chunks de una versión anterior. **Pendiente propuesto:** manejar el fallo de carga de chunk recargando con la versión nueva, para que a ningún usuario con la app abierta se le quede en blanco tras un despliegue. Además quedó visto un error real no bloqueante: `shouldSendNotification` revienta leyendo `.includes` de un undefined.
