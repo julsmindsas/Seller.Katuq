@@ -53,6 +53,14 @@
         <span>NIT (opcional)</span>
         <input type="text" [(ngModel)]="proveedorNit" />
       </label>
+      <label>
+        <span>Flete</span>
+        <input type="number" min="0" [(ngModel)]="flete" placeholder="0" />
+      </label>
+      <label>
+        <span>Otros costos</span>
+        <input type="number" min="0" [(ngModel)]="otrosCostos" placeholder="0" />
+      </label>
       <label class="ancho">
         <span>Observaciones</span>
         <input type="text" [(ngModel)]="observaciones" placeholder="Número de factura, condiciones…" />
@@ -78,6 +86,7 @@
             <th>Producto</th>
             <th class="num">Cantidad</th>
             <th class="num">Costo unitario</th>
+            <th class="num">IVA %</th>
             <th class="num">Subtotal</th>
             <th></th>
           </tr>
@@ -90,6 +99,7 @@
             </td>
             <td class="num"><input class="oc-input" type="number" min="1" [(ngModel)]="linea.cantidad" /></td>
             <td class="num"><input class="oc-input" type="number" min="0" [(ngModel)]="linea.costoUnitario" /></td>
+            <td class="num"><input class="oc-input oc-input--corto" type="number" min="0" max="100" [(ngModel)]="linea.ivaPct" /></td>
             <td class="num">{{ (linea.cantidad * linea.costoUnitario) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td class="num">
               <button class="oc-quitar" (click)="quitarLinea(linea.productoId)"><i class="pi pi-times"></i></button>
@@ -97,6 +107,15 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="oc-desglose" *ngIf="lineasNuevas.length > 0">
+      <span>Mercancía <strong>{{ subtotalNuevo | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span>
+      <span *ngIf="ivaNuevo > 0">IVA <strong>{{ ivaNuevo | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span>
+      <span *ngIf="adicionalesNuevos > 0">Flete y otros <strong>{{ adicionalesNuevos | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span>
+      <span class="oc-desglose-nota" *ngIf="adicionalesNuevos > 0">
+        El flete se reparte entre los productos según su valor y entra al costo. El IVA no: es descontable.
+      </span>
     </div>
 
     <div class="oc-acciones">
@@ -177,7 +196,10 @@
             <td class="num">{{ linea.recibido | number }}</td>
             <td class="num">
               <span class="oc-falta" *ngIf="pendienteDe(linea) > 0">{{ pendienteDe(linea) | number }}</span>
-              <span class="oc-completo" *ngIf="pendienteDe(linea) === 0">Completo</span>
+              <span class="oc-exceso" *ngIf="excedenteDe(linea) > 0" title="Llegaron más unidades de las que se pidieron">
+                +{{ excedenteDe(linea) | number }} de más
+              </span>
+              <span class="oc-completo" *ngIf="pendienteDe(linea) === 0 && excedenteDe(linea) === 0">Completo</span>
             </td>
             <td class="num">
               <input class="oc-input" type="number" min="0" [(ngModel)]="recepcion[linea.productoId]"

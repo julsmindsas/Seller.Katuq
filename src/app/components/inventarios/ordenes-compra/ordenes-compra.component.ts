@@ -16,6 +16,8 @@ interface LineaNueva {
   descripcion: string;
   cantidad: number;
   costoUnitario: number;
+  /** Porcentaje. Solo cuenta para lo que va a facturar el proveedor. */
+  ivaPct: number;
 }
 
 /**
@@ -51,6 +53,9 @@ export class OrdenesCompraComponent implements OnInit {
   proveedorNombre = '';
   proveedorNit = '';
   observaciones = '';
+  /** Lo que cuesta traer la mercancía. Va al costo del producto, prorrateado. */
+  flete: number | null = null;
+  otrosCostos: number | null = null;
   lineasNuevas: LineaNueva[] = [];
 
   busquedaProducto = '';
@@ -134,6 +139,9 @@ export class OrdenesCompraComponent implements OnInit {
       descripcion: producto.titulo || producto.nombre || producto.identificacion?.titulo || '',
       cantidad: 1,
       costoUnitario: Number(producto.costoUnitario || producto.precio?.costoUnitario || 0),
+      // Arranca en cero: poner 19% por defecto haría que la orden diga que el
+      // proveedor va a cobrar un IVA que quizá no cobra.
+      ivaPct: 0,
     });
 
     this.busquedaProducto = '';
@@ -144,8 +152,24 @@ export class OrdenesCompraComponent implements OnInit {
     this.lineasNuevas = this.lineasNuevas.filter((l) => l.productoId !== productoId);
   }
 
-  get totalNuevo(): number {
+  get subtotalNuevo(): number {
     return this.lineasNuevas.reduce((s, l) => s + (Number(l.cantidad) || 0) * (Number(l.costoUnitario) || 0), 0);
+  }
+
+  get ivaNuevo(): number {
+    return this.lineasNuevas.reduce(
+      (s, l) => s + (Number(l.cantidad) || 0) * (Number(l.costoUnitario) || 0) * ((Number(l.ivaPct) || 0) / 100),
+      0,
+    );
+  }
+
+  get adicionalesNuevos(): number {
+    return (Number(this.flete) || 0) + (Number(this.otrosCostos) || 0);
+  }
+
+  /** Lo que va a facturar el proveedor: mercancía + IVA + lo que costó traerla. */
+  get totalNuevo(): number {
+    return this.subtotalNuevo + this.ivaNuevo + this.adicionalesNuevos;
   }
 
   /** Al escoger del maestro, el nombre y el NIT se llenan solos. */
@@ -171,6 +195,8 @@ export class OrdenesCompraComponent implements OnInit {
       .crearOrdenCompra({
         proveedor: { nombre: this.proveedorNombre.trim(), nit: this.proveedorNit.trim() || undefined },
         proveedorId: this.proveedorId || undefined,
+        flete: Number(this.flete) || 0,
+        otrosCostos: Number(this.otrosCostos) || 0,
         bodega: this.bodegaSeleccionada,
         lineas: this.lineasNuevas.map((l) => ({
           productoId: l.productoId,
@@ -178,6 +204,7 @@ export class OrdenesCompraComponent implements OnInit {
           descripcion: l.descripcion || undefined,
           cantidad: Number(l.cantidad),
           costoUnitario: Number(l.costoUnitario) || 0,
+          ivaPct: Number(l.ivaPct) || 0,
         })),
         observaciones: this.observaciones.trim() || undefined,
       })
@@ -193,6 +220,54 @@ export class OrdenesCompraComponent implements OnInit {
           Swal.fire('Error', err?.error?.message || 'No se pudo crear la orden.', 'error');
         },
       });
+  }
+
+  /** Lo que el proveedor mandó de más. Se ve, igual que facturar de más. */
+  excedenteDe(linea: LineaOrdenCompra): number {
+    return Math.max((Number(linea.recibido) || 0) - (Number(linea.cantidad) || 0), 0);
+  }
+
+  /** Anota un pago al proveedor. No mueve inventario ni cambia la factura. */
+  async registrarPago(): Promise<void> {
+    if (!this.orden) return;
+
+    const porPagar = this.orden.cuenta?.porPagar || 0;
+    const { value: datos } = await Swal.fire({
+      title: 'Pago al proveedor',
+      html:
+        `<input id="p-val" type="number" class="swal2-input" placeholder="Valor pagado" value="${porPagar > 0 ? porPagar : ''}">` +
+        '<input id="p-med" class="swal2-input" placeholder="Medio (transferencia, efectivo…)">' +
+        '<input id="p-fac" class="swal2-input" placeholder="Factura (opcional — vacío = anticipo)">',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Anotar pago',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const valor = Number((document.getElementById('p-val') as HTMLInputElement)?.value);
+        if (!valor || valor <= 0) { Swal.showValidationMessage('El valor debe ser mayor que cero'); return false; }
+        return {
+          valor,
+          medio: (document.getElementById('p-med') as HTMLInputElement)?.value?.trim() || null,
+          factura: (document.getElementById('p-fac') as HTMLInputElement)?.value?.trim() || null,
+          fecha: new Date().toISOString().slice(0, 10),
+        };
+      },
+    });
+
+    if (!datos) return;
+
+    this.guardando = true;
+    this.inventarioService.registrarPagoOrden(this.orden.id, datos).subscribe({
+      next: () => {
+        this.guardando = false;
+        this.abrirOrden(this.orden!.id);
+        Swal.fire({ icon: 'success', title: 'Pago anotado', timer: 1500, showConfirmButton: false });
+      },
+      error: (err) => {
+        this.guardando = false;
+        Swal.fire('No se pudo anotar', err?.error?.message || 'Revise el valor.', 'error');
+      },
+    });
   }
 
   /** Anota la factura del proveedor. No mueve inventario ni paga nada. */
@@ -239,6 +314,8 @@ export class OrdenesCompraComponent implements OnInit {
     this.proveedorNombre = '';
     this.proveedorNit = '';
     this.observaciones = '';
+    this.flete = null;
+    this.otrosCostos = null;
     this.lineasNuevas = [];
     this.busquedaProducto = '';
     this.resultados = [];

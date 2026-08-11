@@ -530,6 +530,18 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "check-square",
         },
+      ],
+    },
+    // Compras es su propio módulo, no una carpeta de Inventarios: al recibir
+    // mercancía escribe el costo del producto, y esa frontera se sostiene
+    // también en el menú. La ruta de las órdenes se deja como estaba para no
+    // romper permisos ya dados ni enlaces guardados.
+    {
+      title: "Compras",
+      icon: "shopping-cart",
+      type: "sub",
+      active: false,
+      children: [
         {
           path: "inventario/ordenes-compra",
           title: "Órdenes de compra",
@@ -604,20 +616,24 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
+        // OJO: estas rutas se comparan por texto EXACTO contra
+        // `authorizedMenuItems` en filterMenuItemsByAuthorization(). La de
+        // WhatsApp está registrada CON barra inicial — cambiarla la borra del
+        // menú de todas las empresas que hoy la tienen.
         {
-          path: "notificaciones/whatsapp/inbox",
+          path: "/notificaciones/whatsapp/inbox",
           title: "WhatsApp",
           type: "link",
           icon: "message-circle",
         },
         {
-          path: "notificaciones/instagram/inbox",
+          path: "/notificaciones/instagram/inbox",
           title: "Instagram",
           type: "link",
           icon: "instagram",
         },
         {
-          path: "notificaciones/facebook/inbox",
+          path: "/notificaciones/facebook/inbox",
           title: "Facebook",
           type: "link",
           icon: "facebook",

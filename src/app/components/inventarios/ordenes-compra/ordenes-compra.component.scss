@@ -468,3 +468,39 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
     font-size: 13px;
   }
 }
+
+.oc-input--corto { max-width: 70px; }
+
+// Que llegue mercancía de más no puede pasar en silencio: es lo mismo que se
+// hace cuando el proveedor factura de más.
+.oc-exceso {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: $critico-suave;
+  color: $critico;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.oc-desglose {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border: 1px solid $borde;
+  border-radius: 11px;
+  background: $fondo;
+  font-size: 13px;
+  color: $muted;
+
+  strong { color: $ink; font-variant-numeric: tabular-nums; }
+}
+
+.oc-desglose-nota {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: $muted;
+}

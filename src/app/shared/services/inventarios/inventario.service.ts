@@ -33,6 +33,10 @@ export interface SaldoProveedor {
   /** Lo recibido que aún no llega facturado. Negativo = nos facturaron de más. */
   porFacturar: number;
   conExceso: number;
+  /** Lo que ya se le pagó. */
+  pagado?: number;
+  /** Lo facturado que todavía no se paga: la plata que va a salir. */
+  porPagar?: number;
 }
 
 export interface FacturaOrden {
@@ -42,13 +46,31 @@ export interface FacturaOrden {
   registradaPor?: string;
 }
 
+export interface PagoOrden {
+  valor: number;
+  fecha: string | null;
+  medio?: string | null;
+  /** Opcional: un anticipo se paga antes de que exista la factura. */
+  factura?: string | null;
+}
+
 export interface CuentaOrden {
   pedido: number;
   recibido: number;
+  /** IVA de lo recibido. No entra al costo del producto: es descontable. */
+  iva?: number;
+  /** Flete y otros costos, en la proporción de lo que ya llegó. */
+  adicionales?: number;
+  /** Lo que el proveedor puede cobrar por lo entregado: mercancía + IVA + flete. */
+  esperado?: number;
   facturado: number;
   porFacturar: number;
   facturadoDeMas: boolean;
   facturas: number;
+  pagado?: number;
+  porPagar?: number;
+  pagadoDeMas?: boolean;
+  pagos?: number;
 }
 
 export type EstadoOrdenCompra = 'abierta' | 'parcial' | 'recibida' | 'anulada';
@@ -60,6 +82,8 @@ export interface LineaOrdenCompra {
   cantidad: number;
   recibido: number;
   costoUnitario: number;
+  /** Porcentaje. Solo para saber cuánto va a facturar el proveedor. */
+  ivaPct?: number;
 }
 
 export interface PendienteOrdenCompra {
@@ -79,6 +103,10 @@ export interface OrdenCompra {
   /** Presente cuando la orden se creó eligiendo del maestro. */
   proveedorId?: string | null;
   facturas?: FacturaOrden[];
+  pagos?: PagoOrden[];
+  /** Lo que costó traer la mercancía, aparte del producto. */
+  flete?: number;
+  otrosCostos?: number;
   cuenta?: CuentaOrden;
   lineas: LineaOrdenCompra[];
   pendientes?: PendienteOrdenCompra[];
@@ -755,7 +783,7 @@ export class InventarioService {
   }
 
   /** Cuánto se le debe a cada proveedor: pedido, recibido y facturado. */
-  consultarSaldoProveedores(): Observable<{ proveedores: SaldoProveedor[]; total: number }> {
+  consultarSaldoProveedores(): Observable<{ proveedores: SaldoProveedor[]; total: number; totalPorPagar?: number }> {
     return this.http.get<{ proveedores: SaldoProveedor[]; total: number }>(
       `${this.apiUrl}/ordenes-compra/saldo-proveedores`,
     );
@@ -766,6 +794,11 @@ export class InventarioService {
     return this.http.post(`${this.apiUrl}/ordenes-compra/${id}/factura`, factura);
   }
 
+  /** Anota que la plata salió. No mueve inventario ni cambia la factura. */
+  registrarPagoOrden(id: string, pago: PagoOrden): Observable<{ cuenta: CuentaOrden }> {
+    return this.http.post<{ cuenta: CuentaOrden }>(`${this.apiUrl}/ordenes-compra/${id}/pago`, pago);
+  }
+
   // --- Órdenes de compra ---
 
   crearOrdenCompra(orden: {
@@ -773,30 +806,32 @@ export class InventarioService {
     /** Del maestro. Si viene, el backend toma de ahí el nombre y el NIT. */
     proveedorId?: string;
     bodega: string;
-    lineas: { productoId: string; referencia?: string; descripcion?: string; cantidad: number; costoUnitario?: number }[];
+    lineas: { productoId: string; referencia?: string; descripcion?: string; cantidad: number; costoUnitario?: number; ivaPct?: number }[];
+    flete?: number;
+    otrosCostos?: number;
     observaciones?: string;
   }): Observable<OrdenCompra> {
-    return this.http.post<OrdenCompra>(`${this.apiUrl}/inventory/ordenes-compra`, orden);
+    return this.http.post<OrdenCompra>(`${this.apiUrl}/ordenes-compra`, orden);
   }
 
   listarOrdenesCompra(options: { bodega?: string; pendientes?: boolean } = {}): Observable<{ ordenes: OrdenCompra[] }> {
     let params = new HttpParams();
     if (options.bodega) params = params.set('bodega', options.bodega);
     if (options.pendientes !== undefined) params = params.set('pendientes', String(options.pendientes));
-    return this.http.get<{ ordenes: OrdenCompra[] }>(`${this.apiUrl}/inventory/ordenes-compra`, { params });
+    return this.http.get<{ ordenes: OrdenCompra[] }>(`${this.apiUrl}/ordenes-compra`, { params });
   }
 
   obtenerOrdenCompra(id: string): Observable<OrdenCompra> {
-    return this.http.get<OrdenCompra>(`${this.apiUrl}/inventory/ordenes-compra/${id}`);
+    return this.http.get<OrdenCompra>(`${this.apiUrl}/ordenes-compra/${id}`);
   }
 
   /** Anota lo que llegó contra la orden. La entrada de stock va por su camino. */
   registrarRecepcionOrden(id: string, recibidas: { productoId: string; cantidad: number }[]): Observable<any> {
-    return this.http.put(`${this.apiUrl}/inventory/ordenes-compra/${id}/recepcion`, { recibidas });
+    return this.http.put(`${this.apiUrl}/ordenes-compra/${id}/recepcion`, { recibidas });
   }
 
   anularOrdenCompra(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/inventory/ordenes-compra/${id}`);
+    return this.http.delete(`${this.apiUrl}/ordenes-compra/${id}`);
   }
 
   // --- Conteos cíclicos ---
