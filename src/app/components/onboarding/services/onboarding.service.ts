@@ -99,8 +99,15 @@ export class OnboardingService {
     // Verificar y cargar datos existentes
     await this.loadExistingData(state);
 
+    // loadExistingData puede marcar varios pasos como COMPLETED (empresa
+    // detectada con bodegas, pagos, categorías, etc. ya configurados por el
+    // registro). Sin esto, el wizard siempre abría en COMPANY_INFO aunque
+    // casi todo ya estuviera hecho.
+    const nextStepId = getNextAvailableStep(state) || OnboardingStepId.COMPANY_INFO;
+    state.currentStepId = nextStepId;
+
     this.onboardingState$.next(state);
-    this.currentStep$.next(state.steps.get(OnboardingStepId.COMPANY_INFO)!);
+    this.currentStep$.next(state.steps.get(nextStepId)!);
     this.saveStateToStorage();
     return state;
   }

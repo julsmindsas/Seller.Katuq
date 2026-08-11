@@ -13,7 +13,8 @@ import {
   OnboardingStep,
   OnboardingStepId,
   OnboardingStepStatus,
-  AISuggestion
+  AISuggestion,
+  isStepAvailable
 } from '../models/onboarding-state.model';
 
 @Component({
@@ -316,10 +317,15 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
    */
   goToStep(stepId: OnboardingStepId): void {
     const step = this.onboardingState?.steps.get(stepId);
-    if (!step) return;
+    if (!step || !this.onboardingState) return;
 
-    // Solo permitir ir a pasos anteriores o el paso actual
-    if (step.number > (this.currentStep?.number || 0) + 1) {
+    // Disponible si el paso INMEDIATO anterior está completado u omitido
+    // (misma regla que ya define el modelo). Antes esto comparaba contra
+    // currentStep.number + 1: como currentStepId se queda fijo en el primer
+    // paso aunque el backend detecte varios pasos ya completados (empresa
+    // creada por encuesta con bodegas/pagos/categorías por defecto), cualquier
+    // clic más allá del segundo paso quedaba bloqueado sin motivo real.
+    if (!isStepAvailable(this.onboardingState, stepId)) {
       this.messageService.add({
         severity: 'info',
         summary: 'Paso Bloqueado',
