@@ -1,0 +1,150 @@
+<div class="modal-header">
+  <h5 class="modal-title"><i class="pi pi-tag me-2"></i>Editar Costo</h5>
+  <button type="button" class="btn-close" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  <!-- Información del producto -->
+  <div class="mb-4 p-3 bg-light rounded">
+    <div class="row align-items-center">
+      <div class="col-auto">
+        <img
+          *ngIf="producto?.crearProducto?.imagenesPrincipales?.length > 0"
+          [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto"
+          [alt]="producto?.crearProducto?.titulo"
+          width="60"
+          height="60"
+          style="border-radius: 8px; object-fit: cover;"
+        />
+        <img
+          *ngIf="!producto?.crearProducto?.imagenesPrincipales?.length"
+          src="assets/img/placeholder.png"
+          width="60"
+          height="60"
+          style="border-radius: 8px; opacity: 0.5;"
+        />
+      </div>
+      <div class="col">
+        <h6 class="mb-1 fw-bold">{{ producto?.crearProducto?.titulo }}</h6>
+        <small class="text-muted">Referencia: {{ producto?.identificacion?.referencia }}</small>
+      </div>
+    </div>
+  </div>
+
+  <form [formGroup]="costoForm">
+    <h5 class="mb-3">Costo del producto</h5>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="costoUnitario">
+          Costo unitario<span class="text-danger">*</span>
+        </label>
+        <div class="input-group">
+          <span class="input-group-text">$</span>
+          <input
+            formControlName="costoUnitario"
+            class="form-control"
+            id="costoUnitario"
+            type="number"
+            min="0"
+            placeholder="0"
+            required
+          />
+        </div>
+        <div *ngIf="costoForm.controls['costoUnitario'].invalid && costoForm.controls['costoUnitario'].touched"
+             class="text-danger small mt-1">
+          Ingresa un costo válido (0 o mayor)
+        </div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label" for="fechaVigencia">Fecha de vigencia</label>
+        <input
+          formControlName="fechaVigencia"
+          class="form-control"
+          id="fechaVigencia"
+          type="date"
+        />
+        <small class="text-muted">Desde cuándo rige este costo. Opcional.</small>
+      </div>
+    </div>
+
+    <!-- Referencias de solo lectura: mismos valores que muestra la pestaña -->
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Fuente actual</label>
+        <div class="form-control bg-light">
+          <span class="badge bg-light text-dark border">{{ fuenteActual }}</span>
+        </div>
+        <small class="text-muted">Al guardar quedará registrado como <strong>manual</strong>.</small>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Precio de venta</label>
+        <div class="form-control bg-light text-end">
+          <strong *ngIf="hayPrecioVenta">{{ precioVenta | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <span *ngIf="!hayPrecioVenta" class="text-muted">Sin precio cargado</span>
+        </div>
+        <small class="text-muted">Se edita en la pestaña Precio unitario.</small>
+      </div>
+    </div>
+
+    <!-- Margen calculado en vivo. NO se guarda: es la resta
+         (precio de venta − costo), solo para ver el efecto antes de guardar. -->
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Margen por unidad</label>
+        <div class="form-control text-end"
+             [ngClass]="!hayPrecioVenta ? 'bg-light' : (margenEnRojo ? 'bg-danger text-white' : 'bg-primary text-white')">
+          <strong *ngIf="hayPrecioVenta">{{ margen | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <span *ngIf="!hayPrecioVenta" class="text-muted">—</span>
+        </div>
+        <small class="text-muted">Lo que queda por cada unidad vendida.</small>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Margen sobre la venta</label>
+        <div class="form-control bg-light text-end">
+          <strong *ngIf="margenPorcentaje !== null">{{ margenPorcentaje | number:'1.0-1' }}%</strong>
+          <span *ngIf="margenPorcentaje === null" class="text-muted">—</span>
+        </div>
+        <small class="text-muted">Qué porcentaje del precio te queda.</small>
+      </div>
+    </div>
+
+    <div *ngIf="!hayPrecioVenta" class="alert alert-warning mt-1">
+      <small>
+        Este producto <strong>no tiene precio de venta cargado</strong>, así que no se puede calcular el margen.
+        Puedes guardar el costo igual; el precio se carga en la pestaña <strong>Precio unitario</strong>.
+      </small>
+    </div>
+
+    <div *ngIf="margenEnRojo" class="alert alert-danger mt-1">
+      <small><strong>Ojo:</strong> el costo quedaría por encima del precio de venta; cada unidad se vendería con pérdida.</small>
+    </div>
+
+    <div class="alert alert-info mt-2">
+      <small>
+        <strong>Nota:</strong> el cambio queda registrado en el histórico de costos del producto,
+        igual que cuando los costos entran por importación de Excel.
+      </small>
+    </div>
+
+    <div *ngIf="error" class="alert alert-danger mt-2 mb-0">
+      <small>{{ error }}</small>
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
+  <button
+    type="button"
+    class="btn btn-primary"
+    (click)="guardar()"
+    [disabled]="guardando || costoForm.invalid">
+    <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+    <i *ngIf="!guardando" class="pi pi-save me-1"></i>
+    Guardar Costo
+  </button>
+</div>

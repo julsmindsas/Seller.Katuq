@@ -7,6 +7,7 @@ import { ListaPreciosComponent } from './lista-precios/lista-precios.component';
 import { EditarPreciosTipoClienteComponent } from './editar-precios-tipo-cliente/editar-precios-tipo-cliente.component';
 import { EditarPrecioUnitarioComponent } from './editar-precio-unitario/editar-precio-unitario.component';
 import { EditarPrecioVolumenComponent } from './editar-precio-volumen/editar-precio-volumen.component';
+import { EditarCostoComponent } from './editar-costo/editar-costo.component';
 import { ListaPreciosCostosComponent } from './lista-precios-costos/lista-precios-costos.component';
 import { ImportarCostosModalComponent } from './importar-costos-modal/importar-costos-modal.component';
 import { TableModule } from 'primeng/table';
@@ -42,6 +43,7 @@ import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
     EditarPreciosTipoClienteComponent,
     EditarPrecioUnitarioComponent,
     EditarPrecioVolumenComponent,
+    EditarCostoComponent,
     ListaPreciosCostosComponent,
     ImportarCostosModalComponent
   ]

@@ -3265,6 +3265,122 @@ Decisiones del día (vía preguntas directas):
 
 Además hoy la sesión roadmap desplegó (con mi restart): indicadores KPI, disponibilidad, ubicaciones y conteos cíclicos — ver su registro. Carriles de archivos pactados entre sesiones para no chocar.
 
+## D-164 (2026-08-10) — Lista de Precios: búsqueda sobre índice cacheado + un solo filtro de precio para las 4 pestañas
+
+**Contexto.** Monica reportó que la búsqueda de Lista de Precios "se demora demasiado" y pidió definir el filtro de precios. Medido contra producción (solo lecturas): `getProducBySearch` leía la colección `products` COMPLETA de la empresa, documentos enteros, sin caché, **en cada request** — HARMONY LENS 13.874 docs / 58,4 MB / 42 s; OH MY STORE 8.442 / 48,1 MB / 34 s; ALMARA 2.138 / 29,7 MB / 19 s. Además hacía match contra descripción, stock y precio-como-texto, así que buscar "2" devolvía media base.
+
+**Decisión 1 — la búsqueda va sobre `getSearchIndex`.** Se reescribió `getProducBySearch` para resolver sobre el índice cacheado (máscara de campos, TTL 5 min, el mismo que ya usa el buscador de Productos) e hidratar con `db.getAll` **solo los documentos de la página visible**. El costo deja de escalar con el número de búsquedas y pasa a escalar con el tiempo: máximo una carga de índice cada 5 min por empresa, sin importar cuánta gente busque. Medido tras el cambio en ALMARA: 2,5 s la primera búsqueda (carga índice), ~450 ms las siguientes. Sin criterios (término vacío y sin rango) se mantiene la paginación nativa, que lee solo la página — así el endpoint no carga el índice cuando no hace falta. Beneficia también a **Recepción de Mercancía**, que consume el mismo endpoint.
+
+**Decisión 2 — la búsqueda es por referencia y nombre, nada más.** Se quitaron del match descripción, `cantidadDisponible` y `precioUnitarioSinIva`-como-texto: generaban coincidencias basura que se leían como que el buscador no funcionaba.
+
+**Decisión 3 — UN solo filtro de precio para las 4 pestañas.** Se verificó en el código que las columnas que Monica quería filtrar por separado son **el mismo campo**: "PRECIO BASE" (pestañas 1 y 3), "PRECIO CON IVA" (pestaña 2) y "PRECIO VENTA" (pestaña 4) salen todas de `precio.precioUnitarioConIva` con respaldo a `precioUnitarioSinIva` (`obtenerPrecioBase`, y `lista-precios.component.html:551` para precio venta). Un filtro, etiqueta variable por pestaña. El filtro se resuelve en memoria con la MISMA expresión que pinta la tabla, así lo que trae coincide 1:1 con lo que se ve; se agregó `precio.precioUnitarioSinIva` a la máscara del índice para poder hacerlo. Efecto lateral bueno: `Number()` captura los 10 productos con el precio guardado como string, que el rango nativo de Firestore no ve porque compara por tipo.
+
+**Decisión 4 — NO se filtra por tipo de cliente, volumen ni costo.** Cobertura medida en producción: precios por tipo de cliente 84,7% HARMONY / 98,9% OMS pero **0,0% ALMARA y 0% DEL RANCHO**; rangos por volumen al revés (99,8% ALMARA, 100% DEL RANCHO, 0% HARMONY, 1,5% OMS); costo cargado **0% en tres de cuatro empresas** (1,6% OMS). Un filtro por cualquiera de esos devolvería vacío para media base de clientes y se leería como roto. Tampoco se filtra por "sin IVA" aparte: los productos donde sin IVA ≠ con IVA son 0 en HARMONY, 5 en ALMARA, 1 en DEL RANCHO y 1 en OMS — y en OMS el campo sin IVA solo está poblado en 83 de 8.442 productos, así que ese filtro escondería el 99% del catálogo.
+
+**Decisión 5 — un solo canal de carga en el front.** Toda carga de página de Lista de Precios pasa por un Subject con `debounceTime(50)` + `switchMap`: el debounce colapsa los `onLazyLoad` duplicados que emiten las 4 p-table vivas en el DOM (las 4 pestañas comparten estado), y el switchMap cancela la petición en vuelo para que una respuesta lenta no pise a una más reciente. El `catchError` va DENTRO del switchMap: afuera, un error del backend mataría el stream y la pantalla no volvería a cargar. Se agregó reset a página 1 al cambiar de criterio.
+
+**Costo.** El arreglo de velocidad y el de costo son el mismo arreglo. Estimado para una persona buscando 1 vez/min, 8 h/día, 22 días, en HARMONY LENS: ~146M lecturas y ~616 GB/mes hoy → ~29M y ~10 GB después (peor caso, sin compartir caché con Productos). Sin índices Firestore nuevos, sin infraestructura nueva.
+
+**Continúa en D-165**, que arregla el mismo patrón en el módulo de Productos.
+
+---
+
+## D-165 (2026-08-10) — Productos: un solo camino de carga; escribir en el buscador ya no apaga 15 de los 18 filtros
+
+**El bug.** `productos.component.ts` bifurcaba a `/v1/productos/search/quick` cuando había 2+ caracteres en el buscador, y sobre esa respuesta reaplicaba en memoria **solo estado, disponibilidad y tipo de producto**. Los otros 15 filtros (precio desde/hasta, categoría, subcategoría, producción, inventariable, última edición, completitud, exposición, tipo y tiempo de entrega, canal, adiciones, calendario, precio manual) se caían en silencio, con los chips de filtro activo encendidos. Estaba **duplicado en dos lugares**: `cargarConFiltros()` (:750) y la tubería del `searchSubject` (:497), que es la que corre al escribir.
+
+Tres consecuencias, todas verificadas: (1) filtros ignorados sin aviso; (2) el paginador mentía — el total venía del servidor sin los filtros en memoria mientras las filas se recortaban en el cliente, y como el recorte era posterior a la paginación había resultados válidos que no caían en ninguna página; (3) **"texto + Inactivos" devolvía vacío SIEMPRE**, porque `quickSearch` ya excluye inactivos por su cuenta (`controllers/productos.js:2637`, el front nunca mandaba `incluirInactivos`) y encima el cliente filtraba pidiendo `activar === false`. Hay 113 inactivos en OH MY STORE y 60 en ALMARA que por esa vía eran inencontrables.
+
+**Decisión 1 — un solo camino: `/v1/productos/all`.** Resuelve texto y los 18 filtros juntos sobre el índice cacheado, hidrata solo la página y devuelve totales reales. Se eliminaron las dos ramas de `quickSearch` y el método muerto `ordenarProductos` (el orden lo resuelve el backend con la misma whitelist). `quickSearchProducts` sigue existiendo en el servicio: lo usan ventas, POS, cotizaciones, combos y descuentos.
+
+**Decisión 2 — `/all` entiende `searchBy`.** Espeja el selector de campo de la pantalla (referencia, título, marca, código de barras, etiquetas, categoría, descripción, características, garantías, restricciones, cuidado). Sin `searchBy` mantiene el comportamiento histórico: referencia + título + marca. Se normalizan tildes en ambos lados ("cajon" encuentra "CAJÓN"), que antes solo hacía el endpoint rápido.
+
+**Decisión 3 — orden.** Con término de búsqueda y sin orden de columna, primero la referencia exacta, luego prefijo de referencia, luego prefijo de título (paridad con `quickSearch`, que ordenaba así). Sin término ni orden de columna, `date_edit desc` — el mismo del listado sin filtros, para que aplicar un filtro no reordene la grilla.
+
+**Decisión 4 — el rango de precio sale de Firestore y pasa a memoria.** Se resuelve sobre el índice con la misma expresión `conIva || sinIva` que usa Lista de Precios (D-164), así los dos módulos filtran idéntico. Efecto medido en ALMARA: el rango 20.000–40.000 sobre "caja" pasa de 58 a **60** resultados — los 2 que aparecen son los que el rango nativo se saltaba porque el precio está guardado como string y Firestore compara por tipo.
+
+**Decisión 5 — no escanear IDs cuando no hace falta.** La rama in-memory hacía `baseQuery.select().get()` siempre; sin filtros nativos activos eso lee el ID de TODOS los productos de la empresa en cada request, sin caché — y ese es el caso más común (el usuario solo escribe). Ahora esa consulta solo corre si hay algún filtro nativo (estado, disponibilidad, tipo, producción, inventariable, última edición); si no, la intersección no descartaba nada de todos modos.
+
+**Continúa en D-166**, botón Editar de la pestaña Costos.
+
+**Verificación** (backend local contra Firestore de producción, solo GET, ALMARA FELICIDAD): texto+precio → 0 productos fuera de rango; texto+inactivo → 55 resultados con 0 activos colados (antes 0 resultados siempre); `searchBy` distingue campo (título 9 vs referencia 2.092); totales cuadran exactos (dice 193, recorriendo las 8 páginas salen 193, 193 únicos); solo precio → 463 en 848 ms y ordenado por última edición desc; sin filtros → 777 ms por la ruta nativa; combinado texto+precio+activo → 0 incumplen. Tiempos medidos desde conexión doméstica; en EC2 serán menores.
+
+---
+
+## D-166 (2026-08-10) — Lista de Precios: botón Editar en la pestaña Costos
+
+**Contexto.** La pestaña Costos era la única de las cuatro sin columna ACCIONES: el costo solo se podía cambiar importando un Excel. Monica pidió el mismo formulario de edición de las otras pestañas, con los datos de Costos. (El `switch` de `editarPrecio()` ya tenía un `case COSTO_TAB_INDEX` que abría el importador, pero era inalcanzable porque no existía el botón.)
+
+**Decisión 1 — endpoint propio que reusa el write-set del importador.** `PUT /v1/fulfillment/cost-import/product/:productId` (`controllers/productCosts.js#updateProductCost`). Escribe EXACTAMENTE los mismos campos que `applyCostImport` — `costoUnitario`, el objeto `costo`, `precio.costoUnitario` y el bloque `fulfillment.*` — y deja el mismo rastro en `productCostHistory` con `origen: "edicion-manual"`. La razón de duplicar el write-set y no inventar uno más corto: `obtenerCostoUnitario()` del front lee en cascada `costoUnitario` → `precio.costoUnitario` → `costo.costoUnitario|valor`; si la edición manual escribiera en menos lugares que el importador, la grilla podría mostrar un valor y el importador leer otro. **Si algún día se consolida dónde vive el costo, los dos caminos cambian juntos.**
+
+**Decisión 2 — la fuente queda marcada como `manual`.** No es un desplegable: el modal muestra la fuente actual (Prindel, importación, etc.) como informativa y avisa que al guardar queda registrado como manual. Dejar elegir la fuente permitiría atribuir a Prindel un número escrito a mano y ensuciaría la trazabilidad.
+
+**Decisión 3 — el precio de venta NO se edita acá.** Se muestra de solo lectura porque es el mismo campo que ya editan las otras pestañas (`precio.precioUnitarioConIva`, ver D-164); se usa para calcular margen por unidad y margen sobre la venta en vivo, con aviso en rojo si el costo supera al precio. Dos pestañas escribiendo el mismo campo sería pedir un conflicto.
+
+**Decisión 4 — invalidaciones.** El endpoint invalida el `searchIndex` de la empresa (escribe `date_edit`, que vive en el índice y ordena la grilla) y `actualizarProductoEnVista()` ahora limpia el caché `_todosLosProductos` del export — un hueco que ya existía para las otras tres pestañas: editar y exportar bajaba el valor viejo.
+
+**Verificación E2E** contra el tenant demo **Tienda Demo KAI Import** (no ALMARA: escribe en Firestore de producción, regla de `local-dev-startup`), con reversión completa del producto y borrado del histórico de prueba al terminar: costo inválido → 400; producto de otra empresa → **403** (guardarraíl multi-tenant); producto inexistente → 404; guardado → 200 con los 9 campos del write-set escritos y verificados leyendo Firestore; la cascada que usa la grilla devuelve el valor nuevo; histórico creado con anterior/nuevo/delta/fuente/usuario. El importador masivo sigue disponible en el botón "Importar" de la barra.
+
+---
+
+## D-167 (2026-08-10) — Lista de Precios: un importador y una plantilla por pestaña
+
+**Decisión.** Cada pestaña tiene su propio botón Importar y su propia plantilla, con las columnas de esa pestaña. **La pestaña ES el selector** — se descartó la idea de un importador con sub-pestañas adentro porque sería elegir lo mismo dos veces y habría que explicar la correspondencia. Antes solo tenían importador la pestaña de tipo de cliente y la de costos; unitario y volumen no tenían ninguno.
+
+Endpoints nuevos: `POST /v1/productos/import-precios-unitarios` y `POST /v1/productos/import-precios-volumen`.
+
+- **Unitario** — columnas REFERENCIA · PRECIO SIN IVA · % IVA (opcional; vacío conserva el IVA del producto). Calcula `valorIva` y `precioUnitarioConIva`.
+- **Volumen** — UNA FILA POR RANGO, referencia repetida (y heredada de la fila anterior si viene vacía, que es como exporta hoy la pestaña). `HASTA = 0` significa "de ahí en adelante". **Sobrescribe `preciosVolumen` completo** por referencia, así que el frontend agrupa todos los rangos de una referencia antes de lotear: si se partieran en dos lotes, el segundo borraría los del primero. Los rangos se ordenan por cantidad inicial en el backend porque en el Excel pueden venir revueltos.
+
+**Regla que no se puede romper: escribir con rutas punteadas (`precio.x`), nunca reemplazar el objeto `precio`.** Ahí viven juntos el precio unitario, `preciosVolumen` y `costoUnitario`; reemplazar el objeto haría que importar unitario borre los rangos de volumen y el costo. Hay test que lo cubre.
+
+**De paso:** el mapa referencia→producto de los importadores usa máscara de campos (`select`) en vez de leer documentos completos, como el resto del trabajo de hoy.
+
+**Verificación E2E** contra **Tienda Demo KAI Import** con reversión total: items vacío → 400; referencia inexistente → contada como no encontrada; precio inválido → ignorado; import unitario de 2 productos con IVA calculado correcto (10.000 + 19% = 11.900); import de 3 rangos desordenados → guardados ordenados y con la estructura exacta que espera el editor de volumen; **importar unitario no borra los rangos y viceversa**; y una referencia del tenant demo importada desde ALMARA → 0 actualizados (multi-tenant).
+
+**Consultado y pospuesto:** Monica preguntó si las empresas que usan tipo de cliente deberían dejar de ver las pestañas de unitario y volumen. Los datos dicen que **sí para volumen, no para unitario**: en HARMONY LENS los 11.757 productos con precio por tipo de cliente tienen TODOS precio base, porque el unitario es la base sobre la que se calcula el % por tipo. Reparto real — tipo de cliente: HARMONY 85%, OMS 99%, ALMARA/DEL RANCHO/CAFE ESCOBAR 0%; volumen: al revés (ALMARA 100%, DEL RANCHO 100%, CAFE ESCOBAR 98%, HARMONY 0%, OMS 2%). Ninguna empresa usa los dos modelos. Ojo: **`tiposPrecios` configurados NO sirve como señal** — ALMARA tiene 2 tipos configurados y CAFE ESCOBAR 3, y ninguno de sus productos los usa. Sin decidir todavía; tampoco se tocó la unificación plantilla↔exportar.
+
+---
+
+## D-168 (2026-08-10) — Bug: poner en 0 un precio por tipo de cliente no lo cambiaba
+
+**Síntoma** (reportado por Monica con pantallazo de ALM-1825): se edita un precio por tipo de cliente a 0, se guarda, y queda el valor anterior.
+
+**Causa — tres puntos encadenados, todos por tratar el 0 como "vacío":**
+1. `editar-precios-tipo-cliente.component.ts` omitía del payload los tipos en 0 (`if (precioSinIva && precioSinIva > 0)`).
+2. `updatePreciosTipoCliente` hace **merge por tipoClienteId y preserva lo que no viene en el payload**. Omitir un tipo significa "no lo toques", así que el precio viejo sobrevivía. Entre los dos, no existía forma de borrar un precio.
+3. Al reabrir, el modal precargaba el precio base cuando el guardado era 0, tapando cualquier evidencia.
+
+**Bonus del mismo bug:** el punto 3 explica por qué en el pantallazo los dos tipos de ALM-1825 tenían el MISMO valor ($82.110 = 69.000 base + 19%). El modal precargaba el precio base en **todos** los tipos, así que abrir para tocar uno y guardar creaba precios para todos.
+
+**Decisión — 0 (o vacío) significa QUITAR el precio de ese tipo**, no "precio cero". Un precio de venta en 0 sería regalar el producto; y "sin precio para este tipo" ya es un estado de primera clase en la UI (chip "Sin configurar", `getTiposClienteSinPrecio`). Ese tipo pasa a usar el precio base. El modal lo dice explícitamente.
+
+Cambios: el editor envía **todos** los tipos (los vacíos con `precio: 0`); el backend borra del merge cualquier `tipoClienteId` cuyo `precio` no sea un número > 0; el modal ya no precarga el precio base (queda visible arriba como referencia).
+
+**Verificación E2E** contra Tienda Demo KAI Import con reversión: guardar 69.000 en dos tipos → ambos; poner uno en 0 → **se quita y el otro queda intacto**; volver a ponerle 50.000 → vuelve; todos en 0 → producto sin precios por tipo.
+
+---
+
+## D-169 (2026-08-10) — Bug: el Exportar de Lista de Precios nunca terminaba
+
+**Síntoma** (reportado por Monica en la pestaña Precio unitario): se abre el modal "Preparando exportación", se queda pensando y el Excel nunca baja. **No era de esa pestaña** — el problema estaba en la carga del catálogo, común a las cuatro.
+
+**Causa.** `cargarTodosLosProductos` paginaba `/v1/productos/all` de 100 en 100 en lotes paralelos de 6. Esa ruta usa `offset()`, y **Firestore lee y factura todos los documentos que salta**: la página 1 lee 100 docs, la 22 lee 2.200. Medido en ALMARA (2.138 productos, 22 páginas): **32 s**, subiendo de 1,9 s la primera página a 10,7 s la página 20, con ~25.300 lecturas para un catálogo de 2.138. En HARMONY LENS son 139 páginas ≈ **964.000 lecturas**: por eso no terminaba nunca.
+
+**Decisión — endpoint dedicado `GET /v1/productos/export-precios`.** Una sola consulta con máscara de campos (1 lectura por producto) que devuelve solo lo que consumen los 4 generadores de Excel, sin imágenes, descripciones ni embeddings, y **sin enriquecer stock ni promociones** porque ninguna exportación de precios los usa. Como la máscara de Firestore no entra a los elementos de un array, `preciosPorTipoCliente` y `preciosVolumen` se podan en el controlador.
+
+**Medido:** ALMARA **32 s → 2,3 s** (payload 1,0 MB). HARMONY LENS pasa de no terminar a **31 s / 18,7 MB** (34,6 MB antes de podar los arrays). Los tiempos son desde conexión doméstica; en EC2 serán bastante menores.
+
+Se eliminó `fetchPaginaConReintento`, que solo existía para el bucle de páginas.
+
+**Addendum D-169/segundo-síntoma (2026-08-10).** Tras el arreglo de arriba, Monica reportó que en Precio por volumen y Costo seguía pasando: "el cuadro de alerta no carga, no aparece el botón del Ok". Causa distinta y con una asimetría reveladora: **la PRIMERA exportación funcionaba y la segunda no**. `_todosLosProductos` cachea el catálogo, así que en la segunda pestaña el flujo no espera nada: el `Swal.fire` del modal de carga y el `Swal.fire` del resultado ocurrían en el **mismo tick**, y SweetAlert quedaba atrapado en estado `showLoading()` — el spinner girando y el botón de confirmar oculto. Con caché fría la petición HTTP daba tiempo al modal de abrirse y por eso Precio unitario sí funcionó.
+
+Se verificó primero que no fuera dato ni generación: corriendo los 4 generadores contra los datos reales de ALMARA, volumen produce 2.842 filas en 39 ms (0,87 MB) y costo 2.139 filas en 18 ms — ninguno falla ni es lento.
+
+Arreglo: `exportarExcel` pasa a `async/await`, el modal de carga **solo se abre si hay que ir a buscar el catálogo**, y todo diálogo de resultado va precedido de `hideLoading()` (helper `cerrarCargando`). Se aplicó el mismo helper a los importadores, que tenían el mismo patrón — el de tipo de cliente disparaba el resumen sin salir del estado loading, y el nuevo hacía `close()` + `fire()` en el mismo tick.
+
+---
+
 **Addendum D-163/modal-corte (2026-08-10):** Daniel: "el modal del corte quedó feo" → rediseñado con el tema canónico (stats legibles con fondo suave, chips certificado/ambiguo/incompleto en par fuerte/fondo-suave, labels UPPERCASE) y la explicación repetida resuelta con regla de moda: la novedad mayoritaria de la página se dice UNA vez ("94 de 100 filas comparten...") y la columna Novedad distinta solo marca las que se apartan. Lección endurecida en el código: el cálculo corre una vez por página en el TS — una función llamada desde la plantilla con 100 filas se re-ejecuta miles de veces por ciclo y congela la pestaña (pasó en la versión .13, corregido en .14). Publicado 2026.08.10.14, verificado en vivo fluido. Nota operativa: el "congelado" persistente posterior era el content-script de la extensión de Chrome colgado tras varias recargas duras — pestaña nueva lo resuelve.
 
 **Acta de cierre formal Fase 1 (2026-08-10, D-163):** 34/34 suites en verde — 19 unitarias/contrato (candados, ledger, políticas, corte, dedup, guard bodegas, evidencia sombra, verificación diaria, write-set) + 15 de emulador CADA UNA en proyecto demo aislado (stock transaccional, telemetría sombra Osmosis, ledger, lectores/historial, BI, huella de pedidos y orígenes, controller HTTP, ruteo y cancelación Cereza, logística Shopify, flow adjust, procesadores Shopify, corte). Build de producción del front sin errores. Config sombra Osmosis acotada a las 4 bodegas Cereza (foto apagada). Con esto las tareas ejecutables de la fase quedan TODAS cerradas; restan solo el reloj de observación (~15-ago), las promociones por origen con el "dale" de Daniel, y el archive final (5.x) al cumplirse el criterio de conciliación.

@@ -318,35 +318,10 @@ export class ProductosComponent implements OnInit, OnDestroy {
     return col ? col.visible : true;
   }
 
-  // Ordena en el cliente los resultados de quickSearch (ya están todos en
-  // memoria, no hay round-trip al backend para esa rama). Misma whitelist
-  // de campos que SORTABLE_FIELDS en controllers/productos.js#getAll.
-  private ordenarProductos(products: any[]): any[] {
-    if (!this.sortField) return products;
-    const dir = this.sortOrder === -1 ? -1 : 1;
-    const getVal = (row: any): any => {
-      switch (this.sortField) {
-        case 'crearProducto.titulo': return (row.crearProducto?.titulo || '').toLowerCase();
-        case 'identificacion.referencia': return (row.identificacion?.referencia || '').toLowerCase();
-        case 'categorias.label': return (row.categorias?.label || '').toLowerCase();
-        case 'exposicion.activar': return !!row.exposicion?.activar;
-        case 'exposicion.disponible': return !!row.exposicion?.disponible;
-        case 'crearProducto.paraProduccion': return !!row.crearProducto?.paraProduccion;
-        case 'precio.precioUnitarioConIva': return row.precio?.precioUnitarioConIva ?? 0;
-        case 'date_edit': return row.date_edit ? new Date(row.date_edit).getTime() : 0;
-        default: return null;
-      }
-    };
-    return [...products].sort((a, b) => {
-      const av = getVal(a);
-      const bv = getVal(b);
-      let cmp: number;
-      if (typeof av === 'string') cmp = av.localeCompare(bv);
-      else if (typeof av === 'boolean') cmp = (av === bv) ? 0 : (av ? 1 : -1);
-      else cmp = (av ?? 0) - (bv ?? 0);
-      return cmp * dir;
-    });
-  }
+  // `ordenarProductos` vivía acá para reordenar en el cliente los resultados de
+  // quickSearch. Al unificar la carga en /v1/productos/all (D-165) el orden lo
+  // resuelve el backend con la misma whitelist (SORTABLE_FIELDS), así que el
+  // método quedó sin uso y se eliminó.
 
   /**
    * Ruta completa de la categoría, de la raíz al nodo elegido.
@@ -499,10 +474,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
         this.resetPaginacion();
         this.cargando = true;
         this.guardarFiltros();
-        const trimmed = texto?.trim();
-        const request$ = (trimmed && trimmed.length >= 2)
-          ? this.service.quickSearchProducts(trimmed, this.pageSize, this.filtros.searchBy, this.currentPage)
-          : this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, undefined, this.sortField ?? undefined, this.sortOrder);
+        // UN SOLO camino (D-165). Antes, con 2+ caracteres se bifurcaba a
+        // quickSearch y abajo se reaplicaban en memoria solo 3 de los 18
+        // filtros; los otros 15 se caían en silencio. `/v1/productos/all`
+        // resuelve texto (por el campo de `searchBy`) y todos los filtros
+        // juntos, y devuelve totales reales.
+        const request$ = this.service.getProductsFiltered(
+          this.filtros, this.pageSize, this.currentPage, undefined,
+          this.sortField ?? undefined, this.sortOrder);
 
         // El error se atrapa DENTRO del switchMap a propósito: si escapa hasta el
         // subscribe, RxJS cierra la suscripción y el Subject queda emitiendo al
@@ -517,30 +496,12 @@ export class ProductosComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe({
       next: (response: any) => {
-        if (response?.searchBy !== undefined) {
-          // Respuesta de quickSearch (identificada por el campo searchBy, exclusivo de este endpoint)
-          let products: any[] = response.products || [];
-          if (this.filtros.estado === 'activo') products = products.filter(p => p.exposicion?.activar === true);
-          else if (this.filtros.estado === 'inactivo') products = products.filter(p => p.exposicion?.activar === false);
-          if (this.filtros.disponibilidad === 'disponible') products = products.filter(p => p.exposicion?.disponible === true);
-          else if (this.filtros.disponibilidad === 'agotado') products = products.filter(p => p.exposicion?.disponible === false);
-          if (this.filtros.tipoProducto) products = products.filter(p => p.crearProducto?.tipoProducto === this.filtros.tipoProducto);
-          products = this.ordenarProductos(products);
-          const normalized = this.normalizeProducts(products);
-          this.temp = [...normalized];
-          this.rows = normalized;
-          this.totalItems = response.pagination?.totalItems ?? normalized.length;
-          this.totalPages = response.pagination?.totalPages ?? 1;
-          this.lastDocId = null;
-        } else {
-          // Respuesta de getProductsFiltered
-          const normalized = this.normalizeProducts(response.products);
-          this.temp = [...normalized];
-          this.rows = normalized;
-          this.totalItems = response.pagination.totalItems;
-          this.totalPages = response.pagination.totalPages;
-          this.lastDocId = response.pagination.lastDocId;
-        }
+        const normalized = this.normalizeProducts(response.products);
+        this.temp = [...normalized];
+        this.rows = normalized;
+        this.totalItems = response.pagination.totalItems;
+        this.totalPages = response.pagination.totalPages;
+        this.lastDocId = response.pagination.lastDocId;
         this.cargando = false;
       }
     });
@@ -751,61 +712,36 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.cargando = true;
     this.guardarFiltros();
 
-    const texto = this.filtros.texto?.trim();
-    if (texto && texto.length >= 2) {
-      // Usar quick search indexado (búsqueda por campo vía searchBy).
-      // Paginado real (page/pageSize) — antes topaba en 100 resultados y
-      // fijaba totalPages=1, dejando el paginador inutilizable.
-      this.service.quickSearchProducts(texto, this.pageSize, this.filtros.searchBy, this.currentPage)
-        .subscribe({
-          next: (response: any) => {
-            let products: any[] = response.products || [];
-            // Aplicar filtros adicionales activos en memoria (sobre la página recibida)
-            if (this.filtros.estado === 'activo') {
-              products = products.filter(p => p.exposicion?.activar === true);
-            } else if (this.filtros.estado === 'inactivo') {
-              products = products.filter(p => p.exposicion?.activar === false);
-            }
-            if (this.filtros.disponibilidad === 'disponible') {
-              products = products.filter(p => p.exposicion?.disponible === true);
-            } else if (this.filtros.disponibilidad === 'agotado') {
-              products = products.filter(p => p.exposicion?.disponible === false);
-            }
-            if (this.filtros.tipoProducto) {
-              products = products.filter(p => p.crearProducto?.tipoProducto === this.filtros.tipoProducto);
-            }
-            products = this.ordenarProductos(products);
-            const normalized = this.normalizeProducts(products);
-            this.temp = [...normalized];
-            this.rows = normalized;
-            this.totalItems = response.pagination?.totalItems ?? normalized.length;
-            this.totalPages = response.pagination?.totalPages ?? 1;
-            this.lastDocId = null;
-            this.cargando = false;
-          },
-          error: (err) => {
-            console.error('Error en quick search:', err);
-            this.cargando = false;
-          }
-        });
-    } else {
-      this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, this.lastDocId ?? undefined, this.sortField ?? undefined, this.sortOrder)
-        .subscribe({
-          next: (response: any) => {
-            const normalized = this.normalizeProducts(response.products);
-            this.temp = [...normalized];
-            this.rows = normalized;
-            this.totalItems = response.pagination.totalItems;
-            this.totalPages = response.pagination.totalPages;
-            this.lastDocId = response.pagination.lastDocId;
-            this.cargando = false;
-          },
-          error: (err) => {
-            console.error('Error al cargar productos:', err);
-            this.cargando = false;
-          }
-        });
-    }
+    // UN SOLO camino (D-165). Antes, con 2+ caracteres en el buscador se
+    // bifurcaba a `quickSearchProducts` y sobre esa respuesta se reaplicaban en
+    // memoria SOLO estado, disponibilidad y tipo de producto: los otros 15
+    // filtros (precio, categoría, subcategoría, producción, inventariable,
+    // última edición, completitud, exposición, tipo y tiempo de entrega, canal,
+    // adiciones, calendario, precio manual) se caían en silencio con los chips
+    // encendidos. Además el total venía del servidor sin esos filtros mientras
+    // las filas se recortaban acá, así que el paginador mentía y había
+    // resultados válidos que no caían en ninguna página. Y como el endpoint
+    // rápido ya excluye inactivos por su cuenta, "texto + Inactivos" daba
+    // vacío SIEMPRE.
+    //
+    // `/v1/productos/all` resuelve texto y los 18 filtros juntos sobre el mismo
+    // índice cacheado, hidrata solo la página y devuelve totales reales.
+    this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, this.lastDocId ?? undefined, this.sortField ?? undefined, this.sortOrder)
+      .subscribe({
+        next: (response: any) => {
+          const normalized = this.normalizeProducts(response.products);
+          this.temp = [...normalized];
+          this.rows = normalized;
+          this.totalItems = response.pagination.totalItems;
+          this.totalPages = response.pagination.totalPages;
+          this.lastDocId = response.pagination.lastDocId;
+          this.cargando = false;
+        },
+        error: (err) => {
+          console.error('Error al cargar productos:', err);
+          this.cargando = false;
+        }
+      });
   }
 
   onFiltroChange(): void {

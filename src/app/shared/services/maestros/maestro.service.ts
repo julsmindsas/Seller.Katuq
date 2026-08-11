@@ -255,6 +255,9 @@ export class MaestroService {
       .set('pageSize', pageSize.toString());
 
     if (filtros.texto) params = params.set('searchTerm', filtros.texto);
+    // Campo por el que buscar (referencia | titulo | marca | codigoBarras | ...).
+    // Solo tiene sentido acompañando al texto.
+    if (filtros.texto && filtros.searchBy) params = params.set('searchBy', filtros.searchBy);
     if (filtros.estado) params = params.set('estado', filtros.estado);
     if (filtros.disponibilidad) params = params.set('disponibilidad', filtros.disponibilidad);
     if (filtros.tipoProducto) params = params.set('tipoProducto', filtros.tipoProducto);
@@ -324,11 +327,21 @@ export class MaestroService {
     return this.http.get<any>(this.urlBase + '/v1/productos/all/inventariables', { params });
   }
 
-  getProductsBySearch(searchTerm: any, pageSize: number, currentPage: number, lastDocId?: string) {
+  /**
+   * Búsqueda de productos por referencia o nombre, con filtro opcional por rango
+   * de precio. El backend resuelve ambos sobre el índice cacheado y solo trae los
+   * documentos de la página pedida.
+   */
+  getProductsBySearch(searchTerm: any, pageSize: number, currentPage: number,
+                      precioDesde?: number | null, precioHasta?: number | null,
+                      lastDocId?: string) {
     let params = new HttpParams()
-      .set('searchTerm', searchTerm)
+      .set('searchTerm', searchTerm ?? '')
       .set('page', currentPage.toString())
       .set('pageSize', pageSize.toString());
+
+    if (precioDesde != null) params = params.set('precioDesde', precioDesde.toString());
+    if (precioHasta != null) params = params.set('precioHasta', precioHasta.toString());
 
     if (lastDocId) {
       params = params.set('lastDocId', lastDocId);
@@ -363,6 +376,28 @@ export class MaestroService {
 
   public importPreciosTipoCliente(data: { precios: any[], porcentajeIva: number, preciosConIva: boolean }) {
     return this.http.post<any>(this.urlBase + '/v1/productos/import-precios', data, this.httpOptions);
+  }
+
+  /**
+   * Catálogo completo para exportar precios a Excel: UNA consulta con máscara
+   * de campos. No usar `getAllProductsPagination` en bucle para esto — su
+   * offset relee los documentos que salta y el export nunca terminaba.
+   */
+  public exportarPrecios(): Observable<any> {
+    return this.http.get<any>(this.urlBase + '/v1/productos/export-precios', this.httpOptions);
+  }
+
+  /** Importa el precio unitario (pestaña "Precio unitario" de Lista de Precios). */
+  public importPreciosUnitarios(items: { referencia: string; precioSinIva: number; porcentajeIva?: number | null }[]) {
+    return this.http.post<any>(this.urlBase + '/v1/productos/import-precios-unitarios', { items }, this.httpOptions);
+  }
+
+  /**
+   * Importa los rangos por volumen. Cada item lleva TODOS los rangos de su
+   * referencia: el backend sobrescribe `preciosVolumen` completo.
+   */
+  public importPreciosVolumen(items: { referencia: string; rangos: any[] }[]) {
+    return this.http.post<any>(this.urlBase + '/v1/productos/import-precios-volumen', { items }, this.httpOptions);
   }
 
   /** Guarda los precios por tipo de cliente de UN producto (merge por tipoClienteId en backend). */

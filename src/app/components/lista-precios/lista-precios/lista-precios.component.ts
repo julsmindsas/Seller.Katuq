@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { Subject, firstValueFrom } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, firstValueFrom, of } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError } from 'rxjs/operators';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import * as XLSX from 'xlsx';
@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import { EditarPreciosTipoClienteComponent } from '../editar-precios-tipo-cliente/editar-precios-tipo-cliente.component';
 import { EditarPrecioUnitarioComponent } from '../editar-precio-unitario/editar-precio-unitario.component';
 import { EditarPrecioVolumenComponent } from '../editar-precio-volumen/editar-precio-volumen.component';
+import { EditarCostoComponent } from '../editar-costo/editar-costo.component';
 import { ImportarCostosModalComponent } from '../importar-costos-modal/importar-costos-modal.component';
 import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/Producto';
 
@@ -21,6 +22,16 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private searchSubject$ = new Subject<string>();
+  /**
+   * Toda carga de página pasa por acá. El debounce de 50 ms colapsa las
+   * emisiones duplicadas del mismo tick (las 4 pestañas comparten estado y sus
+   * 4 p-table quedan vivas en el DOM, así que un cambio de página o de total
+   * puede disparar hasta 4 onLazyLoad idénticos), y el switchMap cancela la
+   * petición anterior cuando llega una nueva — sin esto, una respuesta lenta
+   * podía pisar a una más reciente y mostrar resultados que no correspondían
+   * al término escrito.
+   */
+  private cargaSubject$ = new Subject<number>();
 
   cargando = false;
   productosFiltrados: Producto[] = [];
@@ -29,9 +40,18 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   activeTab: number = 0;
   readonly COSTO_TAB_INDEX = 3;
 
+  // Filtro por rango de precio. Aplica a las 4 pestañas porque todas pintan el
+  // MISMO campo (`precio.precioUnitarioConIva`, con respaldo a sin IVA): lo que
+  // la pestaña 1 llama "precio base", la 2 "precio con IVA", la 3 "precio base"
+  // y la 4 "precio venta". Solo cambia la etiqueta.
+  precioDesde: number | null = null;
+  precioHasta: number | null = null;
+
   // Paginación server-side
   pageSize = 10;
   totalRecords = 0;
+  /** Fila inicial de la grilla — se pone en 0 para volver a la página 1. */
+  primeraFila = 0;
   private _lazyLoadInitialized = false;
 
   // Row expansion
@@ -47,13 +67,14 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarTiposCliente();
+    this.iniciarCanalDeCarga();
 
     // Debounce de búsqueda — 500ms después de dejar de escribir
     this.searchSubject$
       .pipe(debounceTime(500), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe(term => {
         this.searchTerm = term;
-        this.cargarPagina(1);
+        this.volverAPrimeraPagina();
       });
 
     // cargarPagina(1) como fallback: si p-table no dispara onLazyLoad en el primer render
@@ -100,29 +121,105 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       });
   }
 
+  /** Hay algún criterio activo (texto o rango de precio). */
+  get hayFiltrosActivos(): boolean {
+    return !!this.searchTerm?.trim() || this.precioDesde != null || this.precioHasta != null;
+  }
+
+  /**
+   * Único canal de carga: colapsa duplicados del mismo tick y cancela la
+   * petición en vuelo cuando entra una nueva. El catchError va DENTRO del
+   * switchMap a propósito — si estuviera afuera, un error del backend mataría
+   * el stream y la pantalla dejaría de cargar hasta recargar el navegador.
+   */
+  private iniciarCanalDeCarga(): void {
+    this.cargaSubject$
+      .pipe(
+        debounceTime(50),
+        tap(() => (this.cargando = true)),
+        switchMap((page: number) => {
+          const term = this.searchTerm?.trim();
+          const usarBusqueda = !!term || this.precioDesde != null || this.precioHasta != null;
+
+          const obs$ = usarBusqueda
+            ? this.service.getProductsBySearch(term || '', this.pageSize, page, this.precioDesde, this.precioHasta)
+            : this.service.getAllProductsPagination(this.pageSize, page);
+
+          return obs$.pipe(catchError(() => of(null)));
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((data: any) => {
+        this.productosFiltrados = Array.isArray(data?.products) ? data.products : [];
+        this.totalRecords = data?.pagination?.totalItems ?? this.productosFiltrados.length;
+        this.cargando = false;
+      });
+  }
+
   /**
    * Carga UNA página de productos desde el servidor.
-   * Si hay searchTerm, usa getProductsBySearch; si no, getAllProductsPagination.
+   * Con texto o rango de precio usa getProductsBySearch (índice cacheado);
+   * sin criterios, getAllProductsPagination (paginación nativa).
    */
   cargarPagina(page: number) {
-    this.cargando = true;
-    const term = this.searchTerm?.trim();
+    this.cargaSubject$.next(page);
+  }
 
-    const obs$ = term
-      ? this.service.getProductsBySearch(term, this.pageSize, page)
-      : this.service.getAllProductsPagination(this.pageSize, page);
+  /**
+   * Vuelve a la página 1 y recarga. Necesario al cambiar el criterio: si
+   * buscabas desde la página 5, la grilla pedía la página 5 de un resultado
+   * que quizá solo tiene una.
+   */
+  volverAPrimeraPagina(): void {
+    this.primeraFila = 0;
+    this.cargarPagina(1);
+  }
 
-    obs$.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (data: any) => {
-        this.productosFiltrados = Array.isArray(data?.products) ? data.products : [];
-        this.totalRecords = data?.pagination?.totalItems || this.productosFiltrados.length;
-        this.cargando = false;
-      },
-      error: () => {
-        this.productosFiltrados = [];
-        this.cargando = false;
-      }
-    });
+  /** Aplica el rango de precio (desde/hasta) escrito por el usuario. */
+  aplicarFiltroPrecio(): void {
+    const desde = this.normalizarPrecio(this.precioDesde);
+    const hasta = this.normalizarPrecio(this.precioHasta);
+
+    // Rango invertido: se intercambia en vez de devolver vacío, que se leería
+    // como que el filtro está roto.
+    if (desde != null && hasta != null && desde > hasta) {
+      this.precioDesde = hasta;
+      this.precioHasta = desde;
+    } else {
+      this.precioDesde = desde;
+      this.precioHasta = hasta;
+    }
+
+    this.volverAPrimeraPagina();
+  }
+
+  private normalizarPrecio(valor: any): number | null {
+    if (valor === null || valor === undefined || valor === '') return null;
+    const n = Number(valor);
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  }
+
+  /** Limpia buscador y rango de precio. */
+  limpiarFiltros(): void {
+    this.searchTerm = '';
+    this.precioDesde = null;
+    this.precioHasta = null;
+    this.volverAPrimeraPagina();
+  }
+
+  /** Nombre de lo que se importa/exporta en la pestaña activa, para los tooltips. */
+  get nombrePestana(): string {
+    if (this.activeTab === 1) return 'precios unitarios';
+    if (this.activeTab === 2) return 'precios por volumen';
+    if (this.activeTab === this.COSTO_TAB_INDEX) return 'costos';
+    return 'precios por tipo de cliente';
+  }
+
+  /** Etiqueta del filtro de precio según la pestaña — el campo es el mismo. */
+  get etiquetaPrecio(): string {
+    if (this.activeTab === 1) return 'Precio con IVA';
+    if (this.activeTab === this.COSTO_TAB_INDEX) return 'Precio venta';
+    return 'Precio base';
   }
 
   /**
@@ -131,90 +228,33 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
    */
   onLazyLoad(event: any) {
     this.pageSize = event.rows || 10;
-    const page = Math.floor((event.first || 0) / this.pageSize) + 1;
+    this.primeraFila = event.first || 0;
+    const page = Math.floor(this.primeraFila / this.pageSize) + 1;
     this._lazyLoadInitialized = true;
     this.cargarPagina(page);
   }
 
   /**
-   * Carga TODOS los productos (todas las páginas) — solo para exportar Excel.
-   * Paginación en PARALELO (batches) → rápido aun con miles de productos.
-   * Siempre trae fresco (precios actuales), reintenta páginas que fallen y, si
-   * queda incompleto, pide confirmación en vez de exportar parcial en silencio.
+   * Carga TODOS los productos — solo para exportar Excel. UNA sola petición.
+   *
+   * Antes paginaba `/productos/all` de 100 en 100 en lotes paralelos, y esa ruta
+   * usa `offset()`: Firestore lee y descarta todo lo que salta, así que cada
+   * página tardaba más que la anterior. Medido en ALMARA (2.138 productos, 22
+   * páginas): 32 s, de 1,9 s la primera a 10,7 s la página 20, con ~25.300
+   * lecturas para un catálogo de 2.138. En HARMONY LENS (139 páginas) el
+   * exportar simplemente no terminaba: el modal se quedaba "pensando".
    */
-  private async cargarTodosLosProductos(callback: () => void) {
-    // Cache: exports repetidos (p.ej. cambiar de pestaña) no re-paginan el catálogo.
-    // Se invalida al editar/importar/eliminar precios (this._todosLosProductos = null).
-    if (this._todosLosProductos) { callback(); return; }
+  private async obtenerCatalogoParaExportar(): Promise<Producto[]> {
+    // Cache: exports repetidos (p.ej. cambiar de pestaña) no vuelven a pedir el
+    // catálogo. Se invalida al editar/importar precios.
+    if (this._todosLosProductos) return this._todosLosProductos;
 
-    const PAGE = 100;        // máx que acepta el backend
-    const CONCURRENCY = 6;   // páginas en paralelo por batch
-
-    const actualizarProgreso = (cargados: number, total: number) => {
-      const el = Swal.getHtmlContainer();
-      if (el) el.innerHTML = `Cargando catálogo… <b>${cargados}</b>${total ? ' / ' + total : ''} productos`;
-    };
-
-    try {
-      // Página 1 → total real de páginas/items (con count del backend).
-      const first: any = await this.service.getAllProductsPagination(PAGE, 1)
-        .pipe(takeUntil(this.destroy$)).toPromise();
-      const all: Producto[] = Array.isArray(first?.products) ? [...first.products] : [];
-      const totalItems = first?.pagination?.totalItems || all.length;
-      const totalPages = Math.max(1, first?.pagination?.totalPages || 1);
-      actualizarProgreso(all.length, totalItems);
-
-      // Resto de páginas en paralelo (offset → páginas independientes).
-      for (let start = 2; start <= totalPages; start += CONCURRENCY) {
-        const batch: Promise<any>[] = [];
-        for (let p = start; p < start + CONCURRENCY && p <= totalPages; p++) {
-          batch.push(this.fetchPaginaConReintento(p, PAGE));
-        }
-        const results = await Promise.all(batch);
-        for (const r of results) {
-          if (Array.isArray(r?.products)) all.push(...r.products);
-        }
-        actualizarProgreso(all.length, totalItems);
-      }
-
-      // Anti parcial-silencioso: si faltan productos, avisar antes de exportar.
-      const incompleto = !!(totalItems && all.length < totalItems);
-      if (incompleto) {
-        const resp = await Swal.fire({
-          title: 'Exportación incompleta',
-          html: `Se cargaron <b>${all.length}</b> de <b>${totalItems}</b> productos (alguna página falló).<br>¿Exportar de todos modos?`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Exportar lo cargado',
-          cancelButtonText: 'Cancelar'
-        });
-        if (!resp.isConfirmed) return; // cancela sin exportar ni error
-      }
-
-      this._todosLosProductos = all;
-      callback();
-      // No cachear un export parcial: la próxima vez se reintenta completo.
-      if (incompleto) this._todosLosProductos = null;
-    } catch (err) {
-      console.error('[ListaPrecios][Export] Error cargando catálogo completo:', err);
-      Swal.fire('Error', 'No se pudo cargar el catálogo completo para exportar. Intenta de nuevo.', 'error');
-    }
-  }
-
-  /** Trae una página de productos con reintento; si falla del todo, devuelve vacío. */
-  private async fetchPaginaConReintento(page: number, pageSize: number, intentos = 2): Promise<any> {
-    for (let i = 0; i < intentos; i++) {
-      try {
-        return await this.service.getAllProductsPagination(pageSize, page)
-          .pipe(takeUntil(this.destroy$)).toPromise();
-      } catch (e) {
-        if (i === intentos - 1) {
-          console.warn(`[ListaPrecios][Export] Página ${page} falló tras ${intentos} intentos`, e);
-          return { products: [] };
-        }
-      }
-    }
-    return { products: [] };
+    const resp: any = await firstValueFrom(
+      this.service.exportarPrecios().pipe(takeUntil(this.destroy$))
+    );
+    const all: Producto[] = Array.isArray(resp?.products) ? resp.products : [];
+    if (all.length > 0) this._todosLosProductos = all;
+    return all;
   }
 
   // ── Búsqueda ──
@@ -224,7 +264,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   }
 
   buscarProducto() {
-    this.cargarPagina(1);
+    this.volverAPrimeraPagina();
   }
 
   onTabChange(event: any) {
@@ -297,7 +337,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       case 0: this.editarPrecioTipoCliente(producto); break;
       case 1: this.editarPrecioUnitario(producto); break;
       case 2: this.editarPrecioVolumen(producto); break;
-      case this.COSTO_TAB_INDEX: this.abrirModalImportarCostos(); break;
+      case this.COSTO_TAB_INDEX: this.editarCosto(producto); break;
     }
   }
 
@@ -346,12 +386,33 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     }).catch(() => {});
   }
 
+  /**
+   * Edición manual del costo de un producto (pestaña Costos). El precio de
+   * venta NO se toca acá: se edita en la pestaña Precio unitario.
+   */
+  private editarCosto(producto: Producto) {
+    const modalRef = this.modalService.open(EditarCostoComponent, {
+      size: 'lg', centered: true, backdrop: 'static'
+    });
+    modalRef.componentInstance.producto = producto;
+
+    modalRef.result.then((result) => {
+      if (result?.success) {
+        this.actualizarProductoEnVista(result.producto);
+        Swal.fire('Éxito', 'Costo actualizado correctamente', 'success');
+      }
+    }).catch(() => {});
+  }
+
   private actualizarProductoEnVista(productoActualizado: Producto) {
     const index = this.productosFiltrados.findIndex(p => p.cd === productoActualizado.cd);
     if (index !== -1) {
       this.productosFiltrados[index] = productoActualizado;
       this.productosFiltrados = [...this.productosFiltrados];
     }
+    // El export cachea el catálogo completo; sin esto, exportar después de
+    // editar bajaba el valor viejo.
+    this._todosLosProductos = null;
   }
 
   obtenerCostoUnitario(producto: Producto): number {
@@ -378,6 +439,14 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   descargarFormatoExcel() {
     if (this.activeTab === this.COSTO_TAB_INDEX) {
       this.generarPlantillaCostosExcel();
+      return;
+    }
+    if (this.activeTab === 1) {
+      this.generarPlantillaUnitarioExcel();
+      return;
+    }
+    if (this.activeTab === 2) {
+      this.generarPlantillaVolumenExcel();
       return;
     }
 
@@ -438,6 +507,57 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Plantilla de la pestaña "Precio unitario". Mismos encabezados que lee
+   * `procesarImportacionUnitario` y que produce el exportar de esta pestaña,
+   * para que el archivo exportado se pueda volver a subir tal cual.
+   */
+  private generarPlantillaUnitarioExcel() {
+    const rows = [
+      ['REFERENCIA', 'PRODUCTO', 'PRECIO SIN IVA', '% IVA'],
+      ['REF-001', 'Ejemplo (columna informativa, no se importa)', 15000, 19],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 20 }, { wch: 40 }, { wch: 16 }, { wch: 10 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Precio Unitario');
+    XLSX.writeFile(wb, `Plantilla_Precio_Unitario_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    Swal.fire({
+      title: 'Plantilla descargada',
+      html: 'Llena <strong>REFERENCIA</strong> y <strong>PRECIO SIN IVA</strong>. Si dejas <strong>% IVA</strong> vacío se conserva el IVA que ya tiene el producto.',
+      icon: 'success'
+    });
+  }
+
+  /**
+   * Plantilla de la pestaña "Precio por volumen": UNA FILA POR RANGO, con la
+   * referencia repetida en cada fila de un mismo producto.
+   */
+  private generarPlantillaVolumenExcel() {
+    const rows = [
+      ['REFERENCIA', 'PRODUCTO', 'DESDE', 'HASTA', 'PRECIO SIN IVA', '% IVA'],
+      ['REF-001', 'Ejemplo (columna informativa, no se importa)', 1, 9, 15000, 19],
+      ['REF-001', '', 10, 49, 13500, 19],
+      ['REF-001', '', 50, 0, 12000, 19],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 20 }, { wch: 40 }, { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 10 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Precio Volumen');
+    XLSX.writeFile(wb, `Plantilla_Precio_Volumen_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    Swal.fire({
+      title: 'Plantilla descargada',
+      html: `Una <strong>fila por rango</strong>: repite la referencia en cada fila del mismo producto.<br>
+             En el último rango deja <strong>HASTA</strong> en 0 para decir "de ahí en adelante".<br>
+             <span class="text-danger">Los rangos del archivo reemplazan los que tenga el producto.</span>`,
+      icon: 'success'
+    });
+  }
+
   private generarPlantillaCostosExcel() {
     const headers = ['REFERENCIA', 'COSTO', 'FECHA_VIGENCIA'];
     const rows = [
@@ -455,58 +575,94 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Exporta todos los productos con precios a Excel.
-   * Carga el catálogo completo solo cuando se exporta.
+   * Exporta a Excel la pestaña activa.
+   *
+   * El modal de carga SOLO se abre si de verdad hay que ir a buscar el catálogo.
+   * Cuando ya estaba en caché (exportar una segunda pestaña), abrirlo y
+   * reemplazarlo por el de éxito ocurría en el MISMO tick: SweetAlert quedaba en
+   * estado "loading" y el diálogo salía sin botón Ok, con el spinner colgado.
+   * Ese era el "se queda pensando" de las pestañas de volumen y costo — la
+   * primera exportación funcionaba porque la petición daba tiempo al modal.
+   * Por eso también va `hideLoading()` antes de cada diálogo de resultado.
    */
-  exportarExcel() {
-    Swal.fire({
-      title: 'Preparando exportación...',
-      text: 'Cargando catálogo completo',
-      allowOutsideClick: false,
-      didOpen: () => { Swal.showLoading(); }
-    });
+  async exportarExcel() {
+    const debeCargar = !this._todosLosProductos;
 
-    this.cargarTodosLosProductos(() => {
-      const productos = this._todosLosProductos || [];
-      if (productos.length === 0) {
-        Swal.fire('Advertencia', 'No hay productos para exportar', 'warning');
-        return;
-      }
-
-      const fecha = new Date().toISOString().split('T')[0];
-      let workbook: XLSX.WorkBook;
-      let filename: string;
-
-      switch (this.activeTab) {
-        case 0:
-          workbook = this.generarExcelTipoCliente(productos);
-          filename = `Precios_Tipo_Cliente_${fecha}.xlsx`;
-          break;
-        case 1:
-          workbook = this.generarExcelUnitario(productos);
-          filename = `Precios_Unitarios_${fecha}.xlsx`;
-          break;
-        case 2:
-          workbook = this.generarExcelVolumen(productos);
-          filename = `Precios_Volumen_${fecha}.xlsx`;
-          break;
-        case this.COSTO_TAB_INDEX:
-          workbook = this.generarExcelCostos(productos);
-          filename = `Costos_${fecha}.xlsx`;
-          break;
-        default:
-          Swal.close();
-          return;
-      }
-
-      XLSX.writeFile(workbook, filename);
+    if (debeCargar) {
       Swal.fire({
-        title: 'Éxito',
-        html: `Excel exportado con ${productos.length} productos`,
-        icon: 'success',
-        confirmButtonText: 'Ok'
+        title: 'Preparando exportación...',
+        text: 'Cargando catálogo completo',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
       });
+    }
+
+    let productos: Producto[] = [];
+    try {
+      productos = await this.obtenerCatalogoParaExportar();
+    } catch (err) {
+      console.error('[ListaPrecios][Export] Error cargando catálogo:', err);
+      this.cerrarCargando();
+      Swal.fire('Error', 'No se pudo cargar el catálogo para exportar. Intenta de nuevo.', 'error');
+      return;
+    }
+
+    if (productos.length === 0) {
+      this.cerrarCargando();
+      Swal.fire('Advertencia', 'No hay productos para exportar', 'warning');
+      return;
+    }
+
+    const fecha = new Date().toISOString().split('T')[0];
+    let workbook: XLSX.WorkBook;
+    let filename: string;
+
+    switch (this.activeTab) {
+      case 0:
+        workbook = this.generarExcelTipoCliente(productos);
+        filename = `Precios_Tipo_Cliente_${fecha}.xlsx`;
+        break;
+      case 1:
+        workbook = this.generarExcelUnitario(productos);
+        filename = `Precios_Unitarios_${fecha}.xlsx`;
+        break;
+      case 2:
+        workbook = this.generarExcelVolumen(productos);
+        filename = `Precios_Volumen_${fecha}.xlsx`;
+        break;
+      case this.COSTO_TAB_INDEX:
+        workbook = this.generarExcelCostos(productos);
+        filename = `Costos_${fecha}.xlsx`;
+        break;
+      default:
+        this.cerrarCargando();
+        return;
+    }
+
+    try {
+      XLSX.writeFile(workbook, filename);
+    } catch (err) {
+      console.error('[ListaPrecios][Export] No se pudo escribir el Excel:', err);
+      this.cerrarCargando();
+      Swal.fire('Error', 'No se pudo generar el archivo Excel.', 'error');
+      return;
+    }
+
+    this.cerrarCargando();
+    Swal.fire({
+      title: 'Éxito',
+      html: `Excel exportado con <strong>${productos.length}</strong> productos`,
+      icon: 'success',
+      confirmButtonText: 'Ok'
     });
+  }
+
+  /**
+   * Saca a SweetAlert del estado "loading" antes de mostrar un resultado.
+   * Sin esto el botón de confirmar sigue oculto y el diálogo aparece sin Ok.
+   */
+  private cerrarCargando(): void {
+    if (Swal.isVisible()) Swal.hideLoading();
   }
 
   private generarExcelTipoCliente(productos: Producto[]): XLSX.WorkBook {
@@ -661,7 +817,15 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
         const workbook = XLSX.read(data, { type: 'array' });
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-        this.procesarImportacion(jsonData).catch(err => {
+
+        // Cada pestaña tiene su propio importador: el archivo se interpreta
+        // según dónde está parado el usuario.
+        let proceso: Promise<void>;
+        if (this.activeTab === 1) proceso = this.procesarImportacionUnitario(jsonData);
+        else if (this.activeTab === 2) proceso = this.procesarImportacionVolumen(jsonData);
+        else proceso = this.procesarImportacion(jsonData);
+
+        proceso.catch(err => {
           Swal.fire('Error', 'Error al procesar importación: ' + (err?.message || err), 'error');
         });
       } catch {
@@ -682,6 +846,201 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     const normBuscado = this.normalizarTexto(nombreBuscado);
     const entrada = Object.entries(row).find(([k]) => this.normalizarTexto(k) === normBuscado);
     return entrada?.[1];
+  }
+
+  /** Convierte una celda de Excel a número, tolerando "$ 12.500,50" y "19%". */
+  private numeroDeCelda(valor: any): number {
+    if (valor === null || valor === undefined || valor === '') return NaN;
+    if (typeof valor === 'number') return valor;
+    const crudo = valor.toString().trim()
+      .replace(/%/g, '')
+      .replace(/\s/g, '')
+      .replace(/[^0-9,.-]/g, '')
+      .replace(/\.(?=\d{3}(\D|$))/g, '')   // punto de miles
+      .replace(',', '.');
+    return Number(crudo);
+  }
+
+  /**
+   * Importador de la pestaña "Precio unitario".
+   * Columnas: REFERENCIA · PRECIO SIN IVA · % IVA (opcional).
+   */
+  async procesarImportacionUnitario(datos: any[]) {
+    const items: { referencia: string; precioSinIva: number; porcentajeIva?: number | null }[] = [];
+    let filasIgnoradas = 0;
+
+    datos.forEach((row: any) => {
+      const referencia = (this.buscarColumnaExcel(row, 'REFERENCIA') ?? '').toString().trim();
+      if (!referencia) { filasIgnoradas++; return; }
+
+      const precioSinIva = this.numeroDeCelda(this.buscarColumnaExcel(row, 'PRECIO SIN IVA'));
+      if (!Number.isFinite(precioSinIva) || precioSinIva < 0) { filasIgnoradas++; return; }
+
+      const ivaCelda = this.buscarColumnaExcel(row, '% IVA');
+      const porcentajeIva = this.numeroDeCelda(ivaCelda);
+
+      items.push({
+        referencia,
+        precioSinIva,
+        porcentajeIva: Number.isFinite(porcentajeIva) ? porcentajeIva : null
+      });
+    });
+
+    if (items.length === 0) {
+      Swal.fire('Sin datos', 'No se encontraron filas válidas. Revisa que el archivo tenga las columnas REFERENCIA y PRECIO SIN IVA.', 'warning');
+      return;
+    }
+
+    const { isConfirmed } = await Swal.fire({
+      title: 'Confirmar importación',
+      html: `
+        <p>Se actualizará el precio unitario de <strong>${items.length} referencia(s)</strong>.</p>
+        <p class="text-muted"><small>Si la columna <strong>% IVA</strong> viene vacía se conserva el IVA que ya tiene cada producto.</small></p>
+        ${filasIgnoradas > 0 ? `<p class="text-muted"><small>${filasIgnoradas} fila(s) ignorada(s) por falta de referencia o precio.</small></p>` : ''}
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: `Importar ${items.length}`,
+      confirmButtonColor: '#198754'
+    });
+    if (!isConfirmed) return;
+
+    await this.enviarImportacionPorLotes(
+      items,
+      (lote) => firstValueFrom(this.service.importPreciosUnitarios(lote)),
+      'Precios unitarios'
+    );
+  }
+
+  /**
+   * Importador de la pestaña "Precio por volumen".
+   * Columnas: REFERENCIA · DESDE · HASTA · PRECIO SIN IVA · % IVA (opcional).
+   * Va UNA FILA POR RANGO, así que varias filas comparten referencia.
+   */
+  async procesarImportacionVolumen(datos: any[]) {
+    const porReferencia = new Map<string, any[]>();
+    let filasIgnoradas = 0;
+    let ultimaReferencia = '';
+
+    datos.forEach((row: any) => {
+      // La referencia puede venir vacía en las filas de continuación (así la
+      // exporta hoy la pestaña); en ese caso se hereda la de la fila anterior.
+      const refCelda = (this.buscarColumnaExcel(row, 'REFERENCIA') ?? '').toString().trim();
+      const referencia = refCelda || ultimaReferencia;
+      if (!referencia) { filasIgnoradas++; return; }
+      ultimaReferencia = referencia;
+
+      const desde = this.numeroDeCelda(this.buscarColumnaExcel(row, 'DESDE'));
+      const hasta = this.numeroDeCelda(this.buscarColumnaExcel(row, 'HASTA'));
+      const precioSinIva = this.numeroDeCelda(this.buscarColumnaExcel(row, 'PRECIO SIN IVA'));
+      if (!Number.isFinite(precioSinIva) || precioSinIva < 0 || !Number.isFinite(desde)) {
+        filasIgnoradas++;
+        return;
+      }
+
+      const iva = this.numeroDeCelda(this.buscarColumnaExcel(row, '% IVA'));
+
+      const rangos = porReferencia.get(referencia) || [];
+      rangos.push({
+        desde,
+        hasta: Number.isFinite(hasta) ? hasta : 0,
+        precioSinIva,
+        porcentajeIva: Number.isFinite(iva) ? iva : null
+      });
+      porReferencia.set(referencia, rangos);
+    });
+
+    const items = Array.from(porReferencia.entries()).map(([referencia, rangos]) => ({ referencia, rangos }));
+
+    if (items.length === 0) {
+      Swal.fire('Sin datos', 'No se encontraron rangos válidos. Revisa las columnas REFERENCIA, DESDE y PRECIO SIN IVA.', 'warning');
+      return;
+    }
+
+    const totalRangos = items.reduce((s, i) => s + i.rangos.length, 0);
+    const { isConfirmed } = await Swal.fire({
+      title: 'Confirmar importación',
+      html: `
+        <p><strong>${totalRangos} rango(s)</strong> para <strong>${items.length} referencia(s)</strong>.</p>
+        <p class="text-danger"><small><strong>Ojo:</strong> los rangos del Excel <strong>reemplazan</strong> los que tenga cada producto hoy.</small></p>
+        ${filasIgnoradas > 0 ? `<p class="text-muted"><small>${filasIgnoradas} fila(s) ignorada(s).</small></p>` : ''}
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: `Importar ${items.length} referencia(s)`,
+      confirmButtonColor: '#198754'
+    });
+    if (!isConfirmed) return;
+
+    await this.enviarImportacionPorLotes(
+      items,
+      (lote) => firstValueFrom(this.service.importPreciosVolumen(lote)),
+      'Precios por volumen'
+    );
+  }
+
+  /**
+   * Envía por lotes y reporta el resultado. Los items ya vienen agrupados por
+   * referencia, así que partir en lotes nunca separa los rangos de un producto.
+   */
+  private async enviarImportacionPorLotes(
+    items: any[],
+    enviar: (lote: any[]) => Promise<any>,
+    titulo: string
+  ) {
+    const TAM_LOTE = 500;
+    const lotes: any[][] = [];
+    for (let i = 0; i < items.length; i += TAM_LOTE) lotes.push(items.slice(i, i + TAM_LOTE));
+
+    let actualizados = 0, noEncontrados = 0, ignorados = 0;
+    const erroresDetalle: string[] = [];
+    const lotesFallidos: number[] = [];
+
+    Swal.fire({
+      title: `Importando ${titulo.toLowerCase()}...`,
+      html: `Preparando ${lotes.length} lote(s)...`,
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    for (let i = 0; i < lotes.length; i++) {
+      Swal.update({
+        html: `Procesando lote <strong>${i + 1} de ${lotes.length}</strong>...<br>
+               <small class="text-muted">${actualizados} actualizados hasta ahora</small>`
+      });
+      try {
+        const respuesta: any = await enviar(lotes[i]);
+        const data = respuesta?.data || respuesta || {};
+        actualizados += data.actualizados || 0;
+        noEncontrados += data.noEncontrados || 0;
+        ignorados += data.ignorados || 0;
+        if (Array.isArray(data.erroresDetalle)) erroresDetalle.push(...data.erroresDetalle);
+      } catch {
+        lotesFallidos.push(i + 1);
+      }
+    }
+
+    // hideLoading en vez de close: cerrar y volver a abrir en el mismo tick deja
+    // el diálogo sin botón Ok (mismo problema que tenía el exportar).
+    this.cerrarCargando();
+    this._todosLosProductos = null;
+    this.cargarPagina(1);
+
+    // Conteo honesto: si un lote falló, no se puede decir que todo salió bien.
+    const huboProblemas = lotesFallidos.length > 0 || noEncontrados > 0 || ignorados > 0;
+    Swal.fire({
+      title: lotesFallidos.length > 0 ? 'Importación incompleta' : 'Importación terminada',
+      html: `
+        <p><strong>${actualizados}</strong> producto(s) actualizado(s).</p>
+        ${noEncontrados > 0 ? `<p class="text-muted">${noEncontrados} referencia(s) no existen en el catálogo.</p>` : ''}
+        ${ignorados > 0 ? `<p class="text-muted">${ignorados} fila(s) con datos inválidos.</p>` : ''}
+        ${lotesFallidos.length > 0 ? `<p class="text-danger">Fallaron los lotes: ${lotesFallidos.join(', ')}. Vuelve a subir el archivo para reintentarlos.</p>` : ''}
+        ${erroresDetalle.length > 0 ? `<details class="text-start mt-2"><summary>Ver detalle (${erroresDetalle.length})</summary><small>${erroresDetalle.slice(0, 50).join('<br>')}</small></details>` : ''}
+      `,
+      icon: lotesFallidos.length > 0 ? 'error' : (huboProblemas ? 'warning' : 'success')
+    });
   }
 
   async procesarImportacion(datos: any[]) {
@@ -813,6 +1172,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       html += '</ul>';
     }
 
+    this.cerrarCargando();   // si no, el diálogo hereda el estado loading y sale sin Ok
     Swal.fire({
       title: actualizados > 0 ? 'Importación completada' : 'Sin cambios',
       html,

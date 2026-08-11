@@ -1,0 +1,8 @@
+/* Tema visual compartido de los modales de Lista de Precios (solo estilos). */
+@import '../lp-modal-theme';
+
+/* Específico de este modal: cuerpo scrolleable */
+.modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
