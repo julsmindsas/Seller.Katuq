@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { MetaInboxService } from '../../meta-inbox.service';
@@ -59,11 +59,67 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
     this.reiniciar();
     this.cargarConexion();
     this.cargarHilos();
+    this.arrancarRefrescoAutomatico();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Refresco automático, el mismo patrón que el buzón de WhatsApp.
+   *
+   * Cada 8 segundos se relee la lista y, si hay un hilo abierto, sus mensajes.
+   * No es tiempo real de verdad, pero para una conversación por chat la
+   * diferencia es imperceptible y no exige mantener una conexión abierta por
+   * cada operador.
+   *
+   * Tres frenos, todos por una razón:
+   *  - **Pestaña oculta**: no se pollea. Cada tick cuesta lecturas de Firestore
+   *    y nadie está mirando (D-117 en el canal de WhatsApp).
+   *  - **Enviando**: no se pisa la pantalla en mitad de un envío.
+   *  - **Escribiendo**: si el operador tiene texto a medias, no se le refresca
+   *    la conversación debajo.
+   */
+  private arrancarRefrescoAutomatico(): void {
+    interval(8000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (document.hidden) return;
+        if (this.enviando) return;
+        if ((this.borrador || '').trim().length > 0) return;
+
+        this.refrescarHilosEnSilencio();
+        if (this.hiloActivo) this.refrescarMensajesEnSilencio();
+      });
+  }
+
+  /** Igual que cargar, pero sin spinner: el refresco no debe parpadear. */
+  private refrescarHilosEnSilencio(): void {
+    this.servicio
+      .listarHilos(this.canal)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((items) => {
+        this.hilos = items;
+      });
+  }
+
+  private refrescarMensajesEnSilencio(): void {
+    const hilo = this.hiloActivo;
+    if (!hilo) return;
+
+    this.servicio
+      .mensajesDeHilo(this.canal, hilo.identidadHash)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((r) => {
+        // El operador pudo cambiar de conversación mientras la respuesta venía
+        // en camino: si ya no es la misma, se descarta en vez de pintar los
+        // mensajes de un hilo sobre otro.
+        if (this.hiloActivo?.identidadHash !== hilo.identidadHash) return;
+        this.mensajes = r.items;
+        this.ventana = r.ventana;
+      });
   }
 
   private reiniciar(): void {
