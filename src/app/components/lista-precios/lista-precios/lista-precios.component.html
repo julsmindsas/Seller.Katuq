@@ -546,9 +546,11 @@
                         <span class="badge bg-success me-1">
                           {{ producto.precio.preciosVolumen.length }} rango(s)
                         </span>
-                        <div class="d-flex flex-wrap gap-1 mt-1" *ngIf="producto.precio.preciosVolumen.length > 1">
-                          <small *ngFor="let rango of producto.precio.preciosVolumen | slice:1:3" class="text-muted">
-                            {{ rango.numeroUnidadesInicial }}-{{ rango.numeroUnidadesLimite }} uds: ${{ rango.valorUnitarioPorVolumenConIVA | number:'1.0-0' }}
+                        <!-- Antes: `slice:1:3` se saltaba el PRIMER rango, así que
+                             el badge decía "3 rango(s)" y solo se listaban 2. -->
+                        <div class="d-flex flex-column gap-1 mt-1">
+                          <small *ngFor="let rango of producto.precio.preciosVolumen | slice:0:3" class="text-muted">
+                            {{ textoRangoVolumen(rango) }}
                           </small>
                           <small *ngIf="producto.precio.preciosVolumen.length > 3" class="text-muted">
                             +{{ producto.precio.preciosVolumen.length - 3 }} más

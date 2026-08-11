@@ -482,16 +482,41 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     this.generarPlantillaExcel();
   }
 
-  private generarPlantillaExcel() {
-    const headers = ['REFERENCIA'];
-    this.tiposCliente.forEach((tipo, index) => {
-      const descripcion = (tipo.descripcion || tipo.description || '').trim();
-      const nombre = (tipo.nombre || tipo.name || '').trim();
-      headers.push(descripcion || nombre || `Tipo_${tipo.id || index}`);
-    });
+  /**
+   * Texto de un rango de volumen para la grilla. "2-2 uds: $11.567" no decía si
+   * el valor era por unidad o el total de las dos; es unitario
+   * (`valorUnitarioPorVolumenConIVA`), así que se dice explícitamente.
+   *   desde = hasta      → "2 uds: $11.567 c/u"
+   *   sin límite (0)     → "7 uds o más: $8.000 c/u"
+   *   rango normal       → "de 3 a 6 uds: $9.520 c/u"
+   */
+  textoRangoVolumen(rango: any): string {
+    const desde = Number(rango?.numeroUnidadesInicial) || 0;
+    const hasta = Number(rango?.numeroUnidadesLimite) || 0;
+    const precio = Number(rango?.valorUnitarioPorVolumenConIVA) || 0;
+    const valor = `$${precio.toLocaleString('es-CO', { maximumFractionDigits: 0 })} c/u`;
 
-    const worksheet = XLSX.utils.aoa_to_sheet([headers]);
-    worksheet['!cols'] = [{ wch: 20 }, ...this.tiposCliente.map(() => ({ wch: 25 }))];
+    if (!hasta || hasta < desde) return `${desde} uds o más: ${valor}`;
+    if (hasta === desde) return `${desde} uds: ${valor}`;
+    return `de ${desde} a ${hasta} uds: ${valor}`;
+  }
+
+  /** Nombre visible de un tipo de cliente, con el mismo criterio en plantilla, import y export. */
+  private nombreTipoCliente(tipo: any, index = 0): string {
+    const descripcion = (tipo.descripcion || tipo.description || '').trim();
+    const nombre = (tipo.nombre || tipo.name || '').trim();
+    return descripcion || nombre || `Tipo_${tipo.id || index}`;
+  }
+
+  private generarPlantillaExcel() {
+    // El sufijo del encabezado dice cómo está expresado el precio, para que el
+    // archivo se explique solo y el importador no tenga que preguntarlo.
+    const nombres = this.tiposCliente.map((t, i) => this.nombreTipoCliente(t, i));
+    const headers = ['REFERENCIA', ...nombres.map(n => `${n} (SIN IVA)`), '% IVA'];
+    const ejemplo = ['REF-001', ...nombres.map(() => 15000), 19];
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ejemplo]);
+    worksheet['!cols'] = [{ wch: 20 }, ...nombres.map(() => ({ wch: 25 })), { wch: 10 }];
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Precios');
@@ -500,8 +525,11 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     XLSX.writeFile(workbook, `Plantilla_Precios_Tipo_Cliente_${fecha}.xlsx`);
 
     Swal.fire({
-      title: 'Éxito',
-      html: `Plantilla Excel descargada con ${this.tiposCliente.length} tipo(s) de cliente`,
+      title: 'Plantilla descargada',
+      html: `Plantilla con <strong>${this.tiposCliente.length} tipo(s) de cliente</strong>.<br><br>
+             Escribe los precios <strong>SIN IVA</strong>: el sistema le suma a cada producto su propio IVA.<br>
+             Si dejas <strong>% IVA</strong> vacío se conserva el IVA que ya tiene el producto.<br>
+             <small class="text-muted">Borra la fila de ejemplo antes de importar.</small>`,
       icon: 'success',
       confirmButtonText: 'Ok'
     });
@@ -536,9 +564,12 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
    * referencia repetida en cada fila de un mismo producto.
    */
   private generarPlantillaVolumenExcel() {
+    // El ejemplo arranca en 2: el precio de 1 unidad es el precio base del
+    // producto y se cambia en "Precio unitario". Antes empezaba en 1 e inducía a
+    // pisar ese precio, que al vender le gana al unitario.
     const rows = [
       ['REFERENCIA', 'PRODUCTO', 'DESDE', 'HASTA', 'PRECIO SIN IVA', '% IVA'],
-      ['REF-001', 'Ejemplo (columna informativa, no se importa)', 1, 9, 15000, 19],
+      ['REF-001', 'Ejemplo (columna informativa, no se importa)', 2, 9, 15000, 19],
       ['REF-001', '', 10, 49, 13500, 19],
       ['REF-001', '', 50, 0, 12000, 19],
     ];
@@ -552,6 +583,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     Swal.fire({
       title: 'Plantilla descargada',
       html: `Una <strong>fila por rango</strong>: repite la referencia en cada fila del mismo producto.<br>
+             Empieza en <strong>DESDE 2</strong>: el precio de 1 unidad es el precio base y se cambia en la pestaña <strong>Precio unitario</strong>.<br>
              En el último rango deja <strong>HASTA</strong> en 0 para decir "de ahí en adelante".<br>
              <span class="text-danger">Los rangos del archivo reemplazan los que tenga el producto.</span>`,
       icon: 'success'
@@ -618,21 +650,24 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     let filename: string;
 
     switch (this.activeTab) {
+      // El prefijo "Exportado_" separa a simple vista estos archivos de las
+      // plantillas: subir el export creyendo que era la plantilla ya costó un
+      // producto mal actualizado (ALM-3279).
       case 0:
         workbook = this.generarExcelTipoCliente(productos);
-        filename = `Precios_Tipo_Cliente_${fecha}.xlsx`;
+        filename = `Exportado_Precios_Tipo_Cliente_${fecha}.xlsx`;
         break;
       case 1:
         workbook = this.generarExcelUnitario(productos);
-        filename = `Precios_Unitarios_${fecha}.xlsx`;
+        filename = `Exportado_Precios_Unitarios_${fecha}.xlsx`;
         break;
       case 2:
         workbook = this.generarExcelVolumen(productos);
-        filename = `Precios_Volumen_${fecha}.xlsx`;
+        filename = `Exportado_Precios_Volumen_${fecha}.xlsx`;
         break;
       case this.COSTO_TAB_INDEX:
         workbook = this.generarExcelCostos(productos);
-        filename = `Costos_${fecha}.xlsx`;
+        filename = `Exportado_Costos_${fecha}.xlsx`;
         break;
       default:
         this.cerrarCargando();
@@ -666,18 +701,22 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   }
 
   private generarExcelTipoCliente(productos: Producto[]): XLSX.WorkBook {
-    const tipoNombres = this.tiposCliente.map(t =>
-      (t.descripcion || t.description || t.nombre || t.name || '').trim()
-    );
+    const tipoNombres = this.tiposCliente.map((t, i) => this.nombreTipoCliente(t, i));
 
-    const headers = ['REFERENCIA', 'PRODUCTO', 'PRECIO BASE', ...tipoNombres];
+    // El sufijo "(CON IVA)" hace explícito lo que exporta esta pestaña y permite
+    // volver a subir el archivo tal cual, sin que el importador tenga que preguntar.
+    const headers = [
+      'REFERENCIA', 'PRODUCTO', 'PRECIO BASE', '% IVA',
+      ...tipoNombres.map(n => `${n} (CON IVA)`)
+    ];
     const rows: any[][] = [headers];
 
     productos.forEach(p => {
       const fila: any[] = [
         p.identificacion?.referencia || '',
         p.crearProducto?.titulo || '',
-        p.precio?.precioUnitarioConIva || p.precio?.precioUnitarioSinIva || 0
+        p.precio?.precioUnitarioConIva || p.precio?.precioUnitarioSinIva || 0,
+        (p.precio?.precioUnitarioIva || '0') + '%'
       ];
       this.tiposCliente.forEach(tipo => {
         const precioTipo = p.preciosPorTipoCliente?.find(
@@ -692,7 +731,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     });
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [{ wch: 20 }, { wch: 35 }, { wch: 15 }, ...tipoNombres.map(() => ({ wch: 20 }))];
+    ws['!cols'] = [{ wch: 20 }, { wch: 35 }, { wch: 15 }, { wch: 10 }, ...tipoNombres.map(() => ({ wch: 22 }))];
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Precio Tipo Cliente');
@@ -838,7 +877,30 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   /** Normaliza texto para comparación: sin tildes, sin espacios extra, minúsculas */
   private normalizarTexto(s: string): string {
     return (s || '').trim().toLowerCase()
+      .replace(/\s+/g, ' ')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  /**
+   * Resuelve la columna de un tipo de cliente y, de paso, cómo viene expresado el
+   * precio según el sufijo del encabezado:
+   *   "Mayorista (SIN IVA)" → conIva: false   (el sistema le suma el IVA)
+   *   "Mayorista (CON IVA)" → conIva: true    (el sistema le descuenta el IVA)
+   *   "Mayorista"           → conIva: null    (archivo viejo: hay que preguntarlo)
+   * Devuelve null si el archivo no trae columna para ese tipo.
+   */
+  private resolverCeldaTipoCliente(row: any, nombreTipo: string): { valor: any; conIva: boolean | null } | null {
+    const base = this.normalizarTexto(nombreTipo);
+    let ambigua: any;
+
+    for (const [clave, valor] of Object.entries(row)) {
+      const norm = this.normalizarTexto(clave);
+      if (norm === `${base} (sin iva)`) return { valor, conIva: false };
+      if (norm === `${base} (con iva)`) return { valor, conIva: true };
+      if (norm === base) ambigua = valor;
+    }
+
+    return ambigua !== undefined ? { valor: ambigua, conIva: null } : null;
   }
 
   /** Busca el valor de una columna en el row de Excel usando comparación normalizada */
@@ -994,7 +1056,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     const lotes: any[][] = [];
     for (let i = 0; i < items.length; i += TAM_LOTE) lotes.push(items.slice(i, i + TAM_LOTE));
 
-    let actualizados = 0, noEncontrados = 0, ignorados = 0;
+    let actualizados = 0, noEncontrados = 0, ignorados = 0, rangosSincronizados = 0, rangosDeUnaUnidadDescartados = 0;
     const erroresDetalle: string[] = [];
     const lotesFallidos: number[] = [];
 
@@ -1016,6 +1078,8 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
         actualizados += data.actualizados || 0;
         noEncontrados += data.noEncontrados || 0;
         ignorados += data.ignorados || 0;
+        rangosSincronizados += data.rangosSincronizados || 0;
+        rangosDeUnaUnidadDescartados += data.rangosDeUnaUnidadDescartados || 0;
         if (Array.isArray(data.erroresDetalle)) erroresDetalle.push(...data.erroresDetalle);
       } catch {
         lotesFallidos.push(i + 1);
@@ -1034,6 +1098,8 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       title: lotesFallidos.length > 0 ? 'Importación incompleta' : 'Importación terminada',
       html: `
         <p><strong>${actualizados}</strong> producto(s) actualizado(s).</p>
+        ${rangosSincronizados > 0 ? `<p class="text-muted">${rangosSincronizados} producto(s) tenían un único rango de volumen y se actualizó al mismo precio.</p>` : ''}
+        ${rangosDeUnaUnidadDescartados > 0 ? `<p class="text-warning">${rangosDeUnaUnidadDescartados} rango(s) que empezaban en 1 unidad se ignoraron: ese precio es el base y se cambia en <strong>Precio unitario</strong>.</p>` : ''}
         ${noEncontrados > 0 ? `<p class="text-muted">${noEncontrados} referencia(s) no existen en el catálogo.</p>` : ''}
         ${ignorados > 0 ? `<p class="text-muted">${ignorados} fila(s) con datos inválidos.</p>` : ''}
         ${lotesFallidos.length > 0 ? `<p class="text-danger">Fallaron los lotes: ${lotesFallidos.join(', ')}. Vuelve a subir el archivo para reintentarlos.</p>` : ''}
@@ -1043,49 +1109,57 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Importador de la pestaña "Precio tipo clientes".
+   * Columnas: REFERENCIA · <Tipo> (SIN IVA) · % IVA (opcional).
+   * El sufijo del encabezado dice cómo viene el precio; solo se pregunta cuando
+   * el archivo trae la columna sin sufijo (plantillas anteriores).
+   */
   async procesarImportacion(datos: any[]) {
-    // Preguntar si los precios son con o sin IVA
-    const resultadoIva = await Swal.fire({
-      title: '¿Los precios del Excel incluyen IVA?',
-      html: `<p class="text-muted mb-3">Indica cómo están expresados los precios en tu archivo.</p>`,
-      icon: 'question',
-      showCancelButton: true,
-      cancelButtonText: 'Cancelar importación',
-      confirmButtonText: 'Sí, incluyen IVA',
-      showDenyButton: true,
-      denyButtonText: 'No, son sin IVA',
-      denyButtonColor: '#0d6efd',
-      confirmButtonColor: '#198754',
-    });
-
-    if (resultadoIva.isDismissed) return;
-    const preciosConIva: boolean = resultadoIva.isConfirmed;
-
-    // Parsear Excel → array plano de { referencia, tipoClienteId, tipoClienteNombre, precio }
+    // Parsear Excel → array plano de { referencia, tipoClienteId, tipoClienteNombre, precio, conIva }
     const precios: any[] = [];
     let filasIgnoradas = 0;
+    let hayColumnasAmbiguas = false;
+    let filasConReferencia = 0;
+
+    // Un archivo EXPORTADO trae PRODUCTO y PRECIO BASE, columnas que la plantilla
+    // no tiene. Subirlo por error solo pisa los productos que ya tenían precio y
+    // pasa desapercibido entre miles de filas vacías.
+    const pareceExport = datos.some((row: any) =>
+      this.buscarColumnaExcel(row, 'PRODUCTO') !== undefined &&
+      this.buscarColumnaExcel(row, 'PRECIO BASE') !== undefined
+    );
 
     datos.forEach((row: any) => {
       const referenciaRaw = this.buscarColumnaExcel(row, 'REFERENCIA') ?? '';
       const referencia = referenciaRaw.toString().trim();
       if (!referencia) { filasIgnoradas++; return; }
+      filasConReferencia++;
 
-      this.tiposCliente.forEach(tipo => {
-        const nombreTipo = tipo.descripcion?.trim() || tipo.description?.trim() || tipo.nombre?.trim() || '';
+      // El % IVA es por fila: aplica a todos los tipos de cliente de esa referencia.
+      const ivaFila = this.numeroDeCelda(this.buscarColumnaExcel(row, '% IVA'));
+      const porcentajeIva = Number.isFinite(ivaFila) && ivaFila >= 0 ? ivaFila : null;
+
+      this.tiposCliente.forEach((tipo, index) => {
+        const nombreTipo = this.nombreTipoCliente(tipo, index);
         if (!nombreTipo) return;
 
-        const valorCelda = this.buscarColumnaExcel(row, nombreTipo);
-        if (valorCelda !== undefined && valorCelda !== null && valorCelda !== '') {
-          const precioNumero = parseFloat(valorCelda.toString().replace(/[^0-9.-]/g, ''));
-          if (!isNaN(precioNumero) && precioNumero > 0) {
-            precios.push({
-              referencia,
-              tipoClienteId: tipo.id,
-              tipoClienteNombre: tipo.descripcion || nombreTipo,
-              precio: precioNumero
-            });
-          }
-        }
+        const celda = this.resolverCeldaTipoCliente(row, nombreTipo);
+        if (!celda || celda.valor === undefined || celda.valor === null || celda.valor === '') return;
+
+        const precioNumero = this.numeroDeCelda(celda.valor);
+        if (!Number.isFinite(precioNumero) || precioNumero <= 0) return;
+
+        if (celda.conIva === null) hayColumnasAmbiguas = true;
+
+        precios.push({
+          referencia,
+          tipoClienteId: tipo.id,
+          tipoClienteNombre: tipo.descripcion || nombreTipo,
+          precio: precioNumero,
+          conIva: celda.conIva,
+          porcentajeIva
+        });
       });
     });
 
@@ -1094,15 +1168,71 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const refsAfectadas = Array.from(new Set(precios.map(p => p.referencia)));
+
+    // La firma del error: un archivo enorme del que casi nada trae precio. Es lo
+    // que pasa al subir el export, donde solo las pocas filas ya configuradas
+    // tienen valor. Se avisa ANTES del preview y arranca en "Cancelar".
+    const casiTodoVacio = filasConReferencia >= 20 && refsAfectadas.length <= filasConReferencia * 0.1;
+
+    if (pareceExport || casiTodoVacio) {
+      const { isConfirmed: seguir } = await Swal.fire({
+        title: '¿Seguro que es el archivo correcto?',
+        html: `
+          ${pareceExport ? `<p>Este archivo tiene las columnas <strong>PRODUCTO</strong> y <strong>PRECIO BASE</strong>,
+            así que parece un archivo <strong>exportado</strong>, no la plantilla de importación.</p>` : ''}
+          ${casiTodoVacio ? `<p>Trae <strong>${filasConReferencia} filas</strong> pero solo
+            <strong>${refsAfectadas.length}</strong> tienen precio: el resto se ignoraría.</p>` : ''}
+          <p class="text-danger mb-0">Se actualizarían únicamente estas referencias:</p>
+          <p><strong>${refsAfectadas.slice(0, 10).join(', ')}</strong>${refsAfectadas.length > 10 ? ` y ${refsAfectadas.length - 10} más` : ''}</p>
+          <p class="text-muted mb-0"><small>Si querías importar otros productos, cancela y revisa el archivo.</small></p>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: 'Sí, es el correcto',
+        confirmButtonColor: '#d33',
+        focusCancel: true
+      });
+      if (!seguir) return;
+    }
+
+    // Solo los archivos con encabezado sin sufijo obligan a preguntar.
+    if (hayColumnasAmbiguas) {
+      const resultadoIva = await Swal.fire({
+        title: '¿Los precios del Excel incluyen IVA?',
+        html: `<p class="text-muted mb-3">Tu archivo usa el formato anterior, en el que el encabezado no dice
+               si el precio lleva IVA. Descarga la plantilla nueva para no tener que responder esto.</p>`,
+        icon: 'question',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar importación',
+        confirmButtonText: 'Sí, incluyen IVA',
+        showDenyButton: true,
+        denyButtonText: 'No, son sin IVA',
+        denyButtonColor: '#0d6efd',
+        confirmButtonColor: '#198754',
+      });
+
+      if (resultadoIva.isDismissed) return;
+      const respuesta = resultadoIva.isConfirmed;
+      precios.forEach(p => { if (p.conIva === null) p.conIva = respuesta; });
+    }
+
     // Preview
-    const refsUnicas = new Set(precios.map(p => p.referencia)).size;
+    const refsUnicas = refsAfectadas.length;
+    const conIvaCount = precios.filter(p => p.conIva).length;
+    const sinIvaCount = precios.length - conIvaCount;
+    const conIvaPropio = precios.filter(p => p.porcentajeIva !== null).length;
+
     const { isConfirmed } = await Swal.fire({
       title: 'Confirmar importación',
       html: `
-        <p><strong>${precios.length} precios</strong> para <strong>${refsUnicas} referencias</strong>.</p>
-        <p>Precios expresados <strong>${preciosConIva ? 'con IVA incluido' : 'sin IVA'}</strong>.</p>
+        <p><strong>${precios.length} precios</strong> para <strong>${refsUnicas} referencia(s)</strong>:</p>
+        <p class="mb-3"><strong>${refsAfectadas.slice(0, 15).join(', ')}</strong>${refsAfectadas.length > 15 ? ` y ${refsAfectadas.length - 15} más` : ''}</p>
+        ${sinIvaCount > 0 ? `<p><strong>${sinIvaCount}</strong> vienen <strong>SIN IVA</strong>: el sistema le suma a cada producto su IVA.</p>` : ''}
+        ${conIvaCount > 0 ? `<p><strong>${conIvaCount}</strong> vienen <strong>CON IVA incluido</strong>: el sistema le descuenta el IVA para guardar el precio base.</p>` : ''}
+        ${conIvaPropio > 0 ? `<p class="text-muted"><small>${conIvaPropio} usan el <strong>% IVA</strong> del archivo; el resto conserva el del producto.</small></p>` : ''}
         ${filasIgnoradas > 0 ? `<p class="text-muted"><small>${filasIgnoradas} filas sin referencia ignoradas</small></p>` : ''}
-        <p>El backend buscará cada producto por referencia y guardará los precios.</p>
       `,
       icon: 'question',
       showCancelButton: true,
@@ -1130,8 +1260,9 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       lotes.push(gruposRef.slice(i, i + CHUNK_REFS).flat());
     }
 
-    let actualizados = 0, noEncontrados = 0, errores = 0;
+    let actualizados = 0, noEncontrados = 0, errores = 0, sinIvaConfigurado = 0;
     const erroresDetalle: string[] = [];
+    const sinIvaDetalle: string[] = [];
     const lotesFallidos: number[] = [];
 
     Swal.fire({
@@ -1148,13 +1279,17 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       });
       try {
         const response: any = await firstValueFrom(
-          this.service.importPreciosTipoCliente({ precios: lotes[i], porcentajeIva: 19, preciosConIva })
+          // `preciosConIva` viaja por ítem (según el sufijo del encabezado); el global
+          // queda solo como respaldo para lotes que no lo traigan.
+          this.service.importPreciosTipoCliente({ precios: lotes[i], porcentajeIva: 19, preciosConIva: false })
         );
         const data = response?.data || response || {};
         actualizados += data.actualizados || 0;
         noEncontrados += data.noEncontrados || 0;
         errores += data.errores || 0;
+        sinIvaConfigurado += data.sinIvaConfigurado || 0;
         if (Array.isArray(data.erroresDetalle)) erroresDetalle.push(...data.erroresDetalle);
+        if (Array.isArray(data.sinIvaConfiguradoDetalle)) sinIvaDetalle.push(...data.sinIvaConfiguradoDetalle);
       } catch (err: any) {
         lotesFallidos.push(i + 1);
         erroresDetalle.push(`Lote ${i + 1}: ${err?.error?.details || err?.message || 'error desconocido'}`);
@@ -1165,6 +1300,8 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       <p><strong>Actualizados:</strong> ${actualizados}</p>
       <p><strong>No encontrados:</strong> ${noEncontrados}</p>
       ${lotesFallidos.length ? `<p class="text-danger"><strong>Lotes con error:</strong> ${lotesFallidos.join(', ')}</p>` : ''}
+      ${sinIvaConfigurado > 0 ? `<p class="text-warning"><strong>${sinIvaConfigurado}</strong> referencia(s) no tienen IVA configurado en el producto: se les aplicó <strong>19%</strong>. Revísalas.
+        ${sinIvaDetalle.length ? `<details class="text-start mt-2"><summary>Ver cuáles</summary><small>${sinIvaDetalle.slice(0, 50).join('<br>')}</small></details>` : ''}</p>` : ''}
     `;
     if (erroresDetalle.length > 0 && erroresDetalle.length <= 10) {
       html += '<hr><ul style="text-align:left;font-size:.85em">';

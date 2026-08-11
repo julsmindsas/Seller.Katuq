@@ -3361,6 +3361,28 @@ Cambios: el editor envía **todos** los tipos (los vacíos con `precio: 0`); el 
 
 ---
 
+## D-173 (2026-08-11) — Lista de Precios: el archivo se explica solo y el IVA 0 deja de convertirse en 19%
+
+**Origen.** Monica probando los importadores: "*no sé si el valor que uno agrega debe ser ya con el IVA incluido o se monta sin el IVA y el sistema se lo suma*". La pestaña "Precio tipo clientes" tapaba esa ambigüedad con un popup ("¿Los precios incluyen IVA?"), mientras las otras dos ya la tenían resuelta llamando a su columna `PRECIO SIN IVA`. Al tirar del hilo aparecieron tres defectos de fondo, dos de ellos con precios reales de por medio.
+
+**1. La señal viaja en el archivo, no en un botón.** La plantilla ahora rotula `<Tipo> (SIN IVA)` y el export `<Tipo> (CON IVA)` — que es lo que siempre sacó. El importador lee el sufijo por columna; el popup solo reaparece con archivos sin sufijo (retrocompatible). Efecto lateral cerrado: exportar y volver a subir respondiendo "sin IVA" **inflaba todo un 19% en silencio**.
+
+**2. `parseInt(iva) || 19` le ponía 19% a los exentos.** El 0 es falsy: todo producto con IVA 0 recibía 19% al importar. Estaba repetido en cuatro sitios (`importPrecios`, el modal de tipo de cliente, y dos veces en el de volumen). Ahora todos comparan con `Number.isFinite` y heredan el IVA del producto. Misma familia que D-168 — **en este módulo el 0 se sigue colando como "vacío"**.
+
+**3. EL HALLAZGO CARO — el rango de volumen le gana al precio unitario al vender.** `orderCalculationService.js:46`: si hay `preciosVolumen`, el rango que abarque la cantidad decide el precio, y el unitario solo se usa si ninguno aplica. La plantilla traía el ejemplo `DESDE 1`, Monica lo subió tal cual, y ALM-1385 (base 9.790, exento) quedó cobrando **17.850 por una unidad en ALMARA productivo**. El modal agravaba el engaño: fuerza la fila 0 a "1-1" y su nota dice "representa el precio base", pero el campo era editable e importable.
+
+**Decisión: el rango de 1 unidad no se edita ni se importa — siempre es el precio base; los descuentos empiezan en 2.** Modal con esa fila bloqueada y cargada del producto; `importPreciosVolumen` descarta `desde <= 1`, antepone el 1-1 generado del precio base y lo reporta; la plantilla arranca en `DESDE 2`. Y `importPreciosUnitarios` sincroniza el rango de volumen cuando es el único (con varios no toca nada: ahí son descuentos deliberados). **Ojo al desplegar:** cambia el importador de volumen para todas las empresas.
+
+**4. Subir el export creyendo que es la plantilla.** `Precios_Tipo_Cliente_*.xlsx` vs `Plantilla_Precios_Tipo_Cliente_*.xlsx` se diferenciaban en un prefijo. El export tenía 2.137 filas vacías y una con valor, así que la importación dijo "Actualizados: 1" y pisó un producto que nadie quiso tocar. Tres candados: el export se llama `Exportado_*`, el preview **lista las referencias** que va a tocar (no solo cuántas), y salta un aviso con `focusCancel` si el archivo trae las columnas del export o si <10% de las filas aportan precio. En la misma línea, el modal de tipo de cliente ahora avisa antes de borrar precios existentes (por D-168 un campo vacío = quitar, y guardar sin tocar nada había borrado los precios recién importados de ALM-1385).
+
+**Datos corregidos en ALMARA** (scripts con dry-run + `--commit` y guardarraíles que abortan si el estado no es el esperado): ALM-3279 de 63.617 → **53.460**, y el rango 1-1 de ALM-1385 de 17.850 → **9.790**. Nota operativa: escribir directo a Firestore **no** invalida `invalidatePaginationCache`/`invalidateSearchIndex` (TTL 5 min) — hay que reiniciar el back o la UI sigue mostrando el valor viejo.
+
+**Cosmético con fondo:** la grilla de volumen decía "3 rango(s)" y listaba 2 (`slice:1:3` se saltaba el primero), y "2-2 uds: $11.567" no aclaraba si era unitario o total. Ahora: "2 uds: $11.567 c/u" · "de 3 a 6 uds: $9.520 c/u" · "N uds o más: $X c/u".
+
+**Pendiente:** cuando hay varios rangos, el de 1 unidad tampoco se sincroniza al importar precio unitario (Monica lo acotó así a propósito). Revisar si conviene extenderlo.
+
+---
+
 ## D-172 (2026-08-11) — Compras cierra el ciclo: qué comprar, devolver, comparar y mandar
 
 **Qué se decidió.** Sobre el MVP de compras (D-171) se cerraron las cuatro puntas que quedaban sueltas de la cadena de abastecimiento, todas medidas contra producción antes de construirlas.
