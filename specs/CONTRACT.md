@@ -3361,6 +3361,40 @@ Cambios: el editor envía **todos** los tipos (los vacíos con `precio: 0`); el 
 
 ---
 
+## D-172 (2026-08-11) — Compras cierra el ciclo: qué comprar, devolver, comparar y mandar
+
+**Qué se decidió.** Sobre el MVP de compras (D-171) se cerraron las cuatro puntas que quedaban sueltas de la cadena de abastecimiento, todas medidas contra producción antes de construirlas.
+
+**1. Qué comprar (reposición sugerida).** `necesidad = consumo diario × (cobertura objetivo + días de entrega del proveedor) − saldo − lo ya pedido`. Reutiliza `cargarInformeKpi` en vez de recalcular consumo: **una sola forma de medir demanda en todo el sistema**. Cuatro decisiones, cada una con su medición:
+
+- **Lo pedido se descuenta.** Volver a comprar lo que viene en camino es la forma más cara de equivocarse.
+- **Lo que la empresa fabrica no se compra.** ALMARA FELICIDAD tiene 1.514 de 2.138 productos marcados `crearProducto.paraProduccion`; sin separarlos se le sugería a una pastelería comprarle a un proveedor los cupcakes que hornea (1.566 tabletas de chocolate en la primera fila). La lista pasó de 388 sugerencias absurdas a 163 creíbles.
+- **Urgente ≠ bajo.** Cobertura menor que el tiempo de entrega significa que la venta ya se pierde salvo que se pida hoy: 138 de los 163 en ALMARA. Mezclarlos escondía justo los que urgen.
+- **Se dice lo que NO se pudo calcular.** OH MY STORE: 13.350 filas de inventario, 30 productos con demanda registrada. Una lista corta puede ser "no hay nada que comprar" o "esta empresa no registra salidas", y llevan a decisiones opuestas. La sugerencia además **hereda las advertencias del informe**: si hubo salidas sin motivo canónico, la proyección puede quedar alta y quien firma la orden lo ve.
+
+La sugerencia **no crea órdenes sola**. Lo seleccionado se convierte en una orden por proveedor y bodega, informando cuáles se crearon si alguna falla — reportar un fracaso total llevaría a crearlas dos veces.
+
+**2. Devolución al proveedor.** Lo devuelto deja de contar como recibido pero no se borra: llegó, y después se devolvió. De ahí sale todo lo demás — una orden con todo devuelto ya no dice que está completa, y lo devuelto baja lo que el proveedor puede cobrar, con su valor a la vista porque es lo que debería volver como nota crédito. Tope: no se puede devolver más de lo que llegó ni dos veces lo mismo.
+
+**Trampa desarmada antes de construirla:** "devolución" nombraba dos cosas opuestas. La del cliente entra a la bodega y **resta** demanda; la del proveedor sale y no dice nada del mercado. Con la taxonomía anterior, devolver un lote averiado habría bajado la demanda y la sugerencia habría pedido **menos** justo del producto a reponer. La salida a proveedor tiene ahora su propio motivo canónico (`supplier_return`) y no cuenta como demanda.
+
+**3. Comparador de precios.** Un renglón por proveedor con su último precio, el mejor que dio y cuánto se paga de más comprándole al caro. Manda el **último** precio de cada uno, no el promedio; las líneas sin precio no entran porque harían ver barato a quien no lo es; con un solo proveedor se dice que no hay con qué comparar, porque un "0% de diferencia" se leería como que ya se compra bien. Es la razón práctica del maestro: sin identidad no se pueden comparar precios.
+
+**4. La orden sale de Katuq.** Se manda por WhatsApp con cantidades y bodega de entrega. Antes se dictaba por teléfono.
+
+**Correcciones que salieron de contrastar contra datos reales, no de revisar código:**
+
+1. El nombre del producto vive en `crearProducto.titulo`; el informe de indicadores lo buscaba solo en `identificacion`, así que **todas** las filas de ALMARA salían con código y sin nombre. Corregido en la fuente: arregla también la pantalla de indicadores.
+2. Los proveedores ganan `diasEntrega`. Sin ese dato la urgencia se calcula con un supuesto de 7 días **y se reporta como supuesto**, no como acuerdo.
+
+**Estado.** Desplegado 2026-08-11: backend `1e82008`, frontend `2026.08.11.20`, menú "Qué comprar" en los 75 roles con inventario. Pruebas: 35 órdenes, 13 reposición y precios, 11 proveedores, 10 costo, política de movimientos y contrato de inventario en verde.
+
+**Pendiente.** Devolución de dinero/nota crédito del proveedor (hoy se ve lo que debería volver, no se concilia); orden por correo o PDF; editar una orden ya creada.
+
+Cambio OpenSpec: `openspec/changes/compras-reposicion/`.
+
+---
+
 ## D-171 (2026-08-11) — MVP de compras: proveedores, el costo entra por la compra, y saldo por proveedor
 
 **Qué se decidió.** Compras arranca como **dominio propio** (`services/purchasing/`, `controllers/purchaseOrders.js`, `controllers/suppliers.js`, rutas `/v1/proveedores` y `/v1/ordenes-compra`), no como una carpeta más de inventario. Razón: al recibir mercancía, compras **escribe el costo del producto**, y hacerlo desde el controlador de inventario borroneaba justo la frontera que el contrato protege (D-134: inventario no toca productos ni precios). Con los dominios separados la regla vuelve a ser verificable leyendo el archivo, y el contrato de write-set tiene una guarda nueva que falla si `controllers/inventory.js` vuelve a importar la captura de costo. Las rutas viejas `/v1/inventory/ordenes-compra` quedan como alias delegando, para no romper el frontend publicado.
