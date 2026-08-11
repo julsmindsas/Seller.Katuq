@@ -6,6 +6,7 @@ import {
   Proveedor,
   SaldoProveedor,
 } from '../../../shared/services/inventarios/inventario.service';
+import { colorDeAvatar, inicialDe } from '../compras-avatar';
 
 /**
  * Proveedores: a quién le compramos.
@@ -38,6 +39,11 @@ export class ProveedoresComponent implements OnInit {
   formulario: Partial<Proveedor> = this.formularioVacio();
 
   constructor(private inventarioService: InventarioService) {}
+
+  /** Mismo avatar que en "Todos los pedidos": el color sale de la inicial, así
+   *  que cada proveedor se ve siempre igual y la lista se reconoce de un ojo. */
+  inicial = inicialDe;
+  colorAvatar = colorDeAvatar;
 
   ngOnInit(): void {
     this.cargar();

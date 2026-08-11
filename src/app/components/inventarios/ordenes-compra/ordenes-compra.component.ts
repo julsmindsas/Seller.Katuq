@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
+import { colorDeAvatar, inicialDe } from '../../compras/compras-avatar';
 import { leerErrorInventario } from 'src/app/shared/utils/error-inventario';
 import {
   InventarioService,
@@ -66,6 +67,20 @@ export class OrdenesCompraComponent implements OnInit {
   recepcion: { [productoId: string]: number | null } = {};
 
   constructor(private inventarioService: InventarioService) {}
+
+  /** Mismo avatar que en el resto de las listas de Katuq. */
+  inicial = inicialDe;
+  colorAvatar = colorDeAvatar;
+
+  /** Estado de la orden como par semántico, no como color suelto. */
+  pillDeEstado(estado: string): string {
+    switch (estado) {
+      case 'recibida': return 'kc-pill--ok';
+      case 'parcial': return 'kc-pill--warn';
+      case 'anulada': return 'kc-pill--slate';
+      default: return 'kc-pill--info';
+    }
+  }
 
   ngOnInit(): void {
     // El maestro es opcional para no bloquear a quien todavía no lo llenó: si

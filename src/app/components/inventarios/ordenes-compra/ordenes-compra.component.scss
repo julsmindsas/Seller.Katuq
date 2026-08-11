@@ -1,361 +1,131 @@
-// Órdenes de compra — tema canónico Katuq: acento #5F3FE0, plano, radios 16/11/20.
+// Órdenes de compra — canon "Todos los pedidos".
+//
+// Los tokens y los patrones compartidos con el resto de Compras viven en el
+// parcial del módulo. La pantalla está bajo `inventarios/` por la ruta histórica
+// —moverla rompería permisos ya dados— pero pertenece a Compras, y se ve así.
+@import '../../compras/compras-theme';
 
-$acento: #5F3FE0;
-$acento-ink: #4930B8;
-$acento-suave: #EFEAFD;
-$ink: #211F3A;
-$muted: #6E6A8A;
-$faint: #9B97B5;
-$borde: #E7E3F5;
-$fondo: #F6F4FB;
-$tarjeta: #FFFFFF;
-$ok: #0F8A4D;
-$ok-suave: #E4F3EB;
-$aviso: #D3790F;
-$aviso-suave: #FBEFDE;
-$critico: #C2266E;
-$critico-suave: #F9E4EE;
-$sombra: 0 10px 30px rgba(95, 63, 224, .08);
-
-.oc-pagina {
-  padding: 24px;
-  background: $fondo;
-  min-height: 100%;
-  color: $ink;
-  font-size: 14px;
-}
-
-.oc-encabezado { margin-bottom: 20px; }
-
-.oc-titulo {
+.kc-atajos {
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
-
-  h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: -.01em; }
-  p { margin: 0; color: $muted; max-width: 64ch; }
-}
-
-.oc-icono {
-  width: 44px;
-  height: 44px;
-  border-radius: 16px;
-  background: $acento-suave;
-  color: $acento-ink;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  flex: none;
-}
-
-.oc-aviso {
-  border-radius: 11px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-
-  &--error { background: $critico-suave; color: $critico; }
-}
-
-.oc-tarjeta {
-  background: $tarjeta;
-  border: 1px solid $borde;
-  border-radius: 16px;
-  box-shadow: $sombra;
-  padding: 20px 22px;
-  margin-bottom: 16px;
-
-  h2 { font-size: 17px; font-weight: 650; margin: 0 0 14px; }
-}
-
-.oc-form {
-  display: flex;
-  gap: 14px;
   flex-wrap: wrap;
+  gap: 6px;
   margin-bottom: 14px;
-
-  label {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    color: $muted;
-  }
-
-  select, input {
-    border: 1px solid $borde;
-    border-radius: 11px;
-    padding: 9px 13px;
-    font-size: 13px;
-    color: $ink;
-    background: $tarjeta;
-    min-width: 210px;
-
-    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
-  }
-}
-
-.oc-criterios {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.oc-criterio {
-  text-align: left;
-  border: 1px solid $borde;
-  background: $fondo;
-  border-radius: 11px;
-  padding: 12px 14px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-
-  strong { font-size: 13.5px; color: $ink; }
-  span { font-size: 12px; color: $muted; }
-
-  &.activo { border-color: $acento; background: $acento-suave; strong { color: $acento-ink; } }
-  &:focus-visible { outline: 2px solid $acento; outline-offset: 2px; }
-}
-
-.oc-boton {
-  border: none;
-  border-radius: 11px;
-  padding: 10px 18px;
-  background: $acento;
-  color: #fff;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-
-  &--suave { background: $acento-suave; color: $acento-ink; }
-  &--fuerte { background: $aviso; }
-  &:disabled { opacity: .55; cursor: default; }
-  &:focus-visible { outline: 2px solid $acento-ink; outline-offset: 2px; }
-}
-
-.oc-detalle-cabeza {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-
-  h2 { margin: 0 0 2px; }
-}
-
-.oc-sub { font-size: 12.5px; color: $muted; }
-
-.oc-marcadores {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.oc-marcador {
-  border: 1px solid $borde;
-  border-radius: 11px;
-  padding: 12px 14px;
-  background: $fondo;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  strong { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
-
-  &--alerta { border-color: $aviso; background: $aviso-suave; }
-}
-
-.oc-etiqueta {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: $muted;
-}
-
-.oc-pie { font-size: 11.5px; color: $faint; }
-
-.oc-tabla-marco { overflow-x: auto; }
-
-.oc-tabla {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 640px;
-  font-size: 13px;
-
-  thead th {
-    text-align: left;
-    font-size: 10.5px;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: $muted;
-    font-weight: 700;
-    padding: 10px 14px;
-    background: #FBFAFE;
-    border-bottom: 1px solid $borde;
-    white-space: nowrap;
-  }
-
-  tbody td {
-    padding: 8px 14px;
-    border-bottom: 1px solid $borde;
-    vertical-align: middle;
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr.exacta { background: rgba(15, 138, 77, .04); }
-  tbody tr.sobra { background: rgba(211, 121, 15, .05); }
-  tbody tr.falta { background: rgba(194, 38, 110, .05); }
-
-  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  thead th.num { text-align: right; }
-}
-
-.oc-referencia { font-weight: 600; }
-.oc-ubicacion {
-  font-size: 12px;
-  background: $acento-suave;
-  color: $acento-ink;
-  border-radius: 20px;
-  padding: 2px 9px;
-  font-weight: 600;
-}
-.oc-sin-ubicacion { font-size: 12px; color: $faint; font-style: italic; }
-
-.oc-input {
-  width: 92px;
-  border: 1px solid $borde;
-  border-radius: 8px;
-  padding: 6px 9px;
-  text-align: right;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  color: $ink;
-
-  &:focus { outline: 2px solid $acento; outline-offset: 1px; }
-  &:disabled { background: $fondo; color: $faint; }
-}
-
-.oc-dif {
-  font-weight: 700;
-
-  &.exacta { color: $ok; }
-  &.sobra { color: $aviso; }
-  &.falta { color: $critico; }
-}
-
-.oc-pendiente { color: $faint; }
-
-.oc-chip {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  padding: 4px 11px;
-  border-radius: 20px;
-
-  &.estado-abierta { background: $acento-suave; color: $acento-ink; }
-  &.estado-contada { background: $aviso-suave; color: $aviso; }
-  &.estado-aplicada { background: $ok-suave; color: $ok; }
-  &.estado-cancelada { background: $fondo; color: $faint; }
-}
-
-.oc-accion {
-  border: 1px solid $acento;
-  background: $acento-suave;
-  color: $acento-ink;
-  border-radius: 20px;
-  padding: 5px 14px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.oc-acciones {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.oc-vacio {
-  color: $muted;
-  padding: 22px;
-  text-align: center;
-  border: 1px dashed $borde;
-  border-radius: 11px;
-}
-
-.oc-nota {
-  color: $faint;
-  font-size: 12.5px;
-  max-width: 78ch;
-  margin: 14px 0 0;
-}
-
-@media (max-width: 640px) {
-  .oc-pagina { padding: 16px; }
-  .oc-form select, .oc-form input { min-width: 100%; }
-}
-
-// Atajos entre módulos: el menú lateral depende de permisos por rol, así que
-// las pantallas nuevas también se alcanzan desde aquí.
-.atajos-modulos {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
 
   a {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 12.5px;
-    font-weight: 600;
-    text-decoration: none;
-    color: #6E6A8A;
-    background: #FFFFFF;
-    border: 1px solid #E7E3F5;
+    padding: 7px 13px;
     border-radius: 20px;
-    padding: 6px 14px;
+    background: $kc-chip-bg;
+    border: 1px solid $kc-chip-border;
+    color: #5b5878;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .15s ease, color .15s ease;
 
-    &:hover { color: #4930B8; background: #EFEAFD; border-color: #5F3FE0; }
-    &.activo { color: #4930B8; background: #EFEAFD; border-color: #5F3FE0; }
+    &:hover { background: $kc-accent-soft; color: $kc-accent; }
+    &.is-active { background: $kc-accent; border-color: $kc-accent; color: #fff; }
   }
 }
 
-.oc-form {
+.kc-head__acciones {
   display: flex;
-  gap: 14px;
   flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.kc-row { cursor: pointer; }
+
+.oc-titulo-panel {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.oc-conteo {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  color: $kc-accent;
+  background: $kc-accent-soft;
+  border-radius: 20px;
+  padding: 2px 9px;
+}
+
+.oc-plata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 120px;
+}
+
+// ---------- detalle ----------
+
+.oc-detalle-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid $kc-line;
+
+  h2 { font-size: 17px; font-weight: 800; margin: 0; }
+}
+
+.oc-detalle-quien {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.oc-sub { color: $kc-muted; font-size: 11.5px; }
+
+.oc-detalle-acciones { display: flex; align-items: center; gap: 10px; }
+
+// ---------- formulario de orden nueva ----------
+
+.oc-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
   margin-bottom: 14px;
 
   label {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    color: $muted;
+    gap: 5px;
 
-    &.ancho { flex: 1 1 320px; }
+    > span {
+      text-transform: uppercase;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      color: $kc-muted;
+    }
+
+    input, select {
+      height: 40px;
+      background: $kc-chip-bg;
+      border: 1px solid $kc-chip-border;
+      border-radius: 10px;
+      padding: 0 12px;
+      color: $kc-ink;
+      font-size: 12.5px;
+
+      &:focus { outline: none; border-color: $kc-accent-2; background: #fff; }
+    }
   }
 
-  input {
-    border: 1px solid $borde;
-    border-radius: 11px;
-    padding: 9px 13px;
-    font-size: 13px;
-    color: $ink;
-    min-width: 220px;
-
-    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
-  }
+  .ancho { grid-column: 1 / -1; }
 }
 
 .oc-buscador {
@@ -364,145 +134,75 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
 
   input {
     width: 100%;
-    border: 1px solid $borde;
+    height: 42px;
+    background: $kc-chip-bg;
+    border: 1px solid $kc-chip-border;
     border-radius: 11px;
-    padding: 10px 14px;
-    font-size: 13px;
-    color: $ink;
+    padding: 0 14px;
+    color: $kc-ink;
+    font-size: 12.5px;
 
-    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
+    &:focus { outline: none; border-color: $kc-accent-2; background: #fff; }
   }
 }
 
 .oc-resultados {
   list-style: none;
   margin: 6px 0 0;
-  padding: 0;
-  border: 1px solid $borde;
-  border-radius: 11px;
-  background: $tarjeta;
+  padding: 6px;
+  border: 1px solid $kc-line;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: $kc-shadow-hover;
   max-height: 260px;
   overflow-y: auto;
 
   li {
-    padding: 9px 14px;
-    cursor: pointer;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    border-bottom: 1px solid $borde;
+    padding: 8px 10px;
+    border-radius: 9px;
+    cursor: pointer;
 
-    strong { font-size: 13px; }
-    span { font-size: 12px; color: $muted; }
+    &:hover { background: $kc-hover; }
 
-    &:last-child { border-bottom: none; }
-    &:hover { background: $acento-suave; }
+    strong { font-size: 12.5px; font-weight: 700; }
+    span { font-size: 11px; color: $kc-muted; }
   }
 }
 
-.oc-buscando { font-size: 12px; color: $muted; }
+.oc-buscando { font-size: 11.5px; color: $kc-muted; }
 
-.oc-desc { display: block; font-size: 12px; color: $muted; }
-.oc-falta { color: $aviso; font-weight: 700; }
-.oc-completo { color: $ok; font-size: 12px; font-weight: 600; }
-.oc-total { margin-right: auto; font-size: 15px; }
+// ---------- líneas y totales ----------
 
-.oc-detalle-acciones { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.oc-referencia { display: block; font-weight: 700; font-size: 12.5px; }
+.oc-desc { display: block; font-size: 11px; color: $kc-muted; }
+
+.kc-input--corto { max-width: 68px; }
 
 .oc-quitar {
-  border: none;
-  background: none;
-  color: $faint;
+  border: 0;
+  background: transparent;
+  color: $kc-danger;
   cursor: pointer;
-  padding: 3px 6px;
-  border-radius: 6px;
+  padding: 4px 6px;
+  border-radius: 8px;
 
-  &:hover { color: $critico; background: $critico-suave; }
+  &:hover { background: $kc-danger-bg; }
 }
 
-.oc-chip {
-  &.estado-abierta { background: $acento-suave; color: $acento-ink; }
-  &.estado-parcial { background: $aviso-suave; color: $aviso; }
-  &.estado-recibida { background: $ok-suave; color: $ok; }
-  &.estado-anulada { background: $fondo; color: $faint; }
-}
+.oc-falta { color: $kc-warn; font-weight: 700; }
+.oc-completo { color: $kc-ok; font-weight: 700; }
 
-.oc-cuenta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 12px;
-  margin: 16px 0;
-}
-
-.oc-cuenta-dato {
-  border: 1px solid $borde;
-  border-radius: 11px;
-  padding: 12px 14px;
-  background: $fondo;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  strong { font-size: 18px; font-variant-numeric: tabular-nums; }
-
-  // Que el proveedor facture más de lo que entregó no puede verse igual que
-  // el resto: es justo lo que hay que reclamar.
-  &--alerta { border-color: $critico; background: $critico-suave; strong { color: $critico; } }
-}
-
-.oc-facturas {
-  list-style: none;
-  margin: 0 0 8px;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-
-  li {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border: 1px solid $borde;
-    border-radius: 11px;
-    background: $tarjeta;
-    font-size: 13px;
-  }
-}
-
-.oc-input--corto { max-width: 70px; }
-
-// Que llegue mercancía de más no puede pasar en silencio: es lo mismo que se
-// hace cuando el proveedor factura de más.
+// Recibir o facturar de más no puede pasar en silencio.
 .oc-exceso {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: 999px;
-  background: $critico-suave;
-  color: $critico;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.oc-desglose {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  align-items: center;
-  padding: 10px 14px;
-  margin-bottom: 8px;
-  border: 1px solid $borde;
-  border-radius: 11px;
-  background: $fondo;
-  font-size: 13px;
-  color: $muted;
-
-  strong { color: $ink; font-variant-numeric: tabular-nums; }
-}
-
-.oc-desglose-nota {
-  flex-basis: 100%;
-  font-size: 12px;
-  color: $muted;
+  border-radius: 20px;
+  background: $kc-danger-bg;
+  color: $kc-danger;
+  font-size: 10px;
+  font-weight: 800;
 }
 
 // El historial de precios se consulta desde la línea, que es donde alguien se
@@ -512,13 +212,117 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
   align-items: center;
   gap: 4px;
   margin-top: 4px;
-  padding: 2px 8px;
-  border: 1px solid $borde;
-  border-radius: 999px;
+  padding: 2px 9px;
+  border: 1px solid $kc-chip-border;
+  border-radius: 20px;
   background: transparent;
-  color: $acento;
-  font-size: 11px;
+  color: $kc-accent;
+  font-size: 10px;
+  font-weight: 700;
   cursor: pointer;
 
-  &:hover { background: $acento-suave; }
+  &:hover { background: $kc-accent-soft; }
+}
+
+.oc-desglose {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+  padding: 11px 14px;
+  margin: 12px 0;
+  background: $kc-surface;
+  border: 1px solid #eeecf7;
+  border-radius: 12px;
+  font-size: 12px;
+  color: $kc-muted;
+
+  strong { color: $kc-ink; font-weight: 800; font-variant-numeric: tabular-nums; }
+}
+
+.oc-desglose-nota { flex-basis: 100%; font-size: 11px; color: $kc-muted-2; }
+
+.oc-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.oc-total {
+  margin-right: auto;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+// ---------- estado de cuenta ----------
+
+.oc-cuenta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.oc-cuenta-dato {
+  background: $kc-surface;
+  border: 1px solid #eeecf7;
+  border-radius: 10px;
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  strong { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  &--alerta {
+    background: $kc-danger-bg;
+    border-color: rgba(214, 69, 69, .25);
+    strong { color: $kc-danger; }
+  }
+}
+
+.oc-pie { font-size: 10.5px; color: $kc-muted-2; }
+
+.oc-facturas {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border: 1px solid $kc-line;
+    border-radius: 11px;
+    background: #fff;
+    font-size: 12px;
+  }
+}
+
+.oc-nota {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  color: $kc-muted;
+}
+
+.oc-vacio { color: $kc-muted; font-size: 12.5px; }
+
+@media (max-width: 900px) {
+  .kc-row {
+    flex-wrap: wrap;
+
+    &__fin {
+      width: 100%;
+      justify-content: space-between;
+      padding-left: 47px;
+    }
+  }
+
+  .oc-plata { align-items: flex-start; min-width: 0; }
 }

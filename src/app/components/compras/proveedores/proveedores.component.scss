@@ -1,377 +1,90 @@
-// Proveedores — tema canónico Katuq: acento #5F3FE0, plano, radios 16/11/20.
+// Proveedores — canon "Todos los pedidos". Los tokens y patrones compartidos
+// viven en el parcial del módulo; aquí solo lo propio de esta pantalla.
+@import '../compras-theme';
 
-$acento: #5F3FE0;
-$acento-ink: #4930B8;
-$acento-suave: #EFEAFD;
-$ink: #211F3A;
-$muted: #6E6A8A;
-$faint: #9B97B5;
-$borde: #E7E3F5;
-$fondo: #F6F4FB;
-$tarjeta: #FFFFFF;
-$ok: #0F8A4D;
-$ok-suave: #E4F3EB;
-$aviso: #D3790F;
-$aviso-suave: #FBEFDE;
-$critico: #C2266E;
-$critico-suave: #F9E4EE;
-$sombra: 0 10px 30px rgba(95, 63, 224, .08);
-
-.prv-pagina {
-  padding: 24px;
-  background: $fondo;
-  min-height: 100%;
-  color: $ink;
-  font-size: 14px;
-}
-
-.prv-encabezado { margin-bottom: 20px; }
-
-.prv-titulo {
+.kc-atajos {
   display: flex;
-  gap: 14px;
-  align-items: flex-start;
-
-  h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: -.01em; }
-  p { margin: 0; color: $muted; max-width: 64ch; }
-}
-
-.prv-icono {
-  width: 44px;
-  height: 44px;
-  border-radius: 16px;
-  background: $acento-suave;
-  color: $acento-ink;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  flex: none;
-}
-
-.prv-aviso {
-  border-radius: 11px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-
-  &--error { background: $critico-suave; color: $critico; }
-}
-
-.prv-tarjeta {
-  background: $tarjeta;
-  border: 1px solid $borde;
-  border-radius: 16px;
-  box-shadow: $sombra;
-  padding: 20px 22px;
-  margin-bottom: 16px;
-
-  h2 { font-size: 17px; font-weight: 650; margin: 0 0 14px; }
-}
-
-.prv-form {
-  display: flex;
-  gap: 14px;
   flex-wrap: wrap;
+  gap: 6px;
   margin-bottom: 14px;
-
-  label {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    color: $muted;
-  }
-
-  select, input {
-    border: 1px solid $borde;
-    border-radius: 11px;
-    padding: 9px 13px;
-    font-size: 13px;
-    color: $ink;
-    background: $tarjeta;
-    min-width: 210px;
-
-    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
-  }
-}
-
-.prv-criterios {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.prv-criterio {
-  text-align: left;
-  border: 1px solid $borde;
-  background: $fondo;
-  border-radius: 11px;
-  padding: 12px 14px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-
-  strong { font-size: 13.5px; color: $ink; }
-  span { font-size: 12px; color: $muted; }
-
-  &.activo { border-color: $acento; background: $acento-suave; strong { color: $acento-ink; } }
-  &:focus-visible { outline: 2px solid $acento; outline-offset: 2px; }
-}
-
-.prv-boton {
-  border: none;
-  border-radius: 11px;
-  padding: 10px 18px;
-  background: $acento;
-  color: #fff;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-
-  &--suave { background: $acento-suave; color: $acento-ink; }
-  &--fuerte { background: $aviso; }
-  &:disabled { opacity: .55; cursor: default; }
-  &:focus-visible { outline: 2px solid $acento-ink; outline-offset: 2px; }
-}
-
-.prv-detalle-cabeza {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-
-  h2 { margin: 0 0 2px; }
-}
-
-.prv-sub { font-size: 12.5px; color: $muted; }
-
-.prv-marcadores {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.prv-marcador {
-  border: 1px solid $borde;
-  border-radius: 11px;
-  padding: 12px 14px;
-  background: $fondo;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  strong { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
-
-  &--alerta { border-color: $aviso; background: $aviso-suave; }
-}
-
-.prv-etiqueta {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: $muted;
-}
-
-.prv-pie { font-size: 11.5px; color: $faint; }
-
-.prv-tabla-marco { overflow-x: auto; }
-
-.prv-tabla {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 640px;
-  font-size: 13px;
-
-  thead th {
-    text-align: left;
-    font-size: 10.5px;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: $muted;
-    font-weight: 700;
-    padding: 10px 14px;
-    background: #FBFAFE;
-    border-bottom: 1px solid $borde;
-    white-space: nowrap;
-  }
-
-  tbody td {
-    padding: 8px 14px;
-    border-bottom: 1px solid $borde;
-    vertical-align: middle;
-  }
-
-  tbody tr:last-child td { border-bottom: none; }
-  tbody tr.exacta { background: rgba(15, 138, 77, .04); }
-  tbody tr.sobra { background: rgba(211, 121, 15, .05); }
-  tbody tr.falta { background: rgba(194, 38, 110, .05); }
-
-  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  thead th.num { text-align: right; }
-}
-
-.prv-referencia { font-weight: 600; }
-.prv-ubicacion {
-  font-size: 12px;
-  background: $acento-suave;
-  color: $acento-ink;
-  border-radius: 20px;
-  padding: 2px 9px;
-  font-weight: 600;
-}
-.prv-sin-ubicacion { font-size: 12px; color: $faint; font-style: italic; }
-
-.prv-input {
-  width: 92px;
-  border: 1px solid $borde;
-  border-radius: 8px;
-  padding: 6px 9px;
-  text-align: right;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  color: $ink;
-
-  &:focus { outline: 2px solid $acento; outline-offset: 1px; }
-  &:disabled { background: $fondo; color: $faint; }
-}
-
-.prv-dif {
-  font-weight: 700;
-
-  &.exacta { color: $ok; }
-  &.sobra { color: $aviso; }
-  &.falta { color: $critico; }
-}
-
-.prv-pendiente { color: $faint; }
-
-.prv-chip {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  padding: 4px 11px;
-  border-radius: 20px;
-
-  &.estado-abierta { background: $acento-suave; color: $acento-ink; }
-  &.estado-contada { background: $aviso-suave; color: $aviso; }
-  &.estado-aplicada { background: $ok-suave; color: $ok; }
-  &.estado-cancelada { background: $fondo; color: $faint; }
-}
-
-.prv-accion {
-  border: 1px solid $acento;
-  background: $acento-suave;
-  color: $acento-ink;
-  border-radius: 20px;
-  padding: 5px 14px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.prv-acciones {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.prv-vacio {
-  color: $muted;
-  padding: 22px;
-  text-align: center;
-  border: 1px dashed $borde;
-  border-radius: 11px;
-}
-
-.prv-nota {
-  color: $faint;
-  font-size: 12.5px;
-  max-width: 78ch;
-  margin: 14px 0 0;
-}
-
-@media (max-width: 640px) {
-  .prv-pagina { padding: 16px; }
-  .prv-form select, .prv-form input { min-width: 100%; }
-}
-
-// Atajos entre módulos: el menú lateral depende de permisos por rol, así que
-// las pantallas nuevas también se alcanzan desde aquí.
-.atajos-modulos {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
 
   a {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 12.5px;
-    font-weight: 600;
-    text-decoration: none;
-    color: #6E6A8A;
-    background: #FFFFFF;
-    border: 1px solid #E7E3F5;
+    padding: 7px 13px;
     border-radius: 20px;
-    padding: 6px 14px;
+    background: $kc-chip-bg;
+    border: 1px solid $kc-chip-border;
+    color: #5b5878;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .15s ease, color .15s ease;
 
-    &:hover { color: #4930B8; background: #EFEAFD; border-color: #5F3FE0; }
-    &.activo { color: #4930B8; background: #EFEAFD; border-color: #5F3FE0; }
+    &:hover { background: $kc-accent-soft; color: $kc-accent; }
+    &.is-active { background: $kc-accent; border-color: $kc-accent; color: #fff; }
   }
+}
+
+.kc-head__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.prv-titulo-panel {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 14px;
 }
 
 .prv-form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 12px;
 
-  label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: $muted;
-    &.ancho { grid-column: 1 / -1; }
-    b { color: $critico; }
-  }
-  input {
-    border: 1px solid $borde; border-radius: 11px; padding: 9px 13px; font-size: 13px; color: $ink;
-    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
+  .ancho { grid-column: 1 / -1; }
+}
+
+.prv-acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+// El bloque de plata va alineado a la derecha y con los números tabulares, para
+// que las cifras de filas distintas se puedan comparar de un vistazo.
+.prv-plata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 170px;
+
+  &__pie {
+    font-size: 10.5px;
+    color: $kc-muted-2;
   }
 }
 
-.prv-tarjeta-ancha {
-  background: $tarjeta; border: 1px solid $borde; border-radius: 16px;
-  box-shadow: $sombra; padding: 20px 22px; margin-bottom: 16px;
-  h2 { font-size: 17px; font-weight: 650; margin: 0 0 14px; }
+.prv-nota {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  color: $kc-muted;
 }
 
-.prv-controles { display: flex; gap: 10px; flex-wrap: wrap; }
-.prv-buscar {
-  border: 1px solid $borde; border-radius: 11px; padding: 9px 13px; font-size: 13px;
-  min-width: 260px; color: $ink;
-  &:focus { outline: 2px solid $acento; outline-offset: 1px; }
-}
-.prv-encabezado { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
-.prv-nombre { display: block; font-weight: 600; }
-.prv-sub { display: block; font-size: 12px; color: $muted; }
-.prv-alerta { color: $critico; font-weight: 600; }
-.prv-accion--suave { border-color: $borde; background: $fondo; color: $muted; margin-left: 6px; }
-.prv-tabla tbody tr.inactivo { opacity: .55; }
-.prv-chip.chip-inactivo { background: $fondo; color: $faint; }
+@media (max-width: 820px) {
+  .kc-row {
+    flex-wrap: wrap;
 
-// Atajos entre módulos: el menú lateral depende de permisos por rol.
-.atajos-modulos {
-  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
-  a {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600;
-    text-decoration: none; color: #6E6A8A; background: #FFFFFF; border: 1px solid #E7E3F5;
-    border-radius: 20px; padding: 6px 14px;
-    &:hover, &.activo { color: #4930B8; background: #EFEAFD; border-color: #5F3FE0; }
+    &__fin {
+      width: 100%;
+      justify-content: space-between;
+      padding-left: 47px;
+    }
   }
+
+  .prv-plata { align-items: flex-start; min-width: 0; }
 }

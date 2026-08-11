@@ -7,6 +7,7 @@ import {
   SugerenciaReposicion,
 } from '../../../shared/services/inventarios/inventario.service';
 import { Bodega } from '../../../shared/models/inventarios/bodega.model';
+import { colorDeAvatar, inicialDe } from '../compras-avatar';
 
 /**
  * Qué comprar: la pregunta que va antes de crear una orden.
@@ -42,6 +43,10 @@ export class ReposicionComponent implements OnInit {
   soloUrgentes = false;
 
   constructor(private inventarioService: InventarioService) {}
+
+  /** Mismo avatar que el resto de las listas de Katuq. */
+  inicial = inicialDe;
+  colorAvatar = colorDeAvatar;
 
   ngOnInit(): void {
     this.inventarioService.getBodegas().subscribe({

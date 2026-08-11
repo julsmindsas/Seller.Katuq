@@ -1,158 +1,172 @@
-<div class="prv-pagina">
+<div class="kc-page">
 
-  <nav class="atajos-modulos" aria-label="Otros módulos">
-    <a routerLink="/compras/proveedores" class="activo"><i class="pi pi-users"></i> Proveedores</a>
+  <nav class="kc-atajos" aria-label="Otros módulos">
+    <a routerLink="/compras/reposicion"><i class="pi pi-chart-line"></i> Qué comprar</a>
     <a routerLink="/inventario/ordenes-compra"><i class="pi pi-shopping-cart"></i> Órdenes de compra</a>
-    <a routerLink="/inventario/inventario-catalogo"><i class="pi pi-database"></i> Inventario por bodega</a>
+    <a routerLink="/compras/proveedores" class="is-active"><i class="pi pi-users"></i> Proveedores</a>
   </nav>
 
-  <header class="prv-encabezado">
-    <div class="prv-titulo">
-      <span class="prv-icono"><i class="pi pi-users"></i></span>
-      <div>
-        <h1>Proveedores</h1>
-        <p>A quién le compramos, cuánto le debemos y en qué condiciones.</p>
-      </div>
+  <header class="kc-head">
+    <div>
+      <h1>Proveedores</h1>
+      <p>A quién le compramos, cuánto le debemos y qué tan bien cumple.</p>
     </div>
-    <div class="prv-controles">
-      <input class="prv-buscar" type="text" [(ngModel)]="busqueda" (keyup.enter)="cargar()"
-             placeholder="Buscar por nombre, NIT o contacto…" />
-      <button class="prv-boton prv-boton--suave" (click)="incluirInactivos = !incluirInactivos; cargar()">
-        {{ incluirInactivos ? 'Ocultar inactivos' : 'Ver inactivos' }}
-      </button>
-      <button class="prv-boton" (click)="abrirNuevo()"><i class="pi pi-plus"></i> Nuevo proveedor</button>
+    <div class="kc-head__acciones">
+      <div class="kc-toggle">
+        <button [class.is-active]="!incluirInactivos" (click)="incluirInactivos = false; cargar()">Activos</button>
+        <button [class.is-active]="incluirInactivos" (click)="incluirInactivos = true; cargar()">Todos</button>
+      </div>
+      <button class="kc-btn" (click)="abrirNuevo()"><i class="pi pi-plus"></i> Nuevo proveedor</button>
     </div>
   </header>
 
-  <div class="prv-aviso prv-aviso--error" *ngIf="error"><i class="pi pi-exclamation-triangle"></i> {{ error }}</div>
+  <div class="kc-filtros">
+    <label class="kc-campo">
+      <span>Buscar</span>
+      <input type="text" [(ngModel)]="busqueda" (keyup.enter)="cargar()"
+             placeholder="Nombre, NIT o contacto…" />
+    </label>
+    <button class="kc-btn kc-btn--ghost" (click)="cargar()" [disabled]="cargando">
+      <i class="pi pi-search"></i> Buscar
+    </button>
+  </div>
 
-  <section class="prv-tarjetas">
-    <article class="prv-tarjeta">
-      <span class="prv-etiqueta">Proveedores activos</span>
-      <strong class="prv-numero">{{ proveedores.length | number }}</strong>
+  <p class="kc-error" *ngIf="error"><i class="pi pi-exclamation-triangle"></i> {{ error }}</p>
+
+  <section class="kc-stats">
+    <article class="kc-stat">
+      <span class="kc-label">Proveedores</span>
+      <strong>{{ proveedores.length | number }}</strong>
+      <small>{{ incluirInactivos ? 'incluye inactivos' : 'activos' }}</small>
     </article>
-    <article class="prv-tarjeta" [class.prv-tarjeta--alerta]="totalPorFacturar > 0">
-      <span class="prv-etiqueta">Recibido sin facturar</span>
-      <strong class="prv-numero">{{ totalPorFacturar | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-      <span class="prv-pie">Mercancía que llegó y aún no llega su factura</span>
+    <article class="kc-stat" [class.kc-stat--alerta]="totalPorFacturar > 0">
+      <span class="kc-label">Recibido sin facturar</span>
+      <strong>{{ totalPorFacturar | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      <small>Llegó y su factura no</small>
     </article>
   </section>
 
   <!-- Formulario -->
-  <section class="prv-tarjeta-ancha" *ngIf="mostrarFormulario">
-    <h2>{{ editando ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
+  <section class="kc-panel" *ngIf="mostrarFormulario">
+    <h2 class="prv-titulo-panel">{{ editando ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
     <div class="prv-form">
-      <label class="ancho">
-        <span>Nombre <b>*</b></span>
+      <label class="kc-campo ancho">
+        <span>Nombre *</span>
         <input type="text" [(ngModel)]="formulario.nombre" placeholder="Razón social o nombre comercial" />
       </label>
-      <label>
+      <label class="kc-campo">
         <span>NIT</span>
         <input type="text" [(ngModel)]="formulario.nit" placeholder="900.123.456-7" />
       </label>
-      <label>
+      <label class="kc-campo">
         <span>Días de crédito</span>
         <input type="number" [(ngModel)]="formulario.diasCredito" min="0" max="365" />
       </label>
-      <label>
+      <label class="kc-campo">
         <span>Días de entrega</span>
         <input type="number" [(ngModel)]="formulario.diasEntrega" min="0" max="365"
                title="Lo que se demora en entregar. Lo usa la sugerencia de compra." />
       </label>
-      <label>
+      <label class="kc-campo">
         <span>Contacto</span>
         <input type="text" [(ngModel)]="formulario.contacto" />
       </label>
-      <label>
+      <label class="kc-campo">
         <span>Teléfono</span>
         <input type="text" [(ngModel)]="formulario.telefono" />
       </label>
-      <label>
+      <label class="kc-campo">
         <span>Correo</span>
         <input type="email" [(ngModel)]="formulario.correo" />
       </label>
-      <label>
+      <label class="kc-campo">
         <span>Ciudad</span>
         <input type="text" [(ngModel)]="formulario.ciudad" />
       </label>
     </div>
     <div class="prv-acciones">
-      <button class="prv-boton" (click)="guardar()" [disabled]="guardando">
+      <button class="kc-btn" (click)="guardar()" [disabled]="guardando">
         {{ editando ? 'Guardar cambios' : 'Crear proveedor' }}
       </button>
-      <button class="prv-boton prv-boton--suave" (click)="cerrarFormulario()">Cancelar</button>
+      <button class="kc-btn kc-btn--ghost" (click)="cerrarFormulario()">Cancelar</button>
     </div>
   </section>
 
   <!-- Lista -->
-  <section class="prv-tarjeta-ancha">
-    <div class="prv-vacio" *ngIf="proveedores.length === 0 && !cargando">
-      Todavía no hay proveedores. Cree el primero y las órdenes de compra dejarán de escribir el nombre a mano.
+  <section class="kc-panel">
+    <p class="kc-cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</p>
+
+    <div class="kc-vacio" *ngIf="proveedores.length === 0 && !cargando">
+      <div class="kc-vacio__icono"><i class="pi pi-users"></i></div>
+      <h3>Todavía no hay proveedores</h3>
+      <p>Cree el primero y las órdenes dejan de escribir el nombre a mano: ahí es cuando empiezan a
+         poder compararse precios y a medirse quién cumple.</p>
     </div>
 
-    <div class="prv-tabla-marco" *ngIf="proveedores.length > 0">
-      <table class="prv-tabla">
-        <thead>
-          <tr>
-            <th>Proveedor</th>
-            <th>Contacto</th>
-            <th>Condiciones</th>
-            <th>Cómo cumple</th>
-            <th class="num">Compras</th>
-            <th class="num">Se le debe</th>
-            <th class="num">Falta pagar</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let proveedor of proveedores" [class.inactivo]="proveedor.estado === 'inactivo'">
-            <td>
-              <span class="prv-nombre">{{ proveedor.nombre }}</span>
-              <span class="prv-sub" *ngIf="proveedor.nit">NIT {{ proveedor.nit }}<span *ngIf="proveedor.digitoVerificacion">-{{ proveedor.digitoVerificacion }}</span></span>
-              <span class="prv-chip chip-inactivo" *ngIf="proveedor.estado === 'inactivo'">Inactivo</span>
-            </td>
-            <td>
-              <span *ngIf="proveedor.contacto">{{ proveedor.contacto }}</span>
-              <span class="prv-sub" *ngIf="proveedor.telefono">{{ proveedor.telefono }}</span>
-              <span class="prv-sub" *ngIf="proveedor.correo">{{ proveedor.correo }}</span>
-              <span class="prv-sub" *ngIf="!proveedor.contacto && !proveedor.telefono && !proveedor.correo">—</span>
-            </td>
-            <td>{{ textoCredito(proveedor.diasCredito) }}</td>
-            <td>
-              <!-- Lo que se demora de verdad, no lo que prometió. -->
-              <span [class.prv-alerta]="seDemoraDeMas(proveedor)">{{ textoEntrega(proveedor) }}</span>
-              <span class="prv-sub" *ngIf="cumplimientoDe(proveedor) as c">
-                <span *ngIf="c.completitudPromedio !== null">
-                  entrega {{ (c.completitudPromedio * 100) | number:'1.0-0' }}% de lo pedido</span>
-                <span *ngIf="c.conDevolucion"> · {{ c.conDevolucion }} con devolución</span>
-              </span>
-            </td>
-            <td class="num">{{ saldoDe(proveedor)?.ordenes || 0 }}</td>
-            <td class="num">
-              <span *ngIf="saldoDe(proveedor) as saldo" [class.prv-alerta]="saldo.conExceso > 0">
-                {{ saldo.porFacturar | currency:'COP':'symbol-narrow':'1.0-0' }}
-                <span class="prv-sub" *ngIf="saldo.conExceso > 0">Facturó de más en {{ saldo.conExceso }}</span>
-              </span>
-              <span class="prv-sub" *ngIf="!saldoDe(proveedor)">Sin compras</span>
-            </td>
-            <td class="num">
-              <span *ngIf="saldoDe(proveedor) as saldo">
-                {{ (saldo.porPagar || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
-              </span>
-            </td>
-            <td class="num">
-              <button class="prv-accion" (click)="abrirEdicion(proveedor)">Editar</button>
-              <button class="prv-accion prv-accion--suave" *ngIf="proveedor.estado !== 'inactivo'"
-                      (click)="desactivar(proveedor)">Desactivar</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="kc-lista" *ngIf="proveedores.length > 0">
+      <article class="kc-row" *ngFor="let proveedor of proveedores"
+               [class.is-inactiva]="proveedor.estado === 'inactivo'">
+        <span class="kc-row__avatar" [style.background]="colorAvatar(proveedor.nombre)">
+          {{ inicial(proveedor.nombre) }}
+        </span>
+
+        <div class="kc-row__main">
+          <div class="kc-row__top">
+            <span class="kc-row__nombre">{{ proveedor.nombre }}</span>
+            <span class="kc-row__cod" *ngIf="proveedor.nit">
+              NIT {{ proveedor.nit }}<span *ngIf="proveedor.digitoVerificacion">-{{ proveedor.digitoVerificacion }}</span>
+            </span>
+            <span class="kc-pill kc-pill--slate" *ngIf="proveedor.estado === 'inactivo'">Inactivo</span>
+            <!-- Lo que se demora de verdad, no lo que prometió. -->
+            <span class="kc-pill" *ngIf="cumplimientoDe(proveedor)"
+                  [ngClass]="seDemoraDeMas(proveedor) ? 'kc-pill--warn' : 'kc-pill--ok'">
+              {{ textoEntrega(proveedor) }}
+            </span>
+          </div>
+
+          <div class="kc-row__meta">
+            <span>{{ textoCredito(proveedor.diasCredito) }}</span>
+            <span *ngIf="proveedor.contacto">{{ proveedor.contacto }}</span>
+            <span *ngIf="proveedor.telefono"><i class="pi pi-phone"></i> {{ proveedor.telefono }}</span>
+            <span *ngIf="proveedor.correo">{{ proveedor.correo }}</span>
+            <span *ngIf="cumplimientoDe(proveedor) as c">
+              <ng-container *ngIf="c.completitudPromedio !== null">
+                entrega {{ (c.completitudPromedio * 100) | number:'1.0-0' }}% de lo pedido
+              </ng-container>
+              <ng-container *ngIf="c.conDevolucion"> · {{ c.conDevolucion }} con devolución</ng-container>
+            </span>
+          </div>
+        </div>
+
+        <div class="kc-row__fin">
+          <div class="prv-plata" *ngIf="saldoDe(proveedor) as saldo; else sinCompras">
+            <span class="kc-label">Falta pagar</span>
+            <span class="kc-row__valor">{{ (saldo.porPagar || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="prv-plata__pie">
+              {{ saldo.ordenes }} compra(s)
+              <ng-container *ngIf="saldo.porFacturar">
+                · {{ saldo.porFacturar | currency:'COP':'symbol-narrow':'1.0-0' }} sin facturar
+              </ng-container>
+            </span>
+            <span class="kc-pill kc-pill--danger" *ngIf="saldo.conExceso > 0">
+              Facturó de más en {{ saldo.conExceso }}
+            </span>
+          </div>
+          <ng-template #sinCompras>
+            <span class="kc-pill">Sin compras</span>
+          </ng-template>
+
+          <div class="kc-row__acciones">
+            <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="abrirEdicion(proveedor)">Editar</button>
+            <button class="kc-btn kc-btn--ghost kc-btn--mini" *ngIf="proveedor.estado !== 'inactivo'"
+                    (click)="desactivar(proveedor)">Desactivar</button>
+          </div>
+        </div>
+      </article>
     </div>
+
+    <p class="prv-nota" *ngIf="proveedores.length > 0">
+      Los proveedores no se borran, se desactivan: uno con historia de compras dejaría sus órdenes huérfanas.
+    </p>
   </section>
-
-  <p class="prv-nota">
-    Un proveedor no se borra: se desactiva. Con historia de compras no puede desaparecer sin dejar
-    huérfanas sus órdenes.
-  </p>
 </div>

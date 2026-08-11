@@ -1,40 +1,43 @@
-<div class="oc-pagina">
+<div class="kc-page">
 
-  <nav class="atajos-modulos" aria-label="Otros módulos de inventario">
-    <a routerLink="/inventario/inventario-catalogo"><i class="pi pi-database"></i> Inventario por bodega</a>
-    <a routerLink="/inventario/indicadores"><i class="pi pi-chart-line"></i> Indicadores</a>
-    <a routerLink="/inventario/ubicaciones"><i class="pi pi-map"></i> Mapa de la bodega</a>
-    <a routerLink="/inventario/conteos"><i class="pi pi-check-square"></i> Conteos</a>
+  <nav class="kc-atajos" aria-label="Otros módulos">
+    <a routerLink="/compras/reposicion"><i class="pi pi-chart-line"></i> Qué comprar</a>
+    <a routerLink="/inventario/ordenes-compra" class="is-active"><i class="pi pi-shopping-cart"></i> Órdenes de compra</a>
+    <a routerLink="/compras/proveedores"><i class="pi pi-users"></i> Proveedores</a>
   </nav>
 
-  <header class="oc-encabezado">
-    <div class="oc-titulo">
-      <span class="oc-icono"><i class="pi pi-shopping-cart"></i></span>
-      <div>
-        <h1>Órdenes de compra</h1>
-        <p>Para saber si el proveedor mandó completo, quedó debiendo o mandó de más.</p>
-      </div>
+  <header class="kc-head">
+    <div>
+      <h1>Órdenes de compra</h1>
+      <p>Para saber si el proveedor mandó completo, quedó debiendo o mandó de más.</p>
     </div>
 
-    <div class="oc-controles" *ngIf="!orden">
-      <select class="oc-select" [(ngModel)]="bodegaSeleccionada" (change)="cargar()">
-        <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
-          {{ bodega.nombre || bodega.idBodega }}
-        </option>
-      </select>
-      <button class="oc-boton oc-boton--suave" (click)="soloPendientes = !soloPendientes; cargar()">
-        {{ soloPendientes ? 'Ver todas' : 'Solo pendientes' }}
-      </button>
-      <button class="oc-boton" (click)="creando = !creando">
+    <div class="kc-head__acciones" *ngIf="!orden">
+      <div class="kc-toggle">
+        <button [class.is-active]="soloPendientes" (click)="soloPendientes = true; cargar()">Pendientes</button>
+        <button [class.is-active]="!soloPendientes" (click)="soloPendientes = false; cargar()">Todas</button>
+      </div>
+      <button class="kc-btn" (click)="creando = !creando">
         <i class="pi pi-plus"></i> Nueva orden
       </button>
     </div>
   </header>
 
-  <div class="oc-aviso oc-aviso--error" *ngIf="error"><i class="pi pi-exclamation-triangle"></i> {{ error }}</div>
+  <div class="kc-filtros" *ngIf="!orden">
+    <label class="kc-campo">
+      <span>Bodega</span>
+      <select [(ngModel)]="bodegaSeleccionada" (change)="cargar()">
+        <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+          {{ bodega.nombre || bodega.idBodega }}
+        </option>
+      </select>
+    </label>
+  </div>
+
+  <p class="kc-error" *ngIf="error"><i class="pi pi-exclamation-triangle"></i> {{ error }}</p>
 
   <!-- ======== CREAR ======== -->
-  <section class="oc-tarjeta" *ngIf="creando && !orden">
+  <section class="kc-panel" *ngIf="creando && !orden">
     <h2>Nueva orden</h2>
 
     <div class="oc-form">
@@ -79,8 +82,8 @@
       <span class="oc-buscando" *ngIf="buscando">Buscando…</span>
     </div>
 
-    <div class="oc-tabla-marco" *ngIf="lineasNuevas.length > 0">
-      <table class="oc-tabla">
+    <div class="kc-tabla-marco" *ngIf="lineasNuevas.length > 0">
+      <table class="kc-tabla">
         <thead>
           <tr>
             <th>Producto</th>
@@ -97,9 +100,9 @@
               <span class="oc-referencia">{{ linea.referencia || linea.productoId }}</span>
               <span class="oc-desc">{{ linea.descripcion }}</span>
             </td>
-            <td class="num"><input class="oc-input" type="number" min="1" [(ngModel)]="linea.cantidad" /></td>
-            <td class="num"><input class="oc-input" type="number" min="0" [(ngModel)]="linea.costoUnitario" /></td>
-            <td class="num"><input class="oc-input oc-input--corto" type="number" min="0" max="100" [(ngModel)]="linea.ivaPct" /></td>
+            <td class="num"><input class="kc-input" type="number" min="1" [(ngModel)]="linea.cantidad" /></td>
+            <td class="num"><input class="kc-input" type="number" min="0" [(ngModel)]="linea.costoUnitario" /></td>
+            <td class="num"><input class="kc-input kc-input--corto" type="number" min="0" max="100" [(ngModel)]="linea.ivaPct" /></td>
             <td class="num">{{ (linea.cantidad * linea.costoUnitario) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
             <td class="num">
               <button class="oc-quitar" (click)="quitarLinea(linea.productoId)"><i class="pi pi-times"></i></button>
@@ -120,63 +123,81 @@
 
     <div class="oc-acciones">
       <strong class="oc-total">Total: {{ totalNuevo | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-      <button class="oc-boton" (click)="crearOrden()" [disabled]="guardando">Crear orden</button>
-      <button class="oc-boton oc-boton--suave" (click)="cancelarCreacion()">Cancelar</button>
+      <button class="kc-btn" (click)="crearOrden()" [disabled]="guardando">Crear orden</button>
+      <button class="kc-btn kc-btn--ghost" (click)="cancelarCreacion()">Cancelar</button>
     </div>
   </section>
 
   <!-- ======== LISTA ======== -->
-  <section class="oc-tarjeta" *ngIf="!orden">
-    <h2>{{ soloPendientes ? 'Órdenes pendientes' : 'Todas las órdenes' }}</h2>
+  <section class="kc-panel" *ngIf="!orden">
+    <h2 class="oc-titulo-panel">
+      {{ soloPendientes ? 'Órdenes pendientes' : 'Todas las órdenes' }}
+      <span class="oc-conteo">{{ ordenes.length | number }}</span>
+    </h2>
 
-    <div class="oc-vacio" *ngIf="ordenes.length === 0 && !cargando">
-      {{ soloPendientes ? 'No hay órdenes pendientes de recibir.' : 'Todavía no hay órdenes de compra.' }}
+    <p class="kc-cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</p>
+
+    <div class="kc-vacio" *ngIf="ordenes.length === 0 && !cargando">
+      <div class="kc-vacio__icono"><i class="pi pi-shopping-cart"></i></div>
+      <h3>{{ soloPendientes ? 'No hay órdenes pendientes' : 'Todavía no hay órdenes de compra' }}</h3>
+      <p>Una orden es contra lo que se recibe: sin ella, la mercancía entra sin nada que comparar.</p>
     </div>
 
-    <div class="oc-tabla-marco" *ngIf="ordenes.length > 0">
-      <table class="oc-tabla">
-        <thead>
-          <tr>
-            <th>Proveedor</th>
-            <th>Bodega</th>
-            <th class="num">Productos</th>
-            <th class="num">Total</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let o of ordenes">
-            <td>
-              <span class="oc-referencia">{{ o.proveedor?.nombre }}</span>
-              <span class="oc-desc" *ngIf="o.observaciones">{{ o.observaciones }}</span>
-            </td>
-            <td>{{ nombreBodega(o.idBodega) }}</td>
-            <td class="num">{{ o.lineas?.length || 0 }}</td>
-            <td class="num">{{ o.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-            <td><span class="oc-chip" [ngClass]="'estado-' + o.estado">{{ o.estado }}</span></td>
-            <td class="num"><button class="oc-accion" (click)="abrirOrden(o.id)">Abrir</button></td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="kc-lista" *ngIf="ordenes.length > 0">
+      <article class="kc-row" *ngFor="let o of ordenes" (click)="abrirOrden(o.id)">
+        <span class="kc-row__avatar" [style.background]="colorAvatar(o.proveedor?.nombre)">
+          {{ inicial(o.proveedor?.nombre) }}
+        </span>
+
+        <div class="kc-row__main">
+          <div class="kc-row__top">
+            <span class="kc-row__nombre">{{ o.proveedor?.nombre }}</span>
+            <span class="kc-pill" [ngClass]="pillDeEstado(o.estado)">{{ o.estado }}</span>
+            <span class="kc-pill kc-pill--danger" *ngIf="o.cuenta?.facturadoDeMas">Facturó de más</span>
+          </div>
+          <div class="kc-row__meta">
+            <span><i class="pi pi-home"></i> {{ nombreBodega(o.idBodega) }}</span>
+            <span>{{ o.lineas?.length || 0 }} productos</span>
+            <span *ngIf="o.cuenta?.porPagar">
+              falta pagar {{ o.cuenta?.porPagar | currency:'COP':'symbol-narrow':'1.0-0' }}
+            </span>
+            <span *ngIf="o.observaciones">{{ o.observaciones }}</span>
+          </div>
+        </div>
+
+        <div class="kc-row__fin">
+          <div class="oc-plata">
+            <span class="kc-label">Total</span>
+            <span class="kc-row__valor">{{ o.total | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          </div>
+          <button class="kc-btn kc-btn--ghost kc-btn--mini" (click)="abrirOrden(o.id); $event.stopPropagation()">
+            Abrir
+          </button>
+        </div>
+      </article>
     </div>
   </section>
 
   <!-- ======== DETALLE / RECIBIR ======== -->
-  <section class="oc-tarjeta" *ngIf="orden as o">
+  <section class="kc-panel" *ngIf="orden as o">
     <header class="oc-detalle-cabeza">
-      <div>
-        <h2>{{ o.proveedor?.nombre }}</h2>
-        <span class="oc-sub">{{ nombreBodega(o.idBodega) }} · {{ o.total | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+      <div class="oc-detalle-quien">
+        <span class="kc-row__avatar" [style.background]="colorAvatar(o.proveedor?.nombre)">
+          {{ inicial(o.proveedor?.nombre) }}
+        </span>
+        <div>
+          <h2>{{ o.proveedor?.nombre }}</h2>
+          <span class="oc-sub">{{ nombreBodega(o.idBodega) }} · {{ o.total | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
       </div>
       <div class="oc-detalle-acciones">
-        <span class="oc-chip" [ngClass]="'estado-' + o.estado">{{ o.estado }}</span>
-        <button class="oc-boton oc-boton--suave" (click)="cerrarDetalle()">Volver</button>
+        <span class="kc-pill" [ngClass]="pillDeEstado(o.estado)">{{ o.estado }}</span>
+        <button class="kc-btn kc-btn--ghost" (click)="cerrarDetalle()">Volver</button>
       </div>
     </header>
 
-    <div class="oc-tabla-marco">
-      <table class="oc-tabla">
+    <div class="kc-tabla-marco">
+      <table class="kc-tabla">
         <thead>
           <tr>
             <th>Producto</th>
@@ -210,7 +231,7 @@
               <span class="oc-completo" *ngIf="pendienteDe(linea) === 0 && excedenteDe(linea) === 0">Completo</span>
             </td>
             <td class="num">
-              <input class="oc-input" type="number" min="0" [(ngModel)]="recepcion[linea.productoId]"
+              <input class="kc-input" type="number" min="0" [(ngModel)]="recepcion[linea.productoId]"
                      [disabled]="o.estado === 'anulada'" placeholder="—" />
             </td>
           </tr>
@@ -219,11 +240,11 @@
     </div>
 
     <div class="oc-acciones" *ngIf="o.estado !== 'anulada' && o.estado !== 'recibida'">
-      <button class="oc-boton oc-boton--suave" (click)="llenarPendientes()">Llegó todo lo que faltaba</button>
-      <button class="oc-boton" (click)="recibir()" [disabled]="guardando || !hayAlgoQueRecibir">
+      <button class="kc-btn kc-btn--ghost" (click)="llenarPendientes()">Llegó todo lo que faltaba</button>
+      <button class="kc-btn" (click)="recibir()" [disabled]="guardando || !hayAlgoQueRecibir">
         <i class="pi pi-download"></i> Recibir e ingresar al inventario
       </button>
-      <button class="oc-boton oc-boton--suave" (click)="anular()" [disabled]="guardando">Anular orden</button>
+      <button class="kc-btn kc-btn--ghost" (click)="anular()" [disabled]="guardando">Anular orden</button>
     </div>
 
     <p class="oc-nota">
