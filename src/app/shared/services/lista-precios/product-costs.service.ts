@@ -31,7 +31,7 @@ export interface PrindelExcelRow {
 
 export interface CostPreviewRequest {
   fileName?: string;
-  fuente?: 'prindel-excel' | 'aliaddo-api' | 'aliaddo-excel' | 'costos-excel' | 'manual';
+  fuente?: 'prindel-excel' | 'aliaddo-api' | 'aliaddo-excel' | 'costos-excel' | 'manual' | 'compra';
   rows: PrindelExcelRow[];
   codeAliases?: { [from: string]: string };
 }
