@@ -445,7 +445,11 @@ export class IntegrationsService {
    * Las 4 pantallas de despachos consumen este método, así que este es el único
    * punto de filtro.
    */
-  private static readonly LOGISTICS_SIN_DESPACHO: string[] = ["fullpi"];
+  // Vacío desde 2026-08-11: la estrategia de despacho de Fullpi ya existe en
+  // el backend (fullpiProvider → pushSingleOrder), así que la puerta dejó de
+  // ser pintada. El filtro queda como mecanismo por si otra integración
+  // logística futura llega sin estrategia.
+  private static readonly LOGISTICS_SIN_DESPACHO: string[] = [];
 
   getIntegrationsByCategory(
     category: IntegrationCategory,
