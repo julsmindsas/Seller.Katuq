@@ -824,11 +824,53 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
         }
         this.exportandoExcel = false;
       },
-      error: () => {
-        this.toastr?.error?.('Error generando Excel del inventario', 'Error');
+      error: (err) => {
         this.exportandoExcel = false;
+        this.mostrarErrorExportacion(err);
       },
     });
+  }
+
+  /**
+   * Muestra el error REAL del backend al exportar.
+   *
+   * Antes esta rama mostraba siempre "Error generando Excel del inventario" y
+   * tiraba a la basura el diagnóstico del servidor — que suele traer la
+   * instrucción exacta para arreglarlo (por ejemplo, qué librería falta y qué
+   * comando correr). Con el mensaje escondido, cada falla de exportación
+   * obligaba a adivinar.
+   *
+   * Detalle: la respuesta se pide como archivo (`responseType: 'blob'`), así
+   * que el cuerpo del error también llega como Blob y hay que LEERLO antes de
+   * poder ver el JSON. Sin este paso el mensaje se pierde igual aunque se
+   * intente mostrar.
+   */
+  private async mostrarErrorExportacion(err: any): Promise<void> {
+    const generico = 'Error generando Excel del inventario';
+
+    try {
+      let cuerpo: any = err?.error;
+
+      if (cuerpo instanceof Blob) {
+        const texto = await cuerpo.text();
+        try {
+          cuerpo = JSON.parse(texto);
+        } catch {
+          cuerpo = texto ? { error: texto } : null;
+        }
+      }
+
+      const mensaje = cuerpo?.error || cuerpo?.message || err?.message || generico;
+      // El backend a veces acompaña el error con la acción para resolverlo.
+      const accion = cuerpo?.action ? ` — ${cuerpo.action}` : '';
+
+      this.toastr?.error?.(`${mensaje}${accion}`, 'No se pudo exportar', {
+        timeOut: 10000,
+        closeButton: true,
+      });
+    } catch {
+      this.toastr?.error?.(generico, 'Error');
+    }
   }
 
   private fechaBogota(offsetDays = 0): string {
@@ -944,7 +986,10 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.cutoffExportando = false;
-        this.toastr.error(error?.error?.error || 'No se pudo exportar el corte', 'Inventario por fecha');
+        // Parecía que mostraba el error del backend, pero no: la respuesta se
+        // pide como archivo, así que `error.error` es un Blob y leerle `.error`
+        // siempre da undefined. Caía en el texto genérico sin decir por qué.
+        this.mostrarErrorExportacion(error);
       },
     });
   }
