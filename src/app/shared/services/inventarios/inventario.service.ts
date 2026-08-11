@@ -770,6 +770,8 @@ export class InventarioService {
 
   crearOrdenCompra(orden: {
     proveedor: { nombre: string; nit?: string };
+    /** Del maestro. Si viene, el backend toma de ahí el nombre y el NIT. */
+    proveedorId?: string;
     bodega: string;
     lineas: { productoId: string; referencia?: string; descripcion?: string; cantidad: number; costoUnitario?: number }[];
     observaciones?: string;

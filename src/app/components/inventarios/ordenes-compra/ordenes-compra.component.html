@@ -38,8 +38,15 @@
     <h2>Nueva orden</h2>
 
     <div class="oc-form">
-      <label>
+      <label *ngIf="proveedores.length > 0">
         <span>Proveedor</span>
+        <select [(ngModel)]="proveedorId" (change)="alEscogerProveedor()">
+          <option value="">— Escoger del maestro —</option>
+          <option *ngFor="let p of proveedores" [value]="p.id">{{ p.nombre }}</option>
+        </select>
+      </label>
+      <label>
+        <span>{{ proveedores.length > 0 ? 'O escríbalo' : 'Proveedor' }}</span>
         <input type="text" [(ngModel)]="proveedorNombre" placeholder="A quién se le compró" />
       </label>
       <label>

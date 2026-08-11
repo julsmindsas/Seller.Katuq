@@ -426,3 +426,45 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
   &.estado-recibida { background: $ok-suave; color: $ok; }
   &.estado-anulada { background: $fondo; color: $faint; }
 }
+
+.oc-cuenta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.oc-cuenta-dato {
+  border: 1px solid $borde;
+  border-radius: 11px;
+  padding: 12px 14px;
+  background: $fondo;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+
+  // Que el proveedor facture más de lo que entregó no puede verse igual que
+  // el resto: es justo lo que hay que reclamar.
+  &--alerta { border-color: $critico; background: $critico-suave; strong { color: $critico; } }
+}
+
+.oc-facturas {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border: 1px solid $borde;
+    border-radius: 11px;
+    background: $tarjeta;
+    font-size: 13px;
+  }
+}

@@ -5,6 +5,7 @@ import {
   InventarioService,
   LineaOrdenCompra,
   OrdenCompra,
+  Proveedor,
 } from '../../../shared/services/inventarios/inventario.service';
 import { Bodega } from '../../../shared/models/inventarios/bodega.model';
 import { TipoMovimientoInventario } from '../enums/tipos-movimiento.enum';
@@ -44,6 +45,9 @@ export class OrdenesCompraComponent implements OnInit {
 
   // Formulario de orden nueva
   creando = false;
+  /** Del maestro. Si está vacío se puede escribir el nombre a mano, como antes. */
+  proveedores: Proveedor[] = [];
+  proveedorId = '';
   proveedorNombre = '';
   proveedorNit = '';
   observaciones = '';
@@ -59,6 +63,13 @@ export class OrdenesCompraComponent implements OnInit {
   constructor(private inventarioService: InventarioService) {}
 
   ngOnInit(): void {
+    // El maestro es opcional para no bloquear a quien todavía no lo llenó: si
+    // está vacío, la orden se crea escribiendo el nombre como se hacía antes.
+    this.inventarioService.listarProveedores().subscribe({
+      next: (r) => { this.proveedores = r.proveedores || []; },
+      error: () => { this.proveedores = []; },
+    });
+
     this.inventarioService.getBodegas().subscribe({
       next: (bodegas) => {
         this.bodegas = (bodegas || []).filter((b: any) => b?.idBodega);
@@ -137,6 +148,14 @@ export class OrdenesCompraComponent implements OnInit {
     return this.lineasNuevas.reduce((s, l) => s + (Number(l.cantidad) || 0) * (Number(l.costoUnitario) || 0), 0);
   }
 
+  /** Al escoger del maestro, el nombre y el NIT se llenan solos. */
+  alEscogerProveedor(): void {
+    const proveedor = this.proveedores.find((p) => p.id === this.proveedorId);
+    if (!proveedor) return;
+    this.proveedorNombre = proveedor.nombre;
+    this.proveedorNit = proveedor.nit || '';
+  }
+
   crearOrden(): void {
     if (!this.proveedorNombre.trim()) {
       Swal.fire('Falta el proveedor', 'Escriba a quién se le compró.', 'warning');
@@ -151,6 +170,7 @@ export class OrdenesCompraComponent implements OnInit {
     this.inventarioService
       .crearOrdenCompra({
         proveedor: { nombre: this.proveedorNombre.trim(), nit: this.proveedorNit.trim() || undefined },
+        proveedorId: this.proveedorId || undefined,
         bodega: this.bodegaSeleccionada,
         lineas: this.lineasNuevas.map((l) => ({
           productoId: l.productoId,
@@ -175,8 +195,47 @@ export class OrdenesCompraComponent implements OnInit {
       });
   }
 
+  /** Anota la factura del proveedor. No mueve inventario ni paga nada. */
+  async registrarFactura(): Promise<void> {
+    if (!this.orden) return;
+
+    const { value: datos } = await Swal.fire({
+      title: 'Factura del proveedor',
+      html:
+        '<input id="f-num" class="swal2-input" placeholder="Número de factura">' +
+        '<input id="f-val" type="number" class="swal2-input" placeholder="Valor facturado">',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Anotar factura',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const numero = (document.getElementById('f-num') as HTMLInputElement)?.value?.trim();
+        const valor = Number((document.getElementById('f-val') as HTMLInputElement)?.value);
+        if (!numero) { Swal.showValidationMessage('La factura necesita su número'); return false; }
+        if (!valor || valor <= 0) { Swal.showValidationMessage('El valor debe ser mayor que cero'); return false; }
+        return { numero, valor };
+      },
+    });
+
+    if (!datos) return;
+
+    this.guardando = true;
+    this.inventarioService.registrarFacturaOrden(this.orden.id, datos).subscribe({
+      next: () => {
+        this.guardando = false;
+        this.abrirOrden(this.orden!.id);
+        Swal.fire({ icon: 'success', title: 'Factura anotada', timer: 1500, showConfirmButton: false });
+      },
+      error: (err) => {
+        this.guardando = false;
+        Swal.fire('No se pudo anotar', err?.error?.message || 'Revise el número y el valor.', 'error');
+      },
+    });
+  }
+
   cancelarCreacion(): void {
     this.creando = false;
+    this.proveedorId = '';
     this.proveedorNombre = '';
     this.proveedorNit = '';
     this.observaciones = '';
