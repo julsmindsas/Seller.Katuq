@@ -1,11 +1,11 @@
 # Tasks — vender-contra-disponible
 
 ## 0. Checkpoint de Daniel (nada se implementa antes)
-- [ ] 0.1 Resolver las 4 decisiones abiertas del proposal: bloqueo duro vs aviso con permiso; si aplica igual a POS que a venta asistida; qué hacer con productos sin registro de inventario; si las bodegas espejo de un WMS externo cuentan igual.
-- [ ] 0.2 Medir el costo de no hacer nada: cuántas ventas de los últimos 90 días se habrían bloqueado con cada política. Solo lectura, sobre pedidos y movimientos ya existentes. Sin este número la decisión es a ciegas.
+- [x] 0.1 RESUELTAS (Daniel, 2026-08-10): configuración por empresa con default SIN bloqueo; POS y asistida iguales; productos sin registro de inventario siguen libres; espejos Fullpi/Cereza sí cuentan para el disponible.
+- [x] 0.2 MEDIDO (`scripts/analizar-ventas-sin-disponible.js`, 90 días): OH MY STORE 2/176 (1,1%); CAFÉ ESCOBAR 25/137 (18,2%); ALMACÉN BOMBAS 3/12 (25%). El impacto no es parejo — de ahí la política por empresa.
 
 ## 1. Sombra (sin cambiar comportamiento)
-- [ ] 1.1 Servicio de evaluación puro: recibe líneas, bodega y disponible; devuelve veredicto y faltante por producto. Con pruebas.
+- [x] 1.1 HECHO (`services/inventory/saleAvailabilityPolicy.js`, 10/10): evaluador puro con las 4 políticas conviviendo; sin cablear a la venta.
 - [ ] 1.2 Bandera y política por empresa, con apagado inmediato y sin despliegue.
 - [ ] 1.3 Enganche en el camino de creación de orden que SOLO evalúa y registra. Ninguna venta se detiene.
 - [ ] 1.4 Evidencia por caso: producto, bodega, pedido, faltante y política que habría aplicado.

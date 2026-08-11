@@ -48,20 +48,23 @@ checkpoint, porque cambia una regla comercial en el módulo más sensible
 Ninguna se reescribe. El descuento de inventario sigue por el camino actual: lo
 que cambia es que ANTES de llegar ahí la venta puede detenerse.
 
-## Decisiones abiertas (checkpoint de Daniel — nada se implementa sin esto)
+## Decisiones del checkpoint (Daniel, 2026-08-10)
 
-1. **¿Bloqueo duro o aviso con permiso?** Un bloqueo duro impide la venta. Un
-   aviso con permiso deja pasar a quien tenga el rol para autorizarlo y deja
-   constancia de quién autorizó vender sin respaldo. La segunda opción respeta
-   que a veces el vendedor SABE que la mercancía llega mañana.
-2. **¿Aplica igual a POS que a venta asistida?** En POS el cliente está enfrente
-   y la mercancía en la mano: bloquear ahí puede ser absurdo. En venta asistida
-   se promete a futuro: bloquear ahí protege la promesa.
-3. **¿Qué pasa con los productos sin registro de inventario?** Hoy se venden sin
-   problema. Tratarlos como "cero disponible" bloquearía ventas que hoy
-   funcionan; tratarlos como "sin límite" deja un hueco por donde se cuela todo.
-4. **¿Las bodegas espejo de un WMS externo (Fullpi, Cereza) cuentan igual?** Su
-   saldo es una foto de un tercero, no un conteo propio.
+Las cuatro quedaron resueltas, con la medición de 90 días sobre la mesa:
+
+1. **El comportamiento se configura por empresa, y por defecto NO bloquea.**
+   Nadie cambia de comportamiento hasta que su empresa encienda su nivel de
+   control. Esto hace el cambio seguro por construcción: se puede desplegar sin
+   que nada se mueva en ningún comercio.
+2. **POS y venta asistida se tratan IGUAL.** Misma política en ambos canales.
+3. **Los productos sin registro de inventario siguen libres.** No se les aplica
+   control: tratarlos como cero habría bloqueado ventas que hoy funcionan.
+4. **Las bodegas espejo de Fullpi y Cereza SÍ cuentan** para el disponible.
+
+La medición que sustentó el "por empresa": bloquear habría detenido el 1,1% de
+las ventas de OH MY STORE, pero el 18,2% de CAFÉ ESCOBAR y el 25% de ALMACÉN
+BOMBAS en 90 días. Una política global habría costado ventas reales en dos de
+los comercios.
 
 ## Impact
 
