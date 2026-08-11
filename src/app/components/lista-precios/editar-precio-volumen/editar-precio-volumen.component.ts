@@ -26,6 +26,16 @@ export class EditarPrecioVolumenComponent implements OnInit {
     this.inicializarFormulario();
   }
 
+  /**
+   * IVA que traen por defecto los rangos: el del producto, no un 19% fijo.
+   * Se valida con Number.isFinite porque el 0 de un producto exento es un IVA
+   * válido y con `||` se lo tragaba el 19.
+   */
+  private get ivaPorDefecto(): number {
+    const iva = parseFloat(this.producto?.precio?.precioUnitarioIva as any);
+    return Number.isFinite(iva) && iva >= 0 ? iva : 19;
+  }
+
   inicializarFormulario() {
     this.precioForm = this.fb.group({
       preciosVolumen: this.fb.array([])
@@ -37,13 +47,26 @@ export class EditarPrecioVolumenComponent implements OnInit {
     if (preciosExistentes.length > 0) {
       preciosExistentes.forEach((precio, index) => {
         const newItem = this.crearPreciosPorVolumen();
+
+        // La fila 0 es "1 unidad" y siempre refleja el precio base del producto.
+        // Antes se cargaba lo que hubiera guardado, así que un import con el rango
+        // arrancando en 1 dejaba 1 unidad cobrándose a otro precio que el unitario.
+        const esFilaBase = index === 0;
+        const precioSinIva = esFilaBase
+          ? Number(this.producto?.precio?.precioUnitarioSinIva) || 0
+          : precio.valorUnitarioPorVolumenSinIVA;
+        const iva = esFilaBase
+          ? this.ivaPorDefecto
+          : (Number.isFinite(Number(precio.valorIVAPorVolumen)) ? Number(precio.valorIVAPorVolumen) : this.ivaPorDefecto);
+        const valorIva = precioSinIva * (iva / 100);
+
         newItem.patchValue({
-          numeroUnidadesInicial: index === 0 ? 1 : precio.numeroUnidadesInicial,
-          numeroUnidadesLimite: index === 0 ? 1 : precio.numeroUnidadesLimite,
-          valorUnitarioPorVolumenSinIVA: precio.valorUnitarioPorVolumenSinIVA,
-          valorIVAPorVolumen: precio.valorIVAPorVolumen || 19,
-          valorUnitarioPorVolumenIva: precio.valorUnitarioPorVolumenIva,
-          valorUnitarioPorVolumenConIVA: precio.valorUnitarioPorVolumenConIVA
+          numeroUnidadesInicial: esFilaBase ? 1 : precio.numeroUnidadesInicial,
+          numeroUnidadesLimite: esFilaBase ? 1 : precio.numeroUnidadesLimite,
+          valorUnitarioPorVolumenSinIVA: precioSinIva,
+          valorIVAPorVolumen: iva,
+          valorUnitarioPorVolumenIva: esFilaBase ? valorIva : precio.valorUnitarioPorVolumenIva,
+          valorUnitarioPorVolumenConIVA: esFilaBase ? precioSinIva + valorIva : precio.valorUnitarioPorVolumenConIVA
         }, { emitEvent: false });
 
         // Si es la primera fila, deshabilitar los campos de cantidad
@@ -67,7 +90,7 @@ export class EditarPrecioVolumenComponent implements OnInit {
       numeroUnidadesLimite: [0, [Validators.required]],
       valorUnitarioPorVolumenSinIVA: [0, [Validators.required]],
       valorUnitarioPorVolumenIva: [0, [Validators.required]],
-      valorIVAPorVolumen: [19, [Validators.required]],
+      valorIVAPorVolumen: [this.ivaPorDefecto, [Validators.required]],
       valorUnitarioPorVolumenConIVA: [0, [Validators.required]]
     });
 

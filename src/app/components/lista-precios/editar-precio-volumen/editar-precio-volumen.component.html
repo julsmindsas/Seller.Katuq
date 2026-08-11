@@ -98,6 +98,10 @@
                 </div>
               </td>
               <td>
+                <!-- La primera fila ES el precio base de 1 unidad: se muestra,
+                     no se edita. Al vender, el rango le gana al precio unitario
+                     (orderCalculationService), así que un valor distinto acá
+                     hacía que 1 unidad se cobrara a otro precio. -->
                 <div class="input-group input-group-sm">
                   <span class="input-group-text">$</span>
                   <input
@@ -105,11 +109,14 @@
                     formControlName="valorUnitarioPorVolumenSinIVA"
                     type="number"
                     placeholder="0"
+                    [attr.disabled]="i === 0 ? true : null"
                   />
                 </div>
+                <small *ngIf="i === 0" class="text-muted">Precio base del producto</small>
               </td>
               <td>
-                <select class="form-control form-control-sm" formControlName="valorIVAPorVolumen">
+                <select class="form-control form-control-sm" formControlName="valorIVAPorVolumen"
+                        [attr.disabled]="i === 0 ? true : null">
                   <option value="19">19%</option>
                   <option value="8">8%</option>
                   <option value="5">5%</option>

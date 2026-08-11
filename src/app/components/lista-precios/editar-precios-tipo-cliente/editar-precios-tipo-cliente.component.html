@@ -55,6 +55,11 @@
               <small class="text-muted d-block">Se aplicará a todos los precios</small>
             </div>
             <div class="col-md-4">
+              <!-- El `.modal-body` tiene `overflow-y: auto` y recortaba el panel:
+                   solo se veía la primera opción. `appendTo="body"` lo saca de ahí,
+                   y `baseZIndex` lo sube por encima del modal (Bootstrap 5 usa
+                   1055); sin eso el panel se abre DETRAS del modal y parece
+                   bloqueado. Las dos cosas van juntas. -->
               <p-dropdown
                 [options]="porcentajesIva"
                 [(ngModel)]="porcentajeIvaSeleccionado"
@@ -62,6 +67,8 @@
                 optionValue="value"
                 placeholder="Seleccione IVA"
                 styleClass="w-100"
+                appendTo="body"
+                [baseZIndex]="2000"
                 (onChange)="onIvaChange()">
               </p-dropdown>
             </div>
