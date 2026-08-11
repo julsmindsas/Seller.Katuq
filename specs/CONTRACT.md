@@ -3384,3 +3384,15 @@ Arreglo: `exportarExcel` pasa a `async/await`, el modal de carga **solo se abre 
 **Addendum D-163/modal-corte (2026-08-10):** Daniel: "el modal del corte quedó feo" → rediseñado con el tema canónico (stats legibles con fondo suave, chips certificado/ambiguo/incompleto en par fuerte/fondo-suave, labels UPPERCASE) y la explicación repetida resuelta con regla de moda: la novedad mayoritaria de la página se dice UNA vez ("94 de 100 filas comparten...") y la columna Novedad distinta solo marca las que se apartan. Lección endurecida en el código: el cálculo corre una vez por página en el TS — una función llamada desde la plantilla con 100 filas se re-ejecuta miles de veces por ciclo y congela la pestaña (pasó en la versión .13, corregido en .14). Publicado 2026.08.10.14, verificado en vivo fluido. Nota operativa: el "congelado" persistente posterior era el content-script de la extensión de Chrome colgado tras varias recargas duras — pestaña nueva lo resuelve.
 
 **Acta de cierre formal Fase 1 (2026-08-10, D-163):** 34/34 suites en verde — 19 unitarias/contrato (candados, ledger, políticas, corte, dedup, guard bodegas, evidencia sombra, verificación diaria, write-set) + 15 de emulador CADA UNA en proyecto demo aislado (stock transaccional, telemetría sombra Osmosis, ledger, lectores/historial, BI, huella de pedidos y orígenes, controller HTTP, ruteo y cancelación Cereza, logística Shopify, flow adjust, procesadores Shopify, corte). Build de producción del front sin errores. Config sombra Osmosis acotada a las 4 bodegas Cereza (foto apagada). Con esto las tareas ejecutables de la fase quedan TODAS cerradas; restan solo el reloj de observación (~15-ago), las promociones por origen con el "dale" de Daniel, y el archive final (5.x) al cumplirse el criterio de conciliación.
+
+## D-164 (2026-08-10) — Checkpoint de "vender contra disponible" RESUELTO con números
+
+Medición de la sesión roadmap sobre 90 días reales (script analizar-ventas-sin-disponible, solo lectura): un bloqueo habría frenado 2/176 ventas en OMS (1,1%), 25/137 en Café Escobar (18,2%), 3/12 en Bombas (25%). Conclusión aceptada: política POR EMPRESA, jamás global.
+
+Decisiones de Daniel (preguntas directas con los números a la vista):
+1. **Sin bloqueo por defecto; el comportamiento es un ajuste en la configuración de cada empresa** ("dejémoslo sin bloqueo o hagamos algo en la configuración de la empresa"). Default = como hoy; cada empresa decide encender su control.
+2. **POS y venta asistida: IGUALES** — la misma política en ambos canales.
+3. **Productos sin registro de inventario siguen vendiéndose libres** — solo se controla lo inventariado.
+4. **Las bodegas espejo (Fullpi/Cereza) SÍ cuentan** para el disponible.
+
+La sesión roadmap implementa sobre su propuesta `vender-contra-disponible` con estas respuestas; sombra por empresa antes de cualquier encendido. Nota para la promoción del ledger (~15-ago): OMS tuvo solo 400 movimientos/90 días — el umbral se cumplirá más por poca actividad que por exactitud demostrada; presentarlo con esa honestidad.
