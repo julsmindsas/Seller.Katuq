@@ -1,0 +1,109 @@
+<div class="container-fluid sitios">
+
+  <div class="cabecera">
+    <div>
+      <h4>Mis páginas</h4>
+      <p class="sub">Publica una landing o una tienda con tu catálogo, sin saber de diseño.</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirAsistente()">Crear página</button>
+  </div>
+
+  <div class="cargando" *ngIf="cargando">Cargando tus páginas…</div>
+
+  <!-- Sin nada creado todavía -->
+  <div class="vacio" *ngIf="!cargando && !sitios.length">
+    <h5>Todavía no tienes ninguna página</h5>
+    <p>Elige una plantilla de tu sector y publícala en minutos. Tus productos, precios y disponibilidad
+      salen de Katuq, así que no tienes que volver a escribirlos.</p>
+    <button class="btn btn-primary" (click)="abrirAsistente()">Crear mi primera página</button>
+  </div>
+
+  <!-- Listado -->
+  <div class="tarjetas" *ngIf="!cargando && sitios.length">
+    <article class="tarjeta" *ngFor="let s of sitios">
+      <div class="tarjeta__cabecera">
+        <h5>{{ s.nombre }}</h5>
+        <span class="estado" [class.estado--publicado]="s.estado === 'publicado'">
+          {{ s.estado === 'publicado' ? 'Publicada' : 'Borrador' }}
+        </span>
+      </div>
+
+      <p class="tarjeta__url">/s/{{ s.slug }}</p>
+
+      <div class="tarjeta__metricas">
+        <span><strong>{{ s.vistasCount || 0 }}</strong> visitas</span>
+        <span><strong>{{ s.leadsCount || 0 }}</strong> contactos</span>
+        <span><strong>{{ s.pedidosCount || 0 }}</strong> pedidos</span>
+      </div>
+
+      <div class="tarjeta__acciones">
+        <button class="btn btn-sm btn-primary" (click)="abrir(s)">Editar</button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="copiarEnlace(s)">Copiar enlace</button>
+        <button class="btn btn-sm btn-outline-secondary"
+                *ngIf="s.estado === 'publicado'"
+                (click)="verPublicado(s)">Ver</button>
+      </div>
+    </article>
+  </div>
+
+  <!-- Asistente de creación -->
+  <div class="modal-fondo" *ngIf="mostrandoAsistente" (click)="cerrarAsistente()">
+    <div class="modal-caja" (click)="$event.stopPropagation()">
+
+      <!-- Paso 1: plantilla -->
+      <ng-container *ngIf="paso === 'plantilla'">
+        <h5>¿Qué tipo de página quieres?</h5>
+        <p class="sub">Todas se pueden cambiar después.</p>
+
+        <div class="cargando" *ngIf="cargandoPlantillas">Cargando plantillas…</div>
+
+        <div class="sector" *ngFor="let sector of sectores">
+          <h6>{{ etiquetaSector(sector) }}</h6>
+          <div class="plantillas">
+            <button class="plantilla" *ngFor="let p of plantillasDe(sector)" (click)="elegirPlantilla(p)">
+              <span class="plantilla__muestra" [style.background]="p.tema.colorPrimario"></span>
+              <span class="plantilla__nombre">{{ p.nombre }}</span>
+              <span class="plantilla__desc">{{ p.descripcion }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-acciones">
+          <button class="btn btn-outline-secondary" (click)="cerrarAsistente()">Cancelar</button>
+        </div>
+      </ng-container>
+
+      <!-- Paso 2: datos -->
+      <ng-container *ngIf="paso === 'datos'">
+        <h5>Cuéntanos de tu página</h5>
+        <p class="sub">Plantilla elegida: <strong>{{ plantillaElegida?.nombre }}</strong></p>
+
+        <label class="campo">
+          <span>Nombre de la página</span>
+          <input type="text" [(ngModel)]="nombre" maxlength="80" placeholder="Ej: Colección primavera" />
+          <small>Se usa para la dirección pública. Puedes cambiarla luego.</small>
+        </label>
+
+        <label class="campo campo--check">
+          <input type="checkbox" [(ngModel)]="usarIA" />
+          <span>Que Katuq escriba los textos por mí</span>
+        </label>
+
+        <label class="campo" *ngIf="usarIA">
+          <span>¿Qué quieres lograr con esta página?</span>
+          <input type="text" [(ngModel)]="objetivo" maxlength="200"
+                 placeholder="Ej: vender la colección nueva y recibir pedidos por WhatsApp" />
+          <small>Entre más claro, mejores quedan los textos.</small>
+        </label>
+
+        <div class="modal-acciones">
+          <button class="btn btn-outline-secondary" (click)="paso = 'plantilla'" [disabled]="creando">Atrás</button>
+          <button class="btn btn-primary" (click)="crear()" [disabled]="creando">
+            {{ creando ? 'Creando…' : 'Crear página' }}
+          </button>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,20 @@
+<div class="estado" *ngIf="cargando">
+  <p>Cargando…</p>
+</div>
+
+<div class="estado" *ngIf="!cargando && error">
+  <h1>Página no disponible</h1>
+  <p>{{ error }}</p>
+</div>
+
+<!-- El dibujo de los bloques es el mismo que ve el comerciante en el editor. -->
+<app-sitio-render
+  *ngIf="!cargando && !error && sitio"
+  [bloques]="sitio.bloques"
+  [tema]="sitio.tema"
+  [enviandoLead]="enviando"
+  [errorLead]="errorEnvio"
+  [leadEnviado]="enviado"
+  (lead)="enviarLead($event)"
+  (clic)="registrarClic($event)">
+</app-sitio-render>

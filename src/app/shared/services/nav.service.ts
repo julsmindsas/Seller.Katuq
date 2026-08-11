@@ -348,6 +348,15 @@ export class NavService implements OnDestroy {
       ],
     },
     {
+      title: "Mi página web",
+      icon: "globe",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "sitios", title: "Mis páginas", type: "link", icon: "layout" },
+      ],
+    },
+    {
       title: "Dropshipping",
       icon: "truck",
       type: "sub",

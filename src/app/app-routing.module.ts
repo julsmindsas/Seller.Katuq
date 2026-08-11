@@ -182,6 +182,18 @@ const routes: Routes = [
       }
     ]
   },
+  // Sitios publicados por el comerciante (landing / catálogo / tienda). Los abre
+  // cualquiera desde el link, sin cuenta en Katuq, así que va fuera del AuthGuard.
+  {
+    path: 's',
+    component: BlankComponent,
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./components/sitio-publico/sitio-publico.module').then(m => m.SitioPublicoModule),
+      }
+    ]
+  },
   // Vitrina pública de catálogos (D-141). Fuera del AuthGuard a propósito: la
   // abre el comprador, que no tiene cuenta en Katuq.
   {

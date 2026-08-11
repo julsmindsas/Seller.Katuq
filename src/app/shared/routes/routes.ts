@@ -158,6 +158,14 @@ export const content: Routes = [
     canActivate: [AuthGuard], // Agregar el guard
   },
   {
+    // Builder de landings y tiendas (D-173/D-174). La página que se publica es
+    // pública y vive fuera de aquí, en /s/:slug.
+    path: "sitios",
+    loadChildren: () =>
+      import("../../components/sitios/sitios.module").then((m) => m.SitiosModule),
+    canActivate: [AuthGuard],
+  },
+  {
     path: "produccion",
     loadChildren: () =>
       import("../../components/produccion/produccion.module").then(

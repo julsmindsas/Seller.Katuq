@@ -1,0 +1,266 @@
+<div class="editor" *ngIf="!cargando && !error && contenido">
+
+  <!-- Barra superior -->
+  <header class="barra">
+    <div class="barra__izq">
+      <button class="btn btn-sm btn-outline-secondary" (click)="volver()">← Mis páginas</button>
+      <div class="titulo">
+        <strong>{{ nombre || 'Sin nombre' }}</strong>
+        <span class="estado" [class.estado--publicado]="sitio?.estado === 'publicado'">
+          {{ sitio?.estado === 'publicado' ? 'Publicada' : 'Borrador' }}
+        </span>
+        <span class="aviso-sucio" *ngIf="sucio">· cambios sin guardar</span>
+      </div>
+    </div>
+
+    <div class="barra__der">
+      <div class="dispositivos">
+        <button [class.activo]="dispositivo === 'escritorio'" (click)="dispositivo = 'escritorio'" title="Escritorio">🖥</button>
+        <button [class.activo]="dispositivo === 'movil'" (click)="dispositivo = 'movil'" title="Móvil">📱</button>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary" (click)="guardar()" [disabled]="guardando">
+        {{ guardando ? 'Guardando…' : 'Guardar' }}
+      </button>
+      <button class="btn btn-sm btn-primary" (click)="publicar()" [disabled]="guardando || publicando">
+        {{ publicando ? 'Publicando…' : (sitio?.estado === 'publicado' ? 'Actualizar publicación' : 'Publicar') }}
+      </button>
+    </div>
+  </header>
+
+  <div class="cuerpo">
+
+    <!-- Panel izquierdo -->
+    <aside class="panel">
+      <nav class="pestanas">
+        <button [class.activa]="panel === 'bloques'" (click)="panel = 'bloques'">Bloques</button>
+        <button [class.activa]="panel === 'diseno'" (click)="panel = 'diseno'">Diseño</button>
+        <button [class.activa]="panel === 'ajustes'" (click)="panel = 'ajustes'">Ajustes</button>
+      </nav>
+
+      <!-- ── Bloques ── -->
+      <div class="panel__contenido" *ngIf="panel === 'bloques'">
+        <ol class="lista-bloques">
+          <li *ngFor="let b of bloques; let i = index"
+              [class.activo]="i === seleccionado"
+              [class.oculto]="b.visible === false">
+            <button class="lista-bloques__nombre" (click)="seleccionar(i)">
+              {{ nombreDeTipo(b.tipo) }}
+            </button>
+            <div class="lista-bloques__acciones">
+              <button (click)="mover(i, -1)" [disabled]="i === 0" title="Subir">↑</button>
+              <button (click)="mover(i, 1)" [disabled]="i === bloques.length - 1" title="Bajar">↓</button>
+              <button (click)="alternarVisible(i)" [title]="b.visible === false ? 'Mostrar' : 'Ocultar'">
+                {{ b.visible === false ? '🚫' : '👁' }}
+              </button>
+              <button (click)="duplicar(i)" title="Duplicar">⧉</button>
+              <button (click)="eliminar(i)" title="Eliminar">🗑</button>
+            </div>
+          </li>
+        </ol>
+
+        <button class="btn btn-sm btn-outline-primary w-100" (click)="mostrandoAgregar = !mostrandoAgregar">
+          + Agregar bloque
+        </button>
+
+        <div class="agregar" *ngIf="mostrandoAgregar">
+          <button class="agregar__opcion" *ngFor="let c of catalogoBloques" (click)="agregar(c.tipo)">
+            <strong>{{ c.nombre }}</strong>
+            <small>{{ c.descripcion }}</small>
+          </button>
+        </div>
+
+        <!-- Edición del bloque seleccionado -->
+        <div class="propiedades" *ngIf="bloqueActual as b">
+          <h6>{{ nombreDeTipo(b.tipo) }}</h6>
+
+          <!-- Banner -->
+          <ng-container *ngIf="b.tipo === 'hero'">
+            <label><span>Título</span>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" /></label>
+            <label><span>Subtítulo</span>
+              <input type="text" [(ngModel)]="b.datos.subtitulo" (ngModelChange)="marcarSucio()" maxlength="240" /></label>
+            <label><span>Texto del botón</span>
+              <input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="40" /></label>
+            <label><span>Destino del botón</span>
+              <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
+              <small>Una sección de la página (#productos, #contacto) o una dirección https.</small></label>
+            <label><span>Alineación</span>
+              <select [(ngModel)]="b.datos.alineacion" (ngModelChange)="marcarSucio()">
+                <option value="izquierda">Izquierda</option>
+                <option value="centro">Centro</option>
+                <option value="derecha">Derecha</option>
+              </select></label>
+            <label><span>Imagen de fondo</span>
+              <input type="file" accept="image/*" (change)="subirImagen($event, 'hero')" [disabled]="subiendo" />
+              <small *ngIf="subiendo">Subiendo…</small></label>
+          </ng-container>
+
+          <!-- Texto -->
+          <ng-container *ngIf="b.tipo === 'texto'">
+            <label><span>Título</span>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" /></label>
+            <label><span>Contenido</span>
+              <textarea rows="5" [(ngModel)]="b.datos.cuerpo" (ngModelChange)="marcarSucio()" maxlength="2000"></textarea></label>
+          </ng-container>
+
+          <!-- Galería -->
+          <ng-container *ngIf="b.tipo === 'galeria'">
+            <label><span>Título</span>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" /></label>
+            <div class="miniaturas">
+              <div class="miniatura" *ngFor="let img of b.datos.imagenes; let i = index">
+                <img [src]="img.url" alt="" />
+                <button (click)="quitarImagenGaleria(i)" title="Quitar">×</button>
+              </div>
+            </div>
+            <label><span>Agregar foto</span>
+              <input type="file" accept="image/*" (change)="subirImagen($event, 'galeria')" [disabled]="subiendo" /></label>
+          </ng-container>
+
+          <!-- Productos -->
+          <ng-container *ngIf="b.tipo === 'productos'">
+            <label><span>Título</span>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" /></label>
+
+            <div class="campo-productos">
+              <span class="campo-productos__resumen">
+                {{ (b.datos.productoIds?.length || 0) }} producto(s) elegido(s)
+              </span>
+              <button class="btn btn-sm btn-outline-primary" (click)="abrirSelector()">
+                {{ (b.datos.productoIds?.length || 0) ? 'Cambiar productos' : 'Elegir productos' }}
+              </button>
+              <small>El precio y la disponibilidad salen de tu catálogo al publicar. Los agotados no se
+                muestran.</small>
+            </div>
+          </ng-container>
+
+          <!-- WhatsApp -->
+          <ng-container *ngIf="b.tipo === 'whatsapp'">
+            <label><span>Número de WhatsApp</span>
+              <input type="tel" [(ngModel)]="b.datos.telefono" (ngModelChange)="marcarSucio()" placeholder="573001234567" />
+              <small>Con indicativo del país y sin espacios.</small></label>
+            <label><span>Mensaje que llega escrito</span>
+              <input type="text" [(ngModel)]="b.datos.mensaje" (ngModelChange)="marcarSucio()" maxlength="240" /></label>
+            <label><span>Texto del botón</span>
+              <input type="text" [(ngModel)]="b.datos.etiqueta" (ngModelChange)="marcarSucio()" maxlength="40" /></label>
+          </ng-container>
+
+          <!-- Formulario -->
+          <ng-container *ngIf="b.tipo === 'formulario'">
+            <label><span>Título</span>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" /></label>
+            <label><span>Descripción</span>
+              <textarea rows="2" [(ngModel)]="b.datos.descripcion" (ngModelChange)="marcarSucio()" maxlength="400"></textarea></label>
+            <label class="check"><input type="checkbox" [(ngModel)]="b.datos.pedirTelefono" (ngModelChange)="marcarSucio()" /> Pedir teléfono</label>
+            <label class="check"><input type="checkbox" [(ngModel)]="b.datos.pedirEmail" (ngModelChange)="marcarSucio()" /> Pedir correo</label>
+            <label class="check"><input type="checkbox" [(ngModel)]="b.datos.pedirMensaje" (ngModelChange)="marcarSucio()" /> Pedir mensaje</label>
+            <label><span>Texto del botón</span>
+              <input type="text" [(ngModel)]="b.datos.textoBoton" (ngModelChange)="marcarSucio()" maxlength="40" /></label>
+            <small class="nota">Cada envío queda como prospecto en tu CRM.</small>
+          </ng-container>
+
+          <!-- FAQ -->
+          <ng-container *ngIf="b.tipo === 'faq'">
+            <label><span>Título</span>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" /></label>
+            <div class="repetible" *ngFor="let p of b.datos.preguntas; let i = index">
+              <input type="text" [(ngModel)]="p.pregunta" (ngModelChange)="marcarSucio()" placeholder="Pregunta" maxlength="200" />
+              <textarea rows="2" [(ngModel)]="p.respuesta" (ngModelChange)="marcarSucio()" placeholder="Respuesta" maxlength="2000"></textarea>
+              <button class="quitar" (click)="quitarPregunta(i)">Quitar</button>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" (click)="agregarPregunta()">+ Pregunta</button>
+          </ng-container>
+
+          <!-- Pie -->
+          <ng-container *ngIf="b.tipo === 'footer'">
+            <label><span>Texto</span>
+              <input type="text" [(ngModel)]="b.datos.texto" (ngModelChange)="marcarSucio()" maxlength="400" /></label>
+            <label class="check"><input type="checkbox" [(ngModel)]="b.datos.mostrarRedes" (ngModelChange)="marcarSucio()" /> Mostrar mis redes</label>
+            <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index">
+              <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="60" />
+              <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://…" />
+              <button class="quitar" (click)="quitarEnlace(i)">Quitar</button>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" (click)="agregarEnlace()">+ Enlace</button>
+          </ng-container>
+        </div>
+
+        <p class="pista" *ngIf="!bloqueActual && bloques.length">
+          Toca un bloque de la lista o de la vista previa para editarlo.
+        </p>
+      </div>
+
+      <!-- ── Diseño ── -->
+      <div class="panel__contenido" *ngIf="panel === 'diseno'">
+        <label><span>Color principal</span>
+          <input type="color" [(ngModel)]="contenido.tema.colorPrimario" (ngModelChange)="marcarSucio()" /></label>
+        <label><span>Color de fondo</span>
+          <input type="color" [(ngModel)]="contenido.tema.colorSecundario" (ngModelChange)="marcarSucio()" /></label>
+        <label><span>Color del texto</span>
+          <input type="color" [(ngModel)]="contenido.tema.colorTexto" (ngModelChange)="marcarSucio()" /></label>
+        <label><span>Tipografía</span>
+          <select [(ngModel)]="contenido.tema.tipografia" (ngModelChange)="marcarSucio()">
+            <option value="sistema">Del sistema</option>
+            <option value="sans">Sans (moderna)</option>
+            <option value="serif">Serif (clásica)</option>
+            <option value="mono">Monoespaciada</option>
+          </select></label>
+      </div>
+
+      <!-- ── Ajustes ── -->
+      <div class="panel__contenido" *ngIf="panel === 'ajustes'">
+        <label><span>Nombre de la página</span>
+          <input type="text" [(ngModel)]="nombre" (ngModelChange)="marcarSucio()" maxlength="80" /></label>
+
+        <label><span>Dirección pública</span>
+          <input type="text" [(ngModel)]="slug" (ngModelChange)="marcarSucio()" (blur)="comprobarSlug()" maxlength="60" />
+          <small [class.error]="!slugValido">{{ slugMensaje || enlacePublico }}</small></label>
+
+        <hr />
+        <h6>Cómo se ve al compartir</h6>
+        <label><span>Título</span>
+          <input type="text" [(ngModel)]="contenido.seo.titulo" (ngModelChange)="marcarSucio()" maxlength="70" /></label>
+        <label><span>Descripción</span>
+          <textarea rows="2" [(ngModel)]="contenido.seo.descripcion" (ngModelChange)="marcarSucio()" maxlength="160"></textarea></label>
+        <label><span>Imagen</span>
+          <input type="file" accept="image/*" (change)="subirImagen($event, 'seo')" [disabled]="subiendo" /></label>
+
+        <hr />
+        <div class="acciones-publicacion">
+          <button class="btn btn-sm btn-outline-secondary" (click)="copiarEnlace()">Copiar enlace</button>
+          <button class="btn btn-sm btn-outline-secondary" *ngIf="sitio?.estado === 'publicado'" (click)="verPublicado()">Ver publicada</button>
+          <button class="btn btn-sm btn-outline-danger" *ngIf="sitio?.estado === 'publicado'"
+                  (click)="despublicar()" [disabled]="publicando">Quitar de línea</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Vista previa -->
+    <main class="previa">
+      <div class="previa__lienzo" [class.previa__lienzo--movil]="dispositivo === 'movil'">
+        <app-sitio-render
+          [bloques]="bloquesPrevia"
+          [tema]="contenido.tema"
+          [previsualizacion]="true"
+          [dispositivo]="dispositivo"
+          [bloqueActivo]="idBloqueActivo"
+          (bloqueSeleccionado)="seleccionarPorId($event)">
+        </app-sitio-render>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Selector de productos del bloque en edición -->
+<app-selector-productos
+  *ngIf="mostrandoSelector && bloqueActual"
+  [seleccionados]="bloqueActual.datos.productoIds || []"
+  (confirmar)="aplicarProductos($event)"
+  (cerrar)="mostrandoSelector = false">
+</app-selector-productos>
+
+<div class="estado-pantalla" *ngIf="cargando">Cargando…</div>
+<div class="estado-pantalla" *ngIf="error">
+  <p>{{ error }}</p>
+  <button class="btn btn-outline-secondary" (click)="volver()">Volver</button>
+</div>

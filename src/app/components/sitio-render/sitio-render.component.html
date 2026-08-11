@@ -1,0 +1,150 @@
+<div class="sitio" [ngStyle]="estiloTema" [class.sitio--movil]="dispositivo === 'movil'">
+
+  <ng-container *ngFor="let bloque of bloquesVisibles">
+    <div class="envoltura"
+         [class.envoltura--editable]="previsualizacion"
+         [class.envoltura--activa]="previsualizacion && bloque.id === bloqueActivo"
+         [class.envoltura--oculta]="bloque.visible === false"
+         (click)="seleccionar(bloque.id)">
+
+      <span class="etiqueta-oculto" *ngIf="previsualizacion && bloque.visible === false">Oculto</span>
+
+      <ng-container [ngSwitch]="bloque.tipo">
+
+        <!-- Banner principal -->
+        <section *ngSwitchCase="'hero'" class="bloque hero"
+                 [class.hero--con-imagen]="bloque.datos.imagen"
+                 [style.textAlign]="alineacion(bloque.datos.alineacion)">
+          <img *ngIf="bloque.datos.imagen" class="hero__fondo" [src]="bloque.datos.imagen" [alt]="bloque.datos.titulo" />
+          <div class="hero__contenido">
+            <h1 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h1>
+            <p *ngIf="bloque.datos.subtitulo">{{ bloque.datos.subtitulo }}</p>
+            <a *ngIf="bloque.datos.ctaTexto && bloque.datos.ctaUrl"
+               class="boton"
+               [href]="bloque.datos.ctaUrl"
+               (click)="registrarClic('cta', bloque.id, $event)">{{ bloque.datos.ctaTexto }}</a>
+          </div>
+        </section>
+
+        <!-- Texto -->
+        <section *ngSwitchCase="'texto'" class="bloque texto">
+          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <p *ngIf="bloque.datos.cuerpo">{{ bloque.datos.cuerpo }}</p>
+        </section>
+
+        <!-- Galería -->
+        <section *ngSwitchCase="'galeria'" class="bloque galeria">
+          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <div class="galeria__grid" *ngIf="bloque.datos.imagenes?.length; else galeriaVacia">
+            <img *ngFor="let img of bloque.datos.imagenes" [src]="img.url" [alt]="img.alt || ''" loading="lazy" />
+          </div>
+          <ng-template #galeriaVacia>
+            <p class="vacio">Aún no has subido imágenes a esta galería.</p>
+          </ng-template>
+        </section>
+
+        <!-- Productos. El id fijo es el destino del ancla "#productos". -->
+        <section *ngSwitchCase="'productos'" class="bloque productos" id="productos">
+          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <div class="productos__grid" *ngIf="bloque.datos.productos?.length">
+            <article class="producto" *ngFor="let p of bloque.datos.productos">
+              <div class="producto__foto">
+                <img *ngIf="p.imagen" [src]="p.imagen" [alt]="p.titulo" loading="lazy" />
+              </div>
+              <h3>{{ p.titulo }}</h3>
+              <p class="producto__precio">{{ precio(p.precioConIva) }}</p>
+            </article>
+          </div>
+
+          <!-- En el editor no hay nada que mostrar por dos razones distintas, y
+               conviene distinguirlas: o no eligió productos, o los que eligió
+               están agotados y por eso no saldrán publicados. -->
+          <ng-container *ngIf="!bloque.datos.productos?.length && previsualizacion">
+            <p class="vacio" *ngIf="!bloque.datos.productoIds?.length">
+              Todavía no has elegido productos para este bloque.
+            </p>
+            <p class="vacio" *ngIf="bloque.datos.productoIds?.length">
+              Los {{ bloque.datos.productoIds.length }} producto(s) elegidos están agotados: no se
+              mostrarán mientras sigan sin stock.
+            </p>
+          </ng-container>
+          <p class="vacio" *ngIf="!bloque.datos.productos?.length && !previsualizacion">
+            No hay productos disponibles en este momento.
+          </p>
+        </section>
+
+        <!-- WhatsApp -->
+        <section *ngSwitchCase="'whatsapp'" class="bloque whatsapp">
+          <a *ngIf="bloque.datos.telefono"
+             class="boton boton--whatsapp"
+             [href]="enlaceWhatsapp(bloque.datos)"
+             target="_blank"
+             rel="noopener"
+             (click)="registrarClic('whatsapp', bloque.id, $event)">{{ bloque.datos.etiqueta }}</a>
+          <p class="vacio" *ngIf="!bloque.datos.telefono && previsualizacion">
+            Falta el número de WhatsApp: este botón no se verá en la página publicada.
+          </p>
+        </section>
+
+        <!-- Formulario. Destino del ancla "#contacto". -->
+        <section *ngSwitchCase="'formulario'" class="bloque formulario" id="contacto">
+          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <p *ngIf="bloque.datos.descripcion">{{ bloque.datos.descripcion }}</p>
+
+          <div class="formulario__ok" *ngIf="leadEnviado">
+            <p>¡Gracias! Recibimos tus datos y te contactaremos pronto.</p>
+          </div>
+
+          <form *ngIf="!leadEnviado" (ngSubmit)="enviarLead()">
+            <label>
+              <span>Nombre</span>
+              <input type="text" name="nombre" [(ngModel)]="nombre" maxlength="120" [disabled]="previsualizacion" />
+            </label>
+            <label *ngIf="bloque.datos.pedirTelefono">
+              <span>Teléfono</span>
+              <input type="tel" name="telefono" [(ngModel)]="telefono" maxlength="30" [disabled]="previsualizacion" />
+            </label>
+            <label *ngIf="bloque.datos.pedirEmail">
+              <span>Correo</span>
+              <input type="email" name="email" [(ngModel)]="email" maxlength="120" [disabled]="previsualizacion" />
+            </label>
+            <label *ngIf="bloque.datos.pedirMensaje">
+              <span>Mensaje</span>
+              <textarea name="mensaje" [(ngModel)]="mensaje" rows="3" maxlength="1000" [disabled]="previsualizacion"></textarea>
+            </label>
+
+            <p class="error" *ngIf="errorLead">{{ errorLead }}</p>
+
+            <button type="submit" class="boton" [disabled]="enviandoLead || previsualizacion">
+              {{ enviandoLead ? 'Enviando…' : (bloque.datos.textoBoton || 'Enviar') }}
+            </button>
+          </form>
+        </section>
+
+        <!-- Preguntas frecuentes -->
+        <section *ngSwitchCase="'faq'" class="bloque faq">
+          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <details *ngFor="let f of bloque.datos.preguntas">
+            <summary>{{ f.pregunta }}</summary>
+            <p>{{ f.respuesta }}</p>
+          </details>
+        </section>
+
+        <!-- Pie -->
+        <footer *ngSwitchCase="'footer'" class="bloque pie">
+          <p *ngIf="bloque.datos.texto">{{ bloque.datos.texto }}</p>
+          <nav *ngIf="bloque.datos.enlaces?.length">
+            <a *ngFor="let e of bloque.datos.enlaces"
+               [href]="e.url"
+               (click)="registrarClic('cta', bloque.id, $event)">{{ e.etiqueta }}</a>
+          </nav>
+        </footer>
+
+      </ng-container>
+    </div>
+  </ng-container>
+
+  <div class="estado" *ngIf="!bloquesVisibles.length">
+    <p>Esta página todavía no tiene bloques.</p>
+  </div>
+</div>

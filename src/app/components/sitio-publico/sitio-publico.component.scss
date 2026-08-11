@@ -1,0 +1,16 @@
+/**
+ * La página pública ya no dibuja bloques: eso vive en `app-sitio-render`, que
+ * trae sus propios estilos. Aquí solo quedan los estados de carga y error.
+ */
+
+.estado {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #222;
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+}

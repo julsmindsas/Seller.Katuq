@@ -1,0 +1,218 @@
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
+import { BaseService } from "../../shared/services/base.service";
+import { BloqueSitio, TemaSitio } from "../sitio-render/sitio-render.component";
+
+export interface ContenidoSitio {
+  bloques: BloqueSitio[];
+  tema: TemaSitio;
+  seo: { titulo: string; descripcion: string; imagen: string };
+}
+
+export interface Sitio {
+  id: string;
+  nombre: string;
+  slug: string;
+  tipo: "landing" | "catalogo" | "tienda";
+  estado: "borrador" | "publicado";
+  draft: ContenidoSitio;
+  published: (ContenidoSitio & { publishedAt: string }) | null;
+  vistasCount: number;
+  leadsCount: number;
+  pedidosCount: number;
+  fechaCreacion: string;
+  origen?: string;
+  plantillaId?: string;
+}
+
+export interface PlantillaSitio {
+  id: string;
+  sector: string;
+  nombre: string;
+  descripcion: string;
+  tema: TemaSitio;
+  bloques: string[];
+}
+
+export interface KitDeMarca {
+  logo: string;
+  colorPrimario: string;
+  colorSecundario: string;
+  colorTexto: string;
+  tipografia: string;
+  tono: string;
+  sector: string;
+  eslogan: string;
+  nombreComercial?: string;
+  redesSociales?: any[];
+}
+
+interface Respuesta<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+  meta?: any;
+  avisos?: string;
+}
+
+/**
+ * Producto tal como lo devuelven los endpoints de catálogo: documento completo
+ * de `products` con el stock ya resuelto contra `inventory`.
+ */
+export interface ProductoCatalogo {
+  cd: string;
+  crearProducto?: {
+    titulo?: string;
+    imagenesPrincipales?: any[];
+    imagenesSecundarias?: any[];
+  };
+  identificacion?: { referencia?: string };
+  precio?: { precioUnitarioConIva?: number };
+  disponibilidad?: { cantidadDisponible?: number; inventariable?: boolean };
+}
+
+/** Los endpoints de productos responden `products`, no `data`. */
+export interface RespuestaProductos {
+  success: boolean;
+  products: ProductoCatalogo[];
+  pagination?: { totalItems: number; totalPages: number; page: number; pageSize: number };
+  error?: string;
+}
+
+/**
+ * Llamadas del editor de sitios.
+ *
+ * Los headers de sesión y empresa los pone el interceptor
+ * (`shared/services/interceptor/http.interceptor.ts`), así que aquí no se
+ * arma ninguno a mano.
+ */
+@Injectable({ providedIn: "root" })
+export class SitiosService extends BaseService {
+  constructor(http: HttpClient) {
+    super(http);
+  }
+
+  listar(): Observable<Respuesta<Sitio[]>> {
+    return this.get<Respuesta<Sitio[]>>("/v1/sites/all");
+  }
+
+  obtener(id: string): Observable<Respuesta<Sitio>> {
+    return this.get<Respuesta<Sitio>>(`/v1/sites/${id}`);
+  }
+
+  crear(body: {
+    nombre: string;
+    tipo?: string;
+    slug?: string;
+    contenido?: Partial<ContenidoSitio>;
+  }): Observable<Respuesta<Sitio>> {
+    return this.post<Respuesta<Sitio>>("/v1/sites/create", body);
+  }
+
+  /** Guarda el borrador. Publicar es un acto aparte. */
+  guardar(body: {
+    id: string;
+    nombre?: string;
+    slug?: string;
+    tipo?: string;
+    contenido?: Partial<ContenidoSitio>;
+  }): Observable<Respuesta<null>> {
+    return this.put<Respuesta<null>>("/v1/sites/edit", body);
+  }
+
+  publicar(id: string): Observable<Respuesta<{ slug: string; publishedAt: string }>> {
+    return this.post<Respuesta<{ slug: string; publishedAt: string }>>(
+      `/v1/sites/${id}/publish`,
+      {}
+    );
+  }
+
+  despublicar(id: string): Observable<Respuesta<null>> {
+    return this.post<Respuesta<null>>(`/v1/sites/${id}/unpublish`, {});
+  }
+
+  slugDisponible(
+    slug: string,
+    siteId?: string
+  ): Observable<Respuesta<{ slug: string; disponible: boolean; motivo?: string }>> {
+    const sufijo = siteId ? `?siteId=${encodeURIComponent(siteId)}` : "";
+    return this.get<Respuesta<{ slug: string; disponible: boolean; motivo?: string }>>(
+      `/v1/sites/slug-disponible/${encodeURIComponent(slug)}${sufijo}`
+    );
+  }
+
+  plantillas(sector?: string): Observable<Respuesta<PlantillaSitio[]>> {
+    const sufijo = sector ? `?sector=${encodeURIComponent(sector)}` : "";
+    return this.get<Respuesta<PlantillaSitio[]>>(`/v1/sites/templates${sufijo}`);
+  }
+
+  /** Primera propuesta. Sin `guardar` solo previsualiza. */
+  generar(body: {
+    sector?: string;
+    objetivo?: string;
+    templateId?: string;
+    productoIds?: string[];
+    nombre?: string;
+    slug?: string;
+    tipo?: string;
+    guardar?: boolean;
+  }): Observable<
+    Respuesta<{
+      contenido: ContenidoSitio;
+      plantillaId: string;
+      generadoPorIA: boolean;
+      motivo?: string;
+      id?: string;
+      slug?: string;
+    }>
+  > {
+    return this.post<any>("/v1/sites/generar", body);
+  }
+
+  kitDeMarca(): Observable<Respuesta<KitDeMarca>> {
+    return this.get<Respuesta<KitDeMarca>>("/v1/companies/brand-kit");
+  }
+
+  guardarKitDeMarca(kit: Partial<KitDeMarca>): Observable<Respuesta<KitDeMarca>> {
+    return this.put<Respuesta<KitDeMarca>>("/v1/companies/brand-kit", kit);
+  }
+
+  /**
+   * Sube una imagen y devuelve su URL. Va por `/v1/media/upload`, que escribe
+   * en Storage con el Admin SDK: el navegador no tiene sesión de Firebase Auth
+   * y subir directo daría 403.
+   */
+  /**
+   * Busca productos del comercio para el selector. Reusa el buscador que ya
+   * existe (`/v1/productos/search/quick`), que filtra por empresa, inyecta el
+   * stock real desde `inventory` y exige dos caracteres como mínimo.
+   */
+  buscarProductos(termino: string, pagina = 1): Observable<RespuestaProductos> {
+    const params = [
+      `q=${encodeURIComponent(termino)}`,
+      "searchBy=general",
+      "limit=24",
+      `page=${pagina}`,
+    ].join("&");
+    return this.get<RespuestaProductos>(`/v1/productos/search/quick?${params}`);
+  }
+
+  /** Resuelve los productos ya elegidos, para mostrarlos al abrir el selector. */
+  productosPorIds(ids: string[]): Observable<RespuestaProductos> {
+    return this.post<RespuestaProductos>("/v1/productos/by-ids", { ids });
+  }
+
+  subirImagen(
+    archivo: File,
+    carpeta = "Sitios"
+  ): Observable<{ success: boolean; url?: string; path?: string; error?: string }> {
+    const datos = new FormData();
+    datos.append("file", archivo);
+    datos.append("carpeta", carpeta);
+    return this.post<{ success: boolean; url?: string; path?: string; error?: string }>(
+      "/v1/media/upload",
+      datos
+    );
+  }
+}

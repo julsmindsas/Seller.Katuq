@@ -1,0 +1,424 @@
+/**
+ * Editor de dos columnas: panel de trabajo a la izquierda, vista previa a la
+ * derecha. En pantallas chicas se apilan, con la previa debajo.
+ */
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);
+  min-height: 520px;
+}
+
+.estado-pantalla {
+  padding: 4rem 1.5rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+// ── Barra superior ───────────────────────────────────────────────────────────
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+
+  &__izq,
+  &__der {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+}
+
+.titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.estado {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 0.7rem;
+  font-weight: 700;
+
+  &--publicado {
+    background: rgba(22, 163, 74, 0.12);
+    color: #15803d;
+  }
+}
+
+.aviso-sucio {
+  color: #b45309;
+  font-size: 0.8rem;
+}
+
+.dispositivos {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+
+  button {
+    padding: 0.3rem 0.6rem;
+    border: 0;
+    background: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+
+    &.activo {
+      background: #1d4ed8;
+    }
+  }
+}
+
+// ── Cuerpo ───────────────────────────────────────────────────────────────────
+.cuerpo {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel {
+  width: 340px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e5e7eb;
+  background: #fff;
+  overflow-y: auto;
+
+  &__contenido {
+    padding: 1rem;
+  }
+}
+
+.pestanas {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+
+  button {
+    flex: 1;
+    padding: 0.65rem 0.5rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.activa {
+      color: #1d4ed8;
+      border-bottom-color: #1d4ed8;
+    }
+  }
+}
+
+// ── Lista de bloques ─────────────────────────────────────────────────────────
+.lista-bloques {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 0.35rem;
+
+    &.activo {
+      border-color: #1d4ed8;
+      background: #f8faff;
+    }
+
+    &.oculto .lista-bloques__nombre {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+  }
+
+  &__nombre {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  &__acciones {
+    display: flex;
+    gap: 0.1rem;
+
+    button {
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      font-size: 0.8rem;
+      line-height: 1;
+      cursor: pointer;
+
+      &:hover:not(:disabled) {
+        background: #f3f4f6;
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+    }
+  }
+}
+
+.agregar {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.5rem 0 1rem;
+
+  &__opcion {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      border-color: #1d4ed8;
+      background: #f8faff;
+    }
+
+    strong {
+      font-size: 0.85rem;
+    }
+
+    small {
+      color: #6b7280;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+// ── Propiedades del bloque ───────────────────────────────────────────────────
+.propiedades {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+
+  h6 {
+    margin-bottom: 0.75rem;
+    color: #1d4ed8;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.panel label {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+
+  input[type="text"],
+  input[type="tel"],
+  input[type="file"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 400;
+  }
+
+  input[type="color"] {
+    width: 100%;
+    height: 34px;
+    padding: 2px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    background: #fff;
+  }
+
+  small {
+    color: #6b7280;
+    font-weight: 400;
+    line-height: 1.3;
+
+    &.error {
+      color: #b42318;
+    }
+  }
+
+  &.check {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 400;
+  }
+}
+
+.nota {
+  display: block;
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+// Campo del bloque de productos: resumen + botón que abre el selector visual.
+.campo-productos {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+  margin-bottom: 0.85rem;
+
+  &__resumen {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  small {
+    color: #6b7280;
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+}
+
+.repetible {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font: inherit;
+    font-size: 0.82rem;
+  }
+
+  .quitar {
+    justify-self: end;
+    border: 0;
+    background: transparent;
+    color: #b42318;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+}
+
+.miniaturas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.miniatura {
+  position: relative;
+
+  img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  button {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    border: 0;
+    border-radius: 50%;
+    background: #111827;
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+}
+
+.pista {
+  margin-top: 1rem;
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.acciones-publicacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+// ── Vista previa ─────────────────────────────────────────────────────────────
+.previa {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  background: #f1f5f9;
+  padding: 1.25rem;
+
+  &__lienzo {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+
+    &--movil {
+      max-width: 390px;
+    }
+  }
+}
+
+@media (max-width: 991px) {
+  .editor {
+    height: auto;
+  }
+
+  .cuerpo {
+    flex-direction: column;
+  }
+
+  .panel {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+}

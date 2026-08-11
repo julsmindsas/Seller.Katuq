@@ -3533,3 +3533,66 @@ Daniel pidió revisar el envío de inventario y productos de Fullpi a Shopify "s
 Métrica sana verificada: `flow_polling_state` de OMS al 10% del límite de 1 MB (103 KB, 3.017 entradas) — las entradas son acumulación histórica por el filtro `onlyWithStock`, no ingesta a medias (8.296 productos Cereza, 2.211 con stock hoy). No hay riesgo inminente de degradación.
 
 Pendiente de Daniel: los 24 precios, autorizar lectura contra Shopify para confirmar DRAFT en GCJ4204A, y priorizar el arreglo del escaneo de Cereza.
+## D-173 (2026-08-11) — Builder de landings y tiendas: se abre el camino con el modelo de bloques
+
+Historia de ClickUp `wdu9v786n2`: el comerciante quiere publicar una landing o una tienda sin saber diseño ni programación, tipo Wix, con la ventaja de que Katuq ya conoce su catálogo, precios e inventario. Es una épica de varios meses; esta sesión abre la base y deja el resto por fases.
+
+**Lo que ya existía y se reusa en vez de reescribir:** la vitrina pública por token de catálogos (D-141) como patrón canónico de endpoint público, `/v1/media/upload` para la biblioteca multimedia, `companies.logo`/`redesSociales` como semilla de marca, y las pasarelas Wompi/ePayco de `services/paymentGateway` para el checkout de la fase de tienda. La vista pública de producto se extrajo de `controllers/catalogos.js` a `utils/vitrinaProducto.js`: qué ve un comprador se decide en un solo lugar.
+
+**Decisión de arquitectura — un sitio es JSON de bloques, nunca HTML.** El comerciante no puede inyectar markup en una página que Katuq sirve bajo su dominio: `utils/siteBlocks.js` valida contra lista blanca de tipos (`hero`, `texto`, `galeria`, `productos`, `whatsapp`, `formulario`, `faq`, `footer`), descarta lo desconocido, y solo acepta URLs `http/https/mailto/tel` — `javascript:` y `data:` quedan fuera. Como el contenido es datos, mover el render a SSR después no cambia el backend.
+
+**Publicación.** MVP en `tienda.katuq.com/{slug}` con slug único global (Firebase Hosting no da wildcard de subdominios: cada dominio se registra a mano). Subdominio por comercio y dominio propio quedan fuera del MVP. La página vive en el Angular actual como ruta pública lazy-loaded `/s/:slug`, fuera del AuthGuard, igual que `catalogo-publico`.
+
+**Colecciones nuevas aprobadas por Daniel:** `sites` (con `draft` y `published` en el mismo doc, sin colección de versiones) y `site_events` (métricas). El kit de marca NO lleva colección: va en `companies.brandKit`, junto al logo y las redes que ya estaban. Los leads entran a `prospects` con `origen: "sitio-web"` y `siteId`, no a una colección aparte.
+
+**Write-set cerrado (alineado con D-134).** El builder LEE `products`, precios e inventario, y solo escribe `sites`, `site_events`, `prospects` y `companies.brandKit`. Nunca productos, variantes, catálogo, precios ni listas de precios. Verificado por grep sobre el módulo y por prueba end-to-end.
+
+**Hallazgo de seguridad cerrado en el camino.** `POST /v1/virtualStoreWebhook/order-created` estaba montado **sin auth y sin rate limit** (no hay auth global; el limiter de `index.js` está comentado): bastaba conocer el nombre de una empresa para crear pedidos y **descontar inventario real**. Sin consumidores en el código —la "tienda propia" que menciona el doc de arquitectura no existe todavía—, se cerró con `auth` + límite de 60 escrituras/15 min. Si aparece una tienda externa que no puede llevar sesión, el camino es HMAC por comercio (`integrations.virtualstore.webhookSecret`), nunca dejarlo abierto.
+
+**Verificado end-to-end contra el backend local (Firestore prod, company ficticia, datos borrados al terminar):** 24 chequeos en verde — 404 mientras no se publica y al despublicar, multi-tenancy por id y por listado, 409 en slug repetido y reservado, bloque de tipo inventado descartado, `javascript:` eliminado del CTA, y la vista pública sin `company`, sin borrador, sin contadores y sin stock. En el bloque de productos: precio tomado del maestro ($185.900), agotado fuera, y **producto de otra empresa descartado** — ese filtro faltaba y se corrigió durante la prueba.
+
+**Fases siguientes:** plantillas por sector + generación con Gemini (el proveedor de IA del backend), editor visual en Seller.Katuq, tienda con carrito y checkout contra las pasarelas ya integradas, y panel de métricas + meta OG para compartir.
+
+**Deuda ajena detectada, no tocada:** `POST /v1/landing/contacts` tiene invertida la validación (`if (!nombre || !email || mensaje)`) y rechaza todo mensaje no vacío; el router de `prospectos` no lleva `auth` ni filtra por company en `getAll`.
+
+## D-174 (2026-08-11) — Builder fase 2: la IA escribe los textos, nunca la página
+
+Segunda fase del builder (D-173). Ocho plantillas por sector — moda, belleza, alimentos, hogar, servicios, tecnología, restaurantes y una genérica — en `data/siteTemplates.js`, sembradas en `site_templates` con `scripts/seed-site-templates.js` (dry-run por defecto, `--apply` para escribir; idempotente de verdad: la comparación ordena las claves porque Firestore las devuelve alfabetizadas y si no marcaba cambios en cada corrida).
+
+**La decisión que define la fase: el modelo NO diseña.** La estructura sale siempre de una plantilla que ya es publicable sola; a Gemini se le mandan los textos actuales y devuelve otros, que se vuelcan campo por campo sobre una lista blanca de campos editables por tipo de bloque (`services/sites/siteGenerator.js`). Consecuencia verificada con el modelo simulado: aunque conteste `<script>`, un `javascript:` en el CTA, una imagen o un teléfono, **no entra nada** — esos campos no son editables por la IA, y lo que sí lo es pasa después por `utils/siteBlocks.js` como cualquier entrada del editor. Si el modelo falla, se agota el tiempo (20 s) o devuelve basura, el comerciante recibe igual la plantilla resuelta con su marca y `generadoPorIA: false` con el motivo.
+
+**Endpoints:** `GET /v1/sites/templates` (sirve las de Firestore y cae a las del módulo si nadie corrió el seed, para que el builder nunca se quede sin plantillas) y `POST /v1/sites/generar`, que previsualiza por defecto y solo guarda con `guardar: true`, dejando `origen` y `plantillaId` en el sitio para poder medir después si la IA ayuda. Límite propio de 30 generaciones/15 min: cada una cuesta una llamada al modelo.
+
+**Se permitieron anclas (`#productos`) en el saneador de URL**, que antes las descartaba: los CTA de todas las plantillas apuntan a una sección de la propia página y el botón salía sin destino, o sea invisible. Las secciones de productos y formulario del componente público llevan ahora ese `id`.
+
+**HALLAZGO — la IA del backend está sin llave.** `GOOGLE_AI_API_KEY` está **vacía** en el `.env` local (línea 12), y `OPENAI_API_KEY` también. Genkit responde "Please pass in the API key…" en cada `generate()`. Si en el `.env` del EC2 pasa lo mismo, entonces **toda la IA del backend está caída, no solo la del builder**: `katuqintelligence.js` y el agent builder llaman por el mismo camino. Sin verificar en prod desde esta máquina. Pendiente: revisar la key en el server; el builder ya funciona sin ella, los otros módulos probablemente no.
+
+**Verificado:** 20 chequeos de plantillas y generación contra el backend local (filtro por sector, plantilla explícita respetada, sector desconocido cae en la genérica, guardar deja el sitio en borrador sin publicar) más 16 con el modelo simulado en tres escenarios: responde bien, intenta inyectar, y falla. Datos de prueba borrados; `sites` y `site_events` quedaron vacías.
+
+## D-175 (2026-08-11) — Builder fase 3: editor visual, y un solo render para editar y publicar
+
+Tercera fase del builder (D-173, D-174). Módulo `components/sitios` en Seller.Katuq, ruta `/sitios` con AuthGuard y entrada "Mi página web" en el menú.
+
+**La decisión estructural: el render de bloques se extrajo a `components/sitio-render`**, que usan tanto la página pública como la vista previa del editor. Si el dibujo viviera dos veces, el comerciante estaría editando una página distinta de la que publica; con un solo componente, la vista previa **es** la página. `sitio-publico` quedó reducido a traer datos, mandar el lead y poner las metas. El render no hace peticiones: emite `lead` y `clic`, y el padre decide — la página pública los manda al backend, el editor los ignora.
+
+**Editor:** lista de bloques con subir, bajar, ocultar, duplicar y eliminar; panel de propiedades por tipo de bloque; pestañas de Diseño (paleta y tipografía) y Ajustes (nombre, dirección con comprobación previa de disponibilidad, y metadatos para compartir); subida de imágenes contra `/v1/media/upload`; vista previa conmutable escritorio/móvil; y publicar, que **guarda primero** porque nadie espera publicar una versión vieja. Los bloques ocultos se ven atenuados en el editor y no salen en la página pública.
+
+**Creación en dos pasos:** elegir plantilla del sector y dar nombre. Con o sin IA se usa el mismo endpoint (`generar` con `guardar`), porque devuelve la plantilla resuelta con la marca aunque el modelo no conteste; si el comerciante pidió textos automáticos y no los hubo, se le avisa sin alarmar y la página existe igual.
+
+**Verificado:** `ng build` limpio con el chunk del editor (190 kB), más 18 chequeos del ciclo real contra el backend — crear desde plantilla, editar textos, mover bloques, ocultar, agregar, guardar, publicar, y comprobar que el visitante ve lo editado y **no** ve lo oculto. Dos comprobaciones que importan y pasan: **los ids de bloque sobreviven al guardado** (si el backend los reescribiera, el editor perdería la selección en cada cambio) y **seguir editando no altera lo ya publicado**. Datos de prueba borrados; `sites` y `site_events` quedaron vacías.
+
+**Falta probar la UI en el navegador con una sesión real** — desde esta máquina no hay credenciales para entrar al panel. La compilación y los contratos están verificados; el recorrido visual no.
+
+## D-176 (2026-08-11) — Selector visual de productos del builder, sobre los endpoints que ya existían
+
+El bloque "Productos" del editor (D-175) se llenaba con un campo de ids separados por coma — servía para probar, no para un comerciante. Ahora hay un selector visual: busca por nombre o referencia, ve foto, precio y stock, marca los que quiere y ordena la lista con flechas.
+
+**No se creó ningún endpoint.** Se reusan `GET /v1/productos/search/quick` (filtra por empresa, busca sobre un índice en memoria e inyecta el stock real desde `inventory`) y `POST /v1/productos/by-ids` para resolver los ya elegidos al abrir. La búsqueda espera 350 ms tras la última tecla.
+
+**El selector solo maneja ids.** Precio y disponibilidad se muestran como referencia; los definitivos los resuelve el servidor al servir la página. Por eso un agotado se puede elegir igual: se avisa en el panel y en la vista previa, y volverá a aparecer solo cuando tenga stock. Tope de 24 por bloque, avisado al elegir en vez de perderlos al guardar.
+
+**La vista previa ahora muestra los productos de verdad**, con foto y precio, en lugar de "3 productos seleccionados". Los datos resueltos se inyectan en una copia de los bloques (`bloquesPrevia`) y **nunca tocan el borrador**: al guardar sigue viajando solo `productoIds`, y el backend descarta cualquier otra clave del bloque.
+
+**Verificado:** build de producción limpio (chunk del editor 241 kB) y los dos endpoints probados contra datos reales de OH MY STORE — "conjunto" da 478 coincidencias con stock y precio correctos, y `by-ids` devuelve los cuatro de la demo con foto.
+
+**Deuda ajena detectada:** `POST /v1/productos/by-ids` **no filtra por company** — hace `getAll` de los ids recibidos y devuelve lo que exista, así que un usuario autenticado de una empresa puede leer productos de otra si conoce el id. No se tocó (lo usa venta asistida, D-147). El builder no queda expuesto por esto: al publicar, `controllers/sites.js` descarta todo producto cuya `company` no sea la del sitio.
