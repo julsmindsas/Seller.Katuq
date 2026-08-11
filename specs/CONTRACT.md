@@ -3361,6 +3361,26 @@ Cambios: el editor envía **todos** los tipos (los vacíos con `precio: 0`); el 
 
 ---
 
+## D-171 (2026-08-11) — MVP de compras: proveedores, el costo entra por la compra, y saldo por proveedor
+
+**Qué se decidió.** Compras arranca como **dominio propio** (`services/purchasing/`, `controllers/purchaseOrders.js`, `controllers/suppliers.js`, rutas `/v1/proveedores` y `/v1/ordenes-compra`), no como una carpeta más de inventario. Razón: al recibir mercancía, compras **escribe el costo del producto**, y hacerlo desde el controlador de inventario borroneaba justo la frontera que el contrato protege (D-134: inventario no toca productos ni precios). Con los dominios separados la regla vuelve a ser verificable leyendo el archivo, y el contrato de write-set tiene una guarda nueva que falla si `controllers/inventory.js` vuelve a importar la captura de costo. Las rutas viejas `/v1/inventory/ordenes-compra` quedan como alias delegando, para no romper el frontend publicado.
+
+**Proveedores dejan de ser texto libre** (colección `proveedores`, autorizada por Daniel). El NIT manda: repetirlo se rechaza, porque dos empresas no comparten NIT. El nombre es señal débil —se compara sin tildes, sin mayúsculas y sin formas jurídicas— y repetirlo solo **avisa**: hay razones legítimas para nombres parecidos. No se borran, se desactivan; un proveedor con historia de compras no puede desaparecer dejando huérfanas sus órdenes (misma lección de las bodegas). La orden guarda **el id del maestro y también el nombre**: solo el id dejaría órdenes ilegibles el día que alguien se renombre, solo el nombre es lo que había.
+
+**El costo entra por la compra, sin desplazar el Excel** (decisión de Daniel, verbatim: *"compras puede escribir el costo pero también el cargue del excel como se tiene actualmente"*, *"automático pero tener en cuenta el excel"*). La captura escribe sobre la **misma tubería que ya existía** (`productCostHistory` y los campos de costo del producto) sumándose como fuente `compra`, con la orden y el proveedor como origen; un camino paralelo habría partido la historia del costo en dos lugares incomparables. Si el costo se aparta más del 30% del vigente, **avisa pero no bloquea la recepción**: la mercancía ya llegó y frenar el registro no la devuelve.
+
+**Saldo por proveedor.** La factura se anota sobre la orden (número y valor) y el detalle muestra recibido contra facturado. Que el proveedor facture **de más** se muestra en negativo y marcado, no recortado a cero: es exactamente lo que hay que reclamar.
+
+**Desvío registrado.** La tarea pedía extraer el núcleo de `updateProductCost` a un servicio reusable; no se hizo. Habría que tocar un endpoint de precios en producción para no ganar nada hoy. Queda como deuda si aparece un tercer llamador.
+
+**Estado.** Desplegado el 2026-08-11: backend `c4b68db` en `katuq-api`, frontend `2026.08.11.11`, y `compras/proveedores` dado de alta en los **75 roles** que ya tenían pantallas de inventario (25 roles sin inventario no se tocaron). Pruebas: 20 casos de órdenes, 11 de proveedores, 10 de costo, contrato de inventario en verde.
+
+**Pendiente.** Medir cuántos de los 5.489 productos sin costo quedan cubiertos tras la primera semana de recepciones.
+
+Cambio OpenSpec: `openspec/changes/mvp-compras/`.
+
+---
+
 ## D-169 (2026-08-10) — Bug: el Exportar de Lista de Precios nunca terminaba
 
 **Síntoma** (reportado por Monica en la pestaña Precio unitario): se abre el modal "Preparando exportación", se queda pensando y el Excel nunca baja. **No era de esa pestaña** — el problema estaba en la carga del catálogo, común a las cuatro.
