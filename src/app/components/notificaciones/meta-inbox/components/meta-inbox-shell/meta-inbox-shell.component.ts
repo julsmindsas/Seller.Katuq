@@ -3,6 +3,8 @@ import { NavigationEnd, Router } from '@angular/router';
 import { Subject, interval } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 
+import { LoaderService } from 'src/app/shared/services/loader.service';
+
 import { MetaInboxService } from '../../meta-inbox.service';
 import {
   META_CANAL_LABEL,
@@ -58,9 +60,15 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private servicio: MetaInboxService,
+    private loader: LoaderService,
   ) {}
 
   ngOnInit(): void {
+    // Sin el overlay global: esta pantalla se refresca sola cada 8 segundos y
+    // el overlay tapa todo en cada vuelta, que es peor que no tener refresco.
+    // El buzón ya avisa por su cuenta con "Cargando conversaciones…" donde toca.
+    this.loader.suppressGlobalLoader();
+
     this.aplicarCanalDeLaUrl();
 
     // Las dos rutas montan ESTE mismo componente desde el mismo módulo, así que
@@ -102,6 +110,9 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Emparejado con el suppress del ngOnInit: si no se libera, el resto de la
+    // aplicación se queda sin overlay.
+    this.loader.releaseGlobalLoader();
     this.destroy$.next();
     this.destroy$.complete();
   }
