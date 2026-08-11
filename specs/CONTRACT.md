@@ -3473,3 +3473,15 @@ Primer despacho REAL desde el módulo de logística: **ORE-000546 → WMS id 10*
 **Decisión de Daniel:** en el despacho MANUAL manda quien despacha; solo se conservan los bloqueos duros (cancelado, sin nroPedido). Si el pedido va sin pagar queda un log `pushed_sin_pago` con estadoPago, formaDePago y saldo. El barrido AUTOMÁTICO sigue exigiendo pagado/contraentrega **y** `ordersPushEnabled` (D-157) — ahí nadie supervisa. Desplegado en `36fb000`.
 
 **Falsa alarma del mismo día:** Daniel reportó "el desplegado no me carga" con `MIME type text/html` + `global is not defined`. El sitio estaba sano (verificado en Chrome limpio: 2026.08.11.11 carga con datos); era caché del navegador pidiendo chunks de una versión anterior. **Pendiente propuesto:** manejar el fallo de carga de chunk recargando con la versión nueva, para que a ningún usuario con la app abierta se le quede en blanco tras un despliegue. Además quedó visto un error real no bloqueante: `shouldSendNotification` revienta leyendo `.includes` de un undefined.
+
+## D-168 (2026-08-11) — Ataque a la valorización: certificación construida y el hallazgo de los costos
+
+Daniel: "ataca la 4" (valorización contable de verdad). Dos frentes, uno resuelto y uno que depende de datos.
+
+**Frente técnico — RESUELTO en su primera mitad.** El informe de corte ya distinguía cifra certificada de estimada, pero `anchorVerified`/`certifiedFrom` llegaban **hardcodeados en false/null** desde el controller: nadie le decía nunca "esta foto está verificada", así que TODAS las filas salían "incompletas" aunque los números fueran correctos. Nuevo `services/inventory/inventoryCertification.js` (`ba5cdc2`, aún NO cableado): `evaluarAptitud` recorre TODO el inventario y reporta lo que impide reconstruirlo sin ambigüedad (saldo negativo, identidad que no resuelve, par duplicado); `certificar` re-evalúa y se NIEGA a sellar sobre datos torcidos; `leerCertificacion` falla a "sin certificar". Test 5 casos, safety-contract PASS, write-set respetado (evidencia en inventory_audit).
+
+**Medición en vivo:** OMS está a **3 problemas** de poder certificar (2 saldos negativos + 1 identidad no resoluble); CAFE ESCOBAR a 7 (todos negativos). Son casos de operación —falta registrar entradas—, no de código.
+
+**Frente de datos — EL PROBLEMA REAL.** Solo **131 de 8.442 productos** de OMS tienen costo (1,5%); en unidades, **337.246 de 345.745 sin costear (97,5%)**. El valorizado de $329M proviene casi todo del inventario Fullpi (recreado del respaldo, que traía costo). Conclusión: la valorización no está limitada por el motor sino por la ausencia de costos. Vías: (a) compras escribiendo costo al recibir —el MVP en curso es la solución estructural—, (b) carga masiva para el stock existente. Pendiente de Daniel: conseguir la lista de costos de OMS.
+
+Pendiente técnico: cablear la certificación al informe (toca `inventoryCutoffQueryService` y `controllers/inventory.js`, carril de la sesión roadmap por el MVP de compras — coordinar antes).
