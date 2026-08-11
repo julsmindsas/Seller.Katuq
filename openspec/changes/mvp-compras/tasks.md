@@ -24,4 +24,5 @@
 
 ## 4. Cierre
 - [x] 4.1 Suites + build + contrato en verde. — 20/20 órdenes, 11/11 proveedores, 10/10 costo, contrato de inventario PASS, `npm run build` sin errores.
-- [ ] 4.2 Desplegar (backend + frontend), aplicar los menús de rol y registrar en CONTRACT.
+- [x] 4.2 Desplegar (backend + frontend), aplicar los menús de rol y registrar en CONTRACT. — backend `c4b68db` en `katuq-api`, frontend `2026.08.11.11`, 75 roles con la pantalla, D-171 en CONTRACT.
+- [ ] 4.3 Archivar el cambio. Queda abierto a propósito hasta cerrar 2.4: archivarlo hoy daría por medido algo que todavía no se midió.
