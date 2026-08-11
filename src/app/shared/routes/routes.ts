@@ -305,15 +305,14 @@ export const content: Routes = [
     canActivate: [AuthGuard],
     data: { title: "CRM" },
   },
-  {
-    path: "notificaciones",
-    loadChildren: () =>
-      import("../../components/notificaciones/notificaciones.module").then(
-        (m) => m.NotificacionesModule,
-      ),
-    canActivate: [AuthGuard],
-    data: { title: "Notificaciones" },
-  },
+  // ⚠️ Los tres buzones van ANTES de "notificaciones" a propósito.
+  //
+  // Angular resuelve las rutas EN ORDEN y por prefijo: "notificaciones" a secas
+  // se traga cualquier URL que empiece por ahí, carga su módulo, no encuentra
+  // nada que responda por "whatsapp/inbox" y la navegación muere sin error
+  // visible — la pantalla simplemente se va a otra parte. Poniéndolos primero,
+  // la coincidencia exacta gana y "notificaciones" queda como lo que es: el
+  // último recurso.
   {
     path: "notificaciones/whatsapp/inbox",
     loadChildren: () =>
@@ -340,6 +339,15 @@ export const content: Routes = [
       ).then((m) => m.MetaInboxModule),
     canActivate: [AuthGuard],
     data: { title: "Conversaciones Facebook" },
+  },
+  {
+    path: "notificaciones",
+    loadChildren: () =>
+      import("../../components/notificaciones/notificaciones.module").then(
+        (m) => m.NotificacionesModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Notificaciones" },
   },
   {
     path: "marketing",
