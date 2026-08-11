@@ -1,0 +1,118 @@
+/* Conexión de canales de Meta — tema canónico "Todos los pedidos". */
+
+$acento: #5f3fe0;
+$ink: #211f3a;
+$muted: #8f8bab;
+$linea: #ececf4;
+$chip-bg: #f5f4fa;
+$chip-borde: #e9e7f3;
+$exito: #1e874b;
+$exito-bg: #e6f7ee;
+$alerta: #d9820a;
+$alerta-bg: #fff1df;
+$error-bg: #fdecec;
+
+.mc {
+  padding: 24px;
+  color: $ink;
+  max-width: 900px;
+
+  &__titulo { font-size: 20px; font-weight: 800; margin: 0 0 6px; }
+  &__sub { font-size: 13px; color: #6b6786; margin: 0 0 24px; max-width: 640px; line-height: 1.5; }
+
+  &__aviso {
+    background: $error-bg;
+    border: 1px solid rgba(214, 69, 69, 0.25);
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    margin-bottom: 18px;
+  }
+
+  &__tarjetas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  &__tarjeta {
+    background: #fff;
+    border: 1px solid $linea;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(30, 20, 80, 0.04);
+  }
+
+  &__fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  &__nombre { font-size: 16px; font-weight: 800; }
+
+  &__pill {
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    background: $chip-bg;
+    color: $muted;
+    border: 1px solid $chip-borde;
+
+    &.is-conectado { background: $exito-bg; color: $exito; border-color: rgba(30,135,75,.2); }
+    &.is-reconectar { background: $alerta-bg; color: $alerta; border-color: rgba(217,130,10,.25); }
+  }
+
+  &__explicacion { font-size: 12.5px; line-height: 1.5; color: #6b6786; margin: 0 0 14px; }
+
+  &__cuenta {
+    background: #faf9fe;
+    border: 1px solid $chip-borde;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+  &__etiqueta {
+    display: block;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: $muted;
+  }
+  &__cuenta-nombre { font-size: 13px; font-weight: 700; }
+
+  &__acciones { display: flex; gap: 10px; }
+
+  &__btn {
+    border-radius: 11px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+
+    &--primario {
+      background: $acento;
+      color: #fff;
+      box-shadow: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
+      &:hover:not(:disabled) { background: #4a2fc0; }
+    }
+    &--ghost {
+      background: #fff;
+      border: 1px solid #e4e2ef;
+      color: #5b5878;
+      &:hover:not(:disabled) { border-color: $acento; color: $acento; }
+    }
+    &:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+  }
+
+  &__cargando, &__pie {
+    font-size: 12.5px;
+    color: $muted;
+    margin-top: 18px;
+  }
+}

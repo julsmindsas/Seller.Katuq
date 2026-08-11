@@ -46,6 +46,9 @@ import { WebhookConfigComponent } from './shopify-dashboard/webhook-config.compo
 // WhatsApp (Kapso) Components
 import { WhatsappKapsoConfigComponent } from './whatsapp-kapso-config/whatsapp-kapso-config.component';
 
+import { MetaChannelsComponent } from './meta-channels/meta-channels.component';
+import { MetaOauthReturnComponent } from './meta-channels/meta-oauth-return.component';
+
 const routes: Routes = [
   // Vista principal de listado
   { path: '', component: IntegrationsListComponent, pathMatch: 'full' },
@@ -72,11 +75,16 @@ const routes: Routes = [
     data: { title: 'Dashboard de integración' },
   },
   // Fallback: redirigir rutas desconocidas de este módulo al listado
+  // Canales de mensajería de Meta (buzones de Instagram y Messenger)
+  { path: 'meta', component: MetaChannelsComponent },
+  { path: 'meta/retorno', component: MetaOauthReturnComponent },
   { path: '**', redirectTo: '' }
 ];
 
 @NgModule({
   declarations: [
+    MetaChannelsComponent,
+    MetaOauthReturnComponent,
     IntegrationsComponent,
     IntegrationsListComponent,
     IntegrationNotificationsComponent,

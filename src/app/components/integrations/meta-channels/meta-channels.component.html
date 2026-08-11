@@ -1,0 +1,62 @@
+<div class="mc">
+  <header class="mc__head">
+    <h1 class="mc__titulo">Mensajes de Instagram y Facebook</h1>
+    <p class="mc__sub">
+      Conecta las cuentas de tu negocio para atender por aquí los mensajes que te
+      llegan por redes, con el cliente y sus pedidos a la vista.
+    </p>
+  </header>
+
+  <div class="mc__aviso" *ngIf="aviso">{{ aviso }}</div>
+
+  <p class="mc__cargando" *ngIf="cargando">Cargando…</p>
+
+  <div class="mc__tarjetas" *ngIf="!cargando">
+    <article class="mc__tarjeta" *ngFor="let c of canales">
+      <div class="mc__fila">
+        <span class="mc__nombre">{{ c.nombre }}</span>
+        <span
+          class="mc__pill"
+          [class.is-conectado]="estadoDe(c.id)?.estado === 'conectado'"
+          [class.is-reconectar]="estadoDe(c.id)?.estado === 'reconectar'"
+        >
+          {{ etiqueta(c.id) }}
+        </span>
+      </div>
+
+      <p class="mc__explicacion">{{ explicacion(c.id) }}</p>
+
+      <div class="mc__cuenta" *ngIf="estadoDe(c.id)?.cuentaNombre">
+        <span class="mc__etiqueta">Cuenta</span>
+        <span class="mc__cuenta-nombre">{{ estadoDe(c.id)?.cuentaNombre }}</span>
+      </div>
+
+      <div class="mc__acciones">
+        <button
+          type="button"
+          class="mc__btn mc__btn--primario"
+          *ngIf="estadoDe(c.id)?.estado !== 'conectado'"
+          [disabled]="ocupado === c.id"
+          (click)="conectar(c.id)"
+        >
+          {{ ocupado === c.id ? 'Abriendo Meta…' : textoBoton(c.id) }}
+        </button>
+
+        <button
+          type="button"
+          class="mc__btn mc__btn--ghost"
+          *ngIf="estadoDe(c.id)?.estado === 'conectado'"
+          [disabled]="ocupado === c.id"
+          (click)="desconectar(c.id)"
+        >
+          Desconectar
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <p class="mc__pie">
+    Al desconectar dejas de recibir mensajes nuevos, pero las conversaciones que
+    ya tienes siguen visibles.
+  </p>
+</div>

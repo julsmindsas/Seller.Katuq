@@ -83,6 +83,14 @@
               </span>
               <span class="mb-msg__fallido" *ngIf="m.estado === 'failed'">
                 No se envió
+                <button
+                  type="button"
+                  class="mb-msg__reintentar"
+                  [disabled]="enviando"
+                  (click)="reintentar(m)"
+                >
+                  Reintentar
+                </button>
               </span>
             </span>
           </div>

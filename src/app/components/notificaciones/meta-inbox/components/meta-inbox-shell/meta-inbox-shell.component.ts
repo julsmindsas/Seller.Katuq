@@ -122,7 +122,7 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
   }
 
   irAConexion(): void {
-    this.router.navigate(['/integrations']);
+    this.router.navigate(['/integrations/meta']);
   }
 
   /**
@@ -166,6 +166,30 @@ export class MetaInboxShellComponent implements OnInit, OnDestroy {
         this.enviando = false;
         if (r.enviado) {
           this.borrador = '';
+          this.abrirHilo(this.hiloActivo!);
+          return;
+        }
+        this.avisoEnvio = this.explicarFallo(r.motivo);
+      });
+  }
+
+  /**
+   * Reenvía un mensaje que falló. Reusa el mismo camino que un envío normal,
+   * así que la ventana se vuelve a validar: si ya expiró, el operador recibe la
+   * explicación en vez de un segundo fallo mudo.
+   */
+  reintentar(m: MetaMensaje): void {
+    if (!this.hiloActivo || this.enviando || !m.body) return;
+
+    this.enviando = true;
+    this.avisoEnvio = null;
+
+    this.servicio
+      .responder(this.canal, this.hiloActivo.identidadHash, m.body)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((r) => {
+        this.enviando = false;
+        if (r.enviado) {
           this.abrirHilo(this.hiloActivo!);
           return;
         }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, DoCheck, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
     templateUrl: './diagnostic-survey.component.html',
     styleUrls: ['./diagnostic-survey.component.scss']
 })
-export class DiagnosticSurveyComponent implements OnInit, OnDestroy, DoCheck {
+export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     private subscriptions: Subscription[] = [];
     private readonly STORAGE_KEY = 'katuq_diagnostic_progress';
     private autoSaveTimeout: any;
@@ -161,11 +161,6 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy, DoCheck {
     videoPlaying: boolean = true; // Empieza reproduciendo
     videoEnded: boolean = false; // Controla si el video terminó
 
-    // Variables para Chatwoot (solo en paso del video)
-    private chatwootLoaded: boolean = false;
-    private chatwootScript: HTMLScriptElement | null = null;
-    private lastCheckedStep: string = '';
-
     // Registro simplificado: solo 4 campos esenciales
     registrationQuestions = [
         { formControl: 'nombre', question: '¿Cuál es el nombre de tu empresa?', placeholder: 'Nombre de la empresa' },
@@ -222,102 +217,6 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy, DoCheck {
         if (this.autoSaveTimeout) {
             clearTimeout(this.autoSaveTimeout);
         }
-
-        // Limpiar Chatwoot si está cargado
-        this.unloadChatwoot();
-    }
-
-    /**
-     * Detecta cambios en currentStep para cargar Chatwoot
-     * IMPORTANTE: Chatwoot se carga una vez al inicio y permanece visible
-     * durante todo el flujo de registro para dar soporte continuo
-     */
-    ngDoCheck() {
-        if (this.currentStep !== this.lastCheckedStep) {
-            // Solo cargar Chatwoot cuando se llega al paso del video
-            // Una vez cargado, permanece visible en todos los pasos siguientes
-            if (this.currentStep === 'video' && !this.chatwootLoaded) {
-                this.loadChatwoot();
-            }
-            // NO descargar Chatwoot al salir del video - debe permanecer visible
-            this.lastCheckedStep = this.currentStep;
-        }
-    }
-
-    /**
-     * Carga el script de Chatwoot dinámicamente (permanece visible en todo el flujo)
-     */
-    private loadChatwoot(): void {
-        if (this.chatwootLoaded || this.chatwootScript) {
-            return; // Ya está cargado
-        }
-
-        console.log('🔵 Cargando Chatwoot (permanecerá visible durante todo el registro)...');
-
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.async = true;
-        script.src = 'https://omnichat.katuq.com/packs/js/sdk.js';
-
-        script.onload = () => {
-            console.log('✅ Chatwoot script cargado');
-            // Inicializar Chatwoot SDK
-            if ((window as any).chatwootSDK) {
-                (window as any).chatwootSDK.run({
-                    websiteToken: 'GDa7kfpoxPktmLBUPY61sf1T',
-                    baseUrl: 'https://omnichat.katuq.com'
-                });
-                this.chatwootLoaded = true;
-                console.log('✅ Chatwoot inicializado correctamente');
-            }
-        };
-
-        script.onerror = (error) => {
-            console.error('❌ Error al cargar Chatwoot:', error);
-            this.chatwootScript = null;
-        };
-
-        document.head.appendChild(script);
-        this.chatwootScript = script;
-    }
-
-    /**
-     * Limpia Chatwoot solo cuando se destruye el componente
-     */
-    private unloadChatwoot(): void {
-        if (!this.chatwootLoaded) {
-            return;
-        }
-
-        console.log('🔴 Limpiando Chatwoot...');
-
-        // Remover el widget de la página
-        const chatwootBubble = document.querySelector('.woot--bubble-holder');
-        const chatwootWidget = document.querySelector('.woot-widget-holder');
-
-        if (chatwootBubble) {
-            chatwootBubble.remove();
-        }
-        if (chatwootWidget) {
-            chatwootWidget.remove();
-        }
-
-        // Remover el script
-        if (this.chatwootScript && this.chatwootScript.parentNode) {
-            this.chatwootScript.parentNode.removeChild(this.chatwootScript);
-            this.chatwootScript = null;
-        }
-
-        // Limpiar el objeto global
-        if ((window as any).chatwootSDK) {
-            delete (window as any).chatwootSDK;
-        }
-        if ((window as any).$chatwoot) {
-            delete (window as any).$chatwoot;
-        }
-
-        this.chatwootLoaded = false;
-        console.log('✅ Chatwoot limpiado correctamente');
     }
 
     /**
