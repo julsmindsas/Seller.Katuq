@@ -1,0 +1,208 @@
+// Qué comprar — tema canónico Katuq: acento #5F3FE0, plano, radios 16/11/20.
+
+$acento: #5F3FE0;
+$acento-suave: #EFEAFD;
+$ink: #211F3A;
+$muted: #6E6A8A;
+$borde: #E7E3F5;
+$fondo: #F6F4FB;
+$tarjeta: #FFFFFF;
+$critico: #C2266E;
+$critico-suave: #F9E4EE;
+$ok: #0F8A4D;
+$sombra: 0 10px 30px rgba(95, 63, 224, .08);
+
+.rp-pagina {
+  padding: 24px;
+  background: $fondo;
+  min-height: 100%;
+  color: $ink;
+}
+
+.rp-cabeza {
+  margin-bottom: 20px;
+
+  h1 { font-size: 26px; font-weight: 700; margin: 0; }
+}
+
+.rp-sub { color: $muted; margin: 4px 0 0; font-size: 14px; }
+
+.rp-tarjeta {
+  background: $tarjeta;
+  border: 1px solid $borde;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: $sombra;
+  margin-bottom: 20px;
+}
+
+.rp-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+
+    span { text-transform: uppercase; letter-spacing: .04em; color: $muted; font-size: 11px; font-weight: 600; }
+  }
+
+  select {
+    border: 1px solid $borde;
+    border-radius: 11px;
+    padding: 9px 12px;
+    background: $tarjeta;
+    color: $ink;
+    min-width: 170px;
+  }
+}
+
+.rp-resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rp-dato {
+  background: $tarjeta;
+  border: 1px solid $borde;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong { font-size: 24px; font-variant-numeric: tabular-nums; }
+
+  // Lo que se agota antes de que llegue el pedido no puede verse igual que el
+  // resto: es lo único que obliga a actuar hoy.
+  &--urgente {
+    border-color: $critico;
+    background: $critico-suave;
+    strong { color: $critico; }
+  }
+}
+
+.rp-etiqueta {
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-size: 11px;
+  font-weight: 600;
+  color: $muted;
+}
+
+.rp-pie { font-size: 12px; color: $muted; }
+
+.rp-avisos {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  border: 1px solid $borde;
+  border-left: 3px solid $acento;
+  border-radius: 11px;
+  background: $acento-suave;
+  font-size: 13px;
+  color: $ink;
+
+  li + li { margin-top: 6px; }
+}
+
+.rp-tabla-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  h2 { font-size: 17px; font-weight: 700; margin: 0; }
+}
+
+.rp-tabla-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.rp-tabla-marco { overflow-x: auto; }
+
+.rp-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th {
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: 11px;
+    color: $muted;
+    padding: 8px 10px;
+    border-bottom: 1px solid $borde;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px;
+    border-bottom: 1px solid $borde;
+    vertical-align: middle;
+  }
+
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+}
+
+.rp-fila--urgente td { background: rgba(194, 38, 110, .04); }
+
+.rp-referencia { display: block; font-weight: 600; }
+.rp-desc { display: block; color: $muted; font-size: 12px; }
+
+.rp-urgente { color: $critico; font-weight: 700; }
+.rp-encamino { color: $ok; font-weight: 600; }
+
+.rp-input, .rp-select {
+  border: 1px solid $borde;
+  border-radius: 9px;
+  padding: 6px 9px;
+  background: $tarjeta;
+  color: $ink;
+}
+
+.rp-input { max-width: 90px; text-align: right; }
+.rp-select { min-width: 150px; }
+
+.rp-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.rp-total { margin-right: auto; font-variant-numeric: tabular-nums; }
+
+.rp-boton {
+  border: 0;
+  border-radius: 11px;
+  padding: 10px 16px;
+  background: $acento;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled { opacity: .5; cursor: default; }
+
+  &--suave {
+    background: $acento-suave;
+    color: $acento;
+  }
+}
+
+.rp-nota, .rp-vacio {
+  color: $muted;
+  font-size: 13px;
+  margin: 12px 0 0;
+}
+
+.rp-cargando { color: $muted; }
+.rp-error { color: $critico; font-weight: 600; }

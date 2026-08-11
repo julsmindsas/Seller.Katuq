@@ -19,6 +19,8 @@ export interface Proveedor {
   ciudad: string | null;
   /** Plazo acordado. 0 = de contado. */
   diasCredito: number;
+  /** Lo que se demora en entregar. Lo usa la sugerencia de compra. */
+  diasEntrega?: number;
   observaciones?: string | null;
   estado: 'activo' | 'inactivo';
 }
@@ -37,6 +39,54 @@ export interface SaldoProveedor {
   pagado?: number;
   /** Lo facturado que todavía no se paga: la plata que va a salir. */
   porPagar?: number;
+}
+
+export interface FilaReposicion {
+  productoId: string;
+  referencia: string | null;
+  nombre: string | null;
+  idBodega: string;
+  saldo: number;
+  consumoDiario: number;
+  /** null = sin demanda; no es cero. */
+  coberturaDias: number | null;
+  /** Unidades ya pedidas y sin llegar. Se descuentan de la necesidad. */
+  yaPedido: number;
+  sugerido: number;
+  horizonteDias: number;
+  diasEntrega: number;
+  diasEntregaSupuesto: boolean;
+  /** Se agota antes de que llegue el pedido. */
+  urgente: boolean;
+  costoUnitario: number;
+  sinCosto: boolean;
+  proveedorId: string | null;
+  proveedor: string | null;
+}
+
+export interface ResumenReposicion {
+  sugeridos: number;
+  urgentes: number;
+  sinCosto: number;
+  sinProveedor: number;
+  valorEstimado: number;
+  cubiertos: number;
+  /** Productos que no se pudieron proyectar por no registrar salidas. */
+  sinDemandaRegistrada: number;
+  /** Se fabrican, no se compran. */
+  seProducen: number;
+  conDiasDeEntregaSupuestos: number;
+}
+
+export interface SugerenciaReposicion {
+  company: string;
+  idBodega: string | null;
+  ventanaDias: number;
+  coberturaObjetivoDias: number;
+  confianza: string | null;
+  filas: FilaReposicion[];
+  resumen: ResumenReposicion;
+  advertencias: string[];
 }
 
 export interface FacturaOrden {
@@ -792,6 +842,15 @@ export class InventarioService {
   /** Anota la factura del proveedor sobre una orden. No mueve inventario. */
   registrarFacturaOrden(id: string, factura: { numero: string; valor: number; fecha?: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/ordenes-compra/${id}/factura`, factura);
+  }
+
+  /** Qué comprar, cuánto y a quién. Solo lee: la orden la crea una persona. */
+  sugerenciaReposicion(opciones: { bodega?: string; dias?: number; cobertura?: number } = {}): Observable<SugerenciaReposicion> {
+    let params = new HttpParams();
+    if (opciones.bodega) params = params.set('bodega', opciones.bodega);
+    if (opciones.dias) params = params.set('dias', String(opciones.dias));
+    if (opciones.cobertura) params = params.set('cobertura', String(opciones.cobertura));
+    return this.http.get<SugerenciaReposicion>(`${this.apiUrl}/ordenes-compra/sugerencia`, { params });
   }
 
   /** Anota que la plata salió. No mueve inventario ni cambia la factura. */

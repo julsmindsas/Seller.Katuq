@@ -55,6 +55,11 @@
         <input type="number" [(ngModel)]="formulario.diasCredito" min="0" max="365" />
       </label>
       <label>
+        <span>Días de entrega</span>
+        <input type="number" [(ngModel)]="formulario.diasEntrega" min="0" max="365"
+               title="Lo que se demora en entregar. Lo usa la sugerencia de compra." />
+      </label>
+      <label>
         <span>Contacto</span>
         <input type="text" [(ngModel)]="formulario.contacto" />
       </label>

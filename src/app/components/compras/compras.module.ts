@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
 import { ProveedoresComponent } from './proveedores/proveedores.component';
+import { ReposicionComponent } from './reposicion/reposicion.component';
 
 /**
  * Compras — dominio propio, separado de Inventarios.
@@ -14,10 +15,11 @@ import { ProveedoresComponent } from './proveedores/proveedores.component';
  */
 const routes: Routes = [
   { path: 'proveedores', component: ProveedoresComponent },
+  { path: 'reposicion', component: ReposicionComponent },
 ];
 
 @NgModule({
-  declarations: [ProveedoresComponent],
+  declarations: [ProveedoresComponent, ReposicionComponent],
   imports: [CommonModule, FormsModule, RouterModule.forChild(routes)],
 })
 export class ComprasModule {}

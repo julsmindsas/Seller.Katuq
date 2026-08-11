@@ -50,6 +50,7 @@ export class ProveedoresComponent implements OnInit {
       correo: '',
       ciudad: '',
       diasCredito: 0,
+      diasEntrega: 0,
     };
   }
 

@@ -543,6 +543,12 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         {
+          path: "compras/reposicion",
+          title: "Qué comprar",
+          type: "link",
+          icon: "trending-down",
+        },
+        {
           path: "inventario/ordenes-compra",
           title: "Órdenes de compra",
           type: "link",

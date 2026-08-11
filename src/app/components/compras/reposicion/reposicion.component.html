@@ -1,0 +1,164 @@
+<div class="rp-pagina">
+  <header class="rp-cabeza">
+    <div>
+      <h1>Qué comprar</h1>
+      <p class="rp-sub">
+        Calculado con lo que se vendió, descontando lo que ya está pedido. Propone; usted decide.
+      </p>
+    </div>
+  </header>
+
+  <section class="rp-tarjeta rp-filtros">
+    <label>
+      <span>Bodega</span>
+      <select [(ngModel)]="bodegaSeleccionada" (change)="consultar()">
+        <option value="">Todas</option>
+        <option *ngFor="let b of bodegas" [value]="b.idBodega">{{ b.nombre }}</option>
+      </select>
+    </label>
+    <label>
+      <span>Cubrir</span>
+      <select [(ngModel)]="coberturaObjetivo" (change)="consultar()">
+        <option [ngValue]="15">15 días</option>
+        <option [ngValue]="30">30 días</option>
+        <option [ngValue]="45">45 días</option>
+        <option [ngValue]="60">60 días</option>
+      </select>
+    </label>
+    <label>
+      <span>Con la venta de</span>
+      <select [(ngModel)]="ventanaDias" (change)="consultar()">
+        <option [ngValue]="30">últimos 30 días</option>
+        <option [ngValue]="90">últimos 90 días</option>
+        <option [ngValue]="180">últimos 180 días</option>
+      </select>
+    </label>
+    <button class="rp-boton rp-boton--suave" (click)="consultar()" [disabled]="cargando">
+      <i class="pi pi-refresh"></i> Recalcular
+    </button>
+  </section>
+
+  <p class="rp-cargando" *ngIf="cargando">Calculando…</p>
+  <p class="rp-error" *ngIf="error">{{ error }}</p>
+
+  <ng-container *ngIf="sugerencia as s">
+    <section class="rp-resumen" *ngIf="!cargando">
+      <div class="rp-dato rp-dato--urgente">
+        <span class="rp-etiqueta">Se agotan antes de que llegue</span>
+        <strong>{{ s.resumen.urgentes | number }}</strong>
+        <span class="rp-pie">La venta se pierde salvo que se pida hoy</span>
+      </div>
+      <div class="rp-dato">
+        <span class="rp-etiqueta">Para reponer</span>
+        <strong>{{ s.resumen.sugeridos | number }}</strong>
+        <span class="rp-pie">{{ s.resumen.cubiertos | number }} ya están cubiertos</span>
+      </div>
+      <div class="rp-dato">
+        <span class="rp-etiqueta">Valor estimado</span>
+        <strong>{{ s.resumen.valorEstimado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        <span class="rp-pie" *ngIf="s.resumen.sinCosto">{{ s.resumen.sinCosto }} sin costo conocido</span>
+      </div>
+      <div class="rp-dato" *ngIf="s.resumen.seProducen">
+        <span class="rp-etiqueta">Se producen</span>
+        <strong>{{ s.resumen.seProducen | number }}</strong>
+        <span class="rp-pie">Se fabrican, no se compran</span>
+      </div>
+      <div class="rp-dato" *ngIf="s.resumen.sinDemandaRegistrada">
+        <span class="rp-etiqueta">Sin venta registrada</span>
+        <strong>{{ s.resumen.sinDemandaRegistrada | number }}</strong>
+        <span class="rp-pie">No se pueden proyectar</span>
+      </div>
+    </section>
+
+    <!-- Lo que el cálculo no puede garantizar se dice antes de firmar la orden. -->
+    <ul class="rp-avisos" *ngIf="s.advertencias?.length && !cargando">
+      <li *ngFor="let a of s.advertencias">{{ a }}</li>
+    </ul>
+
+    <section class="rp-tarjeta" *ngIf="!cargando">
+      <header class="rp-tabla-cabeza">
+        <h2>{{ soloUrgentes ? 'Urgentes' : 'Sugerencia' }} · {{ filas.length | number }} productos</h2>
+        <div class="rp-tabla-acciones">
+          <button class="rp-boton rp-boton--suave" (click)="soloUrgentes = !soloUrgentes">
+            {{ soloUrgentes ? 'Ver todo' : 'Solo urgentes' }}
+          </button>
+          <button class="rp-boton rp-boton--suave" (click)="marcarTodas(true)">Marcar todo</button>
+          <button class="rp-boton rp-boton--suave" (click)="marcarTodas(false)">Desmarcar</button>
+        </div>
+      </header>
+
+      <p class="rp-vacio" *ngIf="filas.length === 0">
+        No hay nada que reponer con estos parámetros.
+        <span *ngIf="s.resumen.sinDemandaRegistrada">
+          Ojo: {{ s.resumen.sinDemandaRegistrada | number }} productos no registran salidas, así que no
+          se pudieron proyectar — puede que sí haya que comprar y el sistema no lo sepa.
+        </span>
+      </p>
+
+      <div class="rp-tabla-marco" *ngIf="filas.length > 0">
+        <table class="rp-tabla">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Producto</th>
+              <th>Bodega</th>
+              <th class="num">Hay</th>
+              <th class="num">Se vende</th>
+              <th class="num">Alcanza</th>
+              <th class="num">Pedido</th>
+              <th class="num">Pedir</th>
+              <th>Proveedor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of filas" [class.rp-fila--urgente]="f.urgente">
+              <td>
+                <input type="checkbox" [(ngModel)]="seleccion[clave(f)]" />
+              </td>
+              <td>
+                <span class="rp-referencia">{{ f.referencia || f.productoId }}</span>
+                <span class="rp-desc">{{ f.nombre }}</span>
+              </td>
+              <td>{{ nombreBodega(f.idBodega) }}</td>
+              <td class="num">{{ f.saldo | number }}</td>
+              <td class="num">{{ f.consumoDiario | number:'1.0-2' }}/día</td>
+              <td class="num">
+                <span class="rp-urgente" *ngIf="f.urgente">{{ textoCobertura(f) }}</span>
+                <span *ngIf="!f.urgente">{{ textoCobertura(f) }}</span>
+              </td>
+              <td class="num">
+                <span *ngIf="f.yaPedido" class="rp-encamino" title="Ya está pedido y se descontó">
+                  {{ f.yaPedido | number }}
+                </span>
+                <span *ngIf="!f.yaPedido">—</span>
+              </td>
+              <td class="num">
+                <input class="rp-input" type="number" min="0" [(ngModel)]="cantidades[clave(f)]" />
+              </td>
+              <td>
+                <select class="rp-select" [(ngModel)]="proveedorPorFila[clave(f)]">
+                  <option value="">— Escoger —</option>
+                  <option *ngFor="let p of proveedores" [value]="p.id">{{ p.nombre }}</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="rp-acciones" *ngIf="filas.length > 0">
+        <strong class="rp-total">
+          {{ seleccionadas.length | number }} seleccionados ·
+          {{ valorSeleccionado | currency:'COP':'symbol-narrow':'1.0-0' }}
+        </strong>
+        <button class="rp-boton" (click)="crearOrdenes()" [disabled]="creando || seleccionadas.length === 0">
+          <i class="pi pi-file-edit"></i> Crear órdenes de compra
+        </button>
+      </div>
+
+      <p class="rp-nota">
+        Se crea una orden por proveedor y bodega. Nada entra al inventario hasta que se reciba.
+      </p>
+    </section>
+  </ng-container>
+</div>
