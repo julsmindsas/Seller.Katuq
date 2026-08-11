@@ -80,6 +80,14 @@
 
     <!-- Formulario de precios -->
     <form [formGroup]="preciosForm">
+      <div class="alert alert-info py-2 mb-2">
+        <small>
+          <i class="pi pi-info-circle me-1"></i>
+          Deja un tipo <strong>vacío o en 0</strong> para quitarle el precio: ese tipo de cliente
+          pasa a usar el precio base del producto.
+        </small>
+      </div>
+
       <div class="table-responsive">
         <table class="table table-hover">
           <thead class="table-light">

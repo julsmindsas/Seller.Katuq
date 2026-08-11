@@ -80,24 +80,18 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
     }
 
     this.tiposCliente.forEach(tipo => {
-      let precioExistente = 0;
+      const guardado = Array.isArray(this.producto?.preciosPorTipoCliente)
+        ? this.producto.preciosPorTipoCliente.find((p: PrecioPorTipoCliente) => p.tipoClienteId === tipo.id)
+        : undefined;
 
-      if (this.producto?.preciosPorTipoCliente && Array.isArray(this.producto.preciosPorTipoCliente)) {
-        const precioEncontrado = this.producto.preciosPorTipoCliente.find(
-          (p: PrecioPorTipoCliente) => p.tipoClienteId === tipo.id
-        );
-        if (precioEncontrado) {
-          precioExistente = precioEncontrado.precio;
-        }
-      }
+      const precio = Number(guardado?.precio);
 
-      if (precioExistente === 0) {
-        precioExistente = this.producto?.precio?.precioUnitarioSinIva ||
-                         this.producto?.precio?.precioUnitarioConIva ||
-                         0;
-      }
-
-      formControls[`precio_${tipo.id}`] = [precioExistente];
+      // Los tipos SIN precio quedan vacíos, no precargados con el precio base.
+      // El precargado hacía que abrir el modal para tocar UN tipo y guardar
+      // creara precios para TODOS los tipos con el valor base: así terminaron
+      // "prueba 2" y "orueba" de ALM-1825 en el mismo $82.110 (69.000 + 19%).
+      // El precio base sigue visible arriba como referencia.
+      formControls[`precio_${tipo.id}`] = [Number.isFinite(precio) && precio > 0 ? precio : null];
     });
 
     this.preciosForm = this.fb.group(formControls);
@@ -137,34 +131,35 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
     // Crear lista de precios por tipo de cliente con IVA
     const preciosPorTipoCliente: PrecioPorTipoCliente[] = [];
 
+    // Se envían TODOS los tipos, también los que quedaron en 0 o vacíos.
+    // Antes se omitían (`if (precio && precio > 0)`) y, como el backend hace
+    // merge por tipoClienteId, omitir un tipo significaba "no lo toques": poner
+    // un precio en 0 no borraba nada, quedaba el valor anterior. Ahora un 0
+    // viaja explícitamente y el backend lo interpreta como quitar ese precio.
     this.tiposCliente.forEach(tipo => {
-      const precioSinIva = this.preciosForm.get(`precio_${tipo.id}`)?.value;
-      if (precioSinIva && precioSinIva > 0) {
-        const valorIva = precioSinIva * (this.porcentajeIvaSeleccionado / 100);
-        const precioConIva = precioSinIva + valorIva;
+      const valor = Number(this.preciosForm.get(`precio_${tipo.id}`)?.value);
+      const tienePrecio = Number.isFinite(valor) && valor > 0;
 
+      if (!tienePrecio) {
         preciosPorTipoCliente.push({
           tipoClienteId: tipo.id,
           tipoClienteNombre: tipo.descripcion || tipo.nombre,
-          precio: parseFloat(precioSinIva), // Precio sin IVA
-          porcentajeIva: this.porcentajeIvaSeleccionado,
-          valorIva: Math.round(valorIva),
-          precioConIva: Math.round(precioConIva),
-          activo: true
-        });
+          precio: 0
+        } as PrecioPorTipoCliente);
+        return;
       }
+
+      const valorIva = valor * (this.porcentajeIvaSeleccionado / 100);
+      preciosPorTipoCliente.push({
+        tipoClienteId: tipo.id,
+        tipoClienteNombre: tipo.descripcion || tipo.nombre,
+        precio: valor, // Precio sin IVA
+        porcentajeIva: this.porcentajeIvaSeleccionado,
+        valorIva: Math.round(valorIva),
+        precioConIva: Math.round(valor + valorIva),
+        activo: true
+      });
     });
-
-    console.log('Precios por tipo de cliente configurados:', preciosPorTipoCliente);
-
-    // Actualizar el objeto del producto con la nueva propiedad
-    const productoActualizado = {
-      ...this.producto,
-      preciosPorTipoCliente: preciosPorTipoCliente,
-      date_edit: new Date().toISOString()
-    };
-
-    console.log('Producto actualizado:', productoActualizado);
 
     // Persistir vía backend (Admin SDK) en lugar de escribir directo a Firestore desde el
     // navegador: la escritura de cliente fallaba en silencio si las reglas bloqueaban

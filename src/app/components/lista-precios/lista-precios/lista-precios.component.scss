@@ -159,6 +159,85 @@
 }
 
 /* ---------------------------------------------------------- */
+/*  Barra de filtros (buscador + rango de precio)             */
+/* ---------------------------------------------------------- */
+:host .lp-filtros {
+  display: flex;
+  flex-wrap: wrap;              /* en pantallas angostas el rango baja de línea */
+  align-items: center;
+  gap: .6rem .75rem;
+}
+
+/* El buscador crece hasta su tope (460px) y cede espacio antes que el rango */
+:host .lp-filtros .input-group { flex: 1 1 260px; }
+
+:host .lp-precio-rango {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .3rem .6rem;
+  border: 1px solid #e2e4ec;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+:host .lp-precio-rango:focus-within {
+  border-color: var(--lp-primary);
+  box-shadow: 0 0 0 3px rgba(115, 102, 255, .15);
+}
+:host .lp-precio-label {
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--lp-muted);
+  padding-right: .15rem;
+  white-space: nowrap;
+}
+:host .lp-precio-simbolo,
+:host .lp-precio-guion {
+  font-size: .8rem;
+  color: var(--lp-muted);
+}
+:host .lp-precio-input {
+  width: 88px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: .875rem;
+  color: var(--lp-ink);
+  padding: .25rem .1rem;
+}
+:host .lp-precio-input::placeholder { color: #b3b8c5; }
+/* Las flechitas del input number roban ancho y no aportan en un rango de precios */
+:host .lp-precio-input::-webkit-outer-spin-button,
+:host .lp-precio-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+:host .lp-precio-input[type='number'] { -moz-appearance: textfield; }
+
+:host .lp-limpiar {
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: .8rem;
+  padding: .45rem .8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: var(--lp-primary-dark);
+  background: var(--lp-primary-soft);
+  border: 1px solid #e3def9;
+}
+:host .lp-limpiar:hover {
+  background: var(--lp-primary);
+  border-color: var(--lp-primary);
+  color: #fff;
+}
+:host .lp-limpiar i { font-size: .75rem; }
+
+/* ---------------------------------------------------------- */
 /*  Buscador                                                  */
 /* ---------------------------------------------------------- */
 :host .input-group {
@@ -339,22 +418,88 @@
 /* ---------------------------------------------------------- */
 /*  Estados (vacío / paginador)                               */
 /* ---------------------------------------------------------- */
+/* El panel del selector "filas por página" se renderiza en <body>
+   (paginatorDropdownAppendTo="body") porque .card y .p-datatable tienen
+   overflow:hidden para el border-radius y recortaban la lista desplegada:
+   solo se alcanzaba a ver la opción 10. NO quitar el appendTo sin quitar
+   antes esos overflow. */
 :host ::ng-deep .p-paginator {
   background: transparent;
   border: none;
-  padding: .85rem .25rem .25rem;
+  border-top: 1px solid var(--lp-line);
+  margin-top: .5rem;
+  padding: .75rem .5rem;
   color: var(--lp-muted);
+  display: flex;
+  flex-wrap: wrap;                  /* en pantallas angostas baja de línea en vez de apretarse */
+  align-items: center;
+  justify-content: center;
+  gap: .35rem .5rem;
+}
+:host ::ng-deep .p-paginator .p-paginator-pages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .25rem;
 }
 :host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page {
   border-radius: 8px;
   min-width: 2rem; height: 2rem;
+  margin: 0;
   color: var(--lp-ink-soft);
+}
+:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page:not(.p-highlight):hover {
+  background: var(--lp-primary-soft);
+  color: var(--lp-primary-dark);
 }
 :host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
   background: var(--lp-primary);
   color: #fff;
 }
-:host ::ng-deep .p-paginator .p-dropdown { border-radius: 8px; }
+
+/* Flechas primera / anterior / siguiente / última */
+:host ::ng-deep .p-paginator .p-paginator-first,
+:host ::ng-deep .p-paginator .p-paginator-prev,
+:host ::ng-deep .p-paginator .p-paginator-next,
+:host ::ng-deep .p-paginator .p-paginator-last {
+  border-radius: 8px;
+  min-width: 2rem; height: 2rem;
+  margin: 0;
+  color: var(--lp-ink-soft);
+}
+:host ::ng-deep .p-paginator .p-paginator-first:not(.p-disabled):hover,
+:host ::ng-deep .p-paginator .p-paginator-prev:not(.p-disabled):hover,
+:host ::ng-deep .p-paginator .p-paginator-next:not(.p-disabled):hover,
+:host ::ng-deep .p-paginator .p-paginator-last:not(.p-disabled):hover {
+  background: var(--lp-primary-soft);
+  color: var(--lp-primary-dark);
+}
+
+/* Selector de filas por página */
+:host ::ng-deep .p-paginator .p-dropdown {
+  border-radius: 8px;
+  height: 2rem;
+  min-width: 5.25rem;               /* cabe "100" + la flecha sin recortar */
+  align-items: center;
+  margin: 0 .25rem;
+  border-color: #dcdfe7;
+}
+:host ::ng-deep .p-paginator .p-dropdown .p-dropdown-label {
+  padding: 0 .1rem 0 .6rem;
+  font-size: .85rem;
+  line-height: 2rem;
+  color: var(--lp-ink-soft);
+}
+:host ::ng-deep .p-paginator .p-dropdown:not(.p-disabled):hover {
+  border-color: var(--lp-primary);
+}
+
+/* Texto "Mostrando X a Y de Z productos" */
+:host ::ng-deep .p-paginator .p-paginator-current {
+  color: var(--lp-muted);
+  font-size: .82rem;
+  padding: 0 .5rem;
+}
 
 :host ::ng-deep .p-datatable .p-datatable-emptymessage > td {
   text-align: center;

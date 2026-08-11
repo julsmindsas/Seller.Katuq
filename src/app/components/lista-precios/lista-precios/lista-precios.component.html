@@ -16,12 +16,14 @@
             </div>
             <div class="col-md-6">
               <div class="lp-actions">
-                <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()" *ngIf="activeTab === 0 || activeTab === COSTO_TAB_INDEX"
-                  [pTooltip]="activeTab === COSTO_TAB_INDEX ? 'Importar costos desde Excel' : 'Importar precios desde Excel'" tooltipPosition="bottom">
+                <!-- Un importador y una plantilla POR PESTAÑA: el archivo se
+                     interpreta según dónde está parado el usuario. -->
+                <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()"
+                  [pTooltip]="'Importar ' + nombrePestana + ' desde Excel'" tooltipPosition="bottom">
                   <i class="icofont icofont-upload"></i> Importar
                 </button>
-                <button class="btn btn-outline-success me-2" (click)="descargarFormatoExcel()" *ngIf="activeTab === 0 || activeTab === COSTO_TAB_INDEX"
-                  [pTooltip]="activeTab === COSTO_TAB_INDEX ? 'Descargar plantilla de costos' : 'Descargar plantilla vacía para importar'" tooltipPosition="bottom">
+                <button class="btn btn-outline-success me-2" (click)="descargarFormatoExcel()"
+                  [pTooltip]="'Descargar plantilla de ' + nombrePestana" tooltipPosition="bottom">
                   <i class="icofont icofont-download"></i> Plantilla
                 </button>
                 <button class="btn btn-success me-2" (click)="exportarExcel()"
@@ -45,7 +47,7 @@
           <p-tabPanel header="Precio tipo clientes">
             <div class="p-3">
               <!-- Buscador con debounce -->
-              <div class="mb-3">
+              <div class="mb-3 lp-filtros">
                 <div class="input-group">
                   <span class="input-group-text">
                     <i class="icofont icofont-search"></i>
@@ -59,6 +61,39 @@
                     (keyup.enter)="buscarProducto()"
                   />
                 </div>
+
+                <!-- Filtro por rango de precio. Es el MISMO campo en las 4
+                     pestañas (precio con IVA, con respaldo a sin IVA); solo
+                     cambia la etiqueta: precio base / con IVA / venta. -->
+                <div class="lp-precio-rango">
+                  <span class="lp-precio-label">{{ etiquetaPrecio }}</span>
+                  <span class="lp-precio-simbolo">$</span>
+                  <input
+                    type="number" min="0" inputmode="numeric"
+                    class="lp-precio-input"
+                    placeholder="desde"
+                    [(ngModel)]="precioDesde"
+                    (blur)="aplicarFiltroPrecio()"
+                    (keyup.enter)="aplicarFiltroPrecio()"
+                  />
+                  <span class="lp-precio-guion">—</span>
+                  <input
+                    type="number" min="0" inputmode="numeric"
+                    class="lp-precio-input"
+                    placeholder="hasta"
+                    [(ngModel)]="precioHasta"
+                    (blur)="aplicarFiltroPrecio()"
+                    (keyup.enter)="aplicarFiltroPrecio()"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  class="btn lp-limpiar"
+                  *ngIf="hayFiltrosActivos"
+                  (click)="limpiarFiltros()">
+                  <i class="pi pi-times"></i> Limpiar
+                </button>
               </div>
 
               <!-- Tabla de productos con LAZY LOADING -->
@@ -69,8 +104,10 @@
                 (onLazyLoad)="onLazyLoad($event)"
                 [paginator]="true"
                 [rows]="pageSize"
+                [first]="primeraFila"
                 [totalRecords]="totalRecords"
                 [rowsPerPageOptions]="[10, 20, 50, 100]"
+                paginatorDropdownAppendTo="body"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
                 styleClass="p-datatable-gridlines p-datatable-striped"
@@ -268,7 +305,7 @@
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="7" class="text-center">No hay productos disponibles</td>
+                    <td colspan="7" class="text-center"><span *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
                   </tr>
                 </ng-template>
               </p-table>
@@ -278,7 +315,7 @@
           <!-- Tab 2: Precio unitario -->
           <p-tabPanel header="Precio unitario">
             <div class="p-3">
-              <div class="mb-3">
+              <div class="mb-3 lp-filtros">
                 <div class="input-group">
                   <span class="input-group-text">
                     <i class="icofont icofont-search"></i>
@@ -292,6 +329,39 @@
                     (keyup.enter)="buscarProducto()"
                   />
                 </div>
+
+                <!-- Filtro por rango de precio. Es el MISMO campo en las 4
+                     pestañas (precio con IVA, con respaldo a sin IVA); solo
+                     cambia la etiqueta: precio base / con IVA / venta. -->
+                <div class="lp-precio-rango">
+                  <span class="lp-precio-label">{{ etiquetaPrecio }}</span>
+                  <span class="lp-precio-simbolo">$</span>
+                  <input
+                    type="number" min="0" inputmode="numeric"
+                    class="lp-precio-input"
+                    placeholder="desde"
+                    [(ngModel)]="precioDesde"
+                    (blur)="aplicarFiltroPrecio()"
+                    (keyup.enter)="aplicarFiltroPrecio()"
+                  />
+                  <span class="lp-precio-guion">—</span>
+                  <input
+                    type="number" min="0" inputmode="numeric"
+                    class="lp-precio-input"
+                    placeholder="hasta"
+                    [(ngModel)]="precioHasta"
+                    (blur)="aplicarFiltroPrecio()"
+                    (keyup.enter)="aplicarFiltroPrecio()"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  class="btn lp-limpiar"
+                  *ngIf="hayFiltrosActivos"
+                  (click)="limpiarFiltros()">
+                  <i class="pi pi-times"></i> Limpiar
+                </button>
               </div>
 
               <p-table
@@ -301,8 +371,10 @@
                 (onLazyLoad)="onLazyLoad($event)"
                 [paginator]="true"
                 [rows]="pageSize"
+                [first]="primeraFila"
                 [totalRecords]="totalRecords"
                 [rowsPerPageOptions]="[10, 20, 50, 100]"
+                paginatorDropdownAppendTo="body"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
                 styleClass="p-datatable-gridlines p-datatable-striped">
@@ -364,7 +436,7 @@
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="7" class="text-center">No hay productos disponibles</td>
+                    <td colspan="7" class="text-center"><span *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
                   </tr>
                 </ng-template>
               </p-table>
@@ -374,7 +446,7 @@
           <!-- Tab 3: Precio por volumen -->
           <p-tabPanel header="Precio por volumen">
             <div class="p-3">
-              <div class="mb-3">
+              <div class="mb-3 lp-filtros">
                 <div class="input-group">
                   <span class="input-group-text">
                     <i class="icofont icofont-search"></i>
@@ -388,6 +460,39 @@
                     (keyup.enter)="buscarProducto()"
                   />
                 </div>
+
+                <!-- Filtro por rango de precio. Es el MISMO campo en las 4
+                     pestañas (precio con IVA, con respaldo a sin IVA); solo
+                     cambia la etiqueta: precio base / con IVA / venta. -->
+                <div class="lp-precio-rango">
+                  <span class="lp-precio-label">{{ etiquetaPrecio }}</span>
+                  <span class="lp-precio-simbolo">$</span>
+                  <input
+                    type="number" min="0" inputmode="numeric"
+                    class="lp-precio-input"
+                    placeholder="desde"
+                    [(ngModel)]="precioDesde"
+                    (blur)="aplicarFiltroPrecio()"
+                    (keyup.enter)="aplicarFiltroPrecio()"
+                  />
+                  <span class="lp-precio-guion">—</span>
+                  <input
+                    type="number" min="0" inputmode="numeric"
+                    class="lp-precio-input"
+                    placeholder="hasta"
+                    [(ngModel)]="precioHasta"
+                    (blur)="aplicarFiltroPrecio()"
+                    (keyup.enter)="aplicarFiltroPrecio()"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  class="btn lp-limpiar"
+                  *ngIf="hayFiltrosActivos"
+                  (click)="limpiarFiltros()">
+                  <i class="pi pi-times"></i> Limpiar
+                </button>
               </div>
 
               <p-table
@@ -397,8 +502,10 @@
                 (onLazyLoad)="onLazyLoad($event)"
                 [paginator]="true"
                 [rows]="pageSize"
+                [first]="primeraFila"
                 [totalRecords]="totalRecords"
                 [rowsPerPageOptions]="[10, 20, 50, 100]"
+                paginatorDropdownAppendTo="body"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
                 styleClass="p-datatable-gridlines p-datatable-striped">
@@ -467,7 +574,7 @@
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="6" class="text-center">No hay productos disponibles</td>
+                    <td colspan="6" class="text-center"><span *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
                   </tr>
                 </ng-template>
               </p-table>
@@ -477,7 +584,7 @@
           <!-- Tab 4: Costo -->
           <p-tabPanel header="COSTO">
             <div class="p-3">
-              <div class="mb-3">
+              <div class="mb-3 lp-filtros">
                 <div class="input-group">
                   <span class="input-group-text">
                     <i class="icofont icofont-search"></i>
@@ -491,6 +598,39 @@
                     (keyup.enter)="buscarProducto()"
                   />
                 </div>
+
+                <!-- Filtro por rango de precio. Es el MISMO campo en las 4
+                     pestañas (precio con IVA, con respaldo a sin IVA); solo
+                     cambia la etiqueta: precio base / con IVA / venta. -->
+                <div class="lp-precio-rango">
+                  <span class="lp-precio-label">{{ etiquetaPrecio }}</span>
+                  <span class="lp-precio-simbolo">$</span>
+                  <input
+                    type="number" min="0" inputmode="numeric"
+                    class="lp-precio-input"
+                    placeholder="desde"
+                    [(ngModel)]="precioDesde"
+                    (blur)="aplicarFiltroPrecio()"
+                    (keyup.enter)="aplicarFiltroPrecio()"
+                  />
+                  <span class="lp-precio-guion">—</span>
+                  <input
+                    type="number" min="0" inputmode="numeric"
+                    class="lp-precio-input"
+                    placeholder="hasta"
+                    [(ngModel)]="precioHasta"
+                    (blur)="aplicarFiltroPrecio()"
+                    (keyup.enter)="aplicarFiltroPrecio()"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  class="btn lp-limpiar"
+                  *ngIf="hayFiltrosActivos"
+                  (click)="limpiarFiltros()">
+                  <i class="pi pi-times"></i> Limpiar
+                </button>
               </div>
 
               <p-table
@@ -500,8 +640,10 @@
                 (onLazyLoad)="onLazyLoad($event)"
                 [paginator]="true"
                 [rows]="pageSize"
+                [first]="primeraFila"
                 [totalRecords]="totalRecords"
                 [rowsPerPageOptions]="[10, 20, 50, 100]"
+                paginatorDropdownAppendTo="body"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
                 styleClass="p-datatable-gridlines p-datatable-striped">
@@ -515,6 +657,7 @@
                     <th>VIGENCIA</th>
                     <th class="text-end">PRECIO VENTA</th>
                     <th>ÚLTIMA EDICIÓN</th>
+                    <th style="width: 100px;" class="text-center">ACCIONES</th>
                   </tr>
                 </ng-template>
 
@@ -548,12 +691,21 @@
                       </span>
                     </td>
                     <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td class="text-center">
+                      <button
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="editarPrecio(producto)"
+                        pTooltip="Editar costo"
+                        tooltipPosition="left">
+                        <i class="pi pi-pencil"></i>
+                      </button>
+                    </td>
                   </tr>
                 </ng-template>
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="7" class="text-center">No hay productos disponibles</td>
+                    <td colspan="8" class="text-center"><span *ngIf="hayFiltrosActivos">Ningún producto coincide con la búsqueda o el rango de precio.</span><span *ngIf="!hayFiltrosActivos">No hay productos disponibles</span></td>
                   </tr>
                 </ng-template>
               </p-table>
