@@ -1,258 +1,169 @@
-<!-- Loading State -->
-<div *ngIf="isLoading" class="onboarding-loading">
-  <div class="loading-content">
-    <i class="pi pi-spin pi-spinner" style="font-size: 3rem; color: #5F3FE0;"></i>
-    <p class="mt-3">Cargando configuración...</p>
-  </div>
-</div>
+<div class="kq-onb" style="display:flex;height:100vh;width:100%;overflow:hidden;background:#ecebf4">
 
-<!-- Main Onboarding Wizard -->
-<div *ngIf="!isLoading && onboardingState" class="onboarding-wizard">
-
-  <!-- Mobile Header -->
-  <div class="mobile-wizard-header show-mobile">
-    <button pButton type="button" icon="pi pi-bars" class="p-button-text p-button-rounded" (click)="toggleSidebar()"
-      [pTooltip]="sidebarVisible ? 'Cerrar menú' : 'Abrir menú'" tooltipPosition="bottom">
-    </button>
-
-    <div class="header-content">
-      <div class="step-name">{{ getCurrentStepName() }}</div>
-      <div class="step-progress">
-        <span class="step-counter">Paso {{ currentStep?.number || 0 }} de {{ totalSteps }}</span>
-        <div class="progress-bar-mini">
-          <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+  <!-- LEFT RAIL -->
+  <aside style="width:330px;flex:none;background:#fff;border-right:1px solid #eceaf4;display:flex;flex-direction:column">
+    <div style="padding:24px 24px 20px;border-bottom:1px solid #f2f0f8">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <div style="width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#7b5bff,#5b34e6);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 5px 14px rgba(107,78,251,.32)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+        </div>
+        <div style="line-height:1.2">
+          <div style="font-size:17px;font-weight:800;letter-spacing:-.2px">Configuremos tu negocio</div>
+          <div style="font-size:12.5px;color:#8b879f;font-weight:600">{{ companyLabel }}</div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Sidebar Vertical (Desktop) / PrimeNG Sidebar (Mobile) -->
-  <p-sidebar [(visible)]="sidebarVisible" [modal]="isMobileView" [dismissible]="isMobileView"
-    [showCloseIcon]="isMobileView" [position]="'left'" [styleClass]="'onboarding-sidebar-overlay'" *ngIf="isMobileView">
-    <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
-  </p-sidebar>
-
-  <div class="onboarding-sidebar hide-mobile" *ngIf="!isMobileView">
-    <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
-  </div>
-
-  <!-- Sidebar Content Template -->
-  <ng-template #sidebarContent>
-    <!-- Header -->
-    <div class="sidebar-header">
-      <div class="logo-placeholder">
-        <i class="pi pi-box"></i>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+        <div style="font-size:13px;font-weight:800">{{ doneCount }} de {{ totalCount }} listos</div>
+        <div style="font-size:12px;font-weight:700;color:#8b879f">≈ {{ minsLeft }} min restantes</div>
       </div>
-      <h3 class="sidebar-title">Configuración</h3>
-      <p class="sidebar-subtitle">{{ onboardingState.companyName || 'Tu Comercio' }}</p>
+      <div style="height:9px;background:#efedf6;border-radius:99px;overflow:hidden">
+        <div [style]="progressFillStyle"></div>
+      </div>
     </div>
 
-    <!-- Steps List -->
-    <div class="steps-list">
-      <div *ngFor="let step of allSteps" class="step-item" [ngClass]="getStepClass(step)"
-        [class.step-disabled]="!isStepAvailable(step)" (click)="isStepAvailable(step) && goToStep(step.id)">
-
-        <div class="step-indicator">
-          <div class="step-circle">
-            <i *ngIf="step.status === StepStatus.COMPLETED" class="pi pi-check"></i>
-            <span *ngIf="step.status !== StepStatus.COMPLETED">{{ step.number }}</span>
+    <div style="flex:1;overflow-y:auto;padding:16px 14px">
+      <div *ngFor="let g of groups()" style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:8px;padding:0 10px 9px">
+          <div style="font-size:10.5px;font-weight:800;color:#a7a3bd;letter-spacing:.7px">{{ g.title }}</div>
+          <div style="flex:1;height:1px;background:#f2f0f8"></div>
+          <div style="font-size:10.5px;font-weight:800;color:#a7a3bd">{{ g.count }}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div *ngFor="let s of g.steps" (click)="goStep(s.id)" [style]="s.rowStyle">
+            <span [style]="s.markStyle">
+              <svg *ngIf="s.isDone" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M20 6 9 17l-5-5"/></svg>
+              <svg *ngIf="s.isSkipped" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 5 7 7-7 7M13 5l7 7-7 7"/></svg>
+              <ng-container *ngIf="s.showNum">{{ s.num }}</ng-container>
+            </span>
+            <div style="flex:1;min-width:0">
+              <div [style]="s.nameStyle">{{ s.name }}</div>
+              <div *ngIf="s.showState" [style]="s.stateStyle">{{ s.stateText }}</div>
+            </div>
           </div>
-          <div class="step-line" *ngIf="step.number !== totalSteps"></div>
-        </div>
-
-        <div class="step-info">
-          <div class="step-title">{{ step.title }}</div>
         </div>
       </div>
     </div>
 
-    <!-- Postpone Button -->
-    <div class="sidebar-footer">
-      <button pButton type="button" label="Posponer" icon="pi pi-clock" class="p-button-text p-button-sm w-100"
-        (click)="postponeOnboarding()">
-      </button>
+    <div style="padding:14px 18px;border-top:1px solid #f2f0f8;display:flex;align-items:center;gap:10px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9793ac" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <div style="flex:1;font-size:12px;color:#8b879f;font-weight:600;line-height:1.35">Tu avance se guarda solo. Puedes salir y volver.</div>
+      <button (click)="continuarLuego()" style="border:none;background:transparent;color:#6a4dfb;font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap">Continuar luego</button>
     </div>
-  </ng-template>
+  </aside>
 
-  <!-- Main Content Area -->
-  <div class="onboarding-content" [class.mobile-view]="isMobileView">
+  <!-- MAIN -->
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
 
-    <div class="content-wrapper">
-      <!-- Step Header -->
-      <div class="step-header" *ngIf="currentStep">
-        <h2 class="step-title">{{ currentStep.title }}</h2>
-        <p class="step-description">{{ currentStep.description }}</p>
-      </div>
+    <div style="flex:1;overflow-y:auto;padding:34px 40px 24px">
+      <div style="max-width:760px;margin:0 auto;animation:rise .32s ease" [attr.data-key]="activeId">
 
-      <!-- AI Suggestions Banner -->
-      <div *ngIf="currentStep?.hasAISuggestion && currentAISuggestion" class="ai-suggestions-banner">
-        <div class="ai-banner-content">
-          <div class="ai-icon">
-            <i class="pi pi-sparkles"></i>
-          </div>
-          <div class="ai-text">
-            <strong>Sugerencia Inteligente</strong>
-            <p>{{ currentAISuggestion.reasoning }}</p>
-          </div>
-          <button pButton type="button" label="Ver" class="p-button-text p-button-sm"
-            (click)="showAISuggestions = !showAISuggestions">
-          </button>
+        <!-- step header -->
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
+          <span style="font-size:12px;font-weight:800;color:#8b879f;letter-spacing:.4px">PASO {{ stepPos }} DE {{ totalCount }}</span>
+          <span style="width:4px;height:4px;border-radius:99px;background:#cfcadf"></span>
+          <span style="font-size:12px;font-weight:700;color:#8b879f">≈ {{ active.mins }} min</span>
         </div>
 
-        <!-- AI Suggestions Panel -->
-        <div *ngIf="showAISuggestions" class="ai-suggestions-panel animate-fade-in">
-          <div class="ai-suggestions-data">
-            <pre>{{ currentAISuggestion.suggestedData | json }}</pre>
+        <h1 style="font-size:29px;font-weight:800;letter-spacing:-.6px;line-height:1.15;margin-bottom:10px;text-wrap:pretty">{{ active.name }}</h1>
+        <p style="font-size:15.5px;color:#6b6880;line-height:1.5;max-width:600px;text-wrap:pretty;margin-bottom:22px">{{ active.desc }}</p>
+
+        <!-- what is this -->
+        <div style="background:#f6f4fe;border:1px solid #e9e3ff;border-radius:16px;padding:18px 20px;margin-bottom:22px">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <span style="width:32px;height:32px;flex:none;border-radius:10px;background:#e7e0fe;display:flex;align-items:center;justify-content:center;color:#6a4dfb">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01"/></svg>
+            </span>
+            <div style="flex:1">
+              <div style="font-size:13.5px;font-weight:800;color:#4a3aa8;margin-bottom:4px">¿Para qué sirve esto?</div>
+              <div style="font-size:14px;color:#5b4fa0;line-height:1.5;text-wrap:pretty">{{ active.why }}</div>
+            </div>
           </div>
-          <div class="ai-suggestions-actions">
-            <button pButton type="button" label="Aplicar" class="p-button-sm google-btn-primary"
-              (click)="applyAISuggestion()">
-            </button>
-            <button pButton type="button" label="Cancelar" class="p-button-text p-button-sm"
-              (click)="showAISuggestions = false">
+        </div>
+
+        <!-- ready-made suggestion -->
+        <div *ngIf="hasSuggestions" style="background:#fff;border-radius:20px;box-shadow:0 4px 22px rgba(30,20,60,.05);overflow:hidden;margin-bottom:18px">
+          <div style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid #f3f1f9">
+            <span style="width:34px;height:34px;flex:none;border-radius:11px;background:linear-gradient(135deg,#7b5bff,#5b34e6);display:flex;align-items:center;justify-content:center">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+            </span>
+            <div style="flex:1">
+              <div style="font-size:14.5px;font-weight:800">{{ active.suggestTitle }}</div>
+              <div style="font-size:12.5px;color:#8b879f">Toca para elegir las que uses. Puedes cambiarlas después.</div>
+            </div>
+            <button (click)="selectAll()" style="border:1.5px solid #e4e1f0;background:#fff;color:#5b5772;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap">{{ selectAllLabel }}</button>
+          </div>
+          <div style="padding:18px 22px;display:grid;grid-template-columns:1fr 1fr;gap:11px">
+            <button *ngFor="let o of suggestions()" (click)="toggleOpt(o.label)" [style]="o.style">
+              <span [style]="o.boxStyle">
+                <svg *ngIf="o.selected" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+              <span style="flex:1;text-align:left;line-height:1.3">
+                <span style="display:block;font-size:13.5px;font-weight:700">{{ o.label }}</span>
+                <span style="display:block;font-size:11.5px;font-weight:600;color:#9793ac">{{ o.hint }}</span>
+              </span>
             </button>
           </div>
+          <div style="padding:0 22px 20px">
+            <div style="display:flex;align-items:center;gap:9px;border:1.6px dashed #ddd8ee;border-radius:12px;padding:12px 15px;background:#fbfaff;color:#6a4dfb;font-size:13.5px;font-weight:700">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>{{ active.addOwn }}
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Step Content -->
-      <div class="step-body">
-        <!-- Step 1: Company Info -->
-        <app-company-info-step *ngIf="currentStep?.id === StepId.COMPANY_INFO" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-company-info-step>
-
-        <!-- Step 2: Roles Setup -->
-        <app-roles-step *ngIf="currentStep?.id === StepId.ROLES_SETUP" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-roles-step>
-
-        <!-- Step 3: Users Setup -->
-        <app-generic-step *ngIf="currentStep?.id === StepId.USERS_SETUP" [stepId]="currentStep.id"
-          [initialData]="currentStepData" [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-generic-step>
-
-        <!-- Step 4: Warehouses -->
-        <app-warehouses-step *ngIf="currentStep?.id === StepId.WAREHOUSES" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-warehouses-step>
-
-        <!-- Step 5: Payment Methods -->
-        <app-payment-methods-step *ngIf="currentStep?.id === StepId.PAYMENT_METHODS" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-payment-methods-step>
-
-        <!-- Step 6: Delivery Methods -->
-        <app-delivery-methods-step *ngIf="currentStep?.id === StepId.DELIVERY_METHODS" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-delivery-methods-step>
-
-        <!-- Step 7: Delivery Types -->
-        <app-delivery-types-step *ngIf="currentStep?.id === StepId.DELIVERY_TYPES" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-delivery-types-step>
-
-        <!-- Step 8: Delivery Times -->
-        <app-delivery-times-step *ngIf="currentStep?.id === StepId.DELIVERY_TIMES" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-delivery-times-step>
-
-        <!-- Step 9: Categories -->
-        <app-categories-step *ngIf="currentStep?.id === StepId.CATEGORIES" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-categories-step>
-
-        <!-- Step 10: Billing Zones -->
-        <app-billing-zones-step *ngIf="currentStep?.id === StepId.BILLING_ZONES" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-billing-zones-step>
-
-        <!-- Step 11: Addons (Keep Generic) -->
-        <app-generic-step *ngIf="currentStep?.id === StepId.ADDONS" [stepId]="currentStep.id"
-          [initialData]="currentStepData" [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-generic-step>
-
-        <!-- Step 12: First Product -->
-        <app-first-product-step *ngIf="currentStep?.id === StepId.FIRST_PRODUCT" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-first-product-step>
-
-        <!-- Step 13: Import Customers -->
-        <app-import-customers-step *ngIf="currentStep?.id === StepId.IMPORT_CUSTOMERS" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-import-customers-step>
-
-        <!-- Step 14: Import Products -->
-        <app-import-products-step *ngIf="currentStep?.id === StepId.IMPORT_PRODUCTS" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-import-products-step>
-
-        <!-- Step 15: Sequences -->
-        <app-sequences-step *ngIf="currentStep?.id === StepId.SEQUENCES" [initialData]="currentStepData"
-          [aiSuggestion]="currentAISuggestion" (dataChange)="saveStepProgress($event)"
-          (stepComplete)="markStepComplete($event)">
-        </app-sequences-step>
-      </div>
-
-      <!-- Navigation Footer -->
-      <div class="step-footer">
-        <div class="footer-left">
-          <button pButton type="button" label="Atrás" class="p-button-text google-btn-text"
-            [disabled]="!canGoPrevious() || isSaving" (click)="goToPreviousStep()">
-          </button>
+        <!-- inline fields -->
+        <div *ngIf="hasFields" style="background:#fff;border-radius:20px;box-shadow:0 4px 22px rgba(30,20,60,.05);padding:22px;margin-bottom:18px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 20px">
+            <div *ngFor="let f of active.fields" [style]="'grid-column:span ' + (f.col === 'full' ? 2 : 1)">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;margin-bottom:8px;min-height:20px">{{ f.label }}<span *ngIf="f.required" style="color:#f0416c;font-weight:800">*</span></label>
+              <input [ngModel]="fieldValue(active, f.key)" (ngModelChange)="onField(f.key, $event)" [ngModelOptions]="{ standalone: true }"
+                     [attr.placeholder]="f.placeholder"
+                     style="width:100%;border:1.5px solid #e6e3f0;border-radius:12px;padding:13px 15px;font-size:14.5px;background:#fbfaff">
+              <div *ngIf="f.help" style="font-size:12px;color:#9793ac;margin-top:7px;line-height:1.4">{{ f.help }}</div>
+            </div>
+          </div>
         </div>
-        <div class="footer-right">
-          <button *ngIf="currentStep && !currentStep.isRequired" pButton type="button" label="Saltar"
-            class="p-button-text google-btn-text mr-2" [disabled]="isSaving" (click)="skipStep()">
-          </button>
 
-          <button pButton type="button" [label]="currentStep?.number === totalSteps ? 'Finalizar' : 'Siguiente'"
-            class="google-btn-primary" [disabled]="!canGoNext() || isSaving" [loading]="isSaving"
-            (click)="goToNextStep()">
-          </button>
+        <!-- task CTA -->
+        <div *ngIf="hasTask" style="background:#fff;border-radius:20px;box-shadow:0 4px 22px rgba(30,20,60,.05);padding:26px;margin-bottom:18px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div style="width:56px;height:56px;flex:none;border-radius:16px;background:linear-gradient(135deg,#7b5bff,#5b34e6);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(107,78,251,.3)">
+            <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+          </div>
+          <div style="flex:1;min-width:220px">
+            <div style="font-size:15.5px;font-weight:800;margin-bottom:3px">{{ active.task?.title }}</div>
+            <div style="font-size:13.5px;color:#8b879f;line-height:1.45;text-wrap:pretty">{{ active.task?.desc }}</div>
+          </div>
+          <div *ngIf="!tasks[active.id]" style="display:flex;align-items:center;gap:11px;flex-wrap:wrap">
+            <button (click)="openProductMaster()" style="display:flex;align-items:center;gap:9px;border:none;background:linear-gradient(135deg,#7b5bff,#6338f0);color:#fff;font-weight:800;font-size:14px;padding:13px 22px;border-radius:12px;cursor:pointer;box-shadow:0 6px 16px rgba(107,78,251,.3);white-space:nowrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>{{ active.task?.cta }}
+            </button>
+            <button (click)="doTask()" style="border:1.5px solid #e4e1f0;background:#fff;color:#5b5772;font-weight:700;font-size:13.5px;padding:13px 18px;border-radius:12px;cursor:pointer;white-space:nowrap">Ya lo creé</button>
+          </div>
+          <span *ngIf="tasks[active.id]" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#16a34a;background:#e7f8ee;padding:11px 18px;border-radius:99px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Hecho</span>
+        </div>
+
+        <!-- selection summary -->
+        <div *ngIf="hasPicked && hasSuggestions" style="display:flex;align-items:center;gap:11px;background:#e7f8ee;border:1px solid #c9edd9;border-radius:14px;padding:14px 18px;margin-bottom:18px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg>
+          <div style="flex:1;font-size:13.5px;font-weight:700;color:#186c3d">{{ pickedText }}</div>
         </div>
       </div>
     </div>
 
-    <!-- Saving Indicator -->
-    <div *ngIf="isSaving" class="saving-indicator">
-      <i class="pi pi-spin pi-spinner"></i>
-      <span>Guardando...</span>
-    </div>
-  </div>
-
-  <!-- Mobile Bottom Navigation Bar -->
-  <div class="mobile-bottom-nav show-mobile">
-    <div class="mobile-nav-actions">
-      <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text p-button-rounded"
-        [disabled]="!canGoPrevious() || isSaving" (click)="goToPreviousStep()">
-      </button>
-
-      <div class="mobile-progress-text">
-        {{ currentStep?.number }} / {{ totalSteps }}
+    <!-- FOOTER -->
+    <div style="flex:none;background:#fff;border-top:1px solid #eceaf4;padding:16px 40px;box-shadow:0 -4px 24px rgba(30,20,60,.05)">
+      <div style="max-width:760px;margin:0 auto;display:flex;align-items:center;gap:14px">
+        <button (click)="goBack()" [style]="backStyle" [disabled]="idx === 0 || isSaving">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>Atrás
+        </button>
+        <div style="flex:1"></div>
+        <button (click)="goNext()" [style]="nextStyle" [disabled]="!isComplete() || isSaving">
+          <i *ngIf="isSaving" class="pi pi-spin pi-spinner" style="font-size:15px"></i>
+          {{ isSaving ? 'Guardando...' : nextLabel }}
+          <svg *ngIf="!isSaving" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
       </div>
-
-      <button pButton type="button" [icon]="currentStep?.number === totalSteps ? 'pi pi-check' : 'pi pi-arrow-right'"
-        class="p-button-rounded google-btn-primary-icon" [disabled]="!canGoNext() || isSaving" [loading]="isSaving"
-        (click)="goToNextStep()">
-      </button>
     </div>
   </div>
 </div>
 
-<!-- Toast Messages -->
 <p-toast position="bottom-center" [baseZIndex]="5000"></p-toast>

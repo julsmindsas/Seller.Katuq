@@ -1031,6 +1031,80 @@ export class OnboardingService {
     }
   }
 
+  /**
+   * Siembra los defaults de los recursos CRÍTICOS que aún no existan, para que
+   * un comercio que finalice el onboarding mínimo (5 pasos) quede funcional:
+   * poder tomar pedidos y hacer checkout. Cubre roles, formas de entrega y
+   * consecutivos. Idempotente y no destructivo (verifica con /check antes de
+   * crear). Best-effort: los fallos se registran pero no interrumpen el cierre.
+   */
+  async seedRemainingDefaults(companyId: string): Promise<void> {
+    if (!companyId) {
+      console.warn('⚠️ seedRemainingDefaults sin companyId — se omite');
+      return;
+    }
+    await Promise.all([
+      this.ensureResourceDefault('roles', companyId),
+      this.ensureResourceDefault('delivery-methods', companyId),
+      this.ensureResourceDefault('sequences', companyId)
+    ]);
+  }
+
+  /**
+   * Verifica si un recurso ya existe para la empresa (endpoint /check) y, si no,
+   * crea su default llamando al endpoint de onboarding con payload vacío (el
+   * backend siembra el default). Best-effort: un fallo se registra pero no
+   * relanza. NO destructivo: para 'categories' (cuyo endpoint reemplaza el doc)
+   * solo se llama cuando NO existen categorías, así nunca se pisa el catálogo.
+   */
+  async ensureResourceDefault(
+    kind: 'roles' | 'payment-methods' | 'delivery-methods' | 'categories' | 'warehouses' | 'sequences',
+    companyId: string,
+    opts?: { sector?: string }
+  ): Promise<void> {
+    try {
+      const check: any = await this.http.get(
+        `${this.urlBase}/v1/onboarding/${kind}/check`,
+        this.getHttpOptions(companyId)
+      ).toPromise();
+
+      // Para consecutivos exigimos que estén COMPLETOS (orders + ordersPOS).
+      const alreadyOk = kind === 'sequences'
+        ? (check?.isComplete || check?.exists)
+        : check?.exists;
+
+      if (alreadyOk) {
+        console.log(`ℹ️ ${kind}: ya existe para ${companyId}, no se siembra default`);
+        return;
+      }
+
+      switch (kind) {
+        case 'roles':
+          await this.createRolesOnboarding(undefined, companyId);
+          break;
+        case 'payment-methods':
+          await this.createPaymentMethodsOnboarding(undefined, true, companyId);
+          break;
+        case 'delivery-methods':
+          await this.createDeliveryMethodsOnboarding(undefined, companyId);
+          break;
+        case 'categories':
+          await this.createCategoriesOnboarding(undefined, opts?.sector, companyId);
+          break;
+        case 'warehouses':
+          await this.createWarehousesOnboarding(undefined, companyId);
+          break;
+        case 'sequences':
+          await this.createSequencesOnboarding(undefined, companyId);
+          break;
+      }
+      console.log(`✅ ${kind}: default sembrado para ${companyId}`);
+    } catch (error) {
+      console.error(`❌ ensureResourceDefault(${kind}) falló para ${companyId}:`, error);
+      // best-effort: no relanzar para no bloquear el cierre del onboarding
+    }
+  }
+
   // ==================== SISTEMA DE POSPONER ====================
 
   /**
