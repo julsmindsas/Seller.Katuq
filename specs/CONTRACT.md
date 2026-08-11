@@ -3248,3 +3248,19 @@ Cadena causal: `createClient`/`editClient` (`clients.js`) nunca trimeaban `docum
 - El `else` destructivo de `pedido-entrega.component.ts:379` sigue existiendo — ya no lo dispara este bug puntual, pero cualquier otro fallo de lookup futuro seguiría vaciando `datosEntregas` en silencio. Candidato a hardening aparte (avisar en vez de vaciar).
 
 **Verificación:** backend reinició limpio en `:3300` con el fix; frontend recompiló "Compiled successfully" tras cada edición. Usuario confirmó en pantalla que el caso de Café Escobar ya funciona tras el backfill.
+
+### 2026-08-11 — D-163: Divergencia de motores de cálculo entre frontend (legacy) y backend (canónico) en venta asistida — propuesta abierta
+
+**Reporte del usuario:** "problemas con la matemática a la hora de crear pedidos desde la venta asistida y que estos queden plasmados correctamente en el módulo de pedidos y el PDF del pedido".
+
+**Investigación (solo lectura, 3 agentes en paralelo — historial SDD, frontend, backend) encontró 4 causas independientes:**
+1. **(Priorizada por el usuario, cambio abierto abajo)** En producción, `environment.prod.ts:62` → `ivaCalcUnificado: false` hace que `checkout.component.ts` y el módulo de Pedidos (`list.component.ts`) usen el motor **legacy** de `PaymentService` (nunca aplica `descuentoLinea`), mientras el backend (`POST /orders/create`, `controllers/orders.js:5604`) recalcula todo con el motor **canónico** (`orderCalculationService.js`, sí aplica `descuentoLinea`) e ignora lo que manda el frontend. El motor canónico frontend (`iva-canonico.ts`, espejo declarado del backend) ya existe y corre en dev — solo apagado en prod por el flag.
+2. `checkout.component.ts:834` sobrescribe `pedido.totalDescuento` con `pedidoUtilService.getDiscount()`, que retorna 0 para cupones `valor_fijo`/dirigidos a categoría-producto — el cupón visto en el carrito desaparece antes de crear el pedido.
+3. Backend: los endpoints de listado de Pedidos recalculan `calculateOrderTotals` en cada lectura con la fórmula ACTUAL sin persistir; los endpoints de detalle (probablemente los que alimentan el PDF) devuelven el documento crudo con la fórmula vigente cuando se creó — pedidos viejos muestran total distinto en listado vs. detalle/PDF porque la fórmula cambió con el tiempo (D-141/142/146).
+4. Backend: `/orders/edit` (`updateOrderInternal`) no recalcula nada server-side — graba ciegamente lo que manda el frontend, a diferencia de `create`.
+
+**Decisión:** se abre `openspec/changes/fix-order-calc-engine-divergence/` para atacar la causa #1 primero (un cambio a la vez, módulo sensible). Las causas #2-#4 quedan documentadas aquí como seguimiento, sin propuesta abierta todavía — se decide caso por caso si ameritan cambio separado.
+
+**Enfoque elegido:** auditoría comparativa bloqueante (Fase 0, mismo patrón que D-054/`audit-iva-divergence-readonly.js`) ANTES de tocar código — comparar legacy / `iva-canonico.ts` / `orderCalculationService.js` con una batería de casos (línea, global, cupón valor fijo, cupón dirigido, promoción) para confirmar si basta con activar el flag `ivaCalcUnificado` en prod o si primero hay que cerrar un hueco real en el backend (la investigación no confirmó si el motor canónico backend soporta cupones `valor_fijo`/dirigidos — solo se verificó la rama porcentual). Precedente relevante a no reabrir: spec 010/`ORE-000494` (el total del historial de redenciones se calcula desde el carrito por desconfianza en los campos persistidos) — este cambio va en dirección contraria para OTRO consumidor (venta asistida en vivo), el audit debe confirmar que no colisiona.
+
+**Estado:** propuesta creada (`proposal.md`/`design.md`/`tasks.md`/delta spec `order-calc-engine-parity`), pendiente de ejecutar Fase 0 (auditoría) — checkpoint humano antes de decidir el alcance exacto de la Fase 1. Nada de código tocado todavía.
