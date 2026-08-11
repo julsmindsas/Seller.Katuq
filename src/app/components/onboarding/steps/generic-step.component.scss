@@ -17,7 +17,7 @@
 
     i {
       font-size: 3rem;
-      color: var(--google-blue, #1a73e8);
+      color: #5F3FE0;
     }
   }
 
@@ -25,13 +25,13 @@
     margin: 0 0 0.5rem 0;
     font-size: 1.5rem;
     font-weight: 400;
-    color: #202124;
+    color: #211F3A;
   }
 
   .description {
     margin: 0 0 1rem 0;
     font-size: 1rem;
-    color: #5f6368;
+    color: #5b5878;
     line-height: 1.5;
   }
 
@@ -60,7 +60,7 @@
 
       i {
         font-size: 1.5rem;
-        color: var(--google-blue, #1a73e8);
+        color: #5F3FE0;
         margin-top: 2px;
       }
 
@@ -68,12 +68,12 @@
         margin: 0 0 0.25rem 0;
         font-size: 1rem;
         font-weight: 500;
-        color: #202124;
+        color: #211F3A;
       }
 
       p {
         margin: 0;
-        color: #5f6368;
+        color: #5b5878;
         font-size: 0.875rem;
         line-height: 1.5;
       }
@@ -86,16 +86,16 @@
   align-items: center;
   gap: 1rem;
   padding: 12px 16px;
-  background-color: #f1f3f4;
+  background-color: #f5f4fa;
   border-radius: 8px;
   margin-bottom: 2rem;
 
   i {
-    color: var(--google-blue, #1a73e8);
+    color: #5F3FE0;
   }
 
   span {
-    color: #202124;
+    color: #211F3A;
     font-size: 0.875rem;
   }
 }
@@ -106,19 +106,19 @@
 
   i.pi-check-circle {
     font-size: 3rem;
-    color: #34a853;
+    color: #10b981;
     margin-bottom: 1rem;
   }
 
   h4 {
     margin: 0 0 0.5rem 0;
     font-size: 1.25rem;
-    color: #202124;
+    color: #211F3A;
   }
 
   p {
     margin: 0.5rem 0;
-    color: #5f6368;
+    color: #5b5878;
   }
 }
 
@@ -128,18 +128,18 @@
 
   i {
     font-size: 2.5rem;
-    color: #dadce0;
+    color: #e4e2ef;
     margin-bottom: 1rem;
   }
 
   h4 {
     margin: 0 0 0.5rem 0;
     font-size: 1.25rem;
-    color: #202124;
+    color: #211F3A;
   }
 
   p {
-    color: #5f6368;
+    color: #5b5878;
   }
 
   .quick-options {
@@ -147,7 +147,7 @@
 
     h5 {
       font-size: 0.875rem;
-      color: #5f6368;
+      color: #5b5878;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -164,24 +164,24 @@
         align-items: center;
         gap: 0.75rem;
         padding: 12px 16px;
-        border: 1px solid #dadce0;
+        border: 1px solid #e4e2ef;
         border-radius: 4px;
         cursor: pointer;
         transition: background 0.2s;
 
         &:hover {
-          background-color: #f1f3f4;
+          background-color: #f5f4fa;
         }
 
         i {
           font-size: 1.25rem;
-          color: var(--google-blue, #1a73e8);
+          color: #5F3FE0;
           margin: 0;
         }
 
         span {
           font-size: 0.875rem;
-          color: #202124;
+          color: #211F3A;
           font-weight: 500;
         }
       }
@@ -199,9 +199,9 @@
     margin: 0 0 1.5rem 0;
     font-size: 1.25rem;
     font-weight: 400;
-    color: #202124;
+    color: #211F3A;
 
-    i { color: var(--google-blue, #1a73e8); }
+    i { color: #5F3FE0; }
   }
 }
 
@@ -213,26 +213,26 @@
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
-      color: #5f6368;
+      color: #5b5878;
       font-size: 0.875rem;
     }
 
     ::ng-deep input.p-inputtext,
     ::ng-deep textarea.p-inputtextarea {
       border-radius: 4px;
-      border: 1px solid #dadce0;
+      border: 1px solid #e4e2ef;
       padding: 10px 12px;
       transition: border-color 0.2s;
 
       &:focus {
-        border-color: var(--google-blue, #1a73e8);
+        border-color: #5F3FE0;
         box-shadow: none;
         border-width: 2px;
         padding: 9px 11px;
       }
 
       &:hover:not(:focus) {
-        border-color: #202124;
+        border-color: #211F3A;
       }
     }
   }
@@ -259,7 +259,7 @@
 .skip-notice {
   text-align: center;
   margin-top: 1.5rem;
-  color: #5f6368;
+  color: #5b5878;
   font-size: 0.875rem;
 
   i { font-size: 0.875rem; margin-right: 4px; }

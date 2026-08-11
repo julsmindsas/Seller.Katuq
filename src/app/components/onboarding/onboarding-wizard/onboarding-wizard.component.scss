@@ -12,18 +12,20 @@ $spacing-md: 1rem;
 $spacing-lg: 1.5rem;
 $spacing-xl: 2rem;
 
-// Modern Color Palette (Solid Colors Only)
-$color-primary: #3b82f6;
-$color-primary-light: #60a5fa;
-$color-primary-dark: #2563eb;
+// Paleta Katuq — acento #5F3FE0, el mismo de "Todos los pedidos" (D-131).
+// Antes era la paleta de Google Material (#3b82f6/#1e293b) sin ningún morado
+// de marca; se reemplaza por el tema canónico, plano, sin gradientes.
+$color-primary: #5F3FE0;
+$color-primary-light: #7C5CFF;
+$color-primary-dark: #4a2fc0;
 $color-success: #10b981;
 $color-warning: #f59e0b;
 $color-info: #06b6d4;
-$color-purple: #8b5cf6;
+$color-purple: #7C5CFF; // antes #8b5cf6 — era un segundo morado compitiendo con el acento
 $bg-gray-50: #f8fafc;
 $bg-gray-100: #f1f5f9;
 $bg-gray-200: #e2e8f0;
-$text-dark: #1e293b;
+$text-dark: #211F3A;
 $text-medium: #475569;
 $text-light: #64748b;
 
@@ -191,7 +193,7 @@ $text-light: #64748b;
         font-size: 1.1rem;
         font-weight: 700;
         color: $color-primary;
-        background: #eff6ff;
+        background: #efe9ff;
         padding: 4px 12px;
         border-radius: 20px;
       }
@@ -247,14 +249,14 @@ $text-light: #64748b;
   }
 
   &.step-current {
-    background: #eff6ff;
+    background: #efe9ff;
     border-left: 4px solid $color-primary;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 2px 8px rgba(95, 63, 224, 0.1);
 
     .step-number {
       background: $color-primary;
       color: white;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 4px 12px rgba(95, 63, 224, 0.3);
     }
 
     .step-title {
@@ -405,7 +407,7 @@ $text-light: #64748b;
     justify-content: center;
     color: white;
     font-size: 0.7rem;
-    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 2px 8px rgba(124, 92, 255, 0.4);
     animation: pulse 2s infinite;
   }
 }
@@ -413,11 +415,11 @@ $text-light: #64748b;
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 2px 8px rgba(124, 92, 255, 0.4);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+    box-shadow: 0 4px 12px rgba(124, 92, 255, 0.6);
   }
 }
 
@@ -443,7 +445,7 @@ $text-light: #64748b;
 
     .step-badge {
       display: inline-block;
-      background: #eff6ff;
+      background: #efe9ff;
       color: $color-primary;
       padding: 8px 16px;
       border-radius: 24px;
@@ -452,7 +454,7 @@ $text-light: #64748b;
       margin-bottom: $spacing-md;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      border: 2px solid #dbeafe;
+      border: 2px solid #eeecf7;
     }
 
     .step-title {
@@ -494,7 +496,7 @@ $text-light: #64748b;
     background: #f5f3ff;
     border: 2px solid #e9d5ff;
     border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.08);
+    box-shadow: 0 4px 12px rgba(124, 92, 255, 0.08);
 
     .ai-banner-icon {
       width: 52px;
@@ -507,7 +509,7 @@ $text-light: #64748b;
       color: white;
       font-size: 1.6rem;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+      box-shadow: 0 4px 12px rgba(124, 92, 255, 0.3);
     }
 
     .ai-banner-text {
@@ -642,7 +644,7 @@ $text-light: #64748b;
 
       &:not(:disabled):hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        box-shadow: 0 4px 12px rgba(95, 63, 224, 0.2);
       }
     }
   }
@@ -930,7 +932,7 @@ $text-light: #64748b;
 
 .success-banner {
   position: relative;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #10b981; // era degradado — el tema canónico es plano (D-131)
   border-radius: 16px;
   padding: 2rem;
   margin-bottom: 2rem;
