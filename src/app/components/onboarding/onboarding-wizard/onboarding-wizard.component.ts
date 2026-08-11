@@ -482,15 +482,41 @@ export class OnboardingWizardComponent implements OnInit {
         }
         break;
       }
-      case 'payment-methods':
-        if (this.companyKey) await this.onboardingService.ensureResourceDefault('payment-methods', this.companyKey);
+      case 'payment-methods': {
+        // Guarda las formas de pago ELEGIDAS por el usuario (no duplica).
+        if (this.companyKey) {
+          const labels = this.picked[step.id] || step.defaults || [];
+          const hints: { [k: string]: string } = {};
+          (step.options || []).forEach(o => { hints[o.label] = o.hint; });
+          await this.onboardingService.savePaymentMethods(this.companyKey, labels, hints);
+        }
         break;
-      case 'categories':
-        if (this.companyKey) await this.onboardingService.ensureResourceDefault('categories', this.companyKey);
+      }
+      case 'categories': {
+        // Guarda las categorías ELEGIDAS por el usuario (reemplaza el doc).
+        if (this.companyKey) {
+          const labels = this.picked[step.id] || step.defaults || [];
+          await this.onboardingService.saveCategories(this.companyKey, labels);
+        }
         break;
-      case 'warehouses':
-        if (this.companyKey) await this.onboardingService.ensureResourceDefault('warehouses', this.companyKey);
+      }
+      case 'warehouses': {
+        // Nombre + ciudad → la bodega (su apartado natural).
+        // Alerta → umbral de stock bajo POR EMPRESA (config de notificaciones).
+        if (this.companyKey) {
+          const v = this.values['bodegas'] || {};
+          await this.onboardingService.savePrimaryWarehouse(this.companyKey, v['bodega'] || '', v['ciudad'] || '');
+
+          const raw = (v['alerta'] || '').toString().replace(/[^0-9]/g, '');
+          if (raw !== '') {
+            const umbral = parseInt(raw, 10);
+            if (Number.isInteger(umbral) && umbral >= 0) {
+              await this.onboardingService.saveLowStockThreshold(umbral);
+            }
+          }
+        }
         break;
+      }
       case 'product':
         // El producto se crea desde el maestro (otra pestaña). Nada que aprovisionar aquí.
         break;
