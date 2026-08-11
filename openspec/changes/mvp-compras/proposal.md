@@ -32,20 +32,29 @@ número defendible.
 **Pieza 3 — Lo que se debe.** La orden lleva su estado de plata: pedido, recibido y
 facturado, con el saldo por proveedor. Sin contabilidad ni asientos.
 
-## Decisiones que necesita Daniel
+## Decisiones tomadas (Daniel, 2026-08-11)
 
-1. **Colección nueva para proveedores.** El proyecto prohíbe crear colecciones sin
-   aprobación. Un maestro de proveedores no cabe en ninguna existente sin
-   deformarla. Se pide autorización explícita para `proveedores`.
-2. **Compras escribe el costo del producto** (acordado en principio 2026-08-11).
-   Conviene registrarlo como decisión: la regla dura sigue siendo que INVENTARIO no
-   toca productos ni precios; compras es otro dominio y recibir mercancía con su
-   costo es legítimo. Sin dejarlo escrito, la próxima sesión lo va a leer como una
-   violación.
-3. **¿El costo se actualiza solo o se propone?** Automático mantiene el dato vivo
-   sin trabajo; propuesto evita que un error de digitación en una orden mueva el
-   costo de un producto que se vende todos los días. Recomiendo automático con
-   aviso cuando el cambio supere un umbral.
+1. **Colección `proveedores`: AUTORIZADA.**
+2. **Compras escribe el costo del producto — y el cargue por Excel sigue igual.**
+   Son DOS fuentes que conviven, no una que reemplaza a la otra. La regla dura
+   sigue intacta: INVENTARIO no toca productos ni precios.
+3. **El costo se actualiza automático**, teniendo en cuenta el Excel: una compra no
+   puede pisar en silencio un costo que alguien acaba de cargar masivamente, ni al
+   revés. Cada escritura deja su fuente, y el aviso salta cuando el cambio es grande.
+
+## Lo que NO hay que construir (hallazgo del 2026-08-11)
+
+Al revisar antes de escribir código apareció que la mitad de la pieza 2 **ya existe**
+y funciona: `controllers/productCosts.js` mantiene `productCostHistory` con costo
+anterior, nuevo, delta, porcentaje, fuente, lote de importación, fecha y autor;
+`productCostImports` guarda los lotes; y hay previsualización antes de aplicar. El
+catálogo de fuentes válidas ya distingue `prindel-excel`, `aliaddo-api`,
+`aliaddo-excel`, `costos-excel` y `manual`.
+
+Entonces compras **no inventa un camino paralelo**: se suma como una fuente más
+(`compra`) sobre la misma tubería. Eso es exactamente lo que hace que las dos
+fuentes convivan sin pisarse — quien mire el historial va a ver si ese costo entró
+por una compra o por un cargue de Excel, y de cuál.
 
 ## Capabilities
 

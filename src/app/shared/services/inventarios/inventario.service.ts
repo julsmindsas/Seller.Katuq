@@ -7,6 +7,50 @@ import { TipoMovimientoInventario } from '../../../components/inventarios/enums/
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
 
+export interface Proveedor {
+  id: string;
+  nombre: string;
+  nit: string | null;
+  digitoVerificacion?: string | null;
+  contacto: string | null;
+  telefono: string | null;
+  correo: string | null;
+  direccion?: string | null;
+  ciudad: string | null;
+  /** Plazo acordado. 0 = de contado. */
+  diasCredito: number;
+  observaciones?: string | null;
+  estado: 'activo' | 'inactivo';
+}
+
+export interface SaldoProveedor {
+  proveedorId: string | null;
+  nombre: string;
+  ordenes: number;
+  pedido: number;
+  recibido: number;
+  facturado: number;
+  /** Lo recibido que aún no llega facturado. Negativo = nos facturaron de más. */
+  porFacturar: number;
+  conExceso: number;
+}
+
+export interface FacturaOrden {
+  numero: string;
+  valor: number;
+  fecha: string | null;
+  registradaPor?: string;
+}
+
+export interface CuentaOrden {
+  pedido: number;
+  recibido: number;
+  facturado: number;
+  porFacturar: number;
+  facturadoDeMas: boolean;
+  facturas: number;
+}
+
 export type EstadoOrdenCompra = 'abierta' | 'parcial' | 'recibida' | 'anulada';
 
 export interface LineaOrdenCompra {
@@ -32,6 +76,10 @@ export interface OrdenCompra {
   id: string;
   idBodega: string;
   proveedor: { nombre: string; nit: string | null };
+  /** Presente cuando la orden se creó eligiendo del maestro. */
+  proveedorId?: string | null;
+  facturas?: FacturaOrden[];
+  cuenta?: CuentaOrden;
   lineas: LineaOrdenCompra[];
   pendientes?: PendienteOrdenCompra[];
   estado: EstadoOrdenCompra;
@@ -683,6 +731,39 @@ export class InventarioService {
   /** Asigna (o quita, con null) el lugar donde vive un producto en una bodega. */
   asignarUbicacionProducto(bodega: string, productoId: string, ubicacion: string | null): Observable<any> {
     return this.http.put(`${this.apiUrl}/inventory/producto-ubicacion`, { bodega, productoId, ubicacion });
+  }
+
+  // --- Proveedores (dominio de compras) ---
+
+  listarProveedores(options: { incluirInactivos?: boolean; busqueda?: string } = {}): Observable<{ proveedores: Proveedor[] }> {
+    let params = new HttpParams();
+    if (options.incluirInactivos) params = params.set('incluirInactivos', 'true');
+    if (options.busqueda) params = params.set('busqueda', options.busqueda);
+    return this.http.get<{ proveedores: Proveedor[] }>(`${this.apiUrl}/proveedores`, { params });
+  }
+
+  crearProveedor(datos: Partial<Proveedor> & { forzar?: boolean }): Observable<Proveedor> {
+    return this.http.post<Proveedor>(`${this.apiUrl}/proveedores`, datos);
+  }
+
+  actualizarProveedor(id: string, datos: Partial<Proveedor>): Observable<Proveedor> {
+    return this.http.put<Proveedor>(`${this.apiUrl}/proveedores/${id}`, datos);
+  }
+
+  desactivarProveedor(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/proveedores/${id}`);
+  }
+
+  /** Cuánto se le debe a cada proveedor: pedido, recibido y facturado. */
+  consultarSaldoProveedores(): Observable<{ proveedores: SaldoProveedor[]; total: number }> {
+    return this.http.get<{ proveedores: SaldoProveedor[]; total: number }>(
+      `${this.apiUrl}/ordenes-compra/saldo-proveedores`,
+    );
+  }
+
+  /** Anota la factura del proveedor sobre una orden. No mueve inventario. */
+  registrarFacturaOrden(id: string, factura: { numero: string; valor: number; fecha?: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/ordenes-compra/${id}/factura`, factura);
   }
 
   // --- Órdenes de compra ---

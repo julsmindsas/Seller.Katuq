@@ -1,0 +1,137 @@
+<div class="prv-pagina">
+
+  <nav class="atajos-modulos" aria-label="Otros módulos">
+    <a routerLink="/compras/proveedores" class="activo"><i class="pi pi-users"></i> Proveedores</a>
+    <a routerLink="/inventario/ordenes-compra"><i class="pi pi-shopping-cart"></i> Órdenes de compra</a>
+    <a routerLink="/inventario/inventario-catalogo"><i class="pi pi-database"></i> Inventario por bodega</a>
+  </nav>
+
+  <header class="prv-encabezado">
+    <div class="prv-titulo">
+      <span class="prv-icono"><i class="pi pi-users"></i></span>
+      <div>
+        <h1>Proveedores</h1>
+        <p>A quién le compramos, cuánto le debemos y en qué condiciones.</p>
+      </div>
+    </div>
+    <div class="prv-controles">
+      <input class="prv-buscar" type="text" [(ngModel)]="busqueda" (keyup.enter)="cargar()"
+             placeholder="Buscar por nombre, NIT o contacto…" />
+      <button class="prv-boton prv-boton--suave" (click)="incluirInactivos = !incluirInactivos; cargar()">
+        {{ incluirInactivos ? 'Ocultar inactivos' : 'Ver inactivos' }}
+      </button>
+      <button class="prv-boton" (click)="abrirNuevo()"><i class="pi pi-plus"></i> Nuevo proveedor</button>
+    </div>
+  </header>
+
+  <div class="prv-aviso prv-aviso--error" *ngIf="error"><i class="pi pi-exclamation-triangle"></i> {{ error }}</div>
+
+  <section class="prv-tarjetas">
+    <article class="prv-tarjeta">
+      <span class="prv-etiqueta">Proveedores activos</span>
+      <strong class="prv-numero">{{ proveedores.length | number }}</strong>
+    </article>
+    <article class="prv-tarjeta" [class.prv-tarjeta--alerta]="totalPorFacturar > 0">
+      <span class="prv-etiqueta">Recibido sin facturar</span>
+      <strong class="prv-numero">{{ totalPorFacturar | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      <span class="prv-pie">Mercancía que llegó y aún no llega su factura</span>
+    </article>
+  </section>
+
+  <!-- Formulario -->
+  <section class="prv-tarjeta-ancha" *ngIf="mostrarFormulario">
+    <h2>{{ editando ? 'Editar proveedor' : 'Nuevo proveedor' }}</h2>
+    <div class="prv-form">
+      <label class="ancho">
+        <span>Nombre <b>*</b></span>
+        <input type="text" [(ngModel)]="formulario.nombre" placeholder="Razón social o nombre comercial" />
+      </label>
+      <label>
+        <span>NIT</span>
+        <input type="text" [(ngModel)]="formulario.nit" placeholder="900.123.456-7" />
+      </label>
+      <label>
+        <span>Días de crédito</span>
+        <input type="number" [(ngModel)]="formulario.diasCredito" min="0" max="365" />
+      </label>
+      <label>
+        <span>Contacto</span>
+        <input type="text" [(ngModel)]="formulario.contacto" />
+      </label>
+      <label>
+        <span>Teléfono</span>
+        <input type="text" [(ngModel)]="formulario.telefono" />
+      </label>
+      <label>
+        <span>Correo</span>
+        <input type="email" [(ngModel)]="formulario.correo" />
+      </label>
+      <label>
+        <span>Ciudad</span>
+        <input type="text" [(ngModel)]="formulario.ciudad" />
+      </label>
+    </div>
+    <div class="prv-acciones">
+      <button class="prv-boton" (click)="guardar()" [disabled]="guardando">
+        {{ editando ? 'Guardar cambios' : 'Crear proveedor' }}
+      </button>
+      <button class="prv-boton prv-boton--suave" (click)="cerrarFormulario()">Cancelar</button>
+    </div>
+  </section>
+
+  <!-- Lista -->
+  <section class="prv-tarjeta-ancha">
+    <div class="prv-vacio" *ngIf="proveedores.length === 0 && !cargando">
+      Todavía no hay proveedores. Cree el primero y las órdenes de compra dejarán de escribir el nombre a mano.
+    </div>
+
+    <div class="prv-tabla-marco" *ngIf="proveedores.length > 0">
+      <table class="prv-tabla">
+        <thead>
+          <tr>
+            <th>Proveedor</th>
+            <th>Contacto</th>
+            <th>Condiciones</th>
+            <th class="num">Compras</th>
+            <th class="num">Se le debe</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let proveedor of proveedores" [class.inactivo]="proveedor.estado === 'inactivo'">
+            <td>
+              <span class="prv-nombre">{{ proveedor.nombre }}</span>
+              <span class="prv-sub" *ngIf="proveedor.nit">NIT {{ proveedor.nit }}<span *ngIf="proveedor.digitoVerificacion">-{{ proveedor.digitoVerificacion }}</span></span>
+              <span class="prv-chip chip-inactivo" *ngIf="proveedor.estado === 'inactivo'">Inactivo</span>
+            </td>
+            <td>
+              <span *ngIf="proveedor.contacto">{{ proveedor.contacto }}</span>
+              <span class="prv-sub" *ngIf="proveedor.telefono">{{ proveedor.telefono }}</span>
+              <span class="prv-sub" *ngIf="proveedor.correo">{{ proveedor.correo }}</span>
+              <span class="prv-sub" *ngIf="!proveedor.contacto && !proveedor.telefono && !proveedor.correo">—</span>
+            </td>
+            <td>{{ textoCredito(proveedor.diasCredito) }}</td>
+            <td class="num">{{ saldoDe(proveedor)?.ordenes || 0 }}</td>
+            <td class="num">
+              <span *ngIf="saldoDe(proveedor) as saldo" [class.prv-alerta]="saldo.conExceso > 0">
+                {{ saldo.porFacturar | currency:'COP':'symbol-narrow':'1.0-0' }}
+                <span class="prv-sub" *ngIf="saldo.conExceso > 0">Facturó de más en {{ saldo.conExceso }}</span>
+              </span>
+              <span class="prv-sub" *ngIf="!saldoDe(proveedor)">Sin compras</span>
+            </td>
+            <td class="num">
+              <button class="prv-accion" (click)="abrirEdicion(proveedor)">Editar</button>
+              <button class="prv-accion prv-accion--suave" *ngIf="proveedor.estado !== 'inactivo'"
+                      (click)="desactivar(proveedor)">Desactivar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="prv-nota">
+    Un proveedor no se borra: se desactiva. Con historia de compras no puede desaparecer sin dejar
+    huérfanas sus órdenes.
+  </p>
+</div>

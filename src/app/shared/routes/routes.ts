@@ -189,6 +189,16 @@ export const content: Routes = [
     canActivate: [AuthGuard], // Agregar el guard
   },
   {
+    // Compras: dominio propio. Separado de inventario porque al recibir escribe
+    // el costo del producto, y mezclarlos borronea esa frontera.
+    path: "compras",
+    loadChildren: () =>
+      import("../../components/compras/compras.module").then(
+        (m) => m.ComprasModule,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: "lista-precios",
     loadChildren: () =>
       import("../../components/lista-precios/lista-precios.module").then(
@@ -312,6 +322,24 @@ export const content: Routes = [
       ).then((m) => m.WhatsappInboxModule),
     canActivate: [AuthGuard],
     data: { title: "Conversaciones WhatsApp" },
+  },
+  {
+    path: "notificaciones/instagram/inbox",
+    loadChildren: () =>
+      import(
+        "../../components/notificaciones/meta-inbox/meta-inbox.module"
+      ).then((m) => m.MetaInboxModule),
+    canActivate: [AuthGuard],
+    data: { title: "Conversaciones Instagram" },
+  },
+  {
+    path: "notificaciones/facebook/inbox",
+    loadChildren: () =>
+      import(
+        "../../components/notificaciones/meta-inbox/meta-inbox.module"
+      ).then((m) => m.MetaInboxModule),
+    canActivate: [AuthGuard],
+    data: { title: "Conversaciones Facebook" },
   },
   {
     path: "marketing",

@@ -536,6 +536,12 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "shopping-cart",
         },
+        {
+          path: "compras/proveedores",
+          title: "Proveedores",
+          type: "link",
+          icon: "users",
+        },
       ],
     },
     {
@@ -589,12 +595,34 @@ export class NavService implements OnDestroy {
       path: "/marketing/campanas",
       active: false,
     },
+    // Los tres buzones agrupados: el menú no crece cada vez que se suma un
+    // canal, y el operador entiende que es la misma tarea en distintos lugares.
+    // La ruta de WhatsApp NO cambia, para no romper enlaces ya guardados.
     {
-      title: "Conversaciones WhatsApp",
+      title: "Mensajes",
       icon: "message-circle",
-      type: "link",
-      path: "/notificaciones/whatsapp/inbox",
+      type: "sub",
       active: false,
+      children: [
+        {
+          path: "notificaciones/whatsapp/inbox",
+          title: "WhatsApp",
+          type: "link",
+          icon: "message-circle",
+        },
+        {
+          path: "notificaciones/instagram/inbox",
+          title: "Instagram",
+          type: "link",
+          icon: "instagram",
+        },
+        {
+          path: "notificaciones/facebook/inbox",
+          title: "Facebook",
+          type: "link",
+          icon: "facebook",
+        },
+      ],
     },
 
     // INTELIGENCIA DE NEGOCIOS
