@@ -481,6 +481,31 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
+    if (!this.isFromProduction && this.esFacturaDian(pedido)) {
+      items.push(
+        {
+          label: 'Consultar estado DIAN',
+          icon: 'pi pi-search',
+          command: () => this.consultarEstadoDian(this.selectedMenuPedido)
+        },
+        {
+          label: 'Descargar PDF DIAN',
+          icon: 'pi pi-file-pdf',
+          command: () => this.descargarArtefactoDian(this.selectedMenuPedido, 'pdf')
+        },
+        {
+          label: 'Crear nota crédito total',
+          icon: 'pi pi-replay',
+          command: () => this.crearNotaCreditoDian(this.selectedMenuPedido)
+        },
+        {
+          label: 'Crear ajuste NC / ND',
+          icon: 'pi pi-pencil',
+          command: () => this.crearAjusteDian(this.selectedMenuPedido)
+        }
+      );
+    }
+
     // Reenviar a Cereza/Osmosis: visible en pedidos no-produccion no-cancelados.
     // Útil para retry manual cuando el push automatico fallo o el pedido no tiene
     // osmosisOrderId todavia. El backend (POST /v1/osmosis/orders/:id/push) es
@@ -946,6 +971,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const provider = this.activeAccountingProvider || 'siigo';
 
+    if (provider === 'dian') {
+      this.mostrarConfirmacionFactura(pedido, providerDisplayName);
+      return;
+    }
+
     // World Office: resolver prefijo según rol del usuario antes de facturar
     if (provider === 'world_office') {
       this.facturarConPrefijoRol(pedido, provider, providerDisplayName);
@@ -1265,6 +1295,199 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           { timeOut: 15000 }
         );
       }
+    });
+  }
+
+  esFacturaDian(pedido: Pedido): boolean {
+    const fiscal = (pedido as any)?.facturacionElectronica;
+    return !!pedido?.nroFactura && fiscal?.provider === 'dian' && !!(fiscal?.cufe || fiscal?.invoiceId);
+  }
+
+  consultarEstadoDian(pedido: Pedido): void {
+    const fiscal = (pedido as any)?.facturacionElectronica || {};
+    const trackId = fiscal.cufe || fiscal.invoiceId;
+    if (!trackId) return;
+
+    Swal.fire({ title: 'Consultando DIAN...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    this.integrationsService.getDianDocumentStatus(trackId).subscribe({
+      next: (response: any) => {
+        const data = response?.data || response;
+        const accepted = data?.isValid === true;
+        const messages = data?.errorMessages || data?.statusMessages || [];
+        Swal.fire({
+          icon: accepted ? 'success' : 'info',
+          title: accepted ? 'Documento aceptado por la DIAN' : 'Estado recibido de la DIAN',
+          html: `<p><strong>${pedido.nroFactura}</strong></p><p>${messages.length ? messages.join('<br>') : (data?.statusDescription || 'Consulta completada.')}</p>`,
+        });
+      },
+      error: (error) => Swal.fire({
+        icon: 'error', title: 'No se pudo consultar la DIAN',
+        text: error?.error?.message || error?.message || 'Error desconocido'
+      })
+    });
+  }
+
+  descargarArtefactoDian(pedido: Pedido, kind: 'xml' | 'pdf' | 'applicationResponse' | 'attachedDocument'): void {
+    const number = pedido?.nroFactura || (pedido as any)?.facturacionElectronica?.invoiceNumber;
+    if (!number) return;
+    this.integrationsService.downloadDianArtifact(number, kind).subscribe({
+      next: (blob: Blob) => {
+        const extension = kind === 'pdf' ? 'pdf' : 'xml';
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${number}-${kind}.${extension}`;
+        link.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (error) => Swal.fire({
+        icon: 'error', title: 'No se pudo descargar el documento',
+        text: error?.error?.message || error?.message || 'El artefacto no está disponible.'
+      })
+    });
+  }
+
+  crearNotaCreditoDian(pedido: Pedido): void {
+    const fiscal = (pedido as any)?.facturacionElectronica || {};
+    const existingCredit = Array.isArray(fiscal.notes) && fiscal.notes.some((note: any) => note?.type === 'credit');
+    if (existingCredit) {
+      Swal.fire({ icon: 'warning', title: 'Ya existe una nota crédito', text: 'Revise las notas del documento antes de emitir otra corrección.' });
+      return;
+    }
+    const orderId = (pedido as any)?._id || (pedido as any)?.cd || (pedido as any)?.id;
+    const issueDate = fiscal.issueDate || (fiscal.createdAt ? String(fiscal.createdAt).slice(0, 10) : '');
+    const reference = { number: pedido.nroFactura, cufe: fiscal.cufe || fiscal.invoiceId, issueDate };
+    if (!orderId || !reference.number || !reference.cufe || !reference.issueDate) {
+      Swal.fire({ icon: 'error', title: 'Faltan datos fiscales', text: 'El pedido no tiene ID, CUFE, número o fecha de la factura de origen.' });
+      return;
+    }
+
+    Swal.fire({
+      icon: 'warning',
+      title: '¿Anular totalmente la factura?',
+      html: `Se emitirá una <strong>nota crédito electrónica por el total</strong> de ${reference.number}. Esta operación fiscal no se puede deshacer.`,
+      showCancelButton: true,
+      confirmButtonText: 'Emitir nota crédito',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33'
+    }).then((confirmation) => {
+      if (!confirmation.isConfirmed) return;
+      Swal.fire({ title: 'Enviando nota a la DIAN...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      this.integrationsService.createDianNote('credit', {
+        orderId,
+        reference,
+        correction: { code: '2', description: 'Anulación de factura electrónica' }
+      }).subscribe({
+        next: (response: any) => {
+          const note = response?.data || response;
+          fiscal.notes = [...(fiscal.notes || []), { type: 'credit', number: note.number, cude: note.cude, artifactsAvailable: !!note.artifacts }];
+          Swal.fire({ icon: 'success', title: 'Nota crédito aceptada', text: `${note.number} fue transmitida y aceptada por la DIAN.` });
+        },
+        error: (error) => Swal.fire({
+          icon: 'error', title: 'La nota no pudo completarse',
+          text: error?.error?.message || error?.message || 'Error desconocido'
+        })
+      });
+    });
+  }
+
+  crearAjusteDian(pedido: Pedido): void {
+    if (!this.esFacturaDian(pedido)) return;
+    Swal.fire({
+      title: 'Tipo de ajuste DIAN',
+      input: 'select',
+      inputOptions: {
+        credit: 'Nota crédito — disminuye el valor de la factura',
+        debit: 'Nota débito — aumenta el valor de la factura'
+      },
+      inputPlaceholder: 'Seleccione el tipo de nota',
+      showCancelButton: true,
+      confirmButtonText: 'Continuar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => value ? null : 'Seleccione el tipo de nota'
+    }).then((typeResult) => {
+      if (!typeResult.isConfirmed || !typeResult.value) return;
+      this.abrirFormularioAjusteDian(pedido, typeResult.value as 'credit' | 'debit');
+    });
+  }
+
+  private abrirFormularioAjusteDian(pedido: Pedido, noteType: 'credit' | 'debit'): void {
+    const fiscal = (pedido as any)?.facturacionElectronica || {};
+    const orderId = (pedido as any)?._id || (pedido as any)?.cd || (pedido as any)?.id;
+    const issueDate = fiscal.issueDate || (fiscal.createdAt ? String(fiscal.createdAt).slice(0, 10) : '');
+    const reference = { number: pedido.nroFactura, cufe: fiscal.cufe || fiscal.invoiceId, issueDate };
+    if (!orderId || !reference.number || !reference.cufe || !reference.issueDate) {
+      Swal.fire({ icon: 'error', title: 'Faltan datos fiscales', text: 'No se puede identificar completamente la factura de origen.' });
+      return;
+    }
+
+    const causes = noteType === 'credit'
+      ? [
+          ['1', 'Devolución parcial de bienes o servicios'],
+          ['2', 'Anulación de factura electrónica'],
+          ['3', 'Rebaja o descuento parcial o total'],
+          ['4', 'Ajuste de precio'],
+          ['5', 'Otros']
+        ]
+      : [
+          ['1', 'Intereses'],
+          ['2', 'Gastos por cobrar'],
+          ['3', 'Cambio del valor'],
+          ['4', 'Otros']
+        ];
+    const options = causes.map(([code, label]) => `<option value="${code}">${code} — ${label}</option>`).join('');
+
+    Swal.fire({
+      title: noteType === 'credit' ? 'Nueva nota crédito' : 'Nueva nota débito',
+      html: `
+        <div class="text-start">
+          <label for="dian-note-cause"><strong>Causal DIAN</strong></label>
+          <select id="dian-note-cause" class="swal2-select" style="width:100%;margin:8px 0 14px">${options}</select>
+          <label for="dian-note-description"><strong>Detalle del ajuste</strong></label>
+          <input id="dian-note-description" class="swal2-input" style="width:100%;margin:8px 0 14px" placeholder="Explique el motivo fiscal">
+          <label for="dian-note-base"><strong>Valor antes de IVA</strong></label>
+          <input id="dian-note-base" type="number" min="0.01" step="0.01" class="swal2-input" style="width:100%;margin:8px 0 14px" placeholder="0.00">
+          <label for="dian-note-tax"><strong>Tarifa IVA</strong></label>
+          <select id="dian-note-tax" class="swal2-select" style="width:100%;margin:8px 0"><option value="0">0%</option><option value="5">5%</option><option value="19">19%</option></select>
+        </div>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Transmitir a la DIAN',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const popup = Swal.getPopup();
+        const code = (popup?.querySelector('#dian-note-cause') as HTMLSelectElement)?.value;
+        const description = (popup?.querySelector('#dian-note-description') as HTMLInputElement)?.value.trim();
+        const baseAmount = Number((popup?.querySelector('#dian-note-base') as HTMLInputElement)?.value);
+        const taxRate = Number((popup?.querySelector('#dian-note-tax') as HTMLSelectElement)?.value);
+        if (!description) return Swal.showValidationMessage('Escriba el motivo fiscal del ajuste');
+        if (!Number.isFinite(baseAmount) || baseAmount <= 0) return Swal.showValidationMessage('Ingrese un valor mayor que cero');
+        return { code, description, baseAmount, taxRate };
+      }
+    }).then((formResult) => {
+      if (!formResult.isConfirmed || !formResult.value) return;
+      const value = formResult.value as { code: string; description: string; baseAmount: number; taxRate: number };
+      Swal.fire({ title: 'Transmitiendo a la DIAN...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      this.integrationsService.createDianNote(noteType, {
+        orderId,
+        reference,
+        correction: { code: value.code, description: value.description },
+        adjustment: { description: value.description, baseAmount: value.baseAmount, taxRate: value.taxRate }
+      }).subscribe({
+        next: (response: any) => {
+          const note = response?.data || response;
+          fiscal.notes = [...(fiscal.notes || []), {
+            type: noteType, number: note.number, cude: note.cude,
+            amount: note.amount, correction: { code: value.code, description: value.description },
+            adjustment: { baseAmount: value.baseAmount, taxRate: value.taxRate }, artifactsAvailable: !!note.artifacts
+          }];
+          Swal.fire({ icon: 'success', title: 'Nota aceptada por la DIAN', text: `${note.number} fue emitida correctamente.` });
+        },
+        error: (error) => Swal.fire({
+          icon: 'error', title: 'La DIAN no aceptó el ajuste',
+          text: error?.error?.message || error?.message || 'Error desconocido'
+        })
+      });
     });
   }
 

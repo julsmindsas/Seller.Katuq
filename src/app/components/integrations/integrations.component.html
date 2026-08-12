@@ -268,7 +268,7 @@
           </div>
         </div>
         <!-- Nombre + ambiente: dos decisiones en una fila, sin tarjeta anidada -->
-        <div class="kx-fila2">
+        <div class="kx-fila2" *ngIf="selectedIntegrationType !== 'dian'">
           <div class="kx-campo">
             <label for="name">
               Nombre de la integración <span class="kx-req">*</span>
@@ -287,7 +287,7 @@
           </div>
 
           <!-- Solo se ofrece si este proveedor realmente guarda el ambiente -->
-          <div class="kx-campo" *ngIf="integrationForm.get('environment')">
+          <div class="kx-campo" *ngIf="integrationForm.get('environment') && selectedIntegrationType !== 'dian'">
             <label>Ambiente</label>
             <div class="kx-radios">
               <button type="button" class="kx-radio"
@@ -315,7 +315,7 @@
         <!-- Encabezado de credenciales. El cifrado es real y verificado:
              /v1/integration/config → IntegrationConfigService.saveConfig →
              encryptSecrets (AES-256-GCM). -->
-        <div class="kx-credhead">
+        <div class="kx-credhead" *ngIf="selectedIntegrationType !== 'dian'">
           <span class="kx-credhead__t">Credenciales de API</span>
           <span class="kx-rulex"></span>
           <span class="kx-credhead__lock">
@@ -1793,6 +1793,223 @@
           </div>
         </ng-container>
 
+        <!-- ===== DIAN DIRECTO - SOFTWARE PROPIO ===== -->
+        <ng-container *ngIf="selectedIntegrationType === 'dian'">
+          <section class="dian-wizard" aria-label="Asistente de configuración DIAN">
+            <div class="dian-wizard__intro">
+              <div class="dian-wizard__icon"><i class="fa fa-file-invoice"></i></div>
+              <div><h4>Preparemos tu facturación electrónica</h4><p>Te acompañamos paso a paso. No necesitas conocimientos de tecnología.</p></div>
+            </div>
+            <div class="dian-wizard__steps">
+              <button type="button" *ngFor="let step of dianSteps" (click)="goToDianStep(step.number)"
+                      [class.is-active]="dianStep === step.number" [class.is-done]="dianStep > step.number"
+                      [disabled]="step.number > dianStep + 1">
+                <span>{{ dianStep > step.number ? '✓' : step.number }}</span>
+                <div><strong>{{ step.title }}</strong><small>{{ step.subtitle }}</small></div>
+              </button>
+            </div>
+          </section>
+          <div class="alert alert-warning mb-3">
+            <i class="fa fa-shield-alt me-2"></i>
+            Esta configuración pertenece solamente al comercio activo. Las claves y el certificado se guardan protegidos.
+          </div>
+          <div class="alert alert-danger" *ngIf="dianStepError"><i class="fa fa-exclamation-circle me-2"></i>{{ dianStepError }}</div>
+
+          <section class="dian-prepare" *ngIf="dianStep === 1">
+            <div><i class="fa fa-id-card"></i><span><strong>RUT actualizado</strong><small>Para confirmar los datos legales</small></span></div>
+            <div><i class="fa fa-key"></i><span><strong>Acceso al portal DIAN</strong><small>Para copiar los códigos</small></span></div>
+            <div><i class="fa fa-certificate"></i><span><strong>Certificado .p12 o .pfx</strong><small>Y la contraseña del archivo</small></span></div>
+          </section>
+
+          <div class="card mb-4" *ngIf="dianStep === 1">
+            <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-server me-2"></i>Ambiente DIAN</h6></div>
+            <div class="card-body">
+              <p class="text-muted">Si es la primera vez, elige pruebas. Usa producción solamente cuando el portal DIAN muestre el comercio como HABILITADO.</p>
+              <div class="dian-environments">
+                <button type="button" [class.is-selected]="integrationForm.get('environment')?.value === 'habilitacion'" (click)="integrationForm.get('environment')?.setValue('habilitacion')">
+                  <i class="fa fa-vial"></i><span><strong>Estoy haciendo las pruebas</strong><small>Es la opción correcta para comenzar.</small></span>
+                </button>
+                <button type="button" [class.is-selected]="integrationForm.get('environment')?.value === 'produccion'" (click)="integrationForm.get('environment')?.setValue('produccion')">
+                  <i class="fa fa-check-circle"></i><span><strong>Ya estoy habilitado</strong><small>Emitiré facturas con efectos fiscales.</small></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4" formGroupName="issuer" *ngIf="dianStep === 1">
+            <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-building me-2"></i>Confirma los datos del comercio</h6></div>
+            <div class="card-body">
+              <p class="text-muted">Ya completamos lo que encontramos en Katuq. Solo compara estos datos con la primera página del RUT.</p>
+              <div class="field-row">
+                <div class="field-col form-group"><label>Razón social *</label><input type="text" class="form-control" formControlName="businessName"></div>
+                <div class="field-col form-group"><label>NIT sin DV *</label><input type="text" class="form-control" formControlName="nit" inputmode="numeric"></div>
+                <div class="field-col form-group"><label>DV</label><input type="text" class="form-control" formControlName="dv" maxlength="1"></div>
+              </div>
+              <div class="field-row">
+                <div class="field-col form-group"><label>Dirección *</label><input type="text" class="form-control" formControlName="address"></div>
+                <div class="field-col form-group dian-municipality-picker">
+                  <label>Ciudad o municipio *</label>
+                  <div class="dian-search-input"><i class="fa fa-search"></i><input type="text" class="form-control" [ngModel]="dianMunicipalitySearch" (input)="searchDianMunicipalities($event)" [ngModelOptions]="{standalone: true}" placeholder="Escribe Bogotá, Medellín, Cali…" autocomplete="off"></div>
+                  <div class="dian-search-results" *ngIf="dianMunicipalityResults.length">
+                    <button type="button" *ngFor="let municipality of dianMunicipalityResults" (click)="selectDianMunicipality(municipality)">
+                      <strong>{{ municipality.nombre }}</strong><span>{{ municipality.departamento }} · código {{ municipality.codigo }}</span>
+                    </button>
+                  </div>
+                  <small class="form-text text-success" *ngIf="integrationForm.get('issuer.municipalityCode')?.value"><i class="fa fa-check-circle me-1"></i>{{ integrationForm.get('issuer.cityName')?.value }} · {{ integrationForm.get('issuer.department')?.value }}</small>
+                </div>
+                <div class="field-col form-group"><label>Correo que aparecerá en la factura</label><input type="email" class="form-control" formControlName="email"></div>
+              </div>
+              <button type="button" class="dian-disclosure" (click)="dianShowFiscalDetails = !dianShowFiscalDetails">
+                <i class="fa" [ngClass]="dianShowFiscalDetails ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                {{ dianShowFiscalDetails ? 'Ocultar datos fiscales adicionales' : 'Mostrar solo si necesito corregir código DANE o responsabilidad fiscal' }}
+              </button>
+              <div class="dian-advanced-panel" *ngIf="dianShowFiscalDetails">
+                <div class="field-row">
+                  <div class="field-col form-group"><label>Código municipio DANE *</label><input type="text" class="form-control" formControlName="municipalityCode" maxlength="5"></div>
+                  <div class="field-col form-group"><label>Ciudad *</label><input type="text" class="form-control" formControlName="cityName"></div>
+                  <div class="field-col form-group"><label>Departamento *</label><input type="text" class="form-control" formControlName="department"></div>
+                </div>
+                <div class="form-group mb-0"><label>Responsabilidad fiscal</label><input type="text" class="form-control" formControlName="responsibilities" placeholder="R-99-PN"><small class="form-text text-muted">Déjalo como está si tu RUT no indica una responsabilidad diferente.</small></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4" formGroupName="numbering" *ngIf="dianStep === 3">
+            <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-list-ol me-2"></i>Numeración autorizada</h6></div>
+            <div class="card-body">
+              <div class="dian-path-help"><i class="fa fa-map-signs"></i><div><strong>En la DIAN abre:</strong><span>Numeración de facturación → Consultar numeración → selecciona el rango asociado a Katuq.</span></div></div>
+              <div class="field-row">
+                <div class="field-col form-group"><label>Número de autorización o resolución *</label><input type="text" class="form-control" formControlName="resolutionNumber" placeholder="Ejemplo: 18764000000000"></div>
+                <div class="field-col form-group"><label>Prefijo de factura *</label><input type="text" class="form-control" formControlName="prefix" placeholder="Ejemplo: SETP o FE"></div>
+              </div>
+              <div class="field-row">
+                <div class="field-col form-group"><label>Primer número autorizado *</label><input type="number" class="form-control" formControlName="from" min="1" (change)="syncDianCurrentFromRange()"></div>
+                <div class="field-col form-group"><label>Último número autorizado *</label><input type="number" class="form-control" formControlName="to" min="1"></div>
+                <div class="field-col form-group"><label>Fecha inicial *</label><input type="date" class="form-control" formControlName="validFrom"></div>
+                <div class="field-col form-group"><label>Fecha final *</label><input type="date" class="form-control" formControlName="validTo"></div>
+              </div>
+              <button type="button" class="dian-disclosure" (click)="dianShowAdvancedNumbering = !dianShowAdvancedNumbering">
+                <i class="fa" [ngClass]="dianShowAdvancedNumbering ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                {{ dianShowAdvancedNumbering ? 'Ocultar opciones avanzadas' : 'Opciones avanzadas: consecutivo actual y prefijos de notas' }}
+              </button>
+              <div class="dian-advanced-panel" *ngIf="dianShowAdvancedNumbering">
+                <div class="form-group mb-0"><label>Siguiente factura que emitirá Katuq *</label><input type="number" class="form-control" formControlName="current" min="1"><small class="form-text text-muted">Para una configuración nueva usamos automáticamente el primer número autorizado.</small></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4 dian-secondary-card" formGroupName="noteNumbering" *ngIf="dianStep === 3 && dianShowAdvancedNumbering">
+            <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-file-alt me-2"></i>Prefijos internos para notas</h6></div>
+            <div class="card-body">
+              <p class="text-muted">Normalmente no necesitas cambiar estos valores. Katuq los usa para llevar el consecutivo de las notas.</p>
+              <div class="field-row">
+                <div class="field-col form-group"><label>Prefijo nota crédito</label><input type="text" class="form-control" formControlName="creditPrefix"></div>
+                <div class="field-col form-group"><label>Siguiente NC</label><input type="number" class="form-control" formControlName="creditCurrent" min="1"></div>
+                <div class="field-col form-group"><label>Prefijo nota débito</label><input type="text" class="form-control" formControlName="debitPrefix"></div>
+                <div class="field-col form-group"><label>Siguiente ND</label><input type="number" class="form-control" formControlName="debitCurrent" min="1"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4" *ngIf="dianStep === 2">
+            <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-key me-2"></i>Copia los datos que entrega la DIAN</h6></div>
+            <div class="card-body">
+              <div class="dian-path-help"><i class="fa fa-map-signs"></i><div><strong>En el portal de habilitación abre:</strong><span>Participantes → Facturador → Configurar modos de operación → Software propio.</span></div></div>
+              <label class="dian-reveal"><input type="checkbox" [(ngModel)]="dianRevealSecrets" [ngModelOptions]="{standalone: true}"><span>Mostrar los códigos mientras los copio para poder revisarlos</span></label>
+              <div class="field-row">
+                <div class="field-col form-group"><label>Software ID *</label><input [type]="dianRevealSecrets ? 'text' : 'password'" class="form-control" formControlName="softwareId" autocomplete="new-password"><small class="form-text text-muted">Copia el valor completo, sin espacios antes o después.</small></div>
+                <div class="field-col form-group"><label>PIN del software *</label><input [type]="dianRevealSecrets ? 'text' : 'password'" class="form-control" formControlName="softwarePin" autocomplete="new-password"><small class="form-text text-muted">Es el PIN que escribiste al crear el software.</small></div>
+                <div class="field-col form-group" *ngIf="integrationForm.get('environment')?.value === 'habilitacion'"><label>TestSetId *</label><input [type]="dianRevealSecrets ? 'text' : 'password'" class="form-control" formControlName="testSetId" autocomplete="new-password"><small class="form-text text-muted">Aparece en la fila del grupo de pruebas.</small></div>
+              </div>
+              <div class="field-row">
+                <div class="field-col form-group"><label>Clave técnica del rango *</label><input [type]="dianRevealSecrets ? 'text' : 'password'" class="form-control" formControlName="technicalKey" autocomplete="new-password"><small class="form-text text-muted">La encuentras en el detalle del rango de numeración, no es la contraseña de la DIAN.</small></div>
+                <div class="field-col form-group"><label>Certificado de firma *</label><label class="dian-file-picker"><input type="file" accept=".p12,.pfx" (change)="onDianCertificateSelected($event)"><i class="fa" [ngClass]="editingIntegrationId && !dianCertificateFileName ? 'fa-lock' : 'fa-upload'"></i><span><strong>{{ dianCertificateFileName || (editingIntegrationId ? 'Certificado guardado · cambiar solo si venció' : 'Seleccionar archivo .p12 o .pfx') }}</strong><small>{{ integrationForm.get('certificateP12Base64')?.value || editingIntegrationId ? 'El certificado está protegido' : 'Busca el archivo entregado por tu certificador' }}</small></span></label></div>
+                <div class="field-col form-group"><label>Contraseña del certificado *</label><input [type]="dianRevealSecrets ? 'text' : 'password'" class="form-control" formControlName="certificatePassword" autocomplete="new-password"><small class="form-text text-muted">Es la contraseña entregada junto con el certificado.</small></div>
+              </div>
+              <div class="form-group" *ngIf="integrationForm.get('environment')?.value === 'produccion'">
+                <label><input type="checkbox" formControlName="enableAutoInvoicing"> Activar facturación automática al crear ventas</label>
+              </div>
+              <div class="form-group">
+                <label><input type="checkbox" formControlName="sendEmail"> Enviar PDF, XML y AttachedDocument al comprador después de la aceptación DIAN</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4" *ngIf="dianStep === 5 && integrationForm.get('environment')?.value === 'habilitacion'">
+            <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-vial me-2"></i>Set oficial de habilitación</h6></div>
+            <div class="card-body">
+              <div class="alert alert-info">
+                Elige ocho ventas de prueba diferentes. Katuq preparará automáticamente las facturas y notas que pide la DIAN.
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong>Selecciona 8 ventas</strong>
+                <span class="badge" [ngClass]="dianSelectedOrderIds.length === 8 ? 'badge-success' : 'badge-primary'">{{ dianSelectedOrderIds.length }} de 8</span>
+              </div>
+              <div class="text-center py-4" *ngIf="dianOrdersLoading"><i class="fa fa-spinner fa-spin me-2"></i>Buscando ventas recientes…</div>
+              <div class="dian-order-list" *ngIf="!dianOrdersLoading && dianTestOrders.length">
+                <button type="button" class="dian-order" *ngFor="let order of dianTestOrders"
+                        [class.is-selected]="isDianTestOrderSelected(order)" (click)="toggleDianTestOrder(order)">
+                  <span class="dian-order__check"><i class="fa" [ngClass]="isDianTestOrderSelected(order) ? 'fa-check' : 'fa-plus'"></i></span>
+                  <span><strong>{{ order.nroPedido || order.referencia || 'Venta' }}</strong><small>{{ order.cliente?.nombres_completos || order.facturacion?.nombres || 'Cliente de prueba' }}</small></span>
+                  <b>{{ (order.totalPedididoConDescuento || order.subtotal || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}</b>
+                </button>
+              </div>
+              <div class="alert alert-light" *ngIf="!dianOrdersLoading && !dianTestOrders.length">No encontramos ventas disponibles. Crea ventas de prueba con cliente, documento y productos, y luego pulsa “Volver a buscar”.</div>
+              <button type="button" class="btn btn-link px-0 d-block mb-2" [disabled]="dianOrdersLoading" (click)="loadDianTestOrders()"><i class="fa fa-refresh me-1"></i>Volver a buscar ventas</button>
+              <button type="button" class="btn btn-warning me-2" [disabled]="dianHabilitationLoading || dianSelectedOrderIds.length !== 8" (click)="submitDianHabilitation()">
+                <i class="fa fa-paper-plane me-1"></i>{{ dianHabilitationLoading ? 'Procesando...' : 'Enviar set oficial' }}
+              </button>
+              <hr>
+              <div class="field-row align-items-end">
+                <div class="field-col form-group mb-0">
+                  <label>ZipKey de la DIAN</label>
+                  <input type="text" class="form-control" [(ngModel)]="dianZipKey" [ngModelOptions]="{standalone: true}" placeholder="ZipKey devuelto por SendTestSetAsync">
+                </div>
+                <div class="field-col form-group mb-0">
+                  <button type="button" class="btn btn-outline-primary" [disabled]="dianHabilitationLoading || !dianZipKey" (click)="checkDianHabilitationStatus()">
+                    <i class="fa fa-search me-1"></i>Consultar estado
+                  </button>
+                </div>
+              </div>
+              <div class="alert mt-3 mb-0" *ngIf="dianHabilitationStatus"
+                   [ngClass]="dianHabilitationStatus?.isValid ? 'alert-success' : 'alert-warning'">
+                <strong>{{ dianHabilitationStatus?.isValid ? 'ACEPTADO' : 'PENDIENTE O RECHAZADO' }}</strong>
+                <div *ngIf="dianHabilitationStatus?.statusDescription">{{ dianHabilitationStatus.statusDescription }}</div>
+                <ul class="mb-0" *ngIf="dianHabilitationStatus?.errorMessages?.length">
+                  <li *ngFor="let message of dianHabilitationStatus.errorMessages">{{ message }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4" *ngIf="dianStep === 5 && integrationForm.get('environment')?.value === 'produccion'">
+            <div class="card-body text-center py-4">
+              <i class="fa fa-check-circle text-success fa-3x mb-3"></i>
+              <h5>Configuración de producción guardada</h5>
+              <p class="text-muted">Ya puedes cerrar este asistente. Recomendamos emitir primero una factura controlada y confirmar su estado en la DIAN.</p>
+            </div>
+          </div>
+
+          <div class="card mb-4 dian-review" *ngIf="dianStep === 4">
+            <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-check me-2"></i>Revisa antes de guardar</h6></div>
+            <div class="card-body">
+              <div class="dian-review__row"><span>Comercio</span><strong>{{ integrationForm.get('issuer.businessName')?.value }}</strong></div>
+              <div class="dian-review__row"><span>NIT</span><strong>{{ integrationForm.get('issuer.nit')?.value }}-{{ integrationForm.get('issuer.dv')?.value }}</strong></div>
+              <div class="dian-review__row"><span>Ambiente</span><strong>{{ integrationForm.get('environment')?.value === 'habilitacion' ? 'Pruebas de habilitación' : 'Producción real' }}</strong></div>
+              <div class="dian-review__row"><span>Próxima factura</span><strong>{{ integrationForm.get('numbering.prefix')?.value }}{{ integrationForm.get('numbering.current')?.value }}</strong></div>
+              <div class="dian-review__row"><span>Certificado</span><strong class="text-success"><i class="fa fa-lock me-1"></i>{{ integrationForm.get('certificateP12Base64')?.value ? 'Cargado y protegido' : 'Se conserva el certificado guardado' }}</strong></div>
+              <div class="alert alert-warning mt-3 mb-0" *ngIf="integrationForm.get('environment')?.value === 'produccion'">Las facturas de este ambiente tienen efectos fiscales. Verifica que el comercio ya figure como HABILITADO en la DIAN.</div>
+            </div>
+          </div>
+
+          <div class="dian-wizard__nav">
+            <button type="button" class="btn btn-outline-secondary" *ngIf="dianStep > 1 && dianStep < 5" (click)="previousDianStep()"><i class="fa fa-arrow-left me-1"></i>Anterior</button>
+            <span class="flex-grow-1"></span>
+            <button type="button" class="btn btn-primary" *ngIf="dianStep < 4" (click)="nextDianStep()">Continuar<i class="fa fa-arrow-right ms-1"></i></button>
+            <button type="button" class="btn btn-success" *ngIf="dianStep === 5" (click)="finishDianSetup()"><i class="fa fa-check me-1"></i>Terminar</button>
+          </div>
+        </ng-container>
+
         <!-- ===== SIIGO - SOFTWARE CONTABLE COLOMBIANO ===== -->
         <ng-container *ngIf="selectedIntegrationType === 'siigo'">
           <!-- Credenciales Siigo -->
@@ -2812,7 +3029,7 @@
         </div>
 
         <!-- Probar antes de guardar, no después -->
-        <div class="kx-prueba" [ngClass]="'kx-prueba--' + pruebaConexion">
+        <div class="kx-prueba" *ngIf="selectedIntegrationType !== 'dian'" [ngClass]="'kx-prueba--' + pruebaConexion">
           <span class="kx-prueba__icon">
             <i class="fa" [ngClass]="pruebaConexion === 'ok' ? 'fa-check' : (pruebaConexion === 'error' ? 'fa-exclamation-triangle' : 'fa-bolt')"></i>
           </span>
@@ -2858,17 +3075,19 @@
         <!-- Form Actions -->
         <div class="kx-pie kx-pie--form">
           <span class="kx-pie__hint">
-            {{ pruebaConexion === 'ok' ? 'Conexión verificada · lista para guardar' : 'Las llaves se guardan cifradas' }}
+            <ng-container *ngIf="selectedIntegrationType === 'dian'">Tus datos se guardan cifrados y separados para este comercio</ng-container>
+            <ng-container *ngIf="selectedIntegrationType !== 'dian'">{{ pruebaConexion === 'ok' ? 'Conexión verificada · lista para guardar' : 'Las llaves se guardan cifradas' }}</ng-container>
           </span>
           <div class="kx-pie__acc">
-            <button type="button" class="kx-b kx-b--suave" *ngIf="!editingIntegrationId" (click)="backToSelection()">
+            <button type="button" class="kx-b kx-b--suave" *ngIf="!editingIntegrationId && !dianDirectMode" (click)="backToSelection()">
               <i class="fa fa-arrow-left"></i> Atrás
             </button>
-            <button type="button" class="kx-b kx-b--suave" (click)="cancel()">Cancelar</button>
-            <button type="submit" class="kx-b kx-b--guardar"
+            <button type="button" class="kx-b kx-b--suave" *ngIf="!dianDirectMode" (click)="cancel()">Cancelar</button>
+            <button type="button" class="kx-b kx-b--suave" *ngIf="dianDirectMode" (click)="exitDianSetup()"><i class="fa fa-arrow-left"></i> Volver a facturación</button>
+            <button type="submit" class="kx-b kx-b--guardar" *ngIf="selectedIntegrationType !== 'dian' || dianStep === 4"
                     [disabled]="integrationForm.invalid || isSaving || isLoadingEdit">
               <i class="fa" [ngClass]="(isSaving || isLoadingEdit) ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-              {{ isLoadingEdit ? 'Cargando datos…' : isSaving ? 'Guardando…' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar y activar') }}
+              {{ isLoadingEdit ? 'Cargando datos…' : isSaving ? 'Guardando…' : (selectedIntegrationType === 'dian' ? 'Guardar y continuar' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar y activar')) }}
             </button>
           </div>
         </div>
@@ -2876,7 +3095,7 @@
     </div>
 
     <!-- Solo mostrar la lista de integraciones cuando NO está en modo modal -->
-    <div *ngIf="savedIntegrations.length > 0 && !isModalMode" class="card">
+    <div *ngIf="savedIntegrations.length > 0 && !isModalMode && !dianDirectMode" class="card">
       <div class="card-header">
         <h3><i class="fa fa-list"></i> Integraciones configuradas</h3>
         <div class="header-actions">

@@ -169,6 +169,13 @@ export class NavService implements OnDestroy {
     const isSuperAdmin = user.rol === "Super Administrador";
     const isJulsmindAdmin =
       user.rol === "Administrador" && user.company === "Julsmind";
+    // El centro DIAN es operativo y debe estar disponible para quien ya
+    // administra integraciones o consulta la cartera del comercio.
+    const canUseDianWorkspace =
+      isSuperAdmin ||
+      isJulsmindAdmin ||
+      authorizedPaths.includes("integrations") ||
+      authorizedPaths.includes("cartera");
 
     // Verificar si dropshipping está habilitado para filtros adicionales
     const isDropshippingEnabled = this.isDropshippingEnabled();
@@ -204,7 +211,8 @@ export class NavService implements OnDestroy {
           return (
             (!child.isOnlySuperAdministrador || isSuperAdmin) &&
             (!child.isOnlyAdmin || isJulsmindAdmin) &&
-            authorizedPaths.includes(child.path)
+            (authorizedPaths.includes(child.path) ||
+              (child.path === "facturacion-electronica" && canUseDianWorkspace))
           );
         });
 
@@ -394,6 +402,14 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
+        {
+          path: "facturacion-electronica",
+          title: "Facturación electrónica",
+          type: "link",
+          icon: "file-text",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
+        },
         { path: "tesoreria", title: "Tesorería", type: "link", icon: "check-square" },
         {
           path: "cartera",

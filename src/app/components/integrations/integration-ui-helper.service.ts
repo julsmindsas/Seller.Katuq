@@ -105,7 +105,8 @@ export class IntegrationUIHelperService {
     salesforce: IntegrationCategory.CRM,
     zoho_crm: IntegrationCategory.CRM,
     quickbooks: IntegrationCategory.ACCOUNTING,
-    siigo: IntegrationCategory.ACCOUNTING
+    siigo: IntegrationCategory.ACCOUNTING,
+    dian: IntegrationCategory.ACCOUNTING
   };
 
   // Integration features and documentation
@@ -123,7 +124,8 @@ export class IntegrationUIHelperService {
     mailchimp: ['Email marketing', 'Automatización', 'Segmentación'],
     salesforce: ['Lead management', 'Pipeline de ventas', 'Reportes'],
     quickbooks: ['Facturación automática', 'Conciliación', 'Reportes fiscales'],
-    siigo: ['Facturación electrónica', 'Inventarios', 'Cartera']
+    siigo: ['Facturación electrónica', 'Inventarios', 'Cartera'],
+    dian: ['Software propio', 'Factura electrónica', 'Notas crédito y débito']
   };
 
   private documentationUrls = {
@@ -140,7 +142,8 @@ export class IntegrationUIHelperService {
     mailchimp: 'https://mailchimp.com/developer/',
     salesforce: 'https://developer.salesforce.com/',
     quickbooks: 'https://developer.intuit.com/app/developer/qbo/docs/get-started',
-    siigo: 'https://siigoapi.docs.apiary.io/'
+    siigo: 'https://siigoapi.docs.apiary.io/',
+    dian: 'https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/documentacion-tecnica/'
   };
 
   // Integration type display names
@@ -168,6 +171,7 @@ export class IntegrationUIHelperService {
     zoho_crm: 'Zoho CRM',
     quickbooks: 'QuickBooks',
     siigo: 'Siigo',
+    dian: 'DIAN directo',
     slack: 'Slack',
     zapier: 'Zapier',
     whatsapp_kapso: 'WhatsApp Business'
@@ -198,6 +202,7 @@ export class IntegrationUIHelperService {
     zoho_crm: 'fa-address-book',
     quickbooks: 'fa-calculator',
     siigo: 'fa-file-invoice',
+    dian: 'fa-file-signature',
     slack: 'fa-slack',
     zapier: 'fa-link',
     whatsapp_kapso: 'fa-whatsapp'

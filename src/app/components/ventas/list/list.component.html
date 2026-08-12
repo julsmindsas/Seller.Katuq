@@ -526,6 +526,26 @@
                                                                 <span class="pedido-action__icon ico-invoice"><i class="pi pi-file-export"></i></span>
                                                                 <span class="pedido-action__txt"><b>{{ 'Facturar' | translate }}</b><small>{{ 'Generar factura electrónica' | translate }}</small></span>
                                                             </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
+                                                                    (click)="consultarEstadoDian(pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-invoice"><i class="pi pi-search"></i></span>
+                                                                <span class="pedido-action__txt"><b>Estado DIAN</b><small>Consultar por CUFE</small></span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
+                                                                    (click)="descargarArtefactoDian(pedidoDetalle, 'pdf')">
+                                                                <span class="pedido-action__icon ico-pdf"><i class="pi pi-file-pdf"></i></span>
+                                                                <span class="pedido-action__txt"><b>PDF DIAN</b><small>Descargar representación</small></span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
+                                                                    (click)="crearNotaCreditoDian(pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-not"><i class="pi pi-replay"></i></span>
+                                                                <span class="pedido-action__txt"><b>Nota crédito</b><small>Anulación total DIAN</small></span>
+                                                            </button>
+                                                            <button type="button" class="pedido-action" *ngIf="!isFromProduction && esFacturaDian(pedidoDetalle)"
+                                                                    (click)="crearAjusteDian(pedidoDetalle)">
+                                                                <span class="pedido-action__icon ico-not"><i class="pi pi-pencil"></i></span>
+                                                                <span class="pedido-action__txt"><b>Ajuste NC / ND</b><small>Crédito o débito parcial</small></span>
+                                                            </button>
                                                             <button type="button" class="pedido-action" *ngIf="!isFromProduction && !isPedidoPOS(pedidoDetalle)" (click)="editNotas(notasModal, pedidoDetalle)">
                                                                 <span class="pedido-action__icon ico-not"><i class="fa fa-sticky-note"></i></span>
                                                                 <span class="pedido-action__txt"><b>{{ 'Editar Notas' | translate }}</b><small>{{ 'Agregar o modificar' | translate }}</small></span>
