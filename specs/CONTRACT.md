@@ -3746,3 +3746,20 @@ Mecanismo confirmado en el código: `nodeExecutor` hace `ctx.params = triggerNod
 - **La "tienda" no vende.** Hay tipo `tienda` y contador de pedidos, pero no existe bloque de carrito ni checkout, y el asistente nunca manda el tipo: todo lo que se crea nace como landing. Es decisión de producto — o entra la compra, o se cambia el texto que la promete.
 - **`POST /v1/productos/by-ids` sigue sin filtrar por company** (ya anotado en D-173). Ahora lo usa también la vista previa del editor. La página publicada sí filtra, así que al público no se le escapa nada.
 - **Numeración del contrato repetida por sesiones paralelas**: D-169 y D-173 aparecen dos veces con contenidos distintos. No se renumeró aquí para no pisar la bitácora de otra sesión.
+
+## D-182 (2026-08-12) — El builder estaba desplegado y funcionando, pero invisible en el menú
+
+**Hallazgo: un módulo nuevo no aparece por existir en el código.** El sidebar filtra cada entrada contra las rutas autorizadas del rol —`nav.service.ts` → `filterMenuItemsByAuthorization()` compara contra el campo `menus` de la colección `roles`, que viaja al frontend en el login—, y **ninguno de los 100 roles de producción tenía `sitios`**. El builder llevaba desde ayer publicado, con su página sirviendo en subdominio, y nadie podía llegar a él desde el menú. El filtro además no tiene salvaguarda para lista vacía: si `menus` no llegara, el menú entero quedaría en blanco.
+
+Corregido con `scripts/backfill-menu-sitios.js` (dry-run por defecto, `--apply` para escribir, idempotente, write-set acotado al array `menus`), corrido sobre los **73 roles de administrador** de las 100 fichas: los vendedores no lo ven, el dueño del negocio sí. Se ve al volver a iniciar sesión, porque el menú viaja en el login. Detalle que costó encontrar: el nombre del rol vive en el campo `rol`, no en `nombre` ni `name`, que vienen vacíos.
+
+**Regla que queda**: toda pantalla nueva con entrada de menú necesita su backfill de roles, o se entrega muerta sin que nadie se entere.
+
+**Dos huecos más, cerrados el mismo día:**
+
+1. **El primer visitante de cada página esperaba ~4 segundos.** El certificado del subdominio se emitía cuando entraba el primero, no al publicar — justo el peor momento, porque el comerciante publica y comparte el link de inmediato. Ahora publicar abre y cierra una conexión TLS contra el subdominio, que es lo que dispara la emisión. Va después de marcar publicado (el servidor de páginas pregunta si el sitio existe antes de pedir el certificado) y no se espera el resultado: si falla, el primer visitante lo emite como antes.
+2. **Los contactos llegaban sin saber de qué campaña venían.** El prospecto guarda ahora `campana` con `utm_*`, `gclid`, `fbclid` y `referrer`, capturados en `sessionStorage` al cargar la página para que sobrevivan a una recarga o a volver desde WhatsApp. El backend acepta solo esas claves y recorta cada valor.
+
+**Confirmado con Daniel: el carrito es la fase 2.** La "tienda" se va a construir de verdad; no se cambia el texto que la promete.
+
+**Queda abierto para esa fase:** no hay medición para pauta —y la política de seguridad de la página bloquea scripts externos, así que habrá que abrirla a propósito para Google Ads o Meta—, falta SEO estructurado (robots, sitemap, datos estructurados de producto y preguntas frecuentes), y hay un tope semanal de certificados por dominio en Let's Encrypt que conviene resolver antes de dar de alta comercios en masa, con exención o con certificado comodín.
