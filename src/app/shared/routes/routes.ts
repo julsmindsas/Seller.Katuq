@@ -241,6 +241,15 @@ export const content: Routes = [
     data: { title: "Cartera (CxC)" },
   },
   {
+    path: "facturacion-electronica",
+    loadChildren: () =>
+      import("../../components/facturacion-electronica/facturacion-electronica.module").then(
+        (m) => m.FacturacionElectronicaModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Facturación electrónica" },
+  },
+  {
     path: "soporte",
     loadChildren: () =>
       import("../../components/soporte/soporte.module").then(

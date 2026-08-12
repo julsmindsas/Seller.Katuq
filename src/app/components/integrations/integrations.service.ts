@@ -122,17 +122,28 @@ export class IntegrationsService {
       return directCompanyId;
     }
 
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        if (user?.company) return String(user.company);
+      } catch (_) { /* se intenta con currentCompany */ }
+    }
+
     // Si no existe, extraerlo del objeto currentCompany
     const currentCompany = localStorage.getItem("currentCompany");
     if (currentCompany) {
       try {
         const company = JSON.parse(currentCompany);
         // Intentar diferentes campos que pueden contener el ID de la empresa
-        const id = company.nomComercial ||
+        const id = company.cd ||
+                   company.id ||
+                   company.companyId ||
+                   company.nomComercial ||
                    company.nombreComercio ||
                    company.razonSocial ||
-                   company.nombre ||
-                   "default_company";
+                   company.nombre;
+        if (!id) throw new Error('La empresa activa no tiene identificador.');
         console.log('🆔 [getCurrentCompanyId] Extracted from company object:', id);
         return id;
       } catch (error) {
@@ -140,8 +151,7 @@ export class IntegrationsService {
       }
     }
 
-    console.warn('⚠️ [getCurrentCompanyId] No company found, using default');
-    return "default_company";
+    throw new Error('No hay una empresa activa para configurar integraciones.');
   }
 
   /**
@@ -775,6 +785,7 @@ export class IntegrationsService {
       shopify:           'Shopify',
       woocommerce:       'WooCommerce',
       magento:           'Magento',
+      dian:              'DIAN directo',
       siigo:             'Siigo',
       world_office:      'World Office',
       quickbooks:        'QuickBooks',
@@ -824,6 +835,7 @@ export class IntegrationsService {
       case "zoho_crm":
         return IntegrationCategory.CRM;
       case "quickbooks":
+      case "dian":
       case "siigo":
       case "world_office":
         return IntegrationCategory.ACCOUNTING;
@@ -1079,6 +1091,58 @@ export class IntegrationsService {
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order`,
       body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /** Ejecuta el set oficial DIAN (8 facturas, 1 NC y 1 ND). */
+  submitDianHabilitationSet(orderIds: string[]): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/dian/habilitation/test-set`,
+      { orderIds },
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  getDianHabilitationStatus(zipKey: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/dian/habilitation/status/${encodeURIComponent(zipKey)}`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  createDianNote(noteType: 'credit' | 'debit', payload: {
+    orderId: string;
+    reference: { number: string; cufe: string; issueDate: string };
+    correction: { code: string; description: string };
+    adjustment?: { description: string; baseAmount: number; taxRate: number };
+  }): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/dian/notes/${noteType}`,
+      payload,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  getDianDocumentStatus(trackId: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/dian/documents/${encodeURIComponent(trackId)}/status`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  downloadDianArtifact(documentNumber: string, kind: 'xml' | 'pdf' | 'applicationResponse' | 'attachedDocument'): Observable<Blob> {
+    return this.http.get(
+      `${environment.urlApi}/v1/accounting/dian/documents/${encodeURIComponent(documentNumber)}/artifacts/${kind}`,
+      { headers: this.getApiHeaders(), responseType: 'blob' }
+    );
+  }
+
+  listDianDocuments(status?: string, limit = 50): Observable<any> {
+    let params = `limit=${limit}`;
+    if (status) params += `&status=${encodeURIComponent(status)}`;
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/dian/invoices?${params}`,
       { headers: this.getApiHeaders() }
     );
   }
@@ -1576,6 +1640,13 @@ export class IntegrationsService {
         },
       ],
       [IntegrationCategory.ACCOUNTING]: [
+        {
+          id: "dian",
+          name: "DIAN directo",
+          description: "Facturación electrónica con software propio, sin intermediarios contables.",
+          logo: "assets/images/logos/dian.svg",
+          active: true,
+        },
         {
           id: "quickbooks",
           name: "QuickBooks",

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Tutorial paso a paso para obtener de la DIAN lo necesario para facturar electrónicamente con software propio.">
+  <title>DIAN | Tutorial para habilitar software propio</title>
+  <style>
+    :root { --ink:#172033; --muted:#586276; --line:#dce2ea; --paper:#f6f8fb; --blue:#1463c3; --green:#147a50; --amber:#996000; --red:#a52b2b; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.5 Arial, sans-serif; }
+    header { background:#102c52; color:#fff; padding:44px 20px; } .wrap { max-width:960px; margin:auto; }
+    h1 { margin:0 0 8px; font-size:clamp(28px,5vw,42px); } h2 { font-size:22px; margin:0 0 7px; } p { margin:0; }
+    .subtitle { max-width:720px; opacity:.88; } main { padding:28px 20px 50px; }
+    .alert { background:#fff7e8; border-left:4px solid #d79016; border-radius:5px; padding:15px 17px; margin-bottom:22px; color:#5c3b00; }
+    .alert strong { color:#392300; } .list { display:grid; gap:12px; } .item { background:#fff; border:1px solid var(--line); border-radius:8px; padding:17px; display:grid; grid-template-columns:auto 1fr; gap:14px; align-items:start; box-shadow:0 1px 2px #17203308; }
+    .item input { width:21px; height:21px; margin:3px 0 0; accent-color:var(--green); } .item h2 { font-size:18px; } .item p { color:var(--muted); } .how { margin:10px 0 0; padding:11px 13px; background:#f5f8fd; border-left:3px solid #7da8df; border-radius:3px; color:#344154; font-size:14px; } .how b { color:#17385f; }
+    .tag { display:inline-block; margin-top:9px; border-radius:20px; padding:3px 9px; font-size:12px; font-weight:700; background:#e9f2ff; color:#15549f; } .tag.done { background:#e7f6ee; color:#12623f; } .tag.secret { background:#fff0ed; color:var(--red); }
+    .excluded { margin-top:24px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:20px; } .excluded ul { margin:8px 0 0; padding-left:20px; color:var(--muted); }
+    .sources { margin-top:24px; border-top:1px solid var(--line); padding-top:20px; color:var(--muted); font-size:14px; } a { color:var(--blue); font-weight:700; } footer { margin-top:20px; font-size:13px; color:var(--muted); }
+    @media print { body { background:#fff; } header { padding:20px; } main { padding:20px; } .item { break-inside:avoid; box-shadow:none; } }
+  </style>
+</head>
+<body>
+  <header><div class="wrap"><h1>Tutorial DIAN: habilitar Software propio</h1><p class="subtitle">Guía para que la empresa emisora obtenga los accesos, datos y autorizaciones necesarios. No incluye desarrollo ni contabilidad de Katuq.</p></div></header>
+  <main class="wrap">
+    <div class="alert"><strong>Antes de empezar:</strong> tenga a mano el RUT y acceso al correo de la empresa o representante legal. La DIAN envía allí el token. Para software propio, se deben aprobar 8 facturas, 1 nota débito y 1 nota crédito.</div>
+    <section class="list" aria-label="Datos y trámites DIAN">
+      <label class="item"><input type="checkbox"><div><h2>Paso 1. Revisar RUT y correo</h2><p>El RUT debe tener datos correctos y un correo al que la empresa o representante legal pueda entrar.</p><div class="how"><b>Qué hacer:</b> ingrese a MUISCA, descargue el RUT y confirme razón social, NIT y correo. Si el correo no sirve, actualícelo antes de continuar.</div><span class="tag">PREPARACIÓN</span></div></label>
+      <label class="item"><input type="checkbox"><div><h2>Paso 2. Entrar a Habilitación y pedir token</h2><p>La DIAN permite el acceso con un token que llega al correo registrado en el RUT.</p><div class="how"><b>Qué hacer:</b> entre al portal de Habilitación, seleccione Empresa o Persona natural, solicite el token y cópielo desde el correo. Si DIAN solicita volver a entrar después de registrarse, pida un token nuevo.</div><span class="tag">DIAN · HABILITACIÓN</span></div></label>
+      <label class="item"><input type="checkbox"><div><h2>Paso 3. Registrarse como Facturador</h2><p>El emisor debe formalizar su inscripción antes de configurar el software.</p><div class="how"><b>Dónde hacer clic:</b> Participantes → Facturador → revisar datos → Registrar → confirmar. Registre también el correo para recibir facturas electrónicas.</div><span class="tag">DIAN · HABILITACIÓN</span></div></label>
+      <label class="item"><input type="checkbox"><div><h2>Paso 4. Agregar “Software propio”</h2><p>Este es el modo de operación correcto para que Katuq facture directo ante DIAN, sin Siigo ni World Office como intermediarios.</p><div class="how"><b>Dónde hacer clic:</b> Participantes → Facturador → Configurar modos de operación → agregar “Software propio” (también puede aparecer como Desarrollo propio).</div><span class="tag">DIAN · HABILITACIÓN</span></div></label>
+      <label class="item"><input type="checkbox"><div><h2>Paso 5. Guardar los datos de pruebas</h2><p>El portal genera o muestra los identificadores con los que Katuq hará la conexión de habilitación.</p><div class="how"><b>Guardar y cargar en Katuq por canal seguro:</b> Software ID, PIN, TestSetId, prefijo/rango y clave técnica de prueba. La clave técnica se usa para calcular el CUFE. No enviarlos por correo abierto, WhatsApp ni Git.</div><span class="tag secret">DATO RESTRINGIDO</span></div></label>
+      <label class="item"><input type="checkbox"><div><h2>Paso 6. Entregar certificado digital</h2><p>DIAN exige firmar los documentos de prueba; para ello Katuq necesita el certificado del emisor.</p><div class="how"><b>Importante:</b> el certificado .p12 y su contraseña no los expide DIAN para software propio: se adquieren con una entidad certificadora. Compártalos solo por canal seguro.</div><span class="tag secret">REQUISITO EXTERNO</span></div></label>
+      <label class="item"><input type="checkbox"><div><h2>Paso 7. Superar el set de pruebas</h2><p>Katuq envía los documentos al ambiente de habilitación usando el TestSetId.</p><div class="how"><b>Resultado esperado:</b> DIAN debe aceptar, sin errores y de forma consecutiva, 8 facturas electrónicas, 1 nota débito y 1 nota crédito. Después revise que el estado cambie de REGISTRADO a HABILITADO.</div><span class="tag done">RESULTADO DIAN</span></div></label>
+      <label class="item"><input type="checkbox"><div><h2>Paso 8. Informar fecha de inicio</h2><p>Solo después de quedar HABILITADO se informa la fecha en que se empieza a facturar en producción.</p><div class="how"><b>Qué hacer:</b> en el portal Habilitación acepte o registre la fecha solicitada. La DIAN actualiza el RUT con la responsabilidad 52 desde esa fecha.</div><span class="tag">DIAN · HABILITACIÓN</span></div></label>
+      <label class="item"><input type="checkbox"><div><h2>Paso 9. Solicitar numeración de producción y contingencia</h2><p>Sin una autorización de numeración no se deben emitir facturas reales.</p><div class="how"><b>Qué hacer en MUISCA:</b> solicitar autorización para Factura Electrónica de venta y, adicionalmente, Factura de talonario o papel para contingencias. Guardar resolución, prefijo, rango, vigencia y consecutivo inicial.</div><span class="tag">DIAN · MUISCA</span></div></label>
+      <label class="item"><input type="checkbox"><div><h2>Paso 10. Asociar prefijos y entregar datos productivos</h2><p>El último paso vincula los rangos autorizados al software del emisor.</p><div class="how"><b>Dónde hacer clic:</b> espere el tiempo que indique DIAN y entre a Facturando Electrónicamente → Participantes → Asociar prefijos. Envíe a Katuq resolución, prefijo, rango, vigencia y clave técnica por canal seguro.</div><span class="tag">DIAN · PRODUCCIÓN</span></div></label>
+    </section>
+    <section class="excluded"><h2>Antes de marcar el tutorial como terminado</h2><ul><li>Conserve evidencia de estado HABILITADO, autorizaciones de numeración y asociación de prefijos.</li><li>La primera factura de producción debe ser una prueba controlada y solo se considera válida cuando DIAN responda satisfactoriamente.</li><li>Desarrollo, firma XML, conexión SOAP, PDF, correo al comprador y módulo contable corresponden a Katuq, no a DIAN.</li></ul></section>
+    <section class="sources"><strong>Fuentes oficiales consultadas el 6 de agosto de 2026.</strong><br><a href="https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/requerimientos-para-ser-facturador-electronico/" target="_blank" rel="noopener">Requerimientos para ser facturador electrónico</a> · <a href="https://www.dian.gov.co/impuestos/factura-electronica/como-hacerlo/Paginas/ser-facturador-electronico.aspx" target="_blank" rel="noopener">Proceso de registro y habilitación</a></section>
+    <footer>Documento de preparación. La empresa emisora debe validar su caso tributario y conservar los soportes oficiales.</footer>
+  </main>
+  <script>
+    (function () {
+      var key = 'katuq-dian-solo-requisitos-v1'; var checks = Array.prototype.slice.call(document.querySelectorAll('input[type="checkbox"]'));
+      var saved = {}; try { saved = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
+      checks.forEach(function (check, index) { check.checked = Boolean(saved[index]); check.addEventListener('change', function () { saved[index] = check.checked; localStorage.setItem(key, JSON.stringify(saved)); }); });
+    }());
+  </script>
+</body>
+</html>
