@@ -155,6 +155,43 @@
                 <input type="file" accept="image/*" (change)="subirImagen($event, 'hero')" [disabled]="subiendo" />
               </label>
             </div>
+
+            <div class="campo">
+              <label>Alto de la portada</label>
+              <div class="segmentado">
+                <button [class.is-active]="b.datos.altura !== 'completa'"
+                        (click)="b.datos.altura = 'normal'; marcarSucio()">Normal</button>
+                <button [class.is-active]="b.datos.altura === 'completa'"
+                        (click)="b.datos.altura = 'completa'; marcarSucio()">Pantalla completa</button>
+              </div>
+              <small>La pantalla completa hace que la foto se sienta de marca. Va bien de primera
+                sección.</small>
+            </div>
+
+            <!-- El velo y su color solo tienen sentido si hay foto: sin ella
+                 oscurecerían el fondo del sitio. -->
+            <ng-container *ngIf="b.datos.imagen">
+              <div class="campo">
+                <label>Qué tan oscura se ve la foto</label>
+                <div class="deslizador">
+                  <input type="range" min="0" max="85" step="5"
+                         [value]="veloDe(b.datos)"
+                         (input)="cambiarVelo(b.datos, $any($event.target).value)" />
+                  <span class="deslizador__valor">{{ veloDe(b.datos) }}%</span>
+                </div>
+                <small>Entre más oscura, mejor se lee el título encima. En 0 se ve la foto tal
+                  cual.</small>
+              </div>
+
+              <button class="opcion" [class.is-active]="b.datos.veloClaro"
+                      (click)="b.datos.veloClaro = !b.datos.veloClaro; marcarSucio()">
+                <span class="opcion__texto">
+                  <strong>Aclarar en vez de oscurecer</strong>
+                  <small>Para fotos claras con el texto en color oscuro.</small>
+                </span>
+                <span class="palanca"><span></span></span>
+              </button>
+            </ng-container>
           </ng-container>
 
           <!-- Sobre tu negocio -->
@@ -345,20 +382,97 @@
         </div>
 
         <div class="grupo">
-          <h3>Tipo de letra</h3>
-          <p>Así se verán los títulos de tu página.</p>
-          <div class="tipografias">
-            <button class="tipografia" *ngFor="let f of tipografias"
-                    [class.is-active]="contenido.tema.tipografia === f.id"
-                    (click)="elegirTipografia(f.id)">
-              <span class="tipografia__aa" [style.font-family]="f.familia">Aa</span>
-              <span class="tipografia__texto">
-                <strong>{{ f.nombre }}</strong>
-                <small>{{ f.pista }}</small>
+          <h3>Estilo de la página</h3>
+          <p>Cambia esquinas, sombras, aire y el peso de los títulos, todo de una.</p>
+          <div class="estilos">
+            <button class="estilo" *ngFor="let e of estilosPagina"
+                    [class.is-active]="estiloActivo === e.id"
+                    (click)="elegirEstiloPagina(e.id)">
+              <span class="estilo__muestra" [attr.data-estilo]="e.id">
+                <span class="estilo__titular">Aa</span>
+                <span class="estilo__linea"></span>
+                <span class="estilo__pastilla"></span>
               </span>
-              <svg *ngIf="contenido.tema.tipografia === f.id" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+              <span class="estilo__texto">
+                <strong>{{ e.nombre }}</strong>
+                <small>{{ e.pista }}</small>
+              </span>
+              <svg *ngIf="estiloActivo === e.id" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
             </button>
           </div>
+        </div>
+
+        <div class="grupo">
+          <h3>Tipo de letra</h3>
+          <p>Parejas ya combinadas: una para los títulos y otra para el texto.</p>
+          <div class="parejas">
+            <button class="pareja" *ngFor="let p of parejas"
+                    [class.is-active]="parejaActiva === p.id"
+                    (click)="aplicarPareja(p.id)">
+              <span class="pareja__muestra">
+                <span class="pareja__titulo" [style.font-family]="familiaDe(p.titulo)">Aa</span>
+                <span class="pareja__cuerpo" [style.font-family]="familiaDe(p.cuerpo)">Texto</span>
+              </span>
+              <span class="pareja__nombre">{{ p.nombre }}</span>
+              <svg *ngIf="parejaActiva === p.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M20 6 9 17l-5-5"/></svg>
+            </button>
+          </div>
+
+          <button class="desplegable" (click)="fuentesSueltas = !fuentesSueltas">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg>
+            <span>Combinar a mi manera</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path *ngIf="!fuentesSueltas" d="m6 9 6 6 6-6"/>
+              <path *ngIf="fuentesSueltas" d="m18 15-6-6-6 6"/>
+            </svg>
+          </button>
+
+          <div class="avanzado" *ngIf="fuentesSueltas">
+            <div class="campo">
+              <label>Letra de los títulos</label>
+              <div class="tipografias">
+                <button class="tipografia" *ngFor="let f of tipografias"
+                        [class.is-active]="fuenteDe('titulo') === f.id"
+                        (click)="elegirFuente('titulo', f.id)">
+                  <span class="tipografia__aa" [style.font-family]="f.familia">Aa</span>
+                  <span class="tipografia__texto">
+                    <strong>{{ f.nombre }}</strong>
+                    <small>{{ f.pista }}</small>
+                  </span>
+                  <svg *ngIf="fuenteDe('titulo') === f.id" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="campo">
+              <label>Letra del texto</label>
+              <div class="tipografias">
+                <button class="tipografia" *ngFor="let f of tipografias"
+                        [class.is-active]="fuenteDe('cuerpo') === f.id"
+                        (click)="elegirFuente('cuerpo', f.id)">
+                  <span class="tipografia__aa" [style.font-family]="f.familia">Aa</span>
+                  <span class="tipografia__texto">
+                    <strong>{{ f.nombre }}</strong>
+                    <small>{{ f.pista }}</small>
+                  </span>
+                  <svg *ngIf="fuenteDe('cuerpo') === f.id" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grupo">
+          <h3>Movimiento</h3>
+          <button class="opcion" [class.is-active]="contenido.tema.animaciones"
+                  (click)="alternarAnimaciones()">
+            <span class="opcion__texto">
+              <strong>Las secciones aparecen al bajar</strong>
+              <small>Un desvanecido suave cuando entran en pantalla. La portada no se
+                mueve.</small>
+            </span>
+            <span class="palanca"><span></span></span>
+          </button>
         </div>
 
         <button class="desplegable" (click)="coloresAvanzados = !coloresAvanzados">

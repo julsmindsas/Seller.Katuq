@@ -760,6 +760,189 @@
   }
 }
 
+// ── Estilos de página ────────────────────────────────────────────────────────
+.estilos {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.estilo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border: 1.5px solid var(--kb-line-4);
+  background: #fff;
+  border-radius: 13px;
+  padding: 11px 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &.is-active {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash-4);
+
+    > svg {
+      color: var(--kb-accent);
+    }
+  }
+
+  // Muestra en miniatura: un titular, una línea de texto y un botón. Cada
+  // estilo la pinta con sus propias esquinas, peso y versalitas, así que se
+  // reconoce de un vistazo sin tener que aplicarlo.
+  &__muestra {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    width: 58px;
+    height: 52px;
+    flex: none;
+    padding: 8px;
+    border: 1px solid var(--kb-line-5);
+    background: #fff;
+    overflow: hidden;
+  }
+
+  &__titular {
+    font-size: 15px;
+    line-height: 1;
+    color: var(--kb-ink);
+  }
+
+  &__linea {
+    width: 100%;
+    height: 3px;
+    border-radius: 99px;
+    background: var(--kb-line-6);
+  }
+
+  &__pastilla {
+    width: 24px;
+    height: 8px;
+    background: var(--kb-ink);
+  }
+
+  &__texto {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+
+    strong {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 800;
+    }
+
+    small {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--kb-muted-2);
+    }
+  }
+
+  // Cada muestra imita la geometría real del estilo que representa.
+  &__muestra[data-estilo="clasico"] {
+    border-radius: 10px;
+
+    .estilo__titular { font-weight: 700; }
+    .estilo__pastilla { border-radius: 6px; }
+  }
+
+  &__muestra[data-estilo="editorial"] {
+    border-radius: 0;
+
+    .estilo__titular { font-family: Georgia, serif; font-weight: 400; font-size: 17px; }
+    .estilo__pastilla { border-radius: 0; }
+  }
+
+  &__muestra[data-estilo="boutique"] {
+    border-radius: 0;
+    border-color: var(--kb-muted-3);
+
+    .estilo__titular { font-family: Georgia, serif; font-weight: 300; font-size: 18px; letter-spacing: 0.5px; }
+    .estilo__pastilla { border-radius: 0; background: transparent; border: 1px solid var(--kb-ink); height: 9px; }
+  }
+
+  &__muestra[data-estilo="minimal"] {
+    border-radius: 3px;
+
+    .estilo__titular { font-weight: 600; letter-spacing: -0.4px; }
+    .estilo__pastilla { border-radius: 2px; }
+  }
+
+  &__muestra[data-estilo="audaz"] {
+    border-radius: 16px;
+    box-shadow: 0 4px 10px -5px rgba(0, 0, 0, 0.4);
+
+    .estilo__titular { font-weight: 800; font-size: 17px; letter-spacing: -0.6px; }
+    .estilo__pastilla { border-radius: 99px; }
+  }
+}
+
+// ── Parejas de letra ─────────────────────────────────────────────────────────
+.parejas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.pareja {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  border: 1.5px solid var(--kb-line-4);
+  background: #fff;
+  border-radius: 13px;
+  padding: 11px;
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &.is-active {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash-4);
+  }
+
+  > svg {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--kb-accent);
+  }
+
+  &__muestra {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    min-height: 26px;
+  }
+
+  &__titulo {
+    font-size: 21px;
+    line-height: 1;
+    color: var(--kb-ink);
+  }
+
+  &__cuerpo {
+    font-size: 12px;
+    color: var(--kb-muted);
+  }
+
+  &__nombre {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--kb-ink-2);
+    line-height: 1.3;
+  }
+}
+
 .tipografias {
   display: flex;
   flex-direction: column;
@@ -850,6 +1033,58 @@
   padding: 16px 16px 2px;
   margin-top: 10px;
   animation: kb-pop 0.18s ease;
+}
+
+// Control segmentado dentro de un campo (alto de la portada).
+.segmentado {
+  @include kb-segmented;
+}
+
+// Deslizador con su valor al lado (qué tan oscura se ve la foto).
+.deslizador {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  input[type="range"] {
+    flex: 1;
+    min-width: 0;
+    appearance: none;
+    height: 6px;
+    border-radius: 99px;
+    background: var(--kb-chip-2);
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--kb-accent);
+      border: 3px solid #fff;
+      box-shadow: 0 1px 4px rgba(30, 20, 60, 0.3);
+      cursor: pointer;
+    }
+
+    &::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--kb-accent);
+      border: 3px solid #fff;
+      cursor: pointer;
+    }
+  }
+
+  &__valor {
+    flex: none;
+    min-width: 42px;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--kb-accent);
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 .acciones-publicacion {

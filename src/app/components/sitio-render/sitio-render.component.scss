@@ -24,13 +24,24 @@
   }
 }
 
+// Los titulares tienen su propia fuente, peso y tracking: es la mitad de lo que
+// distingue un estilo de página de otro.
+h1,
+h2,
+h3 {
+  font-family: var(--sitio-fuente-titulo, var(--sitio-fuente));
+  font-weight: var(--sitio-titulo-peso, 700);
+  letter-spacing: var(--sitio-titulo-track, 0);
+  line-height: var(--sitio-titulo-altura, 1.15);
+}
+
 .bloque {
-  padding: 2.5rem 1.25rem;
-  max-width: 1100px;
+  padding: var(--sitio-aire, 2.5rem) 1.25rem;
+  max-width: var(--sitio-ancho, 1100px);
   margin: 0 auto;
 
   h2 {
-    font-size: 1.5rem;
+    font-size: calc(1.5rem * var(--sitio-titulo-escala, 1));
     margin-bottom: 1rem;
   }
 }
@@ -38,7 +49,8 @@
 // ── Banner ───────────────────────────────────────────────────────────────────
 .hero {
   position: relative;
-  padding: 3.5rem 1.25rem;
+  padding: calc(var(--sitio-aire, 2.5rem) * 1.4) 1.25rem;
+  overflow: hidden;
 
   &__fondo {
     position: absolute;
@@ -49,49 +61,79 @@
     z-index: 0;
   }
 
+  // El velo va sobre la foto completa, no como caja detrás del texto: así la
+  // imagen se ve entera y el titular se sigue leyendo. Espejo de siteHtml.js.
+  &__velo {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #000;
+  }
+
+  &--velo-claro &__velo {
+    background: #fff;
+  }
+
   &__contenido {
     position: relative;
-    z-index: 1;
+    z-index: 2;
+    max-width: 46rem;
+    margin: 0 auto;
+  }
+
+  // A pantalla completa. En la previa se acota a la altura del lienzo, que no
+  // es la del visitante; el 100svh real lo pone el backend al publicar.
+  &--completa {
+    min-height: 78vh;
+    display: flex;
+    align-items: center;
+
+    .hero__contenido {
+      width: 100%;
+    }
   }
 
   h1 {
-    font-size: 2rem;
-    line-height: 1.15;
+    font-size: calc(2rem * var(--sitio-titulo-escala, 1));
     margin-bottom: 0.75rem;
   }
 
   p {
     font-size: 1.05rem;
     margin-bottom: 1.25rem;
+    opacity: 0.88;
+    line-height: 1.55;
   }
 
-  // Con foto de fondo hace falta una capa oscura, o el texto se pierde.
+  // Sobre foto el texto va en blanco; con velo claro vuelve al color del tema.
   &--con-imagen {
     color: #fff;
+  }
 
-    .hero__contenido {
-      background: rgba(0, 0, 0, 0.45);
-      padding: 2rem 1.25rem;
-      border-radius: 12px;
-    }
+  &--con-imagen#{&}--velo-claro {
+    color: var(--sitio-texto);
   }
 }
 
 // ── Botones ──────────────────────────────────────────────────────────────────
 .boton {
   display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border: 0;
-  border-radius: 8px;
+  padding: 0.8rem 1.6rem;
+  border: 1px solid var(--sitio-primario);
+  border-radius: var(--sitio-radio-sm, 8px);
   background: var(--sitio-primario);
   color: #fff;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
+  text-transform: var(--sitio-etiqueta-caja, none);
+  letter-spacing: var(--sitio-etiqueta-track, 0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 
   &:hover {
-    opacity: 0.9;
+    opacity: 0.88;
+    transform: translateY(-1px);
   }
 
   &:disabled {
@@ -119,7 +161,7 @@
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    border-radius: 10px;
+    border-radius: var(--sitio-radio-sm, 10px);
   }
 }
 
@@ -130,8 +172,9 @@
 }
 
 .producto {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
+  border: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.08));
+  border-radius: var(--sitio-radio, 12px);
+  box-shadow: var(--sitio-sombra, none);
   padding: 0.75rem;
   background: #fff;
 
@@ -182,14 +225,16 @@
     gap: 0.3rem;
     font-size: 0.9rem;
     font-weight: 600;
+    text-transform: var(--sitio-etiqueta-caja, none);
+    letter-spacing: var(--sitio-etiqueta-track, 0);
   }
 
   input,
   textarea {
     width: 100%;
     padding: 0.65rem 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
+    border: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.2));
+    border-radius: var(--sitio-radio-sm, 8px);
     font: inherit;
     font-weight: 400;
 
@@ -206,14 +251,14 @@
 
   &__ok {
     padding: 1rem;
-    border-radius: 10px;
+    border-radius: var(--sitio-radio, 10px);
     background: rgba(37, 211, 102, 0.12);
   }
 }
 
 // ── FAQ y pie ────────────────────────────────────────────────────────────────
 .faq details {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.1));
   padding: 0.75rem 0;
 
   summary {
@@ -227,7 +272,7 @@
 }
 
 .pie {
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.1));
   font-size: 0.9rem;
   text-align: center;
 
@@ -247,14 +292,18 @@
 // ── Escritorio ───────────────────────────────────────────────────────────────
 @media (min-width: 768px) {
   .bloque {
-    padding: 3.5rem 2rem;
+    padding: var(--sitio-aire-ancho, 3.5rem) 2rem;
+
+    h2 {
+      font-size: calc(1.9rem * var(--sitio-titulo-escala, 1));
+    }
   }
 
   .hero {
-    padding: 6rem 2rem;
+    padding: calc(var(--sitio-aire-ancho, 3.5rem) * 1.5) 2rem;
 
     h1 {
-      font-size: 3rem;
+      font-size: calc(3rem * var(--sitio-titulo-escala, 1));
     }
 
     p {

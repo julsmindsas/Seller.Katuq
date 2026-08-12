@@ -77,20 +77,68 @@ const PALETAS: {
 ];
 
 /**
- * Tipografías de la página publicada. Los valores son los que acepta el
- * backend (`sistema`, `sans`, `serif`, `mono`): mandar otro se descarta en
- * silencio al guardar y el comerciante vería su elección revertida.
+ * Estilos de página completos. Cada uno mueve esquinas, sombra, aire, peso y
+ * tracking de titulares de una vez. Los ids son los que valida el backend en
+ * `normalizarTema`: mandar otro se descarta en silencio al guardar.
  */
-const TIPOGRAFIAS: { id: string; nombre: string; pista: string; familia: string }[] = [
-  { id: "sans", nombre: "Moderna", pista: "Clara y actual", familia: 'Inter, "Helvetica Neue", Arial, sans-serif' },
-  { id: "serif", nombre: "Clásica", pista: "Elegante, con serifas", familia: 'Georgia, "Times New Roman", serif' },
-  { id: "sistema", nombre: "Neutra", pista: "La del teléfono de tu cliente", familia: "system-ui, -apple-system, sans-serif" },
-  { id: "mono", nombre: "Técnica", pista: "De ancho fijo", familia: "ui-monospace, SFMono-Regular, Menlo, monospace" },
+const ESTILOS_PAGINA: { id: string; nombre: string; pista: string }[] = [
+  { id: "clasico", nombre: "Clásico", pista: "Equilibrado, esquinas suaves" },
+  { id: "editorial", nombre: "Editorial", pista: "Serif grande, mucho aire" },
+  { id: "boutique", nombre: "Boutique", pista: "Filetes finos, versalitas, aire de sobra" },
+  { id: "minimal", nombre: "Minimal", pista: "Nada sobra, medidas contenidas" },
+  { id: "audaz", nombre: "Audaz", pista: "Redondo, con sombra y titulares pesados" },
+];
+
+/**
+ * Fuentes disponibles. `familia` es solo para la muestra del panel; la que vale
+ * es la que aplica el render. Los ids son lista blanca del backend.
+ */
+const TIPOGRAFIAS: { id: string; nombre: string; pista: string; familia: string; grupo: string }[] = [
+  // Con carácter — pensadas para titulares.
+  { id: "playfair", nombre: "Playfair", pista: "Serif de revista", familia: '"Playfair Display", Georgia, serif', grupo: "titulo" },
+  { id: "cormorant", nombre: "Cormorant", pista: "Fina y elegante", familia: '"Cormorant Garamond", Georgia, serif', grupo: "titulo" },
+  { id: "fraunces", nombre: "Fraunces", pista: "Serif con personalidad", familia: '"Fraunces", Georgia, serif', grupo: "titulo" },
+  { id: "dmserif", nombre: "DM Serif", pista: "Contundente y clásica", familia: '"DM Serif Display", Georgia, serif', grupo: "titulo" },
+  { id: "syne", nombre: "Syne", pista: "Moderna y distinta", familia: '"Syne", system-ui, sans-serif', grupo: "titulo" },
+  // Neutras — cómodas para leer párrafos largos.
+  { id: "jakarta", nombre: "Jakarta", pista: "Redonda y cercana", familia: '"Plus Jakarta Sans", system-ui, sans-serif', grupo: "cuerpo" },
+  { id: "outfit", nombre: "Outfit", pista: "Geométrica y limpia", familia: '"Outfit", system-ui, sans-serif', grupo: "cuerpo" },
+  { id: "sora", nombre: "Sora", pista: "Técnica y clara", familia: '"Sora", system-ui, sans-serif', grupo: "cuerpo" },
+  { id: "inter", nombre: "Inter", pista: "La más legible en pantalla", familia: '"Inter", system-ui, sans-serif', grupo: "cuerpo" },
+  // Las de siempre, sin descarga.
+  { id: "sistema", nombre: "Del sistema", pista: "La del teléfono de tu cliente", familia: "system-ui, -apple-system, sans-serif", grupo: "cuerpo" },
+  { id: "serif", nombre: "Serif clásica", pista: "Georgia, sin descargar nada", familia: 'Georgia, "Times New Roman", serif', grupo: "titulo" },
+  { id: "sans", nombre: "Sans clásica", pista: "Sin descargar nada", familia: 'Inter, "Helvetica Neue", Arial, sans-serif', grupo: "cuerpo" },
+  { id: "mono", nombre: "Máquina", pista: "De ancho fijo", familia: "ui-monospace, SFMono-Regular, Menlo, monospace", grupo: "cuerpo" },
+];
+
+/**
+ * Parejas de letra ya combinadas. Elegir dos fuentes que peguen es trabajo de
+ * diseñador; estas son las que se ofrecen primero y las sueltas quedan detrás
+ * de "combinar a mi manera".
+ */
+const PAREJAS: { id: string; nombre: string; titulo: string; cuerpo: string }[] = [
+  { id: "boutique", nombre: "Cormorant + Jakarta", titulo: "cormorant", cuerpo: "jakarta" },
+  { id: "revista", nombre: "Playfair + Inter", titulo: "playfair", cuerpo: "inter" },
+  { id: "calido", nombre: "Fraunces + Sora", titulo: "fraunces", cuerpo: "sora" },
+  { id: "moderno", nombre: "Syne + Outfit", titulo: "syne", cuerpo: "outfit" },
+  { id: "editorial", nombre: "DM Serif + Jakarta", titulo: "dmserif", cuerpo: "jakarta" },
+  { id: "sistema", nombre: "Del sistema", titulo: "sistema", cuerpo: "sistema" },
 ];
 
 /** Valores iniciales de un bloque recién agregado. */
 const BLOQUE_NUEVO: { [tipo: string]: any } = {
-  hero: { titulo: "Título principal", subtitulo: "", ctaTexto: "", ctaUrl: "", alineacion: "centro", imagen: "" },
+  hero: {
+    titulo: "Título principal",
+    subtitulo: "",
+    ctaTexto: "",
+    ctaUrl: "",
+    alineacion: "centro",
+    imagen: "",
+    altura: "normal",
+    velo: 45,
+    veloClaro: false,
+  },
   texto: { titulo: "Título", cuerpo: "Escribe aquí." },
   galeria: { titulo: "Galería", imagenes: [] },
   productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false },
@@ -216,11 +264,20 @@ export class SitioEditorComponent implements OnInit {
     const envio = (d.tienda && d.tienda.envio) || {};
     return {
       bloques: Array.isArray(d.bloques) ? d.bloques : [],
-      tema: d.tema || {
-        colorPrimario: "#111111",
-        colorSecundario: "#ffffff",
-        colorTexto: "#222222",
-        tipografia: "sistema",
+      // El tema se completa campo por campo, no con `d.tema || {…}`: un sitio
+      // creado antes de que existieran las fuentes por separado o el estilo
+      // llega con el objeto viejo, y el panel enlazaría contra `undefined`.
+      tema: {
+        colorPrimario: (d.tema && d.tema.colorPrimario) || "#111111",
+        colorSecundario: (d.tema && d.tema.colorSecundario) || "#ffffff",
+        colorTexto: (d.tema && d.tema.colorTexto) || "#222222",
+        tipografia: (d.tema && d.tema.tipografia) || "sistema",
+        // Sin elección propia, las dos heredan de `tipografia`, que es
+        // exactamente lo que hace el backend.
+        fuenteTitulo: (d.tema && (d.tema.fuenteTitulo || d.tema.tipografia)) || "sistema",
+        fuenteCuerpo: (d.tema && (d.tema.fuenteCuerpo || d.tema.tipografia)) || "sistema",
+        estilo: (d.tema && d.tema.estilo) || "clasico",
+        animaciones: (d.tema && d.tema.animaciones) === true,
       },
       seo: d.seo || { titulo: "", descripcion: "", imagen: "" },
       // Un sitio creado antes de que existiera la tienda llega sin esto. Nace
@@ -388,6 +445,82 @@ export class SitioEditorComponent implements OnInit {
 
   paletas = PALETAS;
   tipografias = TIPOGRAFIAS;
+  estilosPagina = ESTILOS_PAGINA;
+  parejas = PAREJAS;
+
+  /** Las fuentes sueltas van escondidas tras las parejas ya combinadas. */
+  fuentesSueltas = false;
+
+  get estiloActivo(): string {
+    return (this.contenido && this.contenido.tema && this.contenido.tema.estilo) || "clasico";
+  }
+
+  elegirEstiloPagina(id: string): void {
+    if (!this.contenido) return;
+    this.contenido.tema = { ...this.contenido.tema, estilo: id };
+    this.marcarSucio();
+  }
+
+  /** Fuente efectiva de titulares (o de cuerpo), con la herencia de `tipografia`. */
+  fuenteDe(donde: "titulo" | "cuerpo"): string {
+    const t = this.contenido && this.contenido.tema;
+    if (!t) return "sistema";
+    const propia = donde === "titulo" ? t.fuenteTitulo : t.fuenteCuerpo;
+    return propia || t.tipografia || "sistema";
+  }
+
+  familiaDe(id: string): string {
+    const f = TIPOGRAFIAS.find((x) => x.id === id);
+    return f ? f.familia : "system-ui, sans-serif";
+  }
+
+  /** Id de la pareja que coincide con las dos fuentes actuales, o "" si es a mano. */
+  get parejaActiva(): string {
+    const titulo = this.fuenteDe("titulo");
+    const cuerpo = this.fuenteDe("cuerpo");
+    const p = PAREJAS.find((x) => x.titulo === titulo && x.cuerpo === cuerpo);
+    return p ? p.id : "";
+  }
+
+  aplicarPareja(id: string): void {
+    const p = PAREJAS.find((x) => x.id === id);
+    if (!p || !this.contenido) return;
+    this.contenido.tema = { ...this.contenido.tema, fuenteTitulo: p.titulo, fuenteCuerpo: p.cuerpo };
+    this.marcarSucio();
+  }
+
+  elegirFuente(donde: "titulo" | "cuerpo", id: string): void {
+    if (!this.contenido) return;
+    const campo = donde === "titulo" ? "fuenteTitulo" : "fuenteCuerpo";
+    this.contenido.tema = { ...this.contenido.tema, [campo]: id };
+    this.marcarSucio();
+  }
+
+  alternarAnimaciones(): void {
+    if (!this.contenido) return;
+    const t = this.contenido.tema as any;
+    this.contenido.tema = { ...t, animaciones: t.animaciones !== true };
+    this.marcarSucio();
+  }
+
+  // ── Portada ────────────────────────────────────────────────────────────────
+
+  /**
+   * El velo de la portada. Los bloques guardados antes de que existiera el
+   * campo no lo traen, y el backend asume 45: aquí se muestra lo mismo para que
+   * el deslizador no arranque en cero mintiendo sobre lo publicado.
+   */
+  veloDe(datos: any): number {
+    if (!datos) return 45;
+    return datos.velo === undefined || datos.velo === null ? 45 : Number(datos.velo);
+  }
+
+  cambiarVelo(datos: any, valor: any): void {
+    if (!datos) return;
+    const n = Math.min(85, Math.max(0, Number(valor) || 0));
+    datos.velo = n;
+    this.marcarSucio();
+  }
 
   /** Id de la paleta que coincide con los colores actuales, o "" si son a mano. */
   get paletaActiva(): string {
