@@ -9,24 +9,54 @@
     ],
     "headers": [
       {
-        "//": "El index.html NO se cachea. Firebase le pone una hora por defecto, y eso significaba que despues de cada despliegue el navegador seguia sirviendo la version anterior durante 60 minutos: una ruta nueva respondia 404 aunque estuviera publicada. Es el arranque de la aplicacion, pesa 127 kB y se revalida en milisegundos.",
-        "source": "/index.html",
+        "//": "ORDEN IMPORTANTE: Firebase aplica la ULTIMA regla que coincide, no la primera (comprobado en produccion: con el catch-all arriba, los archivos con hash tambien quedaban sin cache). Por eso el catch-all va PRIMERO y las reglas especificas despues.",
+        "//2": "Todo lo que no sea un archivo con hash es, en la practica, el index.html: la raiz y cada ruta de la aplicacion, que llegan por el rewrite. Sin esto el index se cacheaba una hora y despues de desplegar el navegador seguia sirviendo la version anterior — una ruta nueva respondia 404 aunque estuviera publicada.",
+        "source": "**",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
         ]
       },
       {
-        "//": "La version la lee el aviso de novedades: cacheada, anunciaria una version vieja.",
+        "//": "Imagenes y demas estaticos: un dia. No llevan hash, asi que no pueden ser inmutables, pero tampoco hace falta revalidarlos a cada rato.",
+        "source": "/assets/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=86400"
+          }
+        ]
+      },
+      {
+        "//": "La version la lee el aviso de novedades: cacheada, anunciaria una version vieja. Va despues de /assets/** para ganarle.",
         "source": "/assets/version.json",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
         ]
       },
       {
-        "//": "Los archivos con hash en el nombre (main.8832f778.js) no cambian nunca: si cambia el contenido, cambia el nombre. Estaban caducando cada hora, asi que quien trabajaba todo el dia volvia a bajar los 4,6 MB del bundle varias veces. El patron exige DOS puntos, que es lo que distingue a los 110 archivos con hash de los dos temas de PrimeNG (lara-light-blue.css) que no lo llevan y siguen con la cache corta de siempre.",
+        "//": "Los archivos con hash en el nombre (main.8832f778.js) no cambian nunca: si cambia el contenido, cambia el nombre. Estaban caducando cada hora y quien trabajaba todo el dia volvia a bajar los 4,6 MB del bundle varias veces. El patron exige DOS puntos, que es lo que los distingue de los dos temas de PrimeNG (lara-light-blue.css). Va de ultimo para ganarle al catch-all.",
         "source": "/*.*.@(js|css)",
         "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "//": "La raiz exacta: el catch-all `**` no la captura, y es justo por donde entra la gente. Sin esto quedaba sin cabecera y el navegador decidia por su cuenta cuanto cachearla.",
+        "source": "/",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
         ]
       }
     ],
