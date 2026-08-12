@@ -4,10 +4,41 @@ import { Observable } from "rxjs";
 import { BaseService } from "../../shared/services/base.service";
 import { BloqueSitio, TemaSitio } from "../sitio-render/sitio-render.component";
 
+/**
+ * Configuración de venta del sitio. Vive aparte de los bloques porque el
+ * checkout es del sitio entero: la bodega que despacha y el costo del envío
+ * valen igual para todo lo que se compre en esa página.
+ */
+export interface TiendaSitio {
+  habilitada: boolean;
+  /** Business code de la bodega ("BOD-001"), nunca el id de Firestore. */
+  bodegaId: string;
+  envio: { costo: number; gratisDesde: number; texto: string };
+  pagoEnLinea: boolean;
+  contraEntrega: boolean;
+  minimoCompra: number;
+  mensajeConfirmacion: string;
+}
+
+/**
+ * Identificadores de medición. Solo ids, nunca un fragmento de código: el
+ * servidor arma las etiquetas y abre la política de seguridad para los
+ * dominios que hagan falta.
+ */
+export interface AnaliticaSitio {
+  ga4: string;
+  googleAds: string;
+  googleAdsConversion: string;
+  metaPixel: string;
+  gtm: string;
+}
+
 export interface ContenidoSitio {
   bloques: BloqueSitio[];
   tema: TemaSitio;
   seo: { titulo: string; descripcion: string; imagen: string };
+  tienda: TiendaSitio;
+  analitica: AnaliticaSitio;
 }
 
 export interface Sitio {

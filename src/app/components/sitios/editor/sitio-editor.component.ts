@@ -4,6 +4,7 @@ import { ToastrService } from "ngx-toastr";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
 import { ContenidoSitio, Sitio, SitiosService } from "../sitios.service";
+import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string }[] = [
@@ -22,7 +23,7 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   hero: { titulo: "Título principal", subtitulo: "", ctaTexto: "", ctaUrl: "", alineacion: "centro", imagen: "" },
   texto: { titulo: "Título", cuerpo: "Escribe aquí." },
   galeria: { titulo: "Galería", imagenes: [] },
-  productos: { titulo: "Productos destacados", productoIds: [] },
+  productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false },
   whatsapp: { telefono: "", mensaje: "Hola, quiero más información", etiqueta: "Escríbenos por WhatsApp" },
   formulario: {
     titulo: "Déjanos tus datos",
@@ -64,7 +65,11 @@ export class SitioEditorComponent implements OnInit {
   /** Índice del bloque en edición. -1 = ninguno. */
   seleccionado = -1;
   dispositivo: "escritorio" | "movil" = "escritorio";
-  panel: "bloques" | "diseno" | "ajustes" = "bloques";
+  panel: "bloques" | "diseno" | "tienda" | "ajustes" = "bloques";
+
+  /** Bodegas del comercio, para el selector de despacho de la tienda. */
+  bodegas: { codigo: string; nombre: string }[] = [];
+  cargandoBodegas = false;
   mostrandoAgregar = false;
   mostrandoSelector = false;
 
@@ -89,6 +94,7 @@ export class SitioEditorComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private service: SitiosService,
+    private bodegaService: BodegaService,
     private toastr: ToastrService
   ) {}
 
@@ -127,6 +133,7 @@ export class SitioEditorComponent implements OnInit {
    */
   private completar(draft: any): ContenidoSitio {
     const d = draft || {};
+    const envio = (d.tienda && d.tienda.envio) || {};
     return {
       bloques: Array.isArray(d.bloques) ? d.bloques : [],
       tema: d.tema || {
@@ -136,7 +143,75 @@ export class SitioEditorComponent implements OnInit {
         tipografia: "sistema",
       },
       seo: d.seo || { titulo: "", descripcion: "", imagen: "" },
+      // Un sitio creado antes de que existiera la tienda llega sin esto. Nace
+      // apagada: nadie empieza a vender porque se desplegó una versión nueva.
+      tienda: {
+        habilitada: (d.tienda && d.tienda.habilitada) === true,
+        bodegaId: (d.tienda && d.tienda.bodegaId) || "",
+        envio: {
+          costo: Number(envio.costo) || 0,
+          gratisDesde: Number(envio.gratisDesde) || 0,
+          texto: envio.texto || "",
+        },
+        pagoEnLinea: (d.tienda && d.tienda.pagoEnLinea) !== false,
+        contraEntrega: (d.tienda && d.tienda.contraEntrega) === true,
+        minimoCompra: Number(d.tienda && d.tienda.minimoCompra) || 0,
+        mensajeConfirmacion: (d.tienda && d.tienda.mensajeConfirmacion) || "",
+      },
+      analitica: {
+        ga4: (d.analitica && d.analitica.ga4) || "",
+        googleAds: (d.analitica && d.analitica.googleAds) || "",
+        googleAdsConversion: (d.analitica && d.analitica.googleAdsConversion) || "",
+        metaPixel: (d.analitica && d.analitica.metaPixel) || "",
+        gtm: (d.analitica && d.analitica.gtm) || "",
+      },
     };
+  }
+
+  /**
+   * Bodegas del comercio, para elegir de dónde se despacha lo que se venda.
+   * Se cargan al abrir el panel de tienda, no al entrar al editor: la mayoría
+   * de las páginas son landings y no necesitan esta consulta.
+   */
+  cargarBodegas(): void {
+    if (this.bodegas.length || this.cargandoBodegas) return;
+    this.cargandoBodegas = true;
+    this.bodegaService.getBodegas().subscribe({
+      next: (lista: any[]) => {
+        this.cargandoBodegas = false;
+        // `idBodega` es el código de negocio ("BOD-001"), que es lo que espera
+        // inventario. El id de Firestore aquí generaría movimientos huérfanos.
+        this.bodegas = (lista || [])
+          .filter((b) => b && (b.idBodega || b.codigo))
+          .map((b) => ({
+            codigo: b.idBodega || b.codigo,
+            // La colección es `warehouses`; el nombre viene en `nombre`.
+            nombre: b.nombre || b.name || b.idBodega || b.codigo,
+          }));
+      },
+      error: () => {
+        this.cargandoBodegas = false;
+        this.toastr.error("No pudimos cargar tus bodegas.");
+      },
+    });
+  }
+
+  /**
+   * ¿La tienda quedaría a medias? Se avisa antes de publicar, porque una tienda
+   * encendida sin bodega rechaza los pedidos y el comerciante no se entera
+   * hasta que un cliente se queja.
+   */
+  get avisoTienda(): string | null {
+    const t = this.contenido && this.contenido.tienda;
+    if (!t || !t.habilitada) return null;
+    if (!t.bodegaId) return "Elige la bodega desde donde despachas: sin ella la tienda no recibe pedidos.";
+    const hayCompra = this.bloques.some(
+      (b) => b.tipo === "productos" && b.datos && b.datos.permitirCompra === true
+    );
+    if (!hayCompra) {
+      return "Ningún bloque de productos tiene la compra activada, así que no se puede comprar nada.";
+    }
+    return null;
   }
 
   get bloques(): BloqueSitio[] {

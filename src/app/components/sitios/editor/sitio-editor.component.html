@@ -34,6 +34,7 @@
       <nav class="pestanas">
         <button [class.activa]="panel === 'bloques'" (click)="panel = 'bloques'">Bloques</button>
         <button [class.activa]="panel === 'diseno'" (click)="panel = 'diseno'">Diseño</button>
+        <button [class.activa]="panel === 'tienda'" (click)="panel = 'tienda'; cargarBodegas()">Tienda</button>
         <button [class.activa]="panel === 'ajustes'" (click)="panel = 'ajustes'">Ajustes</button>
       </nav>
 
@@ -132,6 +133,14 @@
               <small>El precio y la disponibilidad salen de tu catálogo al publicar. Los agotados no se
                 muestran.</small>
             </div>
+
+            <label class="check">
+              <input type="checkbox" [(ngModel)]="b.datos.permitirCompra" (ngModelChange)="marcarSucio()" />
+              Se pueden comprar desde la página
+            </label>
+            <small class="nota" *ngIf="b.datos.permitirCompra && !contenido.tienda.habilitada">
+              Para que el botón aparezca, enciende la tienda en la pestaña <strong>Tienda</strong>.
+            </small>
           </ng-container>
 
           <!-- WhatsApp -->
@@ -205,6 +214,81 @@
             <option value="serif">Serif (clásica)</option>
             <option value="mono">Monoespaciada</option>
           </select></label>
+      </div>
+
+      <!-- ── Tienda ── -->
+      <div class="panel__contenido" *ngIf="panel === 'tienda'">
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="contenido.tienda.habilitada" (ngModelChange)="marcarSucio()" />
+          Vender desde esta página
+        </label>
+        <small class="nota">Con esto encendido aparece el carrito. Cada bloque de productos decide
+          si sus productos se pueden comprar.</small>
+
+        <ng-container *ngIf="contenido.tienda.habilitada">
+          <hr />
+
+          <label><span>Bodega desde donde despachas</span>
+            <select [(ngModel)]="contenido.tienda.bodegaId" (ngModelChange)="marcarSucio()">
+              <option value="">Elige una bodega…</option>
+              <option *ngFor="let b of bodegas" [value]="b.codigo">{{ b.nombre }}</option>
+            </select>
+            <small *ngIf="cargandoBodegas">Cargando tus bodegas…</small>
+            <small *ngIf="!cargandoBodegas && !bodegas.length">No encontramos bodegas. Crea una en
+              Inventarios antes de vender.</small>
+          </label>
+
+          <hr />
+          <h6>Envío</h6>
+          <label><span>Costo del envío</span>
+            <input type="number" min="0" [(ngModel)]="contenido.tienda.envio.costo"
+                   (ngModelChange)="marcarSucio()" /></label>
+          <label><span>Envío gratis desde</span>
+            <input type="number" min="0" [(ngModel)]="contenido.tienda.envio.gratisDesde"
+                   (ngModelChange)="marcarSucio()" />
+            <small>Deja 0 si nunca das envío gratis.</small></label>
+          <label><span>Nota sobre el envío</span>
+            <input type="text" maxlength="160" [(ngModel)]="contenido.tienda.envio.texto"
+                   (ngModelChange)="marcarSucio()" placeholder="Entregas en 24 a 48 horas" /></label>
+
+          <hr />
+          <h6>Cómo te pagan</h6>
+          <label class="check">
+            <input type="checkbox" [(ngModel)]="contenido.tienda.pagoEnLinea" (ngModelChange)="marcarSucio()" />
+            Pago en línea
+          </label>
+          <label class="check">
+            <input type="checkbox" [(ngModel)]="contenido.tienda.contraEntrega" (ngModelChange)="marcarSucio()" />
+            Contra entrega
+          </label>
+          <label><span>Pedido mínimo</span>
+            <input type="number" min="0" [(ngModel)]="contenido.tienda.minimoCompra"
+                   (ngModelChange)="marcarSucio()" />
+            <small>Deja 0 si no exiges un mínimo.</small></label>
+          <label><span>Mensaje al terminar la compra</span>
+            <textarea rows="2" maxlength="300" [(ngModel)]="contenido.tienda.mensajeConfirmacion"
+                      (ngModelChange)="marcarSucio()"
+                      placeholder="Te escribimos por WhatsApp para confirmar la entrega."></textarea></label>
+
+          <p class="aviso-tienda" *ngIf="avisoTienda">{{ avisoTienda }}</p>
+        </ng-container>
+
+        <hr />
+        <h6>Medición y pauta</h6>
+        <small class="nota">Pega solo los identificadores. Katuq arma las etiquetas y abre los
+          permisos que hagan falta; pegar código suelto no funcionaría.</small>
+        <label><span>Google Analytics 4</span>
+          <input type="text" [(ngModel)]="contenido.analitica.ga4" (ngModelChange)="marcarSucio()"
+                 placeholder="G-XXXXXXXXXX" /></label>
+        <label><span>Google Ads</span>
+          <input type="text" [(ngModel)]="contenido.analitica.googleAds" (ngModelChange)="marcarSucio()"
+                 placeholder="AW-123456789" /></label>
+        <label><span>Píxel de Meta</span>
+          <input type="text" [(ngModel)]="contenido.analitica.metaPixel" (ngModelChange)="marcarSucio()"
+                 placeholder="123456789012345" /></label>
+        <label><span>Google Tag Manager</span>
+          <input type="text" [(ngModel)]="contenido.analitica.gtm" (ngModelChange)="marcarSucio()"
+                 placeholder="GTM-XXXXXX" /></label>
       </div>
 
       <!-- ── Ajustes ── -->

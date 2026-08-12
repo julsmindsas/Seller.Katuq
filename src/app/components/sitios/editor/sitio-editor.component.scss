@@ -422,3 +422,17 @@
     border-bottom: 1px solid #e5e7eb;
   }
 }
+
+// Aviso de tienda a medias: encendida pero sin bodega o sin nada comprable.
+// Va en tono de advertencia, no de error: la página funciona, lo que no
+// funcionaría es la venta.
+.aviso-tienda {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(180, 83, 9, 0.08);
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  color: #b45309;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
