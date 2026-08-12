@@ -3808,3 +3808,17 @@ Daniel señaló `venta-asistida-unica` como la vara: el carrito creaba pedidos a
 **El builder ya tiene uso real**: durante esta misma sesión, OH MY STORE renombró su sitio a `demo-katuq-oms` y **ALMARA FELICIDAD publicó el suyo** (`almara.katuq.com`). El susto de "la tienda no está disponible" en las pruebas era eso: el slug había cambiado por uso legítimo del editor.
 
 **Pendiente**: notificar al vendedor cuando entra un pedido de la tienda — `sendSellerNotification` vive dentro de `controllers/orders.js` y extraerlo es un cambio aparte.
+
+## D-185 (2026-08-12) — El ajuste de tienda queda completo: zonas de cobro, formas de pago del maestro y la verdad de la pasarela
+
+Daniel pidió validar el panel de tienda contra la venta asistida —formas de pago, zonas de cobro, datos de envío y facturación— "para poder salir a vender". La regla que gobierna las tres piezas: **la tienda no inventa maestros paralelos** — usa los mismos que la venta asistida.
+
+**Envío por zonas de cobro.** El comerciante elige entre tarifa fija y cobrar por ciudad con su maestro `zonacobro`. El comprador elige la ciudad de un selector (con el nombre de la zona visible: Medellín tiene tres tarifas, sin nombre elegiría a ciegas la más barata); el navegador manda solo el id, y **el servidor resuelve la tarifa contra el maestro al crear el pedido** — la misma regla de los precios de producto aplicada al domicilio. Zonas sin valor no se ofrecen: una zona a medio configurar no puede regalar el envío. Verificado en producción: pedido a Cali con la zona "Domicilio Zona 1" de $14.900 del maestro real de OMS, con `zonaCobro`/`valorZonaCobro`/ciudad/departamento en el pedido igual que en venta asistida, y el calculador reproduciendo el total.
+
+**Formas de pago del maestro.** Además de pago en línea y contra entrega, hasta 6 formas manuales del maestro `pagos` (Nequi, transferencia...). El pedido nace `Pendiente` con `formaDePago` = el nombre del maestro, y las instrucciones (datos de cuenta) van en el mensaje de confirmación. El cd se valida contra la lista que el comerciante habilitó. Probado con el Nequi real de OMS.
+
+**La verdad de la pasarela — el aviso de plata.** `GET /v1/sites/venta-config` distingue pasarela PROPIA del respaldo de plataforma. El hallazgo: sin credenciales propias, el gateway cae a las credenciales de Julsmind — **el link de pago sale, pero el dinero entra a la cuenta de la plataforma, no a la del comerciante**. El fallo más caro posible porque no se ve. El editor ahora lo dice con todas sus letras, y también avisa si se elige envío por zonas sin zonas creadas.
+
+Todo dentro del lenguaje visual de la remodelación del builder (grupo/campo/opcion/palanca), que otra sesión hizo y esta respeta. Release 2026.08.12.9 publicado. El sitio demo (`demo-katuq-oms`) quedó en modo zonas con Nequi habilitado, a propósito, para que Daniel lo pruebe.
+
+**Deuda que sigue**: notificación al vendedor cuando entra un pedido (subió de prioridad: ALMARA ya publicó su tienda), y la auditoría del bundle de 4,6 MB.
