@@ -3790,3 +3790,21 @@ Solo se venden los productos que ese sitio publica con compra habilitada, y solo
 **Falta para cerrar el cobro en línea**: registrar `https://back.katuq.com/v1/sites/public/pago/webhook` en el panel de Wompi y hacer un pago real de prueba. El código está desplegado y probado hasta donde se puede sin mover dinero.
 
 **Sigue abierto**: el tope de certificados de Let's Encrypt (del orden de 50 por dominio a la semana) para altas masivas de tiendas, que se resuelve con exención o certificado comodín.
+
+## D-184 (2026-08-12) — El pedido de la tienda queda completo como el de venta asistida, y el checkout muestra resumen
+
+Daniel señaló `venta-asistida-unica` como la vara: el carrito creaba pedidos a medias y "no estamos ofreciendo lo necesario". La regla que queda: **un pedido de la tienda no es un pedido de segunda** — despachos, facturación, la lista y el CRM lo leen con los mismos ojos que a cualquier otro.
+
+**`utils/siteOrden.js`** — armador de órdenes puro (sin Firestore), con la prueba que corta de raíz la familia de bugs de esta semana: **el contrato pasa la orden construida por el calculador real de la lista y exige que reproduzca los totales persistidos**. Si divergen, la primera recarga de "Todos los pedidos" pisa los totales (la lección del pedido en $12.000). De esa prueba salió un hallazgo verificado, no asumido: el `subtotal` canónico es productos sin IVA **más el envío**.
+
+**Lo que la orden lleva ahora** (verificado contra el pedido real ORE-000557, luego borrado): `channel` como objeto (era texto y desentonaba con todos los canales), `envio` y `facturacion` de primer nivel con la forma exacta de la venta asistida (incluido `valorZonaCobro`, el respaldo del calculador), `vendedor`, fechaEntrega arriba y por línea, y totales canónicos que el calculador reproduce exacto.
+
+**El comprador queda como cliente real en el CRM** (colección `clients`): se busca por teléfono y correo dentro de la empresa; si existe se completa sin pisar (dirección nueva se agrega, huecos se llenan); si no, se crea. Un fallo del CRM no cuesta la venta. Esto amplía el write-set del módulo de sitios a `clients`, deliberadamente: un comprador que solo vive embebido en la orden es un cliente fantasma al que nadie puede volver a venderle.
+
+**El checkout gana el resumen que pidió Daniel**, dos veces: "Revisa tu pedido" ANTES de confirmar (productos, entrega, pago, notas, totales — comprar sin ver el resumen es la receta de los pedidos con la dirección mala) y una confirmación completa DESPUÉS, pintada desde la respuesta del servidor y no del carrito local: número de pedido con "guárdalo", desglose, entrega y forma de pago. Campos nuevos: barrio, y cédula/NIT opcional para la factura.
+
+**El webhook de pago descuenta por bodega fija** (`updateByPOS`), no por `updateStock`: el camino E-commerce resuelve la bodega vía un canal registrado en `channels` y la tienda no tiene canal — tiene UNA bodega elegida por el comerciante. Por canal habría fallado en silencio.
+
+**El builder ya tiene uso real**: durante esta misma sesión, OH MY STORE renombró su sitio a `demo-katuq-oms` y **ALMARA FELICIDAD publicó el suyo** (`almara.katuq.com`). El susto de "la tienda no está disponible" en las pruebas era eso: el slug había cambiado por uso legítimo del editor.
+
+**Pendiente**: notificar al vendedor cuando entra un pedido de la tienda — `sendSellerNotification` vive dentro de `controllers/orders.js` y extraerlo es un cambio aparte.
