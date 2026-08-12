@@ -3763,3 +3763,24 @@ Corregido con `scripts/backfill-menu-sitios.js` (dry-run por defecto, `--apply` 
 **Confirmado con Daniel: el carrito es la fase 2.** La "tienda" se va a construir de verdad; no se cambia el texto que la promete.
 
 **Queda abierto para esa fase:** no hay medición para pauta —y la política de seguridad de la página bloquea scripts externos, así que habrá que abrirla a propósito para Google Ads o Meta—, falta SEO estructurado (robots, sitemap, datos estructurados de producto y preguntas frecuentes), y hay un tope semanal de certificados por dominio en Let's Encrypt que conviene resolver antes de dar de alta comercios en masa, con exención o con certificado comodín.
+
+## D-183 (2026-08-12) — Fase 2 del builder: la tienda vende de verdad, con SEO y medición
+
+La "tienda" tenía tipo y contador de pedidos pero no había forma de comprar: el bloque de productos era una vitrina. Daniel confirmó que el carrito es la fase 2 y que se construye, no se recorta el alcance.
+
+**Carrito y checkout como web component vanilla** (`utils/siteTienda.js`), sin framework y sin build, por la misma razón que la página se sirve desde el servidor: se abre desde un link de WhatsApp, en celular y con datos. Carrito flotante que sobrevive a la recarga, checkout con datos de entrega y forma de pago, y confirmación con el número de pedido. La página pasó de 10 kB a 32 kB con la tienda encendida — sigue siendo dos órdenes de magnitud menos que el bundle del panel.
+
+**Dos candados que sostienen esto, y por qué:**
+
+1. **El navegador nunca decide precios.** El carrito guarda importes solo para pintarlos; al cerrar la compra viaja `{productoId, cantidad}` y el servidor recalcula contra el maestro. Verificado en producción: se mandó `precio: 1` en la petición y se cobraron los $185.900 reales.
+2. **No se descuenta inventario al crear el pedido.** Nace `Pendiente` y el stock se mueve cuando el comerciante confirma o entra el pago. Un endpoint público que descuenta existencias es un cañón apuntando al inventario: bastaría un script con pedidos falsos para dejar la tienda en cero. Es la lección directa del webhook de tienda virtual, que estuvo abierto creando pedidos y descontando stock sin autenticación.
+
+Solo se venden los productos que ese sitio publica con compra habilitada, y solo de la empresa dueña. La tienda nace apagada, y encendida sin bodega rechaza pedidos en vez de aceptar los que nadie sepa despachar.
+
+**SEO**: datos estructurados armados desde los bloques (Product con precio y moneda, FAQPage, WebSite), más `robots.txt` y `sitemap.xml` por sitio, servidos por Caddy en su ruta exacta. Un `</script>` en el contenido no puede cerrar el bloque JSON-LD.
+
+**Medición y pauta**: GA4, Google Ads, píxel de Meta y GTM por sitio. Se guardan **solo identificadores con formato verificado, nunca fragmentos de código** — aceptar código pegado sería darle al comerciante una vía para inyectar cualquier script en una página servida bajo el dominio de Katuq, que es justo lo que el modelo de bloques existe para impedir. El servidor arma las etiquetas y **abre la política de seguridad solo para los dominios que ese sitio configuró**: una página sin medición queda tan cerrada como antes, y una con píxel de Meta permite Meta y nada más. El carrito emite `add_to_cart`, `begin_checkout` y `purchase` a `dataLayer`, `gtag` y `fbq`.
+
+**Verificado en producción de punta a punta**, con la tienda encendida en el sitio demo: la página pinta los botones y el carrito, `robots.txt` y `sitemap.xml` responden, el pedido se crea con la forma correcta (`E-commerce`, canal `sitio-web`, bodega en business code, `Pendiente`, forma de entrega en la línea del carrito) y las validaciones rechazan producto ajeno, cantidad absurda, falta de teléfono y forma de pago no habilitada. Los cuatro pedidos de prueba se borraron y el contador del sitio volvió a cero; quedaron consumidos los consecutivos ORE-000550 a ORE-000553 de OH MY STORE.
+
+**Queda para la fase siguiente**: el pago en línea está cableado contra `paymentGateway` pero no se pudo probar de extremo a extremo porque la tienda demo quedó en contra entrega; falta el webhook que confirme el pago y mueva el pedido a Aprobado, y con él la decisión de en qué momento se descuenta inventario. Tampoco hay tope de certificados resuelto (Let's Encrypt, del orden de 50 por dominio a la semana) para altas masivas de tiendas.
