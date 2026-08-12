@@ -1,0 +1,404 @@
+// =============================================================================
+// KATUQ · Piel del constructor de páginas
+//
+// Tokens y patrones del diseño aprobado para el builder (lista de páginas,
+// editor y sus modales). Es un lenguaje propio del módulo: acento #6a4dfb,
+// Plus Jakarta Sans, esquinas grandes y sombras violeta muy difusas.
+//
+// Se aparta del canon en dos puntos, por decisión de negocio sobre el diseño:
+// el acento es #6a4dfb (el canon dice #5F3FE0) y el botón primario lleva
+// degradado (el canon lo prohíbe en tarjetas y encabezados). El degradado vive
+// solo en el botón de acción principal; las tarjetas siguen planas.
+//
+// Uso en un componente:
+//   @import '../../../shared/styles/katuq-builder';
+//   :host { @include kb-tokens; font-family: var(--kb-font); }
+// =============================================================================
+
+@mixin kb-tokens {
+  --kb-font: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+
+  --kb-canvas: #ecebf4;
+  --kb-surface: #fff;
+  --kb-surface-2: #f8f7fc;
+  --kb-surface-3: #fcfbff;
+
+  --kb-ink: #211d33;
+  --kb-ink-2: #5b5772;
+  --kb-body: #6b6880;
+  --kb-muted: #8b879f;
+  --kb-muted-2: #9793ac;
+  --kb-muted-3: #a7a3bd;
+  --kb-disabled: #b0abc4;
+
+  // Bordes: de más tenue a más marcado.
+  --kb-line: #f0eef7;
+  --kb-line-2: #ecebf3;
+  --kb-line-3: #eeecf5;
+  --kb-line-4: #e9e6f3;
+  --kb-line-5: #e6e3f0;
+  --kb-line-6: #e4e1f0;
+
+  --kb-chip: #f5f4fb;
+  --kb-chip-2: #f4f2fb;
+
+  --kb-accent: #6a4dfb;
+  --kb-accent-ink: #5537e8;
+  --kb-accent-wash: #f4f0ff;
+  --kb-accent-wash-2: #f6f4fe;
+  --kb-accent-wash-3: #faf9ff;
+  --kb-accent-wash-4: #faf8ff;
+  --kb-accent-tile: #e7e0fe;
+  --kb-accent-line: #e9e3ff;
+  --kb-accent-line-2: #c9b8ff;
+  --kb-accent-text: #5b4fa0;
+  --kb-accent-grad: linear-gradient(135deg, #7b5bff, #6338f0);
+
+  --kb-ok: #16a34a;
+  --kb-ok-wash: #e7f8ee;
+  --kb-ok-soft: #f4fbf7;
+  --kb-ok-line: #d9f0e4;
+
+  --kb-warn: #e08a1e;
+  --kb-warn-wash: #fdf1dc;
+
+  --kb-danger: #d3355c;
+  --kb-danger-wash: #fdf1f4;
+  --kb-danger-line: #f7dde3;
+
+  --kb-shadow-card: 0 5px 26px rgba(30, 20, 60, 0.06);
+  --kb-shadow-modal: 0 30px 80px rgba(20, 12, 45, 0.4);
+  --kb-shadow-frame: 0 14px 40px rgba(30, 20, 60, 0.16);
+  --kb-shadow-thumb: 0 6px 18px rgba(30, 20, 60, 0.12);
+  --kb-shadow-accent: 0 6px 18px rgba(107, 78, 251, 0.32);
+  --kb-shadow-accent-sm: 0 5px 14px rgba(107, 78, 251, 0.3);
+  --kb-shadow-pill: 0 2px 6px rgba(107, 78, 251, 0.15);
+}
+
+// Animaciones de entrada. Se declaran en cada componente que las use porque la
+// encapsulación de Angular no comparte @keyframes entre hojas.
+@mixin kb-keyframes {
+  @keyframes kb-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes kb-pop {
+    from {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes kb-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+// ── Botones ──────────────────────────────────────────────────────────────────
+
+@mixin kb-btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--kb-font);
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+
+  svg {
+    flex: none;
+  }
+}
+
+@mixin kb-btn-primary($alto: 14px, $ancho: 24px, $texto: 14.5px) {
+  @include kb-btn-base;
+  border: none;
+  background: var(--kb-accent-grad);
+  color: #fff;
+  font-size: $texto;
+  padding: $alto $ancho;
+  border-radius: 13px;
+  box-shadow: var(--kb-shadow-accent);
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
+
+  &:disabled {
+    background: #eeecf6;
+    color: var(--kb-disabled);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+}
+
+@mixin kb-btn-ghost($alto: 12px, $ancho: 18px, $texto: 14px) {
+  @include kb-btn-base;
+  border: 1.5px solid var(--kb-line-6);
+  background: #fff;
+  color: var(--kb-ink-2);
+  font-weight: 700;
+  font-size: $texto;
+  padding: $alto $ancho;
+  border-radius: 12px;
+
+  &:hover:not(:disabled) {
+    border-color: var(--kb-accent-line-2);
+  }
+
+  &:disabled {
+    color: var(--kb-disabled);
+    cursor: default;
+  }
+}
+
+// Botón cuadrado de acción secundaria (subir, bajar, duplicar…).
+@mixin kb-btn-icono($lado: 32px) {
+  @include kb-btn-base;
+  width: $lado;
+  height: $lado;
+  padding: 0;
+  border: 1.5px solid var(--kb-line-5);
+  background: #fff;
+  border-radius: 9px;
+  color: var(--kb-body);
+
+  &:hover:not(:disabled) {
+    border-color: var(--kb-accent);
+    color: var(--kb-accent);
+  }
+
+  &:disabled {
+    color: #cfcadf;
+    cursor: not-allowed;
+  }
+}
+
+// ── Controles ────────────────────────────────────────────────────────────────
+
+@mixin kb-input {
+  width: 100%;
+  border: 1.5px solid var(--kb-line-5);
+  border-radius: 12px;
+  padding: 13px 15px;
+  font-family: var(--kb-font);
+  font-size: 14px;
+  color: var(--kb-ink);
+  background: #fbfaff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder {
+    color: var(--kb-muted-3);
+    font-weight: 500;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--kb-accent);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(107, 78, 251, 0.1);
+  }
+}
+
+@mixin kb-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kb-ink);
+  margin-bottom: 8px;
+}
+
+@mixin kb-hint {
+  display: block;
+  font-size: 11.5px;
+  color: var(--kb-muted-2);
+  font-weight: 600;
+  line-height: 1.4;
+  margin-top: 7px;
+}
+
+// Control segmentado (Computador/Celular, esquinas…). La opción activa es una
+// pastilla blanca; el contenedor es el chip lila.
+@mixin kb-segmented {
+  display: flex;
+  background: var(--kb-chip-2);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 2px;
+
+  button {
+    @include kb-btn-base;
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--kb-muted);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 9px 16px;
+    border-radius: 9px;
+
+    &.is-active {
+      background: #fff;
+      color: var(--kb-accent);
+      font-weight: 800;
+      box-shadow: var(--kb-shadow-pill);
+    }
+  }
+}
+
+// Píldora de estado (PUBLICADA, OCULTA, CAMBIOS SIN GUARDAR…).
+@mixin kb-pill($color, $fondo) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: $color;
+  background: $fondo;
+  padding: 4px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+// Chip filtro (sectores del selector de plantillas).
+@mixin kb-chip-filtro {
+  @include kb-btn-base;
+  border: 1.5px solid var(--kb-line-4);
+  background: #fff;
+  color: var(--kb-ink-2);
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 9px 15px;
+  border-radius: 99px;
+
+  &.is-active {
+    border-color: var(--kb-accent);
+    background: #f2eeff;
+    color: var(--kb-accent-ink);
+    font-weight: 800;
+  }
+}
+
+// Aviso lila de ayuda ("tu página está hecha de secciones…").
+@mixin kb-nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  background: var(--kb-accent-wash-2);
+  border: 1px solid var(--kb-accent-line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 12.5px;
+  color: var(--kb-accent-text);
+  font-weight: 600;
+  line-height: 1.45;
+
+  svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--kb-accent);
+  }
+}
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+//
+// El velo va con `appAlBody`: dentro de `.page-body` quedaría por debajo del
+// sidebar. Ver `al-body.directive.ts`.
+
+@mixin kb-modal-velo {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 34px;
+  background: rgba(28, 20, 55, 0.5);
+  backdrop-filter: blur(3px);
+  animation: kb-fade 0.2s ease;
+
+  @media (max-width: 767px) {
+    padding: 12px;
+  }
+}
+
+@mixin kb-modal-caja($ancho: 1000px, $radio: 24px) {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: $ancho;
+  max-height: 88vh;
+  background: #fff;
+  border-radius: $radio;
+  box-shadow: var(--kb-shadow-modal);
+  overflow: hidden;
+  animation: kb-pop 0.22s ease;
+}
+
+@mixin kb-modal-cabecera {
+  flex: none;
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid var(--kb-line);
+
+  @media (max-width: 575px) {
+    padding: 18px 18px 14px;
+  }
+}
+
+@mixin kb-modal-cuerpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 28px 26px;
+
+  @media (max-width: 575px) {
+    padding: 18px;
+  }
+}
+
+@mixin kb-modal-pie {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 28px;
+  border-top: 1px solid var(--kb-line);
+  background: var(--kb-surface-3);
+
+  @media (max-width: 575px) {
+    padding: 14px 18px;
+  }
+}
+
+@mixin kb-cerrar($lado: 36px) {
+  @include kb-btn-base;
+  width: $lado;
+  height: $lado;
+  flex: none;
+  padding: 0;
+  border: none;
+  background: var(--kb-chip-2);
+  border-radius: 11px;
+  color: var(--kb-body);
+
+  &:hover {
+    background: #eceaf4;
+  }
+}

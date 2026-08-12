@@ -4,6 +4,18 @@ import { ToastrService } from "ngx-toastr";
 import { PlantillaSitio, Sitio, SitiosService } from "../sitios.service";
 import { environment } from "../../../../environments/environment";
 
+/** Nombre humano de cada tipo de bloque, para los chips de la plantilla. */
+const NOMBRE_BLOQUE: { [tipo: string]: string } = {
+  hero: "Portada",
+  texto: "Sobre tu negocio",
+  galeria: "Galería",
+  productos: "Productos",
+  whatsapp: "WhatsApp",
+  formulario: "Formulario",
+  faq: "Preguntas",
+  footer: "Pie",
+};
+
 /**
  * Listado de sitios del comercio y creación de uno nuevo.
  *
@@ -28,12 +40,19 @@ export class SitiosListaComponent implements OnInit {
    */
   dominioSitios = environment.dominioSitios || "katuq.com";
 
+  /** Id del sitio cuyo enlace se acaba de copiar, para el "¡Copiado!". */
+  copiadoId = "";
+  private tempCopiado: any = null;
+
   // Asistente de creación
   mostrandoAsistente = false;
   paso: "plantilla" | "datos" = "plantilla";
   plantillas: PlantillaSitio[] = [];
   cargandoPlantillas = false;
   plantillaElegida: PlantillaSitio | null = null;
+
+  /** Filtro de sector del selector de plantillas. "" = todas. */
+  sectorFiltro = "";
 
   nombre = "";
   objetivo = "";
@@ -77,7 +96,13 @@ export class SitiosListaComponent implements OnInit {
   copiarEnlace(sitio: Sitio): void {
     const url = this.enlacePublico(sitio);
     navigator.clipboard.writeText(url).then(
-      () => this.toastr.success("Enlace copiado"),
+      () => {
+        // El botón se vuelve verde un momento; es más claro que un toast que
+        // tapa la tarjeta desde la esquina.
+        this.copiadoId = sitio.id;
+        clearTimeout(this.tempCopiado);
+        this.tempCopiado = setTimeout(() => (this.copiadoId = ""), 1800);
+      },
       () => this.toastr.info(url, "Copia el enlace")
     );
   }
@@ -90,12 +115,35 @@ export class SitiosListaComponent implements OnInit {
     window.open(this.enlacePublico(sitio), "_blank");
   }
 
+  // ── Miniatura de la tarjeta ────────────────────────────────────────────────
+
+  /**
+   * El contenido que se muestra en la miniatura: lo publicado si existe, si no
+   * el borrador. Así la tarjeta enseña lo que el cliente está viendo hoy.
+   */
+  private contenidoDe(sitio: Sitio): any {
+    return (sitio && (sitio.published || sitio.draft)) || {};
+  }
+
+  /** Color de marca de la página, para pintar la miniatura con su look. */
+  colorDe(sitio: Sitio): string {
+    const tema = this.contenidoDe(sitio).tema;
+    return (tema && tema.colorPrimario) || "#6a4dfb";
+  }
+
+  /** ¿La página tiene una sección de productos? Cambia el dibujo de la miniatura. */
+  tieneProductos(sitio: Sitio): boolean {
+    const bloques = this.contenidoDe(sitio).bloques || [];
+    return bloques.some((b: any) => b && b.tipo === "productos");
+  }
+
   // ── Asistente ──────────────────────────────────────────────────────────────
 
   abrirAsistente(): void {
     this.mostrandoAsistente = true;
     this.paso = "plantilla";
     this.plantillaElegida = null;
+    this.sectorFiltro = "";
     this.nombre = "";
     this.objetivo = "";
     this.usarIA = true;
@@ -115,11 +163,17 @@ export class SitiosListaComponent implements OnInit {
   }
 
   cerrarAsistente(): void {
+    if (this.creando) return;
     this.mostrandoAsistente = false;
   }
 
+  /** Elegir no avanza de paso: se marca y se confirma abajo, como en el diseño. */
   elegirPlantilla(p: PlantillaSitio): void {
     this.plantillaElegida = p;
+  }
+
+  continuar(): void {
+    if (!this.plantillaElegida) return;
     this.paso = "datos";
   }
 
@@ -173,13 +227,22 @@ export class SitiosListaComponent implements OnInit {
       });
   }
 
-  /** Sectores presentes en las plantillas, para agrupar la selección. */
+  // ── Plantillas ─────────────────────────────────────────────────────────────
+
+  /** Sectores presentes en las plantillas, para los chips del filtro. */
   get sectores(): string[] {
     return [...new Set(this.plantillas.map((p) => p.sector))];
   }
 
-  plantillasDe(sector: string): PlantillaSitio[] {
-    return this.plantillas.filter((p) => p.sector === sector);
+  /**
+   * Las plantillas se muestran en una sola rejilla y el sector es un filtro.
+   * Antes iban agrupadas por sector, y como hay una plantilla por sector cada
+   * grupo abría su propia rejilla de tres columnas para una sola tarjeta: se
+   * veía una columna flaca con dos tercios de la ventana en blanco.
+   */
+  get plantillasVisibles(): PlantillaSitio[] {
+    if (!this.sectorFiltro) return this.plantillas;
+    return this.plantillas.filter((p) => p.sector === this.sectorFiltro);
   }
 
   etiquetaSector(sector: string): string {
@@ -194,5 +257,28 @@ export class SitiosListaComponent implements OnInit {
       general: "Cualquier negocio",
     };
     return nombres[sector] || sector;
+  }
+
+  /** Nombre corto del título de la plantilla: "Moda — Colección" → "Colección". */
+  tituloPlantilla(p: PlantillaSitio): string {
+    const partes = (p.nombre || "").split("—");
+    return (partes.length > 1 ? partes.slice(1).join("—") : partes[0]).trim();
+  }
+
+  /** Secciones que trae la plantilla, en nombre humano y sin repetir. */
+  seccionesDe(p: PlantillaSitio): string[] {
+    const vistos = new Set<string>();
+    const salida: string[] = [];
+    for (const tipo of p.bloques || []) {
+      const nombre = NOMBRE_BLOQUE[tipo] || tipo;
+      if (vistos.has(nombre)) continue;
+      vistos.add(nombre);
+      salida.push(nombre);
+    }
+    return salida.slice(0, 4);
+  }
+
+  colorPlantilla(p: PlantillaSitio): string {
+    return (p.tema && p.tema.colorPrimario) || "#6a4dfb";
   }
 }

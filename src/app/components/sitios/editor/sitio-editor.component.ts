@@ -7,15 +7,85 @@ import { ContenidoSitio, Sitio, SitiosService } from "../sitios.service";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
-const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string }[] = [
-  { tipo: "hero", nombre: "Banner principal", descripcion: "Imagen grande con título y botón" },
-  { tipo: "texto", nombre: "Texto", descripcion: "Un título y un párrafo" },
-  { tipo: "galeria", nombre: "Galería", descripcion: "Varias fotos en cuadrícula" },
-  { tipo: "productos", nombre: "Productos", descripcion: "Productos de tu catálogo, con precio actual" },
-  { tipo: "whatsapp", nombre: "Botón de WhatsApp", descripcion: "Para que te escriban directo" },
-  { tipo: "formulario", nombre: "Formulario", descripcion: "Pide nombre y contacto; los leads llegan a tu CRM" },
-  { tipo: "faq", nombre: "Preguntas frecuentes", descripcion: "Lista de preguntas y respuestas" },
-  { tipo: "footer", nombre: "Pie de página", descripcion: "Datos del negocio y enlaces" },
+const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
+  {
+    tipo: "hero",
+    nombre: "Portada",
+    descripcion: "Lo primero que ve tu cliente al entrar",
+    icono: "M3 5h18v9H3zM7 19h10",
+  },
+  {
+    tipo: "texto",
+    nombre: "Sobre tu negocio",
+    descripcion: "Cuenta tu historia en pocas líneas",
+    icono: "M4 7h16M4 12h16M4 17h9",
+  },
+  {
+    tipo: "galeria",
+    nombre: "Galería de fotos",
+    descripcion: "Muestra tu local o tus trabajos",
+    icono: "M3 5h18v14H3zM8 11l3 3 3-4 5 5",
+  },
+  {
+    tipo: "productos",
+    nombre: "Tus productos",
+    descripcion: "Se llenan solos desde tu catálogo",
+    icono: "M3 9h18M9 21V9M3 5h18v16H3z",
+  },
+  {
+    tipo: "whatsapp",
+    nombre: "Botón de WhatsApp",
+    descripcion: "Para que te escriban con un toque",
+    icono: "M21 12a9 9 0 1 1-4.5-7.8L21 3l-1.2 4.5A9 9 0 0 1 21 12Z",
+  },
+  {
+    tipo: "formulario",
+    nombre: "Formulario de contacto",
+    descripcion: "Recibe datos de clientes interesados",
+    icono: "M4 5h16v14H4zM8 10h8M8 14h5",
+  },
+  {
+    tipo: "faq",
+    nombre: "Preguntas frecuentes",
+    descripcion: "Responde dudas antes de que pregunten",
+    icono: "M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z",
+  },
+  {
+    tipo: "footer",
+    nombre: "Pie de página",
+    descripcion: "Horarios, redes y datos de contacto",
+    icono: "M3 15h18M3 19h10M3 5h18v14H3z",
+  },
+];
+
+/**
+ * Combinaciones de color ya armadas. Existen porque elegir tres colores que
+ * combinen es justo lo que un comerciante no quiere hacer; los selectores de
+ * color sueltos siguen ahí, escondidos tras "elegir mis propios colores".
+ */
+const PALETAS: {
+  id: string;
+  nombre: string;
+  colorPrimario: string;
+  colorSecundario: string;
+  colorTexto: string;
+}[] = [
+  { id: "violeta", nombre: "Violeta", colorPrimario: "#6a4dfb", colorSecundario: "#ffffff", colorTexto: "#211d33" },
+  { id: "rosa", nombre: "Rosa dulce", colorPrimario: "#e8478f", colorSecundario: "#fff8fb", colorTexto: "#2b1a24" },
+  { id: "verde", nombre: "Verde natural", colorPrimario: "#1f9d68", colorSecundario: "#f7fbf8", colorTexto: "#12261c" },
+  { id: "noche", nombre: "Negro elegante", colorPrimario: "#211d33", colorSecundario: "#faf9f7", colorTexto: "#211d33" },
+];
+
+/**
+ * Tipografías de la página publicada. Los valores son los que acepta el
+ * backend (`sistema`, `sans`, `serif`, `mono`): mandar otro se descarta en
+ * silencio al guardar y el comerciante vería su elección revertida.
+ */
+const TIPOGRAFIAS: { id: string; nombre: string; pista: string; familia: string }[] = [
+  { id: "sans", nombre: "Moderna", pista: "Clara y actual", familia: 'Inter, "Helvetica Neue", Arial, sans-serif' },
+  { id: "serif", nombre: "Clásica", pista: "Elegante, con serifas", familia: 'Georgia, "Times New Roman", serif' },
+  { id: "sistema", nombre: "Neutra", pista: "La del teléfono de tu cliente", familia: "system-ui, -apple-system, sans-serif" },
+  { id: "mono", nombre: "Técnica", pista: "De ancho fijo", familia: "ui-monospace, SFMono-Regular, Menlo, monospace" },
 ];
 
 /** Valores iniciales de un bloque recién agregado. */
@@ -73,6 +143,9 @@ export class SitioEditorComponent implements OnInit {
   mostrandoAgregar = false;
   mostrandoSelector = false;
 
+  /** Los selectores de color sueltos van escondidos tras las paletas. */
+  coloresAvanzados = false;
+
   catalogoBloques = CATALOGO_BLOQUES;
 
   /** Hay cambios sin guardar. Se usa para avisar antes de publicar. */
@@ -85,6 +158,9 @@ export class SitioEditorComponent implements OnInit {
   // Campos de ajustes
   nombre = "";
   slug = "";
+
+  /** Sufijo del dominio, para la barra del navegador de la previa. */
+  dominioSitios = environment.dominioSitios || "katuq.com";
   slugMensaje: string | null = null;
   slugValido = true;
 
@@ -229,6 +305,53 @@ export class SitioEditorComponent implements OnInit {
   nombreDeTipo(tipo: string): string {
     const encontrado = CATALOGO_BLOQUES.find((b) => b.tipo === tipo);
     return encontrado ? encontrado.nombre : tipo;
+  }
+
+  descripcionDeTipo(tipo: string): string {
+    const encontrado = CATALOGO_BLOQUES.find((b) => b.tipo === tipo);
+    return encontrado ? encontrado.descripcion : "";
+  }
+
+  /** Trazo del ícono de la sección (atributo `d` de un <path>). */
+  iconoDeTipo(tipo: string): string {
+    const encontrado = CATALOGO_BLOQUES.find((b) => b.tipo === tipo);
+    return encontrado ? encontrado.icono : "M4 5h16v14H4z";
+  }
+
+  // ── Estilo de la página ────────────────────────────────────────────────────
+
+  paletas = PALETAS;
+  tipografias = TIPOGRAFIAS;
+
+  /** Id de la paleta que coincide con los colores actuales, o "" si son a mano. */
+  get paletaActiva(): string {
+    const t = this.contenido && this.contenido.tema;
+    if (!t) return "";
+    const igual = PALETAS.find(
+      (p) =>
+        p.colorPrimario.toLowerCase() === (t.colorPrimario || "").toLowerCase() &&
+        p.colorSecundario.toLowerCase() === (t.colorSecundario || "").toLowerCase() &&
+        p.colorTexto.toLowerCase() === (t.colorTexto || "").toLowerCase()
+    );
+    return igual ? igual.id : "";
+  }
+
+  aplicarPaleta(id: string): void {
+    const p = PALETAS.find((x) => x.id === id);
+    if (!p || !this.contenido) return;
+    this.contenido.tema = {
+      ...this.contenido.tema,
+      colorPrimario: p.colorPrimario,
+      colorSecundario: p.colorSecundario,
+      colorTexto: p.colorTexto,
+    };
+    this.marcarSucio();
+  }
+
+  elegirTipografia(id: string): void {
+    if (!this.contenido) return;
+    this.contenido.tema = { ...this.contenido.tema, tipografia: id };
+    this.marcarSucio();
   }
 
   seleccionar(indice: number): void {

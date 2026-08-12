@@ -1,4 +1,6 @@
-<div class="fondo" (click)="cerrar.emit()">
+<!-- `appAlBody`: sin él el velo se dibuja dentro de `.page-body`, que abre
+     contexto de apilamiento, y el menú lateral queda encima. Ver la directiva. -->
+<div class="fondo" appAlBody (click)="cerrar.emit()">
   <div class="caja" (click)="$event.stopPropagation()">
 
     <header class="caja__cabecera">
@@ -6,7 +8,9 @@
         <h5>Elegir productos</h5>
         <p class="sub">Se muestran con el precio y la disponibilidad del momento en que alguien abra tu página.</p>
       </div>
-      <button class="cerrar" (click)="cerrar.emit()" title="Cerrar">×</button>
+      <button class="cerrar" (click)="cerrar.emit()" title="Cerrar" aria-label="Cerrar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
     </header>
 
     <div class="caja__cuerpo">
@@ -80,8 +84,8 @@
     </div>
 
     <footer class="caja__pie">
-      <button class="btn btn-outline-secondary" (click)="cerrar.emit()">Cancelar</button>
-      <button class="btn btn-primary" (click)="aceptar()">
+      <button class="btn-fantasma" (click)="cerrar.emit()">Cancelar</button>
+      <button class="btn-primario" (click)="aceptar()">
         Usar {{ elegidos.length }} producto{{ elegidos.length === 1 ? '' : 's' }}
       </button>
     </footer>
