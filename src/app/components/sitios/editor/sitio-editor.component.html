@@ -151,8 +151,8 @@
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" /></label>
             <label><span>Descripción</span>
               <textarea rows="2" [(ngModel)]="b.datos.descripcion" (ngModelChange)="marcarSucio()" maxlength="400"></textarea></label>
-            <label class="check"><input type="checkbox" [(ngModel)]="b.datos.pedirTelefono" (ngModelChange)="marcarSucio()" /> Pedir teléfono</label>
-            <label class="check"><input type="checkbox" [(ngModel)]="b.datos.pedirEmail" (ngModelChange)="marcarSucio()" /> Pedir correo</label>
+            <label class="check"><input type="checkbox" [(ngModel)]="b.datos.pedirTelefono" (ngModelChange)="alCambiarCampoContacto('pedirTelefono')" /> Pedir teléfono</label>
+            <label class="check"><input type="checkbox" [(ngModel)]="b.datos.pedirEmail" (ngModelChange)="alCambiarCampoContacto('pedirEmail')" /> Pedir correo</label>
             <label class="check"><input type="checkbox" [(ngModel)]="b.datos.pedirMensaje" (ngModelChange)="marcarSucio()" /> Pedir mensaje</label>
             <label><span>Texto del botón</span>
               <input type="text" [(ngModel)]="b.datos.textoBoton" (ngModelChange)="marcarSucio()" maxlength="40" /></label>

@@ -2,6 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 import { PlantillaSitio, Sitio, SitiosService } from "../sitios.service";
+import { environment } from "../../../../environments/environment";
 
 /**
  * Listado de sitios del comercio y creación de uno nuevo.
@@ -19,6 +20,13 @@ import { PlantillaSitio, Sitio, SitiosService } from "../sitios.service";
 export class SitiosListaComponent implements OnInit {
   cargando = true;
   sitios: Sitio[] = [];
+
+  /**
+   * Para mostrar la dirección completa en cada tarjeta. El valor por defecto
+   * no sobra: los environments están en .gitignore, así que una copia del repo
+   * compilada en otra máquina no lo trae y la tarjeta diría "mi-tienda.undefined".
+   */
+  dominioSitios = environment.dominioSitios || "katuq.com";
 
   // Asistente de creación
   mostrandoAsistente = false;
@@ -57,13 +65,13 @@ export class SitiosListaComponent implements OnInit {
   }
 
   /**
-   * URL pública del sitio. Hoy la página vive en el mismo hosting que el
-   * panel (`/s/:slug`), así que el origen actual es la dirección correcta.
-   * Cuando se monte el dominio propio de tiendas habrá que leerlo de
-   * `environment`.
+   * URL pública del sitio: cada página vive en su propio subdominio
+   * (`flores-maria.katuq.com`). Dejó de colgar del panel a propósito — el link
+   * se comparte por WhatsApp y antes decía "sellercenter", que es el nombre
+   * interno de la herramienta de vendedores.
    */
   enlacePublico(sitio: Sitio): string {
-    return `${window.location.origin}/s/${sitio.slug}`;
+    return `https://${sitio.slug}.${this.dominioSitios}`;
   }
 
   copiarEnlace(sitio: Sitio): void {

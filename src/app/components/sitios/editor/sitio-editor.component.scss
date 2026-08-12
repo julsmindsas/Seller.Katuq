@@ -76,7 +76,7 @@
     font-size: 1rem;
 
     &.activo {
-      background: #1d4ed8;
+      background: #5F3FE0;
     }
   }
 }
@@ -122,8 +122,8 @@
     cursor: pointer;
 
     &.activa {
-      color: #1d4ed8;
-      border-bottom-color: #1d4ed8;
+      color: #5F3FE0;
+      border-bottom-color: #5F3FE0;
     }
   }
 }
@@ -145,7 +145,7 @@
     margin-bottom: 0.35rem;
 
     &.activo {
-      border-color: #1d4ed8;
+      border-color: #5F3FE0;
       background: #f8faff;
     }
 
@@ -207,7 +207,7 @@
     cursor: pointer;
 
     &:hover {
-      border-color: #1d4ed8;
+      border-color: #5F3FE0;
       background: #f8faff;
     }
 
@@ -230,7 +230,7 @@
 
   h6 {
     margin-bottom: 0.75rem;
-    color: #1d4ed8;
+    color: #5F3FE0;
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;

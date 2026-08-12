@@ -1,6 +1,7 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, HostListener, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
+import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
 import { ContenidoSitio, Sitio, SitiosService } from "../sitios.service";
 
@@ -221,6 +222,27 @@ export class SitioEditorComponent implements OnInit {
 
   // ── Campos con forma propia ────────────────────────────────────────────────
 
+  /**
+   * Teléfono y correo no se pueden apagar los dos.
+   *
+   * Sin ninguno de los dos queda un formulario que pide el nombre y rechaza el
+   * envío pidiendo "un teléfono o un correo", sin campo donde escribirlos: el
+   * visitante llena, manda y no pasa nada. Se vuelve a encender el que se acaba
+   * de apagar y se explica por qué.
+   */
+  alCambiarCampoContacto(campo: "pedirTelefono" | "pedirEmail"): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    if (!b.datos.pedirTelefono && !b.datos.pedirEmail) {
+      b.datos[campo] = true;
+      this.toastr.info(
+        "Necesitas pedir al menos un teléfono o un correo, o no habría forma de responderle a quien te escriba.",
+        "Ese campo tiene que quedar"
+      );
+    }
+    this.marcarSucio();
+  }
+
   agregarPregunta(): void {
     const b = this.bloqueActual;
     if (!b) return;
@@ -436,6 +458,7 @@ export class SitioEditorComponent implements OnInit {
             return;
           }
           this.sucio = false;
+          this.aplicarLoGuardado(res.data);
           if (res.avisos) this.toastr.info(res.avisos);
           if (!alPublicar) this.toastr.success("Cambios guardados");
           if (alPublicar) this.publicarAhora();
@@ -445,6 +468,82 @@ export class SitioEditorComponent implements OnInit {
           this.toastr.error((e && e.error && e.error.message) || "No pudimos guardar.");
         },
       });
+  }
+
+  /**
+   * Refleja lo que el servidor guardó de verdad.
+   *
+   * Al guardar, el backend descarta lo que no pasa el saneador: una dirección
+   * escrita como `www.mitienda.com` (sin `https://`) se va a vacío, y un
+   * WhatsApp de menos de siete dígitos también. Antes el editor seguía
+   * mostrándolos puestos y el comerciante publicaba convencido de que el botón
+   * estaba ahí. Ahora se ve lo que quedó, y se avisa qué se cayó.
+   */
+  private aplicarLoGuardado(
+    data: { nombre: string; slug: string; draft: ContenidoSitio } | undefined
+  ): void {
+    if (!data || !data.draft) return;
+
+    const perdidos = this.camposPerdidos(this.contenido, data.draft);
+
+    this.contenido = this.completar(data.draft);
+    if (data.slug) this.slug = data.slug;
+    if (data.nombre) this.nombre = data.nombre;
+    if (this.sitio) {
+      this.sitio.slug = data.slug || this.sitio.slug;
+      this.sitio.nombre = data.nombre || this.sitio.nombre;
+    }
+    this.resolverProductosDePrevia();
+
+    if (perdidos.length) {
+      this.toastr.warning(
+        perdidos.join(". ") + ".",
+        "Revisa estos campos: no quedaron guardados",
+        { timeOut: 9000, closeButton: true }
+      );
+    }
+  }
+
+  /**
+   * Compara lo que se mandó contra lo que volvió y arma el aviso. Solo mira los
+   * campos donde el saneador puede vaciar algo sin que se note: direcciones y
+   * teléfonos.
+   */
+  private camposPerdidos(antes: ContenidoSitio | null, despues: ContenidoSitio): string[] {
+    if (!antes) return [];
+    const avisos: string[] = [];
+    const nuevos = despues.bloques || [];
+
+    (antes.bloques || []).forEach((bloque, i) => {
+      const guardado = nuevos[i];
+      if (!guardado || guardado.tipo !== bloque.tipo) return;
+
+      const enviado = bloque.datos || {};
+      const quedo = guardado.datos || {};
+
+      if (bloque.tipo === "hero" && enviado.ctaUrl && !quedo.ctaUrl) {
+        avisos.push(
+          `El destino del botón del banner ("${enviado.ctaUrl}") no es una dirección válida; ` +
+            "escríbela completa, con https://, o usa #productos"
+        );
+      }
+      if (bloque.tipo === "whatsapp" && enviado.telefono && !quedo.telefono) {
+        avisos.push(
+          `El número de WhatsApp ("${enviado.telefono}") no sirve; ponlo con indicativo, ` +
+            "solo dígitos (ej: 573001234567)"
+        );
+      }
+      if (bloque.tipo === "footer") {
+        const perdidos = (enviado.enlaces || []).length - (quedo.enlaces || []).length;
+        if (perdidos > 0) {
+          avisos.push(
+            `${perdidos} enlace(s) del pie se descartaron: falta el nombre o la dirección no es válida`
+          );
+        }
+      }
+    });
+
+    return avisos;
   }
 
   /** Publicar guarda primero: nadie espera publicar una versión vieja. */
@@ -488,8 +587,16 @@ export class SitioEditorComponent implements OnInit {
     });
   }
 
+  /**
+   * Dirección pública de la página. Cada sitio se publica en su propio
+   * subdominio (`flores-maria.katuq.com`), no en una ruta del panel: es el link
+   * que el comerciante reparte por WhatsApp, y ahí el nombre importa.
+   */
   get enlacePublico(): string {
-    return `${window.location.origin}/s/${this.slug}`;
+    // El valor por defecto no sobra: los environments están en .gitignore, así
+    // que una copia del repo compilada en otra máquina no trae `dominioSitios`
+    // y el enlace saldría como "mi-tienda.undefined" sin que nada falle.
+    return `https://${this.slug}.${environment.dominioSitios || "katuq.com"}`;
   }
 
   copiarEnlace(): void {
@@ -503,7 +610,22 @@ export class SitioEditorComponent implements OnInit {
     window.open(this.enlacePublico, "_blank");
   }
 
+  /**
+   * Aviso del navegador al cerrar la pestaña o recargar con trabajo sin
+   * guardar. El editor ya sabía que había cambios pendientes, pero no lo decía
+   * en ningún lado: se cerraba la pestaña y se perdía la página a medio armar.
+   */
+  @HostListener("window:beforeunload", ["$event"])
+  avisarAntesDeCerrar(evento: BeforeUnloadEvent): void {
+    if (!this.sucio) return;
+    evento.preventDefault();
+    // Los navegadores muestran su propio texto; lo que importa es que el valor
+    // no sea vacío para que aparezca el diálogo.
+    evento.returnValue = "Tienes cambios sin guardar.";
+  }
+
   volver(): void {
+    if (this.sucio && !confirm("Tienes cambios sin guardar. ¿Salir y perderlos?")) return;
     this.router.navigate(["/sitios"]);
   }
 }

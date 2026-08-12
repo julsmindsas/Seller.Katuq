@@ -3361,7 +3361,7 @@ Cambios: el editor envía **todos** los tipos (los vacíos con `precio: 0`); el 
 
 ---
 
-## D-173 (2026-08-11) — Lista de Precios: el archivo se explica solo y el IVA 0 deja de convertirse en 19%
+## D-180 (2026-08-11) — Lista de Precios: el archivo se explica solo y el IVA 0 deja de convertirse en 19%
 
 **Origen.** Monica probando los importadores: "*no sé si el valor que uno agrega debe ser ya con el IVA incluido o se monta sin el IVA y el sistema se lo suma*". La pestaña "Precio tipo clientes" tapaba esa ambigüedad con un popup ("¿Los precios incluyen IVA?"), mientras las otras dos ya la tenían resuelta llamando a su columna `PRECIO SIN IVA`. Al tirar del hilo aparecieron tres defectos de fondo, dos de ellos con precios reales de por medio.
 
@@ -3618,3 +3618,131 @@ El bloque "Productos" del editor (D-175) se llenaba con un campo de ids separado
 **Verificado:** build de producción limpio (chunk del editor 241 kB) y los dos endpoints probados contra datos reales de OH MY STORE — "conjunto" da 478 coincidencias con stock y precio correctos, y `by-ids` devuelve los cuatro de la demo con foto.
 
 **Deuda ajena detectada:** `POST /v1/productos/by-ids` **no filtra por company** — hace `getAll` de los ids recibidos y devuelve lo que exista, así que un usuario autenticado de una empresa puede leer productos de otra si conoce el id. No se tocó (lo usa venta asistida, D-147). El builder no queda expuesto por esto: al publicar, `controllers/sites.js` descarta todo producto cuya `company` no sea la del sitio.
+## D-178 (2026-08-11) — Detección de cambios de Cereza y candado de precios de Shopify
+
+> Renumerada desde D-170: ese número ya lo tenían los buzones de Instagram y Facebook. Tres sesiones paralelas tomaron números el mismo día.
+
+**Desplegados juntos el arreglo de detección de cambios de Cereza y el candado de precios de Shopify. Y el timeout de transportadoras tiene culpable: Cereza nos inunda de avisos repetidos.**
+
+Autorizado por Daniel ("Dale, desplegá vos") tras consultarle la ambigüedad: la sesión de Shopify recibió "commit y push, no despliegues" y el despliegue quedó de este lado. Producción (`13.222.206.185`, rama `backend-aws-security`) pasó de `3ec495f` a `05d8dac`, con `e52c069` (huella de contenido para detectar cambios en Cereza) y `05d8dac` (candado de precios de Shopify) en un solo pull, para que no existiera una ventana con la detección viva sin el candado.
+
+Verificado antes de reiniciar: `test:flows-osmosis-huella`, `test:flows-node-catalog` (21 handlers en ambos catálogos) y `test:inventory-safety-contract`, los tres en verde. `package.json` solo sumaba una línea de scripts — sin dependencias nuevas. Arranque sin errores, crones dinámicos registrados.
+
+**Resultado medido a los ~10 minutos** contra la foto del antes: 225 productos ya con huella sembrada; **14 de los 39 precios perdidos recuperados, exactos** (GCJ4240 $365.900, GCJ4244 $339.900, GCJ4241 $319.900, GCJ4243 $290.900…), **$2.547.300**. Los 25 restantes van cayendo con el barrido. El candado de Shopify aún sin activarse (`sin_precio_valido` = 0, creaciones = 0), porque lo emitido hasta ahora traía precio válido.
+
+**Hallazgo nuevo, no corregido — Cereza reanuncia los mismos productos como `created` sin parar.** En 6 días de log: **16.266 avisos de producto, 15.072 de tipo `product.created`, para solo 1.062 productos distintos** (GCC411 llegó 167 veces). Katuq hace upsert del producto y **re-sincroniza inventario en cada uno**: 16.270 re-sincronizaciones. La idempotencia existe pero va indexada por `webhookId` y Cereza manda un id nuevo cada vez, así que nunca atrapa la repetición.
+
+Esa tormenta es la causa del timeout que reportó Daniel en el modal "Elige la transportadora": el catálogo de transportadoras de Cereza tarda **5–7 s** en calma y **supera los 30 s** bajo la inundación. Agravantes propios: el caché es solo en memoria (TTL 30 min) sobre un proceso con 4.895 reinicios acumulados, sin reintento ni respaldo persistido. Ese endpoint se llamó 5 veces desde el 05-ago —las 5 de Daniel— y falló las 5.
+
+**No se tocó**: deduplicar por contenido y persistir el catálogo de transportadoras escriben en `products`/inventario y en configuración, carril sensible — van con propuesta y aprobación explícita antes de implementar.
+
+**Corrección a D-170 (mismo día, tras verificar contra el código y los datos):** se afirmó que el despliegue cerraría solo la exposición de los 3 productos vendiéndose en $0 en ohmystore.shop. **Es falso.** El disparador de Cereza, en fase DIFF (la actual, `limit: 0`), escanea **siempre las páginas 1 a 3** — los 300 productos más nuevos por id descendente — y **no avanza cursor** (`osmosis-product-changed.trigger.js` líneas 268–286). Verificado: la ventana barrida cubre ids 38965–40003 (225 productos de 8.298, el 3%). GCDOT065 tiene id 35426 y GCINS0005 id 37113: **quedan fuera y el barrido nunca les llegará**, no en N corridas — nunca. GCC1233 ni siquiera tiene id de Cereza guardado (solo `integrations.shopify`), así que este camino jamás lo toca.
+
+Consecuencia: **bajar esos 3 a borrador es acción manual de Daniel en el admin de Shopify.** Ninguna sesión tiene autorización de escritura sobre Shopify de producción.
+
+Esto da la justificación concreta para la cobertura rotativa que quedó pendiente: no es eficiencia, es **el único mecanismo que alcanza productos rotos fuera de la ventana**. Requiere resolver antes el manejo de 429 — confirmado hoy en vivo: un recorrido paginado del catálogo devolvió `429 Too Many Attempts` a las pocas páginas.
+
+**Segunda corrección a D-170 — defecto propio detectado el mismo día, antes de que nadie lo sufriera en silencio.**
+
+El disparador de Cereza está configurado con `limit: 30` y `diffPagesScan: 3`: **escanea 300 productos por corrida pero solo emite 30**. En `osmosis-product-changed.trigger.js` la huella se escribía en la línea 376, **antes** del corte por tope de la 378. Consecuencia: los ~270 productos escaneados y no emitidos quedaban marcados como vistos, y en la corrida siguiente su huella ya coincidía → **el cambio se descartaba para siempre**. Es el mismo defecto que ya se había corregido en `fullpi-inventory-changed.trigger.js`; no se trasladó la lección al de Cereza.
+
+Efecto medido: de los 39 precios perdidos, 24 caen dentro de la ventana barrida y solo **14** se recuperaron. Los otros **10** (GCJ4265, GCJ4266, GCJ4263, GCJ4270, GCJ4269, GCJ4264, GCC1316, GCC1315, GCC1314, GCC1313 — $1.123.200) quedaron con huella registrada **sin haber sido emitidos**. Los 15 restantes ($769.969) están fuera de la ventana y son inalcanzables hasta que exista cobertura rotativa.
+
+**Arreglo escrito y probado en local, NO desplegado** (pendiente palabra de Daniel): al cortar por el tope se restaura la huella y el id anteriores —o se borran si no había— de modo que el producto se re-detecte en la corrida siguiente. La prueba `test:flows-osmosis-huella` ahora falla si alguien revierte esa restauración.
+
+**Reparación de datos pendiente y no ejecutada**: los ~195 productos ya marcados como vistos sin haber sido emitidos no se recuperan solos. Hay que limpiar `lastSeenHashes` del estado del flow para que la siembra vuelva a correr (a 30 por corrida, ~8 corridas). `lastSeenIds` se deja intacto para que nada salga como `created`.
+
+**Exposición de los $0 acotada**: barrido completo del catálogo de Shopify (5.988 productos activos, 60 páginas) = **exactamente 3 comprables en $0, 685 unidades**. No hay población escondida. Acción manual de Daniel.
+
+## D-179 (2026-08-11) — El barrido de Cereza recorre el catálogo entero
+
+> Renumerada desde D-171: ese número ya lo tenía el MVP de compras.
+
+**El barrido de Cereza pasa de ver el 3% del catálogo a recorrerlo entero. Desplegado.**
+
+Autorizado por Daniel ("Dale, desplegalo") tras plantearle el único riesgo real: la carga sobre Cereza sube de 36 a 60 páginas por hora, y esta misma tarde su API devolvió `429 Too Many Attempts` en un recorrido de prueba con 350 ms entre llamadas.
+
+Producción pasó de `58d8af1` a `e88f5d7`. Entran dos cambios encadenados, en este orden a propósito:
+
+1. **`6b4e1f3` — el tope por corrida ya no descarta lo que no emitió.** Con `limit: 30` y `diffPagesScan: 3`, el flow escaneaba 300 productos por corrida y emitía 30, pero marcaba los 300 como vistos. Los 270 restantes quedaban sellados y su cambio se perdía para siempre. **Sin este arreglo, ampliar la cobertura empeora el problema**: más productos escaneados, mismo tope, más sellados sin emitir.
+2. **`e88f5d7` — cobertura rotativa.** Se conserva la ventana fresca (páginas 1–3, donde caen los nuevos por el orden id descendente) y se agrega un puntero que barre 2 páginas del resto por corrida, en círculo. Vuelta completa ≈ 3,5 h sobre 83 páginas. El puntero vive en `diffRotatePage` del mismo documento de estado, **no avanza sobre una página que no se alcanzó a leer** (si no, un 429 abriría huecos de cobertura permanentes), y ante `429` corta la corrida y reintenta en el siguiente poll reusando el patrón de `osmosisOrderService`. `diffPagesScan`, `diffRotatePages` y `pageDelayMs` quedaron declarados en el esquema del nodo: se ajustan desde el editor sin desplegar.
+
+Verificado antes de reiniciar, las cuatro en verde en el servidor: `test:flows-osmosis-cobertura` (cubre cada página una vez, da la vuelta, normaliza punteros inválidos y falla si alguien invierte el orden leer/avanzar o quita la detección de 429), `test:flows-osmosis-huella`, `test:flows-node-catalog`, `test:inventory-safety-contract`. Arranque sin errores.
+
+**Decisión consciente: el tope de 30 por corrida se mantiene.** Con los dos arreglos ya no pierde cambios —lo que no sale se reintenta— así que pasa a ser regulador de ritmo. Se deja bajo para observar la primera vuelta completa, que es la corrida más pesada que este flow habrá hecho. Si va holgada, se sube con un número medido, no elegido a ojo. Documentado en el código como *ritmo, no filtro*, para que la próxima sesión no lo suba sin saber que antes perdía datos.
+
+**Prueba de aceptación acordada:** que el barrido alcance a GCDOT065 (id 35426) y GCINS0005 (id 37113), hoy inalcanzables. Si a las ~4 h de desplegado no los tocó, algo está mal.
+
+**Vigilancia de la primera hora:** si aparece `rate limit de Cereza` en los logs, bajar `diffRotatePages` a 1 desde el editor (vuelta ≈ 7 h) en vez de chocar contra su API.
+
+
+## D-177 (2026-08-11) — Buzones de Meta en producción: lo que faltaba no era código, y tres fallas mudas
+
+Cierre de la jornada de D-170. Los buzones quedaron **funcionando de punta a punta con una persona ajena**: `@ssanti.gm` escribió por Instagram Direct a las 02:28, se respondió desde el buzón a las 02:29 y él contestó de vuelta. 25 mensajes guardados entre los dos canales. Antes de eso, ida y vuelta completo también por Messenger.
+
+**Desplegado:** backend en la instancia real con `META_APP_ID`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `META_GRAPH_VERSION` y `META_REDIRECT_URI` (respaldo del `.env` previo antes de tocarlo); webhook `https://back.katuq.com/v1/meta/webhook` registrado y verificado por Meta en los objetos **Instagram** (`messages`) y **Page** (`messages` + `messaging_postbacks`); frontend en 2026.08.11.32; tres índices de `meta_messages` creados con el procedimiento seguro (archivo con solo los nuevos, sin `--force`).
+
+**Cuatro fallas que solo aparecieron con tráfico real, todas mudas:**
+
+1. **La página no quedaba suscrita al webhook.** Tener la URL registrada a nivel de app solo dice *a dónde* mandar; `POST /{page-id}/subscribed_apps` es lo que autoriza *a mandar*. Sin eso la pantalla decía "Conectado" y el buzón quedaba mudo para siempre, sin un error visible. Instagram además tomaba `paginas[0]` a ciegas: con varias páginas conectaba la ajena.
+2. **Responder en Instagram fallaba con `(#3) Application does not have the capability`.** Con inicio de sesión de Facebook, Instagram Messaging se opera contra la **página**, no contra la cuenta profesional — aunque los eventos entrantes sí vengan identificados con esa cuenta. Se guarda `paginaId` aparte de `cuentaId`; las conexiones viejas se reparan solas vía `debug_token` (`/me` NO sirve: sobre un token de página exige `pages_read_engagement`, que no está en la configuración de login ni tiene por qué estarlo).
+3. **El nombre del contacto nunca se resolvía.** El webhook solo trae el identificador. En Instagram se consulta directo; en Messenger NO —el PSID devuelve "Object with ID does not exist"— y hay que sacarlo de los participantes de la conversación de la página. Se usaba el camino de Instagram para los dos.
+4. **Las rutas de los buzones rebotaban a la pantalla de inicio.** `notificaciones` a secas estaba declarada ANTES y Angular resuelve por orden y por prefijo: se tragaba `/notificaciones/*/inbox`, cargaba su módulo, no encontraba nada para el resto de la URL y la navegación moría sin error. **Afectaba también al buzón de WhatsApp**, que no es de este cambio. Corregido moviendo las tres rutas antes de la genérica. Queda un pendiente: por URL directa o F5 todavía rebota; por menú funciona.
+
+**Endurecimiento:** el webhook falla CERRADO. Sin `META_APP_SECRET` rechaza los eventos y sin `META_WEBHOOK_VERIFY_TOKEN` rechaza el saludo; antes ambos casos pasaban de largo y una variable mal puesta dejaba el endpoint público sin que nadie se enterara. El único bypass es `META_WEBHOOK_ALLOW_UNSIGNED=true`, explícito; **no se deduce de `NODE_ENV`** porque el `.env` local también dice `production`.
+
+**Producto:** el buzón se refresca solo cada 8 s y suena una campana al entrar un mensaje nuevo. Con la pestaña oculta baja a 32 s y solo relee la lista — WhatsApp no pollea escondido (D-117) por costo de lecturas, pero una campana que solo suena cuando ya estás mirando no sirve. El overlay global se suprime en esta pantalla (`suppressGlobalLoader`, el mecanismo que ya existía): tapaba todo en cada vuelta del refresco.
+
+**Omnichat sale del código.** El webhook del objeto Page estaba ocupado por `https://omnichat.katuq.com/bot` —un Chatwoot propio, servidor sin puertos abiertos— y Meta permite una sola URL por objeto. Daniel autorizó reemplazarlo. Su token viejo estaba enmascarado: **la configuración anterior no se puede restaurar tal cual**. De paso se quitó el widget muerto que la encuesta de diagnóstico cargaba en cada registro, junto con el `ngDoCheck` que existía solo para él.
+
+**Estado en Meta:** `public_profile` en acceso avanzado concedido; la comprobación de uso de datos anual **enviada** (vencía el 29 de agosto y es la misma app donde vive WhatsApp). La solicitud de revisión sigue **sin enviar**: cuatro descripciones escritas (`pages_show_list`, `pages_manage_metadata`, `pages_messaging` con los pasos para el revisor, `instagram_manage_messages`), video subido solo en `pages_messaging`, y bloqueada por dos cosas que no dependen de nosotros — `instagram_basic` tiene el botón deshabilitado hasta que Meta cuente las llamadas a la API (avisa que tarda hasta 24 h) y el contador seguía en cero al cierre.
+
+**Pendientes con dueño:** arrastrar el video a los otros tres permisos (Daniel — la herramienta del asistente topa en 10 MB y el archivo pesa 84); revisar las cuatro casillas de certificación, **incluida la de `pages_messaging` que quedó marcada por error del asistente cuando se había pedido dejarlas todas sin marcar**; decidir la suerte de omnichat; y rastrear por qué la carga en frío de las rutas de buzón rebota a inicio.
+
+**Cierre de D-171 — resultado medido y dos correcciones.**
+
+**Resultado:** 25 de los 39 precios perdidos recuperados = **$3.673.093** (arrancó en 14 = $2.547.300). Las 225 huellas destrabadas drenaron 221/225. El puntero rotativo llegó a la página 82 de 83: **vuelta completa del catálogo**, sin una sola queja de rate limit de Cereza. Los 14 que faltan tienen **stock cero** y el nodo los omite a propósito (`onlyWithStock: true`) — no es defecto, es la regla; uno es `TESTERGCJ2321`, producto de prueba. Saldo real: 25 de 25 alcanzables.
+
+**Corrección 1 — la inanición del tope.** Al encender la rotación, `allProducts.sort((a,b) => a.id - b.id)` convirtió la lista en una cola con prioridad: las páginas rotadas (ids bajos) se comían los 30 cupos y la ventana fresca nunca alcanzaba turno. Medido: de 120 huellas re-selladas tras la limpieza, 120 eran de rotación y 0 del rango destrabado. Se resolvió solo cuando la rotación terminó de descubrir productos y liberó el cupo. Arreglo de raíz en `84cecd3` (ventana fresca primero, rotación con el sobrante) — **NO desplegado**, ver abajo.
+
+**Corrección 2 — los parámetros del nodo NO se leen en caliente.** Se escribió `diffRotatePages: 0` en `flows/{id}.graph.nodes[].params`, verificado guardado, y el puntero igual avanzó de la página 16 a la 82. **El ejecutor no lee ese parámetro desde ahí.** Invalida el plan de contingencia que se le ofreció a Daniel ("si Cereza se queja, bajo a 1 página sin desplegar"): eso no habría funcionado. Pendiente averiguar desde dónde lee el ejecutor antes de volver a ofrecer un ajuste en caliente como red de seguridad.
+
+**Despliegue de `84cecd3` bloqueado a propósito.** El rango entre lo desplegado (`e88f5d7`) y ese commit son **21 archivos y 2.549 inserciones** de una tercera sesión: `controllers/sites.js` (701), `data/siteTemplates.js` (326), `services/sites/siteGenerator.js` (247), `utils/siteBlocks.js` (245), `controllers/companies.js` (238), **`services/inventoryService.js` (85 — carril sensible)** y un arreglo de auth en `routers/virtualStoreWebhook.js`. Su `package.json` sigue modificado sin commitear. El arreglo del orden son 45 de esas 2.549 líneas y ya no es urgente. Va en un despliegue coordinado con la tercera sesión enterada.
+
+**SUPERSEDED — "Corrección 2" de D-171 era falsa. Los parámetros del nodo SÍ se leen en caliente.**
+
+Se afirmó que escribir `diffRotatePages: 0` en `flows/{id}.graph.nodes[].params` no llegaba al ejecutor, porque el puntero apareció en la página 82 después de aplicarlo. **El error fue de método, no de dato: se comparó una lectura anterior a la pausa con una posterior, sin descontar el tiempo transcurrido.**
+
+Aritmética de los respaldos: la limpieza de huellas corrió a las **22:50:32 UTC** y la pausa a las **02:26:13 UTC** — **3,59 horas después, unas 43 corridas**. A 2 páginas por corrida eso son 86 páginas. El puntero pasó de 12 a 82 (70 páginas) **durante ese lapso, antes de la pausa**. La medición que se tomó como prueba del fallo fue a las 02:30, cuatro minutos después de aplicarla.
+
+Mecanismo confirmado en el código: `nodeExecutor` hace `ctx.params = triggerNode.params || ctx.params` — los params del graph **reemplazan** a los del binding, y el flow se lee fresco en cada corrida, así que aplica sin reiniciar. Verificación independiente de la sesión Shopify: con la pausa puesta, el puntero quedó clavado en 82 mientras `lastPolledAt` y las huellas seguían subiendo — exactamente rotación apagada.
+
+**El plan de contingencia SÍ es válido**: bajar `diffRotatePages` en caliente funciona como red de seguridad si Cereza se queja.
+
+**Trampa real que sí sale de esto:** como el graph **reemplaza y no fusiona**, al escribir `params` hay que incluirlos todos. La edición dejó `onlyWithStock` fuera del graph aunque el binding lo tenía; no hizo daño porque el default del código es `true`, pero con otro parámetro se podría apagar algo sin querer.
+
+**Resultado final de la exposición de los $0:** GCDOT065 no se escondió — **recuperó su precio real ($2.593) y sigue en venta con 571 unidades**. Queda solo GCC1233 con 3 unidades. De 685 unidades regalables se pasó a 3.
+
+## D-181 (2026-08-11) — Las páginas del builder se publican en su propio subdominio, y el HTML lo arma el servidor
+
+**El problema no era el diseño, era la dirección y quién dibuja.** Las páginas salían en `sellercenter.katuq.com/s/<slug>`: el link que el comerciante reparte por WhatsApp mostraba el nombre interno del panel de vendedores. Y como el dibujo lo hacía Angular en el navegador, las metas de `<head>` se ponían después de cargar — WhatsApp, Facebook y Google no ejecutan JavaScript, así que el link se compartía pelado y no había nada que indexar. El panel "Cómo se ve al compartir" del editor no cambiaba nada de lo que veía quien recibía el link.
+
+**Decisión: cada sitio vive en `<slug>.katuq.com`, servido desde infraestructura propia.** Lightsail `katuq-sitios-web` (us-east-1, micro, ~7 USD/mes), IP fija **34.225.223.187**, con un comodín `*.katuq.com` en GoDaddy. Los subdominios con registro propio —back, sellercenter, app, api, kai, support, deliveries, www— le ganan al comodín y quedaron además en la lista de slugs reservados: si un comercio tomara uno, su página sería inalcanzable.
+
+**Se eligió Caddy sobre nginx por el certificado.** Con *on-demand TLS*, el certificado de cada subdominio se emite la primera vez que alguien entra; un comodín SSL habría exigido validación por DNS cada 90 días, con llave de API del proveedor de dominios y un cron que nadie revisa hasta que se vence. Antes de emitir, Caddy pregunta a `/v1/sites/public/host-permitido` si esa página existe y está publicada: sin esa pregunta, cualquiera que apunte su dominio a nuestra IP nos haría emitir certificados a su nombre y agotaría la cuota de la autoridad. Verificado: un dominio ajeno apuntado a esa IP no obtiene certificado. Config versionada en `functions/deploy/sitios/Caddyfile`.
+
+**El HTML lo arma el backend (`utils/siteHtml.js`), no el bundle de Angular.** La página pasó de arrastrar el bundle del panel a ~8 kB con su CSS adentro, que en celular con datos decide si la ven o no. El componente Angular queda como vista previa del editor, donde sí hace falta reaccionar a cada tecla; los dos leen los mismos bloques, así que lo que se ve editando es lo que se publica. La respuesta lleva su propia política de seguridad con nonce, porque la de `helmet()` es para la API y bloquearía el estilo y el script de la propia página.
+
+**Tres arreglos que salieron en el camino:**
+
+1. **El tope de tráfico de los endpoints públicos era global.** Con `trust proxy` en false y nginx delante, todas las visitas llegaban con la IP del proxy: los 300 accesos y los 10 formularios cada 15 minutos se sumaban entre **todas** las páginas de **todas** las empresas. La primera campaña de WhatsApp habría dejado la página respondiendo "demasiadas solicitudes" a todo el mundo. Se corrigió en el router de sitios con un conteo por visitante real (primer `X-Forwarded-For`), sin tocar el `trust proxy` global, que afecta a todo el backend y merece su propia validación. **La vitrina de catálogos y la landing de cotizaciones siguen con el mismo defecto.**
+2. **`edit` devolvía "ok" y el editor no releía nada.** El saneador descarta lo que no pasa —una dirección escrita `www.mitienda.com`, un WhatsApp de menos de siete dígitos— y el editor los seguía mostrando puestos: se publicaba creyendo que el botón estaba y en la página no aparecía. Ahora devuelve el borrador normalizado y el editor dice qué campo se cayó.
+3. **El formulario podía quedar sin teléfono ni correo**, o sea imposible de enviar: el visitante llenaba y recibía "déjanos un teléfono o un correo" sin campo donde escribirlos.
+
+**Verificado:** `npm run test:sitios-publicacion` cubre el escape de HTML del contenido del comerciante, que una URL `javascript:`/`data:` no se pinte, que un dominio ajeno no resuelva y el peso de la página. `test:inventory-safety-contract` sigue en verde y el build de producción del frontend, limpio.
+
+**Deuda que queda anotada, no resuelta:**
+
+- **La "tienda" no vende.** Hay tipo `tienda` y contador de pedidos, pero no existe bloque de carrito ni checkout, y el asistente nunca manda el tipo: todo lo que se crea nace como landing. Es decisión de producto — o entra la compra, o se cambia el texto que la promete.
+- **`POST /v1/productos/by-ids` sigue sin filtrar por company** (ya anotado en D-173). Ahora lo usa también la vista previa del editor. La página publicada sí filtra, así que al público no se le escapa nada.
+- **Numeración del contrato repetida por sesiones paralelas**: D-169 y D-173 aparecen dos veces con contenidos distintos. No se renumeró aquí para no pisar la bitácora de otra sesión.

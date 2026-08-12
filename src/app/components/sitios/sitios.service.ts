@@ -110,15 +110,25 @@ export class SitiosService extends BaseService {
     return this.post<Respuesta<Sitio>>("/v1/sites/create", body);
   }
 
-  /** Guarda el borrador. Publicar es un acto aparte. */
+  /**
+   * Guarda el borrador. Publicar es un acto aparte.
+   *
+   * Responde con el borrador **ya normalizado por el servidor**, no con un "ok"
+   * a secas: al guardar se descarta lo que no pasa el saneador, y el editor
+   * tiene que reflejarlo o el comerciante seguiría viendo un botón que en la
+   * página publicada no existe.
+   */
   guardar(body: {
     id: string;
     nombre?: string;
     slug?: string;
     tipo?: string;
     contenido?: Partial<ContenidoSitio>;
-  }): Observable<Respuesta<null>> {
-    return this.put<Respuesta<null>>("/v1/sites/edit", body);
+  }): Observable<Respuesta<{ nombre: string; slug: string; draft: ContenidoSitio }>> {
+    return this.put<Respuesta<{ nombre: string; slug: string; draft: ContenidoSitio }>>(
+      "/v1/sites/edit",
+      body
+    );
   }
 
   publicar(id: string): Observable<Respuesta<{ slug: string; publishedAt: string }>> {
