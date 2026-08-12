@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { ContenidoSitio, Sitio, SitiosService } from "../sitios.service";
+import { ContenidoSitio, Sitio, SitiosService, VentaConfig } from "../sitios.service";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
@@ -140,6 +140,10 @@ export class SitioEditorComponent implements OnInit {
   /** Bodegas del comercio, para el selector de despacho de la tienda. */
   bodegas: { codigo: string; nombre: string }[] = [];
   cargandoBodegas = false;
+
+  /** Pasarela, zonas y formas de pago reales de la empresa. */
+  ventaConfig: VentaConfig | null = null;
+  cargandoVentaConfig = false;
   mostrandoAgregar = false;
   mostrandoSelector = false;
 
@@ -225,12 +229,16 @@ export class SitioEditorComponent implements OnInit {
         habilitada: (d.tienda && d.tienda.habilitada) === true,
         bodegaId: (d.tienda && d.tienda.bodegaId) || "",
         envio: {
+          modo: envio.modo === "zonas" ? "zonas" : "fijo",
           costo: Number(envio.costo) || 0,
           gratisDesde: Number(envio.gratisDesde) || 0,
           texto: envio.texto || "",
         },
         pagoEnLinea: (d.tienda && d.tienda.pagoEnLinea) !== false,
         contraEntrega: (d.tienda && d.tienda.contraEntrega) === true,
+        otrasFormasPago: Array.isArray(d.tienda && d.tienda.otrasFormasPago)
+          ? d.tienda.otrasFormasPago
+          : [],
         minimoCompra: Number(d.tienda && d.tienda.minimoCompra) || 0,
         mensajeConfirmacion: (d.tienda && d.tienda.mensajeConfirmacion) || "",
       },
@@ -250,6 +258,7 @@ export class SitioEditorComponent implements OnInit {
    * de las páginas son landings y no necesitan esta consulta.
    */
   cargarBodegas(): void {
+    this.cargarVentaConfig();
     if (this.bodegas.length || this.cargandoBodegas) return;
     this.cargandoBodegas = true;
     this.bodegaService.getBodegas().subscribe({
@@ -273,6 +282,47 @@ export class SitioEditorComponent implements OnInit {
   }
 
   /**
+   * Config de venta de la empresa: pasarela propia o no, zonas de cobro y
+   * formas de pago del maestro. Sin esto el panel dejaba encender opciones que
+   * no funcionan — pago en línea sin pasarela, envío por zonas sin zonas.
+   */
+  private cargarVentaConfig(): void {
+    if (this.ventaConfig || this.cargandoVentaConfig) return;
+    this.cargandoVentaConfig = true;
+    this.service.ventaConfig().subscribe({
+      next: (res) => {
+        this.cargandoVentaConfig = false;
+        this.ventaConfig = (res && res.data) || null;
+      },
+      error: () => {
+        this.cargandoVentaConfig = false;
+        // Sin la config el panel sigue sirviendo; solo pierde los avisos.
+      },
+    });
+  }
+
+  /** ¿Esta forma de pago del maestro está ofrecida en la tienda? */
+  formaPagoActiva(cd: string): boolean {
+    const t = this.contenido && this.contenido.tienda;
+    return !!t && t.otrasFormasPago.some((f) => f.cd === cd);
+  }
+
+  /** Enciende o apaga una forma de pago manual del maestro. */
+  alternarFormaPago(forma: { cd: string; nombre: string }): void {
+    const t = this.contenido && this.contenido.tienda;
+    if (!t) return;
+    if (this.formaPagoActiva(forma.cd)) {
+      t.otrasFormasPago = t.otrasFormasPago.filter((f) => f.cd !== forma.cd);
+    } else if (t.otrasFormasPago.length >= 6) {
+      this.toastr.warning("Hasta 6 formas de pago adicionales: más opciones confunden al comprador.");
+      return;
+    } else {
+      t.otrasFormasPago = [...t.otrasFormasPago, { cd: forma.cd, nombre: forma.nombre }];
+    }
+    this.marcarSucio();
+  }
+
+  /**
    * ¿La tienda quedaría a medias? Se avisa antes de publicar, porque una tienda
    * encendida sin bodega rechaza los pedidos y el comerciante no se entera
    * hasta que un cliente se queja.
@@ -287,7 +337,23 @@ export class SitioEditorComponent implements OnInit {
     if (!hayCompra) {
       return "Ningún bloque de productos tiene la compra activada, así que no se puede comprar nada.";
     }
+    if (t.envio.modo === "zonas" && this.ventaConfig && this.ventaConfig.zonas === 0) {
+      return "Elegiste envío por zonas pero no tienes zonas de cobro creadas: nadie podría cerrar la compra. Créalas en Maestros → Zonas de cobro.";
+    }
     return null;
+  }
+
+  /**
+   * El aviso de plata: con pago en línea sin pasarela PROPIA, el link de pago
+   * sale con las credenciales de la plataforma y el dinero NO le llega al
+   * comerciante. Es aparte del aviso general porque no bloquea la venta —
+   * bloquea el recaudo, que es peor y más silencioso.
+   */
+  get avisoPasarela(): string | null {
+    const t = this.contenido && this.contenido.tienda;
+    if (!t || !t.habilitada || !t.pagoEnLinea) return null;
+    if (!this.ventaConfig || this.ventaConfig.pasarela.configurada) return null;
+    return "Tienes el pago en línea encendido sin una pasarela propia configurada: los pagos NO llegarían a tu cuenta. Configura Wompi o ePayco en Integraciones, o apaga el pago en línea y usa contra entrega.";
   }
 
   get bloques(): BloqueSitio[] {

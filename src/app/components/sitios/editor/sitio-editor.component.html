@@ -416,13 +416,26 @@
           <div class="grupo">
             <h3>Envío</h3>
             <div class="campo">
+              <label>Cómo cobras el domicilio</label>
+              <select [(ngModel)]="contenido.tienda.envio.modo" (ngModelChange)="marcarSucio()">
+                <option value="fijo">Tarifa fija para todos</option>
+                <option value="zonas">Por ciudad, con mis zonas de cobro</option>
+              </select>
+              <small *ngIf="contenido.tienda.envio.modo === 'zonas'">
+                El comprador elige su ciudad y paga el envío de tu maestro de zonas — el mismo
+                que usa la venta asistida.
+                <ng-container *ngIf="ventaConfig">Tienes
+                  <strong>{{ ventaConfig.zonas }}</strong> zona(s) configurada(s).</ng-container>
+              </small>
+            </div>
+            <div class="campo" *ngIf="contenido.tienda.envio.modo === 'fijo'">
               <label>Costo del envío</label>
               <input type="number" min="0" [(ngModel)]="contenido.tienda.envio.costo" (ngModelChange)="marcarSucio()" />
             </div>
             <div class="campo">
               <label>Envío gratis desde</label>
               <input type="number" min="0" [(ngModel)]="contenido.tienda.envio.gratisDesde" (ngModelChange)="marcarSucio()" />
-              <small>Deja 0 si nunca das envío gratis.</small>
+              <small>Deja 0 si nunca das envío gratis. Aplica también con zonas.</small>
             </div>
             <div class="campo">
               <label>Nota sobre el envío</label>
@@ -435,14 +448,34 @@
             <h3>Cómo te pagan</h3>
             <button class="opcion" [class.is-active]="contenido.tienda.pagoEnLinea"
                     (click)="contenido.tienda.pagoEnLinea = !contenido.tienda.pagoEnLinea; marcarSucio()">
-              <span class="opcion__texto"><strong>Pago en línea</strong></span>
+              <span class="opcion__texto">
+                <strong>Pago en línea</strong>
+                <small *ngIf="ventaConfig && ventaConfig.pasarela.configurada">
+                  Con tu pasarela {{ ventaConfig.pasarela.proveedor }}.</small>
+              </span>
               <span class="palanca"><span></span></span>
             </button>
+            <p class="aviso" *ngIf="avisoPasarela">{{ avisoPasarela }}</p>
             <button class="opcion" [class.is-active]="contenido.tienda.contraEntrega"
                     (click)="contenido.tienda.contraEntrega = !contenido.tienda.contraEntrega; marcarSucio()">
               <span class="opcion__texto"><strong>Contra entrega</strong></span>
               <span class="palanca"><span></span></span>
             </button>
+
+            <ng-container *ngIf="ventaConfig && ventaConfig.formasPago.length">
+              <div class="campo">
+                <label>Otras formas de pago</label>
+                <small>Las de tu maestro de formas de pago. El pedido queda pendiente y el
+                  comprador ve tu mensaje de confirmación con las instrucciones — ponle ahí los
+                  datos de la cuenta.</small>
+              </div>
+              <button class="opcion" *ngFor="let f of ventaConfig.formasPago"
+                      [class.is-active]="formaPagoActiva(f.cd)"
+                      (click)="alternarFormaPago(f)">
+                <span class="opcion__texto"><strong>{{ f.nombre }}</strong></span>
+                <span class="palanca"><span></span></span>
+              </button>
+            </ng-container>
             <div class="campo">
               <label>Pedido mínimo</label>
               <input type="number" min="0" [(ngModel)]="contenido.tienda.minimoCompra" (ngModelChange)="marcarSucio()" />

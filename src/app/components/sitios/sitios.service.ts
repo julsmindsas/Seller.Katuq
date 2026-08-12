@@ -13,11 +13,24 @@ export interface TiendaSitio {
   habilitada: boolean;
   /** Business code de la bodega ("BOD-001"), nunca el id de Firestore. */
   bodegaId: string;
-  envio: { costo: number; gratisDesde: number; texto: string };
+  /**
+   * "fijo": una tarifa pareja. "zonas": el costo sale del maestro de zonas de
+   * cobro según la ciudad del comprador — el mismo que usa la venta asistida.
+   */
+  envio: { modo: "fijo" | "zonas"; costo: number; gratisDesde: number; texto: string };
   pagoEnLinea: boolean;
   contraEntrega: boolean;
+  /** Formas de pago manuales del maestro (transferencia, Nequi...). */
+  otrasFormasPago: { cd: string; nombre: string }[];
   minimoCompra: number;
   mensajeConfirmacion: string;
+}
+
+/** Lo que el panel de tienda necesita saber de la empresa para configurarse. */
+export interface VentaConfig {
+  pasarela: { configurada: boolean; proveedor: string | null };
+  zonas: number;
+  formasPago: { cd: string; nombre: string; categoria: string }[];
 }
 
 /**
@@ -209,6 +222,15 @@ export class SitiosService extends BaseService {
     }>
   > {
     return this.post<any>("/v1/sites/generar", body);
+  }
+
+  /**
+   * Config real para el panel de tienda: si hay pasarela PROPIA (sin ella el
+   * pago en línea entra a la cuenta de la plataforma, no a la del comercio),
+   * cuántas zonas de cobro existen y las formas de pago activas del maestro.
+   */
+  ventaConfig(): Observable<Respuesta<VentaConfig>> {
+    return this.get<Respuesta<VentaConfig>>("/v1/sites/venta-config");
   }
 
   kitDeMarca(): Observable<Respuesta<KitDeMarca>> {
