@@ -33,6 +33,11 @@
       instrucciones.
 - [ ] 2.3 Endpoint: recibe formasEntrega + config ya capturada, devuelve
       entrega/pago/dedicatoria/facturacion del turno. Tests.
+- [ ] 2.4 Instrucciones de VENTA: sugerir un complemento pertinente (solo de
+      resultados reales de búsqueda, con precio real), alternativa honesta
+      cuando no hay existencias, ofrecer opcionales al cierre; prohibiciones
+      explícitas — sin inventar descuentos ni urgencias, una sugerencia por
+      momento, el "no" se respeta a la primera. Tests de instrucciones.
 
 ## 3. Verificación
 

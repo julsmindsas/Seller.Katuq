@@ -44,6 +44,15 @@ cotización.
 **Gates de cierre ampliados**: sin fecha y forma de entrega no se cierra (y
 con domicilio, sin dirección confirmada tampoco — eso ya existe).
 
+**Y el bot VENDE, no solo toma el pedido** (pedido de Daniel): hace
+recomendaciones con criterio — un complemento pertinente al agregar un
+producto, una alternativa cuando no hay existencias o el cliente duda, y el
+empujón amable al cerrar ("¿le sumamos la tarjeta con dedicatoria?"). Con
+guardarraíles: solo recomienda productos que DEVOLVIÓ la búsqueda (jamás
+inventa), UNA sugerencia por momento (no metralleta), un "no" se respeta a la
+primera, y nunca inventa descuentos ni urgencias falsas ("¡última unidad!"
+solo si las existencias reales lo dicen).
+
 ## Capabilities
 
 ### New Capabilities
@@ -54,7 +63,8 @@ con domicilio, sin dirección confirmada tampoco — eso ya existe).
 
 ### Modified Capabilities
 - `whatsapp-bot-conversacion`: el cierre exige además fecha y forma de
-  entrega; la configuración parcial sobrevive entre turnos en la sesión.
+  entrega; la configuración parcial sobrevive entre turnos en la sesión; y el
+  bot recomienda con criterio (persuasivo, honesto, sin insistencia).
 
 ## Impact
 
