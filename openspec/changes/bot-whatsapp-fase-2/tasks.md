@@ -42,6 +42,16 @@
 - [ ] 2.7 Conectar el número propio de ALMARA (trámite con credenciales
       reales) y vaciar `WHATSAPP_BOT_PILOT_*`. Verificar bot vivo por el
       camino oficial. — dueño: Daniel + sesión de despliegue.
+- [ ] 2.8 Plantillas con nombre humano: títulos y descripciones en español
+      editables por comercio, guardados en la config existente
+      (`plantillasMeta` en el doc de integración, sin colecciones nuevas);
+      sugerencia inicial generada por KAI (flujo Genkit puntual: nombre +
+      cuerpo → título + para-qué); aplicarlo en los TRES selectores (iniciar
+      conversación del buzón, paso "Qué dice" de campañas, mensaje de
+      prueba) mostrando título + descripción + vista previa, con el nombre
+      técnico como detalle secundario. Tests del merge de config y del
+      fallback cuando KAI no responde (mostrar nombre técnico "des-feificado":
+      guiones fuera, capitalizado).
 
 ## 3. Cierre
 

@@ -53,6 +53,22 @@ Un comercio sin número propio verificado NO SHALL poder activar el bot; el rech
 - **WHEN** un comercio sin credenciales verificadas intenta prender el bot
 - **THEN** el sistema lo rechaza con la guía de conexión
 
+### Requirement: Las plantillas se presentan con nombre humano
+
+Donde el usuario elige una plantilla de WhatsApp (iniciar conversación desde el buzón, asistente de campañas, mensaje de prueba), el sistema SHALL mostrar un título en español y una descripción de para qué sirve, junto con la vista previa del texto — nunca el nombre técnico solo (`hello_world`, `order_update_v2`). El título y la descripción SHALL poder editarse por el comercio y SHALL persistirse en la configuración existente del comercio (sin colecciones nuevas). Para plantillas sin título asignado, el sistema SHALL proponer uno generado desde el nombre y el cuerpo (vía KAI, flujo puntual), que el usuario puede aceptar o corregir.
+
+#### Scenario: Señora elige plantilla para iniciar conversación
+
+- **WHEN** una usuaria no técnica abre "iniciar conversación" y ve la lista de plantillas
+- **THEN** cada opción muestra un título en español (ej. "Saludo de bienvenida"), una línea de para qué sirve y la vista previa del mensaje
+- **AND** el nombre técnico aparece solo como detalle secundario
+
+#### Scenario: Plantilla nueva sin título asignado
+
+- **WHEN** el comercio tiene una plantilla aprobada sin título humano guardado
+- **THEN** el sistema propone título y descripción generados desde el nombre y el cuerpo
+- **AND** el usuario puede aceptarlos o editarlos, y quedan guardados para la próxima vez
+
 ### Requirement: La excepción del piloto se retira
 
 Cuando ALMARA FELICIDAD tenga número propio verificado, el sistema SHALL operar sin las variables de entorno del piloto, y ningún comercio nuevo SHALL habilitarse por esa vía.
