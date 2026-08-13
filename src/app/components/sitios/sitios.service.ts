@@ -41,9 +41,16 @@ export interface VentaConfig {
 export interface AnaliticaSitio {
   ga4: string;
   googleAds: string;
+  /** Etiqueta de conversión "AW-123/AbC-D_efG". Sin ella no hay qué optimizar. */
   googleAdsConversion: string;
   metaPixel: string;
   gtm: string;
+  tiktokPixel: string;
+  /** Verificaciones de propiedad del dominio (etiquetas meta). */
+  metaVerificacion: string;
+  googleVerificacion: string;
+  /** Consent Mode v2 de Google. Encenderlo sin banner apaga la medición. */
+  consentimiento: boolean;
 }
 
 export interface ContenidoSitio {

@@ -171,15 +171,25 @@
   gap: 4px;
   padding: 6px 12px 0;
   border-bottom: 1px solid var(--kb-line);
+  // Con cinco pestañas ya no caben todas en el panel angosto. Se deslizan en
+  // vez de partirse en dos filas o comerse el nombre.
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   button {
     @include kb-btn-base;
+    flex: none;
+    white-space: nowrap;
     border: none;
     background: transparent;
     color: var(--kb-muted);
     font-weight: 700;
-    font-size: 13.5px;
-    padding: 13px 14px;
+    font-size: 13px;
+    padding: 13px 11px;
     border-bottom: 2.5px solid transparent;
     border-radius: 0;
 

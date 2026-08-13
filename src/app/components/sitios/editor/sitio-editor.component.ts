@@ -183,7 +183,7 @@ export class SitioEditorComponent implements OnInit {
   /** Índice del bloque en edición. -1 = ninguno. */
   seleccionado = -1;
   dispositivo: "escritorio" | "movil" = "escritorio";
-  panel: "bloques" | "diseno" | "tienda" | "ajustes" = "bloques";
+  panel: "bloques" | "diseno" | "tienda" | "pauta" | "ajustes" = "bloques";
 
   /** Bodegas del comercio, para el selector de despacho de la tienda. */
   bodegas: { codigo: string; nombre: string }[] = [];
@@ -305,6 +305,10 @@ export class SitioEditorComponent implements OnInit {
         googleAdsConversion: (d.analitica && d.analitica.googleAdsConversion) || "",
         metaPixel: (d.analitica && d.analitica.metaPixel) || "",
         gtm: (d.analitica && d.analitica.gtm) || "",
+        tiktokPixel: (d.analitica && d.analitica.tiktokPixel) || "",
+        metaVerificacion: (d.analitica && d.analitica.metaVerificacion) || "",
+        googleVerificacion: (d.analitica && d.analitica.googleVerificacion) || "",
+        consentimiento: (d.analitica && d.analitica.consentimiento) === true,
       },
     };
   }
