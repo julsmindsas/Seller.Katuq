@@ -158,6 +158,15 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.availableIntegrations = this.integrationsService.getAvailableIntegrations();
     this.initializeFilteredIntegrations();
+
+    // La ruta directa de DIAN debe pintar el asistente inmediatamente. Antes se
+    // ejecutaban primero varias consultas genéricas de integraciones; cualquier
+    // problema de contexto de empresa o de red podía lanzar un error sincrónico
+    // y dejar el router-outlet completamente en blanco.
+    if (this.route.snapshot.queryParamMap.get('provider') === 'dian') {
+      this.openDianFromDirectRoute();
+      return;
+    }
     
     if (this.preselectedCategory) {
       this.selectedCategory = this.preselectedCategory;
@@ -181,9 +190,6 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.loadConfigSchema();
     this.updateTemplateProperties(); // Carga inicial
 
-    if (this.route.snapshot.queryParamMap.get('provider') === 'dian') {
-      this.openDianFromDirectRoute();
-    }
   }
 
   private openDianFromDirectRoute(): void {
@@ -192,18 +198,38 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.selectedIntegrationType = 'dian';
     this.showOnlyForm = true;
     this.isConfigurationMode = true;
-    this.integrationsService.getIntegration('dian').pipe(takeUntil(this.destroy$)).subscribe({
-      next: (integration) => {
-        this.editIntegration(integration);
-        this.showOnlyForm = true;
-        this.dianStep = 1;
-      },
-      error: () => {
-        this.resetForm();
-        this.showOnlyForm = true;
-        this.dianStep = 1;
-      }
-    });
+
+    // El formulario nuevo es el fallback visible mientras se consulta si el
+    // comercio ya tiene una configuración. Esto también cubre comercios nuevos.
+    this.resetForm();
+    this.showOnlyForm = true;
+    this.dianStep = 1;
+    this.updateTemplateProperties();
+    this.setupRealTimeValidation();
+
+    try {
+      this.integrationsService.getIntegration('dian').pipe(takeUntil(this.destroy$)).subscribe({
+        next: (integration) => {
+          if (integration?.type || integration?.provider) {
+            this.editIntegration({ ...integration, type: 'dian', provider: 'dian' });
+          }
+          this.showOnlyForm = true;
+          this.dianStep = 1;
+        },
+        error: () => {
+          // Un 404 significa que este comercio aún no ha configurado DIAN. El
+          // formulario vacío ya está listo; no se oculta ni se redirige.
+          this.showOnlyForm = true;
+          this.dianStep = 1;
+        }
+      });
+    } catch (_) {
+      // getCurrentCompanyId puede fallar antes de crear el Observable si el
+      // contexto del comercio todavía está cargando. La pantalla debe seguir
+      // disponible para que el usuario pueda volver o reintentar.
+      this.showOnlyForm = true;
+      this.dianStep = 1;
+    }
   }
 
   ngOnDestroy(): void {

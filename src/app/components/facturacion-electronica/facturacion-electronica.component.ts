@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { defer, forkJoin, of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { IntegrationsService } from '../integrations/integrations.service';
@@ -158,21 +158,24 @@ export class FacturacionElectronicaComponent implements OnInit {
     this.documentsError = '';
     this.ordersError = '';
 
-    const integration$ = this.integrationsService.getIntegration('dian').pipe(
+    // `defer` también convierte en error observable los fallos sincrónicos de
+    // contexto (por ejemplo, mientras cambia el comercio activo). Así la vista
+    // conserva su estado amigable en lugar de dejar el router-outlet en blanco.
+    const integration$ = defer(() => this.integrationsService.getIntegration('dian')).pipe(
       catchError(() => of(null)),
     );
-    const documents$ = this.integrationsService.listDianDocuments(undefined, 200).pipe(
+    const documents$ = defer(() => this.integrationsService.listDianDocuments(undefined, 200)).pipe(
       catchError((error) => {
         this.documentsError = this.errorMessage(error, 'No fue posible cargar los documentos DIAN.');
         return of(null);
       }),
     );
-    const orders$ = this.ventasService.getOrdersByFilterOptimized(
+    const orders$ = defer(() => this.ventasService.getOrdersByFilterOptimized(
       { sortField: 'fechaCreacion', sortOrder: -1 },
       1,
       100,
       false,
-    ).pipe(
+    )).pipe(
       catchError((error) => {
         this.ordersError = this.errorMessage(error, 'No fue posible cargar los pedidos pendientes.');
         return of({ orders: [], pagination: null } as any);
