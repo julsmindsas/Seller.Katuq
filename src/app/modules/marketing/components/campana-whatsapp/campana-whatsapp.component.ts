@@ -304,12 +304,42 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
       next: (resp) => {
         this.templates = (resp?.items || []).filter((t) => t.status === 'APPROVED' || !t.status);
         this.loadingTemplates = false;
+        this.sugerirTitulosFaltantes();
       },
       error: () => {
         this.errorTemplates = 'No se pudieron cargar las plantillas. Verifica la configuración Kapso del comercio en /integrations.';
         this.loadingTemplates = false;
       },
     });
+  }
+
+  /**
+   * [fase 2] Las plantillas sin título humano ("hello_world" a secas) se
+   * mandan a KAI para que proponga título y descripción en español; el
+   * backend los persiste y acá se pintan apenas llegan. Best-effort: si KAI
+   * no responde, se queda el nombre limpiado y no pasa nada.
+   */
+  private sugerirTitulosFaltantes(): void {
+    const sinTitulo = this.templates.filter((t) => t.tituloEsSugerido);
+    if (sinTitulo.length === 0) return;
+    this.marketing
+      .sugerirTitulosPlantillas(
+        sinTitulo.map((t) => ({ name: t.name, bodyText: t.bodyText || '' })),
+      )
+      .subscribe({
+        next: (resp) => {
+          const titulos = resp?.titulos || {};
+          for (const t of this.templates) {
+            const s = titulos[t.name];
+            if (s && s.titulo) {
+              t.titulo = s.titulo;
+              t.descripcion = s.descripcion || t.descripcion;
+              t.tituloEsSugerido = !resp.generadosPorKai;
+            }
+          }
+        },
+        error: () => undefined,
+      });
   }
 
   get selectedTemplate(): KapsoTemplate | null {

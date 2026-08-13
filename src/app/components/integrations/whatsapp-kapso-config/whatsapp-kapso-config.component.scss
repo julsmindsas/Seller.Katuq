@@ -446,3 +446,100 @@ $wa-bg-subtle: #f9fafb;
   }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 }
+
+// ============================================================
+// [fase 2] Conexión guiada del número propio
+// ============================================================
+
+.wa-kapso__conexion-estado {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  background: #f8f9fb;
+  border: 1px solid $wa-border;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+
+  strong {
+    font-size: 14px;
+    color: $wa-text;
+  }
+
+  small {
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+}
+
+.wa-kapso__conexion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 99px;
+
+  &.is-ok {
+    background: rgba(37, 211, 102, 0.12);
+    color: #128c4b;
+  }
+
+  &.is-pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+}
+
+.wa-kapso__field--advanced label {
+  color: #9ca3af;
+}
+
+.wa-kapso__conexion-acciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.wa-kapso__verify-btn {
+  background: #fff;
+  border: 1px solid $wa-green;
+  color: $wa-green;
+  padding: 9px 18px;
+  font-weight: 600;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover:not(:disabled) {
+    background: rgba(37, 211, 102, 0.08);
+    color: $wa-green;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+  }
+}
+
+.wa-kapso__test-btn {
+  background: #fff;
+  border: 1px solid $wa-border;
+  color: #4b5563;
+  padding: 9px 18px;
+  font-weight: 600;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &:disabled {
+    opacity: 0.55;
+  }
+}

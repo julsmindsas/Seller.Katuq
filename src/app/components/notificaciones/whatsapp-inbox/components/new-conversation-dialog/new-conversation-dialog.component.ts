@@ -16,6 +16,9 @@ interface KapsoTemplate {
   status: string;
   bodyText: string;
   variables: number[];
+  /** [fase 2] Título en español para gente no técnica (el backend lo trae). */
+  titulo?: string;
+  descripcion?: string;
 }
 
 /**

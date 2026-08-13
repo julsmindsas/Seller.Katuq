@@ -51,7 +51,7 @@
             {{ loadingTemplates ? "Cargando plantillas..." : "Selecciona una plantilla" }}
           </option>
           <option *ngFor="let t of templates" [value]="t.name">
-            {{ t.name }} ({{ t.category }})
+            {{ t.titulo || t.name }}{{ t.descripcion ? " — " + t.descripcion : "" }}
           </option>
         </select>
         <span *ngIf="!loadingTemplates && templates.length === 0" class="ncd-help ncd-help--warn">

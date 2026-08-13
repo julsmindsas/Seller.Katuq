@@ -29,6 +29,8 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
   saving = false;
   testing = false;
   acceptingOptIn = false;
+  /** [fase 2] "Probar conexión" en curso. */
+  verifying = false;
   loadError: string | null = null;
 
   currentConfig: WhatsappIntegrationConfig | null = null;
@@ -128,6 +130,110 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
 
   get commercialNamePlaceholder(): string {
     return this.currentCompanyName || 'Nombre del comercio';
+  }
+
+  // ── [fase 2] Estado de la conexión del número propio ──────────────────
+
+  /** ¿El número propio quedó verificado contra Kapso? */
+  get numeroVerificado(): boolean {
+    return !!this.currentConfig?.ownCredentials?.verifiedAt;
+  }
+
+  get numeroVerificadoLabel(): string {
+    const oc = this.currentConfig?.ownCredentials;
+    if (!oc?.verifiedAt) return '';
+    return [oc.numeroVerificado, oc.nombreVerificado && `(${oc.nombreVerificado})`]
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  /** "Último mensaje recibido hace X" — salud del webhook, en lenguaje humano. */
+  get ultimoEntranteLabel(): string {
+    const iso = this.currentConfig?.conexion?.ultimoInboundAt;
+    if (!iso) return 'Todavía no han entrado mensajes';
+    const ms = Date.now() - new Date(iso).getTime();
+    if (Number.isNaN(ms)) return '';
+    const min = Math.floor(ms / 60000);
+    if (min < 1) return 'Último mensaje recibido hace un momento';
+    if (min < 60) return `Último mensaje recibido hace ${min} min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `Último mensaje recibido hace ${h} h`;
+    return `Último mensaje recibido el ${new Date(iso).toLocaleDateString('es-CO')}`;
+  }
+
+  /** ¿Hay credenciales dignas de probar (guardadas o recién digitadas)? */
+  get puedeProbarConexion(): boolean {
+    const oc = this.form?.get('ownCredentials')?.value || {};
+    return !!(
+      (this.hasStoredApiKey || oc.apiKey) &&
+      (oc.phoneNumberId || this.currentConfig?.ownCredentials?.phoneNumberId)
+    );
+  }
+
+  /**
+   * "Probar conexión": si hay cambios sin guardar en las credenciales, primero
+   * se guardan (la API key viaja UNA vez por el PUT de siempre) y luego el
+   * backend las valida contra Kapso con lo que quedó cifrado.
+   */
+  probarConexion(): void {
+    if (this.verifying || !this.puedeProbarConexion) return;
+    this.verifying = true;
+
+    const raw = this.form.getRawValue();
+    const credencialesEditadas = !!raw.ownCredentials?.apiKey ||
+      raw.ownCredentials?.phoneNumberId !==
+        (this.currentConfig?.ownCredentials?.phoneNumberId || '');
+
+    const verificar = () =>
+      this.configService
+        .verifyOwnCredentials()
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => (this.verifying = false))
+        )
+        .subscribe({
+          next: (res) => {
+            this.toastr.success(
+              `Conectado: ${[res?.numero, res?.nombre].filter(Boolean).join(' — ') || 'número verificado'}`,
+              'Conexión verificada'
+            );
+            this.loadConfig();
+          },
+          error: (err) => {
+            this.toastr.error(
+              err?.error?.message || 'No se pudo verificar la conexión.',
+              'Verificación fallida'
+            );
+          },
+        });
+
+    if (credencialesEditadas) {
+      const payload: Partial<WhatsappIntegrationConfig> = {
+        ownCredentials: {
+          enabled: true,
+          ...(raw.ownCredentials?.apiKey ? { apiKey: raw.ownCredentials.apiKey } : {}),
+          phoneNumberId: raw.ownCredentials?.phoneNumberId || null,
+          baseUrl: raw.ownCredentials?.baseUrl || null,
+        },
+      };
+      this.configService
+        .updateConfig(payload)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (res) => {
+            if (res?.data) this.applyConfig(res.data);
+            verificar();
+          },
+          error: (err) => {
+            this.verifying = false;
+            this.toastr.error(
+              err?.error?.message || 'No se pudieron guardar las credenciales.',
+            );
+          },
+        });
+    } else {
+      verificar();
+    }
   }
 
   // ============================================================
@@ -359,7 +465,10 @@ export class WhatsappKapsoConfigComponent implements OnInit, OnDestroy {
   }
 
   sendTest(): void {
-    if (!this.canSendTest || this.testing) return;
+    // Basta con el número verificado (fase 2) o el canal activo de antes —
+    // el backend valida el resto y responde causas claras.
+    if (this.testing) return;
+    if (!this.canSendTest && !this.numeroVerificado) return;
     this.testing = true;
 
     this.configService

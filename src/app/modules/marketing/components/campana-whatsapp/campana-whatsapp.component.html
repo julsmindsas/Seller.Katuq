@@ -145,9 +145,10 @@
           [class.is-selected]="selectedTemplateName === t.name"
           (click)="selectedTemplateName = t.name; onTemplateChange()"
         >
-          <span class="camp__plantilla-name">{{ t.name }}</span>
+          <span class="camp__plantilla-name">{{ t.titulo || t.name }}</span>
+          <span class="camp__plantilla-uso" *ngIf="t.descripcion">{{ t.descripcion }}</span>
           <span class="camp__plantilla-desc">{{ t.bodyText | slice: 0 : 110 }}{{ (t.bodyText || '').length > 110 ? '…' : '' }}</span>
-          <span class="camp__plantilla-lang">{{ t.language }}</span>
+          <span class="camp__plantilla-lang" [title]="'Nombre técnico: ' + t.name">{{ t.name }}</span>
         </button>
       </div>
 

@@ -13,6 +13,11 @@ export interface KapsoTemplate {
   status: string;
   bodyText: string;
   variables: number[];
+  /** [fase 2] Título y descripción EN ESPAÑOL para gente no técnica. */
+  titulo?: string;
+  descripcion?: string;
+  /** true = el título es el de emergencia (nombre limpiado), no uno humano guardado. */
+  tituloEsSugerido?: boolean;
 }
 
 /** Respuesta de GET /v1/whatsapp/balance (prepago por comercio). */
@@ -81,6 +86,17 @@ export class MarketingService extends BaseService {
   /** Plantillas HSM APPROVED del WABA del comercio. */
   getKapsoTemplates(): Observable<{ items: KapsoTemplate[] }> {
     return this.get<{ items: KapsoTemplate[] }>('/v1/whatsapp/kapso-templates');
+  }
+
+  /**
+   * [fase 2] Pide a KAI títulos y descripciones en español para las
+   * plantillas que aún no tienen uno humano. El backend los persiste;
+   * la respuesta trae { titulos: { <name>: {titulo, descripcion} } }.
+   */
+  sugerirTitulosPlantillas(
+    plantillas: Array<{ name: string; bodyText: string }>,
+  ): Observable<{ titulos: Record<string, { titulo: string; descripcion: string }>; generadosPorKai: boolean }> {
+    return this.post<any>('/v1/whatsapp/kapso-templates/sugerir-titulos', { plantillas });
   }
 
   /** Saldo prepago WhatsApp del comercio. */

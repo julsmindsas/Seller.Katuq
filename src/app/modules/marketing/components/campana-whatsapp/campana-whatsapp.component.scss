@@ -408,6 +408,13 @@
     color: var(--km-ink);
   }
 
+  &__plantilla-uso {
+    font-size: 12.5px;
+    color: var(--km-ink2);
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
   &__plantilla-desc {
     font-size: 12px;
     color: var(--km-muted);
