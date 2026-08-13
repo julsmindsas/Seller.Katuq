@@ -119,7 +119,7 @@
       "cerrada" y la reapertura nunca aplicaba. Corregido (`877a7f6`): el
       cierre es la última mutación de la sesión y la reapertura sana también
       las sesiones atascadas con el orden viejo. Verificado en prod (D-187).
-- [ ] 13.2 Ruido del poller: sync-inbound re-procesa los mismos ~5 mensajes
+- [x] 13.2 Ruido del poller: sync-inbound re-procesa los mismos ~5 mensajes
       cada 30 s y cada pasada loggea `piloto_bot_route` aunque el mensaje ya
       esté persistido. Cortar el log (o bajarlo a debug) para mensajes
       deduplicados. Solo limpieza de logs — la idempotencia ya los frena.
