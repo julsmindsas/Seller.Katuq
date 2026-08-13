@@ -1,5 +1,6 @@
 import { Component, HostListener, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
+import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { ToastrService } from "ngx-toastr";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
@@ -8,6 +9,12 @@ import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
+  {
+    tipo: "encabezado",
+    nombre: "Encabezado con tu logo",
+    descripcion: "Tu marca arriba, siempre visible",
+    icono: "M3 5h18v5H3zM6 15h6",
+  },
   {
     tipo: "hero",
     nombre: "Portada",
@@ -25,6 +32,36 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     nombre: "Galería de fotos",
     descripcion: "Muestra tu local o tus trabajos",
     icono: "M3 5h18v14H3zM8 11l3 3 3-4 5 5",
+  },
+  {
+    tipo: "seccion",
+    nombre: "Sección libre",
+    descripcion: "Pon botones, tarjetas y textos como quieras",
+    icono: "M4 5h16v14H4zM4 10h16M9 10v9",
+  },
+  {
+    tipo: "columnas",
+    nombre: "Columnas",
+    descripcion: "Dos o tres ideas lado a lado",
+    icono: "M4 5h5v14H4zM15 5h5v14h-5z",
+  },
+  {
+    tipo: "imagen",
+    nombre: "Una imagen",
+    descripcion: "Una foto sola, a lo ancho si quieres",
+    icono: "M3 5h18v14H3zM8 11l3 3 3-4 5 5",
+  },
+  {
+    tipo: "botones",
+    nombre: "Botones",
+    descripcion: "Varios caminos: comprar, escribir, ver",
+    icono: "M4 8h16v8H4zM8 12h8",
+  },
+  {
+    tipo: "separador",
+    nombre: "Espacio o línea",
+    descripcion: "Aire entre secciones",
+    icono: "M4 12h16",
   },
   {
     tipo: "productos",
@@ -49,6 +86,30 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     nombre: "Preguntas frecuentes",
     descripcion: "Responde dudas antes de que pregunten",
     icono: "M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z",
+  },
+  {
+    tipo: "catalogo",
+    nombre: "Catálogo completo",
+    descripcion: "Todo lo que vendes, con buscador y categorías",
+    icono: "M4 6h16M4 12h16M4 18h10M20 16l2 2-2 2",
+  },
+  {
+    tipo: "video",
+    nombre: "Video",
+    descripcion: "De YouTube o Vimeo, para mostrar tu trabajo",
+    icono: "M4 5h16v14H4zM10 9l5 3-5 3z",
+  },
+  {
+    tipo: "resenas",
+    nombre: "Lo que dicen tus clientes",
+    descripcion: "Testimonios con estrellas",
+    icono: "m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z",
+  },
+  {
+    tipo: "ubicacion",
+    nombre: "Dónde estás",
+    descripcion: "Dirección, horario y cómo llegar",
+    icono: "M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z M12 10h.01",
   },
   {
     tipo: "footer",
@@ -126,8 +187,202 @@ const PAREJAS: { id: string; nombre: string; titulo: string; cuerpo: string }[] 
   { id: "sistema", nombre: "Del sistema", titulo: "sistema", cuerpo: "sistema" },
 ];
 
+/**
+ * Secciones ya armadas.
+ *
+ * Un comerciante no piensa en "un bloque de columnas": piensa en "quiero contar
+ * cómo trabajo en tres pasos". Estas son las mismas piezas de siempre, pero con
+ * el contenido y el estilo ya puestos, listas para editar encima.
+ *
+ * `datos` y `estilo` se copian tal cual al agregar; el backend los sanea igual
+ * que cualquier otra entrada.
+ */
+const SECCIONES_LISTAS: {
+  id: string;
+  nombre: string;
+  pista: string;
+  grupo: string;
+  tipo: string;
+  datos: any;
+  estilo?: any;
+}[] = [
+  // ── Empezar ───────────────────────────────────────────────────────────────
+  {
+    id: "portada-foto",
+    nombre: "Portada con foto",
+    pista: "Una imagen grande, tu frase y un botón",
+    grupo: "Para empezar",
+    tipo: "hero",
+    datos: {
+      titulo: "Tu marca, como se merece",
+      subtitulo: "Escribe aquí lo que te hace distinto, en una línea.",
+      ctaTexto: "Ver productos",
+      ctaUrl: "#productos",
+      alineacion: "centro",
+      altura: "completa",
+      velo: 45,
+      imagen: "",
+    },
+  },
+  {
+    id: "portada-simple",
+    nombre: "Portada sencilla",
+    pista: "Sin foto, con color de fondo",
+    grupo: "Para empezar",
+    tipo: "hero",
+    datos: {
+      titulo: "Bienvenido",
+      subtitulo: "Cuéntale a tu cliente qué va a encontrar aquí.",
+      ctaTexto: "Escríbenos",
+      ctaUrl: "#contacto",
+      alineacion: "centro",
+      altura: "normal",
+      velo: 0,
+    },
+    estilo: { fondo: "#f3f0ff", espaciado: "amplio" },
+  },
+
+  // ── Contar ────────────────────────────────────────────────────────────────
+  {
+    id: "tres-pasos",
+    nombre: "Cómo trabajamos, en 3 pasos",
+    pista: "Tres columnas cortas",
+    grupo: "Contar tu historia",
+    tipo: "columnas",
+    datos: {
+      titulo: "Cómo trabajamos",
+      columnas: [
+        { titulo: "1. Pides", cuerpo: "Escríbenos por WhatsApp o desde esta página.", imagen: "", ctaTexto: "", ctaUrl: "" },
+        { titulo: "2. Preparamos", cuerpo: "Alistamos tu pedido con cuidado.", imagen: "", ctaTexto: "", ctaUrl: "" },
+        { titulo: "3. Recibes", cuerpo: "Te lo llevamos hasta la puerta.", imagen: "", ctaTexto: "", ctaUrl: "" },
+      ],
+    },
+  },
+  {
+    id: "sobre-nosotros",
+    nombre: "Sobre nosotros",
+    pista: "Un texto con viñetas",
+    grupo: "Contar tu historia",
+    tipo: "texto",
+    datos: {
+      titulo: "Quiénes somos",
+      cuerpo:
+        "Cuenta tu historia en dos o tres líneas.\n\n- Lo que te hace distinto\n- Por qué confiar en ti\n- Desde cuándo estás",
+    },
+  },
+  {
+    id: "franja-frase",
+    nombre: "Franja con una frase",
+    pista: "Fondo oscuro, una idea fuerte",
+    grupo: "Contar tu historia",
+    tipo: "texto",
+    datos: { titulo: "", cuerpo: "*Hecho a mano, como debe ser.*" },
+    estilo: { fondo: "#211d33", colorTexto: "#ffffff", espaciado: "amplio", ancho: "completo", alineacion: "centro" },
+  },
+
+  // ── Vender ────────────────────────────────────────────────────────────────
+  {
+    id: "destacados",
+    nombre: "Productos destacados",
+    pista: "Los que tú elijas",
+    grupo: "Vender",
+    tipo: "productos",
+    datos: { titulo: "Lo más pedido", productoIds: [], permitirCompra: false },
+  },
+  {
+    id: "catalogo-completo",
+    nombre: "Todo mi catálogo",
+    pista: "Con buscador y categorías",
+    grupo: "Vender",
+    tipo: "catalogo",
+    datos: { titulo: "Nuestra tienda", mostrarBuscador: true, mostrarCategorias: true, permitirCompra: false },
+  },
+  {
+    id: "llamado-doble",
+    nombre: "Dos caminos",
+    pista: "Comprar o escribir, lado a lado",
+    grupo: "Vender",
+    tipo: "botones",
+    datos: {
+      botones: [
+        { etiqueta: "Ver productos", url: "#productos", estilo: "principal" },
+        { etiqueta: "Escríbenos", url: "#contacto", estilo: "secundario" },
+      ],
+    },
+    estilo: { alineacion: "centro", espaciado: "compacto" },
+  },
+
+  // ── Confianza ─────────────────────────────────────────────────────────────
+  {
+    id: "resenas-tres",
+    nombre: "Lo que dicen tus clientes",
+    pista: "Tres testimonios",
+    grupo: "Dar confianza",
+    tipo: "resenas",
+    datos: {
+      titulo: "Lo que dicen nuestros clientes",
+      items: [
+        { texto: "Escribe aquí lo que te dijo un cliente.", autor: "", estrellas: 5 },
+        { texto: "Otro comentario real de alguien que te compró.", autor: "", estrellas: 5 },
+        { texto: "Uno más, con su nombre si te dio permiso.", autor: "", estrellas: 5 },
+      ],
+    },
+    estilo: { fondo: "#f7f7fb", espaciado: "amplio" },
+  },
+  {
+    id: "preguntas",
+    nombre: "Preguntas frecuentes",
+    pista: "Responde antes de que pregunten",
+    grupo: "Dar confianza",
+    tipo: "faq",
+    datos: {
+      titulo: "Preguntas frecuentes",
+      preguntas: [
+        { pregunta: "¿Hacen envíos?", respuesta: "Sí, cuéntanos a dónde y te decimos el costo." },
+        { pregunta: "¿Cómo puedo pagar?", respuesta: "Escríbenos y te contamos los medios disponibles." },
+      ],
+    },
+  },
+  {
+    id: "donde-estamos",
+    nombre: "Dónde estamos",
+    pista: "Dirección, horario y cómo llegar",
+    grupo: "Dar confianza",
+    tipo: "ubicacion",
+    datos: { titulo: "Dónde estamos", direccion: "", ciudad: "", referencia: "", horario: "" },
+  },
+
+  // ── Contacto ──────────────────────────────────────────────────────────────
+  {
+    id: "boton-whatsapp",
+    nombre: "Botón de WhatsApp",
+    pista: "El camino más corto a una venta",
+    grupo: "Que te contacten",
+    tipo: "whatsapp",
+    datos: { telefono: "", mensaje: "Hola, vi su página y quiero preguntar por…", etiqueta: "Escríbenos por WhatsApp" },
+    estilo: { espaciado: "compacto" },
+  },
+  {
+    id: "formulario-datos",
+    nombre: "Formulario de contacto",
+    pista: "Los datos llegan a tu CRM",
+    grupo: "Que te contacten",
+    tipo: "formulario",
+    datos: {
+      titulo: "Déjanos tus datos",
+      descripcion: "Te contactamos hoy mismo.",
+      pedirTelefono: true,
+      pedirEmail: true,
+      pedirMensaje: true,
+      textoBoton: "Enviar",
+    },
+    estilo: { fondo: "#f7f7fb", espaciado: "amplio" },
+  },
+];
 /** Valores iniciales de un bloque recién agregado. */
 const BLOQUE_NUEVO: { [tipo: string]: any } = {
+  // El logo no va aquí: sale del kit de marca de la empresa al renderizar.
+  encabezado: { nombre: "", mostrarLogo: true, enlaces: [], ctaTexto: "", ctaUrl: "", fijo: false },
   hero: {
     titulo: "Título principal",
     subtitulo: "",
@@ -141,6 +396,17 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   },
   texto: { titulo: "Título", cuerpo: "Escribe aquí." },
   galeria: { titulo: "Galería", imagenes: [] },
+  columnas: {
+    titulo: "Cómo trabajamos",
+    columnas: [
+      { imagen: "", titulo: "Pides", cuerpo: "", ctaTexto: "", ctaUrl: "" },
+      { imagen: "", titulo: "Enviamos", cuerpo: "", ctaTexto: "", ctaUrl: "" },
+    ],
+  },
+  seccion: { titulo: "", columnas: 1 },
+  imagen: { url: "", alt: "", enlace: "", tamano: "normal" },
+  botones: { botones: [{ etiqueta: "Comprar", url: "#productos", estilo: "principal" }] },
+  separador: { linea: false, alto: "medio" },
   productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false },
   whatsapp: { telefono: "", mensaje: "Hola, quiero más información", etiqueta: "Escríbenos por WhatsApp" },
   formulario: {
@@ -152,6 +418,18 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
     textoBoton: "Enviar",
   },
   faq: { titulo: "Preguntas frecuentes", preguntas: [{ pregunta: "¿Pregunta?", respuesta: "Respuesta." }] },
+  catalogo: {
+    titulo: "Nuestro catálogo",
+    mostrarBuscador: true,
+    mostrarCategorias: true,
+    permitirCompra: false,
+  },
+  video: { titulo: "Míranos en video", proveedor: "youtube", videoId: "" },
+  resenas: {
+    titulo: "Lo que dicen nuestros clientes",
+    items: [{ texto: "", autor: "", estrellas: 5 }],
+  },
+  ubicacion: { titulo: "Dónde estamos", direccion: "", ciudad: "", referencia: "", horario: "" },
   footer: { texto: "", mostrarRedes: true, enlaces: [] },
 };
 
@@ -195,6 +473,16 @@ export class SitioEditorComponent implements OnInit {
   mostrandoAgregar = false;
   mostrandoSelector = false;
 
+  /** El panel de estilo de sección arranca plegado: es para afinar, no para empezar. */
+  mostrandoEstilo = false;
+
+  /**
+   * Fondos de franja sugeridos. Son grises y cremas muy claros a propósito:
+   * el color fuerte de la página es el de la marca, y una franja saturada se
+   * lo come.
+   */
+  fondosSugeridos = ["#f7f7fb", "#f3f0ff", "#fff8f0", "#f2f9f5", "#211d33"];
+
   /** Los selectores de color sueltos van escondidos tras las paletas. */
   coloresAvanzados = false;
 
@@ -213,6 +501,13 @@ export class SitioEditorComponent implements OnInit {
 
   /** Sufijo del dominio, para la barra del navegador de la previa. */
   dominioSitios = environment.dominioSitios || "katuq.com";
+
+  /**
+   * Logo y nombre de la empresa, para que la vista previa dibuje el encabezado
+   * igual que la página publicada. No son del sitio: viven en el kit de marca.
+   */
+  logo = "";
+  negocio = "";
   slugMensaje: string | null = null;
   slugValido = true;
 
@@ -246,11 +541,30 @@ export class SitioEditorComponent implements OnInit {
         this.nombre = res.data.nombre;
         this.slug = res.data.slug;
         this.resolverProductosDePrevia();
+        this.cargarMarca();
+        this.iniciarHistorial();
       },
       error: () => {
         this.cargando = false;
         this.error = "No encontramos esta página.";
       },
+    });
+  }
+
+  /**
+   * Kit de marca de la empresa, solo para pintar el encabezado en la vista
+   * previa. Si falla no se avisa: el editor sirve igual, el encabezado se verá
+   * sin logo y el propio bloque explica dónde subirlo.
+   */
+  private cargarMarca(): void {
+    this.service.kitDeMarca().subscribe({
+      next: (res) => {
+        const kit = res && res.data;
+        if (!kit) return;
+        this.logo = kit.logo || "";
+        this.negocio = kit.nombreComercial || "";
+      },
+      error: () => undefined,
     });
   }
 
@@ -562,12 +876,108 @@ export class SitioEditorComponent implements OnInit {
     this.panel = "bloques";
   }
 
+  /**
+   * Un texto se editó directamente sobre la vista previa.
+   *
+   * El render no toca el modelo: avisa qué campo cambió y aquí se escribe. Así
+   * el historial, el "hay cambios sin guardar" y el guardado siguen pasando por
+   * un solo camino, el mismo que usa el panel lateral.
+   */
+  aplicarTextoEditado(cambio: { bloqueId: string; campo: string; valor: string; indice?: number }): void {
+    const bloque = this.bloques.find((b) => b.id === cambio.bloqueId);
+    if (!bloque) return;
+
+    const destino =
+      cambio.indice === undefined ? bloque.datos : (bloque.datos.columnas || [])[cambio.indice];
+    if (!destino || destino[cambio.campo] === cambio.valor) return;
+
+    destino[cambio.campo] = cambio.valor;
+    // El bloque tocado pasa a ser el seleccionado: el panel muestra lo mismo
+    // que se acaba de editar en la página.
+    this.seleccionarPorId(cambio.bloqueId);
+    this.marcarSucio();
+  }
+
+  /**
+   * Un elemento se soltó en otro punto del lienzo. La previa solo avisa; el
+   * modelo se escribe aquí, para que el movimiento entre al historial de
+   * deshacer igual que cualquier otro cambio.
+   */
+  aplicarElementoMovido(cambio: { bloqueId: string; indice: number; x: number; y: number; w: number }): void {
+    const bloque = this.bloques.find((b) => b.id === cambio.bloqueId);
+    const elemento = bloque && (bloque.elementos || [])[cambio.indice];
+    if (!elemento) return;
+
+    const pos = this.posDe(elemento);
+    if (pos.x === cambio.x && pos.y === cambio.y && pos.w === cambio.w) return;
+
+    pos.x = cambio.x;
+    pos.y = cambio.y;
+    pos.w = cambio.w;
+    // La lista de elementos manda el orden en celular, donde no hay lienzo:
+    // se reordena por dónde quedó cada uno para que la página en el teléfono
+    // se lea en el mismo orden en que se ve en el computador.
+    this.ordenarPorPosicion(bloque);
+    this.marcarSucio();
+  }
+
+  /** De arriba a abajo y, a igual altura, de izquierda a derecha. */
+  private ordenarPorPosicion(bloque: any): void {
+    if (!bloque.lienzo || !(bloque.elementos || []).length) return;
+    bloque.elementos.sort((a: any, b: any) => {
+      const pa = a.pos || {};
+      const pb = b.pos || {};
+      const ya = typeof pa.y === "number" ? pa.y : 0;
+      const yb = typeof pb.y === "number" ? pb.y : 0;
+      // Dos cosas a la misma altura son "la misma fila" aunque difieran un
+      // pelo: sin esta tolerancia, el orden en celular cambiaría por un píxel.
+      if (Math.abs(ya - yb) > 4) return ya - yb;
+      return (typeof pa.x === "number" ? pa.x : 0) - (typeof pb.x === "number" ? pb.x : 0);
+    });
+  }
+
   seleccionarPorId(bloqueId: string): void {
     const i = this.bloques.findIndex((b) => b.id === bloqueId);
     if (i >= 0) this.seleccionar(i);
   }
 
   // ── Operaciones sobre bloques ──────────────────────────────────────────────
+
+  // ── Secciones ya armadas ───────────────────────────────────────────────────
+
+  seccionesListas = SECCIONES_LISTAS;
+  /** Se muestran agrupadas por para qué sirven, no por tipo de bloque. */
+  gruposDeSecciones = [...new Set(SECCIONES_LISTAS.map((s) => s.grupo))];
+  /** El catálogo crudo de tipos queda detrás de "empezar desde cero". */
+  mostrandoTiposCrudos = false;
+
+  seccionesDelGrupo(grupo: string) {
+    return this.seccionesListas.filter((s) => s.grupo === grupo);
+  }
+
+  /**
+   * Agrega una sección ya armada. Es el mismo `agregar` de siempre, pero con el
+   * contenido puesto: el comerciante edita encima en vez de mirar una caja
+   * vacía sin saber qué escribir.
+   */
+  agregarSeccionLista(id: string): void {
+    const preset = this.seccionesListas.find((s) => s.id === id);
+    if (!preset || !this.contenido) return;
+
+    const bloque: any = {
+      id: `b_${Date.now()}_${preset.tipo}`,
+      tipo: preset.tipo,
+      visible: true,
+      datos: JSON.parse(JSON.stringify(preset.datos)),
+    };
+    if (preset.estilo) bloque.estilo = JSON.parse(JSON.stringify(preset.estilo));
+
+    this.contenido.bloques = [...this.bloques, bloque];
+    this.seleccionado = this.contenido.bloques.length - 1;
+    this.mostrandoAgregar = false;
+    this.mostrandoTiposCrudos = false;
+    this.marcarSucio();
+  }
 
   agregar(tipo: string): void {
     if (!this.contenido) return;
@@ -599,6 +1009,28 @@ export class SitioEditorComponent implements OnInit {
     this.contenido.bloques = nuevos;
     if (this.seleccionado === i) this.seleccionado = -1;
     else if (this.seleccionado > i) this.seleccionado--;
+    this.marcarSucio();
+  }
+
+  /**
+   * Reordenar arrastrando. Las flechas se conservan: con el teclado, o en un
+   * celular, arrastrar no siempre es posible.
+   */
+  soltarSeccion(evento: CdkDragDrop<any>): void {
+    if (!this.contenido) return;
+    const desde = evento.previousIndex;
+    const hasta = evento.currentIndex;
+    if (desde === hasta) return;
+
+    const nuevos = [...this.bloques];
+    moveItemInArray(nuevos, desde, hasta);
+    this.contenido.bloques = nuevos;
+
+    // La selección sigue al bloque movido, no a la posición.
+    if (this.seleccionado === desde) this.seleccionado = hasta;
+    else if (this.seleccionado > desde && this.seleccionado <= hasta) this.seleccionado--;
+    else if (this.seleccionado < desde && this.seleccionado >= hasta) this.seleccionado++;
+
     this.marcarSucio();
   }
 
@@ -655,6 +1087,391 @@ export class SitioEditorComponent implements OnInit {
     const b = this.bloqueActual;
     if (!b) return;
     b.datos.preguntas.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  // ── Columnas y botones ─────────────────────────────────────────────────────
+
+  // ── Elementos dentro de una sección libre ──────────────────────────────────
+
+  /** Lo que se puede meter en una sección, con nombre entendible. */
+  tiposDeElemento = [
+    { tipo: "titulo", nombre: "+ Título" },
+    { tipo: "texto", nombre: "+ Texto" },
+    { tipo: "boton", nombre: "+ Botón" },
+    { tipo: "tarjetas", nombre: "+ Tarjetas" },
+    { tipo: "imagen", nombre: "+ Imagen" },
+    { tipo: "espacio", nombre: "+ Espacio" },
+  ];
+
+  /** Los mismos íconos que dibujan el servidor y la vista previa. */
+  iconosDisponibles = [
+    "envio", "garantia", "pago", "reloj", "estrella", "corazon",
+    "chat", "ubicacion", "regalo", "hoja", "escudo", "rayo",
+  ];
+
+  private static readonly TRAZOS_ICONO: { [k: string]: string } = {
+    envio: "M3 7h11v8H3zM14 10h4l3 3v2h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+    garantia: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z M9 12l2 2 4-4",
+    pago: "M2 7h20v10H2zM2 11h20M6 15h3",
+    reloj: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 7v5l3 2",
+    estrella: "m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z",
+    corazon: "M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z",
+    chat: "M4 5h16v11H8l-4 3z",
+    ubicacion: "M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11zM12 10h.01",
+    regalo: "M3 11h18v9H3zM3 7h18v4H3zM12 7v13M8 7a2.5 2.5 0 1 1 4-2c2-2 4-1 4 1 0 1-1 1-1 1z",
+    hoja: "M20 4C10 4 4 9 4 17c0 1 0 2 1 3 6-9 9-10 15-11z",
+    escudo: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z",
+    rayo: "M13 3 5 14h6l-1 7 8-11h-6z",
+  };
+
+  trazoIcono(nombre: string): string {
+    return SitioEditorComponent.TRAZOS_ICONO[nombre] || "";
+  }
+
+  // ── Dónde va cada elemento ─────────────────────────────────────────────────
+
+  /**
+   * Anchos posibles, sobre una rejilla de seis columnas. No son píxeles a
+   * propósito: en celular todo pasa a ancho completo, y con coordenadas habría
+   * que mantener un diseño aparte para móvil.
+   */
+  anchos = [
+    { id: "completo", nombre: "Todo el ancho", corto: "100%" },
+    { id: "dosTercios", nombre: "Dos tercios", corto: "⅔" },
+    { id: "mitad", nombre: "La mitad", corto: "½" },
+    { id: "tercio", nombre: "Un tercio", corto: "⅓" },
+  ];
+
+  alineaciones = [
+    { id: "izquierda", nombre: "A la izquierda", icono: "M4 6h16M4 12h10M4 18h13" },
+    { id: "centro", nombre: "Centrado", icono: "M4 6h16M7 12h10M6 18h12" },
+    { id: "derecha", nombre: "A la derecha", icono: "M4 6h16M10 12h10M7 18h13" },
+  ];
+
+  /** La posición se crea al tocarla; antes el elemento no la lleva. */
+  posDe(elemento: any): any {
+    if (!elemento.pos) elemento.pos = { ancho: "completo", alineacion: "izquierda" };
+    return elemento.pos;
+  }
+
+  cambiarPos(elemento: any, campo: "ancho" | "alineacion", valor: string): void {
+    this.posDe(elemento)[campo] = valor;
+    this.marcarSucio();
+  }
+
+  // ── Lienzo: colocar cada elemento donde uno quiera ─────────────────────────
+
+  /** Cuánto ocupa cada ancho de la rejilla, en porcentaje. */
+  private static readonly ANCHO_EN_PORCENTAJE: { [id: string]: number } = {
+    completo: 100,
+    dosTercios: 66.6,
+    mitad: 50,
+    tercio: 33.3,
+  };
+
+  ALTO_LIENZO_MIN = 160;
+  ALTO_LIENZO_MAX = 2000;
+
+  enLienzo(bloque: any): boolean {
+    return !!(bloque && bloque.lienzo);
+  }
+
+  /**
+   * Prende o apaga la colocación libre de una sección.
+   *
+   * Al prenderla, los elementos NO empiezan amontonados en una esquina: cada
+   * uno arranca donde estaba en la rejilla, apilado y con su mismo ancho. Así
+   * el comerciante ve lo mismo que tenía y de ahí mueve lo que quiera.
+   *
+   * Al apagarla, las coordenadas se conservan: si se arrepiente y vuelve a
+   * prender el lienzo, encuentra su diseño intacto.
+   */
+  alternarLienzo(bloque: any): void {
+    if (bloque.lienzo) {
+      delete bloque.lienzo;
+      this.marcarSucio();
+      return;
+    }
+
+    const elementos = bloque.elementos || [];
+    if (!elementos.length) return;
+
+    const alto = Math.max(this.ALTO_LIENZO_MIN, Math.min(this.ALTO_LIENZO_MAX, elementos.length * 120));
+    bloque.lienzo = { alto };
+
+    const paso = 100 / elementos.length;
+    elementos.forEach((el: any, i: number) => {
+      const pos = this.posDe(el);
+      if (typeof pos.w === "number") return; // ya lo habían colocado antes
+      const w = SitioEditorComponent.ANCHO_EN_PORCENTAJE[pos.ancho] || 100;
+      pos.w = w;
+      pos.x =
+        pos.alineacion === "centro"
+          ? Math.round((100 - w) / 2 * 10) / 10
+          : pos.alineacion === "derecha"
+          ? Math.round((100 - w) * 10) / 10
+          : 0;
+      pos.y = Math.round(i * paso * 10) / 10;
+    });
+
+    this.marcarSucio();
+  }
+
+  cambiarAltoLienzo(bloque: any, valor: any): void {
+    if (!bloque.lienzo) return;
+    const alto = Number(valor);
+    if (!isFinite(alto)) return;
+    bloque.lienzo.alto = Math.round(Math.min(this.ALTO_LIENZO_MAX, Math.max(this.ALTO_LIENZO_MIN, alto)));
+    this.marcarSucio();
+  }
+
+  /** Lo que se muestra en el panel: "12% · 40% de ancho". */
+  resumenDePosicion(elemento: any): string {
+    const pos = elemento && elemento.pos;
+    if (!pos || typeof pos.w !== "number") return "sin colocar";
+    return `x ${pos.x}% · y ${pos.y}% · ancho ${pos.w}%`;
+  }
+
+  nombreDeElemento(tipo: string): string {
+    const encontrado = this.tiposDeElemento.find((t) => t.tipo === tipo);
+    return encontrado ? encontrado.nombre.replace("+ ", "") : tipo;
+  }
+
+  /** Valores iniciales de cada elemento. */
+  private elementoNuevo(tipo: string): any {
+    switch (tipo) {
+      case "titulo":
+        return { texto: "Un título", nivel: "mediano" };
+      case "texto":
+        return { cuerpo: "Escribe aquí." };
+      case "boton":
+        return { etiqueta: "Ver más", url: "#productos", estilo: "principal" };
+      case "imagen":
+        return { url: "", alt: "", enlace: "" };
+      case "espacio":
+        return { alto: "medio", linea: false };
+      case "tarjetas":
+        return {
+          variante: "icono",
+          porFila: 3,
+          items: [
+            { titulo: "Envío rápido", cuerpo: "", icono: "envio", etiqueta: "", precio: "", incluye: [], ctaTexto: "", ctaUrl: "" },
+            { titulo: "Garantía", cuerpo: "", icono: "garantia", etiqueta: "", precio: "", incluye: [], ctaTexto: "", ctaUrl: "" },
+            { titulo: "Pago seguro", cuerpo: "", icono: "pago", etiqueta: "", precio: "", incluye: [], ctaTexto: "", ctaUrl: "" },
+          ],
+        };
+      default:
+        return {};
+    }
+  }
+
+  agregarElemento(bloque: any, tipo: string): void {
+    const actuales = bloque.elementos || [];
+    if (actuales.length >= 12) return;
+    bloque.elementos = [
+      ...actuales,
+      { id: `e_${Date.now()}_${tipo}`, tipo, datos: this.elementoNuevo(tipo) },
+    ];
+    this.marcarSucio();
+  }
+
+  quitarElemento(bloque: any, i: number): void {
+    bloque.elementos.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  duplicarElemento(bloque: any, i: number): void {
+    const copia = JSON.parse(JSON.stringify(bloque.elementos[i]));
+    copia.id = `e_${Date.now()}_${copia.tipo}`;
+    bloque.elementos.splice(i + 1, 0, copia);
+    this.marcarSucio();
+  }
+
+  soltarElemento(evento: CdkDragDrop<any>, bloque: any): void {
+    if (evento.previousIndex === evento.currentIndex) return;
+    moveItemInArray(bloque.elementos, evento.previousIndex, evento.currentIndex);
+    this.marcarSucio();
+  }
+
+  agregarTarjeta(elemento: any): void {
+    const items = elemento.datos.items || [];
+    if (items.length >= 8) return;
+    elemento.datos.items = [
+      ...items,
+      { titulo: "", cuerpo: "", imagen: "", icono: "", etiqueta: "", precio: "", incluye: [], ctaTexto: "", ctaUrl: "" },
+    ];
+    this.marcarSucio();
+  }
+
+  quitarTarjeta(elemento: any, j: number): void {
+    elemento.datos.items.splice(j, 1);
+    this.marcarSucio();
+  }
+
+  /** Sube la foto de un elemento imagen dentro de una sección. */
+  subirImagenElemento(evento: Event, bloque: any, i: number): void {
+    this.subirYAplicar(evento, (url) => {
+      bloque.elementos[i].datos.url = url;
+    });
+  }
+
+  /** Sube la foto de una tarjeta. */
+  subirImagenTarjeta(evento: Event, elemento: any, j: number): void {
+    this.subirYAplicar(evento, (url) => {
+      elemento.datos.items[j].imagen = url;
+    });
+  }
+
+  /**
+   * Subida con destino variable. Las tres subidas de una sección hacen lo
+   * mismo salvo dónde guardan la URL, así que el camino es uno solo.
+   */
+  private subirYAplicar(evento: Event, aplicar: (url: string) => void): void {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files && input.files[0];
+    if (!archivo) return;
+
+    this.subiendo = true;
+    this.service.subirImagen(archivo).subscribe({
+      next: (res) => {
+        this.subiendo = false;
+        input.value = "";
+        if (!res || !res.success || !res.url) {
+          this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
+          return;
+        }
+        aplicar(res.url);
+        this.marcarSucio();
+      },
+      error: () => {
+        this.subiendo = false;
+        input.value = "";
+        this.toastr.error("No pudimos subir la imagen.");
+      },
+    });
+  }
+
+  agregarColumna(): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    const cols = b.datos.columnas || [];
+    if (cols.length >= 3) return;
+    b.datos.columnas = [...cols, { imagen: "", titulo: "", cuerpo: "", ctaTexto: "", ctaUrl: "" }];
+    this.marcarSucio();
+  }
+
+  quitarColumna(i: number): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    b.datos.columnas.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  /** La foto de una columna: se sube igual, pero se guarda en su celda. */
+  subirImagenColumna(evento: Event, indice: number): void {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files && input.files[0];
+    if (!archivo) return;
+
+    this.subiendo = true;
+    this.service.subirImagen(archivo).subscribe({
+      next: (res) => {
+        this.subiendo = false;
+        input.value = "";
+        const b = this.bloqueActual;
+        if (!res || !res.success || !res.url || !b) {
+          this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
+          return;
+        }
+        b.datos.columnas[indice].imagen = res.url;
+        this.marcarSucio();
+      },
+      error: () => {
+        this.subiendo = false;
+        input.value = "";
+        this.toastr.error("No pudimos subir la imagen.");
+      },
+    });
+  }
+
+  agregarBoton(): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    const lista = b.datos.botones || [];
+    if (lista.length >= 4) return;
+    b.datos.botones = [...lista, { etiqueta: "", url: "", estilo: "principal" }];
+    this.marcarSucio();
+  }
+
+  quitarBoton(i: number): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    b.datos.botones.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  // ── Estilo de una sección ──────────────────────────────────────────────────
+
+  /**
+   * El estilo se crea la primera vez que se toca. Antes de eso el bloque no lo
+   * lleva, para no llenar el documento de valores por defecto — el backend
+   * descarta el estilo que no cambia nada.
+   */
+  estiloDe(bloque: any): any {
+    if (!bloque.estilo) {
+      bloque.estilo = {
+        fondo: "",
+        fondoImagen: "",
+        fondoVelo: 0,
+        colorTexto: "",
+        espaciado: "normal",
+        ancho: "normal",
+        alineacion: "",
+      };
+    }
+    return bloque.estilo;
+  }
+
+  tieneEstilo(bloque: any): boolean {
+    const e = bloque && bloque.estilo;
+    if (!e) return false;
+    return !!(
+      e.fondo ||
+      e.fondoImagen ||
+      e.colorTexto ||
+      e.alineacion ||
+      (e.espaciado && e.espaciado !== "normal") ||
+      (e.ancho && e.ancho !== "normal")
+    );
+  }
+
+  cambiarEstilo(bloque: any, campo: string, valor: any): void {
+    this.estiloDe(bloque)[campo] = valor;
+    this.marcarSucio();
+  }
+
+  ponerFondo(bloque: any, color: string): void {
+    this.estiloDe(bloque).fondo = color;
+    this.marcarSucio();
+  }
+
+  limpiarEstilo(bloque: any): void {
+    delete bloque.estilo;
+    this.marcarSucio();
+  }
+
+  agregarResena(): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    b.datos.items = [...(b.datos.items || []), { texto: "", autor: "", estrellas: 5 }];
+    this.marcarSucio();
+  }
+
+  quitarResena(i: number): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    b.datos.items.splice(i, 1);
     this.marcarSucio();
   }
 
@@ -773,7 +1590,10 @@ export class SitioEditorComponent implements OnInit {
 
   // ── Imágenes ───────────────────────────────────────────────────────────────
 
-  subirImagen(evento: Event, destino: "hero" | "galeria" | "seo"): void {
+  subirImagen(
+    evento: Event,
+    destino: "hero" | "galeria" | "seo" | "imagenBloque" | "fondoSeccion"
+  ): void {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
     if (!archivo) return;
@@ -793,7 +1613,15 @@ export class SitioEditorComponent implements OnInit {
           const b = this.bloqueActual;
           if (!b) return;
           if (destino === "hero") b.datos.imagen = res.url;
+          if (destino === "imagenBloque") b.datos.url = res.url;
           if (destino === "galeria") b.datos.imagenes = [...(b.datos.imagenes || []), { url: res.url, alt: "" }];
+          if (destino === "fondoSeccion") {
+            const estilo = this.estiloDe(b);
+            estilo.fondoImagen = res.url;
+            // Un velo por defecto: una foto de fondo sin oscurecer deja el
+            // texto ilegible, y el comerciante lo descubre ya publicado.
+            if (!estilo.fondoVelo) estilo.fondoVelo = 45;
+          }
         }
         this.marcarSucio();
       },
@@ -814,6 +1642,113 @@ export class SitioEditorComponent implements OnInit {
   marcarSucio(): void {
     this.sucio = true;
     this.recalcularPrevia();
+    this.guardarEnHistorial();
+  }
+
+  // ── Deshacer y rehacer ─────────────────────────────────────────────────────
+
+  /**
+   * Historial de contenido.
+   *
+   * Se guardan copias completas del contenido, no diferencias: son objetos de
+   * unos pocos kilobytes y treinta pasos caben de sobra en memoria. Calcular
+   * diferencias sería más código para ahorrar algo que no molesta.
+   *
+   * Los cambios seguidos sobre el mismo campo se agrupan: escribir un título no
+   * puede dejar treinta pasos de deshacer, uno por letra.
+   */
+  private historial: string[] = [];
+  private posicionHistorial = -1;
+  private relojHistorial: any = null;
+  /** Al aplicar un paso del historial no se debe volver a guardar ese estado. */
+  private restaurando = false;
+
+  private guardarEnHistorial(): void {
+    if (this.restaurando || !this.contenido) return;
+
+    clearTimeout(this.relojHistorial);
+    this.relojHistorial = setTimeout(() => {
+      const foto = JSON.stringify(this.contenido);
+      if (this.historial[this.posicionHistorial] === foto) return;
+
+      // Si se deshizo y luego se edita, lo que estaba "adelante" deja de existir.
+      this.historial = this.historial.slice(0, this.posicionHistorial + 1);
+      this.historial.push(foto);
+
+      const MAX_PASOS = 30;
+      if (this.historial.length > MAX_PASOS) this.historial.shift();
+      this.posicionHistorial = this.historial.length - 1;
+    }, 400);
+  }
+
+  /** El estado inicial entra al historial para poder volver a él. */
+  private iniciarHistorial(): void {
+    this.historial = this.contenido ? [JSON.stringify(this.contenido)] : [];
+    this.posicionHistorial = this.historial.length - 1;
+  }
+
+  get puedeDeshacer(): boolean {
+    return this.posicionHistorial > 0;
+  }
+
+  get puedeRehacer(): boolean {
+    return this.posicionHistorial >= 0 && this.posicionHistorial < this.historial.length - 1;
+  }
+
+  deshacer(): void {
+    if (!this.puedeDeshacer) return;
+    this.posicionHistorial--;
+    this.aplicarDelHistorial();
+  }
+
+  rehacer(): void {
+    if (!this.puedeRehacer) return;
+    this.posicionHistorial++;
+    this.aplicarDelHistorial();
+  }
+
+  private aplicarDelHistorial(): void {
+    const foto = this.historial[this.posicionHistorial];
+    if (!foto) return;
+
+    this.restaurando = true;
+    clearTimeout(this.relojHistorial);
+    this.contenido = JSON.parse(foto);
+    // El bloque que estaba seleccionado puede ya no existir.
+    if (this.seleccionado >= this.bloques.length) this.seleccionado = -1;
+    this.sucio = true;
+    this.recalcularPrevia();
+    this.restaurando = false;
+  }
+
+  /**
+   * Atajos de teclado. Se ignoran mientras se escribe en un campo: ahí Ctrl+Z
+   * es el deshacer del propio campo, y robárselo sería peor que no tenerlo.
+   */
+  @HostListener("document:keydown", ["$event"])
+  atajos(evento: KeyboardEvent): void {
+    if (!(evento.ctrlKey || evento.metaKey)) return;
+
+    const destino = evento.target as HTMLElement;
+    const escribiendo =
+      destino &&
+      (destino.tagName === "INPUT" ||
+        destino.tagName === "TEXTAREA" ||
+        destino.isContentEditable);
+    if (escribiendo) return;
+
+    const tecla = evento.key.toLowerCase();
+    if (tecla === "z" && !evento.shiftKey) {
+      evento.preventDefault();
+      this.deshacer();
+    } else if (tecla === "y" || (tecla === "z" && evento.shiftKey)) {
+      evento.preventDefault();
+      this.rehacer();
+    } else if (tecla === "s") {
+      // Guardar con Ctrl+S es lo que todo el mundo intenta.
+      evento.preventDefault();
+      this.guardar();
+    }
   }
 
   comprobarSlug(): void {

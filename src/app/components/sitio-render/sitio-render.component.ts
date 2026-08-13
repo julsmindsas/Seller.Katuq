@@ -6,6 +6,10 @@ export interface BloqueSitio {
   tipo: string;
   visible?: boolean;
   datos: any;
+  /** Elementos sueltos que van dentro de la sección, después de su contenido. */
+  elementos?: any[];
+  /** Si está, los elementos van donde los soltaron y no apilados. */
+  lienzo?: { alto: number };
 }
 
 export interface TemaSitio {
@@ -182,9 +186,42 @@ export class SitioRenderComponent implements OnChanges {
   /** Id del bloque resaltado (el que se está editando). */
   @Input() bloqueActivo: string | null = null;
 
+  /**
+   * Logo y nombre comercial de la empresa, para el encabezado. Llegan desde
+   * fuera porque no son del sitio sino del kit de marca: el mismo criterio que
+   * usa la página publicada, donde los inyecta el servidor.
+   */
+  @Input() logo = "";
+  @Input() negocio = "";
+
   @Output() lead = new EventEmitter<DatosLead>();
   @Output() clic = new EventEmitter<{ destino: string; bloqueId: string }>();
   @Output() bloqueSeleccionado = new EventEmitter<string>();
+
+  /**
+   * Un texto se editó directamente sobre la página. Emite la ruta del campo
+   * (`bloqueId`, `campo` y opcionalmente el índice de la celda) para que el
+   * editor lo escriba en su modelo — el render no muta lo que le pasan.
+   */
+  @Output() textoEditado = new EventEmitter<{
+    bloqueId: string;
+    campo: string;
+    valor: string;
+    indice?: number;
+  }>();
+
+  /**
+   * Un elemento se soltó en otro punto del lienzo. Igual que con el texto: aquí
+   * solo se avisa, y el editor lo escribe en su modelo — así el arrastre entra
+   * al historial de deshacer por el mismo camino que todo lo demás.
+   */
+  @Output() elementoMovido = new EventEmitter<{
+    bloqueId: string;
+    indice: number;
+    x: number;
+    y: number;
+    w: number;
+  }>();
 
   nombre = "";
   telefono = "";
@@ -269,6 +306,167 @@ export class SitioRenderComponent implements OnChanges {
     });
   }
 
+  // ── Edición directa sobre la página ────────────────────────────────────────
+
+  /**
+   * Escribir sobre el propio texto de la página, sin buscar el campo en el
+   * panel. Es lo que hace que el editor se sienta como una página y no como un
+   * formulario.
+   *
+   * Solo en modo edición, y solo texto: al pegar se limpia el formato, porque
+   * un pegado desde Word traería etiquetas que el saneador del servidor
+   * descartaría igual — mejor que el comerciante vea de una lo que va a quedar.
+   */
+  alTerminarEdicion(evento: Event, bloqueId: string, campo: string, indice?: number): void {
+    const el = evento.target as HTMLElement;
+    const valor = (el.innerText || "").replace(/\s+\n/g, "\n").trim();
+    this.textoEditado.emit({ bloqueId, campo, valor, indice });
+  }
+
+  /** Enter confirma en los campos de una línea; Escape cancela. */
+  alTeclearEnTexto(evento: KeyboardEvent, unaLinea: boolean): void {
+    if (evento.key === "Escape") {
+      (evento.target as HTMLElement).blur();
+      return;
+    }
+    if (unaLinea && evento.key === "Enter") {
+      evento.preventDefault();
+      (evento.target as HTMLElement).blur();
+    }
+  }
+
+  /** Pegar sin formato: lo que se ve es lo que se publica. */
+  alPegar(evento: ClipboardEvent): void {
+    if (!this.previsualizacion) return;
+    evento.preventDefault();
+    const texto = evento.clipboardData ? evento.clipboardData.getData("text/plain") : "";
+    document.execCommand("insertText", false, texto);
+  }
+
+  /** Nombre del encabezado: el que escribió el comerciante, o el de su empresa. */
+  nombreDeMarca(datos: any): string {
+    return (datos && datos.nombre) || this.negocio || "";
+  }
+
+  /**
+   * Texto con formato para la vista previa.
+   *
+   * Es el espejo de `textoConFormato` del servidor (`utils/siteHtml.js`): se
+   * escapa TODO primero y solo después se reconocen las marcas, así escribir
+   * `<script>` produce texto y no una etiqueta. Angular además sanea lo que
+   * entra por `innerHTML`, o sea que hay dos redes bajo la misma cuerda.
+   */
+  conFormato(valor: string): string {
+    const crudo = String(valor || "");
+    if (!crudo.trim()) return "";
+
+    const esc = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const urlOk = (u: string) => (/^(https?:\/\/|mailto:|tel:|#|\/)/i.test(u) ? u : "");
+
+    const enLinea = (linea: string) =>
+      linea
+        .replace(/\[([^\]\n]{1,120})\]\(([^)\s]{1,500})\)/g, (m, t, u) => {
+          const href = urlOk(u);
+          return href ? `<a href="${href}">${t}</a>` : m;
+        })
+        .replace(/\*([^*\n]{1,300})\*/g, "<strong>$1</strong>")
+        .replace(/_([^_\n]{1,300})_/g, "<em>$1</em>");
+
+    const salida: string[] = [];
+    let lista: string[] | null = null;
+
+    for (const linea of esc(crudo).split(/\r?\n/)) {
+      const limpia = linea.trim();
+      if (!limpia) {
+        if (lista) { salida.push(`<ul>${lista.join("")}</ul>`); lista = null; }
+        continue;
+      }
+      const item = limpia.match(/^[-•*]\s+(.{1,300})$/);
+      if (item) {
+        lista = lista || [];
+        lista.push(`<li>${enLinea(item[1])}</li>`);
+        continue;
+      }
+      if (lista) { salida.push(`<ul>${lista.join("")}</ul>`); lista = null; }
+      salida.push(`<p>${enLinea(limpia)}</p>`);
+    }
+    if (lista) salida.push(`<ul>${lista.join("")}</ul>`);
+    return salida.join("");
+  }
+
+  /**
+   * Estilo propio de la sección, para que la vista previa muestre las franjas
+   * de color y el aire igual que la página publicada. Allá esto son reglas CSS
+   * (la política de seguridad prohíbe estilos en línea); aquí, dentro del panel,
+   * se pueden aplicar directo.
+   */
+  estiloDeBloque(bloque: any): { [k: string]: string } {
+    const e = bloque && bloque.estilo;
+    if (!e) return {};
+    const AIRE: { [k: string]: string } = { compacto: "1.4rem", amplio: "4.5rem", enorme: "7rem" };
+    const ALINEACION: { [k: string]: string } = { izquierda: "left", centro: "center", derecha: "right" };
+
+    const estilo: { [k: string]: string } = {};
+    if (e.fondo) estilo["background-color"] = e.fondo;
+    if (e.fondoImagen) {
+      const velo = Math.min(85, Math.max(0, Number(e.fondoVelo) || 0)) / 100;
+      estilo["background-image"] = velo
+        ? `linear-gradient(rgba(0,0,0,${velo}),rgba(0,0,0,${velo})),url("${e.fondoImagen}")`
+        : `url("${e.fondoImagen}")`;
+      estilo["background-size"] = "cover";
+      estilo["background-position"] = "center";
+    }
+    if (e.colorTexto) estilo["color"] = e.colorTexto;
+    if (AIRE[e.espaciado]) {
+      estilo["padding-top"] = AIRE[e.espaciado];
+      estilo["padding-bottom"] = AIRE[e.espaciado];
+    }
+    if (e.alineacion) estilo["text-align"] = ALINEACION[e.alineacion];
+    if (e.ancho === "completo") estilo["max-width"] = "100%";
+    if (e.ancho === "angosto") estilo["max-width"] = "42rem";
+    return estilo;
+  }
+
+  /**
+   * Trazos de los íconos de tarjeta. Son los mismos que dibuja el servidor
+   * (`utils/siteHtml.js`): si divergen, la vista previa mostraría un ícono que
+   * la página publicada no tiene.
+   */
+  private static readonly TRAZOS: { [k: string]: string } = {
+    envio: "M3 7h11v8H3zM14 10h4l3 3v2h-7zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+    garantia: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z M9 12l2 2 4-4",
+    pago: "M2 7h20v10H2zM2 11h20M6 15h3",
+    reloj: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 7v5l3 2",
+    estrella: "m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z",
+    corazon: "M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z",
+    chat: "M4 5h16v11H8l-4 3z",
+    ubicacion: "M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11zM12 10h.01",
+    regalo: "M3 11h18v9H3zM3 7h18v4H3zM12 7v13M8 7a2.5 2.5 0 1 1 4-2c2-2 4-1 4 1 0 1-1 1-1 1z",
+    hoja: "M20 4C10 4 4 9 4 17c0 1 0 2 1 3 6-9 9-10 15-11z",
+    escudo: "M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z",
+    rayo: "M13 3 5 14h6l-1 7 8-11h-6z",
+  };
+
+  trazoIcono(nombre: string): string {
+    return SitioRenderComponent.TRAZOS[nombre] || "";
+  }
+
+  /** Cinco posiciones: true = estrella encendida. */
+  estrellas(cuantas: number): boolean[] {
+    const n = Math.min(5, Math.max(1, Number(cuantas) || 5));
+    return [1, 2, 3, 4, 5].map((i) => i <= n);
+  }
+
+  direccionCompleta(datos: any): string {
+    return [datos && datos.direccion, datos && datos.ciudad].filter(Boolean).join(", ");
+  }
+
+  enlaceMapa(datos: any): string {
+    const q = encodeURIComponent(this.direccionCompleta(datos));
+    return `https://www.google.com/maps/search/?api=1&query=${q}`;
+  }
+
   alineacion(valor: string): string {
     if (valor === "izquierda") return "left";
     if (valor === "derecha") return "right";
@@ -302,5 +500,130 @@ export class SitioRenderComponent implements OnChanges {
   /** El padre llama a esto tras un envío exitoso. */
   limpiarFormulario(): void {
     this.nombre = this.telefono = this.email = this.mensaje = "";
+  }
+
+  // ── Colocación libre: arrastrar el elemento y soltarlo donde sea ───────────
+
+  /**
+   * ¿Esta sección está en modo lienzo AHORA?
+   *
+   * En la vista de celular no, aunque el bloque lo tenga: ahí los elementos se
+   * apilan, que es exactamente lo que va a hacer la página publicada debajo de
+   * 700px. Si la previa mostrara el lienzo en modo celular, le mentiría.
+   */
+  enLienzo(bloque: any): boolean {
+    return !!(bloque && bloque.lienzo && this.dispositivo !== "movil");
+  }
+
+  /**
+   * Lo que se está arrastrando. Mientras dura, la posición sale de aquí y NO
+   * del modelo: el render no muta lo que le pasan, avisa al soltar.
+   */
+  arrastre: {
+    bloqueId: string;
+    indice: number;
+    modo: "mover" | "ancho";
+    marco: DOMRect;
+    px: number;
+    py: number;
+    x: number;
+    y: number;
+    w: number;
+    movido: boolean;
+  } | null = null;
+
+  /** La coordenada que hay que pintar: la del arrastre en curso, o la guardada. */
+  coordenada(bloque: any, el: any, indice: number, campo: "x" | "y" | "w"): number | null {
+    if (!this.enLienzo(bloque)) return null;
+    const a = this.arrastre;
+    if (a && a.bloqueId === bloque.id && a.indice === indice) return a[campo];
+    const pos = el && el.pos;
+    return pos && typeof pos.w === "number" ? pos[campo] : null;
+  }
+
+  /** Alto del lienzo en píxeles, o nulo cuando la sección crece con su contenido. */
+  altoDeLienzo(bloque: any): number | null {
+    return this.enLienzo(bloque) ? bloque.lienzo.alto : null;
+  }
+
+  empezarArrastre(evento: PointerEvent, bloque: any, el: any, indice: number, modo: "mover" | "ancho"): void {
+    if (!this.previsualizacion || !this.enLienzo(bloque)) return;
+
+    // Escribir gana sobre mover: si el dedo cayó en un texto editable o en un
+    // campo, no se arrastra nada.
+    const destino = evento.target as HTMLElement;
+    if (modo === "mover" && destino && destino.closest('[contenteditable="true"], input, textarea, select')) {
+      return;
+    }
+
+    const celda = (evento.target as HTMLElement).closest(".celda") as HTMLElement;
+    const marco = celda && (celda.parentElement as HTMLElement);
+    if (!marco) return;
+
+    const pos = el.pos || {};
+    const caja = marco.getBoundingClientRect();
+    this.arrastre = {
+      bloqueId: bloque.id,
+      indice,
+      modo,
+      marco: caja,
+      px: evento.clientX,
+      py: evento.clientY,
+      x: typeof pos.x === "number" ? pos.x : 0,
+      y: typeof pos.y === "number" ? pos.y : 0,
+      w: typeof pos.w === "number" ? pos.w : 100,
+      movido: false,
+    };
+
+    evento.preventDefault();
+    // El puntero se captura en la celda —no en el asa— porque es la celda la
+    // que escucha el movimiento y el soltar: sin esto, salirse del elemento a
+    // media arrastrada deja el gesto colgado.
+    celda.setPointerCapture?.(evento.pointerId);
+    this.bloqueSeleccionado.emit(bloque.id);
+  }
+
+  moverArrastre(evento: PointerEvent): void {
+    const a = this.arrastre;
+    if (!a) return;
+
+    const dx = ((evento.clientX - a.px) / a.marco.width) * 100;
+    const dy = ((evento.clientY - a.py) / a.marco.height) * 100;
+
+    if (a.modo === "ancho") {
+      a.w = this.imantar(this.encerrar(a.w + dx, 5, 100 - a.x));
+    } else {
+      a.x = this.imantar(this.encerrar(a.x + dx, 0, 100 - a.w));
+      a.y = this.imantar(this.encerrar(a.y + dy, 0, 100));
+    }
+
+    // El punto de partida se mueve con el puntero: así, cuando el elemento
+    // topa con un borde, el gesto no queda "debiendo" distancia y responde de
+    // inmediato al devolverse.
+    a.px = evento.clientX;
+    a.py = evento.clientY;
+    a.movido = true;
+  }
+
+  soltarArrastre(): void {
+    const a = this.arrastre;
+    this.arrastre = null;
+    if (!a || !a.movido) return;
+    this.elementoMovido.emit({ bloqueId: a.bloqueId, indice: a.indice, x: a.x, y: a.y, w: a.w });
+  }
+
+  private encerrar(valor: number, min: number, max: number): number {
+    return Math.round(Math.min(max, Math.max(min, valor)) * 10) / 10;
+  }
+
+  /**
+   * Iman a los puntos que uno quiere pegar sin pelear con el mouse: los bordes,
+   * la mitad y los tercios. Fuera de 1,2% de esos puntos no hace nada.
+   */
+  private imantar(valor: number): number {
+    for (const guia of [0, 25, 33.3, 50, 66.6, 75, 100]) {
+      if (Math.abs(valor - guia) < 1.2) return guia;
+    }
+    return valor;
   }
 }

@@ -3822,3 +3822,143 @@ Daniel pidió validar el panel de tienda contra la venta asistida —formas de p
 Todo dentro del lenguaje visual de la remodelación del builder (grupo/campo/opcion/palanca), que otra sesión hizo y esta respeta. Release 2026.08.12.9 publicado. El sitio demo (`demo-katuq-oms`) quedó en modo zonas con Nequi habilitado, a propósito, para que Daniel lo pruebe.
 
 **Deuda que sigue**: notificación al vendedor cuando entra un pedido (subió de prioridad: ALMARA ya publicó su tienda), y la auditoría del bundle de 4,6 MB.
+
+## D-186 (2026-08-13) — Personalización del builder: la marca deja de ser un campo que nadie llena
+
+Daniel pidió potenciar el builder y "darle una mejor personalización a la creación de la landing". El diagnóstico no era estético sino concreto: **todas las páginas salían iguales porque los datos que las diferenciarían no llegaban nunca**.
+
+**Lo que estaba roto de raíz.** `companies.brandKit` tenía endpoints desde D-173 y métodos en el servicio de Angular, pero **ningún componente los llamaba**: el kit no tenía pantalla, así que jamás se llenaba y el generador caía siempre a los colores de la plantilla. El **logo del negocio no aparecía en ninguna página publicada** — las redes sí se pintaban desde el maestro, el logo no viajaba al render y no había bloque donde ponerlo. Y el asistente solo preguntaba plantilla, nombre y objetivo en texto libre.
+
+**Bloque `encabezado`.** Logo, nombre, hasta cuatro enlaces, botón y opción de quedar fijo al bajar. **El logo NO se guarda en el bloque**: se inyecta al renderizar desde el kit de la empresa, por el mismo camino que las redes del pie (`marcaDeLaEmpresa`, que reemplaza a `redesDeLaEmpresa`). Cambiarlo una vez lo cambia en todas las páginas del comercio, sin editar sitio por sitio. Abre las 8 plantillas.
+
+**Pantalla "Mi marca"** (modal desde la lista y desde el asistente): logo, paleta, tipografía, tono, sector y frase, a nivel de empresa. Al subir el logo **se extraen sus colores dominantes con canvas** y se ofrecen como paleta — se agrupan los píxeles en cubos y se descartan blancos, negros y grises, que son fondo y contorno, no marca. El comerciante llega con su logo, no con códigos hexadecimales.
+
+**Textos por objetivo, sin depender de la IA.** Como `GOOGLE_AI_API_KEY` sigue vacía, la personalización **no puede apoyarse en el modelo**. Cada plantilla tiene textos escritos a mano para tres objetivos —vender, conseguir contactos, darse a conocer— con la misma forma de rutas que usa el generador con la IA, así que se aplican con el mismo mecanismo y se sobreescriben si algún día el modelo contesta. Marcadores nuevos `{{eslogan}}`, `{{ciudad}}` y `{{telefono}}`, que salen del maestro de la empresa. **Un marcador sin dato borra la frase que lo rodea**, no la deja a medias: las partes opcionales se escriben entre ⟨⟩ y desaparecen enteras. Verificado: OH MY STORE genera "recíbelo en Palmira" y un negocio sin ciudad no ve la frase.
+
+**El asistente pregunta lo que importa.** Paso nuevo de "¿qué quieres crear?" que **manda el `tipo`** — hasta ahora todo nacía `landing` aunque el tipo `tienda` existiera (deuda de D-181, cerrada). Quien pide una tienda recibe los bloques de producto con el botón de compra encendido. Además: objetivo en botones, selector de productos reusando el del editor, y el sector del kit preselecciona el filtro de plantillas.
+
+**Desfase corregido en el camino:** el kit aceptaba solo cuatro tipografías mientras el editor ya ofrecía trece — elegir "Cormorant" se guardaba como "sistema" sin avisar. Ahora usa la lista blanca del tema.
+
+**Verificado:** suite de publicación en verde con 5 pruebas nuevas del encabezado (logo `javascript:` no se pinta, el nombre del comercio no puede cerrar una etiqueta, apagar el logo deja el nombre, tope de 4 enlaces), y 14 chequeos end-to-end contra el backend: los tres objetivos producen páginas distintas, el encabezado no guarda logo, la tienda nace comprable y la landing no, y el tipo elegido se respeta al guardar. Se re-sembró `site_templates` con dry-run previo; los sitios ya publicados no se tocan porque guardan su propia copia de bloques. Datos de prueba borrados.
+
+## D-187 (2026-08-13) — El builder deja de publicar a ciegas, y tres bloques que faltaban
+
+Continuación de D-186 con la lista de pendientes. Dos frentes: medición y bloques.
+
+**Las métricas existían y nadie las leía.** `site_events` se escribía desde el primer día —**806 eventos guardados**— y no había un solo lector: el comerciante publicaba, compartía el enlace y no sabía si alguien entraba. Nuevo `GET /v1/sites/:id/metricas?dias=N` con visitas, contactos, pedidos, ingresos, conversión y serie por día, más el desglose de clics. Los **ingresos salen del propio evento de pedido**, que ya guardaba `total`: no se consulta `orders`, que es de otro dominio y mucho más grande.
+
+**La consulta filtra por sitio y descarta fechas en memoria a propósito**: cruzar `siteId` con un rango de `fecha` obligaría a un índice compuesto nuevo, y con el volumen actual no se justifica. Si un sitio pasa de 5.000 eventos, la respuesta lo dice en `truncado` y ahí sí toca el índice más una agregación diaria. Verificado con datos reales de `demo-katuq-oms`: 482 visitas, 10 pedidos, $2.088.700 y 2,5% de conversión.
+
+La pantalla es un modal desde cada tarjeta ("Cómo va"), con barras hechas con divs y **sin librería de gráficos**: son treinta valores y una dependencia de charts en un módulo que se descarga en celular no se paga con lo que aporta. Los días sin tráfico viajan en cero — una gráfica con huecos miente sobre la constancia de las visitas. Con cero visitas no se muestra 0% de conversión sino el motivo, y el texto cambia según la página esté publicada o no.
+
+**Tres bloques nuevos: video, reseñas y ubicación.**
+
+- **Video**: guarda el **identificador**, nunca la URL ni el `<iframe>` de la plataforma — mismo criterio que los píxeles de pauta (D-183). El servidor arma el reproductor y **abre `frame-src` solo para el proveedor que ese sitio usa**; una página sin video sigue con `frame-src 'none'`, y un identificador inválido no abre nada. YouTube se sirve por `youtube-nocookie`: con el dominio normal, la sola presencia del reproductor ya deja cookies de seguimiento aunque nadie le dé play.
+- **Reseñas**: testimonios que recoge el comerciante, con estrellas acotadas a 1–5. Sin promedio ni sello de "verificado", que sugerirían una garantía que Katuq no puede dar.
+- **Ubicación**: dirección, referencia, horario y botón "Cómo llegar". **Sin mapa embebido a propósito** — un iframe de Google carga scripts de un tercero y le entrega la IP de cada visitante; el botón abre la app de mapas del teléfono, que es lo que la gente usa igual.
+
+**Verificado:** 7 pruebas nuevas en la suite de publicación (enlace pegado en vez de identificador no dibuja reproductor, id con comillas no rompe el atributo, reseña con HTML se escapa, reseña sin texto no se publica, ubicación sin dirección no se dibuja) y 7 chequeos de la política de seguridad contra el render real, que es el que sirve Caddy. Nota para futuras pruebas: **el render resuelve el sitio por `x-sitio-host`, no por el `Host`** de la petición.
+
+**Sigue pendiente:** registrar el webhook en Wompi y hacer un pago real; buscador, categorías y ficha de producto en la tienda; variantes; dominio propio; y las deudas de `by-ids` sin filtro por company y del conteo por IP en catálogos y cotizaciones.
+
+## D-188 (2026-08-13) — La tienda se puede navegar: catálogo completo con buscador y categorías
+
+Hasta ahora una página solo podía mostrar los productos que el comerciante eligiera a mano, **24 por bloque**: un catálogo de miles de referencias no cabía, y "tienda virtual" quedaba en una vitrina. Nuevo bloque `catalogo`, hermano grande del de `productos`.
+
+**Se apoya en el índice en memoria que ya existía** (`getSearchIndex` de `controllers/productos.js`, cacheado por empresa con TTL de 5 min): filtrar, buscar y paginar sobre él no cuesta lecturas de Firestore, y **no hizo falta ningún índice compuesto nuevo**. Solo se leen los documentos completos de la página que se está viendo —doce— y de ahí salen la foto y el precio. Verificado contra OH MY STORE: de 8.444 productos, **2.267 son publicables** (activos, con precio y con stock), en 189 páginas y 24 categorías.
+
+**La primera página se pinta desde el servidor.** El visitante ve productos apenas carga y hay algo que indexar aunque el script no haya corrido; buscar, filtrar y pasar página ya son cosa del JS. Ese JS **solo se inyecta si la página tiene el bloque**: una landing sin catálogo pesa 17 kB y una tienda 23 kB.
+
+**Candado del endpoint público**: `GET /v1/sites/public/:slug/catalogo` responde **solo si el sitio publicado tiene un bloque de catálogo visible**. Sin eso, cualquiera con el slug de una landing podría usarlo como API para bajarse el catálogo entero de ese comercio. Verificado: una landing sin el bloque responde 404.
+
+**Detalle que importa**: las categorías se calculan ANTES de aplicar el filtro de categoría. Si se calcularan después, al elegir una desaparecerían todas las demás y el visitante no tendría cómo volver.
+
+**Refactor asociado**: la tarjeta de producto se extrajo a `fichaDeProducto`, compartida por los dos bloques. Si el markup viviera dos veces, el carrito dejaría de reconocer una de las dos en cuanto alguien tocara la otra. Las fichas que pinta el JS se arman con `createElement` y `textContent` — el nombre de un producto es texto del comerciante y no puede entrar como HTML.
+
+**Verificado:** 15 chequeos contra el catálogo real (candado, búsqueda con 53 coincidencias todas coherentes, filtro que reproduce el conteo exacto de la categoría, paginación, y las 12 fichas en el HTML publicado) más la suite de publicación completa en verde, incluida la regresión del bloque de productos tras el refactor. Datos de prueba borrados.
+
+## D-189 (2026-08-13) — Libertad de composición sin abrirle la puerta al HTML, y un bug de CSP que llevaba días
+
+Daniel: "quiero que el usuario pueda hacer casi lo que sea con su landing". Se descartó explícitamente permitir HTML o scripts pegados: esas páginas se sirven bajo `katuq.com`, y un script ajeno ahí puede robar datos de los compradores de ese comercio y quemar el dominio para todos los demás. La libertad se da **dentro** del modelo de bloques.
+
+**HALLAZGO — los estilos en línea nunca se aplicaron.** La política de la página lleva `style-src 'nonce-…'`, y **un nonce no habilita atributos `style`**: solo etiquetas `<style>` con esa marca. Todo lo que el render escribía como `style="…"` —la alineación de la portada y la opacidad del velo, de D-181 en adelante— llegaba al HTML y el navegador lo ignoraba. Se veía bien en el código y mal en la pantalla, que es la peor combinación. Ahora esas reglas las escribe `cssDeSecciones` dentro de la hoja con nonce, y hay una prueba que falla si alguien vuelve a meter un `style=` en el cuerpo.
+
+**Estilo por sección.** Cada bloque puede tener fondo (color o foto con velo graduable), aire, ancho (angosto/normal/borde a borde), alineación y color de texto. Vive fuera de `datos` porque es común a todos los tipos: agregar un tipo nuevo no obliga a acordarse de soportarlo. **Solo se guarda si cambia algo** — un estilo igual al de por defecto no se persiste. No acepta CSS ni clases: listas cerradas y colores hexadecimales, y de ahí el servidor arma reglas `[data-b="N"]`.
+
+**Texto con formato, sin HTML.** `*negrita*`, `_cursiva_`, listas con `-` y `[texto](enlace)` — las marcas de WhatsApp, que el comerciante ya conoce. La regla que lo hace seguro: **se escapa TODO primero y solo después se reconocen las marcas**, así escribir `<script>` produce el texto y no una etiqueta. Un enlace con esquema inválido se deja como texto tal cual, para que el comerciante note que algo no cuadra en vez de encontrarse el texto mutilado. De paso se descubrió que el saneador `texto()` se comía los saltos de línea: una lista habría salido como párrafo corrido. Nuevo `textoLargo()` para los campos con formato.
+
+**Cuatro bloques nuevos**: `columnas` (2 o 3, se apilan solas en celular), `imagen` suelta (normal o a borde completo, con enlace opcional), `botones` (hasta 4, principal o solo borde) y `separador` (aire con o sin línea). Con esto son **17 tipos**.
+
+**Verificado:** suite de publicación en verde con 8 pruebas nuevas —pegar HTML no crea etiquetas, un `javascript:` no crea destino navegable, las columnas se topan en 3, un botón sin destino se descarta, un estilo inventado no se guarda— más 16 chequeos del ciclo real contra el backend: el estilo sobrevive al guardado, la página publicada muestra negritas, listas, tres columnas y el separador, las reglas salen como CSS y **ningún elemento del cuerpo lleva atributo `style`**.
+
+**También quedó documentado el cobro**: `docs/PENDIENTE-pago-wompi-tiendas.md` — URL del webhook, por qué no lleva auth, la tabla de respuestas, los pasos de la prueba con dinero real y el aviso de que sin credenciales propias el dinero entra a la cuenta de la plataforma.
+
+## D-190 (2026-08-13) — El editor se siente como un editor de páginas, no como un formulario
+
+Daniel pidió que el builder se pareciera más a Wix. Se evaluó qué de Wix vale la pena copiar y se **descartó explícitamente el lienzo libre** —arrastrar elementos a cualquier píxel—: rompe el móvil (Wix necesita mantener dos diseños separados y aun así falla), y aquí el grueso del tráfico llega desde un enlace de WhatsApp en un celular. El propio Wix se alejó de eso: Studio y ADI son por secciones. Lo que la gente quiere cuando dice "como Wix" es **editar viendo el resultado**, y eso sí se hizo.
+
+**Edición directa sobre la página.** Se toca un título en la vista previa y se escribe ahí mismo. El render no muta el modelo: emite qué campo cambió (`textoEditado`) y el editor lo escribe, así el historial, el "hay cambios sin guardar" y el guardado siguen pasando por un solo camino. Al pegar se limpia el formato — un pegado desde Word traería etiquetas que el saneador descartaría igual, y es mejor que se vea de una lo que va a quedar. Enter confirma en los campos de una línea, Escape cancela.
+
+**Arrastrar para reordenar**, con Angular CDK. Las flechas se conservan: con teclado, o en un celular, arrastrar no siempre es posible. El asa es un elemento propio para que arrastrar y seleccionar no se peleen, y la selección sigue al bloque movido, no a la posición.
+
+**Deshacer y rehacer** con Ctrl+Z / Ctrl+Y, más Ctrl+S para guardar. Se guardan copias completas del contenido, no diferencias: son unos pocos kilobytes y treinta pasos caben de sobra. Los cambios seguidos sobre el mismo campo se agrupan (400 ms), o escribir un título dejaría un paso de deshacer por letra. Los atajos **se ignoran mientras se escribe en un campo**: ahí Ctrl+Z es el deshacer del propio campo y robárselo sería peor que no tenerlo.
+
+**Secciones ya armadas.** Al agregar ya no se elige "un bloque de columnas" sino "Cómo trabajamos, en 3 pasos" — 13 presets agrupados por para qué sirven (empezar, contar tu historia, vender, dar confianza, que te contacten), con contenido y estilo puestos, listos para editar encima. El catálogo de tipos crudos queda detrás de "prefiero empezar desde cero". Es el mismo motor: `datos` y `estilo` se copian tal cual y el backend los sanea como cualquier otra entrada. **Verificado que las 13 sobreviven al saneador sin descartes y conservando su estilo.**
+
+**Lo que sigue fuera**: pegar HTML, scripts o widgets de terceros. Y el lienzo libre, por lo dicho arriba.
+
+**Pendiente de esta línea**: páginas múltiples dentro de un mismo sitio (inicio, nosotros, contacto, con menú), que es la diferencia más visible que queda contra Wix; biblioteca de imágenes reusable (hoy cada subida se pierde en el bloque donde se hizo, aunque `/v1/media` las guarda todas); e historial de publicaciones para volver a la versión de ayer.
+
+## D-191 (2026-08-13) — Secciones libres: botones, tarjetas y elementos dentro de una misma franja
+
+Daniel pidió poder crear botones, tarjetas y módulos **dentro de cualquier sección**, no solo apilar secciones cerradas. Los "módulos" resultaron ser los bloques que ya existen —esos ya se insertan y se arrastran a cualquier posición—, así que el trabajo fue la anidación y las tarjetas.
+
+**Un solo nivel de anidación, a propósito.** Sección → elementos, y los elementos NO contienen elementos. Con dos niveles el editor se vuelve un árbol que no cabe en un panel de 392px y el HTML deja de ser predecible; es la misma decisión del modo simple de Webflow y de Wix Studio. Hay una prueba que lo verifica: mandar `elementos` dentro de un elemento no crea nada.
+
+**Bloque `seccion`** con `columnas` (1, 2 o 3 — en celular siempre se apilan) y hasta **12 elementos**: título, texto, botón, imagen, espacio y tarjetas. Cada elemento se sanea como un bloque: lista blanca de tipos, campos conocidos y nada de markup. Un botón sin destino válido **no se guarda** — un botón que no lleva a ninguna parte no es un botón.
+
+**Tarjetas con cuatro variantes** —con foto, con ícono, con precio y lista de incluidos, o solo texto—, de 2 a 4 por fila, hasta 8. Los campos que no aplican a la variante **se guardan igual**, para que cambiar de variante no borre lo escrito. Los **íconos son un catálogo cerrado de 12 con nombre** (`envio`, `garantia`, `pago`…): el comerciante elige uno y el servidor dibuja el trazo; aceptar un SVG pegado sería abrirle otra vez la puerta al markup. Los trazos están duplicados en el render del servidor, la vista previa y el editor **a propósito** —los tres tienen que dibujar lo mismo—, y si divergen la previa mostraría un ícono que la página no tiene.
+
+**Editor**: lista de elementos con arrastrar, duplicar y eliminar, y el formulario de cada uno según su tipo, incluida la galería visual de íconos. Tres subidas de imagen distintas (elemento, tarjeta, fondo) pasan por un solo camino que solo cambia dónde guarda la URL.
+
+**Verificado:** 6 pruebas nuevas en la suite —tipo de elemento inventado descartado, sin anidación de segundo nivel, botón sin destino fuera, ícono fuera del catálogo vacío, texto de tarjeta inerte, tope de 12 elementos— y 14 chequeos del ciclo real: una sección con título, texto con formato, dos juegos de tarjetas y un botón se guarda con sus 5 elementos, se publica y muestra precio, etiqueta de esquina, lista de incluidos, los 3 íconos y el fondo de sección como CSS, sin un solo atributo `style` en el cuerpo.
+
+**Estado del modelo:** 18 tipos de bloque, 6 de elemento, 4 variantes de tarjeta, 12 íconos.
+
+## D-192 (2026-08-13) — Agregar y quitar elementos en cualquier sección, y colocarlos donde uno quiera
+
+Daniel pidió dos cosas seguidas: que se puedan **agregar y quitar botones, textos y demás elementos de cualquier sección, como si fuera Canva**, y después que se **pueda colocar el elemento en cualquier lugar de la sección**.
+
+**Los elementos dejaron de ser propiedad del bloque `seccion`.** `elementos` pasó a ser un campo **común de todo bloque**, igual que `estilo`: se sanea una sola vez en `normalizarBloques` y se dibuja al final del envoltorio de la sección, sea portada, preguntas, galería o footer. Antes vivía dentro de `datos` del bloque `seccion` y solo ese bloque lo entendía; ahora la portada acepta su botón extra y las preguntas su párrafo, sin tipos nuevos ni bifurcaciones en el render. Un bloque sin elementos **no guarda una lista vacía**, para que los sitios ya publicados no cambien un solo byte.
+
+**"En cualquier lugar" se resolvió con rejilla, no con píxeles.** Cada elemento elige **cuánto ocupa a lo ancho** (completo, dos tercios, media sección, un tercio) y **hacia qué lado se pega** (izquierda, centro, derecha), sobre una rejilla de **seis columnas**; el orden ya se cambia arrastrando. Coordenadas en píxeles se descartaron por lo mismo que en D-190: obligarían a mantener un diseño aparte para el celular, y de ahí llega casi todo el tráfico. **En pantallas de menos de 700px todo se apila a una columna**, sin que el comerciante tenga que pensarlo.
+
+> **Superado en parte por D-193.** Daniel volvió a pedir arrastrar y soltar, y se hizo. La rejilla no se fue: pasó a ser el modo por defecto y el plan B del lienzo en celular.
+
+**Guardado escaso**: `pos` solo se escribe cuando NO es el valor por defecto (`completo` + `izquierda`). Un ancho o una alineación inventados caen al valor por defecto y **no dejan rastro** — misma regla de lista blanca que el resto del modelo.
+
+**La colocación viaja como clases CSS (`celda--mitad`, `celda--centro`), nunca como atributo `style`.** Es la lección de D-186: la página se sirve con `style-src 'nonce-…'` y un nonce **no habilita los `style` en línea**, así que un estilo puesto ahí se pierde en silencio. La suite tiene un chequeo que falla si aparece un solo `style=` en el cuerpo.
+
+**Verificado:** 3 pruebas nuevas en `test:sitios-publicacion` (guarda ancho y alineación; colocación inventada descartada; la colocación sale como clases con rejilla de 6 columnas y sin `style`), suite completa en verde, y el ciclo real contra el backend local: 5 elementos con colocaciones distintas más un botón en la portada se guardan, se publican y la página muestra las 6 celdas con sus anchos y alineaciones, la rejilla de seis columnas, el apilado en móvil y ningún `style`. Sitio de prueba y sus eventos borrados de Firestore. `ng build` limpio.
+
+**Pendiente de esta línea**: lo de D-190 sigue igual —páginas múltiples, biblioteca de imágenes reusable, historial de publicaciones.
+
+## D-193 (2026-08-13) — Lienzo: arrastrar el elemento y soltarlo donde uno quiera
+
+Con la rejilla de D-192 puesta, Daniel fue claro: *"la idea es poder mover todos los elementos al hacerle click y ponerlo en el lugar que yo escoja"*. En D-190 y D-192 se había descartado el lienzo libre por el móvil; **se revirtió esa decisión** y se implementó, resolviendo el móvil de otra manera.
+
+**Cómo se resolvió el problema que había hecho descartarlo.** El lienzo **solo existe de 700px para arriba**. Toda la colocación —el alto de la sección y el `left/top/width` de cada elemento— se emite dentro de un `@media (min-width:700px)`; debajo de eso no se aplica ni una regla y los elementos vuelven a apilarse en la rejilla de D-192, que quedó como plan B. Así **no hay dos diseños que mantener**: hay uno colocado a mano y un apilado automático que sale del mismo modelo. Es la diferencia con Wix clásico, donde el diseño móvil es un segundo lienzo que hay que armar aparte y se desactualiza.
+
+**El orden en celular sale del diseño de escritorio.** Al soltar un elemento, la lista se reordena por `y` y, a igual altura (±4%), por `x`. Sin eso, una página armada a mano se leería en el teléfono en el orden en que se fueron agregando los elementos, que no es el orden en que se ven.
+
+**Modelo.** Campo nuevo `bloque.lienzo = { alto }` —píxeles, encerrado entre 160 y 2000— que prende el modo; y `pos.x`, `pos.y`, `pos.w` **en porcentaje**, no en píxeles: la misma página se ve igual en un portátil y en un monitor de 27". Las tres van juntas o no va ninguna —media coordenada no ubica nada— y se encierran en su rango al guardar, así que **nada puede quedar por fuera de su sección** por más que lo mande el editor. Un lienzo sin elementos no se guarda: sería una sección con alto fijo y vacía adentro. `pos.ancho`/`pos.alineacion` de D-192 **conviven**: son lo que manda en celular y cuando el lienzo está apagado.
+
+**Apagar el lienzo no borra el diseño.** Las coordenadas se conservan; volver a prenderlo devuelve todo donde estaba. Y al prenderlo por primera vez los elementos **no** caen amontonados en una esquina: cada uno arranca apilado y con el ancho que tenía en la rejilla, así el comerciante ve lo que ya tenía y de ahí mueve lo que quiera.
+
+**En el editor** se arrastra sobre la vista previa: se agarra el elemento y se suelta, con un asa en el borde derecho para estirar el ancho e imán a los bordes, la mitad y los tercios (1,2% de tolerancia). Escribir gana sobre mover: si el puntero cae en un texto editable o en un campo, no se arrastra nada. Como con la edición directa de D-190, **la previa no muta el modelo**: emite `elementoMovido` y el editor lo escribe, así el arrastre entra al deshacer por el mismo camino que todo lo demás. Con el lienzo prendido los botones de ancho se ocultan —dos mandos para lo mismo se contradicen— pero los de alineación quedan, porque son los que mandan en celular.
+
+**Sigue sin haber un solo atributo `style`** en la página publicada: la colocación viaja como reglas CSS con nonce, por la CSP (D-186). La suite lo verifica.
+
+**Verificado:** 7 pruebas nuevas en `test:sitios-publicacion` (coordenada guardada y redondeada; media coordenada descartada; nada se sale del rango; lienzo vacío no se guarda; alto encerrado entre 160 y 2000; la colocación sale dentro de la media query; sin lienzo la sección sigue en rejilla aunque el elemento traiga coordenadas), suite completa en verde, y 15 chequeos del ciclo real contra el backend local: una sección con lienzo de 520px y 4 elementos colocados —uno de ellos intentando salirse por la derecha— más una sección normal se guardan, se publican, y la página sale con el alto, las coordenadas correctas, el que se salía encerrado en 70%, la otra sección todavía en rejilla y ningún `style`. Sitio de prueba y sus eventos borrados de Firestore. `ng build` limpio.
+
+**Lo que sigue fuera**: pegar HTML, scripts y widgets de terceros; y un lienzo propio para celular.

@@ -1324,3 +1324,468 @@
     }
   }
 }
+
+// Estrellas de una reseña: se tocan, no se escriben.
+.estrellas-editor {
+  display: flex;
+  gap: 2px;
+
+  button {
+    @include kb-btn-base;
+    border: 0;
+    background: transparent;
+    color: var(--kb-line-5);
+    font-size: 19px;
+    line-height: 1;
+    padding: 2px 3px;
+
+    &.is-active {
+      color: #f5b301;
+    }
+  }
+}
+
+// ── Estilo por sección ───────────────────────────────────────────────────────
+// Plegado por defecto: es para afinar, no para empezar.
+.estilo-seccion {
+  margin-top: 18px;
+  border-top: 1px solid var(--kb-line);
+  padding-top: 14px;
+
+  &__cabeza {
+    @include kb-btn-base;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--kb-line-3);
+    border-radius: 12px;
+    background: var(--kb-surface-2);
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--kb-ink-2);
+
+    svg {
+      transition: transform 0.15s ease;
+    }
+  }
+
+  &__cuerpo {
+    padding-top: 14px;
+  }
+}
+
+.fondos {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  input[type="color"] {
+    width: 40px;
+    height: 32px;
+    padding: 2px;
+    border: 1.5px solid var(--kb-line-3);
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+  }
+}
+
+.fondo-op {
+  @include kb-btn-base;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 9px;
+  background: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--kb-muted-2);
+
+  &.is-active {
+    border-color: var(--kb-accent);
+    box-shadow: 0 0 0 2px var(--kb-accent-wash-3);
+  }
+}
+
+// Miniatura + botón de subida, para columnas, imagen y fondo de sección.
+.mini-imagen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  img {
+    width: 56px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--kb-line-3);
+  }
+}
+
+.repetible__nombre {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--kb-muted-2);
+}
+
+// ── Deshacer / rehacer ───────────────────────────────────────────────────────
+.deshacer {
+  display: flex;
+  gap: 2px;
+
+  button {
+    @include kb-btn-icono(32px);
+  }
+}
+
+// ── Arrastrar secciones ──────────────────────────────────────────────────────
+.seccion {
+  &__asa {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 28px;
+    flex: none;
+    margin-left: -4px;
+    border-radius: 6px;
+    color: var(--kb-line-5);
+    cursor: grab;
+
+    &:hover {
+      color: var(--kb-muted);
+      background: var(--kb-chip-2);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  // Hueco que queda mientras la tarjeta viaja.
+  &__hueco {
+    height: 62px;
+    border: 1.8px dashed var(--kb-accent-line-2);
+    border-radius: 14px;
+    background: var(--kb-accent-wash-4);
+  }
+}
+
+// La tarjeta que se está arrastrando, pegada al cursor.
+.cdk-drag-preview {
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+  background: #fff;
+  padding: 13px 14px;
+  border: 1.5px solid var(--kb-accent);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
+}
+
+// Las demás tarjetas acomodándose.
+.cdk-drag-animating,
+.secciones.cdk-drop-list-dragging .seccion:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// ── Secciones ya armadas ─────────────────────────────────────────────────────
+.grupo-secciones {
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 0 0 10px;
+    font-size: 11.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--kb-muted-2);
+  }
+}
+
+.listas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.lista-sec {
+  @include kb-btn-base;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 13px;
+  background: #fff;
+  text-align: left;
+
+  &:hover {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash-4);
+  }
+
+  // Miniatura abstracta de cómo se verá la sección.
+  &__muestra {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    width: 40px;
+    height: 34px;
+    flex: none;
+    padding: 6px;
+    border-radius: 8px;
+    background: var(--kb-chip-2);
+
+    span {
+      display: block;
+      height: 4px;
+      border-radius: 99px;
+      background: var(--kb-line-5);
+
+      &:first-child { width: 100%; }
+      &:nth-child(2) { width: 70%; }
+      &:nth-child(3) { width: 45%; }
+    }
+
+    // Las de columnas y productos se dibujan como rejilla.
+    &[data-tipo="columnas"],
+    &[data-tipo="productos"],
+    &[data-tipo="catalogo"] {
+      flex-direction: row;
+      align-items: stretch;
+
+      span {
+        height: auto;
+        width: 33% !important;
+        border-radius: 3px;
+      }
+    }
+
+    &[data-tipo="hero"] span:first-child {
+      height: 14px;
+    }
+  }
+
+  &__texto {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+
+    strong {
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    small {
+      font-size: 11.5px;
+      color: var(--kb-muted-2);
+      font-weight: 600;
+      line-height: 1.3;
+    }
+  }
+}
+
+.crudos {
+  margin-top: 4px;
+}
+
+// ── Elementos dentro de una sección libre ────────────────────────────────────
+.elementos {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.elemento {
+  display: grid;
+  gap: 7px;
+  padding: 10px 11px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 12px;
+  background: var(--kb-surface-2);
+
+  input[type="text"],
+  textarea,
+  select {
+    @include kb-input;
+    font-size: 12.5px;
+  }
+
+  &__cabeza {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    strong {
+      font-size: 12px;
+      font-weight: 800;
+    }
+  }
+
+  &__asa {
+    display: flex;
+    align-items: center;
+    color: var(--kb-line-5);
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &__relleno {
+    flex: 1;
+  }
+}
+
+.agregar-elemento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  .agregar {
+    width: auto;
+    margin: 0;
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+}
+
+.dos-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.tarjeta-edit {
+  display: grid;
+  gap: 6px;
+  padding: 9px;
+  border: 1px dashed var(--kb-line-5);
+  border-radius: 10px;
+  background: #fff;
+}
+
+// Galería de íconos de una tarjeta.
+.iconos {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+
+  button {
+    @include kb-btn-base;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    border: 1.5px solid var(--kb-line-3);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--kb-muted);
+
+    &.is-active {
+      border-color: var(--kb-accent);
+      background: var(--kb-accent-wash-4);
+      color: var(--kb-accent);
+    }
+  }
+}
+
+// ── Dónde va el elemento ─────────────────────────────────────────────────────
+.colocacion {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  &__grupo {
+    display: flex;
+    border: 1.5px solid var(--kb-line-3);
+    border-radius: 9px;
+    overflow: hidden;
+    background: #fff;
+
+    button {
+      @include kb-btn-base;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 26px;
+      padding: 0 7px;
+      border: 0;
+      border-right: 1px solid var(--kb-line-3);
+      background: transparent;
+      color: var(--kb-muted);
+      font-size: 11px;
+      font-weight: 800;
+
+      &:last-child {
+        border-right: 0;
+      }
+
+      &.is-active {
+        background: var(--kb-accent-wash-4);
+        color: var(--kb-accent);
+      }
+    }
+  }
+
+  // Dónde quedó, en números. No se edita aquí: se lee para saber si dos
+  // elementos quedaron parejos.
+  &__coords {
+    align-self: center;
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--kb-muted);
+  }
+}
+
+// ── Colocación libre de la sección ───────────────────────────────────────────
+.lienzo-panel {
+  margin: 10px 0;
+  padding: 10px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 11px;
+  background: var(--kb-surface-2, #fafafa);
+
+  .opcion {
+    width: 100%;
+  }
+
+  .campo--fila {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 0;
+
+    label {
+      flex: 0 0 auto;
+      margin: 0;
+    }
+
+    input[type="range"] {
+      flex: 1 1 auto;
+      min-width: 0;
+      accent-color: var(--kb-accent);
+    }
+  }
+
+  .campo__valor {
+    flex: 0 0 auto;
+    min-width: 48px;
+    text-align: right;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--kb-muted);
+  }
+}

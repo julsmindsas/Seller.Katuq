@@ -145,10 +145,89 @@ h3 {
     background: #25d366;
     color: #0b3d20;
   }
+
+  &--chico {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
 }
 
 .whatsapp {
   text-align: center;
+}
+
+// ── Encabezado ───────────────────────────────────────────────────────────────
+// Espejo de los estilos de la página publicada (`utils/siteHtml.js`): la vista
+// previa tiene que verse igual que lo que se publica.
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  &--fija {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--sitio-secundario);
+  }
+
+  &__marca {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-right: auto;
+    min-width: 0;
+  }
+
+  &__logo {
+    height: 40px;
+    width: auto;
+    max-width: 170px;
+    object-fit: contain;
+  }
+
+  &__nombre {
+    font-size: 1.1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__enlaces {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.1rem;
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+
+      &:hover {
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+.sitio--movil .cabecera {
+  gap: 0.6rem;
+
+  .cabecera__logo {
+    height: 32px;
+  }
+
+  .cabecera__enlaces {
+    gap: 0.8rem;
+    width: 100%;
+    order: 3;
+  }
 }
 
 // ── Galería y productos ──────────────────────────────────────────────────────
@@ -374,5 +453,478 @@ h3 {
   .productos__grid,
   .galeria__grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// ── Video, reseñas y ubicación ───────────────────────────────────────────────
+// Espejo de los estilos de la página publicada. El reproductor no se carga en
+// la vista previa: se muestra su marco con un aviso.
+.video__marco {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111;
+}
+
+.video__aviso {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 1rem;
+}
+
+.resenas__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.resena {
+  margin: 0;
+  padding: 1.15rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+
+  &__estrellas {
+    color: var(--sitio-primario);
+    letter-spacing: 0.1em;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+
+    .apagada {
+      opacity: 0.22;
+    }
+  }
+
+  blockquote {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  figcaption {
+    font-size: 0.82rem;
+    opacity: 0.7;
+    font-weight: 600;
+  }
+}
+
+.ubicacion {
+  &__direccion {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+
+  &__referencia,
+  &__horario {
+    opacity: 0.75;
+    font-size: 0.92rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .boton {
+    margin-top: 0.9rem;
+  }
+}
+
+// ── Catálogo (vista previa) ──────────────────────────────────────────────────
+// No se listan productos: son miles y el servidor los pagina al publicar. Se
+// muestra la forma que tendrá para que el comerciante entienda qué está
+// poniendo en su página.
+.catalogo {
+  &__demo {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  &__barra {
+    max-width: 420px;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    color: rgba(0, 0, 0, 0.4);
+    font-size: 0.9rem;
+  }
+
+  &__chips {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+
+    span {
+      padding: 0.3rem 0.75rem;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      opacity: 0.65;
+
+      &:first-child {
+        background: var(--sitio-primario);
+        border-color: var(--sitio-primario);
+        color: #fff;
+        opacity: 1;
+      }
+    }
+  }
+
+  &__esqueleto {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+
+    span {
+      display: block;
+      aspect-ratio: 3 / 4;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.06);
+    }
+  }
+}
+
+// ── Columnas, imagen suelta, botones, separador y texto con formato ──────────
+// Espejo de la hoja de la página publicada (`utils/siteHtml.js`).
+.columnas__grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 700px) {
+  .columnas__grid--2 { grid-template-columns: repeat(2, 1fr); }
+  .columnas__grid--3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+// En la vista previa de móvil las columnas se apilan aunque el panel sea ancho.
+.sitio--movil .columnas__grid { grid-template-columns: 1fr; }
+
+.columna {
+  h3 {
+    font-size: 1.15rem;
+    margin: 0.6rem 0 0.4rem;
+  }
+
+  &__foto {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--sitio-radio, 12px);
+  }
+}
+
+.imagen__foto {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--sitio-radio, 12px);
+}
+
+.imagen--completo {
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+
+  .imagen__foto {
+    border-radius: 0;
+  }
+}
+
+.botones__fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.boton--borde {
+  background: transparent;
+  color: var(--sitio-primario);
+}
+
+.separador {
+  padding-top: 0;
+  padding-bottom: 0;
+
+  &--pequeno { height: 1.5rem; }
+  &--medio { height: 3rem; }
+  &--grande { height: 5.5rem; }
+
+  &__linea {
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    margin: 0;
+    position: relative;
+    top: 50%;
+  }
+}
+
+// Texto con formato: los estilos van sobre el contenedor porque el HTML lo
+// genera el componente.
+.formato {
+  ::ng-deep p {
+    margin: 0 0 0.8rem;
+    line-height: 1.6;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  ::ng-deep ul {
+    margin: 0 0 0.8rem;
+    padding-left: 1.2rem;
+    line-height: 1.6;
+  }
+
+  ::ng-deep a {
+    color: var(--sitio-primario);
+    text-decoration: underline;
+  }
+
+  ::ng-deep strong { font-weight: 700; }
+}
+
+// ── Edición directa sobre la página ──────────────────────────────────────────
+// Se marca con un contorno suave al pasar por encima: tiene que invitar a
+// escribir sin ensuciar la vista previa.
+.editable {
+  outline: 1.5px dashed transparent;
+  outline-offset: 4px;
+  border-radius: 3px;
+  transition: outline-color 0.15s ease, background 0.15s ease;
+  cursor: text;
+
+  &:hover {
+    outline-color: rgba(107, 78, 251, 0.45);
+  }
+
+  &:focus {
+    outline: 2px solid #6b4efb;
+    outline-offset: 4px;
+    background: rgba(107, 78, 251, 0.05);
+  }
+
+  // Un campo vacío no se puede tocar si no ocupa espacio.
+  &:empty::before {
+    content: "Escribe aquí";
+    opacity: 0.45;
+  }
+}
+
+// ── Sección libre, elementos y tarjetas ──────────────────────────────────────
+// Espejo de la hoja de la página publicada.
+.seccion__contenido {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+// Cada elemento vive en una celda de una rejilla de seis columnas: es lo que
+// permite media sección o un tercio sin inventar medidas. Espejo de la hoja
+// de la página publicada.
+.celda {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  > * {
+    max-width: 100%;
+  }
+
+  &--centro {
+    align-items: center;
+    text-align: center;
+  }
+
+  &--derecha {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+
+@media (min-width: 700px) {
+  .seccion__contenido {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .celda {
+    grid-column: span 6;
+
+    &--dosTercios { grid-column: span 4; }
+    &--mitad { grid-column: span 3; }
+    &--tercio { grid-column: span 2; }
+  }
+}
+
+// ── Colocación libre ─────────────────────────────────────────────────────────
+// La sección deja de ser rejilla y pasa a ser el marco de las coordenadas. El
+// alto y el left/top/width los pone Angular como estilo calculado; aquí solo va
+// lo que no cambia por elemento. Espejo de la hoja de la página publicada.
+.seccion__contenido--lienzo {
+  display: block;
+  position: relative;
+
+  > .celda {
+    position: absolute;
+    margin: 0;
+  }
+}
+
+// Lo que sigue es SOLO del editor: en la página publicada no hay asas ni
+// contornos. Se activa con la clase que pone la vista previa.
+.sitio--editable .seccion__contenido--lienzo > .celda {
+  cursor: grab;
+  outline: 1px dashed transparent;
+  outline-offset: 4px;
+  transition: outline-color 0.12s ease;
+
+  &:hover {
+    outline-color: rgba(37, 99, 235, 0.45);
+  }
+}
+
+.sitio--editable .celda--arrastrando {
+  cursor: grabbing;
+  outline-color: #2563eb !important;
+  outline-style: solid;
+  z-index: 5;
+  user-select: none;
+}
+
+// El asa para estirar el ancho: una pestaña en el borde derecho.
+.celda__estirar {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  width: 14px;
+  height: 34px;
+  margin-top: -17px;
+  border-radius: 7px;
+  background: #2563eb;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: ew-resize;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 6;
+}
+
+.sitio--editable .seccion__contenido--lienzo > .celda:hover .celda__estirar,
+.sitio--editable .celda--arrastrando .celda__estirar {
+  opacity: 1;
+}
+
+// En la vista previa de móvil se apila aunque el panel sea ancho.
+.sitio--movil .celda {
+  grid-column: span 6 !important;
+}
+
+.sitio--movil .seccion__contenido--2,
+.sitio--movil .seccion__contenido--3 {
+  grid-template-columns: 1fr;
+}
+
+.el-titulo {
+  margin: 0;
+  font-size: 1.2rem;
+
+  &--grande { font-size: 1.6rem; }
+  &--pequeno { font-size: 1rem; }
+}
+
+.el-imagen {
+  width: 100%;
+  height: auto;
+  border-radius: var(--sitio-radio, 12px);
+  display: block;
+}
+
+.el-espacio {
+  width: 100%;
+  height: 2.25rem;
+
+  &--pequeno { height: 1rem; }
+  &--grande { height: 4rem; }
+}
+
+.tarjetas {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  grid-template-columns: 1fr;
+
+  &--2 { grid-template-columns: repeat(2, 1fr); }
+  &--3 { grid-template-columns: repeat(3, 1fr); }
+  &--4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+.sitio--movil .tarjetas {
+  grid-template-columns: 1fr;
+}
+
+.tarjeta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.35rem;
+  border: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.1));
+  border-radius: var(--sitio-radio, 12px);
+  background: #fff;
+  text-align: left;
+
+  h3 {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  .boton {
+    margin-top: auto;
+    align-self: flex-start;
+  }
+
+  &__foto {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--sitio-radio-sm, 8px);
+  }
+
+  &__icono {
+    color: var(--sitio-primario);
+  }
+
+  &__precio {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--sitio-primario);
+    margin: 0;
+  }
+
+  &__incluye {
+    margin: 0;
+    padding-left: 1.1rem;
+    line-height: 1.6;
+    font-size: 0.92rem;
+    opacity: 0.85;
+  }
+
+  &__etiqueta {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: var(--sitio-primario);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
   }
 }
