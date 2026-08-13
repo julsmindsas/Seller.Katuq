@@ -97,6 +97,13 @@
                 {{ mediaLabel(item.msg) }}
               </p>
               <div class="thread-detail__meta">
+                <span
+                  *ngIf="item.msg.esBot"
+                  class="thread-detail__bot-badge"
+                  title="Mensaje escrito por el bot de pedidos"
+                >
+                  Bot
+                </span>
                 <span class="thread-detail__time">
                   {{ formatTime(item.msg.sentAt) }}
                 </span>
@@ -112,6 +119,54 @@
             </div>
           </div>
         </ng-container>
+      </div>
+
+      <!-- Franja del bot de pedidos: quién lleva la conversación -->
+      <div
+        class="thread-detail__bot-banner"
+        *ngIf="botState && botState.botHabilitado"
+        [class.is-bot]="botState.atendiendoBot"
+      >
+        <div class="thread-detail__bot-banner-text">
+          <ng-container *ngIf="botState.atendiendoBot">
+            <strong>El bot está atendiendo esta conversación.</strong>
+            <small *ngIf="botState.carrito.length > 0">
+              Carrito en curso: {{ botState.carrito.length }}
+              producto(s) por
+              {{ botState.totalCarrito | currency: "COP" : "symbol-narrow" : "1.0-0" }}.
+            </small>
+            <small *ngIf="botState.modoSombra">
+              Modo sombra: redacta pero no envía.
+            </small>
+          </ng-container>
+          <ng-container *ngIf="!botState.atendiendoBot">
+            <strong>
+              {{ botState.tomadaPor ? "Conversación a cargo de " + botState.tomadaPor : "El bot no está atendiendo este hilo." }}
+            </strong>
+            <small *ngIf="botState.motivoTraspaso">{{ botState.motivoTraspaso }}</small>
+            <small *ngIf="botState.cotizacionCreada?.numero">
+              Cotización {{ botState.cotizacionCreada?.numero }} creada por el bot.
+            </small>
+          </ng-container>
+        </div>
+        <button
+          *ngIf="botState.atendiendoBot"
+          type="button"
+          class="thread-detail__bot-action"
+          (click)="tomarConversacion()"
+          [disabled]="botActionBusy"
+        >
+          Tomar conversación
+        </button>
+        <button
+          *ngIf="!botState.atendiendoBot && botState.tomadaPor"
+          type="button"
+          class="thread-detail__bot-action thread-detail__bot-action--ghost"
+          (click)="devolverAlBot()"
+          [disabled]="botActionBusy"
+        >
+          Devolver al bot
+        </button>
       </div>
 
       <!-- Composer: chip plantillas + textarea + botón enviar -->

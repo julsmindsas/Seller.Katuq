@@ -585,3 +585,85 @@ $chat-bg: #f0f2f5;
     }
   }
 }
+
+// ─── BOT DE PEDIDOS ────────────────────────────────────────────────────
+// Franja plana tintada (design-system: acento #5F3FE0, fondo lila suave,
+// sin gradientes) que dice quién lleva la conversación, con la acción al lado.
+.thread-detail__bot-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 16px 8px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(95, 63, 224, 0.22);
+  background: rgba(95, 63, 224, 0.06);
+
+  &.is-bot {
+    border-color: rgba(95, 63, 224, 0.35);
+    background: rgba(95, 63, 224, 0.1);
+  }
+}
+
+.thread-detail__bot-banner-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    font-size: 0.82rem;
+    color: #211f3a;
+  }
+
+  small {
+    font-size: 0.74rem;
+    color: rgba(33, 31, 58, 0.65);
+  }
+}
+
+.thread-detail__bot-action {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 11px;
+  border: 1px solid #5f3fe0;
+  background: #5f3fe0;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #4e33bd;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &--ghost {
+    background: transparent;
+    color: #5f3fe0;
+
+    &:hover:not(:disabled) {
+      background: rgba(95, 63, 224, 0.08);
+    }
+  }
+}
+
+// Chip "Bot" en la burbuja: distingue a simple vista quién escribió.
+.thread-detail__bot-badge {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(95, 63, 224, 0.35);
+  background: rgba(95, 63, 224, 0.12);
+  color: #5f3fe0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}

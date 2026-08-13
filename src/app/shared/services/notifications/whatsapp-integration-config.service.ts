@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { BaseService } from '../base.service';
 
 /**
@@ -65,6 +66,23 @@ export interface WhatsappIntegrationConfigResponse {
 }
 
 /**
+ * Configuración del bot de pedidos por WhatsApp (vista pública del backend).
+ * `puedeActivarse` lo calcula el servidor: solo con número propio conectado.
+ */
+export interface WhatsappBotConfig {
+  enabled: boolean;
+  modoSombra: boolean;
+  topeTurnos: number;
+  mensajeBienvenida: string;
+  anunciarQueEsBot: boolean;
+  horarioHabilitado: boolean;
+  horarioDesde: string;
+  horarioHasta: string;
+  horarioDias: number[];
+  puedeActivarse: boolean;
+}
+
+/**
  * Servicio para administrar la configuración de la integración WhatsApp Business (Kapso).
  * Extiende `BaseService` para que el interceptor adjunte auth + company headers (Art IX).
  *
@@ -110,6 +128,36 @@ export class WhatsappIntegrationConfigService extends BaseService {
     return this.post<WhatsappIntegrationConfigResponse>(
       `${this.basePath}/accept-opt-in`,
       {}
+    );
+  }
+
+  /**
+   * Configuración del bot de pedidos. El backend puede responder con o sin
+   * envoltura ({success,data} / {success,config} / plano), así que acá se
+   * normaliza y el componente recibe siempre el bloque `bot` o `null`.
+   */
+  getBotConfig(): Observable<WhatsappBotConfig | null> {
+    return this.get<any>(this.basePath).pipe(
+      map((res: any) => {
+        const cfg = res?.data || res?.config || res || {};
+        return cfg.bot ? (cfg.bot as WhatsappBotConfig) : null;
+      })
+    );
+  }
+
+  /**
+   * Guarda SOLO el bloque del bot (el backend hace merge con lo demás).
+   * Si el comercio no tiene número propio, el backend responde 422 con
+   * `BOT_REQUIERE_NUMERO_PROPIO` — el componente lo traduce.
+   */
+  updateBotConfig(
+    bot: Partial<WhatsappBotConfig>
+  ): Observable<WhatsappBotConfig | null> {
+    return this.put<any>(this.basePath, { bot }).pipe(
+      map((res: any) => {
+        const cfg = res?.data || res?.config || res || {};
+        return cfg.bot ? (cfg.bot as WhatsappBotConfig) : null;
+      })
     );
   }
 

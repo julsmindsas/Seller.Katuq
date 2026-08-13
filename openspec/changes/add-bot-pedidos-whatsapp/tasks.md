@@ -35,9 +35,10 @@
 - [x] 5.2 Crear `channels/whatsapp/` con `sessions.py` (id `wa_{empresa}_{hilo}`, **el teléfono crudo nunca entra a ADK** — se usa el mismo hash del buzón), `agent.py` y `pipeline.py` (un turno: entra texto, sale texto).
 - [x] 5.3 Endpoint propio `endpoints/whatsapp_bot_endpoint.py` (blueprint Flask registrado en `main.py`): `POST /v1/whatsapp-bot/turno` y `GET /v1/whatsapp-bot/salud`. **Token propio `WHATSAPP_BOT_TOKEN`**, no el JWT de usuario ni el token de administración — permiso mínimo: si se filtra, lo que se consigue es hablar con el bot de pedidos, no entrar a la administración. Comparación del token a prueba de medición de tiempos y mismo error para token ausente, inválido o no configurado.
 - [x] 5.4 Agente **propio del canal, de cara al cliente**, con sus instrucciones en español. No reusa el orquestador general ni el de ventas.
-- [x] 5.5 Lista blanca en el puente MCP: solo `search_products`, `get_product_stock`, `get_product_catalog`. Las prohibidas quedan **escritas en el código con el motivo** (`HERRAMIENTAS_PROHIBIDAS`) para que nadie las agregue por comodidad, con prueba que falla si alguna entra a la lista blanca. Además, **las herramientas de carrito están cerradas sobre el hilo**: no lo reciben como argumento, así que el modelo no puede tocar el carrito de otro cliente — hay prueba que lo verifica por firma. Falta confirmar contra el servidor de herramientas corriendo.
-- [ ] 5.6 Publicar en el registro de herramientas del backend las que faltan: buscar producto (`GET /productos/search/quick` con `searchBy=general`, mínimo 2 caracteres) y las de carrito contra el servicio de sesión del paso 3.
-- [ ] 5.6b Resolver **en el backend, antes de invocar al agente**, la identidad del cliente por su teléfono y su último pedido, y pasarlos ya resueltos en el estado inicial de la sesión. El modelo recibe los datos, nunca la herramienta que podría pedir los de otro.
+- [x] 5.5 Lista blanca en el puente MCP: solo `search_products`, `get_product_stock`, `get_product_catalog`. **Y la llave por empresa (2026-08-12):** el agente resuelve `empresas/{company}/settings/mcp_config` (api_key + mcp_url), mismo esquema que el MultiConnectorManager — la llave es la que fija el tenant en el servidor MCP; sin config cae a la env global (solo single-tenant/local). Al piloto hay que generarle su llave con `POST /mcp/admin/generate-key` y guardarla en ese documento. Las prohibidas quedan **escritas en el código con el motivo** (`HERRAMIENTAS_PROHIBIDAS`) para que nadie las agregue por comodidad, con prueba que falla si alguna entra a la lista blanca. Además, **las herramientas de carrito están cerradas sobre el hilo**: no lo reciben como argumento, así que el modelo no puede tocar el carrito de otro cliente — hay prueba que lo verifica por firma. Falta confirmar contra el servidor de herramientas corriendo.
+- [x] 5.6 Publicar la herramienta que faltaba: `search_products` en `tools/searchProducts.js`, registrada en `toolRegistry`. Busca sin tildes ni mayúsculas sobre el **mismo índice** que la búsqueda rápida de la web (se expuso `getSearchIndex`, 5 líneas, sin caché nueva), lee el documento completo solo de los pocos que devuelve, ordena por qué tan al principio calza el término y avisa con `hayMas` cuando hay más — para que el bot no diga "eso es todo" cuando no lo es. Las de carrito no van por acá: viven cerradas sobre el hilo del lado de ADK.
+- [ ] 5.6d Decisión de negocio pendiente: `search_products` aplica el mismo filtro de productos de reventa (Cereza) que las demás herramientas, para no cambiarle nada al copiloto interno. Para un bot que le vende a un **comprador** eso puede estar mal — le diría "no lo tengo" a un cliente por algo que la tienda sí revende. Cambiarlo es una línea; lo decide el comercio.
+- [x] 5.6b Identidad del cliente resuelta en el backend por el teléfono y entregada ya masticada al agente. **Y el último pedido también**: el despachador toma el pedido más reciente del contacto, lee sus líneas directo del documento (solo lectura de `orders`) y se las pasa al agente — "repetime lo de la otra vez" ya tiene con qué. Si la consulta falla, el bot atiende igual sin el atajo.
 - [ ] 5.6c Prueba de seguridad del canal: un cliente que pregunta por ventas del comercio, por otros clientes o por pedidos ajenos no obtiene nada — ni por herramienta ni por respuesta del modelo.
 - [x] 5.6d Pruebas de lógica del canal: 20 casos en `tests/test_whatsapp_bot_channel.py`, que corren **sin `google-adk` instalado** (se sustituye `FunctionTool`) — saneo del carrito, campos colados, tope de líneas, sumar y corregir cantidades, no cerrar pedido vacío, motivo del traspaso, lista blanca, aislamiento por empresa e instrucciones. Verde.
 - [ ] 5.7 Pruebas de conversación con datos reales de una empresa de prueba, sin enviar nada a WhatsApp: pedir un producto que existe, uno que no, más cantidad de la que hay, corregir el carrito y pedir un asesor. **Requiere el entorno de ADK levantado** (localmente no hay ni `flask` ni `google-adk` instalados).
@@ -45,44 +46,46 @@
 
 ## 6. Cierre en cotización
 
-- [ ] 6.1 Crear la herramienta de cerrar pedido: arma el request interno y delega en `controllers/cotizaciones.js` `create`, tal como lo hace hoy `controllers/catalogos.js` al convertir un carrito público. Estado borrador. Del lado de ADK va envuelta con el patrón de confirmación de `tools/hitl_write_tools.py`, que es el que usa el proyecto para escrituras.
-- [ ] 6.2 Marcar el origen de la cotización (WhatsApp, bot, teléfono del cliente) sin cambiar el comportamiento de las que se crean a mano.
-- [ ] 6.3 Resolver los datos del cliente: si el teléfono está registrado, usar los suyos; si no, exigir que el bot haya pedido nombre y dirección antes de cerrar.
-- [ ] 6.4 **Prueba de contrato del write-set**: falla si al cerrar se escribe `inventory`, `inventoryMovement`, `orders`, consecutivos de pedido, `products`, precios o listas de precios.
-- [ ] 6.5 Prueba de que las existencias de todos los productos del carrito quedan idénticas antes y después de cerrar.
-- [ ] 6.6 Prueba del cierre fallido: el cliente no recibe "quedó registrado" y la conversación pasa a un vendedor con el carrito visible.
+- [x] 6.1 Cierre implementado en `services/whatsappBotCierre.js`: delega en `controllers/cotizaciones.js` `create` con request interno (mismo patrón que catálogos), estado borrador. **Desviación registrada frente al plan:** el cierre corre en el BACKEND cuando el agente lo pide (`pedir_cierre`), no como herramienta HITL dentro de ADK — coherente con la regla del diseño de que ADK nunca escribe en Katuq. La cotización se crea ANTES de confirmarle nada al cliente: si falla, el cliente no escucha "quedó registrado".
+- [x] 6.2 Origen `whatsapp-bot` + `whatsappPhoneHash` + teléfono del cliente en la nota. Las cotizaciones manuales no cambian (el campo es aditivo).
+- [x] 6.3 Cliente registrado cierra con sus datos; cliente nuevo exige nombre Y dirección dictados en el chat (herramienta `registrar_datos_cliente` en ADK → el backend los persiste en la sesión y los usa al cerrar). El nombre del perfil de WhatsApp NO exime de pedir los datos. Sin datos, el cierre pasa a un asesor.
+- [x] 6.4 **Contract test del write-set** en `tests/notifications/whatsappBotCierre.contract.test.js` (`npm run test:whatsapp-bot-cierre`), contra el controlador REAL de cotizaciones con un Firestore que registra cada escritura. Lista BLANCA: solo `cotizaciones` y `cotizaciones_counters`; cualquier otra colección revienta el test. Además: el precio sale del SERVIDOR (un precio de 1 peso plantado por el bot no llega a la cotización) y un producto de otra empresa tumba el cierre.
+- [x] 6.5 Cubierto por el contract test: el cierre no escribe `inventory` ni `inventoryMovement` en absoluto (la lista blanca lo garantiza), así que las existencias no pueden moverse.
+- [x] 6.6 Probado en el despachador: con cierre fallido el cliente recibe "un asesor te contacta" (nunca la confirmación del agente), la sesión NO se marca cerrada y el carrito queda visible para el vendedor. También probado: fallo limpio — un cierre que falla no deja NADA escrito.
 
 ## 7. Despacho desde el webhook
 
-- [ ] 7.1 Leer completo `controllers/whatsappWebhook.js` y ubicar el punto exacto, después de persistir y después de responder 200, donde despachar sin bloquear.
-- [ ] 7.2 Crear `services/whatsappBotDispatcher.js` con las compuertas en orden: bot prendido, número propio con una sola empresa, no está en lista de no contactar, no está tomada por un vendedor, hay saldo, no se pasó del tope, el mensaje es de texto y no se atendió antes.
-- [ ] 7.3 Conectar el despacho con `setImmediate` y variable de entorno de apagado general, apagada de fábrica. El turno se le pide al canal de WhatsApp de **ADK (puerto 8080)**, no a Genkit, con tiempo de espera acotado: si ADK no contesta, la conversación pasa a un vendedor en vez de dejar al cliente colgado.
-- [ ] 7.4 Idempotencia: sellar el último mensaje atendido en la sesión para que una re-entrega de Meta no haga contestar dos veces.
-- [ ] 7.5 Enviar la respuesta del agente por el servicio de salida del paso 2, con `origen: "bot"`.
-- [ ] 7.6 Registro estructurado por turno: qué consultas hizo, qué devolvieron, cuánto costó y por qué traspasó, con el teléfono siempre enmascarado.
-- [ ] 7.7 Pruebas de las compuertas: número compartido no despacha; hilo tomado no despacha; contacto en lista de no contactar no despacha; sin saldo traspasa; mensaje de foto o audio traspasa.
+- [x] 7.1 Ubicado el punto: los turnos se juntan durante el recorrido de mensajes y se despachan después del `res.status(200)`.
+- [x] 7.2 `services/whatsappBotDispatcher.js` con las diez compuertas en orden, todas del lado del servidor. El webhook ahora distingue si el mensaje llegó por número propio de **una sola** empresa y solo entonces marca el turno como despachable.
+- [x] 7.3 Despacho con `setImmediate` después de responderle a Meta, detrás de `WHATSAPP_BOT_ENABLED` (apagado de fábrica). El turno se le pide a ADK en el 8080 con `services/whatsappBotClient.js`, tiempo de espera acotado y sin reintentos — un reintento sería un mensaje duplicado y cobrado. Si ADK no contesta, la conversación pasa a un vendedor.
+- [x] 7.4 Doble sello: el de la sesión (mensaje ya atendido) y el del envío (`clientMessageId` derivado del id del mensaje), así ni se contesta ni se cobra dos veces.
+- [x] 7.5 La respuesta sale por el servicio compartido del paso 2 con el tipo del bot, respetando la lista de no contactar.
+- [x] 7.6 Registro estructurado por turno y por traspaso, siempre con el hilo en vez del teléfono. **Falta** el detalle de qué herramientas usó el agente en cada turno: eso lo tiene ADK y hay que devolverlo en la respuesta del turno.
+- [x] 7.9 **Prueba de punta a punta en sombra contra Firestore REAL** (2026-08-12, corrida por Claude): empresa de prueba aislada + doble de ADK guionado → 4 turnos de conversación (saludo, búsqueda, datos dictados, cierre), compuertas de número compartido y reentrega, sesión visible en `listarSesiones`, y verificación dura de la sombra (0 docs en `whatsapp_usage` y 0 en `cotizaciones`). **Atrapó y se corrigió un bug real:** el sello de idempotencia guardaba solo el ÚLTIMO mensaje atendido, así que la reentrega de un mensaje viejo (lote de Meta) se contestaba de nuevo — ahora la sesión recuerda los últimos 30 sellos, con pruebas del caso viejo y del tope. Todo lo creado se borró al final. Guion en el scratchpad (`fake-adk.js` + `driver-bot-e2e.js`); runbook de despliegue en `despliegue.md`.
+- [x] 7.7 22 casos en `tests/notifications/whatsappBotDispatcher.test.js` (`npm run test:whatsapp-bot-dispatcher`): las diez compuertas, los cinco caminos de traspaso, el modo sombra mudo y que el teléfono crudo nunca viaja a ADK.
 - [ ] 7.8 Verificar que el webhook sigue respondiendo en menos de 3 segundos con el bot prendido.
 
 ## 8. Modo sombra
 
-- [ ] 8.1 Agregar el modo sombra a la configuración del comercio: el bot redacta y se registra, pero no envía ni cobra.
+- [x] 8.1 Modo sombra completo: no envía, no cobra, no exige saldo, no marca traspasos ni crea cotizaciones — solo registra lo que habría hecho (`sombra_no_enviado`, `sombra_traspaso`, `sombra_cierre`). Es el modo por defecto al prender el bot.
 - [ ] 8.2 Prenderlo en el comercio del piloto y dejarlo corriendo contra conversaciones reales.
 - [ ] 8.3 Revisar con Daniel una muestra de lo que habría contestado antes de prender el envío real.
 
 ## 9. Frontend — configuración
 
-- [ ] 9.1 Agregar a la pantalla de integraciones de WhatsApp la sección del bot: interruptor, tope de turnos, mensaje de bienvenida y horario, por servicio que extiende `BaseService`.
-- [ ] 9.2 Deshabilitar el interruptor con explicación visible cuando el comercio no tiene número propio conectado.
-- [ ] 9.3 Aplicar los tokens del sistema de diseño: acento `#5F3FE0`, semánticos en par fuerte con fondo suave, plano sin gradientes.
+- [x] 9.1 Tarjeta `whatsapp-bot-config` dentro de la pantalla de integración de WhatsApp (componente propio con su carga/guardado — un problema del formulario grande no la arrastra): interruptor, modo sombra, presentarse como bot, tope de turnos, mensaje de bienvenida y horario con días. Vía `WhatsappIntegrationConfigService` (BaseService).
+- [x] 9.2 Interruptor deshabilitado + aviso visible cuando no hay número propio (`puedeActivarse` lo calcula el servidor); si el backend igual rechaza, el 422 `BOT_REQUIERE_NUMERO_PROPIO` se traduce a un mensaje claro y el toggle vuelve a apagado.
+- [x] 9.3 Tokens aplicados en las tres piezas nuevas (tarjeta del bot, franja del buzón, chip de cotizaciones): acento #5F3FE0, tinta #211F3A, chips par fuerte/fondo suave, radios 16/11, labels UPPERCASE muted, cero gradientes.
 
 ## 10. Frontend — buzón y cotizaciones
 
-- [ ] 10.1 Distintivo de los mensajes con `origen: "bot"` en el detalle del hilo.
-- [ ] 10.2 Señal de "atendiendo el bot" en la lista de conversaciones.
-- [ ] 10.3 Botones de tomar y devolver el hilo, contra los endpoints del paso 3, con el estado reflejado al instante.
-- [ ] 10.4 Distintivo y filtro por origen WhatsApp en la lista de cotizaciones.
-- [ ] 10.5 Verificar que las rutas nuevas queden dadas de alta en los roles y que el menú las reconozca por texto exacto, o el trabajo se despliega invisible.
-- [ ] 10.6 Build de producción sin errores.
+- [x] 10.1 Chip "Bot" en las burbujas cuyo consumo es `BOT_REPLY` (detalle del hilo, en los dos mapeos: carga y refresco).
+- [x] 10.2 Resuelto con una vista mejor que un chip (pedido de Daniel 2026-08-12): pestaña **"Pedidos"** en el buzón — ver 10.7.
+- [x] 10.7 **Vista "Pedidos por WhatsApp"** (pedida por Daniel): pestañas Conversaciones | Pedidos en el shell del buzón, sin ruta nueva (cero trámite de roles). La izquierda lista las conversaciones del bot con estado (Atendiendo el bot / Con un asesor / Cotización lista), carrito en vivo con total y primeras líneas, número de cotización y motivo de traspaso, con filtros por estado y refresco cada 15s. Clic → se abre a la derecha la MISMA conversación de siempre (que ya trae la franja del bot, el carrito y tomar/devolver). Backend: `GET /v1/whatsapp/conversations/bot/sesiones` sobre `listarSesiones` del servicio de sesiones (vencidas filtradas, más recientes primero, probado). Nombres y teléfono enmascarado se cruzan contra el listado de hilos en el front — la sesión solo conoce el hash.
+- [x] 10.3 Endpoints nuevos (`GET /:phoneHash/bot`, `POST /:phoneHash/bot/tomar`, `POST /:phoneHash/bot/devolver`, con el guard de reply) + franja en el detalle con "Tomar conversación" / "Devolver al bot" y el estado refrescado al responder. **Además**: responder a mano desde el buzón le quita el hilo al bot automáticamente (lo marca el backend en el endpoint de reply, best-effort).
+- [x] 10.4 Chip de origen en la lista de cotizaciones ("Bot" para whatsapp-bot, "Catálogo" para catalogo-digital) al lado del número. El filtro dedicado no se agregó: la lista filtra en servidor y sumar el criterio `origen` al endpoint es un cambio aparte — el chip ya lo hace distinguible a simple vista.
+- [x] 10.5 No hay rutas nuevas de frontend: el bot vive dentro de la pantalla de integraciones y del buzón que ya existen en los roles. Nada que dar de alta.
+- [x] 10.6 `npm run build` en verde (solo las advertencias CommonJS preexistentes).
 
 ## 11. Piloto y cierre
 

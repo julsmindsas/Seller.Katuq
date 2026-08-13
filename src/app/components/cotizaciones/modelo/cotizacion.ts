@@ -59,6 +59,9 @@ export interface Cotizacion {
   vistaCliente?: boolean;
   fechaPrimeraVista?: string | null;
   vistasCount?: number;
+  // De dónde salió: vacío = venta asistida, "catalogo-digital" = carrito del
+  // catálogo por link (D-141), "whatsapp-bot" = bot de pedidos por WhatsApp.
+  origen?: string | null;
   date_edit?: string;
   user_edit?: string;
 }

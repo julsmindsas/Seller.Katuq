@@ -65,6 +65,57 @@ export interface WhatsappMessage {
   status: WhatsappMessageStatus;
   /** Media (imagen/audio/doc) no se renderiza inline — se muestra placeholder. */
   mediaPlaceholder?: boolean;
+  /** true si lo escribió el bot de pedidos (consumo tipo BOT_REPLY). */
+  esBot?: boolean;
+}
+
+/**
+ * Línea del carrito que el bot de pedidos lleva armado en una conversación.
+ */
+export interface BotCarritoLinea {
+  productoId: string;
+  referencia?: string | null;
+  nombre: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+/**
+ * Resumen de una conversación del bot de pedidos (GET /bot/sesiones).
+ * Alimenta la vista "Pedidos" del buzón: qué carritos van en curso, cuáles
+ * pasaron a un vendedor y cuáles cerraron con cotización.
+ */
+export interface BotSesionResumen {
+  phoneHash: string;
+  estado: "bot" | "humano" | "cerrada" | string;
+  tomadaPor?: string | null;
+  motivoTraspaso?: string | null;
+  carrito: BotCarritoLinea[];
+  totalCarrito: number;
+  turnos: number;
+  cotizacionCreada?: { id?: string | null; numero?: string | null } | null;
+  /** Epoch ms de la última actividad (para ordenar y pintar "hace X"). */
+  actualizadoAt?: number | null;
+  /** Enriquecidos en el front cruzando con el listado de hilos. */
+  contactName?: string;
+  phoneMasked?: string;
+}
+
+/**
+ * Estado del bot de pedidos para un hilo (GET /:phoneHash/bot).
+ * `atendiendoBot` es la verdad del servidor: el buzón solo la pinta.
+ */
+export interface BotThreadState {
+  botHabilitado: boolean;
+  modoSombra: boolean;
+  atendiendoBot: boolean;
+  estado?: string | null;
+  tomadaPor?: string | null;
+  motivoTraspaso?: string | null;
+  carrito: BotCarritoLinea[];
+  totalCarrito: number;
+  turnos: number;
+  cotizacionCreada?: { id?: string | null; numero?: string | null } | null;
 }
 
 /**

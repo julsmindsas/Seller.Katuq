@@ -3,14 +3,44 @@
   [class.wa-shell--detail-open]="selectedPhoneHash"
 >
   <header class="wa-shell__header">
-    <h2 class="wa-shell__title">Conversaciones WhatsApp</h2>
+    <h2 class="wa-shell__title">
+      {{ vista === "pedidos" ? "Pedidos por WhatsApp" : "Conversaciones WhatsApp" }}
+    </h2>
+    <nav class="wa-shell__tabs" role="tablist" aria-label="Vista del buzón">
+      <button
+        type="button"
+        role="tab"
+        class="wa-shell__tab"
+        [class.is-active]="vista === 'conversaciones'"
+        [attr.aria-selected]="vista === 'conversaciones'"
+        (click)="setVista('conversaciones')"
+      >
+        <i class="fa fa-comments-o" aria-hidden="true"></i> Conversaciones
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="wa-shell__tab"
+        [class.is-active]="vista === 'pedidos'"
+        [attr.aria-selected]="vista === 'pedidos'"
+        (click)="setVista('pedidos')"
+      >
+        <i class="fa fa-shopping-basket" aria-hidden="true"></i> Pedidos
+      </button>
+    </nav>
   </header>
 
   <div class="wa-shell__body">
     <aside class="wa-shell__list">
       <app-whatsapp-thread-list
+        *ngIf="vista === 'conversaciones'"
         (threadSelected)="onThreadSelected($event)"
       ></app-whatsapp-thread-list>
+      <app-whatsapp-pedidos-list
+        *ngIf="vista === 'pedidos'"
+        [selectedPhoneHash]="selectedPhoneHash"
+        (sesionSelected)="onThreadSelected($event)"
+      ></app-whatsapp-pedidos-list>
     </aside>
 
     <section class="wa-shell__detail">

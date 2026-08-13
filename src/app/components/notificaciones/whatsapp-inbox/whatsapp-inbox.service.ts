@@ -11,6 +11,8 @@ import { catchError, delay, map, retry } from "rxjs/operators";
 import { environment } from "../../../../environments/environment";
 import { BaseService } from "../../../shared/services/base.service";
 import {
+  BotSesionResumen,
+  BotThreadState,
   ContactProfile,
   MessagesPage,
   Order,
@@ -136,6 +138,9 @@ export class WhatsappInboxService extends BaseService {
           .map((m: any) => ({
             id: m.id,
             direction: m.direction === "inbound" ? "inbound" : "outbound",
+            // El tipo de consumo del backend distingue quién escribió: los del
+            // bot de pedidos llegan como BOT_REPLY y el chat les pinta la marca.
+            esBot: String(m.type || "") === "BOT_REPLY",
             type: (m.type || "text").toString().toLowerCase().includes("text")
               ? "text"
               : "text",
@@ -303,6 +308,64 @@ export class WhatsappInboxService extends BaseService {
       }
       return r.json().catch(() => ({}));
     });
+  }
+
+  // ============================================================
+  // Bot de pedidos
+  // ============================================================
+
+  /**
+   * Conversaciones del bot de pedidos (vista "Pedidos" del buzón): carritos en
+   * curso, traspasadas a un vendedor y cerradas con su cotización.
+   *
+   * Real: `GET /v1/whatsapp/conversations/bot/sesiones`.
+   * Fallback: lista vacía — la vista muestra su estado vacío.
+   */
+  getBotSesiones(): Observable<BotSesionResumen[]> {
+    return this.get<{ items: BotSesionResumen[] }>(
+      `/v1/whatsapp/conversations/bot/sesiones`,
+    ).pipe(
+      map((res: any) => (Array.isArray(res?.items) ? res.items : [])),
+      catchError(() => of([] as BotSesionResumen[])),
+    );
+  }
+
+  /**
+   * Estado del bot de pedidos para un hilo: si lo está atendiendo, quién lo
+   * tomó, el carrito en curso y la cotización creada si cerró.
+   *
+   * Real: `GET /v1/whatsapp/conversations/:phoneHash/bot`.
+   * Fallback: `null` — sin estado, el buzón se comporta como siempre.
+   */
+  getBotState(phoneHash: string): Observable<BotThreadState | null> {
+    return this.get<BotThreadState>(
+      `/v1/whatsapp/conversations/${encodeURIComponent(phoneHash)}/bot`,
+    ).pipe(
+      map((res: any) => (res && typeof res === "object" ? (res as BotThreadState) : null)),
+      catchError(() => of(null)),
+    );
+  }
+
+  /**
+   * El vendedor se queda con la conversación: el bot se calla en este hilo.
+   * Real: `POST /v1/whatsapp/conversations/:phoneHash/bot/tomar`.
+   */
+  tomarConversacion(phoneHash: string): Observable<{ success: boolean }> {
+    return this.post<{ success: boolean }>(
+      `/v1/whatsapp/conversations/${encodeURIComponent(phoneHash)}/bot/tomar`,
+      {},
+    );
+  }
+
+  /**
+   * Le devuelve la conversación al bot (reinicia su cuenta de turnos).
+   * Real: `POST /v1/whatsapp/conversations/:phoneHash/bot/devolver`.
+   */
+  devolverAlBot(phoneHash: string): Observable<{ success: boolean }> {
+    return this.post<{ success: boolean }>(
+      `/v1/whatsapp/conversations/${encodeURIComponent(phoneHash)}/bot/devolver`,
+      {},
+    );
   }
 
   /**

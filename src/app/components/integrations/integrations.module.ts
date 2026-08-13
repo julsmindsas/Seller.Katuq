@@ -45,6 +45,7 @@ import { WebhookConfigComponent } from './shopify-dashboard/webhook-config.compo
 
 // WhatsApp (Kapso) Components
 import { WhatsappKapsoConfigComponent } from './whatsapp-kapso-config/whatsapp-kapso-config.component';
+import { WhatsappBotConfigComponent } from './whatsapp-kapso-config/whatsapp-bot-config/whatsapp-bot-config.component';
 
 import { MetaChannelsComponent } from './meta-channels/meta-channels.component';
 import { MetaOauthReturnComponent } from './meta-channels/meta-oauth-return.component';
@@ -95,7 +96,8 @@ const routes: Routes = [
     SyncLogsComponent,
     FieldMappingComponent,
     WebhookConfigComponent,
-    WhatsappKapsoConfigComponent
+    WhatsappKapsoConfigComponent,
+    WhatsappBotConfigComponent
   ],
   imports: [
     CommonModule,
@@ -134,7 +136,8 @@ const routes: Routes = [
   exports: [
     IntegrationsComponent,
     IntegrationsListComponent,
-    WhatsappKapsoConfigComponent
+    WhatsappKapsoConfigComponent,
+    WhatsappBotConfigComponent
   ]
 })
 export class IntegrationsModule {}

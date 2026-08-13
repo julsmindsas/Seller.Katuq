@@ -1,0 +1,271 @@
+// Bot de pedidos — tarjeta plana tintada según el design-system canónico:
+// acento #5F3FE0, tinta #211F3A, superficies lila, radios 16/11px, SIN gradientes.
+
+.wa-bot {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(95, 63, 224, 0.18);
+  background: #fff;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  &__title {
+    display: flex;
+    gap: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: #211f3a;
+    }
+  }
+
+  // Chip de ícono (patrón de tarjeta comercial: fondo suave + borde lila).
+  &__title-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 11px;
+    border: 1px solid rgba(95, 63, 224, 0.25);
+    background: rgba(95, 63, 224, 0.08);
+    color: #5f3fe0;
+    font-size: 1rem;
+  }
+
+  &__subtitle {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: rgba(33, 31, 58, 0.65);
+    max-width: 560px;
+  }
+
+  &__status {
+    flex-shrink: 0;
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid rgba(33, 31, 58, 0.2);
+    background: rgba(33, 31, 58, 0.06);
+    color: rgba(33, 31, 58, 0.65);
+
+    &.is-on {
+      border-color: rgba(34, 154, 84, 0.35);
+      background: rgba(34, 154, 84, 0.1);
+      color: #1d7a44;
+    }
+
+    &.is-shadow {
+      border-color: rgba(95, 63, 224, 0.35);
+      background: rgba(95, 63, 224, 0.1);
+      color: #5f3fe0;
+    }
+  }
+
+  &__loading,
+  &__error {
+    padding: 12px 0;
+    font-size: 0.85rem;
+    color: rgba(33, 31, 58, 0.65);
+  }
+
+  &__hint {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    border-radius: 11px;
+    border: 1px solid rgba(95, 63, 224, 0.22);
+    background: rgba(95, 63, 224, 0.06);
+    font-size: 0.8rem;
+    color: #211f3a;
+
+    i {
+      color: #5f3fe0;
+      margin-top: 2px;
+    }
+  }
+
+  &__row {
+    margin-bottom: 14px;
+
+    &--toggle {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+  }
+
+  &__toggle {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+
+    input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+
+      &:checked + .wa-bot__toggle-slider {
+        background: #5f3fe0;
+
+        &::before {
+          transform: translateX(18px);
+        }
+      }
+
+      &[disabled] + .wa-bot__toggle-slider {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__toggle-slider {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: rgba(33, 31, 58, 0.2);
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.15s ease;
+    }
+  }
+
+  &__toggle-text {
+    strong {
+      display: block;
+      font-size: 0.86rem;
+      color: #211f3a;
+    }
+
+    small {
+      font-size: 0.76rem;
+      color: rgba(33, 31, 58, 0.6);
+    }
+  }
+
+  // Labels UPPERCASE muted, patrón del design-system.
+  &__label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(33, 31, 58, 0.55);
+  }
+
+  &__input {
+    border-radius: 11px;
+
+    &--corto {
+      max-width: 120px;
+    }
+  }
+
+  &__ayuda {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.74rem;
+    color: rgba(33, 31, 58, 0.55);
+  }
+
+  &__horario {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    margin: -4px 0 14px 54px;
+  }
+
+  &__horario-horas {
+    display: flex;
+    gap: 12px;
+
+    label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: rgba(33, 31, 58, 0.6);
+
+      input {
+        margin-top: 2px;
+        border-radius: 11px;
+      }
+    }
+  }
+
+  &__horario-dias {
+    display: flex;
+    gap: 6px;
+  }
+
+  &__dia {
+    width: 32px;
+    height: 32px;
+    border-radius: 11px;
+    border: 1px solid rgba(33, 31, 58, 0.2);
+    background: #fff;
+    color: rgba(33, 31, 58, 0.6);
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+
+    &.is-active {
+      border-color: #5f3fe0;
+      background: rgba(95, 63, 224, 0.1);
+      color: #5f3fe0;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+  }
+
+  &__save {
+    padding: 8px 18px;
+    border-radius: 11px;
+    border: 1px solid #5f3fe0;
+    background: #5f3fe0;
+    color: #fff;
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background: #4e33bd;
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+}
