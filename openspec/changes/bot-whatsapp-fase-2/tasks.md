@@ -59,3 +59,17 @@
 - [ ] 3.2 Calibrar la ventana de ráfaga con tráfico real del piloto.
 - [ ] 3.3 Actualizar CONTRACT.md (decisión de cobro de foto+texto y ventana
       elegida) y la memoria del bot.
+
+## 4. Constructor de plantillas (pedido de Daniel 2026-08-13)
+
+- [x] 4.1 Backend `POST /kapso-templates/crear`: valida título/cuerpo/categoría,
+      genera nombre técnico (slug comercio + título + sufijo), convierte "nombre
+      del cliente" en {{1}} con ejemplo (Meta lo exige), crea vía Kapso formato
+      Meta y guarda el título humano en plantillasMeta. Tests del armador de
+      payload y del slug.
+- [x] 4.2 Listado con estado humano: PENDING/REJECTED visibles con motivo
+      (`?all=1` ya existe; sumar motivoRechazo y estadoHumano).
+- [x] 4.3 Frontend campañas: tarjeta "Crear mi propio mensaje" en el paso
+      "Qué dice" — formulario simple (título, texto, botón insertar nombre del
+      cliente), aviso de revisión de Meta, y las plantillas propias en revisión
+      listadas con su estado.

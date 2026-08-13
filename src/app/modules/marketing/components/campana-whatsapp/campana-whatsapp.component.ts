@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
 
 import { CrmService } from '../../../../components/crm/services/crm.service';
 import { CrmLead, CrmStage } from '../../../../components/crm/models/crm.models';
@@ -65,8 +66,17 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
   loadingTemplates = false;
   errorTemplates = '';
   templates: KapsoTemplate[] = [];
+  /** [fase 2] Plantillas propias aún no aprobadas (en revisión / rechazadas). */
+  plantillasEnRevision: KapsoTemplate[] = [];
   selectedTemplateName = '';
   variableConfigs: VariableConfig[] = [];
+
+  // --- Paso 2: constructor de plantillas (fase 2) ---
+  /** Formulario "Crear mi propio mensaje" abierto. */
+  creandoPlantilla = false;
+  nuevoTitulo = '';
+  nuevoCuerpo = '';
+  enviandoPlantilla = false;
 
   // --- Paso 3: confirmación + envío ---
   nombreCampana = '';
@@ -87,6 +97,7 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
   constructor(
     private crm: CrmService,
     private marketing: MarketingService,
+    private toastr: ToastrService,
   ) {}
 
   ngOnInit(): void {
@@ -300,9 +311,15 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
   private cargarTemplates(): void {
     this.loadingTemplates = true;
     this.errorTemplates = '';
-    this.marketing.getKapsoTemplates().subscribe({
+    // `all=1`: además de las aprobadas, las propias que siguen en revisión o
+    // fueron rechazadas — para que la usuaria vea en qué va su mensaje.
+    this.marketing.getKapsoTemplates(true).subscribe({
       next: (resp) => {
-        this.templates = (resp?.items || []).filter((t) => t.status === 'APPROVED' || !t.status);
+        const items = resp?.items || [];
+        this.templates = items.filter((t) => t.status === 'APPROVED' || !t.status);
+        this.plantillasEnRevision = items.filter(
+          (t) => t.status && t.status !== 'APPROVED',
+        );
         this.loadingTemplates = false;
         this.sugerirTitulosFaltantes();
       },
@@ -311,6 +328,59 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
         this.loadingTemplates = false;
       },
     });
+  }
+
+  // =====================================================================
+  // [fase 2] Constructor de plantillas — el comercio escribe lo que quiera
+  // y Meta lo aprueba. `{nombre}` es la única variable soportada.
+  // =====================================================================
+
+  toggleCrearPlantilla(): void {
+    this.creandoPlantilla = !this.creandoPlantilla;
+  }
+
+  insertarNombre(): void {
+    const marca = '{nombre}';
+    if (this.nuevoCuerpo.includes(marca)) return;
+    this.nuevoCuerpo = `${this.nuevoCuerpo}${this.nuevoCuerpo && !this.nuevoCuerpo.endsWith(' ') ? ' ' : ''}${marca}`;
+  }
+
+  get plantillaNuevaLista(): boolean {
+    return this.nuevoTitulo.trim().length >= 3 && this.nuevoCuerpo.trim().length >= 10;
+  }
+
+  /** Vista previa del mensaje nuevo con el nombre de ejemplo. */
+  get previewPlantillaNueva(): string {
+    return (this.nuevoCuerpo || '').replace(/\{nombre\}/gi, 'María');
+  }
+
+  crearPlantilla(): void {
+    if (!this.plantillaNuevaLista || this.enviandoPlantilla) return;
+    this.enviandoPlantilla = true;
+    this.marketing
+      .crearPlantilla({ titulo: this.nuevoTitulo.trim(), cuerpo: this.nuevoCuerpo })
+      .subscribe({
+        next: (r) => {
+          this.enviandoPlantilla = false;
+          this.creandoPlantilla = false;
+          this.nuevoTitulo = '';
+          this.nuevoCuerpo = '';
+          this.toastr.success(
+            r?.message ||
+              'Tu mensaje quedó en revisión de Meta. Cuando diga "Aprobada" ya puedes usarla.',
+            'Mensaje enviado a aprobación',
+            { timeOut: 9000 },
+          );
+          this.cargarTemplates();
+        },
+        error: (err) => {
+          this.enviandoPlantilla = false;
+          this.toastr.error(
+            err?.error?.message ||
+              'No se pudo crear el mensaje. Revisa el texto e intenta de nuevo.',
+          );
+        },
+      });
   }
 
   /**

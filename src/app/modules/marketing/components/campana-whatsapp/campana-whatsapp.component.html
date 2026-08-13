@@ -152,6 +152,92 @@
         </button>
       </div>
 
+      <!-- [fase 2] Constructor: el comercio escribe su propio mensaje -->
+      <button
+        type="button"
+        class="camp__crear-toggle"
+        *ngIf="!loadingTemplates && !errorTemplates"
+        (click)="toggleCrearPlantilla()"
+      >
+        <i class="fa" [ngClass]="creandoPlantilla ? 'fa-minus' : 'fa-plus'" aria-hidden="true"></i>
+        {{ creandoPlantilla ? "Cerrar" : "Crear mi propio mensaje" }}
+      </button>
+
+      <div class="camp__card camp__crear" *ngIf="creandoPlantilla">
+        <h2 class="camp__card-title">Escribe tu mensaje</h2>
+        <p class="camp__hint">
+          Meta (WhatsApp) revisa cada mensaje nuevo antes de dejarlo enviar —
+          suele tardar de minutos a unas horas. Cuando diga
+          <strong>"Aprobada"</strong> ya puedes usarlo en campañas.
+        </p>
+
+        <label class="camp__crear-campo">
+          Ponle un nombre (para encontrarlo después)
+          <input
+            type="text"
+            [(ngModel)]="nuevoTitulo"
+            maxlength="45"
+            placeholder="Ej: Promoción del mes"
+            [disabled]="enviandoPlantilla"
+          />
+        </label>
+
+        <label class="camp__crear-campo">
+          ¿Qué le quieres decir a tus clientes?
+          <textarea
+            rows="4"
+            [(ngModel)]="nuevoCuerpo"
+            maxlength="1024"
+            placeholder="Ej: Hola {nombre}! Este mes tenemos 20% de descuento en toda la tienda. ¿Te separo algo?"
+            [disabled]="enviandoPlantilla"
+          ></textarea>
+        </label>
+
+        <button
+          type="button"
+          class="camp__crear-nombre"
+          (click)="insertarNombre()"
+          [disabled]="enviandoPlantilla"
+          title="Agrega el nombre de cada cliente al mensaje"
+        >
+          <i class="fa fa-user-plus" aria-hidden="true"></i> Usar el nombre del cliente
+        </button>
+
+        <div class="camp__phone camp__phone--mini" *ngIf="nuevoCuerpo">
+          <div class="camp__phone-screen">
+            <div class="camp__phone-bubble">{{ previewPlantillaNueva }}</div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="camp__btn-next camp__crear-enviar"
+          [disabled]="!plantillaNuevaLista || enviandoPlantilla"
+          (click)="crearPlantilla()"
+        >
+          <i class="fa" [ngClass]="enviandoPlantilla ? 'fa-spinner fa-spin' : 'fa-paper-plane'" aria-hidden="true"></i>
+          {{ enviandoPlantilla ? "Enviando a aprobación…" : "Enviar a aprobación de Meta" }}
+        </button>
+      </div>
+
+      <!-- [fase 2] Mensajes propios en revisión / rechazados -->
+      <div class="camp__card" *ngIf="plantillasEnRevision.length > 0">
+        <h2 class="camp__card-title">Tus mensajes en revisión</h2>
+        <div class="camp__revision" *ngFor="let t of plantillasEnRevision">
+          <div class="camp__revision-info">
+            <span class="camp__revision-titulo">{{ t.titulo || t.name }}</span>
+            <span class="camp__revision-cuerpo">{{ t.bodyText | slice: 0 : 90 }}{{ (t.bodyText || '').length > 90 ? '…' : '' }}</span>
+            <span class="camp__revision-motivo" *ngIf="t.motivoRechazo">Motivo: {{ t.motivoRechazo }}</span>
+          </div>
+          <span
+            class="camp__revision-estado"
+            [class.is-rechazada]="t.status === 'REJECTED'"
+          >
+            {{ t.estadoHumano || t.status }}
+          </span>
+        </div>
+      </div>
+
       <div class="camp__card" *ngIf="selectedTemplate && variableConfigs.length > 0">
         <h2 class="camp__card-title">Completa el mensaje</h2>
         <div class="camp__variable" *ngFor="let cfg of variableConfigs; let i = index">

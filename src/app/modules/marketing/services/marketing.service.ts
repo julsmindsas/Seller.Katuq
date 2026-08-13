@@ -18,6 +18,9 @@ export interface KapsoTemplate {
   descripcion?: string;
   /** true = el título es el de emergencia (nombre limpiado), no uno humano guardado. */
   tituloEsSugerido?: boolean;
+  /** [fase 2] Estado en lenguaje humano ("Aprobada", "En revisión de Meta"...). */
+  estadoHumano?: string;
+  motivoRechazo?: string | null;
 }
 
 /** Respuesta de GET /v1/whatsapp/balance (prepago por comercio). */
@@ -83,9 +86,24 @@ export class MarketingService extends BaseService {
     return this.get<any[]>('/v1/clients/all');
   }
 
-  /** Plantillas HSM APPROVED del WABA del comercio. */
-  getKapsoTemplates(): Observable<{ items: KapsoTemplate[] }> {
-    return this.get<{ items: KapsoTemplate[] }>('/v1/whatsapp/kapso-templates');
+  /** Plantillas HSM del WABA del comercio (con `all` también las PENDING/REJECTED). */
+  getKapsoTemplates(all = false): Observable<{ items: KapsoTemplate[] }> {
+    return this.get<{ items: KapsoTemplate[] }>(
+      `/v1/whatsapp/kapso-templates${all ? '?all=1' : ''}`,
+    );
+  }
+
+  /**
+   * [fase 2] Constructor de plantillas: el comercio escribe título y texto
+   * (con `{nombre}` como única variable) y el backend la crea en Kapso/Meta
+   * para aprobación. El título queda guardado como nombre humano.
+   */
+  crearPlantilla(payload: {
+    titulo: string;
+    cuerpo: string;
+    descripcion?: string;
+  }): Observable<{ success: boolean; name: string; status: string; estadoHumano: string; message?: string }> {
+    return this.post<any>('/v1/whatsapp/kapso-templates/crear', payload);
   }
 
   /**

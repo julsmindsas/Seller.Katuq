@@ -454,6 +454,122 @@
     font-size: 11.5px;
   }
 
+  // ------------------------------------------- constructor de plantillas
+  &__crear-toggle {
+    @include km-btn-ghost;
+    align-self: flex-start;
+    border-style: dashed;
+    color: var(--km-accent-ink);
+    border-color: #d9cffb;
+  }
+
+  &__crear {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__crear-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--km-ink2);
+    margin: 0;
+
+    input,
+    textarea {
+      border: 1.5px solid var(--km-line2);
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-size: 13.5px;
+      font-family: inherit;
+      color: var(--km-ink);
+      font-weight: 500;
+      resize: vertical;
+
+      &:focus {
+        outline: none;
+        border-color: var(--km-accent);
+      }
+    }
+  }
+
+  &__crear-nombre {
+    @include km-btn-ghost;
+    align-self: flex-start;
+    font-size: 12px;
+    padding: 7px 12px;
+  }
+
+  &__crear-enviar {
+    align-self: flex-start;
+  }
+
+  &__phone--mini {
+    max-width: 260px;
+    border-width: 6px;
+    border-radius: 26px;
+
+    .camp__phone-screen {
+      min-height: 0;
+      padding: 16px 12px;
+    }
+  }
+
+  // ------------------------------------------------- mensajes en revisión
+  &__revision {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 13px;
+    border-radius: var(--km-radius-sm);
+    background: #fbfaff;
+    margin-bottom: 8px;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  &__revision-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__revision-titulo {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--km-ink);
+  }
+
+  &__revision-cuerpo {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--km-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__revision-motivo {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--km-red);
+  }
+
+  &__revision-estado {
+    @include km-chip(var(--km-orange-ink), var(--km-orange-wash));
+    flex: none;
+
+    &.is-rechazada {
+      color: var(--km-red);
+      background: var(--km-red-wash);
+    }
+  }
+
   // ------------------------------------------------ paso 2: vista previa
   &__preview-label {
     @include km-label;
