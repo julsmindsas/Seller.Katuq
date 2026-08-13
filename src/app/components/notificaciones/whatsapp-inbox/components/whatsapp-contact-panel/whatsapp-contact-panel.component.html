@@ -2,81 +2,68 @@
   <p *ngIf="loading" class="contact-panel__state">Cargando contacto…</p>
 
   <ng-container *ngIf="!loading && profile">
-    <!-- Sección 1: Identidad -->
-    <details class="contact-panel__section is-identity" open>
-      <summary class="contact-panel__summary">Identidad</summary>
+    <!-- Identidad -->
+    <div class="contact-panel__identity">
+      <div class="contact-panel__avatar" aria-hidden="true">
+        {{ initials }}
+      </div>
 
-      <div class="contact-panel__identity">
-        <div class="contact-panel__avatar" aria-hidden="true">
-          {{ initials }}
+      <div class="contact-panel__identity-info">
+        <h4 class="contact-panel__name">{{ displayName }}</h4>
+        <p class="contact-panel__phone">{{ profile.phoneMasked }}</p>
+        <span
+          class="contact-panel__chip"
+          [class.is-verified]="profile.isClienteRegistrado"
+          [class.is-warmlead]="!profile.isClienteRegistrado && profile.hasOrderHistory"
+          [class.is-unverified]="!profile.isClienteRegistrado && !profile.hasOrderHistory"
+        >
+          {{
+            profile.isClienteRegistrado
+              ? "Cliente registrado"
+              : profile.hasOrderHistory
+                ? "Cliente con pedidos"
+                : "No verificado"
+          }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Este cliente: indicadores (mockup) -->
+    <section class="contact-panel__section">
+      <h5 class="contact-panel__label">Este cliente</h5>
+      <div class="contact-panel__stats">
+        <div class="contact-panel__stat">
+          <span class="contact-panel__stat-icon is-green"><i class="fa fa-usd" aria-hidden="true"></i></span>
+          <div class="contact-panel__stat-info">
+            <span class="contact-panel__stat-label">Le has vendido</span>
+            <strong>{{ totalVendido | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
+          </div>
         </div>
-
-        <div class="contact-panel__identity-info">
-          <h4 class="contact-panel__name">{{ displayName }}</h4>
-          <p class="contact-panel__phone">{{ profile.phoneMasked }}</p>
-          <span
-            class="contact-panel__chip"
-            [class.is-verified]="profile.isClienteRegistrado"
-            [class.is-warmlead]="!profile.isClienteRegistrado && profile.hasOrderHistory"
-            [class.is-unverified]="!profile.isClienteRegistrado && !profile.hasOrderHistory"
-          >
-            {{
-              profile.isClienteRegistrado
-                ? "Cliente registrado"
-                : profile.hasOrderHistory
-                  ? "Cliente con pedidos"
-                  : "No verificado"
-            }}
-          </span>
+        <div class="contact-panel__stat">
+          <span class="contact-panel__stat-icon is-accent"><i class="fa fa-shopping-bag" aria-hidden="true"></i></span>
+          <div class="contact-panel__stat-info">
+            <span class="contact-panel__stat-label">Pedidos hechos</span>
+            <strong>{{ orders.length }}</strong>
+          </div>
+        </div>
+        <div class="contact-panel__stat">
+          <span class="contact-panel__stat-icon is-orange"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+          <div class="contact-panel__stat-info">
+            <span class="contact-panel__stat-label">Última compra</span>
+            <strong>{{ ultimaCompraLabel }}</strong>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="contact-panel__identity-links">
-        <a
-          *ngIf="profile.isClienteRegistrado"
-          class="contact-panel__link"
-          [routerLink]="['/ventas/clienteslista']"
-          title="Ver ficha del cliente en el módulo de ventas"
-        >
-          Ver datos del cliente →
-        </a>
-        <a
-          *ngIf="hasLead && profile.lead?.id"
-          class="contact-panel__link"
-          [routerLink]="['/katuq-flow/leads', profile.lead?.id]"
-          title="Abrir el lead en el CRM"
-        >
-          Abrir lead en CRM →
-        </a>
-      </div>
-
-      <!-- [D-098] Opt-out de marketing -->
-      <div class="contact-panel__optout">
-        <span *ngIf="profile.optedOut" class="contact-panel__optout-badge">🚫 No contactar</span>
-        <button
-          type="button"
-          class="contact-panel__optout-btn"
-          [class.is-active]="profile.optedOut"
-          [disabled]="togglingOptOut"
-          (click)="toggleOptOut()"
-          [title]="profile.optedOut ? 'Volver a permitir campañas y plantillas a este contacto' : 'Excluir a este contacto de campañas y plantillas'"
-        >
-          <span *ngIf="togglingOptOut">Guardando…</span>
-          <span *ngIf="!togglingOptOut">{{ profile.optedOut ? 'Permitir mensajes de nuevo' : 'Marcar como "No contactar"' }}</span>
-        </button>
-      </div>
-    </details>
-
-    <!-- Sección 2: Historial de pedidos -->
-    <details class="contact-panel__section is-orders" open>
-      <summary class="contact-panel__summary">
-        Historial de pedidos ({{ orders.length }})
-      </summary>
+    <!-- Últimos pedidos -->
+    <section class="contact-panel__section">
+      <h5 class="contact-panel__label">Últimos pedidos</h5>
 
       <div class="contact-panel__orders" *ngIf="visibleOrders.length > 0">
         <a
           *ngFor="let order of visibleOrders; trackBy: trackByOrder"
-          class="contact-panel__order contact-panel__order--link"
+          class="contact-panel__order"
           [routerLink]="['/ventas/pedidos']"
           [queryParams]="orderQueryParams(order)"
           [title]="'Abrir el pedido ' + order.nroPedido"
@@ -84,7 +71,7 @@
           <div class="contact-panel__order-top">
             <span class="contact-panel__order-num">{{ order.nroPedido }}</span>
             <span
-              class="contact-panel__chip contact-panel__chip--state"
+              class="contact-panel__order-chip"
               [ngClass]="estadoChipClass(order.estado)"
             >
               {{ order.estado }}
@@ -120,11 +107,47 @@
       >
         Sin pedidos previos
       </p>
-    </details>
+    </section>
 
-    <!-- Sección 3: Lead CRM -->
-    <details class="contact-panel__section is-crm" open>
-      <summary class="contact-panel__summary">Lead CRM</summary>
+    <!-- Acciones -->
+    <section class="contact-panel__section">
+      <a
+        *ngIf="profile.isClienteRegistrado"
+        class="contact-panel__cta contact-panel__cta--ghost"
+        [routerLink]="['/ventas/clienteslista']"
+        title="Ver ficha del cliente en el módulo de ventas"
+      >
+        Ver ficha del cliente
+      </a>
+      <a
+        *ngIf="hasLead && profile.lead?.id"
+        class="contact-panel__link contact-panel__link--full"
+        [routerLink]="['/katuq-flow/leads', profile.lead?.id]"
+        title="Abrir el lead en el CRM"
+      >
+        Abrir lead en CRM →
+      </a>
+
+      <!-- [D-098] Opt-out de marketing -->
+      <div class="contact-panel__optout">
+        <span *ngIf="profile.optedOut" class="contact-panel__optout-badge">🚫 No contactar</span>
+        <button
+          type="button"
+          class="contact-panel__optout-btn"
+          [class.is-active]="profile.optedOut"
+          [disabled]="togglingOptOut"
+          (click)="toggleOptOut()"
+          [title]="profile.optedOut ? 'Volver a permitir campañas y plantillas a este contacto' : 'Excluir a este contacto de campañas y plantillas'"
+        >
+          <span *ngIf="togglingOptOut">Guardando…</span>
+          <span *ngIf="!togglingOptOut">{{ profile.optedOut ? 'Permitir mensajes de nuevo' : 'Marcar como "No contactar"' }}</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Lead CRM -->
+    <section class="contact-panel__section">
+      <h5 class="contact-panel__label">Lead CRM</h5>
 
       <!-- Caso A: lead existente -->
       <div *ngIf="hasLead" class="contact-panel__lead">
@@ -209,7 +232,7 @@
           Califica al contacto o guárdalo en CRM para enriquecer el perfil.
         </p>
       </div>
-    </details>
+    </section>
   </ng-container>
 </div>
 

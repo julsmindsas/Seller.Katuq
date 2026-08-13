@@ -1,198 +1,190 @@
-// Vista "Pedidos" del buzón — plano tintado según el design-system canónico:
-// acento #5F3FE0, tinta #211F3A, chips par fuerte/fondo suave, sin gradientes.
+// Vista "Pedidos" del buzón — mismo lenguaje del mockup "Marketing y WhatsApp".
+@import '../../../../../shared/styles/katuq-marketing';
+
+:host {
+  @include km-tokens;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
 
 .wa-pedidos {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  min-height: 0;
+  flex: 1;
+  font-family: var(--km-font);
 
   &__filtros {
     display: flex;
     gap: 6px;
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(33, 31, 58, 0.08);
+    padding: 14px 14px 10px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
   }
 
   &__filtro {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(33, 31, 58, 0.18);
-    background: #fff;
-    color: rgba(33, 31, 58, 0.65);
-    font-size: 0.74rem;
-    font-weight: 600;
-    cursor: pointer;
-
-    &.is-active {
-      border-color: #5f3fe0;
-      background: rgba(95, 63, 224, 0.1);
-      color: #5f3fe0;
-    }
+    @include km-pill;
+    padding: 7px 13px;
+    font-size: 12px;
   }
 
   &__filtro-count {
-    font-size: 0.68rem;
-    opacity: 0.75;
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    background: #b6b1cb;
+    padding: 1px 6px;
+    border-radius: 99px;
+
+    .wa-pedidos__filtro.is-active & {
+      background: var(--km-accent);
+    }
   }
 
   &__loading,
   &__empty {
-    padding: 28px 20px;
+    padding: 26px 18px;
     text-align: center;
-    color: rgba(33, 31, 58, 0.55);
-    font-size: 0.84rem;
+    color: var(--km-muted);
+    font-size: 13px;
+    font-weight: 600;
+
+    p { margin: 4px 0 0; }
 
     i {
-      font-size: 1.4rem;
-      color: rgba(95, 63, 224, 0.5);
-      margin-bottom: 8px;
+      font-size: 22px;
+      color: var(--km-muted2);
     }
 
-    p {
-      margin: 0 0 4px;
-    }
+    strong { color: var(--km-ink2); }
   }
 
   &__lista {
     flex: 1;
     overflow-y: auto;
-    padding: 10px 12px;
+    padding: 0 10px 12px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    min-height: 0;
   }
 
   &__card {
-    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     width: 100%;
-    padding: 12px 14px;
-    border-radius: 16px;
-    border: 1px solid rgba(33, 31, 58, 0.1);
-    background: #fff;
+    text-align: left;
+    padding: 13px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    background: transparent;
     cursor: pointer;
-    transition: border-color 0.12s ease, background 0.12s ease;
+    font-family: inherit;
 
     &:hover {
-      border-color: rgba(95, 63, 224, 0.35);
+      background: #fbfaff;
     }
 
     &.is-selected {
-      border-color: #5f3fe0;
-      background: rgba(95, 63, 224, 0.05);
+      background: var(--km-accent-wash2);
+      border-color: #e6ddff;
     }
   }
 
   &__card-top {
     display: flex;
-    justify-content: space-between;
     align-items: baseline;
+    justify-content: space-between;
     gap: 8px;
   }
 
   &__nombre {
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: #211f3a;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--km-ink);
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;
   }
 
   &__hace {
-    flex-shrink: 0;
-    font-size: 0.7rem;
-    color: rgba(33, 31, 58, 0.45);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--km-muted2);
+    flex: none;
   }
 
   &__card-mid {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 4px;
+    flex-wrap: wrap;
   }
 
-  // Estado en par fuerte/fondo-suave por semántica.
   &__estado {
-    padding: 1px 9px;
-    border-radius: 999px;
-    font-size: 0.66rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    @include km-chip(var(--km-green-ink), var(--km-green-wash));
 
-    &[data-estado="bot"] {
-      border: 1px solid rgba(95, 63, 224, 0.35);
-      background: rgba(95, 63, 224, 0.1);
-      color: #5f3fe0;
+    &[data-estado='humano'] {
+      color: var(--km-orange-ink);
+      background: var(--km-orange-wash2);
     }
 
-    &[data-estado="humano"] {
-      border: 1px solid rgba(217, 119, 6, 0.35);
-      background: rgba(217, 119, 6, 0.1);
-      color: #b45309;
-    }
-
-    &[data-estado="cerrada"] {
-      border: 1px solid rgba(34, 154, 84, 0.35);
-      background: rgba(34, 154, 84, 0.1);
-      color: #1d7a44;
+    &[data-estado='cerrada'] {
+      color: var(--km-accent-ink);
+      background: var(--km-accent-wash);
     }
   }
 
   &__telefono {
-    font-size: 0.72rem;
-    color: rgba(33, 31, 58, 0.5);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--km-muted);
   }
 
   &__carrito {
-    margin-top: 8px;
-    padding: 8px 10px;
-    border-radius: 11px;
-    border: 1px solid rgba(95, 63, 224, 0.18);
-    background: rgba(95, 63, 224, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 11px;
+    border-radius: var(--km-radius-sm);
+    background: #fbfaff;
   }
 
   &__carrito-resumen {
-    display: block;
-    font-size: 0.76rem;
-    font-weight: 700;
-    color: #211f3a;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--km-ink2);
 
     i {
-      color: #5f3fe0;
+      color: var(--km-green);
       margin-right: 4px;
     }
   }
 
   &__carrito-detalle {
-    display: block;
-    margin-top: 2px;
-    font-size: 0.72rem;
-    color: rgba(33, 31, 58, 0.6);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--km-muted);
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   &__cotizacion {
-    margin-top: 6px;
-    font-size: 0.74rem;
-    font-weight: 600;
-    color: #1d7a44;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--km-accent-ink);
 
-    i {
-      margin-right: 4px;
-    }
+    i { margin-right: 4px; }
   }
 
   &__motivo {
-    margin-top: 4px;
-    font-size: 0.72rem;
-    font-style: italic;
-    color: rgba(33, 31, 58, 0.55);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--km-muted);
   }
 }

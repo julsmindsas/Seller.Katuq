@@ -91,6 +91,31 @@ export class WhatsappContactPanelComponent implements OnChanges {
     return this.orders.slice(0, 10);
   }
 
+  // ─── Indicadores "Este cliente" (mockup Marketing y WhatsApp) ─────────
+
+  /** Suma de lo que el comercio le ha vendido (total de sus pedidos). */
+  get totalVendido(): number {
+    return this.orders.reduce((sum, o) => sum + (o.total || 0), 0);
+  }
+
+  /** Fecha de la compra más reciente, en lenguaje humano. */
+  get ultimaCompraLabel(): string {
+    if (this.orders.length === 0) return "—";
+    const mas = this.orders
+      .map((o) => new Date(o.fechaCreacion).getTime())
+      .filter((t) => !Number.isNaN(t))
+      .sort((a, b) => b - a)[0];
+    if (!mas) return "—";
+    const dias = Math.floor((Date.now() - mas) / (1000 * 60 * 60 * 24));
+    if (dias <= 0) return "Hoy";
+    if (dias === 1) return "Ayer";
+    if (dias < 30) return `hace ${dias}d`;
+    return new Date(mas).toLocaleDateString("es-CO", {
+      day: "numeric",
+      month: "short",
+    });
+  }
+
   /**
    * QueryParams para "Ver todos los pedidos": rango amplio (1 año atrás → hoy)
    * y filtra por nombre del cliente si está registrado. Si no hay nombre,

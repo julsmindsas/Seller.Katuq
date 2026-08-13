@@ -91,6 +91,69 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarAudiencia();
+    // El footer pegajoso del mockup muestra el saldo desde el paso 1.
+    this.cargarBalance();
+  }
+
+  // =====================================================================
+  // Tarjetas de grupo del paso 1 (mockup): elegir una tarjeta carga la
+  // fuente y selecciona todo el grupo — luego se puede excluir gente de la
+  // lista. Sin tarjeta elegida no se puede continuar.
+  // =====================================================================
+  grupoElegido: '' | 'clientes' | 'crm' = '';
+  /** Al terminar de cargar la audiencia, ¿seleccionar todo el grupo? */
+  private autoSeleccionar = false;
+
+  elegirGrupo(g: 'clientes' | 'crm'): void {
+    this.grupoElegido = g;
+    this.autoSeleccionar = true;
+    if (this.fuente !== g) {
+      this.fuente = g;
+      this.onFuenteChange();
+    } else {
+      this.toggleTodos(true);
+      this.autoSeleccionar = false;
+    }
+  }
+
+  /** Texto del aviso cuando el paso actual está bloqueado ('' = se puede seguir). */
+  get bloqueoTexto(): string {
+    if (this.paso === 1) {
+      if (!this.grupoElegido) return 'Elige un grupo de clientes';
+      if (this.seleccionados.length === 0) return 'No hay nadie seleccionado';
+      if (this.excedeTope) return `Máximo ${MAX_DESTINATARIOS} por campaña`;
+      return '';
+    }
+    if (this.paso === 2) {
+      if (!this.plantillaLista) return 'Elige y completa el mensaje';
+      return '';
+    }
+    if (this.saldoInsuficiente) {
+      const falta = this.costoEstimado - (this.balance?.balanceCOP || 0);
+      return `Te faltan $${Math.max(0, Math.round(falta)).toLocaleString('es-CO')} de saldo`;
+    }
+    if (this.programacionInvalida) return 'Elige una fecha futura';
+    return '';
+  }
+
+  /** Etiqueta del botón principal del footer según el paso. */
+  get siguienteLabel(): string {
+    if (this.paso === 1) return 'Continuar al mensaje';
+    if (this.paso === 2) return 'Revisar y enviar';
+    return `${this.cuandoEnviar === 'programar' ? 'Programar para' : 'Enviar a'} ${this.seleccionados.length.toLocaleString('es-CO')} persona${this.seleccionados.length === 1 ? '' : 's'}`;
+  }
+
+  /** Acción del botón principal del footer. */
+  avanzar(): void {
+    if (this.bloqueoTexto) return;
+    if (this.paso === 1) this.irAPlantilla();
+    else if (this.paso === 2) this.irAConfirmacion();
+    else this.enviarCampana();
+  }
+
+  /** Saldo que quedaría después de enviar (para la tarjeta de costos). */
+  get saldoDespues(): number {
+    return Math.max(0, (this.balance?.balanceCOP || 0) - this.costoEstimado);
   }
 
   // =====================================================================
@@ -124,6 +187,10 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
         }));
         this.leadsSinTelefono = mapped.filter((d) => !d.phone).length;
         this.destinatarios = mapped.filter((d) => !!d.phone);
+        if (this.autoSeleccionar) {
+          this.toggleTodos(true);
+          this.autoSeleccionar = false;
+        }
         this.loadingAudiencia = false;
       },
       error: () => {
@@ -158,6 +225,10 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
             selected: false,
           }))
           .filter((d) => !!d.phone);
+        if (this.autoSeleccionar) {
+          this.toggleTodos(true);
+          this.autoSeleccionar = false;
+        }
         this.loadingAudiencia = false;
       },
       error: () => {

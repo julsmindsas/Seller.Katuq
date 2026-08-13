@@ -1,159 +1,437 @@
-// Dashboard de Marketing (spec 022) — estilo plano con border-left de acento
-// (regla de diseño del repo: sin gradientes en cards/stats).
+// Dashboard de Marketing — look del mockup "Marketing y WhatsApp" (2026-08).
+@import '../../../../shared/styles/katuq-marketing';
 
-.marketing-dashboard {
-  padding-top: 1rem;
-  padding-bottom: 2rem;
-}
-
-// ---- Tarjetas KPI -----------------------------------------------------
-.stat-card {
-  background: #fff;
-  border: 1px solid #e9ecef;
-  border-left: 4px solid #adb5bd;
-  border-radius: 6px;
-  padding: 0.9rem 1rem;
-  min-height: 92px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-
-  &.accent-primary { border-left-color: #4c6fff; }
-  &.accent-info    { border-left-color: #17a2b8; }
-  &.accent-success { border-left-color: #28a745; }
-  &.accent-warning { border-left-color: #ffb200; }
-
-  .stat-label {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #6c757d;
-  }
-
-  .stat-value {
-    font-size: 1.35rem;
-    font-weight: 700;
-    line-height: 1.2;
-    color: #212529;
-  }
-
-  .stat-sub {
-    font-size: 0.75rem;
-    color: #6c757d;
-  }
-}
-
-// ---- Paneles ----------------------------------------------------------
-.panel-card {
-  background: #fff;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  padding: 1rem;
-  height: 100%;
-
-  .panel-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #495057;
-    margin-bottom: 0.75rem;
-  }
-
-  .panel-loading,
-  .panel-empty {
-    color: #adb5bd;
-    font-size: 0.85rem;
-    padding: 1.5rem 0;
-    text-align: center;
-  }
-}
-
-.ventas-chart {
+:host {
+  @include km-tokens;
   display: block;
-  height: 280px;
-  width: 100%;
 }
 
-.canales-table {
-  font-size: 0.82rem;
+.mkt {
+  padding: 18px 22px 28px;
+  background: var(--km-canvas);
+  min-height: calc(100vh - 80px);
+  font-family: var(--km-font);
 
-  th {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    color: #6c757d;
+  // ---------------------------------------------------------------- header
+  &__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--km-ink);
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: var(--km-muted);
+    margin: 3px 0 0;
+    font-weight: 500;
+  }
+
+  &__range {
+    display: flex;
+    gap: 2px;
+    background: var(--km-surface);
+    border-radius: 12px;
+    padding: 3px;
+    box-shadow: var(--km-shadow);
+  }
+
+  &__range-pill {
+    border: none;
+    background: transparent;
+    color: var(--km-muted);
+    font-weight: 700;
+    font-size: 12.5px;
+    padding: 9px 15px;
+    border-radius: 9px;
+    cursor: pointer;
+    font-family: inherit;
+
+    &.is-active {
+      background: var(--km-accent-wash);
+      color: var(--km-accent);
+      font-weight: 800;
+    }
+  }
+
+  &__custom-range {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    @include km-card;
+    padding: 12px 16px;
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--km-ink2);
+      margin: 0;
+    }
+
+    input {
+      border: 1.5px solid var(--km-line2);
+      border-radius: 9px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--km-ink);
+    }
+  }
+
+  &__apply {
+    @include km-btn-primary;
+    padding: 9px 18px;
+    font-size: 13px;
+  }
+
+  // ------------------------------------------------------------------ KPIs
+  &__kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__kpi {
+    @include km-card;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: relative;
+  }
+
+  &__kpi-icon {
+    @include km-icon-tile(28px);
+    position: absolute;
+    top: 16px;
+    right: 16px;
+
+    &.is-accent { background: #eef2ff; color: var(--km-accent); }
+    &.is-green { background: var(--km-green-wash); color: var(--km-green); }
+    &.is-orange { background: var(--km-orange-wash); color: var(--km-orange); }
+  }
+
+  &__kpi-label {
+    @include km-label;
+  }
+
+  &__kpi-value {
+    font-size: 25px;
+    font-weight: 800;
+    color: var(--km-ink);
+    line-height: 1.15;
+  }
+
+  &__kpi-hint {
+    font-size: 12px;
+    color: var(--km-muted);
     font-weight: 600;
   }
-}
 
-// ---- Embudo CRM -------------------------------------------------------
-.funnel {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+  &__kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    align-self: flex-start;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 99px;
 
-.funnel-row {
-  display: grid;
-  grid-template-columns: 140px 1fr 48px;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.82rem;
+    em {
+      font-style: normal;
+      font-weight: 600;
+      opacity: 0.75;
+    }
 
-  .funnel-label {
+    &.is-up { color: var(--km-green); background: var(--km-green-wash); }
+    &.is-down { color: var(--km-red); background: var(--km-red-wash); }
+  }
+
+  // ------------------------------------------------- tarjeta acción WhatsApp
+  &__wa-card {
+    @include km-card;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    margin-bottom: 14px;
+    border-left: 4px solid var(--km-green);
+    flex-wrap: wrap;
+  }
+
+  &__wa-icon {
+    @include km-icon-tile(42px);
+    background: var(--km-green-wash);
+    color: var(--km-green);
+    border-radius: 13px;
+
+    i { font-size: 22px; }
+  }
+
+  &__wa-text {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    strong {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--km-ink);
+    }
+
+    span {
+      font-size: 12.5px;
+      color: var(--km-muted);
+      font-weight: 600;
+    }
+  }
+
+  &__wa-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__wa-btn {
+    @include km-btn-whatsapp;
+    text-decoration: none;
+
+    &:hover { color: #fff; }
+
+    &.is-ghost {
+      background: var(--km-surface);
+      color: var(--km-green-ink);
+      border: 1.5px solid #cdeeda;
+
+      &:hover { color: var(--km-green-ink); background: var(--km-green-wash); }
+    }
+  }
+
+  // ------------------------------------------------------------------ grid
+  &__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 14px;
+
+    @media (max-width: 1100px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__card {
+    @include km-card;
+    padding: 18px 20px;
+    min-width: 0;
+  }
+
+  &__card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &__card-title {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: var(--km-ink);
+    margin: 0 0 14px;
+  }
+
+  &__card-link {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--km-accent);
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover { color: var(--km-accent-ink); }
+  }
+
+  &__chart {
+    height: 260px;
+    width: 100%;
+  }
+
+  &__state {
+    color: var(--km-muted);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 20px 0;
+  }
+
+  // --------------------------------------------------------------- canales
+  &__canales {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  &__canal-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  &__canal-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--km-ink2);
+  }
+
+  &__canal-value {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--km-ink);
+  }
+
+  &__canal-track {
+    height: 8px;
+    background: #f0eef7;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  &__canal-bar {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--km-accent);
+
+    &.is-alt { background: var(--km-orange); }
+  }
+
+  &__canal-meta {
+    display: block;
+    font-size: 11.5px;
+    color: var(--km-muted);
+    font-weight: 600;
+    margin-top: 5px;
+  }
+
+  // ---------------------------------------------------------------- embudo
+  &__funnel {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  &__funnel-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    &.is-empty {
+      .mkt__funnel-label { color: var(--km-muted2); }
+      .mkt__funnel-count { color: #c9c5d8; }
+    }
+  }
+
+  &__funnel-label {
+    width: 140px;
+    flex: none;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--km-ink2);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #495057;
+
+    &.is-won { font-weight: 800; }
   }
 
-  .funnel-bar-track {
-    background: #f1f3f5;
-    border-radius: 4px;
-    height: 18px;
+  &__funnel-track {
+    flex: 1;
+    height: 16px;
+    background: #f7f6fc;
+    border-radius: 8px;
     overflow: hidden;
   }
 
-  .funnel-bar {
+  &__funnel-bar {
     height: 100%;
-    min-width: 2px;
-    background: #4c6fff;
-    border-radius: 4px;
+    border-radius: 8px;
+    background: #c9baff;
+    min-width: 0;
 
-    &.is-won { background: #28a745; }
+    &.is-won { background: var(--km-green) !important; }
   }
 
-  .funnel-count {
+  &__funnel-count {
+    width: 34px;
+    flex: none;
     text-align: right;
-    font-weight: 600;
-    color: #212529;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--km-ink);
   }
-}
 
-// ---- Resumen CRM ------------------------------------------------------
-.crm-summary {
-  li {
+  // --------------------------------------------------------------- cartera
+  &__cartera {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__cartera-row {
+    display: flex;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #f1f3f5;
-    font-size: 0.85rem;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 13px;
+    border-radius: var(--km-radius-sm);
+    background: #fbfaff;
 
-    &:last-child { border-bottom: none; }
-
-    span { color: #6c757d; }
-  }
-}
-
-// ---- Responsive -------------------------------------------------------
-@media (max-width: 576px) {
-  .funnel-row {
-    grid-template-columns: 96px 1fr 40px;
+    &.is-big { background: var(--km-accent-wash2); }
   }
 
-  .stat-card .stat-value {
-    font-size: 1.1rem;
+  &__cartera-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  &__cartera-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--km-ink2);
+  }
+
+  &__cartera-hint {
+    font-size: 11px;
+    color: var(--km-muted);
+    font-weight: 600;
+  }
+
+  &__cartera-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--km-ink);
+    white-space: nowrap;
+
+    &.is-accent { color: var(--km-accent-ink); font-size: 17px; }
+    &.is-danger { color: var(--km-red); }
   }
 }

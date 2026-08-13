@@ -1,10 +1,13 @@
-// Shell Master-Detail. Estilo Katuq: plano, sin gradientes.
+// Shell Master-Detail — look del mockup "Marketing y WhatsApp":
+// lienzo lila, columnas como tarjetas blancas de radio 18px con sombra suave.
+@import '../../../../../shared/styles/katuq-marketing';
 
-// Wrapper del componente: separa el shell de los bordes del .page-body y del sidebar.
 :host {
+  @include km-tokens;
   display: block;
   padding: 4px 8px 12px 8px;
   box-sizing: border-box;
+  background: var(--km-canvas);
 }
 
 .wa-shell {
@@ -14,47 +17,40 @@
   // (footer está oculto mientras el shell está activo — patch en TS).
   height: calc(100vh - 110px);
   min-height: 480px;
-  background: #ffffff;
-  border: 1px solid #e3e6ea;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  font-family: var(--km-font);
 
   &__header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    background: #ffffff;
-    border-bottom: 1px solid #e3e6ea;
+    gap: 14px;
+    padding: 10px 6px 14px;
     flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  &__heading {
+    min-width: 0;
   }
 
   &__title {
     margin: 0;
-    font-size: 17px;
-    font-weight: 600;
-    color: #0f172a;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--km-ink);
     letter-spacing: -0.01em;
   }
 
-  &__demo-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 9px;
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
-    border-radius: 12px;
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+  &__subtitle {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--km-muted);
   }
 
   &__body {
     flex: 1;
     display: flex;
+    gap: 14px;
     min-height: 0;
   }
 
@@ -62,8 +58,7 @@
     flex: 0 0 340px;
     max-width: 340px;
     min-width: 300px;
-    background: #ffffff;
-    border-right: 1px solid #e3e6ea;
+    @include km-card;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -77,10 +72,11 @@
 
   &__detail {
     flex: 1 1 auto;
-    background: #ffffff;
+    @include km-card;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
 
   // Responsive: en pantallas chicas, sólo se ve uno.
@@ -109,34 +105,51 @@
   }
 }
 
-// Pestañas Conversaciones | Pedidos (design-system: acento #5F3FE0, plano).
+// Pestañas Conversaciones | Pedidos — pills sobre tarjeta blanca (mockup).
 .wa-shell__tabs {
   display: flex;
-  gap: 6px;
+  gap: 2px;
   margin-left: auto;
+  background: var(--km-surface);
+  border-radius: 12px;
+  padding: 3px;
+  box-shadow: var(--km-shadow);
 }
 
 .wa-shell__tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(33, 31, 58, 0.18);
-  background: #fff;
-  color: rgba(33, 31, 58, 0.65);
-  font-size: 0.8rem;
-  font-weight: 600;
+  gap: 7px;
+  padding: 8px 15px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--km-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease;
 
   &.is-active {
-    border-color: #5f3fe0;
-    background: rgba(95, 63, 224, 0.1);
-    color: #5f3fe0;
+    background: var(--km-accent-wash);
+    color: var(--km-accent);
+    font-weight: 800;
   }
 
   i {
-    font-size: 0.85rem;
+    font-size: 13px;
+  }
+}
+
+// Botón "Nueva campaña" del encabezado (mockup).
+.wa-shell__campaign {
+  @include km-btn-primary;
+  padding: 10px 18px;
+  font-size: 13px;
+  text-decoration: none;
+
+  &:hover {
+    color: #fff;
   }
 }

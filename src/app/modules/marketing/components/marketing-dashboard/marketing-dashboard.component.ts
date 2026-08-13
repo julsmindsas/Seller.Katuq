@@ -39,12 +39,16 @@ export class MarketingDashboardComponent implements OnInit {
   // Rango de fechas (default: últimos 30 días)
   fechaInicio = '';
   fechaFin = '';
+  /** Pill de rango activa (mockup Marketing y WhatsApp): 7d/30d/90d o rango manual. */
+  rango: '7d' | '30d' | '90d' | 'custom' = '30d';
 
   // --- Tarjetas: ventas/pedidos (dashboard-core) ---
   loadingCore = false;
   errorCore = false;
   kpis: KPIsCriticos | null = null;
   canales: TicketPromedioCanal[] = [];
+  /** % de la barra de cada canal, relativo al canal top (paralelo a `canales`). */
+  canalesPct: number[] = [];
   ventasChartOptions: EChartsOption | null = null;
 
   // --- Tarjeta: embudo CRM ---
@@ -66,11 +70,19 @@ export class MarketingDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.setRango('30d');
+  }
+
+  /** Cambia el período con las pills del mockup; 'custom' muestra los inputs de fecha. */
+  setRango(r: '7d' | '30d' | '90d' | 'custom'): void {
+    this.rango = r;
+    if (r === 'custom') return; // el usuario elige fechas y presiona Aplicar
+    const dias = r === '7d' ? 7 : r === '30d' ? 30 : 90;
     const hoy = new Date();
-    const hace30 = new Date();
-    hace30.setDate(hoy.getDate() - 30);
+    const desde = new Date();
+    desde.setDate(hoy.getDate() - dias);
     this.fechaFin = this.toIsoDay(hoy);
-    this.fechaInicio = this.toIsoDay(hace30);
+    this.fechaInicio = this.toIsoDay(desde);
     this.cargarTodo();
   }
 
@@ -92,6 +104,11 @@ export class MarketingDashboardComponent implements OnInit {
       next: (core: DashboardCoreResponse) => {
         this.kpis = core?.kpis || null;
         this.canales = (core?.ticketPromedioPorCanal || []).slice(0, 6);
+        // Ancho de barra por canal, relativo al canal que más vende (mockup).
+        const maxCanal = Math.max(1, ...this.canales.map((c) => c.ventas || 0));
+        this.canalesPct = this.canales.map((c) =>
+          Math.max(2, Math.round(((c.ventas || 0) / maxCanal) * 100)),
+        );
         this.ventasChartOptions = this.buildVentasChart(core);
         this.loadingCore = false;
       },
@@ -105,28 +122,41 @@ export class MarketingDashboardComponent implements OnInit {
   private buildVentasChart(core: DashboardCoreResponse): EChartsOption | null {
     const serie = core?.ventasPorPeriodo || [];
     if (serie.length === 0) return null;
+    // Barras violeta del mockup: los días pico en acento pleno, el resto en lila.
+    const max = Math.max(1, ...serie.map((d) => d.ventas));
     return {
-      tooltip: { trigger: 'axis' },
-      grid: { left: 70, right: 16, top: 24, bottom: 28 },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        valueFormatter: (v: any) =>
+          `$${Math.round(Number(v) || 0).toLocaleString('es-CO')}`,
+      },
+      grid: { left: 44, right: 8, top: 16, bottom: 26 },
       xAxis: {
         type: 'category',
-        data: serie.map((d) => d.fecha),
-        axisLabel: { fontSize: 10 },
+        data: serie.map((d) => d.fecha.slice(5)),
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { fontSize: 10, color: '#a7a3bd', interval: 'auto' },
       },
       yAxis: {
         type: 'value',
+        splitLine: { lineStyle: { color: '#f0eef7' } },
         axisLabel: {
           fontSize: 10,
+          color: '#a7a3bd',
           formatter: (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${Math.round(v / 1e3)}k`),
         },
       },
       series: [
         {
           name: 'Ventas',
-          type: 'line',
-          smooth: true,
-          showSymbol: false,
-          areaStyle: { opacity: 0.12 },
+          type: 'bar',
+          barMaxWidth: 18,
+          itemStyle: {
+            borderRadius: [4, 4, 2, 2],
+            color: (p: any) => (p.value >= max * 0.85 ? '#6a4dfb' : '#c0aeff'),
+          },
           data: serie.map((d) => d.ventas),
         },
       ],

@@ -93,3 +93,22 @@
 - [ ] 11.2 Seguimiento diario la primera semana: gasto del bot aparte, cuántas conversaciones traspasó y por qué, cuántas cotizaciones creó y cuántas se volvieron pedido.
 - [ ] 11.3 Ajustar tope, tono y mensaje de bienvenida con lo que salga del piloto.
 - [ ] 11.4 Actualizar `/specs/CONTRACT.md` con la bitácora de la sesión y archivar el cambio con `/opsx:archive`.
+
+## 12. Traspaso con timbre — ANOTADO, aprobación pendiente (2026-08-13)
+
+> Daniel: "debe haber algo que indique que un mensaje debe ser atendido por un
+> asesor y se pueda asignar y notifique, algo parecido a Chatwoot, o cosas más
+> innovadoras". Ya existe: tomar/asignarse, cola en la pestaña Pedidos (filtro
+> Asesor) con motivo y carrito. Falta el timbre. Plan por capas:
+
+- [ ] 12.1 Notificar el traspaso por el FCM que ya existe (`services/fcmService.js`
+      → push + campanita `notifications`): al traspasar, avisar a los usuarios
+      del comercio. **Decisión pendiente de Daniel:** ¿todos los del comercio o
+      solo los que tienen permiso de responder el buzón?
+- [ ] 12.2 Resumen de la IA al traspasar: el agente entrega 2 líneas de contexto
+      ("quiere 2 camisetas talla M, preguntó por envío, dudó al pagar") en vez
+      del motivo seco. Va en la sesión, la tarjeta de Pedidos y la notificación.
+- [ ] 12.3 Repartir además de tomar: asignación dirigida por un admin y, luego,
+      auto-asignación rotativa entre asesores (el de menos hilos recibe).
+- [ ] 12.4 Aviso por WhatsApp al asesor (canal propio, $80/aviso, opción por
+      comercio): "tenés un cliente esperando, resumen: ...".

@@ -14,14 +14,6 @@
     </div>
 
     <div class="thread-detail__header-info">
-      <a
-        class="thread-detail__client-link"
-        [routerLink]="['/ventas/clienteslista']"
-        [queryParams]="clientLinkParams"
-        title="Abrir ficha del cliente en el módulo de ventas"
-      >
-        Ver datos del cliente →
-      </a>
       <h3 class="thread-detail__name">
         {{ headerName }}
       </h3>
@@ -30,25 +22,62 @@
       </p>
     </div>
 
+    <!-- Quién atiende: pill del bot + acción (mockup) -->
+    <div class="thread-detail__bot-pill" *ngIf="botState?.atendiendoBot">
+      <span class="thread-detail__bot-dot" aria-hidden="true"></span>
+      Atendido por el bot
+    </div>
+    <button
+      *ngIf="botState?.atendiendoBot"
+      type="button"
+      class="thread-detail__bot-take"
+      (click)="tomarConversacion()"
+      [disabled]="botActionBusy"
+    >
+      Tomar la conversación
+    </button>
+
     <div class="thread-detail__header-actions">
       <button
         type="button"
-        class="btn"
+        class="thread-detail__action-btn"
         (click)="markAsRead()"
         [disabled]="!phoneHash"
+        title="Marcar los mensajes como leídos"
       >
-        Marcar leído
+        <i class="fa fa-check" aria-hidden="true"></i>
       </button>
       <button
         type="button"
-        class="btn"
+        class="thread-detail__action-btn thread-detail__action-btn--label"
         [class.is-active]="contactPanelOpen"
         (click)="toggleContactPanel()"
       >
-        {{ contactPanelOpen ? "Cerrar panel" : "Ver contacto" }}
+        <i class="fa fa-user-o" aria-hidden="true"></i>
+        {{ contactPanelOpen ? "Ocultar ficha" : "Ver ficha" }}
       </button>
     </div>
   </header>
+
+  <!-- Franja secundaria del bot: traspaso / devolver (solo si aplica) -->
+  <div
+    class="thread-detail__bot-strip"
+    *ngIf="botState && botState.botHabilitado && !botState.atendiendoBot && (botState.tomadaPor || botState.motivoTraspaso)"
+  >
+    <span class="thread-detail__bot-strip-text">
+      {{ botState.tomadaPor ? "Conversación a cargo de " + botState.tomadaPor : "El bot no está atendiendo este hilo." }}
+      <em *ngIf="botState.motivoTraspaso">{{ botState.motivoTraspaso }}</em>
+    </span>
+    <button
+      *ngIf="botState.tomadaPor"
+      type="button"
+      class="thread-detail__bot-strip-btn"
+      (click)="devolverAlBot()"
+      [disabled]="botActionBusy"
+    >
+      Devolver al bot
+    </button>
+  </div>
 
   <div class="thread-detail__body">
     <div class="thread-detail__chat">
@@ -102,7 +131,7 @@
                   class="thread-detail__bot-badge"
                   title="Mensaje escrito por el bot de pedidos"
                 >
-                  Bot
+                  Asistente
                 </span>
                 <span class="thread-detail__time">
                   {{ formatTime(item.msg.sentAt) }}
@@ -121,88 +150,60 @@
         </ng-container>
       </div>
 
-      <!-- Franja del bot de pedidos: quién lleva la conversación -->
+      <!-- Carrito en curso del bot (mockup: tarjeta EN SU CARRITO) -->
       <div
-        class="thread-detail__bot-banner"
-        *ngIf="botState && botState.botHabilitado"
-        [class.is-bot]="botState.atendiendoBot"
+        class="thread-detail__cart"
+        *ngIf="botState && botState.atendiendoBot && botState.carrito.length > 0"
       >
-        <div class="thread-detail__bot-banner-text">
-          <ng-container *ngIf="botState.atendiendoBot">
-            <strong>El bot está atendiendo esta conversación.</strong>
-            <small *ngIf="botState.carrito.length > 0">
-              Carrito en curso: {{ botState.carrito.length }}
-              producto(s) por
-              {{ botState.totalCarrito | currency: "COP" : "symbol-narrow" : "1.0-0" }}.
-            </small>
-            <small *ngIf="botState.modoSombra">
-              Modo sombra: redacta pero no envía.
-            </small>
-          </ng-container>
-          <ng-container *ngIf="!botState.atendiendoBot">
-            <strong>
-              {{ botState.tomadaPor ? "Conversación a cargo de " + botState.tomadaPor : "El bot no está atendiendo este hilo." }}
-            </strong>
-            <small *ngIf="botState.motivoTraspaso">{{ botState.motivoTraspaso }}</small>
-            <small *ngIf="botState.cotizacionCreada?.numero">
-              Cotización {{ botState.cotizacionCreada?.numero }} creada por el bot.
-            </small>
-          </ng-container>
+        <span class="thread-detail__cart-label">
+          <i class="fa fa-shopping-basket" aria-hidden="true"></i> En su carrito
+        </span>
+        <div class="thread-detail__cart-item" *ngFor="let linea of botState.carrito">
+          <span class="thread-detail__cart-qty">{{ linea.cantidad }}×</span>
+          <span class="thread-detail__cart-name">{{ linea.nombre }}</span>
+          <span class="thread-detail__cart-price">
+            {{ linea.precioUnitario * linea.cantidad | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </span>
         </div>
-        <button
-          *ngIf="botState.atendiendoBot"
-          type="button"
-          class="thread-detail__bot-action"
-          (click)="tomarConversacion()"
-          [disabled]="botActionBusy"
-        >
-          Tomar conversación
-        </button>
-        <button
-          *ngIf="!botState.atendiendoBot && botState.tomadaPor"
-          type="button"
-          class="thread-detail__bot-action thread-detail__bot-action--ghost"
-          (click)="devolverAlBot()"
-          [disabled]="botActionBusy"
-        >
-          Devolver al bot
-        </button>
+        <div class="thread-detail__cart-total">
+          <span>Total</span>
+          <strong>{{ botState.totalCarrito | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
+        </div>
+        <small class="thread-detail__cart-note" *ngIf="botState.modoSombra">
+          Modo sombra: el bot redacta pero no envía.
+        </small>
       </div>
 
-      <!-- Composer: chip plantillas + textarea + botón enviar -->
+      <!-- Pedido cerrado por el bot (mockup: tarjeta de pedido registrado) -->
+      <div
+        class="thread-detail__order"
+        *ngIf="botState?.cotizacionCreada?.numero"
+      >
+        <span class="thread-detail__order-icon"><i class="fa fa-check" aria-hidden="true"></i></span>
+        <div class="thread-detail__order-info">
+          <strong>Pedido {{ botState?.cotizacionCreada?.numero }} registrado</strong>
+          <span>El asistente lo dejó como cotización para que lo confirmes</span>
+        </div>
+        <a
+          class="thread-detail__order-link"
+          [routerLink]="botState?.cotizacionCreada?.id ? ['/cotizaciones/editor', botState?.cotizacionCreada?.id] : ['/cotizaciones']"
+        >
+          Ver pedido →
+        </a>
+      </div>
+
+      <!-- Composer: chips de respuesta rápida + textarea + botón enviar -->
       <div class="thread-detail__composer-wrap" *ngIf="canShowComposer">
-        <div class="thread-detail__templates">
+        <div class="thread-detail__quick-replies">
           <button
             type="button"
-            class="thread-detail__templates-chip"
-            (click)="toggleTemplates()"
-            [class.is-open]="templatesOpen"
-            aria-haspopup="true"
-            [attr.aria-expanded]="templatesOpen"
+            class="thread-detail__quick-chip"
+            *ngFor="let tpl of quickTemplates"
+            (click)="applyTemplate(tpl)"
+            [title]="tpl.sandboxBody"
           >
-            Plantillas rápidas
-            <span class="thread-detail__templates-caret" aria-hidden="true">
-              {{ templatesOpen ? "▴" : "▾" }}
-            </span>
+            {{ tpl.label }}
           </button>
-
-          <ul
-            class="thread-detail__templates-menu"
-            *ngIf="templatesOpen"
-            role="menu"
-          >
-            <li
-              *ngFor="let tpl of quickTemplates"
-              class="thread-detail__templates-item"
-              role="menuitem"
-              (click)="applyTemplate(tpl)"
-            >
-              <span class="thread-detail__templates-label">{{ tpl.label }}</span>
-              <span class="thread-detail__templates-preview">
-                {{ tpl.sandboxBody }}
-              </span>
-            </li>
-          </ul>
         </div>
 
         <form class="thread-detail__composer" (submit)="onSend($event)">
@@ -220,6 +221,7 @@
             class="thread-detail__composer-send"
             [disabled]="!composerText.trim() || sending"
           >
+            <i class="fa fa-paper-plane" aria-hidden="true"></i>
             {{ sending ? "Enviando..." : "Enviar" }}
           </button>
         </form>
@@ -239,6 +241,7 @@
 
 <ng-template #emptyState>
   <div class="thread-detail__placeholder">
+    <span class="thread-detail__placeholder-icon"><i class="fa fa-comments-o" aria-hidden="true"></i></span>
     <p>Selecciona una conversación de la lista</p>
   </div>
 </ng-template>

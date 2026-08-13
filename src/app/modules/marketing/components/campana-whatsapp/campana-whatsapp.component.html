@@ -1,210 +1,321 @@
-<div class="container-fluid campana-whatsapp">
-  <!-- Encabezado + pasos -->
-  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+<div class="camp">
+  <!-- Encabezado -->
+  <header class="camp__header">
     <div>
-      <h4 class="mb-0">Campaña de WhatsApp</h4>
-      <small class="text-muted">Audiencia desde el CRM · plantillas aprobadas de tu WhatsApp Business · descuenta de tu saldo prepago</small>
+      <h1 class="camp__title">Enviar una campaña</h1>
+      <p class="camp__subtitle">Un mensaje de WhatsApp a un grupo de tus clientes — se descuenta de tu saldo prepago</p>
     </div>
-    <a routerLink="/marketing" class="btn btn-outline-secondary btn-sm" *ngIf="!enviando">← Volver al dashboard</a>
-  </div>
+    <a routerLink="/marketing" class="camp__back-link" *ngIf="!enviando">← Volver al dashboard</a>
+  </header>
 
-  <div class="steps mb-3">
-    <span class="step" [class.active]="paso === 1" [class.done]="paso > 1">1. Audiencia</span>
-    <span class="step" [class.active]="paso === 2" [class.done]="paso > 2">2. Mensaje</span>
-    <span class="step" [class.active]="paso === 3">3. Confirmar y enviar</span>
-  </div>
+  <!-- Pasos -->
+  <nav class="camp__steps" aria-label="Pasos de la campaña">
+    <button
+      type="button"
+      class="camp__step"
+      *ngFor="let st of [
+        { n: 1, label: 'A quién' },
+        { n: 2, label: 'Qué dice' },
+        { n: 3, label: 'Revisar y enviar' }
+      ]; let last = last"
+      [class.is-active]="paso === st.n"
+      [class.is-done]="paso > st.n"
+      [disabled]="st.n >= paso || enviando"
+      (click)="st.n < paso && volverAlPaso($any(st.n))"
+    >
+      <span class="camp__step-badge">
+        <i *ngIf="paso > st.n" class="fa fa-check" aria-hidden="true"></i>
+        <ng-container *ngIf="paso <= st.n">{{ st.n }}</ng-container>
+      </span>
+      {{ st.label }}
+      <i *ngIf="!last" class="fa fa-angle-right camp__step-arrow" aria-hidden="true"></i>
+    </button>
+  </nav>
 
-  <!-- ============ PASO 1: AUDIENCIA ============ -->
-  <div *ngIf="paso === 1" class="panel-card">
-    <div class="row align-items-end mb-2 g-2">
-      <div class="col-md-3">
-        <label class="form-label small mb-1">¿A quién le escribes?</label>
-        <select class="form-select form-select-sm" [(ngModel)]="fuente" (change)="onFuenteChange()">
-          <option value="clientes">Mis clientes</option>
-          <option value="crm">Leads del CRM</option>
-        </select>
-      </div>
-      <div class="col-md-3" *ngIf="fuente === 'crm'">
-        <label class="form-label small mb-1">Etapa del CRM</label>
-        <select class="form-select form-select-sm" [(ngModel)]="etapaSeleccionada" (change)="onEtapaChange()">
-          <option value="">Todas las etapas</option>
-          <option *ngFor="let s of stages" [value]="s.key">{{ s.label }}</option>
-        </select>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label small mb-1">Buscar</label>
-        <input type="text" class="form-control form-control-sm" placeholder="Nombre o teléfono…" [(ngModel)]="filtroNombre" />
-      </div>
-      <div class="col text-md-end mt-2 mt-md-0">
-        <span class="badge bg-light text-dark me-2">{{ destinatarios.length }} con teléfono</span>
-        <span class="badge bg-light text-muted me-2" *ngIf="leadsSinTelefono > 0">{{ leadsSinTelefono }} sin teléfono (excluidos)</span>
-        <span class="badge" [class.bg-primary]="!excedeTope" [class.bg-danger]="excedeTope">{{ seleccionados.length }} seleccionados</span>
-      </div>
+  <!-- ============ PASO 1: A QUIÉN ============ -->
+  <section *ngIf="paso === 1" class="camp__body">
+    <div class="camp__segments">
+      <button
+        type="button"
+        class="camp__segment"
+        [class.is-selected]="grupoElegido === 'clientes'"
+        (click)="elegirGrupo('clientes')"
+      >
+        <span class="camp__segment-icon is-accent"><i class="fa fa-users" aria-hidden="true"></i></span>
+        <span class="camp__segment-name">Todos mis clientes</span>
+        <span class="camp__segment-desc">Todo el que te ha comprado o registraste, con teléfono válido.</span>
+        <span class="camp__segment-count" *ngIf="grupoElegido === 'clientes' && !loadingAudiencia">
+          {{ destinatarios.length | number: '1.0-0' }} <em>personas</em>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        class="camp__segment"
+        [class.is-selected]="grupoElegido === 'crm'"
+        (click)="elegirGrupo('crm')"
+      >
+        <span class="camp__segment-icon is-green"><i class="fa fa-filter" aria-hidden="true"></i></span>
+        <span class="camp__segment-name">Leads del CRM</span>
+        <span class="camp__segment-desc">Tus oportunidades comerciales — puedes filtrar por etapa del embudo.</span>
+        <span class="camp__segment-count" *ngIf="grupoElegido === 'crm' && !loadingAudiencia">
+          {{ destinatarios.length | number: '1.0-0' }} <em>personas</em>
+        </span>
+      </button>
     </div>
 
-    <div *ngIf="loadingAudiencia" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando {{ fuente === 'clientes' ? 'clientes' : 'leads del CRM' }}…</div>
-    <div *ngIf="!loadingAudiencia && errorAudiencia" class="panel-empty">No se pudo cargar la audiencia</div>
-    <div *ngIf="!loadingAudiencia && !errorAudiencia && destinatarios.length === 0" class="panel-empty">
-      <ng-container *ngIf="fuente === 'clientes'">No tienes clientes con teléfono registrado todavía. <a routerLink="/maestros/clientes">Ir a Clientes</a></ng-container>
-      <ng-container *ngIf="fuente === 'crm'">No hay leads con teléfono en esta etapa (los leads del CRM suelen crearse sin teléfono). Prueba la fuente <strong>"Mis clientes"</strong> o <a routerLink="/crm">ve al CRM</a>.</ng-container>
+    <!-- Filtro por etapa (solo con CRM elegido) -->
+    <div class="camp__etapa" *ngIf="grupoElegido === 'crm'">
+      <label>Etapa del embudo</label>
+      <select [(ngModel)]="etapaSeleccionada" (change)="onEtapaChange()">
+        <option value="">Todas las etapas</option>
+        <option *ngFor="let s of stages" [value]="s.key">{{ s.label }}</option>
+      </select>
     </div>
 
-    <div *ngIf="!loadingAudiencia && destinatarios.length > 0" class="audiencia-tabla">
-      <table class="table table-sm table-hover mb-2">
-        <thead>
-          <tr>
-            <th style="width: 36px">
-              <input type="checkbox" class="form-check-input" (change)="toggleTodos($any($event.target).checked)" />
-            </th>
-            <th>Nombre</th>
-            <th>Teléfono</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let d of destinatariosVisibles" (click)="d.selected = !d.selected" class="cursor-pointer">
-            <td><input type="checkbox" class="form-check-input" [(ngModel)]="d.selected" (click)="$event.stopPropagation()" /></td>
-            <td>{{ d.nombre }}</td>
-            <td class="text-muted">+{{ d.phone }}</td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="alert alert-warning py-1 px-2 small mb-2" *ngIf="excedeTope">
+    <!-- Lista de audiencia -->
+    <div class="camp__card" *ngIf="grupoElegido">
+      <div class="camp__card-head">
+        <div>
+          <h2 class="camp__card-title">La lista a la que le escribes</h2>
+          <p class="camp__hint" *ngIf="!loadingAudiencia">
+            {{ seleccionados.length | number: '1.0-0' }} personas seleccionadas
+            <ng-container *ngIf="leadsSinTelefono > 0"> · {{ leadsSinTelefono }} quedaron fuera por no tener teléfono válido</ng-container>
+          </p>
+        </div>
+        <div class="camp__export" *ngIf="destinatarios.length > 0">
+          <button type="button" class="camp__export-btn" (click)="exportarAudiencia('meta')" title="CSV para Públicos personalizados de Meta Ads">
+            <i class="fa fa-download" aria-hidden="true"></i> Meta Ads
+          </button>
+          <button type="button" class="camp__export-btn" (click)="exportarAudiencia('google')" title="CSV para Customer Match de Google Ads">
+            <i class="fa fa-download" aria-hidden="true"></i> Google Ads
+          </button>
+        </div>
+      </div>
+
+      <input
+        type="text"
+        class="camp__search"
+        placeholder="Buscar por nombre o teléfono…"
+        [(ngModel)]="filtroNombre"
+        *ngIf="destinatarios.length > 0"
+      />
+
+      <div *ngIf="loadingAudiencia" class="camp__state"><i class="fa fa-spinner fa-spin"></i> Cargando la lista…</div>
+      <div *ngIf="!loadingAudiencia && errorAudiencia" class="camp__state">No se pudo cargar la audiencia</div>
+      <div *ngIf="!loadingAudiencia && !errorAudiencia && destinatarios.length === 0" class="camp__state">
+        <ng-container *ngIf="fuente === 'clientes'">No tienes clientes con teléfono registrado todavía. <a routerLink="/maestros/clientes">Ir a Clientes</a></ng-container>
+        <ng-container *ngIf="fuente === 'crm'">No hay leads con teléfono en esta etapa. Prueba <strong>"Todos mis clientes"</strong> o <a routerLink="/katuq-flow/leads">ve al CRM</a>.</ng-container>
+      </div>
+
+      <div class="camp__contacts" *ngIf="!loadingAudiencia && destinatarios.length > 0">
+        <label class="camp__contact" *ngFor="let d of destinatariosVisibles | slice: 0 : 120">
+          <input type="checkbox" [(ngModel)]="d.selected" />
+          <span class="camp__contact-avatar">{{ (d.nombre || '?').charAt(0) | uppercase }}</span>
+          <span class="camp__contact-info">
+            <span class="camp__contact-name">{{ d.nombre }}</span>
+            <span class="camp__contact-phone">+{{ d.phone }}</span>
+          </span>
+        </label>
+        <p class="camp__hint camp__hint--center" *ngIf="destinatariosVisibles.length > 120">
+          Y {{ destinatariosVisibles.length - 120 | number: '1.0-0' }} personas más. No hace falta revisarlas una por una — usa el buscador para excluir a alguien.
+        </p>
+      </div>
+
+      <div class="camp__warn" *ngIf="excedeTope">
         Máximo {{ MAX_DESTINATARIOS }} destinatarios por campaña en esta versión. Reduce la selección.
       </div>
     </div>
+  </section>
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <div class="btn-group" *ngIf="destinatarios.length > 0">
-        <button class="btn btn-outline-secondary btn-sm" (click)="exportarAudiencia('meta')" title="CSV para Públicos personalizados de Meta Ads">
-          <i class="fa fa-download me-1"></i>Exportar para Meta Ads
-        </button>
-        <button class="btn btn-outline-secondary btn-sm" (click)="exportarAudiencia('google')" title="CSV para Customer Match de Google Ads">
-          <i class="fa fa-download me-1"></i>Google Ads
+  <!-- ============ PASO 2: QUÉ DICE ============ -->
+  <section *ngIf="paso === 2" class="camp__body camp__body--split">
+    <div class="camp__col">
+      <div *ngIf="loadingTemplates" class="camp__state"><i class="fa fa-spinner fa-spin"></i> Cargando tus mensajes aprobados…</div>
+      <div *ngIf="!loadingTemplates && errorTemplates" class="camp__state">{{ errorTemplates }}</div>
+      <div *ngIf="!loadingTemplates && !errorTemplates && templates.length === 0" class="camp__state">
+        No hay plantillas aprobadas en tu WhatsApp Business. Crea y aprueba una plantilla en Kapso primero.
+      </div>
+
+      <div class="camp__plantillas" *ngIf="!loadingTemplates && templates.length > 0">
+        <button
+          type="button"
+          class="camp__plantilla"
+          *ngFor="let t of templates"
+          [class.is-selected]="selectedTemplateName === t.name"
+          (click)="selectedTemplateName = t.name; onTemplateChange()"
+        >
+          <span class="camp__plantilla-name">{{ t.name }}</span>
+          <span class="camp__plantilla-desc">{{ t.bodyText | slice: 0 : 110 }}{{ (t.bodyText || '').length > 110 ? '…' : '' }}</span>
+          <span class="camp__plantilla-lang">{{ t.language }}</span>
         </button>
       </div>
-      <span class="text-muted small" *ngIf="destinatarios.length > 0">Se exporta la selección (o toda la lista si no hay selección) para públicos personalizados/lookalikes.</span>
-      <button class="btn btn-primary btn-sm ms-auto" [disabled]="seleccionados.length === 0 || excedeTope" (click)="irAPlantilla()">
-        Continuar ({{ seleccionados.length }}) →
-      </button>
+
+      <div class="camp__card" *ngIf="selectedTemplate && variableConfigs.length > 0">
+        <h2 class="camp__card-title">Completa el mensaje</h2>
+        <div class="camp__variable" *ngFor="let cfg of variableConfigs; let i = index">
+          <span class="camp__variable-tag">{{ '{{' + (i + 1) + '}}' }}</span>
+          <select [(ngModel)]="cfg.mode">
+            <option value="fijo">Texto fijo</option>
+            <option value="nombre">Nombre del contacto</option>
+          </select>
+          <input *ngIf="cfg.mode === 'fijo'" type="text" placeholder="Escribe el valor…" [(ngModel)]="cfg.value" />
+          <span *ngIf="cfg.mode === 'nombre'" class="camp__hint">se reemplaza por el nombre de cada persona</span>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- ============ PASO 2: MENSAJE ============ -->
-  <div *ngIf="paso === 2" class="panel-card">
-    <div *ngIf="loadingTemplates" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando plantillas aprobadas…</div>
-    <div *ngIf="!loadingTemplates && errorTemplates" class="panel-empty">{{ errorTemplates }}</div>
-    <div *ngIf="!loadingTemplates && !errorTemplates && templates.length === 0" class="panel-empty">
-      No hay plantillas aprobadas en tu WhatsApp Business. Crea y aprueba una plantilla en Kapso primero.
+    <!-- Vista previa estilo teléfono -->
+    <div class="camp__col camp__col--preview">
+      <span class="camp__preview-label">Así lo va a recibir {{ seleccionados[0]?.nombre || 'tu cliente' }}</span>
+      <div class="camp__phone">
+        <div class="camp__phone-screen">
+          <div class="camp__phone-bubble" *ngIf="selectedTemplate">{{ previewText }}</div>
+          <div class="camp__phone-bubble is-empty" *ngIf="!selectedTemplate">Elige un mensaje a la izquierda para ver la vista previa.</div>
+        </div>
+      </div>
     </div>
+  </section>
 
-    <div class="row" *ngIf="!loadingTemplates && templates.length > 0">
-      <div class="col-lg-6">
-        <label class="form-label small mb-1">Plantilla</label>
-        <select class="form-select form-select-sm mb-3" [(ngModel)]="selectedTemplateName" (change)="onTemplateChange()">
-          <option value="" disabled>Elige una plantilla…</option>
-          <option *ngFor="let t of templates" [value]="t.name">{{ t.name }} ({{ t.language }})</option>
-        </select>
+  <!-- ============ PASO 3: REVISAR Y ENVIAR ============ -->
+  <section *ngIf="paso === 3" class="camp__body camp__body--split">
+    <div class="camp__col" *ngIf="!envioTerminado">
+      <div class="camp__card">
+        <h2 class="camp__card-title">Revisa antes de enviar</h2>
 
-        <div *ngIf="selectedTemplate && variableConfigs.length > 0">
-          <label class="form-label small mb-1">Variables del mensaje</label>
-          <div class="variable-row" *ngFor="let cfg of variableConfigs; let i = index">
-            <span class="variable-tag">{{ '{{' + (i + 1) + '}}' }}</span>
-            <select class="form-select form-select-sm variable-mode" [(ngModel)]="cfg.mode">
-              <option value="fijo">Texto fijo</option>
-              <option value="nombre">Nombre del contacto</option>
-            </select>
-            <input *ngIf="cfg.mode === 'fijo'" type="text" class="form-control form-control-sm" placeholder="Valor…" [(ngModel)]="cfg.value" />
-            <span *ngIf="cfg.mode === 'nombre'" class="text-muted small">se reemplaza por el nombre de cada lead</span>
+        <div class="camp__resumen">
+          <div class="camp__resumen-row">
+            <span class="camp__resumen-icon is-accent"><i class="fa fa-users" aria-hidden="true"></i></span>
+            <div class="camp__resumen-info">
+              <span class="camp__resumen-label">Le escribes a</span>
+              <span class="camp__resumen-value">
+                {{ grupoElegido === 'crm' ? 'Leads del CRM' : 'Tus clientes' }} ·
+                {{ seleccionados.length | number: '1.0-0' }} personas
+              </span>
+            </div>
+            <button type="button" class="camp__resumen-edit" (click)="volverAlPaso(1)" [disabled]="enviando">Cambiar</button>
+          </div>
+
+          <div class="camp__resumen-row">
+            <span class="camp__resumen-icon is-green"><i class="fa fa-comment" aria-hidden="true"></i></span>
+            <div class="camp__resumen-info">
+              <span class="camp__resumen-label">Mensaje</span>
+              <span class="camp__resumen-value">{{ selectedTemplate?.name || 'Sin elegir' }}</span>
+            </div>
+            <button type="button" class="camp__resumen-edit" (click)="volverAlPaso(2)" [disabled]="enviando">Cambiar</button>
+          </div>
+
+          <div class="camp__resumen-row">
+            <span class="camp__resumen-icon is-orange"><i class="fa fa-clock-o" aria-hidden="true"></i></span>
+            <div class="camp__resumen-info">
+              <span class="camp__resumen-label">Cuándo se envía</span>
+              <span class="camp__resumen-value">{{ cuandoEnviar === 'programar' ? 'Programada' : 'Ahora mismo' }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="col-lg-6" *ngIf="selectedTemplate">
-        <label class="form-label small mb-1">Vista previa (ejemplo: {{ seleccionados[0]?.nombre }})</label>
-        <div class="wa-preview">{{ previewText }}</div>
-      </div>
-    </div>
-
-    <div class="d-flex justify-content-between mt-3">
-      <button class="btn btn-outline-secondary btn-sm" (click)="volverAlPaso(1)">← Audiencia</button>
-      <button class="btn btn-primary btn-sm" [disabled]="!plantillaLista" (click)="irAConfirmacion()">Continuar →</button>
-    </div>
-  </div>
-
-  <!-- ============ PASO 3: CONFIRMAR + ENVIAR ============ -->
-  <div *ngIf="paso === 3" class="panel-card">
-    <div class="row mb-3 g-2" *ngIf="!envioTerminado">
-      <div class="col-md-5">
-        <label class="form-label small mb-1">Nombre de la campaña <span class="text-muted">(para el historial)</span></label>
-        <input type="text" class="form-control form-control-sm" [(ngModel)]="nombreCampana" maxlength="120" [disabled]="enviando" />
-      </div>
-      <div class="col-md-3">
-        <label class="form-label small mb-1">¿Cuándo enviar?</label>
-        <select class="form-select form-select-sm" [(ngModel)]="cuandoEnviar" [disabled]="enviando">
-          <option value="ahora">Ahora mismo</option>
-          <option value="programar">Programar</option>
-        </select>
-      </div>
-      <div class="col-md-4" *ngIf="cuandoEnviar === 'programar'">
-        <label class="form-label small mb-1">Fecha y hora</label>
-        <input type="datetime-local" class="form-control form-control-sm" [(ngModel)]="fechaProgramada" [disabled]="enviando" />
-        <small class="text-danger" *ngIf="programacionInvalida && fechaProgramada">Debe ser una fecha futura</small>
-      </div>
-    </div>
-    <div class="row g-3 mb-3" *ngIf="!envioTerminado">
-      <div class="col-md-4">
-        <div class="resumen-item">
-          <span>Destinatarios</span>
-          <strong>{{ seleccionados.length }}</strong>
+        <div class="camp__form-row">
+          <label>
+            Nombre de la campaña <em>(para el historial)</em>
+            <input type="text" [(ngModel)]="nombreCampana" maxlength="120" [disabled]="enviando" />
+          </label>
+          <label>
+            ¿Cuándo enviar?
+            <select [(ngModel)]="cuandoEnviar" [disabled]="enviando">
+              <option value="ahora">Ahora mismo</option>
+              <option value="programar">Programar</option>
+            </select>
+          </label>
+          <label *ngIf="cuandoEnviar === 'programar'">
+            Fecha y hora
+            <input type="datetime-local" [(ngModel)]="fechaProgramada" [disabled]="enviando" />
+            <small class="camp__error" *ngIf="programacionInvalida && fechaProgramada">Debe ser una fecha futura</small>
+          </label>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="resumen-item">
-          <span>Costo estimado</span>
+    </div>
+
+    <div class="camp__col" [class.camp__col--full]="envioTerminado">
+      <!-- Costos -->
+      <div class="camp__card camp__cost" *ngIf="!envioTerminado">
+        <h2 class="camp__card-title">Lo que te cuesta</h2>
+        <div class="camp__cost-line">
+          <span>{{ seleccionados.length | number: '1.0-0' }} mensajes × {{ balance?.priceCOP || 80 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} cada uno</span>
           <strong>{{ costoEstimado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
-          <small class="text-muted d-block">{{ balance?.priceCOP || 80 | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} por mensaje</small>
         </div>
-      </div>
-      <div class="col-md-4">
-        <div class="resumen-item" [class.insuficiente]="saldoInsuficiente">
-          <span>Saldo disponible</span>
+        <div class="camp__cost-line" [class.is-danger]="saldoInsuficiente">
+          <span>Tu saldo</span>
           <strong *ngIf="!loadingBalance">{{ balance ? (balance.balanceCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0') : 'No disponible' }}</strong>
           <strong *ngIf="loadingBalance"><i class="fa fa-spinner fa-spin"></i></strong>
         </div>
+        <div class="camp__cost-line is-total" *ngIf="!saldoInsuficiente && balance">
+          <span>Te quedarían</span>
+          <strong>{{ saldoDespues | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+        <div class="camp__warn" *ngIf="saldoInsuficiente">
+          Saldo insuficiente. Recarga en <a routerLink="/notificaciones">Notificaciones → WhatsApp</a> o reduce la audiencia.
+        </div>
+      </div>
+
+      <!-- Progreso del broadcast (server-side, Kapso) -->
+      <div class="camp__card" *ngIf="enviando || envioTerminado">
+        <div class="camp__progress-head">
+          <span *ngIf="enviando"><i class="fa fa-spinner fa-spin" aria-hidden="true"></i> {{ broadcastMensaje || 'Lanzando campaña…' }}</span>
+          <span *ngIf="envioTerminado" class="camp__progress-done" [class.is-danger]="broadcastStatus === 'failed'">
+            <i class="fa" [class.fa-check-circle]="broadcastStatus !== 'failed'" [class.fa-times-circle]="broadcastStatus === 'failed'" aria-hidden="true"></i>
+            {{ broadcastMensaje }}
+          </span>
+          <span *ngIf="broadcastStatus !== 'scheduled'" class="camp__progress-pct">{{ progreso }}%</span>
+        </div>
+        <div class="camp__progress-track" *ngIf="broadcastStatus !== 'scheduled'">
+          <div
+            class="camp__progress-bar"
+            [class.is-done]="broadcastStatus === 'completed'"
+            [class.is-danger]="broadcastStatus === 'failed'"
+            [style.width.%]="progreso"
+          ></div>
+        </div>
+
+        <div class="camp__warn" *ngIf="broadcastErrores.length > 0">
+          Kapso reportó problemas con algunos destinatarios:
+          <ul><li *ngFor="let e of broadcastErrores">{{ e }}</li></ul>
+        </div>
+
+        <a *ngIf="envioTerminado" routerLink="/marketing/campanas" class="camp__history-link">
+          <i class="fa fa-bar-chart" aria-hidden="true"></i> Ver historial de campañas
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER PEGAJOSO ============ -->
+  <footer class="camp__footer" *ngIf="!envioTerminado">
+    <div class="camp__footer-stats">
+      <div class="camp__footer-stat">
+        <span class="camp__footer-label">Destinatarios</span>
+        <strong>{{ seleccionados.length | number: '1.0-0' }}</strong>
+      </div>
+      <div class="camp__footer-stat">
+        <span class="camp__footer-label">Costo estimado</span>
+        <strong>{{ costoEstimado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+      </div>
+      <div class="camp__footer-stat">
+        <span class="camp__footer-label">Tu saldo</span>
+        <strong [class.is-danger]="saldoInsuficiente">
+          {{ balance ? (balance.balanceCOP | currency: 'COP' : 'symbol-narrow' : '1.0-0') : '—' }}
+        </strong>
       </div>
     </div>
 
-    <div class="alert alert-danger py-2 small" *ngIf="saldoInsuficiente && !envioTerminado">
-      Saldo insuficiente para esta campaña. Recarga en <a routerLink="/notificaciones">Notificaciones → WhatsApp</a> o reduce la audiencia.
-    </div>
-
-    <!-- Progreso del broadcast (server-side, Kapso) -->
-    <div *ngIf="enviando || envioTerminado" class="mb-3">
-      <div class="d-flex justify-content-between small mb-1">
-        <span *ngIf="enviando"><i class="fa fa-spinner fa-spin"></i> {{ broadcastMensaje || 'Lanzando campaña…' }}</span>
-        <span *ngIf="envioTerminado" class="fw-bold" [class.text-danger]="broadcastStatus === 'failed'">
-          <i class="fa" [class.fa-check-circle]="broadcastStatus !== 'failed'" [class.fa-times-circle]="broadcastStatus === 'failed'"></i>
-          {{ broadcastMensaje }}
-        </span>
-        <span *ngIf="broadcastStatus !== 'scheduled'">{{ progreso }}%</span>
-      </div>
-      <div class="progress" style="height: 8px" *ngIf="broadcastStatus !== 'scheduled'">
-        <div class="progress-bar" [class.bg-success]="broadcastStatus === 'completed'" [class.bg-danger]="broadcastStatus === 'failed'" [style.width.%]="progreso"></div>
-      </div>
-    </div>
-
-    <div *ngIf="broadcastErrores.length > 0" class="alert alert-warning py-2 small mb-3">
-      Kapso reportó problemas con algunos destinatarios:
-      <ul class="mb-0"><li *ngFor="let e of broadcastErrores">{{ e }}</li></ul>
-    </div>
-
-    <div class="d-flex justify-content-between">
-      <button class="btn btn-outline-secondary btn-sm" [disabled]="enviando" (click)="volverAlPaso(2)" *ngIf="!envioTerminado">← Mensaje</button>
-      <a *ngIf="envioTerminado" routerLink="/marketing/campanas" class="btn btn-primary btn-sm"><i class="fa fa-bar-chart me-1"></i>Ver historial de campañas</a>
-      <button *ngIf="!envioTerminado" class="btn btn-success btn-sm" [disabled]="enviando || saldoInsuficiente || loadingBalance || programacionInvalida" (click)="enviarCampana()">
-        <i class="fa" [class.fa-paper-plane]="cuandoEnviar === 'ahora'" [class.fa-clock-o]="cuandoEnviar === 'programar'"></i>
-        {{ cuandoEnviar === 'programar' ? 'Programar para' : 'Enviar a' }} {{ seleccionados.length }} contactos
+    <div class="camp__footer-actions">
+      <span class="camp__blocked" *ngIf="bloqueoTexto && !enviando">
+        <i class="fa fa-info-circle" aria-hidden="true"></i> {{ bloqueoTexto }}
+      </span>
+      <button type="button" class="camp__btn-back" *ngIf="paso > 1" [disabled]="enviando" (click)="volverAlPaso($any(paso - 1))">Atrás</button>
+      <button type="button" class="camp__btn-next" [disabled]="!!bloqueoTexto || enviando || loadingBalance" (click)="avanzar()">
+        {{ siguienteLabel }}
+        <i class="fa" [ngClass]="paso < 3 ? 'fa-arrow-right' : cuandoEnviar === 'programar' ? 'fa-clock-o' : 'fa-paper-plane'" aria-hidden="true"></i>
       </button>
     </div>
-  </div>
+  </footer>
 </div>

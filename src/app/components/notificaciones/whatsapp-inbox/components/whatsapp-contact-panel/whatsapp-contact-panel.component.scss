@@ -1,289 +1,278 @@
-// Panel de contacto (demo). Sin gradientes. Cards planos con border-left de color.
+// Panel de contacto — look del mockup "Marketing y WhatsApp":
+// bloque "Este cliente" con indicadores, últimos pedidos como tarjetas.
+@import '../../../../../shared/styles/katuq-marketing';
 
-$border: #e3e6ea;
-$text: #1d2330;
-$muted: #6b7280;
-
-// Colores acento por sección — distintos para diferenciación visual rápida.
-$accent-identity: #1f7a4d;   // verde Katuq
-$accent-orders: #1e6091;     // azul
-$accent-crm: #b8860b;        // dorado opaco
+:host {
+  @include km-tokens;
+  display: block;
+}
 
 .contact-panel {
-  padding: 12px;
-  height: 100%;
-  overflow-y: auto;
-  background: #ffffff;
-
-  &__banner {
-    padding: 6px 10px;
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 12px;
-  }
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: var(--km-font);
 
   &__state,
   &__placeholder {
+    padding: 22px 12px;
     text-align: center;
-    color: $muted;
-    padding: 24px 12px;
+    color: var(--km-muted);
     font-size: 13px;
+    font-weight: 600;
+
+    p { margin: 0; }
   }
 
-  &__placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
+  &__label {
+    @include km-label;
+    margin: 0 0 9px;
   }
 
   &__section {
-    border: 1px solid $border;
-    border-left-width: 4px;
-    border-radius: 6px;
-    background: #ffffff;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-
-    &.is-identity {
-      border-left-color: $accent-identity;
-    }
-    &.is-orders {
-      border-left-color: $accent-orders;
-    }
-    &.is-crm {
-      border-left-color: $accent-crm;
-    }
-
-    &[open] .contact-panel__summary::after {
-      content: "−";
-    }
+    display: flex;
+    flex-direction: column;
   }
 
-  &__summary {
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: $muted;
-    padding: 4px 0;
-    position: relative;
-    list-style: none;
-    user-select: none;
-
-    &::-webkit-details-marker {
-      display: none;
-    }
-
-    &::after {
-      content: "+";
-      position: absolute;
-      right: 0;
-      font-size: 14px;
-      color: $muted;
-    }
-  }
-
-  // Sección identidad
+  // -------------------------------------------------------------- identidad
   &__identity {
     display: flex;
     gap: 12px;
-    margin-top: 10px;
     align-items: center;
   }
 
   &__avatar {
-    flex: 0 0 52px;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: #e8eaed;
-    color: #4b5563;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 700;
+    @include km-avatar(46px);
+    border-radius: 14px;
+    font-size: 15px;
+    background: var(--km-accent-wash);
+    color: var(--km-accent);
   }
 
   &__identity-info {
-    flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   &__name {
     margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: $text;
+    font-size: 14.5px;
+    font-weight: 800;
+    color: var(--km-ink);
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   &__phone {
-    margin: 2px 0;
+    margin: 0;
     font-size: 12px;
-    color: $muted;
+    font-weight: 600;
+    color: var(--km-muted);
   }
 
   &__chip {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    align-self: flex-start;
+    @include km-chip(var(--km-muted), #f4f2fb);
 
     &.is-verified {
-      background: #e8f5ee;
-      color: $accent-identity;
+      color: var(--km-green-ink);
+      background: var(--km-green-wash);
     }
 
     &.is-warmlead {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    &.is-unverified {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    &--state {
-      &.is-success {
-        background: #e8f5ee;
-        color: $accent-identity;
-      }
-      &.is-info {
-        background: #e3effa;
-        color: $accent-orders;
-      }
-      &.is-danger {
-        background: #fdecea;
-        color: #b91c1c;
-      }
-      &.is-neutral {
-        background: #eef0f3;
-        color: $muted;
-      }
+      color: var(--km-accent-ink);
+      background: var(--km-accent-wash);
     }
   }
 
-  &__muted {
-    color: $muted;
-    font-size: 12px;
-    margin: 2px 0;
-  }
-
-  &__empty-line {
-    margin-top: 10px;
-    text-align: center;
-  }
-
-  // Sección pedidos
-  &__orders {
-    margin-top: 8px;
+  // ---------------------------------------------------------- este cliente
+  &__stats {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
+  }
+
+  &__stat {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 11px;
+    border-radius: var(--km-radius-sm);
+    background: #fbfaff;
+  }
+
+  &__stat-icon {
+    @include km-icon-tile(30px);
+    border-radius: 9px;
+
+    &.is-green { background: var(--km-green-wash); color: var(--km-green); }
+    &.is-accent { background: #eef2ff; color: var(--km-accent); }
+    &.is-orange { background: var(--km-orange-wash); color: var(--km-orange); }
+  }
+
+  &__stat-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    strong {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--km-ink);
+    }
+  }
+
+  &__stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--km-muted);
+  }
+
+  // ---------------------------------------------------------------- pedidos
+  &__orders {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
   }
 
   &__order {
-    border: 1px solid $border;
-    border-radius: 4px;
-    padding: 6px 8px;
-    background: #fafbfc;
-  }
-
-  &__order--link {
-    display: block;
-    text-decoration: none;
-    color: inherit;
-    transition: background 0.12s ease, border-color 0.12s ease;
-    cursor: pointer;
-
-    &:hover {
-      background: #f1f5f9;
-      border-color: #c7d2da;
-    }
-  }
-
-  &__identity-links {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed $border;
-  }
-
-  &__link {
-    display: inline-block;
-    font-size: 12px;
-    font-weight: 600;
-    color: $accent-orders;
+    padding: 10px 12px;
+    border: 1.5px solid var(--km-line);
+    border-radius: var(--km-radius-sm);
     text-decoration: none;
-    padding: 4px 0;
-    cursor: pointer;
+    background: var(--km-surface);
 
     &:hover {
-      color: darken($accent-orders, 10%);
-      text-decoration: underline;
+      border-color: #d9cffb;
+      background: #faf8ff;
     }
   }
 
-  &__link--full {
-    display: block;
-    text-align: center;
-    margin-top: 6px;
-    padding: 6px;
-    background: #f1f5f9;
-    border-radius: 4px;
-
-    &:hover {
-      background: #e2e8f0;
-      text-decoration: none;
-    }
-  }
-
-  &__order-top,
-  &__order-bottom {
+  &__order-top {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 6px;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   &__order-num {
-    font-weight: 600;
-    font-size: 12px;
-    color: $text;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--km-ink);
+  }
+
+  &__order-chip {
+    @include km-chip(var(--km-accent-ink), var(--km-accent-wash));
+    font-size: 10px;
+
+    // Estados que ya mapea estadoChipClass() en el TS.
+    &.chip-success { color: var(--km-green-ink); background: var(--km-green-wash); }
+    &.chip-warning { color: var(--km-orange-ink); background: var(--km-orange-wash); }
+    &.chip-danger { color: var(--km-red); background: var(--km-red-wash); }
+  }
+
+  &__order-bottom {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   &__order-total {
-    font-size: 12px;
-    font-weight: 600;
-    color: $text;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--km-ink);
   }
 
-  // Sección CRM
+  &__muted {
+    margin: 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--km-muted);
+  }
+
+  &__empty-line {
+    padding: 4px 0;
+  }
+
+  // ------------------------------------------------------- links y acciones
+  &__link {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--km-accent);
+    text-decoration: none;
+
+    &:hover { color: var(--km-accent-ink); }
+
+    &--full {
+      display: block;
+      margin-top: 9px;
+      text-align: center;
+    }
+  }
+
+  &__cta {
+    @include km-btn-primary;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 13px;
+    text-decoration: none;
+    text-align: center;
+
+    &:hover { color: #fff; }
+
+    &--ghost {
+      @include km-btn-ghost;
+      justify-content: center;
+      color: var(--km-accent-ink);
+      border-color: #d9cffb;
+
+      &:hover { color: var(--km-accent-ink); background: var(--km-accent-wash2); }
+    }
+  }
+
+  &__optout {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 12px;
+  }
+
+  &__optout-badge {
+    align-self: flex-start;
+    @include km-chip(var(--km-red), var(--km-red-wash));
+  }
+
+  &__optout-btn {
+    @include km-btn-ghost;
+    justify-content: center;
+    font-size: 12px;
+
+    &.is-active {
+      border-color: #f3c9d4;
+      color: var(--km-red);
+    }
+  }
+
+  // -------------------------------------------------------------------- CRM
   &__lead {
-    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   &__lead-name {
-    margin: 0 0 4px;
-    font-size: 13px;
-    font-weight: 600;
-    color: $text;
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--km-ink);
   }
 
   &__rating-block {
@@ -294,117 +283,40 @@ $accent-crm: #b8860b;        // dorado opaco
   }
 
   &__rating-label {
-    font-size: 11px;
-    color: $muted;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--km-muted);
   }
 
   &__stars {
-    display: inline-flex;
-    gap: 2px;
-    cursor: pointer;
-    user-select: none;
-
-    &--large {
-      .contact-panel__star {
-        font-size: 22px;
-      }
-    }
+    display: flex;
+    gap: 3px;
   }
 
   &__star {
-    font-size: 16px;
-    color: #d1d5db;
+    font-size: 17px;
+    cursor: pointer;
+    color: #d7d3e6;
     line-height: 1;
-    transition: color 0.12s ease;
 
     &.is-on {
-      color: #f59e0b;
-    }
-
-    &:hover {
-      color: #f59e0b;
+      color: #f2b01e;
     }
   }
 
-  &__rating-draft {
-    margin-top: 8px;
+  &__stars--large &__star {
+    font-size: 22px;
+  }
+
+  &__rating-draft,
+  &__no-crm {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 9px;
+    align-items: flex-start;
   }
 
   &__draft-note {
-    margin: 4px 0 0;
     font-size: 11px;
-    color: $muted;
-    font-style: italic;
-  }
-
-  &__no-crm {
-    margin-top: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  &__cta {
-    border: 1px solid $accent-identity;
-    background: $accent-identity;
-    color: #ffffff;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.12s ease;
-
-    &:hover {
-      background: darken($accent-identity, 6%);
-    }
-  }
-}
-
-// [D-098] Opt-out de marketing
-.contact-panel__optout {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-
-  &-badge {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #dc3545;
-    background: #fdecec;
-    border: 1px solid #f5c2c7;
-    border-radius: 999px;
-    padding: 2px 10px;
-  }
-
-  &-btn {
-    font-size: 0.74rem;
-    border: 1px solid #dee2e6;
-    background: #fff;
-    color: #6c757d;
-    border-radius: 4px;
-    padding: 3px 10px;
-    cursor: pointer;
-
-    &:hover:not(:disabled) {
-      border-color: #dc3545;
-      color: #dc3545;
-    }
-
-    &.is-active {
-      border-color: #28a745;
-      color: #28a745;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
   }
 }

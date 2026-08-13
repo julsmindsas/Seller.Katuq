@@ -1,276 +1,275 @@
-// Lista de hilos. Estilo Katuq: plano, sin gradientes, border-left 4px en activo.
+// Lista de hilos — look del mockup "Marketing y WhatsApp".
+@import '../../../../../shared/styles/katuq-marketing';
 
-$accent: #1f7a4d;
-$accent-soft: #e8f5ee;
-$border: #e3e6ea;
-$border-soft: #eef0f3;
-$text: #1d2330;
-$text-strong: #0f172a;
-$muted: #6b7280;
+:host {
+  @include km-tokens;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
 
 .thread-list {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  background: #ffffff;
+  min-height: 0;
+  flex: 1;
+  font-family: var(--km-font);
 
   &__header {
-    padding: 16px;
-    border-bottom: 1px solid $border;
-    background: #ffffff;
+    padding: 14px 14px 10px;
     flex-shrink: 0;
   }
 
   &__search-row {
     display: flex;
-    align-items: stretch;
     gap: 8px;
+    align-items: center;
   }
 
   &__search-wrapper {
+    position: relative;
     flex: 1;
-    min-width: 0;
+
+    > i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--km-muted2);
+      font-size: 13px;
+      pointer-events: none;
+    }
   }
 
   &__search {
     width: 100%;
-    font-size: 13.5px;
-    padding: 8px 12px;
-    border: 1px solid $border;
-    border-radius: 8px;
-    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+    border: 1.5px solid var(--km-line2);
+    border-radius: 11px;
+    padding: 9px 12px 9px 34px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--km-ink);
+    background: #fbfaff;
 
     &:focus {
       outline: none;
-      border-color: $accent;
-      box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.12);
+      border-color: var(--km-accent);
+      background: var(--km-surface);
+    }
+
+    &::placeholder {
+      color: var(--km-muted2);
+      font-weight: 500;
     }
   }
 
   &__new-btn {
     width: 38px;
-    flex-shrink: 0;
-    border: 1px solid $accent;
-    background: $accent;
-    color: #ffffff;
-    border-radius: 8px;
-    font-size: 22px;
-    font-weight: 400;
-    line-height: 1;
+    height: 38px;
+    flex: none;
+    border: none;
+    border-radius: 11px;
+    background: var(--km-accent-wash);
+    color: var(--km-accent);
+    font-size: 20px;
+    font-weight: 800;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.12s ease, transform 0.12s ease;
+    line-height: 1;
 
     &:hover {
-      background: darken($accent, 6%);
-    }
-    &:active {
-      transform: scale(0.96);
+      background: var(--km-accent);
+      color: #fff;
     }
   }
 
   &__chips {
-    margin-top: 12px;
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    margin-top: 10px;
     flex-wrap: wrap;
   }
 
   &__chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    border: 1px solid $border;
-    background: #ffffff;
-    border-radius: 16px;
+    @include km-pill;
+    padding: 7px 13px;
     font-size: 12px;
-    color: $muted;
-    cursor: pointer;
-    transition: background-color 0.12s ease, border-color 0.12s ease;
-    font-weight: 500;
-
-    &:hover {
-      background: #f7f8fa;
-      border-color: #c9cdd3;
-    }
-
-    &.is-active {
-      background: $accent-soft;
-      border-color: $accent;
-      color: $accent;
-      font-weight: 600;
-    }
   }
 
-  &__chip-check {
-    display: inline-block;
-    width: 12px;
-    text-align: center;
-    font-weight: 700;
+  &__chip-count {
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    background: #b6b1cb;
+    padding: 1px 6px;
+    border-radius: 99px;
+
+    .thread-list__chip.is-active & {
+      background: var(--km-accent);
+    }
   }
 
   &__banner {
-    padding: 10px 16px;
-    background: #fef3c7;
-    color: #92400e;
-    font-size: 12px;
-    border-bottom: 1px solid #fde68a;
-    line-height: 1.4;
+    margin: 0 14px 8px;
+    padding: 8px 12px;
+    background: var(--km-orange-wash);
+    color: var(--km-orange-ink);
+    border-radius: var(--km-radius-sm);
+    font-size: 11.5px;
+    font-weight: 700;
   }
 
   &__body {
     flex: 1;
     overflow-y: auto;
+    padding: 0 10px 12px;
+    min-height: 0;
   }
 
   &__state {
+    padding: 24px 14px;
     text-align: center;
-    color: $muted;
-    padding: 32px 16px;
-    font-size: 13.5px;
+    color: var(--km-muted);
+    font-size: 13px;
+    font-weight: 600;
   }
 
+  // ------------------------------------------------------------------ item
   &__item {
-    width: 100%;
-    text-align: left;
-    background: #ffffff;
-    border: 0;
-    border-bottom: 1px solid $border-soft;
-    border-left: 4px solid transparent;
-    padding: 14px 16px;
-    cursor: pointer;
     display: flex;
     gap: 12px;
-    align-items: flex-start;
-    transition: background-color 0.12s ease, border-left-color 0.12s ease;
+    width: 100%;
+    text-align: left;
+    padding: 13px;
+    border-radius: 14px;
+    cursor: pointer;
+    margin-bottom: 3px;
+    background: transparent;
+    border: 1px solid transparent;
+    font-family: inherit;
 
     &:hover {
-      background: #f7f8fa;
+      background: #fbfaff;
     }
 
     &.is-active {
-      background: $accent-soft;
-      border-left-color: $accent;
+      background: var(--km-accent-wash2);
+      border-color: #e6ddff;
+
+      .thread-list__avatar {
+        background: #e7e0fe;
+        color: var(--km-accent);
+      }
     }
 
     &.is-unread {
       .thread-list__name {
-        font-weight: 700;
-        color: $text-strong;
-      }
-      .thread-list__snippet {
-        color: $text;
-        font-weight: 500;
+        font-weight: 800;
       }
     }
   }
 
   &__avatar {
-    flex: 0 0 44px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #e8eaed;
-    color: #4b5563;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
+    @include km-avatar(40px);
   }
 
   &__content {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
   }
 
   &__row-top {
     display: flex;
-    justify-content: space-between;
     align-items: baseline;
+    justify-content: space-between;
     gap: 8px;
   }
 
   &__name {
-    font-weight: 600;
     font-size: 13.5px;
-    color: $text;
+    font-weight: 700;
+    color: var(--km-ink);
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    letter-spacing: -0.005em;
+    min-width: 0;
   }
 
   &__date {
-    font-size: 11.5px;
-    color: $muted;
-    flex-shrink: 0;
-    letter-spacing: 0.02em;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--km-muted2);
+    flex: none;
   }
 
   &__row-phone {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-top: 3px;
   }
 
   &__phone {
     font-size: 11.5px;
-    color: $muted;
-    letter-spacing: 0.02em;
+    color: var(--km-muted);
+    font-weight: 600;
   }
 
   &__row-bottom {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 6px;
+    gap: 6px;
+    min-width: 0;
   }
 
-  &__direction {
-    font-size: 12px;
-    color: $muted;
-    flex-shrink: 0;
+  &__row-preview {
+    min-width: 0;
+  }
+
+  &__tag {
+    @include km-chip(var(--km-green-ink), var(--km-green-wash));
+
+    i { font-size: 10px; }
+
+    &[data-kind='pedido'] {
+      color: var(--km-accent-ink);
+      background: var(--km-accent-wash);
+    }
+
+    &[data-kind='cliente'] {
+      color: var(--km-orange-ink);
+      background: var(--km-orange-wash2);
+    }
   }
 
   &__snippet {
     flex: 1;
-    font-size: 12.5px;
-    color: #4b5563;
+    min-width: 0;
+    font-size: 12px;
+    color: var(--km-muted);
+    font-weight: 500;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    line-height: 1.4;
   }
 
   &__badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 7px;
-    border-radius: 10px;
-    font-size: 10.5px;
-    font-weight: 700;
-    flex-shrink: 0;
-    letter-spacing: 0.02em;
+    flex: none;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 99px;
 
     &--unread {
-      background: $accent;
-      color: #ffffff;
+      background: var(--km-green);
+      color: #fff;
     }
 
     &--warn {
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fde68a;
+      background: var(--km-orange-wash);
+      color: var(--km-orange-ink);
     }
   }
 }

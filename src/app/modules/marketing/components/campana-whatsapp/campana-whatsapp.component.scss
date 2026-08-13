@@ -1,132 +1,724 @@
-// Campaña WhatsApp (spec 022 fase 2) — mismo lenguaje visual plano del dashboard.
+// Asistente de campañas WhatsApp — look del mockup "Marketing y WhatsApp".
+@import '../../../../shared/styles/katuq-marketing';
 
-.campana-whatsapp {
-  padding-top: 1rem;
-  padding-bottom: 2rem;
+:host {
+  @include km-tokens;
+  display: block;
 }
 
-.panel-card {
-  background: #fff;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  padding: 1rem;
+.camp {
+  padding: 18px 22px 0;
+  background: var(--km-canvas);
+  min-height: calc(100vh - 80px);
+  font-family: var(--km-font);
 
-  .panel-loading,
-  .panel-empty {
-    color: #adb5bd;
-    font-size: 0.85rem;
-    padding: 1.5rem 0;
-    text-align: center;
+  // ---------------------------------------------------------------- header
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
   }
-}
 
-// ---- Indicador de pasos ----
-.steps {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  &__title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--km-ink);
+    margin: 0;
+  }
 
-  .step {
-    font-size: 0.78rem;
-    padding: 4px 12px;
-    border-radius: 999px;
-    background: #f1f3f5;
-    color: #868e96;
-    border-left: 3px solid transparent;
+  &__subtitle {
+    font-size: 13px;
+    color: var(--km-muted);
+    margin: 3px 0 0;
+    font-weight: 500;
+  }
 
-    &.active {
-      background: #e7edff;
-      color: #4c6fff;
-      font-weight: 600;
-      border-left-color: #4c6fff;
+  &__back-link {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--km-muted);
+    text-decoration: none;
+
+    &:hover { color: var(--km-accent); }
+  }
+
+  // ----------------------------------------------------------------- pasos
+  &__steps {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__step {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 16px;
+    border-radius: 99px;
+    border: none;
+    background: transparent;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--km-muted);
+    cursor: pointer;
+    font-family: inherit;
+
+    &:disabled { cursor: default; }
+
+    &.is-active {
+      background: var(--km-accent-wash);
+      color: var(--km-accent-ink);
+      font-weight: 800;
+
+      .camp__step-badge {
+        background: var(--km-accent);
+        color: #fff;
+      }
     }
 
-    &.done {
-      background: #e6f6ea;
-      color: #28a745;
+    &.is-done {
+      color: var(--km-green-ink);
+      cursor: pointer;
+
+      .camp__step-badge {
+        background: var(--km-green-wash);
+        color: var(--km-green);
+      }
     }
   }
-}
 
-// ---- Audiencia ----
-.audiencia-tabla {
-  max-height: 380px;
-  overflow-y: auto;
+  &__step-badge {
+    width: 24px;
+    height: 24px;
+    flex: none;
+    border-radius: 99px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 800;
+    background: #f0eef7;
+    color: var(--km-muted2);
 
-  table {
-    font-size: 0.84rem;
+    i { font-size: 10px; }
+  }
 
-    th {
-      position: sticky;
-      top: 0;
-      background: #fff;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      color: #6c757d;
+  &__step-arrow {
+    color: #cfcbdf;
+    margin-left: 6px;
+  }
+
+  // ------------------------------------------------------------------ body
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    &--split {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: 14px;
+      align-items: start;
+
+      @media (max-width: 1000px) {
+        grid-template-columns: 1fr;
+      }
     }
   }
-}
 
-.cursor-pointer {
-  cursor: pointer;
-}
+  &__col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
 
-// ---- Variables de plantilla ----
-.variable-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+    &--preview {
+      align-items: center;
+    }
 
-  .variable-tag {
-    font-family: monospace;
-    font-size: 0.78rem;
-    background: #f1f3f5;
-    border-radius: 4px;
-    padding: 3px 8px;
-    color: #495057;
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__card {
+    @include km-card;
+    padding: 18px 20px;
+  }
+
+  &__card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__card-title {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: var(--km-ink);
+    margin: 0 0 6px;
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: var(--km-muted);
+    font-weight: 600;
+    margin: 0;
+
+    &--center {
+      text-align: center;
+      padding: 10px 0 2px;
+    }
+  }
+
+  &__state {
+    @include km-card;
+    color: var(--km-muted);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 22px 20px;
+
+    a { color: var(--km-accent); font-weight: 800; }
+  }
+
+  &__warn {
+    margin-top: 12px;
+    background: var(--km-orange-wash);
+    color: var(--km-orange-ink);
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 10px 14px;
+    border-radius: var(--km-radius-sm);
+
+    a { color: inherit; text-decoration: underline; }
+    ul { margin: 6px 0 0; padding-left: 18px; font-weight: 600; }
+  }
+
+  &__error {
+    color: var(--km-red);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  // ------------------------------------------------------- paso 1: grupos
+  &__segments {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+
+  &__segment {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    text-align: left;
+    border: 1.5px solid var(--km-line);
+    background: var(--km-surface);
+    border-radius: var(--km-radius);
+    padding: 18px;
+    cursor: pointer;
+    box-shadow: var(--km-shadow);
+    font-family: inherit;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+
+    &.is-selected {
+      border-color: var(--km-accent);
+      background: #faf8ff;
+      box-shadow: var(--km-shadow-accent);
+    }
+  }
+
+  &__segment-icon {
+    @include km-icon-tile(34px);
+    border-radius: 11px;
+
+    &.is-accent { background: #eef2ff; color: var(--km-accent); }
+    &.is-green { background: var(--km-green-wash); color: var(--km-green); }
+  }
+
+  &__segment-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--km-ink);
+  }
+
+  &__segment-desc {
+    font-size: 12px;
+    color: var(--km-muted);
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  &__segment-count {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--km-accent-ink);
+
+    em {
+      font-style: normal;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--km-muted);
+    }
+  }
+
+  &__etapa {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    label {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--km-ink2);
+      margin: 0;
+    }
+
+    select {
+      border: 1.5px solid var(--km-line2);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--km-ink);
+      background: var(--km-surface);
+    }
+  }
+
+  &__search {
+    width: 100%;
+    border: 1.5px solid var(--km-line2);
+    border-radius: 11px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--km-ink);
+    margin: 10px 0 12px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--km-accent);
+    }
+  }
+
+  &__export {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__export-btn {
+    @include km-btn-ghost;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  &__contacts {
+    display: flex;
+    flex-direction: column;
+    max-height: 380px;
+    overflow-y: auto;
+  }
+
+  &__contact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 10px;
+    border-radius: var(--km-radius-sm);
+    cursor: pointer;
+    margin: 0;
+
+    &:hover { background: #fbfaff; }
+
+    input[type='checkbox'] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--km-accent);
+      flex: none;
+    }
+  }
+
+  &__contact-avatar {
+    @include km-avatar(36px);
+    border-radius: 11px;
+    font-size: 12px;
+    background: #eef2ff;
+    color: var(--km-accent);
+  }
+
+  &__contact-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__contact-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--km-ink);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .variable-mode {
-    max-width: 180px;
-  }
-}
-
-// ---- Vista previa WhatsApp ----
-.wa-preview {
-  background: #e7fbe3;
-  border: 1px solid #c8ecc0;
-  border-radius: 8px;
-  border-top-left-radius: 0;
-  padding: 0.75rem 1rem;
-  font-size: 0.88rem;
-  color: #212529;
-  white-space: pre-wrap;
-  max-width: 420px;
-}
-
-// ---- Confirmación ----
-.resumen-item {
-  border: 1px solid #e9ecef;
-  border-left: 4px solid #4c6fff;
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-
-  span {
-    display: block;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    color: #6c757d;
+  &__contact-phone {
+    font-size: 11.5px;
+    color: var(--km-muted);
+    font-weight: 600;
   }
 
-  strong {
-    font-size: 1.15rem;
+  // --------------------------------------------------- paso 2: plantillas
+  &__plantillas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  &.insuficiente {
-    border-left-color: #dc3545;
+  &__plantilla {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    text-align: left;
+    border: 1.5px solid var(--km-line);
+    background: var(--km-surface);
+    border-radius: 14px;
+    padding: 15px 17px;
+    cursor: pointer;
+    font-family: inherit;
+    position: relative;
 
-    strong { color: #dc3545; }
+    &.is-selected {
+      border-color: var(--km-accent);
+      background: #faf8ff;
+    }
+  }
+
+  &__plantilla-name {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--km-ink);
+  }
+
+  &__plantilla-desc {
+    font-size: 12px;
+    color: var(--km-muted);
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  &__plantilla-lang {
+    position: absolute;
+    top: 13px;
+    right: 15px;
+    @include km-chip(var(--km-muted), #f4f2fb);
+  }
+
+  &__variable {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+
+    select,
+    input {
+      border: 1.5px solid var(--km-line2);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--km-ink);
+    }
+
+    input { flex: 1; min-width: 140px; }
+  }
+
+  &__variable-tag {
+    @include km-chip(var(--km-accent-ink), var(--km-accent-wash));
+    font-size: 11.5px;
+  }
+
+  // ------------------------------------------------ paso 2: vista previa
+  &__preview-label {
+    @include km-label;
+    margin-bottom: 10px;
+  }
+
+  &__phone {
+    width: 100%;
+    max-width: 300px;
+    border: 8px solid var(--km-ink);
+    border-radius: 34px;
+    overflow: hidden;
+    background: #e6ded5;
+    box-shadow: var(--km-shadow);
+  }
+
+  &__phone-screen {
+    min-height: 320px;
+    padding: 22px 14px;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.25) 0, transparent 45%),
+      #e6ded5;
+  }
+
+  &__phone-bubble {
+    background: #dcf8c6;
+    border-radius: 4px 12px 12px 12px;
+    padding: 11px 13px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #1b1b1b;
+    white-space: pre-wrap;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+    max-width: 92%;
+
+    &.is-empty {
+      background: rgba(255, 255, 255, 0.85);
+      color: var(--km-muted);
+      font-weight: 600;
+    }
+  }
+
+  // ------------------------------------------------- paso 3: resumen/costo
+  &__resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  &__resumen-row {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 12px 14px;
+    border-radius: var(--km-radius-sm);
+    background: #fbfaff;
+  }
+
+  &__resumen-icon {
+    @include km-icon-tile(34px);
+    border-radius: 11px;
+
+    &.is-accent { background: #eef2ff; color: var(--km-accent); }
+    &.is-green { background: var(--km-green-wash); color: var(--km-green); }
+    &.is-orange { background: var(--km-orange-wash); color: var(--km-orange); }
+  }
+
+  &__resumen-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  &__resumen-label {
+    @include km-label;
+  }
+
+  &__resumen-value {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--km-ink);
+  }
+
+  &__resumen-edit {
+    @include km-btn-ghost;
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  &__form-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--km-ink2);
+      margin: 0;
+      flex: 1;
+      min-width: 180px;
+
+      em {
+        font-style: normal;
+        font-weight: 600;
+        color: var(--km-muted);
+      }
+    }
+
+    input,
+    select {
+      border: 1.5px solid var(--km-line2);
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--km-ink);
+      font-weight: 600;
+    }
+  }
+
+  &__cost-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--km-line);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--km-ink2);
+
+    strong {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--km-ink);
+    }
+
+    &.is-total {
+      border-bottom: none;
+
+      strong { color: var(--km-accent-ink); }
+    }
+
+    &.is-danger strong { color: var(--km-red); }
+  }
+
+  // -------------------------------------------------------- progreso envío
+  &__progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--km-ink2);
+    margin-bottom: 8px;
+  }
+
+  &__progress-done {
+    font-weight: 800;
+    color: var(--km-green-ink);
+
+    &.is-danger { color: var(--km-red); }
+  }
+
+  &__progress-pct {
+    font-weight: 800;
+    color: var(--km-ink);
+  }
+
+  &__progress-track {
+    height: 8px;
+    background: #f0eef7;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  &__progress-bar {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--km-accent);
+    transition: width 0.4s ease;
+
+    &.is-done { background: var(--km-green); }
+    &.is-danger { background: var(--km-red); }
+  }
+
+  &__history-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    @include km-btn-primary;
+    text-decoration: none;
+
+    &:hover { color: #fff; }
+  }
+
+  // -------------------------------------------------------- footer sticky
+  &__footer {
+    // Pegajoso dentro del contenido (fixed taparía el sidebar de la app).
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin: 18px -10px 0;
+    border-radius: var(--km-radius) var(--km-radius) 0 0;
+    background: var(--km-surface);
+    box-shadow: 0 -6px 24px rgba(30, 20, 60, 0.08);
+    padding: 12px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-family: var(--km-font);
+  }
+
+  &__footer-stats {
+    display: flex;
+    gap: 26px;
+    flex-wrap: wrap;
+  }
+
+  &__footer-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+
+    strong {
+      font-size: 15.5px;
+      font-weight: 800;
+      color: var(--km-ink);
+
+      &.is-danger { color: var(--km-red); }
+    }
+  }
+
+  &__footer-label {
+    @include km-label;
+  }
+
+  &__footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__blocked {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--km-orange-ink);
+    background: var(--km-orange-wash);
+    padding: 8px 13px;
+    border-radius: 99px;
+  }
+
+  &__btn-back {
+    @include km-btn-ghost;
+  }
+
+  &__btn-next {
+    @include km-btn-primary;
   }
 }
