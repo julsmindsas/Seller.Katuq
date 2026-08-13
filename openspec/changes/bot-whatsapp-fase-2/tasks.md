@@ -55,7 +55,7 @@
 
 ## 3. Cierre
 
-- [ ] 3.1 Suites del bot en verde + build Angular sin errores.
+- [x] 3.1 Suites del bot en verde + build Angular sin errores.
 - [ ] 3.2 Calibrar la ventana de ráfaga con tráfico real del piloto.
 - [ ] 3.3 Actualizar CONTRACT.md (decisión de cobro de foto+texto y ventana
       elegida) y la memoria del bot.
