@@ -148,7 +148,12 @@ export class WhatsappNewConversationDialogComponent implements OnChanges {
     fetch(`${environment.urlApi}/v1/whatsapp/kapso-templates`, { headers })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((resp: any) => {
-        this.templates = resp.items || [];
+        // Solo mensajes para escribirle a un cliente: las plantillas del
+        // SISTEMA (pedido creado, despachado...) las envía Katuq solo y
+        // ofrecerlas acá era confuso — la gente las mandaba a mano.
+        this.templates = (resp.items || []).filter(
+          (t: any) => t.uso !== "sistema",
+        );
         this.loadingTemplates = false;
       })
       .catch((err) => {

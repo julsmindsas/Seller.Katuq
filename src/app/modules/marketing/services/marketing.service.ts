@@ -21,6 +21,12 @@ export interface KapsoTemplate {
   /** [fase 2] Estado en lenguaje humano ("Aprobada", "En revisión de Meta"...). */
   estadoHumano?: string;
   motivoRechazo?: string | null;
+  /**
+   * [fase 2] Para qué es: "sistema" = notificaciones automáticas de Katuq
+   * (pedido creado, despachado...) que NO se ofrecen como mensaje manual;
+   * "marketing" = disponibles para campañas y conversación.
+   */
+  uso?: 'sistema' | 'marketing';
 }
 
 /** Respuesta de GET /v1/whatsapp/balance (prepago por comercio). */

@@ -316,8 +316,11 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
     this.marketing.getKapsoTemplates(true).subscribe({
       next: (resp) => {
         const items = resp?.items || [];
-        this.templates = items.filter((t) => t.status === 'APPROVED' || !t.status);
-        this.plantillasEnRevision = items.filter(
+        // Las plantillas del SISTEMA (pedido creado, despachado...) las envía
+        // Katuq solo — no se ofrecen como mensaje de campaña.
+        const deGente = items.filter((t) => t.uso !== 'sistema');
+        this.templates = deGente.filter((t) => t.status === 'APPROVED' || !t.status);
+        this.plantillasEnRevision = deGente.filter(
           (t) => t.status && t.status !== 'APPROVED',
         );
         this.loadingTemplates = false;

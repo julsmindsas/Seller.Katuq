@@ -134,7 +134,9 @@
       <div *ngIf="loadingTemplates" class="camp__state"><i class="fa fa-spinner fa-spin"></i> Cargando tus mensajes aprobados…</div>
       <div *ngIf="!loadingTemplates && errorTemplates" class="camp__state">{{ errorTemplates }}</div>
       <div *ngIf="!loadingTemplates && !errorTemplates && templates.length === 0" class="camp__state">
-        No hay plantillas aprobadas en tu WhatsApp Business. Crea y aprueba una plantilla en Kapso primero.
+        Aún no tienes mensajes de marketing. Usa <strong>"Crear mi propio mensaje"</strong> para
+        escribir el primero. (Las plantillas de notificaciones — pedido creado, despachado… —
+        las envía el sistema automáticamente y no aparecen aquí.)
       </div>
 
       <div class="camp__plantillas" *ngIf="!loadingTemplates && templates.length > 0">
