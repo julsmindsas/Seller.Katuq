@@ -39,10 +39,25 @@
       explícitas — sin inventar descuentos ni urgencias, una sugerencia por
       momento, el "no" se respeta a la primera. Tests de instrucciones.
 
-## 3. Verificación
+## 3. Imágenes
 
-- [ ] 3.1 Suites backend + ADK en verde; contract test del write-set intacto.
-- [ ] 3.2 Prueba real en el piloto: pedido con domicilio + fecha + dedicatoria
-      → abrir la cotización en el editor y convertirla a pedido: el carrito
+- [ ] 3.1 Backend: descarga de media del proveedor (GET media por id con las
+      credenciales del comercio, tope de tamaño ~5 MB, solo jpeg/png/webp),
+      SIN persistir — bytes en memoria al turno y se descartan. Tests del
+      gate de tamaño/formato.
+- [ ] 3.2 Despachador: tipo imagen deja de ser aviso cortés y va al agente
+      con la foto + el caption como texto; audio/sticker/documento conservan
+      el aviso. La ráfaga no agrupa imágenes (una foto = un turno). Tests.
+- [ ] 3.3 ADK: endpoint y pipeline aceptan imagen (base64 + mime) y arman el
+      turno multimodal; instrucciones para describir-buscar-ofrecer y para
+      pedir texto cuando la imagen no se entienda. Tests.
+- [ ] 3.4 Fallo limpio: imagen pesada/formato raro → respuesta amable pidiendo
+      texto; error de descarga → aviso cortés de siempre. Nunca truena.
+
+## 4. Verificación
+
+- [ ] 4.1 Suites backend + ADK en verde; contract test del write-set intacto.
+- [ ] 4.2 Prueba real en el piloto: pedido con domicilio + fecha + dedicatoria
+      (y mandando una FOTO de un producto) → abrir la cotización en el editor y convertirla a pedido: el carrito
       debe cargar configurado y sin errores.
-- [ ] 3.3 CONTRACT.md + memoria al día.
+- [ ] 4.3 CONTRACT.md + memoria al día.

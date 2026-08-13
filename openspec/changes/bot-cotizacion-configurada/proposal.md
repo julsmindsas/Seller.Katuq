@@ -53,9 +53,18 @@ inventa), UNA sugerencia por momento (no metralleta), un "no" se respeta a la
 primera, y nunca inventa descuentos ni urgencias falsas ("¡última unidad!"
 solo si las existencias reales lo dicen).
 
+**Y recibe IMÁGENES** (pedido de Daniel): la foto que manda el cliente se
+descarga del proveedor, viaja al agente en el mismo turno y el bot la usa
+para vender — describe lo que ve, busca lo más parecido en el catálogo y lo
+ofrece con precio real. La imagen se procesa y se DESCARTA (no se persiste en
+Katuq); audios y stickers siguen con el aviso cortés.
+
 ## Capabilities
 
 ### New Capabilities
+- `whatsapp-bot-imagenes`: recepción e interpretación de fotos del cliente
+  (descarga del proveedor, análisis multimodal en ADK, búsqueda de parecidos
+  en catálogo; sin persistencia de la imagen).
 - `whatsapp-bot-pedido-configurado`: captura conversacional de entrega
   (forma + fecha), método de pago, dedicatoria y facturación; validación
   server-side contra maestros; aterrizaje en la cotización con la forma
