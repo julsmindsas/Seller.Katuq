@@ -58,6 +58,48 @@
     max-width: 520px;
     text-wrap: pretty;
   }
+
+  &__acciones {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  // Miniatura del logo dentro del botón "Mi marca": confirma de un vistazo que
+  // la marca ya está cargada, sin abrir nada.
+  &__logo {
+    height: 20px;
+    width: auto;
+    max-width: 46px;
+    object-fit: contain;
+  }
+}
+
+// Aviso de marca sin logo. Solo aparece cuando falta, y se va solo al cargarlo.
+.aviso-marca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+  padding: 14px 18px;
+  border: 1.5px dashed var(--kb-accent-line-2);
+  border-radius: 14px;
+  background: var(--kb-accent-wash-4);
+
+  strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  span {
+    font-size: 12.5px;
+    color: var(--kb-muted-2);
+    font-weight: 600;
+  }
 }
 
 .btn-primario {
@@ -736,5 +778,109 @@
         transform: translateX(18px);
       }
     }
+  }
+}
+
+// ── Paso "¿qué quieres crear?" ───────────────────────────────────────────────
+.opcion-grande {
+  @include kb-btn-base;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 16px 18px;
+  border: 1.8px solid var(--kb-line-3);
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+  color: var(--kb-ink);
+
+  &:hover {
+    border-color: var(--kb-accent-line-2);
+    background: var(--kb-accent-wash-4);
+  }
+
+  &.is-elegida {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash-4);
+  }
+
+  &__texto {
+    flex: 1;
+    display: grid;
+    gap: 3px;
+
+    strong {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    small {
+      font-size: 12.5px;
+      color: var(--kb-muted-2);
+      font-weight: 600;
+      line-height: 1.35;
+    }
+  }
+}
+
+// El aviso de marca dentro del asistente es el mismo de la lista, más discreto.
+.aviso-marca--modal {
+  margin: 18px 0 0;
+}
+
+// ── Objetivo de la página ────────────────────────────────────────────────────
+.objetivos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.objetivo {
+  @include kb-btn-base;
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  text-align: left;
+  padding: 11px 13px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 12px;
+  background: #fff;
+
+  &.is-active {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash-4);
+  }
+
+  strong {
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  small {
+    font-size: 11.5px;
+    color: var(--kb-muted-2);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+}
+
+// ── Productos elegidos en el asistente ───────────────────────────────────────
+.productos-elegidos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 11px 14px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 12px;
+  background: var(--kb-chip-2);
+
+  span {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--kb-ink-2);
   }
 }

@@ -86,6 +86,35 @@ export interface PlantillaSitio {
   bloques: string[];
 }
 
+/** Un día de la serie de métricas. Los días sin tráfico llegan en cero. */
+export interface DiaMetricas {
+  dia: string;
+  vista: number;
+  lead: number;
+  pedido: number;
+  clic: number;
+  ingresos: number;
+}
+
+export interface MetricasSitio {
+  sitio: { id: string; nombre: string; slug: string; estado: string };
+  dias: number;
+  totales: {
+    vista: number;
+    lead: number;
+    pedido: number;
+    clic: number;
+    contactos: number;
+    ingresos: number;
+  };
+  clicsPorDestino: { [destino: string]: number };
+  /** Null cuando todavía no hay visitas: no es 0%, es que no hay dato. */
+  conversion: number | null;
+  serie: DiaMetricas[];
+  historico: { vistas: number; leads: number; pedidos: number };
+  truncado: boolean;
+}
+
 export interface KitDeMarca {
   logo: string;
   colorPrimario: string;
@@ -152,6 +181,11 @@ export class SitiosService extends BaseService {
     return this.get<Respuesta<Sitio>>(`/v1/sites/${id}`);
   }
 
+  /** Qué está pasando en una página: visitas, contactos, pedidos e ingresos. */
+  metricas(id: string, dias = 30): Observable<Respuesta<MetricasSitio>> {
+    return this.get<Respuesta<MetricasSitio>>(`/v1/sites/${id}/metricas?dias=${dias}`);
+  }
+
   crear(body: {
     nombre: string;
     tipo?: string;
@@ -211,7 +245,10 @@ export class SitiosService extends BaseService {
   /** Primera propuesta. Sin `guardar` solo previsualiza. */
   generar(body: {
     sector?: string;
+    /** Texto libre, solo para la IA. */
     objetivo?: string;
+    /** Objetivo de una lista corta: elige textos escritos a mano. */
+    objetivoId?: string;
     templateId?: string;
     productoIds?: string[];
     nombre?: string;

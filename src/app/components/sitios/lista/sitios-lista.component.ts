@@ -46,13 +46,44 @@ export class SitiosListaComponent implements OnInit {
 
   // Asistente de creación
   mostrandoAsistente = false;
-  paso: "plantilla" | "datos" = "plantilla";
+  paso: "tipo" | "plantilla" | "datos" = "tipo";
   plantillas: PlantillaSitio[] = [];
   cargandoPlantillas = false;
   plantillaElegida: PlantillaSitio | null = null;
 
   /** Filtro de sector del selector de plantillas. "" = todas. */
   sectorFiltro = "";
+
+  /**
+   * Qué quiere crear el comerciante. Antes no se preguntaba y TODO nacía como
+   * landing, aunque el tipo `tienda` existiera desde el principio.
+   */
+  tipoElegido: "landing" | "catalogo" | "tienda" = "landing";
+  tipos = [
+    {
+      id: "landing" as const,
+      nombre: "Una página para mi negocio",
+      pista: "Cuenta quién eres y recibe contactos por WhatsApp",
+    },
+    {
+      id: "catalogo" as const,
+      nombre: "Un catálogo para compartir",
+      pista: "Muestra tus productos con precio, sin carrito",
+    },
+    {
+      id: "tienda" as const,
+      nombre: "Una tienda que vende",
+      pista: "Con carrito, pago y el pedido entra a Katuq",
+    },
+  ];
+
+  /** Objetivo de la página. Llega del servidor junto con las plantillas. */
+  objetivoId = "";
+  objetivos: { id: string; nombre: string; pista: string }[] = [];
+
+  /** Productos a destacar, elegidos con el mismo selector del editor. */
+  productoIds: string[] = [];
+  mostrandoSelector = false;
 
   nombre = "";
   objetivo = "";
@@ -65,8 +96,43 @@ export class SitiosListaComponent implements OnInit {
     private toastr: ToastrService
   ) {}
 
+  /** Página cuyas métricas se están viendo. Null = ninguna. */
+  sitioMetricas: Sitio | null = null;
+
+  /** Kit de marca abierto. */
+  mostrandoMarca = false;
+  /** Logo de la empresa: si falta, se ofrece cargarlo antes que nada. */
+  logoMarca = "";
+  /** Sector del kit, para preseleccionar el filtro de plantillas. */
+  sectorMarca = "";
+
   ngOnInit(): void {
     this.cargar();
+    this.cargarMarca();
+  }
+
+  /**
+   * Se lee solo para saber si ya hay logo. Si falla, no se avisa: el aviso de
+   * "sube tu logo" aparecería igual y el comerciante puede entrar a la pantalla
+   * de marca cuando quiera.
+   */
+  private cargarMarca(): void {
+    this.service.kitDeMarca().subscribe({
+      next: (res) => {
+        const kit = res && res.data;
+        this.logoMarca = (kit && kit.logo) || "";
+        this.sectorMarca = (kit && kit.sector) || "";
+      },
+      error: () => undefined,
+    });
+  }
+
+  alGuardarMarca(kit: any): void {
+    this.logoMarca = (kit && kit.logo) || "";
+    this.sectorMarca = (kit && kit.sector) || "";
+    this.mostrandoMarca = false;
+    // Si venía del asistente, se sigue donde estaba en vez de devolverlo al
+    // principio: configurar la marca es un desvío, no un reinicio.
   }
 
   cargar(): void {
@@ -137,16 +203,25 @@ export class SitiosListaComponent implements OnInit {
     return bloques.some((b: any) => b && b.tipo === "productos");
   }
 
+  verMetricas(sitio: Sitio): void {
+    this.sitioMetricas = sitio;
+  }
+
   // ── Asistente ──────────────────────────────────────────────────────────────
 
   abrirAsistente(): void {
     this.mostrandoAsistente = true;
-    this.paso = "plantilla";
+    this.paso = "tipo";
     this.plantillaElegida = null;
-    this.sectorFiltro = "";
+    this.tipoElegido = "landing";
+    this.objetivoId = "";
+    this.productoIds = [];
     this.nombre = "";
     this.objetivo = "";
     this.usarIA = true;
+    // El sector del kit filtra las plantillas de entrada: quien ya dijo a qué
+    // se dedica no debería tener que volver a buscarlo entre todas.
+    this.sectorFiltro = this.sectorMarca;
 
     if (this.plantillas.length) return;
     this.cargandoPlantillas = true;
@@ -154,6 +229,7 @@ export class SitiosListaComponent implements OnInit {
       next: (res) => {
         this.cargandoPlantillas = false;
         this.plantillas = (res && res.data) || [];
+        this.objetivos = (res && res.meta && res.meta.objetivos) || [];
       },
       error: () => {
         this.cargandoPlantillas = false;
@@ -172,9 +248,31 @@ export class SitiosListaComponent implements OnInit {
     this.plantillaElegida = p;
   }
 
+  // ── Pasos ──────────────────────────────────────────────────────────────────
+
+  elegirTipo(id: "landing" | "catalogo" | "tienda"): void {
+    this.tipoElegido = id;
+    // Cada tipo suele vivir en su plantilla: la tienda quiere una con productos.
+    this.paso = "plantilla";
+  }
+
   continuar(): void {
     if (!this.plantillaElegida) return;
     this.paso = "datos";
+  }
+
+  atras(): void {
+    if (this.creando) return;
+    this.paso = this.paso === "datos" ? "plantilla" : "tipo";
+  }
+
+  abrirSelectorProductos(): void {
+    this.mostrandoSelector = true;
+  }
+
+  aplicarProductos(ids: string[]): void {
+    this.productoIds = ids;
+    this.mostrandoSelector = false;
   }
 
   crear(): void {
@@ -192,12 +290,17 @@ export class SitiosListaComponent implements OnInit {
     this.creando = true;
 
     // Con IA o sin ella se usa el mismo endpoint: `generar` con `guardar`
-    // devuelve la plantilla resuelta con la marca aunque el modelo falle.
+    // devuelve la plantilla resuelta con la marca aunque el modelo falle. El
+    // `objetivoId` elige textos escritos a mano, así que la página habla del
+    // objetivo aunque el modelo no conteste.
     this.service
       .generar({
         templateId: this.plantillaElegida.id,
         sector: this.plantillaElegida.sector,
         objetivo: this.usarIA ? this.objetivo.trim() : "",
+        objetivoId: this.objetivoId,
+        productoIds: this.productoIds,
+        tipo: this.tipoElegido,
         nombre,
         guardar: true,
       })

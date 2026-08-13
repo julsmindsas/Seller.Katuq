@@ -1,10 +1,13 @@
 import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+import { DragDropModule } from "@angular/cdk/drag-drop";
 import { SitiosRoutingModule } from "./sitios-routing.module";
 import { SitiosListaComponent } from "./lista/sitios-lista.component";
 import { SitioEditorComponent } from "./editor/sitio-editor.component";
 import { SelectorProductosComponent } from "./selector-productos/selector-productos.component";
+import { MarcaComponent } from "./marca/marca.component";
+import { MetricasComponent } from "./metricas/metricas.component";
 import { SitioRenderModule } from "../sitio-render/sitio-render.module";
 import { AlBodyDirective } from "../../shared/directives/al-body.directive";
 
@@ -17,11 +20,13 @@ import { AlBodyDirective } from "../../shared/directives/al-body.directive";
  * otro módulo la necesita, se promueve.
  */
 @NgModule({
-  imports: [CommonModule, FormsModule, SitiosRoutingModule, SitioRenderModule],
+  imports: [CommonModule, FormsModule, DragDropModule, SitiosRoutingModule, SitioRenderModule],
   declarations: [
     SitiosListaComponent,
     SitioEditorComponent,
     SelectorProductosComponent,
+    MarcaComponent,
+    MetricasComponent,
     AlBodyDirective,
   ],
 })
