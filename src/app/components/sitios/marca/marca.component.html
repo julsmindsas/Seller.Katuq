@@ -1,0 +1,135 @@
+<!-- `appAlBody`: igual que el selector de productos, el velo tiene que colgar
+     del <body> o el menú lateral queda por encima. -->
+<div class="fondo" appAlBody (click)="cerrar.emit()">
+  <div class="caja" (click)="$event.stopPropagation()">
+
+    <header class="caja__cabecera">
+      <div>
+        <h5>Mi marca</h5>
+        <p class="sub">
+          Se llena una vez y lo usan todas tus páginas. Si cambias el logo aquí, cambia en todas.
+        </p>
+      </div>
+      <button class="cerrar" (click)="cerrar.emit()" title="Cerrar" aria-label="Cerrar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <div class="caja__cuerpo">
+      <p class="cargando" *ngIf="cargando">Cargando tu marca…</p>
+
+      <ng-container *ngIf="!cargando">
+
+        <!-- Logo -->
+        <section class="grupo">
+          <h3>Tu logo</h3>
+          <p class="grupo__pista">Aparece arriba en tus páginas. Un PNG con fondo transparente se ve mejor.</p>
+
+          <div class="logo">
+            <div class="logo__marco" [class.logo__marco--vacio]="!kit.logo">
+              <img *ngIf="kit.logo" [src]="kit.logo" alt="Tu logo" />
+              <span *ngIf="!kit.logo">Sin logo</span>
+            </div>
+
+            <div class="logo__acciones">
+              <label class="btn-fantasma">
+                {{ subiendo ? 'Subiendo…' : (kit.logo ? 'Cambiar logo' : 'Subir logo') }}
+                <input type="file" accept="image/*" hidden (change)="subirLogo($event)" [disabled]="subiendo" />
+              </label>
+              <button class="btn-fantasma btn-fantasma--peligro" *ngIf="kit.logo" (click)="quitarLogo()">
+                Quitar
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Colores -->
+        <section class="grupo">
+          <h3>Tus colores</h3>
+
+          <div class="sugeridos" *ngIf="sugeridos.length">
+            <p class="grupo__pista">Sacados de tu logo. Toca uno para usarlo como color principal.</p>
+            <div class="sugeridos__fila">
+              <button class="muestra" *ngFor="let c of sugeridos"
+                      [style.background]="c"
+                      [class.is-active]="kit.colorPrimario === c"
+                      (click)="usarColorPrincipal(c)"
+                      [title]="c"></button>
+            </div>
+          </div>
+
+          <p class="grupo__pista" *ngIf="!sugeridos.length && kit.logo">
+            No pudimos leer los colores de tu logo. Elige una combinación de abajo.
+          </p>
+
+          <div class="paletas">
+            <button class="paleta" *ngFor="let p of paletasBase" (click)="aplicarPaletaBase(p)"
+                    [class.is-active]="kit.colorPrimario === p.colorPrimario">
+              <span class="paleta__puntos">
+                <span [style.background]="p.colorPrimario"></span>
+                <span [style.background]="p.colorSecundario"></span>
+                <span [style.background]="p.colorTexto"></span>
+              </span>
+              <span class="paleta__nombre">{{ p.nombre }}</span>
+            </button>
+          </div>
+
+          <div class="colores">
+            <label class="color">
+              <span>Principal</span>
+              <input type="color" [(ngModel)]="kit.colorPrimario" />
+            </label>
+            <label class="color">
+              <span>Fondo</span>
+              <input type="color" [(ngModel)]="kit.colorSecundario" />
+            </label>
+            <label class="color">
+              <span>Texto</span>
+              <input type="color" [(ngModel)]="kit.colorTexto" />
+            </label>
+          </div>
+        </section>
+
+        <!-- Negocio -->
+        <section class="grupo">
+          <h3>Tu negocio</h3>
+
+          <div class="campo">
+            <label>¿A qué se dedica {{ nombreComercial }}?</label>
+            <select [(ngModel)]="kit.sector">
+              <option value="">Elige uno</option>
+              <option *ngFor="let s of sectores" [value]="s.id">{{ s.nombre }}</option>
+            </select>
+            <small>Con esto elegimos las plantillas y los textos que mejor le van.</small>
+          </div>
+
+          <div class="campo">
+            <label>Tu frase</label>
+            <input type="text" [(ngModel)]="kit.eslogan" maxlength="160"
+                   placeholder="Ej: Tostado artesanal, entregado el mismo día" />
+            <small>Aparece en tus páginas y en lo que se ve al compartir el enlace.</small>
+          </div>
+
+          <div class="campo">
+            <label>¿Cómo le hablas a tus clientes?</label>
+            <div class="tonos">
+              <button class="tono" *ngFor="let t of tonos"
+                      [class.is-active]="kit.tono === t.id"
+                      (click)="kit.tono = t.id">
+                <strong>{{ t.nombre }}</strong>
+                <small>{{ t.pista }}</small>
+              </button>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+    </div>
+
+    <footer class="caja__pie">
+      <button class="btn-fantasma" (click)="cerrar.emit()">Cancelar</button>
+      <button class="btn-primario" (click)="guardar()" [disabled]="guardando || cargando">
+        {{ guardando ? 'Guardando…' : textoGuardar }}
+      </button>
+    </footer>
+  </div>
+</div>

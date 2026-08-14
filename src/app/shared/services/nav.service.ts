@@ -169,6 +169,13 @@ export class NavService implements OnDestroy {
     const isSuperAdmin = user.rol === "Super Administrador";
     const isJulsmindAdmin =
       user.rol === "Administrador" && user.company === "Julsmind";
+    // El centro DIAN es operativo y debe estar disponible para quien ya
+    // administra integraciones o consulta la cartera del comercio.
+    const canUseDianWorkspace =
+      isSuperAdmin ||
+      isJulsmindAdmin ||
+      authorizedPaths.includes("integrations") ||
+      authorizedPaths.includes("cartera");
 
     // Verificar si dropshipping está habilitado para filtros adicionales
     const isDropshippingEnabled = this.isDropshippingEnabled();
@@ -204,7 +211,8 @@ export class NavService implements OnDestroy {
           return (
             (!child.isOnlySuperAdministrador || isSuperAdmin) &&
             (!child.isOnlyAdmin || isJulsmindAdmin) &&
-            authorizedPaths.includes(child.path)
+            (authorizedPaths.includes(child.path) ||
+              (child.path === "facturacion-electronica" && canUseDianWorkspace))
           );
         });
 
@@ -348,6 +356,15 @@ export class NavService implements OnDestroy {
       ],
     },
     {
+      title: "Mi página web",
+      icon: "globe",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "sitios", title: "Mis páginas", type: "link", icon: "layout" },
+      ],
+    },
+    {
       title: "Dropshipping",
       icon: "truck",
       type: "sub",
@@ -385,6 +402,14 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
+        {
+          path: "facturacion-electronica",
+          title: "Facturación electrónica",
+          type: "link",
+          icon: "file-text",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
+        },
         { path: "tesoreria", title: "Tesorería", type: "link", icon: "check-square" },
         {
           path: "cartera",
@@ -512,6 +537,54 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "activity",
         },
+        {
+          path: "inventario/indicadores",
+          title: "Indicadores de bodega",
+          type: "link",
+          icon: "trending-up",
+        },
+        {
+          path: "inventario/ubicaciones",
+          title: "Mapa de la bodega",
+          type: "link",
+          icon: "map",
+        },
+        {
+          path: "inventario/conteos",
+          title: "Conteos de inventario",
+          type: "link",
+          icon: "check-square",
+        },
+      ],
+    },
+    // Compras es su propio módulo, no una carpeta de Inventarios: al recibir
+    // mercancía escribe el costo del producto, y esa frontera se sostiene
+    // también en el menú. La ruta de las órdenes se deja como estaba para no
+    // romper permisos ya dados ni enlaces guardados.
+    {
+      title: "Compras",
+      icon: "shopping-cart",
+      type: "sub",
+      active: false,
+      children: [
+        {
+          path: "compras/reposicion",
+          title: "Qué comprar",
+          type: "link",
+          icon: "trending-down",
+        },
+        {
+          path: "inventario/ordenes-compra",
+          title: "Órdenes de compra",
+          type: "link",
+          icon: "shopping-cart",
+        },
+        {
+          path: "compras/proveedores",
+          title: "Proveedores",
+          type: "link",
+          icon: "users",
+        },
       ],
     },
     {
@@ -565,12 +638,38 @@ export class NavService implements OnDestroy {
       path: "/marketing/campanas",
       active: false,
     },
+    // Los tres buzones agrupados: el menú no crece cada vez que se suma un
+    // canal, y el operador entiende que es la misma tarea en distintos lugares.
+    // La ruta de WhatsApp NO cambia, para no romper enlaces ya guardados.
     {
-      title: "Conversaciones WhatsApp",
+      title: "Mensajes",
       icon: "message-circle",
-      type: "link",
-      path: "/notificaciones/whatsapp/inbox",
+      type: "sub",
       active: false,
+      children: [
+        // OJO: estas rutas se comparan por texto EXACTO contra
+        // `authorizedMenuItems` en filterMenuItemsByAuthorization(). La de
+        // WhatsApp está registrada CON barra inicial — cambiarla la borra del
+        // menú de todas las empresas que hoy la tienen.
+        {
+          path: "/notificaciones/whatsapp/inbox",
+          title: "WhatsApp",
+          type: "link",
+          icon: "message-circle",
+        },
+        {
+          path: "/notificaciones/instagram/inbox",
+          title: "Instagram",
+          type: "link",
+          icon: "instagram",
+        },
+        {
+          path: "/notificaciones/facebook/inbox",
+          title: "Facebook",
+          type: "link",
+          icon: "facebook",
+        },
+      ],
     },
 
     // INTELIGENCIA DE NEGOCIOS

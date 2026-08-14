@@ -1,0 +1,930 @@
+/**
+ * Estilos de la página publicada. El comerciante elige color y tipografía; eso
+ * llega como variables CSS desde el componente, así que aquí no hay ningún
+ * color de marca escrito a mano.
+ *
+ * Móvil primero: la mayoría de estas páginas se abren desde un link de
+ * WhatsApp o Instagram, en un celular.
+ */
+
+.sitio {
+  font-family: var(--sitio-fuente);
+  color: var(--sitio-texto);
+  background: var(--sitio-secundario);
+  min-height: 100vh;
+}
+
+.estado {
+  padding: 4rem 1.5rem;
+  text-align: center;
+
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+// Los titulares tienen su propia fuente, peso y tracking: es la mitad de lo que
+// distingue un estilo de página de otro.
+h1,
+h2,
+h3 {
+  font-family: var(--sitio-fuente-titulo, var(--sitio-fuente));
+  font-weight: var(--sitio-titulo-peso, 700);
+  letter-spacing: var(--sitio-titulo-track, 0);
+  line-height: var(--sitio-titulo-altura, 1.15);
+}
+
+.bloque {
+  padding: var(--sitio-aire, 2.5rem) 1.25rem;
+  max-width: var(--sitio-ancho, 1100px);
+  margin: 0 auto;
+
+  h2 {
+    font-size: calc(1.5rem * var(--sitio-titulo-escala, 1));
+    margin-bottom: 1rem;
+  }
+}
+
+// ── Banner ───────────────────────────────────────────────────────────────────
+.hero {
+  position: relative;
+  padding: calc(var(--sitio-aire, 2.5rem) * 1.4) 1.25rem;
+  overflow: hidden;
+
+  &__fondo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
+  // El velo va sobre la foto completa, no como caja detrás del texto: así la
+  // imagen se ve entera y el titular se sigue leyendo. Espejo de siteHtml.js.
+  &__velo {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #000;
+  }
+
+  &--velo-claro &__velo {
+    background: #fff;
+  }
+
+  &__contenido {
+    position: relative;
+    z-index: 2;
+    max-width: 46rem;
+    margin: 0 auto;
+  }
+
+  // A pantalla completa. En la previa se acota a la altura del lienzo, que no
+  // es la del visitante; el 100svh real lo pone el backend al publicar.
+  &--completa {
+    min-height: 78vh;
+    display: flex;
+    align-items: center;
+
+    .hero__contenido {
+      width: 100%;
+    }
+  }
+
+  h1 {
+    font-size: calc(2rem * var(--sitio-titulo-escala, 1));
+    margin-bottom: 0.75rem;
+  }
+
+  p {
+    font-size: 1.05rem;
+    margin-bottom: 1.25rem;
+    opacity: 0.88;
+    line-height: 1.55;
+  }
+
+  // Sobre foto el texto va en blanco; con velo claro vuelve al color del tema.
+  &--con-imagen {
+    color: #fff;
+  }
+
+  &--con-imagen#{&}--velo-claro {
+    color: var(--sitio-texto);
+  }
+}
+
+// ── Botones ──────────────────────────────────────────────────────────────────
+.boton {
+  display: inline-block;
+  padding: 0.8rem 1.6rem;
+  border: 1px solid var(--sitio-primario);
+  border-radius: var(--sitio-radio-sm, 8px);
+  background: var(--sitio-primario);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  text-transform: var(--sitio-etiqueta-caja, none);
+  letter-spacing: var(--sitio-etiqueta-track, 0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  &--whatsapp {
+    background: #25d366;
+    color: #0b3d20;
+  }
+
+  &--chico {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+.whatsapp {
+  text-align: center;
+}
+
+// ── Encabezado ───────────────────────────────────────────────────────────────
+// Espejo de los estilos de la página publicada (`utils/siteHtml.js`): la vista
+// previa tiene que verse igual que lo que se publica.
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  &--fija {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--sitio-secundario);
+  }
+
+  &__marca {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-right: auto;
+    min-width: 0;
+  }
+
+  &__logo {
+    height: 40px;
+    width: auto;
+    max-width: 170px;
+    object-fit: contain;
+  }
+
+  &__nombre {
+    font-size: 1.1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__enlaces {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.1rem;
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+
+      &:hover {
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+.sitio--movil .cabecera {
+  gap: 0.6rem;
+
+  .cabecera__logo {
+    height: 32px;
+  }
+
+  .cabecera__enlaces {
+    gap: 0.8rem;
+    width: 100%;
+    order: 3;
+  }
+}
+
+// ── Galería y productos ──────────────────────────────────────────────────────
+.galeria__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+
+  img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--sitio-radio-sm, 10px);
+  }
+}
+
+.productos__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.producto {
+  border: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.08));
+  border-radius: var(--sitio-radio, 12px);
+  box-shadow: var(--sitio-sombra, none);
+  padding: 0.75rem;
+  background: #fff;
+
+  &__foto {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f4f4f5;
+    margin-bottom: 0.5rem;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    line-height: 1.3;
+    margin-bottom: 0.25rem;
+  }
+
+  &__precio {
+    font-weight: 700;
+    color: var(--sitio-primario);
+  }
+}
+
+.vacio {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+// ── Formulario ───────────────────────────────────────────────────────────────
+.formulario {
+  form {
+    display: grid;
+    gap: 0.85rem;
+    max-width: 480px;
+  }
+
+  label {
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: var(--sitio-etiqueta-caja, none);
+    letter-spacing: var(--sitio-etiqueta-track, 0);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.2));
+    border-radius: var(--sitio-radio-sm, 8px);
+    font: inherit;
+    font-weight: 400;
+
+    &:focus {
+      outline: 2px solid var(--sitio-primario);
+      outline-offset: 1px;
+    }
+  }
+
+  .error {
+    color: #b42318;
+    font-size: 0.9rem;
+  }
+
+  &__ok {
+    padding: 1rem;
+    border-radius: var(--sitio-radio, 10px);
+    background: rgba(37, 211, 102, 0.12);
+  }
+}
+
+// ── FAQ y pie ────────────────────────────────────────────────────────────────
+.faq details {
+  border-bottom: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.1));
+  padding: 0.75rem 0;
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  p {
+    padding-top: 0.5rem;
+  }
+}
+
+.pie {
+  border-top: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.1));
+  font-size: 0.9rem;
+  text-align: center;
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.75rem;
+  }
+
+  a {
+    color: inherit;
+  }
+}
+
+// ── Escritorio ───────────────────────────────────────────────────────────────
+@media (min-width: 768px) {
+  .bloque {
+    padding: var(--sitio-aire-ancho, 3.5rem) 2rem;
+
+    h2 {
+      font-size: calc(1.9rem * var(--sitio-titulo-escala, 1));
+    }
+  }
+
+  .hero {
+    padding: calc(var(--sitio-aire-ancho, 3.5rem) * 1.5) 2rem;
+
+    h1 {
+      font-size: calc(3rem * var(--sitio-titulo-escala, 1));
+    }
+
+    p {
+      font-size: 1.2rem;
+    }
+  }
+}
+
+// ── Modo edición ─────────────────────────────────────────────────────────────
+// Solo aplica cuando el render se usa dentro del editor: marca los bloques como
+// seleccionables y deja ver los que están ocultos.
+.envoltura {
+  position: relative;
+
+  &--editable {
+    cursor: pointer;
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+    transition: outline-color 0.15s ease;
+
+    &:hover {
+      outline-color: rgba(95, 63, 224, 0.35);
+    }
+  }
+
+  &--activa {
+    outline-color: #5F3FE0;
+  }
+
+  &--oculta {
+    opacity: 0.4;
+  }
+}
+
+.etiqueta-oculto {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #64748b;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+// Vista previa en móvil: se estrecha el lienzo para que los saltos de columna
+// se vean igual que en un celular, sin depender del ancho de la pantalla.
+.sitio--movil {
+  .bloque {
+    padding: 2rem 1rem;
+  }
+
+  .hero {
+    padding: 3rem 1rem;
+
+    h1 {
+      font-size: 1.9rem;
+    }
+
+    p {
+      font-size: 1rem;
+    }
+  }
+
+  .productos__grid,
+  .galeria__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// ── Video, reseñas y ubicación ───────────────────────────────────────────────
+// Espejo de los estilos de la página publicada. El reproductor no se carga en
+// la vista previa: se muestra su marco con un aviso.
+.video__marco {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111;
+}
+
+.video__aviso {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 1rem;
+}
+
+.resenas__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.resena {
+  margin: 0;
+  padding: 1.15rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+
+  &__estrellas {
+    color: var(--sitio-primario);
+    letter-spacing: 0.1em;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+
+    .apagada {
+      opacity: 0.22;
+    }
+  }
+
+  blockquote {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  figcaption {
+    font-size: 0.82rem;
+    opacity: 0.7;
+    font-weight: 600;
+  }
+}
+
+.ubicacion {
+  &__direccion {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+
+  &__referencia,
+  &__horario {
+    opacity: 0.75;
+    font-size: 0.92rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .boton {
+    margin-top: 0.9rem;
+  }
+}
+
+// ── Catálogo (vista previa) ──────────────────────────────────────────────────
+// No se listan productos: son miles y el servidor los pagina al publicar. Se
+// muestra la forma que tendrá para que el comerciante entienda qué está
+// poniendo en su página.
+.catalogo {
+  &__demo {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  &__barra {
+    max-width: 420px;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    color: rgba(0, 0, 0, 0.4);
+    font-size: 0.9rem;
+  }
+
+  &__chips {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+
+    span {
+      padding: 0.3rem 0.75rem;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 999px;
+      font-size: 0.78rem;
+      opacity: 0.65;
+
+      &:first-child {
+        background: var(--sitio-primario);
+        border-color: var(--sitio-primario);
+        color: #fff;
+        opacity: 1;
+      }
+    }
+  }
+
+  &__esqueleto {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+
+    span {
+      display: block;
+      aspect-ratio: 3 / 4;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.06);
+    }
+  }
+}
+
+// ── Columnas, imagen suelta, botones, separador y texto con formato ──────────
+// Espejo de la hoja de la página publicada (`utils/siteHtml.js`).
+.columnas__grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 700px) {
+  .columnas__grid--2 { grid-template-columns: repeat(2, 1fr); }
+  .columnas__grid--3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+// En la vista previa de móvil las columnas se apilan aunque el panel sea ancho.
+.sitio--movil .columnas__grid { grid-template-columns: 1fr; }
+
+.columna {
+  h3 {
+    font-size: 1.15rem;
+    margin: 0.6rem 0 0.4rem;
+  }
+
+  &__foto {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--sitio-radio, 12px);
+  }
+}
+
+.imagen__foto {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--sitio-radio, 12px);
+}
+
+.imagen--completo {
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+
+  .imagen__foto {
+    border-radius: 0;
+  }
+}
+
+.botones__fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.boton--borde {
+  background: transparent;
+  color: var(--sitio-primario);
+}
+
+.separador {
+  padding-top: 0;
+  padding-bottom: 0;
+
+  &--pequeno { height: 1.5rem; }
+  &--medio { height: 3rem; }
+  &--grande { height: 5.5rem; }
+
+  &__linea {
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    margin: 0;
+    position: relative;
+    top: 50%;
+  }
+}
+
+// Texto con formato: los estilos van sobre el contenedor porque el HTML lo
+// genera el componente.
+.formato {
+  ::ng-deep p {
+    margin: 0 0 0.8rem;
+    line-height: 1.6;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  ::ng-deep ul {
+    margin: 0 0 0.8rem;
+    padding-left: 1.2rem;
+    line-height: 1.6;
+  }
+
+  ::ng-deep a {
+    color: var(--sitio-primario);
+    text-decoration: underline;
+  }
+
+  ::ng-deep strong { font-weight: 700; }
+}
+
+// ── Edición directa sobre la página ──────────────────────────────────────────
+// Se marca con un contorno suave al pasar por encima: tiene que invitar a
+// escribir sin ensuciar la vista previa.
+.editable {
+  outline: 1.5px dashed transparent;
+  outline-offset: 4px;
+  border-radius: 3px;
+  transition: outline-color 0.15s ease, background 0.15s ease;
+  cursor: text;
+
+  &:hover {
+    outline-color: rgba(107, 78, 251, 0.45);
+  }
+
+  &:focus {
+    outline: 2px solid #6b4efb;
+    outline-offset: 4px;
+    background: rgba(107, 78, 251, 0.05);
+  }
+
+  // Un campo vacío no se puede tocar si no ocupa espacio.
+  &:empty::before {
+    content: "Escribe aquí";
+    opacity: 0.45;
+  }
+}
+
+// ── Sección libre, elementos y tarjetas ──────────────────────────────────────
+// Espejo de la hoja de la página publicada.
+.seccion__contenido {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+// Cada elemento vive en una celda de una rejilla de seis columnas: es lo que
+// permite media sección o un tercio sin inventar medidas. Espejo de la hoja
+// de la página publicada.
+.celda {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  > * {
+    max-width: 100%;
+  }
+
+  &--centro {
+    align-items: center;
+    text-align: center;
+  }
+
+  &--derecha {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+
+@media (min-width: 700px) {
+  .seccion__contenido {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .celda {
+    grid-column: span 6;
+
+    &--dosTercios { grid-column: span 4; }
+    &--mitad { grid-column: span 3; }
+    &--tercio { grid-column: span 2; }
+  }
+}
+
+// ── Colocación libre ─────────────────────────────────────────────────────────
+// La sección deja de ser rejilla y pasa a ser el marco de las coordenadas. El
+// alto y el left/top/width los pone Angular como estilo calculado; aquí solo va
+// lo que no cambia por elemento. Espejo de la hoja de la página publicada.
+.seccion__contenido--lienzo {
+  display: block;
+  position: relative;
+
+  > .celda {
+    position: absolute;
+    margin: 0;
+  }
+}
+
+// Lo que sigue es SOLO del editor: en la página publicada no hay asas ni
+// contornos. Se activa con la clase que pone la vista previa.
+.sitio--editable .seccion__contenido--lienzo > .celda {
+  cursor: grab;
+  outline: 1px dashed transparent;
+  outline-offset: 4px;
+  transition: outline-color 0.12s ease;
+
+  &:hover {
+    outline-color: rgba(37, 99, 235, 0.45);
+  }
+}
+
+.sitio--editable .celda--arrastrando {
+  cursor: grabbing;
+  outline-color: #2563eb !important;
+  outline-style: solid;
+  z-index: 5;
+  user-select: none;
+}
+
+// El asa para estirar el ancho: una pestaña en el borde derecho.
+.celda__estirar {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  width: 14px;
+  height: 34px;
+  margin-top: -17px;
+  border-radius: 7px;
+  background: #2563eb;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: ew-resize;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 6;
+}
+
+.sitio--editable .seccion__contenido--lienzo > .celda:hover .celda__estirar,
+.sitio--editable .celda--arrastrando .celda__estirar {
+  opacity: 1;
+}
+
+// En la vista previa de móvil se apila aunque el panel sea ancho.
+.sitio--movil .celda {
+  grid-column: span 6 !important;
+}
+
+.sitio--movil .seccion__contenido--2,
+.sitio--movil .seccion__contenido--3 {
+  grid-template-columns: 1fr;
+}
+
+.el-titulo {
+  margin: 0;
+  font-size: 1.2rem;
+
+  &--grande { font-size: 1.6rem; }
+  &--pequeno { font-size: 1rem; }
+}
+
+.el-imagen {
+  width: 100%;
+  height: auto;
+  border-radius: var(--sitio-radio, 12px);
+  display: block;
+}
+
+.el-espacio {
+  width: 100%;
+  height: 2.25rem;
+
+  &--pequeno { height: 1rem; }
+  &--grande { height: 4rem; }
+}
+
+.tarjetas {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  grid-template-columns: 1fr;
+
+  &--2 { grid-template-columns: repeat(2, 1fr); }
+  &--3 { grid-template-columns: repeat(3, 1fr); }
+  &--4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+.sitio--movil .tarjetas {
+  grid-template-columns: 1fr;
+}
+
+.tarjeta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.35rem;
+  border: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.1));
+  border-radius: var(--sitio-radio, 12px);
+  background: #fff;
+  text-align: left;
+
+  h3 {
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
+  .boton {
+    margin-top: auto;
+    align-self: flex-start;
+  }
+
+  &__foto {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--sitio-radio-sm, 8px);
+  }
+
+  &__icono {
+    color: var(--sitio-primario);
+  }
+
+  &__precio {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--sitio-primario);
+    margin: 0;
+  }
+
+  &__incluye {
+    margin: 0;
+    padding-left: 1.1rem;
+    line-height: 1.6;
+    font-size: 0.92rem;
+    opacity: 0.85;
+  }
+
+  &__etiqueta {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: var(--sitio-primario);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+}

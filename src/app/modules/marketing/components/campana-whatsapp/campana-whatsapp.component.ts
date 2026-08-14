@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
 
 import { CrmService } from '../../../../components/crm/services/crm.service';
 import { CrmLead, CrmStage } from '../../../../components/crm/models/crm.models';
@@ -65,8 +66,17 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
   loadingTemplates = false;
   errorTemplates = '';
   templates: KapsoTemplate[] = [];
+  /** [fase 2] Plantillas propias aún no aprobadas (en revisión / rechazadas). */
+  plantillasEnRevision: KapsoTemplate[] = [];
   selectedTemplateName = '';
   variableConfigs: VariableConfig[] = [];
+
+  // --- Paso 2: constructor de plantillas (fase 2) ---
+  /** Formulario "Crear mi propio mensaje" abierto. */
+  creandoPlantilla = false;
+  nuevoTitulo = '';
+  nuevoCuerpo = '';
+  enviandoPlantilla = false;
 
   // --- Paso 3: confirmación + envío ---
   nombreCampana = '';
@@ -87,10 +97,74 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
   constructor(
     private crm: CrmService,
     private marketing: MarketingService,
+    private toastr: ToastrService,
   ) {}
 
   ngOnInit(): void {
     this.cargarAudiencia();
+    // El footer pegajoso del mockup muestra el saldo desde el paso 1.
+    this.cargarBalance();
+  }
+
+  // =====================================================================
+  // Tarjetas de grupo del paso 1 (mockup): elegir una tarjeta carga la
+  // fuente y selecciona todo el grupo — luego se puede excluir gente de la
+  // lista. Sin tarjeta elegida no se puede continuar.
+  // =====================================================================
+  grupoElegido: '' | 'clientes' | 'crm' = '';
+  /** Al terminar de cargar la audiencia, ¿seleccionar todo el grupo? */
+  private autoSeleccionar = false;
+
+  elegirGrupo(g: 'clientes' | 'crm'): void {
+    this.grupoElegido = g;
+    this.autoSeleccionar = true;
+    if (this.fuente !== g) {
+      this.fuente = g;
+      this.onFuenteChange();
+    } else {
+      this.toggleTodos(true);
+      this.autoSeleccionar = false;
+    }
+  }
+
+  /** Texto del aviso cuando el paso actual está bloqueado ('' = se puede seguir). */
+  get bloqueoTexto(): string {
+    if (this.paso === 1) {
+      if (!this.grupoElegido) return 'Elige un grupo de clientes';
+      if (this.seleccionados.length === 0) return 'No hay nadie seleccionado';
+      if (this.excedeTope) return `Máximo ${MAX_DESTINATARIOS} por campaña`;
+      return '';
+    }
+    if (this.paso === 2) {
+      if (!this.plantillaLista) return 'Elige y completa el mensaje';
+      return '';
+    }
+    if (this.saldoInsuficiente) {
+      const falta = this.costoEstimado - (this.balance?.balanceCOP || 0);
+      return `Te faltan $${Math.max(0, Math.round(falta)).toLocaleString('es-CO')} de saldo`;
+    }
+    if (this.programacionInvalida) return 'Elige una fecha futura';
+    return '';
+  }
+
+  /** Etiqueta del botón principal del footer según el paso. */
+  get siguienteLabel(): string {
+    if (this.paso === 1) return 'Continuar al mensaje';
+    if (this.paso === 2) return 'Revisar y enviar';
+    return `${this.cuandoEnviar === 'programar' ? 'Programar para' : 'Enviar a'} ${this.seleccionados.length.toLocaleString('es-CO')} persona${this.seleccionados.length === 1 ? '' : 's'}`;
+  }
+
+  /** Acción del botón principal del footer. */
+  avanzar(): void {
+    if (this.bloqueoTexto) return;
+    if (this.paso === 1) this.irAPlantilla();
+    else if (this.paso === 2) this.irAConfirmacion();
+    else this.enviarCampana();
+  }
+
+  /** Saldo que quedaría después de enviar (para la tarjeta de costos). */
+  get saldoDespues(): number {
+    return Math.max(0, (this.balance?.balanceCOP || 0) - this.costoEstimado);
   }
 
   // =====================================================================
@@ -124,6 +198,10 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
         }));
         this.leadsSinTelefono = mapped.filter((d) => !d.phone).length;
         this.destinatarios = mapped.filter((d) => !!d.phone);
+        if (this.autoSeleccionar) {
+          this.toggleTodos(true);
+          this.autoSeleccionar = false;
+        }
         this.loadingAudiencia = false;
       },
       error: () => {
@@ -158,6 +236,10 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
             selected: false,
           }))
           .filter((d) => !!d.phone);
+        if (this.autoSeleccionar) {
+          this.toggleTodos(true);
+          this.autoSeleccionar = false;
+        }
         this.loadingAudiencia = false;
       },
       error: () => {
@@ -229,16 +311,108 @@ export class CampanaWhatsappComponent implements OnInit, OnDestroy {
   private cargarTemplates(): void {
     this.loadingTemplates = true;
     this.errorTemplates = '';
-    this.marketing.getKapsoTemplates().subscribe({
+    // `all=1`: además de las aprobadas, las propias que siguen en revisión o
+    // fueron rechazadas — para que la usuaria vea en qué va su mensaje.
+    this.marketing.getKapsoTemplates(true).subscribe({
       next: (resp) => {
-        this.templates = (resp?.items || []).filter((t) => t.status === 'APPROVED' || !t.status);
+        const items = resp?.items || [];
+        // Las plantillas del SISTEMA (pedido creado, despachado...) las envía
+        // Katuq solo — no se ofrecen como mensaje de campaña.
+        const deGente = items.filter((t) => t.uso !== 'sistema');
+        this.templates = deGente.filter((t) => t.status === 'APPROVED' || !t.status);
+        this.plantillasEnRevision = deGente.filter(
+          (t) => t.status && t.status !== 'APPROVED',
+        );
         this.loadingTemplates = false;
+        this.sugerirTitulosFaltantes();
       },
       error: () => {
         this.errorTemplates = 'No se pudieron cargar las plantillas. Verifica la configuración Kapso del comercio en /integrations.';
         this.loadingTemplates = false;
       },
     });
+  }
+
+  // =====================================================================
+  // [fase 2] Constructor de plantillas — el comercio escribe lo que quiera
+  // y Meta lo aprueba. `{nombre}` es la única variable soportada.
+  // =====================================================================
+
+  toggleCrearPlantilla(): void {
+    this.creandoPlantilla = !this.creandoPlantilla;
+  }
+
+  insertarNombre(): void {
+    const marca = '{nombre}';
+    if (this.nuevoCuerpo.includes(marca)) return;
+    this.nuevoCuerpo = `${this.nuevoCuerpo}${this.nuevoCuerpo && !this.nuevoCuerpo.endsWith(' ') ? ' ' : ''}${marca}`;
+  }
+
+  get plantillaNuevaLista(): boolean {
+    return this.nuevoTitulo.trim().length >= 3 && this.nuevoCuerpo.trim().length >= 10;
+  }
+
+  /** Vista previa del mensaje nuevo con el nombre de ejemplo. */
+  get previewPlantillaNueva(): string {
+    return (this.nuevoCuerpo || '').replace(/\{nombre\}/gi, 'María');
+  }
+
+  crearPlantilla(): void {
+    if (!this.plantillaNuevaLista || this.enviandoPlantilla) return;
+    this.enviandoPlantilla = true;
+    this.marketing
+      .crearPlantilla({ titulo: this.nuevoTitulo.trim(), cuerpo: this.nuevoCuerpo })
+      .subscribe({
+        next: (r) => {
+          this.enviandoPlantilla = false;
+          this.creandoPlantilla = false;
+          this.nuevoTitulo = '';
+          this.nuevoCuerpo = '';
+          this.toastr.success(
+            r?.message ||
+              'Tu mensaje quedó en revisión de Meta. Cuando diga "Aprobada" ya puedes usarla.',
+            'Mensaje enviado a aprobación',
+            { timeOut: 9000 },
+          );
+          this.cargarTemplates();
+        },
+        error: (err) => {
+          this.enviandoPlantilla = false;
+          this.toastr.error(
+            err?.error?.message ||
+              'No se pudo crear el mensaje. Revisa el texto e intenta de nuevo.',
+          );
+        },
+      });
+  }
+
+  /**
+   * [fase 2] Las plantillas sin título humano ("hello_world" a secas) se
+   * mandan a KAI para que proponga título y descripción en español; el
+   * backend los persiste y acá se pintan apenas llegan. Best-effort: si KAI
+   * no responde, se queda el nombre limpiado y no pasa nada.
+   */
+  private sugerirTitulosFaltantes(): void {
+    const sinTitulo = this.templates.filter((t) => t.tituloEsSugerido);
+    if (sinTitulo.length === 0) return;
+    this.marketing
+      .sugerirTitulosPlantillas(
+        sinTitulo.map((t) => ({ name: t.name, bodyText: t.bodyText || '' })),
+      )
+      .subscribe({
+        next: (resp) => {
+          const titulos = resp?.titulos || {};
+          for (const t of this.templates) {
+            const s = titulos[t.name];
+            if (s && s.titulo) {
+              t.titulo = s.titulo;
+              t.descripcion = s.descripcion || t.descripcion;
+              t.tituloEsSugerido = !resp.generadosPorKai;
+            }
+          }
+        },
+        error: () => undefined,
+      });
   }
 
   get selectedTemplate(): KapsoTemplate | null {

@@ -83,7 +83,9 @@
   left: 4%;
   font-size: 25px;
   color: #7c5cff;
-  transform: translate(-50%, -50%);
+  /* El glyph fa-truck de Font Awesome 4.7 apunta a la izquierda; se espeja
+     para que mire hacia donde avanza (proveedor → bodega → cliente). */
+  transform: translate(-50%, -50%) scaleX(-1);
   animation: truckMove 2.2s ease-in-out infinite;
 }
 

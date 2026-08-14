@@ -6,10 +6,10 @@
 
 ## 1. Etapa A — Sombra en OMS (config, reversible)
 - [x] 1.1 `companyConfig/OH MY STORE`: flags de sombra para ajustes y traslados. Verificar con un ajuste de prueba que el saldo lo siga escribiendo legacy y quede resumen en `inventory_audit`.
-- [ ] 1.2 Config Osmosis OMS: `inventoryLedgerMode=shadow` con alcance de bodegas explícito. (La foto sigue APAGADA — la sombra de Osmosis solo actúa si algún día corre un sync manual autorizado.)
+- [x] 1.2 HECHO (2026-08-10): `integration_configs/OH MY STORE_osmosis.config` con `inventoryLedgerMode=shadow`, `inventoryLedgerWarehouseCodes=[BOD-CEREZA-1,1A,1B,51]`, `allWarehouses=false` — verificado. La foto sigue APAGADA; si se reenciende, nace acotada.
 - [x] 1.3a Observador diario construido (`functions/scripts/observacion-sombra-inventario.js`, solo lectura) e integrado con la evidencia persistida.
 - [x] 1.3c Parche de persistencia de sombra (aprobado por Daniel 2026-08-07, desplegado `ae44152`): `shadowAuditService` guarda en `inventory_audit` el plan del ledger vs el saldo que dejó legacy con veredicto `divergente`, en los 4 endpoints (ajuste, lote, edición setTo, traslado); fire-and-forget, jamás frena la operación. Test puro 7 casos + smoke real (empresa sintética, rastro borrado). IMPORTANTE: el conteo hacia el umbral para manual/traslados ARRANCA 2026-08-07 con este parche — los días previos de sombra no tienen respaldo y no cuentan.
-- [ ] 1.3b Revisión diaria durante la ventana (correr el observador cada día; 5 limpias consecutivas / mínimo 7 días habilitan promover ajustes manuales).
+- [x] 1.3b AUTOMATIZADA (decisión de Daniel "con los flows", 2026-08-10): flow `inventario-verificacion-diaria-oms` corre 4:30am diario y persiste la evidencia; la lectura acumulada se hace al evaluar el umbral (~15-ago).
 
 ## 2. Etapa B — Promoción por origen (config, reversible)
 - [ ] 2.1 Ajustes manuales → `transactional` (verificar `operationKey` llega desde la pantalla; pestañas viejas caen a legacy por diseño).
@@ -20,8 +20,8 @@
 
 ## 3. Etapa C — Candados permanentes (código pequeño + contract test)
 - [x] 3.1 Validación en frontera de escritura de movimientos: rechazar `idBodega` no-canónico y producto no resoluble (aplica también a caminos legacy). Test que intenta escribir un doc ID y espera rechazo.
-- [ ] 3.2 Guard de bodegas: impedir borrar bodega con stock o historia; ofrecer archivado. Ajuste en pantalla Bodegas para mostrar el motivo.
-- [ ] 3.3 Correr `test:inventory-safety-contract` y suites de emulador tocadas; build sin errores.
+- [x] 3.2 HECHO (2026-08-10, sesión roadmap, aprobado por Daniel): `warehouseDeletionGuard` desplegado — 409 con conteo y oferta de archivado; 8/8 test; smoke real: 9 de 13 bodegas OMS protegidas.
+- [x] 3.3 HECHO (2026-08-10): 19 suites unitarias/contrato + 15 suites de emulador (cada una en proyecto demo aislado) = 34/34 PASS; build de producción del front sin errores. Acta en CONTRACT.
 
 ## 4. Remates de datos (dry-run primero, respaldo total)
 - [x] 4.1 Café Escobar: drenar 5 filas duplicadas (58 uds) con el método D-151; verificación par por par post-apply.

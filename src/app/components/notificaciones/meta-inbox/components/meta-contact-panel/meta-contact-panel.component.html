@@ -1,0 +1,91 @@
+<div class="mp">
+  <p class="mp__cargando" *ngIf="cargando">Cargando contacto…</p>
+
+  <ng-container *ngIf="!cargando && perfil">
+    <!-- Identidad del contacto en el canal -->
+    <div class="mp__cabecera">
+      <span class="mp__avatar">{{ (perfil.perfilNombre || nombrePerfil || '?').charAt(0) }}</span>
+      <div class="mp__ident">
+        <span class="mp__nombre">{{ perfil.perfilNombre || nombrePerfil || 'Contacto' }}</span>
+        <span class="mp__canal">{{ canal === 'instagram' ? 'Instagram' : 'Facebook' }}</span>
+      </div>
+    </div>
+
+    <!-- SIN VINCULAR: no se muestran pedidos de nadie -->
+    <ng-container *ngIf="!perfil.vinculado">
+      <div class="mp__bloque mp__bloque--pendiente">
+        <span class="mp__etiqueta">Cliente</span>
+        <p class="mp__ayuda">
+          Este contacto todavía no está vinculado a un cliente.
+          {{ canal === 'instagram' ? 'Instagram' : 'Facebook' }} no nos da el teléfono,
+          así que hay que decirle quién es para poder ver sus pedidos.
+        </p>
+
+        <input
+          type="text"
+          class="mp__buscador"
+          placeholder="Buscar cliente por nombre, documento o teléfono…"
+          [ngModel]="termino"
+          (ngModelChange)="alEscribir($event)"
+        />
+
+        <p class="mp__cargando" *ngIf="buscando">Buscando…</p>
+
+        <p class="mp__sin-resultados" *ngIf="!buscando && termino.length >= 2 && resultados.length === 0">
+          No encontramos clientes con ese dato.
+        </p>
+
+        <button
+          type="button"
+          class="mp__resultado"
+          *ngFor="let c of resultados; trackBy: trackCliente"
+          [disabled]="vinculando"
+          (click)="vincular(c)"
+        >
+          <span class="mp__resultado-nombre">{{ nombreDe(c) }}</span>
+          <span class="mp__resultado-dato" *ngIf="c.numero_celular_whatsapp || c.telefono">
+            {{ c.numero_celular_whatsapp || c.telefono }}
+          </span>
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- VINCULADO: aquí sí aparece el contexto del cliente -->
+    <ng-container *ngIf="perfil.vinculado">
+      <div class="mp__bloque">
+        <span class="mp__etiqueta">Cliente</span>
+        <div class="mp__cliente">
+          <span class="mp__cliente-nombre">{{ perfil.cliente?.nombre || 'Cliente' }}</span>
+          <button type="button" class="mp__desvincular" [disabled]="vinculando" (click)="desvincular()">
+            Cambiar
+          </button>
+        </div>
+        <span class="mp__origen" *ngIf="perfil.origenVinculo === 'sugerido_ia'">
+          Vínculo sugerido automáticamente y confirmado
+        </span>
+      </div>
+
+      <div class="mp__bloque" *ngIf="perfil.lead">
+        <span class="mp__etiqueta">Oportunidad</span>
+        <span class="mp__lead">{{ perfil.lead.name }}</span>
+        <span class="mp__lead-etapa" *ngIf="perfil.lead.stage">{{ perfil.lead.stage }}</span>
+      </div>
+
+      <div class="mp__bloque">
+        <span class="mp__etiqueta">Pedidos</span>
+        <p class="mp__sin-resultados" *ngIf="perfil.pedidos.length === 0">
+          Este cliente todavía no tiene pedidos.
+        </p>
+        <a
+          class="mp__pedido"
+          *ngFor="let p of perfil.pedidos"
+          [routerLink]="p.deepLink"
+        >
+          <span class="mp__pedido-nro">{{ p.nroPedido }}</span>
+          <span class="mp__pedido-estado" *ngIf="p.estado">{{ p.estado }}</span>
+          <span class="mp__pedido-total">{{ p.total | currency: 'COP':'symbol-narrow':'1.0-0' }}</span>
+        </a>
+      </div>
+    </ng-container>
+  </ng-container>
+</div>

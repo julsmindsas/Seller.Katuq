@@ -1,0 +1,407 @@
+// Tema de Compras — tokens y patrones del canon "Todos los pedidos".
+//
+// Vive aquí y no repetido en cada componente porque las tres pantallas de
+// compras son la misma familia visual: si el acento cambia, cambia en un lugar.
+// Los valores salen de `openspec/specs/design-system/spec.md`; no inventar hex
+// por fuera de esa tabla.
+
+$kc-accent: #5F3FE0;
+$kc-accent-2: #7C5CFF;
+$kc-accent-soft: #efe9ff;
+$kc-ink: #211F3A;
+$kc-muted: #8f8bab;
+$kc-muted-2: #9995b3;
+$kc-line: #ececf4;
+$kc-line-soft: #f1f0f7;
+$kc-chip-bg: #f5f4fa;
+$kc-chip-border: #e9e7f3;
+$kc-surface: #faf9fe;
+$kc-hover: #faf9ff;
+$kc-tile: #f3f1fb;
+
+// Semánticos en par fuerte/fondo-suave. Nunca sólidos Material.
+$kc-ok: #1E874B;
+$kc-ok-bg: #E6F7EE;
+$kc-warn: #D9820A;
+$kc-warn-bg: #FFF1DF;
+$kc-danger: #D64545;
+$kc-danger-bg: #FDECEC;
+$kc-info: #1E6FD9;
+$kc-info-bg: #E7F1FF;
+$kc-slate: #5A6B78;
+$kc-slate-bg: #eef0f3;
+
+$kc-shadow-panel: 0 1px 3px rgba(30, 20, 80, .04);
+$kc-shadow-hover: 0 6px 14px -8px rgba(50, 40, 110, .35);
+$kc-shadow-primary: 0 8px 18px -8px rgba(95, 63, 224, .7);
+
+$kc-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+// ---------- página ----------
+
+.kc-page {
+  padding: 18px 20px 32px;
+  color: $kc-ink;
+  font-size: 12.5px;
+}
+
+.kc-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+
+  h1 { font-size: 20px; font-weight: 800; margin: 0; letter-spacing: -.2px; }
+  p { margin: 4px 0 0; color: $kc-muted; font-size: 12.5px; max-width: 62ch; }
+}
+
+.kc-panel {
+  background: #fff;
+  border: 1px solid $kc-line;
+  border-radius: 16px;
+  box-shadow: $kc-shadow-panel;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+// ---------- labels y chips de dato ----------
+
+.kc-label {
+  display: block;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  color: $kc-muted;
+}
+
+.kc-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.kc-stat {
+  background: $kc-surface;
+  border: 1px solid #eeecf7;
+  border-radius: 10px;
+  padding: 11px 13px;
+  transition: transform .15s ease, box-shadow .15s ease;
+
+  strong {
+    display: block;
+    font-size: 19px;
+    font-weight: 800;
+    color: $kc-accent;
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+
+  small { display: block; color: $kc-muted-2; font-size: 10.5px; margin-top: 1px; }
+
+  &:hover { transform: translateY(-1px); box-shadow: $kc-shadow-hover; }
+
+  // El dato que obliga a actuar hoy no puede verse igual que el resto.
+  &--alerta {
+    background: $kc-danger-bg;
+    border-color: rgba(214, 69, 69, .25);
+    strong { color: $kc-danger; }
+  }
+}
+
+// ---------- filtros ----------
+
+.kc-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.kc-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  > span { @extend .kc-label; }
+
+  input, select {
+    height: 40px;
+    min-width: 180px;
+    background: $kc-chip-bg;
+    border: 1px solid $kc-chip-border;
+    border-radius: 10px;
+    padding: 0 12px;
+    color: $kc-ink;
+    font-size: 12.5px;
+
+    &:focus { outline: none; border-color: $kc-accent-2; background: #fff; }
+  }
+}
+
+// Segmented control: la opción activa es una pastilla blanca, no un botón lleno.
+.kc-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: $kc-chip-bg;
+  border: 1px solid $kc-chip-border;
+  border-radius: 10px;
+
+  button {
+    border: 0;
+    background: transparent;
+    border-radius: 8px;
+    padding: 7px 13px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #5b5878;
+    cursor: pointer;
+
+    &.is-active {
+      background: #fff;
+      color: $kc-accent;
+      box-shadow: 0 1px 3px rgba(30, 20, 80, .12);
+    }
+  }
+}
+
+// ---------- botones ----------
+
+.kc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 11px;
+  padding: 10px 15px;
+  background: $kc-accent;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: $kc-shadow-primary;
+  transition: background .15s ease;
+
+  &:hover:not(:disabled) { background: #4a2fc0; }
+  &:disabled { opacity: .45; cursor: default; box-shadow: none; }
+
+  &--ghost {
+    background: #fff;
+    color: #5b5878;
+    border: 1px solid #e4e2ef;
+    box-shadow: none;
+
+    &:hover:not(:disabled) { background: $kc-hover; color: $kc-accent; }
+  }
+
+  &--mini { padding: 6px 11px; font-size: 11px; border-radius: 9px; }
+}
+
+// ---------- filas de listado ----------
+
+.kc-lista { display: flex; flex-direction: column; gap: 2px; }
+
+.kc-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  transition: background .12s ease, border-color .12s ease;
+
+  &:hover { background: $kc-hover; }
+  &.is-active { background: rgba(124, 92, 255, .09); border-color: #d9cffb; }
+  // Se agota antes de que llegue el pedido: se ve sin tener que leer la fila.
+  &.is-urgente { background: rgba(214, 69, 69, .05); }
+  &.is-inactiva { opacity: .55; }
+
+  &__avatar {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__main { flex: 1; min-width: 0; }
+
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  &__nombre {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: $kc-ink;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__cod {
+    font-family: $kc-mono;
+    font-size: 11px;
+    font-weight: 700;
+    color: $kc-info;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 3px;
+    color: $kc-muted;
+    font-size: 11px;
+  }
+
+  &__fin {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: none;
+    text-align: right;
+  }
+
+  &__valor {
+    font-size: 14px;
+    font-weight: 800;
+    color: $kc-ink;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__acciones { display: flex; gap: 6px; }
+}
+
+// ---------- pills ----------
+
+.kc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  background: $kc-chip-bg;
+  color: #5b5878;
+
+  &--ok { background: $kc-ok-bg; color: $kc-ok; }
+  &--warn { background: $kc-warn-bg; color: $kc-warn; }
+  &--danger { background: $kc-danger-bg; color: $kc-danger; }
+  &--info { background: $kc-info-bg; color: $kc-info; }
+  &--accent { background: $kc-accent-soft; color: $kc-accent; }
+  &--slate { background: $kc-slate-bg; color: $kc-slate; }
+}
+
+// ---------- avisos y vacíos ----------
+
+.kc-avisos {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 12px 15px;
+  background: $kc-accent-soft;
+  border: 1px solid #ddd3fb;
+  border-radius: 12px;
+  font-size: 11.5px;
+  color: #4a4468;
+
+  li + li { margin-top: 5px; }
+}
+
+.kc-vacio {
+  text-align: center;
+  padding: 34px 20px;
+
+  &__icono {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 12px;
+    border-radius: 16px;
+    background: $kc-tile;
+    color: $kc-accent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+  }
+
+  h3 { font-size: 15px; font-weight: 800; margin: 0 0 4px; }
+  p { font-size: 12.5px; color: $kc-muted; margin: 0 auto; max-width: 52ch; }
+}
+
+.kc-cargando { color: $kc-muted; font-size: 12.5px; padding: 10px 2px; }
+.kc-error { color: $kc-danger; font-weight: 700; font-size: 12.5px; }
+
+// ---------- tablas (donde el dato SÍ es tabular) ----------
+//
+// Una orden de compra es una tabla de verdad: producto, cantidad, costo. Se
+// re-tona al canon en vez de forzarla a ser lista.
+
+.kc-tabla-marco { overflow-x: auto; }
+
+.kc-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+
+  th {
+    @extend .kc-label;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid $kc-line;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px;
+    border-bottom: 1px solid $kc-line-soft;
+    vertical-align: middle;
+  }
+
+  tbody tr:hover td { background: $kc-hover; }
+
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+}
+
+.kc-input {
+  height: 34px;
+  max-width: 96px;
+  text-align: right;
+  background: $kc-chip-bg;
+  border: 1px solid $kc-chip-border;
+  border-radius: 10px;
+  padding: 0 9px;
+  color: $kc-ink;
+  font-size: 12.5px;
+
+  &:focus { outline: none; border-color: $kc-accent-2; background: #fff; }
+}
+
+.kc-select {
+  height: 34px;
+  min-width: 150px;
+  background: $kc-chip-bg;
+  border: 1px solid $kc-chip-border;
+  border-radius: 10px;
+  padding: 0 8px;
+  color: $kc-ink;
+  font-size: 12px;
+
+  &:focus { outline: none; border-color: $kc-accent-2; background: #fff; }
+}

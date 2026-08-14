@@ -1,0 +1,370 @@
+<div class="sitios">
+  <div class="sitios__interior">
+
+    <header class="cabecera">
+      <div class="cabecera__texto">
+        <h1>Mis páginas</h1>
+        <p>Publica una tienda o una landing con tus productos. Eliges una plantilla y listo — no
+          necesitas saber de diseño.</p>
+      </div>
+      <div class="cabecera__acciones">
+        <button class="btn-fantasma" (click)="mostrandoMarca = true">
+          <img *ngIf="logoMarca" class="cabecera__logo" [src]="logoMarca" alt="" />
+          <svg *ngIf="!logoMarca" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3l7 4v10l-7 4-7-4V7z"/></svg>
+          Mi marca
+        </button>
+        <button class="btn-primario" (click)="abrirAsistente()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
+          Crear página
+        </button>
+      </div>
+    </header>
+
+    <!-- Aviso solo cuando falta lo que de verdad cambia el resultado. -->
+    <div class="aviso-marca" *ngIf="!cargando && !logoMarca">
+      <div>
+        <strong>Sube tu logo</strong>
+        <span>Tus páginas se ven de tu marca, no de una plantilla. Se hace una vez.</span>
+      </div>
+      <button class="btn-fantasma" (click)="mostrandoMarca = true">Configurar mi marca</button>
+    </div>
+
+    <div class="cargando" *ngIf="cargando">Cargando tus páginas…</div>
+
+    <!-- Sin nada creado todavía -->
+    <div class="vacio" *ngIf="!cargando && !sitios.length">
+      <span class="vacio__icono">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/></svg>
+      </span>
+      <h2>Todavía no tienes ninguna página</h2>
+      <p>Elige una plantilla de tu sector y publícala en minutos. Tus productos, precios y
+        disponibilidad salen de Katuq, así que no tienes que volver a escribirlos.</p>
+      <button class="btn-primario" (click)="abrirAsistente()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
+        Crear mi primera página
+      </button>
+    </div>
+
+    <!-- Listado -->
+    <div class="lista" *ngIf="!cargando && sitios.length">
+      <article class="pagina" *ngFor="let s of sitios">
+
+        <!-- Miniatura: un navegador de juguete con los colores de la página -->
+        <div class="pagina__muestra">
+          <div class="mock">
+            <div class="mock__barra">
+              <span class="mock__punto mock__punto--rojo"></span>
+              <span class="mock__punto mock__punto--ambar"></span>
+              <span class="mock__punto mock__punto--verde"></span>
+              <span class="mock__url"></span>
+            </div>
+            <div class="mock__pagina">
+              <span class="mock__titulo" [style.background]="colorDe(s)"></span>
+              <span class="mock__linea"></span>
+              <span class="mock__linea mock__linea--corta"></span>
+              <span class="mock__boton" [style.background]="colorDe(s)"></span>
+              <div class="mock__rejilla" *ngIf="tieneProductos(s)">
+                <span class="mock__tarjeta mock__tarjeta--1"></span>
+                <span class="mock__tarjeta mock__tarjeta--2"></span>
+                <span class="mock__tarjeta mock__tarjeta--3"></span>
+                <span class="mock__tarjeta mock__tarjeta--4"></span>
+              </div>
+              <div class="mock__parrafo" *ngIf="!tieneProductos(s)">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pagina__datos">
+          <div class="pagina__titulo">
+            <h2>{{ s.nombre }}</h2>
+            <span class="estado" [class.estado--publicado]="s.estado === 'publicado'">
+              <span class="estado__punto"></span>
+              {{ s.estado === 'publicado' ? 'PUBLICADA' : 'BORRADOR' }}
+            </span>
+          </div>
+
+          <div class="enlace">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18"/></svg>
+            <span class="enlace__url">{{ s.slug }}.{{ dominioSitios }}</span>
+            <button class="enlace__copiar" [class.is-copiado]="copiadoId === s.id" (click)="copiarEnlace(s)">
+              <ng-container *ngIf="copiadoId === s.id">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg>
+                ¡Copiado!
+              </ng-container>
+              <ng-container *ngIf="copiadoId !== s.id">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V4h11"/></svg>
+                Copiar
+              </ng-container>
+            </button>
+          </div>
+
+          <div class="metricas">
+            <div class="metrica">
+              <div class="metrica__valor">{{ s.vistasCount || 0 }}</div>
+              <div class="metrica__etiqueta">visitas</div>
+              <div class="metrica__pista">desde que se publicó</div>
+            </div>
+            <div class="metrica">
+              <div class="metrica__valor">{{ s.leadsCount || 0 }}</div>
+              <div class="metrica__etiqueta">contactos</div>
+              <div class="metrica__pista">desde el formulario</div>
+            </div>
+            <div class="metrica">
+              <div class="metrica__valor">{{ s.pedidosCount || 0 }}</div>
+              <div class="metrica__etiqueta">pedidos</div>
+              <div class="metrica__pista">hechos en la página</div>
+            </div>
+          </div>
+
+          <div class="pagina__acciones">
+            <button class="btn-primario btn-primario--sm" (click)="abrir(s)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg>
+              Editar página
+            </button>
+            <button class="btn-fantasma" *ngIf="s.estado === 'publicado'" (click)="verPublicado(s)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              Ver como cliente
+            </button>
+            <button class="btn-fantasma" (click)="verMetricas(s)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
+              Cómo va
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <p class="apunte">
+        <span class="apunte__icono">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+        </span>
+        Puedes tener varias páginas: una tienda con todo tu catálogo y landings para promociones
+        puntuales.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ Asistente de creación ═══════════════════════════════════════════════
+     Va con `appAlBody` porque `.page-body` abre contexto de apilamiento y el
+     velo se quedaría por debajo del menú. Ver al-body.directive.ts. -->
+<div class="velo" *ngIf="mostrandoAsistente" appAlBody (click)="cerrarAsistente()">
+  <div class="caja" [class.caja--angosta]="paso === 'datos' || paso === 'tipo'" (click)="$event.stopPropagation()">
+
+    <!-- ── Paso 1: qué quiere crear ── -->
+    <ng-container *ngIf="paso === 'tipo'">
+      <header class="caja__cabecera">
+        <div class="caja__titulo">
+          <div>
+            <h2>¿Qué quieres crear?</h2>
+            <p>Puedes cambiarlo después; esto solo nos dice por dónde empezar.</p>
+          </div>
+          <button class="cerrar" (click)="cerrarAsistente()" aria-label="Cerrar">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="caja__cuerpo">
+        <button class="opcion-grande" *ngFor="let t of tipos"
+                [class.is-elegida]="tipoElegido === t.id"
+                (click)="elegirTipo(t.id)">
+          <span class="opcion-grande__texto">
+            <strong>{{ t.nombre }}</strong>
+            <small>{{ t.pista }}</small>
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
+        <!-- La marca se puede cargar sin salir del asistente. -->
+        <div class="aviso-marca aviso-marca--modal" *ngIf="!logoMarca">
+          <div>
+            <strong>¿Ya subiste tu logo?</strong>
+            <span>Con él, tu página se ve de tu marca desde el primer momento.</span>
+          </div>
+          <button class="btn-fantasma" (click)="mostrandoMarca = true">Subir logo</button>
+        </div>
+      </div>
+
+      <footer class="caja__pie">
+        <span class="caja__pista">Elige una opción para continuar.</span>
+        <button class="btn-fantasma" (click)="cerrarAsistente()">Cancelar</button>
+      </footer>
+    </ng-container>
+
+    <!-- ── Paso 2: plantilla ── -->
+    <ng-container *ngIf="paso === 'plantilla'">
+      <header class="caja__cabecera">
+        <div class="caja__titulo">
+          <div>
+            <h2>Elige un diseño</h2>
+            <p>El que se parezca a tu negocio. Todo se puede cambiar después.</p>
+          </div>
+          <button class="cerrar" (click)="cerrarAsistente()" aria-label="Cerrar">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="filtros" *ngIf="plantillas.length">
+          <button class="chip" [class.is-active]="!sectorFiltro" (click)="sectorFiltro = ''">Todas</button>
+          <button class="chip" *ngFor="let sec of sectores"
+                  [class.is-active]="sectorFiltro === sec"
+                  (click)="sectorFiltro = sec">{{ etiquetaSector(sec) }}</button>
+        </div>
+      </header>
+
+      <div class="caja__cuerpo">
+        <div class="cargando" *ngIf="cargandoPlantillas">Cargando plantillas…</div>
+
+        <div class="plantillas">
+          <button class="plantilla" *ngFor="let p of plantillasVisibles"
+                  [class.is-elegida]="plantillaElegida?.id === p.id"
+                  (click)="elegirPlantilla(p)">
+            <span class="plantilla__muestra">
+              <span class="plantilla__hero" [style.background]="colorPlantilla(p)">
+                <span class="plantilla__hero-barra"></span>
+                <span class="plantilla__hero-linea"></span>
+                <span class="plantilla__hero-linea plantilla__hero-linea--corta"></span>
+              </span>
+              <span class="plantilla__azulejos">
+                <span [style.background]="colorPlantilla(p) + '22'"></span>
+                <span [style.background]="colorPlantilla(p) + '33'"></span>
+                <span [style.background]="colorPlantilla(p) + '22'"></span>
+              </span>
+            </span>
+
+            <span class="plantilla__nombre">
+              <span>{{ tituloPlantilla(p) }}</span>
+              <span class="plantilla__check" *ngIf="plantillaElegida?.id === p.id">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M20 6 9 17l-5-5"/></svg>
+              </span>
+            </span>
+            <span class="plantilla__desc">{{ p.descripcion }}</span>
+            <span class="plantilla__secciones">
+              <span *ngFor="let sec of seccionesDe(p)">{{ sec }}</span>
+            </span>
+          </button>
+        </div>
+
+        <p class="sin-resultados" *ngIf="!cargandoPlantillas && !plantillasVisibles.length">
+          No hay plantillas para ese sector todavía.
+        </p>
+      </div>
+
+      <footer class="caja__pie">
+        <span class="caja__pista">
+          {{ plantillaElegida
+              ? 'Podrás cambiar textos, colores y secciones cuando quieras.'
+              : 'Toca una plantilla para elegirla.' }}
+        </span>
+        <button class="btn-fantasma" (click)="atras()">Atrás</button>
+        <button class="btn-primario btn-primario--sm" [disabled]="!plantillaElegida" (click)="continuar()">
+          {{ plantillaElegida ? 'Usar esta plantilla' : 'Elige una plantilla' }}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </footer>
+    </ng-container>
+
+    <!-- ── Paso 2: datos ── -->
+    <ng-container *ngIf="paso === 'datos'">
+      <header class="caja__cabecera">
+        <div class="caja__titulo">
+          <div>
+            <h2>Cuéntanos de tu página</h2>
+            <p>Plantilla elegida: <strong>{{ tituloPlantilla(plantillaElegida!) }}</strong></p>
+          </div>
+          <button class="cerrar" (click)="cerrarAsistente()" aria-label="Cerrar">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="caja__cuerpo">
+        <div class="campo">
+          <label for="nombre-pagina">Nombre de la página</label>
+          <input id="nombre-pagina" type="text" [(ngModel)]="nombre" maxlength="80"
+                 placeholder="Ej: Colección primavera" />
+          <small>Se usa para la dirección pública. Puedes cambiarla luego.</small>
+        </div>
+
+        <!-- El objetivo cambia los textos de la página, con o sin IA. -->
+        <div class="campo" *ngIf="objetivos.length">
+          <label>¿Qué quieres lograr con esta página?</label>
+          <div class="objetivos">
+            <button class="objetivo" *ngFor="let o of objetivos"
+                    [class.is-active]="objetivoId === o.id"
+                    (click)="objetivoId = objetivoId === o.id ? '' : o.id">
+              <strong>{{ o.nombre }}</strong>
+              <small>{{ o.pista }}</small>
+            </button>
+          </div>
+          <small>Con esto ajustamos los textos de tu portada y tus botones.</small>
+        </div>
+
+        <!-- Productos a destacar: el mismo selector del editor. -->
+        <div class="campo">
+          <label>¿Qué productos quieres mostrar?</label>
+          <div class="productos-elegidos">
+            <span>{{ productoIds.length ? (productoIds.length + ' producto(s) elegido(s)') : 'Ninguno todavía' }}</span>
+            <button class="btn-fantasma" (click)="abrirSelectorProductos()">
+              {{ productoIds.length ? 'Cambiar' : 'Elegir productos' }}
+            </button>
+          </div>
+          <small>Se muestran con el precio y la disponibilidad de tu catálogo. Puedes dejarlo para después.</small>
+        </div>
+
+        <button class="interruptor" [class.is-active]="usarIA" (click)="usarIA = !usarIA">
+          <span class="interruptor__icono">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg>
+          </span>
+          <span class="interruptor__texto">
+            <strong>Que Katuq escriba los textos por mí</strong>
+            <small>Redacta la portada y las secciones con la marca de tu negocio.</small>
+          </span>
+          <span class="interruptor__palanca"><span></span></span>
+        </button>
+
+        <div class="campo" *ngIf="usarIA">
+          <label for="objetivo-pagina">¿Algo más que debamos saber?</label>
+          <input id="objetivo-pagina" type="text" [(ngModel)]="objetivo" maxlength="200"
+                 placeholder="Ej: hacemos envíos solo los fines de semana" />
+          <small>Opcional. Entre más claro, mejores quedan los textos.</small>
+        </div>
+      </div>
+
+      <footer class="caja__pie">
+        <span class="caja__pista">Puedes cambiar todo esto después desde el editor.</span>
+        <button class="btn-fantasma" (click)="atras()" [disabled]="creando">Atrás</button>
+        <button class="btn-primario btn-primario--sm" (click)="crear()" [disabled]="creando">
+          {{ creando ? 'Creando…' : 'Crear página' }}
+        </button>
+      </footer>
+    </ng-container>
+
+  </div>
+</div>
+
+<!-- Estos dos van FUERA del velo del asistente: se abren también desde la
+     cabecera de la lista, con el asistente cerrado. -->
+
+<!-- Kit de marca. Al guardarlo se refresca el logo de esta pantalla. -->
+<app-marca *ngIf="mostrandoMarca"
+           (guardado)="alGuardarMarca($event)"
+           (cerrar)="mostrandoMarca = false">
+</app-marca>
+
+<!-- Productos a destacar, desde el asistente. -->
+<app-selector-productos *ngIf="mostrandoSelector"
+                        [seleccionados]="productoIds"
+                        (confirmar)="aplicarProductos($event)"
+                        (cerrar)="mostrandoSelector = false">
+</app-selector-productos>
+
+<!-- Métricas de una página. -->
+<app-metricas *ngIf="sitioMetricas"
+              [siteId]="sitioMetricas.id"
+              [nombre]="sitioMetricas.nombre"
+              (cerrar)="sitioMetricas = null">
+</app-metricas>

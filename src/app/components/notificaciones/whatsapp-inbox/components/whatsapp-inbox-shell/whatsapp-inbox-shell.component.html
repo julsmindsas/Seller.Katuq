@@ -3,14 +3,56 @@
   [class.wa-shell--detail-open]="selectedPhoneHash"
 >
   <header class="wa-shell__header">
-    <h2 class="wa-shell__title">Conversaciones WhatsApp</h2>
+    <div class="wa-shell__heading">
+      <h2 class="wa-shell__title">Conversaciones de WhatsApp</h2>
+      <p class="wa-shell__subtitle">
+        Lo que tus clientes te escriben y lo que el asistente responde por ti
+      </p>
+    </div>
+
+    <nav class="wa-shell__tabs" role="tablist" aria-label="Vista del buzón">
+      <button
+        type="button"
+        role="tab"
+        class="wa-shell__tab"
+        [class.is-active]="vista === 'conversaciones'"
+        [attr.aria-selected]="vista === 'conversaciones'"
+        (click)="setVista('conversaciones')"
+      >
+        <i class="fa fa-comments-o" aria-hidden="true"></i> Conversaciones
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="wa-shell__tab"
+        [class.is-active]="vista === 'pedidos'"
+        [attr.aria-selected]="vista === 'pedidos'"
+        (click)="setVista('pedidos')"
+      >
+        <i class="fa fa-shopping-basket" aria-hidden="true"></i> Pedidos
+      </button>
+    </nav>
+
+    <a
+      class="wa-shell__campaign"
+      routerLink="/marketing/campanas/whatsapp"
+      title="Enviar una campaña de WhatsApp a un grupo de clientes"
+    >
+      <i class="fa fa-bullhorn" aria-hidden="true"></i> Nueva campaña
+    </a>
   </header>
 
   <div class="wa-shell__body">
     <aside class="wa-shell__list">
       <app-whatsapp-thread-list
+        *ngIf="vista === 'conversaciones'"
         (threadSelected)="onThreadSelected($event)"
       ></app-whatsapp-thread-list>
+      <app-whatsapp-pedidos-list
+        *ngIf="vista === 'pedidos'"
+        [selectedPhoneHash]="selectedPhoneHash"
+        (sesionSelected)="onThreadSelected($event)"
+      ></app-whatsapp-pedidos-list>
     </aside>
 
     <section class="wa-shell__detail">

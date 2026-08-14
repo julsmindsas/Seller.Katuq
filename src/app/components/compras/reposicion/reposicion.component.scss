@@ -1,0 +1,124 @@
+// Qué comprar — canon "Todos los pedidos".
+@import '../compras-theme';
+
+.kc-atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 20px;
+    background: $kc-chip-bg;
+    border: 1px solid $kc-chip-border;
+    color: #5b5878;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .15s ease, color .15s ease;
+
+    &:hover { background: $kc-accent-soft; color: $kc-accent; }
+    &.is-active { background: $kc-accent; border-color: $kc-accent; color: #fff; }
+  }
+}
+
+.rp-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+
+  &__acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+}
+
+.rp-titulo {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rp-conteo {
+  font-size: 11px;
+  font-weight: 700;
+  color: $kc-muted;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.rp-check {
+  flex: none;
+  display: flex;
+  align-items: center;
+  margin: 0;
+
+  input {
+    width: 16px;
+    height: 16px;
+    accent-color: $kc-accent;
+    cursor: pointer;
+  }
+}
+
+// La cantidad y el proveedor viven en la fila: decidir cuánto pedir y a quién
+// es la acción de esta pantalla, no un paso aparte.
+.rp-fin {
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.rp-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+
+  &--ancho { min-width: 160px; }
+}
+
+.rp-sincosto { color: $kc-warn; font-weight: 700; }
+
+.rp-pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid $kc-line;
+}
+
+.rp-total {
+  margin-right: auto;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-nota {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  color: $kc-muted;
+}
+
+.kc-avisos i { color: $kc-accent; margin-right: 5px; }
+
+@media (max-width: 900px) {
+  .kc-row {
+    flex-wrap: wrap;
+
+    &__fin {
+      width: 100%;
+      justify-content: flex-start;
+      padding-left: 63px;
+    }
+  }
+}

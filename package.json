@@ -22,7 +22,8 @@
     "actualizar-compilar": "npm run update-version && npm run build",
     "release": "npm run update-version && node --max_old_space_size=8192 node_modules/@angular/cli/bin/ng build --configuration=production && firebase deploy",
     "deploy-privacy": "npm run update-version && node --max_old_space_size=8192 node_modules/@angular/cli/bin/ng build --configuration=production && firebase deploy --config firebase-privacy.json",
-    "build-privacy": "node --max_old_space_size=8192 node_modules/@angular/cli/bin/ng build --configuration=production"
+    "build-privacy": "node --max_old_space_size=8192 node_modules/@angular/cli/bin/ng build --configuration=production",
+    "verificar:espejo-sitio": "node scripts/verificar-espejo-sitio.js"
   },
   "private": true,
   "dependencies": {

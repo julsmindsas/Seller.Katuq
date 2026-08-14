@@ -6,9 +6,13 @@ import { IntegrationFormValidatorService, ValidationResult } from './integration
 import { IntegrationUIHelperService } from './integration-ui-helper.service';
 import { BodegaService } from '../../shared/services/bodegas/bodega.service';
 import { environment } from '../../../environments/environment';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, timer, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError, filter } from 'rxjs/operators';
+import Swal from 'sweetalert2';
+import { VentasService } from '../../shared/services/ventas/ventas.service';
+import { DaneCodesService } from '../../shared/services/dane-codes.service';
+import { MunicipioDane } from '../../shared/data/colombia-dane-codes';
 
 @Component({
   selector: 'app-integrations',
@@ -70,6 +74,29 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
   isSaving = false;
   isTesting = false;
+  dianTestOrderIds = '';
+  dianHabilitationLoading = false;
+  dianZipKey = '';
+  dianHabilitationStatus: any = null;
+  dianTestOrders: any[] = [];
+  dianSelectedOrderIds: string[] = [];
+  dianOrdersLoading = false;
+  dianStep = 1;
+  dianStepError = '';
+  dianRevealSecrets = false;
+  dianShowAdvancedNumbering = false;
+  dianShowFiscalDetails = false;
+  dianCertificateFileName = '';
+  dianMunicipalitySearch = '';
+  dianMunicipalityResults: MunicipioDane[] = [];
+  dianDirectMode = false;
+  readonly dianSteps = [
+    { number: 1, title: 'Comercio', subtitle: 'Confirmar datos del RUT' },
+    { number: 2, title: 'Firma digital', subtitle: 'Copiar códigos y subir certificado' },
+    { number: 3, title: 'Rango de facturas', subtitle: 'Copiar la numeración autorizada' },
+    { number: 4, title: 'Revisar', subtitle: 'Confirmar antes de guardar' },
+    { number: 5, title: 'Activar', subtitle: 'Completar pruebas o comenzar' }
+  ];
 
   // World Office master data (loaded after successful test connection)
   woEmpresas: any[] = [];
@@ -119,7 +146,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     private formValidator: IntegrationFormValidatorService,
     private uiHelper: IntegrationUIHelperService,
     private bodegaService: BodegaService,
+    private ventasService: VentasService,
+    private daneCodesService: DaneCodesService,
     private router: Router,
+    private route: ActivatedRoute,
     public activeModal?: NgbActiveModal
   ) {
     this.integrationForm = this.createShopifyForm();
@@ -128,6 +158,15 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.availableIntegrations = this.integrationsService.getAvailableIntegrations();
     this.initializeFilteredIntegrations();
+
+    // La ruta directa de DIAN debe pintar el asistente inmediatamente. Antes se
+    // ejecutaban primero varias consultas genéricas de integraciones; cualquier
+    // problema de contexto de empresa o de red podía lanzar un error sincrónico
+    // y dejar el router-outlet completamente en blanco.
+    if (this.route.snapshot.queryParamMap.get('provider') === 'dian') {
+      this.openDianFromDirectRoute();
+      return;
+    }
     
     if (this.preselectedCategory) {
       this.selectedCategory = this.preselectedCategory;
@@ -150,6 +189,47 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.startHealthChecks();
     this.loadConfigSchema();
     this.updateTemplateProperties(); // Carga inicial
+
+  }
+
+  private openDianFromDirectRoute(): void {
+    this.dianDirectMode = true;
+    this.isModalMode = false;
+    this.selectedIntegrationType = 'dian';
+    this.showOnlyForm = true;
+    this.isConfigurationMode = true;
+
+    // El formulario nuevo es el fallback visible mientras se consulta si el
+    // comercio ya tiene una configuración. Esto también cubre comercios nuevos.
+    this.resetForm();
+    this.showOnlyForm = true;
+    this.dianStep = 1;
+    this.updateTemplateProperties();
+    this.setupRealTimeValidation();
+
+    try {
+      this.integrationsService.getIntegration('dian').pipe(takeUntil(this.destroy$)).subscribe({
+        next: (integration) => {
+          if (integration?.type || integration?.provider) {
+            this.editIntegration({ ...integration, type: 'dian', provider: 'dian' });
+          }
+          this.showOnlyForm = true;
+          this.dianStep = 1;
+        },
+        error: () => {
+          // Un 404 significa que este comercio aún no ha configurado DIAN. El
+          // formulario vacío ya está listo; no se oculta ni se redirige.
+          this.showOnlyForm = true;
+          this.dianStep = 1;
+        }
+      });
+    } catch (_) {
+      // getCurrentCompanyId puede fallar antes de crear el Observable si el
+      // contexto del comercio todavía está cargando. La pantalla debe seguir
+      // disponible para que el usuario pueda volver o reintentar.
+      this.showOnlyForm = true;
+      this.dianStep = 1;
+    }
   }
 
   ngOnDestroy(): void {
@@ -556,6 +636,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'siigo':
         this.integrationForm = this.createSiigoForm();
         break;
+      case 'dian':
+        this.integrationForm = this.createDianForm();
+        this.dianStep = 1;
+        this.prefillDianCompanyData();
+        break;
       case 'prindel':
         this.integrationForm = this.createPrindelForm();
         break;
@@ -667,6 +752,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'siigo':
         this.integrationForm = this.createSiigoForm();
         break;
+      case 'dian':
+        this.integrationForm = this.createDianForm();
+        break;
       case 'prindel':
         this.integrationForm = this.createPrindelForm();
         break;
@@ -718,6 +806,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
             enabled: fullIntegration.enabled ?? integration.enabled,
             ...config
           });
+          if (integration.type === 'dian') {
+            const issuer = config.issuer || {};
+            this.dianMunicipalitySearch = issuer.cityName
+              ? `${issuer.cityName}${issuer.department ? ' - ' + issuer.department : ''}`
+              : '';
+          }
 
           // Para campos que el backend NO devuelve por seguridad (ej. accessKey encriptado),
           // limpiar validators solo de esos campos vacíos
@@ -1018,6 +1112,285 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  createDianForm(): FormGroup {
+    return this.fb.group({
+      name: ['DIAN directo', Validators.required],
+      enabled: [true],
+      environment: ['habilitacion', Validators.required],
+      issuer: this.fb.group({
+        businessName: ['', Validators.required],
+        nit: ['', [Validators.required, Validators.pattern(/^\d{6,10}$/)]],
+        dv: ['', [Validators.pattern(/^\d$/)]],
+        address: ['', Validators.required],
+        municipalityCode: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
+        cityName: ['', Validators.required],
+        department: ['', Validators.required],
+        responsibilities: ['R-99-PN'],
+        email: ['', Validators.email]
+      }),
+      numbering: this.fb.group({
+        resolutionNumber: ['', Validators.required],
+        prefix: ['', Validators.required],
+        from: [1, [Validators.required, Validators.min(1)]],
+        to: [1, [Validators.required, Validators.min(1)]],
+        current: [1, [Validators.required, Validators.min(1)]],
+        validFrom: ['', Validators.required],
+        validTo: ['', Validators.required]
+      }),
+      noteNumbering: this.fb.group({
+        creditPrefix: ['NC', Validators.required],
+        creditCurrent: [1, [Validators.required, Validators.min(1)]],
+        debitPrefix: ['ND', Validators.required],
+        debitCurrent: [1, [Validators.required, Validators.min(1)]]
+      }),
+      softwareId: ['', Validators.required],
+      softwarePin: ['', Validators.required],
+      testSetId: [''],
+      technicalKey: ['', Validators.required],
+      certificateP12Base64: ['', Validators.required],
+      certificatePassword: ['', Validators.required],
+      enableAutoInvoicing: [false],
+      sendEmail: [true],
+      timeoutMs: [90000, [Validators.min(10000), Validators.max(180000)]]
+    });
+  }
+
+  onDianCertificateSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files[0];
+    if (!file) return;
+    if (!/\.(p12|pfx)$/i.test(file.name)) {
+      this.uiHelper.showError('Selecciona un certificado .p12 o .pfx válido.');
+      input.value = '';
+      return;
+    }
+    this.dianCertificateFileName = file.name;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = String(reader.result || '');
+      this.integrationForm.get('certificateP12Base64')?.setValue(value.split(',').pop() || '');
+      this.integrationForm.get('certificateP12Base64')?.markAsDirty();
+    };
+    reader.onerror = () => this.uiHelper.showError('No fue posible leer el certificado.');
+    reader.readAsDataURL(file);
+  }
+
+  searchDianMunicipalities(event: Event): void {
+    const query = (event.target as HTMLInputElement)?.value || '';
+    this.dianMunicipalitySearch = query;
+    if (query.trim().length < 2) {
+      this.dianMunicipalityResults = [];
+      return;
+    }
+    this.daneCodesService.searchMunicipios(query.trim()).pipe(takeUntil(this.destroy$)).subscribe((results) => {
+      this.dianMunicipalityResults = results.slice(0, 8);
+    });
+  }
+
+  selectDianMunicipality(municipality: MunicipioDane): void {
+    this.integrationForm.get('issuer')?.patchValue({
+      municipalityCode: municipality.codigo,
+      cityName: municipality.nombre,
+      department: municipality.departamento,
+    });
+    this.dianMunicipalitySearch = `${municipality.nombre} - ${municipality.departamento}`;
+    this.dianMunicipalityResults = [];
+    this.daneCodesService.addMunicipioFrecuente(municipality);
+  }
+
+  syncDianCurrentFromRange(): void {
+    const from = Number(this.integrationForm.get('numbering.from')?.value);
+    const current = this.integrationForm.get('numbering.current');
+    if (Number.isFinite(from) && from > 0 && (current?.pristine || !current?.value)) {
+      current?.setValue(from);
+    }
+  }
+
+  goToDianStep(step: number): void {
+    if (step < 1 || step > 5 || step > this.dianStep + 1) return;
+    if (step === this.dianStep + 1 && !this.validateDianStep(this.dianStep)) return;
+    this.dianStepError = '';
+    this.dianStep = step;
+  }
+
+  nextDianStep(): void {
+    if (!this.validateDianStep(this.dianStep)) return;
+    this.dianStepError = '';
+    this.dianStep = Math.min(5, this.dianStep + 1);
+  }
+
+  previousDianStep(): void {
+    this.dianStepError = '';
+    this.dianStep = Math.max(1, this.dianStep - 1);
+  }
+
+  finishDianSetup(): void {
+    if (this.dianDirectMode) {
+      this.router.navigate(['/facturacion-electronica']);
+      return;
+    }
+    if (this.isModalMode && this.activeModal) this.activeModal.close('saved');
+    else this.backToSelection();
+  }
+
+  exitDianSetup(): void {
+    this.router.navigate(['/facturacion-electronica']);
+  }
+
+  loadDianTestOrders(): void {
+    this.dianOrdersLoading = true;
+    this.ventasService.getOrdersByFilterOptimized({ sortField: 'fechaCreacion', sortOrder: -1 }, 1, 30, false)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.dianOrdersLoading = false;
+          this.dianTestOrders = (response?.orders || []).filter((order: any) =>
+            !order?.nroFactura && Array.isArray(order?.carrito) && order.carrito.length > 0
+          );
+        },
+        error: () => {
+          this.dianOrdersLoading = false;
+          this.uiHelper.showError('No pudimos cargar las ventas de prueba. Puedes reintentar.');
+        }
+      });
+  }
+
+  toggleDianTestOrder(order: any): void {
+    const id = String(order?._id || order?.cd || order?.id || '');
+    if (!id) return;
+    const selected = this.dianSelectedOrderIds.includes(id);
+    if (!selected && this.dianSelectedOrderIds.length >= 8) {
+      this.uiHelper.showWarning('Ya seleccionaste las ocho ventas necesarias.');
+      return;
+    }
+    this.dianSelectedOrderIds = selected
+      ? this.dianSelectedOrderIds.filter((value) => value !== id)
+      : [...this.dianSelectedOrderIds, id];
+    this.dianTestOrderIds = this.dianSelectedOrderIds.join('\n');
+  }
+
+  isDianTestOrderSelected(order: any): boolean {
+    const id = String(order?._id || order?.cd || order?.id || '');
+    return this.dianSelectedOrderIds.includes(id);
+  }
+
+  private validateDianStep(step: number): boolean {
+    const paths: { [key: number]: string[] } = {
+      1: ['environment', 'issuer'],
+      2: ['softwareId', 'softwarePin', 'technicalKey', 'certificateP12Base64', 'certificatePassword'],
+      3: ['numbering', 'noteNumbering']
+    };
+    if (step === 2 && this.integrationForm.get('environment')?.value === 'habilitacion') paths[2].push('testSetId');
+    const controls = (paths[step] || []).map((path) => this.integrationForm.get(path)).filter(Boolean);
+    controls.forEach((control) => control?.markAllAsTouched());
+    let valid = controls.every((control) => control?.valid !== false);
+    if (step === 2 && !this.editingIntegrationId && this.integrationForm.get('environment')?.value === 'habilitacion') {
+      valid = valid && !!this.integrationForm.get('testSetId')?.value;
+    }
+    if (!valid) {
+      const labels: { [key: string]: string } = {
+        environment: 'el punto del proceso', issuer: 'los datos legales del comercio',
+        softwareId: 'Software ID', softwarePin: 'PIN del software', technicalKey: 'clave técnica',
+        testSetId: 'TestSetId', certificateP12Base64: 'archivo del certificado',
+        certificatePassword: 'contraseña del certificado', numbering: 'numeración autorizada',
+        noteNumbering: 'numeración de notas'
+      };
+      const missing = (paths[step] || [])
+        .filter((path) => this.integrationForm.get(path)?.invalid)
+        .map((path) => labels[path] || path);
+      this.dianStepError = `Para continuar falta revisar: ${missing.join(', ')}.`;
+      setTimeout(() => {
+        const invalid = document.querySelector('.integration-form .ng-invalid.ng-touched') as HTMLElement | null;
+        invalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        invalid?.focus();
+      });
+    }
+    return valid;
+  }
+
+  private prefillDianCompanyData(): void {
+    try {
+      const current = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const issuer = this.integrationForm.get('issuer');
+      if (!issuer) return;
+      issuer.patchValue({
+        businessName: current.razonSocial || current.nombre || current.nomComercial || '',
+        nit: String(current.nit || user.nit || '').replace(/\D/g, ''),
+        dv: String(current.dv || current.digitoVerificacion || ''),
+        address: current.direccion || current.address || '',
+        municipalityCode: current.codigoMunicipio || current.municipalityCode || '',
+        cityName: current.ciudad || current.city || '',
+        department: current.departamento || current.department || '',
+        email: current.email || user.email || ''
+      }, { emitEvent: false });
+      const city = current.ciudad || current.city || '';
+      const department = current.departamento || current.department || '';
+      this.dianMunicipalitySearch = city ? `${city}${department ? ' - ' + department : ''}` : '';
+    } catch (_) {
+      // El usuario puede completar los datos manualmente si el perfil legacy no es JSON válido.
+    }
+  }
+
+  submitDianHabilitation(): void {
+    const orderIds = this.dianTestOrderIds.split(/[\s,;]+/).map((id) => id.trim()).filter(Boolean);
+    const uniqueIds = [...new Set(orderIds)];
+    if (uniqueIds.length !== 8) {
+      this.uiHelper.showError(`Debe ingresar exactamente 8 IDs de pedidos diferentes. Encontrados: ${uniqueIds.length}.`);
+      return;
+    }
+    if (this.integrationForm.get('environment')?.value !== 'habilitacion') {
+      this.uiHelper.showError('El set oficial solo se puede ejecutar en ambiente de habilitación.');
+      return;
+    }
+    Swal.fire({
+      icon: 'warning',
+      title: '¿Enviar el set oficial a la DIAN?',
+      html: 'Se consumirán consecutivos y se transmitirán <strong>8 facturas, 1 nota crédito y 1 nota débito</strong>.',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar set',
+      cancelButtonText: 'Cancelar'
+    }).then((confirmation) => {
+      if (!confirmation.isConfirmed) return;
+      this.dianHabilitationLoading = true;
+      this.dianHabilitationStatus = null;
+      this.integrationsService.submitDianHabilitationSet(uniqueIds).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (response: any) => {
+          this.dianHabilitationLoading = false;
+          const data = response?.data || response;
+          this.dianZipKey = data?.zipKey || '';
+          this.uiHelper.showSuccess(`Set enviado. ZipKey: ${this.dianZipKey}`);
+        },
+        error: (error) => {
+          this.dianHabilitationLoading = false;
+          this.uiHelper.showError(error?.error?.message || error?.message || 'No se pudo enviar el set DIAN.');
+        }
+      });
+    });
+  }
+
+  checkDianHabilitationStatus(): void {
+    const zipKey = this.dianZipKey.trim();
+    if (!zipKey) {
+      this.uiHelper.showError('Ingrese el ZipKey devuelto por la DIAN.');
+      return;
+    }
+    this.dianHabilitationLoading = true;
+    this.integrationsService.getDianHabilitationStatus(zipKey).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (response: any) => {
+        this.dianHabilitationLoading = false;
+        this.dianHabilitationStatus = response?.data || response;
+        const accepted = this.dianHabilitationStatus?.isValid === true;
+        if (accepted) this.uiHelper.showSuccess('La DIAN reporta el set como aceptado.');
+        else this.uiHelper.showError('El set sigue pendiente o contiene rechazos. Revise el detalle mostrado.');
+      },
+      error: (error) => {
+        this.dianHabilitationLoading = false;
+        this.uiHelper.showError(error?.error?.message || error?.message || 'No se pudo consultar el ZipKey.');
+      }
+    });
+  }
+
   createPrindelForm(): FormGroup {
     return this.fb.group({
       name: ['Prindel', Validators.required],
@@ -1167,6 +1540,13 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (result: any) => {
         this.isSaving = false;
+
+        if (provider === 'dian') {
+          this.dianStep = 5;
+          this.loadDianTestOrders();
+          this.uiHelper.showSuccess('Configuración DIAN guardada. Ya puedes hacer la prueba de habilitación.');
+          return;
+        }
 
         // El backend ahora responde { success, configId, message }
         if (result && result.success) {
@@ -1513,6 +1893,26 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           costAccount: formData.costAccount,
           inventoryAccount: formData.inventoryAccount,
           discountAccount: formData.discountAccount
+        };
+        break;
+      case 'dian':
+        credentials = {
+          environment: formData.environment,
+          issuer: {
+            ...formData.issuer,
+            responsibilities: String(formData.issuer?.responsibilities || 'R-99-PN').split(/[;,]+/).map((value: string) => value.trim()).filter(Boolean)
+          },
+          numbering: formData.numbering,
+          noteNumbering: formData.noteNumbering,
+          softwareId: formData.softwareId,
+          softwarePin: formData.softwarePin,
+          testSetId: formData.testSetId,
+          technicalKey: formData.technicalKey,
+          certificateP12Base64: formData.certificateP12Base64,
+          certificatePassword: formData.certificatePassword,
+          enableAutoInvoicing: formData.environment === 'produccion' && !!formData.enableAutoInvoicing,
+          sendEmail: !!formData.sendEmail,
+          timeoutMs: formData.timeoutMs || 90000
         };
         break;
       case 'osmosis':

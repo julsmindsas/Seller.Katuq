@@ -16,6 +16,7 @@ import { ToastrService } from "ngx-toastr";
 
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
 import {
+  BotThreadState,
   ContactProfile,
   WhatsappMessage,
 } from "../../models/whatsapp-thread.model";
@@ -81,6 +82,12 @@ export class WhatsappThreadDetailComponent
   profile: ContactProfile | null = null;
   loading = false;
   contactPanelOpen = false;
+
+  // ─── Bot de pedidos ────────────────────────────────────────────────────
+  /** Estado del bot para este hilo (null = sin bot o sin cargar). */
+  botState: BotThreadState | null = null;
+  /** Lock del botón tomar/devolver mientras responde el backend. */
+  botActionBusy = false;
 
   // ─── Composer ──────────────────────────────────────────────────────────
   /** Texto en edición del composer. Two-way binding con el textarea. */
@@ -310,6 +317,9 @@ export class WhatsappThreadDetailComponent
         this.toastr.success("Mensaje enviado", "WhatsApp");
         // Recargar para ver el saliente en el feed.
         this.refreshMessages();
+        // Responder a mano le quita el hilo al bot (lo marca el backend);
+        // refrescar el estado para que la franja cambie de una.
+        this.cargarEstadoBot(hash);
       })
       .catch((err: Error) => {
         this.sending = false;
@@ -406,6 +416,7 @@ export class WhatsappThreadDetailComponent
           .map((m: any) => ({
             id: m.id,
             direction: m.direction === "inbound" ? "inbound" : "outbound",
+            esBot: String(m.type || "") === "BOT_REPLY",
             type: "text" as any,
             body:
               m.text ||
@@ -468,15 +479,66 @@ export class WhatsappThreadDetailComponent
     }
   }
 
+  // ─── Bot de pedidos ─────────────────────────────────────────────────────
+
+  /** Carga (o refresca) el estado del bot para el hilo. Nunca bloquea el chat. */
+  private cargarEstadoBot(hash: string): void {
+    this.inbox.getBotState(hash).subscribe({
+      next: (estado) => {
+        // Si el hilo cambió mientras respondía, se descarta.
+        if (this.phoneHash === hash) this.botState = estado;
+      },
+      error: () => undefined,
+    });
+  }
+
+  /** El vendedor se queda con la conversación; el bot se calla en este hilo. */
+  tomarConversacion(): void {
+    if (!this.phoneHash || this.botActionBusy) return;
+    const hash = this.phoneHash;
+    this.botActionBusy = true;
+    this.inbox.tomarConversacion(hash).subscribe({
+      next: () => {
+        this.botActionBusy = false;
+        this.toastr.success("La conversación quedó a tu cargo. El bot no vuelve a responder acá.");
+        this.cargarEstadoBot(hash);
+      },
+      error: () => {
+        this.botActionBusy = false;
+        this.toastr.error("No se pudo tomar la conversación. Probá de nuevo.");
+      },
+    });
+  }
+
+  /** Le devuelve la conversación al bot (arranca con la cuenta de turnos en cero). */
+  devolverAlBot(): void {
+    if (!this.phoneHash || this.botActionBusy) return;
+    const hash = this.phoneHash;
+    this.botActionBusy = true;
+    this.inbox.devolverAlBot(hash).subscribe({
+      next: () => {
+        this.botActionBusy = false;
+        this.toastr.success("El bot vuelve a atender esta conversación.");
+        this.cargarEstadoBot(hash);
+      },
+      error: () => {
+        this.botActionBusy = false;
+        this.toastr.error("No se pudo devolver la conversación al bot.");
+      },
+    });
+  }
+
   private loadAll(): void {
     if (!this.phoneHash) {
       this.messages = [];
       this.feedItems = [];
       this.profile = null;
+      this.botState = null;
       return;
     }
     this.loading = true;
     const hash = this.phoneHash;
+    this.cargarEstadoBot(hash);
     // Fetch directo para evitar el bug del provider singleton cacheado por HMR
     // (mismo patrón que thread-list.fetchThreads).
     const userStr = localStorage.getItem("user") || "{}";
@@ -520,6 +582,7 @@ export class WhatsappThreadDetailComponent
           .map((m: any) => ({
             id: m.id,
             direction: m.direction === "inbound" ? "inbound" : "outbound",
+            esBot: String(m.type || "") === "BOT_REPLY",
             type: "text" as any,
             body:
               m.text ||

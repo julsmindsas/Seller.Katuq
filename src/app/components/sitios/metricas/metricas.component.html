@@ -1,0 +1,108 @@
+<div class="fondo" appAlBody (click)="cerrar.emit()">
+  <div class="caja" (click)="$event.stopPropagation()">
+
+    <header class="caja__cabecera">
+      <div>
+        <h5>Cómo va tu página</h5>
+        <p class="sub">{{ nombre || (datos && datos.sitio.nombre) }}</p>
+      </div>
+      <button class="cerrar" (click)="cerrar.emit()" title="Cerrar" aria-label="Cerrar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <div class="caja__cuerpo">
+      <div class="rangos">
+        <button *ngFor="let r of rangos" [class.is-active]="rango === r.dias" (click)="cambiarRango(r.dias)">
+          {{ r.nombre }}
+        </button>
+      </div>
+
+      <p class="estado" *ngIf="cargando">Cargando…</p>
+      <p class="estado" *ngIf="error">{{ error }}</p>
+
+      <ng-container *ngIf="!cargando && !error && datos">
+
+        <!-- Sin una sola visita el resto de cifras no dice nada -->
+        <div class="sin-datos" *ngIf="!hayTrafico">
+          <strong>Todavía nadie ha entrado</strong>
+          <p *ngIf="datos.sitio.estado !== 'publicado'">
+            Esta página aún no está publicada. Publícala y comparte el enlace por WhatsApp o tus redes.
+          </p>
+          <p *ngIf="datos.sitio.estado === 'publicado'">
+            Comparte tu enlace por WhatsApp, Instagram o donde estén tus clientes. Aquí verás cuánta
+            gente entra y cuántos te escriben.
+          </p>
+        </div>
+
+        <ng-container *ngIf="hayTrafico">
+          <div class="cifras">
+            <div class="cifra">
+              <span class="cifra__valor">{{ datos.totales.vista }}</span>
+              <span class="cifra__nombre">Visitas</span>
+            </div>
+            <div class="cifra">
+              <span class="cifra__valor">{{ datos.totales.contactos }}</span>
+              <span class="cifra__nombre">Te escribieron</span>
+              <span class="cifra__pista">Formulario y WhatsApp</span>
+            </div>
+            <div class="cifra">
+              <span class="cifra__valor">{{ datos.totales.pedido }}</span>
+              <span class="cifra__nombre">Pedidos</span>
+            </div>
+            <div class="cifra cifra--destacada">
+              <span class="cifra__valor">{{ dinero(datos.totales.ingresos) }}</span>
+              <span class="cifra__nombre">Vendido</span>
+            </div>
+          </div>
+
+          <p class="conversion" *ngIf="datos.conversion !== null">
+            De cada 100 personas que entran, <strong>{{ datos.conversion }}</strong> te escriben o compran.
+          </p>
+
+          <!-- Visitas por día -->
+          <section class="grafica">
+            <h6>Visitas por día</h6>
+            <div class="grafica__barras">
+              <div class="barra" *ngFor="let d of datos.serie; let i = index"
+                   [title]="d.vista + ' visitas · ' + d.dia">
+                <span class="barra__relleno" [style.height.%]="altura(d)"
+                      [class.barra__relleno--con-pedido]="d.pedido > 0"></span>
+                <span class="barra__etiqueta" *ngIf="mostrarEtiqueta(i)">{{ etiquetaDia(d.dia) }}</span>
+              </div>
+            </div>
+            <p class="grafica__pie">Las barras moradas son días con pedidos.</p>
+          </section>
+
+          <!-- Clics -->
+          <section class="clics" *ngIf="datos.totales.clic > 0">
+            <h6>En qué hicieron clic</h6>
+            <ul>
+              <li *ngIf="datos.clicsPorDestino['whatsapp']">
+                <span>Botón de WhatsApp</span><strong>{{ datos.clicsPorDestino['whatsapp'] }}</strong>
+              </li>
+              <li *ngIf="datos.clicsPorDestino['cta']">
+                <span>Botones de la página</span><strong>{{ datos.clicsPorDestino['cta'] }}</strong>
+              </li>
+              <li *ngIf="datos.clicsPorDestino['producto']">
+                <span>Productos</span><strong>{{ datos.clicsPorDestino['producto'] }}</strong>
+              </li>
+              <li *ngIf="datos.clicsPorDestino['red-social']">
+                <span>Tus redes</span><strong>{{ datos.clicsPorDestino['red-social'] }}</strong>
+              </li>
+            </ul>
+          </section>
+
+          <p class="aviso" *ngIf="datos.truncado">
+            Esta página tiene mucho tráfico y estamos mostrando solo una parte. Avísanos para
+            activarte el histórico completo.
+          </p>
+        </ng-container>
+      </ng-container>
+    </div>
+
+    <footer class="caja__pie">
+      <button class="btn-fantasma" (click)="cerrar.emit()">Cerrar</button>
+    </footer>
+  </div>
+</div>

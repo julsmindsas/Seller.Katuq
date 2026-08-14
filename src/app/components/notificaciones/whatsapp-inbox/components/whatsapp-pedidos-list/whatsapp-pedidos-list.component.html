@@ -1,0 +1,86 @@
+<div class="wa-pedidos">
+  <!-- Filtros por estado -->
+  <div class="wa-pedidos__filtros" role="tablist" aria-label="Filtrar pedidos">
+    <button
+      *ngFor="let f of [
+        { id: 'todo', label: 'Todos' },
+        { id: 'bot', label: 'Bot' },
+        { id: 'humano', label: 'Asesor' },
+        { id: 'cerrada', label: 'Cerrados' }
+      ]"
+      type="button"
+      class="wa-pedidos__filtro"
+      role="tab"
+      [class.is-active]="filtro === f.id"
+      (click)="setFiltro($any(f.id))"
+    >
+      {{ f.label }}
+      <span class="wa-pedidos__filtro-count">{{ contar($any(f.id)) }}</span>
+    </button>
+  </div>
+
+  <div class="wa-pedidos__loading" *ngIf="loading">
+    <i class="fa fa-spinner fa-spin"></i> Cargando pedidos...
+  </div>
+
+  <!-- Estado vacío -->
+  <div class="wa-pedidos__empty" *ngIf="!loading && filtradas.length === 0">
+    <i class="fa fa-shopping-basket" aria-hidden="true"></i>
+    <p><strong>Sin pedidos del bot todavía.</strong></p>
+    <p>
+      Cuando el bot atienda una conversación de compra, acá vas a ver el
+      carrito en vivo, quién la lleva y la cotización cuando cierre.
+    </p>
+  </div>
+
+  <!-- Tarjetas de conversación-pedido -->
+  <div class="wa-pedidos__lista" *ngIf="!loading && filtradas.length > 0">
+    <button
+      *ngFor="let s of filtradas; trackBy: trackSesion"
+      type="button"
+      class="wa-pedidos__card"
+      [class.is-selected]="s.phoneHash === selectedPhoneHash"
+      (click)="seleccionar(s)"
+    >
+      <div class="wa-pedidos__card-top">
+        <span class="wa-pedidos__nombre">{{ s.contactName }}</span>
+        <span class="wa-pedidos__hace">{{ haceCuanto(s.actualizadoAt) }}</span>
+      </div>
+
+      <div class="wa-pedidos__card-mid">
+        <span
+          class="wa-pedidos__estado"
+          [attr.data-estado]="s.estado"
+        >
+          {{ estadoEtiqueta(s) }}
+        </span>
+        <span class="wa-pedidos__telefono" *ngIf="s.phoneMasked">{{ s.phoneMasked }}</span>
+      </div>
+
+      <!-- Carrito -->
+      <div class="wa-pedidos__carrito" *ngIf="s.carrito.length > 0">
+        <span class="wa-pedidos__carrito-resumen">
+          <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+          {{ s.carrito.length }} producto(s) ·
+          {{ s.totalCarrito | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+        </span>
+        <span class="wa-pedidos__carrito-detalle">
+          <ng-container *ngFor="let l of s.carrito.slice(0, 3); let last = last">
+            {{ l.cantidad }}× {{ l.nombre }}<ng-container *ngIf="!last">, </ng-container>
+          </ng-container>
+          <ng-container *ngIf="s.carrito.length > 3">…</ng-container>
+        </span>
+      </div>
+
+      <!-- Cotización creada -->
+      <div class="wa-pedidos__cotizacion" *ngIf="s.cotizacionCreada?.numero">
+        <i class="fa fa-file-text-o" aria-hidden="true"></i>
+        {{ s.cotizacionCreada?.numero }} — lista para confirmar
+      </div>
+
+      <div class="wa-pedidos__motivo" *ngIf="s.estado === 'humano' && s.motivoTraspaso">
+        {{ s.motivoTraspaso }}
+      </div>
+    </button>
+  </div>
+</div>

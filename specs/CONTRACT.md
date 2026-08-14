@@ -2900,7 +2900,7 @@ total      = (Σbase − descTotal) + impuesto
 
 **Colisiones de numeración que quedan abiertas (no se tocaron).** Al unir los roadmaps, `009` y `010` existen en ambas ramas con contenidos distintos: `009-whatsapp-kapso-notifications-marco` vs `009-customer-metrics-detalle-cliente`, y `010-venta-asistida-impuestos-congruencia` vs `010-assisted-sale-discounts-promotions` (y ya había un tercer `010-notificaciones-pedido-unificadas`). El precedente del proyecto es renumerar al mergear, pero eso implica renombrar carpetas de specs y sus referencias en ambos repos, así que **se dejó marcado con ⚠️ en el roadmap y la renumeración queda como decisión pendiente**, no se hizo por cuenta propia. Lo mismo con `D-044` a `D-047`, que cada rama usó para decisiones distintas: ambas bitácoras se conservaron completas.
 
-**Daño preexistente encontrado y reparado.** El contrato ya venía con marcadores de conflicto de un `git stash pop` **commiteados** en la rama madre (`<<<<<<< Updated upstream` … `>>>>>>> Stashed changes`), congelando 391 líneas de bitácora entre ellos. No lo causó este merge. Se quitaron solo los marcadores y se conservó el contenido de ambos lados, sin perder nada; queda visible que `D-137` está usado dos veces con contenidos distintos.
+**Daño preexistente encontrado y reparado.** El contrato ya venía con marcadores de conflicto de un `git stash pop` **commiteados** en la rama madre (` … `>>>>>>> Stashed changes`), congelando 391 líneas de bitácora entre ellos. No lo causó este merge. Se quitaron solo los marcadores y se conservó el contenido de ambos lados, sin perder nada; queda visible que `D-137` está usado dos veces con contenidos distintos.
 
 **Lo que NO entró.** Durante el merge del backend, tres archivos de otra sesión en curso (`controllers/inventory.js`, `services/inventoryService.js` y un script nuevo `scripts/backfill-idbodega-movimientos.js`, todos sobre la convención de `idBodega` en movimientos) estaban sin commitear y quedaron arrastrados por un `git add -A`. Se sacaron del commit de merge y se devolvieron al working tree tal como estaban, sin commitear: es un cambio de inventario, y esos van de a uno y con spec aprobada.
 
@@ -3249,6 +3249,22 @@ Cadena causal: `createClient`/`editClient` (`clients.js`) nunca trimeaban `docum
 
 **Verificación:** backend reinició limpio en `:3300` con el fix; frontend recompiló "Compiled successfully" tras cada edición. Usuario confirmó en pantalla que el caso de Café Escobar ya funciona tras el backfill.
 
+**Addendum D-161/corte (2026-08-09):** Por orden de Daniel se subió el lote pendiente del corte por fecha (trabajo de la sesión del corte): backend `80f9eef` desplegado con restart limpio (paginate para carga única, tipo ENTRADA/SALIDA por delta real en el escritor de flows — protege el sync Fullpi en bajadas de stock —, signo conservado en movementDelta) y frontend `2026.08.09.1` publicado desde worktree limpio (pantalla trae el conjunto una vez y pagina local). Verificación funcional real: corte al 2026-08-08 de BOD-FULLPI-1 devuelve 75 filas en una carga, JCR4001=91, etiquetado honesto (estimate/incomplete hasta que exista ancla certificada — Fase 3). Los archivos de onboarding sucios del mismo working tree NO se tocaron.
+
+## D-163 (2026-08-10) — Tablero único de cierre + seis decisiones de Daniel en un día
+
+Daniel (estresado por pendientes dispersos) fijó la regla: existe UN tablero único de cierre de inventario (artifact) que toda sesión actualiza antes de cerrar; todo reporte termina con lista finita de pendientes con dueño y palabra que los cierra. Guardado en memoria persistente.
+
+Decisiones del día (vía preguntas directas):
+1. **Candado de bodegas: "dale"** → implementado por la sesión roadmap y DESPLEGADO (409 con conteo y oferta de archivado; 8/8 test; smoke real: 9 de 13 bodegas OMS quedan protegidas).
+2. **Bodegas huérfanas (596 OMS / 183 Escobar): "déjalas así"** → cerrado por decisión, sin acción.
+3. **Clave de cifrado propia: "después"** → pendiente de Daniel, sin fecha.
+4. **Duplicados al escribir: "dale"** → regla del mayor también en el escritor de flows (sesión roadmap), DESPLEGADO.
+5. **Verificación diaria: "con los flows"** → construido y ACTIVO: `dailyObservationService` (única casa de la lógica), nodo `katuq-inventory-observe`, flow `inventario-verificacion-diaria-oms` con schedule-cron 4:30am Bogotá; evidencia `inventory_observation` en inventory_audit; CLI queda como envoltorio del mismo servicio (commit 3f47fd5, desplegado, smoke E2E verificado y limpiado, observación de hoy registrada).
+6. **Menús de inventario a 73 roles: "todavía no"** → pendiente de Daniel (las pantallas nuevas existen pero la mayoría de roles no las ve; script con dry-run listo).
+
+Además hoy la sesión roadmap desplegó (con mi restart): indicadores KPI, disponibilidad, ubicaciones y conteos cíclicos — ver su registro. Carriles de archivos pactados entre sesiones para no chocar.
+
 ### 2026-08-11 — D-163: Divergencia de motores de cálculo entre frontend (legacy) y backend (canónico) en venta asistida — propuesta abierta
 
 **Reporte del usuario:** "problemas con la matemática a la hora de crear pedidos desde la venta asistida y que estos queden plasmados correctamente en el módulo de pedidos y el PDF del pedido".
@@ -3264,3 +3280,941 @@ Cadena causal: `createClient`/`editClient` (`clients.js`) nunca trimeaban `docum
 **Enfoque elegido:** auditoría comparativa bloqueante (Fase 0, mismo patrón que D-054/`audit-iva-divergence-readonly.js`) ANTES de tocar código — comparar legacy / `iva-canonico.ts` / `orderCalculationService.js` con una batería de casos (línea, global, cupón valor fijo, cupón dirigido, promoción) para confirmar si basta con activar el flag `ivaCalcUnificado` en prod o si primero hay que cerrar un hueco real en el backend (la investigación no confirmó si el motor canónico backend soporta cupones `valor_fijo`/dirigidos — solo se verificó la rama porcentual). Precedente relevante a no reabrir: spec 010/`ORE-000494` (el total del historial de redenciones se calcula desde el carrito por desconfianza en los campos persistidos) — este cambio va en dirección contraria para OTRO consumidor (venta asistida en vivo), el audit debe confirmar que no colisiona.
 
 **Estado:** propuesta creada (`proposal.md`/`design.md`/`tasks.md`/delta spec `order-calc-engine-parity`), pendiente de ejecutar Fase 0 (auditoría) — checkpoint humano antes de decidir el alcance exacto de la Fase 1. Nada de código tocado todavía.
+
+## D-164 (2026-08-10) — Lista de Precios: búsqueda sobre índice cacheado + un solo filtro de precio para las 4 pestañas
+
+**Contexto.** Monica reportó que la búsqueda de Lista de Precios "se demora demasiado" y pidió definir el filtro de precios. Medido contra producción (solo lecturas): `getProducBySearch` leía la colección `products` COMPLETA de la empresa, documentos enteros, sin caché, **en cada request** — HARMONY LENS 13.874 docs / 58,4 MB / 42 s; OH MY STORE 8.442 / 48,1 MB / 34 s; ALMARA 2.138 / 29,7 MB / 19 s. Además hacía match contra descripción, stock y precio-como-texto, así que buscar "2" devolvía media base.
+
+**Decisión 1 — la búsqueda va sobre `getSearchIndex`.** Se reescribió `getProducBySearch` para resolver sobre el índice cacheado (máscara de campos, TTL 5 min, el mismo que ya usa el buscador de Productos) e hidratar con `db.getAll` **solo los documentos de la página visible**. El costo deja de escalar con el número de búsquedas y pasa a escalar con el tiempo: máximo una carga de índice cada 5 min por empresa, sin importar cuánta gente busque. Medido tras el cambio en ALMARA: 2,5 s la primera búsqueda (carga índice), ~450 ms las siguientes. Sin criterios (término vacío y sin rango) se mantiene la paginación nativa, que lee solo la página — así el endpoint no carga el índice cuando no hace falta. Beneficia también a **Recepción de Mercancía**, que consume el mismo endpoint.
+
+**Decisión 2 — la búsqueda es por referencia y nombre, nada más.** Se quitaron del match descripción, `cantidadDisponible` y `precioUnitarioSinIva`-como-texto: generaban coincidencias basura que se leían como que el buscador no funcionaba.
+
+**Decisión 3 — UN solo filtro de precio para las 4 pestañas.** Se verificó en el código que las columnas que Monica quería filtrar por separado son **el mismo campo**: "PRECIO BASE" (pestañas 1 y 3), "PRECIO CON IVA" (pestaña 2) y "PRECIO VENTA" (pestaña 4) salen todas de `precio.precioUnitarioConIva` con respaldo a `precioUnitarioSinIva` (`obtenerPrecioBase`, y `lista-precios.component.html:551` para precio venta). Un filtro, etiqueta variable por pestaña. El filtro se resuelve en memoria con la MISMA expresión que pinta la tabla, así lo que trae coincide 1:1 con lo que se ve; se agregó `precio.precioUnitarioSinIva` a la máscara del índice para poder hacerlo. Efecto lateral bueno: `Number()` captura los 10 productos con el precio guardado como string, que el rango nativo de Firestore no ve porque compara por tipo.
+
+**Decisión 4 — NO se filtra por tipo de cliente, volumen ni costo.** Cobertura medida en producción: precios por tipo de cliente 84,7% HARMONY / 98,9% OMS pero **0,0% ALMARA y 0% DEL RANCHO**; rangos por volumen al revés (99,8% ALMARA, 100% DEL RANCHO, 0% HARMONY, 1,5% OMS); costo cargado **0% en tres de cuatro empresas** (1,6% OMS). Un filtro por cualquiera de esos devolvería vacío para media base de clientes y se leería como roto. Tampoco se filtra por "sin IVA" aparte: los productos donde sin IVA ≠ con IVA son 0 en HARMONY, 5 en ALMARA, 1 en DEL RANCHO y 1 en OMS — y en OMS el campo sin IVA solo está poblado en 83 de 8.442 productos, así que ese filtro escondería el 99% del catálogo.
+
+**Decisión 5 — un solo canal de carga en el front.** Toda carga de página de Lista de Precios pasa por un Subject con `debounceTime(50)` + `switchMap`: el debounce colapsa los `onLazyLoad` duplicados que emiten las 4 p-table vivas en el DOM (las 4 pestañas comparten estado), y el switchMap cancela la petición en vuelo para que una respuesta lenta no pise a una más reciente. El `catchError` va DENTRO del switchMap: afuera, un error del backend mataría el stream y la pantalla no volvería a cargar. Se agregó reset a página 1 al cambiar de criterio.
+
+**Costo.** El arreglo de velocidad y el de costo son el mismo arreglo. Estimado para una persona buscando 1 vez/min, 8 h/día, 22 días, en HARMONY LENS: ~146M lecturas y ~616 GB/mes hoy → ~29M y ~10 GB después (peor caso, sin compartir caché con Productos). Sin índices Firestore nuevos, sin infraestructura nueva.
+
+**Continúa en D-165**, que arregla el mismo patrón en el módulo de Productos.
+
+---
+
+## D-165 (2026-08-10) — Productos: un solo camino de carga; escribir en el buscador ya no apaga 15 de los 18 filtros
+
+**El bug.** `productos.component.ts` bifurcaba a `/v1/productos/search/quick` cuando había 2+ caracteres en el buscador, y sobre esa respuesta reaplicaba en memoria **solo estado, disponibilidad y tipo de producto**. Los otros 15 filtros (precio desde/hasta, categoría, subcategoría, producción, inventariable, última edición, completitud, exposición, tipo y tiempo de entrega, canal, adiciones, calendario, precio manual) se caían en silencio, con los chips de filtro activo encendidos. Estaba **duplicado en dos lugares**: `cargarConFiltros()` (:750) y la tubería del `searchSubject` (:497), que es la que corre al escribir.
+
+Tres consecuencias, todas verificadas: (1) filtros ignorados sin aviso; (2) el paginador mentía — el total venía del servidor sin los filtros en memoria mientras las filas se recortaban en el cliente, y como el recorte era posterior a la paginación había resultados válidos que no caían en ninguna página; (3) **"texto + Inactivos" devolvía vacío SIEMPRE**, porque `quickSearch` ya excluye inactivos por su cuenta (`controllers/productos.js:2637`, el front nunca mandaba `incluirInactivos`) y encima el cliente filtraba pidiendo `activar === false`. Hay 113 inactivos en OH MY STORE y 60 en ALMARA que por esa vía eran inencontrables.
+
+**Decisión 1 — un solo camino: `/v1/productos/all`.** Resuelve texto y los 18 filtros juntos sobre el índice cacheado, hidrata solo la página y devuelve totales reales. Se eliminaron las dos ramas de `quickSearch` y el método muerto `ordenarProductos` (el orden lo resuelve el backend con la misma whitelist). `quickSearchProducts` sigue existiendo en el servicio: lo usan ventas, POS, cotizaciones, combos y descuentos.
+
+**Decisión 2 — `/all` entiende `searchBy`.** Espeja el selector de campo de la pantalla (referencia, título, marca, código de barras, etiquetas, categoría, descripción, características, garantías, restricciones, cuidado). Sin `searchBy` mantiene el comportamiento histórico: referencia + título + marca. Se normalizan tildes en ambos lados ("cajon" encuentra "CAJÓN"), que antes solo hacía el endpoint rápido.
+
+**Decisión 3 — orden.** Con término de búsqueda y sin orden de columna, primero la referencia exacta, luego prefijo de referencia, luego prefijo de título (paridad con `quickSearch`, que ordenaba así). Sin término ni orden de columna, `date_edit desc` — el mismo del listado sin filtros, para que aplicar un filtro no reordene la grilla.
+
+**Decisión 4 — el rango de precio sale de Firestore y pasa a memoria.** Se resuelve sobre el índice con la misma expresión `conIva || sinIva` que usa Lista de Precios (D-164), así los dos módulos filtran idéntico. Efecto medido en ALMARA: el rango 20.000–40.000 sobre "caja" pasa de 58 a **60** resultados — los 2 que aparecen son los que el rango nativo se saltaba porque el precio está guardado como string y Firestore compara por tipo.
+
+**Decisión 5 — no escanear IDs cuando no hace falta.** La rama in-memory hacía `baseQuery.select().get()` siempre; sin filtros nativos activos eso lee el ID de TODOS los productos de la empresa en cada request, sin caché — y ese es el caso más común (el usuario solo escribe). Ahora esa consulta solo corre si hay algún filtro nativo (estado, disponibilidad, tipo, producción, inventariable, última edición); si no, la intersección no descartaba nada de todos modos.
+
+**Continúa en D-166**, botón Editar de la pestaña Costos.
+
+**Verificación** (backend local contra Firestore de producción, solo GET, ALMARA FELICIDAD): texto+precio → 0 productos fuera de rango; texto+inactivo → 55 resultados con 0 activos colados (antes 0 resultados siempre); `searchBy` distingue campo (título 9 vs referencia 2.092); totales cuadran exactos (dice 193, recorriendo las 8 páginas salen 193, 193 únicos); solo precio → 463 en 848 ms y ordenado por última edición desc; sin filtros → 777 ms por la ruta nativa; combinado texto+precio+activo → 0 incumplen. Tiempos medidos desde conexión doméstica; en EC2 serán menores.
+
+---
+
+## D-166 (2026-08-10) — Lista de Precios: botón Editar en la pestaña Costos
+
+**Contexto.** La pestaña Costos era la única de las cuatro sin columna ACCIONES: el costo solo se podía cambiar importando un Excel. Monica pidió el mismo formulario de edición de las otras pestañas, con los datos de Costos. (El `switch` de `editarPrecio()` ya tenía un `case COSTO_TAB_INDEX` que abría el importador, pero era inalcanzable porque no existía el botón.)
+
+**Decisión 1 — endpoint propio que reusa el write-set del importador.** `PUT /v1/fulfillment/cost-import/product/:productId` (`controllers/productCosts.js#updateProductCost`). Escribe EXACTAMENTE los mismos campos que `applyCostImport` — `costoUnitario`, el objeto `costo`, `precio.costoUnitario` y el bloque `fulfillment.*` — y deja el mismo rastro en `productCostHistory` con `origen: "edicion-manual"`. La razón de duplicar el write-set y no inventar uno más corto: `obtenerCostoUnitario()` del front lee en cascada `costoUnitario` → `precio.costoUnitario` → `costo.costoUnitario|valor`; si la edición manual escribiera en menos lugares que el importador, la grilla podría mostrar un valor y el importador leer otro. **Si algún día se consolida dónde vive el costo, los dos caminos cambian juntos.**
+
+**Decisión 2 — la fuente queda marcada como `manual`.** No es un desplegable: el modal muestra la fuente actual (Prindel, importación, etc.) como informativa y avisa que al guardar queda registrado como manual. Dejar elegir la fuente permitiría atribuir a Prindel un número escrito a mano y ensuciaría la trazabilidad.
+
+**Decisión 3 — el precio de venta NO se edita acá.** Se muestra de solo lectura porque es el mismo campo que ya editan las otras pestañas (`precio.precioUnitarioConIva`, ver D-164); se usa para calcular margen por unidad y margen sobre la venta en vivo, con aviso en rojo si el costo supera al precio. Dos pestañas escribiendo el mismo campo sería pedir un conflicto.
+
+**Decisión 4 — invalidaciones.** El endpoint invalida el `searchIndex` de la empresa (escribe `date_edit`, que vive en el índice y ordena la grilla) y `actualizarProductoEnVista()` ahora limpia el caché `_todosLosProductos` del export — un hueco que ya existía para las otras tres pestañas: editar y exportar bajaba el valor viejo.
+
+**Verificación E2E** contra el tenant demo **Tienda Demo KAI Import** (no ALMARA: escribe en Firestore de producción, regla de `local-dev-startup`), con reversión completa del producto y borrado del histórico de prueba al terminar: costo inválido → 400; producto de otra empresa → **403** (guardarraíl multi-tenant); producto inexistente → 404; guardado → 200 con los 9 campos del write-set escritos y verificados leyendo Firestore; la cascada que usa la grilla devuelve el valor nuevo; histórico creado con anterior/nuevo/delta/fuente/usuario. El importador masivo sigue disponible en el botón "Importar" de la barra.
+
+---
+
+## D-167 (2026-08-10) — Lista de Precios: un importador y una plantilla por pestaña
+
+**Decisión.** Cada pestaña tiene su propio botón Importar y su propia plantilla, con las columnas de esa pestaña. **La pestaña ES el selector** — se descartó la idea de un importador con sub-pestañas adentro porque sería elegir lo mismo dos veces y habría que explicar la correspondencia. Antes solo tenían importador la pestaña de tipo de cliente y la de costos; unitario y volumen no tenían ninguno.
+
+Endpoints nuevos: `POST /v1/productos/import-precios-unitarios` y `POST /v1/productos/import-precios-volumen`.
+
+- **Unitario** — columnas REFERENCIA · PRECIO SIN IVA · % IVA (opcional; vacío conserva el IVA del producto). Calcula `valorIva` y `precioUnitarioConIva`.
+- **Volumen** — UNA FILA POR RANGO, referencia repetida (y heredada de la fila anterior si viene vacía, que es como exporta hoy la pestaña). `HASTA = 0` significa "de ahí en adelante". **Sobrescribe `preciosVolumen` completo** por referencia, así que el frontend agrupa todos los rangos de una referencia antes de lotear: si se partieran en dos lotes, el segundo borraría los del primero. Los rangos se ordenan por cantidad inicial en el backend porque en el Excel pueden venir revueltos.
+
+**Regla que no se puede romper: escribir con rutas punteadas (`precio.x`), nunca reemplazar el objeto `precio`.** Ahí viven juntos el precio unitario, `preciosVolumen` y `costoUnitario`; reemplazar el objeto haría que importar unitario borre los rangos de volumen y el costo. Hay test que lo cubre.
+
+**De paso:** el mapa referencia→producto de los importadores usa máscara de campos (`select`) en vez de leer documentos completos, como el resto del trabajo de hoy.
+
+**Verificación E2E** contra **Tienda Demo KAI Import** con reversión total: items vacío → 400; referencia inexistente → contada como no encontrada; precio inválido → ignorado; import unitario de 2 productos con IVA calculado correcto (10.000 + 19% = 11.900); import de 3 rangos desordenados → guardados ordenados y con la estructura exacta que espera el editor de volumen; **importar unitario no borra los rangos y viceversa**; y una referencia del tenant demo importada desde ALMARA → 0 actualizados (multi-tenant).
+
+**Consultado y pospuesto:** Monica preguntó si las empresas que usan tipo de cliente deberían dejar de ver las pestañas de unitario y volumen. Los datos dicen que **sí para volumen, no para unitario**: en HARMONY LENS los 11.757 productos con precio por tipo de cliente tienen TODOS precio base, porque el unitario es la base sobre la que se calcula el % por tipo. Reparto real — tipo de cliente: HARMONY 85%, OMS 99%, ALMARA/DEL RANCHO/CAFE ESCOBAR 0%; volumen: al revés (ALMARA 100%, DEL RANCHO 100%, CAFE ESCOBAR 98%, HARMONY 0%, OMS 2%). Ninguna empresa usa los dos modelos. Ojo: **`tiposPrecios` configurados NO sirve como señal** — ALMARA tiene 2 tipos configurados y CAFE ESCOBAR 3, y ninguno de sus productos los usa. Sin decidir todavía; tampoco se tocó la unificación plantilla↔exportar.
+
+---
+
+## D-168 (2026-08-10) — Bug: poner en 0 un precio por tipo de cliente no lo cambiaba
+
+**Síntoma** (reportado por Monica con pantallazo de ALM-1825): se edita un precio por tipo de cliente a 0, se guarda, y queda el valor anterior.
+
+**Causa — tres puntos encadenados, todos por tratar el 0 como "vacío":**
+1. `editar-precios-tipo-cliente.component.ts` omitía del payload los tipos en 0 (`if (precioSinIva && precioSinIva > 0)`).
+2. `updatePreciosTipoCliente` hace **merge por tipoClienteId y preserva lo que no viene en el payload**. Omitir un tipo significa "no lo toques", así que el precio viejo sobrevivía. Entre los dos, no existía forma de borrar un precio.
+3. Al reabrir, el modal precargaba el precio base cuando el guardado era 0, tapando cualquier evidencia.
+
+**Bonus del mismo bug:** el punto 3 explica por qué en el pantallazo los dos tipos de ALM-1825 tenían el MISMO valor ($82.110 = 69.000 base + 19%). El modal precargaba el precio base en **todos** los tipos, así que abrir para tocar uno y guardar creaba precios para todos.
+
+**Decisión — 0 (o vacío) significa QUITAR el precio de ese tipo**, no "precio cero". Un precio de venta en 0 sería regalar el producto; y "sin precio para este tipo" ya es un estado de primera clase en la UI (chip "Sin configurar", `getTiposClienteSinPrecio`). Ese tipo pasa a usar el precio base. El modal lo dice explícitamente.
+
+Cambios: el editor envía **todos** los tipos (los vacíos con `precio: 0`); el backend borra del merge cualquier `tipoClienteId` cuyo `precio` no sea un número > 0; el modal ya no precarga el precio base (queda visible arriba como referencia).
+
+**Verificación E2E** contra Tienda Demo KAI Import con reversión: guardar 69.000 en dos tipos → ambos; poner uno en 0 → **se quita y el otro queda intacto**; volver a ponerle 50.000 → vuelve; todos en 0 → producto sin precios por tipo.
+
+---
+
+## D-180 (2026-08-11) — Lista de Precios: el archivo se explica solo y el IVA 0 deja de convertirse en 19%
+
+**Origen.** Monica probando los importadores: "*no sé si el valor que uno agrega debe ser ya con el IVA incluido o se monta sin el IVA y el sistema se lo suma*". La pestaña "Precio tipo clientes" tapaba esa ambigüedad con un popup ("¿Los precios incluyen IVA?"), mientras las otras dos ya la tenían resuelta llamando a su columna `PRECIO SIN IVA`. Al tirar del hilo aparecieron tres defectos de fondo, dos de ellos con precios reales de por medio.
+
+**1. La señal viaja en el archivo, no en un botón.** La plantilla ahora rotula `<Tipo> (SIN IVA)` y el export `<Tipo> (CON IVA)` — que es lo que siempre sacó. El importador lee el sufijo por columna; el popup solo reaparece con archivos sin sufijo (retrocompatible). Efecto lateral cerrado: exportar y volver a subir respondiendo "sin IVA" **inflaba todo un 19% en silencio**.
+
+**2. `parseInt(iva) || 19` le ponía 19% a los exentos.** El 0 es falsy: todo producto con IVA 0 recibía 19% al importar. Estaba repetido en cuatro sitios (`importPrecios`, el modal de tipo de cliente, y dos veces en el de volumen). Ahora todos comparan con `Number.isFinite` y heredan el IVA del producto. Misma familia que D-168 — **en este módulo el 0 se sigue colando como "vacío"**.
+
+**3. EL HALLAZGO CARO — el rango de volumen le gana al precio unitario al vender.** `orderCalculationService.js:46`: si hay `preciosVolumen`, el rango que abarque la cantidad decide el precio, y el unitario solo se usa si ninguno aplica. La plantilla traía el ejemplo `DESDE 1`, Monica lo subió tal cual, y ALM-1385 (base 9.790, exento) quedó cobrando **17.850 por una unidad en ALMARA productivo**. El modal agravaba el engaño: fuerza la fila 0 a "1-1" y su nota dice "representa el precio base", pero el campo era editable e importable.
+
+**Decisión: el rango de 1 unidad no se edita ni se importa — siempre es el precio base; los descuentos empiezan en 2.** Modal con esa fila bloqueada y cargada del producto; `importPreciosVolumen` descarta `desde <= 1`, antepone el 1-1 generado del precio base y lo reporta; la plantilla arranca en `DESDE 2`. Y `importPreciosUnitarios` sincroniza el rango de volumen cuando es el único (con varios no toca nada: ahí son descuentos deliberados). **Ojo al desplegar:** cambia el importador de volumen para todas las empresas.
+
+**4. Subir el export creyendo que es la plantilla.** `Precios_Tipo_Cliente_*.xlsx` vs `Plantilla_Precios_Tipo_Cliente_*.xlsx` se diferenciaban en un prefijo. El export tenía 2.137 filas vacías y una con valor, así que la importación dijo "Actualizados: 1" y pisó un producto que nadie quiso tocar. Tres candados: el export se llama `Exportado_*`, el preview **lista las referencias** que va a tocar (no solo cuántas), y salta un aviso con `focusCancel` si el archivo trae las columnas del export o si <10% de las filas aportan precio. En la misma línea, el modal de tipo de cliente ahora avisa antes de borrar precios existentes (por D-168 un campo vacío = quitar, y guardar sin tocar nada había borrado los precios recién importados de ALM-1385).
+
+**Datos corregidos en ALMARA** (scripts con dry-run + `--commit` y guardarraíles que abortan si el estado no es el esperado): ALM-3279 de 63.617 → **53.460**, y el rango 1-1 de ALM-1385 de 17.850 → **9.790**. Nota operativa: escribir directo a Firestore **no** invalida `invalidatePaginationCache`/`invalidateSearchIndex` (TTL 5 min) — hay que reiniciar el back o la UI sigue mostrando el valor viejo.
+
+**Cosmético con fondo:** la grilla de volumen decía "3 rango(s)" y listaba 2 (`slice:1:3` se saltaba el primero), y "2-2 uds: $11.567" no aclaraba si era unitario o total. Ahora: "2 uds: $11.567 c/u" · "de 3 a 6 uds: $9.520 c/u" · "N uds o más: $X c/u".
+
+**Pendiente:** cuando hay varios rangos, el de 1 unidad tampoco se sincroniza al importar precio unitario (Monica lo acotó así a propósito). Revisar si conviene extenderlo.
+
+---
+
+## D-172 (2026-08-11) — Compras cierra el ciclo: qué comprar, devolver, comparar y mandar
+
+**Qué se decidió.** Sobre el MVP de compras (D-171) se cerraron las cuatro puntas que quedaban sueltas de la cadena de abastecimiento, todas medidas contra producción antes de construirlas.
+
+**1. Qué comprar (reposición sugerida).** `necesidad = consumo diario × (cobertura objetivo + días de entrega del proveedor) − saldo − lo ya pedido`. Reutiliza `cargarInformeKpi` en vez de recalcular consumo: **una sola forma de medir demanda en todo el sistema**. Cuatro decisiones, cada una con su medición:
+
+- **Lo pedido se descuenta.** Volver a comprar lo que viene en camino es la forma más cara de equivocarse.
+- **Lo que la empresa fabrica no se compra.** ALMARA FELICIDAD tiene 1.514 de 2.138 productos marcados `crearProducto.paraProduccion`; sin separarlos se le sugería a una pastelería comprarle a un proveedor los cupcakes que hornea (1.566 tabletas de chocolate en la primera fila). La lista pasó de 388 sugerencias absurdas a 163 creíbles.
+- **Urgente ≠ bajo.** Cobertura menor que el tiempo de entrega significa que la venta ya se pierde salvo que se pida hoy: 138 de los 163 en ALMARA. Mezclarlos escondía justo los que urgen.
+- **Se dice lo que NO se pudo calcular.** OH MY STORE: 13.350 filas de inventario, 30 productos con demanda registrada. Una lista corta puede ser "no hay nada que comprar" o "esta empresa no registra salidas", y llevan a decisiones opuestas. La sugerencia además **hereda las advertencias del informe**: si hubo salidas sin motivo canónico, la proyección puede quedar alta y quien firma la orden lo ve.
+
+La sugerencia **no crea órdenes sola**. Lo seleccionado se convierte en una orden por proveedor y bodega, informando cuáles se crearon si alguna falla — reportar un fracaso total llevaría a crearlas dos veces.
+
+**2. Devolución al proveedor.** Lo devuelto deja de contar como recibido pero no se borra: llegó, y después se devolvió. De ahí sale todo lo demás — una orden con todo devuelto ya no dice que está completa, y lo devuelto baja lo que el proveedor puede cobrar, con su valor a la vista porque es lo que debería volver como nota crédito. Tope: no se puede devolver más de lo que llegó ni dos veces lo mismo.
+
+**Trampa desarmada antes de construirla:** "devolución" nombraba dos cosas opuestas. La del cliente entra a la bodega y **resta** demanda; la del proveedor sale y no dice nada del mercado. Con la taxonomía anterior, devolver un lote averiado habría bajado la demanda y la sugerencia habría pedido **menos** justo del producto a reponer. La salida a proveedor tiene ahora su propio motivo canónico (`supplier_return`) y no cuenta como demanda.
+
+**3. Comparador de precios.** Un renglón por proveedor con su último precio, el mejor que dio y cuánto se paga de más comprándole al caro. Manda el **último** precio de cada uno, no el promedio; las líneas sin precio no entran porque harían ver barato a quien no lo es; con un solo proveedor se dice que no hay con qué comparar, porque un "0% de diferencia" se leería como que ya se compra bien. Es la razón práctica del maestro: sin identidad no se pueden comparar precios.
+
+**4. La orden sale de Katuq.** Se manda por WhatsApp con cantidades y bodega de entrega. Antes se dictaba por teléfono.
+
+**Correcciones que salieron de contrastar contra datos reales, no de revisar código:**
+
+1. El nombre del producto vive en `crearProducto.titulo`; el informe de indicadores lo buscaba solo en `identificacion`, así que **todas** las filas de ALMARA salían con código y sin nombre. Corregido en la fuente: arregla también la pantalla de indicadores.
+2. Los proveedores ganan `diasEntrega`. Sin ese dato la urgencia se calcula con un supuesto de 7 días **y se reporta como supuesto**, no como acuerdo.
+
+**Estado.** Desplegado 2026-08-11: backend `1e82008`, frontend `2026.08.11.20`, menú "Qué comprar" en los 75 roles con inventario. Pruebas: 35 órdenes, 13 reposición y precios, 11 proveedores, 10 costo, política de movimientos y contrato de inventario en verde.
+
+**Pendiente.** Devolución de dinero/nota crédito del proveedor (hoy se ve lo que debería volver, no se concilia); orden por correo o PDF; editar una orden ya creada.
+
+Cambio OpenSpec: `openspec/changes/compras-reposicion/`.
+
+---
+
+## D-171 (2026-08-11) — MVP de compras: proveedores, el costo entra por la compra, y saldo por proveedor
+
+**Qué se decidió.** Compras arranca como **dominio propio** (`services/purchasing/`, `controllers/purchaseOrders.js`, `controllers/suppliers.js`, rutas `/v1/proveedores` y `/v1/ordenes-compra`), no como una carpeta más de inventario. Razón: al recibir mercancía, compras **escribe el costo del producto**, y hacerlo desde el controlador de inventario borroneaba justo la frontera que el contrato protege (D-134: inventario no toca productos ni precios). Con los dominios separados la regla vuelve a ser verificable leyendo el archivo, y el contrato de write-set tiene una guarda nueva que falla si `controllers/inventory.js` vuelve a importar la captura de costo. Las rutas viejas `/v1/inventory/ordenes-compra` quedan como alias delegando, para no romper el frontend publicado.
+
+**Proveedores dejan de ser texto libre** (colección `proveedores`, autorizada por Daniel). El NIT manda: repetirlo se rechaza, porque dos empresas no comparten NIT. El nombre es señal débil —se compara sin tildes, sin mayúsculas y sin formas jurídicas— y repetirlo solo **avisa**: hay razones legítimas para nombres parecidos. No se borran, se desactivan; un proveedor con historia de compras no puede desaparecer dejando huérfanas sus órdenes (misma lección de las bodegas). La orden guarda **el id del maestro y también el nombre**: solo el id dejaría órdenes ilegibles el día que alguien se renombre, solo el nombre es lo que había.
+
+**El costo entra por la compra, sin desplazar el Excel** (decisión de Daniel, verbatim: *"compras puede escribir el costo pero también el cargue del excel como se tiene actualmente"*, *"automático pero tener en cuenta el excel"*). La captura escribe sobre la **misma tubería que ya existía** (`productCostHistory` y los campos de costo del producto) sumándose como fuente `compra`, con la orden y el proveedor como origen; un camino paralelo habría partido la historia del costo en dos lugares incomparables. Si el costo se aparta más del 30% del vigente, **avisa pero no bloquea la recepción**: la mercancía ya llegó y frenar el registro no la devuelve.
+
+**Saldo por proveedor.** La factura se anota sobre la orden (número y valor) y el detalle muestra recibido contra facturado. Que el proveedor facture **de más** se muestra en negativo y marcado, no recortado a cero: es exactamente lo que hay que reclamar.
+
+**Desvío registrado.** La tarea pedía extraer el núcleo de `updateProductCost` a un servicio reusable; no se hizo. Habría que tocar un endpoint de precios en producción para no ganar nada hoy. Queda como deuda si aparece un tercer llamador.
+
+**Estado.** Desplegado el 2026-08-11: backend `c4b68db` en `katuq-api`, frontend `2026.08.11.11`, y `compras/proveedores` dado de alta en los **75 roles** que ya tenían pantallas de inventario (25 roles sin inventario no se tocaron). Pruebas: 20 casos de órdenes, 11 de proveedores, 10 de costo, contrato de inventario en verde.
+
+**Pendiente.** Medir cuántos de los 5.489 productos sin costo quedan cubiertos tras la primera semana de recepciones.
+
+Cambio OpenSpec: `openspec/changes/mvp-compras/`.
+
+---
+
+## D-170 (2026-08-11) — Buzones de Instagram y Facebook, aditivos y con vínculo manual de contacto
+
+**Qué se decidió.** Instagram Direct y Messenger entran como **dos buzones nuevos e independientes** (`/notificaciones/instagram/inbox`, `/notificaciones/facebook/inbox`), conectados **directo con la API de Meta** — sin Chatwoot ni intermediario. El buzón de WhatsApp y el canal Kapso **no se tocan ni se reemplazan**: siguen vivos cobrando por conversación. Los tres quedan agrupados bajo un solo elemento de menú, "Mensajes", conservando la ruta actual de WhatsApp.
+
+**Por qué no se generalizó el buzón existente.** La identidad del hilo de WhatsApp es `phoneHash`, y de ahí cuelgan la ruta, el perfil de contacto, el opt-out y el cobro. Instagram y Messenger no tienen teléfono (usan IGSID y PSID). Generalizarlo obligaba a reemplazar la identidad en un módulo que mueve plata; se prefirió aditivo. El webhook nuevo (`/v1/meta/webhook`) es un archivo aparte aunque comparta el formato `entry[]` de Meta: un error ahí no puede tumbar la recepción de Kapso.
+
+**Colección nueva (aprobada explícitamente por Daniel).** Una sola: `meta_messages`, compartida por los dos canales con campo `canal` — mismo modelo de Meta, misma identidad; la separación vive en la consulta, no en el almacenamiento. Las **conexiones de cuenta NO usan colección nueva**: reutilizan `integration_configs/{company}_meta_{canal}`, y los contactos cuelgan como **subcolección** `contactos` (un mapa `hash -> dato` en el documento habría reventado el límite de 1 MB de Firestore con unos miles de conversaciones, tumbando la recepción).
+
+**Vínculo de contacto: manual, con puerta abierta a IA.** Meta no entrega teléfono, así que el cliente **no se puede resolver solo** — la spec original daba por hecho que sí y estaba equivocada. El operador vincula el hilo con un cliente a mano; recién ahí el panel muestra lead y pedidos. Cada vínculo guarda `origen` (`manual` hoy; `sugerido_ia` mañana) para que una sugerencia automática futura entre como propuesta a confirmar y nunca se auto-aplique. Se descartó emparejar por parecido de nombre: mostrarle al operador los pedidos del cliente equivocado, en un buzón donde se habla de plata, es peor que no mostrar ninguno.
+
+**Ventana de 24 horas como requisito, no como riesgo.** Al decidirse que la primera entrega **lee y responde**, el buzón debe mostrar cuánto queda de ventana y bloquear el envío al expirar, explicándolo en lenguaje llano. Si no, el operador escribe al vacío.
+
+**Trampa encontrada al verificar en navegador.** El menú se filtra comparando **texto exacto** contra `authorizedMenuItems` (que viene de `userData.menu` al iniciar sesión). La ruta de WhatsApp está registrada **con barra inicial**; al convertirla en hijo sin la barra se borró del menú de una empresa que sí la tenía autorizada. Corregido. Consecuencia operativa: **las rutas de Instagram y Facebook hay que darlas de alta en los roles**, o el feature se despliega invisible.
+
+**Estado de Meta.** App `katuq` (`2191585237986547`, negocio Julsmind) ya tiene Messenger, Instagram y Webhooks agregados, pero está en **modo Desarrollo** y los tres permisos de mensajería están en **acceso estándar, sin revisión solicitada y con cero llamadas a la API**. Katuq es proveedor de tecnología (sus clientes conectan sus propias cuentas), así que exige verificación de negocio y de acceso, más revisión con screencast por permiso. Hasta 25 usuarios de prueba no requieren revisión: se construye contra ellos y de ahí sale el screencast.
+
+**Fuera de alcance.** El bot que recibe pedidos por WhatsApp (toca órdenes, va en propuesta aparte).
+
+Cambio OpenSpec: `openspec/changes/add-buzones-instagram-facebook/`.
+
+## D-169 (2026-08-10) — Bug: el Exportar de Lista de Precios nunca terminaba
+
+**Síntoma** (reportado por Monica en la pestaña Precio unitario): se abre el modal "Preparando exportación", se queda pensando y el Excel nunca baja. **No era de esa pestaña** — el problema estaba en la carga del catálogo, común a las cuatro.
+
+**Causa.** `cargarTodosLosProductos` paginaba `/v1/productos/all` de 100 en 100 en lotes paralelos de 6. Esa ruta usa `offset()`, y **Firestore lee y factura todos los documentos que salta**: la página 1 lee 100 docs, la 22 lee 2.200. Medido en ALMARA (2.138 productos, 22 páginas): **32 s**, subiendo de 1,9 s la primera página a 10,7 s la página 20, con ~25.300 lecturas para un catálogo de 2.138. En HARMONY LENS son 139 páginas ≈ **964.000 lecturas**: por eso no terminaba nunca.
+
+**Decisión — endpoint dedicado `GET /v1/productos/export-precios`.** Una sola consulta con máscara de campos (1 lectura por producto) que devuelve solo lo que consumen los 4 generadores de Excel, sin imágenes, descripciones ni embeddings, y **sin enriquecer stock ni promociones** porque ninguna exportación de precios los usa. Como la máscara de Firestore no entra a los elementos de un array, `preciosPorTipoCliente` y `preciosVolumen` se podan en el controlador.
+
+**Medido:** ALMARA **32 s → 2,3 s** (payload 1,0 MB). HARMONY LENS pasa de no terminar a **31 s / 18,7 MB** (34,6 MB antes de podar los arrays). Los tiempos son desde conexión doméstica; en EC2 serán bastante menores.
+
+Se eliminó `fetchPaginaConReintento`, que solo existía para el bucle de páginas.
+
+**Addendum D-169/segundo-síntoma (2026-08-10).** Tras el arreglo de arriba, Monica reportó que en Precio por volumen y Costo seguía pasando: "el cuadro de alerta no carga, no aparece el botón del Ok". Causa distinta y con una asimetría reveladora: **la PRIMERA exportación funcionaba y la segunda no**. `_todosLosProductos` cachea el catálogo, así que en la segunda pestaña el flujo no espera nada: el `Swal.fire` del modal de carga y el `Swal.fire` del resultado ocurrían en el **mismo tick**, y SweetAlert quedaba atrapado en estado `showLoading()` — el spinner girando y el botón de confirmar oculto. Con caché fría la petición HTTP daba tiempo al modal de abrirse y por eso Precio unitario sí funcionó.
+
+Se verificó primero que no fuera dato ni generación: corriendo los 4 generadores contra los datos reales de ALMARA, volumen produce 2.842 filas en 39 ms (0,87 MB) y costo 2.139 filas en 18 ms — ninguno falla ni es lento.
+
+Arreglo: `exportarExcel` pasa a `async/await`, el modal de carga **solo se abre si hay que ir a buscar el catálogo**, y todo diálogo de resultado va precedido de `hideLoading()` (helper `cerrarCargando`). Se aplicó el mismo helper a los importadores, que tenían el mismo patrón — el de tipo de cliente disparaba el resumen sin salir del estado loading, y el nuevo hacía `close()` + `fire()` en el mismo tick.
+
+---
+
+**Addendum D-163/modal-corte (2026-08-10):** Daniel: "el modal del corte quedó feo" → rediseñado con el tema canónico (stats legibles con fondo suave, chips certificado/ambiguo/incompleto en par fuerte/fondo-suave, labels UPPERCASE) y la explicación repetida resuelta con regla de moda: la novedad mayoritaria de la página se dice UNA vez ("94 de 100 filas comparten...") y la columna Novedad distinta solo marca las que se apartan. Lección endurecida en el código: el cálculo corre una vez por página en el TS — una función llamada desde la plantilla con 100 filas se re-ejecuta miles de veces por ciclo y congela la pestaña (pasó en la versión .13, corregido en .14). Publicado 2026.08.10.14, verificado en vivo fluido. Nota operativa: el "congelado" persistente posterior era el content-script de la extensión de Chrome colgado tras varias recargas duras — pestaña nueva lo resuelve.
+
+**Acta de cierre formal Fase 1 (2026-08-10, D-163):** 34/34 suites en verde — 19 unitarias/contrato (candados, ledger, políticas, corte, dedup, guard bodegas, evidencia sombra, verificación diaria, write-set) + 15 de emulador CADA UNA en proyecto demo aislado (stock transaccional, telemetría sombra Osmosis, ledger, lectores/historial, BI, huella de pedidos y orígenes, controller HTTP, ruteo y cancelación Cereza, logística Shopify, flow adjust, procesadores Shopify, corte). Build de producción del front sin errores. Config sombra Osmosis acotada a las 4 bodegas Cereza (foto apagada). Con esto las tareas ejecutables de la fase quedan TODAS cerradas; restan solo el reloj de observación (~15-ago), las promociones por origen con el "dale" de Daniel, y el archive final (5.x) al cumplirse el criterio de conciliación.
+
+## D-164 (2026-08-10) — Checkpoint de "vender contra disponible" RESUELTO con números
+
+Medición de la sesión roadmap sobre 90 días reales (script analizar-ventas-sin-disponible, solo lectura): un bloqueo habría frenado 2/176 ventas en OMS (1,1%), 25/137 en Café Escobar (18,2%), 3/12 en Bombas (25%). Conclusión aceptada: política POR EMPRESA, jamás global.
+
+Decisiones de Daniel (preguntas directas con los números a la vista):
+1. **Sin bloqueo por defecto; el comportamiento es un ajuste en la configuración de cada empresa** ("dejémoslo sin bloqueo o hagamos algo en la configuración de la empresa"). Default = como hoy; cada empresa decide encender su control.
+2. **POS y venta asistida: IGUALES** — la misma política en ambos canales.
+3. **Productos sin registro de inventario siguen vendiéndose libres** — solo se controla lo inventariado.
+4. **Las bodegas espejo (Fullpi/Cereza) SÍ cuentan** para el disponible.
+
+La sesión roadmap implementa sobre su propuesta `vender-contra-disponible` con estas respuestas; sombra por empresa antes de cualquier encendido. Nota para la promoción del ledger (~15-ago): OMS tuvo solo 400 movimientos/90 días — el umbral se cumplirá más por poca actividad que por exactitud demostrada; presentarlo con esa honestidad.
+
+**Addendum D-164 (2026-08-11):** Cableado del control de existencias DESPLEGADO (inerte): `updateStock` evalúa la política de la empresa antes del descuento usando los 3 módulos de la spec vender-contra-disponible (config fail-open, política pura, auditoría fire-and-forget). Revisión cruzada entre sesiones atrapó un error real antes de producción: la consulta de disponible solo miraba el docId y no el espejo legacy por referencia — subestimaba el disponible, el lado peligroso. Corregido (ambas identidades + regla del mayor + limit 5), catch con rastro para no quedar ciegos, y anotado para el encendido: caché de config y where-in por lotes. Esta capa nunca detiene la venta; el freno pre-creación es la fase siguiente de la spec (sesión roadmap). Nadie tiene `controlExistenciasVenta` → cero cambio de comportamiento hoy.
+
+## D-165 (2026-08-11) — Estrategia de despacho de Fullpi: la puerta ya no está pintada
+
+Por orden de Daniel ("probaremos enviar pedidos a Fullpi desde logística"): `fullpiProvider` en shippingProviders (patrón OsmosisProvider) delegando en `fullpiOrderService.pushSingleOrder` — push MANUAL de una orden desde el módulo de Despachos: idempotente (marca local + "already exist"), elegibilidad pagada/contraentrega, cancelados no viajan, estado avanza a EnDespacho solo hacia adelante, log por orden. El candado del barrido AUTOMÁTICO (D-157, ordersPushEnabled) queda intacto — esto es solo el camino con humano. Backend desplegado (estrategia cargando en prod), frontend publicado (2026.08.10.15): LOGISTICS_SIN_DESPACHO quedó vacío y Fullpi vuelve a aparecer en las 4 pantallas de despacho. Falta la prueba E2E con pedido real — el pedido viajará al ambiente que definan las credenciales cargadas (mismo de las pruebas D-158); Daniel define el pedido de prueba.
+
+**Addendum D-165 (2026-08-11) — PRUEBA E2E EXITOSA del despacho a Fullpi desde logística.** Con el "dale" de Daniel: pedido de prueba PRB-FULLPI-1 (malla JCR4001, Medellín, marcado PRUEBA/BORRAR en comprador y notas) → módulo Despachos → Generar Orden de Envío #270 → transportadora Fullpi (visible junto a Cereza y Prindel, "todas operativas") → Confirmar Despacho → resultado verificado en AMBOS lados: Katuq con integrations.fullpi {isPushed, pushSource despacho-manual, idOrden PRB-FULLPI-1, wmsOrderId 3, status created} y orden #270 "Despachado"; el WMS devolvió el pedido por getorders con comprador PRUEBA FULLPI (BORRAR), dirección completa y DANE 5001000 aceptado. De paso se validó el guard de "pedido ya está en una orden activa" (rechazó un doble intento). PENDIENTES de la prueba: avisar a Fullpi que su orden id 3 / PRB-FULLPI-1 es de ensayo (no procesar físico); confirmar con ellos el formato DANE (llegó 5001000, sin cero inicial). Nota técnica: envio.carrier/trackingNumber no quedaron en el doc del pedido (el flujo de orden-de-envío guarda la marca en integrations.fullpi y en la orden #270) — cosmético, anotado.
+
+## D-166 (2026-08-11) — HALLAZGO: el endpoint de crear orden de Fullpi descarta las líneas de producto
+
+Durante la prueba E2E del despacho (D-165) la orden llegó al WMS con cabecera perfecta pero **tabla de Productos vacía**. Diagnóstico con 4 órdenes de ensayo y evidencia cruzada:
+
+| Origen | Órdenes (id interno WMS) | ¿Productos? |
+|---|---|---|
+| API `POST /order/create` | 3, 4, 5, 7 | NO en ninguna |
+| Formulario web del WMS / ellos | 2, 6 | SÍ |
+
+Variantes probadas en `products[]`, todas aceptadas con `success` y sin error: `cantidad` entero (su tabla de campos), `cantidad` string (su ejemplo oficial del PDF), agregando `quantity`/`valor`/`price`, `idOrden` sin guiones, y SKU `GCJ4076C` (el mismo que SÍ figura en una orden creada por ellos). El SKU `JCR4001` existe en su catálogo (autocompletar de su formulario lo resuelve) con 91 unidades en ECF1. Nuestro empaque cumple la documentación → **el defecto es del lado de Fullpi**; se les pasa el reporte con la tabla de evidencia. Hasta que respondan, NO se envían pedidos reales por API (el flujo queda técnicamente listo pero el pedido llegaría sin nada que alistar).
+
+Hallazgos secundarios: (a) **ECF1 = Medellín**, confirmado por su propia pantalla — responde una de las 3 preguntas abiertas a Fullpi; (b) su `GET getorders` es **inconsistente**: en dos llamadas seguidas devolvió productos y luego vacío para las mismas órdenes, así que no sirve como verificación; (c) su formulario usa códigos internos de forma de pago (`paid`, `msp_cashondelivery`) distintos a los textos del PDF (`Pagado`, `Pago contraentrega`) — vale preguntarles si el API espera los códigos.
+
+**Addendum D-166 (2026-08-11) — RESUELTO por Fullpi: las líneas de producto ya se guardan.** Tras el reporte, Fullpi corrigió su endpoint. Verificado con `PRB-FULLPI-6` (id WMS 8) enviada con el empaque de PRODUCCIÓN sin modificar (`products: [{sku, cantidad:1, lote:""}]`): la orden muestra el producto en su pantalla y `getorders` lo devuelve. **Cero cambios en nuestro código** — el empaque siempre cumplió el contrato.
+
+Pendiente cerrado con hallazgo: la columna "Valor" queda vacía porque **el WMS no maneja valor por línea**, ni siquiera en las órdenes creadas desde su propio formulario (verificado en las 4 órdenes con productos: todas devuelven solo `{sku, cantidad}`). Una sonda con 5 nombres candidatos (`valor`, `valorUnitario`, `precio`, `price`, `unit_price`) no pintó nada. El total del pedido SÍ llega en la cabecera, que es lo que sostiene el cobro contraentrega. No es bloqueante; si OMS necesita el valor por línea, es petición de producto a Fullpi.
+
+Asimetría documentada en el cliente: se CREA con `products` (inglés) y se CONSULTA en `productos` (español). Buscar `products` en la respuesta devuelve undefined — nos habría costado tiempo más adelante.
+
+**Estado de la integración Fullpi: COMPLETA en sus cuatro patas** — catálogo recreado, inventario cada 30 min multi-bodega, despacho de pedidos desde logística, y pull de estados. Quedan las órdenes de prueba 3,4,5,7,8,9 por eliminar de su lado.
+
+## D-167 (2026-08-11) — Despacho a Fullpi ESTRENADO con pedido real + elegibilidad de pago decidida
+
+Primer despacho REAL desde el módulo de logística: **ORE-000546 → WMS id 10**, `pushSource: despacho-manual`, pedido en EnDespacho. Antes falló dos veces (16:47, 16:54) con "El pedido no está pago ni es contraentrega": ese pedido es **CXC NÓMINA con saldo pendiente**, y mi candado —heredado del barrido automático— bloqueaba ventas legítimas a crédito.
+
+**Decisión de Daniel:** en el despacho MANUAL manda quien despacha; solo se conservan los bloqueos duros (cancelado, sin nroPedido). Si el pedido va sin pagar queda un log `pushed_sin_pago` con estadoPago, formaDePago y saldo. El barrido AUTOMÁTICO sigue exigiendo pagado/contraentrega **y** `ordersPushEnabled` (D-157) — ahí nadie supervisa. Desplegado en `36fb000`.
+
+**Falsa alarma del mismo día:** Daniel reportó "el desplegado no me carga" con `MIME type text/html` + `global is not defined`. El sitio estaba sano (verificado en Chrome limpio: 2026.08.11.11 carga con datos); era caché del navegador pidiendo chunks de una versión anterior. **Pendiente propuesto:** manejar el fallo de carga de chunk recargando con la versión nueva, para que a ningún usuario con la app abierta se le quede en blanco tras un despliegue. Además quedó visto un error real no bloqueante: `shouldSendNotification` revienta leyendo `.includes` de un undefined.
+
+## D-168 (2026-08-11) — Ataque a la valorización: certificación construida y el hallazgo de los costos
+
+Daniel: "ataca la 4" (valorización contable de verdad). Dos frentes, uno resuelto y uno que depende de datos.
+
+**Frente técnico — RESUELTO en su primera mitad.** El informe de corte ya distinguía cifra certificada de estimada, pero `anchorVerified`/`certifiedFrom` llegaban **hardcodeados en false/null** desde el controller: nadie le decía nunca "esta foto está verificada", así que TODAS las filas salían "incompletas" aunque los números fueran correctos. Nuevo `services/inventory/inventoryCertification.js` (`ba5cdc2`, aún NO cableado): `evaluarAptitud` recorre TODO el inventario y reporta lo que impide reconstruirlo sin ambigüedad (saldo negativo, identidad que no resuelve, par duplicado); `certificar` re-evalúa y se NIEGA a sellar sobre datos torcidos; `leerCertificacion` falla a "sin certificar". Test 5 casos, safety-contract PASS, write-set respetado (evidencia en inventory_audit).
+
+**Medición en vivo:** OMS está a **3 problemas** de poder certificar (2 saldos negativos + 1 identidad no resoluble); CAFE ESCOBAR a 7 (todos negativos). Son casos de operación —falta registrar entradas—, no de código.
+
+**Frente de datos — EL PROBLEMA REAL.** Solo **131 de 8.442 productos** de OMS tienen costo (1,5%); en unidades, **337.246 de 345.745 sin costear (97,5%)**. El valorizado de $329M proviene casi todo del inventario Fullpi (recreado del respaldo, que traía costo). Conclusión: la valorización no está limitada por el motor sino por la ausencia de costos. Vías: (a) compras escribiendo costo al recibir —el MVP en curso es la solución estructural—, (b) carga masiva para el stock existente. Pendiente de Daniel: conseguir la lista de costos de OMS.
+
+Pendiente técnico: cablear la certificación al informe (toca `inventoryCutoffQueryService` y `controllers/inventory.js`, carril de la sesión roadmap por el MVP de compras — coordinar antes).
+
+## D-169 (2026-08-11) — Hallazgos del camino Katuq→Shopify (revisión cruzada con la sesión shopify)
+
+Daniel pidió revisar el envío de inventario y productos de Fullpi a Shopify "sin redundar, sin pisar precios ni costos". La revisión destapó tres cosas, ninguna de Fullpi:
+
+**1. El flow de Cereza solo ve el 3,6% del catálogo — CONFIRMADO empíricamente.** El trigger escanea 3 páginas en régimen normal (límite puesto por rate-limit 429). Se verificó llamando a la API de Cereza en vivo: **ordena por id DESCENDENTE**, no por fecha (página 1 = 40003, 40002, 40001…), así que un producto que se actualiza NO sube a la primera página. Cereza reporta **8.298 productos**; el flow ve 300. Consecuencia: cambios en productos viejos (precio, título, fotos) **nunca llegan a Shopify**, y un producto agotado que recupera stock puede no publicarse jamás. En OMS hay **6.085 productos de Cereza hoy sin stock** — ese es el universo de candidatos cada vez que se reabastecen. Hallazgo adicional: la API **no devuelve ningún campo de fecha** (`active, data, discounts, id, images, price, reference, stock`), así que la comparación por `updated_at` del trigger no puede estar operando como se creía.
+
+**2. El precio se escribe siempre, y en cero cuando no resuelve.** `shopify-product-upsert` manda `price: String(v0.price || '0.00')` incondicionalmente (a diferencia de `barcode`/`inventoryItem`, que sí se omiten). Medido: de **5.980 productos ligados a Shopify, 24 no tienen precio** → reciben `0.00` y el guard de precio-muy-bajo los manda a DRAFT. **12 de esos 24 tienen stock real: 7.707 unidades** sin poder venderse (GCJ4204A solo: 5.280). NO es hemorragia activa —los flows deduplican por estado, quedaron pegados desde su última emisión, fechas de junio—, y **cargar el precio en Katuq los destraba solos** (mueve date_edit → re-emisión → DRAFT se auto-cura). Precio canónico: `precio.precioUnitarioConIva`.
+
+**3. Fullpi→Shopify no es configuración, es modelo de datos.** El pipeline es 1 producto → 1 location: `bodegaCode` se pierde en el trigger y el upsert suma todas las bodegas. Los 91 productos de Fullpi viven en 3 bodegas espejo; publicar 3 cantidades a 3 ubicaciones exige un eje (variante × bodega) que no existe. El desglose `stockPorBodega` YA se calcula y se descarta. Camino stock-only construible sin tocar el upsert (`shopify-inventory-adjust` ya resuelve identidad por SKU sin escribir productos), pero requiere: eje de bodega, mapeo bodega→location con fail-closed (hoy no existe para BOD-FULLPI-1/3/4) y filtro de bodegas en `productStockHelper`.
+
+Métrica sana verificada: `flow_polling_state` de OMS al 10% del límite de 1 MB (103 KB, 3.017 entradas) — las entradas son acumulación histórica por el filtro `onlyWithStock`, no ingesta a medias (8.296 productos Cereza, 2.211 con stock hoy). No hay riesgo inminente de degradación.
+
+Pendiente de Daniel: los 24 precios, autorizar lectura contra Shopify para confirmar DRAFT en GCJ4204A, y priorizar el arreglo del escaneo de Cereza.
+## D-173 (2026-08-11) — Builder de landings y tiendas: se abre el camino con el modelo de bloques
+
+Historia de ClickUp `wdu9v786n2`: el comerciante quiere publicar una landing o una tienda sin saber diseño ni programación, tipo Wix, con la ventaja de que Katuq ya conoce su catálogo, precios e inventario. Es una épica de varios meses; esta sesión abre la base y deja el resto por fases.
+
+**Lo que ya existía y se reusa en vez de reescribir:** la vitrina pública por token de catálogos (D-141) como patrón canónico de endpoint público, `/v1/media/upload` para la biblioteca multimedia, `companies.logo`/`redesSociales` como semilla de marca, y las pasarelas Wompi/ePayco de `services/paymentGateway` para el checkout de la fase de tienda. La vista pública de producto se extrajo de `controllers/catalogos.js` a `utils/vitrinaProducto.js`: qué ve un comprador se decide en un solo lugar.
+
+**Decisión de arquitectura — un sitio es JSON de bloques, nunca HTML.** El comerciante no puede inyectar markup en una página que Katuq sirve bajo su dominio: `utils/siteBlocks.js` valida contra lista blanca de tipos (`hero`, `texto`, `galeria`, `productos`, `whatsapp`, `formulario`, `faq`, `footer`), descarta lo desconocido, y solo acepta URLs `http/https/mailto/tel` — `javascript:` y `data:` quedan fuera. Como el contenido es datos, mover el render a SSR después no cambia el backend.
+
+**Publicación.** MVP en `tienda.katuq.com/{slug}` con slug único global (Firebase Hosting no da wildcard de subdominios: cada dominio se registra a mano). Subdominio por comercio y dominio propio quedan fuera del MVP. La página vive en el Angular actual como ruta pública lazy-loaded `/s/:slug`, fuera del AuthGuard, igual que `catalogo-publico`.
+
+**Colecciones nuevas aprobadas por Daniel:** `sites` (con `draft` y `published` en el mismo doc, sin colección de versiones) y `site_events` (métricas). El kit de marca NO lleva colección: va en `companies.brandKit`, junto al logo y las redes que ya estaban. Los leads entran a `prospects` con `origen: "sitio-web"` y `siteId`, no a una colección aparte.
+
+**Write-set cerrado (alineado con D-134).** El builder LEE `products`, precios e inventario, y solo escribe `sites`, `site_events`, `prospects` y `companies.brandKit`. Nunca productos, variantes, catálogo, precios ni listas de precios. Verificado por grep sobre el módulo y por prueba end-to-end.
+
+**Hallazgo de seguridad cerrado en el camino.** `POST /v1/virtualStoreWebhook/order-created` estaba montado **sin auth y sin rate limit** (no hay auth global; el limiter de `index.js` está comentado): bastaba conocer el nombre de una empresa para crear pedidos y **descontar inventario real**. Sin consumidores en el código —la "tienda propia" que menciona el doc de arquitectura no existe todavía—, se cerró con `auth` + límite de 60 escrituras/15 min. Si aparece una tienda externa que no puede llevar sesión, el camino es HMAC por comercio (`integrations.virtualstore.webhookSecret`), nunca dejarlo abierto.
+
+**Verificado end-to-end contra el backend local (Firestore prod, company ficticia, datos borrados al terminar):** 24 chequeos en verde — 404 mientras no se publica y al despublicar, multi-tenancy por id y por listado, 409 en slug repetido y reservado, bloque de tipo inventado descartado, `javascript:` eliminado del CTA, y la vista pública sin `company`, sin borrador, sin contadores y sin stock. En el bloque de productos: precio tomado del maestro ($185.900), agotado fuera, y **producto de otra empresa descartado** — ese filtro faltaba y se corrigió durante la prueba.
+
+**Fases siguientes:** plantillas por sector + generación con Gemini (el proveedor de IA del backend), editor visual en Seller.Katuq, tienda con carrito y checkout contra las pasarelas ya integradas, y panel de métricas + meta OG para compartir.
+
+**Deuda ajena detectada, no tocada:** `POST /v1/landing/contacts` tiene invertida la validación (`if (!nombre || !email || mensaje)`) y rechaza todo mensaje no vacío; el router de `prospectos` no lleva `auth` ni filtra por company en `getAll`.
+
+## D-174 (2026-08-11) — Builder fase 2: la IA escribe los textos, nunca la página
+
+Segunda fase del builder (D-173). Ocho plantillas por sector — moda, belleza, alimentos, hogar, servicios, tecnología, restaurantes y una genérica — en `data/siteTemplates.js`, sembradas en `site_templates` con `scripts/seed-site-templates.js` (dry-run por defecto, `--apply` para escribir; idempotente de verdad: la comparación ordena las claves porque Firestore las devuelve alfabetizadas y si no marcaba cambios en cada corrida).
+
+**La decisión que define la fase: el modelo NO diseña.** La estructura sale siempre de una plantilla que ya es publicable sola; a Gemini se le mandan los textos actuales y devuelve otros, que se vuelcan campo por campo sobre una lista blanca de campos editables por tipo de bloque (`services/sites/siteGenerator.js`). Consecuencia verificada con el modelo simulado: aunque conteste `<script>`, un `javascript:` en el CTA, una imagen o un teléfono, **no entra nada** — esos campos no son editables por la IA, y lo que sí lo es pasa después por `utils/siteBlocks.js` como cualquier entrada del editor. Si el modelo falla, se agota el tiempo (20 s) o devuelve basura, el comerciante recibe igual la plantilla resuelta con su marca y `generadoPorIA: false` con el motivo.
+
+**Endpoints:** `GET /v1/sites/templates` (sirve las de Firestore y cae a las del módulo si nadie corrió el seed, para que el builder nunca se quede sin plantillas) y `POST /v1/sites/generar`, que previsualiza por defecto y solo guarda con `guardar: true`, dejando `origen` y `plantillaId` en el sitio para poder medir después si la IA ayuda. Límite propio de 30 generaciones/15 min: cada una cuesta una llamada al modelo.
+
+**Se permitieron anclas (`#productos`) en el saneador de URL**, que antes las descartaba: los CTA de todas las plantillas apuntan a una sección de la propia página y el botón salía sin destino, o sea invisible. Las secciones de productos y formulario del componente público llevan ahora ese `id`.
+
+**HALLAZGO — la IA del backend está sin llave.** `GOOGLE_AI_API_KEY` está **vacía** en el `.env` local (línea 12), y `OPENAI_API_KEY` también. Genkit responde "Please pass in the API key…" en cada `generate()`. Si en el `.env` del EC2 pasa lo mismo, entonces **toda la IA del backend está caída, no solo la del builder**: `katuqintelligence.js` y el agent builder llaman por el mismo camino. Sin verificar en prod desde esta máquina. Pendiente: revisar la key en el server; el builder ya funciona sin ella, los otros módulos probablemente no.
+
+**Verificado:** 20 chequeos de plantillas y generación contra el backend local (filtro por sector, plantilla explícita respetada, sector desconocido cae en la genérica, guardar deja el sitio en borrador sin publicar) más 16 con el modelo simulado en tres escenarios: responde bien, intenta inyectar, y falla. Datos de prueba borrados; `sites` y `site_events` quedaron vacías.
+
+## D-175 (2026-08-11) — Builder fase 3: editor visual, y un solo render para editar y publicar
+
+Tercera fase del builder (D-173, D-174). Módulo `components/sitios` en Seller.Katuq, ruta `/sitios` con AuthGuard y entrada "Mi página web" en el menú.
+
+**La decisión estructural: el render de bloques se extrajo a `components/sitio-render`**, que usan tanto la página pública como la vista previa del editor. Si el dibujo viviera dos veces, el comerciante estaría editando una página distinta de la que publica; con un solo componente, la vista previa **es** la página. `sitio-publico` quedó reducido a traer datos, mandar el lead y poner las metas. El render no hace peticiones: emite `lead` y `clic`, y el padre decide — la página pública los manda al backend, el editor los ignora.
+
+**Editor:** lista de bloques con subir, bajar, ocultar, duplicar y eliminar; panel de propiedades por tipo de bloque; pestañas de Diseño (paleta y tipografía) y Ajustes (nombre, dirección con comprobación previa de disponibilidad, y metadatos para compartir); subida de imágenes contra `/v1/media/upload`; vista previa conmutable escritorio/móvil; y publicar, que **guarda primero** porque nadie espera publicar una versión vieja. Los bloques ocultos se ven atenuados en el editor y no salen en la página pública.
+
+**Creación en dos pasos:** elegir plantilla del sector y dar nombre. Con o sin IA se usa el mismo endpoint (`generar` con `guardar`), porque devuelve la plantilla resuelta con la marca aunque el modelo no conteste; si el comerciante pidió textos automáticos y no los hubo, se le avisa sin alarmar y la página existe igual.
+
+**Verificado:** `ng build` limpio con el chunk del editor (190 kB), más 18 chequeos del ciclo real contra el backend — crear desde plantilla, editar textos, mover bloques, ocultar, agregar, guardar, publicar, y comprobar que el visitante ve lo editado y **no** ve lo oculto. Dos comprobaciones que importan y pasan: **los ids de bloque sobreviven al guardado** (si el backend los reescribiera, el editor perdería la selección en cada cambio) y **seguir editando no altera lo ya publicado**. Datos de prueba borrados; `sites` y `site_events` quedaron vacías.
+
+**Falta probar la UI en el navegador con una sesión real** — desde esta máquina no hay credenciales para entrar al panel. La compilación y los contratos están verificados; el recorrido visual no.
+
+## D-176 (2026-08-11) — Selector visual de productos del builder, sobre los endpoints que ya existían
+
+El bloque "Productos" del editor (D-175) se llenaba con un campo de ids separados por coma — servía para probar, no para un comerciante. Ahora hay un selector visual: busca por nombre o referencia, ve foto, precio y stock, marca los que quiere y ordena la lista con flechas.
+
+**No se creó ningún endpoint.** Se reusan `GET /v1/productos/search/quick` (filtra por empresa, busca sobre un índice en memoria e inyecta el stock real desde `inventory`) y `POST /v1/productos/by-ids` para resolver los ya elegidos al abrir. La búsqueda espera 350 ms tras la última tecla.
+
+**El selector solo maneja ids.** Precio y disponibilidad se muestran como referencia; los definitivos los resuelve el servidor al servir la página. Por eso un agotado se puede elegir igual: se avisa en el panel y en la vista previa, y volverá a aparecer solo cuando tenga stock. Tope de 24 por bloque, avisado al elegir en vez de perderlos al guardar.
+
+**La vista previa ahora muestra los productos de verdad**, con foto y precio, en lugar de "3 productos seleccionados". Los datos resueltos se inyectan en una copia de los bloques (`bloquesPrevia`) y **nunca tocan el borrador**: al guardar sigue viajando solo `productoIds`, y el backend descarta cualquier otra clave del bloque.
+
+**Verificado:** build de producción limpio (chunk del editor 241 kB) y los dos endpoints probados contra datos reales de OH MY STORE — "conjunto" da 478 coincidencias con stock y precio correctos, y `by-ids` devuelve los cuatro de la demo con foto.
+
+**Deuda ajena detectada:** `POST /v1/productos/by-ids` **no filtra por company** — hace `getAll` de los ids recibidos y devuelve lo que exista, así que un usuario autenticado de una empresa puede leer productos de otra si conoce el id. No se tocó (lo usa venta asistida, D-147). El builder no queda expuesto por esto: al publicar, `controllers/sites.js` descarta todo producto cuya `company` no sea la del sitio.
+## D-178 (2026-08-11) — Detección de cambios de Cereza y candado de precios de Shopify
+
+> Renumerada desde D-170: ese número ya lo tenían los buzones de Instagram y Facebook. Tres sesiones paralelas tomaron números el mismo día.
+
+**Desplegados juntos el arreglo de detección de cambios de Cereza y el candado de precios de Shopify. Y el timeout de transportadoras tiene culpable: Cereza nos inunda de avisos repetidos.**
+
+Autorizado por Daniel ("Dale, desplegá vos") tras consultarle la ambigüedad: la sesión de Shopify recibió "commit y push, no despliegues" y el despliegue quedó de este lado. Producción (`13.222.206.185`, rama `backend-aws-security`) pasó de `3ec495f` a `05d8dac`, con `e52c069` (huella de contenido para detectar cambios en Cereza) y `05d8dac` (candado de precios de Shopify) en un solo pull, para que no existiera una ventana con la detección viva sin el candado.
+
+Verificado antes de reiniciar: `test:flows-osmosis-huella`, `test:flows-node-catalog` (21 handlers en ambos catálogos) y `test:inventory-safety-contract`, los tres en verde. `package.json` solo sumaba una línea de scripts — sin dependencias nuevas. Arranque sin errores, crones dinámicos registrados.
+
+**Resultado medido a los ~10 minutos** contra la foto del antes: 225 productos ya con huella sembrada; **14 de los 39 precios perdidos recuperados, exactos** (GCJ4240 $365.900, GCJ4244 $339.900, GCJ4241 $319.900, GCJ4243 $290.900…), **$2.547.300**. Los 25 restantes van cayendo con el barrido. El candado de Shopify aún sin activarse (`sin_precio_valido` = 0, creaciones = 0), porque lo emitido hasta ahora traía precio válido.
+
+**Hallazgo nuevo, no corregido — Cereza reanuncia los mismos productos como `created` sin parar.** En 6 días de log: **16.266 avisos de producto, 15.072 de tipo `product.created`, para solo 1.062 productos distintos** (GCC411 llegó 167 veces). Katuq hace upsert del producto y **re-sincroniza inventario en cada uno**: 16.270 re-sincronizaciones. La idempotencia existe pero va indexada por `webhookId` y Cereza manda un id nuevo cada vez, así que nunca atrapa la repetición.
+
+Esa tormenta es la causa del timeout que reportó Daniel en el modal "Elige la transportadora": el catálogo de transportadoras de Cereza tarda **5–7 s** en calma y **supera los 30 s** bajo la inundación. Agravantes propios: el caché es solo en memoria (TTL 30 min) sobre un proceso con 4.895 reinicios acumulados, sin reintento ni respaldo persistido. Ese endpoint se llamó 5 veces desde el 05-ago —las 5 de Daniel— y falló las 5.
+
+**No se tocó**: deduplicar por contenido y persistir el catálogo de transportadoras escriben en `products`/inventario y en configuración, carril sensible — van con propuesta y aprobación explícita antes de implementar.
+
+**Corrección a D-170 (mismo día, tras verificar contra el código y los datos):** se afirmó que el despliegue cerraría solo la exposición de los 3 productos vendiéndose en $0 en ohmystore.shop. **Es falso.** El disparador de Cereza, en fase DIFF (la actual, `limit: 0`), escanea **siempre las páginas 1 a 3** — los 300 productos más nuevos por id descendente — y **no avanza cursor** (`osmosis-product-changed.trigger.js` líneas 268–286). Verificado: la ventana barrida cubre ids 38965–40003 (225 productos de 8.298, el 3%). GCDOT065 tiene id 35426 y GCINS0005 id 37113: **quedan fuera y el barrido nunca les llegará**, no en N corridas — nunca. GCC1233 ni siquiera tiene id de Cereza guardado (solo `integrations.shopify`), así que este camino jamás lo toca.
+
+Consecuencia: **bajar esos 3 a borrador es acción manual de Daniel en el admin de Shopify.** Ninguna sesión tiene autorización de escritura sobre Shopify de producción.
+
+Esto da la justificación concreta para la cobertura rotativa que quedó pendiente: no es eficiencia, es **el único mecanismo que alcanza productos rotos fuera de la ventana**. Requiere resolver antes el manejo de 429 — confirmado hoy en vivo: un recorrido paginado del catálogo devolvió `429 Too Many Attempts` a las pocas páginas.
+
+**Segunda corrección a D-170 — defecto propio detectado el mismo día, antes de que nadie lo sufriera en silencio.**
+
+El disparador de Cereza está configurado con `limit: 30` y `diffPagesScan: 3`: **escanea 300 productos por corrida pero solo emite 30**. En `osmosis-product-changed.trigger.js` la huella se escribía en la línea 376, **antes** del corte por tope de la 378. Consecuencia: los ~270 productos escaneados y no emitidos quedaban marcados como vistos, y en la corrida siguiente su huella ya coincidía → **el cambio se descartaba para siempre**. Es el mismo defecto que ya se había corregido en `fullpi-inventory-changed.trigger.js`; no se trasladó la lección al de Cereza.
+
+Efecto medido: de los 39 precios perdidos, 24 caen dentro de la ventana barrida y solo **14** se recuperaron. Los otros **10** (GCJ4265, GCJ4266, GCJ4263, GCJ4270, GCJ4269, GCJ4264, GCC1316, GCC1315, GCC1314, GCC1313 — $1.123.200) quedaron con huella registrada **sin haber sido emitidos**. Los 15 restantes ($769.969) están fuera de la ventana y son inalcanzables hasta que exista cobertura rotativa.
+
+**Arreglo escrito y probado en local, NO desplegado** (pendiente palabra de Daniel): al cortar por el tope se restaura la huella y el id anteriores —o se borran si no había— de modo que el producto se re-detecte en la corrida siguiente. La prueba `test:flows-osmosis-huella` ahora falla si alguien revierte esa restauración.
+
+**Reparación de datos pendiente y no ejecutada**: los ~195 productos ya marcados como vistos sin haber sido emitidos no se recuperan solos. Hay que limpiar `lastSeenHashes` del estado del flow para que la siembra vuelva a correr (a 30 por corrida, ~8 corridas). `lastSeenIds` se deja intacto para que nada salga como `created`.
+
+**Exposición de los $0 acotada**: barrido completo del catálogo de Shopify (5.988 productos activos, 60 páginas) = **exactamente 3 comprables en $0, 685 unidades**. No hay población escondida. Acción manual de Daniel.
+
+## D-179 (2026-08-11) — El barrido de Cereza recorre el catálogo entero
+
+> Renumerada desde D-171: ese número ya lo tenía el MVP de compras.
+
+**El barrido de Cereza pasa de ver el 3% del catálogo a recorrerlo entero. Desplegado.**
+
+Autorizado por Daniel ("Dale, desplegalo") tras plantearle el único riesgo real: la carga sobre Cereza sube de 36 a 60 páginas por hora, y esta misma tarde su API devolvió `429 Too Many Attempts` en un recorrido de prueba con 350 ms entre llamadas.
+
+Producción pasó de `58d8af1` a `e88f5d7`. Entran dos cambios encadenados, en este orden a propósito:
+
+1. **`6b4e1f3` — el tope por corrida ya no descarta lo que no emitió.** Con `limit: 30` y `diffPagesScan: 3`, el flow escaneaba 300 productos por corrida y emitía 30, pero marcaba los 300 como vistos. Los 270 restantes quedaban sellados y su cambio se perdía para siempre. **Sin este arreglo, ampliar la cobertura empeora el problema**: más productos escaneados, mismo tope, más sellados sin emitir.
+2. **`e88f5d7` — cobertura rotativa.** Se conserva la ventana fresca (páginas 1–3, donde caen los nuevos por el orden id descendente) y se agrega un puntero que barre 2 páginas del resto por corrida, en círculo. Vuelta completa ≈ 3,5 h sobre 83 páginas. El puntero vive en `diffRotatePage` del mismo documento de estado, **no avanza sobre una página que no se alcanzó a leer** (si no, un 429 abriría huecos de cobertura permanentes), y ante `429` corta la corrida y reintenta en el siguiente poll reusando el patrón de `osmosisOrderService`. `diffPagesScan`, `diffRotatePages` y `pageDelayMs` quedaron declarados en el esquema del nodo: se ajustan desde el editor sin desplegar.
+
+Verificado antes de reiniciar, las cuatro en verde en el servidor: `test:flows-osmosis-cobertura` (cubre cada página una vez, da la vuelta, normaliza punteros inválidos y falla si alguien invierte el orden leer/avanzar o quita la detección de 429), `test:flows-osmosis-huella`, `test:flows-node-catalog`, `test:inventory-safety-contract`. Arranque sin errores.
+
+**Decisión consciente: el tope de 30 por corrida se mantiene.** Con los dos arreglos ya no pierde cambios —lo que no sale se reintenta— así que pasa a ser regulador de ritmo. Se deja bajo para observar la primera vuelta completa, que es la corrida más pesada que este flow habrá hecho. Si va holgada, se sube con un número medido, no elegido a ojo. Documentado en el código como *ritmo, no filtro*, para que la próxima sesión no lo suba sin saber que antes perdía datos.
+
+**Prueba de aceptación acordada:** que el barrido alcance a GCDOT065 (id 35426) y GCINS0005 (id 37113), hoy inalcanzables. Si a las ~4 h de desplegado no los tocó, algo está mal.
+
+**Vigilancia de la primera hora:** si aparece `rate limit de Cereza` en los logs, bajar `diffRotatePages` a 1 desde el editor (vuelta ≈ 7 h) en vez de chocar contra su API.
+
+
+## D-177 (2026-08-11) — Buzones de Meta en producción: lo que faltaba no era código, y tres fallas mudas
+
+Cierre de la jornada de D-170. Los buzones quedaron **funcionando de punta a punta con una persona ajena**: `@ssanti.gm` escribió por Instagram Direct a las 02:28, se respondió desde el buzón a las 02:29 y él contestó de vuelta. 25 mensajes guardados entre los dos canales. Antes de eso, ida y vuelta completo también por Messenger.
+
+**Desplegado:** backend en la instancia real con `META_APP_ID`, `META_APP_SECRET`, `META_WEBHOOK_VERIFY_TOKEN`, `META_GRAPH_VERSION` y `META_REDIRECT_URI` (respaldo del `.env` previo antes de tocarlo); webhook `https://back.katuq.com/v1/meta/webhook` registrado y verificado por Meta en los objetos **Instagram** (`messages`) y **Page** (`messages` + `messaging_postbacks`); frontend en 2026.08.11.32; tres índices de `meta_messages` creados con el procedimiento seguro (archivo con solo los nuevos, sin `--force`).
+
+**Cuatro fallas que solo aparecieron con tráfico real, todas mudas:**
+
+1. **La página no quedaba suscrita al webhook.** Tener la URL registrada a nivel de app solo dice *a dónde* mandar; `POST /{page-id}/subscribed_apps` es lo que autoriza *a mandar*. Sin eso la pantalla decía "Conectado" y el buzón quedaba mudo para siempre, sin un error visible. Instagram además tomaba `paginas[0]` a ciegas: con varias páginas conectaba la ajena.
+2. **Responder en Instagram fallaba con `(#3) Application does not have the capability`.** Con inicio de sesión de Facebook, Instagram Messaging se opera contra la **página**, no contra la cuenta profesional — aunque los eventos entrantes sí vengan identificados con esa cuenta. Se guarda `paginaId` aparte de `cuentaId`; las conexiones viejas se reparan solas vía `debug_token` (`/me` NO sirve: sobre un token de página exige `pages_read_engagement`, que no está en la configuración de login ni tiene por qué estarlo).
+3. **El nombre del contacto nunca se resolvía.** El webhook solo trae el identificador. En Instagram se consulta directo; en Messenger NO —el PSID devuelve "Object with ID does not exist"— y hay que sacarlo de los participantes de la conversación de la página. Se usaba el camino de Instagram para los dos.
+4. **Las rutas de los buzones rebotaban a la pantalla de inicio.** `notificaciones` a secas estaba declarada ANTES y Angular resuelve por orden y por prefijo: se tragaba `/notificaciones/*/inbox`, cargaba su módulo, no encontraba nada para el resto de la URL y la navegación moría sin error. **Afectaba también al buzón de WhatsApp**, que no es de este cambio. Corregido moviendo las tres rutas antes de la genérica. Queda un pendiente: por URL directa o F5 todavía rebota; por menú funciona.
+
+**Endurecimiento:** el webhook falla CERRADO. Sin `META_APP_SECRET` rechaza los eventos y sin `META_WEBHOOK_VERIFY_TOKEN` rechaza el saludo; antes ambos casos pasaban de largo y una variable mal puesta dejaba el endpoint público sin que nadie se enterara. El único bypass es `META_WEBHOOK_ALLOW_UNSIGNED=true`, explícito; **no se deduce de `NODE_ENV`** porque el `.env` local también dice `production`.
+
+**Producto:** el buzón se refresca solo cada 8 s y suena una campana al entrar un mensaje nuevo. Con la pestaña oculta baja a 32 s y solo relee la lista — WhatsApp no pollea escondido (D-117) por costo de lecturas, pero una campana que solo suena cuando ya estás mirando no sirve. El overlay global se suprime en esta pantalla (`suppressGlobalLoader`, el mecanismo que ya existía): tapaba todo en cada vuelta del refresco.
+
+**Omnichat sale del código.** El webhook del objeto Page estaba ocupado por `https://omnichat.katuq.com/bot` —un Chatwoot propio, servidor sin puertos abiertos— y Meta permite una sola URL por objeto. Daniel autorizó reemplazarlo. Su token viejo estaba enmascarado: **la configuración anterior no se puede restaurar tal cual**. De paso se quitó el widget muerto que la encuesta de diagnóstico cargaba en cada registro, junto con el `ngDoCheck` que existía solo para él.
+
+**Estado en Meta:** `public_profile` en acceso avanzado concedido; la comprobación de uso de datos anual **enviada** (vencía el 29 de agosto y es la misma app donde vive WhatsApp). La solicitud de revisión sigue **sin enviar**: cuatro descripciones escritas (`pages_show_list`, `pages_manage_metadata`, `pages_messaging` con los pasos para el revisor, `instagram_manage_messages`), video subido solo en `pages_messaging`, y bloqueada por dos cosas que no dependen de nosotros — `instagram_basic` tiene el botón deshabilitado hasta que Meta cuente las llamadas a la API (avisa que tarda hasta 24 h) y el contador seguía en cero al cierre.
+
+**Pendientes con dueño:** arrastrar el video a los otros tres permisos (Daniel — la herramienta del asistente topa en 10 MB y el archivo pesa 84); revisar las cuatro casillas de certificación, **incluida la de `pages_messaging` que quedó marcada por error del asistente cuando se había pedido dejarlas todas sin marcar**; decidir la suerte de omnichat; y rastrear por qué la carga en frío de las rutas de buzón rebota a inicio.
+
+**Cierre de D-171 — resultado medido y dos correcciones.**
+
+**Resultado:** 25 de los 39 precios perdidos recuperados = **$3.673.093** (arrancó en 14 = $2.547.300). Las 225 huellas destrabadas drenaron 221/225. El puntero rotativo llegó a la página 82 de 83: **vuelta completa del catálogo**, sin una sola queja de rate limit de Cereza. Los 14 que faltan tienen **stock cero** y el nodo los omite a propósito (`onlyWithStock: true`) — no es defecto, es la regla; uno es `TESTERGCJ2321`, producto de prueba. Saldo real: 25 de 25 alcanzables.
+
+**Corrección 1 — la inanición del tope.** Al encender la rotación, `allProducts.sort((a,b) => a.id - b.id)` convirtió la lista en una cola con prioridad: las páginas rotadas (ids bajos) se comían los 30 cupos y la ventana fresca nunca alcanzaba turno. Medido: de 120 huellas re-selladas tras la limpieza, 120 eran de rotación y 0 del rango destrabado. Se resolvió solo cuando la rotación terminó de descubrir productos y liberó el cupo. Arreglo de raíz en `84cecd3` (ventana fresca primero, rotación con el sobrante) — **NO desplegado**, ver abajo.
+
+**Corrección 2 — los parámetros del nodo NO se leen en caliente.** Se escribió `diffRotatePages: 0` en `flows/{id}.graph.nodes[].params`, verificado guardado, y el puntero igual avanzó de la página 16 a la 82. **El ejecutor no lee ese parámetro desde ahí.** Invalida el plan de contingencia que se le ofreció a Daniel ("si Cereza se queja, bajo a 1 página sin desplegar"): eso no habría funcionado. Pendiente averiguar desde dónde lee el ejecutor antes de volver a ofrecer un ajuste en caliente como red de seguridad.
+
+**Despliegue de `84cecd3` bloqueado a propósito.** El rango entre lo desplegado (`e88f5d7`) y ese commit son **21 archivos y 2.549 inserciones** de una tercera sesión: `controllers/sites.js` (701), `data/siteTemplates.js` (326), `services/sites/siteGenerator.js` (247), `utils/siteBlocks.js` (245), `controllers/companies.js` (238), **`services/inventoryService.js` (85 — carril sensible)** y un arreglo de auth en `routers/virtualStoreWebhook.js`. Su `package.json` sigue modificado sin commitear. El arreglo del orden son 45 de esas 2.549 líneas y ya no es urgente. Va en un despliegue coordinado con la tercera sesión enterada.
+
+**SUPERSEDED — "Corrección 2" de D-171 era falsa. Los parámetros del nodo SÍ se leen en caliente.**
+
+Se afirmó que escribir `diffRotatePages: 0` en `flows/{id}.graph.nodes[].params` no llegaba al ejecutor, porque el puntero apareció en la página 82 después de aplicarlo. **El error fue de método, no de dato: se comparó una lectura anterior a la pausa con una posterior, sin descontar el tiempo transcurrido.**
+
+Aritmética de los respaldos: la limpieza de huellas corrió a las **22:50:32 UTC** y la pausa a las **02:26:13 UTC** — **3,59 horas después, unas 43 corridas**. A 2 páginas por corrida eso son 86 páginas. El puntero pasó de 12 a 82 (70 páginas) **durante ese lapso, antes de la pausa**. La medición que se tomó como prueba del fallo fue a las 02:30, cuatro minutos después de aplicarla.
+
+Mecanismo confirmado en el código: `nodeExecutor` hace `ctx.params = triggerNode.params || ctx.params` — los params del graph **reemplazan** a los del binding, y el flow se lee fresco en cada corrida, así que aplica sin reiniciar. Verificación independiente de la sesión Shopify: con la pausa puesta, el puntero quedó clavado en 82 mientras `lastPolledAt` y las huellas seguían subiendo — exactamente rotación apagada.
+
+**El plan de contingencia SÍ es válido**: bajar `diffRotatePages` en caliente funciona como red de seguridad si Cereza se queja.
+
+**Trampa real que sí sale de esto:** como el graph **reemplaza y no fusiona**, al escribir `params` hay que incluirlos todos. La edición dejó `onlyWithStock` fuera del graph aunque el binding lo tenía; no hizo daño porque el default del código es `true`, pero con otro parámetro se podría apagar algo sin querer.
+
+**Resultado final de la exposición de los $0:** GCDOT065 no se escondió — **recuperó su precio real ($2.593) y sigue en venta con 571 unidades**. Queda solo GCC1233 con 3 unidades. De 685 unidades regalables se pasó a 3.
+
+## D-181 (2026-08-11) — Las páginas del builder se publican en su propio subdominio, y el HTML lo arma el servidor
+
+**El problema no era el diseño, era la dirección y quién dibuja.** Las páginas salían en `sellercenter.katuq.com/s/<slug>`: el link que el comerciante reparte por WhatsApp mostraba el nombre interno del panel de vendedores. Y como el dibujo lo hacía Angular en el navegador, las metas de `<head>` se ponían después de cargar — WhatsApp, Facebook y Google no ejecutan JavaScript, así que el link se compartía pelado y no había nada que indexar. El panel "Cómo se ve al compartir" del editor no cambiaba nada de lo que veía quien recibía el link.
+
+**Decisión: cada sitio vive en `<slug>.katuq.com`, servido desde infraestructura propia.** Lightsail `katuq-sitios-web` (us-east-1, micro, ~7 USD/mes), IP fija **34.225.223.187**, con un comodín `*.katuq.com` en GoDaddy. Los subdominios con registro propio —back, sellercenter, app, api, kai, support, deliveries, www— le ganan al comodín y quedaron además en la lista de slugs reservados: si un comercio tomara uno, su página sería inalcanzable.
+
+**Se eligió Caddy sobre nginx por el certificado.** Con *on-demand TLS*, el certificado de cada subdominio se emite la primera vez que alguien entra; un comodín SSL habría exigido validación por DNS cada 90 días, con llave de API del proveedor de dominios y un cron que nadie revisa hasta que se vence. Antes de emitir, Caddy pregunta a `/v1/sites/public/host-permitido` si esa página existe y está publicada: sin esa pregunta, cualquiera que apunte su dominio a nuestra IP nos haría emitir certificados a su nombre y agotaría la cuota de la autoridad. Verificado: un dominio ajeno apuntado a esa IP no obtiene certificado. Config versionada en `functions/deploy/sitios/Caddyfile`.
+
+**El HTML lo arma el backend (`utils/siteHtml.js`), no el bundle de Angular.** La página pasó de arrastrar el bundle del panel a ~8 kB con su CSS adentro, que en celular con datos decide si la ven o no. El componente Angular queda como vista previa del editor, donde sí hace falta reaccionar a cada tecla; los dos leen los mismos bloques, así que lo que se ve editando es lo que se publica. La respuesta lleva su propia política de seguridad con nonce, porque la de `helmet()` es para la API y bloquearía el estilo y el script de la propia página.
+
+**Tres arreglos que salieron en el camino:**
+
+1. **El tope de tráfico de los endpoints públicos era global.** Con `trust proxy` en false y nginx delante, todas las visitas llegaban con la IP del proxy: los 300 accesos y los 10 formularios cada 15 minutos se sumaban entre **todas** las páginas de **todas** las empresas. La primera campaña de WhatsApp habría dejado la página respondiendo "demasiadas solicitudes" a todo el mundo. Se corrigió en el router de sitios con un conteo por visitante real (primer `X-Forwarded-For`), sin tocar el `trust proxy` global, que afecta a todo el backend y merece su propia validación. **La vitrina de catálogos y la landing de cotizaciones siguen con el mismo defecto.**
+2. **`edit` devolvía "ok" y el editor no releía nada.** El saneador descarta lo que no pasa —una dirección escrita `www.mitienda.com`, un WhatsApp de menos de siete dígitos— y el editor los seguía mostrando puestos: se publicaba creyendo que el botón estaba y en la página no aparecía. Ahora devuelve el borrador normalizado y el editor dice qué campo se cayó.
+3. **El formulario podía quedar sin teléfono ni correo**, o sea imposible de enviar: el visitante llenaba y recibía "déjanos un teléfono o un correo" sin campo donde escribirlos.
+
+**Verificado:** `npm run test:sitios-publicacion` cubre el escape de HTML del contenido del comerciante, que una URL `javascript:`/`data:` no se pinte, que un dominio ajeno no resuelva y el peso de la página. `test:inventory-safety-contract` sigue en verde y el build de producción del frontend, limpio.
+
+**Deuda que queda anotada, no resuelta:**
+
+- **La "tienda" no vende.** Hay tipo `tienda` y contador de pedidos, pero no existe bloque de carrito ni checkout, y el asistente nunca manda el tipo: todo lo que se crea nace como landing. Es decisión de producto — o entra la compra, o se cambia el texto que la promete.
+- **`POST /v1/productos/by-ids` sigue sin filtrar por company** (ya anotado en D-173). Ahora lo usa también la vista previa del editor. La página publicada sí filtra, así que al público no se le escapa nada.
+- **Numeración del contrato repetida por sesiones paralelas**: D-169 y D-173 aparecen dos veces con contenidos distintos. No se renumeró aquí para no pisar la bitácora de otra sesión.
+
+## D-182 (2026-08-12) — El builder estaba desplegado y funcionando, pero invisible en el menú
+
+**Hallazgo: un módulo nuevo no aparece por existir en el código.** El sidebar filtra cada entrada contra las rutas autorizadas del rol —`nav.service.ts` → `filterMenuItemsByAuthorization()` compara contra el campo `menus` de la colección `roles`, que viaja al frontend en el login—, y **ninguno de los 100 roles de producción tenía `sitios`**. El builder llevaba desde ayer publicado, con su página sirviendo en subdominio, y nadie podía llegar a él desde el menú. El filtro además no tiene salvaguarda para lista vacía: si `menus` no llegara, el menú entero quedaría en blanco.
+
+Corregido con `scripts/backfill-menu-sitios.js` (dry-run por defecto, `--apply` para escribir, idempotente, write-set acotado al array `menus`), corrido sobre los **73 roles de administrador** de las 100 fichas: los vendedores no lo ven, el dueño del negocio sí. Se ve al volver a iniciar sesión, porque el menú viaja en el login. Detalle que costó encontrar: el nombre del rol vive en el campo `rol`, no en `nombre` ni `name`, que vienen vacíos.
+
+**Regla que queda**: toda pantalla nueva con entrada de menú necesita su backfill de roles, o se entrega muerta sin que nadie se entere.
+
+**Dos huecos más, cerrados el mismo día:**
+
+1. **El primer visitante de cada página esperaba ~4 segundos.** El certificado del subdominio se emitía cuando entraba el primero, no al publicar — justo el peor momento, porque el comerciante publica y comparte el link de inmediato. Ahora publicar abre y cierra una conexión TLS contra el subdominio, que es lo que dispara la emisión. Va después de marcar publicado (el servidor de páginas pregunta si el sitio existe antes de pedir el certificado) y no se espera el resultado: si falla, el primer visitante lo emite como antes.
+2. **Los contactos llegaban sin saber de qué campaña venían.** El prospecto guarda ahora `campana` con `utm_*`, `gclid`, `fbclid` y `referrer`, capturados en `sessionStorage` al cargar la página para que sobrevivan a una recarga o a volver desde WhatsApp. El backend acepta solo esas claves y recorta cada valor.
+
+**Confirmado con Daniel: el carrito es la fase 2.** La "tienda" se va a construir de verdad; no se cambia el texto que la promete.
+
+**Queda abierto para esa fase:** no hay medición para pauta —y la política de seguridad de la página bloquea scripts externos, así que habrá que abrirla a propósito para Google Ads o Meta—, falta SEO estructurado (robots, sitemap, datos estructurados de producto y preguntas frecuentes), y hay un tope semanal de certificados por dominio en Let's Encrypt que conviene resolver antes de dar de alta comercios en masa, con exención o con certificado comodín.
+
+## D-183 (2026-08-12) — Fase 2 del builder: la tienda vende de verdad, con SEO y medición
+
+La "tienda" tenía tipo y contador de pedidos pero no había forma de comprar: el bloque de productos era una vitrina. Daniel confirmó que el carrito es la fase 2 y que se construye, no se recorta el alcance.
+
+**Carrito y checkout como web component vanilla** (`utils/siteTienda.js`), sin framework y sin build, por la misma razón que la página se sirve desde el servidor: se abre desde un link de WhatsApp, en celular y con datos. Carrito flotante que sobrevive a la recarga, checkout con datos de entrega y forma de pago, y confirmación con el número de pedido. La página pasó de 10 kB a 32 kB con la tienda encendida — sigue siendo dos órdenes de magnitud menos que el bundle del panel.
+
+**Dos candados que sostienen esto, y por qué:**
+
+1. **El navegador nunca decide precios.** El carrito guarda importes solo para pintarlos; al cerrar la compra viaja `{productoId, cantidad}` y el servidor recalcula contra el maestro. Verificado en producción: se mandó `precio: 1` en la petición y se cobraron los $185.900 reales.
+2. **No se descuenta inventario al crear el pedido.** Nace `Pendiente` y el stock se mueve cuando el comerciante confirma o entra el pago. Un endpoint público que descuenta existencias es un cañón apuntando al inventario: bastaría un script con pedidos falsos para dejar la tienda en cero. Es la lección directa del webhook de tienda virtual, que estuvo abierto creando pedidos y descontando stock sin autenticación.
+
+Solo se venden los productos que ese sitio publica con compra habilitada, y solo de la empresa dueña. La tienda nace apagada, y encendida sin bodega rechaza pedidos en vez de aceptar los que nadie sepa despachar.
+
+**SEO**: datos estructurados armados desde los bloques (Product con precio y moneda, FAQPage, WebSite), más `robots.txt` y `sitemap.xml` por sitio, servidos por Caddy en su ruta exacta. Un `</script>` en el contenido no puede cerrar el bloque JSON-LD.
+
+**Medición y pauta**: GA4, Google Ads, píxel de Meta y GTM por sitio. Se guardan **solo identificadores con formato verificado, nunca fragmentos de código** — aceptar código pegado sería darle al comerciante una vía para inyectar cualquier script en una página servida bajo el dominio de Katuq, que es justo lo que el modelo de bloques existe para impedir. El servidor arma las etiquetas y **abre la política de seguridad solo para los dominios que ese sitio configuró**: una página sin medición queda tan cerrada como antes, y una con píxel de Meta permite Meta y nada más. El carrito emite `add_to_cart`, `begin_checkout` y `purchase` a `dataLayer`, `gtag` y `fbq`.
+
+**Verificado en producción de punta a punta**, con la tienda encendida en el sitio demo: la página pinta los botones y el carrito, `robots.txt` y `sitemap.xml` responden, el pedido se crea con la forma correcta (`E-commerce`, canal `sitio-web`, bodega en business code, `Pendiente`, forma de entrega en la línea del carrito) y las validaciones rechazan producto ajeno, cantidad absurda, falta de teléfono y forma de pago no habilitada. Los cuatro pedidos de prueba se borraron y el contador del sitio volvió a cero; quedaron consumidos los consecutivos ORE-000550 a ORE-000553 de OH MY STORE.
+
+**El ciclo de cobro quedó cerrado en la misma sesión** con `POST /v1/sites/public/pago/webhook`. Va sin `auth` porque quien llama es la pasarela; lo que reemplaza a la sesión es **la firma del evento**, validada con el secreto de la empresa dueña del pedido. Responde 401 ante firma inválida —no es un evento que no nos sirva, es uno que no podemos creer— y 200 cuando simplemente lo descarta, porque las pasarelas reintentan ante cualquier otra cosa. Es idempotente: sin esa guarda, el inventario se descontaría una vez por reintento. El proveedor se deduce de la forma del evento en vez de cablearse, o una tienda con ePayco tendría todos los pagos leídos con el mapa de Wompi. Verificado contra producción: firma falsa sobre un pedido real devuelve 401 y el pedido sigue en `Pendiente`.
+
+**Dónde se descuenta el inventario, y por qué ahí**: en el webhook, cuando el pago entra; nunca al crear el pedido. Es el único momento en que se sabe que la venta es real — antes de la confirmación, un pedido público es una intención que puede venir de un bot. Los pedidos contra entrega quedan `Pendiente` y los confirma el comerciante.
+
+**Falta para cerrar el cobro en línea**: registrar `https://back.katuq.com/v1/sites/public/pago/webhook` en el panel de Wompi y hacer un pago real de prueba. El código está desplegado y probado hasta donde se puede sin mover dinero.
+
+**Sigue abierto**: el tope de certificados de Let's Encrypt (del orden de 50 por dominio a la semana) para altas masivas de tiendas, que se resuelve con exención o certificado comodín.
+
+## D-184 (2026-08-12) — El pedido de la tienda queda completo como el de venta asistida, y el checkout muestra resumen
+
+Daniel señaló `venta-asistida-unica` como la vara: el carrito creaba pedidos a medias y "no estamos ofreciendo lo necesario". La regla que queda: **un pedido de la tienda no es un pedido de segunda** — despachos, facturación, la lista y el CRM lo leen con los mismos ojos que a cualquier otro.
+
+**`utils/siteOrden.js`** — armador de órdenes puro (sin Firestore), con la prueba que corta de raíz la familia de bugs de esta semana: **el contrato pasa la orden construida por el calculador real de la lista y exige que reproduzca los totales persistidos**. Si divergen, la primera recarga de "Todos los pedidos" pisa los totales (la lección del pedido en $12.000). De esa prueba salió un hallazgo verificado, no asumido: el `subtotal` canónico es productos sin IVA **más el envío**.
+
+**Lo que la orden lleva ahora** (verificado contra el pedido real ORE-000557, luego borrado): `channel` como objeto (era texto y desentonaba con todos los canales), `envio` y `facturacion` de primer nivel con la forma exacta de la venta asistida (incluido `valorZonaCobro`, el respaldo del calculador), `vendedor`, fechaEntrega arriba y por línea, y totales canónicos que el calculador reproduce exacto.
+
+**El comprador queda como cliente real en el CRM** (colección `clients`): se busca por teléfono y correo dentro de la empresa; si existe se completa sin pisar (dirección nueva se agrega, huecos se llenan); si no, se crea. Un fallo del CRM no cuesta la venta. Esto amplía el write-set del módulo de sitios a `clients`, deliberadamente: un comprador que solo vive embebido en la orden es un cliente fantasma al que nadie puede volver a venderle.
+
+**El checkout gana el resumen que pidió Daniel**, dos veces: "Revisa tu pedido" ANTES de confirmar (productos, entrega, pago, notas, totales — comprar sin ver el resumen es la receta de los pedidos con la dirección mala) y una confirmación completa DESPUÉS, pintada desde la respuesta del servidor y no del carrito local: número de pedido con "guárdalo", desglose, entrega y forma de pago. Campos nuevos: barrio, y cédula/NIT opcional para la factura.
+
+**El webhook de pago descuenta por bodega fija** (`updateByPOS`), no por `updateStock`: el camino E-commerce resuelve la bodega vía un canal registrado en `channels` y la tienda no tiene canal — tiene UNA bodega elegida por el comerciante. Por canal habría fallado en silencio.
+
+**El builder ya tiene uso real**: durante esta misma sesión, OH MY STORE renombró su sitio a `demo-katuq-oms` y **ALMARA FELICIDAD publicó el suyo** (`almara.katuq.com`). El susto de "la tienda no está disponible" en las pruebas era eso: el slug había cambiado por uso legítimo del editor.
+
+**Pendiente**: notificar al vendedor cuando entra un pedido de la tienda — `sendSellerNotification` vive dentro de `controllers/orders.js` y extraerlo es un cambio aparte.
+
+## D-185 (2026-08-12) — El ajuste de tienda queda completo: zonas de cobro, formas de pago del maestro y la verdad de la pasarela
+
+Daniel pidió validar el panel de tienda contra la venta asistida —formas de pago, zonas de cobro, datos de envío y facturación— "para poder salir a vender". La regla que gobierna las tres piezas: **la tienda no inventa maestros paralelos** — usa los mismos que la venta asistida.
+
+**Envío por zonas de cobro.** El comerciante elige entre tarifa fija y cobrar por ciudad con su maestro `zonacobro`. El comprador elige la ciudad de un selector (con el nombre de la zona visible: Medellín tiene tres tarifas, sin nombre elegiría a ciegas la más barata); el navegador manda solo el id, y **el servidor resuelve la tarifa contra el maestro al crear el pedido** — la misma regla de los precios de producto aplicada al domicilio. Zonas sin valor no se ofrecen: una zona a medio configurar no puede regalar el envío. Verificado en producción: pedido a Cali con la zona "Domicilio Zona 1" de $14.900 del maestro real de OMS, con `zonaCobro`/`valorZonaCobro`/ciudad/departamento en el pedido igual que en venta asistida, y el calculador reproduciendo el total.
+
+**Formas de pago del maestro.** Además de pago en línea y contra entrega, hasta 6 formas manuales del maestro `pagos` (Nequi, transferencia...). El pedido nace `Pendiente` con `formaDePago` = el nombre del maestro, y las instrucciones (datos de cuenta) van en el mensaje de confirmación. El cd se valida contra la lista que el comerciante habilitó. Probado con el Nequi real de OMS.
+
+**La verdad de la pasarela — el aviso de plata.** `GET /v1/sites/venta-config` distingue pasarela PROPIA del respaldo de plataforma. El hallazgo: sin credenciales propias, el gateway cae a las credenciales de Julsmind — **el link de pago sale, pero el dinero entra a la cuenta de la plataforma, no a la del comerciante**. El fallo más caro posible porque no se ve. El editor ahora lo dice con todas sus letras, y también avisa si se elige envío por zonas sin zonas creadas.
+
+Todo dentro del lenguaje visual de la remodelación del builder (grupo/campo/opcion/palanca), que otra sesión hizo y esta respeta. Release 2026.08.12.9 publicado. El sitio demo (`demo-katuq-oms`) quedó en modo zonas con Nequi habilitado, a propósito, para que Daniel lo pruebe.
+
+**Deuda que sigue**: notificación al vendedor cuando entra un pedido (subió de prioridad: ALMARA ya publicó su tienda), y la auditoría del bundle de 4,6 MB.
+
+## D-186 (2026-08-13) — Personalización del builder: la marca deja de ser un campo que nadie llena
+
+Daniel pidió potenciar el builder y "darle una mejor personalización a la creación de la landing". El diagnóstico no era estético sino concreto: **todas las páginas salían iguales porque los datos que las diferenciarían no llegaban nunca**.
+
+**Lo que estaba roto de raíz.** `companies.brandKit` tenía endpoints desde D-173 y métodos en el servicio de Angular, pero **ningún componente los llamaba**: el kit no tenía pantalla, así que jamás se llenaba y el generador caía siempre a los colores de la plantilla. El **logo del negocio no aparecía en ninguna página publicada** — las redes sí se pintaban desde el maestro, el logo no viajaba al render y no había bloque donde ponerlo. Y el asistente solo preguntaba plantilla, nombre y objetivo en texto libre.
+
+**Bloque `encabezado`.** Logo, nombre, hasta cuatro enlaces, botón y opción de quedar fijo al bajar. **El logo NO se guarda en el bloque**: se inyecta al renderizar desde el kit de la empresa, por el mismo camino que las redes del pie (`marcaDeLaEmpresa`, que reemplaza a `redesDeLaEmpresa`). Cambiarlo una vez lo cambia en todas las páginas del comercio, sin editar sitio por sitio. Abre las 8 plantillas.
+
+**Pantalla "Mi marca"** (modal desde la lista y desde el asistente): logo, paleta, tipografía, tono, sector y frase, a nivel de empresa. Al subir el logo **se extraen sus colores dominantes con canvas** y se ofrecen como paleta — se agrupan los píxeles en cubos y se descartan blancos, negros y grises, que son fondo y contorno, no marca. El comerciante llega con su logo, no con códigos hexadecimales.
+
+**Textos por objetivo, sin depender de la IA.** Como `GOOGLE_AI_API_KEY` sigue vacía, la personalización **no puede apoyarse en el modelo**. Cada plantilla tiene textos escritos a mano para tres objetivos —vender, conseguir contactos, darse a conocer— con la misma forma de rutas que usa el generador con la IA, así que se aplican con el mismo mecanismo y se sobreescriben si algún día el modelo contesta. Marcadores nuevos `{{eslogan}}`, `{{ciudad}}` y `{{telefono}}`, que salen del maestro de la empresa. **Un marcador sin dato borra la frase que lo rodea**, no la deja a medias: las partes opcionales se escriben entre ⟨⟩ y desaparecen enteras. Verificado: OH MY STORE genera "recíbelo en Palmira" y un negocio sin ciudad no ve la frase.
+
+**El asistente pregunta lo que importa.** Paso nuevo de "¿qué quieres crear?" que **manda el `tipo`** — hasta ahora todo nacía `landing` aunque el tipo `tienda` existiera (deuda de D-181, cerrada). Quien pide una tienda recibe los bloques de producto con el botón de compra encendido. Además: objetivo en botones, selector de productos reusando el del editor, y el sector del kit preselecciona el filtro de plantillas.
+
+**Desfase corregido en el camino:** el kit aceptaba solo cuatro tipografías mientras el editor ya ofrecía trece — elegir "Cormorant" se guardaba como "sistema" sin avisar. Ahora usa la lista blanca del tema.
+
+**Verificado:** suite de publicación en verde con 5 pruebas nuevas del encabezado (logo `javascript:` no se pinta, el nombre del comercio no puede cerrar una etiqueta, apagar el logo deja el nombre, tope de 4 enlaces), y 14 chequeos end-to-end contra el backend: los tres objetivos producen páginas distintas, el encabezado no guarda logo, la tienda nace comprable y la landing no, y el tipo elegido se respeta al guardar. Se re-sembró `site_templates` con dry-run previo; los sitios ya publicados no se tocan porque guardan su propia copia de bloques. Datos de prueba borrados.
+
+## D-187 (2026-08-13) — El builder deja de publicar a ciegas, y tres bloques que faltaban
+
+Continuación de D-186 con la lista de pendientes. Dos frentes: medición y bloques.
+
+**Las métricas existían y nadie las leía.** `site_events` se escribía desde el primer día —**806 eventos guardados**— y no había un solo lector: el comerciante publicaba, compartía el enlace y no sabía si alguien entraba. Nuevo `GET /v1/sites/:id/metricas?dias=N` con visitas, contactos, pedidos, ingresos, conversión y serie por día, más el desglose de clics. Los **ingresos salen del propio evento de pedido**, que ya guardaba `total`: no se consulta `orders`, que es de otro dominio y mucho más grande.
+
+**La consulta filtra por sitio y descarta fechas en memoria a propósito**: cruzar `siteId` con un rango de `fecha` obligaría a un índice compuesto nuevo, y con el volumen actual no se justifica. Si un sitio pasa de 5.000 eventos, la respuesta lo dice en `truncado` y ahí sí toca el índice más una agregación diaria. Verificado con datos reales de `demo-katuq-oms`: 482 visitas, 10 pedidos, $2.088.700 y 2,5% de conversión.
+
+La pantalla es un modal desde cada tarjeta ("Cómo va"), con barras hechas con divs y **sin librería de gráficos**: son treinta valores y una dependencia de charts en un módulo que se descarga en celular no se paga con lo que aporta. Los días sin tráfico viajan en cero — una gráfica con huecos miente sobre la constancia de las visitas. Con cero visitas no se muestra 0% de conversión sino el motivo, y el texto cambia según la página esté publicada o no.
+
+**Tres bloques nuevos: video, reseñas y ubicación.**
+
+- **Video**: guarda el **identificador**, nunca la URL ni el `<iframe>` de la plataforma — mismo criterio que los píxeles de pauta (D-183). El servidor arma el reproductor y **abre `frame-src` solo para el proveedor que ese sitio usa**; una página sin video sigue con `frame-src 'none'`, y un identificador inválido no abre nada. YouTube se sirve por `youtube-nocookie`: con el dominio normal, la sola presencia del reproductor ya deja cookies de seguimiento aunque nadie le dé play.
+- **Reseñas**: testimonios que recoge el comerciante, con estrellas acotadas a 1–5. Sin promedio ni sello de "verificado", que sugerirían una garantía que Katuq no puede dar.
+- **Ubicación**: dirección, referencia, horario y botón "Cómo llegar". **Sin mapa embebido a propósito** — un iframe de Google carga scripts de un tercero y le entrega la IP de cada visitante; el botón abre la app de mapas del teléfono, que es lo que la gente usa igual.
+
+**Verificado:** 7 pruebas nuevas en la suite de publicación (enlace pegado en vez de identificador no dibuja reproductor, id con comillas no rompe el atributo, reseña con HTML se escapa, reseña sin texto no se publica, ubicación sin dirección no se dibuja) y 7 chequeos de la política de seguridad contra el render real, que es el que sirve Caddy. Nota para futuras pruebas: **el render resuelve el sitio por `x-sitio-host`, no por el `Host`** de la petición.
+
+**Sigue pendiente:** registrar el webhook en Wompi y hacer un pago real; buscador, categorías y ficha de producto en la tienda; variantes; dominio propio; y las deudas de `by-ids` sin filtro por company y del conteo por IP en catálogos y cotizaciones.
+
+## D-188 (2026-08-13) — La tienda se puede navegar: catálogo completo con buscador y categorías
+
+Hasta ahora una página solo podía mostrar los productos que el comerciante eligiera a mano, **24 por bloque**: un catálogo de miles de referencias no cabía, y "tienda virtual" quedaba en una vitrina. Nuevo bloque `catalogo`, hermano grande del de `productos`.
+
+**Se apoya en el índice en memoria que ya existía** (`getSearchIndex` de `controllers/productos.js`, cacheado por empresa con TTL de 5 min): filtrar, buscar y paginar sobre él no cuesta lecturas de Firestore, y **no hizo falta ningún índice compuesto nuevo**. Solo se leen los documentos completos de la página que se está viendo —doce— y de ahí salen la foto y el precio. Verificado contra OH MY STORE: de 8.444 productos, **2.267 son publicables** (activos, con precio y con stock), en 189 páginas y 24 categorías.
+
+**La primera página se pinta desde el servidor.** El visitante ve productos apenas carga y hay algo que indexar aunque el script no haya corrido; buscar, filtrar y pasar página ya son cosa del JS. Ese JS **solo se inyecta si la página tiene el bloque**: una landing sin catálogo pesa 17 kB y una tienda 23 kB.
+
+**Candado del endpoint público**: `GET /v1/sites/public/:slug/catalogo` responde **solo si el sitio publicado tiene un bloque de catálogo visible**. Sin eso, cualquiera con el slug de una landing podría usarlo como API para bajarse el catálogo entero de ese comercio. Verificado: una landing sin el bloque responde 404.
+
+**Detalle que importa**: las categorías se calculan ANTES de aplicar el filtro de categoría. Si se calcularan después, al elegir una desaparecerían todas las demás y el visitante no tendría cómo volver.
+
+**Refactor asociado**: la tarjeta de producto se extrajo a `fichaDeProducto`, compartida por los dos bloques. Si el markup viviera dos veces, el carrito dejaría de reconocer una de las dos en cuanto alguien tocara la otra. Las fichas que pinta el JS se arman con `createElement` y `textContent` — el nombre de un producto es texto del comerciante y no puede entrar como HTML.
+
+**Verificado:** 15 chequeos contra el catálogo real (candado, búsqueda con 53 coincidencias todas coherentes, filtro que reproduce el conteo exacto de la categoría, paginación, y las 12 fichas en el HTML publicado) más la suite de publicación completa en verde, incluida la regresión del bloque de productos tras el refactor. Datos de prueba borrados.
+
+## D-189 (2026-08-13) — Libertad de composición sin abrirle la puerta al HTML, y un bug de CSP que llevaba días
+
+Daniel: "quiero que el usuario pueda hacer casi lo que sea con su landing". Se descartó explícitamente permitir HTML o scripts pegados: esas páginas se sirven bajo `katuq.com`, y un script ajeno ahí puede robar datos de los compradores de ese comercio y quemar el dominio para todos los demás. La libertad se da **dentro** del modelo de bloques.
+
+**HALLAZGO — los estilos en línea nunca se aplicaron.** La política de la página lleva `style-src 'nonce-…'`, y **un nonce no habilita atributos `style`**: solo etiquetas `<style>` con esa marca. Todo lo que el render escribía como `style="…"` —la alineación de la portada y la opacidad del velo, de D-181 en adelante— llegaba al HTML y el navegador lo ignoraba. Se veía bien en el código y mal en la pantalla, que es la peor combinación. Ahora esas reglas las escribe `cssDeSecciones` dentro de la hoja con nonce, y hay una prueba que falla si alguien vuelve a meter un `style=` en el cuerpo.
+
+**Estilo por sección.** Cada bloque puede tener fondo (color o foto con velo graduable), aire, ancho (angosto/normal/borde a borde), alineación y color de texto. Vive fuera de `datos` porque es común a todos los tipos: agregar un tipo nuevo no obliga a acordarse de soportarlo. **Solo se guarda si cambia algo** — un estilo igual al de por defecto no se persiste. No acepta CSS ni clases: listas cerradas y colores hexadecimales, y de ahí el servidor arma reglas `[data-b="N"]`.
+
+**Texto con formato, sin HTML.** `*negrita*`, `_cursiva_`, listas con `-` y `[texto](enlace)` — las marcas de WhatsApp, que el comerciante ya conoce. La regla que lo hace seguro: **se escapa TODO primero y solo después se reconocen las marcas**, así escribir `<script>` produce el texto y no una etiqueta. Un enlace con esquema inválido se deja como texto tal cual, para que el comerciante note que algo no cuadra en vez de encontrarse el texto mutilado. De paso se descubrió que el saneador `texto()` se comía los saltos de línea: una lista habría salido como párrafo corrido. Nuevo `textoLargo()` para los campos con formato.
+
+**Cuatro bloques nuevos**: `columnas` (2 o 3, se apilan solas en celular), `imagen` suelta (normal o a borde completo, con enlace opcional), `botones` (hasta 4, principal o solo borde) y `separador` (aire con o sin línea). Con esto son **17 tipos**.
+
+**Verificado:** suite de publicación en verde con 8 pruebas nuevas —pegar HTML no crea etiquetas, un `javascript:` no crea destino navegable, las columnas se topan en 3, un botón sin destino se descarta, un estilo inventado no se guarda— más 16 chequeos del ciclo real contra el backend: el estilo sobrevive al guardado, la página publicada muestra negritas, listas, tres columnas y el separador, las reglas salen como CSS y **ningún elemento del cuerpo lleva atributo `style`**.
+
+**También quedó documentado el cobro**: `docs/PENDIENTE-pago-wompi-tiendas.md` — URL del webhook, por qué no lleva auth, la tabla de respuestas, los pasos de la prueba con dinero real y el aviso de que sin credenciales propias el dinero entra a la cuenta de la plataforma.
+
+## D-190 (2026-08-13) — El editor se siente como un editor de páginas, no como un formulario
+
+Daniel pidió que el builder se pareciera más a Wix. Se evaluó qué de Wix vale la pena copiar y se **descartó explícitamente el lienzo libre** —arrastrar elementos a cualquier píxel—: rompe el móvil (Wix necesita mantener dos diseños separados y aun así falla), y aquí el grueso del tráfico llega desde un enlace de WhatsApp en un celular. El propio Wix se alejó de eso: Studio y ADI son por secciones. Lo que la gente quiere cuando dice "como Wix" es **editar viendo el resultado**, y eso sí se hizo.
+
+**Edición directa sobre la página.** Se toca un título en la vista previa y se escribe ahí mismo. El render no muta el modelo: emite qué campo cambió (`textoEditado`) y el editor lo escribe, así el historial, el "hay cambios sin guardar" y el guardado siguen pasando por un solo camino. Al pegar se limpia el formato — un pegado desde Word traería etiquetas que el saneador descartaría igual, y es mejor que se vea de una lo que va a quedar. Enter confirma en los campos de una línea, Escape cancela.
+
+**Arrastrar para reordenar**, con Angular CDK. Las flechas se conservan: con teclado, o en un celular, arrastrar no siempre es posible. El asa es un elemento propio para que arrastrar y seleccionar no se peleen, y la selección sigue al bloque movido, no a la posición.
+
+**Deshacer y rehacer** con Ctrl+Z / Ctrl+Y, más Ctrl+S para guardar. Se guardan copias completas del contenido, no diferencias: son unos pocos kilobytes y treinta pasos caben de sobra. Los cambios seguidos sobre el mismo campo se agrupan (400 ms), o escribir un título dejaría un paso de deshacer por letra. Los atajos **se ignoran mientras se escribe en un campo**: ahí Ctrl+Z es el deshacer del propio campo y robárselo sería peor que no tenerlo.
+
+**Secciones ya armadas.** Al agregar ya no se elige "un bloque de columnas" sino "Cómo trabajamos, en 3 pasos" — 13 presets agrupados por para qué sirven (empezar, contar tu historia, vender, dar confianza, que te contacten), con contenido y estilo puestos, listos para editar encima. El catálogo de tipos crudos queda detrás de "prefiero empezar desde cero". Es el mismo motor: `datos` y `estilo` se copian tal cual y el backend los sanea como cualquier otra entrada. **Verificado que las 13 sobreviven al saneador sin descartes y conservando su estilo.**
+
+**Lo que sigue fuera**: pegar HTML, scripts o widgets de terceros. Y el lienzo libre, por lo dicho arriba.
+
+**Pendiente de esta línea**: páginas múltiples dentro de un mismo sitio (inicio, nosotros, contacto, con menú), que es la diferencia más visible que queda contra Wix; biblioteca de imágenes reusable (hoy cada subida se pierde en el bloque donde se hizo, aunque `/v1/media` las guarda todas); e historial de publicaciones para volver a la versión de ayer.
+
+## D-191 (2026-08-13) — Secciones libres: botones, tarjetas y elementos dentro de una misma franja
+
+Daniel pidió poder crear botones, tarjetas y módulos **dentro de cualquier sección**, no solo apilar secciones cerradas. Los "módulos" resultaron ser los bloques que ya existen —esos ya se insertan y se arrastran a cualquier posición—, así que el trabajo fue la anidación y las tarjetas.
+
+**Un solo nivel de anidación, a propósito.** Sección → elementos, y los elementos NO contienen elementos. Con dos niveles el editor se vuelve un árbol que no cabe en un panel de 392px y el HTML deja de ser predecible; es la misma decisión del modo simple de Webflow y de Wix Studio. Hay una prueba que lo verifica: mandar `elementos` dentro de un elemento no crea nada.
+
+**Bloque `seccion`** con `columnas` (1, 2 o 3 — en celular siempre se apilan) y hasta **12 elementos**: título, texto, botón, imagen, espacio y tarjetas. Cada elemento se sanea como un bloque: lista blanca de tipos, campos conocidos y nada de markup. Un botón sin destino válido **no se guarda** — un botón que no lleva a ninguna parte no es un botón.
+
+**Tarjetas con cuatro variantes** —con foto, con ícono, con precio y lista de incluidos, o solo texto—, de 2 a 4 por fila, hasta 8. Los campos que no aplican a la variante **se guardan igual**, para que cambiar de variante no borre lo escrito. Los **íconos son un catálogo cerrado de 12 con nombre** (`envio`, `garantia`, `pago`…): el comerciante elige uno y el servidor dibuja el trazo; aceptar un SVG pegado sería abrirle otra vez la puerta al markup. Los trazos están duplicados en el render del servidor, la vista previa y el editor **a propósito** —los tres tienen que dibujar lo mismo—, y si divergen la previa mostraría un ícono que la página no tiene.
+
+**Editor**: lista de elementos con arrastrar, duplicar y eliminar, y el formulario de cada uno según su tipo, incluida la galería visual de íconos. Tres subidas de imagen distintas (elemento, tarjeta, fondo) pasan por un solo camino que solo cambia dónde guarda la URL.
+
+**Verificado:** 6 pruebas nuevas en la suite —tipo de elemento inventado descartado, sin anidación de segundo nivel, botón sin destino fuera, ícono fuera del catálogo vacío, texto de tarjeta inerte, tope de 12 elementos— y 14 chequeos del ciclo real: una sección con título, texto con formato, dos juegos de tarjetas y un botón se guarda con sus 5 elementos, se publica y muestra precio, etiqueta de esquina, lista de incluidos, los 3 íconos y el fondo de sección como CSS, sin un solo atributo `style` en el cuerpo.
+
+**Estado del modelo:** 18 tipos de bloque, 6 de elemento, 4 variantes de tarjeta, 12 íconos.
+
+## D-192 (2026-08-13) — Agregar y quitar elementos en cualquier sección, y colocarlos donde uno quiera
+
+Daniel pidió dos cosas seguidas: que se puedan **agregar y quitar botones, textos y demás elementos de cualquier sección, como si fuera Canva**, y después que se **pueda colocar el elemento en cualquier lugar de la sección**.
+
+**Los elementos dejaron de ser propiedad del bloque `seccion`.** `elementos` pasó a ser un campo **común de todo bloque**, igual que `estilo`: se sanea una sola vez en `normalizarBloques` y se dibuja al final del envoltorio de la sección, sea portada, preguntas, galería o footer. Antes vivía dentro de `datos` del bloque `seccion` y solo ese bloque lo entendía; ahora la portada acepta su botón extra y las preguntas su párrafo, sin tipos nuevos ni bifurcaciones en el render. Un bloque sin elementos **no guarda una lista vacía**, para que los sitios ya publicados no cambien un solo byte.
+
+**"En cualquier lugar" se resolvió con rejilla, no con píxeles.** Cada elemento elige **cuánto ocupa a lo ancho** (completo, dos tercios, media sección, un tercio) y **hacia qué lado se pega** (izquierda, centro, derecha), sobre una rejilla de **seis columnas**; el orden ya se cambia arrastrando. Coordenadas en píxeles se descartaron por lo mismo que en D-190: obligarían a mantener un diseño aparte para el celular, y de ahí llega casi todo el tráfico. **En pantallas de menos de 700px todo se apila a una columna**, sin que el comerciante tenga que pensarlo.
+
+> **Superado en parte por D-193.** Daniel volvió a pedir arrastrar y soltar, y se hizo. La rejilla no se fue: pasó a ser el modo por defecto y el plan B del lienzo en celular.
+
+**Guardado escaso**: `pos` solo se escribe cuando NO es el valor por defecto (`completo` + `izquierda`). Un ancho o una alineación inventados caen al valor por defecto y **no dejan rastro** — misma regla de lista blanca que el resto del modelo.
+
+**La colocación viaja como clases CSS (`celda--mitad`, `celda--centro`), nunca como atributo `style`.** Es la lección de D-186: la página se sirve con `style-src 'nonce-…'` y un nonce **no habilita los `style` en línea**, así que un estilo puesto ahí se pierde en silencio. La suite tiene un chequeo que falla si aparece un solo `style=` en el cuerpo.
+
+**Verificado:** 3 pruebas nuevas en `test:sitios-publicacion` (guarda ancho y alineación; colocación inventada descartada; la colocación sale como clases con rejilla de 6 columnas y sin `style`), suite completa en verde, y el ciclo real contra el backend local: 5 elementos con colocaciones distintas más un botón en la portada se guardan, se publican y la página muestra las 6 celdas con sus anchos y alineaciones, la rejilla de seis columnas, el apilado en móvil y ningún `style`. Sitio de prueba y sus eventos borrados de Firestore. `ng build` limpio.
+
+**Pendiente de esta línea**: lo de D-190 sigue igual —páginas múltiples, biblioteca de imágenes reusable, historial de publicaciones.
+
+## D-193 (2026-08-13) — Lienzo: arrastrar el elemento y soltarlo donde uno quiera
+
+Con la rejilla de D-192 puesta, Daniel fue claro: *"la idea es poder mover todos los elementos al hacerle click y ponerlo en el lugar que yo escoja"*. En D-190 y D-192 se había descartado el lienzo libre por el móvil; **se revirtió esa decisión** y se implementó, resolviendo el móvil de otra manera.
+
+**Cómo se resolvió el problema que había hecho descartarlo.** El lienzo **solo existe de 700px para arriba**. Toda la colocación —el alto de la sección y el `left/top/width` de cada elemento— se emite dentro de un `@media (min-width:700px)`; debajo de eso no se aplica ni una regla y los elementos vuelven a apilarse en la rejilla de D-192, que quedó como plan B. Así **no hay dos diseños que mantener**: hay uno colocado a mano y un apilado automático que sale del mismo modelo. Es la diferencia con Wix clásico, donde el diseño móvil es un segundo lienzo que hay que armar aparte y se desactualiza.
+
+**El orden en celular sale del diseño de escritorio.** Al soltar un elemento, la lista se reordena por `y` y, a igual altura (±4%), por `x`. Sin eso, una página armada a mano se leería en el teléfono en el orden en que se fueron agregando los elementos, que no es el orden en que se ven.
+
+**Modelo.** Campo nuevo `bloque.lienzo = { alto }` —píxeles, encerrado entre 160 y 2000— que prende el modo; y `pos.x`, `pos.y`, `pos.w` **en porcentaje**, no en píxeles: la misma página se ve igual en un portátil y en un monitor de 27". Las tres van juntas o no va ninguna —media coordenada no ubica nada— y se encierran en su rango al guardar, así que **nada puede quedar por fuera de su sección** por más que lo mande el editor. Un lienzo sin elementos no se guarda: sería una sección con alto fijo y vacía adentro. `pos.ancho`/`pos.alineacion` de D-192 **conviven**: son lo que manda en celular y cuando el lienzo está apagado.
+
+**Apagar el lienzo no borra el diseño.** Las coordenadas se conservan; volver a prenderlo devuelve todo donde estaba. Y al prenderlo por primera vez los elementos **no** caen amontonados en una esquina: cada uno arranca apilado y con el ancho que tenía en la rejilla, así el comerciante ve lo que ya tenía y de ahí mueve lo que quiera.
+
+**En el editor** se arrastra sobre la vista previa: se agarra el elemento y se suelta, con un asa en el borde derecho para estirar el ancho e imán a los bordes, la mitad y los tercios (1,2% de tolerancia). Escribir gana sobre mover: si el puntero cae en un texto editable o en un campo, no se arrastra nada. Como con la edición directa de D-190, **la previa no muta el modelo**: emite `elementoMovido` y el editor lo escribe, así el arrastre entra al deshacer por el mismo camino que todo lo demás. Con el lienzo prendido los botones de ancho se ocultan —dos mandos para lo mismo se contradicen— pero los de alineación quedan, porque son los que mandan en celular.
+
+**Sigue sin haber un solo atributo `style`** en la página publicada: la colocación viaja como reglas CSS con nonce, por la CSP (D-186). La suite lo verifica.
+
+**Verificado:** 7 pruebas nuevas en `test:sitios-publicacion` (coordenada guardada y redondeada; media coordenada descartada; nada se sale del rango; lienzo vacío no se guarda; alto encerrado entre 160 y 2000; la colocación sale dentro de la media query; sin lienzo la sección sigue en rejilla aunque el elemento traiga coordenadas), suite completa en verde, y 15 chequeos del ciclo real contra el backend local: una sección con lienzo de 520px y 4 elementos colocados —uno de ellos intentando salirse por la derecha— más una sección normal se guardan, se publican, y la página sale con el alto, las coordenadas correctas, el que se salía encerrado en 70%, la otra sección todavía en rejilla y ningún `style`. Sitio de prueba y sus eventos borrados de Firestore. `ng build` limpio.
+
+**Lo que sigue fuera**: pegar HTML, scripts y widgets de terceros; y un lienzo propio para celular.
+
+## D-172
+
+**2026-08-12 — Cerrado el mapeo de bodegas de Fullpi: ECF1=Bogotá, ECF3=Medellín, ECF4=Cali.**
+
+Confirmado por Daniel. **Corrige un dato previo equivocado**: se había registrado "ECF1 = Medellín confirmado" (ver memoria `fullpi-integracion-estado`), y es falso — ECF1 es **Bogotá**. Queda SUPERSEDED.
+
+**No hubo daño.** Las bodegas espejo creadas en D-159 nunca rotularon ciudad: se llamaban "Fullpi ECF3 — ciudad por confirmar" y "Fullpi ECF4 — ciudad por confirmar". El enrutamiento nunca dependió de la ciudad sino del código WMS, y el `bodegaMap` del flow `fullpi-inventory-to-katuq-oms` ya era correcto (`ECF1→BOD-FULLPI-1`, `ECF3→BOD-FULLPI-3`, `ECF4→BOD-FULLPI-4`). Ningún movimiento quedó mal dirigido.
+
+Aplicado con pasada en seco y respaldo, sin tocar `idBodega` (business code):
+
+| Bodega | Nombre antes | Nombre ahora | Unidades |
+| --- | --- | --- | --- |
+| `BOD-FULLPI-1` | Fullpi (WMS) | **Fullpi Bogotá (ECF1)** | 4.395 en 75 filas |
+| `BOD-FULLPI-3` | Fullpi ECF3 — ciudad por confirmar | **Fullpi Medellín (ECF3)** | 1.823 en 59 filas |
+| `BOD-FULLPI-4` | Fullpi ECF4 — ciudad por confirmar | **Fullpi Cali (ECF4)** | 2.276 en 85 filas |
+
+Se agregó además `ciudad` (campo que ya usan las otras 114 bodegas) y **`codigoBodegaWms: "ECF1"` a `BOD-FULLPI-1`, que no lo tenía** — hueco real: era la única de las tres sin el código del WMS.
+
+Total espejado desde Fullpi: **8.494 unidades en 219 filas**, repartidas ahora en tres ciudades identificables.
+
+**Pendiente con Fullpi** (no bloquea): significado del sufijo "-OFF", archivo de cobertura, y borrado de los pedidos de prueba 3, 4, 5, 7, 8 y 9.
+
+## D-173
+
+**2026-08-12 — Desplegado el backend con facturación electrónica DIAN y el constructor de sitios, por orden explícita de Daniel sobre una objeción planteada.**
+
+Daniel pidió desplegar backend y front. Al revisar qué implicaba, se le expuso que **lo único pendiente no era trabajo de esta sesión**: `fe18eec` (facturación electrónica DIAN directa, 917 líneas — numeración, armado del documento, cliente SOAP, correo) y `963ccfd` (tipografías y portadas de sitios), ambos de otra sesión, sin revisar por esta y sin que su autora avisara que estuvieran listos. Se señaló que la facturación toca documentos con efecto legal ante la DIAN y que la numeración es difícil de deshacer. **Daniel respondió "desplegalo ya, los dos".** Se ejecutó y se dejó constancia.
+
+Producción: `327e6e9` → `963ccfd`. Rango real: **2 commits, 17 archivos, 1.443 inserciones**.
+
+Verificado antes de reiniciar: sintaxis de los 8 archivos nuevos o cambiados, y las cuatro pruebas de guarda en verde en el servidor (`inventory-safety-contract`, `flows-node-catalog`, `flows-osmosis-cobertura`, `flows-osmosis-huella`). Sin dependencias nuevas. Tras reiniciar: arranque sin errores, 7 crones nativos + 2 dinámicos + 2 de CronService registrados, 21 disparos del despachador en 3 min, memoria estable. Verificación independiente de la sesión Shopify sobre 6.017 productos del catálogo activo: **cero regresiones, ningún producto nuevo en $0**.
+
+**El frontend NO se desplegó, a propósito.** Ya estaba publicado por la tercera sesión a las 21:58 UTC (`2026.08.12.11`), con su trabajo del bot de WhatsApp compilado adentro pese a seguir sin commitear. Un build nuevo solo habría subido el número de versión y vuelto a arrastrar código ajeno a medio terminar.
+
+**Alcance no cubierto, dicho explícitamente:** nadie revisó la facturación electrónica. Se verificó que arranca y que no rompe lo que ya corría; no se verificó que numere correctamente ni que el documento sea válido ante la DIAN. La sesión Shopify tampoco la revisó y confirmó que **si algo falla por ese lado no aparecerá en sus métricas**: ese frente queda sin vigilancia. Punto de retorno: `327e6e9`.
+
+**Lección de método (vale para las tres sesiones):** con varias sesiones sobre la misma rama, **la unidad de despliegue es la rama, no el commit**. "Despliego lo mío" no existe: cada `pull` en el servidor sube todo lo que haya llegado, revisado o no. Se comprobó dos veces el mismo día — `84cecd3` se había apartado explícitamente para "despliegue coordinado" y entró igual en el despliegue nocturno de la tercera sesión (03:28 UTC, con `fb6b8fa`), sin que ninguna de las dos sesiones dueñas se enterara en el momento. Apartar un commit por acuerdo verbal no lo aparta de nada; si debe quedar afuera, va en rama aparte.
+
+## D-195 (2026-08-12) — Rediseño "Marketing y WhatsApp": el mockup de Daniel manda sobre el canon visual en esas tres pantallas
+
+**Decisión.** Daniel entregó un mockup propio (proyecto de Claude Design "Rediseño maestro de productos", archivo `Marketing y WhatsApp.dc.html`) y pidió implementarlo tal cual para modernizar marketing y la interfaz de conversaciones. El mockup usa acento `#6a4dfb` sobre lienzo lila `#ecebf4`, tarjetas blancas de radio 18px, tipografía Plus Jakarta Sans y un degradado en el botón principal — difiere del canon D-131 (`#5F3FE0`, plano sin gradientes). Se implementó fiel al mockup **solo en las pantallas que el mockup cubre**: dashboard de marketing, asistente de campañas y buzón de WhatsApp (lista, detalle, panel de contacto, vista pedidos). El resto de la app sigue con el canon D-131. Si este lenguaje se va a extender, se resuelve por propuesta OpenSpec actualizando el design-system, no copiando estilos.
+
+**Cómo quedó.**
+- Tema compartido en `src/app/shared/styles/_katuq-marketing.scss` (mixins `km-*`, mismo patrón de `_katuq-comercial.scss`). Plus Jakarta Sans ya estaba cargada en `index.html`.
+- **Dashboard** (`modules/marketing/marketing-dashboard`): pills de rango 7/30/90 días, 3 KPIs con ícono tintado y delta real (`crecimientoVentas`), tarjeta de acción de WhatsApp ("N clientes esperan tu respuesta" → Responder ahora / Enviar campaña), ventas por día en barras violeta, canales con barras de progreso, embudo CRM y "Tu cartera comercial" desde `crmStats`. Solo métricas reales, igual que antes.
+- **Campañas** (`campana-whatsapp`): mismo motor (audiencia clientes/CRM, plantillas Kapso, broadcast server-side D-097, export Meta/Google), nueva presentación: tarjetas de grupo que auto-seleccionan la audiencia, vista previa en teléfono WhatsApp, resumen con "Cambiar" y footer pegajoso con destinatarios/costo/saldo (el saldo se carga desde el paso 1) y aviso de bloqueo.
+- **Buzón** (`whatsapp-inbox`): encabezado con toggle Conversaciones|Pedidos y botón "Nueva campaña"; la lista gana chips de filtro (Sin responder con conteo / Todas / Atendidas por el bot) y etiquetas por hilo ("Te escribió", "Respondió el asistente", "Hizo un pedido") cruzando client-side con `GET /bot/sesiones` — sin tocar el endpoint de hilos; el detalle gana pill "Atendido por el bot" + Tomar en el header, tarjeta "En su carrito" en vivo, tarjeta de cotización creada con link al editor, y respuestas rápidas como chips; el panel de contacto gana el bloque "Este cliente" (vendido total, pedidos, última compra) calculado de los pedidos ya cargados. Cero endpoints nuevos: todo es composición de datos que ya existían.
+
+**Pendiente anotado, no construido:** los grupos de audiencia por comportamiento del mockup (compraron hace poco, dormidos, dejaron el carrito, mejores clientes, cumpleaños) necesitan un endpoint de agregación de pedidos por cliente que hoy no existe; el paso 1 arranca con los grupos que los datos actuales permiten (todos los clientes, leads CRM por etapa). Dueño: Daniel decide si se construye el endpoint.
+
+## D-196 (2026-08-13) — El bot quedaba mudo para siempre después de cada venta exitosa
+
+**El síntoma.** "Dejó de funcionar el bot" — tras cerrar el primer pedido real del piloto ALMARA (COT-2026-0813-0047), el bot no volvió a contestar en ese hilo. ADK vivo, piloto enrutando, saldo disponible: silencio total y sin una línea de log que lo explicara.
+
+**La causa (dos piezas que se anulaban entre sí).** El cierre hacía `marcarCerrada` (estado "cerrada") y DESPUÉS `traspasar`, que pisaba el estado con "humano" + `tomadaPor: "sin_asignar"`. La reapertura post-cierre exigía estado "cerrada" — nunca aplicaba. Y la compuerta `estaTomadaPorHumano` da verdadero con cualquier `tomadaPor` truthy, "sin_asignar" incluido, y retorna sin loggear. Resultado: cada cierre exitoso dejaba el hilo tomado por nadie y al bot callado para siempre. El bug solo se manifestaba cuando la venta salía BIEN — por eso sobrevivió al smoke y a los 100+ tests.
+
+**El arreglo (`877a7f6`, desplegado y verificado en prod).**
+1. El cierre es ahora la ÚLTIMA mutación de la sesión: responder → traspasar → `marcarCerrada`. La sesión termina en "cerrada" de verdad.
+2. La reapertura reconoce las dos formas del mismo hecho: estado "cerrada", o estado "humano" con cotización creada y sin dueño real (la forma atascada del orden viejo) — las sesiones ya rotas se sanan solas con el siguiente mensaje, sin tocar la base a mano.
+3. Tests nuevos: el orden de mutaciones queda clavado (`["traspaso","cerrada"]`) y la sesión atascada se reabre; un traspaso por duda sin cotización NO se reabre. Las 6 suites del bot en verde.
+
+**Verificación en producción:** 04:43:18 `reapertura_post_cierre` → 04:43:35 respuesta enviada (turno 1, carrito vacío, 3,6 s de ADK). Daniel confirmó que le contestó.
+
+**Pendiente anotado (ruido, no falla):** el poller de sync-inbound re-procesa los mismos ~5 mensajes cada 30 s y cada pasada loggea `piloto_bot_route`; la idempotencia los frena pero ensucia el log — falta un corte de dedup antes de loggear o bajar ese evento a debug para mensajes ya persistidos.
+
+## D-197 (2026-08-13) — Bot fase 2 implementada y en producción: conversación robusta y número propio verificable
+
+**Cambio OpenSpec `bot-whatsapp-fase-2`** (propuesta aprobada por Daniel), implementado completo y desplegado (backend `1492dc7`, ADK `a09f8ea`; rangos medidos antes de pullear — solo estos commits).
+
+**Conversación:** los mensajes seguidos se agrupan en UN turno (ventana 4 s en memoria, máx 10 s, módulo `whatsappBotRafagas`; sellos de idempotencia de todos los ids; un solo cobro); los audios/fotos reciben aviso cortés una vez por sesión SIN traspasar (antes la spec prometía aviso y la implementación traspasaba); la respuesta puede salir como FOTO del producto con el precio en el caption (herramienta `mostrar_producto` en ADK — el agente solo anota el id, el backend resuelve la imagen con la regla del CDN de Cereza y degrada a texto sin error); "¿dónde va mi pedido?" se responde con hasta 3 pedidos reales pre-resueltos en el backend (el teléfono sigue sin entrar jamás a ADK); el cierre exige dirección y ciudad confirmadas y el resumen del carrito tiene formato fijo.
+
+**Número propio:** `POST /own-credentials/verify` valida las credenciales guardadas contra Kapso (causas humanas, la API key nunca vuelve al navegador) y persiste `verifiedAt` + número/nombre visibles; el publicView trae el último mensaje entrante (salud del webhook, índice existente vía limitToLast); **el bot ya solo se prende con conexión VERIFICADA** — pegar credenciales no basta, hay que "Probar conexión" (el piloto por env sigue exento hasta que ALMARA tenga número propio). Plantillas con título y descripción en español (`plantillasMeta` en la config existente, editables por comercio; sugerencia automática vía KAI `generateContentFlow`, fallback des-feificado — una señora nunca ve "hello_world" a secas).
+
+**De paso, bug real encontrado:** el servicio Angular de la config de WhatsApp esperaba un envoltorio `{success,data}` y campos anidados que el backend nunca devolvió (publicView plano) — la pantalla no podía cargar la config. Corregido con normalización tolerante (mismo criterio del bloque del bot).
+
+**Verificación:** 7 suites backend + 33 tests ADK en verde; build Angular sin errores; backend y ADK reiniciados y sanos en prod. **El frontend sigue sin desplegar a hosting** (commits `96191342` y anteriores en la rama). **Pendiente 2.7 (dueño Daniel):** credenciales reales de Kapso para ALMARA y vaciar el piloto. La ventana de ráfaga (4 s) se calibra con el tráfico del piloto (tarea 3.2).
+
+## D-174
+
+**2026-08-13 — Arreglado el cimiento que impedía publicar el inventario de Fullpi en Shopify: el mapeo bodega⇄location se descartaba en silencio.**
+
+Daniel pidió "revisalo" sobre el encargo abierto de Fullpi→Shopify. Al revisarlo apareció que el bloqueante **no era falta de trabajo sino un defecto vivo**, y que además no era exclusivo de Fullpi: afecta hoy a la sincronización de Cereza.
+
+**El defecto** (`shopify-inventory-adjust.action.js:398`): `shopifyService.resolveShopifyLocation` devuelve el GID como **string** (`entry?.shopifyLocationGid || null`, `shopifyService.js:847`), pero el nodo comprobaba `loc?.id` — siempre `undefined` en un string. **La condición nunca se cumplía**, así que un mapeo correcto se descartaba y el stock caía al fallback `locs[0].id`, "la primera location del shop", sin error y sin log.
+
+**Verificado en producción el 2026-08-13:**
+- **Ningún mapeo configurado**: 0 de 13 bodegas de OMS con `integrations.shopify.locationId`, y ninguno en `integration_configs/*location_mappings`.
+- **Los dos flows activos caen por ese camino**: `cereza-products-to-shopify-a5156643` y `katuq-web-to-shopify`, ambos sin `location` explícita en los params del nodo.
+- **OH MY STORE tiene UNA sola location** (`gid://shopify/Location/61623730382`, Medellín), así que el fallback acertaba por accidente. Confirmado que no hubo daño: `GCJ4240` 60 uds y `GCDOT065` 571 uds, ambos en esa única location, sin stock huérfano.
+
+**Por qué se arregla ahora y no después:** el defecto está dormido **precisamente porque OMS todavía no hizo lo que Fullpi exige**. Publicar las 3 bodegas espejo (Bogotá/Medellín/Cali, D-172) requiere crear más locations en Shopify, y en el instante en que exista la segunda el stock se iría a la equivocada en silencio — y como `locs[0]` depende de un orden que Shopify no garantiza, ni siquiera sería consistentemente la misma. Hoy verificar el arreglo es mirar un número; con tres locations montadas habría que auditar qué se ensució.
+
+**Desplegado** (`603f413`, rango limpio de un solo commit: 3 archivos, 77 inserciones). **Es no-op hoy a propósito**: sin mapeos, `resolveShopifyLocation` devuelve `null` y todo sigue cayendo al mismo fallback. Cuatro pruebas en verde en el servidor antes de reiniciar; arranque sin errores.
+
+**Prueba nueva `test:shopify-location`**, verificada inyectando el defecto de vuelta (lo caza) y restaurando (vuelve a pasar). Además **fija el contrato del servicio** —si `resolveShopifyLocation` cambia a devolver objeto, la prueba falla y obliga a actualizar el llamador— y **deja señalado como deuda** que el fallback que adivina sigue existiendo.
+
+**Orden pendiente, deliberado:** (2) configurar los mapeos de las 13 bodegas hacia la única location; (3) **recién entonces** reemplazar la adivinanza por fallo explícito (fail-closed, como ya exige inventario). No se hizo hoy porque con cero mapeos, fail-closed **detendría toda la sincronización de stock en seco**.
+
+**Decisión de Daniel registrada aparte:** no se usarán ramas separadas por sesión — "todo aquí". La mitigación al riesgo de D-173 queda entonces en **medir el rango antes de cada pull y avisar si hay commits ajenos**, no en aislar por rama.
+
+## D-175
+
+**2026-08-13 — El catálogo de transportadoras de Cereza ya no vive en memoria: el modal de despachos deja de depender de una llamada viva.**
+
+Autorizado por Daniel ("si subelo"). Desplegado en `d5395eb`, rango limpio de un solo commit (4 archivos, 297 inserciones).
+
+**El problema** (diagnosticado el 2026-08-11): el modal "Elige la transportadora" pedía el catálogo a Cereza en **cada apertura**, con caché **solo en memoria** del proceso (TTL 30 min). Ese endpoint tarda **5–7 s en calma** (medido 8 veces: min 5.344 ms, mediana 6.773 ms) y supera los 30 s bajo carga. Como el proceso se reinicia con cada despliegue —20 el 11-ago, 12 el 12-ago— el caché casi nunca llegaba a servir. **El endpoint se llamó 5 veces desde el 05-ago y falló las 5.**
+
+**La causa de fondo no era Cereza ni el TTL**, sino que el estado vivía en memoria de un proceso efímero. Contraste del mismo día: el barrido de Cereza cruzó esos 20 reinicios sin perder una página porque su estado vive en `flow_polling_state`. Misma tormenta, resultado opuesto; la única diferencia es dónde se guarda el estado. **Regla que queda: lo que debe sobrevivir a un reinicio no puede vivir en memoria.**
+
+**Nuevo orden de resolución** — memoria → copia persistida → Cereza:
+- Copia en **`integration_configs`** (colección ya existente, **no se creó ninguna nueva**), `type: "catalog_cache"`, frescura 6 h.
+- Timeout propio de **90 s** para esa llamada, en vez del general de 30 s que causaba el fallo.
+- Si Cereza falla o viene vacía, **se sirve la copia aunque esté vencida**: una lista vieja a lo sumo omite una transportadora nueva; un modal que no abre impide despachar.
+- Sin copia previa se propaga el fallo real — no se finge un catálogo vacío.
+- Leer o escribir la copia **nunca propaga error**: es una ayuda, no una dependencia dura.
+
+**Verificación de punta a punta en producción**, ejecutando en dos procesos distintos (el segundo simula un reinicio):
+```
+proceso 1 (sin copia)   51.157 ms  → Cereza, 105 transportadoras, persiste
+proceso 2 (proc. nuevo)     110 ms  → copia guardada, 105 transportadoras
+```
+**Dato relevante: la primera llamada tardó 51 s**, muy por encima de los 5–7 s medidos el 11-ago. Con el límite viejo de 30 s habría vuelto a fallar. Cereza está notoriamente más lenta, lo que **refuerza que la tormenta de reanuncios sigue viva y sin resolver** (ver `cereza-reanuncia-productos-tormenta`): es el pendiente de fondo, y el único que no se resuelve solo del lado de Katuq.
+
+Prueba `test:carriers-catalog`, verificada inyectando el defecto de quitar el timeout propio. Cubre el orden de resolución, servir copia vieja antes de romper, que un Firestore caído no tumbe la consulta, y que no se cree colección nueva.
+
+**Nota de expectativa:** la primera apertura tras cada despliegue seguirá tardando lo que tarde Cereza, porque la copia se siembra al primer uso. De la segunda en adelante es instantánea.
+
+**Estado del barrido de Cereza al cierre**, verificado tras la confusión de si se había detenido: `diffRotatePages=2` (encendida), puntero moviéndose (82 → 28, dio la vuelta), **2.141 huellas estancadas porque `onlyWithStock: true` y esa es la población completa con existencias** (de 8.298 productos), rango de ids 22019–40003. Es **régimen estacionario**, no una parada. Descartado también rate limit: cero cortes, cero errores de página, cero 429 hoy.
+
+## D-176
+
+**2026-08-13 — El stock ya puede publicarse cuando cambia el stock, y el cron que mentía ahora dice la verdad.**
+
+Daniel pidió dejar lista la sincronización Katuq → Shopify de precios e inventarios. Al auditarla aparecieron cinco huecos; se atacaron los dos primeros por decisión suya ("dale con el 1 y el 2"). Desplegado en `7fc3a0a`.
+
+**Hueco 1 — el cron de inventario masivo es un cascarón que se anota como exitoso.** `full-inventory-sync` corre cada 30 min y no hace nada: su registrador real (`initFullInventorySync`) está **comentado** en `cronService.js:83`, y el handler que resuelve el cargador dinámico era un placeholder que hacía `console.warn` y **retornaba**. Como no lanzaba, `reloadJob` lo marcaba con `markRunResult(id, true)`. Medido: **378 corridas no-op registradas como exitosas**, con su config diciendo "última corrida hace 24 min". Un trabajo que no hace nada pero reporta éxito es peor que uno caído: se ve verde y nadie lo revisa. Ahora los handlers no implementados **lanzan** con `HANDLER_NOT_IMPLEMENTED` y quedan registrados como fallidos. Verificado que no toca el pull de estados de pedidos, que corre por el flow `cereza-orders-status-pull` y sigue igual.
+
+**Hueco 2 — los cambios de stock no llegaban a Shopify.** El único camino que publicaba existencias era `katuq-product-changed`, que detecta por `date_edit` del **producto**. Una venta, un ajuste o un traslado no tocan el documento del producto, así que Shopify **nunca se enteraba**: el stock solo viajaba de casualidad. Nuevo trigger **`katuq-inventory-changed`**, que detecta por `updatedAt` de `inventory`. **Antes de diseñar sobre ese campo se verificó empíricamente contra movimientos reales: 8 de 8 filas tenían `updatedAt` posterior a su movimiento** — es exactamente la comprobación que faltó con Cereza y costó 39 precios.
+
+Tres decisiones de diseño, todas fijadas por prueba:
+- **Camino solo-stock.** Alimenta únicamente a `shopify-inventory-adjust`; no emite producto, precio ni catálogo (regla de `openspec/config.yaml`). La prueba verifica el **payload emitido**, no la intención.
+- **Un valor por producto, no por fila.** Emitir cada fila haría que la última pisara a las anteriores en Shopify (hoy una sola location), publicando el stock de UNA bodega como si fuera el total.
+- **Sin doble conteo.** Se normaliza `productoId` (referencia→docId) y se deduplica por producto+bodega: sumar los registros legacy infla ~60%, y publicar stock inflado es vender lo que no hay.
+
+**Nace en modo sombra** (`publicar: false`): observa y registra cuánto publicaría sin emitir nada. Encenderlo es decisión explícita por empresa; apagarlo es el kill switch. **Declarado en AMBOS catálogos** — declararlo en uno solo fue lo que tumbó el registro de nodos 21 horas el 10-ago; la prueba de cobertura confirma 22 handlers en ambos.
+
+**No se conectó a ningún flow todavía**: el trigger es inerte hasta que exista uno.
+
+**Los tres huecos restantes, medidos y sin atacar:** (3) `bulkUpdateField` permite cambiar `precio.precioUnitarioIva` y `precio.precioUnitarioSinIva` en masa **sin tocar `date_edit`**, así que un cambio masivo de precios es invisible para la sincronización; (4) el mapeo bodega→location sigue sin configurar (D-174 paso 2), todo cae en la única location; (5) los 98 productos de Fullpi tienen `marketplace.paginaWeb=false` y por eso no son elegibles.
+
+**Población real de la sincronización** (medida): de 8.444 productos de OMS, 8.343 tienen `paginaWeb=true`, pero **8.295 son de Cereza y van por su propio flow**. `katuq-web-to-shopify` sirve a **48 productos**.
+
+**Rango de despliegue:** 3 commits, uno ajeno (`b47c9d1`, conversiones de landings de la tercera sesión) que **no toca inventario, pedidos ni precios** — señalado a Daniel antes de pullear, según la disciplina de D-173. Siete pruebas de guarda en verde en el servidor; arranque sin errores; 21 corridas de flows en los 15 min siguientes.
+
+## D-198 (2026-08-13) — Bot fase 3: la cotización sale configurada como la real, el bot vende y recibe fotos
+
+**Cambio OpenSpec `bot-cotizacion-configurada`** (aprobado por Daniel en tres adiciones el mismo día), implementado y desplegado (backend `0de0563`, ADK `9c2bd11`; rangos medidos, solo estos commits).
+
+**Configuración conversacional del pedido.** Antes de cerrar, el bot acuerda: forma de entrega (con las opciones REALES del maestro `formaEntrega` del comercio — inferencia domicilio/recoge por nombre, mismo criterio de crear-ventas) y fecha (el agente normaliza "el viernes" a AAAA-MM-DD; el backend valida real y futura — el 30 de febrero y el año pasado mueren con log y se repreguntan); opcionales ofrecidos UNA vez sin insistir: método de pago (maestro `pagos`), dedicatoria y facturación a otro nombre. Todo lo válido persiste en la sesión (sobrevive turnos, no se repregunta; se limpia al cerrar y al devolver al bot). Gates: sin forma+fecha no hay cotización; **recoge en tienda cierra sin dirección** (antes se exigía siempre).
+
+**Aterrizaje canónico.** El hallazgo que hizo barata la fase: la cotización guarda `items: Carrito[]` con la MISMA forma del carrito de venta asistida, y la conversión a pedido ya copia `configuracion` intacta. El cierre del bot ahora arma cada ítem con `configuracion.datosEntrega` (formaEntrega + fechaEntrega `{year,month,day}` + observaciones), arrays SIEMPRE presentes y la dedicatoria en `tarjetas` — el editor, el link público y la conversión la tratan como una cotización hecha a mano. `metodoPagoPreferido` y `facturarA` en el doc y todo repetido en la nota. Write-set intacto (contract test ampliado lo clava).
+
+**El bot vende.** Instrucciones de venta persuasiva con guardarraíles: una sugerencia por momento y solo productos que devolvió la búsqueda con su precio real; alternativa honesta sin existencias; el "no" se respeta a la primera; PROHIBIDO inventar descuentos o urgencias.
+
+**Recibe fotos.** La imagen del cliente se descarga de Kapso (tope 5 MB, jpeg/png/webp), viaja al turno multimodal con el caption como texto y se DESCARTA — jamás se persiste. Foto que no baja o formato raro → aviso cortés de siempre; audio/sticker no cambian.
+
+**Verificación:** 8 suites backend + 38 tests ADK en verde; desplegado y sano. **Pendiente 4.2:** prueba real del ciclo con Daniel (pedido con domicilio + fecha + dedicatoria + foto) y abrir/convertir la cotización.
+
+## D-177
+
+**2026-08-13 — Encendida la web de los productos de Fullpi: 78 ya publicados en Shopify. Y dos errores propios de lectura, uno destapado por Daniel.**
+
+Daniel pidió encender `marketplace.paginaWeb` en los 98 productos de Fullpi para que puedan publicarse en Shopify.
+
+**Error propio nº1, corregido por Daniel.** Se midió el precio leyendo `precio.precioUnitarioConIva` y se reportó que 84 de 98 "no tenían precio" y que 13 estaban a "$10 de relleno" y se regalarían. **Daniel preguntó: "¿qué precios estás viendo? ¿la lista de precios por tipo de cliente?"** — y ahí estaba: el precio real vive en `preciosPorTipoCliente` (lista "Público en general"), y `mapper.js:299 _resolverPrecioPublico` **la lee correctamente**; el campo base es solo el fallback. Simulando el mapeador real sobre los 98: **94 publicables, precio promedio $171.646** (JCR4011 base $0 → $60.992; JCR4156 base $0 → $220.361). De haber seguido el diagnóstico propio se habrían dejado 93 productos apagados sin razón.
+
+**Error propio nº2, detectado al verificar.** Encender `marketplace.paginaWeb` con un merge **no toca `date_edit`**, y el trigger `katuq-product-changed` filtra por cursor sobre ese campo. Los 94 quedaron con fecha de mayo, muy por debajo del cursor (23:26) — **invisibles para siempre**. Es exactamente el hueco 3 reportado en D-176, mordiendo en el propio cambio. Corregido marcando `date_edit = ahora`, que es lo que hace el endpoint de edición (`productos.js:1778`).
+
+**Resultado, verificado:** la corrida de las 22:50 duró 212 s y terminó sin errores. **78 de 94 creados en Shopify** con su precio de lista y su stock (8.494 uds de Bogotá/Medellín/Cali sumadas, correcto con una sola location).
+
+**4 quedaron apagados a propósito**: `ARRNDO`, `TLFNO`, `ENRGA`, `AGUA` — arriendo, teléfono, energía y agua. No son productos sino gastos; que el criterio (precio resuelto por el mapeador) los excluyera solo confirma que era el correcto.
+
+**16 NO se crearon y la causa quedó SIN determinar.** Son exactamente los del sufijo `-OFF`. Están activos, con web encendida, precio válido y fecha marcada, igual que los 78 que sí pasaron; **no aparecen en ningún log** — ni error, ni rechazo. Los 16 tienen producto base y **los 16 bases ya están en Shopify**, lo que apunta a una interacción con el emparejamiento por SKU (`matchBy: "sku"`), sin comprobar.
+
+**Se decidió parar la investigación ahí**: seguir cavando para publicar 16 productos cuyo significado de negocio nadie explicó es esfuerzo mal dirigido. **El bloqueante no es técnico: es que Fullpi conteste qué significa `-OFF`.** Si es "descontinuado", que no se hayan publicado es el mejor desenlace posible.
+
+Respaldos en el servidor: `respaldo-web-fullpi-*.json` y `respaldo-dateedit-fullpi-*.json`.
+
+## D-178
+
+**2026-08-14 — Medido: Katuq ignora $95,7 millones en descuentos activos de Cereza. Censo completo del catálogo.**
+
+Daniel reportó que la API de Cereza ahora entrega `discount_price` dentro de cada precio y una llave `discounts` con las campañas activas, y pidió revisar qué pasa con ellos.
+
+**Estado actual: Katuq los ignora por completo.** El mapeo `osmosisProductSyncService` (líneas 448-461) construye `preciosPorTipoCliente` leyendo `v.price` de `price_list` 1 (público) y 3 (mayorista) — **nunca `discount_price`**. La llave `discounts` no se lee en ninguna parte del código. Shopify publica el precio de lista.
+
+**Lo único que sí funciona: la detección de cambios.** La huella de contenido (D-170) incluye `discount_price`, así que cuando una campaña empieza o termina el producto se re-sincroniza solo. La cañería avisa; falta qué hacer con el aviso.
+
+**Censo completo contra la API en vivo** (83 páginas, 900 ms entre llamadas, **0 errores y 0 rate limits** — el ritmo funciona y sirve de referencia para futuros barridos):
+
+| | |
+| --- | --- |
+| Productos revisados | **8.300** |
+| Con descuento activo | **1.266 (15,3% del catálogo)** |
+| Precio de lista sumado | **$301.189.949** |
+| Precio con descuento | **$205.474.826** |
+| Diferencia | **$95.715.123 (32% promedio)** |
+| Campañas activas | **93** |
+
+**La muestra pequeña engañaba por diez:** los primeros 300 productos daban 5 con descuento (1,7%); el catálogo completo da 15,3%. Daniel eligió medir el catálogo entero y tenía razón.
+
+Campañas más grandes: Mapalé Outlet 351 productos al 35% (hasta feb-2027), **Elfo 313 productos al 25% que vence el 17-ago**, CHISA Outlet 103 al 45%.
+
+**Hallazgo de diseño: hay DOS descuentos por producto, uno por lista.** `tiendacereza` (público) y `cereza-mayorista` (mayorista) traen porcentajes distintos — Mapalé: 35% público vs 15% mayorista. Eso calza con los dos tipos de cliente que ya maneja Katuq, así que **cada tipo debe recibir su propio descuento**, no uno solo para todos.
+
+**Discrepancia a preguntarle a Cereza:** la campaña `tiendacereza :: "Lovense del 13 al 17 15%"` reporta `percent: 10`. El nombre y el campo no coinciden.
+
+**Enfoque aprobado por Daniel:** precio tachado en la tienda (Shopify `compareAtPrice`, hoy solo leído en `shopify-bulk-product-sync`, nunca escrito por el upsert). **Diseño propuesto, pendiente de luz verde para implementar:** guardar el descuento **al lado** del precio de lista y no encima, de modo que al vencer la campaña el descuento desaparezca y el precio vuelva solo, sin intervención. Pisar el precio de lista dejaría sin valor de retorno.
+
+**Contexto Cereza que sigue sin resolverse:** la tormenta de reanuncios (16.266 avisos en 6 días para 1.062 productos) y la lentitud creciente de su API (el catálogo de transportadoras pasó de 5-7 s a **51 s** el 13-ago). Ninguno se arregla del lado de Katuq.
+
+## D-194 (2026-08-14) — Link de pauta con código: premium temporal al registrarse, y el premium por fin vence
+
+Daniel pidió un enlace para pautar: quien se registre con un código entra a Katuq **en premium por un tiempo limitado**, sin pagar. La primera campaña es `COLOMBIA2026` con **90 días (3 meses)**.
+
+**El hueco que había que tapar primero: el premium no vencía.** `SubscriptionGuard` solo evalúa `plan === 'premium'` y el backend lo lee de `companies.subscriptionPlan`, sin ninguna fecha de corte. Regalar premium sin construir el vencimiento habría sido regalarlo de por vida. Se agregan `premiumUntil`, `premiumOrigen`, `premiumCodigo` y `premiumCampanaId` a la empresa, y un trabajo diario (6 AM COT) que baja a freemium lo vencido y preavisa 3 días antes. **Alcance blindado por construcción**: la pasada filtra `premiumOrigen == 'promocion'`, campo que un premium pagado no tiene, así que no puede alcanzarlo ni por error; al degradar el origen pasa a `promocion_vencida` y la empresa sale del filtro, con lo que repetir la pasada no cambia nada. No cobra, no pide tarjeta y no toca datos del comercio: solo el plan y sus límites.
+
+**Dónde viven los códigos: en `subscriptionPlans`, por decisión explícita de Daniel de no abrir colección nueva.** Se marcan con `tipoRegistro: 'campana'`. **Riesgo asumido y mitigado**: `GET /v1/subscription-plans/active` se sirve **sin auth** a la vitrina pública de precios, y `getSubscriptionPlans`, `filterSubscriptionPlans` y `getSubscriptionPlansStats` leen la colección entera. Los seis lectores filtran ahora con `esPlanVendible()`, **en código y no confiando en que `orderBy('precio')` descarte los documentos sin ese campo** — eso es un efecto lateral de Firestore, no una garantía. Queda la deuda: un lector nuevo que se olvide del filtro pone una campaña a la venta. Hay prueba que lo cubre.
+
+**El canje ocurre dentro de la creación de la empresa, en transacción**, no en la landing: el enlace circula por redes y validar solo al abrirlo dejaría pasar el cupo. `usosConsumidos` se incrementa atómicamente. **El código es estrictamente opcional y no puede tumbar el registro** — bloque aislado en `try/catch`, cualquier falla cae a freemium con el comportamiento de siempre y deja rastro en `registration_security_audit`. Por ahí pasa toda la adquisición, no solo la de campaña. **En cuarentena no se canjea**: quemaría cupo de la pauta en un registro que nadie ha validado todavía.
+
+**Sin índice compuesto a propósito**: la pasada consulta por igualdad simple sobre `premiumOrigen` (índice automático) y descarta fechas en memoria. Son cientos de empresas; si crece, ahí sí toca el índice.
+
+**Landing propia `/promo/:codigo`** (módulo lazy, 27 kB), pública y fuera del registro para no engordarlo. Código muerto o agotado no deja a nadie en pantalla en blanco: avisa en tono de advertencia —no de error, que no es culpa de quien entra— y ofrece el registro normal. **Pantalla de campañas en superadmin** con enlace listo para copiar y cuántos registros trajo cada una.
+
+**Verificado:** build de frontend en verde y **40 pruebas de reglas** en `scripts/test-promociones-registro.js`, que corren con un doble de Firestore en memoria (sin credenciales, sin tocar producción): la vitrina pública no devuelve campañas, un plan vendible no se puede canjear como campaña, el cupo no se pasa, la vista pública no filtra cupo ni usos, el vencimiento no toca premium pagado ni vigente ni freemium, y repetir la pasada no degrada a nadie más ni repite correos.
+
+**Pendiente antes de pautar:** correr la pasada en producción en modo simulación y revisar la lista; ejecutar el backfill de roles (`scripts/agregar-menu-campanas-a-superadmin.js`) o la pantalla queda invisible como ya pasó antes; ciclo real con campaña de cupo 1; y encender el cron con `PREMIUM_PROMO_CRON_ENABLED=true`, que nace apagado a propósito.

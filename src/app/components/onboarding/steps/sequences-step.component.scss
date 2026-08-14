@@ -1,14 +1,14 @@
 // Sequences Step Styles - Clean, Modern Design (No Gradients)
 
-// Variables (consistent with onboarding wizard)
-$color-primary: #3b82f6;
+// Variables (consistent with onboarding wizard) — acento Katuq #5F3FE0 (D-131)
+$color-primary: #5F3FE0;
 $color-success: #10b981;
 $color-warning: #f59e0b;
 $color-danger: #ef4444;
 $bg-gray-50: #f8fafc;
 $bg-gray-100: #f1f5f9;
 $bg-gray-200: #e2e8f0;
-$text-dark: #1e293b;
+$text-dark: #211F3A;
 $text-medium: #475569;
 $text-light: #64748b;
 $spacing-sm: 0.5rem;
@@ -70,14 +70,14 @@ $spacing-lg: 1.5rem;
 
     &:hover {
       border-color: $color-primary;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+      box-shadow: 0 4px 12px rgba(95, 63, 224, 0.1);
       transform: translateY(-2px);
     }
 
     &.selected {
-      background: #eff6ff;
+      background: #efe9ff;
       border-color: $color-primary;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+      box-shadow: 0 4px 12px rgba(95, 63, 224, 0.15);
 
       .option-label {
         color: $color-primary;
@@ -164,8 +164,8 @@ $spacing-lg: 1.5rem;
     align-items: center;
     gap: $spacing-sm;
     padding: $spacing-md $spacing-lg;
-    background: #eff6ff;
-    border: 2px solid #dbeafe;
+    background: #efe9ff;
+    border: 2px solid #eeecf7;
     border-radius: 10px;
     font-size: 0.95rem;
     color: $color-primary;

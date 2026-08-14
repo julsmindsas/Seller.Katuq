@@ -31,7 +31,7 @@ export interface PrindelExcelRow {
 
 export interface CostPreviewRequest {
   fileName?: string;
-  fuente?: 'prindel-excel' | 'aliaddo-api' | 'aliaddo-excel' | 'costos-excel' | 'manual';
+  fuente?: 'prindel-excel' | 'aliaddo-api' | 'aliaddo-excel' | 'costos-excel' | 'manual' | 'compra';
   rows: PrindelExcelRow[];
   codeAliases?: { [from: string]: string };
 }
@@ -97,6 +97,15 @@ export class ProductCostsService extends BaseService {
 
   applyImport(body: CostApplyRequest): Observable<{ success: boolean; importId: string; processed: number; failed: number; errors: any[]; message: string }> {
     return this.post('/v1/fulfillment/cost-import/apply', body);
+  }
+
+  /**
+   * Edición manual del costo de UN producto (botón Editar de la pestaña Costos).
+   * Escribe el mismo write-set que el importador y deja la misma auditoría.
+   */
+  updateProductCost(productId: string, body: { costoUnitario: number; fechaVigencia?: string | null; fuente?: string })
+    : Observable<{ success: boolean; productId: string; costoAnterior: number; costoNuevo: number; delta: number; fechaVigencia: string | null; fuente: string; date_edit: string }> {
+    return this.put(`/v1/fulfillment/cost-import/product/${productId}`, body);
   }
 
   listImports(limit = 20): Observable<{ success: boolean; imports: any[] }> {

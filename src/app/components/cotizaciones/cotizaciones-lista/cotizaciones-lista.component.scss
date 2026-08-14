@@ -700,3 +700,27 @@
   .cotz-title { font-size: 22px; }
   .cotz-head { align-items: flex-start; }
 }
+
+// Chip de origen (bot de WhatsApp / catálogo digital) al lado del número.
+// Plano tintado, mismo par fuerte/fondo-suave del design-system.
+.origen-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(33, 31, 58, 0.2);
+  background: rgba(33, 31, 58, 0.05);
+  color: rgba(33, 31, 58, 0.6);
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.7;
+
+  &--bot {
+    border-color: rgba(95, 63, 224, 0.35);
+    background: rgba(95, 63, 224, 0.1);
+    color: #5f3fe0;
+  }
+}

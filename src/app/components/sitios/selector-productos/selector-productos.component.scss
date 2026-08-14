@@ -1,0 +1,312 @@
+@import "../../../shared/styles/katuq-builder";
+
+// El velo se cuelga del <body> (appAlBody) y deja de ser hijo del host, así que
+// los tokens tienen que declararse sobre él mismo.
+:host,
+.fondo {
+  @include kb-tokens;
+}
+
+@include kb-keyframes;
+
+.fondo {
+  @include kb-modal-velo;
+  font-family: var(--kb-font);
+  color: var(--kb-ink);
+}
+
+.caja {
+  @include kb-modal-caja(940px, 22px);
+
+  &__cabecera {
+    @include kb-modal-cabecera;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 26px 18px;
+
+    h5 {
+      margin: 0 0 3px;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+  }
+
+  &__cuerpo {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  &__pie {
+    @include kb-modal-pie;
+    justify-content: flex-end;
+  }
+}
+
+.btn-primario {
+  @include kb-btn-primary(12px, 22px, 14px);
+  border-radius: 12px;
+  box-shadow: var(--kb-shadow-accent-sm);
+}
+
+.btn-fantasma {
+  @include kb-btn-ghost;
+}
+
+.sub {
+  margin: 0;
+  color: var(--kb-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  max-width: 560px;
+}
+
+.cerrar {
+  @include kb-cerrar;
+}
+
+.pista {
+  color: var(--kb-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  margin: 0.75rem 0 0;
+}
+
+// ── Buscador ─────────────────────────────────────────────────────────────────
+.buscador {
+  flex: 1;
+  min-width: 0;
+  padding: 18px 22px;
+  overflow-y: auto;
+
+  input {
+    @include kb-input;
+  }
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.producto {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  padding: 8px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 13px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--kb-accent-line-2);
+  }
+
+  &--elegido {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash-4);
+    box-shadow: 0 4px 14px rgba(107, 78, 251, 0.14);
+  }
+
+  &__marca {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--kb-accent);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  &__foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    background: var(--kb-chip-2);
+    overflow: hidden;
+    margin-bottom: 4px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__titulo {
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--kb-ink);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__precio {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--kb-accent);
+  }
+
+  &__stock {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--kb-ok);
+
+    &.agotado {
+      color: var(--kb-warn);
+    }
+  }
+}
+
+.sin-foto {
+  color: var(--kb-muted-3);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+// ── Elegidos ─────────────────────────────────────────────────────────────────
+.elegidos {
+  width: 310px;
+  flex: none;
+  padding: 18px 20px;
+  border-left: 1px solid var(--kb-line);
+  background: var(--kb-surface-2);
+  overflow-y: auto;
+
+  h6 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--kb-muted);
+  }
+
+  &__lista {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px;
+      margin-bottom: 7px;
+      border: 1px solid var(--kb-line-3);
+      border-radius: 12px;
+      background: #fff;
+    }
+  }
+
+  &__foto {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: var(--kb-chip-2);
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__datos {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+
+    strong {
+      font-size: 12.5px;
+      font-weight: 800;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    small {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--kb-muted-2);
+
+      &.agotado {
+        color: var(--kb-warn);
+      }
+    }
+  }
+
+  &__acciones {
+    display: flex;
+    gap: 3px;
+
+    button {
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--kb-body);
+      font-size: 0.8rem;
+      line-height: 1;
+      cursor: pointer;
+
+      &:hover:not(:disabled) {
+        background: var(--kb-chip-2);
+        color: var(--kb-accent);
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+    }
+  }
+}
+
+.aviso {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--kb-warn-wash);
+  border: 1px solid #f6dfb8;
+  color: #8a5a12;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+@media (max-width: 767px) {
+  .caja__cuerpo {
+    flex-direction: column;
+  }
+
+  .elegidos {
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid var(--kb-line);
+  }
+}

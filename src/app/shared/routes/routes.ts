@@ -158,6 +158,14 @@ export const content: Routes = [
     canActivate: [AuthGuard], // Agregar el guard
   },
   {
+    // Builder de landings y tiendas (D-173/D-174). La página que se publica es
+    // pública y vive fuera de aquí, en /s/:slug.
+    path: "sitios",
+    loadChildren: () =>
+      import("../../components/sitios/sitios.module").then((m) => m.SitiosModule),
+    canActivate: [AuthGuard],
+  },
+  {
     path: "produccion",
     loadChildren: () =>
       import("../../components/produccion/produccion.module").then(
@@ -187,6 +195,16 @@ export const content: Routes = [
         (m) => m.InventarioCatalogoModule,
       ),
     canActivate: [AuthGuard], // Agregar el guard
+  },
+  {
+    // Compras: dominio propio. Separado de inventario porque al recibir escribe
+    // el costo del producto, y mezclarlos borronea esa frontera.
+    path: "compras",
+    loadChildren: () =>
+      import("../../components/compras/compras.module").then(
+        (m) => m.ComprasModule,
+      ),
+    canActivate: [AuthGuard],
   },
   {
     path: "lista-precios",
@@ -221,6 +239,15 @@ export const content: Routes = [
       ),
     canActivate: [AuthGuard],
     data: { title: "Cartera (CxC)" },
+  },
+  {
+    path: "facturacion-electronica",
+    loadChildren: () =>
+      import("../../components/facturacion-electronica/facturacion-electronica.module").then(
+        (m) => m.FacturacionElectronicaModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Facturación electrónica" },
   },
   {
     path: "soporte",
@@ -295,15 +322,14 @@ export const content: Routes = [
     canActivate: [AuthGuard],
     data: { title: "CRM" },
   },
-  {
-    path: "notificaciones",
-    loadChildren: () =>
-      import("../../components/notificaciones/notificaciones.module").then(
-        (m) => m.NotificacionesModule,
-      ),
-    canActivate: [AuthGuard],
-    data: { title: "Notificaciones" },
-  },
+  // ⚠️ Los tres buzones van ANTES de "notificaciones" a propósito.
+  //
+  // Angular resuelve las rutas EN ORDEN y por prefijo: "notificaciones" a secas
+  // se traga cualquier URL que empiece por ahí, carga su módulo, no encuentra
+  // nada que responda por "whatsapp/inbox" y la navegación muere sin error
+  // visible — la pantalla simplemente se va a otra parte. Poniéndolos primero,
+  // la coincidencia exacta gana y "notificaciones" queda como lo que es: el
+  // último recurso.
   {
     path: "notificaciones/whatsapp/inbox",
     loadChildren: () =>
@@ -312,6 +338,33 @@ export const content: Routes = [
       ).then((m) => m.WhatsappInboxModule),
     canActivate: [AuthGuard],
     data: { title: "Conversaciones WhatsApp" },
+  },
+  {
+    path: "notificaciones/instagram/inbox",
+    loadChildren: () =>
+      import(
+        "../../components/notificaciones/meta-inbox/meta-inbox.module"
+      ).then((m) => m.MetaInboxModule),
+    canActivate: [AuthGuard],
+    data: { title: "Conversaciones Instagram" },
+  },
+  {
+    path: "notificaciones/facebook/inbox",
+    loadChildren: () =>
+      import(
+        "../../components/notificaciones/meta-inbox/meta-inbox.module"
+      ).then((m) => m.MetaInboxModule),
+    canActivate: [AuthGuard],
+    data: { title: "Conversaciones Facebook" },
+  },
+  {
+    path: "notificaciones",
+    loadChildren: () =>
+      import("../../components/notificaciones/notificaciones.module").then(
+        (m) => m.NotificacionesModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Notificaciones" },
   },
   {
     path: "marketing",

@@ -99,8 +99,15 @@ export class OnboardingService {
     // Verificar y cargar datos existentes
     await this.loadExistingData(state);
 
+    // loadExistingData puede marcar varios pasos como COMPLETED (empresa
+    // detectada con bodegas, pagos, categorías, etc. ya configurados por el
+    // registro). Sin esto, el wizard siempre abría en COMPANY_INFO aunque
+    // casi todo ya estuviera hecho.
+    const nextStepId = getNextAvailableStep(state) || OnboardingStepId.COMPANY_INFO;
+    state.currentStepId = nextStepId;
+
     this.onboardingState$.next(state);
-    this.currentStep$.next(state.steps.get(OnboardingStepId.COMPANY_INFO)!);
+    this.currentStep$.next(state.steps.get(nextStepId)!);
     this.saveStateToStorage();
     return state;
   }
@@ -1022,6 +1029,202 @@ export class OnboardingService {
       console.error('Error al completar onboarding:', error);
       return false;
     }
+  }
+
+  /**
+   * Siembra los defaults de los recursos CRÍTICOS que aún no existan, para que
+   * un comercio que finalice el onboarding mínimo (5 pasos) quede funcional:
+   * poder tomar pedidos y hacer checkout. Cubre roles, formas de entrega y
+   * consecutivos. Idempotente y no destructivo (verifica con /check antes de
+   * crear). Best-effort: los fallos se registran pero no interrumpen el cierre.
+   */
+  async seedRemainingDefaults(companyId: string): Promise<void> {
+    if (!companyId) {
+      console.warn('⚠️ seedRemainingDefaults sin companyId — se omite');
+      return;
+    }
+    await Promise.all([
+      this.ensureResourceDefault('roles', companyId),
+      this.ensureResourceDefault('delivery-methods', companyId),
+      this.ensureResourceDefault('sequences', companyId)
+    ]);
+  }
+
+  /**
+   * Verifica si un recurso ya existe para la empresa (endpoint /check) y, si no,
+   * crea su default llamando al endpoint de onboarding con payload vacío (el
+   * backend siembra el default). Best-effort: un fallo se registra pero no
+   * relanza. NO destructivo: para 'categories' (cuyo endpoint reemplaza el doc)
+   * solo se llama cuando NO existen categorías, así nunca se pisa el catálogo.
+   */
+  async ensureResourceDefault(
+    kind: 'roles' | 'payment-methods' | 'delivery-methods' | 'categories' | 'warehouses' | 'sequences',
+    companyId: string,
+    opts?: { sector?: string }
+  ): Promise<void> {
+    try {
+      const check: any = await this.http.get(
+        `${this.urlBase}/v1/onboarding/${kind}/check`,
+        this.getHttpOptions(companyId)
+      ).toPromise();
+
+      // Para consecutivos exigimos que estén COMPLETOS (orders + ordersPOS).
+      const alreadyOk = kind === 'sequences'
+        ? (check?.isComplete || check?.exists)
+        : check?.exists;
+
+      if (alreadyOk) {
+        console.log(`ℹ️ ${kind}: ya existe para ${companyId}, no se siembra default`);
+        return;
+      }
+
+      switch (kind) {
+        case 'roles':
+          await this.createRolesOnboarding(undefined, companyId);
+          break;
+        case 'payment-methods':
+          await this.createPaymentMethodsOnboarding(undefined, true, companyId);
+          break;
+        case 'delivery-methods':
+          await this.createDeliveryMethodsOnboarding(undefined, companyId);
+          break;
+        case 'categories':
+          await this.createCategoriesOnboarding(undefined, opts?.sector, companyId);
+          break;
+        case 'warehouses':
+          await this.createWarehousesOnboarding(undefined, companyId);
+          break;
+        case 'sequences':
+          await this.createSequencesOnboarding(undefined, companyId);
+          break;
+      }
+      console.log(`✅ ${kind}: default sembrado para ${companyId}`);
+    } catch (error) {
+      console.error(`❌ ensureResourceDefault(${kind}) falló para ${companyId}:`, error);
+      // best-effort: no relanzar para no bloquear el cierre del onboarding
+    }
+  }
+
+  /**
+   * Guarda la bodega principal con el NOMBRE que escribió el usuario en el
+   * onboarding. Si la empresa ya tiene una bodega (la encuesta/quickstart suele
+   * autocrear una "BODEGA PRINCIPAL"), la RENOMBRA en lugar de duplicar; si no
+   * hay ninguna, la crea con ese nombre. Detalles como ciudad, cobertura o
+   * alertas de stock NO se guardan aquí: van en su apartado propio
+   * (Inventario → Bodegas y alertas por producto).
+   */
+  async savePrimaryWarehouse(company: string, nombre: string, ciudad?: string): Promise<void> {
+    const clean = (nombre || '').trim();
+    const city = (ciudad || '').trim();
+    if (!company || !clean) return;
+
+    const check: any = await this.http.get(
+      `${this.urlBase}/v1/onboarding/warehouses/check`,
+      this.getHttpOptions(company)
+    ).toPromise();
+
+    const existing = (check?.data || []).find((b: any) => b?.id);
+    if (existing) {
+      // Renombrar la bodega principal existente a lo que escribió el usuario
+      // (y guardar la ciudad en la bodega, su apartado natural).
+      const payload: any = { id: existing.id, nombre: clean };
+      if (city) payload.ciudad = city;
+      await this.http.post(
+        `${this.urlBase}/v1/bodegas/edit`,
+        payload,
+        this.getHttpOptions(company)
+      ).toPromise();
+      console.log(`✅ Bodega principal renombrada a "${clean}" (${existing.id})`);
+    } else {
+      // No hay ninguna: crear la principal con el nombre (y ciudad) del usuario.
+      const bodega: any = { nombre: clean, idBodega: 'BOD-001', tipo: 'Física', active: true };
+      if (city) bodega.ciudad = city;
+      await this.createWarehousesOnboarding([bodega], company);
+      console.log(`✅ Bodega principal creada: "${clean}"`);
+    }
+  }
+
+  /**
+   * Guarda el umbral de stock bajo POR EMPRESA (config de notificaciones).
+   * OpenSpec: umbral-stock-bajo-empresa. Usa el endpoint acotado y seguro
+   * `POST /v1/companies/notification-settings` (no toca otros datos de la empresa
+   * ni puede duplicarla). El interceptor agrega Authorization + company.
+   */
+  async saveLowStockThreshold(umbral: number): Promise<void> {
+    if (!Number.isInteger(umbral) || umbral < 0) return;
+    await this.http.post(
+      `${this.urlBase}/v1/companies/notification-settings`,
+      { stockBajoUmbral: umbral },
+      this.httpOptions
+    ).toPromise();
+    console.log(`✅ Umbral de stock bajo guardado: ${umbral}`);
+  }
+
+  /**
+   * Guarda las formas de pago que ELIGIÓ el usuario (chips del onboarding).
+   * Idempotente y NO destructivo: crea solo las que aún no existen (match por
+   * nombre); nunca borra las que ya estaban. Crea las de POS solo si no había
+   * ninguna. Cada forma de pago web es un doc simple { nombre, descripcion,
+   * activo } — igual que el default del backend.
+   */
+  async savePaymentMethods(company: string, labels: string[], hints: { [k: string]: string } = {}): Promise<void> {
+    if (!company || !labels || labels.length === 0) return;
+
+    const check: any = await this.http.get(
+      `${this.urlBase}/v1/onboarding/payment-methods/check`,
+      this.getHttpOptions(company)
+    ).toPromise();
+
+    const existing = (check?.data || [])
+      .filter((p: any) => (p.collection || 'pagos') === 'pagos')
+      .map((p: any) => (p.nombre || '').trim().toLowerCase());
+    const posCount = check?.breakdown?.pos ?? 0;
+
+    const toCreate = labels
+      .filter(l => !existing.includes((l || '').trim().toLowerCase()))
+      .map(l => ({ nombre: l, descripcion: hints[l] || l, activo: true }));
+
+    if (toCreate.length === 0) {
+      console.log('ℹ️ Formas de pago elegidas ya existían — no se duplican');
+      return;
+    }
+
+    // createPOS solo si no hay ninguna en POS (evita duplicar Efectivo/Tarjeta POS).
+    await this.createPaymentMethodsOnboarding(toCreate, posCount === 0, company);
+    console.log(`✅ ${toCreate.length} forma(s) de pago creada(s) desde el onboarding`);
+  }
+
+  /**
+   * Guarda las categorías que ELIGIÓ el usuario. El endpoint de categorías
+   * REEMPLAZA el doc de categorías de la empresa por el nuevo — en onboarding es
+   * el comportamiento deseado: dejar exactamente las categorías que el comerciante
+   * seleccionó. Cada categoría lleva su propio id para que los productos puedan
+   * referenciarla.
+   */
+  async saveCategories(company: string, labels: string[]): Promise<void> {
+    if (!company || !labels || labels.length === 0) return;
+
+    const categorias = {
+      categorias: labels.map((nombre, i) => ({
+        id: this.genCategoryId(i),
+        nombre,
+        descripcion: nombre,
+        activa: true,
+        orden: i + 1
+      })),
+      descripcion: 'Categorías elegidas durante el onboarding'
+    };
+
+    await this.createCategoriesOnboarding(categorias, undefined, company);
+    console.log(`✅ ${labels.length} categoría(s) guardada(s) desde el onboarding`);
+  }
+
+  private genCategoryId(i: number): string {
+    try {
+      const c: any = (typeof crypto !== 'undefined') ? crypto : null;
+      if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+    } catch { /* fallthrough */ }
+    return `cat-${Date.now()}-${i}`;
   }
 
   // ==================== SISTEMA DE POSPONER ====================

@@ -3,6 +3,7 @@ import { Router } from "@angular/router";
 import { NgbModal, NgbModalOptions } from "@ng-bootstrap/ng-bootstrap";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import Swal from "sweetalert2";
+import { leerErrorInventario } from 'src/app/shared/utils/error-inventario';
 import { ProductDetailsComponent } from "../../productos/product-details/product-details.component";
 import { Producto } from "../../../shared/models/productos/Producto";
 import { MovimientoInventario } from "../model/movimientoinventario";
@@ -13,6 +14,7 @@ import {
   ProductoConsolidado,
   BodegaConsolidada,
   InventarioCorteEstado,
+  InventarioCorteFila,
   InventarioCorteResponse,
 } from "../../../shared/services/inventarios/inventario.service";
 import { TourService } from "../../../shared/services/tour.service";
@@ -213,6 +215,26 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       icon: 'pi pi-calendar',
       command: () => this.abrirInventarioCorte(),
     },
+    { separator: true },
+    // Atajos a los módulos nuevos. Van aquí porque el menú lateral se arma con
+    // los permisos guardados de cada rol: una pantalla nueva no aparece ahí
+    // hasta que se autorice rol por rol. Las rutas, en cambio, funcionan para
+    // cualquiera que haya iniciado sesión.
+    {
+      label: 'Indicadores de bodega',
+      icon: 'pi pi-chart-line',
+      command: () => this.router.navigate(['/inventario/indicadores']),
+    },
+    {
+      label: 'Mapa de la bodega',
+      icon: 'pi pi-map',
+      command: () => this.router.navigate(['/inventario/ubicaciones']),
+    },
+    {
+      label: 'Conteos de inventario',
+      icon: 'pi pi-check-square',
+      command: () => this.router.navigate(['/inventario/conteos']),
+    },
   ];
   exportandoExcel = false;
 
@@ -231,7 +253,12 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   ];
   cutoffReport: InventarioCorteResponse | null = null;
   cutoffPageIndex = 0;
-  cutoffCursorHistory: Array<string | null> = [null];
+  cutoffAllRows: InventarioCorteFila[] = [];
+  readonly cutoffPageSize = 100;
+
+  get cutoffTotalPages(): number {
+    return Math.max(1, Math.ceil(this.cutoffAllRows.length / this.cutoffPageSize));
+  }
 
   // Filtros para vista consolidada
   filtrosConsolidados = {
@@ -798,11 +825,53 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
         }
         this.exportandoExcel = false;
       },
-      error: () => {
-        this.toastr?.error?.('Error generando Excel del inventario', 'Error');
+      error: (err) => {
         this.exportandoExcel = false;
+        this.mostrarErrorExportacion(err);
       },
     });
+  }
+
+  /**
+   * Muestra el error REAL del backend al exportar.
+   *
+   * Antes esta rama mostraba siempre "Error generando Excel del inventario" y
+   * tiraba a la basura el diagnóstico del servidor — que suele traer la
+   * instrucción exacta para arreglarlo (por ejemplo, qué librería falta y qué
+   * comando correr). Con el mensaje escondido, cada falla de exportación
+   * obligaba a adivinar.
+   *
+   * Detalle: la respuesta se pide como archivo (`responseType: 'blob'`), así
+   * que el cuerpo del error también llega como Blob y hay que LEERLO antes de
+   * poder ver el JSON. Sin este paso el mensaje se pierde igual aunque se
+   * intente mostrar.
+   */
+  private async mostrarErrorExportacion(err: any): Promise<void> {
+    const generico = 'Error generando Excel del inventario';
+
+    try {
+      let cuerpo: any = err?.error;
+
+      if (cuerpo instanceof Blob) {
+        const texto = await cuerpo.text();
+        try {
+          cuerpo = JSON.parse(texto);
+        } catch {
+          cuerpo = texto ? { error: texto } : null;
+        }
+      }
+
+      const mensaje = cuerpo?.error || cuerpo?.message || err?.message || generico;
+      // El backend a veces acompaña el error con la acción para resolverlo.
+      const accion = cuerpo?.action ? ` — ${cuerpo.action}` : '';
+
+      this.toastr?.error?.(`${mensaje}${accion}`, 'No se pudo exportar', {
+        timeOut: 10000,
+        closeButton: true,
+      });
+    } catch {
+      this.toastr?.error?.(generico, 'Error');
+    }
   }
 
   private fechaBogota(offsetDays = 0): string {
@@ -826,33 +895,30 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     if (!this.fechaCorteInventario || this.cutoffLoading) return;
     if (resetPagination) {
       this.cutoffPageIndex = 0;
-      this.cutoffCursorHistory = [null];
     }
 
     this.cutoffLoading = true;
-    const cursor = this.cutoffCursorHistory[this.cutoffPageIndex] || undefined;
     this.inventarioService.consultarInventarioCorte({
       fechaCorte: this.fechaCorteInventario,
       bodega: this.filtrosConsolidados.bodegaId || undefined,
       search: this.filtrosConsolidados.busqueda?.trim() || undefined,
       status: this.cutoffStatusFilter || undefined,
-      limit: 100,
-      cursor,
+      // El backend hace la reconstrucción costosa una sola vez. Las páginas
+      // siguientes se muestran desde esta respuesta, sin volver a leer Firestore.
+      paginate: false,
     })
     .pipe(takeUntil(this.destroy$))
     .subscribe({
       next: (report) => {
+        this.cutoffAllRows = [...(report.rows || [])];
         this.cutoffReport = report;
-        if (report.pagination.nextCursor) {
-          this.cutoffCursorHistory[this.cutoffPageIndex + 1] = report.pagination.nextCursor;
-        } else {
-          this.cutoffCursorHistory = this.cutoffCursorHistory.slice(0, this.cutoffPageIndex + 1);
-        }
+        this.actualizarPaginaCorte();
         this.cutoffLoading = false;
       },
       error: (error) => {
         this.cutoffLoading = false;
         this.cutoffReport = null;
+        this.cutoffAllRows = [];
         this.toastr.error(
           error?.error?.error || 'No se pudo reconstruir el inventario para esa fecha',
           'Inventario por fecha',
@@ -864,13 +930,36 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   paginaAnteriorCorte(): void {
     if (this.cutoffPageIndex <= 0 || this.cutoffLoading) return;
     this.cutoffPageIndex -= 1;
-    this.consultarInventarioCorte(false);
+    this.actualizarPaginaCorte();
   }
 
   paginaSiguienteCorte(): void {
     if (!this.cutoffReport?.pagination?.hasMore || this.cutoffLoading) return;
     this.cutoffPageIndex += 1;
-    this.consultarInventarioCorte(false);
+    this.actualizarPaginaCorte();
+  }
+
+  private actualizarPaginaCorte(): void {
+    if (!this.cutoffReport) return;
+
+    const total = this.cutoffAllRows.length;
+    const ultimaPagina = Math.max(0, Math.ceil(total / this.cutoffPageSize) - 1);
+    this.cutoffPageIndex = Math.min(Math.max(this.cutoffPageIndex, 0), ultimaPagina);
+
+    const inicio = this.cutoffPageIndex * this.cutoffPageSize;
+    const rows = this.cutoffAllRows.slice(inicio, inicio + this.cutoffPageSize);
+    this.calcularNovedadesPaginaCorte(rows);
+    this.cutoffReport = {
+      ...this.cutoffReport,
+      rows,
+      pagination: {
+        limit: this.cutoffPageSize,
+        returned: rows.length,
+        total,
+        hasMore: inicio + rows.length < total,
+        nextCursor: null,
+      },
+    };
   }
 
   exportarInventarioCorte(): void {
@@ -898,7 +987,10 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.cutoffExportando = false;
-        this.toastr.error(error?.error?.error || 'No se pudo exportar el corte', 'Inventario por fecha');
+        // Parecía que mostraba el error del backend, pero no: la respuesta se
+        // pide como archivo, así que `error.error` es un Blob y leerle `.error`
+        // siempre da undefined. Caía en el texto genérico sin decir por qué.
+        this.mostrarErrorExportacion(error);
       },
     });
   }
@@ -910,9 +1002,42 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   }
 
   claseEstadoCorte(status: InventarioCorteEstado): string {
-    if (status === 'certified') return 'bg-success';
-    if (status === 'ambiguous') return 'bg-warning text-dark';
-    return 'bg-secondary';
+    if (status === 'certified') return 'is-cert';
+    if (status === 'ambiguous') return 'is-amb';
+    return 'is-inc';
+  }
+
+  /**
+   * La explicación mayoritaria de la página se dice UNA vez encima de la tabla;
+   * en las filas solo se señala lo que se aparta de ella. Se calcula UNA sola
+   * vez al armar cada página (nunca desde la plantilla: con 100 filas, una
+   * función en el template se re-ejecuta miles de veces por ciclo de cambio
+   * y congela la pestaña).
+   */
+  cutoffCausaComun: { texto: string; cuenta: number; total: number; hayDistintas: boolean } | null = null;
+  cutoffNovedadesFila: string[] = [];
+
+  private calcularNovedadesPaginaCorte(rows: Array<{ causes?: string[] }>): void {
+    this.cutoffCausaComun = null;
+    const textos = rows.map((row) => this.causasCorteEnTexto(row?.causes));
+    this.cutoffNovedadesFila = textos;
+    if (rows.length < 2) return;
+
+    const conteo = new Map<string, number>();
+    for (const texto of textos) {
+      if (!texto) continue;
+      conteo.set(texto, (conteo.get(texto) || 0) + 1);
+    }
+    let moda = '';
+    let cuenta = 0;
+    for (const [texto, n] of conteo) {
+      if (n > cuenta) { moda = texto; cuenta = n; }
+    }
+    if (!moda || cuenta < 2) return;
+
+    this.cutoffCausaComun = { texto: moda, cuenta, total: rows.length, hayDistintas: cuenta < rows.length };
+    // La columna solo marca lo que se aparta de la mayoría.
+    this.cutoffNovedadesFila = textos.map((texto) => (texto === moda ? '' : texto));
   }
 
   causasCorteEnTexto(causes: string[]): string {
@@ -1320,8 +1445,22 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
         this.recargarInventarioConsolidado();
       },
       error: (err: any) => {
-        this.toastr.error(err?.error?.error || 'Error al ajustar inventario', 'Error');
+        const leido = leerErrorInventario(err);
         this.ajusteGuardando = false;
+        if (leido.esNoInventariable) {
+          this.ajusteVisible = false;
+          Swal.fire({
+            icon: 'warning',
+            title: 'Este producto no lleva inventario',
+            html:
+              `<p><strong>${this.ajusteProducto?.nombre || 'El producto'}</strong> está marcado como ` +
+              `<strong>no inventariable</strong>, así que no admite ingresos ni retiros de stock.</p>` +
+              `<p class="text-muted mb-0">Para que lleve stock, cámbialo en la ficha del producto.</p>`,
+            confirmButtonColor: '#5F3FE0',
+          });
+          return;
+        }
+        this.toastr.error(leido.motivo || 'Error al ajustar inventario', 'Error');
       }
     });
   }

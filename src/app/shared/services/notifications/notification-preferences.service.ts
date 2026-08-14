@@ -63,8 +63,9 @@ export class NotificationPreferencesService {
       // Intentar cargar desde el backend primero
       const serverPreferences = await this.loadFromServer();
       if (serverPreferences) {
-        this.preferencesSubject.next(serverPreferences);
-        this.saveToLocalStorage(serverPreferences);
+        const normalizadas = this.normalizarPreferencias(serverPreferences);
+        this.preferencesSubject.next(normalizadas);
+        this.saveToLocalStorage(normalizadas);
         return;
       }
     } catch (error) {
@@ -74,12 +75,77 @@ export class NotificationPreferencesService {
     // Si no hay preferencias en el servidor, usar localStorage o crear por defecto
     const localPreferences = this.loadFromLocalStorage();
     if (localPreferences) {
-      this.preferencesSubject.next(localPreferences);
+      this.preferencesSubject.next(this.normalizarPreferencias(localPreferences));
     } else {
       const defaultPreferences = this.createDefaultPreferences();
       this.preferencesSubject.next(defaultPreferences);
       this.saveToLocalStorage(defaultPreferences);
     }
+  }
+
+  /**
+   * Deja las preferencias con la forma que espera el resto del servicio.
+   *
+   * Ni el servidor ni localStorage validan nada: se guarda y se lee el objeto
+   * tal cual. Basta con que un tipo llegue sin `channels` para que
+   * `shouldSendNotification` reviente en `channels.includes(...)`, y como esa
+   * llamada ocurre dentro de la suscripción que pinta las notificaciones, el
+   * error tumba la suscripción y deja pantallas cargando para siempre. Pasó en
+   * producción el 2026-08-12.
+   *
+   * Se mezcla lo guardado encima de los valores por defecto: lo que el usuario
+   * eligió manda, lo que falte se rellena. Nunca devuelve un tipo sin canales.
+   */
+  private normalizarPreferencias(entrada: any): NotificationPreferences {
+    const base = this.createDefaultPreferences();
+    const guardadas = entrada || {};
+    const tiposReparados: string[] = [];
+
+    const canales: any = { ...base.channels };
+    Object.entries(guardadas.channels || {}).forEach(([canal, valor]) => {
+      if (valor && typeof valor === 'object') {
+        canales[canal] = { ...canales[canal], ...(valor as any) };
+      }
+    });
+
+    const tipos: any = { ...base.types };
+    Object.entries(guardadas.types || {}).forEach(([tipo, valor]) => {
+      const previo = tipos[tipo] || {
+        enabled: true,
+        channels: [NotificationChannel.IN_APP],
+        priority: NotificationPriority.NORMAL,
+      };
+      const mezclado = { ...previo, ...((valor as any) || {}) };
+
+      if (!Array.isArray(mezclado.channels)) {
+        // Un tipo habilitado sin canales no se puede evaluar. Se cae a los
+        // canales por defecto de ese tipo en vez de romper la lectura.
+        mezclado.channels = previo.channels || [NotificationChannel.IN_APP];
+        tiposReparados.push(tipo);
+      }
+
+      tipos[tipo] = mezclado;
+    });
+
+    if (tiposReparados.length) {
+      // No se calla: si esto aparece, hay preferencias mal guardadas en el
+      // servidor o en el navegador y conviene saber cuáles.
+      console.warn(
+        'Preferencias de notificación sin canales; se completaron con los valores por defecto:',
+        tiposReparados.join(', ')
+      );
+    }
+
+    return {
+      ...base,
+      ...guardadas,
+      userId: guardadas.userId || base.userId,
+      channels: canales,
+      types: tipos,
+      deviceSettings: { ...base.deviceSettings, ...(guardadas.deviceSettings || {}) },
+      createdAt: guardadas.createdAt ? new Date(guardadas.createdAt) : base.createdAt,
+      updatedAt: guardadas.updatedAt ? new Date(guardadas.updatedAt) : base.updatedAt,
+    };
   }
 
   /**
@@ -347,14 +413,28 @@ export class NotificationPreferencesService {
     const current = this.preferencesSubject.getValue();
     if (!current) return;
 
+    // Aquí nacía la preferencia rota. El centro de notificaciones llama con
+    // solo `{ enabled }`, y si el tipo todavía no existía en `types` el
+    // resultado era `{ enabled: true }` a secas, sin `channels`: se guardaba
+    // así y a la siguiente carga reventaba la lectura. Se parte de lo que ya
+    // había, y si no había nada, de los valores por defecto del tipo.
+    const previo =
+      current.types[type] || this.createDefaultPreferences().types[type] || {
+        enabled: true,
+        channels: [NotificationChannel.IN_APP],
+        priority: NotificationPriority.NORMAL,
+      };
+
+    const mezclado: any = { ...previo, ...settings };
+    if (!Array.isArray(mezclado.channels) || !mezclado.channels.length) {
+      mezclado.channels = [NotificationChannel.IN_APP];
+    }
+
     const updated = {
       ...current,
       types: {
         ...current.types,
-        [type]: {
-          ...current.types[type],
-          ...settings
-        }
+        [type]: mezclado
       },
       updatedAt: new Date()
     };
@@ -421,7 +501,16 @@ export class NotificationPreferencesService {
       return false;
     }
 
-    // Verificar si el canal está habilitado para este tipo
+    // Verificar si el canal está habilitado para este tipo.
+    //
+    // `channels` se comprueba antes de usarlo aunque `normalizarPreferencias`
+    // ya lo garantice: este método se llama desde la suscripción que pinta las
+    // notificaciones, y ahí una excepción no solo pierde el aviso — tumba la
+    // suscripción y deja la pantalla cargando. Ante una forma inesperada se
+    // deja pasar la notificación, que es el fallo menos dañino.
+    if (!Array.isArray(typePrefs.channels)) {
+      return true;
+    }
     if (!typePrefs.channels.includes(channel)) {
       return false;
     }
@@ -489,6 +578,12 @@ export class NotificationPreferencesService {
       return [];
     }
 
+    // Mismo resguardo que en `shouldSendNotification`: sin canales usables se
+    // responde el canal seguro en vez de reventar.
+    if (!Array.isArray(typePrefs.channels)) {
+      return [NotificationChannel.IN_APP];
+    }
+
     // Filtrar solo los canales que están habilitados globalmente
     return typePrefs.channels.filter(channel => {
       const channelPrefs = preferences.channels[channel];
@@ -553,11 +648,13 @@ export class NotificationPreferencesService {
         throw new Error('Formato de preferencias inválido');
       }
 
-      // Actualizar userId si es necesario
-      imported.userId = this.currentUserId!;
-      imported.updatedAt = new Date();
+      // Un archivo importado viene de fuera: se normaliza igual que lo del
+      // servidor, o entraría con tipos sin canales por la puerta de atrás.
+      const normalizadas = this.normalizarPreferencias(imported);
+      normalizadas.userId = this.currentUserId!;
+      normalizadas.updatedAt = new Date();
 
-      await this.savePreferences(imported);
+      await this.savePreferences(normalizadas);
       return true;
     } catch (error) {
       console.error('Error importando preferencias:', error);

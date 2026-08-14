@@ -1,0 +1,93 @@
+<!-- `appAlBody`: sin él el velo se dibuja dentro de `.page-body`, que abre
+     contexto de apilamiento, y el menú lateral queda encima. Ver la directiva. -->
+<div class="fondo" appAlBody (click)="cerrar.emit()">
+  <div class="caja" (click)="$event.stopPropagation()">
+
+    <header class="caja__cabecera">
+      <div>
+        <h5>Elegir productos</h5>
+        <p class="sub">Se muestran con el precio y la disponibilidad del momento en que alguien abra tu página.</p>
+      </div>
+      <button class="cerrar" (click)="cerrar.emit()" title="Cerrar" aria-label="Cerrar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <div class="caja__cuerpo">
+
+      <!-- Buscador y resultados -->
+      <section class="buscador">
+        <input type="text"
+               [value]="termino"
+               (input)="alEscribir($any($event.target).value)"
+               placeholder="Busca por nombre o referencia…"
+               autocomplete="off" />
+
+        <p class="pista" *ngIf="termino.trim().length < 2">Escribe al menos dos letras para buscar.</p>
+        <p class="pista" *ngIf="buscando">Buscando…</p>
+        <p class="pista" *ngIf="!buscando && buscado && !resultados.length">
+          No encontramos productos con “{{ termino }}”.
+        </p>
+
+        <div class="rejilla" *ngIf="resultados.length">
+          <button class="producto"
+                  *ngFor="let p of resultados"
+                  [class.producto--elegido]="estaElegido(p.id)"
+                  (click)="alternar(p)">
+            <span class="producto__marca" *ngIf="estaElegido(p.id)">✓</span>
+            <span class="producto__foto">
+              <img *ngIf="p.imagen" [src]="p.imagen" [alt]="p.titulo" loading="lazy" />
+              <span class="sin-foto" *ngIf="!p.imagen">Sin foto</span>
+            </span>
+            <span class="producto__titulo">{{ p.titulo }}</span>
+            <span class="producto__precio">{{ precioTexto(p.precio) }}</span>
+            <span class="producto__stock" [class.agotado]="p.agotado">
+              {{ p.agotado ? 'Agotado' : p.stock + ' disponibles' }}
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Elegidos, en orden -->
+      <aside class="elegidos">
+        <h6>En este bloque ({{ elegidos.length }})</h6>
+
+        <p class="pista" *ngIf="cargandoElegidos">Cargando…</p>
+        <p class="pista" *ngIf="!cargandoElegidos && !elegidos.length">
+          Todavía no has elegido ninguno. Búscalos a la izquierda.
+        </p>
+
+        <ol class="elegidos__lista">
+          <li *ngFor="let p of elegidos; let i = index">
+            <span class="elegidos__foto">
+              <img *ngIf="p.imagen" [src]="p.imagen" [alt]="p.titulo" />
+            </span>
+            <span class="elegidos__datos">
+              <strong>{{ p.titulo }}</strong>
+              <small [class.agotado]="p.agotado">
+                {{ precioTexto(p.precio) }}{{ p.agotado ? ' · agotado' : '' }}
+              </small>
+            </span>
+            <span class="elegidos__acciones">
+              <button (click)="mover(i, -1)" [disabled]="i === 0" title="Subir">↑</button>
+              <button (click)="mover(i, 1)" [disabled]="i === elegidos.length - 1" title="Bajar">↓</button>
+              <button (click)="quitar(i)" title="Quitar">×</button>
+            </span>
+          </li>
+        </ol>
+
+        <p class="aviso" *ngIf="hayAgotados">
+          Los productos agotados no se muestran en la página publicada. Vuelven a aparecer solos cuando
+          tengan stock.
+        </p>
+      </aside>
+    </div>
+
+    <footer class="caja__pie">
+      <button class="btn-fantasma" (click)="cerrar.emit()">Cancelar</button>
+      <button class="btn-primario" (click)="aceptar()">
+        Usar {{ elegidos.length }} producto{{ elegidos.length === 1 ? '' : 's' }}
+      </button>
+    </footer>
+  </div>
+</div>

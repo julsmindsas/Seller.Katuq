@@ -2267,3 +2267,188 @@ th.text-center .d-flex.align-items-center.justify-content-center {
 
   i { color: var(--kc-green); }
 }
+
+// ── Modal "Inventario por fecha de corte" ───────────────────────────────────
+// Sigue el tema canónico: superficies suaves, chips fondo-suave + par fuerte,
+// radios 16/11, plano sin gradientes. La honestidad del informe (certificado /
+// ambiguo / incompleto) debe leerse de un vistazo.
+.corte-controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  margin-bottom: 6px;
+}
+.corte-campo {
+  flex: 1 1 220px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.corte-botones {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+.corte-label {
+  font-family: var(--kc-font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kc-muted);
+  margin: 0;
+}
+.corte-hint {
+  font-size: 12.5px;
+  color: var(--kc-muted2);
+}
+.corte-nota {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--kc-muted);
+  background: var(--kc-canvas);
+  border: 1px solid var(--kc-line2);
+  border-radius: 11px;
+  padding: 8px 12px;
+  margin: 10px 0 14px;
+
+  i { color: var(--kc-accent); }
+}
+.corte-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 11px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  margin-bottom: 14px;
+  border: 1px solid transparent;
+
+  i { font-size: 16px; margin-top: 1px; }
+  strong { display: block; }
+
+  &.is-cert {
+    background: var(--kc-green-wash);
+    border-color: #cbebd8;
+    color: var(--kc-green);
+  }
+  &.is-warn {
+    background: var(--kc-orange-wash);
+    border-color: #f2ddb8;
+    color: #8a5a12;
+
+    i { color: var(--kc-orange); }
+  }
+}
+.corte-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.corte-stat {
+  border-radius: 11px;
+  padding: 12px 14px;
+  border: 1px solid var(--kc-line2);
+  background: var(--kc-canvas);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &.is-cert { background: var(--kc-green-wash); border-color: #cbebd8; }
+  &.is-amb  { background: var(--kc-orange-wash); border-color: #f2ddb8; }
+  &.is-inc  { background: var(--kc-accent-wash); border-color: var(--kc-line); }
+}
+.corte-stat-label {
+  font-family: var(--kc-font-head);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kc-muted);
+}
+.corte-stat-valor {
+  font-family: var(--kc-font-head);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--kc-ink);
+  font-variant-numeric: tabular-nums;
+}
+.corte-causa-comun {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--kc-ink2);
+  background: var(--kc-accent-wash);
+  border: 1px solid var(--kc-line);
+  border-radius: 11px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+
+  i { color: var(--kc-accent); }
+  strong { font-weight: 600; }
+}
+.corte-tabla {
+  border: 1px solid var(--kc-line2);
+  border-radius: 11px;
+  overflow: auto;
+
+  ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+    background: var(--kc-canvas);
+    color: var(--kc-muted);
+    font-family: var(--kc-font-head);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-color: var(--kc-line2);
+  }
+  ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+    font-size: 13.5px;
+    color: var(--kc-ink2);
+    border-color: var(--kc-line2);
+  }
+}
+.corte-ref {
+  font-weight: 600;
+  color: var(--kc-ink);
+}
+.corte-cantidad {
+  font-family: var(--kc-font-head);
+  font-weight: 700;
+  color: var(--kc-ink);
+  font-variant-numeric: tabular-nums;
+}
+.corte-explicacion {
+  font-size: 12.5px;
+  color: var(--kc-muted2);
+  max-width: 320px;
+}
+.corte-chip {
+  display: inline-block;
+  font-family: var(--kc-font-head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+
+  &.is-cert { background: var(--kc-green-wash); border-color: #cbebd8; color: var(--kc-green); }
+  &.is-amb  { background: var(--kc-orange-wash); border-color: #f2ddb8; color: #8a5a12; }
+  &.is-inc  { background: var(--kc-accent-wash); border-color: var(--kc-line); color: var(--kc-accent); }
+}
+.corte-paginacion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}

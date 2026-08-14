@@ -1,0 +1,188 @@
+<div class="wa-bot">
+  <!-- Encabezado -->
+  <div class="wa-bot__header">
+    <div class="wa-bot__title">
+      <span class="wa-bot__title-chip" aria-hidden="true">
+        <i class="fa fa-comments-o"></i>
+      </span>
+      <div>
+        <h3>Bot de pedidos</h3>
+        <p class="wa-bot__subtitle">
+          Atiende a tus clientes por WhatsApp, arma el pedido conversando y lo
+          deja como <strong>cotización en borrador</strong> para que tu equipo
+          la confirme. Nunca crea pedidos ni toca inventario.
+        </p>
+      </div>
+    </div>
+    <span
+      class="wa-bot__status"
+      [class.is-on]="botEncendido"
+      [class.is-shadow]="botEncendido && form.get('modoSombra')?.value"
+    >
+      {{
+        !botEncendido
+          ? "Apagado"
+          : form.get("modoSombra")?.value
+            ? "Modo sombra"
+            : "Encendido"
+      }}
+    </span>
+  </div>
+
+  <div class="wa-bot__loading" *ngIf="loading">
+    <i class="fa fa-spinner fa-spin"></i> Cargando bot de pedidos...
+  </div>
+
+  <div class="wa-bot__error" *ngIf="loadError && !loading">
+    {{ loadError }}
+    <button type="button" class="btn btn-sm btn-outline-secondary ms-2" (click)="cargar()">
+      Reintentar
+    </button>
+  </div>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="guardar()"
+    class="wa-bot__form"
+    *ngIf="!loading && !loadError"
+  >
+    <!-- Aviso: exige número propio -->
+    <div class="wa-bot__hint" *ngIf="!puedeActivarse">
+      <i class="fa fa-info-circle"></i>
+      Para prender el bot, el comercio necesita su
+      <strong>propio número de WhatsApp</strong> conectado (sección
+      "Credenciales propias" de arriba). Con el número compartido, un mismo
+      mensaje llega a varias empresas y el bot contestaría duplicado.
+    </div>
+
+    <!-- Interruptor principal -->
+    <div class="wa-bot__row wa-bot__row--toggle">
+      <label class="wa-bot__toggle">
+        <input
+          type="checkbox"
+          formControlName="enabled"
+          [attr.disabled]="!puedeActivarse && !botEncendido ? true : null"
+        />
+        <span class="wa-bot__toggle-slider"></span>
+      </label>
+      <div class="wa-bot__toggle-text">
+        <strong>Bot de pedidos encendido</strong>
+        <small>
+          El bot responde los mensajes entrantes de este comercio. Apagarlo
+          surte efecto de inmediato.
+        </small>
+      </div>
+    </div>
+
+    <ng-container *ngIf="botEncendido">
+      <!-- Modo sombra -->
+      <div class="wa-bot__row wa-bot__row--toggle">
+        <label class="wa-bot__toggle">
+          <input type="checkbox" formControlName="modoSombra" />
+          <span class="wa-bot__toggle-slider"></span>
+        </label>
+        <div class="wa-bot__toggle-text">
+          <strong>Modo sombra</strong>
+          <small>
+            El bot piensa y se registra lo que habría contestado, pero
+            <strong>no envía mensajes ni gasta saldo</strong>. Ideal para
+            revisar cómo respondería antes de soltarlo.
+          </small>
+        </div>
+      </div>
+
+      <!-- Presentarse como bot -->
+      <div class="wa-bot__row wa-bot__row--toggle">
+        <label class="wa-bot__toggle">
+          <input type="checkbox" formControlName="anunciarQueEsBot" />
+          <span class="wa-bot__toggle-slider"></span>
+        </label>
+        <div class="wa-bot__toggle-text">
+          <strong>Presentarse como asistente automático</strong>
+          <small>En el primer mensaje aclara que es un bot y que un asesor puede tomar la conversación.</small>
+        </div>
+      </div>
+
+      <!-- Tope de turnos -->
+      <div class="wa-bot__row">
+        <label class="wa-bot__label" for="botTopeTurnos">
+          Tope de mensajes del bot por conversación
+        </label>
+        <input
+          id="botTopeTurnos"
+          type="number"
+          class="form-control wa-bot__input wa-bot__input--corto"
+          formControlName="topeTurnos"
+          min="1"
+          max="100"
+        />
+        <small class="wa-bot__ayuda">
+          Al llegar al tope, el bot pasa la conversación a un asesor. Cada
+          mensaje del bot descuenta saldo como uno escrito a mano.
+        </small>
+      </div>
+
+      <!-- Mensaje de bienvenida -->
+      <div class="wa-bot__row">
+        <label class="wa-bot__label" for="botBienvenida">
+          Mensaje de bienvenida (opcional)
+        </label>
+        <textarea
+          id="botBienvenida"
+          class="form-control wa-bot__input"
+          formControlName="mensajeBienvenida"
+          rows="2"
+          maxlength="500"
+          placeholder="Ej: ¡Hola! Soy el asistente de {{ '{' }}nombre del comercio{{ '}' }}. Contame qué querés pedir."
+        ></textarea>
+        <small class="wa-bot__ayuda">
+          Cómo abre la conversación. Si queda vacío, el bot saluda con su tono
+          normal.
+        </small>
+      </div>
+
+      <!-- Horario -->
+      <div class="wa-bot__row wa-bot__row--toggle">
+        <label class="wa-bot__toggle">
+          <input type="checkbox" formControlName="horarioHabilitado" />
+          <span class="wa-bot__toggle-slider"></span>
+        </label>
+        <div class="wa-bot__toggle-text">
+          <strong>Atender solo en un horario</strong>
+          <small>Fuera del horario, los mensajes quedan en el buzón para el equipo.</small>
+        </div>
+      </div>
+
+      <div class="wa-bot__horario" *ngIf="form.get('horarioHabilitado')?.value">
+        <div class="wa-bot__horario-horas">
+          <label>
+            Desde
+            <input type="time" class="form-control" formControlName="horarioDesde" />
+          </label>
+          <label>
+            Hasta
+            <input type="time" class="form-control" formControlName="horarioHasta" />
+          </label>
+        </div>
+        <div class="wa-bot__horario-dias" role="group" aria-label="Días de atención">
+          <button
+            *ngFor="let d of dias"
+            type="button"
+            class="wa-bot__dia"
+            [class.is-active]="diaActivo(d.valor)"
+            (click)="toggleDia(d.valor)"
+          >
+            {{ d.etiqueta }}
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="wa-bot__actions">
+      <button type="submit" class="btn wa-bot__save" [disabled]="saving">
+        <i class="fa" [class.fa-spinner]="saving" [class.fa-spin]="saving" [class.fa-check]="!saving"></i>
+        {{ saving ? "Guardando..." : "Guardar bot" }}
+      </button>
+    </div>
+  </form>
+</div>

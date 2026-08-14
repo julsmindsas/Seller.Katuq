@@ -13,6 +13,20 @@ export interface KapsoTemplate {
   status: string;
   bodyText: string;
   variables: number[];
+  /** [fase 2] Título y descripción EN ESPAÑOL para gente no técnica. */
+  titulo?: string;
+  descripcion?: string;
+  /** true = el título es el de emergencia (nombre limpiado), no uno humano guardado. */
+  tituloEsSugerido?: boolean;
+  /** [fase 2] Estado en lenguaje humano ("Aprobada", "En revisión de Meta"...). */
+  estadoHumano?: string;
+  motivoRechazo?: string | null;
+  /**
+   * [fase 2] Para qué es: "sistema" = notificaciones automáticas de Katuq
+   * (pedido creado, despachado...) que NO se ofrecen como mensaje manual;
+   * "marketing" = disponibles para campañas y conversación.
+   */
+  uso?: 'sistema' | 'marketing';
 }
 
 /** Respuesta de GET /v1/whatsapp/balance (prepago por comercio). */
@@ -78,9 +92,35 @@ export class MarketingService extends BaseService {
     return this.get<any[]>('/v1/clients/all');
   }
 
-  /** Plantillas HSM APPROVED del WABA del comercio. */
-  getKapsoTemplates(): Observable<{ items: KapsoTemplate[] }> {
-    return this.get<{ items: KapsoTemplate[] }>('/v1/whatsapp/kapso-templates');
+  /** Plantillas HSM del WABA del comercio (con `all` también las PENDING/REJECTED). */
+  getKapsoTemplates(all = false): Observable<{ items: KapsoTemplate[] }> {
+    return this.get<{ items: KapsoTemplate[] }>(
+      `/v1/whatsapp/kapso-templates${all ? '?all=1' : ''}`,
+    );
+  }
+
+  /**
+   * [fase 2] Constructor de plantillas: el comercio escribe título y texto
+   * (con `{nombre}` como única variable) y el backend la crea en Kapso/Meta
+   * para aprobación. El título queda guardado como nombre humano.
+   */
+  crearPlantilla(payload: {
+    titulo: string;
+    cuerpo: string;
+    descripcion?: string;
+  }): Observable<{ success: boolean; name: string; status: string; estadoHumano: string; message?: string }> {
+    return this.post<any>('/v1/whatsapp/kapso-templates/crear', payload);
+  }
+
+  /**
+   * [fase 2] Pide a KAI títulos y descripciones en español para las
+   * plantillas que aún no tienen uno humano. El backend los persiste;
+   * la respuesta trae { titulos: { <name>: {titulo, descripcion} } }.
+   */
+  sugerirTitulosPlantillas(
+    plantillas: Array<{ name: string; bodyText: string }>,
+  ): Observable<{ titulos: Record<string, { titulo: string; descripcion: string }>; generadosPorKai: boolean }> {
+    return this.post<any>('/v1/whatsapp/kapso-templates/sugerir-titulos', { plantillas });
   }
 
   /** Saldo prepago WhatsApp del comercio. */

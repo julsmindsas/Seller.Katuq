@@ -2,9 +2,10 @@
   <header class="thread-list__header">
     <div class="thread-list__search-row">
       <div class="thread-list__search-wrapper">
+        <i class="fa fa-search" aria-hidden="true"></i>
         <input
           type="search"
-          class="form-control thread-list__search"
+          class="thread-list__search"
           placeholder="Buscar contacto o mensaje"
           [ngModel]="searchQuery"
           (ngModelChange)="onSearchChange($event)"
@@ -25,13 +26,27 @@
       <button
         type="button"
         class="thread-list__chip"
-        [class.is-active]="onlyInbound"
-        (click)="toggleInboundFilter()"
+        [class.is-active]="filtro === 'pendientes'"
+        (click)="setFiltro('pendientes')"
       >
-        <span class="thread-list__chip-check" aria-hidden="true">
-          {{ onlyInbound ? "✓" : "" }}
-        </span>
-        Solo con respuesta entrante
+        Sin responder
+        <span class="thread-list__chip-count" *ngIf="pendientesCount > 0">{{ pendientesCount }}</span>
+      </button>
+      <button
+        type="button"
+        class="thread-list__chip"
+        [class.is-active]="filtro === 'todas'"
+        (click)="setFiltro('todas')"
+      >
+        Todas
+      </button>
+      <button
+        type="button"
+        class="thread-list__chip"
+        [class.is-active]="filtro === 'bot'"
+        (click)="setFiltro('bot')"
+      >
+        Atendidas por el bot
       </button>
     </div>
   </header>
@@ -44,20 +59,20 @@
     Algunas conversaciones tienen mensajes anteriores a 90 días no disponibles.
   </div>
 
-  <div class="thread-list__body list-group list-group-flush">
+  <div class="thread-list__body">
     <div *ngIf="loading" class="thread-list__state">Cargando…</div>
 
     <div
       *ngIf="!loading && visibleThreads.length === 0"
       class="thread-list__state"
     >
-      No hay hilos para este filtro.
+      No hay conversaciones para este filtro.
     </div>
 
     <button
       type="button"
       *ngFor="let thread of visibleThreads; trackBy: trackByHash"
-      class="list-group-item list-group-item-action thread-list__item"
+      class="thread-list__item"
       [class.is-active]="thread.phoneHash === selectedPhoneHash"
       [class.is-unread]="thread.unreadCount > 0"
       (click)="onSelect(thread)"
@@ -86,10 +101,21 @@
         </div>
 
         <div class="thread-list__row-bottom">
-          <span class="thread-list__direction" aria-hidden="true">
-            {{ thread.lastDirection === "outbound" ? "→" : "←" }}
-          </span>
-          <span class="thread-list__snippet">
+          <ng-container *ngIf="tagFor(thread) as tag">
+            <span class="thread-list__tag" [attr.data-kind]="tag.kind">
+              <i
+                class="fa"
+                [ngClass]="{
+                  'fa-magic': tag.kind === 'bot',
+                  'fa-shopping-bag': tag.kind === 'pedido',
+                  'fa-comment': tag.kind === 'cliente'
+                }"
+                aria-hidden="true"
+              ></i>
+              {{ tag.label }}
+            </span>
+          </ng-container>
+          <span class="thread-list__snippet" *ngIf="!tagFor(thread)">
             {{ truncateSnippet(thread.lastMessageSnippet) }}
           </span>
           <span
@@ -98,6 +124,10 @@
           >
             {{ thread.unreadCount }}
           </span>
+        </div>
+
+        <div class="thread-list__row-preview" *ngIf="tagFor(thread) && thread.lastMessageSnippet">
+          <span class="thread-list__snippet">{{ truncateSnippet(thread.lastMessageSnippet) }}</span>
         </div>
       </div>
     </button>

@@ -10,7 +10,16 @@ import { Subject, Subscription, interval } from "rxjs";
 import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
-import { WhatsappThread } from "../../models/whatsapp-thread.model";
+import {
+  BotSesionResumen,
+  WhatsappThread,
+} from "../../models/whatsapp-thread.model";
+
+/** Etiqueta de estado de un hilo en la lista (mockup Marketing y WhatsApp). */
+interface ThreadTag {
+  label: string;
+  kind: "bot" | "pedido" | "cliente";
+}
 
 /**
  * Listado de hilos (columna izquierda del shell).
@@ -36,9 +45,17 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   threads: WhatsappThread[] = [];
   loading = false;
   searchQuery = "";
-  onlyInbound = false;
+  /** Filtro activo de la lista (chips del mockup). */
+  filtro: "pendientes" | "todas" | "bot" = "todas";
   selectedPhoneHash: string | null = null;
   newConversationOpen = false;
+
+  /**
+   * Sesiones del bot por hilo — para pintar la etiqueta "Respondió el
+   * asistente" / "Hizo un pedido" sin tocar el endpoint de hilos.
+   * Best-effort: si falla, la lista se ve como siempre.
+   */
+  private botPorHash = new Map<string, BotSesionResumen>();
 
   /** Stream de búsqueda con debounce para no disparar getThreads por cada tecla. */
   private readonly searchSubject = new Subject<string>();
@@ -53,6 +70,7 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
       .pipe(debounceTime(350), distinctUntilChanged())
       .subscribe(() => this.fetchThreads());
     this.fetchThreads();
+    this.fetchBotSesiones();
     // Polling cada 10s: refresca la lista para que aparezcan badges/preview
     // de hilos con mensajes nuevos sin necesidad de tener ese hilo abierto.
     // Solo se hace si no estás escribiendo en el buscador (para no molestar).
@@ -63,8 +81,43 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
       if (document.hidden) return;
       if ((this.searchQuery || "").trim().length === 0) {
         this.fetchThreadsSilent();
+        this.fetchBotSesiones();
       }
     });
+  }
+
+  /** Refresca el mapa de sesiones del bot (etiquetas de la lista). */
+  private fetchBotSesiones(): void {
+    this.inbox.getBotSesiones().subscribe({
+      next: (sesiones) => {
+        const mapa = new Map<string, BotSesionResumen>();
+        for (const s of sesiones || []) {
+          if (s?.phoneHash) mapa.set(s.phoneHash, s);
+        }
+        this.botPorHash = mapa;
+      },
+      error: () => undefined,
+    });
+  }
+
+  /**
+   * Etiqueta de estado del hilo, en orden de relevancia:
+   *  1. el bot ya cerró un pedido (cotización creada),
+   *  2. el bot está atendiendo,
+   *  3. el cliente escribió y nadie ha respondido.
+   */
+  tagFor(thread: WhatsappThread): ThreadTag | null {
+    const sesion = this.botPorHash.get(thread.phoneHash);
+    if (sesion?.cotizacionCreada?.numero) {
+      return { label: "Hizo un pedido", kind: "pedido" };
+    }
+    if (sesion && sesion.estado === "bot") {
+      return { label: "Respondió el asistente", kind: "bot" };
+    }
+    if (thread.unreadCount > 0) {
+      return { label: "Te escribió", kind: "cliente" };
+    }
+    return null;
   }
 
   ngOnDestroy(): void {
@@ -130,16 +183,24 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
     this.searchSubject.next(value);
   }
 
-  toggleInboundFilter(): void {
-    this.onlyInbound = !this.onlyInbound;
+  setFiltro(filtro: "pendientes" | "todas" | "bot"): void {
+    this.filtro = filtro;
   }
 
-  /** Threads filtrados por el toggle de "solo con respuesta entrante". */
+  /** Hilos sin responder (badge del chip "Sin responder"). */
+  get pendientesCount(): number {
+    return this.threads.filter((t) => t.unreadCount > 0).length;
+  }
+
+  /** Threads filtrados por el chip activo. */
   get visibleThreads(): WhatsappThread[] {
-    if (!this.onlyInbound) {
-      return this.threads;
+    if (this.filtro === "pendientes") {
+      return this.threads.filter((t) => t.unreadCount > 0);
     }
-    return this.threads.filter((t) => t.lastDirection === "inbound");
+    if (this.filtro === "bot") {
+      return this.threads.filter((t) => this.botPorHash.has(t.phoneHash));
+    }
+    return this.threads;
   }
 
   /** True si al menos un hilo tiene el flag de truncamiento por retención. */

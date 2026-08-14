@@ -31,6 +31,13 @@ export class WhatsappInboxShellComponent
   /** Hash del teléfono del hilo seleccionado (deep-link o click en lista). */
   selectedPhoneHash: string | null = null;
 
+  /**
+   * Vista activa del panel izquierdo: los hilos de siempre o los pedidos que
+   * lleva el bot. El detalle de la derecha es el mismo en ambas — cambiar de
+   * pestaña no pierde la conversación abierta.
+   */
+  vista: "conversaciones" | "pedidos" = "conversaciones";
+
   private pageBodyEl: HTMLElement | null = null;
   private pageBodyOriginal: { minHeight: string; height: string } | null = null;
   private footerEl: HTMLElement | null = null;
@@ -100,6 +107,10 @@ export class WhatsappInboxShellComponent
 
   onThreadSelected(phoneHash: string): void {
     this.selectedPhoneHash = phoneHash;
+  }
+
+  setVista(vista: "conversaciones" | "pedidos"): void {
+    this.vista = vista;
   }
 
   /** Mobile: volver al listado cuando el usuario cierra el detalle. */

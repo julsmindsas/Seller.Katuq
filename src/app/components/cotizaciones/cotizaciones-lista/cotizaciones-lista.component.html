@@ -205,6 +205,20 @@
               <div class="num-wrap">
                 <span class="num-dot" [attr.data-estado]="c.estadoCotizacion"></span>
                 <span class="num-text">{{ c.nroCotizacion || "—" }}</span>
+                <span
+                  *ngIf="c.origen === 'whatsapp-bot'"
+                  class="origen-chip origen-chip--bot"
+                  title="Pedido tomado por el bot de WhatsApp"
+                >
+                  <i class="fa fa-whatsapp"></i> Bot
+                </span>
+                <span
+                  *ngIf="c.origen === 'catalogo-digital'"
+                  class="origen-chip"
+                  title="Solicitud desde un catálogo digital"
+                >
+                  Catálogo
+                </span>
               </div>
             </td>
             <td>

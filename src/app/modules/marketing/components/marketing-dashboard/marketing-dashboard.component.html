@@ -1,152 +1,184 @@
-<div class="container-fluid marketing-dashboard">
-  <!-- Encabezado + filtro de fechas -->
-  <div class="row align-items-end mb-3">
-    <div class="col-md-5">
-      <h4 class="mb-0">Dashboard de Marketing</h4>
-      <small class="text-muted">Adquisición, embudo CRM y actividad WhatsApp — datos reales de tu empresa</small>
+<div class="mkt">
+  <!-- Encabezado: título + pills de rango -->
+  <header class="mkt__header">
+    <div>
+      <h1 class="mkt__title">Marketing</h1>
+      <p class="mkt__subtitle">Cómo van tus ventas, tus conversaciones y tus oportunidades — datos reales de tu empresa</p>
     </div>
-    <div class="col-md-7">
-      <div class="d-flex gap-2 justify-content-md-end align-items-end flex-wrap">
-        <div>
-          <label class="form-label mb-1 small">Desde</label>
-          <input type="date" class="form-control form-control-sm" [(ngModel)]="fechaInicio" />
-        </div>
-        <div>
-          <label class="form-label mb-1 small">Hasta</label>
-          <input type="date" class="form-control form-control-sm" [(ngModel)]="fechaFin" />
-        </div>
-        <button class="btn btn-primary btn-sm" (click)="cargarTodo()" [disabled]="loadingCore">
-          <i class="fa fa-refresh me-1"></i>Aplicar
-        </button>
-      </div>
+    <div class="mkt__range">
+      <button
+        type="button"
+        class="mkt__range-pill"
+        *ngFor="let r of [
+          { id: '7d', label: '7 días' },
+          { id: '30d', label: '30 días' },
+          { id: '90d', label: '3 meses' },
+          { id: 'custom', label: 'Otro rango' }
+        ]"
+        [class.is-active]="rango === r.id"
+        (click)="setRango($any(r.id))"
+      >
+        {{ r.label }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Rango manual (solo con "Otro rango") -->
+  <div class="mkt__custom-range" *ngIf="rango === 'custom'">
+    <label>Desde <input type="date" [(ngModel)]="fechaInicio" /></label>
+    <label>Hasta <input type="date" [(ngModel)]="fechaFin" /></label>
+    <button type="button" class="mkt__apply" (click)="cargarTodo()" [disabled]="loadingCore">Aplicar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="mkt__kpis">
+    <div class="mkt__kpi">
+      <div class="mkt__kpi-icon is-accent"><i class="fa fa-usd" aria-hidden="true"></i></div>
+      <ng-container *ngIf="!loadingCore && kpis && !errorCore; else kpiEmpty">
+        <span class="mkt__kpi-label">Ventas del período</span>
+        <span class="mkt__kpi-value">{{ kpis.ventasTotales | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="mkt__kpi-delta" [class.is-down]="kpis.crecimientoVentas < 0" [class.is-up]="kpis.crecimientoVentas >= 0">
+          <i class="fa" [ngClass]="kpis.crecimientoVentas >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'" aria-hidden="true"></i>
+          {{ (kpis.crecimientoVentas >= 0 ? kpis.crecimientoVentas : -kpis.crecimientoVentas) }}%
+          {{ kpis.crecimientoVentas >= 0 ? 'más' : 'menos' }}
+          <em>que el período anterior</em>
+        </span>
+      </ng-container>
+    </div>
+
+    <div class="mkt__kpi">
+      <div class="mkt__kpi-icon is-green"><i class="fa fa-shopping-bag" aria-hidden="true"></i></div>
+      <ng-container *ngIf="!loadingCore && kpis && !errorCore; else kpiEmpty">
+        <span class="mkt__kpi-label">Pedidos</span>
+        <span class="mkt__kpi-value">{{ kpis.totalPedidos }}</span>
+        <span class="mkt__kpi-hint">{{ kpis.pedidosAprobados }} aprobados · {{ kpis.tasaConversion }}%</span>
+      </ng-container>
+    </div>
+
+    <div class="mkt__kpi">
+      <div class="mkt__kpi-icon is-orange"><i class="fa fa-line-chart" aria-hidden="true"></i></div>
+      <ng-container *ngIf="!loadingCore && kpis && !errorCore; else kpiEmpty">
+        <span class="mkt__kpi-label">Ticket promedio</span>
+        <span class="mkt__kpi-value">{{ kpis.ticketPromedio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="mkt__kpi-hint">lo que gasta cada cliente</span>
+      </ng-container>
     </div>
   </div>
 
-  <!-- KPIs ventas/pedidos -->
-  <div class="row g-3 mb-3">
-    <div class="col-6 col-lg-3">
-      <div class="stat-card accent-primary">
-        <ng-container *ngIf="!loadingCore; else miniLoading">
-          <ng-container *ngIf="kpis && !errorCore; else noData">
-            <span class="stat-label">Ventas del período</span>
-            <span class="stat-value">{{ kpis.ventasTotales | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
-            <span class="stat-sub" [class.text-success]="kpis.crecimientoVentas >= 0" [class.text-danger]="kpis.crecimientoVentas < 0">
-              {{ kpis.crecimientoVentas >= 0 ? '▲' : '▼' }} {{ kpis.crecimientoVentas }}% vs período anterior
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+  <!-- Tarjeta de acción WhatsApp -->
+  <div class="mkt__wa-card" *ngIf="!errorWa">
+    <div class="mkt__wa-icon"><i class="fa fa-whatsapp" aria-hidden="true"></i></div>
+    <div class="mkt__wa-text">
+      <strong *ngIf="waSinResponder > 0">
+        {{ waSinResponder }} cliente{{ waSinResponder === 1 ? '' : 's' }} espera{{ waSinResponder === 1 ? '' : 'n' }} tu respuesta en WhatsApp
+      </strong>
+      <strong *ngIf="waSinResponder === 0">Estás al día con tus conversaciones de WhatsApp</strong>
+      <span>{{ waTotal }} conversaciones en total en tu buzón</span>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="stat-card accent-info">
-        <ng-container *ngIf="!loadingCore; else miniLoading">
-          <ng-container *ngIf="kpis && !errorCore; else noData">
-            <span class="stat-label">Pedidos</span>
-            <span class="stat-value">{{ kpis.totalPedidos }}</span>
-            <span class="stat-sub">{{ kpis.pedidosAprobados }} aprobados ({{ kpis.tasaConversion }}%)</span>
-          </ng-container>
-        </ng-container>
-      </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="stat-card accent-success">
-        <ng-container *ngIf="!loadingCore; else miniLoading">
-          <ng-container *ngIf="kpis && !errorCore; else noData">
-            <span class="stat-label">Ticket promedio</span>
-            <span class="stat-value">{{ kpis.ticketPromedio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
-            <span class="stat-sub">sobre pedidos con venta</span>
-          </ng-container>
-        </ng-container>
-      </div>
-    </div>
-    <div class="col-6 col-lg-3">
-      <div class="stat-card accent-warning">
-        <ng-container *ngIf="!loadingWa; else miniLoading">
-          <ng-container *ngIf="!errorWa; else noData">
-            <span class="stat-label">WhatsApp</span>
-            <span class="stat-value">{{ waTotal }}</span>
-            <span class="stat-sub">
-              conversaciones · <strong>{{ waSinResponder }}</strong> recientes sin responder
-              <a routerLink="/notificaciones/whatsapp/inbox" class="ms-1">ver inbox</a>
-              · <a routerLink="/marketing/campanas/whatsapp" class="fw-bold">nueva campaña</a>
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+    <div class="mkt__wa-actions">
+      <a class="mkt__wa-btn" routerLink="/notificaciones/whatsapp/inbox">Responder ahora</a>
+      <a class="mkt__wa-btn is-ghost" routerLink="/marketing/campanas/whatsapp">Enviar una campaña</a>
     </div>
   </div>
 
-  <div class="row g-3">
+  <div class="mkt__grid">
     <!-- Ventas por día -->
-    <div class="col-lg-8">
-      <div class="panel-card">
-        <div class="panel-title">Ventas por día</div>
-        <div *ngIf="loadingCore" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
-        <div *ngIf="!loadingCore && errorCore" class="panel-empty">No disponible</div>
-        <div *ngIf="!loadingCore && !errorCore && !ventasChartOptions" class="panel-empty">Sin ventas en el período</div>
-        <div *ngIf="!loadingCore && ventasChartOptions" echarts [options]="ventasChartOptions" class="ventas-chart"></div>
-      </div>
-    </div>
+    <section class="mkt__card is-wide">
+      <h2 class="mkt__card-title">Ventas por día</h2>
+      <div *ngIf="loadingCore" class="mkt__state"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
+      <div *ngIf="!loadingCore && errorCore" class="mkt__state">No disponible</div>
+      <div *ngIf="!loadingCore && !errorCore && !ventasChartOptions" class="mkt__state">Sin ventas en el período</div>
+      <div *ngIf="!loadingCore && ventasChartOptions" echarts [options]="ventasChartOptions" class="mkt__chart"></div>
+    </section>
 
-    <!-- Ventas por canal -->
-    <div class="col-lg-4">
-      <div class="panel-card">
-        <div class="panel-title">Ventas por canal</div>
-        <div *ngIf="loadingCore" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
-        <div *ngIf="!loadingCore && (errorCore || canales.length === 0)" class="panel-empty">Sin datos de canal en el período</div>
-        <table *ngIf="!loadingCore && canales.length > 0" class="table table-sm mb-0 canales-table">
-          <thead>
-            <tr><th>Canal</th><th class="text-end">Ventas</th><th class="text-end">Pedidos</th></tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let c of canales">
-              <td>{{ c.canal }}</td>
-              <td class="text-end">{{ c.ventas | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
-              <td class="text-end">{{ c.pedidos }}</td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- De dónde vienen tus ventas -->
+    <section class="mkt__card">
+      <h2 class="mkt__card-title">De dónde vienen tus ventas</h2>
+      <div *ngIf="loadingCore" class="mkt__state"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
+      <div *ngIf="!loadingCore && (errorCore || canales.length === 0)" class="mkt__state">Sin datos de canal en el período</div>
+      <div class="mkt__canales" *ngIf="!loadingCore && canales.length > 0">
+        <div class="mkt__canal" *ngFor="let c of canales; let i = index">
+          <div class="mkt__canal-top">
+            <span class="mkt__canal-name">{{ c.canal }}</span>
+            <span class="mkt__canal-value">{{ c.ventas | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+          </div>
+          <div class="mkt__canal-track">
+            <div class="mkt__canal-bar" [style.width.%]="canalesPct[i]" [class.is-alt]="i > 0"></div>
+          </div>
+          <span class="mkt__canal-meta">{{ c.pedidos }} pedido{{ c.pedidos === 1 ? '' : 's' }} · ticket {{ c.ticketPromedio | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        </div>
       </div>
-    </div>
+    </section>
 
     <!-- Embudo CRM -->
-    <div class="col-lg-8">
-      <div class="panel-card">
-        <div class="panel-title">
-          Embudo CRM
-          <a routerLink="/crm" class="small ms-2">ir al CRM</a>
-        </div>
-        <div *ngIf="loadingCrm" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
-        <div *ngIf="!loadingCrm && (errorCrm || funnel.length === 0)" class="panel-empty">Sin leads en el CRM todavía</div>
-        <div *ngIf="!loadingCrm && funnel.length > 0" class="funnel">
-          <div class="funnel-row" *ngFor="let f of funnel">
-            <span class="funnel-label" [class.fw-bold]="f.isWon">{{ f.label }}</span>
-            <div class="funnel-bar-track">
-              <div class="funnel-bar" [style.width.%]="f.pct" [style.background]="f.color || null" [class.is-won]="f.isWon"></div>
-            </div>
-            <span class="funnel-count">{{ f.count }}</span>
+    <section class="mkt__card is-wide">
+      <div class="mkt__card-head">
+        <h2 class="mkt__card-title">Cómo avanzan tus oportunidades</h2>
+        <a routerLink="/katuq-flow/leads" class="mkt__card-link">Ir al CRM →</a>
+      </div>
+      <div *ngIf="loadingCrm" class="mkt__state"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
+      <div *ngIf="!loadingCrm && (errorCrm || funnel.length === 0)" class="mkt__state">Sin leads en el CRM todavía</div>
+      <div class="mkt__funnel" *ngIf="!loadingCrm && funnel.length > 0">
+        <div class="mkt__funnel-row" *ngFor="let f of funnel" [class.is-empty]="f.count === 0">
+          <span class="mkt__funnel-label" [class.is-won]="f.isWon">{{ f.label }}</span>
+          <div class="mkt__funnel-track">
+            <div
+              class="mkt__funnel-bar"
+              [style.width.%]="f.pct"
+              [style.background]="f.count > 0 ? f.color || null : null"
+              [class.is-won]="f.isWon"
+            ></div>
           </div>
+          <span class="mkt__funnel-count">{{ f.count }}</span>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Resumen CRM -->
-    <div class="col-lg-4">
-      <div class="panel-card">
-        <div class="panel-title">Gestión comercial</div>
-        <div *ngIf="loadingCrm" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
-        <div *ngIf="!loadingCrm && !crmStats" class="panel-empty">No disponible</div>
-        <ul *ngIf="!loadingCrm && crmStats" class="crm-summary list-unstyled mb-0">
-          <li><span>Leads totales</span><strong>{{ crmStats.total }}</strong></li>
-          <li *ngIf="crmStats.nuevos30d != null"><span>Nuevos (30 días)</span><strong>{{ crmStats.nuevos30d }}</strong></li>
-          <li><span>Valor del pipeline</span><strong>{{ crmStats.totalValue | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong></li>
-          <li><span>Tareas pendientes</span><strong>{{ crmStats.tasksPending }}</strong></li>
-          <li><span>Tareas vencidas</span><strong [class.text-danger]="crmStats.tasksOverdue > 0">{{ crmStats.tasksOverdue }}</strong></li>
-        </ul>
+    <!-- Tu cartera comercial -->
+    <section class="mkt__card">
+      <h2 class="mkt__card-title">Tu cartera comercial</h2>
+      <div *ngIf="loadingCrm" class="mkt__state"><i class="fa fa-spinner fa-spin"></i> Cargando…</div>
+      <div *ngIf="!loadingCrm && !crmStats" class="mkt__state">No disponible</div>
+      <div class="mkt__cartera" *ngIf="!loadingCrm && crmStats">
+        <div class="mkt__cartera-row">
+          <div class="mkt__cartera-info">
+            <span class="mkt__cartera-label">Leads totales</span>
+            <span class="mkt__cartera-hint">personas interesadas</span>
+          </div>
+          <strong class="mkt__cartera-value">{{ crmStats.total }}</strong>
+        </div>
+        <div class="mkt__cartera-row" *ngIf="crmStats.nuevos30d != null">
+          <div class="mkt__cartera-info">
+            <span class="mkt__cartera-label">Nuevos este mes</span>
+            <span class="mkt__cartera-hint">llegaron en 30 días</span>
+          </div>
+          <strong class="mkt__cartera-value">{{ crmStats.nuevos30d }}</strong>
+        </div>
+        <div class="mkt__cartera-row is-big">
+          <div class="mkt__cartera-info">
+            <span class="mkt__cartera-label">Valor del pipeline</span>
+            <span class="mkt__cartera-hint">si cierras todo lo abierto</span>
+          </div>
+          <strong class="mkt__cartera-value is-accent">{{ crmStats.totalValue | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</strong>
+        </div>
+        <div class="mkt__cartera-row">
+          <div class="mkt__cartera-info">
+            <span class="mkt__cartera-label">Tareas pendientes</span>
+          </div>
+          <strong class="mkt__cartera-value">{{ crmStats.tasksPending }}</strong>
+        </div>
+        <div class="mkt__cartera-row">
+          <div class="mkt__cartera-info">
+            <span class="mkt__cartera-label">Tareas vencidas</span>
+          </div>
+          <strong class="mkt__cartera-value" [class.is-danger]="crmStats.tasksOverdue > 0">{{ crmStats.tasksOverdue }}</strong>
+        </div>
       </div>
-    </div>
+    </section>
   </div>
 
-  <ng-template #miniLoading><span class="stat-label"><i class="fa fa-spinner fa-spin"></i> Cargando…</span></ng-template>
-  <ng-template #noData><span class="stat-label">No disponible</span></ng-template>
+  <ng-template #kpiEmpty>
+    <span class="mkt__kpi-label" *ngIf="loadingCore"><i class="fa fa-spinner fa-spin"></i> Cargando…</span>
+    <span class="mkt__kpi-label" *ngIf="!loadingCore">No disponible</span>
+  </ng-template>
 </div>

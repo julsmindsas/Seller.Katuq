@@ -237,8 +237,11 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
 - **Módulos con SRP**: evitar componentes monolíticos; separar en módulos pequeños con responsabilidad única.
 - **Servicios Angular para HTTP**: nunca `HttpClient` directo en componentes — el interceptor agrega auth headers.
 - **Strategy Pattern en backend** para integraciones (providers + managers).
-- **KAI (Genkit)** para IA, no llamadas directas a Gemini API. Flujos en `kai/functions/src/agents/`.
-- **ADK** para agentes multi-departamento con AG-UI protocol. No mezclar ADK con Genkit.
+- **Nunca llamadas directas a la API de Gemini.** Toda IA pasa por KAI. Dos motores, y el criterio de reparto es **conversación**:
+  - **ADK** (`kai/adk_agent/`, Python) — **todo agente conversacional y todo canal de chat**: Telegram, WhatsApp, video/voz, multi-departamento. Ahí ya viven el `Runner`, el `FirestoreSessionService` (memoria por empresa), el puente MCP a las herramientas de `functions/tools/` y las herramientas de escritura con confirmación humana. **Un canal nuevo es un adaptador de transporte en `channels/<canal>/`, no un cerebro nuevo** — ver `channels/telegram/` como molde.
+  - **Genkit** (`kai/functions/src/agents/`) — flujos puntuales sin conversación: mapeo de columnas al importar, análisis de inventario, generación one-shot.
+  - No mezclar los dos en un mismo caso de uso.
+- **Dónde corre cada uno en producción** (se confunde fácil y ya costó una decisión mal tomada): Genkit es el proceso `index` de **PM2 del daemon root** (`sudo pm2 restart index`), puerto 3890. **ADK corre por systemd, NO por PM2** (`sudo systemctl restart kai-adk`), puerto 8080, expuesto como `back.katuq.com/adk`. Revisar solo `pm2 list` da la falsa impresión de que ADK no está desplegado.
 - **Firestore transactions** para operaciones de inventario — evitar race conditions.
 - **Multi-tenancy**: todas las queries filtradas por `companyId`.
 - `formaEntrega` en despachos SIEMPRE de `carrito[0].configuracion.datosEntrega.formaEntrega`.

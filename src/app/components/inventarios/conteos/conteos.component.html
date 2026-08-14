@@ -1,0 +1,188 @@
+<div class="cnt-pagina">
+
+  <nav class="atajos-modulos" aria-label="Otros módulos de inventario">
+    <a routerLink="/inventario/inventario-catalogo"><i class="pi pi-database"></i> Inventario por bodega</a>
+    <a routerLink="/inventario/indicadores"><i class="pi pi-chart-line"></i> Indicadores</a>
+    <a routerLink="/inventario/ubicaciones"><i class="pi pi-map"></i> Mapa de la bodega</a>
+    <a routerLink="/inventario/conteos"><i class="pi pi-check-square"></i> Conteos</a>
+  </nav>
+
+
+  <header class="cnt-encabezado">
+    <div class="cnt-titulo">
+      <span class="cnt-icono"><i class="pi pi-check-square"></i></span>
+      <div>
+        <h1>Conteos de inventario</h1>
+        <p>Contar un pedazo cada día, sin cerrar la bodega. Contar deja constancia; ajustar es un paso aparte.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="cnt-aviso cnt-aviso--error" *ngIf="error">
+    <i class="pi pi-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <!-- ============ ARMAR EL CONTEO DEL DÍA ============ -->
+  <section class="cnt-tarjeta" *ngIf="!sesion">
+    <h2>Armar el conteo de hoy</h2>
+
+    <div class="cnt-form">
+      <label>
+        <span>Bodega</span>
+        <select [(ngModel)]="bodegaSeleccionada" (change)="cargarSesiones()">
+          <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+            {{ bodega.nombre || bodega.idBodega }}
+          </option>
+        </select>
+      </label>
+
+      <label>
+        <span>Cuántos productos</span>
+        <input type="number" [(ngModel)]="tamano" min="1" max="500" />
+      </label>
+    </div>
+
+    <div class="cnt-criterios">
+      <button class="cnt-criterio" *ngFor="let opcion of criterios"
+              [class.activo]="criterio === opcion.valor" (click)="criterio = opcion.valor">
+        <strong>{{ opcion.label }}</strong>
+        <span>{{ opcion.ayuda }}</span>
+      </button>
+    </div>
+
+    <button class="cnt-boton" (click)="armarConteo()" [disabled]="guardando">
+      <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-list'"></i>
+      Armar conteo de {{ tamano }} productos
+    </button>
+  </section>
+
+  <!-- ============ HISTORIAL ============ -->
+  <section class="cnt-tarjeta" *ngIf="!sesion">
+    <h2>Conteos recientes</h2>
+
+    <div class="cnt-vacio" *ngIf="sesiones.length === 0 && !cargando">
+      Todavía no se ha contado nada en esta bodega.
+    </div>
+
+    <div class="cnt-tabla-marco" *ngIf="sesiones.length > 0">
+      <table class="cnt-tabla">
+        <thead>
+          <tr>
+            <th>Bodega</th>
+            <th>Criterio</th>
+            <th class="num">Productos</th>
+            <th class="num">Exactitud</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of sesiones">
+            <td>{{ nombreBodega(s.idBodega) }}</td>
+            <td>{{ etiquetaCriterio(s.criterio) }}</td>
+            <td class="num">{{ s.resumen?.lineas || 0 }}</td>
+            <td class="num">{{ textoExactitud(s.resumen?.exactitud) }}</td>
+            <td><span class="cnt-chip" [ngClass]="'estado-' + s.estado">{{ s.estado }}</span></td>
+            <td class="num">
+              <button class="cnt-accion" (click)="abrirSesion(s.id)">Abrir</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ DETALLE DEL CONTEO ============ -->
+  <ng-container *ngIf="sesion as s">
+    <section class="cnt-tarjeta">
+      <header class="cnt-detalle-cabeza">
+        <div>
+          <h2>{{ nombreBodega(s.idBodega) }}</h2>
+          <span class="cnt-sub">{{ etiquetaCriterio(s.criterio) }} · {{ s.resumen.lineas }} productos</span>
+        </div>
+        <button class="cnt-boton cnt-boton--suave" (click)="cerrarDetalle()">Volver</button>
+      </header>
+
+      <div class="cnt-marcadores">
+        <div class="cnt-marcador">
+          <span class="cnt-etiqueta">Exactitud</span>
+          <strong>{{ textoExactitud(s.resumen.exactitud) }}</strong>
+          <span class="cnt-pie">{{ s.resumen.exactas }} de {{ s.resumen.contadas }} coinciden</span>
+        </div>
+        <div class="cnt-marcador">
+          <span class="cnt-etiqueta">Sin contar</span>
+          <strong>{{ s.resumen.sinContar }}</strong>
+          <span class="cnt-pie">Faltan por revisar</span>
+        </div>
+        <div class="cnt-marcador" [class.cnt-marcador--alerta]="s.resumen.unidadesFaltan > 0">
+          <span class="cnt-etiqueta">Faltan</span>
+          <strong>{{ s.resumen.unidadesFaltan }}</strong>
+          <span class="cnt-pie">unidades menos de lo esperado</span>
+        </div>
+        <div class="cnt-marcador" [class.cnt-marcador--alerta]="s.resumen.unidadesSobran > 0">
+          <span class="cnt-etiqueta">Sobran</span>
+          <strong>{{ s.resumen.unidadesSobran }}</strong>
+          <span class="cnt-pie">unidades más de lo esperado</span>
+        </div>
+      </div>
+
+      <div class="cnt-tabla-marco">
+        <table class="cnt-tabla">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Ubicación</th>
+              <th class="num">Sistema dice</th>
+              <th class="num">Contado</th>
+              <th class="num">Diferencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let linea of s.lineas" [ngClass]="claseLinea(linea)">
+              <td>
+                <span class="cnt-referencia">{{ linea.referencia || linea.productoId }}</span>
+              </td>
+              <td>
+                <span class="cnt-ubicacion" *ngIf="linea.ubicacion">{{ linea.ubicacion }}</span>
+                <span class="cnt-sin-ubicacion" *ngIf="!linea.ubicacion">Sin ubicar</span>
+              </td>
+              <td class="num">{{ linea.esperado | number }}</td>
+              <td class="num">
+                <input class="cnt-input" type="number" min="0" [(ngModel)]="linea.contado"
+                       [disabled]="s.estado === 'aplicada' || s.estado === 'cancelada'"
+                       placeholder="—" />
+              </td>
+              <td class="num">
+                <span class="cnt-dif" *ngIf="diferenciaEnVivo(linea) !== null"
+                      [ngClass]="claseLinea(linea)">
+                  {{ diferenciaEnVivo(linea)! > 0 ? '+' : '' }}{{ diferenciaEnVivo(linea) }}
+                </span>
+                <span class="cnt-pendiente" *ngIf="diferenciaEnVivo(linea) === null">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cnt-acciones" *ngIf="s.estado !== 'aplicada' && s.estado !== 'cancelada'">
+        <button class="cnt-boton" (click)="guardarConteo()" [disabled]="guardando">
+          <i class="pi pi-save"></i> Guardar lo contado
+        </button>
+        <button class="cnt-boton cnt-boton--fuerte" (click)="aplicarDiferencias()"
+                [disabled]="guardando || (s.ajustesPropuestos || []).length === 0">
+          <i class="pi pi-sliders-h"></i>
+          Ajustar {{ (s.ajustesPropuestos || []).length }} diferencias
+        </button>
+        <button class="cnt-boton cnt-boton--suave" (click)="cancelarConteo()" [disabled]="guardando">
+          Descartar
+        </button>
+      </div>
+
+      <p class="cnt-nota">
+        Guardar deja la constancia de lo que había; ajustar mueve el inventario. Son dos pasos
+        a propósito: contar y ajustar de un solo golpe es como se tapan los faltantes.
+      </p>
+    </section>
+  </ng-container>
+
+</div>

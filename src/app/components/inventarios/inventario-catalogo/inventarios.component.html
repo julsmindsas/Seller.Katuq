@@ -1639,26 +1639,22 @@
     [(visible)]="cutoffDialogVisible"
     header="Inventario por fecha de corte"
     [modal]="true"
+    styleClass="inv-dialog corte-dialog"
     [style]="{width: '96vw', maxWidth: '1180px'}"
     [contentStyle]="{maxHeight: '72vh', overflow: 'auto'}">
 
-    <div class="alert alert-info py-2">
-        <i class="pi pi-info-circle me-2"></i>
-        Esta consulta no cambia existencias. Si la historia tiene huecos, se lo dice claramente y no presenta la cifra como exacta.
-    </div>
-
-    <div class="row g-3 align-items-end mb-3">
-        <div class="col-12 col-md-4">
-            <label class="form-label fw-semibold">Fecha de corte</label>
+    <div class="corte-controles">
+        <div class="corte-campo">
+            <label class="corte-label">Fecha de corte</label>
             <input type="date"
                    class="form-control"
                    [(ngModel)]="fechaCorteInventario"
                    [max]="maxFechaCorteInventario"
                    [disabled]="cutoffLoading">
-            <small class="text-muted">La fecha se toma al terminar el día en hora de Colombia.</small>
+            <small class="corte-hint">Se toma al terminar el día, hora de Colombia.</small>
         </div>
-        <div class="col-12 col-md-4">
-            <label class="form-label fw-semibold">Qué confianza mostrar</label>
+        <div class="corte-campo">
+            <label class="corte-label">Qué confianza mostrar</label>
             <p-dropdown
                 [options]="cutoffStatusOptions"
                 [(ngModel)]="cutoffStatusFilter"
@@ -1669,7 +1665,7 @@
                 [disabled]="cutoffLoading">
             </p-dropdown>
         </div>
-        <div class="col-12 col-md-4 d-flex gap-2">
+        <div class="corte-campo corte-botones">
             <button pButton type="button"
                     icon="pi pi-search"
                     label="Consultar"
@@ -1688,7 +1684,12 @@
         </div>
     </div>
 
-    <div *ngIf="filtrosConsolidados.bodegaId || filtrosConsolidados.busqueda" class="small text-muted mb-3">
+    <p class="corte-nota">
+        <i class="pi pi-lock"></i>
+        Consulta de solo lectura: no cambia existencias. Si la historia tiene huecos, se dicen claramente y la cifra no se presenta como exacta.
+    </p>
+
+    <div *ngIf="filtrosConsolidados.bodegaId || filtrosConsolidados.busqueda" class="corte-hint mb-3">
         Se respetan los filtros actuales:
         <span *ngIf="filtrosConsolidados.bodegaId">bodega {{ getNombreBodegaById(filtrosConsolidados.bodegaId) }}</span>
         <span *ngIf="filtrosConsolidados.bodegaId && filtrosConsolidados.busqueda"> · </span>
@@ -1696,70 +1697,81 @@
     </div>
 
     <ng-container *ngIf="cutoffReport as report">
-        <div class="alert py-2" [ngClass]="report.certified ? 'alert-success' : 'alert-warning'">
-            <strong>{{ report.certified ? 'Corte certificado.' : 'Corte informativo, todavía no certificado.' }}</strong>
-            <span *ngIf="!report.certified">
-                No lo use como cifra contable hasta cerrar la foto base y los huecos indicados.
+        <div class="corte-banner" [ngClass]="report.certified ? 'is-cert' : 'is-warn'">
+            <i class="pi" [ngClass]="report.certified ? 'pi-verified' : 'pi-exclamation-triangle'"></i>
+            <div>
+                <strong>{{ report.certified ? 'Corte certificado.' : 'Corte informativo, todavía no certificado.' }}</strong>
+                <span *ngIf="!report.certified">
+                    No lo use como cifra contable hasta cerrar la foto base y los huecos indicados.
+                </span>
+            </div>
+        </div>
+
+        <div class="corte-stats">
+            <div class="corte-stat is-cert">
+                <span class="corte-stat-label">Certificadas</span>
+                <span class="corte-stat-valor">{{ report.statusCounts.certified | number }}</span>
+            </div>
+            <div class="corte-stat is-amb">
+                <span class="corte-stat-label">Ambiguas</span>
+                <span class="corte-stat-valor">{{ report.statusCounts.ambiguous | number }}</span>
+            </div>
+            <div class="corte-stat is-inc">
+                <span class="corte-stat-label">Incompletas</span>
+                <span class="corte-stat-valor">{{ report.statusCounts.incomplete | number }}</span>
+            </div>
+        </div>
+
+        <p *ngIf="cutoffCausaComun as causaComun" class="corte-causa-comun">
+            <i class="pi pi-info-circle"></i>
+            <span>
+                {{ causaComun.cuenta === causaComun.total ? 'Todas las filas de esta página comparten la misma novedad' : causaComun.cuenta + ' de ' + causaComun.total + ' filas comparten la misma novedad' }}:
+                <strong>{{ causaComun.texto }}</strong>.
+                <ng-container *ngIf="causaComun.hayDistintas"> Abajo solo se señalan las filas que se apartan.</ng-container>
             </span>
+        </p>
+
+        <div class="corte-tabla">
+            <p-table [value]="report.rows" [loading]="cutoffLoading" responsiveLayout="scroll">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Referencia</th>
+                        <th>Producto</th>
+                        <th>Bodega</th>
+                        <th class="text-end">Cantidad al corte</th>
+                        <th>Confianza</th>
+                        <th *ngIf="!cutoffCausaComun || cutoffCausaComun.hayDistintas">{{ cutoffCausaComun ? 'Novedad distinta' : 'Explicación' }}</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-row let-i="rowIndex">
+                    <tr>
+                        <td class="corte-ref">{{ row.referencia || row.productId || 'Sin identificar' }}</td>
+                        <td>{{ row.nombre || 'Producto sin nombre disponible' }}</td>
+                        <td>{{ row.bodegaNombre || row.idBodega || 'Sin bodega' }}</td>
+                        <td class="text-end corte-cantidad">
+                            <span *ngIf="row.quantityAtCutoff !== null; else sinCantidadCorte">{{ row.quantityAtCutoff | number }}</span>
+                            <ng-template #sinCantidadCorte>—</ng-template>
+                        </td>
+                        <td>
+                            <span class="corte-chip" [ngClass]="claseEstadoCorte(row.status)">
+                                {{ etiquetaEstadoCorte(row.status) }}
+                            </span>
+                        </td>
+                        <td *ngIf="!cutoffCausaComun || cutoffCausaComun.hayDistintas" class="corte-explicacion">
+                            {{ cutoffNovedadesFila[i] || (cutoffCausaComun ? '—' : 'Sin novedades') }}
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                    <tr><td colspan="6" class="text-center corte-hint py-4">No hay filas para esos filtros.</td></tr>
+                </ng-template>
+            </p-table>
         </div>
 
-        <div class="row g-2 mb-3">
-            <div class="col-4">
-                <div class="border-start border-success border-4 rounded p-2 bg-light">
-                    <small>Certificadas</small>
-                    <div class="fs-5 fw-bold">{{ report.statusCounts.certified | number }}</div>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="border-start border-warning border-4 rounded p-2 bg-light">
-                    <small>Ambiguas</small>
-                    <div class="fs-5 fw-bold">{{ report.statusCounts.ambiguous | number }}</div>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="border-start border-secondary border-4 rounded p-2 bg-light">
-                    <small>Incompletas</small>
-                    <div class="fs-5 fw-bold">{{ report.statusCounts.incomplete | number }}</div>
-                </div>
-            </div>
-        </div>
-
-        <p-table [value]="report.rows" [loading]="cutoffLoading" responsiveLayout="scroll">
-            <ng-template pTemplate="header">
-                <tr>
-                    <th>Referencia</th>
-                    <th>Producto</th>
-                    <th>Bodega</th>
-                    <th class="text-end">Cantidad al corte</th>
-                    <th>Confianza</th>
-                    <th>Explicación</th>
-                </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-row>
-                <tr>
-                    <td>{{ row.referencia || row.productId || 'Sin identificar' }}</td>
-                    <td>{{ row.nombre || 'Producto sin nombre disponible' }}</td>
-                    <td>{{ row.bodegaNombre || row.idBodega || 'Sin bodega' }}</td>
-                    <td class="text-end fw-semibold">
-                        <span *ngIf="row.quantityAtCutoff !== null; else sinCantidadCorte">{{ row.quantityAtCutoff | number }}</span>
-                        <ng-template #sinCantidadCorte>—</ng-template>
-                    </td>
-                    <td>
-                        <span class="badge" [ngClass]="claseEstadoCorte(row.status)">
-                            {{ etiquetaEstadoCorte(row.status) }}
-                        </span>
-                    </td>
-                    <td class="small">{{ causasCorteEnTexto(row.causes) || 'Sin novedades' }}</td>
-                </tr>
-            </ng-template>
-            <ng-template pTemplate="emptymessage">
-                <tr><td colspan="6" class="text-center text-muted py-4">No hay filas para esos filtros.</td></tr>
-            </ng-template>
-        </p-table>
-
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <small class="text-muted">
-                Página {{ cutoffPageIndex + 1 }} · {{ report.pagination.total | number }} fila(s)
+        <div class="corte-paginacion">
+            <small class="corte-hint">
+                Página {{ cutoffPageIndex + 1 }} de {{ cutoffTotalPages }}
+                · {{ report.pagination.total | number }} fila(s)
             </small>
             <div class="d-flex gap-2">
                 <button pButton type="button" label="Anterior" icon="pi pi-chevron-left"

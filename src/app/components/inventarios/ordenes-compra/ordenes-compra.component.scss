@@ -1,0 +1,328 @@
+// Órdenes de compra — canon "Todos los pedidos".
+//
+// Los tokens y los patrones compartidos con el resto de Compras viven en el
+// parcial del módulo. La pantalla está bajo `inventarios/` por la ruta histórica
+// —moverla rompería permisos ya dados— pero pertenece a Compras, y se ve así.
+@import '../../compras/compras-theme';
+
+.kc-atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 20px;
+    background: $kc-chip-bg;
+    border: 1px solid $kc-chip-border;
+    color: #5b5878;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .15s ease, color .15s ease;
+
+    &:hover { background: $kc-accent-soft; color: $kc-accent; }
+    &.is-active { background: $kc-accent; border-color: $kc-accent; color: #fff; }
+  }
+}
+
+.kc-head__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.kc-row { cursor: pointer; }
+
+.oc-titulo-panel {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.oc-conteo {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  color: $kc-accent;
+  background: $kc-accent-soft;
+  border-radius: 20px;
+  padding: 2px 9px;
+}
+
+.oc-plata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 120px;
+}
+
+// ---------- detalle ----------
+
+.oc-detalle-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid $kc-line;
+
+  h2 { font-size: 17px; font-weight: 800; margin: 0; }
+}
+
+.oc-detalle-quien {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.oc-sub { color: $kc-muted; font-size: 11.5px; }
+
+.oc-detalle-acciones { display: flex; align-items: center; gap: 10px; }
+
+// ---------- formulario de orden nueva ----------
+
+.oc-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    > span {
+      text-transform: uppercase;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      color: $kc-muted;
+    }
+
+    input, select {
+      height: 40px;
+      background: $kc-chip-bg;
+      border: 1px solid $kc-chip-border;
+      border-radius: 10px;
+      padding: 0 12px;
+      color: $kc-ink;
+      font-size: 12.5px;
+
+      &:focus { outline: none; border-color: $kc-accent-2; background: #fff; }
+    }
+  }
+
+  .ancho { grid-column: 1 / -1; }
+}
+
+.oc-buscador {
+  position: relative;
+  margin-bottom: 14px;
+
+  input {
+    width: 100%;
+    height: 42px;
+    background: $kc-chip-bg;
+    border: 1px solid $kc-chip-border;
+    border-radius: 11px;
+    padding: 0 14px;
+    color: $kc-ink;
+    font-size: 12.5px;
+
+    &:focus { outline: none; border-color: $kc-accent-2; background: #fff; }
+  }
+}
+
+.oc-resultados {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 6px;
+  border: 1px solid $kc-line;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: $kc-shadow-hover;
+  max-height: 260px;
+  overflow-y: auto;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+
+    &:hover { background: $kc-hover; }
+
+    strong { font-size: 12.5px; font-weight: 700; }
+    span { font-size: 11px; color: $kc-muted; }
+  }
+}
+
+.oc-buscando { font-size: 11.5px; color: $kc-muted; }
+
+// ---------- líneas y totales ----------
+
+.oc-referencia { display: block; font-weight: 700; font-size: 12.5px; }
+.oc-desc { display: block; font-size: 11px; color: $kc-muted; }
+
+.kc-input--corto { max-width: 68px; }
+
+.oc-quitar {
+  border: 0;
+  background: transparent;
+  color: $kc-danger;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+
+  &:hover { background: $kc-danger-bg; }
+}
+
+.oc-falta { color: $kc-warn; font-weight: 700; }
+.oc-completo { color: $kc-ok; font-weight: 700; }
+
+// Recibir o facturar de más no puede pasar en silencio.
+.oc-exceso {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: $kc-danger-bg;
+  color: $kc-danger;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+// El historial de precios se consulta desde la línea, que es donde alguien se
+// pregunta si le están cobrando bien.
+.oc-precios {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 9px;
+  border: 1px solid $kc-chip-border;
+  border-radius: 20px;
+  background: transparent;
+  color: $kc-accent;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover { background: $kc-accent-soft; }
+}
+
+.oc-desglose {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+  padding: 11px 14px;
+  margin: 12px 0;
+  background: $kc-surface;
+  border: 1px solid #eeecf7;
+  border-radius: 12px;
+  font-size: 12px;
+  color: $kc-muted;
+
+  strong { color: $kc-ink; font-weight: 800; font-variant-numeric: tabular-nums; }
+}
+
+.oc-desglose-nota { flex-basis: 100%; font-size: 11px; color: $kc-muted-2; }
+
+.oc-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.oc-total {
+  margin-right: auto;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+// ---------- estado de cuenta ----------
+
+.oc-cuenta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.oc-cuenta-dato {
+  background: $kc-surface;
+  border: 1px solid #eeecf7;
+  border-radius: 10px;
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  strong { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  &--alerta {
+    background: $kc-danger-bg;
+    border-color: rgba(214, 69, 69, .25);
+    strong { color: $kc-danger; }
+  }
+}
+
+.oc-pie { font-size: 10.5px; color: $kc-muted-2; }
+
+.oc-facturas {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border: 1px solid $kc-line;
+    border-radius: 11px;
+    background: #fff;
+    font-size: 12px;
+  }
+}
+
+.oc-nota {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  color: $kc-muted;
+}
+
+.oc-vacio { color: $kc-muted; font-size: 12.5px; }
+
+@media (max-width: 900px) {
+  .kc-row {
+    flex-wrap: wrap;
+
+    &__fin {
+      width: 100%;
+      justify-content: space-between;
+      padding-left: 47px;
+    }
+  }
+
+  .oc-plata { align-items: flex-start; min-width: 0; }
+}

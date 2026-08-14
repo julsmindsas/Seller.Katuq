@@ -1,0 +1,220 @@
+// =============================================================================
+// KATUQ · Lenguaje visual "Marketing y WhatsApp" (mockup Claude Design 2026-08)
+// Fuente compartida del rediseño de: dashboard de marketing, asistente de
+// campañas y buzón de conversaciones WhatsApp.
+//
+// Paleta del mockup aprobado por Daniel: acento #6a4dfb sobre lienzo lila
+// #ecebf4, tarjetas blancas radio 18px con sombra violeta difusa, chips 99px.
+// Nota: difiere del canon D-131 (#5F3FE0) — decisión registrada en CONTRACT.
+// Uso en un componente:
+//   @import '../../../shared/styles/katuq-marketing';
+//   :host { @include km-tokens; }
+//   .mi-card { @include km-card; }
+// =============================================================================
+
+@mixin km-tokens {
+  --km-canvas: #ecebf4;
+  --km-surface: #fff;
+  --km-ink: #211d33;
+  --km-ink2: #4b4763;
+  --km-muted: #8b879f;
+  --km-muted2: #a7a3bd;
+  --km-line: #eceaf4;
+  --km-line2: #e9e6f3;
+
+  --km-accent: #6a4dfb;
+  --km-accent-ink: #5537e8;
+  --km-accent-wash: #f2eeff;
+  --km-accent-wash2: #f6f4fe;
+
+  --km-green: #1f9d5b;
+  --km-green-ink: #1f7a55;
+  --km-green-wash: #e7f8ee;
+  --km-orange: #d9963f;
+  --km-orange-ink: #c2410c;
+  --km-orange-wash: #fff4e6;
+  --km-orange-wash2: #fff1e6;
+  --km-pink: #e8478f;
+  --km-pink-wash: #ffeef4;
+  --km-red: #d3355c;
+  --km-red-wash: #fdf1f4;
+  --km-blue: #5b8ec9;
+  --km-blue-wash: #eaf4ff;
+
+  // Burbujas del chat (mockup: salientes verdes suaves, entrantes blancas)
+  --km-bubble-out: #eafaf1;
+  --km-bubble-out-line: #d5ecdd;
+  --km-bubble-in: #fff;
+  --km-bubble-in-line: #eceaf4;
+
+  --km-radius: 18px;
+  --km-radius-sm: 12px;
+  --km-shadow: 0 4px 20px rgba(30, 20, 60, 0.05);
+  --km-shadow-accent: 0 6px 20px rgba(107, 78, 251, 0.16);
+
+  --km-font: 'Plus Jakarta Sans', 'Rubik', system-ui, -apple-system, sans-serif;
+
+  font-family: var(--km-font);
+  color: var(--km-ink);
+}
+
+// Tarjeta base del mockup
+@mixin km-card {
+  background: var(--km-surface);
+  border-radius: var(--km-radius);
+  box-shadow: var(--km-shadow);
+}
+
+// Chip redondo (etiquetas de estado, filtros)
+@mixin km-chip($ink, $wash) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: $ink;
+  background: $wash;
+  padding: 4px 9px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+// Ícono cuadrado tintado (KPIs, segmentos, resumen)
+@mixin km-icon-tile($size: 28px) {
+  width: $size;
+  height: $size;
+  flex: none;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: $size * 0.46;
+  }
+}
+
+// Botón principal (violeta del mockup — el único degradado permitido aquí)
+@mixin km-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: none;
+  background: linear-gradient(135deg, #7b5bff, #6338f0);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(107, 78, 251, 0.32);
+  transition: filter 0.15s ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+
+  &:disabled {
+    background: #eeecf6;
+    color: #b0abc4;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+}
+
+// Botón secundario (borde suave sobre blanco)
+@mixin km-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1.5px solid var(--km-line2);
+  background: var(--km-surface);
+  color: #5b5772;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    border-color: #d9cffb;
+    color: var(--km-accent);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+// Botón verde WhatsApp (enviar / responder)
+@mixin km-btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: var(--km-green);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13.5px;
+  padding: 11px 18px;
+  border-radius: 11px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+// Pill de filtro/rango (activa / inactiva se maneja con .is-active)
+@mixin km-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid var(--km-line2);
+  background: var(--km-surface);
+  color: #5b5772;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 8px 14px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+
+  &.is-active {
+    border-color: var(--km-accent);
+    background: var(--km-accent-wash);
+    color: var(--km-accent-ink);
+    font-weight: 800;
+  }
+}
+
+// Label de sección UPPERCASE muted del mockup
+@mixin km-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--km-muted);
+}
+
+// Avatar cuadrado con iniciales
+@mixin km-avatar($size: 40px) {
+  width: $size;
+  height: $size;
+  flex: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  background: #f4f2fb;
+  color: var(--km-muted);
+}

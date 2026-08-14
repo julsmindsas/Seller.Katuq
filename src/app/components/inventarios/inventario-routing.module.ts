@@ -7,6 +7,10 @@ import { TrasladosComponent } from './traslados/traslados.component';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 import { CentralAbastecimientoComponent } from './central-abastecimiento/central-abastecimiento.component';
 import { BodegaDetalleComponent } from './bodega-detalle/bodega-detalle.component';
+import { IndicadoresComponent } from './indicadores/indicadores.component';
+import { UbicacionesComponent } from './ubicaciones/ubicaciones.component';
+import { ConteosComponent } from './conteos/conteos.component';
+import { OrdenesCompraComponent } from './ordenes-compra/ordenes-compra.component';
 
 
 const routes: Routes = [
@@ -37,6 +41,22 @@ const routes: Routes = [
     {
         path: 'bodega-detalle',
         component: BodegaDetalleComponent
+    },
+    {
+        path: 'indicadores',
+        component: IndicadoresComponent
+    },
+    {
+        path: 'ubicaciones',
+        component: UbicacionesComponent
+    },
+    {
+        path: 'conteos',
+        component: ConteosComponent
+    },
+    {
+        path: 'ordenes-compra',
+        component: OrdenesCompraComponent
     }
 ];
 

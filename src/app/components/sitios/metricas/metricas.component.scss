@@ -1,0 +1,228 @@
+@import "../../../shared/styles/katuq-builder";
+
+:host,
+.fondo {
+  @include kb-tokens;
+}
+
+.fondo {
+  @include kb-modal-velo;
+}
+
+.caja {
+  @include kb-modal-caja(660px, 22px);
+
+  &__cabecera {
+    @include kb-modal-cabecera;
+  }
+
+  &__cuerpo {
+    @include kb-modal-cuerpo;
+  }
+
+  &__pie {
+    @include kb-modal-pie;
+  }
+}
+
+.cerrar {
+  @include kb-cerrar;
+}
+
+.btn-fantasma {
+  @include kb-btn-ghost;
+}
+
+.sub {
+  margin: 0;
+  color: var(--kb-muted-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.estado {
+  padding: 26px 0;
+  color: var(--kb-muted);
+  font-weight: 600;
+  text-align: center;
+}
+
+// ── Rango ────────────────────────────────────────────────────────────────────
+.rangos {
+  @include kb-segmented;
+  margin-bottom: 18px;
+}
+
+// ── Sin datos ────────────────────────────────────────────────────────────────
+.sin-datos {
+  padding: 30px 22px;
+  border: 1.5px dashed var(--kb-line-3);
+  border-radius: 16px;
+  text-align: center;
+  background: var(--kb-surface-2);
+
+  strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  p {
+    margin: 0 auto;
+    max-width: 400px;
+    color: var(--kb-muted-2);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+}
+
+// ── Cifras ───────────────────────────────────────────────────────────────────
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cifra {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--kb-line-3);
+  border-radius: 14px;
+  background: #fff;
+
+  &--destacada {
+    border-color: var(--kb-accent-line-2);
+    background: var(--kb-accent-wash-4);
+  }
+
+  &__valor {
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    line-height: 1.15;
+  }
+
+  &__nombre {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--kb-ink-2);
+  }
+
+  &__pista {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--kb-muted-2);
+  }
+}
+
+.conversion {
+  margin: 0 0 20px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: var(--kb-chip-2);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kb-ink-2);
+
+  strong {
+    font-weight: 800;
+  }
+}
+
+// ── Gráfica ──────────────────────────────────────────────────────────────────
+.grafica {
+  margin-bottom: 22px;
+
+  h6 {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  &__barras {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 130px;
+    padding-bottom: 20px;
+    border-bottom: 1.5px solid var(--kb-line);
+  }
+
+  &__pie {
+    margin: 24px 0 0;
+    font-size: 11.5px;
+    color: var(--kb-muted-2);
+    font-weight: 600;
+  }
+}
+
+.barra {
+  position: relative;
+  flex: 1;
+  min-width: 3px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+
+  &__relleno {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    background: var(--kb-accent-line-2);
+    transition: height 0.25s ease;
+
+    &--con-pedido {
+      background: var(--kb-accent);
+    }
+  }
+
+  &__etiqueta {
+    position: absolute;
+    bottom: -19px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--kb-muted-2);
+    white-space: nowrap;
+  }
+}
+
+// ── Clics ────────────────────────────────────────────────────────────────────
+.clics {
+  h6 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 13px;
+    margin-bottom: 6px;
+    border-radius: 11px;
+    background: var(--kb-surface-2);
+    font-size: 13px;
+    font-weight: 700;
+
+    span {
+      color: var(--kb-ink-2);
+    }
+  }
+}
+
+.aviso {
+  @include kb-nota;
+  margin: 16px 0 0;
+}

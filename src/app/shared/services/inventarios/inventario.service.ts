@@ -7,6 +7,398 @@ import { TipoMovimientoInventario } from '../../../components/inventarios/enums/
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
 
+export interface Proveedor {
+  id: string;
+  nombre: string;
+  nit: string | null;
+  digitoVerificacion?: string | null;
+  contacto: string | null;
+  telefono: string | null;
+  correo: string | null;
+  direccion?: string | null;
+  ciudad: string | null;
+  /** Plazo acordado. 0 = de contado. */
+  diasCredito: number;
+  /** Lo que se demora en entregar. Lo usa la sugerencia de compra. */
+  diasEntrega?: number;
+  observaciones?: string | null;
+  estado: 'activo' | 'inactivo';
+}
+
+export interface SaldoProveedor {
+  proveedorId: string | null;
+  nombre: string;
+  ordenes: number;
+  pedido: number;
+  recibido: number;
+  facturado: number;
+  /** Lo recibido que aún no llega facturado. Negativo = nos facturaron de más. */
+  porFacturar: number;
+  conExceso: number;
+  /** Lo que ya se le pagó. */
+  pagado?: number;
+  /** Lo facturado que todavía no se paga: la plata que va a salir. */
+  porPagar?: number;
+}
+
+export interface FilaReposicion {
+  productoId: string;
+  referencia: string | null;
+  nombre: string | null;
+  idBodega: string;
+  saldo: number;
+  consumoDiario: number;
+  /** null = sin demanda; no es cero. */
+  coberturaDias: number | null;
+  /** Unidades ya pedidas y sin llegar. Se descuentan de la necesidad. */
+  yaPedido: number;
+  sugerido: number;
+  horizonteDias: number;
+  diasEntrega: number;
+  /** De dónde salió ese plazo: observado > acordado > supuesto. */
+  origenDeLosDias?: 'observado' | 'acordado' | 'supuesto';
+  diasEntregaSupuesto: boolean;
+  /** Se agota antes de que llegue el pedido. */
+  urgente: boolean;
+  costoUnitario: number;
+  sinCosto: boolean;
+  proveedorId: string | null;
+  proveedor: string | null;
+}
+
+export interface ResumenReposicion {
+  sugeridos: number;
+  urgentes: number;
+  sinCosto: number;
+  sinProveedor: number;
+  valorEstimado: number;
+  cubiertos: number;
+  /** Productos que no se pudieron proyectar por no registrar salidas. */
+  sinDemandaRegistrada: number;
+  /** Se fabrican, no se compran. */
+  seProducen: number;
+  conDiasDeEntregaSupuestos: number;
+}
+
+export interface SugerenciaReposicion {
+  company: string;
+  idBodega: string | null;
+  ventanaDias: number;
+  coberturaObjetivoDias: number;
+  confianza: string | null;
+  filas: FilaReposicion[];
+  resumen: ResumenReposicion;
+  advertencias: string[];
+}
+
+export interface FacturaOrden {
+  numero: string;
+  valor: number;
+  fecha: string | null;
+  registradaPor?: string;
+}
+
+export interface PagoOrden {
+  valor: number;
+  fecha: string | null;
+  medio?: string | null;
+  /** Opcional: un anticipo se paga antes de que exista la factura. */
+  factura?: string | null;
+}
+
+export interface CuentaOrden {
+  pedido: number;
+  recibido: number;
+  /** IVA de lo recibido. No entra al costo del producto: es descontable. */
+  iva?: number;
+  /** Flete y otros costos, en la proporción de lo que ya llegó. */
+  adicionales?: number;
+  /** Lo que el proveedor puede cobrar por lo entregado: mercancía + IVA + flete. */
+  esperado?: number;
+  /** Lo que se le devolvió, en plata: debería volver como nota crédito. */
+  devuelto?: number;
+  facturado: number;
+  porFacturar: number;
+  facturadoDeMas: boolean;
+  facturas: number;
+  pagado?: number;
+  porPagar?: number;
+  pagadoDeMas?: boolean;
+  pagos?: number;
+}
+
+export type EstadoOrdenCompra = 'abierta' | 'parcial' | 'recibida' | 'anulada';
+
+export interface LineaOrdenCompra {
+  productoId: string;
+  referencia: string | null;
+  descripcion: string | null;
+  cantidad: number;
+  recibido: number;
+  /** Devuelto al proveedor. Deja de contar como recibido, pero no se borra. */
+  devuelto?: number;
+  costoUnitario: number;
+  /** Porcentaje. Solo para saber cuánto va a facturar el proveedor. */
+  ivaPct?: number;
+}
+
+export interface CumplimientoProveedor {
+  proveedorId: string | null;
+  nombre: string;
+  ordenes: number;
+  entregadas: number;
+  /** Órdenes puestas y todavía sin recibir. No son incumplimiento. */
+  sinRecibir: number;
+  /** null = todavía no ha entregado nada; no es cero. */
+  diasPromedio: number | null;
+  diasPeor: number | null;
+  /** Solo con dos o más entregas: con una hay anécdota, no comportamiento. */
+  diasObservados: number | null;
+  completitudPromedio: number | null;
+  completas: number;
+  conDevolucion: number;
+}
+
+export interface PrecioProveedor {
+  proveedorId: string | null;
+  proveedor: string;
+  compras: number;
+  unidades: number;
+  ultimoCosto: number;
+  ultimaFecha: string | null;
+  mejorCosto: number;
+  peorCosto: number;
+}
+
+export interface PreciosDeProducto {
+  productoId: string;
+  proveedores: PrecioProveedor[];
+  resumen: {
+    proveedoresDistintos: number;
+    comprasRegistradas: number;
+    masBarato: { proveedor: string; costo: number } | null;
+    masCaro: { proveedor: string; costo: number } | null;
+    diferencia: number;
+    diferenciaPct: number;
+    /** false = un solo proveedor: no hay con qué comparar. */
+    comparable: boolean;
+  };
+}
+
+export interface PendienteOrdenCompra {
+  productoId: string;
+  referencia: string | null;
+  pedido: number;
+  recibido: number;
+  /** Lo que se le devolvió al proveedor. */
+  devuelto?: number;
+  pendiente: number;
+  /** Lo que el proveedor mandó de más. */
+  excedente: number;
+}
+
+export interface OrdenCompra {
+  id: string;
+  idBodega: string;
+  proveedor: { nombre: string; nit: string | null };
+  /** Presente cuando la orden se creó eligiendo del maestro. */
+  proveedorId?: string | null;
+  facturas?: FacturaOrden[];
+  pagos?: PagoOrden[];
+  /** Lo que costó traer la mercancía, aparte del producto. */
+  flete?: number;
+  otrosCostos?: number;
+  cuenta?: CuentaOrden;
+  lineas: LineaOrdenCompra[];
+  pendientes?: PendienteOrdenCompra[];
+  estado: EstadoOrdenCompra;
+  total: number;
+  observaciones: string | null;
+  creadoPor?: string;
+  createdAt?: any;
+}
+
+export type CriterioConteo = 'valor' | 'movimiento' | 'sin_contar' | 'ubicacion';
+export type EstadoConteo = 'abierta' | 'contada' | 'aplicada' | 'cancelada';
+
+export interface LineaConteo {
+  productoId: string;
+  referencia: string | null;
+  ubicacion: string | null;
+  /** Lo que el sistema dice que debería haber. */
+  esperado: number;
+  /** Lo que el operario contó. null = todavía no lo ha contado. */
+  contado: number | null;
+  diferencia?: number | null;
+  estado?: 'exacta' | 'sobra' | 'falta' | 'sin_contar';
+}
+
+export interface ResumenConteo {
+  lineas: number;
+  contadas: number;
+  sinContar: number;
+  exactas: number;
+  conDiferencia: number;
+  /** Exactitud por líneas que coinciden (IRA). null si no se ha contado nada. */
+  exactitud: number | null;
+  unidadesSobran: number;
+  unidadesFaltan: number;
+}
+
+export interface AjustePropuesto {
+  productoId: string;
+  referencia: string | null;
+  ubicacion: string | null;
+  cantidadAnterior: number;
+  cantidadNueva: number;
+  diferencia: number;
+}
+
+export interface SesionConteo {
+  id: string;
+  idBodega: string;
+  criterio: CriterioConteo;
+  estado: EstadoConteo;
+  lineas?: LineaConteo[];
+  resumen: ResumenConteo;
+  ajustesPropuestos?: AjustePropuesto[];
+  creadoPor?: string;
+  createdAt?: any;
+}
+
+/** Una ubicación del catálogo de la bodega. */
+export interface UbicacionCatalogo {
+  codigo: string;
+  zona: string;
+  estante: string | null;
+  posicion: string | null;
+  nivel: string | null;
+  descripcion: string | null;
+  activa: boolean;
+}
+
+export interface ProductoEnUbicacion {
+  productoId: string;
+  referencia: string | null;
+  cantidad: number;
+  ubicacion: string | null;
+}
+
+export interface UbicacionConProductos extends UbicacionCatalogo {
+  productos: ProductoEnUbicacion[];
+}
+
+export interface UbicacionesBodegaResponse {
+  idBodega: string;
+  nombre: string;
+  ubicaciones: UbicacionConProductos[];
+  /** Usadas por el inventario pero no dadas de alta en el catálogo. */
+  fueraDeCatalogo: { codigo: string; productos: ProductoEnUbicacion[] }[];
+  sinUbicar: ProductoEnUbicacion[];
+  resumen: {
+    ubicacionesDefinidas: number;
+    ubicacionesOcupadas: number;
+    productosUbicados: number;
+    productosSinUbicar: number;
+  };
+}
+
+/** Una fila de disponibilidad: el mismo producto visto de tres maneras. */
+export interface FilaDisponibilidad {
+  productoId: string;
+  referencia: string | null;
+  idBodega: string;
+  /** Lo que se puede vender (el saldo, nunca negativo). */
+  disponible: number;
+  /** Vendido que sigue en el estante porque el pedido no ha salido. */
+  comprometido: number;
+  /** Lo que un operario contaría hoy: disponible + comprometido. */
+  fisicoEsperado: number;
+  /** Unidades vendidas sin respaldo (saldo negativo). */
+  deudaDeRegistro: number;
+  sobrecomprometido: boolean;
+  /** Hay compromiso pero ni siquiera existe fila de inventario. */
+  sinFilaDeInventario?: boolean;
+}
+
+export interface ResumenDisponibilidadBodega {
+  skus: number;
+  disponible: number;
+  comprometido: number;
+  fisicoEsperado: number;
+  sobrecomprometidos: number;
+  skusConCompromiso: number;
+}
+
+export interface DisponibilidadBodega {
+  idBodega: string;
+  resumen: ResumenDisponibilidadBodega;
+  filas: FilaDisponibilidad[];
+}
+
+export interface DisponibilidadResponse {
+  company: string;
+  pedidosAbiertos: number;
+  advertencias: string[];
+  bodegas: DisponibilidadBodega[];
+}
+
+/** Fila de indicadores: un producto en una bodega. */
+export interface IndicadorProducto {
+  productoId: string;
+  referencia: string | null;
+  nombre: string | null;
+  idBodega: string;
+  /** Saldo contable para efectos del informe (los negativos cuentan como 0). */
+  saldo: number;
+  /** Saldo tal como está guardado, incluido el negativo. */
+  saldoReal: number;
+  saldoNegativo: boolean;
+  demandaNeta: number;
+  consumoDiario: number;
+  /** null = sin demanda en la ventana; no es cero. */
+  coberturaDias: number | null;
+  coberturaTopeada: boolean;
+  rotacionAnual: number | null;
+  inmovilizado: boolean;
+  costoUnitario: number;
+  sinCosto: boolean;
+  valorCosto: number;
+}
+
+export interface ResumenIndicadoresBodega {
+  skus: number;
+  unidades: number;
+  valorCosto: number;
+  sinExistencias: number;
+  coberturaBaja: number;
+  inmovilizados: number;
+  valorInmovilizado: number;
+  demandaNeta: number;
+  coberturaDiasBodega: number | null;
+  coberturaTopeada: boolean;
+  rotacionAnualBodega: number | null;
+  skusSinCosto: number;
+  unidadesSinCosto: number;
+  skusEnNegativo: number;
+}
+
+export interface IndicadoresBodega {
+  idBodega: string;
+  resumen: ResumenIndicadoresBodega;
+  filas: IndicadorProducto[];
+}
+
+export interface IndicadoresInventarioResponse {
+  company: string;
+  ventana: { dias: number; desde: string; hasta: string };
+  /** 'exacta' solo si todo tiene costo y toda salida tiene motivo. */
+  confianza: 'exacta' | 'parcial';
+  advertencias: string[];
+  coberturaBajaDias: number;
+  bodegas: IndicadoresBodega[];
+}
+
 /**
  * Interfaz para producto en vista consolidada de inventario
  */
@@ -407,6 +799,7 @@ export class InventarioService {
     status?: InventarioCorteEstado;
     limit?: number;
     cursor?: string;
+    paginate?: boolean;
   }): Observable<InventarioCorteResponse> {
     let params = new HttpParams().set('fechaCorte', options.fechaCorte);
     if (options.bodega) params = params.set('bodega', options.bodega);
@@ -414,11 +807,187 @@ export class InventarioService {
     if (options.status) params = params.set('status', options.status);
     if (options.limit) params = params.set('limit', String(options.limit));
     if (options.cursor) params = params.set('cursor', options.cursor);
+    if (options.paginate !== undefined) params = params.set('paginate', String(options.paginate));
 
     return this.http.get<InventarioCorteResponse>(
       `${this.apiUrl}/inventory/cutoff-report`,
       { params },
     );
+  }
+
+  /**
+   * Indicadores de bodega: cobertura en días, rotación, inmovilizados y
+   * valorizado a costo. Read-only, derivado del libro de movimientos.
+   */
+  consultarIndicadoresInventario(options: {
+    bodega?: string;
+    dias?: number;
+  } = {}): Observable<IndicadoresInventarioResponse> {
+    let params = new HttpParams();
+    if (options.bodega) params = params.set('bodega', options.bodega);
+    if (options.dias) params = params.set('dias', String(options.dias));
+
+    return this.http.get<IndicadoresInventarioResponse>(
+      `${this.apiUrl}/inventory/kpi`,
+      { params },
+    );
+  }
+
+  /**
+   * Disponible vs comprometido vs físico en estante. Read-only.
+   */
+  consultarDisponibilidad(options: { bodega?: string } = {}): Observable<DisponibilidadResponse> {
+    let params = new HttpParams();
+    if (options.bodega) params = params.set('bodega', options.bodega);
+
+    return this.http.get<DisponibilidadResponse>(
+      `${this.apiUrl}/inventory/disponibilidad`,
+      { params },
+    );
+  }
+
+  /** Mapa de ubicaciones de una bodega: catálogo, qué hay en cada una y qué falta ubicar. */
+  consultarUbicaciones(bodega: string): Observable<UbicacionesBodegaResponse> {
+    const params = new HttpParams().set('bodega', bodega);
+    return this.http.get<UbicacionesBodegaResponse>(`${this.apiUrl}/inventory/ubicaciones`, { params });
+  }
+
+  /** Guarda el catálogo completo de ubicaciones de una bodega. */
+  guardarUbicaciones(bodega: string, ubicaciones: UbicacionCatalogo[], forzar = false): Observable<any> {
+    return this.http.put(`${this.apiUrl}/inventory/ubicaciones`, { bodega, ubicaciones, forzar });
+  }
+
+  /** Asigna (o quita, con null) el lugar donde vive un producto en una bodega. */
+  asignarUbicacionProducto(bodega: string, productoId: string, ubicacion: string | null): Observable<any> {
+    return this.http.put(`${this.apiUrl}/inventory/producto-ubicacion`, { bodega, productoId, ubicacion });
+  }
+
+  // --- Proveedores (dominio de compras) ---
+
+  listarProveedores(options: { incluirInactivos?: boolean; busqueda?: string } = {}): Observable<{ proveedores: Proveedor[] }> {
+    let params = new HttpParams();
+    if (options.incluirInactivos) params = params.set('incluirInactivos', 'true');
+    if (options.busqueda) params = params.set('busqueda', options.busqueda);
+    return this.http.get<{ proveedores: Proveedor[] }>(`${this.apiUrl}/proveedores`, { params });
+  }
+
+  crearProveedor(datos: Partial<Proveedor> & { forzar?: boolean }): Observable<Proveedor> {
+    return this.http.post<Proveedor>(`${this.apiUrl}/proveedores`, datos);
+  }
+
+  actualizarProveedor(id: string, datos: Partial<Proveedor>): Observable<Proveedor> {
+    return this.http.put<Proveedor>(`${this.apiUrl}/proveedores/${id}`, datos);
+  }
+
+  desactivarProveedor(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/proveedores/${id}`);
+  }
+
+  /** Cuánto se le debe a cada proveedor: pedido, recibido y facturado. */
+  consultarSaldoProveedores(): Observable<{ proveedores: SaldoProveedor[]; total: number; totalPorPagar?: number }> {
+    return this.http.get<{ proveedores: SaldoProveedor[]; total: number }>(
+      `${this.apiUrl}/ordenes-compra/saldo-proveedores`,
+    );
+  }
+
+  /** Anota la factura del proveedor sobre una orden. No mueve inventario. */
+  registrarFacturaOrden(id: string, factura: { numero: string; valor: number; fecha?: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/ordenes-compra/${id}/factura`, factura);
+  }
+
+  /** Qué comprar, cuánto y a quién. Solo lee: la orden la crea una persona. */
+  sugerenciaReposicion(opciones: { bodega?: string; dias?: number; cobertura?: number } = {}): Observable<SugerenciaReposicion> {
+    let params = new HttpParams();
+    if (opciones.bodega) params = params.set('bodega', opciones.bodega);
+    if (opciones.dias) params = params.set('dias', String(opciones.dias));
+    if (opciones.cobertura) params = params.set('cobertura', String(opciones.cobertura));
+    return this.http.get<SugerenciaReposicion>(`${this.apiUrl}/ordenes-compra/sugerencia`, { params });
+  }
+
+  /** Anota lo que se le devuelve al proveedor. La salida de stock va aparte. */
+  registrarDevolucionOrden(
+    id: string,
+    devueltas: { productoId: string; cantidad: number }[],
+    motivo?: string,
+  ): Observable<any> {
+    return this.http.post(`${this.apiUrl}/ordenes-compra/${id}/devolucion`, { devueltas, motivo });
+  }
+
+  /** Cuánto se demora de verdad cada proveedor y cuánto entrega completo. */
+  cumplimientoProveedores(): Observable<{ proveedores: CumplimientoProveedor[] }> {
+    return this.http.get<{ proveedores: CumplimientoProveedor[] }>(`${this.apiUrl}/ordenes-compra/cumplimiento`);
+  }
+
+  /** A quién y a cómo se le ha comprado un producto. */
+  preciosDeProducto(productoId: string): Observable<PreciosDeProducto> {
+    const params = new HttpParams().set('producto', productoId);
+    return this.http.get<PreciosDeProducto>(`${this.apiUrl}/ordenes-compra/precios`, { params });
+  }
+
+  /** Anota que la plata salió. No mueve inventario ni cambia la factura. */
+  registrarPagoOrden(id: string, pago: PagoOrden): Observable<{ cuenta: CuentaOrden }> {
+    return this.http.post<{ cuenta: CuentaOrden }>(`${this.apiUrl}/ordenes-compra/${id}/pago`, pago);
+  }
+
+  // --- Órdenes de compra ---
+
+  crearOrdenCompra(orden: {
+    proveedor: { nombre: string; nit?: string };
+    /** Del maestro. Si viene, el backend toma de ahí el nombre y el NIT. */
+    proveedorId?: string;
+    bodega: string;
+    lineas: { productoId: string; referencia?: string; descripcion?: string; cantidad: number; costoUnitario?: number; ivaPct?: number }[];
+    flete?: number;
+    otrosCostos?: number;
+    observaciones?: string;
+  }): Observable<OrdenCompra> {
+    return this.http.post<OrdenCompra>(`${this.apiUrl}/ordenes-compra`, orden);
+  }
+
+  listarOrdenesCompra(options: { bodega?: string; pendientes?: boolean } = {}): Observable<{ ordenes: OrdenCompra[] }> {
+    let params = new HttpParams();
+    if (options.bodega) params = params.set('bodega', options.bodega);
+    if (options.pendientes !== undefined) params = params.set('pendientes', String(options.pendientes));
+    return this.http.get<{ ordenes: OrdenCompra[] }>(`${this.apiUrl}/ordenes-compra`, { params });
+  }
+
+  obtenerOrdenCompra(id: string): Observable<OrdenCompra> {
+    return this.http.get<OrdenCompra>(`${this.apiUrl}/ordenes-compra/${id}`);
+  }
+
+  /** Anota lo que llegó contra la orden. La entrada de stock va por su camino. */
+  registrarRecepcionOrden(id: string, recibidas: { productoId: string; cantidad: number }[]): Observable<any> {
+    return this.http.put(`${this.apiUrl}/ordenes-compra/${id}/recepcion`, { recibidas });
+  }
+
+  anularOrdenCompra(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/ordenes-compra/${id}`);
+  }
+
+  // --- Conteos cíclicos ---
+
+  /** Arma el conteo del día para una bodega según el criterio elegido. */
+  crearConteo(bodega: string, criterio: CriterioConteo, tamano: number): Observable<SesionConteo> {
+    return this.http.post<SesionConteo>(`${this.apiUrl}/inventory/conteos`, { bodega, criterio, tamano });
+  }
+
+  listarConteos(bodega?: string): Observable<{ sesiones: SesionConteo[] }> {
+    let params = new HttpParams();
+    if (bodega) params = params.set('bodega', bodega);
+    return this.http.get<{ sesiones: SesionConteo[] }>(`${this.apiUrl}/inventory/conteos`, { params });
+  }
+
+  obtenerConteo(id: string): Observable<SesionConteo> {
+    return this.http.get<SesionConteo>(`${this.apiUrl}/inventory/conteos/${id}`);
+  }
+
+  /** Guarda lo contado. No ajusta inventario. */
+  registrarConteo(id: string, lineas: { productoId: string; contado: number | null }[]): Observable<any> {
+    return this.http.put(`${this.apiUrl}/inventory/conteos/${id}`, { lineas });
+  }
+
+  cerrarConteo(id: string, aplicado: boolean): Observable<any> {
+    return this.http.post(`${this.apiUrl}/inventory/conteos/${id}/cerrar`, { aplicado });
   }
 
   obtenerInventarioConsolidado(options: {
