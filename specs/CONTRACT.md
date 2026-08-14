@@ -2900,7 +2900,7 @@ total      = (Σbase − descTotal) + impuesto
 
 **Colisiones de numeración que quedan abiertas (no se tocaron).** Al unir los roadmaps, `009` y `010` existen en ambas ramas con contenidos distintos: `009-whatsapp-kapso-notifications-marco` vs `009-customer-metrics-detalle-cliente`, y `010-venta-asistida-impuestos-congruencia` vs `010-assisted-sale-discounts-promotions` (y ya había un tercer `010-notificaciones-pedido-unificadas`). El precedente del proyecto es renumerar al mergear, pero eso implica renombrar carpetas de specs y sus referencias en ambos repos, así que **se dejó marcado con ⚠️ en el roadmap y la renumeración queda como decisión pendiente**, no se hizo por cuenta propia. Lo mismo con `D-044` a `D-047`, que cada rama usó para decisiones distintas: ambas bitácoras se conservaron completas.
 
-**Daño preexistente encontrado y reparado.** El contrato ya venía con marcadores de conflicto de un `git stash pop` **commiteados** en la rama madre (`<<<<<<< Updated upstream` … `>>>>>>> Stashed changes`), congelando 391 líneas de bitácora entre ellos. No lo causó este merge. Se quitaron solo los marcadores y se conservó el contenido de ambos lados, sin perder nada; queda visible que `D-137` está usado dos veces con contenidos distintos.
+**Daño preexistente encontrado y reparado.** El contrato ya venía con marcadores de conflicto de un `git stash pop` **commiteados** en la rama madre (` … `>>>>>>> Stashed changes`), congelando 391 líneas de bitácora entre ellos. No lo causó este merge. Se quitaron solo los marcadores y se conservó el contenido de ambos lados, sin perder nada; queda visible que `D-137` está usado dos veces con contenidos distintos.
 
 **Lo que NO entró.** Durante el merge del backend, tres archivos de otra sesión en curso (`controllers/inventory.js`, `services/inventoryService.js` y un script nuevo `scripts/backfill-idbodega-movimientos.js`, todos sobre la convención de `idBodega` en movimientos) estaban sin commitear y quedaron arrastrados por un `git add -A`. Se sacaron del commit de merge y se devolvieron al working tree tal como estaban, sin commitear: es un cambio de inventario, y esos van de a uno y con spec aprobada.
 
@@ -3962,3 +3962,243 @@ Con la rejilla de D-192 puesta, Daniel fue claro: *"la idea es poder mover todos
 **Verificado:** 7 pruebas nuevas en `test:sitios-publicacion` (coordenada guardada y redondeada; media coordenada descartada; nada se sale del rango; lienzo vacío no se guarda; alto encerrado entre 160 y 2000; la colocación sale dentro de la media query; sin lienzo la sección sigue en rejilla aunque el elemento traiga coordenadas), suite completa en verde, y 15 chequeos del ciclo real contra el backend local: una sección con lienzo de 520px y 4 elementos colocados —uno de ellos intentando salirse por la derecha— más una sección normal se guardan, se publican, y la página sale con el alto, las coordenadas correctas, el que se salía encerrado en 70%, la otra sección todavía en rejilla y ningún `style`. Sitio de prueba y sus eventos borrados de Firestore. `ng build` limpio.
 
 **Lo que sigue fuera**: pegar HTML, scripts y widgets de terceros; y un lienzo propio para celular.
+
+## D-172
+
+**2026-08-12 — Cerrado el mapeo de bodegas de Fullpi: ECF1=Bogotá, ECF3=Medellín, ECF4=Cali.**
+
+Confirmado por Daniel. **Corrige un dato previo equivocado**: se había registrado "ECF1 = Medellín confirmado" (ver memoria `fullpi-integracion-estado`), y es falso — ECF1 es **Bogotá**. Queda SUPERSEDED.
+
+**No hubo daño.** Las bodegas espejo creadas en D-159 nunca rotularon ciudad: se llamaban "Fullpi ECF3 — ciudad por confirmar" y "Fullpi ECF4 — ciudad por confirmar". El enrutamiento nunca dependió de la ciudad sino del código WMS, y el `bodegaMap` del flow `fullpi-inventory-to-katuq-oms` ya era correcto (`ECF1→BOD-FULLPI-1`, `ECF3→BOD-FULLPI-3`, `ECF4→BOD-FULLPI-4`). Ningún movimiento quedó mal dirigido.
+
+Aplicado con pasada en seco y respaldo, sin tocar `idBodega` (business code):
+
+| Bodega | Nombre antes | Nombre ahora | Unidades |
+| --- | --- | --- | --- |
+| `BOD-FULLPI-1` | Fullpi (WMS) | **Fullpi Bogotá (ECF1)** | 4.395 en 75 filas |
+| `BOD-FULLPI-3` | Fullpi ECF3 — ciudad por confirmar | **Fullpi Medellín (ECF3)** | 1.823 en 59 filas |
+| `BOD-FULLPI-4` | Fullpi ECF4 — ciudad por confirmar | **Fullpi Cali (ECF4)** | 2.276 en 85 filas |
+
+Se agregó además `ciudad` (campo que ya usan las otras 114 bodegas) y **`codigoBodegaWms: "ECF1"` a `BOD-FULLPI-1`, que no lo tenía** — hueco real: era la única de las tres sin el código del WMS.
+
+Total espejado desde Fullpi: **8.494 unidades en 219 filas**, repartidas ahora en tres ciudades identificables.
+
+**Pendiente con Fullpi** (no bloquea): significado del sufijo "-OFF", archivo de cobertura, y borrado de los pedidos de prueba 3, 4, 5, 7, 8 y 9.
+
+## D-173
+
+**2026-08-12 — Desplegado el backend con facturación electrónica DIAN y el constructor de sitios, por orden explícita de Daniel sobre una objeción planteada.**
+
+Daniel pidió desplegar backend y front. Al revisar qué implicaba, se le expuso que **lo único pendiente no era trabajo de esta sesión**: `fe18eec` (facturación electrónica DIAN directa, 917 líneas — numeración, armado del documento, cliente SOAP, correo) y `963ccfd` (tipografías y portadas de sitios), ambos de otra sesión, sin revisar por esta y sin que su autora avisara que estuvieran listos. Se señaló que la facturación toca documentos con efecto legal ante la DIAN y que la numeración es difícil de deshacer. **Daniel respondió "desplegalo ya, los dos".** Se ejecutó y se dejó constancia.
+
+Producción: `327e6e9` → `963ccfd`. Rango real: **2 commits, 17 archivos, 1.443 inserciones**.
+
+Verificado antes de reiniciar: sintaxis de los 8 archivos nuevos o cambiados, y las cuatro pruebas de guarda en verde en el servidor (`inventory-safety-contract`, `flows-node-catalog`, `flows-osmosis-cobertura`, `flows-osmosis-huella`). Sin dependencias nuevas. Tras reiniciar: arranque sin errores, 7 crones nativos + 2 dinámicos + 2 de CronService registrados, 21 disparos del despachador en 3 min, memoria estable. Verificación independiente de la sesión Shopify sobre 6.017 productos del catálogo activo: **cero regresiones, ningún producto nuevo en $0**.
+
+**El frontend NO se desplegó, a propósito.** Ya estaba publicado por la tercera sesión a las 21:58 UTC (`2026.08.12.11`), con su trabajo del bot de WhatsApp compilado adentro pese a seguir sin commitear. Un build nuevo solo habría subido el número de versión y vuelto a arrastrar código ajeno a medio terminar.
+
+**Alcance no cubierto, dicho explícitamente:** nadie revisó la facturación electrónica. Se verificó que arranca y que no rompe lo que ya corría; no se verificó que numere correctamente ni que el documento sea válido ante la DIAN. La sesión Shopify tampoco la revisó y confirmó que **si algo falla por ese lado no aparecerá en sus métricas**: ese frente queda sin vigilancia. Punto de retorno: `327e6e9`.
+
+**Lección de método (vale para las tres sesiones):** con varias sesiones sobre la misma rama, **la unidad de despliegue es la rama, no el commit**. "Despliego lo mío" no existe: cada `pull` en el servidor sube todo lo que haya llegado, revisado o no. Se comprobó dos veces el mismo día — `84cecd3` se había apartado explícitamente para "despliegue coordinado" y entró igual en el despliegue nocturno de la tercera sesión (03:28 UTC, con `fb6b8fa`), sin que ninguna de las dos sesiones dueñas se enterara en el momento. Apartar un commit por acuerdo verbal no lo aparta de nada; si debe quedar afuera, va en rama aparte.
+
+## D-195 (2026-08-12) — Rediseño "Marketing y WhatsApp": el mockup de Daniel manda sobre el canon visual en esas tres pantallas
+
+**Decisión.** Daniel entregó un mockup propio (proyecto de Claude Design "Rediseño maestro de productos", archivo `Marketing y WhatsApp.dc.html`) y pidió implementarlo tal cual para modernizar marketing y la interfaz de conversaciones. El mockup usa acento `#6a4dfb` sobre lienzo lila `#ecebf4`, tarjetas blancas de radio 18px, tipografía Plus Jakarta Sans y un degradado en el botón principal — difiere del canon D-131 (`#5F3FE0`, plano sin gradientes). Se implementó fiel al mockup **solo en las pantallas que el mockup cubre**: dashboard de marketing, asistente de campañas y buzón de WhatsApp (lista, detalle, panel de contacto, vista pedidos). El resto de la app sigue con el canon D-131. Si este lenguaje se va a extender, se resuelve por propuesta OpenSpec actualizando el design-system, no copiando estilos.
+
+**Cómo quedó.**
+- Tema compartido en `src/app/shared/styles/_katuq-marketing.scss` (mixins `km-*`, mismo patrón de `_katuq-comercial.scss`). Plus Jakarta Sans ya estaba cargada en `index.html`.
+- **Dashboard** (`modules/marketing/marketing-dashboard`): pills de rango 7/30/90 días, 3 KPIs con ícono tintado y delta real (`crecimientoVentas`), tarjeta de acción de WhatsApp ("N clientes esperan tu respuesta" → Responder ahora / Enviar campaña), ventas por día en barras violeta, canales con barras de progreso, embudo CRM y "Tu cartera comercial" desde `crmStats`. Solo métricas reales, igual que antes.
+- **Campañas** (`campana-whatsapp`): mismo motor (audiencia clientes/CRM, plantillas Kapso, broadcast server-side D-097, export Meta/Google), nueva presentación: tarjetas de grupo que auto-seleccionan la audiencia, vista previa en teléfono WhatsApp, resumen con "Cambiar" y footer pegajoso con destinatarios/costo/saldo (el saldo se carga desde el paso 1) y aviso de bloqueo.
+- **Buzón** (`whatsapp-inbox`): encabezado con toggle Conversaciones|Pedidos y botón "Nueva campaña"; la lista gana chips de filtro (Sin responder con conteo / Todas / Atendidas por el bot) y etiquetas por hilo ("Te escribió", "Respondió el asistente", "Hizo un pedido") cruzando client-side con `GET /bot/sesiones` — sin tocar el endpoint de hilos; el detalle gana pill "Atendido por el bot" + Tomar en el header, tarjeta "En su carrito" en vivo, tarjeta de cotización creada con link al editor, y respuestas rápidas como chips; el panel de contacto gana el bloque "Este cliente" (vendido total, pedidos, última compra) calculado de los pedidos ya cargados. Cero endpoints nuevos: todo es composición de datos que ya existían.
+
+**Pendiente anotado, no construido:** los grupos de audiencia por comportamiento del mockup (compraron hace poco, dormidos, dejaron el carrito, mejores clientes, cumpleaños) necesitan un endpoint de agregación de pedidos por cliente que hoy no existe; el paso 1 arranca con los grupos que los datos actuales permiten (todos los clientes, leads CRM por etapa). Dueño: Daniel decide si se construye el endpoint.
+
+## D-196 (2026-08-13) — El bot quedaba mudo para siempre después de cada venta exitosa
+
+**El síntoma.** "Dejó de funcionar el bot" — tras cerrar el primer pedido real del piloto ALMARA (COT-2026-0813-0047), el bot no volvió a contestar en ese hilo. ADK vivo, piloto enrutando, saldo disponible: silencio total y sin una línea de log que lo explicara.
+
+**La causa (dos piezas que se anulaban entre sí).** El cierre hacía `marcarCerrada` (estado "cerrada") y DESPUÉS `traspasar`, que pisaba el estado con "humano" + `tomadaPor: "sin_asignar"`. La reapertura post-cierre exigía estado "cerrada" — nunca aplicaba. Y la compuerta `estaTomadaPorHumano` da verdadero con cualquier `tomadaPor` truthy, "sin_asignar" incluido, y retorna sin loggear. Resultado: cada cierre exitoso dejaba el hilo tomado por nadie y al bot callado para siempre. El bug solo se manifestaba cuando la venta salía BIEN — por eso sobrevivió al smoke y a los 100+ tests.
+
+**El arreglo (`877a7f6`, desplegado y verificado en prod).**
+1. El cierre es ahora la ÚLTIMA mutación de la sesión: responder → traspasar → `marcarCerrada`. La sesión termina en "cerrada" de verdad.
+2. La reapertura reconoce las dos formas del mismo hecho: estado "cerrada", o estado "humano" con cotización creada y sin dueño real (la forma atascada del orden viejo) — las sesiones ya rotas se sanan solas con el siguiente mensaje, sin tocar la base a mano.
+3. Tests nuevos: el orden de mutaciones queda clavado (`["traspaso","cerrada"]`) y la sesión atascada se reabre; un traspaso por duda sin cotización NO se reabre. Las 6 suites del bot en verde.
+
+**Verificación en producción:** 04:43:18 `reapertura_post_cierre` → 04:43:35 respuesta enviada (turno 1, carrito vacío, 3,6 s de ADK). Daniel confirmó que le contestó.
+
+**Pendiente anotado (ruido, no falla):** el poller de sync-inbound re-procesa los mismos ~5 mensajes cada 30 s y cada pasada loggea `piloto_bot_route`; la idempotencia los frena pero ensucia el log — falta un corte de dedup antes de loggear o bajar ese evento a debug para mensajes ya persistidos.
+
+## D-197 (2026-08-13) — Bot fase 2 implementada y en producción: conversación robusta y número propio verificable
+
+**Cambio OpenSpec `bot-whatsapp-fase-2`** (propuesta aprobada por Daniel), implementado completo y desplegado (backend `1492dc7`, ADK `a09f8ea`; rangos medidos antes de pullear — solo estos commits).
+
+**Conversación:** los mensajes seguidos se agrupan en UN turno (ventana 4 s en memoria, máx 10 s, módulo `whatsappBotRafagas`; sellos de idempotencia de todos los ids; un solo cobro); los audios/fotos reciben aviso cortés una vez por sesión SIN traspasar (antes la spec prometía aviso y la implementación traspasaba); la respuesta puede salir como FOTO del producto con el precio en el caption (herramienta `mostrar_producto` en ADK — el agente solo anota el id, el backend resuelve la imagen con la regla del CDN de Cereza y degrada a texto sin error); "¿dónde va mi pedido?" se responde con hasta 3 pedidos reales pre-resueltos en el backend (el teléfono sigue sin entrar jamás a ADK); el cierre exige dirección y ciudad confirmadas y el resumen del carrito tiene formato fijo.
+
+**Número propio:** `POST /own-credentials/verify` valida las credenciales guardadas contra Kapso (causas humanas, la API key nunca vuelve al navegador) y persiste `verifiedAt` + número/nombre visibles; el publicView trae el último mensaje entrante (salud del webhook, índice existente vía limitToLast); **el bot ya solo se prende con conexión VERIFICADA** — pegar credenciales no basta, hay que "Probar conexión" (el piloto por env sigue exento hasta que ALMARA tenga número propio). Plantillas con título y descripción en español (`plantillasMeta` en la config existente, editables por comercio; sugerencia automática vía KAI `generateContentFlow`, fallback des-feificado — una señora nunca ve "hello_world" a secas).
+
+**De paso, bug real encontrado:** el servicio Angular de la config de WhatsApp esperaba un envoltorio `{success,data}` y campos anidados que el backend nunca devolvió (publicView plano) — la pantalla no podía cargar la config. Corregido con normalización tolerante (mismo criterio del bloque del bot).
+
+**Verificación:** 7 suites backend + 33 tests ADK en verde; build Angular sin errores; backend y ADK reiniciados y sanos en prod. **El frontend sigue sin desplegar a hosting** (commits `96191342` y anteriores en la rama). **Pendiente 2.7 (dueño Daniel):** credenciales reales de Kapso para ALMARA y vaciar el piloto. La ventana de ráfaga (4 s) se calibra con el tráfico del piloto (tarea 3.2).
+
+## D-174
+
+**2026-08-13 — Arreglado el cimiento que impedía publicar el inventario de Fullpi en Shopify: el mapeo bodega⇄location se descartaba en silencio.**
+
+Daniel pidió "revisalo" sobre el encargo abierto de Fullpi→Shopify. Al revisarlo apareció que el bloqueante **no era falta de trabajo sino un defecto vivo**, y que además no era exclusivo de Fullpi: afecta hoy a la sincronización de Cereza.
+
+**El defecto** (`shopify-inventory-adjust.action.js:398`): `shopifyService.resolveShopifyLocation` devuelve el GID como **string** (`entry?.shopifyLocationGid || null`, `shopifyService.js:847`), pero el nodo comprobaba `loc?.id` — siempre `undefined` en un string. **La condición nunca se cumplía**, así que un mapeo correcto se descartaba y el stock caía al fallback `locs[0].id`, "la primera location del shop", sin error y sin log.
+
+**Verificado en producción el 2026-08-13:**
+- **Ningún mapeo configurado**: 0 de 13 bodegas de OMS con `integrations.shopify.locationId`, y ninguno en `integration_configs/*location_mappings`.
+- **Los dos flows activos caen por ese camino**: `cereza-products-to-shopify-a5156643` y `katuq-web-to-shopify`, ambos sin `location` explícita en los params del nodo.
+- **OH MY STORE tiene UNA sola location** (`gid://shopify/Location/61623730382`, Medellín), así que el fallback acertaba por accidente. Confirmado que no hubo daño: `GCJ4240` 60 uds y `GCDOT065` 571 uds, ambos en esa única location, sin stock huérfano.
+
+**Por qué se arregla ahora y no después:** el defecto está dormido **precisamente porque OMS todavía no hizo lo que Fullpi exige**. Publicar las 3 bodegas espejo (Bogotá/Medellín/Cali, D-172) requiere crear más locations en Shopify, y en el instante en que exista la segunda el stock se iría a la equivocada en silencio — y como `locs[0]` depende de un orden que Shopify no garantiza, ni siquiera sería consistentemente la misma. Hoy verificar el arreglo es mirar un número; con tres locations montadas habría que auditar qué se ensució.
+
+**Desplegado** (`603f413`, rango limpio de un solo commit: 3 archivos, 77 inserciones). **Es no-op hoy a propósito**: sin mapeos, `resolveShopifyLocation` devuelve `null` y todo sigue cayendo al mismo fallback. Cuatro pruebas en verde en el servidor antes de reiniciar; arranque sin errores.
+
+**Prueba nueva `test:shopify-location`**, verificada inyectando el defecto de vuelta (lo caza) y restaurando (vuelve a pasar). Además **fija el contrato del servicio** —si `resolveShopifyLocation` cambia a devolver objeto, la prueba falla y obliga a actualizar el llamador— y **deja señalado como deuda** que el fallback que adivina sigue existiendo.
+
+**Orden pendiente, deliberado:** (2) configurar los mapeos de las 13 bodegas hacia la única location; (3) **recién entonces** reemplazar la adivinanza por fallo explícito (fail-closed, como ya exige inventario). No se hizo hoy porque con cero mapeos, fail-closed **detendría toda la sincronización de stock en seco**.
+
+**Decisión de Daniel registrada aparte:** no se usarán ramas separadas por sesión — "todo aquí". La mitigación al riesgo de D-173 queda entonces en **medir el rango antes de cada pull y avisar si hay commits ajenos**, no en aislar por rama.
+
+## D-175
+
+**2026-08-13 — El catálogo de transportadoras de Cereza ya no vive en memoria: el modal de despachos deja de depender de una llamada viva.**
+
+Autorizado por Daniel ("si subelo"). Desplegado en `d5395eb`, rango limpio de un solo commit (4 archivos, 297 inserciones).
+
+**El problema** (diagnosticado el 2026-08-11): el modal "Elige la transportadora" pedía el catálogo a Cereza en **cada apertura**, con caché **solo en memoria** del proceso (TTL 30 min). Ese endpoint tarda **5–7 s en calma** (medido 8 veces: min 5.344 ms, mediana 6.773 ms) y supera los 30 s bajo carga. Como el proceso se reinicia con cada despliegue —20 el 11-ago, 12 el 12-ago— el caché casi nunca llegaba a servir. **El endpoint se llamó 5 veces desde el 05-ago y falló las 5.**
+
+**La causa de fondo no era Cereza ni el TTL**, sino que el estado vivía en memoria de un proceso efímero. Contraste del mismo día: el barrido de Cereza cruzó esos 20 reinicios sin perder una página porque su estado vive en `flow_polling_state`. Misma tormenta, resultado opuesto; la única diferencia es dónde se guarda el estado. **Regla que queda: lo que debe sobrevivir a un reinicio no puede vivir en memoria.**
+
+**Nuevo orden de resolución** — memoria → copia persistida → Cereza:
+- Copia en **`integration_configs`** (colección ya existente, **no se creó ninguna nueva**), `type: "catalog_cache"`, frescura 6 h.
+- Timeout propio de **90 s** para esa llamada, en vez del general de 30 s que causaba el fallo.
+- Si Cereza falla o viene vacía, **se sirve la copia aunque esté vencida**: una lista vieja a lo sumo omite una transportadora nueva; un modal que no abre impide despachar.
+- Sin copia previa se propaga el fallo real — no se finge un catálogo vacío.
+- Leer o escribir la copia **nunca propaga error**: es una ayuda, no una dependencia dura.
+
+**Verificación de punta a punta en producción**, ejecutando en dos procesos distintos (el segundo simula un reinicio):
+```
+proceso 1 (sin copia)   51.157 ms  → Cereza, 105 transportadoras, persiste
+proceso 2 (proc. nuevo)     110 ms  → copia guardada, 105 transportadoras
+```
+**Dato relevante: la primera llamada tardó 51 s**, muy por encima de los 5–7 s medidos el 11-ago. Con el límite viejo de 30 s habría vuelto a fallar. Cereza está notoriamente más lenta, lo que **refuerza que la tormenta de reanuncios sigue viva y sin resolver** (ver `cereza-reanuncia-productos-tormenta`): es el pendiente de fondo, y el único que no se resuelve solo del lado de Katuq.
+
+Prueba `test:carriers-catalog`, verificada inyectando el defecto de quitar el timeout propio. Cubre el orden de resolución, servir copia vieja antes de romper, que un Firestore caído no tumbe la consulta, y que no se cree colección nueva.
+
+**Nota de expectativa:** la primera apertura tras cada despliegue seguirá tardando lo que tarde Cereza, porque la copia se siembra al primer uso. De la segunda en adelante es instantánea.
+
+**Estado del barrido de Cereza al cierre**, verificado tras la confusión de si se había detenido: `diffRotatePages=2` (encendida), puntero moviéndose (82 → 28, dio la vuelta), **2.141 huellas estancadas porque `onlyWithStock: true` y esa es la población completa con existencias** (de 8.298 productos), rango de ids 22019–40003. Es **régimen estacionario**, no una parada. Descartado también rate limit: cero cortes, cero errores de página, cero 429 hoy.
+
+## D-176
+
+**2026-08-13 — El stock ya puede publicarse cuando cambia el stock, y el cron que mentía ahora dice la verdad.**
+
+Daniel pidió dejar lista la sincronización Katuq → Shopify de precios e inventarios. Al auditarla aparecieron cinco huecos; se atacaron los dos primeros por decisión suya ("dale con el 1 y el 2"). Desplegado en `7fc3a0a`.
+
+**Hueco 1 — el cron de inventario masivo es un cascarón que se anota como exitoso.** `full-inventory-sync` corre cada 30 min y no hace nada: su registrador real (`initFullInventorySync`) está **comentado** en `cronService.js:83`, y el handler que resuelve el cargador dinámico era un placeholder que hacía `console.warn` y **retornaba**. Como no lanzaba, `reloadJob` lo marcaba con `markRunResult(id, true)`. Medido: **378 corridas no-op registradas como exitosas**, con su config diciendo "última corrida hace 24 min". Un trabajo que no hace nada pero reporta éxito es peor que uno caído: se ve verde y nadie lo revisa. Ahora los handlers no implementados **lanzan** con `HANDLER_NOT_IMPLEMENTED` y quedan registrados como fallidos. Verificado que no toca el pull de estados de pedidos, que corre por el flow `cereza-orders-status-pull` y sigue igual.
+
+**Hueco 2 — los cambios de stock no llegaban a Shopify.** El único camino que publicaba existencias era `katuq-product-changed`, que detecta por `date_edit` del **producto**. Una venta, un ajuste o un traslado no tocan el documento del producto, así que Shopify **nunca se enteraba**: el stock solo viajaba de casualidad. Nuevo trigger **`katuq-inventory-changed`**, que detecta por `updatedAt` de `inventory`. **Antes de diseñar sobre ese campo se verificó empíricamente contra movimientos reales: 8 de 8 filas tenían `updatedAt` posterior a su movimiento** — es exactamente la comprobación que faltó con Cereza y costó 39 precios.
+
+Tres decisiones de diseño, todas fijadas por prueba:
+- **Camino solo-stock.** Alimenta únicamente a `shopify-inventory-adjust`; no emite producto, precio ni catálogo (regla de `openspec/config.yaml`). La prueba verifica el **payload emitido**, no la intención.
+- **Un valor por producto, no por fila.** Emitir cada fila haría que la última pisara a las anteriores en Shopify (hoy una sola location), publicando el stock de UNA bodega como si fuera el total.
+- **Sin doble conteo.** Se normaliza `productoId` (referencia→docId) y se deduplica por producto+bodega: sumar los registros legacy infla ~60%, y publicar stock inflado es vender lo que no hay.
+
+**Nace en modo sombra** (`publicar: false`): observa y registra cuánto publicaría sin emitir nada. Encenderlo es decisión explícita por empresa; apagarlo es el kill switch. **Declarado en AMBOS catálogos** — declararlo en uno solo fue lo que tumbó el registro de nodos 21 horas el 10-ago; la prueba de cobertura confirma 22 handlers en ambos.
+
+**No se conectó a ningún flow todavía**: el trigger es inerte hasta que exista uno.
+
+**Los tres huecos restantes, medidos y sin atacar:** (3) `bulkUpdateField` permite cambiar `precio.precioUnitarioIva` y `precio.precioUnitarioSinIva` en masa **sin tocar `date_edit`**, así que un cambio masivo de precios es invisible para la sincronización; (4) el mapeo bodega→location sigue sin configurar (D-174 paso 2), todo cae en la única location; (5) los 98 productos de Fullpi tienen `marketplace.paginaWeb=false` y por eso no son elegibles.
+
+**Población real de la sincronización** (medida): de 8.444 productos de OMS, 8.343 tienen `paginaWeb=true`, pero **8.295 son de Cereza y van por su propio flow**. `katuq-web-to-shopify` sirve a **48 productos**.
+
+**Rango de despliegue:** 3 commits, uno ajeno (`b47c9d1`, conversiones de landings de la tercera sesión) que **no toca inventario, pedidos ni precios** — señalado a Daniel antes de pullear, según la disciplina de D-173. Siete pruebas de guarda en verde en el servidor; arranque sin errores; 21 corridas de flows en los 15 min siguientes.
+
+## D-198 (2026-08-13) — Bot fase 3: la cotización sale configurada como la real, el bot vende y recibe fotos
+
+**Cambio OpenSpec `bot-cotizacion-configurada`** (aprobado por Daniel en tres adiciones el mismo día), implementado y desplegado (backend `0de0563`, ADK `9c2bd11`; rangos medidos, solo estos commits).
+
+**Configuración conversacional del pedido.** Antes de cerrar, el bot acuerda: forma de entrega (con las opciones REALES del maestro `formaEntrega` del comercio — inferencia domicilio/recoge por nombre, mismo criterio de crear-ventas) y fecha (el agente normaliza "el viernes" a AAAA-MM-DD; el backend valida real y futura — el 30 de febrero y el año pasado mueren con log y se repreguntan); opcionales ofrecidos UNA vez sin insistir: método de pago (maestro `pagos`), dedicatoria y facturación a otro nombre. Todo lo válido persiste en la sesión (sobrevive turnos, no se repregunta; se limpia al cerrar y al devolver al bot). Gates: sin forma+fecha no hay cotización; **recoge en tienda cierra sin dirección** (antes se exigía siempre).
+
+**Aterrizaje canónico.** El hallazgo que hizo barata la fase: la cotización guarda `items: Carrito[]` con la MISMA forma del carrito de venta asistida, y la conversión a pedido ya copia `configuracion` intacta. El cierre del bot ahora arma cada ítem con `configuracion.datosEntrega` (formaEntrega + fechaEntrega `{year,month,day}` + observaciones), arrays SIEMPRE presentes y la dedicatoria en `tarjetas` — el editor, el link público y la conversión la tratan como una cotización hecha a mano. `metodoPagoPreferido` y `facturarA` en el doc y todo repetido en la nota. Write-set intacto (contract test ampliado lo clava).
+
+**El bot vende.** Instrucciones de venta persuasiva con guardarraíles: una sugerencia por momento y solo productos que devolvió la búsqueda con su precio real; alternativa honesta sin existencias; el "no" se respeta a la primera; PROHIBIDO inventar descuentos o urgencias.
+
+**Recibe fotos.** La imagen del cliente se descarga de Kapso (tope 5 MB, jpeg/png/webp), viaja al turno multimodal con el caption como texto y se DESCARTA — jamás se persiste. Foto que no baja o formato raro → aviso cortés de siempre; audio/sticker no cambian.
+
+**Verificación:** 8 suites backend + 38 tests ADK en verde; desplegado y sano. **Pendiente 4.2:** prueba real del ciclo con Daniel (pedido con domicilio + fecha + dedicatoria + foto) y abrir/convertir la cotización.
+
+## D-177
+
+**2026-08-13 — Encendida la web de los productos de Fullpi: 78 ya publicados en Shopify. Y dos errores propios de lectura, uno destapado por Daniel.**
+
+Daniel pidió encender `marketplace.paginaWeb` en los 98 productos de Fullpi para que puedan publicarse en Shopify.
+
+**Error propio nº1, corregido por Daniel.** Se midió el precio leyendo `precio.precioUnitarioConIva` y se reportó que 84 de 98 "no tenían precio" y que 13 estaban a "$10 de relleno" y se regalarían. **Daniel preguntó: "¿qué precios estás viendo? ¿la lista de precios por tipo de cliente?"** — y ahí estaba: el precio real vive en `preciosPorTipoCliente` (lista "Público en general"), y `mapper.js:299 _resolverPrecioPublico` **la lee correctamente**; el campo base es solo el fallback. Simulando el mapeador real sobre los 98: **94 publicables, precio promedio $171.646** (JCR4011 base $0 → $60.992; JCR4156 base $0 → $220.361). De haber seguido el diagnóstico propio se habrían dejado 93 productos apagados sin razón.
+
+**Error propio nº2, detectado al verificar.** Encender `marketplace.paginaWeb` con un merge **no toca `date_edit`**, y el trigger `katuq-product-changed` filtra por cursor sobre ese campo. Los 94 quedaron con fecha de mayo, muy por debajo del cursor (23:26) — **invisibles para siempre**. Es exactamente el hueco 3 reportado en D-176, mordiendo en el propio cambio. Corregido marcando `date_edit = ahora`, que es lo que hace el endpoint de edición (`productos.js:1778`).
+
+**Resultado, verificado:** la corrida de las 22:50 duró 212 s y terminó sin errores. **78 de 94 creados en Shopify** con su precio de lista y su stock (8.494 uds de Bogotá/Medellín/Cali sumadas, correcto con una sola location).
+
+**4 quedaron apagados a propósito**: `ARRNDO`, `TLFNO`, `ENRGA`, `AGUA` — arriendo, teléfono, energía y agua. No son productos sino gastos; que el criterio (precio resuelto por el mapeador) los excluyera solo confirma que era el correcto.
+
+**16 NO se crearon y la causa quedó SIN determinar.** Son exactamente los del sufijo `-OFF`. Están activos, con web encendida, precio válido y fecha marcada, igual que los 78 que sí pasaron; **no aparecen en ningún log** — ni error, ni rechazo. Los 16 tienen producto base y **los 16 bases ya están en Shopify**, lo que apunta a una interacción con el emparejamiento por SKU (`matchBy: "sku"`), sin comprobar.
+
+**Se decidió parar la investigación ahí**: seguir cavando para publicar 16 productos cuyo significado de negocio nadie explicó es esfuerzo mal dirigido. **El bloqueante no es técnico: es que Fullpi conteste qué significa `-OFF`.** Si es "descontinuado", que no se hayan publicado es el mejor desenlace posible.
+
+Respaldos en el servidor: `respaldo-web-fullpi-*.json` y `respaldo-dateedit-fullpi-*.json`.
+
+## D-178
+
+**2026-08-14 — Medido: Katuq ignora $95,7 millones en descuentos activos de Cereza. Censo completo del catálogo.**
+
+Daniel reportó que la API de Cereza ahora entrega `discount_price` dentro de cada precio y una llave `discounts` con las campañas activas, y pidió revisar qué pasa con ellos.
+
+**Estado actual: Katuq los ignora por completo.** El mapeo `osmosisProductSyncService` (líneas 448-461) construye `preciosPorTipoCliente` leyendo `v.price` de `price_list` 1 (público) y 3 (mayorista) — **nunca `discount_price`**. La llave `discounts` no se lee en ninguna parte del código. Shopify publica el precio de lista.
+
+**Lo único que sí funciona: la detección de cambios.** La huella de contenido (D-170) incluye `discount_price`, así que cuando una campaña empieza o termina el producto se re-sincroniza solo. La cañería avisa; falta qué hacer con el aviso.
+
+**Censo completo contra la API en vivo** (83 páginas, 900 ms entre llamadas, **0 errores y 0 rate limits** — el ritmo funciona y sirve de referencia para futuros barridos):
+
+| | |
+| --- | --- |
+| Productos revisados | **8.300** |
+| Con descuento activo | **1.266 (15,3% del catálogo)** |
+| Precio de lista sumado | **$301.189.949** |
+| Precio con descuento | **$205.474.826** |
+| Diferencia | **$95.715.123 (32% promedio)** |
+| Campañas activas | **93** |
+
+**La muestra pequeña engañaba por diez:** los primeros 300 productos daban 5 con descuento (1,7%); el catálogo completo da 15,3%. Daniel eligió medir el catálogo entero y tenía razón.
+
+Campañas más grandes: Mapalé Outlet 351 productos al 35% (hasta feb-2027), **Elfo 313 productos al 25% que vence el 17-ago**, CHISA Outlet 103 al 45%.
+
+**Hallazgo de diseño: hay DOS descuentos por producto, uno por lista.** `tiendacereza` (público) y `cereza-mayorista` (mayorista) traen porcentajes distintos — Mapalé: 35% público vs 15% mayorista. Eso calza con los dos tipos de cliente que ya maneja Katuq, así que **cada tipo debe recibir su propio descuento**, no uno solo para todos.
+
+**Discrepancia a preguntarle a Cereza:** la campaña `tiendacereza :: "Lovense del 13 al 17 15%"` reporta `percent: 10`. El nombre y el campo no coinciden.
+
+**Enfoque aprobado por Daniel:** precio tachado en la tienda (Shopify `compareAtPrice`, hoy solo leído en `shopify-bulk-product-sync`, nunca escrito por el upsert). **Diseño propuesto, pendiente de luz verde para implementar:** guardar el descuento **al lado** del precio de lista y no encima, de modo que al vencer la campaña el descuento desaparezca y el precio vuelva solo, sin intervención. Pisar el precio de lista dejaría sin valor de retorno.
+
+**Contexto Cereza que sigue sin resolverse:** la tormenta de reanuncios (16.266 avisos en 6 días para 1.062 productos) y la lentitud creciente de su API (el catálogo de transportadoras pasó de 5-7 s a **51 s** el 13-ago). Ninguno se arregla del lado de Katuq.
+
+## D-194 (2026-08-14) — Link de pauta con código: premium temporal al registrarse, y el premium por fin vence
+
+Daniel pidió un enlace para pautar: quien se registre con un código entra a Katuq **en premium por un tiempo limitado**, sin pagar. La primera campaña es `COLOMBIA2026` con **90 días (3 meses)**.
+
+**El hueco que había que tapar primero: el premium no vencía.** `SubscriptionGuard` solo evalúa `plan === 'premium'` y el backend lo lee de `companies.subscriptionPlan`, sin ninguna fecha de corte. Regalar premium sin construir el vencimiento habría sido regalarlo de por vida. Se agregan `premiumUntil`, `premiumOrigen`, `premiumCodigo` y `premiumCampanaId` a la empresa, y un trabajo diario (6 AM COT) que baja a freemium lo vencido y preavisa 3 días antes. **Alcance blindado por construcción**: la pasada filtra `premiumOrigen == 'promocion'`, campo que un premium pagado no tiene, así que no puede alcanzarlo ni por error; al degradar el origen pasa a `promocion_vencida` y la empresa sale del filtro, con lo que repetir la pasada no cambia nada. No cobra, no pide tarjeta y no toca datos del comercio: solo el plan y sus límites.
+
+**Dónde viven los códigos: en `subscriptionPlans`, por decisión explícita de Daniel de no abrir colección nueva.** Se marcan con `tipoRegistro: 'campana'`. **Riesgo asumido y mitigado**: `GET /v1/subscription-plans/active` se sirve **sin auth** a la vitrina pública de precios, y `getSubscriptionPlans`, `filterSubscriptionPlans` y `getSubscriptionPlansStats` leen la colección entera. Los seis lectores filtran ahora con `esPlanVendible()`, **en código y no confiando en que `orderBy('precio')` descarte los documentos sin ese campo** — eso es un efecto lateral de Firestore, no una garantía. Queda la deuda: un lector nuevo que se olvide del filtro pone una campaña a la venta. Hay prueba que lo cubre.
+
+**El canje ocurre dentro de la creación de la empresa, en transacción**, no en la landing: el enlace circula por redes y validar solo al abrirlo dejaría pasar el cupo. `usosConsumidos` se incrementa atómicamente. **El código es estrictamente opcional y no puede tumbar el registro** — bloque aislado en `try/catch`, cualquier falla cae a freemium con el comportamiento de siempre y deja rastro en `registration_security_audit`. Por ahí pasa toda la adquisición, no solo la de campaña. **En cuarentena no se canjea**: quemaría cupo de la pauta en un registro que nadie ha validado todavía.
+
+**Sin índice compuesto a propósito**: la pasada consulta por igualdad simple sobre `premiumOrigen` (índice automático) y descarta fechas en memoria. Son cientos de empresas; si crece, ahí sí toca el índice.
+
+**Landing propia `/promo/:codigo`** (módulo lazy, 27 kB), pública y fuera del registro para no engordarlo. Código muerto o agotado no deja a nadie en pantalla en blanco: avisa en tono de advertencia —no de error, que no es culpa de quien entra— y ofrece el registro normal. **Pantalla de campañas en superadmin** con enlace listo para copiar y cuántos registros trajo cada una.
+
+**Verificado:** build de frontend en verde y **40 pruebas de reglas** en `scripts/test-promociones-registro.js`, que corren con un doble de Firestore en memoria (sin credenciales, sin tocar producción): la vitrina pública no devuelve campañas, un plan vendible no se puede canjear como campaña, el cupo no se pasa, la vista pública no filtra cupo ni usos, el vencimiento no toca premium pagado ni vigente ni freemium, y repetir la pasada no degrada a nadie más ni repite correos.
+
+**Pendiente antes de pautar:** correr la pasada en producción en modo simulación y revisar la lista; ejecutar el backfill de roles (`scripts/agregar-menu-campanas-a-superadmin.js`) o la pantalla queda invisible como ya pasó antes; ciclo real con campaña de cupo 1; y encender el cron con `PREMIUM_PROMO_CRON_ENABLED=true`, que nace apagado a propósito.
