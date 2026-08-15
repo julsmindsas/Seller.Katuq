@@ -43,6 +43,11 @@ export class PromoCampanaComponent implements OnInit {
         this.disponible = !!respuesta.disponible;
         this.promocion = respuesta.promocion || null;
         this.cargando = false;
+        // Solo se cuenta la visita de una campaña que existe: si no, cualquiera
+        // podría crear tráfico falso pidiendo códigos inventados.
+        if (this.disponible) {
+          this.promociones.contarVisita(this.codigo, 'visita');
+        }
       },
       error: () => {
         // Nunca se promete un beneficio que el registro no vaya a poder cumplir.
@@ -56,6 +61,7 @@ export class PromoCampanaComponent implements OnInit {
   empezar(): void {
     if (this.disponible && this.promocion) {
       this.promociones.guardarCodigoPendiente(this.promocion.codigo);
+      this.promociones.contarVisita(this.promocion.codigo, 'clic');
     }
     this.router.navigate(["/registrarse"]);
   }

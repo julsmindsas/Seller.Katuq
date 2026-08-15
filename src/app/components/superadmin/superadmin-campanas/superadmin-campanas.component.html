@@ -120,18 +120,47 @@
           <span class="dato__valor">{{ fechaLegible(campana.vigenteHasta) }}</span>
         </div>
         <div class="dato">
+          <span class="dato__label">Visitas</span>
+          <span class="dato__valor">
+            {{ campana.visitas }}
+            <small class="dato__nota" *ngIf="campana.visitantes">· {{ campana.visitantes }} personas aprox.</small>
+          </span>
+        </div>
+        <div class="dato">
+          <span class="dato__label">Empezaron el registro</span>
+          <span class="dato__valor">{{ campana.clics }}</span>
+        </div>
+        <div class="dato dato--ancho">
           <span class="dato__label">Enlace</span>
           <span class="dato__valor dato__valor--enlace">{{ enlaceDeCampana(campana) }}</span>
         </div>
       </div>
 
       <div class="resultado">
-        <ng-container *ngIf="resultados[campana.id]; else pedirResultado">
-          <span class="dato__label">Resultado</span>
-          <span class="dato__valor">
-            {{ resultados[campana.id].registradas }} registros ·
-            {{ resultados[campana.id].sigueEnPremium }} siguen en Premium
-          </span>
+        <ng-container *ngIf="resultados[campana.id] as r; else pedirResultado">
+          <div class="embudo">
+            <div class="embudo__paso">
+              <span class="embudo__num">{{ r.visitas }}</span>
+              <span class="embudo__label">entraron al enlace</span>
+            </div>
+            <span class="embudo__flecha">→</span>
+            <div class="embudo__paso">
+              <span class="embudo__num">{{ r.clics }}</span>
+              <span class="embudo__label">empezaron el registro</span>
+            </div>
+            <span class="embudo__flecha">→</span>
+            <div class="embudo__paso embudo__paso--fin">
+              <span class="embudo__num">{{ r.registradas }}</span>
+              <span class="embudo__label">se registraron</span>
+            </div>
+          </div>
+          <div class="embudo__pie">
+            Conversión desde la visita: <strong>{{ porcentaje(r.conversionVisitaRegistro) }}</strong>
+            · Siguen en Premium: <strong>{{ r.sigueEnPremium }}</strong>
+            <span *ngIf="r.degradadas"> · Ya bajaron a gratis: <strong>{{ r.degradadas }}</strong></span>
+            <br />
+            <small>Las visitas se guardan por tandas: el número puede ir hasta medio minuto atrás.</small>
+          </div>
         </ng-container>
         <ng-template #pedirResultado>
           <button type="button" class="btn-plano" (click)="verResultado(campana)">Ver cuántos trajo</button>

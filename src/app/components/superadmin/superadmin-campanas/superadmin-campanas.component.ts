@@ -1,5 +1,5 @@
 import { Component, OnInit } from "@angular/core";
-import { PromocionesService, Campana } from "../../../shared/services/promociones.service";
+import { PromocionesService, Campana, ResultadoCampana } from "../../../shared/services/promociones.service";
 import { ToastrService } from "ngx-toastr";
 
 /**
@@ -27,7 +27,7 @@ export class SuperadminCampanasComponent implements OnInit {
   formulario = this.formularioVacio();
 
   /** Resultados por campaña, cargados a demanda. */
-  resultados: { [id: string]: { registradas: number; sigueEnPremium: number } } = {};
+  resultados: { [id: string]: ResultadoCampana } = {};
 
   constructor(
     private promociones: PromocionesService,
@@ -139,14 +139,18 @@ export class SuperadminCampanasComponent implements OnInit {
 
   verResultado(campana: Campana): void {
     this.promociones.resultadoCampana(campana.id).subscribe({
-      next: (resultado) => {
-        this.resultados[campana.id] = {
-          registradas: resultado.registradas,
-          sigueEnPremium: resultado.sigueEnPremium,
-        };
-      },
+      next: (resultado) => (this.resultados[campana.id] = resultado),
       error: () => this.toastr.error("No pudimos cargar el resultado"),
     });
+  }
+
+  /**
+   * El conteo llega hasta 30 s tarde: el servidor acumula las visitas en memoria
+   * y las guarda por tandas para no escribir en Firestore en cada carga de la
+   * página. Se dice en pantalla para que nadie crea que el contador está roto.
+   */
+  porcentaje(valor: number | null): string {
+    return valor === null || valor === undefined ? "—" : `${valor}%`;
   }
 
   enlaceDeCampana(campana: Campana): string {

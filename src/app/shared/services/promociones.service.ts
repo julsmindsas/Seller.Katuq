@@ -35,6 +35,9 @@ export interface Campana {
   activo: boolean;
   disponible: boolean;
   fechaCreacion?: any;
+  visitas: number;
+  visitantes: number;
+  clics: number;
 }
 
 export interface ResultadoCampana {
@@ -43,6 +46,14 @@ export interface ResultadoCampana {
   registradas: number;
   sigueEnPremium: number;
   degradadas: number;
+  /** El embudo: sin esto no se sabe si la pauta rinde, solo cuántos entraron. */
+  visitas: number;
+  visitantes: number;
+  clics: number;
+  /** Porcentajes, o null cuando todavía no hay de dónde calcularlos. */
+  conversionVisitaRegistro: number | null;
+  conversionClicRegistro: number | null;
+  porDia: { [fecha: string]: { v: number; u: number; c: number } };
 }
 
 /**
@@ -64,6 +75,31 @@ export class PromocionesService extends BaseService {
 
   validarCodigo(codigo: string): Observable<ValidacionPromocion> {
     return this.get<ValidacionPromocion>(`/v1/promociones/validar/${encodeURIComponent(codigo)}`);
+  }
+
+  /**
+   * Avisa que alguien abrió el enlace o pulsó el botón de registro.
+   *
+   * Es telemetría y no debe estorbar: se dispara sin esperar respuesta y los
+   * errores se tragan. `nuevo` marca la primera visita del día de este navegador
+   * — aproximado a propósito, no se rastrea a nadie.
+   */
+  contarVisita(codigo: string, tipo: 'visita' | 'clic'): void {
+    const llave = `katuq_promo_visto_${codigo}`;
+    const hoy = new Date().toISOString().slice(0, 10);
+    let nuevo = false;
+
+    if (tipo === 'visita') {
+      try {
+        nuevo = localStorage.getItem(llave) !== hoy;
+        if (nuevo) localStorage.setItem(llave, hoy);
+      } catch (e) {
+        // Navegación privada: se cuenta como visita, no como visitante.
+      }
+    }
+
+    this.post(`/v1/promociones/visita/${encodeURIComponent(codigo)}`, { tipo, nuevo })
+      .subscribe({ next: () => {}, error: () => {} });
   }
 
   listarCampanas(): Observable<Campana[]> {
