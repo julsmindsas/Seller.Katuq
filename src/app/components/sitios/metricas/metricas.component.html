@@ -74,6 +74,43 @@
             <p class="grafica__pie">Las barras moradas son días con pedidos.</p>
           </section>
 
+          <!-- De dónde vienen -->
+          <section class="fuentes" *ngIf="datos.fuentes && datos.fuentes.length">
+            <h6>De dónde te visitan</h6>
+            <ul>
+              <li *ngFor="let f of datos.fuentes">
+                <span class="fuentes__nombre">{{ etiquetaFuente(f.fuente) }}</span>
+                <span class="fuentes__barra"><span [style.width.%]="anchoFuente(f.vistas)"></span></span>
+                <strong>{{ f.vistas }}</strong>
+              </li>
+            </ul>
+            <p class="grafica__pie" *ngIf="datos.visitantesUnicos">
+              {{ datos.visitantesUnicos }} persona(s) distinta(s) en este período.
+            </p>
+          </section>
+
+          <!-- Dispositivo y campañas, lado a lado cuando hay de ambos -->
+          <div class="dos-columnas">
+            <section class="clics" *ngIf="datos.dispositivos && datos.dispositivos.length">
+              <h6>Desde qué entran</h6>
+              <ul>
+                <li *ngFor="let d of datos.dispositivos">
+                  <span>{{ d.dispositivo === 'móvil' ? 'Celular' : (d.dispositivo === 'escritorio' ? 'Computador' : 'Sin dato') }}</span>
+                  <strong>{{ d.vistas }}</strong>
+                </li>
+              </ul>
+            </section>
+            <section class="clics" *ngIf="datos.campanas && datos.campanas.length">
+              <h6>Tus campañas</h6>
+              <ul>
+                <li *ngFor="let c of datos.campanas">
+                  <span>{{ c.campana }}</span>
+                  <strong>{{ c.vistas }}</strong>
+                </li>
+              </ul>
+            </section>
+          </div>
+
           <!-- Clics -->
           <section class="clics" *ngIf="datos.totales.clic > 0">
             <h6>En qué hicieron clic</h6>
