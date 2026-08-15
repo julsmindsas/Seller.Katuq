@@ -4220,3 +4220,17 @@ Actualizada la expresión del flow (respaldo en `respaldo-mapeo-cereza-*.json`),
 **Verificado en producción:** 95 productos con descuento aplicado, **los 95 ligados a Shopify**, $7,4M de descuento reflejado, y subiendo a ~30 por corrida. Ejemplos: GCJ2709 $165.900 → $82.950 (−50%), GCD270R $75.900 → $49.335 (−35%), GCJ4451 $599.900 → $539.910 (−10%).
 
 **Lección operativa:** en los flows, el mapeo de campos puede ser **configuración, no código**. Antes de dar por cubierto un cambio de mapeo hay que revisar si el flow tiene su propio `katuq-canonical-mapper` con expresiones declarativas — y actualizarlas también. Verificar el efecto en datos, nunca asumir que el despliegue bastó.
+
+### Bitácora del despliegue (14-ago-2026, misma sesión)
+
+**Desplegado y verificado en producción.** Backend en `13.222.206.185` (commit `50ba1ab`, `pm2 restart katuq-api`, arranque sin errores) y frontend en hosting (versión `2026.08.14.2`). Comprobado contra producción: el endpoint público de validación responde sin sesión, la administración de campañas exige token (401), y **`/v1/subscription-plans/active` sigue devolviendo la vitrina sin campañas** — que era el riesgo de haberlas metido en `subscriptionPlans`.
+
+**Campaña `COLOMBIA2026` creada** (`RwZ5zO3PJRSiOJQU97ht`): 120 días, **sin tope de cupo y sin fecha límite**, decisión explícita de Daniel tras advertirle que cada registro son 4 meses de acceso completo sin cobrar y que el enlace va en un video para redes.
+
+**Ciclo verificado con navegador** sobre producción: landing → "Crear mi cuenta gratis" → el registro reconoce la promoción y muestra "COLOMBIA2026 · 4 meses de Premium gratis". No se completó el envío para no crear una empresa real. El código se revalida al retomarlo, así que una campaña apagada a mitad de camino no deja una promesa colgada en pantalla.
+
+**Hallazgo del backfill de menús:** cuatro roles de comercios ajenos —La Tartaleria, Palacio Contable (×2) y Yavalva— tienen `superadmin/clientes` en su campo `menus` por una configuración vieja. `requireRole(['Super Administrador'])` los rechaza con 403, así que no pueden operar nada, pero **ven una entrada de la consola de plataforma en su menú**. El script se restringió a Super Administrador y no se les amplió. Queda como deuda a limpiar aparte.
+
+**El cron de vencimiento sigue apagado** (`PREMIUM_PROMO_CRON_ENABLED` sin definir en producción). Consecuencia a tener presente: **hoy el premium promocional no caduca**. El primer vencimiento cae a 120 días del primer registro; antes de encenderlo hay que correr `node scripts/vencer-premium-promocional.js` en el servidor y revisar la lista.
+
+**Se commiteó trabajo en curso de otras sesiones** sobre ambas ramas (políticas de inventario y sus contract tests, onboarding, middleware de tenant, asistente de onboarding, bienvenida, política de privacidad) porque Daniel confirmó que también era suyo. Verificado antes de subir: sintaxis de todos los `.js`, cinco suites de tests ajenas en verde y build de producción del frontend sin errores.

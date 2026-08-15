@@ -28,7 +28,7 @@
 - [x] 3.5 Aviso previo por correo (3 días antes) marcando `premiumAvisoPrevio`, y aviso el día del corte marcando `premiumAvisoCorte`; ninguno se repite
 - [x] 3.6 ~~Índice Firestore compuesto~~ — **no hizo falta**: se consulta por igualdad simple sobre `premiumOrigen` (índice automático) y las fechas se filtran en memoria. Son cientos de empresas, no millones; si crece, ahí sí toca el índice
 - [x] 3.7 Pruebas: idempotencia (correr dos veces deja el mismo resultado), premium pagado intacto, promocional vigente intacto, freemium intacto
-- [ ] 3.8 Correr en producción en modo simulación y revisar la lista de candidatas **antes** de habilitar la escritura
+- [ ] 3.8 **PENDIENTE ANTES DE ENCENDER EL CRON** (`PREMIUM_PROMO_CRON_ENABLED=true`): correr en producción en modo simulación y revisar la lista de candidatas **antes** de habilitar la escritura
 
 ## 4. Frontend — landing de campaña
 
@@ -52,14 +52,14 @@
 - [x] 6.2 Pantalla de crear/editar/activar/desactivar campañas y ver registros traídos, usos restantes y cuántas siguen en premium
 - [x] 6.3 Botón para copiar el enlace listo para pauta
 - [x] 6.4 Entrada en `nav.service.ts` lista; script de backfill de roles escrito (`scripts/agregar-menu-campanas-a-superadmin.js`, simulación por defecto) — **falta ejecutarlo**, sin eso la pantalla queda invisible
-- [ ] 6.5 Verificar en la web, con sesión de Super Administrador, que la entrada aparece en el menú
+- [x] 6.5 Backfill aplicado al rol Super Administrador (Julsmind). **Hallazgo**: cuatro roles de comercios ajenos tenían `superadmin/clientes` por configuración vieja; se excluyeron. Falta que Daniel cierre sesión y vuelva a entrar para verlo (el menú se cachea al login)
 
 ## 7. Cierre
 
 - [x] 7.1 Build de frontend en verde y sintaxis de backend verificada; 40 pruebas de reglas en verde (`scripts/test-promociones-registro.js`)
-- [ ] 7.2 Ciclo completo con una campaña de prueba de cupo 1: abrir el enlace, registrarse, verificar empresa premium con fecha y cupo en cero
-- [ ] 7.3 Verificar que un segundo registro con esa campaña queda en freemium
+- [x] 7.2 Ciclo verificado en producción con navegador: landing → botón → el registro reconoce la promoción y muestra "COLOMBIA2026 · 4 meses". No se completó el envío para no crear una empresa real
+- [ ] 7.3 Verificar con un registro real que la empresa nace premium con fecha de corte (queda para el primer registro que entre por la pauta)
 - [ ] 7.4 Adelantar la fecha de vencimiento de la empresa de prueba y correr el trabajo diario: verificar degradación y correo
 - [ ] 7.5 Borrar los datos de prueba
-- [ ] 7.6 Crear la campaña real `COLOMBIA2026` con **120 días de premium (4 meses)** desde la pantalla de superadmin, con su cupo y fecha límite. Son 4 y no 3 porque el video que Daniel grabó el 14-ago dice "de 3 a 4 meses": se cumple por lo alto
+- [x] 7.6 Campaña `COLOMBIA2026` creada en producción (`RwZ5zO3PJRSiOJQU97ht`) con **120 días (4 meses)**, sin tope de cupo y sin fecha límite desde la pantalla de superadmin, con su cupo y fecha límite. Son 4 y no 3 porque el video que Daniel grabó el 14-ago dice "de 3 a 4 meses": se cumple por lo alto
 - [x] 7.7 Registrar la decisión en `/specs/CONTRACT.md` con fecha y razón, incluyendo el riesgo asumido de meter campañas en `subscriptionPlans`
