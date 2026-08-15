@@ -4234,3 +4234,17 @@ Actualizada la expresión del flow (respaldo en `respaldo-mapeo-cereza-*.json`),
 **El cron de vencimiento sigue apagado** (`PREMIUM_PROMO_CRON_ENABLED` sin definir en producción). Consecuencia a tener presente: **hoy el premium promocional no caduca**. El primer vencimiento cae a 120 días del primer registro; antes de encenderlo hay que correr `node scripts/vencer-premium-promocional.js` en el servidor y revisar la lista.
 
 **Se commiteó trabajo en curso de otras sesiones** sobre ambas ramas (políticas de inventario y sus contract tests, onboarding, middleware de tenant, asistente de onboarding, bienvenida, política de privacidad) porque Daniel confirmó que también era suyo. Verificado antes de subir: sintaxis de todos los `.js`, cinco suites de tests ajenas en verde y build de producción del frontend sin errores.
+
+## D-190 (2026-08-14) — Analítica de visitas del builder: de dónde vienen, con qué entran y cuántas personas son
+
+Daniel pidió saber desde dónde visitan las páginas y una analítica estilo WordPress/Shopify. Tres decisiones:
+
+**1. La visita se cuenta desde el navegador, no en el servidor.** Al render también tocan el bot de WhatsApp que arma la tarjetica y los rastreadores de Google: contarlos inflaba el panel (el demo llevaba "680 vistas" con bots revueltos). La baliza (`sendBeacon` a `/public/:slug/vista`) solo la ejecutan personas, y lleva un id de visitante persistente en `localStorage` para distinguir visitas de visitantes. Consecuencia asumida: `vistasCount` cambia de significado — antes cargas de página con bots, ahora personas. Los números van a BAJAR y eso es la verdad, no una regresión.
+
+**2. La fuente se clasifica en el servidor** (`utils/siteAnalitica.js`, puro y probado en el contrato): UTM primero —si el comerciante marcó la campaña, esa es la verdad— y referrer después (WhatsApp, Instagram, Facebook, TikTok, Google, YouTube, correo, otro-sitio con su dominio, directo). Vocabulario cerrado a propósito: una fuente libre por visita haría el gráfico ilegible. El dispositivo sale del ancho real de pantalla; el user-agent miente demasiado.
+
+**3. Se extiende el panel de la otra sesión, no se duplica.** `GET /v1/sites/:id/metricas` gana fuentes, dispositivos, campañas y visitantes únicos (totales y por día); el panel gana "De dónde te visitan" con barras, celular vs computador, y campañas por nombre. Las vistas de antes de la baliza aparecen como "Sin dato (visitas antiguas)".
+
+**Verificado en producción de punta a punta**: tres visitas simuladas (Instagram/móvil, `utm_source=meta` + campaña `dia-madres` → Facebook, directo/escritorio) quedaron clasificadas exactas en `site_events` y se borraron. Release `2026.08.14.4` publicado.
+
+**Lo que esto NO es**: geolocalización (país/ciudad). Necesita una base GeoIP (licencia MaxMind o similar) — decisión aparte si se quiere.
