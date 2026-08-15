@@ -16,6 +16,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ImportResult } from '../../../../shared/models/column-mapping.model';
 import { ClientConfigService, ClientTag } from '../services/client-config.service';
 import Swal from 'sweetalert2';
+import { SitiosService } from '../../../sitios/sitios.service';
 
 @Component({
     selector: 'app-clientes-lista',
@@ -79,7 +80,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         private datePipe: DatePipe,
         private messageService: MessageService,
         private http: HttpClient,
-        private clientConfig: ClientConfigService
+        private clientConfig: ClientConfigService,
+        private sitiosService: SitiosService
     ) {
         this.formFiltros = this.fb.group({
             cliente: [''],
@@ -766,5 +768,49 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 detail: error?.error?.error || 'No se pudieron eliminar los clientes'
             });
         }
+    }
+
+    /**
+     * Link de acceso personal del cliente a la tienda publicada: al abrirlo,
+     * la tienda lo saluda y le muestra los precios de SU lista. Generarlo de
+     * nuevo ROTA el acceso — el link anterior deja de servir (así se revoca).
+     */
+    generarAccesoTienda(cliente: any): void {
+        const cd = cliente?.cd;
+        if (!cd) {
+            Swal.fire('Sin identificador', 'Este cliente no tiene identificador interno; ábrelo y guárdalo una vez.', 'warning');
+            return;
+        }
+        this.sitiosService.generarAccesoCliente(cd).subscribe({
+            next: (res) => {
+                const data = res && res.data;
+                if (!data) {
+                    Swal.fire('Error', 'No pudimos generar el acceso.', 'error');
+                    return;
+                }
+                if (!data.links.length) {
+                    Swal.fire(
+                        'Acceso creado, pero sin tienda',
+                        data.aviso || 'Ningún sitio publicado tiene la tienda encendida todavía. Enciéndela en Mi página web y vuelve a generar el link.',
+                        'info'
+                    );
+                    return;
+                }
+                const link = data.links[0].url;
+                navigator.clipboard?.writeText(link).catch(() => undefined);
+                Swal.fire({
+                    title: 'Link copiado',
+                    html:
+                        `<p style="margin-bottom:.5rem">Compárteselo a <strong>${cliente.nombres_completos || 'tu cliente'}</strong>` +
+                        (data.categoria ? ` (${data.categoria})` : '') +
+                        ` por WhatsApp. Al abrirlo verá los precios de su lista en toda la tienda.</p>` +
+                        `<code style="font-size:.75rem;word-break:break-all">${link}</code>` +
+                        `<p style="margin-top:.75rem;font-size:.8rem;opacity:.75">Generarlo de nuevo revoca el link anterior.</p>`,
+                    icon: 'success',
+                    confirmButtonText: 'Listo',
+                });
+            },
+            error: () => Swal.fire('Error', 'No pudimos generar el acceso.', 'error'),
+        });
     }
 }

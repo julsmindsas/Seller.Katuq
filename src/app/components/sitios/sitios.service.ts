@@ -285,6 +285,22 @@ export class SitiosService extends BaseService {
     return this.get<Respuesta<VentaConfig>>("/v1/sites/venta-config");
   }
 
+  /**
+   * Genera (o rota, que es la forma de revocar) el link de acceso personal de
+   * un cliente a las tiendas publicadas: con él, el cliente ve los precios de
+   * SU lista en toda la tienda.
+   */
+  generarAccesoCliente(clienteCd: string): Observable<
+    Respuesta<{
+      cliente: string;
+      categoria: string | null;
+      links: { sitio: string; slug: string; url: string }[];
+      aviso?: string;
+    }>
+  > {
+    return this.post<any>("/v1/sites/acceso-cliente", { clienteCd });
+  }
+
   kitDeMarca(): Observable<Respuesta<KitDeMarca>> {
     return this.get<Respuesta<KitDeMarca>>("/v1/companies/brand-kit");
   }

@@ -435,6 +435,10 @@
                                             <i class="pi pi-eye"></i>
                                             <span>{{ "Ver detalles" | translate }}</span>
                                         </li>
+                                        <li (click)="generarAccesoTienda(cliente)">
+                                            <i class="pi pi-shopping-bag"></i>
+                                            <span>{{ "Acceso a la tienda" | translate }}</span>
+                                        </li>
                                         <li class="separator"></li>
                                         <li (click)="exportarCliente(cliente)">
                                             <i class="pi pi-download"></i>
