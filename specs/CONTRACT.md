@@ -4260,3 +4260,21 @@ Daniel pidió filtros en la exhibición, mejor presentación y plantillas a la a
 **3. Presentación y plantillas.** Sobre el hover y los tokens de la remodelación: insignia de oferta, precio tachado, títulos recortados a dos líneas con altura pareja (la rejilla no baila), y respaldo digno para fichas sin foto. Las plantillas de moda, hogar, tecnología y alimentos nacen con el catálogo completo, comprable de nacimiento — el botón solo aparece cuando la tienda del sitio se enciende. El demo (`demo-katuq-oms`) quedó con el catálogo montado para probar.
 
 **Dato de datos, no de código**: el producto más barato del catálogo de OMS vale $10 — huele a error de captura en su maestro, se les puede avisar.
+
+### D-195 (2026-08-14) — Contador de visitas de campaña, y dos fallos que solo aparecieron midiendo en producción
+
+Con el enlace ya vivo, medir solo registros dejaba ciega la decisión de pauta: se sabía cuántos convirtieron, nunca **de cuántos**. Ahora la landing avisa al abrirse y al pulsar el botón, y la pantalla de campañas pinta el embudo completo — entraron → empezaron → se registraron — con la conversión.
+
+**No se escribe en Firestore en cada visita, a propósito.** Los contadores viven en el documento de la campaña y Firestore aguanta del orden de una escritura por segundo sobre un mismo documento: un video que funcione manda ráfagas muy por encima, así que **justo el día bueno el contador empezaría a fallar**. Se acumula en memoria y se vuelca cada 30 s con `increment`, más volcado al apagar el proceso. Si el proceso muere se pierden ≤30 s de conteo: es telemetría, y se prefiere eso antes que arriesgar el camino de quien se está registrando. La pantalla dice que el número puede ir medio minuto atrás, para que nadie lo lea como roto.
+
+**Privacidad:** solo contadores agregados. No se guarda IP, user-agent ni nada que identifique a nadie. Los "visitantes" salen de una marca del propio navegador y por eso se llaman *personas aprox.* en pantalla, en vez de fingir precisión.
+
+**Dos fallos que la verificación contra producción destapó, y que ninguna prueba en verde habría mostrado:**
+
+1. **Un evento sin `Content-Type` se contaba como visita.** El código asumía `"visita"` cuando el cuerpo no venía parseado. Probado con `curl`: sumaba una visita falsa. Justo el número que decide si la pauta rinde, inflándose solo. Ahora el tipo tiene que venir explícito o no se cuenta nada.
+
+2. **`sendBeacon` no sirve aquí, y falla de la peor manera.** Se usó primero porque es la herramienta "de libro" para enviar telemetría cuando la página se va — el clic dispara la petición y acto seguido el navegador salta al registro. Pero con cuerpo JSON hacia otro dominio el navegador exige un preflight que `sendBeacon` no hace, **descarta la petición en silencio y aun así devuelve `true`**. Medido en producción: con `sendBeacon` no llegó ni una sola visita. Se reemplazó por `fetch` con `keepalive`, que sobrevive igual a la navegación y sí hace el preflight. Verificado después: la visita y el clic quedan contados.
+
+Antes de encontrar (2), el fallo se veía como "el clic se cuenta 1 de cada 3 veces" — porque las navegaciones rápidas de la prueba cancelaban la petición normal. Perseguir esa intermitencia fue lo que llevó al fallo real.
+
+**Estado:** 50 pruebas en verde en `scripts/test-promociones-registro.js`, contador reiniciado a cero tras las pruebas, y el ciclo verificado con navegador contra producción.
