@@ -4278,3 +4278,15 @@ Con el enlace ya vivo, medir solo registros dejaba ciega la decisión de pauta: 
 Antes de encontrar (2), el fallo se veía como "el clic se cuenta 1 de cada 3 veces" — porque las navegaciones rápidas de la prueba cancelaban la petición normal. Perseguir esa intermitencia fue lo que llevó al fallo real.
 
 **Estado:** 50 pruebas en verde en `scripts/test-promociones-registro.js`, contador reiniciado a cero tras las pruebas, y el ciclo verificado con navegador contra producción.
+
+## D-192 (2026-08-14) — La tienda cobra la lista de precios por cliente
+
+Daniel lo señaló: la tienda no estaba cogiendo la lista de precios por cliente — cobraba a todo el mundo la lista pública. Un mayorista comprando a precio de público es sobrecobrarle al distribuidor.
+
+**La regla replicada es la exacta de venta asistida** (`payment.service`, PRIORIDAD 1): fila de `preciosPorTipoCliente` con `tipoClienteId === cliente.categoria.id` y activa → se cobra su `precioConIva`, y la categoría le gana a la promoción. El comprador se identifica por teléfono o correo contra el CRM **antes** de preciar; la búsqueda se reusa para el guardado posterior (una sola consulta).
+
+**El precio cobrado queda horneado en la línea**: el sin-IVA se deriva del precio cobrado, nunca se confía en el del maestro. El recalculador de "Todos los pedidos" no sabe de listas por cliente y recalcula con lo que la línea trae — si trajera el sin-IVA del precio público, la primera recarga reescribiría el pedido del mayorista al precio público. Probado explícitamente en el contrato con un maestro que trae el sin-IVA público y una línea cobrada a lista mayorista.
+
+**Verificado en producción con el mismo producto (INTENSE)**: cliente de prueba con categoría mayorista compró 2 unidades a **$79.900** ("Precios aplicados: Precio a mayoristas" en su confirmación); un desconocido compró a **$185.900**. El pedido del mayorista resiste el recalculador ($174.700 exacto). Pruebas y clientes de mentira borrados.
+
+**Nota de alcance**: la página y el catálogo siguen mostrando precios de público — el visitante es anónimo hasta que escribe su teléfono en el checkout. El precio de su lista se aplica al confirmar y la confirmación lo dice. Un "inicia sesión para ver tus precios" estilo B2B de Shopify sería fase aparte.
