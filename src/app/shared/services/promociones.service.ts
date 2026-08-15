@@ -2,6 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { BaseService } from "./base.service";
+import { environment } from "../../../environments/environment";
 
 /** Lo que se le muestra a quien llega por el enlace de una campaña. */
 export interface PromocionPublica {
@@ -96,6 +97,23 @@ export class PromocionesService extends BaseService {
       } catch (e) {
         // Navegación privada: se cuenta como visita, no como visitante.
       }
+    }
+
+    const url = `${environment.urlApi}/v1/promociones/visita/${encodeURIComponent(codigo)}`;
+    const cuerpo = JSON.stringify({ tipo, nuevo });
+
+    // sendBeacon sobrevive a que la persona salga de la página, que es justo lo
+    // que pasa con el clic: se pulsa el botón y el navegador se va al registro.
+    // Con una petición normal, esa se cancela a medio camino y el clic no se
+    // cuenta. El Blob lleva el tipo JSON explícito porque sin él el servidor no
+    // parsea el cuerpo y el evento se descarta.
+    try {
+      if (navigator.sendBeacon) {
+        const enviado = navigator.sendBeacon(url, new Blob([cuerpo], { type: 'application/json' }));
+        if (enviado) return;
+      }
+    } catch (e) {
+      // Si el navegador no lo permite, se intenta por el camino normal.
     }
 
     this.post(`/v1/promociones/visita/${encodeURIComponent(codigo)}`, { tipo, nuevo })
