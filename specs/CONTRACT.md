@@ -4248,3 +4248,15 @@ Daniel pidió saber desde dónde visitan las páginas y una analítica estilo Wo
 **Verificado en producción de punta a punta**: tres visitas simuladas (Instagram/móvil, `utm_source=meta` + campaña `dia-madres` → Facebook, directo/escritorio) quedaron clasificadas exactas en `site_events` y se borraron. Release `2026.08.14.4` publicado.
 
 **Lo que esto NO es**: geolocalización (país/ciudad). Necesita una base GeoIP (licencia MaxMind o similar) — decisión aparte si se quiere.
+
+## D-191 (2026-08-14) — La exhibición de productos: ofertas cobradas de verdad, orden por precio y plantillas con tienda
+
+Daniel pidió filtros en la exhibición, mejor presentación y plantillas a la altura. Sobre el catálogo navegable que otra sesión construyó (búsqueda, categorías, paginación), tres piezas — y dos hallazgos de plata en el camino:
+
+**1. La vitrina ignoraba la lista pública y las promociones.** `productoParaVitrina` solo leía `precio.precioUnitarioConIva`: ni la lista "Público en general" (decisión canónica 2026-05-27 que Shopify ya respeta) ni los `precioDescuentoConIva` que el trabajo de descuentos de Cereza trajo hoy al maestro. **Shopify mostraba la oferta y la tienda del builder cobraba el precio de lista.** Ahora la cadena es la misma del mapper de Shopify — descuento vigente > lista pública > principal — y con promoción la tienda VENDE al precio rebajado. Verificado en vivo: 8 ofertas reales de OMS con insignia de %, tachado y el precio rebajado en los microdatos.
+
+**2. El orden por precio debe usar el precio que se cobra.** El primer intento ordenó por el precio principal del índice y salió mentiroso (un producto con principal en cero y lista pública de $5.000.000 de primero en "menor a mayor" — detectado probando contra la tienda real). El catálogo ahora carga un mapa de precios de vitrina propio (lectura flaca de dos campos, caché de 10 minutos por empresa) y lo usa para **filtrar y ordenar**: el mismo precio que la ficha muestra y el checkout cobra. Engordar el índice compartido con las listas de precios habría castigado a todos sus usuarios. Bono: 64 productos vendibles con solo lista pública (principal en cero) estaban excluidos del catálogo y entraron (2.276 → 2.340).
+
+**3. Presentación y plantillas.** Sobre el hover y los tokens de la remodelación: insignia de oferta, precio tachado, títulos recortados a dos líneas con altura pareja (la rejilla no baila), y respaldo digno para fichas sin foto. Las plantillas de moda, hogar, tecnología y alimentos nacen con el catálogo completo, comprable de nacimiento — el botón solo aparece cuando la tienda del sitio se enciende. El demo (`demo-katuq-oms`) quedó con el catálogo montado para probar.
+
+**Dato de datos, no de código**: el producto más barato del catálogo de OMS vale $10 — huele a error de captura en su maestro, se les puede avisar.
