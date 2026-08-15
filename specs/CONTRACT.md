@@ -4290,3 +4290,17 @@ Daniel lo señaló: la tienda no estaba cogiendo la lista de precios por cliente
 **Verificado en producción con el mismo producto (INTENSE)**: cliente de prueba con categoría mayorista compró 2 unidades a **$79.900** ("Precios aplicados: Precio a mayoristas" en su confirmación); un desconocido compró a **$185.900**. El pedido del mayorista resiste el recalculador ($174.700 exacto). Pruebas y clientes de mentira borrados.
 
 **Nota de alcance**: la página y el catálogo siguen mostrando precios de público — el visitante es anónimo hasta que escribe su teléfono en el checkout. El precio de su lista se aplica al confirmar y la confirmación lo dice. Un "inicia sesión para ver tus precios" estilo B2B de Shopify sería fase aparte.
+
+## D-193 (2026-08-15) — Inicio de sesión del cliente en la tienda: link de acceso personal que carga su tipo y sus precios
+
+Daniel preguntó "¿y si hacemos un inicio de sesión para usuarios y cargue el tipo de usuario?". Decisión suya entre las opciones presentadas: **link de acceso personal generado desde el CRM** (cero costo por inicio, cero fricción, patrón de los catálogos por link) con **personalización completa** — catálogo, carrito y checkout. El OTP por WhatsApp queda como fase de autoservicio, montable sobre la misma sesión.
+
+**Por qué importa más que la comodidad**: pintar el catálogo entero con la lista del cliente exige identidad verificada. El precio por teléfono escrito (D-192) es aceptable para el checkout, pero como llave del catálogo dejaría que cualquiera con el celular de un mayorista viera todas sus tarifas. El token es la identidad fuerte; el teléfono escrito queda de respaldo.
+
+**El token** (`utils/siteAcceso.js`): `<clienteCd>.<secreto>`, con el secreto viviendo **en el doc del cliente** — validar es leer por id y comparar en tiempo constante. Sin llaves globales que rotar; revocable por cliente (regenerar rota el secreto y mata el link anterior). El comerciante lo genera desde la lista de clientes ("Acceso a la tienda" en el menú contextual): se copia al portapapeles listo para WhatsApp.
+
+**La sesión en la página**: `?acceso=` se valida contra el servidor, se guarda por sitio y **la URL se limpia** — compartir la página no puede regalar el acceso. Chip "Hola Fulano · Mayorista" con Salir. El catálogo consulta con el acceso (el servidor personaliza y responde `private, no-store`); las tarjetas ya servidas se repintan vía `POST /precios` (el HTML se cachea compartido y sale público); las líneas **ya en el carrito** pasan a su lista — cobrar un precio y mostrar otro sería mentirle en la cara; el checkout saluda y precarga teléfono, correo, documento y dirección del CRM.
+
+**Verificado en producción de punta a punta**: sesión abierta con el cliente de prueba mayorista (nombre, lista y datos de entrega), token corrupto → 401, catálogo con sesión a $79.900 vs $185.900 sin ella, y el pedido preciado por el **token** aunque el teléfono escrito fuera otro. Pruebas y cliente de mentira borrados. Releases: backend desplegado, frontend `2026.08.15.3`.
+
+**Nota**: la prueba de conversiones de otra sesión ancla en el literal `r&&r.success` para encontrar la rama del formulario; el fetch de sesión usa otro nombre de variable para respetar esa ancla — anclar pruebas en literales de código compartido es frágil y conviene migrarlas a marcadores propios.
