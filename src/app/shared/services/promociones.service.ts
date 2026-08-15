@@ -102,22 +102,25 @@ export class PromocionesService extends BaseService {
     const url = `${environment.urlApi}/v1/promociones/visita/${encodeURIComponent(codigo)}`;
     const cuerpo = JSON.stringify({ tipo, nuevo });
 
-    // sendBeacon sobrevive a que la persona salga de la página, que es justo lo
-    // que pasa con el clic: se pulsa el botón y el navegador se va al registro.
-    // Con una petición normal, esa se cancela a medio camino y el clic no se
-    // cuenta. El Blob lleva el tipo JSON explícito porque sin él el servidor no
-    // parsea el cuerpo y el evento se descarta.
+    // `keepalive` hace que el navegador termine de entregar la petición aunque la
+    // página ya se haya ido, que es justo lo que pasa con el clic: se pulsa el
+    // botón y acto seguido se navega al registro. Sin eso la petición se cancela
+    // a medio camino y el clic no se cuenta.
+    //
+    // NO se usa navigator.sendBeacon: con cuerpo JSON hacia otro dominio el
+    // navegador exige un preflight que sendBeacon no hace, así que la descarta
+    // en silencio — y aun así devuelve true, con lo que ni siquiera se nota.
+    // Verificado contra producción: con sendBeacon no llegaba ni una visita.
     try {
-      if (navigator.sendBeacon) {
-        const enviado = navigator.sendBeacon(url, new Blob([cuerpo], { type: 'application/json' }));
-        if (enviado) return;
-      }
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: cuerpo,
+        keepalive: true,
+      }).catch(() => {});
     } catch (e) {
-      // Si el navegador no lo permite, se intenta por el camino normal.
+      // Telemetría: si no se puede medir, se sigue igual.
     }
-
-    this.post(`/v1/promociones/visita/${encodeURIComponent(codigo)}`, { tipo, nuevo })
-      .subscribe({ next: () => {}, error: () => {} });
   }
 
   listarCampanas(): Observable<Campana[]> {
