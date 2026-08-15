@@ -108,6 +108,14 @@ export interface MetricasSitio {
     ingresos: number;
   };
   clicsPorDestino: { [destino: string]: number };
+  /**
+   * De dónde vienen las visitas, contadas por la baliza del navegador (los
+   * bots no ejecutan JS). "sin dato" agrupa las vistas de antes de la baliza.
+   */
+  fuentes: { fuente: string; vistas: number }[];
+  dispositivos: { dispositivo: string; vistas: number }[];
+  campanas: { campana: string; vistas: number }[];
+  visitantesUnicos: number;
   /** Null cuando todavía no hay visitas: no es 0%, es que no hay dato. */
   conversion: number | null;
   serie: DiaMetricas[];
@@ -275,6 +283,22 @@ export class SitiosService extends BaseService {
    */
   ventaConfig(): Observable<Respuesta<VentaConfig>> {
     return this.get<Respuesta<VentaConfig>>("/v1/sites/venta-config");
+  }
+
+  /**
+   * Genera (o rota, que es la forma de revocar) el link de acceso personal de
+   * un cliente a las tiendas publicadas: con él, el cliente ve los precios de
+   * SU lista en toda la tienda.
+   */
+  generarAccesoCliente(clienteCd: string): Observable<
+    Respuesta<{
+      cliente: string;
+      categoria: string | null;
+      links: { sitio: string; slug: string; url: string }[];
+      aviso?: string;
+    }>
+  > {
+    return this.post<any>("/v1/sites/acceso-cliente", { clienteCd });
   }
 
   kitDeMarca(): Observable<Respuesta<KitDeMarca>> {

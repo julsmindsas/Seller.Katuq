@@ -14,6 +14,9 @@ export interface SubscriptionPlan {
   lastPaymentDate?: string | null;  // Fecha del último pago realizado
   lastPaymentAmount?: number | null;  // Monto del último pago
   subscriptionId?: string | null;  // ID del documento de suscripción en Firestore
+  premiumUntil?: string | null;  // Fecha de corte del premium promocional (campañas de pauta)
+  premiumOrigen?: 'promocion' | 'promocion_vencida' | 'pago' | null;  // Un premium pagado no trae premiumUntil
+  premiumCodigo?: string | null;  // Código de la campaña con la que entró
   limits: {
     orders: {
       monthly: number;  // -1 = ilimitado

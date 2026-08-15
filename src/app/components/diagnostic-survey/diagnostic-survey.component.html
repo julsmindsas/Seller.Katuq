@@ -31,6 +31,25 @@
           {{ quickStartMessage }}
         </div>
 
+        <!-- Promoción aplicada: la empresa quedó en Premium con fecha de corte -->
+        <div *ngIf="promocionAplicada" class="promo-aplicada">
+          <p class="promo-aplicada__titulo">🎁 Tienes Premium activo</p>
+          <p class="promo-aplicada__texto">
+            Aplicamos el código <strong>{{ promocionAplicada.codigo }}</strong>: tu cuenta queda con el
+            plan Premium completo. Te avisaremos por correo antes de que termine, y tu información
+            sigue intacta pase lo que pase.
+          </p>
+        </div>
+
+        <!-- El código no alcanzó: se dice claro, pero el registro ya está hecho -->
+        <div *ngIf="promocionNoAplicada" class="promo-no-aplicada">
+          <p class="promo-no-aplicada__titulo">Tu cuenta quedó creada en el plan gratuito</p>
+          <p class="promo-no-aplicada__texto">
+            La promoción con la que llegaste ya no estaba disponible cuando terminaste el registro.
+            Puedes empezar a vender de una vez, y pasarte a Premium cuando quieras.
+          </p>
+        </div>
+
         <!-- Credenciales: la contraseña solo llega por correo, hay que decírselo al usuario -->
         <div class="credentials-notice" style="background: #f8f9fa; border-left: 4px solid #9020FF; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
           <p style="margin: 0 0 6px; font-weight: bold; color: #9020FF;">📧 {{ 'Revisa tu correo para ingresar' | translate }}</p>
@@ -385,6 +404,14 @@
 
       <!-- Paso de Registro: mostrar un input por cada pregunta de forma step by step -->
       <div *ngIf="currentStep === 'registration'" [formGroup]="mainForm.get('registration')">
+        <!-- Beneficio de la campaña con la que llegó, para que no lo pierda de vista -->
+        <div *ngIf="promocionCampana" class="promo-franja">
+          <span class="promo-franja__codigo">{{ promocionCampana.codigo }}</span>
+          <span class="promo-franja__texto">
+            <strong>{{ promocionCampana.duracionTexto }}</strong> de Premium gratis al terminar tu registro
+          </span>
+        </div>
+
         <h2>{{ 'Información Básica de tu Empresa' | translate }}</h2>
         <p class="registration-help">Cada dato nos ayuda a personalizar mejor tu experiencia</p>
         <!-- 🍯 Honeypot anti-bot: oculto para humanos (fuera de pantalla, sin tab ni autocompletar). -->

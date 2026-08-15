@@ -226,3 +226,23 @@
   @include kb-nota;
   margin: 16px 0 0;
 }
+
+// De dónde te visitan: barras horizontales, la fuente más grande manda el 100%.
+.fuentes {
+  margin-top: 1.1rem;
+
+  h6 { margin: 0 0 0.55rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6b6890; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+  li { display: grid; grid-template-columns: 150px 1fr auto; gap: 0.6rem; align-items: center; font-size: 0.85rem; }
+
+  &__nombre { color: #211f3a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__barra {
+    height: 8px; border-radius: 999px; background: #f0edfb; overflow: hidden;
+    span { display: block; height: 100%; border-radius: 999px; background: #5f3fe0; }
+  }
+}
+
+.dos-columnas {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+}

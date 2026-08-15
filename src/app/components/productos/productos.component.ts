@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NgbActiveModal, NgbModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { ProductDetailsComponent } from './product-details/product-details.component';
 import Swal from 'sweetalert2';
@@ -426,6 +426,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
     private imageService: ImagenService,
     private storage: AngularFireStorage,
     private router: Router,
+    private route: ActivatedRoute,
     private modalService: NgbModal,
     private utilsService: UtilsService,
     private proveedoresService: ProveedoresService,
@@ -435,6 +436,19 @@ export class ProductosComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    // Handshake con el onboarding: abrir el importador real al llegar desde la
+    // ruta "Tengo mis productos en Excel". Se consume el parámetro para que
+    // cerrar el modal o recargar después no lo abra indefinidamente.
+    if (this.route.snapshot.queryParamMap.get('onboardingImport') === 'products') {
+      this.showImportModal = true;
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { onboardingImport: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
+    }
+
     const currentCompany = localStorage.getItem("currentCompany");
     this.empresaActual = currentCompany ? JSON.parse(currentCompany) : {};
     const texto = this.empresaActual.nomComercial.toString();

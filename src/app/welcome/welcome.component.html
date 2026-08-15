@@ -28,42 +28,20 @@
     </div>
 </div>
 
-<!-- Setup checklist (usuarios nuevos) -->
+<!-- Acceso persistente al acompañamiento inicial -->
 <div class="container-fluid px-4 mb-3" *ngIf="showOnboardingBanner">
-    <div class="card border-0 shadow-sm onboarding-card">
-        <div class="card-body p-3">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <h2 class="onboarding-title fw-bold mb-0">
-                    <i class="fa fa-rocket me-2" aria-hidden="true"></i>Configura tu tienda
-                </h2>
-                <button type="button" class="btn-close onboarding-close" aria-label="Cerrar checklist de configuración"
-                        (click)="dismissOnboarding()"></button>
+    <div class="card border-0 shadow-sm onboarding-card" role="region" aria-labelledby="onboarding-banner-title">
+        <div class="card-body p-3 onboarding-banner-body">
+            <span class="onboarding-banner-icon" aria-hidden="true"><i class="fa fa-rocket"></i></span>
+            <div class="onboarding-banner-copy">
+                <h2 id="onboarding-banner-title" class="onboarding-title fw-bold mb-1">Dejemos tu negocio listo para vender</h2>
+                <p class="mb-0">Te acompañamos con preguntas sencillas. Puedes continuar exactamente donde quedaste.</p>
             </div>
-            <div class="row g-2">
-                <div class="col-6 col-md-3" *ngIf="canAccess('productos')">
-                    <a routerLink="/productos/crearProductos" class="setup-link setup-link--primary">
-                        <i class="fa fa-cube" aria-hidden="true"></i>
-                        <small class="fw-semibold">Agregar productos</small>
-                    </a>
-                </div>
-                <div class="col-6 col-md-3" *ngIf="canAccess('ventas/clientes')">
-                    <a routerLink="/ventas/clientes" class="setup-link setup-link--success">
-                        <i class="fa fa-user-plus" aria-hidden="true"></i>
-                        <small class="fw-semibold">Agregar clientes</small>
-                    </a>
-                </div>
-                <div class="col-6 col-md-3" *ngIf="canAccess('empresas')">
-                    <a routerLink="/empresas" class="setup-link setup-link--warning">
-                        <i class="fa fa-building" aria-hidden="true"></i>
-                        <small class="fw-semibold">Info de tu empresa</small>
-                    </a>
-                </div>
-                <div class="col-6 col-md-3" *ngIf="canAccess('empresas')">
-                    <a routerLink="/empresas" class="setup-link setup-link--gray">
-                        <i class="fa fa-cog" aria-hidden="true"></i>
-                        <small class="fw-semibold">Personalizar</small>
-                    </a>
-                </div>
+            <div class="onboarding-banner-actions">
+                <a class="btn btn-katuq-solid btn-sm" routerLink="/onboarding">
+                    Continuar configuración <i class="fa fa-arrow-right ms-1" aria-hidden="true"></i>
+                </a>
+                <button type="button" class="btn onboarding-later" (click)="dismissOnboarding()">Ahora no</button>
             </div>
         </div>
     </div>
@@ -276,4 +254,3 @@
         </div>
     </div>
 </div>
-

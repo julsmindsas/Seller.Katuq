@@ -9,6 +9,7 @@ import { InitializationService } from "../initialization.service";
 import { OnboardingService } from "../../../components/onboarding/services/onboarding.service";
 import { BehaviorSubject } from 'rxjs';
 import { syncSentryUserContext } from "../errores/sentry-context";
+import { clearOnboardingStorage } from "../../../components/onboarding/utils/onboarding-v2.utils";
 
 export interface User {
   uid: string;
@@ -90,6 +91,10 @@ export class AuthService implements OnInit {
       this.initializeBackgroundServices();
 
       if (result.mustChangePassword) {
+        // No dejar que una empresa de la sesión anterior alimente el wizard
+        // mientras se carga el tenant del usuario que acaba de ingresar.
+        localStorage.removeItem('currentCompany');
+        sessionStorage.removeItem('currentCompany');
         this.router.navigate(["/change-password"]);
         this.services.getEmpresaByName({ company: result.company });
         return;
@@ -117,19 +122,28 @@ export class AuthService implements OnInit {
             // ✅ FIX: Cargar empresa PRIMERO para evitar race condition
             await this.loadCompanyData(result.company, result.email);
 
-            const onboardingCompleted = await this.onboardingService.checkOnboardingStatus(result.email);
+            localStorage.removeItem('showOnboardingBanner');
+            sessionStorage.removeItem('onboarding_banner_dismissed');
+            const onboardingEntry = await this.onboardingService.getOnboardingEntryState();
 
-            if (!onboardingCompleted) {
-              // Usuario nuevo: ir a welcome directamente (onboarding accesible desde menú)
+            if (!onboardingEntry.completed) {
+              // Primer acceso guiado. El propio flujo ofrece "Continuar después"
+              // para quien prefiera explorar el sistema.
               localStorage.setItem('showOnboardingBanner', 'true');
+              this.router.navigate([onboardingEntry.deferred ? "/welcome" : "/onboarding"]);
+            } else {
+              // Una sesión anterior no puede volver a mostrar una invitación ya
+              // completada para este usuario.
+              localStorage.removeItem('showOnboardingBanner');
+              sessionStorage.removeItem('onboarding_banner_dismissed');
+              this.router.navigate(["/welcome"]);
             }
-
-            // Usuario con onboarding completado
-            console.log('✅ Administrador con onboarding completado, redirigiendo a /welcome');
-            this.router.navigate(["/welcome"]);
           } catch (error) {
             console.error('❌ Error verificando estado de onboarding:', error);
-            // En caso de error, cargar empresa de forma async y permitir acceso a welcome
+            // Un fallo transitorio no debe dejar al usuario sin forma de
+            // reanudar. Welcome queda accesible y conserva el CTA del proceso.
+            localStorage.setItem('showOnboardingBanner', 'true');
+            sessionStorage.removeItem('onboarding_banner_dismissed');
             this.services.getEmpresaByName({ company: result.company });
             this.router.navigate(["/welcome"]);
           }
@@ -233,14 +247,20 @@ export class AuthService implements OnInit {
     // Limpiar datos de localStorage (currentCompany migrado de sessionStorage)
     localStorage.removeItem('user');
     localStorage.removeItem('currentCompany');
+    sessionStorage.removeItem('currentCompany');
     localStorage.removeItem('authorizedMenuItems');
     localStorage.removeItem('company');
     localStorage.removeItem('warehousePOS');
     localStorage.removeItem('warehouse');
 
     // ✅ FIX: Limpiar estado de onboarding y diagnostic survey para evitar conflictos en próximo login
+    clearOnboardingStorage(localStorage);
     localStorage.removeItem('katuq_onboarding_state');
     localStorage.removeItem('katuq_diagnostic_progress');
+    localStorage.removeItem('showOnboardingBanner');
+    sessionStorage.removeItem('onboarding_banner_dismissed');
+    sessionStorage.removeItem('onboarding_postponed');
+    sessionStorage.removeItem('onboarding_reminder_shown');
 
     this.router.navigateByUrl('/login');
   }
@@ -253,6 +273,11 @@ export class AuthService implements OnInit {
     console.log(`📥 Cargando datos de empresa: ${companyName}`);
 
     return new Promise((resolve, reject) => {
+      // No resolver el polling con la empresa de una sesión anterior mientras
+      // la solicitud de la empresa actual todavía está en vuelo.
+      localStorage.removeItem('currentCompany');
+      sessionStorage.removeItem('currentCompany');
+
       // Llamar al método existente que ya maneja la lógica de guardado
       // Este método retorna un Subscription y maneja internamente el guardado
       const subscription = this.services.getEmpresaByName({ company: companyName });

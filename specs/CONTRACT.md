@@ -4203,7 +4203,7 @@ Campañas más grandes: Mapalé Outlet 351 productos al 35% (hasta feb-2027), **
 
 ## D-194 (2026-08-14) — Link de pauta con código: premium temporal al registrarse, y el premium por fin vence
 
-Daniel pidió un enlace para pautar: quien se registre con un código entra a Katuq **en premium por un tiempo limitado**, sin pagar. La primera campaña es `COLOMBIA2026` con **90 días (3 meses)**.
+Daniel pidió un enlace para pautar: quien se registre con un código entra a Katuq **en premium por un tiempo limitado**, sin pagar. La primera campaña es `COLOMBIA2026` con **120 días (4 meses)** — se subió de 90 a 120 porque el video que grabó para redes dice "de 3 a 4 meses" y se cumple por lo alto de lo que la gente oye.
 
 **El hueco que había que tapar primero: el premium no vencía.** `SubscriptionGuard` solo evalúa `plan === 'premium'` y el backend lo lee de `companies.subscriptionPlan`, sin ninguna fecha de corte. Regalar premium sin construir el vencimiento habría sido regalarlo de por vida. Se agregan `premiumUntil`, `premiumOrigen`, `premiumCodigo` y `premiumCampanaId` a la empresa, y un trabajo diario (6 AM COT) que baja a freemium lo vencido y preavisa 3 días antes. **Alcance blindado por construcción**: la pasada filtra `premiumOrigen == 'promocion'`, campo que un premium pagado no tiene, así que no puede alcanzarlo ni por error; al degradar el origen pasa a `promocion_vencida` y la empresa sale del filtro, con lo que repetir la pasada no cambia nada. No cobra, no pide tarjeta y no toca datos del comercio: solo el plan y sus límites.
 
@@ -4241,6 +4241,108 @@ Daniel pidió un enlace para pautar: quien se registre con un código entra a Ka
 5. **No se tocó el pedido ni ningún dato** — todo lo anterior es lectura contra Firestore real y contra el código de `controllers/orders.js`/`openspec/changes/fix-order-calc-engine-divergence/`.
 
 **Pendiente antes de pautar:** correr la pasada en producción en modo simulación y revisar la lista; ejecutar el backfill de roles (`scripts/agregar-menu-campanas-a-superadmin.js`) o la pantalla queda invisible como ya pasó antes; ciclo real con campaña de cupo 1; y encender el cron con `PREMIUM_PROMO_CRON_ENABLED=true`, que nace apagado a propósito.
+
+**Corrección y cierre de D-178 — el flow NO usa el código del mapeo: usa una expresión guardada en su propia config.**
+
+Tras desplegar `16561ce` y destrabar 575 productos, la verificación mostró que se reprocesaban pero **el descuento no aterrizaba**: los campos ni siquiera aparecían en `preciosPorTipoCliente`. Producción sí tenía el código nuevo, así que el problema era de ruta.
+
+**Causa: hay DOS caminos que escriben productos de Cereza, y el cambio de código solo cubría uno.**
+1. **Webhooks** (`osmosisWebhookService` → `osmosisProductSyncService._mapOsmosisProductToKatuq`) — cubierto por el commit.
+2. **El barrido** (`osmosis-product-changed` → **`katuq-canonical-mapper`** → `katuq-product-upsert`) — el nodo mapper **re-arma el producto desde el payload crudo con una expresión declarativa guardada en `flows/{id}.graph.nodes[mapper].params.mapping`**, descartando el canónico que emitió el trigger. Esa expresión construía `preciosPorTipoCliente` leyendo solo `p.price`, nunca `discount_price`.
+
+Es decir: **parte del mapeo de precios de Cereza no vive en el código sino en datos.** Un cambio de código no lo alcanza.
+
+Actualizada la expresión del flow (respaldo en `respaldo-mapeo-cereza-*.json`), probada antes de aplicar evaluándola con `expressionEngine` contra productos reales de la API: GCJ4451 $599.900 → $539.910 (10%) hasta 31-ago; GCD445P sin descuento → null. Misma lógica que el código: solo cuenta si `discount_price` es válido y **menor** al de lista, y null explícito cuando no hay promoción para que al vencer la campaña el valor se limpie.
+
+**Segundo destrabe necesario:** los 575 ya se habían vuelto a sellar pasando por el mapeo viejo, así que hubo que borrarles la huella otra vez (185 alcanzados en ese momento; el resto seguía sin sellar).
+
+**Verificado en producción:** 95 productos con descuento aplicado, **los 95 ligados a Shopify**, $7,4M de descuento reflejado, y subiendo a ~30 por corrida. Ejemplos: GCJ2709 $165.900 → $82.950 (−50%), GCD270R $75.900 → $49.335 (−35%), GCJ4451 $599.900 → $539.910 (−10%).
+
+**Lección operativa:** en los flows, el mapeo de campos puede ser **configuración, no código**. Antes de dar por cubierto un cambio de mapeo hay que revisar si el flow tiene su propio `katuq-canonical-mapper` con expresiones declarativas — y actualizarlas también. Verificar el efecto en datos, nunca asumir que el despliegue bastó.
+
+### Bitácora del despliegue (14-ago-2026, misma sesión)
+
+**Desplegado y verificado en producción.** Backend en `13.222.206.185` (commit `50ba1ab`, `pm2 restart katuq-api`, arranque sin errores) y frontend en hosting (versión `2026.08.14.2`). Comprobado contra producción: el endpoint público de validación responde sin sesión, la administración de campañas exige token (401), y **`/v1/subscription-plans/active` sigue devolviendo la vitrina sin campañas** — que era el riesgo de haberlas metido en `subscriptionPlans`.
+
+**Campaña `COLOMBIA2026` creada** (`RwZ5zO3PJRSiOJQU97ht`): 120 días, **sin tope de cupo y sin fecha límite**, decisión explícita de Daniel tras advertirle que cada registro son 4 meses de acceso completo sin cobrar y que el enlace va en un video para redes.
+
+**Ciclo verificado con navegador** sobre producción: landing → "Crear mi cuenta gratis" → el registro reconoce la promoción y muestra "COLOMBIA2026 · 4 meses de Premium gratis". No se completó el envío para no crear una empresa real. El código se revalida al retomarlo, así que una campaña apagada a mitad de camino no deja una promesa colgada en pantalla.
+
+**Hallazgo del backfill de menús:** cuatro roles de comercios ajenos —La Tartaleria, Palacio Contable (×2) y Yavalva— tienen `superadmin/clientes` en su campo `menus` por una configuración vieja. `requireRole(['Super Administrador'])` los rechaza con 403, así que no pueden operar nada, pero **ven una entrada de la consola de plataforma en su menú**. El script se restringió a Super Administrador y no se les amplió. Queda como deuda a limpiar aparte.
+
+**El cron de vencimiento sigue apagado** (`PREMIUM_PROMO_CRON_ENABLED` sin definir en producción). Consecuencia a tener presente: **hoy el premium promocional no caduca**. El primer vencimiento cae a 120 días del primer registro; antes de encenderlo hay que correr `node scripts/vencer-premium-promocional.js` en el servidor y revisar la lista.
+
+**Se commiteó trabajo en curso de otras sesiones** sobre ambas ramas (políticas de inventario y sus contract tests, onboarding, middleware de tenant, asistente de onboarding, bienvenida, política de privacidad) porque Daniel confirmó que también era suyo. Verificado antes de subir: sintaxis de todos los `.js`, cinco suites de tests ajenas en verde y build de producción del frontend sin errores.
+
+## D-190 (2026-08-14) — Analítica de visitas del builder: de dónde vienen, con qué entran y cuántas personas son
+
+Daniel pidió saber desde dónde visitan las páginas y una analítica estilo WordPress/Shopify. Tres decisiones:
+
+**1. La visita se cuenta desde el navegador, no en el servidor.** Al render también tocan el bot de WhatsApp que arma la tarjetica y los rastreadores de Google: contarlos inflaba el panel (el demo llevaba "680 vistas" con bots revueltos). La baliza (`sendBeacon` a `/public/:slug/vista`) solo la ejecutan personas, y lleva un id de visitante persistente en `localStorage` para distinguir visitas de visitantes. Consecuencia asumida: `vistasCount` cambia de significado — antes cargas de página con bots, ahora personas. Los números van a BAJAR y eso es la verdad, no una regresión.
+
+**2. La fuente se clasifica en el servidor** (`utils/siteAnalitica.js`, puro y probado en el contrato): UTM primero —si el comerciante marcó la campaña, esa es la verdad— y referrer después (WhatsApp, Instagram, Facebook, TikTok, Google, YouTube, correo, otro-sitio con su dominio, directo). Vocabulario cerrado a propósito: una fuente libre por visita haría el gráfico ilegible. El dispositivo sale del ancho real de pantalla; el user-agent miente demasiado.
+
+**3. Se extiende el panel de la otra sesión, no se duplica.** `GET /v1/sites/:id/metricas` gana fuentes, dispositivos, campañas y visitantes únicos (totales y por día); el panel gana "De dónde te visitan" con barras, celular vs computador, y campañas por nombre. Las vistas de antes de la baliza aparecen como "Sin dato (visitas antiguas)".
+
+**Verificado en producción de punta a punta**: tres visitas simuladas (Instagram/móvil, `utm_source=meta` + campaña `dia-madres` → Facebook, directo/escritorio) quedaron clasificadas exactas en `site_events` y se borraron. Release `2026.08.14.4` publicado.
+
+**Lo que esto NO es**: geolocalización (país/ciudad). Necesita una base GeoIP (licencia MaxMind o similar) — decisión aparte si se quiere.
+
+## D-191 (2026-08-14) — La exhibición de productos: ofertas cobradas de verdad, orden por precio y plantillas con tienda
+
+Daniel pidió filtros en la exhibición, mejor presentación y plantillas a la altura. Sobre el catálogo navegable que otra sesión construyó (búsqueda, categorías, paginación), tres piezas — y dos hallazgos de plata en el camino:
+
+**1. La vitrina ignoraba la lista pública y las promociones.** `productoParaVitrina` solo leía `precio.precioUnitarioConIva`: ni la lista "Público en general" (decisión canónica 2026-05-27 que Shopify ya respeta) ni los `precioDescuentoConIva` que el trabajo de descuentos de Cereza trajo hoy al maestro. **Shopify mostraba la oferta y la tienda del builder cobraba el precio de lista.** Ahora la cadena es la misma del mapper de Shopify — descuento vigente > lista pública > principal — y con promoción la tienda VENDE al precio rebajado. Verificado en vivo: 8 ofertas reales de OMS con insignia de %, tachado y el precio rebajado en los microdatos.
+
+**2. El orden por precio debe usar el precio que se cobra.** El primer intento ordenó por el precio principal del índice y salió mentiroso (un producto con principal en cero y lista pública de $5.000.000 de primero en "menor a mayor" — detectado probando contra la tienda real). El catálogo ahora carga un mapa de precios de vitrina propio (lectura flaca de dos campos, caché de 10 minutos por empresa) y lo usa para **filtrar y ordenar**: el mismo precio que la ficha muestra y el checkout cobra. Engordar el índice compartido con las listas de precios habría castigado a todos sus usuarios. Bono: 64 productos vendibles con solo lista pública (principal en cero) estaban excluidos del catálogo y entraron (2.276 → 2.340).
+
+**3. Presentación y plantillas.** Sobre el hover y los tokens de la remodelación: insignia de oferta, precio tachado, títulos recortados a dos líneas con altura pareja (la rejilla no baila), y respaldo digno para fichas sin foto. Las plantillas de moda, hogar, tecnología y alimentos nacen con el catálogo completo, comprable de nacimiento — el botón solo aparece cuando la tienda del sitio se enciende. El demo (`demo-katuq-oms`) quedó con el catálogo montado para probar.
+
+**Dato de datos, no de código**: el producto más barato del catálogo de OMS vale $10 — huele a error de captura en su maestro, se les puede avisar.
+
+### D-195 (2026-08-14) — Contador de visitas de campaña, y dos fallos que solo aparecieron midiendo en producción
+
+Con el enlace ya vivo, medir solo registros dejaba ciega la decisión de pauta: se sabía cuántos convirtieron, nunca **de cuántos**. Ahora la landing avisa al abrirse y al pulsar el botón, y la pantalla de campañas pinta el embudo completo — entraron → empezaron → se registraron — con la conversión.
+
+**No se escribe en Firestore en cada visita, a propósito.** Los contadores viven en el documento de la campaña y Firestore aguanta del orden de una escritura por segundo sobre un mismo documento: un video que funcione manda ráfagas muy por encima, así que **justo el día bueno el contador empezaría a fallar**. Se acumula en memoria y se vuelca cada 30 s con `increment`, más volcado al apagar el proceso. Si el proceso muere se pierden ≤30 s de conteo: es telemetría, y se prefiere eso antes que arriesgar el camino de quien se está registrando. La pantalla dice que el número puede ir medio minuto atrás, para que nadie lo lea como roto.
+
+**Privacidad:** solo contadores agregados. No se guarda IP, user-agent ni nada que identifique a nadie. Los "visitantes" salen de una marca del propio navegador y por eso se llaman *personas aprox.* en pantalla, en vez de fingir precisión.
+
+**Dos fallos que la verificación contra producción destapó, y que ninguna prueba en verde habría mostrado:**
+
+1. **Un evento sin `Content-Type` se contaba como visita.** El código asumía `"visita"` cuando el cuerpo no venía parseado. Probado con `curl`: sumaba una visita falsa. Justo el número que decide si la pauta rinde, inflándose solo. Ahora el tipo tiene que venir explícito o no se cuenta nada.
+
+2. **`sendBeacon` no sirve aquí, y falla de la peor manera.** Se usó primero porque es la herramienta "de libro" para enviar telemetría cuando la página se va — el clic dispara la petición y acto seguido el navegador salta al registro. Pero con cuerpo JSON hacia otro dominio el navegador exige un preflight que `sendBeacon` no hace, **descarta la petición en silencio y aun así devuelve `true`**. Medido en producción: con `sendBeacon` no llegó ni una sola visita. Se reemplazó por `fetch` con `keepalive`, que sobrevive igual a la navegación y sí hace el preflight. Verificado después: la visita y el clic quedan contados.
+
+Antes de encontrar (2), el fallo se veía como "el clic se cuenta 1 de cada 3 veces" — porque las navegaciones rápidas de la prueba cancelaban la petición normal. Perseguir esa intermitencia fue lo que llevó al fallo real.
+
+**Estado:** 50 pruebas en verde en `scripts/test-promociones-registro.js`, contador reiniciado a cero tras las pruebas, y el ciclo verificado con navegador contra producción.
+
+## D-192 (2026-08-14) — La tienda cobra la lista de precios por cliente
+
+Daniel lo señaló: la tienda no estaba cogiendo la lista de precios por cliente — cobraba a todo el mundo la lista pública. Un mayorista comprando a precio de público es sobrecobrarle al distribuidor.
+
+**La regla replicada es la exacta de venta asistida** (`payment.service`, PRIORIDAD 1): fila de `preciosPorTipoCliente` con `tipoClienteId === cliente.categoria.id` y activa → se cobra su `precioConIva`, y la categoría le gana a la promoción. El comprador se identifica por teléfono o correo contra el CRM **antes** de preciar; la búsqueda se reusa para el guardado posterior (una sola consulta).
+
+**El precio cobrado queda horneado en la línea**: el sin-IVA se deriva del precio cobrado, nunca se confía en el del maestro. El recalculador de "Todos los pedidos" no sabe de listas por cliente y recalcula con lo que la línea trae — si trajera el sin-IVA del precio público, la primera recarga reescribiría el pedido del mayorista al precio público. Probado explícitamente en el contrato con un maestro que trae el sin-IVA público y una línea cobrada a lista mayorista.
+
+**Verificado en producción con el mismo producto (INTENSE)**: cliente de prueba con categoría mayorista compró 2 unidades a **$79.900** ("Precios aplicados: Precio a mayoristas" en su confirmación); un desconocido compró a **$185.900**. El pedido del mayorista resiste el recalculador ($174.700 exacto). Pruebas y clientes de mentira borrados.
+
+**Nota de alcance**: la página y el catálogo siguen mostrando precios de público — el visitante es anónimo hasta que escribe su teléfono en el checkout. El precio de su lista se aplica al confirmar y la confirmación lo dice. Un "inicia sesión para ver tus precios" estilo B2B de Shopify sería fase aparte.
+
+## D-193 (2026-08-15) — Inicio de sesión del cliente en la tienda: link de acceso personal que carga su tipo y sus precios
+
+Daniel preguntó "¿y si hacemos un inicio de sesión para usuarios y cargue el tipo de usuario?". Decisión suya entre las opciones presentadas: **link de acceso personal generado desde el CRM** (cero costo por inicio, cero fricción, patrón de los catálogos por link) con **personalización completa** — catálogo, carrito y checkout. El OTP por WhatsApp queda como fase de autoservicio, montable sobre la misma sesión.
+
+**Por qué importa más que la comodidad**: pintar el catálogo entero con la lista del cliente exige identidad verificada. El precio por teléfono escrito (D-192) es aceptable para el checkout, pero como llave del catálogo dejaría que cualquiera con el celular de un mayorista viera todas sus tarifas. El token es la identidad fuerte; el teléfono escrito queda de respaldo.
+
+**El token** (`utils/siteAcceso.js`): `<clienteCd>.<secreto>`, con el secreto viviendo **en el doc del cliente** — validar es leer por id y comparar en tiempo constante. Sin llaves globales que rotar; revocable por cliente (regenerar rota el secreto y mata el link anterior). El comerciante lo genera desde la lista de clientes ("Acceso a la tienda" en el menú contextual): se copia al portapapeles listo para WhatsApp.
+
+**La sesión en la página**: `?acceso=` se valida contra el servidor, se guarda por sitio y **la URL se limpia** — compartir la página no puede regalar el acceso. Chip "Hola Fulano · Mayorista" con Salir. El catálogo consulta con el acceso (el servidor personaliza y responde `private, no-store`); las tarjetas ya servidas se repintan vía `POST /precios` (el HTML se cachea compartido y sale público); las líneas **ya en el carrito** pasan a su lista — cobrar un precio y mostrar otro sería mentirle en la cara; el checkout saluda y precarga teléfono, correo, documento y dirección del CRM.
+
+**Verificado en producción de punta a punta**: sesión abierta con el cliente de prueba mayorista (nombre, lista y datos de entrega), token corrupto → 401, catálogo con sesión a $79.900 vs $185.900 sin ella, y el pedido preciado por el **token** aunque el teléfono escrito fuera otro. Pruebas y cliente de mentira borrados. Releases: backend desplegado, frontend `2026.08.15.3`.
+
+**Nota**: la prueba de conversiones de otra sesión ancla en el literal `r&&r.success` para encontrar la rama del formulario; el fetch de sesión usa otro nombre de variable para respetar esa ancla — anclar pruebas en literales de código compartido es frágil y conviene migrarlas a marcadores propios.
 
 ## D-200 (2026-08-15) — DAD-012131 resuelto: NO es bug de etiqueta "domicilio" (D-199 estaba mal encaminado). Causa real: `calcularIVAUnitario` (legacy, `pedidos.util.service.ts`) ignora `_ivaManualOverride` salvo que el producto también tenga `_precioManualOverride` + `permitePrecioManual===true`
 

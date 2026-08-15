@@ -78,6 +78,31 @@ export class MetricasComponent implements OnInit {
     return Math.max(3, Math.round((dia.vista / max) * 100));
   }
 
+  /** Nombres con cara humana para el vocabulario cerrado de fuentes. */
+  etiquetaFuente(fuente: string): string {
+    const nombres: { [f: string]: string } = {
+      whatsapp: "WhatsApp",
+      instagram: "Instagram",
+      facebook: "Facebook",
+      tiktok: "TikTok",
+      google: "Google",
+      youtube: "YouTube",
+      email: "Correo",
+      directo: "Directo (link o favorito)",
+      "campaña": "Tus campañas",
+      "otro-sitio": "Otros sitios",
+      "sin dato": "Sin dato (visitas antiguas)",
+    };
+    return nombres[fuente] || fuente;
+  }
+
+  /** Ancho de la barra de una fuente, relativo a la más grande. */
+  anchoFuente(vistas: number): number {
+    const lista = (this.datos && this.datos.fuentes) || [];
+    const max = lista.length ? lista[0].vistas : 0;
+    return max > 0 ? Math.max(4, Math.round((vistas / max) * 100)) : 0;
+  }
+
   get maxVistas(): number {
     if (!this.datos) return 0;
     return this.datos.serie.reduce((m, d) => Math.max(m, d.vista), 0);

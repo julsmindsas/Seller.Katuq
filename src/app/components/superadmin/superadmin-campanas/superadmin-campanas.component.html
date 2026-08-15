@@ -1,0 +1,173 @@
+<div class="campanas">
+
+  <div class="campanas__encabezado">
+    <div>
+      <span class="campanas__eyebrow">Configuración plataforma</span>
+      <h1 class="campanas__titulo">Campañas de registro</h1>
+      <p class="campanas__bajada">
+        Códigos para pautar. Quien se registre por el enlace entra con Premium por el tiempo que
+        definas, sin tarjeta. Al terminar pasa al plan gratuito y le avisamos antes.
+      </p>
+    </div>
+    <button type="button" class="btn-acento" (click)="nueva()">Nueva campaña</button>
+  </div>
+
+  <!-- Formulario -->
+  <div *ngIf="mostrarFormulario" class="tarjeta tarjeta--formulario">
+    <h2 class="tarjeta__titulo">{{ editandoId ? 'Editar campaña' : 'Nueva campaña' }}</h2>
+
+    <div class="campos">
+      <label class="campo">
+        <span class="campo__label">Código</span>
+        <input type="text" [(ngModel)]="formulario.codigo" placeholder="COLOMBIA2026"
+               [disabled]="guardando" class="campo__input campo__input--codigo">
+        <small class="campo__ayuda">Es lo que va en el enlace. Solo letras y números.</small>
+      </label>
+
+      <label class="campo">
+        <span class="campo__label">Nombre de la campaña</span>
+        <input type="text" [(ngModel)]="formulario.nombre" placeholder="Colombia 2026"
+               [disabled]="guardando" class="campo__input">
+        <small class="campo__ayuda">Lo ve quien abre el enlace.</small>
+      </label>
+
+      <label class="campo campo--ancho">
+        <span class="campo__label">Descripción</span>
+        <input type="text" [(ngModel)]="formulario.descripcion"
+               placeholder="Monta tu tienda y vende desde el primer día"
+               [disabled]="guardando" class="campo__input">
+      </label>
+
+      <label class="campo">
+        <span class="campo__label">Días de Premium</span>
+        <input type="number" [(ngModel)]="formulario.diasPremium" min="1" max="730"
+               [disabled]="guardando" class="campo__input">
+        <small class="campo__ayuda">90 días = 3 meses.</small>
+      </label>
+
+      <label class="campo">
+        <span class="campo__label">Cupo máximo</span>
+        <input type="number" [(ngModel)]="formulario.cupoMaximo" min="0"
+               [disabled]="guardando" class="campo__input">
+        <small class="campo__ayuda">0 = sin tope.</small>
+      </label>
+
+      <label class="campo">
+        <span class="campo__label">Vigente hasta</span>
+        <input type="date" [(ngModel)]="formulario.vigenteHasta"
+               [disabled]="guardando" class="campo__input">
+        <small class="campo__ayuda">Vacío = sin fecha límite.</small>
+      </label>
+
+      <label class="campo campo--switch">
+        <input type="checkbox" [(ngModel)]="formulario.activo" [disabled]="guardando">
+        <span>Campaña activa</span>
+      </label>
+    </div>
+
+    <div class="acciones">
+      <button type="button" class="btn-plano" (click)="cancelar()" [disabled]="guardando">Cancelar</button>
+      <button type="button" class="btn-acento" (click)="guardar()" [disabled]="guardando">
+        {{ guardando ? 'Guardando…' : (editandoId ? 'Guardar cambios' : 'Crear campaña') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Cargando -->
+  <div *ngIf="cargando" class="estado-vacio">Cargando campañas…</div>
+
+  <!-- Sin campañas -->
+  <div *ngIf="!cargando && campanas.length === 0" class="estado-vacio">
+    Todavía no hay campañas. Crea la primera para empezar a pautar.
+  </div>
+
+  <!-- Listado -->
+  <div class="lista" *ngIf="!cargando">
+    <div class="tarjeta" *ngFor="let campana of campanas">
+
+      <div class="tarjeta__fila">
+        <div>
+          <span class="chip" [class.chip--apagado]="!campana.activo">{{ campana.codigo }}</span>
+          <span class="chip chip--info">{{ campana.duracionTexto }} de Premium</span>
+          <span class="chip chip--aviso" *ngIf="campana.activo && !campana.disponible">Sin cupo o vencida</span>
+          <span class="chip chip--apagado" *ngIf="!campana.activo">Apagada</span>
+        </div>
+        <div class="tarjeta__acciones">
+          <button type="button" class="btn-plano" (click)="copiarEnlace(campana)">Copiar enlace</button>
+          <button type="button" class="btn-plano" (click)="editar(campana)">Editar</button>
+          <button type="button" class="btn-plano" (click)="cambiarEstado(campana)">
+            {{ campana.activo ? 'Apagar' : 'Encender' }}
+          </button>
+        </div>
+      </div>
+
+      <h3 class="tarjeta__titulo">{{ campana.nombre }}</h3>
+      <p class="tarjeta__descripcion" *ngIf="campana.descripcion">{{ campana.descripcion }}</p>
+
+      <div class="datos">
+        <div class="dato">
+          <span class="dato__label">Usos</span>
+          <span class="dato__valor">
+            {{ campana.usosConsumidos }}<ng-container *ngIf="campana.cupoMaximo > 0"> de {{ campana.cupoMaximo }}</ng-container>
+          </span>
+        </div>
+        <div class="dato">
+          <span class="dato__label">Cupo restante</span>
+          <span class="dato__valor">{{ campana.cupoRestante === -1 ? 'Sin tope' : campana.cupoRestante }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato__label">Vigente hasta</span>
+          <span class="dato__valor">{{ fechaLegible(campana.vigenteHasta) }}</span>
+        </div>
+        <div class="dato">
+          <span class="dato__label">Visitas</span>
+          <span class="dato__valor">
+            {{ campana.visitas }}
+            <small class="dato__nota" *ngIf="campana.visitantes">· {{ campana.visitantes }} personas aprox.</small>
+          </span>
+        </div>
+        <div class="dato">
+          <span class="dato__label">Empezaron el registro</span>
+          <span class="dato__valor">{{ campana.clics }}</span>
+        </div>
+        <div class="dato dato--ancho">
+          <span class="dato__label">Enlace</span>
+          <span class="dato__valor dato__valor--enlace">{{ enlaceDeCampana(campana) }}</span>
+        </div>
+      </div>
+
+      <div class="resultado">
+        <ng-container *ngIf="resultados[campana.id] as r; else pedirResultado">
+          <div class="embudo">
+            <div class="embudo__paso">
+              <span class="embudo__num">{{ r.visitas }}</span>
+              <span class="embudo__label">entraron al enlace</span>
+            </div>
+            <span class="embudo__flecha">→</span>
+            <div class="embudo__paso">
+              <span class="embudo__num">{{ r.clics }}</span>
+              <span class="embudo__label">empezaron el registro</span>
+            </div>
+            <span class="embudo__flecha">→</span>
+            <div class="embudo__paso embudo__paso--fin">
+              <span class="embudo__num">{{ r.registradas }}</span>
+              <span class="embudo__label">se registraron</span>
+            </div>
+          </div>
+          <div class="embudo__pie">
+            Conversión desde la visita: <strong>{{ porcentaje(r.conversionVisitaRegistro) }}</strong>
+            · Siguen en Premium: <strong>{{ r.sigueEnPremium }}</strong>
+            <span *ngIf="r.degradadas"> · Ya bajaron a gratis: <strong>{{ r.degradadas }}</strong></span>
+            <br />
+            <small>Las visitas se guardan por tandas: el número puede ir hasta medio minuto atrás.</small>
+          </div>
+        </ng-container>
+        <ng-template #pedirResultado>
+          <button type="button" class="btn-plano" (click)="verResultado(campana)">Ver cuántos trajo</button>
+        </ng-template>
+      </div>
+
+    </div>
+  </div>
+
+</div>

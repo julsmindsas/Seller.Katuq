@@ -32,6 +32,17 @@ export interface DiagnosticResponse {
     complejidad: string;
     canales: string[];
   };
+  /** Código de campaña con el que llegó, si vino por un enlace de pauta. */
+  codigoPromocional?: string | null;
+}
+
+/** Cómo le fue al código promocional en el registro. */
+export interface PromocionRegistro {
+  aplicada: boolean;
+  codigo?: string;
+  nombre?: string;
+  diasPremium?: number;
+  premiumHasta?: string;
 }
 
 export interface QuickStartResult {
@@ -45,6 +56,7 @@ export interface QuickStartResult {
   error?: string;
   errorCode?: string; // COMERCIO_YA_EXISTE | EMAIL_YA_EXISTE | USUARIO_YA_EXISTE | VALIDATION_ERROR | REGISTRATION_BLOCKED
   pendingReview?: boolean; // 202: registro en cuarentena, pendiente de revisión humana
+  promocion?: PromocionRegistro | null; // null = se registró sin código de campaña
   nextSteps?: string[];
   adminUser?: any;
   serverResponse?: any; // Respuesta completa del servidor
@@ -181,6 +193,7 @@ export class KatuqQuickStartService {
       return {
         success: true,
         pendingReview,
+        promocion: serverResponse?.promocion ?? null,
         empresa: empresa,
         rol: rol,
         bodega: bodega,
@@ -438,7 +451,10 @@ export class KatuqQuickStartService {
       recomendacionesIA: diagnosticData.aiRecommendation,
       registro: diagnosticData.registration,
       sector: diagnosticData.responses.q1 || 'No especificado',
-      procesoCompletado: true
+      procesoCompletado: true,
+      // Código de campaña (opcional). El backend lo revalida y descuenta cupo;
+      // si no sirve, el registro se completa igual en plan gratuito.
+      codigoPromocional: diagnosticData.codigoPromocional || null
     };
 
     try {
