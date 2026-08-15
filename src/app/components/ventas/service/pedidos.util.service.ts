@@ -770,6 +770,21 @@ export class PedidosUtilService {
             return 0;
         }
 
+        // D-202 (spec 010): _ivaManualOverride gana SIEMPRE que esté presente, sin
+        // importar si la línea también tiene override de precio ni qué rama de precio
+        // (categoría/volumen/base) aplique — mismo criterio que el motor canónico
+        // (`resolverPrecioLinea`). Antes esta función NUNCA leía este campo, así que
+        // un producto de catálogo con SOLO el IVA cambiado (sin tocar el precio)
+        // perdía el override en silencio — causa raíz de DAD-012131 (D-199/D-200/D-201).
+        // IMPORTANTE: esta función retorna un MONTO (no el %) — hay que multiplicar
+        // el % override por el precio sin IVA resuelto (`calcularPrecioUnitarioSinIVA`),
+        // NO devolver `_ivaManualOverride` directo (es el porcentaje, ej. 19).
+        if (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null) {
+            const sinIva = this.calcularPrecioUnitarioSinIVA(itemCarrito);
+            const tarifaOverride = Number(itemCarrito._ivaManualOverride) || 0;
+            return sinIva * (tarifaOverride / 100);
+        }
+
         // 🔒 Si el producto tiene precio por categoría de cliente, usar IVA fijo SIN escalar por volumen
         if (producto._precioAplicadoPorCategoria) {
             return Number(producto.precio.valorIva) || 0;

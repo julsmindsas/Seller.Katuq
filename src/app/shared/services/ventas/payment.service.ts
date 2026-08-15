@@ -452,6 +452,25 @@ export class PaymentService extends BaseService {
       // precioConIvaItem = (Number(producto?.precio?.precioUnitarioConIva) || 0);
       // }
 
+      // D-202 (spec 010): _ivaManualOverride aplica SIEMPRE que esté presente,
+      // independientemente de si la línea también tiene override de precio. Antes
+      // solo se leía dentro de PRIORIDAD 0 (precio manual), así que un producto de
+      // catálogo con SOLO el IVA cambiado (sin tocar el precio) perdía el override
+      // silenciosamente — el bug real de DAD-012131 (D-199/D-200/D-201/D-202).
+      // IMPORTANTE: no basta con cambiar `porcentajeIvaItemStr` — `precioConIvaItem`
+      // ya quedó resuelto arriba (categoría/promo/volumen/base) con la tarifa VIEJA
+      // horneada adentro. Hay que re-anclar al sin-IVA implícito de esa rama (dividir
+      // por 1+tarifaVieja) y recomponer el con-IVA con la tarifa nueva — si no, la
+      // extracción de IVA más abajo (con-IVA ÷ (1+%) × %) queda mal (mismo ancla que
+      // usa el motor canónico: IVA = sinIVA × tarifa, nunca al revés).
+      if (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null) {
+        const tarifaViejaNum = (Number(porcentajeIvaItemStr) || 0) / 100;
+        const sinIvaImplicito = (1 + tarifaViejaNum) !== 0 ? precioConIvaItem / (1 + tarifaViejaNum) : precioConIvaItem;
+        porcentajeIvaItemStr = itemCarrito._ivaManualOverride.toString();
+        const tarifaNuevaNum = (Number(porcentajeIvaItemStr) || 0) / 100;
+        precioConIvaItem = sinIvaImplicito * (1 + tarifaNuevaNum);
+      }
+
       // Feature B / no acumulación (D-B2): una línea en promoción automática NO
       // recibe el descuento del código (factorDesc=1); el resto sí (1 - porceDescuento).
       // Guard G4 (spec 010): factorDesc nunca negativo (porcentaje > 100% legacy).
