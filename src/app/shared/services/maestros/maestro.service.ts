@@ -13,8 +13,12 @@ export class MaestroService {
     return this.http.post(this.urlBase + '/v1/users/delete', { cd: id }, this.httpOptions);
   }
 
-  changePassword(user: any) {
-    return this.http.post(this.urlBase + '/v1/users/updateDefaultPassword', user, this.httpOptions);
+  changePassword(payload: { newPassword: string }) {
+    return this.http.post(
+      this.urlBase + '/v1/users/updateDefaultPassword',
+      { newPassword: payload.newPassword },
+      this.httpOptions
+    );
   }
   changeNewPassword(user: any) {
     return this.http.post(this.urlBase + '/v1/users/changePassword', user, this.httpOptions);

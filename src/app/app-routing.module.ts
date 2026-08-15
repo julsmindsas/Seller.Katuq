@@ -194,6 +194,18 @@ const routes: Routes = [
       }
     ]
   },
+  // Landing de campaña para pauta. Pública a propósito: quien llega por el
+  // anuncio todavía no tiene cuenta. El código viaja al registro.
+  {
+    path: 'promo',
+    component: BlankComponent,
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./components/promo-campana/promo-campana.module').then(m => m.PromoCampanaModule),
+      }
+    ]
+  },
   // Vitrina pública de catálogos (D-141). Fuera del AuthGuard a propósito: la
   // abre el comprador, que no tiene cuenta en Katuq.
   {

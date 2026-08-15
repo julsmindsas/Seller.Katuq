@@ -304,6 +304,13 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "users",
         },
+        {
+          path: "superadmin/campanas",
+          title: "Campañas de registro",
+          type: "link",
+          icon: "gift",
+          isOnlySuperAdministrador: true,
+        },
         { path: "prospectos/lista", title: "Prospectos", type: "link", icon: "user-plus" },
       ],
     },

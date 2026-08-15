@@ -87,9 +87,10 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (localStorage.getItem('showOnboardingBanner') === 'true') {
-      this.showOnboardingBanner = true;
-    }
+    this.showOnboardingBanner =
+      this.isAdminRole &&
+      localStorage.getItem('showOnboardingBanner') === 'true' &&
+      sessionStorage.getItem('onboarding_banner_dismissed') !== 'true';
 
     this.cargarMetricasNegocio();
   }
@@ -168,7 +169,9 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   dismissOnboarding(): void {
     this.showOnboardingBanner = false;
-    localStorage.removeItem('showOnboardingBanner');
+    // Ocultarlo es una decisión de esta sesión, no equivale a completar el
+    // onboarding. El acceso reaparece al volver a ingresar hasta finalizarlo.
+    sessionStorage.setItem('onboarding_banner_dismissed', 'true');
   }
 
   /**

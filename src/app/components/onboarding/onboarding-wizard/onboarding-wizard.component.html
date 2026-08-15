@@ -1,169 +1,330 @@
-<div class="kq-onb" style="display:flex;height:100vh;width:100%;overflow:hidden;background:#ecebf4">
+<div class="onboarding-loading" *ngIf="isInitializing" role="status" aria-live="polite">
+  <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+  <p>Estamos preparando tu siguiente paso…</p>
+</div>
 
-  <!-- LEFT RAIL -->
-  <aside style="width:330px;flex:none;background:#fff;border-right:1px solid #eceaf4;display:flex;flex-direction:column">
-    <div style="padding:24px 24px 20px;border-bottom:1px solid #f2f0f8">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-        <div style="width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,#7b5bff,#5b34e6);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 5px 14px rgba(107,78,251,.32)">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
-        </div>
-        <div style="line-height:1.2">
-          <div style="font-size:17px;font-weight:800;letter-spacing:-.2px">Configuremos tu negocio</div>
-          <div style="font-size:12.5px;color:#8b879f;font-weight:600">{{ companyLabel }}</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
-        <div style="font-size:13px;font-weight:800">{{ doneCount }} de {{ totalCount }} listos</div>
-        <div style="font-size:12px;font-weight:700;color:#8b879f">≈ {{ minsLeft }} min restantes</div>
-      </div>
-      <div style="height:9px;background:#efedf6;border-radius:99px;overflow:hidden">
-        <div [style]="progressFillStyle"></div>
+<div class="kq-onboarding" *ngIf="!isInitializing">
+  <header class="mobile-header">
+    <button type="button" class="icon-button" (click)="mobileNavOpen = !mobileNavOpen"
+            [attr.aria-expanded]="mobileNavOpen" aria-controls="onboarding-navigation"
+            aria-label="Abrir pasos de configuración">
+      <i class="pi pi-bars" aria-hidden="true"></i>
+    </button>
+    <div>
+      <strong>{{ active.shortName }}</strong>
+      <span>Paso {{ stepPosition }} de {{ all.length }}</span>
+    </div>
+    <span class="mobile-progress">{{ progressPercentage }}%</span>
+  </header>
+
+  <button *ngIf="mobileNavOpen" type="button" class="nav-backdrop"
+          (click)="mobileNavOpen = false" aria-label="Cerrar pasos"></button>
+
+  <aside id="onboarding-navigation" class="onboarding-sidebar" [class.is-open]="mobileNavOpen">
+    <div class="brand-block">
+      <span class="brand-icon" aria-hidden="true"><i class="pi pi-sparkles"></i></span>
+      <div>
+        <h1>Vamos paso a paso</h1>
+        <p>{{ companyLabel }}</p>
       </div>
     </div>
 
-    <div style="flex:1;overflow-y:auto;padding:16px 14px">
-      <div *ngFor="let g of groups()" style="margin-bottom:18px">
-        <div style="display:flex;align-items:center;gap:8px;padding:0 10px 9px">
-          <div style="font-size:10.5px;font-weight:800;color:#a7a3bd;letter-spacing:.7px">{{ g.title }}</div>
-          <div style="flex:1;height:1px;background:#f2f0f8"></div>
-          <div style="font-size:10.5px;font-weight:800;color:#a7a3bd">{{ g.count }}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <div *ngFor="let s of g.steps" (click)="goStep(s.id)" [style]="s.rowStyle">
-            <span [style]="s.markStyle">
-              <svg *ngIf="s.isDone" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M20 6 9 17l-5-5"/></svg>
-              <svg *ngIf="s.isSkipped" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 5 7 7-7 7M13 5l7 7-7 7"/></svg>
-              <ng-container *ngIf="s.showNum">{{ s.num }}</ng-container>
-            </span>
-            <div style="flex:1;min-width:0">
-              <div [style]="s.nameStyle">{{ s.name }}</div>
-              <div *ngIf="s.showState" [style]="s.stateStyle">{{ s.stateText }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="progress-copy">
+      <strong>{{ doneCount }} de {{ all.length }} listos</strong>
+      <span>≈ {{ minsLeft }} min</span>
+    </div>
+    <div class="progress-track" role="progressbar" aria-label="Avance de configuración"
+         aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progressPercentage">
+      <span [style.width.%]="progressPercentage"></span>
     </div>
 
-    <div style="padding:14px 18px;border-top:1px solid #f2f0f8;display:flex;align-items:center;gap:10px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9793ac" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-      <div style="flex:1;font-size:12px;color:#8b879f;font-weight:600;line-height:1.35">Tu avance se guarda solo. Puedes salir y volver.</div>
-      <button (click)="continuarLuego()" style="border:none;background:transparent;color:#6a4dfb;font-weight:800;font-size:12.5px;cursor:pointer;white-space:nowrap">Continuar luego</button>
+    <nav class="steps-nav" aria-label="Pasos de configuración">
+      <button *ngFor="let step of all" type="button" class="step-link"
+              [class.is-active]="step.id === activeId"
+              [class.is-done]="status[step.id] === 'done'"
+              [disabled]="!canOpenStep(step)"
+              [attr.aria-current]="step.id === activeId ? 'step' : null"
+              (click)="goStep(step.id)">
+        <span class="step-marker" aria-hidden="true">
+          <i *ngIf="status[step.id] === 'done'" class="pi pi-check"></i>
+          <span *ngIf="status[step.id] !== 'done'">{{ all.indexOf(step) + 1 }}</span>
+        </span>
+        <span class="step-label">
+          <strong>{{ step.shortName }}</strong>
+          <small>{{ status[step.id] === 'done' ? 'Listo' : 'Pendiente' }}</small>
+        </span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p><i class="pi pi-cloud" aria-hidden="true"></i> Tu avance se guarda de forma segura.</p>
+      <button type="button" class="text-button" (click)="continueLater()">Continuar después</button>
     </div>
   </aside>
 
-  <!-- MAIN -->
-  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+  <main class="onboarding-main">
+    <div class="content-scroll">
+      <div class="content-shell">
+        <div class="step-kicker">Paso {{ stepPosition }} de {{ all.length }} · cerca de {{ active.mins }} min</div>
+        <h2 id="active-step-title">{{ active.name }}</h2>
 
-    <div style="flex:1;overflow-y:auto;padding:34px 40px 24px">
-      <div style="max-width:760px;margin:0 auto;animation:rise .32s ease" [attr.data-key]="activeId">
-
-        <!-- step header -->
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
-          <span style="font-size:12px;font-weight:800;color:#8b879f;letter-spacing:.4px">PASO {{ stepPos }} DE {{ totalCount }}</span>
-          <span style="width:4px;height:4px;border-radius:99px;background:#cfcadf"></span>
-          <span style="font-size:12px;font-weight:700;color:#8b879f">≈ {{ active.mins }} min</span>
+        <div class="notice notice--warning" *ngIf="progressWarning" role="status">
+          <i class="pi pi-cloud-upload" aria-hidden="true"></i>
+          <span>{{ progressWarning }}</span>
         </div>
 
-        <h1 style="font-size:29px;font-weight:800;letter-spacing:-.6px;line-height:1.15;margin-bottom:10px;text-wrap:pretty">{{ active.name }}</h1>
-        <p style="font-size:15.5px;color:#6b6880;line-height:1.5;max-width:600px;text-wrap:pretty;margin-bottom:22px">{{ active.desc }}</p>
-
-        <!-- what is this -->
-        <div style="background:#f6f4fe;border:1px solid #e9e3ff;border-radius:16px;padding:18px 20px;margin-bottom:22px">
-          <div style="display:flex;align-items:flex-start;gap:12px">
-            <span style="width:32px;height:32px;flex:none;border-radius:10px;background:#e7e0fe;display:flex;align-items:center;justify-content:center;color:#6a4dfb">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01"/></svg>
-            </span>
-            <div style="flex:1">
-              <div style="font-size:13.5px;font-weight:800;color:#4a3aa8;margin-bottom:4px">¿Para qué sirve esto?</div>
-              <div style="font-size:14px;color:#5b4fa0;line-height:1.5;text-wrap:pretty">{{ active.why }}</div>
-            </div>
-          </div>
+        <div class="notice notice--error" *ngIf="errorMessage" role="alert">
+          <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+          <span>{{ errorMessage }}</span>
         </div>
 
-        <!-- ready-made suggestion -->
-        <div *ngIf="hasSuggestions" style="background:#fff;border-radius:20px;box-shadow:0 4px 22px rgba(30,20,60,.05);overflow:hidden;margin-bottom:18px">
-          <div style="display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid #f3f1f9">
-            <span style="width:34px;height:34px;flex:none;border-radius:11px;background:linear-gradient(135deg,#7b5bff,#5b34e6);display:flex;align-items:center;justify-content:center">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
-            </span>
-            <div style="flex:1">
-              <div style="font-size:14.5px;font-weight:800">{{ active.suggestTitle }}</div>
-              <div style="font-size:12.5px;color:#8b879f">Toca para elegir las que uses. Puedes cambiarlas después.</div>
+        <section class="step-card" aria-labelledby="active-step-title" [ngSwitch]="activeId">
+          <ng-container *ngSwitchCase="'goal'">
+            <p class="step-intro">¿Qué te gustaría conseguir primero? Puedes cambiar de ruta cuando quieras.</p>
+            <div class="choice-list choice-list--goals">
+              <button type="button" class="choice-card" [class.is-selected]="goal === 'sell_today'"
+                      [attr.aria-pressed]="goal === 'sell_today'" (click)="selectGoal('sell_today')">
+                <span class="choice-icon choice-icon--purple" aria-hidden="true"><i class="pi pi-shopping-cart"></i></span>
+                <span><strong>Quiero vender hoy</strong><small>Crea algo que vendes, confirma cómo cobras y abre tu primera venta.</small></span>
+              </button>
+              <button type="button" class="choice-card" [class.is-selected]="goal === 'import_excel'"
+                      [attr.aria-pressed]="goal === 'import_excel'" (click)="selectGoal('import_excel')">
+                <span class="choice-icon choice-icon--green" aria-hidden="true"><i class="pi pi-file-excel"></i></span>
+                <span><strong>Tengo mis productos en Excel</strong><small>Ve al importador, revisa tus datos y vuelve para dejar listo el cobro.</small></span>
+              </button>
+              <button type="button" class="choice-card" [class.is-selected]="goal === 'explore'"
+                      [attr.aria-pressed]="goal === 'explore'" (click)="selectGoal('explore')">
+                <span class="choice-icon choice-icon--blue" aria-hidden="true"><i class="pi pi-compass"></i></span>
+                <span><strong>Prefiero explorar primero</strong><small>Conoce Katuq sin configurar nada ahora. Te mostraremos cómo continuar después.</small></span>
+              </button>
             </div>
-            <button (click)="selectAll()" style="border:1.5px solid #e4e1f0;background:#fff;color:#5b5772;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap">{{ selectAllLabel }}</button>
-          </div>
-          <div style="padding:18px 22px;display:grid;grid-template-columns:1fr 1fr;gap:11px">
-            <button *ngFor="let o of suggestions()" (click)="toggleOpt(o.label)" [style]="o.style">
-              <span [style]="o.boxStyle">
-                <svg *ngIf="o.selected" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M20 6 9 17l-5-5"/></svg>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'context'">
+            <p class="step-intro">No hay respuestas técnicas. Esto nos ayuda a mostrarte solamente lo que necesitas.</p>
+
+            <fieldset class="question-block">
+              <legend>¿Qué vendes?</legend>
+              <p>Así sabremos si necesitas controlar existencias.</p>
+              <div class="segmented-grid">
+                <button type="button" [class.is-selected]="offering === 'products'" [attr.aria-pressed]="offering === 'products'" (click)="selectOffering('products')">Productos</button>
+                <button type="button" [class.is-selected]="offering === 'services'" [attr.aria-pressed]="offering === 'services'" (click)="selectOffering('services')">Servicios</button>
+                <button type="button" [class.is-selected]="offering === 'both'" [attr.aria-pressed]="offering === 'both'" (click)="selectOffering('both')">Ambos</button>
+                <button type="button" [class.is-selected]="offering === 'unknown'" [attr.aria-pressed]="offering === 'unknown'" (click)="selectOffering('unknown')">Aún no estoy seguro</button>
+              </div>
+            </fieldset>
+
+            <fieldset class="question-block">
+              <legend>¿Dónde recibes pedidos normalmente?</legend>
+              <p>Luego podrás activar otros canales.</p>
+              <div class="segmented-grid">
+                <button type="button" [class.is-selected]="channel === 'local'" [attr.aria-pressed]="channel === 'local'" (click)="selectChannel('local')">En mi local</button>
+                <button type="button" [class.is-selected]="channel === 'social'" [attr.aria-pressed]="channel === 'social'" (click)="selectChannel('social')">WhatsApp o redes</button>
+                <button type="button" [class.is-selected]="channel === 'delivery'" [attr.aria-pressed]="channel === 'delivery'" (click)="selectChannel('delivery')">Pedidos o domicilios</button>
+                <button type="button" [class.is-selected]="channel === 'unknown'" [attr.aria-pressed]="channel === 'unknown'" (click)="selectChannel('unknown')">Todavía no vendo</button>
+              </div>
+            </fieldset>
+
+            <fieldset class="question-block" *ngIf="offering !== 'services' && offering !== 'unknown'">
+              <legend>¿Quieres llevar la cuenta de cuántas unidades te quedan?</legend>
+              <p>Puedes responder “Ahora no” y activarlo más adelante.</p>
+              <div class="segmented-grid segmented-grid--two">
+                <button type="button" [class.is-selected]="inventoryEnabled === true" [attr.aria-pressed]="inventoryEnabled === true" (click)="selectInventory(true)">Sí, quiero controlarlas</button>
+                <button type="button" [class.is-selected]="inventoryEnabled === false" [attr.aria-pressed]="inventoryEnabled === false" (click)="selectInventory(false)">Ahora no</button>
+              </div>
+            </fieldset>
+
+            <div class="follow-up" *ngIf="inventoryEnabled === true">
+              <h3>¿Dónde guardas tus productos?</h3>
+              <p>Katuq llama “bodega” a este lugar. Puede ser tu local, casa o almacén.</p>
+              <div class="form-grid">
+                <div class="field field--full">
+                  <label for="warehouse-name">Nombre del lugar</label>
+                  <input id="warehouse-name" type="text" autocomplete="organization"
+                         [(ngModel)]="warehouseName" (ngModelChange)="onDraftChange()"
+                         [ngModelOptions]="{ standalone: true }" placeholder="Ej. Local principal">
+                </div>
+                <div class="field">
+                  <label for="warehouse-city">Ciudad <span>opcional</span></label>
+                  <input id="warehouse-city" type="text" autocomplete="address-level2"
+                         [(ngModel)]="warehouseCity" (ngModelChange)="onDraftChange()"
+                         [ngModelOptions]="{ standalone: true }" placeholder="Ej. Bogotá">
+                </div>
+                <div class="field">
+                  <label for="low-stock">Avísame cuando queden menos de</label>
+                  <input id="low-stock" type="number" min="0" step="1" inputmode="numeric"
+                         [(ngModel)]="lowStockThreshold" (ngModelChange)="onDraftChange()"
+                         [ngModelOptions]="{ standalone: true }" aria-describedby="low-stock-help">
+                  <small id="low-stock-help">Déjalo vacío si prefieres configurar el aviso después.</small>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'product'">
+            <div class="success-panel" *ngIf="readiness?.product_ready">
+              <i class="pi pi-check-circle" aria-hidden="true"></i>
+              <div><strong>Ya encontramos algo listo para vender</strong><p>No necesitas crearlo otra vez. Puedes continuar con el cobro.</p></div>
+            </div>
+
+            <ng-container *ngIf="!readiness?.product_ready && isImportRoute">
+              <p class="step-intro">Abre el catálogo, usa “Importar productos” y vuelve aquí. Katuq comprobará el resultado real antes de continuar.</p>
+              <div class="import-panel">
+                <span class="large-icon" aria-hidden="true"><i class="pi pi-file-excel"></i></span>
+                <div><strong>Excel o CSV</strong><p>Podrás revisar las columnas y los errores antes de confirmar.</p></div>
+                <button type="button" class="btn-primary" (click)="openImporter()">
+                  <i class="pi pi-external-link" aria-hidden="true"></i> Importar productos
+                </button>
+              </div>
+              <p class="helper-copy" *ngIf="importOpened">Cuando termines, regresa y pulsa “Ya importé, verificar”.</p>
+            </ng-container>
+
+            <ng-container *ngIf="!readiness?.product_ready && !isImportRoute">
+              <p class="step-intro">Empieza con una sola cosa. Los detalles avanzados se pueden completar después.</p>
+
+              <fieldset class="question-block" *ngIf="productTypeNeedsChoice">
+                <legend>¿Qué quieres crear primero?</legend>
+                <div class="segmented-grid segmented-grid--two">
+                  <button type="button" [class.is-selected]="product.tipo === 'producto'" [attr.aria-pressed]="product.tipo === 'producto'" (click)="selectProductType('producto')">Un producto</button>
+                  <button type="button" [class.is-selected]="product.tipo === 'servicio'" [attr.aria-pressed]="product.tipo === 'servicio'" (click)="selectProductType('servicio')">Un servicio</button>
+                </div>
+              </fieldset>
+
+              <div class="form-grid product-form">
+                <div class="field field--full">
+                  <label for="product-name">Nombre del {{ productNoun }}</label>
+                  <input id="product-name" type="text" autocomplete="off" maxlength="120"
+                         [(ngModel)]="product.nombre" (ngModelChange)="onDraftChange()"
+                         [ngModelOptions]="{ standalone: true }"
+                         [placeholder]="selectedProductType === 'servicio' ? 'Ej. Corte de cabello' : 'Ej. Camiseta blanca'">
+                </div>
+                <div class="field">
+                  <label for="product-price">Precio de venta</label>
+                  <div class="money-input"><span aria-hidden="true">$</span>
+                    <input id="product-price" type="text" inputmode="decimal" maxlength="20" autocomplete="off"
+                           [(ngModel)]="product.precio" (ngModelChange)="onDraftChange()"
+                           [ngModelOptions]="{ standalone: true }" placeholder="50.000">
+                  </div>
+                </div>
+                <div class="field" *ngIf="tracksInitialInventory">
+                  <label for="initial-quantity">¿Cuántos tienes hoy?</label>
+                  <input id="initial-quantity" type="number" min="1" step="1" inputmode="numeric"
+                         [(ngModel)]="initialQuantity" (ngModelChange)="onDraftChange()"
+                         [ngModelOptions]="{ standalone: true }"
+                         [attr.aria-invalid]="validInitialQuantity ? null : true"
+                         aria-describedby="initial-quantity-help">
+                  <small id="initial-quantity-help">Usaremos esta cantidad para que tu primera venta no deje existencias negativas.</small>
+                </div>
+                <div class="field field-help">
+                  <i class="pi pi-image" aria-hidden="true"></i>
+                  <span><strong>La foto es opcional</strong> Puedes agregarla después desde tu catálogo.</span>
+                </div>
+              </div>
+            </ng-container>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'payment'">
+            <p class="step-intro">Elige al menos una. Esto solo registra cómo te pagaron; no conecta ni mueve dinero.</p>
+            <div class="notice notice--warning" *ngIf="paymentNeedsManualActivation" role="alert">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              <span>Encontramos una forma de cobro desactivada con ese nombre.
+                <button type="button" class="inline-link" (click)="managePaymentMethods()">Revisar métodos de pago</button>
               </span>
-              <span style="flex:1;text-align:left;line-height:1.3">
-                <span style="display:block;font-size:13.5px;font-weight:700">{{ o.label }}</span>
-                <span style="display:block;font-size:11.5px;font-weight:600;color:#9793ac">{{ o.hint }}</span>
-              </span>
-            </button>
-          </div>
-          <div style="padding:0 22px 20px">
-            <div style="display:flex;align-items:center;gap:9px;border:1.6px dashed #ddd8ee;border-radius:12px;padding:12px 15px;background:#fbfaff;color:#6a4dfb;font-size:13.5px;font-weight:700">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>{{ active.addOwn }}
             </div>
-          </div>
-        </div>
-
-        <!-- inline fields -->
-        <div *ngIf="hasFields" style="background:#fff;border-radius:20px;box-shadow:0 4px 22px rgba(30,20,60,.05);padding:22px;margin-bottom:18px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 20px">
-            <div *ngFor="let f of active.fields" [style]="'grid-column:span ' + (f.col === 'full' ? 2 : 1)">
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;margin-bottom:8px;min-height:20px">{{ f.label }}<span *ngIf="f.required" style="color:#f0416c;font-weight:800">*</span></label>
-              <input [ngModel]="fieldValue(active, f.key)" (ngModelChange)="onField(f.key, $event)" [ngModelOptions]="{ standalone: true }"
-                     [attr.placeholder]="f.placeholder"
-                     style="width:100%;border:1.5px solid #e6e3f0;border-radius:12px;padding:13px 15px;font-size:14.5px;background:#fbfaff">
-              <div *ngIf="f.help" style="font-size:12px;color:#9793ac;margin-top:7px;line-height:1.4">{{ f.help }}</div>
+            <div class="success-panel" *ngIf="readiness?.payment_ready">
+              <i class="pi pi-check-circle" aria-hidden="true"></i>
+              <div><strong>Ya tienes una forma de cobro configurada</strong><p>Puedes continuar o agregar otra de la lista.</p></div>
             </div>
-          </div>
-        </div>
+            <div class="payment-grid">
+              <button *ngFor="let option of paymentOptions" type="button" class="payment-choice"
+                      [class.is-selected]="paymentMethods.includes(option.label)"
+                      [attr.aria-pressed]="paymentMethods.includes(option.label)"
+                      (click)="togglePayment(option.label)">
+                <span class="check-box" aria-hidden="true"><i *ngIf="paymentMethods.includes(option.label)" class="pi pi-check"></i></span>
+                <span><strong>{{ option.label }}</strong><small>{{ option.hint }}</small></span>
+              </button>
+            </div>
+            <div class="custom-payment">
+              <label for="custom-payment">¿Usas otra forma?</label>
+              <div>
+                <input id="custom-payment" type="text" maxlength="60" [(ngModel)]="customPayment"
+                       [ngModelOptions]="{ standalone: true }" placeholder="Ej. Bono o convenio"
+                       (keyup.enter)="addCustomPayment()">
+                <button type="button" class="btn-ghost" [disabled]="!customPayment.trim()" (click)="addCustomPayment()">Agregar</button>
+              </div>
+            </div>
+            <div class="selected-chips" *ngIf="paymentMethods.length">
+              <span *ngFor="let method of paymentMethods">{{ method }}</span>
+            </div>
+          </ng-container>
 
-        <!-- task CTA -->
-        <div *ngIf="hasTask" style="background:#fff;border-radius:20px;box-shadow:0 4px 22px rgba(30,20,60,.05);padding:26px;margin-bottom:18px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-          <div style="width:56px;height:56px;flex:none;border-radius:16px;background:linear-gradient(135deg,#7b5bff,#5b34e6);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(107,78,251,.3)">
-            <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
-          </div>
-          <div style="flex:1;min-width:220px">
-            <div style="font-size:15.5px;font-weight:800;margin-bottom:3px">{{ active.task?.title }}</div>
-            <div style="font-size:13.5px;color:#8b879f;line-height:1.45;text-wrap:pretty">{{ active.task?.desc }}</div>
-          </div>
-          <div *ngIf="!tasks[active.id]" style="display:flex;align-items:center;gap:11px;flex-wrap:wrap">
-            <button (click)="openProductMaster()" style="display:flex;align-items:center;gap:9px;border:none;background:linear-gradient(135deg,#7b5bff,#6338f0);color:#fff;font-weight:800;font-size:14px;padding:13px 22px;border-radius:12px;cursor:pointer;box-shadow:0 6px 16px rgba(107,78,251,.3);white-space:nowrap">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>{{ active.task?.cta }}
-            </button>
-            <button (click)="doTask()" style="border:1.5px solid #e4e1f0;background:#fff;color:#5b5772;font-weight:700;font-size:13.5px;padding:13px 18px;border-radius:12px;cursor:pointer;white-space:nowrap">Ya lo creé</button>
-          </div>
-          <span *ngIf="tasks[active.id]" style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#16a34a;background:#e7f8ee;padding:11px 18px;border-radius:99px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Hecho</span>
-        </div>
+          <ng-container *ngSwitchCase="'result'">
+            <ng-container *ngIf="isExploreRoute">
+              <div class="result-hero">
+                <span class="large-icon large-icon--purple" aria-hidden="true"><i class="pi pi-compass"></i></span>
+                <h3>Explora con tranquilidad</h3>
+                <p>Tu avance queda guardado. En el inicio verás un acceso claro para continuar cuando estés listo.</p>
+              </div>
+            </ng-container>
 
-        <!-- selection summary -->
-        <div *ngIf="hasPicked && hasSuggestions" style="display:flex;align-items:center;gap:11px;background:#e7f8ee;border:1px solid #c9edd9;border-radius:14px;padding:14px 18px;margin-bottom:18px">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg>
-          <div style="flex:1;font-size:13.5px;font-weight:700;color:#186c3d">{{ pickedText }}</div>
-        </div>
+            <ng-container *ngIf="!isExploreRoute">
+              <div class="checking" *ngIf="isCheckingReadiness" role="status">
+                <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Comprobando tu configuración…
+              </div>
+              <div class="result-hero" *ngIf="!isCheckingReadiness">
+                <span class="large-icon" [class.large-icon--success]="readiness?.ready_to_sell" aria-hidden="true">
+                  <i [class]="readiness?.ready_to_sell ? 'pi pi-check' : 'pi pi-list-check'"></i>
+                </span>
+                <h3>{{ readiness?.ready_to_sell ? '¡Ya puedes registrar una venta!' : 'Estamos a un paso de terminar' }}</h3>
+                <p>{{ readiness?.ready_to_sell ? 'El sistema confirmó producto, cobro y numeración.' : 'Revisa lo pendiente. No diremos que está listo hasta confirmarlo.' }}</p>
+              </div>
+
+              <ul class="readiness-list" *ngIf="!isCheckingReadiness">
+                <li *ngFor="let row of readinessRows" [class.is-ready]="row.ready">
+                  <i [class]="row.ready ? 'pi pi-check-circle' : 'pi pi-clock'" aria-hidden="true"></i>
+                  <span>{{ row.label }}</span>
+                  <strong>{{ row.ready ? 'Listo' : 'Pendiente' }}</strong>
+                </li>
+              </ul>
+
+              <button *ngIf="!isCheckingReadiness && !readiness?.ready_to_sell" type="button" class="btn-ghost verify-button" (click)="retryReadiness()">
+                <i class="pi pi-refresh" aria-hidden="true"></i> Verificar de nuevo
+              </button>
+
+              <div class="result-actions" *ngIf="!isCheckingReadiness && !readiness?.ready_to_sell && missingActionLabel">
+                <button type="button" class="btn-ghost" (click)="resolveFirstMissing()">
+                  <i class="pi pi-arrow-left" aria-hidden="true"></i> {{ missingActionLabel }}
+                </button>
+              </div>
+
+              <div class="result-actions" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell">
+                <button type="button" class="btn-ghost" (click)="viewProducts()">
+                  <i class="pi pi-box" aria-hidden="true"></i> Ver mis productos
+                </button>
+                <button type="button" class="btn-ghost" (click)="continueLater()">
+                  <i class="pi pi-clock" aria-hidden="true"></i> Seguir después
+                </button>
+              </div>
+            </ng-container>
+          </ng-container>
+        </section>
       </div>
     </div>
 
-    <!-- FOOTER -->
-    <div style="flex:none;background:#fff;border-top:1px solid #eceaf4;padding:16px 40px;box-shadow:0 -4px 24px rgba(30,20,60,.05)">
-      <div style="max-width:760px;margin:0 auto;display:flex;align-items:center;gap:14px">
-        <button (click)="goBack()" [style]="backStyle" [disabled]="idx === 0 || isSaving">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>Atrás
+    <footer class="wizard-footer">
+      <div class="footer-shell">
+        <button type="button" class="btn-ghost" (click)="goBack()" [disabled]="stepPosition === 1 || isSaving">
+          <i class="pi pi-arrow-left" aria-hidden="true"></i> Atrás
         </button>
-        <div style="flex:1"></div>
-        <button (click)="goNext()" [style]="nextStyle" [disabled]="!isComplete() || isSaving">
-          <i *ngIf="isSaving" class="pi pi-spin pi-spinner" style="font-size:15px"></i>
-          {{ isSaving ? 'Guardando...' : nextLabel }}
-          <svg *ngIf="!isSaving" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m9 18 6-6-6-6"/></svg>
+        <span class="footer-hint" *ngIf="!canSubmitCurrentStep">{{ nextHint }}</span>
+        <button type="button" class="btn-primary" (click)="goNext()" [disabled]="!canSubmitCurrentStep">
+          <i *ngIf="isSaving" class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+          <span>{{ isSaving ? 'Guardando…' : nextLabel }}</span>
+          <i *ngIf="!isSaving" class="pi pi-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
-    </div>
-  </div>
+    </footer>
+  </main>
 </div>
 
 <p-toast position="bottom-center" [baseZIndex]="5000"></p-toast>

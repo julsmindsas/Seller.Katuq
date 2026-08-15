@@ -48,6 +48,7 @@ export class AppComponent implements OnInit, OnDestroy {
     '/authentication',
     '/registrarse',
     '/nuevo-registro',
+    '/promo',
     '/change-password',
     '/terms-conditions',
     '/privacy-policy',

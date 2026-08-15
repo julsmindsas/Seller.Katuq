@@ -1,53 +1,38 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { OnboardingService } from '../services/onboarding.service';
+import {
+  MinimalOnboardingProduct,
+  OnboardingReadiness,
+  OnboardingService,
+  OnboardingV2Progress
+} from '../services/onboarding.service';
+import {
+  buildOnboardingStorageKey,
+  parseLowStockThreshold
+} from '../utils/onboarding-v2.utils';
 
-/**
- * Onboarding Wizard — versión mínima de 5 pasos.
- *
- * UI portada del diseño "Onboarding KATUQ" (Claude Design). Estructura:
- *   Lo básico   → Información de empresa, Formas de pago
- *   Tu catálogo → Categorías, Bodega, Primer producto
- *
- * Aprovisionamiento V1 seguro (decisión del usuario):
- *  - Empresa: se guarda con los datos reales del formulario.
- *  - Pagos / Categorías / Bodega: idempotente y NO destructivo — cada paso
- *    verifica con /check y solo siembra el default del backend si el recurso
- *    NO existe (así nunca se pisa el catálogo de categorías). Los chips/campos
- *    son intención de UX; el detalle fino se ajusta luego desde el panel.
- *  - Primer producto: abre el maestro real en otra pestaña (no crea inline).
- *  - Al finalizar: seedRemainingDefaults (roles, formas de entrega, consecutivos)
- *    para que el comercio quede funcional aunque se termine temprano.
- */
+type StepId = 'goal' | 'context' | 'product' | 'payment' | 'result';
+type Goal = 'sell_today' | 'import_excel' | 'explore';
+type Offering = 'products' | 'services' | 'both' | 'unknown';
+type Channel = 'local' | 'social' | 'delivery' | 'unknown';
+type ProductType = 'producto' | 'servicio';
 
-type ProvisionKind = 'company' | 'payment-methods' | 'categories' | 'warehouses' | 'product';
-
-interface WizField {
-  key: string;
-  label: string;
-  required?: boolean;
-  col?: 'full';
-  placeholder?: string;
-  help?: string;
-}
-interface WizOption { label: string; hint: string; }
-interface WizTask { title: string; desc: string; cta: string; route: string; }
-interface WizStep {
-  id: string;
-  num: number;
+interface WizardStep {
+  id: StepId;
   name: string;
-  group: string;
+  shortName: string;
   mins: number;
-  desc: string;
-  why: string;
-  provision: ProvisionKind;
-  fields?: WizField[];
-  suggestTitle?: string;
-  addOwn?: string;
-  options?: WizOption[];
-  defaults?: string[];
-  task?: WizTask;
+}
+
+interface ProductDraft {
+  nombre: string;
+  precio: string | number;
+  fotoUrl: string;
+  tipo: ProductType;
+  requestId?: string;
+  requestFingerprint?: string;
+  resourceId?: string;
 }
 
 @Component({
@@ -56,90 +41,62 @@ interface WizStep {
   styleUrls: ['./onboarding-wizard.component.scss'],
   providers: [MessageService]
 })
-export class OnboardingWizardComponent implements OnInit {
-  private readonly STORAGE_KEY = 'katuq_onboarding_v2';
+export class OnboardingWizardComponent implements OnInit, OnDestroy {
+  private readonly LEGACY_UNSCOPED_KEY = 'katuq_onboarding_v2';
+  private cacheKey = '';
+  private progressTimer: any;
 
-  activeId = 'negocio';
-  status: Record<string, 'done' | 'skipped'> = {};
-  picked: Record<string, string[]> = {};
-  values: Record<string, Record<string, string>> = {};
-  tasks: Record<string, boolean> = {};
-
-  isSaving = false;
-  companyKey = '';
-  companyLabel = 'Tu Comercio';
-
-  private readonly _steps: WizStep[] = [
-    {
-      id: 'negocio', num: 1, name: 'Información de empresa', group: 'Lo básico', mins: 2,
-      provision: 'company',
-      desc: 'Nombre, dirección y contacto que verán tus clientes en facturas y en tu tienda.',
-      why: 'Es la información que aparece impresa en cada factura y recibo que entregues.',
-      fields: [
-        { key: 'razon', label: 'Nombre del negocio', required: true, col: 'full', placeholder: 'Versatilidad e Innovaciones SAS', help: 'Así aparecerá en tus facturas' },
-        { key: 'nit', label: 'NIT o cédula', required: true, placeholder: '900.123.456-7' },
-        { key: 'tel', label: 'Teléfono de contacto', required: true, placeholder: '300 123 4567' },
-        { key: 'dir', label: 'Dirección', col: 'full', placeholder: 'Calle 80 #12-34, Bogotá' }
-      ]
-    },
-    {
-      id: 'pago', num: 2, name: 'Formas de pago', group: 'Lo básico', mins: 2,
-      provision: 'payment-methods',
-      desc: 'Cómo te pagan tus clientes: efectivo, tarjeta, transferencia.',
-      why: 'Al vender, podrás registrar con qué medio te pagaron y cuadrar la caja al cierre del día.',
-      suggestTitle: 'Formas de pago más usadas en Colombia',
-      addOwn: 'Agregar otra forma de pago',
-      options: [
-        { label: 'Efectivo', hint: 'Pago en caja' },
-        { label: 'Tarjeta débito', hint: 'Datáfono' },
-        { label: 'Tarjeta crédito', hint: 'Datáfono' },
-        { label: 'Nequi', hint: 'Transferencia' },
-        { label: 'Daviplata', hint: 'Transferencia' },
-        { label: 'Transferencia bancaria', hint: 'PSE o cuenta' }
-      ],
-      defaults: ['Efectivo', 'Tarjeta débito', 'Nequi']
-    },
-    {
-      id: 'categorias', num: 3, name: 'Categorías', group: 'Tu catálogo', mins: 3,
-      provision: 'categories',
-      desc: 'Los grupos en los que organizas lo que vendes.',
-      why: 'Con categorías encuentras un producto en segundos al vender, en vez de buscar en una lista larga.',
-      suggestTitle: 'Categorías sugeridas para tu tipo de negocio',
-      addOwn: 'Crear mi propia categoría',
-      options: [
-        { label: 'Chocolates', hint: '12 productos típicos' },
-        { label: 'Cupcakes', hint: '8 productos típicos' },
-        { label: 'Floristería', hint: '15 productos típicos' },
-        { label: 'Desayunos', hint: '6 productos típicos' },
-        { label: 'Peluches', hint: '9 productos típicos' },
-        { label: 'Tarjetas', hint: '5 productos típicos' }
-      ],
-      defaults: ['Chocolates', 'Cupcakes', 'Floristería']
-    },
-    {
-      id: 'bodegas', num: 4, name: 'Bodega', group: 'Tu catálogo', mins: 3,
-      provision: 'warehouses',
-      desc: 'Dónde guardas la mercancía y cuánto tienes de cada cosa.',
-      why: 'KATUQ descuenta el stock solo con cada venta y te avisa cuando algo está por agotarse.',
-      fields: [
-        { key: 'bodega', label: 'Nombre de tu bodega principal', required: true, col: 'full', placeholder: 'Bodega Principal', help: 'Si solo tienes un local, este es su nombre' },
-        { key: 'ciudad', label: 'Ciudad', required: true, placeholder: 'Bogotá' },
-        { key: 'alerta', label: 'Avísame cuando queden menos de', placeholder: '5 unidades', help: 'Recibirás una alerta para reponer a tiempo' }
-      ]
-    },
-    {
-      id: 'producto', num: 5, name: 'Primer producto', group: 'Tu catálogo', mins: 4,
-      provision: 'product',
-      desc: 'Crea el primero para ver cómo funciona. Con uno ya puedes vender.',
-      why: 'Con un producto creado ya puedes hacer tu primera venta de prueba y ver el flujo completo.',
-      task: {
-        title: 'Crea tu primer producto',
-        desc: 'Se abre el formulario en otra pestaña, así no pierdes tu avance aquí. Solo necesitas nombre, precio y una foto.',
-        cta: 'Crear producto',
-        route: '/productos/crearProductos'
-      }
-    }
+  private readonly baseSteps: WizardStep[] = [
+    { id: 'goal', name: 'Tu primer objetivo', shortName: 'Objetivo', mins: 1 },
+    { id: 'context', name: 'Conozcamos tu forma de vender', shortName: 'Tu negocio', mins: 2 },
+    { id: 'product', name: 'Algo listo para vender', shortName: 'Producto o servicio', mins: 2 },
+    { id: 'payment', name: 'Cómo recibes el dinero', shortName: 'Cobro', mins: 1 },
+    { id: 'result', name: 'Revisemos que todo esté listo', shortName: 'Resultado', mins: 1 }
   ];
+
+  activeId: StepId = 'goal';
+  status: Partial<Record<StepId, 'done'>> = {};
+  goal: Goal | null = null;
+  offering: Offering | null = null;
+  channel: Channel | null = null;
+  inventoryEnabled: boolean | null = null;
+
+  warehouseName = 'Bodega principal';
+  warehouseCity = '';
+  warehouseBusinessCode = '';
+  lowStockThreshold: string | number = 5;
+  initialQuantity: string | number = 1;
+
+  product: ProductDraft = {
+    nombre: '',
+    precio: '',
+    fotoUrl: '',
+    tipo: 'producto'
+  };
+
+  paymentMethods: string[] = [];
+  customPayment = '';
+  readonly paymentOptions = [
+    { label: 'Efectivo', hint: 'Pago en caja o contraentrega' },
+    { label: 'Transferencia bancaria', hint: 'Cuenta bancaria o PSE' },
+    { label: 'Nequi', hint: 'Transferencia desde el celular' },
+    { label: 'Daviplata', hint: 'Transferencia desde el celular' },
+    { label: 'Tarjeta débito', hint: 'Registro de pago con datáfono' },
+    { label: 'Tarjeta crédito', hint: 'Registro de pago con datáfono' }
+  ];
+
+  importOpened = false;
+  readiness: OnboardingReadiness | null = null;
+  companyKey = '';
+  companyLabel = 'Tu negocio';
+  isInitializing = true;
+  isSaving = false;
+  isCheckingReadiness = false;
+  mobileNavOpen = false;
+  errorMessage = '';
+  progressWarning = '';
+  paymentNeedsManualActivation = false;
+  deferred = false;
 
   constructor(
     private onboardingService: OnboardingService,
@@ -147,398 +104,868 @@ export class OnboardingWizardComponent implements OnInit {
     private router: Router
   ) {}
 
-  ngOnInit(): void {
-    this.loadCompanyFromStorage();
-    this.loadProgress();
-    this.prefillCompany();
+  async ngOnInit(): Promise<void> {
+    const user = this.readJson(localStorage.getItem('user'));
+    const currentCompany = this.readJson(localStorage.getItem('currentCompany'));
+    const sessionCompany = this.readJson(sessionStorage.getItem('currentCompany'));
+    const hasSessionCompany = sessionCompany && typeof sessionCompany === 'object' &&
+      Object.keys(sessionCompany).length > 0;
+    const company = hasSessionCompany ? sessionCompany : currentCompany;
 
-    // Inicializa el estado del servicio para poder cerrar el onboarding al final
-    // (completeOnboarding necesita userEmail en el estado). No bloquea la UI.
-    const user = this.readUser();
-    if (user?.email) {
-      this.onboardingService
-        .initializeOnboarding(user.email, user.uid || user.id || user.email)
-        .then(() => {
-          const st = this.onboardingService.getCurrentState();
-          // No pisar companyKey con el doc id de Firestore: el header de tenant
-          // que usa la app es el NOMBRE (user.company). Solo refrescamos el label.
-          if (st?.companyName) this.companyLabel = st.companyName;
-        })
-        .catch(() => { /* no bloquear */ });
+    // La empresa activa siempre viene de la sesión. Nunca se restaura desde un
+    // borrador local ni desde la respuesta de un endpoint de progreso.
+    this.companyKey = String(user?.company || '').trim();
+    this.companyLabel = String(
+      company?.nombreComercio || company?.nomComercial || user?.company || 'Tu negocio'
+    ).trim();
+    const userKey = String(user?.uid || user?.id || user?._id || user?.email || '').trim();
+
+    if (!userKey || !this.companyKey) {
+      this.isInitializing = false;
+      this.errorMessage = 'No pudimos identificar tu sesión o tu negocio. Vuelve a ingresar para continuar.';
+      return;
+    }
+
+    // El wizard V2 no consulta ni vuelve a persistir el estado global legacy.
+    // Se descarta antes de cargar la caché aislada por usuario + tenant.
+    this.onboardingService.resetOnboarding();
+    this.cacheKey = buildOnboardingStorageKey(userKey, this.companyKey);
+    localStorage.removeItem(this.LEGACY_UNSCOPED_KEY);
+    this.applyProgress(this.loadCachedProgress());
+
+    try {
+      const remoteProgress = await this.onboardingService.loadV2Progress();
+      if (remoteProgress?.onboardingCompleted === true) {
+        this.clearProgress();
+        localStorage.removeItem('showOnboardingBanner');
+        sessionStorage.removeItem('onboarding_banner_dismissed');
+        await this.router.navigate(['/welcome']);
+        return;
+      }
+      if (remoteProgress) {
+        this.applyProgress(remoteProgress, true);
+        if (typeof remoteProgress.context?.inventoryEnabled === 'boolean' &&
+            remoteProgress.context.inventoryEnabled !== this.requiresInventoryReadiness) {
+          await this.persistProgress();
+        }
+      }
+    } catch {
+      // La caché namespaced permite continuar durante una interrupción corta. El
+      // siguiente guardado reintentará la sincronización canónica.
+      this.progressWarning = 'Estás trabajando con el avance guardado en este dispositivo.';
+    }
+
+    await this.clearDeferredOnEntry();
+
+    // Respetar los datos maestros existentes: si el borrador aún no eligió una
+    // bodega, mostramos la principal real en vez de renombrarla con el placeholder.
+    if (!this.warehouseBusinessCode &&
+        (!this.warehouseName.trim() || this.warehouseName === 'Bodega principal')) {
+      try {
+        const warehouse = await this.onboardingService.getPreferredActiveWarehouse(this.companyKey);
+        if (warehouse) {
+          this.warehouseBusinessCode = warehouse.idBodega;
+          this.warehouseName = warehouse.nombre;
+          if (!this.warehouseCity) this.warehouseCity = warehouse.ciudad || '';
+        }
+      } catch {
+        // Es una ayuda de hidratación; la validación al guardar sigue siendo la
+        // fuente definitiva y mostrará un error accionable si hiciera falta.
+      }
+    }
+
+    try {
+      await this.refreshReadiness();
+    } catch (error) {
+      this.errorMessage = this.errorText(error, 'No pudimos comprobar la configuración de tu negocio.');
+    } finally {
+      this.normalizeActiveStep();
+      this.saveCache();
+      this.isInitializing = false;
     }
   }
 
-  // ==================== DATOS / PERSISTENCIA ====================
-
-  steps(): WizStep[] { return this._steps; }
-
-  private readUser(): any {
-    try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
+  ngOnDestroy(): void {
+    if (this.progressTimer) clearTimeout(this.progressTimer);
   }
 
-  private loadCompanyFromStorage(): void {
-    try {
-      const user = this.readUser();
-      let c = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
-      if (!c?.id && !c?.nit) c = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      // La llave de tenant canónica es `user.company` (NOMBRE de empresa): es lo
-      // que el HttpInterceptor2 pone en el header `company` de TODA petición al
-      // backend, y con la que el back consulta/crea (roles, consecutivos, etc.).
-      // Se usa como fuente de verdad para que los checks y seeds apunten al mismo
-      // tenant que el resto de la app. NUNCA el doc id de Firestore.
-      this.companyKey = user?.company || c?.nomComercial || c?.nombre || '';
-      this.companyLabel = c?.nomComercial || c?.nombre || user?.company || 'Tu Comercio';
-      (this as any)._company = c;
-    } catch { /* ignore */ }
+  get all(): WizardStep[] {
+    if (this.goal === 'explore') {
+      return this.baseSteps.filter(step => step.id === 'goal' || step.id === 'result');
+    }
+    return this.baseSteps;
   }
 
-  private prefillCompany(): void {
-    const c = (this as any)._company || {};
-    const cur = this.values['negocio'] || {};
-    this.values['negocio'] = {
-      razon: cur.razon || c.nomComercial || c.nombre || '',
-      nit: cur.nit || c.nit || '',
-      tel: cur.tel || c.telefono || '',
-      dir: cur.dir || c.direccion || ''
-    };
+  get active(): WizardStep {
+    return this.all.find(step => step.id === this.activeId) || this.all[0];
   }
 
-  private loadProgress(): void {
-    try {
-      const raw = localStorage.getItem(this.STORAGE_KEY);
-      if (!raw) return;
-      const d = JSON.parse(raw);
-      if (d.status) this.status = d.status;
-      if (d.picked) this.picked = d.picked;
-      if (d.values) this.values = d.values;
-      if (d.tasks) this.tasks = d.tasks;
-      if (d.companyKey) this.companyKey = d.companyKey;
-      if (d.activeId && this._steps.some(s => s.id === d.activeId)) {
-        this.activeId = d.activeId;
-      }
-    } catch { /* ignore */ }
+  get stepPosition(): number {
+    const index = this.all.findIndex(step => step.id === this.activeId);
+    return index < 0 ? 1 : index + 1;
   }
 
-  private saveProgress(): void {
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
-        activeId: this.activeId,
-        status: this.status,
-        picked: this.picked,
-        values: this.values,
-        tasks: this.tasks,
-        companyKey: this.companyKey
-      }));
-    } catch { /* ignore */ }
+  get doneCount(): number {
+    return this.all.filter(step => this.status[step.id] === 'done').length;
   }
 
-  private clearProgress(): void {
-    try { localStorage.removeItem(this.STORAGE_KEY); } catch { /* ignore */ }
+  get progressPercentage(): number {
+    if (!this.all.length) return 0;
+    return Math.round((this.doneCount / this.all.length) * 100);
   }
 
-  // ==================== DERIVADOS PARA LA VISTA ====================
-
-  get all(): WizStep[] { return this._steps; }
-  get idx(): number { const i = this._steps.findIndex(s => s.id === this.activeId); return i < 0 ? 0 : i; }
-  get active(): WizStep { return this._steps[this.idx]; }
-
-  private resolvedCount(): number {
-    return this._steps.filter(s => this.status[s.id]).length;
-  }
-  get doneCount(): number { return this.resolvedCount(); }
-  get totalCount(): number { return this._steps.length; }
   get minsLeft(): number {
-    return this._steps.filter(s => !this.status[s.id]).reduce((a, s) => a + s.mins, 0);
-  }
-  get progressPct(): number {
-    return Math.round(this.resolvedCount() / this._steps.length * 100);
-  }
-  get progressFillStyle(): string {
-    return `width:${this.progressPct}%;height:100%;background:linear-gradient(90deg,#7b5bff,#22c07a);border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1)`;
+    return this.all
+      .filter(step => this.status[step.id] !== 'done')
+      .reduce((sum, step) => sum + step.mins, 0);
   }
 
-  pickedFor(step: WizStep): string[] {
-    return this.picked[step.id] || step.defaults || [];
+  get isImportRoute(): boolean {
+    return this.goal === 'import_excel';
   }
 
-  groups(): any[] {
-    const names: string[] = [];
-    this._steps.forEach(s => { if (!names.includes(s.group)) names.push(s.group); });
-    return names.map(g => {
-      const list = this._steps.filter(s => s.group === g);
-      const d = list.filter(s => this.status[s.id]).length;
-      return {
-        title: g.toUpperCase(),
-        count: d + '/' + list.length,
-        steps: list.map(s => this.stepRow(s))
-      };
-    });
+  get isExploreRoute(): boolean {
+    return this.goal === 'explore';
   }
 
-  private stepRow(s: WizStep): any {
-    const state = this.status[s.id];
-    const isActive = s.id === this.activeId;
-    return {
-      id: s.id, num: s.num, name: s.name,
-      isDone: state === 'done', isSkipped: state === 'skipped', showNum: !state,
-      showState: !!state && !isActive,
-      stateText: state === 'done' ? 'Listo' : 'Saltado · puedes hacerlo después',
-      stateStyle: state === 'done'
-        ? 'font-size:11.5px;font-weight:700;color:#16a34a'
-        : 'font-size:11.5px;font-weight:600;color:#9793ac',
-      rowStyle: isActive
-        ? 'display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:12px;cursor:pointer;background:#f6f4fe;border:1px solid #e6ddff'
-        : 'display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:12px;cursor:pointer;background:transparent;border:1px solid transparent',
-      markStyle: state === 'done'
-        ? 'width:26px;height:26px;flex:none;border-radius:99px;display:flex;align-items:center;justify-content:center;background:#e7f8ee;color:#16a34a;font-weight:800;font-size:12px'
-        : (state === 'skipped'
-          ? 'width:26px;height:26px;flex:none;border-radius:99px;display:flex;align-items:center;justify-content:center;background:#f4f2fb;color:#a7a3bd;font-weight:800;font-size:12px'
-          : (isActive
-            ? 'width:26px;height:26px;flex:none;border-radius:99px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#7b5bff,#6338f0);color:#fff;font-weight:800;font-size:12px'
-            : 'width:26px;height:26px;flex:none;border-radius:99px;display:flex;align-items:center;justify-content:center;background:#f4f2fb;color:#8b879f;font-weight:800;font-size:12px')),
-      nameStyle: isActive
-        ? 'font-size:13.5px;font-weight:800;color:#5537e8'
-        : (state ? 'font-size:13.5px;font-weight:600;color:#8b879f' : 'font-size:13.5px;font-weight:700;color:#211d33')
-    };
+  get productTypeNeedsChoice(): boolean {
+    return this.offering === 'both' || this.offering === 'unknown';
   }
 
-  get stepPos(): number { return this.idx + 1; }
-
-  get hasSuggestions(): boolean { return (this.active.options || []).length > 0; }
-  get hasFields(): boolean { return (this.active.fields || []).length > 0; }
-  get hasTask(): boolean { return !!this.active.task; }
-  get hasPicked(): boolean { return this.pickedFor(this.active).length > 0; }
-
-  get allSelected(): boolean {
-    const opts = this.active.options || [];
-    return opts.length > 0 && this.pickedFor(this.active).length === opts.length;
-  }
-  get selectAllLabel(): string { return this.allSelected ? 'Quitar todas' : 'Seleccionar todas'; }
-
-  get pickedText(): string {
-    const p = this.pickedFor(this.active);
-    return p.length + ' seleccionada' + (p.length > 1 ? 's' : '') + ' · ' + p.join(', ');
+  get productNoun(): string {
+    return this.selectedProductType === 'servicio' ? 'servicio' : 'producto';
   }
 
-  suggestions(): any[] {
-    const picked = this.pickedFor(this.active);
-    return (this.active.options || []).map(o => {
-      const sel = picked.includes(o.label);
-      return {
-        label: o.label, hint: o.hint, selected: sel,
-        style: sel
-          ? 'display:flex;align-items:center;gap:11px;border:1.5px solid #6a4dfb;background:#f6f4fe;border-radius:13px;padding:13px 15px;cursor:pointer;text-align:left'
-          : 'display:flex;align-items:center;gap:11px;border:1.5px solid #e9e6f3;background:#fff;border-radius:13px;padding:13px 15px;cursor:pointer;text-align:left',
-        boxStyle: sel
-          ? 'width:22px;height:22px;flex:none;border-radius:7px;background:#6a4dfb;color:#fff;display:flex;align-items:center;justify-content:center'
-          : 'width:22px;height:22px;flex:none;border-radius:7px;border:1.6px solid #d8d4e8;background:#fff'
-      };
-    });
+  get tracksInitialInventory(): boolean {
+    return this.inventoryEnabled === true && this.selectedProductType === 'producto';
   }
 
-  fieldValue(step: WizStep, key: string): string {
-    return (this.values[step.id] || {})[key] || '';
+  get requiresInventoryReadiness(): boolean {
+    return this.inventoryEnabled === true &&
+      (this.isImportRoute || this.selectedProductType === 'producto');
   }
 
-  isComplete(): boolean {
-    const a = this.active;
-    const opts = a.options || [];
-    if (opts.length > 0) return this.pickedFor(a).length > 0;
-    const reqF = (a.fields || []).filter(f => f.required);
-    if (reqF.length > 0) return reqF.every(f => String(this.fieldValue(a, f.key)).trim().length > 0);
-    if (a.task) return !!this.tasks[a.id];
-    return true;
+  get selectedProductType(): ProductType {
+    if (this.offering === 'services') return 'servicio';
+    if (this.offering === 'products') return 'producto';
+    return this.product.tipo;
   }
 
-  get nextHint(): string {
-    const a = this.active;
-    if ((a.options || []).length > 0) return 'Elige al menos una opción';
-    if ((a.fields || []).some(f => f.required)) return 'Completa los campos con *';
-    if (a.task) return 'Crea el producto o marca "Ya lo creé"';
-    return 'Continuar';
+  get canSubmitCurrentStep(): boolean {
+    if (this.isInitializing || this.isSaving) return false;
+
+    switch (this.activeId) {
+      case 'goal':
+        return !!this.goal;
+      case 'context':
+        return !!this.offering && !!this.channel && this.inventoryEnabled !== null &&
+          (this.inventoryEnabled !== true || this.warehouseName.trim().length >= 2) &&
+          this.validThreshold;
+      case 'product':
+        if (this.readiness?.product_ready) return true;
+        if (this.isImportRoute) return true;
+        return this.product.nombre.trim().length >= 2 && this.parsedPrice > 0 &&
+          (!this.tracksInitialInventory || this.validInitialQuantity);
+      case 'payment':
+        return this.readiness?.payment_ready === true || this.paymentMethods.length > 0;
+      case 'result':
+        // El intento final puede sembrar y verificar la numeración que aún
+        // falte. Solo se completa después de que readiness lo confirme.
+        return true;
+      default:
+        return false;
+    }
   }
 
   get nextLabel(): string {
-    if (!this.isComplete()) return this.nextHint;
-    return this.idx === this.all.length - 1 ? 'Terminar configuración' : 'Guardar y continuar';
+    if (this.activeId === 'product' && this.isImportRoute && !this.readiness?.product_ready) {
+      return 'Ya importé, verificar';
+    }
+    if (this.activeId === 'result') {
+      if (this.isExploreRoute) return 'Explorar Katuq';
+      return this.readiness?.ready_to_sell
+        ? 'Finalizar y hacer una venta'
+        : 'Preparar lo que falta';
+    }
+    return 'Guardar y continuar';
   }
 
-  get nextStyle(): string {
-    return this.isComplete()
-      ? 'display:flex;align-items:center;gap:9px;border:none;background:linear-gradient(135deg,#7b5bff,#6338f0);color:#fff;font-weight:800;font-size:14.5px;padding:14px 26px;border-radius:12px;cursor:pointer;box-shadow:0 6px 18px rgba(107,78,251,.32)'
-      : 'display:flex;align-items:center;gap:9px;border:none;background:#eeecf6;color:#b0abc4;font-weight:800;font-size:14.5px;padding:14px 26px;border-radius:12px;cursor:not-allowed';
+  get nextHint(): string {
+    switch (this.activeId) {
+      case 'goal': return 'Elige lo que quieres lograr primero';
+      case 'context':
+        if (!this.offering) return 'Cuéntanos qué vendes';
+        if (!this.channel) return 'Elige cómo vendes hoy';
+        if (this.inventoryEnabled === null) return 'Indica si quieres controlar existencias';
+        if (this.inventoryEnabled && this.warehouseName.trim().length < 2) return 'Escribe dónde guardas tus productos';
+        if (!this.validThreshold) return 'El aviso de existencias debe ser un número entero desde cero';
+        return 'Completa esta información';
+      case 'product':
+        if (this.isImportRoute) return 'Importa el archivo y vuelve para verificarlo';
+        if (this.tracksInitialInventory && !this.validInitialQuantity) return 'Escribe cuántas unidades tienes hoy';
+        return 'Escribe un nombre y un precio mayor que cero';
+      case 'payment': return 'Elige al menos una forma de cobro';
+      case 'result': return 'Todavía falta confirmar parte de la configuración';
+      default: return 'Continuar';
+    }
   }
 
-  get backStyle(): string {
-    return this.idx > 0
-      ? 'display:flex;align-items:center;gap:8px;border:1.5px solid #e4e1f0;background:#fff;color:#5b5772;font-weight:700;font-size:14px;padding:13px 20px;border-radius:12px;cursor:pointer'
-      : 'display:flex;align-items:center;gap:8px;border:1.5px solid #f2f0f8;background:#fff;color:#c9c5d8;font-weight:700;font-size:14px;padding:13px 20px;border-radius:12px;cursor:not-allowed';
+  get parsedPrice(): number {
+    if (typeof this.product.precio === 'number') {
+      return Number.isFinite(this.product.precio) ? this.product.precio : 0;
+    }
+    const raw = String(this.product.precio || '').trim().replace(/\s|\$/g, '');
+    if (!raw || !/^\d[\d.,]*$/.test(raw)) return 0;
+
+    // En Colombia es natural escribir 50.000. También aceptamos 1,000.50 y
+    // 1.000,50 sin convertir accidentalmente cincuenta mil en cincuenta.
+    let normalized = raw;
+    if (/^\d{1,3}([.,]\d{3})+$/.test(raw)) {
+      normalized = raw.replace(/[.,]/g, '');
+    } else if (raw.includes('.') && raw.includes(',')) {
+      const decimalSeparator = raw.lastIndexOf(',') > raw.lastIndexOf('.') ? ',' : '.';
+      const groupingSeparator = decimalSeparator === ',' ? '.' : ',';
+      normalized = raw.split(groupingSeparator).join('').replace(decimalSeparator, '.');
+    } else if (raw.includes(',')) {
+      normalized = raw.replace(',', '.');
+    }
+    const value = Number(normalized);
+    return Number.isFinite(value) ? value : 0;
   }
 
-  // ==================== ACCIONES ====================
+  get validThreshold(): boolean {
+    if (!this.inventoryEnabled || this.lowStockThreshold === '' || this.lowStockThreshold === null) return true;
+    return parseLowStockThreshold(this.lowStockThreshold) !== null;
+  }
 
-  goStep(id: string): void { this.activeId = id; this.saveProgress(); }
+  get validInitialQuantity(): boolean {
+    const parsed = parseLowStockThreshold(this.initialQuantity);
+    return parsed !== null && parsed > 0;
+  }
+
+  get readinessRows(): Array<{ key: string; label: string; ready: boolean }> {
+    const readiness = this.readiness;
+    const rows = [
+      { key: 'company', label: 'Información de tu negocio', ready: readiness?.company_ready === true },
+      { key: 'product', label: 'Producto o servicio con precio', ready: readiness?.product_ready === true },
+      { key: 'payment', label: 'Una forma de cobro', ready: readiness?.payment_ready === true },
+      { key: 'sequences', label: 'Numeración automática de ventas', ready: readiness?.sequences_ready === true }
+    ];
+    if (this.requiresInventoryReadiness) {
+      rows.splice(2, 0, {
+        key: 'inventory',
+        label: 'Existencias iniciales',
+        ready: readiness?.inventory_ready === true
+      });
+    }
+    if (this.channel === 'delivery') {
+      rows.splice(rows.length - 1, 0, {
+        key: 'delivery',
+        label: 'Forma de entrega',
+        ready: readiness?.delivery_ready === true
+      });
+    }
+    return rows;
+  }
+
+  get missingActionLabel(): string {
+    if (this.readiness?.company_ready === false) return 'Completar datos de mi negocio';
+    if (this.readiness?.product_ready === false) return 'Volver al producto o servicio';
+    if (this.requiresInventoryReadiness && this.readiness?.inventory_ready === false) return 'Revisar mis existencias';
+    if (this.readiness?.payment_ready === false) return 'Volver a las formas de cobro';
+    if (this.channel === 'delivery' && this.readiness?.delivery_ready === false) return 'Revisar cómo entrego mis pedidos';
+    return '';
+  }
+
+  selectGoal(goal: Goal): void {
+    if (this.goal !== goal) {
+      this.goal = goal;
+      delete this.status.goal;
+      delete this.status.context;
+      delete this.status.result;
+      if (goal === 'import_excel' && !this.offering) this.offering = 'products';
+    }
+    this.onDraftChange();
+  }
+
+  selectOffering(offering: Offering): void {
+    const previous = this.offering;
+    this.offering = offering;
+    if (offering === 'services') {
+      this.product.tipo = 'servicio';
+      this.inventoryEnabled = false;
+    }
+    if (offering === 'unknown') this.inventoryEnabled = false;
+    if (offering === 'products') this.product.tipo = 'producto';
+    if ((offering === 'products' || offering === 'both') &&
+        (previous === 'services' || previous === 'unknown')) {
+      this.inventoryEnabled = null;
+    }
+    this.onDraftChange();
+  }
+
+  selectChannel(channel: Channel): void {
+    this.channel = channel;
+    this.onDraftChange();
+  }
+
+  selectInventory(enabled: boolean): void {
+    this.inventoryEnabled = enabled;
+    this.onDraftChange();
+  }
+
+  selectProductType(type: ProductType): void {
+    this.product.tipo = type;
+    this.onDraftChange();
+  }
+
+  togglePayment(label: string): void {
+    const index = this.paymentMethods.indexOf(label);
+    if (index >= 0) {
+      this.paymentMethods = this.paymentMethods.filter(item => item !== label);
+    } else {
+      this.paymentMethods = this.paymentMethods.concat(label);
+    }
+    this.onDraftChange();
+  }
+
+  addCustomPayment(): void {
+    const value = this.customPayment.trim();
+    if (!value) return;
+    if (!this.paymentMethods.some(item => item.toLocaleLowerCase() === value.toLocaleLowerCase())) {
+      this.paymentMethods = this.paymentMethods.concat(value);
+    }
+    this.customPayment = '';
+    this.onDraftChange();
+  }
+
+  onDraftChange(): void {
+    this.errorMessage = '';
+    this.deferred = false;
+    // Editar un paso que ya estaba listo obliga a volver a confirmarlo antes de
+    // avanzar; de otro modo el menú permitiría saltar con datos aún no guardados.
+    if (this.activeId !== 'result') delete this.status[this.activeId];
+    delete this.status.result;
+    this.resetProductRequestIfChanged();
+    this.saveCache();
+    this.queueProgressSync();
+  }
+
+  canOpenStep(step: WizardStep): boolean {
+    if (step.id === this.activeId) return true;
+    const firstUnresolved = this.all.findIndex(item => this.status[item.id] !== 'done');
+    const stepIndex = this.all.findIndex(item => item.id === step.id);
+    const boundary = firstUnresolved < 0 ? this.all.length - 1 : firstUnresolved;
+    return stepIndex >= 0 && stepIndex <= boundary;
+  }
+
+  goStep(id: StepId): void {
+    const step = this.all.find(item => item.id === id);
+    if (!step || !this.canOpenStep(step)) return;
+    this.activeId = id;
+    this.mobileNavOpen = false;
+    this.saveCache();
+    this.queueProgressSync();
+    if (id === 'result') this.refreshReadinessSafely();
+  }
 
   goBack(): void {
-    if (this.idx > 0) { this.activeId = this.all[this.idx - 1].id; this.saveProgress(); }
-  }
-
-  onField(key: string, value: string): void {
-    const a = this.active;
-    this.values[a.id] = { ...(this.values[a.id] || {}), [key]: value };
-    this.saveProgress();
-  }
-
-  toggleOpt(label: string): void {
-    const a = this.active;
-    const cur = this.pickedFor(a).slice();
-    const i = cur.indexOf(label);
-    if (i >= 0) cur.splice(i, 1); else cur.push(label);
-    this.picked[a.id] = cur;
-    this.saveProgress();
-  }
-
-  selectAll(): void {
-    const a = this.active;
-    this.picked[a.id] = this.allSelected ? [] : (a.options || []).map(o => o.label);
-    this.saveProgress();
-  }
-
-  doTask(): void {
-    this.tasks[this.active.id] = true;
-    this.saveProgress();
-  }
-
-  /** Abre el maestro de productos real en otra pestaña y marca el paso como hecho. */
-  openProductMaster(): void {
-    const route = this.active.task?.route || '/productos/crearProductos';
-    try {
-      const url = this.router.serializeUrl(this.router.createUrlTree([route]));
-      window.open(window.location.origin + url, '_blank');
-    } catch { /* si falla el open, igual dejamos marcar "Ya lo creé" */ }
-    this.doTask();
-  }
-
-  continuarLuego(): void {
-    try { this.onboardingService.postponeOnboarding(); } catch { /* ignore */ }
-    this.router.navigate(['/welcome']);
+    const index = this.all.findIndex(step => step.id === this.activeId);
+    if (index <= 0) return;
+    this.activeId = this.all[index - 1].id;
+    this.saveCache();
+    this.queueProgressSync();
   }
 
   async goNext(): Promise<void> {
-    if (!this.isComplete() || this.isSaving) return;
+    if (!this.canSubmitCurrentStep || this.isSaving) return;
 
-    const step = this.active;
-    const curIdx = this.idx;
+    if (this.activeId === 'result') {
+      if (this.isExploreRoute) await this.exploreNow();
+      else await this.finishAndSell();
+      return;
+    }
+
     this.isSaving = true;
-
+    this.deferred = false;
+    this.errorMessage = '';
     try {
-      await this.provision(step);
-
-      this.status = { ...this.status, [step.id]: 'done' };
-      this.saveProgress();
-
-      if (curIdx < this.all.length - 1) {
-        this.activeId = this.all[curIdx + 1].id;
-        this.saveProgress();
-      } else {
-        await this.finish();
-      }
+      await this.provisionCurrentStep();
+      this.status = { ...this.status, [this.activeId]: 'done' };
+      const currentIndex = this.all.findIndex(step => step.id === this.activeId);
+      const remaining = this.all.slice(currentIndex + 1);
+      const nextStep = remaining.find(step => this.status[step.id] !== 'done') ||
+        remaining[remaining.length - 1] || this.all[this.all.length - 1];
+      this.activeId = nextStep.id;
+      await this.persistProgress();
+      if (this.activeId === 'result') await this.refreshReadiness();
     } catch (error) {
-      console.error(`Error aprovisionando paso ${step.id}:`, error);
+      if (this.activeId === 'payment' && this.isInactiveResourceError(error)) {
+        this.paymentNeedsManualActivation = true;
+        const detail = error?.error?.details ||
+          this.errorText(error, 'Ya existe una forma de cobro con ese nombre, pero está desactivada.');
+        this.errorMessage = `${detail} Revísala en Métodos de pago o elige una diferente.`;
+      } else {
+        this.errorMessage = this.errorText(error, 'No pudimos guardar este paso. Inténtalo de nuevo.');
+      }
       this.messageService.add({
         severity: 'error',
-        summary: 'No se pudo guardar',
-        detail: 'Revisa los datos e inténtalo de nuevo.'
+        summary: 'No se pudo continuar',
+        detail: this.errorMessage
       });
     } finally {
       this.isSaving = false;
     }
   }
 
-  /**
-   * Aprovisiona el recurso del paso. Empresa se guarda con datos reales; el resto
-   * usa el camino idempotente/no destructivo (ensureResourceDefault). El producto
-   * se crea desde el maestro (otra pestaña), no inline.
-   */
-  private async provision(step: WizStep): Promise<void> {
-    switch (step.provision) {
-      case 'company': {
-        const v = this.values['negocio'] || {};
-        const payload = {
-          nit: (v.nit || '').trim(),
-          nombre: (v.razon || '').trim(),
-          nomComercial: (v.razon || '').trim(),
-          telefono: (v.tel || '').trim(),
-          direccion: (v.dir || '').trim()
-        };
-        const res: any = await this.onboardingService.createCompanyOnboarding(payload);
-        const data = res?.data;
-        if (data) {
-          this.companyLabel = data.nomComercial || data.nombre || this.companyLabel;
-          // Fallback SOLO si aún no había tenant key: usar el nombre comercial
-          // (misma llave que el header `company`). NUNCA el doc id de Firestore.
-          if (!this.companyKey) this.companyKey = data.nomComercial || data.nombre || '';
-          this.saveProgress();
-        }
-        break;
-      }
-      case 'payment-methods': {
-        // Guarda las formas de pago ELEGIDAS por el usuario (no duplica).
-        if (this.companyKey) {
-          const labels = this.picked[step.id] || step.defaults || [];
-          const hints: { [k: string]: string } = {};
-          (step.options || []).forEach(o => { hints[o.label] = o.hint; });
-          await this.onboardingService.savePaymentMethods(this.companyKey, labels, hints);
-        }
-        break;
-      }
-      case 'categories': {
-        // Guarda las categorías ELEGIDAS por el usuario (reemplaza el doc).
-        if (this.companyKey) {
-          const labels = this.picked[step.id] || step.defaults || [];
-          await this.onboardingService.saveCategories(this.companyKey, labels);
-        }
-        break;
-      }
-      case 'warehouses': {
-        // Nombre + ciudad → la bodega (su apartado natural).
-        // Alerta → umbral de stock bajo POR EMPRESA (config de notificaciones).
-        if (this.companyKey) {
-          const v = this.values['bodegas'] || {};
-          await this.onboardingService.savePrimaryWarehouse(this.companyKey, v['bodega'] || '', v['ciudad'] || '');
+  async openImporter(): Promise<void> {
+    this.importOpened = true;
+    localStorage.setItem('showOnboardingBanner', 'true');
+    sessionStorage.removeItem('onboarding_banner_dismissed');
+    await this.persistProgress().catch(() => undefined);
+    this.router.navigate(['/productos'], { queryParams: { onboardingImport: 'products' } });
+  }
 
-          const raw = (v['alerta'] || '').toString().replace(/[^0-9]/g, '');
-          if (raw !== '') {
-            const umbral = parseInt(raw, 10);
-            if (Number.isInteger(umbral) && umbral >= 0) {
-              await this.onboardingService.saveLowStockThreshold(umbral);
-            }
-          }
-        }
-        break;
-      }
-      case 'product':
-        // El producto se crea desde el maestro (otra pestaña). Nada que aprovisionar aquí.
-        break;
+  async continueLater(): Promise<void> {
+    this.deferred = true;
+    localStorage.setItem('showOnboardingBanner', 'true');
+    sessionStorage.removeItem('onboarding_banner_dismissed');
+    await this.persistProgress().catch(() => undefined);
+    this.router.navigate(['/welcome']);
+  }
+
+  async viewProducts(): Promise<void> {
+    localStorage.setItem('showOnboardingBanner', 'true');
+    sessionStorage.removeItem('onboarding_banner_dismissed');
+    await this.persistProgress().catch(() => undefined);
+    this.router.navigate(['/productos']);
+  }
+
+  async managePaymentMethods(): Promise<void> {
+    localStorage.setItem('showOnboardingBanner', 'true');
+    sessionStorage.removeItem('onboarding_banner_dismissed');
+    await this.persistProgress().catch(() => undefined);
+    this.router.navigate(['/extras/formasPago']);
+  }
+
+  async resolveFirstMissing(): Promise<void> {
+    if (this.readiness?.company_ready === false) {
+      localStorage.setItem('showOnboardingBanner', 'true');
+      sessionStorage.removeItem('onboarding_banner_dismissed');
+      await this.persistProgress().catch(() => undefined);
+      this.router.navigate(['/empresas']);
+      return;
+    }
+    if (this.readiness?.product_ready === false) {
+      this.goStep('product');
+      return;
+    }
+    if (this.requiresInventoryReadiness && this.readiness?.inventory_ready === false) {
+      localStorage.setItem('showOnboardingBanner', 'true');
+      sessionStorage.removeItem('onboarding_banner_dismissed');
+      await this.persistProgress().catch(() => undefined);
+      this.router.navigate(['/inventario/inventario-catalogo']);
+      return;
+    }
+    if (this.readiness?.payment_ready === false) this.goStep('payment');
+    else if (this.channel === 'delivery' && this.readiness?.delivery_ready === false) {
+      localStorage.setItem('showOnboardingBanner', 'true');
+      sessionStorage.removeItem('onboarding_banner_dismissed');
+      await this.persistProgress().catch(() => undefined);
+      this.router.navigate(['/formasEntrega']);
     }
   }
 
-  private async finish(): Promise<void> {
-    // Siembra defaults críticos faltantes (roles, formas de entrega, consecutivos)
-    // para que el comercio quede funcional aunque se termine temprano.
-    if (this.companyKey) {
-      await this.onboardingService.seedRemainingDefaults(this.companyKey);
-    }
-    await this.onboardingService.completeOnboarding();
-    this.clearProgress();
+  async retryReadiness(): Promise<void> {
+    await this.refreshReadinessSafely();
+  }
 
-    this.messageService.add({
-      severity: 'success',
-      summary: '¡Listo para vender!',
-      detail: 'Tu comercio quedó configurado.',
-      life: 3000
+  private async provisionCurrentStep(): Promise<void> {
+    switch (this.activeId) {
+      case 'goal':
+        return;
+      case 'context':
+        if (this.inventoryEnabled && this.warehouseName.trim()) {
+          this.warehouseBusinessCode = await this.onboardingService.savePrimaryWarehouse(
+            this.companyKey,
+            this.warehouseName,
+            this.warehouseCity
+          ) || '';
+          const threshold = parseLowStockThreshold(this.lowStockThreshold);
+          if (threshold !== null) {
+            await this.onboardingService.saveLowStockThreshold(threshold);
+          }
+        }
+        return;
+      case 'product':
+        if (this.readiness?.product_ready) return;
+        if (this.isImportRoute) {
+          await this.refreshReadiness();
+          if (!this.readiness?.product_ready) {
+            throw new Error('Aún no encontramos productos importados. Termina la importación y vuelve a verificar.');
+          }
+          return;
+        }
+        await this.createMinimalProduct();
+        return;
+      case 'payment':
+        if (!this.readiness?.payment_ready || this.paymentMethods.length > 0) {
+          const hints: Record<string, string> = {};
+          this.paymentOptions.forEach(option => { hints[option.label] = option.hint; });
+          await this.onboardingService.savePaymentMethods(this.companyKey, this.paymentMethods, hints);
+        }
+        await this.refreshReadiness();
+        if (!this.readiness?.payment_ready) {
+          throw new Error('La forma de cobro no quedó confirmada. Inténtalo nuevamente.');
+        }
+        return;
+      default:
+        return;
+    }
+  }
+
+  private async createMinimalProduct(): Promise<void> {
+    const type = this.selectedProductType;
+    const inventariable = this.tracksInitialInventory;
+    const cantidadInicial = inventariable ? parseLowStockThreshold(this.initialQuantity) : 0;
+    const fingerprint = JSON.stringify({
+      nombre: this.product.nombre.trim(),
+      precio: this.parsedPrice,
+      fotoUrl: this.product.fotoUrl.trim(),
+      tipo: type,
+      inventariable,
+      cantidadInicial,
+      idBodega: inventariable ? this.warehouseBusinessCode : ''
     });
 
-    setTimeout(() => this.router.navigate(['/welcome']), 1500);
+    if (!this.product.requestId || this.product.requestFingerprint !== fingerprint) {
+      this.product.requestId = this.createRequestId();
+      this.product.requestFingerprint = fingerprint;
+      // La clave se persiste antes del comando para cubrir refresco/doble pestaña.
+      await this.persistProgress();
+    }
+
+    const payload: MinimalOnboardingProduct = {
+      nombre: this.product.nombre.trim(),
+      precio: this.parsedPrice,
+      tipo: type,
+      requestId: this.product.requestId,
+      inventariable,
+      cantidadInicial: cantidadInicial || 0
+    };
+    if (this.product.fotoUrl.trim()) payload.fotoUrl = this.product.fotoUrl.trim();
+    if (inventariable && this.warehouseBusinessCode) payload.idBodega = this.warehouseBusinessCode;
+
+    const created = await this.onboardingService.createMinimalProduct(payload);
+    this.product.resourceId = created?.id || created?.cd || created?.productId || this.product.resourceId;
+    await this.refreshReadiness();
+    if (!this.readiness?.product_ready) {
+      throw new Error(`El ${this.productNoun} se guardó, pero todavía no aparece listo para vender.`);
+    }
+  }
+
+  private async finishAndSell(): Promise<void> {
+    if (this.isSaving) return;
+    this.isSaving = true;
+    this.errorMessage = '';
+    try {
+      // Readiness lee el contexto canónico del backend. Guardarlo primero evita
+      // exigir inventario antiguo si la persona cambió su primer ítem a servicio.
+      await this.persistProgress();
+      const seedResult = await this.onboardingService.seedRemainingDefaults(this.companyKey);
+      await this.refreshReadiness();
+      if (!this.readiness?.ready_to_sell) {
+        throw new Error(this.describeMissingReadiness());
+      }
+
+      await this.onboardingService.completeOnboarding();
+      this.status = { ...this.status, result: 'done' };
+      if (this.progressTimer) {
+        clearTimeout(this.progressTimer);
+        this.progressTimer = null;
+      }
+      this.clearProgress();
+      localStorage.removeItem('showOnboardingBanner');
+      sessionStorage.removeItem('onboarding_banner_dismissed');
+      this.messageService.add({
+        severity: 'success',
+        summary: '¡Ya puedes vender!',
+        detail: seedResult.optionalFailures.length
+          ? 'Producto, cobro y numeración están listos. Algunas opciones de equipo o entrega quedaron para después.'
+          : 'Abriremos una venta para que pruebes el flujo completo.',
+        life: 3000
+      });
+      setTimeout(() => this.router.navigate(['/ventas/crear-ventas']), seedResult.optionalFailures.length ? 1200 : 600);
+    } catch (error) {
+      this.errorMessage = this.errorText(error, 'No pudimos finalizar la configuración. Tu avance sigue guardado.');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Tu avance está a salvo',
+        detail: this.errorMessage
+      });
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
+  private async exploreNow(): Promise<void> {
+    this.deferred = true;
+    localStorage.setItem('showOnboardingBanner', 'true');
+    sessionStorage.removeItem('onboarding_banner_dismissed');
+    await this.persistProgress().catch(() => undefined);
+    this.router.navigate(['/welcome']);
+  }
+
+  private async refreshReadiness(): Promise<OnboardingReadiness> {
+    this.isCheckingReadiness = true;
+    try {
+      const readiness = await this.onboardingService.getReadiness();
+      this.readiness = readiness;
+
+      if (readiness.product_ready) this.status = { ...this.status, product: 'done' };
+      else delete this.status.product;
+
+      if (readiness.payment_ready) {
+        this.status = { ...this.status, payment: 'done' };
+        this.paymentNeedsManualActivation = false;
+      } else {
+        delete this.status.payment;
+      }
+
+      return readiness;
+    } finally {
+      this.isCheckingReadiness = false;
+    }
+  }
+
+  private async refreshReadinessSafely(): Promise<void> {
+    this.errorMessage = '';
+    try {
+      // Primero sincronizar las decisiones contextuales que cambian los
+      // requisitos (inventario/entrega); después pedir la verificación real.
+      await this.persistProgress();
+      await this.refreshReadiness();
+      this.normalizeActiveStep();
+      await this.persistProgress();
+    } catch (error) {
+      this.errorMessage = this.errorText(error, 'No pudimos volver a comprobar la configuración.');
+    }
+  }
+
+  private normalizeActiveStep(): void {
+    if (!this.all.some(step => step.id === this.activeId)) this.activeId = this.all[0].id;
+    const active = this.all.find(step => step.id === this.activeId);
+    if (!active || !this.canOpenStep(active)) {
+      this.activeId = this.all.find(step => this.status[step.id] !== 'done')?.id || this.all[0].id;
+    }
+  }
+
+  private buildProgress(): OnboardingV2Progress {
+    return {
+      schemaVersion: 'v2',
+      activeRoute: this.goal || undefined,
+      context: {
+        offering: this.offering,
+        channel: this.channel,
+        inventoryEnabled: this.requiresInventoryReadiness
+      },
+      currentStepId: this.activeId,
+      steps: Object.keys(this.status).reduce((result, key) => {
+        result[key] = { status: this.status[key as StepId] };
+        return result;
+      }, {} as Record<string, any>),
+      draft: {
+        warehouseName: this.warehouseName,
+        warehouseCity: this.warehouseCity,
+        warehouseBusinessCode: this.warehouseBusinessCode,
+        lowStockThreshold: this.lowStockThreshold,
+        inventoryPreference: this.inventoryEnabled,
+        initialQuantity: this.initialQuantity,
+        product: this.product,
+        paymentMethods: this.paymentMethods,
+        importOpened: this.importOpened,
+        deferred: this.deferred
+      }
+    };
+  }
+
+  private applyProgress(progress: OnboardingV2Progress | null, replace = false): void {
+    if (!progress || progress.schemaVersion !== 'v2') return;
+    const validGoals: Goal[] = ['sell_today', 'import_excel', 'explore'];
+    const validOfferings: Offering[] = ['products', 'services', 'both', 'unknown'];
+    const validChannels: Channel[] = ['local', 'social', 'delivery', 'unknown'];
+    this.goal = validGoals.includes(progress.activeRoute as Goal)
+      ? progress.activeRoute as Goal
+      : (replace ? null : this.goal);
+    this.offering = validOfferings.includes(progress.context?.offering as Offering)
+      ? progress.context?.offering as Offering
+      : (replace ? null : this.offering);
+    this.channel = validChannels.includes(progress.context?.channel as Channel)
+      ? progress.context?.channel as Channel
+      : (replace ? null : this.channel);
+    if (typeof progress.context?.inventoryEnabled === 'boolean') {
+      this.inventoryEnabled = progress.context.inventoryEnabled;
+    } else if (replace) {
+      this.inventoryEnabled = null;
+    }
+    if ((this.offering === 'services' || this.offering === 'unknown') && this.inventoryEnabled === null) {
+      this.inventoryEnabled = false;
+    }
+
+    const statuses: Partial<Record<StepId, 'done'>> = {};
+    Object.keys(progress.steps || {}).forEach(key => {
+      const value = progress.steps?.[key];
+      if ((value?.status || value) === 'done' && this.baseSteps.some(step => step.id === key)) {
+        statuses[key as StepId] = 'done';
+      }
+    });
+    this.status = statuses;
+
+    const draft = progress.draft || {};
+    if (typeof draft.inventoryPreference === 'boolean') {
+      this.inventoryEnabled = draft.inventoryPreference;
+    }
+    if (this.offering === 'services' || this.offering === 'unknown') {
+      this.inventoryEnabled = false;
+    }
+    this.warehouseName = String(draft.warehouseName || (replace ? 'Bodega principal' : this.warehouseName));
+    this.warehouseCity = String(draft.warehouseCity || (replace ? '' : this.warehouseCity));
+    this.warehouseBusinessCode = String(draft.warehouseBusinessCode || (replace ? '' : this.warehouseBusinessCode));
+    if (draft.lowStockThreshold !== undefined) this.lowStockThreshold = draft.lowStockThreshold;
+    else if (replace) this.lowStockThreshold = 5;
+    if (draft.initialQuantity !== undefined) this.initialQuantity = draft.initialQuantity;
+    else if (replace) this.initialQuantity = 1;
+    if (draft.product && typeof draft.product === 'object') {
+      this.product = {
+        ...(replace ? { nombre: '', precio: '', fotoUrl: '', tipo: 'producto' as ProductType } : this.product),
+        ...draft.product,
+        tipo: draft.product.tipo === 'servicio' ? 'servicio' : 'producto'
+      };
+    } else if (replace) {
+      this.product = { nombre: '', precio: '', fotoUrl: '', tipo: 'producto' };
+    }
+    this.paymentMethods = Array.isArray(draft.paymentMethods)
+      ? draft.paymentMethods.filter((item: any) => typeof item === 'string').slice(0, 20)
+      : (replace ? [] : this.paymentMethods);
+    this.importOpened = draft.importOpened === true || (!replace && this.importOpened);
+    this.deferred = draft.deferred === true;
+
+    if (this.baseSteps.some(step => step.id === progress.currentStepId)) {
+      this.activeId = progress.currentStepId as StepId;
+    } else if (replace) {
+      this.activeId = 'goal';
+    }
+
+    if (!this.goal) delete this.status.goal;
+    if (!this.offering || !this.channel || this.inventoryEnabled === null) delete this.status.context;
+    // El resultado solo puede considerarse terminado con el flag autenticado
+    // del backend, que ya provoca redirección antes de aplicar el progreso.
+    delete this.status.result;
+  }
+
+  private loadCachedProgress(): OnboardingV2Progress | null {
+    if (!this.cacheKey) return null;
+    return this.readJson(localStorage.getItem(this.cacheKey));
+  }
+
+  private saveCache(): void {
+    if (!this.cacheKey) return;
+    try {
+      localStorage.setItem(this.cacheKey, JSON.stringify(this.buildProgress()));
+    } catch { /* la sincronización remota sigue siendo la fuente canónica */ }
+  }
+
+  private clearProgress(): void {
+    if (this.cacheKey) localStorage.removeItem(this.cacheKey);
+  }
+
+  private queueProgressSync(): void {
+    if (!this.cacheKey) return;
+    if (this.progressTimer) clearTimeout(this.progressTimer);
+    this.progressTimer = setTimeout(() => {
+      this.persistProgress().catch(() => {
+        this.progressWarning = 'No pudimos sincronizar ahora; conservamos una copia segura en este dispositivo.';
+      });
+    }, 700);
+  }
+
+  private async clearDeferredOnEntry(): Promise<void> {
+    if (!this.deferred) return;
+    this.deferred = false;
+    this.saveCache();
+    try {
+      await this.onboardingService.saveV2Progress(this.buildProgress());
+      this.progressWarning = '';
+    } catch {
+      this.progressWarning = 'Abrimos tu avance, pero todavía no pudimos sincronizarlo.';
+      this.queueProgressSync();
+    }
+  }
+
+  private async persistProgress(): Promise<void> {
+    if (this.progressTimer) {
+      clearTimeout(this.progressTimer);
+      this.progressTimer = null;
+    }
+    this.saveCache();
+    await this.onboardingService.saveV2Progress(this.buildProgress());
+    this.progressWarning = '';
+  }
+
+  private resetProductRequestIfChanged(): void {
+    if (!this.product.requestFingerprint) return;
+    const current = JSON.stringify({
+      nombre: this.product.nombre.trim(),
+      precio: this.parsedPrice,
+      fotoUrl: this.product.fotoUrl.trim(),
+      tipo: this.selectedProductType,
+      inventariable: this.tracksInitialInventory,
+      cantidadInicial: this.tracksInitialInventory ? parseLowStockThreshold(this.initialQuantity) : 0,
+      idBodega: this.tracksInitialInventory ? this.warehouseBusinessCode : ''
+    });
+    if (current !== this.product.requestFingerprint) {
+      delete this.product.requestId;
+      delete this.product.requestFingerprint;
+    }
+  }
+
+  private createRequestId(): string {
+    try {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+    } catch { /* fallback */ }
+    return `onb-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  private readJson(raw: string | null): any {
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+
+  private errorText(error: any, fallback: string): string {
+    return error?.error?.message || error?.error?.details || error?.error?.error || error?.message || fallback;
+  }
+
+  private isInactiveResourceError(error: any): boolean {
+    return error?.error?.code === 'ONBOARDING_RESOURCE_INACTIVE' ||
+      error?.code === 'ONBOARDING_RESOURCE_INACTIVE';
+  }
+
+  private describeMissingReadiness(): string {
+    const labels: Record<string, string> = {
+      company: 'los datos del negocio',
+      product: 'un producto o servicio real',
+      payment_method: 'una forma de cobro',
+      sequences: 'la numeración automática',
+      delivery_method: 'una forma de entrega',
+      inventory: 'existencias disponibles'
+    };
+    const missing = (this.readiness?.missing || [])
+      .map(item => labels[item] || '')
+      .filter(Boolean);
+    return missing.length
+      ? `Aún falta confirmar ${missing.join(', ')}. Tu avance sigue guardado.`
+      : 'Todavía falta confirmar uno de los requisitos. Revisa el resumen e inténtalo de nuevo.';
   }
 }

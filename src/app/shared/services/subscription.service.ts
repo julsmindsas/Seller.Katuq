@@ -157,6 +157,29 @@ export class SubscriptionService {
   }
 
   /**
+   * ¿El premium viene de una campaña de pauta y por lo tanto vence?
+   * Un premium pagado no trae `premiumUntil`.
+   */
+  esPremiumPromocional(): boolean {
+    const subscription = this.subscriptionSubject.value;
+    return subscription?.plan === 'premium' && subscription?.premiumOrigen === 'promocion';
+  }
+
+  /**
+   * Días que le quedan de premium promocional. `null` si no aplica.
+   * Devuelve 0 el mismo día del corte — la degradación la hace el backend.
+   */
+  diasRestantesPremium(): number | null {
+    const subscription = this.subscriptionSubject.value;
+    if (!subscription?.premiumUntil || subscription.premiumOrigen !== 'promocion') return null;
+
+    const corte = new Date(subscription.premiumUntil).getTime();
+    if (isNaN(corte)) return null;
+
+    return Math.max(0, Math.ceil((corte - Date.now()) / (24 * 60 * 60 * 1000)));
+  }
+
+  /**
    * Obtener plan actual
    */
   getCurrentPlan(): 'freemium' | 'premium' | null {

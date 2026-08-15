@@ -1,0 +1,61 @@
+<div class="promo-pagina">
+  <div class="promo-tarjeta">
+
+    <!-- Cargando -->
+    <div *ngIf="cargando" class="promo-cargando">
+      <div class="promo-spinner"></div>
+      <p>Verificando tu promoción…</p>
+    </div>
+
+    <!-- Promoción vigente -->
+    <ng-container *ngIf="!cargando && disponible && promocion">
+      <span class="promo-chip">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+        </svg>
+        {{ promocion.codigo }}
+      </span>
+
+      <h1 class="promo-titulo">{{ promocion.nombre }}</h1>
+
+      <div class="promo-beneficio">
+        <span class="promo-beneficio-numero">{{ promocion.duracionTexto }}</span>
+        <span class="promo-beneficio-texto">de Katuq Premium, gratis</span>
+      </div>
+
+      <p class="promo-descripcion" *ngIf="promocion.descripcion">{{ promocion.descripcion }}</p>
+
+      <ul class="promo-lista">
+        <li>Pedidos ilimitados desde el primer día</li>
+        <li>Punto de venta, inventario y despachos completos</li>
+        <li>Asistente de inteligencia artificial sin límite diario</li>
+      </ul>
+
+      <button type="button" class="promo-boton" (click)="empezar()">
+        Crear mi cuenta gratis
+      </button>
+
+      <p class="promo-letra-chica">
+        Sin tarjeta de crédito. Al terminar los {{ promocion.duracionTexto }} tu cuenta pasa al plan
+        gratuito y tu información sigue intacta — te avisamos antes.
+      </p>
+    </ng-container>
+
+    <!-- Promoción no disponible: nunca se deja a nadie en una pantalla muerta -->
+    <ng-container *ngIf="!cargando && !disponible">
+      <span class="promo-chip promo-chip--aviso">Promoción no disponible</span>
+
+      <h1 class="promo-titulo">Esta promoción ya no está activa</h1>
+
+      <p class="promo-descripcion">
+        Puede que se haya agotado o que ya se haya cumplido su fecha. De todas formas puedes crear
+        tu cuenta en Katuq gratis y empezar a vender hoy mismo.
+      </p>
+
+      <button type="button" class="promo-boton" (click)="irAlRegistroNormal()">
+        Crear mi cuenta gratis
+      </button>
+    </ng-container>
+
+  </div>
+</div>

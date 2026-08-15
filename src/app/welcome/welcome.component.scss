@@ -131,90 +131,86 @@
 }
 
 // ==========================================
-// ONBOARDING CHECKLIST
+// ONBOARDING — ACCESO PARA REANUDAR
 // ==========================================
 
 .onboarding-card {
   border-radius: 10px;
-  // .card de Bootstrap lleva border-0 en el template; el acento necesita ganar
   border-left: 4px solid $katuq-primary !important;
+}
+
+.onboarding-banner-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.onboarding-banner-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  flex: 0 0 42px;
+  place-items: center;
+  color: $katuq-primary;
+  background: $katuq-purple-50;
+}
+
+.onboarding-banner-copy {
+  flex: 1 1 auto;
+
+  p {
+    color: $katuq-gray-600;
+    font-size: 0.875rem;
+  }
 }
 
 .onboarding-title {
   font-size: 1rem;
   color: $katuq-gray-900;
-
-  i {
-    color: $katuq-primary;
-  }
 }
 
-.onboarding-close {
-  // Amplía el target táctil del btn-close de Bootstrap (glifo ~16px)
-  padding: 10px;
-}
-
-// Setup links (onboarding checklist)
-.setup-link {
+.onboarding-banner-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  min-height: 44px; // target táctil mínimo en mobile
-  border-radius: 8px;
-  text-decoration: none;
-  border: 1px solid;
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  }
-
-  i {
-    font-size: 0.85rem;
-  }
-
-  small {
-    font-size: 0.75rem;
-    line-height: 1.2;
-    color: $katuq-gray-700;
-  }
+  flex: 0 0 auto;
 }
 
-.setup-link--primary {
-  background: $katuq-purple-50;
-  border-color: $katuq-purple-200;
+.onboarding-later {
+  min-height: 38px;
+  color: $katuq-gray-600;
+  font-size: 0.82rem;
+  font-weight: 600;
 
-  i {
+  &:hover,
+  &:focus-visible {
     color: $katuq-primary;
+    background: $katuq-purple-50;
   }
 }
 
-.setup-link--success {
-  background: $katuq-success-light;
-  border-color: $katuq-accent-light;
-
-  i {
-    color: $katuq-success-dark;
+@media (max-width: 767.98px) {
+  .onboarding-banner-body {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
-}
 
-.setup-link--warning {
-  background: $katuq-warning-light;
-  border-color: rgba($katuq-warning, 0.35);
-
-  i {
-    color: $katuq-warning-dark;
+  .onboarding-banner-copy {
+    flex-basis: calc(100% - 56px);
   }
-}
 
-.setup-link--gray {
-  background: $katuq-gray-100;
-  border-color: $katuq-gray-200;
+  .onboarding-banner-actions {
+    width: 100%;
+    justify-content: flex-end;
 
-  i {
-    color: $katuq-gray-600;
+    .btn-katuq-solid {
+      flex: 1 1 auto;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
   }
 }
 

@@ -4187,7 +4187,7 @@ Campañas más grandes: Mapalé Outlet 351 productos al 35% (hasta feb-2027), **
 
 ## D-194 (2026-08-14) — Link de pauta con código: premium temporal al registrarse, y el premium por fin vence
 
-Daniel pidió un enlace para pautar: quien se registre con un código entra a Katuq **en premium por un tiempo limitado**, sin pagar. La primera campaña es `COLOMBIA2026` con **90 días (3 meses)**.
+Daniel pidió un enlace para pautar: quien se registre con un código entra a Katuq **en premium por un tiempo limitado**, sin pagar. La primera campaña es `COLOMBIA2026` con **120 días (4 meses)** — se subió de 90 a 120 porque el video que grabó para redes dice "de 3 a 4 meses" y se cumple por lo alto de lo que la gente oye.
 
 **El hueco que había que tapar primero: el premium no vencía.** `SubscriptionGuard` solo evalúa `plan === 'premium'` y el backend lo lee de `companies.subscriptionPlan`, sin ninguna fecha de corte. Regalar premium sin construir el vencimiento habría sido regalarlo de por vida. Se agregan `premiumUntil`, `premiumOrigen`, `premiumCodigo` y `premiumCampanaId` a la empresa, y un trabajo diario (6 AM COT) que baja a freemium lo vencido y preavisa 3 días antes. **Alcance blindado por construcción**: la pasada filtra `premiumOrigen == 'promocion'`, campo que un premium pagado no tiene, así que no puede alcanzarlo ni por error; al degradar el origen pasa a `promocion_vencida` y la empresa sale del filtro, con lo que repetir la pasada no cambia nada. No cobra, no pide tarjeta y no toca datos del comercio: solo el plan y sus límites.
 
@@ -4202,3 +4202,21 @@ Daniel pidió un enlace para pautar: quien se registre con un código entra a Ka
 **Verificado:** build de frontend en verde y **40 pruebas de reglas** en `scripts/test-promociones-registro.js`, que corren con un doble de Firestore en memoria (sin credenciales, sin tocar producción): la vitrina pública no devuelve campañas, un plan vendible no se puede canjear como campaña, el cupo no se pasa, la vista pública no filtra cupo ni usos, el vencimiento no toca premium pagado ni vigente ni freemium, y repetir la pasada no degrada a nadie más ni repite correos.
 
 **Pendiente antes de pautar:** correr la pasada en producción en modo simulación y revisar la lista; ejecutar el backfill de roles (`scripts/agregar-menu-campanas-a-superadmin.js`) o la pantalla queda invisible como ya pasó antes; ciclo real con campaña de cupo 1; y encender el cron con `PREMIUM_PROMO_CRON_ENABLED=true`, que nace apagado a propósito.
+
+**Corrección y cierre de D-178 — el flow NO usa el código del mapeo: usa una expresión guardada en su propia config.**
+
+Tras desplegar `16561ce` y destrabar 575 productos, la verificación mostró que se reprocesaban pero **el descuento no aterrizaba**: los campos ni siquiera aparecían en `preciosPorTipoCliente`. Producción sí tenía el código nuevo, así que el problema era de ruta.
+
+**Causa: hay DOS caminos que escriben productos de Cereza, y el cambio de código solo cubría uno.**
+1. **Webhooks** (`osmosisWebhookService` → `osmosisProductSyncService._mapOsmosisProductToKatuq`) — cubierto por el commit.
+2. **El barrido** (`osmosis-product-changed` → **`katuq-canonical-mapper`** → `katuq-product-upsert`) — el nodo mapper **re-arma el producto desde el payload crudo con una expresión declarativa guardada en `flows/{id}.graph.nodes[mapper].params.mapping`**, descartando el canónico que emitió el trigger. Esa expresión construía `preciosPorTipoCliente` leyendo solo `p.price`, nunca `discount_price`.
+
+Es decir: **parte del mapeo de precios de Cereza no vive en el código sino en datos.** Un cambio de código no lo alcanza.
+
+Actualizada la expresión del flow (respaldo en `respaldo-mapeo-cereza-*.json`), probada antes de aplicar evaluándola con `expressionEngine` contra productos reales de la API: GCJ4451 $599.900 → $539.910 (10%) hasta 31-ago; GCD445P sin descuento → null. Misma lógica que el código: solo cuenta si `discount_price` es válido y **menor** al de lista, y null explícito cuando no hay promoción para que al vencer la campaña el valor se limpie.
+
+**Segundo destrabe necesario:** los 575 ya se habían vuelto a sellar pasando por el mapeo viejo, así que hubo que borrarles la huella otra vez (185 alcanzados en ese momento; el resto seguía sin sellar).
+
+**Verificado en producción:** 95 productos con descuento aplicado, **los 95 ligados a Shopify**, $7,4M de descuento reflejado, y subiendo a ~30 por corrida. Ejemplos: GCJ2709 $165.900 → $82.950 (−50%), GCD270R $75.900 → $49.335 (−35%), GCJ4451 $599.900 → $539.910 (−10%).
+
+**Lección operativa:** en los flows, el mapeo de campos puede ser **configuración, no código**. Antes de dar por cubierto un cambio de mapeo hay que revisar si el flow tiene su propio `katuq-canonical-mapper` con expresiones declarativas — y actualizarlas también. Verificar el efecto en datos, nunca asumir que el despliegue bastó.

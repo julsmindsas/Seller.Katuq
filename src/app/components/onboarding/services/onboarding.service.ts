@@ -8,13 +8,61 @@ import {
   OnboardingStep,
   OnboardingStepId,
   OnboardingStepStatus,
-  OnboardingProgress,
   initializeOnboardingState,
   calculateProgress,
   isStepAvailable,
   getNextAvailableStep,
   ONBOARDING_STEPS_CONFIG
 } from '../models/onboarding-state.model';
+
+export interface OnboardingReadiness {
+  company_ready: boolean;
+  product_ready: boolean;
+  payment_ready: boolean;
+  delivery_ready?: boolean;
+  sequences_ready: boolean;
+  inventory_ready?: boolean;
+  ready_to_sell: boolean;
+  checks?: Record<string, any>;
+  missing?: string[];
+}
+
+export interface MinimalOnboardingProduct {
+  nombre: string;
+  precio: number;
+  fotoUrl?: string;
+  tipo: 'producto' | 'servicio';
+  referencia?: string;
+  requestId: string;
+  inventariable?: boolean;
+  cantidadInicial?: number;
+  idBodega?: string;
+}
+
+export interface OnboardingV2Progress {
+  schemaVersion: 'v2';
+  activeRoute?: 'sell_today' | 'import_excel' | 'explore';
+  context?: Record<string, any>;
+  currentStepId?: string;
+  steps?: Record<string, any>;
+  draft?: Record<string, any>;
+  onboardingCompleted?: boolean;
+}
+
+export interface OnboardingSeedResult {
+  optionalFailures: Array<'roles' | 'delivery-methods'>;
+}
+
+export interface OnboardingWarehouseSummary {
+  idBodega: string;
+  nombre: string;
+  ciudad?: string;
+}
+
+export interface OnboardingEntryState {
+  completed: boolean;
+  deferred: boolean;
+}
 
 /**
  * Servicio principal para gestionar el estado y progreso del onboarding
@@ -661,40 +709,31 @@ export class OnboardingService {
 
   /**
    * Verifica si el usuario ha completado el onboarding
-   * FIX: Backend es la fuente de verdad, localStorage solo como fallback
+   * Backend autenticado es la única fuente de verdad.
    */
-  async checkOnboardingStatus(userEmail: string): Promise<boolean> {
+  async checkOnboardingStatus(): Promise<boolean> {
+    return (await this.getOnboardingEntryState()).completed;
+  }
+
+  /**
+   * Decide la entrada sin depender de flags de sesión: `deferred` se guarda en
+   * el progreso V2 autenticado cuando la persona elige continuar después.
+   */
+  async getOnboardingEntryState(): Promise<OnboardingEntryState> {
     try {
-      // ✅ PRIMERO: Verificar en backend (fuente de verdad)
-      const response: any = await this.http.get(
-        `${this.urlBase}/v1/users/onboarding/status?email=${userEmail}`,
-        this.httpOptions
-      ).toPromise();
+      // Progreso V2 es la única fuente autenticada. El backend deriva usuario
+      // y tenant del JWT; nunca se envía identidad en URL ni body.
+      const progress = await this.loadV2Progress();
+      const backendCompleted = progress?.onboardingCompleted === true;
 
-      const backendCompleted = response?.onboardingCompleted || false;
-
-      // ✅ SEGUNDO: Sincronizar localStorage con backend
-      const localState = this.loadStateFromStorage();
-      if (localState && localState.isCompleted !== backendCompleted) {
-        console.log(`🔄 Sincronizando localStorage con backend: ${backendCompleted}`);
-        localState.isCompleted = backendCompleted;
-        this.onboardingState$.next(localState);
-        this.saveStateToStorage();
-      }
-
-      return backendCompleted;
+      return {
+        completed: backendCompleted,
+        deferred: !backendCompleted && progress?.draft?.deferred === true
+      };
 
     } catch (error) {
       console.error('❌ Error verificando estado de onboarding:', error);
-
-      // Fallback: Si falla el backend, usar localStorage
-      const localState = this.loadStateFromStorage();
-      if (localState?.isCompleted) {
-        console.warn('⚠️ Usando localStorage como fallback');
-        return true;
-      }
-
-      return false;
+      throw error;
     }
   }
 
@@ -993,41 +1032,106 @@ export class OnboardingService {
    */
   async markOnboardingComplete(): Promise<void> {
     const state = this.onboardingState$.value;
-    if (!state) return;
 
-    state.isCompleted = true;
-    state.completedAt = new Date();
+    // El backend es la fuente de verdad. El estado local se actualiza solamente
+    // después de recibir una respuesta exitosa; así un error de red nunca se
+    // presenta como "Listo para vender".
+    const response: any = await this.http.post(
+      `${this.urlBase}/v1/onboarding/complete`,
+      {},
+      this.httpOptions
+    ).toPromise();
 
-    this.onboardingState$.next(state);
-    this.saveStateToStorage();
-
-    // Notificar al backend
-    try {
-      await this.http.post(
-        `${this.urlBase}/v1/users/onboarding/complete`,
-        { email: state.userEmail },
-        this.httpOptions
-      ).toPromise();
-
-      // Limpiar flag de pospuesto
-      sessionStorage.removeItem('onboarding_postponed');
-
-      console.log('✅ Onboarding completado exitosamente');
-    } catch (error) {
-      console.error('Error marcando onboarding como completado:', error);
+    if (response?.success === false) {
+      throw new Error(response?.message || 'El servidor no pudo completar el onboarding.');
     }
+
+    if (state) {
+      state.isCompleted = true;
+      state.completedAt = new Date();
+      state.lastUpdated = new Date();
+      this.onboardingState$.next(state);
+      this.saveStateToStorage();
+    }
+
+    sessionStorage.removeItem('onboarding_postponed');
   }
 
   /**
    * Completa todo el onboarding (wrapper para compatibilidad)
    */
   async completeOnboarding(): Promise<boolean> {
-    try {
-      await this.markOnboardingComplete();
-      return true;
-    } catch (error) {
-      console.error('Error al completar onboarding:', error);
-      return false;
+    await this.markOnboardingComplete();
+    return true;
+  }
+
+  /**
+   * Estado real de preparación calculado por el backend autenticado. Nunca se
+   * deriva de clics, pasos locales o datos enviados por el navegador.
+   */
+  async getReadiness(): Promise<OnboardingReadiness> {
+    const response: any = await this.http.get(
+      `${this.urlBase}/v1/onboarding/readiness`,
+      this.httpOptions
+    ).toPromise();
+
+    const data = response?.data || response;
+    if (!data || typeof data.ready_to_sell !== 'boolean') {
+      throw new Error('El servidor no devolvió un estado de preparación válido.');
+    }
+
+    return {
+      company_ready: data.company_ready === true,
+      product_ready: data.product_ready === true,
+      payment_ready: data.payment_ready === true,
+      delivery_ready: data.delivery_ready === undefined ? undefined : data.delivery_ready === true,
+      sequences_ready: data.sequences_ready === true,
+      inventory_ready: data.inventory_ready === undefined ? undefined : data.inventory_ready === true,
+      ready_to_sell: data.ready_to_sell === true,
+      checks: data.checks || {},
+      missing: Array.isArray(data.missing) ? data.missing : []
+    };
+  }
+
+  /** Crea el producto/servicio mínimo confirmado en el onboarding. */
+  async createMinimalProduct(payload: MinimalOnboardingProduct): Promise<any> {
+    const response: any = await this.http.post(
+      `${this.urlBase}/v1/onboarding/minimal-product`,
+      payload,
+      this.httpOptions
+    ).toPromise();
+
+    if (response?.success === false) {
+      throw new Error(response?.message || 'No se pudo crear el producto o servicio.');
+    }
+
+    return response?.data || response?.product || response?.producto || response;
+  }
+
+  /** Carga el progreso V2 del usuario y tenant derivados de la sesión. */
+  async loadV2Progress(): Promise<OnboardingV2Progress | null> {
+    const response: any = await this.http.get(
+      `${this.urlBase}/v1/onboarding/progress`,
+      this.httpOptions
+    ).toPromise();
+
+    const data = response?.data || null;
+    return data?.schemaVersion === 'v2' ? data as OnboardingV2Progress : null;
+  }
+
+  /**
+   * Persiste progreso V2 sin enviar email ni empresa: el backend deriva ambos
+   * valores del JWT. localStorage queda únicamente como caché de recuperación.
+   */
+  async saveV2Progress(progress: OnboardingV2Progress): Promise<void> {
+    const response: any = await this.http.post(
+      `${this.urlBase}/v1/onboarding/progress`,
+      progress,
+      this.httpOptions
+    ).toPromise();
+
+    if (response?.success === false) {
+      throw new Error(response?.message || 'No se pudo guardar el avance.');
     }
   }
 
@@ -1036,25 +1140,37 @@ export class OnboardingService {
    * un comercio que finalice el onboarding mínimo (5 pasos) quede funcional:
    * poder tomar pedidos y hacer checkout. Cubre roles, formas de entrega y
    * consecutivos. Idempotente y no destructivo (verifica con /check antes de
-   * crear). Best-effort: los fallos se registran pero no interrumpen el cierre.
+   * crear). Consecutivos es bloqueante; roles y entrega se reportan como
+   * pendientes opcionales para que ningún error desaparezca silenciosamente.
    */
-  async seedRemainingDefaults(companyId: string): Promise<void> {
+  async seedRemainingDefaults(companyId: string): Promise<OnboardingSeedResult> {
     if (!companyId) {
-      console.warn('⚠️ seedRemainingDefaults sin companyId — se omite');
-      return;
+      throw new Error('No se pudo identificar el negocio para preparar la venta.');
     }
-    await Promise.all([
-      this.ensureResourceDefault('roles', companyId),
-      this.ensureResourceDefault('delivery-methods', companyId),
-      this.ensureResourceDefault('sequences', companyId)
-    ]);
+
+    const kinds = ['roles', 'delivery-methods', 'sequences'] as const;
+    const results = await Promise.allSettled(
+      kinds.map(kind => this.ensureResourceDefault(kind, companyId))
+    );
+    const failed = kinds.filter((_, index) => results[index].status === 'rejected');
+
+    if (failed.includes('sequences')) {
+      throw new Error('No pudimos preparar la numeración automática de las ventas. Inténtalo nuevamente.');
+    }
+
+    return {
+      optionalFailures: failed.filter(
+        (kind): kind is 'roles' | 'delivery-methods' => kind !== 'sequences'
+      )
+    };
   }
 
   /**
    * Verifica si un recurso ya existe para la empresa (endpoint /check) y, si no,
    * crea su default llamando al endpoint de onboarding con payload vacío (el
-   * backend siembra el default). Best-effort: un fallo se registra pero no
-   * relanza. NO destructivo: para 'categories' (cuyo endpoint reemplaza el doc)
+   * backend siembra el default). Un fallo se relanza al orquestador para poder
+   * distinguir requisitos críticos de defaults opcionales. NO destructivo:
+   * para 'categories' (cuyo endpoint reemplaza el doc)
    * solo se llama cuando NO existen categorías, así nunca se pisa el catálogo.
    */
   async ensureResourceDefault(
@@ -1068,10 +1184,11 @@ export class OnboardingService {
         this.getHttpOptions(companyId)
       ).toPromise();
 
-      // Para consecutivos exigimos que estén COMPLETOS (orders + ordersPOS).
+      // Para consecutivos `exists` solo significa que hay al menos uno. Para
+      // declarar el recurso listo deben existir los dos canales requeridos.
       const alreadyOk = kind === 'sequences'
-        ? (check?.isComplete || check?.exists)
-        : check?.exists;
+        ? check?.isComplete === true
+        : check?.exists === true;
 
       if (alreadyOk) {
         console.log(`ℹ️ ${kind}: ya existe para ${companyId}, no se siembra default`);
@@ -1101,8 +1218,33 @@ export class OnboardingService {
       console.log(`✅ ${kind}: default sembrado para ${companyId}`);
     } catch (error) {
       console.error(`❌ ensureResourceDefault(${kind}) falló para ${companyId}:`, error);
-      // best-effort: no relanzar para no bloquear el cierre del onboarding
+      throw error;
     }
+  }
+
+  /**
+   * Devuelve la bodega activa inequívocamente principal para hidratar el
+   * formulario. No muta ni escoge arbitrariamente entre varias sedes.
+   */
+  async getPreferredActiveWarehouse(company: string): Promise<OnboardingWarehouseSummary | null> {
+    if (!company) return null;
+    const check: any = await this.http.get(
+      `${this.urlBase}/v1/onboarding/warehouses/check`,
+      this.getHttpOptions(company)
+    ).toPromise();
+    const warehouses = (Array.isArray(check?.data) ? check.data : []).filter((b: any) =>
+      b?.active !== false && b?.activo !== false && String(b?.idBodega || '').trim()
+    );
+    const preferred = warehouses.find((b: any) =>
+      b?.principal === true || b?.isPrimary === true ||
+      String(b?.idBodega || '').trim().toUpperCase() === 'BOD-001'
+    ) || (warehouses.length === 1 ? warehouses[0] : null);
+    if (!preferred) return null;
+    return {
+      idBodega: String(preferred.idBodega).trim(),
+      nombre: String(preferred.nombre || preferred.name || 'Bodega principal').trim(),
+      ciudad: preferred.ciudad ? String(preferred.ciudad).trim() : undefined
+    };
   }
 
   /**
@@ -1113,17 +1255,36 @@ export class OnboardingService {
    * alertas de stock NO se guardan aquí: van en su apartado propio
    * (Inventario → Bodegas y alertas por producto).
    */
-  async savePrimaryWarehouse(company: string, nombre: string, ciudad?: string): Promise<void> {
+  async savePrimaryWarehouse(company: string, nombre: string, ciudad?: string): Promise<string | null> {
     const clean = (nombre || '').trim();
     const city = (ciudad || '').trim();
-    if (!company || !clean) return;
+    if (!company || !clean) return null;
 
     const check: any = await this.http.get(
       `${this.urlBase}/v1/onboarding/warehouses/check`,
       this.getHttpOptions(company)
     ).toPromise();
 
-    const existing = (check?.data || []).find((b: any) => b?.id);
+    const allWarehouses = Array.isArray(check?.data) ? check.data : [];
+    // Una bodega inactiva o sin business code no puede recibir el inventario
+    // inicial. Sus códigos sí se reservan más abajo para no reutilizarlos.
+    const warehouses = allWarehouses.filter((b: any) =>
+      b?.active !== false && b?.activo !== false && String(b?.idBodega || '').trim()
+    );
+    const normalizedName = clean.toLocaleLowerCase();
+    const sameName = warehouses.find((b: any) =>
+      b?.id && String(b?.nombre || '').trim().toLocaleLowerCase() === normalizedName
+    );
+    const explicitPrimary = warehouses.find((b: any) =>
+      b?.id && (
+        b?.principal === true ||
+        b?.isPrimary === true ||
+        String(b?.idBodega || '').toUpperCase() === 'BOD-001'
+      )
+    );
+    // Una única bodega es inequívocamente la principal. Con varias nunca se
+    // renombra "la primera" de un arreglo cuyo orden no está garantizado.
+    const existing = sameName || explicitPrimary || (warehouses.length === 1 ? warehouses[0] : null);
     if (existing) {
       // Renombrar la bodega principal existente a lo que escribió el usuario
       // (y guardar la ciudad en la bodega, su apartado natural).
@@ -1135,12 +1296,25 @@ export class OnboardingService {
         this.getHttpOptions(company)
       ).toPromise();
       console.log(`✅ Bodega principal renombrada a "${clean}" (${existing.id})`);
+      return existing.idBodega ? String(existing.idBodega) : null;
     } else {
-      // No hay ninguna: crear la principal con el nombre (y ciudad) del usuario.
-      const bodega: any = { nombre: clean, idBodega: 'BOD-001', tipo: 'Física', active: true };
+      // Si ya hay varias bodegas sin una principal inequívoca, crear una nueva
+      // ubicación con business code libre es más seguro que renombrar una sede.
+      const usedCodes = new Set(allWarehouses.map((b: any) => String(b?.idBodega || '').toUpperCase()));
+      let next = 1;
+      while (usedCodes.has(`BOD-${String(next).padStart(3, '0')}`)) next++;
+      const businessCode = `BOD-${String(next).padStart(3, '0')}`;
+      const bodega: any = {
+        nombre: clean,
+        idBodega: businessCode,
+        tipo: 'Física',
+        active: true,
+        principal: true
+      };
       if (city) bodega.ciudad = city;
       await this.createWarehousesOnboarding([bodega], company);
       console.log(`✅ Bodega principal creada: "${clean}"`);
+      return businessCode;
     }
   }
 
@@ -1163,9 +1337,9 @@ export class OnboardingService {
   /**
    * Guarda las formas de pago que ELIGIÓ el usuario (chips del onboarding).
    * Idempotente y NO destructivo: crea solo las que aún no existen (match por
-   * nombre); nunca borra las que ya estaban. Crea las de POS solo si no había
-   * ninguna. Cada forma de pago web es un doc simple { nombre, descripcion,
-   * activo } — igual que el default del backend.
+   * nombre); nunca borra las que ya estaban. POS se configura en su propio
+   * módulo y no condiciona la primera venta. Cada forma web es un doc simple
+   * { nombre, descripcion, activo } — igual que el default del backend.
    */
   async savePaymentMethods(company: string, labels: string[], hints: { [k: string]: string } = {}): Promise<void> {
     if (!company || !labels || labels.length === 0) return;
@@ -1177,21 +1351,15 @@ export class OnboardingService {
 
     const existing = (check?.data || [])
       .filter((p: any) => (p.collection || 'pagos') === 'pagos')
+      .filter((p: any) => p?.activo !== false && p?.active !== false)
       .map((p: any) => (p.nombre || '').trim().toLowerCase());
-    const posCount = check?.breakdown?.pos ?? 0;
-
     const toCreate = labels
       .filter(l => !existing.includes((l || '').trim().toLowerCase()))
       .map(l => ({ nombre: l, descripcion: hints[l] || l, activo: true }));
 
-    if (toCreate.length === 0) {
-      console.log('ℹ️ Formas de pago elegidas ya existían — no se duplican');
-      return;
-    }
+    if (toCreate.length === 0) return;
 
-    // createPOS solo si no hay ninguna en POS (evita duplicar Efectivo/Tarjeta POS).
-    await this.createPaymentMethodsOnboarding(toCreate, posCount === 0, company);
-    console.log(`✅ ${toCreate.length} forma(s) de pago creada(s) desde el onboarding`);
+    await this.createPaymentMethodsOnboarding(toCreate, false, company);
   }
 
   /**
@@ -1204,19 +1372,38 @@ export class OnboardingService {
   async saveCategories(company: string, labels: string[]): Promise<void> {
     if (!company || !labels || labels.length === 0) return;
 
+    const check: any = await this.http.get(
+      `${this.urlBase}/v1/onboarding/categories/check`,
+      this.getHttpOptions(company)
+    ).toPromise();
+
+    const raw = check?.data;
+    const existingCategories: any[] = Array.isArray(raw)
+      ? raw
+      : (Array.isArray(raw?.categorias) ? raw.categorias : []);
+    const existingNames = new Set(
+      existingCategories.map(c => String(c?.nombre || '').trim().toLocaleLowerCase())
+    );
+    const additions = labels
+      .map(nombre => String(nombre || '').trim())
+      .filter(nombre => nombre && !existingNames.has(nombre.toLocaleLowerCase()));
+
+    if (additions.length === 0) return;
+
     const categorias = {
-      categorias: labels.map((nombre, i) => ({
-        id: this.genCategoryId(i),
+      // El endpoint reemplaza el documento, así que reenviamos primero las
+      // categorías existentes con sus IDs intactos y agregamos solo las nuevas.
+      categorias: existingCategories.concat(additions.map((nombre, i) => ({
+        id: this.genCategoryId(existingCategories.length + i),
         nombre,
         descripcion: nombre,
         activa: true,
-        orden: i + 1
-      })),
-      descripcion: 'Categorías elegidas durante el onboarding'
+        orden: existingCategories.length + i + 1
+      }))),
+      descripcion: raw?.descripcion || 'Categorías del comercio'
     };
 
     await this.createCategoriesOnboarding(categorias, undefined, company);
-    console.log(`✅ ${labels.length} categoría(s) guardada(s) desde el onboarding`);
   }
 
   private genCategoryId(i: number): string {
@@ -1389,21 +1576,19 @@ export class OnboardingService {
         };
       });
 
-      const progress: OnboardingProgress = {
-        email: state.userEmail,
-        onboardingCompleted: state.isCompleted,
+      const progress: OnboardingV2Progress = {
+        schemaVersion: 'v2',
         currentStepId: state.currentStepId,
         steps: stepsObject,
-        postponedAt: state.postponedAt?.toISOString(),
-        lastUpdated: state.lastUpdated.toISOString(),
-        progressPercentage: state.progressPercentage
+        context: {
+          postponedAt: state.postponedAt?.toISOString(),
+          lastUpdated: state.lastUpdated.toISOString(),
+          progressPercentage: state.progressPercentage
+        },
+        draft: {}
       };
 
-      await this.http.post(
-        `${this.urlBase}/v1/users/onboarding/save-progress`,
-        progress,
-        this.httpOptions
-      ).toPromise();
+      await this.saveV2Progress(progress);
 
     } catch (error) {
       console.warn('Error sincronizando con backend:', error);
@@ -1414,16 +1599,22 @@ export class OnboardingService {
   /**
    * Carga el progreso desde el backend
    */
-  async loadProgressFromBackend(userEmail: string): Promise<void> {
+  async loadProgressFromBackend(_userEmail?: string): Promise<void> {
     try {
-      const response: any = await this.http.get(
-        `${this.urlBase}/v1/users/onboarding/status?email=${userEmail}`,
-        this.httpOptions
-      ).toPromise();
+      const response = await this.loadV2Progress();
 
       if (response && response.steps) {
+        const storedUser = (() => {
+          try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
+        })();
+        const authenticatedEmail = String(
+          this.onboardingState$.value?.userEmail || storedUser?.email || ''
+        ).trim();
+        if (!authenticatedEmail) return;
+
         // Reconstruir estado desde el backend
-        const state = this.onboardingState$.value || initializeOnboardingState(userEmail, response.userId || userEmail);
+        const state = this.onboardingState$.value ||
+          initializeOnboardingState(authenticatedEmail, storedUser?.uid || storedUser?.id || authenticatedEmail);
 
         // Actualizar pasos con datos del backend
         Object.keys(response.steps).forEach((stepId) => {
@@ -1436,10 +1627,10 @@ export class OnboardingService {
           }
         });
 
-        state.isCompleted = response.onboardingCompleted;
+        state.isCompleted = response.onboardingCompleted === true;
         state.currentStepId = response.currentStepId as OnboardingStepId;
-        state.progressPercentage = response.progressPercentage;
-        state.postponedAt = response.postponedAt ? new Date(response.postponedAt) : undefined;
+        state.progressPercentage = Number(response.context?.progressPercentage) || 0;
+        state.postponedAt = response.context?.postponedAt ? new Date(response.context.postponedAt) : undefined;
 
         this.onboardingState$.next(state);
         this.saveStateToStorage();
@@ -1515,9 +1706,13 @@ export class OnboardingService {
   async createPaymentMethodsOnboarding(formasPago?: any[], createPOS: boolean = true, company?: string): Promise<any> {
     try {
       const headers = { company: company || '' };
+      const body: any = { createPOS };
+      // `undefined` significa "usa defaults"; `[]` significa explícitamente
+      // "no crees formas web" (por ejemplo, una reparación solo de POS).
+      if (formasPago !== undefined) body.formasPago = formasPago;
       const response: any = await this.http.post(
         `${this.urlBase}/v1/onboarding/payment-methods`,
-        { formasPago: formasPago || [], createPOS },
+        body,
         { headers }
       ).toPromise();
 

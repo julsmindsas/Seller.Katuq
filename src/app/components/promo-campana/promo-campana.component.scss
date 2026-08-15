@@ -1,0 +1,182 @@
+/**
+ * Landing de campaña.
+ *
+ * Tema canónico (openspec/specs/design-system/spec.md): acento #5F3FE0, tinta
+ * #211F3A, superficies lila, radios 16/11/20, sombras violeta difusas, plano SIN
+ * gradientes. Los valores van literales porque esta página se sirve sin sesión y
+ * no debe depender de los estilos del panel.
+ */
+
+$acento: #5f3fe0;
+$acento-suave: #f2eefe;
+$tinta: #211f3a;
+$tinta-suave: #6f6b85;
+$superficie: #fbfaff;
+$borde: #eae6f8;
+$aviso: #b7791f;
+$aviso-suave: #fdf6e3;
+
+.promo-pagina {
+  min-height: 100vh;
+  background: $superficie;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.promo-tarjeta {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border: 1px solid $borde;
+  border-radius: 20px;
+  box-shadow: 0 18px 40px rgba(95, 63, 224, 0.12);
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.promo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: $acento-suave;
+  color: $acento;
+  border: 1px solid rgba(95, 63, 224, 0.18);
+  border-radius: 11px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  &--aviso {
+    background: $aviso-suave;
+    color: $aviso;
+    border-color: rgba(183, 121, 31, 0.24);
+  }
+}
+
+.promo-titulo {
+  color: $tinta;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 20px 0 0;
+}
+
+.promo-beneficio {
+  margin: 24px 0;
+  padding: 24px 16px;
+  background: $acento-suave;
+  border: 1px solid rgba(95, 63, 224, 0.18);
+  border-radius: 16px;
+}
+
+.promo-beneficio-numero {
+  display: block;
+  color: $acento;
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.promo-beneficio-texto {
+  display: block;
+  color: $tinta;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.promo-descripcion {
+  color: $tinta-suave;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 16px 0 0;
+}
+
+.promo-lista {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  text-align: left;
+
+  li {
+    position: relative;
+    color: $tinta;
+    font-size: 15px;
+    padding: 8px 0 8px 28px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 15px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: $acento;
+    }
+  }
+}
+
+.promo-boton {
+  width: 100%;
+  margin-top: 28px;
+  padding: 14px 24px;
+  background: $acento;
+  color: #ffffff;
+  border: none;
+  border-radius: 11px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: darken($acento, 6%);
+  }
+}
+
+.promo-letra-chica {
+  color: $tinta-suave;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 16px 0 0;
+}
+
+.promo-cargando {
+  padding: 32px 0;
+  color: $tinta-suave;
+}
+
+.promo-spinner {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 16px;
+  border: 3px solid $acento-suave;
+  border-top-color: $acento;
+  border-radius: 50%;
+  animation: promo-girar 0.8s linear infinite;
+}
+
+@keyframes promo-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .promo-tarjeta {
+    padding: 32px 20px;
+  }
+
+  .promo-titulo {
+    font-size: 22px;
+  }
+
+  .promo-beneficio-numero {
+    font-size: 34px;
+  }
+}

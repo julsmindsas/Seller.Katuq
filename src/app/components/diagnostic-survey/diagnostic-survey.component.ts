@@ -2,9 +2,11 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
-import { KatuqQuickStartService, DiagnosticResponse } from '../../shared/services/quickstart/katuq-quickstart.service';
+import { KatuqQuickStartService, DiagnosticResponse, PromocionRegistro } from '../../shared/services/quickstart/katuq-quickstart.service';
 import { ContextualQuestionsService, ContextualQuestion } from '../../shared/services/quickstart/contextual-questions.service';
+import { PromocionesService, PromocionPublica } from '../../shared/services/promociones.service';
 import { Subscription } from 'rxjs';
+import { clearOnboardingStorage } from '../onboarding/utils/onboarding-v2.utils';
 
 @Component({
     selector: 'app-diagnostic-survey',
@@ -142,6 +144,13 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     quickStartMessage: string = "";
     nextSteps: string[] = [];
 
+    // Campaña de pauta: si llegó por /promo/:codigo, el código viaja con el
+    // registro y la empresa nace en premium por el tiempo de la campaña.
+    codigoPromocional: string | null = null;
+    promocionCampana: PromocionPublica | null = null;
+    promocionAplicada: PromocionRegistro | null = null;
+    promocionNoAplicada: boolean = false; // el código se cayó entre la landing y el registro
+
     // Variables para preguntas contextuales
     contextualQuestions: ContextualQuestion[] = [];
     currentContextualIndex: number = 0;
@@ -174,7 +183,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         private fb: FormBuilder, 
         private router: Router,
         private quickStartService: KatuqQuickStartService,
-        private contextualQuestionsService: ContextualQuestionsService
+        private contextualQuestionsService: ContextualQuestionsService,
+        private promocionesService: PromocionesService
     ) {
         // No se vuelve a asignar registrationQuestions aquí
         this.mainForm = this.fb.group({
@@ -192,6 +202,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        this.cargarPromocionPendiente();
         this.loadProgress();
         this.setupAutoSave();
         
@@ -420,6 +431,36 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         return this.currentSection.questions[this.currentQuestionIndex];
     }
 
+    /**
+     * Recupera el código de campaña que dejó la landing `/promo/:codigo`.
+     *
+     * Se relee el beneficio contra el backend en vez de confiar en lo que quedó
+     * guardado: entre que la persona abrió el enlace y termina el registro, la
+     * campaña pudo apagarse o agotarse, y no se le va a prometer algo que el
+     * registro no vaya a cumplir.
+     */
+    private cargarPromocionPendiente() {
+        const codigo = this.promocionesService.obtenerCodigoPendiente();
+        if (!codigo) return;
+
+        this.codigoPromocional = codigo;
+        this.promocionesService.validarCodigo(codigo).subscribe({
+            next: (respuesta) => {
+                if (respuesta.disponible && respuesta.promocion) {
+                    this.promocionCampana = respuesta.promocion;
+                } else {
+                    // Ya no sirve: se olvida y el registro sigue como uno normal.
+                    this.promocionCampana = null;
+                    this.codigoPromocional = null;
+                    this.promocionesService.limpiarCodigoPendiente();
+                }
+            },
+            error: () => {
+                this.promocionCampana = null;
+            }
+        });
+    }
+
     selectOption(option: string) {
         this.responses[this.currentQuestion.id] = option;
         this.debouncedSave(); // Guardar progreso
@@ -595,7 +636,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 sector: this.responses.q1 || 'Retail - Comercial',
                 complejidad: 'basica',
                 canales: ['POS']
-            }
+            },
+            codigoPromocional: this.codigoPromocional
         };
 
         try {
@@ -607,6 +649,22 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 this.welcomeMessage = registrationData.nombre;
                 this.quickStartMessage = quickStartResult.message || "¡Tu comercio está configurado y listo!";
                 this.clearProgress();
+                clearOnboardingStorage(localStorage);
+                localStorage.removeItem('katuq_onboarding_state');
+                localStorage.removeItem('showOnboardingBanner');
+                sessionStorage.removeItem('onboarding_banner_dismissed');
+                sessionStorage.removeItem('onboarding_postponed');
+                sessionStorage.removeItem('onboarding_reminder_shown');
+
+                // Resultado del código de campaña. Si el cupo se agotó entre la
+                // landing y este momento, se dice claro — pero el registro ya
+                // quedó hecho, no se pierde nada.
+                if (quickStartResult.promocion?.aplicada) {
+                    this.promocionAplicada = quickStartResult.promocion;
+                } else if (this.codigoPromocional) {
+                    this.promocionNoAplicada = true;
+                }
+                this.promocionesService.limpiarCodigoPendiente();
 
                 if (quickStartResult.pendingReview) {
                     // Cuarentena anti-abuso: NO hay credenciales todavía, no redirigir al panel.
@@ -670,9 +728,14 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         // Para QuickStart exitoso, mostrar instrucciones para ingresar
         // o redirigir al login con las credenciales creadas
 
-        // ✅ FIX: Limpiar también el estado de onboarding anterior para evitar conflictos
+        // Un registro nuevo no puede heredar el borrador de otro usuario o
+        // comercio que haya usado antes este navegador.
+        clearOnboardingStorage(localStorage);
         localStorage.removeItem('katuq_onboarding_state');
-        console.log('🧹 localStorage limpiado: katuq_onboarding_state');
+        localStorage.removeItem('showOnboardingBanner');
+        sessionStorage.removeItem('onboarding_banner_dismissed');
+        sessionStorage.removeItem('onboarding_postponed');
+        sessionStorage.removeItem('onboarding_reminder_shown');
 
         this.router.navigate(['/login'], {
             queryParams: {

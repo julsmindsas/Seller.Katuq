@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
 import { SuperadminClientesComponent } from './superadmin-clientes/superadmin-clientes.component';
+import { SuperadminCampanasComponent } from './superadmin-campanas/superadmin-campanas.component';
 import { SuperadminRoutingModule } from './superadmin-routing.module';
 
 @NgModule({
   declarations: [
-    SuperadminClientesComponent
+    SuperadminClientesComponent,
+    SuperadminCampanasComponent
   ],
   imports: [
     CommonModule,
@@ -17,7 +19,8 @@ import { SuperadminRoutingModule } from './superadmin-routing.module';
     SuperadminRoutingModule
   ],
   exports: [
-    SuperadminClientesComponent
+    SuperadminClientesComponent,
+    SuperadminCampanasComponent
   ]
 })
 export class SuperadminModule { }

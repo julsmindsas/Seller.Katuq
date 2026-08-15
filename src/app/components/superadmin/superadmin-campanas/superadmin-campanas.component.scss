@@ -1,0 +1,294 @@
+/**
+ * Campañas de pauta.
+ * Tema canónico (openspec/specs/design-system/spec.md): acento #5F3FE0, tinta
+ * #211F3A, superficies lila, radios 16/11/20, labels UPPERCASE muted, plano sin
+ * gradientes.
+ */
+
+$acento: #5f3fe0;
+$acento-suave: #f2eefe;
+$tinta: #211f3a;
+$tinta-suave: #6f6b85;
+$superficie: #fbfaff;
+$borde: #eae6f8;
+$aviso: #b7791f;
+$aviso-suave: #fdf6e3;
+
+.campanas {
+  padding: 24px;
+  background: $superficie;
+  min-height: 100%;
+
+  &__encabezado {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  &__eyebrow {
+    display: block;
+    color: $tinta-suave;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  &__titulo {
+    color: $tinta;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 6px 0 0;
+  }
+
+  &__bajada {
+    color: $tinta-suave;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 8px 0 0;
+    max-width: 640px;
+  }
+}
+
+.tarjeta {
+  background: #ffffff;
+  border: 1px solid $borde;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(95, 63, 224, 0.06);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+
+  &--formulario {
+    border-color: rgba(95, 63, 224, 0.24);
+  }
+
+  &__fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__titulo {
+    color: $tinta;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 12px 0 0;
+  }
+
+  &__descripcion {
+    color: $tinta-suave;
+    font-size: 14px;
+    margin: 6px 0 0;
+  }
+
+  &__acciones {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.chip {
+  display: inline-block;
+  background: $acento-suave;
+  color: $acento;
+  border: 1px solid rgba(95, 63, 224, 0.18);
+  border-radius: 11px;
+  padding: 4px 12px;
+  margin-right: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  &--info {
+    background: #ffffff;
+    color: $tinta-suave;
+    border-color: $borde;
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 600;
+  }
+
+  &--aviso {
+    background: $aviso-suave;
+    color: $aviso;
+    border-color: rgba(183, 121, 31, 0.24);
+  }
+
+  &--apagado {
+    background: #f4f3f8;
+    color: $tinta-suave;
+    border-color: $borde;
+  }
+}
+
+.campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+
+  &--ancho {
+    grid-column: 1 / -1;
+  }
+
+  &--switch {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    color: $tinta;
+    font-size: 14px;
+  }
+
+  &__label {
+    color: $tinta-suave;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  &__input {
+    border: 1px solid $borde;
+    border-radius: 11px;
+    padding: 10px 12px;
+    font-size: 15px;
+    color: $tinta;
+    background: #ffffff;
+
+    &:focus {
+      outline: none;
+      border-color: $acento;
+      box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.12);
+    }
+
+    &--codigo {
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+  }
+
+  &__ayuda {
+    color: $tinta-suave;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-acento {
+  background: $acento;
+  color: #ffffff;
+  border: none;
+  border-radius: 11px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.btn-plano {
+  background: #ffffff;
+  color: $acento;
+  border: 1px solid rgba(95, 63, 224, 0.24);
+  border-radius: 11px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: $acento-suave;
+  }
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid $borde;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+
+  &__label {
+    color: $tinta-suave;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__valor {
+    color: $tinta;
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 4px;
+
+    &--enlace {
+      font-size: 13px;
+      font-weight: 500;
+      word-break: break-all;
+      color: $acento;
+    }
+  }
+}
+
+.resultado {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid $borde;
+}
+
+.estado-vacio {
+  background: #ffffff;
+  border: 1px dashed $borde;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  color: $tinta-suave;
+  font-size: 15px;
+}
+
+@media (max-width: 640px) {
+  .campanas {
+    padding: 16px;
+  }
+
+  .tarjeta__fila {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
