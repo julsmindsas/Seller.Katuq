@@ -4409,3 +4409,32 @@ El usuario preguntó si el fix de hoy garantiza que el patrón de DAD-012131 no 
 2. **Frontend**: si se llegó a desplegar con `ivaCalcUnificado: true` en `environment.prod.ts`, cambiarlo de vuelta a `false` y correr `npm run release` (build + deploy). Si solo está en local (`environment.ts` de dev), basta con editar el archivo y reiniciar `ng serve`.
 3. **Importante — apagar los flags NO revierte los 3 fixes de D-202** (`updateOrderInternal`, `payment.service.ts::checkIVAPrice()`, `pedidos.util.service.ts::calcularIVAUnitario()`): esos corrigen las rutas LEGACY (lo que corre con los flags en `false`), así que el pedido seguiría calculando bien aunque se apaguen. Los flags solo alternan entre el motor canónico (Opción A, con los 3 campos por línea) y el legacy ya corregido — **apagarlos no reintroduce el bug de DAD-012131**.
 4. Si de verdad hace falta revertir los fixes de D-202 (no solo los flags), son 3 archivos puntuales: `functions/controllers/orders.js` (bloque agregado antes de `date_upd` en `updateOrderInternal`), `src/app/shared/services/ventas/payment.service.ts` (bloque `checkIVAPrice`), `src/app/components/ventas/service/pedidos.util.service.ts` (`calcularIVAUnitario`) — cada uno con comentario `D-202` marcando el cambio exacto para ubicarlo rápido.
+
+---
+
+## D-203 (2026-08-16) — La tienda en línea no vendía: dos bugs de raíz, ficha de producto, y el inventario que nunca bajó
+
+**Disparador.** Reclamo directo: "no es una tienda virtual utilizable ni por el putas". Se auditó el flujo de compra completo en vez de seguir ajustando presentación. El diagnóstico le dio la razón: no era estética.
+
+### Lo que estaba roto
+
+1. **El catálogo comprable rechazaba el 100% de los pedidos.** `idsComprables()` (`controllers/sites.js`) solo leía bloques `productos`; el bloque `catalogo` no guarda ids —son miles, por diseño (`utils/siteBlocks.js`)— así que la lista blanca salía vacía y **todo** pedido moría con "Uno de los productos ya no está disponible en esta tienda". Armar la tienda sobre el catálogo es la forma natural (es el bloque con buscador, categorías y paginación) y no vendía nada. El aviso previo a publicar tampoco lo contaba, así que el comerciante veía "ningún bloque tiene la compra activada" habiéndola activado.
+   **Corregido** con `vendeTodoElCatalogo()`: un catálogo comprable habilita el catálogo entero. El candado no desaparece — el producto se sigue verificando contra el maestro (misma empresa, vendible, precio del maestro).
+
+2. **El inventario NUNCA bajó en un pedido de tienda.** `inventoryService.updateByPOS` resuelve el producto **solo** por `item.producto.id`, y `siteOrden.construirLinea` ponía únicamente `cd` (los documentos de `products` no persisten `id`; el `cd` se agrega al leer). Resultado: `doc(undefined)` → transacción rota → el error se traga en `inventoryService` → `{success:false}` → se registra en consola y el pedido se crea igual. **Verificado en producción**: los pedidos viejos de tienda tienen `producto.id: undefined`.
+   **Corregido en `siteOrden.construirLinea`** (la línea ahora lleva `cd` **y** `id`). Se decidió NO tocar `inventoryService.js` — es de alto impacto (POS, ventas, fulfillment, Shopify) y el arreglo en el armador de pedidos es local y suficiente.
+
+3. **No existía ficha de producto.** Tocar un producto no hacía nada: sin descripción (existía y se leía solo para el JSON-LD), sin galería (las fotos secundarias se leían y se botaban), sin poder elegir talla ni color, sin link propio para compartir.
+   **Construida**: `?producto=<id>` (Caddy descarta el path pero preserva la query, así que no hubo que tocar el Caddyfile). Reutiliza el encabezado y el pie del mismo sitio, así hereda tema, carrito, menú y medición. Incluye galería, descripción del proveedor **saneada a lista blanca de etiquetas** (235 de 300 productos de OH MY STORE la traen con HTML de Cereza), **selector de talla y color**, cantidad, y metas OG propias para que un link de producto en WhatsApp muestre ese producto.
+   **Las variantes importaban de verdad**: 62 de 300 productos de OMS tienen tallas/colores (`variantes[].atributos.option1/option2`) y no se podían elegir — el pedido llegaba sin decir qué despachar. La elección viaja al pedido en `configuracion.preferencias` (donde la venta asistida guarda lo mismo) y dos tallas del mismo producto son dos líneas del carrito. Las fotos de Cereza traen `{urls, color}`, así que la imagen sigue al color elegido.
+
+**Probado end-to-end en producción**, no en aislamiento: se compró en `demo-katuq-oms.katuq.com` eligiendo el color negro, se confirmó el pedido real **ORE-000566**, se verificó en Firestore que quedó con `producto.id`, `preferencias: [{titulo:"Opción elegida", subtitulo:"UNICA-NEGRO"}]` y `estadoProceso: ParaDespachar`, y se borraron el pedido y el cliente de prueba.
+
+### Pendientes anotados (NO resueltos)
+
+- **Contra entrega y pagos manuales nunca descuentan inventario**: solo el webhook de pago aprobado lo hace. Una tienda contra entrega sobrevende sin freno. → Se aborda con **reserva de inventario** (ver D-204, en curso).
+- **El stock que se publica es global y del campo legacy** `products.disponibilidad.cantidadDisponible` (declarado obsoleto en `services/productStockHelper.js`; la verdad es la colección `inventory`), y **no filtra por la bodega de la tienda**: stock en BOD-005 hace vendible algo que despacha BOD-001. Tampoco se valida la cantidad contra el stock — se pueden pedir 50 unidades de algo que tiene 1, y `updateByPOS` es "negativo-visible" a propósito, así que no frena.
+- **El precio del carrito se congela** al agregar y el servidor cobra el del maestro sin comparar: el comprador confirma $X y se le cobra $Y sin aviso.
+- **Volver de la pasarela cae en la portada**: `crearPedido` redirige a `/gracias?pedido=N`, ruta que no existe (Caddy reescribe todo al render).
+- Sin cupones, sin recoger en tienda (`formaEntrega` clavado en "Envío a Domicilio"), sin historial ni seguimiento para el comprador, sin relacionados.
+- **Borrar una página publicada no existe** (ni endpoint ni botón).
