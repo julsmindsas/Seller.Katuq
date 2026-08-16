@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy, Optional, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ValidatorFn } from '@angular/forms';
 import { IntegrationsService, Integration, IntegrationCategory, CATEGORY_LABELS, ValidationResponse, ConfigSchema } from './integrations.service';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -162,7 +162,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     private daneCodesService: DaneCodesService,
     private router: Router,
     private route: ActivatedRoute,
-    public activeModal?: NgbActiveModal
+    @Optional() public activeModal: NgbActiveModal | null
   ) {
     this.integrationForm = this.createShopifyForm();
   }
