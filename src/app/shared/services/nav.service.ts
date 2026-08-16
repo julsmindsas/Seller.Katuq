@@ -176,6 +176,12 @@ export class NavService implements OnDestroy {
       isJulsmindAdmin ||
       authorizedPaths.includes("integrations") ||
       authorizedPaths.includes("cartera");
+    // Los roles financieros existentes se crearon antes de que existiera la
+    // ruta `contabilidad`. Darles acceso por su rol evita pedir a cada comercio
+    // que vuelva a guardar permisos solo para que aparezca el módulo nuevo.
+    const canUseBookkeepingWorkspace =
+      ["Contador", "Tesorero", "Administrador", "Super Administrador"].includes(user.rol) ||
+      authorizedPaths.includes("contabilidad");
 
     // Verificar si dropshipping está habilitado para filtros adicionales
     const isDropshippingEnabled = this.isDropshippingEnabled();
@@ -212,7 +218,8 @@ export class NavService implements OnDestroy {
             (!child.isOnlySuperAdministrador || isSuperAdmin) &&
             (!child.isOnlyAdmin || isJulsmindAdmin) &&
             (authorizedPaths.includes(child.path) ||
-              (child.path === "facturacion-electronica" && canUseDianWorkspace))
+              (child.path === "facturacion-electronica" && canUseDianWorkspace) ||
+              (child.path === "contabilidad" && canUseBookkeepingWorkspace))
           );
         });
 
@@ -423,6 +430,14 @@ export class NavService implements OnDestroy {
           title: "Cartera (CxC)",
           type: "link",
           icon: "credit-card",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
+        },
+        {
+          path: "contabilidad",
+          title: "Contabilidad",
+          type: "link",
+          icon: "book-open",
           badgeType: "primary",
           badgeValue: "NUEVO",
         },

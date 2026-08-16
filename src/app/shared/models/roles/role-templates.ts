@@ -137,6 +137,7 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
       // Spec 014 — CxC: el contador necesita el aging para provisiones.
       'cartera',
       'facturacion-electronica',
+      'contabilidad',
     ],
     permissions: {
       reportes: ['view', 'create', 'share'],
@@ -159,6 +160,7 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
       'tesoreria',
       // Spec 014 — CxC: cartera agrupada por cliente + aging.
       'cartera',
+      'contabilidad',
       'ventas/pedidos',
       'dashboards',
     ],

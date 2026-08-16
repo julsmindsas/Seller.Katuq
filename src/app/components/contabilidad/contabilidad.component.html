@@ -1,0 +1,217 @@
+<div class="accounting-page">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">FINANZAS</span>
+      <h1>Contabilidad</h1>
+      <p>Organice facturas, notas y movimientos del comercio en un libro que siempre debe cuadrar.</p>
+    </div>
+    <button *ngIf="overview?.initialized" class="btn btn-outline-primary" type="button" (click)="syncMovements()" [disabled]="saving">
+      <i class="pi pi-refresh"></i> Sincronizar movimientos
+    </button>
+  </header>
+
+  <div *ngIf="loading" class="state-card">
+    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+    <span>Cargando la contabilidad del comercio…</span>
+  </div>
+
+  <div *ngIf="!loading && error" class="state-card error-state">
+    <i class="pi pi-exclamation-circle"></i>
+    <div><strong>No pudimos cargar esta información</strong><p>{{ error }}</p></div>
+    <button class="btn btn-outline-danger" type="button" (click)="loadAll()">Intentar nuevamente</button>
+  </div>
+
+  <section *ngIf="!loading && !error && !overview?.initialized" class="welcome-card">
+    <div class="welcome-icon"><i class="pi pi-book"></i></div>
+    <span class="step-label">CONFIGURACIÓN INICIAL · 3 PASOS</span>
+    <h2>Prepare la contabilidad de este comercio</h2>
+    <p class="welcome-copy">No necesita cargar un archivo ni conocer códigos. Katuq crea una plantilla inicial y usted podrá revisarla antes de que se contabilice algo.</p>
+    <div class="setup-steps">
+      <article><span>1</span><div><strong>Preparar las cuentas</strong><p>Caja, clientes, IVA, ventas, inventario, proveedores y gastos.</p></div></article>
+      <article><span>2</span><div><strong>Revisar y activar</strong><p>Confirme las siete cuentas principales con su contador o persona responsable.</p></div></article>
+      <article><span>3</span><div><strong>Trabajar normalmente</strong><p>Las facturas, notas DIAN y pagos aprobados crearán su comprobante automáticamente.</p></div></article>
+    </div>
+    <button class="btn btn-primary btn-lg" type="button" (click)="initialize()" [disabled]="saving">
+      <span *ngIf="saving" class="spinner-border spinner-border-sm"></span>
+      Preparar mi contabilidad
+    </button>
+    <small>La plantilla es editable y debe validarse según la realidad tributaria del comercio.</small>
+  </section>
+
+  <ng-container *ngIf="!loading && !error && overview?.initialized">
+    <div *ngIf="!isReady" class="activation-banner">
+      <div class="banner-icon"><i class="pi pi-shield"></i></div>
+      <div>
+        <strong>La contabilidad está preparada, pero aún no está activa</strong>
+        <p>Revise las cuentas principales. Mientras tanto, documentos y recaudos quedan como borradores y no afectan el balance.</p>
+      </div>
+      <button class="btn btn-success" type="button" (click)="selectTab('settings')">Revisar y activar</button>
+    </div>
+
+    <div *ngIf="isReady" class="active-banner">
+      <i class="pi pi-check-circle"></i>
+      <span><strong>Contabilidad activa.</strong> Las facturas, notas DIAN y pagos aprobados se contabilizan automáticamente.</span>
+    </div>
+
+    <section class="kpi-grid">
+      <article class="kpi-card status">
+        <span class="kpi-label">ESTADO</span>
+        <strong>{{ isReady ? 'Activa' : 'Por confirmar' }}</strong>
+        <small>{{ overview?.accounts || 0 }} cuentas preparadas</small>
+      </article>
+      <article class="kpi-card posted">
+        <span class="kpi-label">CONTABILIZADOS</span>
+        <strong>{{ overview?.journal?.posted || 0 }}</strong>
+        <small>Comprobantes en el libro</small>
+      </article>
+      <article class="kpi-card drafts">
+        <span class="kpi-label">POR REVISAR</span>
+        <strong>{{ overview?.journal?.drafts || 0 }}</strong>
+        <small>Borradores sin afectar saldos</small>
+      </article>
+      <article class="kpi-card balance" [class.danger]="(balance?.difference || 0) !== 0">
+        <span class="kpi-label">CUADRE DEL PERÍODO</span>
+        <strong>{{ (balance?.difference || 0) === 0 ? 'Correcto' : ((balance?.difference || 0) | currency:'COP':'symbol-narrow':'1.0-0') }}</strong>
+        <small>Débitos y créditos {{ (balance?.difference || 0) === 0 ? 'coinciden' : 'no coinciden' }}</small>
+      </article>
+    </section>
+
+    <nav class="accounting-tabs" aria-label="Secciones de contabilidad">
+      <button type="button" [class.active]="activeTab === 'summary'" (click)="selectTab('summary')"><i class="pi pi-home"></i> Resumen</button>
+      <button type="button" [class.active]="activeTab === 'journal'" (click)="selectTab('journal')"><i class="pi pi-book"></i> Comprobantes</button>
+      <button type="button" [class.active]="activeTab === 'balance'" (click)="selectTab('balance')"><i class="pi pi-chart-bar"></i> Balance de prueba</button>
+      <button type="button" [class.active]="activeTab === 'settings'" (click)="selectTab('settings')"><i class="pi pi-cog"></i> Configuración</button>
+    </nav>
+
+    <section *ngIf="activeTab === 'summary'" class="tab-panel summary-layout">
+      <article class="panel-card next-action">
+        <span class="card-kicker">LO MÁS IMPORTANTE AHORA</span>
+        <ng-container *ngIf="!isReady">
+          <h2>Confirme las cuentas antes de comenzar</h2>
+          <p>Katuq ya preparó la estructura. Solo falta revisar dónde se registran clientes, ventas, IVA y devoluciones.</p>
+          <button class="btn btn-primary" type="button" (click)="selectTab('settings')">Revisar las 7 cuentas</button>
+        </ng-container>
+        <ng-container *ngIf="isReady && (overview?.journal?.drafts || 0) > 0">
+          <h2>Hay {{ overview?.journal?.drafts }} comprobantes por revisar</h2>
+          <p>Son documentos creados antes de activar la contabilidad. Puede consultarlos en Comprobantes.</p>
+          <button class="btn btn-primary" type="button" (click)="selectTab('journal')">Ver comprobantes</button>
+        </ng-container>
+        <ng-container *ngIf="isReady && (overview?.journal?.drafts || 0) === 0">
+          <h2>Los libros están al día</h2>
+          <p>No hay borradores pendientes y el balance del período está cuadrado.</p>
+          <button class="btn btn-outline-primary" type="button" (click)="selectTab('balance')">Ver balance</button>
+        </ng-container>
+      </article>
+
+      <article class="panel-card explanation-card">
+        <span class="card-kicker">¿CÓMO FUNCIONA?</span>
+        <div class="explanation-row"><i class="pi pi-file"></i><div><strong>Factura aceptada</strong><p>Aumenta lo que el cliente debe, el ingreso y el IVA generado.</p></div></div>
+        <div class="explanation-row"><i class="pi pi-minus-circle"></i><div><strong>Nota crédito aceptada</strong><p>Disminuye la cuenta por cobrar y revierte venta e IVA.</p></div></div>
+        <div class="explanation-row"><i class="pi pi-plus-circle"></i><div><strong>Nota débito aceptada</strong><p>Aumenta la cuenta por cobrar y el mayor valor facturado.</p></div></div>
+        <div class="explanation-row"><i class="pi pi-wallet"></i><div><strong>Pago aprobado</strong><p>Aumenta caja o bancos y disminuye lo que el cliente debe. Si aún no hay factura, queda como anticipo y se aplica automáticamente cuando la DIAN la acepte.</p></div></div>
+      </article>
+
+      <article class="panel-card recent-card">
+        <div class="panel-heading"><div><span class="card-kicker">ACTIVIDAD RECIENTE</span><h2>Últimos comprobantes</h2></div><button type="button" class="text-button" (click)="selectTab('journal')">Ver todos</button></div>
+        <div *ngIf="!overview?.recentEntries?.length" class="empty-inline">Todavía no hay comprobantes. Aparecerán aquí cuando se contabilice una factura, nota o movimiento manual.</div>
+        <button *ngFor="let entry of overview?.recentEntries; trackBy: trackById" class="recent-entry" type="button" (click)="selectTab('journal')">
+          <span class="source-dot" [class.draft]="entry.status === 'draft'"></span>
+          <div><strong>{{ entry.description }}</strong><small>{{ entry.date }} · {{ sourceLabel(entry.sourceType) }}</small></div>
+          <span>{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </button>
+      </article>
+    </section>
+
+    <section *ngIf="activeTab === 'journal'" class="tab-panel">
+      <div class="panel-heading journal-heading">
+        <div><span class="card-kicker">LIBRO DIARIO</span><h2>Comprobantes contables</h2><p>Cada fila debe tener el mismo total en débitos y créditos.</p></div>
+        <button *ngIf="isReady" class="btn btn-primary" type="button" (click)="showManualEntry = !showManualEntry"><i class="pi pi-plus"></i> Nuevo comprobante</button>
+      </div>
+
+      <div *ngIf="showManualEntry" class="manual-card">
+        <div class="manual-heading"><div><span class="card-kicker">NUEVO MOVIMIENTO</span><h3>Comprobante manual</h3></div><button type="button" class="icon-button" (click)="showManualEntry = false" aria-label="Cerrar"><i class="pi pi-times"></i></button></div>
+        <div class="form-row-two">
+          <label><span>Fecha</span><input class="form-control" type="date" [(ngModel)]="manual.date"></label>
+          <label><span>¿Qué ocurrió?</span><input class="form-control" type="text" [(ngModel)]="manual.description" placeholder="Ej. Pago de servicio de internet"></label>
+        </div>
+        <div class="manual-lines">
+          <div class="line-head"><span>Cuenta</span><span>Detalle</span><span>Débito</span><span>Crédito</span><span></span></div>
+          <div *ngFor="let line of manual.lines; let i = index" class="line-row">
+            <select class="form-select" [(ngModel)]="line.accountCode"><option value="">Seleccione…</option><option *ngFor="let account of accounts" [value]="account.code" [disabled]="account.active === false">{{ account.code }} · {{ account.name }}</option></select>
+            <input class="form-control" type="text" [(ngModel)]="line.description" placeholder="Opcional">
+            <input class="form-control money-input" type="number" min="0" step="0.01" [(ngModel)]="line.debit" (ngModelChange)="line.credit = $event > 0 ? 0 : line.credit">
+            <input class="form-control money-input" type="number" min="0" step="0.01" [(ngModel)]="line.credit" (ngModelChange)="line.debit = $event > 0 ? 0 : line.debit">
+            <button class="icon-button danger" type="button" (click)="removeLine(i)" [disabled]="manual.lines.length <= 2" aria-label="Eliminar movimiento"><i class="pi pi-trash"></i></button>
+          </div>
+        </div>
+        <button class="text-button add-line" type="button" (click)="addLine()"><i class="pi pi-plus"></i> Agregar otra línea</button>
+        <div class="manual-footer">
+          <div class="totals"><span>Débitos <strong>{{ manualTotals.debit | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span><span>Créditos <strong>{{ manualTotals.credit | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span><span [class.difference]="manualTotals.difference !== 0">Diferencia <strong>{{ manualTotals.difference | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></span></div>
+          <button class="btn btn-success" type="button" (click)="saveManualEntry()" [disabled]="saving || manualTotals.difference !== 0 || manualTotals.debit <= 0">Contabilizar comprobante</button>
+        </div>
+      </div>
+
+      <div class="filter-bar"><i class="pi pi-search"></i><input type="search" [(ngModel)]="search" placeholder="Buscar por número, documento o concepto"></div>
+      <div *ngIf="!filteredEntries.length" class="empty-state"><i class="pi pi-book"></i><strong>No hay comprobantes para mostrar</strong><p>Cuando se contabilice una factura, una nota o un movimiento manual aparecerá aquí.</p></div>
+      <article *ngFor="let entry of filteredEntries; trackBy: trackById" class="entry-card" [class.draft]="entry.status === 'draft'">
+        <button class="entry-summary" type="button" (click)="toggleEntry(entry)">
+          <span class="entry-icon"><i [class]="entry.sourceType === 'manual' ? 'pi pi-pencil' : 'pi pi-file'"></i></span>
+          <div class="entry-main"><strong>{{ entry.description }}</strong><small>{{ entry.number }} · {{ entry.date }} · {{ sourceLabel(entry.sourceType) }}</small></div>
+          <span class="status-pill" [class.draft]="entry.status === 'draft'">{{ entry.status === 'posted' ? 'Contabilizado' : 'Borrador' }}</span>
+          <strong class="entry-amount">{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          <i [class]="expandedEntryId === entry.id ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+        </button>
+        <div *ngIf="expandedEntryId === entry.id" class="entry-detail">
+          <div class="detail-head"><span>Cuenta</span><span>Detalle</span><span>Débito</span><span>Crédito</span></div>
+          <div *ngFor="let line of entry.lines" class="detail-line"><span><b>{{ line.accountCode }}</b> {{ line.accountName }}</span><span>{{ line.description || '—' }}</span><span>{{ line.debit ? (line.debit | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</span><span>{{ line.credit ? (line.credit | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</span></div>
+          <div class="detail-total"><span>Total</span><span></span><strong>{{ entry.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</strong><strong>{{ entry.totalCredit | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <section *ngIf="activeTab === 'balance'" class="tab-panel">
+      <div class="panel-heading balance-heading">
+        <div><span class="card-kicker">BALANCE DE PRUEBA</span><h2>¿Cuánto se movió en cada cuenta?</h2><p>Solo incluye comprobantes contabilizados. Los borradores no afectan estos valores.</p></div>
+        <div class="period-filter"><label>Desde<input class="form-control" type="date" [(ngModel)]="periodFrom"></label><label>Hasta<input class="form-control" type="date" [(ngModel)]="periodTo"></label><button class="btn btn-outline-primary" type="button" (click)="loadAll()">Actualizar</button></div>
+      </div>
+      <div class="balance-status" [class.error]="(balance?.difference || 0) !== 0"><i [class]="(balance?.difference || 0) === 0 ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'"></i><div><strong>{{ (balance?.difference || 0) === 0 ? 'El balance está cuadrado' : 'El balance requiere revisión' }}</strong><p>{{ balance?.entries || 0 }} comprobantes incluidos entre {{ periodFrom }} y {{ periodTo }}.</p></div></div>
+      <div class="table-responsive balance-table-wrap">
+        <table class="table balance-table">
+          <thead><tr><th>Cuenta</th><th>Nombre</th><th class="text-end">Débitos</th><th class="text-end">Créditos</th><th class="text-end">Saldo</th></tr></thead>
+          <tbody><tr *ngFor="let row of balance?.rows"><td><strong>{{ row.accountCode }}</strong></td><td>{{ row.accountName }}</td><td class="text-end">{{ row.debit | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td class="text-end">{{ row.credit | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td class="text-end"><strong>{{ row.balance | currency:'COP':'symbol-narrow':'1.0-0' }}</strong></td></tr></tbody>
+          <tfoot><tr><td colspan="2">Totales</td><td class="text-end">{{ balance?.totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td class="text-end">{{ balance?.totalCredit | currency:'COP':'symbol-narrow':'1.0-0' }}</td><td class="text-end">Diferencia: {{ balance?.difference | currency:'COP':'symbol-narrow':'1.0-0' }}</td></tr></tfoot>
+        </table>
+      </div>
+      <div *ngIf="!balance?.rows?.length" class="empty-state"><i class="pi pi-chart-bar"></i><strong>El período todavía no tiene movimientos</strong><p>Cambie las fechas o espere a que se contabilicen documentos.</p></div>
+    </section>
+
+    <section *ngIf="activeTab === 'settings'" class="tab-panel settings-layout">
+      <article class="panel-card mapping-card">
+        <span class="card-kicker">PASO 1 DE 2</span>
+        <h2>Revise las cuentas principales</h2>
+        <p class="section-copy">No necesita revisar las 14 para comenzar. Estas siete controlan facturas, notas electrónicas, recaudos y anticipos.</p>
+        <label *ngFor="let item of mappings" class="mapping-row">
+          <div><strong>{{ item.label }}</strong><small>{{ item.help }}</small></div>
+          <select class="form-select" [(ngModel)]="accountMapping[item.key]"><option *ngFor="let account of accounts" [value]="account.code" [disabled]="account.active === false">{{ account.code }} · {{ account.name }}</option></select>
+        </label>
+        <button class="btn btn-outline-primary" type="button" (click)="saveMapping()" [disabled]="saving">Guardar selección</button>
+      </article>
+
+      <article class="panel-card activation-card">
+        <span class="card-kicker">PASO 2 DE 2</span>
+        <h2>{{ isReady ? 'La contabilización automática está activa' : 'Active cuando termine la revisión' }}</h2>
+        <p *ngIf="!isReady">Al activar, Katuq revisará documentos DIAN y pagos aprobados, y contabilizará los que tengan información completa.</p>
+        <p *ngIf="isReady">Las nuevas facturas, notas y pagos aprobados crearán un comprobante una sola vez. Los pagos anteriores a la factura se manejarán como anticipos.</p>
+        <ul class="safe-list"><li><i class="pi pi-check"></i> Cada comercio tiene su propio plan y sus propios libros.</li><li><i class="pi pi-check"></i> Un documento repetido no duplica el asiento.</li><li><i class="pi pi-check"></i> Una factura aceptada no se invalida si falla el registro contable.</li></ul>
+        <button *ngIf="!isReady" class="btn btn-success btn-lg" type="button" (click)="activate()" [disabled]="saving">Confirmar y activar</button>
+        <button *ngIf="isReady" class="btn btn-outline-primary" type="button" (click)="syncMovements()" [disabled]="saving">Sincronizar movimientos anteriores</button>
+      </article>
+
+      <article class="panel-card accounts-card">
+        <div class="panel-heading"><div><span class="card-kicker">PLAN COMPLETO</span><h2>{{ accounts.length }} cuentas del comercio</h2></div></div>
+        <div class="account-list"><div *ngFor="let account of accounts; trackBy: trackById" class="account-row" [class.inactive]="account.active === false"><span class="account-code">{{ account.code }}</span><div><strong>{{ account.name }}</strong><small>{{ accountTypeLabel(account.type) }} · Naturaleza {{ account.nature === 'debit' ? 'débito' : 'crédito' }}</small></div><span class="status-dot" [class.off]="account.active === false"></span></div></div>
+        <div class="advice-box"><i class="pi pi-info-circle"></i><p>Esta es una plantilla inicial. Retenciones, costos, inventarios, centros de costo y cuentas especiales deben configurarse según la operación real del comercio.</p></div>
+      </article>
+    </section>
+  </ng-container>
+</div>

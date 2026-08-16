@@ -250,6 +250,15 @@ export const content: Routes = [
     data: { title: "Facturación electrónica" },
   },
   {
+    path: "contabilidad",
+    loadChildren: () =>
+      import("../../components/contabilidad/contabilidad.module").then(
+        (m) => m.ContabilidadModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Contabilidad" },
+  },
+  {
     path: "soporte",
     loadChildren: () =>
       import("../../components/soporte/soporte.module").then(
