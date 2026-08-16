@@ -1356,6 +1356,26 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       const city = current.ciudad || current.city || '';
       const department = current.departamento || current.department || '';
       this.dianMunicipalitySearch = city ? `${city}${department ? ' - ' + department : ''}` : '';
+      if (!issuer.get('municipalityCode')?.value && city) {
+        const normalize = (value: string) => String(value || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .trim()
+          .toLowerCase();
+        this.daneCodesService.searchMunicipios(city).pipe(takeUntil(this.destroy$)).subscribe((matches) => {
+          const sameCity = matches.filter((municipality) => normalize(municipality.nombre) === normalize(city));
+          const exact = sameCity.find((municipality) =>
+            !department || normalize(municipality.departamento) === normalize(department)
+          ) || (sameCity.length === 1 ? sameCity[0] : undefined);
+          if (!exact) return;
+          issuer.patchValue({
+            municipalityCode: exact.codigo,
+            cityName: exact.nombre,
+            department: exact.departamento,
+          }, { emitEvent: false });
+          this.dianMunicipalitySearch = `${exact.nombre} - ${exact.departamento}`;
+        });
+      }
     } catch (_) {
       // El usuario puede completar los datos manualmente si el perfil legacy no es JSON válido.
     }
