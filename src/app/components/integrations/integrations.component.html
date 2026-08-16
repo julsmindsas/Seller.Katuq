@@ -1826,10 +1826,10 @@
             <div class="card-body">
               <p class="text-muted">Si es la primera vez, elige pruebas. Usa producción solamente cuando el portal DIAN muestre el comercio como HABILITADO.</p>
               <div class="dian-environments">
-                <button type="button" [class.is-selected]="integrationForm.get('environment')?.value === 'habilitacion'" (click)="integrationForm.get('environment')?.setValue('habilitacion')">
+                <button type="button" [class.is-selected]="integrationForm.get('environment')?.value === 'habilitacion'" (click)="selectDianEnvironment('habilitacion')">
                   <i class="fa fa-vial"></i><span><strong>Estoy haciendo las pruebas</strong><small>Es la opción correcta para comenzar.</small></span>
                 </button>
-                <button type="button" [class.is-selected]="integrationForm.get('environment')?.value === 'produccion'" (click)="integrationForm.get('environment')?.setValue('produccion')">
+                <button type="button" [class.is-selected]="integrationForm.get('environment')?.value === 'produccion'" (click)="selectDianEnvironment('produccion')">
                   <i class="fa fa-check-circle"></i><span><strong>Ya estoy habilitado</strong><small>Emitiré facturas con efectos fiscales.</small></span>
                 </button>
               </div>
@@ -1875,20 +1875,21 @@
           </div>
 
           <div class="card mb-4" formGroupName="numbering" *ngIf="dianStep === 3">
-            <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-list-ol me-2"></i>Numeración autorizada</h6></div>
+            <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-list-ol me-2"></i>{{ integrationForm.get('environment')?.value === 'habilitacion' ? 'Rango DIAN preparado automáticamente' : 'Numeración autorizada' }}</h6></div>
             <div class="card-body">
-              <div class="dian-path-help"><i class="fa fa-map-signs"></i><div><strong>En la DIAN abre:</strong><span>Numeración de facturación → Consultar numeración → selecciona el rango asociado a Katuq.</span></div></div>
+              <div class="alert alert-success" *ngIf="integrationForm.get('environment')?.value === 'habilitacion'"><i class="fa fa-check-circle me-2"></i><strong>Este paso ya está listo.</strong> Katuq aplicó el rango oficial de habilitación SETP; no tienes que copiar nada más desde la DIAN.</div>
+              <div class="dian-path-help" *ngIf="integrationForm.get('environment')?.value === 'produccion'"><i class="fa fa-map-signs"></i><div><strong>En la DIAN abre:</strong><span>Numeración de facturación → Consultar numeración → selecciona el rango asociado a Katuq.</span></div></div>
               <div class="field-row">
-                <div class="field-col form-group"><label>Número de autorización o resolución *</label><input type="text" class="form-control" formControlName="resolutionNumber" placeholder="Ejemplo: 18764000000000"></div>
-                <div class="field-col form-group"><label>Prefijo de factura *</label><input type="text" class="form-control" formControlName="prefix" placeholder="Ejemplo: SETP o FE"></div>
+                <div class="field-col form-group"><label>Número de autorización o resolución *</label><input type="text" class="form-control" formControlName="resolutionNumber" [readonly]="integrationForm.get('environment')?.value === 'habilitacion'" placeholder="Ejemplo: 18764000000000"></div>
+                <div class="field-col form-group"><label>Prefijo de factura *</label><input type="text" class="form-control" formControlName="prefix" [readonly]="integrationForm.get('environment')?.value === 'habilitacion'" placeholder="Ejemplo: SETP o FE"></div>
               </div>
               <div class="field-row">
-                <div class="field-col form-group"><label>Primer número autorizado *</label><input type="number" class="form-control" formControlName="from" min="1" (change)="syncDianCurrentFromRange()"></div>
-                <div class="field-col form-group"><label>Último número autorizado *</label><input type="number" class="form-control" formControlName="to" min="1"></div>
-                <div class="field-col form-group"><label>Fecha inicial *</label><input type="date" class="form-control" formControlName="validFrom"></div>
-                <div class="field-col form-group"><label>Fecha final *</label><input type="date" class="form-control" formControlName="validTo"></div>
+                <div class="field-col form-group"><label>Primer número autorizado *</label><input type="number" class="form-control" formControlName="from" min="1" [readonly]="integrationForm.get('environment')?.value === 'habilitacion'" (change)="syncDianCurrentFromRange()"></div>
+                <div class="field-col form-group"><label>Último número autorizado *</label><input type="number" class="form-control" formControlName="to" min="1" [readonly]="integrationForm.get('environment')?.value === 'habilitacion'"></div>
+                <div class="field-col form-group"><label>Fecha inicial *</label><input type="date" class="form-control" formControlName="validFrom" [readonly]="integrationForm.get('environment')?.value === 'habilitacion'"></div>
+                <div class="field-col form-group"><label>Fecha final *</label><input type="date" class="form-control" formControlName="validTo" [readonly]="integrationForm.get('environment')?.value === 'habilitacion'"></div>
               </div>
-              <button type="button" class="dian-disclosure" (click)="dianShowAdvancedNumbering = !dianShowAdvancedNumbering">
+              <button type="button" class="dian-disclosure" *ngIf="integrationForm.get('environment')?.value === 'produccion'" (click)="dianShowAdvancedNumbering = !dianShowAdvancedNumbering">
                 <i class="fa" [ngClass]="dianShowAdvancedNumbering ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                 {{ dianShowAdvancedNumbering ? 'Ocultar opciones avanzadas' : 'Opciones avanzadas: consecutivo actual y prefijos de notas' }}
               </button>
@@ -1898,7 +1899,7 @@
             </div>
           </div>
 
-          <div class="card mb-4 dian-secondary-card" formGroupName="noteNumbering" *ngIf="dianStep === 3 && dianShowAdvancedNumbering">
+          <div class="card mb-4 dian-secondary-card" formGroupName="noteNumbering" *ngIf="dianStep === 3 && dianShowAdvancedNumbering && integrationForm.get('environment')?.value === 'produccion'">
             <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-file-alt me-2"></i>Prefijos internos para notas</h6></div>
             <div class="card-body">
               <p class="text-muted">Normalmente no necesitas cambiar estos valores. Katuq los usa para llevar el consecutivo de las notas.</p>

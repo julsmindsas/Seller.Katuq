@@ -14,6 +14,18 @@ import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { DaneCodesService } from '../../shared/services/dane-codes.service';
 import { MunicipioDane } from '../../shared/data/colombia-dane-codes';
 
+// El catálogo DIAN asigna este mismo rango a software propio en habilitación.
+// No se le pide al comercio copiarlo: no es una resolución de producción.
+const DIAN_HABILITATION_NUMBERING = Object.freeze({
+  resolutionNumber: '18760000001',
+  prefix: 'SETP',
+  from: 990000000,
+  to: 995000000,
+  current: 990000000,
+  validFrom: '2019-01-19',
+  validTo: '2030-01-19'
+});
+
 @Component({
   selector: 'app-integrations',
   templateUrl: './integrations.component.html',
@@ -93,7 +105,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   readonly dianSteps = [
     { number: 1, title: 'Comercio', subtitle: 'Confirmar datos del RUT' },
     { number: 2, title: 'Firma digital', subtitle: 'Copiar códigos y subir certificado' },
-    { number: 3, title: 'Rango de facturas', subtitle: 'Copiar la numeración autorizada' },
+    { number: 3, title: 'Rango de facturas', subtitle: 'Automático durante las pruebas' },
     { number: 4, title: 'Revisar', subtitle: 'Confirmar antes de guardar' },
     { number: 5, title: 'Activar', subtitle: 'Completar pruebas o comenzar' }
   ];
@@ -1129,13 +1141,13 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         email: ['', Validators.email]
       }),
       numbering: this.fb.group({
-        resolutionNumber: ['', Validators.required],
-        prefix: ['', Validators.required],
-        from: [1, [Validators.required, Validators.min(1)]],
-        to: [1, [Validators.required, Validators.min(1)]],
-        current: [1, [Validators.required, Validators.min(1)]],
-        validFrom: ['', Validators.required],
-        validTo: ['', Validators.required]
+        resolutionNumber: [DIAN_HABILITATION_NUMBERING.resolutionNumber, Validators.required],
+        prefix: [DIAN_HABILITATION_NUMBERING.prefix, Validators.required],
+        from: [DIAN_HABILITATION_NUMBERING.from, [Validators.required, Validators.min(1)]],
+        to: [DIAN_HABILITATION_NUMBERING.to, [Validators.required, Validators.min(1)]],
+        current: [DIAN_HABILITATION_NUMBERING.current, [Validators.required, Validators.min(1)]],
+        validFrom: [DIAN_HABILITATION_NUMBERING.validFrom, Validators.required],
+        validTo: [DIAN_HABILITATION_NUMBERING.validTo, Validators.required]
       }),
       noteNumbering: this.fb.group({
         creditPrefix: ['NC', Validators.required],
@@ -1203,6 +1215,19 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     const current = this.integrationForm.get('numbering.current');
     if (Number.isFinite(from) && from > 0 && (current?.pristine || !current?.value)) {
       current?.setValue(from);
+    }
+  }
+
+  selectDianEnvironment(environmentName: 'habilitacion' | 'produccion'): void {
+    this.integrationForm.get('environment')?.setValue(environmentName);
+    if (environmentName === 'habilitacion' && !this.editingIntegrationId) {
+      this.integrationForm.get('numbering')?.patchValue({ ...DIAN_HABILITATION_NUMBERING });
+    }
+    if (environmentName === 'produccion' && !this.editingIntegrationId) {
+      this.integrationForm.get('numbering')?.reset({
+        resolutionNumber: '', prefix: '', from: 1, to: 1, current: 1,
+        validFrom: '', validTo: ''
+      });
     }
   }
 
@@ -1314,10 +1339,14 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const issuer = this.integrationForm.get('issuer');
       if (!issuer) return;
+      const rawNit = String(current.nit || user.nit || '').replace(/\D/g, '');
+      const explicitDv = String(current.dv || current.digitoVerificacion || '');
+      const nit = !explicitDv && rawNit.length === 10 ? rawNit.slice(0, -1) : rawNit;
+      const dv = explicitDv || (rawNit.length === 10 ? rawNit.slice(-1) : '');
       issuer.patchValue({
         businessName: current.razonSocial || current.nombre || current.nomComercial || '',
-        nit: String(current.nit || user.nit || '').replace(/\D/g, ''),
-        dv: String(current.dv || current.digitoVerificacion || ''),
+        nit,
+        dv,
         address: current.direccion || current.address || '',
         municipalityCode: current.codigoMunicipio || current.municipalityCode || '',
         cityName: current.ciudad || current.city || '',
