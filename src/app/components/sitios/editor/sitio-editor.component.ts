@@ -16,6 +16,12 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     icono: "M3 5h18v5H3zM6 15h6",
   },
   {
+    tipo: "anuncio",
+    nombre: "Barra de anuncios",
+    descripcion: "Una franja arriba: envío gratis, rebajas, lo que quieras gritar",
+    icono: "M3 6h18v4H3zM7 14h10",
+  },
+  {
     tipo: "hero",
     nombre: "Portada",
     descripcion: "Lo primero que ve tu cliente al entrar",
@@ -92,6 +98,12 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     nombre: "Catálogo completo",
     descripcion: "Todo lo que vendes, con buscador y categorías",
     icono: "M4 6h16M4 12h16M4 18h10M20 16l2 2-2 2",
+  },
+  {
+    tipo: "categorias",
+    nombre: "Compra por categoría",
+    descripcion: "Baldosas con tus categorías; se llenan solas desde tu catálogo",
+    icono: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
   },
   {
     tipo: "video",
@@ -383,6 +395,8 @@ const SECCIONES_LISTAS: {
 const BLOQUE_NUEVO: { [tipo: string]: any } = {
   // El logo no va aquí: sale del kit de marca de la empresa al renderizar.
   encabezado: { nombre: "", mostrarLogo: true, enlaces: [], ctaTexto: "", ctaUrl: "", fijo: false },
+  anuncio: { texto: "Envíos a todo el país", url: "", marquesina: true },
+  categorias: { titulo: "Compra por categoría", maximo: 6 },
   hero: {
     titulo: "Título principal",
     subtitulo: "",
@@ -989,6 +1003,11 @@ export class SitioEditorComponent implements OnInit {
     this.seleccionado = this.contenido.bloques.length - 1;
     this.mostrandoAgregar = false;
     this.marcarSucio();
+  }
+
+  /** Si la página ya tiene un bloque de este tipo (para avisos entre bloques). */
+  hayBloque(tipo: string): boolean {
+    return this.bloques.some((b) => b.tipo === tipo);
   }
 
   duplicar(i: number): void {

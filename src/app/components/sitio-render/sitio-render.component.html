@@ -42,6 +42,15 @@
         </header>
 
         <!-- Banner principal -->
+        <!-- Barra de anuncios. En el editor no desfila: distrae mientras se
+             edita; el movimiento se ve en la página publicada. -->
+        <aside *ngSwitchCase="'anuncio'" class="bloque anuncio">
+          <span [attr.contenteditable]="previsualizacion ? true : null"
+                (blur)="alTerminarEdicion($event, bloque.id, 'texto')"
+                (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)"
+                [class.editable]="previsualizacion">{{ bloque.datos.texto || 'Escribe tu anuncio' }}</span>
+        </aside>
+
         <section *ngSwitchCase="'hero'" class="bloque hero"
                  [class.hero--con-imagen]="bloque.datos.imagen"
                  [class.hero--completa]="bloque.datos.altura === 'completa'"
@@ -235,6 +244,19 @@
               al publicar.
             </p>
           </div>
+        </section>
+
+        <!-- Compra por categoría. Como el catálogo: las baldosas reales las
+             resuelve el servidor al publicar; aquí se enseña la forma. -->
+        <section *ngSwitchCase="'categorias'" class="bloque categorias">
+          <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
+          <div class="categorias__esqueleto">
+            <span *ngFor="let n of [1,2,3,4,5,6].slice(0, bloque.datos.maximo || 6)"></span>
+          </div>
+          <p class="vacio">
+            Las baldosas se llenan solas con las categorías de tus productos y la foto de uno de
+            ellos, al publicar.
+          </p>
         </section>
 
         <!-- Video. En el editor no se carga el reproductor: sería un tercero

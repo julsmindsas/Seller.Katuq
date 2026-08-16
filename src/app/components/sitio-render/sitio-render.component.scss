@@ -590,6 +590,33 @@ h3 {
   }
 }
 
+// ── Barra de anuncios ────────────────────────────────────────────────────────
+// En el editor no desfila: el movimiento se ve en la página publicada.
+.anuncio {
+  background: var(--sitio-primario);
+  color: var(--sitio-secundario, #fff);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.5rem 1rem;
+  text-align: center;
+}
+
+// ── Compra por categoría ─────────────────────────────────────────────────────
+.categorias__esqueleto {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+
+  span {
+    display: block;
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.06);
+  }
+}
+
 // ── Columnas, imagen suelta, botones, separador y texto con formato ──────────
 // Espejo de la hoja de la página publicada (`utils/siteHtml.js`).
 .columnas__grid {

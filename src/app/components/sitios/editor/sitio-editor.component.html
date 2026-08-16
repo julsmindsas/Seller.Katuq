@@ -193,6 +193,29 @@
             </button>
           </ng-container>
 
+          <!-- Barra de anuncios -->
+          <ng-container *ngIf="b.tipo === 'anuncio'">
+            <div class="campo">
+              <label>Anuncio</label>
+              <input type="text" [(ngModel)]="b.datos.texto" (ngModelChange)="marcarSucio()"
+                     maxlength="90" placeholder="Envío gratis desde $150.000" />
+            </div>
+            <div class="campo">
+              <label>Al tocarlo lleva a (opcional)</label>
+              <input type="text" [(ngModel)]="b.datos.url" (ngModelChange)="marcarSucio()"
+                     placeholder="#catalogo o https://…" />
+            </div>
+            <button class="opcion" [class.is-active]="b.datos.marquesina"
+                    (click)="b.datos.marquesina = !b.datos.marquesina; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Que desfile</strong>
+                <small>El texto se repite y se mueve, como en las tiendas grandes. Necesita el
+                  movimiento encendido en la pestaña Estilo.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+          </ng-container>
+
           <ng-container *ngIf="b.tipo === 'hero'">
             <div class="campo">
               <label>Título</label>
@@ -439,6 +462,31 @@
             </button>
             <p class="aviso" *ngIf="b.datos.permitirCompra && !contenido.tienda.habilitada">
               Para que el botón aparezca, enciende la tienda en la pestaña <strong>Tienda</strong>.
+            </p>
+          </ng-container>
+
+          <!-- Compra por categoría -->
+          <ng-container *ngIf="b.tipo === 'categorias'">
+            <p class="nota">
+              Las baldosas <strong>se llenan solas</strong> con las categorías de tus productos y la
+              foto de uno de ellos. Al tocarlas, filtran el catálogo de esta misma página.
+            </p>
+            <div class="campo">
+              <label>Título</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
+            </div>
+            <div class="campo">
+              <label>Cuántas mostrar</label>
+              <select [(ngModel)]="b.datos.maximo" (ngModelChange)="marcarSucio()">
+                <option [ngValue]="4">4</option>
+                <option [ngValue]="6">6</option>
+                <option [ngValue]="8">8</option>
+                <option [ngValue]="12">12</option>
+              </select>
+            </div>
+            <p class="aviso" *ngIf="!hayBloque('catalogo')">
+              Esta página no tiene <strong>Catálogo completo</strong>: agrega uno para que las
+              baldosas tengan a dónde llevar.
             </p>
           </ng-container>
 
