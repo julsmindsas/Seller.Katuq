@@ -394,7 +394,7 @@ const SECCIONES_LISTAS: {
 /** Valores iniciales de un bloque recién agregado. */
 const BLOQUE_NUEVO: { [tipo: string]: any } = {
   // El logo no va aquí: sale del kit de marca de la empresa al renderizar.
-  encabezado: { nombre: "", mostrarLogo: true, enlaces: [], ctaTexto: "", ctaUrl: "", fijo: false },
+  encabezado: { nombre: "", mostrarLogo: true, enlaces: [], ctaTexto: "", ctaUrl: "", fijo: false, mostrarCategorias: false },
   anuncio: { texto: "Envíos a todo el país", url: "", marquesina: true },
   categorias: { titulo: "Compra por categoría", maximo: 6 },
   hero: {

@@ -39,6 +39,11 @@
           <p class="vacio" *ngIf="previsualizacion && !logo && bloque.datos.mostrarLogo !== false">
             Sube tu logo en “Mi marca” y aparecerá aquí, en todas tus páginas.
           </p>
+
+          <!-- Las categorías reales las resuelve el servidor al publicar. -->
+          <nav class="cabecera__cats" *ngIf="bloque.datos.mostrarCategorias">
+            <a>tus categorías</a><a>salen aquí</a><a>al publicar</a>
+          </nav>
         </header>
 
         <!-- Banner principal -->

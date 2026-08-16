@@ -172,6 +172,16 @@
               <span class="palanca"><span></span></span>
             </button>
 
+            <button class="opcion" [class.is-active]="b.datos.mostrarCategorias"
+                    (click)="b.datos.mostrarCategorias = !b.datos.mostrarCategorias; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Menú de categorías</strong>
+                <small>Una fila con tus categorías reales; tocar una lleva al catálogo ya
+                  filtrado. Necesita un catálogo en la página.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
             <div class="campo">
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="30" />
