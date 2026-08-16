@@ -35,15 +35,37 @@ h3 {
   line-height: var(--sitio-titulo-altura, 1.15);
 }
 
+// Espejo de los anchos de la página publicada: de borde a borde por defecto
+// (anuncio, encabezado, portada, pie), vitrina ancha para el comercio y ancho
+// de lectura solo donde hay texto.
 .bloque {
   padding: var(--sitio-aire, 2.5rem) 1.25rem;
-  max-width: var(--sitio-ancho, 1100px);
   margin: 0 auto;
 
   h2 {
     font-size: calc(1.5rem * var(--sitio-titulo-escala, 1));
     margin-bottom: 1rem;
   }
+}
+
+.productos,
+.catalogo,
+.categorias,
+.galeria,
+.columnas,
+.seccion,
+.resenas,
+.botones,
+.video {
+  max-width: 1480px;
+}
+
+.texto,
+.faq,
+.formulario,
+.ubicacion,
+.whatsapp {
+  max-width: var(--sitio-ancho, 1100px);
 }
 
 // ── Banner ───────────────────────────────────────────────────────────────────
