@@ -295,22 +295,17 @@ h3 {
   gap: 1rem;
 }
 
+// Tarjeta sin caja, espejo de la página publicada: la foto manda.
 .producto {
-  border: 1px solid var(--sitio-borde, rgba(0, 0, 0, 0.08));
-  border-radius: var(--sitio-radio, 12px);
-  box-shadow: var(--sitio-sombra, none);
-  padding: 0.75rem;
-  background: #fff;
-
   &__foto {
     aspect-ratio: 1 / 1;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: var(--sitio-radio, 12px);
     background: #f4f4f5;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.7rem;
 
     img {
       width: 100%;
@@ -320,14 +315,20 @@ h3 {
   }
 
   h3 {
-    font-size: 0.95rem;
-    line-height: 1.3;
-    margin-bottom: 0.25rem;
+    font-family: var(--sitio-fuente);
+    font-weight: 500;
+    font-size: 0.88rem;
+    letter-spacing: 0;
+    text-transform: none;
+    line-height: 1.4;
+    margin-bottom: 0.3rem;
+    opacity: 0.92;
   }
 
   &__precio {
-    font-weight: 700;
-    color: var(--sitio-primario);
+    font-weight: 650;
+    color: inherit;
+    font-size: 0.95rem;
   }
 }
 
