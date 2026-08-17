@@ -4438,3 +4438,18 @@ El usuario preguntó si el fix de hoy garantiza que el patrón de DAD-012131 no 
 - **Volver de la pasarela cae en la portada**: `crearPedido` redirige a `/gracias?pedido=N`, ruta que no existe (Caddy reescribe todo al render).
 - Sin cupones, sin recoger en tienda (`formaEntrega` clavado en "Envío a Domicilio"), sin historial ni seguimiento para el comprador, sin relacionados.
 - **Borrar una página publicada no existe** (ni endpoint ni botón).
+
+---
+
+## D-204 (2026-08-17) — Reserva de inventario para la tienda en línea: descontar al crear, devolver al anular (EN CURSO)
+
+**Contexto.** Auditoría del WMS confirmó: no existe reserva como tal, pero sí su antesala (`availabilityService` con disponible/comprometido/físico esperado, ya en pantalla). Los pedidos de tienda solo descontaban con el webhook de pago Aprobado → contra entrega y pagos manuales sobrevendían sin freno, y además rompían el supuesto de `availabilityService` (contaban como comprometido sin haber descontado: doble conteo del apartado).
+
+**Decisión.** La reserva de la fase 1 es **el mismo modelo de los demás canales**: descontar al crear el pedido (`updateByPOS`, bodega fija de la tienda) y devolver por el camino existente al anular/rechazar (`restoreStock`, idempotente). Sin colección nueva, sin campo de saldo nuevo — coherente con el roadmap WMS (reservas = Fase 2) y con la regla de "libro único". Un pedido de pasarela que nunca se paga queda descontado hasta que el comerciante lo anule en el panel (paridad exacta con venta asistida).
+
+**Estado de implementación:**
+1. ✅ **Checkout valida contra `inventory` real de la bodega de la tienda** (getRealStockMap + cantidad pedida) — desplegado y probado contra existencias reales.
+2. ✅ **Guarda de transición en `webhookPago`**: si el pedido lleva `inventarioDescontadoAlCrear === true`, el webhook NO vuelve a descontar (evita el doble descuento). Desplegada — inofensiva sola porque nada escribe la marca todavía.
+3. ⏳ **Descuento en `crearPedido`** (escribe la marca): diff listo, **pendiente de aprobación explícita** (regla de módulos sensibles + el clasificador de permisos lo frenó). Es la única pieza que cambia comportamiento.
+
+**Pendientes posteriores (no bloquean):** vencimiento automático que devuelva pedidos de pasarela nunca pagados (barrido con `restoreStock` por antigüedad), y encender `controlExistenciasVenta` por empresa como freno adicional.
