@@ -136,6 +136,12 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     icono: "M3 9h4v6H3zM10 9h4v6h-4zM17 9h4v6h-4z",
   },
   {
+    tipo: "instagram",
+    nombre: "Instagram",
+    descripcion: "Una rejilla de fotos que lleva a tu perfil",
+    icono: "M4 4h16v16H4zM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zM16.8 7.2h.01",
+  },
+  {
     tipo: "video",
     nombre: "Video",
     descripcion: "De YouTube o Vimeo, para mostrar tu trabajo",
@@ -440,6 +446,7 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   contador: { titulo: "La oferta termina en", hasta: "", mensajeFin: "La oferta terminó", ctaTexto: "", ctaUrl: "" },
   suscripcion: { titulo: "Entérate primero", descripcion: "Novedades y rebajas antes que nadie, sin spam.", textoBoton: "Suscribirme" },
   marcas: { titulo: "Trabajamos con", logos: [] },
+  instagram: { titulo: "Síguenos en Instagram", usuario: "", fotos: [] },
   hero: {
     titulo: "Título principal",
     subtitulo: "",
@@ -1094,6 +1101,16 @@ export class SitioEditorComponent implements OnInit {
     this.marcarSucio();
   }
 
+  quitarFotoCarrusel(bloque: any, i: number): void {
+    bloque.datos.imagenes.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  quitarFotoInstagram(bloque: any, i: number): void {
+    bloque.datos.fotos.splice(i, 1);
+    this.marcarSucio();
+  }
+
   duplicar(i: number): void {
     if (!this.contenido) return;
     const copia = JSON.parse(JSON.stringify(this.bloques[i]));
@@ -1695,7 +1712,16 @@ export class SitioEditorComponent implements OnInit {
 
   subirImagen(
     evento: Event,
-    destino: "hero" | "galeria" | "seo" | "imagenBloque" | "fondoSeccion" | "promo" | "marcas"
+    destino:
+      | "hero"
+      | "galeria"
+      | "seo"
+      | "imagenBloque"
+      | "fondoSeccion"
+      | "promo"
+      | "marcas"
+      | "heroCarrusel"
+      | "instagram"
   ): void {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
@@ -1720,6 +1746,8 @@ export class SitioEditorComponent implements OnInit {
           if (destino === "imagenBloque") b.datos.url = res.url;
           if (destino === "galeria") b.datos.imagenes = [...(b.datos.imagenes || []), { url: res.url, alt: "" }];
           if (destino === "marcas") b.datos.logos = [...(b.datos.logos || []), { url: res.url, alt: "" }];
+          if (destino === "heroCarrusel") b.datos.imagenes = [...(b.datos.imagenes || []), res.url];
+          if (destino === "instagram") b.datos.fotos = [...(b.datos.fotos || []), res.url];
           if (destino === "fondoSeccion") {
             const estilo = this.estiloDe(b);
             estilo.fondoImagen = res.url;

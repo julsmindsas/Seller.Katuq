@@ -40,6 +40,15 @@
             Sube tu logo en “Mi marca” y aparecerá aquí, en todas tus páginas.
           </p>
 
+          <!-- Buscador y carrito, espejo de la página publicada. -->
+          <div class="cabecera__buscar" *ngIf="bloque.datos.mostrarBuscador">
+            <input type="search" placeholder="Buscar productos…" disabled />
+          </div>
+          <span class="cabecera__carrito" *ngIf="bloque.datos.mostrarCarrito">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h14l-1.5 9h-11z"/><path d="M6 7 5 3H2"/><circle cx="9.5" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>
+            <b>2</b>
+          </span>
+
           <!-- Las categorías reales las resuelve el servidor al publicar. -->
           <nav class="cabecera__cats" *ngIf="bloque.datos.mostrarCategorias">
             <a>tus categorías</a><a>salen aquí</a><a>al publicar</a>
@@ -307,6 +316,18 @@
               <a class="boton">{{ bloque.datos.textoBoton || 'Suscribirme' }}</a>
             </div>
           </div>
+        </section>
+
+        <!-- Instagram -->
+        <section *ngSwitchCase="'instagram'" class="bloque insta">
+          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <p class="insta__usuario" *ngIf="bloque.datos.usuario">@{{ bloque.datos.usuario }}</p>
+          <div class="insta__grid" *ngIf="bloque.datos.fotos?.length; else instaVacia">
+            <span class="insta__foto" *ngFor="let f of bloque.datos.fotos"><img [src]="f" alt="" /></span>
+          </div>
+          <ng-template #instaVacia>
+            <p class="vacio">Pon tu usuario y sube tus mejores fotos; cada una llevará a tu perfil.</p>
+          </ng-template>
         </section>
 
         <!-- Franja de marcas -->

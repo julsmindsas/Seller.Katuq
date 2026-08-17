@@ -182,6 +182,26 @@
               <span class="palanca"><span></span></span>
             </button>
 
+            <button class="opcion" [class.is-active]="b.datos.mostrarBuscador"
+                    (click)="b.datos.mostrarBuscador = !b.datos.mostrarBuscador; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Buscador en la barra</strong>
+                <small>El visitante escribe y el catálogo de la página se filtra.
+                  Necesita un catálogo en la página.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
+            <button class="opcion" [class.is-active]="b.datos.mostrarCarrito"
+                    (click)="b.datos.mostrarCarrito = !b.datos.mostrarCarrito; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Carrito en la barra</strong>
+                <small>El icono con el contador de productos. Solo aparece con la
+                  tienda encendida.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
             <div class="campo">
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="30" />
@@ -258,6 +278,23 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
                 {{ subiendo ? 'Subiendo…' : 'Elegir una foto' }}
                 <input type="file" accept="image/*" (change)="subirImagen($event, 'hero')" [disabled]="subiendo" />
+              </label>
+            </div>
+
+            <div class="campo">
+              <label>Carrusel (opcional)</label>
+              <small>Sube dos o más fotos y la portada las rota sola, con puntos para saltar.
+                Manda sobre la imagen de fondo.</small>
+              <div class="miniaturas" *ngIf="b.datos.imagenes?.length">
+                <div class="miniatura" *ngFor="let img of b.datos.imagenes; let i = index">
+                  <img [src]="img" alt="" />
+                  <button (click)="quitarFotoCarrusel(b, i)" title="Quitar">×</button>
+                </div>
+              </div>
+              <label class="archivo" *ngIf="(b.datos.imagenes?.length || 0) < 5">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
+                {{ subiendo ? 'Subiendo…' : 'Agregar foto al carrusel' }}
+                <input type="file" accept="image/*" (change)="subirImagen($event, 'heroCarrusel')" [disabled]="subiendo" />
               </label>
             </div>
 
@@ -594,6 +631,34 @@
             <div class="campo">
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.textoBoton" (ngModelChange)="marcarSucio()" maxlength="30" />
+            </div>
+          </ng-container>
+
+          <!-- Instagram -->
+          <ng-container *ngIf="b.tipo === 'instagram'">
+            <div class="campo">
+              <label>Tu usuario de Instagram</label>
+              <input type="text" [(ngModel)]="b.datos.usuario" (ngModelChange)="marcarSucio()"
+                     maxlength="30" placeholder="mitienda (sin @)" />
+              <small>Cada foto lleva a tu perfil. Sin usuario, la sección no se publica.</small>
+            </div>
+            <div class="campo">
+              <label>Título</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="90" />
+            </div>
+            <div class="miniaturas" *ngIf="b.datos.fotos?.length">
+              <div class="miniatura" *ngFor="let f of b.datos.fotos; let i = index">
+                <img [src]="f" alt="" />
+                <button (click)="quitarFotoInstagram(b, i)" title="Quitar">×</button>
+              </div>
+            </div>
+            <div class="campo">
+              <label class="archivo" *ngIf="(b.datos.fotos?.length || 0) < 6">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
+                {{ subiendo ? 'Subiendo…' : 'Agregar una foto' }}
+                <input type="file" accept="image/*" (change)="subirImagen($event, 'instagram')" [disabled]="subiendo" />
+              </label>
+              <small>Usa tus mejores publicaciones. Hasta 6.</small>
             </div>
           </ng-container>
 
