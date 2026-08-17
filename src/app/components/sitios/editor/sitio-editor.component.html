@@ -475,6 +475,150 @@
             </p>
           </ng-container>
 
+          <!-- Imagen con texto -->
+          <ng-container *ngIf="b.tipo === 'promo'">
+            <div class="campo">
+              <label>Palabrita de arriba (opcional)</label>
+              <input type="text" [(ngModel)]="b.datos.etiqueta" (ngModelChange)="marcarSucio()"
+                     maxlength="40" placeholder="NUEVO · SOLO ESTA SEMANA" />
+            </div>
+            <div class="campo">
+              <label>Título</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
+            </div>
+            <div class="campo">
+              <label>Texto</label>
+              <textarea rows="4" [(ngModel)]="b.datos.cuerpo" (ngModelChange)="marcarSucio()" maxlength="800"></textarea>
+            </div>
+            <div class="campo">
+              <label>Foto</label>
+              <div class="mini-imagen">
+                <img *ngIf="b.datos.imagen" [src]="b.datos.imagen" alt="" />
+                <label class="btn-fantasma btn-fantasma--sm">
+                  {{ b.datos.imagen ? 'Cambiar' : 'Subir foto' }}
+                  <input type="file" accept="image/*" hidden (change)="subirImagen($event, 'promo')" [disabled]="subiendo" />
+                </label>
+              </div>
+            </div>
+            <div class="campo">
+              <label>La foto va a la</label>
+              <select [(ngModel)]="b.datos.lado" (ngModelChange)="marcarSucio()">
+                <option value="izquierda">Izquierda</option>
+                <option value="derecha">Derecha</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label>Texto del botón (opcional)</label>
+              <input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="40" />
+            </div>
+            <div class="campo">
+              <label>Destino del botón</label>
+              <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#catalogo o https://…" />
+            </div>
+          </ng-container>
+
+          <!-- Producto destacado -->
+          <ng-container *ngIf="b.tipo === 'destacado'">
+            <div class="campo">
+              <label>Palabrita de arriba</label>
+              <input type="text" [(ngModel)]="b.datos.etiqueta" (ngModelChange)="marcarSucio()" maxlength="40" />
+            </div>
+            <div class="campo">
+              <label>El producto</label>
+              <p class="nota nota--simple" *ngIf="b.datos.productoId">
+                Elegido: <strong>{{ nombreDestacado[b.datos.productoId] || b.datos.productoId }}</strong>.
+                La foto, el precio y la disponibilidad salen de tu catálogo al publicar.
+              </p>
+              <div class="buscador-inline">
+                <input type="text" [(ngModel)]="busquedaDestacado" (keyup.enter)="buscarProductoDestacado()"
+                       placeholder="Busca por nombre o referencia…" />
+                <button class="btn-fantasma btn-fantasma--sm" (click)="buscarProductoDestacado()"
+                        [disabled]="buscandoDestacado">{{ buscandoDestacado ? 'Buscando…' : 'Buscar' }}</button>
+              </div>
+              <div class="resultados-inline" *ngIf="resultadosDestacado.length">
+                <button *ngFor="let r of resultadosDestacado" (click)="elegirDestacado(b, r)">{{ r.titulo }}</button>
+              </div>
+            </div>
+            <button class="opcion" [class.is-active]="b.datos.permitirCompra"
+                    (click)="b.datos.permitirCompra = !b.datos.permitirCompra; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Se puede comprar</strong>
+                <small>Botón de agregar al carrito junto al precio.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <p class="aviso" *ngIf="b.datos.permitirCompra && !contenido.tienda.habilitada">
+              Para que el botón aparezca, enciende la tienda en la pestaña <strong>Tienda</strong>.
+            </p>
+          </ng-container>
+
+          <!-- Cuenta regresiva -->
+          <ng-container *ngIf="b.tipo === 'contador'">
+            <div class="campo">
+              <label>Título</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="90" />
+            </div>
+            <div class="campo">
+              <label>Termina el</label>
+              <input type="datetime-local" [(ngModel)]="b.datos.hasta" (ngModelChange)="marcarSucio()" />
+              <small>Sin fecha, la sección no se muestra en la página publicada.</small>
+            </div>
+            <div class="campo">
+              <label>Cuando termine, decir</label>
+              <input type="text" [(ngModel)]="b.datos.mensajeFin" (ngModelChange)="marcarSucio()" maxlength="90" />
+            </div>
+            <div class="campo">
+              <label>Texto del botón (opcional)</label>
+              <input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="40" />
+            </div>
+            <div class="campo">
+              <label>Destino del botón</label>
+              <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#destacado o #catalogo" />
+            </div>
+          </ng-container>
+
+          <!-- Boletín -->
+          <ng-container *ngIf="b.tipo === 'suscripcion'">
+            <p class="nota">
+              Pide <strong>solo el correo</strong>. El contacto entra a tus clientes potenciales,
+              marcado como suscriptor del boletín.
+            </p>
+            <div class="campo">
+              <label>Título</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="90" />
+            </div>
+            <div class="campo">
+              <label>Descripción</label>
+              <input type="text" [(ngModel)]="b.datos.descripcion" (ngModelChange)="marcarSucio()" maxlength="200" />
+            </div>
+            <div class="campo">
+              <label>Texto del botón</label>
+              <input type="text" [(ngModel)]="b.datos.textoBoton" (ngModelChange)="marcarSucio()" maxlength="30" />
+            </div>
+          </ng-container>
+
+          <!-- Franja de marcas -->
+          <ng-container *ngIf="b.tipo === 'marcas'">
+            <div class="campo">
+              <label>Título (opcional)</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="90" />
+            </div>
+            <div class="miniaturas" *ngIf="b.datos.logos?.length">
+              <div class="miniatura" *ngFor="let l of b.datos.logos; let i = index">
+                <img [src]="l.url" alt="" />
+                <button (click)="quitarLogoMarcas(b, i)" title="Quitar">×</button>
+              </div>
+            </div>
+            <div class="campo">
+              <label class="archivo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
+                {{ subiendo ? 'Subiendo…' : 'Agregar un logo' }}
+                <input type="file" accept="image/*" (change)="subirImagen($event, 'marcas')" [disabled]="subiendo" />
+              </label>
+              <small>Se ven en gris y toman color al pasar el mouse. Hasta 8.</small>
+            </div>
+          </ng-container>
+
           <!-- Compra por categoría -->
           <ng-container *ngIf="b.tipo === 'categorias'">
             <p class="nota">
@@ -958,6 +1102,17 @@
                 </div>
               </div>
 
+              <div class="campo" *ngIf="estiloDe(b).fondo && !estiloDe(b).fondoImagen">
+                <label>Degradar hacia (opcional)</label>
+                <div class="fondos">
+                  <button class="fondo-op" [class.is-active]="!estiloDe(b).fondo2"
+                          (click)="cambiarEstilo(b, 'fondo2', '')">Un solo color</button>
+                  <input type="color" [ngModel]="estiloDe(b).fondo2 || '#ffffff'"
+                         (ngModelChange)="cambiarEstilo(b, 'fondo2', $event)" title="Segundo color" />
+                </div>
+                <small>El fondo pasa suavemente del primer color a este.</small>
+              </div>
+
               <div class="campo">
                 <label>Foto de fondo</label>
                 <div class="mini-imagen">
@@ -1011,6 +1166,18 @@
                   <input type="color" [ngModel]="estiloDe(b).colorTexto || '#222222'"
                          (ngModelChange)="cambiarEstilo(b, 'colorTexto', $event)" />
                 </div>
+              </div>
+
+              <div class="campo">
+                <label>Cómo entra al hacer scroll</label>
+                <select [ngModel]="estiloDe(b).animacion || 'aparecer'"
+                        (ngModelChange)="cambiarEstilo(b, 'animacion', $event)">
+                  <option value="aparecer">Aparece suave</option>
+                  <option value="deslizar">Se desliza de lado</option>
+                  <option value="zoom">Crece con zoom</option>
+                  <option value="ninguna">Quieta</option>
+                </select>
+                <small>Necesita el movimiento encendido en la pestaña Estilo.</small>
               </div>
 
               <button class="btn-fantasma btn-fantasma--sm" (click)="limpiarEstilo(b)"

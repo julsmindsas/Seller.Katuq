@@ -1000,3 +1000,85 @@ h3 {
     font-weight: 700;
   }
 }
+
+// ── Bloques de tienda grande (espejo de utils/siteHtml.js) ───────────────────
+.kicker {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sitio-primario);
+  margin-bottom: 0.6rem;
+}
+
+.promo { max-width: 1480px; }
+.promo__grid { display: grid; gap: 1.75rem; align-items: center; }
+.promo__foto {
+  overflow: hidden;
+  border-radius: var(--sitio-radio, 12px);
+  background: #f4f4f5;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+.promo__sinfoto { font-size: 0.85rem; opacity: 0.5; }
+@media (min-width: 860px) {
+  .promo__grid { grid-template-columns: 1.05fr 1fr; gap: 3.5rem; }
+  .promo--derecha .promo__foto { order: 2; }
+}
+
+.destacado { max-width: 1480px; }
+.destacado__grid { display: grid; gap: 1.75rem; align-items: center; }
+.destacado__foto--demo {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--sitio-radio, 12px);
+  background: rgba(0, 0, 0, 0.06);
+}
+@media (min-width: 860px) {
+  .destacado__grid { grid-template-columns: 0.9fr 1.1fr; gap: 3.5rem; }
+}
+
+.contador { text-align: center; }
+.contador__cajas { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin: 1.25rem 0; }
+.contador__caja {
+  min-width: 78px;
+  padding: 0.9rem 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--sitio-radio-sm, 8px);
+  background: rgba(0, 0, 0, 0.02);
+
+  b { display: block; font-size: 1.9rem; line-height: 1; font-family: var(--sitio-fuente-titulo, inherit); }
+  span { display: block; margin-top: 0.35rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; }
+}
+
+.suscripcion__caja {
+  display: grid;
+  gap: 1rem;
+  padding: 1.75rem;
+  border-radius: var(--sitio-radio, 12px);
+  background: var(--sitio-primario);
+  color: var(--sitio-secundario, #fff);
+
+  h2 { margin: 0 0 0.25rem; font-size: 1.4rem; }
+  p { margin: 0; opacity: 0.85; font-size: 0.95rem; }
+}
+.suscripcion__form {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+
+  input { flex: 1; min-width: 180px; padding: 0.8rem 1rem; border: 0; border-radius: var(--sitio-radio-sm, 8px); font: inherit; }
+  .boton { background: var(--sitio-secundario, #fff); color: var(--sitio-primario); border-color: var(--sitio-secundario, #fff); }
+}
+@media (min-width: 860px) {
+  .suscripcion__caja { grid-template-columns: 1fr auto; align-items: center; padding: 2.25rem 2.5rem; }
+}
+
+.marcas { text-align: center; }
+.marcas__titulo { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.55; margin: 0 0 1.1rem; }
+.marcas__fila { display: flex; gap: 2.5rem; justify-content: center; align-items: center; flex-wrap: wrap; }
+.marca img { height: 34px; width: auto; max-width: 130px; object-fit: contain; filter: grayscale(1); opacity: 0.55; }

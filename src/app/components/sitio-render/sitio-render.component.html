@@ -251,6 +251,75 @@
           </div>
         </section>
 
+        <!-- Imagen con texto -->
+        <section *ngSwitchCase="'promo'" class="bloque promo"
+                 [class.promo--derecha]="bloque.datos.lado === 'derecha'">
+          <div class="promo__grid">
+            <div class="promo__foto">
+              <img *ngIf="bloque.datos.imagen" [src]="bloque.datos.imagen" alt="" />
+              <span class="promo__sinfoto" *ngIf="!bloque.datos.imagen">Sube una foto</span>
+            </div>
+            <div class="promo__contenido">
+              <span class="kicker" *ngIf="bloque.datos.etiqueta">{{ bloque.datos.etiqueta }}</span>
+              <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
+              <p *ngIf="bloque.datos.cuerpo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'cuerpo')" (keydown)="alTeclearEnTexto($event, false)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.cuerpo }}</p>
+              <a class="boton" *ngIf="bloque.datos.ctaTexto">{{ bloque.datos.ctaTexto }}</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Producto destacado: el producto real se resuelve al publicar. -->
+        <section *ngSwitchCase="'destacado'" class="bloque destacado">
+          <div class="destacado__grid">
+            <div class="destacado__foto destacado__foto--demo"></div>
+            <div>
+              <span class="kicker">{{ bloque.datos.etiqueta || 'Producto destacado' }}</span>
+              <h2>{{ bloque.datos.productoId ? 'Tu producto elegido' : 'Elige un producto' }}</h2>
+              <p class="vacio">
+                {{ bloque.datos.productoId
+                  ? 'La foto, el precio y la descripción salen de tu catálogo al publicar.'
+                  : 'Toca esta sección y busca el producto en el panel.' }}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Cuenta regresiva: el reloj corre en la página publicada. -->
+        <section *ngSwitchCase="'contador'" class="bloque contador">
+          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <div class="contador__cajas">
+            <div class="contador__caja" *ngFor="let u of ['Días','Horas','Min','Seg']">
+              <b>00</b><span>{{ u }}</span>
+            </div>
+          </div>
+          <p class="vacio" *ngIf="!bloque.datos.hasta">Ponle la fecha en el panel o no se mostrará.</p>
+        </section>
+
+        <!-- Boletín -->
+        <section *ngSwitchCase="'suscripcion'" class="bloque suscripcion">
+          <div class="suscripcion__caja">
+            <div>
+              <h2>{{ bloque.datos.titulo || 'Entérate primero' }}</h2>
+              <p *ngIf="bloque.datos.descripcion">{{ bloque.datos.descripcion }}</p>
+            </div>
+            <div class="suscripcion__form">
+              <input type="email" placeholder="tu@correo.com" disabled />
+              <a class="boton">{{ bloque.datos.textoBoton || 'Suscribirme' }}</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Franja de marcas -->
+        <section *ngSwitchCase="'marcas'" class="bloque marcas">
+          <p class="marcas__titulo" *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</p>
+          <div class="marcas__fila" *ngIf="bloque.datos.logos?.length; else marcasVacias">
+            <span class="marca" *ngFor="let l of bloque.datos.logos"><img [src]="l.url" alt="" /></span>
+          </div>
+          <ng-template #marcasVacias>
+            <p class="vacio">Sube los logos en el panel; se ven en gris y toman color al pasar el mouse.</p>
+          </ng-template>
+        </section>
+
         <!-- Compra por categoría. Como el catálogo: las baldosas reales las
              resuelve el servidor al publicar; aquí se enseña la forma. -->
         <section *ngSwitchCase="'categorias'" class="bloque categorias">

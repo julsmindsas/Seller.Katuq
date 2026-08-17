@@ -106,6 +106,36 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     icono: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z",
   },
   {
+    tipo: "promo",
+    nombre: "Imagen con texto",
+    descripcion: "Una foto a un lado y tu argumento al otro, con botón",
+    icono: "M3 5h8v14H3zM14 8h7M14 12h7M14 16h4",
+  },
+  {
+    tipo: "destacado",
+    nombre: "Producto destacado",
+    descripcion: "Uno solo, con espacio para lucirse y botón de compra",
+    icono: "M12 3l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z",
+  },
+  {
+    tipo: "contador",
+    nombre: "Cuenta regresiva",
+    descripcion: "La oferta termina en… urgencia de verdad, con reloj",
+    icono: "M12 8v5l3 2M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM9 2h6",
+  },
+  {
+    tipo: "suscripcion",
+    nombre: "Boletín",
+    descripcion: "Pide solo el correo; el contacto entra a tu CRM",
+    icono: "M3 6h18v12H3zM3 7l9 6 9-6",
+  },
+  {
+    tipo: "marcas",
+    nombre: "Franja de marcas",
+    descripcion: "Los logos de las marcas que vendes o que confían en ti",
+    icono: "M3 9h4v6H3zM10 9h4v6h-4zM17 9h4v6h-4z",
+  },
+  {
     tipo: "video",
     nombre: "Video",
     descripcion: "De YouTube o Vimeo, para mostrar tu trabajo",
@@ -397,6 +427,19 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   encabezado: { nombre: "", mostrarLogo: true, enlaces: [], ctaTexto: "", ctaUrl: "", fijo: false, mostrarCategorias: false },
   anuncio: { texto: "Envíos a todo el país", url: "", marquesina: true },
   categorias: { titulo: "Compra por categoría", maximo: 6 },
+  promo: {
+    etiqueta: "Nuevo",
+    titulo: "Una historia que vende",
+    cuerpo: "Cuenta aquí por qué esto vale la pena: qué lo hace distinto y qué gana quien lo compra.",
+    imagen: "",
+    lado: "izquierda",
+    ctaTexto: "",
+    ctaUrl: "",
+  },
+  destacado: { etiqueta: "Producto destacado", productoId: "", permitirCompra: true },
+  contador: { titulo: "La oferta termina en", hasta: "", mensajeFin: "La oferta terminó", ctaTexto: "", ctaUrl: "" },
+  suscripcion: { titulo: "Entérate primero", descripcion: "Novedades y rebajas antes que nadie, sin spam.", textoBoton: "Suscribirme" },
+  marcas: { titulo: "Trabajamos con", logos: [] },
   hero: {
     titulo: "Título principal",
     subtitulo: "",
@@ -1010,6 +1053,47 @@ export class SitioEditorComponent implements OnInit {
     return this.bloques.some((b) => b.tipo === tipo);
   }
 
+  // ── Producto destacado: buscador de UN producto ────────────────────────────
+  // Reusa el buscador del catálogo (filtra por empresa e inyecta stock). Los
+  // nombres elegidos se guardan solo en memoria para mostrarlos; el bloque
+  // persiste únicamente el id, como el bloque de productos.
+  busquedaDestacado = "";
+  buscandoDestacado = false;
+  resultadosDestacado: { cd: string; titulo: string }[] = [];
+  nombreDestacado: { [id: string]: string } = {};
+
+  buscarProductoDestacado(): void {
+    const termino = this.busquedaDestacado.trim();
+    if (termino.length < 2) return;
+    this.buscandoDestacado = true;
+    this.service.buscarProductos(termino).subscribe({
+      next: (res) => {
+        this.buscandoDestacado = false;
+        this.resultadosDestacado = (res.products || []).slice(0, 8).map((p) => ({
+          cd: p.cd,
+          titulo: (p.crearProducto && p.crearProducto.titulo) || p.cd,
+        }));
+      },
+      error: () => {
+        this.buscandoDestacado = false;
+        this.resultadosDestacado = [];
+      },
+    });
+  }
+
+  elegirDestacado(bloque: any, p: { cd: string; titulo: string }): void {
+    bloque.datos.productoId = p.cd;
+    this.nombreDestacado[p.cd] = p.titulo;
+    this.resultadosDestacado = [];
+    this.busquedaDestacado = "";
+    this.marcarSucio();
+  }
+
+  quitarLogoMarcas(bloque: any, i: number): void {
+    bloque.datos.logos.splice(i, 1);
+    this.marcarSucio();
+  }
+
   duplicar(i: number): void {
     if (!this.contenido) return;
     const copia = JSON.parse(JSON.stringify(this.bloques[i]));
@@ -1611,7 +1695,7 @@ export class SitioEditorComponent implements OnInit {
 
   subirImagen(
     evento: Event,
-    destino: "hero" | "galeria" | "seo" | "imagenBloque" | "fondoSeccion"
+    destino: "hero" | "galeria" | "seo" | "imagenBloque" | "fondoSeccion" | "promo" | "marcas"
   ): void {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
@@ -1632,8 +1716,10 @@ export class SitioEditorComponent implements OnInit {
           const b = this.bloqueActual;
           if (!b) return;
           if (destino === "hero") b.datos.imagen = res.url;
+          if (destino === "promo") b.datos.imagen = res.url;
           if (destino === "imagenBloque") b.datos.url = res.url;
           if (destino === "galeria") b.datos.imagenes = [...(b.datos.imagenes || []), { url: res.url, alt: "" }];
+          if (destino === "marcas") b.datos.logos = [...(b.datos.logos || []), { url: res.url, alt: "" }];
           if (destino === "fondoSeccion") {
             const estilo = this.estiloDe(b);
             estilo.fondoImagen = res.url;
