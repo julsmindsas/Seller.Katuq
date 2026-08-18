@@ -1640,9 +1640,28 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     };
 
     this.logisticaService.createShipment(payload).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         this.isSaving = false;
         console.log('✅ Envíos Prindel creados:', response);
+
+        // El backend devuelve el resultado pedido por pedido: si alguno fue
+        // rechazado hay que mostrarlo en vez de dar todo por creado.
+        const fallidos = (response?.results || []).filter((r: any) => r && !r.success);
+        if (fallidos.length > 0) {
+          const detalle = fallidos
+            .map((r: any) => `<li><b>${r.nroPedido || 'pedido'}</b>: ${r.error || 'no se pudo despachar'}</li>`)
+            .join('');
+          const exitosos = (response?.results?.length || 0) - fallidos.length;
+          Swal.fire({
+            icon: exitosos > 0 ? 'warning' : 'error',
+            title: exitosos > 0
+              ? `${exitosos} envío(s) creados, ${fallidos.length} con problema`
+              : 'No se pudieron crear los envíos',
+            html: `<div style="text-align:left"><ul>${detalle}</ul></div>`,
+            confirmButtonText: 'Entendido'
+          });
+          return;
+        }
 
         Swal.fire({
           icon: 'success',
@@ -1661,7 +1680,10 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: error?.error?.message || 'Error al crear los envíos con Prindel.'
+          text: error?.error?.error
+            || error?.error?.message
+            || error?.error?.details
+            || 'Error al crear los envíos con Prindel.'
         });
       }
     });
@@ -2883,7 +2905,13 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
         Swal.fire({
           icon: 'error',
           title: 'Error al despachar',
-          text: error?.error?.message || error?.message || 'No se pudo enviar el despacho a Guía Cereza.',
+          // `error` es el resumen de motivos que arma el backend cuando ningún
+          // pedido pasó (HTTP 422); `message`/`details` cubren el resto.
+          text: error?.error?.error
+            || error?.error?.message
+            || error?.error?.details
+            || error?.message
+            || 'No se pudo enviar el despacho a Guía Cereza.',
           confirmButtonText: 'Entendido'
         });
       }

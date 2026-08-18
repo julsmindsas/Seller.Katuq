@@ -4453,3 +4453,26 @@ El usuario preguntó si el fix de hoy garantiza que el patrón de DAD-012131 no 
 3. ⏳ **Descuento en `crearPedido`** (escribe la marca): diff listo, **pendiente de aprobación explícita** (regla de módulos sensibles + el clasificador de permisos lo frenó). Es la única pieza que cambia comportamiento.
 
 **Pendientes posteriores (no bloquean):** vencimiento automático que devuelva pedidos de pasarela nunca pagados (barrido con `restoreStock` por antigüedad), y encender `controlExistenciasVenta` por empresa como freno adicional.
+
+---
+
+## D-205 (2026-08-18) — El estado de pago deja de bloquear el despacho que pide una persona
+
+**Disparador.** Producción, 8:22 a.m.: `Cereza no ejecutó el despacho: not_eligible` al despachar ORE-000567 (OH MY STORE). Verificado contra Firestore: al pulsar despachar el pedido tenía `estadoPago: "Pendiente"` (forma de pago CXC NÓMINA, $171.300 por cobrar). La foto embebida en la orden de despacho 277 lo confirma.
+
+**Lo que se descubrió, más grave que el rechazo.** El pedido quedó **marcado "Despachado" en Katuq, con correo y notificación al cliente, sin existir en Cereza**. La secuencia: `createShipments` responde HTTP 200 con `success: true` aunque todos los pedidos hayan fallado (el detalle solo viaja en `results[]`), la pantalla de Despachos lo tomaba como éxito y seguía marcando los pedidos como despachados. El error solo salía por la consola del navegador.
+
+Censo de pedidos con transportadora Cereza desde el 1-jul (23 en total): **3 despachados que Cereza nunca recibió por esta causa** — ORE-000547 y ORE-000548 (11-ago, pago Pendiente) y ORE-000567. Aparte quedan ORE-000450 y ORE-000451 (21-jul) que sí estaban PreAprobado al despachar: causa distinta, sin investigar.
+
+**Decisión.** La regla de elegibilidad de pago (Pagado / Aprobado / PreAprobado, `services/inventory/paymentInventoryPolicy.js`) nació para inventario y se estaba aplicando también a logística. Se separan los dos usos:
+
+- **Push automático** (flows, Shopify): conserva el gate. `dispatchOrderToCereza` mantiene `requirePaymentEligibility = true` por defecto — nada se despacha solo, sin que nadie lo mire, antes de que el pago esté aprobado.
+- **Despacho pedido por una persona** (módulo de Despachos: crear envío y generar guía externa): **el estado de pago no lo bloquea**. Contraentrega y CXC nómina se despachan con el pedido pendiente y se cobran después. `logisticsManager.createShipment` pasa `requirePaymentEligibility: false`.
+
+El payload que viaja a Cereza sigue llevando `is_paid` real, así que Cereza sabe si debe recaudar. Los pedidos Cancelado / Rechazado / Eliminado siguen bloqueados (`shouldCancelOrder`, que corre antes). **La política de inventario no se tocó**: `paymentInventoryPolicy.js` queda igual y el descuento de stock sigue rigiéndose por el pago.
+
+**Fallo mudo cerrado.** `createShipments` ahora responde 200 / 207 / 422 según el resultado real, con `success` verdadero y un `error` ya redactado; los mensajes internos (`not_eligible`, `in_flight`) se traducen a texto para el operador; y las pantallas de Despachos (v2, legacy y generar orden) muestran el motivo por pedido y **ya no marcan como despachado lo que el transportador rechazó**.
+
+**Cobertura:** `functions/tests/inventory/cerezaDispatchPaymentGate.emulator.test.js` (`npm run test:cereza-dispatch-gate:emulator`) — el automático sigue bloqueando pago pendiente, el manual no, y cancelado + idempotencia quedan intactos. Verde también `shopifyPaidOrderLogistics.emulator.test.js`, `paymentInventoryPolicy.test.js` y el contract test de seguridad de inventario. Build de frontend limpio.
+
+**Pendiente.** Empujar a Cereza los pedidos que quedaron colgados (ORE-000567 primero) y revisar aparte ORE-000450 y ORE-000451.

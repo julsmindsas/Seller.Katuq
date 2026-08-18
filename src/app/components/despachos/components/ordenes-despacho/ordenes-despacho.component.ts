@@ -3,6 +3,7 @@ import { Pedido } from '../../../ventas/modelo/pedido';
 import { Router } from '@angular/router';
 import { IntegrationsService, Integration, IntegrationCategory } from '../../../integrations/integrations.service';
 import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-ordenes-despacho',
@@ -428,16 +429,63 @@ export class OrdenesDespachoComponent implements OnInit {
 
     this.isDispatchingShipment = true;
     this.logisticaService.createShipment(shipmentPayload).subscribe({
-      next: () => {
+      next: (resp: any) => {
         this.isDispatchingShipment = false;
+
+        // El backend responde con el resultado pedido por pedido. Si alguno
+        // falló hay que decirlo: antes el error solo iba a la consola del
+        // navegador y el modal se cerraba como si todo hubiera salido bien.
+        const fallidos = (resp?.results || []).filter((r: any) => r && !r.success);
+        if (resp?.success === false || resp?.summary?.failed > 0 || fallidos.length) {
+          Swal.fire({
+            icon: 'error',
+            title: 'El despacho no se completó',
+            html: this.detalleErrorDespacho(resp),
+            confirmButtonText: 'Entendido'
+          });
+          return;
+        }
+
         // Cerrar modal y limpiar selección
         this.closeTransporterModal();
       },
       error: (error) => {
         console.error('Error creando envío con transportadora:', error);
         this.isDispatchingShipment = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error en Despacho',
+          html: this.detalleErrorDespacho(error?.error ?? error),
+          confirmButtonText: 'Entendido'
+        });
       }
     });
+  }
+
+  /**
+   * Detalle legible del fallo de despacho, con el motivo real por pedido.
+   */
+  private detalleErrorDespacho(payload: any): string {
+    const escapar = (t: any) => String(t ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const fallidos = (payload?.results || []).filter((r: any) => r && !r.success);
+    if (fallidos.length) {
+      const filas = fallidos
+        .map((r: any) => `<li><b>${escapar(r.nroPedido || 'Pedido')}</b>: ${escapar(r.error)}</li>`)
+        .join('');
+      const ok = payload?.summary?.ok || 0;
+      const encabezado = ok > 0
+        ? `<p>${ok} pedido(s) se despacharon y ${fallidos.length} no:</p>`
+        : '<p>Ningún pedido se pudo despachar:</p>';
+      return `${encabezado}<ul style="text-align:left;margin:0;padding-left:1.2rem">${filas}</ul>`;
+    }
+
+    const mensaje = payload?.error
+      || payload?.details
+      || payload?.message
+      || 'Hubo un problema al despachar la orden. Por favor intenta nuevamente.';
+    return escapar(mensaje);
   }
 
   closeTransporterModal(): void {

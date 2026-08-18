@@ -1114,7 +1114,25 @@ export class OrdenesDespachoV2Component implements OnInit {
 
     this.isDispatchingShipment = true;
     this.logisticaService.createShipment(shipmentPayload).subscribe({
-      next: () => {
+      next: (resp: any) => {
+        // El backend responde 200 con un resumen por pedido. Antes se marcaba
+        // todo como despachado sin mirarlo: cuando la transportadora rechazaba
+        // el envío, el pedido quedaba "Despachado" en Katuq, con correo al
+        // cliente, y sin guía real (caso ORE-000567, 18-ago). Si algún pedido
+        // falló no se avanza: se muestra el motivo y se deja la orden como está.
+        const fallidos = (resp?.results || []).filter((r: any) => r && !r.success);
+        if (resp?.success === false || resp?.summary?.failed > 0 || fallidos.length) {
+          this.isDispatchingShipment = false;
+          Swal.fire({
+            icon: 'error',
+            title: 'El despacho no se completó',
+            html: this.detalleErrorDespacho(resp),
+            confirmButtonText: 'Entendido'
+          });
+          this.loadInitialOrders();
+          return;
+        }
+
         // Actualizar el transportador en la orden
         order.transportador = normalizeTransportadorName(this.selectedTransporter);
 
@@ -1193,15 +1211,42 @@ export class OrdenesDespachoV2Component implements OnInit {
         console.error('Error creando envío con transportadora:', error);
         this.isDispatchingShipment = false;
 
-        // Show error message
         Swal.fire({
           icon: 'error',
           title: 'Error en Despacho',
-          text: 'Hubo un problema al despachar la orden. Por favor intenta nuevamente.',
+          html: this.detalleErrorDespacho(error?.error ?? error),
           confirmButtonText: 'Entendido'
         });
       }
     });
+  }
+
+  /**
+   * Arma el detalle que ve el operador cuando un despacho falla. El backend
+   * manda el motivo real por pedido (`results[].error`) y ya resumido en
+   * `error`; antes se descartaba y solo se mostraba "hubo un problema".
+   */
+  private detalleErrorDespacho(payload: any): string {
+    const escapar = (t: any) => String(t ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const fallidos = (payload?.results || []).filter((r: any) => r && !r.success);
+    if (fallidos.length) {
+      const filas = fallidos
+        .map((r: any) => `<li><b>${escapar(r.nroPedido || 'Pedido')}</b>: ${escapar(r.error)}</li>`)
+        .join('');
+      const ok = payload?.summary?.ok || 0;
+      const encabezado = ok > 0
+        ? `<p>${ok} pedido(s) se despacharon y ${fallidos.length} no:</p>`
+        : '<p>Ningún pedido se pudo despachar:</p>';
+      return `${encabezado}<ul style="text-align:left;margin:0;padding-left:1.2rem">${filas}</ul>`;
+    }
+
+    const mensaje = payload?.error
+      || payload?.details
+      || payload?.message
+      || 'Hubo un problema al despachar la orden. Por favor intenta nuevamente.';
+    return escapar(mensaje);
   }
 
   closeTransporterModal(): void {
