@@ -4450,7 +4450,11 @@ El usuario preguntó si el fix de hoy garantiza que el patrón de DAD-012131 no 
 **Estado de implementación:**
 1. ✅ **Checkout valida contra `inventory` real de la bodega de la tienda** (getRealStockMap + cantidad pedida) — desplegado y probado contra existencias reales.
 2. ✅ **Guarda de transición en `webhookPago`**: si el pedido lleva `inventarioDescontadoAlCrear === true`, el webhook NO vuelve a descontar (evita el doble descuento). Desplegada — inofensiva sola porque nada escribe la marca todavía.
-3. ⏳ **Descuento en `crearPedido`** (escribe la marca): diff listo, **pendiente de aprobación explícita** (regla de módulos sensibles + el clasificador de permisos lo frenó). Es la única pieza que cambia comportamiento.
+3. ✅ **Descuento en `crearPedido`** (escribe la marca): **aprobado explícitamente por Daniel y aplicado el 2026-08-18** (el clasificador de permisos lo bloqueó dos veces en auto-mode; Daniel destrabó el modo y el diff entró tal como se le presentó).
+
+**Verificación end-to-end en producción (2026-08-18)**: producto con 10 unidades en BOD-CEREZA-1A → compra real contra entrega de 2 unidades por la tienda pública (pedido ORE-000569) → inventario quedó en **8**, orden marcada `inventarioDescontadoAlCrear: true`, movimiento `SALIDA -2` con `ordenId` trazable → devolución por el camino canónico (`restoreStock`, firma `(order, {company, userEmail, reason})`) → inventario volvió a **10** con movimiento `INGRESO_DEVOLUCION_CANCELACION` → pedido y rastro de prueba borrados. La reserva opera en los dos sentidos.
+
+⚠️ Nota de la verificación: `restoreStock` recibe `(order, opciones)` — pasarle company como tercer argumento posicional falla con "company requerido". El flujo real de anulación en `controllers/orders.js` ya lo llama bien; el tropiezo fue solo del script de prueba.
 
 **Pendientes posteriores (no bloquean):** vencimiento automático que devuelva pedidos de pasarela nunca pagados (barrido con `restoreStock` por antigüedad), y encender `controlExistenciasVenta` por empresa como freno adicional.
 
