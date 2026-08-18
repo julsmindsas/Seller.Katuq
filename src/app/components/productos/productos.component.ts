@@ -957,8 +957,13 @@ export class ProductosComponent implements OnInit, OnDestroy {
           <p><strong>Referencia actual:</strong> ${row.identificacion?.referencia || 'Sin referencia'}</p>
           <hr>
           <p style="color: #666; font-size: 14px;">
-            Se creará una copia exacta del producto con una nueva referencia (formato <strong>${row.identificacion?.referencia || 'REF'}-COPIA-XXXXXX</strong>).<br>
+            Se creará una copia del producto con una nueva referencia (formato <strong>${row.identificacion?.referencia || 'REF'}-COPIA-XXXXXX</strong>).<br>
             El sufijo final se genera al confirmar y se mostrará en el siguiente paso.
+          </p>
+          <p style="color: #b45309; font-size: 14px; background:#fef6e7; border:1px solid #f6dfb4; border-radius:8px; padding:8px 10px;">
+            <strong>La copia queda con el precio en $0.</strong> No hereda el precio del original
+            (ni el unitario, ni los rangos por volumen, ni los precios por tipo de cliente):
+            hay que ponerle su precio antes de activarla.
           </p>
         </div>
       `,
@@ -977,6 +982,58 @@ export class ProductosComponent implements OnInit, OnDestroy {
         this.ejecutarDuplicacion(row);
       }
     });
+  }
+
+  /**
+   * Deja el duplicado SIN precio (todo en cero).
+   *
+   * Por qué: un duplicado heredaba el precio del original, así que bastaba con
+   * que alguien olvidara editarlo y lo activara para vender un producto al
+   * precio de otro. El duplicado ya nace inactivo, pero eso no alcanza: se
+   * activa con un clic y nadie vuelve a mirar el precio.
+   *
+   * Se limpian TODAS las fuentes de precio, no solo la base — si quedara una,
+   * el cero sería mentira:
+   *  - `preciosVolumen`: al vender, el rango de volumen le GANA al precio
+   *    unitario (`orderCalculationService.js:41`). Con la base en 0 y un rango
+   *    heredado, se cobraría el rango. Es exactamente el caso de ALMARA, donde
+   *    el 99,8% de los productos tienen rangos.
+   *  - `preciosPorTipoCliente`: el frontend lo aplica ANTES que el precio base
+   *    (`payment.service.ts:402`). Es el caso de OH MY STORE y HARMONY LENS,
+   *    con 98,9% y 84,7% de sus productos con estos precios.
+   *  - `precio.variantesOsmosis`: es el respaldo desde el que Shopify arma sus
+   *    listas de precio (`marketPricingService.js:57`), y viene del producto
+   *    original — igual que los IDs de integración, que ya se limpian.
+   *
+   * Lo que SÍ se conserva: el **porcentaje de IVA** (es un atributo tributario
+   * del producto, no un precio; ponerlo en 0 convertiría en exento algo que no
+   * lo es) y el **costo** (no interviene en lo que se le cobra al cliente y
+   * sirve para el margen cuando se ponga el precio nuevo).
+   */
+  private limpiarPreciosDelDuplicado(producto: any): void {
+    if (!producto.precio) producto.precio = {};
+    const precio = producto.precio;
+
+    precio.precioUnitarioSinIva = 0;
+    precio.precioUnitarioConIva = 0;
+    precio.valorIva = 0;
+
+    // Rangos de volumen: se va sin ninguno (es el estado natural de un producto
+    // que todavía no tiene precio).
+    precio.preciosVolumen = [];
+
+    // Campos derivados del volumen — solo se tocan si el producto los traía,
+    // para no inventar claves nuevas en documentos que no las tienen.
+    ['precioPorVolumenSinIva', 'precioIvaPorVolumen', 'precioTotalVolumenConIva']
+      .forEach(campo => {
+        if (precio[campo] !== undefined) precio[campo] = '0';
+      });
+
+    // Espejo de precios de Osmosis: pertenece al producto original.
+    delete precio.variantesOsmosis;
+
+    // Precios por tipo de cliente (van fuera de `precio`, en la raíz).
+    producto.preciosPorTipoCliente = [];
   }
 
   private async ejecutarDuplicacion(row) {
@@ -1036,6 +1093,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
       productoDuplicado.crearProducto.imagenesSecundarias = [];
     }
 
+    // Precios en CERO — el duplicado nunca hereda el precio del original.
+    this.limpiarPreciosDelDuplicado(productoDuplicado);
+
     this.service.createProduct(productoDuplicado).subscribe({
       next: (response: any) => {
         Swal.close();
@@ -1059,6 +1119,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
               <p><strong>Nuevo título:</strong> ${productoGuardado.crearProducto?.titulo}</p>
               <p><strong>Nueva referencia:</strong> <span style="color:#28a745; font-weight:bold;">${productoGuardado.identificacion?.referencia}</span></p>
               <p class="text-warning"><i class="fa fa-info-circle"></i> El producto quedó <strong>inactivo</strong>. Actívalo después de revisarlo.</p>
+              <p class="text-warning"><i class="fa fa-info-circle"></i> El duplicado quedó con <strong>precio en $0</strong>. Ponle su precio antes de activarlo.</p>
               <p class="text-warning"><i class="fa fa-info-circle"></i> El duplicado no incluye imágenes. Súbelas de nuevo antes de activarlo.</p>
             </div>
           `,
@@ -1101,6 +1162,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
                   <p><strong>Nuevo título:</strong> ${productoDuplicado.crearProducto?.titulo}</p>
                   <p><strong>Nueva referencia:</strong> <span style="color:#28a745; font-weight:bold;">${nuevaReferencia}</span></p>
                   <p class="text-warning"><i class="fa fa-info-circle"></i> El producto quedó <strong>inactivo</strong>. Actívalo después de revisarlo.</p>
+                  <p class="text-warning"><i class="fa fa-info-circle"></i> El duplicado quedó con <strong>precio en $0</strong>. Ponle su precio antes de activarlo.</p>
                 </div>`,
                 icon: 'success',
                 confirmButtonText: 'Perfecto',

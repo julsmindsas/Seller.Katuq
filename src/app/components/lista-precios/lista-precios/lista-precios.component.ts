@@ -11,6 +11,7 @@ import { EditarPrecioVolumenComponent } from '../editar-precio-volumen/editar-pr
 import { EditarCostoComponent } from '../editar-costo/editar-costo.component';
 import { ImportarCostosModalComponent } from '../importar-costos-modal/importar-costos-modal.component';
 import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/Producto';
+import { ModoPrecio, PricingModeService } from 'src/app/shared/services/empresas/pricing-mode.service';
 
 @Component({
   selector: 'app-lista-precios',
@@ -37,8 +38,28 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   productosFiltrados: Producto[] = [];
   tiposCliente: any[] = [];
   searchTerm: string = '';
+  /**
+   * Pestaña activa en índice LÓGICO (0 tipo cliente, 1 unitario, 2 volumen,
+   * 3 costo). Es el índice que usa todo el componente para decidir qué importa,
+   * qué plantilla descarga y qué columna pinta — NO es el índice que renderiza
+   * PrimeNG. Cuando el modo de precios de la empresa esconde una pestaña, los
+   * índices renderizados se corren, y traducir entre los dos es trabajo de
+   * `tabsVisibles` / `activeTabRender` / `onTabChange`. Confundirlos hace que el
+   * importador interprete el Excel con la pestaña equivocada.
+   */
   activeTab: number = 0;
+  readonly TIPO_CLIENTE_TAB_INDEX = 0;
+  readonly UNITARIO_TAB_INDEX = 1;
+  readonly VOLUMEN_TAB_INDEX = 2;
   readonly COSTO_TAB_INDEX = 3;
+
+  /**
+   * Modo de precios de la empresa (`companies.configuracionPrecios.modo`).
+   * `null` = la empresa no ha elegido: se muestran las 4 pestañas, como siempre.
+   */
+  modoPrecio: ModoPrecio = null;
+  /** Índices lógicos que se renderizan, EN ORDEN. Cambia con el modo. */
+  tabsVisibles: number[] = [0, 1, 2, 3];
 
   // Filtro por rango de precio. Aplica a las 4 pestañas porque todas pintan el
   // MISMO campo (`precio.precioUnitarioConIva`, con respaldo a sin IVA): lo que
@@ -62,10 +83,12 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
 
   constructor(
     private service: MaestroService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private pricingMode: PricingModeService
   ) {}
 
   ngOnInit(): void {
+    this.cargarModoPrecio();
     this.cargarTiposCliente();
     this.iniciarCanalDeCarga();
 
@@ -119,6 +142,71 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
             });
         }
       });
+  }
+
+  // ── Modo de precios de la empresa ──
+
+  /**
+   * Una empresa factura por tipo de cliente O por volumen, nunca por los dos.
+   * El modo lo elige el administrador en Empresa → Activación Módulos y aquí
+   * solo se lee: decide cuál de esas dos pestañas se muestra. Si el endpoint
+   * falla o la empresa no eligió, el servicio devuelve `null` y todo se ve como
+   * siempre — nunca se esconde una pestaña por un error de red.
+   *
+   * Ojo: esto es lo que se VE y se importa. NO cambia cómo se cobra: al vender,
+   * `orderCalculationService` sigue dando prioridad a los rangos de volumen
+   * guardados en el producto. Un producto con rangos viejos se sigue cobrando
+   * por volumen aunque la empresa esté en modo tipo de cliente.
+   */
+  private cargarModoPrecio(): void {
+    this.pricingMode.getModo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(modo => {
+        this.modoPrecio = modo;
+        this.tabsVisibles = this.calcularTabsVisibles(modo);
+        // Si la pestaña en la que estamos ya no se muestra, caer a la primera
+        // visible (pasa al entrar: el estado inicial es la de tipo de cliente).
+        if (!this.tabsVisibles.includes(this.activeTab)) {
+          this.activeTab = this.tabsVisibles[0];
+        }
+      });
+  }
+
+  /** Índices lógicos a renderizar, en el mismo orden en que están en el HTML. */
+  private calcularTabsVisibles(modo: ModoPrecio): number[] {
+    if (modo === 'tipoCliente') {
+      return [this.TIPO_CLIENTE_TAB_INDEX, this.UNITARIO_TAB_INDEX, this.COSTO_TAB_INDEX];
+    }
+    if (modo === 'volumen') {
+      return [this.UNITARIO_TAB_INDEX, this.VOLUMEN_TAB_INDEX, this.COSTO_TAB_INDEX];
+    }
+    return [
+      this.TIPO_CLIENTE_TAB_INDEX,
+      this.UNITARIO_TAB_INDEX,
+      this.VOLUMEN_TAB_INDEX,
+      this.COSTO_TAB_INDEX
+    ];
+  }
+
+  get mostrarTabTipoCliente(): boolean {
+    return this.tabsVisibles.includes(this.TIPO_CLIENTE_TAB_INDEX);
+  }
+
+  get mostrarTabVolumen(): boolean {
+    return this.tabsVisibles.includes(this.VOLUMEN_TAB_INDEX);
+  }
+
+  /** Índice que entiende p-tabView (posición entre las pestañas renderizadas). */
+  get activeTabRender(): number {
+    const pos = this.tabsVisibles.indexOf(this.activeTab);
+    return pos >= 0 ? pos : 0;
+  }
+
+  /** Texto del aviso de modo activo en la cabecera. */
+  get etiquetaModoPrecio(): string {
+    if (this.modoPrecio === 'tipoCliente') return 'Precio por tipo de cliente';
+    if (this.modoPrecio === 'volumen') return 'Precio por volumen';
+    return '';
   }
 
   /** Hay algún criterio activo (texto o rango de precio). */
@@ -267,8 +355,15 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     this.volverAPrimeraPagina();
   }
 
+  /**
+   * `event.index` es la POSICIÓN entre las pestañas renderizadas, no el índice
+   * lógico: con el modo "volumen" la primera pestaña que se ve es "Precio
+   * unitario" (lógico 1), no "Precio tipo clientes". Se traduce acá y el resto
+   * del componente sigue razonando en índices lógicos.
+   */
   onTabChange(event: any) {
-    this.activeTab = event.index;
+    const logico = this.tabsVisibles[event.index];
+    this.activeTab = logico !== undefined ? logico : this.tabsVisibles[0];
   }
 
   // ── Precios base y comparación ──

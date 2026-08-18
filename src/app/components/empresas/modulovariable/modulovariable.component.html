@@ -1,6 +1,81 @@
 <app-breadcrumb [title]="'Modulos variables'" [items]="['Empresa']" [active_item]="'centrosTrabajo'"></app-breadcrumb>
 
 <div class="container-fluid">
+    <!-- MODO DE PRECIOS DE LA EMPRESA -->
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card mp-card">
+                <div class="card-body text-start">
+                    <div class="mp-head">
+                        <div class="mp-head-icon"><i class="pi pi-tags"></i></div>
+                        <div>
+                            <h5 class="mb-1 fw-bold">Modo de precios</h5>
+                            <p class="text-muted mb-0">
+                                Cada empresa factura de una sola forma. Elige cuál maneja la tuya y
+                                <strong>Lista de precios</strong> mostrará solo esa pestaña.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mp-loading" *ngIf="cargandoModo">
+                        <i class="pi pi-spin pi-spinner me-2"></i> Consultando la configuración de tu empresa...
+                    </div>
+
+                    <ng-container *ngIf="!cargandoModo">
+                        <div class="mp-aviso" *ngIf="!modoPrecio">
+                            <i class="pi pi-info-circle me-2"></i>
+                            Tu empresa todavía no ha elegido. Mientras tanto, en Lista de precios se siguen
+                            viendo las dos pestañas, igual que hasta hoy.
+                        </div>
+
+                        <div class="mp-opciones">
+                            <button type="button" class="mp-opcion"
+                                [class.activa]="modoPrecio === 'tipoCliente'"
+                                [class.bloqueada]="!puedeEditarModo"
+                                [disabled]="!puedeEditarModo || guardandoModo"
+                                (click)="seleccionarModo('tipoCliente')">
+                                <span class="mp-check"><i class="pi"
+                                    [ngClass]="modoPrecio === 'tipoCliente' ? 'pi-check-circle' : 'pi-circle'"></i></span>
+                                <span class="mp-opcion-txt">
+                                    <strong>Precio por tipo de cliente</strong>
+                                    <small>El precio depende de la tipología del cliente (mayorista, distribuidor,
+                                        público…), sin importar cuántas unidades lleve.</small>
+                                </span>
+                            </button>
+
+                            <button type="button" class="mp-opcion"
+                                [class.activa]="modoPrecio === 'volumen'"
+                                [class.bloqueada]="!puedeEditarModo"
+                                [disabled]="!puedeEditarModo || guardandoModo"
+                                (click)="seleccionarModo('volumen')">
+                                <span class="mp-check"><i class="pi"
+                                    [ngClass]="modoPrecio === 'volumen' ? 'pi-check-circle' : 'pi-circle'"></i></span>
+                                <span class="mp-opcion-txt">
+                                    <strong>Precio por volumen</strong>
+                                    <small>El precio depende de la cantidad comprada, por rangos de unidades,
+                                        igual para todos los clientes.</small>
+                                </span>
+                            </button>
+                        </div>
+
+                        <div class="mp-nota" *ngIf="!puedeEditarModo">
+                            <i class="pi pi-lock me-2"></i>
+                            Solo el administrador de la empresa puede cambiar el modo de precios.
+                        </div>
+                        <div class="mp-nota" *ngIf="puedeEditarModo">
+                            <i class="pi pi-shield me-2"></i>
+                            Cambiar de modo no borra precios: los del modo que se apaga quedan guardados.
+                        </div>
+
+                        <div class="mp-loading" *ngIf="guardandoModo">
+                            <i class="pi pi-spin pi-spinner me-2"></i> Guardando...
+                        </div>
+                    </ng-container>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-sm-12 text-center">
             <div class="card">

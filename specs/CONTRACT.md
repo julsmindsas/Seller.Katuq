@@ -4480,3 +4480,59 @@ El payload que viaja a Cereza sigue llevando `is_paid` real, así que Cereza sab
 **Cobertura:** `functions/tests/inventory/cerezaDispatchPaymentGate.emulator.test.js` (`npm run test:cereza-dispatch-gate:emulator`) — el automático sigue bloqueando pago pendiente, el manual no, y cancelado + idempotencia quedan intactos. Verde también `shopifyPaidOrderLogistics.emulator.test.js`, `paymentInventoryPolicy.test.js` y el contract test de seguridad de inventario. Build de frontend limpio.
 
 **Pendiente.** Empujar a Cereza los pedidos que quedaron colgados (ORE-000567 primero) y revisar aparte ORE-000450 y ORE-000451.
+
+---
+
+## D-206 (2026-08-18) — Modo de precios por empresa: tipo de cliente **o** volumen, nunca los dos
+
+**Disparador.** Pedido de Monica: cada empresa factura de una sola forma, y Lista de Precios les mostraba las cuatro pestañas a todas, incluidas las de un modo que no usan.
+
+**Decisión.** Campo nuevo `companies.configuracionPrecios.modo` con dos valores: `tipoCliente` | `volumen`. Lo elige **el administrador de cada empresa** en *Empresa → Activación Módulos*; en Lista de Precios solo se informa cuál está activo.
+
+- **Endpoints** `GET/POST /v1/companies/pricing-mode`, calcados del molde acotado de `notification-settings` (D del umbral de stock bajo): la empresa se resuelve por el **header `company`, no por un nit del body** que se podría falsear para configurar otra empresa; se escribe **solo** `configuracionPrecios.*` con dot-path. Leer no exige rol (la pantalla de precios lo necesita para saber qué mostrar); **escribir sí**: `auth + requireJwtTenant + ONLY_ADMIN`.
+- **Pestañas.** `Precio unitario` y `COSTO` se muestran **siempre** — el precio base alimenta a los dos modos y el costo es transversal. Entre `Precio tipo clientes` y `Precio por volumen` se muestra solo la del modo elegido, con su importador y su plantilla.
+- **Sin modo elegido = todo como hoy.** Las empresas existentes siguen viendo las cuatro pestañas hasta que su administrador elija. No se adivina el modo a partir de los datos que ya tengan (varias tienen precios de los dos tipos cargados). Si el endpoint falla, el servicio devuelve `null` y tampoco se esconde nada: un error de red nunca puede tapar una pestaña de precios.
+- **Cambiar de modo no borra precios.** Los del modo que se apaga quedan guardados y vuelven a verse si se cambia de vuelta. La confirmación lo dice explícitamente.
+
+**Trampa de PrimeNG que este cambio obligó a resolver.** `activeTab` (0 tipo cliente, 1 unitario, 2 volumen, 3 costo) decide en ~15 lugares del componente **qué importador corre, qué plantilla se descarga y qué columna se pinta**. Un `*ngIf` sobre un `p-tabPanel` renumera los índices que emite `p-tabView`, así que sin traducción el importador habría interpretado el Excel con la pestaña equivocada. Se separó el índice **lógico** (`activeTab`, el que usa todo el componente) del **renderizado** (`tabsVisibles` / `activeTabRender` / `onTabChange`).
+
+**Alcance deliberado — el modo NO cambia cómo se cobra.** `orderCalculationService.js:41` sigue dando prioridad a `preciosVolumen` sobre el precio base, y el precio por tipo de cliente solo lo aplica el frontend (`payment.service.ts:402`). **Una empresa en modo `tipoCliente` cuyos productos conserven rangos de volumen guardados se sigue cobrando por volumen**, aunque ya no vea esa pestaña. Alinear los dos motores con el modo toca el cálculo de pedidos y va en su propia propuesta (misma familia que `fix-order-calc-engine-divergence`).
+
+**Verificación (backend, local contra Firestore real).** `GET` → `{"modo":null}` en una empresa sin configurar; `POST` con rol Vendedor → **403** `ROLE_NOT_ALLOWED`; `POST` con `modo` inválido → **400** sin escribir; `POST modo=volumen` → 200, persiste en Firestore y el `GET` lo devuelve. E2E de escritura corrido contra **Tienda Demo KAI Import** (tenant de pruebas, nunca ALMARA) y **revertido**: el campo se borró y el documento quedó como estaba. Frontend compila limpio.
+
+**Archivos.** Backend: `controllers/companies.js` (`getPricingMode`/`setPricingMode`), `routers/companies.js` (rutas antes de `/:id`, o el GET las captura como un id). Frontend: `shared/services/empresas/pricing-mode.service.ts` (nuevo, `BaseService`), `empresas/modulovariable/modulovariable.component.{ts,html,scss}`, `lista-precios/lista-precios/lista-precios.component.{ts,html,scss}`.
+
+---
+
+## D-207 (2026-08-18) — Duplicar un producto ya no hereda el precio: la copia nace en $0
+
+**Disparador.** Monica: al duplicar un producto y guardarlo sin tocar el precio, la copia queda con el precio del original. Si a alguien se le olvida cambiarlo, se vende un producto al precio de otro.
+
+**Censo previo (solo lectura, producción, 25.553 productos).** Sirve para dimensionar el riesgo y de paso responde qué empresa trabaja con cuál modo de precio:
+
+| Empresa | Productos | Con rangos de volumen reales (2+ uds) | Con precio por tipo de cliente |
+|---|---|---|---|
+| HARMONY LENS | 13.874 | 0 | **11.757 (84,7%)** |
+| OH MY STORE | 8.445 | 1 | **8.355 (98,9%)** |
+| ALMARA FELICIDAD | 2.151 | **100** (2.147 tienen el array, casi todos solo con el rango 1-1) | 0 |
+| DEL RANCHO GREEN | 289 | **22** | 0 |
+| CAFE ESCOBAR | 60 | **31** | 0 |
+| CHOCOMELI 4 · La Tartaleria 5 · Dulces Mafe 5 · Yavalva 5 · TALLADRES 3 · LA BREBAJERIA 2 · HASU 1 · Natural Vienna 1 · Arreglos varios 1 | ≤11 c/u | sí | 0 |
+
+Lectura: **volumen = ALMARA, DEL RANCHO GREEN, CAFE ESCOBAR y una cola de empresas pequeñas; tipo de cliente = HARMONY LENS y OH MY STORE.** OH MY STORE tiene 129 productos con las dos cosas y ALMACEN BOMBAS sus 2 productos con ambas — son los únicos casos mixtos reales.
+
+**Decisión.** El duplicado se crea **sin precio**: `precioUnitarioSinIva`, `precioUnitarioConIva` y `valorIva` en 0. Ya nacía inactivo, pero eso no alcanza: activarlo es un clic y nadie vuelve a mirar el precio.
+
+**Poner solo la base en 0 habría sido mentira** — hay tres fuentes de precio más, y cada una le gana a la base en algún camino. Se limpian todas:
+
+- `precio.preciosVolumen = []` — al vender, el rango de volumen **le gana** al precio unitario (`orderCalculationService.js:41`). Con la base en 0 y un rango heredado se cobraba el rango. Es el caso de ALMARA (99,8% de sus productos traen el array).
+- `preciosPorTipoCliente = []` — el frontend lo aplica **antes** que el precio base (`payment.service.ts:402`). Caso de OH MY STORE y HARMONY LENS.
+- `precio.variantesOsmosis` se borra — es el respaldo desde el que Shopify arma sus listas de precio (`marketPricingService.js:57`) y pertenece al producto original, igual que los IDs de integración que ya se limpiaban.
+
+**Lo que la copia SÍ conserva:** el **porcentaje de IVA** (es un atributo tributario, no un precio: ponerlo en 0 volvería exento un producto gravado) y el **costo** (no interviene en lo que se le cobra al cliente y sirve para calcular el margen al ponerle precio nuevo).
+
+Los dos avisos lo dicen: la confirmación previa advierte que la copia queda en $0, y el mensaje de éxito lo repite junto a "quedó inactivo" y "no incluye imágenes".
+
+**Archivos.** `productos.component.ts`: nuevo `limpiarPreciosDelDuplicado()`, invocado en `ejecutarDuplicacion()` + textos de los tres diálogos. Solo frontend; el backend no valida precio > 0 al crear, así que el 0 se persiste tal cual.
+
+**Verificación.** Censo y estructura de precios leídos de producción con scripts de solo lectura. Frontend compila limpio. **Falta la prueba en navegador** (duplicar y confirmar que la copia queda en $0 sin rangos ni precios por tipo de cliente).

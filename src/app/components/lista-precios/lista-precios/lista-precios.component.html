@@ -11,6 +11,11 @@
                 <div>
                   <h4 class="mb-1 fw-bold">Gestión de Precios</h4>
                   <p class="text-muted mb-0">Administra los precios de tus productos</p>
+                  <!-- Modo de precios de la empresa: acá solo se informa; se elige
+                       en Empresa → Activación Módulos (solo el administrador). -->
+                  <span class="lp-modo" *ngIf="modoPrecio">
+                    <i class="pi pi-tag"></i> Tu empresa maneja: <strong>{{ etiquetaModoPrecio }}</strong>
+                  </span>
                 </div>
               </div>
             </div>
@@ -42,9 +47,11 @@
 
       <!-- Tabs -->
       <div class="card">
-        <p-tabView (onChange)="onTabChange($event)" [activeIndex]="activeTab">
-          <!-- Tab 1: Precio tipo clientes -->
-          <p-tabPanel header="Precio tipo clientes">
+        <!-- [activeIndex] va con el índice RENDERIZADO: con una pestaña oculta por
+             el modo de la empresa, la posición ya no coincide con el índice lógico. -->
+        <p-tabView (onChange)="onTabChange($event)" [activeIndex]="activeTabRender">
+          <!-- Tab 1: Precio tipo clientes — oculta si la empresa maneja volumen -->
+          <p-tabPanel header="Precio tipo clientes" *ngIf="mostrarTabTipoCliente">
             <div class="p-3">
               <!-- Buscador con debounce -->
               <div class="mb-3 lp-filtros">
@@ -443,8 +450,8 @@
             </div>
           </p-tabPanel>
 
-          <!-- Tab 3: Precio por volumen -->
-          <p-tabPanel header="Precio por volumen">
+          <!-- Tab 3: Precio por volumen — oculta si la empresa maneja tipo de cliente -->
+          <p-tabPanel header="Precio por volumen" *ngIf="mostrarTabVolumen">
             <div class="p-3">
               <div class="mb-3 lp-filtros">
                 <div class="input-group">

@@ -67,6 +67,23 @@
 }
 :host .lp-header p { color: var(--lp-muted); font-size: .875rem; }
 
+/* Chip informativo del modo de precios de la empresa (se elige en
+   Empresa → Activación Módulos; acá es solo lectura). */
+:host .lp-modo {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin-top: .45rem;
+  padding: .25rem .6rem;
+  border-radius: 999px;
+  background: #f2eefe;
+  border: 1px solid #ddd2fb;
+  color: #4a3a8c;
+  font-size: .78rem;
+  line-height: 1.4;
+}
+:host .lp-modo strong { font-weight: 700; }
+
 /* ---------------------------------------------------------- */
 /*  Toolbar (botones de acción)                               */
 /* ---------------------------------------------------------- */
