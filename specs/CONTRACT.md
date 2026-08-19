@@ -4588,3 +4588,17 @@ La forma del campo vive en `functions/services/companyPricingConfig.js`, fuente 
 Producto de prueba, marcas de los tipos y config de la empresa quedaron restaurados.
 
 **Sigue sin cambiar cómo se cobra** (mismo alcance de D-206): `orderCalculationService` prioriza `preciosVolumen`. Alinear el motor de venta va aparte.
+
+## D-209 (2026-08-14) — El bot configura el producto como venta asistida: adiciones con precio del maestro
+
+**Cambio OpenSpec `bot-configuracion-de-producto`** (aprobado por Daniel), implementado y desplegado (backend `2cfa67c`, ADK `c09ab6d`).
+
+**Qué hace.** Las líneas del carrito del bot aceptan **adiciones y preferencias como NOMBRES** del maestro `adiciones` del comercio (el mismo que usa venta asistida: `esAdicion` cobra aparte, `esPreferencia` no), más **ocasión y observación por producto** ("es para un cumpleaños", "sin maní, es alérgica"). El despachador le pasa al agente los extras con su **precio real** —filtrando los que no aplican a la entrega ya acordada, igual que crear-ventas— y el cierre resuelve cada nombre contra el maestro y adjunta el **objeto completo**, de modo que `controllers/cotizaciones` los suma con su `valorUnitarioSinIva` y `porcentajeIva` como si vinieran de venta asistida. **Un precio dictado por el modelo no llega jamás al documento**; lo inventado, lo ambiguo y lo incompatible con la entrega se descartan y quedan **dichos en la nota** (no desaparecen en silencio). El pedido nunca se cae por una adición.
+
+**Hallazgo que valió el cambio.** Al hacer que el test del despachador leyera maestros de verdad (antes el stub fallaba y todo caía a texto libre), apareció un bug real: el emparejado exigía casi igualdad y **"Recogen en tienda" no matcheaba "Recoge en tienda"** — la forma se descartaba, el gate de entrega no se cumplía y el cierre no salía. Se extrajo `whatsappBotNombres` (compartido por entrega, pago y adiciones): tolera conjugación y plural por prefijo, pero compara **por PALABRAS completas, no por substring** — con substring, `"sal"` caía en `"Salsa de la casa"` y le cobrábamos al cliente una salsa que no pidió. Ambigüedad (`"chocolates"` con dos chocolates en el maestro) = descarte, nunca adivinar.
+
+**Verificación:** 9 suites backend (una nueva, `test:whatsapp-bot-nombres`) + 49 casos ADK en verde; write-set intacto (contract test ampliado con adiciones, incompatibilidad de entrega y ambigüedad). Desplegado y sano.
+
+**Transparencia del despliegue:** el rango del backend arrastró `D-206`/`D-208` (modos de precio) de la sesión paralela — la unidad de despliegue es la rama.
+
+**Pendiente:** prueba real del ciclo (pedido con adición → comparar total del chat vs cotización → convertir a pedido y ver las adiciones en el carrito).
