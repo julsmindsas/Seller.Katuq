@@ -4642,3 +4642,19 @@ La entrada de menú de Combos se movió del grupo **"Producto"** (sección Confi
 `path` sin cambios (`proceso/combos`), así que ningún permiso se rompe y no se tocó ni el componente ni la ruta ni el backend. Medido sobre los 102 roles de producción: **3** autorizan `proceso/combos` (Administrador @ ALMARA FELICIDAD, Administrador @ ALMACEN BOMBAS, ADMINISTRADOR FULL OH @ OH MY STORE) y **los 3 ya autorizan `productos` o `ecommerce/adiciones/listar`**, así que el grupo destino ya se les dibujaba: nadie pierde acceso y a nadie le queda un grupo huérfano con un solo hijo. El grupo "Producto" conserva sus otros 4 items.
 
 **Ojo con lo que este cambio NO hace:** los otros 99 roles siguen sin ver Combos. El menú filtra `ALLMENUITEMS` contra el `path` exacto del array `menus` del rol; mover la entrada no la publica. Es la misma trampa de D-208. El orden sí lo manda el código: el filtro conserva la secuencia de `ALLMENUITEMS` y el `index` que traen los `menus` del rol no se usa para ordenar.
+
+## D-213 (2026-08-19) — Opciones tocables en el bot: botones y listas con identificador exacto
+
+**Cambio OpenSpec `bot-opciones-interactivas`** (aprobado por Daniel), implementado y desplegado (backend `a7c5b26`, ADK `9b8e8a2`; rangos medidos, solo estos commits).
+
+**Qué hace.** El bot puede responder con **opciones tocables** donde la elección es cerrada: forma de entrega, medio de pago, sí/no, productos de una búsqueda. Hasta 3 salen como **botones**, de 4 a 10 como **lista**; los topes de Meta (título 20/24, descripción 72, cuerpo 1024) se recortan ANTES de enviar porque pasarse hace que Meta rechace el mensaje entero. Dos opciones que se ven iguales tras el recorte: la segunda cae, confunde más de lo que ayuda. Mismo camino de salida y **un solo cobro**.
+
+**El hueco que se cerró.** El webhook ya sabía leer `interactive.button_reply`, pero el despachador cortaba todo lo que no fuera texto: **el bot le habría contestado "por ahora solo leo texto" a su propia clienta por usar el botón que él mismo le ofreció**. Ahora los interactivos entrantes se atienden como un turno normal.
+
+**Lo que de verdad importa: el identificador.** El `id` de la opción lleva el valor canónico (`entrega:Recoge en tienda`, `pago:Nequi`) y se aplica **DIRECTO** sobre los maestros, sin pasar por el emparejado difuso — que es lo que mata de raíz la ambigüedad de "recogen" vs "recoge" que ya costó un cierre (D-209). Un id inventado no tiene privilegio: se valida contra el maestro igual que un texto dictado y se ignora si no existe. Las adiciones y productos siguen manejándose por el agente, que sabe de qué producto se hablaba.
+
+**Riesgo principal, cubierto por diseño:** no hay forma de saber sin probar si Kapso reenvía interactivos. Si los rechaza, la MISMA pregunta sale como **texto con las opciones enumeradas** ("1. Domicilio / 2. Recoge en tienda") y queda el log `interactivo_degradado_a_texto` — el cliente no percibe error y sigue pudiendo responder. Está probado.
+
+**Sobriedad como regla escrita, no como intención:** las instrucciones prohíben usar botones para preguntas abiertas o en todos los mensajes ("se siente máquina"), y el cliente siempre puede escribir.
+
+**Verificación:** 10 suites backend (una nueva, `test:whatsapp-interactivo`) + 54 casos ADK en verde; desplegado y sano. **Pendiente:** confirmar en el piloto que Kapso reenvía los interactivos — si no, la degradación ya deja todo funcionando y se ve en el log.
