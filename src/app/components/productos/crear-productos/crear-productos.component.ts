@@ -387,9 +387,15 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
             this.generarCodigoBarras();
           }
         } else {
-          if (this.edit.identificacion?.referencia) {
+          // `this.edit?` y no `this.edit.`: creando desde cero NO hay producto en
+          // sessionStorage, así que `this.edit` es null. Sin el optional chaining
+          // esta línea lanzaba TypeError, el subscriber moría acá y nunca llegaba
+          // al `enable()` de abajo — por eso al elegir "Manual" en un producto
+          // nuevo la caja de Referencia se quedaba bloqueada. Editando sí
+          // funcionaba, porque ahí `this.edit` existe.
+          if (this.edit?.identificacion?.referencia) {
             this.identificacion.controls["referencia"].setValue(
-              this.edit.identificacion?.referencia,
+              this.edit.identificacion.referencia,
             );
           } else {
             this.identificacion.controls["referencia"].setValue("");
@@ -2661,7 +2667,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
     this.service.getTiempoEntrega().subscribe((r: any) => {
       this.tiempoEntrega = r as any[];
-
+      // El maestro llega DESPUÉS de que el producto ya se volcó al formulario:
+      // `ngOnInit` dispara esta llamada async y sigue derecho a `handleEditMode()`.
+      // Por eso la traducción se hace acá y no solo en `loadBasicData()` — allá
+      // `this.tiempoEntrega` todavía está vacío y nunca resolvía nada.
+      this.normalizarTiempoEntregaGuardado();
     });
 
     this.service.consultarOcasion().subscribe((r: any) => {
@@ -2740,16 +2750,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   private loadBasicData() {
     this.crearProducto.patchValue(this.edit.crearProducto);
     this.Dimensiones.patchValue(this.edit.dimensiones);
-    const disp = { ...this.edit.disponibilidad };
-    // Si tiempoEntrega es un número (minDias legacy), convertir al nombreInterno correspondiente
-    const teVal = disp.tiempoEntrega;
-    const isLegacyNumeric = teVal !== null && teVal !== undefined && !isNaN(Number(teVal)) &&
-      !this.tiempoEntrega.some(i => i.nombreInterno === teVal);
-    if (isLegacyNumeric && this.tiempoEntrega.length > 0) {
-      const match = this.tiempoEntrega.find(i => String(i.minDias) === String(teVal));
-      if (match) disp.tiempoEntrega = match.nombreInterno;
-    }
-    this.disponibilidad.patchValue(disp);
+    this.disponibilidad.patchValue(this.edit.disponibilidad);
+    // La traducción del `tiempoEntrega` legacy vive en `normalizarTiempoEntregaGuardado()`
+    // y se dispara cuando responde el maestro. Se llama igual acá por si ya llegó.
+    this.normalizarTiempoEntregaGuardado();
     this.identificacion.patchValue(this.edit.identificacion);
     this.exposicion.patchValue(this.edit.exposicion);
     this.etiquetas = this.edit.exposicion.etiquetas;
@@ -2761,6 +2765,46 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     if (this.edit.dropshippingConfig) {
       this.dropshippingConfig.patchValue(this.edit.dropshippingConfig);
     }
+  }
+
+  /**
+   * Traduce el `tiempoEntrega` guardado al `nombreInterno` que espera el <select>.
+   *
+   * Los productos viejos guardan un NÚMERO de días ("0", "1", "3"…, a veces
+   * numérico y no string) mientras que el <option> se pinta con `nombreInterno`.
+   * Al no existir ninguna opción con value "0", el navegador no puede
+   * seleccionar nada y el campo se ve VACÍO aunque el dato exista en Firestore.
+   * Pasa en la mayoría del catálogo de varias empresas, y el duplicado lo hereda.
+   *
+   * Orden de resolución — se corta en el primero que resuelva SIN ambigüedad:
+   *  1. Ya es un `nombreInterno` del maestro → no se toca.
+   *  2. `minDias`, solo si hay UN candidato (ALMARA tiene dos con `minDias: 0`).
+   *  3. `posicion`, que en los maestros reales sí refleja los días:
+   *     "ENTREGA HOY MISMO" es posicion 0, "Solicítalo con 1 día" es posicion 1
+   *     aunque su `minDias` esté cargado en 0.
+   *
+   * Si nada resuelve, se deja como está: mejor el campo vacío que mostrar un
+   * tiempo de entrega que el producto no tiene.
+   *
+   * Solo cambia lo que se MUESTRA. El valor viejo sigue en Firestore hasta que
+   * alguien guarde ese producto.
+   */
+  private normalizarTiempoEntregaGuardado(): void {
+    const control = this.disponibilidad?.get("tiempoEntrega");
+    if (!control || !this.tiempoEntrega?.length) return;
+
+    const valor = control.value;
+    if (valor === null || valor === undefined || valor === "" || valor === "seleccione") return;
+    if (this.tiempoEntrega.some((i) => i.nombreInterno === valor)) return;
+    if (isNaN(Number(valor))) return;
+
+    const dias = String(Number(valor));
+    const porMinDias = this.tiempoEntrega.filter((i) => String(i.minDias) === dias);
+    const match = porMinDias.length === 1
+      ? porMinDias[0]
+      : this.tiempoEntrega.find((i) => String(i.posicion) === dias);
+
+    if (match) control.setValue(match.nombreInterno);
   }
 
   private loadPricingData() {

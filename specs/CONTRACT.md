@@ -4602,3 +4602,43 @@ Producto de prueba, marcas de los tipos y config de la empresa quedaron restaura
 **Transparencia del despliegue:** el rango del backend arrastró `D-206`/`D-208` (modos de precio) de la sesión paralela — la unidad de despliegue es la rama.
 
 **Pendiente:** prueba real del ciclo (pedido con adición → comparar total del chat vs cotización → convertir a pedido y ver las adiciones en el carrito).
+
+---
+
+## D-210 (2026-08-19) — El tiempo de entrega vuelve a verse: el dato era un número legacy, no un `nombreInterno`
+
+**Síntoma.** Al editar un producto (o abrir un duplicado) el campo **Tiempo de entrega** de la pestaña Disponibilidad aparecía vacío, como si nunca se hubiera puesto.
+
+**Causa.** El dato nunca se perdió. El `<select>` pinta sus `<option>` con `nombreInterno` del maestro `tiemposentrega`, pero el catálogo guarda un **número de días** (`"0"`, `"1"`, `"3"`; en HARMONY LENS incluso numérico, no string). Ninguna opción tiene value `"0"`, así que el navegador no puede seleccionar nada. El duplicado lo hereda del original: los 14 duplicados de ALMARA tenían `"0"`.
+
+Censo de producción: **ALMARA 2.005/2.152 · DEL RANCHO GREEN 289/289 · CAFE ESCOBAR 59/60 · HARMONY LENS 13.874 · OH MY STORE 90** (los 8.298 de OMS en `""` NO son este bug: nunca se les cargó).
+
+**Por qué el parche anterior no servía.** `75fc6cb8` ya había escrito la traducción en `loadBasicData()`, pero era **código muerto**: `ngOnInit` dispara `loadMasterData()` (HTTP async) y sigue **síncrono** a `handleEditMode()`, así que `this.tiempoEntrega` siempre era `[]` y el guard `length > 0` nunca entraba. La traducción se movió a `normalizarTiempoEntregaGuardado()` y se dispara desde el `subscribe` del maestro.
+
+**`minDias` no alcanza como llave; `posicion` sí.** ALMARA tiene **dos** tiempos con `minDias: 0` ("ENTREGA HOY MISMO" y "Solicítalo con 1 día") y **ninguno** con `minDias: 1`, pero `posicion` sí refleja los días. Orden de resolución: `nombreInterno` exacto → `minDias` **solo si el candidato es único** → `posicion` → si nada resuelve, se deja vacío. Nunca se adivina.
+
+**Verificación:** simulado contra el catálogo real de las 5 empresas. Resuelve todo menos **1** producto (`"7"` en ALMARA, sin equivalente en su maestro) y 15 con texto libre ajeno al maestro de su empresa. Solo cambia lo que se MUESTRA: el valor viejo sigue en Firestore hasta que alguien guarde ese producto.
+
+**Descartado con evidencia** (para no volver a buscar ahí): `/v1/productos/all` devuelve el documento completo, así que el dato sí llega al formulario; Angular 14 **sí** re-sincroniza un `<select>` cuando las `<option>` llegan tarde (`NgSelectOption.value` re-llama `writeValue`); y el flow de Cereza escribe con `set(merge:true)` y su `disponibilidad` no trae `tiempoEntrega`, así que no lo pisa.
+
+**Pendiente — el filtro sigue roto.** `controllers/productos.js:1103` compara el filtro de tiempo de entrega con igualdad estricta, así que filtrar por "ENTREGA HOY MISMO" no devuelve los 1.790 productos que están en `"0"`. Arreglarlo pide normalizar el dato en Firestore: va como propuesta aparte, con `--dry-run` primero.
+
+---
+
+## D-211 (2026-08-19) — La referencia manual no se podía escribir al crear un producto desde cero
+
+Creando un producto nuevo, elegir **Manual** en "Tipo Referencia" dejaba la caja de Referencia bloqueada. Editando uno existente funcionaba.
+
+El handler de `tipoReferencia.valueChanges` leía `this.edit.identificacion?.referencia` — el `?.` estaba sobre `identificacion`, no sobre `edit`. Sin producto en `sessionStorage`, `this.edit` es `null`, la línea lanzaba `TypeError`, **el subscriber moría ahí y nunca llegaba al `enable()`** de dos líneas más abajo. Editando no explotaba porque `this.edit` existe. Corregido a `this.edit?.identificacion?.referencia`.
+
+Regla que deja: en este componente `this.edit` es `null` en modo crear. Cualquier lectura suya fuera de una rama protegida por `isEditMode()` necesita optional chaining sobre `edit`, no solo sobre sus hijos.
+
+---
+
+## D-212 (2026-08-19) — Combos pasa a "Inventarios y Productos → Productos", debajo de Adiciones
+
+La entrada de menú de Combos se movió del grupo **"Producto"** (sección Configuración) al grupo **"Productos"** (sección Inventarios y Productos), como tercer item, debajo de Adiciones. Los dos grupos se llamaban casi igual —"Producto" singular vs "Productos" plural— y la pantalla estaba en el que no correspondía.
+
+`path` sin cambios (`proceso/combos`), así que ningún permiso se rompe y no se tocó ni el componente ni la ruta ni el backend. Medido sobre los 102 roles de producción: **3** autorizan `proceso/combos` (Administrador @ ALMARA FELICIDAD, Administrador @ ALMACEN BOMBAS, ADMINISTRADOR FULL OH @ OH MY STORE) y **los 3 ya autorizan `productos` o `ecommerce/adiciones/listar`**, así que el grupo destino ya se les dibujaba: nadie pierde acceso y a nadie le queda un grupo huérfano con un solo hijo. El grupo "Producto" conserva sus otros 4 items.
+
+**Ojo con lo que este cambio NO hace:** los otros 99 roles siguen sin ver Combos. El menú filtra `ALLMENUITEMS` contra el `path` exacto del array `menus` del rol; mover la entrada no la publica. Es la misma trampa de D-208. El orden sí lo manda el código: el filtro conserva la secuencia de `ALLMENUITEMS` y el `index` que traen los `menus` del rol no se usa para ordenar.
