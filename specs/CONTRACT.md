@@ -4487,7 +4487,9 @@ El payload que viaja a Cereza sigue llevando `is_paid` real, así que Cereza sab
 
 **Disparador.** Pedido de Monica: cada empresa factura de una sola forma, y Lista de Precios les mostraba las cuatro pestañas a todas, incluidas las de un modo que no usan.
 
-**Decisión.** Campo nuevo `companies.configuracionPrecios.modo` con dos valores: `tipoCliente` | `volumen`. Lo elige **el administrador de cada empresa** en *Empresa → Activación Módulos*; en Lista de Precios solo se informa cuál está activo.
+**Decisión.** Campo nuevo `companies.configuracionPrecios.modo` con dos valores: `tipoCliente` | `volumen`. Lo elige **el administrador de cada empresa** en el **menú de perfil → Configuración de empresa** (ruta `empresas`, `EmpresasComponent`); en Lista de Precios solo se informa cuál está activo.
+
+**Por qué ahí y no en "Activación Módulos" (corregido el mismo día, con datos).** Primero se puso en `empresas/modulovariable/produccion/opciones` y Monica reportó que ni siquiera le aparecía el menú de Empresa. Causa verificada: el menú lateral solo muestra un link si su `path` **exacto** está en `authorizedMenuItems`, que sale del array `menus` del ROL (colección `roles`, no de un permiso calculado). Medido sobre los 102 roles de producción: `empresas` está autorizado en **78**, y `empresas/modulovariable/produccion/opciones` solo en **16**. La pantalla de Configuración de empresa es además a donde apunta el botón de perfil del header (`my-account.component.ts:38`), así que es la puerta real a la configuración de la empresa. **Regla para lo que venga: una pantalla nueva de configuración no se "publica" sola — si su path no está en el `menus` de cada rol, no existe para el usuario.**
 
 - **Endpoints** `GET/POST /v1/companies/pricing-mode`, calcados del molde acotado de `notification-settings` (D del umbral de stock bajo): la empresa se resuelve por el **header `company`, no por un nit del body** que se podría falsear para configurar otra empresa; se escribe **solo** `configuracionPrecios.*` con dot-path. Leer no exige rol (la pantalla de precios lo necesita para saber qué mostrar); **escribir sí**: `auth + requireJwtTenant + ONLY_ADMIN`.
 - **Pestañas.** `Precio unitario` y `COSTO` se muestran **siempre** — el precio base alimenta a los dos modos y el costo es transversal. Entre `Precio tipo clientes` y `Precio por volumen` se muestra solo la del modo elegido, con su importador y su plantilla.
@@ -4536,3 +4538,53 @@ Los dos avisos lo dicen: la confirmación previa advierte que la copia queda en 
 **Archivos.** `productos.component.ts`: nuevo `limpiarPreciosDelDuplicado()`, invocado en `ejecutarDuplicacion()` + textos de los tres diálogos. Solo frontend; el backend no valida precio > 0 al crear, así que el 0 se persiste tal cual.
 
 **Verificación.** Censo y estructura de precios leídos de producción con scripts de solo lectura. Frontend compila limpio. **Falta la prueba en navegador** (duplicar y confirmar que la copia queda en $0 sin rangos ni precios por tipo de cliente).
+
+---
+
+## D-208 (2026-08-18) — Tercer modo (precio unitario) y el precio por tipo de cliente como precio base
+
+Amplía D-206, que arrancó con dos modos.
+
+**Tres modos.** `configuracionPrecios.modo` ahora es `unitario` | `tipoCliente` | `volumen`. Pestañas que muestra Lista de Precios:
+
+| Modo | Pestañas |
+|---|---|
+| `unitario` | Precio unitario · COSTO |
+| `tipoCliente`, ningún tipo marcado como precio base | Precio tipo clientes · Precio unitario · COSTO |
+| `tipoCliente`, con un tipo marcado como precio base | Precio tipo clientes · COSTO |
+| `volumen` | Precio unitario · Precio por volumen · COSTO |
+| sin elegir (`null`) | las 4, como siempre |
+
+En modo `volumen` el precio unitario se queda a propósito: el rango de volumen se apoya en el precio base (el rango 1-1 lo refleja, D-173) y sin esa pestaña no habría dónde ponerlo. COSTO es transversal a los tres modos.
+
+**La marca "este tipo define el precio base" vive en el TIPO DE CLIENTE** (`tiposPrecios.esPrecioBase`), no en la configuración de la empresa. Se administra en **Tipos de Cliente → Editar**, con una columna "Precio base" en el listado para verlo de un vistazo. Marcada, guardar o importar precios por tipo de cliente **también escribe el precio unitario del producto**, y la pestaña "Precio unitario" desaparece de Lista de Precios — administrarla aparte crearía dos verdades para el mismo número.
+
+Es el primer ajuste de esta familia que cambia lo que se ESCRIBE y no solo lo que se ve, por eso pide confirmación explícita al prenderla (apagarla no: deja de escribir). Y es **excluyente por empresa**: al marcar un tipo, el backend desmarca el anterior en batch — dos tipos "base" dejarían el precio unitario dependiendo del orden de guardado.
+
+*Iteración intermedia descartada el mismo día:* primero se puso como un sub-check en la tarjeta de Configuración de empresa (`configuracionPrecios.tipoClienteEsPrecioBase` + `tipoClienteBaseId`). Monica lo corrigió: el ajuste pertenece al módulo donde se administran los tipos, no a la configuración de la empresa. En la empresa quedó solo el modo, y la tarjeta remite al módulo de tipos.
+
+**Que sea UN tipo marcado, y por qué NO se adivina.** Censo de producción: OH MY STORE tiene 3 tipos por producto y HARMONY LENS **17** — "el precio por tipo de cliente" no es un solo número. Se midió si el precio base coincide hoy con alguno:
+
+- **OH MY STORE**: el base coincide con el **mayor** de los tipos en **8.191 de 8.353** productos (98%).
+- **HARMONY LENS**: no coincide **con ninguno** en los **11.757** productos con precios por tipo (su base está por debajo de todos sus tipos).
+
+Sincronizar "el más alto" habría acertado en OMS y **inventado** en HARMONY. Decisión: con un solo precio cargado se usa ese (no hay ambigüedad); con varios, **si no hay un tipo marcado no se sincroniza nada**.
+
+**Dónde se sincroniza:** `updatePreciosTipoCliente` (editor de un producto) e `importPrecios` (importador de la pestaña tipo de cliente), los dos con **rutas punteadas `precio.*`** — nunca reemplazando el objeto `precio`, donde también viven `preciosVolumen` y `costoUnitario` (D-167). Nunca escribe ceros: si el tipo elegido no tiene precio, no toca el base. El importador devuelve `basesSincronizadas` y el editor `precioBaseSincronizado`.
+
+La forma del campo vive en `functions/services/companyPricingConfig.js`, fuente única que leen `controllers/companies.js` y `controllers/productos.js`; reutiliza `findCompanyDocByTenant` de `onboardingReadiness` en vez de escribir una cuarta copia del lookup. La exclusividad de la marca vive en `controllers/tiposPrecios.js` (`aplicarExclusividadPrecioBase`).
+
+**Guard multi-tenant agregado de paso:** `editTipoPrecio` editaba por id suelto sin verificar la empresa del documento — una empresa podía marcar el precio base de otra. Ahora responde 404 si no existe y 403 si el tipo es de otra empresa.
+
+**Bug encontrado al probar en OH MY STORE — el rol de administrador NO se llama igual en todas las empresas.** Los 4 usuarios de OMS tienen `rol = "ADMINISTRADOR FULL OH"`; también hay "Administrador Full CE" (CAFE ESCOBAR), "Administrador LT" (La Tartaleria) y "Administrador PC" (PALACIO CONTABLE). El frontend comparaba contra el texto exacto `'Administrador' | 'Super Administrador'`, así que **bloqueaba la pantalla a administradores que el backend sí autoriza** (`requireRole.isAdminFamilyRole` normaliza acentos/mayúsculas y acepta la familia). La UI mentía sobre un permiso concedido. `PricingModeService.esRolAdministrador` es ahora el espejo exacto de esa regla; verificado contra los nombres reales: la familia Administrador pasa, y Vendedor / Bodega / Asesor Comercial / Contabilidad siguen bloqueados. Monica confirmó dejarlo así (la alternativa era renombrar el rol de OMS, que gobierna todos los permisos de esos usuarios, no solo esta pantalla).
+
+**Regla para lo que venga: nunca comparar un rol con `===` en el frontend.** Usar la normalización de familia, o la pantalla bloqueará a usuarios que el servidor sí deja pasar.
+
+**Verificación E2E (local contra Firestore real, tenant de pruebas Tienda Demo KAI Import, todo revertido).** Dos baterías, 20 chequeos verdes en total:
+
+- *Modos:* los tres guardan y releen; modo inválido → 400; rol Vendedor → 403.
+- *Precio base:* marcar el tipo desde el módulo funciona; marcar un segundo **desmarca el primero**; sin modo elegido no sincroniza aunque haya tipo marcado; con modo `tipoCliente` + tipo marcado el precio base sigue al tipo (sinIva y conIva) y la respuesta reporta cuál se usó; guardar el precio de **otro** tipo deja el base intacto; los rangos de volumen del producto sobreviven a la escritura.
+
+Producto de prueba, marcas de los tipos y config de la empresa quedaron restaurados.
+
+**Sigue sin cambiar cómo se cobra** (mismo alcance de D-206): `orderCalculationService` prioriza `preciosVolumen`. Alinear el motor de venta va aparte.

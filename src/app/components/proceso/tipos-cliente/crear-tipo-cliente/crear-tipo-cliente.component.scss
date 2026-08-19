@@ -51,3 +51,46 @@ input:checked + .slider:before {
 
 
 
+
+/* "Este precio es el precio base del producto" — marca excluyente por empresa.
+   Se destaca porque cambia lo que se ESCRIBE: a partir de ahí, guardar precios
+   de este tipo también actualiza el precio unitario del producto. */
+.tc-precio-base {
+  padding: 14px 16px;
+  border-radius: 11px;
+  border: 1px solid #e6e3f0;
+  background: #faf8ff;
+  transition: border-color .15s ease, background-color .15s ease;
+
+  &.activo {
+    border-color: #5F3FE0;
+    background: #f2eefe;
+  }
+
+  .tc-precio-base-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    cursor: pointer;
+
+    input { margin-top: 3px; flex: 0 0 auto; }
+
+    span {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+
+      strong { font-size: .9rem; color: #211F3A; }
+      small { color: #6b6885; line-height: 1.4; }
+    }
+  }
+
+  .tc-precio-base-nota {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd2fb;
+    font-size: .78rem;
+    color: #4a3a8c;
+  }
+}

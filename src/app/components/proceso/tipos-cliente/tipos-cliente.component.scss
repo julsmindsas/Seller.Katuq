@@ -27,3 +27,19 @@
 
 
 
+
+/* Marca de "precio base": el precio de este tipo también es el precio base del
+   producto. Es excluyente por empresa, por eso se destaca en el listado. */
+.badge-precio-base {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .2rem .6rem;
+  border-radius: 999px;
+  background: #f2eefe;
+  border: 1px solid #ddd2fb;
+  color: #4a3a8c;
+  font-size: .75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}

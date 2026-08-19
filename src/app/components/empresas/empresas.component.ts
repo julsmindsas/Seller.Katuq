@@ -9,6 +9,7 @@ import { FormControl } from '@angular/forms';
 import { Table } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { SubscriptionService } from '../../shared/services/subscription.service';
+import { ConfigPrecios, ModoPrecio, PricingModeService } from '../../shared/services/empresas/pricing-mode.service';
 import Swal from 'sweetalert2';
 
 // Interfaz mejorada basada en el modelo completo de Empresa
@@ -116,13 +117,26 @@ export class EmpresasComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
+  // ── Modo de precios de la empresa (unitario | tipo de cliente | volumen) ──
+  /**
+   * `modo: null` = la empresa todavía no eligió. Cuál tipo de cliente define el
+   * precio base NO se decide acá: es una marca del propio tipo, en el módulo
+   * Tipos de Cliente.
+   */
+  configPrecios: ConfigPrecios = { modo: null };
+  cargandoModo = true;
+  guardandoModo = false;
+  /** Solo el administrador de la empresa puede cambiarlo. */
+  puedeEditarModo = false;
+
   constructor(
     private service: MaestroService,
     private router: Router,
     private breakpointObserver: BreakpointObserver,
     private dataStoreService: DataStoreService,
     private messageService: MessageService,
-    private subscriptionService: SubscriptionService
+    private subscriptionService: SubscriptionService,
+    private pricingMode: PricingModeService
   ) {
     const currentCompany = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     this.isJulsmind = currentCompany.nomComercial === 'Julsmind';
@@ -155,6 +169,103 @@ export class EmpresasComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarDatos();
+    this.puedeEditarModo = this.pricingMode.puedeEditar();
+    this.cargarModoPrecio();
+  }
+
+  // ── Modo de precios ──
+
+  /** Nombre legible de cada modo, para los mensajes. */
+  private readonly NOMBRE_MODO: { [k: string]: string } = {
+    unitario: 'Precio unitario',
+    tipoCliente: 'Precio por tipo de cliente',
+    volumen: 'Precio por volumen'
+  };
+
+  get modoPrecio(): ModoPrecio {
+    return this.configPrecios.modo;
+  }
+
+  private cargarModoPrecio(): void {
+    this.cargandoModo = true;
+    this.pricingMode.getConfig(true)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config) => {
+          this.configPrecios = config;
+          this.cargandoModo = false;
+        },
+        error: () => {
+          this.configPrecios = { modo: null };
+          this.cargandoModo = false;
+        }
+      });
+  }
+
+  /**
+   * Cambia el modo de precios de la empresa. Pide confirmación porque cambia lo
+   * que ve todo el equipo en Lista de Precios; los precios de los modos que se
+   * apagan NO se borran, solo dejan de mostrarse.
+   */
+  async seleccionarModoPrecio(modo: Exclude<ModoPrecio, null>): Promise<void> {
+    if (!this.puedeEditarModo || this.guardandoModo || modo === this.configPrecios.modo) {
+      return;
+    }
+
+    const nombre = this.NOMBRE_MODO[modo];
+    const ocultas = Object.keys(this.NOMBRE_MODO)
+      .filter(k => k !== modo && k !== 'unitario')
+      .map(k => this.NOMBRE_MODO[k]);
+
+    const confirmacion = await Swal.fire({
+      title: `¿Manejar ${nombre}?`,
+      html: `En <strong>Lista de precios</strong> se mostrará la pestaña de
+             <strong>${nombre}</strong>${modo === 'unitario' ? '' : ' y se ocultará la de <strong>' + ocultas.join('</strong> y <strong>') + '</strong>'}.<br><br>
+             Los precios que ya tengas cargados en los otros modos
+             <u>no se borran</u>: quedan guardados y vuelven a verse si cambias de modo.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, usar este modo',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#5F3FE0'
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    this.guardarConfigPrecios({ modo }, `Tu empresa maneja ahora ${nombre}.`);
+  }
+
+  private guardarConfigPrecios(
+    config: { modo: Exclude<ModoPrecio, null> },
+    mensajeExito: string
+  ): void {
+    this.guardandoModo = true;
+    this.pricingMode.setConfig(config)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (confirmada) => {
+          this.configPrecios = confirmada;
+          this.guardandoModo = false;
+          Swal.fire({
+            icon: 'success',
+            title: 'Configuración de precios actualizada',
+            text: mensajeExito,
+            confirmButtonColor: '#5F3FE0'
+          });
+        },
+        error: (err) => {
+          this.guardandoModo = false;
+          const esPermiso = err?.status === 403;
+          Swal.fire({
+            icon: 'error',
+            title: esPermiso ? 'No tienes permiso' : 'No se pudo guardar',
+            text: esPermiso
+              ? 'Solo el administrador de la empresa puede cambiar el modo de precios.'
+              : (err?.error?.error || 'Intenta de nuevo en unos segundos.'),
+            confirmButtonColor: '#5F3FE0'
+          });
+        }
+      });
   }
 
   ngOnDestroy(): void {

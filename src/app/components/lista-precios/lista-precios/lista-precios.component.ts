@@ -11,7 +11,7 @@ import { EditarPrecioVolumenComponent } from '../editar-precio-volumen/editar-pr
 import { EditarCostoComponent } from '../editar-costo/editar-costo.component';
 import { ImportarCostosModalComponent } from '../importar-costos-modal/importar-costos-modal.component';
 import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/Producto';
-import { ModoPrecio, PricingModeService } from 'src/app/shared/services/empresas/pricing-mode.service';
+import { ConfigPrecios, ModoPrecio, PricingModeService } from 'src/app/shared/services/empresas/pricing-mode.service';
 
 @Component({
   selector: 'app-lista-precios',
@@ -54,10 +54,10 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   readonly COSTO_TAB_INDEX = 3;
 
   /**
-   * Modo de precios de la empresa (`companies.configuracionPrecios.modo`).
-   * `null` = la empresa no ha elegido: se muestran las 4 pestañas, como siempre.
+   * Configuración de precios de la empresa (`companies.configuracionPrecios`).
+   * `modo: null` = la empresa no ha elegido: se muestran las 4 pestañas.
    */
-  modoPrecio: ModoPrecio = null;
+  configPrecios: ConfigPrecios = { modo: null };
   /** Índices lógicos que se renderizan, EN ORDEN. Cambia con el modo. */
   tabsVisibles: number[] = [0, 1, 2, 3];
 
@@ -131,6 +131,9 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
             descripcion: tipo.descripcion || tipo.description || '',
             nombre: tipo.nombre || tipo.name || ''
           }));
+          // Entre los tipos viene la marca `esPrecioBase`, que decide si la
+          // pestaña "Precio unitario" se muestra.
+          this.recalcularTabsVisibles();
         },
         error: () => {
           this.service.consultarTiposClienteActivos()
@@ -138,6 +141,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
             .subscribe({
               next: (dataActivos: any) => {
                 this.tiposCliente = Array.isArray(dataActivos) ? dataActivos : [];
+                this.recalcularTabsVisibles();
               }
             });
         }
@@ -148,8 +152,8 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
 
   /**
    * Una empresa factura por tipo de cliente O por volumen, nunca por los dos.
-   * El modo lo elige el administrador en Empresa → Activación Módulos y aquí
-   * solo se lee: decide cuál de esas dos pestañas se muestra. Si el endpoint
+   * El modo lo elige el administrador en el menú de perfil → Configuración de
+   * empresa, y aquí solo se lee: decide cuál de esas dos pestañas se muestra. Si el endpoint
    * falla o la empresa no eligió, el servicio devuelve `null` y todo se ve como
    * siempre — nunca se esconde una pestaña por un error de red.
    *
@@ -159,25 +163,56 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
    * por volumen aunque la empresa esté en modo tipo de cliente.
    */
   private cargarModoPrecio(): void {
-    this.pricingMode.getModo()
+    this.pricingMode.getConfig()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(modo => {
-        this.modoPrecio = modo;
-        this.tabsVisibles = this.calcularTabsVisibles(modo);
-        // Si la pestaña en la que estamos ya no se muestra, caer a la primera
-        // visible (pasa al entrar: el estado inicial es la de tipo de cliente).
-        if (!this.tabsVisibles.includes(this.activeTab)) {
-          this.activeTab = this.tabsVisibles[0];
-        }
+      .subscribe(config => {
+        this.configPrecios = config;
+        this.recalcularTabsVisibles();
       });
   }
 
-  /** Índices lógicos a renderizar, en el mismo orden en que están en el HTML. */
-  private calcularTabsVisibles(modo: ModoPrecio): number[] {
-    if (modo === 'tipoCliente') {
-      return [this.TIPO_CLIENTE_TAB_INDEX, this.UNITARIO_TAB_INDEX, this.COSTO_TAB_INDEX];
+  /**
+   * Las pestañas dependen del modo Y de si algún tipo de cliente está marcado
+   * como precio base (`tiposPrecios.esPrecioBase`), así que se recalculan cuando
+   * llega cualquiera de los dos — llegan por caminos distintos y en cualquier
+   * orden.
+   */
+  private recalcularTabsVisibles(): void {
+    this.tabsVisibles = this.calcularTabsVisibles(this.configPrecios);
+    // Si la pestaña en la que estamos ya no se muestra, caer a la primera
+    // visible (pasa al entrar: el estado inicial es la de tipo de cliente).
+    if (!this.tabsVisibles.includes(this.activeTab)) {
+      this.activeTab = this.tabsVisibles[0];
     }
-    if (modo === 'volumen') {
+  }
+
+  /** ¿Algún tipo de cliente activo define el precio base del producto? */
+  get hayTipoClienteBase(): boolean {
+    return this.tiposCliente.some(t => t?.esPrecioBase === true && t?.active !== false);
+  }
+
+  /**
+   * Índices lógicos a renderizar, en el mismo orden en que están en el HTML.
+   *
+   * COSTO va siempre: es transversal a los tres modos. "Precio unitario" va
+   * siempre MENOS cuando el precio por tipo de cliente pasó a ser el precio
+   * base — ahí administrar el unitario aparte crearía dos verdades para el
+   * mismo número.
+   */
+  private calcularTabsVisibles(config: ConfigPrecios): number[] {
+    if (config.modo === 'unitario') {
+      return [this.UNITARIO_TAB_INDEX, this.COSTO_TAB_INDEX];
+    }
+    if (config.modo === 'tipoCliente') {
+      // Con un tipo marcado como precio base, el unitario ya no se administra
+      // aparte: lo escribe el guardado de precios por tipo de cliente.
+      return this.hayTipoClienteBase
+        ? [this.TIPO_CLIENTE_TAB_INDEX, this.COSTO_TAB_INDEX]
+        : [this.TIPO_CLIENTE_TAB_INDEX, this.UNITARIO_TAB_INDEX, this.COSTO_TAB_INDEX];
+    }
+    if (config.modo === 'volumen') {
+      // El unitario se queda: el rango de volumen se apoya en el precio base
+      // (el rango 1-1 lo refleja) y sin él no habría dónde ponerlo.
       return [this.UNITARIO_TAB_INDEX, this.VOLUMEN_TAB_INDEX, this.COSTO_TAB_INDEX];
     }
     return [
@@ -188,8 +223,16 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     ];
   }
 
+  get modoPrecio(): ModoPrecio {
+    return this.configPrecios.modo;
+  }
+
   get mostrarTabTipoCliente(): boolean {
     return this.tabsVisibles.includes(this.TIPO_CLIENTE_TAB_INDEX);
+  }
+
+  get mostrarTabUnitario(): boolean {
+    return this.tabsVisibles.includes(this.UNITARIO_TAB_INDEX);
   }
 
   get mostrarTabVolumen(): boolean {
@@ -204,9 +247,18 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
 
   /** Texto del aviso de modo activo en la cabecera. */
   get etiquetaModoPrecio(): string {
+    if (this.modoPrecio === 'unitario') return 'Precio unitario';
     if (this.modoPrecio === 'tipoCliente') return 'Precio por tipo de cliente';
     if (this.modoPrecio === 'volumen') return 'Precio por volumen';
     return '';
+  }
+
+  /** Aclaración extra del chip cuando un tipo de cliente manda el precio base. */
+  get etiquetaPrecioBaseTipoCliente(): string {
+    if (this.modoPrecio !== 'tipoCliente' || !this.hayTipoClienteBase) return '';
+    const tipo = this.tiposCliente.find(t => t?.esPrecioBase === true && t?.active !== false);
+    const nombre = tipo?.nombre || tipo?.name;
+    return nombre ? ` — “${nombre}” define el precio base` : ' — un tipo define el precio base';
   }
 
   /** Hay algún criterio activo (texto o rango de precio). */

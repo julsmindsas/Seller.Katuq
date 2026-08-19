@@ -42,6 +42,30 @@
           </div>
         </div>
       </div>
+
+      <!-- PRECIO BASE — marca excluyente: el precio de este tipo pasa a ser
+           también el precio base del producto. -->
+      <div class="col-12">
+        <div class="tc-precio-base" [class.activo]="tipoClienteForm.get('esPrecioBase')?.value">
+          <label class="tc-precio-base-check">
+            <input type="checkbox" formControlName="esPrecioBase" />
+            <span>
+              <strong>Este precio es el precio base del producto</strong>
+              <small>
+                Al guardar o importar precios por tipo de cliente, el precio de este tipo queda
+                también como <b>precio base</b> del producto, y la pestaña “Precio unitario”
+                desaparece de Lista de precios.
+              </small>
+            </span>
+          </label>
+
+          <div class="tc-precio-base-nota" *ngIf="tipoClienteForm.get('esPrecioBase')?.value">
+            <i class="pi pi-info-circle me-1"></i>
+            Solo un tipo de cliente puede ser el precio base: al marcar este, se desmarca el que
+            lo fuera antes.
+          </div>
+        </div>
+      </div>
     </div>
   </form>
 </div>

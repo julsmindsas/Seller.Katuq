@@ -12,9 +12,11 @@
                   <h4 class="mb-1 fw-bold">Gestión de Precios</h4>
                   <p class="text-muted mb-0">Administra los precios de tus productos</p>
                   <!-- Modo de precios de la empresa: acá solo se informa; se elige
-                       en Empresa → Activación Módulos (solo el administrador). -->
+                       en el menú de perfil → Configuración de empresa (solo el
+                       administrador). -->
                   <span class="lp-modo" *ngIf="modoPrecio">
-                    <i class="pi pi-tag"></i> Tu empresa maneja: <strong>{{ etiquetaModoPrecio }}</strong>
+                    <i class="pi pi-tag"></i> Tu empresa maneja:
+                    <strong>{{ etiquetaModoPrecio }}{{ etiquetaPrecioBaseTipoCliente }}</strong>
                   </span>
                 </div>
               </div>
@@ -319,8 +321,9 @@
             </div>
           </p-tabPanel>
 
-          <!-- Tab 2: Precio unitario -->
-          <p-tabPanel header="Precio unitario">
+          <!-- Tab 2: Precio unitario — se oculta solo cuando el precio por tipo
+               de cliente pasó a ser el precio base (si no, habría dos verdades) -->
+          <p-tabPanel header="Precio unitario" *ngIf="mostrarTabUnitario">
             <div class="p-3">
               <div class="mb-3 lp-filtros">
                 <div class="input-group">

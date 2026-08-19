@@ -60,6 +60,10 @@
                                   {{ "Descripción" | translate }}
                                   <p-sortIcon field="descripcion"></p-sortIcon>
                               </th>
+                              <th class="text-center" pSortableColumn="esPrecioBase">
+                                  {{ "Precio base" | translate }}
+                                  <p-sortIcon field="esPrecioBase"></p-sortIcon>
+                              </th>
                               <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">
                                   {{ "Activo" | translate }}
                                   <p-sortIcon field="activo"></p-sortIcon>
@@ -75,6 +79,14 @@
                               <td *ngIf="!isMobile" class="text-center">{{ row.id }}</td>
                               <td>{{ row.nombre }}</td>
                               <td>{{ row.descripcion }}</td>
+                              <td class="text-center">
+                                  <!-- Marca excluyente: el precio de este tipo también es el
+                                       precio base del producto. Se cambia en Editar. -->
+                                  <span class="badge-precio-base" *ngIf="row.esPrecioBase">
+                                      <i class="pi pi-star-fill"></i> {{ "Precio base" | translate }}
+                                  </span>
+                                  <span class="text-muted" *ngIf="!row.esPrecioBase">—</span>
+                              </td>
                               <td *ngIf="!isMobile" class="text-center">
                                   <label class="switch">
                                       <input class="toggle" type="checkbox" [checked]="row.active" disabled />
@@ -96,7 +108,7 @@
 
                       <ng-template pTemplate="emptymessage">
                           <tr>
-                              <td [attr.colspan]="isMobile ? 3 : 5">{{ "No hay datos disponibles" | translate }}</td>
+                              <td [attr.colspan]="isMobile ? 4 : 6">{{ "No hay datos disponibles" | translate }}</td>
                           </tr>
                       </ng-template>
 
