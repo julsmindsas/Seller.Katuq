@@ -4759,3 +4759,15 @@ Pedido de prueba **ORE-000593** (cliente Jairo Alberto Arango Gómez, CXC NOMINA
 - FRENCH MAID → `variant_option1: "L/XL"`, `variant_option2: "AS SHOWN"`, `variant_sku: "GCTT60073-L/XL-AS SHOWN"`
 
 En 155 líneas históricas esos campos siempre fueron null. Pendiente: Daniel revisa en la pantalla de Guía Cereza cómo pinta la orden 115 (si "L/XL" aparece como talla → el mapeo option1=talla es correcto; si aparece como color → se invierte en un solo punto, `utils/variantesProducto.js`), y anula el pedido de prueba con Cereza. Los otros 1.645 productos multivariante siguen SIN backfill — solo los 5 de la prueba.
+
+### D-214 — Adenda 2 (2026-08-20): variante + descuento juntos, prueba completa en Cereza (orden 116)
+
+Reclamo de Cereza: los pedidos llegaban sin descuento. Causa doble, ambas corregidas y desplegadas:
+1. `discount` leía `item.descuento`, clave inexistente → siempre 0. Ahora viaja POR UNIDAD (como el contrato oficial: discount×quantity=total_discounts), base CON IVA, % línea+global compuesto.
+2. Las líneas en PROMOCIÓN (Feature B) tampoco lo llevaban: la rebaja viaja en `_precioPromocional` y el mapeador no lo miraba. Ahora discount = base − promo (con IVA), prioridad promo > % digitado.
+
+**Prueba completa ejecutada** con GCL230D (PIJAMA HOLLY): único producto elegido de un censo por API de los 8.300 — **375 tienen variantes reales + `discount_price` activo en lista pública**. Se le generó `variablesForm` (backfill) y una promoción nativa del 35% en `descuentosPromociones` (espejo manual del descuento de Cereza, id NIe6rJkSo3MmR1jMoTyx, vence 2026-08-21). Venta real en venta asistida (ORE-000594, cliente Jairo Alberto Arango Gómez): catálogo pintó $64.285 tachando $98.900, modal exigió talla, carrito mostró −35%. Push → **orden Cereza 116**: `price 98900, discount 34615, variant_option1 "M", variant_option2 "DORADO"`. Pendiente que Daniel la revise y anule.
+
+**Regla de Daniel (blindada con test):** si la prenda tiene descuento se envía; si no, se envía 0 — el campo `discount` SIEMPRE viaja, jamás se omite (`test:osmosis-discount`).
+
+**Notas:** (a) `total_discounts` de la orden va en 0 cuando el descuento es por promoción — `order.totalDescuento` no acumula promos; el descuento sí va en la línea. Decidir si se suma al nivel orden cuando se ataque el frente grande. (b) Al cliente de prueba se le quitó la categoría "Precio especial para modelos" (daba precios $0) — restaurar si hacía falta. (c) El frente grande sigue pendiente: el sync ignora `discount_price` de Cereza (1.266 productos, ~$95,7M); el mecanismo destino natural son las promociones nativas, igual que en esta prueba pero automático.
