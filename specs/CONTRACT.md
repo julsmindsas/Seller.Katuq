@@ -4946,3 +4946,15 @@ que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
 - Regresión: money-path 26/26, promo-line 12/12, validación 4/4; arregló de paso 2 casos que ya fallaban en cotizaciones-contract (quedan 2 preexistentes de `cotizacionService.calcularTotales` — IVA en 0 con fixture `valorIva` — anotados, ajenos).
 
 **Fase 1 en curso**: backfill de descuentos por tienda (dry-run → execute). **Fase 2 pendiente**: venta asistida consume `precioDescuentoConIva` vigente (mayorista ve $43.120 tachando $53.900) + push a Cereza con precio lleno y descuento de lista + `tipoClienteIds` en promociones. Plan completo: `openspec/changes/precios-descuentos-por-tipo-cliente/` (backend).
+
+### D-219 — Adenda (2026-08-20): Fase 1 y Fase 2 completas
+
+**No se reporta nada a Cereza** (decisión de Daniel): el bug de su `discount_price` mayorista se compensa de nuestro lado. Lo que importa es que a ellos lleguen los pedidos bien.
+
+**Fase 1 — backfill EJECUTADO**: 8.300 productos revisados contra el catálogo vivo de Cereza, **943 escritos** con el descuento de la campaña de SU tienda. Verificado GCL230D: público $98.900→$64.285 (35%, hasta 29-ene-2027) y mayorista $53.900→**$43.120** (20%, hasta 31-ene-2027) — idéntico a cerezamayorista.com. Script versionado: `functions/scripts/backfill-descuentos-por-tienda.js` (dry-run por defecto).
+
+**Fase 2 — DESPLEGADA** (backend `1a66dd8`; frontend `b1f4d4f1` commiteado, **sin desplegar a hosting**):
+- Frontend: `src/app/shared/utils/precio-por-tipo-cliente.ts` — helper único que aplica el precio de la lista del cliente CON su descuento vigente (`descuentoHasta` de la campaña de su tienda). Lo usan el catálogo y el modal de configuración (una sola regla, antes duplicada). La tarjeta muestra el precio efectivo y **tacha el precio de SU lista**, no el del público. Modelos (lista manual) se respeta igual. Cobertura: 9 casos con los números reales de GCL230D; build limpio.
+- Backend: el push a Cereza manda `price` = precio de lista LLENO y `discount` = la rebaja (mayorista: price 53.900, discount 10.780, neto 43.120) — la forma en que Cereza maneja sus campañas. Prioridad 0 del discount, encima de promoción y del % digitado.
+
+**Pendiente**: desplegar el frontend a hosting para que el vendedor vea el precio rebajado del mayorista (hoy el backend ya lo cobraría bien si la línea trae la marca, pero quien la pone es el frontend). Y probar un pedido real de cliente mayorista de punta a punta.
