@@ -430,8 +430,8 @@
                                                 {{getPrecioParaMostrar(producto) | currency:'USD':'symbol':'1.0-0'}}
                                             </div>
                                             <!-- Precio original tachado: por precio de categoría o por promoción automática -->
-                                            <div class="price-discount" *ngIf="tienePrecioCategoria(producto) || tienePrecioPromocional(producto)">
-                                                <del>{{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}</del>
+                                            <div class="price-discount" *ngIf="tienePrecioCategoria(producto) || tienePrecioPromocional(producto) || tieneDescuentoDeLista(producto)">
+                                                <del>{{getPrecioTachado(producto) | currency:'USD':'symbol':'1.0-0'}}</del>
                                                 <!-- Solo valor fijo conserva el badge de texto; el porcentaje se muestra como sticker sobre la foto -->
                                                 <span *ngIf="tienePrecioPromocional(producto) && !getPromoBadgeImg(producto)" class="badge bg-danger promo-badge">
                                                     OFERTA

@@ -46,6 +46,7 @@ import { takeUntil, switchMap, tap, catchError, take } from "rxjs/operators";
 import { CustomFieldsService, CustomFieldGroup, CustomFieldConfig } from "../../../../shared/services/custom-fields.service";
 import { VentasService } from "../../../../shared/services/ventas/ventas.service";
 import { firstValueFrom } from "rxjs";
+import { aplicarPrecioDeLista } from '../../../../shared/utils/precio-por-tipo-cliente';
 @Component({
   selector: "app-conf-product-to-cart",
   templateUrl: "./conf-product-to-cart.component.html",
@@ -4567,26 +4568,9 @@ export class ConfProductToCartComponent
         : 'N/A'
     });
 
-    // Crear copia temporal del producto (NO modifica this.producto)
-    const productoConPrecioAjustado = {
-      ...this.producto,
-      precio: {
-        ...this.producto.precio,
-        // Reemplazar los precios con los de la categoría
-        precioUnitarioConIva: precioCategoria.precioConIva,
-        precioUnitarioSinIva: precioCategoria.precio,
-        valorIva: precioCategoria.valorIva
-      },
-      // Guardar referencia a la categoría aplicada (para auditoría/debugging)
-      _precioAplicadoPorCategoria: {
-        tipoClienteId: precioCategoria.tipoClienteId,
-        tipoClienteNombre: precioCategoria.tipoClienteNombre,
-        precioOriginalConIva: this.producto?.precio?.precioUnitarioConIva,
-        precioOriginalSinIva: this.producto?.precio?.precioUnitarioSinIva
-      }
-    };
-
-    return productoConPrecioAjustado;
+    // D-219 Fase 2: mismo helper que el catálogo — precio de la lista con su
+    // descuento vigente, sin modificar this.producto.
+    return aplicarPrecioDeLista(this.producto, precioCategoria.tipoClienteId);
   }
 
   /**

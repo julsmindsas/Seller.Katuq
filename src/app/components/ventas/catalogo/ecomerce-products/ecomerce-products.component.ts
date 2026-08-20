@@ -33,6 +33,7 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { InventarioService } from "../../../../shared/services/inventarios/inventario.service";
 import { CartSingletonService } from "../../../../shared/services/ventas/cart.singleton.service";
 import { ToastrService } from "ngx-toastr";
+import { aplicarPrecioDeLista, filaDeTipoCliente, descuentoVigente, precioEfectivoDeFila } from '../../../../shared/utils/precio-por-tipo-cliente';
 
 @Component({
   selector: "app-ecomerce-products",
@@ -1243,7 +1244,9 @@ export class EcomerceProductsComponent
           (p: any) => p.tipoClienteId === categoriaId && p.activo === true
         );
         if (precioCategoria) {
-          return precioCategoria.precioConIva || producto?.precio?.precioUnitarioConIva || 0;
+          // D-219 Fase 2: si la lista trae descuento vigente se muestra el
+          // rebajado — lo mismo que se cobra al agregar al carrito.
+          return precioEfectivoDeFila(precioCategoria) || producto?.precio?.precioUnitarioConIva || 0;
         }
       }
     }
@@ -1287,6 +1290,24 @@ export class EcomerceProductsComponent
       Math.abs(cur - valor) < Math.abs(prev - valor) ? cur : prev
     );
     return `assets/images/promo/badge-${cercana}.png`;
+  }
+
+  /**
+   * D-219 Fase 2 — precio que se tacha al lado del precio efectivo.
+   * Para un cliente con lista, el tachado es SU precio de lista (el mayorista
+   * ve $43.120 tachando $53.900, no el público $98.900); si no tiene lista,
+   * el precio estándar del producto.
+   */
+  getPrecioTachado(producto: Producto): number {
+    const fila = filaDeTipoCliente(producto, this._cachedCategoriaClienteId);
+    if (fila && descuentoVigente(fila)) return Number(fila.precioConIva) || 0;
+    return Number(producto?.precio?.precioUnitarioConIva) || 0;
+  }
+
+  /** true si la lista del cliente trae una campaña vigente (para el tachado). */
+  tieneDescuentoDeLista(producto: Producto): boolean {
+    if (!this._clienteCacheInitialized) this.refreshClienteCache();
+    return descuentoVigente(filaDeTipoCliente(producto, this._cachedCategoriaClienteId));
   }
 
   /**
@@ -1381,24 +1402,11 @@ export class EcomerceProductsComponent
       precioCategoria: precioCategoria.precioConIva
     });
 
-    const productoConPrecioAjustado = {
-      ...producto,
-      precio: {
-        ...producto.precio,
-        precioUnitarioConIva: precioCategoria.precioConIva,
-        precioUnitarioSinIva: precioCategoria.precio,
-        valorIva: precioCategoria.valorIva
-      },
-      // Guardar referencia a la categoría aplicada (para auditoría/debugging)
-      _precioAplicadoPorCategoria: {
-        tipoClienteId: precioCategoria.tipoClienteId,
-        tipoClienteNombre: precioCategoria.tipoClienteNombre,
-        precioOriginalConIva: producto?.precio?.precioUnitarioConIva,
-        precioOriginalSinIva: producto?.precio?.precioUnitarioSinIva
-      }
-    };
-
-    return productoConPrecioAjustado;
+    // D-219 Fase 2: el helper aplica el precio de la lista Y su descuento
+    // vigente (el mayorista ve $43.120 en vez de $53.900 llenos, igual que en
+    // cerezamayorista.com). Deja el precio de lista sin rebajar en la marca
+    // para el tachado y para el `price` que viaja a Cereza.
+    return aplicarPrecioDeLista(producto, precioCategoria.tipoClienteId);
   }
 
   /**
