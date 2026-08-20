@@ -4699,3 +4699,26 @@ Katuq **ya tiene el mecanismo completo** para capturar la variante, funcionando 
 ### SUPERSEDED
 
 El plan del 19-ago que proponía un campo nuevo `carrito[i].variante` (artifact "Talla y Color a Cereza") queda **SUPERSEDED por esta decisión**: el vehículo es el mecanismo nativo de preferencias/variables. El diagnóstico y el censo de ese análisis siguen siendo válidos y esta decisión los reusa.
+
+## D-215 (2026-08-19) — La rama de KAI en prod cambió, y la lentitud del bot resultó ser nuestra
+
+**Dos cosas que una sesión futura no puede ignorar.**
+
+**1. Base de despliegue de KAI: `feat/claude-agent-sdk` @ `1b50aa4`, ya NO `codex/011-agent-context-handoff-protocol`.** La sesión de Opttia/KAI desplegó su rama (rediseño de chat + HITL + fixes MCP) sobre la misma EC2. Coordinó antes de pisar: preservó los archivos del canal de WhatsApp EXACTOS de `9b8e8a2` (verificado con diff por esta sesión: agent.py, pipeline.py, whatsapp_bot_endpoint.py y el test, los cuatro idénticos), el blueprint sigue registrado, `.env` intacto y la suite del canal pasa 54/54 EN la EC2. Salud del canal `configurado:true` y turno real de punta a punta contra el catálogo verdadero de ALMARA: responde. **Cualquier deploy futuro del canal sale de esa rama.** Rollback anotado por ellos: `git checkout 9b8e8a2 && sudo systemctl restart kai-adk`.
+
+De regalo: el default del CÓDIGO pasó de gpt-oss a Haiku 4.5 (`model_config.py:181`), así que la visión de imágenes del bot queda doblemente cubierta — antes dependía solo del override por env.
+
+**2. La regresión de latencia del bot es NUESTRA, no del merge ajeno.** Se midió 13-19 s por turno contra una línea base de 4-10 s (logs del 13-14 ago) y la primera lectura fue culpar al deploy vecino. Estaba mal: esa línea base es de código anterior a los cambios de ESTA semana. El A/B correcto (misma máquina, mismo turno, pre/post merge) mostró que el merge **acelera ~2x**. La causa está en el canal:
+
+| versión del canal | herramientas | prompt estático |
+|---|---|---|
+| `58a9c48` (13 ago, base 4-10 s) | 7 | 2.197 chars |
+| `9b8e8a2` (hoy, en prod) | 17 | 5.730 chars |
+
+17 esquemas de herramientas viajan al modelo en CADA turno y más herramientas = más llamadas encadenadas (cada una, un round-trip completo al LLM). A eso se suman los bloques dinámicos que se arman completos aunque no vengan al caso: las 30 adiciones con precio se mandan aunque el cliente apenas haya saludado.
+
+**Plan (sin ejecutar aún, a propósito):** fusionar herramientas antes que recortar prompt —el consejo del peer, y coincide: agregar/quitar adición en una sola con parámetro de acción, y probablemente las de configuración del pedido—; condicionar los bloques dinámicos al momento de la conversación; y medir con línea base limpia antes de tocar. **Se espera a que Daniel ejercite lo de esta semana** (configuración de producto y opciones tocables no se han usado en vivo — cero tráfico desde el 14 ago) para no optimizar a ciegas.
+
+**Aparte, del vecino y confirmado:** ~6 s de cada turno se van creando una sesión SSE nueva contra el MCP de Katuq en cada turno (`MCP_SESSION_POOLING` apagado desde los SSE stale de mayo). Hay 3-4 s por turno recuperables para TODOS los canales. Pactado: no se enciende sin avisar, y el canal se verifica después del cambio.
+
+**Lección de método:** antes de atribuir una regresión, verificar que la línea base sea del mismo código. Comparar contra logs viejos y culpar al cambio ajeno es fácil y es injusto.
