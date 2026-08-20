@@ -20,7 +20,7 @@ y no en el prompt.
 
 | escenario | qué aísla |
 |---|---|
-| 1. frío (primera invocación tras reinicio) | arranque; se DESCARTA del análisis |
+| 1. frío (primera invocación tras reinicio) | arranque; se DESCARTA del análisis (ver nota) |
 | 2. hilo nuevo + saludo (no obliga a buscar) | costo de la BASE |
 | 3. hilo nuevo + pregunta que obliga a buscar | base + UNA consulta MCP |
 | 4. hilo en curso (responde de memoria) | turno sin herramientas |
@@ -50,6 +50,12 @@ turno "$H_BUSCA"  "que peluches tienes?" s3 # 3: base + MCP
 turno "$H_BUSCA"  "gracias"            s4   # 4: de memoria
 ```
 
+**Ojo con el "frío":** solo es frío si se corre INMEDIATAMENTE después del
+restart, antes de cualquier otra petición. Un chequeo de salud o un e2e ajeno
+ya despiertan el proceso y entonces el escenario 1 es un tibio más (pasó el
+2026-08-19: dio 4.225 ms en vez de los ~11.600 esperados). Se descarta igual
+del análisis, pero no sirve para hablar de arranque.
+
 **Ojo con el hilo:** son 64 caracteres exactos o el endpoint responde
 `hilo_invalido` (422) y `duracionMs` vuelve vacío — si ves `None`, es eso, no
 un problema del servidor. Y usá hilos NUEVOS en cada corrida: un hilo reusado
@@ -73,6 +79,11 @@ python3 adk_agent/tests/test_whatsapp_bot_channel.py   # suite del canal
 
 Consulta MCP ≈ **4 s**. Antes del merge de `feat/claude-agent-sdk` la misma
 tabla daba 26.483 / 13.571 / 19.360 — ese merge aceleró el canal ~3x.
+
+Segunda corrida sobre `e9f4479` (mismo día, otro commit): base 3.575 ms,
+con catálogo 8.457 ms, de memoria 2.831 ms → **consulta MCP ≈ 4,9 s**.
+Dos commits distintos dan el mismo orden de magnitud: la línea base para
+juzgar el pooling está confirmada.
 
 ## Limpieza
 
