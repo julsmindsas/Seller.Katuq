@@ -4810,3 +4810,27 @@ necesitas?"), negrita de un asterisco, sin voseo ni mexicanismos.
 **Guardarraíl que queda.** Toda instrucción nueva del bot —prompt, descripción
 de herramienta, mensaje de error que el cliente pueda leer— se escribe en
 colombiano neutro. Los tests de registro son parte del contrato del canal.
+
+---
+
+## D-218 (2026-08-20) — Apagado masivo de crones basura + candado maestro CRON_ENABLED
+
+**Disparador.** Daniel: "los crones están desordenados, unos a mano y otros con /flows, y fallan en silencio… apaga todos, no deberían haber tantos". Auditoría completa primero (35 trabajos, 4 mecanismos sin fuente de verdad común): tablero en https://claude.ai/code/artifact/bfc23029-ca9a-475b-a6d3-6ccc39c55e88 y memoria `crones-auditoria-2026-08`.
+
+**"Todos" se interpretó como todo lo basura/roto/redundante — NO la operación viva** (despachadores de flows, cartera WO, SIIGO, notificaciones siguen corriendo; apagar eso mata la sincronización de OH MY STORE y requiere confirmación renglón por renglón).
+
+### Apagado (ejecutado y verificado)
+
+1. `cron_jobs_config`: **full-inventory-sync** y **osmosis-order-sync** (fallaban el 100% cada 30 min desde el 13-ago, sin handler) + los 3 espejos letra-muerta de los dispatchers. Todos con `disabledAt`/`disabledReason`.
+2. `flow_trigger_bindings`: **fullpi-orders-status-pull-oms → inactive** (desbocado 31×: corría cada minuto por un binding sobre un nodo ACTION que nunca persiste `flow_polling_state`; 1.440 golpes/día al WMS de Fullpi sin pedidos que consultar — el push a Fullpi está en borrador). Verificado detenido: última corrida 17:36Z, nada después. Se reactiva SOLO arreglando el binding. **Binding huérfano de Café Escobar** (flow archivado desde mayo) → inactive.
+3. `whatsappInboundSync` (poller Kapso cada 30s, redundante con el webhook, con catch que suprime errores): apagado vía `WHATSAPP_INBOUND_POLL=false` en el .env de prod.
+4. `satisfactionSurveyPromoter`: apagado por defecto en código — corría a diario sobre `scheduled_notifications`, VACÍA en toda la historia (el hook que debía poblarla jamás escribió). Gate `SATISFACTION_SURVEY_CRON_ENABLED`.
+5. **CANDADO MAESTRO**: `CronService` solo arranca con `CRON_ENABLED=true` (agregado al .env de prod ANTES del deploy). Cierra la puerta por la que cualquier `node index.js` local con el serviceAccountKey operaba crones contra producción.
+
+**El proceso fantasma IDENTIFICADO**: la instancia de pruebas Lightsail (34.237.136.82) corre el backend con código de ABRIL (feature/osmosis, a67ee2c) y la llave de prod — sus despachadores explican las corridas dobles (p. ej. cereza-orders-status-pull 2× por tick). Pendiente que Daniel lo detenga: `ssh lightsail 'pm2 stop index && pm2 save'` (el candado no lo cubre: código viejo).
+
+### Pendientes con dueño (de la auditoría, NO resueltos)
+
+- **Daniel — decisión de negocio**: billing/vencimiento de suscripciones MUERTO desde el 3-abr (las 2 vías a la vez; 4,5 meses sin degradar premium vencidos). ¿Revivir con simulación primero o declarar apagado a propósito?
+- **Daniel — confirmar con el cliente**: webhook Woo de Café Escobar (flow activo `woo-orders-to-katuq`) sin tráfico desde el 22-jul — ¿siguen vendiendo?
+- Conectar `jobHeartbeat` (existe, testeado, 0 usos) a los jobs de valor; alertar flow_runs failed/partial; sacar el webhook Slack hardcodeado (token commiteado en `utils/handleLogger.js:3`) a env y rotarlo; arreglar el catchup que no parsea minuto≠0; el guard del node-cron duplicado; retención de flow_runs e integration_audit; rotación de pm2-out.log (340MB); los OOM de katuq-api (~74 desde mayo, 119 boots en agosto). Detalle y orden en el tablero.
