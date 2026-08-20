@@ -4926,3 +4926,23 @@ Verificado contra prod tras el cambio: el agente mandó las 7 bebidas con el
 identificador correcto y el rescate **no hizo falta** — que es exactamente lo
 que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
 11 del backend, 78 del canal.
+
+---
+
+## D-219 (2026-08-20) — Precios y descuentos por tipo de cliente: reglas de Daniel y Fase 0 desplegada
+
+**Reglas fijadas por Daniel:**
+1. Cliente con tipo recibe el precio de SU lista y el descuento de SU lista. **Modelos** no existe en Cereza: manda la lista manual de Katuq y nadie la pisa. **Mayorista/Público**: manda Guía Cereza (precio de la lista + campaña de SU tienda).
+2. Las promociones de catálogo NO se acumulan sobre precios de lista.
+3. A Cereza viaja precio lleno de la lista + descuento de la lista (Fase 2, pendiente).
+
+**Contexto (terreno verificado, foto ancla Pijama Holly GCL230D):** Cereza tiene dos campañas por producto con % distinto (público 35%, mayorista 20% → $43.120) y su API manda el `discount_price` de la fila mayorista calculado con el % del PÚBLICO (bug de Cereza — reportarles). Doble descuento real en producción (ORE-000485 lista Modelos −20% extra; ORE-000575 lista Mayoristas −50%): frontend y backend tenían la jerarquía invertida. Los webhooks (sin discount_price en su payload) borraban con null los descuentos del sync; el re-sync pisaba la fila Modelos. 8.171/8.443 productos sin `precioUnitarioSinIva` → órdenes $0 (ORE-000593: $189.000 persistidos como $50.076).
+
+**Fase 0 — IMPLEMENTADA Y DESPLEGADA** (`4c88156`, `npm run test:precios-tipo-fase0`, 12 casos con números reales):
+- `resolverPrecioLinea`: categoría ANTES que promocional; `aplicarPromocionesACarrito` salta líneas con `_precioAplicadoPorCategoria` — alineado con el frontend, muere el doble descuento.
+- `_sinIvaDesde`: sin-IVA derivado del conIVA con la tarifa cuando falta (canónico + los 2 caminos legacy) — mueren las órdenes $0.
+- `construirFilasPreciosPorTipo`: descuento de cada lista desde la campaña de SU tienda (`discounts{}`); mayorista JAMÁS usa `discount_price`; `descuentoHasta` por tienda; corridas sin info de descuentos (webhooks) emiten filas sin esas claves.
+- `mergePreciosPorTipo` en el update del sync: por tipoClienteId, preserva Modelos/manuales y los descuentos ante webhooks.
+- Regresión: money-path 26/26, promo-line 12/12, validación 4/4; arregló de paso 2 casos que ya fallaban en cotizaciones-contract (quedan 2 preexistentes de `cotizacionService.calcularTotales` — IVA en 0 con fixture `valorIva` — anotados, ajenos).
+
+**Fase 1 en curso**: backfill de descuentos por tienda (dry-run → execute). **Fase 2 pendiente**: venta asistida consume `precioDescuentoConIva` vigente (mayorista ve $43.120 tachando $53.900) + push a Cereza con precio lleno y descuento de lista + `tipoClienteIds` en promociones. Plan completo: `openspec/changes/precios-descuentos-por-tipo-cliente/` (backend).
