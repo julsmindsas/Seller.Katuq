@@ -4658,3 +4658,44 @@ La entrada de menú de Combos se movió del grupo **"Producto"** (sección Confi
 **Sobriedad como regla escrita, no como intención:** las instrucciones prohíben usar botones para preguntas abiertas o en todos los mensajes ("se siente máquina"), y el cliente siempre puede escribir.
 
 **Verificación:** 10 suites backend (una nueva, `test:whatsapp-interactivo`) + 54 casos ADK en verde; desplegado y sano. **Pendiente:** confirmar en el piloto que Kapso reenvía los interactivos — si no, la degradación ya deja todo funcionando y se ve en el log.
+
+---
+
+## D-214 (2026-08-19) — REGLA DURA: talla y color viajan por el mecanismo NATIVO de variables/preferencias. PROHIBIDO inventar un campo nuevo de variante.
+
+**Decidido por Daniel, con sangre. Toda sesión que toque variantes, Cereza, venta asistida o el carrito LEE ESTO PRIMERO.**
+
+### El descubrimiento que cambia todo
+
+Katuq **ya tiene el mecanismo completo** para capturar la variante, funcionando en producción desde siempre:
+
+1. El producto declara sus variables en `procesoComercial.aceptaVariable` + `procesoComercial.variablesForm` (árbol JSON de opciones, se autora en `crear-productos.component.ts:2422`).
+2. La venta asistida reacciona sola: `requiereConfiguracion` abre el modal cuando `aceptaVariable` es true (`ecomerce-products.component.ts:1323`), el modal pinta el panel "Preferencias del producto" con un desplegable por variable (`conf-product-to-cart.component.html:612`), y la elección queda en el pedido como `{titulo, subtitulo, valorUnitarioSinIva, precioTotalConIva, tipo:"preferencia", paraProduccion:true, cantidad:1}` dentro de `configuracion.preferencias` (`sincronizarPreferencias`, `conf-product-to-cart.component.ts:2321`).
+3. La tienda del builder guarda **exactamente la misma forma**: `{titulo:"Opción elegida", subtitulo:"UNICA-NEGRO"}` (`siteOrden.js`).
+
+**El hueco real es UNO SOLO**: los ~1.650 productos multivariante que vienen de Cereza traen sus combinaciones en `products.variantes[]` — un campo paralelo que la venta ignora — y nadie les puso `aceptaVariable` ni les llenó `variablesForm`. Por eso el modal nunca se abre y la elección jamás se captura. Consecuencia medida: **0 de 155 líneas históricas enviadas a Cereza llevan variante**; ORE-000568 entró a ICG con 3 líneas ambiguas y consecutivo 1VPL-17 sin que nadie se enterara (Cereza acepta el campo `variant {name, sku, option1, option2}` pero es opcional y no valida nada).
+
+### El puente decidido (dos piezas, CERO pantallas nuevas)
+
+1. **El sync de productos genera el árbol nativo**: en `katuq-product-upsert.action.js` (código versionado del repo, NO la expresión del flow en Firestore), cuando el producto tiene ≥2 combinaciones reales → `aceptaVariable=true`, `configProcesoComercialActivo=true`, `variablesForm` con las combinaciones de `variantes[]` como opciones a precio $0. Más backfill inicial para los existentes, con `--dry-run` primero.
+2. **El envío a Cereza lee la preferencia elegida**: en `osmosisOrderService` (el ÚNICO armador vivo del payload — `osmosis-order-create.action.js` es código muerto, ningún flow define `params.mapping`), casar el `subtitulo` contra `variantes[]` por **texto completo** y armar el `variant`. La misma regla lee "Opción elegida" de la tienda del builder. Auto-resolución cuando el producto tiene UNA sola combinación real (cubre 5 de las 9 líneas reales que necesitaban talla, sin pantalla).
+
+### Prohibiciones que salen del censo (8.443 productos, API real de Cereza)
+
+- **NUNCA partir el subtítulo por el guion**: los valores reales llevan guiones y barras (`M/L`, `FUCSIA/NEG`, `NEGRO ESTA`, `1/2X`). Casar el texto COMPLETO contra el catálogo o devolver null — jamás adivinar.
+- **NUNCA normalizar los textos** (ni mayúsculas, ni tildes, ni recortes): Cereza identifica la combinación SOLO por el par (size, color) tal como los publicó. No hay sku ni id por variante del lado de Cereza.
+- **NUNCA usar la referencia de variante** (`GCL292-UNICA-NEGRO`) como `items[].sku` del payload, como `producto.cd` ni como `productoId` de inventario. Ya hay un documento huérfano real en producción por eso (`inventory/GCL301-UNICA-NEGRO_BOD-CEREZA-1` en -1).
+- **NUNCA construir sobre `producto.stock[]`**: es residuo legacy que apunta a BOD-010 (bodega inexistente). La fuente es `products.variantes[]`.
+- **Filtrar las variantes parciales**: 91 productos tienen opciones de un solo eje ("NEGRO") conviviendo con las completas ("UNICA-NEGRO") — ofrecerlas produce chips fantasma. La regla ya está escrita en `services/flows/nodes/shopify/utils/mapper.js:167-171` (solo variantes con valor real en TODOS los ejes): reusarla, no escribir otra.
+- **No mapear ejes por posición** (hay 32 variantes de un solo eje): mapear por nombre de clave con la convención que ya existe en `mapper.js:109-134`.
+- **No tocar precios ni inventario**: solo 25 de 1.650 productos multivariante cambian de precio por combinación. Esto es identidad de despacho, no plata ni stock.
+
+### Advertencias honestas
+
+- Encender `configProcesoComercialActivo` en esos 1.650 hace que en combos queden "pendientes de configurar" y el checkout los frene hasta elegir — es la semántica que la plataforma YA tiene para todo producto con variables.
+- Precio $0 suma $0 en las calculadoras (verificado en `sincronizarPreferencias`). El carrito esconde preferencias de precio $0 en su bloque actual (`checkPreferencePrice`) — la talla debe pintarse aparte o no se ve.
+- **Pregunta abierta a Cereza (bloqueante blando)**: ¿en `option1` va la talla o el color? Su ejemplo oficial manda el color primero; Katuq implementó al revés en los dos mapeadores. Confirmar con un pedido de prueba real antes de dar por cerrado.
+
+### SUPERSEDED
+
+El plan del 19-ago que proponía un campo nuevo `carrito[i].variante` (artifact "Talla y Color a Cereza") queda **SUPERSEDED por esta decisión**: el vehículo es el mecanismo nativo de preferencias/variables. El diagnóstico y el censo de ese análisis siguen siendo válidos y esta decisión los reusa.
