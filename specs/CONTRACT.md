@@ -4899,8 +4899,30 @@ Ensayo contra prod con productos reales de ALMARA FELICIDAD:
   NO cierra y pregunta la bebida y la fecha en un solo mensaje, con las 7
   opciones reales; con la bebida ya elegida, cierra.
 
-**Observación abierta, no bloqueante.** En ese ensayo el agente listó las 7
-bebidas como texto en vez de usar `ofrecer_opciones` (cabían como lista
-desplegable). El prompt lo sugiere pero no lo obliga; el respaldo del servidor
-sí manda botones cuando es él quien frena el cierre por variable pendiente. Si
-se repite en conversaciones reales, se endurece la instrucción.
+### D-218 — Adenda (2026-08-20): las opciones tocables endurecidas
+
+En el ensayo el agente listó las 7 bebidas como texto numerado en vez de
+mandarlas tocables. Daniel pidió endurecerlo, y se hizo por **tres** vías,
+porque una sola no alcanza:
+
+1. **La instrucción**, que pasó de sugerencia a regla: preguntar una variable
+   o unas adiciones sin `ofrecer_opciones` queda prohibido, y enumerarlas en
+   el texto también — el cliente tendría que copiar el nombre a mano.
+2. **Un respaldo determinista en el servidor** (`opcionesDeRescate`): si el
+   agente preguntó una variable y no mandó opciones, se arman desde el perfil.
+   Conservador a propósito: solo actúa si el texto NOMBRA la variable o alguna
+   opción, para no colgarle botones de talla a un mensaje sobre el domicilio.
+   Deja log `opciones_rescatadas` — si se dispara seguido hay que endurecer la
+   instrucción, no vivir del respaldo.
+3. **Un hueco que solo apareció al verificar**: cuando el cliente TOCA una
+   opción, el título vuelve recortado a los topes de Meta ("Bebida Naranja
+   (Envase co…"), y el catálogo real tiene nombres más largos que eso.
+   Emparejar ese texto de vuelta sería pedirle al modelo que adivine, así que
+   la clase `variable:` pasa a resolverse en el servidor contra el perfil real
+   del producto — como ya se hacía con entrega y pago. Una opción inventada no
+   entra; elegir otra opción de la misma variable reemplaza la anterior.
+
+Verificado contra prod tras el cambio: el agente mandó las 7 bebidas con el
+identificador correcto y el rescate **no hizo falta** — que es exactamente lo
+que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
+11 del backend, 78 del canal.
