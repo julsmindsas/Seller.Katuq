@@ -4834,3 +4834,73 @@ colombiano neutro. Los tests de registro son parte del contrato del canal.
 - **Daniel — decisión de negocio**: billing/vencimiento de suscripciones MUERTO desde el 3-abr (las 2 vías a la vez; 4,5 meses sin degradar premium vencidos). ¿Revivir con simulación primero o declarar apagado a propósito?
 - **Daniel — confirmar con el cliente**: webhook Woo de Café Escobar (flow activo `woo-orders-to-katuq`) sin tráfico desde el 22-jul — ¿siguen vendiendo?
 - Conectar `jobHeartbeat` (existe, testeado, 0 usos) a los jobs de valor; alertar flow_runs failed/partial; sacar el webhook Slack hardcodeado (token commiteado en `utils/handleLogger.js:3`) a env y rotarlo; arreglar el catchup que no parsea minuto≠0; el guard del node-cron duplicado; retención de flow_runs e integration_audit; rotación de pm2-out.log (340MB); los OOM de katuq-api (~74 desde mayo, 119 boots en agosto). Detalle y orden en el tablero.
+
+## D-218 (2026-08-20) — El bot pregunta solo lo que cada producto necesita, y el cierre se calcula
+
+**El problema.** El bot preguntaba lo mismo para todo: entrega, fecha,
+adiciones, tarjeta. Pero en Katuq cada producto declara en `procesoComercial`
+qué necesita, y venta asistida ya lo respeta. Dos consecuencias, y la segunda
+es la grave:
+
+1. Le ofrecía adiciones a quien compraba una vela suelta. Cansa y hace ver
+   desordenado al comercio.
+2. **No cerraba el pedido** hasta tener forma y fecha de entrega — aunque el
+   producto tuviera `llevaCalendario: false` y esa fecha no existiera. Un
+   candado sobre una puerta que no existe.
+
+Y al revés: un producto con variables (talla, color, bebida) se vendía sin
+preguntarlas, que es justo el dato que después le falta a producción.
+
+**Decisión (propuesta `bot-configuracion-segun-producto`, aprobada por Daniel).**
+
+1. El backend arma, por cada producto del carrito, un perfil desde
+   `procesoComercial` — solo lectura de `products`, write-set intacto — y se lo
+   manda al agente **en prosa**, no como flags: "aceptaAdiciones: false" invita
+   a interpretar, "NO necesita nada más" no.
+2. **El gate de cierre se calcula**: forma y fecha se exigen solo si algún
+   producto del carrito lleva calendario. Sin perfiles legibles se sigue
+   exigiendo — no saber no es lo mismo que saber que no hace falta.
+3. **Las variables declaradas sí bloquean** el cierre y se preguntan con
+   botones: un pedido sin talla no se puede producir.
+4. Lo elegido entra a la cotización por el **mecanismo nativo** —
+   `configuracion.preferencias`, con el precio del maestro del producto —
+   respetando la regla dura de variantes. Hay contract test que falla si
+   aparece un campo `variante`.
+5. Default deliberado: producto sin `procesoComercial` o con el interruptor
+   apagado = **no requiere nada**. El catálogo real tiene de los dos tipos y
+   este es el default que NO bloquea ventas.
+
+**Dos cosas que solo aparecieron al probar contra datos reales:**
+
+- **`variablesForm` es un árbol serializado con `flatted`**, no JSON. Y hay
+  documentos viejos con JSON plano que `flatted.parse` acepta SIN lanzar,
+  devolviendo un árbol falso. Por eso se prueban los dos formatos y gana el
+  que produzca variables de verdad; si ninguno, el producto queda sin
+  variables y la venta sigue.
+- **El bloque genérico de entrega le ganaba al perfil.** En el primer ensayo
+  el peluche igual recibió "¿cómo prefieres la entrega?": el prompt seguía
+  diciendo "acuérdala antes de cerrar" y el modelo obedeció esa instrucción,
+  no el perfil. Ahora, si ningún producto pide fecha, ese bloque se apaga de
+  raíz. **Lección: cuando dos instrucciones se contradicen, no se espera que
+  el modelo resuelva — se apaga la que sobra.**
+
+**Estado: aplicado y verificado en producción.** Backend `079e4b0` + `b96e69a`
+(`backend-aws-security`), ADK `03332ee` + `f0ee691` (`feat/claude-agent-sdk`).
+11 suites del backend y 77 tests del canal en verde.
+
+Ensayo contra prod con productos reales de ALMARA FELICIDAD:
+
+- El lector sacó del catálogo real la variable "Bebida" con sus 7 opciones
+  reales, y distinguió los productos simples (peluche, pulsera) de los que sí
+  llevan fecha.
+- *Peluche* (no pide fecha): cierra de una, sin preguntar entrega. **Es el
+  caso que antes quedaba trabado.**
+- *Desayuno Te Quiero* (pide fecha + variable Bebida): sin la bebida elegida
+  NO cierra y pregunta la bebida y la fecha en un solo mensaje, con las 7
+  opciones reales; con la bebida ya elegida, cierra.
+
+**Observación abierta, no bloqueante.** En ese ensayo el agente listó las 7
+bebidas como texto en vez de usar `ofrecer_opciones` (cabían como lista
+desplegable). El prompt lo sugiere pero no lo obliga; el respaldo del servidor
+sí manda botones cuando es él quien frena el cierre por variable pendiente. Si
+se repite en conversaciones reales, se endurece la instrucción.
