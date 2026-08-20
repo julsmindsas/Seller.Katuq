@@ -4771,3 +4771,42 @@ Reclamo de Cereza: los pedidos llegaban sin descuento. Causa doble, ambas correg
 **Regla de Daniel (blindada con test):** si la prenda tiene descuento se envía; si no, se envía 0 — el campo `discount` SIEMPRE viaja, jamás se omite (`test:osmosis-discount`).
 
 **Notas:** (a) `total_discounts` de la orden va en 0 cuando el descuento es por promoción — `order.totalDescuento` no acumula promos; el descuento sí va en la línea. Decidir si se suma al nivel orden cuando se ataque el frente grande. (b) Al cliente de prueba se le quitó la categoría "Precio especial para modelos" (daba precios $0) — restaurar si hacía falta. (c) El frente grande sigue pendiente: el sync ignora `discount_price` de Cereza (1.266 productos, ~$95,7M); el mecanismo destino natural son las promociones nativas, igual que en esta prueba pero automático.
+
+## D-217 (2026-08-20) — El bot habla colombiano neutro, y el registro se vigila en el PROMPT
+
+**Qué pasó.** Daniel leyó una conversación real y lo dijo directo: "la forma de
+hablar del bot está muy mexicano, debe ser más neutro, o tirando a colombiano".
+Y era peor que eso: el bot mezclaba mexicanismos ("¿te late?", visto el 20-ago
+a las 16:24) con voseo argentino.
+
+**La causa no era el modelo.** El prompt entero de
+`kai/adk_agent/channels/whatsapp/agent.py` estaba escrito en voseo — "sos el
+asistente", "atendés", "decile", "ofrecele", "usá", "pasalo" — y también las
+descripciones de las herramientas. El modelo imita el registro de sus propias
+instrucciones: le hablábamos en voseo y contestaba en voseo, con los
+mexicanismos que se le colaban por encima.
+
+**Decisión.**
+
+1. Prompt y descripciones de herramientas reescritos en español colombiano
+   neutro, tuteando al cliente. Si el cliente ustedea, se le ustedea.
+2. Bloque explícito CÓMO HABLAS al principio del prompt: prohíbe voseo y
+   mexicanismos **por nombre**, con los equivalentes colombianos al lado
+   ("listo", "con gusto", "¿te parece?", "un momentico").
+3. WhatsApp no es Markdown: negrita con UN asterisco. El bot contestaba con
+   `**negrita**` y en el teléfono se ven los asteriscos crudos.
+4. **Lo que se vigila es el TEXTO DEL PROMPT, no la salida.** Cuatro tests
+   arman el prompt completo y fallan si aparece voseo, mexicanismos o
+   Markdown. La salida del modelo no es determinista; el prompt sí, y es la
+   causa. Si alguien vuelve a escribir instrucciones en voseo, la suite lo
+   frena antes de que llegue a un cliente.
+
+**Estado: aplicado y verificado en producción.** Commits `f71f85b` y `c0ae928`
+sobre `feat/claude-agent-sdk`, ADK reiniciado por systemd. Suite del canal
+64/64. Verificado con dos turnos reales contra prod: respuesta en tuteo
+colombiano ("con gusto te ayudo", "pasas por acá", "¿para cuándo lo
+necesitas?"), negrita de un asterisco, sin voseo ni mexicanismos.
+
+**Guardarraíl que queda.** Toda instrucción nueva del bot —prompt, descripción
+de herramienta, mensaje de error que el cliente pueda leer— se escribe en
+colombiano neutro. Los tests de registro son parte del contrato del canal.
