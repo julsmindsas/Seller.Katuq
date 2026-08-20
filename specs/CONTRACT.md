@@ -4717,8 +4717,36 @@ De regalo: el default del CÓDIGO pasó de gpt-oss a Haiku 4.5 (`model_config.py
 
 17 esquemas de herramientas viajan al modelo en CADA turno y más herramientas = más llamadas encadenadas (cada una, un round-trip completo al LLM). A eso se suman los bloques dinámicos que se arman completos aunque no vengan al caso: las 30 adiciones con precio se mandan aunque el cliente apenas haya saludado.
 
-**Plan (sin ejecutar aún, a propósito):** fusionar herramientas antes que recortar prompt —el consejo del peer, y coincide: agregar/quitar adición en una sola con parámetro de acción, y probablemente las de configuración del pedido—; condicionar los bloques dinámicos al momento de la conversación; y medir con línea base limpia antes de tocar. **Se espera a que Daniel ejercite lo de esta semana** (configuración de producto y opciones tocables no se han usado en vivo — cero tráfico desde el 14 ago) para no optimizar a ciegas.
+**CORREGIDO el mismo día tras medir con prueba discriminante (base `42ab332`).** La hipótesis de "17 herramientas + prompt gordo" era FALSA como causa dominante, y el plan de fusionar herramientas habría sido esfuerzo casi inútil. Con el MISMO código del canal en ambas fechas:
+
+| escenario | anoche (`9b8e8a2`) | hoy (`42ab332`) |
+|---|---|---|
+| saludo, sin tocar catálogo | 13.571 ms | **4.203 ms** |
+| pregunta que obliga a buscar en catálogo | 19.360 ms | 7.658 ms |
+| primera invocación tras reinicio (frío) | 26.483 ms | 11.642 ms |
+| conversación en curso (de memoria) | — | 3.373 ms |
+
+Dos lecturas:
+1. **El merge del vecino aceleró también ESTE canal ~3x** (no solo su orquestador): 13,5 s → 4,2 s en el mismo escenario. Su A/B se ve idéntico desde acá.
+2. **La base con todo el prompt y las 17 herramientas cuesta 4 s**; cada consulta al catálogo por MCP suma ~4 s más. Una venta encadena varias (busca, existencias, muestra otro) y ahí se van los segundos.
+
+**Plan corregido:** baja la prioridad de fusionar herramientas; sube apoyar el **pooling de sesiones MCP** (los ~6 s por turno que identificó el vecino, con `MCP_SESSION_POOLING` apagado desde los SSE stale de mayo). Ofrecido: medir el canal antes/después con los cuatro escenarios de la tabla, que separan base de consulta. **Se espera a que Daniel ejercite lo de esta semana** (configuración de producto y opciones tocables sin usar en vivo — cero tráfico desde el 14 ago) para no optimizar a ciegas.
 
 **Aparte, del vecino y confirmado:** ~6 s de cada turno se van creando una sesión SSE nueva contra el MCP de Katuq en cada turno (`MCP_SESSION_POOLING` apagado desde los SSE stale de mayo). Hay 3-4 s por turno recuperables para TODOS los canales. Pactado: no se enciende sin avisar, y el canal se verifica después del cambio.
 
 **Lección de método:** antes de atribuir una regresión, verificar que la línea base sea del mismo código. Comparar contra logs viejos y culpar al cambio ajeno es fácil y es injusto.
+
+## D-216 (2026-08-19) — El servidor MCP se endurece: errores que nombran el parámetro, vacíos sin ambigüedad y respuestas acotadas
+
+**Origen:** la sesión de Opttia (agentes ADK consumiendo el MCP de Katuq) reportó 4 defectos con evidencia y, horas después, un quinto con números (~430KB en una respuesta de `get_orders` viajando como input al siguiente turno del LLM). Todo del lado servidor, backend `katuq_admin_back_firebase`.
+
+**Decisiones (desplegadas en prod, commit `8635013`):**
+
+1. **Validar parámetros ANTES de trabajar y nombrarlos en el error.** `get_order_analytics` sin `metricType` respondía "Tipo de métrica no soportado: undefined" y los agentes lo leían como "0 ventas" en silencio. Ahora el error nombra el parámetro faltante, lista los valores válidos y detecta alias snake_case (`metric_type`, `date_from`, `period`) — el esquema real es camelCase y ahora lo declaran las descriptions.
+2. **Una lista vacía nunca es ambigua.** `get_low_stock_products` devuelve `status` machine-readable: `ok` | `no_low_stock` | `inventory_not_configured` (cero registros en `inventory`: los ceros son ausencia de datos, no conteos) | `no_products`. Los agentes deciden por `status`, no por `alerts.length`.
+3. **El `maximum` del inputSchema no es un límite: el clamp va en servidor.** `get_orders`/`search_orders`/`get_customers` acotan `limit`/`offset` de verdad (100/100/200) y rechazan no-numéricos nombrando el parámetro. Tope de payload por respuesta: 64KB (`MCP_MAX_PAYLOAD_BYTES`) con truncamiento EXPLÍCITO — `truncated: true`, total real intacto, `truncatedDetail` con cómo paginar. Nunca truncar en silencio.
+4. **Frescura visible:** `generatedAt` en todas las respuestas; `lastOrderAt` por métrica en analytics, para distinguir datos al día de una empresa congelada.
+
+Helper compartido nuevo `functions/tools/_paramGuards.js` (con test unitario que además cazó un off-by-~200-bytes en el tope). 30 tests en verde contra Firestore real; specs de `docs/mcp/` actualizadas.
+
+**Ojo al desplegar (aplicación real de D-XXX de sesiones paralelas):** el working copy tenía el commit de variantes (D-214) local sin pushear. Se midió el rango, se avisó ANTES de tocar y Daniel eligió desplegar solo esto: el commit MCP se reconstruyó sobre la base de prod en un worktree temporal (`8635013`), se pusheó solo, y la rama local se rebasó encima dejando D-214 local intacto sobre el nuevo tope. Prod pasó de `a7c5b26` a `8635013` con exactamente un commit.
