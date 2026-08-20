@@ -4750,3 +4750,12 @@ Dos lecturas:
 Helper compartido nuevo `functions/tools/_paramGuards.js` (con test unitario que además cazó un off-by-~200-bytes en el tope). 30 tests en verde contra Firestore real; specs de `docs/mcp/` actualizadas.
 
 **Ojo al desplegar (aplicación real de D-XXX de sesiones paralelas):** el working copy tenía el commit de variantes (D-214) local sin pushear. Se midió el rango, se avisó ANTES de tocar y Daniel eligió desplegar solo esto: el commit MCP se reconstruyó sobre la base de prod en un worktree temporal (`8635013`), se pusheó solo, y la rama local se rebasó encima dejando D-214 local intacto sobre el nuevo tope. Prod pasó de `a7c5b26` a `8635013` con exactamente un commit.
+
+### D-214 — Adenda 2026-08-20: prueba end-to-end EJECUTADA, la variante llegó a Cereza
+
+Pedido de prueba **ORE-000593** (cliente Jairo Alberto Arango Gómez, CXC NOMINA, pago Pendiente) creado en la pantalla real de venta asistida: el modal se abrió solo para los dos productos, exigió la elección, y las preferencias sobrevivieron hasta Firestore. Empujado a Cereza como **orden 115** (Lumina, 104). Cereza persistió por primera vez la variante:
+
+- BODY GLOW → `variant_option1: "UNICA"`, `variant_option2: "VERDE NEÓN"`, `variant_sku: "GCL292-UNICA-VERDE NEÓN"`
+- FRENCH MAID → `variant_option1: "L/XL"`, `variant_option2: "AS SHOWN"`, `variant_sku: "GCTT60073-L/XL-AS SHOWN"`
+
+En 155 líneas históricas esos campos siempre fueron null. Pendiente: Daniel revisa en la pantalla de Guía Cereza cómo pinta la orden 115 (si "L/XL" aparece como talla → el mapeo option1=talla es correcto; si aparece como color → se invierte en un solo punto, `utils/variantesProducto.js`), y anula el pedido de prueba con Cereza. Los otros 1.645 productos multivariante siguen SIN backfill — solo los 5 de la prueba.
