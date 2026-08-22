@@ -987,16 +987,28 @@ export class PedidosUtilService {
             // 🔄 NUEVO: Los descuentos se aplican solo a productos, no al envío
             const subtotalProductos = this.getSubtotalSinEnvio();
             const descuento = subtotalProductos * ((this.pedido.porceDescuento) / 100);
-            
+
             console.log('💰 DESCUENTO - Cálculo:', {
                 subtotalProductos,
                 porcentajeDescuento: this.pedido.porceDescuento,
                 descuentoCalculado: descuento
             });
-            
+
             return descuento;
         }
-        return 0;
+        // Código valor_fijo o dirigido a categoría/producto (carrito.component.ts::
+        // aplicarResultadoDescuento deja porceDescuento en 0 y el monto ya resuelto
+        // en descuentoAplicado.montoDescuento). Sin esto, checkout.component.ts
+        // pisaba pedido.totalDescuento con 0 justo antes de crear la orden.
+        // Topado al subtotal ACTUAL (espejo de orderCalculationService.js:397,
+        // Math.min(totalDescuento, baseDescontable)): si después de aplicar el
+        // código se quita un producto del pedido (list/despachos/POS llaman este
+        // mismo getDiscount() al editar), el monto fijo no debe superar el nuevo
+        // subtotal — o el total quedaría negativo.
+        const montoFijo = Number(this.pedido?.descuentoAplicado?.montoDescuento) || 0;
+        if (montoFijo <= 0) return 0;
+        const subtotalProductos = this.getSubtotalSinEnvio();
+        return Math.min(montoFijo, subtotalProductos);
     }
 
     /**
