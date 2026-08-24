@@ -11,7 +11,7 @@ import {
   SimpleChanges,
   OnDestroy,
 } from "@angular/core";
-import { Subject, of, forkJoin, EMPTY, Observable } from "rxjs";
+import { Subject, of, forkJoin, EMPTY, Observable, timer } from "rxjs";
 import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError, filter, expand, map, last } from "rxjs/operators";
 import { QuickViewComponent } from "../../quick-view/quick-view.component";
 import { VentasService } from "../../../../shared/services/ventas/ventas.service";
@@ -126,7 +126,22 @@ export class EcomerceProductsComponent
 
   // Cache de precio por categoría del cliente (evita parsear sessionStorage en cada CD cycle)
   private _cachedCategoriaClienteId: string | null = null;
+  private _cachedCategoriaClienteNombre: string | null = null;
   private _clienteCacheInitialized: boolean = false;
+
+  // ── Aviso "a este cliente se le está cobrando el precio general" ──
+  // El cliente pertenece a una lista de precios y hay productos que no la
+  // tienen: el vendedor termina cobrándoles el precio base sin enterarse.
+  // Es genérico por construcción: si la empresa no usa listas, sus clientes no
+  // tienen lista asignada y no aparece absolutamente nada.
+  /** Productos del catálogo sin precio en la lista del cliente (null = no se sabe). */
+  productosSinPrecioDeLista: number | null = null;
+  /** Total de productos del catálogo, para dar contexto al número de arriba. */
+  totalProductosCatalogo: number | null = null;
+  private _coberturaPedidaPara: string | null = null;
+  private _coberturaReintentada: boolean = false;
+  private _bannerListaRef: any = null;
+  private _bannerListaValor: boolean = false;
 
   // Flag para evitar recargar filtros estáticos
   private _filtrosCargados: boolean = false;
@@ -162,6 +177,19 @@ export class EcomerceProductsComponent
    * en vez de que el catálogo vuelva al listado completo.
    */
   private terminoBusquedaActivo: string = "";
+
+  /**
+   * Evita que el reintento sin "Solo con stock" se dispare en cadena: se permite
+   * UNA vuelta por búsqueda. Sin este candado, una búsqueda sin resultados
+   * reintentaría indefinidamente.
+   */
+  private _reintentandoSinStock: boolean = false;
+
+  /**
+   * Aviso visible cuando la búsqueda solo encontró productos agotados en esta
+   * bodega. Es el que convierte un "no hay nada" en "no hay ACÁ, mira dónde sí".
+   */
+  public avisoBusquedaSinStock: string | null = null;
 
   constructor(
     private ventasService: VentasService,
@@ -485,7 +513,39 @@ export class EcomerceProductsComponent
         takeUntil(this.destroy$)
       )
       .subscribe(({ response, requestedPage }: any) => {
-        this.productosPaginados = response.products || [];
+        const productos = response.products || [];
+
+        // Búsqueda sin resultados con "Solo con stock" activo: el producto puede
+        // existir y estar agotado ACÁ pero disponible en otra bodega. Se reintenta
+        // una vez incluyendo agotados, en vez de decirle al vendedor que no hay
+        // nada — que es lo que hacía creer que "faltan productos" en la recompra.
+        // El badge queda en 0 y el desglose por bodega dice dónde sí hay.
+        if (
+          productos.length === 0 &&
+          this.terminoBusquedaActivo &&
+          this.soloConStock &&
+          !this._reintentandoSinStock
+        ) {
+          this._reintentandoSinStock = true;
+          this.avisoBusquedaSinStock = null;
+          this.filtrosActuales = { ...this.filtrosActuales, onlyWithStock: false };
+          this.resetPageCursors();
+          this.cargarPaginaServidor(1);
+          return;
+        }
+
+        // Si el reintento sí encontró algo, se le dice al vendedor por qué está
+        // viendo agotados; si tampoco encontró, el producto no existe en el catálogo.
+        if (this._reintentandoSinStock) {
+          this._reintentandoSinStock = false;
+          this.avisoBusquedaSinStock = productos.length > 0
+            ? `Sin existencias en ${this.bodega?.nombre || 'esta bodega'}. Se muestran también los agotados — pasa el cursor sobre el indicador de stock para ver en qué bodega hay.`
+            : null;
+        } else if (!this.terminoBusquedaActivo) {
+          this.avisoBusquedaSinStock = null;
+        }
+
+        this.productosPaginados = productos;
         this.productos = this.productosPaginados;
         this.temp = [...this.productosPaginados];
         this.totalProductos = response.pagination?.totalItems || 0;
@@ -540,13 +600,18 @@ export class EcomerceProductsComponent
       if (clienteStr) {
         const cliente = JSON.parse(clienteStr);
         this._cachedCategoriaClienteId = cliente?.categoria?.id || null;
+        this._cachedCategoriaClienteNombre =
+          cliente?.categoria?.nombre || cliente?.categoria?.descripcion || null;
       } else {
         this._cachedCategoriaClienteId = null;
+        this._cachedCategoriaClienteNombre = null;
       }
     } catch (e) {
       this._cachedCategoriaClienteId = null;
+      this._cachedCategoriaClienteNombre = null;
     }
     this._clienteCacheInitialized = true;
+    this.consultarCoberturaDeLista();
   }
 
   ngOnDestroy(): void {
@@ -1007,8 +1072,13 @@ export class EcomerceProductsComponent
     this.terminoBusquedaActivo = (searchTerm || "").trim();
     if (!searchTerm || searchTerm.trim().length === 0) {
       // Limpiar búsqueda: recargar sin searchTerm
+      this._reintentandoSinStock = false;
+      this.avisoBusquedaSinStock = null;
       if (this.filtrosActuales) {
         delete this.filtrosActuales.searchTerm;
+        if (!this.soloNoInventariables) {
+          this.filtrosActuales.onlyWithStock = this.soloConStock;
+        }
         this.paginaActual = 1;
         this.cargarPaginaServidor(1);
       }
@@ -1076,6 +1146,13 @@ export class EcomerceProductsComponent
     }
 
     this.filtrosActuales.searchTerm = searchTerm;
+    // Cada búsqueda arranca con el filtro que el vendedor tiene puesto: si la
+    // anterior lo apagó para poder mostrar agotados, no debe quedarse apagado.
+    if (!this.soloNoInventariables) {
+      this.filtrosActuales.onlyWithStock = this.soloConStock;
+    }
+    this._reintentandoSinStock = false;
+    this.avisoBusquedaSinStock = null;
     this.paginaActual = 1;
     this.resetPageCursors();
     this.cargarPaginaServidor(1);
@@ -1418,6 +1495,91 @@ export class EcomerceProductsComponent
   tieneDescuentoDeLista(producto: Producto): boolean {
     if (!this._clienteCacheInitialized) this.refreshClienteCache();
     return descuentoVigente(filaDeTipoCliente(producto, this._cachedCategoriaClienteId));
+  }
+
+  /**
+   * El cliente en pantalla pertenece a una lista de precios y a ESTE producto
+   * le falta esa lista: se le va a cobrar el precio general.
+   *
+   * Mismo criterio que `aplicarPrecioDeLista` — una fila apagada o en cero no
+   * se aplica, así que cuenta como faltante. Si el cliente no tiene lista
+   * asignada (o la empresa no usa listas) devuelve false siempre.
+   */
+  faltaPrecioDeLista(producto: Producto): boolean {
+    if (!this._clienteCacheInitialized) this.refreshClienteCache();
+    if (!this._cachedCategoriaClienteId) return false;
+    const fila = filaDeTipoCliente(producto, this._cachedCategoriaClienteId);
+    return !fila || !(Number(fila.precioConIva) > 0);
+  }
+
+  /** Nombre corto de la lista del cliente ("Mayoristas"), o null si no tiene. */
+  get listaDelCliente(): string | null {
+    if (!this._clienteCacheInitialized) this.refreshClienteCache();
+    return this._cachedCategoriaClienteId ? this._cachedCategoriaClienteNombre : null;
+  }
+
+  /**
+   * A TODO lo que se ve le falta la lista. Pasa cuando a una empresa le
+   * asignaron una lista a sus clientes pero nunca le pusieron precios: en vez
+   * de encender las 40 tarjetas se muestra un solo renglón arriba.
+   * Se recalcula solo cuando cambia la página de productos.
+   */
+  get catalogoCompletoSinLista(): boolean {
+    if (!this._cachedCategoriaClienteId) return false;
+    const pagina: any[] = this.productosPaginados as any[];
+    if (!pagina || pagina.length === 0) return false;
+    if (this._bannerListaRef !== pagina) {
+      this._bannerListaRef = pagina;
+      this._bannerListaValor = pagina.every((p) => this.faltaPrecioDeLista(p));
+    }
+    return this._bannerListaValor;
+  }
+
+  /**
+   * Le pregunta al backend cuántos productos del catálogo no tienen precio en
+   * la lista del cliente. El backend responde de una; si todavía lo está
+   * calculando, se vuelve a preguntar UNA vez a los 20 segundos y si tampoco
+   * llega, el catálogo simplemente no muestra el número (el aviso por producto
+   * sigue funcionando: no depende de esta consulta).
+   */
+  private consultarCoberturaDeLista(): void {
+    const id = this._cachedCategoriaClienteId;
+    if (!id) {
+      this.productosSinPrecioDeLista = null;
+      this.totalProductosCatalogo = null;
+      this._coberturaPedidaPara = null;
+      this._coberturaReintentada = false;
+      return;
+    }
+    if (this._coberturaPedidaPara === id) return;
+    this._coberturaPedidaPara = id;
+
+    this.ventasService
+      .getCoberturaListasPrecio()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (respuesta: any) => {
+          const fila = (respuesta?.listas || []).find(
+            (l: any) => l.tipoClienteId === id,
+          );
+          this.productosSinPrecioDeLista = fila ? Number(fila.sin) : null;
+          this.totalProductosCatalogo = respuesta?.totalProductos ?? null;
+
+          if (respuesta?.calculando && !this._coberturaReintentada) {
+            this._coberturaReintentada = true;
+            timer(20000)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe(() => {
+                this._coberturaPedidaPara = null;
+                this.consultarCoberturaDeLista();
+              });
+          }
+        },
+        error: () => {
+          this.productosSinPrecioDeLista = null;
+          this.totalProductosCatalogo = null;
+        },
+      });
   }
 
   /**

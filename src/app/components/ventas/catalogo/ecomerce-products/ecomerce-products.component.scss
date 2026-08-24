@@ -1791,3 +1791,16 @@
     font-size: 13.5px;
   }
 }
+
+// Aviso "sin existencias en esta bodega" tras una búsqueda que solo halló
+// agotados. Tinte de atención plano, sin gradientes (design system).
+.aviso-sin-stock-bodega {
+  background: rgba(255, 171, 0, 0.10);
+  border: 1px solid rgba(255, 171, 0, 0.35);
+  color: #7a5200;
+  border-radius: 11px;
+
+  i { color: #b37400; }
+  h6 { font-weight: 700; }
+  p { font-size: 0.87rem; }
+}
