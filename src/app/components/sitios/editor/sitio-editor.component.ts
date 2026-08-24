@@ -596,6 +596,25 @@ export class SitioEditorComponent implements OnInit {
       return;
     }
 
+    // Las maquetas viajan con las plantillas. Si la petición falla, el editor
+    // sigue funcionando: simplemente no ofrece elegir forma, y las perillas de
+    // siempre quedan ahí.
+    this.service.plantillas().subscribe({
+      next: (res: any) => {
+        this.maquetas = (res && res.meta && res.meta.maquetas) || [];
+        // Los vestidos SON los temas de las plantillas: once combinaciones de
+        // color, tipografías y estilo de página que ya están hechas y que ya se
+        // distinguen entre sí. No hace falta inventar otra lista.
+        this.vestidos = ((res && res.data) || [])
+          .filter((p: any) => p && p.tema && p.tema.estilo)
+          .map((p: any) => ({ id: p.id, nombre: p.nombre, tema: p.tema }));
+      },
+      error: () => {
+        this.maquetas = [];
+        this.vestidos = [];
+      },
+    });
+
     this.service.obtener(this.id).subscribe({
       next: (res) => {
         this.cargando = false;
@@ -941,6 +960,9 @@ export class SitioEditorComponent implements OnInit {
   seleccionar(indice: number): void {
     this.seleccionado = indice;
     this.panel = "bloques";
+    // El aviso es de la maqueta que se acaba de elegir, no del bloque: al
+    // cambiar de sección deja de venir a cuento.
+    this.avisoMaqueta = "";
   }
 
   /**
@@ -1317,6 +1339,191 @@ export class SitioEditorComponent implements OnInit {
   /** ¿Este bloque se puede colocar a mano? */
   permiteLienzo(bloque: any): boolean {
     return !!bloque && !SitioEditorComponent.BLOQUES_CONECTADOS.includes(bloque.tipo);
+  }
+
+  // ── Maquetas: las formas con nombre de un bloque ───────────────────────────
+  // Llegan del servidor con las plantillas, igual que los objetivos, para que el
+  // editor no tenga su propia copia y se desfase. No agregan capacidad: son
+  // combinaciones que el bloque ya acepta, bautizadas para elegirlas mirando.
+
+  maquetas: any[] = [];
+
+  // ── Vestidos: el look completo de otra plantilla ───────────────────────────
+  // Cada plantilla tiene su tema propio —color, tipografías y estilo de página—
+  // y son once combinaciones distintas. Probárselas sobre el contenido ya
+  // escrito ataca de frente el "esta página no se parece a mi marca", que es el
+  // reclamo real detrás de "quiero mover las cosas".
+  //
+  // REGLA: el vestido es apariencia y NUNCA estructura. No toca los bloques, ni
+  // su orden, ni sus textos, ni sus productos. Por eso probárselo no puede
+  // hacerle perder nada a nadie, y por eso no hace falta confirmar nada.
+
+  vestidos: { id: string; nombre: string; tema: any }[] = [];
+
+  /** El tema tal como estaba antes de empezar a probarse vestidos. */
+  temaAnterior: any = null;
+
+  /**
+   * Por defecto se respeta la marca del comercio: quien ya definió sus colores
+   * no quiere que probarse una letra nueva se los borre.
+   */
+  conservarMisColores = true;
+
+  /** Qué vestido lleva puesto, si es que reconoce alguno. */
+  get vestidoActivo(): string {
+    const t = (this.contenido && this.contenido.tema) as any;
+    if (!t) return "";
+    const igual = this.vestidos.find(
+      (v) =>
+        v.tema.estilo === t.estilo &&
+        v.tema.fuenteTitulo === t.fuenteTitulo &&
+        v.tema.fuenteCuerpo === t.fuenteCuerpo &&
+        (this.conservarMisColores || v.tema.colorPrimario === t.colorPrimario)
+    );
+    return igual ? igual.id : "";
+  }
+
+  probarVestido(vestido: { id: string; nombre: string; tema: any }): void {
+    // Se guarda el punto de partida la PRIMERA vez, no en cada prueba: así
+    // "volver al de antes" devuelve al look con el que llegó, no al anterior
+    // de la cadena de pruebas.
+    if (!this.temaAnterior) this.temaAnterior = { ...(this.contenido.tema as any) };
+
+    const v = vestido.tema || {};
+    const nuevo: any = {
+      ...(this.contenido.tema as any),
+      estilo: v.estilo,
+      fuenteTitulo: v.fuenteTitulo,
+      fuenteCuerpo: v.fuenteCuerpo,
+      tipografia: v.tipografia,
+    };
+    if (!this.conservarMisColores) {
+      nuevo.colorPrimario = v.colorPrimario;
+      nuevo.colorSecundario = v.colorSecundario;
+      nuevo.colorTexto = v.colorTexto;
+    }
+    this.contenido.tema = nuevo;
+    this.marcarSucio();
+  }
+
+  descartarVestido(): void {
+    if (!this.temaAnterior) return;
+    this.contenido.tema = { ...this.temaAnterior };
+    this.temaAnterior = null;
+    this.marcarSucio();
+  }
+
+  /** El nombre en cristiano de una tipografía, para la tarjeta del vestido. */
+  nombreDeFuente(id: string): string {
+    const encontrada = TIPOGRAFIAS.find((f) => f.id === id);
+    return encontrada ? encontrada.nombre : "Del sistema";
+  }
+
+  /** Las de este bloque. Vacío en los que no tienen dónde elegir. */
+  maquetasDe(bloque: any): any[] {
+    if (!bloque) return [];
+    return this.maquetas.filter((m) => m.bloque === bloque.tipo);
+  }
+
+  /** Qué foto lleva el bloque ahora. Misma regla que el servidor. */
+  private modoDeFoto(datos: any): string {
+    const d = datos || {};
+    if ((d.mosaico || []).length >= 2) return "mosaico";
+    if ((d.imagenes || []).length >= 2) return "carrusel";
+    if (d.imagen) return "una";
+    return "ninguna";
+  }
+
+  /**
+   * Cuál lleva puesta. Se DEDUCE de los valores en vez de guardarse: guardar el
+   * nombre obligaría a mantenerlo al día cada vez que se mueve una perilla a
+   * mano, y el día que se desfasara el editor señalaría una maqueta que la
+   * página ya no tiene.
+   */
+  maquetaActiva(bloque: any): any {
+    if (!bloque) return null;
+    const d = bloque.datos || {};
+    const modo = this.modoDeFoto(d);
+    return (
+      this.maquetasDe(bloque).find(
+        (m) => m.foto === modo && Object.keys(m.forma).every((c) => d[c] === m.forma[c])
+      ) || null
+    );
+  }
+
+  /**
+   * Aplica una maqueta. Solo toca los campos de FORMA: los textos, las fotos y
+   * los destinos se quedan como estén, así que probarse maquetas no puede
+   * hacerle perder nada a nadie.
+   */
+  aplicarMaqueta(bloque: any, maqueta: any): void {
+    Object.keys(maqueta.forma).forEach((campo) => {
+      bloque.datos[campo] = maqueta.forma[campo];
+    });
+    // Si le falta la foto que esa forma necesita, se dice en el momento: si no,
+    // el comerciante elige "Mosaico", no ve ningún cambio y no sabe por qué.
+    this.avisoMaqueta = this.faltaParaMaqueta(bloque, maqueta);
+    this.marcarSucio();
+  }
+
+  /** Lo que hay que decirle sobre la maqueta que acaba de elegir. */
+  avisoMaqueta = "";
+
+  /**
+   * Qué le falta al bloque para que la maqueta se vea como promete. La maqueta
+   * no sube fotos por su cuenta — son del comerciante —, así que se le dice.
+   */
+  faltaParaMaqueta(bloque: any, maqueta: any): string {
+    if (this.modoDeFoto(bloque.datos) === maqueta.foto) return "";
+    const PIDE: { [id: string]: string } = {
+      una: "Sube una foto de portada para que se vea así",
+      mosaico: "Sube de 2 a 4 fotos al mosaico para que se vea así",
+      carrusel: "Sube 2 o más fotos al carrusel para que se vea así",
+      ninguna: "Quita la foto de portada para que se vea así",
+    };
+    return PIDE[maqueta.foto] || "";
+  }
+
+  /**
+   * Trazo del dibujito de cada maqueta. Es una miniatura, no un icono: lo que
+   * tiene que transmitir es dónde queda cada cosa.
+   *
+   * Se dibuja con `fill-rule="evenodd"`, así que las formas interiores no se
+   * pintan encima del fondo: lo perforan. Por eso los textos y los huecos se ven.
+   */
+  dibujoDeMaqueta(id: string): string {
+    const DIBUJOS: { [id: string]: string } = {
+      // ── Portada ──
+      cartel: "M2 2h36v24H2z M13 12h14v2H13z M16 17h8v1.5h-8z",
+      lateral: "M2 2h36v24H2z M6 11h13v2H6z M6 16h9v1.5H6z",
+      clara: "M2 2h36v24H2z M9 11h22v3H9z M13 17h14v2H13z",
+      banda: "M2 7h36v14H2z M23 12h13v2H23z M27 17h9v1.5h-9z",
+      mosaico:
+        "M2 2h17v24H2z M5 10h11v2H5z M5 15h7v1.5H5z M21 2h8v11h-8z M31 2h7v11h-7z M21 15h8v11h-8z M31 15h7v11h-7z",
+      carrusel: "M2 2h36v24H2z M13 11h14v2H13z M15 21h2v2h-2z M19 21h2v2h-2z M23 21h2v2h-2z",
+      tipografica: "M8 9h24v3H8z M12 15h16v2H12z M15 20h10v1.5H15z",
+
+      // ── Encabezado ──
+      // La barra de arriba con sus huecos, y debajo el cuerpo insinuado.
+      "encabezado-minimo": "M2 3h36v8H2z M5 5.5h5v3H5z M7 16h26v2H7z M7 21h17v2H7z",
+      "encabezado-menu":
+        "M2 3h36v7H2z M5 5h4v3H5z M2 11h36v4H2z M5 12.5h6v1H5z M13 12.5h6v1h-6z M21 12.5h6v1h-6z M7 20h26v2H7z",
+      "encabezado-tienda":
+        "M2 3h36v7H2z M5 5h4v3H5z M20 5.5h9v2h-9z M31 5h4v3h-4z M2 11h36v4H2z M5 12.5h6v1H5z M13 12.5h6v1h-6z M21 12.5h6v1h-6z M7 20h26v2H7z",
+      "encabezado-compra":
+        "M2 3h36v8H2z M5 5.5h4v3H5z M18 6h10v2H18z M30 5.5h4v3h-4z M7 16h26v2H7z M7 21h17v2H7z",
+      "encabezado-nombre": "M2 3h36v8H2z M5 5.5h13v3H5z M7 16h26v2H7z M7 21h17v2H7z",
+
+      // ── Catálogo ──
+      // Buscador, fila de categorías y la rejilla de productos.
+      "catalogo-completo":
+        "M2 2h36v5H2z M5 3.5h13v2H5z M2 9h9v3H2z M13 9h9v3h-9z M24 9h9v3h-9z M2 14h11v11H2z M14.5 14h11v11h-11z M27 14h11v11H27z",
+      "catalogo-buscador":
+        "M2 2h36v5H2z M5 3.5h13v2H5z M2 10h11v14H2z M14.5 10h11v14h-11z M27 10h11v14H27z",
+      "catalogo-simple":
+        "M2 3h11v10H2z M14.5 3h11v10h-11z M27 3h11v10H27z M2 15h11v10H2z M14.5 15h11v10h-11z M27 15h11v10H27z",
+    };
+    return DIBUJOS[id] || "M2 2h36v24H2z";
   }
 
   enLienzo(bloque: any): boolean {
