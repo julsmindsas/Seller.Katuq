@@ -5080,3 +5080,21 @@ que ya estaban en la rama (`a7278f6` maquetas de bloque de sitios y `8eece03`
 docs), de una sesión que ya había terminado. Son aditivos —un catálogo nuevo
 más cuatro líneas en el endpoint de sitios— y su propia suite
 (`test:sitios-publicacion`) quedó en verde antes de subir.
+
+---
+
+## D-230 (2026-08-24) — Tres bugs del sync a Shopify: fotos, "bajo pedido" y ciudad de entrega
+
+Del ticket OMS. Cada uno reproducido contra producción antes de tocar código. (Se toma D-230 y no D-223 porque la sesión de Guía Cereza reservó D-223..D-229 para su tanda del mismo ticket.)
+
+**1. Las fotos nunca llegaban a un producto que ya existía en Shopify.** `productUpdate` no acepta media y el camino UPDATE del nodo no la mandaba: solo recibían imagen los productos que el flow creaba desde cero. Un producto vinculado a un Shopify preexistente se quedaba sin foto para siempre. Verificado con `PX-CPD-2169-500ML`: foto en Katuq, `media count: 0` en Shopify. Ahora el update rellena vía `productCreateMedia` y **solo cuando allá no hay ninguna imagen** — lo que el comerciante subió a mano no se toca. Una media rechazada se registra y no tumba el upsert. De paso: `syncImages` estaba en el schema del nodo pero **no lo leía nadie**; apagarlo no apagaba nada. Ya es efectivo.
+
+**2. Los "bajo pedido" salían AGOTADOS en Shopify.** Nunca se mandaba `inventoryPolicy`, así que Shopify aplicaba su default `DENY`: un producto no inventariable, que por definición tiene stock 0, no se podía comprar. Los 43 no inventariables de OH MY STORE vinculados a Shopify estaban todos en DENY con qty 0. Los no inventariables pasan a `CONTINUE`; los inventariables siguen en `DENY`.
+
+**Trampa de datos encontrada acá y cuantificada por la sesión de Guía Cereza:** el campo top-level `products.<doc>.inventariable` **miente**. Sobre el catálogo completo (8.444 productos) hay **2.256 con el top-level en `false` mientras `disponibilidad.inventariable` dice `true` — el 27%**. Otros 6.147 solo tienen el subobjeto. Quien lea el top-level marca "bajo pedido" a más de dos mil productos que sí son inventariables. **Regla: `disponibilidad.inventariable` manda siempre; el top-level solo como respaldo para canonical V2.**
+
+**3. A Shopify no llegaba la ciudad de entrega.** El draft se armaba sin ninguna dirección —ni envío ni facturación— y con `useCustomerDefaultAddress: false`, así que la orden entraba pelada. Se mapea `envio` con el mismo criterio que ya usa el nodo de Cereza, para no tener dos verdades sobre la misma dirección. Dos detalles que salieron de mirar pedidos reales:
+- Katuq guarda literalmente `"N/A"` en los campos de envío cuando la entrega es "Recoge" (ORE-000609). Se filtran: ese caso manda solo ciudad y país, que es justo lo que el ticket pide.
+- El teléfono se sanea y **se omite si no es plausible**. Shopify rechaza el `draftOrderCreate` completo con un teléfono inválido y los datos reales traen basura (`602-3007506140-`, ORE-000608). Perder el teléfono es molesto; perder el pedido no es aceptable.
+
+Verificado con ORE-000610 (domicilio: dirección completa y teléfono normalizado a `+57…`), ORE-000609 (recoge: solo ciudad) y ORE-000608 (teléfono sucio omitido, dirección intacta). Backend `318ff33`. Los flows de producto corren cada 5–10 min, así que fotos y política de inventario se aplican solas tras el despliegue.
