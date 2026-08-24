@@ -5098,3 +5098,57 @@ Del ticket OMS. Cada uno reproducido contra producción antes de tocar código. 
 - El teléfono se sanea y **se omite si no es plausible**. Shopify rechaza el `draftOrderCreate` completo con un teléfono inválido y los datos reales traen basura (`602-3007506140-`, ORE-000608). Perder el teléfono es molesto; perder el pedido no es aceptable.
 
 Verificado con ORE-000610 (domicilio: dirección completa y teléfono normalizado a `+57…`), ORE-000609 (recoge: solo ciudad) y ORE-000608 (teléfono sucio omitido, dirección intacta). Backend `318ff33`. Los flows de producto corren cada 5–10 min, así que fotos y política de inventario se aplican solas tras el despliegue.
+
+## D-220 (2026-08-24) — El cliente esperaba 27 segundos y solo 4 eran el modelo
+
+**Cómo apareció.** Daniel pidió analizar las conversaciones reales del bot. Al
+medir la espera de punta a punta sobre 46 turnos: **mediana 26,7 s, p90 31 s,
+máximo 41 s**. Un cliente esperando medio minuto en WhatsApp.
+
+**Dónde estaba, medido y no supuesto:**
+
+| Tramo | Tiempo |
+|---|---|
+| Kapso → nosotros | 1,8 s (mediana) |
+| Ventana de agrupación de ráfagas | 4 s fijos, siempre |
+| Lecturas previas al turno, en fila | **8,1 s** |
+| El agente pensando (ADK) | 4,4 / 4,1 / 8,7 s |
+
+**Mi error de método, que vale registrar:** yo venía midiendo el endpoint del
+modelo (4-8 s) y dando la latencia por entendida. Nunca medí lo que espera el
+cliente. El modelo era la parte pequeña.
+
+**Los dos hallazgos concretos:**
+
+1. **`getContactOrders` trae hasta 1.000 pedidos del comercio y los filtra en
+   memoria** — 5,2 s y mil lecturas de Firestore **en cada mensaje**. Era el
+   75 % de las lecturas del turno.
+2. **La ventana de ráfagas de 4 s se cobra siempre**, aunque llegue un solo
+   mensaje. Medido sobre 74 intervalos reales: solo el **4,1 %** llega dentro
+   de esos 4 s, y dos de cada tres de esas ráfagas caben en 2 s.
+
+**Decisión.**
+
+- Todo el contexto del turno se pide **de una** (perfil, pedidos, nombre del
+  comercio, los tres maestros). Ninguna lectura depende de otra, así que la
+  espera pasa a ser la de la más lenta y no la suma.
+- El contexto del contacto se **cachea por hilo 5 minutos**, con el mismo
+  patrón que ya usaban los maestros de ese módulo — no es una capa nueva. El
+  historial de pedidos de alguien no cambia mientras conversa; el cierre
+  invalida el hilo para que "lo mismo de la otra vez" incluya el recién hecho.
+- **Ventana de ráfagas 4 s → 2 s**, con test que fija el valor: si alguien la
+  vuelve a subir, que sea con un dato en la mano.
+
+**Resultado medido contra prod:** las lecturas del turno pasan de **6.869 ms a
+5.138 ms** en el primer mensaje de un hilo y a **108 ms** del segundo en
+adelante. Sumado a los 2 s de la ventana, la espera del cliente baja de ~27 s
+a ~10-15 s en la mayoría de los turnos.
+
+**Estado: aplicado y verificado en producción.** Commits `c83ef74` y `ec87c79`
+(`backend-aws-security`). Suites del canal en verde.
+
+**Lo que sigue pendiente y por qué importa:** la consulta de pedidos por
+teléfono sigue escaneando mil documentos en el primer turno de cada hilo (5,6 s
+verificados tras el deploy). El arreglo de fondo es indexarla, pero toca un
+servicio que comparte el buzón y necesita índice nuevo en Firestore — se hace
+aparte, con su propia medición.
