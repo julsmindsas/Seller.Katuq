@@ -341,6 +341,26 @@
                     </div>
                 </div>
 
+                <!-- El cliente pertenece a una lista de precios y hay productos que no
+                     la tienen: a esos se les cobra el precio general. Si la empresa no
+                     usa listas, el cliente no tiene lista y esto no aparece nunca. -->
+                <div *ngIf="catalogoCompletoSinLista" class="aviso-lista-precio aviso-lista-precio--todo mb-4">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Ningún producto tiene precio de {{ listaDelCliente }}</strong>
+                        <span>A este cliente se le está cobrando el precio general del catálogo.</span>
+                    </div>
+                </div>
+                <div *ngIf="!catalogoCompletoSinLista && productosSinPrecioDeLista !== null && productosSinPrecioDeLista > 0"
+                     class="aviso-lista-precio mb-4">
+                    <i class="fa fa-tag"></i>
+                    <div>
+                        <strong>{{ listaDelCliente }}</strong>
+                        <span>{{ productosSinPrecioDeLista | number }}<span *ngIf="totalProductosCatalogo"> de {{ totalProductosCatalogo | number }}</span>
+                            productos no tienen precio de esta lista — a esos se les cobra el general.</span>
+                    </div>
+                </div>
+
                 <div class="product-wrapper-grid" [class.list-view]="listView" [class.grid-five-columns]="col === '5' && !listView"
                      [class.loading-overlay]="cargandoProductos && productosPaginados?.length > 0"
                      *ngIf="(soloNoInventariables || (bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '')) && productosPaginados?.length > 0">
@@ -450,6 +470,13 @@
                                                 <span *ngIf="tienePrecioPromocional(producto) && !getPromoBadgeImg(producto)" class="badge bg-danger promo-badge">
                                                     OFERTA
                                                 </span>
+                                            </div>
+                                            <!-- A este producto le falta la lista del cliente: se cobra el general.
+                                                 Se calla cuando le falta a TODO el catálogo (ya hay aviso arriba). -->
+                                            <div class="sin-precio-lista" *ngIf="!catalogoCompletoSinLista && faltaPrecioDeLista(producto)"
+                                                 title="Este producto no tiene precio en la lista {{ listaDelCliente }}; se cobra el precio general">
+                                                <i class="fa fa-exclamation-triangle"></i>
+                                                Sin precio de {{ listaDelCliente }}
                                             </div>
                                         </div>
                                     </div>
