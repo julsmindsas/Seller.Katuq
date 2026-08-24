@@ -28,3 +28,12 @@
 - [x] 3.2 Ensayo contra prod: pedido a domicilio (dirección y ciudad quedan en
       `envio`) y pedido de recogida (sin preguntar dirección).
 - [x] 3.3 CONTRACT.md al día.
+
+## 4. Dirección completa y códigos DANE (2026-08-20)
+
+- [x] 4.1 Reusar el resolutor DANE de Cereza; `departamentosDe` para poder
+      preguntar en vez de solo fallar.
+- [x] 4.2 El servidor resuelve ciudad → departamento + código; ambigua
+      pregunta con botones; fuera del listado se respeta. Tests.
+- [x] 4.3 El agente pide barrio y NO deduce el departamento. Tests.
+- [x] 4.4 El `envio` de la cotización lleva departamento, código y país.

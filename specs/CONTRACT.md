@@ -5040,3 +5040,43 @@ que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
 - Salida para el vendedor: las filas del popover son clicables y cambian la bodega de trabajo conservando la búsqueda; el hover se sostiene al pasar el cursor al popover.
 
 **Nota sobre "Solo con stock":** al buscar una referencia exacta el producto se muestra aunque esté en 0 en esta bodega — ocultarlo haría creer que no existe. El badge queda en rojo y el desglose dice dónde sí hay.
+
+### D-219 — Adenda (2026-08-20): dirección completa y códigos DANE resueltos
+
+Daniel pidió que además se pida **barrio y departamento**, y que el bot
+**resuelva los códigos**. Se hizo reusando el resolutor DANE que ya existe
+para el push a Cereza (`cerezaMunicipalityResolver`, 1.122 municipios, match
+exacto) en vez de escribir otro.
+
+- El cliente escribe "medellin" y el pedido queda con **"Medellín",
+  "Antioquia", código 05001 y país Colombia**. El departamento NO se le
+  pregunta: casi nadie lo dice al dictar una dirección.
+- **El modelo tiene prohibido deducirlo.** "Medellín… entonces Antioquia" es
+  exactamente lo que no debe hacer: hay 67 municipios cuyo nombre se repite
+  entre departamentos. Lo resuelve el servidor contra el listado oficial.
+- **Ciudad repetida → se pregunta, con botones.** Armenia está en Quindío y en
+  Antioquia; La Victoria, en tres. El resolutor se niega a adivinar a
+  propósito, y ahora el bot pregunta cuál es en vez de solo fallar.
+- **Ciudad que no está en el listado** (una vereda, un corregimiento) se
+  respeta tal cual y la venta sigue: el listado tiene municipios, y
+  rechazarlas sería no venderle a medio país rural.
+- **El barrio pasa a pedirse siempre.** Obligatorias para cerrar siguen siendo
+  dirección y ciudad: en zona rural puede no haber barrio y eso no puede
+  trabar un pedido.
+
+Detalle que costó un test: `departamentosPosibles` se guarda como lista vacía
+**explícita** al resolver. La config del pedido se funde campo a campo, así
+que una clave ausente dejaría en pie la ambigüedad del turno anterior y el bot
+preguntaría un departamento que ya sabía.
+
+**Estado: aplicado y verificado en producción.** Backend `7364be8`, ADK
+`d8284cd`. 11 suites del backend y 91 tests del canal en verde. Ensayo real: el
+agente anotó `{direccion: "carrera 70 numero 30-15", barrio: "Belen", ciudad:
+"Medellin"}` y el servidor lo dejó en Medellín / Antioquia / 05001; con
+"Armenia" el resolutor responde "Antioquia o Quindío" y el bot pregunta.
+
+**Nota de despliegue:** ese deploy de `katuq-api` arrastró dos commits ajenos
+que ya estaban en la rama (`a7278f6` maquetas de bloque de sitios y `8eece03`
+docs), de una sesión que ya había terminado. Son aditivos —un catálogo nuevo
+más cuatro líneas en el endpoint de sitios— y su propia suite
+(`test:sitios-publicacion`) quedó en verde antes de subir.
