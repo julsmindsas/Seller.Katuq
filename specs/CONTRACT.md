@@ -5152,3 +5152,24 @@ teléfono sigue escaneando mil documentos en el primer turno de cada hilo (5,6 s
 verificados tras el deploy). El arreglo de fondo es indexarla, pero toca un
 servicio que comparte el buzón y necesita índice nuevo en Firestore — se hace
 aparte, con su propia medición.
+
+---
+
+## D-233 (2026-08-24) — REGLA: un producto "bajo pedido" nunca sale agotado en Shopify
+
+**Decisión de Daniel, y es ley para TODO comercio que use Shopify con Katuq** — no un parche para el que reportó el problema. Un producto no inventariable se vende sin stock y **Shopify no le lleva la cuenta**.
+
+D-230 los dejó comprables (`inventoryPolicy: CONTINUE`) pero seguían mostrando 0, y con `tracked: true` + cantidad 0 el tema los pinta AGOTADO igual. Ahora además van con `inventoryItem.tracked: false`: salen siempre disponibles, sin número que mantener.
+
+**Se descartó cargarles una cifra alta tipo 9999** (la idea inicial): es un número inventado que baja con cada venta y que cualquier corrida del sync de inventario puede pisar. Sin rastreo no hay número que sostener ni que se pueda desincronizar.
+
+**Tres piezas, porque con una sola se deshacía sola en la corrida siguiente:**
+1. `mapper` emite `inventoryTracked` por variante (`false` solo para bajo pedido).
+2. `shopify-product-upsert` lo manda en `inventoryItem.tracked`. Solo fuerza el `false`; para los inventariables NO manda el campo — ese es del nodo de inventario y mandarlo ahí pelearía con él.
+3. `shopify-inventory-adjust` **omite los no inventariables**. Sin este corte el nodo les forzaba `tracked: true` y les escribía la cantidad real (0), deshaciendo en la siguiente corrida lo que el nodo de producto acababa de dejar bien. Se reporta como `skipped` con razón `producto_no_inventariable`: no es una falla, es la regla aplicándose.
+
+**Contract test `npm run test:bajo-pedido-shopify` (8/8)** — cubre bajo pedido, inventariable, variantes múltiples, canonical V2, el default seguro sin dato, y el caso del campo top-level mentiroso. Si alguien rompe la regla, el test falla.
+
+**Repaso ejecutado en OH MY STORE:** 42 productos actualizados, 0 fallidos; verificado después, 43 comprables y sin rastreo, 0 pendientes. Hizo falta porque el código nuevo solo actúa sobre lo que el flujo vuelva a emitir — y **lo quieto no se re-emite nunca** (ver D-232).
+
+Backend `ee0ea28`.
