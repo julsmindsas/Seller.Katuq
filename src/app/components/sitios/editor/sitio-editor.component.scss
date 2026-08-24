@@ -1702,6 +1702,156 @@
 }
 
 // ── Dónde va el elemento ─────────────────────────────────────────────────────
+// Colocación al detalle: los números de la posición y quién tapa a quién.
+// Solo aparece con el lienzo prendido y el elemento ya colocado.
+.coordenadas {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-top: 7px;
+
+  &__campo {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--kb-muted-2);
+
+    span {
+      min-width: 32px;
+    }
+
+    input {
+      width: 58px;
+      padding: 4px 6px;
+      border: 1.5px solid var(--kb-line-4);
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--kb-ink);
+      background: #fff;
+
+      &:focus {
+        outline: none;
+        border-color: var(--kb-accent);
+      }
+    }
+
+    em {
+      font-style: normal;
+      opacity: 0.7;
+    }
+  }
+
+  &__quitar {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 2px;
+    color: var(--kb-muted-2);
+
+    &:hover {
+      color: var(--kb-accent);
+    }
+  }
+
+  &__capas {
+    display: flex;
+    gap: 5px;
+    margin-left: auto;
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border: 1.5px solid var(--kb-line-4);
+      border-radius: 7px;
+      background: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--kb-muted-2);
+      cursor: pointer;
+
+      &:hover {
+        border-color: var(--kb-accent);
+        color: var(--kb-accent);
+      }
+    }
+  }
+}
+
+// Vestido del objeto: color de letra, fondo propio y escala del texto.
+.vestido-objeto {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 7px;
+
+  &__color {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--kb-muted-2);
+
+    input[type="color"] {
+      width: 30px;
+      height: 24px;
+      padding: 0;
+      border: 1.5px solid var(--kb-line-4);
+      border-radius: 6px;
+      background: none;
+      cursor: pointer;
+    }
+
+    button {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--kb-muted-2);
+
+      &:hover {
+        color: var(--kb-accent);
+      }
+    }
+  }
+
+  &__escala {
+    display: flex;
+    margin-left: auto;
+
+    button {
+      width: 26px;
+      height: 24px;
+      border: 1.5px solid var(--kb-line-4);
+      background: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--kb-muted-2);
+      cursor: pointer;
+
+      &:first-child { border-radius: 7px 0 0 7px; }
+      &:last-child { border-radius: 0 7px 7px 0; }
+      &:not(:first-child) { border-left: none; }
+
+      &.is-active {
+        background: var(--kb-accent);
+        border-color: var(--kb-accent);
+        color: #fff;
+      }
+    }
+  }
+}
+
 .colocacion {
   display: flex;
   gap: 6px;

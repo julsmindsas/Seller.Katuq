@@ -41,9 +41,12 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
   },
   {
     tipo: "seccion",
-    nombre: "Sección libre",
-    descripcion: "Pon botones, tarjetas y textos como quieras",
-    icono: "M4 5h16v14H4zM4 10h16M9 10v9",
+    // Es LA sección donde se compone a mano: la única que se puede colocar
+    // libremente. El nombre viejo —"Sección libre"— no lo estaba diciendo, y se
+    // notaba: estaba en la paleta y en cero plantillas.
+    nombre: "Componer a mano",
+    descripcion: "La única que se coloca libre: arrastra cada cosa donde quieras",
+    icono: "M4 5h16v14H4zM8 9l3 3-3 3M14 15h3",
   },
   {
     tipo: "columnas",
@@ -1292,9 +1295,37 @@ export class SitioEditorComponent implements OnInit {
 
   ALTO_LIENZO_MIN = 160;
   ALTO_LIENZO_MAX = 2000;
+  /** Alto de arranque cuando se prende el lienzo en una sección todavía vacía. */
+  ALTO_LIENZO_VACIO = 360;
+
+  /**
+   * Los bloques que se llenan solos contra el maestro de productos. Ahí la
+   * disposición la decide el dato, no el comerciante: la vitrina, el catálogo
+   * con su buscador y su paginación, el destacado, las baldosas de categoría y
+   * el encabezado con su menú real y su carrito.
+   *
+   * Son los únicos donde NO se puede componer a mano. Todo lo demás sí.
+   */
+  private static readonly BLOQUES_CONECTADOS = [
+    "catalogo",
+    "productos",
+    "destacado",
+    "categorias",
+    "encabezado",
+  ];
+
+  /** ¿Este bloque se puede colocar a mano? */
+  permiteLienzo(bloque: any): boolean {
+    return !!bloque && !SitioEditorComponent.BLOQUES_CONECTADOS.includes(bloque.tipo);
+  }
 
   enLienzo(bloque: any): boolean {
-    return !!(bloque && bloque.lienzo);
+    return !!(bloque && bloque.lienzo) && this.permiteLienzo(bloque);
+  }
+
+  /** Cuántos objetos caben: una sección que compone admite más. */
+  topeDeElementos(bloque: any): number {
+    return this.enLienzo(bloque) ? 30 : 12;
   }
 
   /**
@@ -1306,6 +1337,10 @@ export class SitioEditorComponent implements OnInit {
    *
    * Al apagarla, las coordenadas se conservan: si se arrepiente y vuelve a
    * prender el lienzo, encuentra su diseño intacto.
+   *
+   * Se puede prender en una sección VACÍA: es el caso de quien parte de una
+   * plantilla y quiere empezar colocando a mano. Los objetos que agregue después
+   * nacen ya con coordenadas (ver `agregarElemento`).
    */
   alternarLienzo(bloque: any): void {
     if (bloque.lienzo) {
@@ -1315,9 +1350,10 @@ export class SitioEditorComponent implements OnInit {
     }
 
     const elementos = bloque.elementos || [];
-    if (!elementos.length) return;
 
-    const alto = Math.max(this.ALTO_LIENZO_MIN, Math.min(this.ALTO_LIENZO_MAX, elementos.length * 120));
+    const alto = elementos.length
+      ? Math.max(this.ALTO_LIENZO_MIN, Math.min(this.ALTO_LIENZO_MAX, elementos.length * 120))
+      : this.ALTO_LIENZO_VACIO;
     bloque.lienzo = { alto };
 
     const paso = 100 / elementos.length;
@@ -1351,6 +1387,141 @@ export class SitioEditorComponent implements OnInit {
     const pos = elemento && elemento.pos;
     if (!pos || typeof pos.w !== "number") return "sin colocar";
     return `x ${pos.x}% · y ${pos.y}% · ancho ${pos.w}%`;
+  }
+
+  /** ¿Este elemento está colocado por coordenadas (y no por rejilla)? */
+  estaColocado(elemento: any): boolean {
+    return !!(elemento && elemento.pos && typeof elemento.pos.w === "number");
+  }
+
+  /**
+   * Escribir una coordenada a mano, para cuando arrastrar no alcanza: alinear
+   * dos cosas al milímetro con el mouse es una pelea que nadie tiene por qué dar.
+   *
+   * Se acota igual que en el backend —nada se sale de su sección— para que el
+   * editor no muestre una posición que al guardar se corrige sola.
+   */
+  escribirCoordenada(
+    bloque: any,
+    elemento: any,
+    campo: "x" | "y" | "w" | "h" | "angulo",
+    valor: any
+  ): void {
+    if (!this.estaColocado(elemento)) return;
+    const n = Number(valor);
+    if (!isFinite(n)) return;
+
+    const pos = this.posDe(elemento);
+    const redondear = (v: number) => Math.round(v * 10) / 10;
+
+    if (campo === "w") {
+      pos.w = redondear(Math.min(100, Math.max(this.ANCHO_LIBRE_MIN, n)));
+      // Al ensanchar, el elemento no puede quedar colgando por fuera.
+      pos.x = Math.min(pos.x, redondear(100 - pos.w));
+    } else if (campo === "x") {
+      pos.x = redondear(Math.min(100 - pos.w, Math.max(0, n)));
+    } else if (campo === "y") {
+      pos.y = redondear(Math.min(100, Math.max(0, n)));
+    } else if (campo === "h") {
+      pos.h = redondear(Math.min(100, Math.max(this.ALTO_LIBRE_MIN, n)));
+    } else {
+      pos.angulo = Math.round(Math.min(180, Math.max(-180, n)));
+    }
+
+    this.ordenarPorPosicion(bloque);
+    this.marcarSucio();
+  }
+
+  /** Devuelve el objeto a que crezca con su contenido, en vez de un alto fijo. */
+  quitarAlto(elemento: any): void {
+    if (elemento && elemento.pos) delete elemento.pos.h;
+    this.marcarSucio();
+  }
+
+  /** Lo endereza. */
+  quitarGiro(elemento: any): void {
+    if (elemento && elemento.pos) delete elemento.pos.angulo;
+    this.marcarSucio();
+  }
+
+  ALTO_LIBRE_MIN = 3;
+
+  // ── Vestido del objeto: color, fondo y escala ──────────────────────────────
+  // Hasta ahora el color vivía solo en la sección: se podía teñir una franja
+  // entera pero no un título suelto. Al componer a mano eso se queda corto.
+
+  escalas = [
+    { id: "pequeno", nombre: "Pequeño" },
+    { id: "normal", nombre: "Normal" },
+    { id: "grande", nombre: "Grande" },
+    { id: "enorme", nombre: "Enorme" },
+  ];
+
+  /**
+   * El vestido de un OBJETO. Ojo con el nombre: `estiloDe` ya existe y es el de
+   * la SECCIÓN. Son dos cosas distintas — el objeto hereda el de su sección
+   * mientras no tenga uno propio.
+   */
+  estiloDeObjeto(elemento: any): any {
+    if (!elemento.estilo) elemento.estilo = { colorTexto: "", fondo: "", escala: "normal" };
+    return elemento.estilo;
+  }
+
+  cambiarEstiloElemento(elemento: any, campo: "colorTexto" | "fondo" | "escala", valor: any): void {
+    this.estiloDeObjeto(elemento)[campo] = valor;
+    this.marcarSucio();
+  }
+
+  /** Volver a heredar el color de la sección, en vez de tener uno propio. */
+  quitarColor(elemento: any, campo: "colorTexto" | "fondo"): void {
+    this.estiloDeObjeto(elemento)[campo] = "";
+    this.marcarSucio();
+  }
+
+  ANCHO_LIBRE_MIN = 5;
+  private static readonly Z_MAX = 99;
+
+  /** ¿Hay más de un elemento colocado? Sin eso, la profundidad no significa nada. */
+  puedeSuperponer(bloque: any): boolean {
+    return (bloque.elementos || []).filter((el: any) => this.estaColocado(el)).length > 1;
+  }
+
+  /**
+   * Quién tapa a quién. Va como campo propio del elemento y NO reordenando la
+   * lista: el orden de la lista es el orden de LECTURA, y es el que manda en
+   * celular, donde el lienzo se ignora. Si traer al frente reordenara, acomodar
+   * algo en el monitor cambiaría en silencio cómo se lee en un teléfono.
+   */
+  traerAlFrente(bloque: any, elemento: any): void {
+    if (!this.estaColocado(elemento)) return;
+    const zetas = (bloque.elementos || [])
+      .filter((el: any) => this.estaColocado(el))
+      .map((el: any) => (typeof el.pos.z === "number" ? el.pos.z : 0));
+    const tope = Math.max(...zetas, 0);
+    this.posDe(elemento).z = Math.min(SitioEditorComponent.Z_MAX, tope + 1);
+    this.marcarSucio();
+  }
+
+  enviarAtras(bloque: any, elemento: any): void {
+    if (!this.estaColocado(elemento)) return;
+    const zetas = (bloque.elementos || [])
+      .filter((el: any) => this.estaColocado(el))
+      .map((el: any) => (typeof el.pos.z === "number" ? el.pos.z : 0));
+    const piso = Math.min(...zetas, 0);
+    // Nadie baja de cero: en vez de eso, se sube a todos los demás. Así el
+    // resultado visible es el mismo y no hay que guardar números negativos.
+    if (piso <= 0) {
+      (bloque.elementos || [])
+        .filter((el: any) => this.estaColocado(el) && el !== elemento)
+        .forEach((el: any) => {
+          const z = typeof el.pos.z === "number" ? el.pos.z : 0;
+          el.pos.z = Math.min(SitioEditorComponent.Z_MAX, z + 1);
+        });
+      this.posDe(elemento).z = 0;
+    } else {
+      this.posDe(elemento).z = piso - 1;
+    }
+    this.marcarSucio();
   }
 
   nombreDeElemento(tipo: string): string {
@@ -1388,11 +1559,23 @@ export class SitioEditorComponent implements OnInit {
 
   agregarElemento(bloque: any, tipo: string): void {
     const actuales = bloque.elementos || [];
-    if (actuales.length >= 12) return;
-    bloque.elementos = [
-      ...actuales,
-      { id: `e_${Date.now()}_${tipo}`, tipo, datos: this.elementoNuevo(tipo) },
-    ];
+    if (actuales.length >= this.topeDeElementos(bloque)) return;
+
+    const nuevo: any = { id: `e_${Date.now()}_${tipo}`, tipo, datos: this.elementoNuevo(tipo) };
+
+    // Con el lienzo prendido el objeto nace COLOCADO, no en la esquina: si
+    // naciera sin coordenadas habría que arrastrarlo antes de poder usarlo, que
+    // es justo el paso extra que esta capacidad viene a quitar. Se apila hacia
+    // abajo a media anchura, que es fácil de ver y de agarrar.
+    if (this.enLienzo(bloque)) {
+      nuevo.pos = {
+        x: 0,
+        y: Math.min(85, actuales.length * 12),
+        w: 50,
+      };
+    }
+
+    bloque.elementos = [...actuales, nuevo];
     this.marcarSucio();
   }
 

@@ -289,7 +289,8 @@
           <small>Se usa para la dirección pública. Puedes cambiarla luego.</small>
         </div>
 
-        <!-- El objetivo cambia los textos de la página, con o sin IA. -->
+        <!-- El objetivo elige la variante de textos: cambia titular, bajada y
+             a dónde lleva el botón de la portada. -->
         <div class="campo" *ngIf="objetivos.length">
           <label>¿Qué quieres lograr con esta página?</label>
           <div class="objetivos">
@@ -315,22 +316,11 @@
           <small>Se muestran con el precio y la disponibilidad de tu catálogo. Puedes dejarlo para después.</small>
         </div>
 
-        <button class="interruptor" [class.is-active]="usarIA" (click)="usarIA = !usarIA">
-          <span class="interruptor__icono">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg>
-          </span>
-          <span class="interruptor__texto">
-            <strong>Que Katuq escriba los textos por mí</strong>
-            <small>Redacta la portada y las secciones con la marca de tu negocio.</small>
-          </span>
-          <span class="interruptor__palanca"><span></span></span>
-        </button>
-
-        <div class="campo" *ngIf="usarIA">
-          <label for="objetivo-pagina">¿Algo más que debamos saber?</label>
+        <div class="campo">
+          <label for="objetivo-pagina">¿Cómo describirías tu negocio en una línea?</label>
           <input id="objetivo-pagina" type="text" [(ngModel)]="objetivo" maxlength="200"
-                 placeholder="Ej: hacemos envíos solo los fines de semana" />
-          <small>Opcional. Entre más claro, mejores quedan los textos.</small>
+                 placeholder="Ej: ramos y arreglos florales con entrega el mismo día" />
+          <small>Opcional. Es lo que se lee en Google y al compartir el enlace.</small>
         </div>
       </div>
 

@@ -19,10 +19,11 @@ const NOMBRE_BLOQUE: { [tipo: string]: string } = {
 /**
  * Listado de sitios del comercio y creación de uno nuevo.
  *
- * Crear tiene dos caminos, y los dos terminan en el mismo editor:
- *  - elegir una plantilla del sector y empezar a editar;
- *  - pedirle a Katuq una primera propuesta, que rellena los textos con la
- *    marca del negocio. Si la IA no responde, igual queda la plantilla.
+ * Crear es un solo camino: se elige la plantilla del sector y qué se quiere
+ * lograr con la página, y Katuq devuelve una primera propuesta ya vestida con la
+ * marca del negocio y sus productos reales. No interviene ningún modelo de
+ * lenguaje: los textos están escritos a mano, plantilla por plantilla y objetivo
+ * por objetivo, así que la misma entrada produce siempre la misma página.
  */
 @Component({
   selector: "app-sitios-lista",
@@ -86,8 +87,8 @@ export class SitiosListaComponent implements OnInit {
   mostrandoSelector = false;
 
   nombre = "";
+  /** Descripción en una línea. Va al SEO de la página, no a ningún modelo. */
   objetivo = "";
-  usarIA = true;
   creando = false;
 
   constructor(
@@ -218,7 +219,6 @@ export class SitiosListaComponent implements OnInit {
     this.productoIds = [];
     this.nombre = "";
     this.objetivo = "";
-    this.usarIA = true;
     // El sector del kit filtra las plantillas de entrada: quien ya dijo a qué
     // se dedica no debería tener que volver a buscarlo entre todas.
     this.sectorFiltro = this.sectorMarca;
@@ -289,15 +289,14 @@ export class SitiosListaComponent implements OnInit {
 
     this.creando = true;
 
-    // Con IA o sin ella se usa el mismo endpoint: `generar` con `guardar`
-    // devuelve la plantilla resuelta con la marca aunque el modelo falle. El
-    // `objetivoId` elige textos escritos a mano, así que la página habla del
-    // objetivo aunque el modelo no conteste.
+    // `generar` con `guardar` devuelve la plantilla ya resuelta con la marca del
+    // negocio. El `objetivoId` elige la variante de textos escrita a mano, que
+    // es lo que hace que la página hable de lo que el comerciante quiere lograr.
     this.service
       .generar({
         templateId: this.plantillaElegida.id,
         sector: this.plantillaElegida.sector,
-        objetivo: this.usarIA ? this.objetivo.trim() : "",
+        objetivo: this.objetivo.trim(),
         objetivoId: this.objetivoId,
         productoIds: this.productoIds,
         tipo: this.tipoElegido,
@@ -311,13 +310,6 @@ export class SitiosListaComponent implements OnInit {
           if (!data || !data.id) {
             this.toastr.error((res && res.message) || "No pudimos crear la página.");
             return;
-          }
-          if (this.usarIA && !data.generadoPorIA) {
-            // Se avisa sin alarmar: la página existe igual.
-            this.toastr.info(
-              "Creamos tu página con la plantilla; puedes editar los textos a mano.",
-              "La redacción automática no estuvo disponible"
-            );
           }
           this.mostrandoAsistente = false;
           this.router.navigate(["/sitios/editor", data.id]);

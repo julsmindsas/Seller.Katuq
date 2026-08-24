@@ -863,6 +863,30 @@ h3 {
   }
 }
 
+// Guía de alineación: la línea que aparece cuando el objeto que se arrastra
+// queda pegado a un borde de la sección o de otro objeto. Vive solo durante el
+// gesto y solo en el editor — la página publicada no la conoce.
+.guia {
+  position: absolute;
+  background: #2563eb;
+  pointer-events: none;
+  z-index: 40;
+
+  &--x {
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    margin-left: -0.5px;
+  }
+
+  &--y {
+    left: 0;
+    right: 0;
+    height: 1px;
+    margin-top: -0.5px;
+  }
+}
+
 .sitio--editable .celda--arrastrando {
   cursor: grabbing;
   outline-color: #2563eb !important;
