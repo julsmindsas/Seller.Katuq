@@ -4137,6 +4137,22 @@ export class CrearVentasComponent
   }
 
   /**
+   * Cambia la bodega de trabajo por su business code. Lo usa el catálogo cuando
+   * el vendedor, viendo el desglose de existencias, elige la bodega donde sí hay
+   * el producto ("acá 0, en Bogotá 26") sin tener que volver al selector.
+   */
+  seleccionarBodegaPorId(idBodega: string): void {
+    if (!idBodega) return;
+    const selected = this.bodegas?.find((w: any) => w.idBodega === idBodega);
+    if (!selected) {
+      this.toastrService.warning("No se encontró esa bodega en la lista", "Bodega");
+      return;
+    }
+    if (this.bodega?.idBodega === idBodega) return;
+    this.aplicarCambioBodega(selected);
+  }
+
+  /**
    * Aplica el cambio de bodega actualizando todas las referencias necesarias.
    */
   private aplicarCambioBodega(selected: any): void {

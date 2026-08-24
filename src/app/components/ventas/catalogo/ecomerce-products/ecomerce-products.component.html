@@ -367,12 +367,14 @@
                                                 'badge-info': !producto.disponibilidad?.inventariable
                                               }"
                                               [ngbPopover]="stockBodegasTpl"
+                                              #popStock="ngbPopover"
                                               popoverTitle="{{ 'Existencias por bodega' | translate }}"
                                               popoverClass="stock-bodegas-popover"
-                                              triggers="mouseenter:mouseleave"
+                                              triggers="manual"
                                               container="body"
                                               [disablePopover]="producto.disponibilidad?.inventariable === false"
-                                              (mouseenter)="cargarStockPorBodegas(producto)">
+                                              (mouseenter)="abrirStockPopover(popStock, producto)"
+                                              (mouseleave)="cerrarStockPopoverConGracia()">
                                             {{ producto.disponibilidad?.inventariable ?
                                                (producto.disponibilidad?.cantidadDisponible || 0) + ' unid.' :
                                                'Bajo pedido' }}
@@ -538,13 +540,18 @@
         </div>
         <div class="modal-body">
             <app-conf-product-to-cart #confProduct [producto]="productoSeleccionado"
+                [bodegaId]="soloNoInventariables ? null : bodega?.idBodega"
                 [isRebuy]="isRebuy"></app-conf-product-to-cart>
         </div>
     </ng-template>
 
     <!-- Contenido del popover "Existencias por bodega" (compartido; solo hay un hover a la vez) -->
     <ng-template #stockBodegasTpl>
-        <div class="stock-bodegas-pop">
+        <!-- El popover se navega con el mouse (las filas cambian de bodega), así que
+             mantiene abierto mientras el cursor esté encima. -->
+        <div class="stock-bodegas-pop"
+             (mouseenter)="cancelarCierreStockPopover()"
+             (mouseleave)="cerrarStockPopoverConGracia()">
             <div *ngIf="stockBodegasActual?.cargando" class="sbp-loading">
                 <i class="fa fa-circle-o-notch fa-spin me-1"></i> {{ 'Consultando…' | translate }}
             </div>
@@ -552,10 +559,18 @@
                 {{ 'No se pudo consultar el inventario' | translate }}
             </div>
             <ng-container *ngIf="stockBodegasActual && !stockBodegasActual.cargando && !stockBodegasActual.error">
-                <div *ngFor="let b of stockBodegasActual.bodegas" class="sbp-row" [class.sbp-actual]="esBodegaActual(b.idBodega)">
+                <!-- Fila clicable: si el stock está en otra bodega, se cambia de
+                     bodega desde acá en vez de dejar al vendedor con un 0 sin salida. -->
+                <div *ngFor="let b of stockBodegasActual.bodegas" class="sbp-row"
+                     [class.sbp-actual]="esBodegaActual(b.idBodega)"
+                     [class.sbp-clicable]="!esBodegaActual(b.idBodega)"
+                     [attr.role]="esBodegaActual(b.idBodega) ? null : 'button'"
+                     [attr.title]="esBodegaActual(b.idBodega) ? null : ('Trabajar en esta bodega' | translate)"
+                     (click)="irABodega(b.idBodega)">
                     <span class="sbp-nombre">
                         {{ b.nombre }}
                         <small *ngIf="esBodegaActual(b.idBodega)">({{ 'actual' | translate }})</small>
+                        <small *ngIf="!esBodegaActual(b.idBodega)" class="sbp-ir">{{ 'cambiar aquí' | translate }}</small>
                     </span>
                     <span class="sbp-cantidad">{{ b.cantidad }}</span>
                 </div>

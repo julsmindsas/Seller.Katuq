@@ -1663,6 +1663,24 @@
       font-weight: 700;
       small { color: #7366ff; font-weight: 600; }
     }
+
+    // Bodega distinta a la actual: clicable para trabajar allá.
+    &.sbp-clicable {
+      cursor: pointer;
+
+      .sbp-ir {
+        color: #7366ff;
+        font-weight: 600;
+        margin-left: 6px;
+        opacity: 0;
+        transition: opacity 0.12s ease;
+      }
+
+      &:hover {
+        background: rgba(115, 102, 255, 0.16);
+        .sbp-ir { opacity: 1; }
+      }
+    }
   }
   .sbp-nombre {
     max-width: 200px;

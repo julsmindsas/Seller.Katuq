@@ -4958,3 +4958,24 @@ que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
 - Backend: el push a Cereza manda `price` = precio de lista LLENO y `discount` = la rebaja (mayorista: price 53.900, discount 10.780, neto 43.120) — la forma en que Cereza maneja sus campañas. Prioridad 0 del discount, encima de promoción y del % digitado.
 
 **Pendiente**: desplegar el frontend a hosting para que el vendedor vea el precio rebajado del mayorista (hoy el backend ya lo cobraría bien si la línea trae la marca, pero quien la pone es el frontend). Y probar un pedido real de cliente mayorista de punta a punta.
+
+---
+
+## D-222 (2026-08-24) — La disponibilidad que ve el vendedor es la de SU bodega
+
+**Reporte de Estefani (OH MY STORE):** con "Fullpi Cali (ECF4)" elegida, buscar la referencia `GCJ1255CC` mostraba **26 unidades** — y esas 26 están en Bogotá. El popover de existencias la desmentía en la misma pantalla: "Fullpi Bogotá (ECF1) 26".
+
+**Terreno verificado en producción** (producto `4OGXy4bP9QIRY7LsNn43`, "Domis2/ 40 und"): `BOD-FULLPI-1` = 26, `BOD-FULLPI-3` = −6, `BOD-FULLPI-4` = −4. Con la política de negativo-visible los dos negativos se muestran 0, y el total queda justo en 26 — el número que ella veía.
+
+**Causa raíz:** `/v1/productos/search/quick` respondía `cantidadDisponible = stockTotal`, la SUMA entre bodegas (`productStockHelper`), porque no recibía bodega. La venta asistida usa ese endpoint como atajo cuando el término tecleado parece referencia (alfanumérico ≥3), así que la búsqueda por referencia se salía del camino que sí resuelve por bodega (`productosPaginated`). Dos derivados que NO dependían de buscar:
+- el modal "Configurar" (venta asistida y POS) refrescaba stock por ese mismo atajo y **pisaba** el dato correcto que traía el catálogo — y su validación de "Sin stock" corría contra el número inflado;
+- el botón "Agregar" del catálogo no validaba stock en absoluto.
+
+**Decisión:** la disponibilidad que se muestra y con la que se valida es **siempre la de la bodega de trabajo**. El total entre bodegas solo se usa en el modo "Sin inventario" (lo que se vende bajo pedido no pertenece a ninguna bodega) — regla fijada por Daniel.
+
+**Implementado:**
+- Backend: `quickSearch` acepta `bodegaId` y responde la cantidad de esa bodega; `stockTotal` y `stockPorBodega` siguen viajando para poder ofrecer "hay N en otra bodega". Sin `bodegaId` el comportamiento no cambia.
+- Frontend: catálogo, modal de configuración y combos derivan la cantidad de la bodega activa (también desde `stockPorBodega`, así el número queda bien aunque el backend vaya atrás). "Agregar" ya no deja meter al carrito lo que no hay, y el resumen del combo dice cuántas líneas quedaron fuera por falta de existencias.
+- Salida para el vendedor: las filas del popover son clicables y cambian la bodega de trabajo conservando la búsqueda; el hover se sostiene al pasar el cursor al popover.
+
+**Nota sobre "Solo con stock":** al buscar una referencia exacta el producto se muestra aunque esté en 0 en esta bodega — ocultarlo haría creer que no existe. El badge queda en rojo y el desglose dice dónde sí hay.

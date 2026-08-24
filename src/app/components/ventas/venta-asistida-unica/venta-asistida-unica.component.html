@@ -329,7 +329,10 @@
                       [class.has-value]="selectedWarehouse"
                       [disabled]="catalogoSinInventario">
                 <option value="">Seleccionar...</option>
-                <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+                <!-- [selected] mantiene el selector sincronizado cuando la bodega
+                     se cambia desde el catálogo (popover de existencias). -->
+                <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega"
+                        [selected]="selectedWarehouse === bodega.nombre">
                   {{ bodega.nombre }}
                 </option>
               </select>
@@ -468,6 +471,7 @@
               [mostrarBuscador]="false"
               [isRebuy]="false"
               (citySelected)="onCitySelect($event)"
+              (bodegaSolicitada)="seleccionarBodegaPorId($event)"
               *ngIf="pedidoGral && pedidoGral.cliente && (catalogoSinInventario || (bodega && selectedCity && selectedCity !== 'seleccione'))">
             </app-ecomerce-products>
           </div>

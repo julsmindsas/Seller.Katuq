@@ -2001,6 +2001,7 @@
         </div>
         <div class="estado-modal-body p-0" style="overflow-y: auto; max-height: calc(100vh - 80px);">
             <app-conf-product-to-cart #confProductToCart [producto]="configuracionCarritoSeleccionado?.producto || productoSeleccionado"
+                [bodegaId]="selectedWarehouse?.idBodega"
                 [configuracionCarrito]="configuracionCarritoSeleccionado" [isEdit]="true" [modalRef]="modal"></app-conf-product-to-cart>
         </div>
     </div>
@@ -2027,7 +2028,8 @@
                     <div class="position-relative">
                         <select class="form-select custom-select" (change)="onWarehouseChange($event)">
                             <option value="">{{ 'Seleccione una bodega' | translate }}</option>
-                            <option *ngFor="let bodega of bodegas; trackBy: trackByBodega" [value]="bodega.idBodega">
+                            <option *ngFor="let bodega of bodegas; trackBy: trackByBodega" [value]="bodega.idBodega"
+                                    [selected]="selectedWarehouse?.idBodega === bodega.idBodega">
                                 {{ bodega.nombre }} ({{ bodega.idBodega }})
                             </option>
                         </select>
@@ -2045,7 +2047,8 @@
         <app-ecomerce-products #recompra [ciudadSelector]="ciudadesEntrega" [selectedCity]="ciudadSeleccionada"
             [ciudad]="ciudadSeleccionada" [bodega]="selectedWarehouse" [isRebuy]="true"
             [mostrarBuscador]="true"
-            (citySelected)="onCitySelect($event)">
+            (citySelected)="onCitySelect($event)"
+            (bodegaSolicitada)="seleccionarBodegaPorId($event)">
         </app-ecomerce-products>
     </div>
 </ng-template>

@@ -593,6 +593,20 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
   }
 
   /**
+   * Bodega de trabajo del POS (business code). Es la misma fuente que usa el
+   * checkout para armar la orden, así lo que se muestra y lo que se descuenta
+   * hablan de la misma bodega.
+   */
+  private bodegaPOS(): string | undefined {
+    try {
+      const raw = localStorage.getItem("warehousePOS");
+      return raw ? JSON.parse(raw)?.idBodega || undefined : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * Refresca disponibilidad.cantidadDisponible del producto consultando al
    * backend (que ya deriva el stock desde la colección inventory).
    * Best-effort: si falla, mantiene el valor del snapshot.
@@ -601,11 +615,17 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
     const ref = this.producto?.identificacion?.referencia;
     if (!ref || !this.producto?.disponibilidad?.inventariable) return;
     try {
+      // El POS vende desde una bodega concreta (la misma que el checkout usa
+      // para descontar). Sin mandarla, el refresco traía la SUMA de todas y
+      // dejaba vender acá lo que estaba en otra ciudad.
+      const bodegaId = this.bodegaPOS();
       const resp: any = await firstValueFrom(
-        this.ventasService.quickSearchProducts(ref, 1),
+        this.ventasService.quickSearchProducts(ref, 1, undefined, bodegaId),
       );
       const fresh = resp?.products?.[0];
-      const stockReal = fresh?.disponibilidad?.cantidadDisponible;
+      const stockReal = bodegaId
+        ? (fresh?.stockPorBodega?.[bodegaId] ?? fresh?.disponibilidad?.cantidadDisponible)
+        : fresh?.disponibilidad?.cantidadDisponible;
       if (stockReal !== undefined && stockReal !== null) {
         this.producto.disponibilidad = {
           ...this.producto.disponibilidad,

@@ -195,6 +195,13 @@ export class ConfProductToCartComponent
    */
   @Input() public returnOnly: boolean = false;
 
+  /**
+   * Bodega de trabajo (business code, ej. "ECF4"). Sin ella, el refresco de
+   * stock traía la SUMA de todas las bodegas y pisaba el dato correcto que ya
+   * venía del catálogo: el modal mostraba —y dejaba vender— stock de otra ciudad.
+   */
+  @Input() public bodegaId: string | null = null;
+
   public cantidad: number = 1;
   private digitandoCantidad = false;
   public tipoEntrega: any[];
@@ -1586,10 +1593,15 @@ export class ConfProductToCartComponent
     if (!ref || !this.producto?.disponibilidad?.inventariable) return;
     try {
       const resp: any = await firstValueFrom(
-        this.ventasService.quickSearchProducts(ref, 1),
+        this.ventasService.quickSearchProducts(ref, 1, undefined, this.bodegaId || undefined),
       );
       const fresh = resp?.products?.[0];
-      const stockReal = fresh?.disponibilidad?.cantidadDisponible;
+      // Con bodega, el número válido es el de ESA bodega. Se deriva también del
+      // desglose para que el modal quede correcto aunque el backend todavía no
+      // aplique el filtro, en vez de volver a mostrar el total entre bodegas.
+      const stockReal = this.bodegaId
+        ? (fresh?.stockPorBodega?.[this.bodegaId] ?? fresh?.disponibilidad?.cantidadDisponible)
+        : fresh?.disponibilidad?.cantidadDisponible;
       if (stockReal !== undefined && stockReal !== null) {
         this.producto.disponibilidad = {
           ...this.producto.disponibilidad,

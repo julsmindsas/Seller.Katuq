@@ -117,6 +117,13 @@ export class EcomerceProductsComponent
    */
   @Input() soloNoInventariables: boolean = false;
 
+  /**
+   * El vendedor pidió trabajar en otra bodega desde el popover de existencias
+   * ("aquí no hay, pero en Bogotá sí"). El padre es el dueño del selector de
+   * bodega, así que solo se le avisa el business code elegido.
+   */
+  @Output() bodegaSolicitada = new EventEmitter<string>();
+
   // Cache de precio por categoría del cliente (evita parsear sessionStorage en cada CD cycle)
   private _cachedCategoriaClienteId: string | null = null;
   private _clienteCacheInitialized: boolean = false;
@@ -147,6 +154,14 @@ export class EcomerceProductsComponent
 
   // Cache de filtros actuales para paginación
   private filtrosActuales: any = null;
+
+  /**
+   * Término de búsqueda vigente. Se conserva para que al cambiar de bodega
+   * (por el selector o desde el popover de existencias) el vendedor siga viendo
+   * el producto que estaba buscando, ahora con el stock de la nueva bodega,
+   * en vez de que el catálogo vuelva al listado completo.
+   */
+  private terminoBusquedaActivo: string = "";
 
   constructor(
     private ventasService: VentasService,
@@ -199,9 +214,89 @@ export class EcomerceProductsComponent
     });
   }
 
+  /** Popover de existencias abierto y temporizador de cierre con gracia. */
+  private popoverStockAbierto: any = null;
+  private cierreStockTimer: any = null;
+
+  /**
+   * Abre el popover de existencias. El hover se controla a mano (no con
+   * `triggers="mouseenter:mouseleave"`) porque las filas son clicables: con el
+   * trigger automático el popover se cerraba justo al mover el cursor hacia él.
+   */
+  abrirStockPopover(popover: any, producto: any): void {
+    this.cancelarCierreStockPopover();
+    if (this.popoverStockAbierto && this.popoverStockAbierto !== popover) {
+      this.popoverStockAbierto.close();
+    }
+    this.cargarStockPorBodegas(producto);
+    this.popoverStockAbierto = popover;
+    popover.open();
+  }
+
+  /** Cierra tras un respiro, para poder pasar del badge al popover sin perderlo. */
+  cerrarStockPopoverConGracia(): void {
+    this.cancelarCierreStockPopover();
+    this.cierreStockTimer = setTimeout(() => {
+      this.popoverStockAbierto?.close();
+      this.popoverStockAbierto = null;
+      this.cierreStockTimer = null;
+    }, 220);
+  }
+
+  /** El cursor entró al popover: se cancela el cierre pendiente. */
+  cancelarCierreStockPopover(): void {
+    if (this.cierreStockTimer) {
+      clearTimeout(this.cierreStockTimer);
+      this.cierreStockTimer = null;
+    }
+  }
+
   /** true si la fila del popover corresponde a la bodega actualmente seleccionada. */
   esBodegaActual(idBodega: string): boolean {
     return !!this.bodega?.idBodega && this.bodega.idBodega === idBodega;
+  }
+
+  /**
+   * Pide al padre trabajar en otra bodega. Se dispara desde el popover cuando
+   * el producto no tiene existencias acá pero sí en otra: en vez de dejar al
+   * vendedor con un 0 sin salida, se cambia de bodega y el catálogo recarga.
+   */
+  irABodega(idBodega: string): void {
+    if (!idBodega || this.esBodegaActual(idBodega)) return;
+    this.cancelarCierreStockPopover();
+    this.popoverStockAbierto?.close();
+    this.popoverStockAbierto = null;
+    this.bodegaSolicitada.emit(idBodega);
+  }
+
+  /**
+   * Fija `cantidadDisponible` a las existencias de la bodega seleccionada.
+   *
+   * La búsqueda rápida devuelve el desglose `stockPorBodega`; si el backend aún
+   * no aplica el filtro por bodega, `cantidadDisponible` viene como el total
+   * entre bodegas. Derivarlo acá deja el número correcto en pantalla aunque el
+   * backend esté desactualizado, en vez de fallar en silencio mostrando stock
+   * de otra ciudad. No toca los no inventariables (no viven en una bodega).
+   */
+  private aplicarStockDeBodega(products: any[]): any[] {
+    const idBodega = this.bodega?.idBodega;
+    if (!Array.isArray(products) || this.soloNoInventariables || !idBodega) {
+      return products || [];
+    }
+    return products.map((p) => {
+      if (!p || p.disponibilidad?.inventariable === false) return p;
+      if (!p.stockPorBodega) return p;
+      const enBodega = p.stockPorBodega[idBodega] || 0;
+      if (p.disponibilidad?.cantidadDisponible === enBodega) return p;
+      return {
+        ...p,
+        disponibilidad: {
+          ...(p.disponibilidad || {}),
+          cantidadDisponible: enBodega,
+          inventarioSeguridad: enBodega,
+        },
+      };
+    });
   }
 
   ngAfterViewInit(): void {
@@ -455,6 +550,7 @@ export class EcomerceProductsComponent
   }
 
   ngOnDestroy(): void {
+    this.cancelarCierreStockPopover();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -700,6 +796,13 @@ export class EcomerceProductsComponent
     // Reiniciar a página 1 con nuevos filtros
     this.paginaActual = 1;
 
+    // Con una búsqueda vigente (cambio de bodega, toggle de stock, etc.) se
+    // reejecuta esa búsqueda contra los filtros nuevos, no el catálogo entero.
+    if (this.usarPaginacionServidor && this.terminoBusquedaActivo) {
+      this.ejecutarBusqueda(this.terminoBusquedaActivo);
+      return;
+    }
+
     if (this.usarPaginacionServidor) {
       this.cargarPaginaServidor(1);
     } else {
@@ -901,6 +1004,7 @@ export class EcomerceProductsComponent
    * Ejecuta búsqueda en el servidor con el término dado
    */
   private ejecutarBusqueda(searchTerm: string): void {
+    this.terminoBusquedaActivo = (searchTerm || "").trim();
     if (!searchTerm || searchTerm.trim().length === 0) {
       // Limpiar búsqueda: recargar sin searchTerm
       if (this.filtrosActuales) {
@@ -916,14 +1020,20 @@ export class EcomerceProductsComponent
 
     if (isLikelyReference) {
       this.cargandoProductos = true;
-      this.ventasService.quickSearchProducts(searchTerm.trim(), 20)
+      // La bodega viaja SIEMPRE que el catálogo esté trabajando sobre una: sin
+      // ella el backend responde la suma de todas y el badge mostraba stock de
+      // otra ciudad. En modo "Sin inventario" no hay bodega y sí se busca en
+      // todas, que es el comportamiento correcto para lo que se vende bajo pedido.
+      const bodegaBusqueda = this.soloNoInventariables ? undefined : this.bodega?.idBodega;
+      this.ventasService.quickSearchProducts(searchTerm.trim(), 20, undefined, bodegaBusqueda)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             if (response.success && response.products?.length > 0) {
-              this.productosPaginados = response.products;
-              this.productos = response.products;
-              this.temp = [...response.products];
+              const products = this.aplicarStockDeBodega(response.products);
+              this.productosPaginados = products;
+              this.productos = products;
+              this.temp = [...products];
               this.totalProductos = response.total;
               this.totalPaginas = 1;
               this.paginaActual = 1;
@@ -1449,8 +1559,25 @@ export class EcomerceProductsComponent
   private agregarProductoAlCarritoInterno(
     producto: Producto,
     opts: { requiereConfiguracionPendiente?: boolean; mostrarToast?: boolean } = {}
-  ): void {
+  ): boolean {
     const mostrarToast = opts.mostrarToast !== false;
+
+    // 1.b Sin existencias en la bodega de trabajo no se agrega. El botón
+    // "Agregar" no validaba stock (solo lo hacía el modal Configurar), así que
+    // un producto agotado en esta bodega entraba al carrito sin aviso.
+    const inventariable = producto.disponibilidad?.inventariable !== false;
+    const disponible = producto.disponibilidad?.cantidadDisponible || 0;
+    if (inventariable && disponible <= 0) {
+      if (mostrarToast) {
+        const dondeSiHay = this.bodega?.nombre ? ` en ${this.bodega.nombre}` : "";
+        this.toastrService.error(
+          `No hay unidades${dondeSiHay}. Pasa el cursor sobre el indicador de stock para ver en qué bodega sí hay.`,
+          "Sin stock en esta bodega",
+          { timeOut: 5000, progressBar: true, positionClass: "toast-bottom-right" }
+        );
+      }
+      return false;
+    }
 
     // 2. Obtener la cantidad mínima de venta
     const cantidadMinima = producto.disponibilidad?.cantidadMinVenta || 1;
@@ -1550,6 +1677,7 @@ export class EcomerceProductsComponent
         requiereConfiguracionPendiente: !!opts.requiereConfiguracionPendiente
       });
     }
+    return true;
   }
 
   /** Abre el picker de combos (buscador + lista) — escala a cualquier cantidad de combos. */
@@ -1593,12 +1721,16 @@ export class EcomerceProductsComponent
 
     this.maestroService.getProductsByIds(ids).subscribe({
       next: (res: any) => {
-        const productosResueltos: Producto[] = res?.products || [];
+        // Los productos del combo se resuelven por ID y llegan con el stock
+        // sumado entre bodegas: se baja al de la bodega de trabajo antes de
+        // decidir si entran al carrito.
+        const productosResueltos: Producto[] = this.aplicarStockDeBodega(res?.products || []);
         const mapaPorId = new Map(productosResueltos.map((p: any) => [p.cd, p]));
 
         let agregados = 0;
         let pendientesConfig = 0;
         let noDisponibles = 0;
+        let sinStock = 0;
 
         ids.forEach((id) => {
           const producto = mapaPorId.get(id);
@@ -1609,14 +1741,17 @@ export class EcomerceProductsComponent
             return;
           }
 
-          if (this.requiereConfiguracion(producto)) {
-            this.agregarProductoAlCarritoInterno(producto, {
-              requiereConfiguracionPendiente: true,
-              mostrarToast: false
-            });
+          const requiereConfig = this.requiereConfiguracion(producto);
+          const agregado = this.agregarProductoAlCarritoInterno(producto, {
+            requiereConfiguracionPendiente: requiereConfig,
+            mostrarToast: false
+          });
+          if (!agregado) {
+            sinStock++;
+            return;
+          }
+          if (requiereConfig) {
             pendientesConfig++;
-          } else {
-            this.agregarProductoAlCarritoInterno(producto, { mostrarToast: false });
           }
           agregados++;
         });
@@ -1629,6 +1764,10 @@ export class EcomerceProductsComponent
         }
         if (noDisponibles > 0) {
           mensaje += `. ${noDisponibles} producto(s) del combo ya no están disponibles y no se agregaron.`;
+        }
+        if (sinStock > 0) {
+          const enBodega = this.bodega?.nombre ? ` en ${this.bodega.nombre}` : "";
+          mensaje += `. ${sinStock} producto(s) sin existencias${enBodega} quedaron fuera.`;
         }
 
         this.toastrService.success(mensaje, 'Combo agregado', {

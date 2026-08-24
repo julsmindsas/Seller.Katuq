@@ -9029,10 +9029,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onWarehouseChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    const selectedId = target.value;
-    const selected = this.bodegas.find((b) => b.idBodega === selectedId);
+    this.seleccionarBodegaPorId(target.value);
+  }
+
+  /**
+   * Cambia la bodega de la recompra por su business code. Además del selector,
+   * lo dispara el catálogo cuando el vendedor elige desde el desglose de
+   * existencias la bodega donde sí hay el producto.
+   */
+  seleccionarBodegaPorId(idBodega: string): void {
+    const selected = this.bodegas?.find((b) => b.idBodega === idBodega);
 
     if (selected) {
+      if (this.selectedWarehouse?.idBodega === selected.idBodega) return;
       this.selectedWarehouse = selected;
 
       if (this.recompraCmp) {

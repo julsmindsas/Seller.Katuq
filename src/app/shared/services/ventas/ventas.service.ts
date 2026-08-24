@@ -187,8 +187,12 @@ export class VentasService extends BaseService {
    * todos los productos. `searchBy` opcional: por defecto el backend filtra por
    * `referencia` (comportamiento histórico); pasar `'all'` busca por referencia O
    * título O marca O código de barras (usado por el editor de cotizaciones).
+   *
+   * `bodegaId` (business code, ej. "ECF4"): sin él la respuesta trae la SUMA de
+   * todas las bodegas — justo lo que hacía ver stock de Bogotá con Cali elegida.
+   * Todo consumidor que opere sobre una bodega debe mandarlo.
    */
-  public quickSearchProducts(term: string, limit: number = 20, searchBy?: string): Observable<{
+  public quickSearchProducts(term: string, limit: number = 20, searchBy?: string, bodegaId?: string): Observable<{
     success: boolean;
     products: Producto[];
     total: number;
@@ -197,7 +201,8 @@ export class VentasService extends BaseService {
   }> {
     const encodedTerm = encodeURIComponent(term);
     const byParam = searchBy ? `&searchBy=${encodeURIComponent(searchBy)}` : "";
-    return this.get<any>(`/v1/productos/search/quick?q=${encodedTerm}&limit=${limit}${byParam}`);
+    const bodegaParam = bodegaId ? `&bodegaId=${encodeURIComponent(bodegaId)}` : "";
+    return this.get<any>(`/v1/productos/search/quick?q=${encodedTerm}&limit=${limit}${byParam}${bodegaParam}`);
   }
 
   validateCupon(cupon: any) {
