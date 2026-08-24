@@ -27,13 +27,23 @@
             </span>
           </div>
           <nav class="cabecera__enlaces" *ngIf="bloque.datos.enlaces?.length">
-            <a *ngFor="let e of bloque.datos.enlaces"
+            <a *ngFor="let e of bloque.datos.enlaces; let j = index"
                [href]="e.url"
+               [attr.contenteditable]="previsualizacion ? true : null"
+               [class.editable]="previsualizacion"
+               (blur)="alEditarTexto($event, bloque.id, {campo:'etiqueta', lista:'enlaces', item:j})"
+               (keydown)="alTeclearEnTexto($event, true)"
+               (paste)="alPegar($event)"
                (click)="registrarClic('cta', bloque.id, $event)">{{ e.etiqueta }}</a>
           </nav>
           <a *ngIf="bloque.datos.ctaTexto && bloque.datos.ctaUrl"
              class="boton boton--chico"
              [href]="bloque.datos.ctaUrl"
+             [attr.contenteditable]="previsualizacion ? true : null"
+             [class.editable]="previsualizacion"
+             (blur)="alEditarTexto($event, bloque.id, {campo:'ctaTexto'})"
+             (keydown)="alTeclearEnTexto($event, true)"
+             (paste)="alPegar($event)"
              (click)="registrarClic('cta', bloque.id, $event)">{{ bloque.datos.ctaTexto }}</a>
 
           <p class="vacio" *ngIf="previsualizacion && !logo && bloque.datos.mostrarLogo !== false">
@@ -79,6 +89,11 @@
             <a *ngIf="bloque.datos.ctaTexto && bloque.datos.ctaUrl"
                class="boton"
                [href]="bloque.datos.ctaUrl"
+               [attr.contenteditable]="previsualizacion ? true : null"
+               [class.editable]="previsualizacion"
+               (blur)="alEditarTexto($event, bloque.id, {campo:'ctaTexto'})"
+               (keydown)="alTeclearEnTexto($event, true)"
+               (paste)="alPegar($event)"
                (click)="registrarClic('cta', bloque.id, $event)">{{ bloque.datos.ctaTexto }}</a>
           </div>
         </section>
@@ -87,8 +102,14 @@
         <section *ngSwitchCase="'texto'" class="bloque texto">
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
           <!-- Se dibuja con formato para que la previa muestre la negrita y las
-               listas tal como saldrán publicadas. -->
-          <div class="formato" *ngIf="bloque.datos.cuerpo" [innerHTML]="conFormato(bloque.datos.cuerpo)"></div>
+               listas tal como saldrán publicadas. Editable en línea: al salir se
+               lee el HTML y se devuelve a la notación, sin perder el formato. -->
+          <div class="formato" *ngIf="bloque.datos.cuerpo" [innerHTML]="conFormato(bloque.datos.cuerpo)"
+               [attr.contenteditable]="previsualizacion ? true : null"
+               [class.editable]="previsualizacion"
+               (blur)="alEditarFormato($event, bloque.id, {campo:'cuerpo'})"
+               (keydown)="alTeclearEnTexto($event, false)"
+               (paste)="alPegar($event)"></div>
         </section>
 
         <!-- Galería -->
@@ -139,6 +160,11 @@
              [href]="enlaceWhatsapp(bloque.datos)"
              target="_blank"
              rel="noopener"
+             [attr.contenteditable]="previsualizacion ? true : null"
+             [class.editable]="previsualizacion"
+             (blur)="alEditarTexto($event, bloque.id, {campo:'etiqueta'})"
+             (keydown)="alTeclearEnTexto($event, true)"
+             (paste)="alPegar($event)"
              (click)="registrarClic('whatsapp', bloque.id, $event)">{{ bloque.datos.etiqueta }}</a>
           <p class="vacio" *ngIf="!bloque.datos.telefono && previsualizacion">
             Falta el número de WhatsApp: este botón no se verá en la página publicada.
@@ -183,9 +209,22 @@
         <!-- Preguntas frecuentes -->
         <section *ngSwitchCase="'faq'" class="bloque faq">
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
-          <details *ngFor="let f of bloque.datos.preguntas">
-            <summary>{{ f.pregunta }}</summary>
-            <p>{{ f.respuesta }}</p>
+          <!-- En el editor las preguntas quedan ABIERTAS y sin plegarse: si el
+               clic plegara, no se podría poner el cursor para editar. En la
+               página publicada se pliegan como siempre. -->
+          <details *ngFor="let f of bloque.datos.preguntas; let j = index"
+                   [attr.open]="previsualizacion ? '' : null">
+            <summary (click)="previsualizacion && $event.preventDefault()"
+                     [attr.contenteditable]="previsualizacion ? true : null"
+                     [class.editable]="previsualizacion"
+                     (blur)="alEditarTexto($event, bloque.id, {campo:'pregunta', lista:'preguntas', item:j})"
+                     (keydown)="alTeclearEnTexto($event, true)"
+                     (paste)="alPegar($event)">{{ f.pregunta }}</summary>
+            <p [attr.contenteditable]="previsualizacion ? true : null"
+               [class.editable]="previsualizacion"
+               (blur)="alEditarTexto($event, bloque.id, {campo:'respuesta', lista:'preguntas', item:j})"
+               (keydown)="alTeclearEnTexto($event, false)"
+               (paste)="alPegar($event)">{{ f.respuesta }}</p>
           </details>
         </section>
 
@@ -193,7 +232,12 @@
         <!-- La sección libre solo pinta su título: los elementos los dibuja el
              bloque de abajo, que vale para CUALQUIER tipo de sección. -->
         <section *ngSwitchCase="'seccion'" class="bloque seccion">
-          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <h2 *ngIf="bloque.datos.titulo"
+              [attr.contenteditable]="previsualizacion ? true : null"
+              [class.editable]="previsualizacion"
+              (blur)="alEditarTexto($event, bloque.id, {campo:'titulo'})"
+              (keydown)="alTeclearEnTexto($event, true)"
+              (paste)="alPegar($event)">{{ bloque.datos.titulo }}</h2>
           <p class="vacio" *ngIf="!bloque.elementos?.length && previsualizacion">
             Esta sección está vacía. Agrégale un texto, un botón o unas tarjetas.
           </p>
@@ -204,11 +248,26 @@
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
           <div class="columnas__grid" [class.columnas__grid--2]="bloque.datos.columnas?.length === 2"
                [class.columnas__grid--3]="bloque.datos.columnas?.length === 3">
-            <div class="columna" *ngFor="let c of bloque.datos.columnas">
+            <div class="columna" *ngFor="let c of bloque.datos.columnas; let j = index">
               <img *ngIf="c.imagen" class="columna__foto" [src]="c.imagen" [alt]="c.titulo || ''" />
-              <h3 *ngIf="c.titulo">{{ c.titulo }}</h3>
-              <div class="formato" *ngIf="c.cuerpo" [innerHTML]="conFormato(c.cuerpo)"></div>
+              <h3 *ngIf="c.titulo"
+                  [attr.contenteditable]="previsualizacion ? true : null"
+                  [class.editable]="previsualizacion"
+                  (blur)="alEditarTexto($event, bloque.id, {campo:'titulo', indice:j})"
+                  (keydown)="alTeclearEnTexto($event, true)"
+                  (paste)="alPegar($event)">{{ c.titulo }}</h3>
+              <div class="formato" *ngIf="c.cuerpo" [innerHTML]="conFormato(c.cuerpo)"
+                   [attr.contenteditable]="previsualizacion ? true : null"
+                   [class.editable]="previsualizacion"
+                   (blur)="alEditarFormato($event, bloque.id, {campo:'cuerpo', indice:j})"
+                   (keydown)="alTeclearEnTexto($event, false)"
+                   (paste)="alPegar($event)"></div>
               <a *ngIf="c.ctaTexto && c.ctaUrl" class="boton boton--chico" [href]="c.ctaUrl"
+                 [attr.contenteditable]="previsualizacion ? true : null"
+                 [class.editable]="previsualizacion"
+                 (blur)="alEditarTexto($event, bloque.id, {campo:'ctaTexto', indice:j})"
+                 (keydown)="alTeclearEnTexto($event, true)"
+                 (paste)="alPegar($event)"
                  (click)="registrarClic('cta', bloque.id, $event)">{{ c.ctaTexto }}</a>
             </div>
           </div>
@@ -225,9 +284,14 @@
         <!-- Fila de botones -->
         <section *ngSwitchCase="'botones'" class="bloque botones">
           <div class="botones__fila">
-            <a *ngFor="let bt of bloque.datos.botones"
+            <a *ngFor="let bt of bloque.datos.botones; let j = index"
                [class]="bt.estilo === 'secundario' ? 'boton boton--borde' : 'boton'"
                [href]="bt.url || '#'"
+               [attr.contenteditable]="previsualizacion ? true : null"
+               [class.editable]="previsualizacion"
+               (blur)="alEditarTexto($event, bloque.id, {campo:'etiqueta', lista:'botones', item:j})"
+               (keydown)="alTeclearEnTexto($event, true)"
+               (paste)="alPegar($event)"
                (click)="registrarClic('cta', bloque.id, $event)">{{ bt.etiqueta }}</a>
           </div>
           <p class="vacio" *ngIf="!bloque.datos.botones?.length">Agrega un botón.</p>
@@ -269,10 +333,20 @@
               <span class="promo__sinfoto" *ngIf="!bloque.datos.imagen">Sube una foto</span>
             </div>
             <div class="promo__contenido">
-              <span class="kicker" *ngIf="bloque.datos.etiqueta">{{ bloque.datos.etiqueta }}</span>
+              <span class="kicker" *ngIf="bloque.datos.etiqueta"
+                    [attr.contenteditable]="previsualizacion ? true : null"
+                    [class.editable]="previsualizacion"
+                    (blur)="alEditarTexto($event, bloque.id, {campo:'etiqueta'})"
+                    (keydown)="alTeclearEnTexto($event, true)"
+                    (paste)="alPegar($event)">{{ bloque.datos.etiqueta }}</span>
               <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
               <p *ngIf="bloque.datos.cuerpo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'cuerpo')" (keydown)="alTeclearEnTexto($event, false)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.cuerpo }}</p>
-              <a class="boton" *ngIf="bloque.datos.ctaTexto">{{ bloque.datos.ctaTexto }}</a>
+              <a class="boton" *ngIf="bloque.datos.ctaTexto"
+                 [attr.contenteditable]="previsualizacion ? true : null"
+                 [class.editable]="previsualizacion"
+                 (blur)="alEditarTexto($event, bloque.id, {campo:'ctaTexto'})"
+                 (keydown)="alTeclearEnTexto($event, true)"
+                 (paste)="alPegar($event)">{{ bloque.datos.ctaTexto }}</a>
             </div>
           </div>
         </section>
@@ -282,7 +356,12 @@
           <div class="destacado__grid">
             <div class="destacado__foto destacado__foto--demo"></div>
             <div>
-              <span class="kicker">{{ bloque.datos.etiqueta || 'Producto destacado' }}</span>
+              <span class="kicker"
+                    [attr.contenteditable]="previsualizacion ? true : null"
+                    [class.editable]="previsualizacion"
+                    (blur)="alEditarTexto($event, bloque.id, {campo:'etiqueta'})"
+                    (keydown)="alTeclearEnTexto($event, true)"
+                    (paste)="alPegar($event)">{{ bloque.datos.etiqueta || 'Producto destacado' }}</span>
               <h2>{{ bloque.datos.productoId ? 'Tu producto elegido' : 'Elige un producto' }}</h2>
               <p class="vacio">
                 {{ bloque.datos.productoId
@@ -295,7 +374,12 @@
 
         <!-- Cuenta regresiva: el reloj corre en la página publicada. -->
         <section *ngSwitchCase="'contador'" class="bloque contador">
-          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <h2 *ngIf="bloque.datos.titulo"
+              [attr.contenteditable]="previsualizacion ? true : null"
+              [class.editable]="previsualizacion"
+              (blur)="alEditarTexto($event, bloque.id, {campo:'titulo'})"
+              (keydown)="alTeclearEnTexto($event, true)"
+              (paste)="alPegar($event)">{{ bloque.datos.titulo }}</h2>
           <div class="contador__cajas">
             <div class="contador__caja" *ngFor="let u of ['Días','Horas','Min','Seg']">
               <b>00</b><span>{{ u }}</span>
@@ -308,19 +392,38 @@
         <section *ngSwitchCase="'suscripcion'" class="bloque suscripcion">
           <div class="suscripcion__caja">
             <div>
-              <h2>{{ bloque.datos.titulo || 'Entérate primero' }}</h2>
-              <p *ngIf="bloque.datos.descripcion">{{ bloque.datos.descripcion }}</p>
+              <h2 [attr.contenteditable]="previsualizacion ? true : null"
+                  [class.editable]="previsualizacion"
+                  (blur)="alEditarTexto($event, bloque.id, {campo:'titulo'})"
+                  (keydown)="alTeclearEnTexto($event, true)"
+                  (paste)="alPegar($event)">{{ bloque.datos.titulo || 'Entérate primero' }}</h2>
+              <p *ngIf="bloque.datos.descripcion"
+                 [attr.contenteditable]="previsualizacion ? true : null"
+                 [class.editable]="previsualizacion"
+                 (blur)="alEditarTexto($event, bloque.id, {campo:'descripcion'})"
+                 (keydown)="alTeclearEnTexto($event, false)"
+                 (paste)="alPegar($event)">{{ bloque.datos.descripcion }}</p>
             </div>
             <div class="suscripcion__form">
               <input type="email" placeholder="tu@correo.com" disabled />
-              <a class="boton">{{ bloque.datos.textoBoton || 'Suscribirme' }}</a>
+              <a class="boton"
+                 [attr.contenteditable]="previsualizacion ? true : null"
+                 [class.editable]="previsualizacion"
+                 (blur)="alEditarTexto($event, bloque.id, {campo:'textoBoton'})"
+                 (keydown)="alTeclearEnTexto($event, true)"
+                 (paste)="alPegar($event)">{{ bloque.datos.textoBoton || 'Suscribirme' }}</a>
             </div>
           </div>
         </section>
 
         <!-- Instagram -->
         <section *ngSwitchCase="'instagram'" class="bloque insta">
-          <h2 *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</h2>
+          <h2 *ngIf="bloque.datos.titulo"
+              [attr.contenteditable]="previsualizacion ? true : null"
+              [class.editable]="previsualizacion"
+              (blur)="alEditarTexto($event, bloque.id, {campo:'titulo'})"
+              (keydown)="alTeclearEnTexto($event, true)"
+              (paste)="alPegar($event)">{{ bloque.datos.titulo }}</h2>
           <p class="insta__usuario" *ngIf="bloque.datos.usuario">@{{ bloque.datos.usuario }}</p>
           <div class="insta__grid" *ngIf="bloque.datos.fotos?.length; else instaVacia">
             <span class="insta__foto" *ngFor="let f of bloque.datos.fotos"><img [src]="f" alt="" /></span>
@@ -332,7 +435,12 @@
 
         <!-- Franja de marcas -->
         <section *ngSwitchCase="'marcas'" class="bloque marcas">
-          <p class="marcas__titulo" *ngIf="bloque.datos.titulo">{{ bloque.datos.titulo }}</p>
+          <p class="marcas__titulo" *ngIf="bloque.datos.titulo"
+             [attr.contenteditable]="previsualizacion ? true : null"
+             [class.editable]="previsualizacion"
+             (blur)="alEditarTexto($event, bloque.id, {campo:'titulo'})"
+             (keydown)="alTeclearEnTexto($event, true)"
+             (paste)="alPegar($event)">{{ bloque.datos.titulo }}</p>
           <div class="marcas__fila" *ngIf="bloque.datos.logos?.length; else marcasVacias">
             <span class="marca" *ngFor="let l of bloque.datos.logos"><img [src]="l.url" alt="" /></span>
           </div>
@@ -372,12 +480,21 @@
         <section *ngSwitchCase="'resenas'" class="bloque resenas">
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
           <div class="resenas__grid">
-            <figure class="resena" *ngFor="let r of bloque.datos.items">
+            <figure class="resena" *ngFor="let r of bloque.datos.items; let j = index">
               <div class="resena__estrellas">
                 <span *ngFor="let e of estrellas(r.estrellas)" [class.apagada]="!e">★</span>
               </div>
-              <blockquote>{{ r.texto }}</blockquote>
-              <figcaption *ngIf="r.autor">{{ r.autor }}</figcaption>
+              <blockquote [attr.contenteditable]="previsualizacion ? true : null"
+                          [class.editable]="previsualizacion"
+                          (blur)="alEditarTexto($event, bloque.id, {campo:'texto', lista:'items', item:j})"
+                          (keydown)="alTeclearEnTexto($event, false)"
+                          (paste)="alPegar($event)">{{ r.texto }}</blockquote>
+              <figcaption *ngIf="r.autor"
+                          [attr.contenteditable]="previsualizacion ? true : null"
+                          [class.editable]="previsualizacion"
+                          (blur)="alEditarTexto($event, bloque.id, {campo:'autor', lista:'items', item:j})"
+                          (keydown)="alTeclearEnTexto($event, true)"
+                          (paste)="alPegar($event)">{{ r.autor }}</figcaption>
             </figure>
           </div>
           <p class="vacio" *ngIf="!bloque.datos.items?.length">Todavía no has agregado reseñas.</p>
@@ -389,8 +506,18 @@
           <p class="ubicacion__direccion" *ngIf="direccionCompleta(bloque.datos)">
             {{ direccionCompleta(bloque.datos) }}
           </p>
-          <p class="ubicacion__referencia" *ngIf="bloque.datos.referencia">{{ bloque.datos.referencia }}</p>
-          <p class="ubicacion__horario" *ngIf="bloque.datos.horario">{{ bloque.datos.horario }}</p>
+          <p class="ubicacion__referencia" *ngIf="bloque.datos.referencia"
+             [attr.contenteditable]="previsualizacion ? true : null"
+             [class.editable]="previsualizacion"
+             (blur)="alEditarTexto($event, bloque.id, {campo:'referencia'})"
+             (keydown)="alTeclearEnTexto($event, true)"
+             (paste)="alPegar($event)">{{ bloque.datos.referencia }}</p>
+          <p class="ubicacion__horario" *ngIf="bloque.datos.horario"
+             [attr.contenteditable]="previsualizacion ? true : null"
+             [class.editable]="previsualizacion"
+             (blur)="alEditarTexto($event, bloque.id, {campo:'horario'})"
+             (keydown)="alTeclearEnTexto($event, true)"
+             (paste)="alPegar($event)">{{ bloque.datos.horario }}</p>
           <a class="boton" *ngIf="direccionCompleta(bloque.datos)"
              [href]="enlaceMapa(bloque.datos)" target="_blank" rel="noopener"
              (click)="registrarClic('cta', bloque.id, $event)">Cómo llegar</a>
@@ -401,10 +528,20 @@
 
         <!-- Pie -->
         <footer *ngSwitchCase="'footer'" class="bloque pie">
-          <p *ngIf="bloque.datos.texto">{{ bloque.datos.texto }}</p>
+          <p *ngIf="bloque.datos.texto"
+             [attr.contenteditable]="previsualizacion ? true : null"
+             [class.editable]="previsualizacion"
+             (blur)="alEditarTexto($event, bloque.id, {campo:'texto'})"
+             (keydown)="alTeclearEnTexto($event, false)"
+             (paste)="alPegar($event)">{{ bloque.datos.texto }}</p>
           <nav *ngIf="bloque.datos.enlaces?.length">
-            <a *ngFor="let e of bloque.datos.enlaces"
+            <a *ngFor="let e of bloque.datos.enlaces; let j = index"
                [href]="e.url"
+               [attr.contenteditable]="previsualizacion ? true : null"
+               [class.editable]="previsualizacion"
+               (blur)="alEditarTexto($event, bloque.id, {campo:'etiqueta', lista:'enlaces', item:j})"
+               (keydown)="alTeclearEnTexto($event, true)"
+               (paste)="alPegar($event)"
                (click)="registrarClic('cta', bloque.id, $event)">{{ e.etiqueta }}</a>
           </nav>
         </footer>
@@ -456,16 +593,35 @@
                     title="Estirar el ancho"
                     (pointerdown)="$event.stopPropagation(); empezarArrastre($event, bloque, el, ei, 'ancho')"></span>
 
+              <!-- Se escribe encima, igual que en los títulos del bloque. Los
+                   textos con formato y los botones siguen editándose en el
+                   panel: leer un contenteditable devuelve texto plano y se
+                   perdería la negrita o el destino. -->
               <h3 *ngIf="el.tipo === 'titulo'" class="el-titulo"
                   [class.el-titulo--grande]="el.datos.nivel === 'grande'"
-                  [class.el-titulo--pequeno]="el.datos.nivel === 'pequeno'">{{ el.datos.texto }}</h3>
+                  [class.el-titulo--pequeno]="el.datos.nivel === 'pequeno'"
+                  [attr.contenteditable]="previsualizacion ? true : null"
+                  [class.editable]="previsualizacion"
+                  (blur)="alTerminarEdicionElemento($event, bloque.id, ei, 'texto')"
+                  (keydown)="alTeclearEnTexto($event, true)"
+                  (paste)="alPegar($event)">{{ el.datos.texto }}</h3>
 
               <div *ngIf="el.tipo === 'texto'" class="el-texto formato"
-                   [innerHTML]="conFormato(el.datos.cuerpo)"></div>
+                   [innerHTML]="conFormato(el.datos.cuerpo)"
+                   [attr.contenteditable]="previsualizacion ? true : null"
+                   [class.editable]="previsualizacion"
+                   (blur)="alTerminarEdicionFormato($event, bloque.id, ei, 'cuerpo')"
+                   (keydown)="alTeclearEnTexto($event, false)"
+                   (paste)="alPegar($event)"></div>
 
               <a *ngIf="el.tipo === 'boton'"
                  [class]="el.datos.estilo === 'secundario' ? 'boton boton--borde' : 'boton'"
                  [href]="el.datos.url || '#'"
+                 [attr.contenteditable]="previsualizacion ? true : null"
+                 [class.editable]="previsualizacion"
+                 (blur)="alEditarTexto($event, bloque.id, {campo:'etiqueta', elemento:ei})"
+                 (keydown)="alTeclearEnTexto($event, true)"
+                 (paste)="alPegar($event)"
                  (click)="registrarClic('cta', bloque.id, $event)">{{ el.datos.etiqueta }}</a>
 
               <img *ngIf="el.tipo === 'imagen'" class="el-imagen" [src]="el.datos.url" [alt]="el.datos.alt || ''" />
@@ -480,9 +636,14 @@
                    [class.tarjetas--2]="el.datos.porFila === 2"
                    [class.tarjetas--3]="el.datos.porFila === 3"
                    [class.tarjetas--4]="el.datos.porFila === 4">
-                <article class="tarjeta" *ngFor="let t of el.datos.items"
+                <article class="tarjeta" *ngFor="let t of el.datos.items; let j = index"
                          [class.tarjeta--icono]="el.datos.variante === 'icono'">
-                  <span class="tarjeta__etiqueta" *ngIf="t.etiqueta">{{ t.etiqueta }}</span>
+                  <span class="tarjeta__etiqueta" *ngIf="t.etiqueta"
+                        [attr.contenteditable]="previsualizacion ? true : null"
+                        [class.editable]="previsualizacion"
+                        (blur)="alTerminarEdicionTarjeta($event, bloque.id, ei, j, 'etiqueta')"
+                        (keydown)="alTeclearEnTexto($event, true)"
+                        (paste)="alPegar($event)">{{ t.etiqueta }}</span>
 
                   <img *ngIf="el.datos.variante === 'imagen' && t.imagen" class="tarjeta__foto"
                        [src]="t.imagen" [alt]="t.titulo || ''" />
@@ -492,13 +653,35 @@
                     <path [attr.d]="trazoIcono(t.icono)" />
                   </svg>
 
-                  <h3 *ngIf="t.titulo">{{ t.titulo }}</h3>
-                  <p class="tarjeta__precio" *ngIf="el.datos.variante === 'precio' && t.precio">{{ t.precio }}</p>
-                  <div class="formato" *ngIf="t.cuerpo" [innerHTML]="conFormato(t.cuerpo)"></div>
+                  <h3 *ngIf="t.titulo"
+                      [attr.contenteditable]="previsualizacion ? true : null"
+                      [class.editable]="previsualizacion"
+                      (blur)="alTerminarEdicionTarjeta($event, bloque.id, ei, j, 'titulo')"
+                      (keydown)="alTeclearEnTexto($event, true)"
+                      (paste)="alPegar($event)">{{ t.titulo }}</h3>
+                  <p class="tarjeta__precio" *ngIf="el.datos.variante === 'precio' && t.precio"
+                     [attr.contenteditable]="previsualizacion ? true : null"
+                     [class.editable]="previsualizacion"
+                     (blur)="alTerminarEdicionTarjeta($event, bloque.id, ei, j, 'precio')"
+                     (keydown)="alTeclearEnTexto($event, true)"
+                     (paste)="alPegar($event)">{{ t.precio }}</p>
+                  <!-- Con formato: se lee el HTML y se devuelve a la notación
+                       guardada, para no aplanar la negrita ni los enlaces. -->
+                  <div class="formato" *ngIf="t.cuerpo" [innerHTML]="conFormato(t.cuerpo)"
+                       [attr.contenteditable]="previsualizacion ? true : null"
+                       [class.editable]="previsualizacion"
+                       (blur)="alTerminarEdicionFormato($event, bloque.id, ei, 'cuerpo', j)"
+                       (keydown)="alTeclearEnTexto($event, false)"
+                       (paste)="alPegar($event)"></div>
                   <ul class="tarjeta__incluye" *ngIf="el.datos.variante === 'precio' && t.incluye?.length">
                     <li *ngFor="let i of t.incluye">{{ i }}</li>
                   </ul>
                   <a *ngIf="t.ctaTexto && t.ctaUrl" class="boton boton--chico" [href]="t.ctaUrl"
+                     [attr.contenteditable]="previsualizacion ? true : null"
+                     [class.editable]="previsualizacion"
+                     (blur)="alEditarTexto($event, bloque.id, {campo:'ctaTexto', elemento:ei, item:j})"
+                     (keydown)="alTeclearEnTexto($event, true)"
+                     (paste)="alPegar($event)"
                      (click)="registrarClic('cta', bloque.id, $event)">{{ t.ctaTexto }}</a>
                 </article>
               </div>
