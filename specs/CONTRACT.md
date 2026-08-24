@@ -5173,3 +5173,28 @@ D-230 los dejó comprables (`inventoryPolicy: CONTINUE`) pero seguían mostrando
 **Repaso ejecutado en OH MY STORE:** 42 productos actualizados, 0 fallidos; verificado después, 43 comprables y sin rastreo, 0 pendientes. Hizo falta porque el código nuevo solo actúa sobre lo que el flujo vuelva a emitir — y **lo quieto no se re-emite nunca** (ver D-232).
 
 Backend `ee0ea28`.
+
+---
+
+## D-224 (2026-08-24) — El vendedor ve cuándo le está cobrando a un cliente el precio general
+
+**El hueco.** Un cliente puede tener asignada una lista de precios y el producto no tenerla. Cuando eso pasa, `aplicarPrecioDeLista` devuelve el producto intacto y el vendedor cobra el precio base — sin ningún aviso. En OH MY STORE eso es **108 productos para los 159 clientes mayoristas** y **2.362 para la lista de modelos**, de 8.350 en catálogo.
+
+**La pregunta que originó esto** era "cómo le decimos a OMS qué productos de Guía Cereza no tienen precio de modelos, pero que sirva para cualquier comercio". La respuesta NO puede ser "avisar cuando falte una lista": a CAFE ESCOBAR le faltan las tres listas en los 55 productos y no es un problema — sencillamente no usan el mecanismo. Lo mismo Tienda Demo (552 de 556).
+
+**La regla que sí es genérica: el aviso cuelga de la lista del cliente que está en pantalla, no de una lista con nombre.** Empresa que no usa listas → sus clientes no tienen lista asignada → no aparece absolutamente nada. Sin umbrales, sin configuración, sin nombrar "Modelos" en ninguna parte del código. Verificado que el emparejamiento es por id y no por nombre: **el 100% de los clientes con lista calza contra `tiposPrecios`** (OMS 164/164, HARMONY LENS 2/2, CAFE ESCOBAR 10/10).
+
+**Tres piezas:**
+1. **Chip en la tarjeta** ("Sin precio de Mayoristas") cuando a ESE producto le falta la lista del cliente.
+2. **Renglón arriba con el total** del catálogo — el que responde "cuáles y cuántos son".
+3. **Un solo renglón, más fuerte, cuando le falta a TODOS.** Pasa cuando una empresa asignó listas a sus clientes y nunca les puso precios (CAFE ESCOBAR: 10 clientes con lista, 0 productos con precios). Encender las 40 tarjetas ahí sería ruido; el problema no es el producto, es la configuración.
+
+**El criterio de "le falta" es exactamente el de la pantalla**: fila de esa lista, `activo === true` y precio con IVA mayor que cero. Una fila apagada o en cero no la aplica `aplicarPrecioDeLista`, así que cobrar el general igual — cuenta como faltante. Si el backend contara distinto, el chip y el total se contradirían. Cubierto por `npm run test:cobertura-listas` (14 casos).
+
+**Por qué el conteo no corre dentro de la petición.** Firestore no sabe responder "el array NO contiene este id", así que toca barrer los productos: **0,3 s con los 55 de CAFE ESCOBAR, pero 60 s con los 13.874 de HARMONY LENS contra sus 17 listas.** `GET /v1/productos/cobertura-listas` contesta de una con lo último calculado y dispara el recálculo aparte; mientras no haya número, el catálogo no muestra el renglón y el chip por tarjeta sigue funcionando porque no depende del backend. Vigencia 15 minutos, y se olvida en el mismo punto donde ya se invalida el caché de paginación para que editar precios no deje el conteo viejo colgado.
+
+**El chip no arregla nada — evita el cobro equivocado en el momento en que ocurre**, que es el daño real.
+
+**Dato para OMS antes de mandarlos a llenar 2.362 precios:** de sus 588 clientes, **159 son Mayoristas, 4 Público y solo UNO es Modelos**; 424 no tienen lista asignada. El hueco que se cobra mal todos los días es el de mayoristas (108 productos × 159 clientes), no el de modelos. O los "modelos" reales están entre los 424 sin lista y el problema no es que falten precios sino que nadie les asignó la lista.
+
+Frontend `fabf88d6` (el `.ts` ya había entrado por `d272054f`). Backend `d6cd954` + `14bad7e`, **sin desplegar** — mientras tanto la llamada del total da 404 y el catálogo solo muestra el chip.
