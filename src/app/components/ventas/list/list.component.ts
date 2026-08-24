@@ -7165,9 +7165,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Actualizar el porcentaje de descuento
     pedidoOriginal.porceDescuento = this.nuevoPorcentajeDescuento;
 
-    // Si el descuento es 0, limpiar el cupón aplicado
+    // Si el descuento es 0, limpiar el cupón aplicado y su snapshot (D-220:
+    // dejar descuentoAplicado vivo con el monto viejo resucita el descuento
+    // en el próximo getDiscount(), que ahora también lee ese campo).
     if (this.nuevoPorcentajeDescuento === 0) {
       pedidoOriginal.cuponAplicado = undefined;
+      pedidoOriginal.descuentoAplicado = undefined;
     }
 
     // Recalcular todos los totales usando el mismo método que se usa en la tabla
