@@ -418,6 +418,15 @@
       <div class="seccion__contenido" *ngIf="bloque.elementos?.length"
            [class.seccion__contenido--lienzo]="enLienzo(bloque)"
            [style.height.px]="altoDeLienzo(bloque)">
+
+        <!-- Guías de alineación. Solo existen mientras se arrastra Y solo
+             cuando el objeto quedó imantado a algo: una línea permanente sería
+             ruido. Son del editor, nunca de la página publicada. -->
+        <ng-container *ngIf="previsualizacion && arrastre?.bloqueId === bloque.id">
+          <div class="guia guia--x" *ngIf="guiaX !== null" [style.left.%]="guiaX"></div>
+          <div class="guia guia--y" *ngIf="guiaY !== null" [style.top.%]="guiaY"></div>
+        </ng-container>
+
         <div class="celda" *ngFor="let el of bloque.elementos; let ei = index"
              [class.celda--dosTercios]="!enLienzo(bloque) && el.pos?.ancho === 'dosTercios'"
              [class.celda--mitad]="!enLienzo(bloque) && el.pos?.ancho === 'mitad'"
@@ -429,6 +438,13 @@
              [style.left.%]="coordenada(bloque, el, ei, 'x')"
              [style.top.%]="coordenada(bloque, el, ei, 'y')"
              [style.width.%]="coordenada(bloque, el, ei, 'w')"
+             [style.zIndex]="profundidad(bloque, el)"
+             [style.height.%]="altoDeElemento(bloque, el)"
+             [style.transform]="giroDeElemento(bloque, el)"
+             [style.color]="colorDeElemento(el)"
+             [style.backgroundColor]="fondoDeElemento(el)"
+             [style.padding]="fondoDeElemento(el) ? '.6rem .8rem' : null"
+             [style.fontSize]="escalaDeElemento(el)"
              (pointerdown)="empezarArrastre($event, bloque, el, ei, 'mover')"
              (pointermove)="moverArrastre($event)"
              (pointerup)="soltarArrastre()"

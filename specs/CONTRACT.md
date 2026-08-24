@@ -4441,7 +4441,7 @@ El usuario preguntó si el fix de hoy garantiza que el patrón de DAD-012131 no 
 
 ---
 
-## D-204 (2026-08-17) — Reserva de inventario para la tienda en línea: descontar al crear, devolver al anular (EN CURSO)
+## D-204 (2026-08-17) — Reserva de inventario para la tienda en línea: descontar al crear, devolver al anular (APLICADA)
 
 **Contexto.** Auditoría del WMS confirmó: no existe reserva como tal, pero sí su antesala (`availabilityService` con disponible/comprometido/físico esperado, ya en pantalla). Los pedidos de tienda solo descontaban con el webhook de pago Aprobado → contra entrega y pagos manuales sobrevendían sin freno, y además rompían el supuesto de `availabilityService` (contaban como comprometido sin haber descontado: doble conteo del apartado).
 

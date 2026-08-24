@@ -253,9 +253,9 @@ export class SitiosService extends BaseService {
   /** Primera propuesta. Sin `guardar` solo previsualiza. */
   generar(body: {
     sector?: string;
-    /** Texto libre, solo para la IA. */
+    /** Descripción en una línea: va al SEO de la página. */
     objetivo?: string;
-    /** Objetivo de una lista corta: elige textos escritos a mano. */
+    /** Objetivo de una lista corta: elige la variante de textos de la plantilla. */
     objetivoId?: string;
     templateId?: string;
     productoIds?: string[];
@@ -267,8 +267,6 @@ export class SitiosService extends BaseService {
     Respuesta<{
       contenido: ContenidoSitio;
       plantillaId: string;
-      generadoPorIA: boolean;
-      motivo?: string;
       id?: string;
       slug?: string;
     }>

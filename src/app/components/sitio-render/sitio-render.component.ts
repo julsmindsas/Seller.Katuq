@@ -511,8 +511,20 @@ export class SitioRenderComponent implements OnChanges {
    * apilan, que es exactamente lo que va a hacer la página publicada debajo de
    * 700px. Si la previa mostrara el lienzo en modo celular, le mentiría.
    */
+  /** Los que se llenan solos contra el maestro: ahí no se compone a mano. */
+  private static readonly BLOQUES_CONECTADOS = [
+    "catalogo",
+    "productos",
+    "destacado",
+    "categorias",
+    "encabezado",
+  ];
+
   enLienzo(bloque: any): boolean {
-    return !!(bloque && bloque.lienzo && this.dispositivo !== "movil");
+    // Misma regla que el render publicado: si la previa dibujara un lienzo donde
+    // la página no lo pinta, el comerciante diseñaría una cosa y publicaría otra.
+    if (!bloque || !bloque.lienzo || this.dispositivo === "movil") return false;
+    return !SitioRenderComponent.BLOQUES_CONECTADOS.includes(bloque.tipo);
   }
 
   /**
@@ -544,6 +556,50 @@ export class SitioRenderComponent implements OnChanges {
   /** Alto del lienzo en píxeles, o nulo cuando la sección crece con su contenido. */
   altoDeLienzo(bloque: any): number | null {
     return this.enLienzo(bloque) ? bloque.lienzo.alto : null;
+  }
+
+  /**
+   * Quién tapa a quién. Nulo cuando el elemento no la fijó, para que se apile
+   * por orden de lectura igual que en la página publicada — donde tampoco se
+   * emite `z-index` sin el campo.
+   */
+  profundidad(bloque: any, el: any): number | null {
+    if (!this.enLienzo(bloque)) return null;
+    const pos = el && el.pos;
+    return pos && typeof pos.w === "number" && typeof pos.z === "number" ? pos.z : null;
+  }
+
+  /** Alto propio del objeto, o nulo cuando crece con su contenido. */
+  altoDeElemento(bloque: any, el: any): number | null {
+    if (!this.enLienzo(bloque)) return null;
+    const pos = el && el.pos;
+    return pos && typeof pos.h === "number" ? pos.h : null;
+  }
+
+  /** El giro, listo para `transform`. Nulo cuando va derecho. */
+  giroDeElemento(bloque: any, el: any): string | null {
+    if (!this.enLienzo(bloque)) return null;
+    const pos = el && el.pos;
+    return pos && typeof pos.angulo === "number" ? `rotate(${pos.angulo}deg)` : null;
+  }
+
+  /**
+   * El vestido del objeto. A diferencia de la colocación, NO depende del lienzo:
+   * un título teñido lo está también en la rejilla y en el celular, igual que en
+   * la página publicada.
+   */
+  colorDeElemento(el: any): string | null {
+    return (el && el.estilo && el.estilo.colorTexto) || null;
+  }
+
+  fondoDeElemento(el: any): string | null {
+    return (el && el.estilo && el.estilo.fondo) || null;
+  }
+
+  escalaDeElemento(el: any): string | null {
+    const escala = el && el.estilo && el.estilo.escala;
+    const TAMANOS: { [id: string]: string } = { pequeno: ".85em", grande: "1.3em", enorme: "1.7em" };
+    return (escala && TAMANOS[escala]) || null;
   }
 
   empezarArrastre(evento: PointerEvent, bloque: any, el: any, indice: number, modo: "mover" | "ancho"): void {
@@ -590,11 +646,15 @@ export class SitioRenderComponent implements OnChanges {
     const dx = ((evento.clientX - a.px) / a.marco.width) * 100;
     const dy = ((evento.clientY - a.py) / a.marco.height) * 100;
 
+    // Los bordes de los OTROS objetos también imantan: alinear dos cosas entre
+    // sí es lo que más cuesta con el mouse y lo que más se nota mal hecho.
+    const vecinos = this.bordesVecinos(a.bloqueId, a.indice);
+
     if (a.modo === "ancho") {
-      a.w = this.imantar(this.encerrar(a.w + dx, 5, 100 - a.x));
+      a.w = this.imantar(this.encerrar(a.w + dx, 5, 100 - a.x), vecinos.horizontales, "x", a.x);
     } else {
-      a.x = this.imantar(this.encerrar(a.x + dx, 0, 100 - a.w));
-      a.y = this.imantar(this.encerrar(a.y + dy, 0, 100));
+      a.x = this.imantar(this.encerrar(a.x + dx, 0, 100 - a.w), vecinos.horizontales, "x");
+      a.y = this.imantar(this.encerrar(a.y + dy, 0, 100), vecinos.verticales, "y");
     }
 
     // El punto de partida se mueve con el puntero: así, cuando el elemento
@@ -608,6 +668,9 @@ export class SitioRenderComponent implements OnChanges {
   soltarArrastre(): void {
     const a = this.arrastre;
     this.arrastre = null;
+    // Las guías son del gesto, no del diseño: al soltar desaparecen.
+    this.guiaX = null;
+    this.guiaY = null;
     if (!a || !a.movido) return;
     this.elementoMovido.emit({ bloqueId: a.bloqueId, indice: a.indice, x: a.x, y: a.y, w: a.w });
   }
@@ -617,13 +680,55 @@ export class SitioRenderComponent implements OnChanges {
   }
 
   /**
-   * Iman a los puntos que uno quiere pegar sin pelear con el mouse: los bordes,
-   * la mitad y los tercios. Fuera de 1,2% de esos puntos no hace nada.
+   * Guía a la que está pegado el objeto AHORA mismo, para dibujarla mientras se
+   * arrastra. Nula cuando va suelto: la línea solo aparece cuando de verdad se
+   * imantó, o sería ruido permanente.
    */
-  private imantar(valor: number): number {
-    for (const guia of [0, 25, 33.3, 50, 66.6, 75, 100]) {
-      if (Math.abs(valor - guia) < 1.2) return guia;
+  guiaX: number | null = null;
+  guiaY: number | null = null;
+
+  /** A qué distancia (en % de la sección) agarra el imán. */
+  private static readonly IMAN = 1.2;
+
+  /**
+   * Los bordes de los demás objetos de la sección, para alinearse con ellos.
+   * Se excluye el que se está arrastrando: pegarse a uno mismo no significa nada.
+   */
+  private bordesVecinos(bloqueId: string, indice: number): { horizontales: number[]; verticales: number[] } {
+    const bloque = (this.bloques || []).find((b: any) => b.id === bloqueId) as any;
+    const horizontales: number[] = [];
+    const verticales: number[] = [];
+    if (!bloque) return { horizontales, verticales };
+
+    (bloque.elementos || []).forEach((el: any, i: number) => {
+      if (i === indice) return;
+      const p = el && el.pos;
+      if (!p || typeof p.w !== "number") return;
+      horizontales.push(p.x, Math.round((p.x + p.w) * 10) / 10);
+      verticales.push(p.y);
+    });
+    return { horizontales, verticales };
+  }
+
+  /**
+   * Imán a los puntos que uno quiere pegar sin pelear con el mouse: los bordes
+   * de la sección, la mitad, los tercios y los bordes de los objetos vecinos.
+   * Fuera del radio del imán no hace nada, así que se puede colocar libre.
+   *
+   * @param desplazar Cuando se estira el ancho, la guía se compara contra el
+   *   borde derecho (x + w), no contra el ancho suelto.
+   */
+  private imantar(valor: number, vecinos: number[] = [], eje: "x" | "y" | null = null, desplazar = 0): number {
+    const guias = [0, 25, 33.3, 50, 66.6, 75, 100, ...vecinos];
+    for (const guia of guias) {
+      if (Math.abs(valor + desplazar - guia) < SitioRenderComponent.IMAN) {
+        if (eje === "x") this.guiaX = guia;
+        if (eje === "y") this.guiaY = guia;
+        return Math.round((guia - desplazar) * 10) / 10;
+      }
     }
+    if (eje === "x") this.guiaX = null;
+    if (eje === "y") this.guiaY = null;
     return valor;
   }
 }
