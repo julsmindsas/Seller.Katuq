@@ -185,7 +185,7 @@
                     <button type="button" class="btn btn-outline-secondary mr-2" (click)="resetForm()">
                         <i class="fa fa-undo"></i> Cancelar
                     </button>
-                    <button type="submit" class="btn btn-primary" [disabled]="ticketForm.invalid || isSubmitting">
+                    <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
                         <i class="fa fa-paper-plane" *ngIf="!isSubmitting"></i>
                         <span *ngIf="!isSubmitting">Crear Ticket</span>
                         <span *ngIf="isSubmitting">

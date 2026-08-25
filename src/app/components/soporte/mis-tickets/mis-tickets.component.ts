@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { ServiciosService } from '../../../shared/services/servicios.service';
+import { SecurityService } from '../../../shared/services/security/security.service';
 import { finalize } from 'rxjs/operators';
 
 @Component({
@@ -24,10 +25,16 @@ export class MisTicketsComponent implements OnInit {
   isLoading: boolean = true;
   showCommentSuccess: boolean = false;
 
-  constructor(private ticketService: ServiciosService, private storage: AngularFireStorage) {}
+  constructor(
+    private ticketService: ServiciosService,
+    private securityService: SecurityService,
+    private storage: AngularFireStorage
+  ) {}
 
   ngOnInit(): void {
-    const currentCompany = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
+    // Empresa activa desde la fuente canónica (mismo criterio que la creación de tickets)
+    const empresa = this.securityService.getCompanyInformationLogged();
+    const nombreComercio = empresa?.nombreComercio;
     this.isLoading = true;
 
     this.ticketService.getTickets().subscribe({
@@ -35,7 +42,8 @@ export class MisTicketsComponent implements OnInit {
         this.originalTasks = ticket.result
           .filter((task: any) => {
             return (
-              task.tienda === currentCompany.nomComercial &&
+              nombreComercio &&
+              task.tienda === nombreComercio &&
               task.status !== 'Archivado' // Remove filtering for Resuelto to show in stats
             );
           })

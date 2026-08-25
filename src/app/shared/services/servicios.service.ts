@@ -1003,8 +1003,23 @@ editTicket(newTicket: any): Observable<any>  {
 }
 
 addNotification(message: string, ticketId: string) {
- 
+
   const ref = this.db.list('notificaciones');
+  return ref.push({
+    message,
+    ticketId,
+    timestamp: Date.now(),
+    read: false
+  });
+}
+
+// Notificación al canal propio del comercio (lo escucha la campana del Seller:
+// ActualizacionTicket{nomComercial}, ver notification-manager.service.ts)
+addTicketNotificationForCompany(message: string, ticketId: string, nomComercial: string) {
+  if (!nomComercial) {
+    return null;
+  }
+  const ref = this.db.list('ActualizacionTicket' + nomComercial);
   return ref.push({
     message,
     ticketId,

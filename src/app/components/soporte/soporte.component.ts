@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ServiciosService } from '../../shared/services/servicios.service';
+import { SecurityService } from '../../shared/services/security/security.service';
 import Swal from 'sweetalert2';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { finalize } from 'rxjs/operators';
@@ -31,9 +32,10 @@ export class SoporteComponent implements OnInit {
   selectedPreviewVideo: any = { url: '', type: '' }; // Added for video preview modal
 
   constructor(
-    private fb: FormBuilder, 
-    private router: Router, 
+    private fb: FormBuilder,
+    private router: Router,
     private ticketService: ServiciosService,
+    private securityService: SecurityService,
     private storage: AngularFireStorage
   ) {
     // Get currently logged in user
@@ -48,7 +50,7 @@ export class SoporteComponent implements OnInit {
       categoria: [{ value: 'funcionalidad katuq', disabled: true }, Validators.required],
       subcategoria: [{ value: 'general', disabled: true }, Validators.required],
       motivo: ['soporte', Validators.required],
-      nombreUsuarioReporta: [this.currentUser?.name || '', Validators.required], // Set default to current user's name
+      nombreUsuarioReporta: [this.currentUser?.name || this.currentUser?.email || '', Validators.required], // Nombre o correo del usuario logueado; editable
       fechaRegistro: [today, Validators.required],
       fechaEvento: [today, Validators.required], // Set default to today's date
       asunto: ['', Validators.required],
@@ -381,13 +383,29 @@ export class SoporteComponent implements OnInit {
   }
 
   async onSubmit() {
-    if (this.isSubmitting || !this.ticketForm.valid) {
+    if (this.isSubmitting) {
       return;
     }
-    
+
+    if (!this.ticketForm.valid) {
+      // Hacer visibles los errores de todos los campos obligatorios
+      this.ticketForm.markAllAsTouched();
+      return;
+    }
+
+    // Empresa activa desde la fuente canónica; sin ella no se crea un ticket huérfano
+    const empresa = this.securityService.getCompanyInformationLogged();
+    if (!empresa?.nombreComercio) {
+      Swal.fire(
+        'Sesión incompleta',
+        'No pudimos identificar tu comercio. Cierra sesión y vuelve a ingresar para crear el ticket.',
+        'warning'
+      );
+      return;
+    }
+
     this.isSubmitting = true;
-    const currentCompany = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
-    
+
     try {
       const formData = this.ticketForm.getRawValue();
       
@@ -403,8 +421,11 @@ export class SoporteComponent implements OnInit {
         fechaCreacion: "2024-11-06T13:16:04.0316182+00:00"
       };
       formData.base64String = this.fileBase64String ?? '';
-      formData.tienda = currentCompany.nomComercial;
-      formData.company = currentCompany;
+      // Identidad mínima trazable del comercio; no se envía la configuración completa de la empresa
+      formData.tienda = empresa.nombreComercio;
+      formData.company = empresa.nombreComercio;
+      formData.nit = this.currentUser?.nit || '';
+      formData.emailUsuarioReporta = this.currentUser?.email || '';
 
       // Show processing indicator with progress steps
       let loadingStep = 'Preparando información...';
@@ -444,24 +465,36 @@ export class SoporteComponent implements OnInit {
       // Send ticket data
       this.ticketService.addTicket(formData).subscribe({
         next: (response) => {
+          const ticketId = response?.result?.cd || '';
+          this.isSubmitting = false;
+
+          // Notificar al equipo de soporte (ticketId como string, no el objeto)
+          this.ticketService.addNotification('Nuevo ticket creado', ticketId);
+          // Notificar el canal propio del comercio (el que escucha la campana del Seller)
+          this.ticketService.addTicketNotificationForCompany(
+            'Tu ticket fue creado y está en estado Pendiente',
+            ticketId,
+            empresa.nombreComercio
+          );
+
           Swal.fire({
             title: '¡Ticket creado con éxito!',
             html: `<div class="success-ticket">
-                     <div class="ticket-number">${response.result.cd}</div>
+                     <div class="ticket-number">${ticketId}</div>
+                     <p>Estado inicial: <strong>Pendiente</strong></p>
                      <p>Su ticket ha sido registrado correctamente</p>
                    </div>`,
             icon: 'success',
             confirmButtonText: 'Ver mis tickets'
+          }).then(() => {
+            this.router.navigate(['/misTickets']);
           });
-          
-          formData.cd = response.result.cd;
-          this.ticketService.addNotification('Nuevo ticket creado', formData);
-          this.router.navigate(['/misTickets']);
         },
         error: (error) => {
+          // El formulario conserva los datos; el botón queda disponible para reintentar
           this.isSubmitting = false;
-          Swal.fire('Error', 'No se pudo guardar el ticket. Por favor intente de nuevo.', 'error');
-          console.error('Error al actualizar el ticket:', error);
+          Swal.fire('Error', 'No se pudo crear el ticket. Verifica tu conexión e intenta de nuevo.', 'error');
+          console.error('Error al crear el ticket:', error);
         }
       });
     } catch (error) {

@@ -5173,3 +5173,16 @@ D-230 los dejó comprables (`inventoryPolicy: CONTINUE`) pero seguían mostrando
 **Repaso ejecutado en OH MY STORE:** 42 productos actualizados, 0 fallidos; verificado después, 43 comprables y sin rastreo, 0 pendientes. Hizo falta porque el código nuevo solo actúa sobre lo que el flujo vuelva a emitir — y **lo quieto no se re-emite nunca** (ver D-232).
 
 Backend `ee0ea28`.
+
+
+## D-235 (2026-08-25) — Soporte: fuente canónica de empresa, payload mínimo y canal del comercio por nomComercial
+
+Los tickets creados desde la pantalla de soporte "desaparecían": el formulario leía `currentCompany` de `sessionStorage` cuando el login lo persiste en `localStorage`, así que en pestaña nueva el ticket salía con `tienda: undefined` y Mis Tickets (que filtra por tienda, misma fuente frágil) nunca lo mostraba. Evidencia file:line en `openspec/changes/fix-seller-ticket-creation/proposal.md`.
+
+**Decisiones:**
+1. **La empresa activa en el flujo de soporte se resuelve SOLO vía `SecurityService.getCompanyInformationLogged()`** (soporte.component + mis-tickets.component). Sin empresa resuelta se bloquea el envío con mensaje de re-login — no se crean tickets huérfanos (los históricos con `tienda: undefined` quedan como dato perdido, no se migran).
+2. **Payload mínimo trazable** al API de Support: `tienda`/`company` = nomComercial (string), `nit` y `emailUsuarioReporta` del usuario logueado. Deja de enviarse el objeto `CompanyInformation` completo a un API público.
+3. **El canal in-app del comercio es `ActualizacionTicket{nomComercial}`** — es lo que escucha la campana (notification-manager.service.ts:339) y lo que existe en RTDB real. Queda registrado que la app Support hoy publica por NIT y por eso sus avisos nunca llegan al Seller; la alineación se hace en las tareas de notificaciones (ClickUp wdu9v78jh8/jh9), no aquí.
+4. Validación visible al enviar (markAllAsTouched; el botón ya no se deshabilita por invalidez sin explicación), confirmación con número y estado inicial, error de red conserva datos y permite reintento (guard anti doble-submit).
+
+Cambio OpenSpec `fix-seller-ticket-creation` (proposal/design/specs/tasks completos, validate OK). Tarea origen: ClickUp wdu9v78jh7 (urgente). Build de producción verde. (Numerada D-235: D-234 ya estaba usado por los commits de recompra d272054f/0fdcbd44, aunque no esté registrado en este contrato — precedente D-043/D-067/D-085.) Pendiente: verificación en navegador por el usuario.
