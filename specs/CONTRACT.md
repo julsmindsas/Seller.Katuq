@@ -1275,6 +1275,26 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-08-24 (sesión Guía Cereza — avisar precios faltantes por lista, D-224)
+- **Hecho y en producción (frontend 2026.08.24.10):** el catálogo de venta asistida avisa cuando al
+  cliente en pantalla se le está cobrando el precio general porque al producto le falta la lista de
+  ese cliente. Chip por tarjeta + renglón con el total + un solo renglón cuando le falta a todo el
+  catálogo. Genérico por construcción: si la empresa no usa listas, no aparece nada. Ver D-224.
+- **Hecho, sin desplegar:** `GET /v1/productos/cobertura-listas` (backend `d6cd954` + test `14bad7e`,
+  14 casos). Mientras no se despliegue, el renglón del total no sale; el chip sí funciona.
+- **Barrido de descuentos contra la API de Cereza:** 8.300 productos, **1 desactualizado** —
+  GCTT8218X, Cereza lo subió a $159.900 y Katuq lo tiene en $119.900. Dry-run, 0 escrituras.
+- **Números que cambian la prioridad del ticket OMS:** de 588 clientes, 159 son mayoristas, 4
+  público y **solo 1 es modelos**; 424 sin lista asignada. El hueco que se cobra mal a diario es el
+  de mayoristas (108 productos), no el de modelos (2.362 productos con un solo cliente).
+- **Incidente de sesiones paralelas:** la otra sesión arrastró código mío al commitear un archivo
+  compartido y la rama quedó sin compilar (consumidor sin proveedor). Se detectó al ir a publicar y
+  se cerró completando las piezas que faltaban, no revirtiendo.
+- **Queda pendiente, esperando a Daniel:** (1) desplegar el backend del contador; (2) autorizar la
+  corrección del precio de GCTT8218X (`--execute` escribe precios en producción). Y abiertas del
+  ticket OMS: ofertas a Shopify (906 productos), importador de Excel que borra las otras listas,
+  8.171 productos sin precio sin-IVA, unidades por bodega en Cereza.
+
 ### 2026-07-30 (spec 011 — alta múltiple de zonas de cobro)
 - Fix previo (spec 010): historial de redenciones — "Total pedido" ahora se calcula desde el carrito
   (mercancía con IVA − descuentos, sin envío) porque los campos de total persistidos podían estar corruptos
