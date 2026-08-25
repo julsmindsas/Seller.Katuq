@@ -26,6 +26,26 @@ import {
 import { VentasNotificationInterceptor } from '../notifications/ventas-notification.interceptor';
 import { FeatureFlagsService } from '../feature-flags.service';
 
+/** Una lista de precios de la empresa y qué tanto del catálogo cubre. */
+export interface CoberturaDeLista {
+  tipoClienteId: string;
+  nombre: string;
+  descripcion: string;
+  con: number;
+  sin: number;
+  cobertura: number;
+}
+
+export interface CoberturaListasPrecio {
+  success: boolean;
+  company: string;
+  totalProductos: number | null;
+  listas: CoberturaDeLista[];
+  /** true mientras el backend todavía no tiene el conteo. */
+  calculando?: boolean;
+  calculadoEn?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -187,8 +207,12 @@ export class VentasService extends BaseService {
    * todos los productos. `searchBy` opcional: por defecto el backend filtra por
    * `referencia` (comportamiento histórico); pasar `'all'` busca por referencia O
    * título O marca O código de barras (usado por el editor de cotizaciones).
+   *
+   * `bodegaId` (business code, ej. "ECF4"): sin él la respuesta trae la SUMA de
+   * todas las bodegas — justo lo que hacía ver stock de Bogotá con Cali elegida.
+   * Todo consumidor que opere sobre una bodega debe mandarlo.
    */
-  public quickSearchProducts(term: string, limit: number = 20, searchBy?: string): Observable<{
+  public quickSearchProducts(term: string, limit: number = 20, searchBy?: string, bodegaId?: string): Observable<{
     success: boolean;
     products: Producto[];
     total: number;
@@ -197,7 +221,21 @@ export class VentasService extends BaseService {
   }> {
     const encodedTerm = encodeURIComponent(term);
     const byParam = searchBy ? `&searchBy=${encodeURIComponent(searchBy)}` : "";
-    return this.get<any>(`/v1/productos/search/quick?q=${encodedTerm}&limit=${limit}${byParam}`);
+    const bodegaParam = bodegaId ? `&bodegaId=${encodeURIComponent(bodegaId)}` : "";
+    return this.get<any>(`/v1/productos/search/quick?q=${encodedTerm}&limit=${limit}${byParam}${bodegaParam}`);
+  }
+
+  /**
+   * Cobertura de las listas de precio de la empresa: cuántos productos del
+   * catálogo tienen precio en cada lista y a cuántos les falta. La venta
+   * asistida lo usa para avisar que al cliente en pantalla se le está
+   * cobrando el precio general.
+   *
+   * El backend responde de una: si aún no tiene el conteo devuelve
+   * `calculando: true` y lo calcula aparte — no hay que esperarlo.
+   */
+  getCoberturaListasPrecio() {
+    return this.get<CoberturaListasPrecio>('/v1/productos/cobertura-listas');
   }
 
   validateCupon(cupon: any) {

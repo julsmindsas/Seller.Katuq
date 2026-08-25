@@ -4441,7 +4441,7 @@ El usuario preguntó si el fix de hoy garantiza que el patrón de DAD-012131 no 
 
 ---
 
-## D-204 (2026-08-17) — Reserva de inventario para la tienda en línea: descontar al crear, devolver al anular (EN CURSO)
+## D-204 (2026-08-17) — Reserva de inventario para la tienda en línea: descontar al crear, devolver al anular (APLICADA)
 
 **Contexto.** Auditoría del WMS confirmó: no existe reserva como tal, pero sí su antesala (`availabilityService` con disponible/comprometido/físico esperado, ya en pantalla). Los pedidos de tienda solo descontaban con el webhook de pago Aprobado → contra entrega y pagos manuales sobrevendían sin freno, y además rompían el supuesto de `availabilityService` (contaban como comprometido sin haber descontado: doble conteo del apartado).
 
@@ -5020,7 +5020,9 @@ que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
 
 **Archivos tocados (finalmente, tras el revert):** ninguno en `orderCalculationService.js`. Solo `functions/scripts/deepdive-d220-divergencia-categoria-base.js` (nuevo, herramienta de diagnóstico read-only).
 
-## D-222 (2026-08-25) — Bug real en SIIGO: la factura electrónica ignora el IVA efectivo de línea (propuesta OpenSpec, pendiente de aprobación/implementación)
+## D-239 (2026-08-25) — Bug real en SIIGO: la factura electrónica ignora el IVA efectivo de línea (propuesta OpenSpec, pendiente de aprobación/implementación)
+
+**Nota de renumeración:** esta decisión se registró originalmente como D-222, pero al mezclar con `origin` apareció colisión — D-222 ya estaba tomado el 2026-08-24 por "La disponibilidad que ve el vendedor es la de SU bodega" (ver más abajo), y D-223..D-238 también ya estaban en uso por sesiones concurrentes. Renumerada a **D-239** (siguiente libre tras la mezcla), mismo precedente que D-085/D-144/D-067.
 
 **Disparador.** Reporte de negocio: pedido **DAD-012406** (ALMARA FELICIDAD) se creó correcto en venta asistida, pero al facturar por SIIGO (factura #8834) salió **sin IVA discriminado**; el PDF del pedido tampoco lo mostraba; en pantalla el IVA aparecía y desaparecía entre recargas.
 
@@ -5041,4 +5043,227 @@ que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
 - Contract test nuevo `functions/scripts/test-siigo-invoice-line-iva.js`: **7/7 PASS** (sin override → idéntico al comportamiento actual; `_ivaManualOverride`; `tarifaEfectiva`; `ivaLinea`+`precioSinIvaResuelto`; patrón real DAD-012406 sin override sigue en 0%, confirmando que el fix no inventa IVA donde no corresponde).
 - `test-iva-persist-option-a.js` re-corrido: **8/8 PASS**, sin regresión cruzada con el motor canónico de spec 010.
 - Reinicio local (`node index.js`, sin hot-reload): arrancó limpio en `:3300`.
-- **Pendiente:** verificación manual contra SIIGO real (requiere tenant de prueba con integración activa) y commit (no se commitea sin pedido explícito).
+- **Pendiente:** verificación manual contra SIIGO real (requiere tenant de prueba con integración activa).
+
+---
+
+## D-223 (2026-08-24) — El descuento por producto llega al total que se cobra, no solo a la línea
+
+**Reporte de Monica:** cotización aceptada → convertida a pedido → en el último paso de la venta asistida la línea decía `1 × $47.500` con badge `-5%`, pero **"TOTAL A PAGAR" seguía en $50.000**. Debía cobrar $47.500.
+
+**Causa raíz:** el checkout usa DOS funciones distintas para lo mismo. La línea la pinta `checkout.component.ts::checkPriceScaleProd(item)`, que sí aplica `descuentoLinea` (lo arregló D-141). El total suma `checkPriceScale()` (agregada, delega en `payment.service`), que devuelve el subtotal **bruto** — correcto, porque alimenta `totalPedidoSinDescuento`. El descuento se resta aparte, vía `pedidosUtilService.getDiscount()`… que **solo sabía de `porceDescuento`**, el descuento global. Con 5% de línea y 0% global, `getDiscount()` devolvía 0 y el total se quedaba en el bruto. D-141 arregló la línea y nunca tocó el agregado.
+
+**Por qué el PDF y el correo sí estaban bien:** leen el pedido ya guardado, y el backend recalcula al crear (`orders.js:5617` → `calculateOrderTotals`) pisando lo que mande el frontend (`:5665`). Desde D-141 ese cálculo compone línea + global. Solo estaba mal la pantalla que calcula en vivo, antes de que el pedido exista.
+
+**Decisión:** `getDiscount()` pasa a ser el **descuento total** del pedido (línea + global), mismo contrato que el backend (`totalDescuento = bruto − neto`). No se toca `checkPriceScale()`: sigue siendo el bruto, porque es lo que `totalPedidoSinDescuento` debe guardar (lección D-046: no pisar el campo que permite reconstruir el precio original).
+
+**Composición multiplicativa**, espejo del motor canónico — el % global va sobre la base YA neta de línea:
+`factor = (1 − descLinea/100) × (1 − porceDescuento/100)`
+Línea 10% + global 10% sobre 100.000 descuenta **19.000**, no 20.000.
+
+**Implementado (frontend):**
+- `pedidos.util.service.ts`: nuevo `getSubtotalSinEnvioNeto()` (espejo de `getSubtotalSinEnvio()` con `descuentoLinea` aplicado al final, incluyendo adiciones y preferencias). `getDiscount()` suma `descuentoLineas + global`; el tope del código de valor fijo pasa a ser el subtotal **neto**.
+- `payment.service.ts::checkIVAPrice` (camino legacy): `factorDesc` compone ahora `descuentoLinea`. Aplica a producto, adiciones y preferencias en un solo punto. **Solo se nota en producción** (`ivaCalcUnificado: false`); en local el motor canónico ya lo hacía bien — trampa a recordar: el IVA cuadra en localhost y descuadra en prod.
+- `payment.service.ts::generateHtmlContentInternal`: badge `-X%` en el correo (chip verde inline) y `(-X% dcto)` en texto plano en la comanda (se imprime en térmica B/N, un chip de color sale como mancha). Cierra el pendiente que D-142 dejó fuera de alcance en su tarea 3.2.
+- 6 pruebas de regresión nuevas en `pedidos.util.service.spec.ts`.
+
+**Efecto colateral bueno:** `checkout.component.ts:834` persiste `totalDescuento = getDiscount()`, así que la columna "Descuento" del listado de pedidos también queda correcta por esta ruta.
+
+**Verificado:** `npx tsc --noEmit` exit 0; `ng serve` recompiló limpio. **Karma NO se pudo correr** (`node_modules/quill` falta, roto de antes). Sin prueba en navegador.
+
+**Pendiente / deuda anotada:**
+- **Nunca se ha ejercitado con datos reales**: censo en producción dio **0 de 2.958 pedidos** desde 2026-06-01 con `descuentoLinea`. Ni el PDF ni el correo se han generado jamás con descuento por línea.
+- `list.component.ts` sigue con **5 bloques duplicados** (`:2627`, `:3665`, `:4015`, `:5432`, `:5545`) que recalculan totales y pisan `totalDescuento` con solo la parte global cuando hay línea + global juntos. Se dispara con `necesitaRecalculoFrontend` (precios por volumen ⇒ ALMARA, DEL RANCHO, CAFE ESCOBAR). No corregido aquí.
+- POS suma `getDiscount()` en vez de restarlo (`pos-checkout.component.html:198,223`). Bug preexistente; hoy inocuo porque el POS no tiene UI de descuento por línea.
+
+## D-234 (2026-08-24) — Cabecera del acordeón del checkout: el chevron pisaba "Completo"
+
+**Reporte de Monica:** en la columna izquierda del checkout las cards se veían "cortadas" — el chevron encima del texto "Completo", el título partido en tres líneas ("Datos / de / Entrega") y, en la card abierta, "Completo" saliéndose por el borde.
+
+**Causa raíz (tres defectos que se veían como uno):**
+1. El título es un **nodo de texto suelto** dentro del `.accordion-button` (que es flex) → ítem flex **anónimo**: no admite clase y sí encoge, así que era lo único que cedía y cedía partiéndose.
+2. El `::after` de Bootstrap se coloca con `margin-left: auto`, igual que el `.ms-auto` del resumen. Dos márgenes automáticos se reparten el espacio **libre**; sin espacio libre, ambos quedan en cero y el chevron termina encima de la última letra.
+3. `.accordion-summary` sin `min-width: 0` → en vez de recortarse, desbordaba la card.
+
+**Decisión:** el chevron sale del flujo y tiene carril propio; "Completo" es estado, no dato, así que se recortan primero los datos.
+
+**Implementado:** solo `checkout.component.scss` (sin tocar el HTML): `white-space: nowrap` en el botón; chevron `position: absolute` con `padding-right` reservado y `translateY(-50%)` conservado en la rotación al expandir; `.accordion-summary` con `flex: 1 1 auto` + `min-width: 0` + `overflow: hidden`; `.complete` con `flex: 0 0 auto`. Carril ajustado también en la media query de ≤992px.
+
+**Sin verificar en navegador** (la usuaria prueba la UI ella misma).
+
+## D-222 (2026-08-24) — La disponibilidad que ve el vendedor es la de SU bodega
+
+**Reporte de Estefani (OH MY STORE):** con "Fullpi Cali (ECF4)" elegida, buscar la referencia `GCJ1255CC` mostraba **26 unidades** — y esas 26 están en Bogotá. El popover de existencias la desmentía en la misma pantalla: "Fullpi Bogotá (ECF1) 26".
+
+**Terreno verificado en producción** (producto `4OGXy4bP9QIRY7LsNn43`, "Domis2/ 40 und"): `BOD-FULLPI-1` = 26, `BOD-FULLPI-3` = −6, `BOD-FULLPI-4` = −4. Con la política de negativo-visible los dos negativos se muestran 0, y el total queda justo en 26 — el número que ella veía.
+
+**Causa raíz:** `/v1/productos/search/quick` respondía `cantidadDisponible = stockTotal`, la SUMA entre bodegas (`productStockHelper`), porque no recibía bodega. La venta asistida usa ese endpoint como atajo cuando el término tecleado parece referencia (alfanumérico ≥3), así que la búsqueda por referencia se salía del camino que sí resuelve por bodega (`productosPaginated`). Dos derivados que NO dependían de buscar:
+- el modal "Configurar" (venta asistida y POS) refrescaba stock por ese mismo atajo y **pisaba** el dato correcto que traía el catálogo — y su validación de "Sin stock" corría contra el número inflado;
+- el botón "Agregar" del catálogo no validaba stock en absoluto.
+
+**Decisión:** la disponibilidad que se muestra y con la que se valida es **siempre la de la bodega de trabajo**. El total entre bodegas solo se usa en el modo "Sin inventario" (lo que se vende bajo pedido no pertenece a ninguna bodega) — regla fijada por Daniel.
+
+**Implementado:**
+- Backend: `quickSearch` acepta `bodegaId` y responde la cantidad de esa bodega; `stockTotal` y `stockPorBodega` siguen viajando para poder ofrecer "hay N en otra bodega". Sin `bodegaId` el comportamiento no cambia.
+- Frontend: catálogo, modal de configuración y combos derivan la cantidad de la bodega activa (también desde `stockPorBodega`, así el número queda bien aunque el backend vaya atrás). "Agregar" ya no deja meter al carrito lo que no hay, y el resumen del combo dice cuántas líneas quedaron fuera por falta de existencias.
+- Salida para el vendedor: las filas del popover son clicables y cambian la bodega de trabajo conservando la búsqueda; el hover se sostiene al pasar el cursor al popover.
+
+**Nota sobre "Solo con stock":** al buscar una referencia exacta el producto se muestra aunque esté en 0 en esta bodega — ocultarlo haría creer que no existe. El badge queda en rojo y el desglose dice dónde sí hay.
+
+### D-219 — Adenda (2026-08-20): dirección completa y códigos DANE resueltos
+
+Daniel pidió que además se pida **barrio y departamento**, y que el bot
+**resuelva los códigos**. Se hizo reusando el resolutor DANE que ya existe
+para el push a Cereza (`cerezaMunicipalityResolver`, 1.122 municipios, match
+exacto) en vez de escribir otro.
+
+- El cliente escribe "medellin" y el pedido queda con **"Medellín",
+  "Antioquia", código 05001 y país Colombia**. El departamento NO se le
+  pregunta: casi nadie lo dice al dictar una dirección.
+- **El modelo tiene prohibido deducirlo.** "Medellín… entonces Antioquia" es
+  exactamente lo que no debe hacer: hay 67 municipios cuyo nombre se repite
+  entre departamentos. Lo resuelve el servidor contra el listado oficial.
+- **Ciudad repetida → se pregunta, con botones.** Armenia está en Quindío y en
+  Antioquia; La Victoria, en tres. El resolutor se niega a adivinar a
+  propósito, y ahora el bot pregunta cuál es en vez de solo fallar.
+- **Ciudad que no está en el listado** (una vereda, un corregimiento) se
+  respeta tal cual y la venta sigue: el listado tiene municipios, y
+  rechazarlas sería no venderle a medio país rural.
+- **El barrio pasa a pedirse siempre.** Obligatorias para cerrar siguen siendo
+  dirección y ciudad: en zona rural puede no haber barrio y eso no puede
+  trabar un pedido.
+
+Detalle que costó un test: `departamentosPosibles` se guarda como lista vacía
+**explícita** al resolver. La config del pedido se funde campo a campo, así
+que una clave ausente dejaría en pie la ambigüedad del turno anterior y el bot
+preguntaría un departamento que ya sabía.
+
+**Estado: aplicado y verificado en producción.** Backend `7364be8`, ADK
+`d8284cd`. 11 suites del backend y 91 tests del canal en verde. Ensayo real: el
+agente anotó `{direccion: "carrera 70 numero 30-15", barrio: "Belen", ciudad:
+"Medellin"}` y el servidor lo dejó en Medellín / Antioquia / 05001; con
+"Armenia" el resolutor responde "Antioquia o Quindío" y el bot pregunta.
+
+**Nota de despliegue:** ese deploy de `katuq-api` arrastró dos commits ajenos
+que ya estaban en la rama (`a7278f6` maquetas de bloque de sitios y `8eece03`
+docs), de una sesión que ya había terminado. Son aditivos —un catálogo nuevo
+más cuatro líneas en el endpoint de sitios— y su propia suite
+(`test:sitios-publicacion`) quedó en verde antes de subir.
+
+---
+
+## D-230 (2026-08-24) — Tres bugs del sync a Shopify: fotos, "bajo pedido" y ciudad de entrega
+
+Del ticket OMS. Cada uno reproducido contra producción antes de tocar código. (Se toma D-230 y no D-223 porque la sesión de Guía Cereza reservó D-223..D-229 para su tanda del mismo ticket.)
+
+**1. Las fotos nunca llegaban a un producto que ya existía en Shopify.** `productUpdate` no acepta media y el camino UPDATE del nodo no la mandaba: solo recibían imagen los productos que el flow creaba desde cero. Un producto vinculado a un Shopify preexistente se quedaba sin foto para siempre. Verificado con `PX-CPD-2169-500ML`: foto en Katuq, `media count: 0` en Shopify. Ahora el update rellena vía `productCreateMedia` y **solo cuando allá no hay ninguna imagen** — lo que el comerciante subió a mano no se toca. Una media rechazada se registra y no tumba el upsert. De paso: `syncImages` estaba en el schema del nodo pero **no lo leía nadie**; apagarlo no apagaba nada. Ya es efectivo.
+
+**2. Los "bajo pedido" salían AGOTADOS en Shopify.** Nunca se mandaba `inventoryPolicy`, así que Shopify aplicaba su default `DENY`: un producto no inventariable, que por definición tiene stock 0, no se podía comprar. Los 43 no inventariables de OH MY STORE vinculados a Shopify estaban todos en DENY con qty 0. Los no inventariables pasan a `CONTINUE`; los inventariables siguen en `DENY`.
+
+**Trampa de datos encontrada acá y cuantificada por la sesión de Guía Cereza:** el campo top-level `products.<doc>.inventariable` **miente**. Sobre el catálogo completo (8.444 productos) hay **2.256 con el top-level en `false` mientras `disponibilidad.inventariable` dice `true` — el 27%**. Otros 6.147 solo tienen el subobjeto. Quien lea el top-level marca "bajo pedido" a más de dos mil productos que sí son inventariables. **Regla: `disponibilidad.inventariable` manda siempre; el top-level solo como respaldo para canonical V2.**
+
+**3. A Shopify no llegaba la ciudad de entrega.** El draft se armaba sin ninguna dirección —ni envío ni facturación— y con `useCustomerDefaultAddress: false`, así que la orden entraba pelada. Se mapea `envio` con el mismo criterio que ya usa el nodo de Cereza, para no tener dos verdades sobre la misma dirección. Dos detalles que salieron de mirar pedidos reales:
+- Katuq guarda literalmente `"N/A"` en los campos de envío cuando la entrega es "Recoge" (ORE-000609). Se filtran: ese caso manda solo ciudad y país, que es justo lo que el ticket pide.
+- El teléfono se sanea y **se omite si no es plausible**. Shopify rechaza el `draftOrderCreate` completo con un teléfono inválido y los datos reales traen basura (`602-3007506140-`, ORE-000608). Perder el teléfono es molesto; perder el pedido no es aceptable.
+
+Verificado con ORE-000610 (domicilio: dirección completa y teléfono normalizado a `+57…`), ORE-000609 (recoge: solo ciudad) y ORE-000608 (teléfono sucio omitido, dirección intacta). Backend `318ff33`. Los flows de producto corren cada 5–10 min, así que fotos y política de inventario se aplican solas tras el despliegue.
+
+## D-220 (2026-08-24) — El cliente esperaba 27 segundos y solo 4 eran el modelo
+
+**Cómo apareció.** Daniel pidió analizar las conversaciones reales del bot. Al
+medir la espera de punta a punta sobre 46 turnos: **mediana 26,7 s, p90 31 s,
+máximo 41 s**. Un cliente esperando medio minuto en WhatsApp.
+
+**Dónde estaba, medido y no supuesto:**
+
+| Tramo | Tiempo |
+|---|---|
+| Kapso → nosotros | 1,8 s (mediana) |
+| Ventana de agrupación de ráfagas | 4 s fijos, siempre |
+| Lecturas previas al turno, en fila | **8,1 s** |
+| El agente pensando (ADK) | 4,4 / 4,1 / 8,7 s |
+
+**Mi error de método, que vale registrar:** yo venía midiendo el endpoint del
+modelo (4-8 s) y dando la latencia por entendida. Nunca medí lo que espera el
+cliente. El modelo era la parte pequeña.
+
+**Los dos hallazgos concretos:**
+
+1. **`getContactOrders` trae hasta 1.000 pedidos del comercio y los filtra en
+   memoria** — 5,2 s y mil lecturas de Firestore **en cada mensaje**. Era el
+   75 % de las lecturas del turno.
+2. **La ventana de ráfagas de 4 s se cobra siempre**, aunque llegue un solo
+   mensaje. Medido sobre 74 intervalos reales: solo el **4,1 %** llega dentro
+   de esos 4 s, y dos de cada tres de esas ráfagas caben en 2 s.
+
+**Decisión.**
+
+- Todo el contexto del turno se pide **de una** (perfil, pedidos, nombre del
+  comercio, los tres maestros). Ninguna lectura depende de otra, así que la
+  espera pasa a ser la de la más lenta y no la suma.
+- El contexto del contacto se **cachea por hilo 5 minutos**, con el mismo
+  patrón que ya usaban los maestros de ese módulo — no es una capa nueva. El
+  historial de pedidos de alguien no cambia mientras conversa; el cierre
+  invalida el hilo para que "lo mismo de la otra vez" incluya el recién hecho.
+- **Ventana de ráfagas 4 s → 2 s**, con test que fija el valor: si alguien la
+  vuelve a subir, que sea con un dato en la mano.
+
+**Resultado medido contra prod:** las lecturas del turno pasan de **6.869 ms a
+5.138 ms** en el primer mensaje de un hilo y a **108 ms** del segundo en
+adelante. Sumado a los 2 s de la ventana, la espera del cliente baja de ~27 s
+a ~10-15 s en la mayoría de los turnos.
+
+**Estado: aplicado y verificado en producción.** Commits `c83ef74` y `ec87c79`
+(`backend-aws-security`). Suites del canal en verde.
+
+**Lo que sigue pendiente y por qué importa:** la consulta de pedidos por
+teléfono sigue escaneando mil documentos en el primer turno de cada hilo (5,6 s
+verificados tras el deploy). El arreglo de fondo es indexarla, pero toca un
+servicio que comparte el buzón y necesita índice nuevo en Firestore — se hace
+aparte, con su propia medición.
+
+---
+
+## D-233 (2026-08-24) — REGLA: un producto "bajo pedido" nunca sale agotado en Shopify
+
+**Decisión de Daniel, y es ley para TODO comercio que use Shopify con Katuq** — no un parche para el que reportó el problema. Un producto no inventariable se vende sin stock y **Shopify no le lleva la cuenta**.
+
+D-230 los dejó comprables (`inventoryPolicy: CONTINUE`) pero seguían mostrando 0, y con `tracked: true` + cantidad 0 el tema los pinta AGOTADO igual. Ahora además van con `inventoryItem.tracked: false`: salen siempre disponibles, sin número que mantener.
+
+**Se descartó cargarles una cifra alta tipo 9999** (la idea inicial): es un número inventado que baja con cada venta y que cualquier corrida del sync de inventario puede pisar. Sin rastreo no hay número que sostener ni que se pueda desincronizar.
+
+**Tres piezas, porque con una sola se deshacía sola en la corrida siguiente:**
+1. `mapper` emite `inventoryTracked` por variante (`false` solo para bajo pedido).
+2. `shopify-product-upsert` lo manda en `inventoryItem.tracked`. Solo fuerza el `false`; para los inventariables NO manda el campo — ese es del nodo de inventario y mandarlo ahí pelearía con él.
+3. `shopify-inventory-adjust` **omite los no inventariables**. Sin este corte el nodo les forzaba `tracked: true` y les escribía la cantidad real (0), deshaciendo en la siguiente corrida lo que el nodo de producto acababa de dejar bien. Se reporta como `skipped` con razón `producto_no_inventariable`: no es una falla, es la regla aplicándose.
+
+**Contract test `npm run test:bajo-pedido-shopify` (8/8)** — cubre bajo pedido, inventariable, variantes múltiples, canonical V2, el default seguro sin dato, y el caso del campo top-level mentiroso. Si alguien rompe la regla, el test falla.
+
+**Repaso ejecutado en OH MY STORE:** 42 productos actualizados, 0 fallidos; verificado después, 43 comprables y sin rastreo, 0 pendientes. Hizo falta porque el código nuevo solo actúa sobre lo que el flujo vuelva a emitir — y **lo quieto no se re-emite nunca** (ver D-232).
+
+Backend `ee0ea28`.
+
+---
+
+## D-224 (2026-08-24) — El vendedor ve cuándo le está cobrando a un cliente el precio general
+
+**El hueco.** Un cliente puede tener asignada una lista de precios y el producto no tenerla. Cuando eso pasa, `aplicarPrecioDeLista` devuelve el producto intacto y el vendedor cobra el precio base — sin ningún aviso. En OH MY STORE eso es **108 productos para los 159 clientes mayoristas** y **2.362 para la lista de modelos**, de 8.350 en catálogo.
+
+**La pregunta que originó esto** era "cómo le decimos a OMS qué productos de Guía Cereza no tienen precio de modelos, pero que sirva para cualquier comercio". La respuesta NO puede ser "avisar cuando falte una lista": a CAFE ESCOBAR le faltan las tres listas en los 55 productos y no es un problema — sencillamente no usan el mecanismo. Lo mismo Tienda Demo (552 de 556).
+
+**La regla que sí es genérica: el aviso cuelga de la lista del cliente que está en pantalla, no de una lista con nombre.** Empresa que no usa listas → sus clientes no tienen lista asignada → no aparece absolutamente nada. Sin umbrales, sin configuración, sin nombrar "Modelos" en ninguna parte del código. Verificado que el emparejamiento es por id y no por nombre: **el 100% de los clientes con lista calza contra `tiposPrecios`** (OMS 164/164, HARMONY LENS 2/2, CAFE ESCOBAR 10/10).
+
+**Tres piezas:**
+1. **Chip en la tarjeta** ("Sin precio de Mayoristas") cuando a ESE producto le falta la lista del cliente.
+2. **Renglón arriba con el total** del catálogo — el que responde "cuáles y cuántos son".
+3. **Un solo renglón, más fuerte, cuando le falta a TODOS.** Pasa cuando una empresa asignó listas a sus clientes y nunca les puso precios (CAFE ESCOBAR: 10 clientes con lista, 0 productos con precios). Encender las 40 tarjetas ahí sería ruido; el problema no es el producto, es la configuración.
+
+**El criterio de "le falta" es exactamente el de la pantalla**: fila de esa lista, `activo === true` y precio con IVA mayor que cero. Una fila apagada o en cero no la aplica `aplicarPrecioDeLista`, así que cobrar el general igual — cuenta como faltante. Si el backend contara distinto, el chip y el total se contradirían. Cubierto por `npm run test:cobertura-listas` (14 casos).
+
+**Por qué el conteo no corre dentro de la petición.** Firestore no sabe responder "el array NO contiene este id", así que toca barrer los productos: **0,3 s con los 55 de CAFE ESCOBAR, pero 60 s con los 13.874 de HARMONY LENS contra sus 17 listas.** `GET /v1/productos/cobertura-listas` contesta de una con lo último calculado y dispara el recálculo aparte; mientras no haya número, el catálogo no muestra el renglón y el chip por tarjeta sigue funcionando porque no depende del backend. Vigencia 15 minutos, y se olvida en el mismo punto donde ya se invalida el caché de paginación para que editar precios no deje el conteo viejo colgado.
+
+**El chip no arregla nada — evita el cobro equivocado en el momento en que ocurre**, que es el daño real.
+
+**Dato para OMS antes de mandarlos a llenar 2.362 precios:** de sus 588 clientes, **159 son Mayoristas, 4 Público y solo UNO es Modelos**; 424 no tienen lista asignada. El hueco que se cobra mal todos los días es el de mayoristas (108 productos × 159 clientes), no el de modelos. O los "modelos" reales están entre los 424 sin lista y el problema no es que falten precios sino que nadie les asignó la lista.
+
+Frontend `fabf88d6` (el `.ts` ya había entrado por `d272054f`). Backend `d6cd954` + `14bad7e`, **sin desplegar** — mientras tanto la llamada del total da 404 y el catálogo solo muestra el chip.

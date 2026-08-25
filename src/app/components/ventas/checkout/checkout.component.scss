@@ -258,6 +258,65 @@
   margin-left: 0.5rem;
 }
 
+/* ── Cabecera del acordeón: título fijo, resumen elástico, chevron con carril propio ──
+   Tres defectos que se veían juntos en la columna izquierda del checkout:
+
+   1. El título se partía en varias líneas ("Datos / de / Entrega"). El texto del
+      título es un nodo suelto dentro del `.accordion-button` (que es flex), o sea
+      un ítem flex ANÓNIMO: no se le puede poner clase y sí encoge. `white-space:
+      nowrap` en el contenedor lo mantiene en una línea.
+
+   2. El chevron pisaba "Completo". El `::after` de Bootstrap se coloca con
+      `margin-left:auto`, igual que el `.ms-auto` del resumen; cuando el contenido
+      llenaba la fila no quedaba espacio libre que repartir y ambos quedaban
+      pegados. Ahora el chevron sale del flujo (absoluto) y se le reserva un
+      carril con `padding-right`, así nunca compite por el espacio.
+
+   3. En la card abierta "Completo" se salía por el borde. El resumen no tenía
+      `min-width: 0`, así que en vez de recortarse desbordaba la card. */
+.accordion-button {
+  position: relative;
+  padding-right: 3rem;
+  white-space: nowrap;
+}
+
+.accordion-button::after {
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  margin-left: 0;
+  transform: translateY(-50%);
+}
+
+/* La rotación al expandir debe conservar el centrado vertical. */
+.accordion-button:not(.collapsed)::after {
+  transform: translateY(-50%) rotate(-180deg);
+}
+
+.accordion-summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.accordion-summary span {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+/* "Completo" es el estado, no un dato: se recorta el resto antes que él. */
+.accordion-summary span.complete {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 991.98px) {
+  /* El resumen se oculta a este ancho, pero el chevron sigue absoluto:
+     mantener su carril para que el título no se le meta debajo. */
+  .accordion-button { padding-right: 2.75rem; }
+  .accordion-button::after { right: 1rem; }
+}
+
 /* form-control-static (valores de solo lectura) */
 .accordion-body-content {
   padding: 0 0.5rem;

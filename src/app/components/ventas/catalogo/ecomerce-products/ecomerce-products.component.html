@@ -317,6 +317,18 @@
                     </div>
                 </div>
 
+                <!-- La búsqueda solo encontró agotados en esta bodega: se muestran
+                     igual, con la salida para ver dónde sí hay. -->
+                <div *ngIf="avisoBusquedaSinStock && !cargandoProductos" class="alert alert-warning mb-4 aviso-sin-stock-bodega">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-exchange-alt fa-lg me-3"></i>
+                        <div>
+                            <h6 class="mb-1">{{ 'Sin existencias en esta bodega' | translate }}</h6>
+                            <p class="mb-0">{{ avisoBusquedaSinStock }}</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Mensaje cuando no hay productos -->
                 <div *ngIf="(soloNoInventariables || (bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '')) && !cargandoProductos && productosPaginados?.length === 0 && !errorCarga" class="alert alert-secondary mb-4">
                     <div class="d-flex align-items-center">
@@ -326,6 +338,26 @@
                             <p class="mb-0" *ngIf="!soloNoInventariables">{{ 'No se encontraron productos para la bodega y ciudad seleccionadas' | translate }}</p>
                             <p class="mb-0" *ngIf="soloNoInventariables">{{ 'No hay productos sin inventario en el catálogo' | translate }}</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- El cliente pertenece a una lista de precios y hay productos que no
+                     la tienen: a esos se les cobra el precio general. Si la empresa no
+                     usa listas, el cliente no tiene lista y esto no aparece nunca. -->
+                <div *ngIf="catalogoCompletoSinLista" class="aviso-lista-precio aviso-lista-precio--todo mb-4">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Ningún producto tiene precio de {{ listaDelCliente }}</strong>
+                        <span>A este cliente se le está cobrando el precio general del catálogo.</span>
+                    </div>
+                </div>
+                <div *ngIf="!catalogoCompletoSinLista && productosSinPrecioDeLista !== null && productosSinPrecioDeLista > 0"
+                     class="aviso-lista-precio mb-4">
+                    <i class="fa fa-tag"></i>
+                    <div>
+                        <strong>{{ listaDelCliente }}</strong>
+                        <span>{{ productosSinPrecioDeLista | number }}<span *ngIf="totalProductosCatalogo"> de {{ totalProductosCatalogo | number }}</span>
+                            productos no tienen precio de esta lista — a esos se les cobra el general.</span>
                     </div>
                 </div>
 
@@ -367,12 +399,14 @@
                                                 'badge-info': !producto.disponibilidad?.inventariable
                                               }"
                                               [ngbPopover]="stockBodegasTpl"
+                                              #popStock="ngbPopover"
                                               popoverTitle="{{ 'Existencias por bodega' | translate }}"
                                               popoverClass="stock-bodegas-popover"
-                                              triggers="mouseenter:mouseleave"
+                                              triggers="manual"
                                               container="body"
                                               [disablePopover]="producto.disponibilidad?.inventariable === false"
-                                              (mouseenter)="cargarStockPorBodegas(producto)">
+                                              (mouseenter)="abrirStockPopover(popStock, producto)"
+                                              (mouseleave)="cerrarStockPopoverConGracia()">
                                             {{ producto.disponibilidad?.inventariable ?
                                                (producto.disponibilidad?.cantidadDisponible || 0) + ' unid.' :
                                                'Bajo pedido' }}
@@ -436,6 +470,13 @@
                                                 <span *ngIf="tienePrecioPromocional(producto) && !getPromoBadgeImg(producto)" class="badge bg-danger promo-badge">
                                                     OFERTA
                                                 </span>
+                                            </div>
+                                            <!-- A este producto le falta la lista del cliente: se cobra el general.
+                                                 Se calla cuando le falta a TODO el catálogo (ya hay aviso arriba). -->
+                                            <div class="sin-precio-lista" *ngIf="!catalogoCompletoSinLista && faltaPrecioDeLista(producto)"
+                                                 title="Este producto no tiene precio en la lista {{ listaDelCliente }}; se cobra el precio general">
+                                                <i class="fa fa-exclamation-triangle"></i>
+                                                Sin precio de {{ listaDelCliente }}
                                             </div>
                                         </div>
                                     </div>
@@ -538,13 +579,18 @@
         </div>
         <div class="modal-body">
             <app-conf-product-to-cart #confProduct [producto]="productoSeleccionado"
+                [bodegaId]="soloNoInventariables ? null : bodega?.idBodega"
                 [isRebuy]="isRebuy"></app-conf-product-to-cart>
         </div>
     </ng-template>
 
     <!-- Contenido del popover "Existencias por bodega" (compartido; solo hay un hover a la vez) -->
     <ng-template #stockBodegasTpl>
-        <div class="stock-bodegas-pop">
+        <!-- El popover se navega con el mouse (las filas cambian de bodega), así que
+             mantiene abierto mientras el cursor esté encima. -->
+        <div class="stock-bodegas-pop"
+             (mouseenter)="cancelarCierreStockPopover()"
+             (mouseleave)="cerrarStockPopoverConGracia()">
             <div *ngIf="stockBodegasActual?.cargando" class="sbp-loading">
                 <i class="fa fa-circle-o-notch fa-spin me-1"></i> {{ 'Consultando…' | translate }}
             </div>
@@ -552,10 +598,18 @@
                 {{ 'No se pudo consultar el inventario' | translate }}
             </div>
             <ng-container *ngIf="stockBodegasActual && !stockBodegasActual.cargando && !stockBodegasActual.error">
-                <div *ngFor="let b of stockBodegasActual.bodegas" class="sbp-row" [class.sbp-actual]="esBodegaActual(b.idBodega)">
+                <!-- Fila clicable: si el stock está en otra bodega, se cambia de
+                     bodega desde acá en vez de dejar al vendedor con un 0 sin salida. -->
+                <div *ngFor="let b of stockBodegasActual.bodegas" class="sbp-row"
+                     [class.sbp-actual]="esBodegaActual(b.idBodega)"
+                     [class.sbp-clicable]="!esBodegaActual(b.idBodega)"
+                     [attr.role]="esBodegaActual(b.idBodega) ? null : 'button'"
+                     [attr.title]="esBodegaActual(b.idBodega) ? null : ('Trabajar en esta bodega' | translate)"
+                     (click)="irABodega(b.idBodega)">
                     <span class="sbp-nombre">
                         {{ b.nombre }}
                         <small *ngIf="esBodegaActual(b.idBodega)">({{ 'actual' | translate }})</small>
+                        <small *ngIf="!esBodegaActual(b.idBodega)" class="sbp-ir">{{ 'cambiar aquí' | translate }}</small>
                     </span>
                     <span class="sbp-cantidad">{{ b.cantidad }}</span>
                 </div>

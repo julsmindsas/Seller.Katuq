@@ -139,6 +139,39 @@
             {{ nombreDeTipo(b.tipo) }}
           </h3>
 
+          <!-- ── Maquetas ──
+               Las formas que este bloque ya puede tomar, con nombre y dibujo.
+               No agregan nada: son las mismas perillas de abajo, agrupadas para
+               elegirlas mirando en vez de imaginarse el resultado de
+               combinarlas. Elegir una NO toca textos, fotos ni destinos.
+               Va arriba de todo, antes de los campos: primero se elige la forma
+               y después se afina, no al revés. -->
+          <div class="maquetas" *ngIf="maquetasDe(b).length">
+            <div class="maquetas__cabeza">
+              <strong>Cómo se ve</strong>
+              <small *ngIf="!maquetaActiva(b)">A tu manera</small>
+              <small *ngIf="maquetaActiva(b)">{{ maquetaActiva(b).nombre }}</small>
+            </div>
+            <div class="maquetas__lista">
+              <button class="maqueta" *ngFor="let m of maquetasDe(b)"
+                      [class.is-active]="maquetaActiva(b)?.id === m.id"
+                      (click)="aplicarMaqueta(b, m)"
+                      [title]="m.descripcion">
+                <!-- `evenodd` es lo que hace que las barras interiores se vean:
+                     sin él se funden con el rectángulo de fondo, que lleva el
+                     mismo relleno, y el dibujo queda en una mancha. -->
+                <svg viewBox="0 0 40 28" aria-hidden="true">
+                  <path [attr.d]="dibujoDeMaqueta(m.id)" fill-rule="evenodd" />
+                </svg>
+                <span>{{ m.nombre }}</span>
+              </button>
+            </div>
+            <p class="nota nota--simple" *ngIf="maquetaActiva(b) && !avisoMaqueta">
+              {{ maquetaActiva(b).descripcion }}
+            </p>
+            <p class="maquetas__falta" *ngIf="avisoMaqueta">{{ avisoMaqueta }}</p>
+          </div>
+
           <!-- Portada -->
           <!-- Encabezado -->
           <ng-container *ngIf="b.tipo === 'encabezado'">
@@ -945,14 +978,23 @@
                Vale para cualquier tipo de bloque, no solo la sección libre:
                a una portada o a un bloque de preguntas también se le puede
                agregar un botón o unas tarjetas debajo. -->
-            <!-- Colocación libre de la sección: con esto prendido, cada
-                 elemento va donde uno lo suelte en la vista previa. -->
-            <div class="lienzo-panel" *ngIf="b.elementos?.length">
+            <!-- Colocación libre: con esto prendido, cada elemento va donde uno
+                 lo suelte en la vista previa.
+                 Se ofrece en casi todo bloque, MENOS en los conectados: la
+                 vitrina, el catálogo, el destacado, las categorías y el
+                 encabezado se llenan solos contra el maestro y ahí la
+                 disposición la decide el dato. Ésos siguen pudiendo llevar
+                 objetos, acomodados en la rejilla.
+                 Se muestra aunque la sección esté vacía: cuando estaba
+                 condicionado a que ya hubiera elementos, quien partía de una
+                 plantilla no llegaba a ver nunca esta opción. -->
+            <div class="lienzo-panel" *ngIf="permiteLienzo(b)">
               <button class="opcion" [class.is-active]="enLienzo(b)" (click)="alternarLienzo(b)">
                 <span class="opcion__texto">
                   <strong>Colocar a mano</strong>
                   <small *ngIf="!enLienzo(b)">Mueve cada elemento donde quieras, arrastrándolo sobre la página.</small>
-                  <small *ngIf="enLienzo(b)">Arrastra los elementos en la vista previa. En celular se apilan solos.</small>
+                  <small *ngIf="enLienzo(b) && b.elementos?.length">Arrastra los elementos en la vista previa. En celular se apilan solos.</small>
+                  <small *ngIf="enLienzo(b) && !b.elementos?.length">Agrega abajo un objeto y colócalo donde quieras.</small>
                 </span>
                 <span class="palanca"><span></span></span>
               </button>
@@ -1005,7 +1047,91 @@
                       </svg>
                     </button>
                   </div>
-                  <span class="colocacion__coords" *ngIf="enLienzo(b)">{{ resumenDePosicion(el) }}</span>
+                  <span class="colocacion__coords" *ngIf="enLienzo(b) && !estaColocado(el)">
+                    {{ resumenDePosicion(el) }}
+                  </span>
+                </div>
+
+                <!-- Colocación al detalle. Arrastrar es cómodo pero impreciso:
+                     alinear dos cosas al milímetro con el mouse es una pelea que
+                     nadie tiene por qué dar. Los números y el arrastre son el
+                     mismo dato, así que se actualizan entre sí. -->
+                <div class="coordenadas" *ngIf="enLienzo(b) && estaColocado(el)">
+                  <label class="coordenadas__campo">
+                    <span>Izq.</span>
+                    <input type="number" min="0" max="100" step="0.5" [value]="el.pos.x"
+                           (change)="escribirCoordenada(b, el, 'x', $any($event.target).value)" />
+                    <em>%</em>
+                  </label>
+                  <label class="coordenadas__campo">
+                    <span>Arriba</span>
+                    <input type="number" min="0" max="100" step="0.5" [value]="el.pos.y"
+                           (change)="escribirCoordenada(b, el, 'y', $any($event.target).value)" />
+                    <em>%</em>
+                  </label>
+                  <label class="coordenadas__campo">
+                    <span>Ancho</span>
+                    <input type="number" [min]="ANCHO_LIBRE_MIN" max="100" step="0.5" [value]="el.pos.w"
+                           (change)="escribirCoordenada(b, el, 'w', $any($event.target).value)" />
+                    <em>%</em>
+                  </label>
+
+                  <label class="coordenadas__campo">
+                    <span>Alto</span>
+                    <input type="number" [min]="ALTO_LIBRE_MIN" max="100" step="0.5"
+                           [value]="el.pos.h === undefined ? '' : el.pos.h" placeholder="auto"
+                           (change)="escribirCoordenada(b, el, 'h', $any($event.target).value)" />
+                    <em>%</em>
+                    <button type="button" class="coordenadas__quitar" *ngIf="el.pos.h !== undefined"
+                            (click)="quitarAlto(el)" title="Que crezca con su contenido">×</button>
+                  </label>
+                  <label class="coordenadas__campo">
+                    <span>Giro</span>
+                    <input type="number" min="-180" max="180" step="1"
+                           [value]="el.pos.angulo === undefined ? '' : el.pos.angulo" placeholder="0"
+                           (change)="escribirCoordenada(b, el, 'angulo', $any($event.target).value)" />
+                    <em>°</em>
+                    <button type="button" class="coordenadas__quitar" *ngIf="el.pos.angulo !== undefined"
+                            (click)="quitarGiro(el)" title="Enderezar">×</button>
+                  </label>
+
+                  <!-- Quién tapa a quién, solo si hay con quién superponerse. -->
+                  <div class="coordenadas__capas" *ngIf="puedeSuperponer(b)">
+                    <button type="button" (click)="traerAlFrente(b, el)" title="Traer al frente">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><rect x="3" y="3" width="13" height="13" rx="2"/><path d="M8 21h11a2 2 0 0 0 2-2V8"/></svg>
+                      Al frente
+                    </button>
+                    <button type="button" (click)="enviarAtras(b, el)" title="Enviar atrás">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 3H5a2 2 0 0 0-2 2v11"/></svg>
+                      Atrás
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Vestido del objeto. A diferencia de la colocación, esto vale
+                     también en la rejilla y en el celular: un título teñido lo
+                     está en todas partes. -->
+                <div class="vestido-objeto">
+                  <label class="vestido-objeto__color">
+                    <span>Letra</span>
+                    <input type="color" [value]="el.estilo?.colorTexto || '#222222'"
+                           (change)="cambiarEstiloElemento(el, 'colorTexto', $any($event.target).value)" />
+                    <button type="button" *ngIf="el.estilo?.colorTexto"
+                            (click)="quitarColor(el, 'colorTexto')" title="Heredar el de la sección">×</button>
+                  </label>
+                  <label class="vestido-objeto__color">
+                    <span>Fondo</span>
+                    <input type="color" [value]="el.estilo?.fondo || '#ffffff'"
+                           (change)="cambiarEstiloElemento(el, 'fondo', $any($event.target).value)" />
+                    <button type="button" *ngIf="el.estilo?.fondo"
+                            (click)="quitarColor(el, 'fondo')" title="Sin fondo propio">×</button>
+                  </label>
+                  <div class="vestido-objeto__escala" role="group" aria-label="Tamaño del texto">
+                    <button type="button" *ngFor="let e of escalas"
+                            [class.is-active]="(el.estilo?.escala || 'normal') === e.id"
+                            (click)="cambiarEstiloElemento(el, 'escala', e.id)"
+                            [title]="e.nombre">{{ e.nombre.charAt(0) }}</button>
+                  </div>
                 </div>
 
                 <!-- Título -->
@@ -1132,12 +1258,24 @@
             <div class="agregar-elemento">
               <button class="agregar agregar--sm" *ngFor="let t of tiposDeElemento"
                       (click)="agregarElemento(b, t.tipo)"
-                      [disabled]="(b.elementos?.length || 0) >= 12">
+                      [disabled]="(b.elementos?.length || 0) >= topeDeElementos(b)">
                 {{ t.nombre }}
               </button>
             </div>
-            <p class="nota nota--simple" *ngIf="(b.elementos?.length || 0) >= 12">
-              Doce elementos por sección es el máximo. Si necesitas más, agrega otra sección.
+            <p class="nota nota--simple" *ngIf="(b.elementos?.length || 0) >= topeDeElementos(b)">
+              <ng-container *ngIf="enLienzo(b)">
+                {{ topeDeElementos(b) }} objetos es el máximo de una sección compuesta
+                a mano. Si necesitas más, agrega otra sección.
+              </ng-container>
+              <ng-container *ngIf="!enLienzo(b) && permiteLienzo(b)">
+                {{ topeDeElementos(b) }} objetos es el máximo aquí. Prende
+                <strong>Colocar a mano</strong> y caben bastantes más.
+              </ng-container>
+              <ng-container *ngIf="!permiteLienzo(b)">
+                {{ topeDeElementos(b) }} objetos es el máximo. Esta sección se llena
+                sola con tu catálogo, así que su disposición no se toca a mano: para
+                componer, agrega otra sección.
+              </ng-container>
             </p>
 
           <!-- ── Estilo de ESTA sección ── -->
@@ -1258,6 +1396,44 @@
 
       <!-- ── Estilo ── -->
       <div class="panel__contenido" *ngIf="panel === 'diseno'">
+
+        <!-- ── Vestido completo ──
+             Probarse el look entero de otra plantilla sobre el contenido que ya
+             está escrito. Cambia SOLO la apariencia: no agrega, quita ni
+             reordena una sola sección, así que no hay forma de perder nada. -->
+        <div class="grupo" *ngIf="vestidos.length">
+          <h3>Pruébate otro vestido</h3>
+          <p>El look completo de otra plantilla, sobre lo que ya escribiste. No cambia ni una sección.</p>
+
+          <div class="vestidos">
+            <button class="vestido" *ngFor="let v of vestidos"
+                    [class.is-active]="vestidoActivo === v.id"
+                    (click)="probarVestido(v)"
+                    [title]="v.nombre">
+              <span class="vestido__puntos">
+                <span [style.background]="v.tema.colorPrimario"></span>
+                <span [style.background]="v.tema.colorSecundario"></span>
+                <span [style.background]="v.tema.colorTexto"></span>
+              </span>
+              <span class="vestido__nombre">{{ v.nombre }}</span>
+              <span class="vestido__letra">{{ nombreDeFuente(v.tema.fuenteTitulo) }}</span>
+            </button>
+          </div>
+
+          <button class="opcion" [class.is-active]="conservarMisColores"
+                  (click)="conservarMisColores = !conservarMisColores">
+            <span class="opcion__texto">
+              <strong>Conservar mis colores</strong>
+              <small>Solo cambian la letra y el estilo de página. Tu marca se queda.</small>
+            </span>
+            <span class="palanca"><span></span></span>
+          </button>
+
+          <button class="secundario" *ngIf="temaAnterior" (click)="descartarVestido()">
+            Volver al de antes
+          </button>
+        </div>
+
         <div class="grupo">
           <h3>Elige un look</h3>
           <p>Combinaciones de color ya armadas. Toca una y mira la vista previa.</p>

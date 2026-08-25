@@ -154,6 +154,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // ------ NUEVAS PROPIEDADES PARA FILTRAR POR BODEGA Y CIUDAD EN RECOMPRA ------
   public bodegas: any[] = [];
   public selectedWarehouse: any = null; // objeto de bodega seleccionado
+
+  /**
+   * true cuando la bodega activa se heredó del pedido que se está recomprando;
+   * false cuando fue un default de la lista. Lo usa el modal para decir con
+   * honestidad de dónde salió la elección, en vez de elegir en silencio.
+   */
+  public bodegaHeredadaDelPedido = false;
   @ViewChild("recompra", { static: false })
   recompraCmp: EcomerceProductsComponent;
 
@@ -6706,9 +6713,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pedidoUtilService.pedido = order;
     this.ciudadSeleccionada = order.envio?.ciudad;
 
-    // Pre-seleccionar la primera bodega disponible para que los productos se muestren inmediatamente
+    // Bodega de trabajo de la recompra. Antes se tomaba `bodegas[0]` a secas: una
+    // elección arbitraria que el vendedor no veía, y que lo dejaba viendo UNA
+    // bodega de nueve creyendo que ese era todo el catálogo ("no salen todos los
+    // productos"). La elección correcta acá no es la primera de la lista: es la
+    // bodega DEL PEDIDO que se está recomprando, que es informada y reproducible.
+    // Si el pedido no la trae (pedidos viejos), se cae a la primera, pero el
+    // modal deja dicho cuál quedó activa y de cuántas.
     if (this.bodegas && this.bodegas.length > 0 && !this.selectedWarehouse) {
-      this.selectedWarehouse = this.bodegas[0];
+      const delPedido = order?.bodegaId
+        ? this.bodegas.find((b) => b.idBodega === order.bodegaId)
+        : null;
+      this.selectedWarehouse = delPedido || this.bodegas[0];
+      this.bodegaHeredadaDelPedido = !!delPedido;
     }
 
     this.modalService
@@ -9032,10 +9049,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onWarehouseChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    const selectedId = target.value;
-    const selected = this.bodegas.find((b) => b.idBodega === selectedId);
+    this.seleccionarBodegaPorId(target.value);
+  }
+
+  /**
+   * Cambia la bodega de la recompra por su business code. Además del selector,
+   * lo dispara el catálogo cuando el vendedor elige desde el desglose de
+   * existencias la bodega donde sí hay el producto.
+   */
+  seleccionarBodegaPorId(idBodega: string): void {
+    const selected = this.bodegas?.find((b) => b.idBodega === idBodega);
 
     if (selected) {
+      if (this.selectedWarehouse?.idBodega === selected.idBodega) return;
       this.selectedWarehouse = selected;
 
       if (this.recompraCmp) {

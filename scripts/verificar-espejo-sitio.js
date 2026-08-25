@@ -55,11 +55,37 @@ function normalizar(familia) {
   return String(familia).replace(/\s+/g, " ").trim();
 }
 
-/** Extrae `const NOMBRE = { ... };` del componente como pares clave/valor. */
+/**
+ * Extrae `const NOMBRE = { ... };` del componente, ya partido en líneas.
+ *
+ * Se parte con `\r?\n` y NO con `"\n"` a secas: el componente está guardado con
+ * fin de línea de Windows, y al partir solo por `\n` cada línea queda con un
+ * `\r` al final. Las expresiones que terminan en `(.+)$` no casan entonces
+ * nada, porque en JavaScript el punto no acepta terminadores de línea y `\r` es
+ * uno. Eso hacía que el verificador leyera los NOMBRES de los estilos pero
+ * ningún VALOR, y reportara los 66 campos como desfasados cuando en realidad
+ * coincidían todos. Un guardián que grita en falso enseña a ignorarlo.
+ */
 function bloque(nombre) {
-  const m = fuente.match(new RegExp(`const ${nombre}[^=]*=\\s*\\{([\\s\\S]*?)\\n\\};`));
+  const m = fuente.match(new RegExp(`const ${nombre}[^=]*=\\s*\\{([\\s\\S]*?)\\r?\\n\\};`));
   if (!m) throw new Error(`No encontré ${nombre} en sitio-render.component.ts`);
-  return m[1];
+  return m[1].split(/\r?\n/);
+}
+
+/**
+ * Si un bloque se encuentra pero no se le lee ni una entrada, el roto es este
+ * script y no la vista previa. Sin esta guarda, ese fallo se disfraza de
+ * "todo está desfasado".
+ */
+function exigirQueLeyeraAlgo(nombre, leido) {
+  const cuantos = Object.keys(leido).length;
+  if (cuantos === 0) {
+    console.error(
+      `\n✖ El verificador no pudo leer ni una entrada de ${nombre} en sitio-render.component.ts.\n` +
+        `  Eso es un fallo DE ESTE SCRIPT (cambió el formato del componente), no un desfase.\n`
+    );
+    process.exit(2);
+  }
 }
 
 let fallas = 0;
@@ -71,12 +97,11 @@ const bien = (msg) => console.log(`  ok    ${msg}`);
 
 // ── Fuentes ──────────────────────────────────────────────────────────────────
 const familiasPrevia = {};
-bloque("FAMILIAS")
-  .split("\n")
-  .forEach((linea) => {
-    const m = linea.match(/^\s{2}(\w+):\s*(.+)$/);
-    if (m) familiasPrevia[m[1]] = sinComillas(m[2]);
-  });
+bloque("FAMILIAS").forEach((linea) => {
+  const m = linea.match(/^\s{2}(\w+):\s*(.+)$/);
+  if (m) familiasPrevia[m[1]] = sinComillas(m[2]);
+});
+exigirQueLeyeraAlgo("FAMILIAS", familiasPrevia);
 
 const idsBack = Object.keys(back.FUENTES).sort();
 const idsPrevia = Object.keys(familiasPrevia).sort();
@@ -111,18 +136,22 @@ if (familiasDistintas.length) {
 // ── Estilos de página ────────────────────────────────────────────────────────
 const estilosPrevia = {};
 let estiloActual = null;
-bloque("ESTILOS")
-  .split("\n")
-  .forEach((linea) => {
-    const cab = linea.match(/^\s{2}(\w+):\s*\{/);
-    if (cab) {
-      estiloActual = cab[1];
-      estilosPrevia[estiloActual] = {};
-      return;
-    }
-    const par = linea.match(/^\s{4}"(--[\w-]+)":\s*(.+)$/);
-    if (par && estiloActual) estilosPrevia[estiloActual][par[1]] = sinComillas(par[2]);
-  });
+bloque("ESTILOS").forEach((linea) => {
+  const cab = linea.match(/^\s{2}(\w+):\s*\{/);
+  if (cab) {
+    estiloActual = cab[1];
+    estilosPrevia[estiloActual] = {};
+    return;
+  }
+  const par = linea.match(/^\s{4}"(--[\w-]+)":\s*(.+)$/);
+  if (par && estiloActual) estilosPrevia[estiloActual][par[1]] = sinComillas(par[2]);
+});
+exigirQueLeyeraAlgo("ESTILOS", estilosPrevia);
+// Un estilo declarado pero sin una sola variable leída también es fallo del
+// script: es lo que pasaba antes con TODOS.
+for (const [id, vars] of Object.entries(estilosPrevia)) {
+  exigirQueLeyeraAlgo(`ESTILOS.${id}`, vars);
+}
 
 // Nombre del campo en el backend → variable CSS que emite.
 const EQUIVALENCIAS = {

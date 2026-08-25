@@ -41,9 +41,12 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
   },
   {
     tipo: "seccion",
-    nombre: "Sección libre",
-    descripcion: "Pon botones, tarjetas y textos como quieras",
-    icono: "M4 5h16v14H4zM4 10h16M9 10v9",
+    // Es LA sección donde se compone a mano: la única que se puede colocar
+    // libremente. El nombre viejo —"Sección libre"— no lo estaba diciendo, y se
+    // notaba: estaba en la paleta y en cero plantillas.
+    nombre: "Componer a mano",
+    descripcion: "La única que se coloca libre: arrastra cada cosa donde quieras",
+    icono: "M4 5h16v14H4zM8 9l3 3-3 3M14 15h3",
   },
   {
     tipo: "columnas",
@@ -593,6 +596,25 @@ export class SitioEditorComponent implements OnInit {
       return;
     }
 
+    // Las maquetas viajan con las plantillas. Si la petición falla, el editor
+    // sigue funcionando: simplemente no ofrece elegir forma, y las perillas de
+    // siempre quedan ahí.
+    this.service.plantillas().subscribe({
+      next: (res: any) => {
+        this.maquetas = (res && res.meta && res.meta.maquetas) || [];
+        // Los vestidos SON los temas de las plantillas: once combinaciones de
+        // color, tipografías y estilo de página que ya están hechas y que ya se
+        // distinguen entre sí. No hace falta inventar otra lista.
+        this.vestidos = ((res && res.data) || [])
+          .filter((p: any) => p && p.tema && p.tema.estilo)
+          .map((p: any) => ({ id: p.id, nombre: p.nombre, tema: p.tema }));
+      },
+      error: () => {
+        this.maquetas = [];
+        this.vestidos = [];
+      },
+    });
+
     this.service.obtener(this.id).subscribe({
       next: (res) => {
         this.cargando = false;
@@ -938,6 +960,9 @@ export class SitioEditorComponent implements OnInit {
   seleccionar(indice: number): void {
     this.seleccionado = indice;
     this.panel = "bloques";
+    // El aviso es de la maqueta que se acaba de elegir, no del bloque: al
+    // cambiar de sección deja de venir a cuento.
+    this.avisoMaqueta = "";
   }
 
   /**
@@ -947,12 +972,34 @@ export class SitioEditorComponent implements OnInit {
    * el historial, el "hay cambios sin guardar" y el guardado siguen pasando por
    * un solo camino, el mismo que usa el panel lateral.
    */
-  aplicarTextoEditado(cambio: { bloqueId: string; campo: string; valor: string; indice?: number }): void {
+  aplicarTextoEditado(cambio: {
+    bloqueId: string;
+    campo: string;
+    valor: string;
+    indice?: number;
+    elemento?: number;
+    item?: number;
+    lista?: string;
+  }): void {
     const bloque = this.bloques.find((b) => b.id === cambio.bloqueId);
     if (!bloque) return;
 
-    const destino =
-      cambio.indice === undefined ? bloque.datos : (bloque.datos.columnas || [])[cambio.indice];
+    // Se resuelve la ruta de más profunda a menos: una tarjeta vive dentro de un
+    // objeto, que vive dentro de la sección; un item de lista (una pregunta, una
+    // reseña, un botón de la fila) vive en una lista del bloque.
+    let destino: any;
+    if (cambio.elemento !== undefined) {
+      const el: any = (bloque.elementos || [])[cambio.elemento];
+      destino =
+        cambio.item === undefined ? el && el.datos : el && (el.datos.items || [])[cambio.item];
+    } else if (cambio.lista !== undefined && cambio.item !== undefined) {
+      destino = (bloque.datos[cambio.lista] || [])[cambio.item];
+    } else if (cambio.indice !== undefined) {
+      destino = (bloque.datos.columnas || [])[cambio.indice];
+    } else {
+      destino = bloque.datos;
+    }
+
     if (!destino || destino[cambio.campo] === cambio.valor) return;
 
     destino[cambio.campo] = cambio.valor;
@@ -1292,9 +1339,222 @@ export class SitioEditorComponent implements OnInit {
 
   ALTO_LIENZO_MIN = 160;
   ALTO_LIENZO_MAX = 2000;
+  /** Alto de arranque cuando se prende el lienzo en una sección todavía vacía. */
+  ALTO_LIENZO_VACIO = 360;
+
+  /**
+   * Los bloques que se llenan solos contra el maestro de productos. Ahí la
+   * disposición la decide el dato, no el comerciante: la vitrina, el catálogo
+   * con su buscador y su paginación, el destacado, las baldosas de categoría y
+   * el encabezado con su menú real y su carrito.
+   *
+   * Son los únicos donde NO se puede componer a mano. Todo lo demás sí.
+   */
+  private static readonly BLOQUES_CONECTADOS = [
+    "catalogo",
+    "productos",
+    "destacado",
+    "categorias",
+    "encabezado",
+  ];
+
+  /** ¿Este bloque se puede colocar a mano? */
+  permiteLienzo(bloque: any): boolean {
+    return !!bloque && !SitioEditorComponent.BLOQUES_CONECTADOS.includes(bloque.tipo);
+  }
+
+  // ── Maquetas: las formas con nombre de un bloque ───────────────────────────
+  // Llegan del servidor con las plantillas, igual que los objetivos, para que el
+  // editor no tenga su propia copia y se desfase. No agregan capacidad: son
+  // combinaciones que el bloque ya acepta, bautizadas para elegirlas mirando.
+
+  maquetas: any[] = [];
+
+  // ── Vestidos: el look completo de otra plantilla ───────────────────────────
+  // Cada plantilla tiene su tema propio —color, tipografías y estilo de página—
+  // y son once combinaciones distintas. Probárselas sobre el contenido ya
+  // escrito ataca de frente el "esta página no se parece a mi marca", que es el
+  // reclamo real detrás de "quiero mover las cosas".
+  //
+  // REGLA: el vestido es apariencia y NUNCA estructura. No toca los bloques, ni
+  // su orden, ni sus textos, ni sus productos. Por eso probárselo no puede
+  // hacerle perder nada a nadie, y por eso no hace falta confirmar nada.
+
+  vestidos: { id: string; nombre: string; tema: any }[] = [];
+
+  /** El tema tal como estaba antes de empezar a probarse vestidos. */
+  temaAnterior: any = null;
+
+  /**
+   * Por defecto se respeta la marca del comercio: quien ya definió sus colores
+   * no quiere que probarse una letra nueva se los borre.
+   */
+  conservarMisColores = true;
+
+  /** Qué vestido lleva puesto, si es que reconoce alguno. */
+  get vestidoActivo(): string {
+    const t = (this.contenido && this.contenido.tema) as any;
+    if (!t) return "";
+    const igual = this.vestidos.find(
+      (v) =>
+        v.tema.estilo === t.estilo &&
+        v.tema.fuenteTitulo === t.fuenteTitulo &&
+        v.tema.fuenteCuerpo === t.fuenteCuerpo &&
+        (this.conservarMisColores || v.tema.colorPrimario === t.colorPrimario)
+    );
+    return igual ? igual.id : "";
+  }
+
+  probarVestido(vestido: { id: string; nombre: string; tema: any }): void {
+    // Se guarda el punto de partida la PRIMERA vez, no en cada prueba: así
+    // "volver al de antes" devuelve al look con el que llegó, no al anterior
+    // de la cadena de pruebas.
+    if (!this.temaAnterior) this.temaAnterior = { ...(this.contenido.tema as any) };
+
+    const v = vestido.tema || {};
+    const nuevo: any = {
+      ...(this.contenido.tema as any),
+      estilo: v.estilo,
+      fuenteTitulo: v.fuenteTitulo,
+      fuenteCuerpo: v.fuenteCuerpo,
+      tipografia: v.tipografia,
+    };
+    if (!this.conservarMisColores) {
+      nuevo.colorPrimario = v.colorPrimario;
+      nuevo.colorSecundario = v.colorSecundario;
+      nuevo.colorTexto = v.colorTexto;
+    }
+    this.contenido.tema = nuevo;
+    this.marcarSucio();
+  }
+
+  descartarVestido(): void {
+    if (!this.temaAnterior) return;
+    this.contenido.tema = { ...this.temaAnterior };
+    this.temaAnterior = null;
+    this.marcarSucio();
+  }
+
+  /** El nombre en cristiano de una tipografía, para la tarjeta del vestido. */
+  nombreDeFuente(id: string): string {
+    const encontrada = TIPOGRAFIAS.find((f) => f.id === id);
+    return encontrada ? encontrada.nombre : "Del sistema";
+  }
+
+  /** Las de este bloque. Vacío en los que no tienen dónde elegir. */
+  maquetasDe(bloque: any): any[] {
+    if (!bloque) return [];
+    return this.maquetas.filter((m) => m.bloque === bloque.tipo);
+  }
+
+  /** Qué foto lleva el bloque ahora. Misma regla que el servidor. */
+  private modoDeFoto(datos: any): string {
+    const d = datos || {};
+    if ((d.mosaico || []).length >= 2) return "mosaico";
+    if ((d.imagenes || []).length >= 2) return "carrusel";
+    if (d.imagen) return "una";
+    return "ninguna";
+  }
+
+  /**
+   * Cuál lleva puesta. Se DEDUCE de los valores en vez de guardarse: guardar el
+   * nombre obligaría a mantenerlo al día cada vez que se mueve una perilla a
+   * mano, y el día que se desfasara el editor señalaría una maqueta que la
+   * página ya no tiene.
+   */
+  maquetaActiva(bloque: any): any {
+    if (!bloque) return null;
+    const d = bloque.datos || {};
+    const modo = this.modoDeFoto(d);
+    return (
+      this.maquetasDe(bloque).find(
+        (m) => m.foto === modo && Object.keys(m.forma).every((c) => d[c] === m.forma[c])
+      ) || null
+    );
+  }
+
+  /**
+   * Aplica una maqueta. Solo toca los campos de FORMA: los textos, las fotos y
+   * los destinos se quedan como estén, así que probarse maquetas no puede
+   * hacerle perder nada a nadie.
+   */
+  aplicarMaqueta(bloque: any, maqueta: any): void {
+    Object.keys(maqueta.forma).forEach((campo) => {
+      bloque.datos[campo] = maqueta.forma[campo];
+    });
+    // Si le falta la foto que esa forma necesita, se dice en el momento: si no,
+    // el comerciante elige "Mosaico", no ve ningún cambio y no sabe por qué.
+    this.avisoMaqueta = this.faltaParaMaqueta(bloque, maqueta);
+    this.marcarSucio();
+  }
+
+  /** Lo que hay que decirle sobre la maqueta que acaba de elegir. */
+  avisoMaqueta = "";
+
+  /**
+   * Qué le falta al bloque para que la maqueta se vea como promete. La maqueta
+   * no sube fotos por su cuenta — son del comerciante —, así que se le dice.
+   */
+  faltaParaMaqueta(bloque: any, maqueta: any): string {
+    if (this.modoDeFoto(bloque.datos) === maqueta.foto) return "";
+    const PIDE: { [id: string]: string } = {
+      una: "Sube una foto de portada para que se vea así",
+      mosaico: "Sube de 2 a 4 fotos al mosaico para que se vea así",
+      carrusel: "Sube 2 o más fotos al carrusel para que se vea así",
+      ninguna: "Quita la foto de portada para que se vea así",
+    };
+    return PIDE[maqueta.foto] || "";
+  }
+
+  /**
+   * Trazo del dibujito de cada maqueta. Es una miniatura, no un icono: lo que
+   * tiene que transmitir es dónde queda cada cosa.
+   *
+   * Se dibuja con `fill-rule="evenodd"`, así que las formas interiores no se
+   * pintan encima del fondo: lo perforan. Por eso los textos y los huecos se ven.
+   */
+  dibujoDeMaqueta(id: string): string {
+    const DIBUJOS: { [id: string]: string } = {
+      // ── Portada ──
+      cartel: "M2 2h36v24H2z M13 12h14v2H13z M16 17h8v1.5h-8z",
+      lateral: "M2 2h36v24H2z M6 11h13v2H6z M6 16h9v1.5H6z",
+      clara: "M2 2h36v24H2z M9 11h22v3H9z M13 17h14v2H13z",
+      banda: "M2 7h36v14H2z M23 12h13v2H23z M27 17h9v1.5h-9z",
+      mosaico:
+        "M2 2h17v24H2z M5 10h11v2H5z M5 15h7v1.5H5z M21 2h8v11h-8z M31 2h7v11h-7z M21 15h8v11h-8z M31 15h7v11h-7z",
+      carrusel: "M2 2h36v24H2z M13 11h14v2H13z M15 21h2v2h-2z M19 21h2v2h-2z M23 21h2v2h-2z",
+      tipografica: "M8 9h24v3H8z M12 15h16v2H12z M15 20h10v1.5H15z",
+
+      // ── Encabezado ──
+      // La barra de arriba con sus huecos, y debajo el cuerpo insinuado.
+      "encabezado-minimo": "M2 3h36v8H2z M5 5.5h5v3H5z M7 16h26v2H7z M7 21h17v2H7z",
+      "encabezado-menu":
+        "M2 3h36v7H2z M5 5h4v3H5z M2 11h36v4H2z M5 12.5h6v1H5z M13 12.5h6v1h-6z M21 12.5h6v1h-6z M7 20h26v2H7z",
+      "encabezado-tienda":
+        "M2 3h36v7H2z M5 5h4v3H5z M20 5.5h9v2h-9z M31 5h4v3h-4z M2 11h36v4H2z M5 12.5h6v1H5z M13 12.5h6v1h-6z M21 12.5h6v1h-6z M7 20h26v2H7z",
+      "encabezado-compra":
+        "M2 3h36v8H2z M5 5.5h4v3H5z M18 6h10v2H18z M30 5.5h4v3h-4z M7 16h26v2H7z M7 21h17v2H7z",
+      "encabezado-nombre": "M2 3h36v8H2z M5 5.5h13v3H5z M7 16h26v2H7z M7 21h17v2H7z",
+
+      // ── Catálogo ──
+      // Buscador, fila de categorías y la rejilla de productos.
+      "catalogo-completo":
+        "M2 2h36v5H2z M5 3.5h13v2H5z M2 9h9v3H2z M13 9h9v3h-9z M24 9h9v3h-9z M2 14h11v11H2z M14.5 14h11v11h-11z M27 14h11v11H27z",
+      "catalogo-buscador":
+        "M2 2h36v5H2z M5 3.5h13v2H5z M2 10h11v14H2z M14.5 10h11v14h-11z M27 10h11v14H27z",
+      "catalogo-simple":
+        "M2 3h11v10H2z M14.5 3h11v10h-11z M27 3h11v10H27z M2 15h11v10H2z M14.5 15h11v10h-11z M27 15h11v10H27z",
+    };
+    return DIBUJOS[id] || "M2 2h36v24H2z";
+  }
 
   enLienzo(bloque: any): boolean {
-    return !!(bloque && bloque.lienzo);
+    return !!(bloque && bloque.lienzo) && this.permiteLienzo(bloque);
+  }
+
+  /** Cuántos objetos caben: una sección que compone admite más. */
+  topeDeElementos(bloque: any): number {
+    return this.enLienzo(bloque) ? 30 : 12;
   }
 
   /**
@@ -1306,6 +1566,10 @@ export class SitioEditorComponent implements OnInit {
    *
    * Al apagarla, las coordenadas se conservan: si se arrepiente y vuelve a
    * prender el lienzo, encuentra su diseño intacto.
+   *
+   * Se puede prender en una sección VACÍA: es el caso de quien parte de una
+   * plantilla y quiere empezar colocando a mano. Los objetos que agregue después
+   * nacen ya con coordenadas (ver `agregarElemento`).
    */
   alternarLienzo(bloque: any): void {
     if (bloque.lienzo) {
@@ -1315,9 +1579,10 @@ export class SitioEditorComponent implements OnInit {
     }
 
     const elementos = bloque.elementos || [];
-    if (!elementos.length) return;
 
-    const alto = Math.max(this.ALTO_LIENZO_MIN, Math.min(this.ALTO_LIENZO_MAX, elementos.length * 120));
+    const alto = elementos.length
+      ? Math.max(this.ALTO_LIENZO_MIN, Math.min(this.ALTO_LIENZO_MAX, elementos.length * 120))
+      : this.ALTO_LIENZO_VACIO;
     bloque.lienzo = { alto };
 
     const paso = 100 / elementos.length;
@@ -1351,6 +1616,141 @@ export class SitioEditorComponent implements OnInit {
     const pos = elemento && elemento.pos;
     if (!pos || typeof pos.w !== "number") return "sin colocar";
     return `x ${pos.x}% · y ${pos.y}% · ancho ${pos.w}%`;
+  }
+
+  /** ¿Este elemento está colocado por coordenadas (y no por rejilla)? */
+  estaColocado(elemento: any): boolean {
+    return !!(elemento && elemento.pos && typeof elemento.pos.w === "number");
+  }
+
+  /**
+   * Escribir una coordenada a mano, para cuando arrastrar no alcanza: alinear
+   * dos cosas al milímetro con el mouse es una pelea que nadie tiene por qué dar.
+   *
+   * Se acota igual que en el backend —nada se sale de su sección— para que el
+   * editor no muestre una posición que al guardar se corrige sola.
+   */
+  escribirCoordenada(
+    bloque: any,
+    elemento: any,
+    campo: "x" | "y" | "w" | "h" | "angulo",
+    valor: any
+  ): void {
+    if (!this.estaColocado(elemento)) return;
+    const n = Number(valor);
+    if (!isFinite(n)) return;
+
+    const pos = this.posDe(elemento);
+    const redondear = (v: number) => Math.round(v * 10) / 10;
+
+    if (campo === "w") {
+      pos.w = redondear(Math.min(100, Math.max(this.ANCHO_LIBRE_MIN, n)));
+      // Al ensanchar, el elemento no puede quedar colgando por fuera.
+      pos.x = Math.min(pos.x, redondear(100 - pos.w));
+    } else if (campo === "x") {
+      pos.x = redondear(Math.min(100 - pos.w, Math.max(0, n)));
+    } else if (campo === "y") {
+      pos.y = redondear(Math.min(100, Math.max(0, n)));
+    } else if (campo === "h") {
+      pos.h = redondear(Math.min(100, Math.max(this.ALTO_LIBRE_MIN, n)));
+    } else {
+      pos.angulo = Math.round(Math.min(180, Math.max(-180, n)));
+    }
+
+    this.ordenarPorPosicion(bloque);
+    this.marcarSucio();
+  }
+
+  /** Devuelve el objeto a que crezca con su contenido, en vez de un alto fijo. */
+  quitarAlto(elemento: any): void {
+    if (elemento && elemento.pos) delete elemento.pos.h;
+    this.marcarSucio();
+  }
+
+  /** Lo endereza. */
+  quitarGiro(elemento: any): void {
+    if (elemento && elemento.pos) delete elemento.pos.angulo;
+    this.marcarSucio();
+  }
+
+  ALTO_LIBRE_MIN = 3;
+
+  // ── Vestido del objeto: color, fondo y escala ──────────────────────────────
+  // Hasta ahora el color vivía solo en la sección: se podía teñir una franja
+  // entera pero no un título suelto. Al componer a mano eso se queda corto.
+
+  escalas = [
+    { id: "pequeno", nombre: "Pequeño" },
+    { id: "normal", nombre: "Normal" },
+    { id: "grande", nombre: "Grande" },
+    { id: "enorme", nombre: "Enorme" },
+  ];
+
+  /**
+   * El vestido de un OBJETO. Ojo con el nombre: `estiloDe` ya existe y es el de
+   * la SECCIÓN. Son dos cosas distintas — el objeto hereda el de su sección
+   * mientras no tenga uno propio.
+   */
+  estiloDeObjeto(elemento: any): any {
+    if (!elemento.estilo) elemento.estilo = { colorTexto: "", fondo: "", escala: "normal" };
+    return elemento.estilo;
+  }
+
+  cambiarEstiloElemento(elemento: any, campo: "colorTexto" | "fondo" | "escala", valor: any): void {
+    this.estiloDeObjeto(elemento)[campo] = valor;
+    this.marcarSucio();
+  }
+
+  /** Volver a heredar el color de la sección, en vez de tener uno propio. */
+  quitarColor(elemento: any, campo: "colorTexto" | "fondo"): void {
+    this.estiloDeObjeto(elemento)[campo] = "";
+    this.marcarSucio();
+  }
+
+  ANCHO_LIBRE_MIN = 5;
+  private static readonly Z_MAX = 99;
+
+  /** ¿Hay más de un elemento colocado? Sin eso, la profundidad no significa nada. */
+  puedeSuperponer(bloque: any): boolean {
+    return (bloque.elementos || []).filter((el: any) => this.estaColocado(el)).length > 1;
+  }
+
+  /**
+   * Quién tapa a quién. Va como campo propio del elemento y NO reordenando la
+   * lista: el orden de la lista es el orden de LECTURA, y es el que manda en
+   * celular, donde el lienzo se ignora. Si traer al frente reordenara, acomodar
+   * algo en el monitor cambiaría en silencio cómo se lee en un teléfono.
+   */
+  traerAlFrente(bloque: any, elemento: any): void {
+    if (!this.estaColocado(elemento)) return;
+    const zetas = (bloque.elementos || [])
+      .filter((el: any) => this.estaColocado(el))
+      .map((el: any) => (typeof el.pos.z === "number" ? el.pos.z : 0));
+    const tope = Math.max(...zetas, 0);
+    this.posDe(elemento).z = Math.min(SitioEditorComponent.Z_MAX, tope + 1);
+    this.marcarSucio();
+  }
+
+  enviarAtras(bloque: any, elemento: any): void {
+    if (!this.estaColocado(elemento)) return;
+    const zetas = (bloque.elementos || [])
+      .filter((el: any) => this.estaColocado(el))
+      .map((el: any) => (typeof el.pos.z === "number" ? el.pos.z : 0));
+    const piso = Math.min(...zetas, 0);
+    // Nadie baja de cero: en vez de eso, se sube a todos los demás. Así el
+    // resultado visible es el mismo y no hay que guardar números negativos.
+    if (piso <= 0) {
+      (bloque.elementos || [])
+        .filter((el: any) => this.estaColocado(el) && el !== elemento)
+        .forEach((el: any) => {
+          const z = typeof el.pos.z === "number" ? el.pos.z : 0;
+          el.pos.z = Math.min(SitioEditorComponent.Z_MAX, z + 1);
+        });
+      this.posDe(elemento).z = 0;
+    } else {
+      this.posDe(elemento).z = piso - 1;
+    }
+    this.marcarSucio();
   }
 
   nombreDeElemento(tipo: string): string {
@@ -1388,11 +1788,23 @@ export class SitioEditorComponent implements OnInit {
 
   agregarElemento(bloque: any, tipo: string): void {
     const actuales = bloque.elementos || [];
-    if (actuales.length >= 12) return;
-    bloque.elementos = [
-      ...actuales,
-      { id: `e_${Date.now()}_${tipo}`, tipo, datos: this.elementoNuevo(tipo) },
-    ];
+    if (actuales.length >= this.topeDeElementos(bloque)) return;
+
+    const nuevo: any = { id: `e_${Date.now()}_${tipo}`, tipo, datos: this.elementoNuevo(tipo) };
+
+    // Con el lienzo prendido el objeto nace COLOCADO, no en la esquina: si
+    // naciera sin coordenadas habría que arrastrarlo antes de poder usarlo, que
+    // es justo el paso extra que esta capacidad viene a quitar. Se apila hacia
+    // abajo a media anchura, que es fácil de ver y de agarrar.
+    if (this.enLienzo(bloque)) {
+      nuevo.pos = {
+        x: 0,
+        y: Math.min(85, actuales.length * 12),
+        w: 50,
+      };
+    }
+
+    bloque.elementos = [...actuales, nuevo];
     this.marcarSucio();
   }
 
