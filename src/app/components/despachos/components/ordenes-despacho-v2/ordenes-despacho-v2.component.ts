@@ -524,15 +524,25 @@ export class OrdenesDespachoV2Component implements OnInit {
   canDispatchOrder(order: any): boolean {
     const estado = this.getEstadoProceso(order);
 
-    // Permitir despachar en múltiples estados antes de la entrega/cierre
-    const estadosDespachables = [
-      'Por despachar',
-      'Para Despachar',
-      'Empacado',
-      'En Despacho',
-      'En Producción',
-      'Producido',
-      'Sin Producir'
+    // Estados en los que todavía se puede despachar. Van por el enum y NO por
+    // texto suelto: la lista anterior estaba escrita con espacios ('Para
+    // Despachar', 'En Despacho', 'Sin Producir') mientras los pedidos se guardan
+    // sin ellos ('ParaDespachar', 'EnDespacho', 'SinProducir'), así que de los 7
+    // estados que enumeraba solo 'Empacado' existía de verdad.
+    //
+    // Efecto medido sobre los 584 pedidos de OH MY STORE: el botón Despachar
+    // aparecía en 2, y quedaban sin él los 82 en ParaDespachar, los 33 en
+    // EnDespacho y los 13 en SinProducir. Eso es el "a veces le queda el
+    // avioncito y otras no" que reportó despachos.
+    const estadosDespachables: string[] = [
+      EstadoProceso.SinProducir,
+      EstadoProceso.EnProduccion,
+      EstadoProceso.Producido,
+      EstadoProceso.ProducidoTotalmente,
+      EstadoProceso.ProducidoParcialmente,
+      EstadoProceso.ParaDespachar,
+      EstadoProceso.Empacado,
+      EstadoProceso.EnDespacho,
     ];
 
     return estadosDespachables.includes(estado);
