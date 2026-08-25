@@ -5040,6 +5040,31 @@ que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
 
 **Archivos tocados (finalmente, tras el revert):** ninguno en `orderCalculationService.js`. Solo `functions/scripts/deepdive-d220-divergencia-categoria-base.js` (nuevo, herramienta de diagnóstico read-only).
 
+## D-239 (2026-08-25) — Bug real en SIIGO: la factura electrónica ignora el IVA efectivo de línea (propuesta OpenSpec, pendiente de aprobación/implementación)
+
+**Nota de renumeración:** esta decisión se registró originalmente como D-222, pero al mezclar con `origin` apareció colisión — D-222 ya estaba tomado el 2026-08-24 por "La disponibilidad que ve el vendedor es la de SU bodega" (ver más abajo), y D-223..D-238 también ya estaban en uso por sesiones concurrentes. Renumerada a **D-239** (siguiente libre tras la mezcla), mismo precedente que D-085/D-144/D-067.
+
+**Disparador.** Reporte de negocio: pedido **DAD-012406** (ALMARA FELICIDAD) se creó correcto en venta asistida, pero al facturar por SIIGO (factura #8834) salió **sin IVA discriminado**; el PDF del pedido tampoco lo mostraba; en pantalla el IVA aparecía y desaparecía entre recargas.
+
+**Investigación read-only contra Firestore** (`functions/scripts/inspect-order-dad-012406*.js`, sin escrituras): el pedido se creó (22:29:01) y facturó (22:31:40) con `totalImpuesto: 0` ya persistido desde el origen, sin ningún `_ivaManualOverride` en su única línea (ALM-4030, "Caja de Chocolates Medica Junior"). El producto está catalogado a `precioUnitarioIva: "0"` tanto hoy como en el snapshot del pedido. **Esta causa puntual es de catálogo/negocio (mismo patrón ya documentado en D-221 para ALMARA FELICIDAD, pendiente de decisión de negocio) — por decisión explícita del usuario, se deja fuera de alcance ("esas facturas dejemoslas en el olvido, lo que fue, fue").**
+
+**Hallazgo real y sistémico (independiente del pedido puntual), auditando el código de facturación:** `functions/services/accounting/utils/siigoDataMapper.js::mapOrderToInvoice()` (línea ~750) calcula el IVA de cada ítem con `calculateTaxPercentage(producto)` — lee **solo** el snapshot de catálogo embebido en la línea (`producto.precio.precioUnitarioConIva`/`SinIva`). **Nunca** revisa `item._ivaManualOverride`, `item.tarifaEfectiva` ni `item.ivaLinea` — los campos por línea que la spec 010 (D-201/OT-4, Opción A) creó específicamente como fuente única del IVA efectivo. Esto ya estaba anticipado en `specs/010-venta-asistida-impuestos-congruencia/tasks.md` T-17: *"SIIGO — AISLADO a propósito (...) si en el futuro se quiere SIIGO con tarifa efectiva, priorizar (...) en su mapper (gateado)."*
+
+**Prueba de que es un bug, no diseño:** `worldOfficeDataMapper.js::extractTaxPercentage(producto, carrito)` (líneas 93-117) SÍ implementa la jerarquía correcta (`tarifaEfectiva → _ivaManualOverride → catálogo`) desde la sesión de D-201/D-202 (2026-08-15) — el fix se aplicó a World Office pero nunca se portó a SIIGO. Cualquier pedido con IVA manual por línea que facture por SIIGO sale con el IVA equivocado de forma silenciosa y reproducible, aunque el pedido en Firestore esté correcto.
+
+**Propuesta OpenSpec creada** (CLI `openspec` no instalado en esta máquina — artefactos escritos a mano siguiendo el molde de `edit-order-line-iva`): `katuq_admin_back_firebase/openspec/changes/fix-siigo-invoice-line-iva/` (proposal.md + design.md + tasks.md + specs/siigo-invoice-line-iva/spec.md, 3 requirements EARS). Fix propuesto: nueva función `extractEffectiveTaxPercentage(producto, item)` en `siigoDataMapper.js` con la misma jerarquía que World Office, sin flag (retrocompatible por construcción — sin override, resultado idéntico al actual). No toca `worldOfficeDataMapper.js`, catálogo, precios, ni facturas ya emitidas. Riesgo preexistente documentado y no corregido en este cambio: `getTaxId()` no mapea 8% a un ID de SIIGO.
+
+**Estado: propuesta lista, pendiente de aprobación humana e implementación (`/opsx:apply` o equivalente manual).**
+
+**Implementación (2026-08-25, aprobada por el usuario "ok perfecto démosle"):** `siigoDataMapper.js` — nueva función `extractEffectiveTaxPercentage(producto, item)` (jerarquía idéntica a World Office) + call-site en `mapOrderToInvoice()` cambiado de `calculateTaxPercentage(producto)` a `extractEffectiveTaxPercentage(producto, item)`. `calculateTaxPercentage` original intacta (sigue siendo la única fuente en `mapProductToSiigo`, sync de catálogo).
+
+**Verificación:**
+- `node --check` limpio.
+- Contract test nuevo `functions/scripts/test-siigo-invoice-line-iva.js`: **7/7 PASS** (sin override → idéntico al comportamiento actual; `_ivaManualOverride`; `tarifaEfectiva`; `ivaLinea`+`precioSinIvaResuelto`; patrón real DAD-012406 sin override sigue en 0%, confirmando que el fix no inventa IVA donde no corresponde).
+- `test-iva-persist-option-a.js` re-corrido: **8/8 PASS**, sin regresión cruzada con el motor canónico de spec 010.
+- Reinicio local (`node index.js`, sin hot-reload): arrancó limpio en `:3300`.
+- **Pendiente:** verificación manual contra SIIGO real (requiere tenant de prueba con integración activa).
+
 ---
 
 ## D-223 (2026-08-24) — El descuento por producto llega al total que se cobra, no solo a la línea
