@@ -199,15 +199,24 @@ export class SitioRenderComponent implements OnChanges {
   @Output() bloqueSeleccionado = new EventEmitter<string>();
 
   /**
-   * Un texto se editó directamente sobre la página. Emite la ruta del campo
-   * (`bloqueId`, `campo` y opcionalmente el índice de la celda) para que el
-   * editor lo escriba en su modelo — el render no muta lo que le pasan.
+   * Un texto se editó directamente sobre la página. Emite la RUTA del campo para
+   * que el editor lo escriba en su modelo — el render no muta lo que le pasan.
+   *
+   * La ruta tiene hasta tres niveles, y se usa el más profundo que venga:
+   *  - `bloqueId` + `campo` → un campo del bloque.
+   *  - `+ indice`           → una celda del bloque de columnas.
+   *  - `+ elemento`         → un objeto colocado dentro de la sección.
+   *  - `+ elemento` e `item`→ una tarjeta dentro de ese objeto.
    */
   @Output() textoEditado = new EventEmitter<{
     bloqueId: string;
     campo: string;
     valor: string;
     indice?: number;
+    elemento?: number;
+    item?: number;
+    /** Lista del bloque a la que pertenece el item: "preguntas", "items", "botones", "enlaces"… */
+    lista?: string;
   }>();
 
   /**
@@ -321,6 +330,131 @@ export class SitioRenderComponent implements OnChanges {
     const el = evento.target as HTMLElement;
     const valor = (el.innerText || "").replace(/\s+\n/g, "\n").trim();
     this.textoEditado.emit({ bloqueId, campo, valor, indice });
+  }
+
+  /**
+   * Los dos emisores GENERALES de edición en línea. La ruta dice dónde vive el
+   * texto: campo del bloque, celda de columnas (`indice`), item de una lista del
+   * bloque (`lista` + `item`), objeto colocado (`elemento`) o tarjeta dentro de
+   * un objeto (`elemento` + `item`).
+   *
+   * Existen porque la edición en línea nació solo para tres campos y creció a
+   * TODA la página: un método por combinación de ruta ya no daba.
+   */
+  alEditarTexto(
+    evento: Event,
+    bloqueId: string,
+    ruta: { campo: string; indice?: number; elemento?: number; item?: number; lista?: string }
+  ): void {
+    const el = evento.target as HTMLElement;
+    const valor = (el.innerText || "").replace(/\s+\n/g, "\n").trim();
+    this.textoEditado.emit({ bloqueId, valor, ...ruta });
+  }
+
+  /** Igual, para los textos CON FORMATO: lee el HTML y lo devuelve a la notación. */
+  alEditarFormato(
+    evento: Event,
+    bloqueId: string,
+    ruta: { campo: string; indice?: number; elemento?: number; item?: number; lista?: string }
+  ): void {
+    const el = evento.target as HTMLElement;
+    const valor = this.desdeFormato(el);
+    this.textoEditado.emit({ bloqueId, valor, ...ruta });
+  }
+
+  /**
+   * Lo mismo, pero para el texto de un objeto colocado dentro de la sección.
+   *
+   * Los objetos no eran editables sobre la página: había que buscarlos en el
+   * panel. Se notó al poner objetos en todas las plantillas — el comerciante
+   * aprende que escribe encima de la página y al llegar a ellos el clic no hacía
+   * nada.
+   */
+  alTerminarEdicionElemento(evento: Event, bloqueId: string, elemento: number, campo: string): void {
+    const el = evento.target as HTMLElement;
+    const valor = (el.innerText || "").replace(/\s+\n/g, "\n").trim();
+    this.textoEditado.emit({ bloqueId, campo, valor, elemento });
+  }
+
+  /** Y para el texto de una tarjeta dentro de ese objeto. */
+  alTerminarEdicionTarjeta(
+    evento: Event,
+    bloqueId: string,
+    elemento: number,
+    item: number,
+    campo: string
+  ): void {
+    const el = evento.target as HTMLElement;
+    const valor = (el.innerText || "").replace(/\s+\n/g, "\n").trim();
+    this.textoEditado.emit({ bloqueId, campo, valor, elemento, item });
+  }
+
+  /**
+   * Igual, pero para los textos CON FORMATO.
+   *
+   * Estos no se pueden leer con `innerText`: devolvería el texto pelado y al
+   * guardar se perdería la negrita, la cursiva, los enlaces y las listas. Se lee
+   * el HTML y se convierte de vuelta a la notación que se guarda, así que el ida
+   * y vuelta no pierde nada — y de paso, la negrita que el comerciante ponga con
+   * Ctrl+B queda guardada.
+   */
+  alTerminarEdicionFormato(
+    evento: Event,
+    bloqueId: string,
+    elemento: number,
+    campo: string,
+    item?: number
+  ): void {
+    const el = evento.target as HTMLElement;
+    const valor = this.desdeFormato(el);
+    this.textoEditado.emit({ bloqueId, campo, valor, elemento, item });
+  }
+
+  /**
+   * El inverso de `conFormato`. Recorre lo que dejó el navegador y lo devuelve a
+   * la notación guardada. Lo que no reconoce se degrada a su texto, que es lo
+   * que habría pasado de todas formas al leerlo como texto plano.
+   */
+  private desdeFormato(raiz: HTMLElement): string {
+    const deNodo = (nodo: Node): string => {
+      if (nodo.nodeType === Node.TEXT_NODE) return nodo.textContent || "";
+      if (nodo.nodeType !== Node.ELEMENT_NODE) return "";
+
+      const el = nodo as HTMLElement;
+      const dentro = Array.from(el.childNodes).map(deNodo).join("");
+
+      switch (el.tagName) {
+        case "BR":
+          return "\n";
+        case "STRONG":
+        case "B":
+          return dentro.trim() ? `*${dentro}*` : dentro;
+        case "EM":
+        case "I":
+          return dentro.trim() ? `_${dentro}_` : dentro;
+        case "A": {
+          const url = el.getAttribute("href") || "";
+          return url && dentro.trim() ? `[${dentro}](${url})` : dentro;
+        }
+        case "LI":
+          return `- ${dentro.trim()}\n`;
+        case "P":
+        case "DIV":
+        case "UL":
+        case "OL":
+          return `${dentro}\n`;
+        default:
+          return dentro;
+      }
+    };
+
+    return Array.from(raiz.childNodes)
+      .map(deNodo)
+      .join("")
+      // El navegador deja saltos de sobra al envolver en <div> y <p>.
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
   }
 
   /** Enter confirma en los campos de una línea; Escape cancela. */

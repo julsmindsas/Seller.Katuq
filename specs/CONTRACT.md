@@ -5084,3 +5084,161 @@ Línea 10% + global 10% sobre 100.000 descuenta **19.000**, no 20.000.
 - Salida para el vendedor: las filas del popover son clicables y cambian la bodega de trabajo conservando la búsqueda; el hover se sostiene al pasar el cursor al popover.
 
 **Nota sobre "Solo con stock":** al buscar una referencia exacta el producto se muestra aunque esté en 0 en esta bodega — ocultarlo haría creer que no existe. El badge queda en rojo y el desglose dice dónde sí hay.
+
+### D-219 — Adenda (2026-08-20): dirección completa y códigos DANE resueltos
+
+Daniel pidió que además se pida **barrio y departamento**, y que el bot
+**resuelva los códigos**. Se hizo reusando el resolutor DANE que ya existe
+para el push a Cereza (`cerezaMunicipalityResolver`, 1.122 municipios, match
+exacto) en vez de escribir otro.
+
+- El cliente escribe "medellin" y el pedido queda con **"Medellín",
+  "Antioquia", código 05001 y país Colombia**. El departamento NO se le
+  pregunta: casi nadie lo dice al dictar una dirección.
+- **El modelo tiene prohibido deducirlo.** "Medellín… entonces Antioquia" es
+  exactamente lo que no debe hacer: hay 67 municipios cuyo nombre se repite
+  entre departamentos. Lo resuelve el servidor contra el listado oficial.
+- **Ciudad repetida → se pregunta, con botones.** Armenia está en Quindío y en
+  Antioquia; La Victoria, en tres. El resolutor se niega a adivinar a
+  propósito, y ahora el bot pregunta cuál es en vez de solo fallar.
+- **Ciudad que no está en el listado** (una vereda, un corregimiento) se
+  respeta tal cual y la venta sigue: el listado tiene municipios, y
+  rechazarlas sería no venderle a medio país rural.
+- **El barrio pasa a pedirse siempre.** Obligatorias para cerrar siguen siendo
+  dirección y ciudad: en zona rural puede no haber barrio y eso no puede
+  trabar un pedido.
+
+Detalle que costó un test: `departamentosPosibles` se guarda como lista vacía
+**explícita** al resolver. La config del pedido se funde campo a campo, así
+que una clave ausente dejaría en pie la ambigüedad del turno anterior y el bot
+preguntaría un departamento que ya sabía.
+
+**Estado: aplicado y verificado en producción.** Backend `7364be8`, ADK
+`d8284cd`. 11 suites del backend y 91 tests del canal en verde. Ensayo real: el
+agente anotó `{direccion: "carrera 70 numero 30-15", barrio: "Belen", ciudad:
+"Medellin"}` y el servidor lo dejó en Medellín / Antioquia / 05001; con
+"Armenia" el resolutor responde "Antioquia o Quindío" y el bot pregunta.
+
+**Nota de despliegue:** ese deploy de `katuq-api` arrastró dos commits ajenos
+que ya estaban en la rama (`a7278f6` maquetas de bloque de sitios y `8eece03`
+docs), de una sesión que ya había terminado. Son aditivos —un catálogo nuevo
+más cuatro líneas en el endpoint de sitios— y su propia suite
+(`test:sitios-publicacion`) quedó en verde antes de subir.
+
+---
+
+## D-230 (2026-08-24) — Tres bugs del sync a Shopify: fotos, "bajo pedido" y ciudad de entrega
+
+Del ticket OMS. Cada uno reproducido contra producción antes de tocar código. (Se toma D-230 y no D-223 porque la sesión de Guía Cereza reservó D-223..D-229 para su tanda del mismo ticket.)
+
+**1. Las fotos nunca llegaban a un producto que ya existía en Shopify.** `productUpdate` no acepta media y el camino UPDATE del nodo no la mandaba: solo recibían imagen los productos que el flow creaba desde cero. Un producto vinculado a un Shopify preexistente se quedaba sin foto para siempre. Verificado con `PX-CPD-2169-500ML`: foto en Katuq, `media count: 0` en Shopify. Ahora el update rellena vía `productCreateMedia` y **solo cuando allá no hay ninguna imagen** — lo que el comerciante subió a mano no se toca. Una media rechazada se registra y no tumba el upsert. De paso: `syncImages` estaba en el schema del nodo pero **no lo leía nadie**; apagarlo no apagaba nada. Ya es efectivo.
+
+**2. Los "bajo pedido" salían AGOTADOS en Shopify.** Nunca se mandaba `inventoryPolicy`, así que Shopify aplicaba su default `DENY`: un producto no inventariable, que por definición tiene stock 0, no se podía comprar. Los 43 no inventariables de OH MY STORE vinculados a Shopify estaban todos en DENY con qty 0. Los no inventariables pasan a `CONTINUE`; los inventariables siguen en `DENY`.
+
+**Trampa de datos encontrada acá y cuantificada por la sesión de Guía Cereza:** el campo top-level `products.<doc>.inventariable` **miente**. Sobre el catálogo completo (8.444 productos) hay **2.256 con el top-level en `false` mientras `disponibilidad.inventariable` dice `true` — el 27%**. Otros 6.147 solo tienen el subobjeto. Quien lea el top-level marca "bajo pedido" a más de dos mil productos que sí son inventariables. **Regla: `disponibilidad.inventariable` manda siempre; el top-level solo como respaldo para canonical V2.**
+
+**3. A Shopify no llegaba la ciudad de entrega.** El draft se armaba sin ninguna dirección —ni envío ni facturación— y con `useCustomerDefaultAddress: false`, así que la orden entraba pelada. Se mapea `envio` con el mismo criterio que ya usa el nodo de Cereza, para no tener dos verdades sobre la misma dirección. Dos detalles que salieron de mirar pedidos reales:
+- Katuq guarda literalmente `"N/A"` en los campos de envío cuando la entrega es "Recoge" (ORE-000609). Se filtran: ese caso manda solo ciudad y país, que es justo lo que el ticket pide.
+- El teléfono se sanea y **se omite si no es plausible**. Shopify rechaza el `draftOrderCreate` completo con un teléfono inválido y los datos reales traen basura (`602-3007506140-`, ORE-000608). Perder el teléfono es molesto; perder el pedido no es aceptable.
+
+Verificado con ORE-000610 (domicilio: dirección completa y teléfono normalizado a `+57…`), ORE-000609 (recoge: solo ciudad) y ORE-000608 (teléfono sucio omitido, dirección intacta). Backend `318ff33`. Los flows de producto corren cada 5–10 min, así que fotos y política de inventario se aplican solas tras el despliegue.
+
+## D-220 (2026-08-24) — El cliente esperaba 27 segundos y solo 4 eran el modelo
+
+**Cómo apareció.** Daniel pidió analizar las conversaciones reales del bot. Al
+medir la espera de punta a punta sobre 46 turnos: **mediana 26,7 s, p90 31 s,
+máximo 41 s**. Un cliente esperando medio minuto en WhatsApp.
+
+**Dónde estaba, medido y no supuesto:**
+
+| Tramo | Tiempo |
+|---|---|
+| Kapso → nosotros | 1,8 s (mediana) |
+| Ventana de agrupación de ráfagas | 4 s fijos, siempre |
+| Lecturas previas al turno, en fila | **8,1 s** |
+| El agente pensando (ADK) | 4,4 / 4,1 / 8,7 s |
+
+**Mi error de método, que vale registrar:** yo venía midiendo el endpoint del
+modelo (4-8 s) y dando la latencia por entendida. Nunca medí lo que espera el
+cliente. El modelo era la parte pequeña.
+
+**Los dos hallazgos concretos:**
+
+1. **`getContactOrders` trae hasta 1.000 pedidos del comercio y los filtra en
+   memoria** — 5,2 s y mil lecturas de Firestore **en cada mensaje**. Era el
+   75 % de las lecturas del turno.
+2. **La ventana de ráfagas de 4 s se cobra siempre**, aunque llegue un solo
+   mensaje. Medido sobre 74 intervalos reales: solo el **4,1 %** llega dentro
+   de esos 4 s, y dos de cada tres de esas ráfagas caben en 2 s.
+
+**Decisión.**
+
+- Todo el contexto del turno se pide **de una** (perfil, pedidos, nombre del
+  comercio, los tres maestros). Ninguna lectura depende de otra, así que la
+  espera pasa a ser la de la más lenta y no la suma.
+- El contexto del contacto se **cachea por hilo 5 minutos**, con el mismo
+  patrón que ya usaban los maestros de ese módulo — no es una capa nueva. El
+  historial de pedidos de alguien no cambia mientras conversa; el cierre
+  invalida el hilo para que "lo mismo de la otra vez" incluya el recién hecho.
+- **Ventana de ráfagas 4 s → 2 s**, con test que fija el valor: si alguien la
+  vuelve a subir, que sea con un dato en la mano.
+
+**Resultado medido contra prod:** las lecturas del turno pasan de **6.869 ms a
+5.138 ms** en el primer mensaje de un hilo y a **108 ms** del segundo en
+adelante. Sumado a los 2 s de la ventana, la espera del cliente baja de ~27 s
+a ~10-15 s en la mayoría de los turnos.
+
+**Estado: aplicado y verificado en producción.** Commits `c83ef74` y `ec87c79`
+(`backend-aws-security`). Suites del canal en verde.
+
+**Lo que sigue pendiente y por qué importa:** la consulta de pedidos por
+teléfono sigue escaneando mil documentos en el primer turno de cada hilo (5,6 s
+verificados tras el deploy). El arreglo de fondo es indexarla, pero toca un
+servicio que comparte el buzón y necesita índice nuevo en Firestore — se hace
+aparte, con su propia medición.
+
+---
+
+## D-233 (2026-08-24) — REGLA: un producto "bajo pedido" nunca sale agotado en Shopify
+
+**Decisión de Daniel, y es ley para TODO comercio que use Shopify con Katuq** — no un parche para el que reportó el problema. Un producto no inventariable se vende sin stock y **Shopify no le lleva la cuenta**.
+
+D-230 los dejó comprables (`inventoryPolicy: CONTINUE`) pero seguían mostrando 0, y con `tracked: true` + cantidad 0 el tema los pinta AGOTADO igual. Ahora además van con `inventoryItem.tracked: false`: salen siempre disponibles, sin número que mantener.
+
+**Se descartó cargarles una cifra alta tipo 9999** (la idea inicial): es un número inventado que baja con cada venta y que cualquier corrida del sync de inventario puede pisar. Sin rastreo no hay número que sostener ni que se pueda desincronizar.
+
+**Tres piezas, porque con una sola se deshacía sola en la corrida siguiente:**
+1. `mapper` emite `inventoryTracked` por variante (`false` solo para bajo pedido).
+2. `shopify-product-upsert` lo manda en `inventoryItem.tracked`. Solo fuerza el `false`; para los inventariables NO manda el campo — ese es del nodo de inventario y mandarlo ahí pelearía con él.
+3. `shopify-inventory-adjust` **omite los no inventariables**. Sin este corte el nodo les forzaba `tracked: true` y les escribía la cantidad real (0), deshaciendo en la siguiente corrida lo que el nodo de producto acababa de dejar bien. Se reporta como `skipped` con razón `producto_no_inventariable`: no es una falla, es la regla aplicándose.
+
+**Contract test `npm run test:bajo-pedido-shopify` (8/8)** — cubre bajo pedido, inventariable, variantes múltiples, canonical V2, el default seguro sin dato, y el caso del campo top-level mentiroso. Si alguien rompe la regla, el test falla.
+
+**Repaso ejecutado en OH MY STORE:** 42 productos actualizados, 0 fallidos; verificado después, 43 comprables y sin rastreo, 0 pendientes. Hizo falta porque el código nuevo solo actúa sobre lo que el flujo vuelva a emitir — y **lo quieto no se re-emite nunca** (ver D-232).
+
+Backend `ee0ea28`.
+
+---
+
+## D-224 (2026-08-24) — El vendedor ve cuándo le está cobrando a un cliente el precio general
+
+**El hueco.** Un cliente puede tener asignada una lista de precios y el producto no tenerla. Cuando eso pasa, `aplicarPrecioDeLista` devuelve el producto intacto y el vendedor cobra el precio base — sin ningún aviso. En OH MY STORE eso es **108 productos para los 159 clientes mayoristas** y **2.362 para la lista de modelos**, de 8.350 en catálogo.
+
+**La pregunta que originó esto** era "cómo le decimos a OMS qué productos de Guía Cereza no tienen precio de modelos, pero que sirva para cualquier comercio". La respuesta NO puede ser "avisar cuando falte una lista": a CAFE ESCOBAR le faltan las tres listas en los 55 productos y no es un problema — sencillamente no usan el mecanismo. Lo mismo Tienda Demo (552 de 556).
+
+**La regla que sí es genérica: el aviso cuelga de la lista del cliente que está en pantalla, no de una lista con nombre.** Empresa que no usa listas → sus clientes no tienen lista asignada → no aparece absolutamente nada. Sin umbrales, sin configuración, sin nombrar "Modelos" en ninguna parte del código. Verificado que el emparejamiento es por id y no por nombre: **el 100% de los clientes con lista calza contra `tiposPrecios`** (OMS 164/164, HARMONY LENS 2/2, CAFE ESCOBAR 10/10).
+
+**Tres piezas:**
+1. **Chip en la tarjeta** ("Sin precio de Mayoristas") cuando a ESE producto le falta la lista del cliente.
+2. **Renglón arriba con el total** del catálogo — el que responde "cuáles y cuántos son".
+3. **Un solo renglón, más fuerte, cuando le falta a TODOS.** Pasa cuando una empresa asignó listas a sus clientes y nunca les puso precios (CAFE ESCOBAR: 10 clientes con lista, 0 productos con precios). Encender las 40 tarjetas ahí sería ruido; el problema no es el producto, es la configuración.
+
+**El criterio de "le falta" es exactamente el de la pantalla**: fila de esa lista, `activo === true` y precio con IVA mayor que cero. Una fila apagada o en cero no la aplica `aplicarPrecioDeLista`, así que cobrar el general igual — cuenta como faltante. Si el backend contara distinto, el chip y el total se contradirían. Cubierto por `npm run test:cobertura-listas` (14 casos).
+
+**Por qué el conteo no corre dentro de la petición.** Firestore no sabe responder "el array NO contiene este id", así que toca barrer los productos: **0,3 s con los 55 de CAFE ESCOBAR, pero 60 s con los 13.874 de HARMONY LENS contra sus 17 listas.** `GET /v1/productos/cobertura-listas` contesta de una con lo último calculado y dispara el recálculo aparte; mientras no haya número, el catálogo no muestra el renglón y el chip por tarjeta sigue funcionando porque no depende del backend. Vigencia 15 minutos, y se olvida en el mismo punto donde ya se invalida el caché de paginación para que editar precios no deje el conteo viejo colgado.
+
+**El chip no arregla nada — evita el cobro equivocado en el momento en que ocurre**, que es el daño real.
+
+**Dato para OMS antes de mandarlos a llenar 2.362 precios:** de sus 588 clientes, **159 son Mayoristas, 4 Público y solo UNO es Modelos**; 424 no tienen lista asignada. El hueco que se cobra mal todos los días es el de mayoristas (108 productos × 159 clientes), no el de modelos. O los "modelos" reales están entre los 424 sin lista y el problema no es que falten precios sino que nadie les asignó la lista.
+
+Frontend `fabf88d6` (el `.ts` ya había entrado por `d272054f`). Backend `d6cd954` + `14bad7e`, **sin desplegar** — mientras tanto la llamada del total da 404 y el catálogo solo muestra el chip.

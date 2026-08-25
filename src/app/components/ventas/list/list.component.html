@@ -2042,6 +2042,22 @@
                     </span>
                 </div>
             </div>
+            <!-- El vendedor está viendo UNA bodega de varias: decirlo, en vez de
+                 dejar que crea que ese es todo el catálogo. -->
+            <div class="row" *ngIf="selectedWarehouse && bodegas?.length > 1">
+                <div class="col-12">
+                    <small class="text-muted d-block mt-2">
+                        <i class="fa fa-info-circle me-1"></i>
+                        <ng-container *ngIf="bodegaHeredadaDelPedido">
+                            Viendo el catálogo de <strong>{{ selectedWarehouse?.nombre }}</strong>, la bodega de este pedido.
+                        </ng-container>
+                        <ng-container *ngIf="!bodegaHeredadaDelPedido">
+                            Viendo el catálogo de <strong>{{ selectedWarehouse?.nombre }}</strong>.
+                        </ng-container>
+                        Hay {{ bodegas.length }} bodegas: si no encuentras un producto, cámbiala arriba o toca la bodega en el detalle de existencias.
+                    </small>
+                </div>
+            </div>
         </div>
 
         <app-ecomerce-products #recompra [ciudadSelector]="ciudadesEntrega" [selectedCity]="ciudadSeleccionada"

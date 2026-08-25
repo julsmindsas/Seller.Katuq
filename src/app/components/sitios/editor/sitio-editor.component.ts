@@ -972,12 +972,34 @@ export class SitioEditorComponent implements OnInit {
    * el historial, el "hay cambios sin guardar" y el guardado siguen pasando por
    * un solo camino, el mismo que usa el panel lateral.
    */
-  aplicarTextoEditado(cambio: { bloqueId: string; campo: string; valor: string; indice?: number }): void {
+  aplicarTextoEditado(cambio: {
+    bloqueId: string;
+    campo: string;
+    valor: string;
+    indice?: number;
+    elemento?: number;
+    item?: number;
+    lista?: string;
+  }): void {
     const bloque = this.bloques.find((b) => b.id === cambio.bloqueId);
     if (!bloque) return;
 
-    const destino =
-      cambio.indice === undefined ? bloque.datos : (bloque.datos.columnas || [])[cambio.indice];
+    // Se resuelve la ruta de más profunda a menos: una tarjeta vive dentro de un
+    // objeto, que vive dentro de la sección; un item de lista (una pregunta, una
+    // reseña, un botón de la fila) vive en una lista del bloque.
+    let destino: any;
+    if (cambio.elemento !== undefined) {
+      const el: any = (bloque.elementos || [])[cambio.elemento];
+      destino =
+        cambio.item === undefined ? el && el.datos : el && (el.datos.items || [])[cambio.item];
+    } else if (cambio.lista !== undefined && cambio.item !== undefined) {
+      destino = (bloque.datos[cambio.lista] || [])[cambio.item];
+    } else if (cambio.indice !== undefined) {
+      destino = (bloque.datos.columnas || [])[cambio.indice];
+    } else {
+      destino = bloque.datos;
+    }
+
     if (!destino || destino[cambio.campo] === cambio.valor) return;
 
     destino[cambio.campo] = cambio.valor;
