@@ -5287,3 +5287,37 @@ Backend `ee0ea28`.
 **Dato para OMS antes de mandarlos a llenar 2.362 precios:** de sus 588 clientes, **159 son Mayoristas, 4 Público y solo UNO es Modelos**; 424 no tienen lista asignada. El hueco que se cobra mal todos los días es el de mayoristas (108 productos × 159 clientes), no el de modelos. O los "modelos" reales están entre los 424 sin lista y el problema no es que falten precios sino que nadie les asignó la lista.
 
 Frontend `fabf88d6` (el `.ts` ya había entrado por `d272054f`). Backend `d6cd954` + `14bad7e`, **sin desplegar** — mientras tanto la llamada del total da 404 y el catálogo solo muestra el chip.
+
+---
+
+## D-240 (2026-08-25) — Cotizaciones: el tachado mostraba el precio de otra línea, y las columnas unitarias no se dejaban multiplicar
+
+**Dos hallazgos de la misma pantalla (editor de cotizaciones). Ninguno tocó cálculo: los totales siempre estuvieron bien.**
+
+### 1. El tachado salía MENOR que el precio vigente
+
+Con 800 uds de ALM-818 la línea mostraba **$3,890** con IVA (tier de volumen: 3.269 sin IVA × 1,19) y al lado, tachado, **$3,650** — el "antes" parecía más barato que el "ahora", que se lee al revés. `itemPrecioOriginal` leía `producto.precio.precioUnitarioConIva` a secas: el precio de **1 unidad**, ignorando la escala de volumen, el precio por categoría y el flag de spec 010. Comparaba dos bases distintas.
+
+La causa de fondo: **D-046 (`31ef361f`) arregló exactamente esto en `itemPrecio`** — el comentario que dejó ahí todavía dice *"Bug histórico: antes reseteaba al precio de 1 unidad"* — pero dejó el camino del tachado copiado a mano. Por eso el arreglo **no reimplementa la lógica**: `itemPrecioOriginal` ahora llama a `itemPrecio` sobre la misma línea con los overrides quitados (`itemSinOverrides`). Cualquier arreglo futuro del precio lo hereda el tachado solo, y la desincronización no se puede repetir.
+
+Verificado que el clon no cambia de rama ni de resultado: `permitePrecioManual` no lee los overrides, y `getRangoVolumen` — que cortaba el volumen justo por existir el override de IVA (`:614`) — sobre la línea limpia sí devuelve el tier de 800.
+
+Dos remates del mismo bloque: el tachado aparecía **aunque no hubiera cambio** (`tieneOverride` pregunta si tocaste el selector, no si el valor se movió; elegir el mismo 19% que ya traía el producto dejaba un tachado idéntico al precio) → ahora `mostrarPrecioOriginal` exige diferencia ≥ $1. Y el `(IVA X%)` de al lado leía la tarifa cruda del producto ignorando el `valorIVAPorVolumen` del tier, contradiciendo al número que tenía al lado.
+
+### 2. El redondeo de la columna impedía verificar la cuenta a mano
+
+Mónica sumó `694 × 800 = 555.200` y el sistema decía **554.800**. El sistema estaba bien: `3.650 × 19% = 693,5`, y los totales acumulan el valor crudo (`ivaNetoLineas`), no el pintado. **Los $400 de diferencia son medio peso × 800 unidades.** El pipe estaba en `'1.0-0'`, así que `693,5` se pintaba `$694` y `4.343,5` se pintaba `$4.344`.
+
+Sumar sin redondear es lo correcto y no se tocó: `2.920.000 × 19% = 554.800` da lo mismo por el otro lado, que es como lo valida la DIAN. Si el sistema hiciera la cuenta manual, la factura saldría con $400 de IVA de más.
+
+**El arreglo usa dos formatos distintos a propósito:**
+- **Columnas unitarias → `'1.2-2'` (siempre 2 decimales).** Son las que el vendedor multiplica por la cantidad, así que no pueden estar redondeadas. Incluye el precio grande de la columna PRECIO, que decía `$3.890` siendo `3.890,11` — justo lo que explicaba el subtotal de `$3.112.088`.
+- **Totales y subtotales → `'1.0-2'` (decimales solo si existen).** El resumen sigue limpio (`$3.474.800`, sin `,00` de relleno) pero nunca miente. Dejarlos en cero decimales reproducía el mismo problema un nivel más arriba: con 3 unidades el IVA da `2.080,50` y se habría pintado `2.081`.
+
+Aplicado también a la **vista previa / PDF que recibe el cliente** (`doc-tbl`), que tenía el mismo redondeo: no tiene sentido que el vendedor pueda cuadrar la cuenta y el cliente no. Columnas numéricas ensanchadas en el SCSS (95→105px, `min-width` 1330→1400) porque llevan `white-space: nowrap` y un unitario de siete cifras con decimales se montaba sobre la columna vecina.
+
+### Pendiente — esto sí es plata
+
+Entre dos capturas de la misma cotización la línea pasó de **3.269 sin IVA** (tier de volumen para 800 uds) a **3.650** (lista de 1 unidad): ~**$305.000** de diferencia. Parece que al guardar/recargar la línea pierde el precio por volumen. **Sin diagnosticar.**
+
+Frontend, **sin desplegar**.
