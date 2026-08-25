@@ -89,4 +89,85 @@ describe('PedidosUtilService.getDiscount() — D-220', () => {
     } as any;
     expect(service.getDiscount()).toBe(10000); // topado, no 20.000
   });
+
+  /**
+   * D-141 (continuación) — el checkout mostraba la línea con el precio ya rebajado
+   * (`checkPriceScaleProd` aplica `descuentoLinea`) pero "TOTAL A PAGAR" sumaba
+   * `checkPriceScale()`, que es el subtotal BRUTO, sin restar ese descuento por
+   * ningún lado: `getDiscount()` solo sabía de `porceDescuento`.
+   * Reportado con una cotización al 5%: la línea decía $47.500 y el total $50.000.
+   */
+  describe('descuento por línea (item.descuentoLinea)', () => {
+    it('caso reportado: 5% de línea sin descuento global — antes 0, ahora 2.500', () => {
+      service.pedido = {
+        porceDescuento: 0,
+        carrito: [{
+          producto: { precio: { precioUnitarioSinIva: 50000, preciosVolumen: [] } },
+          cantidad: 1, configuracion: {}, descuentoLinea: 5,
+        }],
+      } as any;
+      expect(service.getDiscount()).toBe(2500);
+    });
+
+    it('línea + global se componen multiplicativamente, no se suman (espejo del backend)', () => {
+      service.pedido = {
+        porceDescuento: 10,
+        carrito: [{
+          producto: { precio: { precioUnitarioSinIva: 100000, preciosVolumen: [] } },
+          cantidad: 1, configuracion: {}, descuentoLinea: 10,
+        }],
+      } as any;
+      // neto de línea = 90.000; global 10% sobre ESE neto = 9.000
+      // total descuento = 10.000 + 9.000 = 19.000 → neto final 81.000 = 100.000 × 0,9 × 0,9
+      expect(service.getDiscount()).toBe(19000);
+    });
+
+    it('el descuento de línea aplica por ítem, no contamina las otras líneas', () => {
+      service.pedido = {
+        porceDescuento: 0,
+        carrito: [
+          { producto: { precio: { precioUnitarioSinIva: 50000, preciosVolumen: [] } }, cantidad: 1, configuracion: {}, descuentoLinea: 5 },
+          { producto: { precio: { precioUnitarioSinIva: 30000, preciosVolumen: [] } }, cantidad: 2, configuracion: {} },
+        ],
+      } as any;
+      expect(service.getDiscount()).toBe(2500); // solo la primera línea
+    });
+
+    it('línea + código de valor fijo: se suman, y el fijo se topa al subtotal YA neto', () => {
+      service.pedido = {
+        porceDescuento: 0,
+        descuentoAplicado: { descuentoId: 'f', codigoPersonalizado: 'FIJO20K', tipo: 'valor_fijo', valor: 20000, montoDescuento: 20000 },
+        carrito: [{
+          producto: { precio: { precioUnitarioSinIva: 50000, preciosVolumen: [] } },
+          cantidad: 1, configuracion: {}, descuentoLinea: 5,
+        }],
+      } as any;
+      expect(service.getDiscount()).toBe(22500); // 2.500 de línea + 20.000 del código
+    });
+
+    it('el tope del código fijo usa el neto: nunca deja el total en negativo', () => {
+      service.pedido = {
+        porceDescuento: 0,
+        descuentoAplicado: { descuentoId: 'f', codigoPersonalizado: 'FIJO99K', tipo: 'valor_fijo', valor: 99000, montoDescuento: 99000 },
+        carrito: [{
+          producto: { precio: { precioUnitarioSinIva: 50000, preciosVolumen: [] } },
+          cantidad: 1, configuracion: {}, descuentoLinea: 5,
+        }],
+      } as any;
+      // 2.500 + min(99.000, 47.500) = 50.000 exactos, nunca más que el bruto
+      expect(service.getDiscount()).toBe(50000);
+    });
+
+    it('descuentoLinea fuera de rango se sanea (>100 y negativos no rompen el total)', () => {
+      service.pedido = {
+        porceDescuento: 0,
+        carrito: [
+          { producto: { precio: { precioUnitarioSinIva: 10000, preciosVolumen: [] } }, cantidad: 1, configuracion: {}, descuentoLinea: 150 },
+          { producto: { precio: { precioUnitarioSinIva: 10000, preciosVolumen: [] } }, cantidad: 1, configuracion: {}, descuentoLinea: -20 },
+        ],
+      } as any;
+      expect(service.getDiscount()).toBe(10000); // 100% de la primera, 0% de la segunda
+    });
+  });
+
 });

@@ -5022,6 +5022,50 @@ que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
 
 ---
 
+## D-223 (2026-08-24) — El descuento por producto llega al total que se cobra, no solo a la línea
+
+**Reporte de Monica:** cotización aceptada → convertida a pedido → en el último paso de la venta asistida la línea decía `1 × $47.500` con badge `-5%`, pero **"TOTAL A PAGAR" seguía en $50.000**. Debía cobrar $47.500.
+
+**Causa raíz:** el checkout usa DOS funciones distintas para lo mismo. La línea la pinta `checkout.component.ts::checkPriceScaleProd(item)`, que sí aplica `descuentoLinea` (lo arregló D-141). El total suma `checkPriceScale()` (agregada, delega en `payment.service`), que devuelve el subtotal **bruto** — correcto, porque alimenta `totalPedidoSinDescuento`. El descuento se resta aparte, vía `pedidosUtilService.getDiscount()`… que **solo sabía de `porceDescuento`**, el descuento global. Con 5% de línea y 0% global, `getDiscount()` devolvía 0 y el total se quedaba en el bruto. D-141 arregló la línea y nunca tocó el agregado.
+
+**Por qué el PDF y el correo sí estaban bien:** leen el pedido ya guardado, y el backend recalcula al crear (`orders.js:5617` → `calculateOrderTotals`) pisando lo que mande el frontend (`:5665`). Desde D-141 ese cálculo compone línea + global. Solo estaba mal la pantalla que calcula en vivo, antes de que el pedido exista.
+
+**Decisión:** `getDiscount()` pasa a ser el **descuento total** del pedido (línea + global), mismo contrato que el backend (`totalDescuento = bruto − neto`). No se toca `checkPriceScale()`: sigue siendo el bruto, porque es lo que `totalPedidoSinDescuento` debe guardar (lección D-046: no pisar el campo que permite reconstruir el precio original).
+
+**Composición multiplicativa**, espejo del motor canónico — el % global va sobre la base YA neta de línea:
+`factor = (1 − descLinea/100) × (1 − porceDescuento/100)`
+Línea 10% + global 10% sobre 100.000 descuenta **19.000**, no 20.000.
+
+**Implementado (frontend):**
+- `pedidos.util.service.ts`: nuevo `getSubtotalSinEnvioNeto()` (espejo de `getSubtotalSinEnvio()` con `descuentoLinea` aplicado al final, incluyendo adiciones y preferencias). `getDiscount()` suma `descuentoLineas + global`; el tope del código de valor fijo pasa a ser el subtotal **neto**.
+- `payment.service.ts::checkIVAPrice` (camino legacy): `factorDesc` compone ahora `descuentoLinea`. Aplica a producto, adiciones y preferencias en un solo punto. **Solo se nota en producción** (`ivaCalcUnificado: false`); en local el motor canónico ya lo hacía bien — trampa a recordar: el IVA cuadra en localhost y descuadra en prod.
+- `payment.service.ts::generateHtmlContentInternal`: badge `-X%` en el correo (chip verde inline) y `(-X% dcto)` en texto plano en la comanda (se imprime en térmica B/N, un chip de color sale como mancha). Cierra el pendiente que D-142 dejó fuera de alcance en su tarea 3.2.
+- 6 pruebas de regresión nuevas en `pedidos.util.service.spec.ts`.
+
+**Efecto colateral bueno:** `checkout.component.ts:834` persiste `totalDescuento = getDiscount()`, así que la columna "Descuento" del listado de pedidos también queda correcta por esta ruta.
+
+**Verificado:** `npx tsc --noEmit` exit 0; `ng serve` recompiló limpio. **Karma NO se pudo correr** (`node_modules/quill` falta, roto de antes). Sin prueba en navegador.
+
+**Pendiente / deuda anotada:**
+- **Nunca se ha ejercitado con datos reales**: censo en producción dio **0 de 2.958 pedidos** desde 2026-06-01 con `descuentoLinea`. Ni el PDF ni el correo se han generado jamás con descuento por línea.
+- `list.component.ts` sigue con **5 bloques duplicados** (`:2627`, `:3665`, `:4015`, `:5432`, `:5545`) que recalculan totales y pisan `totalDescuento` con solo la parte global cuando hay línea + global juntos. Se dispara con `necesitaRecalculoFrontend` (precios por volumen ⇒ ALMARA, DEL RANCHO, CAFE ESCOBAR). No corregido aquí.
+- POS suma `getDiscount()` en vez de restarlo (`pos-checkout.component.html:198,223`). Bug preexistente; hoy inocuo porque el POS no tiene UI de descuento por línea.
+
+## D-224 (2026-08-24) — Cabecera del acordeón del checkout: el chevron pisaba "Completo"
+
+**Reporte de Monica:** en la columna izquierda del checkout las cards se veían "cortadas" — el chevron encima del texto "Completo", el título partido en tres líneas ("Datos / de / Entrega") y, en la card abierta, "Completo" saliéndose por el borde.
+
+**Causa raíz (tres defectos que se veían como uno):**
+1. El título es un **nodo de texto suelto** dentro del `.accordion-button` (que es flex) → ítem flex **anónimo**: no admite clase y sí encoge, así que era lo único que cedía y cedía partiéndose.
+2. El `::after` de Bootstrap se coloca con `margin-left: auto`, igual que el `.ms-auto` del resumen. Dos márgenes automáticos se reparten el espacio **libre**; sin espacio libre, ambos quedan en cero y el chevron termina encima de la última letra.
+3. `.accordion-summary` sin `min-width: 0` → en vez de recortarse, desbordaba la card.
+
+**Decisión:** el chevron sale del flujo y tiene carril propio; "Completo" es estado, no dato, así que se recortan primero los datos.
+
+**Implementado:** solo `checkout.component.scss` (sin tocar el HTML): `white-space: nowrap` en el botón; chevron `position: absolute` con `padding-right` reservado y `translateY(-50%)` conservado en la rotación al expandir; `.accordion-summary` con `flex: 1 1 auto` + `min-width: 0` + `overflow: hidden`; `.complete` con `flex: 0 0 auto`. Carril ajustado también en la media query de ≤992px.
+
+**Sin verificar en navegador** (la usuaria prueba la UI ella misma).
+
 ## D-222 (2026-08-24) — La disponibilidad que ve el vendedor es la de SU bodega
 
 **Reporte de Estefani (OH MY STORE):** con "Fullpi Cali (ECF4)" elegida, buscar la referencia `GCJ1255CC` mostraba **26 unidades** — y esas 26 están en Bogotá. El popover de existencias la desmentía en la misma pantalla: "Fullpi Bogotá (ECF1) 26".
