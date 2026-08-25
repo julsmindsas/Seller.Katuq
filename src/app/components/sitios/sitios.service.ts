@@ -22,6 +22,8 @@ export interface TiendaSitio {
   contraEntrega: boolean;
   /** Formas de pago manuales del maestro (transferencia, Nequi...). */
   otrasFormasPago: { cd: string; nombre: string }[];
+  /** Venta cruzada (afines + sugerencias del carrito). Encendida por defecto. */
+  ventaCruzada?: boolean;
   minimoCompra: number;
   mensajeConfirmacion: string;
 }
@@ -234,6 +236,11 @@ export class SitiosService extends BaseService {
     );
   }
 
+  /** Borra la página para siempre (borrador y publicado). */
+  eliminar(id: string): Observable<Respuesta<null>> {
+    return this.delete<Respuesta<null>>(`/v1/sites/${id}`);
+  }
+
   despublicar(id: string): Observable<Respuesta<null>> {
     return this.post<Respuesta<null>>(`/v1/sites/${id}/unpublish`, {});
   }
@@ -266,6 +273,8 @@ export class SitiosService extends BaseService {
     slug?: string;
     tipo?: string;
     guardar?: boolean;
+    /** Que KAI escriba los textos (opt-in; si falla, sale la plantilla). */
+    conIA?: boolean;
   }): Observable<
     Respuesta<{
       contenido: ContenidoSitio;

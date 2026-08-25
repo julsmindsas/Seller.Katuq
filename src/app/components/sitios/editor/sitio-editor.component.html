@@ -1649,6 +1649,17 @@
               <span class="palanca"><span></span></span>
             </button>
 
+            <button class="opcion" [class.is-active]="contenido.tienda.ventaCruzada !== false"
+                    (click)="contenido.tienda.ventaCruzada = contenido.tienda.ventaCruzada === false; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Venta cruzada</strong>
+                <small>«También te puede gustar» en cada producto y «Completa tu pedido»
+                  en el carrito, con productos afines de tu catálogo. Sube el ticket
+                  promedio; apágala solo si no la quieres.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
             <ng-container *ngIf="ventaConfig && ventaConfig.formasPago.length">
               <div class="campo">
                 <label>Otras formas de pago</label>
