@@ -45,6 +45,47 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     });
   }
 
+  /**
+   * Bodega activa real: la elegida vía tools o la que el vendedor eligió en la
+   * pantalla de venta asistida (localStorage['warehouse'], escrita por
+   * CrearVentasComponent.onWarehouseChange).
+   */
+  private getBodegaActual(): any | null {
+    if (this.bodegaSeleccionada) return this.bodegaSeleccionada;
+    try {
+      return JSON.parse(localStorage.getItem('warehouse') || 'null');
+    } catch {
+      return null;
+    }
+  }
+
+  /** Stock de un producto en la bodega activa: los ítems de la UI traen stockPorBodega; los de las tools, disponibilidad.cantidadDisponible. */
+  private getStockEnBodega(p: any, idBodega?: string): number {
+    const bodega = idBodega || this.getBodegaActual()?.idBodega;
+    if (p?.stockPorBodega && bodega && p.stockPorBodega[bodega] !== undefined) {
+      return p.stockPorBodega[bodega];
+    }
+    return p?.disponibilidad?.cantidadDisponible ?? 0;
+  }
+
+  /**
+   * Los 6 pasos REALES del wizard de crear-ventas (aw-wizard en
+   * crear-ventas.component.html): cliente primero, envío y facturación son un
+   * solo paso con pestañas. Única fuente de verdad para todas las tools de pasos.
+   */
+  private getWizardStepsReales(): Array<{ number: number; name: string; key: string; completed: boolean; current: boolean; description: string }> {
+    const cart = this.cartService.productInCart.getValue() || [];
+    const steps = [
+      { number: 1, name: 'Selección de Cliente', key: 'cliente', completed: !!this.pedidoEnProgreso.cliente, description: 'Seleccionar o crear el cliente del pedido' },
+      { number: 2, name: 'Selección de Productos', key: 'productos', completed: cart.length > 0, description: 'Buscar productos y agregarlos al carrito' },
+      { number: 3, name: 'Carrito y Notas', key: 'carrito', completed: cart.length > 0, description: 'Revisar el carrito y agregar notas del pedido' },
+      { number: 4, name: 'Envío y Facturación', key: 'envio-facturacion', completed: !!this.pedidoEnProgreso.envio?.direccionEntrega && !!this.pedidoEnProgreso.facturacion, description: 'Configurar entrega y datos de facturación (un paso con dos pestañas)' },
+      { number: 5, name: 'Resumen y Pago', key: 'pago', completed: !!this.pedidoEnProgreso.formaDePago, description: 'Revisar totales y elegir método de pago' },
+      { number: 6, name: 'Confirmación', key: 'confirmacion', completed: !!this.pedidoEnProgreso._id, description: 'Pedido creado y confirmado' }
+    ];
+    return steps.map(s => ({ ...s, current: this.pasoActual === s.number }));
+  }
+
   private inicializarNuevoPedido(): void {
     const user = JSON.parse(localStorage.getItem('user') || '{}') as UserLogged;
     const asesor: UserLite = { name: user.name, email: user.email, nit: user.nit };
@@ -318,8 +359,8 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         },
         async () => {
             try {
-                const bodegas = (await this.bodegaService.getBodegas().toPromise()) || [];
-                const warehouseList = bodegas.map(b => ({id: b.idBodega, nombre: b.nombre}));
+                const bodegas = (await this.bodegaService.getBodegasByChannelName('Venta Asistida').toPromise()) || [];
+                const warehouseList = bodegas.map(b => ({id: b.idBodega || b.id, idBodega: b.idBodega, nombre: b.nombre}));
                 
                 if (warehouseList.length === 0) {
                     return { 
@@ -360,7 +401,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         },
         async ({ warehouseId }) => {
             try {
-                const bodegas = (await this.bodegaService.getBodegas().toPromise()) || [];
+                const bodegas = (await this.bodegaService.getBodegasByChannelName('Venta Asistida').toPromise()) || [];
                 this.bodegaSeleccionada = bodegas.find(b => b.idBodega === warehouseId);
 
                 if (!this.bodegaSeleccionada) {
@@ -444,33 +485,40 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         }
       },
       async ({ query, category, minPrice, maxPrice, minStock, sortBy, limit = 10 }) => {
-        if (!this.bodegaSeleccionada) {
-            return { 
-                success: false, 
-                error: "Primero necesitas seleccionar una bodega. Usa la herramienta 'selectWarehouse' con el ID de la bodega que deseas usar.",
+        const bodegaActual = this.getBodegaActual();
+        if (!bodegaActual?.idBodega) {
+            return {
+                success: false,
+                error: "Primero necesitas seleccionar una bodega. Usa la herramienta 'selectWarehouse' con el ID de la bodega que deseas usar, o elígela en la pantalla de venta asistida.",
                 suggestion: "Prueba con 'listWarehouses' para ver las bodegas disponibles."
             };
         }
-        
+
+        const term = (query || '').trim();
+        if (term.length < 2) {
+            return {
+                success: false,
+                error: 'Necesito un término de búsqueda de al menos 2 caracteres (nombre, referencia o código de barras).'
+            };
+        }
+
         // Validar límite
         const safeLimit = Math.min(limit || 10, 50);
-        
-        let results: Producto[] = this.productosCatalogo;
+
+        // Búsqueda por servidor (mismo índice que usa la pantalla de venta asistida),
+        // filtrada por la bodega activa para que el stock sea el de esa bodega.
+        let results: Producto[] = [];
         let appliedFilters: string[] = [];
-        
-        // Filtro por búsqueda de texto (nombre, código de barras, referencia)
-        if (query) {
-          const q = query.toLowerCase().trim();
-          results = results.filter(p => {
-            const titulo = p.crearProducto?.titulo?.toLowerCase() || '';
-            const codigoBarras = p.identificacion?.codigoBarras?.toLowerCase() || '';
-            const referencia = p.identificacion?.referencia?.toLowerCase() || '';
-            
-            return titulo.includes(q) || codigoBarras.includes(q) || referencia.includes(q);
-          });
-          appliedFilters.push(`búsqueda: "${query}"`);
+        try {
+          const resp: any = await this.ventasService
+            .quickSearchProducts(term, Math.max(safeLimit * 2, 20), 'all', bodegaActual.idBodega)
+            .toPromise();
+          results = [...(resp?.products || [])];
+        } catch (error: any) {
+          return { success: false, error: `Error buscando productos en el servidor: ${error?.message || error}` };
         }
-        
+        appliedFilters.push(`búsqueda: "${term}"`);
+
         // Filtro por categoría
         if (category) {
           results = results.filter(p => {
@@ -500,10 +548,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         
         // Filtro por stock mínimo
         if (minStock !== undefined) {
-          results = results.filter(p => {
-            const stock = p.disponibilidad?.cantidadDisponible || 0;
-            return stock >= minStock;
-          });
+          results = results.filter(p => this.getStockEnBodega(p, bodegaActual.idBodega) >= minStock);
           appliedFilters.push(`stock mín: ${minStock}`);
         }
         
@@ -535,19 +580,11 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
               appliedFilters.push('ordenado por precio (mayor a menor)');
               break;
             case 'stock-desc':
-              results.sort((a, b) => {
-                const stockA = a.disponibilidad?.cantidadDisponible || 0;
-                const stockB = b.disponibilidad?.cantidadDisponible || 0;
-                return stockB - stockA;
-              });
+              results.sort((a, b) => this.getStockEnBodega(b, bodegaActual.idBodega) - this.getStockEnBodega(a, bodegaActual.idBodega));
               appliedFilters.push('ordenado por stock (mayor a menor)');
               break;
             case 'stock-asc':
-              results.sort((a, b) => {
-                const stockA = a.disponibilidad?.cantidadDisponible || 0;
-                const stockB = b.disponibilidad?.cantidadDisponible || 0;
-                return stockA - stockB;
-              });
+              results.sort((a, b) => this.getStockEnBodega(a, bodegaActual.idBodega) - this.getStockEnBodega(b, bodegaActual.idBodega));
               appliedFilters.push('ordenado por stock (menor a mayor)');
               break;
           }
@@ -565,11 +602,8 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
             return { 
                 success: false, 
                 error: `No encontré productos${filterText}.`,
-                suggestion: 'Intenta ajustar los filtros o usa términos más generales. Puedes usar searchProducts sin parámetros para ver todos los productos disponibles.',
-                totalInCatalog: this.productosCatalogo.length,
-                appliedFilters: appliedFilters,
-                availableCategories: this.getAvailableCategories(),
-                priceRange: this.getPriceRange()
+                suggestion: 'Intenta ajustar los filtros o usa términos más generales.',
+                appliedFilters: appliedFilters
             };
         }
         
@@ -577,7 +611,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
             id: p.cd, 
             nombre: p.crearProducto?.titulo, 
             precio: p.precio?.precioUnitarioConIva || 0,
-            disponible: p.disponibilidad?.cantidadDisponible || 0,
+            disponible: this.getStockEnBodega(p),
             categoria: p.exposicion?.etiquetas?.[0] || p.categorias?.label || 'Sin categoría',
             referencia: p.identificacion?.referencia || '',
             codigoBarras: p.identificacion?.codigoBarras || '',
@@ -982,7 +1016,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
             order: {
                 orderNumber: this.pedidoEnProgreso.nroPedido,
                 reference: this.pedidoEnProgreso.referencia,
-                warehouse: this.bodegaSeleccionada?.nombre || 'No seleccionada',
+                warehouse: this.getBodegaActual()?.nombre || 'No seleccionada',
                 client: this.pedidoEnProgreso.cliente ? {
                     name: this.pedidoEnProgreso.cliente.nombres_completos,
                     document: this.pedidoEnProgreso.cliente.documento,
@@ -1240,7 +1274,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
           // Validar stock de productos
           let stockIssues = 0;
           cart.forEach((item, index) => {
-            const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+            const producto = (item.producto ?? null);
             const stockDisponible = producto?.disponibilidad?.cantidadDisponible || 0;
             const cantidadSolicitada = item.cantidad || 0;
             
@@ -1292,7 +1326,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         let subtotal = 0;
         if (cart) {
           cart.forEach(item => {
-            const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+            const producto = (item.producto ?? null);
             const precio = producto?.precio?.precioUnitarioConIva || 0;
             subtotal += precio * (item.cantidad || 0);
           });
@@ -1358,7 +1392,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         const productDetails = [];
 
         for (const item of cart) {
-          const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+          const producto = (item.producto ?? null);
           if (producto) {
             const precioUnitario = producto.precio?.precioUnitarioConIva || 0;
             const precioSinIVA = producto.precio?.precioUnitarioSinIva || precioUnitario;
@@ -1451,7 +1485,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
 
           // Información del warehouse
           warehouse: {
-            name: this.bodegaSeleccionada?.nombre || 'No seleccionada',
+            name: this.getBodegaActual()?.nombre || 'No seleccionada',
             id: this.bodegaSeleccionada?.idBodega || ''
           },
 
@@ -1519,7 +1553,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
               validation.passed.push(`${cart.length} productos en el carrito`);
               // Validar stock para cada producto
               cart.forEach((item, index) => {
-                const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+                const producto = (item.producto ?? null);
                 const stockDisponible = producto?.disponibilidad?.cantidadDisponible || 0;
                 const cantidadSolicitada = item.cantidad || 0;
                 
@@ -1567,7 +1601,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
             if (cartItems && cartItems.length > 0) {
               let total = 0;
               cartItems.forEach(item => {
-                const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+                const producto = (item.producto ?? null);
                 const precio = producto?.precio?.precioUnitarioConIva || 0;
                 total += precio * (item.cantidad || 0);
               });
@@ -1656,7 +1690,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
             id: p.cd, 
             nombre: p.crearProducto?.titulo, 
             precio: p.precio?.precioUnitarioConIva || 0,
-            disponible: p.disponibilidad?.cantidadDisponible || 0,
+            disponible: this.getStockEnBodega(p),
             precioFormateado: `$${(p.precio?.precioUnitarioConIva || 0).toLocaleString()}`
           }))
         };
@@ -1936,7 +1970,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         let totalEstimado = 0;
         if (cart) {
           cart.forEach(item => {
-            const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+            const producto = (item.producto ?? null);
             const precio = producto?.precio?.precioUnitarioConIva || 0;
             totalEstimado += precio * (item.cantidad || 0);
           });
@@ -1947,8 +1981,8 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
           snapshot: {
             timestamp: new Date().toLocaleString('es-CO'),
             orderNumber: this.pedidoEnProgreso.nroPedido || 'Por generar',
-            currentStep: `${this.pasoActual}/8 - ${currentStepName}`,
-            warehouse: this.bodegaSeleccionada?.nombre || '❌ No seleccionada',
+            currentStep: `${this.pasoActual}/6 - ${currentStepName}`,
+            warehouse: this.getBodegaActual()?.nombre || '❌ No seleccionada',
             client: this.pedidoEnProgreso.cliente?.nombres_completos || '❌ No seleccionado',
             itemsInCart: cart?.length || 0,
             estimatedTotal: `$${totalEstimado.toLocaleString()}`,
@@ -1966,15 +2000,15 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
 
           progress: {
             completed: this.calculateCompletionPercentage(this._getProcessStatus()),
-            readyToPay: this.pasoActual >= 7 && this.isReadyForPayment(),
+            readyToPay: this.pasoActual >= 5 && this.isReadyForPayment(),
             canProceed: this.validateCurrentStep().canProceed
           },
 
           quickActions: this.getQuickActionsForCurrentStep(),
 
-          message: (this.pasoActual >= 7 && this.isReadyForPayment()) ? 
+          message: (this.pasoActual >= 5 && this.isReadyForPayment()) ? 
             `🎉 Pedido listo para procesar (${this.calculateCompletionPercentage(this._getProcessStatus())}% completo)` :
-            `⚡ Proceso en curso: Paso ${this.pasoActual}/8 (${this.calculateCompletionPercentage(this._getProcessStatus())}% completo)`,
+            `⚡ Proceso en curso: Paso ${this.pasoActual}/6 (${this.calculateCompletionPercentage(this._getProcessStatus())}% completo)`,
 
           suggestedNextAction: this.getSuggestedNextAction()
         };
@@ -2559,36 +2593,6 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
       }
     );
 
-    // Herramienta para obtener resumen del pedido
-    adapter.registerTool(
-      {
-        name: 'getOrderSummary',
-        description: 'Obtiene un resumen completo del pedido actual.',
-        parameters: { type: 'object', properties: {} }
-      },
-      () => {
-        this.pedidosUtilService.pedido = this.pedidoEnProgreso;
-        
-        const summary = {
-          orderNumber: this.pedidoEnProgreso.nroPedido,
-          warehouse: this.bodegaSeleccionada?.nombre || 'No seleccionada',
-          client: this.pedidoEnProgreso.cliente?.nombres_completos || 'No configurado',
-          itemsCount: this.pedidoEnProgreso.carrito?.length || 0,
-          subtotal: this.pedidosUtilService.getSubtotal(),
-          taxes: this.pedidosUtilService.checkIVAPrice(),
-          shipping: this.pedidoEnProgreso.totalEnvio || 0,
-          discount: this.pedidoEnProgreso.totalDescuento || 0,
-          total: (this.pedidosUtilService.getSubtotal() + this.pedidosUtilService.checkIVAPrice() + (this.pedidoEnProgreso.totalEnvio || 0) - (this.pedidoEnProgreso.totalDescuento || 0)),
-          paymentMethod: this.pedidoEnProgreso.formaDePago || 'No seleccionado',
-          deliveryAddress: this.pedidoEnProgreso.envio?.direccionEntrega || 'No configurada',
-          status: this.pedidoEnProgreso.estadoProceso,
-          paymentStatus: this.pedidoEnProgreso.estadoPago
-        };
-
-        return { success: true, summary };
-      }
-    );
-
     // Herramienta para configurar información de facturación
     adapter.registerTool(
       {
@@ -2917,13 +2921,13 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     adapter.registerTool(
       {
         name: 'goToStep',
-        description: 'Navega a un paso específico del proceso de creación de pedidos. Los pasos disponibles son: cliente, productos, carrito, facturacion, entrega, notas, pago, confirmacion.',
+        description: 'Navega a un paso específico del proceso de creación de pedidos. Los pasos disponibles son: cliente, productos, carrito, envio-facturacion, pago, confirmacion.',
         parameters: {
           type: 'object',
           properties: {
             step: {
               type: 'string',
-              enum: ['cliente', 'productos', 'carrito', 'facturacion', 'entrega', 'notas', 'pago', 'confirmacion'],
+              enum: ['cliente', 'productos', 'carrito', 'envio-facturacion', 'pago', 'confirmacion'],
               description: 'El paso al que se desea navegar'
             }
           },
@@ -2931,22 +2935,11 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         }
       },
       (args: { step: string }) => {
-        const stepMapping = {
-          'cliente': { number: 1, name: 'Selección de Cliente' },
-          'productos': { number: 2, name: 'Selección de Productos' },
-          'carrito': { number: 3, name: 'Revisión del Carrito' },
-          'facturacion': { number: 4, name: 'Datos de Facturación' },
-          'entrega': { number: 5, name: 'Información de Entrega' },
-          'notas': { number: 6, name: 'Notas del Pedido' },
-          'pago': { number: 7, name: 'Método de Pago' },
-          'confirmacion': { number: 8, name: 'Confirmación Final' }
-        };
-
-        const targetStep = stepMapping[args.step];
+        const targetStep = this.getWizardStepsReales().find(s => s.key === args.step);
         if (!targetStep) {
-          return { 
-            success: false, 
-            error: `Paso no válido: ${args.step}. Pasos disponibles: ${Object.keys(stepMapping).join(', ')}` 
+          return {
+            success: false,
+            error: `Paso no válido: ${args.step}. Pasos disponibles: ${this.getWizardStepsReales().map(s => s.key).join(', ')}`
           };
         }
 
@@ -2971,7 +2964,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         parameters: { type: 'object', properties: {} }
       },
       () => {
-        if (this.pasoActual >= 8) {
+        if (this.pasoActual >= 6) {
           return { 
             success: false, 
             error: 'Ya estás en el último paso del proceso',
@@ -3064,72 +3057,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         parameters: { type: 'object', properties: {} }
       },
       () => {
-        const allSteps = [
-          {
-            number: 1,
-            name: 'Selección de Cliente',
-            key: 'cliente',
-            completed: !!this.pedidoEnProgreso.cliente,
-            current: this.pasoActual === 1,
-            description: 'Seleccionar o crear un cliente para el pedido'
-          },
-          {
-            number: 2,
-            name: 'Selección de Productos',
-            key: 'productos',
-            completed: this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0,
-            current: this.pasoActual === 2,
-            description: 'Agregar productos al carrito'
-          },
-          {
-            number: 3,
-            name: 'Revisión del Carrito',
-            key: 'carrito',
-            completed: this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0,
-            current: this.pasoActual === 3,
-            description: 'Revisar y modificar productos en el carrito'
-          },
-          {
-            number: 4,
-            name: 'Datos de Facturación',
-            key: 'facturacion',
-            completed: !!this.pedidoEnProgreso.facturacion?.nombres,
-            current: this.pasoActual === 4,
-            description: 'Completar información de facturación'
-          },
-          {
-            number: 5,
-            name: 'Información de Entrega',
-            key: 'entrega',
-            completed: !!this.pedidoEnProgreso.envio?.direccionEntrega,
-            current: this.pasoActual === 5,
-            description: 'Configurar dirección y método de entrega'
-          },
-          {
-            number: 6,
-            name: 'Notas del Pedido',
-            key: 'notas',
-            completed: true, // Las notas son opcionales
-            current: this.pasoActual === 6,
-            description: 'Agregar notas opcionales para el pedido'
-          },
-          {
-            number: 7,
-            name: 'Método de Pago',
-            key: 'pago',
-            completed: !!this.pedidoEnProgreso.formaDePago,
-            current: this.pasoActual === 7,
-            description: 'Seleccionar método de pago'
-          },
-          {
-            number: 8,
-            name: 'Confirmación Final',
-            key: 'confirmacion',
-            completed: false, // Solo se completa al procesar la venta
-            current: this.pasoActual === 8,
-            description: 'Revisar y confirmar el pedido'
-          }
-        ];
+        const allSteps = this.getWizardStepsReales();
 
         const completedSteps = allSteps.filter(step => step.completed).length;
         const progressPercentage = Math.round((completedSteps / allSteps.length) * 100);
@@ -3144,7 +3072,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
             total: allSteps.length,
             percentage: progressPercentage
           },
-          message: `Proceso en paso ${this.pasoActual}/8 (${progressPercentage}% completado)`,
+          message: `Proceso en paso ${this.pasoActual}/${allSteps.length} (${progressPercentage}% completado)`,
           nextActions: this.getNextActions(this._getProcessStatus())
         };
       }
@@ -3262,39 +3190,17 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         parameters: { type: 'object', properties: {} }
       },
       () => {
-        const steps = this.getInitialProcessSteps();
+        const steps = this.getWizardStepsReales();
         const currentStepIndex = Math.max(0, Math.min(this.pasoActual - 1, steps.length - 1));
         const currentStep = steps[currentStepIndex];
         const processStatus = this._getProcessStatus();
+        const bodegaActual = this.getBodegaActual();
 
-        // Información específica según el paso actual
+        // Información específica según el paso actual (wizard real de 6 pasos)
         let stepSpecificInfo: any = {};
-        
-        switch (this.pasoActual) {
-          case 1: // Productos
-            stepSpecificInfo = {
-              warehouses: this.bodegaSeleccionada ? 
-                { selected: this.bodegaSeleccionada.nombre, id: this.bodegaSeleccionada.idBodega } :
-                { message: 'No hay bodega seleccionada' },
-              productsInCatalog: this.productosCatalogo.length,
-              nextAction: !this.bodegaSeleccionada ? 
-                'Usa selectWarehouse para elegir una bodega' :
-                'Usa searchProducts para buscar productos o addToCart para agregar al carrito'
-            };
-            break;
-            
-          case 2: // Carrito
-            const cart = this.cartService.productInCart.getValue();
-            stepSpecificInfo = {
-              itemsInCart: cart?.length || 0,
-              cartTotal: this.calculateCartTotal(),
-              nextAction: (cart?.length || 0) > 0 ? 
-                'Revisa tu carrito y procede con setClientToOrder' :
-                'Agrega productos al carrito con addToCart'
-            };
-            break;
-            
-          case 3: // Cliente
+
+        switch (currentStep.number) {
+          case 1: // Cliente
             stepSpecificInfo = {
               clientConfigured: !!this.pedidoEnProgreso.cliente,
               clientInfo: this.pedidoEnProgreso.cliente ? {
@@ -3304,11 +3210,34 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
               } : null,
               nextAction: !this.pedidoEnProgreso.cliente ?
                 'Usa searchClient para buscar un cliente o setClientToOrder para crear uno nuevo' :
-                'Cliente configurado. Procede con setDeliveryInfo'
+                'Cliente configurado. Continúa con la selección de productos'
             };
             break;
-            
-          case 4: // Envío
+
+          case 2: // Productos
+            stepSpecificInfo = {
+              warehouses: bodegaActual ?
+                { selected: bodegaActual.nombre, id: bodegaActual.idBodega } :
+                { message: 'No hay bodega seleccionada' },
+              nextAction: !bodegaActual ?
+                'Usa selectWarehouse para elegir una bodega' :
+                'Usa searchProducts para buscar productos o addToCart para agregar al carrito'
+            };
+            break;
+
+          case 3: { // Carrito y notas
+            const cart = this.cartService.productInCart.getValue();
+            stepSpecificInfo = {
+              itemsInCart: cart?.length || 0,
+              cartTotal: this.calculateCartTotal(),
+              nextAction: (cart?.length || 0) > 0 ?
+                'Revisa el carrito y continúa con envío y facturación' :
+                'Agrega productos al carrito con addToCart'
+            };
+            break;
+          }
+
+          case 4: // Envío y facturación (un solo paso con dos pestañas)
             stepSpecificInfo = {
               deliveryConfigured: !!this.pedidoEnProgreso.envio,
               deliveryInfo: this.pedidoEnProgreso.envio ? {
@@ -3317,27 +3246,21 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
                 method: this.pedidoEnProgreso.formaEntrega
               } : null,
               isPickup: this.pedidoEnProgreso.formaEntrega?.toLowerCase().includes('recoge'),
-              nextAction: !this.pedidoEnProgreso.envio ?
-                'Usa setDeliveryInfo para configurar la entrega' :
-                'Entrega configurada. Procede con setBillingInfo'
-            };
-            break;
-            
-          case 5: // Facturación
-            stepSpecificInfo = {
               billingConfigured: !!this.pedidoEnProgreso.facturacion,
               billingInfo: this.pedidoEnProgreso.facturacion ? {
                 name: this.pedidoEnProgreso.facturacion.nombres,
                 document: this.pedidoEnProgreso.facturacion.documento,
                 address: this.pedidoEnProgreso.facturacion.direccion
               } : null,
-              nextAction: !this.pedidoEnProgreso.facturacion ?
-                'Usa setBillingInfo para configurar la facturación' :
-                'Facturación configurada. Procede al resumen y pago'
+              nextAction: !this.pedidoEnProgreso.envio ?
+                'Usa setDeliveryInfo para configurar la entrega' :
+                (!this.pedidoEnProgreso.facturacion ?
+                  'Usa setBillingInfo para configurar la facturación' :
+                  'Envío y facturación configurados. Continúa al resumen y pago')
             };
             break;
-            
-          case 6: // Pago
+
+          case 5: // Resumen y pago
             stepSpecificInfo = {
               paymentMethodSelected: !!this.pedidoEnProgreso.formaDePago,
               paymentMethod: this.pedidoEnProgreso.formaDePago || 'No seleccionado',
@@ -3353,8 +3276,8 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
                 'Completa la información faltante antes de procesar'
             };
             break;
-            
-          case 7: // Confirmación
+
+          case 6: // Confirmación
             stepSpecificInfo = {
               orderProcessed: this.pedidoEnProgreso.estadoProceso !== 'SinProducir',
               orderNumber: this.pedidoEnProgreso.nroPedido,
@@ -3368,22 +3291,21 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         return {
           success: true,
           currentStep: {
-            number: this.pasoActual,
-            name: currentStep.caption,
-            key: currentStep.stepKey,
-            icon: currentStep.icon,
-            description: this.getStepDescription(this.pasoActual)
+            number: currentStep.number,
+            name: currentStep.name,
+            key: currentStep.key,
+            description: currentStep.description
           },
           stepSpecificInfo,
           processStatus,
           navigation: {
             canGoBack: this.pasoActual > 1,
-            canGoForward: this.pasoActual < 7 && this.validateCurrentStep().canProceed,
-            availableSteps: steps.map((step, index) => ({
-              number: index + 1,
-              name: step.caption,
-              key: step.stepKey,
-              accessible: this.canAccessStep(index + 1)
+            canGoForward: this.pasoActual < steps.length && this.validateCurrentStep().canProceed,
+            availableSteps: steps.map((step) => ({
+              number: step.number,
+              name: step.name,
+              key: step.key,
+              accessible: this.canAccessStep(step.number)
             }))
           },
           completionPercentage: this.calculateCompletionPercentage(processStatus),
@@ -3400,28 +3322,21 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
         parameters: { type: 'object', properties: {} }
       },
       () => {
-        const steps = this.getInitialProcessSteps();
+        const steps = this.getWizardStepsReales();
         const processStatus = this._getProcessStatus();
-        
-        const stepMap = steps.map((step, index) => {
-          const stepNumber = index + 1;
-          const isCurrent = stepNumber === this.pasoActual;
-          const canAccess = this.canAccessStep(stepNumber);
-          const isCompleted = this.isStepCompleted(stepNumber);
-          
+
+        const stepMap = steps.map((step) => {
+          const stepNumber = step.number;
           return {
             number: stepNumber,
-            name: step.caption,
-            key: step.stepKey,
-            icon: step.icon,
+            name: step.name,
+            key: step.key,
             status: {
-              isCurrent,
-              isCompleted,
-              canAccess,
+              isCurrent: step.current,
+              isCompleted: step.completed,
+              canAccess: this.canAccessStep(stepNumber),
               description: this.getStepStatusDescription(stepNumber)
-            },
-            requirements: this.getStepRequirements(stepNumber),
-            actions: this.getStepAvailableActions(stepNumber)
+            }
           };
         });
 
@@ -3449,16 +3364,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
 
   // Métodos auxiliares requeridos por las nuevas herramientas de navegación
   private getStepDescription(stepNumber: number): string {
-    const stepDescriptions: { [key: number]: string } = {
-      1: 'Productos: Selecciona una bodega y elige productos del catálogo disponible para tu pedido',
-      2: 'Carrito: Revisa los productos seleccionados, ajusta cantidades y aplica descuentos si necesario',
-      3: 'Cliente: Selecciona o crea el cliente que realizará la compra',
-      4: 'Envío: Configura la información de entrega del pedido (dirección, método, costos)',
-      5: 'Facturación: Define los datos de facturación electrónica y tipo de documento',
-      6: 'Pago: Selecciona el método de pago y completa la información financiera',
-      7: 'Confirmación: Revisa y confirma todos los detalles antes de crear el pedido'
-    };
-    return stepDescriptions[stepNumber] || 'Paso no identificado';
+    return this.getWizardStepsReales().find(s => s.number === stepNumber)?.description || 'Paso no identificado';
   }
 
   private canAccessStep(stepNumber: number): boolean {
@@ -3475,24 +3381,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
   }
 
   private isStepCompleted(stepNumber: number): boolean {
-    switch (stepNumber) {
-      case 1: // Productos
-        return this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0;
-      case 2: // Carrito  
-        return this.pedidoEnProgreso.carrito && this.pedidoEnProgreso.carrito.length > 0;
-      case 3: // Cliente
-        return !!this.pedidoEnProgreso.cliente;
-      case 4: // Envío
-        return !!this.pedidoEnProgreso.envio && !!this.pedidoEnProgreso.envio.direccionEntrega;
-      case 5: // Facturación
-        return !!this.pedidoEnProgreso.facturacion;
-      case 6: // Pago
-        return !!this.pedidoEnProgreso.formaDePago;
-      case 7: // Confirmación
-        return !!this.pedidoEnProgreso._id; // Completado si ya tiene ID (pedido creado)
-      default:
-        return false;
-    }
+    return this.getWizardStepsReales().find(s => s.number === stepNumber)?.completed ?? false;
   }
 
   private getStepStatusDescription(stepNumber: number): string {
@@ -3639,33 +3528,11 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
   }
 
   private getStepName(stepNumber: number): string {
-    const stepNames = {
-      1: 'Selección de Cliente',
-      2: 'Selección de Productos', 
-      3: 'Revisión del Carrito',
-      4: 'Datos de Facturación',
-      5: 'Información de Entrega',
-      6: 'Notas del Pedido',
-      7: 'Método de Pago',
-      8: 'Confirmación Final'
-    };
-    
-    return stepNames[stepNumber] || 'Paso desconocido';
+    return this.getWizardStepsReales().find(s => s.number === stepNumber)?.name || 'Paso desconocido';
   }
   
   private getStepKeyForNumber(stepNumber: number): string {
-    const stepKeys = {
-      1: 'cliente',
-      2: 'productos', 
-      3: 'carrito',
-      4: 'facturacion',
-      5: 'entrega',
-      6: 'notas',
-      7: 'pago',
-      8: 'confirmacion'
-    };
-    
-    return stepKeys[stepNumber] || 'cliente';
+    return this.getWizardStepsReales().find(s => s.number === stepNumber)?.key || 'cliente';
   }
 
 
@@ -3851,7 +3718,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
   }
 
   private internalNextStep() {
-    if (this.pasoActual >= 8) {
+    if (this.pasoActual >= 6) {
       return { 
         success: false, 
         error: 'Ya estás en el último paso del proceso',
@@ -3899,7 +3766,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     }
 
     const total = cart.reduce((acc, item) => {
-      const producto = this.productosCatalogo.find(p => p.cd === item.producto?.cd);
+      const producto = (item.producto ?? null);
       const precio = producto?.precio?.precioUnitarioConIva || 0;
       const cantidad = item.cantidad || 0;
       return acc + (precio * cantidad);
