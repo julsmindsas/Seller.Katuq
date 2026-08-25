@@ -5338,3 +5338,16 @@ Frontend, **sin desplegar**.
 **Verificado en producción con dominio de ensayo** (puesto y retirado): host-permitido 200 con y sin www, 404 para dominio ajeno y tras retirarlo; el render responde por `X-Sitio-Host` del dominio y la canónica + sitemap apuntan al dominio del comerciante.
 
 **Seguridad razonada**: reclamar un dominio ajeno es inofensivo — sin control del DNS ese dominio jamás trae tráfico aquí, y el certificado solo se emite cuando llega tráfico TLS real (lo que implica que el DNS ya apunta). El candado de unicidad impide que un sitio le robe el dominio a otro dentro de la plataforma.
+
+---
+
+## D-206 (2026-08-25) — El lote de las seis: la lista de mejoras completa, de una
+
+Daniel pidió "todas una por una". Todo desplegado (backend + Caddy de sitios + frontend) con la suite en 188 verdes.
+
+1. **Vencimiento de la reserva**: un pedido de PASARELA sin pagar devuelve su stock solo tras `RESERVA_TIENDA_MINUTOS` (60) y queda Anulado con rastro (`reservaVencida`, `estadoProcesoAntesDeVencer`, `user_edit: vencimiento-reserva`). Solo pasarela — contra entrega y formas manuales no vencen. Barrido **perezoso** (corre al crear pedidos, freno 10 min por empresa, consultas solo-igualdad sin índices nuevos; cero crones). Un **pago tardío revive** el pedido y vuelve a descontar.
+2. **Hoja de estilos compartida**: el CSS constante sale del HTML a `/estilos.css?v=<huella>` con caché inmutable de un año (huella vieja → hoja vigente con caché corta). CSP gana `'self'`; handle nuevo en el Caddy de sitios (repo + servidor recargado). Mitad del peso por página desde la 2ª vista.
+3. **Borrar páginas**: `DELETE /v1/sites/:id` con candado de empresa + botón «Eliminar» con confirmación en Mis páginas.
+4. **Palanca de venta cruzada** (`tienda.ventaCruzada`, ON por defecto): apaga afines de ficha, endpoint de relacionados y sugerencias del carrito. Toggle en la pestaña Tienda.
+5. **IA de textos VÍA KAI, de vuelta y funcionando**: `generateContentFlow` (Genkit 3890, ya desplegado, con SU llave — descubierto empíricamente: acepta `{data:{prompt}}` y devuelve JSON parseado). Opt-in (`conIA`) desde la casilla del asistente; si KAI falla, la página sale con plantilla y `motivo` explícito. Resuelve las dos objeciones por las que Santiago la retiró (modelo directo sin llave + fallo silencioso); su prueba «no depende de ningún modelo» evolucionó a «sin casilla es determinista y jamás hay modelo directo». **Verificada en producción: 17 textos reescritos con copy real de marca.**
+6. **Efectos premium**: marquesina de marcas (loop CSS con pista duplicada, pausa al hover, respeta reduced-motion y el interruptor del tema) y **la foto vuela de la rejilla a la ficha** (`@view-transition` por página solo con movimiento; el nombre lo pone un toque de JS por CSSOM — la CSP intacta; sin soporte del navegador, navegación normal).
