@@ -5051,7 +5051,7 @@ Línea 10% + global 10% sobre 100.000 descuenta **19.000**, no 20.000.
 - `list.component.ts` sigue con **5 bloques duplicados** (`:2627`, `:3665`, `:4015`, `:5432`, `:5545`) que recalculan totales y pisan `totalDescuento` con solo la parte global cuando hay línea + global juntos. Se dispara con `necesitaRecalculoFrontend` (precios por volumen ⇒ ALMARA, DEL RANCHO, CAFE ESCOBAR). No corregido aquí.
 - POS suma `getDiscount()` en vez de restarlo (`pos-checkout.component.html:198,223`). Bug preexistente; hoy inocuo porque el POS no tiene UI de descuento por línea.
 
-## D-224 (2026-08-24) — Cabecera del acordeón del checkout: el chevron pisaba "Completo"
+## D-234 (2026-08-24) — Cabecera del acordeón del checkout: el chevron pisaba "Completo"
 
 **Reporte de Monica:** en la columna izquierda del checkout las cards se veían "cortadas" — el chevron encima del texto "Completo", el título partido en tres líneas ("Datos / de / Entrega") y, en la card abierta, "Completo" saliéndose por el borde.
 
