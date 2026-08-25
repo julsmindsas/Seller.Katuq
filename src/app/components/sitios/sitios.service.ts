@@ -216,12 +216,15 @@ export class SitiosService extends BaseService {
     nombre?: string;
     slug?: string;
     tipo?: string;
+    /** Dominio del comerciante ("mitienda.com"). Vacío = quitarlo. */
+    dominioPropio?: string;
     contenido?: Partial<ContenidoSitio>;
-  }): Observable<Respuesta<{ nombre: string; slug: string; draft: ContenidoSitio }>> {
-    return this.put<Respuesta<{ nombre: string; slug: string; draft: ContenidoSitio }>>(
-      "/v1/sites/edit",
-      body
-    );
+  }): Observable<
+    Respuesta<{ nombre: string; slug: string; dominioPropio?: string; draft: ContenidoSitio }>
+  > {
+    return this.put<
+      Respuesta<{ nombre: string; slug: string; dominioPropio?: string; draft: ContenidoSitio }>
+    >("/v1/sites/edit", body);
   }
 
   publicar(id: string): Observable<Respuesta<{ slug: string; publishedAt: string }>> {

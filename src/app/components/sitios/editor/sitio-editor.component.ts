@@ -565,6 +565,7 @@ export class SitioEditorComponent implements OnInit {
   // Campos de ajustes
   nombre = "";
   slug = "";
+  dominioPropio = "";
 
   /** Sufijo del dominio, para la barra del navegador de la previa. */
   dominioSitios = environment.dominioSitios || "katuq.com";
@@ -626,6 +627,7 @@ export class SitioEditorComponent implements OnInit {
         this.contenido = this.completar(res.data.draft);
         this.nombre = res.data.nombre;
         this.slug = res.data.slug;
+        this.dominioPropio = (res.data as any).dominioPropio || "";
         this.resolverProductosDePrevia();
         this.cargarMarca();
         this.iniciarHistorial();
@@ -2329,6 +2331,7 @@ export class SitioEditorComponent implements OnInit {
         id: this.id,
         nombre: this.nombre.trim(),
         slug: this.slug.trim(),
+        dominioPropio: this.dominioPropio.trim(),
         contenido: this.contenido,
       })
       .subscribe({
@@ -2370,6 +2373,7 @@ export class SitioEditorComponent implements OnInit {
     this.contenido = this.completar(data.draft);
     if (data.slug) this.slug = data.slug;
     if (data.nombre) this.nombre = data.nombre;
+    if ((data as any).dominioPropio !== undefined) this.dominioPropio = (data as any).dominioPropio || "";
     if (this.sitio) {
       this.sitio.slug = data.slug || this.sitio.slug;
       this.sitio.nombre = data.nombre || this.sitio.nombre;

@@ -2123,3 +2123,12 @@
     &:hover { background: rgba(95, 63, 224, 0.07); }
   }
 }
+
+// ── Instrucciones DNS del dominio propio ─────────────────────────────────────
+.dns-pasos {
+  margin: 0.5rem 0 0.5rem;
+  padding-left: 1.2rem;
+
+  li { margin-bottom: 0.3rem; font-size: 0.85rem; }
+  b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; }
+}

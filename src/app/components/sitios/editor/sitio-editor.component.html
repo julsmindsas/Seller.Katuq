@@ -1786,6 +1786,29 @@
         </div>
 
         <div class="grupo">
+          <h3>Tu propio dominio</h3>
+          <div class="campo">
+            <label>Dominio (opcional)</label>
+            <input type="text" [(ngModel)]="dominioPropio" (ngModelChange)="marcarSucio()"
+                   maxlength="253" placeholder="mitienda.com" />
+            <small>Tu página responderá también en tu dominio, con candado verde
+              automático. Escríbelo sin https:// ni rutas.</small>
+          </div>
+          <div class="nota nota--simple" *ngIf="dominioPropio">
+            <strong>Configura esto donde compraste el dominio</strong> (GoDaddy,
+            Namecheap, Hostinger…):
+            <ol class="dns-pasos">
+              <li>Registro <b>A</b> con nombre <b>&#64;</b> apuntando a
+                <b>34.225.223.187</b></li>
+              <li>Registro <b>CNAME</b> con nombre <b>www</b> apuntando a
+                <b>{{ slug || 'tu-pagina' }}.{{ dominioSitios }}</b></li>
+            </ol>
+            El cambio de DNS puede tardar de minutos a unas horas en regar.
+            Cuando apunte, el certificado se emite solo en la primera visita.
+          </div>
+        </div>
+
+        <div class="grupo">
           <h3>Cómo se ve al compartir</h3>
           <div class="campo">
             <label>Título</label>
