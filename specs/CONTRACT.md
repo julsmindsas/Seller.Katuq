@@ -5321,3 +5321,20 @@ Aplicado también a la **vista previa / PDF que recibe el cliente** (`doc-tbl`),
 Entre dos capturas de la misma cotización la línea pasó de **3.269 sin IVA** (tier de volumen para 800 uds) a **3.650** (lista de 1 unidad): ~**$305.000** de diferencia. Parece que al guardar/recargar la línea pierde el precio por volumen. **Sin diagnosticar.**
 
 Frontend, **sin desplegar**.
+
+---
+
+## D-205 (2026-08-25) — Dominio propio para las páginas publicadas
+
+**Pedido directo de Daniel** ("necesito rápido poder asociarle un dominio personalizado"). La infraestructura ya estaba lista sin saberlo: el Caddy de sitios emite certificados bajo demanda para CUALQUIER host que le llegue, y el único freno era `host-permitido`, que solo autorizaba subdominios de katuq.com.
+
+**Qué se hizo** (cero cambios en el Caddyfile):
+- `sanitizar.dominio()`: hostname DNS válido, tolera lo que la gente pega (https://, rutas, puerto se caen), rechaza katuq.com y subdominios — para la casa está el slug.
+- **Resolutor único por host** (`cargarPublicadoPorHost`): subdominio → slug; dominio propio → campo `dominioPropio` del sitio (acepta con y sin www). Lo usan la autorización de certificados, el render, robots y sitemap — la misma regla en todos los puntos.
+- `edit` acepta `dominioPropio` con **candado de unicidad** (un dominio pertenece a UN sitio; 409 si otro lo tiene) y precalienta el certificado al guardarlo.
+- Todas las URLs que salen del sitio usan su base canónica (`urlBaseDelSitio`): canónica y metas de compartir, sitemap, robots, link de acceso de cliente, y el regreso de la pasarela a `/gracias`.
+- Editor: campo "Tu propio dominio" en Ajustes con los DOS registros DNS exactos (A `@` → `34.225.223.187`; CNAME `www` → `<slug>.katuq.com`).
+
+**Verificado en producción con dominio de ensayo** (puesto y retirado): host-permitido 200 con y sin www, 404 para dominio ajeno y tras retirarlo; el render responde por `X-Sitio-Host` del dominio y la canónica + sitemap apuntan al dominio del comerciante.
+
+**Seguridad razonada**: reclamar un dominio ajeno es inofensivo — sin control del DNS ese dominio jamás trae tráfico aquí, y el certificado solo se emite cuando llega tráfico TLS real (lo que implica que el DNS ya apunta). El candado de unicidad impide que un sitio le robe el dominio a otro dentro de la plataforma.
