@@ -1802,8 +1802,11 @@
             <label>Dominio (opcional)</label>
             <input type="text" [(ngModel)]="dominioPropio" (ngModelChange)="marcarSucio()"
                    maxlength="253" placeholder="mitienda.com" />
-            <small>Escríbelo sin https:// ni barras. Tu página responderá ahí con
-              candado verde automático.</small>
+            <small>Escríbelo sin https:// ni barras. Al escribirlo te mostramos
+              los <b>2 registros DNS</b> que debes crear en tu proveedor de dominio
+              (GoDaddy, Namecheap, Hostinger…), con botón para copiarlos y un
+              comprobador para saber cuándo quedó. El candado verde (https) se
+              activa solo.</small>
           </div>
 
           <div class="dns" *ngIf="dominioPropio">
