@@ -2134,30 +2134,41 @@
 
   &__paso { margin: 0.55rem 0 0.4rem; line-height: 1.5; }
 
-  &__tabla {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0.35rem 0 0.4rem;
-
-    th {
-      text-align: left;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      opacity: 0.55;
-      padding: 0.25rem 0.5rem 0.25rem 0;
-    }
-
-    td { padding: 0.35rem 0.5rem 0.35rem 0; vertical-align: middle; }
+  // Cada registro DNS como bloque apilado: el panel es angosto y una tabla
+  // de 4 columnas empujaba los botones Copiar fuera de la tarjeta.
+  &__registro {
+    border: 1px solid rgba(95, 63, 224, 0.16);
+    background: rgba(95, 63, 224, 0.03);
+    border-radius: 10px;
+    padding: 0.55rem 0.7rem;
+    margin: 0.4rem 0;
 
     code {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.82rem;
-      background: rgba(95, 63, 224, 0.07);
+      background: rgba(95, 63, 224, 0.09);
       padding: 0.2rem 0.45rem;
       border-radius: 6px;
-      white-space: nowrap;
+      word-break: break-all;
     }
+  }
+
+  &__linea {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.18rem 0;
+
+    .btn-fantasma--sm { margin-left: auto; flex-shrink: 0; }
+  }
+
+  &__etiqueta {
+    flex: 0 0 7.2rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.55;
   }
 
   &__estado {

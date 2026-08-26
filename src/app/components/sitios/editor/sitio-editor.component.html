@@ -1818,27 +1818,40 @@
               sección <b>DNS</b> o <b>Administrar registros</b>.</p>
 
             <p class="dns__paso"><b>3.</b> Crea estos dos registros, tal cual:</p>
-            <table class="dns__tabla">
-              <thead>
-                <tr><th>Tipo</th><th>Nombre / Host</th><th>Valor / Apunta a</th><th></th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><b>A</b></td>
-                  <td><code>&#64;</code></td>
-                  <td><code>34.225.223.187</code></td>
-                  <td><button class="btn-fantasma btn-fantasma--sm"
-                        (click)="copiarDns('34.225.223.187')">Copiar</button></td>
-                </tr>
-                <tr>
-                  <td><b>CNAME</b></td>
-                  <td><code>www</code></td>
-                  <td><code>{{ slug || 'tu-pagina' }}.{{ dominioSitios }}</code></td>
-                  <td><button class="btn-fantasma btn-fantasma--sm"
-                        (click)="copiarDns((slug || 'tu-pagina') + '.' + dominioSitios)">Copiar</button></td>
-                </tr>
-              </tbody>
-            </table>
+
+            <div class="dns__registro">
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Tipo</span>
+                <b>A</b>
+              </div>
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Nombre / Host</span>
+                <code>&#64;</code>
+              </div>
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Valor / Apunta a</span>
+                <code>34.225.223.187</code>
+                <button class="btn-fantasma btn-fantasma--sm"
+                        (click)="copiarDns('34.225.223.187')">Copiar</button>
+              </div>
+            </div>
+
+            <div class="dns__registro">
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Tipo</span>
+                <b>CNAME</b>
+              </div>
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Nombre / Host</span>
+                <code>www</code>
+              </div>
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Valor / Apunta a</span>
+                <code>{{ slug || 'tu-pagina' }}.{{ dominioSitios }}</code>
+                <button class="btn-fantasma btn-fantasma--sm"
+                        (click)="copiarDns((slug || 'tu-pagina') + '.' + dominioSitios)">Copiar</button>
+              </div>
+            </div>
             <small>Si ya existe un registro A en &#64; o un CNAME en www apuntando a
               otro lado, edítalo en vez de crear uno nuevo.</small>
 
