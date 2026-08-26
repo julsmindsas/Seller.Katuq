@@ -12,9 +12,12 @@ import { OnboardingService } from '../onboarding/services/onboarding.service';
     styleUrls: ['./change-password.component.scss']
 })
 export class ChangePasswordComponent implements OnInit {
+    // La sesión que pospone el cambio no vuelve a ser interrumpida hasta el
+    // próximo login; los redirects de login/auth consultan esta misma llave.
+    static readonly DEFER_KEY = 'passwordChangeDeferred';
+
     passwordForm: FormGroup;
     standardPasswordDetected: boolean = true; // Esta bandera se debería definir según la lógica de autenticación
-    confirmVisible: boolean = false; // Nueva propiedad para mostrar confirmación inline
 
     constructor(private fb: FormBuilder, private router: Router,
         private service: MaestroService,
@@ -34,8 +37,7 @@ export class ChangePasswordComponent implements OnInit {
         return form.get('newPassword')?.value === form.get('confirmPassword')?.value ? null : { mismatch: true };
     }
 
-    // Nuevo método para confirmar la acción
-    confirmUpdate(): void {
+    submit(): void {
         if (this.passwordForm.valid) {
             const user = JSON.parse(localStorage.getItem('user') ?? '{}');
             // El backend deriva usuario y tenant del JWT. Nunca reenviar el
@@ -46,6 +48,9 @@ export class ChangePasswordComponent implements OnInit {
 
             this.service.changePassword(passwordUpdate).subscribe({
                 next: (result: any) => {
+                    user.mustChangePassword = false;
+                    localStorage.setItem('user', JSON.stringify(user));
+                    sessionStorage.removeItem(ChangePasswordComponent.DEFER_KEY);
                     Swal.fire({
                         icon: 'success',
                         title: 'Contraseña actualizada',
@@ -62,7 +67,6 @@ export class ChangePasswordComponent implements OnInit {
                         title: 'No se pudo actualizar',
                         text: err?.error?.message || err?.message || 'Error desconocido al actualizar la contraseña.'
                     });
-                    this.confirmVisible = false;
                 }
             });
         }
@@ -103,14 +107,11 @@ export class ChangePasswordComponent implements OnInit {
         await this.router.navigate(['/welcome']);
     }
 
-    // Permite cancelar el cambio
-    cancelUpdate(): void {
-        this.confirmVisible = false;
-    }
-
-    // Nuevo submit sin Swal: muestra la confirmación inline
-    submit(): void {
-        // Mostrar mensaje de confirmación en el HTML
-        this.confirmVisible = true;
+    // Posponer el cambio: la sesión sigue a su destino normal y el
+    // recordatorio no vuelve a interrumpir hasta el próximo login.
+    deferUpdate(): void {
+        sessionStorage.setItem(ChangePasswordComponent.DEFER_KEY, 'true');
+        const user = JSON.parse(localStorage.getItem('user') ?? '{}');
+        void this.navigateAfterPasswordChange(user);
     }
 }
