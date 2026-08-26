@@ -236,6 +236,13 @@ export class SitiosService extends BaseService {
     );
   }
 
+  /** ¿El DNS del dominio propio ya apunta a nuestros servidores? */
+  dominioEstado(dominio: string): Observable<
+    Respuesta<{ dominio: string; raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean }>
+  > {
+    return this.get<any>(`/v1/sites/dominio-estado?dominio=${encodeURIComponent(dominio)}`);
+  }
+
   /** Borra la página para siempre (borrador y publicado). */
   eliminar(id: string): Observable<Respuesta<null>> {
     return this.delete<Respuesta<null>>(`/v1/sites/${id}`);

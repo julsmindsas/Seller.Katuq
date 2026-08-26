@@ -1802,20 +1802,54 @@
             <label>Dominio (opcional)</label>
             <input type="text" [(ngModel)]="dominioPropio" (ngModelChange)="marcarSucio()"
                    maxlength="253" placeholder="mitienda.com" />
-            <small>Tu página responderá también en tu dominio, con candado verde
-              automático. Escríbelo sin https:// ni rutas.</small>
+            <small>Escríbelo sin https:// ni barras. Tu página responderá ahí con
+              candado verde automático.</small>
           </div>
-          <div class="nota nota--simple" *ngIf="dominioPropio">
-            <strong>Configura esto donde compraste el dominio</strong> (GoDaddy,
-            Namecheap, Hostinger…):
-            <ol class="dns-pasos">
-              <li>Registro <b>A</b> con nombre <b>&#64;</b> apuntando a
-                <b>34.225.223.187</b></li>
-              <li>Registro <b>CNAME</b> con nombre <b>www</b> apuntando a
-                <b>{{ slug || 'tu-pagina' }}.{{ dominioSitios }}</b></li>
-            </ol>
-            El cambio de DNS puede tardar de minutos a unas horas en regar.
-            Cuando apunte, el certificado se emite solo en la primera visita.
+
+          <div class="dns" *ngIf="dominioPropio">
+            <p class="dns__paso"><b>1.</b> Guarda los cambios de esta página
+              (botón <b>Guardar</b> arriba).</p>
+
+            <p class="dns__paso"><b>2.</b> Entra a donde compraste
+              <b>{{ dominioPropio }}</b> (GoDaddy, Namecheap, Hostinger…) y busca la
+              sección <b>DNS</b> o <b>Administrar registros</b>.</p>
+
+            <p class="dns__paso"><b>3.</b> Crea estos dos registros, tal cual:</p>
+            <table class="dns__tabla">
+              <thead>
+                <tr><th>Tipo</th><th>Nombre / Host</th><th>Valor / Apunta a</th><th></th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><b>A</b></td>
+                  <td><code>&#64;</code></td>
+                  <td><code>34.225.223.187</code></td>
+                  <td><button class="btn-fantasma btn-fantasma--sm"
+                        (click)="copiarDns('34.225.223.187')">Copiar</button></td>
+                </tr>
+                <tr>
+                  <td><b>CNAME</b></td>
+                  <td><code>www</code></td>
+                  <td><code>{{ slug || 'tu-pagina' }}.{{ dominioSitios }}</code></td>
+                  <td><button class="btn-fantasma btn-fantasma--sm"
+                        (click)="copiarDns((slug || 'tu-pagina') + '.' + dominioSitios)">Copiar</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <small>Si ya existe un registro A en &#64; o un CNAME en www apuntando a
+              otro lado, edítalo en vez de crear uno nuevo.</small>
+
+            <p class="dns__paso"><b>4.</b> Espera un rato (de minutos a un par de
+              horas) y comprueba aquí mismo:</p>
+            <button class="btn-fantasma" (click)="comprobarDominio()"
+                    [disabled]="comprobandoDominio">
+              {{ comprobandoDominio ? 'Comprobando…' : 'Comprobar mi dominio' }}
+            </button>
+            <p class="dns__estado" *ngIf="estadoDominio"
+               [class.is-ok]="estadoDominio.listo"
+               [class.is-error]="estadoDominio.raizApuntaOtroLado">
+              {{ mensajeDominio }}
+            </p>
           </div>
         </div>
 

@@ -2124,11 +2124,50 @@
   }
 }
 
-// ── Instrucciones DNS del dominio propio ─────────────────────────────────────
-.dns-pasos {
-  margin: 0.5rem 0 0.5rem;
-  padding-left: 1.2rem;
 
-  li { margin-bottom: 0.3rem; font-size: 0.85rem; }
-  b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.82rem; }
+// ── Guía de DNS del dominio propio ───────────────────────────────────────────
+.dns {
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  font-size: 0.87rem;
+
+  &__paso { margin: 0.55rem 0 0.4rem; line-height: 1.5; }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.35rem 0 0.4rem;
+
+    th {
+      text-align: left;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.55;
+      padding: 0.25rem 0.5rem 0.25rem 0;
+    }
+
+    td { padding: 0.35rem 0.5rem 0.35rem 0; vertical-align: middle; }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      background: rgba(95, 63, 224, 0.07);
+      padding: 0.2rem 0.45rem;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+  }
+
+  &__estado {
+    margin: 0.6rem 0 0;
+    padding: 0.55rem 0.75rem;
+    border-radius: 9px;
+    background: rgba(0, 0, 0, 0.05);
+    line-height: 1.5;
+
+    &.is-ok { background: rgba(37, 211, 102, 0.13); }
+    &.is-error { background: rgba(180, 35, 24, 0.09); }
+  }
 }
