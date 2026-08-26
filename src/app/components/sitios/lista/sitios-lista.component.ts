@@ -1,4 +1,5 @@
 import { Component, OnInit } from "@angular/core";
+import Swal from "sweetalert2";
 import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 import { PlantillaSitio, Sitio, SitiosService } from "../sitios.service";
@@ -210,13 +211,31 @@ export class SitiosListaComponent implements OnInit {
   /**
    * Borrar es para siempre: se pide confirmación con el nombre de la página en
    * el mensaje, y si estaba publicada se advierte que el enlace muere.
+   *
+   * Con SweetAlert2, como TODO diálogo de confirmación del proyecto — nunca
+   * window.confirm(), que es el recuadro crudo del navegador.
    */
   eliminarSitio(s: Sitio): void {
-    const publicada = s.estado === "publicado" ? `\n\nEstá PUBLICADA: ${s.slug}.katuq.com dejará de existir.` : "";
-    const seguro = window.confirm(
-      `¿Eliminar "${s.nombre}" para siempre? Esta acción no se puede deshacer.${publicada}`
-    );
-    if (!seguro) return;
+    const publicada =
+      s.estado === "publicado"
+        ? `<br /><br />Está <b>publicada</b>: <code>${s.slug}.katuq.com</code> dejará de existir.`
+        : "";
+    Swal.fire({
+      title: `¿Eliminar "${s.nombre}"?`,
+      html: `Esta acción no se puede deshacer.${publicada}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminarla",
+      cancelButtonText: "Conservarla",
+      confirmButtonColor: "#b42318",
+      focusCancel: true,
+    }).then((r) => {
+      if (!r.isConfirmed) return;
+      this.confirmarEliminacion(s);
+    });
+  }
+
+  private confirmarEliminacion(s: Sitio): void {
     this.eliminando = s.id;
     this.service.eliminar(s.id).subscribe({
       next: (res) => {
