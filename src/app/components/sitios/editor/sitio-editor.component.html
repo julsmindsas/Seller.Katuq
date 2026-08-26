@@ -417,8 +417,25 @@
               <button class="btn-fantasma btn-fantasma--sm" (click)="abrirSelector()">
                 {{ (b.datos.productoIds?.length || 0) ? 'Cambiar productos' : 'Elegir productos' }}
               </button>
-              <small>El precio y la disponibilidad salen de tu catálogo al publicar. Los agotados no
-                se muestran.</small>
+
+              <!-- Los elegidos, arrastrables: el orden de esta lista es el orden
+                   en que salen en la página. -->
+              <div class="elegidos__lista" *ngIf="elegidosDelBloque.length"
+                   cdkDropList (cdkDropListDropped)="soltarProducto($event)">
+                <div class="elegido" *ngFor="let p of elegidosDelBloque; let i = index" cdkDrag>
+                  <span class="elegido__asa" cdkDragHandle title="Arrastra para reordenar">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="5" r="1.6"/><circle cx="16" cy="5" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/></svg>
+                  </span>
+                  <img class="elegido__foto" *ngIf="p.imagen" [src]="p.imagen" alt="" />
+                  <span class="elegido__foto elegido__foto--vacia" *ngIf="!p.imagen"></span>
+                  <span class="elegido__titulo">{{ p.titulo }}</span>
+                  <button class="elegido__quitar" (click)="quitarProducto(i)"
+                          title="Quitar de la selección">✕</button>
+                </div>
+              </div>
+
+              <small>Arrastra para cambiar el orden en que salen. El precio y la disponibilidad
+                salen de tu catálogo al publicar; los agotados no se muestran.</small>
             </div>
 
             <button class="opcion" [class.is-active]="b.datos.permitirCompra"

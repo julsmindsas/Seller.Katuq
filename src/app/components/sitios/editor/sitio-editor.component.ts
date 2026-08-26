@@ -2080,6 +2080,41 @@ export class SitioEditorComponent implements OnInit {
     this.mostrandoSelector = true;
   }
 
+  /**
+   * Los productos elegidos del bloque en edición, con foto y título para la
+   * lista arrastrable del panel. Mientras la previa no los haya resuelto,
+   * salen con un título de espera — la lista no se esconde.
+   */
+  get elegidosDelBloque(): any[] {
+    const b = this.bloqueActual;
+    if (!b || b.tipo !== "productos") return [];
+    return (b.datos.productoIds || []).map(
+      (id: string) =>
+        this.productosPrevia.get(id) || { productoId: id, titulo: "Cargando…", imagen: null }
+    );
+  }
+
+  /** Reordenar los elegidos arrastrando: el orden de la lista es el de la página. */
+  soltarProducto(evento: CdkDragDrop<any>): void {
+    const b = this.bloqueActual;
+    if (!b || evento.previousIndex === evento.currentIndex) return;
+    const ids = [...(b.datos.productoIds || [])];
+    moveItemInArray(ids, evento.previousIndex, evento.currentIndex);
+    b.datos.productoIds = ids;
+    this.marcarSucio();
+    this.recalcularPrevia();
+  }
+
+  quitarProducto(i: number): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    const ids = [...(b.datos.productoIds || [])];
+    ids.splice(i, 1);
+    b.datos.productoIds = ids;
+    this.marcarSucio();
+    this.recalcularPrevia();
+  }
+
   /** Los ids llegan ya en el orden en que el comerciante quiere mostrarlos. */
   aplicarProductos(ids: string[]): void {
     const b = this.bloqueActual;

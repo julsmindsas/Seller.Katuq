@@ -690,6 +690,78 @@
   small {
     @include kb-hint;
   }
+
+  &__lista {
+    margin: 11px 0 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+.elegido {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 10px;
+  background: var(--kb-surface-1, #fff);
+
+  &__asa {
+    color: var(--kb-muted);
+    cursor: grab;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  &__foto {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    object-fit: cover;
+    flex-shrink: 0;
+
+    &--vacia {
+      background: var(--kb-surface-3);
+      border: 1px dashed var(--kb-line-4);
+    }
+  }
+
+  &__titulo {
+    flex: 1;
+    min-width: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--kb-ink-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__quitar {
+    border: 0;
+    background: transparent;
+    color: var(--kb-muted);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    flex-shrink: 0;
+
+    &:hover {
+      color: #b42318;
+      background: rgba(180, 35, 24, 0.08);
+    }
+  }
+
+  &.cdk-drag-preview {
+    box-shadow: 0 10px 26px rgba(33, 31, 58, 0.18);
+  }
+}
+
+.elegidos__lista.cdk-drop-list-dragging .elegido:not(.cdk-drag-placeholder) {
+  transition: transform 200ms ease;
 }
 
 .pista {
