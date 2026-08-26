@@ -528,7 +528,15 @@
                     (click)="b.datos.mostrarCategorias = b.datos.mostrarCategorias === false; marcarSucio()">
               <span class="opcion__texto">
                 <strong>Filtro por categorías</strong>
-                <small>Salen de las categorías de tus productos.</small>
+                <small>Panel lateral con tus categorías y cuántos productos tiene cada una.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" [class.is-active]="b.datos.mostrarPrecio !== false"
+                    (click)="b.datos.mostrarPrecio = b.datos.mostrarPrecio === false; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Filtro de precio y ofertas</strong>
+                <small>Rango de precio y la casilla "Solo en oferta" en el panel de filtros.</small>
               </span>
               <span class="palanca"><span></span></span>
             </button>
