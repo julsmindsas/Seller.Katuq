@@ -5351,3 +5351,51 @@ Daniel pidió "todas una por una". Todo desplegado (backend + Caddy de sitios + 
 4. **Palanca de venta cruzada** (`tienda.ventaCruzada`, ON por defecto): apaga afines de ficha, endpoint de relacionados y sugerencias del carrito. Toggle en la pestaña Tienda.
 5. **IA de textos VÍA KAI, de vuelta y funcionando**: `generateContentFlow` (Genkit 3890, ya desplegado, con SU llave — descubierto empíricamente: acepta `{data:{prompt}}` y devuelve JSON parseado). Opt-in (`conIA`) desde la casilla del asistente; si KAI falla, la página sale con plantilla y `motivo` explícito. Resuelve las dos objeciones por las que Santiago la retiró (modelo directo sin llave + fallo silencioso); su prueba «no depende de ningún modelo» evolucionó a «sin casilla es determinista y jamás hay modelo directo». **Verificada en producción: 17 textos reescritos con copy real de marca.**
 6. **Efectos premium**: marquesina de marcas (loop CSS con pista duplicada, pausa al hover, respeta reduced-motion y el interruptor del tema) y **la foto vuela de la rejilla a la ficha** (`@view-transition` por página solo con movimiento; el nombre lo pone un toque de JS por CSSOM — la CSP intacta; sin soporte del navegador, navegación normal).
+
+---
+
+## Bitácora 2026-08-25 — cierre masivo del ticket OMS (sesión fulpi): D-231..D-248
+
+Registro consolidado de las decisiones commiteadas durante el cierre del ticket OMS (20 de 22 subtareas cerradas). Cada una tiene el detalle completo en su commit del backend. Tres se renumeran acá por colisión con decisiones de sesiones paralelas (la numeración del contrato manda sobre la del commit).
+
+## D-231 (2026-08-24) — El matching por SKU en Shopify exige coincidencia exacta y elige determinista
+7 SKUs vivían en dos productos de Shopify a la vez (handles `copia-de-…`: el comerciante duplica y la copia hereda el SKU) y el sync elegía "el primero" — lotería que escribía precio e imágenes en el gemelo equivocado (uno a $3.659.900 costando $158.900). Ahora: match exacto obligatorio (sin match no se vincula), y ante gemelos gana ACTIVE > DRAFT/ARCHIVED y el más viejo; la ambigüedad SIEMPRE queda en el log. Backend `f6e7e11`.
+
+## D-232 (2026-08-24) — Lo quieto no se re-emite: todo arreglo del sync necesita su repaso de una pasada
+Hallazgo estructural: `katuq-product-changed` solo emite productos cuyo `date_edit` cambió y deduplica por ese valor — un producto quieto NUNCA se re-procesa. Desplegar un fix del sync no repara lo viejo: hay que empujarlo una vez. Repasos versionados con dry-run: fotos (19/19) y bajo pedido (43/43). Backend `10a3593`.
+
+## D-235 (2026-08-25) — Duplicados de Shopify borrados: 6, con guardarraíl que atrapó un error propio
+Lista explícita (no calculada), verificación previa de que el que se borra no sea el vinculado en Katuq y de que el que se conserva exista. El guardarraíl frenó el caso del disfraz: el "original" estaba huérfano y Katuq sincronizaba contra la copia — borrar la copia habría fabricado otro duplicado. Resultado: 0 duplicados vendibles (queda OHKITACLARANTE con ambos gemelos archivados, intocado a propósito). Backend `4e797ae`.
+
+## D-236 (2026-08-25) — El pedido que entra de un canal externo deja su dirección en la ficha del cliente
+El mapeo Shopify→Katuq estaba bien (la ciudad "Ninguna" venía así de Shopify); lo que faltaba era que el cliente se actualizara al entrar el pedido. Ahora la dirección se agrega si no existe (dedup por calle+ciudad normalizadas, nunca pisa las existentes) y la ciudad inservible se recupera de otra dirección del cliente o del departamento. Best-effort: jamás pone en riesgo el pedido. Backend `064aa72`.
+
+## D-237 (2026-08-25) — Dos pedidos no pueden compartir la misma factura
+La recuperación post-timeout de Siigo (cliente+fecha+total) no distingue dos pedidos legítimamente iguales: la 5976 quedó en ORE-000597 y ORE-000598, uno sin soporte ante la DIAN. Ahora, antes de vincular una factura recuperada se verifica que no pertenezca ya a otro pedido (por `invoiceId`, el id real del proveedor); si está tomada, el pedido queda sin factura y el conflicto se registra. Ante duda, se asume tomada. Las facturas ya emitidas se dejan como están (decisión de Daniel). Backend `b2cf443`.
+
+## D-238 (2026-08-25) — El botón Despachar aparecía en 2 pedidos de 584
+`canDispatchOrder` comparaba contra estados escritos CON espacios ("Para Despachar") y los pedidos se guardan SIN ("ParaDespachar"): de 7 estados solo "Empacado" existía. Ahora va por el enum — 130 pedidos recuperaron el botón (82 ParaDespachar, 33 EnDespacho, 13 SinProducir). Frontend `98a2a0ef`, publicado en `2026.08.25.2`.
+
+## D-241 (2026-08-25) — Las ofertas de Cereza llegan a Shopify: 906 productos viajaban a precio lleno
+El mapper asumía "variante con precio propio = sin descuento" y TODAS las variantes de Cereza traen precio propio (el lleno): $62,7M de rebaja no llegaba a la tienda. Ahora la campaña vigente rebaja la variante que calza con la lista llena (la que no calza se salta y reporta — no descontar dos veces), la vigencia `descuentoHasta` por fin se valida, y jamás se recalcula desde el `discount_price` contaminado de la API (D-223). Contract test 7/7 protege el write-set (solo price/compareAtPrice). Repaso ejecutado: 642 actualizados, 0 fallidos; verificado 673/673 y testigo GCJ3283 a $29.950 tachando $59.900. Backend `0ee3069` + `a1d805c`.
+
+## D-242 (2026-08-25) — El maestro discrimina subtotal e IVA: barrido de 8.171 productos
+El motor ya derivaba en caliente (D-219 F0) pero el dato seguía vacío y las métricas leían subtotal 0. Barrido con el MISMO criterio del motor, en dos fases: 2.330 con tarifa propia (mecánico) y 5.841 sin tarifa con el 19% — decisión de negocio EXPLÍCITA de Daniel, por flag, no por default. Final: 8.255 con subtotal, 0 pendientes (190 no tienen precio alguno). Backend `bb799bd`.
+
+## D-243 (2026-08-25) — El maestro obedece a la lista base: 140 reparados
+La lista base ya estaba configurada ("Público", `tiposPrecios.esPrecioBase`) y el sync la respeta — pero lo quieto no se re-emite (D-232) y 140 productos tenían el maestro roto (GCJ1255CC a $10 contra lista $599.900; 80 en $0): inventario valorado en centavos. Reparación de una pasada: 8.326 coherentes, 0 pendientes. Backend `a883ee4`.
+
+## D-244 (2026-08-25) — Spec 018 ejecutada: tipo de cliente estampado en los customers de Shopify
+Backfill de la spec aprobada: 18 customers creados, resultado estable 152 correctos / 0 errores en dos corridas de control. Dos defectos atrapados: la mutación de borrado singular ya no existe en la API (se usa el borrado por identificador) y un PING-PONG por 3 parejas de clientes que comparten email con tipos en conflicto — dedup determinista (gana el que tiene tipo; a tipos distintos, el más reciente) y el conflicto se reporta: la cura real es fusionar los duplicados en Katuq. Pendiente de la spec: estampado continuo al crear/editar y webhook de registro directo. Backend `0a642f8`.
+
+## D-245 (2026-08-25) — Barrido stock-only de Cereza implementado y EN SOMBRA
+Propuesta `sync-stock-bodegas-cereza` aprobada por Daniel el mismo día ("dale candela"). Contract test PRIMERO en rojo (12/12): write-set cerrado (sombra→solo `inventory_audit`; escritura→`inventory`+`inventoryMovement`+auditoría; jamás products/warehouses/precios), ceros SÍ se escriben, fantasma intocada, ambiguas omitidas, duplicados alineados TODOS. Nodo `osmosis-stock-sweep` con núcleo puro; flujo `cereza-stock-sweep-oms` cada 45 min en SOMBRA por el despachador vivo, bajo `CRON_ENABLED` (D-218 intacto). Dos emboscadas del motor documentadas: el catálogo de contratos valida aparte del registry, y los crones dinámicos leen `flow_trigger_bindings`, no `flows.triggers`. Regla aprobada: en bodegas de Cereza, Cereza pisa; la sombra reporta pisadas de ajustes <24h. El paso a escritura es decisión de Daniel sobre el reporte. Backend `d0b9ea7`+`16da6a3`+`82db230`.
+
+## D-246 (2026-08-24) — La recompra deja de esconder que muestra UNA bodega de nueve
+(Renumerada: el commit dice D-234, tomado en paralelo por el chevron del checkout.) No faltaban bodegas (las 9 comerciales están asociadas): el modal elegía `bodegas[0]` en silencio con "Solo con stock" activo. Ahora la bodega es la DEL PEDIDO que se recompra, el modal dice cuál muestra y cuántas hay, y una búsqueda sin resultados reintenta UNA vez incluyendo agotados con aviso y salida hacia la bodega que sí tiene (popover clicable de D-222). Frontend `d272054f`, publicado en `2026.08.24.10`.
+
+## D-247 (2026-08-25) — El mismo pedido enviado dos veces ya no crea dos pedidos
+(Renumerada: el commit dice D-239, tomado por el IVA de SIIGO.) 16 pares de gemelos medidos (mismo cliente+productos+total en <10 min; uno con 0 segundos; un par emitió DOS facturas reales). Regla de Daniel: dentro de 2 minutos es el mismo pedido reenviado — se devuelve el existente con `_duplicadoEvitado`, ANTES de consumir consecutivo. En AMBOS caminos (controlador y servicio) con una sola implementación. Best-effort: si la verificación falla, el pedido se crea. Tres errores propios atrapados por la prueba quedan anotados en el commit. Backend `7eb53f9`.
+
+## D-248 (2026-08-25) — Importar un Excel de una lista ya no borra las demás
+(Renumerada: el commit dice D-240, tomado por cotizaciones.) `batch.update` con el arreglo completo REEMPLAZA `preciosPorTipoCliente`: importar Modelos borraba Mayorista y Público. Ahora fusiona por `tipoClienteId` reutilizando `mergePreciosPorTipo` del sync de Cereza (un solo criterio de fusión en el sistema, ya cubierto por test) y reporta `listasPreservadas`. Backend `bbaf127`.
