@@ -1220,6 +1220,7 @@
                   <div class="dos-campos">
                     <select [(ngModel)]="el.datos.variante" (ngModelChange)="marcarSucio()">
                       <option value="imagen">Con foto</option>
+                      <option value="fondo">Foto de fondo</option>
                       <option value="icono">Con ícono</option>
                       <option value="precio">Con precio</option>
                       <option value="simple">Solo texto</option>
@@ -1252,7 +1253,7 @@
                       </button>
                     </div>
 
-                    <div class="mini-imagen" *ngIf="el.datos.variante === 'imagen'">
+                    <div class="mini-imagen" *ngIf="el.datos.variante === 'imagen' || el.datos.variante === 'fondo'">
                       <img *ngIf="t.imagen" [src]="t.imagen" alt="" />
                       <label class="btn-fantasma btn-fantasma--sm">
                         {{ t.imagen ? 'Cambiar' : 'Subir foto' }}
