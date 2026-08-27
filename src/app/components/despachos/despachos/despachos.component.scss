@@ -1226,13 +1226,16 @@ $border-radius: 8px;
 }
 
 // Pestañas estilo segmented control
+// Tabs de despachos — re-tonados al canon "Todos los pedidos" (design-system
+// D-131): segmented control plano con riel lila, activa como tarjeta blanca con
+// acento #5F3FE0 y sombra violeta difusa. Sin gradientes, sin grises Material.
 :host ::ng-deep .modern-tabs {
   border: none;
 
   .p-tabview-nav-container {
-    background: #eef0f4;
-    padding: 0.3rem 0.75rem;
-    border-bottom: 1px solid #dde0e6;
+    background: #fff;
+    padding: 0.85rem 1rem 0.75rem;
+    border-bottom: 1px solid #f1f0f7; // divisor suave del canon
   }
 
   .p-tabview-nav-content {
@@ -1244,43 +1247,63 @@ $border-radius: 8px;
   }
 
   .p-tabview-nav {
-    background: transparent;
-    border: none;
-    padding: 0;
+    // Riel del segmented: chip-bg + chip-border del tema, radio 16px
+    background: #f5f4fa;
+    border: 1px solid #e9e7f3;
+    border-radius: 16px;
+    padding: 4px;
     margin: 0;
-    gap: 0.25rem;
+    gap: 4px;
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
 
     li {
       margin: 0;
 
       &.p-highlight .p-tabview-nav-link {
         background: #fff !important;
-        color: #1e3a5f;
-        font-weight: 600;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-        border-radius: 6px;
-        border: 1px solid #d1d5db !important;
+        color: #5F3FE0;
+        font-weight: 700;
+        border: 1px solid #e9e7f3 !important;
+        border-radius: 11px;
+        box-shadow: 0 6px 16px rgba(95, 63, 224, 0.14);
+
+        i { color: #5F3FE0; }
       }
     }
 
     .p-tabview-nav-link {
-      border: none !important;
+      border: 1px solid transparent !important;
       background: transparent !important;
-      color: #6b7280;
-      font-weight: 500;
-      font-size: 0.825rem;
-      padding: 0.45rem 0.85rem;
-      transition: all 0.15s ease;
-      border-radius: 6px;
+      color: #8f8bab; // muted del canon
+      font-weight: 600;
+      font-size: 0.82rem;
+      letter-spacing: 0.2px;
+      padding: 0.5rem 1.05rem;
+      transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+      border-radius: 11px;
       white-space: nowrap;
+
+      i {
+        color: #9995b3;
+        font-size: 0.85rem;
+        transition: color 0.15s ease;
+      }
 
       &:not(.p-disabled):focus {
         box-shadow: none;
       }
 
+      &:not(.p-disabled):focus-visible {
+        box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.18);
+      }
+
       &:hover {
-        background: rgba(255, 255, 255, 0.5) !important;
-        color: #374151;
+        background: rgba(255, 255, 255, 0.65) !important;
+        color: #211F3A; // ink
+
+        i { color: #5F3FE0; }
       }
     }
   }
