@@ -524,28 +524,19 @@ export class OrdenesDespachoV2Component implements OnInit {
   canDispatchOrder(order: any): boolean {
     const estado = this.getEstadoProceso(order);
 
-    // Estados en los que todavía se puede despachar. Van por el enum y NO por
-    // texto suelto: la lista anterior estaba escrita con espacios ('Para
-    // Despachar', 'En Despacho', 'Sin Producir') mientras los pedidos se guardan
-    // sin ellos ('ParaDespachar', 'EnDespacho', 'SinProducir'), así que de los 7
-    // estados que enumeraba solo 'Empacado' existía de verdad.
+    // OJO CON LA FUENTE: acá NO llega el enum del pedido — llega el TEXTO
+    // AGREGADO que arma getEstadoProceso() para la orden completa, y ese texto
+    // va con espacios ('En Despacho', 'Para Despachar'). El 24-ago se "corrigió"
+    // esta lista a los valores del enum sin espacios comparando contra el campo
+    // crudo de Firestore — medición sobre la fuente equivocada — y la flecha de
+    // despachar desapareció para todos los estados intermedios (regresión real:
+    // Café Escobar no pudo despachar 243/244; OMS, la 304).
     //
-    // Efecto medido sobre los 584 pedidos de OH MY STORE: el botón Despachar
-    // aparecía en 2, y quedaban sin él los 82 en ParaDespachar, los 33 en
-    // EnDespacho y los 13 en SinProducir. Eso es el "a veces le queda el
-    // avioncito y otras no" que reportó despachos.
-    const estadosDespachables: string[] = [
-      EstadoProceso.SinProducir,
-      EstadoProceso.EnProduccion,
-      EstadoProceso.Producido,
-      EstadoProceso.ProducidoTotalmente,
-      EstadoProceso.ProducidoParcialmente,
-      EstadoProceso.ParaDespachar,
-      EstadoProceso.Empacado,
-      EstadoProceso.EnDespacho,
-    ];
-
-    return estadosDespachables.includes(estado);
+    // Regla a prueba de listas desactualizadas: se puede despachar TODO lo que
+    // no esté en un estado final. Si getEstadoProceso estrena un texto
+    // intermedio nuevo, el botón aparece solo, en vez de esconderse en silencio.
+    const estadosFinales = ['Despachado', 'Entregado', 'Rechazado', 'Cerrado', 'Sin pedidos'];
+    return !estadosFinales.includes(estado);
   }
 
   canEditOrder(order: any): boolean {
