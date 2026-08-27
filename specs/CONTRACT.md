@@ -5433,3 +5433,50 @@ O sea: el video mostraba el envío desde Katuq pero **nunca el mensaje llegando 
 **Pendiente único para reenviar:** una toma de ~90 segundos con el mensaje llegando al cliente nativo, pegada al material que ya sirve, con subtítulos en inglés. Reenviar con el botón "Volver a solicitar"; los tres permisos aprobados no se pierden.
 
 **Guardarraíl para la próxima grabación:** pantalla completa (nunca ventana), guion escrito antes de grabar, conversación del negocio abierta y fija, y **no usar la cuenta personal de Facebook de Daniel** — dos de las seis fallas fueron por notificaciones y chats privados asomándose.
+
+## D-221 (2026-08-27) — Lo que el prompt pide, el servidor lo garantiza
+
+Los tres pendientes que dejó el análisis de conversaciones reales (D-220),
+todos con la misma forma: **pedírselo al modelo no alcanzó.**
+
+**1. El Markdown ya no depende del modelo.** El 23-ago, tres días después de
+prohibirle los asteriscos dobles, el bot mandó `- **Rosas y Ferreros** —
+$140.000`. Ahora el camino de salida traduce Markdown al formato de WhatsApp
+—negrita de un asterisco, títulos, viñetas, enlaces— y **solo para los
+mensajes del bot**: lo que escribe una persona sale tal cual. El prompt lo
+sigue pidiendo; esto es la red debajo.
+
+**2. El historial se poda.** Ahí estaba la causa de que las reglas nuevas no
+pegaran: el Runner pide la sesión sin límite, así que le viajaba TODA la
+conversación en cada mensaje. El hilo más activo acumulaba **86 eventos y 53
+KB por turno**, y el modelo copiaba su propio estilo viejo — veía veinte
+respuestas suyas con `**` y mexicanismos, y eso le ganaba a la instrucción. En
+hilos nuevos salía limpio, y por eso las pruebas pasaban.
+
+Tope de 40 eventos (unos 20 turnos; el tope del bot son 20), configurable por
+entorno y **solo para WhatsApp** — Telegram y video conversan distinto. El
+pedido no vive en esos eventos: el carrito y lo acordado se los manda el
+backend en cada turno, así que recortar el historial no pierde el pedido.
+Verificado en prod: esa sesión pasó de 86 a **40** eventos.
+
+**3. Las listas de productos se vuelven tocables.** El 23-ago el bot enumeró
+siete rosas en texto y el cliente no volvió a escribir. El agente no puede
+ofrecerlas él —los productos los devuelve el catálogo dentro de ADK y el
+backend no los ve—, así que se leen de su propia respuesta. Con desconfianza:
+el carrito y los resúmenes con total quedan fuera, con menos de tres no se
+ofrece nada y una lista larguísima se deja como texto; unos botones
+equivocados son peores que ninguno. El identificador lleva el nombre
+**completo** porque el título del botón vuelve recortado por los topes de Meta.
+
+**Un falso positivo mío, corregido:** prohibí "dale" como argentinismo. En
+Colombia se usa igual ("dale pues"). Salió de la lista.
+
+**Estado: aplicado y verificado en producción.** Backend `d40edc2`, ADK
+`c24640a`. 13 suites del backend y 93 tests del canal en verde. Verificado
+contra el mensaje real que perdió la venta: sale con negrita simple, con
+viñetas, y con sus cuatro opciones tocables.
+
+**Lo que sigue abierto:** indexar la consulta de pedidos por teléfono (Daniel
+la dejó fuera de este turno a propósito) y la latencia del agente cuando
+consulta catálogo — un turno de prueba con búsqueda de rosas tardó 17,6 s solo
+en ADK, que ahora es el tramo dominante.
