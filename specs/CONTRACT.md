@@ -5186,3 +5186,16 @@ Los tickets creados desde la pantalla de soporte "desaparecían": el formulario 
 4. Validación visible al enviar (markAllAsTouched; el botón ya no se deshabilita por invalidez sin explicación), confirmación con número y estado inicial, error de red conserva datos y permite reintento (guard anti doble-submit).
 
 Cambio OpenSpec `fix-seller-ticket-creation` (proposal/design/specs/tasks completos, validate OK). Tarea origen: ClickUp wdu9v78jh7 (urgente). Build de producción verde. (Numerada D-235: D-234 ya estaba usado por los commits de recompra d272054f/0fdcbd44, aunque no esté registrado en este contrato — precedente D-043/D-067/D-085.) Pendiente: verificación en navegador por el usuario.
+
+
+## D-236 (2026-08-25) — Notificaciones de tickets: contrato compartido con Support, contador compartido y cola de correos
+
+El comercio no recibía correo por ningún evento de sus tickets y la campana mostraba avisos pobres (payload `{message, ticketId}` con `push()`, duplicable). La app Support ya publica todos los eventos del ciclo de vida con payload tipado en `ActualizacionTicket{nomComercial}` y encola correos en `colaCorreos`; esta decisión fija la mitad del Seller.
+
+**Decisiones:**
+1. **Contrato de payload compartido entre Support y Seller** para el canal del comercio: `{message, ticketId, numero, type: TICKET_*, evento, estadoAnterior, estadoNuevo, actionUrl, actionText, timestamp, read}`. Tipos nuevos en `NotificationType` (TICKET_CREATED/STATUS_CHANGED/ASSIGNED/REPLY/CLOSED/REOPENED) con ícono, nombre y template propios; los tipos desconocidos siguen cayendo al fallback (compatibilidad con notificaciones viejas).
+2. **Consecutivo visible compartido**: ambas apps reservan `nroTicket` del contador RTDB `contadores/tickets` con transacción (unicidad ante concurrencia entre apps). El `cd` de Firestore sigue siendo la clave técnica.
+3. **Correos por cola RTDB `colaCorreos`** con claves idempotentes por evento y destinatario (`crearSiNoExiste` por transacción — los reintentos no duplican) y registro de entrega (`estado/intentos/creadoEn`). Destinatarios: comercio (email del usuario logueado) + `environment.soporte.correosEquipo` (sgarcia@katuq.com; TODO correo de Daniel). **El envío físico depende de un consumidor de la cola (Cloud Function/extensión en julsmind-katuq) que aún no existe** — un solo consumidor servirá a ambas apps; hasta entonces los correos quedan encolados con su registro.
+4. Servicio nuevo `TicketNotificacionesSellerService` (no se engorda `ServiciosService`, que es legacy).
+
+Cambio OpenSpec `seller-ticket-notifications` (proposal/design/specs/tasks, validate OK). Tareas ClickUp wdu9v78jh9 (urgente, correos) y wdu9v78jh8 (in-app). Build de producción verde. Pendiente: verificación en navegador por el usuario.

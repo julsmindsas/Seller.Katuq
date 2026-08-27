@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ServiciosService } from '../../shared/services/servicios.service';
 import { SecurityService } from '../../shared/services/security/security.service';
+import { TicketNotificacionesSellerService } from '../../shared/services/ticket-notificaciones-seller.service';
 import Swal from 'sweetalert2';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { finalize } from 'rxjs/operators';
@@ -36,6 +37,7 @@ export class SoporteComponent implements OnInit {
     private router: Router,
     private ticketService: ServiciosService,
     private securityService: SecurityService,
+    private ticketNotificaciones: TicketNotificacionesSellerService,
     private storage: AngularFireStorage
   ) {
     // Get currently logged in user
@@ -426,6 +428,8 @@ export class SoporteComponent implements OnInit {
       formData.company = empresa.nombreComercio;
       formData.nit = this.currentUser?.nit || '';
       formData.emailUsuarioReporta = this.currentUser?.email || '';
+      // Número visible consecutivo (contador compartido con Support); el cd queda como clave técnica
+      formData.nroTicket = await this.ticketNotificaciones.siguienteNumero();
 
       // Show processing indicator with progress steps
       let loadingStep = 'Preparando información...';
@@ -466,21 +470,26 @@ export class SoporteComponent implements OnInit {
       this.ticketService.addTicket(formData).subscribe({
         next: (response) => {
           const ticketId = response?.result?.cd || '';
+          const numeroVisible = formData.nroTicket || ticketId;
           this.isSubmitting = false;
 
           // Notificar al equipo de soporte (ticketId como string, no el objeto)
-          this.ticketService.addNotification('Nuevo ticket creado', ticketId);
-          // Notificar el canal propio del comercio (el que escucha la campana del Seller)
-          this.ticketService.addTicketNotificationForCompany(
-            'Tu ticket fue creado y está en estado Pendiente',
-            ticketId,
-            empresa.nombreComercio
-          );
+          this.ticketService.addNotification(`Nuevo ticket #${numeroVisible} creado`, ticketId);
+          // Campana del comercio (payload tipado y accionable) + correos encolados
+          // (comercio + equipo operativo), todo idempotente ante reintentos
+          this.ticketNotificaciones.notificarCreacion({
+            ticketCd: ticketId,
+            numero: formData.nroTicket,
+            asunto: formData.asunto,
+            nomComercial: empresa.nombreComercio,
+            emailComercio: this.currentUser?.email,
+            autor: formData.nombreUsuarioReporta
+          });
 
           Swal.fire({
             title: '¡Ticket creado con éxito!',
             html: `<div class="success-ticket">
-                     <div class="ticket-number">${ticketId}</div>
+                     <div class="ticket-number">#${numeroVisible}</div>
                      <p>Estado inicial: <strong>Pendiente</strong></p>
                      <p>Su ticket ha sido registrado correctamente</p>
                    </div>`,

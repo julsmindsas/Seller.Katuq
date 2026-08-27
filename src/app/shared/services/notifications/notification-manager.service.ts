@@ -461,7 +461,15 @@ export class NotificationManagerService {
       'INVOICE_CREATED': NotificationType.INVOICE_CREATED,
       'INVOICE_FAILED': NotificationType.INVOICE_FAILED,
       'SIIGO_INVOICE_CREATED': NotificationType.SIIGO_INVOICE_CREATED,
-      'SIIGO_INVOICE_FAILED': NotificationType.SIIGO_INVOICE_FAILED
+      'SIIGO_INVOICE_FAILED': NotificationType.SIIGO_INVOICE_FAILED,
+
+      // Tickets de soporte (los emite esta app al crear y la app Support en el resto de eventos)
+      'TICKET_CREATED': NotificationType.TICKET_CREATED,
+      'TICKET_STATUS_CHANGED': NotificationType.TICKET_STATUS_CHANGED,
+      'TICKET_ASSIGNED': NotificationType.TICKET_ASSIGNED,
+      'TICKET_REPLY': NotificationType.TICKET_REPLY,
+      'TICKET_CLOSED': NotificationType.TICKET_CLOSED,
+      'TICKET_REOPENED': NotificationType.TICKET_REOPENED
     };
 
     return typeMap[type] || NotificationType.SYSTEM_ALERT;
@@ -481,7 +489,13 @@ export class NotificationManagerService {
       'Pago Rechazado': 'Pago Rechazado',
       'En Producción': 'En Producción',
       'Despachado': 'Pedido Despachado',
-      'Entregado': 'Pedido Entregado'
+      'Entregado': 'Pedido Entregado',
+      'TICKET_CREATED': 'Ticket creado',
+      'TICKET_STATUS_CHANGED': 'Ticket actualizado',
+      'TICKET_ASSIGNED': 'Ticket asignado',
+      'TICKET_REPLY': 'Nueva respuesta en tu ticket',
+      'TICKET_CLOSED': 'Ticket resuelto',
+      'TICKET_REOPENED': 'Ticket reabierto'
     };
     
     return typeNames[notification.type] || 'Notificación';

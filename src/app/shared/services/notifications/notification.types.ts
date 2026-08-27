@@ -60,7 +60,15 @@ export enum NotificationType {
 
   // Facturación Electrónica Genérica (cualquier provider: Siigo, WO, etc.)
   INVOICE_CREATED = 'INVOICE_CREATED',
-  INVOICE_FAILED = 'INVOICE_FAILED'
+  INVOICE_FAILED = 'INVOICE_FAILED',
+
+  // Tickets de soporte (contrato compartido con la app Support)
+  TICKET_CREATED = 'TICKET_CREATED',
+  TICKET_STATUS_CHANGED = 'TICKET_STATUS_CHANGED',
+  TICKET_ASSIGNED = 'TICKET_ASSIGNED',
+  TICKET_REPLY = 'TICKET_REPLY',
+  TICKET_CLOSED = 'TICKET_CLOSED',
+  TICKET_REOPENED = 'TICKET_REOPENED'
 }
 
 // Canales de notificación disponibles

@@ -126,7 +126,7 @@
            tabindex="0"
            [attr.aria-controls]="'ticket-details-' + i">
         <div class="ticket-info">
-          <div class="ticket-id">#{{ticket.cd || 'Sin ID'}}</div>
+          <div class="ticket-id">#{{ticket.nroTicket || ticket.cd || 'Sin ID'}}</div>
           <h3 class="ticket-title">{{ticket.asunto}}</h3>
           <div class="ticket-meta">
             <span class="ticket-date"><i class="fa fa-calendar"></i> {{ticket.fechaRegistro | date:'dd/MM/yyyy'}}</span>

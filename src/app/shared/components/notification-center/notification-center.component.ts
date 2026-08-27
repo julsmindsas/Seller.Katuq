@@ -416,7 +416,15 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
 
       // Facturación genérica
       [NotificationType.INVOICE_CREATED]: 'fa-check-square-o',
-      [NotificationType.INVOICE_FAILED]: 'fa-exclamation-triangle'
+      [NotificationType.INVOICE_FAILED]: 'fa-exclamation-triangle',
+
+      // Tickets de soporte
+      [NotificationType.TICKET_CREATED]: 'fa-ticket',
+      [NotificationType.TICKET_STATUS_CHANGED]: 'fa-refresh',
+      [NotificationType.TICKET_ASSIGNED]: 'fa-user',
+      [NotificationType.TICKET_REPLY]: 'fa-comment-o',
+      [NotificationType.TICKET_CLOSED]: 'fa-check-circle',
+      [NotificationType.TICKET_REOPENED]: 'fa-undo'
     };
 
     return iconMap[type] || 'fa-info-circle';
@@ -546,7 +554,15 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
 
       // Facturación genérica
       [NotificationType.INVOICE_CREATED]: 'Factura Creada',
-      [NotificationType.INVOICE_FAILED]: 'Error de Facturación'
+      [NotificationType.INVOICE_FAILED]: 'Error de Facturación',
+
+      // Tickets de soporte
+      [NotificationType.TICKET_CREATED]: 'Ticket Creado',
+      [NotificationType.TICKET_STATUS_CHANGED]: 'Ticket Actualizado',
+      [NotificationType.TICKET_ASSIGNED]: 'Ticket Asignado',
+      [NotificationType.TICKET_REPLY]: 'Respuesta de Soporte',
+      [NotificationType.TICKET_CLOSED]: 'Ticket Resuelto',
+      [NotificationType.TICKET_REOPENED]: 'Ticket Reabierto'
     };
 
     return nameMap[type] || type;

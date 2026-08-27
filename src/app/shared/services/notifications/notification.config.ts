@@ -670,6 +670,103 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
     requiresUserInteraction: true,
     persistInNotificationCenter: true,
     expiresInMinutes: 10080
+  },
+
+  // TICKETS DE SOPORTE (contrato compartido con la app Support)
+  [NotificationType.TICKET_CREATED]: {
+    type: NotificationType.TICKET_CREATED,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.NORMAL,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '🎫 Ticket creado',
+        message: 'Tu ticket de soporte fue creado y está en estado Pendiente',
+        actionText: 'Ver mis tickets',
+        actionUrl: '/misTickets'
+      }
+    },
+    persistInNotificationCenter: true
+  },
+
+  [NotificationType.TICKET_STATUS_CHANGED]: {
+    type: NotificationType.TICKET_STATUS_CHANGED,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.NORMAL,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '🎫 Ticket actualizado',
+        message: 'El estado de tu ticket de soporte cambió',
+        actionText: 'Ver mis tickets',
+        actionUrl: '/misTickets'
+      }
+    },
+    persistInNotificationCenter: true
+  },
+
+  [NotificationType.TICKET_ASSIGNED]: {
+    type: NotificationType.TICKET_ASSIGNED,
+    channels: [NotificationChannel.IN_APP],
+    priority: NotificationPriority.NORMAL,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '🎫 Ticket asignado',
+        message: 'Tu ticket de soporte tiene un responsable asignado',
+        actionText: 'Ver mis tickets',
+        actionUrl: '/misTickets'
+      }
+    },
+    persistInNotificationCenter: true
+  },
+
+  [NotificationType.TICKET_REPLY]: {
+    type: NotificationType.TICKET_REPLY,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.HIGH,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '💬 Respuesta de soporte',
+        message: 'Tu ticket de soporte tiene una nueva respuesta',
+        actionText: 'Ver mis tickets',
+        actionUrl: '/misTickets'
+      }
+    },
+    persistInNotificationCenter: true
+  },
+
+  [NotificationType.TICKET_CLOSED]: {
+    type: NotificationType.TICKET_CLOSED,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.NORMAL,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '✅ Ticket resuelto',
+        message: 'Tu ticket de soporte fue resuelto',
+        actionText: 'Ver mis tickets',
+        actionUrl: '/misTickets'
+      }
+    },
+    persistInNotificationCenter: true
+  },
+
+  [NotificationType.TICKET_REOPENED]: {
+    type: NotificationType.TICKET_REOPENED,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.NORMAL,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '🎫 Ticket reabierto',
+        message: 'Tu ticket de soporte fue reabierto',
+        actionText: 'Ver mis tickets',
+        actionUrl: '/misTickets'
+      }
+    },
+    persistInNotificationCenter: true
   }
 };
 
