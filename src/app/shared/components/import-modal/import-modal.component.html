@@ -61,14 +61,34 @@
   </div>
 
   <!-- Step 2b: Uploading/Importing -->
+  <!-- Progreso del envío. Con archivos grandes esto queda en pantalla mucho
+       rato (un import de 69.000 filas tardó media hora), así que tiene que
+       mostrar avance real: una barra indeterminada no se distingue de estar
+       colgado. Las peticiones van con SKIP_LOADER para que el overlay global no
+       tape esta pantalla. -->
   <div class="analyzing-step" *ngIf="isUploading">
     <div class="analyzing-content">
       <i class="pi pi-spin pi-spinner analyzing-icon"></i>
-      <h4>Importando {{ importTotalRecords }} {{ type === 'customer' ? 'clientes' : 'productos' }}...</h4>
-      <p class="text-muted">
-        Esto puede tardar varios segundos dependiendo del volumen. No cierres esta ventana.
-      </p>
-      <p-progressBar mode="indeterminate" styleClass="mt-3"></p-progressBar>
+      <h4>Importando {{ importTotalRecords | number }} {{ type === 'customer' ? 'clientes' : type === 'inventory' ? 'registros de inventario' : type === 'category' ? 'categorías' : 'productos' }}...</h4>
+
+      <ng-container *ngIf="totalLotes > 1; else barraSimple">
+        <p-progressBar [value]="porcentajeImport" styleClass="mt-3"></p-progressBar>
+        <p class="progreso-detalle">
+          Lote <strong>{{ loteActual }}</strong> de <strong>{{ totalLotes }}</strong>
+          · {{ registrosProcesados | number }} de {{ importTotalRecords | number }} procesados
+        </p>
+        <p class="text-muted">
+          Se envía por lotes para no saturar el servidor. No cierres esta ventana ni
+          recargues la página: se cortaría a la mitad y lo ya subido quedaría cargado.
+        </p>
+      </ng-container>
+
+      <ng-template #barraSimple>
+        <p class="text-muted">
+          Esto puede tardar varios segundos dependiendo del volumen. No cierres esta ventana.
+        </p>
+        <p-progressBar mode="indeterminate" styleClass="mt-3"></p-progressBar>
+      </ng-template>
     </div>
   </div>
 
@@ -210,9 +230,50 @@
 
       <div class="errors-list" *ngIf="importResult.errors && importResult.errors.length > 0">
         <p-accordion>
-          <p-accordionTab header="Ver errores ({{ importResult.errors.length }})">
+          <p-accordionTab
+            header="Ver errores ({{ importResult.errors.length }}{{ erroresDetallados.length > importResult.errors.length ? ' de ' + erroresDetallados.length : '' }})">
             <ul>
               <li *ngFor="let error of importResult.errors">{{ error }}</li>
+            </ul>
+          </p-accordionTab>
+        </p-accordion>
+
+        <!-- La lista de arriba se corta; el Excel las trae todas, con el número
+             de fila para poder ir a corregirlas. -->
+        <div class="descargar-errores" *ngIf="erroresDetallados.length > 0">
+          <button
+            pButton
+            type="button"
+            [label]="'Descargar las ' + erroresDetallados.length + ' filas rechazadas'"
+            icon="pi pi-download"
+            class="p-button-sm p-button-outlined"
+            (click)="descargarErrores()">
+          </button>
+          <small>Trae fila del Excel, documento, nombre y motivo.</small>
+        </div>
+      </div>
+
+      <!-- Filas repetidas DENTRO del archivo. Va en la pantalla de resultado
+           y no en un toast: el usuario tiene que poder anotar los números de
+           fila para ir a corregir el Excel. -->
+      <div class="duplicados-archivo" *ngIf="duplicadosEnArchivo.length > 0">
+        <div class="duplicados-titulo">
+          <i class="pi pi-copy"></i>
+          <span>
+            <strong>{{ duplicadosEnArchivo.length }}</strong>
+            {{ duplicadosEnArchivo.length === 1 ? 'fila venía repetida' : 'filas venían repetidas' }}
+            en el archivo y <strong>no se subieron</strong>.
+            Se conservó la primera aparición de cada una. Revisá esas filas en tu Excel:
+            si son clientes distintos, tienen el mismo documento y hay que corregirlo.
+          </span>
+        </div>
+        <p-accordion>
+          <p-accordionTab header="Ver filas repetidas ({{ duplicadosEnArchivo.length }})">
+            <ul class="duplicados-lista">
+              <li *ngFor="let d of duplicadosEnArchivo">
+                Fila <strong>{{ d.fila }}</strong> — documento {{ d.valor }}
+                <small>(ya venía en la fila {{ d.primeraFila }})</small>
+              </li>
             </ul>
           </p-accordionTab>
         </p-accordion>

@@ -1,9 +1,8 @@
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ViewChild } from '@angular/core';
 import { Subject } from 'rxjs';
 import { MessageService } from 'primeng/api';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
 import * as XLSX from 'xlsx';
+import { ImportApiService } from 'src/app/shared/services/import/import-api.service';
 import { ColumnMappingService } from '../../../shared/services/import/column-mapping.service';
 import {
   ColumnMappingResult,
@@ -64,7 +63,7 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
 
   constructor(
     private messageService: MessageService,
-    private http: HttpClient,
+    private importApi: ImportApiService,
     private columnMappingService: ColumnMappingService
   ) {}
 
@@ -379,16 +378,11 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
         mappings: payload.mappings
       });
 
-      // Agregar header company explícitamente para onboarding
-      const headers = new HttpHeaders({
-        'company': companyId
-      });
-
-      const response = await this.http.post<ImportResult>(
-        `${environment.urlApi}/v1/onboarding/import-customers`,
+      const response = await this.importApi.post<ImportResult>(
+        '/v1/onboarding/import-customers',
         payload,
-        { headers }
-      ).toPromise();
+        companyId
+      );
 
       this.importResult = response || { success: 0, failed: 0, errors: [] };
 

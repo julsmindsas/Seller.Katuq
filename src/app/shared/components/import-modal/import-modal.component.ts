@@ -1,10 +1,9 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Subject } from 'rxjs';
 import { MessageService } from 'primeng/api';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
 import * as XLSX from 'xlsx';
 import { ColumnMappingService } from '../../services/import/column-mapping.service';
+import { ImportApiService } from '../../services/import/import-api.service';
 import { MaestroService } from '../../services/maestros/maestro.service';
 import { resolverNombreApellido } from '../../utils/nombre-apellido.util';
 import {
@@ -23,6 +22,9 @@ interface ImportConfig {
   title: string;
   endpoint: string;
   payloadKey: string;
+  // Campo que identifica al registro. Si está, las filas repetidas del archivo
+  // se descartan antes de subir. Sin él, el importador sube todo tal cual.
+  claveUnica?: string;
   maxFileSize: number;
   templateColumns: TemplateColumn[];
   fieldLabels: { [key: string]: string };
@@ -147,6 +149,35 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   uploadedFile: File | null = null;
   importResult: ImportResult | null = null;
   importTotalRecords = 0;
+
+  /**
+   * Filas que el archivo trae repetidas y NO se subieron.
+   *
+   * Hay que sacarlas acá, antes de partir en lotes: el backend busca los
+   * clientes existentes UNA vez por lote, así que dos filas con el mismo
+   * documento dentro del mismo lote de 500 no se ven entre sí y se creaban dos
+   * veces. Pasó en ALMARA: 393 clientes duplicados en un import de 73.054
+   * filas, todos con el mismo correo y el mismo celular, cargados dos veces en
+   * el Excel con el nombre escrito distinto.
+   */
+  duplicadosEnArchivo: { fila: number; valor: string; primeraFila: number }[] = [];
+
+  /**
+   * Cada fila rechazada por el backend, con su número de fila del Excel.
+   *
+   * La pantalla muestra 50; esto las guarda TODAS para poder descargarlas. Sin
+   * esto no hay forma de saber qué corregir: el backend numera "Cliente 231"
+   * por su posición dentro del lote de 500, y con 147 lotes ese número no
+   * ubica nada.
+   */
+  erroresDetallados: { fila: number; documento: string; nombre: string; motivo: string }[] = [];
+
+  // Progreso real del envío por lotes. Sin esto la pantalla solo podía mostrar
+  // una barra indeterminada, que en un import de media hora es indistinguible
+  // de estar colgado.
+  loteActual = 0;
+  totalLotes = 0;
+  registrosProcesados = 0;
   deleteResult: { deleted: number } | null = null;
   previewData: any[] = [];
   showPreview = false;
@@ -552,6 +583,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     title: 'Importar Clientes',
     endpoint: '/v1/onboarding/import-customers',
     payloadKey: 'customers',
+    claveUnica: 'documento',
     maxFileSize: 5000000, // 5MB
     templateColumns: [
       // ── Datos básicos del cliente (documento, tipo doc y correo van UNA sola vez;
@@ -896,7 +928,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
   constructor(
     private messageService: MessageService,
-    private http: HttpClient,
+    private importApi: ImportApiService,
     private columnMappingService: ColumnMappingService,
     private maestroService: MaestroService
   ) {}
@@ -1032,6 +1064,11 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.showPreview = false;
     this.importResult = null;
     this.importTotalRecords = 0;
+    this.erroresDetallados = [];
+    this.loteActual = 0;
+    this.totalLotes = 0;
+    this.registrosProcesados = 0;
+    this.duplicadosEnArchivo = [];
     this.deleteResult = null;
     this.parsedData = [];
     this.sourceColumns = [];
@@ -1565,15 +1602,23 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         ? this.transformStandardCustomerTemplate(this.parsedData)
         : this.transformDataWithMapping(this.parsedData, this.confirmedMappings, this.mappingResult?.mappings);
 
+      const { unicas: filasAEnviar, filasOriginales } = this.descartarRepetidos(transformedData);
+
       console.log('[ImportModal] ✅ Datos transformados:', transformedData.length, 'registros');
       console.log('[ImportModal] 📋 Muestra de datos transformados (primeros 3):', JSON.stringify(transformedData.slice(0, 3), null, 2));
 
       const batchId = `imp_${Date.now()}`;
-      const headers = new HttpHeaders({ 'company': companyId });
 
       // Particion por lotes de 500 registros
       const BATCH_SIZE = 500;
-      const totalBatches = Math.ceil(transformedData.length / BATCH_SIZE);
+      const totalBatches = Math.ceil(filasAEnviar.length / BATCH_SIZE);
+
+      // El total que se muestra es el que de verdad se va a subir: parsedData
+      // incluía las filas repetidas que acabamos de descartar.
+      this.importTotalRecords = filasAEnviar.length;
+      this.totalLotes = totalBatches;
+      this.loteActual = 0;
+      this.registrosProcesados = 0;
       let totalCreated = 0;
       let totalUpdated = 0;
       let totalFailed = 0;
@@ -1585,11 +1630,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       const categoriasCreadas = new Set<string>();
       let totalSinCategoria = 0;
 
-      console.log(`[ImportModal] 📦 Enviando en ${totalBatches} lotes de ${BATCH_SIZE} (${transformedData.length} total)`);
+      console.log(`[ImportModal] 📦 Enviando en ${totalBatches} lotes de ${BATCH_SIZE} (${filasAEnviar.length} total)`);
 
       for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
         const start = batchIdx * BATCH_SIZE;
-        const batchData = transformedData.slice(start, start + BATCH_SIZE);
+        const batchData = filasAEnviar.slice(start, start + BATCH_SIZE);
+        this.loteActual = batchIdx + 1;
 
         const payload: any = {
           companyId: companyId,
@@ -1611,11 +1657,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         });
 
         try {
-          const httpPromise = this.http.post<any>(
-            `${environment.urlApi}${this.config!.endpoint}`,
-            payload,
-            { headers }
-          ).toPromise();
+          const httpPromise = this.importApi.post<any>(this.config!.endpoint, payload, companyId);
 
           const response: any = await Promise.race([httpPromise, timeoutPromise]);
           clearTimeout(timeoutHandle);
@@ -1629,8 +1671,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
           // decirlos: si no, el usuario ve "0 procesados" sin ninguna
           // explicación de por qué su archivo no hizo nada.
           totalOmitted += data.omitted || 0;
+          this.registrosProcesados += batchData.length;
           if (data.omittedDetails?.length) allOmitted.push(...data.omittedDetails);
-          if (data.errors?.length) allErrors.push(...data.errors);
+          if (data.errors?.length) {
+            allErrors.push(...data.errors);
+            this.registrarErroresDetallados(data.errors, batchData, start, filasOriginales);
+          }
           if (data.categoriasCreadas?.length) {
             data.categoriasCreadas.forEach((c: string) => categoriasCreadas.add(c));
           }
@@ -1650,6 +1696,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
           totalFailed += batchData.length;
           allErrors.push(`Lote ${batchIdx + 1}: ${batchError?.message || 'Error desconocido'}`);
           console.error(`[ImportModal] ❌ Lote ${batchIdx + 1} fallo:`, batchError);
+          // También cuenta como procesado: la barra mide avance, no éxito.
+          this.registrosProcesados += batchData.length;
           // Continuar con el siguiente lote
         }
       }
@@ -1688,6 +1736,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         detail += `. Se omitieron ${totalOmitted} porque ${porModo}`;
         console.info('[ImportModal] Filas omitidas por el modo elegido:', allOmitted);
       }
+      if (this.duplicadosEnArchivo.length > 0) {
+        detail += `. ${this.duplicadosEnArchivo.length} filas venían repetidas en el archivo y no se subieron`;
+      }
       if (totalBatches > 1) detail += ` (${totalBatches} lotes)`;
 
       this.messageService.add({
@@ -1722,11 +1773,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     try {
       const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
       const companyId = company.nomComercial;
-      const headers = new HttpHeaders({ 'company': companyId });
-      const response = await this.http.delete<{ success: boolean; deleted: number }>(
-        `${environment.urlApi}/v1/onboarding/import-customers/${this.importResult.batchId}`,
-        { headers }
-      ).toPromise();
+      const response = await this.importApi.delete<{ success: boolean; deleted: number }>(
+        `/v1/onboarding/import-customers/${this.importResult.batchId}`,
+        companyId
+      );
       this.deleteResult = { deleted: response?.deleted || 0 };
       this.importResult = null;
       this.messageService.add({
@@ -1751,11 +1801,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     try {
       const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
       const companyId = company.nomComercial;
-      const headers = new HttpHeaders({ 'company': companyId });
-      const response = await this.http.delete<{ success: boolean; deleted: number }>(
-        `${environment.urlApi}/v1/onboarding/delete-all-clients`,
-        { headers }
-      ).toPromise();
+      const response = await this.importApi.delete<{ success: boolean; deleted: number }>(
+        '/v1/onboarding/delete-all-clients',
+        companyId
+      );
       this.deleteResult = { deleted: response?.deleted || 0 };
       this.importResult = null;
       this.messageService.add({
@@ -1772,6 +1821,108 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     } finally {
       this.isDeleting = false;
     }
+  }
+
+  /**
+   * Deja una sola fila por cada valor de `claveUnica` y anota las repetidas en
+   * `duplicadosEnArchivo`. Gana la PRIMERA aparición.
+   *
+   * Las filas sin clave pasan igual: de esas se encarga el backend, que las
+   * rechaza y las cuenta como fallidas con su motivo.
+   */
+  private descartarRepetidos(filas: any[]): { unicas: any[]; filasOriginales: number[] } {
+    this.duplicadosEnArchivo = [];
+    // +2 para que el número coincida con lo que ve el usuario en Excel: la
+    // fila 1 es el encabezado y Excel cuenta desde 1.
+    const filaDeExcel = (i: number) => i + 2;
+
+    const clave = this.config?.claveUnica;
+    if (!clave) return { unicas: filas, filasOriginales: filas.map((_, i) => filaDeExcel(i)) };
+
+    const vistos = new Map<string, number>();
+    const unicas: any[] = [];
+    const filasOriginales: number[] = [];
+
+    filas.forEach((fila, i) => {
+      const nroFila = filaDeExcel(i);
+      const valor = String(fila?.[clave] ?? '').trim();
+
+      if (!valor) { unicas.push(fila); filasOriginales.push(nroFila); return; }
+
+      const primera = vistos.get(valor);
+      if (primera === undefined) {
+        vistos.set(valor, nroFila);
+        unicas.push(fila);
+        filasOriginales.push(nroFila);
+      } else {
+        this.duplicadosEnArchivo.push({ fila: nroFila, valor, primeraFila: primera });
+      }
+    });
+
+    if (this.duplicadosEnArchivo.length) {
+      console.warn('[ImportModal] Filas repetidas en el archivo (no se suben):', this.duplicadosEnArchivo);
+    }
+    return { unicas, filasOriginales };
+  }
+
+  /**
+   * Traduce los errores del backend a filas del Excel.
+   *
+   * El backend los manda como `Cliente 231: documento es requerido`, donde 231
+   * es la posición dentro del lote. Acá se convierte en la fila real del
+   * archivo y se le pega el documento y el nombre, que es lo que el usuario
+   * necesita para encontrarla.
+   */
+  private registrarErroresDetallados(
+    errores: string[], batchData: any[], offset: number, filasOriginales: number[]
+  ): void {
+    const legible: { [motivo: string]: string } = {
+      'documento es requerido': 'Falta el número de documento',
+      'nombres_completos es requerido': 'Falta el nombre',
+    };
+
+    errores.forEach(err => {
+      const m = /^Cliente (d+):s*(.+)$/.exec(err);
+      if (!m) {
+        // Error que no viene por fila (falla de todo el lote). Se guarda igual:
+        // callarlo sería peor que mostrarlo sin número de fila.
+        this.erroresDetallados.push({ fila: 0, documento: '', nombre: '', motivo: err });
+        return;
+      }
+      const idx = Number(m[1]) - 1;
+      const registro = batchData[idx] || {};
+      this.erroresDetallados.push({
+        fila: filasOriginales[offset + idx] ?? 0,
+        documento: String(registro.documento ?? ''),
+        nombre: String(registro.nombres_completos ?? ''),
+        motivo: legible[m[2]] || m[2],
+      });
+    });
+  }
+
+  /** Avance del envío, 0-100. */
+  get porcentajeImport(): number {
+    if (!this.importTotalRecords) return 0;
+    return Math.min(100, Math.round((this.registrosProcesados / this.importTotalRecords) * 100));
+  }
+
+  /** Baja TODAS las filas rechazadas en un Excel, no las 50 que muestra la pantalla. */
+  descargarErrores(): void {
+    if (!this.erroresDetallados.length) return;
+
+    const hoja = XLSX.utils.json_to_sheet(
+      this.erroresDetallados.map(e => ({
+        'Fila del Excel': e.fila || '(sin fila)',
+        'Documento': e.documento || '(vacío)',
+        'Nombre': e.nombre || '(vacío)',
+        'Motivo': e.motivo,
+      }))
+    );
+    hoja['!cols'] = [{ wch: 14 }, { wch: 18 }, { wch: 38 }, { wch: 34 }];
+
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Filas rechazadas');
+    XLSX.writeFile(libro, `errores_importacion_${this.importResult?.batchId || 'sin_lote'}.xlsx`);
   }
 
   private transformDataWithMapping(
