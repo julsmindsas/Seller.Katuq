@@ -887,6 +887,28 @@ h3 {
   }
 }
 
+// Tarjeta con foto de fondo: espejo de la página publicada. Capas, nada de
+// estilos en línea.
+.tarjeta--fondo {
+  min-height: 15rem;
+  justify-content: flex-end;
+  overflow: hidden;
+  border: none;
+  color: #fff;
+
+  h3, p, .formato { color: #fff; position: relative; z-index: 1; }
+  .tarjeta__icono { color: #fff; position: relative; z-index: 1; }
+  .boton, .tarjeta__etiqueta { position: relative; z-index: 1; }
+}
+.tarjeta__fondo {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 0;
+}
+.tarjeta__velo-fondo {
+  position: absolute; inset: 0; z-index: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.05) 30%, rgba(0,0,0,.72) 100%);
+}
+
 .sitio--editable .celda--arrastrando {
   cursor: grabbing;
   outline-color: #2563eb !important;

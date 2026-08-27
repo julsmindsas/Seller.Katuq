@@ -637,7 +637,13 @@
                    [class.tarjetas--3]="el.datos.porFila === 3"
                    [class.tarjetas--4]="el.datos.porFila === 4">
                 <article class="tarjeta" *ngFor="let t of el.datos.items; let j = index"
-                         [class.tarjeta--icono]="el.datos.variante === 'icono'">
+                         [class.tarjeta--icono]="el.datos.variante === 'icono'"
+                         [class.tarjeta--fondo]="el.datos.variante === 'fondo'">
+                  <!-- Foto de fondo con velo, igual que la página publicada. -->
+                  <ng-container *ngIf="el.datos.variante === 'fondo' && t.imagen">
+                    <img class="tarjeta__fondo" [src]="t.imagen" alt="" />
+                    <span class="tarjeta__velo-fondo"></span>
+                  </ng-container>
                   <span class="tarjeta__etiqueta" *ngIf="t.etiqueta"
                         [attr.contenteditable]="previsualizacion ? true : null"
                         [class.editable]="previsualizacion"
@@ -647,7 +653,7 @@
 
                   <img *ngIf="el.datos.variante === 'imagen' && t.imagen" class="tarjeta__foto"
                        [src]="t.imagen" [alt]="t.titulo || ''" />
-                  <svg *ngIf="el.datos.variante === 'icono' && trazoIcono(t.icono)" class="tarjeta__icono"
+                  <svg *ngIf="(el.datos.variante === 'icono' || el.datos.variante === 'fondo') && trazoIcono(t.icono)" class="tarjeta__icono"
                        width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                        stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                     <path [attr.d]="trazoIcono(t.icono)" />
