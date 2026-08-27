@@ -5480,3 +5480,48 @@ viñetas, y con sus cuatro opciones tocables.
 la dejó fuera de este turno a propósito) y la latencia del agente cuando
 consulta catálogo — un turno de prueba con búsqueda de rosas tardó 17,6 s solo
 en ADK, que ahora es el tramo dominante.
+
+### D-221 — Adenda (2026-08-27): dónde se va el tiempo del agente, medido
+
+Daniel señaló que el turno sigue tardando. Medido, no supuesto:
+
+**El MCP no era el problema.** En prod: 1,1 s de conexión + `get_tools`, 0,6 s
+por consulta al catálogo, 0,26 s si la conexión ya está abierta. El pooling de
+sesiones está apagado y aun así el costo es ese.
+
+**El costo es cada ida y vuelta al modelo.** De una conversación completa de
+prueba:
+
+| Herramientas del turno | Tiempo |
+|---|---|
+| ninguna | 4,0 s |
+| 1 (`search_products`) | 8,0 s |
+| 2 encadenadas | 9,3 s |
+| 4 (en tandas) | 8,8 s |
+
+El piso es ~4 s por pasada del modelo, y cada TANDA de herramientas suma otra.
+Varias herramientas en la misma tanda casi no cuestan extra. El prompt son
+2.751 tokens: recortarlo no es donde está la ganancia.
+
+**Queda instrumentado**: el turno registra cuántas herramientas usó y cuáles,
+en el log del backend y en la respuesta de ADK. El próximo turno lento se
+explica en vez de adivinarse.
+
+**Espera total del cliente hoy**: ~1,8 s de transporte + 2 s de ventana + 0,1 s
+de lecturas (turnos 2 en adelante) + 4-9 s del modelo ≈ **8-13 s**, contra los
+26,7 s de mediana con que empezó el día.
+
+**Verificado lo que Daniel pidió recordar** — envío y facturación se piden y
+quedan anotados: `{direccion: "carrera 70 numero 30-15", barrio: "Belen",
+ciudad: "Medellin", fecha: "2026-09-05", forma: "Envio a Domicilio"}` y
+`{nombre: "Julsmind SAS", tipoDocumento: "NIT", documento: "901234567",
+correo: "pagos@julsmind.com"}`.
+
+**Un defecto que salió en esa prueba, corregido:** el cliente dictó la
+dirección y el bot contestó por el producto sin anotarla; la guardó un turno
+después. La regla del "anótalo YA" existía para la forma de entrega y ahora
+también para la dirección (ADK `6ddfc54`).
+
+**Sigue abierto:** la búsqueda de catálogo se contradijo en esa misma prueba
+("no tenemos peluche de Mickey" → "¡sí tenemos!" → "no hay existencias"). Es
+el tema de búsqueda que Daniel aplazó, no una regresión.
