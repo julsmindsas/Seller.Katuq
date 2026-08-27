@@ -103,6 +103,22 @@ export class MetaChannelsComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * ¿Se muestra la cuenta enlazada?
+   *
+   * Solo cuando el canal está vivo. Con "reconectar" también, porque ahí saber
+   * cuál cuenta se cayó es justo lo que el usuario necesita. Desconectado, no:
+   * una tarjeta que dice "Sin conectar" y debajo muestra una cuenta se lee como
+   * que la desconexión no funcionó.
+   */
+  muestraCuenta(canal: MetaCanal): boolean {
+    const estado = this.estadoDe(canal)?.estado;
+    return (
+      Boolean(this.estadoDe(canal)?.cuentaNombre) &&
+      (estado === 'conectado' || estado === 'reconectar')
+    );
+  }
+
   textoBoton(canal: MetaCanal): string {
     return this.estadoDe(canal)?.estado === 'reconectar' ? 'Reconectar' : 'Conectar';
   }

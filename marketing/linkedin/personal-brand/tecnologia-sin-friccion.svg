@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <image x="0" y="0" width="1080" height="1350" xlink:href="tecnologia-sin-friccion-base.png" preserveAspectRatio="xMidYMid slice"/>
+
+  <rect x="68" y="72" width="10" height="60" rx="5" fill="#00e5cc"/>
+  <text x="104" y="111" fill="#00e5cc" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" letter-spacing="3">TECNOLOGÍA CON PROPÓSITO</text>
+
+  <text x="68" y="226" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="69" font-weight="700">Construir tecnología</text>
+  <text x="68" y="310" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="69" font-weight="700">no es agregar</text>
+  <text x="68" y="394" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="69" font-weight="700">herramientas.</text>
+  <text x="68" y="495" fill="#00e5cc" font-family="Arial, Helvetica, sans-serif" font-size="69" font-weight="700">Es eliminar fricción.</text>
+
+  <rect x="56" y="1174" width="968" height="116" rx="24" fill="#0f172a" fill-opacity="0.92"/>
+  <text x="88" y="1221" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700">Daniel Mauricio García Hincapié</text>
+  <text x="88" y="1260" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="22">Cofundador &amp; CTO</text>
+  <rect x="764" y="1205" width="222" height="58" rx="29" fill="#ffffff"/>
+  <image x="792" y="1221" width="166" height="31" xlink:href="katuq-logo.png" preserveAspectRatio="xMidYMid meet"/>
+</svg>

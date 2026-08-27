@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <image x="0" y="0" width="1200" height="1200" xlink:href="katuq-operacion-en-control-base.png" preserveAspectRatio="xMidYMid slice"/>
+
+  <rect x="54" y="58" width="270" height="64" rx="32" fill="#ffffff"/>
+  <image x="78" y="78" width="222" height="41" xlink:href="katuq-logo.png" preserveAspectRatio="xMinYMid meet"/>
+
+  <rect x="54" y="198" width="570" height="404" rx="24" fill="#0f172a" fill-opacity="0.88"/>
+  <rect x="54" y="198" width="9" height="404" rx="4" fill="#00e5cc"/>
+  <text x="96" y="284" fill="#00e5cc" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" letter-spacing="2">GESTIONA SIN PERDER EL RITMO</text>
+  <text x="96" y="372" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="700">Tu negocio,</text>
+  <text x="96" y="450" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="700">en control.</text>
+  <text x="96" y="518" fill="#dbeafe" font-family="Arial, Helvetica, sans-serif" font-size="28">Ventas, inventario y pedidos</text>
+  <text x="96" y="555" fill="#dbeafe" font-family="Arial, Helvetica, sans-serif" font-size="28">en una sola plataforma.</text>
+
+  <rect x="54" y="1064" width="570" height="72" rx="18" fill="#8b5cf6"/>
+  <text x="86" y="1111" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700">Simplifica hoy. Crece mañana.</text>
+</svg>

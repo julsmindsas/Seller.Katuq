@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <rect width="1080" height="1350" fill="#073b4c"/>
+  <image x="0" y="-80" width="1080" height="1688" preserveAspectRatio="none" xlink:href="julsmind-sin-codigo-base-2026-08-24.png"/>
+
+  <circle cx="88" cy="84" r="36" fill="#ffffff"/>
+  <image x="66" y="60" width="44" height="48" preserveAspectRatio="xMidYMid meet" xlink:href="julsmind-symbol.png"/>
+  <text x="142" y="94" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" letter-spacing="3">JULSMIND SAS</text>
+
+  <rect x="54" y="164" width="10" height="38" rx="5" fill="#ff7a59"/>
+  <text x="84" y="193" fill="#ffb59f" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" letter-spacing="3">LECCIÓN EN +50 PROYECTOS</text>
+
+  <text x="54" y="296" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="69" font-weight="700">El software a medida</text>
+  <text x="54" y="378" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="69" font-weight="700">no empieza</text>
+  <text x="54" y="460" fill="#ff8b69" font-family="Arial, Helvetica, sans-serif" font-size="69" font-weight="700">con código.</text>
+
+  <rect x="54" y="1218" width="806" height="94" rx="22" fill="#062f3b" fill-opacity="0.9"/>
+  <text x="82" y="1258" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700">julsmind.com</text>
+  <text x="82" y="1291" fill="#d6e4e8" font-family="Arial, Helvetica, sans-serif" font-size="20">Software a medida e inteligencia artificial aplicada</text>
+</svg>

@@ -5401,3 +5401,35 @@ Propuesta `sync-stock-bodegas-cereza` aprobada por Daniel el mismo día ("dale c
 
 ## D-248 (2026-08-25) — Importar un Excel de una lista ya no borra las demás
 (Renumerada: el commit dice D-240, tomado por cotizaciones.) `batch.update` con el arreglo completo REEMPLAZA `preciosPorTipoCliente`: importar Modelos borraba Mayorista y Público. Ahora fusiona por `tipoClienteId` reutilizando `mergePreciosPorTipo` del sync de Cereza (un solo criterio de fusión en el sistema, ya cubierto por test) y reporta `listasPreservadas`. Backend `bbaf127`.
+
+
+## D-249 (2026-08-26) — Revisión de Meta: el caso de uso pasó, el video no
+
+Meta respondió la solicitud enviada el 25-ago. **Tres permisos aprobados** —`pages_show_list`, `pages_manage_metadata`, `instagram_basic`— más `public_profile` renovado. **Dos rechazados: `pages_messaging` e `instagram_manage_messages`**, que son justamente los que hacen funcionar el buzón.
+
+**El motivo no es el producto.** Meta lo escribió explícito: *"Determinamos que el caso de uso de tu app está permitido. Sin embargo, la captura de video no muestra la experiencia completa del caso de uso"*. Y el revisor detalló a mano qué faltaba:
+
+> "the screencast does not show a message being sent from your app UI and the same message appearing in the native client (Messenger, Instagram, or WhatsApp). Please re-record showing: (1) asset selection (Page, account, or number visible), (2) a live send action from your app, and (3) the delivered message in the native client."
+
+O sea: el video mostraba el envío desde Katuq pero **nunca el mensaje llegando del otro lado**. Falta de guion, no de implementación. No hay nada que rediseñar en Katuq.
+
+**Trámites que quedaron firmes y no se repiten:** verificación de negocio, verificación de acceso como proveedor de tecnología (aprobada el 25-ago, destrabó `instagram_basic` que tenía el botón con candado), comprobación de uso de datos anual, y la encuesta de tratamiento de datos.
+
+**Configuración de la app corregida de paso**, porque tenía tres cosas que la habrían hundido igual: *Condiciones del servicio* y *Eliminación de datos* apuntaban a `facebook.com` (marcadores de posición), y el dominio de la app era `omnichat.katuq.com` —el Chatwoot muerto—. Ahora apuntan a las páginas reales de Katuq, verificadas antes de ponerlas. También se agregó la plataforma "Sitio web", que no estaba declarada y bloqueaba el paso de instrucciones para revisores.
+
+**Sobre el idioma, para que nadie lo vuelva a plantear:** Meta pide inglés en la interfaz solo *"si es posible"*, y acepta explícitamente *"subtítulos y consejos de herramientas"* cuando la app no está en inglés. **NO hay que traducir Katuq.** El video lleva subtítulos en inglés y la app se queda en español.
+
+**Seis intentos de grabación el 26-ago, ninguno limpio.** Vale la pena el registro porque cada falla enseñó algo:
+
+1. Ventana de Edge capturada pero el recorrido nunca se hizo — la conexión no llegó a Firestore.
+2. Proceso zombie: Edge se cerró y la grabación siguió 55 minutos capturando una ventana muerta.
+3. Grabar **solo la ventana** de Edge: el diálogo de Facebook abre en ventana APARTE, así que la toma clave nunca podía quedar. Error de método mío.
+4. Toma con zoom extremo, ilegible.
+5. Recorrido completo logrado… pero corté la grabación ANTES de cambiar a Messenger, y faltó justo la toma que Meta pidió.
+6. Al cerrar una notificación se abrió una **conversación personal de Daniel** con la cámara andando. Grabación cortada y borrada de inmediato, sin copia en disco.
+
+**Lo que sí funcionó y quedó demostrado en vivo:** FLORECER conectó Instagram (`@katuq_`) y Facebook (página `Katuq`) desde cero, entró un mensaje real al buzón con nombre del remitente y ventana de 24 h, y la respuesta salió con estado `sent` y se vio llegar en Messenger. El aislamiento multiempresa quedó a la vista: FLORECER arrancó sin conexiones porque las de agosto viven en otra empresa.
+
+**Pendiente único para reenviar:** una toma de ~90 segundos con el mensaje llegando al cliente nativo, pegada al material que ya sirve, con subtítulos en inglés. Reenviar con el botón "Volver a solicitar"; los tres permisos aprobados no se pierden.
+
+**Guardarraíl para la próxima grabación:** pantalla completa (nunca ventana), guion escrito antes de grabar, conversación del negocio abierta y fija, y **no usar la cuenta personal de Facebook de Daniel** — dos de las seis fallas fueron por notificaciones y chats privados asomándose.
