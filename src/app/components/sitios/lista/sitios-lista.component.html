@@ -131,6 +131,11 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
               Cómo va
             </button>
+            <button class="btn-fantasma btn-fantasma--peligro" (click)="eliminarSitio(s)"
+                    [disabled]="eliminando === s.id" title="Eliminar esta página para siempre">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
+              {{ eliminando === s.id ? 'Eliminando…' : 'Eliminar' }}
+            </button>
           </div>
         </div>
       </article>
@@ -322,6 +327,15 @@
                  placeholder="Ej: ramos y arreglos florales con entrega el mismo día" />
           <small>Opcional. Es lo que se lee en Google y al compartir el enlace.</small>
         </div>
+
+          <button type="button" class="opcion" [class.is-active]="conIA" (click)="conIA = !conIA">
+            <span class="opcion__texto">
+              <strong>Que Katuq escriba los textos por mí</strong>
+              <small>La inteligencia de Katuq redacta portada y secciones con tu marca.
+                Si no responde, la página sale igual con los textos de la plantilla.</small>
+            </span>
+            <span class="palanca"><span></span></span>
+          </button>
       </div>
 
       <footer class="caja__pie">

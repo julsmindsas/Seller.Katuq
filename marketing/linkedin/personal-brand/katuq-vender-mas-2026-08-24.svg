@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <rect width="1080" height="1350" fill="#071121"/>
+  <image x="0" y="-80" width="1080" height="1688" preserveAspectRatio="none" xlink:href="katuq-vender-mas-base-2026-08-24.png"/>
+
+  <rect x="54" y="48" width="282" height="68" rx="34" fill="#ffffff"/>
+  <image x="80" y="62" width="230" height="42" preserveAspectRatio="xMidYMid meet" xlink:href="katuq-logo.png"/>
+
+  <rect x="54" y="172" width="10" height="38" rx="5" fill="#02e6d0"/>
+  <text x="84" y="201" fill="#02e6d0" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700" letter-spacing="3">UNA LECCIÓN CONSTRUYENDO KATUQ</text>
+
+  <text x="54" y="302" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="71" font-weight="700">Vender más no sirve</text>
+  <text x="54" y="386" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="71" font-weight="700">si tu operación</text>
+  <text x="54" y="470" fill="#02e6d0" font-family="Arial, Helvetica, sans-serif" font-size="71" font-weight="700">no aguanta.</text>
+
+  <rect x="54" y="1218" width="806" height="94" rx="22" fill="#071121" fill-opacity="0.88"/>
+  <text x="82" y="1258" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700">katuq.com</text>
+  <text x="82" y="1291" fill="#c7d2e2" font-family="Arial, Helvetica, sans-serif" font-size="20">Pedidos, inventario y facturación en un solo lugar</text>
+</svg>

@@ -474,7 +474,12 @@ export class PaymentService extends BaseService {
       // Feature B / no acumulación (D-B2): una línea en promoción automática NO
       // recibe el descuento del código (factorDesc=1); el resto sí (1 - porceDescuento).
       // Guard G4 (spec 010): factorDesc nunca negativo (porcentaje > 100% legacy).
-      const factorDesc = lineaEnPromo ? 1 : Math.max(0, 1 - porceDescuento);
+      // Descuento por linea (D-141): compone multiplicativamente con el global,
+      // igual que el backend (orderCalculationService::calcularTotalesPedido) y que
+      // carrito/checkout/PDF/correo. A diferencia del codigo de descuento, este SI
+      // aplica a lineas en promocion: lo puso el vendedor sobre esa linea a mano.
+      const descLineaFrac = Math.min(100, Math.max(0, Number(itemCarrito?.descuentoLinea) || 0)) / 100;
+      const factorDesc = (lineaEnPromo ? 1 : Math.max(0, 1 - porceDescuento)) * (1 - descLineaFrac);
       // Calcular valor total con IVA del producto principal (antes de descuento)
       let valorTotalConIvaProducto = precioConIvaItem * cantidad;
       // Aplicar descuento al valor con IVA
@@ -1321,6 +1326,10 @@ export class PaymentService extends BaseService {
       // fuente (manual, categoría, volumen o base). Cubre tanto la comanda ("Precio Unit")
       // como el email (Total por producto), que comparten estas mismas variables.
       const descLineaFrac = Math.min(100, Math.max(0, Number(item?.descuentoLinea) || 0)) / 100;
+      // Porcentaje para pintarlo: el precio ya sale neto, pero sin decir el % el
+      // cliente no entiende por que difiere del precio de lista (mismo criterio
+      // que el badge del checkout y del PDF de orden de venta).
+      const descLineaPct = Math.round(descLineaFrac * 100);
       if (descLineaFrac > 0) {
         precioUnitarioSinIva *= (1 - descLineaFrac);
         precioUnitarioConIva *= (1 - descLineaFrac);
@@ -1359,7 +1368,7 @@ export class PaymentService extends BaseService {
             <td style="padding: 4px; font-size: 10px; vertical-align: top;">
               <div style="font-weight: bold; color: #000; margin-bottom: 2px;">${tituloProducto}</div>
               <div style="font-size: 9px; color: #666; margin-bottom: 2px;">Ref: ${referenciaProducto}</div>
-              <div style="font-size: 8px; color: #888;">Precio Unit: ${this.formatCurrency(precioUnitarioConIva)}</div>
+              <div style="font-size: 8px; color: #888;">Precio Unit: ${this.formatCurrency(precioUnitarioConIva)}${descLineaPct > 0 ? ` (-${descLineaPct}% dcto)` : ""}</div>
               ${producto?.crearProducto?.descripcion ? `<div style="font-size: 9px; font-style: italic; color: #666; line-height: 1.3; margin-top: 2px;">${producto.crearProducto.descripcion}</div>` : ''}
             </td>
             <td style="padding: 4px; font-size: 10px; vertical-align: top; text-align: center; font-weight: bold;">
@@ -1602,7 +1611,7 @@ export class PaymentService extends BaseService {
                   ${tituloProducto}
                 </div>
                 <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; margin-top: ${styles.spacing.xs}; line-height: 1.4;">
-                  Ref: ${referenciaProducto} • Cantidad: ${cantidad}
+                  Ref: ${referenciaProducto} • Cantidad: ${cantidad}${descLineaPct > 0 ? ` <span style="display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 10px; background-color: #E6F4EA; color: #0B8A4B; font-weight: 700; font-size: 11px;">-${descLineaPct}%</span>` : ""}
                 </div>
               </div>
             </td>

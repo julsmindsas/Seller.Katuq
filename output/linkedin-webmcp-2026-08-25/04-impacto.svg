@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <rect width="1080" height="1350" fill="#07172d"/>
+  <text x="70" y="100" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" letter-spacing="2" fill="#68dcff">LA WEB AGENTE-NATIVA</text>
+  <text x="70" y="184" font-family="Arial, Helvetica, sans-serif" font-size="66" font-weight="800" fill="#ffffff">¿Por qué importa?</text>
+  <text x="70" y="238" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#b9d3e8">El cambio no es solo técnico: redefine cómo usamos y construimos software.</text>
+
+  <rect x="70" y="304" width="450" height="270" rx="28" fill="#10243b" stroke="#284760" stroke-width="2"/>
+  <circle cx="126" cy="364" r="30" fill="#68dcff"/>
+  <text x="126" y="374" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="800" fill="#07172d">P</text>
+  <text x="176" y="374" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="800" fill="#ffffff">PERSONAS</text>
+  <text x="106" y="436" font-family="Arial, Helvetica, sans-serif" font-size="25" fill="#d9ebf6">
+    <tspan x="106" dy="0">• Tareas complejas más fáciles</tspan>
+    <tspan x="106" dy="42">• Mejor accesibilidad</tspan>
+    <tspan x="106" dy="42">• Control compartido con el agente</tspan>
+  </text>
+
+  <rect x="560" y="304" width="450" height="270" rx="28" fill="#0b2d43" stroke="#43c7eb" stroke-width="2"/>
+  <circle cx="616" cy="364" r="30" fill="#ff856d"/>
+  <text x="616" y="374" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="800" fill="#07172d">E</text>
+  <text x="666" y="374" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="800" fill="#ffffff">EMPRESAS</text>
+  <text x="596" y="436" font-family="Arial, Helvetica, sans-serif" font-size="25" fill="#d9ebf6">
+    <tspan x="596" dy="0">• Nuevo canal agente-nativo</tspan>
+    <tspan x="596" dy="42">• Menos fricción operativa</tspan>
+    <tspan x="596" dy="42">• Mejor experiencia y conversión</tspan>
+  </text>
+
+  <rect x="70" y="610" width="450" height="270" rx="28" fill="#0b2d43" stroke="#43c7eb" stroke-width="2"/>
+  <circle cx="126" cy="670" r="30" fill="#ff856d"/>
+  <text x="126" y="680" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="800" fill="#07172d">D</text>
+  <text x="176" y="680" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="800" fill="#ffffff">DESARROLLADORES</text>
+  <text x="106" y="742" font-family="Arial, Helvetica, sans-serif" font-size="25" fill="#d9ebf6">
+    <tspan x="106" dy="0">• Reutilizan lógica y permisos</tspan>
+    <tspan x="106" dy="42">• Contratos estructurados</tspan>
+    <tspan x="106" dy="42">• Menos automatización frágil</tspan>
+  </text>
+
+  <rect x="560" y="610" width="450" height="270" rx="28" fill="#10243b" stroke="#284760" stroke-width="2"/>
+  <circle cx="616" cy="670" r="30" fill="#68dcff"/>
+  <text x="616" y="680" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="800" fill="#07172d">I</text>
+  <text x="666" y="680" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="800" fill="#ffffff">INDUSTRIA</text>
+  <text x="596" y="742" font-family="Arial, Helvetica, sans-serif" font-size="25" fill="#d9ebf6">
+    <tspan x="596" dy="0">• Capa abierta e interoperable</tspan>
+    <tspan x="596" dy="42">• Web para humanos + agentes</tspan>
+    <tspan x="596" dy="42">• Nueva disciplina: Agent UX</tspan>
+  </text>
+
+  <rect x="70" y="928" width="940" height="120" rx="26" fill="#fff0ec"/>
+  <text x="106" y="975" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="800" fill="#a34735">IMPORTANTE</text>
+  <text x="106" y="1017" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#57332c">Aún es experimental. Seguridad, permisos y confirmaciones son parte del diseño.</text>
+
+  <text x="70" y="1128" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="800" fill="#ffffff">¿Tu producto está preparado para</text>
+  <text x="70" y="1178" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="800" fill="#68dcff">clientes humanos y agentes?</text>
+  <line x1="70" y1="1242" x2="1010" y2="1242" stroke="#2d536d"/>
+  <text x="70" y="1290" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#b9d3e8">Daniel Mauricio García · Katuq</text>
+  <text x="1010" y="1290" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#68dcff">4 / 4</text>
+</svg>

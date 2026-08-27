@@ -417,8 +417,25 @@
               <button class="btn-fantasma btn-fantasma--sm" (click)="abrirSelector()">
                 {{ (b.datos.productoIds?.length || 0) ? 'Cambiar productos' : 'Elegir productos' }}
               </button>
-              <small>El precio y la disponibilidad salen de tu catálogo al publicar. Los agotados no
-                se muestran.</small>
+
+              <!-- Los elegidos, arrastrables: el orden de esta lista es el orden
+                   en que salen en la página. -->
+              <div class="elegidos__lista" *ngIf="elegidosDelBloque.length"
+                   cdkDropList (cdkDropListDropped)="soltarProducto($event)">
+                <div class="elegido" *ngFor="let p of elegidosDelBloque; let i = index" cdkDrag>
+                  <span class="elegido__asa" cdkDragHandle title="Arrastra para reordenar">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="5" r="1.6"/><circle cx="16" cy="5" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/></svg>
+                  </span>
+                  <img class="elegido__foto" *ngIf="p.imagen" [src]="p.imagen" alt="" />
+                  <span class="elegido__foto elegido__foto--vacia" *ngIf="!p.imagen"></span>
+                  <span class="elegido__titulo">{{ p.titulo }}</span>
+                  <button class="elegido__quitar" (click)="quitarProducto(i)"
+                          title="Quitar de la selección">✕</button>
+                </div>
+              </div>
+
+              <small>Arrastra para cambiar el orden en que salen. El precio y la disponibilidad
+                salen de tu catálogo al publicar; los agotados no se muestran.</small>
             </div>
 
             <button class="opcion" [class.is-active]="b.datos.permitirCompra"
@@ -528,7 +545,15 @@
                     (click)="b.datos.mostrarCategorias = b.datos.mostrarCategorias === false; marcarSucio()">
               <span class="opcion__texto">
                 <strong>Filtro por categorías</strong>
-                <small>Salen de las categorías de tus productos.</small>
+                <small>Panel lateral con tus categorías y cuántos productos tiene cada una.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" [class.is-active]="b.datos.mostrarPrecio !== false"
+                    (click)="b.datos.mostrarPrecio = b.datos.mostrarPrecio === false; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Filtro de precio y ofertas</strong>
+                <small>Rango de precio y la casilla "Solo en oferta" en el panel de filtros.</small>
               </span>
               <span class="palanca"><span></span></span>
             </button>
@@ -1649,6 +1674,17 @@
               <span class="palanca"><span></span></span>
             </button>
 
+            <button class="opcion" [class.is-active]="contenido.tienda.ventaCruzada !== false"
+                    (click)="contenido.tienda.ventaCruzada = contenido.tienda.ventaCruzada === false; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Venta cruzada</strong>
+                <small>«También te puede gustar» en cada producto y «Completa tu pedido»
+                  en el carrito, con productos afines de tu catálogo. Sube el ticket
+                  promedio; apágala solo si no la quieres.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
             <ng-container *ngIf="ventaConfig && ventaConfig.formasPago.length">
               <div class="campo">
                 <label>Otras formas de pago</label>
@@ -1783,6 +1819,79 @@
           <small [class.is-error]="!slugValido">
             {{ slugMensaje || 'Este es el enlace que compartes por WhatsApp o Instagram.' }}
           </small>
+        </div>
+
+        <div class="grupo">
+          <h3>Tu propio dominio</h3>
+          <div class="campo">
+            <label>Dominio (opcional)</label>
+            <input type="text" [(ngModel)]="dominioPropio" (ngModelChange)="marcarSucio()"
+                   maxlength="253" placeholder="mitienda.com" />
+            <small>Escríbelo sin https:// ni barras. Al escribirlo te mostramos
+              los <b>2 registros DNS</b> que debes crear en tu proveedor de dominio
+              (GoDaddy, Namecheap, Hostinger…), con botón para copiarlos y un
+              comprobador para saber cuándo quedó. El candado verde (https) se
+              activa solo.</small>
+          </div>
+
+          <div class="dns" *ngIf="dominioPropio">
+            <p class="dns__paso"><b>1.</b> Guarda los cambios de esta página
+              (botón <b>Guardar</b> arriba).</p>
+
+            <p class="dns__paso"><b>2.</b> Entra a donde compraste
+              <b>{{ dominioPropio }}</b> (GoDaddy, Namecheap, Hostinger…) y busca la
+              sección <b>DNS</b> o <b>Administrar registros</b>.</p>
+
+            <p class="dns__paso"><b>3.</b> Crea estos dos registros, tal cual:</p>
+
+            <div class="dns__registro">
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Tipo</span>
+                <b>A</b>
+              </div>
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Nombre / Host</span>
+                <code>&#64;</code>
+              </div>
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Valor / Apunta a</span>
+                <code>34.225.223.187</code>
+                <button class="btn-fantasma btn-fantasma--sm"
+                        (click)="copiarDns('34.225.223.187')">Copiar</button>
+              </div>
+            </div>
+
+            <div class="dns__registro">
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Tipo</span>
+                <b>CNAME</b>
+              </div>
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Nombre / Host</span>
+                <code>www</code>
+              </div>
+              <div class="dns__linea">
+                <span class="dns__etiqueta">Valor / Apunta a</span>
+                <code>{{ slug || 'tu-pagina' }}.{{ dominioSitios }}</code>
+                <button class="btn-fantasma btn-fantasma--sm"
+                        (click)="copiarDns((slug || 'tu-pagina') + '.' + dominioSitios)">Copiar</button>
+              </div>
+            </div>
+            <small>Si ya existe un registro A en &#64; o un CNAME en www apuntando a
+              otro lado, edítalo en vez de crear uno nuevo.</small>
+
+            <p class="dns__paso"><b>4.</b> Espera un rato (de minutos a un par de
+              horas) y comprueba aquí mismo:</p>
+            <button class="btn-fantasma" (click)="comprobarDominio()"
+                    [disabled]="comprobandoDominio">
+              {{ comprobandoDominio ? 'Comprobando…' : 'Comprobar mi dominio' }}
+            </button>
+            <p class="dns__estado" *ngIf="estadoDominio"
+               [class.is-ok]="estadoDominio.listo"
+               [class.is-error]="estadoDominio.raizApuntaOtroLado">
+              {{ mensajeDominio }}
+            </p>
+          </div>
         </div>
 
         <div class="grupo">

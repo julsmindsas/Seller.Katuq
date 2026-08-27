@@ -1275,6 +1275,26 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-08-24 (sesión Guía Cereza — avisar precios faltantes por lista, D-224)
+- **Hecho y en producción (frontend 2026.08.24.10):** el catálogo de venta asistida avisa cuando al
+  cliente en pantalla se le está cobrando el precio general porque al producto le falta la lista de
+  ese cliente. Chip por tarjeta + renglón con el total + un solo renglón cuando le falta a todo el
+  catálogo. Genérico por construcción: si la empresa no usa listas, no aparece nada. Ver D-224.
+- **Hecho, sin desplegar:** `GET /v1/productos/cobertura-listas` (backend `d6cd954` + test `14bad7e`,
+  14 casos). Mientras no se despliegue, el renglón del total no sale; el chip sí funciona.
+- **Barrido de descuentos contra la API de Cereza:** 8.300 productos, **1 desactualizado** —
+  GCTT8218X, Cereza lo subió a $159.900 y Katuq lo tiene en $119.900. Dry-run, 0 escrituras.
+- **Números que cambian la prioridad del ticket OMS:** de 588 clientes, 159 son mayoristas, 4
+  público y **solo 1 es modelos**; 424 sin lista asignada. El hueco que se cobra mal a diario es el
+  de mayoristas (108 productos), no el de modelos (2.362 productos con un solo cliente).
+- **Incidente de sesiones paralelas:** la otra sesión arrastró código mío al commitear un archivo
+  compartido y la rama quedó sin compilar (consumidor sin proveedor). Se detectó al ir a publicar y
+  se cerró completando las piezas que faltaban, no revirtiendo.
+- **Queda pendiente, esperando a Daniel:** (1) desplegar el backend del contador; (2) autorizar la
+  corrección del precio de GCTT8218X (`--execute` escribe precios en producción). Y abiertas del
+  ticket OMS: ofertas a Shopify (906 productos), importador de Excel que borra las otras listas,
+  8.171 productos sin precio sin-IVA, unidades por bodega en Cereza.
+
 ### 2026-07-30 (spec 011 — alta múltiple de zonas de cobro)
 - Fix previo (spec 010): historial de redenciones — "Total pedido" ahora se calcula desde el carrito
   (mercancía con IVA − descuentos, sin envío) porque los campos de total persistidos podían estar corruptos
@@ -5020,7 +5040,76 @@ que se busca. Backend `7d2da39` + `ddb54fb`, ADK `ed644ab`. Suites en verde:
 
 **Archivos tocados (finalmente, tras el revert):** ninguno en `orderCalculationService.js`. Solo `functions/scripts/deepdive-d220-divergencia-categoria-base.js` (nuevo, herramienta de diagnóstico read-only).
 
+## D-239 (2026-08-25) — Bug real en SIIGO: la factura electrónica ignora el IVA efectivo de línea (propuesta OpenSpec, pendiente de aprobación/implementación)
+
+**Nota de renumeración:** esta decisión se registró originalmente como D-222, pero al mezclar con `origin` apareció colisión — D-222 ya estaba tomado el 2026-08-24 por "La disponibilidad que ve el vendedor es la de SU bodega" (ver más abajo), y D-223..D-238 también ya estaban en uso por sesiones concurrentes. Renumerada a **D-239** (siguiente libre tras la mezcla), mismo precedente que D-085/D-144/D-067.
+
+**Disparador.** Reporte de negocio: pedido **DAD-012406** (ALMARA FELICIDAD) se creó correcto en venta asistida, pero al facturar por SIIGO (factura #8834) salió **sin IVA discriminado**; el PDF del pedido tampoco lo mostraba; en pantalla el IVA aparecía y desaparecía entre recargas.
+
+**Investigación read-only contra Firestore** (`functions/scripts/inspect-order-dad-012406*.js`, sin escrituras): el pedido se creó (22:29:01) y facturó (22:31:40) con `totalImpuesto: 0` ya persistido desde el origen, sin ningún `_ivaManualOverride` en su única línea (ALM-4030, "Caja de Chocolates Medica Junior"). El producto está catalogado a `precioUnitarioIva: "0"` tanto hoy como en el snapshot del pedido. **Esta causa puntual es de catálogo/negocio (mismo patrón ya documentado en D-221 para ALMARA FELICIDAD, pendiente de decisión de negocio) — por decisión explícita del usuario, se deja fuera de alcance ("esas facturas dejemoslas en el olvido, lo que fue, fue").**
+
+**Hallazgo real y sistémico (independiente del pedido puntual), auditando el código de facturación:** `functions/services/accounting/utils/siigoDataMapper.js::mapOrderToInvoice()` (línea ~750) calcula el IVA de cada ítem con `calculateTaxPercentage(producto)` — lee **solo** el snapshot de catálogo embebido en la línea (`producto.precio.precioUnitarioConIva`/`SinIva`). **Nunca** revisa `item._ivaManualOverride`, `item.tarifaEfectiva` ni `item.ivaLinea` — los campos por línea que la spec 010 (D-201/OT-4, Opción A) creó específicamente como fuente única del IVA efectivo. Esto ya estaba anticipado en `specs/010-venta-asistida-impuestos-congruencia/tasks.md` T-17: *"SIIGO — AISLADO a propósito (...) si en el futuro se quiere SIIGO con tarifa efectiva, priorizar (...) en su mapper (gateado)."*
+
+**Prueba de que es un bug, no diseño:** `worldOfficeDataMapper.js::extractTaxPercentage(producto, carrito)` (líneas 93-117) SÍ implementa la jerarquía correcta (`tarifaEfectiva → _ivaManualOverride → catálogo`) desde la sesión de D-201/D-202 (2026-08-15) — el fix se aplicó a World Office pero nunca se portó a SIIGO. Cualquier pedido con IVA manual por línea que facture por SIIGO sale con el IVA equivocado de forma silenciosa y reproducible, aunque el pedido en Firestore esté correcto.
+
+**Propuesta OpenSpec creada** (CLI `openspec` no instalado en esta máquina — artefactos escritos a mano siguiendo el molde de `edit-order-line-iva`): `katuq_admin_back_firebase/openspec/changes/fix-siigo-invoice-line-iva/` (proposal.md + design.md + tasks.md + specs/siigo-invoice-line-iva/spec.md, 3 requirements EARS). Fix propuesto: nueva función `extractEffectiveTaxPercentage(producto, item)` en `siigoDataMapper.js` con la misma jerarquía que World Office, sin flag (retrocompatible por construcción — sin override, resultado idéntico al actual). No toca `worldOfficeDataMapper.js`, catálogo, precios, ni facturas ya emitidas. Riesgo preexistente documentado y no corregido en este cambio: `getTaxId()` no mapea 8% a un ID de SIIGO.
+
+**Estado: propuesta lista, pendiente de aprobación humana e implementación (`/opsx:apply` o equivalente manual).**
+
+**Implementación (2026-08-25, aprobada por el usuario "ok perfecto démosle"):** `siigoDataMapper.js` — nueva función `extractEffectiveTaxPercentage(producto, item)` (jerarquía idéntica a World Office) + call-site en `mapOrderToInvoice()` cambiado de `calculateTaxPercentage(producto)` a `extractEffectiveTaxPercentage(producto, item)`. `calculateTaxPercentage` original intacta (sigue siendo la única fuente en `mapProductToSiigo`, sync de catálogo).
+
+**Verificación:**
+- `node --check` limpio.
+- Contract test nuevo `functions/scripts/test-siigo-invoice-line-iva.js`: **7/7 PASS** (sin override → idéntico al comportamiento actual; `_ivaManualOverride`; `tarifaEfectiva`; `ivaLinea`+`precioSinIvaResuelto`; patrón real DAD-012406 sin override sigue en 0%, confirmando que el fix no inventa IVA donde no corresponde).
+- `test-iva-persist-option-a.js` re-corrido: **8/8 PASS**, sin regresión cruzada con el motor canónico de spec 010.
+- Reinicio local (`node index.js`, sin hot-reload): arrancó limpio en `:3300`.
+- **Pendiente:** verificación manual contra SIIGO real (requiere tenant de prueba con integración activa).
+
 ---
+
+## D-223 (2026-08-24) — El descuento por producto llega al total que se cobra, no solo a la línea
+
+**Reporte de Monica:** cotización aceptada → convertida a pedido → en el último paso de la venta asistida la línea decía `1 × $47.500` con badge `-5%`, pero **"TOTAL A PAGAR" seguía en $50.000**. Debía cobrar $47.500.
+
+**Causa raíz:** el checkout usa DOS funciones distintas para lo mismo. La línea la pinta `checkout.component.ts::checkPriceScaleProd(item)`, que sí aplica `descuentoLinea` (lo arregló D-141). El total suma `checkPriceScale()` (agregada, delega en `payment.service`), que devuelve el subtotal **bruto** — correcto, porque alimenta `totalPedidoSinDescuento`. El descuento se resta aparte, vía `pedidosUtilService.getDiscount()`… que **solo sabía de `porceDescuento`**, el descuento global. Con 5% de línea y 0% global, `getDiscount()` devolvía 0 y el total se quedaba en el bruto. D-141 arregló la línea y nunca tocó el agregado.
+
+**Por qué el PDF y el correo sí estaban bien:** leen el pedido ya guardado, y el backend recalcula al crear (`orders.js:5617` → `calculateOrderTotals`) pisando lo que mande el frontend (`:5665`). Desde D-141 ese cálculo compone línea + global. Solo estaba mal la pantalla que calcula en vivo, antes de que el pedido exista.
+
+**Decisión:** `getDiscount()` pasa a ser el **descuento total** del pedido (línea + global), mismo contrato que el backend (`totalDescuento = bruto − neto`). No se toca `checkPriceScale()`: sigue siendo el bruto, porque es lo que `totalPedidoSinDescuento` debe guardar (lección D-046: no pisar el campo que permite reconstruir el precio original).
+
+**Composición multiplicativa**, espejo del motor canónico — el % global va sobre la base YA neta de línea:
+`factor = (1 − descLinea/100) × (1 − porceDescuento/100)`
+Línea 10% + global 10% sobre 100.000 descuenta **19.000**, no 20.000.
+
+**Implementado (frontend):**
+- `pedidos.util.service.ts`: nuevo `getSubtotalSinEnvioNeto()` (espejo de `getSubtotalSinEnvio()` con `descuentoLinea` aplicado al final, incluyendo adiciones y preferencias). `getDiscount()` suma `descuentoLineas + global`; el tope del código de valor fijo pasa a ser el subtotal **neto**.
+- `payment.service.ts::checkIVAPrice` (camino legacy): `factorDesc` compone ahora `descuentoLinea`. Aplica a producto, adiciones y preferencias en un solo punto. **Solo se nota en producción** (`ivaCalcUnificado: false`); en local el motor canónico ya lo hacía bien — trampa a recordar: el IVA cuadra en localhost y descuadra en prod.
+- `payment.service.ts::generateHtmlContentInternal`: badge `-X%` en el correo (chip verde inline) y `(-X% dcto)` en texto plano en la comanda (se imprime en térmica B/N, un chip de color sale como mancha). Cierra el pendiente que D-142 dejó fuera de alcance en su tarea 3.2.
+- 6 pruebas de regresión nuevas en `pedidos.util.service.spec.ts`.
+
+**Efecto colateral bueno:** `checkout.component.ts:834` persiste `totalDescuento = getDiscount()`, así que la columna "Descuento" del listado de pedidos también queda correcta por esta ruta.
+
+**Verificado:** `npx tsc --noEmit` exit 0; `ng serve` recompiló limpio. **Karma NO se pudo correr** (`node_modules/quill` falta, roto de antes). Sin prueba en navegador.
+
+**Pendiente / deuda anotada:**
+- **Nunca se ha ejercitado con datos reales**: censo en producción dio **0 de 2.958 pedidos** desde 2026-06-01 con `descuentoLinea`. Ni el PDF ni el correo se han generado jamás con descuento por línea.
+- `list.component.ts` sigue con **5 bloques duplicados** (`:2627`, `:3665`, `:4015`, `:5432`, `:5545`) que recalculan totales y pisan `totalDescuento` con solo la parte global cuando hay línea + global juntos. Se dispara con `necesitaRecalculoFrontend` (precios por volumen ⇒ ALMARA, DEL RANCHO, CAFE ESCOBAR). No corregido aquí.
+- POS suma `getDiscount()` en vez de restarlo (`pos-checkout.component.html:198,223`). Bug preexistente; hoy inocuo porque el POS no tiene UI de descuento por línea.
+
+## D-234 (2026-08-24) — Cabecera del acordeón del checkout: el chevron pisaba "Completo"
+
+**Reporte de Monica:** en la columna izquierda del checkout las cards se veían "cortadas" — el chevron encima del texto "Completo", el título partido en tres líneas ("Datos / de / Entrega") y, en la card abierta, "Completo" saliéndose por el borde.
+
+**Causa raíz (tres defectos que se veían como uno):**
+1. El título es un **nodo de texto suelto** dentro del `.accordion-button` (que es flex) → ítem flex **anónimo**: no admite clase y sí encoge, así que era lo único que cedía y cedía partiéndose.
+2. El `::after` de Bootstrap se coloca con `margin-left: auto`, igual que el `.ms-auto` del resumen. Dos márgenes automáticos se reparten el espacio **libre**; sin espacio libre, ambos quedan en cero y el chevron termina encima de la última letra.
+3. `.accordion-summary` sin `min-width: 0` → en vez de recortarse, desbordaba la card.
+
+**Decisión:** el chevron sale del flujo y tiene carril propio; "Completo" es estado, no dato, así que se recortan primero los datos.
+
+**Implementado:** solo `checkout.component.scss` (sin tocar el HTML): `white-space: nowrap` en el botón; chevron `position: absolute` con `padding-right` reservado y `translateY(-50%)` conservado en la rotación al expandir; `.accordion-summary` con `flex: 1 1 auto` + `min-width: 0` + `overflow: hidden`; `.complete` con `flex: 0 0 auto`. Carril ajustado también en la media query de ≤992px.
+
+**Sin verificar en navegador** (la usuaria prueba la UI ella misma).
 
 ## D-222 (2026-08-24) — La disponibilidad que ve el vendedor es la de SU bodega
 
@@ -5174,7 +5263,6 @@ D-230 los dejó comprables (`inventoryPolicy: CONTINUE`) pero seguían mostrando
 
 Backend `ee0ea28`.
 
-
 ## D-235 (2026-08-25) — Soporte: fuente canónica de empresa, payload mínimo y canal del comercio por nomComercial
 
 Los tickets creados desde la pantalla de soporte "desaparecían": el formulario leía `currentCompany` de `sessionStorage` cuando el login lo persiste en `localStorage`, así que en pestaña nueva el ticket salía con `tienda: undefined` y Mis Tickets (que filtra por tienda, misma fuente frágil) nunca lo mostraba. Evidencia file:line en `openspec/changes/fix-seller-ticket-creation/proposal.md`.
@@ -5199,3 +5287,176 @@ El comercio no recibía correo por ningún evento de sus tickets y la campana mo
 4. Servicio nuevo `TicketNotificacionesSellerService` (no se engorda `ServiciosService`, que es legacy).
 
 Cambio OpenSpec `seller-ticket-notifications` (proposal/design/specs/tasks, validate OK). Tareas ClickUp wdu9v78jh9 (urgente, correos) y wdu9v78jh8 (in-app). Build de producción verde. Pendiente: verificación en navegador por el usuario.
+
+> Nota de merge 2026-08-27: los D-235/D-236 de soporte (arriba) colisionan en número con los D-235/D-236 de la bitácora OMS (abajo), tomados en sesiones paralelas. Se conservan ambos, precedente D-137.
+
+---
+
+## D-224 (2026-08-24) — El vendedor ve cuándo le está cobrando a un cliente el precio general
+
+**El hueco.** Un cliente puede tener asignada una lista de precios y el producto no tenerla. Cuando eso pasa, `aplicarPrecioDeLista` devuelve el producto intacto y el vendedor cobra el precio base — sin ningún aviso. En OH MY STORE eso es **108 productos para los 159 clientes mayoristas** y **2.362 para la lista de modelos**, de 8.350 en catálogo.
+
+**La pregunta que originó esto** era "cómo le decimos a OMS qué productos de Guía Cereza no tienen precio de modelos, pero que sirva para cualquier comercio". La respuesta NO puede ser "avisar cuando falte una lista": a CAFE ESCOBAR le faltan las tres listas en los 55 productos y no es un problema — sencillamente no usan el mecanismo. Lo mismo Tienda Demo (552 de 556).
+
+**La regla que sí es genérica: el aviso cuelga de la lista del cliente que está en pantalla, no de una lista con nombre.** Empresa que no usa listas → sus clientes no tienen lista asignada → no aparece absolutamente nada. Sin umbrales, sin configuración, sin nombrar "Modelos" en ninguna parte del código. Verificado que el emparejamiento es por id y no por nombre: **el 100% de los clientes con lista calza contra `tiposPrecios`** (OMS 164/164, HARMONY LENS 2/2, CAFE ESCOBAR 10/10).
+
+**Tres piezas:**
+1. **Chip en la tarjeta** ("Sin precio de Mayoristas") cuando a ESE producto le falta la lista del cliente.
+2. **Renglón arriba con el total** del catálogo — el que responde "cuáles y cuántos son".
+3. **Un solo renglón, más fuerte, cuando le falta a TODOS.** Pasa cuando una empresa asignó listas a sus clientes y nunca les puso precios (CAFE ESCOBAR: 10 clientes con lista, 0 productos con precios). Encender las 40 tarjetas ahí sería ruido; el problema no es el producto, es la configuración.
+
+**El criterio de "le falta" es exactamente el de la pantalla**: fila de esa lista, `activo === true` y precio con IVA mayor que cero. Una fila apagada o en cero no la aplica `aplicarPrecioDeLista`, así que cobrar el general igual — cuenta como faltante. Si el backend contara distinto, el chip y el total se contradirían. Cubierto por `npm run test:cobertura-listas` (14 casos).
+
+**Por qué el conteo no corre dentro de la petición.** Firestore no sabe responder "el array NO contiene este id", así que toca barrer los productos: **0,3 s con los 55 de CAFE ESCOBAR, pero 60 s con los 13.874 de HARMONY LENS contra sus 17 listas.** `GET /v1/productos/cobertura-listas` contesta de una con lo último calculado y dispara el recálculo aparte; mientras no haya número, el catálogo no muestra el renglón y el chip por tarjeta sigue funcionando porque no depende del backend. Vigencia 15 minutos, y se olvida en el mismo punto donde ya se invalida el caché de paginación para que editar precios no deje el conteo viejo colgado.
+
+**El chip no arregla nada — evita el cobro equivocado en el momento en que ocurre**, que es el daño real.
+
+**Dato para OMS antes de mandarlos a llenar 2.362 precios:** de sus 588 clientes, **159 son Mayoristas, 4 Público y solo UNO es Modelos**; 424 no tienen lista asignada. El hueco que se cobra mal todos los días es el de mayoristas (108 productos × 159 clientes), no el de modelos. O los "modelos" reales están entre los 424 sin lista y el problema no es que falten precios sino que nadie les asignó la lista.
+
+Frontend `fabf88d6` (el `.ts` ya había entrado por `d272054f`). Backend `d6cd954` + `14bad7e`, **sin desplegar** — mientras tanto la llamada del total da 404 y el catálogo solo muestra el chip.
+
+---
+
+## D-240 (2026-08-25) — Cotizaciones: el tachado mostraba el precio de otra línea, y las columnas unitarias no se dejaban multiplicar
+
+**Dos hallazgos de la misma pantalla (editor de cotizaciones). Ninguno tocó cálculo: los totales siempre estuvieron bien.**
+
+### 1. El tachado salía MENOR que el precio vigente
+
+Con 800 uds de ALM-818 la línea mostraba **$3,890** con IVA (tier de volumen: 3.269 sin IVA × 1,19) y al lado, tachado, **$3,650** — el "antes" parecía más barato que el "ahora", que se lee al revés. `itemPrecioOriginal` leía `producto.precio.precioUnitarioConIva` a secas: el precio de **1 unidad**, ignorando la escala de volumen, el precio por categoría y el flag de spec 010. Comparaba dos bases distintas.
+
+La causa de fondo: **D-046 (`31ef361f`) arregló exactamente esto en `itemPrecio`** — el comentario que dejó ahí todavía dice *"Bug histórico: antes reseteaba al precio de 1 unidad"* — pero dejó el camino del tachado copiado a mano. Por eso el arreglo **no reimplementa la lógica**: `itemPrecioOriginal` ahora llama a `itemPrecio` sobre la misma línea con los overrides quitados (`itemSinOverrides`). Cualquier arreglo futuro del precio lo hereda el tachado solo, y la desincronización no se puede repetir.
+
+Verificado que el clon no cambia de rama ni de resultado: `permitePrecioManual` no lee los overrides, y `getRangoVolumen` — que cortaba el volumen justo por existir el override de IVA (`:614`) — sobre la línea limpia sí devuelve el tier de 800.
+
+Dos remates del mismo bloque: el tachado aparecía **aunque no hubiera cambio** (`tieneOverride` pregunta si tocaste el selector, no si el valor se movió; elegir el mismo 19% que ya traía el producto dejaba un tachado idéntico al precio) → ahora `mostrarPrecioOriginal` exige diferencia ≥ $1. Y el `(IVA X%)` de al lado leía la tarifa cruda del producto ignorando el `valorIVAPorVolumen` del tier, contradiciendo al número que tenía al lado.
+
+### 2. El redondeo de la columna impedía verificar la cuenta a mano
+
+Mónica sumó `694 × 800 = 555.200` y el sistema decía **554.800**. El sistema estaba bien: `3.650 × 19% = 693,5`, y los totales acumulan el valor crudo (`ivaNetoLineas`), no el pintado. **Los $400 de diferencia son medio peso × 800 unidades.** El pipe estaba en `'1.0-0'`, así que `693,5` se pintaba `$694` y `4.343,5` se pintaba `$4.344`.
+
+Sumar sin redondear es lo correcto y no se tocó: `2.920.000 × 19% = 554.800` da lo mismo por el otro lado, que es como lo valida la DIAN. Si el sistema hiciera la cuenta manual, la factura saldría con $400 de IVA de más.
+
+**El arreglo usa dos formatos distintos a propósito:**
+- **Columnas unitarias → `'1.2-2'` (siempre 2 decimales).** Son las que el vendedor multiplica por la cantidad, así que no pueden estar redondeadas. Incluye el precio grande de la columna PRECIO, que decía `$3.890` siendo `3.890,11` — justo lo que explicaba el subtotal de `$3.112.088`.
+- **Totales y subtotales → `'1.0-2'` (decimales solo si existen).** El resumen sigue limpio (`$3.474.800`, sin `,00` de relleno) pero nunca miente. Dejarlos en cero decimales reproducía el mismo problema un nivel más arriba: con 3 unidades el IVA da `2.080,50` y se habría pintado `2.081`.
+
+Aplicado también a la **vista previa / PDF que recibe el cliente** (`doc-tbl`), que tenía el mismo redondeo: no tiene sentido que el vendedor pueda cuadrar la cuenta y el cliente no. Columnas numéricas ensanchadas en el SCSS (95→105px, `min-width` 1330→1400) porque llevan `white-space: nowrap` y un unitario de siete cifras con decimales se montaba sobre la columna vecina.
+
+### Pendiente — esto sí es plata
+
+Entre dos capturas de la misma cotización la línea pasó de **3.269 sin IVA** (tier de volumen para 800 uds) a **3.650** (lista de 1 unidad): ~**$305.000** de diferencia. Parece que al guardar/recargar la línea pierde el precio por volumen. **Sin diagnosticar.**
+
+Frontend, **sin desplegar**.
+
+---
+
+## D-205 (2026-08-25) — Dominio propio para las páginas publicadas
+
+**Pedido directo de Daniel** ("necesito rápido poder asociarle un dominio personalizado"). La infraestructura ya estaba lista sin saberlo: el Caddy de sitios emite certificados bajo demanda para CUALQUIER host que le llegue, y el único freno era `host-permitido`, que solo autorizaba subdominios de katuq.com.
+
+**Qué se hizo** (cero cambios en el Caddyfile):
+- `sanitizar.dominio()`: hostname DNS válido, tolera lo que la gente pega (https://, rutas, puerto se caen), rechaza katuq.com y subdominios — para la casa está el slug.
+- **Resolutor único por host** (`cargarPublicadoPorHost`): subdominio → slug; dominio propio → campo `dominioPropio` del sitio (acepta con y sin www). Lo usan la autorización de certificados, el render, robots y sitemap — la misma regla en todos los puntos.
+- `edit` acepta `dominioPropio` con **candado de unicidad** (un dominio pertenece a UN sitio; 409 si otro lo tiene) y precalienta el certificado al guardarlo.
+- Todas las URLs que salen del sitio usan su base canónica (`urlBaseDelSitio`): canónica y metas de compartir, sitemap, robots, link de acceso de cliente, y el regreso de la pasarela a `/gracias`.
+- Editor: campo "Tu propio dominio" en Ajustes con los DOS registros DNS exactos (A `@` → `34.225.223.187`; CNAME `www` → `<slug>.katuq.com`).
+
+**Verificado en producción con dominio de ensayo** (puesto y retirado): host-permitido 200 con y sin www, 404 para dominio ajeno y tras retirarlo; el render responde por `X-Sitio-Host` del dominio y la canónica + sitemap apuntan al dominio del comerciante.
+
+**Seguridad razonada**: reclamar un dominio ajeno es inofensivo — sin control del DNS ese dominio jamás trae tráfico aquí, y el certificado solo se emite cuando llega tráfico TLS real (lo que implica que el DNS ya apunta). El candado de unicidad impide que un sitio le robe el dominio a otro dentro de la plataforma.
+
+---
+
+## D-206 (2026-08-25) — El lote de las seis: la lista de mejoras completa, de una
+
+Daniel pidió "todas una por una". Todo desplegado (backend + Caddy de sitios + frontend) con la suite en 188 verdes.
+
+1. **Vencimiento de la reserva**: un pedido de PASARELA sin pagar devuelve su stock solo tras `RESERVA_TIENDA_MINUTOS` (60) y queda Anulado con rastro (`reservaVencida`, `estadoProcesoAntesDeVencer`, `user_edit: vencimiento-reserva`). Solo pasarela — contra entrega y formas manuales no vencen. Barrido **perezoso** (corre al crear pedidos, freno 10 min por empresa, consultas solo-igualdad sin índices nuevos; cero crones). Un **pago tardío revive** el pedido y vuelve a descontar.
+2. **Hoja de estilos compartida**: el CSS constante sale del HTML a `/estilos.css?v=<huella>` con caché inmutable de un año (huella vieja → hoja vigente con caché corta). CSP gana `'self'`; handle nuevo en el Caddy de sitios (repo + servidor recargado). Mitad del peso por página desde la 2ª vista.
+3. **Borrar páginas**: `DELETE /v1/sites/:id` con candado de empresa + botón «Eliminar» con confirmación en Mis páginas.
+4. **Palanca de venta cruzada** (`tienda.ventaCruzada`, ON por defecto): apaga afines de ficha, endpoint de relacionados y sugerencias del carrito. Toggle en la pestaña Tienda.
+5. **IA de textos VÍA KAI, de vuelta y funcionando**: `generateContentFlow` (Genkit 3890, ya desplegado, con SU llave — descubierto empíricamente: acepta `{data:{prompt}}` y devuelve JSON parseado). Opt-in (`conIA`) desde la casilla del asistente; si KAI falla, la página sale con plantilla y `motivo` explícito. Resuelve las dos objeciones por las que Santiago la retiró (modelo directo sin llave + fallo silencioso); su prueba «no depende de ningún modelo» evolucionó a «sin casilla es determinista y jamás hay modelo directo». **Verificada en producción: 17 textos reescritos con copy real de marca.**
+6. **Efectos premium**: marquesina de marcas (loop CSS con pista duplicada, pausa al hover, respeta reduced-motion y el interruptor del tema) y **la foto vuela de la rejilla a la ficha** (`@view-transition` por página solo con movimiento; el nombre lo pone un toque de JS por CSSOM — la CSP intacta; sin soporte del navegador, navegación normal).
+
+---
+
+## Bitácora 2026-08-25 — cierre masivo del ticket OMS (sesión fulpi): D-231..D-248
+
+Registro consolidado de las decisiones commiteadas durante el cierre del ticket OMS (20 de 22 subtareas cerradas). Cada una tiene el detalle completo en su commit del backend. Tres se renumeran acá por colisión con decisiones de sesiones paralelas (la numeración del contrato manda sobre la del commit).
+
+## D-231 (2026-08-24) — El matching por SKU en Shopify exige coincidencia exacta y elige determinista
+7 SKUs vivían en dos productos de Shopify a la vez (handles `copia-de-…`: el comerciante duplica y la copia hereda el SKU) y el sync elegía "el primero" — lotería que escribía precio e imágenes en el gemelo equivocado (uno a $3.659.900 costando $158.900). Ahora: match exacto obligatorio (sin match no se vincula), y ante gemelos gana ACTIVE > DRAFT/ARCHIVED y el más viejo; la ambigüedad SIEMPRE queda en el log. Backend `f6e7e11`.
+
+## D-232 (2026-08-24) — Lo quieto no se re-emite: todo arreglo del sync necesita su repaso de una pasada
+Hallazgo estructural: `katuq-product-changed` solo emite productos cuyo `date_edit` cambió y deduplica por ese valor — un producto quieto NUNCA se re-procesa. Desplegar un fix del sync no repara lo viejo: hay que empujarlo una vez. Repasos versionados con dry-run: fotos (19/19) y bajo pedido (43/43). Backend `10a3593`.
+
+## D-235 (2026-08-25) — Duplicados de Shopify borrados: 6, con guardarraíl que atrapó un error propio
+Lista explícita (no calculada), verificación previa de que el que se borra no sea el vinculado en Katuq y de que el que se conserva exista. El guardarraíl frenó el caso del disfraz: el "original" estaba huérfano y Katuq sincronizaba contra la copia — borrar la copia habría fabricado otro duplicado. Resultado: 0 duplicados vendibles (queda OHKITACLARANTE con ambos gemelos archivados, intocado a propósito). Backend `4e797ae`.
+
+## D-236 (2026-08-25) — El pedido que entra de un canal externo deja su dirección en la ficha del cliente
+El mapeo Shopify→Katuq estaba bien (la ciudad "Ninguna" venía así de Shopify); lo que faltaba era que el cliente se actualizara al entrar el pedido. Ahora la dirección se agrega si no existe (dedup por calle+ciudad normalizadas, nunca pisa las existentes) y la ciudad inservible se recupera de otra dirección del cliente o del departamento. Best-effort: jamás pone en riesgo el pedido. Backend `064aa72`.
+
+## D-237 (2026-08-25) — Dos pedidos no pueden compartir la misma factura
+La recuperación post-timeout de Siigo (cliente+fecha+total) no distingue dos pedidos legítimamente iguales: la 5976 quedó en ORE-000597 y ORE-000598, uno sin soporte ante la DIAN. Ahora, antes de vincular una factura recuperada se verifica que no pertenezca ya a otro pedido (por `invoiceId`, el id real del proveedor); si está tomada, el pedido queda sin factura y el conflicto se registra. Ante duda, se asume tomada. Las facturas ya emitidas se dejan como están (decisión de Daniel). Backend `b2cf443`.
+
+## D-238 (2026-08-25) — El botón Despachar aparecía en 2 pedidos de 584
+`canDispatchOrder` comparaba contra estados escritos CON espacios ("Para Despachar") y los pedidos se guardan SIN ("ParaDespachar"): de 7 estados solo "Empacado" existía. Ahora va por el enum — 130 pedidos recuperaron el botón (82 ParaDespachar, 33 EnDespacho, 13 SinProducir). Frontend `98a2a0ef`, publicado en `2026.08.25.2`.
+
+## D-241 (2026-08-25) — Las ofertas de Cereza llegan a Shopify: 906 productos viajaban a precio lleno
+El mapper asumía "variante con precio propio = sin descuento" y TODAS las variantes de Cereza traen precio propio (el lleno): $62,7M de rebaja no llegaba a la tienda. Ahora la campaña vigente rebaja la variante que calza con la lista llena (la que no calza se salta y reporta — no descontar dos veces), la vigencia `descuentoHasta` por fin se valida, y jamás se recalcula desde el `discount_price` contaminado de la API (D-223). Contract test 7/7 protege el write-set (solo price/compareAtPrice). Repaso ejecutado: 642 actualizados, 0 fallidos; verificado 673/673 y testigo GCJ3283 a $29.950 tachando $59.900. Backend `0ee3069` + `a1d805c`.
+
+## D-242 (2026-08-25) — El maestro discrimina subtotal e IVA: barrido de 8.171 productos
+El motor ya derivaba en caliente (D-219 F0) pero el dato seguía vacío y las métricas leían subtotal 0. Barrido con el MISMO criterio del motor, en dos fases: 2.330 con tarifa propia (mecánico) y 5.841 sin tarifa con el 19% — decisión de negocio EXPLÍCITA de Daniel, por flag, no por default. Final: 8.255 con subtotal, 0 pendientes (190 no tienen precio alguno). Backend `bb799bd`.
+
+## D-243 (2026-08-25) — El maestro obedece a la lista base: 140 reparados
+La lista base ya estaba configurada ("Público", `tiposPrecios.esPrecioBase`) y el sync la respeta — pero lo quieto no se re-emite (D-232) y 140 productos tenían el maestro roto (GCJ1255CC a $10 contra lista $599.900; 80 en $0): inventario valorado en centavos. Reparación de una pasada: 8.326 coherentes, 0 pendientes. Backend `a883ee4`.
+
+## D-244 (2026-08-25) — Spec 018 ejecutada: tipo de cliente estampado en los customers de Shopify
+Backfill de la spec aprobada: 18 customers creados, resultado estable 152 correctos / 0 errores en dos corridas de control. Dos defectos atrapados: la mutación de borrado singular ya no existe en la API (se usa el borrado por identificador) y un PING-PONG por 3 parejas de clientes que comparten email con tipos en conflicto — dedup determinista (gana el que tiene tipo; a tipos distintos, el más reciente) y el conflicto se reporta: la cura real es fusionar los duplicados en Katuq. Pendiente de la spec: estampado continuo al crear/editar y webhook de registro directo. Backend `0a642f8`.
+
+## D-245 (2026-08-25) — Barrido stock-only de Cereza implementado y EN SOMBRA
+Propuesta `sync-stock-bodegas-cereza` aprobada por Daniel el mismo día ("dale candela"). Contract test PRIMERO en rojo (12/12): write-set cerrado (sombra→solo `inventory_audit`; escritura→`inventory`+`inventoryMovement`+auditoría; jamás products/warehouses/precios), ceros SÍ se escriben, fantasma intocada, ambiguas omitidas, duplicados alineados TODOS. Nodo `osmosis-stock-sweep` con núcleo puro; flujo `cereza-stock-sweep-oms` cada 45 min en SOMBRA por el despachador vivo, bajo `CRON_ENABLED` (D-218 intacto). Dos emboscadas del motor documentadas: el catálogo de contratos valida aparte del registry, y los crones dinámicos leen `flow_trigger_bindings`, no `flows.triggers`. Regla aprobada: en bodegas de Cereza, Cereza pisa; la sombra reporta pisadas de ajustes <24h. El paso a escritura es decisión de Daniel sobre el reporte. Backend `d0b9ea7`+`16da6a3`+`82db230`.
+
+**Adenda 2026-08-26 — ESCRITURA ENCENDIDA Y VERIFICADA.** Tras 18 corridas de sombra estables (693-711 correcciones, 430-432 ceros, fantasma intocada, 0 errores), Daniel aprobó el encendido. Primera corrida real (9:19 Bogotá): **694 de 694 correcciones aplicadas**, 432 ceros escritos, 694 movimientos `AJUSTE_SWEEP_CEREZA` (uno por cambio), verificación cruzada de un agotado leyendo `inventory` directo (GCD439/Bogotá 1→0 ✓). Horario movido a minutos 17 y 47 (las corridas del minuto 0 salían parciales por choque con los demás crones — el corte de cortesía ante 429 funcionando como se diseñó). El ticket OMS queda 21 de 22: solo Fullpi abierta (pendiente de pago, de Jairo).
+
+## D-246 (2026-08-24) — La recompra deja de esconder que muestra UNA bodega de nueve
+(Renumerada: el commit dice D-234, tomado en paralelo por el chevron del checkout.) No faltaban bodegas (las 9 comerciales están asociadas): el modal elegía `bodegas[0]` en silencio con "Solo con stock" activo. Ahora la bodega es la DEL PEDIDO que se recompra, el modal dice cuál muestra y cuántas hay, y una búsqueda sin resultados reintenta UNA vez incluyendo agotados con aviso y salida hacia la bodega que sí tiene (popover clicable de D-222). Frontend `d272054f`, publicado en `2026.08.24.10`.
+
+## D-247 (2026-08-25) — El mismo pedido enviado dos veces ya no crea dos pedidos
+(Renumerada: el commit dice D-239, tomado por el IVA de SIIGO.) 16 pares de gemelos medidos (mismo cliente+productos+total en <10 min; uno con 0 segundos; un par emitió DOS facturas reales). Regla de Daniel: dentro de 2 minutos es el mismo pedido reenviado — se devuelve el existente con `_duplicadoEvitado`, ANTES de consumir consecutivo. En AMBOS caminos (controlador y servicio) con una sola implementación. Best-effort: si la verificación falla, el pedido se crea. Tres errores propios atrapados por la prueba quedan anotados en el commit. Backend `7eb53f9`.
+
+## D-248 (2026-08-25) — Importar un Excel de una lista ya no borra las demás
+(Renumerada: el commit dice D-240, tomado por cotizaciones.) `batch.update` con el arreglo completo REEMPLAZA `preciosPorTipoCliente`: importar Modelos borraba Mayorista y Público. Ahora fusiona por `tipoClienteId` reutilizando `mergePreciosPorTipo` del sync de Cereza (un solo criterio de fusión en el sistema, ya cubierto por test) y reporta `listasPreservadas`. Backend `bbaf127`.
+
+
+## D-249 (2026-08-26) — Revisión de Meta: el caso de uso pasó, el video no
+
+Meta respondió la solicitud enviada el 25-ago. **Tres permisos aprobados** —`pages_show_list`, `pages_manage_metadata`, `instagram_basic`— más `public_profile` renovado. **Dos rechazados: `pages_messaging` e `instagram_manage_messages`**, que son justamente los que hacen funcionar el buzón.
+
+**El motivo no es el producto.** Meta lo escribió explícito: *"Determinamos que el caso de uso de tu app está permitido. Sin embargo, la captura de video no muestra la experiencia completa del caso de uso"*. Y el revisor detalló a mano qué faltaba:
+
+> "the screencast does not show a message being sent from your app UI and the same message appearing in the native client (Messenger, Instagram, or WhatsApp). Please re-record showing: (1) asset selection (Page, account, or number visible), (2) a live send action from your app, and (3) the delivered message in the native client."
+
+O sea: el video mostraba el envío desde Katuq pero **nunca el mensaje llegando del otro lado**. Falta de guion, no de implementación. No hay nada que rediseñar en Katuq.
+
+**Trámites que quedaron firmes y no se repiten:** verificación de negocio, verificación de acceso como proveedor de tecnología (aprobada el 25-ago, destrabó `instagram_basic` que tenía el botón con candado), comprobación de uso de datos anual, y la encuesta de tratamiento de datos.
+
+**Configuración de la app corregida de paso**, porque tenía tres cosas que la habrían hundido igual: *Condiciones del servicio* y *Eliminación de datos* apuntaban a `facebook.com` (marcadores de posición), y el dominio de la app era `omnichat.katuq.com` —el Chatwoot muerto—. Ahora apuntan a las páginas reales de Katuq, verificadas antes de ponerlas. También se agregó la plataforma "Sitio web", que no estaba declarada y bloqueaba el paso de instrucciones para revisores.
+
+**Sobre el idioma, para que nadie lo vuelva a plantear:** Meta pide inglés en la interfaz solo *"si es posible"*, y acepta explícitamente *"subtítulos y consejos de herramientas"* cuando la app no está en inglés. **NO hay que traducir Katuq.** El video lleva subtítulos en inglés y la app se queda en español.
+
+**Seis intentos de grabación el 26-ago, ninguno limpio.** Vale la pena el registro porque cada falla enseñó algo:
+
+1. Ventana de Edge capturada pero el recorrido nunca se hizo — la conexión no llegó a Firestore.
+2. Proceso zombie: Edge se cerró y la grabación siguió 55 minutos capturando una ventana muerta.
+3. Grabar **solo la ventana** de Edge: el diálogo de Facebook abre en ventana APARTE, así que la toma clave nunca podía quedar. Error de método mío.
+4. Toma con zoom extremo, ilegible.
+5. Recorrido completo logrado… pero corté la grabación ANTES de cambiar a Messenger, y faltó justo la toma que Meta pidió.
+6. Al cerrar una notificación se abrió una **conversación personal de Daniel** con la cámara andando. Grabación cortada y borrada de inmediato, sin copia en disco.
+
+**Lo que sí funcionó y quedó demostrado en vivo:** FLORECER conectó Instagram (`@katuq_`) y Facebook (página `Katuq`) desde cero, entró un mensaje real al buzón con nombre del remitente y ventana de 24 h, y la respuesta salió con estado `sent` y se vio llegar en Messenger. El aislamiento multiempresa quedó a la vista: FLORECER arrancó sin conexiones porque las de agosto viven en otra empresa.
+
+**Pendiente único para reenviar:** una toma de ~90 segundos con el mensaje llegando al cliente nativo, pegada al material que ya sirve, con subtítulos en inglés. Reenviar con el botón "Volver a solicitar"; los tres permisos aprobados no se pierden.
+
+**Guardarraíl para la próxima grabación:** pantalla completa (nunca ventana), guion escrito antes de grabar, conversación del negocio abierta y fija, y **no usar la cuenta personal de Facebook de Daniel** — dos de las seis fallas fueron por notificaciones y chats privados asomándose.

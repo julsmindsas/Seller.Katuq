@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <rect width="1080" height="1350" fill="#f4f8fb"/>
+  <rect x="0" y="0" width="1080" height="18" fill="#27c8e8"/>
+  <text x="70" y="102" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" letter-spacing="2" fill="#08728a">UN EJEMPLO REAL</text>
+  <text x="70" y="184" font-family="Arial, Helvetica, sans-serif" font-size="66" font-weight="800" fill="#07172d">WebMCP en ecommerce</text>
+  <text x="70" y="238" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#476276">Una persona pide. El agente coordina herramientas del sitio.</text>
+
+  <rect x="70" y="296" width="940" height="146" rx="30" fill="#07172d"/>
+  <circle cx="132" cy="369" r="30" fill="#68dcff"/>
+  <text x="132" y="379" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#07172d">1</text>
+  <text x="188" y="350" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#68dcff">USUARIO</text>
+  <text x="188" y="394" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#ffffff">“Busca una camisa negra talla M</text>
+  <text x="188" y="428" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#ffffff">y agrégala al carrito.”</text>
+
+  <line x1="540" y1="444" x2="540" y2="510" stroke="#27c8e8" stroke-width="6"/>
+  <polygon points="526,497 554,497 540,520" fill="#27c8e8"/>
+
+  <rect x="70" y="526" width="940" height="416" rx="30" fill="#ffffff" stroke="#c9dce8" stroke-width="2"/>
+  <circle cx="132" cy="596" r="30" fill="#ff856d"/>
+  <text x="132" y="606" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#07172d">2</text>
+  <text x="188" y="605" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#07172d">EL AGENTE DESCUBRE Y LLAMA</text>
+  <g font-family="Menlo, Monaco, monospace">
+    <rect x="112" y="662" width="856" height="70" rx="18" fill="#eaf7fb"/>
+    <text x="146" y="706" font-size="25" font-weight="700" fill="#08728a">search_catalog({ color: "negro", talla: "M" })</text>
+    <rect x="112" y="754" width="856" height="70" rx="18" fill="#eef1ff"/>
+    <text x="146" y="798" font-size="25" font-weight="700" fill="#3345a4">show_variant({ productId, variantId })</text>
+    <rect x="112" y="846" width="856" height="70" rx="18" fill="#fff0ec"/>
+    <text x="146" y="890" font-size="25" font-weight="700" fill="#a34735">update_cart({ variantId, quantity: 1 })</text>
+  </g>
+
+  <line x1="540" y1="944" x2="540" y2="1010" stroke="#27c8e8" stroke-width="6"/>
+  <polygon points="526,997 554,997 540,1020" fill="#27c8e8"/>
+
+  <rect x="70" y="1030" width="940" height="184" rx="30" fill="#0b2d43"/>
+  <circle cx="132" cy="1096" r="30" fill="#68dcff"/>
+  <text x="132" y="1106" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#07172d">3</text>
+  <text x="188" y="1084" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" fill="#68dcff">RESULTADO</text>
+  <text x="188" y="1128" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#ffffff">Misma sesión · cambio visible · resultado verificable</text>
+  <text x="188" y="1170" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#b9d3e8">El sitio conserva autenticación, permisos y validaciones.</text>
+  <text x="70" y="1290" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="800" fill="#07172d">Menos clics. Menos ambigüedad. Más control.</text>
+  <text x="1010" y="1290" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#08728a">3 / 4</text>
+</svg>

@@ -22,6 +22,8 @@ export interface TiendaSitio {
   contraEntrega: boolean;
   /** Formas de pago manuales del maestro (transferencia, Nequi...). */
   otrasFormasPago: { cd: string; nombre: string }[];
+  /** Venta cruzada (afines + sugerencias del carrito). Encendida por defecto. */
+  ventaCruzada?: boolean;
   minimoCompra: number;
   mensajeConfirmacion: string;
 }
@@ -216,12 +218,15 @@ export class SitiosService extends BaseService {
     nombre?: string;
     slug?: string;
     tipo?: string;
+    /** Dominio del comerciante ("mitienda.com"). Vacío = quitarlo. */
+    dominioPropio?: string;
     contenido?: Partial<ContenidoSitio>;
-  }): Observable<Respuesta<{ nombre: string; slug: string; draft: ContenidoSitio }>> {
-    return this.put<Respuesta<{ nombre: string; slug: string; draft: ContenidoSitio }>>(
-      "/v1/sites/edit",
-      body
-    );
+  }): Observable<
+    Respuesta<{ nombre: string; slug: string; dominioPropio?: string; draft: ContenidoSitio }>
+  > {
+    return this.put<
+      Respuesta<{ nombre: string; slug: string; dominioPropio?: string; draft: ContenidoSitio }>
+    >("/v1/sites/edit", body);
   }
 
   publicar(id: string): Observable<Respuesta<{ slug: string; publishedAt: string }>> {
@@ -229,6 +234,18 @@ export class SitiosService extends BaseService {
       `/v1/sites/${id}/publish`,
       {}
     );
+  }
+
+  /** ¿El DNS del dominio propio ya apunta a nuestros servidores? */
+  dominioEstado(dominio: string): Observable<
+    Respuesta<{ dominio: string; raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean }>
+  > {
+    return this.get<any>(`/v1/sites/dominio-estado?dominio=${encodeURIComponent(dominio)}`);
+  }
+
+  /** Borra la página para siempre (borrador y publicado). */
+  eliminar(id: string): Observable<Respuesta<null>> {
+    return this.delete<Respuesta<null>>(`/v1/sites/${id}`);
   }
 
   despublicar(id: string): Observable<Respuesta<null>> {
@@ -263,6 +280,8 @@ export class SitiosService extends BaseService {
     slug?: string;
     tipo?: string;
     guardar?: boolean;
+    /** Que KAI escriba los textos (opt-in; si falla, sale la plantilla). */
+    conIA?: boolean;
   }): Observable<
     Respuesta<{
       contenido: ContenidoSitio;

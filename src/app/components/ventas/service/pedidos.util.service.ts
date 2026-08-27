@@ -759,6 +759,39 @@ export class PedidosUtilService {
         
         return totalPrecioSinIVADef;
     }
+
+    /**
+     * Igual que getSubtotalSinEnvio() pero NETO del descuento por linea
+     * (item.descuentoLinea, 0-100). Espejo de carrito.component.ts::checkPriceScale
+     * y checkout.component.ts::checkPriceScaleProd: el descuento se aplica al final,
+     * sobre el precio ya resuelto por la jerarquia (manual/categoria/volumen/base),
+     * incluyendo adiciones y preferencias de la linea.
+     */
+    getSubtotalSinEnvioNeto(): number {
+        let total = 0;
+        if (this.pedido && this.pedido.carrito) {
+            this.pedido.carrito.forEach((itemCarrito: any) => {
+                const precioUnitarioSinIVA = this.calcularPrecioUnitarioSinIVA(itemCarrito);
+                let totalPrecioSinIVA = precioUnitarioSinIVA * itemCarrito.cantidad;
+
+                if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
+                    itemCarrito.configuracion.adiciones.forEach(adicion => {
+                        totalPrecioSinIVA += (adicion['cantidad'] * adicion['referencia']['precioUnitario']) * itemCarrito.cantidad;
+                    });
+                }
+
+                if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
+                    itemCarrito.configuracion.preferencias.forEach(preferencia => {
+                        totalPrecioSinIVA += (preferencia['valorUnitarioSinIva']) * itemCarrito.cantidad;
+                    });
+                }
+
+                const descLineaFrac = Math.min(100, Math.max(0, Number(itemCarrito?.descuentoLinea) || 0)) / 100;
+                total += totalPrecioSinIVA * (1 - descLineaFrac);
+            });
+        }
+        return total;
+    }
     /**
      * Calcula el IVA unitario considerando escalas de volumen
      */
@@ -983,14 +1016,29 @@ export class PedidosUtilService {
     }
 
     getDiscount(): number {
+        // D-141: el descuento por línea (item.descuentoLinea) es parte del descuento
+        // TOTAL del pedido, igual que en el backend (orderCalculationService::
+        // calculateOrderTotals calcula totalDescuento = bruto − neto, componiendo
+        // línea y global). Antes solo se contaba el global: el checkout mostraba la
+        // línea con el precio ya rebajado pero "TOTAL A PAGAR" cobraba el bruto.
+        // Composición multiplicativa, misma que el motor canónico:
+        //   factor = (1 − descLinea/100) × (1 − porceDescuento/100)
+        const bruto = this.getSubtotalSinEnvio();
+        const neto = this.getSubtotalSinEnvioNeto();
+        const descuentoLineas = Math.max(0, bruto - neto);
+
         if (this.pedido && this.pedido.porceDescuento) {
-            // 🔄 NUEVO: Los descuentos se aplican solo a productos, no al envío
-            const subtotalProductos = this.getSubtotalSinEnvio();
-            const descuento = subtotalProductos * ((this.pedido.porceDescuento) / 100);
+            // 🔄 NUEVO: Los descuentos se aplican solo a productos, no al envío.
+            // El % global va sobre la base YA neta de descuento por línea.
+            const descuentoGlobal = neto * ((this.pedido.porceDescuento) / 100);
+            const descuento = descuentoLineas + descuentoGlobal;
 
             console.log('💰 DESCUENTO - Cálculo:', {
-                subtotalProductos,
+                subtotalProductos: bruto,
+                subtotalNetoLineas: neto,
+                descuentoLineas,
                 porcentajeDescuento: this.pedido.porceDescuento,
+                descuentoGlobal,
                 descuentoCalculado: descuento
             });
 
@@ -1004,11 +1052,11 @@ export class PedidosUtilService {
         // Math.min(totalDescuento, baseDescontable)): si después de aplicar el
         // código se quita un producto del pedido (list/despachos/POS llaman este
         // mismo getDiscount() al editar), el monto fijo no debe superar el nuevo
-        // subtotal — o el total quedaría negativo.
+        // subtotal — o el total quedaría negativo. El tope es el subtotal NETO,
+        // porque el descuento de línea ya se descontó antes de aplicar el código.
         const montoFijo = Number(this.pedido?.descuentoAplicado?.montoDescuento) || 0;
-        if (montoFijo <= 0) return 0;
-        const subtotalProductos = this.getSubtotalSinEnvio();
-        return Math.min(montoFijo, subtotalProductos);
+        if (montoFijo <= 0) return descuentoLineas;
+        return descuentoLineas + Math.min(montoFijo, neto);
     }
 
     /**

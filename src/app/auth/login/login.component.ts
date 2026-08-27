@@ -64,7 +64,8 @@ export class LoginComponent implements OnInit {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
 
-      if (user?.mustChangePassword) {
+      // Recordatorio pospuesto en esta sesión: no volver a interrumpir.
+      if (user?.mustChangePassword && !sessionStorage.getItem('passwordChangeDeferred')) {
         this.router.navigate(['/change-password']);
         return;
       }

@@ -774,9 +774,43 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return Number(precio?.precioUnitarioConIva) || 0;
   }
 
-  /** Precio unitario CON IVA original (sin overrides) — para el tachado. */
+  /**
+   * La MISMA línea pero sin overrides manuales — base del "precio original".
+   * `Carrito` es una interface plana, así que el spread conserva producto/cantidad.
+   */
+  private itemSinOverrides(item: Carrito): Carrito {
+    return {
+      ...item,
+      _precioManualOverride: undefined,
+      _ivaManualOverride: undefined,
+    } as Carrito;
+  }
+
+  /**
+   * Precio unitario CON IVA original (sin overrides) — para el tachado.
+   * Delega en `itemPrecio` sobre la línea limpia en vez de leer
+   * `precio.precioUnitarioConIva` a secas: así hereda escala de volumen, precio
+   * por categoría y el flag de spec 010, igual que el precio vigente. (Antes el
+   * tachado mostraba el precio de 1 unidad y salía MENOR que el precio actual
+   * en líneas con volumen — D-046 arregló `itemPrecio` y olvidó este camino.)
+   */
   itemPrecioOriginal(item: Carrito): number {
-    return Number((item?.producto as any)?.precio?.precioUnitarioConIva) || 0;
+    return this.itemPrecio(this.itemSinOverrides(item));
+  }
+
+  /** % de IVA que traía la línea antes del override (volumen > producto). */
+  itemIvaOriginal(item: Carrito): number {
+    return this.getIvaActual(this.itemSinOverrides(item));
+  }
+
+  /**
+   * ¿Mostrar el tachado? Solo si el precio cambió de verdad: `tieneOverride`
+   * pregunta si tocaste el selector, no si el valor se movió (elegir el mismo
+   * 19% que ya traía el producto dejaba un tachado idéntico al precio vigente).
+   */
+  mostrarPrecioOriginal(item: Carrito): boolean {
+    if (!this.tieneOverride(item)) return false;
+    return Math.abs(this.itemPrecioOriginal(item) - this.itemPrecio(item)) >= 1;
   }
 
   /** Precio unitario SIN IVA (deriva del precio con IVA y el IVA vigente). */

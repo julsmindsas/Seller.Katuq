@@ -26,7 +26,14 @@
 
       <p class="mc__explicacion">{{ explicacion(c.id) }}</p>
 
-      <div class="mc__cuenta" *ngIf="estadoDe(c.id)?.cuentaNombre">
+      <!--
+        La cuenta se muestra solo si el canal está vivo. El backend conserva el
+        nombre después de desconectar (sirve para reconectar sin volver a
+        buscarlo), así que mostrarlo por el solo hecho de existir dejaba la
+        tarjeta diciendo "Sin conectar" con una cuenta debajo — contradictorio,
+        y la gente concluía que el botón Desconectar no había funcionado.
+      -->
+      <div class="mc__cuenta" *ngIf="muestraCuenta(c.id)">
         <span class="mc__etiqueta">Cuenta</span>
         <span class="mc__cuenta-nombre">{{ estadoDe(c.id)?.cuentaNombre }}</span>
       </div>
@@ -49,7 +56,7 @@
           [disabled]="ocupado === c.id"
           (click)="desconectar(c.id)"
         >
-          Desconectar
+          {{ ocupado === c.id ? 'Desconectando…' : 'Desconectar' }}
         </button>
       </div>
     </article>

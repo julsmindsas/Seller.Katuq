@@ -1,4 +1,5 @@
 import { Component, OnInit } from "@angular/core";
+import Swal from "sweetalert2";
 import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 import { PlantillaSitio, Sitio, SitiosService } from "../sitios.service";
@@ -89,6 +90,7 @@ export class SitiosListaComponent implements OnInit {
   nombre = "";
   /** Descripción en una línea. Va al SEO de la página, no a ningún modelo. */
   objetivo = "";
+  conIA = false;
   creando = false;
 
   constructor(
@@ -204,6 +206,54 @@ export class SitiosListaComponent implements OnInit {
     return bloques.some((b: any) => b && b.tipo === "productos");
   }
 
+  eliminando = "";
+
+  /**
+   * Borrar es para siempre: se pide confirmación con el nombre de la página en
+   * el mensaje, y si estaba publicada se advierte que el enlace muere.
+   *
+   * Con SweetAlert2, como TODO diálogo de confirmación del proyecto — nunca
+   * window.confirm(), que es el recuadro crudo del navegador.
+   */
+  eliminarSitio(s: Sitio): void {
+    const publicada =
+      s.estado === "publicado"
+        ? `<br /><br />Está <b>publicada</b>: <code>${s.slug}.katuq.com</code> dejará de existir.`
+        : "";
+    Swal.fire({
+      title: `¿Eliminar "${s.nombre}"?`,
+      html: `Esta acción no se puede deshacer.${publicada}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminarla",
+      cancelButtonText: "Conservarla",
+      confirmButtonColor: "#b42318",
+      focusCancel: true,
+    }).then((r) => {
+      if (!r.isConfirmed) return;
+      this.confirmarEliminacion(s);
+    });
+  }
+
+  private confirmarEliminacion(s: Sitio): void {
+    this.eliminando = s.id;
+    this.service.eliminar(s.id).subscribe({
+      next: (res) => {
+        this.eliminando = "";
+        if (!res || !res.success) {
+          this.toastr.error((res && res.message) || "No pudimos eliminar la página.");
+          return;
+        }
+        this.sitios = this.sitios.filter((x) => x.id !== s.id);
+        this.toastr.success("Página eliminada.");
+      },
+      error: () => {
+        this.eliminando = "";
+        this.toastr.error("No pudimos eliminar la página.");
+      },
+    });
+  }
+
   verMetricas(sitio: Sitio): void {
     this.sitioMetricas = sitio;
   }
@@ -298,6 +348,7 @@ export class SitiosListaComponent implements OnInit {
         sector: this.plantillaElegida.sector,
         objetivo: this.objetivo.trim(),
         objetivoId: this.objetivoId,
+        conIA: this.conIA,
         productoIds: this.productoIds,
         tipo: this.tipoElegido,
         nombre,

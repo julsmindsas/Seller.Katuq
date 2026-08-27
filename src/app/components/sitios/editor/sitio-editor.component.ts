@@ -565,6 +565,9 @@ export class SitioEditorComponent implements OnInit {
   // Campos de ajustes
   nombre = "";
   slug = "";
+  dominioPropio = "";
+  comprobandoDominio = false;
+  estadoDominio: { raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean } | null = null;
 
   /** Sufijo del dominio, para la barra del navegador de la previa. */
   dominioSitios = environment.dominioSitios || "katuq.com";
@@ -626,6 +629,7 @@ export class SitioEditorComponent implements OnInit {
         this.contenido = this.completar(res.data.draft);
         this.nombre = res.data.nombre;
         this.slug = res.data.slug;
+        this.dominioPropio = (res.data as any).dominioPropio || "";
         this.resolverProductosDePrevia();
         this.cargarMarca();
         this.iniciarHistorial();
@@ -1100,6 +1104,47 @@ export class SitioEditorComponent implements OnInit {
     this.seleccionado = this.contenido.bloques.length - 1;
     this.mostrandoAgregar = false;
     this.marcarSucio();
+  }
+
+  /** Copia un valor de DNS al portapapeles, para que nadie lo transcriba a mano. */
+  copiarDns(valor: string): void {
+    navigator.clipboard
+      .writeText(valor)
+      .then(() => this.toastr.success("Copiado. Pégalo en tu proveedor de dominio."))
+      .catch(() => this.toastr.error("No pudimos copiar. Selecciónalo y cópialo a mano."));
+  }
+
+  /** Pregunta al servidor si el DNS del dominio ya apunta a nosotros. */
+  comprobarDominio(): void {
+    const dominio = this.dominioPropio.trim();
+    if (!dominio) return;
+    this.comprobandoDominio = true;
+    this.estadoDominio = null;
+    this.service.dominioEstado(dominio).subscribe({
+      next: (res) => {
+        this.comprobandoDominio = false;
+        if (!res || !res.success || !res.data) {
+          this.toastr.error((res && res.message) || "No pudimos comprobar el dominio.");
+          return;
+        }
+        this.estadoDominio = res.data;
+      },
+      error: (e) => {
+        this.comprobandoDominio = false;
+        this.toastr.error((e && e.error && e.error.message) || "No pudimos comprobar el dominio.");
+      },
+    });
+  }
+
+  /** El estado del DNS, dicho en cristiano. */
+  get mensajeDominio(): string {
+    const d = this.estadoDominio;
+    if (!d) return "";
+    if (d.raiz && d.www) return "✅ Los dos registros apuntan bien. El candado verde se activa solo con la primera visita.";
+    if (d.raiz) return "✅ El registro A ya apunta. Falta el CNAME de www — tu página ya funciona sin www.";
+    if (d.www) return "✅ El www ya apunta. Falta el registro A de la raíz (@) — sin él, el dominio sin www no abre.";
+    if (d.raizApuntaOtroLado) return "⚠️ Tu dominio apunta a OTRO servidor. Edita el registro A existente y ponle 34.225.223.187.";
+    return "⏳ Todavía no vemos los registros. El DNS puede tardar de minutos a un par de horas — vuelve a comprobar más tarde.";
   }
 
   /** Si la página ya tiene un bloque de este tipo (para avisos entre bloques). */
@@ -2035,6 +2080,41 @@ export class SitioEditorComponent implements OnInit {
     this.mostrandoSelector = true;
   }
 
+  /**
+   * Los productos elegidos del bloque en edición, con foto y título para la
+   * lista arrastrable del panel. Mientras la previa no los haya resuelto,
+   * salen con un título de espera — la lista no se esconde.
+   */
+  get elegidosDelBloque(): any[] {
+    const b = this.bloqueActual;
+    if (!b || b.tipo !== "productos") return [];
+    return (b.datos.productoIds || []).map(
+      (id: string) =>
+        this.productosPrevia.get(id) || { productoId: id, titulo: "Cargando…", imagen: null }
+    );
+  }
+
+  /** Reordenar los elegidos arrastrando: el orden de la lista es el de la página. */
+  soltarProducto(evento: CdkDragDrop<any>): void {
+    const b = this.bloqueActual;
+    if (!b || evento.previousIndex === evento.currentIndex) return;
+    const ids = [...(b.datos.productoIds || [])];
+    moveItemInArray(ids, evento.previousIndex, evento.currentIndex);
+    b.datos.productoIds = ids;
+    this.marcarSucio();
+    this.recalcularPrevia();
+  }
+
+  quitarProducto(i: number): void {
+    const b = this.bloqueActual;
+    if (!b) return;
+    const ids = [...(b.datos.productoIds || [])];
+    ids.splice(i, 1);
+    b.datos.productoIds = ids;
+    this.marcarSucio();
+    this.recalcularPrevia();
+  }
+
   /** Los ids llegan ya en el orden en que el comerciante quiere mostrarlos. */
   aplicarProductos(ids: string[]): void {
     const b = this.bloqueActual;
@@ -2329,6 +2409,7 @@ export class SitioEditorComponent implements OnInit {
         id: this.id,
         nombre: this.nombre.trim(),
         slug: this.slug.trim(),
+        dominioPropio: this.dominioPropio.trim(),
         contenido: this.contenido,
       })
       .subscribe({
@@ -2370,6 +2451,7 @@ export class SitioEditorComponent implements OnInit {
     this.contenido = this.completar(data.draft);
     if (data.slug) this.slug = data.slug;
     if (data.nombre) this.nombre = data.nombre;
+    if ((data as any).dominioPropio !== undefined) this.dominioPropio = (data as any).dominioPropio || "";
     if (this.sitio) {
       this.sitio.slug = data.slug || this.sitio.slug;
       this.sitio.nombre = data.nombre || this.sitio.nombre;

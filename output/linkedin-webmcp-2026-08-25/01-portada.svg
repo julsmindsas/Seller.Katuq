@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <linearGradient id="shade" x1="0" x2="1">
+      <stop offset="0" stop-color="#06152c" stop-opacity="0.98"/>
+      <stop offset="0.58" stop-color="#06152c" stop-opacity="0.86"/>
+      <stop offset="1" stop-color="#06152c" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <rect x="76" y="78" width="392" height="48" rx="24" fill="#ff856d"/>
+  <text x="108" y="110" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" letter-spacing="1" fill="#06152c">NOTICIA · 25 AGO 2026</text>
+  <text x="76" y="254" font-family="Arial, Helvetica, sans-serif" font-size="94" font-weight="800" fill="#ffffff">OpenAI</text>
+  <text x="76" y="350" font-family="Arial, Helvetica, sans-serif" font-size="94" font-weight="800" fill="#ffffff">ya soporta</text>
+  <text x="76" y="462" font-family="Arial, Helvetica, sans-serif" font-size="118" font-weight="900" fill="#68dcff">WebMCP</text>
+  <rect x="76" y="512" width="92" height="8" rx="4" fill="#ff856d"/>
+  <rect x="56" y="536" width="700" height="268" rx="28" fill="#07172d" opacity="0.78"/>
+  <text x="76" y="586" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="500" fill="#e7f4ff">
+    <tspan x="76" dy="0">La web deja de ser solo</tspan>
+    <tspan x="76" dy="52">una interfaz para humanos.</tspan>
+    <tspan x="76" dy="72" font-weight="700" fill="#ffffff">Ahora también expone acciones</tspan>
+    <tspan x="76" dy="52" font-weight="700" fill="#ffffff">estructuradas para agentes.</tspan>
+  </text>
+  <rect x="76" y="1116" width="928" height="1" fill="#70dfff" opacity="0.45"/>
+  <text x="76" y="1173" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#ffffff">Daniel Mauricio García</text>
+  <text x="76" y="1214" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#b9d3e8">Cofundador &amp; CTO · Katuq</text>
+  <text x="1004" y="1214" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#68dcff">1 / 4</text>
+</svg>

@@ -524,18 +524,19 @@ export class OrdenesDespachoV2Component implements OnInit {
   canDispatchOrder(order: any): boolean {
     const estado = this.getEstadoProceso(order);
 
-    // Permitir despachar en múltiples estados antes de la entrega/cierre
-    const estadosDespachables = [
-      'Por despachar',
-      'Para Despachar',
-      'Empacado',
-      'En Despacho',
-      'En Producción',
-      'Producido',
-      'Sin Producir'
-    ];
-
-    return estadosDespachables.includes(estado);
+    // OJO CON LA FUENTE: acá NO llega el enum del pedido — llega el TEXTO
+    // AGREGADO que arma getEstadoProceso() para la orden completa, y ese texto
+    // va con espacios ('En Despacho', 'Para Despachar'). El 24-ago se "corrigió"
+    // esta lista a los valores del enum sin espacios comparando contra el campo
+    // crudo de Firestore — medición sobre la fuente equivocada — y la flecha de
+    // despachar desapareció para todos los estados intermedios (regresión real:
+    // Café Escobar no pudo despachar 243/244; OMS, la 304).
+    //
+    // Regla a prueba de listas desactualizadas: se puede despachar TODO lo que
+    // no esté en un estado final. Si getEstadoProceso estrena un texto
+    // intermedio nuevo, el botón aparece solo, en vez de esconderse en silencio.
+    const estadosFinales = ['Despachado', 'Entregado', 'Rechazado', 'Cerrado', 'Sin pedidos'];
+    return !estadosFinales.includes(estado);
   }
 
   canEditOrder(order: any): boolean {

@@ -90,6 +90,9 @@ export class AuthService implements OnInit {
       // Inicializar datos maestros en segundo plano después del login exitoso
       this.initializeBackgroundServices();
 
+      // Un login nuevo reinicia la posposición: el recordatorio vuelve a
+      // aparecer una vez por sesión, con opción de "Cambiar más tarde".
+      sessionStorage.removeItem('passwordChangeDeferred');
       if (result.mustChangePassword) {
         // No dejar que una empresa de la sesión anterior alimente el wizard
         // mientras se carga el tenant del usuario que acaba de ingresar.
