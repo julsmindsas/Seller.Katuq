@@ -143,8 +143,8 @@ export class NotificationPreferencesService {
       channels: canales,
       types: tipos,
       deviceSettings: { ...base.deviceSettings, ...(guardadas.deviceSettings || {}) },
-      createdAt: guardadas.createdAt ? new Date(guardadas.createdAt) : base.createdAt,
-      updatedAt: guardadas.updatedAt ? new Date(guardadas.updatedAt) : base.updatedAt,
+      createdAt: this.aFecha(guardadas.createdAt) || base.createdAt,
+      updatedAt: this.aFecha(guardadas.updatedAt) || base.updatedAt,
     };
   }
 
@@ -199,8 +199,8 @@ export class NotificationPreferencesService {
       const parsed = JSON.parse(stored);
       return {
         ...parsed,
-        createdAt: new Date(parsed.createdAt),
-        updatedAt: new Date(parsed.updatedAt)
+        createdAt: this.aFecha(parsed.createdAt) || new Date(),
+        updatedAt: this.aFecha(parsed.updatedAt) || new Date()
       };
     } catch (error) {
       console.error('Error cargando preferencias desde localStorage:', error);
@@ -215,8 +215,8 @@ export class NotificationPreferencesService {
     try {
       const toSave = {
         ...preferences,
-        createdAt: preferences.createdAt?.toISOString?.() || new Date().toISOString(),
-        updatedAt: preferences.updatedAt?.toISOString?.() || new Date().toISOString()
+        createdAt: this.aIso(preferences.createdAt),
+        updatedAt: this.aIso(preferences.updatedAt)
       };
       
       localStorage.setItem(
@@ -226,6 +226,35 @@ export class NotificationPreferencesService {
     } catch (error) {
       console.error('Error guardando preferencias en localStorage:', error);
     }
+  }
+
+  /**
+   * Devuelve una Date USABLE, o undefined.
+   *
+   * `new Date(x)` con basura no falla: devuelve un objeto Date "Invalid Date",
+   * que es `typeof object` y tiene `.toISOString`. Por eso el `?.toISOString?.()`
+   * de `saveToLocalStorage` no lo esquivaba — lo llamaba y reventaba con
+   * `RangeError: Invalid time value`. Pasa cuando el servidor manda la fecha
+   * como timestamp de Firestore (`{_seconds, _nanoseconds}`) en vez de un ISO.
+   */
+  private aFecha(valor: any): Date | undefined {
+    if (valor === null || valor === undefined || valor === '') return undefined;
+
+    // Timestamp de Firestore, en cualquiera de sus dos formas.
+    if (typeof valor === 'object' && !(valor instanceof Date)) {
+      if (typeof valor.toDate === 'function') return this.aFecha(valor.toDate());
+      const segundos = valor._seconds ?? valor.seconds;
+      if (typeof segundos === 'number') return new Date(segundos * 1000);
+      return undefined;
+    }
+
+    const fecha = valor instanceof Date ? valor : new Date(valor);
+    return isNaN(fecha.getTime()) ? undefined : fecha;
+  }
+
+  /** ISO de una fecha usable; si no la hay, la de ahora. Nunca lanza. */
+  private aIso(valor: any): string {
+    return (this.aFecha(valor) || new Date()).toISOString();
   }
 
   /**
