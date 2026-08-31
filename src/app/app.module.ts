@@ -8,6 +8,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { SharedModule } from "./shared/shared.module";
 import { AppRoutingModule } from './app-routing.module';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { OverlayModule } from '@angular/cdk/overlay';
 import { ToastrModule } from 'ngx-toastr';
 // for HttpClient import:
 import { LoadingBarHttpClientModule } from '@ngx-loading-bar/http-client';
@@ -97,6 +98,19 @@ export function HttpLoaderFactory(http: HttpClient) {
     RouterModule,
     HttpClientModule,
     NgbModule,
+    // `Overlay` del CDK NO es `providedIn: 'root'`: solo existe donde se importe
+    // `OverlayModule`. `ModalGalleryService` (la galería `ks-carousel`) SÍ es
+    // `providedIn: 'root'`, así que se construye en el injector RAÍZ y ahí
+    // buscaba un `Overlay` que nadie había registrado → `No provider for
+    // Overlay!`, y el modal quedaba en blanco.
+    //
+    // Los módulos lazy que importan `GalleryModule` (`ProductosModule`,
+    // `crear-productos`) dejaban `Overlay` en SU injector, no en el raíz, así
+    // que no alcanzaba: ng-bootstrap crea el contenido del modal contra el
+    // injector raíz (`NgbModal` es `providedIn: 'root'`). Por eso la vista
+    // previa del formulario largo también estaba rota. Va acá, una vez, en vez
+    // de repetir el parche en cada módulo que abra una galería.
+    OverlayModule,
     NgIdleKeepaliveModule.forRoot(),
     LoginModule,
     TreeTableModule,
