@@ -20,6 +20,15 @@ export const IMAGEN_PRODUCTO_POR_DEFECTO = 'assets/images/other-images/sinimagen
 /**
  * Convierte una ruta de imagen en URL absoluta.
  * Las que ya son absolutas (Firebase Storage, `data:`) se dejan intactas.
+ *
+ * `data:` es la que usan las pantallas que muestran una foto ANTES de subirla
+ * (la creación rápida de productos y su vista previa). **No se usa `blob:` a
+ * propósito**: `URL.createObjectURL()` es lo natural para eso, pero el
+ * sanitizador de Angular solo admite los esquemas `https? | mailto | data |
+ * ftp | tel | file | sms` (`SAFE_URL_PATTERN` en `@angular/core`), reescribe
+ * cualquier `blob:` de un `[src]` a `unsafe:blob:` y la imagen no carga nunca.
+ * Agregar `blob:` acá no arregla nada: pasaría este filtro para que Angular lo
+ * bloqueara igual, un renglón después.
  */
 export function urlImagenAbsoluta(ruta: string | null | undefined): string | null {
   if (!ruta || typeof ruta !== 'string') return null;

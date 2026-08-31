@@ -5552,3 +5552,49 @@ también para la dirección (ADK `6ddfc54`).
 **Sigue abierto:** la búsqueda de catálogo se contradijo en esa misma prueba
 ("no tenemos peluche de Mickey" → "¡sí tenemos!" → "no hay existencias"). Es
 el tema de búsqueda que Daniel aplazó, no una regresión.
+
+
+## D-253 (2026-08-31) — La creación rápida de productos muestra la MISMA vista previa que el formulario largo
+
+**Numeración**: se toma 253 porque D-250..D-252 ya se gastaron en los commits del importador de clientes, aunque nunca llegaron a este contrato.
+
+La creación rápida (`productos/crear-rapido`) permitía guardar sin haber visto nunca el producto. Ahora tiene el botón **Vista previa** en el encabezado, al lado de Cancelar.
+
+**Reusa el modal del formulario completo** —`ProductDetailsComponent` con `fromProductCreate = true`, la misma configuración `NgbModalOptions` que usa `crear-productos.viewProduct()`— en vez de dibujar una previa propia. Si cada pantalla pintara la suya, el mismo producto se vería distinto según por dónde se creó y la previa dejaría de servir como referencia.
+
+**No hizo falta tocar `crear-producto-lite.module.ts`**, y es deliberado: su docblock prohíbe agregar `providers` para no repetir el 401 de D-251. No hace falta porque
+`NgbModal` es `providedIn: 'root'` e instancia el componente contra el injector RAÍZ (los servicios que inyecta salen del root, con el `HttpClient` bueno); `NgbActiveModal` lo provee el propio modal al abrirse; y `NgbModule` ya entra por `SharedModule`. El chunk lazy del lite pasó de 116 kB a 182 kB porque se lleva el componente de detalle y la galería: es el precio de no duplicar la previa.
+
+### El modal abría EN BLANCO: `No provider for Overlay!`
+
+Verificado en el navegador, no deducido: `NullInjectorError: R3InjectorError[ModalGalleryService -> Overlay]: No provider for Overlay!`. La excepción sale en el primer render del contenido del modal y **aborta la vista entera**, por eso se veía completamente vacío en vez de con campos vacíos.
+
+La cadena, que conviene entender porque se repite con cualquier librería que mezcle `providedIn:'root'` con providers de módulo:
+
+- **`Overlay` del CDK NO es `providedIn:'root'`** (`Overlay.ɵprov` sale sin `providedIn`). Solo existe donde se importe `OverlayModule`.
+- Quien lo trae es `GalleryModule` (`imports: [CommonModule, OverlayModule]`), y solo se importaba en módulos **lazy** (`ProductosModule`, `crear-productos`). Ahí `Overlay` queda en el injector de ESE módulo, nunca en el raíz.
+- **`ModalGalleryService` sí es `providedIn:'root'`**, así que se construye en el injector RAÍZ y busca `Overlay` donde no está.
+- Los `providers: [ModalGalleryService]` de esos módulos lazy **no lo salvan**: ng-bootstrap crea el contenido del modal con `options.injector || contentInjector`, y `contentInjector` es el `_injector` de `NgbModal`, que es el RAÍZ. El provider lazy nunca entra en juego.
+
+**Corolario que cambia el alcance del arreglo: la "Vista Previa" del formulario LARGO estaba rota por lo mismo.** Falla solo en la rama `fromProductCreate`, la única con `<ks-carousel>`; el detalle que abre el LISTADO (`!fromProductCreate`) no tiene galería y por eso nunca se notó.
+
+**Arreglo: `OverlayModule` importado en `app.module.ts`**, una vez y en la raíz. Se prefirió a pasar `injector` en las `NgbModalOptions` de cada pantalla porque ataca la causa —`Overlay` ausente del raíz— en lugar de parchear cada módulo que abra una galería, y de paso arregla el formulario largo. No reintroduce el riesgo de D-251: `OverlayModule` no importa `HttpClientModule`, y `ModalGalleryService` solo inyecta `Injector`, `Overlay` y `ConfigService`.
+
+**`armarPayloadEdicion()` se extrajo de `guardarEdicion()`.** La previa necesita exactamente el objeto que se va a guardar; si lo armara por su cuenta mostraría un producto distinto del que se guarda. Al editar, la previa recibe `{ ...productoOriginal, ...armarPayloadEdicion() }`, porque el payload de edición es una fusión parcial y por sí solo no es un producto completo.
+
+**Dos arreglos que salieron de paso:**
+
+1. **`urlImagenAbsoluta()` deja pasar `blob:`.** La foto recién elegida solo se sube al guardar, así que la previa la muestra con la URL local de `URL.createObjectURL()`. Esa URL ya es absoluta y solo la entiende la pestaña; el helper le pegaba el CDN de Osmosis delante y la rompía. Afecta al pipe `imagenProducto` por igual.
+2. **`POSCarrito` no declaraba `descuentoLinea`** (`components/pos/pos-modelo/pedido.ts`). D-141 agregó el descuento por línea y actualizó `Carrito` en `components/ventas/modelo/pedido.ts` pero no su gemelo de POS, mientras `payment.service.ts:481` sí lo lee. **La rama `feature/venta-asistida-mejorada` no compilaba** por esto: `error TS2339`. Estaba tapado porque el build incremental de `ng serve` no revisaba ese archivo hasta que algo invalidaba su caché de tipos.
+
+### La miniatura de la imagen nunca se veía: `blob:` no pasa el sanitizador de Angular
+
+Reportado como "monto la imagen y no la muestra; solo aparece cuando guardo, así que no sé si quedó".
+
+`seleccionarArchivo()` armaba la miniatura con `URL.createObjectURL()`, que es lo natural para previsualizar un archivo local. Pero el `SAFE_URL_PATTERN` de `@angular/core` solo admite `https? | mailto | data | ftp | tel | file | sms`: **`blob:` no está**. Angular reescribe el `[src]` a `unsafe:blob:` y la imagen no carga nunca. Se veía el recuadro con el nombre del archivo y sin foto, y aparecía recién al guardar, cuando la URL ya era la `https://` del storage.
+
+**Arreglo: `FileReader.readAsDataURL()`**, que produce una `data:` URL — sí está en la lista blanca, sirve igual dentro de la vista previa (el modal la pasa por `urlImagenAbsoluta`, que ya respetaba `data:`) y no deja object URLs que revocar, así que se quitaron el `revokeObjectURL` del `ngOnDestroy` y los de `seleccionarArchivo`/`quitarImagen`. El `onload` descarta su resultado si para cuando llega el usuario ya cambió o quitó la foto.
+
+**Se revirtió el `blob:` que se había agregado a `urlImagenAbsoluta`**: era inútil y engañoso —pasaba ese filtro para que Angular lo bloqueara un renglón después—. Queda documentado ahí mismo para que nadie lo vuelva a agregar.
+
+**Segundo defecto, en la EDICIÓN**: `vistaPrevia` tomaba `imagenesPrincipales[0].urls` cruda. Con las rutas relativas de Osmosis (`/osmosis/products/…`), que son buena parte del catálogo, el navegador las resolvía contra nuestro dominio y el rewrite de Firebase devolvía el HTML de la app: al editar parecía que el producto no tenía foto. Ahora pasa por `urlImagenAbsoluta()` para mostrarse, y `imagenActual` conserva el valor CRUDO, que es el que cuenta para decidir si la imagen se conserva, se reemplaza o se borra.

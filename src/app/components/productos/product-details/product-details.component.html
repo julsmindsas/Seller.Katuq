@@ -167,9 +167,15 @@
     <button type="button" class="btn btn-outline-secondary btn-sm" (click)="activeModal.close('Cross click')">
       <i class="icofont icofont-close me-1"></i>Cerrar
     </button>
-    <button type="button" class="btn btn-primary btn-sm" (click)="activeModal.close('edit')">
-      <i class="icofont icofont-pencil-alt-5 me-1"></i>Editar producto
-    </button>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-primary btn-sm" (click)="activeModal.close('edit')">
+        <i class="icofont icofont-pencil-alt-5 me-1"></i>{{ permiteEdicionRapida ? 'Editar todo' : 'Editar producto' }}
+      </button>
+      <button type="button" class="btn btn-primary btn-sm" *ngIf="permiteEdicionRapida"
+              (click)="activeModal.close('edit-rapido')">
+        <i class="icofont icofont-flash me-1"></i>Edición rápida
+      </button>
+    </div>
   </div>
 
 </div>

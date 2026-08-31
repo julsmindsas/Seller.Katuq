@@ -760,8 +760,12 @@
                                             <i class="pi pi-ellipsis-v"></i>
                                         </button>
                                         <div ngbDropdownMenu class="pk-actions-menu">
+                                            <button ngbDropdownItem type="button" *ngIf="puedeEdicionRapida"
+                                                    (click)="editarProductoRapido(row)">
+                                                <i class="pi pi-bolt pk-ico-accent"></i>{{ 'Edición rápida' | translate }}
+                                            </button>
                                             <button ngbDropdownItem type="button" (click)="editarProducto(row)">
-                                                <i class="pi pi-pencil pk-ico-accent"></i>{{ 'Editar' | translate }}
+                                                <i class="pi pi-pencil pk-ico-accent"></i>{{ (puedeEdicionRapida ? 'Editar todo' : 'Editar') | translate }}
                                             </button>
                                             <button ngbDropdownItem type="button" (click)="viewProduct(row)">
                                                 <i class="pi pi-eye pk-ico-success"></i>{{ 'Ver detalle' | translate }}

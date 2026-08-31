@@ -37,6 +37,17 @@ export const content: Routes = [
     canActivate: [AuthGuard], // Agregar el guard
   },
   {
+    // Creación rápida. Es un módulo aparte y NO reemplaza a crearProductos: se
+    // habilita por empresa agregando este path al array `menus` del rol, igual
+    // que cualquier otro módulo.
+    path: "productos/crear-rapido",
+    loadChildren: () =>
+      import(
+        "../../components/productos/crear-producto-lite/crear-producto-lite.module"
+      ).then((m) => m.CrearProductoLiteModule),
+    canActivate: [AuthGuard],
+  },
+  {
     path: "productos/crearProductos",
     loadChildren: () =>
       import(

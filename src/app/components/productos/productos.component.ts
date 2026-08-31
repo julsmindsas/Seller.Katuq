@@ -436,14 +436,22 @@ export class ProductosComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    // Handshake con el onboarding: abrir el importador real al llegar desde la
-    // ruta "Tengo mis productos en Excel". Se consume el parámetro para que
-    // cerrar el modal o recargar después no lo abra indefinidamente.
-    if (this.route.snapshot.queryParamMap.get('onboardingImport') === 'products') {
+    // Handshake para abrir el importador real al llegar desde otra pantalla:
+    // el onboarding ("Tengo mis productos en Excel") y la creación rápida
+    // ("¿Tiene muchos productos?"). El importador vive SOLO acá a propósito —
+    // duplicarlo sería un segundo lugar donde mantener el mapeo de columnas y
+    // los valores por defecto, y se desincronizarían en silencio.
+    //
+    // Se consume el parámetro para que cerrar el modal o recargar después no lo
+    // abra indefinidamente.
+    const pidenImportador =
+      this.route.snapshot.queryParamMap.get('onboardingImport') === 'products' ||
+      this.route.snapshot.queryParamMap.get('abrirImportador') === 'productos';
+    if (pidenImportador) {
       this.showImportModal = true;
       this.router.navigate([], {
         relativeTo: this.route,
-        queryParams: { onboardingImport: null },
+        queryParams: { onboardingImport: null, abrirImportador: null },
         queryParamsHandling: 'merge',
         replaceUrl: true
       });
@@ -454,6 +462,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
     const texto = this.empresaActual.nomComercial.toString();
     this.ultimasLetras = texto.substring(texto.length - 3);
     this.puedeEliminarBaseDatos = this.esRolAdministrador();
+    this.puedeEdicionRapida = this.calcularPuedeEdicionRapida();
 
     // Cargar opciones de tipo/tiempo de entrega y categorías para filtros
     this.service.getTipoEntrega().subscribe((r: any) => { this.tiposEntrega = r || []; });
@@ -938,6 +947,55 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('productos/crearProductos');
   }
 
+  /**
+   * ¿Esta empresa tiene habilitada la creación/edición rápida?
+   *
+   * Se mira el MISMO permiso que decide el menú lateral: el array `menus` del
+   * rol, que llega a `localStorage.authorizedMenuItems`. Sin esto, la opción
+   * del listado aparecería en empresas que no tienen el módulo y el interruptor
+   * por empresa quedaría a medias.
+   *
+   * El rol de administrador NO se compara con `===`: no se llama igual en todas
+   * las empresas ("ADMINISTRADOR FULL OH", "Administrador LT"...), y una
+   * comparación exacta escondería la opción a administradores reales.
+   *
+   * NO puede ser un getter: se usa dos veces dentro del `ng-template` de fila
+   * de la tabla, así que Angular lo evaluaría por cada fila en CADA ciclo de
+   * detección de cambios (y en desarrollo son dos por ciclo). Con 50 filas en
+   * pantalla eso son cientos de `JSON.parse` de localStorage por cada tecla,
+   * scroll o click, y la tabla se siente trabada. El permiso no cambia
+   * mientras la pantalla está abierta, así que se calcula una sola vez.
+   */
+  puedeEdicionRapida = false;
+
+  private calcularPuedeEdicionRapida(): boolean {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const rol = String(user?.rol || '').toLowerCase();
+      if (rol.includes('administrador')) return true;
+
+      const rutas = JSON.parse(localStorage.getItem('authorizedMenuItems') || '[]')
+        .map((i: any) => i?.path);
+      return rutas.includes('productos/crear-rapido');
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Edición rápida: los mismos campos del formulario corto (título, precio,
+   * IVA, categoría, imagen). Llave propia y no `infoForms`, que es la del
+   * formulario completo — compartirla dejaría a una pantalla en el modo de la
+   * otra al navegar entre las dos.
+   *
+   * No borra nada de lo que no muestra: el guardado manda solo las llaves que
+   * cambian y el backend fusiona con lo que ya estaba.
+   */
+  editarProductoRapido(row) {
+    sessionStorage.setItem('productoLiteEditar', JSON.stringify(row));
+    this.router.navigateByUrl('productos/crear-rapido');
+  }
+
   configurarDropshipping(row) {
     console.log(row);
     sessionStorage.setItem('infoForms', JSON.stringify(row));
@@ -1402,8 +1460,11 @@ export class ProductosComponent implements OnInit, OnDestroy {
     const modalRef = this.modalService.open(ProductDetailsComponent, config);
     modalRef.componentInstance.producto = row;
     modalRef.componentInstance.isView = true;
+    modalRef.componentInstance.permiteEdicionRapida = this.puedeEdicionRapida;
     modalRef.result.then((result) => {
-      if (result === 'edit') {
+      if (result === 'edit-rapido') {
+        this.editarProductoRapido(row);
+      } else if (result === 'edit') {
         this.editarProducto(row);
       }
     }, () => {});

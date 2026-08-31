@@ -2550,7 +2550,34 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     // ejemplo de una celda si algo era obligatorio, opcional o directamente de
     // otro formato. Va DENTRO del archivo a propósito — se llena en Excel,
     // lejos de la pantalla donde estaría la ayuda.
+    //
+    // Arriba de la tabla va la regla que NADIE deduce del archivo: qué hacer
+    // con las columnas que no se necesitan. Sin decirlo, lo natural es rellenar
+    // con ceros "para no dejar nada en blanco", y un 0 NO es lo mismo que vacío:
+    // el vacío dice "no se sabe" y el sistema lo respeta, mientras que un peso o
+    // una medida en 0 se toma como dato real y cotiza mal el envío.
+    const obligatorias = this.config.templateColumns.filter(col => col.required).length;
+    const totales = this.config.templateColumns.length;
     const instrucciones: string[][] = [
+      ['CÓMO LLENAR ESTA PLANTILLA', '', '', ''],
+      ['', '', '', ''],
+      [`1. De las ${totales} columnas, solo ${obligatorias} son OBLIGATORIAS. Están marcadas así en la tabla de abajo.`, '', '', ''],
+      ['2. Las demás son opcionales: si no las necesita, DÉJELAS VACÍAS.', '', '', ''],
+      ['3. NO escriba 0, ni "N/A", ni guiones para rellenar. Vacío significa "no aplica" y el sistema lo respeta;', '', '', ''],
+      ['   un 0 se toma como un dato real (por ejemplo, un peso o una medida en 0 hace que se cotice mal el envío).', '', '', ''],
+      ['4. Lo que deje vacío se puede completar después, producto por producto, desde el módulo de Productos.', '', '', ''],
+      ['', '', '', ''],
+      // El atajo de la Creación rápida solo aplica a productos: las otras
+      // plantillas (clientes, inventario, categorías) no tienen esa pantalla.
+      // Los nombres son los ENCABEZADOS reales de la hoja "Plantilla", para que
+      // se puedan buscar tal cual.
+      ...(this.type === 'product'
+        ? [
+            ['Si solo necesita lo mismo que pide la pantalla de Creación rápida, llene únicamente estas seis columnas', '', '', ''],
+            ['y deje TODAS las demás vacías:  Referencia (SKU)  |  Titulo  |  Descripcion  |  Precio sin IVA  |  IVA (%)  |  Categoria', '', '', ''],
+            ['', '', '', ''],
+          ]
+        : []),
       ['Columna', '¿Hay que llenarla?', 'Qué va acá', 'Ejemplo'],
       ...this.config.templateColumns.map(col => [
         col.header,

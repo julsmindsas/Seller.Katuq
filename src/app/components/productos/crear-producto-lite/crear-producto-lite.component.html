@@ -1,0 +1,497 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card">
+        <div class="card-body lite-body">
+
+          <!-- Encabezado según el tema canónico D-131: plano tintado, sin degradados. -->
+          <div class="lite-header">
+            <div class="lite-header__left">
+              <div class="lite-header__tile">
+                <i class="pi" [ngClass]="editando ? 'pi-pencil' : 'pi-bolt'"></i>
+              </div>
+              <div class="lite-header__title-wrap">
+                <span class="lite-header__crumb">
+                  Productos <i class="pi pi-angle-right"></i>
+                  <em>{{ editando ? 'Edición rápida' : 'Creación rápida' }}</em>
+                </span>
+                <h2 class="lite-header__title">
+                  {{ editando ? (formulario.get('titulo').value || 'Editar producto') : 'Nuevo producto' }}
+                </h2>
+              </div>
+            </div>
+            <div class="lite-header__actions">
+              <span class="lite-badge"><i class="pi pi-check-circle"></i> 5 campos obligatorios</span>
+              <!-- Igual que en el formulario completo: la previa no valida ni
+                   guarda, así que está disponible siempre. Sirve justamente
+                   para revisar antes de terminar de llenar. -->
+              <button type="button" class="lite-btn lite-btn--ghost"
+                      (click)="abrirVistaPrevia()">
+                <i class="pi pi-eye"></i> Vista previa
+              </button>
+              <button type="button" class="lite-btn lite-btn--ghost" *ngIf="editando"
+                      (click)="cancelarEdicion()">
+                <i class="pi pi-times"></i> Cancelar
+              </button>
+            </div>
+          </div>
+
+          <p class="lite-intro">
+            {{ editando
+              ? 'Modifique los datos principales del producto. Lo que no aparece en esta pantalla se conserva tal como está.'
+              : 'Registre lo indispensable para poner el producto a la venta. La información restante se puede completar en cualquier momento.' }}
+          </p>
+
+          <!-- Al vender, el rango de volumen le gana al precio unitario. Cambiar
+               acá el precio base no cambia lo que paga el cliente por esas
+               cantidades, y callarlo haría creer que sí. -->
+          <div class="lite-aviso lite-aviso--alerta lite-aviso--suelto" *ngIf="editando && tienePreciosVolumen">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>
+              Este producto tiene <strong>precios por volumen</strong>. Al vender, esos rangos
+              tienen prioridad sobre el precio unitario, así que cambiarlo acá no modifica lo
+              que paga el cliente por esas cantidades. Ajústelos en <strong>Lista de Precios</strong>.
+            </span>
+          </div>
+
+          <form class="lite-form" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+
+            <!-- K.A.I. -->
+            <!-- Va PRIMERA y solo al crear: su razón de ser es llenar el
+                 formulario en blanco. Al editar el producto ya tiene datos y
+                 una sugerencia masiva pisaría lo que la empresa ya corrigió. -->
+            <section class="lite-seccion lite-kai" *ngIf="!editando" [formGroup]="kaiForm">
+              <h3 class="lite-seccion__titulo lite-seccion__titulo--kai">
+                <i class="pi pi-sparkles"></i> K.A.I.
+                <span class="lite-opcional">Opcional</span>
+              </h3>
+              <p class="lite-kai__intro">
+                Describa el producto y K.A.I. llena el formulario por usted.
+                Después puede corregir lo que quiera: no se guarda nada hasta que
+                usted lo apruebe.
+              </p>
+
+              <div class="lite-field">
+                <label class="lite-label" for="tituloKai">¿Qué producto es?</label>
+                <input id="tituloKai" type="text" class="lite-input" formControlName="tituloKai"
+                       placeholder="Ejemplo: Vela aromática de lavanda en frasco de vidrio, 200 g"
+                       autocomplete="off" />
+                <span class="lite-ayuda">Entre más detalle dé, mejor queda la sugerencia.</span>
+              </div>
+
+              <div class="lite-field">
+                <label class="lite-label" for="textoBase">Texto base</label>
+                <textarea id="textoBase" class="lite-input" formControlName="textoBase" rows="2"
+                          maxlength="200"
+                          placeholder="Datos que quiera que aparezcan sí o sí: material, medidas, contenido..."></textarea>
+              </div>
+
+              <div class="lite-field" *ngIf="kaiForm.value.isAnalizeImageForPrompt">
+                <label class="lite-label" for="imagenKai">
+                  Imagen para analizar <span class="lite-opcional">Opcional</span>
+                </label>
+                <input id="imagenKai" type="file" accept="image/*" class="lite-input"
+                       (change)="fileChangeEventForKAI($event)" />
+                <span class="lite-ayuda">Si sube una foto, K.A.I. la usa para deducir el producto.</span>
+              </div>
+
+              <div class="lite-kai__accion">
+                <app-katuqintelligence
+                  [titleInput]="'Llenar el formulario con K.A.I.'"
+                  [katuqIntelligencePrompt]="getKatuqPrompt()"
+                  [textToSwalHeader]="'Por favor espere mientras generamos la información del producto'"
+                  [textToQuiestionSwal]="'¿Desea llenar el formulario a partir de esta descripción?'"
+                  (katuqIntelligenceResponse)="katuqIntelligeceResponse($event)"
+                  [photoToAnalize]="kaiForm.value.photoToAnalize"
+                  [isAnalizeImageForPrompt]="kaiForm.value.isAnalizeImageForPrompt"
+                  [isGenerateImage]="kaiForm.value.isGenerateImage"
+                  [buttonStyle]="'button'">
+                </app-katuqintelligence>
+                <span class="lite-ayuda" *ngIf="!kaiListo">
+                  Escriba arriba qué producto es para habilitar la sugerencia.
+                </span>
+              </div>
+            </section>
+
+            <!-- DATOS BASICOS -->
+            <section class="lite-seccion">
+              <h3 class="lite-seccion__titulo">Datos básicos</h3>
+
+              <div class="lite-field">
+                <label class="lite-label" for="titulo">
+                  Título <span class="lite-req">*</span>
+                </label>
+                <input id="titulo" type="text" class="lite-input" formControlName="titulo"
+                       maxlength="180" placeholder="Ejemplo: Pan tajado integral" autocomplete="off" />
+                <span class="lite-error" *ngIf="formulario.get('titulo').touched && formulario.get('titulo').invalid">
+                  Ingrese el nombre del producto tal como lo verá el cliente.
+                </span>
+              </div>
+
+              <div class="lite-field">
+                <label class="lite-label" for="descripcion">
+                  Descripción y contenido <span class="lite-req">*</span>
+                </label>
+                <textarea id="descripcion" class="lite-input" formControlName="descripcion" rows="3"
+                          placeholder="Qué es el producto, qué trae y para qué sirve"></textarea>
+                <span class="lite-ayuda">
+                  Es el texto que lee el cliente antes de comprar.
+                </span>
+                <span class="lite-error" *ngIf="formulario.get('descripcion').touched && formulario.get('descripcion').invalid">
+                  Describa el producto: sin esto se publica en blanco.
+                </span>
+              </div>
+            </section>
+
+            <!-- IMAGENES -->
+            <!-- La imagen va arriba: en el listado la empresa reconoce sus
+                 productos por la foto antes que por la referencia. Opcional,
+                 porque quien carga muchos productos rara vez tiene todas las
+                 fotos a la mano. -->
+            <section class="lite-seccion">
+              <h3 class="lite-seccion__titulo">
+                Imágenes <span class="lite-opcional">Opcional</span>
+              </h3>
+
+              <div class="lite-field lite-field--imagen">
+                <div class="lite-drop" *ngIf="!vistaPrevia">
+                  <input id="imagenProducto" type="file" accept="image/*" (change)="seleccionarArchivo($event)" />
+                  <label for="imagenProducto" class="lite-drop__label">
+                    <span class="lite-drop__icon"><i class="pi pi-image"></i></span>
+                    <span class="lite-drop__titulo">Seleccione una foto del producto</span>
+                    <small>JPG, PNG o WEBP · hasta 5 MB</small>
+                  </label>
+                </div>
+
+                <div class="lite-preview" *ngIf="vistaPrevia">
+                  <img [src]="vistaPrevia" alt="Vista previa del producto" />
+                  <div class="lite-preview__datos">
+                    <span class="lite-preview__nombre">{{ archivo?.name || 'Imagen actual del producto' }}</span>
+                    <button type="button" class="lite-quitar" (click)="quitarImagen()">
+                      <i class="pi pi-trash"></i> Quitar imagen
+                    </button>
+                  </div>
+                  <div class="lite-barra"
+                       *ngIf="guardando && progresoImagen > 0 && progresoImagen < 100">
+                    <div class="lite-barra__fill" [style.width.%]="progresoImagen"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- EL PRECIO -->
+            <!-- Mismos campos y mismo orden que la pestaña "Precio" del
+                 formulario completo: base, porcentaje, valor del IVA y total.
+                 Los dos últimos son calculados, no se escriben. -->
+            <section class="lite-seccion">
+              <h3 class="lite-seccion__titulo">El precio</h3>
+              <h4 class="lite-seccion__sub">Precio unitario individual</h4>
+
+              <div class="lite-fila">
+                <div class="lite-field">
+                  <label class="lite-label" for="precio">
+                    Precio unitario (sin IVA) <span class="lite-req">*</span>
+                  </label>
+                  <input id="precio" type="number" class="lite-input" formControlName="precioSinIva"
+                         min="0" step="1" placeholder="8500" inputmode="decimal" />
+                  <span class="lite-error" *ngIf="formulario.get('precioSinIva').touched && formulario.get('precioSinIva').invalid">
+                    Ingrese el precio base. Un producto sin precio se vendería en $0.
+                  </span>
+                </div>
+
+                <div class="lite-field">
+                  <label class="lite-label" for="iva">
+                    Porcentaje IVA <span class="lite-req">*</span>
+                  </label>
+                  <select id="iva" class="lite-input" formControlName="porcentajeIva">
+                    <option *ngFor="let t of tarifasIva" [ngValue]="t.valor">{{ t.texto }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="lite-fila">
+                <div class="lite-field">
+                  <label class="lite-label">Valor IVA</label>
+                  <div class="lite-monto">{{ valorIva | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+                </div>
+
+                <div class="lite-field">
+                  <label class="lite-label">Precio unitario total (con IVA)</label>
+                  <div class="lite-monto lite-monto--total">{{ precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+                  <span class="lite-ayuda">Es lo que paga el cliente por una unidad.</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- DISPONIBILIDAD -->
+            <!-- "Cantidad disponible" no aparece, igual que en el formulario
+                 completo, donde quedó como input hidden: el stock se gestiona
+                 desde /inventario/inventario-catalogo. -->
+            <section class="lite-seccion">
+              <h3 class="lite-seccion__titulo">
+                Disponibilidad <span class="lite-opcional">Opcional</span>
+              </h3>
+
+              <div class="lite-fila">
+                <div class="lite-field">
+                  <label class="lite-label" for="tipoEntrega">Tipo de entrega</label>
+                  <select id="tipoEntrega" class="lite-input" formControlName="tipoEntrega">
+                    <option value="">{{ cargandoTiposEntrega ? 'Cargando...' : 'Sin definir' }}</option>
+                    <option *ngFor="let t of tiposEntrega" [value]="t.nombreInterno">
+                      {{ t.nombreInterno }}{{ t.fueraDelMaestro ? ' (ya no está en Maestros)' : '' }}
+                    </option>
+                  </select>
+                  <span class="lite-ayuda" *ngIf="cargandoTiposEntrega || tiposEntrega.length">
+                    Cómo llega al cliente. Se configura en Maestros.
+                  </span>
+                  <span class="lite-ayuda" *ngIf="!cargandoTiposEntrega && !tiposEntrega.length">
+                    Esta empresa no tiene <strong>tipos de entrega</strong> cargados en Maestros.
+                  </span>
+                </div>
+
+                <div class="lite-field">
+                  <label class="lite-label" for="tiempoEntrega">Tiempo de entrega</label>
+                  <select id="tiempoEntrega" class="lite-input" formControlName="tiempoEntrega">
+                    <option value="">{{ cargandoTiemposEntrega ? 'Cargando...' : 'Sin definir' }}</option>
+                    <option *ngFor="let t of tiemposEntrega" [value]="t.nombreInterno">
+                      {{ t.nombreInterno }}{{ t.fueraDelMaestro ? ' (ya no está en Maestros)' : '' }}
+                    </option>
+                  </select>
+                  <span class="lite-ayuda" *ngIf="cargandoTiemposEntrega || tiemposEntrega.length">
+                    Cuánto tarda desde que se confirma el pedido.
+                  </span>
+                  <span class="lite-ayuda" *ngIf="!cargandoTiemposEntrega && !tiemposEntrega.length">
+                    Esta empresa no tiene <strong>tiempos de entrega</strong> cargados en Maestros.
+                  </span>
+                </div>
+              </div>
+
+              <div class="lite-fila">
+                <div class="lite-field">
+                  <label class="lite-label" for="cantidadMinVenta">Cantidad mínima de venta</label>
+                  <input id="cantidadMinVenta" type="number" class="lite-input"
+                         formControlName="cantidadMinVenta" min="1" step="1" placeholder="Ej: 1" />
+                  <span class="lite-ayuda">Unidades mínimas por pedido. Lo normal es 1.</span>
+                  <span class="lite-error" *ngIf="formulario.get('cantidadMinVenta').touched && formulario.get('cantidadMinVenta').invalid">
+                    Debe ser 1 o más.
+                  </span>
+                </div>
+
+                <div class="lite-field">
+                  <label class="lite-label" for="inventarioSeguridad">Inventario de seguridad</label>
+                  <input id="inventarioSeguridad" type="number" class="lite-input"
+                         formControlName="inventarioSeguridad" min="0" step="1" placeholder="Ej: 0" />
+                  <span class="lite-ayuda">Unidades que se reservan y no se ofrecen a la venta. Si no aplica, 0.</span>
+                  <span class="lite-error" *ngIf="formulario.get('inventarioSeguridad').touched && formulario.get('inventarioSeguridad').invalid">
+                    No puede ser negativo.
+                  </span>
+                </div>
+              </div>
+
+              <label class="lite-check" for="inventariable">
+                <input id="inventariable" type="checkbox" formControlName="inventariable" />
+                <span class="lite-check__texto">
+                  <strong>¿Este producto es inventariable?</strong>
+                  <small>Marcado = se le descuenta stock en cada venta. Sin marcar = servicio o producto sin control de existencias.</small>
+                </span>
+              </label>
+            </section>
+
+            <!-- IDENTIFICACION -->
+            <section class="lite-seccion">
+              <h3 class="lite-seccion__titulo">Identificación</h3>
+
+              <div class="lite-field">
+                <label class="lite-label" for="referencia">
+                  Referencia
+                  <span class="lite-opcional" *ngIf="!referenciaManual">Automática</span>
+                </label>
+
+                <div class="lite-referencia">
+                  <input id="referencia" type="text" class="lite-input" formControlName="referencia"
+                         [class.lite-referencia--fija]="!referenciaManual || editando"
+                         [placeholder]="cargandoReferencia ? 'Calculando el consecutivo...' : 'Escriba su propio código'"
+                         autocomplete="off" />
+                  <button type="button" class="lite-btn lite-btn--ghost"
+                          *ngIf="!editando && !referenciaManual" (click)="cambiarReferencia()">
+                    <i class="pi pi-pencil"></i> Cambiar
+                  </button>
+                  <button type="button" class="lite-btn lite-btn--ghost"
+                          *ngIf="!editando && referenciaManual" (click)="volverAReferenciaAutomatica()">
+                    <i class="pi pi-replay"></i> Usar la automática
+                  </button>
+                </div>
+
+                <span class="lite-ayuda" *ngIf="editando">
+                  No se puede modificar: el inventario ya guardado quedaría enlazado a un código
+                  que dejó de existir.
+                </span>
+                <span class="lite-ayuda" *ngIf="!editando && !referenciaManual">
+                  Es el consecutivo del producto. Si su empresa ya maneja códigos propios,
+                  cámbielo ahora: <strong>después no conviene modificarlo</strong>, porque el
+                  inventario queda enlazado a este código.
+                </span>
+                <span class="lite-ayuda" *ngIf="referenciaManual">
+                  Debe ser distinta a la de cualquier otro producto de la empresa.
+                </span>
+                <span class="lite-error" *ngIf="formulario.get('referencia').touched && formulario.get('referencia').invalid">
+                  La referencia no puede quedar vacía.
+                </span>
+              </div>
+
+              <div class="lite-fila">
+                <div class="lite-field">
+                  <label class="lite-label" for="marca">Marca</label>
+                  <input id="marca" type="text" class="lite-input" formControlName="marca"
+                         placeholder="Ejemplo: Alpina" autocomplete="off" />
+                </div>
+
+                <div class="lite-field">
+                  <label class="lite-label" for="codigoBarras">Código de barras</label>
+                  <input id="codigoBarras" type="text" class="lite-input" formControlName="codigoBarras"
+                         placeholder="7701234567890" autocomplete="off" />
+                  <span class="lite-ayuda">Solo si escanea el producto en el punto de venta.</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- EXPOSICION -->
+            <section class="lite-seccion">
+              <h3 class="lite-seccion__titulo">Exposición</h3>
+
+              <label class="lite-check" for="activar">
+                <input id="activar" type="checkbox" formControlName="activar" />
+                <span class="lite-check__texto">
+                  <strong>Activar</strong>
+                  <small>Sin activar, el producto queda guardado pero no se muestra a la venta.</small>
+                </span>
+              </label>
+            </section>
+
+            <!-- CATEGORIAS -->
+            <section class="lite-seccion">
+              <h3 class="lite-seccion__titulo">Categorías</h3>
+
+              <div class="lite-field">
+                <label class="lite-label" for="categoria">
+                  Categoría <span class="lite-req">*</span>
+                </label>
+
+                <select id="categoria" class="lite-input" formControlName="categoria"
+                        *ngIf="!cargandoCategorias && !errorCategorias">
+                  <option [ngValue]="null" disabled>Seleccione una categoría</option>
+                  <option *ngFor="let c of categorias" [ngValue]="c.nodo">{{ c.etiqueta }}</option>
+                </select>
+
+                <div class="lite-aviso" *ngIf="cargandoCategorias">
+                  <i class="pi pi-spin pi-spinner"></i> Cargando categorías...
+                </div>
+
+                <div class="lite-aviso lite-aviso--alerta" *ngIf="!cargandoCategorias && errorCategorias">
+                  <i class="pi pi-exclamation-triangle"></i>
+                  No fue posible cargar las categorías. Cree al menos una en
+                  <strong>Categorías de productos</strong> e intente nuevamente.
+                </div>
+
+                <span class="lite-ayuda">
+                  Sin categoría, el producto no aparece en los filtros ni califica para promociones.
+                </span>
+                <span class="lite-error" *ngIf="formulario.get('categoria').touched && formulario.get('categoria').invalid">
+                  Seleccione una categoría.
+                </span>
+              </div>
+            </section>
+
+            <!-- CANALES DE VENTA -->
+            <!-- Mismos tres propios del formulario completo, más los
+                 marketplaces que tenga configurados la empresa
+                 (`currentCompany.marketPlace`). Antes se creaban los tres en
+                 `true` sin preguntar; ahora se eligen, pero siguen marcados por
+                 defecto porque lo normal es vender en todas partes. -->
+            <section class="lite-seccion">
+              <h3 class="lite-seccion__titulo">Canales de venta</h3>
+              <h4 class="lite-seccion__sub">Propios</h4>
+
+              <div class="lite-checks">
+                <label class="lite-check" for="sellerCenter">
+                  <input id="sellerCenter" type="checkbox" formControlName="sellerCenter" />
+                  <span class="lite-check__texto"><strong>Seller Center</strong></span>
+                </label>
+
+                <label class="lite-check" for="paginaWeb">
+                  <input id="paginaWeb" type="checkbox" formControlName="paginaWeb" />
+                  <span class="lite-check__texto"><strong>Página Web</strong></span>
+                </label>
+
+                <label class="lite-check" for="puntoDeVenta">
+                  <input id="puntoDeVenta" type="checkbox" formControlName="puntoDeVenta" />
+                  <span class="lite-check__texto"><strong>Punto de venta</strong></span>
+                </label>
+              </div>
+
+              <ng-container *ngIf="marketplaces.length">
+                <h4 class="lite-seccion__sub">Marketplace</h4>
+                <div class="lite-checks">
+                  <label class="lite-check" *ngFor="let mp of marketplaces; let i = index"
+                         [attr.for]="'mp-' + i">
+                    <input [id]="'mp-' + i" type="checkbox"
+                           [checked]="mp.activo" (change)="mp.activo = !mp.activo" />
+                    <span class="lite-check__texto"><strong>{{ mp.nameMP }}</strong></span>
+                  </label>
+                </div>
+              </ng-container>
+
+              <span class="lite-ayuda" *ngIf="!marketplaces.length">
+                Esta empresa no tiene marketplaces configurados.
+              </span>
+            </section>
+
+            <div class="lite-pie">
+              <button type="submit" class="lite-btn lite-btn--primary" [disabled]="guardando">
+                <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'"></i>
+                {{ guardando ? 'Guardando...' : (editando ? 'Guardar cambios' : 'Guardar producto') }}
+              </button>
+              <span class="lite-pie__nota">
+                <i class="pi pi-info-circle"></i>
+                {{ editando
+                  ? 'Solo se modifican los campos de esta pantalla; el resto del producto queda igual.'
+                  : 'El producto se crea con la exposición y los canales que queden marcados arriba.' }}
+              </span>
+            </div>
+          </form>
+
+          <!-- Salida al formulario completo. No es otro producto ni otro flujo:
+               es la misma pantalla de siempre, para terminar de detallarlo. -->
+          <div class="lite-mas">
+            <div class="lite-mas__texto">
+              <h6>{{ editando ? '¿Desea modificar más detalles de su producto?' : '¿Desea registrar más detalles de su producto?' }}</h6>
+              <p>
+                Dimensiones y peso, etiquetas de búsqueda, cobertura por ciudad,
+                proceso comercial y precios por volumen.
+              </p>
+            </div>
+            <button type="button" class="lite-btn lite-btn--ghost" (click)="irAFormularioCompleto()">
+              Abrir el formulario completo <i class="pi pi-arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- Carga masiva. Solo al crear: importar mientras se edita UN producto
+               no significa nada. Abre el importador del listado, no una copia. -->
+          <div class="lite-mas lite-mas--importar" *ngIf="!editando">
+            <div class="lite-mas__texto">
+              <h6>¿Tiene muchos productos?</h6>
+              <p>
+                Cárguelos todos de una vez desde un archivo de Excel. Quedan
+                registrados igual que los que se crean en esta pantalla.
+              </p>
+            </div>
+            <button type="button" class="lite-btn lite-btn--ghost" (click)="irAlImportador()">
+              <i class="pi pi-upload"></i> Importar desde Excel
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

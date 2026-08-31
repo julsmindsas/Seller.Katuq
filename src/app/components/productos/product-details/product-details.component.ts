@@ -21,6 +21,11 @@ export class ProductDetailsComponent implements OnInit {
   @Input() public producto: any;
   @Input() public isView: boolean = false;
   @Input() public fromProductCreate: boolean = false;
+  /**
+   * ¿Ofrecer también la edición rápida? Lo decide quien abre el modal, con el
+   * mismo permiso que gobierna el menú lateral y la opción del listado.
+   */
+  @Input() public permiteEdicionRapida: boolean = false;
   public imagesRect: Image[]
 
   // Quick preview state

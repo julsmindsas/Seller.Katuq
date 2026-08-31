@@ -510,6 +510,12 @@ export class NavService implements OnDestroy {
       children: [
         { path: "productos", title: "Productos", type: "link", icon: "grid" },
         {
+          path: "productos/crear-rapido",
+          title: "Creación rápida",
+          type: "link",
+          icon: "zap",
+        },
+        {
           path: "ecommerce/adiciones/listar",
           title: "Adiciones",
           type: "link",
