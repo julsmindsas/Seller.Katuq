@@ -431,7 +431,9 @@ export class FacturacionElectronicaComponent implements OnInit {
   }
 
   trackByOrder(index: number, order: any): string {
-    return this.orderId(order) || order?.nroPedido || String(index);
+    // Angular invokes trackBy as a standalone callback, so it must not depend
+    // on the component's `this` context.
+    return String(order?._id || order?.id || order?.cd || order?.nroPedido || index);
   }
 
   private confirmFullCreditNote(document: DianDocument): void {
