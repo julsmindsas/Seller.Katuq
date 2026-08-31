@@ -75,7 +75,15 @@ export interface POSCarrito {
     configuracion?: POSConfiguracion,
     cantidad?: number,
     _precioManualOverride?: number,
-    _ivaManualOverride?: number
+    _ivaManualOverride?: number,
+    /**
+     * Descuento opcional por línea (porcentaje 0–100).
+     *
+     * Lo agregó D-141 y quedó declarado solo en el `Carrito` de ventas
+     * (`components/ventas/modelo/pedido.ts`), su modelo gemelo. `payment.service`
+     * lo lee de un `POSCarrito` y sin esta llave el proyecto NO compila.
+     */
+    descuentoLinea?: number
 }
 
 
