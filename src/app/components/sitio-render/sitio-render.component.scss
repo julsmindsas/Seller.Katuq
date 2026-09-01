@@ -437,6 +437,74 @@ h3 {
   }
 }
 
+// ── Portada de mosaico ───────────────────────────────────────────────────────
+// Espejo de la rama hero--mosaico de siteHtml.js: titular a un lado, rejilla
+// de fotos de producto al otro. Mismos valores; si cambian allá, cambian aquí.
+.hero--mosaico {
+  max-width: 1480px;
+  text-align: left;
+  padding: calc(var(--sitio-aire, 2.5rem) * 0.9) 1.25rem;
+
+  .hero__contenido {
+    max-width: none;
+    margin: 0;
+  }
+
+  &:hover .hero__foto img {
+    transform: scale(1.02);
+  }
+}
+
+.hero__mosaico-grid {
+  display: grid;
+  gap: 1.75rem;
+  align-items: center;
+}
+
+.hero__fotos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  grid-auto-rows: minmax(0, 1fr);
+  height: clamp(240px, 46vh, 340px);
+
+  &--3 .hero__foto:first-child,
+  &--1 .hero__foto {
+    grid-column: span 2;
+  }
+}
+
+.hero__foto {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--sitio-radio, 12px);
+  background: #f4f4f5;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+}
+
+@media (min-width: 860px) {
+  .hero--mosaico {
+    padding: calc(var(--sitio-aire-ancho, 3.5rem) * 0.75) 2rem;
+  }
+
+  .hero__mosaico-grid {
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 3.5rem;
+  }
+
+  .hero__fotos {
+    height: clamp(340px, 58vh, 470px);
+    margin-left: auto;
+    max-width: 660px;
+  }
+}
+
 // ── Modo edición ─────────────────────────────────────────────────────────────
 // Solo aplica cuando el render se usa dentro del editor: marca los bloques como
 // seleccionables y deja ver los que están ocultos.

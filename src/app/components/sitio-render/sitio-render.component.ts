@@ -298,7 +298,7 @@ export class SitioRenderComponent implements OnChanges {
 
   /** Alto del velo de la portada, en la misma escala que el backend (0–85%). */
   opacidadVelo(datos: any): number {
-    if (!datos || !datos.imagen) return 0;
+    if (!datos || !this.fondoDeHero(datos)) return 0;
     const v = datos.velo === undefined || datos.velo === null ? 45 : Number(datos.velo);
     if (!isFinite(v)) return 0;
     return Math.min(85, Math.max(0, v)) / 100;
@@ -615,6 +615,30 @@ export class SitioRenderComponent implements OnChanges {
     if (valor === "izquierda") return "left";
     if (valor === "derecha") return "right";
     return "center";
+  }
+
+  /**
+   * ¿Esta portada se pinta como mosaico? Misma precedencia del servidor
+   * (siteHtml.js): el carrusel manda, luego el mosaico si no hay foto de
+   * fondo, y por último la portada clásica. Si el espejo se desfasa, el
+   * comerciante ve una portada en el editor y publica otra.
+   */
+  esMosaico(d: any): boolean {
+    return (
+      ((d && d.imagenes) || []).length < 2 &&
+      !(d && d.imagen) &&
+      ((d && d.mosaico) || []).length >= 2
+    );
+  }
+
+  /**
+   * Fondo de la portada clásica en la previa. La página publicada rota el
+   * carrusel; la previa no lo anima, pero al menos muestra la primera foto —
+   * antes un hero solo-carrusel se veía en blanco en el editor.
+   */
+  fondoDeHero(d: any): string {
+    if (d && d.imagen) return d.imagen;
+    return ((d && d.imagenes) || [])[0] || "";
   }
 
   registrarClic(destino: string, bloqueId: string, evento?: Event): void {

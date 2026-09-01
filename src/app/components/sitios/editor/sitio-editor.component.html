@@ -307,10 +307,33 @@
             </div>
             <div class="campo">
               <label>Imagen de fondo</label>
+              <div class="mini-imagen" *ngIf="b.datos.imagen">
+                <img [src]="b.datos.imagen" alt="" />
+                <button class="repetible__quitar" (click)="b.datos.imagen = ''; marcarSucio()">Quitar foto</button>
+              </div>
               <label class="archivo">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
-                {{ subiendo ? 'Subiendo…' : 'Elegir una foto' }}
+                {{ subiendo ? 'Subiendo…' : (b.datos.imagen ? 'Cambiar la foto' : 'Elegir una foto') }}
                 <input type="file" accept="image/*" (change)="subirImagen($event, 'hero')" [disabled]="subiendo" />
+              </label>
+              <small *ngIf="b.datos.imagen && b.datos.mosaico?.length">Con foto de fondo el mosaico no
+                se muestra: quítala para verlo.</small>
+            </div>
+
+            <div class="campo">
+              <label>Mosaico (opcional)</label>
+              <small>De 2 a 4 fotos de producto en rejilla, con el titular al lado. Se ve
+                cuando no hay imagen de fondo ni carrusel.</small>
+              <div class="miniaturas" *ngIf="b.datos.mosaico?.length">
+                <div class="miniatura" *ngFor="let img of b.datos.mosaico; let i = index">
+                  <img [src]="img" alt="" />
+                  <button (click)="quitarFotoMosaico(b, i)" title="Quitar">×</button>
+                </div>
+              </div>
+              <label class="archivo" *ngIf="(b.datos.mosaico?.length || 0) < 4">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
+                {{ subiendo ? 'Subiendo…' : 'Agregar foto al mosaico' }}
+                <input type="file" accept="image/*" (change)="subirImagen($event, 'heroMosaico')" [disabled]="subiendo" />
               </label>
             </div>
 
@@ -343,9 +366,9 @@
                 sección.</small>
             </div>
 
-            <!-- El velo y su color solo tienen sentido si hay foto: sin ella
-                 oscurecerían el fondo del sitio. -->
-            <ng-container *ngIf="b.datos.imagen">
+            <!-- El velo y su color solo tienen sentido si hay foto (de fondo o
+                 de carrusel): sin ella oscurecerían el fondo del sitio. -->
+            <ng-container *ngIf="b.datos.imagen || b.datos.imagenes?.length">
               <div class="campo">
                 <label>Qué tan oscura se ve la foto</label>
                 <div class="deslizador">

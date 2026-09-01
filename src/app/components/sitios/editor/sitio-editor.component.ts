@@ -1247,6 +1247,11 @@ export class SitioEditorComponent implements OnInit {
     this.marcarSucio();
   }
 
+  quitarFotoMosaico(bloque: any, i: number): void {
+    bloque.datos.mosaico.splice(i, 1);
+    this.marcarSucio();
+  }
+
   quitarFotoInstagram(bloque: any, i: number): void {
     bloque.datos.fotos.splice(i, 1);
     this.marcarSucio();
@@ -2262,6 +2267,7 @@ export class SitioEditorComponent implements OnInit {
       | "promo"
       | "marcas"
       | "heroCarrusel"
+      | "heroMosaico"
       | "instagram"
   ): void {
     const input = evento.target as HTMLInputElement;
@@ -2288,6 +2294,7 @@ export class SitioEditorComponent implements OnInit {
           if (destino === "galeria") b.datos.imagenes = [...(b.datos.imagenes || []), { url: res.url, alt: "" }];
           if (destino === "marcas") b.datos.logos = [...(b.datos.logos || []), { url: res.url, alt: "" }];
           if (destino === "heroCarrusel") b.datos.imagenes = [...(b.datos.imagenes || []), res.url];
+          if (destino === "heroMosaico") b.datos.mosaico = [...(b.datos.mosaico || []), res.url];
           if (destino === "instagram") b.datos.fotos = [...(b.datos.fotos || []), res.url];
           if (destino === "fondoSeccion") {
             const estilo = this.estiloDe(b);

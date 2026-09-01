@@ -107,26 +107,51 @@
         </aside>
 
         <section *ngSwitchCase="'hero'" class="bloque hero"
-                 [class.hero--con-imagen]="bloque.datos.imagen"
-                 [class.hero--completa]="bloque.datos.altura === 'completa'"
+                 [class.hero--con-imagen]="fondoDeHero(bloque.datos)"
+                 [class.hero--completa]="!esMosaico(bloque.datos) && bloque.datos.altura === 'completa'"
                  [class.hero--velo-claro]="bloque.datos.veloClaro"
-                 [style.textAlign]="alineacion(bloque.datos.alineacion)">
-          <img *ngIf="bloque.datos.imagen" class="hero__fondo" [src]="bloque.datos.imagen" [alt]="bloque.datos.titulo" />
-          <span *ngIf="opacidadVelo(bloque.datos)" class="hero__velo"
-                [style.opacity]="opacidadVelo(bloque.datos)"></span>
-          <div class="hero__contenido">
-            <h1 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h1>
-            <p *ngIf="bloque.datos.subtitulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'subtitulo')" (keydown)="alTeclearEnTexto($event, false)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.subtitulo }}</p>
-            <a *ngIf="bloque.datos.ctaTexto && bloque.datos.ctaUrl"
-               class="boton"
-               [href]="bloque.datos.ctaUrl"
-               [attr.contenteditable]="previsualizacion ? true : null"
-               [class.editable]="previsualizacion"
-               (blur)="alEditarTexto($event, bloque.id, {campo:'ctaTexto'})"
-               (keydown)="alTeclearEnTexto($event, true)"
-               (paste)="alPegar($event)"
-               (click)="registrarClic('cta', bloque.id, $event)">{{ bloque.datos.ctaTexto }}</a>
+                 [class.hero--mosaico]="esMosaico(bloque.datos)"
+                 [style.textAlign]="esMosaico(bloque.datos) ? null : alineacion(bloque.datos.alineacion)">
+
+          <!-- Mosaico: titular a un lado, rejilla de fotos al otro. Espejo de
+               la rama hero--mosaico del servidor. -->
+          <div class="hero__mosaico-grid" *ngIf="esMosaico(bloque.datos); else heroClasico">
+            <div class="hero__contenido">
+              <h1 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h1>
+              <p *ngIf="bloque.datos.subtitulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'subtitulo')" (keydown)="alTeclearEnTexto($event, false)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.subtitulo }}</p>
+              <a *ngIf="bloque.datos.ctaTexto && bloque.datos.ctaUrl"
+                 class="boton"
+                 [href]="bloque.datos.ctaUrl"
+                 [attr.contenteditable]="previsualizacion ? true : null"
+                 [class.editable]="previsualizacion"
+                 (blur)="alEditarTexto($event, bloque.id, {campo:'ctaTexto'})"
+                 (keydown)="alTeclearEnTexto($event, true)"
+                 (paste)="alPegar($event)"
+                 (click)="registrarClic('cta', bloque.id, $event)">{{ bloque.datos.ctaTexto }}</a>
+            </div>
+            <div class="hero__fotos" [ngClass]="'hero__fotos--' + bloque.datos.mosaico.length">
+              <span class="hero__foto" *ngFor="let u of bloque.datos.mosaico"><img [src]="u" alt="" /></span>
+            </div>
           </div>
+
+          <ng-template #heroClasico>
+            <img *ngIf="fondoDeHero(bloque.datos)" class="hero__fondo" [src]="fondoDeHero(bloque.datos)" [alt]="bloque.datos.titulo" />
+            <span *ngIf="opacidadVelo(bloque.datos)" class="hero__velo"
+                  [style.opacity]="opacidadVelo(bloque.datos)"></span>
+            <div class="hero__contenido">
+              <h1 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h1>
+              <p *ngIf="bloque.datos.subtitulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'subtitulo')" (keydown)="alTeclearEnTexto($event, false)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.subtitulo }}</p>
+              <a *ngIf="bloque.datos.ctaTexto && bloque.datos.ctaUrl"
+                 class="boton"
+                 [href]="bloque.datos.ctaUrl"
+                 [attr.contenteditable]="previsualizacion ? true : null"
+                 [class.editable]="previsualizacion"
+                 (blur)="alEditarTexto($event, bloque.id, {campo:'ctaTexto'})"
+                 (keydown)="alTeclearEnTexto($event, true)"
+                 (paste)="alPegar($event)"
+                 (click)="registrarClic('cta', bloque.id, $event)">{{ bloque.datos.ctaTexto }}</a>
+            </div>
+          </ng-template>
         </section>
 
         <!-- Texto -->
