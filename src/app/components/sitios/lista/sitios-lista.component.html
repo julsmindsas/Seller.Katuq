@@ -309,8 +309,12 @@
           <small>Con esto ajustamos los textos de tu portada y tus botones.</small>
         </div>
 
-        <!-- Productos a destacar: el mismo selector del editor. -->
-        <div class="campo">
+        <!-- Productos a destacar: el mismo selector del editor.
+             Solo para la landing. Una tienda o un catálogo traen TODO lo que
+             esté marcado para Página Web en cada producto, así que pedir aquí
+             una lista a mano es trabajo que no cambia nada: los destacados se
+             escogen después, sobre la página, donde se ven. -->
+        <div class="campo" *ngIf="tipoElegido === 'landing'">
           <label>¿Qué productos quieres mostrar?</label>
           <div class="productos-elegidos">
             <span>{{ productoIds.length ? (productoIds.length + ' producto(s) elegido(s)') : 'Ninguno todavía' }}</span>
@@ -319,6 +323,15 @@
             </button>
           </div>
           <small>Se muestran con el precio y la disponibilidad de tu catálogo. Puedes dejarlo para después.</small>
+        </div>
+
+        <div class="nota-catalogo" *ngIf="tipoElegido !== 'landing'">
+          <strong>Tus productos entran solos</strong>
+          <span>
+            Se publican los que tengan marcada <b>Página Web</b> en su pestaña
+            «Canales de Venta». Las vitrinas nacen con productos reales y los cambias
+            después, arrastrándolos sobre la página.
+          </span>
         </div>
 
         <div class="campo">

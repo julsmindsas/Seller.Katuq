@@ -374,6 +374,15 @@
              miles y el servidor los pagina al publicar. Se explica qué hará. -->
         <section *ngSwitchCase="'catalogo'" class="bloque catalogo">
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
+
+          <!-- Con el catálogo en su propia página, en el inicio va la banda que
+               invita a entrar: espejo de la rama `explorar` del servidor. -->
+          <div class="explorar__caja" *ngIf="bloque.datos.enPagina; else catalogoEnLaPagina">
+            <p>Tu catálogo completo vive en su propia página.</p>
+            <span class="boton">{{ bloque.datos.textoExplorar || 'Explorar la tienda' }}</span>
+          </div>
+
+          <ng-template #catalogoEnLaPagina>
           <div class="catalogo__demo">
             <div class="catalogo__barra" *ngIf="bloque.datos.mostrarBuscador !== false">Buscar en la tienda…</div>
             <div class="catalogo__chips" *ngIf="bloque.datos.mostrarCategorias !== false">
@@ -387,6 +396,7 @@
               al publicar.
             </p>
           </div>
+          </ng-template>
         </section>
 
         <!-- Imagen con texto -->
