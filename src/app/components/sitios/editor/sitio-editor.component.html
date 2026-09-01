@@ -1102,7 +1102,7 @@
                             [title]="a.nombre">{{ a.corto }}</button>
                   </div>
                   <div class="colocacion__grupo" role="group" aria-label="Alineación">
-                    <button *ngFor="let al of alineaciones"
+                    <button *ngFor="let al of alineaciones" [title]="al.nombre"
                             [class.is-active]="posDe(el).alineacion === al.id"
                             (click)="cambiarPos(el, 'alineacion', al.id)"
                             [title]="al.nombre">
@@ -1282,7 +1282,7 @@
                            (ngModelChange)="marcarSucio()" placeholder="Precio (ej: $50.000)" maxlength="40" />
 
                     <div class="iconos" *ngIf="el.datos.variante === 'icono'">
-                      <button *ngFor="let ic of iconosDisponibles"
+                      <button *ngFor="let ic of iconosDisponibles" [title]="'Ícono: ' + ic"
                               [class.is-active]="t.icono === ic"
                               (click)="t.icono = ic; marcarSucio()" [title]="ic">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1362,7 +1362,7 @@
                 <div class="fondos">
                   <button class="fondo-op" [class.is-active]="!estiloDe(b).fondo && !estiloDe(b).fondoImagen"
                           (click)="ponerFondo(b, '')">Ninguno</button>
-                  <button class="fondo-op" *ngFor="let c of fondosSugeridos"
+                  <button class="fondo-op" *ngFor="let c of fondosSugeridos" [title]="'Fondo ' + c"
                           [style.background]="c" [class.is-active]="estiloDe(b).fondo === c"
                           (click)="ponerFondo(b, c)" [title]="c"></button>
                   <input type="color" [ngModel]="estiloDe(b).fondo || '#ffffff'"

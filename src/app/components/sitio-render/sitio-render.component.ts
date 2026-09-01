@@ -689,33 +689,37 @@ export class SitioRenderComponent implements OnChanges {
    * Solo se ve en el editor; la página publicada no imprime nombres de bloque.
    */
   private static readonly NOMBRES_BLOQUE: { [tipo: string]: string } = {
-    encabezado: "Encabezado",
-    anuncio: "Barra de anuncio",
+    // MISMOS nombres que CATALOGO_BLOQUES del editor: el comerciante ve la
+    // misma palabra en la lista del panel y en la barra flotante. Si se
+    // desfasan, "Componer a mano" allá y "Sección libre" acá parecen dos cosas.
+    encabezado: "Encabezado con tu logo",
+    anuncio: "Barra de anuncios",
     hero: "Portada",
-    texto: "Texto",
-    galeria: "Galería",
-    seccion: "Sección libre",
+    texto: "Sobre tu negocio",
+    galeria: "Galería de fotos",
+    seccion: "Componer a mano",
     columnas: "Columnas",
-    imagen: "Imagen",
+    imagen: "Una imagen",
     botones: "Botones",
-    separador: "Separador",
-    productos: "Productos elegidos",
+    separador: "Espacio o línea",
+    productos: "Tus productos",
     whatsapp: "Botón de WhatsApp",
     formulario: "Formulario de contacto",
     faq: "Preguntas frecuentes",
     catalogo: "Catálogo completo",
-    categorias: "Categorías",
-    promo: "Promoción",
+    categorias: "Compra por categoría",
+    promo: "Imagen con texto",
     destacado: "Producto destacado",
     contador: "Cuenta regresiva",
-    suscripcion: "Suscripción",
-    marcas: "Marcas",
+    suscripcion: "Boletín",
+    marcas: "Franja de marcas",
     instagram: "Instagram",
     video: "Video",
-    resenas: "Reseñas",
-    ubicacion: "Ubicación",
+    resenas: "Lo que dicen tus clientes",
+    ubicacion: "Dónde estás",
     footer: "Pie de página",
   };
+
 
   nombreDeBloque(tipo: string): string {
     return SitioRenderComponent.NOMBRES_BLOQUE[tipo] || "Sección";
