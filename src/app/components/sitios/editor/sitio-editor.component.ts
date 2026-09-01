@@ -104,6 +104,12 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     icono: "M4 6h16M4 12h16M4 18h10M20 16l2 2-2 2",
   },
   {
+    tipo: "buscador",
+    nombre: "Busca tu detalle",
+    descripcion: "Categoría, ocasión y presupuesto: lleva al catálogo ya filtrado",
+    icono: "M10 4a6 6 0 1 0 3.9 10.6l4.8 4.8 1.4-1.4-4.8-4.8A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z",
+  },
+  {
     tipo: "categorias",
     nombre: "Compra por categoría",
     descripcion: "Baldosas con tus categorías; se llenan solas desde tu catálogo",
@@ -476,7 +482,8 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   botones: { botones: [{ etiqueta: "Comprar", url: "#productos", estilo: "principal" }] },
   separador: { linea: false, alto: "medio" },
   productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false },
-  whatsapp: { telefono: "", mensaje: "Hola, quiero más información", etiqueta: "Escríbenos por WhatsApp" },
+  whatsapp: { telefono: "", mensaje: "Hola, quiero más información", etiqueta: "Escríbenos por WhatsApp", flotante: false },
+  buscador: { titulo: "Busca tu detalle", mostrarCategoria: true, mostrarOcasion: true, mostrarPrecio: true, mostrarPalabra: true, textoBoton: "Buscar" },
   formulario: {
     titulo: "Déjanos tus datos",
     descripcion: "",

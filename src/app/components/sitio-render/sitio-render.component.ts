@@ -707,6 +707,7 @@ export class SitioRenderComponent implements OnChanges {
     formulario: "Formulario de contacto",
     faq: "Preguntas frecuentes",
     catalogo: "Catálogo completo",
+    buscador: "Busca tu detalle",
     categorias: "Compra por categoría",
     promo: "Imagen con texto",
     destacado: "Producto destacado",
@@ -720,6 +721,11 @@ export class SitioRenderComponent implements OnChanges {
     footer: "Pie de página",
   };
 
+
+  /** Renglones de un texto multilínea (horarios del pie). */
+  lineasDe(texto: string): string[] {
+    return String(texto || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 8);
+  }
 
   nombreDeBloque(tipo: string): string {
     return SitioRenderComponent.NOMBRES_BLOQUE[tipo] || "Sección";

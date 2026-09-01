@@ -218,9 +218,27 @@
           </p>
         </section>
 
+        <!-- Busca tu detalle. Las listas se llenan al publicar. -->
+        <section *ngSwitchCase="'buscador'" class="bloque buscador">
+          <form class="buscador__caja" (submit)="$event.preventDefault()">
+            <h2 [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo || 'Busca tu detalle' }}</h2>
+            <div class="buscador__campos">
+              <label *ngIf="bloque.datos.mostrarCategoria !== false"><span>Categoría</span><select disabled><option>Todas</option></select></label>
+              <label *ngIf="bloque.datos.mostrarOcasion !== false"><span>Ocasión</span><select disabled><option>Cualquiera</option></select></label>
+              <label *ngIf="bloque.datos.mostrarPrecio !== false"><span>Presupuesto</span><select disabled><option>Sin límite</option></select></label>
+              <label *ngIf="bloque.datos.mostrarPalabra !== false"><span>Palabra clave</span><input type="search" disabled placeholder="Chocolates, desayuno, peluche…" /></label>
+            </div>
+            <button type="button" class="boton">{{ bloque.datos.textoBoton || 'Buscar' }}</button>
+          </form>
+          <p class="vacio" *ngIf="previsualizacion">Categorías y ocasiones se llenan solas con tus productos, al publicar.</p>
+        </section>
+
         <!-- WhatsApp -->
-        <section *ngSwitchCase="'whatsapp'" class="bloque whatsapp">
-          <a *ngIf="bloque.datos.telefono"
+        <section *ngSwitchCase="'whatsapp'" class="bloque whatsapp" [class.whatsapp--flotante]="bloque.datos.flotante">
+          <span *ngIf="bloque.datos.flotante && bloque.datos.telefono" class="kq-wa kq-wa--previa" title="Así se ve la burbuja en la página publicada">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true"><path d="M20.5 3.5A11.8 11.8 0 0 0 12 0C5.5 0 .2 5.3.2 11.8c0 2.1.5 4.1 1.6 5.9L0 24l6.4-1.7a11.8 11.8 0 0 0 5.6 1.4c6.5 0 11.8-5.3 11.8-11.8 0-3.2-1.2-6.1-3.3-8.4Z"/></svg>
+          </span>
+          <a *ngIf="bloque.datos.telefono && !bloque.datos.flotante"
              class="boton boton--whatsapp"
              [href]="enlaceWhatsapp(bloque.datos)"
              target="_blank"
@@ -611,7 +629,11 @@
               <span *ngIf="!logo && negocio" class="pie__nombre">{{ negocio }}</span>
             </div>
             <div class="pie__col"><h4>Explora</h4><span class="vacio">Tus categorías salen aquí al publicar.</span></div>
+            <div class="pie__col pie__horarios" *ngIf="bloque.datos.horarios"><h4>Horarios</h4>
+              <span class="pie__horario" *ngFor="let h of lineasDe(bloque.datos.horarios)"><i>{{ h }}</i></span>
+            </div>
           </div>
+          <div class="pie__pagos" *ngIf="bloque.datos.mostrarMediosPago"><span class="pie__pagos-t">Medios de pago</span><span class="pie__pago">Los de tu tienda, al publicar</span></div>
           <p *ngIf="bloque.datos.texto" class="pie__legal"
              [attr.contenteditable]="previsualizacion ? true : null"
              [class.editable]="previsualizacion"

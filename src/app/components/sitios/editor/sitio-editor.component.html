@@ -490,6 +490,40 @@
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.etiqueta" (ngModelChange)="marcarSucio()" maxlength="40" />
             </div>
+            <button class="opcion" [class.is-active]="b.datos.flotante"
+                    title="La burbuja verde acompaña al visitante en toda la página, abajo a la izquierda"
+                    (click)="b.datos.flotante = !b.datos.flotante; marcarSucio()">
+              <span class="opcion__texto"><strong>Burbuja flotante</strong><small>Siempre visible, abajo a la izquierda</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
+          </ng-container>
+
+          <!-- Busca tu detalle -->
+          <ng-container *ngIf="b.tipo === 'buscador'">
+            <p class="nota">
+              Las categorías y las ocasiones <strong>se llenan solas</strong> desde tus productos. Al buscar,
+              el visitante cae en el catálogo ya filtrado.
+            </p>
+            <div class="campo">
+              <label>Título</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="80" />
+            </div>
+            <button class="opcion" [class.is-active]="b.datos.mostrarCategoria" (click)="b.datos.mostrarCategoria = !b.datos.mostrarCategoria; marcarSucio()">
+              <span class="opcion__texto"><strong>Categoría</strong></span><span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" [class.is-active]="b.datos.mostrarOcasion" (click)="b.datos.mostrarOcasion = !b.datos.mostrarOcasion; marcarSucio()">
+              <span class="opcion__texto"><strong>Ocasión</strong><small>Cumpleaños, aniversario… las de tus productos</small></span><span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" [class.is-active]="b.datos.mostrarPrecio" (click)="b.datos.mostrarPrecio = !b.datos.mostrarPrecio; marcarSucio()">
+              <span class="opcion__texto"><strong>Presupuesto</strong></span><span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" [class.is-active]="b.datos.mostrarPalabra" (click)="b.datos.mostrarPalabra = !b.datos.mostrarPalabra; marcarSucio()">
+              <span class="opcion__texto"><strong>Palabra clave</strong></span><span class="palanca"><span></span></span>
+            </button>
+            <div class="campo">
+              <label>Texto del botón</label>
+              <input type="text" [(ngModel)]="b.datos.textoBoton" (ngModelChange)="marcarSucio()" maxlength="30" />
+            </div>
           </ng-container>
 
           <!-- Formulario -->
@@ -897,6 +931,18 @@
             <button class="opcion" [class.is-active]="b.datos.mostrarRedes"
                     (click)="b.datos.mostrarRedes = !b.datos.mostrarRedes; marcarSucio()">
               <span class="opcion__texto"><strong>Mostrar mis redes</strong></span>
+              <span class="palanca"><span></span></span>
+            </button>
+            <div class="campo">
+              <label>Horarios de atención</label>
+              <textarea rows="3" [(ngModel)]="b.datos.horarios" (ngModelChange)="marcarSucio()" maxlength="400"
+                        placeholder="Lunes a viernes: 10am a 6pm&#10;Sábados: 9am a 2pm"></textarea>
+              <small>Un renglón por línea. "Día: horas" se alinea solo.</small>
+            </div>
+            <button class="opcion" [class.is-active]="b.datos.mostrarMediosPago"
+                    title="Franja con lo que aceptas: tarjetas, PSE, Nequi, contra entrega… según tu pestaña Tienda"
+                    (click)="b.datos.mostrarMediosPago = !b.datos.mostrarMediosPago; marcarSucio()">
+              <span class="opcion__texto"><strong>Mostrar medios de pago</strong><small>Los de tu pestaña Tienda</small></span>
               <span class="palanca"><span></span></span>
             </button>
             <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index">
