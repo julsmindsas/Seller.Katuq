@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { LoaderService } from '../../../shared/services/loader.service';
 import {
   MinimalOnboardingProduct,
   OnboardingReadiness,
@@ -45,6 +46,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private readonly LEGACY_UNSCOPED_KEY = 'katuq_onboarding_v2';
   private cacheKey = '';
   private progressTimer: any;
+  private progressUpdatedAt = '';
 
   private readonly baseSteps: WizardStep[] = [
     { id: 'goal', name: 'Tu primer objetivo', shortName: 'Objetivo', mins: 1 },
@@ -101,10 +103,15 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   constructor(
     private onboardingService: OnboardingService,
     private messageService: MessageService,
+    private loaderService: LoaderService,
     private router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {
+    // El onboarding ya tiene estados de carga propios. Las precargas globales
+    // de maestros que arrancan después del login no deben cubrirlo con un
+    // overlay bloqueante mientras el usuario intenta responder.
+    this.loaderService.suppressGlobalLoader();
     const user = this.readJson(localStorage.getItem('user'));
     const currentCompany = this.readJson(localStorage.getItem('currentCompany'));
     const sessionCompany = this.readJson(sessionStorage.getItem('currentCompany'));
@@ -131,23 +138,47 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     this.onboardingService.resetOnboarding();
     this.cacheKey = buildOnboardingStorageKey(userKey, this.companyKey);
     localStorage.removeItem(this.LEGACY_UNSCOPED_KEY);
-    this.applyProgress(this.loadCachedProgress());
+    const cachedProgress = this.loadCachedProgress();
+    this.applyProgress(cachedProgress);
 
     try {
       const remoteProgress = await this.onboardingService.loadV2Progress();
-      if (remoteProgress?.onboardingCompleted === true) {
+      const onboardingWasCompleted = remoteProgress?.onboardingCompleted === true;
+      if (onboardingWasCompleted) {
+        // El login ya evita enviar automáticamente al wizard a quien terminó.
+        // Por eso llegar manualmente a /onboarding es una intención explícita
+        // de revisar la guía, no una razón para devolverlo silenciosamente a
+        // /welcome. Abrimos el resumen y dejamos todos los pasos consultables.
         this.clearProgress();
         localStorage.removeItem('showOnboardingBanner');
         sessionStorage.removeItem('onboarding_banner_dismissed');
-        await this.router.navigate(['/welcome']);
-        return;
       }
       if (remoteProgress) {
-        this.applyProgress(remoteProgress, true);
-        if (typeof remoteProgress.context?.inventoryEnabled === 'boolean' &&
-            remoteProgress.context.inventoryEnabled !== this.requiresInventoryReadiness) {
+        // Un onboarding ya completado siempre se hidrata desde la fuente
+        // autenticada; un borrador local antiguo no puede reabrirlo a medias.
+        const preferredProgress = onboardingWasCompleted
+          ? remoteProgress
+          : this.newestProgress(cachedProgress, remoteProgress);
+        this.applyProgress(preferredProgress, true);
+        if (onboardingWasCompleted) {
+          this.status = { ...this.status, result: 'done' };
+          this.activeId = 'result';
+          this.deferred = false;
+        }
+        // Si el dispositivo tenía cambios más recientes (por ejemplo, cerró la
+        // pestaña durante el debounce), recuperarlos también en el backend.
+        if (preferredProgress === cachedProgress && cachedProgress !== remoteProgress) {
+          await this.onboardingService.saveV2Progress(this.buildProgress());
+        }
+        if (typeof preferredProgress.context?.inventoryEnabled === 'boolean' &&
+            preferredProgress.context.inventoryEnabled !== this.requiresInventoryReadiness) {
           await this.persistProgress();
         }
+      } else if (cachedProgress) {
+        // Un cierre abrupto puede alcanzar a guardar localmente pero no en el
+        // backend. Si allí todavía no existe progreso, rehidratarlo evita que
+        // otro dispositivo empiece el onboarding desde cero.
+        await this.onboardingService.saveV2Progress(this.buildProgress());
       }
     } catch {
       // La caché namespaced permite continuar durante una interrupción corta. El
@@ -186,7 +217,15 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.progressTimer) clearTimeout(this.progressTimer);
+    if (this.progressTimer) {
+      clearTimeout(this.progressTimer);
+      this.progressTimer = null;
+      // La caché local es inmediata y la siguiente entrada resolverá cualquier
+      // conflicto por fecha. El intento remoto cubre navegaciones dentro del SPA.
+      this.saveCache();
+      this.onboardingService.saveV2Progress(this.buildProgress()).catch(() => undefined);
+    }
+    this.loaderService.releaseGlobalLoader();
   }
 
   get all(): WizardStep[] {
@@ -245,6 +284,11 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       (this.isImportRoute || this.selectedProductType === 'producto');
   }
 
+  get needsImportedInventory(): boolean {
+    return this.isImportRoute && this.requiresInventoryReadiness &&
+      this.readiness?.product_ready === true && this.readiness?.inventory_ready !== true;
+  }
+
   get selectedProductType(): ProductType {
     if (this.offering === 'services') return 'servicio';
     if (this.offering === 'products') return 'producto';
@@ -278,6 +322,9 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   }
 
   get nextLabel(): string {
+    if (this.activeId === 'product' && this.needsImportedInventory) {
+      return 'Cargar existencias';
+    }
     if (this.activeId === 'product' && this.isImportRoute && !this.readiness?.product_ready) {
       return 'Ya importé, verificar';
     }
@@ -379,11 +426,18 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
 
   selectGoal(goal: Goal): void {
     if (this.goal !== goal) {
+      const previousOffering = this.offering;
       this.goal = goal;
       delete this.status.goal;
       delete this.status.context;
       delete this.status.result;
-      if (goal === 'import_excel' && !this.offering) this.offering = 'products';
+      if (goal === 'import_excel') {
+        this.offering = 'products';
+        this.product.tipo = 'producto';
+        if (previousOffering === 'services' || previousOffering === 'unknown') {
+          this.inventoryEnabled = null;
+        }
+      }
     }
     this.onDraftChange();
   }
@@ -447,6 +501,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     if (this.activeId !== 'result') delete this.status[this.activeId];
     delete this.status.result;
     this.resetProductRequestIfChanged();
+    this.touchProgress();
     this.saveCache();
     this.queueProgressSync();
   }
@@ -463,6 +518,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     const step = this.all.find(item => item.id === id);
     if (!step || !this.canOpenStep(step)) return;
     this.activeId = id;
+    this.touchProgress();
     this.mobileNavOpen = false;
     this.saveCache();
     this.queueProgressSync();
@@ -473,12 +529,18 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     const index = this.all.findIndex(step => step.id === this.activeId);
     if (index <= 0) return;
     this.activeId = this.all[index - 1].id;
+    this.touchProgress();
     this.saveCache();
     this.queueProgressSync();
   }
 
   async goNext(): Promise<void> {
     if (!this.canSubmitCurrentStep || this.isSaving) return;
+
+    if (this.activeId === 'product' && this.needsImportedInventory) {
+      await this.openInventoryImporter();
+      return;
+    }
 
     if (this.activeId === 'result') {
       if (this.isExploreRoute) await this.exploreNow();
@@ -497,6 +559,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       const nextStep = remaining.find(step => this.status[step.id] !== 'done') ||
         remaining[remaining.length - 1] || this.all[this.all.length - 1];
       this.activeId = nextStep.id;
+      this.touchProgress();
       await this.persistProgress();
       if (this.activeId === 'result') await this.refreshReadiness();
     } catch (error) {
@@ -523,7 +586,19 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     localStorage.setItem('showOnboardingBanner', 'true');
     sessionStorage.removeItem('onboarding_banner_dismissed');
     await this.persistProgress().catch(() => undefined);
-    this.router.navigate(['/productos'], { queryParams: { onboardingImport: 'products' } });
+    this.router.navigate(['/productos'], {
+      queryParams: { onboardingImport: 'products', onboardingReturn: '/onboarding' }
+    });
+  }
+
+  async openInventoryImporter(): Promise<void> {
+    this.importOpened = true;
+    localStorage.setItem('showOnboardingBanner', 'true');
+    sessionStorage.removeItem('onboarding_banner_dismissed');
+    await this.persistProgress().catch(() => undefined);
+    this.router.navigate(['/inventario/inventario-catalogo'], {
+      queryParams: { onboardingImport: 'inventory', onboardingReturn: '/onboarding' }
+    });
   }
 
   async continueLater(): Promise<void> {
@@ -564,7 +639,9 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       localStorage.setItem('showOnboardingBanner', 'true');
       sessionStorage.removeItem('onboarding_banner_dismissed');
       await this.persistProgress().catch(() => undefined);
-      this.router.navigate(['/inventario/inventario-catalogo']);
+      this.router.navigate(['/inventario/inventario-catalogo'], {
+        queryParams: { onboardingImport: 'inventory', onboardingReturn: '/onboarding' }
+      });
       return;
     }
     if (this.readiness?.payment_ready === false) this.goStep('payment');
@@ -726,7 +803,9 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       else delete this.status.product;
 
       if (readiness.payment_ready) {
-        this.status = { ...this.status, payment: 'done' };
+        // Tener un método previo permite confirmar este paso con un clic, pero
+        // no debe saltárselo: la persona necesita entender cómo se registran
+        // los cobros antes de llegar al resultado.
         this.paymentNeedsManualActivation = false;
       } else {
         delete this.status.payment;
@@ -767,7 +846,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       context: {
         offering: this.offering,
         channel: this.channel,
-        inventoryEnabled: this.requiresInventoryReadiness
+        inventoryEnabled: this.requiresInventoryReadiness,
+        lastUpdated: this.progressUpdatedAt || new Date().toISOString()
       },
       currentStepId: this.activeId,
       steps: Object.keys(this.status).reduce((result, key) => {
@@ -791,6 +871,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
 
   private applyProgress(progress: OnboardingV2Progress | null, replace = false): void {
     if (!progress || progress.schemaVersion !== 'v2') return;
+    const progressTimestamp = String(progress.context?.lastUpdated || '');
+    if (this.validTimestamp(progressTimestamp)) this.progressUpdatedAt = progressTimestamp;
     const validGoals: Goal[] = ['sell_today', 'import_excel', 'explore'];
     const validOfferings: Offering[] = ['products', 'services', 'both', 'unknown'];
     const validChannels: Channel[] = ['local', 'social', 'delivery', 'unknown'];
@@ -858,8 +940,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
 
     if (!this.goal) delete this.status.goal;
     if (!this.offering || !this.channel || this.inventoryEnabled === null) delete this.status.context;
-    // El resultado solo puede considerarse terminado con el flag autenticado
-    // del backend, que ya provoca redirección antes de aplicar el progreso.
+    // El resultado solo se marca como terminado desde el flag autenticado del
+    // backend, después de aplicar el progreso remoto en ngOnInit.
     delete this.status.result;
   }
 
@@ -892,6 +974,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   private async clearDeferredOnEntry(): Promise<void> {
     if (!this.deferred) return;
     this.deferred = false;
+    this.touchProgress();
     this.saveCache();
     try {
       await this.onboardingService.saveV2Progress(this.buildProgress());
@@ -907,6 +990,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       clearTimeout(this.progressTimer);
       this.progressTimer = null;
     }
+    this.touchProgress();
     this.saveCache();
     await this.onboardingService.saveV2Progress(this.buildProgress());
     this.progressWarning = '';
@@ -927,6 +1011,33 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       delete this.product.requestId;
       delete this.product.requestFingerprint;
     }
+  }
+
+  private touchProgress(): void {
+    this.progressUpdatedAt = new Date().toISOString();
+  }
+
+  private newestProgress(
+    cached: OnboardingV2Progress | null,
+    remote: OnboardingV2Progress
+  ): OnboardingV2Progress {
+    if (!cached) return remote;
+    const cachedAt = this.progressTimestamp(cached);
+    const remoteAt = this.progressTimestamp(remote);
+    if (!cachedAt) return remote;
+    if (!remoteAt) return cached;
+    return cachedAt > remoteAt ? cached : remote;
+  }
+
+  private progressTimestamp(progress: OnboardingV2Progress | null): number {
+    if (!progress) return 0;
+    const value = String(progress.context?.lastUpdated || '');
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private validTimestamp(value: string): boolean {
+    return !!value && Number.isFinite(Date.parse(value));
   }
 
   private createRequestId(): string {

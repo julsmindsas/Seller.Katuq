@@ -50,4 +50,11 @@ export class LoaderService {
       this.loadingSubject.next(true);
     }
   }
+
+  /** Descarta solicitudes visuales pertenecientes a una sesión que terminó. */
+  reset(): void {
+    this.requestCount = 0;
+    this.suppressCount = 0;
+    this.loadingSubject.next(false);
+  }
 }

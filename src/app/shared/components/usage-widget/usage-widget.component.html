@@ -1,7 +1,7 @@
 <p-card *ngIf="!loading && usage && !isPremium" styleClass="usage-widget">
   <ng-template pTemplate="header">
     <div class="card-header-content">
-      <h4>Uso del Plan Freemium</h4>
+      <h4>Uso del Plan Gratis</h4>
       <button pButton icon="pi pi-refresh" class="p-button-text p-button-sm" (click)="refresh()" [loading]="loading"></button>
     </div>
   </ng-template>
@@ -24,11 +24,16 @@
     </small>
   </div>
 
-  <!-- Chat IA -->
+  <div class="limit-notice" *ngIf="getOrdersPercentage() >= 80" [class.limit-notice--full]="getOrdersPercentage() >= 100">
+    <i [class]="getOrdersPercentage() >= 100 ? 'pi pi-lock' : 'pi pi-info-circle'"></i>
+    <span>{{ getOrdersLimitMessage() }}</span>
+  </div>
+
+  <!-- Consultas generales de KAI -->
   <div class="usage-item mb-4">
     <div class="d-flex justify-content-between mb-2 align-items-center">
       <span class="usage-label">
-        <i class="pi pi-comments"></i> Chat IA hoy
+        <i class="pi pi-comments"></i> Consultas KAI hoy (tu usuario)
       </span>
       <span class="usage-value">{{ usage.ai.chat.used }} / {{ usage.ai.chat.limit }}</span>
     </div>
@@ -38,7 +43,7 @@
       [styleClass]="getProgressBarClass(getChatPercentage())">
     </p-progressBar>
     <small class="text-muted d-block mt-1">
-      <i class="pi pi-clock"></i> Resetea: {{ usage.resetTime }}
+      <i class="pi pi-clock"></i> Se renueva diariamente
     </small>
   </div>
 
@@ -46,7 +51,7 @@
   <div class="usage-item mb-4">
     <div class="d-flex justify-content-between mb-2 align-items-center">
       <span class="usage-label">
-        <i class="pi pi-box"></i> Productos IA hoy
+        <i class="pi pi-box"></i> Productos IA hoy (tu usuario)
       </span>
       <span class="usage-value">{{ usage.ai.products.used }} / {{ usage.ai.products.limit }}</span>
     </div>
@@ -56,13 +61,13 @@
       [styleClass]="getProgressBarClass(getProductsPercentage())">
     </p-progressBar>
     <small class="text-muted d-block mt-1">
-      <i class="pi pi-clock"></i> Resetea: {{ usage.resetTime }}
+      <i class="pi pi-clock"></i> Se renueva diariamente
     </small>
   </div>
 
   <!-- Features bloqueadas -->
   <div class="blocked-features mb-3">
-    <p class="mb-2"><strong>Features bloqueadas:</strong></p>
+    <p class="mb-2"><strong>Funciones Premium:</strong></p>
     <div class="feature-badge">
       <i class="pi pi-lock"></i> IA de Voz
     </div>
@@ -78,7 +83,7 @@
     <div class="text-center">
       <button
         pButton
-        label="Actualizar a Premium"
+        label="Desbloquear Premium"
         icon="pi pi-star"
         routerLink="/pricing"
         class="p-button-success w-100">
@@ -99,7 +104,7 @@
   <div class="text-center premium-content">
     <i class="pi pi-star premium-icon"></i>
     <h4 class="mt-3 mb-2">Uso Ilimitado</h4>
-    <p class="text-muted">Disfruta de todas las features sin límites</p>
+    <p class="text-muted">Disfruta de todas las funciones Premium</p>
 
     <div class="premium-features mt-4">
       <div class="feature-item">

@@ -218,6 +218,106 @@
 // INDICATOR CARDS (TRM, SMLMV, etc.)
 // ==========================================
 
+.start-center {
+  border-radius: 10px;
+  border-left: 4px solid $katuq-primary !important;
+}
+
+.start-center-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+
+  p {
+    margin: 4px 0 0;
+    color: $katuq-gray-600;
+    font-size: 0.88rem;
+  }
+}
+
+.start-center-eyebrow {
+  color: $katuq-primary;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.start-center-title {
+  margin: 2px 0 0;
+  color: $katuq-gray-900;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.free-plan-badge {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid $katuq-primary;
+  border-radius: 8px;
+  color: $katuq-primary;
+  background: $katuq-purple-50;
+  text-align: right;
+
+  strong,
+  span { display: block; }
+  strong { font-size: 0.78rem; }
+  span { margin-top: 1px; font-size: 0.7rem; color: $katuq-gray-600; }
+}
+
+.start-center-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.start-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 66px;
+  padding: 10px 12px;
+  border: 1px solid $katuq-gray-100;
+  border-radius: 8px;
+  color: $katuq-gray-900;
+  background: #fff;
+  text-decoration: none;
+
+  i { width: 22px; color: $katuq-primary; text-align: center; }
+  span,
+  strong,
+  small { display: block; }
+  strong { font-size: 0.78rem; }
+  small { margin-top: 2px; color: $katuq-gray-600; font-size: 0.68rem; line-height: 1.25; }
+
+  &:hover,
+  &:focus-visible {
+    border-color: $katuq-primary;
+    color: $katuq-primary;
+  }
+
+  &--primary {
+    border-color: $katuq-primary;
+    color: #fff;
+    background: $katuq-primary;
+
+    i,
+    small { color: #fff; }
+  }
+}
+
+@media (max-width: 991.98px) {
+  .start-center-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 575.98px) {
+  .start-center-heading { display: block; }
+  .free-plan-badge { margin-top: 12px; text-align: left; }
+  .start-center-actions { grid-template-columns: 1fr; }
+}
+
 .indicator-card {
   background: #fff;
   border: 1px solid $katuq-gray-100;

@@ -442,7 +442,7 @@
         <div class="plan-badge"
              [class.premium]="currentPlan.type === 'Premium'"
              [class.freemium]="currentPlan.type === 'Freemium'">
-          {{currentPlan.type}}
+          {{currentPlan.type === 'Freemium' ? 'Gratis' : currentPlan.type}}
         </div>
       </div>
       
@@ -474,7 +474,7 @@
                [class.premium]="currentPlan.type === 'Premium'"
                [class.freemium]="currentPlan.type === 'Freemium'">
             <i class="fa" [ngClass]="currentPlan.type === 'Premium' ? 'fa-crown' : 'fa-star'"></i>
-            {{currentPlan.type}}
+            {{currentPlan.type === 'Freemium' ? 'Gratis' : currentPlan.type}}
           </div>
         </div>
 
@@ -531,7 +531,7 @@
                 <i class="fa fa-shopping-cart"></i>
               </div>
               <div class="stat-content">
-                <div class="stat-label">Pedidos</div>
+                <div class="stat-label">Pedidos este mes</div>
                 <div class="stat-value">
                   {{currentPlan.usage.orders.current}}<span class="stat-limit">/{{currentPlan.usage.orders.limit}}</span>
                 </div>
@@ -543,7 +543,7 @@
                 <i class="fa fa-comments"></i>
               </div>
               <div class="stat-content">
-                <div class="stat-label">Chat IA</div>
+                <div class="stat-label">Consultas KAI hoy</div>
                 <div class="stat-value">
                   {{currentPlan.usage.chatAI.current}}<span class="stat-limit">/{{currentPlan.usage.chatAI.limit}}</span>
                 </div>
@@ -555,7 +555,7 @@
                 <i class="fa fa-box"></i>
               </div>
               <div class="stat-content">
-                <div class="stat-label">Productos IA</div>
+                <div class="stat-label">Productos IA hoy</div>
                 <div class="stat-value">
                   {{currentPlan.usage.productsAI.current}}<span class="stat-limit">/{{currentPlan.usage.productsAI.limit}}</span>
                 </div>
@@ -568,7 +568,7 @@
             <div class="progress-header">
               <span class="progress-label">
                 <i class="fa fa-chart-line"></i>
-                Uso del Mes
+                Pedidos del mes
               </span>
               <span class="progress-percentage">{{currentPlan.progress}}%</span>
             </div>
@@ -585,12 +585,14 @@
             </div>
           </div>
 
-          <!-- Fecha de reseteo para Freemium -->
+          <!-- Los pedidos se renuevan mensualmente; la IA, diariamente. -->
           <div class="billing-info freemium-reset">
             <i class="fa fa-sync-alt"></i>
             <div class="billing-text">
-              <span class="billing-label">Reseteo de límites</span>
+              <span class="billing-label">Pedidos se renuevan</span>
               <span class="billing-date">{{currentPlan.renewalDate}} ({{currentPlan.daysLeft}} días)</span>
+              <span class="billing-label mt-1">KAI y Productos IA</span>
+              <span class="billing-date">Se renuevan diariamente</span>
             </div>
           </div>
         </ng-container>
@@ -601,7 +603,7 @@
                   *ngIf="currentPlan.type === 'Freemium'"
                   (click)="openPlanModal(); $event.stopPropagation();">
             <i class="fa fa-rocket"></i>
-            <span>Actualizar a Premium</span>
+            <span>Desbloquear Premium</span>
           </button>
 
           <button class="modern-btn secondary"

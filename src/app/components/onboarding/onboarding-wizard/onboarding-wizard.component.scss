@@ -574,6 +574,27 @@ input:focus-visible {
   gap: 8px;
 }
 
+.free-plan-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #ddd3fb;
+  border-left: 4px solid var(--kc-accent);
+  border-radius: 10px;
+  background: #faf8ff;
+
+  span,
+  strong { display: block; }
+  span { color: var(--kc-accent-ink); font-size: 12px; font-weight: 850; }
+  strong { margin-top: 2px; color: var(--kc-muted); font-size: 12px; line-height: 1.35; }
+  a { flex: 0 0 auto; color: var(--kc-accent-ink); font-size: 12px; font-weight: 850; text-decoration: none; }
+  a:hover,
+  a:focus-visible { text-decoration: underline; }
+}
+
 .btn-primary { @include kc-btn-primary; }
 .btn-ghost { @include kc-btn-ghost; }
 
@@ -671,6 +692,7 @@ input:focus-visible {
   .choice-icon { width: 40px; height: 40px; border-radius: 12px; }
   .import-panel .btn-primary { width: 100%; }
   .result-actions .btn-ghost { width: 100%; justify-content: center; }
+  .free-plan-note { align-items: flex-start; flex-direction: column; }
   .footer-shell { gap: 8px; }
   .footer-shell .btn-primary { flex: 1; padding-inline: 12px; }
   .footer-shell .btn-ghost { padding-inline: 12px; }

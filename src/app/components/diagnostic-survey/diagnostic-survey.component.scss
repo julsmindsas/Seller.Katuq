@@ -132,6 +132,14 @@
     text-align: center;
 }
 
+.welcome-kicker {
+    color: #9020FF;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+}
+
 .welcome-title {
     font-size: 2.5rem;
     font-family: 'Geometr415BlkBTBlack', sans-serif;
@@ -280,6 +288,28 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 12px;
+}
+
+.diagnostic-option {
+    min-width: 320px;
+}
+
+.video-help-link {
+    background: transparent;
+    border: 0;
+    color: #5b5670;
+    cursor: pointer;
+    font-family: 'Geometr415L', sans-serif;
+    font-size: 0.95rem;
+    padding: 8px 12px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.video-help-link:hover,
+.video-help-link:focus {
+    color: #9020FF;
 }
 
 .cta-button.large {
@@ -590,6 +620,27 @@
     margin: 10px 0 20px 0;
     font-style: italic;
     font-family: 'Geometr415L', sans-serif;
+}
+
+.free-plan-created {
+    background: #f4fffc;
+    border-left: 4px solid #00a884;
+    border-radius: 6px;
+    margin: 20px 0;
+    padding: 16px;
+    text-align: left;
+}
+
+.free-plan-created__title {
+    color: #0C0042;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+}
+
+.free-plan-created__text {
+    color: #4d485f;
+    margin: 0;
 }
 
 .summary-motivational {
@@ -999,6 +1050,21 @@
 .summary-container p {
     font-size: 1.75rem;
     color: #000;
+}
+
+.summary-container--registration-only {
+    max-height: none;
+    overflow: visible;
+    padding: 16px 20px;
+}
+
+.summary-container--registration-only h3 {
+    font-size: 1.2rem;
+}
+
+.summary-container--registration-only p {
+    font-size: 1.05rem;
+    line-height: 1.45;
 }
 
 /* ===== ESTILOS PARA VALIDACIÓN DE CAMPOS ===== */
@@ -1466,6 +1532,10 @@
     position: relative;
 }
 
+.progress-steps--short {
+    max-width: 360px;
+}
+
 .progress-steps::before {
     content: '';
     position: absolute;
@@ -1548,6 +1618,11 @@
     .progress-steps::before {
         left: 37.5px;
         right: 37.5px;
+    }
+
+    .diagnostic-option {
+        min-width: 0;
+        width: 100%;
     }
 }
 

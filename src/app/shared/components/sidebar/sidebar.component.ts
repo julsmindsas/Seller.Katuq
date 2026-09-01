@@ -774,16 +774,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (usage) {
         this.currentPlan.usage = {
           orders: {
-            current: usage.orders?.current || 0,
-            limit: usage.orders?.limit || 15
+            current: usage.orders?.current ?? 0,
+            limit: usage.orders?.limit ?? 15
           },
           chatAI: {
-            current: usage.ai?.chat?.used || 0,
-            limit: usage.ai?.chat?.limit || 10
+            current: usage.ai?.chat?.used ?? 0,
+            limit: usage.ai?.chat?.limit ?? 10
           },
           productsAI: {
-            current: usage.ai?.products?.used || 0,
-            limit: usage.ai?.products?.limit || 10
+            current: usage.ai?.products?.used ?? 0,
+            limit: usage.ai?.products?.limit ?? 10
           },
           voice: {
             enabled: (usage.ai?.voice?.limit || 0) > 0
@@ -793,7 +793,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
           }
         };
 
-        this.currentPlan.progress = this.calculateOverallProgress(usage);
+        this.currentPlan.progress = this.calculateOrderProgress(usage);
       }
     });
 
@@ -807,24 +807,11 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  private calculateOverallProgress(usage: any): number {
-    const metrics = [];
-
-    // Solo calcular % de features habilitadas
-    if (usage.orders?.limit > 0 && usage.orders?.limit !== -1) {
-      metrics.push((usage.orders.current / usage.orders.limit) * 100);
-    }
-    if (usage.ai?.chat?.limit > 0 && usage.ai?.chat?.limit !== -1) {
-      metrics.push((usage.ai.chat.used / usage.ai.chat.limit) * 100);
-    }
-    if (usage.ai?.products?.limit > 0 && usage.ai?.products?.limit !== -1) {
-      metrics.push((usage.ai.products.used / usage.ai.products.limit) * 100);
-    }
-
-    if (metrics.length === 0) return 0;
-
-    const average = metrics.reduce((a, b) => a + b, 0) / metrics.length;
-    return Math.min(100, Math.round(average));
+  private calculateOrderProgress(usage: any): number {
+    const current = usage.orders?.current ?? 0;
+    const limit = usage.orders?.limit ?? 0;
+    if (limit <= 0 || limit === -1) return 0;
+    return Math.min(100, Math.round((current / limit) * 100));
   }
 
   private calculateDaysUntilReset(resetDate: any): number {

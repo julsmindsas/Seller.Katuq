@@ -7,6 +7,7 @@ import { LogisticaServiceV2 } from '../shared/services/despachos/logistica.servi
 import { InventarioService } from '../shared/services/inventarios/inventario.service';
 import { CrmService } from '../components/crm/services/crm.service';
 import { VentasService } from '../shared/services/ventas/ventas.service';
+import { SubscriptionService } from '../shared/services/subscription.service';
 
 @Component({
   selector: 'app-welcome',
@@ -52,6 +53,11 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   // Onboarding banner
   showOnboardingBanner = false;
+  showFreeStartCenter = false;
+  freeOrdersUsed = 0;
+  freeOrdersLimit = 15;
+  private isFreemiumPlan = false;
+  private freeUsageLoaded = false;
 
   constructor(
     private securityService: SecurityService,
@@ -60,7 +66,8 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     private inventarioService: InventarioService,
     private crmService: CrmService,
     private ventasService: VentasService,
-    private loaderService: LoaderService
+    private loaderService: LoaderService,
+    private subscriptionService: SubscriptionService
   ) {}
 
   ngOnInit() {
@@ -91,6 +98,25 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       this.isAdminRole &&
       localStorage.getItem('showOnboardingBanner') === 'true' &&
       sessionStorage.getItem('onboarding_banner_dismissed') !== 'true';
+
+    if (this.isAdminRole) {
+      this.subscriptionService.loadSubscriptionStatus().subscribe({
+        next: (subscription) => {
+          this.isFreemiumPlan = subscription.plan === 'freemium';
+          this.updateFreeStartCenter();
+        },
+        error: () => { this.isFreemiumPlan = false; }
+      });
+      this.subscriptionService.getUsageStats().subscribe({
+        next: (usage) => {
+          this.freeOrdersUsed = usage.orders.current || 0;
+          this.freeOrdersLimit = usage.orders.limit > 0 ? usage.orders.limit : 15;
+          this.freeUsageLoaded = true;
+          this.updateFreeStartCenter();
+        },
+        error: () => { this.freeUsageLoaded = false; }
+      });
+    }
 
     this.cargarMetricasNegocio();
   }
@@ -172,6 +198,11 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     // Ocultarlo es una decisión de esta sesión, no equivale a completar el
     // onboarding. El acceso reaparece al volver a ingresar hasta finalizarlo.
     sessionStorage.setItem('onboarding_banner_dismissed', 'true');
+  }
+
+  private updateFreeStartCenter(): void {
+    this.showFreeStartCenter = !this.showOnboardingBanner &&
+      this.isFreemiumPlan && this.freeUsageLoaded && this.freeOrdersUsed === 0;
   }
 
   /**

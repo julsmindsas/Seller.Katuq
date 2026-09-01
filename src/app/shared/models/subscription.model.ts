@@ -61,7 +61,7 @@ export interface SubscriptionUsage {
       remaining: number;
     };
   };
-  resetTime: string;
+  resetTime: string | null;
 }
 
 export interface LimitCheckResult {

@@ -1,26 +1,15 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
-import { HttpClient } from '@angular/common/http';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-
-// Factory function required for AOT compilation
-export function HttpLoaderFactory(http: HttpClient) {
-  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
-}
+import { TranslateModule } from '@ngx-translate/core';
 
 @NgModule({
   declarations: [],
   imports: [
     CommonModule,
-    TranslateModule.forRoot({
-      loader: {
-        provide: TranslateLoader,
-        useFactory: HttpLoaderFactory,
-        deps: [HttpClient]
-      },
-      defaultLanguage: 'es'
-    })
+    // El único forRoot vive en AppModule. Crear otro aquí generaba dos
+    // TranslateService y el selector del encabezado no siempre afectaba login
+    // u otros módulos lazy.
+    TranslateModule
   ],
   exports: [TranslateModule]
 })

@@ -477,6 +477,76 @@ h3 {
   letter-spacing: 0.02em;
 }
 
+// Nombre del bloque al pasar el mouse. Solo informa: no captura el clic, que
+// debe caer en la envoltura para elegir el bloque.
+.etiqueta-bloque {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 3;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  background: #5F3FE0;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.envoltura--editable:hover > .etiqueta-bloque {
+  opacity: 1;
+}
+
+// Barra de acciones del bloque elegido: mover, duplicar, ocultar, estilo y
+// quitar sin ir al panel. Va arriba y centrada, como la de los editores de
+// páginas que el comerciante ya conoce.
+.barra-bloque {
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 11px;
+  background: #211F3A;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(33, 31, 58, 0.35);
+  white-space: nowrap;
+
+  &__nombre {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0 0.5rem 0 0.3rem;
+  }
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+  }
+
+  &__peligro:hover {
+    background: #b42318 !important;
+  }
+}
+
 // Vista previa en móvil: se estrecha el lienzo para que los saltos de columna
 // se vean igual que en un celular, sin depender del ancho de la pantalla.
 .sitio--movil {

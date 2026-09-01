@@ -50,6 +50,14 @@
           </p>
         </div>
 
+        <div *ngIf="!promocionAplicada && !promocionNoAplicada" class="free-plan-created">
+          <p class="free-plan-created__title">Tu cuenta Gratis está lista</p>
+          <p class="free-plan-created__text">
+            Puedes operar hasta 15 pedidos sin tarjeta. Cuando necesites más capacidad o funciones avanzadas,
+            podrás activar Premium desde Katuq.
+          </p>
+        </div>
+
         <!-- Credenciales: la contraseña solo llega por correo, hay que decírselo al usuario -->
         <div class="credentials-notice" style="background: #f8f9fa; border-left: 4px solid #9020FF; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
           <p style="margin: 0 0 6px; font-weight: bold; color: #9020FF;">📧 {{ 'Revisa tu correo para ingresar' | translate }}</p>
@@ -166,8 +174,18 @@
       </div>
     </div>
     <!-- Barra de progreso general -->
-    <div *ngIf="!submissionSuccess && currentStep !== 'quickstart-success' && currentStep !== 'welcome'" class="main-progress-container">
-      <div class="progress-steps">
+    <div *ngIf="!submissionSuccess && currentStep !== 'quickstart-success' && currentStep !== 'welcome' && currentStep !== 'video'" class="main-progress-container">
+      <div *ngIf="registrationOnly" class="progress-steps progress-steps--short">
+        <div class="step" [ngClass]="{'active': currentStep === 'registration', 'completed': currentStep === 'summary'}">
+          <span class="step-number">1</span>
+          <span class="step-label">Datos básicos</span>
+        </div>
+        <div class="step" [ngClass]="{'active': currentStep === 'summary'}">
+          <span class="step-number">2</span>
+          <span class="step-label">Crear cuenta</span>
+        </div>
+      </div>
+      <div *ngIf="!registrationOnly" class="progress-steps">
         <div class="step" [ngClass]="{'active': currentStep === 'questionnaire', 'completed': getStepNumber() > 1}">
           <span class="step-number">1</span>
           <span class="step-label">Diagnóstico</span>
@@ -190,67 +208,42 @@
     <!-- Secciones según currentStep -->
     <div *ngIf="!submissionSuccess">
       <!-- Paso 0: Página de Bienvenida/Landing -->
-      <div *ngIf="currentStep === 'welcome'" class="welcome-landing" role="main" aria-label="Bienvenida al diagnóstico">
+      <div *ngIf="currentStep === 'welcome'" class="welcome-landing" role="main" aria-label="Crea tu cuenta en Katuq">
         <div class="welcome-content">
-          <h1 class="welcome-title">🎯 Configura tu Negocio Digital en {{ estimatedTimeMinutes }} Minutos</h1>
-          <p class="welcome-subtitle">Descubre cómo optimizar tu negocio con nuestra plataforma inteligente</p>
+          <p class="welcome-kicker">EMPIEZA SIN RIESGO</p>
+          <h1 class="welcome-title">Crea tu cuenta Gratis y empieza a vender</h1>
+          <p class="welcome-subtitle">Katuq te guía paso a paso. No necesitas saber de sistemas ni configurar todo hoy.</p>
           
-          <!-- Señales sociales -->
-          <div class="social-proof">
-            <div class="social-proof-item">
-              <span class="social-proof-number">{{ totalCompaniesConfigured | number }}</span>
-              <span class="social-proof-label">empresas ya configuradas</span>
-            </div>
-            <div class="social-proof-divider"></div>
-            <div class="social-proof-item">
-              <span class="social-proof-icon">⚡</span>
-              <span class="social-proof-label">Configuración automática</span>
-            </div>
-            <div class="social-proof-divider"></div>
-            <div class="social-proof-item">
-              <span class="social-proof-icon">🔒</span>
-              <span class="social-proof-label">100% seguro</span>
-            </div>
-          </div>
-
-          <!-- Beneficios principales -->
           <div class="benefits-list">
             <div class="benefit-item">
-              <span class="benefit-icon">✅</span>
-              <span class="benefit-text">Diagnóstico personalizado para tu sector</span>
+              <span class="benefit-icon">✓</span>
+              <span class="benefit-text"><strong>Plan Gratis</strong><br>Hasta 15 pedidos para comenzar</span>
             </div>
             <div class="benefit-item">
-              <span class="benefit-icon">✅</span>
-              <span class="benefit-text">Configuración automática de módulos</span>
+              <span class="benefit-icon">✓</span>
+              <span class="benefit-text"><strong>Sin tarjeta</strong><br>Premium solo si decides activarlo</span>
             </div>
             <div class="benefit-item">
-              <span class="benefit-icon">✅</span>
-              <span class="benefit-text">Recomendaciones basadas en IA</span>
+              <span class="benefit-icon">✓</span>
+              <span class="benefit-text"><strong>Ayuda incluida</strong><br>Te acompañamos hasta tu primera venta</span>
             </div>
             <div class="benefit-item">
-              <span class="benefit-icon">✅</span>
-              <span class="benefit-text">Listo para empezar de inmediato</span>
+              <span class="benefit-icon">✓</span>
+              <span class="benefit-text"><strong>Solo 4 datos</strong><br>Completa lo demás cuando estés listo</span>
             </div>
           </div>
 
-          <!-- Testimonial breve -->
-          <div class="testimonial-box">
-            <p class="testimonial-text">"En menos de {{ estimatedTimeMinutes }} minutos tuve mi negocio configurado y funcionando. ¡Increíble!"</p>
-            <p class="testimonial-author">— Cliente satisfecho</p>
-          </div>
-
-          <!-- Tiempo estimado -->
-          <div class="time-estimate">
-            <span class="time-icon">⏱️</span>
-            <span class="time-text">Tiempo estimado: {{ estimatedTimeMinutes }} minutos</span>
-          </div>
-
-          <!-- CTA principal -->
           <div class="welcome-cta">
-            <button class="cta-button primary large" (click)="startDiagnostic()" type="button">
-              🚀 Comenzar Diagnóstico
+            <button class="cta-button primary large" (click)="startFreeRegistration()" type="button">
+              Crear mi cuenta Gratis
             </button>
-            <p class="cta-subtext">Es gratis y solo te tomará unos minutos</p>
+            <button class="cta-button secondary diagnostic-option" (click)="startDiagnostic()" type="button">
+              Personalizar primero con un diagnóstico
+            </button>
+            <button class="video-help-link" (click)="showIntroVideo()" type="button">
+              Ver video de 15 segundos
+            </button>
+            <p class="cta-subtext">El diagnóstico es opcional y puedes hacerlo después.</p>
           </div>
         </div>
       </div>
@@ -413,7 +406,10 @@
         </div>
 
         <h2>{{ 'Información Básica de tu Empresa' | translate }}</h2>
-        <p class="registration-help">Cada dato nos ayuda a personalizar mejor tu experiencia</p>
+        <p class="registration-help" *ngIf="registrationOnly">
+          Solo necesitamos estos 4 datos. Después te guiaremos para completar tu negocio.
+        </p>
+        <p class="registration-help" *ngIf="!registrationOnly">Cada dato nos ayuda a personalizar mejor tu experiencia</p>
         <!-- 🍯 Honeypot anti-bot: oculto para humanos (fuera de pantalla, sin tab ni autocompletar). -->
         <input type="text" formControlName="website" autocomplete="off" tabindex="-1"
                aria-hidden="true"
@@ -517,8 +513,7 @@
           </div>
         </ng-container>
         <div class="navigation-buttons">
-          <button type="button" class="back-button" (click)="backRegistration()"
-            *ngIf="registrationIndex > 0">{{ 'Volver' | translate }}</button>
+          <button type="button" class="back-button" (click)="backRegistration()">{{ 'Volver' | translate }}</button>
           <button type="button" 
                   class="next-button" 
                   (click)="moveNextStep()"
@@ -531,12 +526,16 @@
 
       <!-- Paso 3: Resumen de Respuestas -->
       <div *ngIf="currentStep === 'summary'">
-        <h1>{{ 'Resumen de respuestas' | translate }} ✨</h1>
-        <p class="summary-motivational">¡Estás a un paso de obtener tu configuración personalizada!</p>
-        <div class="summary-container" [innerHTML]="summaryHTML"></div>
+        <h1>{{ registrationOnly ? 'Revisa tus datos' : ('Resumen de respuestas' | translate) }} ✨</h1>
+        <p class="summary-motivational">
+          {{ registrationOnly ? 'Estás a un paso de crear tu cuenta Gratis.' : '¡Estás a un paso de obtener tu configuración personalizada!' }}
+        </p>
+        <div class="summary-container"
+             [class.summary-container--registration-only]="registrationOnly"
+             [innerHTML]="summaryHTML"></div>
         <div class="navigation-buttons">
-          <button class="back-button" (click)="editResponses()">{{ 'Revisar respuestas' | translate }}</button>
-          <button class="next-button" (click)="submitResponses()">{{ 'Confirmar envío' | translate }}</button>
+          <button class="back-button" (click)="editResponses()">{{ registrationOnly ? 'Editar datos' : ('Revisar respuestas' | translate) }}</button>
+          <button class="next-button" (click)="submitResponses()">{{ registrationOnly ? 'Crear mi cuenta Gratis' : ('Confirmar envío' | translate) }}</button>
         </div>
       </div>
     </div>

@@ -1,7 +1,9 @@
 <ngx-loading-bar [color]="'#7366ff'" [includeSpinner]="true" [height]="'4px'"></ngx-loading-bar>
 <!-- <app-loader></app-loader> -->
 
-<app-loader-custom></app-loader-custom>
+<!-- Las rutas públicas deben seguir utilizables aunque una solicitud de la
+     sesión anterior termine tarde después de cerrar sesión. -->
+<app-loader-custom *ngIf="!isPublicRoute"></app-loader-custom>
 
 <app-tap-to-top></app-tap-to-top>
 

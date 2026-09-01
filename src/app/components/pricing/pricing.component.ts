@@ -21,7 +21,7 @@ export class PricingComponent implements OnInit, OnDestroy {
   billingInfo: any = null;
   billingLoading = false;
 
-  tiers = [
+  tiers: any[] = [
     { id: 'freemium', name: 'Freemium', priceUSD: 0, maxSales: '15 pedidos/mes', description: 'Para empezar', icon: 'pi-star', gradient: 'linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%)' },
     { id: 'origen', name: 'Origen', priceUSD: 47, maxSales: 'Hasta $30M COP/mes', description: 'Pequeños negocios', icon: 'pi-home', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
     { id: 'esencia', name: 'Esencia', priceUSD: 77, maxSales: 'Hasta $60M COP/mes', description: 'En crecimiento', icon: 'pi-chart-line', gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', popular: true },
@@ -50,11 +50,13 @@ export class PricingComponent implements OnInit, OnDestroy {
     { text: '1 bodega', enabled: true },
     { text: '5 usuarios', enabled: true },
     { text: '1 integración', enabled: true },
-    { text: 'Chat IA: 10 msg/día', enabled: true },
+    { text: 'Consultas KAI: 10 al día por usuario', enabled: true },
+    { text: 'Productos con IA: 10 al día por usuario', enabled: true },
     { text: 'Dashboard básico', enabled: true },
     { text: 'Producción', enabled: false },
     { text: 'Dropshipping', enabled: false },
     { text: 'IA de Voz', enabled: false },
+    { text: 'IA de Video y constructor de agentes', enabled: false },
   ];
 
   constructor(
@@ -84,6 +86,20 @@ export class PricingComponent implements OnInit, OnDestroy {
     this.http.get(`${environment.urlApi}/v1/billing/info`).subscribe({
       next: (data: any) => {
         this.billingInfo = data;
+        if (Array.isArray(data?.tiers) && data.tiers.length) {
+          const presentation = new Map(this.tiers.map((tier) => [tier.id, tier]));
+          const freeTier = presentation.get('freemium');
+          this.tiers = [
+            freeTier,
+            ...data.tiers.map((tier: any) => ({
+              ...(presentation.get(tier.id) || {}),
+              ...tier,
+              maxSales: tier.custom || !Number.isFinite(tier.maxSalesCOP)
+                ? '+$500M COP/mes'
+                : `Hasta $${tier.maxSalesCOP / 1000000}M COP/mes`
+            }))
+          ].filter(Boolean);
+        }
         this.billingLoading = false;
       },
       error: () => { this.billingLoading = false; }
@@ -99,6 +115,6 @@ export class PricingComponent implements OnInit, OnDestroy {
   }
 
   contactarVentas(): void {
-    window.open('https://wa.me/573001234567?text=Hola, me interesa el plan Cumbre de Katuq', '_blank');
+    window.location.href = 'mailto:soporte@katuq.com?subject=Plan%20Cumbre%20de%20Katuq';
   }
 }

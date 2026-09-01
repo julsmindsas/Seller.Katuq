@@ -106,6 +106,8 @@ const routes: Routes = [
   {
     path: 'video-agent',
     component: BlankComponent,
+    canActivate: [AdminGuard, SubscriptionGuard],
+    data: { requiresPremium: true },
     children: [
       {
         path: '',
@@ -118,6 +120,7 @@ const routes: Routes = [
     path: 'agent-builder',
     component: ContentComponent,
     canActivate: [AdminGuard, SubscriptionGuard],
+    data: { requiresPremium: true },
     children: [
       {
         path: '',

@@ -8,6 +8,21 @@
     </p>
   </div>
 
+  <div class="card border-0 shadow-sm mb-4" *ngIf="currentPlan === 'freemium'" style="border-radius: 12px;">
+    <div class="card-body p-4">
+      <h5 class="fw-bold mb-3" style="color: #0f172a;">Lo que incluye tu plan Gratis</h5>
+      <div class="row">
+        <div class="col-md-6" *ngFor="let feature of freemiumFeatures">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i [class]="feature.enabled ? 'pi pi-check-circle' : 'pi pi-lock'"
+               [style.color]="feature.enabled ? '#27ae60' : '#94a3b8'"></i>
+            <small [style.color]="feature.enabled ? '#334155' : '#64748b'">{{ feature.text }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Tu situación actual -->
   <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border-left: 4px solid #5c6ac4 !important;"
        *ngIf="billingInfo && currentPlan !== 'freemium'">
@@ -37,8 +52,8 @@
   <div class="card border-0 shadow-sm mb-4" *ngIf="currentPlan === 'freemium'"
        style="border-radius: 12px; background: #faf5ff; border: 1px solid #e9d5ff;">
     <div class="card-body p-4 text-center">
-      <h4 class="fw-bold mb-2" style="color: #8b5cf6;">Estas en el plan Freemium</h4>
-      <p class="text-muted mb-3">15 pedidos/mes gratis. Al activar un plan pago, desbloqueas TODO y tu facturacion se ajusta a tus ventas.</p>
+      <h4 class="fw-bold mb-2" style="color: #8b5cf6;">Estás en el plan Gratis</h4>
+      <p class="text-muted mb-3">Tienes 15 pedidos gratis al mes. El plan pago se activa únicamente después de que Wompi apruebe el pago.</p>
       <button pButton label="Activar Plan Pago" icon="pi pi-bolt"
               class="p-button-lg" style="background: #8b5cf6; border-color: #8b5cf6; font-weight: 700;"
               (click)="activarPlan()"></button>
@@ -112,7 +127,7 @@
 
   <!-- FAQ -->
   <div class="text-center mb-3">
-    <h5 class="fw-bold" style="color: #0f172a;">{{ 'Como funciona' | translate }}</h5>
+    <h5 class="fw-bold" style="color: #0f172a;">{{ 'Cómo funciona' | translate }}</h5>
   </div>
   <div class="row g-3 mb-4">
     <div class="col-md-4">
@@ -123,7 +138,7 @@
             <span class="fw-bold" style="color: #5c6ac4;">1</span>
           </div>
           <h6 class="fw-bold">Vendes normalmente</h6>
-          <small class="text-muted">Usa Katuq sin restricciones. Todas las funcionalidades activas.</small>
+          <small class="text-muted">Opera dentro de la capacidad de tu plan. Al activar el plan pago se desbloquean todas las funciones.</small>
         </div>
       </div>
     </div>

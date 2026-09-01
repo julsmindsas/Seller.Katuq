@@ -1953,7 +1953,8 @@
               [negocio]="negocio"
               (textoEditado)="aplicarTextoEditado($event)"
               (elementoMovido)="aplicarElementoMovido($event)"
-              (bloqueSeleccionado)="seleccionarPorId($event)">
+              (bloqueSeleccionado)="seleccionarDesdePrevia($event)"
+              (accionBloque)="accionDesdePrevia($event)">
             </app-sitio-render>
           </div>
         </div>

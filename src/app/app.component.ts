@@ -21,6 +21,7 @@ import { LayoutService } from './shared/services/layout.service';
 import { NgpThemeService } from './shared/services/ngtheme.service';
 import { IdleInterruptService, IdleConfiguration } from './shared/services/idle-interrupt.service';
 import { Subject } from 'rxjs';
+import { DEFAULT_APP_LANGUAGE, normalizeAppLanguage } from './shared/utils/app-language.utils';
 
 @Component({
   selector: 'app-root',
@@ -85,7 +86,11 @@ export class AppComponent implements OnInit, OnDestroy {
     );
 
     if (isPlatformBrowser(this.platformId)) {
-      translate.setDefaultLang('es');
+      const storedUser = this.readStoredUser();
+      const activeLanguage = normalizeAppLanguage(storedUser?.lang);
+      translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
+      translate.use(activeLanguage.code);
+      document.documentElement.lang = activeLanguage.code;
       translate.addLangs(['en', 'de', 'es', 'fr', 'pt', 'cn', 'ae']);
     }
     // Service Worker desactivado (2026-03-25) - duplicaba requests HTTP y degradaba rendimiento
@@ -188,6 +193,15 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.reset();
 
+  }
+
+  private readStoredUser(): any {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
   }
 
   loadNotifications() {
@@ -405,7 +419,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
 }
-
 
 
 

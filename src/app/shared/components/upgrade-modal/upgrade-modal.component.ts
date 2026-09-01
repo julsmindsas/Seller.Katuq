@@ -1,19 +1,26 @@
-import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { SubscriptionService } from '../../services/subscription.service';
 import { environment } from '../../../../environments/environment';
+import { Subject, timer } from 'rxjs';
+import { switchMap, take, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-upgrade-modal',
   templateUrl: './upgrade-modal.component.html',
   styleUrls: ['./upgrade-modal.component.scss']
 })
-export class UpgradeModalComponent implements OnChanges {
+export class UpgradeModalComponent implements OnChanges, OnDestroy {
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
 
   loading = false;
-  step: 'info' | 'card' | 'success' = 'info';
+  step: 'info' | 'card' | 'pending' | 'success' = 'info';
+  pendingMessage = 'Estamos esperando la confirmación segura de Wompi.';
+  readonly isLocalEnvironment = !environment.production;
+  readonly localTestAmountCOP = environment.wompi.subscriptionTestAmountCOP || 1500;
+  private destroy$ = new Subject<void>();
+  private stopPaymentPolling$ = new Subject<void>();
 
   // Wompi acceptance tokens
   acceptanceToken: string | null = null;
@@ -36,11 +43,24 @@ export class UpgradeModalComponent implements OnChanges {
     private subscriptionService: SubscriptionService
   ) {}
 
+  get paymentButtonLabel(): string {
+    return this.isLocalEnvironment
+      ? `Pagar $${this.localTestAmountCOP.toLocaleString('es-CO')} COP`
+      : 'Pagar y activar';
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible'] && changes['visible'].currentValue === true) {
       this.step = 'info';
       this.resetForm();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.stopPaymentPolling$.next();
+    this.stopPaymentPolling$.complete();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   // Paso 1: Usuario acepta y va a registrar tarjeta
@@ -132,12 +152,15 @@ export class UpgradeModalComponent implements OnChanges {
         throw new Error(sourceResp?.error || 'Error al registrar medio de pago');
       }
 
-      // 2c. Activar plan pago
-      await this.subscriptionService.upgradePlan('premium' as any).toPromise();
-      this.subscriptionService.loadSubscriptionStatus().subscribe();
+      // El backend realiza el primer cobro. El plan permanece Gratis hasta que
+      // el webhook de Wompi confirme que la transacción fue aprobada.
+      if (!sourceResp.subscriptionId) {
+        throw new Error('No recibimos el identificador para verificar el pago');
+      }
 
-      this.step = 'success';
+      this.step = 'pending';
       this.loading = false;
+      this.waitForPaymentConfirmation(sourceResp.subscriptionId);
 
     } catch (err: any) {
       this.loading = false;
@@ -166,18 +189,37 @@ export class UpgradeModalComponent implements OnChanges {
     return true;
   }
 
-  skipCard(): void {
-    // Activar plan sin tarjeta — recibirá links de pago por email
-    this.loading = true;
-    this.subscriptionService.upgradePlan('premium' as any).subscribe({
-      next: () => {
-        this.subscriptionService.loadSubscriptionStatus().subscribe();
-        this.step = 'success';
-        this.loading = false;
+  private waitForPaymentConfirmation(subscriptionId: string): void {
+    this.stopPaymentPolling$.next();
+    this.pendingMessage = 'Estamos esperando la confirmación segura de Wompi.';
+
+    timer(0, 1500).pipe(
+      take(20),
+      takeUntil(this.stopPaymentPolling$),
+      takeUntil(this.destroy$),
+      switchMap(() => this.subscriptionService.getPaymentStatus(subscriptionId))
+    ).subscribe({
+      next: (status) => {
+        if (status.activated) {
+          this.stopPaymentPolling$.next();
+          this.subscriptionService.refresh();
+          this.step = 'success';
+          return;
+        }
+
+        if (['failed', 'declined', 'error', 'voided'].includes(String(status.paymentStatus).toLowerCase())) {
+          this.stopPaymentPolling$.next();
+          this.cardError = 'Wompi no aprobó el pago. Revisa la tarjeta o intenta con otra.';
+          this.step = 'card';
+        }
       },
       error: () => {
-        this.loading = false;
-        this.cardError = 'Error al activar plan';
+        this.pendingMessage = 'El pago sigue en verificación. Puedes cerrar esta ventana; activaremos Premium cuando Wompi lo confirme.';
+      },
+      complete: () => {
+        if (this.step === 'pending') {
+          this.pendingMessage = 'El pago sigue en verificación. Puedes continuar usando Gratis; Premium se activará al recibir la confirmación.';
+        }
       }
     });
   }
@@ -189,11 +231,13 @@ export class UpgradeModalComponent implements OnChanges {
     this.cardCvc = '';
     this.cardHolder = '';
     this.cardError = '';
+    this.pendingMessage = 'Estamos esperando la confirmación segura de Wompi.';
     this.acceptedPolicy = false;
     this.acceptedPersonalData = false;
   }
 
   closeModal(): void {
+    this.stopPaymentPolling$.next();
     this.visible = false;
     this.visibleChange.emit(false);
   }

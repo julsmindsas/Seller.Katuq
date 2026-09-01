@@ -132,7 +132,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     summaryHTML: string = "";
     submissionSuccess: boolean = false;
     welcomeMessage: string = "";
-    currentStep: 'welcome' | 'video' | 'questionnaire' | 'contextual' | 'introduction' | 'registration' | 'summary' | 'quickstart-success' = 'video';
+    currentStep: 'welcome' | 'video' | 'questionnaire' | 'contextual' | 'introduction' | 'registration' | 'summary' | 'quickstart-success' = 'welcome';
+    registrationOnly: boolean = false;
     
     // Variables para Quick Start
     quickStartInProgress: boolean = false;
@@ -221,8 +222,11 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         this.subscriptions.forEach(sub => sub.unsubscribe());
         this.subscriptions = [];
 
-        // Guardar progreso final antes de destruir
-        this.saveProgress();
+        // Un registro ya enviado no debe reaparecer como una pantalla de éxito
+        // vacía cuando otra persona use este navegador.
+        if (this.currentStep !== 'quickstart-success' && !this.submissionSuccess) {
+            this.saveProgress();
+        }
 
         // Limpiar timeout de autoguardado
         if (this.autoSaveTimeout) {
@@ -244,6 +248,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 currentQuestionIndex: this.currentQuestionIndex,
                 currentContextualIndex: this.currentContextualIndex,
                 registrationIndex: this.registrationIndex,
+                registrationOnly: this.registrationOnly,
                 timestamp: new Date().toISOString()
             };
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(progress));
@@ -258,9 +263,10 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     private loadProgress(): void {
         try {
             const saved = localStorage.getItem(this.STORAGE_KEY);
-            // Si no hay progreso guardado, asegurarse de empezar en video
+            // El registro Gratis es la entrada principal. El video y el
+            // diagnóstico quedan disponibles como ayuda opcional.
             if (!saved) {
-                this.currentStep = 'video';
+                this.currentStep = 'welcome';
                 return;
             }
 
@@ -295,13 +301,13 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 if (progress.registrationIndex !== undefined) {
                     this.registrationIndex = progress.registrationIndex;
                 }
+                this.registrationOnly = progress.registrationOnly === true;
 
                 // Restaurar paso actual (con validación)
                 if (progress.currentStep && this.isValidStep(progress.currentStep)) {
-                    // Si estaba en video o welcome, no restaurar (siempre mostrar video en nueva sesión)
-                    if (progress.currentStep !== 'video' && progress.currentStep !== 'welcome') {
-                        this.currentStep = progress.currentStep;
-                    }
+                    this.currentStep = ['video', 'welcome', 'quickstart-success'].includes(progress.currentStep)
+                        ? 'welcome'
+                        : progress.currentStep;
                 }
 
                 // Si había preguntas contextuales, cargarlas
@@ -517,18 +523,22 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
 
     confirmFinish() {
         let summary = '<div style="text-align: left;" class="survey-summary">';
-        summary += `<p>${this.surveyData.formDescription}</p>`;
-        summary += '<p>A continuación, se muestra el resumen de tus respuestas:</p>';
-        this.surveyData.sections.forEach(section => {
-            summary += `<h3 style="margin: 10px 0 5px; color: #00FFCC ; font-size: 1.5em;">${section.sectionTitle}</h3>`;
-            section.questions.forEach(q => {
-                summary += `<p style="margin: 0 0 10px;"><strong>${q.question}</strong><br><em>${this.responses[q.id] || 'Sin respuesta'}</em></p>`;
+        if (this.registrationOnly) {
+            summary += '<p><strong>Empezarás en el plan Gratis:</strong> sin tarjeta y con hasta 15 pedidos. Podrás activar Premium cuando realmente lo necesites.</p>';
+        } else {
+            summary += `<p>${this.surveyData.formDescription}</p>`;
+            summary += '<p>A continuación, se muestra el resumen de tus respuestas:</p>';
+            this.surveyData.sections.forEach(section => {
+                summary += `<h3 style="margin: 10px 0 5px; color: #00FFCC ; font-size: 1.5em;">${section.sectionTitle}</h3>`;
+                section.questions.forEach(q => {
+                    summary += `<p style="margin: 0 0 10px;"><strong>${q.question}</strong><br><em>${this.escapeHtml(this.responses[q.id] || 'Sin respuesta')}</em></p>`;
+                });
             });
-        });
+        }
         summary += `<h3 style="margin: 20px 0 10px; color: #9020FF; font-size: 1.5em;">Información de Empresa</h3>`;
         this.registrationQuestions.forEach(item => {
             const value = this.mainForm.get('registration.' + item.formControl)?.value;
-            summary += `<p style="margin: 0 0 10px;"><strong>${item.question}</strong><br><em>${value ? value : 'Sin respuesta'}</em></p>`;
+            summary += `<p style="margin: 0 0 10px;"><strong>${item.question}</strong><br><em>${this.escapeHtml(value || 'Sin respuesta')}</em></p>`;
         });
         summary += '</div>';
         this.summaryHTML = summary;
@@ -536,7 +546,19 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     }
 
     editResponses() {
-        this.currentStep = 'questionnaire';
+        this.currentStep = this.registrationOnly ? 'registration' : 'questionnaire';
+        if (this.registrationOnly) {
+            this.registrationIndex = 0;
+        }
+    }
+
+    private escapeHtml(value: string): string {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     // Agrega este método en la clase para hacer trim a los valores del grupo "registration"
@@ -559,7 +581,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             section.questions.filter(q => !this.responses[q.id])
         );
         
-        if (unansweredQuestions.length > 0) {
+        if (!this.registrationOnly && unansweredQuestions.length > 0) {
             alert(`Por favor, responde todas las preguntas antes de continuar. Faltan ${unansweredQuestions.length} pregunta(s).`);
             this.currentStep = 'questionnaire';
             // Ir a la primera pregunta sin respuesta
@@ -620,7 +642,10 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         this.subscriptions.push(statusSubscription);
 
         // Preparar datos para Quick Start (incluir respuestas contextuales)
-        const allResponses = { ...this.responses, ...this.contextualResponses };
+        const capturedResponses = { ...this.responses, ...this.contextualResponses };
+        const allResponses = Object.keys(capturedResponses).length > 0
+            ? capturedResponses
+            : { q1: 'No especificado' };
         const diagnosticData: DiagnosticResponse = {
             responses: allResponses,
             registration: registrationData,
@@ -633,7 +658,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                     'gestionar_pedidos',
                     'usar_pos'
                 ],
-                sector: this.responses.q1 || 'Retail - Comercial',
+                sector: allResponses.q1 || 'No especificado',
                 complejidad: 'basica',
                 canales: ['POS']
             },
@@ -819,8 +844,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         if (this.registrationIndex > 0) {
             this.registrationIndex--;
         } else {
-            // Si estamos en la primera pregunta de registro, regresar al cuestionario
-            this.currentStep = 'questionnaire';
+            this.currentStep = this.registrationOnly ? 'welcome' : 'questionnaire';
         }
     }
 
@@ -899,8 +923,28 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
      * Método para iniciar el diagnóstico desde la página de bienvenida
      */
     startDiagnostic(): void {
+        this.registrationOnly = false;
         this.currentStep = 'questionnaire';
         this.debouncedSave();
+    }
+
+    /**
+     * Inicia el camino corto: cuatro datos, plan Gratis y sin diagnóstico forzado.
+     */
+    startFreeRegistration(): void {
+        this.registrationOnly = true;
+        this.responses = {};
+        this.contextualResponses = {};
+        this.contextualQuestions = [];
+        this.registrationIndex = 0;
+        this.currentStep = 'registration';
+        this.debouncedSave();
+    }
+
+    showIntroVideo(): void {
+        this.videoPlaying = true;
+        this.videoEnded = false;
+        this.currentStep = 'video';
     }
 
     /**

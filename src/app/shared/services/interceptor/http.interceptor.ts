@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import {
   HttpRequest,
   HttpHandler,
@@ -7,9 +7,7 @@ import {
 } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Router } from '@angular/router';
 import { AuthService } from '../firebase/auth.service';
-import { ServiciosService } from '../servicios.service';
 import { ToastrService } from 'ngx-toastr';
 import * as Sentry from '@sentry/angular';
 
@@ -21,9 +19,7 @@ export class HttpInterceptor2 implements HttpInterceptor {
   private static readonly CONNECTION_ERROR_THROTTLE_MS = 30000;
 
   constructor(
-    private service: ServiciosService,
-    private authService: AuthService,
-    private router: Router,
+    private injector: Injector,
     private toastr: ToastrService
   ) {}
 
@@ -155,7 +151,12 @@ export class HttpInterceptor2 implements HttpInterceptor {
     // Un instante para que el mensaje se alcance a leer antes del salto.
     setTimeout(() => {
       try {
-        this.authService.SignOut();
+        // AuthService usa ServiciosService y este, a su vez, usa HttpClient.
+        // Resolverlo al construir el interceptor crea el ciclo:
+        // HttpClient -> HTTP_INTERCEPTORS -> AuthService -> HttpClient.
+        // La resolución perezosa solo ocurre cuando de verdad hay que cerrar
+        // una sesión inválida y mantiene disponibles las rutas públicas.
+        this.injector.get(AuthService).SignOut();
       } finally {
         HttpInterceptor2.cerrandoSesion = false;
       }

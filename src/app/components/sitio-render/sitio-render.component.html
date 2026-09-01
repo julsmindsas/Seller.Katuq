@@ -13,6 +13,37 @@
 
       <span class="etiqueta-oculto" *ngIf="previsualizacion && bloque.visible === false">Oculto</span>
 
+      <!-- Editar señalando: el nombre aparece al pasar el mouse, y al elegir el
+           bloque sale su barra de acciones — sin ir a buscarlo al panel. -->
+      <span class="etiqueta-bloque" *ngIf="previsualizacion && bloque.id !== bloqueActivo">
+        {{ nombreDeBloque(bloque.tipo) }}
+      </span>
+      <div class="barra-bloque" *ngIf="previsualizacion && bloque.id === bloqueActivo"
+           (click)="$event.stopPropagation()">
+        <span class="barra-bloque__nombre">{{ nombreDeBloque(bloque.tipo) }}</span>
+        <button type="button" title="Subir" (click)="accionar(bloque.id, 'subir', $event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+        <button type="button" title="Bajar" (click)="accionar(bloque.id, 'bajar', $event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </button>
+        <button type="button" title="Duplicar" (click)="accionar(bloque.id, 'duplicar', $event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        </button>
+        <button type="button" [title]="bloque.visible === false ? 'Mostrar' : 'Ocultar'"
+                (click)="accionar(bloque.id, 'visibilidad', $event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>
+        </button>
+        <button type="button" title="Fondo y estilo de esta sección"
+                (click)="accionar(bloque.id, 'estilo', $event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-.6-.2-1-.6-1.4-.4-.4-.6-.9-.6-1.4 0-1.1.9-2 2-2h2.4A4.8 4.8 0 0 0 21 10.5C20.7 6.3 16.8 3 12 3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="15" cy="7.5" r="1"/></svg>
+        </button>
+        <button type="button" class="barra-bloque__peligro" title="Quitar de la página"
+                (click)="accionar(bloque.id, 'eliminar', $event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+        </button>
+      </div>
+
       <ng-container [ngSwitch]="bloque.tipo">
 
         <!-- Encabezado. El logo y el nombre no se guardan en el bloque: salen

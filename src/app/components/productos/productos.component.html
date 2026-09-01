@@ -1,6 +1,13 @@
 <!--<app-breadcrumb [title]="'Productos'" [items]="['Maestros']" [active_item]="'Productos'"></app-breadcrumb>-->
 
 <div class="container-fluid">
+    <div class="alert alert-info d-flex align-items-center justify-content-between gap-3 mb-3"
+         *ngIf="onboardingReturnUrl" role="status">
+        <span><i class="pi pi-arrow-circle-left me-2"></i>Estás cargando tus productos para completar la configuración inicial.</span>
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="returnToOnboarding()">
+            Volver a la configuración
+        </button>
+    </div>
     <div class="row">
         <div class="col-sm-12">
             <div class="card shadow-sm border-0 mb-4">

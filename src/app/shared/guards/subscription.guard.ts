@@ -28,29 +28,15 @@ export class SubscriptionGuard implements CanActivate {
       return of(true); // No requiere premium, permitir acceso
     }
 
-    // Verificar plan
-    return this.subscriptionService.subscription$.pipe(
-      take(1), // Solo tomar el primer valor para evitar múltiples emisiones
+    // Consultar el backend antes de abrir una ruta Premium. Un valor ausente o
+    // un error técnico nunca debe convertirse en acceso concedido.
+    return this.subscriptionService.loadSubscriptionStatus().pipe(
+      take(1),
       map(subscription => {
-        if (!subscription) {
-          // Si no hay info de suscripción, intentar cargar
-          console.warn('[SubscriptionGuard] No subscription info available');
-          // Cargar y permitir por ahora (mejor UX que bloquear por error técnico)
-          this.subscriptionService.loadSubscriptionStatus().subscribe();
+        if (subscription.plan === 'premium') {
           return true;
         }
 
-        if (subscription.plan === 'premium') {
-          return true; // Es premium, permitir
-        }
-
-        // Es freemium intentando acceder a feature premium
-        console.warn(`[SubscriptionGuard] Freemium user attempting to access premium route: ${route.routeConfig?.path}`);
-
-        // Mostrar alerta
-        alert('Esta funcionalidad requiere el plan Premium. Serás redirigido a la página de planes.');
-
-        // Redirigir a pricing
         this.router.navigate(['/pricing'], {
           queryParams: {
             from: route.routeConfig?.path,
@@ -60,10 +46,14 @@ export class SubscriptionGuard implements CanActivate {
 
         return false;
       }),
-      catchError(error => {
-        console.error('[SubscriptionGuard] Error checking subscription:', error);
-        // En caso de error, permitir acceso (no bloquear por error técnico)
-        return of(true);
+      catchError(() => {
+        this.router.navigate(['/pricing'], {
+          queryParams: {
+            from: route.routeConfig?.path,
+            reason: 'subscription_verification_failed'
+          }
+        });
+        return of(false);
       })
     );
   }

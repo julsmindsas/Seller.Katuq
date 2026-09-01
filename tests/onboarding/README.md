@@ -10,6 +10,8 @@ Ejecutar desde la raiz de `Seller.Katuq`:
 node tests/onboarding/onboarding-v2-utils.test.js
 node tests/onboarding/onboarding-service-contract.test.js
 node tests/onboarding/change-password-routing.contract.test.js
+node tests/onboarding/onboarding-routing.contract.test.js
+node tests/onboarding/spanish-default.test.js
 ```
 
 El segundo runner carga el servicio Angular con un cliente HTTP falso y verifica

@@ -66,6 +66,15 @@ export class UsageWidgetComponent implements OnInit, OnDestroy {
     return Math.min(100, (this.usage.orders.current / this.usage.orders.limit) * 100);
   }
 
+  getOrdersLimitMessage(): string {
+    if (!this.usage) return '';
+    const remaining = Math.max(0, this.usage.orders.limit - this.usage.orders.current);
+    if (remaining === 0) {
+      return 'Llegaste al límite mensual. Puedes esperar al reinicio o desbloquear Premium.';
+    }
+    return `Te quedan ${remaining} pedidos Gratis este mes.`;
+  }
+
   getChatPercentage(): number {
     if (!this.usage || this.usage.ai.chat.limit === -1) return 0;
     return Math.min(100, (this.usage.ai.chat.used / this.usage.ai.chat.limit) * 100);

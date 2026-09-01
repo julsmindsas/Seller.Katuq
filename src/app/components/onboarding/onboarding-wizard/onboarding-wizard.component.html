@@ -125,7 +125,7 @@
               </div>
             </fieldset>
 
-            <fieldset class="question-block" *ngIf="offering !== 'services' && offering !== 'unknown'">
+            <fieldset class="question-block" *ngIf="offering && offering !== 'services' && offering !== 'unknown'">
               <legend>¿Quieres llevar la cuenta de cuántas unidades te quedan?</legend>
               <p>Puedes responder “Ahora no” y activarlo más adelante.</p>
               <div class="segmented-grid segmented-grid--two">
@@ -164,7 +164,19 @@
           <ng-container *ngSwitchCase="'product'">
             <div class="success-panel" *ngIf="readiness?.product_ready">
               <i class="pi pi-check-circle" aria-hidden="true"></i>
-              <div><strong>Ya encontramos algo listo para vender</strong><p>No necesitas crearlo otra vez. Puedes continuar con el cobro.</p></div>
+              <div>
+                <strong>Ya encontramos algo listo para vender</strong>
+                <p *ngIf="!needsImportedInventory">No necesitas crearlo otra vez. Puedes continuar con el cobro.</p>
+                <p *ngIf="needsImportedInventory">Ahora carga cuántas unidades tienes para que la primera venta no deje existencias incorrectas.</p>
+              </div>
+            </div>
+
+            <div class="import-panel" *ngIf="needsImportedInventory">
+              <span class="large-icon" aria-hidden="true"><i class="pi pi-box"></i></span>
+              <div><strong>Faltan las existencias iniciales</strong><p>Usa la plantilla de inventario; solo se actualizarán cantidades de productos existentes.</p></div>
+              <button type="button" class="btn-primary" (click)="openInventoryImporter()">
+                <i class="pi pi-external-link" aria-hidden="true"></i> Cargar existencias
+              </button>
             </div>
 
             <ng-container *ngIf="!readiness?.product_ready && isImportRoute">
@@ -224,7 +236,7 @@
           </ng-container>
 
           <ng-container *ngSwitchCase="'payment'">
-            <p class="step-intro">Elige al menos una. Esto solo registra cómo te pagaron; no conecta ni mueve dinero.</p>
+            <p class="step-intro">Confirma una forma que ya usas o agrega otra. Esto solo registra cómo te pagaron; no conecta ni mueve dinero.</p>
             <div class="notice notice--warning" *ngIf="paymentNeedsManualActivation" role="alert">
               <i class="pi pi-info-circle" aria-hidden="true"></i>
               <span>Encontramos una forma de cobro desactivada con ese nombre.
@@ -286,6 +298,14 @@
                   <strong>{{ row.ready ? 'Listo' : 'Pendiente' }}</strong>
                 </li>
               </ul>
+
+              <div class="free-plan-note" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell">
+                <div>
+                  <span>Empiezas en el plan Gratis</span>
+                  <strong>15 pedidos al mes, sin tarjeta y con tus datos siempre disponibles.</strong>
+                </div>
+                <a routerLink="/pricing">Conocer Premium</a>
+              </div>
 
               <button *ngIf="!isCheckingReadiness && !readiness?.ready_to_sell" type="button" class="btn-ghost verify-button" (click)="retryReadiness()">
                 <i class="pi pi-refresh" aria-hidden="true"></i> Verificar de nuevo

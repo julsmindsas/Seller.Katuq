@@ -20,6 +20,7 @@ import { Subject } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
 import { EMPTY, of } from 'rxjs';
 import { parse as flatedParse } from 'flatted';
+import { LoaderService } from '../../shared/services/loader.service';
 
 const FILTROS_SESSION_KEY = 'productos_filtros';
 
@@ -204,6 +205,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   // Import modal
   showImportModal: boolean = false;
+  onboardingReturnUrl = '';
+  private onboardingLoaderSuppressed = false;
 
   // Export dialog
   showExportDialog = false;
@@ -432,7 +435,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
     private proveedoresService: ProveedoresService,
     private fulfillmentService: FulfillmentService,
     private toastr: ToastrService,
-    private integrationsService: IntegrationsService
+    private integrationsService: IntegrationsService,
+    private loaderService: LoaderService
   ) { }
 
   ngOnInit(): void {
@@ -447,6 +451,16 @@ export class ProductosComponent implements OnInit, OnDestroy {
     const pidenImportador =
       this.route.snapshot.queryParamMap.get('onboardingImport') === 'products' ||
       this.route.snapshot.queryParamMap.get('abrirImportador') === 'productos';
+
+    // Si la importación nació en el onboarding, conservar el regreso guiado y
+    // evitar que el loader global tape el modal de importación.
+    const requestedReturn = this.route.snapshot.queryParamMap.get('onboardingReturn');
+    this.onboardingReturnUrl = requestedReturn === '/onboarding' ? requestedReturn : '';
+    if (this.onboardingReturnUrl) {
+      this.loaderService.suppressGlobalLoader();
+      this.onboardingLoaderSuppressed = true;
+    }
+
     if (pidenImportador) {
       this.showImportModal = true;
       this.router.navigate([], {
@@ -566,6 +580,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.onboardingLoaderSuppressed) this.loaderService.releaseGlobalLoader();
   }
 
   // ---- Persistencia de filtros en sesión ----
@@ -1763,16 +1778,22 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.importModal.downloadTemplate();
   }
 
-  onImportComplete(result: ImportResult): void {
+  async onImportComplete(result: ImportResult): Promise<void> {
     this.showImportModal = false;
     if (result.success > 0) {
-      Swal.fire({
+      const dialog = await Swal.fire({
         title: 'Importación Exitosa',
         text: `${result.success} productos importados correctamente`,
-        icon: 'success'
+        icon: 'success',
+        showCancelButton: !!this.onboardingReturnUrl,
+        confirmButtonText: this.onboardingReturnUrl ? 'Volver a la configuración' : 'Entendido',
+        cancelButtonText: 'Seguir en productos'
       });
       // Recargar lista de productos
       this.cargarDatos();
+      if (dialog.isConfirmed && this.onboardingReturnUrl) {
+        await this.returnToOnboarding();
+      }
     }
     if (result.failed > 0) {
       Swal.fire({
@@ -1781,6 +1802,11 @@ export class ProductosComponent implements OnInit, OnDestroy {
         icon: 'warning'
       });
     }
+  }
+
+  async returnToOnboarding(): Promise<void> {
+    if (!this.onboardingReturnUrl) return;
+    await this.router.navigate([this.onboardingReturnUrl]);
   }
 
   // ============== MÉTODOS DE FULFILLMENT ==============

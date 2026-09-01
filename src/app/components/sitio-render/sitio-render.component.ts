@@ -232,6 +232,16 @@ export class SitioRenderComponent implements OnChanges {
     w: number;
   }>();
 
+  /**
+   * Un botón de la barra flotante del bloque elegido. El render no toca su
+   * modelo: avisa y el editor ejecuta la operación (mover, duplicar, ocultar,
+   * quitar, abrir el estilo), que así entra al historial de deshacer.
+   */
+  @Output() accionBloque = new EventEmitter<{
+    bloqueId: string;
+    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar";
+  }>();
+
   nombre = "";
   telefono = "";
   email = "";
@@ -619,6 +629,54 @@ export class SitioRenderComponent implements OnChanges {
 
   seleccionar(bloqueId: string): void {
     if (this.previsualizacion) this.bloqueSeleccionado.emit(bloqueId);
+  }
+
+  accionar(
+    bloqueId: string,
+    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar",
+    evento: Event
+  ): void {
+    // Sin esto el clic también "elige" el bloque y, al quitar, la selección
+    // apuntaría a un bloque que ya no existe.
+    evento.stopPropagation();
+    this.accionBloque.emit({ bloqueId, accion });
+  }
+
+  /**
+   * Nombre entendible para la etiqueta al pasar el mouse y la barra flotante.
+   * Solo se ve en el editor; la página publicada no imprime nombres de bloque.
+   */
+  private static readonly NOMBRES_BLOQUE: { [tipo: string]: string } = {
+    encabezado: "Encabezado",
+    anuncio: "Barra de anuncio",
+    hero: "Portada",
+    texto: "Texto",
+    galeria: "Galería",
+    seccion: "Sección libre",
+    columnas: "Columnas",
+    imagen: "Imagen",
+    botones: "Botones",
+    separador: "Separador",
+    productos: "Productos elegidos",
+    whatsapp: "Botón de WhatsApp",
+    formulario: "Formulario de contacto",
+    faq: "Preguntas frecuentes",
+    catalogo: "Catálogo completo",
+    categorias: "Categorías",
+    promo: "Promoción",
+    destacado: "Producto destacado",
+    contador: "Cuenta regresiva",
+    suscripcion: "Suscripción",
+    marcas: "Marcas",
+    instagram: "Instagram",
+    video: "Video",
+    resenas: "Reseñas",
+    ubicacion: "Ubicación",
+    footer: "Pie de página",
+  };
+
+  nombreDeBloque(tipo: string): string {
+    return SitioRenderComponent.NOMBRES_BLOQUE[tipo] || "Sección";
   }
 
   enviarLead(): void {

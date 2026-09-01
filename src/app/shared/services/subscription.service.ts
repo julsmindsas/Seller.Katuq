@@ -78,34 +78,36 @@ export class SubscriptionService {
         // Calcular remaining
         return {
           orders: {
-            current: usage.orders.current || 0,
+            current: usage.orders.current ?? 0,
             limit: usage.orders.limit,
-            remaining: usage.orders.limit === -1 ? -1 : (usage.orders.limit - (usage.orders.current || 0)),
+            remaining: usage.orders.limit === -1
+              ? -1
+              : Math.max(0, usage.orders.limit - (usage.orders.current ?? 0)),
             resetDate: usage.orders.resetDate
           },
           ai: {
             chat: {
-              used: usage.ai.chat?.used || 0,
-              limit: usage.ai.chat?.limit || 10,
-              remaining: usage.ai.chat?.remaining || 10
+              used: usage.ai.chat?.used ?? 0,
+              limit: usage.ai.chat?.limit ?? 10,
+              remaining: usage.ai.chat?.remaining ?? 10
             },
             products: {
-              used: usage.ai.products?.used || 0,
-              limit: usage.ai.products?.limit || 10,
-              remaining: usage.ai.products?.remaining || 10
+              used: usage.ai.products?.used ?? 0,
+              limit: usage.ai.products?.limit ?? 10,
+              remaining: usage.ai.products?.remaining ?? 10
             },
             voice: {
-              used: usage.ai.voice?.used || 0,
-              limit: usage.ai.voice?.limit || 0,
-              remaining: usage.ai.voice?.remaining || 0
+              used: usage.ai.voice?.used ?? 0,
+              limit: usage.ai.voice?.limit ?? 0,
+              remaining: usage.ai.voice?.remaining ?? 0
             },
             video: {
-              used: usage.ai.video?.used || 0,
-              limit: usage.ai.video?.limit || 0,
-              remaining: usage.ai.video?.remaining || 0
+              used: usage.ai.video?.used ?? 0,
+              limit: usage.ai.video?.limit ?? 0,
+              remaining: usage.ai.video?.remaining ?? 0
             }
           },
-          resetTime: usage.resetTime || 'mañana'
+          resetTime: usage.resetTime ?? null
         };
       }),
       tap(usage => {
@@ -131,12 +133,12 @@ export class SubscriptionService {
    */
   canUseFeature(feature: string): boolean {
     const subscription = this.subscriptionSubject.value;
-    if (!subscription) return true; // Por defecto permitir
+    if (!subscription) return false;
 
     if (subscription.plan === 'premium') return true;
 
     // Freemium permite 1 integración (validada en backend), bloquea producción y dropshipping
-    const blockedFeatures = ['production', 'dropshipping'];
+    const blockedFeatures = ['production', 'dropshipping', 'agent-builder', 'live-audio', 'video-agent'];
     return !blockedFeatures.includes(feature);
   }
 
@@ -219,6 +221,19 @@ export class SubscriptionService {
           this.getUsageStats().subscribe();
         }
       })
+    );
+  }
+
+  /** Consultar el primer pago mientras el webhook confirma la activación. */
+  getPaymentStatus(subscriptionId: string): Observable<{
+    success: boolean;
+    status: string;
+    paymentStatus: string;
+    activated: boolean;
+    plan: 'freemium' | 'premium';
+  }> {
+    return this.http.get<any>(
+      `${this.baseUrl}/payment-status/${encodeURIComponent(subscriptionId)}`
     );
   }
 

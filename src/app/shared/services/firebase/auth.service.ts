@@ -10,6 +10,8 @@ import { OnboardingService } from "../../../components/onboarding/services/onboa
 import { BehaviorSubject } from 'rxjs';
 import { syncSentryUserContext } from "../errores/sentry-context";
 import { clearOnboardingStorage } from "../../../components/onboarding/utils/onboarding-v2.utils";
+import { LoaderService } from "../loader.service";
+import { AppLanguage, DEFAULT_APP_LANGUAGE, normalizeAppLanguage } from "../../utils/app-language.utils";
 
 export interface User {
   uid: string;
@@ -36,7 +38,8 @@ export class AuthService implements OnInit {
     private translate: TranslateService,
     private navServices: NavService,
     private initializationService: InitializationService,
-    private onboardingService: OnboardingService
+    private onboardingService: OnboardingService,
+    private loaderService: LoaderService
   ) { }
 
   ngOnInit(): void { }
@@ -79,9 +82,10 @@ export class AuthService implements OnInit {
       this.SetUserData(result.token);
       this.setMenu(result.menu);
 
-      if (result.lang) {
-        this.setLanguage(result.lang);
-      }
+      // Usuarios legacy pueden traer `lang: "es"`; los nuevos pueden traer el
+      // objeto completo. Si no hay preferencia, cada login empieza en español
+      // y nunca hereda el idioma de la sesión anterior.
+      result.lang = this.setLanguage(result.lang);
 
       localStorage.setItem("user", JSON.stringify(result));
       localStorage.setItem("loginTime", new Date().toISOString());
@@ -206,9 +210,12 @@ export class AuthService implements OnInit {
     });
   }
 
-  private setLanguage(lang: any): void {
-    this.translate.setDefaultLang(lang.code);
-    this.translate.use(lang.code);
+  private setLanguage(lang: unknown): AppLanguage {
+    const activeLanguage = normalizeAppLanguage(lang);
+    this.translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
+    this.translate.use(activeLanguage.code);
+    document.documentElement.lang = activeLanguage.code;
+    return activeLanguage;
   }
 
   ForgotPassword(passwordResetEmail: string): Promise<any> {
@@ -243,6 +250,8 @@ export class AuthService implements OnInit {
 
   SignOut(): void {
     this.showLoader = false;
+    this.loaderService.reset();
+    this.setLanguage(DEFAULT_APP_LANGUAGE);
 
     // Resetear servicios de inicialización
     this.initializationService.resetInitialization();

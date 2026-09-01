@@ -4,7 +4,29 @@
 
   &.premium-widget {
     border: 2px solid gold;
-    background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+    background: #fffdf5;
+  }
+}
+
+.limit-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: -0.25rem 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid #f4d58d;
+  border-left: 3px solid #e6a700;
+  border-radius: 6px;
+  color: #6f4f00;
+  background: #fffaf0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+
+  &--full {
+    border-color: #f0b9be;
+    border-left-color: #dc3545;
+    color: #842029;
+    background: #fff5f5;
   }
 }
 

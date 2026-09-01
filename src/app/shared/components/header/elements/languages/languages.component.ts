@@ -5,6 +5,12 @@ import { TranslateService } from '@ngx-translate/core';
 import { NavService, Menu } from '../../../../services/nav.service';
 import { UserLogged } from '../../../../../shared/models/User/UserLogged';
 import { MaestroService } from '../../../../services/maestros/maestro.service';
+import {
+  APP_LANGUAGES,
+  AppLanguage,
+  DEFAULT_APP_LANGUAGE,
+  normalizeAppLanguage
+} from '../../../../utils/app-language.utils';
 
 @Component({
   selector: 'app-languages',
@@ -16,36 +22,9 @@ export class LanguagesComponent implements OnInit, OnDestroy {
 
   public language: boolean = false;
 
-  public languages: any[] = [{
-    language: 'English',
-    code: 'en',
-    type: 'US',
-    icon: 'us'
-  },
-  {
-    language: 'Español',
-    code: 'es',
-    type: 'CO',
-    icon: 'co'
-  },
-  // {
-  //   language: 'Français',
-  //   code: 'fr',
-  //   icon: 'fr'
-  // },
-  {
-    language: 'Português',
-    code: 'pt',
-    type: 'BR',
-    icon: 'br'
-  }]
+  public languages: ReadonlyArray<AppLanguage> = APP_LANGUAGES;
 
-  public selectedLanguage: any = {
-    language: 'Español',
-    code: 'es',
-    type: 'CO',
-    icon: 'co'
-  }
+  public selectedLanguage: AppLanguage = { ...DEFAULT_APP_LANGUAGE };
 
   UserLogged: any;
 
@@ -57,24 +36,29 @@ export class LanguagesComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Validar localStorage antes de parsear
-    const userData = localStorage.getItem('user');
-    this.UserLogged = userData ? JSON.parse(userData) as UserLogged : null;
-
-    if (this.UserLogged?.lang) {
-      this.translate.use(this.UserLogged.lang.code)
-      this.translate.setDefaultLang(this.UserLogged.lang.code)
-      this.selectedLanguage = this.UserLogged.lang;
+    try {
+      const userData = localStorage.getItem('user');
+      this.UserLogged = userData ? JSON.parse(userData) as UserLogged : null;
+    } catch {
+      this.UserLogged = null;
     }
+
+    this.selectedLanguage = normalizeAppLanguage(this.UserLogged?.lang);
+    this.translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
+    this.translate.use(this.selectedLanguage.code);
+    document.documentElement.lang = this.selectedLanguage.code;
   }
 
-  changeLanguage(lang: any) {
-    this.translate.use(lang.code)
-    this.translate.setDefaultLang(lang.code)
-    this.selectedLanguage = lang;
-    this.guardarLenguaje(lang);
+  changeLanguage(lang: unknown) {
+    this.selectedLanguage = normalizeAppLanguage(lang);
+    this.translate.setDefaultLang(DEFAULT_APP_LANGUAGE.code);
+    this.translate.use(this.selectedLanguage.code);
+    document.documentElement.lang = this.selectedLanguage.code;
+    this.guardarLenguaje(this.selectedLanguage);
   }
 
-  async guardarLenguaje(lang: any) {
+  async guardarLenguaje(lang: AppLanguage) {
+    if (!this.UserLogged) return;
     this.UserLogged.lang = lang;
 
     const item: any = {

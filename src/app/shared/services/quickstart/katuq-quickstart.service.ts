@@ -94,7 +94,7 @@ export class KatuqQuickStartService {
    * Validar datos del diagnóstico antes de proceder
    */
   private validateDiagnosticData(diagnosticData: DiagnosticResponse): void {
-    const { registration, responses } = diagnosticData;
+    const { registration } = diagnosticData;
     
     // Validar datos de registro obligatorios
     if (!registration) {
@@ -117,17 +117,8 @@ export class KatuqQuickStartService {
       throw new Error('Se requiere un número de celular válido (mínimo 10 dígitos)');
     }
 
-    // Validar respuestas del diagnóstico
-    if (!responses || Object.keys(responses).length === 0) {
-      throw new Error('Se requieren respuestas del diagnóstico para configurar el comercio');
-    }
-
-    // Validar que al menos tenga la respuesta del sector
-    if (!responses.q1) {
-      console.warn('No se especificó el sector, usando "Retail - Comercial" por defecto');
-    }
-
-    console.log('Validación de datos completada exitosamente');
+    // El diagnóstico es opcional. El onboarding autenticado permite completar
+    // la información del negocio después, sin bloquear la creación de la cuenta.
   }
 
   /**
@@ -170,7 +161,7 @@ export class KatuqQuickStartService {
       // 5. Preparar producto demo (sin enviar al servidor)
       this.updateStatus(true, 'Preparando producto de demostración...');
       const productoDemo = this.prepareProductoDemo(
-        diagnosticData.responses.q1 || 'Retail - Comercial',
+        diagnosticData.responses?.q1 || 'No especificado',
         bodega.idBodega
       );
 
@@ -206,7 +197,7 @@ export class KatuqQuickStartService {
         message: serverResponse.message || (pendingReview
           ? 'Tu registro está en revisión. Te enviaremos tus credenciales por correo al validarlo.'
           : `¡Tu comercio ${serverResponse.companyName || empresa.nomComercial} está configurado y listo para operar!`),
-        nextSteps: this.getNextStepsBySector(diagnosticData.responses.q1 || 'Retail - Comercial')
+        nextSteps: this.getNextStepsBySector(diagnosticData.responses?.q1 || 'No especificado')
       };
 
     } catch (error) {

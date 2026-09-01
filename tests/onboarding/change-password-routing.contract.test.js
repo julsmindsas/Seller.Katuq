@@ -31,14 +31,14 @@ function methodText(name) {
   return method.getText(sourceFile).replace(/\s+/g, " ");
 }
 
-const confirmUpdate = methodText("confirmUpdate");
+const confirmUpdate = methodText("submit");
 const navigate = methodText("navigateAfterPasswordChange");
 
 // La identidad nunca viaja en el payload: el backend la deriva del JWT. El
 // componente construye un objeto cerrado con solo newPassword.
 const confirmMethod = componentClass.members.find(
   (member) => ts.isMethodDeclaration(member) &&
-    member.name?.getText(sourceFile) === "confirmUpdate",
+    member.name?.getText(sourceFile) === "submit",
 );
 let passwordUpdateInitializer = null;
 function findPasswordUpdate(node) {

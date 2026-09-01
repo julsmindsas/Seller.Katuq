@@ -332,8 +332,8 @@ export const content: Routes = [
       import("../../components/dropshipping/dropshipping.module").then(
         (m) => m.DropshippingModule,
       ),
-    canActivate: [AuthGuard],
-    data: { title: "Dropshipping" },
+    canActivate: [AuthGuard, SubscriptionGuard],
+    data: { title: "Dropshipping", requiresPremium: true },
   },
   {
     path: "crm",

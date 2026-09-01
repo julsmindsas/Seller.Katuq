@@ -1056,6 +1056,55 @@ export class SitioEditorComponent implements OnInit {
     if (i >= 0) this.seleccionar(i);
   }
 
+  /**
+   * Clic sobre un bloque en la vista previa. Además de elegirlo, el panel
+   * lateral se desplaza solo hasta sus perillas: sin esto el comerciante hace
+   * clic en la página y "no pasa nada", porque el cambio ocurrió fuera de su
+   * campo visual.
+   */
+  seleccionarDesdePrevia(bloqueId: string): void {
+    this.seleccionarPorId(bloqueId);
+    this.llevarPanelA(".propiedades");
+  }
+
+  /** Un botón de la barra flotante del bloque en la vista previa. */
+  accionDesdePrevia(ev: { bloqueId: string; accion: string }): void {
+    const i = this.bloques.findIndex((b) => b.id === ev.bloqueId);
+    if (i < 0) return;
+    switch (ev.accion) {
+      case "subir":
+        this.mover(i, -1);
+        break;
+      case "bajar":
+        this.mover(i, 1);
+        break;
+      case "duplicar":
+        this.duplicar(i);
+        break;
+      case "visibilidad":
+        this.alternarVisible(i);
+        break;
+      case "estilo":
+        this.seleccionar(i);
+        this.mostrandoEstilo = true;
+        this.llevarPanelA(".estilo-seccion");
+        break;
+      // Sin diálogo, igual que la papelera del panel: quitar es un paso más
+      // del historial y se revierte con deshacer.
+      case "eliminar":
+        this.eliminar(i);
+        break;
+    }
+  }
+
+  /** Desplaza el panel lateral hasta un punto, después de que Angular pinte. */
+  private llevarPanelA(selector: string): void {
+    setTimeout(() => {
+      const destino = document.querySelector(selector);
+      if (destino) destino.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   // ── Operaciones sobre bloques ──────────────────────────────────────────────
 
   // ── Secciones ya armadas ───────────────────────────────────────────────────

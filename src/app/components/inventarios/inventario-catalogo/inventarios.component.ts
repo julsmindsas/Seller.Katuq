@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, TemplateRef, ViewChild } from "@angular/core";
-import { Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { NgbModal, NgbModalOptions } from "@ng-bootstrap/ng-bootstrap";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import Swal from "sweetalert2";
@@ -24,6 +24,7 @@ import { Table } from "primeng/table";
 import { MenuItem } from "primeng/api";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
+import { LoaderService } from "../../../shared/services/loader.service";
 
 // Tipo extendido para productos con información de inventario
 interface ProductoInventario extends Producto {
@@ -456,11 +457,30 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
 
   // ============== IMPORTACIÓN ==============
   showImportModal: boolean = false;
+  onboardingReturnUrl = '';
+  private onboardingLoaderSuppressed = false;
 
-  onImportComplete(result: any): void {
+  async onImportComplete(result: any): Promise<void> {
+    this.showImportModal = false;
     if (result.success > 0) {
       this.recargarInventarioConsolidado();
+      const dialog = await Swal.fire({
+        title: 'Existencias importadas',
+        text: `${result.success} registros de inventario se actualizaron correctamente`,
+        icon: 'success',
+        showCancelButton: !!this.onboardingReturnUrl,
+        confirmButtonText: this.onboardingReturnUrl ? 'Volver a la configuración' : 'Entendido',
+        cancelButtonText: 'Seguir en inventario'
+      });
+      if (dialog.isConfirmed && this.onboardingReturnUrl) {
+        await this.returnToOnboarding();
+      }
     }
+  }
+
+  async returnToOnboarding(): Promise<void> {
+    if (!this.onboardingReturnUrl) return;
+    await this.router.navigate([this.onboardingReturnUrl]);
   }
 
   // ============== ANÁLISIS IA ==============
@@ -477,31 +497,51 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     private service: MaestroService,
     private inventarioService: InventarioService,
     private router: Router,
+    private route: ActivatedRoute,
     private modalService: NgbModal,
     private bodegaService: BodegaService, // Inyectamos el servicio de bodegas
     private tourService: TourService,
     private fulfillmentService: FulfillmentService,
     private toastr: ToastrService,
+    private loaderService: LoaderService,
   ) {}
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.onboardingLoaderSuppressed) this.loaderService.releaseGlobalLoader();
   }
 
   ngOnInit(): void {
+    const requestedReturn = this.route.snapshot.queryParamMap.get('onboardingReturn');
+    this.onboardingReturnUrl = requestedReturn === '/onboarding' ? requestedReturn : '';
+    if (this.onboardingReturnUrl) {
+      this.loaderService.suppressGlobalLoader();
+      this.onboardingLoaderSuppressed = true;
+    }
+    if (this.route.snapshot.queryParamMap.get('onboardingImport') === 'inventory') {
+      this.showImportModal = true;
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { onboardingImport: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
+    }
     this.maxFechaCorteInventario = this.fechaBogota(-1);
     this.fechaCorteInventario = this.maxFechaCorteInventario;
     this.empresaActual = JSON.parse(
       localStorage.getItem("currentCompany") ?? "{}",
     );
-    const texto = this.empresaActual.nomComercial.toString();
+    const texto = String(this.empresaActual?.nomComercial || '');
 
     // Initialize tour after component loads only if not completed
     const completedTours = JSON.parse(
       localStorage.getItem("katuq_completed_tours") || "[]",
     );
-    if (!completedTours.includes("inventario")) {
+    // Al venir desde el onboarding el objetivo ya está claro: abrir el
+    // importador. El tour superpuesto creaba dos modales y bloqueaba el archivo.
+    if (!this.onboardingReturnUrl && !completedTours.includes("inventario")) {
       setTimeout(() => {
         this.tourService.startTour(
           "inventario",
