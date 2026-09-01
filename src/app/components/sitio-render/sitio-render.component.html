@@ -603,7 +603,16 @@
 
         <!-- Pie -->
         <footer *ngSwitchCase="'footer'" class="bloque pie">
-          <p *ngIf="bloque.datos.texto"
+          <!-- Espejo del pie del servidor: marca arriba, legal abajo. Las
+               columnas automáticas (categorías, contacto) se llenan al publicar. -->
+          <div class="pie__grid">
+            <div class="pie__marca" *ngIf="logo || negocio">
+              <img *ngIf="logo" class="pie__logo" [src]="logo" [alt]="negocio" />
+              <span *ngIf="!logo && negocio" class="pie__nombre">{{ negocio }}</span>
+            </div>
+            <div class="pie__col"><h4>Explora</h4><span class="vacio">Tus categorías salen aquí al publicar.</span></div>
+          </div>
+          <p *ngIf="bloque.datos.texto" class="pie__legal"
              [attr.contenteditable]="previsualizacion ? true : null"
              [class.editable]="previsualizacion"
              (blur)="alEditarTexto($event, bloque.id, {campo:'texto'})"
