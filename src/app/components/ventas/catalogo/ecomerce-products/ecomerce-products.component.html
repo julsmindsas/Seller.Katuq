@@ -419,6 +419,16 @@
                                              [alt]="'-' + producto.promocionAplicada?.valor + '% OFF'"
                                              loading="lazy">
 
+                                        <!-- Distintivo de oferta para el comercial: rebaja vigente en el
+                                             precio que se cobra (campaña de lista o promoción). El sticker
+                                             de % ya cubre las promociones automáticas porcentuales. -->
+                                        <span *ngIf="estaEnOferta(producto) && !getPromoBadgeImg(producto)"
+                                              class="oferta-chip"
+                                              title="Este producto tiene una rebaja vigente para este cliente">
+                                            <i class="fa fa-tag"></i>
+                                            {{ getPorcentajeOferta(producto) ? '-' + getPorcentajeOferta(producto) + '%' : ('Oferta' | translate) }}
+                                        </span>
+
                                         <!-- Overlay de acciones MODERNIZADO -->
                                         <div class="product-actions-overlay" *ngIf="producto.exposicion?.activar !== false">
                                             <!-- Botón Quick Add: Siempre visible para agregar rápido -->

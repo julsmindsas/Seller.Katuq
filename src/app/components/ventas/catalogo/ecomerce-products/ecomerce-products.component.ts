@@ -854,6 +854,13 @@ export class EcomerceProductsComponent
     filter.isChannelManual = true;
     filter.estado = 'activo';
 
+    // "En oferta" evalúa la rebaja de la lista del cliente en pantalla; sin
+    // cliente con lista, el backend considera cualquier lista con campaña viva.
+    if (!this._clienteCacheInitialized) this.refreshClienteCache();
+    if (this._cachedCategoriaClienteId) {
+      filter.tipoClienteId = this._cachedCategoriaClienteId;
+    }
+
     // Guardar filtros actuales
     this.filtrosActuales = { ...filter };
     this.resetPageCursors();
@@ -1495,6 +1502,23 @@ export class EcomerceProductsComponent
   tieneDescuentoDeLista(producto: Producto): boolean {
     if (!this._clienteCacheInitialized) this.refreshClienteCache();
     return descuentoVigente(filaDeTipoCliente(producto, this._cachedCategoriaClienteId));
+  }
+
+  /**
+   * Distintivo de oferta para el comercial: el precio que se está cobrando al
+   * cliente en pantalla trae una rebaja vigente (campaña de su lista o
+   * promoción automática del catálogo).
+   */
+  estaEnOferta(producto: Producto): boolean {
+    return this.tieneDescuentoDeLista(producto) || this.tienePrecioPromocional(producto);
+  }
+
+  /** % de rebaja para el chip de oferta; null si no se puede calcular. */
+  getPorcentajeOferta(producto: Producto): number | null {
+    const tachado = this.getPrecioTachado(producto);
+    const efectivo = this.getPrecioParaMostrar(producto);
+    if (!(tachado > 0) || !(efectivo > 0) || efectivo >= tachado) return null;
+    return Math.round((1 - efectivo / tachado) * 100);
   }
 
   /**
