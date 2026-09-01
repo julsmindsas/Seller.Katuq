@@ -437,6 +437,27 @@ h3 {
   }
 }
 
+// Banda "Explorar la tienda": lo que ve el inicio cuando el catálogo vive en
+// su propia página. Espejo de `.explorar__caja` de siteHtml.js.
+.explorar__caja {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+
+  p {
+    margin: 0;
+    opacity: 0.7;
+  }
+
+  .boton {
+    margin-top: 0.5rem;
+  }
+}
+
 // ── Portada de mosaico ───────────────────────────────────────────────────────
 // Espejo de la rama hero--mosaico de siteHtml.js: titular a un lado, rejilla
 // de fotos de producto al otro. Mismos valores; si cambian allá, cambian aquí.

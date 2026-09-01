@@ -591,6 +591,22 @@
             <p class="aviso" *ngIf="b.datos.permitirCompra && !contenido.tienda.habilitada">
               Para que el botón aparezca, enciende la tienda en la pestaña <strong>Tienda</strong>.
             </p>
+
+            <button class="opcion" [class.is-active]="b.datos.enPagina"
+                    (click)="b.datos.enPagina = !b.datos.enPagina; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>El catálogo va en su propia página</strong>
+                <small>En el inicio queda solo una banda que invita a entrar. Tocar una
+                  categoría lleva a esa página, ya filtrada.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
+            <div class="campo" *ngIf="b.datos.enPagina">
+              <label>Texto del botón de la banda</label>
+              <input type="text" [(ngModel)]="b.datos.textoExplorar" (ngModelChange)="marcarSucio()"
+                     maxlength="40" placeholder="Explorar la tienda" />
+            </div>
           </ng-container>
 
           <!-- Imagen con texto -->
