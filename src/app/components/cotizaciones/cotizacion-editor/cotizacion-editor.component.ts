@@ -1378,7 +1378,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   // ---- Vista previa del documento (mismo HTML que el PDF) ----
 
   /** Abre el overlay con la vista previa del documento para el cliente. */
-  abrirVistaPrevia(): void {
+  async abrirVistaPrevia(): Promise<void> {
     if (!this.puedeGuardar) {
       this.toastr.warning(
         "Agrega un cliente y al menos un producto para ver la cotización.",
@@ -1387,6 +1387,11 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       return;
     }
     this.showPreview = true;
+    // Los banners usan crossorigin="anonymous" (lo necesita html2canvas para el PDF),
+    // y Firebase Storage no expone CORS: sin precargarlos a data URL, el navegador
+    // bloquea la carga y la vista previa se ve sin encabezado/pie/publicidad.
+    await this.preloadBannersForPdf();
+    this.cdr.detectChanges();
   }
 
   cerrarVistaPrevia(): void {
