@@ -587,10 +587,23 @@ h3 {
   box-shadow: 0 8px 24px rgba(33, 31, 58, 0.35);
   white-space: nowrap;
 
+  &__asa {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 26px;
+    cursor: grab;
+    opacity: 0.75;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
   &__nombre {
     font-size: 0.72rem;
     font-weight: 700;
-    padding: 0 0.5rem 0 0.3rem;
+    padding: 0 0.5rem 0 0.15rem;
   }
 
   button {
@@ -613,6 +626,24 @@ h3 {
   &__peligro:hover {
     background: #b42318 !important;
   }
+}
+
+// Arrastre de secciones sobre la página. El hueco marcado con línea punteada
+// dice dónde va a caer, que es lo que falta cuando solo se ve el bloque flotando.
+.cdk-drag-preview {
+  box-shadow: 0 18px 44px rgba(33, 31, 58, 0.28);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.5;
+  outline: 2px dashed #5F3FE0;
+  outline-offset: -4px;
+}
+
+.cdk-drop-list-dragging .envoltura:not(.cdk-drag-placeholder) {
+  transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
 }
 
 // Vista previa en móvil: se estrecha el lienzo para que los saltos de columna

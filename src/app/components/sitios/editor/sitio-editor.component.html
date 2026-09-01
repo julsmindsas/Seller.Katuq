@@ -1597,30 +1597,40 @@
           </button>
         </div>
 
-        <button class="desplegable" (click)="coloresAvanzados = !coloresAvanzados">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
-          <span>Elegir mis propios colores</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path *ngIf="!coloresAvanzados" d="m6 9 6 6 6-6"/>
-            <path *ngIf="coloresAvanzados" d="m18 15-6-6-6 6"/>
-          </svg>
-        </button>
-
-        <div class="avanzado" *ngIf="coloresAvanzados">
-          <div class="campo campo--color">
-            <label>Color principal</label>
-            <input type="color" [(ngModel)]="contenido.tema.colorPrimario" (ngModelChange)="marcarSucio()" />
-            <small>Se usa en títulos y botones.</small>
-          </div>
-          <div class="campo campo--color">
-            <label>Color de fondo</label>
-            <input type="color" [(ngModel)]="contenido.tema.colorSecundario" (ngModelChange)="marcarSucio()" />
-            <small>El fondo de toda la página.</small>
-          </div>
-          <div class="campo campo--color">
-            <label>Color del texto</label>
-            <input type="color" [(ngModel)]="contenido.tema.colorTexto" (ngModelChange)="marcarSucio()" />
-            <small>Mejor uno oscuro para que se lea bien.</small>
+        <!-- Los tres colores van a la vista, no escondidos tras un desplegable:
+             cambiar un color es lo primero que intenta todo el mundo, y detrás
+             de "Elegir mis propios colores" nadie los encontraba. -->
+        <div class="grupo">
+          <h3>Tus colores</h3>
+          <p>Toca un círculo y elige el color. Cambia toda la página al instante.</p>
+          <div class="colores">
+            <label class="color">
+              <span class="color__muestra" [style.background]="contenido.tema.colorPrimario">
+                <input type="color" [(ngModel)]="contenido.tema.colorPrimario" (ngModelChange)="marcarSucio()" />
+              </span>
+              <span class="color__texto">
+                <strong>Principal</strong>
+                <small>Botones y detalles</small>
+              </span>
+            </label>
+            <label class="color">
+              <span class="color__muestra" [style.background]="contenido.tema.colorSecundario">
+                <input type="color" [(ngModel)]="contenido.tema.colorSecundario" (ngModelChange)="marcarSucio()" />
+              </span>
+              <span class="color__texto">
+                <strong>Fondo</strong>
+                <small>El fondo de la página</small>
+              </span>
+            </label>
+            <label class="color">
+              <span class="color__muestra" [style.background]="contenido.tema.colorTexto">
+                <input type="color" [(ngModel)]="contenido.tema.colorTexto" (ngModelChange)="marcarSucio()" />
+              </span>
+              <span class="color__texto">
+                <strong>Texto</strong>
+                <small>Mejor uno oscuro</small>
+              </span>
+            </label>
           </div>
         </div>
       </div>
@@ -1977,7 +1987,8 @@
               (textoEditado)="aplicarTextoEditado($event)"
               (elementoMovido)="aplicarElementoMovido($event)"
               (bloqueSeleccionado)="seleccionarDesdePrevia($event)"
-              (accionBloque)="accionDesdePrevia($event)">
+              (accionBloque)="accionDesdePrevia($event)"
+              (bloqueMovido)="moverDesdePrevia($event)">
             </app-sitio-render>
           </div>
         </div>

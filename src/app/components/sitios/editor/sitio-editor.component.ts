@@ -550,9 +550,6 @@ export class SitioEditorComponent implements OnInit {
    */
   fondosSugeridos = ["#f7f7fb", "#f3f0ff", "#fff8f0", "#f2f9f5", "#211d33"];
 
-  /** Los selectores de color sueltos van escondidos tras las paletas. */
-  coloresAvanzados = false;
-
   catalogoBloques = CATALOGO_BLOQUES;
 
   /** Hay cambios sin guardar. Se usa para avisar antes de publicar. */
@@ -1065,6 +1062,14 @@ export class SitioEditorComponent implements OnInit {
   seleccionarDesdePrevia(bloqueId: string): void {
     this.seleccionarPorId(bloqueId);
     this.llevarPanelA(".propiedades");
+  }
+
+  /**
+   * Una sección se arrastró sobre la página. Se reusa `soltarSeccion`, el mismo
+   * camino de la lista del panel, para que el reordenado sea uno solo.
+   */
+  moverDesdePrevia(ev: { desde: number; hasta: number }): void {
+    this.soltarSeccion({ previousIndex: ev.desde, currentIndex: ev.hasta } as CdkDragDrop<any>);
   }
 
   /** Un botón de la barra flotante del bloque en la vista previa. */

@@ -1,14 +1,20 @@
 <div class="sitio" [ngStyle]="estiloTema" [class.sitio--movil]="dispositivo === 'movil'"
-     [class.sitio--editable]="previsualizacion">
+     [class.sitio--editable]="previsualizacion"
+     cdkDropList [cdkDropListDisabled]="!previsualizacion"
+     (cdkDropListDropped)="soltarBloque($event)">
 
   <ng-container *ngFor="let bloque of bloquesVisibles">
     <!-- El estilo propio de la sección se aplica en la envoltura: así vale para
-         cualquier tipo de bloque sin repetirlo en cada plantilla. -->
+         cualquier tipo de bloque sin repetirlo en cada plantilla.
+         El arrastre va por el asa de la barra flotante, no por el cuerpo: si
+         se pudiera arrastrar desde cualquier punto, escribir sobre un texto
+         empezaría a mover la sección. -->
     <div class="envoltura"
          [ngStyle]="estiloDeBloque(bloque)"
          [class.envoltura--editable]="previsualizacion"
          [class.envoltura--activa]="previsualizacion && bloque.id === bloqueActivo"
          [class.envoltura--oculta]="bloque.visible === false"
+         cdkDrag [cdkDragDisabled]="!previsualizacion"
          (click)="seleccionar(bloque.id)">
 
       <span class="etiqueta-oculto" *ngIf="previsualizacion && bloque.visible === false">Oculto</span>
@@ -20,6 +26,9 @@
       </span>
       <div class="barra-bloque" *ngIf="previsualizacion && bloque.id === bloqueActivo"
            (click)="$event.stopPropagation()">
+        <span class="barra-bloque__asa" cdkDragHandle title="Arrastra para mover esta sección">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+        </span>
         <span class="barra-bloque__nombre">{{ nombreDeBloque(bloque.tipo) }}</span>
         <button type="button" title="Subir" (click)="accionar(bloque.id, 'subir', $event)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>

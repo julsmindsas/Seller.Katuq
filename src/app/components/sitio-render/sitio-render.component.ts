@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import { CdkDragDrop } from "@angular/cdk/drag-drop";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
 export interface BloqueSitio {
@@ -241,6 +242,12 @@ export class SitioRenderComponent implements OnChanges {
     bloqueId: string;
     accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar";
   }>();
+
+  /**
+   * Una sección se arrastró a otra posición sobre la página. Igual que el
+   * texto y los elementos: aquí solo se avisa y el editor reordena su modelo.
+   */
+  @Output() bloqueMovido = new EventEmitter<{ desde: number; hasta: number }>();
 
   nombre = "";
   telefono = "";
@@ -653,6 +660,17 @@ export class SitioRenderComponent implements OnChanges {
 
   seleccionar(bloqueId: string): void {
     if (this.previsualizacion) this.bloqueSeleccionado.emit(bloqueId);
+  }
+
+  /**
+   * En vista previa `bloquesVisibles` devuelve TODOS los bloques, ocultos
+   * incluidos, así que los índices del arrastre son los del modelo y se pueden
+   * emitir tal cual.
+   */
+  soltarBloque(evento: CdkDragDrop<any>): void {
+    if (!this.previsualizacion) return;
+    if (evento.previousIndex === evento.currentIndex) return;
+    this.bloqueMovido.emit({ desde: evento.previousIndex, hasta: evento.currentIndex });
   }
 
   accionar(
