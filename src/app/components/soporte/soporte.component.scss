@@ -139,6 +139,14 @@
     }
   }
 
+  // Solo vertical: sin esto el navegador deja ensanchar el textarea y
+  // desbordar horizontalmente la tarjeta que lo contiene
+  textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.5;
+  }
+
   .invalid-feedback {
     display: block;
     color: $katuq-danger-dark;
@@ -261,6 +269,12 @@
     overflow: hidden;
     border: 1px solid $katuq-gray-200;
     box-shadow: 0 2px 6px rgba(15, 23, 42, .08);
+
+    // Fondo oscuro de respaldo: mantiene legible el icono de play blanco
+    // mientras carga la miniatura o si esta falla
+    &.video-preview {
+      background: $katuq-gray-900;
+    }
 
     .preview-image,
     .video-thumbnail {

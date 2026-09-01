@@ -154,7 +154,9 @@
       padding: .5rem .8rem;
       font-size: .88rem;
       color: $katuq-gray-800;
-      background: #fff;
+      // background-color, no el atajo `background`: el chevron de los selects viaja
+      // en background-image y el atajo lo borraria al marcar el filtro activo
+      background-color: #fff;
       transition: border-color .15s ease, box-shadow .15s ease;
 
       &:focus {
@@ -165,8 +167,25 @@
 
       &.active-filter {
         border-color: $katuq-primary;
-        background: $katuq-purple-50;
+        background-color: $katuq-purple-50;
       }
+    }
+  }
+
+  // Chevron propio para los selects de filtro: dibujado en SVG para no depender
+  // de que la fuente de iconos haya cargado
+  .select-wrapper {
+    position: relative;
+
+    .form-control {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding-right: 2.2rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right .8rem center;
+      background-size: 12px 8px;
     }
   }
 
