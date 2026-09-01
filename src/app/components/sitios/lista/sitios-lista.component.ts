@@ -302,6 +302,11 @@ export class SitiosListaComponent implements OnInit {
 
   elegirTipo(id: "landing" | "catalogo" | "tienda"): void {
     this.tipoElegido = id;
+    // Una tienda o un catálogo publican lo que esté marcado para Página Web:
+    // ahí no se escoge lista a mano. Si el usuario ya había elegido productos
+    // y se devuelve a cambiar de tipo, esa lista se suelta — si no, viajaría
+    // escondida hasta la página sin que él pueda verla ni quitarla.
+    if (id !== "landing") this.productoIds = [];
     // Cada tipo suele vivir en su plantilla: la tienda quiere una con productos.
     this.paso = "plantilla";
   }

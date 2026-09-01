@@ -743,6 +743,31 @@
   margin: 18px 0 0;
 }
 
+// Reemplaza al selector de productos cuando la página es tienda o catálogo:
+// ahí no se escoge lista, se publica lo marcado para Página Web.
+.nota-catalogo {
+  display: block;
+  padding: 13px 16px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 14px;
+  background: var(--kb-accent-wash-4);
+
+  strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--kb-ink);
+  }
+
+  span {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--kb-muted-2);
+    font-weight: 600;
+  }
+}
+
 // ── Objetivo de la página ────────────────────────────────────────────────────
 .objetivos {
   display: grid;
