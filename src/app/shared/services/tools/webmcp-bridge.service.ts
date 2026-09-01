@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import Swal from 'sweetalert2';
 import { ToolRegistryService, ToolMetadata } from './tool-registry.service';
 
 /**
@@ -94,7 +95,7 @@ export class WebMcpBridgeService {
       description: meta.description,
       inputSchema: meta.parameters ?? { type: 'object', properties: {} },
       execute: async (args: any) => {
-        if (isWrite && mode === 'all' && !this.confirmWrite(meta.name)) {
+        if (isWrite && mode === 'all' && !(await this.confirmWrite(meta.name))) {
           return this.asContent({ success: false, error: 'El usuario rechazó la operación.' });
         }
         try {
@@ -108,8 +109,17 @@ export class WebMcpBridgeService {
   }
 
   /** Confirmación humana antes de que un agente ejecute una tool que muta el pedido. */
-  private confirmWrite(toolName: string): boolean {
-    return window.confirm(`Un agente de IA del navegador quiere ejecutar '${toolName}' en tu sesión. ¿Permitir?`);
+  private async confirmWrite(toolName: string): Promise<boolean> {
+    const r = await Swal.fire({
+      title: 'Un agente de IA quiere actuar en tu sesión',
+      text: `Va a ejecutar '${toolName}' como si fueras tú. ¿Lo permites?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Permitir',
+      cancelButtonText: 'No',
+      reverseButtons: true
+    });
+    return r.isConfirmed === true;
   }
 
   /** WebMCP espera respuestas estilo MCP: { content: [{ type: 'text', text }] }. */
