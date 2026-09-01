@@ -2,6 +2,7 @@ import { Component, HostListener, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { ToastrService } from "ngx-toastr";
+import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
 import { ContenidoSitio, Sitio, SitiosService, VentaConfig } from "../sitios.service";
@@ -2649,7 +2650,22 @@ export class SitioEditorComponent implements OnInit {
   }
 
   volver(): void {
-    if (this.sucio && !confirm("Tienes cambios sin guardar. ¿Salir y perderlos?")) return;
-    this.router.navigate(["/sitios"]);
+    if (!this.sucio) {
+      this.router.navigate(["/sitios"]);
+      return;
+    }
+    // SweetAlert, nunca el confirm() del navegador: el recuadro nativo bloquea
+    // la pestaña entera (y a cualquier herramienta que la esté manejando).
+    Swal.fire({
+      title: "Tienes cambios sin guardar",
+      text: "Si sales ahora se pierden. ¿Quieres salir de todas formas?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Salir sin guardar",
+      cancelButtonText: "Quedarme",
+      confirmButtonColor: "#b42318",
+    }).then((r) => {
+      if (r.isConfirmed) this.router.navigate(["/sitios"]);
+    });
   }
 }
