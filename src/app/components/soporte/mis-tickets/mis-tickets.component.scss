@@ -1,1324 +1,832 @@
-.tickets-container {
-    margin: 20px auto;
-    max-width: 1200px;
-    font-family: Arial, sans-serif;
-  }
-  
-  .card {
-    margin-bottom: 20px;
-  }
-  
-  .card-header {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-bottom: 1px solid #ddd;
-  
-    .ticket-title {
-      font-size: 1.25rem; /* Tamaño adecuado para destacar el asunto */
-      font-weight: bold;
-      margin: 0;
-      word-wrap: break-word; /* Ajustar texto largo */
-      line-height: 1.4; /* Mejorar la legibilidad */
-      color: #333; /* Color neutro */
-    }
-  
-    .ticket-status {
-      font-size: 0.9rem;
-      font-weight: bold;
-      color: white;
-      padding: 5px 10px;
-      border-radius: 5px;
-      text-align: center;
-      white-space: nowrap; /* Evitar que el texto del estado se divida */
-    }
-  }
-  
-  
-  .badge {
-    font-size: 0.9rem;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-  }
-  
-  .attachment-img {
-    max-width: 100px;
-    max-height: 100px;
-    border-radius: 5px;
-    margin-right: 10px;
-    cursor: pointer;
-    object-fit: cover;
-  }
-  
-  .comment-header {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  
-  .comment-author {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    color: white;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .comment-content {
-    margin: 10px 0;
-  }
-  
-  .reply {
-    margin-left: 20px;
-    border-left: 2px solid #ddd;
-    padding-left: 10px;
-  }
-  
-  .image-previews {
-    margin-top: 20px;
-  }
-  
-  .preview-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: flex-start;
-  }
-  
-  .preview {
-    width: 120px;
-    height: 120px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s;
-  }
-  
-  .preview:hover {
-    transform: scale(1.05);
-  }
-  .image-previews {
-    margin-top: 15px;
-  
-    h5 {
-      font-size: 1rem;
-      margin-bottom: 10px;
-    }
-  
-    .preview-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-  
-    .preview {
-      position: relative;
-      width: 100px;
-      height: 100px;
-  
-      .thumbnail {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 5px;
-        border: 1px solid #ddd;
-      }
-  
-      .delete-button {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background-color: rgba(255, 0, 0, 0.8);
-        border: none;
-        border-radius: 50%;
-        color: white;
-        font-size: 0.8rem;
-        cursor: pointer;
-        padding: 2px 6px;
-      }
-  
-      .delete-button:hover {
-        background-color: red;
-      }
-    }
-  }
-  
-.tickets-container {
-  max-width: 900px;
-  margin: auto;
-}
-.compact-card {
-  margin-bottom: 10px;
-  cursor: pointer;
-  transition: box-shadow 0.3s;
-}
-.compact-card:hover {
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-}
-.ticket-status {
-  padding: 4px 10px;
-  border-radius: 12px;
-  color: #fff;
-  font-weight: bold;
-}
-.details {
-  display: none;
-  padding: 15px;
-}
-.details.show {
+// Mis tickets — rediseño con el design system Katuq
+@import '../../../../assets/scss/utils/katuq-tokens';
+
+:host {
   display: block;
-}
-.attachment-img {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  margin: 5px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-.comment-author {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  color: #fff;
-  text-align: center;
-  line-height: 30px;
-  font-weight: bold;
-}
-.comment {
-  border-left: 3px solid #a78bfa;
-  margin-bottom: 10px;
-  padding: 5px 10px;
-  background-color: #f0f0f0;
-  border-radius: 5px;
-}
-.reply {
-  border-left: 2px solid #6c757d;
-  margin-left: 15px;
-  padding: 5px 10px;
-  background-color: #e6e6e6;
-  border-radius: 5px;
-}
-.thumbnail {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 5px;
-  margin-right: 5px;
-}
-.delete-button {
-  position: absolute;
-  top: 0;
-  right: 0;
-  border-radius: 50%;
+  min-height: 100%;
 }
 
-// Modern Dashboard Styling
 .tickets-dashboard {
-  max-width: 1000px;
+  position: relative;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 20px 40px;
-  font-family: 'Segoe UI', Arial, sans-serif;
+  padding: 1.5rem 1rem 3rem;
 }
 
-// Header Styling
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-  
-  .dashboard-title {
-    h1 {
-      font-size: 28px;
-      font-weight: 600;
-      margin: 0;
-      color: #2c3e50;
-      display: flex;
-      align-items: center;
-      
-      i {
-        margin-right: 10px;
-        color: #3498db;
-      }
-    }
-    
-    p {
-      font-size: 14px;
-      margin: 5px 0 0;
-      color: #7f8c8d;
-    }
-  }
-  
-  .dashboard-actions {
-    .btn-create {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 16px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      transition: background-color 0.2s;
-      cursor: pointer;
-      
-      i {
-        margin-right: 6px;
-      }
-      
-      &:hover {
-        background-color: #2980b9;
-      }
-    }
-  }
-}
-
-// Filters Section
-.filters-section {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  margin-bottom: 20px;
-  overflow: hidden;
-  
-  .filters-header {
-    background-color: #f8f9fa;
-    padding: 15px 20px;
-    border-bottom: 1px solid #eee;
-    
-    h5 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-      color: #2c3e50;
-      display: flex;
-      align-items: center;
-      
-      i {
-        margin-right: 8px;
-        color: #7f8c8d;
-      }
-    }
-  }
-  
-  .filters-body {
-    padding: 15px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    
-    .filter-group {
-      flex: 1;
-      min-width: 200px;
-      
-      label {
-        display: block;
-        margin-bottom: 6px;
-        font-weight: 500;
-        font-size: 13px;
-        color: #34495e;
-      }
-      
-      .select-wrapper {
-        position: relative;
-        
-        &:after {
-          content: "\f107";
-          font-family: "Font Awesome 5 Free";
-          font-weight: 900;
-          position: absolute;
-          right: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #7f8c8d;
-          pointer-events: none;
-        }
-      }
-      
-      &.search-group {
-        flex: 2;
-        
-        .search-wrapper {
-          position: relative;
-          
-          .search-icon {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #7f8c8d;
-          }
-        }
-      }
-      
-      .form-control {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 14px;
-        
-        &:focus {
-          border-color: #3498db;
-          outline: none;
-          box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
-        }
-      }
-      
-      select.form-control {
-        appearance: none;
-        padding-right: 30px;
-      }
-    }
-  }
-}
-
-// Improved ticket statistics styles
-.ticket-stats {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin: 25px 0;
-}
-
-.stat-box {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  border-left: 4px solid #ddd;
-  min-height: 120px;
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .stat-icon {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-right: 15px;
-    
-    i {
-      font-size: 24px;
-    }
-  }
-  
-  .stat-info {
-    flex: 1;
-    
-    .stat-count {
-      display: block;
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 5px;
-      line-height: 1;
-    }
-    
-    .stat-label {
-      display: block;
-      font-size: 14px;
-      color: #666;
-    }
-  }
-  
-  // Pending tickets styling
-  &.pending {
-    border-left-color: #dc3545;
-    
-    .stat-icon {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
-    }
-    
-    .stat-count {
-      color: #dc3545;
-    }
-  }
-  
-  // In Progress tickets styling - make this one stand out more
-  &.progress {
-    border-left-color: #fd7e14;
-    transform: scale(1.05);
-    box-shadow: 0 5px 20px rgba(253, 126, 20, 0.15);
-    z-index: 1;
-    
-    .stat-icon {
-      background-color: rgba(253, 126, 20, 0.1);
-      color: #fd7e14;
-      width: 66px;
-      height: 66px;
-      
-      i {
-        font-size: 28px;
-      }
-    }
-    
-    .stat-count {
-      color: #fd7e14;
-      font-size: 32px;
-    }
-    
-    .stat-label {
-      font-weight: 600;
-      font-size: 15px;
-    }
-  }
-  
-  // Resolved tickets styling
-  &.resolved {
-    border-left-color: #28a745;
-    
-    .stat-icon {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    .stat-count {
-      color: #28a745;
-    }
-  }
-}
-
-// Make it responsive
-@media (max-width: 768px) {
-  .ticket-stats {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .stat-box {
-    min-height: auto;
-    
-    &.progress {
-      transform: scale(1.03);
-      margin: 10px 0;
-    }
-  }
-}
-
-// Empty state
-.empty-state {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  padding: 40px 20px;
-  text-align: center;
-  
-  .empty-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background-color: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    
-    i {
-      font-size: 36px;
-      color: #bdc3c7;
-    }
-  }
-  
-  h3 {
-    font-size: 18px;
-    color: #2c3e50;
-    margin: 0 0 10px;
-  }
-  
-  p {
-    font-size: 14px;
-    color: #7f8c8d;
-    margin-bottom: 20px;
-  }
-  
-  .btn-primary {
-    background-color: #484848;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-size: 14px;
-    cursor: pointer;
-    
-    &:hover {
-      background-color: #2980b9;
-    }
-  }
-}
-
-// Tickets list
-.tickets-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  
-  .ticket-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    overflow: hidden;
-    
-    .ticket-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 20px;
-      border-bottom: 1px solid #f1f1f1;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      
-      &:hover {
-        background-color: #f8f9fa;
-      }
-      
-      &.expanded {
-        background-color: #f8f9fa;
-      }
-      
-      .ticket-info {
-        flex: 1;
-        
-        .ticket-id {
-          font-size: 12px;
-          color: #7f8c8d;
-          margin-bottom: 5px;
-        }
-        
-        .ticket-title {
-          font-size: 16px;
-          font-weight: 600;
-          color: #2c3e50;
-          margin: 0 0 5px;
-        }
-        
-        .ticket-meta {
-          display: flex;
-          gap: 15px;
-          font-size: 12px;
-          color: #7f8c8d;
-          
-          span {
-            display: flex;
-            align-items: center;
-            
-            i {
-              margin-right: 4px;
-            }
-          }
-        }
-      }
-      
-      .ticket-status-wrapper {
-        display: flex;
-        align-items: center;
-        
-        .ticket-status {
-          display: flex;
-          align-items: center;
-          padding: 6px 10px;
-          border-radius: 20px;
-          font-size: 13px;
-          font-weight: 500;
-          margin-right: 15px;
-          
-          i {
-            margin-right: 4px;
-            font-size: 12px;
-          }
-          
-          &.pendiente {
-            background-color: rgba(243, 156, 18, 0.2);
-            color: #f39c12;
-          }
-          
-          &.haciendo {
-            background-color: rgba(52, 152, 219, 0.2);
-            color: #3498db;
-          }
-          
-          &.resuelto {
-            background-color: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-          }
-          
-          &.archivado {
-            background-color: rgba(127, 140, 141, 0.2);
-            color: #7f8c8d;
-          }
-        }
-        
-        .expand-icon {
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #7f8c8d;
-        }
-      }
-    }
-    
-    .ticket-details {
-      padding: 0;
-      
-      .ticket-section {
-        padding: 20px;
-        border-bottom: 1px solid #f1f1f1;
-        
-        &:last-child {
-          border-bottom: none;
-        }
-        
-        h4 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #2c3e50;
-          margin: 0 0 15px;
-          display: flex;
-          align-items: center;
-          
-          i {
-            margin-right: 8px;
-            color: #7f8c8d;
-          }
-        }
-        
-        .ticket-description {
-          font-size: 14px;
-          color: #34495e;
-          line-height: 1.6;
-        }
-      }
-      
-      // Attachments
-      .attachments-gallery {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        
-        .attachment-item {
-          width: 120px;
-          position: relative;
-          
-          .attachment-preview {
-            width: 100%;
-            height: 120px;
-            border-radius: 6px;
-            overflow: hidden;
-            cursor: pointer;
-            
-            img {
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-              transition: transform 0.2s;
-              
-              &:hover {
-                transform: scale(1.05);
-              }
-            }
-          }
-          
-          .attachment-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 5px;
-            
-            .attachment-btn {
-              width: 30px;
-              height: 30px;
-              border: none;
-              background: none;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              cursor: pointer;
-              color: #7f8c8d;
-              
-              &:hover {
-                background-color: #f1f1f1;
-                color: #3498db;
-              }
-            }
-          }
-        }
-      }
-      
-      // Comments
-      .comments-timeline {
-        .comment-item {
-          display: flex;
-          margin-bottom: 20px;
-          
-          &:last-child {
-            margin-bottom: 0;
-          }
-          
-          .comment-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 600;
-            color: white;
-            margin-right: 15px;
-            flex-shrink: 0;
-          }
-          
-          .comment-content {
-            flex: 1;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            padding: 15px;
-            position: relative;
-            
-            &:before {
-              content: '';
-              position: absolute;
-              left: -8px;
-              top: 15px;
-              width: 0;
-              height: 0;
-              border-top: 8px solid transparent;
-              border-bottom: 8px solid transparent;
-              border-right: 8px solid #f8f9fa;
-            }
-            
-            .comment-header {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 10px;
-              
-              .comment-author {
-                font-weight: 600;
-                color: #2c3e50;
-                font-size: 14px;
-              }
-              
-              .comment-date {
-                font-size: 12px;
-                color: #7f8c8d;
-              }
-            }
-            
-            .comment-body {
-              p {
-                margin: 0 0 10px;
-                font-size: 14px;
-                color: #34495e;
-                line-height: 1.6;
-              }
-              
-              .comment-attachments {
-                .attachment-thumbnails {
-                  display: flex;
-                  flex-wrap: wrap;
-                  gap: 10px;
-                  
-                  .thumbnail-item {
-                    width: 60px;
-                    height: 60px;
-                    border-radius: 4px;
-                    overflow: hidden;
-                    
-                    img {
-                      width: 100%;
-                      height: 100%;
-                      object-fit: cover;
-                      cursor: pointer;
-                      transition: transform 0.2s;
-                      
-                      &:hover {
-                        transform: scale(1.05);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      .no-comments-message {
-        background-color: #f8f9fa;
-        border-radius: 6px;
-        padding: 15px;
-        text-align: center;
-        color: #7f8c8d;
-        font-size: 14px;
-      }
-      
-      // Add Comment Form
-      .add-comment-form {
-        margin-top: 25px;
-        
-        h5 {
-          font-size: 14px;
-          font-weight: 600;
-          color: #2c3e50;
-          margin: 0 0 10px;
-          display: flex;
-          align-items: center;
-          
-          i {
-            margin-right: 6px;
-            color: #7f8c8d;
-          }
-        }
-      }
-    }
-  }
-}
-
-// Add styles for filter interaction feedback
-
-.filters-section {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-  margin-bottom: 20px;
-  overflow: hidden;
-  
-  .filters-header {
-    padding: 15px 20px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #efefef;
-    
-    h5 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      
-      i {
-        margin-right: 8px;
-        color: #6c757d;
-      }
-    }
-  }
-  
-  .filters-body {
-    padding: 15px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    
-    .filter-group {
-      flex: 1;
-      min-width: 200px;
-      
-      label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 500;
-        font-size: 14px;
-        color: #495057;
-      }
-      
-      .select-wrapper {
-        position: relative;
-        
-        &:after {
-          content: "\f0d7";
-          font-family: "Font Awesome 5 Free";
-          font-weight: 900;
-          position: absolute;
-          right: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #6c757d;
-          pointer-events: none;
-        }
-        
-        select {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #ced4da;
-          border-radius: 4px;
-          appearance: none;
-          background-color: #fff;
-          font-size: 14px;
-          
-          &:focus {
-            outline: none;
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-          }
-        }
-      }
-      
-      &.search-group {
-        flex: 2;
-        
-        .search-wrapper {
-          position: relative;
-          
-          input {
-            width: 100%;
-            padding: 8px 12px;
-            padding-right: 35px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 14px;
-            
-            &:focus {
-              outline: none;
-              border-color: #80bdff;
-              box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-            }
-          }
-          
-          .search-icon {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6c757d;
-          }
-        }
-      }
-    }
-  }
-}
-
-// Change cursor to show interactivity
-select, input[type="text"] {
-  cursor: pointer;
-}
-
-input[type="text"] {
-  cursor: text;
-}
-
-// Active filter indicators
-select, input[type="text"] {
-  &.has-value {
-    border-color: #3498db !important;
-    background-color: #f1f9ff;
-  }
-}
-
-// Improved ticket statistics
-.ticket-stats {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin: 25px 0;
-}
-
-.stat-box {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  border-left: 4px solid #ddd;
-  min-height: 120px;
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .stat-icon {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-right: 15px;
-    
-    i {
-      font-size: 24px;
-    }
-  }
-  
-  .stat-info {
-    flex: 1;
-    
-    .stat-count {
-      display: block;
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 5px;
-      line-height: 1;
-    }
-    
-    .stat-label {
-      display: block;
-      font-size: 14px;
-      color: #666;
-    }
-  }
-  
-  // Pending tickets styling
-  &.pending {
-    border-left-color: #dc3545;
-    
-    .stat-icon {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
-    }
-    
-    .stat-count {
-      color: #dc3545;
-    }
-  }
-  
-  // In Progress tickets styling - make this one stand out more
-  &.progress {
-    border-left-color: #fd7e14;
-    transform: scale(1.05);
-    box-shadow: 0 5px 20px rgba(253, 126, 20, 0.15);
-    z-index: 1;
-    
-    .stat-icon {
-      background-color: rgba(253, 126, 20, 0.1);
-      color: #fd7e14;
-      width: 66px;
-      height: 66px;
-      
-      i {
-        font-size: 28px;
-      }
-    }
-    
-    .stat-count {
-      color: #fd7e14;
-      font-size: 32px;
-    }
-    
-    .stat-label {
-      font-weight: 600;
-      font-size: 15px;
-    }
-  }
-  
-  // Resolved tickets styling
-  &.resolved {
-    border-left-color: #28a745;
-    
-    .stat-icon {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    .stat-count {
-      color: #28a745;
-    }
-  }
-}
-
-// Make it responsive
-@media (max-width: 768px) {
-  .ticket-stats {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .stat-box {
-    min-height: auto;
-    
-    &.progress {
-      transform: scale(1.03);
-      margin: 10px 0;
-    }
-  }
-  
-  .filters-body {
-    flex-direction: column;
-    
-    .filter-group {
-      width: 100%;
-    }
-  }
-}
-
-// Add styles for active filters with visual indicators
-.filters-section {
-  .filters-body {
-    .filter-group {
-      .select-wrapper select, 
-      .search-wrapper input {
-        &.active-filter {
-          border-color: #3498db;
-          background-color: rgba(52, 152, 219, 0.05);
-          box-shadow: 0 0 0 1px rgba(52, 152, 219, 0.2);
-        }
-      }
-      
-      // Add small indicator badge when filter is active
-      label {
-        position: relative;
-        
-        &.has-active-filter:after {
-          content: "";
-          position: absolute;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background-color: #3498db;
-          right: -12px;
-          top: 50%;
-          transform: translateY(-50%);
-        }
-      }
-    }
-  }
-}
-
-// Add smooth transition for expanding tickets
-.ticket-details {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease-out;
-  
-  &.expanded {
-    max-height: 2000px; // Arbitrary large value
-  }
-}
-
-// Add loading indicator styles
+// ---------------------------------------------------------------------------
+// Carga
+// ---------------------------------------------------------------------------
 .loading-overlay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.7);
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 10;
-  
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 6rem;
+  background: rgba(255, 255, 255, .7);
+  backdrop-filter: blur(2px);
+  border-radius: 16px;
+
   .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(52, 152, 219, 0.1);
+    width: 42px;
+    height: 42px;
+    border: 4px solid $katuq-purple-100;
+    border-top-color: $katuq-primary;
     border-radius: 50%;
-    border-top-color: #3498db;
-    animation: spin 1s ease-in-out infinite;
+    animation: kq-spin .8s linear infinite;
   }
 }
 
-@keyframes spin {
+@keyframes kq-spin {
   to { transform: rotate(360deg); }
 }
 
-// Success notification for comment submission
-.comment-notification {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #2ecc71;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transform: translateY(100px);
-  opacity: 0;
-  transition: all 0.3s ease;
-  
-  &.show {
-    transform: translateY(0);
-    opacity: 1;
+// ---------------------------------------------------------------------------
+// Encabezado
+// ---------------------------------------------------------------------------
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+
+  .dashboard-title {
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      color: $katuq-gray-900;
+      margin: 0;
+
+      i {
+        color: $katuq-primary;
+        font-size: 1.25rem;
+      }
+    }
+
+    p {
+      margin: .25rem 0 0;
+      font-size: .88rem;
+      color: $katuq-gray-500;
+    }
   }
-  
-  .notification-content {
-    display: flex;
+
+  .btn-create {
+    display: inline-flex;
     align-items: center;
-    
-    i {
-      margin-right: 10px;
+    gap: .5rem;
+    background: $katuq-primary;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .65rem 1.4rem;
+    cursor: pointer;
+    transition: background .15s ease, box-shadow .15s ease;
+
+    &:hover {
+      background: $katuq-primary-dark;
+      box-shadow: 0 4px 12px rgba($katuq-primary, .35);
     }
   }
 }
 
-// --- Botón moderno para adjuntar archivos en comentarios ---
-.btn-attach {
-  background-color: #f1f9ff;
-  color: #3498db;
-  border: 1px solid #3498db;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.2s, color 0.2s, border 0.2s;
-  cursor: pointer;
-  margin-right: 10px;
+// ---------------------------------------------------------------------------
+// Filtros
+// ---------------------------------------------------------------------------
+.filters-section {
+  background: #fff;
+  border: 1px solid $katuq-gray-200;
+  border-radius: 14px;
+  padding: 1rem 1.25rem 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 
-  i {
-    font-size: 16px;
-    margin-right: 6px;
+  .filters-header {
+    h5 {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: $katuq-purple-700;
+      margin: 0 0 .85rem;
+
+      i { color: $katuq-primary; }
+    }
   }
 
-  &:hover, &:focus {
-    background-color: #3498db;
-    color: #fff;
-    border-color: #2980b9;
-    outline: none;
+  .filters-body {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-group {
+    flex: 1 1 180px;
+    min-width: 160px;
+
+    label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 600;
+      color: $katuq-gray-600;
+      margin-bottom: .3rem;
+
+      &.has-active-filter {
+        color: $katuq-primary-dark;
+      }
+    }
+
+    .form-control {
+      width: 100%;
+      border: 1.5px solid $katuq-gray-300;
+      border-radius: 10px;
+      padding: .5rem .8rem;
+      font-size: .88rem;
+      color: $katuq-gray-800;
+      background: #fff;
+      transition: border-color .15s ease, box-shadow .15s ease;
+
+      &:focus {
+        border-color: $katuq-primary;
+        box-shadow: 0 0 0 3px rgba($katuq-primary, .15);
+        outline: none;
+      }
+
+      &.active-filter {
+        border-color: $katuq-primary;
+        background: $katuq-purple-50;
+      }
+    }
+  }
+
+  .search-group {
+    flex: 2 1 260px;
+  }
+
+  .search-wrapper {
+    position: relative;
+
+    .form-control {
+      padding-right: 4.2rem;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: .9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $katuq-gray-400;
+      pointer-events: none;
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 2.4rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $katuq-gray-500;
+      cursor: pointer;
+
+      &:hover { color: $katuq-danger; }
+    }
   }
 }
 
-// --- Botón moderno para enviar comentario ---
-.btn-send-comment {
-  background-color: #3498db;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 18px;
-  font-size: 15px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.2s, color 0.2s;
-  cursor: pointer;
+// ---------------------------------------------------------------------------
+// Estadísticas por estado
+// ---------------------------------------------------------------------------
+.ticket-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: .9rem;
+  margin-bottom: 1.5rem;
 
-  i {
-    font-size: 16px;
-    margin-right: 6px;
-  }
+  .stat-box {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    background: #fff;
+    border: 1px solid $katuq-gray-200;
+    border-radius: 14px;
+    padding: 1rem 1.15rem;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
 
-  &:hover, &:focus {
-    background-color: #2980b9;
-    color: #fff;
-    outline: none;
-  }
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
 
-  &:disabled {
-    background-color: #b3d3ee;
-    color: #f5f5f5;
-    cursor: not-allowed;
-    opacity: 0.7;
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+
+      .stat-count {
+        font-size: 1.35rem;
+        font-weight: 800;
+        line-height: 1.1;
+        color: $katuq-gray-900;
+      }
+
+      .stat-label {
+        font-size: .78rem;
+        font-weight: 600;
+        color: $katuq-gray-500;
+      }
+    }
+
+    &.pending .stat-icon {
+      background: $katuq-warning-light;
+      color: $katuq-warning-dark;
+    }
+
+    &.progress .stat-icon {
+      background: $katuq-purple-100;
+      color: $katuq-primary;
+    }
+
+    &.resolved .stat-icon {
+      background: $katuq-success-light;
+      color: $katuq-success-dark;
+    }
   }
 }
 
+// ---------------------------------------------------------------------------
+// Estado vacío
+// ---------------------------------------------------------------------------
+.empty-state {
+  text-align: center;
+  background: #fff;
+  border: 1px dashed $katuq-purple-300;
+  border-radius: 16px;
+  padding: 3rem 1.5rem;
+
+  .empty-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: $katuq-purple-50;
+
+    i {
+      font-size: 1.8rem;
+      color: $katuq-primary;
+    }
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $katuq-gray-800;
+    margin-bottom: .35rem;
+  }
+
+  p {
+    font-size: .88rem;
+    color: $katuq-gray-500;
+    margin-bottom: 1.25rem;
+  }
+
+  .btn-primary {
+    background: $katuq-primary;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: .9rem;
+    padding: .6rem 1.5rem;
+    cursor: pointer;
+    transition: background .15s ease;
+
+    &:hover { background: $katuq-primary-dark; }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Lista de tickets
+// ---------------------------------------------------------------------------
+.tickets-list {
+  display: flex;
+  flex-direction: column;
+  gap: .9rem;
+}
+
+.ticket-card {
+  background: #fff;
+  border: 1px solid $katuq-gray-200;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  transition: box-shadow .15s ease, border-color .15s ease;
+
+  &:hover {
+    border-color: $katuq-purple-300;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, .1);
+  }
+}
+
+.ticket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+
+  &.expanded {
+    border-bottom: 1px solid $katuq-gray-200;
+    background: $katuq-purple-50;
+  }
+
+  .ticket-info {
+    min-width: 0;
+
+    .ticket-id {
+      display: inline-block;
+      font-size: .75rem;
+      font-weight: 700;
+      color: $katuq-primary-dark;
+      background: $katuq-purple-100;
+      border-radius: 999px;
+      padding: .12rem .6rem;
+      margin-bottom: .3rem;
+    }
+
+    .ticket-title {
+      font-size: .98rem;
+      font-weight: 700;
+      color: $katuq-gray-900;
+      margin: 0 0 .3rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .ticket-meta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: .78rem;
+      color: $katuq-gray-500;
+
+      i {
+        margin-right: .3rem;
+        color: $katuq-gray-400;
+      }
+    }
+  }
+
+  .ticket-status-wrapper {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-shrink: 0;
+
+    .ticket-status {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .78rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: .3rem .8rem;
+      white-space: nowrap;
+
+      &.pendiente {
+        background: $katuq-warning-light;
+        color: $katuq-warning-text;
+      }
+
+      &.haciendo {
+        background: $katuq-purple-100;
+        color: $katuq-purple-800;
+      }
+
+      &.resuelto {
+        background: $katuq-success-light;
+        color: $katuq-success-text;
+      }
+
+      &.archivado {
+        background: $katuq-gray-100;
+        color: $katuq-gray-600;
+      }
+    }
+
+    .expand-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: $katuq-gray-100;
+      color: $katuq-gray-600;
+      font-size: .75rem;
+      transition: background .15s ease, color .15s ease;
+    }
+  }
+
+  &:hover .expand-icon {
+    background: $katuq-purple-100;
+    color: $katuq-primary-dark;
+  }
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .ticket-status-wrapper {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Detalle expandido
+// ---------------------------------------------------------------------------
+.ticket-details {
+  padding: 1.25rem;
+  animation: kq-fade-in .2s ease;
+
+  .ticket-section {
+    margin-bottom: 1.5rem;
+
+    &:last-child { margin-bottom: 0; }
+
+    h4 {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: $katuq-purple-700;
+      margin-bottom: .75rem;
+      padding-bottom: .5rem;
+      border-bottom: 2px solid $katuq-purple-100;
+
+      i { color: $katuq-primary; }
+    }
+  }
+
+  .ticket-description {
+    font-size: .9rem;
+    color: $katuq-gray-700;
+    line-height: 1.6;
+    margin: 0;
+    white-space: pre-wrap;
+  }
+}
+
+@keyframes kq-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// Adjuntos del ticket
+.attachments-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+
+  .attachment-item {
+    width: 110px;
+
+    .attachment-preview {
+      width: 110px;
+      height: 90px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid $katuq-gray-200;
+      cursor: pointer;
+
+      .attachment-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform .2s ease;
+
+        &:hover { transform: scale(1.06); }
+      }
+    }
+
+    .attachment-actions {
+      display: flex;
+      justify-content: center;
+      gap: .4rem;
+      margin-top: .35rem;
+
+      .attachment-btn {
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid $katuq-gray-300;
+        border-radius: 50%;
+        background: #fff;
+        color: $katuq-gray-600;
+        font-size: .7rem;
+        cursor: pointer;
+        transition: background .15s ease, color .15s ease, border-color .15s ease;
+
+        &:hover {
+          background: $katuq-purple-50;
+          border-color: $katuq-purple-300;
+          color: $katuq-primary-dark;
+        }
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Comentarios
+// ---------------------------------------------------------------------------
+.comments-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.comment-item {
+  display: flex;
+  gap: .75rem;
+
+  .comment-avatar {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+  }
+
+  .comment-content {
+    flex: 1;
+    min-width: 0;
+    background: $katuq-gray-50;
+    border: 1px solid $katuq-gray-200;
+    border-radius: 12px;
+    padding: .75rem 1rem;
+
+    .comment-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: .75rem;
+      flex-wrap: wrap;
+      margin-bottom: .35rem;
+
+      .comment-author {
+        font-size: .85rem;
+        font-weight: 700;
+        color: $katuq-gray-800;
+      }
+
+      .comment-date {
+        font-size: .72rem;
+        color: $katuq-gray-500;
+      }
+    }
+
+    .comment-body p {
+      font-size: .88rem;
+      color: $katuq-gray-700;
+      line-height: 1.55;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+  }
+}
+
+.comment-attachments {
+  margin-top: .6rem;
+
+  .attachment-thumbnails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+
+    .thumbnail-item img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid $katuq-gray-200;
+      cursor: pointer;
+    }
+  }
+}
+
+.no-comments-message {
+  background: $katuq-gray-50;
+  border: 1px dashed $katuq-gray-300;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  margin-bottom: 1.25rem;
+
+  p {
+    margin: 0;
+    font-size: .85rem;
+    color: $katuq-gray-500;
+  }
+}
+
+// Formulario de nuevo comentario
+.add-comment-form {
+  background: $katuq-purple-50;
+  border: 1px solid $katuq-purple-100;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+
+  h5 {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .85rem;
+    font-weight: 700;
+    color: $katuq-purple-800;
+    margin-bottom: .75rem;
+
+    i { color: $katuq-primary; }
+  }
+
+  .form-control {
+    width: 100%;
+    border: 1.5px solid $katuq-gray-300;
+    border-radius: 10px;
+    padding: .6rem .85rem;
+    font-size: .88rem;
+    color: $katuq-gray-800;
+    resize: vertical;
+    transition: border-color .15s ease, box-shadow .15s ease;
+
+    &:focus {
+      border-color: $katuq-primary;
+      box-shadow: 0 0 0 3px rgba($katuq-primary, .15);
+      outline: none;
+    }
+  }
+
+  .file-upload-section {
+    margin-top: .75rem;
+
+    .btn-attach {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      background: #fff;
+      border: 1.5px solid $katuq-gray-300;
+      border-radius: 999px;
+      color: $katuq-gray-700;
+      font-size: .82rem;
+      font-weight: 600;
+      padding: .45rem 1rem;
+      cursor: pointer;
+      transition: border-color .15s ease, color .15s ease;
+
+      &:hover {
+        border-color: $katuq-primary;
+        color: $katuq-primary-dark;
+      }
+    }
+
+    .hidden-file-input { display: none; }
+  }
+
+  .upload-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    margin-top: .75rem;
+
+    .preview-item .preview-image {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid $katuq-gray-200;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .remove-preview {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, .65);
+        color: #fff;
+        font-size: .65rem;
+        cursor: pointer;
+
+        &:hover { background: $katuq-danger; }
+      }
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: .85rem;
+
+    .btn-send-comment {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: $katuq-primary;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: .85rem;
+      font-weight: 600;
+      padding: .55rem 1.3rem;
+      cursor: pointer;
+      transition: background .15s ease, box-shadow .15s ease;
+
+      &:hover:not(:disabled) {
+        background: $katuq-primary-dark;
+        box-shadow: 0 4px 12px rgba($katuq-primary, .35);
+      }
+
+      &:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Notificación de comentario enviado
+// ---------------------------------------------------------------------------
+.comment-notification {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1050;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+
+  &.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .notification-content {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    background: $katuq-success;
+    color: #fff;
+    font-size: .88rem;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: .8rem 1.2rem;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, .35);
+  }
+}
