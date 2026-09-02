@@ -455,6 +455,12 @@ export class MaestroService {
   public deleteBillingZone(adicion: any) {
     return this.http.post(this.urlBase + '/v1/zonascobro/delete', adicion);
   }
+  // Spec 011.1 (D-054): borrado en lote. payload = { cds: string[] } (borrar esas)
+  // o { all: true } (borrar TODAS las de la empresa). El backend solo borra zonas
+  // de la empresa activa (aislamiento server-side); ids ajenos se ignoran.
+  public deleteBillingZonesBatch(payload: { cds?: string[]; all?: boolean }) {
+    return this.http.post(this.urlBase + '/v1/zonascobro/delete-batch', payload);
+  }
   // Spec 011 v2 (D-051/D-052): una zona de cobro es un PAQUETE.
   // create/edit reciben { nombreZonaCobro, valorZonaCobro, impuestoZonaCobro, municipios[] }
   // y el backend crea/actualiza UN documento con la lista de municipios adentro.

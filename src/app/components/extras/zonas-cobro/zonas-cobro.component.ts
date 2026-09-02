@@ -20,6 +20,9 @@ export class ZonasCobroComponent implements OnInit {
   rows: ZonaCobro[] = [];
   // Buscador de municipios por zona expandida (keyed por cd).
   filtroMunicipio: { [cd: string]: string } = {};
+  // Selección múltiple (spec 011.1, D-054). Ligada a [(selection)] de la tabla;
+  // el check del encabezado marca la PÁGINA visible (decisión del usuario).
+  seleccionadas: ZonaCobro[] = [];
 
   constructor(
     private service: MaestroService,
@@ -34,10 +37,24 @@ export class ZonasCobroComponent implements OnInit {
 
   cargarDatos(): void {
     this.cargando = true;
+    this.seleccionadas = []; // limpia selección al recargar (los cd pueden cambiar)
     this.service.getBillingZone().subscribe((x: any) => {
-      this.rows = normalizeZonasCobro(x || []);
+      // Orden por fecha de creación DESC: la zona recién creada queda en la 1ª página.
+      // Las que no tengan date_add van al final.
+      this.rows = normalizeZonasCobro(x || []).sort((a, b) => this.ts(b) - this.ts(a));
       this.cargando = false;
     }, () => { this.cargando = false; });
+  }
+
+  /** Timestamp (ms) de date_add para ordenar; 0 si falta o es inválido. */
+  private ts(z: ZonaCobro): number {
+    const t = z && z.date_add ? Date.parse(z.date_add) : NaN;
+    return isNaN(t) ? 0 : t;
+  }
+
+  /** Total de municipios en un conjunto de zonas (para los mensajes de confirmación). */
+  private totalMunicipios(zonas: ZonaCobro[]): number {
+    return (zonas || []).reduce((acc, z) => acc + (z.municipios?.length || 0), 0);
   }
 
   /** Municipios de una zona filtrados por el buscador de su detalle. */
@@ -87,6 +104,62 @@ export class ZonasCobroComponent implements OnInit {
           this.cargarDatos();
         });
       }
+    });
+  }
+
+  /** Borra las zonas marcadas con checkbox (spec 011.1, D-054). Una sola petición. */
+  borrarSeleccionadas(): void {
+    const n = this.seleccionadas.length;
+    if (n === 0) { return; }
+    const munis = this.totalMunicipios(this.seleccionadas);
+    Swal.fire({
+      title: `¿Eliminar ${n} zona${n === 1 ? '' : 's'} de cobro?`,
+      text: `Se eliminarán ${n} zona${n === 1 ? '' : 's'} con ${munis} municipio${munis === 1 ? '' : 's'} en total. Esta acción no se puede deshacer.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    }).then((result) => {
+      if (!result.isConfirmed) { return; }
+      const cds = this.seleccionadas.map(z => z.cd).filter((cd): cd is string => !!cd);
+      this.service.deleteBillingZonesBatch({ cds }).subscribe((r: any) => {
+        Swal.fire('Eliminadas!', `Se eliminaron ${r?.deleted ?? cds.length} zonas de cobro.`, 'success');
+        this.cargarDatos();
+      }, () => {
+        Swal.fire('Error', 'No se pudieron eliminar las zonas seleccionadas.', 'error');
+      });
+    });
+  }
+
+  /**
+   * Borra TODAS las zonas de la empresa (spec 011.1, D-054). Confirmación reforzada:
+   * el operador debe escribir la palabra ELIMINAR para habilitar el borrado.
+   */
+  borrarTodas(): void {
+    const total = this.rows.length;
+    if (total === 0) { return; }
+    Swal.fire({
+      title: '¿Eliminar TODAS las zonas de cobro?',
+      html: `Vas a eliminar <b>${total}</b> zona${total === 1 ? '' : 's'} de cobro de esta empresa. ` +
+        `Esta acción es <b>irreversible</b>.<br><br>Escribe <b>ELIMINAR</b> para confirmar:`,
+      icon: 'warning',
+      input: 'text',
+      inputPlaceholder: 'ELIMINAR',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar todas',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc3545',
+      reverseButtons: true,
+      inputValidator: (value) => (value === 'ELIMINAR' ? null : 'Escribe ELIMINAR (en mayúsculas) para confirmar')
+    }).then((result) => {
+      if (!result.isConfirmed || result.value !== 'ELIMINAR') { return; }
+      this.service.deleteBillingZonesBatch({ all: true }).subscribe((r: any) => {
+        Swal.fire('Eliminadas!', `Se eliminaron ${r?.deleted ?? total} zonas de cobro.`, 'success');
+        this.cargarDatos();
+      }, () => {
+        Swal.fire('Error', 'No se pudieron eliminar las zonas.', 'error');
+      });
     });
   }
 }

@@ -21,6 +21,8 @@ export interface ZonaCobro {
   municipios: MunicipioZona[];
   company?: string;
   activo?: boolean;
+  // auditoría (ISO string); se muestra como "Fecha creación" y ordena la lista:
+  date_add?: string;
   // campos legacy que pueden venir en docs sin migrar:
   ciudad?: string;
   codigoDane?: string;

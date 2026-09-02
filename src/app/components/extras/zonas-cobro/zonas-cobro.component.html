@@ -35,13 +35,33 @@
 
         <div class="card-body custom-datatable" *ngIf="!cargando">
 
-          <p-table #dt [value]="rows" dataKey="cd" [paginator]="true" [rows]="10"
+          <!-- Toolbar de borrado múltiple (spec 011.1, D-054) -->
+          <div class="row m-1 mb-2" *ngIf="rows.length">
+            <div class="col-12 d-flex flex-wrap align-items-center gap-2">
+              <button type="button" class="btn btn-outline-danger btn-sm"
+                [disabled]="!seleccionadas.length" (click)="borrarSeleccionadas()">
+                <i class="icofont icofont-trash"></i>&nbsp;{{ 'Eliminar seleccionadas' | translate }}
+                <span *ngIf="seleccionadas.length">({{ seleccionadas.length }})</span>
+              </button>
+              <button type="button" class="btn btn-danger btn-sm ml-2" (click)="borrarTodas()">
+                <i class="icofont icofont-ui-delete"></i>&nbsp;{{ 'Eliminar TODAS' | translate }}
+              </button>
+              <span class="text-muted ml-2" *ngIf="seleccionadas.length">
+                {{ seleccionadas.length }} seleccionada{{ seleccionadas.length === 1 ? '' : 's' }} en esta página
+              </span>
+            </div>
+          </div>
+
+          <p-table #dt [value]="rows" dataKey="cd" [(selection)]="seleccionadas" [paginator]="true" [rows]="10"
             [scrollable]="true" scrollHeight="flex" [rowsPerPageOptions]="[10, 20, 50]"
             styleClass="p-datatable-gridlines p-datatable-striped" [tableStyle]="{ 'min-width': '20rem' }"
             [rowHover]="true">
 
             <ng-template pTemplate="header">
               <tr>
+                <th style="width: 3rem" class="text-center">
+                  <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                </th>
                 <th style="width: 3rem"></th>
                 <th [pSortableColumn]="'nombreZonaCobro'" class="text-center">{{ 'Nombre' | translate }} <p-sortIcon [field]="'nombreZonaCobro'"></p-sortIcon></th>
                 <th [pSortableColumn]="'valorZonaCobro'" class="text-center">{{ 'Valor' | translate }} <p-sortIcon [field]="'valorZonaCobro'"></p-sortIcon></th>
@@ -49,12 +69,16 @@
                 <th class="text-center">{{ 'Impuesto' | translate }}</th>
                 <th class="text-center">{{ 'Total' | translate }}</th>
                 <th class="text-center">{{ 'Municipios' | translate }}</th>
+                <th [pSortableColumn]="'date_add'" class="text-center">{{ 'Fecha creación' | translate }} <p-sortIcon [field]="'date_add'"></p-sortIcon></th>
                 <th class="text-center">{{ 'Acciones' | translate }}</th>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-row let-expanded="expanded">
               <tr>
+                <td class="text-center">
+                  <p-tableCheckbox [value]="row"></p-tableCheckbox>
+                </td>
                 <td class="text-center">
                   <a href="javascript:void(0)" [pRowToggler]="row" class="fc-primary"
                     ngbTooltip="Ver municipios" placement="top">
@@ -69,6 +93,7 @@
                 <td class="text-center">
                   <span class="badge bg-info text-white">{{ row.municipios?.length || 0 }}</span>
                 </td>
+                <td class="text-center">{{ row.date_add ? (row.date_add | date:'dd/MM/yyyy') : '—' }}</td>
                 <td class="text-center">
                   <i placement="top" ngbTooltip="{{'Edit' | translate}}"
                     style="font-size: 18px; margin-left: 10px; cursor: pointer;"
@@ -82,7 +107,7 @@
 
             <ng-template pTemplate="rowexpansion" let-row>
               <tr>
-                <td colspan="8">
+                <td colspan="10">
                   <div class="p-3">
                     <div class="row mb-2">
                       <div class="col-md-5">
@@ -113,7 +138,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="8">{{ 'No hay datos disponibles' | translate }}</td>
+                <td colspan="10">{{ 'No hay datos disponibles' | translate }}</td>
               </tr>
             </ng-template>
 
