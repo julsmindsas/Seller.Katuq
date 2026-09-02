@@ -5633,3 +5633,13 @@ Commits backend: a97f0d9, d89c436, 7c947bc, 6798f61, 373a06f, f0c6cff. Frontend:
 - Hallazgo: el runner de `test-sitios-publicacion` no esperaba las pruebas asíncronas; **4 pruebas del generador de páginas nunca corrieron y hoy fallan** (quedan como PENDIENTE visibles). Dueño: quien retome el generador.
 - Pendiente del paquete: encabezado móvil compacto con barra inferior única, plantilla Tienda de regalos v2 con títulos editoriales, spec de movimiento con la previa animando, bloque de hora de corte, JS externo con hash, Mi marca vs Estilo, miniaturas reales, e idempotencia del pedido (diff a aprobar).
 Commits backend: a9695e5, e8cbaae, efbb2fd, 51d2e9b. Frontend: 676a373f (2026.09.02.7).
+
+### D-255 — Tablero de pendientes con dueño (2026-09-02, cierre de turno)
+| Pendiente | Dueño | Nota |
+|---|---|---|
+| 4 pruebas del generador de páginas que nunca corrían y hoy fallan (`pendiente()` en test-sitios-publicacion) | Sesión que retome el generador (`services/sites/siteGenerator.js`) | Contratos: sin modelo directo, tienda completa con anuncio/categorías, portada con foto real, vestido por sector |
+| Idempotencia del pedido público (huella con teléfono) | Daniel aprueba el diff → Claude aplica | Propuesto en el reporte del 2026-09-02 |
+| Fotos reales de portada/banners ≥ 1600 px en FLORECER y `backfill-variantes-sitios.js --apply` | Daniel (fotos) → Claude (backfill) | Dry-run: 15 fotos, todas banners de prueba de 800 px; sin fotos nuevas el LCP no baja |
+| Variantes de fotos de producto (vienen del catálogo, sin variantes) | Backend, próxima sesión | Al sincronizar catálogo o al vuelo; es donde está el volumen |
+| Encabezado móvil compacto + barra inferior única; plantilla v2 con títulos editoriales; movimiento visible en la previa; bloque hora de corte; JS externo con hash; Mi marca vs Estilo; miniaturas reales | Claude, siguiente turno | Orden sugerido por la auditoría |
+Lighthouse móvil tras el turno (medido por la sesión auditora): portada 62→84, ficha 86; CLS 0,19→0,01; LCP 4,3 s (imágenes sin variantes).
