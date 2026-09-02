@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { ContenidoSitio, Sitio, SitiosService, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, Sitio, SitiosService, VentaConfig } from "../sitios.service";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
@@ -615,6 +615,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
 
   /** Bloques con los productos ya resueltos, solo para la vista previa. */
   bloquesPrevia: BloqueSitio[] = [];
+  /** Categorías reales de la empresa: la previa las pinta y el panel las ofrece. */
+  categorias: CategoriaSitio[] = [];
   private productosPrevia = new Map<string, any>();
 
   // Campos de ajustes
@@ -694,6 +696,10 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
         this.iniciarHistorial();
         this.fijarComoGuardado();
         setTimeout(() => this.observarLienzo());
+        this.service.categorias(this.id).subscribe({
+          next: (r) => { this.categorias = (r && r.success && r.data) || []; },
+          error: () => { this.categorias = []; },
+        });
       },
       error: () => {
         this.cargando = false;
@@ -2422,6 +2428,28 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
    * Cualquier cambio del editor pasa por aquí: marca que hay trabajo sin
    * guardar y refresca lo que ve la vista previa.
    */
+  /** Las que sí salen en el sitio (para la previa). */
+  get categoriasVisibles(): CategoriaSitio[] {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    const ocultas = new Set(((t && t.categoriasOcultas) || []).map((c: string) => String(c).toLowerCase()));
+    return this.categorias.filter((c) => !ocultas.has(String(c.nombre).toLowerCase()));
+  }
+
+  categoriaOculta(nombre: string): boolean {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    return ((t && t.categoriasOcultas) || []).some((c: string) => String(c).toLowerCase() === String(nombre).toLowerCase());
+  }
+
+  alternarCategoriaOculta(nombre: string): void {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    if (!t) return;
+    const lista: string[] = Array.isArray(t.categoriasOcultas) ? t.categoriasOcultas : [];
+    t.categoriasOcultas = this.categoriaOculta(nombre)
+      ? lista.filter((c) => String(c).toLowerCase() !== String(nombre).toLowerCase())
+      : [...lista, nombre].slice(0, 40);
+    this.marcarSucio();
+  }
+
   /** Categorías ocultas del sitio, como texto separado por coma para el campo. */
   categoriasOcultasTexto(): string {
     const t: any = this.contenido && (this.contenido as any).tienda;

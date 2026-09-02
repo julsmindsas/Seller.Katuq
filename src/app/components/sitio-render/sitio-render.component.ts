@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from "@angular/core";
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
@@ -179,7 +179,7 @@ export interface DatosLead {
   templateUrl: "./sitio-render.component.html",
   styleUrls: ["./sitio-render.component.scss"],
 })
-export class SitioRenderComponent implements OnChanges {
+export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Input() bloques: BloqueSitio[] = [];
   @Input() tema: TemaSitio | null = null;
 
@@ -193,6 +193,40 @@ export class SitioRenderComponent implements OnChanges {
 
   /** En vista previa los formularios y enlaces no hacen nada. */
   @Input() previsualizacion = false;
+  /** Categorías reales de la empresa (la previa las pinta como la publicada). */
+  @Input() categorias: { nombre: string; total: number; imagen: string }[] = [];
+  /** Con la tienda encendida, las tarjetas llevan su botón "Agregar". */
+  @Input() tiendaActiva = false;
+
+  /** Reloj de los carruseles de la previa (portada y banners): un paso cada 5 s. */
+  paso = 0;
+  private reloj: any = null;
+
+  ngOnInit(): void {
+    if (typeof window === "undefined") return;
+    const quieto = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!quieto) this.reloj = setInterval(() => { this.paso++; }, 5000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.reloj) clearInterval(this.reloj);
+  }
+
+  /** Fotos de la portada en carrusel (dos o más y sin foto fija). */
+  slidesDeHero(d: any): string[] {
+    if (!d || d.imagen) return [];
+    const s = (d.imagenes || []).filter(Boolean);
+    return s.length >= 2 ? s : [];
+  }
+
+  /** Índice activo de un carrusel de n fotos según el reloj. */
+  activo(n: number): number {
+    return n > 0 ? this.paso % n : 0;
+  }
+
+  categoriasDe(d: any): { nombre: string; total: number; imagen: string }[] {
+    return (this.categorias || []).slice(0, Number(d && d.maximo) || 6);
+  }
   /** Ancho simulado en la vista previa del editor. */
   @Input() dispositivo: "escritorio" | "movil" = "escritorio";
 

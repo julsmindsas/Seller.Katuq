@@ -1897,11 +1897,19 @@
 
             <div class="campo">
               <label>Categorías que no salen en el sitio</label>
-              <small>Separadas por coma, tal como se llaman en tu maestro (por ejemplo «Listas internas»).
-                Desaparecen del menú, las baldosas, el pie y los filtros; un producto que solo esté en
-                ellas tampoco sale.</small>
-              <input type="text" [ngModel]="categoriasOcultasTexto()" (ngModelChange)="ponerCategoriasOcultas($event)"
-                     placeholder="Listas internas, Insumos" />
+              <small>Desmarca las que no quieres en el menú, las baldosas, el pie ni los filtros
+                (por ejemplo «Listas internas»). Un producto que solo esté en ellas tampoco sale.</small>
+              <div class="casillas" *ngIf="categorias.length; else sinCategorias">
+                <label class="casilla" *ngFor="let c of categorias">
+                  <input type="checkbox" [checked]="!categoriaOculta(c.nombre)" (change)="alternarCategoriaOculta(c.nombre)" />
+                  <span class="casilla__nombre">{{ c.nombre }}</span>
+                  <span class="casilla__total">{{ c.total }}</span>
+                </label>
+              </div>
+              <ng-template #sinCategorias>
+                <input type="text" [ngModel]="categoriasOcultasTexto()" (ngModelChange)="ponerCategoriasOcultas($event)"
+                       placeholder="Listas internas, Insumos" />
+              </ng-template>
             </div>
 
             <ng-container *ngIf="ventaConfig && ventaConfig.formasPago.length">
@@ -2170,6 +2178,8 @@
               [bloqueActivo]="idBloqueActivo"
               [logo]="logo"
               [negocio]="negocio"
+              [categorias]="categoriasVisibles"
+              [tiendaActiva]="contenido.tienda?.habilitada === true"
               (textoEditado)="aplicarTextoEditado($event)"
               (elementoMovido)="aplicarElementoMovido($event)"
               (bloqueSeleccionado)="seleccionarDesdePrevia($event)"

@@ -101,7 +101,10 @@
 
           <!-- Las categorías reales las resuelve el servidor al publicar. -->
           <nav class="cabecera__cats" *ngIf="bloque.datos.mostrarCategorias">
-            <a>tus categorías</a><a>salen aquí</a><a>al publicar</a>
+            <ng-container *ngIf="categorias.length; else catsDemo">
+              <a *ngFor="let c of categorias.slice(0, 8)">{{ c.nombre }}</a>
+            </ng-container>
+            <ng-template #catsDemo><a>tus categorías</a><a>salen aquí</a><a>al publicar</a></ng-template>
           </nav>
         </header>
 
@@ -144,7 +147,13 @@
           </div>
 
           <ng-template #heroClasico>
-            <img *ngIf="fondoDeHero(bloque.datos)" class="hero__fondo" [src]="fondoDeHero(bloque.datos)" [alt]="bloque.datos.titulo" />
+            <ng-container *ngIf="slidesDeHero(bloque.datos).length; else fondoFijo">
+              <img *ngFor="let u of slidesDeHero(bloque.datos); let k = index" class="hero__slide"
+                   [class.is-activa]="k === activo(slidesDeHero(bloque.datos).length)" [src]="u" alt="" />
+            </ng-container>
+            <ng-template #fondoFijo>
+              <img *ngIf="fondoDeHero(bloque.datos)" class="hero__fondo" [src]="fondoDeHero(bloque.datos)" [alt]="bloque.datos.titulo" />
+            </ng-template>
             <span *ngIf="opacidadVelo(bloque.datos)" class="hero__velo"
                   [style.opacity]="opacidadVelo(bloque.datos)"></span>
             <div class="hero__contenido">
@@ -198,6 +207,8 @@
               </div>
               <h3>{{ p.titulo }}</h3>
               <p class="producto__precio">{{ precio(p.precioConIva) }}</p>
+              <button *ngIf="tiendaActiva && bloque.datos.permitirCompra" type="button" class="kq-agregar"
+                      [disabled]="p.disponible === false">{{ p.disponible === false ? 'Agotado' : 'Agregar' }}</button>
             </article>
           </div>
 
@@ -378,9 +389,12 @@
                  [class.banner--bajo]="bloque.datos.alto === 'bajo'"
                  [class.banner--alto]="bloque.datos.alto === 'alto'">
           <div class="fila" *ngIf="bloque.datos.banners?.length; else bannerVacio">
-            <div class="banner__slide"><img [src]="bloque.datos.banners[0].url" [alt]="bloque.datos.banners[0].alt || ''" /></div>
+            <div class="banner__slide" *ngIf="bloque.datos.banners[bloque.datos.rotar === false ? 0 : activo(bloque.datos.banners.length)] as bn">
+              <img [src]="bn.url" [alt]="bn.alt || ''" />
+            </div>
             <div class="fila__puntos" *ngIf="bloque.datos.banners.length > 1">
-              <span class="fila__punto" *ngFor="let bn of bloque.datos.banners; let k = index" [class.is-activa]="k === 0"></span>
+              <span class="fila__punto" *ngFor="let bn of bloque.datos.banners; let k = index"
+                    [class.is-activa]="k === (bloque.datos.rotar === false ? 0 : activo(bloque.datos.banners.length))"></span>
             </div>
           </div>
           <ng-template #bannerVacio><p class="vacio">Sube uno o más banners para este bloque.</p></ng-template>
@@ -574,13 +588,26 @@
              resuelve el servidor al publicar; aquí se enseña la forma. -->
         <section *ngSwitchCase="'categorias'" class="bloque categorias">
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
-          <div class="categorias__esqueleto">
-            <span *ngFor="let n of [1,2,3,4,5,6].slice(0, bloque.datos.maximo || 6)"></span>
-          </div>
-          <p class="vacio">
-            Las baldosas se llenan solas con las categorías de tus productos y la foto de uno de
-            ellos, al publicar.
-          </p>
+          <ng-container *ngIf="categoriasDe(bloque.datos).length; else catsEsqueleto">
+            <div class="categorias__grid" [class.categorias__grid--fila]="bloque.datos.carrusel">
+              <a class="categoria" *ngFor="let c of categoriasDe(bloque.datos)" (click)="$event.preventDefault()">
+                <span class="categoria__foto"><img *ngIf="c.imagen" [src]="c.imagen" alt="" loading="lazy" /></span>
+                <span class="categoria__pie">
+                  <span class="categoria__nombre">{{ c.nombre }}</span>
+                  <span class="categoria__total">{{ c.total }} producto{{ c.total === 1 ? '' : 's' }}</span>
+                </span>
+              </a>
+            </div>
+          </ng-container>
+          <ng-template #catsEsqueleto>
+            <div class="categorias__esqueleto">
+              <span *ngFor="let n of [1,2,3,4,5,6].slice(0, bloque.datos.maximo || 6)"></span>
+            </div>
+            <p class="vacio">
+              Las baldosas se llenan solas con las categorías de tus productos y la foto de uno de
+              ellos, al publicar.
+            </p>
+          </ng-template>
         </section>
 
         <!-- Video. En el editor no se carga el reproductor: sería un tercero
@@ -656,7 +683,10 @@
               <img *ngIf="logo" class="pie__logo" [src]="logo" [alt]="negocio" />
               <span *ngIf="!logo && negocio" class="pie__nombre">{{ negocio }}</span>
             </div>
-            <div class="pie__col"><h3>Explora</h3><span class="vacio">Tus categorías salen aquí al publicar.</span></div>
+            <div class="pie__col"><h3>Explora</h3>
+              <ng-container *ngIf="categorias.length; else pieDemo"><a class="pie__cat" *ngFor="let c of categorias.slice(0, 6)">{{ c.nombre }}</a></ng-container>
+              <ng-template #pieDemo><span class="vacio">Tus categorías salen aquí al publicar.</span></ng-template>
+            </div>
             <div class="pie__col pie__horarios" *ngIf="bloque.datos.horarios"><h3>Horarios</h3>
               <span class="pie__horario" *ngFor="let h of lineasDe(bloque.datos.horarios)"><i>{{ h }}</i></span>
             </div>
