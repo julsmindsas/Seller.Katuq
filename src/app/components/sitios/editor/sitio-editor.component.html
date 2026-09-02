@@ -431,6 +431,12 @@
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
+            <button class="opcion" [class.is-active]="b.datos.carrusel"
+                    title="Una sola fila que se desliza con flechas y con el dedo"
+                    (click)="b.datos.carrusel = !b.datos.carrusel; marcarSucio()">
+              <span class="opcion__texto"><strong>Mostrar en carrusel</strong><small>Una fila con flechas, como las tiendas grandes</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
 
             <div class="elegidos">
               <div class="elegidos__resumen">
@@ -495,6 +501,44 @@
                     (click)="b.datos.flotante = !b.datos.flotante; marcarSucio()">
               <span class="opcion__texto"><strong>Burbuja flotante</strong><small>Siempre visible, abajo a la izquierda</small></span>
               <span class="palanca"><span></span></span>
+            </button>
+          </ng-container>
+
+          <!-- Banners -->
+          <ng-container *ngIf="b.tipo === 'banner'">
+            <p class="nota">
+              Sube tus imágenes de promoción a lo ancho. Con <strong>dos o más</strong>, rotan solas y llevan
+              flechas y puntos. Cada banner puede llevar a un enlace (por ejemplo, una categoría del catálogo).
+            </p>
+            <div class="repetible repetible--banner" *ngFor="let bn of b.datos.banners; let i = index">
+              <img [src]="bn.url" alt="" class="repetible__foto" />
+              <input type="text" [(ngModel)]="bn.enlace" (ngModelChange)="marcarSucio()" placeholder="Enlace al tocar (opcional)" />
+              <input type="text" [(ngModel)]="bn.alt" (ngModelChange)="marcarSucio()" placeholder="Qué muestra (para accesibilidad)" maxlength="120" />
+              <div class="repetible__acciones">
+                <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="moverBanner(b, i, -1)" [disabled]="i === 0" title="Mover antes">↑</button>
+                <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="moverBanner(b, i, 1)" [disabled]="i === b.datos.banners.length - 1" title="Mover después">↓</button>
+                <button type="button" class="repetible__quitar" (click)="quitarBanner(b, i)">Quitar</button>
+              </div>
+            </div>
+            <label class="archivo" *ngIf="(b.datos.banners?.length || 0) < 6">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
+              {{ subiendo ? 'Subiendo…' : 'Subir banner' }}
+              <input type="file" accept="image/*" (change)="subirImagen($event, 'banner')" [disabled]="subiendo" />
+            </label>
+            <small>Ideal: imágenes anchas (por ejemplo 1600 × 500). Hasta 6.</small>
+            <div class="campo">
+              <label>Alto</label>
+              <div class="segmentado">
+                <button [class.is-active]="b.datos.alto === 'bajo'" (click)="b.datos.alto = 'bajo'; marcarSucio()">Bajo</button>
+                <button [class.is-active]="b.datos.alto !== 'bajo' && b.datos.alto !== 'alto'" (click)="b.datos.alto = 'medio'; marcarSucio()">Medio</button>
+                <button [class.is-active]="b.datos.alto === 'alto'" (click)="b.datos.alto = 'alto'; marcarSucio()">Alto</button>
+              </div>
+            </div>
+            <button class="opcion" [class.is-active]="b.datos.rotar !== false" (click)="b.datos.rotar = b.datos.rotar === false; marcarSucio()">
+              <span class="opcion__texto"><strong>Rotar solos</strong><small>Cambian cada 5 segundos hasta que el visitante toca</small></span><span class="palanca"><span></span></span>
+            </button>
+            <button class="opcion" [class.is-active]="b.datos.completo !== false" (click)="b.datos.completo = b.datos.completo === false; marcarSucio()">
+              <span class="opcion__texto"><strong>De borde a borde</strong><small>Apagado, respeta el ancho de la página</small></span><span class="palanca"><span></span></span>
             </button>
           </ng-container>
 
@@ -821,6 +865,11 @@
               Las baldosas <strong>se llenan solas</strong> con las categorías de tus productos y la
               foto de uno de ellos. Al tocarlas, filtran el catálogo de esta misma página.
             </p>
+            <button class="opcion" [class.is-active]="b.datos.carrusel"
+                    (click)="b.datos.carrusel = !b.datos.carrusel; marcarSucio()">
+              <span class="opcion__texto"><strong>Mostrar en carrusel</strong><small>Una fila con flechas</small></span>
+              <span class="palanca"><span></span></span>
+            </button>
             <div class="campo">
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />

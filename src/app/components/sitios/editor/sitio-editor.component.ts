@@ -56,6 +56,12 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     icono: "M4 5h5v14H4zM15 5h5v14h-5z",
   },
   {
+    tipo: "banner",
+    nombre: "Banners",
+    descripcion: "Tus imágenes a lo ancho; con varias, rotan solas con flechas",
+    icono: "M2 6h20v12H2zM6 12h.01M18 12h.01",
+  },
+  {
     tipo: "imagen",
     nombre: "Una imagen",
     descripcion: "Una foto sola, a lo ancho si quieres",
@@ -286,6 +292,14 @@ const SECCIONES_LISTAS: {
     },
   },
   {
+    id: "banners-rotan",
+    nombre: "Banners que rotan",
+    pista: "Sube tus promociones a lo ancho",
+    grupo: "Para empezar",
+    tipo: "banner",
+    datos: { banners: [], alto: "medio", rotar: true, completo: true },
+  },
+  {
     id: "portada-simple",
     nombre: "Portada sencilla",
     pista: "Sin foto, con color de fondo",
@@ -490,9 +504,10 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   },
   seccion: { titulo: "", columnas: 1 },
   imagen: { url: "", alt: "", enlace: "", tamano: "normal" },
+  banner: { banners: [], alto: "medio", rotar: true, completo: true },
   botones: { botones: [{ etiqueta: "Comprar", url: "#productos", estilo: "principal" }] },
   separador: { linea: false, alto: "medio" },
-  productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false },
+  productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false, carrusel: false },
   whatsapp: { telefono: "", mensaje: "Hola, quiero más información", etiqueta: "Escríbenos por WhatsApp", flotante: false },
   buscador: { titulo: "Busca tu detalle", mostrarCategoria: true, mostrarOcasion: true, mostrarPrecio: true, mostrarPalabra: true, textoBoton: "Buscar" },
   formulario: {
@@ -1268,6 +1283,19 @@ export class SitioEditorComponent implements OnInit {
 
   quitarFotoCarrusel(bloque: any, i: number): void {
     bloque.datos.imagenes.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  quitarBanner(bloque: any, i: number): void {
+    bloque.datos.banners.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  moverBanner(bloque: any, i: number, delta: number): void {
+    const lista = bloque.datos.banners || [];
+    const j = i + delta;
+    if (j < 0 || j >= lista.length) return;
+    [lista[i], lista[j]] = [lista[j], lista[i]];
     this.marcarSucio();
   }
 
@@ -2293,6 +2321,7 @@ export class SitioEditorComponent implements OnInit {
       | "heroCarrusel"
       | "heroMosaico"
       | "instagram"
+      | "banner"
   ): void {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
@@ -2320,6 +2349,7 @@ export class SitioEditorComponent implements OnInit {
           if (destino === "heroCarrusel") b.datos.imagenes = [...(b.datos.imagenes || []), res.url];
           if (destino === "heroMosaico") b.datos.mosaico = [...(b.datos.mosaico || []), res.url];
           if (destino === "instagram") b.datos.fotos = [...(b.datos.fotos || []), res.url];
+          if (destino === "banner") b.datos.banners = [...(b.datos.banners || []), { url: res.url, enlace: "", alt: "" }];
           if (destino === "fondoSeccion") {
             const estilo = this.estiloDe(b);
             estilo.fondoImagen = res.url;

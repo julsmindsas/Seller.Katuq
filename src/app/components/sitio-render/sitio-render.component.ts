@@ -718,6 +718,7 @@ export class SitioRenderComponent implements OnChanges {
     galeria: "Galería de fotos",
     seccion: "Componer a mano",
     columnas: "Columnas",
+    banner: "Banners",
     imagen: "Una imagen",
     botones: "Botones",
     separador: "Espacio o línea",

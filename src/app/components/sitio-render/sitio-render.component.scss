@@ -1411,3 +1411,16 @@ h3 {
   .pie { background: color-mix(in srgb, var(--sitio-primario, #111) 90%, #000); color: var(--sitio-secundario, #fff); border-top: 0; }
   .buscador { margin-top: -3.25rem; position: relative; z-index: 3; background: transparent; }
 }
+
+/* ── Banners y filas en carrusel (espejo de siteHtml.js) ── */
+.banner { padding-top: 0; padding-bottom: 0; }
+.banner--completo { max-width: none; padding-left: 0; padding-right: 0; }
+.banner__slide { display: block; width: 100%; overflow: hidden; img { width: 100%; height: clamp(180px, 32vw, 420px); object-fit: cover; display: block; } }
+.banner--bajo .banner__slide img { height: clamp(120px, 20vw, 260px); }
+.banner--alto .banner__slide img { height: clamp(260px, 46vw, 620px); }
+.banner:not(.banner--completo) .banner__slide img { border-radius: var(--sitio-radio, 12px); }
+.fila { position: relative; }
+.fila__puntos { display: flex; justify-content: center; gap: 0.45rem; margin-top: 0.7rem; }
+.banner .fila__puntos { position: absolute; left: 0; right: 0; bottom: 0.9rem; margin: 0; }
+.fila__punto { width: 9px; height: 9px; border-radius: 999px; background: rgba(255,255,255,.5); &.is-activa { background: #fff; transform: scale(1.25); } }
+.productos__grid--fila { display: flex; gap: 1rem; overflow-x: auto; .producto { flex: 0 0 auto; width: clamp(160px, 22vw, 250px); } }

@@ -191,7 +191,7 @@
         <!-- Productos. El id fijo es el destino del ancla "#productos". -->
         <section *ngSwitchCase="'productos'" class="bloque productos" id="productos">
           <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
-          <div class="productos__grid" *ngIf="bloque.datos.productos?.length">
+          <div class="productos__grid" [class.productos__grid--fila]="bloque.datos.carrusel" *ngIf="bloque.datos.productos?.length">
             <article class="producto" *ngFor="let p of bloque.datos.productos">
               <div class="producto__foto">
                 <img *ngIf="p.imagen" [src]="p.imagen" [alt]="p.titulo" loading="lazy" />
@@ -358,6 +358,20 @@
         </section>
 
         <!-- Imagen suelta -->
+        <!-- Banners: en la previa se ve el primero con sus puntos. -->
+        <section *ngSwitchCase="'banner'" class="bloque banner"
+                 [class.banner--completo]="bloque.datos.completo !== false"
+                 [class.banner--bajo]="bloque.datos.alto === 'bajo'"
+                 [class.banner--alto]="bloque.datos.alto === 'alto'">
+          <div class="fila" *ngIf="bloque.datos.banners?.length; else bannerVacio">
+            <div class="banner__slide"><img [src]="bloque.datos.banners[0].url" [alt]="bloque.datos.banners[0].alt || ''" /></div>
+            <div class="fila__puntos" *ngIf="bloque.datos.banners.length > 1">
+              <span class="fila__punto" *ngFor="let bn of bloque.datos.banners; let k = index" [class.is-activa]="k === 0"></span>
+            </div>
+          </div>
+          <ng-template #bannerVacio><p class="vacio">Sube uno o más banners para este bloque.</p></ng-template>
+        </section>
+
         <section *ngSwitchCase="'imagen'" class="bloque imagen"
                  [class.imagen--completo]="bloque.datos.tamano === 'completo'">
           <img *ngIf="bloque.datos.url" class="imagen__foto" [src]="bloque.datos.url" [alt]="bloque.datos.alt || ''" />
