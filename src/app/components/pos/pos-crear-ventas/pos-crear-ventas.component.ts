@@ -1,3 +1,4 @@
+import { zonaCubreCiudad } from "../../../shared/util/zona-cobro.util";
 import { Component, Input, OnInit, ViewChild, ElementRef, ChangeDetectorRef, AfterViewChecked, OnChanges, SimpleChanges, QueryList, ViewChildren } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { InfoIndicativos } from "../../../../Mock/indicativosPais";
@@ -598,7 +599,9 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
     // this.service.getBillingZone().subscribe({
     //   next(value: any) {
     // context.allBillingZone = value;
-    context.filteredResults = context.allBillingZone.filter(item => item.ciudad === ciudad);
+    // Spec 011 v2: una zona es un paquete de municipios; `item.ciudad` en la raíz
+    // solo existe en docs sin migrar. zonaCubreCiudad cubre las dos formas.
+    context.filteredResults = context.allBillingZone.filter(item => zonaCubreCiudad(item, ciudad));
     if (zona_cobro.zonaCobro) {
       context.zona_cobro = zona_cobro.zonaCobro;
       context.valor_zona_cobro = zona_cobro.valorZonaCobro

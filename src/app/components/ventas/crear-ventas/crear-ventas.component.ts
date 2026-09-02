@@ -23,6 +23,7 @@ import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
 import { DaneCodesService } from "../../../shared/services/dane-codes.service";
 import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 import { normalizarCiudad } from "../../../shared/utils/ciudad.util";
+import { zonaCubreCiudad } from "../../../shared/util/zona-cobro.util";
 import { QuickViewComponent } from "../quick-view/quick-view.component";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
@@ -3757,8 +3758,9 @@ export class CrearVentasComponent
   idBillingZone(zona_cobro: any) {
     const ciudad = this.ciudad_municipio_entrega;
     const context = this;
+    // Spec 011 v2: la zona es un paquete; se cubre la ciudad si está en municipios[].
     context.filteredResults = context.allBillingZone.filter(
-      (item) => item.ciudad === ciudad,
+      (item) => zonaCubreCiudad(item, ciudad),
     );
     // Si zona_cobro es un objeto con datos (carga de dirección existente)
     if (zona_cobro && zona_cobro.zonaCobro) {

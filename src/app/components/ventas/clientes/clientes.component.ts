@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, ChangeDetectorRef } from '@angular/core';
+import { zonaCubreCiudad } from '../../../shared/util/zona-cobro.util';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2'
@@ -725,7 +726,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     // this.service.getBillingZone().subscribe({
     //   next(value: any) {
     // context.allBillingZone = value;
-    context.filteredResults = context.allBillingZone.filter(item => item.ciudad === ciudad);
+    // Spec 011 v2: la zona es un paquete; se cubre la ciudad si está en municipios[].
+    context.filteredResults = context.allBillingZone.filter(item => zonaCubreCiudad(item, ciudad));
     if (zona_cobro.zonaCobro) {
       context.zona_cobro = zona_cobro.zonaCobro;
       context.valor_zona_cobro = zona_cobro.valorZonaCobro
