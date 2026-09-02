@@ -370,15 +370,32 @@
 
 // ── Propiedades de la sección ────────────────────────────────────────────────
 .propiedades {
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid var(--kb-line);
+  // Cabecera fija mientras se baja por el formulario: siempre se sabe qué
+  // sección se edita y cómo volver a la lista.
+  &__cabecera {
+    position: sticky;
+    top: -18px;
+    z-index: 3;
+    margin: -18px -16px 16px;
+    padding: 12px 16px 10px;
+    background: #fff;
+    border-bottom: 1px solid var(--kb-line);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__volver {
+    @include kb-btn-ghost(6px, 10px, 12.5px);
+    align-self: flex-start;
+    border-radius: 9px;
+  }
 
   &__titulo {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin: 0 0 16px;
+    margin: 0;
     font-size: 15px;
     font-weight: 800;
     color: var(--kb-ink);
@@ -1277,6 +1294,14 @@
   width: 100%;
   max-width: 900px;
   align-self: flex-start;
+
+  // "Computador": 1280 px reales, encogidos con zoom a lo que quepa (lo pone el
+  // editor). Así la cabecera y las filas se ven como en la página publicada.
+  &--escritorio {
+    width: 1280px;
+    max-width: none;
+    flex: none;
+  }
   display: flex;
   flex-direction: column;
   border-radius: 16px;
@@ -1285,8 +1310,36 @@
   box-shadow: var(--kb-shadow-frame);
   transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
+  // "Celular": 390×844 con marco y línea de pliegue (lo que se ve sin bajar).
   &--movil {
+    width: 390px;
     max-width: 390px;
+    flex: none;
+    border-radius: 34px;
+    border: 10px solid #1f1d2b;
+    position: relative;
+
+    .marco__barra { display: none; }
+    .marco__pagina {
+      height: 844px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    &::after {
+      content: "Aquí termina lo que se ve sin bajar";
+      position: absolute;
+      left: 0; right: 0;
+      top: calc(844px - 24px);
+      border-top: 2px dashed rgba(95, 63, 224, 0.7);
+      padding: 4px 10px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #5f3fe0;
+      background: rgba(255, 255, 255, 0.85);
+      pointer-events: none;
+    }
   }
 
   &__barra {
@@ -1335,6 +1388,7 @@
   .editor {
     height: auto;
   }
+  .marco--escritorio { width: 100%; }
 
   .cuerpo {
     flex-direction: column;

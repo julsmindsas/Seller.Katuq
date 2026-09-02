@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from "@angular/core";
+import { Component, ElementRef, HostListener, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { ToastrService } from "ngx-toastr";
@@ -564,7 +564,7 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   templateUrl: "./sitio-editor.component.html",
   styleUrls: ["./sitio-editor.component.scss"],
 })
-export class SitioEditorComponent implements OnInit {
+export class SitioEditorComponent implements OnInit, OnDestroy {
   cargando = true;
   guardando = false;
   publicando = false;
@@ -602,7 +602,16 @@ export class SitioEditorComponent implements OnInit {
   catalogoBloques = CATALOGO_BLOQUES;
 
   /** Hay cambios sin guardar. Se usa para avisar antes de publicar. */
+  /**
+   * "Cambios sin guardar" se decide por DIFERENCIA REAL contra lo último
+   * cargado o guardado, no por haber tocado algo: seleccionar una sección en
+   * la previa, abrir un panel o deshacer hasta el punto guardado no ensucia.
+   */
   sucio = false;
+  private firmaGuardada = "";
+  /** Escala de la previa "Computador": 1280 px reales encogidos a lo que quepa. */
+  escalaPrevia = 1;
+  private observadorLienzo: ResizeObserver | null = null;
 
   /** Bloques con los productos ya resueltos, solo para la vista previa. */
   bloquesPrevia: BloqueSitio[] = [];
@@ -634,11 +643,15 @@ export class SitioEditorComponent implements OnInit {
     private router: Router,
     private service: SitiosService,
     private bodegaService: BodegaService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private host: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get("id") || "";
+    // El editor ocupa la pantalla entera: sin menú ni cabecera del panel, la
+    // previa "Computador" cabe de verdad y hay un solo scroll por columna.
+    document.body.classList.add("kq-editor-lleno");
     if (!this.id) {
       this.cargando = false;
       this.error = "No encontramos esta página.";
@@ -679,6 +692,8 @@ export class SitioEditorComponent implements OnInit {
         this.resolverProductosDePrevia();
         this.cargarMarca();
         this.iniciarHistorial();
+        this.fijarComoGuardado();
+        setTimeout(() => this.observarLienzo());
       },
       error: () => {
         this.cargando = false;
@@ -1009,6 +1024,7 @@ export class SitioEditorComponent implements OnInit {
 
   seleccionar(indice: number): void {
     this.seleccionado = indice;
+    this.subirPanel();
     this.panel = "bloques";
     // El aviso es de la maqueta que se acaba de elegir, no del bloque: al
     // cambiar de sección deja de venir a cuento.
@@ -1109,8 +1125,23 @@ export class SitioEditorComponent implements OnInit {
    * campo visual.
    */
   seleccionarDesdePrevia(bloqueId: string): void {
+    this.panel = "bloques";
     this.seleccionarPorId(bloqueId);
-    this.llevarPanelA(".propiedades");
+    this.subirPanel();
+  }
+
+  /** Vuelve de la sección a la lista. */
+  cerrarSeccion(): void {
+    this.seleccionado = -1;
+    this.subirPanel();
+  }
+
+  /** Con drill-in, entrar o salir de una sección empieza arriba del panel. */
+  private subirPanel(): void {
+    setTimeout(() => {
+      const p = this.host.nativeElement.querySelector(".panel__contenido");
+      if (p) p.scrollTop = 0;
+    });
   }
 
   /**
@@ -2409,9 +2440,44 @@ export class SitioEditorComponent implements OnInit {
   }
 
   marcarSucio(): void {
-    this.sucio = true;
+    this.recalcularSucio();
     this.recalcularPrevia();
     this.guardarEnHistorial();
+  }
+
+  private firmaActual(): string {
+    return JSON.stringify({ n: this.nombre, s: this.slug, d: this.dominioPropio, c: this.contenido });
+  }
+
+  private fijarComoGuardado(): void {
+    this.firmaGuardada = this.firmaActual();
+    this.sucio = false;
+  }
+
+  private recalcularSucio(): void {
+    this.sucio = this.firmaActual() !== this.firmaGuardada;
+  }
+
+  ngOnDestroy(): void {
+    document.body.classList.remove("kq-editor-lleno");
+    if (this.observadorLienzo) this.observadorLienzo.disconnect();
+  }
+
+  /**
+   * La previa "Computador" se dibuja a 1280 px reales (como la ve un
+   * comprador) y se encoge con `zoom` a lo que quepa en el lienzo: sin esto,
+   * a 900 px la cabecera se reacomodaba y las filas se cortaban.
+   */
+  private observarLienzo(): void {
+    const lienzo = this.host.nativeElement.querySelector(".previa__lienzo") as HTMLElement | null;
+    if (!lienzo || typeof ResizeObserver === "undefined") return;
+    const medir = () => {
+      const ancho = lienzo.clientWidth - 48;
+      this.escalaPrevia = ancho >= 1280 ? 1 : Math.max(0.4, Math.round((ancho / 1280) * 1000) / 1000);
+    };
+    medir();
+    this.observadorLienzo = new ResizeObserver(medir);
+    this.observadorLienzo.observe(lienzo);
   }
 
   // ── Deshacer y rehacer ─────────────────────────────────────────────────────
@@ -2485,7 +2551,7 @@ export class SitioEditorComponent implements OnInit {
     this.contenido = JSON.parse(foto);
     // El bloque que estaba seleccionado puede ya no existir.
     if (this.seleccionado >= this.bloques.length) this.seleccionado = -1;
-    this.sucio = true;
+    this.recalcularSucio();
     this.recalcularPrevia();
     this.restaurando = false;
   }
@@ -2563,8 +2629,8 @@ export class SitioEditorComponent implements OnInit {
             this.toastr.error((res && res.message) || "No pudimos guardar.");
             return;
           }
-          this.sucio = false;
           this.aplicarLoGuardado(res.data);
+          this.fijarComoGuardado();
           if (res.avisos) this.toastr.info(res.avisos);
           if (!alPublicar) this.toastr.success("Cambios guardados");
           if (alPublicar) this.publicarAhora();
@@ -2717,19 +2783,10 @@ export class SitioEditorComponent implements OnInit {
     window.open(this.enlacePublico, "_blank");
   }
 
-  /**
-   * Aviso del navegador al cerrar la pestaña o recargar con trabajo sin
-   * guardar. El editor ya sabía que había cambios pendientes, pero no lo decía
-   * en ningún lado: se cerraba la pestaña y se perdía la página a medio armar.
-   */
-  @HostListener("window:beforeunload", ["$event"])
-  avisarAntesDeCerrar(evento: BeforeUnloadEvent): void {
-    if (!this.sucio) return;
-    evento.preventDefault();
-    // Los navegadores muestran su propio texto; lo que importa es que el valor
-    // no sea vacío para que aparezca el diálogo.
-    evento.returnValue = "Tienes cambios sin guardar.";
-  }
+  // Sin el aviso nativo del navegador al cerrar la pestaña: el recuadro
+  // "¿Salir del sitio?" bloquea la pestaña entera y el editor ya avisa con
+  // SweetAlert al salir por "Mis páginas". Con "sucio" por diferencia real,
+  // además, ya no salta por solo haber tocado una sección.
 
   volver(): void {
     if (!this.sucio) {

@@ -61,6 +61,8 @@
 
       <!-- ── Secciones ── -->
       <div class="panel__contenido" *ngIf="panel === 'bloques'">
+        <!-- Drill-in: con una sección elegida, la lista se aparta y el panel es solo su formulario. -->
+        <ng-container *ngIf="seleccionado < 0">
         <p class="nota">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01"/></svg>
           Tu página está hecha de secciones, como bloques de lego. Ordénalas, ocúltalas o quítalas —
@@ -129,15 +131,22 @@
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
           Agregar una sección
         </button>
+        </ng-container>
 
         <!-- Propiedades de la sección elegida -->
         <section class="propiedades" *ngIf="bloqueActual as b">
-          <h3 class="propiedades__titulo">
-            <span class="propiedades__icono">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path [attr.d]="iconoDeTipo(b.tipo)"/></svg>
-            </span>
-            {{ nombreDeTipo(b.tipo) }}
-          </h3>
+          <div class="propiedades__cabecera">
+            <button class="propiedades__volver" (click)="cerrarSeccion()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+              Secciones
+            </button>
+            <h3 class="propiedades__titulo">
+              <span class="propiedades__icono">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path [attr.d]="iconoDeTipo(b.tipo)"/></svg>
+              </span>
+              {{ nombreDeTipo(b.tipo) }}
+            </h3>
+          </div>
 
           <!-- ── Maquetas ──
                Las formas que este bloque ya puede tomar, con nombre y dibujo.
@@ -2144,7 +2153,8 @@
       </div>
 
       <div class="previa__lienzo">
-        <div class="marco" [class.marco--movil]="dispositivo === 'movil'">
+        <div class="marco" [class.marco--movil]="dispositivo === 'movil'" [class.marco--escritorio]="dispositivo !== 'movil'"
+             [style.zoom]="dispositivo === 'movil' ? null : escalaPrevia">
           <div class="marco__barra">
             <span class="marco__punto marco__punto--rojo"></span>
             <span class="marco__punto marco__punto--ambar"></span>

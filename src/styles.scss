@@ -1604,3 +1604,21 @@ ngb-modal-window .modal-dialog:has(.cliente-modal) .modal-content {
   .katuq-modal .modal-content { border-radius: 16px; }
   .katuq-modal .modal-body { max-height: calc(100vh - 170px); }
 }
+
+/* Editor de sitios a pantalla completa: sin menú, cabecera ni barra inferior
+   del panel. La clase la pone y quita el propio editor (sitio-editor). */
+body.kq-editor-lleno {
+  .page-wrapper .page-header,
+  .page-wrapper .sidebar-wrapper,
+  .page-wrapper .footer,
+  app-bottom-navigation { display: none !important; }
+  .page-wrapper .page-body-wrapper { min-height: 100vh; }
+  .page-wrapper .page-body {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh;
+  }
+  .page-wrapper .page-body > main { padding: 0 !important; }
+  app-sitio-editor .editor { height: 100vh; }
+  overflow: hidden;
+}
