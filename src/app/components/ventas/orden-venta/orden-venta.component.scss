@@ -423,6 +423,39 @@ $color-danger: #e74c3c;
 // ============================================================
 // FOOTER (Compacto)
 // ============================================================
+// Forma de pago + descripción (spec 016)
+.forma-pago-section {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid $color-border;
+  page-break-inside: avoid;
+
+  .forma-pago-linea {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+
+    .forma-pago-label {
+      font-size: 13px;
+      color: #6B7280;
+    }
+
+    .forma-pago-valor {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1F2937;
+    }
+  }
+
+  .forma-pago-descripcion {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #6B7280;
+    line-height: 1.5;
+    white-space: pre-line; // respeta saltos de línea de la descripción
+  }
+}
+
 .pdf-footer {
   margin-top: 15px;
   text-align: center;

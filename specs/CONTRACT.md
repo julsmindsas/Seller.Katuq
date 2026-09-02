@@ -725,6 +725,28 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Decisión:** implementación de spec 015 **done**. Faltan del lote: **Tareas 5 y 6** (el usuario las pasa una
   por una). Próxima decisión = **D-070**.
 
+### 2026-09-01 — D-070: Spec 016 — Descripción de correo del método de pago en la notificación de venta — Tarea 5/6 del lote pagos
+- **Contexto:** cada método de pago tiene `descripcionCorreoElectronico` (instrucciones para el cliente) que
+  hoy **no se muestra** en la venta (el correo solo pone el nombre `formaDePago`; el campo solo se usaba en
+  `diagnostics.js`). Objetivo: llevar esa descripción al **correo** y al **documento/PDF `orden-venta`**.
+- **Checkpoint (decisiones del usuario):** ambas superficies (correo + PDF); en `orden-venta` bloque
+  "Forma de pago: {nombre}" **+** descripción; **solo** `descripcionCorreoElectronico` (recordatorioCobro
+  fuera); **solo** notificaciones de creación/confirmación (`ORDER_CREATED`/`PAYMENT_Aprobado`).
+- **Enfoque:** surfacing sin tocar modelos. La orden guarda la forma de pago por **nombre**; la descripción se
+  **lee** del método (`pagos`/`formaPagosPos`) por nombre+empresa+canal (`typeOrder`), degradando seguro a `''`.
+- **Implementado (rama `feature/pagos-metodos-unificados`, ambos repos):**
+  - **BACK:** `services/notifications/paymentMethodDescription.js` (nuevo: `coleccionPorCanal` puro +
+    `resolverDescripcionMetodoPago`, 1 consulta, degrada a `''`) + `notificationHooks.js` (inyecta
+    `metodoPagoDescripcion` en los payloads de cliente `ORDER_CREATED` y `PAYMENT_Aprobado`) +
+    `templateHelpers.js` (`filaFormaPago` añade renglón con la descripción **sanitizada**). Test
+    `test:pagos-notif-descripcion` **15/15**. OpenSpec `openspec/changes/sale-notification-payment-method-description/`.
+  - **FRONT:** `orden-venta.component.{ts,html,scss}` resuelve la descripción por nombre+canal (vía
+    `MaestroService`, `ngOnChanges` para reuso) y muestra "Forma de pago: {nombre}" + descripción cerca de los
+    totales (`page-break-inside: avoid`). `ng serve` OK.
+  - **E2E navegador:** probado por el usuario 2026-09-01 → OK (PDF verificado; correo local sujeto a SMTP).
+- **Decisión:** implementación de spec 016 **done**. **Deploy backend (EC2/PM2) a cargo del equipo.** Falta del
+  lote: **Tarea 6**. Próxima decisión = **D-071**.
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.

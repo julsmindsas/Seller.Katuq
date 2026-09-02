@@ -106,6 +106,15 @@
     </div>
   </div>
 
+  <!-- Forma de pago + su descripción (spec 016) -->
+  <div class="forma-pago-section" *ngIf="formaPagoNombre">
+    <div class="forma-pago-linea">
+      <span class="forma-pago-label">Forma de pago:</span>
+      <span class="forma-pago-valor">{{ formaPagoNombre }}</span>
+    </div>
+    <p class="forma-pago-descripcion" *ngIf="formaPagoDescripcion">{{ formaPagoDescripcion }}</p>
+  </div>
+
 
   <!-- Footer con logo Katuq -->
   <div class="pdf-footer">

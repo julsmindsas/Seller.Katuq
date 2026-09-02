@@ -1,9 +1,10 @@
-import { Component, Input, OnInit, OnDestroy, Optional, ViewChild, ElementRef } from "@angular/core";
+import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges, Optional, ViewChild, ElementRef } from "@angular/core";
 import { Pedido } from "../modelo/pedido";
 import { Empresa } from "../../../shared/models/empresa/empresa";
 import { CompanyInformation } from "../../../shared/models/User/CompanyInformation";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
 import { SecurityService } from "../../../shared/services/security/security.service";
+import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
@@ -12,7 +13,7 @@ import { takeUntil } from "rxjs/operators";
   templateUrl: "./orden-venta.component.html",
   styleUrls: ["./orden-venta.component.scss"],
 })
-export class OrdenVentaComponent implements OnInit, OnDestroy {
+export class OrdenVentaComponent implements OnInit, OnDestroy, OnChanges {
   @Input() pedido: Pedido;
   @ViewChild('ordenVentaContentRef') ordenVentaContentRef: ElementRef;
 
@@ -36,6 +37,11 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
   get totalEnvio(): number { return Number(this.pedido?.totalEnvio) || 0; }
   get totalFinal(): number { return Number(this.pedido?.totalPedididoConDescuento) || 0; }
 
+  // Forma de pago (spec 016): nombre desde el pedido; descripción leída del método por
+  // nombre+canal. Se muestra en el documento/PDF de venta. Degrada a '' sin romper.
+  get formaPagoNombre(): string { return (this.pedido?.formaDePago || '').toString().trim(); }
+  formaPagoDescripcion: string = '';
+
   // Fecha de emisión
   fechaEmision: Date = new Date();
 
@@ -50,16 +56,46 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
   constructor(
     @Optional() public activeModal: NgbActiveModal,
     private securityService: SecurityService,
+    private maestro: MaestroService,
   ) {}
 
   ngOnInit(): void {
     this.cargarDatosEmpresa();
     this.cargarCompanyInformation();
+    this.resolverDescripcionFormaPago();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // El componente se reutiliza con otro pedido (PDF desde list.component) → re-resolver.
+    if (changes['pedido']) {
+      this.resolverDescripcionFormaPago();
+    }
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Resuelve la descripción de correo del método de pago del pedido (spec 016). Lee el
+   * método por nombre en la colección del canal (POS vs e-commerce) y toma
+   * `descripcionCorreoElectronico`. Degrada a '' ante cualquier problema (no rompe el PDF).
+   */
+  private resolverDescripcionFormaPago(): void {
+    this.formaPagoDescripcion = '';
+    const nombre = this.formaPagoNombre;
+    if (!nombre) { return; }
+    const esPos = String(this.pedido?.typeOrder || '').trim().toUpperCase() === 'POS';
+    const obs$ = esPos ? this.maestro.consultarFormaPagoPOS() : this.maestro.consultarFormaPago();
+    obs$.pipe(takeUntil(this.destroy$)).subscribe(
+      (lista: any) => {
+        const arr = Array.isArray(lista) ? lista : [];
+        const match = arr.find((m: any) => (m?.nombre || '').toString().trim().toLowerCase() === nombre.toLowerCase());
+        this.formaPagoDescripcion = (match?.descripcionCorreoElectronico || '').toString().trim();
+      },
+      () => { this.formaPagoDescripcion = ''; },
+    );
   }
 
   /**
