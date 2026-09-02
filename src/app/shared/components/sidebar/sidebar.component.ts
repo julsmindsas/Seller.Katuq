@@ -760,10 +760,19 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.currentPlan.type = subscription.plan === 'premium' ? 'Premium' : 'Freemium';
         this.currentPlan.status = subscription.status;
 
-        if (subscription.limits?.orders?.resetDate) {
-          this.currentPlan.renewalDate = this.formatDate(subscription.limits.orders.resetDate);
-          this.currentPlan.daysLeft = this.calculateDaysUntilReset(subscription.limits.orders.resetDate);
-        }
+        // En Premium la tarjeta dice "Próximo cobro", por lo que debe usar la
+        // fecha canónica de facturación. `orders.resetDate` solo corresponde al
+        // reinicio mensual del contador de pedidos y puede contener datos legacy.
+        const renewalDate = subscription.plan === 'premium'
+          ? (subscription.nextBillingDate || subscription.premiumUntil)
+          : subscription.limits?.orders?.resetDate;
+
+        this.currentPlan.renewalDate = renewalDate
+          ? this.formatDate(renewalDate)
+          : 'No definida';
+        this.currentPlan.daysLeft = renewalDate
+          ? this.calculateDaysUntilReset(renewalDate)
+          : 0;
       }
     });
 

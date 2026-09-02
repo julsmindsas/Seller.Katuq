@@ -1,9 +1,19 @@
 import { Component, EventEmitter, Input, Output, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { SubscriptionService } from '../../services/subscription.service';
-import { environment } from '../../../../environments/environment';
 import { Subject, timer } from 'rxjs';
 import { switchMap, take, takeUntil } from 'rxjs/operators';
+import {
+  detectCardBrand,
+  encryptCardDataForWompi,
+  formatCardNumber,
+  isValidCardHolder,
+  isValidCvc,
+  isValidExpiry,
+  isValidReceiptEmail,
+  onlyDigits,
+  passesLuhn,
+  WompiCardBrand,
+} from '../../utils/wompi-card-security.utils';
 
 @Component({
   selector: 'app-upgrade-modal',
@@ -15,12 +25,24 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   @Output() visibleChange = new EventEmitter<boolean>();
 
   loading = false;
+  configLoading = false;
+  securityLoading = false;
+  securityReady = false;
+  termsReady = false;
   step: 'info' | 'card' | 'pending' | 'success' = 'info';
   pendingMessage = 'Estamos esperando la confirmación segura de Wompi.';
-  readonly isLocalEnvironment = !environment.production;
-  readonly localTestAmountCOP = environment.wompi.subscriptionTestAmountCOP || 1500;
+  paymentEnvironment: 'sandbox' | 'production' | null = null;
+  productionTestCharge = false;
+  initialAmountCOP: number | null = null;
+  tierName = 'Base';
+  billingPeriod: 'monthly' | 'yearly' = 'monthly';
+  annualDiscountPercent = 20;
   private destroy$ = new Subject<void>();
   private stopPaymentPolling$ = new Subject<void>();
+  private wompiApiUrl = '';
+  private wompiPublicKey = '';
+  private wompiTokenizationPublicKeyPem = '';
+  private paymentQuoteId = '';
 
   // Wompi acceptance tokens
   acceptanceToken: string | null = null;
@@ -36,23 +58,74 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   cardExpYear = '';
   cardCvc = '';
   cardHolder = '';
+  cardBrand: WompiCardBrand = 'unknown';
+  receiptEmail = '';
   cardError = '';
+  receiptEmailError = '';
+  cardNumberError = '';
+  expiryError = '';
+  cardCvcError = '';
+  cardHolderError = '';
 
-  constructor(
-    private http: HttpClient,
-    private subscriptionService: SubscriptionService
-  ) {}
+  constructor(private subscriptionService: SubscriptionService) {}
 
   get paymentButtonLabel(): string {
-    return this.isLocalEnvironment
-      ? `Pagar $${this.localTestAmountCOP.toLocaleString('es-CO')} COP`
+    return this.initialAmountCOP
+      ? `Pagar $${this.initialAmountCOP.toLocaleString('es-CO')} COP`
       : 'Pagar y activar';
+  }
+
+  get isSandboxPayment(): boolean {
+    return this.paymentEnvironment === 'sandbox';
+  }
+
+  get billingPeriodLabel(): string {
+    return this.billingPeriod === 'yearly' ? 'anual' : 'mensual';
+  }
+
+  get renewalLabel(): string {
+    return this.billingPeriod === 'yearly'
+      ? 'renovación automática cada 12 meses'
+      : 'renovación mensual automática';
+  }
+
+  selectBillingPeriod(period: 'monthly' | 'yearly'): void {
+    if (this.billingPeriod === period || this.configLoading || this.loading) return;
+    this.billingPeriod = period;
+    this.loadPaymentConfig();
+  }
+
+  get cardBrandLabel(): string {
+    const labels: Record<WompiCardBrand, string> = {
+      visa: 'Visa',
+      mastercard: 'Mastercard',
+      amex: 'American Express',
+      unknown: 'Tarjeta',
+    };
+    return labels[this.cardBrand];
+  }
+
+  get cardCvcMaxLength(): number {
+    return this.cardBrand === 'amex' ? 4 : 3;
+  }
+
+  get isCardNumberValid(): boolean {
+    return passesLuhn(this.cardNumber);
+  }
+
+  get isCardFormValid(): boolean {
+    return isValidReceiptEmail(this.receiptEmail) &&
+      this.isCardNumberValid &&
+      isValidExpiry(this.cardExpMonth, this.cardExpYear) &&
+      isValidCvc(this.cardCvc, this.cardBrand) &&
+      isValidCardHolder(this.cardHolder);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible'] && changes['visible'].currentValue === true) {
       this.step = 'info';
       this.resetForm();
+      this.loadPaymentConfig();
     }
   }
 
@@ -65,35 +138,71 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
 
   // Paso 1: Usuario acepta y va a registrar tarjeta
   goToCardStep(): void {
-    this.step = 'card';
-    this.loadAcceptanceTokens();
-  }
-
-  // Cargar acceptance tokens desde Wompi (public key — seguro en frontend)
-  private loadAcceptanceTokens(): void {
-    const publicKey = environment.wompi.public_key;
-    if (!publicKey) {
-      this.cardError = 'Wompi no está configurado en este entorno';
+    if (!this.wompiApiUrl || !this.wompiPublicKey || !this.initialAmountCOP) {
+      this.cardError = 'Espera mientras confirmamos el valor y la conexión segura con Wompi.';
       return;
     }
-    this.http.get<any>(`https://production.wompi.co/v1/merchants/${publicKey}`)
+    this.step = 'card';
+    this.fetchAcceptanceTokens();
+  }
+
+  // El backend es la única fuente de verdad para ambiente y monto. Así un
+  // localhost con llaves productivas nunca muestra el precio reducido de test.
+  private loadPaymentConfig(): void {
+    this.configLoading = true;
+    this.cardError = '';
+    this.initialAmountCOP = null;
+    this.paymentQuoteId = '';
+    this.securityReady = false;
+    this.subscriptionService.getPaymentConfig(this.billingPeriod).subscribe({
+      next: (config) => {
+        this.configLoading = false;
+        const allowedApiUrls = [
+          'https://sandbox.wompi.co/v1',
+          'https://production.wompi.co/v1'
+        ];
+        if (!config?.publicKey || !allowedApiUrls.includes(config.apiUrl) || !config.initialAmountCOP ||
+            !config.quoteId || !config.quoteExpiresAt ||
+            !String(config.tokenizationPublicKey || '').includes('BEGIN PUBLIC KEY')) {
+          this.cardError = 'Wompi no está configurado en este entorno';
+          return;
+        }
+
+        this.wompiApiUrl = config.apiUrl;
+        this.wompiPublicKey = config.publicKey;
+        this.paymentEnvironment = config.environment;
+        this.productionTestCharge = config.environment === 'production' && config.testCharge === true;
+        this.initialAmountCOP = config.initialAmountCOP;
+        this.paymentQuoteId = config.quoteId;
+        this.billingPeriod = config.billingPeriod;
+        this.annualDiscountPercent = Number(config.annualDiscountPercent || 0);
+        this.tierName = config.tierName || 'Base';
+        this.wompiTokenizationPublicKeyPem = config.tokenizationPublicKey;
+        this.securityReady = true;
+      },
+      error: () => {
+        this.configLoading = false;
+        this.cardError = 'Wompi no está configurado en este entorno';
+      }
+    });
+  }
+
+  private fetchAcceptanceTokens(): void {
+    this.termsReady = false;
+    this.subscriptionService.getWompiMerchant(this.wompiApiUrl, this.wompiPublicKey)
       .subscribe({
         next: (resp) => {
           const presigned = resp?.data?.presigned_acceptance;
-          if (presigned) {
+          const personalAuth = resp?.data?.presigned_personal_data_auth;
+          if (presigned?.acceptance_token && presigned?.permalink &&
+              personalAuth?.acceptance_token && personalAuth?.permalink) {
             this.acceptanceToken = presigned.acceptance_token;
             this.policyLink = presigned.permalink;
-
-            // Personal auth puede venir como campo separado
-            const personalAuth = resp?.data?.presigned_personal_data_auth;
-            if (personalAuth) {
-              this.personalAuthToken = personalAuth.acceptance_token;
-              this.personalDataLink = personalAuth.permalink;
-            } else {
-              // Algunos merchants no tienen personal auth separado
-              this.personalAuthToken = this.acceptanceToken;
-              this.personalDataLink = this.policyLink;
-            }
+            this.personalAuthToken = personalAuth.acceptance_token;
+            this.personalDataLink = personalAuth.permalink;
+            this.termsReady = true;
+          } else {
+            this.cardError = 'Wompi no entregó las autorizaciones obligatorias. No ingreses la tarjeta.';
           }
         },
         error: () => {
@@ -105,8 +214,12 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   // Paso 2: Tokenizar tarjeta y crear payment source
   async submitCard(): Promise<void> {
     if (!this.validateCard()) return;
-    if (!this.acceptedPolicy || !this.acceptedPersonalData) {
+    if (!this.acceptedPolicy || !this.acceptedPersonalData || !this.termsReady) {
       this.cardError = 'Debes aceptar los términos y la política de datos personales';
+      return;
+    }
+    if (!this.securityReady || !this.wompiTokenizationPublicKeyPem || !this.paymentQuoteId) {
+      this.cardError = 'El cifrado seguro de Wompi todavía no está listo';
       return;
     }
 
@@ -114,18 +227,22 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
     this.cardError = '';
 
     try {
-      // 2a. Tokenizar tarjeta (frontend → Wompi con public key)
-      const publicKey = environment.wompi.public_key;
-      const tokenResp = await this.http.post<any>(
-        'https://production.wompi.co/v1/tokens/cards',
-        {
-          number: this.cardNumber.replace(/\s/g, ''),
-          exp_month: this.cardExpMonth.padStart(2, '0'),
-          exp_year: this.cardExpYear,
-          cvc: this.cardCvc,
-          card_holder: this.cardHolder.toUpperCase()
-        },
-        { headers: { Authorization: `Bearer ${publicKey}` } }
+      // 2a. Cifrar como JWE y tokenizar directamente en Wompi. La petición
+      // nunca contiene PAN/CVC legibles y el backend de Katuq solo ve el token.
+      if (!this.wompiApiUrl || !this.wompiPublicKey) {
+        throw new Error('Wompi no está configurado en este entorno');
+      }
+      const encryptedPayload = await encryptCardDataForWompi({
+        number: onlyDigits(this.cardNumber, 19),
+        exp_month: onlyDigits(this.cardExpMonth, 2).padStart(2, '0'),
+        exp_year: onlyDigits(this.cardExpYear, 2),
+        cvc: onlyDigits(this.cardCvc, 4),
+        card_holder: this.cardHolder.trim().toUpperCase(),
+      }, this.wompiTokenizationPublicKeyPem);
+      const tokenResp = await this.subscriptionService.tokenizeWompiEncryptedCard(
+        this.wompiApiUrl,
+        this.wompiPublicKey,
+        encryptedPayload,
       ).toPromise();
 
       if (!tokenResp?.data?.id) {
@@ -135,18 +252,19 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
       const cardToken = tokenResp.data.id;
       const cardBrand = tokenResp.data.brand;
       const cardLastFour = tokenResp.data.last_four;
+      this.clearSensitiveCardFields();
 
       // 2b. Enviar token al backend para crear payment source (private key en servidor)
-      const sourceResp = await this.http.post<any>(
-        `${environment.urlApi}/v1/subscriptions/create-payment-source`,
-        {
+      const sourceResp = await this.subscriptionService.createRecurringPaymentSource({
           token: cardToken,
           acceptanceToken: this.acceptanceToken,
           personalAuthToken: this.personalAuthToken,
           cardBrand,
-          cardLastFour
-        }
-      ).toPromise();
+          cardLastFour,
+          receiptEmail: this.receiptEmail.trim().toLowerCase(),
+          billingPeriod: this.billingPeriod,
+          quoteId: this.paymentQuoteId,
+        }).toPromise();
 
       if (!sourceResp?.success) {
         throw new Error(sourceResp?.error || 'Error al registrar medio de pago');
@@ -164,29 +282,106 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
 
     } catch (err: any) {
       this.loading = false;
-      this.cardError = err?.error?.message || err?.message || 'Error al procesar la tarjeta';
+      this.cardError = this.friendlyPaymentError(err);
     }
   }
 
   private validateCard(): boolean {
-    const num = this.cardNumber.replace(/\s/g, '');
-    if (num.length < 13 || num.length > 19) {
-      this.cardError = 'Número de tarjeta inválido';
-      return false;
+    this.validateReceiptEmail();
+    this.validateCardNumber();
+    this.validateExpiry();
+    this.validateCvc();
+    this.validateHolder();
+    this.cardError = this.isCardFormValid ? '' : 'Revisa los campos marcados antes de continuar';
+    return this.isCardFormValid;
+  }
+
+  onReceiptEmailInput(value: string): void {
+    this.receiptEmail = String(value || '').trimStart().slice(0, 254);
+    if (this.receiptEmailError) this.validateReceiptEmail();
+  }
+
+  onCardNumberInput(value: string): void {
+    this.cardNumber = formatCardNumber(value);
+    this.cardBrand = detectCardBrand(this.cardNumber);
+    this.cardCvc = onlyDigits(this.cardCvc, this.cardCvcMaxLength);
+    if (onlyDigits(this.cardNumber, 19).length >= 13) this.validateCardNumber();
+    if (this.cardCvc) this.validateCvc();
+  }
+
+  onExpiryMonthInput(value: string): void {
+    this.cardExpMonth = onlyDigits(value, 2);
+    if (this.cardExpMonth.length === 2 && this.cardExpYear.length === 2) this.validateExpiry();
+  }
+
+  onExpiryYearInput(value: string): void {
+    this.cardExpYear = onlyDigits(value, 2);
+    if (this.cardExpMonth.length === 2 && this.cardExpYear.length === 2) this.validateExpiry();
+  }
+
+  onCvcInput(value: string): void {
+    this.cardCvc = onlyDigits(value, this.cardCvcMaxLength);
+    if (this.cardCvc.length === this.cardCvcMaxLength) this.validateCvc();
+  }
+
+  onCardHolderInput(value: string): void {
+    this.cardHolder = String(value || '')
+      .toUpperCase()
+      .replace(/[^A-ZÁÉÍÓÚÜÑ .'-]/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .slice(0, 80);
+    if (this.cardHolderError) this.validateHolder();
+  }
+
+  validateReceiptEmail(): void {
+    this.receiptEmailError = isValidReceiptEmail(this.receiptEmail)
+      ? ''
+      : 'Escribe un correo válido para recibir el comprobante.';
+  }
+
+  validateCardNumber(): void {
+    const digits = onlyDigits(this.cardNumber, 19);
+    this.cardNumberError = digits.length < 13 || digits.length > 19
+      ? 'El número debe tener entre 13 y 19 dígitos.'
+      : passesLuhn(digits) ? '' : 'Revisa el número: la validación de la tarjeta no coincide.';
+  }
+
+  validateExpiry(): void {
+    this.expiryError = isValidExpiry(this.cardExpMonth, this.cardExpYear)
+      ? ''
+      : 'La fecha debe ser válida y estar vigente.';
+  }
+
+  validateCvc(): void {
+    this.cardCvcError = isValidCvc(this.cardCvc, this.cardBrand)
+      ? ''
+      : this.cardBrand === 'amex' ? 'American Express usa 4 dígitos.' : 'El CVC debe tener 3 dígitos.';
+  }
+
+  validateHolder(): void {
+    this.cardHolderError = isValidCardHolder(this.cardHolder)
+      ? ''
+      : 'Escribe el nombre completo tal como aparece en la tarjeta.';
+  }
+
+  private clearSensitiveCardFields(): void {
+    this.cardNumber = '';
+    this.cardExpMonth = '';
+    this.cardExpYear = '';
+    this.cardCvc = '';
+    this.cardHolder = '';
+    this.cardBrand = 'unknown';
+  }
+
+  private friendlyPaymentError(error: any): string {
+    const errorCode = String(error?.error?.error?.type || error?.error?.error || '').toUpperCase();
+    if (errorCode.includes('CARD') || errorCode.includes('UNPROCESSABLE')) {
+      return 'Wompi no pudo validar la tarjeta. Revisa los datos o usa otra tarjeta.';
     }
-    if (!this.cardExpMonth || !this.cardExpYear) {
-      this.cardError = 'Fecha de expiración requerida';
-      return false;
+    if (error?.status === 0) {
+      return 'No pudimos conectar de forma segura con Wompi. Verifica tu conexión e intenta de nuevo.';
     }
-    if (this.cardCvc.length < 3) {
-      this.cardError = 'CVC inválido';
-      return false;
-    }
-    if (this.cardHolder.length < 3) {
-      this.cardError = 'Nombre del titular requerido';
-      return false;
-    }
-    return true;
+    return error?.error?.message || error?.message || 'No pudimos procesar el pago de forma segura.';
   }
 
   private waitForPaymentConfirmation(subscriptionId: string): void {
@@ -230,10 +425,39 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
     this.cardExpYear = '';
     this.cardCvc = '';
     this.cardHolder = '';
+    this.cardBrand = 'unknown';
+    this.receiptEmail = this.getDefaultReceiptEmail();
     this.cardError = '';
+    this.receiptEmailError = '';
+    this.cardNumberError = '';
+    this.expiryError = '';
+    this.cardCvcError = '';
+    this.cardHolderError = '';
     this.pendingMessage = 'Estamos esperando la confirmación segura de Wompi.';
+    this.wompiApiUrl = '';
+    this.wompiPublicKey = '';
+    this.wompiTokenizationPublicKeyPem = '';
+    this.paymentQuoteId = '';
+    this.securityLoading = false;
+    this.securityReady = false;
+    this.termsReady = false;
+    this.paymentEnvironment = null;
+    this.productionTestCharge = false;
+    this.initialAmountCOP = null;
+    this.tierName = 'Base';
+    this.billingPeriod = 'monthly';
+    this.annualDiscountPercent = 20;
     this.acceptedPolicy = false;
     this.acceptedPersonalData = false;
+  }
+
+  private getDefaultReceiptEmail(): string {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return typeof user.email === 'string' ? user.email : '';
+    } catch {
+      return '';
+    }
   }
 
   closeModal(): void {

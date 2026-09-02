@@ -10,6 +10,11 @@ export interface SubscriptionPlan {
   status: 'active' | 'trial' | 'suspended';
   startDate?: string | null;  // Fecha de inicio de la suscripción (primer pago)
   billingPeriod?: 'monthly' | 'quarterly' | 'yearly' | null;  // Período de facturación
+  billingMode?: 'recurring' | 'manual' | null;
+  recurringBillingEnabled?: boolean;
+  billingAnchorDay?: number | null;
+  pendingBillingPeriod?: 'monthly' | 'yearly' | null;  // Cambio que se aplicará en el siguiente cobro
+  billingPeriodChangeEffectiveAt?: string | null;
   nextBillingDate?: string | null;  // Fecha del próximo cobro (crítico para renovaciones)
   lastPaymentDate?: string | null;  // Fecha del último pago realizado
   lastPaymentAmount?: number | null;  // Monto del último pago

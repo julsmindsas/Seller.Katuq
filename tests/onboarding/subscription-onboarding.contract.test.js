@@ -15,14 +15,21 @@ const onboarding = read('src/app/components/onboarding/onboarding-wizard/onboard
 const registrationTs = read('src/app/components/diagnostic-survey/diagnostic-survey.component.ts');
 const registrationHtml = read('src/app/components/diagnostic-survey/diagnostic-survey.component.html');
 const quickStart = read('src/app/shared/services/quickstart/katuq-quickstart.service.ts');
+const subscriptionService = read('src/app/shared/services/subscription.service.ts');
 
 assert.ok(!modalTs.includes('skipCard()'), 'el modal no debe permitir omitir el pago');
 assert.ok(!modalTs.includes("upgradePlan('premium'"), 'el frontend no debe activar Premium directamente');
 assert.ok(!modalHtml.includes('Omitir tarjeta'), 'la UI no debe ofrecer Premium sin tarjeta/pago');
 assert.ok(modalTs.includes('getPaymentStatus'), 'el modal debe esperar confirmación del webhook');
 assert.ok(modalHtml.includes("step === 'pending'"), 'la UI debe explicar el estado pendiente');
-assert.ok(modalTs.includes('localTestAmountCOP'), 'el modal debe exponer el monto de prueba local');
-assert.ok(modalHtml.includes('Este valor no aplica en producción'), 'la UI debe diferenciar el precio local del productivo');
+assert.ok(modalTs.includes('initialAmountCOP'), 'el modal debe exponer el monto exacto calculado por backend');
+assert.ok(modalHtml.includes('Pago real con Wompi'), 'la UI debe advertir claramente cuando el cobro mueve dinero real');
+assert.ok(modalHtml.includes('No mueve dinero real'), 'la UI debe diferenciar Sandbox del ambiente productivo');
+assert.ok(modalHtml.includes('Correo para el comprobante') && modalHtml.includes('Aquí llegará el comprobante PDF'), 'el usuario debe elegir dónde recibir el comprobante');
+assert.ok(subscriptionService.includes('getPaymentConfig('), 'el frontend debe obtener del backend el ambiente público de Wompi');
+assert.ok(modalTs.includes("'https://sandbox.wompi.co/v1'"), 'sandbox debe estar permitido explícitamente');
+assert.ok(modalTs.includes("'https://production.wompi.co/v1'"), 'producción debe estar permitida explícitamente');
+assert.ok(!modalTs.includes("this.http.post<any>(\n        'https://production.wompi.co/v1/tokens/cards'"), 'la tokenización no puede quedar fijada a producción');
 
 assert.ok(guard.includes('loadSubscriptionStatus()'), 'el guard debe validar el plan contra backend');
 assert.ok(guard.includes('return of(false)'), 'un fallo de validación debe cerrar el acceso');
