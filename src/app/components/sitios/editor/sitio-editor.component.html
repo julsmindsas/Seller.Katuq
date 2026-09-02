@@ -504,6 +504,50 @@
             </button>
           </ng-container>
 
+          <!-- Popup de bienvenida -->
+          <ng-container *ngIf="b.tipo === 'popup'">
+            <p class="nota">
+              Sale al entrar, encima de la página, y el visitante la cierra con la ✕, tocando afuera o con
+              Escape. No vuelve a salir según la frecuencia que elijas, ni cuando alguien vuelve del pago.
+            </p>
+            <div class="campo">
+              <label>Foto</label>
+              <div class="miniaturas" *ngIf="b.datos.imagen">
+                <div class="miniatura"><img [src]="b.datos.imagen" alt="" /><button (click)="b.datos.imagen = ''; marcarSucio()" title="Quitar">×</button></div>
+              </div>
+              <label class="archivo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
+                {{ subiendo ? 'Subiendo…' : (b.datos.imagen ? 'Cambiar foto' : 'Subir foto') }}
+                <input type="file" accept="image/*" (change)="subirImagen($event, 'popup')" [disabled]="subiendo" />
+              </label>
+              <small>Va a un lado del texto. Ideal casi cuadrada (por ejemplo 800 × 800).</small>
+            </div>
+            <div class="campo">
+              <label>Titular</label>
+              <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="90" />
+            </div>
+            <div class="campo">
+              <label>Texto</label>
+              <textarea rows="3" [(ngModel)]="b.datos.texto" (ngModelChange)="marcarSucio()" maxlength="240"></textarea>
+            </div>
+            <div class="campo campo--doble">
+              <div><label>Texto del botón</label><input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="40" /></div>
+              <div><label>A dónde lleva</label><input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="/?catalogo=1" /></div>
+            </div>
+            <div class="campo">
+              <label>Cuántas veces sale</label>
+              <select [(ngModel)]="b.datos.frecuencia" (ngModelChange)="marcarSucio()">
+                <option value="dia">Una vez al día por visitante</option>
+                <option value="visita">Una sola vez por visitante</option>
+                <option value="siempre">Cada vez que entra</option>
+              </select>
+            </div>
+            <div class="campo campo--doble">
+              <div><label>Espera antes de salir (segundos)</label><input type="number" min="0" max="30" [(ngModel)]="b.datos.demora" (ngModelChange)="marcarSucio()" /></div>
+              <div><label>Hasta (opcional)</label><input type="date" [(ngModel)]="b.datos.hasta" (ngModelChange)="marcarSucio()" /></div>
+            </div>
+          </ng-container>
+
           <!-- Banners -->
           <ng-container *ngIf="b.tipo === 'banner'">
             <p class="nota">

@@ -56,6 +56,12 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     icono: "M4 5h5v14H4zM15 5h5v14h-5z",
   },
   {
+    tipo: "popup",
+    nombre: "Popup de bienvenida",
+    descripcion: "Una ventana al entrar: foto, titular y botón. Sale una vez por día",
+    icono: "M4 4h16v16H4zM8 9h8M8 13h5",
+  },
+  {
     tipo: "banner",
     nombre: "Banners",
     descripcion: "Tus imágenes a lo ancho; con varias, rotan solas con flechas",
@@ -365,6 +371,14 @@ const SECCIONES_LISTAS: {
     datos: { titulo: "Lo más pedido", productoIds: [], permitirCompra: false },
   },
   {
+    id: "popup-bienvenida",
+    nombre: "Popup de bienvenida",
+    pista: "Una promoción al entrar, una vez por día",
+    grupo: "Vender",
+    tipo: "popup",
+    datos: { imagen: "", titulo: "Hay personas que merecen sentirse inolvidables", texto: "Cada cumpleaños, aniversario o \"te quiero\" merece un detalle pensado para emocionar.", ctaTexto: "Descubrir regalos", ctaUrl: "/?catalogo=1", frecuencia: "dia", demora: 2, hasta: "" },
+  },
+  {
     id: "busca-tu-detalle",
     nombre: "Busca tu detalle",
     pista: "Categoría, ocasión y presupuesto",
@@ -505,6 +519,7 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   seccion: { titulo: "", columnas: 1 },
   imagen: { url: "", alt: "", enlace: "", tamano: "normal" },
   banner: { banners: [], alto: "medio", rotar: true, completo: true },
+  popup: { imagen: "", titulo: "Hay personas que merecen sentirse inolvidables", texto: "Cada cumpleaños, aniversario o \"te quiero\" merece un detalle pensado para emocionar.", ctaTexto: "Descubrir regalos", ctaUrl: "/?catalogo=1", frecuencia: "dia", demora: 2, hasta: "" },
   botones: { botones: [{ etiqueta: "Comprar", url: "#productos", estilo: "principal" }] },
   separador: { linea: false, alto: "medio" },
   productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false, carrusel: false },
@@ -2322,6 +2337,7 @@ export class SitioEditorComponent implements OnInit {
       | "heroMosaico"
       | "instagram"
       | "banner"
+      | "popup"
   ): void {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
@@ -2350,6 +2366,7 @@ export class SitioEditorComponent implements OnInit {
           if (destino === "heroMosaico") b.datos.mosaico = [...(b.datos.mosaico || []), res.url];
           if (destino === "instagram") b.datos.fotos = [...(b.datos.fotos || []), res.url];
           if (destino === "banner") b.datos.banners = [...(b.datos.banners || []), { url: res.url, enlace: "", alt: "" }];
+          if (destino === "popup") b.datos.imagen = res.url;
           if (destino === "fondoSeccion") {
             const estilo = this.estiloDe(b);
             estilo.fondoImagen = res.url;

@@ -1424,3 +1424,11 @@ h3 {
 .banner .fila__puntos { position: absolute; left: 0; right: 0; bottom: 0.9rem; margin: 0; }
 .fila__punto { width: 9px; height: 9px; border-radius: 999px; background: rgba(255,255,255,.5); &.is-activa { background: #fff; transform: scale(1.25); } }
 .productos__grid--fila { display: flex; gap: 1rem; overflow-x: auto; .producto { flex: 0 0 auto; width: clamp(160px, 22vw, 250px); } }
+
+/* ── Popup de bienvenida (en la previa, como tarjeta en su sitio) ── */
+.popup-previa { display: grid; gap: 0.75rem; }
+.kq-popup__caja { position: relative; width: min(820px, 100%); margin: 0 auto; background: #fff; color: #222; border-radius: var(--sitio-radio, 12px); box-shadow: 0 30px 80px -30px rgba(0,0,0,.6); display: grid; overflow: hidden; }
+.kq-popup__caja--con-foto { grid-template-columns: 1fr; @media (min-width: 700px) { grid-template-columns: 1.1fr 1fr; } }
+.kq-popup__foto { min-height: 220px; background: #f4f4f5; img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 220px; } }
+.kq-popup__texto { padding: 2rem 1.75rem; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem; h2 { margin: 0; font-size: 1.7rem; line-height: 1.1; } p { margin: 0; opacity: 0.8; line-height: 1.5; } .boton { align-self: flex-start; margin-top: 0.5rem; } }
+.kq-popup__cerrar { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.92); color: #222; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px -8px rgba(0,0,0,.5); }

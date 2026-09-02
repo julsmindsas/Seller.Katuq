@@ -358,6 +358,20 @@
         </section>
 
         <!-- Imagen suelta -->
+        <!-- Popup: en la previa se muestra como tarjeta en su lugar; en la página sale encima al entrar. -->
+        <section *ngSwitchCase="'popup'" class="bloque popup-previa">
+          <p class="vacio">Así se ve el popup. En la página publicada sale encima de todo al entrar, no aquí.</p>
+          <div class="kq-popup__caja" [class.kq-popup__caja--con-foto]="bloque.datos.imagen">
+            <span class="kq-popup__cerrar">✕</span>
+            <div class="kq-popup__foto" *ngIf="bloque.datos.imagen"><img [src]="bloque.datos.imagen" alt="" /></div>
+            <div class="kq-popup__texto">
+              <h2 *ngIf="bloque.datos.titulo" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'titulo')" (keydown)="alTeclearEnTexto($event, true)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.titulo }}</h2>
+              <p *ngIf="bloque.datos.texto" [attr.contenteditable]="previsualizacion ? true : null" (blur)="alTerminarEdicion($event, bloque.id, 'texto')" (keydown)="alTeclearEnTexto($event, false)" (paste)="alPegar($event)" [class.editable]="previsualizacion">{{ bloque.datos.texto }}</p>
+              <a *ngIf="bloque.datos.ctaTexto" class="boton" [href]="bloque.datos.ctaUrl || '#'" (click)="registrarClic('cta', bloque.id, $event)">{{ bloque.datos.ctaTexto }}</a>
+            </div>
+          </div>
+        </section>
+
         <!-- Banners: en la previa se ve el primero con sus puntos. -->
         <section *ngSwitchCase="'banner'" class="bloque banner"
                  [class.banner--completo]="bloque.datos.completo !== false"
