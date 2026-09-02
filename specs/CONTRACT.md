@@ -664,6 +664,67 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Test:** validador `validarImagenMetodoPago` 9/9 (ts-node). Deploy front a cargo del equipo.
 - Entregable ClickUp: `clickup/feature-pagos-metodos-unificados__tarea-3-imagen-metodo-pago.md`.
 
+### 2026-08-09 — D-067: Apertura + aprobación spec 015 (amarrar forma de pago con integración) — Tarea 4/6 del lote pagos
+- **Tarea 4 del lote "módulo pagos".** Rama `feature/pagos-metodos-unificados` (ambos repos). Ver [[D-054]].
+- **Problema:** un método con integración se puede desconfigurar *sueltamente* (apagar su Disponible por canal
+  con un clic, o pasar `Integración` de Sí→No) aunque detrás haya una pasarela activa → deja el cobro roto/oculto
+  sin aviso. El vínculo método↔pasarela existe (enrutamiento **por nombre** en `orders.js`) pero no está protegido.
+- **"Integración activa" = ambas (clarification):** (a) flag manual `Integración = Sí`, **o** (b) **pasarela
+  activa** = el nombre corresponde a pasarela (keywords `wompi`/`epayco`/`pasarela`/`tarjeta online`) **y** la
+  empresa tiene esa pasarela con config **propia** activa (`getProviderInfo(company).isConfigured === true`; el
+  **fallback de plataforma NO cuenta** — R-01).
+- **Qué se bloquea (UI + guardarraíl backend 409):** (1) **apagar Disponible por canal** mientras el método esté
+  amarrado (encender nunca se bloquea); (2) **`Integración` Sí→No** solo si hay **pasarela activa** detrás. Si el
+  amarre es **solo por flag manual**, Sí→No **se permite** = vía deliberada para liberar el método.
+- **D-067 (checkpoint humano):** **Inhabilitar/Eliminar NO se bloquean** — quedan como **escape deliberado y
+  confirmado** (Swal). El guardarraíl "no apagar canal" aplica al switch por canal, no a Inhabilitar. Coherente
+  con "que no se desconfigure *sueltamente*".
+- **Fuera de alcance:** crear el vínculo formal `provider` en el método (sigue por nombre); configurar/activar la
+  pasarela (solo se **lee** su estado); bloquear edición de Nombre; bloquear Inhabilitar/Eliminar.
+- **Estado:** spec **aprobada** 2026-08-09 → habilita `plan.md`. Próxima decisión = **D-068**.
+
+### 2026-08-09 — D-068: Aprobación plan 015 (guardarraíl de amarre) + decisiones técnicas
+- **Núcleo:** lógica pura compartida front/back — `esPasarelaPorNombre(nombre)` (keywords `wompi`/`epayco`/
+  `pasarela`/`tarjeta online`, mismas de `orders.js`) + `evaluarAmarre(m, {hayPasarelaActiva})` →
+  `{amarrado, motivo:'flag'|'pasarela'|null, bloqueaCanalOff, bloqueaQuitarFlag}`.
+- **Front:** 1 lectura del estado de pasarela por carga; switches de canal encendidos `[disabled]` + badge
+  🔒(motivo); modal `Integración [disabled]` solo si `bloqueaQuitarFlag` (pasarela activa).
+- **Back (autoritativo):** `POST /v1/pagos/edit` y `/pos/edit` ganan guardarraíl **409** — `metodo_amarrado`
+  (apagar canal casual) e `integracion_amarrada` (Sí→No con pasarela activa) + auditoría `PAYMENT_METHOD_LOCK_BLOCK`.
+  Nuevo helper puro `services/pagosAmarre.js`. Sin cambios de esquema (amarre derivado en lectura).
+- **OQ-1 (resuelta):** distinguir apagado casual vs deliberado con **marcador de request `permitirInhabilitar:true`**
+  (lo envía Inhabilitar/Rehabilitar; el toggle no) → **sin** endpoint dedicado. El marcador es escape deliberado
+  (spoofeable a propósito, RT-04) y NO habilita quitar el flag con pasarela activa.
+- **OQ-2 (resuelta):** el front lee el estado de pasarela **reutilizando** `GET /v1/integration/config` existente
+  (deriva `hayPasarelaActiva` = provider de pago con `status:'active'`). **No** se crea endpoint nuevo (regla dura).
+- **OQ-3 (resuelta):** keywords de pasarela **duplicadas** en las puras front/back con nota a `orders.js` (repos
+  separados). `hayPasarelaActiva` server-side = `getProviderInfo(company).isConfigured` (fallback plataforma NO
+  cuenta, R-01).
+- **Dispara gate backend** → se acompaña de propuesta OpenSpec `payment-method-integration-lock/`. Deploy backend
+  a cargo del equipo (EC2/PM2). **Estado:** plan **aprobado** → habilita `tasks.md`. Próxima decisión = **D-069**.
+
+### 2026-09-01 — D-069: Cierre implementación spec 015 (amarre método↔integración) — Tarea 4/6 del lote pagos
+- **Implementado y verificado (rama `feature/pagos-metodos-unificados`, ambos repos):**
+  - **BACK:** `services/pagosAmarre.js` (puras `esPasarelaPorNombre`/`integracionEnSi`/`evaluarAmarre`,
+    keywords `wompi`/`epayco`/`pasarela`/`tarjeta online`) + `controllers/pagos.js` con helpers
+    `resolverHayPasarelaActiva` (`getProviderInfo().isConfigured`, fallback plataforma NO cuenta),
+    `chequearAmarre` y `auditarBloqueoAmarre`; **guardarraíl cableado en `edit` y `editPos`** → **409**
+    `metodo_amarrado` (apagar canal sin `permitirInhabilitar`) / `integracion_amarrada` (Sí→No con pasarela
+    activa), borra `permitirInhabilitar` del body antes del `.update`, auditoría `PAYMENT_METHOD_LOCK_BLOCK`
+    (no bloqueante, Slack). Tests `test:pagos-amarre` **19/19**; rutas verificadas (401 = montadas).
+  - **FRONT:** `shared/util/metodo-pago.util.ts` (puras espejo, **paridad 1:1** con back) + runner ts-node
+    `scripts/test-metodo-pago-amarre.ts` (**19/19**, `scripts/tsconfig.json` fuerza CommonJS para evitar el
+    modo ESM de ts-node) + `MetodosPagoService.getEstadoPasarela()` (reusa `GET /v1/integration/config`) y
+    marcador `permitirInhabilitar` solo en Inhabilitar/Eliminar (no en el toggle) + `metodos-pago.component`
+    (amarre por fila; switch encendido+amarrado `[disabled]`+🔒+tooltip; badge "Amarrado"; `select` Integración
+    disabled+hint en el modal; 409 `metodo_amarrado`/`integracion_amarrada` → Swal claro y revierte el switch).
+    `ng serve` **Compiled successfully**.
+  - **E2E navegador:** probado por el usuario (2026-09-01) → OK.
+- **OpenSpec backend:** propuesta `openspec/changes/payment-method-integration-lock/` (proposal + spec de
+  capability + tasks BT-01..BT-06). **Deploy backend (EC2/PM2) a cargo del equipo.**
+- **Decisión:** implementación de spec 015 **done**. Faltan del lote: **Tareas 5 y 6** (el usuario las pasa una
+  por una). Próxima decisión = **D-070**.
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.

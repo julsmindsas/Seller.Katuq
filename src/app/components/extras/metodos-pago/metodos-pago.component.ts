@@ -1,9 +1,9 @@
 import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Observable, of } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { MetodosPagoService } from 'src/app/shared/services/ventas/metodos-pago.service';
-import { CanalPago, MetodoPagoUnificado } from 'src/app/shared/util/metodo-pago.util';
+import { AmarreInfo, CanalPago, MetodoPagoUnificado, evaluarAmarre } from 'src/app/shared/util/metodo-pago.util';
 import { PedidosUtilService } from 'src/app/components/ventas/service/pedidos.util.service';
 import { POSPedidosUtilService } from 'src/app/components/pos/pos-service/pos-pedidos.util.service';
 import Swal from 'sweetalert2';
@@ -27,6 +27,15 @@ export class MetodosPagoComponent implements OnInit {
   filtrados: MetodoPagoUnificado[] = [];
   cargando = false;
   filtro = '';
+
+  // Amarre (spec 015): estado de pasarela de la empresa + amarre calculado por método.
+  hayPasarelaActiva = false;
+  amarres: { [clave: string]: AmarreInfo } = {};
+  /** true si en el modal en edición NO se puede quitar el flag de integración (pasarela activa). */
+  integracionBloqueadaEdit = false;
+  private readonly AMARRE_LIBRE: AmarreInfo = {
+    amarrado: false, motivo: null, bloqueaCanalOff: false, bloqueaQuitarFlag: false,
+  };
 
   form: FormGroup;
   editando = false;
@@ -74,9 +83,15 @@ export class MetodosPagoComponent implements OnInit {
 
   cargarDatos(): void {
     this.cargando = true;
-    this.service.getMetodosUnificados().subscribe({
-      next: (m) => {
-        this.metodos = m;
+    // Trae los métodos y el estado de la pasarela en paralelo para calcular el amarre por fila.
+    forkJoin({
+      metodos: this.service.getMetodosUnificados(),
+      estado: this.service.getEstadoPasarela(),
+    }).subscribe({
+      next: ({ metodos, estado }) => {
+        this.hayPasarelaActiva = !!estado?.hayPasarelaActiva;
+        this.metodos = metodos;
+        this.recomputarAmarres();
         this.aplicarFiltro();
         this.cargando = false;
       },
@@ -85,6 +100,38 @@ export class MetodosPagoComponent implements OnInit {
         Swal.fire('Error', 'No se pudieron cargar los métodos de pago', 'error');
       },
     });
+  }
+
+  /** Recalcula el amarre de cada método según el estado actual de la pasarela. */
+  private recomputarAmarres(): void {
+    this.amarres = {};
+    for (const m of this.metodos) {
+      this.amarres[m.clave] = evaluarAmarre(
+        { nombre: m.nombre, integracion: m.integracion },
+        { hayPasarelaActiva: this.hayPasarelaActiva },
+      );
+    }
+  }
+
+  /** Amarre calculado de un método (o "libre" si aún no se calculó). */
+  amarre(m: MetodoPagoUnificado): AmarreInfo {
+    return this.amarres[m.clave] || this.AMARRE_LIBRE;
+  }
+
+  /**
+   * true si el switch de disponibilidad de ese canal debe quedar bloqueado: el canal está
+   * ENCENDIDO y el método está amarrado (no se puede apagar). Encender nunca se bloquea.
+   */
+  canalBloqueado(m: MetodoPagoUnificado, canal: CanalPago): boolean {
+    return m[canal].disponible && this.amarre(m).bloqueaCanalOff;
+  }
+
+  /** Texto del motivo de amarre para tooltips/badges. */
+  motivoAmarreTexto(m: MetodoPagoUnificado): string {
+    const a = this.amarre(m);
+    if (a.motivo === 'pasarela') { return 'Amarrado — pasarela activa'; }
+    if (a.motivo === 'flag') { return 'Amarrado — integración (Sí)'; }
+    return '';
   }
 
   aplicarFiltro(): void {
@@ -126,6 +173,8 @@ export class MetodosPagoComponent implements OnInit {
   abrirCrear(): void {
     this.editando = false;
     this.metodoEditando = null;
+    this.integracionBloqueadaEdit = false;
+    this.form.get('integracion')?.enable(); // al crear, siempre editable
     this.resetImagen(null);
     this.form.reset({
       nombre: '',
@@ -156,6 +205,11 @@ export class MetodosPagoComponent implements OnInit {
       dispPos: metodo.pos.disponible,
       posPos: metodo.pos.posicion ?? '',
     });
+    // Amarre (spec 015): si hay pasarela activa detrás, no se puede quitar el flag de integración.
+    const am = this.amarre(metodo);
+    this.integracionBloqueadaEdit = am.bloqueaQuitarFlag;
+    const ctrl = this.form.get('integracion');
+    if (am.bloqueaQuitarFlag) { ctrl?.disable(); } else { ctrl?.enable(); }
     this.modalService.open(this.modalForm, { size: 'lg', centered: true });
   }
 
@@ -364,11 +418,30 @@ export class MetodosPagoComponent implements OnInit {
   private manejarError(e: any, metodo?: MetodoPagoUnificado, canal?: CanalPago): void {
     this.cargando = false;
     if (e && e.status === 409) {
+      const code = e?.error?.error; // el backend envía { error: '<codigo>', ... }
+      if (code === 'metodo_amarrado') {
+        Swal.fire(
+          'Método amarrado',
+          'Este método está amarrado a una integración activa, no se puede desactivar por canal. Para bajarlo usa "Inhabilitar".',
+          'warning',
+        );
+        if (canal) { this.cargarDatos(); } // revierte el switch al estado real
+        return;
+      }
+      if (code === 'integracion_amarrada') {
+        Swal.fire(
+          'Integración amarrada',
+          'No puedes quitar la integración: hay una pasarela activa vinculada. Desactiva la pasarela para liberar el método.',
+          'warning',
+        );
+        return;
+      }
+      // 409 restante = nombre duplicado (spec 012).
       const donde = canal ? ` en ${this.etiquetaCanal(canal)}` : '';
       const nombre = metodo ? metodo.nombre : this.form.value.nombre;
       Swal.fire('Nombre duplicado', `Ya existe un método "${nombre}"${donde}.`, 'warning');
-    } else {
-      Swal.fire('Error', 'No se pudo completar la operación', 'error');
+      return;
     }
+    Swal.fire('Error', 'No se pudo completar la operación', 'error');
   }
 }

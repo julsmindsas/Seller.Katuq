@@ -13,6 +13,7 @@
     "build:8gb": "node --max_old_space_size=8192 node_modules/@angular/cli/bin/ng build",
     "build:prod": "node --max_old_space_size=8192 node_modules/@angular/cli/bin/ng build --configuration=production",
     "test": "node --max_old_space_size=4096 node_modules/@angular/cli/bin/ng test",
+    "test:pagos-amarre": "ts-node --project scripts/tsconfig.json --transpile-only scripts/test-metodo-pago-amarre.ts",
     "lint": "node --max_old_space_size=4096 node_modules/@angular/cli/bin/ng lint",
     "e2e": "node --max_old_space_size=4096 node_modules/@angular/cli/bin/ng e2e",
     "gc": "ng generate component",

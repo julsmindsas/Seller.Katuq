@@ -76,6 +76,78 @@ export function validarImagenMetodoPago(
   return null;
 }
 
+// --- Amarre de método con integración (spec 015) --------------------------
+
+/**
+ * Palabras clave que hacen que un método "sea" una pasarela de cobro. Es la MISMA lista que usa el
+ * enrutamiento de cobro en el backend (`orders.js`): un método cuyo nombre contiene una de estas se cobra
+ * por pasarela. Duplicada a propósito (repos separados, sin import compartido) — OQ-3/D-068.
+ */
+export const PASARELA_KEYWORDS = ['wompi', 'epayco', 'pasarela', 'tarjeta online'];
+
+/** Quita acentos y baja a minúsculas para comparaciones tolerantes (no colapsa espacios). */
+function normalizarTexto(v: unknown): string {
+  return String(v ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim();
+}
+
+/** true si el nombre del método corresponde a una pasarela (por palabra clave). Spec 015. */
+export function esPasarelaPorNombre(nombre: unknown): boolean {
+  const n = normalizarTexto(nombre);
+  return PASARELA_KEYWORDS.some((k) => n.includes(k));
+}
+
+/** true si el flag `integracion` del método está en "Sí" (tolera 'Si'/'sí'/'SI'). Spec 015. */
+export function integracionEnSi(integracion: unknown): boolean {
+  return normalizarTexto(integracion) === 'si';
+}
+
+/** Motivo por el que un método queda amarrado (o `null` si está libre). */
+export type MotivoAmarre = 'pasarela' | 'flag' | null;
+
+/** Resultado de evaluar el amarre de un método (derivado en lectura, no se persiste). Spec 015. */
+export interface AmarreInfo {
+  /** true si el método está amarrado por cualquier motivo. */
+  amarrado: boolean;
+  motivo: MotivoAmarre;
+  /** true si NO se puede apagar la disponibilidad de un canal encendido (sin escape deliberado). */
+  bloqueaCanalOff: boolean;
+  /** true si NO se puede cambiar `Integración` de Sí → No (solo con pasarela activa detrás). */
+  bloqueaQuitarFlag: boolean;
+}
+
+const AMARRE_LIBRE: AmarreInfo = {
+  amarrado: false,
+  motivo: null,
+  bloqueaCanalOff: false,
+  bloqueaQuitarFlag: false,
+};
+
+/**
+ * Evalúa el amarre de un método (spec 015 / D-067). Regla:
+ * - **pasarela activa** (nombre es pasarela Y la empresa tiene pasarela activa) → amarrado; bloquea apagar
+ *   canal Y quitar el flag.
+ * - **flag manual** (`Integración = Sí` sin pasarela activa) → amarrado; bloquea apagar canal, pero permite
+ *   quitar el flag (Sí→No es la vía deliberada de liberar).
+ * - en otro caso → libre.
+ * Función PURA: misma lógica espejada en el backend (`services/pagosAmarre.js`).
+ */
+export function evaluarAmarre(
+  m: { nombre?: unknown; integracion?: unknown },
+  ctx: { hayPasarelaActiva: boolean },
+): AmarreInfo {
+  if (esPasarelaPorNombre(m?.nombre) && ctx?.hayPasarelaActiva) {
+    return { amarrado: true, motivo: 'pasarela', bloqueaCanalOff: true, bloqueaQuitarFlag: true };
+  }
+  if (integracionEnSi(m?.integracion)) {
+    return { amarrado: true, motivo: 'flag', bloqueaCanalOff: true, bloqueaQuitarFlag: false };
+  }
+  return { ...AMARRE_LIBRE };
+}
+
 /** Normaliza un nombre para usarlo como clave de fusión: trim, minúsculas, espacios colapsados. */
 export function normalizeNombre(nombre: unknown): string {
   return String(nombre ?? '')

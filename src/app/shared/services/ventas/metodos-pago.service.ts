@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { Observable, forkJoin, of } from 'rxjs';
-import { last, map, switchMap } from 'rxjs/operators';
+import { catchError, last, map, switchMap } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 
 import { MaestroService } from '../maestros/maestro.service';
 import {
@@ -22,10 +24,41 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class MetodosPagoService {
+  /** Providers de pago soportados por el backend (`paymentGateway/index.js`). Spec 015. */
+  private static readonly GATEWAY_PROVIDERS = ['wompi', 'epayco'];
+
   constructor(
     private maestro: MaestroService,
     private storage: AngularFireStorage,
+    private http: HttpClient,
   ) {}
+
+  /**
+   * Estado de la pasarela de la empresa activa (spec 015). Reutiliza el endpoint existente
+   * `GET /v1/integration/config` (OQ-2/D-068), que ya devuelve solo configs `status:'active'`. El interceptor
+   * añade el header `company` (= `user.company`), la MISMA con que se llavean las integration configs y la
+   * colección `pagos` → sin desalineación multi-tenant. `hayPasarelaActiva` = hay una config de un provider de
+   * pago (wompi/epayco). Degrada seguro a `false` si falla (NFR 5.5): el guardarraíl backend sigue siendo
+   * autoritativo.
+   */
+  getEstadoPasarela(): Observable<{ hayPasarelaActiva: boolean; provider?: string }> {
+    return this.http
+      .get<{ configs?: Array<{ provider?: string; status?: string }> }>(
+        `${environment.urlApi}/v1/integration/config`,
+      )
+      .pipe(
+        map((resp) => {
+          const configs = resp?.configs || [];
+          const activa = configs.find((c) => {
+            const provider = String(c?.provider ?? '').toLowerCase();
+            const activo = c?.status === undefined || String(c.status).toLowerCase() === 'active';
+            return MetodosPagoService.GATEWAY_PROVIDERS.includes(provider) && activo;
+          });
+          return { hayPasarelaActiva: !!activa, provider: activa?.provider };
+        }),
+        catchError(() => of({ hayPasarelaActiva: false })),
+      );
+  }
 
   /** Valida un archivo de imagen para el logo del método (delega en la lógica pura del util). */
   validarImagen(file: { name?: string; type?: string; size?: number } | null): string | null {
@@ -74,10 +107,17 @@ export class MetodosPagoService {
     metodo: MetodoPagoUnificado,
     canal: CanalPago,
     disponible: boolean,
+    opts: { deliberado?: boolean } = {},
   ): Observable<any> {
     const estado = metodo[canal];
     if (estado.existe && estado.cd) {
-      const payload = { ...(estado.raw || {}), cd: estado.cd, activo: disponible };
+      const payload: any = { ...(estado.raw || {}), cd: estado.cd, activo: disponible };
+      // Marcador de escape deliberado (spec 015 T-06): SOLO al inhabilitar a propósito
+      // (Inhabilitar / Eliminar), nunca en el toggle de disponibilidad — ese queda sujeto
+      // al guardarraíl de amarre del backend (409 metodo_amarrado).
+      if (!disponible && opts.deliberado) {
+        payload.permitirInhabilitar = true;
+      }
       return this.editEnCanal(canal, payload);
     }
     if (disponible) {
@@ -86,9 +126,9 @@ export class MetodosPagoService {
     return of({ msg: 'noop' });
   }
 
-  /** Inhabilita (borrado lógico) un método en un canal. */
+  /** Inhabilita (borrado lógico) un método en un canal — escape deliberado del amarre. */
   inhabilitar(metodo: MetodoPagoUnificado, canal: CanalPago): Observable<any> {
-    return this.setDisponibilidad(metodo, canal, false);
+    return this.setDisponibilidad(metodo, canal, false, { deliberado: true });
   }
 
   /**
@@ -99,7 +139,7 @@ export class MetodosPagoService {
     const ops: Observable<any>[] = [];
     (['ecommerce', 'pos'] as CanalPago[]).forEach((canal) => {
       if (metodo[canal].existe && metodo[canal].disponible) {
-        ops.push(this.setDisponibilidad(metodo, canal, false));
+        ops.push(this.setDisponibilidad(metodo, canal, false, { deliberado: true }));
       }
     });
     return ops.length ? forkJoin(ops) : of([]);

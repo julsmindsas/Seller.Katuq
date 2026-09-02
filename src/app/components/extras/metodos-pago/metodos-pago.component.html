@@ -52,16 +52,27 @@
                     {{ m.nombre }}
                   </td>
                   <td>{{ m.online }}</td>
-                  <td class="text-center">{{ m.integracion }}</td>
+                  <td class="text-center">
+                    {{ m.integracion }}
+                    <div *ngIf="amarre(m).amarrado" class="mt-1">
+                      <span class="badge bg-warning text-dark" placement="top"
+                        ngbTooltip="{{ motivoAmarreTexto(m) | translate }}">
+                        <i class="icofont icofont-lock"></i>&nbsp;{{ 'Amarrado' | translate }}
+                      </span>
+                    </div>
+                  </td>
 
                   <!-- E-commerce -->
                   <td class="text-center">
-                    <label class="switch-inline" [attr.aria-label]="'Disponible en E-commerce' | translate">
+                    <label class="switch-inline" [attr.aria-label]="'Disponible en E-commerce' | translate"
+                      placement="top" [ngbTooltip]="canalBloqueado(m, 'ecommerce') ? (motivoAmarreTexto(m) | translate) : ''">
                       <input type="checkbox" [checked]="m.ecommerce.disponible"
+                        [disabled]="canalBloqueado(m, 'ecommerce')"
                         (change)="toggleCanal(m, 'ecommerce')" />
                       <span class="estado" [class.on]="m.ecommerce.disponible">
                         {{ (m.ecommerce.disponible ? 'Sí' : 'No') | translate }}
                       </span>
+                      <i *ngIf="canalBloqueado(m, 'ecommerce')" class="icofont icofont-lock text-warning ml-1"></i>
                     </label>
                   </td>
                   <td class="text-center">
@@ -72,12 +83,15 @@
 
                   <!-- POS -->
                   <td class="text-center">
-                    <label class="switch-inline" [attr.aria-label]="'Disponible en POS' | translate">
+                    <label class="switch-inline" [attr.aria-label]="'Disponible en POS' | translate"
+                      placement="top" [ngbTooltip]="canalBloqueado(m, 'pos') ? (motivoAmarreTexto(m) | translate) : ''">
                       <input type="checkbox" [checked]="m.pos.disponible"
+                        [disabled]="canalBloqueado(m, 'pos')"
                         (change)="toggleCanal(m, 'pos')" />
                       <span class="estado" [class.on]="m.pos.disponible">
                         {{ (m.pos.disponible ? 'Sí' : 'No') | translate }}
                       </span>
+                      <i *ngIf="canalBloqueado(m, 'pos')" class="icofont icofont-lock text-warning ml-1"></i>
                     </label>
                   </td>
                   <td class="text-center">
@@ -157,6 +171,9 @@
               <option value="Si">{{ 'Si' | translate }}</option>
               <option value="No">{{ 'No' | translate }}</option>
             </select>
+            <small class="text-warning d-block mt-1" *ngIf="integracionBloqueadaEdit">
+              <i class="icofont icofont-lock"></i>&nbsp;{{ 'Hay una pasarela activa vinculada: no puedes quitar la integración. Desactiva la pasarela para liberar el método.' | translate }}
+            </small>
           </div>
         </div>
 

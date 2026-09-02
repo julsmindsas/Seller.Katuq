@@ -1,0 +1,11 @@
+{
+  "//": "tsconfig aislado para runners ts-node (spec 015 T-03). Fuerza CommonJS para evitar el modo ESM de ts-node ('Unknown file extension .ts'). No lo usa el build de Angular.",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2019",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  }
+}
