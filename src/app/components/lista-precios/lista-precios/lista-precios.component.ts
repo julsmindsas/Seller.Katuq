@@ -449,7 +449,13 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
         const tipoActual = this.tiposCliente.find(t => t.id === precio.tipoClienteId);
         return {
           ...precio,
-          tipoClienteNombre: tipoActual?.descripcion || tipoActual?.nombre || precio.tipoClienteNombre
+          // El NOMBRE manda, no la descripción: las descripciones son párrafos
+          // ("Lista B - Aquel cliente que asume la propiedad de los productos
+          // para venderlos dentro de su propia red comercial...") y en un chip
+          // tapaban el precio, que es el dato de la columna. La descripción
+          // queda en el tooltip.
+          tipoClienteNombre: tipoActual?.nombre || tipoActual?.descripcion || precio.tipoClienteNombre,
+          tipoClienteDescripcion: tipoActual?.descripcion || ''
         };
       });
   }
@@ -1302,7 +1308,11 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
         precios.push({
           referencia,
           tipoClienteId: tipo.id,
-          tipoClienteNombre: tipo.descripcion || nombreTipo,
+          // Rótulo, no llave: se guarda el nombre para que coincida con lo que
+          // muestra el listado. `nombreTipo` NO se toca porque es la llave con
+          // la que se emparejan las columnas del Excel — cambiarla dejaría sin
+          // reconocer las plantillas ya descargadas.
+          tipoClienteNombre: tipo.nombre || nombreTipo,
           precio: precioNumero,
           conIva: celda.conIva,
           porcentajeIva
@@ -1545,3 +1555,4 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     });
   }
 }
+

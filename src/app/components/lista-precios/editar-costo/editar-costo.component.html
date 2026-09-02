@@ -8,20 +8,15 @@
   <div class="mb-4 p-3 bg-light rounded">
     <div class="row align-items-center">
       <div class="col-auto">
+        <!-- Una sola etiqueta: el pipe entrega el placeholder cuando no hay foto
+             y appImageFallback atrapa la URL que existe pero no carga. -->
         <img
-          *ngIf="producto?.crearProducto?.imagenesPrincipales?.length > 0"
-          [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto"
+          [src]="producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
           [alt]="producto?.crearProducto?.titulo"
+          appImageFallback
           width="60"
           height="60"
           style="border-radius: 8px; object-fit: cover;"
-        />
-        <img
-          *ngIf="!producto?.crearProducto?.imagenesPrincipales?.length"
-          src="assets/img/placeholder.png"
-          width="60"
-          height="60"
-          style="border-radius: 8px; opacity: 0.5;"
         />
       </div>
       <div class="col">

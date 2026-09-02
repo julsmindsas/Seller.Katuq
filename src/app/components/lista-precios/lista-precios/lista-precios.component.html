@@ -129,7 +129,7 @@
                     <th style="width: 80px;" class="text-center">IMAGEN</th>
                     <th>REFERENCIA</th>
                     <th>PRECIO BASE</th>
-                    <th>PRECIOS POR TIPO</th>
+                    <th>NOMBRE Y PRECIO POR TIPO DE CLIENTE</th>
                     <th>ÚLTIMA EDICIÓN</th>
                     <th style="width: 120px;" class="text-center">ACCIONES</th>
                   </tr>
@@ -169,13 +169,15 @@
                     </td>
                     <td>
                       <div class="d-flex flex-wrap gap-1" *ngIf="getPreciosValidosPorTipoCliente(producto).length > 0">
+                        <!-- Nombre del tipo + precio. La descripción es un párrafo y va
+                             en el tooltip; en el chip tapaba el precio. -->
                         <span
                           *ngFor="let precio of getPreciosValidosPorTipoCliente(producto) | slice:0:3; trackBy: trackByTipoClienteId"
-                          class="badge bg-light text-dark border"
-                          style="font-size: 0.75rem;"
-                          [pTooltip]="'Sin IVA: $' + (precio.precio | number:'1.0-0') + ' + IVA ' + (precio.porcentajeIva || 0) + '%'"
+                          class="badge chip-precio-tipo"
+                          [pTooltip]="(precio.tipoClienteDescripcion ? precio.tipoClienteDescripcion + ' — ' : '') + 'Sin IVA: $' + (precio.precio | number:'1.0-0') + ' + IVA ' + (precio.porcentajeIva || 0) + '%'"
                           tooltipPosition="top">
-                          {{ precio.tipoClienteNombre }}: ${{ (precio.precioConIva || precio.precio) | number:'1.0-0' }}
+                          <span class="chip-tipo">{{ precio.tipoClienteNombre }}</span>
+                          <span class="chip-valor">${{ (precio.precioConIva || precio.precio) | number:'1.0-0' }}</span>
                         </span>
                         <span
                           *ngIf="getPreciosValidosPorTipoCliente(producto).length > 3"
@@ -231,8 +233,12 @@
                             </thead>
                             <tbody>
                               <tr *ngFor="let precio of getPreciosValidosPorTipoCliente(producto); trackBy: trackByTipoClienteId">
+                                <!-- Acá sí cabe la descripción: es la vista de detalle.
+                                     En la fila de arriba solo va nombre + precio. -->
                                 <td>
                                   <span class="fw-bold">{{ precio.tipoClienteNombre }}</span>
+                                  <small class="d-block text-muted lp-tipo-descripcion"
+                                         *ngIf="precio.tipoClienteDescripcion">{{ precio.tipoClienteDescripcion }}</small>
                                 </td>
                                 <td class="text-end">
                                   $ {{ precio.precio | number:'1.0-0' }}
