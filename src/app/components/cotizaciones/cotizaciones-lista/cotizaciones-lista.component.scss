@@ -615,6 +615,7 @@
   justify-content: center;
   transition: all 0.12s ease;
 
+  &.prev:hover { background: var(--canvas); border-color: var(--muted2); color: var(--ink); }
   &.edit:hover { background: #f3eeff; border-color: #e2d9fb; color: var(--accent); }
   &.dup:hover  { background: var(--blue-bg); border-color: #cfe1fb; color: var(--blue); }
   &.conv:hover { background: var(--green-bg); border-color: #c7ebd6; color: var(--green); }

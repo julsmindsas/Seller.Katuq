@@ -86,6 +86,19 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   buscandoProducto = false;
   private productoSearch$ = new Subject<string>();
 
+  // Catálogo de tipos de cliente de la empresa. Solo se usa para poner el NOMBRE
+  // en los chips de precio por segmento: lo guardado en el producto es la
+  // descripción (un párrafo). Si la carga falla, los chips caen al texto
+  // recortado y la cotización sigue funcionando igual.
+  tiposCliente: any[] = [];
+
+  // Se entró desde "Vista previa" del listado (`?preview=1`).
+  private abrirPreviewAlCargar = false;
+  // …y por eso al cerrar el documento se devuelve al listado: quien venía a ver
+  // no pidió abrir el editor, y quedarse dentro con el formulario detrás se
+  // siente como si el botón lo hubiera mandado a otra parte.
+  private volverAlListadoAlCerrar = false;
+
   private subs: Subscription[] = [];
 
   constructor(
@@ -114,7 +127,12 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.configurarBusquedaCliente();
     this.configurarBusquedaProducto();
+    this.cargarTiposCliente();
     this.cotizacionId = this.route.snapshot.paramMap.get("id");
+    // Llegada desde el botón "Vista previa" del listado: se abre el documento
+    // apenas terminen de cargar los datos.
+    this.abrirPreviewAlCargar = this.route.snapshot.queryParamMap.get("preview") === "1";
+    this.volverAlListadoAlCerrar = this.abrirPreviewAlCargar;
 
     if (this.cotizacionId) {
       this.cargar(this.cotizacionId);
@@ -125,6 +143,32 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.forEach((s) => s.unsubscribe());
+  }
+
+  /** Catálogo de tipos de cliente (para el rótulo de los chips de segmento). */
+  private cargarTiposCliente(): void {
+    this.subs.push(
+      this.maestro.consultarTiposCliente().subscribe({
+        next: (data: any) => {
+          const lista = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.results)
+            ? data.results
+            : [];
+          this.tiposCliente = lista.map((t: any) => ({
+            ...t,
+            nombre: t?.nombre || t?.name || "",
+            descripcion: t?.descripcion || t?.description || "",
+          }));
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.tiposCliente = [];
+        },
+      })
+    );
   }
 
   // ---- Inicialización ----
@@ -192,6 +236,11 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
           this.cargarTerminosDefault();
         }
         this.loading = false;
+        if (this.abrirPreviewAlCargar) {
+          // Una sola vez: si el usuario cierra el documento, no debe reaparecer.
+          this.abrirPreviewAlCargar = false;
+          this.abrirVistaPrevia();
+        }
       },
       error: () => {
         this.toastr.error("No se pudo cargar la cotización.");
@@ -595,6 +644,16 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return (item?.producto as any)?.identificacion?.referencia || "";
   }
 
+  /**
+   * Ruta de la foto principal del producto de la línea. La resuelve el pipe
+   * `imagenProducto` (buena parte del catálogo trae rutas relativas de Osmosis
+   * que sin resolver devuelven el HTML de la app en vez de la foto) y, si la URL
+   * existe pero no carga, `appImageFallback` pone el placeholder.
+   */
+  itemImagen(item: Carrito): string {
+    return (item?.producto as any)?.crearProducto?.imagenesPrincipales?.[0]?.urls || "";
+  }
+
   // ---- T-20: precio/IVA por línea (réplica del carrito de venta asistida) ----
 
   /** Ítems libres y productos con `permitePrecioManual` admiten editar el precio base. */
@@ -943,18 +1002,71 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
    * (el que efectivamente determina el precio de la línea).
    * Devuelve [] para empresas sin segmentación o ítems libres.
    */
-  preciosSegmento(item: Carrito): { nombre: string; precio: number; aplicado: boolean }[] {
+  preciosSegmento(
+    item: Carrito
+  ): { nombre: string; descripcion: string; precio: number; aplicado: boolean }[] {
     if (this.itemEsLibre(item)) return [];
     const lista = (item?.producto as any)?.preciosPorTipoCliente;
     if (!Array.isArray(lista) || lista.length === 0) return [];
     const categoriaId = (this.cotizacion.cliente as any)?.categoria?.id;
     return lista
       .filter((p: any) => p && p.activo === true)
-      .map((p: any) => ({
-        nombre: p.tipoClienteNombre || p.tipoClienteId || "Segmento",
-        precio: Number(p.precioConIva) || 0,
-        aplicado: !!categoriaId && p.tipoClienteId === categoriaId,
-      }));
+      .map((p: any) => {
+        const tipo = this.tiposCliente.find((t: any) => t?.id === p.tipoClienteId);
+        return {
+          nombre: this.rotuloTipoCliente(tipo, p.tipoClienteNombre, p.tipoClienteId) || "Segmento",
+          descripcion: (tipo?.descripcion || p.tipoClienteNombre || "").trim(),
+          precio: Number(p.precioConIva) || 0,
+          aplicado: !!categoriaId && p.tipoClienteId === categoriaId,
+        };
+      });
+  }
+
+  /**
+   * Nombre de la lista de precios que se le aplicó a la línea, para el documento
+   * que ve el cliente ("Precio a mayoristas").
+   *
+   * En el documento va SOLO la lista aplicada, nunca las demás: la cotización se
+   * le envía al cliente, y listar las otras tarifas le mostraría al mayorista lo
+   * que se le cobra a público general. Las demás listas se quedan en el editor,
+   * que es de uso interno.
+   *
+   * Vacío si el cliente no tiene tipo asignado o el producto no tiene precio
+   * para ese tipo (ahí el precio salió de otra fuente y no hay lista que nombrar).
+   */
+  segmentoAplicado(item: Carrito): string {
+    const aplicado = this.preciosSegmento(item).find((s) => s.aplicado);
+    return aplicado ? aplicado.nombre : "";
+  }
+
+  /**
+   * Rótulo corto del tipo de cliente para el chip de la línea.
+   *
+   * El chip tiene que caber al lado del precio, que es el dato que importa. Lo
+   * guardado en `tipoClienteNombre` NO sirve: las cotizaciones viejas traen ahí
+   * la DESCRIPCIÓN, que es un párrafo entero ("Lista B - Aquel cliente que asume
+   * la propiedad de los productos para venderlos dentro de su propia red
+   * comercial…") y tapaba el precio empujando la fila fuera de la pantalla.
+   *
+   * Orden: el nombre del catálogo manda; si el catálogo no cargó, se recorta lo
+   * guardado por el primer separador (`Lista B - Aquel cliente…` → `Lista B`),
+   * que es como quedaron escritas las descripciones.
+   */
+  private rotuloTipoCliente(tipo: any, guardado: string, id: string): string {
+    const nombre = (tipo?.nombre || "").trim();
+    if (nombre) return nombre;
+    const texto = (guardado || tipo?.descripcion || "").trim();
+    if (texto) {
+      const corte = texto.split(/\s+[-–—:]\s+/)[0].trim();
+      // Un corte que se come todo el rótulo (o que deja un párrafo igual de
+      // largo) no ayuda: en ese caso se trunca por longitud y el texto completo
+      // queda en el tooltip.
+      if (corte && corte.length <= 32) return corte;
+      return texto.length > 32 ? texto.slice(0, 32).trimEnd() + "…" : texto;
+    }
+    // Vacío, no el id: quien llama decide el respaldo. En el documento del
+    // cliente imprimir un id crudo sería peor que no poner nada.
+    return id;
   }
 
   // ---- Fechas / validez ----
@@ -1050,19 +1162,23 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
    */
   clienteTipo(cli: any): string {
     if (!cli) return "";
-    return (
-      cli.categoria?.nombre ||
-      cli.categoria?.descripcion ||
-      cli.tipoCliente ||
-      ""
-    );
+    const cat = cli.categoria;
+    if (cat) {
+      // Mismo criterio que los chips: el nombre del catálogo manda. Guardado en
+      // el cliente puede venir la descripción, que es un párrafo entero.
+      const tipo = this.tiposCliente.find((t: any) => t?.id === cat.id);
+      const rotulo = this.rotuloTipoCliente(tipo, cat.nombre || cat.descripcion || "", "");
+      if (rotulo) return rotulo;
+    }
+    return (cli.tipoCliente || "").trim();
   }
 
-  /** Meta del cliente para el documento: documento · ciudad · correo. */
+  /** Meta del cliente para el documento: documento · ciudad · celular · correo. */
   clienteMetaDoc(cli: any): string {
     return [
       this.clienteDocumento(cli),
       this.clienteCiudad(cli),
+      this.clienteCelular(cli),
       this.clienteCorreo(cli),
     ]
       .filter(Boolean)
@@ -1396,6 +1512,10 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
 
   cerrarVistaPrevia(): void {
     this.showPreview = false;
+    if (this.volverAlListadoAlCerrar) {
+      this.volverAlListadoAlCerrar = false;
+      this.router.navigate(["/cotizaciones"]);
+    }
   }
 
   /**
