@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, HostListener, OnInit } from "@angular/core";
 import Swal from "sweetalert2";
 import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
@@ -334,6 +334,15 @@ export class SitiosListaComponent implements OnInit {
     this.mostrandoAsistente = false;
   }
 
+  /** Escape cierra lo que esté abierto encima de la lista, de adentro hacia afuera. */
+  @HostListener("document:keydown.escape")
+  alEscape(): void {
+    if (this.mostrandoSelector) { this.mostrandoSelector = false; return; }
+    if (this.mostrandoMarca) { this.mostrandoMarca = false; return; }
+    if (this.sitioMetricas) { this.sitioMetricas = null; return; }
+    if (this.mostrandoAsistente) this.cerrarAsistente();
+  }
+
   /** Elegir no avanza de paso: se marca y se confirma abajo, como en el diseño. */
   elegirPlantilla(p: PlantillaSitio): void {
     this.plantillaElegida = p;
@@ -464,7 +473,9 @@ export class SitiosListaComponent implements OnInit {
   aptaParaTipo(p: PlantillaSitio): boolean {
     if (this.tipoElegido === "landing") return true;
     const bloques = p.bloques || [];
-    return bloques.includes("catalogo") || bloques.includes("productos");
+    // Vender en línea o mostrar un catálogo exige el bloque de catálogo completo:
+    // una plantilla con solo "productos destacados" (vacíos) no es una vitrina.
+    return bloques.includes("catalogo");
   }
 
   etiquetaSector(sector: string): string {
