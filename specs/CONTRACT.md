@@ -5624,3 +5624,12 @@ Contexto: otra sesión auditó `florecer-regalos.katuq.com` (nota 5,1/10 como ti
 8. **Sitio móvil**: "Agregar" fijo en la ficha, esqueletos al filtrar el catálogo, barra de anuncios que se esconde al bajar.
 
 Commits backend: a97f0d9, d89c436, 7c947bc, 6798f61, 373a06f, f0c6cff. Frontend: 1f965435, d4cdf09d, 68a6fddd, 484ee22a, 006dd77f (versión 2026.09.02.5).
+
+### D-255 — Adenda (2026-09-02, tarde): bloques B y C avanzados
+- **Caché del HTML publicado** 60 s en memoria con ETag estable (304) y nonce nuevo por respuesta; nunca con `acceso` ni `pedido`; se vacía al publicar/despublicar/borrar. El render **ya no cuenta visitas** (solo la baliza del navegador). Marca cacheada 5 min; precios y ofertas en una sola consulta.
+- **Tubería de imágenes** (`utils/siteImagenes.js`, sharp): lo que sube a `Sitios` se lee por bytes, va a WebP en 320/640/1280/1920 con el ancho en el nombre y el mismo token; la página arma `srcset` por convención. El editor avisa si la portada mide < 1600 px.
+- **Rutas con nombre**: `/p/<nombre>-<id>` y `/c/<categoria>`; `?producto=` redirige 301; canónica, tarjetas, menú, pie, baldosas y WebMCP usan la ruta; sitemap con productos y categorías (verificado: 1.911 URLs en FLORECER). **Caddy** (Lightsail 34.225.223.187) ahora manda la ruta en `?ruta=` (`deploy/sitios/Caddyfile`, respaldo `/etc/caddy/Caddyfile.bak-2026-09-02`).
+- Sitio móvil: "Agregar" fijo en la ficha, esqueletos al filtrar, barra de anuncios que se esconde.
+- Hallazgo: el runner de `test-sitios-publicacion` no esperaba las pruebas asíncronas; **4 pruebas del generador de páginas nunca corrieron y hoy fallan** (quedan como PENDIENTE visibles). Dueño: quien retome el generador.
+- Pendiente del paquete: encabezado móvil compacto con barra inferior única, plantilla Tienda de regalos v2 con títulos editoriales, spec de movimiento con la previa animando, bloque de hora de corte, JS externo con hash, Mi marca vs Estilo, miniaturas reales, e idempotencia del pedido (diff a aprobar).
+Commits backend: a9695e5, e8cbaae, efbb2fd, 51d2e9b. Frontend: 676a373f (2026.09.02.7).
