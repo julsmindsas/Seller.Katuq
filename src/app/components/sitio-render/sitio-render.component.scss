@@ -464,7 +464,7 @@ h3 {
 @media (min-width: 760px) { .pie__grid { grid-template-columns: 1.4fr 1fr 1fr; } }
 .pie__logo { height: 44px; width: auto; max-width: 200px; object-fit: contain; }
 .pie__nombre { font-family: var(--sitio-fuente-titulo); font-size: 1.4rem; }
-.pie__col { display: flex; flex-direction: column; gap: 0.45rem; h4 { margin: 0 0 0.35rem; font-size: 0.74rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.55; font-weight: 600; } }
+.pie__col { display: flex; flex-direction: column; gap: 0.45rem; h3 { margin: 0 0 0.35rem; font-size: 0.74rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.75; font-weight: 600; } }
 .pie__legal { margin: 2.25rem 0 0; padding-top: 1.1rem; border-top: 1px solid var(--sitio-borde, rgba(0,0,0,.08)); font-size: 0.8rem; opacity: 0.6; }
 
 // ── Portada de mosaico ───────────────────────────────────────────────────────
@@ -1423,7 +1423,7 @@ h3 {
 .fila__puntos { display: flex; justify-content: center; gap: 0.45rem; margin-top: 0.7rem; }
 .banner .fila__puntos { position: absolute; left: 0; right: 0; bottom: 0.9rem; margin: 0; }
 .fila__punto { width: 9px; height: 9px; border-radius: 999px; background: rgba(255,255,255,.5); &.is-activa { background: #fff; transform: scale(1.25); } }
-.productos__grid--fila { display: flex; gap: 1rem; overflow-x: auto; .producto { flex: 0 0 auto; width: clamp(160px, 22vw, 250px); } }
+.productos__grid--fila { display: flex; gap: 1rem; overflow-x: auto; .producto { flex: 1 0 clamp(160px, 22vw, 250px); max-width: 320px; } }
 
 /* ── Popup de bienvenida (en la previa, como tarjeta en su sitio) ── */
 .popup-previa { display: grid; gap: 0.75rem; }

@@ -656,8 +656,8 @@
               <img *ngIf="logo" class="pie__logo" [src]="logo" [alt]="negocio" />
               <span *ngIf="!logo && negocio" class="pie__nombre">{{ negocio }}</span>
             </div>
-            <div class="pie__col"><h4>Explora</h4><span class="vacio">Tus categorías salen aquí al publicar.</span></div>
-            <div class="pie__col pie__horarios" *ngIf="bloque.datos.horarios"><h4>Horarios</h4>
+            <div class="pie__col"><h3>Explora</h3><span class="vacio">Tus categorías salen aquí al publicar.</span></div>
+            <div class="pie__col pie__horarios" *ngIf="bloque.datos.horarios"><h3>Horarios</h3>
               <span class="pie__horario" *ngFor="let h of lineasDe(bloque.datos.horarios)"><i>{{ h }}</i></span>
             </div>
           </div>

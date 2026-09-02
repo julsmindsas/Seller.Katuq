@@ -543,7 +543,8 @@
               </select>
             </div>
             <div class="campo campo--doble">
-              <div><label>Espera antes de salir (segundos)</label><input type="number" min="0" max="30" [(ngModel)]="b.datos.demora" (ngModelChange)="marcarSucio()" /></div>
+              <div><label>Espera antes de salir (segundos)</label><input type="number" min="8" max="60" [(ngModel)]="b.datos.demora" (ngModelChange)="marcarSucio()" />
+                <small *ngIf="!(b.datos.demora >= 8)" class="aviso">Sale a los 8 segundos como mínimo: antes taparía la tienda sin que el visitante haya visto un producto (en celular, la pantalla entera). También sale al bajar el 40% de la página o cuando el cursor va a cerrar la pestaña.</small></div>
               <div><label>Hasta (opcional)</label><input type="date" [(ngModel)]="b.datos.hasta" (ngModelChange)="marcarSucio()" /></div>
             </div>
           </ng-container>
@@ -1873,6 +1874,26 @@
               </span>
               <span class="palanca"><span></span></span>
             </button>
+
+            <button class="opcion" [class.is-active]="contenido.tienda.abrirCarritoAlAgregar === true"
+                    (click)="contenido.tienda.abrirCarritoAlAgregar = contenido.tienda.abrirCarritoAlAgregar !== true; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Abrir el carrito al agregar</strong>
+                <small>Apagado, el botón confirma «Agregado ✓», el contador rebota y sale un aviso
+                  con «Ver carrito» sin sacar al comprador de la vitrina. Encendido, el cajón se abre
+                  con cada producto.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
+            <div class="campo">
+              <label>Categorías que no salen en el sitio</label>
+              <small>Separadas por coma, tal como se llaman en tu maestro (por ejemplo «Listas internas»).
+                Desaparecen del menú, las baldosas, el pie y los filtros; un producto que solo esté en
+                ellas tampoco sale.</small>
+              <input type="text" [ngModel]="categoriasOcultasTexto()" (ngModelChange)="ponerCategoriasOcultas($event)"
+                     placeholder="Listas internas, Insumos" />
+            </div>
 
             <ng-container *ngIf="ventaConfig && ventaConfig.formasPago.length">
               <div class="campo">

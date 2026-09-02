@@ -24,6 +24,10 @@ export interface TiendaSitio {
   otrasFormasPago: { cd: string; nombre: string }[];
   /** Venta cruzada (afines + sugerencias del carrito). Encendida por defecto. */
   ventaCruzada?: boolean;
+  /** Al agregar: abrir el cajón (true) o solo confirmar con un aviso (por defecto). */
+  abrirCarritoAlAgregar?: boolean;
+  /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */
+  categoriasOcultas?: string[];
   minimoCompra: number;
   mensajeConfirmacion: string;
 }

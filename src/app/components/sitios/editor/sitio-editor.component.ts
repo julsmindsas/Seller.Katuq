@@ -376,7 +376,7 @@ const SECCIONES_LISTAS: {
     pista: "Una promoción al entrar, una vez por día",
     grupo: "Vender",
     tipo: "popup",
-    datos: { imagen: "", titulo: "Hay personas que merecen sentirse inolvidables", texto: "Cada cumpleaños, aniversario o \"te quiero\" merece un detalle pensado para emocionar.", ctaTexto: "Descubrir regalos", ctaUrl: "/?catalogo=1", frecuencia: "dia", demora: 2, hasta: "" },
+    datos: { imagen: "", titulo: "Hay personas que merecen sentirse inolvidables", texto: "Cada cumpleaños, aniversario o \"te quiero\" merece un detalle pensado para emocionar.", ctaTexto: "Descubrir regalos", ctaUrl: "/?catalogo=1", frecuencia: "dia", demora: 8, hasta: "" },
   },
   {
     id: "busca-tu-detalle",
@@ -519,7 +519,7 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   seccion: { titulo: "", columnas: 1 },
   imagen: { url: "", alt: "", enlace: "", tamano: "normal" },
   banner: { banners: [], alto: "medio", rotar: true, completo: true },
-  popup: { imagen: "", titulo: "Hay personas que merecen sentirse inolvidables", texto: "Cada cumpleaños, aniversario o \"te quiero\" merece un detalle pensado para emocionar.", ctaTexto: "Descubrir regalos", ctaUrl: "/?catalogo=1", frecuencia: "dia", demora: 2, hasta: "" },
+  popup: { imagen: "", titulo: "Hay personas que merecen sentirse inolvidables", texto: "Cada cumpleaños, aniversario o \"te quiero\" merece un detalle pensado para emocionar.", ctaTexto: "Descubrir regalos", ctaUrl: "/?catalogo=1", frecuencia: "dia", demora: 8, hasta: "" },
   botones: { botones: [{ etiqueta: "Comprar", url: "#productos", estilo: "principal" }] },
   separador: { linea: false, alto: "medio" },
   productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false, carrusel: false },
@@ -2391,6 +2391,23 @@ export class SitioEditorComponent implements OnInit {
    * Cualquier cambio del editor pasa por aquí: marca que hay trabajo sin
    * guardar y refresca lo que ve la vista previa.
    */
+  /** Categorías ocultas del sitio, como texto separado por coma para el campo. */
+  categoriasOcultasTexto(): string {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    return Array.isArray(t && t.categoriasOcultas) ? t.categoriasOcultas.join(", ") : "";
+  }
+
+  ponerCategoriasOcultas(texto: string): void {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    if (!t) return;
+    t.categoriasOcultas = String(texto || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .slice(0, 40);
+    this.marcarSucio();
+  }
+
   marcarSucio(): void {
     this.sucio = true;
     this.recalcularPrevia();
