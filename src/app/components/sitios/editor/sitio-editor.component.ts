@@ -2390,6 +2390,15 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
           this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
           return;
         }
+        // La portada y los banners se muestran a lo ancho de la pantalla: una
+        // foto pequeña se agranda y sale borrosa en un computador.
+        if ((destino === "hero" || destino === "heroCarrusel" || destino === "banner") && Number(res.ancho) > 0 && Number(res.ancho) < 1600) {
+          this.toastr.warning(
+            `Esta foto mide ${res.ancho} px de ancho. Para portada o banner conviene una de 1600 px o más: así no se ve borrosa en pantallas grandes.`,
+            "Foto pequeña para la portada",
+            { timeOut: 9000, closeButton: true }
+          );
+        }
         if (destino === "seo" && this.contenido) {
           this.contenido.seo.imagen = res.url;
         } else {

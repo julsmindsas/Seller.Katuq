@@ -370,11 +370,11 @@ export class SitiosService extends BaseService {
   subirImagen(
     archivo: File,
     carpeta = "Sitios"
-  ): Observable<{ success: boolean; url?: string; path?: string; error?: string }> {
+  ): Observable<{ success: boolean; url?: string; path?: string; error?: string; ancho?: number; alto?: number }> {
     const datos = new FormData();
     datos.append("file", archivo);
     datos.append("carpeta", carpeta);
-    return this.post<{ success: boolean; url?: string; path?: string; error?: string }>(
+    return this.post<{ success: boolean; url?: string; path?: string; error?: string; ancho?: number; alto?: number }>(
       "/v1/media/upload",
       datos
     );
