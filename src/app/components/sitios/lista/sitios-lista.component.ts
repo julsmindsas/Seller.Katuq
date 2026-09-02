@@ -7,14 +7,35 @@ import { environment } from "../../../../environments/environment";
 
 /** Nombre humano de cada tipo de bloque, para los chips de la plantilla. */
 const NOMBRE_BLOQUE: { [tipo: string]: string } = {
+  encabezado: "Encabezado",
+  anuncio: "Barra de anuncios",
   hero: "Portada",
   texto: "Sobre tu negocio",
   galeria: "Galería",
+  seccion: "Sección libre",
+  columnas: "Columnas",
+  popup: "Popup de bienvenida",
+  banner: "Banners",
+  imagen: "Imagen",
+  botones: "Botones",
+  separador: "Separador",
   productos: "Productos",
+  catalogo: "Catálogo completo",
+  buscador: "Busca tu detalle",
+  categorias: "Categorías",
+  promo: "Foto con argumento",
+  destacado: "Producto destacado",
+  contador: "Cuenta regresiva",
+  suscripcion: "Boletín",
+  instagram: "Instagram",
+  marcas: "Marcas",
   whatsapp: "WhatsApp",
   formulario: "Formulario",
-  faq: "Preguntas",
-  footer: "Pie",
+  faq: "Preguntas frecuentes",
+  video: "Video",
+  resenas: "Reseñas",
+  ubicacion: "Ubicación",
+  footer: "Pie de página",
 };
 
 /**
@@ -61,21 +82,40 @@ export class SitiosListaComponent implements OnInit {
    * landing, aunque el tipo `tienda` existiera desde el principio.
    */
   tipoElegido: "landing" | "catalogo" | "tienda" = "landing";
+  /**
+   * Una sola pregunta de intención: qué tipo de página Y para qué. Antes se
+   * preguntaba el tipo en el paso 1 y "¿qué quieres lograr?" en el paso 3,
+   * que era la misma decisión dos veces.
+   */
+  intencionElegida = "";
   tipos = [
     {
-      id: "landing" as const,
-      nombre: "Una página para mi negocio",
-      pista: "Cuenta quién eres y recibe contactos por WhatsApp",
+      id: "tienda-vender",
+      tipo: "tienda" as const,
+      objetivoId: "vender",
+      nombre: "Vender en línea",
+      pista: "Tienda con carrito y pago; el pedido entra a Katuq",
     },
     {
-      id: "catalogo" as const,
-      nombre: "Un catálogo para compartir",
-      pista: "Muestra tus productos con precio, sin carrito",
+      id: "catalogo-vender",
+      tipo: "catalogo" as const,
+      objetivoId: "vender",
+      nombre: "Mostrar mis productos con precio",
+      pista: "Catálogo para compartir, sin carrito; te piden por WhatsApp",
     },
     {
-      id: "tienda" as const,
-      nombre: "Una tienda que vende",
-      pista: "Con carrito, pago y el pedido entra a Katuq",
+      id: "landing-contactos",
+      tipo: "landing" as const,
+      objetivoId: "contactos",
+      nombre: "Conseguir contactos",
+      pista: "Una página con formulario y WhatsApp para que te escriban",
+    },
+    {
+      id: "landing-conocer",
+      tipo: "landing" as const,
+      objetivoId: "conocer",
+      nombre: "Que conozcan mi negocio",
+      pista: "Quién eres, qué haces y cómo llegar",
     },
   ];
 
@@ -265,6 +305,7 @@ export class SitiosListaComponent implements OnInit {
     this.paso = "tipo";
     this.plantillaElegida = null;
     this.tipoElegido = "landing";
+    this.intencionElegida = "";
     this.objetivoId = "";
     this.productoIds = [];
     this.nombre = "";
@@ -300,7 +341,20 @@ export class SitiosListaComponent implements OnInit {
 
   // ── Pasos ──────────────────────────────────────────────────────────────────
 
-  elegirTipo(id: "landing" | "catalogo" | "tienda"): void {
+  elegirTipo(id: string): void {
+    const t = this.tipos.find((x) => x.id === id) || this.tipos[0];
+    this.intencionElegida = t.id;
+    this.tipoElegido = t.tipo;
+    this.objetivoId = t.objetivoId;
+    const id_ = t.tipo;
+    // Al cambiar de intención, la plantilla elegida puede no servir ya.
+    if (this.plantillaElegida && !this.aptaParaTipo(this.plantillaElegida)) this.plantillaElegida = null;
+    // Con el sector sin plantillas para este tipo, el filtro se suelta solo.
+    if (this.sectorFiltro && !this.plantillas.some((p) => p.sector === this.sectorFiltro && this.aptaParaTipo(p))) this.sectorFiltro = "";
+    this.elegirTipoBase(id_);
+  }
+
+  private elegirTipoBase(id: "landing" | "catalogo" | "tienda"): void {
     this.tipoElegido = id;
     // Una tienda o un catálogo publican lo que esté marcado para Página Web:
     // ahí no se escoge lista a mano. Si el usuario ya había elegido productos
@@ -392,8 +446,25 @@ export class SitiosListaComponent implements OnInit {
    * veía una columna flaca con dos tercios de la ventana en blanco.
    */
   get plantillasVisibles(): PlantillaSitio[] {
-    if (!this.sectorFiltro) return this.plantillas;
-    return this.plantillas.filter((p) => p.sector === this.sectorFiltro);
+    const aptas = this.plantillas.filter((p) => this.aptaParaTipo(p));
+    if (!this.sectorFiltro) return aptas;
+    return aptas.filter((p) => p.sector === this.sectorFiltro);
+  }
+
+  /** Sectores con al menos una plantilla apta para lo que se quiere crear. */
+  get sectoresVisibles(): string[] {
+    return this.sectores.filter((s) => this.plantillas.some((p) => p.sector === s && this.aptaParaTipo(p)));
+  }
+
+  /**
+   * Una tienda o un catálogo necesitan una plantilla con vitrina; una landing
+   * sirve con cualquiera. Antes el paso 2 ofrecía "Carta y reservas" a quien
+   * acababa de elegir "una tienda que vende".
+   */
+  aptaParaTipo(p: PlantillaSitio): boolean {
+    if (this.tipoElegido === "landing") return true;
+    const bloques = p.bloques || [];
+    return bloques.includes("catalogo") || bloques.includes("productos");
   }
 
   etiquetaSector(sector: string): string {
@@ -402,6 +473,7 @@ export class SitiosListaComponent implements OnInit {
       belleza: "Belleza",
       alimentos: "Alimentos",
       hogar: "Hogar",
+      regalos: "Regalos y detalles",
       servicios: "Servicios",
       tecnologia: "Tecnología",
       restaurantes: "Restaurantes",

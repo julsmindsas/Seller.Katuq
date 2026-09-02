@@ -15,6 +15,7 @@ const SECTORES = [
   { id: "belleza", nombre: "Belleza y cuidado" },
   { id: "alimentos", nombre: "Alimentos" },
   { id: "restaurantes", nombre: "Restaurante" },
+  { id: "regalos", nombre: "Regalos y detalles" },
   { id: "hogar", nombre: "Hogar y decoración" },
   { id: "tecnologia", nombre: "Tecnología" },
   { id: "servicios", nombre: "Servicios" },

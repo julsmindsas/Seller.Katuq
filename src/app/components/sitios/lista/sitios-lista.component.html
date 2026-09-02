@@ -163,8 +163,8 @@
       <header class="caja__cabecera">
         <div class="caja__titulo">
           <div>
-            <h2>¿Qué quieres crear?</h2>
-            <p>Puedes cambiarlo después; esto solo nos dice por dónde empezar.</p>
+            <h2>¿Qué quieres lograr?</h2>
+            <p>Con esto elegimos el tipo de página y los textos de tu portada. Se puede cambiar después.</p>
           </div>
           <button class="cerrar" (click)="cerrarAsistente()" aria-label="Cerrar">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -174,7 +174,7 @@
 
       <div class="caja__cuerpo">
         <button class="opcion-grande" *ngFor="let t of tipos"
-                [class.is-elegida]="tipoElegido === t.id"
+                [class.is-elegida]="intencionElegida === t.id"
                 (click)="elegirTipo(t.id)">
           <span class="opcion-grande__texto">
             <strong>{{ t.nombre }}</strong>
@@ -214,7 +214,7 @@
 
         <div class="filtros" *ngIf="plantillas.length">
           <button class="chip" [class.is-active]="!sectorFiltro" (click)="sectorFiltro = ''">Todas</button>
-          <button class="chip" *ngFor="let sec of sectores"
+          <button class="chip" *ngFor="let sec of sectoresVisibles"
                   [class.is-active]="sectorFiltro === sec"
                   (click)="sectorFiltro = sec">{{ etiquetaSector(sec) }}</button>
         </div>
@@ -254,7 +254,7 @@
         </div>
 
         <p class="sin-resultados" *ngIf="!cargandoPlantillas && !plantillasVisibles.length">
-          No hay plantillas para ese sector todavía.
+          No hay plantillas de ese sector para lo que quieres lograr. Prueba con «Todas».
         </p>
       </div>
 
@@ -294,20 +294,8 @@
           <small>Se usa para la dirección pública. Puedes cambiarla luego.</small>
         </div>
 
-        <!-- El objetivo elige la variante de textos: cambia titular, bajada y
-             a dónde lleva el botón de la portada. -->
-        <div class="campo" *ngIf="objetivos.length">
-          <label>¿Qué quieres lograr con esta página?</label>
-          <div class="objetivos">
-            <button class="objetivo" *ngFor="let o of objetivos"
-                    [class.is-active]="objetivoId === o.id"
-                    (click)="objetivoId = objetivoId === o.id ? '' : o.id">
-              <strong>{{ o.nombre }}</strong>
-              <small>{{ o.pista }}</small>
-            </button>
-          </div>
-          <small>Con esto ajustamos los textos de tu portada y tus botones.</small>
-        </div>
+        <!-- El objetivo ya quedó decidido con la intención del paso 1: no se
+             vuelve a preguntar. -->
 
         <!-- Productos a destacar: el mismo selector del editor.
              Solo para la landing. Una tienda o un catálogo traen TODO lo que
