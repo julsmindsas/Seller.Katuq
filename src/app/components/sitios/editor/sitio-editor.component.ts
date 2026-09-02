@@ -348,6 +348,14 @@ const SECCIONES_LISTAS: {
     datos: { titulo: "Lo más pedido", productoIds: [], permitirCompra: false },
   },
   {
+    id: "busca-tu-detalle",
+    nombre: "Busca tu detalle",
+    pista: "Categoría, ocasión y presupuesto",
+    grupo: "Vender",
+    tipo: "buscador",
+    datos: { titulo: "Busca tu detalle", mostrarCategoria: true, mostrarOcasion: true, mostrarPrecio: true, mostrarPalabra: true, textoBoton: "Buscar" },
+  },
+  {
     id: "catalogo-completo",
     nombre: "Todo mi catálogo",
     pista: "Con buscador y categorías",
