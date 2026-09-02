@@ -5638,7 +5638,7 @@ Commits backend: a9695e5, e8cbaae, efbb2fd, 51d2e9b. Frontend: 676a373f (2026.09
 | Pendiente | Dueño | Nota |
 |---|---|---|
 | 4 pruebas del generador de páginas que nunca corrían y hoy fallan (`pendiente()` en test-sitios-publicacion) | Sesión que retome el generador (`services/sites/siteGenerator.js`) | Contratos: sin modelo directo, tienda completa con anuncio/categorías, portada con foto real, vestido por sector |
-| Idempotencia del pedido público (huella con teléfono) | Daniel aprueba el diff → Claude aplica | Propuesto en el reporte del 2026-09-02 |
+| ~~Idempotencia del pedido público (huella con teléfono)~~ HECHO bd456d8 | Aprobado por Daniel 2026-09-02 | En prod |
 | Fotos reales de portada/banners ≥ 1600 px en FLORECER y `backfill-variantes-sitios.js --apply` | Daniel (fotos) → Claude (backfill) | Dry-run: 15 fotos, todas banners de prueba de 800 px; sin fotos nuevas el LCP no baja |
 | Variantes de fotos de producto (vienen del catálogo, sin variantes) | Backend, próxima sesión | Al sincronizar catálogo o al vuelo; es donde está el volumen |
 | Encabezado móvil compacto + barra inferior única; plantilla v2 con títulos editoriales; movimiento visible en la previa; bloque hora de corte; JS externo con hash; Mi marca vs Estilo; miniaturas reales | Claude, siguiente turno | Orden sugerido por la auditoría |
