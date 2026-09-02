@@ -206,6 +206,7 @@ const ESTILOS_PAGINA: { id: string; nombre: string; pista: string }[] = [
   { id: "boutique", nombre: "Boutique", pista: "Filetes finos, versalitas, aire de sobra" },
   { id: "minimal", nombre: "Minimal", pista: "Nada sobra, medidas contenidas" },
   { id: "audaz", nombre: "Audaz", pista: "Redondo, con sombra y titulares pesados" },
+  { id: "tienda", nombre: "Tienda de regalos", pista: "Barras de color, títulos en franja, tarjetas y pie oscuro" },
 ];
 
 /**
@@ -219,6 +220,8 @@ const TIPOGRAFIAS: { id: string; nombre: string; pista: string; familia: string;
   { id: "fraunces", nombre: "Fraunces", pista: "Serif con personalidad", familia: '"Fraunces", Georgia, serif', grupo: "titulo" },
   { id: "dmserif", nombre: "DM Serif", pista: "Contundente y clásica", familia: '"DM Serif Display", Georgia, serif', grupo: "titulo" },
   { id: "syne", nombre: "Syne", pista: "Moderna y distinta", familia: '"Syne", system-ui, sans-serif', grupo: "titulo" },
+  { id: "oswald", nombre: "Oswald", pista: "Condensada, de tienda", familia: '"Oswald", "Arial Narrow", sans-serif', grupo: "titulo" },
+  { id: "dancing", nombre: "Dancing Script", pista: "Manuscrita y cálida", familia: '"Dancing Script", "Brush Script MT", cursive', grupo: "titulo" },
   // Neutras — cómodas para leer párrafos largos.
   { id: "jakarta", nombre: "Jakarta", pista: "Redonda y cercana", familia: '"Plus Jakarta Sans", system-ui, sans-serif', grupo: "cuerpo" },
   { id: "outfit", nombre: "Outfit", pista: "Geométrica y limpia", familia: '"Outfit", system-ui, sans-serif', grupo: "cuerpo" },

@@ -1,4 +1,4 @@
-<div class="sitio" [ngStyle]="estiloTema" [class.sitio--movil]="dispositivo === 'movil'"
+<div class="sitio" [ngStyle]="estiloTema" [attr.data-estilo]="tema?.estilo || 'clasico'" [class.sitio--movil]="dispositivo === 'movil'"
      [class.sitio--editable]="previsualizacion"
      cdkDropList [cdkDropListDisabled]="!previsualizacion"
      (cdkDropListDropped)="soltarBloque($event)">
