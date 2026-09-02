@@ -328,7 +328,7 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
    * meterlas en el index del panel o la previa se vería con la letra del
    * sistema y el comerciante creería que su elección no funcionó.
    */
-  private static readonly DESCARGABLES: { [id: string]: string } = {
+  static readonly DESCARGABLES: { [id: string]: string } = {
     playfair: "Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400",
     cormorant: "Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300",
     fraunces: "Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300",
@@ -344,6 +344,17 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
 
   /** Ids ya pedidos, para no repetir el <link> en cada cambio del tema. */
   private static readonly yaCargadas = new Set<string>();
+
+  /** Pide TODAS las fuentes de una vez (para las muestras del panel Estilo). */
+  static cargarTodasLasFuentes(): void {
+    if (SitioRenderComponent.yaCargadas.has("__todas")) return;
+    SitioRenderComponent.yaCargadas.add("__todas");
+    const specs = Object.keys(SitioRenderComponent.DESCARGABLES).map((k) => SitioRenderComponent.DESCARGABLES[k]);
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?${specs.map((s) => "family=" + s).join("&")}&display=swap`;
+    document.head.appendChild(link);
+  }
 
   private cargarFuente(id: string): void {
     const spec = SitioRenderComponent.DESCARGABLES[id];

@@ -1131,6 +1131,8 @@
   gap: 9px;
 }
 
+.tipografia__muestra { display: block; font-size: 17px; line-height: 1.2; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pareja__titulo, .pareja__cuerpo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .tipografia {
   display: flex;
   align-items: center;

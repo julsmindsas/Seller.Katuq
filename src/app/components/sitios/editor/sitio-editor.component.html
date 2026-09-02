@@ -53,7 +53,7 @@
     <aside class="panel">
       <nav class="pestanas">
         <button [class.is-active]="panel === 'bloques'" (click)="panel = 'bloques'">Secciones</button>
-        <button [class.is-active]="panel === 'diseno'" (click)="panel = 'diseno'">Estilo</button>
+        <button [class.is-active]="panel === 'diseno'" (click)="panel = 'diseno'; cargarMuestrasDeLetra()">Estilo</button>
         <button [class.is-active]="panel === 'tienda'" (click)="panel = 'tienda'; cargarBodegas()">Tienda</button>
         <button [class.is-active]="panel === 'pauta'" (click)="panel = 'pauta'">Pauta</button>
         <button [class.is-active]="panel === 'ajustes'" (click)="panel = 'ajustes'">Ajustes</button>
@@ -1697,8 +1697,8 @@
                     [class.is-active]="parejaActiva === p.id"
                     (click)="aplicarPareja(p.id)">
               <span class="pareja__muestra">
-                <span class="pareja__titulo" [style.font-family]="familiaDe(p.titulo)">Aa</span>
-                <span class="pareja__cuerpo" [style.font-family]="familiaDe(p.cuerpo)">Texto</span>
+                <span class="pareja__titulo" [style.font-family]="familiaDe(p.titulo)">{{ fraseDeMuestra() }}</span>
+                <span class="pareja__cuerpo" [style.font-family]="familiaDe(p.cuerpo)">Pide antes de las 2 pm y llega hoy.</span>
               </span>
               <span class="pareja__nombre">{{ p.nombre }}</span>
               <svg *ngIf="parejaActiva === p.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M20 6 9 17l-5-5"/></svg>
@@ -1721,10 +1721,9 @@
                 <button class="tipografia" *ngFor="let f of tipografias"
                         [class.is-active]="fuenteDe('titulo') === f.id"
                         (click)="elegirFuente('titulo', f.id)">
-                  <span class="tipografia__aa" [style.font-family]="f.familia">Aa</span>
                   <span class="tipografia__texto">
-                    <strong>{{ f.nombre }}</strong>
-                    <small>{{ f.pista }}</small>
+                    <strong class="tipografia__muestra" [style.font-family]="f.familia">{{ fraseDeMuestra() }}</strong>
+                    <small>{{ f.nombre }} · {{ f.pista }}</small>
                   </span>
                   <svg *ngIf="fuenteDe('titulo') === f.id" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
                 </button>
@@ -1737,10 +1736,9 @@
                 <button class="tipografia" *ngFor="let f of tipografias"
                         [class.is-active]="fuenteDe('cuerpo') === f.id"
                         (click)="elegirFuente('cuerpo', f.id)">
-                  <span class="tipografia__aa" [style.font-family]="f.familia">Aa</span>
                   <span class="tipografia__texto">
-                    <strong>{{ f.nombre }}</strong>
-                    <small>{{ f.pista }}</small>
+                    <strong class="tipografia__muestra" [style.font-family]="f.familia">{{ fraseDeMuestra() }}</strong>
+                    <small>{{ f.nombre }} · {{ f.pista }}</small>
                   </span>
                   <svg *ngIf="fuenteDe('cuerpo') === f.id" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
                 </button>

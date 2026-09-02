@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
 import { CategoriaSitio, ContenidoSitio, Sitio, SitiosService, VentaConfig } from "../sitios.service";
+import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
@@ -2448,6 +2449,18 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
       ? lista.filter((c) => String(c).toLowerCase() !== String(nombre).toLowerCase())
       : [...lista, nombre].slice(0, 40);
     this.marcarSucio();
+  }
+
+  /** Las muestras del panel Estilo se ven en su letra real, no en la de la interfaz. */
+  cargarMuestrasDeLetra(): void {
+    SitioRenderComponent.cargarTodasLasFuentes();
+  }
+
+  /** Frase de muestra con algo de la tienda: el titular de la portada o el nombre. */
+  fraseDeMuestra(): string {
+    const hero = this.bloques.find((b) => b.tipo === "hero");
+    const t = hero && hero.datos && String(hero.datos.titulo || "").trim();
+    return (t && t.length <= 40 ? t : "") || this.nombre || "Regalos que se sienten";
   }
 
   /** Categorías ocultas del sitio, como texto separado por coma para el campo. */
