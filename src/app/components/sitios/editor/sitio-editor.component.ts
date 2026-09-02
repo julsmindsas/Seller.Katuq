@@ -2603,6 +2603,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
    */
   @HostListener("document:keydown", ["$event"])
   atajos(evento: KeyboardEvent): void {
+    // Escape cierra lo que esté abierto encima del editor.
+    if (evento.key === "Escape") {
+      if (this.mostrandoAgregar) { this.mostrandoAgregar = false; evento.preventDefault(); return; }
+      if (this.seleccionado >= 0 && !(evento.target as HTMLElement)?.isContentEditable) { this.cerrarSeccion(); return; }
+    }
     if (!(evento.ctrlKey || evento.metaKey)) return;
 
     const destino = evento.target as HTMLElement;

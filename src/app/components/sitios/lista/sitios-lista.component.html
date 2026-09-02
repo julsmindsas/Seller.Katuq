@@ -131,10 +131,10 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
               Cómo va
             </button>
-            <button class="btn-fantasma btn-fantasma--peligro" (click)="eliminarSitio(s)"
-                    [disabled]="eliminando === s.id" title="Eliminar esta página para siempre">
+            <!-- Borrar va aparte y discreto: no es una acción del mismo rango que editar. -->
+            <button class="icono-peligro" (click)="eliminarSitio(s)"
+                    [disabled]="eliminando === s.id" title="Eliminar esta página para siempre" aria-label="Eliminar esta página para siempre">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
-              {{ eliminando === s.id ? 'Eliminando…' : 'Eliminar' }}
             </button>
           </div>
         </div>

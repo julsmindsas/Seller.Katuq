@@ -744,6 +744,22 @@
   }
 }
 
+.icono-peligro {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--kb-muted);
+  cursor: pointer;
+  &:hover:not(:disabled) { color: var(--kb-danger); background: var(--kb-danger-wash); border-color: var(--kb-danger-line); }
+  &:disabled { opacity: 0.5; cursor: default; }
+}
+
 .opcion-grande {
   @include kb-btn-base;
   display: flex;
