@@ -5608,3 +5608,19 @@ Reportado por el usuario en local: al generar una cotización y abrir la "Vista 
 **Arreglo:** `abrirVistaPrevia()` ahora también llama a `preloadBannersForPdf()` + `cdr.detectChanges()` antes de mostrar el modal, igual que ya hacía `descargarPDF()`. 8 líneas en `cotizacion-editor.component.ts`. Verificado en local: vista previa y landing público (`/c/:token` de una cotización real de OH MY STORE) muestran los 3 banners.
 
 **Sigue pendiente para prod, igual que D-047:** el commit de UI de banners (`1bb95ae`) sigue solo en `feature/venta-asistida-mejorada`, no en `main`; y el cableado backend (`667c344`) se commiteó con instrucción explícita de "NO desplegar" ese día — sin confirmación de que se haya desplegado desde entonces. Este commit nuevo viaja en el mismo paquete pendiente de despliegue.
+
+## D-255 (2026-09-02) — Builder de sitios: paquete de mejoras a partir de la auditoría de FLORECER
+
+Contexto: otra sesión auditó `florecer-regalos.katuq.com` (nota 5,1/10 como tienda; Lighthouse móvil 62), el backend del módulo y el editor como comerciante nuevo. Daniel autorizó ejecutar las mejoras en orden (A editor, B sitio publicado, C rendimiento backend). Idempotencia del pedido público (`services/orderService.js`) queda fuera hasta diff aprobado (módulo sensible).
+
+**Decisiones:**
+1. **Al agregar al carrito no se abre el cajón por defecto**: el botón confirma "Agregado ✓" 1,2 s, el contador rebota y un aviso de 2,5 s ofrece "Ver carrito". Palanca por sitio `tienda.abrirCarritoAlAgregar`.
+2. **Popup nunca antes de 8 s** (o al 40 % de scroll o intención de salida); en móvil como hoja inferior. El saneador fuerza el mínimo.
+3. **Categorías ocultas por sitio** (`tienda.categoriasOcultas`): desaparecen de menú, baldosas, pie, filtros y catálogo; un producto solo en categorías ocultas tampoco sale. Endpoint `GET /v1/sites/:id/categorias` alimenta la previa y las casillas del panel.
+4. **Freno de pedidos por IP real**: `X-Forwarded-For` se lee de derecha a izquierda saltando nginx/Caddy; tope adicional 300 pedidos por sitio y hora; body 256 KB en rutas públicas; acceso de cliente vence a 90 días y su página sale `private, no-store`.
+5. **Fuentes**: máximo tres pesos por familia; preload + `media="print"` activado por el script con nonce (la CSP bloquea `onload` inline).
+6. **Editor a pantalla completa** (`body.kq-editor-lleno`), "sin guardar" por diferencia real (sin `beforeunload` nativo), drill-in por sección, previa Computador a 1280 px con zoom y Celular 390×844 con pliegue, previa con categorías reales/Agregar/carruseles, muestras de letra reales.
+7. **Asistente con una sola pregunta de intención** (tipo + objetivo), plantillas filtradas por tipo, sector `regalos` y plantilla `regalos-tienda`; `listarPlantillas` une las del módulo no sembradas.
+8. **Sitio móvil**: "Agregar" fijo en la ficha, esqueletos al filtrar el catálogo, barra de anuncios que se esconde al bajar.
+
+Commits backend: a97f0d9, d89c436, 7c947bc, 6798f61, 373a06f, f0c6cff. Frontend: 1f965435, d4cdf09d, 68a6fddd, 484ee22a, 006dd77f (versión 2026.09.02.5).
