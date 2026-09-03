@@ -509,12 +509,11 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "productos", title: "Productos", type: "link", icon: "grid" },
-        {
-          path: "productos/crear-rapido",
-          title: "Creación rápida",
-          type: "link",
-          icon: "zap",
-        },
+        // "Creación rápida" ya NO va en el menú: se entra por el desplegable del
+        // botón Crear Producto, dentro del listado. Tenerlo en los dos lados era
+        // redundante. La ruta `productos/crear-rapido` sigue viva y el permiso
+        // sigue siendo el mismo path en el array `menus` del ROL, que es lo que
+        // lee `puedeEdicionRapida` — no se toca al sacarlo de acá.
         {
           path: "ecommerce/adiciones/listar",
           title: "Adiciones",

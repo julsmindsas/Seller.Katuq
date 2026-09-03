@@ -28,6 +28,32 @@
 
 
 
+/* Columna Descripción: son párrafos, no etiquetas ("Lista B - Aquel cliente que
+   asume la propiedad de los productos para venderlos dentro de su propia red
+   comercial..."). Sin tope se van en una sola línea, estiran la tabla y la
+   última columna queda fuera de pantalla.
+
+   El tope va en el `span` y no solo en la celda a propósito: la tabla tiene
+   layout automático, donde el ancho de columna sale del contenido y `max-width`
+   sobre el `td` es apenas una sugerencia. Acotando el bloque de adentro, el
+   ancho máximo del contenido queda cerrado y la columna no puede crecer más. */
+.col-descripcion {
+  min-width: 240px;
+  white-space: normal;
+  vertical-align: top;
+}
+
+.descripcion-recortada {
+  display: -webkit-box;
+  max-width: 460px;
+  -webkit-line-clamp: 3;   /* tope de 3 renglones; el resto vive en el tooltip */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere; /* una palabra larguísima parte en vez de desbordar */
+  line-height: 1.45;
+  text-align: left;
+}
+
 /* Marca de "precio base": el precio de este tipo también es el precio base del
    producto. Es excluyente por empresa, por eso se destaca en el listado. */
 .badge-precio-base {

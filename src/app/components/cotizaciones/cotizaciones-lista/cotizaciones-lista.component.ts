@@ -217,6 +217,23 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     if (c.id) this.router.navigate(["/cotizaciones/editor", c.id]);
   }
 
+  /**
+   * Abre la cotización directamente en su vista previa (el documento que ve el
+   * cliente, idéntico al PDF).
+   *
+   * Va al editor con `?preview=1` en vez de dibujar el documento acá: el
+   * documento es un solo marcado en el editor, compartido por la vista previa y
+   * el PDF. Una segunda copia en el listado se desincronizaría al primer cambio
+   * — y ya pasó con los banners y con la tabla de columnas.
+   */
+  vistaPrevia(c: Cotizacion, ev: Event): void {
+    ev.stopPropagation();
+    if (!c.id) return;
+    this.router.navigate(["/cotizaciones/editor", c.id], {
+      queryParams: { preview: 1 },
+    });
+  }
+
   /** Navega al pedido generado a partir de la cotización (deep-link a la lista de pedidos). */
   verPedido(c: Cotizacion, ev: Event): void {
     ev.stopPropagation();

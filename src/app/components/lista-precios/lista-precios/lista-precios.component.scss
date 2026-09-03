@@ -360,6 +360,50 @@
   border: 1px solid #e3def9 !important;
 }
 
+/* Chip de "nombre del tipo de cliente + precio".
+   El precio es el dato de la columna, así que nunca se recorta: se le da
+   `flex-shrink: 0` y lo que cede es el nombre, con puntos suspensivos. Antes
+   el chip traía la descripción completa del tipo (un párrafo) y el precio
+   quedaba fuera de pantalla. */
+:host ::ng-deep .chip-precio-tipo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .45rem;
+  max-width: 100%;
+  background: var(--lp-primary-soft);
+  color: var(--lp-primary-dark);
+  border: 1px solid #e3def9;
+  font-size: .75rem;
+}
+:host ::ng-deep .chip-precio-tipo .chip-tipo {
+  min-width: 0;              /* sin esto el ellipsis no corre dentro de un flex */
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+:host ::ng-deep .chip-precio-tipo .chip-valor {
+  flex: 0 0 auto;            /* el precio manda: no se encoge ni se parte */
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--lp-primary);
+}
+
+/* Descripción del tipo dentro del detalle expandido: con tope, para no repetir
+   el problema de la fila (párrafo largo que estira la tabla). */
+:host ::ng-deep .lp-tipo-descripcion {
+  display: -webkit-box;
+  max-width: 420px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: .75rem;
+  line-height: 1.35;
+  margin-top: .15rem;
+}
+
 /* Botón de acción (editar) → icono circular */
 :host ::ng-deep .p-datatable .btn-outline-primary {
   width: 36px; height: 36px;

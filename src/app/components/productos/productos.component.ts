@@ -956,6 +956,19 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('productos/crearProductos');
   }
 
+  /**
+   * Creación rápida: el formulario corto, en blanco.
+   *
+   * Borra `productoLiteEditar` a propósito. Esa llave es la que pone
+   * `editarProductoRapido()`, y si queda de una visita anterior la pantalla
+   * abre en modo edición: se vería el producto de antes y guardar lo pisaría
+   * en vez de crear uno nuevo.
+   */
+  crearProductoRapido() {
+    sessionStorage.removeItem('productoLiteEditar');
+    this.router.navigateByUrl('productos/crear-rapido');
+  }
+
   editarProducto(row) {
     console.log(row);
     sessionStorage.setItem('infoForms', JSON.stringify(row));
