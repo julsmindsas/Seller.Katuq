@@ -233,9 +233,16 @@
       </div>
 
       <div class="cart-summary">
+        <!-- Desglose: bruto → descuento de línea → cupón → total. El subtotal
+             muestra el precio de lista; si se rebajara aquí, el descuento
+             quedaría invisible y el total no cuadraría con lo que se ve. -->
         <div class="summary-line">
           <span>Subtotal</span>
-          <span>{{getTotalProductPriceInCart() | currency:'USD':'symbol':'1.0-0'}}</span>
+          <span>{{getTotalBrutoEnCarrito() | currency:'USD':'symbol':'1.0-0'}}</span>
+        </div>
+        <div class="summary-line discount" *ngIf="getTotalDescuentoLineas() > 0">
+          <span>Descuento en productos</span>
+          <span>− {{getTotalDescuentoLineas() | currency:'USD':'symbol':'1.0-0'}}</span>
         </div>
         <div class="summary-line discount" *ngIf="valorDescuento > 0">
           <span>Descuento<span *ngIf="descuentoAplicado"> ({{ descuentoAplicado.codigoPersonalizado }})</span></span>

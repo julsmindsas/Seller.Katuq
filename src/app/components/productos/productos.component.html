@@ -28,10 +28,48 @@
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <button type="button" class="pk-btn pk-btn-primary"
-                                    (click)="crearProducto()">
-                                <i class="pi pi-plus"></i>{{ "Crear Producto" | translate }}
-                            </button>
+                            <!-- Crear Producto abre el desplegable; no navega por su cuenta.
+                                 Si el botón llevara al formulario completo Y el menú lo
+                                 ofreciera otra vez, la misma acción estaría en dos lados y
+                                 quien quisiera el corto tendría que adivinar dónde está.
+                                 Acá se elige, siempre, entre los dos formularios, con el
+                                 alcance de cada uno escrito debajo del nombre.
+
+                                 Este es también el ÚNICO acceso al formulario rápido: se
+                                 sacó del menú lateral por lo mismo (ver nav.service.ts).
+                                 Solo aparece si la empresa lo tiene habilitado — el mismo
+                                 permiso que la acción de edición rápida de cada fila. -->
+                            <div class="btn-group" ngbDropdown
+                                 *ngIf="puedeEdicionRapida; else crearProductoSimple">
+                                <button type="button" class="pk-btn pk-btn-primary pk-btn-dropdown"
+                                        ngbDropdownToggle>
+                                    <i class="pi pi-plus"></i>{{ "Crear Producto" | translate }}
+                                </button>
+                                <div ngbDropdownMenu class="pk-menu pk-menu-formularios">
+                                    <button ngbDropdownItem (click)="crearProductoRapido()">
+                                        <span class="pk-opt-title">
+                                            <i class="pi pi-bolt pk-ico-accent"></i>Formulario rápido
+                                        </span>
+                                        <small class="pk-opt-desc">
+                                            5 campos obligatorios. Para dejarlo creado ya y completarlo después.
+                                        </small>
+                                    </button>
+                                    <button ngbDropdownItem (click)="crearProducto()">
+                                        <span class="pk-opt-title">
+                                            <i class="pi pi-list pk-ico-info"></i>Formulario completo
+                                        </span>
+                                        <small class="pk-opt-desc">
+                                            Todas las secciones: identificación, canales, marketplaces y más.
+                                        </small>
+                                    </button>
+                                </div>
+                            </div>
+                            <ng-template #crearProductoSimple>
+                                <button type="button" class="pk-btn pk-btn-primary"
+                                        (click)="crearProducto()">
+                                    <i class="pi pi-plus"></i>{{ "Crear Producto" | translate }}
+                                </button>
+                            </ng-template>
                             <!-- Split: Importar Excel + dropdown integraciones -->
                             <div class="btn-group pk-split" ngbDropdown>
                                 <button type="button" class="pk-btn pk-btn-outline pk-split-main"
@@ -561,38 +599,27 @@
                                         [checked]="isSelected(row)"
                                         (change)="toggleSelectRow(row)" />
                                 </td>
-                                <!-- Imagen -->
+                                <!-- Imagen — mismo criterio que Lista de Precios.
+                                     Una sola etiqueta: el pipe resuelve la ruta (o entrega el
+                                     placeholder si no hay) y `appImageFallback` atrapa la URL
+                                     que existe pero no carga. Antes eran dos ramas y la del
+                                     "sin imagen" apuntaba a `assets/img/placeholder.png`, que
+                                     NO existe: el navegador dibujaba la imagen rota con el
+                                     texto alternativo al lado. -->
                                 <td class="text-center">
                                     <img
-                                        *ngIf="
-                                            row.crearProducto
-                                                ?.imagenesPrincipales?.length >
-                                            0
-                                        "
                                         [src]="
                                             row.crearProducto
                                                 ?.imagenesPrincipales?.[0]?.urls
-                                                | imagenProducto
+                                                | imagenProducto: 'assets/images/placeholders/product-not-found.svg'
                                         "
                                         [alt]="row.crearProducto?.titulo"
+                                        appImageFallback
                                         width="52"
                                         height="52"
                                         class="product-thumbnail pk-thumb"
                                         style="cursor: pointer; object-fit: cover;"
                                         (click)="viewProduct(row)"
-                                    />
-                                    <img
-                                        *ngIf="
-                                            row.crearProducto
-                                                ?.imagenesPrincipales?.length ==
-                                            0
-                                        "
-                                        src="assets/img/placeholder.png"
-                                        [alt]="row.crearProducto?.titulo"
-                                        width="52"
-                                        height="52"
-                                        class="pk-thumb"
-                                        style="opacity: 0.5"
                                     />
                                 </td>
 
@@ -932,3 +959,5 @@
         </button>
     </ng-template>
 </p-dialog>
+
+

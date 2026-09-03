@@ -56,7 +56,7 @@
                                   {{ "Nombre" | translate }}
                                   <p-sortIcon field="nombre"></p-sortIcon>
                               </th>
-                              <th class="text-center" pSortableColumn="descripcion">
+                              <th class="text-center col-descripcion" pSortableColumn="descripcion">
                                   {{ "Descripción" | translate }}
                                   <p-sortIcon field="descripcion"></p-sortIcon>
                               </th>
@@ -78,7 +78,14 @@
                           <tr>
                               <td *ngIf="!isMobile" class="text-center">{{ row.id }}</td>
                               <td>{{ row.nombre }}</td>
-                              <td>{{ row.descripcion }}</td>
+                              <!-- Estas descripciones son párrafos ("Lista B - Aquel cliente que
+                                   asume la propiedad de los productos para..."). Sin tope se van
+                                   en una sola línea y estiran la tabla hasta salirse de pantalla,
+                                   así que se envuelven y se recortan a 3 renglones. El texto
+                                   completo queda en el tooltip. -->
+                              <td class="col-descripcion">
+                                  <span class="descripcion-recortada" [title]="row.descripcion">{{ row.descripcion }}</span>
+                              </td>
                               <td class="text-center">
                                   <!-- Marca excluyente: el precio de este tipo también es el
                                        precio base del producto. Se cambia en Editar. -->
@@ -88,8 +95,15 @@
                                   <span class="text-muted" *ngIf="!row.esPrecioBase">—</span>
                               </td>
                               <td *ngIf="!isMobile" class="text-center">
-                                  <label class="switch">
-                                      <input class="toggle" type="checkbox" [checked]="row.active" disabled />
+                                  <!-- Apagarlo lo saca de circulación sin borrar los precios que
+                                       los productos tengan cargados a su nombre. Es la alternativa
+                                       reversible a la papelera, que sí borra. -->
+                                  <label class="switch"
+                                      placement="top"
+                                      ngbTooltip="{{ (row.active === false ? 'Activar' : 'Desactivar') | translate }}">
+                                      <input class="toggle" type="checkbox" [checked]="row.active !== false"
+                                          [disabled]="guardandoActivo[row.id]"
+                                          (change)="toggleActivo(row)" />
                                       <span class="switch-state"></span>
                                   </label>
                               </td>

@@ -201,11 +201,22 @@
                 *ngFor="let p of productoSuggestions"
                 (click)="agregarProducto(p)"
               >
-                <span class="cot-sugg-name">{{ productoTitulo(p) }}</span>
-                <span class="cot-sugg-sub">
-                  <ng-container *ngIf="productoReferencia(p)">Ref: {{ productoReferencia(p) }} · </ng-container>
-                  {{ productoPrecio(p) | currency:'COP':'symbol-narrow':'1.0-0' }}
-                  <span class="cot-sugg-tag" *ngIf="requiereConfiguracion(p)">configurable</span>
+                <img
+                  class="cot-sugg-thumb"
+                  [src]="p?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
+                  [alt]="productoTitulo(p)"
+                  appImageFallback
+                  width="36"
+                  height="36"
+                  loading="lazy"
+                />
+                <span class="cot-sugg-txt">
+                  <span class="cot-sugg-name">{{ productoTitulo(p) }}</span>
+                  <span class="cot-sugg-sub">
+                    <ng-container *ngIf="productoReferencia(p)">Ref: {{ productoReferencia(p) }} · </ng-container>
+                    {{ productoPrecio(p) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                    <span class="cot-sugg-tag" *ngIf="requiereConfiguracion(p)">configurable</span>
+                  </span>
                 </span>
               </button>
               <div class="cot-sugg-empty" *ngIf="productoSuggestions.length === 0">
@@ -240,15 +251,31 @@
           <div class="cot-line-row" *ngFor="let item of cotizacion.items; let i = index">
             <span class="cl-prod">
               <ng-container *ngIf="!itemEsLibre(item)">
-                <span class="cl-titulo">{{ itemTitulo(item) }}</span>
-                <span class="cl-ref" *ngIf="itemReferencia(item)">Ref: {{ itemReferencia(item) }}</span>
-                <div class="cl-segmentos" *ngIf="preciosSegmento(item).length">
-                  <span class="cl-seg-chip" *ngFor="let s of preciosSegmento(item)"
-                        [class.cl-seg-aplicado]="s.aplicado"
-                        [title]="s.aplicado ? 'Precio aplicado a este cliente' : 'Precio para el segmento ' + s.nombre">
-                    🏷️ {{ s.nombre }}: {{ s.precio | currency:'COP':'symbol-narrow':'1.0-0' }}
-                  </span>
-                </div>
+                <!-- Foto + texto. La foto la resuelve el pipe (rutas relativas de
+                     Osmosis) y `appImageFallback` cubre la URL que no carga. -->
+                <img
+                  class="cl-thumb"
+                  [src]="itemImagen(item) | imagenProducto: 'assets/images/placeholders/product-not-found.svg'"
+                  [alt]="itemTitulo(item)"
+                  appImageFallback
+                  width="44"
+                  height="44"
+                  loading="lazy"
+                />
+                <span class="cl-prod-txt">
+                  <span class="cl-titulo">{{ itemTitulo(item) }}</span>
+                  <span class="cl-ref" *ngIf="itemReferencia(item)">Ref: {{ itemReferencia(item) }}</span>
+                  <div class="cl-segmentos" *ngIf="preciosSegmento(item).length">
+                    <!-- El chip lleva el NOMBRE del tipo y el precio; la descripción
+                         (un párrafo) queda en el tooltip. -->
+                    <span class="cl-seg-chip" *ngFor="let s of preciosSegmento(item)"
+                          [class.cl-seg-aplicado]="s.aplicado"
+                          [title]="(s.aplicado ? 'Precio aplicado a este cliente — ' : '') + (s.descripcion || s.nombre)">
+                      <span class="cl-seg-nombre">{{ s.nombre }}</span>
+                      <span class="cl-seg-precio">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                    </span>
+                  </div>
+                </span>
               </ng-container>
               <input
                 *ngIf="itemEsLibre(item)"
@@ -495,20 +522,28 @@
       <div class="doc-client">
         <small>PARA</small>
         <strong>{{ clienteNombre(cotizacion.cliente) || '— sin cliente —' }}</strong>
+        <!-- Documento · ciudad · celular · correo -->
         <span *ngIf="clienteMetaDoc(cotizacion.cliente)">{{ clienteMetaDoc(cotizacion.cliente) }}</span>
+        <!-- El tipo de cliente va en renglón propio: no es un dato de contacto,
+             es el segmento con el que se tarifó la cotización. -->
+        <span class="doc-client-tipo" *ngIf="clienteTipo(cotizacion.cliente)">
+          Tipo de cliente: <strong>{{ clienteTipo(cotizacion.cliente) }}</strong>
+        </span>
       </div>
 
       <table class="doc-tbl">
         <thead>
           <tr>
+            <!-- Rótulos cortos: son 9 columnas en una hoja vertical. "Precio
+                 unitario Total(con IVA)" ocupaba más que la cifra que titula. -->
             <th>Descripción</th>
             <th>Cant.</th>
-            <th>Valor Bruto</th>
+            <th>Valor bruto</th>
             <th>Descuento</th>
-            <th>Precio Unitario (sin IVA)</th>
-            <th>Porcentaje IVA</th>
+            <th>P. unit. sin IVA</th>
+            <th>% IVA</th>
             <th>Valor IVA</th>
-            <th>Precio unitario Total(con IVA)</th>
+            <th>P. unit. con IVA</th>
             <th>Subtotal</th>
           </tr>
         </thead>
@@ -517,14 +552,20 @@
             <td>
               {{ itemTitulo(it) }}
               <span class="doc-ref" *ngIf="itemReferencia(it)"> · Ref: {{ itemReferencia(it) }}</span>
+              <!-- Solo la lista aplicada. Las otras tarifas se quedan en el
+                   editor: este documento lo recibe el cliente. -->
+              <span class="doc-lista" *ngIf="segmentoAplicado(it)">{{ segmentoAplicado(it) }}</span>
             </td>
+            <!-- Sin decimales forzados (`1.0-2`, no `1.2-2`): el `,00` de cada
+                 cifra sumaba ~25px por columna y era parte de lo que empujaba la
+                 tabla fuera de la hoja. Los centavos siguen saliendo cuando los hay. -->
             <td>{{ it.cantidad }}</td>
-            <td>{{ getValorBruto(it) | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
-            <td>{{ descLineaPct(it) > 0 ? (getDescuentoUnitario(it) | currency:'COP':'symbol-narrow':'1.2-2') : '—' }}</td>
-            <td>{{ getPrecioSinIvaNeto(it) | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+            <td>{{ getValorBruto(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
+            <td>{{ descLineaPct(it) > 0 ? (getDescuentoUnitario(it) | currency:'COP':'symbol-narrow':'1.0-2') : '—' }}</td>
+            <td>{{ getPrecioSinIvaNeto(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
             <td>{{ getIvaActual(it) }}%</td>
-            <td>{{ getValorIvaNeto(it) | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
-            <td>{{ getPrecioTotalConIvaNeto(it) | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+            <td>{{ getValorIvaNeto(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
+            <td>{{ getPrecioTotalConIvaNeto(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
             <td>{{ itemSubtotal(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
           </tr>
         </tbody>

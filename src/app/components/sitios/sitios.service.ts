@@ -32,6 +32,13 @@ export interface TiendaSitio {
   mensajeConfirmacion: string;
 }
 
+/** Una categoría de la empresa tal como la pinta la página publicada. */
+export interface CategoriaSitio {
+  nombre: string;
+  total: number;
+  imagen: string;
+}
+
 /** Lo que el panel de tienda necesita saber de la empresa para configurarse. */
 export interface VentaConfig {
   pasarela: { configurada: boolean; proveedor: string | null };
@@ -193,6 +200,11 @@ export class SitiosService extends BaseService {
 
   obtener(id: string): Observable<Respuesta<Sitio>> {
     return this.get<Respuesta<Sitio>>(`/v1/sites/${id}`);
+  }
+
+  /** Categorías reales (nombre, total, foto) para la previa y el panel de tienda. */
+  categorias(id: string): Observable<Respuesta<CategoriaSitio[]>> {
+    return this.get<Respuesta<CategoriaSitio[]>>(`/v1/sites/${id}/categorias`);
   }
 
   /** Qué está pasando en una página: visitas, contactos, pedidos e ingresos. */
@@ -358,11 +370,11 @@ export class SitiosService extends BaseService {
   subirImagen(
     archivo: File,
     carpeta = "Sitios"
-  ): Observable<{ success: boolean; url?: string; path?: string; error?: string }> {
+  ): Observable<{ success: boolean; url?: string; path?: string; error?: string; ancho?: number; alto?: number }> {
     const datos = new FormData();
     datos.append("file", archivo);
     datos.append("carpeta", carpeta);
-    return this.post<{ success: boolean; url?: string; path?: string; error?: string }>(
+    return this.post<{ success: boolean; url?: string; path?: string; error?: string; ancho?: number; alto?: number }>(
       "/v1/media/upload",
       datos
     );

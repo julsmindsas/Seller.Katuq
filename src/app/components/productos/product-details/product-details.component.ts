@@ -84,7 +84,7 @@ export class ProductDetailsComponent implements OnInit {
     // Quick preview image state
     this.currentPreviewImage = images.length > 0
       ? (urlImagenAbsoluta(images[0].urls) ?? IMAGEN_PRODUCTO_POR_DEFECTO)
-      : 'assets/img/placeholder.png';
+      : 'assets/images/placeholders/product-not-found.svg';
     this.currentPreviewIdx = 0;
     if(this.fromProductCreate){
       this.libConfigCarouselFixed = {

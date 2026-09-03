@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from "@angular/core";
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
@@ -179,7 +179,7 @@ export interface DatosLead {
   templateUrl: "./sitio-render.component.html",
   styleUrls: ["./sitio-render.component.scss"],
 })
-export class SitioRenderComponent implements OnChanges {
+export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Input() bloques: BloqueSitio[] = [];
   @Input() tema: TemaSitio | null = null;
 
@@ -193,6 +193,40 @@ export class SitioRenderComponent implements OnChanges {
 
   /** En vista previa los formularios y enlaces no hacen nada. */
   @Input() previsualizacion = false;
+  /** Categorías reales de la empresa (la previa las pinta como la publicada). */
+  @Input() categorias: { nombre: string; total: number; imagen: string }[] = [];
+  /** Con la tienda encendida, las tarjetas llevan su botón "Agregar". */
+  @Input() tiendaActiva = false;
+
+  /** Reloj de los carruseles de la previa (portada y banners): un paso cada 5 s. */
+  paso = 0;
+  private reloj: any = null;
+
+  ngOnInit(): void {
+    if (typeof window === "undefined") return;
+    const quieto = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!quieto) this.reloj = setInterval(() => { this.paso++; }, 5000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.reloj) clearInterval(this.reloj);
+  }
+
+  /** Fotos de la portada en carrusel (dos o más y sin foto fija). */
+  slidesDeHero(d: any): string[] {
+    if (!d || d.imagen) return [];
+    const s = (d.imagenes || []).filter(Boolean);
+    return s.length >= 2 ? s : [];
+  }
+
+  /** Índice activo de un carrusel de n fotos según el reloj. */
+  activo(n: number): number {
+    return n > 0 ? this.paso % n : 0;
+  }
+
+  categoriasDe(d: any): { nombre: string; total: number; imagen: string }[] {
+    return (this.categorias || []).slice(0, Number(d && d.maximo) || 6);
+  }
   /** Ancho simulado en la vista previa del editor. */
   @Input() dispositivo: "escritorio" | "movil" = "escritorio";
 
@@ -294,7 +328,7 @@ export class SitioRenderComponent implements OnChanges {
    * meterlas en el index del panel o la previa se vería con la letra del
    * sistema y el comerciante creería que su elección no funcionó.
    */
-  private static readonly DESCARGABLES: { [id: string]: string } = {
+  static readonly DESCARGABLES: { [id: string]: string } = {
     playfair: "Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400",
     cormorant: "Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300",
     fraunces: "Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300",
@@ -310,6 +344,17 @@ export class SitioRenderComponent implements OnChanges {
 
   /** Ids ya pedidos, para no repetir el <link> en cada cambio del tema. */
   private static readonly yaCargadas = new Set<string>();
+
+  /** Pide TODAS las fuentes de una vez (para las muestras del panel Estilo). */
+  static cargarTodasLasFuentes(): void {
+    if (SitioRenderComponent.yaCargadas.has("__todas")) return;
+    SitioRenderComponent.yaCargadas.add("__todas");
+    const specs = Object.keys(SitioRenderComponent.DESCARGABLES).map((k) => SitioRenderComponent.DESCARGABLES[k]);
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?${specs.map((s) => "family=" + s).join("&")}&display=swap`;
+    document.head.appendChild(link);
+  }
 
   private cargarFuente(id: string): void {
     const spec = SitioRenderComponent.DESCARGABLES[id];

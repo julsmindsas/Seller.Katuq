@@ -215,6 +215,16 @@ $pk-warning-soft: #FDF1DD;
     }
 }
 
+/* Botón que abre un menú en vez de ejecutar una acción (Crear Producto).
+   La flecha la pinta Bootstrap con `.dropdown-toggle::after`; acá solo se le
+   da aire para que no quede pegada al texto. */
+.pk-btn-dropdown {
+    &.dropdown-toggle::after {
+        margin-left: .5rem;
+        vertical-align: middle;
+    }
+}
+
 // Iconos con color de acento dentro de botones
 .pk-ico-accent { color: $pk-accent; }
 .pk-ico-success { color: $pk-success; }
@@ -237,6 +247,43 @@ $pk-warning-soft: #FDF1DD;
         &:hover { background: $pk-bg-soft; color: $pk-accent; }
         &:disabled { opacity: 0.6; }
     }
+}
+
+/* Menú de Crear Producto: opciones de dos renglones — el nombre del formulario
+   y, debajo, su alcance. Los dos hacen lo mismo con distinto detalle, así que
+   el título solo no alcanza para elegir.
+   Va DESPUÉS de `.pk-menu` a propósito: misma especificidad, gana el último. */
+.pk-menu-formularios {
+    min-width: 340px;
+
+    .dropdown-item {
+        display: block;
+        white-space: normal;
+        padding: 10px 12px;
+
+        + .dropdown-item { margin-top: 2px; }
+    }
+
+    .pk-opt-title {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-weight: 700;
+        font-size: .9rem;
+        color: $pk-text-dark;
+    }
+
+    .pk-opt-desc {
+        display: block;
+        margin-top: 2px;
+        padding-left: 1.5rem;   /* alineado bajo el texto, no bajo el icono */
+        font-weight: 400;
+        font-size: .75rem;
+        line-height: 1.35;
+        color: $pk-text-light;
+    }
+
+    .dropdown-item:hover .pk-opt-title { color: $pk-accent; }
 }
 
 // ====================================================
@@ -1040,3 +1087,4 @@ $fs-active-border: $pk-accent-border;
         i { font-size: 1.2rem; }
     }
 }
+

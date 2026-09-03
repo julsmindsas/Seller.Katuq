@@ -53,7 +53,7 @@
     <aside class="panel">
       <nav class="pestanas">
         <button [class.is-active]="panel === 'bloques'" (click)="panel = 'bloques'">Secciones</button>
-        <button [class.is-active]="panel === 'diseno'" (click)="panel = 'diseno'">Estilo</button>
+        <button [class.is-active]="panel === 'diseno'" (click)="panel = 'diseno'; cargarMuestrasDeLetra()">Estilo</button>
         <button [class.is-active]="panel === 'tienda'" (click)="panel = 'tienda'; cargarBodegas()">Tienda</button>
         <button [class.is-active]="panel === 'pauta'" (click)="panel = 'pauta'">Pauta</button>
         <button [class.is-active]="panel === 'ajustes'" (click)="panel = 'ajustes'">Ajustes</button>
@@ -61,6 +61,8 @@
 
       <!-- ── Secciones ── -->
       <div class="panel__contenido" *ngIf="panel === 'bloques'">
+        <!-- Drill-in: con una sección elegida, la lista se aparta y el panel es solo su formulario. -->
+        <ng-container *ngIf="seleccionado < 0">
         <p class="nota">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01"/></svg>
           Tu página está hecha de secciones, como bloques de lego. Ordénalas, ocúltalas o quítalas —
@@ -129,15 +131,22 @@
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
           Agregar una sección
         </button>
+        </ng-container>
 
         <!-- Propiedades de la sección elegida -->
         <section class="propiedades" *ngIf="bloqueActual as b">
-          <h3 class="propiedades__titulo">
-            <span class="propiedades__icono">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path [attr.d]="iconoDeTipo(b.tipo)"/></svg>
-            </span>
-            {{ nombreDeTipo(b.tipo) }}
-          </h3>
+          <div class="propiedades__cabecera">
+            <button class="propiedades__volver" (click)="cerrarSeccion()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+              Secciones
+            </button>
+            <h3 class="propiedades__titulo">
+              <span class="propiedades__icono">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path [attr.d]="iconoDeTipo(b.tipo)"/></svg>
+              </span>
+              {{ nombreDeTipo(b.tipo) }}
+            </h3>
+          </div>
 
           <!-- ── Maquetas ──
                Las formas que este bloque ya puede tomar, con nombre y dibujo.
@@ -1688,8 +1697,8 @@
                     [class.is-active]="parejaActiva === p.id"
                     (click)="aplicarPareja(p.id)">
               <span class="pareja__muestra">
-                <span class="pareja__titulo" [style.font-family]="familiaDe(p.titulo)">Aa</span>
-                <span class="pareja__cuerpo" [style.font-family]="familiaDe(p.cuerpo)">Texto</span>
+                <span class="pareja__titulo" [style.font-family]="familiaDe(p.titulo)">{{ fraseDeMuestra() }}</span>
+                <span class="pareja__cuerpo" [style.font-family]="familiaDe(p.cuerpo)">Pide antes de las 2 pm y llega hoy.</span>
               </span>
               <span class="pareja__nombre">{{ p.nombre }}</span>
               <svg *ngIf="parejaActiva === p.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M20 6 9 17l-5-5"/></svg>
@@ -1712,10 +1721,9 @@
                 <button class="tipografia" *ngFor="let f of tipografias"
                         [class.is-active]="fuenteDe('titulo') === f.id"
                         (click)="elegirFuente('titulo', f.id)">
-                  <span class="tipografia__aa" [style.font-family]="f.familia">Aa</span>
                   <span class="tipografia__texto">
-                    <strong>{{ f.nombre }}</strong>
-                    <small>{{ f.pista }}</small>
+                    <strong class="tipografia__muestra" [style.font-family]="f.familia">{{ fraseDeMuestra() }}</strong>
+                    <small>{{ f.nombre }} · {{ f.pista }}</small>
                   </span>
                   <svg *ngIf="fuenteDe('titulo') === f.id" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
                 </button>
@@ -1728,10 +1736,9 @@
                 <button class="tipografia" *ngFor="let f of tipografias"
                         [class.is-active]="fuenteDe('cuerpo') === f.id"
                         (click)="elegirFuente('cuerpo', f.id)">
-                  <span class="tipografia__aa" [style.font-family]="f.familia">Aa</span>
                   <span class="tipografia__texto">
-                    <strong>{{ f.nombre }}</strong>
-                    <small>{{ f.pista }}</small>
+                    <strong class="tipografia__muestra" [style.font-family]="f.familia">{{ fraseDeMuestra() }}</strong>
+                    <small>{{ f.nombre }} · {{ f.pista }}</small>
                   </span>
                   <svg *ngIf="fuenteDe('cuerpo') === f.id" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
                 </button>
@@ -1888,11 +1895,19 @@
 
             <div class="campo">
               <label>Categorías que no salen en el sitio</label>
-              <small>Separadas por coma, tal como se llaman en tu maestro (por ejemplo «Listas internas»).
-                Desaparecen del menú, las baldosas, el pie y los filtros; un producto que solo esté en
-                ellas tampoco sale.</small>
-              <input type="text" [ngModel]="categoriasOcultasTexto()" (ngModelChange)="ponerCategoriasOcultas($event)"
-                     placeholder="Listas internas, Insumos" />
+              <small>Desmarca las que no quieres en el menú, las baldosas, el pie ni los filtros
+                (por ejemplo «Listas internas»). Un producto que solo esté en ellas tampoco sale.</small>
+              <div class="casillas" *ngIf="categorias.length; else sinCategorias">
+                <label class="casilla" *ngFor="let c of categorias">
+                  <input type="checkbox" [checked]="!categoriaOculta(c.nombre)" (change)="alternarCategoriaOculta(c.nombre)" />
+                  <span class="casilla__nombre">{{ c.nombre }}</span>
+                  <span class="casilla__total">{{ c.total }}</span>
+                </label>
+              </div>
+              <ng-template #sinCategorias>
+                <input type="text" [ngModel]="categoriasOcultasTexto()" (ngModelChange)="ponerCategoriasOcultas($event)"
+                       placeholder="Listas internas, Insumos" />
+              </ng-template>
             </div>
 
             <ng-container *ngIf="ventaConfig && ventaConfig.formasPago.length">
@@ -2144,7 +2159,8 @@
       </div>
 
       <div class="previa__lienzo">
-        <div class="marco" [class.marco--movil]="dispositivo === 'movil'">
+        <div class="marco" [class.marco--movil]="dispositivo === 'movil'" [class.marco--escritorio]="dispositivo !== 'movil'"
+             [style.zoom]="dispositivo === 'movil' ? null : escalaPrevia">
           <div class="marco__barra">
             <span class="marco__punto marco__punto--rojo"></span>
             <span class="marco__punto marco__punto--ambar"></span>
@@ -2160,6 +2176,8 @@
               [bloqueActivo]="idBloqueActivo"
               [logo]="logo"
               [negocio]="negocio"
+              [categorias]="categoriasVisibles"
+              [tiendaActiva]="contenido.tienda?.habilitada === true"
               (textoEditado)="aplicarTextoEditado($event)"
               (elementoMovido)="aplicarElementoMovido($event)"
               (bloqueSeleccionado)="seleccionarDesdePrevia($event)"

@@ -291,6 +291,37 @@ export class CarritoComponent implements OnInit {
   }
 
   /**
+   * Suma de las líneas ANTES del descuento por línea (precio de lista × cantidad).
+   *
+   * `getTotalProductPriceInCart()` devuelve el neto: `checkPriceScale()` ya
+   * descuenta el `DESC. %` de cada línea. Rotular ese neto como "Subtotal" y no
+   * mostrar nada más hacía que el descuento pareciera perdido — el usuario ve un
+   * 20% escrito en la línea y un total que no lo menciona. Con el bruto arriba y
+   * el descuento en su propio renglón, la resta queda a la vista.
+   */
+  getTotalBrutoEnCarrito(): number {
+    if (!this.productos || this.productos.length === 0) return 0;
+
+    return this.productos.reduce((total, producto) => {
+      const precioBase = Number(this.checkPriceScaleBruto(producto)) || 0;
+      const precioAdiciones = Number(this.calculateAdicionesPrice(producto?.configuracion?.adiciones)) || 0;
+      const precioPreferencias = Number(this.calculatePreferenciasPrice(producto?.configuracion?.preferencias)) || 0;
+      const cantidad = Number(producto?.cantidad) || 0;
+
+      const totalItem = (precioBase + precioAdiciones + precioPreferencias) * cantidad;
+      return total + (isNaN(totalItem) ? 0 : totalItem);
+    }, 0);
+  }
+
+  /** Cuánto rebajaron los `DESC. %` de las líneas, en pesos. */
+  getTotalDescuentoLineas(): number {
+    const dif = this.getTotalBrutoEnCarrito() - this.getTotalProductPriceInCart();
+    // Solo las adiciones/preferencias podrían meter ruido de centavos; por
+    // debajo de un peso no es un descuento, es redondeo.
+    return dif > 0.5 ? dif : 0;
+  }
+
+  /**
    * Precio unitario CON IVA de la línea, YA NETO del descuento de línea
    * (`itemCarrito.descuentoLinea`, 0-100). El descuento se aplica multiplicando
    * el resultado final por (1-descLinea/100) sin importar la fuente del precio
