@@ -162,8 +162,13 @@
           <h4><i class="fa fa-paperclip"></i> Adjuntos ({{ticket.adjuntos.length}})</h4>
           <div class="attachments-gallery">
             <div class="attachment-item" *ngFor="let adjunto of ticket.adjuntos">
-              <div class="attachment-preview" (click)="openInNewTab(adjunto)">
-                <img [src]="adjunto" alt="Adjunto" class="attachment-img" (error)="handleImageError($event)">
+              <div class="attachment-preview" [ngSwitch]="tipoAdjunto(adjunto)">
+                <video *ngSwitchCase="'video'" [src]="adjunto" class="attachment-img" controls preload="metadata"></video>
+                <div *ngSwitchCase="'documento'" class="attachment-doc" (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                  <i class="fa fa-file-o fa-2x"></i>
+                  <span>{{nombreAdjunto(adjunto)}}</span>
+                </div>
+                <img *ngSwitchDefault [src]="adjunto" alt="Adjunto" class="attachment-img" (click)="openInNewTab(adjunto)" (error)="handleImageError($event)">
               </div>
               <div class="attachment-actions">
                 <button class="attachment-btn view" (click)="openInNewTab(adjunto)" title="Ver completo">
@@ -197,8 +202,13 @@
                   <!-- Comment Attachments -->
                   <div class="comment-attachments" *ngIf="comment.adjuntos?.length">
                     <div class="attachment-thumbnails">
-                      <div class="thumbnail-item" *ngFor="let adjunto of comment.adjuntos">
-                        <img [src]="adjunto" alt="Adjunto" (click)="openInNewTab(adjunto)">
+                      <div class="thumbnail-item" *ngFor="let adjunto of comment.adjuntos" [ngSwitch]="tipoAdjunto(adjunto)">
+                        <video *ngSwitchCase="'video'" [src]="adjunto" controls preload="metadata"></video>
+                        <div *ngSwitchCase="'documento'" class="attachment-doc" (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                          <i class="fa fa-file-o"></i>
+                          <span>{{nombreAdjunto(adjunto)}}</span>
+                        </div>
+                        <img *ngSwitchDefault [src]="adjunto" alt="Adjunto" (click)="openInNewTab(adjunto)">
                       </div>
                     </div>
                   </div>

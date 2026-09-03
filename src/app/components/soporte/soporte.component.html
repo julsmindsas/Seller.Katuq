@@ -134,10 +134,10 @@
                                 <div class="upload-button">
                                     <i class="fa fa-upload"></i> Seleccionar Archivos
                                 </div>
-                                <small>Formatos aceptados: JPG, PNG, GIF, MP4, MOV, AVI - Máximo 50MB por archivo</small>
+                                <small>Formatos aceptados: imágenes (JPG, PNG, GIF), videos (MP4, MOV, AVI) y documentos (PDF, Word, Excel, PowerPoint, TXT, CSV, ZIP) - Máximo 50MB por archivo</small>
                             </div>
                         </label>
-                        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*,video/*" />
+                        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" />
                     </div>
                 
                     <!-- Vista Previa de Imágenes -->
@@ -174,6 +174,19 @@
                                 <span class="video-number">{{i+1}}</span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Documentos adjuntos -->
+                    <div class="document-previews" *ngIf="documentFiles.length > 0">
+                        <h5>Documentos ({{documentFiles.length}})</h5>
+                        <ul class="document-list">
+                            <li class="document-item" *ngFor="let doc of documentFiles; let i = index">
+                                <i class="fa fa-file-o"></i>
+                                <span class="document-name" [title]="doc.name">{{doc.name}}</span>
+                                <span class="document-size">{{formatearTamano(doc.size)}}</span>
+                                <button type="button" class="remove-document-btn" (click)="removeDocument(i)" title="Quitar documento" aria-label="Quitar documento">&times;</button>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             

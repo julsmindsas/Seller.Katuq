@@ -22,9 +22,15 @@ export class SoporteComponent implements OnInit {
   subcategories: any[] = [];
   canales: any;
   fileBase64String: any;
-  selectedFiles: unknown[] = [];
+  // Imágenes elegidas, en el mismo orden que imagePreviews (índice a índice)
+  imageFiles: File[] = [];
   imagePreviews: any[] = [];
   videoPreviews: any[] = [];
+  // Documentos (PDF, Office, texto, comprimidos)
+  documentFiles: File[] = [];
+  // Límite prometido en la interfaz ("Máximo 50MB por archivo")
+  readonly MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+  readonly DOC_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar'];
   isSubmitting: boolean = false;
   isDragging: boolean = false;
   selectedPriority: string = 'media'; // Default priority
@@ -192,10 +198,53 @@ export class SoporteComponent implements OnInit {
     }
   }
 
+  // Todo lo que se subirá a Storage al enviar: imágenes y videos, en ese orden
+  get selectedFiles(): File[] {
+    return [
+      ...this.imageFiles,
+      ...this.videoPreviews.map(v => v.file as File),
+      ...this.documentFiles
+    ];
+  }
+
+  private extensionDe(file: File): string {
+    const partes = file.name.split('.');
+    return partes.length > 1 ? partes.pop()!.toLowerCase() : '';
+  }
+
+  private esDocumentoPermitido(file: File): boolean {
+    return this.DOC_EXTENSIONS.includes(this.extensionDe(file));
+  }
+
   handleFiles(files: FileList): void {
-    if (files && files.length > 0) {
-      const validFiles = Array.from(files).filter(file => file.type.startsWith('video/'));
-      for (const file of validFiles) {
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const rechazados: string[] = [];
+
+    for (const file of Array.from(files)) {
+      const esImagen = file.type.startsWith('image/');
+      const esVideo = file.type.startsWith('video/');
+      const esDocumento = !esImagen && !esVideo && this.esDocumentoPermitido(file);
+
+      if (!esImagen && !esVideo && !esDocumento) {
+        rechazados.push(`${file.name} (formato no permitido)`);
+        continue;
+      }
+      if (file.size > this.MAX_FILE_SIZE_BYTES) {
+        rechazados.push(`${file.name} (supera 50MB)`);
+        continue;
+      }
+
+      if (esImagen) {
+        this.imageFiles.push(file);
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          this.imagePreviews.push(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else if (esVideo) {
         this.generateVideoThumbnail(file).then(thumbnail => {
           this.videoPreviews.push({
             url: URL.createObjectURL(file),
@@ -204,7 +253,18 @@ export class SoporteComponent implements OnInit {
             thumbnail
           });
         });
+      } else {
+        this.documentFiles.push(file);
       }
+    }
+
+    if (rechazados.length > 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Algunos archivos no se adjuntaron',
+        html: rechazados.map(r => `<div>${r}</div>`).join(''),
+        confirmButtonText: 'Entendido'
+      });
     }
   }
 
@@ -233,6 +293,8 @@ export class SoporteComponent implements OnInit {
   onFileChange(event: any): void {
     if (event.target.files) {
       this.handleFiles(event.target.files);
+      // Permite volver a elegir el mismo archivo tras quitarlo
+      event.target.value = '';
     }
   }
 
@@ -240,12 +302,7 @@ export class SoporteComponent implements OnInit {
     const index = this.imagePreviews.indexOf(preview);
     if (index !== -1) {
       this.imagePreviews.splice(index, 1);
-      
-      // Also remove from selectedFiles array
-      if (this.selectedFiles && this.selectedFiles.length > index) {
-        this.selectedFiles = Array.from(this.selectedFiles);
-        this.selectedFiles.splice(index, 1);
-      }
+      this.imageFiles.splice(index, 1);
     }
   }
 
@@ -254,6 +311,16 @@ export class SoporteComponent implements OnInit {
     if (index !== -1) {
       this.videoPreviews.splice(index, 1);
     }
+  }
+
+  removeDocument(index: number): void {
+    this.documentFiles.splice(index, 1);
+  }
+
+  formatearTamano(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   // Open image preview modal
@@ -290,9 +357,10 @@ export class SoporteComponent implements OnInit {
       if (result.isConfirmed) {
         // Reset form state
         this.ticketForm.reset();
-        this.selectedFiles = [];
+        this.imageFiles = [];
         this.imagePreviews = [];
         this.videoPreviews = [];
+        this.documentFiles = [];
         
         // Reset to defaults
         const today = new Date().toISOString().split('T')[0];
@@ -331,56 +399,37 @@ export class SoporteComponent implements OnInit {
   }
 
   // Existing methods
+  // Sube imágenes, videos y documentos a Storage conservando nombre y extensión originales,
+  // para que Support pueda distinguir el tipo y mostrar el nombre del archivo
   async subirImagenesAFirebase(): Promise<string[]> {
     const urls: string[] = [];
-    
-    // Upload images
+
     for (const file of this.selectedFiles) {
       if (file instanceof File) {
-        if (file.type.startsWith('image/')) {
-          const url = await this.subirImagenFirebase(file, `tickets/${Date.now()}_${file.name}`);
-          urls.push(url);
-        } else if (file.type.startsWith('video/')) {
-          const url = await this.subirVideoFirebase(file, `tickets/${Date.now()}_${file.name}`);
-          urls.push(url);
-        }
+        const nombreSeguro = file.name.replace(/[^\w.\-]+/g, '_');
+        const url = await this.subirArchivoFirebase(file, `tickets/${Date.now()}_${nombreSeguro}`);
+        urls.push(url);
       }
     }
-    
+
     return urls;
   }
 
-  subirImagenFirebase(file: File, fileName: string): Promise<string> {
+  subirArchivoFirebase(file: File, fileName: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const fileRef = this.storage.ref(fileName);
-      const task = this.storage.upload(fileName, file);
-      
-      task.snapshotChanges().pipe(
-        finalize(() => {
-          fileRef.getDownloadURL().subscribe(url => {
-            resolve(url);
-          }, error => {
-            reject(error);
-          });
-        })
-      ).subscribe();
-    });
-  }
+      const task = this.storage.upload(fileName, file, { contentType: file.type || undefined });
 
-  subirVideoFirebase(file: File, fileName: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const fileRef = this.storage.ref(fileName);
-      const task = this.storage.upload(fileName, file);
-      
       task.snapshotChanges().pipe(
         finalize(() => {
-          fileRef.getDownloadURL().subscribe(url => {
-            resolve(url);
-          }, error => {
-            reject(error);
+          fileRef.getDownloadURL().subscribe({
+            next: (url) => resolve(url),
+            error: (error) => reject(error)
           });
         })
-      ).subscribe();
+      ).subscribe({
+        error: (error) => reject(error)
+      });
     });
   }
 
@@ -448,7 +497,7 @@ export class SoporteComponent implements OnInit {
       // Process images if any
       if (this.selectedFiles && this.selectedFiles.length > 0) {
         currentStep = 2;
-        loadingStep = 'Subiendo imágenes...';
+        loadingStep = 'Subiendo archivos adjuntos...';
         Swal.update({
           html: `Paso ${currentStep}/${totalSteps}: ${loadingStep}`
         });

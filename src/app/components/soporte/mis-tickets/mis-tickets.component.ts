@@ -84,6 +84,23 @@ export class MisTicketsComponent implements OnInit {
     return 'assets/icons/video-placeholder.png';
   }
   
+  // Los adjuntos son URLs de Storage; el tipo se deduce por la extensión de la ruta
+  tipoAdjunto(url: string): 'imagen' | 'video' | 'documento' {
+    if (!url) return 'imagen';
+    const ruta = decodeURIComponent(url.split('?')[0]).toLowerCase();
+    if (/\.(mp4|mov|avi|webm|mkv|m4v)$/.test(ruta)) return 'video';
+    if (/\.(pdf|docx?|xlsx?|pptx?|txt|csv|zip|rar)$/.test(ruta)) return 'documento';
+    return 'imagen';
+  }
+
+  // Nombre legible: último segmento de la ruta sin el prefijo de timestamp
+  nombreAdjunto(url: string): string {
+    if (!url) return '';
+    const ruta = decodeURIComponent(url.split('?')[0]);
+    const archivo = ruta.substring(ruta.lastIndexOf('/') + 1);
+    return archivo.replace(/^\d{10,}_/, '');
+  }
+
   openInNewTab(url: string): void {
     window.open(url, '_blank'); // Abrir el adjunto en una nueva pestaña
   }
@@ -237,7 +254,9 @@ export class MisTicketsComponent implements OnInit {
   async subirImagenesAFirebase(): Promise<string[]> {
     const urls = await Promise.all(
       this.selectedFiles.map((file: any, index) => {
-        const fileName = `ticket_${Date.now()}_${index + 1}.jpg`;
+        // Conserva nombre y extensión para que se distinga imagen, video o documento
+        const nombreSeguro = String(file.name || 'adjunto').replace(/[^\w.\-]+/g, '_');
+        const fileName = `ticket_${Date.now()}_${index + 1}_${nombreSeguro}`;
         return this.subirImagenFirebase(file, fileName);
       })
     );
