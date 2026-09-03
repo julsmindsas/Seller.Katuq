@@ -69,7 +69,7 @@ export interface AnaliticaSitio {
 export interface ContenidoSitio {
   bloques: BloqueSitio[];
   tema: TemaSitio;
-  seo: { titulo: string; descripcion: string; imagen: string };
+  seo: { titulo: string; descripcion: string; imagen: string; favicon?: string };
   tienda: TiendaSitio;
   analitica: AnaliticaSitio;
 }

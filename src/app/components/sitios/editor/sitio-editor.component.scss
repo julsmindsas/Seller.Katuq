@@ -438,6 +438,9 @@
   &__total { font-size: 11.5px; color: var(--kb-muted); font-weight: 700; }
 }
 
+.favicon-fila { display: flex; align-items: center; gap: 10px; }
+.favicon-muestra { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; border: 1px solid var(--kb-line); background: #fff; }
+
 // ── Campos ───────────────────────────────────────────────────────────────────
 .campo {
   margin-bottom: 16px;

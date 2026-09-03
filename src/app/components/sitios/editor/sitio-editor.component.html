@@ -2136,6 +2136,20 @@
               <input type="file" accept="image/*" (change)="subirImagen($event, 'seo')" [disabled]="subiendo" />
             </label>
           </div>
+          <div class="campo">
+            <label>Icono de la pestaña (favicon)</label>
+            <small>Cuadrado, mínimo 64 px. Si no subes uno, se usa el logo de tu marca.</small>
+            <div class="favicon-fila">
+              <img *ngIf="contenido.seo.favicon" class="favicon-muestra" [src]="contenido.seo.favicon" alt="" />
+              <label class="archivo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
+                {{ subiendo ? 'Subiendo…' : (contenido.seo.favicon ? 'Cambiar el icono' : 'Subir el icono') }}
+                <input type="file" accept="image/png,image/webp,image/jpeg" (change)="subirImagen($event, 'favicon')" [disabled]="subiendo" />
+              </label>
+              <button *ngIf="contenido.seo.favicon" class="btn-fantasma btn-fantasma--sm" type="button"
+                      (click)="contenido.seo.favicon = ''; marcarSucio()">Usar el logo</button>
+            </div>
+          </div>
         </div>
 
         <div class="grupo">

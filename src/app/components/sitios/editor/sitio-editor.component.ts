@@ -2367,6 +2367,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
       | "hero"
       | "galeria"
       | "seo"
+      | "favicon"
       | "imagenBloque"
       | "fondoSeccion"
       | "promo"
@@ -2398,6 +2399,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
             "Foto pequeña para la portada",
             { timeOut: 9000, closeButton: true }
           );
+        }
+        if (destino === "favicon" && this.contenido) {
+          // La variante chica alcanza para la pestaña y pesa nada.
+          this.contenido.seo.favicon = res.url.replace(/-w\d+\.webp/, "-w320.webp");
+          this.marcarSucio();
+          return;
         }
         if (destino === "seo" && this.contenido) {
           this.contenido.seo.imagen = res.url;
