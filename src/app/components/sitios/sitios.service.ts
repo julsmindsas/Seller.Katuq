@@ -32,6 +32,16 @@ export interface TiendaSitio {
   mensajeConfirmacion: string;
 }
 
+/** Lo que propone la IA: solo lo validado por el servidor. */
+export interface PropuestaDiseno {
+  tema: Partial<TemaSitio>;
+  orden: string[];
+  ocultar: string[];
+  portada: { titulo: string; subtitulo: string; cta: string } | null;
+  anuncio: string;
+  razones: string[];
+}
+
 /** Una categoría de la empresa tal como la pinta la página publicada. */
 export interface CategoriaSitio {
   nombre: string;
@@ -200,6 +210,11 @@ export class SitiosService extends BaseService {
 
   obtener(id: string): Observable<Respuesta<Sitio>> {
     return this.get<Respuesta<Sitio>>(`/v1/sites/${id}`);
+  }
+
+  /** Propuesta de diseño con IA (vía KAI) sobre el contenido tal como está en el editor. */
+  disenarConIA(id: string, contenido: ContenidoSitio, indicaciones: string): Observable<Respuesta<PropuestaDiseno>> {
+    return this.post<Respuesta<PropuestaDiseno>>(`/v1/sites/${id}/disenar-ia`, { contenido, indicaciones });
   }
 
   /** Categorías reales (nombre, total, foto) para la previa y el panel de tienda. */

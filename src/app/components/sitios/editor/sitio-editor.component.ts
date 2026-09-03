@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, Sitio, SitiosService, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, PropuestaDiseno, Sitio, SitiosService, VentaConfig } from "../sitios.service";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
@@ -1588,6 +1588,77 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
 
   /** El tema tal como estaba antes de empezar a probarse vestidos. */
   temaAnterior: any = null;
+
+  // ── Diseñar con IA ──
+  indicacionesIA = "";
+  disenandoIA = false;
+  razonesIA: string[] = [];
+  private fotoAntesDeIA = "";
+
+  /**
+   * Pide a KAI un diseño con los parámetros actuales (marca, sector, objetivo,
+   * secciones, categorías) y lo aplica sobre el contenido. Todo queda en el
+   * historial: Ctrl+Z o "Volver a como estaba" lo deshacen.
+   */
+  disenarConIA(): void {
+    if (!this.contenido || this.disenandoIA) return;
+    this.disenandoIA = true;
+    this.razonesIA = [];
+    this.fotoAntesDeIA = JSON.stringify(this.contenido);
+    this.service.disenarConIA(this.id, this.contenido, this.indicacionesIA.trim()).subscribe({
+      next: (res) => {
+        this.disenandoIA = false;
+        if (!res || !res.success || !res.data) {
+          this.toastr.warning((res && (res as any).message) || "KAI no devolvió una propuesta.");
+          return;
+        }
+        this.aplicarPropuestaIA(res.data);
+      },
+      error: (e) => {
+        this.disenandoIA = false;
+        this.toastr.error((e && e.error && e.error.message) || "No pudimos pedir el diseño.");
+      },
+    });
+  }
+
+  private aplicarPropuestaIA(p: PropuestaDiseno): void {
+    if (!this.contenido) return;
+    const c: any = this.contenido;
+    if (p.tema && Object.keys(p.tema).length) c.tema = { ...c.tema, ...p.tema };
+    if (p.orden && p.orden.length === c.bloques.length) {
+      const porId = new Map(c.bloques.map((b: any) => [b.id, b]));
+      c.bloques = p.orden.map((id) => porId.get(id)).filter(Boolean);
+    }
+    for (const id of p.ocultar || []) {
+      const b = c.bloques.find((x: any) => x.id === id);
+      if (b) b.visible = false;
+    }
+    const hero = c.bloques.find((b: any) => b.tipo === "hero");
+    if (hero && p.portada) {
+      if (p.portada.titulo) hero.datos.titulo = p.portada.titulo;
+      if (p.portada.subtitulo) hero.datos.subtitulo = p.portada.subtitulo;
+      if (p.portada.cta) hero.datos.ctaTexto = p.portada.cta;
+    }
+    const anuncio = c.bloques.find((b: any) => b.tipo === "anuncio");
+    if (anuncio && p.anuncio) anuncio.datos.texto = p.anuncio;
+    this.seleccionado = -1;
+    this.razonesIA = p.razones || [];
+    this.marcarSucio();
+    this.toastr.success("Diseño propuesto por KAI aplicado. Si no te convence, vuelve a como estaba.");
+  }
+
+  volverAntesDeIA(): void {
+    if (!this.fotoAntesDeIA) return;
+    this.contenido = JSON.parse(this.fotoAntesDeIA);
+    this.fotoAntesDeIA = "";
+    this.razonesIA = [];
+    this.seleccionado = -1;
+    this.marcarSucio();
+  }
+
+  get hayPropuestaIA(): boolean {
+    return !!this.fotoAntesDeIA;
+  }
 
   /**
    * Por defecto se respeta la marca del comercio: quien ya definió sus colores

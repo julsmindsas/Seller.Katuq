@@ -438,6 +438,9 @@
   &__total { font-size: 11.5px; color: var(--kb-muted); font-weight: 700; }
 }
 
+.grupo--ia { border: 1.5px solid var(--kb-accent-line-2, #cfc5f7); background: var(--kb-accent-wash-4, #f6f3ff); border-radius: 14px; padding: 14px; }
+.ia-acciones { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ia-razones { margin: 10px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--kb-body); li { margin: 3px 0; } }
 .favicon-fila { display: flex; align-items: center; gap: 10px; }
 .favicon-muestra { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; border: 1px solid var(--kb-line); background: #fff; }
 

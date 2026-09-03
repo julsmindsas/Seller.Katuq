@@ -1611,6 +1611,30 @@
       <!-- ── Estilo ── -->
       <div class="panel__contenido" *ngIf="panel === 'diseno'">
 
+        <!-- ── Diseñar con IA ── KAI propone estilo, colores, letra, orden y
+             portada a partir de la marca, el sector, el objetivo, las
+             secciones y las categorías reales. Se aplica sobre lo que hay y se
+             puede deshacer. -->
+        <div class="grupo grupo--ia">
+          <h3>Diseñar con IA</h3>
+          <p>KAI mira tu marca, tu sector, para qué es la página, tus secciones y tus categorías, y propone estilo, colores, letra, orden y portada.</p>
+          <div class="campo">
+            <label>Indicaciones (opcional)</label>
+            <textarea rows="2" [(ngModel)]="indicacionesIA" maxlength="400"
+                      placeholder="Ej: más elegante, fondo claro, que la portada hable de entrega el mismo día"></textarea>
+          </div>
+          <div class="ia-acciones">
+            <button class="btn-primario btn-primario--sm" (click)="disenarConIA()" [disabled]="disenandoIA">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+              {{ disenandoIA ? 'Pensando…' : (hayPropuestaIA ? 'Proponer otro' : 'Proponer un diseño') }}
+            </button>
+            <button class="btn-fantasma btn-fantasma--sm" *ngIf="hayPropuestaIA" (click)="volverAntesDeIA()" [disabled]="disenandoIA">Volver a como estaba</button>
+          </div>
+          <ul class="ia-razones" *ngIf="razonesIA.length">
+            <li *ngFor="let r of razonesIA">{{ r }}</li>
+          </ul>
+        </div>
+
         <!-- ── Vestido completo ──
              Probarse el look entero de otra plantilla sobre el contenido que ya
              está escrito. Cambia SOLO la apariencia: no agrega, quita ni
