@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from "@angular/core";
 import { CdkDragDrop } from "@angular/cdk/drag-drop";
 
 /** Un bloque tal como lo entrega el backend: tipo + datos ya saneados. */
@@ -46,6 +46,8 @@ const FAMILIAS: { [id: string]: string } = {
   cormorant: '"Cormorant Garamond", Georgia, serif',
   fraunces: '"Fraunces", Georgia, serif',
   dmserif: '"DM Serif Display", Georgia, serif',
+  oswald: '"Oswald", "Arial Narrow", sans-serif',
+  dancing: '"Dancing Script", "Brush Script MT", cursive',
   syne: '"Syne", system-ui, sans-serif',
   outfit: '"Outfit", system-ui, sans-serif',
   sora: '"Sora", system-ui, sans-serif',
@@ -115,6 +117,21 @@ const ESTILOS: { [id: string]: { [variable: string]: string } } = {
     "--sitio-etiqueta-track": ".01em",
     "--sitio-ancho": "960px",
   },
+  tienda: {
+    "--sitio-radio": "10px",
+    "--sitio-radio-sm": "6px",
+    "--sitio-sombra": "0 8px 22px -14px rgba(0,0,0,.3)",
+    "--sitio-borde": "rgba(0,0,0,.1)",
+    "--sitio-aire": "2.5rem",
+    "--sitio-aire-ancho": "3.5rem",
+    "--sitio-titulo-peso": "500",
+    "--sitio-titulo-track": ".03em",
+    "--sitio-titulo-escala": "1.05",
+    "--sitio-titulo-altura": "1.15",
+    "--sitio-etiqueta-caja": "uppercase",
+    "--sitio-etiqueta-track": ".1em",
+    "--sitio-ancho": "1140px",
+  },
   audaz: {
     "--sitio-radio": "22px",
     "--sitio-radio-sm": "14px",
@@ -162,7 +179,7 @@ export interface DatosLead {
   templateUrl: "./sitio-render.component.html",
   styleUrls: ["./sitio-render.component.scss"],
 })
-export class SitioRenderComponent implements OnChanges {
+export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Input() bloques: BloqueSitio[] = [];
   @Input() tema: TemaSitio | null = null;
 
@@ -176,6 +193,40 @@ export class SitioRenderComponent implements OnChanges {
 
   /** En vista previa los formularios y enlaces no hacen nada. */
   @Input() previsualizacion = false;
+  /** Categorías reales de la empresa (la previa las pinta como la publicada). */
+  @Input() categorias: { nombre: string; total: number; imagen: string }[] = [];
+  /** Con la tienda encendida, las tarjetas llevan su botón "Agregar". */
+  @Input() tiendaActiva = false;
+
+  /** Reloj de los carruseles de la previa (portada y banners): un paso cada 5 s. */
+  paso = 0;
+  private reloj: any = null;
+
+  ngOnInit(): void {
+    if (typeof window === "undefined") return;
+    const quieto = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!quieto) this.reloj = setInterval(() => { this.paso++; }, 5000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.reloj) clearInterval(this.reloj);
+  }
+
+  /** Fotos de la portada en carrusel (dos o más y sin foto fija). */
+  slidesDeHero(d: any): string[] {
+    if (!d || d.imagen) return [];
+    const s = (d.imagenes || []).filter(Boolean);
+    return s.length >= 2 ? s : [];
+  }
+
+  /** Índice activo de un carrusel de n fotos según el reloj. */
+  activo(n: number): number {
+    return n > 0 ? this.paso % n : 0;
+  }
+
+  categoriasDe(d: any): { nombre: string; total: number; imagen: string }[] {
+    return (this.categorias || []).slice(0, Number(d && d.maximo) || 6);
+  }
   /** Ancho simulado en la vista previa del editor. */
   @Input() dispositivo: "escritorio" | "movil" = "escritorio";
 
@@ -277,11 +328,13 @@ export class SitioRenderComponent implements OnChanges {
    * meterlas en el index del panel o la previa se vería con la letra del
    * sistema y el comerciante creería que su elección no funcionó.
    */
-  private static readonly DESCARGABLES: { [id: string]: string } = {
+  static readonly DESCARGABLES: { [id: string]: string } = {
     playfair: "Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400",
     cormorant: "Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300",
     fraunces: "Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300",
     dmserif: "DM+Serif+Display:ital@0;1",
+    oswald: "Oswald:wght@400;500;600",
+    dancing: "Dancing+Script:wght@500;700",
     syne: "Syne:wght@400;600;700;800",
     outfit: "Outfit:wght@300;400;500;600;700",
     sora: "Sora:wght@300;400;500;600;700",
@@ -291,6 +344,17 @@ export class SitioRenderComponent implements OnChanges {
 
   /** Ids ya pedidos, para no repetir el <link> en cada cambio del tema. */
   private static readonly yaCargadas = new Set<string>();
+
+  /** Pide TODAS las fuentes de una vez (para las muestras del panel Estilo). */
+  static cargarTodasLasFuentes(): void {
+    if (SitioRenderComponent.yaCargadas.has("__todas")) return;
+    SitioRenderComponent.yaCargadas.add("__todas");
+    const specs = Object.keys(SitioRenderComponent.DESCARGABLES).map((k) => SitioRenderComponent.DESCARGABLES[k]);
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?${specs.map((s) => "family=" + s).join("&")}&display=swap`;
+    document.head.appendChild(link);
+  }
 
   private cargarFuente(id: string): void {
     const spec = SitioRenderComponent.DESCARGABLES[id];
@@ -699,6 +763,8 @@ export class SitioRenderComponent implements OnChanges {
     galeria: "Galería de fotos",
     seccion: "Componer a mano",
     columnas: "Columnas",
+    popup: "Popup de bienvenida",
+    banner: "Banners",
     imagen: "Una imagen",
     botones: "Botones",
     separador: "Espacio o línea",
@@ -707,6 +773,7 @@ export class SitioRenderComponent implements OnChanges {
     formulario: "Formulario de contacto",
     faq: "Preguntas frecuentes",
     catalogo: "Catálogo completo",
+    buscador: "Busca tu detalle",
     categorias: "Compra por categoría",
     promo: "Imagen con texto",
     destacado: "Producto destacado",
@@ -720,6 +787,11 @@ export class SitioRenderComponent implements OnChanges {
     footer: "Pie de página",
   };
 
+
+  /** Renglones de un texto multilínea (horarios del pie). */
+  lineasDe(texto: string): string[] {
+    return String(texto || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 8);
+  }
 
   nombreDeBloque(tipo: string): string {
     return SitioRenderComponent.NOMBRES_BLOQUE[tipo] || "Sección";

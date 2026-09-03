@@ -1,178 +1,300 @@
-<div class="container-fluid p-4" style="max-width: 1200px; margin: 0 auto;">
+<div class="pricing-page">
+  <section class="pricing-hero" aria-labelledby="pricing-title">
+    <div class="intro-badge">
+      <i class="pi pi-star" aria-hidden="true"></i>
+      Precios de introducción
+    </div>
 
-  <!-- Header -->
-  <div class="text-center mb-4">
-    <h2 class="fw-bold" style="color: #0f172a;">{{ 'Planes que crecen contigo' | translate }}</h2>
-    <p class="text-muted" style="max-width: 600px; margin: 0 auto;">
-      {{ 'No eliges un plan — tu facturación se ajusta automáticamente según tus ventas del mes. Sin sorpresas.' | translate }}
+    <h1 id="pricing-title">
+      Crecemos si tú creces.
+      <span>Todo Katuq sin límites.</span>
+    </h1>
+    <p class="hero-copy">
+      Empieza gratis y activa toda la plataforma cuando la necesites. Tu tarifa mensual se ajusta al volumen real de ventas de tu negocio.
     </p>
-  </div>
 
-  <div class="card border-0 shadow-sm mb-4" *ngIf="currentPlan === 'freemium'" style="border-radius: 12px;">
-    <div class="card-body p-4">
-      <h5 class="fw-bold mb-3" style="color: #0f172a;">Lo que incluye tu plan Gratis</h5>
-      <div class="row">
-        <div class="col-md-6" *ngFor="let feature of freemiumFeatures">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <i [class]="feature.enabled ? 'pi pi-check-circle' : 'pi pi-lock'"
-               [style.color]="feature.enabled ? '#27ae60' : '#94a3b8'"></i>
-            <small [style.color]="feature.enabled ? '#334155' : '#64748b'">{{ feature.text }}</small>
-          </div>
-        </div>
+    <div class="hero-status" aria-label="Estado de tu suscripción">
+      <div class="status-icon"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
+      <div>
+        <span>Tu plan actual</span>
+        <strong>{{ currentPlanLabel }}</strong>
+      </div>
+      <div class="status-divider"></div>
+      <div>
+        <span>Compromiso</span>
+        <strong>Sin permanencia</strong>
+      </div>
+      <div class="status-divider"></div>
+      <div>
+        <span>Plan anual</span>
+        <strong>{{ annualDiscount }}% de descuento</strong>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Tu situación actual -->
-  <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border-left: 4px solid #5c6ac4 !important;"
-       *ngIf="billingInfo && currentPlan !== 'freemium'">
-    <div class="card-body p-3">
-      <div class="row align-items-center">
-        <div class="col-md-3 text-center">
-          <small class="text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.5px;">Ventas este mes</small>
-          <h4 class="fw-bold mb-0" style="color: #5c6ac4;">${{ billingInfo.currentMonthSales | number:'1.0-0' }}</h4>
+  <section class="pricing-overview" aria-label="Calculadora de planes">
+    <article class="calculator-card">
+      <div class="calculator-heading">
+        <div>
+          <span class="eyebrow">Calculadora</span>
+          <h2>¿Cuánto vendes al mes?</h2>
+          <p>Mueve el selector y conoce el tramo que corresponde a tu operación.</p>
         </div>
-        <div class="col-md-3 text-center">
-          <small class="text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.5px;">Tu tramo actual</small>
-          <h4 class="fw-bold mb-0" style="color: #0f172a;">{{ billingInfo.currentTierName }}</h4>
-        </div>
-        <div class="col-md-3 text-center">
-          <small class="text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.5px;">Facturación proyectada</small>
-          <h4 class="fw-bold mb-0" style="color: #27ae60;">${{ billingInfo.projectedAmount | number:'1.0-0' }} COP</h4>
-        </div>
-        <div class="col-md-3 text-center">
-          <small class="text-muted text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.5px;">TRM</small>
-          <h4 class="fw-bold mb-0" style="color: #64748b;">${{ billingInfo.trm | number:'1.2-2' }}</h4>
+
+        <div class="currency-switch" role="group" aria-label="Moneda del precio">
+          <button type="button" [class.active]="currency === 'USD'" (click)="setCurrency('USD')">USD</button>
+          <button type="button" [class.active]="currency === 'COP'" (click)="setCurrency('COP')">COP</button>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Freemium banner (si es freemium) -->
-  <div class="card border-0 shadow-sm mb-4" *ngIf="currentPlan === 'freemium'"
-       style="border-radius: 12px; background: #faf5ff; border: 1px solid #e9d5ff;">
-    <div class="card-body p-4 text-center">
-      <h4 class="fw-bold mb-2" style="color: #8b5cf6;">Estás en el plan Gratis</h4>
-      <p class="text-muted mb-3">Tienes 15 pedidos gratis al mes. El plan pago se activa únicamente después de que Wompi apruebe el pago.</p>
-      <button pButton label="Activar Plan Pago" icon="pi pi-bolt"
-              class="p-button-lg" style="background: #8b5cf6; border-color: #8b5cf6; font-weight: 700;"
-              (click)="activarPlan()"></button>
-    </div>
-  </div>
-
-  <!-- Grid de planes -->
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3" *ngFor="let tier of tiers" [hidden]="tier.id === 'freemium'">
-      <div class="card border-0 h-100 tier-card" [class.current]="isCurrentTier(tier.id)"
-           style="border-radius: 12px; overflow: hidden; position: relative;">
-
-        <!-- Badge popular -->
-        <div *ngIf="tier.popular" class="popular-badge">Más popular</div>
-
-        <!-- Header con gradiente -->
-        <div class="p-3 text-white text-center" [style.background]="tier.gradient">
-          <i class="pi {{tier.icon}} mb-2" style="font-size: 1.5rem;"></i>
-          <h5 class="fw-bold mb-0">{{ tier.name }}</h5>
+      <div class="selected-plan" *ngIf="selectedTier as tier">
+        <div class="selected-plan-main">
+          <div class="plan-symbol"><i class="pi {{ tier.icon }}" aria-hidden="true"></i></div>
+          <div>
+            <span class="plan-caption">Plan recomendado</span>
+            <h3>{{ tier.name }}</h3>
+            <p>{{ tierSalesLabel(tier) }}</p>
+          </div>
         </div>
 
-        <!-- Body -->
-        <div class="card-body p-3 text-center d-flex flex-column">
-          <div class="mb-2">
-            <span *ngIf="!tier.custom" class="fw-bold" style="font-size: 1.8rem; color: #0f172a;">
-              ${{ tier.priceUSD }}
-            </span>
-            <span *ngIf="tier.custom" class="fw-bold" style="font-size: 1.4rem; color: #0f172a;">
-              A medida
-            </span>
-            <small *ngIf="!tier.custom" class="text-muted d-block" style="font-size: 0.75rem;">USD/mes</small>
-          </div>
-
-          <p class="text-muted mb-2" style="font-size: 0.8rem;">{{ tier.maxSales }}</p>
-          <small class="text-muted" style="font-size: 0.7rem;">{{ tier.description }}</small>
-
-          <!-- Current indicator -->
-          <div class="mt-auto pt-2" *ngIf="isCurrentTier(tier.id)">
-            <span class="badge w-100 py-2" style="background: #eef0fb; color: #5c6ac4; font-size: 0.75rem;">
-              <i class="pi pi-check-circle me-1"></i>Tu tramo actual
-            </span>
-          </div>
-
-          <div class="mt-auto pt-2" *ngIf="tier.custom">
-            <button pButton label="Contactar" icon="pi pi-whatsapp"
-                    class="p-button-sm p-button-outlined w-100" style="border-color: #0f172a; color: #0f172a;"
-                    (click)="contactarVentas()"></button>
-          </div>
+        <div class="selected-plan-price">
+          <strong>{{ tierPrice(tier) }}</strong>
+          <span>{{ tierCurrencyLabel(tier) }}</span>
+          <small *ngIf="!tier.custom && currency === 'COP'">TRM de referencia: {{ trm | number:'1.0-0' }}</small>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Todas las features incluidas -->
-  <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-    <div class="card-body p-4">
-      <h5 class="fw-bold text-center mb-3" style="color: #0f172a;">
-        <i class="pi pi-check-circle me-2" style="color: #27ae60;"></i>
-        {{ 'Todos los planes pagos incluyen' | translate }}
-      </h5>
-      <div class="row">
-        <div class="col-md-4" *ngFor="let feature of allFeatures">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <i class="pi pi-check" style="color: #27ae60; font-size: 0.8rem;"></i>
-            <small style="color: #334155;">{{ feature }}</small>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+      <div class="tier-selector">
+        <input
+          type="range"
+          min="0"
+          [max]="tiers.length - 1"
+          step="1"
+          [value]="selectedTierIndex"
+          (input)="selectTier(+$any($event.target).value)"
+          aria-label="Seleccionar rango de ventas"
+          [attr.aria-valuetext]="selectedTier.name">
 
-  <!-- FAQ -->
-  <div class="text-center mb-3">
-    <h5 class="fw-bold" style="color: #0f172a;">{{ 'Cómo funciona' | translate }}</h5>
-  </div>
-  <div class="row g-3 mb-4">
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-        <div class="card-body p-3 text-center">
-          <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center"
-               style="width: 40px; height: 40px; background: #eef0fb;">
-            <span class="fw-bold" style="color: #5c6ac4;">1</span>
-          </div>
-          <h6 class="fw-bold">Vendes normalmente</h6>
-          <small class="text-muted">Opera dentro de la capacidad de tu plan. Al activar el plan pago se desbloquean todas las funciones.</small>
+        <div class="tier-scale" aria-hidden="true">
+          <button
+            type="button"
+            *ngFor="let tier of tiers; let index = index"
+            [class.active]="selectedTierIndex === index"
+            (click)="selectTier(index)"
+            tabindex="-1">
+            <span>{{ tierShortLabel(tier) }}</span>
+          </button>
         </div>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-        <div class="card-body p-3 text-center">
-          <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center"
-               style="width: 40px; height: 40px; background: #e8f8f0;">
-            <span class="fw-bold" style="color: #27ae60;">2</span>
-          </div>
-          <h6 class="fw-bold">Calculamos tus ventas</h6>
-          <small class="text-muted">Al cierre de tu mes, sumamos tus ventas y determinamos tu tramo.</small>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-        <div class="card-body p-3 text-center">
-          <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center"
-               style="width: 40px; height: 40px; background: #fef5ec;">
-            <span class="fw-bold" style="color: #e67e22;">3</span>
-          </div>
-          <h6 class="fw-bold">Te cobramos justo</h6>
-          <small class="text-muted">Pagas según lo que vendiste. Si vendes poco, pagas poco. Así de simple.</small>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Back -->
-  <div class="text-center">
-    <button pButton label="Volver" icon="pi pi-arrow-left" class="p-button-text" routerLink="/welcome"></button>
+      <div class="calculator-actions">
+        <div class="price-note">
+          <i class="pi pi-shield" aria-hidden="true"></i>
+          <span>Todos los planes pagos incluyen la plataforma completa.</span>
+        </div>
+
+        <button *ngIf="!selectedTier.custom" type="button" class="primary-action" (click)="activarPlan()" [disabled]="billingActionDisabled">
+          {{ primaryBillingActionLabel }}
+          <i class="pi pi-arrow-right" aria-hidden="true"></i>
+        </button>
+        <button *ngIf="selectedTier.custom" type="button" class="primary-action" (click)="contactarVentas()">
+          Hablar con ventas
+          <i class="pi pi-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <p class="calculator-footnote">
+        Precios en USD. La conversión a COP usa la TRM vigente. El tramo se calcula sobre las ventas mensuales procesadas.
+      </p>
+    </article>
+
+    <aside class="free-card" [class.current]="currentPlan === 'freemium'">
+      <div class="current-badge" *ngIf="currentPlan === 'freemium'">Tu plan actual</div>
+      <span class="eyebrow">Empieza sin tarjeta</span>
+      <div class="free-title-row">
+        <div>
+          <h2>Gratis</h2>
+          <p>Para validar tu operación</p>
+        </div>
+        <strong>$0</strong>
+      </div>
+
+      <span class="free-includes">Lo que incluye tu plan Gratis</span>
+
+      <ul class="free-feature-list">
+        <li *ngFor="let feature of freeFeatures" [class.locked]="!feature.enabled">
+          <i [class]="feature.enabled ? 'pi pi-check' : 'pi pi-lock'" aria-hidden="true"></i>
+          <span>{{ feature.text }}</span>
+        </li>
+      </ul>
+
+      <button type="button" class="secondary-action" (click)="activarPlan()" [disabled]="billingActionDisabled">
+        {{ hasOutstandingManualInvoice ? 'Pagar cuenta pendiente' : 'Desbloquear Katuq' }}
+        <i class="pi pi-bolt" aria-hidden="true"></i>
+      </button>
+      <p class="payment-safety"><i class="pi pi-lock" aria-hidden="true"></i> Premium solo se activa cuando Wompi aprueba el pago.</p>
+    </aside>
+  </section>
+
+  <section class="billing-receipt" *ngIf="lastInvoice as invoice" aria-labelledby="billing-receipt-title">
+    <div class="receipt-icon"><i class="pi pi-receipt" aria-hidden="true"></i></div>
+    <div class="receipt-main">
+      <span class="eyebrow">Último comprobante</span>
+      <h2 id="billing-receipt-title">Tu cobro de suscripción</h2>
+      <p>
+        Referencia <strong>{{ invoice.id }}</strong>
+        <ng-container *ngIf="invoiceDate(invoice) as issuedAt"> · {{ issuedAt | date:'d MMM y, h:mm a' }}</ng-container>
+      </p>
+    </div>
+    <div class="receipt-detail">
+      <span [class]="'receipt-status status-' + invoice.status">{{ invoiceStatusLabel(invoice.status) }}</span>
+      <strong>{{ invoice.amountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      <small *ngIf="invoice.testMode || invoice.simulation">Simulación Wompi Sandbox · sin dinero real</small>
+      <small *ngIf="(invoice.status === 'pending_manual' || invoice.status === 'overdue') && invoiceGraceDeadline(invoice) as graceDeadline">
+        {{ invoice.status === 'overdue' ? 'Venció el' : 'Paga antes del' }} {{ graceDeadline | date:'d MMM y, h:mm a' }}
+      </small>
+      <small *ngIf="currentSubscription?.nextBillingDate && invoice.status === 'paid'">
+        Próximo cobro: {{ currentSubscription.nextBillingDate | date:'d MMM y' }}
+      </small>
+      <small *ngIf="invoice.manualReconciliationRequired" class="receipt-reconciliation">
+        Estamos confirmando este pago con Wompi. No vuelvas a pagarlo.
+      </small>
+    </div>
+    <div class="receipt-actions">
+      <a *ngIf="invoice.paymentLink && !invoice.manualReconciliationRequired && invoice.manualPaymentLinkActive !== false && (invoice.status === 'pending_manual' || invoice.status === 'overdue')" class="receipt-pay"
+         [href]="invoice.paymentLink" target="_blank" rel="noopener noreferrer">
+        <i class="pi pi-credit-card" aria-hidden="true"></i>
+        {{ invoice.status === 'overdue' ? 'Reactivar Premium' : 'Pagar ahora' }}
+      </a>
+      <button type="button" class="receipt-refresh" (click)="refreshBillingState()" [disabled]="billingLoading">
+        <i class="pi" [class.pi-spin]="billingLoading" [class.pi-spinner]="billingLoading" [class.pi-refresh]="!billingLoading"></i>
+        Actualizar
+      </button>
+    </div>
+  </section>
+
+  <section *ngIf="canManageBillingPeriod" id="billing-period-settings"
+           class="billing-period-settings" aria-labelledby="billing-period-title">
+    <div class="period-settings-copy">
+      <span class="eyebrow">Periodicidad</span>
+      <h2 id="billing-period-title">¿Mensual o anual?</h2>
+      <p>Tu período actual es <strong>{{ currentBillingPeriodLabel }}</strong>. El cambio se aplica en el próximo cobro; guardar aquí no genera un cargo inmediato.</p>
+      <p>{{ billingModeSummary }}</p>
+      <p *ngIf="currentSubscription?.pendingBillingPeriod" class="period-pending">
+        <i class="pi pi-clock"></i>
+        Cambio programado a {{ currentSubscription.pendingBillingPeriod === 'yearly' ? 'Anual' : 'Mensual' }}
+        para el {{ currentSubscription.billingPeriodChangeEffectiveAt || currentSubscription.nextBillingDate | date:'d MMM y' }}.
+      </p>
+    </div>
+
+    <div class="period-options" role="group" aria-label="Cambiar periodicidad de facturación">
+      <button type="button" [class.active]="billingPeriodChoice === 'monthly'"
+              (click)="chooseBillingPeriod('monthly')" [disabled]="billingPeriodSaving">
+        <span>Mensual</span>
+        <strong>{{ billingMonthlyUSD | currency:'USD':'symbol':'1.0-0' }} USD</strong>
+        <small>{{ billingInfo?.billingMode === 'manual' ? 'Una cuenta de cobro cada mes' : 'Un cobro cada mes' }}</small>
+      </button>
+      <button type="button" [class.active]="billingPeriodChoice === 'yearly'"
+              (click)="chooseBillingPeriod('yearly')" [disabled]="billingPeriodSaving">
+        <span>Anual <em>20% menos</em></span>
+        <strong>{{ annualAmountUSD | currency:'USD':'symbol':'1.0-2' }} USD</strong>
+        <small>{{ billingInfo?.billingMode === 'manual' ? 'Una cuenta de cobro cada 12 meses' : 'Un cobro cada 12 meses' }}</small>
+      </button>
+    </div>
+
+    <div class="period-summary">
+      <span>Próximo esquema</span>
+      <strong>{{ billingPeriodChoiceLabel }}</strong>
+      <small>Aproximadamente {{ selectedPeriodAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} COP con la TRM actual.</small>
+      <button type="button" class="primary-action" (click)="saveBillingPeriod()"
+              [disabled]="billingPeriodSaving || (billingPeriodChoice === (currentSubscription?.billingPeriod || 'monthly') && !currentSubscription?.pendingBillingPeriod)">
+        <i class="pi" [class.pi-spin]="billingPeriodSaving" [class.pi-spinner]="billingPeriodSaving" [class.pi-calendar]="!billingPeriodSaving"></i>
+        Guardar para el próximo cobro
+      </button>
+      <small *ngIf="billingPeriodMessage" class="period-success">{{ billingPeriodMessage }}</small>
+      <small *ngIf="billingPeriodError" class="period-error">{{ billingPeriodError }}</small>
+    </div>
+  </section>
+
+  <section class="tier-reference" aria-labelledby="tier-reference-title">
+    <div class="section-heading">
+      <div>
+        <span class="eyebrow">Referencia de rangos</span>
+        <h2 id="tier-reference-title">Un solo plan pago, una tarifa justa</h2>
+        <p>No pierdes funcionalidades al cambiar de tramo: solo cambia el precio según tus ventas.</p>
+      </div>
+      <a [href]="publicPricingUrl" target="_blank" rel="noopener noreferrer">
+        Ver precios públicos <i class="pi pi-external-link" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <div class="tier-grid">
+      <button
+        type="button"
+        class="tier-card"
+        *ngFor="let tier of tiers; let index = index"
+        [class.selected]="selectedTierIndex === index"
+        [class.current]="isCurrentTier(tier.id)"
+        (click)="selectTier(index)">
+        <span class="tier-index">{{ index + 1 }}</span>
+        <span class="tier-current" *ngIf="isCurrentTier(tier.id)">Tu tramo</span>
+        <i class="pi {{ tier.icon }}" aria-hidden="true"></i>
+        <strong>{{ tier.name }}</strong>
+        <span class="tier-limit">{{ tierSalesLabel(tier) }}</span>
+        <span class="tier-price">{{ tierPrice(tier) }}</span>
+        <small>{{ tierCurrencyLabel(tier) }}</small>
+      </button>
+    </div>
+  </section>
+
+  <section class="included-section" aria-labelledby="included-title">
+    <div class="section-heading compact">
+      <div>
+        <span class="eyebrow">Acceso total</span>
+        <h2 id="included-title">Todo incluido desde el primer día</h2>
+        <p>Sin módulos ocultos ni cobros por cada herramienta que actives.</p>
+      </div>
+    </div>
+
+    <div class="feature-grid">
+      <article class="feature-card" *ngFor="let feature of paidFeatures">
+        <div class="feature-icon"><i class="pi {{ feature.icon }}" aria-hidden="true"></i></div>
+        <div>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.text }}</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="steps-section" aria-labelledby="steps-title">
+    <div class="section-heading compact">
+      <div>
+        <span class="eyebrow">Así de simple</span>
+        <h2 id="steps-title">Katuq se ajusta a tu negocio</h2>
+      </div>
+    </div>
+
+    <div class="steps-grid">
+      <article>
+        <span>1</span>
+        <div><h3>Vendes normalmente</h3><p>Opera con toda la plataforma y sin contar usuarios o pedidos.</p></div>
+      </article>
+      <article>
+        <span>2</span>
+        <div><h3>Calculamos tus ventas</h3><p>Al cierre del ciclo identificamos automáticamente tu rango.</p></div>
+      </article>
+      <article>
+        <span>3</span>
+        <div><h3>Pagas lo justo</h3><p>Tu tarifa corresponde al volumen que realmente procesaste.</p></div>
+      </article>
+    </div>
+  </section>
+
+  <div class="page-actions">
+    <button type="button" class="back-action" routerLink="/welcome"><i class="pi pi-arrow-left"></i> Volver</button>
+    <button type="button" class="primary-action" (click)="activarPlan()" [disabled]="billingActionDisabled">{{ primaryBillingActionLabel }} <i class="pi pi-arrow-right"></i></button>
   </div>
 </div>
 
-<!-- Modal de upgrade -->
 <app-upgrade-modal [(visible)]="showUpgradeModal"></app-upgrade-modal>

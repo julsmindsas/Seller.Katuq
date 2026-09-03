@@ -16,6 +16,8 @@ export class TiposClienteComponent implements OnInit {
   cargando = false;
   rows = [];
   temp = [];
+  /** id -> true mientras viaja el cambio de estado, para no dispararlo dos veces. */
+  guardandoActivo: { [id: string]: boolean } = {};
   ColumnMode = ColumnMode;
   isMobile = false;
 
@@ -73,10 +75,64 @@ export class TiposClienteComponent implements OnInit {
     }).catch(() => {});
   }
 
+  /**
+   * Prende/apaga el tipo desde el listado, sin abrir el modal.
+   *
+   * Es la salida para quien NO quiere borrar: un tipo apagado deja de ofrecerse
+   * al crear clientes y de contar como precio base, pero los precios que los
+   * productos tienen cargados a su nombre quedan intactos y vuelven al
+   * prenderlo. La papelera, en cambio, borra.
+   *
+   * Se manda solo `{ id, active }` a propósito: `/edit` hace un update parcial,
+   * así que reenviar nombre/descripción/esPrecioBase solo abriría la puerta a
+   * pisar con datos viejos de la fila lo que alguien más haya cambiado.
+   */
+  toggleActivo(row: any) {
+    const nuevoEstado = row.active === false;
+
+    // Optimista: la fila ya se pintó con el clic del usuario. Si el backend
+    // falla se revierte abajo, y como `[checked]` está ligado a `row.active`,
+    // el cambio de valor devuelve el interruptor a su lugar.
+    row.active = nuevoEstado;
+    this.guardandoActivo[row.id] = true;
+
+    this.service.editTipoCliente({ id: row.id, active: nuevoEstado }).subscribe({
+      next: () => {
+        this.guardandoActivo[row.id] = false;
+        Swal.fire({
+          icon: 'success',
+          title: nuevoEstado ? 'Tipo de cliente activado' : 'Tipo de cliente desactivado',
+          text: nuevoEstado
+            ? 'Vuelve a estar disponible al crear clientes.'
+            : 'Ya no se ofrece al crear clientes. Sus precios quedan guardados.',
+          toast: true,
+          position: 'top-end',
+          timer: 2600,
+          showConfirmButton: false
+        });
+      },
+      error: (error) => {
+        console.error('Error cambiando el estado:', error);
+        row.active = !nuevoEstado;
+        this.guardandoActivo[row.id] = false;
+        Swal.fire('Error', error?.error?.error || 'No se pudo cambiar el estado del tipo de cliente', 'error');
+      }
+    });
+  }
+
   deleteTipoCliente(row: any) {
+    // Eliminar borra el tipo. Para quitarlo de circulación sin perder los
+    // precios que los productos tienen cargados a su nombre está el interruptor
+    // de la columna Activo, que es reversible — por eso se ofrece acá.
+    const avisoPrecioBase = row?.esPrecioBase
+      ? '<br><br><b>Además define el precio base de la empresa</b>, así que los productos se quedan sin lista base hasta que marques otra.'
+      : '';
+
     Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta acción no se puede deshacer',
+      title: `¿Eliminar "${row?.nombre || 'este tipo de cliente'}"?`,
+      html: 'Se pierden los precios que los productos tengan cargados para este tipo y no se puede deshacer.' +
+            avisoPrecioBase +
+            '<br><br>Si solo quieres dejar de usarlo y conservar sus precios, cancela y apaga el interruptor de la columna <b>Activo</b>.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
@@ -90,7 +146,7 @@ export class TiposClienteComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error eliminando:', error);
-            Swal.fire('Error', 'No se pudo eliminar el tipo de cliente', 'error');
+            Swal.fire('Error', error?.error?.error || 'No se pudo eliminar el tipo de cliente', 'error');
           }
         });
       }

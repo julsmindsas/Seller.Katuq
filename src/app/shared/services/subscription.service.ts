@@ -128,6 +128,11 @@ export class SubscriptionService {
     );
   }
 
+  /** Resumen de ventas, tramo y precios oficiales para la empresa activa. */
+  getBillingInfo(): Observable<any> {
+    return this.http.get<any>(`${environment.urlApi}/v1/billing/info`);
+  }
+
   /**
    * Verificar si puede usar una feature
    */
@@ -225,7 +230,23 @@ export class SubscriptionService {
   }
 
   /** Consultar el primer pago mientras el webhook confirma la activación. */
-  getPaymentStatus(subscriptionId: string): Observable<{
+  getPaymentStatus(subscriptionId: string, transactionId?: string): Observable<{
+    success: boolean;
+    status: string;
+    paymentStatus: string;
+    activated: boolean;
+    plan: 'freemium' | 'premium';
+  }> {
+    const query = transactionId
+      ? `?transactionId=${encodeURIComponent(transactionId)}`
+      : '';
+    return this.http.get<any>(
+      `${this.baseUrl}/payment-status/${encodeURIComponent(subscriptionId)}${query}`
+    );
+  }
+
+  /** Callback público mínimo: Wompi aporta el transaction id en el redirect. */
+  getPublicPaymentStatus(subscriptionId: string, transactionId: string): Observable<{
     success: boolean;
     status: string;
     paymentStatus: string;
@@ -233,7 +254,93 @@ export class SubscriptionService {
     plan: 'freemium' | 'premium';
   }> {
     return this.http.get<any>(
-      `${this.baseUrl}/payment-status/${encodeURIComponent(subscriptionId)}`
+      `${this.baseUrl}/payment-status-public/${encodeURIComponent(subscriptionId)}` +
+      `?transactionId=${encodeURIComponent(transactionId)}`
+    );
+  }
+
+  getPaymentConfig(billingPeriod: 'monthly' | 'yearly' = 'monthly'): Observable<{
+    success: boolean;
+    environment: 'sandbox' | 'production';
+    apiUrl: string;
+    publicKey: string;
+    testAmountCOP: number | null;
+    testCharge: boolean;
+    initialAmountCOP: number;
+    quoteId: string;
+    quoteExpiresAt: string;
+    trm: number | null;
+    quoteSource: string;
+    billingPeriod: 'monthly' | 'yearly';
+    annualDiscountPercent: number;
+    currency: 'COP';
+    tier: string;
+    tierName: string;
+    priceUSD: number;
+    tokenizationPublicKey: string;
+  }> {
+    return this.http.get<{
+      success: boolean;
+      environment: 'sandbox' | 'production';
+      apiUrl: string;
+      publicKey: string;
+      testAmountCOP: number | null;
+      testCharge: boolean;
+      initialAmountCOP: number;
+      quoteId: string;
+      quoteExpiresAt: string;
+      trm: number | null;
+      quoteSource: string;
+      billingPeriod: 'monthly' | 'yearly';
+      annualDiscountPercent: number;
+      currency: 'COP';
+      tier: string;
+      tierName: string;
+      priceUSD: number;
+      tokenizationPublicKey: string;
+    }>(`${this.baseUrl}/payment-config?billingPeriod=${billingPeriod}`);
+  }
+
+  /** Consultar términos públicos del comercio directamente en Wompi. */
+  getWompiMerchant(apiUrl: string, publicKey: string): Observable<any> {
+    return this.http.get<any>(
+      `${apiUrl}/merchants/${encodeURIComponent(publicKey)}`
+    );
+  }
+
+  /** Enviar únicamente el JWE cifrado; Katuq nunca recibe número, fecha ni CVC. */
+  tokenizeWompiEncryptedCard(
+    apiUrl: string,
+    publicKey: string,
+    encryptedPayload: string
+  ): Observable<any> {
+    return this.http.post<any>(
+      `${apiUrl}/tokens/cards`,
+      { payload: encryptedPayload },
+      { headers: { Authorization: `Bearer ${publicKey}` } }
+    );
+  }
+
+  /** Crear la fuente recurrente y solicitar el primer cobro desde el backend. */
+  createRecurringPaymentSource(payload: {
+    token: string;
+    acceptanceToken: string | null;
+    personalAuthToken: string | null;
+    cardBrand?: string;
+    cardLastFour?: string;
+    receiptEmail: string;
+    billingPeriod: 'monthly' | 'yearly';
+    quoteId: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/create-payment-source`, payload);
+  }
+
+  /** Programa mensual↔anual para el siguiente cobro; nunca cobra al guardar. */
+  updateBillingPeriod(billingPeriod: 'monthly' | 'yearly'): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/billing-period`, { billingPeriod }).pipe(
+      tap(response => {
+        if (response?.success) this.loadSubscriptionStatus().subscribe();
+      })
     );
   }
 

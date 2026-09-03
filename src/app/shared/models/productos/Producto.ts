@@ -19,6 +19,12 @@ export interface PrecioPorTipoCliente {
   valorIva: number;
   precioConIva: number;
   activo: boolean;
+  /**
+   * Solo para mostrar: la descripción del tipo de cliente, resuelta desde el
+   * catálogo al pintar. NO se guarda en el producto — las descripciones son
+   * párrafos largos y no caben en una tabla; van al tooltip.
+   */
+  tipoClienteDescripcion?: string;
 }
 
 /**

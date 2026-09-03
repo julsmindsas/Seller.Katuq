@@ -6,6 +6,7 @@ import { CatalogoSharedModule } from "../ventas/catalogo/catalogo-shared.module"
 import { ClientesSharedModule } from "../ventas/clientes/clientes-shared.module";
 import { CotizacionesRoutingModule } from "./cotizaciones-routing.module";
 import { LinkifyModule } from "../../shared/pipes/linkify.module";
+import { ImagenProductoPipe } from "../../shared/pipes/imagen-producto.pipe";
 
 import { CotizacionesListaComponent } from "./cotizaciones-lista/cotizaciones-lista.component";
 import { CotizacionEditorComponent } from "./cotizacion-editor/cotizacion-editor.component";
@@ -21,6 +22,7 @@ import { CotizacionEditorComponent } from "./cotizacion-editor/cotizacion-editor
     ClientesSharedModule,
     CotizacionesRoutingModule,
     LinkifyModule,
+    ImagenProductoPipe,
   ],
 })
 export class CotizacionesModule {}

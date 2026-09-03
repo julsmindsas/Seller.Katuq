@@ -1,10 +1,12 @@
-import { Component, HostListener, OnInit } from "@angular/core";
+import { Component, ElementRef, HostListener, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { ToastrService } from "ngx-toastr";
+import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { ContenidoSitio, Sitio, SitiosService, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, Sitio, SitiosService, VentaConfig } from "../sitios.service";
+import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
@@ -55,6 +57,18 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     icono: "M4 5h5v14H4zM15 5h5v14h-5z",
   },
   {
+    tipo: "popup",
+    nombre: "Popup de bienvenida",
+    descripcion: "Una ventana al entrar: foto, titular y botón. Sale una vez por día",
+    icono: "M4 4h16v16H4zM8 9h8M8 13h5",
+  },
+  {
+    tipo: "banner",
+    nombre: "Banners",
+    descripcion: "Tus imágenes a lo ancho; con varias, rotan solas con flechas",
+    icono: "M2 6h20v12H2zM6 12h.01M18 12h.01",
+  },
+  {
     tipo: "imagen",
     nombre: "Una imagen",
     descripcion: "Una foto sola, a lo ancho si quieres",
@@ -101,6 +115,12 @@ const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; ico
     nombre: "Catálogo completo",
     descripcion: "Todo lo que vendes, con buscador y categorías",
     icono: "M4 6h16M4 12h16M4 18h10M20 16l2 2-2 2",
+  },
+  {
+    tipo: "buscador",
+    nombre: "Busca tu detalle",
+    descripcion: "Categoría, ocasión y presupuesto: lleva al catálogo ya filtrado",
+    icono: "M10 4a6 6 0 1 0 3.9 10.6l4.8 4.8 1.4-1.4-4.8-4.8A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z",
   },
   {
     tipo: "categorias",
@@ -199,6 +219,7 @@ const ESTILOS_PAGINA: { id: string; nombre: string; pista: string }[] = [
   { id: "boutique", nombre: "Boutique", pista: "Filetes finos, versalitas, aire de sobra" },
   { id: "minimal", nombre: "Minimal", pista: "Nada sobra, medidas contenidas" },
   { id: "audaz", nombre: "Audaz", pista: "Redondo, con sombra y titulares pesados" },
+  { id: "tienda", nombre: "Tienda de regalos", pista: "Barras de color, títulos en franja, tarjetas y pie oscuro" },
 ];
 
 /**
@@ -212,6 +233,8 @@ const TIPOGRAFIAS: { id: string; nombre: string; pista: string; familia: string;
   { id: "fraunces", nombre: "Fraunces", pista: "Serif con personalidad", familia: '"Fraunces", Georgia, serif', grupo: "titulo" },
   { id: "dmserif", nombre: "DM Serif", pista: "Contundente y clásica", familia: '"DM Serif Display", Georgia, serif', grupo: "titulo" },
   { id: "syne", nombre: "Syne", pista: "Moderna y distinta", familia: '"Syne", system-ui, sans-serif', grupo: "titulo" },
+  { id: "oswald", nombre: "Oswald", pista: "Condensada, de tienda", familia: '"Oswald", "Arial Narrow", sans-serif', grupo: "titulo" },
+  { id: "dancing", nombre: "Dancing Script", pista: "Manuscrita y cálida", familia: '"Dancing Script", "Brush Script MT", cursive', grupo: "titulo" },
   // Neutras — cómodas para leer párrafos largos.
   { id: "jakarta", nombre: "Jakarta", pista: "Redonda y cercana", familia: '"Plus Jakarta Sans", system-ui, sans-serif', grupo: "cuerpo" },
   { id: "outfit", nombre: "Outfit", pista: "Geométrica y limpia", familia: '"Outfit", system-ui, sans-serif', grupo: "cuerpo" },
@@ -274,6 +297,14 @@ const SECCIONES_LISTAS: {
       velo: 45,
       imagen: "",
     },
+  },
+  {
+    id: "banners-rotan",
+    nombre: "Banners que rotan",
+    pista: "Sube tus promociones a lo ancho",
+    grupo: "Para empezar",
+    tipo: "banner",
+    datos: { banners: [], alto: "medio", rotar: true, completo: true },
   },
   {
     id: "portada-simple",
@@ -339,6 +370,22 @@ const SECCIONES_LISTAS: {
     grupo: "Vender",
     tipo: "productos",
     datos: { titulo: "Lo más pedido", productoIds: [], permitirCompra: false },
+  },
+  {
+    id: "popup-bienvenida",
+    nombre: "Popup de bienvenida",
+    pista: "Una promoción al entrar, una vez por día",
+    grupo: "Vender",
+    tipo: "popup",
+    datos: { imagen: "", titulo: "Hay personas que merecen sentirse inolvidables", texto: "Cada cumpleaños, aniversario o \"te quiero\" merece un detalle pensado para emocionar.", ctaTexto: "Descubrir regalos", ctaUrl: "/?catalogo=1", frecuencia: "dia", demora: 8, hasta: "" },
+  },
+  {
+    id: "busca-tu-detalle",
+    nombre: "Busca tu detalle",
+    pista: "Categoría, ocasión y presupuesto",
+    grupo: "Vender",
+    tipo: "buscador",
+    datos: { titulo: "Busca tu detalle", mostrarCategoria: true, mostrarOcasion: true, mostrarPrecio: true, mostrarPalabra: true, textoBoton: "Buscar" },
   },
   {
     id: "catalogo-completo",
@@ -472,10 +519,13 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   },
   seccion: { titulo: "", columnas: 1 },
   imagen: { url: "", alt: "", enlace: "", tamano: "normal" },
+  banner: { banners: [], alto: "medio", rotar: true, completo: true },
+  popup: { imagen: "", titulo: "Hay personas que merecen sentirse inolvidables", texto: "Cada cumpleaños, aniversario o \"te quiero\" merece un detalle pensado para emocionar.", ctaTexto: "Descubrir regalos", ctaUrl: "/?catalogo=1", frecuencia: "dia", demora: 8, hasta: "" },
   botones: { botones: [{ etiqueta: "Comprar", url: "#productos", estilo: "principal" }] },
   separador: { linea: false, alto: "medio" },
-  productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false },
-  whatsapp: { telefono: "", mensaje: "Hola, quiero más información", etiqueta: "Escríbenos por WhatsApp" },
+  productos: { titulo: "Productos destacados", productoIds: [], permitirCompra: false, carrusel: false },
+  whatsapp: { telefono: "", mensaje: "Hola, quiero más información", etiqueta: "Escríbenos por WhatsApp", flotante: false },
+  buscador: { titulo: "Busca tu detalle", mostrarCategoria: true, mostrarOcasion: true, mostrarPrecio: true, mostrarPalabra: true, textoBoton: "Buscar" },
   formulario: {
     titulo: "Déjanos tus datos",
     descripcion: "",
@@ -515,7 +565,7 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   templateUrl: "./sitio-editor.component.html",
   styleUrls: ["./sitio-editor.component.scss"],
 })
-export class SitioEditorComponent implements OnInit {
+export class SitioEditorComponent implements OnInit, OnDestroy {
   cargando = true;
   guardando = false;
   publicando = false;
@@ -553,10 +603,21 @@ export class SitioEditorComponent implements OnInit {
   catalogoBloques = CATALOGO_BLOQUES;
 
   /** Hay cambios sin guardar. Se usa para avisar antes de publicar. */
+  /**
+   * "Cambios sin guardar" se decide por DIFERENCIA REAL contra lo último
+   * cargado o guardado, no por haber tocado algo: seleccionar una sección en
+   * la previa, abrir un panel o deshacer hasta el punto guardado no ensucia.
+   */
   sucio = false;
+  private firmaGuardada = "";
+  /** Escala de la previa "Computador": 1280 px reales encogidos a lo que quepa. */
+  escalaPrevia = 1;
+  private observadorLienzo: ResizeObserver | null = null;
 
   /** Bloques con los productos ya resueltos, solo para la vista previa. */
   bloquesPrevia: BloqueSitio[] = [];
+  /** Categorías reales de la empresa: la previa las pinta y el panel las ofrece. */
+  categorias: CategoriaSitio[] = [];
   private productosPrevia = new Map<string, any>();
 
   // Campos de ajustes
@@ -585,11 +646,15 @@ export class SitioEditorComponent implements OnInit {
     private router: Router,
     private service: SitiosService,
     private bodegaService: BodegaService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private host: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit(): void {
     this.id = this.route.snapshot.paramMap.get("id") || "";
+    // El editor ocupa la pantalla entera: sin menú ni cabecera del panel, la
+    // previa "Computador" cabe de verdad y hay un solo scroll por columna.
+    document.body.classList.add("kq-editor-lleno");
     if (!this.id) {
       this.cargando = false;
       this.error = "No encontramos esta página.";
@@ -630,6 +695,12 @@ export class SitioEditorComponent implements OnInit {
         this.resolverProductosDePrevia();
         this.cargarMarca();
         this.iniciarHistorial();
+        this.fijarComoGuardado();
+        setTimeout(() => this.observarLienzo());
+        this.service.categorias(this.id).subscribe({
+          next: (r) => { this.categorias = (r && r.success && r.data) || []; },
+          error: () => { this.categorias = []; },
+        });
       },
       error: () => {
         this.cargando = false;
@@ -960,6 +1031,7 @@ export class SitioEditorComponent implements OnInit {
 
   seleccionar(indice: number): void {
     this.seleccionado = indice;
+    this.subirPanel();
     this.panel = "bloques";
     // El aviso es de la maqueta que se acaba de elegir, no del bloque: al
     // cambiar de sección deja de venir a cuento.
@@ -1060,8 +1132,23 @@ export class SitioEditorComponent implements OnInit {
    * campo visual.
    */
   seleccionarDesdePrevia(bloqueId: string): void {
+    this.panel = "bloques";
     this.seleccionarPorId(bloqueId);
-    this.llevarPanelA(".propiedades");
+    this.subirPanel();
+  }
+
+  /** Vuelve de la sección a la lista. */
+  cerrarSeccion(): void {
+    this.seleccionado = -1;
+    this.subirPanel();
+  }
+
+  /** Con drill-in, entrar o salir de una sección empieza arriba del panel. */
+  private subirPanel(): void {
+    setTimeout(() => {
+      const p = this.host.nativeElement.querySelector(".panel__contenido");
+      if (p) p.scrollTop = 0;
+    });
   }
 
   /**
@@ -1249,6 +1336,19 @@ export class SitioEditorComponent implements OnInit {
 
   quitarFotoCarrusel(bloque: any, i: number): void {
     bloque.datos.imagenes.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  quitarBanner(bloque: any, i: number): void {
+    bloque.datos.banners.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  moverBanner(bloque: any, i: number, delta: number): void {
+    const lista = bloque.datos.banners || [];
+    const j = i + delta;
+    if (j < 0 || j >= lista.length) return;
+    [lista[i], lista[j]] = [lista[j], lista[i]];
     this.marcarSucio();
   }
 
@@ -2274,6 +2374,8 @@ export class SitioEditorComponent implements OnInit {
       | "heroCarrusel"
       | "heroMosaico"
       | "instagram"
+      | "banner"
+      | "popup"
   ): void {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
@@ -2288,6 +2390,15 @@ export class SitioEditorComponent implements OnInit {
           this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
           return;
         }
+        // La portada y los banners se muestran a lo ancho de la pantalla: una
+        // foto pequeña se agranda y sale borrosa en un computador.
+        if ((destino === "hero" || destino === "heroCarrusel" || destino === "banner") && Number(res.ancho) > 0 && Number(res.ancho) < 1600) {
+          this.toastr.warning(
+            `Esta foto mide ${res.ancho} px de ancho. Para portada o banner conviene una de 1600 px o más: así no se ve borrosa en pantallas grandes.`,
+            "Foto pequeña para la portada",
+            { timeOut: 9000, closeButton: true }
+          );
+        }
         if (destino === "seo" && this.contenido) {
           this.contenido.seo.imagen = res.url;
         } else {
@@ -2301,6 +2412,8 @@ export class SitioEditorComponent implements OnInit {
           if (destino === "heroCarrusel") b.datos.imagenes = [...(b.datos.imagenes || []), res.url];
           if (destino === "heroMosaico") b.datos.mosaico = [...(b.datos.mosaico || []), res.url];
           if (destino === "instagram") b.datos.fotos = [...(b.datos.fotos || []), res.url];
+          if (destino === "banner") b.datos.banners = [...(b.datos.banners || []), { url: res.url, enlace: "", alt: "" }];
+          if (destino === "popup") b.datos.imagen = res.url;
           if (destino === "fondoSeccion") {
             const estilo = this.estiloDe(b);
             estilo.fondoImagen = res.url;
@@ -2325,10 +2438,96 @@ export class SitioEditorComponent implements OnInit {
    * Cualquier cambio del editor pasa por aquí: marca que hay trabajo sin
    * guardar y refresca lo que ve la vista previa.
    */
+  /** Las que sí salen en el sitio (para la previa). */
+  get categoriasVisibles(): CategoriaSitio[] {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    const ocultas = new Set(((t && t.categoriasOcultas) || []).map((c: string) => String(c).toLowerCase()));
+    return this.categorias.filter((c) => !ocultas.has(String(c.nombre).toLowerCase()));
+  }
+
+  categoriaOculta(nombre: string): boolean {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    return ((t && t.categoriasOcultas) || []).some((c: string) => String(c).toLowerCase() === String(nombre).toLowerCase());
+  }
+
+  alternarCategoriaOculta(nombre: string): void {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    if (!t) return;
+    const lista: string[] = Array.isArray(t.categoriasOcultas) ? t.categoriasOcultas : [];
+    t.categoriasOcultas = this.categoriaOculta(nombre)
+      ? lista.filter((c) => String(c).toLowerCase() !== String(nombre).toLowerCase())
+      : [...lista, nombre].slice(0, 40);
+    this.marcarSucio();
+  }
+
+  /** Las muestras del panel Estilo se ven en su letra real, no en la de la interfaz. */
+  cargarMuestrasDeLetra(): void {
+    SitioRenderComponent.cargarTodasLasFuentes();
+  }
+
+  /** Frase de muestra con algo de la tienda: el titular de la portada o el nombre. */
+  fraseDeMuestra(): string {
+    const hero = this.bloques.find((b) => b.tipo === "hero");
+    const t = hero && hero.datos && String(hero.datos.titulo || "").trim();
+    return (t && t.length <= 40 ? t : "") || this.nombre || "Regalos que se sienten";
+  }
+
+  /** Categorías ocultas del sitio, como texto separado por coma para el campo. */
+  categoriasOcultasTexto(): string {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    return Array.isArray(t && t.categoriasOcultas) ? t.categoriasOcultas.join(", ") : "";
+  }
+
+  ponerCategoriasOcultas(texto: string): void {
+    const t: any = this.contenido && (this.contenido as any).tienda;
+    if (!t) return;
+    t.categoriasOcultas = String(texto || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean)
+      .slice(0, 40);
+    this.marcarSucio();
+  }
+
   marcarSucio(): void {
-    this.sucio = true;
+    this.recalcularSucio();
     this.recalcularPrevia();
     this.guardarEnHistorial();
+  }
+
+  private firmaActual(): string {
+    return JSON.stringify({ n: this.nombre, s: this.slug, d: this.dominioPropio, c: this.contenido });
+  }
+
+  private fijarComoGuardado(): void {
+    this.firmaGuardada = this.firmaActual();
+    this.sucio = false;
+  }
+
+  private recalcularSucio(): void {
+    this.sucio = this.firmaActual() !== this.firmaGuardada;
+  }
+
+  ngOnDestroy(): void {
+    document.body.classList.remove("kq-editor-lleno");
+    if (this.observadorLienzo) this.observadorLienzo.disconnect();
+  }
+
+  /**
+   * La previa "Computador" se dibuja a 1280 px reales (como la ve un
+   * comprador) y se encoge con `zoom` a lo que quepa en el lienzo: sin esto,
+   * a 900 px la cabecera se reacomodaba y las filas se cortaban.
+   */
+  private observarLienzo(): void {
+    const lienzo = this.host.nativeElement.querySelector(".previa__lienzo") as HTMLElement | null;
+    if (!lienzo || typeof ResizeObserver === "undefined") return;
+    const medir = () => {
+      const ancho = lienzo.clientWidth - 48;
+      this.escalaPrevia = ancho >= 1280 ? 1 : Math.max(0.4, Math.round((ancho / 1280) * 1000) / 1000);
+    };
+    medir();
+    this.observadorLienzo = new ResizeObserver(medir);
+    this.observadorLienzo.observe(lienzo);
   }
 
   // ── Deshacer y rehacer ─────────────────────────────────────────────────────
@@ -2402,7 +2601,7 @@ export class SitioEditorComponent implements OnInit {
     this.contenido = JSON.parse(foto);
     // El bloque que estaba seleccionado puede ya no existir.
     if (this.seleccionado >= this.bloques.length) this.seleccionado = -1;
-    this.sucio = true;
+    this.recalcularSucio();
     this.recalcularPrevia();
     this.restaurando = false;
   }
@@ -2413,6 +2612,11 @@ export class SitioEditorComponent implements OnInit {
    */
   @HostListener("document:keydown", ["$event"])
   atajos(evento: KeyboardEvent): void {
+    // Escape cierra lo que esté abierto encima del editor.
+    if (evento.key === "Escape") {
+      if (this.mostrandoAgregar) { this.mostrandoAgregar = false; evento.preventDefault(); return; }
+      if (this.seleccionado >= 0 && !(evento.target as HTMLElement)?.isContentEditable) { this.cerrarSeccion(); return; }
+    }
     if (!(evento.ctrlKey || evento.metaKey)) return;
 
     const destino = evento.target as HTMLElement;
@@ -2480,8 +2684,8 @@ export class SitioEditorComponent implements OnInit {
             this.toastr.error((res && res.message) || "No pudimos guardar.");
             return;
           }
-          this.sucio = false;
           this.aplicarLoGuardado(res.data);
+          this.fijarComoGuardado();
           if (res.avisos) this.toastr.info(res.avisos);
           if (!alPublicar) this.toastr.success("Cambios guardados");
           if (alPublicar) this.publicarAhora();
@@ -2634,22 +2838,28 @@ export class SitioEditorComponent implements OnInit {
     window.open(this.enlacePublico, "_blank");
   }
 
-  /**
-   * Aviso del navegador al cerrar la pestaña o recargar con trabajo sin
-   * guardar. El editor ya sabía que había cambios pendientes, pero no lo decía
-   * en ningún lado: se cerraba la pestaña y se perdía la página a medio armar.
-   */
-  @HostListener("window:beforeunload", ["$event"])
-  avisarAntesDeCerrar(evento: BeforeUnloadEvent): void {
-    if (!this.sucio) return;
-    evento.preventDefault();
-    // Los navegadores muestran su propio texto; lo que importa es que el valor
-    // no sea vacío para que aparezca el diálogo.
-    evento.returnValue = "Tienes cambios sin guardar.";
-  }
+  // Sin el aviso nativo del navegador al cerrar la pestaña: el recuadro
+  // "¿Salir del sitio?" bloquea la pestaña entera y el editor ya avisa con
+  // SweetAlert al salir por "Mis páginas". Con "sucio" por diferencia real,
+  // además, ya no salta por solo haber tocado una sección.
 
   volver(): void {
-    if (this.sucio && !confirm("Tienes cambios sin guardar. ¿Salir y perderlos?")) return;
-    this.router.navigate(["/sitios"]);
+    if (!this.sucio) {
+      this.router.navigate(["/sitios"]);
+      return;
+    }
+    // SweetAlert, nunca el confirm() del navegador: el recuadro nativo bloquea
+    // la pestaña entera (y a cualquier herramienta que la esté manejando).
+    Swal.fire({
+      title: "Tienes cambios sin guardar",
+      text: "Si sales ahora se pierden. ¿Quieres salir de todas formas?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Salir sin guardar",
+      cancelButtonText: "Quedarme",
+      confirmButtonColor: "#b42318",
+    }).then((r) => {
+      if (r.isConfirmed) this.router.navigate(["/sitios"]);
+    });
   }
 }

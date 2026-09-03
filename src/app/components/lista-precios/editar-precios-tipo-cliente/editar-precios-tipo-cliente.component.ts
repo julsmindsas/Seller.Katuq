@@ -153,8 +153,15 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
     });
 
     if (tiposQueSePierden.length > 0) {
+      // El nombre se resuelve contra el catálogo y no se toma del producto: los
+      // datos ya guardados traen la DESCRIPCIÓN en `tipoClienteNombre` (un
+      // párrafo), que en este aviso tapaba el precio.
       const nombres = tiposQueSePierden
-        .map((p: PrecioPorTipoCliente) => `${p.tipoClienteNombre}: $${Number(p.precio).toLocaleString('es-CO')}`)
+        .map((p: PrecioPorTipoCliente) => {
+          const tipo = this.tiposCliente.find(t => t?.id === p.tipoClienteId);
+          const nombre = tipo?.nombre || tipo?.descripcion || p.tipoClienteNombre;
+          return `${nombre}: $${Number(p.precio).toLocaleString('es-CO')}`;
+        })
         .join('<br>');
       const { isConfirmed } = await Swal.fire({
         title: '¿Quitar estos precios?',
@@ -186,7 +193,7 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
       if (!tienePrecio) {
         preciosPorTipoCliente.push({
           tipoClienteId: tipo.id,
-          tipoClienteNombre: tipo.descripcion || tipo.nombre,
+          tipoClienteNombre: tipo.nombre || tipo.descripcion,
           precio: 0
         } as PrecioPorTipoCliente);
         return;
@@ -195,7 +202,7 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
       const valorIva = valor * (this.porcentajeIvaSeleccionado / 100);
       preciosPorTipoCliente.push({
         tipoClienteId: tipo.id,
-        tipoClienteNombre: tipo.descripcion || tipo.nombre,
+        tipoClienteNombre: tipo.nombre || tipo.descripcion,
         precio: valor, // Precio sin IVA
         porcentajeIva: this.porcentajeIvaSeleccionado,
         valorIva: Math.round(valorIva),

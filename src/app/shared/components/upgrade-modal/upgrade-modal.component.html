@@ -1,5 +1,6 @@
 <p-dialog
   [(visible)]="visible"
+  styleClass="upgrade-modal"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -16,7 +17,7 @@
           {{ step === 'info' ? 'Activar Plan Pago' : step === 'card' ? 'Medio de Pago' : step === 'pending' ? 'Verificando Pago' : 'Plan Activado' }}
         </h5>
         <small class="text-muted">
-          {{ step === 'info' ? 'Desbloquea todo, paga según tus ventas' : step === 'card' ? 'Primer cobro y facturación mensual' : step === 'pending' ? 'Premium se activa solo con pago aprobado' : '' }}
+          {{ step === 'info' ? 'Desbloquea todo, paga según tus ventas' : step === 'card' ? 'Primer cobro y facturación ' + billingPeriodLabel : step === 'pending' ? 'Premium se activa solo con pago aprobado' : '' }}
         </small>
       </div>
     </div>
@@ -24,10 +25,39 @@
 
   <!-- STEP 1: Info -->
   <div *ngIf="step === 'info'" class="p-3">
-    <div *ngIf="isLocalEnvironment" class="alert alert-info py-2 mb-3" style="font-size: 0.8rem;">
-      <i class="pi pi-wrench me-1"></i>
-      Prueba local: el cobro inicial será de <strong>{{ localTestAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>.
-      Este valor no aplica en producción.
+    <div *ngIf="configLoading" class="payment-notice payment-notice-loading mb-3">
+      <i class="pi pi-spin pi-spinner"></i>
+      Consultando el valor exacto antes de pagar…
+    </div>
+    <div class="billing-period-picker mb-3" role="group" aria-label="Periodicidad de facturación">
+      <button type="button" [class.active]="billingPeriod === 'monthly'"
+              (click)="selectBillingPeriod('monthly')" [disabled]="configLoading || loading">
+        <span>Mensual</span>
+        <small>Un cobro cada mes</small>
+      </button>
+      <button type="button" [class.active]="billingPeriod === 'yearly'"
+              (click)="selectBillingPeriod('yearly')" [disabled]="configLoading || loading">
+        <span>Anual <em>Ahorra 20%</em></span>
+        <small>Un cobro cada 12 meses</small>
+      </button>
+    </div>
+    <div *ngIf="paymentEnvironment === 'sandbox'" class="payment-notice payment-notice-sandbox mb-3">
+      <i class="pi pi-wrench"></i>
+      <div>
+        <strong>Prueba Wompi Sandbox</strong>
+        <span>Simularemos un cobro de {{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}. No mueve dinero real.</span>
+      </div>
+    </div>
+    <div *ngIf="paymentEnvironment === 'production'" class="payment-notice payment-notice-production mb-3">
+      <i class="pi pi-credit-card"></i>
+      <div>
+        <strong>{{ productionTestCharge ? 'Prueba real con Wompi' : 'Pago real con Wompi' }}</strong>
+        <span *ngIf="productionTestCharge">Se cobrarán realmente {{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} para validar el flujo. La próxima renovación {{ billingPeriodLabel }} usará el precio de tu tramo.</span>
+        <span *ngIf="!productionTestCharge">El primer cobro será de {{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}. Después se cobrará de forma {{ billingPeriodLabel }} según tu tramo.</span>
+      </div>
+    </div>
+    <div *ngIf="cardError" class="alert alert-danger py-2 mb-3" style="font-size: 0.8rem;">
+      <i class="pi pi-exclamation-circle me-1"></i>{{ cardError }}
     </div>
     <div class="mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
       <h6 class="fw-bold mb-3" style="color: #0f172a; font-size: 0.85rem;">
@@ -46,7 +76,7 @@
       <div class="d-flex align-items-start gap-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
               style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">3</span>
-        <small style="color: #334155;">Te cobramos según lo que vendiste. Desde $47 USD/mes.</small>
+        <small style="color: #334155;">Te cobramos según lo que vendiste. El plan anual aplica 20% de descuento sobre 12 mensualidades.</small>
       </div>
     </div>
 
@@ -59,8 +89,9 @@
         </tr>
       </thead>
       <tbody>
+        <tr><td>Base</td><td class="text-center">$15M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$27 USD</td></tr>
         <tr><td>Origen</td><td class="text-center">$30M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$47 USD</td></tr>
-        <tr style="background: #faf5ff;"><td>Esencia <span class="badge" style="background: #f3e8ff; color: #8b5cf6; font-size: 0.55rem;">Popular</span></td><td class="text-center">$60M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$77 USD</td></tr>
+        <tr><td>Esencia</td><td class="text-center">$60M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$77 USD</td></tr>
         <tr><td>Impulso</td><td class="text-center">$150M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$147 USD</td></tr>
         <tr><td>Expansión</td><td class="text-center">$300M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$247 USD</td></tr>
         <tr><td>Liderazgo</td><td class="text-center">$500M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$427 USD</td></tr>
@@ -74,49 +105,128 @@
 
   <!-- STEP 2: Card -->
   <div *ngIf="step === 'card'" class="p-3">
-    <div class="mb-3">
-      <label class="form-label fw-semibold" style="font-size: 0.85rem;">Número de tarjeta</label>
-      <input type="text" class="form-control" [(ngModel)]="cardNumber"
-             placeholder="4242 4242 4242 4242" maxlength="19" [disabled]="loading">
+    <div class="payment-summary mb-3" [class.payment-summary-real]="paymentEnvironment === 'production'">
+      <span>{{ paymentEnvironment === 'production' ? (productionTestCharge ? 'Prueba real ahora' : 'Cobro real ahora') : 'Cobro de prueba' }}</span>
+      <strong>{{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} COP</strong>
+      <small>Plan {{ tierName }} · {{ renewalLabel }}</small>
     </div>
-    <div class="row g-2 mb-3">
-      <div class="col-4">
-        <label class="form-label fw-semibold" style="font-size: 0.85rem;">Mes</label>
-        <input type="text" class="form-control" [(ngModel)]="cardExpMonth"
-               placeholder="MM" maxlength="2" [disabled]="loading">
-      </div>
-      <div class="col-4">
-        <label class="form-label fw-semibold" style="font-size: 0.85rem;">Año</label>
-        <input type="text" class="form-control" [(ngModel)]="cardExpYear"
-               placeholder="YY" maxlength="2" [disabled]="loading">
-      </div>
-      <div class="col-4">
-        <label class="form-label fw-semibold" style="font-size: 0.85rem;">CVC</label>
-        <input type="text" class="form-control" [(ngModel)]="cardCvc"
-               placeholder="123" maxlength="4" [disabled]="loading">
+
+    <div class="security-status mb-3"
+         [class.security-status-ready]="securityReady && termsReady"
+         [class.security-status-loading]="securityLoading || !termsReady">
+      <span class="security-icon">
+        <i [class]="securityReady && termsReady ? 'pi pi-shield' : 'pi pi-spin pi-spinner'"></i>
+      </span>
+      <div>
+        <strong>{{ securityReady && termsReady ? 'Cifrado seguro activo' : 'Preparando conexión segura…' }}</strong>
+        <small *ngIf="securityReady && termsReady">Tus datos se cifran en este navegador y viajan directamente a Wompi. Katuq solo recibe un token.</small>
+        <small *ngIf="!securityReady || !termsReady">Espera a que Wompi confirme el cifrado y las autorizaciones antes de escribir la tarjeta.</small>
       </div>
     </div>
-    <div class="mb-3">
-      <label class="form-label fw-semibold" style="font-size: 0.85rem;">Titular de la tarjeta</label>
-      <input type="text" class="form-control" [(ngModel)]="cardHolder"
-             placeholder="NOMBRE COMO APARECE EN LA TARJETA" [disabled]="loading"
-             style="text-transform: uppercase;">
+
+    <div class="secure-card-form">
+      <div class="payment-field">
+        <label for="receiptEmail">Correo para el comprobante</label>
+        <div class="input-shell" [class.input-shell-error]="receiptEmailError">
+          <i class="pi pi-envelope field-icon"></i>
+          <input id="receiptEmail" type="email" class="form-control"
+                 [ngModel]="receiptEmail" (ngModelChange)="onReceiptEmailInput($event)"
+                 (blur)="validateReceiptEmail()" placeholder="tu@correo.com"
+                 autocomplete="email" maxlength="254" [disabled]="loading"
+                 [attr.aria-invalid]="!!receiptEmailError">
+        </div>
+        <small *ngIf="!receiptEmailError" class="field-help">Aquí llegará el comprobante PDF cuando Wompi apruebe.</small>
+        <small *ngIf="receiptEmailError" class="field-error">{{ receiptEmailError }}</small>
+      </div>
+
+      <div class="payment-field">
+        <div class="field-label-row">
+          <label for="cardNumber">Número de tarjeta</label>
+          <span class="brand-badge" [class.brand-badge-known]="cardBrand !== 'unknown'">{{ cardBrandLabel }}</span>
+        </div>
+        <div class="input-shell" [class.input-shell-error]="cardNumberError">
+          <i class="pi pi-credit-card field-icon"></i>
+          <input id="cardNumber" type="text" class="form-control card-number-input"
+                 [ngModel]="cardNumber" (ngModelChange)="onCardNumberInput($event)"
+                 (blur)="validateCardNumber()" placeholder="Número de la tarjeta"
+                 inputmode="numeric" autocomplete="cc-number" maxlength="23"
+                 [disabled]="loading || !securityReady || !termsReady"
+                 [attr.aria-invalid]="!!cardNumberError">
+          <i *ngIf="cardNumber && !cardNumberError && isCardNumberValid" class="pi pi-check-circle field-valid"></i>
+        </div>
+        <small *ngIf="cardNumberError" class="field-error">{{ cardNumberError }}</small>
+      </div>
+
+      <div class="card-detail-grid">
+        <div class="payment-field">
+          <label for="cardExpMonth">Mes</label>
+          <div class="input-shell compact" [class.input-shell-error]="expiryError">
+            <input id="cardExpMonth" type="text" class="form-control"
+                   [ngModel]="cardExpMonth" (ngModelChange)="onExpiryMonthInput($event)"
+                   (blur)="validateExpiry()" placeholder="MM" inputmode="numeric"
+                   autocomplete="cc-exp-month" maxlength="2"
+                   [disabled]="loading || !securityReady || !termsReady"
+                   [attr.aria-invalid]="!!expiryError">
+          </div>
+        </div>
+        <div class="payment-field">
+          <label for="cardExpYear">Año</label>
+          <div class="input-shell compact" [class.input-shell-error]="expiryError">
+            <input id="cardExpYear" type="text" class="form-control"
+                   [ngModel]="cardExpYear" (ngModelChange)="onExpiryYearInput($event)"
+                   (blur)="validateExpiry()" placeholder="AA" inputmode="numeric"
+                   autocomplete="cc-exp-year" maxlength="2"
+                   [disabled]="loading || !securityReady || !termsReady"
+                   [attr.aria-invalid]="!!expiryError">
+          </div>
+        </div>
+        <div class="payment-field">
+          <div class="field-label-row">
+            <label for="cardCvc">CVC</label>
+            <span class="cvc-hint" title="Código de seguridad de 3 o 4 dígitos">?</span>
+          </div>
+          <div class="input-shell compact" [class.input-shell-error]="cardCvcError">
+            <input id="cardCvc" type="password" class="form-control"
+                   [ngModel]="cardCvc" (ngModelChange)="onCvcInput($event)"
+                   (blur)="validateCvc()" placeholder="•••" inputmode="numeric"
+                   autocomplete="cc-csc" [maxlength]="cardCvcMaxLength"
+                   [disabled]="loading || !securityReady || !termsReady"
+                   [attr.aria-invalid]="!!cardCvcError">
+          </div>
+        </div>
+      </div>
+      <small *ngIf="expiryError" class="field-error detail-error">{{ expiryError }}</small>
+      <small *ngIf="cardCvcError" class="field-error detail-error">{{ cardCvcError }}</small>
+
+      <div class="payment-field">
+        <label for="cardHolder">Titular de la tarjeta</label>
+        <div class="input-shell" [class.input-shell-error]="cardHolderError">
+          <i class="pi pi-user field-icon"></i>
+          <input id="cardHolder" type="text" class="form-control holder-input"
+                 [ngModel]="cardHolder" (ngModelChange)="onCardHolderInput($event)"
+                 (blur)="validateHolder()" placeholder="NOMBRE COMO APARECE EN LA TARJETA"
+                 autocomplete="cc-name" maxlength="80"
+                 [disabled]="loading || !securityReady || !termsReady"
+                 [attr.aria-invalid]="!!cardHolderError">
+        </div>
+        <small *ngIf="cardHolderError" class="field-error">{{ cardHolderError }}</small>
+      </div>
     </div>
 
     <!-- Aceptación de términos -->
-    <div class="p-2 rounded mb-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+    <div class="consent-card mb-3">
       <div class="form-check mb-2">
         <input type="checkbox" class="form-check-input" id="acceptPolicy"
-               [(ngModel)]="acceptedPolicy" [disabled]="loading">
-        <label class="form-check-label" for="acceptPolicy" style="font-size: 0.75rem;">
-          Acepto los <a [href]="policyLink" target="_blank" style="color: #8b5cf6;">términos y condiciones</a> de Wompi
+               [(ngModel)]="acceptedPolicy" [disabled]="loading || !termsReady">
+        <label class="form-check-label" for="acceptPolicy">
+          Leí y acepto los <a [href]="policyLink" target="_blank" rel="noopener noreferrer">términos y condiciones</a> de Wompi.
         </label>
       </div>
       <div class="form-check">
         <input type="checkbox" class="form-check-input" id="acceptPersonal"
-               [(ngModel)]="acceptedPersonalData" [disabled]="loading">
-        <label class="form-check-label" for="acceptPersonal" style="font-size: 0.75rem;">
-          Autorizo el <a [href]="personalDataLink" target="_blank" style="color: #8b5cf6;">tratamiento de datos personales</a>
+               [(ngModel)]="acceptedPersonalData" [disabled]="loading || !termsReady">
+        <label class="form-check-label" for="acceptPersonal">
+          Autorizo el <a [href]="personalDataLink" target="_blank" rel="noopener noreferrer">tratamiento de mis datos personales</a>.
         </label>
       </div>
     </div>
@@ -126,10 +236,9 @@
       <i class="pi pi-exclamation-circle me-1"></i>{{ cardError }}
     </div>
 
-    <div class="text-center">
-      <small class="text-muted" style="font-size: 0.65rem;">
-        <i class="pi pi-lock me-1"></i>Tu información está protegida por Wompi. Katuq nunca almacena los datos de la tarjeta.
-      </small>
+    <div class="secure-footer-note">
+      <i class="pi pi-lock"></i>
+      <span><strong>No almacenamos tu tarjeta.</strong> El número, vencimiento y CVC se eliminan de la pantalla apenas Wompi genera el token.</span>
     </div>
   </div>
 
@@ -149,7 +258,7 @@
       <i class="pi pi-check-circle" style="font-size: 3rem; color: #27ae60;"></i>
     </div>
     <h5 class="fw-bold" style="color: #0f172a;">Plan activado exitosamente</h5>
-    <p class="text-muted">Wompi confirmó el pago. Ya tienes acceso a las funcionalidades Premium de Katuq.</p>
+    <p class="text-muted">Wompi confirmó el pago. Ya tienes acceso a Premium y enviamos el comprobante PDF a <strong>{{ receiptEmail }}</strong>.</p>
   </div>
 
   <ng-template pTemplate="footer">
@@ -160,6 +269,7 @@
                 class="p-button-text p-button-secondary" (click)="closeModal()"></button>
         <button pButton type="button" label="Continuar" icon="pi pi-arrow-right" iconPos="right"
                 style="background: #8b5cf6; border-color: #8b5cf6;"
+                [disabled]="configLoading || !initialAmountCOP || !!cardError"
                 (click)="goToCardStep()"></button>
       </ng-container>
 
@@ -173,7 +283,7 @@
                 icon="pi pi-lock"
                 style="background: #8b5cf6; border-color: #8b5cf6;"
                 [loading]="loading"
-                [disabled]="loading || !acceptedPolicy || !acceptedPersonalData"
+                [disabled]="loading || !securityReady || !termsReady || !isCardFormValid || !acceptedPolicy || !acceptedPersonalData"
                 (click)="submitCard()"></button>
       </ng-container>
 

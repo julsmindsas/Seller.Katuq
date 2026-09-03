@@ -458,6 +458,15 @@ h3 {
   }
 }
 
+// Pie con marca y columnas (espejo de siteHtml.js).
+.pie { text-align: left; }
+.pie__grid { display: grid; gap: 2rem; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .pie__grid { grid-template-columns: 1.4fr 1fr 1fr; } }
+.pie__logo { height: 44px; width: auto; max-width: 200px; object-fit: contain; }
+.pie__nombre { font-family: var(--sitio-fuente-titulo); font-size: 1.4rem; }
+.pie__col { display: flex; flex-direction: column; gap: 0.45rem; h3 { margin: 0 0 0.35rem; font-size: 0.74rem; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.75; font-weight: 600; } }
+.pie__legal { margin: 2.25rem 0 0; padding-top: 1.1rem; border-top: 1px solid var(--sitio-borde, rgba(0,0,0,.08)); font-size: 0.8rem; opacity: 0.6; }
+
 // ── Portada de mosaico ───────────────────────────────────────────────────────
 // Espejo de la rama hero--mosaico de siteHtml.js: titular a un lado, rejilla
 // de fotos de producto al otro. Mismos valores; si cambian allá, cambian aquí.
@@ -840,6 +849,19 @@ h3 {
 }
 
 // ── Compra por categoría ─────────────────────────────────────────────────────
+/* ── Compra por categoría (espejo de siteHtml.js) ── */
+.categorias__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+@media (min-width: 640px) { .categorias__grid { grid-template-columns: repeat(3, 1fr); } }
+.categorias__grid--fila { display: flex; overflow-x: auto; gap: 1rem; .categoria { flex: 1 0 clamp(150px, 20vw, 220px); max-width: 300px; } }
+.categoria { position: relative; display: block; overflow: hidden; text-decoration: none; color: inherit; text-align: left; border-radius: var(--sitio-radio-sm, 8px); cursor: default; }
+.categoria__foto { display: block; aspect-ratio: 1 / 1; overflow: hidden; background: #f4f4f5; img { width: 100%; height: 100%; object-fit: cover; } }
+.categoria__pie { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; padding: 0.6rem 0.8rem; background: rgba(17,17,17,.78); color: #fff; }
+.categoria__nombre { margin: 0; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: #fff; }
+.categoria__total { margin: 0; font-size: 0.72rem; opacity: 0.7; color: #fff; white-space: nowrap; }
+.pie__cat { display: block; font-size: 0.86rem; opacity: 0.85; text-transform: capitalize; }
+.hero__slide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0; transition: opacity 1s ease; &.is-activa { opacity: 1; } }
+.kq-agregar { margin-top: 0.5rem; width: 100%; padding: 0.55rem; border-radius: 999px; border: 1px solid var(--sitio-borde, rgba(0,0,0,.14)); background: transparent; color: inherit; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: default; &[disabled] { opacity: 0.5; } }
+
 .categorias__esqueleto {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -1374,3 +1396,64 @@ h3 {
 @media (min-width: 768px) {
   .insta__grid { grid-template-columns: repeat(6, 1fr); }
 }
+
+/* ── "Busca tu detalle", burbuja de WhatsApp y pie con horarios/pagos (espejo de siteHtml.js) ── */
+.buscador { background: color-mix(in srgb, var(--sitio-primario, #111) 7%, var(--sitio-secundario, #fff)); }
+.buscador__caja { max-width: 980px; margin: 0 auto; background: #fff; border: 1px solid var(--sitio-borde, rgba(0,0,0,.08)); border-radius: var(--sitio-radio, 16px); padding: 1.4rem 1.5rem; box-shadow: var(--sitio-sombra, none);
+  h2 { margin: 0 0 1rem; font-size: 1.5rem; }
+  .boton { margin-top: 1rem; }
+}
+.buscador__campos { display: grid; gap: 0.75rem; grid-template-columns: 1fr;
+  label { display: grid; gap: 0.3rem; }
+  span { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; font-weight: 600; }
+  select, input { width: 100%; padding: 0.65rem 0.8rem; border: 1px solid var(--sitio-borde, rgba(0,0,0,.08)); border-radius: var(--sitio-radio-sm, 11px); background: #fff; color: inherit; font: inherit; font-size: 0.95rem; }
+  @media (min-width: 700px) { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+}
+.kq-wa--previa { display: inline-flex; width: 56px; height: 56px; border-radius: 50%; align-items: center; justify-content: center; background: #25d366; color: #fff; box-shadow: 0 10px 24px -8px rgba(0,0,0,.45); }
+.whatsapp--flotante { text-align: left; }
+.pie__horario { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.86rem; i { font-style: normal; opacity: 0.7; } }
+.pie__pagos { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 2rem; padding-top: 1.1rem; border-top: 1px solid var(--sitio-borde, rgba(0,0,0,.08)); }
+.pie__pagos-t { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.55; font-weight: 600; margin-right: 0.4rem; }
+.pie__pago { font-size: 0.78rem; padding: 0.3rem 0.65rem; border: 1px solid var(--sitio-borde, rgba(0,0,0,.08)); border-radius: 999px; opacity: 0.85; }
+
+/* ── Estilo "Tienda de regalos" (aproximación en la vista previa) ── */
+.sitio[data-estilo="tienda"] {
+  .cabecera__cats { margin: 0 -1.25rem; width: calc(100% + 2.5rem); padding: 0.8rem 1.25rem; border-top: 0; justify-content: center; gap: 2rem; background: var(--sitio-primario, #111); color: var(--sitio-secundario, #fff); }
+  .productos > h2, .categorias > h2, .galeria > h2 { margin: 0 -1.25rem 1.6rem; padding: 0.75rem 1.5rem; background: color-mix(in srgb, var(--sitio-primario, #111) 82%, #000); color: var(--sitio-secundario, #fff); font-weight: 500; font-size: 1.1rem; letter-spacing: 0.16em; text-transform: uppercase; border-radius: 0; }
+  .boton { border-radius: 999px; }
+  .pie { background: color-mix(in srgb, var(--sitio-primario, #111) 90%, #000); color: var(--sitio-secundario, #fff); border-top: 0; }
+  .buscador { margin-top: -3.25rem; position: relative; z-index: 3; background: transparent; }
+  .categoria { border-radius: 6px; box-shadow: 0 8px 20px -14px rgba(0,0,0,.35); background: #fff; }
+  .categoria__foto { background: #fff; }
+  .categoria__pie { position: static; justify-content: center; padding: 0.55rem 0.8rem; background: var(--kq-banda, #c96a5b); }
+  .categoria__nombre { font-family: var(--sitio-fuente-titulo); font-size: 1rem; letter-spacing: 0.06em; text-transform: none; font-weight: 500; }
+  .categoria__total { display: none; }
+  .categoria:nth-child(6n+1) { --kq-banda: #c96a5b; }
+  .categoria:nth-child(6n+2) { --kq-banda: #c99a3b; }
+  .categoria:nth-child(6n+3) { --kq-banda: #6f8f7a; }
+  .categoria:nth-child(6n+4) { --kq-banda: #b5657c; }
+  .categoria:nth-child(6n+5) { --kq-banda: #7d5a7e; }
+  .categoria:nth-child(6n+6) { --kq-banda: #4f8a8b; }
+  .kq-agregar { border-radius: 999px; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; }
+}
+
+/* ── Banners y filas en carrusel (espejo de siteHtml.js) ── */
+.banner { padding-top: 0; padding-bottom: 0; }
+.banner--completo { max-width: none; padding-left: 0; padding-right: 0; }
+.banner__slide { display: block; width: 100%; overflow: hidden; img { width: 100%; height: clamp(180px, 32vw, 420px); object-fit: cover; display: block; } }
+.banner--bajo .banner__slide img { height: clamp(120px, 20vw, 260px); }
+.banner--alto .banner__slide img { height: clamp(260px, 46vw, 620px); }
+.banner:not(.banner--completo) .banner__slide img { border-radius: var(--sitio-radio, 12px); }
+.fila { position: relative; }
+.fila__puntos { display: flex; justify-content: center; gap: 0.45rem; margin-top: 0.7rem; }
+.banner .fila__puntos { position: absolute; left: 0; right: 0; bottom: 0.9rem; margin: 0; }
+.fila__punto { width: 9px; height: 9px; border-radius: 999px; background: rgba(255,255,255,.5); &.is-activa { background: #fff; transform: scale(1.25); } }
+.productos__grid--fila { display: flex; gap: 1rem; overflow-x: auto; .producto { flex: 1 0 clamp(160px, 22vw, 250px); max-width: 320px; } }
+
+/* ── Popup de bienvenida (en la previa, como tarjeta en su sitio) ── */
+.popup-previa { display: grid; gap: 0.75rem; }
+.kq-popup__caja { position: relative; width: min(820px, 100%); margin: 0 auto; background: #fff; color: #222; border-radius: var(--sitio-radio, 12px); box-shadow: 0 30px 80px -30px rgba(0,0,0,.6); display: grid; overflow: hidden; }
+.kq-popup__caja--con-foto { grid-template-columns: 1fr; @media (min-width: 700px) { grid-template-columns: 1.1fr 1fr; } }
+.kq-popup__foto { min-height: 220px; background: #f4f4f5; img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 220px; } }
+.kq-popup__texto { padding: 2rem 1.75rem; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem; h2 { margin: 0; font-size: 1.7rem; line-height: 1.1; } p { margin: 0; opacity: 0.8; line-height: 1.5; } .boton { align-self: flex-start; margin-top: 0.5rem; } }
+.kq-popup__cerrar { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 2; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.92); color: #222; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px -8px rgba(0,0,0,.5); }

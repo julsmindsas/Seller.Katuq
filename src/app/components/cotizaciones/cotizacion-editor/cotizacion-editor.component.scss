@@ -434,6 +434,37 @@
   }
 }
 
+// Solo la sugerencia de PRODUCTO lleva foto (la de cliente sigue en columna):
+// ver la foto antes de elegir evita agregar la referencia equivocada.
+.cot-sugg-prod {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+
+  .cot-sugg-thumb {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--canvas);
+  }
+
+  .cot-sugg-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .cot-sugg-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .cot-sugg-prod .cot-sugg-tag {
   display: inline-block;
   margin-left: 8px;
@@ -609,6 +640,25 @@
 
   .cl-prod {
     display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  // La miniatura no se encoge ni se estira: la fila tiene que verse pareja
+  // aunque las fotos vengan en proporciones distintas.
+  .cl-thumb {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--canvas);
+  }
+
+  .cl-prod-txt {
+    display: flex;
     flex-direction: column;
     gap: 2px;
     min-width: 0;
@@ -618,6 +668,7 @@
     font-weight: 600;
     color: var(--ink);
     font-size: 14px;
+    line-height: 1.3;
   }
 
   .cl-ref {
@@ -629,27 +680,49 @@
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    margin-top: 4px;
+    margin-top: 5px;
   }
 
+  // Nombre + precio, separados: el precio es lo que se compara entre listas, así
+  // que va en negrita y en tinta fuerte; el nombre queda de rótulo. El nombre se
+  // trunca antes que el precio — un rótulo largo nunca debe empujar el número
+  // fuera del chip (era lo que pasaba cuando aquí venía la descripción entera).
   .cl-seg-chip {
     display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 1px 7px;
+    align-items: baseline;
+    gap: 5px;
+    max-width: 100%;
+    padding: 2px 8px;
     border-radius: 999px;
     border: 1px solid var(--line);
     background: #fff;
     color: var(--muted);
     font-size: 10.5px;
     font-weight: 600;
-    white-space: nowrap;
+
+    .cl-seg-nombre {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cl-seg-precio {
+      flex: 0 0 auto;
+      color: var(--ink);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
 
     &.cl-seg-aplicado {
       border-color: var(--primary);
       background: var(--primary-wash);
       color: var(--primary-ink);
       font-weight: 700;
+
+      .cl-seg-precio {
+        color: var(--primary-ink);
+      }
     }
   }
 
@@ -1093,33 +1166,80 @@
     }
 
     span {
+      display: block;
       font-size: 12.5px;
       color: var(--muted);
+    }
+
+    // El `strong` de arriba es display:block a 16px (es el nombre del cliente).
+    // Sin devolverlo a inline, el nombre del tipo se iría a otro renglón y
+    // saldría del tamaño de un titular.
+    .doc-client-tipo {
+      margin-top: 3px;
+
+      strong {
+        display: inline;
+        font-size: 12.5px;
+        margin: 0;
+        color: var(--ink);
+      }
     }
   }
 
   .doc-tbl {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12.5px;
+    font-size: 11px;
+    table-layout: fixed;
 
     th {
       text-align: left;
-      padding: 9px 8px;
+      padding: 8px 4px;
       border-bottom: 1.5px solid var(--line);
       color: var(--muted);
-      font-size: 11px;
+      font-size: 9.5px;
       text-transform: uppercase;
       font-weight: 700;
+      line-height: 1.25;
     }
 
     td {
-      padding: 9px 8px;
+      padding: 8px 4px;
       border-bottom: 1px solid var(--line2);
       vertical-align: top;
     }
 
-    th:not(:first-child),
+    // Reparto explícito de las 9 columnas, en porcentaje. Con `table-layout:
+    // fixed` un `width: auto` NO reclama el espacio sobrante: la descripción se
+    // quedaba en una tira de una letra de ancho y el título salía en vertical.
+    // Los porcentajes suman 100 y cada cifra tiene de sobra para su ancho real.
+    // Sobre 804px útiles (880 del lienzo − 38 de margen a cada lado): una celda
+    // de 10,5% da 84px, y la cifra más larga que se ha visto ($13.090.000, 11
+    // caracteres a 11px) mide ~70px. Queda holgura para el separador de miles.
+    th:nth-child(1), td:nth-child(1) { width: 24%; }    // Descripción
+    th:nth-child(2), td:nth-child(2) { width: 5%; }     // Cant.
+    th:nth-child(3), td:nth-child(3) { width: 10.5%; }  // Valor bruto
+    th:nth-child(4), td:nth-child(4) { width: 10.5%; }  // Descuento
+    th:nth-child(5), td:nth-child(5) { width: 10.5%; }  // P. unit. sin IVA
+    th:nth-child(6), td:nth-child(6) { width: 6%; }     // % IVA
+    th:nth-child(7), td:nth-child(7) { width: 10.5%; }  // Valor IVA
+    th:nth-child(8), td:nth-child(8) { width: 10.5%; }  // P. unit. con IVA
+    th:nth-child(9), td:nth-child(9) { width: 12.5%; }  // Subtotal
+
+    td:first-child {
+      // Una referencia larga sin espacios no puede ensanchar la columna.
+      overflow-wrap: anywhere;
+    }
+
+    // Los ENCABEZADOS rompen línea; las CIFRAS no. Al revés (que era como
+    // estaba) un rótulo como "Precio unitario total (con IVA)" se salía de su
+    // celda y se montaba encima del vecino.
+    th:not(:first-child) {
+      text-align: right;
+      white-space: normal;
+      hyphens: none;
+    }
+
     td:not(:first-child) {
       text-align: right;
       white-space: nowrap;
@@ -1127,7 +1247,19 @@
 
     .doc-ref {
       color: var(--muted);
-      font-size: 11px;
+      font-size: 9.5px;
+    }
+
+    // Lista de precios aplicada. En renglón aparte y discreta: acompaña al
+    // producto, no compite con el precio. Sin fondo de color porque el PDF se
+    // imprime y los rellenos se van en gris sucio.
+    .doc-lista {
+      display: block;
+      margin-top: 2px;
+      color: var(--primary-ink);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
     }
   }
 
@@ -1172,14 +1304,19 @@
 }
 
 // Documento oculto (fuera de pantalla) que captura html2pdf.
+// Lienzo que rasteriza html2pdf. El ancho tiene que dar para la tabla COMPLETA:
+// html2canvas recorta lo que se sale de la caja, y html2pdf después encoge la
+// imagen entera al ancho de la página. Con 700px las últimas columnas (Valor IVA,
+// Precio total, Subtotal) quedaban cortadas a media cifra. Con 880px caben todas
+// y la reducción a A4 las deja legibles.
 .cot-doc-capture {
   position: absolute;
   left: -10000px;
   top: 0;
-  width: 700px;
+  width: 880px;
 
   .cot-doc {
-    width: 700px;
+    width: 880px;
   }
 }
 
@@ -1196,10 +1333,13 @@
   z-index: 1060;
 }
 
+// Mismo ancho que el lienzo del PDF: la vista previa existe para mostrar lo que
+// va a salir impreso, y con 680px la tabla se recortaba acá también — se veía
+// bien en pantalla y llegaba cortada al PDF, o al revés.
 .cot-doc-modal {
   background: #fff;
   width: 100%;
-  max-width: 680px;
+  max-width: 880px;
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.3);

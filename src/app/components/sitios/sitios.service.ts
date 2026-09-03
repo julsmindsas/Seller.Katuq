@@ -24,8 +24,19 @@ export interface TiendaSitio {
   otrasFormasPago: { cd: string; nombre: string }[];
   /** Venta cruzada (afines + sugerencias del carrito). Encendida por defecto. */
   ventaCruzada?: boolean;
+  /** Al agregar: abrir el cajón (true) o solo confirmar con un aviso (por defecto). */
+  abrirCarritoAlAgregar?: boolean;
+  /** Categorías del maestro que no salen en el sitio (menú, baldosas, pie, filtros). */
+  categoriasOcultas?: string[];
   minimoCompra: number;
   mensajeConfirmacion: string;
+}
+
+/** Una categoría de la empresa tal como la pinta la página publicada. */
+export interface CategoriaSitio {
+  nombre: string;
+  total: number;
+  imagen: string;
 }
 
 /** Lo que el panel de tienda necesita saber de la empresa para configurarse. */
@@ -191,6 +202,11 @@ export class SitiosService extends BaseService {
     return this.get<Respuesta<Sitio>>(`/v1/sites/${id}`);
   }
 
+  /** Categorías reales (nombre, total, foto) para la previa y el panel de tienda. */
+  categorias(id: string): Observable<Respuesta<CategoriaSitio[]>> {
+    return this.get<Respuesta<CategoriaSitio[]>>(`/v1/sites/${id}/categorias`);
+  }
+
   /** Qué está pasando en una página: visitas, contactos, pedidos e ingresos. */
   metricas(id: string, dias = 30): Observable<Respuesta<MetricasSitio>> {
     return this.get<Respuesta<MetricasSitio>>(`/v1/sites/${id}/metricas?dias=${dias}`);
@@ -354,11 +370,11 @@ export class SitiosService extends BaseService {
   subirImagen(
     archivo: File,
     carpeta = "Sitios"
-  ): Observable<{ success: boolean; url?: string; path?: string; error?: string }> {
+  ): Observable<{ success: boolean; url?: string; path?: string; error?: string; ancho?: number; alto?: number }> {
     const datos = new FormData();
     datos.append("file", archivo);
     datos.append("carpeta", carpeta);
-    return this.post<{ success: boolean; url?: string; path?: string; error?: string }>(
+    return this.post<{ success: boolean; url?: string; path?: string; error?: string; ancho?: number; alto?: number }>(
       "/v1/media/upload",
       datos
     );

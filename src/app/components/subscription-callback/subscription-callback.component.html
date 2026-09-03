@@ -62,18 +62,21 @@
     </div>
 
     <!-- Pending/Error State -->
-    <div *ngIf="!loading && !success" class="result-section pending">
+    <div *ngIf="!loading && !success" class="result-section pending" [class.failed]="failed">
       <div class="icon-wrapper pending-icon">
-        <i class="fa fa-clock"></i>
+        <i class="fa" [class.fa-clock]="!failed" [class.fa-times-circle]="failed"></i>
       </div>
-      <h2>Pago Pendiente</h2>
+      <h2>{{ failed ? 'Pago no aprobado' : 'Pago pendiente' }}</h2>
       <p class="message">{{ message }}</p>
 
       <div class="info-box">
         <i class="fa fa-info-circle"></i>
-        <p>
+        <p *ngIf="!failed">
           El procesamiento puede tomar algunos minutos. Recibirás un correo electrónico
           cuando tu suscripción se active. Si el problema persiste, contacta a soporte.
+        </p>
+        <p *ngIf="failed">
+          No se activó un nuevo cobro. Puedes revisar el medio de pago o contactar a soporte si necesitas ayuda.
         </p>
       </div>
 

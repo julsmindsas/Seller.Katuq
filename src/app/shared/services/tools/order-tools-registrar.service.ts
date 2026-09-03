@@ -14,6 +14,7 @@ import { Producto } from '../../models/productos/Producto';
 import { UserLogged } from '../../models/User/UserLogged';
 import { UserLite } from '../../models/User/UserLite';
 import { VoiceAgentService } from '../voice-agent.service';
+import { AuthService } from '../firebase/auth.service';
 
 
 @Injectable({ providedIn: 'root' })
@@ -35,14 +36,20 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
     private bodegaService: BodegaService,
     private inventarioService: InventarioService,
     private pedidosUtilService: PedidosUtilService,
-    private voiceAgentService: VoiceAgentService
+    private voiceAgentService: VoiceAgentService,
+    private authService: AuthService
   ) {
     console.log('OrderToolsRegistrarService constructor inicializado');
     this.empresaActual = JSON.parse(localStorage.getItem("company") || '{}');
     this.inicializarNuevoPedido();
-    this.maestroService.getBillingZone().subscribe(data => {
-      this.allBillingZone = data as unknown as any[]; // Asegurar tipado correcto sin advertencia de ArrayBuffer
-    });
+    // Este registrador se construye durante el bootstrap, también en /login y
+    // /registrarse. No llamar endpoints protegidos hasta tener una sesión JWT
+    // vigente; al iniciar sesión la app se recarga y aquí sí se precargan.
+    if (this.authService.isLoggedIn) {
+      this.maestroService.getBillingZone().subscribe(data => {
+        this.allBillingZone = data as unknown as any[]; // Asegurar tipado correcto sin advertencia de ArrayBuffer
+      });
+    }
   }
 
   /**
@@ -3774,4 +3781,4 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
 
     return `$${total.toLocaleString()}`;
   }
-} 
+}
