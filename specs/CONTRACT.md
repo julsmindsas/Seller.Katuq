@@ -5730,3 +5730,6 @@ Verificado en prod: el endpoint responde JSON por Haiku 4.5 y da 401 sin token; 
 
 **Pendiente**: reactivar Google Cloud (mapeo de columnas al importar sigue por Genkit/Gemini) o migrar ese flow también a Opttia. Dueño: Daniel (cuenta) / próxima sesión (migración).
 Commits: kai e9fe7bd; backend 2823bca, 8654016; frontend 2026.09.03.4.
+
+### D-256 — Adenda (2026-09-03, noche): mapeo de columnas al importar también por Opttia
+`columnMappingFlow` (Genkit) sigue armando sus prompts, pero pide el JSON a `POST /api/ai/json` del ADK (alias del endpoint de diseño, tope 12.000 tokens) y solo cae a Gemini si el ADK no responde. Genkit lleva ahora `WHATSAPP_BOT_TOKEN` en `~/kai/functions/.env` (copiado del ADK en el servidor). Verificado en prod con 5 columnas de productos: 5 mapeos con confianza y razones, por Bedrock. Siguen solo en Gemini (caídos hasta reactivar Google Cloud): análisis de inventario, informes admin, despacho multiagente y el agente de ventas de Genkit. Migrarlos = mismo patrón (`pedirJsonAOpttia`). Commit kai 6071c42.
