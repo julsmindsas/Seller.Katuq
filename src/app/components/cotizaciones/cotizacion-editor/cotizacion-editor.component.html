@@ -550,11 +550,27 @@
         <tbody>
           <tr *ngFor="let it of cotizacion.items">
             <td>
-              {{ itemTitulo(it) }}
-              <span class="doc-ref" *ngIf="itemReferencia(it)"> · Ref: {{ itemReferencia(it) }}</span>
-              <!-- Solo la lista aplicada. Las otras tarifas se quedan en el
-                   editor: este documento lo recibe el cliente. -->
-              <span class="doc-lista" *ngIf="segmentoAplicado(it)">{{ segmentoAplicado(it) }}</span>
+              <!-- Foto + texto, la misma que ve el vendedor en el editor. El `src`
+                   sale de `itemImagenDoc`, que devuelve el data URL precargado: la
+                   URL remota se ve en pantalla pero html2canvas la deja en blanco. -->
+              <div class="doc-prod">
+                <img
+                  *ngIf="itemImagenDoc(it)"
+                  class="doc-thumb"
+                  [src]="itemImagenDoc(it)"
+                  [alt]="itemTitulo(it)"
+                  (error)="ocultarImagenDoc($event)">
+                <span class="doc-prod-txt">
+                  {{ itemTitulo(it) }}
+                  <span class="doc-ref" *ngIf="itemReferencia(it)"> · Ref: {{ itemReferencia(it) }}</span>
+                  <!-- Solo la lista aplicada, con su precio. Las otras tarifas se
+                       quedan en el editor: este documento lo recibe el cliente y
+                       listarlas le mostraría al mayorista lo que paga público general. -->
+                  <span class="doc-lista" *ngIf="segmentoAplicado(it)">
+                    {{ segmentoAplicado(it) }}<ng-container *ngIf="segmentoAplicadoPrecio(it) > 0">: {{ segmentoAplicadoPrecio(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</ng-container>
+                  </span>
+                </span>
+              </div>
             </td>
             <!-- Sin decimales forzados (`1.0-2`, no `1.2-2`): el `,00` de cada
                  cifra sumaba ~25px por columna y era parte de lo que empujaba la

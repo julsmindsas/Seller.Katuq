@@ -1245,6 +1245,34 @@
       white-space: nowrap;
     }
 
+    // Foto del producto dentro de la celda de Descripción. Va acá y no en una
+    // columna propia porque la tabla reparte 9 anchos fijos calculados sobre el
+    // lienzo de 880px y una décima columna los desbarata.
+    //
+    // La miniatura va FLOTADA, no en flex: html2canvas rasteriza a partir de la
+    // caja que ya calculó el navegador y el float es lo que menos se le tuerce.
+    // El `overflow: hidden` del contenedor está para contener el float — sin él
+    // el renglón colapsa cuando el título es más corto que la foto.
+    .doc-prod {
+      overflow: hidden;
+    }
+
+    .doc-thumb {
+      float: left;
+      width: 40px;
+      height: 40px;
+      margin: 1px 8px 2px 0;
+      object-fit: contain;
+      border: 1px solid var(--line2);
+      border-radius: 4px;
+      background: #fff;
+    }
+
+    .doc-prod-txt {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
     .doc-ref {
       color: var(--muted);
       font-size: 9.5px;

@@ -27,6 +27,7 @@ import { CrearClienteModalComponent } from "../../ventas/clientes/crear-cliente-
 import { LeadToSalesService } from "../../crm/services/lead-to-sales.service";
 import { resolverPrecioLinea } from "../../../shared/services/ventas/iva-canonico";
 import { environment } from "../../../../environments/environment";
+import { urlImagenAbsoluta } from "../../../shared/utils/imagen-producto";
 
 /**
  * Editor de cotización — T-18 (cliente + fechas + términos).
@@ -1040,6 +1041,23 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Precio de lista del segmento aplicado, para ponerlo junto al nombre en el
+   * documento ("Precio a mayoristas: $86.789").
+   *
+   * Es el precio de la LISTA, no lo que termina cobrando la línea: el descuento
+   * por producto, el override manual y los rangos por volumen se aplican después
+   * y viajan en sus propias columnas. Va acá porque es la tarifa que nombra el
+   * rótulo — igual que el chip del editor, que es de donde salió este dato.
+   *
+   * 0 cuando el segmento no trae precio: ahí el documento imprime solo el nombre
+   * en vez de un "$0" que se leería como que el producto sale gratis.
+   */
+  segmentoAplicadoPrecio(item: Carrito): number {
+    const aplicado = this.preciosSegmento(item).find((s) => s.aplicado);
+    return aplicado ? Number(aplicado.precio) || 0 : 0;
+  }
+
+  /**
    * Rótulo corto del tipo de cliente para el chip de la línea.
    *
    * El chip tiene que caber al lado del precio, que es el dato que importa. Lo
@@ -1288,6 +1306,102 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     if (ad) this.bannerDataCache["publicidad"] = ad;
   }
 
+  // ---- Fotos de producto dentro del documento ----
+  // Cache de la foto de cada producto convertida a data URL, indexada por su URL
+  // absoluta. Mismo motivo que los banners: html2canvas no puede rasterizar una
+  // imagen remota sin CORS (ni Firebase Storage ni el CDN de Osmosis lo exponen),
+  // así que la foto se veía en pantalla pero en el PDF quedaba el hueco en blanco.
+  private productoImgCache: { [url: string]: string } = {};
+
+  /** URL absoluta de la foto de la línea (resuelve las rutas relativas de Osmosis). */
+  private itemImagenAbsoluta(item: Carrito): string {
+    return urlImagenAbsoluta(this.itemImagen(item)) || "";
+  }
+
+  /**
+   * Foto de la línea para el documento: el data URL precargado si ya está, y si
+   * no la URL remota (así la vista previa la muestra aunque la precarga falle).
+   */
+  itemImagenDoc(item: Carrito): string {
+    const url = this.itemImagenAbsoluta(item);
+    if (!url) return "";
+    return this.productoImgCache[url] || url;
+  }
+
+  /**
+   * Oculta la foto que no cargó. En el documento que recibe el cliente un ícono de
+   * "imagen no disponible" estorba más de lo que informa, así que la línea se queda
+   * solo con el texto (a diferencia del editor, donde sí va el placeholder).
+   */
+  ocultarImagenDoc(ev: Event): void {
+    const img = ev.target as HTMLImageElement | null;
+    if (img) img.style.display = "none";
+  }
+
+  /**
+   * Precarga a data URL las fotos de los productos de la cotización, por el mismo
+   * proxy del backend que usan los banners. Best-effort: la que falle se queda con
+   * su URL remota y el resto del documento sale igual.
+   */
+  private async preloadItemImagesForPdf(): Promise<void> {
+    const urls = Array.from(
+      new Set(
+        (this.cotizacion.items || [])
+          .map((it) => this.itemImagenAbsoluta(it))
+          // Solo remotas: un `assets/...` local html2canvas ya lo rasteriza sin
+          // ayuda, y mandarlo al proxy solo saca un 400 (no es una URL absoluta).
+          .filter((u) => /^https?:\/\//i.test(u) && !this.productoImgCache[u])
+      )
+    );
+    if (!urls.length) return;
+
+    // De a 4: una cotización puede traer muchas líneas y cada foto es una llamada
+    // al backend que además devuelve la imagen entera en base64.
+    const LOTE = 4;
+    for (let i = 0; i < urls.length; i += LOTE) {
+      const lote = urls.slice(i, i + LOTE);
+      const datos = await Promise.all(lote.map((u) => this.toDataUrl(u)));
+      for (let j = 0; j < lote.length; j++) {
+        if (!datos[j]) continue;
+        this.productoImgCache[lote[j]] = await this.reducirDataUrl(datos[j]);
+      }
+    }
+  }
+
+  /**
+   * Reduce la foto a miniatura antes de incrustarla. La imagen de catálogo pesa
+   * varios MB y en el documento se pinta a 40px: sin esto cada línea mete su
+   * imagen completa en el DOM y html2canvas las rasteriza todas a tamaño real.
+   * Si algo falla devuelve el data URL original (mejor pesado que sin foto).
+   */
+  private reducirDataUrl(dataUrl: string, lado = 160): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const escala = Math.min(1, lado / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * escala));
+          const h = Math.max(1, Math.round(img.height * escala));
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return resolve(dataUrl);
+          // Fondo blanco: el PNG con transparencia sale con el fondo en negro al
+          // pasarlo a JPEG.
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        } catch {
+          resolve(dataUrl);
+        }
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  }
+
   /** Precio unitario SIN IVA para la columna "Precio" del documento. */
   docPrecioUnit(item: Carrito): number {
     return this.getPrecioSinIva(item);
@@ -1506,7 +1620,9 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     // Los banners usan crossorigin="anonymous" (lo necesita html2canvas para el PDF),
     // y Firebase Storage no expone CORS: sin precargarlos a data URL, el navegador
     // bloquea la carga y la vista previa se ve sin encabezado/pie/publicidad.
-    await this.preloadBannersForPdf();
+    // Las fotos de producto se precargan acá mismo para que la vista previa muestre
+    // exactamente lo que va a salir impreso (es lo único que hace esta pantalla).
+    await Promise.all([this.preloadBannersForPdf(), this.preloadItemImagesForPdf()]);
     this.cdr.detectChanges();
   }
 
@@ -1537,9 +1653,9 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     try {
       const html2pdf = (await import("html2pdf.js")).default;
 
-      // Incrustar banners como base64 para que html2canvas los rasterice (las URLs
-      // remotas se ven en pantalla pero quedan en blanco al generar el PDF).
-      await this.preloadBannersForPdf();
+      // Incrustar banners y fotos de producto como base64 para que html2canvas los
+      // rasterice (las URLs remotas se ven en pantalla pero quedan en blanco en el PDF).
+      await Promise.all([this.preloadBannersForPdf(), this.preloadItemImagesForPdf()]);
       this.cdr.detectChanges();
       // Pequeña espera para que el navegador pinte las <img> con el data URL.
       await new Promise((r) => setTimeout(r, 80));
