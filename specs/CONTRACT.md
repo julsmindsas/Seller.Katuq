@@ -5745,3 +5745,17 @@ Quedan en Genkit hasta que se toquen: análisis de inventario (`/kai/inventory-a
 ### D-257 — Adenda (2026-09-03, cierre): migrados a Opttia los usos de una pasada
 Ya van por `pedirJsonAOpttia` (probados en prod, 2–4 s): descripción de producto con foto (`/ia/product/getprompt2`, la foto la describe Claude en Bedrock; la generación de imagen no se ofrece), análisis de inventario (`/kai/inventory-analysis`, prompt en `services/ai/prompts/inventarioPrompt.js`), diagnóstico de la encuesta de registro (`diagnostics.saveSurveyResponse`, prompt en `services/ai/prompts/diagnosticoPrompt.js`, misma forma `{result:{recommendedModules}}`), títulos de plantillas de WhatsApp (`routers/whatsapp.js`). El ADK acepta `image_base64` y `system` en `/api/ai/json`.
 **Siguen en Genkit** porque son agentes con herramientas/conversación, no una pasada: chatbot del vendedor (`kaiMultiAgentFlowLite`/`Stream`), `ventasAgentFlow`, `loadOrderByKAI`, agent builder RPC (`flowAiController`, nodo `kai-agent-invoke`) y `kaiIntegrationService`. Su migración = mapearlos a los orquestadores del ADK (`/agui/v2`), tarea aparte con dueño: próxima sesión que toque el chatbot. Commits: backend 689e616, kai 670a1e5.
+
+## D-258 (2026-09-04) — Crear y publicar la página web desde Opttia, conversacional y viéndola
+
+Pedido de Daniel: "la funcionalidad debe ser interactiva con el usuario, que se vea cómo se crea".
+
+**Cómo queda:** el usuario le dice a Opttia "quiero una tienda / una página / vender por internet"; el gerente general lo manda al orquestador de ventas (María), que pregunta una cosa a la vez (qué quiere lograr → tipo, nombre, sector, indicaciones), pide confirmación, crea el sitio en borrador y lo muestra **embebido en el chat** (tarjeta `KatuqSitePreview`, con vista celular/computador, "Abrir vista previa", "Editar en Katuq"); luego ofrece publicar, con confirmación aparte.
+
+**Piezas:**
+- Backend: tools MCP `list_katuq_sites` (lectura), `create_katuq_site` y `publish_katuq_site` (escritura con preview + `confirm:true`), sobre `crearSitioDesdeOpttia` / `publicarSitioDesdeOpttia` (misma receta del asistente del panel: plantilla por sector y tipo, textos y diseño por Opttia, productos reales, slug libre automático). **Vista previa de borrador**: `GET /v1/sites/render/<slug>?vista_previa=<id>&t=<token HMAC, 6 h>` desde back.katuq.com, `private, no-store`, `noindex`, `frame-ancestors` solo Opttia (`OPTTIA_FRAME_ORIGINS`), rutas `/api` y `/estilos.css` reescritas al mismo origen. Nunca entra a la caché.
+- ADK: `tools/site_tools.py` (FunctionTools HITL con `request_confirmation`), enganchadas al orquestador de ventas; regla 5b de ruteo en el CEO; `render_site_card` en el A2UI. **Interruptor propio `OPTTIA_SITES_WRITE_MODE`** (default `live`), independiente de `OPTTIA_WRITE_MODE` (que en prod está en `off`): crear un borrador no toca inventario ni facturación y publicar exige confirmación aparte.
+- SupplyKai: componente `KatuqSitePreview` (iframe con la vista previa firmada). Commit 1a80ccc en rama `erp-conector`; **falta desplegarlo en Vercel** (manual, cuenta de Daniel).
+
+**Verificado en prod** (empresa demo FLORECER): `create_katuq_site` sin `confirm` devuelve el preview; con `confirm` creó "Prueba Opttia" (tienda, plantilla regalos, 14 secciones, textos por Opttia) en 4,4 s; la vista previa responde 200 con las cabeceras esperadas; el ADK carga las tres tools y pinta la tarjeta. Queda el sitio de prueba `prueba-opttia` en borrador en FLORECER (borrar cuando sobre).
+Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
