@@ -181,7 +181,7 @@ Bootstrap 5 + PrimeNG 14 + ng-bootstrap. SweetAlert2 para diálogos de confirmac
 |----------|--------|-----------|--------------|
 | Angular Frontend | 4200 | `Seller.Katuq/` | `npm start` |
 | Backend Express | 3300 | `katuq_admin_back_firebase/functions/` | `node index.js` |
-| KAI Genkit (flows + REST + WS) | 3890/3891/3892 | `kai/functions/` | `npx tsx --watch src/index.ts` |
+| ~~KAI Genkit~~ (**OBSOLETO desde D-257, 2026-09-03**; sigue en prod como `index` de pm2 root solo por los flows viejos) | 3890 | `kai/functions/` | no levantar para trabajo nuevo |
 | ADK Python/Flask | 8080 | `kai/adk_agent/` | `python main.py` |
 
 ## Convenciones de IDs críticas
@@ -217,8 +217,8 @@ Backend → inventoryService.updateStock(order)
 ### Importación con KAI
 ```
 Frontend (import-modal) → POST /v1/katuqintelligence/kai/column-mapping
-  → Backend proxy → POST http://127.0.0.1:3890/columnMappingFlow (Genkit)
-  → KAI analiza columnas con Gemini 2.5 Flash → retorna mappings con confidence scores
+  → Backend arma el prompt (services/ai/columnMappingPrompts.js) → POST http://127.0.0.1:8080/api/ai/json (Opttia/ADK, Bedrock)
+  → retorna mappings con confidence scores (D-257; Genkit ya no participa)
 Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inventory}
 ```
 
@@ -237,11 +237,14 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
 - **Módulos con SRP**: evitar componentes monolíticos; separar en módulos pequeños con responsabilidad única.
 - **Servicios Angular para HTTP**: nunca `HttpClient` directo en componentes — el interceptor agrega auth headers.
 - **Strategy Pattern en backend** para integraciones (providers + managers).
-- **Nunca llamadas directas a la API de Gemini.** Toda IA pasa por KAI. Dos motores, y el criterio de reparto es **conversación**:
+- **Nunca llamadas directas a un modelo.** Toda IA pasa por **Opttia (el ADK, `kai/adk_agent/`, Python, Bedrock)**. Desde **D-257 (2026-09-03) Genkit está OBSOLETO**: no se le agregan flows ni se usa como respaldo; los que le quedan (análisis de inventario, informes admin, despacho multiagente, agente de ventas) se migran al mismo patrón cuando se toquen.
+  - **Una pasada (prompt → JSON)**: `POST /api/ai/json` del ADK con `X-Bot-Token` = `WHATSAPP_BOT_TOKEN`; en el backend, `services/ai/opttiaJson.js` (`pedirJsonAOpttia`). Ahí van el mapeo de columnas al importar y los textos y el diseño del builder de sitios.
+  - **Conversación**: los orquestadores del ADK (Telegram, WhatsApp, video/voz, multi-departamento).
+  - Reparto histórico (ya no aplica para código nuevo):
   - **ADK** (`kai/adk_agent/`, Python) — **todo agente conversacional y todo canal de chat**: Telegram, WhatsApp, video/voz, multi-departamento. Ahí ya viven el `Runner`, el `FirestoreSessionService` (memoria por empresa), el puente MCP a las herramientas de `functions/tools/` y las herramientas de escritura con confirmación humana. **Un canal nuevo es un adaptador de transporte en `channels/<canal>/`, no un cerebro nuevo** — ver `channels/telegram/` como molde.
   - **Genkit** (`kai/functions/src/agents/`) — flujos puntuales sin conversación: mapeo de columnas al importar, análisis de inventario, generación one-shot.
   - No mezclar los dos en un mismo caso de uso.
-- **Dónde corre cada uno en producción** (se confunde fácil y ya costó una decisión mal tomada): Genkit es el proceso `index` de **PM2 del daemon root** (`sudo pm2 restart index`), puerto 3890. **ADK corre por systemd, NO por PM2** (`sudo systemctl restart kai-adk`), puerto 8080, expuesto como `back.katuq.com/adk`. Revisar solo `pm2 list` da la falsa impresión de que ADK no está desplegado.
+- **Dónde corre cada uno en producción**: **ADK corre por systemd, NO por PM2** (`sudo systemctl restart kai-adk`), puerto 8080, expuesto como `back.katuq.com/adk`; se despliega con `cd ~/kai && git pull` + restart. Genkit (obsoleto) sigue como proceso `index` de **PM2 del daemon root** (`sudo pm2 restart index`), puerto 3890, solo por los flows viejos. Revisar solo `pm2 list` da la falsa impresión de que ADK no está desplegado.
 - **Firestore transactions** para operaciones de inventario — evitar race conditions.
 - **Multi-tenancy**: todas las queries filtradas por `companyId`.
 - `formaEntrega` en despachos SIEMPRE de `carrito[0].configuracion.datosEntrega.formaEntrega`.

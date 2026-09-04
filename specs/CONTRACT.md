@@ -5733,3 +5733,11 @@ Commits: kai e9fe7bd; backend 2823bca, 8654016; frontend 2026.09.03.4.
 
 ### D-256 — Adenda (2026-09-03, noche): mapeo de columnas al importar también por Opttia
 `columnMappingFlow` (Genkit) sigue armando sus prompts, pero pide el JSON a `POST /api/ai/json` del ADK (alias del endpoint de diseño, tope 12.000 tokens) y solo cae a Gemini si el ADK no responde. Genkit lleva ahora `WHATSAPP_BOT_TOKEN` en `~/kai/functions/.env` (copiado del ADK en el servidor). Verificado en prod con 5 columnas de productos: 5 mapeos con confianza y razones, por Bedrock. Siguen solo en Gemini (caídos hasta reactivar Google Cloud): análisis de inventario, informes admin, despacho multiagente y el agente de ventas de Genkit. Migrarlos = mismo patrón (`pedirJsonAOpttia`). Commit kai 6071c42.
+
+## D-257 (2026-09-03) — Genkit queda OBSOLETO: toda IA de una pasada va por Opttia (ADK/Bedrock)
+
+Decisión de Daniel ("para qué usas genkit, eso ya márcalo como obsoleto"). Regla: no se agregan flows a Genkit ni se usa como respaldo. En el backend, `services/ai/opttiaJson.js` (`pedirJsonAOpttia`) es el único cliente de IA no conversacional: `POST /api/ai/json` del ADK, Bedrock, token interno.
+
+Hecho hoy: el generador del builder (textos y "Diseñar con IA") ya no cae a Genkit; el mapeo de columnas al importar arma el prompt en el backend (`services/ai/columnMappingPrompts.js`, transpilado con esbuild desde `kai/functions/src/agents/data-import/agents/columnMappingAgent.ts`; la fuente de verdad pasa al backend) y llama a Opttia directo. CLAUDE.md actualizado (motores, puertos, flujo de importación).
+
+Quedan en Genkit hasta que se toquen: análisis de inventario (`/kai/inventory-analysis`), informes admin, despacho multiagente, agente de ventas de Genkit. El proceso `index` de pm2 root se apaga cuando esos flows estén migrados. Dueño: la sesión que toque cada uno.
