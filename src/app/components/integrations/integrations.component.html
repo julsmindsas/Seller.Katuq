@@ -1824,7 +1824,7 @@
           <div class="card mb-4" *ngIf="dianStep === 1">
             <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-server me-2"></i>Ambiente DIAN</h6></div>
             <div class="card-body">
-              <p class="text-muted">Si es la primera vez, elige pruebas. Usa producción solamente cuando el portal DIAN muestre el comercio como HABILITADO.</p>
+              <p class="text-muted">Si es la primera vez, elige pruebas. Para producción, revisa que el comercio esté HABILITADO y que Katuq aparezca ACEPTADO en Modos de operación del portal DIAN. El resultado de un lote es una consulta diferente.</p>
               <div class="dian-environments">
                 <button type="button" [class.is-selected]="integrationForm.get('environment')?.value === 'habilitacion'" (click)="selectDianEnvironment('habilitacion')">
                   <i class="fa fa-vial"></i><span><strong>Estoy haciendo las pruebas</strong><small>Es la opción correcta para comenzar.</small></span>
@@ -1936,6 +1936,22 @@
             </div>
           </div>
 
+          <div class="card mb-4 dian-review" *ngIf="dianStep === 5">
+            <div class="card-body">
+              <h6>Habilitación del software</h6>
+              <p>Se confirma en el portal DIAN, en <strong>Modos de operación → Katuq</strong>.
+                Si allí aparece <strong>Aceptado</strong>, un lote pendiente no cambia esa aprobación.
+                Esta pantalla consulta envíos, no sincroniza la aprobación del software.</p>
+              <a href="https://catalogo-vpfe-hab.dian.gov.co/User/CompanyLogin" target="_blank" rel="noopener noreferrer">Ver habilitación en el portal DIAN <i class="fa fa-external-link ms-1" aria-hidden="true"></i></a>
+              <div class="dian-review__row mt-3">
+                <span>Ambiente seleccionado en Katuq</span>
+                <strong>{{ integrationForm.get('environment')?.value === 'habilitacion' ? 'Pruebas' : 'Producción' }}</strong>
+              </div>
+              <p class="small text-muted mt-2 mb-1">Consultar un lote no cambia el ambiente ni activa la facturación real.</p>
+              <button type="button" class="btn btn-link px-0" [disabled]="dianHabilitationLoading" (click)="goToDianStep(1)">Revisar configuración del ambiente</button>
+            </div>
+          </div>
+
           <div class="card mb-4" *ngIf="dianStep === 5 && integrationForm.get('environment')?.value === 'habilitacion'">
             <div class="card-header bg-light"><h6 class="mb-0"><i class="fa fa-vial me-2"></i>Set oficial de habilitación</h6></div>
             <div class="card-body">
@@ -1963,22 +1979,32 @@
               <hr>
               <div class="field-row align-items-end">
                 <div class="field-col form-group mb-0">
-                  <label>ZipKey de la DIAN</label>
-                  <input type="text" class="form-control" [(ngModel)]="dianZipKey" [ngModelOptions]="{standalone: true}" placeholder="ZipKey devuelto por SendTestSetAsync">
+                  <label for="dian-batch-key">Código de seguimiento del envío (ZipKey)</label>
+                  <input id="dian-batch-key" type="text" class="form-control" [(ngModel)]="dianZipKey" (ngModelChange)="clearDianBatchResult()" [disabled]="dianHabilitationLoading" [ngModelOptions]="{standalone: true}" placeholder="Código que recibiste al enviar el lote">
                 </div>
                 <div class="field-col form-group mb-0">
                   <button type="button" class="btn btn-outline-primary" [disabled]="dianHabilitationLoading || !dianZipKey" (click)="checkDianHabilitationStatus()">
-                    <i class="fa fa-search me-1"></i>Consultar estado
+                    <i class="fa fa-search me-1"></i>Consultar lote
                   </button>
                 </div>
               </div>
-              <div class="alert mt-3 mb-0" *ngIf="dianHabilitationStatus"
-                   [ngClass]="dianHabilitationStatus?.isValid ? 'alert-success' : 'alert-warning'">
-                <strong>{{ dianHabilitationStatus?.isValid ? 'ACEPTADO' : 'PENDIENTE O RECHAZADO' }}</strong>
-                <div *ngIf="dianHabilitationStatus?.statusDescription">{{ dianHabilitationStatus.statusDescription }}</div>
-                <ul class="mb-0" *ngIf="dianHabilitationStatus?.errorMessages?.length">
-                  <li *ngFor="let message of dianHabilitationStatus.errorMessages">{{ message }}</li>
-                </ul>
+              <div class="alert alert-danger mt-3 mb-0" role="alert" *ngIf="dianHabilitationError">
+                <strong>No se pudo consultar el lote</strong>
+                <div>{{ dianHabilitationError }}</div>
+                <small>Un problema de consulta no significa que el lote ni el software hayan sido rechazados.</small>
+              </div>
+              <div class="alert mt-3 mb-0" *ngIf="dianHabilitationStatus as batch"
+                   [ngClass]="batch.alertClass" role="status" aria-live="polite">
+                <strong>{{ batch.title }}</strong>
+                <p class="mb-1">{{ batch.description }}</p>
+                <small class="d-block text-break">Envío consultado: {{ dianQueriedZipKey }}</small>
+                <div class="mt-2" *ngFor="let detail of batch.details; let i = index">
+                  <strong *ngIf="batch.details.length > 1 || detail.documentName" class="text-break">{{ detail.documentName || ('Respuesta ' + (i + 1)) }} — {{ detail.label }}</strong>
+                  <small *ngIf="detail.code" class="d-block">Código DIAN: {{ detail.code }}</small>
+                  <ul class="mb-0" *ngIf="detail.messages.length">
+                    <li *ngFor="let message of detail.messages" class="text-break">{{ message }}</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -1999,7 +2025,7 @@
               <div class="dian-review__row"><span>Ambiente</span><strong>{{ integrationForm.get('environment')?.value === 'habilitacion' ? 'Pruebas de habilitación' : 'Producción real' }}</strong></div>
               <div class="dian-review__row"><span>Próxima factura</span><strong>{{ integrationForm.get('numbering.prefix')?.value }}{{ integrationForm.get('numbering.current')?.value }}</strong></div>
               <div class="dian-review__row"><span>Certificado</span><strong class="text-success"><i class="fa fa-lock me-1"></i>{{ integrationForm.get('certificateP12Base64')?.value ? 'Cargado y protegido' : 'Se conserva el certificado guardado' }}</strong></div>
-              <div class="alert alert-warning mt-3 mb-0" *ngIf="integrationForm.get('environment')?.value === 'produccion'">Las facturas de este ambiente tienen efectos fiscales. Verifica que el comercio ya figure como HABILITADO en la DIAN.</div>
+              <div class="alert alert-warning mt-3 mb-0" *ngIf="integrationForm.get('environment')?.value === 'produccion'">Las facturas de este ambiente tienen efectos fiscales. Revisa la habilitación del comercio, la aprobación de Katuq en Modos de operación y la numeración de producción. Un lote aceptado no sustituye estas verificaciones.</div>
             </div>
           </div>
 
