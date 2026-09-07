@@ -59,6 +59,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // Propiedad para verificar si estamos en una ruta donde NO debe mostrarse el floating button
   public isPublicRoute: boolean = false;
+  public showFloatingAssistant = false;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -391,6 +392,20 @@ export class AppComponent implements OnInit, OnDestroy {
       currentUrl.startsWith(route)
     );
 
+    // Visibilidad del asistente independiente del loader y de la autenticación.
+    const path = currentUrl.split(/[?#;]/)[0];
+    const excluded = [...this.PUBLIC_ROUTES, '/r', '/c', '/s', '/cat',
+      '/onboarding', '/payment-callback', '/subscription-callback', '/servicios/agendamiento'];
+    let route = this.router.routerState.snapshot.root;
+    let hiddenByRoute = route.data['hideFloatingAssistant'] === true;
+    while (route.firstChild) {
+      route = route.firstChild;
+      hiddenByRoute = hiddenByRoute || route.data['hideFloatingAssistant'] === true;
+    }
+    this.showFloatingAssistant = path !== '/' && !hiddenByRoute
+      && route.routeConfig?.path !== '**'
+      && !excluded.some(prefix => path === prefix || path.startsWith(prefix + '/'));
+
     // Log de depuración
     if (wasPublic !== this.isPublicRoute || !environment.production) {
       console.log('🔍 [FloatingButton] Verificación de ruta:', {
@@ -419,6 +434,5 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
 }
-
 
 

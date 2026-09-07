@@ -25,13 +25,13 @@ a {
 
 // Contenedor principal del botón flotante
 .floating-button-container {
-    position: fixed; // Asegura que el contenedor esté fijo en la pantalla
-    bottom: 20px;    // Posición desde abajo
-    right: 20px;     // Posición desde la derecha
-    z-index: 990;    // Reducido para estar debajo del bottom navigation (z-index: 1000)
-    width: 72px;     // Ancho inicial (tamaño del botón)
-    height: 72px;    // Alto inicial (tamaño del botón)
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); // Transición suave para cambios de tamaño/posición
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 990;
+    width: 148px;
+    height: 58px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
     // Estado abierto (cuando el chat está visible)
     &.open {
@@ -59,7 +59,7 @@ a {
     // Estado con panel de opciones visible
     &.options-visible {
         width: 340px;
-        height: auto;
+        height: 58px;
     }
     
     // Estado de modo de voz
@@ -73,52 +73,101 @@ a {
 
 // Botón flotante principal
 .floating-button {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background-color: $primary-color;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 148px;
+    height: 58px;
+    padding: 7px 30px 7px 8px;
+    border-radius: 18px;
+    background-color: $secondary-color;
     color: $white;
-    border: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Sombra mejorada */
+    border: 1px solid rgba(255, 255, 255, .22);
+    box-shadow: 0 10px 24px rgba(35, 43, 105, .28);
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    gap: 10px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    position: relative;
     z-index: 991;
-    font-size: 26px;
-    border: 2px solid rgba(255, 255, 255, 0.8); /* Borde blanco para mejor definición */
-    overflow: hidden; /* Asegura que el contenido no desborde */
-    
-    // Eliminamos el pseudo-elemento que causaba la superposición
-    // &:before {
-    //     content: "\f075"; // Icono de chat de Font Awesome
-    //     font-family: "FontAwesome";
-    // }
-    
-    // Estilo para el icono principal
+    overflow: hidden;
+
+    .opttia-button-icon {
+        display: inline-flex;
+        flex: 0 0 42px;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border: 1px solid rgba(255, 255, 255, .18);
+        border-radius: 13px;
+        background-color: rgba(255, 255, 255, .14);
+        transition: transform .25s ease, background-color .25s ease;
+    }
+
     .main-icon {
-        font-size: 26px;
-        transition: all 0.3s;
+        font-size: 18px;
+        transition: transform .25s ease;
+    }
+
+    .opttia-button-copy {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.05;
+
+        strong {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: .01em;
+        }
+
+        small {
+            margin-top: 4px;
+            color: rgba(255, 255, 255, .72);
+            font-size: 10px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+    }
+
+    .opttia-status-dot {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 8px;
+        height: 8px;
+        border: 2px solid $secondary-color;
+        border-radius: 50%;
+        background-color: $success-color;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, .28);
     }
     
     &:hover {
-        transform: translateY(-5px) scale(1.05);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-        
-        .main-icon {
-            transform: scale(1.1);
+        transform: translateY(-3px);
+        background-color: darken($secondary-color, 5%);
+        box-shadow: 0 14px 30px rgba(35, 43, 105, .34);
+
+        .opttia-button-icon {
+            transform: rotate(-3deg) scale(1.04);
+            background-color: rgba(255, 255, 255, .2);
         }
+    }
+
+    &:focus-visible {
+        outline: 3px solid rgba($primary-color, .42);
+        outline-offset: 3px;
+    }
+
+    &:active {
+        transform: translateY(-1px) scale(.98);
     }
     
     // Estado activo
     &.active {
-        background-color: $secondary-color;
-        
-        .main-icon {
-            transform: rotate(45deg);
-        }
+        background-color: darken($secondary-color, 8%);
     }
     
     // Estado escuchando
@@ -138,11 +187,11 @@ a {
     // Indicador de notificación
     &.has-unread .notification-indicator {
         position: absolute;
-        top: 0;
-        right: 0;
-        width: 16px;
-        height: 16px;
-        background-color: $secondary-color;
+        top: -4px;
+        right: -4px;
+        width: 14px;
+        height: 14px;
+        background-color: $danger-color;
         border-radius: 50%;
         border: 2px solid $white;
         animation: pulse 2s infinite;
@@ -168,40 +217,6 @@ a {
             animation: wave 1.5s infinite;
         }
     }
-}
-
-// Tooltip del botón flotante
-.tooltip-text-floating {
-    position: absolute;
-    right: 70px;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: $white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 14px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: $transition-standard;
-    
-    &:after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        right: -5px;
-        transform: translateY(-50%);
-        border-left: 5px solid rgba(0, 0, 0, 0.8);
-        border-top: 5px solid transparent;
-        border-bottom: 5px solid transparent;
-    }
-}
-
-// Mostrar tooltip al hacer hover
-.floating-button-container:hover .tooltip-text-floating {
-    opacity: 1;
-    right: 75px;
 }
 
 // Panel de opciones renovado - NUEVO POSICIONAMIENTO Y DISEÑO
@@ -336,6 +351,10 @@ a {
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
         }
     }
+}
+
+.opttia-option {
+    border-left: 3px solid $primary-color;
 }
 
 // Burbuja de chat minimizada
@@ -1028,8 +1047,8 @@ a {
         // Ajustar posición para evitar solaparse con bottom navigation
         bottom: 20px; // Reducido para estar más cerca del borde
         right: 15px;
-        width: 64px; // Botón más compacto
-        height: 64px;
+        width: 132px;
+        height: 54px;
 
         &.open {
             width: 100%;
@@ -1040,19 +1059,26 @@ a {
         }
 
         &.options-visible {
-            width: auto;
-            height: auto;
+            width: 280px;
+            height: 54px;
             bottom: 20px;
             right: 15px;
         }
     }
 
-    // Botón más pequeño en móvil
     .floating-button {
-        width: 64px;
-        height: 64px;
-        font-size: 24px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        width: 132px;
+        height: 54px;
+        padding-right: 26px;
+        border-radius: 17px;
+        box-shadow: 0 8px 22px rgba(35, 43, 105, .3);
+
+        .opttia-button-icon {
+            flex-basis: 38px;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+        }
 
         &:active {
             transform: scale(0.95);
@@ -1062,8 +1088,8 @@ a {
     .options-wrapper {
         width: auto;
         max-width: 280px;
-        bottom: 75px;
-        right: 5px;
+        bottom: 66px;
+        right: 0;
         border-radius: $radius-standard;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     }
@@ -1104,6 +1130,11 @@ a {
     }
 
     .floating-chat-overlay {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        bottom: 0;
+        right: 0;
         border-radius: 0;
     }
 
@@ -1128,3 +1159,5 @@ a {
         }
     }
 }
+
+@import 'opttia-launcher';

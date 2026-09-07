@@ -1,0 +1,114 @@
+<section class="opttia-chat" *ngIf="hasConsent; else consentView" aria-label="Chat con Opttia">
+  <div class="opttia-toolbar">
+    <div class="opttia-identity">
+      <span class="opttia-mark" aria-hidden="true"><i class="fa fa-bolt"></i></span>
+      <div>
+        <strong>Opttia</strong>
+        <small><span class="status-dot"></span> {{ opttia.commerceName }}</small>
+      </div>
+    </div>
+
+    <div class="toolbar-actions">
+      <button type="button" (click)="clearConversation()" [disabled]="isSending" title="Nueva conversación"
+        aria-label="Iniciar una conversación nueva">
+        <i class="fa fa-plus"></i>
+      </button>
+      <button type="button" (click)="withdrawConsent()" [disabled]="isSending" title="Privacidad"
+        aria-label="Retirar permiso para usar Opttia">
+        <i class="fa fa-shield"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="messages" #messagesContainer aria-live="polite">
+    <article class="message" *ngFor="let message of messages; trackBy: trackMessage"
+      [class.user-message]="message.role === 'user'"
+      [class.assistant-message]="message.role === 'assistant'">
+      <span class="avatar" aria-hidden="true">
+        <i class="fa" [ngClass]="message.role === 'user' ? 'fa-user' : 'fa-bolt'"></i>
+      </span>
+      <div class="bubble">
+        <div class="message-text">{{ message.content }}</div>
+        <time>{{ message.createdAt | date:'HH:mm' }}</time>
+      </div>
+    </article>
+
+    <div class="suggestions" *ngIf="messages.length === 1 && !isSending">
+      <button type="button" *ngFor="let suggestion of suggestions" (click)="useSuggestion(suggestion)">
+        {{ suggestion }}
+      </button>
+    </div>
+
+    <article class="interrupt-card" *ngIf="pendingInterrupt as interrupt">
+      <div class="interrupt-heading">
+        <i class="fa fa-shield"></i>
+        <strong>{{ interrupt.title }}</strong>
+      </div>
+      <p>{{ interrupt.message }}</p>
+      <div class="interrupt-actions" *ngIf="interrupt.resumeToken; else externalConfirmation">
+        <button type="button" *ngFor="let action of interrupt.actions"
+          [class.primary]="action.variant === 'primary' || action.id === 'approve'"
+          [class.danger]="action.variant === 'danger'"
+          [disabled]="isSending"
+          (click)="respond(interrupt, action.id)">
+          {{ action.label }}
+        </button>
+      </div>
+      <ng-template #externalConfirmation>
+        <a href="https://www.opttia.com/" target="_blank" rel="noopener noreferrer">
+          Completar en Opttia <i class="fa fa-external-link"></i>
+        </a>
+      </ng-template>
+    </article>
+
+    <div class="thinking" *ngIf="isSending">
+      <span></span><span></span><span></span>
+      <small>Opttia está pensando…</small>
+    </div>
+  </div>
+
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="fa fa-exclamation-circle"></i>
+    <span>{{ errorMessage }}</span>
+    <button type="button" (click)="opttia.dismissError()" aria-label="Cerrar error">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+
+  <form class="composer" (ngSubmit)="send()">
+    <textarea name="opttiaMessage" [(ngModel)]="draft" (keydown)="onKeydown($event)"
+      [disabled]="isSending" rows="1" maxlength="4000"
+      placeholder="Pregúntale a Opttia sobre tu negocio…"
+      aria-label="Mensaje para Opttia"></textarea>
+    <button *ngIf="!isSending" type="submit" [disabled]="!draft.trim()" aria-label="Enviar mensaje">
+      <i class="fa fa-paper-plane"></i>
+    </button>
+    <button *ngIf="isSending" type="button" class="stop-button" (click)="opttia.cancel()"
+      aria-label="Detener respuesta">
+      <i class="fa fa-stop"></i>
+    </button>
+  </form>
+
+  <p class="disclaimer">Opttia puede equivocarse. Verifica la información importante antes de hacer cambios.</p>
+</section>
+
+<ng-template #consentView>
+  <section class="consent-view" aria-labelledby="opttia-consent-title">
+    <span class="consent-icon" aria-hidden="true"><i class="fa fa-bolt"></i></span>
+    <h2 id="opttia-consent-title">Antes de hablar con Opttia</h2>
+    <p>
+      Al aceptar, tus mensajes, el identificador de tu empresa y un identificador de sesión se enviarán
+      a SupplyKai, proveedor de inteligencia artificial de Katuq, para generar respuestas y mantener el contexto.
+    </p>
+    <ul>
+      <li><i class="fa fa-lock"></i> La información se usa para prestar el chat, no para publicidad.</li>
+      <li><i class="fa fa-eye-slash"></i> No compartas contraseñas ni datos bancarios innecesarios.</li>
+      <li><i class="fa fa-undo"></i> Puedes retirar este permiso cuando quieras.</li>
+    </ul>
+    <a href="/privacy-policy" target="_blank">Leer la política de privacidad</a>
+    <div class="consent-actions">
+      <button type="button" class="accept" (click)="acceptConsent()">Aceptar y usar Opttia</button>
+      <button type="button" class="decline" (click)="declineConsent()">Ahora no</button>
+    </div>
+  </section>
+</ng-template>

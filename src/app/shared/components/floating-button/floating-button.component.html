@@ -1,134 +1,80 @@
-<div class="floating-button-container" *ngIf="authService.isLoggedIn" [ngClass]="{
-        'open': chatFormVisible, 
-        'minimized': chatMinimized,
-        'options-visible': optionsPanelVisible,
-        'voice-mode': selectedMode === 'voice' && isListening,
-        'voice-call-mode': selectedMode === 'voice' && isListening
-     }">
-
-  <!-- Botón flotante principal -->
-  <button class="floating-button" (click)="toggleOptionsPanel($event)" [ngClass]="{
-            'active': chatFormVisible || optionsPanelVisible, 
-            'has-unread': hasUnreadMessages,
-            'listening': isListening
-          }">
-    <i class="fa fa-comments main-icon"></i>
-    <span class="notification-indicator" *ngIf="hasUnreadMessages"></span>
-    <i *ngIf="isListening" class="listening-indicator"></i>
+<div class="floating-button-container opttia-launcher" *ngIf="authService.isLoggedIn"
+  [class.open]="chatFormVisible" [class.minimized]="chatMinimized" [class.options-visible]="optionsPanelVisible">
+  <button type="button" class="floating-button" (click)="toggleOptionsPanel($event)"
+    [attr.aria-label]="optionsPanelVisible ? 'Cerrar menú de Opttia' : 'Abrir menú de Opttia'"
+    [attr.aria-expanded]="optionsPanelVisible" aria-controls="opttia-menu"
+    [class.active]="optionsPanelVisible" [class.has-unread]="hasUnreadMessages">
+    <span class="launcher-symbol" aria-hidden="true">
+      <svg viewBox="0 0 32 32" fill="none">
+        <path d="M15 5c1.5 7 3 8.5 10 10-7 1.5-8.5 3-10 10-1.5-7-3-8.5-10-10 7-1.5 8.5-3 10-10Z" fill="currentColor"/>
+        <path d="M26 2v7M22.5 5.5h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <span class="launcher-label">Opttia <span class="launcher-ai">IA</span></span>
+    <i class="fa launcher-toggle" [ngClass]="optionsPanelVisible ? 'fa-times' : 'fa-angle-up'" aria-hidden="true"></i>
+    <span class="launcher-unread" *ngIf="hasUnreadMessages" aria-label="Mensajes sin leer"></span>
   </button>
 
-  <!-- Panel de opciones - Envolver en un div posicionado -->
-  <div class="options-wrapper" *ngIf="optionsPanelVisible">
-    <div class="options-panel">
-      <div class="options-header">
-        <span>¿Cómo puedo ayudarte?</span>
-        <button class="close-options-btn" (click)="closeEverything($event)" title="Cerrar">
-          <i class="fa fa-times"></i>
+  <button type="button" class="mobile-menu-backdrop" *ngIf="optionsPanelVisible"
+    (click)="closeEverything($event)" aria-label="Cerrar opciones de Opttia" tabindex="-1"></button>
+  <section id="opttia-menu" class="opttia-menu" *ngIf="optionsPanelVisible"
+    aria-labelledby="opttia-menu-title" (keydown.escape)="$event.stopPropagation(); closeEverything(null)">
+    <header class="opttia-menu-header">
+      <div>
+        <span class="menu-eyebrow">TU ESPACIO DE AYUDA</span>
+        <h2 id="opttia-menu-title">¿Qué necesitas hoy?</h2>
+      </div>
+      <button type="button" class="menu-close" (click)="closeEverything($event)" aria-label="Cerrar menú">
+        <i class="fa fa-times" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div class="opttia-menu-body">
+      <button type="button" class="opttia-feature" (click)="selectMode('opttia', $event)">
+        <span class="feature-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M15 5c1.5 7 3 8.5 10 10-7 1.5-8.5 3-10 10-1.5-7-3-8.5-10-10 7-1.5 8.5-3 10-10Z" fill="currentColor"/>
+            <path d="M26 2v7M22.5 5.5h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="feature-copy">
+          <span class="feature-title">Hablar con Opttia <span class="feature-badge">IA</span></span>
+          <span class="feature-description">Ventas, pedidos e inventario.<br>Tu negocio, en una conversación.</span>
+          <span class="feature-action">Iniciar conversación <i class="fa fa-arrow-right" aria-hidden="true"></i></span>
+        </span>
+      </button>
+
+      <!-- K.A.I. Chat, Voz y Live Audio están deprecados y no se ofrecen en este menú. -->
+      <h3 class="menu-section-title">SOPORTE Y SEGUIMIENTO</h3>
+      <nav class="support-links" aria-label="Soporte de Katuq">
+        <button type="button" class="support-link" (click)="navigateTo('/soporte', $event)">
+          <span class="support-icon" aria-hidden="true"><i class="fa fa-headphones"></i></span>
+          <span class="support-copy"><strong>Contactar soporte</strong><small>Reporta un problema o propone una idea</small></span>
+          <i class="fa fa-angle-right" aria-hidden="true"></i>
         </button>
-      </div>
-
-      <div class="options-list">
-        <div class="option-item" (click)="selectMode('chat', $event)" [ngClass]="{'selected': selectedMode === 'chat'}">
-          <div class="option-icon">
-            <i class="fa fa-comments"></i>
-          </div>
-          <div class="option-details">
-            <span class="option-title">Chat</span>
-            <span class="option-description">Conversa con K.A.I. por mensajes</span>
-          </div>
-        </div>
-
-        <div class="option-item" *ngIf="isPremiumUser" (click)="selectMode('voice', $event)"
-          [ngClass]="{'selected': selectedMode === 'voice'}">
-          <div class="option-icon">
-            <i class="fa fa-microphone"></i>
-          </div>
-          <div class="option-details">
-            <span class="option-title">Voz</span>
-            <span class="option-description">Habla con K.A.I. usando tu micrófono</span>
-          </div>
-        </div>
-
-        <div class="option-item" *ngIf="isPremiumUser" (click)="selectMode('live-audio', $event)"
-          [ngClass]="{'selected': selectedMode === 'live-audio'}">
-          <div class="option-icon">
-            <i class="fa fa-podcast"></i>
-          </div>
-          <div class="option-details">
-            <span class="option-title">Live Audio</span>
-            <span class="option-description">Conversación en tiempo real con IA</span>
-          </div>
-        </div>
-
-        <!-- Nueva sección de Soporte -->
-        <div class="option-separator">Soporte</div>
-
-        <div class="option-item" (click)="navigateTo('/soporte', $event)">
-          <div class="option-icon">
-            <i class="fa fa-headphones"></i>
-          </div>
-          <div class="option-details">
-            <span class="option-title">Crear Ticket/Idea</span>
-            <span class="option-description">Reporta un problema o sugiere una mejora</span>
-          </div>
-        </div>
-
-        <div class="option-item" (click)="navigateTo('/misTickets', $event)">
-          <div class="option-icon">
-            <i class="fa fa-ticket"></i>
-          </div>
-          <div class="option-details">
-            <span class="option-title">Mis Tickets</span>
-            <span class="option-description">Consulta el estado de tus tickets</span>
-          </div>
-        </div>
-
-        <div class="option-item" (click)="navigateTo('/misIdeas', $event)">
-          <div class="option-icon">
-            <i class="fa fa-lightbulb-o"></i>
-          </div>
-          <div class="option-details">
-            <span class="option-title">Mis Ideas</span>
-            <span class="option-description">Revisa tus ideas enviadas</span>
-          </div>
-        </div>
-        <!-- Fin Nueva sección de Soporte -->
-
-        <div class="option-separator">Otros</div>
-
-        <div class="option-item" (click)="selectMode('help', $event)" [ngClass]="{'selected': selectedMode === 'help'}">
-          <div class="option-icon">
-            <i class="fa fa-question-circle"></i>
-          </div>
-          <div class="option-details">
-            <span class="option-title">Ayuda</span>
-            <span class="option-description">Guía de uso y preguntas frecuentes</span>
-          </div>
-        </div>
-
-        <div class="option-item" (click)="selectMode('feedback', $event)"
-          [ngClass]="{'selected': selectedMode === 'feedback'}">
-          <div class="option-icon">
-            <i class="fa fa-star"></i>
-          </div>
-          <div class="option-details">
-            <span class="option-title">Feedback</span>
-            <span class="option-description">Califica y mejora a K.A.I.</span>
-          </div>
-        </div>
-      </div>
+        <button type="button" class="support-link" (click)="navigateTo('/misTickets', $event)">
+          <span class="support-icon" aria-hidden="true"><i class="fa fa-ticket"></i></span>
+          <span class="support-copy"><strong>Mis tickets</strong><small>Consulta respuestas y avances</small></span>
+          <i class="fa fa-angle-right" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="support-link" (click)="navigateTo('/misIdeas', $event)">
+          <span class="support-icon" aria-hidden="true"><i class="fa fa-lightbulb-o"></i></span>
+          <span class="support-copy"><strong>Mis ideas</strong><small>Sigue las mejoras que has propuesto</small></span>
+          <i class="fa fa-angle-right" aria-hidden="true"></i>
+        </button>
+      </nav>
     </div>
-  </div>
 
-  <!-- Tooltip que se muestra cuando el botón está en estado normal -->
-  <span class="tooltip-text-floating"
-    *ngIf="!chatFormVisible && !chatMinimized && !optionsPanelVisible && !isListening">
-    Pregúntale a K.A.I.
-  </span>
+    <footer class="opttia-menu-footer">
+      <span>Estamos para ayudarte</span>
+      <span class="menu-brand">Katuq</span>
+    </footer>
+  </section>
 
   <!-- Nuevo componente de agente de voz - Reemplaza toda la implementación anterior -->
+  <!-- @deprecated Agente K.A.I. de voz conservado solo para compatibilidad. -->
   <app-voice-agent
-    *ngIf="selectedMode === 'voice'"
+    *ngIf="legacyKaiEnabled && selectedMode === 'voice'"
     [config]="voiceAgentConfig"
     [demoSteps]="demoSteps"
     [uiConfig]="{
@@ -144,8 +90,8 @@
     (errorOccurred)="onVoiceError($event)">
   </app-voice-agent>
 
-  <!-- Componente Live Audio -->
-  <div *ngIf="selectedMode === 'live-audio'" class="live-audio-container">
+  <!-- @deprecated K.A.I. Live Audio conservado solo para compatibilidad. -->
+  <div *ngIf="legacyKaiEnabled && selectedMode === 'live-audio'" class="live-audio-container">
     <app-live-audio></app-live-audio>
     <button class="close-live-audio-btn" (click)="stopLiveAudioMode($event)" title="Cerrar Live Audio">
       <i class="fa fa-times"></i>
@@ -154,7 +100,7 @@
 
   <!-- Burbuja de chat minimizada -->
   <div *ngIf="chatMinimized" class="minimized-chat-bubble" (click)="maximizeChat($event)">
-    <span class="minimize-text">K.A.I. asistente</span>
+    <span class="minimize-text">Opttia</span>
     <span class="notification-indicator" *ngIf="hasUnreadMessages"></span>
     <button class="maximize-chat-btn" (click)="maximizeChat($event)">
       <i class="fa fa-expand"></i>
@@ -165,7 +111,7 @@
   <div *ngIf="chatFormVisible && !chatMinimized" class="floating-chat-overlay" [ngClass]="{'maximized': chatMaximized}">
     <!-- Barra de título del chat -->
     <div class="chat-header" (dblclick)="toggleChatSize($event)">
-      <span class="chat-title">K.A.I. - Asistente Virtual</span>
+      <span class="chat-title">Opttia · Inteligencia operacional</span>
       <div class="chat-controls">
         <button class="chat-control-btn" (click)="toggleChatSize($event)" title="Cambiar tamaño">
           <i class="fa" [ngClass]="chatMaximized ? 'fa-compress' : 'fa-expand'"></i>
@@ -178,7 +124,11 @@
 
     <!-- Contenedor del chat con estructura flexbox -->
     <div *ngIf="authService.isLoggedIn" class="floating-chat-container">
-      <app-chat [isFloating]="true" class="floating-chat" (closeRequested)="closeChat($event)">
+      <app-opttia-chat *ngIf="selectedMode === 'opttia'" class="floating-chat"
+        (closeRequested)="closeChat($event)">
+      </app-opttia-chat>
+      <!-- @deprecated Chat K.A.I. conservado solo para compatibilidad. -->
+      <app-chat *ngIf="legacyKaiEnabled && selectedMode === 'chat'" [isFloating]="true" class="floating-chat" (closeRequested)="closeChat($event)">
       </app-chat>
     </div>
   </div>

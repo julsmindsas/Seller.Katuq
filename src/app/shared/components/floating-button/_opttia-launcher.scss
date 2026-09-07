@@ -1,0 +1,180 @@
+// Launcher y menú actuales. Los estilos K.A.I. se conservan por compatibilidad.
+.opttia-launcher {
+  --menu-bg: #ffffff;
+  --menu-ink: #252139;
+  --menu-muted: #777286;
+  --menu-line: #eeecf3;
+  --menu-soft: #f7f6fa;
+  --menu-accent: #7046df;
+  --menu-tint: #f3efff;
+  width: 166px;
+  height: 56px;
+  pointer-events: none;
+
+  &.options-visible { width: 344px; height: 56px; }
+
+  .floating-button {
+    pointer-events: auto;
+    width: 166px;
+    height: 56px;
+    padding: 7px 16px 7px 7px;
+    gap: 10px;
+    border-radius: 28px;
+    background: #7046df;
+    border: 1px solid rgba(255, 255, 255, .35);
+    box-shadow: 0 6px 18px rgba(72, 40, 146, .22), 0 2px 4px rgba(40, 24, 71, .1);
+    overflow: visible;
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+
+    &:hover { background: #6137cc; transform: translateY(-2px); }
+    &.active { background: #372653; }
+    &:active { transform: scale(.97); }
+    &:focus-visible { outline: 3px solid #bca4ff; outline-offset: 4px; }
+  }
+
+  .launcher-symbol {
+    display: grid;
+    place-items: center;
+    flex: 0 0 40px;
+    height: 40px;
+    color: #7046df;
+    background: #fff;
+    border-radius: 50%;
+    svg { width: 27px; height: 27px; }
+  }
+
+  .launcher-label { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 650; letter-spacing: -.3px; }
+  .launcher-ai { padding: 3px 4px; border: 1px solid rgba(255,255,255,.4); border-radius: 5px; font-size: 9px; letter-spacing: .4px; }
+  .launcher-toggle { margin-left: auto; font-size: 16px; }
+  .launcher-unread { position: absolute; width: 11px; height: 11px; top: 0; right: 7px; border: 2px solid white; border-radius: 50%; background: #e54f69; }
+
+  .opttia-menu {
+    pointer-events: auto;
+    position: absolute;
+    right: 0;
+    bottom: 70px;
+    width: 344px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 118px);
+    max-height: calc(100dvh - 118px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    color: var(--menu-ink);
+    background: var(--menu-bg);
+    border: 1px solid var(--menu-line);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(35, 23, 62, .16), 0 3px 10px rgba(35, 23, 62, .06);
+    transform-origin: bottom right;
+    animation: opttia-menu-enter .18s ease-out;
+    button { font-family: inherit; cursor: pointer; text-align: left; }
+    button:focus-visible { outline: 2px solid var(--menu-accent); outline-offset: 2px; }
+  }
+
+  .opttia-menu-header { display: flex; align-items: center; justify-content: space-between; padding: 22px 20px 16px; gap: 12px; }
+  .menu-eyebrow { display: block; color: var(--menu-muted); font-size: 9px; font-weight: 650; letter-spacing: 1.3px; }
+  .opttia-menu-header h2 { margin: 7px 0 0; color: var(--menu-ink); font-size: 19px; line-height: 1.3; font-weight: 650; letter-spacing: -.5px; }
+  .menu-close { display: grid; place-items: center; flex: 0 0 32px; height: 32px; border: 0; border-radius: 50%; background: var(--menu-soft); color: var(--menu-muted); font-size: 13px; }
+  .menu-close:hover { color: var(--menu-accent); background: var(--menu-tint); }
+  .opttia-menu-body { padding: 0 12px 12px; }
+
+  .opttia-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 17px 15px;
+    color: var(--menu-accent);
+    background: var(--menu-tint);
+    border: 1px solid transparent;
+    border-radius: 16px;
+    transition: border-color .18s ease, background .18s ease;
+    &:hover { border-color: #b8a1ec; }
+  }
+  .feature-mark { flex: 0 0 38px; display: grid; place-items: center; height: 38px; background: var(--menu-accent); color: white; border-radius: 12px; svg { width: 26px; height: 26px; } }
+  .feature-copy { min-width: 0; }
+  .feature-title { display: flex; align-items: center; gap: 7px; color: var(--menu-ink); font-size: 14px; font-weight: 650; }
+  .feature-badge { padding: 2px 5px; color: var(--menu-accent); border: 1px solid #cabbec; border-radius: 5px; font-size: 9px; }
+  .feature-description { display: block; margin-top: 6px; color: var(--menu-muted); font-size: 12px; line-height: 1.55; }
+  .feature-action { display: flex; align-items: center; gap: 10px; margin-top: 13px; font-size: 11px; font-weight: 650; }
+  .feature-action i { font-size: 10px; transition: transform .18s ease; }
+  .opttia-feature:hover .feature-action i { transform: translateX(3px); }
+  // El tema global impone tamaño a h3 con !important.
+  .menu-section-title { margin: 20px 10px 8px; color: var(--menu-muted); font-size: 10px !important; line-height: 1.4; letter-spacing: 1px; font-weight: 650; }
+  .support-links { display: flex; flex-direction: column; gap: 2px; }
+  .support-link { display: flex; align-items: center; gap: 11px; width: 100%; min-height: 62px; padding: 10px; color: var(--menu-muted); background: transparent; border: 0; border-radius: 12px; transition: background .18s ease; }
+  .support-link:hover { background: var(--menu-soft); color: var(--menu-accent); }
+  .support-icon { flex: 0 0 34px; height: 34px; display: grid; place-items: center; color: var(--menu-muted); background: var(--menu-soft); border: 1px solid var(--menu-line); border-radius: 10px; font-size: 16px; }
+  .support-copy { flex: 1; min-width: 0; strong { display: block; color: var(--menu-ink); font-size: 12px; font-weight: 600; } small { display: block; margin-top: 3px; color: var(--menu-muted); font-size: 10px; line-height: 1.5; } }
+  .opttia-menu-footer { display: flex; justify-content: space-between; align-items: center; padding: 13px 22px; border-top: 1px solid var(--menu-line); color: var(--menu-muted); font-size: 10px; }
+  .menu-brand { color: var(--menu-ink); font-size: 12px; font-weight: 750; letter-spacing: -.4px; }
+
+  // El contenedor es transparente a clics; las superficies activas los reciben.
+  .floating-chat-overlay, .minimized-chat-bubble { pointer-events: auto; }
+  &.open.options-visible .opttia-menu { bottom: 0; }
+}
+
+:host-context(body.dark-only) .opttia-launcher,
+:host-context(body.dark-mode) .opttia-launcher {
+  --menu-bg: #24212f;
+  --menu-ink: #f3effa;
+  --menu-muted: #b5afc4;
+  --menu-line: #393443;
+  --menu-soft: #2e2939;
+  --menu-accent: #bea3ff;
+  --menu-tint: #352b48;
+  .feature-mark { background: #7850cf; }
+}
+
+@keyframes opttia-menu-enter {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 768px) {
+  .opttia-launcher, .opttia-launcher.options-visible {
+    // Por encima de la barra inferior (1000), debajo de modales (1050).
+    z-index: 1040;
+    right: 16px;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    width: 60px;
+    height: 64px;
+    .floating-button {
+      width: 60px; height: 64px; padding: 7px 5px;
+      flex-direction: column; gap: 3px; border-radius: 20px;
+      .launcher-symbol { flex: 0 0 29px; width: 29px; height: 29px; background: transparent; color: white; }
+      .launcher-symbol svg { width: 28px; height: 28px; }
+      .launcher-label { font-size: 10px; letter-spacing: 0; }
+      .launcher-ai, .launcher-toggle { display: none; }
+    }
+    .opttia-menu {
+      position: fixed; bottom: 0; right: 0; left: 0;
+      width: 100%; max-width: none;
+      max-height: calc(100vh - 32px);
+      max-height: calc(100dvh - 32px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      border-radius: 24px 24px 0 0;
+      z-index: 2;
+    }
+    &.options-visible .floating-button { visibility: hidden; }
+    .mobile-menu-backdrop {
+      display: block; position: fixed; inset: 0; width: 100%; height: 100%;
+      background: rgba(20, 15, 35, .36); border: 0;
+      pointer-events: auto; z-index: 1;
+    }
+  }
+  .opttia-launcher.open:not(.minimized) {
+    right: 0; bottom: 0;
+    .floating-button { display: none; }
+    .floating-chat-overlay { height: 100dvh; max-height: 100dvh; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-menu-backdrop { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opttia-launcher .opttia-menu { animation: none; }
+  .opttia-launcher button, .opttia-launcher .feature-action i { transition: none; }
+}

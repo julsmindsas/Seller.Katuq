@@ -15,13 +15,20 @@ import { SubscriptionService } from '../../services/subscription.service';
   styleUrls: ['./floating-button.component.scss']
 })
 export class FloatingButtonComponent implements OnInit, OnDestroy {
+  /**
+   * @deprecated Los asistentes K.A.I. de chat, voz y Live Audio fueron
+   * reemplazados por Opttia. Se conserva temporalmente su implementación para
+   * compatibilidad, pero no debe habilitarse en la interfaz.
+   */
+  public readonly legacyKaiEnabled = false;
+
   // Propiedades existentes
   public chatFormVisible: boolean = false;
   public chatMinimized: boolean = false;
   public hasUnreadMessages: boolean = false;
   public position = { bottom: 20, right: 20 };
   public optionsPanelVisible: boolean = false;
-  public selectedMode: string = 'chat';
+  public selectedMode: string = 'opttia';
   private conversationState: any = null;
 
   // Propiedades simplificadas para el agente de voz
@@ -82,7 +89,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
         this.chatMinimized = parsedState.minimized || false;
         this.hasUnreadMessages = parsedState.hasUnread || false;
         this.conversationState = parsedState.conversation || null;
-        this.selectedMode = parsedState.mode || 'chat';
+        // Los modos K.A.I. guardados pertenecen a la experiencia deprecada.
+        this.selectedMode = 'opttia';
 
         // Si había una conversación en curso, mostrar el chat como minimizado
         if (this.conversationState && Object.keys(this.conversationState).length > 0) {
@@ -162,10 +170,19 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
   selectMode(mode: string, event: MouseEvent) {
     event.stopPropagation();
+
+    if (!this.legacyKaiEnabled && ['chat', 'voice', 'live-audio'].includes(mode)) {
+      this.openOpttia(event);
+      return;
+    }
+
     this.selectedMode = mode;
     this.optionsPanelVisible = false;
 
     switch (mode) {
+      case 'opttia':
+        this.openOpttia(event);
+        break;
       case 'chat':
         this.openChat(event);
         break;
@@ -186,7 +203,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     this.saveState();
   }
 
-  // Método simplificado para iniciar el modo de voz usando el servicio
+  /** @deprecated Reemplazado por Opttia. */
   async startVoiceMode(event: MouseEvent) {
     event.stopPropagation();
     console.log('🎤 Verificando acceso a modo de voz');
@@ -218,8 +235,18 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     this.saveState();
   }
 
+  /** @deprecated Reemplazado por Opttia. */
   openChat(event: MouseEvent) {
     event.stopPropagation();
+    this.chatFormVisible = true;
+    this.chatMinimized = false;
+    this.hasUnreadMessages = false;
+    this.saveState();
+  }
+
+  openOpttia(event: MouseEvent) {
+    event.stopPropagation();
+    this.selectedMode = 'opttia';
     this.chatFormVisible = true;
     this.chatMinimized = false;
     this.hasUnreadMessages = false;
@@ -431,7 +458,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     // this.toastr.info('Reconocimiento de voz detenido', 'Voz'); // No longer needed
   }
 
-  // Método para iniciar el modo live-audio
+  /** @deprecated Reemplazado por Opttia. */
   startLiveAudioMode(event: MouseEvent) {
     event.stopPropagation();
     console.log('🎵 Verificando acceso a Live Audio');
@@ -657,7 +684,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
       document.body.removeChild(fullscreenContainer);
       
       // Resetear modo
-      this.selectedMode = 'chat';
+      this.selectedMode = 'opttia';
       this.saveState();
     }
   }
@@ -667,7 +694,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     if (event) event.stopPropagation();
     console.log('🛑 Deteniendo modo Live Audio');
     
-    this.selectedMode = 'chat'; // Volver al modo por defecto
+    this.selectedMode = 'opttia'; // Volver al asistente principal
     this.saveState();
   }
 
@@ -747,7 +774,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
     // Resetear modo si es live-audio
     if (this.selectedMode === 'live-audio') {
-      this.selectedMode = 'chat';
+      this.selectedMode = 'opttia';
     }
 
     this.saveState();
