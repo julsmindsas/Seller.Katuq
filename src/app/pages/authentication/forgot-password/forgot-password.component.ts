@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../shared/services/firebase/auth.service';
+import { ServiciosService } from '../../../shared/services/servicios.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -19,6 +20,7 @@ export class ForgotPasswordComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
+    private serviciosService: ServiciosService,
     private toastr: ToastrService
   ) {
     this.forgotPasswordForm = this.fb.group({
@@ -38,22 +40,19 @@ export class ForgotPasswordComponent implements OnInit {
       this.isLoading = true;
       const email = this.forgotPasswordForm.value.email.toLowerCase();
       
-      this.authService.ForgotPassword(email)
-        .then(() => {
+      this.serviciosService.forgotPassword({ email }).subscribe({
+        next: () => {
           this.emailSent = true;
           this.isLoading = false;
-          this.toastr.success('Se han enviado las instrucciones a tu correo', 'Éxito');
+          this.toastr.success('Si el correo está registrado, recibirás las instrucciones', 'Solicitud recibida');
           
-          // Opcional: redirigir después de unos segundos
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 5000);
-        })
-        .catch((error) => {
+        },
+        error: () => {
           this.isLoading = false;
-          console.error('Error al enviar email de recuperación:', error);
-          this.toastr.error('Error al enviar las instrucciones. Intenta nuevamente.', 'Error');
-        });
+          // El mensaje no confirma si el correo existe y permite volver a intentar.
+          this.toastr.error('No pudimos procesar la solicitud. Intenta nuevamente.', 'Error');
+        }
+      });
     }
   }
 }

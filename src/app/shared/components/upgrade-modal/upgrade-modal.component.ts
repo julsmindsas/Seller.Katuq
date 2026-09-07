@@ -22,7 +22,9 @@ import {
 })
 export class UpgradeModalComponent implements OnChanges, OnDestroy {
   @Input() visible = false;
+  @Input() mode: 'upgrade' | 'replace' = 'upgrade';
   @Output() visibleChange = new EventEmitter<boolean>();
+  @Output() completed = new EventEmitter<void>();
 
   loading = false;
   configLoading = false;
@@ -70,6 +72,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   constructor(private subscriptionService: SubscriptionService) {}
 
   get paymentButtonLabel(): string {
+    if (this.mode === 'replace') return 'Guardar nueva tarjeta';
     return this.initialAmountCOP
       ? `Pagar $${this.initialAmountCOP.toLocaleString('es-CO')} COP`
       : 'Pagar y activar';
@@ -77,6 +80,10 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
 
   get isSandboxPayment(): boolean {
     return this.paymentEnvironment === 'sandbox';
+  }
+
+  get isReplacementMode(): boolean {
+    return this.mode === 'replace';
   }
 
   get billingPeriodLabel(): string {
@@ -122,7 +129,8 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['visible'] && changes['visible'].currentValue === true) {
+    if ((changes['visible'] && changes['visible'].currentValue === true) ||
+        (changes['mode'] && this.visible)) {
       this.step = 'info';
       this.resetForm();
       this.loadPaymentConfig();
@@ -138,7 +146,8 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
 
   // Paso 1: Usuario acepta y va a registrar tarjeta
   goToCardStep(): void {
-    if (!this.wompiApiUrl || !this.wompiPublicKey || !this.initialAmountCOP) {
+    if (!this.wompiApiUrl || !this.wompiPublicKey ||
+        (this.mode === 'upgrade' && !this.initialAmountCOP)) {
       this.cardError = 'Espera mientras confirmamos el valor y la conexión segura con Wompi.';
       return;
     }
@@ -148,7 +157,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
 
   // El backend es la única fuente de verdad para ambiente y monto. Así un
   // localhost con llaves productivas nunca muestra el precio reducido de test.
-  private loadPaymentConfig(): void {
+  private loadPaymentConfig(messageAfterLoad = ''): void {
     this.configLoading = true;
     this.cardError = '';
     this.initialAmountCOP = null;
@@ -179,6 +188,7 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
         this.tierName = config.tierName || 'Base';
         this.wompiTokenizationPublicKeyPem = config.tokenizationPublicKey;
         this.securityReady = true;
+        if (messageAfterLoad) this.cardError = messageAfterLoad;
       },
       error: () => {
         this.configLoading = false;
@@ -218,7 +228,8 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
       this.cardError = 'Debes aceptar los términos y la política de datos personales';
       return;
     }
-    if (!this.securityReady || !this.wompiTokenizationPublicKeyPem || !this.paymentQuoteId) {
+    if (!this.securityReady || !this.wompiTokenizationPublicKeyPem ||
+        (this.mode === 'upgrade' && !this.paymentQuoteId)) {
       this.cardError = 'El cifrado seguro de Wompi todavía no está listo';
       return;
     }
@@ -255,19 +266,32 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
       this.clearSensitiveCardFields();
 
       // 2b. Enviar token al backend para crear payment source (private key en servidor)
-      const sourceResp = await this.subscriptionService.createRecurringPaymentSource({
+      const paymentPayload = {
           token: cardToken,
           acceptanceToken: this.acceptanceToken,
           personalAuthToken: this.personalAuthToken,
           cardBrand,
           cardLastFour,
           receiptEmail: this.receiptEmail.trim().toLowerCase(),
+      };
+      const sourceResp = await (this.mode === 'replace'
+        ? this.subscriptionService.replaceRecurringPaymentSource(paymentPayload)
+        : this.subscriptionService.createRecurringPaymentSource({
+          ...paymentPayload,
           billingPeriod: this.billingPeriod,
           quoteId: this.paymentQuoteId,
-        }).toPromise();
+        })).toPromise();
 
       if (!sourceResp?.success) {
         throw new Error(sourceResp?.error || 'Error al registrar medio de pago');
+      }
+
+      if (this.mode === 'replace') {
+        this.loading = false;
+        this.subscriptionService.refresh();
+        this.completed.emit();
+        this.step = 'success';
+        return;
       }
 
       // El backend realiza el primer cobro. El plan permanece Gratis hasta que
@@ -282,7 +306,18 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
 
     } catch (err: any) {
       this.loading = false;
-      this.cardError = this.friendlyPaymentError(err);
+      const message = this.friendlyPaymentError(err);
+      const errorCode = String(err?.error?.error || '').toUpperCase();
+      // La cotización se consume antes de crear la fuente/cobro. Si Wompi ya
+      // devolvió un rechazo terminal, pedimos una nueva cotización y dejamos
+      // el formulario listo para que el comercio reintente sin soporte.
+      if (this.mode === 'upgrade' &&
+          ['PAYMENT_NOT_APPROVED', 'INITIAL_CHARGE_ERROR', 'PAYMENT_METHOD_REVIEW_REQUIRED',
+            'PAYMENT_SOURCE_ERROR', 'PAYMENT_QUOTE_EXPIRED'].includes(errorCode)) {
+        this.loadPaymentConfig(message);
+      } else {
+        this.cardError = message;
+      }
     }
   }
 
@@ -404,8 +439,8 @@ export class UpgradeModalComponent implements OnChanges, OnDestroy {
 
         if (['failed', 'declined', 'error', 'voided'].includes(String(status.paymentStatus).toLowerCase())) {
           this.stopPaymentPolling$.next();
-          this.cardError = 'Wompi no aprobó el pago. Revisa la tarjeta o intenta con otra.';
           this.step = 'card';
+          this.loadPaymentConfig('Wompi no aprobó el pago. Revisa la tarjeta o intenta con otra.');
         }
       },
       error: () => {

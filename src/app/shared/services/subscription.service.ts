@@ -335,6 +335,18 @@ export class SubscriptionService {
     return this.http.post<any>(`${this.baseUrl}/create-payment-source`, payload);
   }
 
+  /** Reemplazar la fuente recurrente; este endpoint nunca hace un cobro. */
+  replaceRecurringPaymentSource(payload: {
+    token: string;
+    acceptanceToken: string | null;
+    personalAuthToken: string | null;
+    cardBrand?: string;
+    cardLastFour?: string;
+    receiptEmail: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/replace-payment-source`, payload);
+  }
+
   /** Programa mensual↔anual para el siguiente cobro; nunca cobra al guardar. */
   updateBillingPeriod(billingPeriod: 'monthly' | 'yearly'): Observable<any> {
     return this.http.put<any>(`${this.baseUrl}/billing-period`, { billingPeriod }).pipe(

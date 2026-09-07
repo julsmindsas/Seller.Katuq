@@ -142,6 +142,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     registrationAlreadyExists: boolean = false; // 409: comercio/usuario ya registrado
     registrationPendingReview: boolean = false; // 202: registro en cuarentena anti-abuso
     registrationBlocked: boolean = false; // 403/422: bloqueado o datos inválidos
+    credentialsEmailSent: boolean = true;
     quickStartMessage: string = "";
     nextSteps: string[] = [];
 
@@ -673,6 +674,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 this.quickStartInProgress = false;
                 this.welcomeMessage = registrationData.nombre;
                 this.quickStartMessage = quickStartResult.message || "¡Tu comercio está configurado y listo!";
+                this.credentialsEmailSent = quickStartResult.credentialsEmailSent !== false;
                 this.clearProgress();
                 clearOnboardingStorage(localStorage);
                 localStorage.removeItem('katuq_onboarding_state');

@@ -59,12 +59,20 @@
         </div>
 
         <!-- Credenciales: la contraseña solo llega por correo, hay que decírselo al usuario -->
-        <div class="credentials-notice" style="background: #f8f9fa; border-left: 4px solid #9020FF; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
+        <div *ngIf="credentialsEmailSent" class="credentials-notice" style="background: #f8f9fa; border-left: 4px solid #9020FF; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
           <p style="margin: 0 0 6px; font-weight: bold; color: #9020FF;">📧 {{ 'Revisa tu correo para ingresar' | translate }}</p>
           <p style="margin: 0; font-size: 1.05rem;">
             {{ 'Te enviamos tu usuario y contraseña a' | translate }}
             <strong>{{ mainForm.get('registration.correo')?.value }}</strong>.
             {{ 'Úsalas para iniciar sesión y luego cámbiala por seguridad.' | translate }}
+          </p>
+        </div>
+
+        <div *ngIf="!credentialsEmailSent" class="credentials-notice" style="background: #fff8e1; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
+          <p style="margin: 0 0 6px; font-weight: bold; color: #92400e;">Tu cuenta está lista, pero el correo no pudo salir</p>
+          <p style="margin: 0; font-size: 1.05rem;">
+            Ve al login y usa <strong>“Olvidé mi contraseña”</strong> con
+            <strong>{{ mainForm.get('registration.correo')?.value }}</strong>. Podrás crear una contraseña sin ayuda de soporte.
           </p>
         </div>
 

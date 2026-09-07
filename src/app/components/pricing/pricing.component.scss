@@ -678,6 +678,47 @@
   .period-error { color: #b91c1c; font-weight: 700; }
 }
 
+.billing-self-service {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ddd6fe;
+
+  > small {
+    color: var(--pricing-muted);
+    font-size: 0.62rem;
+    text-align: center;
+  }
+}
+
+.payment-method-action,
+.cancel-plan-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:disabled { cursor: wait; opacity: 0.62; }
+}
+
+.payment-method-action {
+  border: 1px solid #c4b5fd;
+  color: var(--pricing-purple-dark);
+}
+
+.cancel-plan-action {
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
 .tier-reference,
 .included-section,
 .steps-section {

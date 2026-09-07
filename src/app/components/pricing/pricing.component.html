@@ -213,6 +213,19 @@
       </button>
       <small *ngIf="billingPeriodMessage" class="period-success">{{ billingPeriodMessage }}</small>
       <small *ngIf="billingPeriodError" class="period-error">{{ billingPeriodError }}</small>
+      <div class="billing-self-service">
+        <button *ngIf="canManagePaymentMethod" type="button" class="payment-method-action"
+                (click)="managePaymentMethod()" [disabled]="cancellingSubscription">
+          <i class="pi pi-credit-card"></i>
+          Cambiar tarjeta
+        </button>
+        <small *ngIf="canManagePaymentMethod">{{ savedPaymentMethodLabel }}</small>
+        <button type="button" class="cancel-plan-action" (click)="cancelPaidPlan()"
+                [disabled]="cancellingSubscription || billingPeriodSaving">
+          <i [class]="cancellingSubscription ? 'pi pi-spin pi-spinner' : 'pi pi-times-circle'"></i>
+          Cancelar Premium
+        </button>
+      </div>
     </div>
   </section>
 
@@ -297,4 +310,8 @@
   </div>
 </div>
 
-<app-upgrade-modal [(visible)]="showUpgradeModal"></app-upgrade-modal>
+<app-upgrade-modal
+  [(visible)]="showUpgradeModal"
+  [mode]="upgradeModalMode"
+  (completed)="onPaymentMethodUpdated()">
+</app-upgrade-modal>

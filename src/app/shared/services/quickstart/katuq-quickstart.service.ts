@@ -62,6 +62,7 @@ export interface QuickStartResult {
   serverResponse?: any; // Respuesta completa del servidor
   companyName?: string; // Nombre de la empresa creada en el servidor
   userEmail?: string; // Email del usuario creado en el servidor
+  credentialsEmailSent?: boolean; // false: cuenta creada, el usuario debe recuperar acceso
 }
 
 export interface SectorConfig {
@@ -194,6 +195,7 @@ export class KatuqQuickStartService {
         serverResponse: serverResponse, // Respuesta completa del servidor
         companyName: serverResponse.companyName || empresa.nomComercial,
         userEmail: serverResponse.userEmail || diagnosticData.registration.correo,
+        credentialsEmailSent: serverResponse.credentialsEmailSent !== false,
         message: serverResponse.message || (pendingReview
           ? 'Tu registro está en revisión. Te enviaremos tus credenciales por correo al validarlo.'
           : `¡Tu comercio ${serverResponse.companyName || empresa.nomComercial} está configurado y listo para operar!`),

@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../../shared/services/firebase/auth.service';
 import { ServiciosService } from '../../../shared/services/servicios.service';
-import { UtilsService } from '../../../shared/services/utils.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -25,15 +23,14 @@ export class ResetPasswordComponent implements OnInit {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private authService: AuthService,
     private serviciosService: ServiciosService,
-    private utils: UtilsService,
     private toastr: ToastrService
   ) {
     this.resetPasswordForm = this.fb.group({
       newPassword: ['', [
         Validators.required, 
         Validators.minLength(8), 
+        Validators.maxLength(72),
         Validators.pattern(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
       ]],
       confirmPassword: ['', Validators.required]
@@ -90,7 +87,9 @@ export class ResetPasswordComponent implements OnInit {
       
       const resetData = {
         token: this.resetToken,
-        newPassword: this.utils.hash(this.resetPasswordForm.value.newPassword)
+        // HTTPS protege el transporte; el backend valida la política y guarda
+        // una credencial bcrypt compatible con el login legacy.
+        newPassword: this.resetPasswordForm.value.newPassword
       };
 
       this.serviciosService.resetPassword(resetData).subscribe({

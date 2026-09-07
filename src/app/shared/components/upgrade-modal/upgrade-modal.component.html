@@ -11,13 +11,13 @@
 
   <ng-template pTemplate="header">
     <div class="d-flex align-items-center gap-2">
-      <i class="pi pi-bolt" style="color: #8b5cf6; font-size: 1.2rem;"></i>
+      <i [class]="isReplacementMode ? 'pi pi-credit-card' : 'pi pi-bolt'" style="color: #8b5cf6; font-size: 1.2rem;"></i>
       <div>
         <h5 class="mb-0 fw-bold" style="color: #0f172a;">
-          {{ step === 'info' ? 'Activar Plan Pago' : step === 'card' ? 'Medio de Pago' : step === 'pending' ? 'Verificando Pago' : 'Plan Activado' }}
+          {{ step === 'info' ? (isReplacementMode ? 'Actualizar medio de pago' : 'Activar Plan Pago') : step === 'card' ? 'Medio de Pago' : step === 'pending' ? 'Verificando Pago' : (isReplacementMode ? 'Tarjeta actualizada' : 'Plan Activado') }}
         </h5>
         <small class="text-muted">
-          {{ step === 'info' ? 'Desbloquea todo, paga según tus ventas' : step === 'card' ? 'Primer cobro y facturación ' + billingPeriodLabel : step === 'pending' ? 'Premium se activa solo con pago aprobado' : '' }}
+          {{ step === 'info' ? (isReplacementMode ? 'La nueva tarjeta se usará en el próximo cobro' : 'Desbloquea todo, paga según tus ventas') : step === 'card' ? (isReplacementMode ? 'Registro seguro sin cobro inmediato' : 'Primer cobro y facturación ' + billingPeriodLabel) : step === 'pending' ? 'Premium se activa solo con pago aprobado' : '' }}
         </small>
       </div>
     </div>
@@ -29,7 +29,7 @@
       <i class="pi pi-spin pi-spinner"></i>
       Consultando el valor exacto antes de pagar…
     </div>
-    <div class="billing-period-picker mb-3" role="group" aria-label="Periodicidad de facturación">
+    <div *ngIf="!isReplacementMode" class="billing-period-picker mb-3" role="group" aria-label="Periodicidad de facturación">
       <button type="button" [class.active]="billingPeriod === 'monthly'"
               (click)="selectBillingPeriod('monthly')" [disabled]="configLoading || loading">
         <span>Mensual</span>
@@ -41,14 +41,14 @@
         <small>Un cobro cada 12 meses</small>
       </button>
     </div>
-    <div *ngIf="paymentEnvironment === 'sandbox'" class="payment-notice payment-notice-sandbox mb-3">
+    <div *ngIf="!isReplacementMode && paymentEnvironment === 'sandbox'" class="payment-notice payment-notice-sandbox mb-3">
       <i class="pi pi-wrench"></i>
       <div>
         <strong>Prueba Wompi Sandbox</strong>
         <span>Simularemos un cobro de {{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}. No mueve dinero real.</span>
       </div>
     </div>
-    <div *ngIf="paymentEnvironment === 'production'" class="payment-notice payment-notice-production mb-3">
+    <div *ngIf="!isReplacementMode && paymentEnvironment === 'production'" class="payment-notice payment-notice-production mb-3">
       <i class="pi pi-credit-card"></i>
       <div>
         <strong>{{ productionTestCharge ? 'Prueba real con Wompi' : 'Pago real con Wompi' }}</strong>
@@ -56,10 +56,17 @@
         <span *ngIf="!productionTestCharge">El primer cobro será de {{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }}. Después se cobrará de forma {{ billingPeriodLabel }} según tu tramo.</span>
       </div>
     </div>
+    <div *ngIf="isReplacementMode" class="payment-notice payment-notice-production mb-3">
+      <i class="pi pi-shield"></i>
+      <div>
+        <strong>Sin cobro inmediato</strong>
+        <span>Wompi guardará una nueva autorización tokenizada. Katuq la usará desde el próximo cobro o reintento programado.</span>
+      </div>
+    </div>
     <div *ngIf="cardError" class="alert alert-danger py-2 mb-3" style="font-size: 0.8rem;">
       <i class="pi pi-exclamation-circle me-1"></i>{{ cardError }}
     </div>
-    <div class="mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+    <div *ngIf="!isReplacementMode" class="mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
       <h6 class="fw-bold mb-3" style="color: #0f172a; font-size: 0.85rem;">
         <i class="pi pi-info-circle me-1" style="color: #8b5cf6;"></i>Cómo funciona
       </h6>
@@ -80,7 +87,7 @@
       </div>
     </div>
 
-    <table class="table table-sm mb-3" style="font-size: 0.8rem;">
+    <table *ngIf="!isReplacementMode" class="table table-sm mb-3" style="font-size: 0.8rem;">
       <thead style="background: #f8fafc;">
         <tr>
           <th style="color: #64748b; font-weight: 600;">Plan</th>
@@ -98,7 +105,7 @@
       </tbody>
     </table>
 
-    <small class="text-muted d-block mb-3" style="font-size: 0.7rem;">
+    <small *ngIf="!isReplacementMode" class="text-muted d-block mb-3" style="font-size: 0.7rem;">
       <i class="pi pi-info-circle me-1"></i>Precios en USD convertidos a COP con la TRM del día de cobro
     </small>
   </div>
@@ -106,9 +113,10 @@
   <!-- STEP 2: Card -->
   <div *ngIf="step === 'card'" class="p-3">
     <div class="payment-summary mb-3" [class.payment-summary-real]="paymentEnvironment === 'production'">
-      <span>{{ paymentEnvironment === 'production' ? (productionTestCharge ? 'Prueba real ahora' : 'Cobro real ahora') : 'Cobro de prueba' }}</span>
-      <strong>{{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} COP</strong>
-      <small>Plan {{ tierName }} · {{ renewalLabel }}</small>
+      <span>{{ isReplacementMode ? 'Actualización segura' : (paymentEnvironment === 'production' ? (productionTestCharge ? 'Prueba real ahora' : 'Cobro real ahora') : 'Cobro de prueba') }}</span>
+      <strong *ngIf="!isReplacementMode">{{ initialAmountCOP | currency:'COP':'symbol-narrow':'1.0-0' }} COP</strong>
+      <strong *ngIf="isReplacementMode">$0 ahora</strong>
+      <small>{{ isReplacementMode ? 'Se usará en tu próximo cobro automático' : 'Plan ' + tierName + ' · ' + renewalLabel }}</small>
     </div>
 
     <div class="security-status mb-3"
@@ -135,7 +143,7 @@
                  autocomplete="email" maxlength="254" [disabled]="loading"
                  [attr.aria-invalid]="!!receiptEmailError">
         </div>
-        <small *ngIf="!receiptEmailError" class="field-help">Aquí llegará el comprobante PDF cuando Wompi apruebe.</small>
+        <small *ngIf="!receiptEmailError" class="field-help">{{ isReplacementMode ? 'Aquí llegarán los próximos comprobantes.' : 'Aquí llegará el comprobante PDF cuando Wompi apruebe.' }}</small>
         <small *ngIf="receiptEmailError" class="field-error">{{ receiptEmailError }}</small>
       </div>
 
@@ -257,8 +265,9 @@
     <div class="mb-3">
       <i class="pi pi-check-circle" style="font-size: 3rem; color: #27ae60;"></i>
     </div>
-    <h5 class="fw-bold" style="color: #0f172a;">Plan activado exitosamente</h5>
-    <p class="text-muted">Wompi confirmó el pago. Ya tienes acceso a Premium y enviamos el comprobante PDF a <strong>{{ receiptEmail }}</strong>.</p>
+    <h5 class="fw-bold" style="color: #0f172a;">{{ isReplacementMode ? 'Medio de pago actualizado' : 'Plan activado exitosamente' }}</h5>
+    <p *ngIf="!isReplacementMode" class="text-muted">Wompi confirmó el pago. Ya tienes acceso a Premium y enviamos el comprobante PDF a <strong>{{ receiptEmail }}</strong>.</p>
+    <p *ngIf="isReplacementMode" class="text-muted">La nueva tarjeta quedó tokenizada para tus próximos cobros. No realizamos ningún cargo ahora.</p>
   </div>
 
   <ng-template pTemplate="footer">
@@ -297,9 +306,12 @@
       <!-- Step 4 -->
       <ng-container *ngIf="step === 'success'">
         <span></span>
-        <button pButton type="button" label="Ir al Dashboard" icon="pi pi-home"
+        <button *ngIf="!isReplacementMode" pButton type="button" label="Ir al Dashboard" icon="pi pi-home"
                 style="background: #8b5cf6; border-color: #8b5cf6;"
                 (click)="closeModal()" routerLink="/welcome"></button>
+        <button *ngIf="isReplacementMode" pButton type="button" label="Listo" icon="pi pi-check"
+                style="background: #8b5cf6; border-color: #8b5cf6;"
+                (click)="closeModal()"></button>
       </ng-container>
     </div>
   </ng-template>

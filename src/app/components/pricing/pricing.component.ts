@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SubscriptionService } from '../../shared/services/subscription.service';
+import Swal from 'sweetalert2';
 
 type PricingCurrency = 'USD' | 'COP';
 
@@ -25,6 +26,7 @@ export class PricingComponent implements OnInit, OnDestroy {
   subscriptionStateReady = false;
   currentSubscription: any = null;
   showUpgradeModal = false;
+  upgradeModalMode: 'upgrade' | 'replace' = 'upgrade';
   billingInfo: any = null;
   billingLoading = false;
   currency: PricingCurrency = 'USD';
@@ -33,6 +35,7 @@ export class PricingComponent implements OnInit, OnDestroy {
   billingPeriodSaving = false;
   billingPeriodMessage = '';
   billingPeriodError = '';
+  cancellingSubscription = false;
   readonly publicPricingUrl = 'https://katuq.com/es/precios';
   readonly annualDiscount = 20;
   private destroy$ = new Subject<void>();
@@ -155,6 +158,19 @@ export class PricingComponent implements OnInit, OnDestroy {
     return this.currentPlan === 'premium' && this.billingInfo?.billableSubscription === true;
   }
 
+  get canManagePaymentMethod(): boolean {
+    return this.currentPlan === 'premium' &&
+      this.billingInfo?.billableSubscription === true &&
+      this.billingInfo?.billingMode === 'recurring';
+  }
+
+  get savedPaymentMethodLabel(): string {
+    const method = this.billingInfo?.paymentMethod;
+    if (!method) return 'Tarjeta autorizada en Wompi';
+    const brand = method.brand || 'Tarjeta';
+    return method.lastFour ? `${brand} terminada en ${method.lastFour}` : brand;
+  }
+
   get billingModeSummary(): string {
     return this.billingInfo?.billingMode === 'manual'
       ? 'Recibirás la cuenta de cobro y sus recordatorios por correo; guardar aquí no hace un débito automático.'
@@ -266,7 +282,57 @@ export class PricingComponent implements OnInit, OnDestroy {
       }
       return;
     }
+    this.upgradeModalMode = 'upgrade';
     this.showUpgradeModal = true;
+  }
+
+  managePaymentMethod(): void {
+    if (!this.canManagePaymentMethod || this.cancellingSubscription) return;
+    this.upgradeModalMode = 'replace';
+    this.showUpgradeModal = true;
+  }
+
+  onPaymentMethodUpdated(): void {
+    this.loadBillingInfo();
+  }
+
+  async cancelPaidPlan(): Promise<void> {
+    if (this.currentPlan !== 'premium' || this.cancellingSubscription) return;
+    const confirmation = await Swal.fire({
+      icon: 'warning',
+      title: '¿Volver al plan Gratis?',
+      html: 'La baja es <strong>inmediata</strong>: perderás las funciones Premium y no se harán nuevos cobros automáticos. Tus datos permanecerán en Katuq.',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, pasar a Gratis',
+      cancelButtonText: 'Conservar Premium',
+      confirmButtonColor: '#b91c1c',
+      reverseButtons: true,
+    });
+    if (!confirmation.isConfirmed) return;
+
+    this.cancellingSubscription = true;
+    this.subscriptionService.upgradePlan('freemium').subscribe({
+      next: (response: any) => {
+        this.cancellingSubscription = false;
+        this.currentPlan = 'freemium';
+        this.refreshBillingState();
+        Swal.fire({
+          icon: 'success',
+          title: 'Plan Gratis activado',
+          text: response?.message || 'La renovación automática quedó cancelada.',
+          confirmButtonText: 'Entendido',
+        });
+      },
+      error: (error: any) => {
+        this.cancellingSubscription = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'No pudimos cancelar todavía',
+          text: error?.error?.message || 'Hay un pago en proceso o una validación pendiente. Actualiza el estado e intenta nuevamente.',
+          confirmButtonText: 'Entendido',
+        });
+      },
+    });
   }
 
   chooseBillingPeriod(period: 'monthly' | 'yearly'): void {
