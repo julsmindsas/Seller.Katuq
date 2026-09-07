@@ -30,6 +30,18 @@ import { environment } from "../../../../environments/environment";
 import { urlImagenAbsoluta } from "../../../shared/utils/imagen-producto";
 
 /**
+ * Una lista de precios por tipo de cliente, resuelta para una línea concreta.
+ * `aplicado` marca la del tipo del cliente de la cotización: es la que fijó el
+ * precio que se está cobrando; las demás son referencia.
+ */
+export interface SegmentoPrecio {
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  aplicado: boolean;
+}
+
+/**
  * Editor de cotización — T-18 (cliente + fechas + términos).
  *
  * Scaffold del editor: picker de cliente existente (autocomplete vía
@@ -92,6 +104,22 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   // descripción (un párrafo). Si la carga falla, los chips caen al texto
   // recortado y la cotización sigue funcionando igual.
   tiposCliente: any[] = [];
+
+  // Cambia cada vez que se recarga el catálogo de tipos. Es la llave que
+  // invalida el caché de segmentos: sin esto las líneas resueltas ANTES de que
+  // llegara el catálogo se quedarían con el rótulo recortado para siempre.
+  private tiposClienteVersion = 0;
+
+  // Caché de `preciosSegmento` por línea. El template lo llama varias veces por
+  // fila (los chips del editor, el rótulo del documento y el anexo de precios
+  // sugeridos) y cada llamada recorre el catálogo de tipos con un `find` por
+  // precio; multiplicado por las pasadas de detección de cambios pesa. Se
+  // invalida cuando cambia la categoría del cliente o el catálogo de tipos, que
+  // es de lo único externo a la línea que depende el resultado.
+  private segmentosCache = new WeakMap<
+    object,
+    { clave: string; segmentos: SegmentoPrecio[]; sugeridos: SegmentoPrecio[] }
+  >();
 
   // Se entró desde "Vista previa" del listado (`?preview=1`).
   private abrirPreviewAlCargar = false;
@@ -163,10 +191,12 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
             nombre: t?.nombre || t?.name || "",
             descripcion: t?.descripcion || t?.description || "",
           }));
+          this.tiposClienteVersion++;
           this.cdr.detectChanges();
         },
         error: () => {
           this.tiposCliente = [];
+          this.tiposClienteVersion++;
         },
       })
     );
@@ -1003,14 +1033,51 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
    * (el que efectivamente determina el precio de la línea).
    * Devuelve [] para empresas sin segmentación o ítems libres.
    */
-  preciosSegmento(
-    item: Carrito
-  ): { nombre: string; descripcion: string; precio: number; aplicado: boolean }[] {
-    if (this.itemEsLibre(item)) return [];
+  preciosSegmento(item: Carrito): SegmentoPrecio[] {
+    return this.segmentosDeLinea(item).segmentos;
+  }
+
+  /**
+   * Todas las listas del producto, ordenadas de mayor a menor precio, para el
+   * anexo de precios sugeridos del documento.
+   *
+   * Se descartan las de precio 0: en el anexo saldrían como "$0" y se leerían
+   * como que ese tipo de cliente se lo lleva gratis. En el editor sí se siguen
+   * viendo (el chip es interno y un 0 ahí significa "lista sin tarifar").
+   *
+   * De mayor a menor porque así se lee una tarifa: se parte del precio más alto
+   * y las demás listas se leen como el descuento que representan.
+   */
+  preciosSugeridos(item: Carrito): SegmentoPrecio[] {
+    return this.segmentosDeLinea(item).sugeridos;
+  }
+
+  /** Hay algo que anexar: al menos una línea con listas para sugerir. */
+  get hayPreciosSugeridos(): boolean {
+    return (this.cotizacion?.items || []).some(
+      (it) => this.preciosSugeridos(it).length > 0
+    );
+  }
+
+  /**
+   * Resuelve (y memoriza) los segmentos de una línea. Ver `segmentosCache`: el
+   * template pide esto varias veces por fila en cada detección de cambios.
+   */
+  private segmentosDeLinea(item: Carrito): {
+    segmentos: SegmentoPrecio[];
+    sugeridos: SegmentoPrecio[];
+  } {
+    const vacio = { segmentos: [], sugeridos: [] };
+    if (!item || this.itemEsLibre(item)) return vacio;
     const lista = (item?.producto as any)?.preciosPorTipoCliente;
-    if (!Array.isArray(lista) || lista.length === 0) return [];
-    const categoriaId = (this.cotizacion.cliente as any)?.categoria?.id;
-    return lista
+    if (!Array.isArray(lista) || lista.length === 0) return vacio;
+
+    const categoriaId = (this.cotizacion.cliente as any)?.categoria?.id || "";
+    const clave = `${categoriaId}|${this.tiposClienteVersion}`;
+    const previo = this.segmentosCache.get(item as object);
+    if (previo && previo.clave === clave) return previo;
+
+    const segmentos: SegmentoPrecio[] = lista
       .filter((p: any) => p && p.activo === true)
       .map((p: any) => {
         const tipo = this.tiposCliente.find((t: any) => t?.id === p.tipoClienteId);
@@ -1021,16 +1088,27 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
           aplicado: !!categoriaId && p.tipoClienteId === categoriaId,
         };
       });
+
+    // Copia antes de ordenar: `sort` muta, y `segmentos` es lo que ven los chips
+    // del editor, que van en el orden en que la empresa definió las listas.
+    const sugeridos = segmentos
+      .filter((s) => s.precio > 0)
+      .slice()
+      .sort((a, b) => b.precio - a.precio);
+
+    const entrada = { clave, segmentos, sugeridos };
+    this.segmentosCache.set(item as object, entrada);
+    return entrada;
   }
 
   /**
    * Nombre de la lista de precios que se le aplicó a la línea, para el documento
    * que ve el cliente ("Precio a mayoristas").
    *
-   * En el documento va SOLO la lista aplicada, nunca las demás: la cotización se
-   * le envía al cliente, y listar las otras tarifas le mostraría al mayorista lo
-   * que se le cobra a público general. Las demás listas se quedan en el editor,
-   * que es de uso interno.
+   * Va en la fila del producto para dejar claro con qué tarifa se cotizó. Las
+   * demás listas ya no se ocultan: desde 2026-09-07 el documento lleva además el
+   * anexo de precios sugeridos con todas (`preciosSugeridos`), por pedido de la
+   * usuaria — la decisión anterior era mostrar solo esta.
    *
    * Vacío si el cliente no tiene tipo asignado o el producto no tiene precio
    * para ese tipo (ahí el precio salió de otra fuente y no hay lista que nombrar).
