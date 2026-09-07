@@ -1,0 +1,51 @@
+<form [formGroup]="form" (ngSubmit)="reviewInvoice()" novalidate>
+  <fieldset [disabled]="disabled">
+    <section class="invoice-panel">
+      <div class="invoice-panel__heading"><span class="step-dot">1</span><div><h3>¿A quién le vas a facturar?</h3><p>Elige un cliente de Katuq. Usaremos su ficha actual, no datos escritos aparte.</p></div></div>
+      <app-invoice-customer-picker [companyId]="companyId" [disabled]="disabled" (selected)="chooseCustomer($event)"></app-invoice-customer-picker>
+      <p class="field-error" *ngIf="invalid('customerId')">Selecciona un cliente registrado con sus datos fiscales completos.</p>
+    </section>
+
+    <section class="invoice-panel">
+      <div class="invoice-panel__heading"><span class="step-dot">2</span><div><h3>¿Qué vas a facturar?</h3><p>Escribe el inicio del nombre para buscar conceptos guardados o usados en hasta 100 facturas libres aceptadas en Katuq. También puedes escribir uno nuevo y pulsar Guardar concepto.</p></div></div>
+      <div class="table-responsive">
+        <table class="table composer-table" formArrayName="items">
+          <thead><tr><th>Producto o servicio</th><th>Cantidad</th><th>Valor unitario sin IVA</th><th>IVA</th><th>Descuento %</th><th class="text-end">Total con IVA</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
+          <tbody><tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+            <td class="concept-cell" data-label="Producto o servicio"><app-invoice-concept-picker [item]="item" [companyId]="companyId" [disabled]="disabled" [index]="i"></app-invoice-concept-picker>
+              <small class="field-error" *ngIf="invalid('items.' + i + '.description')">Escribe el producto o servicio.</small></td>
+            <td data-label="Cantidad"><input class="form-control number-input" type="number" min="0.001" max="1000000" step="0.001" formControlName="quantity" [class.is-invalid]="invalid('items.' + i + '.quantity')" [attr.aria-label]="'Cantidad del concepto ' + (i + 1)"></td>
+            <td data-label="Valor unitario sin IVA"><input class="form-control price-input" type="number" min="0.01" max="1000000000" step="0.01" formControlName="unitPrice" [class.is-invalid]="invalid('items.' + i + '.unitPrice')" [attr.aria-label]="'Valor sin IVA del concepto ' + (i + 1)" placeholder="0"></td>
+            <td data-label="IVA"><select class="form-select tax-input" formControlName="taxRate" [class.is-invalid]="invalid('items.' + i + '.taxRate')" [attr.aria-label]="'IVA del concepto ' + (i + 1)"><option [ngValue]="null">Elige</option><option [ngValue]="0">0 %</option><option [ngValue]="5">5 %</option><option [ngValue]="19">19 %</option></select></td>
+            <td data-label="Descuento %"><input class="form-control discount-input" type="number" min="0" max="99.99" step="0.01" formControlName="discountPercent" [class.is-invalid]="invalid('items.' + i + '.discountPercent')" [attr.aria-label]="'Descuento porcentual del concepto ' + (i + 1)">
+              <small class="discount-amount">− {{ lineDiscount(i) | currency:'COP':'symbol-narrow':'1.2-2' }}</small>
+              <small class="field-error" *ngIf="invalid('items.' + i + '.discountPercent')">De 0 a 99,99 %, máximo 2 decimales.</small></td>
+            <td class="text-end line-amount" data-label="Total con IVA">{{ lineTotal(i) | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+            <td><button type="button" class="icon-action" [disabled]="items.length === 1" (click)="removeItem(i)" [attr.aria-label]="'Quitar concepto ' + (i + 1)"><i class="pi pi-trash"></i></button></td>
+          </tr></tbody>
+        </table>
+      </div>
+      <button class="btn btn-outline-primary add-concept" type="button" (click)="addItem()" [disabled]="items.length >= 100"><i class="pi pi-plus"></i> Agregar otro concepto</button>
+      <p class="field-hint">Descuento comercial por concepto, aplicado antes del IVA. Valores en COP, IVA 0 %, 5 % o 19 %. Sin retenciones ni descuento global. El descuento de esta factura no cambia el servicio guardado.</p>
+    </section>
+
+    <section class="invoice-panel">
+      <div class="invoice-panel__heading"><span class="step-dot">3</span><div><h3>¿Cómo se paga?</h3><p>Selecciona las condiciones de esta venta.</p></div></div>
+      <div formGroupName="payment" class="customer-grid">
+        <label>Forma de pago<select class="form-select" formControlName="meansId" (change)="changePayment()"><option value="1">Contado</option><option value="2">Crédito · Se paga después</option></select></label>
+        <label>Medio de pago<select class="form-select" formControlName="meansCode" [class.is-invalid]="invalid('payment.meansCode')"><option value="">Selecciona</option><option *ngFor="let method of paymentMethods" [value]="method.code">{{ method.label }}</option></select></label>
+        <label *ngIf="form.get('payment.meansId')?.value === '2'">Fecha límite de pago<input class="form-control" type="date" formControlName="dueDate" [min]="minDate" [class.is-invalid]="invalid('payment.dueDate')"></label>
+      </div>
+    </section>
+    <div class="draft-footer">
+      <div><small>Total del borrador</small><strong>{{ totals.total | currency:'COP':'symbol-narrow':'1.2-2' }}</strong>
+        <small *ngIf="totals.discount">Antes de descuentos {{ totals.subtotal + totals.discount | currency:'COP':'symbol-narrow':'1.2-2' }} · Descuento − {{ totals.discount | currency:'COP':'symbol-narrow':'1.2-2' }}</small>
+        <small>Base neta {{ totals.subtotal | currency:'COP':'symbol-narrow':'1.2-2' }} + IVA {{ totals.tax | currency:'COP':'symbol-narrow':'1.2-2' }}</small></div>
+      <div class="customer-actions">
+        <button class="btn btn-outline-primary" type="button" (click)="storeDraft()"><i class="pi pi-save"></i> Guardar borrador</button>
+        <button class="btn btn-primary" type="submit"><i class="pi pi-eye"></i> Revisar factura</button>
+      </div>
+    </div>
+    <p role="alert" class="field-error" *ngIf="attempted && form.invalid">Faltan datos. Revisa los campos señalados antes de continuar.</p>
+  </fieldset>
+</form>

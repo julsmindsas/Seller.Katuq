@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { defer, forkJoin, of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { IntegrationsService } from '../integrations/integrations.service';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
+import { splitDianDocumentList } from './dian-document-list';
 
 type DianDocumentType = 'invoice' | 'creditNote' | 'debitNote';
 type DianStatus = 'accepted' | 'rejected' | 'failed' | string;
@@ -34,8 +35,12 @@ interface DianDocument {
   styleUrls: ['./facturacion-electronica.component.scss'],
 })
 export class FacturacionElectronicaComponent implements OnInit {
-  activeTab: 'documents' | 'invoice' | 'guide' = 'documents';
+  activeTab: 'documents' | 'invoice' | 'compose' | 'guide' = 'documents';
+  composerOpened = false;
+  @ViewChild('composerPanel', { static: true }) composerPanel: ElementRef<HTMLElement>;
   documents: DianDocument[] = [];
+  technicalHistory: any[] = [];
+  configurationError = '';
   pendingOrders: any[] = [];
   queuedOrders = new Set<string>();
   integration: any = null;
@@ -50,6 +55,7 @@ export class FacturacionElectronicaComponent implements OnInit {
     private integrationsService: IntegrationsService,
     private ventasService: VentasService,
     private router: Router,
+    private changeDetector: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -82,6 +88,11 @@ export class FacturacionElectronicaComponent implements OnInit {
   }
 
   get nextTask(): { tone: 'warning' | 'danger' | 'success' | 'info'; icon: string; title: string; description: string; button: string } {
+    if (this.configurationError) {
+      return { tone: 'warning', icon: 'pi-refresh', title: 'No pudimos cargar tu configuración',
+        description: 'No significa que tus datos se hayan borrado. Vuelve a consultar antes de facturar o configurar.',
+        button: 'Volver a consultar' };
+    }
     if (!this.isConfigured) {
       return {
         tone: 'warning', icon: 'pi-cog', title: 'Primero: conecte este comercio con la DIAN',
@@ -133,7 +144,7 @@ export class FacturacionElectronicaComponent implements OnInit {
   }
 
   get notesCount(): number {
-    return this.documents.filter((document) => document.type !== 'invoice').length;
+    return this.documents.filter((document) => document.type === 'creditNote' || document.type === 'debitNote').length;
   }
 
   get filteredDocuments(): DianDocument[] {
@@ -154,7 +165,9 @@ export class FacturacionElectronicaComponent implements OnInit {
   }
 
   loadDashboard(): void {
+    if (this.loading) return;
     this.loading = true;
+    this.configurationError = '';
     this.documentsError = '';
     this.ordersError = '';
 
@@ -162,7 +175,10 @@ export class FacturacionElectronicaComponent implements OnInit {
     // contexto (por ejemplo, mientras cambia el comercio activo). Así la vista
     // conserva su estado amigable en lugar de dejar el router-outlet en blanco.
     const integration$ = defer(() => this.integrationsService.getIntegration('dian')).pipe(
-      catchError(() => of(null)),
+      catchError((error) => {
+        if (error?.status !== 404) this.configurationError = 'No pudimos consultar la configuración guardada.';
+        return of(null);
+      }),
     );
     const documents$ = defer(() => this.integrationsService.listDianDocuments(undefined, 200)).pipe(
       catchError((error) => {
@@ -187,17 +203,28 @@ export class FacturacionElectronicaComponent implements OnInit {
       .subscribe(({ integration, documents, orders }) => {
         this.integration = integration;
         const documentData = documents?.data || documents;
-        this.documents = Array.isArray(documentData?.invoices) ? documentData.invoices : [];
+        const list = splitDianDocumentList(documentData?.invoices);
+        this.documents = list.documents;
+        this.technicalHistory = list.history;
         const orderList = Array.isArray(orders?.orders) ? orders.orders : [];
         this.pendingOrders = orderList.filter((order: any) => this.isPendingInvoice(order));
       });
   }
 
-  selectTab(tab: 'documents' | 'invoice' | 'guide'): void {
+  selectTab(tab: 'documents' | 'invoice' | 'compose' | 'guide'): void {
     this.activeTab = tab;
+    if (tab === 'compose') {
+      this.composerOpened = true;
+      // Render before focusing: the panel can still be hidden on the first click.
+      this.changeDetector.detectChanges();
+      const panel = this.composerPanel.nativeElement;
+      panel.focus({ preventScroll: true });
+      panel.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
   }
 
   doNextTask(): void {
+    if (this.configurationError) { this.loadDashboard(); return; }
     if (!this.isConfigured || !this.isProduction) {
       this.goToConfiguration();
       return;

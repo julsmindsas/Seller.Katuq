@@ -1,0 +1,131 @@
+// Misma paleta, topbar, toggle y composición lista/detalle de ventas/list.
+$accent: #5F3FE0;
+$ink: #211F3A;
+$muted: #514d67;
+$line: #c9c4d9;
+$chip: #efedf8;
+
+:host { display: block; color: $ink; min-width: 0; }
+fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+[hidden] { display: none !important; }
+.composer-page { background: #fff; border: 1px solid $line; border-radius: 16px; padding: 8px; }
+.pedidos-topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 18px 8px;
+  &__h { color: $accent; font-size: 20px; font-weight: 800; letter-spacing: -.2px; margin: 0; }
+  &__sub { color: $muted; font-size: 12.5px; margin: 4px 0 0; }
+}
+.composer-intro { padding: 12px 18px 4px; p { color: $muted; font-size: 13px; margin-top: 10px; } }
+.pedidos-viewtoggle {
+  display: inline-flex; flex-wrap: wrap; background: $chip; border: 1px solid #e9e7f3; border-radius: 10px; padding: 3px; gap: 2px;
+  &__btn { border: 0; background: transparent; color: #5b5878; font-size: 13px; font-weight: 700; padding: 10px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;
+    &.is-active { background: #fff; color: $accent; box-shadow: 0 1px 3px rgba(30,20,80,.12); }
+  }
+}
+.composer-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; padding: 6px 14px 16px; align-items: start; }
+.composer-editor { min-width: 0; }
+.invoice-panel { border: 1px solid $line; border-radius: 14px; background: #fff; padding: 18px; margin-bottom: 16px; }
+.invoice-panel__heading { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; h3 { font-size: 15px; font-weight: 750; margin: 2px 0 5px; } p { font-size: 12.5px; color: $muted; margin: 0; } }
+.step-dot { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: $accent; background: $chip; font-size: 13px; font-weight: 700; }
+.customer-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; label { display: flex; flex-direction: column; gap: 5px; font-weight: 600; font-size: 12px; margin: 0; } .span-2 { grid-column: 1 / -1; } small { color: $muted; font-size: 11px; font-weight: 400; } }
+.form-control, .form-select { font-size: 13px; border-color: #e4e1ed; border-radius: 8px; min-height: 38px; color: $ink; &:focus { border-color: $accent; box-shadow: 0 0 0 2px rgba(95,63,224,.12); } &.is-invalid { border-color: #c83446; } }
+.field-error { color: #b42336; font-size: 12px; font-weight: 500; }
+.field-hint { font-size: 12px; color: $muted; line-height: 1.6; margin: 10px 0; }
+.composer-table { font-size: 12px; margin: 0; thead th { background: $chip; color: #5b5878; border-bottom: 1px solid $line; font-weight: 700; padding: 12px 9px; } td { padding: 12px 8px; vertical-align: top; border-color: $line; } .concept-cell { min-width: 190px; } .reference-input { font-size: 11px; margin-top: 6px; min-height: 28px; border-color: transparent; padding-left: 4px; } }
+.number-input { width: 84px; }
+.discount-input { width: 98px; }
+.discount-amount { display: block; color: #395c47; font-weight: 700; margin-top: 6px; white-space: nowrap; }
+.concept-picker { min-width: 230px; .field-hint { display: block; } }
+.concept-save { margin-top: 4px; font-size: 11px; }
+.concept-suggestions { border: 1px solid $line; border-radius: 8px; max-height: 250px; overflow-y: auto; margin-top: 5px;
+  button { display: block; width: 100%; border: 0; border-bottom: 1px solid $line; background: #fff; text-align: left; padding: 10px; color: $ink; &:hover { background: $chip; } }
+  strong, small { display: block; font-size: 12px; overflow-wrap: anywhere; } small { color: $muted; font-size: 11px; }
+}
+.price-input { width: 130px; }
+.tax-input { width: 84px; }
+.line-amount { white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 650; }
+.icon-action { border: 0; padding: 8px; background: transparent; color: $muted; &:hover { color: #b42336; background: #fff2f3; border-radius: 8px; } }
+button:disabled { opacity: .55; cursor: not-allowed; }
+button:focus-visible { outline: 2px solid $accent; outline-offset: 3px; }
+.btn-primary { background: $accent !important; border-color: $accent !important; }
+.btn-outline-primary { color: $accent; border-color: #d7d0f6; &:hover:not(:disabled) { color: #fff; background: $accent; border-color: $accent; } }
+.btn { border-radius: 8px; font-size: 12px; font-weight: 650; i { margin-right: 4px; } }
+.add-concept { margin-top: 14px; }
+.draft-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: $chip; padding: 18px; border-radius: 12px; margin-bottom: 10px; div { display: flex; flex-direction: column; gap: 3px; } small { color: $muted; font-size: 11px; } strong { font-size: 21px; color: $ink; } }
+.invoice-summary { border: 1px solid $line; border-radius: 14px; padding: 18px; background: #fff; position: sticky; top: 90px; overflow-wrap: anywhere;
+  &__head { display: flex; align-items: center; gap: 10px; color: $accent; h3 { font-size: 15px; font-weight: 750; margin: 0; } }
+}
+.composer-empty { text-align: center; padding: 35px 12px; color: $muted; > i { font-size: 28px; color: #a89bcf; margin-bottom: 10px; } h4 { color: $ink; font-size: 14px; font-weight: 650; margin: 4px 0 8px; } p { font-size: 12px; margin: 0; line-height: 1.7; } }
+.preview-customer { border-block: 1px solid $line; padding: 14px 0; display: flex; flex-direction: column; gap: 4px; font-size: 12px; small { color: $accent; font-size: 11px; } strong { font-size: 14px; } span { color: $muted; } }
+.preview-concepts { max-height: 300px; overflow: auto; > div { display: flex; justify-content: space-between; align-items: start; gap: 10px; padding: 12px 0; border-bottom: 1px solid $line; font-size: 12px; } strong { display: block; font-weight: 600; } small { display: block; color: $muted; font-size: 11px; margin-top: 4px; } b { white-space: nowrap; font-weight: 600; } }
+.preview-totals { margin: 14px 0; > div { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; font-size: 12px; } dt { color: $muted; font-weight: 400; } dd { margin: 0; white-space: nowrap; } &__total { border-top: 1px solid $line; margin-top: 8px; padding-top: 12px !important; dt,dd { font-weight: 750; color: $ink; font-size: 15px; } } }
+.composer-message { border-left: 3px solid $accent; background: $chip; color: #514768; padding: 12px; border-radius: 6px; font-size: 12px; margin: 12px 0; line-height: 1.6; p { margin: 5px 0 0; } &--error { border-color: #c83446; color: #a12b3a; background: #fff4f5; } }
+.summary-safety { border-top: 1px solid $line; padding-top: 14px; margin: 14px 0 0; color: $muted; font-size: 11px; line-height: 1.7; }
+.composer-chip { display: inline-block; border: 1px solid #e9e7f3; border-radius: 20px; padding: 4px 10px; font-size: 11px; color: #72688f; background: $chip; white-space: nowrap; &--ready { background: #eef8f2; color: #257547; border-color: #d7eddf; } }
+.customer-cell { display: flex; align-items: center; gap: 9px; min-width: 160px; }
+.customer-avatar { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; background: #7C5CFF; color: #fff; border-radius: 9px; font-size: 12px; font-weight: 700; }
+.customer-search { label { font-size: 12px; font-weight: 650; margin-bottom: 7px; } small { display: block; } }
+.customer-results { border: 1px solid $line; border-radius: 10px; overflow: hidden; margin-block: 12px; }
+.customer-result { border: 0; border-bottom: 1px solid $line; background: #fff; width: 100%; display: flex; gap: 12px; align-items: center; padding: 13px; text-align: left; color: $ink; >span:nth-child(2) { flex: 1; } strong, small { display: block; font-size: 12px; } small { color: $muted; margin-top: 3px; } &:hover { background: $chip; } }
+.registered-customer { display: flex; flex-direction: column; gap: 5px; border-left: 3px solid $accent; padding: 12px 15px; background: $chip; margin-top: 14px; border-radius: 8px; font-size: 12px; > strong { font-size: 15px; } .composer-chip { align-self: flex-start; margin-bottom: 6px; } }
+.customer-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.billing-email {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #faf9fd;
+  label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; margin-bottom: 8px; color: $ink; i { color: $accent; } }
+  .form-control { width: 100%; min-width: 0; background: #fff; }
+  small { display: block; margin-top: 7px; color: $muted; font-size: 12px; line-height: 1.5; }
+  &--empty .form-control { background: #f0eef6; opacity: 1; }
+}
+.preview-billing-email {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid $line;
+  span { display: block; font-size: 11px; color: $muted; i { margin-right: 4px; } }
+  b { display: block; margin-top: 4px; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; color: $ink; }
+}
+.invoice-confirmation { display: flex; gap: 9px; align-items: flex-start; margin: 15px 0; font-size: 12px; input { margin-top: 4px; accent-color: $accent; } }
+.orders-picker { td { vertical-align: middle; } td small { display: block; color: $muted; margin-top: 4px; } .row-unavailable { background: #fcfbfe; } }
+.picker-pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0 0; small { color: $muted; font-size: 11px; } div { display: flex; gap: 6px; } }
+@media (max-width: 1599px) { .composer-layout { grid-template-columns: minmax(0,1fr); } .invoice-summary { position: static; } }
+// Stronger hierarchy using the existing Katuq palette, without gradients.
+.composer-page { background: #f0eef6; border-color: #b8b0cf; border-radius: 12px; }
+.pedidos-topbar { padding: 18px; background: #fff; border-bottom: 2px solid $accent; margin-bottom: 8px; border-radius: 10px 10px 0 0; }
+.pedidos-topbar__h { font-size: 24px; color: #352179; }
+.pedidos-topbar__sub, .composer-intro p { font-size: 14px; }
+.invoice-panel { border-left: 4px solid $accent; border-radius: 10px; box-shadow: 0 2px 5px rgba(33,31,58,.07); }
+.invoice-panel__heading h3 { font-size: 17px; color: #28213e; }
+.invoice-panel__heading p { font-size: 13px; }
+.step-dot { color: #fff; background: $accent; font-size: 15px; }
+.pedidos-viewtoggle__btn.is-active { background: $accent; color: #fff; }
+.form-control, .form-select { border: 1px solid #a69cbf; min-height: 42px; color: #211a32; background-color: #fff; font-size: 14px; &::placeholder { color: #686078; opacity: 1; } }
+.btn { min-height: 40px; font-size: 13px; }
+.btn-outline-primary { border-color: $accent; border-width: 1px; background: #fff; }
+.composer-table thead th { background: #e5dff5; color: #35265c; border-bottom: 2px solid #a99acb; font-size: 13px; }
+.composer-table td { border-bottom: 1px solid #c9c4d9; }
+.line-amount { color: #302052; font-size: 15px; }
+.invoice-summary { border-top: 4px solid $accent; }
+.draft-footer { border: 1px solid #a99acb; background: #e5dff5; strong { font-size: 26px; } small { color: #3d3354; font-size: 12px; } }
+.composer-chip { color: #49386a; border-color: #b0a1cb; }
+@media (max-width: 1199px) {
+  .composer-table {
+    display: block;
+    thead { display: none; }
+    tbody { display: block; }
+    tbody tr { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid $line; border-radius: 10px; background: #faf9fd; }
+    td { display: block; min-width: 0; padding: 0; border: 0; }
+    td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 6px; font-size: 12px; font-weight: 750; color: #35265c; text-align: left; }
+    .concept-cell { grid-column: 1 / -1; min-width: 0; }
+    .line-amount { text-align: left !important; }
+    .form-control, .form-select { width: 100%; }
+    td:last-child { text-align: right; align-self: end; }
+  }
+  .concept-picker { min-width: 0; }
+}
+@media (max-width: 575px) {
+  .composer-page { padding: 2px; } .composer-layout { padding: 6px; } .pedidos-topbar, .composer-intro { padding-inline: 10px; }
+  .invoice-panel { padding: 12px; } .customer-grid { grid-template-columns: minmax(0,1fr); } .customer-grid .span-2 { grid-column: auto; }
+  .draft-footer, .picker-pagination { align-items: stretch; flex-direction: column; } .pedidos-viewtoggle { display: flex; } .pedidos-viewtoggle__btn { flex: 1; justify-content: center; padding-inline: 10px; }
+}

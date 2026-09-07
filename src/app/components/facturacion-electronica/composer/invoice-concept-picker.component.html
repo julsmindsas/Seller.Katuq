@@ -1,0 +1,19 @@
+<div [formGroup]="item" class="concept-picker">
+  <input class="form-control" formControlName="description" [readOnly]="disabled || saving" [attr.aria-label]="'Concepto ' + (index + 1)" placeholder="Escribe o busca: Mensualidad Katuq…" maxlength="300" autocomplete="off" (input)="search()" (keydown.escape)="dismiss()" (keydown.enter)="$event.preventDefault()">
+  <small class="field-hint" *ngIf="loading" role="status">Buscando conceptos…</small>
+  <div class="concept-suggestions" *ngIf="results.length" aria-label="Conceptos sugeridos">
+    <button type="button" *ngFor="let concept of results" (click)="choose(concept)" [disabled]="disabled || saving">
+      <strong>{{ concept.description }}</strong>
+      <small>{{ concept.unitPrice | currency:'COP':'symbol-narrow':'1.2-2' }} sin IVA · IVA {{ concept.taxRate }} % · {{ concept.source === 'saved' ? 'Guardado' : 'Facturado antes' }}</small>
+    </button>
+    <button type="button" (click)="dismiss()">Cerrar sugerencias</button>
+  </div>
+  <div class="concept-details">
+    <div class="concept-reference">
+      <label [attr.for]="'invoice-concept-reference-' + index">Referencia <span>Opcional</span></label>
+      <input class="form-control reference-input" [id]="'invoice-concept-reference-' + index" formControlName="reference" [readOnly]="disabled || saving" [attr.aria-label]="'Referencia del concepto ' + (index + 1) + ' (opcional)'" placeholder="Ej. MENS-01" maxlength="50">
+    </div>
+    <button type="button" class="btn concept-save" (click)="save()" [disabled]="disabled || saving"><i class="pi" aria-hidden="true" [ngClass]="saving ? 'pi-spin pi-spinner' : 'pi-bookmark'"></i> {{ saving ? 'Guardando…' : 'Guardar concepto' }}</button>
+  </div>
+  <small class="field-hint" *ngIf="message" role="status">{{ message }}</small>
+</div>

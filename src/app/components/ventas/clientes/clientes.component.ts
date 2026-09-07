@@ -7,7 +7,7 @@ import { DataStoreService } from '../../../shared/services/dataStoreService';
 import { InfoPaises } from '../../../../Mock/pais-estado-ciudad'
 import { InfoIndicativos } from '../../../../Mock/indicativosPais'
 import { NgbActiveModal, NgbModal, ModalDismissReasons, NgbModalConfig } from '@ng-bootstrap/ng-bootstrap';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CrearClienteModalComponent } from './crear-cliente-modal/crear-cliente-modal.component';
 import { DireccionEstructuradaComponent } from '../entrega/direccion-estructurada/direccion-estructurada.component';
 import { DaneCodesService } from '../../../shared/services/dane-codes.service';
@@ -213,7 +213,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
 
-  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos, private cdr: ChangeDetectorRef, private daneCodesService: DaneCodesService, private clientConfig: ClientConfigService) {
+  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos, private cdr: ChangeDetectorRef, private daneCodesService: DaneCodesService, private clientConfig: ClientConfigService, private route: ActivatedRoute) {
     this.daneCodesService.getDepartamentos().subscribe(deptos => {
       this.departamentosDane = deptos;
     });
@@ -221,6 +221,15 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
   async ngAfterViewInit(): Promise<void> {
     try {
+      // Entrada explícita desde Nueva factura: consultar la ficha completa, nunca crear ni guardar al abrir.
+      const invoiceCustomer = this.route.snapshot.queryParamMap.get('invoiceCustomer');
+      if (invoiceCustomer && invoiceCustomer.length <= 50 && this.documentoBusqueda?.nativeElement) {
+        this.tipoBusqueda = 'CC-NIT';
+        this.documentoBusqueda.nativeElement.value = invoiceCustomer;
+        this.buscar();
+        this.cdr.detectChanges();
+        return;
+      }
       // Si ya tenemos clienteEdit desde el @Input, usarlo directamente
       if (this.clienteEdit && this.isEdit) {
         console.log('Cargando cliente desde @Input:', this.clienteEdit);

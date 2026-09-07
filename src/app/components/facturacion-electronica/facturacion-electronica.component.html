@@ -3,9 +3,12 @@
     <div>
       <div class="dian-eyebrow">KATUQ + DIAN</div>
       <h1>Facturación electrónica</h1>
-      <p>Factura pedidos, revisa las respuestas de la DIAN y encuentra tus notas en un solo lugar.</p>
+      <p>Prepara facturas libres o desde pedidos, revisa las respuestas de la DIAN y encuentra tus notas.</p>
     </div>
     <div class="header-actions">
+      <button type="button" class="btn btn-primary" (click)="selectTab('compose')">
+        <i class="pi pi-plus"></i> Nueva factura
+      </button>
       <button type="button" class="btn btn-light" (click)="openGuide()">
         <i class="pi pi-question-circle"></i>
         Cómo se usa
@@ -24,12 +27,22 @@
   <div class="connection-card" [class.connection-card--ready]="isConfigured">
     <span class="connection-icon"><i class="pi" [ngClass]="isConfigured ? 'pi-check-circle' : 'pi-exclamation-circle'"></i></span>
     <div class="connection-copy">
-      <strong>{{ isConfigured ? 'Conexión DIAN activa' : 'La conexión DIAN necesita configuración' }}</strong>
+      <strong>{{ configurationError ? 'No pudimos consultar la configuración' : (isConfigured ? 'Configuración DIAN guardada' : 'La conexión DIAN necesita configuración') }}</strong>
       <span *ngIf="isConfigured">Ambiente: {{ environmentLabel }}. Cada comercio usa sus propios datos, certificado y numeración.</span>
-      <span *ngIf="!isConfigured">Complete una sola vez el asistente del comercio antes de emitir documentos.</span>
+      <span *ngIf="!isConfigured && !configurationError">Complete una sola vez el asistente del comercio antes de emitir documentos.</span>
+      <span *ngIf="configurationError">Tus datos no se han borrado. Pulsa Actualizar para volver a consultar.</span>
     </div>
-    <button *ngIf="!isConfigured" type="button" class="btn btn-primary" (click)="goToConfiguration()">Configurar ahora</button>
+    <button *ngIf="!isConfigured && !configurationError && !loading" type="button" class="btn btn-primary" (click)="goToConfiguration()">Configurar ahora</button>
   </div>
+
+  <details class="alert alert-info" *ngIf="technicalHistory.length">
+    <summary>Historial técnico: {{ technicalHistory.length }} registros de envíos y consultas</summary>
+    <p>Estos registros no son facturas ni notas y no se suman a los contadores. El estado de un lote no determina si Katuq está habilitado.</p>
+    <p *ngFor="let entry of technicalHistory">
+      {{ entry.type === 'habilitationSet' ? 'Envío del set de pruebas' : (entry.type === 'habilitationStatus' ? 'Consulta del set de pruebas' : 'Registro técnico') }}
+      — {{ documentDate(entry) ? (documentDate(entry) | date:'dd/MM/yyyy') : 'Sin fecha' }}.
+    </p>
+  </details>
 
   <section class="next-task" [ngClass]="'next-task--' + nextTask.tone" aria-live="polite">
     <span class="next-task__icon"><i class="pi" [ngClass]="nextTask.icon"></i></span>
@@ -67,6 +80,9 @@
   </div>
 
   <nav class="work-tabs" aria-label="Opciones de facturación">
+    <button type="button" [class.active]="activeTab === 'compose'" (click)="selectTab('compose')">
+      <i class="pi pi-plus"></i> Nueva factura
+    </button>
     <button type="button" [class.active]="activeTab === 'documents'" (click)="selectTab('documents')">
       <i class="pi pi-file"></i>
       Facturas y notas
@@ -74,7 +90,7 @@
     </button>
     <button type="button" [class.active]="activeTab === 'invoice'" (click)="selectTab('invoice')">
       <i class="pi pi-send"></i>
-      Facturar pedidos
+      Emisión desde pedidos
       <span>{{ pendingOrders.length }}</span>
     </button>
     <button type="button" [class.active]="activeTab === 'guide'" (click)="selectTab('guide')">
@@ -82,6 +98,10 @@
       Guía paso a paso
     </button>
   </nav>
+
+  <section #composerPanel class="composer-panel" tabindex="-1" aria-label="Preparar nueva factura" [hidden]="activeTab !== 'compose'">
+    <app-invoice-composer *ngIf="composerOpened" [integration]="integration" (issued)="loadDashboard()" (documentsRequested)="selectTab('documents')"></app-invoice-composer>
+  </section>
 
   <section class="workspace-card" *ngIf="activeTab === 'documents'">
     <div class="section-heading">

@@ -182,9 +182,10 @@
 
               <!-- Correo + Cómo nos conoció en misma fila -->
               <div class="col-12 col-sm-7">
-                <label class="form-label-modern">{{ "Correo Electrónico" | translate }} <span class="required">*</span></label>
-                <input pInputText type="email" placeholder="{{ 'correo@ejemplo.com' | translate }}"
-                  formControlName="correo_electronico_comprador" class="w-100">
+                <label class="form-label-modern" for="crear-cliente-email">{{ emailLabel | translate }} <span class="required">*</span></label>
+                <input id="crear-cliente-email" pInputText type="email" placeholder="{{ 'correo@ejemplo.com' | translate }}"
+                  formControlName="correo_electronico_comprador" class="w-100" [attr.aria-describedby]="emailHint ? 'crear-cliente-email-help' : null">
+                <small id="crear-cliente-email-help" class="text-muted d-block mt-1" *ngIf="emailHint">{{ emailHint | translate }}</small>
                 <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid" class="error-message mt-1">
                   <i class="pi pi-exclamation-circle"></i>
                   <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>

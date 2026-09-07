@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from "@angular/core";
 import { FormGroup, FormBuilder, Validators } from "@angular/forms";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
 import { map } from "rxjs/operators";
+import { throwError } from "rxjs";
 import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
 import { CorporateClientsService } from "../services/corporate-clients.service";
 import { CrmService } from "../../../crm/services/crm.service";
@@ -31,6 +32,8 @@ export class CrearClienteModalComponent implements OnInit {
    * así que editarla no debe crear ni actualizar nada.
    */
   @Input() persist: boolean = true;
+  /** Optional caller guard: do not save into a different commerce after a session change. */
+  @Input() canPersist: () => boolean = () => true;
   /**
    * Destino de persistencia. 'client' (default) usa la colección de clientes
    * habituales; 'corporate' persiste vía CRM (corporate_clients + crm_pipeline,
@@ -39,6 +42,9 @@ export class CrearClienteModalComponent implements OnInit {
   @Input() target: 'client' | 'corporate' = 'client';
   /** Encabezado del modal. Por defecto habla de "Cliente". */
   @Input() title: string = "";
+  /** Textos opcionales del correo; conserva el mismo campo persistido en Clientes. */
+  @Input() emailLabel: string = "Correo Electrónico";
+  @Input() emailHint: string = "";
   /**
    * Catálogo de etiquetas a mostrar. Si el caller no lo pasa, se cargan las de
    * clientes. Corporativos tiene catálogo PROPIO y lo inyecta por aquí, para no
@@ -354,6 +360,10 @@ export class CrearClienteModalComponent implements OnInit {
   }
 
   guardarCliente() {
+    if (!this.canPersist()) {
+      Swal.fire('Comercio cambiado', 'Cierra este formulario y vuelve a abrir Crear cliente en el comercio correcto.', 'warning');
+      return;
+    }
     if (this.formulario.invalid) {
       this.marcarControlesComoTocados();
       const faltantes = this.getCamposFaltantes();
@@ -421,6 +431,7 @@ export class CrearClienteModalComponent implements OnInit {
   }
 
   private persistCreate(clienteData: any) {
+    if (!this.canPersist()) return throwError(() => new Error('El comercio activo cambió. Vuelve a abrir el formulario.'));
     if (this.target !== 'corporate') return this.maestroService.createClient(clienteData);
     return this.failOnCrmError<any>(this.crmService.createLead(clienteData, true)).pipe(
       // Normaliza la respuesta del CRM ({success, data:{entityId}}) a la forma
@@ -430,6 +441,7 @@ export class CrearClienteModalComponent implements OnInit {
   }
 
   private persistEdit(payload: any) {
+    if (!this.canPersist()) return throwError(() => new Error('El comercio activo cambió. Vuelve a abrir el formulario.'));
     if (this.target !== 'corporate') return this.maestroService.editClient(payload);
     return this.failOnCrmError<any>(this.crmService.updateLead(payload.cd, payload, true));
   }

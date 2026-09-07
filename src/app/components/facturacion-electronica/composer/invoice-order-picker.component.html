@@ -1,0 +1,33 @@
+<section class="invoice-panel">
+  <div class="invoice-panel__heading"><span class="step-dot"><i class="pi pi-search"></i></span><div><h3>Busca el pedido que quieres facturar</h3><p>Como en Todos los pedidos: busca por número o cliente y filtra por fecha de creación.</p></div></div>
+  <fieldset [disabled]="disabled">
+    <app-shared-filters
+      [showColumnSelector]="false" [showStatusFilters]="false" [showExportButton]="false" [showAdvancedButton]="false"
+      [showDateFilters]="true" [searchPlaceholder]="'Número o cliente…'" [filterButtonLabel]="'Buscar'"
+      [isSearching]="loading" [searchSuggestions]="[]"
+      (searchQueryChange)="search = $event" (dateFromChange)="dateFrom = $event" (dateToChange)="dateTo = $event"
+      (filterAction)="load()" (clearAllFilters)="clear()">
+    </app-shared-filters>
+  </fieldset>
+  <div class="composer-message composer-message--error" role="alert" *ngIf="error">{{ error }}</div>
+  <div class="composer-empty" *ngIf="loading" role="status"><i class="pi pi-spin pi-spinner"></i><p>Buscando en los pedidos de este comercio…</p></div>
+  <div class="composer-empty" *ngIf="!loading && !error && !orders.length"><i class="pi pi-search"></i><h4>No encontramos pedidos</h4><p>Prueba otro número o cambia las fechas. También puedes usar Factura libre.</p></div>
+  <div class="table-responsive" *ngIf="!loading && orders.length">
+    <table class="table composer-table orders-picker">
+      <thead><tr><th>Pedido</th><th>Cliente</th><th class="text-end">Total del pedido</th><th>Estado</th><th><span class="visually-hidden">Seleccionar</span></th></tr></thead>
+      <tbody><tr *ngFor="let order of orders; trackBy: trackByOrder" [class.row-unavailable]="unavailable(order)">
+        <td><strong>{{ order.nroPedido || id(order) }}</strong><small>{{ order.facturacionElectronica?.invoiceNumber || order.nroFactura || '' }}</small></td>
+        <td><div class="customer-cell"><span class="customer-avatar">{{ customer(order).charAt(0).toUpperCase() }}</span><span>{{ customer(order) }}</span></div></td>
+        <td class="text-end line-amount">{{ amount(order) | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+        <td><span class="composer-chip" [class.composer-chip--ready]="!unavailable(order)">{{ unavailable(order) || 'Por facturar' }}</span></td>
+        <td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button" [disabled]="disabled || !!unavailable(order)" (click)="choose(order)">Revisar <i class="pi pi-arrow-right"></i></button></td>
+      </tr></tbody>
+    </table>
+  </div>
+  <div class="picker-pagination" *ngIf="!loading && !error">
+    <small>{{ total }} pedidos encontrados · Página {{ page }}</small>
+    <div><button class="btn btn-light btn-sm" type="button" [disabled]="disabled || page <= 1" (click)="load(page - 1)"><i class="pi pi-angle-left"></i> Anterior</button>
+      <button class="btn btn-light btn-sm" type="button" [disabled]="disabled || !hasNext" (click)="load(page + 1)">Siguiente <i class="pi pi-angle-right"></i></button></div>
+  </div>
+  <p class="field-hint">Los pedidos ya facturados aparecen identificados y no se pueden seleccionar de nuevo.</p>
+</section>

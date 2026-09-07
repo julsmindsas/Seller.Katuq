@@ -7,13 +7,14 @@ import { IntegrationUIHelperService } from './integration-ui-helper.service';
 import { BodegaService } from '../../shared/services/bodegas/bodega.service';
 import { environment } from '../../../environments/environment';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, timer, of } from 'rxjs';
+import { Subject, timer, of, defer } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError, filter } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { DaneCodesService } from '../../shared/services/dane-codes.service';
 import { MunicipioDane } from '../../shared/data/colombia-dane-codes';
 import { describeDianBatchStatus, DianBatchStatus } from './dian-batch-status';
+import { DIAN_SECRET_FIELDS, dianConfigError, dianNumberingError } from './dian-config-feedback';
 
 // El catálogo DIAN asigna este mismo rango a software propio en habilitación.
 // No se le pide al comercio copiarlo: no es una resolución de producción.
@@ -99,6 +100,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   dianOrdersLoading = false;
   dianStep = 1;
   dianStepError = '';
+  dianLoadError = '';
+  dianStoredSecrets: { [field: string]: boolean } = {};
+  private dianConfigCompanyId: string | null = null;
   dianRevealSecrets = false;
   dianShowAdvancedNumbering = false;
   dianShowFiscalDetails = false;
@@ -223,16 +227,23 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     this.updateTemplateProperties();
     this.setupRealTimeValidation();
 
+    this.dianLoadError = '';
+    this.isLoadingEdit = true;
     try {
-      this.integrationsService.getIntegration('dian').pipe(takeUntil(this.destroy$)).subscribe({
+      this.dianConfigCompanyId = this.integrationsService.getActiveCompanyId();
+      this.integrationsService.getIntegration('dian', true).pipe(takeUntil(this.destroy$)).subscribe({
         next: (integration) => {
+          this.isLoadingEdit = false;
           if (integration?.type || integration?.provider) {
             this.editIntegration({ ...integration, type: 'dian', provider: 'dian' });
           }
           this.showOnlyForm = true;
           this.dianStep = 1;
         },
-        error: () => {
+        error: (error) => {
+          this.isLoadingEdit = false;
+          this.dianLoadError = error?.status === 404 ? '' :
+            'No pudimos cargar la configuración guardada. Para proteger tus datos, vuelve a cargarla antes de editar.';
           // Un 404 significa que este comercio aún no ha configurado DIAN. El
           // formulario vacío ya está listo; no se oculta ni se redirige.
           this.showOnlyForm = true;
@@ -240,6 +251,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         }
       });
     } catch (_) {
+      this.isLoadingEdit = false;
+      this.dianLoadError = 'No pudimos identificar el comercio activo. Vuelve a facturación y selecciona tu comercio.';
       // getCurrentCompanyId puede fallar antes de crear el Observable si el
       // contexto del comercio todavía está cargando. La pantalla debe seguir
       // disponible para que el usuario pueda volver o reintentar.
@@ -608,6 +621,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
   resetForm(): void {
     this.clearDianBatchResult();
+    this.dianStoredSecrets = {};
+    this.dianCertificateFileName = '';
+    this.dianLoadError = '';
+    this.dianStepError = '';
     // Resetea el formulario según el tipo seleccionado
     switch (this.selectedIntegrationType) {
       case 'shopify':
@@ -656,6 +673,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'dian':
         this.integrationForm = this.createDianForm();
         this.dianStep = 1;
+        try { this.dianConfigCompanyId = this.integrationsService.getActiveCompanyId(); }
+        catch (_) { this.dianLoadError = 'Selecciona el comercio activo antes de configurar la DIAN.'; }
         this.prefillDianCompanyData();
         break;
       case 'prindel':
@@ -810,7 +829,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     });
 
     // Cargar datos completos desde el backend para poblar las credenciales
-    this.integrationsService.getIntegration(integration.type)
+    const detail$ = integration.type === 'dian' && integration.config
+      ? of(integration) : this.integrationsService.getIntegration(integration.type, true);
+    detail$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (fullIntegration) => {
@@ -824,10 +845,17 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
             ...config
           });
           if (integration.type === 'dian') {
+            this.dianConfigCompanyId = fullIntegration.companyId || this.integrationsService.getActiveCompanyId();
+            this.editingIntegrationId = fullIntegration.id || this.editingIntegrationId;
+            this.dianStoredSecrets = fullIntegration.storedSecrets || {};
+            this.dianLoadError = '';
             const issuer = config.issuer || {};
             this.dianMunicipalitySearch = issuer.cityName
               ? `${issuer.cityName}${issuer.department ? ' - ' + issuer.department : ''}`
               : '';
+            this.updateDianSecretValidators();
+            this.integrationForm.markAsPristine();
+            return;
           }
 
           // Para campos que el backend NO devuelve por seguridad (ej. accessKey encriptado),
@@ -843,6 +871,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.isLoadingEdit = false;
+          if (integration.type === 'dian') {
+            this.dianLoadError = 'No pudimos cargar la configuración guardada. Vuelve a cargarla antes de editar.';
+            return;
+          }
           // Fallback: si el backend falla, al menos name/enabled están listos.
           // Limpiar validators de credenciales para permitir guardar sin re-ingresarlas.
           Object.keys(this.integrationForm.controls).forEach(ctrlName => {
@@ -1137,7 +1169,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       issuer: this.fb.group({
         businessName: ['', Validators.required],
         nit: ['', [Validators.required, Validators.pattern(/^\d{6,10}$/)]],
-        dv: ['', [Validators.pattern(/^\d$/)]],
+        dv: ['', [Validators.required, Validators.pattern(/^\d$/)]],
         address: ['', Validators.required],
         municipalityCode: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
         cityName: ['', Validators.required],
@@ -1162,14 +1194,27 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       }),
       softwareId: ['', Validators.required],
       softwarePin: ['', Validators.required],
-      testSetId: [''],
+      testSetId: ['', Validators.required],
       technicalKey: ['', Validators.required],
       certificateP12Base64: ['', Validators.required],
       certificatePassword: ['', Validators.required],
       enableAutoInvoicing: [false],
       sendEmail: [true],
-      timeoutMs: [90000, [Validators.min(10000), Validators.max(180000)]]
+      timeoutMs: [90000, [Validators.min(5000), Validators.max(120000)]]
     });
+  }
+
+  private updateDianSecretValidators(): void {
+    for (const field of DIAN_SECRET_FIELDS) {
+      const control = this.integrationForm.get(field);
+      const required = field !== 'testSetId' || this.integrationForm.get('environment')?.value === 'habilitacion';
+      control?.setValidators(required && !this.dianStoredSecrets[field] ? [Validators.required] : []);
+      control?.updateValueAndValidity({ emitEvent: false });
+    }
+  }
+
+  reloadDianConfiguration(): void {
+    this.openDianFromDirectRoute();
   }
 
   onDianCertificateSelected(event: Event): void {
@@ -1181,14 +1226,29 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       input.value = '';
       return;
     }
+    if (file.size > 2 * 1024 * 1024) {
+      this.dianStepError = 'El certificado supera 2 MB. Revisa que seleccionaste el archivo .p12 o .pfx.';
+      input.value = '';
+      return;
+    }
     this.dianCertificateFileName = file.name;
+    this.integrationForm.get('certificateP12Base64')?.setValue('');
+    this.integrationForm.get('certificateP12Base64')?.setValidators([Validators.required]);
+    this.integrationForm.get('certificateP12Base64')?.updateValueAndValidity();
+    this.integrationForm.get('certificatePassword')?.setValue('');
+    this.integrationForm.get('certificatePassword')?.setValidators([Validators.required]);
+    this.integrationForm.get('certificatePassword')?.updateValueAndValidity();
     const reader = new FileReader();
     reader.onload = () => {
       const value = String(reader.result || '');
       this.integrationForm.get('certificateP12Base64')?.setValue(value.split(',').pop() || '');
       this.integrationForm.get('certificateP12Base64')?.markAsDirty();
     };
-    reader.onerror = () => this.uiHelper.showError('No fue posible leer el certificado.');
+    reader.onerror = () => {
+      this.dianCertificateFileName = '';
+      this.dianStepError = 'No pudimos leer el certificado. Selecciona el archivo nuevamente.';
+      this.uiHelper.showError(this.dianStepError);
+    };
     reader.readAsDataURL(file);
   }
 
@@ -1218,18 +1278,26 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   syncDianCurrentFromRange(): void {
     const from = Number(this.integrationForm.get('numbering.from')?.value);
     const current = this.integrationForm.get('numbering.current');
-    if (Number.isFinite(from) && from > 0 && (current?.pristine || !current?.value)) {
+    if (Number.isFinite(from) && from > 0
+      && ((!this.editingIntegrationId && current?.pristine) || !current?.value || Number(current.value) < from)) {
       current?.setValue(from);
     }
   }
 
   selectDianEnvironment(environmentName: 'habilitacion' | 'produccion'): void {
+    if (this.isSaving || this.isLoadingEdit || this.dianLoadError) return;
+    if (this.integrationForm.get('environment')?.value === environmentName) return;
     this.clearDianBatchResult();
     this.integrationForm.get('environment')?.setValue(environmentName);
-    if (environmentName === 'habilitacion' && !this.editingIntegrationId) {
+    this.integrationForm.markAsDirty();
+    this.dianStoredSecrets.technicalKey = false;
+    this.integrationForm.get('technicalKey')?.setValue('');
+    this.updateDianSecretValidators();
+    if (environmentName === 'habilitacion') {
+      this.integrationForm.get('enableAutoInvoicing')?.setValue(false);
       this.integrationForm.get('numbering')?.patchValue({ ...DIAN_HABILITATION_NUMBERING });
     }
-    if (environmentName === 'produccion' && !this.editingIntegrationId) {
+    if (environmentName === 'produccion') {
       this.integrationForm.get('numbering')?.reset({
         resolutionNumber: '', prefix: '', from: 1, to: 1, current: 1,
         validFrom: '', validTo: ''
@@ -1238,6 +1306,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   goToDianStep(step: number): void {
+    if (this.isSaving || this.isLoadingEdit || this.dianLoadError) return;
+    if (step === 5 && (!this.editingIntegrationId || this.integrationForm.dirty)) {
+      this.dianStepError = 'Primero pulsa Guardar y continuar en el paso Revisar.';
+      return;
+    }
     if (step < 1 || step > 5 || step > this.dianStep + 1) return;
     if (step === this.dianStep + 1 && !this.validateDianStep(this.dianStep)) return;
     this.dianStepError = '';
@@ -1245,6 +1318,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   nextDianStep(): void {
+    if (this.isSaving || this.isLoadingEdit || this.dianLoadError) return;
+    if (this.dianStep === 4) { this.onSubmit(); return; }
     if (!this.validateDianStep(this.dianStep)) return;
     this.dianStepError = '';
     this.dianStep = Math.min(5, this.dianStep + 1);
@@ -1315,6 +1390,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     const controls = (paths[step] || []).map((path) => this.integrationForm.get(path)).filter(Boolean);
     controls.forEach((control) => control?.markAllAsTouched());
     let valid = controls.every((control) => control?.valid !== false);
+    if (step === 3) {
+      const error = dianNumberingError(this.integrationForm.get('numbering')?.value,
+        this.integrationForm.get('environment')?.value === 'produccion');
+      if (error) { this.dianStepError = error; return false; }
+    }
     if (step === 2 && !this.editingIntegrationId && this.integrationForm.get('environment')?.value === 'habilitacion') {
       valid = valid && !!this.integrationForm.get('testSetId')?.value;
     }
@@ -1557,8 +1637,23 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    if (this.isSaving || this.isLoadingEdit || (this.selectedIntegrationType === 'dian' && this.dianLoadError)) return;
+    if (this.selectedIntegrationType === 'dian') {
+      this.dianStepError = '';
+      try {
+        if (this.dianConfigCompanyId && this.integrationsService.getActiveCompanyId() !== this.dianConfigCompanyId) {
+          this.dianLoadError = 'Cambió el comercio activo. Vuelve a cargar su configuración antes de guardar.';
+          return;
+        }
+        this.dianConfigCompanyId = this.integrationsService.getActiveCompanyId();
+      } catch (error) { this.dianStepError = dianConfigError(error); return; }
+      for (const step of [1, 2, 3]) {
+        if (!this.validateDianStep(step)) { this.dianStep = step; return; }
+      }
+    }
     if (this.integrationForm.invalid) {
       this.integrationForm.markAllAsTouched();
+      if (this.selectedIntegrationType === 'dian') this.dianStepError = 'Revisa los campos marcados antes de guardar la configuración.';
       return;
     }
     
@@ -1583,30 +1678,33 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       return { ...creds, ...base };
     };
 
-    // Paso 1: Validar configuración. Si el endpoint falla, se procede con el guardado igual.
-    this.integrationsService.validateConfig(provider, credentials).pipe(
-      catchError(() => of({ success: true, errors: [] } as ValidationResponse)),
+    const configPayload = buildPayload(credentials);
+    let persisted = false;
+    // Validate the same partial update that will be saved. HTTP success alone
+    // does not mean the configuration passed validation.
+    defer(() => this.integrationsService.validateConfig(provider, configPayload)).pipe(
       switchMap(validationResult => {
-        if (!validationResult.success && validationResult.errors?.length) {
-          // Si hay errores críticos, no proceder
-          const criticalErrors = validationResult.errors.filter(err =>
-            !err.toLowerCase().includes('warning') &&
-            !err.toLowerCase().includes('opcional')
-          );
-
-          if (criticalErrors.length > 0) {
-            throw new Error('Errores de validación: ' + criticalErrors.join(', '));
-          }
+        if (!validationResult.success) {
+          throw new Error((validationResult.errors?.length
+            ? validationResult.errors : ['Revisa los datos de configuración.']).join(', '));
         }
 
         // Paso 2: Proceder con el guardado
-        const configPayload = buildPayload(credentials);
-
+        if (provider === 'dian' && this.integrationsService.getActiveCompanyId() !== this.dianConfigCompanyId) {
+          throw new Error('Cambió el comercio activo. Vuelve a cargar la configuración antes de guardar.');
+        }
         if (this.editingIntegrationId) {
           return this.integrationsService.updateIntegration(provider, configPayload);
         } else {
           return this.integrationsService.createIntegration(provider, configPayload);
         }
+      }),
+      switchMap(result => {
+        persisted = true;
+        if (provider === 'dian' && this.integrationsService.getActiveCompanyId() !== this.dianConfigCompanyId) {
+          throw new Error('Cambió el comercio activo después del guardado.');
+        }
+        return provider === 'dian' ? this.integrationsService.getIntegration('dian', true) : of(result);
       }),
       takeUntil(this.destroy$)
     ).subscribe({
@@ -1614,9 +1712,18 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         this.isSaving = false;
 
         if (provider === 'dian') {
+          this.editingIntegrationId = result.id;
+          this.dianStoredSecrets = result.storedSecrets || {};
+          this.integrationForm.patchValue(result.config, { emitEvent: false });
+          for (const field of DIAN_SECRET_FIELDS) this.integrationForm.get(field)?.setValue('', { emitEvent: false });
+          this.dianCertificateFileName = '';
+          this.updateDianSecretValidators();
+          this.integrationForm.markAsPristine();
           this.dianStep = 5;
-          this.loadDianTestOrders();
-          this.uiHelper.showSuccess('Configuración DIAN guardada. Ya puedes hacer la prueba de habilitación.');
+          if (result.config.environment === 'habilitacion') this.loadDianTestOrders();
+          this.uiHelper.showSuccess(result.config.environment === 'produccion'
+            ? 'Configuración de producción guardada. Puedes revisar y facturar tus ventas desde Facturación electrónica.'
+            : 'Configuración de pruebas guardada. Puedes continuar con el set de habilitación.');
           return;
         }
 
@@ -1652,6 +1759,14 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isSaving = false;
+        if (provider === 'dian') {
+          this.dianStepError = persisted
+            ? 'Katuq confirmó el guardado, pero no pudimos volver a cargarlo. Vuelve a cargar la configuración antes de continuar.'
+            : dianConfigError(error);
+          if (persisted) this.dianLoadError = this.dianStepError;
+          this.uiHelper.showError(this.dianStepError);
+          return;
+        }
         const errorMessage = error?.error?.message || error?.message || 'Error al guardar la integración';
         this.uiHelper.showError(errorMessage);
       }

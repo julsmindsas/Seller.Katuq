@@ -4,7 +4,7 @@ import { Observable, of } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { IntegrationStateService } from "./integration-state.service";
 import { IntegrationCacheService } from "./integration-cache.service";
-import { tap, map, catchError, finalize } from "rxjs/operators";
+import { tap, map, catchError, finalize, timeout } from "rxjs/operators";
 
 // ===== INTERFACES V2 SEGÚN DOCUMENTACIÓN BACKEND =====
 
@@ -24,6 +24,8 @@ export interface IntegrationV2 {
 // Mantener interface legacy para compatibilidad
 export interface Integration {
   id?: string;
+  companyId?: string;
+  storedSecrets?: { [field: string]: boolean };
   type: string;
   name: string;
   enabled: boolean;
@@ -154,6 +156,10 @@ export class IntegrationsService {
     throw new Error('No hay una empresa activa para configurar integraciones.');
   }
 
+  getActiveCompanyId(): string {
+    return this.getCurrentCompanyId();
+  }
+
   /**
    * Genera headers requeridos por la API V2
    * Company ID se obtiene dinámicamente en cada llamada
@@ -237,14 +243,11 @@ export class IntegrationsService {
     );
   }
 
-  getIntegration(provider: string): Observable<Integration> {
+  getIntegration(provider: string, fresh = false): Observable<Integration> {
     const companyId = this.getCurrentCompanyId();
     console.log(`🔍 [IntegrationsService] Fetching ${provider} for company: ${companyId}`);
 
-    return this.cacheService.get(
-      `integration:${provider}:${companyId}`,  // ✅ Cache key includes company
-      () =>
-        this.http
+    const fetch = () => this.http
           .get<{ success: boolean; config: any; metadata?: any }>(
             `${this.apiUrl}/${provider}`,
             {
@@ -252,11 +255,13 @@ export class IntegrationsService {
             },
           )
           .pipe(
+            timeout(45000),
             map((response) => {
               // Mapear respuesta del backend a estructura frontend
               const backendConfig = response.config;
               return {
                 id: backendConfig.id,
+                companyId: backendConfig.companyId,
                 provider: backendConfig.provider,
                 type: backendConfig.provider,  // Legacy compatibility
                 name: backendConfig.provider,
@@ -265,7 +270,8 @@ export class IntegrationsService {
                 createdAt: backendConfig.createdAt,
                 updatedAt: backendConfig.updatedAt,
                 category: 'payment' as IntegrationCategory,  // Asumir payment por defecto
-                credentials: backendConfig.config  // Legacy compatibility
+                credentials: backendConfig.config, // Legacy compatibility
+                storedSecrets: backendConfig.storedSecrets
               } as Integration;
             }),
             tap((integration) => {
@@ -274,8 +280,10 @@ export class IntegrationsService {
               console.log(`   - Has config: ${!!integration.config}`);
               console.log(`   - Has publicKey: ${!!integration.config?.publicKey}`);
             })
-          ),
-      10 * 60 * 1000, // 10 minutos TTL para integraciones individuales
+          );
+    // Fiscal configuration contains live counters; never serve an old DIAN draft.
+    return fresh || provider === 'dian' ? fetch() : this.cacheService.get(
+      `integration:${provider}:${companyId}`, fetch, 10 * 60 * 1000,
     );
   }
 
@@ -301,7 +309,11 @@ export class IntegrationsService {
         headers: this.getApiHeaders(),
       })
       .pipe(
-        map((response) => response.data || null),
+        timeout(60000),
+        map((response) => {
+          if (!response.success) throw new Error(response.message || 'No se guardó la configuración.');
+          return response.data || null;
+        }),
         tap((createdIntegration) => {
           // Si el backend no devuelve la integración completa (solo configId), forzar refetch
           if (createdIntegration) {
@@ -349,7 +361,11 @@ export class IntegrationsService {
         headers: this.getApiHeaders(),
       })
       .pipe(
-        map((response) => response.data || null),
+        timeout(60000),
+        map((response) => {
+          if (!response.success) throw new Error(response.message || 'No se guardó la configuración.');
+          return response.data || null;
+        }),
         tap((updatedIntegration) => {
           if (updatedIntegration) {
             this.stateService.updateIntegration(updatedIntegration);
@@ -564,11 +580,20 @@ export class IntegrationsService {
       config: config,
     };
 
-    return this.http.post<ValidationResponse>(
+    return this.http.post<any>(
       `${this.apiUrl}/validate`,
       requestBody,
       { headers: this.getApiHeaders() },
-    );
+    ).pipe(timeout(45000), map(response => {
+      if (response.validation) {
+        return {
+          success: response.success === true && response.validation.isValid === true,
+          errors: response.validation.errors || [],
+          warnings: response.validation.warnings || [],
+        };
+      }
+      return response as ValidationResponse;
+    }));
   }
 
   /**

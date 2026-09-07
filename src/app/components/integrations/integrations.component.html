@@ -1795,6 +1795,12 @@
 
         <!-- ===== DIAN DIRECTO - SOFTWARE PROPIO ===== -->
         <ng-container *ngIf="selectedIntegrationType === 'dian'">
+          <div class="alert alert-info" role="status" *ngIf="isLoadingEdit">Cargando los datos guardados de este comercio…</div>
+          <div class="alert alert-danger" role="alert" *ngIf="dianLoadError">
+            <p>{{ dianLoadError }}</p>
+            <button type="button" class="btn btn-outline-danger" (click)="reloadDianConfiguration()">Volver a cargar configuración</button>
+          </div>
+          <fieldset class="border-0 p-0 w-100" [disabled]="isSaving || isLoadingEdit || !!dianLoadError">
           <section class="dian-wizard" aria-label="Asistente de configuración DIAN">
             <div class="dian-wizard__intro">
               <div class="dian-wizard__icon"><i class="fa fa-file-invoice"></i></div>
@@ -1813,7 +1819,12 @@
             <i class="fa fa-shield-alt me-2"></i>
             Esta configuración pertenece solamente al comercio activo. Las claves y el certificado se guardan protegidos.
           </div>
-          <div class="alert alert-danger" *ngIf="dianStepError"><i class="fa fa-exclamation-circle me-2"></i>{{ dianStepError }}</div>
+          <div class="alert alert-danger" role="alert" *ngIf="dianStepError"><i class="fa fa-exclamation-circle me-2"></i>{{ dianStepError }}</div>
+          <div class="alert alert-info" *ngIf="dianStep === 2 && editingIntegrationId">
+            No mostramos tus claves guardadas por seguridad. No necesitas copiarlas otra vez para cambiar otros datos.
+            Si cambias de rango o de certificado, te pediremos los datos nuevos.
+            <span class="d-block" *ngIf="dianStoredSecrets.certificateP12Base64">Certificado guardado para este comercio.</span>
+          </div>
 
           <section class="dian-prepare" *ngIf="dianStep === 1">
             <div><i class="fa fa-id-card"></i><span><strong>RUT actualizado</strong><small>Para confirmar los datos legales</small></span></div>
@@ -1928,7 +1939,8 @@
                 <div class="field-col form-group"><label>Contraseña del certificado *</label><input [type]="dianRevealSecrets ? 'text' : 'password'" class="form-control" formControlName="certificatePassword" autocomplete="new-password"><small class="form-text text-muted">Es la contraseña entregada junto con el certificado.</small></div>
               </div>
               <div class="form-group" *ngIf="integrationForm.get('environment')?.value === 'produccion'">
-                <label><input type="checkbox" formControlName="enableAutoInvoicing"> Activar facturación automática al crear ventas</label>
+                <label><input type="checkbox" formControlName="enableAutoInvoicing"> Facturar automáticamente al crear una venta</label>
+                <small class="form-text text-muted">Si lo dejas apagado, puedes revisar tus ventas y pulsar Facturar cuando tú decidas. No desactiva la conexión con la DIAN.</small>
               </div>
               <div class="form-group">
                 <label><input type="checkbox" formControlName="sendEmail"> Enviar PDF, XML y AttachedDocument al comprador después de la aceptación DIAN</label>
@@ -1936,7 +1948,7 @@
             </div>
           </div>
 
-          <div class="card mb-4 dian-review" *ngIf="dianStep === 5">
+          <div class="card mb-4 dian-review" *ngIf="dianStep === 5 && integrationForm.get('environment')?.value === 'habilitacion'">
             <div class="card-body">
               <h6>Habilitación del software</h6>
               <p>Se confirma en el portal DIAN, en <strong>Modos de operación → Katuq</strong>.
@@ -2013,7 +2025,10 @@
             <div class="card-body text-center py-4">
               <i class="fa fa-check-circle text-success fa-3x mb-3"></i>
               <h5>Configuración de producción guardada</h5>
-              <p class="text-muted">Ya puedes cerrar este asistente. Recomendamos emitir primero una factura controlada y confirmar su estado en la DIAN.</p>
+              <p class="text-muted">Tus datos quedaron guardados para este comercio. Desde Facturación electrónica puedes revisar una venta real y enviarla a la DIAN.</p>
+              <p><strong>Próxima factura:</strong> {{ integrationForm.get('numbering.prefix')?.value }}{{ integrationForm.get('numbering.current')?.value }}</p>
+              <p>{{ integrationForm.get('enableAutoInvoicing')?.value ? 'Facturación automática activada al crear ventas.' : 'Facturación manual: tú decides qué venta facturar y cuándo.' }}</p>
+              <p class="small text-muted">Guardar la configuración no emite ninguna factura.</p>
             </div>
           </div>
 
@@ -2024,7 +2039,8 @@
               <div class="dian-review__row"><span>NIT</span><strong>{{ integrationForm.get('issuer.nit')?.value }}-{{ integrationForm.get('issuer.dv')?.value }}</strong></div>
               <div class="dian-review__row"><span>Ambiente</span><strong>{{ integrationForm.get('environment')?.value === 'habilitacion' ? 'Pruebas de habilitación' : 'Producción real' }}</strong></div>
               <div class="dian-review__row"><span>Próxima factura</span><strong>{{ integrationForm.get('numbering.prefix')?.value }}{{ integrationForm.get('numbering.current')?.value }}</strong></div>
-              <div class="dian-review__row"><span>Certificado</span><strong class="text-success"><i class="fa fa-lock me-1"></i>{{ integrationForm.get('certificateP12Base64')?.value ? 'Cargado y protegido' : 'Se conserva el certificado guardado' }}</strong></div>
+              <div class="dian-review__row"><span>Certificado</span><strong><i class="fa fa-lock me-1"></i>{{ integrationForm.get('certificateP12Base64')?.value ? 'Seleccionado; se guardará cifrado' : (dianStoredSecrets.certificateP12Base64 ? 'Se conserva el certificado guardado' : 'Falta subir el certificado') }}</strong></div>
+              <div class="dian-review__row"><span>Cómo vas a facturar</span><strong>{{ integrationForm.get('enableAutoInvoicing')?.value ? 'Automáticamente al crear ventas' : 'Manualmente: tú eliges cada venta' }}</strong></div>
               <div class="alert alert-warning mt-3 mb-0" *ngIf="integrationForm.get('environment')?.value === 'produccion'">Las facturas de este ambiente tienen efectos fiscales. Revisa la habilitación del comercio, la aprobación de Katuq en Modos de operación y la numeración de producción. Un lote aceptado no sustituye estas verificaciones.</div>
             </div>
           </div>
@@ -2035,6 +2051,7 @@
             <button type="button" class="btn btn-primary" *ngIf="dianStep < 4" (click)="nextDianStep()">Continuar<i class="fa fa-arrow-right ms-1"></i></button>
             <button type="button" class="btn btn-success" *ngIf="dianStep === 5" (click)="finishDianSetup()"><i class="fa fa-check me-1"></i>Terminar</button>
           </div>
+          </fieldset>
         </ng-container>
 
         <!-- ===== SIIGO - SOFTWARE CONTABLE COLOMBIANO ===== -->
@@ -3112,7 +3129,7 @@
             <button type="button" class="kx-b kx-b--suave" *ngIf="!dianDirectMode" (click)="cancel()">Cancelar</button>
             <button type="button" class="kx-b kx-b--suave" *ngIf="dianDirectMode" (click)="exitDianSetup()"><i class="fa fa-arrow-left"></i> Volver a facturación</button>
             <button type="submit" class="kx-b kx-b--guardar" *ngIf="selectedIntegrationType !== 'dian' || dianStep === 4"
-                    [disabled]="integrationForm.invalid || isSaving || isLoadingEdit">
+                    [disabled]="isSaving || isLoadingEdit || (selectedIntegrationType === 'dian' ? !!dianLoadError : integrationForm.invalid)">
               <i class="fa" [ngClass]="(isSaving || isLoadingEdit) ? 'fa-spinner fa-spin' : 'fa-check'"></i>
               {{ isLoadingEdit ? 'Cargando datos…' : isSaving ? 'Guardando…' : (selectedIntegrationType === 'dian' ? 'Guardar y continuar' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar y activar')) }}
             </button>

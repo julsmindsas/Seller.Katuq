@@ -1,0 +1,47 @@
+<div class="customer-search">
+  <label for="invoice-customer-search">Buscar cliente registrado</label>
+  <div class="input-group">
+    <input id="invoice-customer-search" class="form-control" type="search" [(ngModel)]="search" [ngModelOptions]="{standalone:true}" [disabled]="disabled || loading" placeholder="Nombre, NIT, cédula o correo" (keydown.enter)="$event.preventDefault(); find()">
+    <button type="button" class="btn btn-outline-primary" [disabled]="disabled || loading" (click)="find()"><i class="pi pi-search"></i> Buscar</button>
+  </div>
+  <div class="customer-actions">
+    <button type="button" class="btn btn-outline-primary" [disabled]="disabled || loading || creating" (click)="createCustomer()"><i class="pi pi-user-plus"></i> Crear cliente</button>
+  </div>
+  <small class="field-hint">Puedes registrar el cliente aquí sin salir de la factura. Se guardará en Clientes de este comercio; si faltan datos fiscales, te indicaremos cuáles completar.</small>
+</div>
+<p role="status" *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> Consultando la ficha actual…</p>
+<p role="alert" class="field-error" *ngIf="error">{{ error }}</p>
+<div class="customer-results" *ngIf="results.length">
+  <button type="button" class="customer-result" *ngFor="let item of results" [disabled]="disabled" (click)="choose(item)">
+    <span class="customer-avatar">{{ (item.nombres_completos || '?').charAt(0).toUpperCase() }}</span><span><strong>{{ item.nombres_completos }} {{ item.apellidos_completos }}</strong><small>{{ item.documento }} · {{ item.correo_electronico_comprador }}</small></span><i class="pi pi-angle-right"></i>
+  </button>
+</div>
+<p class="field-hint" *ngIf="searched && !loading && !error && !results.length && !customer">No encontramos clientes. Pulsa Crear cliente para registrarlo sin salir de aquí.</p>
+<div *ngIf="customer">
+  <div class="customer-grid">
+    <label>Datos fiscales<select class="form-select" [(ngModel)]="billingProfile" [ngModelOptions]="{standalone:true}" (change)="refresh()" [disabled]="disabled || loading"><option *ngFor="let option of customer.billingProfiles" [ngValue]="option.index">{{ option.label }}</option></select></label>
+    <label *ngIf="customer.addresses.length > 1">Dirección guardada<select class="form-select" [(ngModel)]="addressIndex" [ngModelOptions]="{standalone:true}" (change)="refresh()" [disabled]="disabled || loading"><option [ngValue]="undefined">Selecciona una dirección</option><option *ngFor="let option of customer.addresses" [ngValue]="option.index">{{ option.label }}</option></select></label>
+  </div>
+  <div class="registered-customer">
+    <span class="composer-chip composer-chip--ready"><i class="pi pi-user"></i> Cliente registrado</span>
+    <strong>{{ customer.fiscal.name || customer.name }}</strong>
+    <span>{{ customer.fiscal.documentType }} {{ customer.fiscal.documentNumber }}</span>
+    <span *ngIf="customer.fiscal.address && customer.fiscal.municipalityCode">{{ customer.fiscal.address }} · {{ customer.fiscal.city }} {{ customer.fiscal.department }}</span>
+    <small *ngIf="!customer.fiscal.address || !customer.fiscal.municipalityCode">Dirección fiscal opcional. No impide preparar esta factura.</small>
+  </div>
+  <div class="billing-email" aria-labelledby="invoice-billing-email-label">
+    <label id="invoice-billing-email-label" for="invoice-billing-email"><i class="pi pi-envelope" aria-hidden="true"></i> Correo de facturación</label>
+    <input id="invoice-billing-email" class="form-control" type="email" [value]="loading ? '' : customer.fiscal.email" readonly [disabled]="loading" [placeholder]="loading ? 'Consultando correo…' : 'Sin correo de facturación registrado'" aria-describedby="invoice-billing-email-help">
+    <small id="invoice-billing-email-help">Se toma de los datos fiscales seleccionados. Para cambiarlo, actualiza la ficha del cliente y vuelve a consultar.</small>
+  </div>
+  <p class="composer-message composer-message--error" *ngIf="missingFields.length">Para facturar, actualiza: {{ missingFields.join(', ') }}. Los datos deben quedar guardados en la ficha del cliente.</p>
+  <div class="customer-actions">
+    <a class="btn btn-light" routerLink="/ventas/clientes" [queryParams]="{invoiceCustomer:customer.documentNumber}" target="_blank" rel="noopener"><i class="pi pi-external-link"></i> Actualizar ficha completa</a>
+    <button type="button" class="btn btn-outline-primary" (click)="refresh()" [disabled]="disabled || loading"><i class="pi pi-refresh"></i> Ya actualicé: volver a consultar</button>
+  </div>
+</div>
+<div class="billing-email billing-email--empty" *ngIf="!customer">
+  <label for="invoice-billing-email-empty"><i class="pi pi-envelope" aria-hidden="true"></i> Correo de facturación</label>
+  <input id="invoice-billing-email-empty" class="form-control" type="email" disabled placeholder="Selecciona o crea un cliente" aria-describedby="invoice-billing-email-empty-help">
+  <small id="invoice-billing-email-empty-help">Aquí verás el correo registrado para recibir la factura.</small>
+</div>
