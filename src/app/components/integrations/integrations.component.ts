@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { DaneCodesService } from '../../shared/services/dane-codes.service';
 import { MunicipioDane } from '../../shared/data/colombia-dane-codes';
+import { describeDianBatchStatus, DianBatchStatus } from './dian-batch-status';
 
 // El catálogo DIAN asigna este mismo rango a software propio en habilitación.
 // No se le pide al comercio copiarlo: no es una resolución de producción.
@@ -89,7 +90,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   dianTestOrderIds = '';
   dianHabilitationLoading = false;
   dianZipKey = '';
-  dianHabilitationStatus: any = null;
+  dianHabilitationStatus: DianBatchStatus | null = null;
+  dianHabilitationError = '';
+  dianQueriedZipKey = '';
+  private dianBatchQueryVersion = 0;
   dianTestOrders: any[] = [];
   dianSelectedOrderIds: string[] = [];
   dianOrdersLoading = false;
@@ -603,6 +607,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   resetForm(): void {
+    this.clearDianBatchResult();
     // Resetea el formulario según el tipo seleccionado
     switch (this.selectedIntegrationType) {
       case 'shopify':
@@ -1219,6 +1224,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   selectDianEnvironment(environmentName: 'habilitacion' | 'produccion'): void {
+    this.clearDianBatchResult();
     this.integrationForm.get('environment')?.setValue(environmentName);
     if (environmentName === 'habilitacion' && !this.editingIntegrationId) {
       this.integrationForm.get('numbering')?.patchValue({ ...DIAN_HABILITATION_NUMBERING });
@@ -1382,6 +1388,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   submitDianHabilitation(): void {
+    if (this.dianHabilitationLoading) return;
     const orderIds = this.dianTestOrderIds.split(/[\s,;]+/).map((id) => id.trim()).filter(Boolean);
     const uniqueIds = [...new Set(orderIds)];
     if (uniqueIds.length !== 8) {
@@ -1402,13 +1409,13 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     }).then((confirmation) => {
       if (!confirmation.isConfirmed) return;
       this.dianHabilitationLoading = true;
-      this.dianHabilitationStatus = null;
+      this.clearDianBatchResult();
       this.integrationsService.submitDianHabilitationSet(uniqueIds).pipe(takeUntil(this.destroy$)).subscribe({
         next: (response: any) => {
           this.dianHabilitationLoading = false;
           const data = response?.data || response;
           this.dianZipKey = data?.zipKey || '';
-          this.uiHelper.showSuccess(`Set enviado. ZipKey: ${this.dianZipKey}`);
+          this.uiHelper.showSuccess('Lote enviado. Consulta su resultado con el código de seguimiento. El envío no confirma la habilitación del software.');
         },
         error: (error) => {
           this.dianHabilitationLoading = false;
@@ -1419,25 +1426,41 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   checkDianHabilitationStatus(): void {
+    if (this.dianHabilitationLoading) return;
     const zipKey = this.dianZipKey.trim();
     if (!zipKey) {
       this.uiHelper.showError('Ingrese el ZipKey devuelto por la DIAN.');
       return;
     }
     this.dianHabilitationLoading = true;
+    this.clearDianBatchResult();
+    const queryVersion = this.dianBatchQueryVersion;
     this.integrationsService.getDianHabilitationStatus(zipKey).pipe(takeUntil(this.destroy$)).subscribe({
       next: (response: any) => {
         this.dianHabilitationLoading = false;
-        this.dianHabilitationStatus = response?.data || response;
-        const accepted = this.dianHabilitationStatus?.isValid === true;
-        if (accepted) this.uiHelper.showSuccess('La DIAN reporta el set como aceptado.');
-        else this.uiHelper.showError('El set sigue pendiente o contiene rechazos. Revise el detalle mostrado.');
+        if (queryVersion !== this.dianBatchQueryVersion) return;
+        this.dianQueriedZipKey = zipKey;
+        this.dianHabilitationStatus = describeDianBatchStatus(response);
+        const { state, title } = this.dianHabilitationStatus;
+        if (state === 'accepted') this.uiHelper.showSuccess(title);
+        else if (state === 'rejected') this.uiHelper.showError(title);
+        else if (state === 'mixed' || state === 'not_found') this.uiHelper.showWarning(title);
+        else this.uiHelper.showInfo(title);
       },
       error: (error) => {
         this.dianHabilitationLoading = false;
-        this.uiHelper.showError(error?.error?.message || error?.message || 'No se pudo consultar el ZipKey.');
+        if (queryVersion !== this.dianBatchQueryVersion) return;
+        this.dianHabilitationError = error?.error?.message || error?.message || 'No se pudo consultar el lote. Intenta consultar de nuevo; no es necesario reenviarlo para consultar.';
+        this.uiHelper.showError(this.dianHabilitationError);
       }
     });
+  }
+
+  clearDianBatchResult(): void {
+    this.dianBatchQueryVersion++;
+    this.dianHabilitationStatus = null;
+    this.dianHabilitationError = '';
+    this.dianQueriedZipKey = '';
   }
 
   createPrindelForm(): FormGroup {
