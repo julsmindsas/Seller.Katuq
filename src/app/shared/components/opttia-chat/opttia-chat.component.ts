@@ -33,11 +33,13 @@ export class OpttiaChatComponent implements OnInit, OnDestroy, AfterViewChecked 
   errorMessage: string | null = null;
   hasConsent = false;
 
-  readonly suggestions = [
-    '¿Cómo van las ventas de hoy?',
-    '¿Qué productos tienen bajo stock?',
-    'Muéstrame los pedidos pendientes'
-  ];
+  get suggestions(): string[] {
+    return [
+      { tool: 'get_sales_today', text: '¿Cómo van las ventas de hoy?' },
+      { tool: 'get_low_stock_products', text: '¿Qué productos tienen bajo stock?' },
+      { tool: 'get_orders', text: 'Muéstrame los pedidos pendientes' }
+    ].filter(suggestion => this.opttia.hasTool(suggestion.tool)).map(suggestion => suggestion.text);
+  }
 
   private shouldScroll = false;
   private readonly destroy$ = new Subject<void>();
@@ -112,7 +114,7 @@ export class OpttiaChatComponent implements OnInit, OnDestroy, AfterViewChecked 
 
   async send(): Promise<void> {
     const text = this.draft.trim();
-    if (!text || this.isSending || !this.hasConsent) return;
+    if (!text || this.isSending || !this.hasConsent || !this.opttia.canSend) return;
     this.draft = '';
     await this.opttia.sendMessage(text);
     if (this.errorMessage) this.draft = text;

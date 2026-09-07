@@ -8,6 +8,16 @@ import {
 
 export type OpttiaMessageRole = 'user' | 'assistant';
 
+export interface OpttiaAccess {
+  allowed: boolean;
+  plan: string;
+  remaining: number;
+  limit: number;
+  resetTime: string | null;
+  tools: string[];
+  message?: string;
+}
+
 export interface OpttiaChatMessage {
   id: string;
   role: OpttiaMessageRole;
@@ -32,6 +42,7 @@ export interface OpttiaInterrupt {
 }
 
 interface OpttiaSseEvent {
+  access?: OpttiaAccess;
   type?: string;
   customType?: string;
   threadId?: string;
@@ -57,6 +68,42 @@ interface OpttiaSseEvent {
  */
 @Injectable({ providedIn: 'root' })
 export class OpttiaChatService implements OnDestroy {
+  private readonly accessEndpoint = (environment as typeof environment & { opttiaAccessApi?: string }).opttiaAccessApi
+    || 'https://back.katuq.com/v1/opttia/access';
+  private readonly accessSubject = new BehaviorSubject<OpttiaAccess | null>(null);
+  readonly access$ = this.accessSubject.asObservable();
+  accessLoading = false;
+
+  get canSend(): boolean {
+    const access = this.accessSubject.value;
+    return !!access && access.allowed && (access.remaining === -1 || access.remaining > 0);
+  }
+
+  hasTool(name: string): boolean {
+    return this.accessSubject.value?.tools.includes(name) === true;
+  }
+
+  async refreshAccess(): Promise<void> {
+    const session = this.readSession();
+    this.accessSubject.next(null);
+    if (!session) return;
+    this.accessLoading = true;
+    try {
+      const response = await fetch(this.accessEndpoint, { headers: this.buildHeaders(session, 'application/json') });
+      if (!response.ok) throw new Error(await this.readHttpError(response));
+      const access = await response.json() as OpttiaAccess;
+      const current = this.readSession();
+      if (current?.token !== session.token || current?.companyId !== session.companyId) return;
+      if (typeof access.allowed !== 'boolean' || !Number.isFinite(access.remaining) || !Array.isArray(access.tools)) {
+        throw new Error('Katuq no devolvió una autorización válida para Opttia.');
+      }
+      this.accessSubject.next(access);
+    } catch (error: any) {
+      if (this.readSession()?.token === session.token) this.errorSubject.next(error.message || 'No se pudo verificar el cupo.');
+    } finally {
+      this.accessLoading = false;
+    }
+  }
   private readonly endpoint = `${(
     (environment as typeof environment & { opttiaApi?: string }).opttiaApi
     || 'https://back.katuq.com/adk'
@@ -64,7 +111,7 @@ export class OpttiaChatService implements OnDestroy {
   private readonly initialMessage: OpttiaChatMessage = {
     id: 'opttia-welcome',
     role: 'assistant',
-    content: '¡Hola! Soy Opttia. Puedo consultar ventas, pedidos, inventario y la operación de tu empresa en Katuq. ¿Qué quieres saber?',
+    content: '¡Hola! Soy Opttia. Puedo ayudarte con la información de Katuq que tu rol tenga autorizada. ¿Qué quieres saber?',
     createdAt: new Date(),
     includeInContext: false
   };
@@ -114,11 +161,16 @@ export class OpttiaChatService implements OnDestroy {
   prepareForCurrentSession(): void {
     const session = this.readSession();
     if (session) this.ensureSessionScope(session);
+    void this.refreshAccess();
   }
 
   async sendMessage(content: string): Promise<void> {
     const text = content.trim();
     if (!text || this.isSending) return;
+    if (!this.canSend) {
+      this.errorSubject.next('Verifica tu cupo y permisos antes de enviar otro mensaje.');
+      return;
+    }
 
     const session = this.readSession();
     if (!session) {
@@ -182,6 +234,7 @@ export class OpttiaChatService implements OnDestroy {
       if (this.abortController === requestController) {
         this.sendingSubject.next(false);
         this.abortController = null;
+        void this.refreshAccess();
       }
     }
   }
@@ -219,6 +272,10 @@ export class OpttiaChatService implements OnDestroy {
       }
 
       this.interruptSubject.next(null);
+      if (response.headers.get('content-type')?.includes('text/event-stream') && response.body) {
+        await this.consumeEventStream(response.body);
+        return;
+      }
       this.addMessage({
         id: this.generateId('assistant'),
         role: 'assistant',
@@ -294,6 +351,10 @@ export class OpttiaChatService implements OnDestroy {
   }
 
   private handleEvent(event: OpttiaSseEvent): void {
+    if (event.type === 'katuq:ACCESS' && event.access) {
+      this.accessSubject.next(event.access);
+      return;
+    }
     const type = event.customType || event.type;
 
     switch (type) {

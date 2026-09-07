@@ -20,6 +20,17 @@
     </div>
   </div>
 
+  <div class="access-banner" aria-live="polite">
+    <ng-container *ngIf="opttia.access$ | async as access; else checkingAccess">
+      <span *ngIf="access.limit === -1">Tu plan incluye mensajes ilimitados.</span>
+      <span *ngIf="access.limit !== -1">{{ access.remaining }} de {{ access.limit }} mensajes disponibles hoy para tu usuario.</span>
+      <small *ngIf="access.resetTime">Se renueva: {{ access.resetTime | date:'d MMM, HH:mm' }}</small>
+      <a *ngIf="access.remaining === 0" routerLink="/pricing">Ver planes</a>
+    </ng-container>
+    <ng-template #checkingAccess><span>{{ opttia.accessLoading ? 'Verificando cupo y permisos…' : 'No se pudo verificar tu acceso.' }}</span></ng-template>
+    <button type="button" (click)="opttia.refreshAccess()" [disabled]="isSending || opttia.accessLoading" aria-label="Actualizar cupo y permisos">Actualizar</button>
+  </div>
+
   <div class="messages" #messagesContainer aria-live="polite">
     <article class="message" *ngFor="let message of messages; trackBy: trackMessage"
       [class.user-message]="message.role === 'user'"
@@ -34,7 +45,7 @@
     </article>
 
     <div class="suggestions" *ngIf="messages.length === 1 && !isSending">
-      <button type="button" *ngFor="let suggestion of suggestions" (click)="useSuggestion(suggestion)">
+      <button type="button" *ngFor="let suggestion of suggestions" [disabled]="!opttia.canSend" (click)="useSuggestion(suggestion)">
         {{ suggestion }}
       </button>
     </div>
@@ -77,10 +88,10 @@
 
   <form class="composer" (ngSubmit)="send()">
     <textarea name="opttiaMessage" [(ngModel)]="draft" (keydown)="onKeydown($event)"
-      [disabled]="isSending" rows="1" maxlength="4000"
+      [disabled]="isSending || !opttia.canSend" rows="1" maxlength="4000"
       placeholder="Pregúntale a Opttia sobre tu negocio…"
       aria-label="Mensaje para Opttia"></textarea>
-    <button *ngIf="!isSending" type="submit" [disabled]="!draft.trim()" aria-label="Enviar mensaje">
+    <button *ngIf="!isSending" type="submit" [disabled]="!draft.trim() || !opttia.canSend" aria-label="Enviar mensaje">
       <i class="fa fa-paper-plane"></i>
     </button>
     <button *ngIf="isSending" type="button" class="stop-button" (click)="opttia.cancel()"
