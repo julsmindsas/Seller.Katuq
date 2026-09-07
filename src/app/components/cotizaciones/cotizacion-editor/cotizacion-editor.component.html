@@ -601,6 +601,42 @@
         <div class="doc-total"><span>Total</span><span>{{ total | currency:'COP':'symbol-narrow':'1.0-2' }}</span></div>
       </div>
 
+      <!-- ANEXO: precios sugeridos por tipo de cliente.
+           Va DESPUÉS de los totales a propósito: lo que se cobra es el total, y
+           esto es material de referencia. Aquí sí van TODAS las listas del
+           producto (la fila de arriba nombra solo la aplicada), para que el
+           cliente vea a qué precio quedaría en cada tipo. -->
+      <div class="doc-sugeridos" *ngIf="hayPreciosSugeridos">
+        <div class="doc-sug-tit">Precios sugeridos por tipo de cliente</div>
+        <div class="doc-sug-nota">
+          Valores unitarios con IVA, de referencia. El precio facturado es el de la tabla anterior.
+        </div>
+        <ng-container *ngFor="let it of cotizacion.items">
+          <!-- Cada producto es un bloque completo: `break-inside: avoid` para
+               que el PDF no parta el título de sus precios. -->
+          <div class="doc-sug-prod" *ngIf="preciosSugeridos(it).length">
+            <div class="doc-sug-nom">
+              {{ itemTitulo(it) }}
+              <span class="doc-ref" *ngIf="itemReferencia(it)"> · Ref: {{ itemReferencia(it) }}</span>
+            </div>
+            <!-- `inline-block` + margen, no flex con gap: html2canvas rasteriza
+                 a partir de la caja ya calculada y el flujo en línea es lo que
+                 menos se le tuerce al partir en páginas. -->
+            <div class="doc-sug-lista">
+              <span
+                class="doc-sug-item"
+                [class.es-aplicado]="s.aplicado"
+                *ngFor="let s of preciosSugeridos(it)"
+                [title]="s.descripcion">
+                <span class="doc-sug-tipo">{{ s.nombre }}</span>
+                <span class="doc-sug-val">{{ s.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                <span class="doc-sug-tag" *ngIf="s.aplicado">precio aplicado</span>
+              </span>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
       <div class="doc-notes" *ngIf="(cotizacion.terminos || '').trim()" [innerHTML]="cotizacion.terminos | linkify"></div>
 
       <img

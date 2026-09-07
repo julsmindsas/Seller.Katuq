@@ -1,5 +1,19 @@
-:host {
-  // Paleta del rediseño "Cotización Editor"
+// Paleta del rediseño "Cotización Editor".
+//
+// Va en un mixin, y no solo en `:host`, porque el documento se captura CLONADO:
+// html2pdf hace `document.body.appendChild(overlay)` con el clon de `.cot-doc`,
+// que así termina FUERA del host del componente. Ahí toda variable heredada del
+// host queda sin definir, y una `var()` sin definir invalida la declaración
+// entera:
+//   · `color: var(--muted)`            → el texto cae al color del body
+//   · `border: 1px solid var(--line)`  → se anula el atajo → borde INVISIBLE
+//   · `.es-aplicado`                   → pierde su color y no se distingue
+// Las reglas sin variables (anchos, fondos, negritas) sí sobreviven, que es por
+// qué el PDF salía bien armado pero descolorido y sin bordes.
+//
+// Por eso `.cot-doc` repite la paleta y es autosuficiente. Un mixin y no dos
+// listas sueltas para que no se desincronicen.
+@mixin paleta-cotizacion {
   --ink: #2a2e3c;
   --ink2: #52586b;
   --muted: #8a90a2;
@@ -22,6 +36,10 @@
 
   --font-head: "Baloo 2", "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Nunito", "Inter", system-ui, -apple-system, sans-serif;
+}
+
+:host {
+  @include paleta-cotizacion;
 
   display: block;
   color: var(--ink);
@@ -1064,6 +1082,10 @@
 
 // ============ DOCUMENTO (vista previa + PDF) — preservado sin cambios ============
 .cot-doc {
+  // El documento carga su propia paleta: el clon que captura html2pdf cuelga
+  // del `body` y no ve las variables del `:host`. Ver `paleta-cotizacion`.
+  @include paleta-cotizacion;
+
   background: #fff;
   color: var(--ink);
   font-family: "Inter", system-ui, sans-serif;
@@ -1289,6 +1311,119 @@
       font-weight: 700;
       letter-spacing: 0.01em;
     }
+  }
+
+  // ---- Anexo de precios sugeridos por tipo de cliente ----
+  //
+  // Va en bloques por producto con las tarifas en flujo de línea, NO en una
+  // matriz producto × tipo: hay empresas con 17 listas y una columna por tipo
+  // no cabe en el lienzo de 880px. Así el bloque crece hacia abajo, que es la
+  // dirección en la que el PDF sí tiene espacio.
+  //
+  // Sin rellenos de color, igual que el resto del documento: el PDF se imprime
+  // y los fondos se van en gris sucio. La jerarquía la hacen borde y tinta.
+  .doc-sugeridos {
+    margin-top: 22px;
+    padding-top: 12px;
+    border-top: 1.5px solid var(--line);
+  }
+
+  .doc-sug-tit {
+    color: var(--muted);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .doc-sug-nota {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.35;
+  }
+
+  .doc-sug-prod {
+    margin-top: 9px;
+    // Que el PDF no deje el nombre del producto al final de una página y sus
+    // precios al principio de la siguiente.
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .doc-sug-nom {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+
+    // `.doc-ref` de la tabla está anidada dentro de `.doc-tbl` y no llega acá.
+    .doc-ref {
+      color: var(--muted);
+      font-size: 9.5px;
+      font-weight: 400;
+    }
+  }
+
+  .doc-sug-lista {
+    margin-top: 3px;
+  }
+
+  // Flujo en línea con margen, no flex con gap: html2canvas rasteriza sobre la
+  // caja que ya calculó el navegador, y el `inline-block` es lo que mejor se le
+  // porta cuando además hay que partir en páginas.
+  .doc-sug-item {
+    display: inline-block;
+    margin: 0 5px 4px 0;
+    padding: 2px 7px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 9.5px;
+    line-height: 1.5;
+    white-space: nowrap;
+
+    // La lista aplicada es la única que el cliente está pagando de verdad, así
+    // que tiene que saltar a la vista. Acá SÍ va relleno, a diferencia del resto
+    // del documento: es un área diminuta, y al imprimir en blanco y negro el
+    // gris claro sigue señalando cuál es. Confiar solo en el color dejaría el
+    // dato perdido en cualquier impresión sin tinta de color.
+    //
+    // Tres señales redundantes a propósito: relleno, tinta de marca y la
+    // etiqueta "PRECIO APLICADO". Con que sobreviva una, se entiende.
+    &.es-aplicado {
+      border-color: var(--primary-ink);
+      background: var(--primary-wash);
+
+      .doc-sug-tipo {
+        color: var(--primary-ink);
+        font-weight: 700;
+      }
+
+      .doc-sug-val { color: var(--primary-ink); }
+    }
+  }
+
+  .doc-sug-tipo {
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  // El precio es lo que se compara entre listas: tinta fuerte y cifras de ancho
+  // fijo para que los valores queden alineados aunque estén en chips distintos.
+  .doc-sug-val {
+    margin-left: 5px;
+    color: var(--ink);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .doc-sug-tag {
+    margin-left: 5px;
+    color: var(--primary-ink);
+    font-size: 8.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   .doc-totals {
