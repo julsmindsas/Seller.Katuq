@@ -35,8 +35,8 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     { cargando: false, total: null, pedidos: null };
   despachosHoy: { cargando: boolean; paraDespacho: number | null; urgentes: number | null } =
     { cargando: false, paraDespacho: null, urgentes: null };
-  stockCritico: { cargando: boolean; sinStock: number | null; bajoStock: number | null } =
-    { cargando: false, sinStock: null, bajoStock: null };
+  stockCritico: { cargando: boolean; sinStock: number | null; bajoStock: number | null; sinDatos: number | null } =
+    { cargando: false, sinStock: null, bajoStock: null, sinDatos: null };
   crmTareas: { cargando: boolean; vencidas: number | null; paraHoy: number | null } =
     { cargando: false, vencidas: null, paraHoy: null };
   clientesResumen: { cargando: boolean; nuevosMes: number | null; enAlerta: number | null; total: number | null } =
@@ -219,8 +219,8 @@ export class WelcomeComponent implements OnInit, OnDestroy {
         next: (r) => {
           this.ventasHoy = {
             cargando: false,
-            total: r?.kpis?.ventasTotales ?? 0,
-            pedidos: r?.kpis?.totalPedidos ?? 0,
+            total: r?.kpis?.ventasTotales ?? null,
+            pedidos: r?.kpis?.totalPedidos ?? null,
           };
         },
         error: () => { this.ventasHoy.cargando = false; },
@@ -230,12 +230,12 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     if (this.showDespachosHoy) {
       this.despachosHoy.cargando = true;
       // Sin filtro de fechas: la cola operativa activa completa.
-      this.logisticaService.getShippingMetrics().subscribe({
+      this.logisticaService.getShippingMetrics({ scope: 'operationalQueue' }).subscribe({
         next: (r) => {
           this.despachosHoy = {
             cargando: false,
-            paraDespacho: r?.pedidosParaDespacho ?? 0,
-            urgentes: r?.pedidosUrgentes ?? 0,
+            paraDespacho: r?.pedidosParaDespacho ?? null,
+            urgentes: r?.pedidosUrgentes ?? null,
           };
         },
         error: () => { this.despachosHoy.cargando = false; },
@@ -249,14 +249,13 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       // — los globales correctos salen de totalesGlobales y bodegas[].metricas.
       this.inventarioService.obtenerInventarioConsolidado({ limit: 1, includeMetrics: true }).subscribe({
         next: (r) => {
-          const tg = r?.totalesGlobales;
-          // SKUs inventariables sin stock = catálogo total - SKUs con stock.
-          const sinStock = tg ? Math.max(0, (tg.totalSKUsCatalogo || 0) - (tg.totalProductos || 0)) : 0;
-          // Suma de bajo stock por bodega (exacto para tenants de 1 bodega;
-          // aproximado en multi-bodega hasta tener el agregado global backend).
-          const bajoStock = (r?.bodegas || []).reduce(
-            (acc, b) => acc + (b?.metricas?.productosBajoStock || 0), 0);
-          this.stockCritico = { cargando: false, sinStock, bajoStock };
+          const alerts = r?.totalesGlobales?.stockAlerts;
+          // Agregado por producto, no suma por bodega. Ausencia de datos no es cero.
+          const valid = alerts?.productosEvaluados > 0;
+          const sinStock = valid ? alerts.productosSinStock : null;
+          const bajoStock = valid ? alerts.productosBajoStock : null;
+          this.stockCritico = { cargando: false, sinStock, bajoStock,
+            sinDatos: alerts?.productosSinDatos ?? null };
         },
         error: () => { this.stockCritico.cargando = false; },
       });
@@ -288,9 +287,9 @@ export class WelcomeComponent implements OnInit, OnDestroy {
         next: (r) => {
           this.clientesResumen = {
             cargando: false,
-            nuevosMes: r?.clientesNuevos30dias ?? 0,
-            enAlerta: r?.clientesEnAlerta ?? 0,
-            total: r?.totalClientes ?? 0,
+            nuevosMes: r?.clientesNuevos30dias ?? null,
+            enAlerta: r?.clientesEnAlerta ?? null,
+            total: r?.totalClientes ?? null,
           };
         },
         error: () => { this.clientesResumen.cargando = false; },
@@ -299,9 +298,6 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   }
 
   private formatearFechaLocal(d: Date): string {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return new Date(d.getTime() - 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
   }
 }

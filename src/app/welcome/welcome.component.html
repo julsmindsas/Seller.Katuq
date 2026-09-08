@@ -108,7 +108,7 @@
                     <ng-container *ngIf="!despachosHoy.cargando">{{ despachosHoy.paraDespacho !== null ? despachosHoy.paraDespacho : '—' }}</ng-container>
                 </span>
                 <small class="indicator-sub">
-                    {{ despachosHoy.urgentes ? (despachosHoy.urgentes + ' urgentes') : 'Cola de despachos' }}
+                    {{ despachosHoy.urgentes !== null ? (despachosHoy.urgentes + ' con entrega hoy o vencida') : 'Cola completa de despachos' }}
                 </small>
             </a>
         </div>
@@ -121,6 +121,7 @@
                 </span>
                 <small class="indicator-sub">
                     {{ stockCritico.bajoStock !== null ? (stockCritico.bajoStock + ' en bajo stock') : 'Inventario' }}
+                    <ng-container *ngIf="stockCritico.sinDatos"> · {{ stockCritico.sinDatos }} sin datos</ng-container>
                 </small>
             </a>
         </div>
@@ -138,24 +139,24 @@
         </div>
         <div class="col-6 col-lg-3" *ngIf="showClientesResumen">
             <a routerLink="/ventas/clienteslista" class="indicator-card indicator-card--success negocio-card">
-                <small class="indicator-label">Clientes nuevos (mes)</small>
+                <small class="indicator-label" title="Primera compra observada en los últimos 30 días dentro del historial de 12 meses. No representa altas de clientes.">Primera compra reciente</small>
                 <span class="indicator-value">
                     <span class="skeleton" *ngIf="clientesResumen.cargando" aria-hidden="true"></span>
                     <ng-container *ngIf="!clientesResumen.cargando">{{ clientesResumen.nuevosMes !== null ? clientesResumen.nuevosMes : '—' }}</ng-container>
                 </span>
                 <small class="indicator-sub">
-                    {{ clientesResumen.total !== null ? ('de ' + clientesResumen.total + ' clientes') : 'Base de datos' }}
+                    30 días · historial de 12 meses
                 </small>
             </a>
         </div>
         <div class="col-6 col-lg-3" *ngIf="showClientesResumen">
             <a routerLink="/ventas/clienteslista" class="indicator-card indicator-card--warning negocio-card">
-                <small class="indicator-label">Alerta de recompra</small>
+                <small class="indicator-label">Recompra estimada</small>
                 <span class="indicator-value">
                     <span class="skeleton" *ngIf="clientesResumen.cargando" aria-hidden="true"></span>
                     <ng-container *ngIf="!clientesResumen.cargando">{{ clientesResumen.enAlerta !== null ? clientesResumen.enAlerta : '—' }}</ng-container>
                 </span>
-                <small class="indicator-sub">clientes por reactivar</small>
+                <small class="indicator-sub">según frecuencia histórica · no son tareas</small>
             </a>
         </div>
     </div>

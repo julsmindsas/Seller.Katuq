@@ -509,6 +509,14 @@ export interface MetricasIAGlobal {
  * Interfaz para totales globales del inventario
  */
 export interface TotalesGlobales {
+  stockAlerts?: {
+    threshold: number;
+    productosEvaluados: number;
+    productosSinDatos: number;
+    productosSinStock: number;
+    productosBajoStock: number;
+    productosConStock: number;
+  };
   valorTotal: number;
   /** Valor a costo total del inventario */
   valorCostoTotal?: number;
