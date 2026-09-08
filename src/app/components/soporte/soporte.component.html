@@ -134,10 +134,10 @@
                                 <div class="upload-button">
                                     <i class="fa fa-upload"></i> Seleccionar Archivos
                                 </div>
-                                <small>Formatos aceptados: JPG, PNG, GIF, MP4, MOV, AVI - Máximo 50MB por archivo</small>
+                                <small>Formatos aceptados: imágenes (JPG, PNG, GIF), videos (MP4, MOV, AVI) y documentos (PDF, Word, Excel, PowerPoint, TXT, CSV, ZIP) - Máximo 50MB por archivo</small>
                             </div>
                         </label>
-                        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*,video/*" />
+                        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" />
                     </div>
                 
                     <!-- Vista Previa de Imágenes -->
@@ -145,9 +145,9 @@
                         <h5>Vista previa de las imágenes ({{imagePreviews.length}})</h5>
                         <div class="preview-container">
                             <div class="preview" *ngFor="let preview of imagePreviews; let i = index">
-                                <img [src]="preview" alt="Vista previa" class="preview-image" 
-                                     (click)="openImagePreview(preview)" />
-                                <button type="button" class="remove-image-btn" (click)="removeImage(preview)" title="Eliminar imagen">
+                                <img [src]="preview.url" alt="Vista previa" class="preview-image"
+                                     (click)="openImagePreview(preview.url)" />
+                                <button type="button" class="remove-image-btn" (click)="removeImage(i)" title="Eliminar imagen">
                                     &times;
                                 </button>
                                 <span class="image-number">{{i+1}}</span>
@@ -160,7 +160,10 @@
                         <h5>Vista previa de los videos ({{videoPreviews.length}})</h5>
                         <div class="preview-container">
                             <div class="preview video-preview" *ngFor="let preview of videoPreviews; let i = index">
-                                <img [src]="preview.thumbnail" alt="Miniatura de video" class="video-thumbnail" />
+                                <img *ngIf="preview.thumbnail; else sinMiniatura" [src]="preview.thumbnail" alt="Miniatura de video" class="video-thumbnail" />
+                                <ng-template #sinMiniatura>
+                                    <i class="fa fa-file-video-o fa-3x video-placeholder"></i>
+                                </ng-template>
                                 <span class="play-icon">&#9658;</span>
                                 <button
                                     type="button"
@@ -174,6 +177,19 @@
                                 <span class="video-number">{{i+1}}</span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Documentos adjuntos -->
+                    <div class="document-previews" *ngIf="documentFiles.length > 0">
+                        <h5>Documentos ({{documentFiles.length}})</h5>
+                        <ul class="document-list">
+                            <li class="document-item" *ngFor="let doc of documentFiles; let i = index">
+                                <i class="fa fa-file-o"></i>
+                                <span class="document-name" [title]="doc.name">{{doc.name}}</span>
+                                <span class="document-size">{{formatearTamano(doc.size)}}</span>
+                                <button type="button" class="remove-document-btn" (click)="removeDocument(i)" title="Quitar documento" aria-label="Quitar documento">&times;</button>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             
