@@ -40,6 +40,7 @@ test('Nueva factura renders before scrolling and focuses the form, even when alr
     assert.equal(page.activeTab, 'compose');
     assert.equal(page.composerOpened, true);
     calls.push('render');
+    page.composer = { requestNewInvoice() { calls.push('new'); } };
   } };
   page.composerPanel = { nativeElement: {
     focus(options) { assert.equal(options.preventScroll, true); calls.push('focus'); },
@@ -47,7 +48,7 @@ test('Nueva factura renders before scrolling and focuses the form, even when alr
   } };
   page.selectTab('compose');
   page.selectTab('compose');
-  assert.deepEqual(calls, ['render', 'focus', 'scroll', 'render', 'focus', 'scroll']);
+  assert.deepEqual(calls, ['render', 'new', 'focus', 'scroll', 'render', 'new', 'focus', 'scroll']);
   calls.length = 0;
   page.selectTab('documents');
   assert.equal(page.activeTab, 'documents');

@@ -17,6 +17,7 @@ import { ImportResult } from '../../../../shared/models/column-mapping.model';
 import { ClientConfigService, ClientTag } from '../services/client-config.service';
 import Swal from 'sweetalert2';
 import { SitiosService } from '../../../sitios/sitios.service';
+import { clientBillingProfiles, matchesClientSearch } from '../../../../shared/utils/client-search';
 
 @Component({
     selector: 'app-clientes-lista',
@@ -29,6 +30,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     clientes: any[] = [];
     clientesOriginales: any[] = []; // Guardamos los datos originales sin filtrar
+    billingProfiles = clientBillingProfiles;
     cargando: boolean = true;
     formFiltros: FormGroup;
     totalRecords: number = 0;
@@ -103,8 +105,11 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         // Entrada desde el buscador global del header (?buscar=documento|nombre):
         // prefiltra la tabla. Reacciona aunque ya estemos en esta ruta.
         this.route.queryParams.subscribe(params => {
-            const buscar = (params['buscar'] || '').toString().trim();
+            const buscar = (params['invoiceCustomer'] || params['buscar'] || '').toString().trim();
             if (buscar) {
+                if (params['invoiceCustomer']) {
+                    this.formFiltros.reset(); this.selectedTagNames = []; this.selectedEstadoFilter = 'todos';
+                }
                 this.globalFilterValue = buscar;
                 this.pendingGlobalSearch = buscar;
                 this.applyPendingGlobalSearch();
@@ -126,8 +131,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         // Configurar debounce para búsqueda global
         this.searchSubject
             .pipe(debounceTime(300), distinctUntilChanged())
-            .subscribe((searchValue) => {
-                this.dt.filterGlobal(searchValue, 'contains');
+            .subscribe(() => {
+                this.aplicarFiltros(false);
             });
     }
 
@@ -151,14 +156,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         // Actualizar el valor en el formulario
         this.formFiltros.patchValue({ estado: estado === 'todos' ? null : estado });
 
-        // Aplicar filtrado local
-        if (estado === 'todos') {
-            this.clientes = [...this.clientesOriginales];
-        } else {
-            this.clientes = this.clientesOriginales.filter(c => c.estado === estado);
-        }
-
-        this.totalRecords = this.clientes.length;
+        this.aplicarFiltros(false);
 
         // Guardar preferencia
         this.saveFilters();
@@ -168,8 +166,6 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         this.cargando = true;
         this.clienteService.obtenerClientes().subscribe({
             next: (clientes: any) => {
-                console.log('[clientes/all] total:', clientes?.length);
-                console.log('[clientes/all] primer registro:', clientes?.[0]);
                 // Ordenar por fecha de creación desc: los clientes recién creados/importados
                 // aparecen de primeros (el backend /clients/all no ordena).
                 const ordenados = this.ordenarPorReciente(clientes || []);
@@ -179,6 +175,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 this.cargando = false;
                 // Si veníamos del buscador global, aplicar el filtro ya con datos.
                 this.applyPendingGlobalSearch();
+                this.aplicarFiltros(false);
             },
             error: (error) => {
                 console.error(error);
@@ -200,35 +197,24 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     // Aplicar filtros locales a los datos
-    private aplicarFiltros(): void {
+    private aplicarFiltros(notify = true): void {
         const filtros = this.formFiltros.value;
 
         let clientesFiltrados = [...this.clientesOriginales];
 
         // Filtro por nombre/cliente
         if (filtros.cliente && filtros.cliente.trim()) {
-            const nombreLower = filtros.cliente.toLowerCase();
-            clientesFiltrados = clientesFiltrados.filter(c =>
-                (c.nombres_completos || '').toLowerCase().includes(nombreLower) ||
-                (c.apellidos_completos || '').toLowerCase().includes(nombreLower)
-            );
+            clientesFiltrados = clientesFiltrados.filter(c => matchesClientSearch(c, filtros.cliente, 'name'));
         }
 
         // Filtro por documento
         if (filtros.documento && filtros.documento.trim()) {
-            const docLower = filtros.documento.toLowerCase();
-            clientesFiltrados = clientesFiltrados.filter(c =>
-                (c.documento || '').toLowerCase().includes(docLower) ||
-                (c.tipo_documento_comprador || '').toLowerCase().includes(docLower)
-            );
+            clientesFiltrados = clientesFiltrados.filter(c => matchesClientSearch(c, filtros.documento, 'document'));
         }
 
         // Filtro por email
         if (filtros.email && filtros.email.trim()) {
-            const emailLower = filtros.email.toLowerCase();
-            clientesFiltrados = clientesFiltrados.filter(c =>
-                (c.correo_electronico_comprador || '').toLowerCase().includes(emailLower)
-            );
+            clientesFiltrados = clientesFiltrados.filter(c => matchesClientSearch(c, filtros.email, 'email'));
         }
 
         // Filtro por estado
@@ -255,9 +241,12 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             });
         }
 
+        if (this.globalFilterValue.trim()) clientesFiltrados = clientesFiltrados.filter(c => matchesClientSearch(c, this.globalFilterValue));
         // Aplicar resultados filtrados
         this.clientes = clientesFiltrados;
         this.totalRecords = clientesFiltrados.length;
+        if (this.dt) this.dt.first = 0;
+        if (!notify) return;
 
         // Mostrar mensaje si no hay resultados
         if (this.clientes.length === 0) {
@@ -317,6 +306,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 this.clientesOriginales = [nuevo, ...this.clientesOriginales];
                 this.clientes = [nuevo, ...this.clientes];
                 this.totalRecords = this.clientes.length;
+                this.aplicarFiltros(false);
             } else if (result?.action === 'existing_found') {
                 // Cliente ya existía — no era nuevo, no agregar duplicado
             }
@@ -674,12 +664,9 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     // llegan por red — el que llegue de último dispara el filtro).
     private applyPendingGlobalSearch(): void {
         if (!this.pendingGlobalSearch || this.cargando) return;
-        setTimeout(() => {
-            if (this.dt && this.pendingGlobalSearch) {
-                this.dt.filterGlobal(this.pendingGlobalSearch, 'contains');
-                this.pendingGlobalSearch = '';
-            }
-        });
+        this.globalFilterValue = this.pendingGlobalSearch;
+        this.pendingGlobalSearch = '';
+        this.aplicarFiltros(false);
     }
 
     toggleActionMenu(event: Event, cliente: any): void {

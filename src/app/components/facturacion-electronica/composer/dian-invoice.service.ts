@@ -32,9 +32,9 @@ export class DianInvoiceService extends BaseService {
     return this.get<{success: boolean; data: {items: InvoiceDraftSummary[]; limit: number}}>('/v1/accounting/dian/invoice-drafts')
       .pipe(timeout(45000), this.unwrap<{items: InvoiceDraftSummary[]; limit: number}>());
   }
-  saveDraft(requestId: string, invoice: ManualInvoice, version: number) {
+  saveDraft(requestId: string, invoice: ManualInvoice, version: number, observations?: string) {
     return this.put<{success: boolean; data: InvoiceRequest}>('/v1/accounting/dian/invoice-drafts/' + encodeURIComponent(requestId),
-      {source: 'manual', invoice, version}).pipe(timeout(45000), this.unwrap<InvoiceRequest>());
+      {source: 'manual', invoice, version, ...(observations ? {observations} : {})}).pipe(timeout(45000), this.unwrap<InvoiceRequest>());
   }
   createReview(requestId: string, selection: InvoiceSelection, draftVersion?: number) {
     return this.post<{ success: boolean; data: InvoiceRequest }>(

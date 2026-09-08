@@ -24,12 +24,16 @@ export interface ManualInvoice {
   payment: { meansId: string; meansCode: string; dueDate?: string };
 }
 
-export type InvoiceSelection = { source: 'manual'; invoice: ManualInvoice } | { source: 'order'; orderId: string };
+export const MAX_INVOICE_OBSERVATIONS_LENGTH = 1000;
+export type InvoiceSelection = ({ source: 'manual'; invoice: ManualInvoice } | { source: 'order'; orderId: string }) & {
+  observations?: string;
+};
 
 export interface InvoicePreview {
   fingerprint: string;
   customerId?: string;
   orderRef?: string;
+  observations?: string;
   customer: {
     name: string; documentNumber: string; email: string; dv?: string;
     address?: { line: string; city: string; department: string };

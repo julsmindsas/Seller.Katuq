@@ -13,7 +13,11 @@
 <p role="alert" class="field-error" *ngIf="error">{{ error }}</p>
 <div class="customer-results" *ngIf="results.length">
   <button type="button" class="customer-result" *ngFor="let item of results" [disabled]="disabled" (click)="choose(item)">
-    <span class="customer-avatar">{{ (item.nombres_completos || '?').charAt(0).toUpperCase() }}</span><span><strong>{{ item.nombres_completos }} {{ item.apellidos_completos }}</strong><small>{{ item.documento }} · {{ item.correo_electronico_comprador }}</small></span><i class="pi pi-angle-right"></i>
+    <span class="customer-avatar">{{ (item.searchName || item.nombres_completos || '?').charAt(0).toUpperCase() }}</span>
+    <span><strong>{{ item.searchName || item.nombres_completos }}<ng-container *ngIf="!item.searchName"> {{ item.apellidos_completos }}</ng-container></strong>
+      <small>{{ item.searchDocument || item.documento }} · {{ item.searchEmail || item.correo_electronico_comprador }}</small>
+      <small *ngIf="item.searchOwner">Datos de facturación guardados en la ficha de {{ item.searchOwner }}</small>
+    </span><i class="pi pi-angle-right"></i>
   </button>
 </div>
 <p class="field-hint" *ngIf="searched && !loading && !error && !results.length && !customer">No encontramos clientes. Pulsa Crear cliente para registrarlo sin salir de aquí.</p>
@@ -36,7 +40,7 @@
   </div>
   <p class="composer-message composer-message--error" *ngIf="missingFields.length">Para facturar, actualiza: {{ missingFields.join(', ') }}. Los datos deben quedar guardados en la ficha del cliente.</p>
   <div class="customer-actions">
-    <a class="btn btn-light" routerLink="/ventas/clientes" [queryParams]="{invoiceCustomer:customer.documentNumber}" target="_blank" rel="noopener"><i class="pi pi-external-link"></i> Actualizar ficha completa</a>
+    <a class="btn btn-light" routerLink="/ventas/clientes" [queryParams]="{invoiceCustomer:customer.fiscal.documentNumber || customer.documentNumber}" target="_blank" rel="noopener"><i class="pi pi-external-link"></i> Actualizar ficha completa</a>
     <button type="button" class="btn btn-outline-primary" (click)="refresh()" [disabled]="disabled || loading"><i class="pi pi-refresh"></i> Ya actualicé: volver a consultar</button>
   </div>
 </div>

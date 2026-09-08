@@ -13,12 +13,14 @@ import { DireccionEstructuradaComponent } from '../entrega/direccion-estructurad
 import { DaneCodesService } from '../../../shared/services/dane-codes.service';
 import { MunicipioDane } from '../../../shared/data/colombia-dane-codes';
 import { ClientConfigService, ClientTag } from './services/client-config.service';
+import { clientBillingProfiles, matchesClientSearch } from '../../../shared/utils/client-search';
 @Component({
   selector: 'app-clientes',
   templateUrl: './clientes.component.html',
   styleUrls: ['./clientes.component.scss']
 })
 export class ClientesComponent implements OnInit, AfterViewInit {
+  billingProfiles = clientBillingProfiles;
 
   @ViewChild('documentoBusqueda') documentoBusqueda: ElementRef
   @ViewChild('whatsapp') whatsapp: ElementRef
@@ -616,6 +618,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             confirmButtonText: 'Ok'
           });
         }
+      }, error => {
+        this.encontrado = false;
+        this.datos = null;
+        Swal.fire({ title: 'No se pudo consultar',
+          text: error?.error?.error || 'No se pudo verificar el cliente. Intenta de nuevo antes de crear otra ficha.',
+          icon: 'error', confirmButtonText: 'Entendido' });
       });
 
     } else if (this.tipoBusqueda === 'email' || this.tipoBusqueda === 'nombre') {
@@ -625,14 +633,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         const todos: any[] = Array.isArray(res) ? res : (res.data || res.clients || res.clientes || []);
         let lista: any[];
         if (this.tipoBusqueda === 'email') {
-          lista = todos.filter(c =>
-            (c.correo_electronico_comprador || '').toLowerCase().includes(term)
-          );
+          lista = todos.filter(c => matchesClientSearch(c, term, 'email'));
         } else {
-          lista = todos.filter(c => {
-            const nombre = `${c.nombres_completos || ''} ${c.apellidos_completos || ''}`.toLowerCase();
-            return nombre.includes(term);
-          });
+          lista = todos.filter(c => matchesClientSearch(c, term, 'name'));
         }
         if (!lista || lista.length === 0) {
           this.resultadosBusqueda = [];

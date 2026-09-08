@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { IntegrationsService } from '../integrations/integrations.service';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { splitDianDocumentList } from './dian-document-list';
+import { InvoiceComposerComponent } from './composer/invoice-composer.component';
 
 type DianDocumentType = 'invoice' | 'creditNote' | 'debitNote';
 type DianStatus = 'accepted' | 'rejected' | 'failed' | string;
@@ -38,6 +39,7 @@ export class FacturacionElectronicaComponent implements OnInit {
   activeTab: 'documents' | 'invoice' | 'compose' | 'guide' = 'documents';
   composerOpened = false;
   @ViewChild('composerPanel', { static: true }) composerPanel: ElementRef<HTMLElement>;
+  @ViewChild(InvoiceComposerComponent) composer?: InvoiceComposerComponent;
   documents: DianDocument[] = [];
   technicalHistory: any[] = [];
   configurationError = '';
@@ -217,6 +219,7 @@ export class FacturacionElectronicaComponent implements OnInit {
       this.composerOpened = true;
       // Render before focusing: the panel can still be hidden on the first click.
       this.changeDetector.detectChanges();
+      this.composer?.requestNewInvoice();
       const panel = this.composerPanel.nativeElement;
       panel.focus({ preventScroll: true });
       panel.scrollIntoView({ behavior: 'auto', block: 'start' });

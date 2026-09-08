@@ -94,7 +94,9 @@
                     </thead>
                     <tbody>
                         <tr *ngFor="let c of resultadosBusqueda" style="cursor: pointer;" (click)="seleccionarClienteResultado(c)">
-                            <td>{{ c.nombres_completos }} {{ c.apellidos_completos }}</td>
+                            <td>{{ c.nombres_completos }} {{ c.apellidos_completos }}
+                                <small *ngFor="let fiscal of billingProfiles(c)" class="d-block mt-1">Datos de facturación: <strong>{{ fiscal.name || fiscal.alias }}</strong> · {{ fiscal.document }}</small>
+                            </td>
                             <td>{{ c.documento }}</td>
                             <td>{{ c.correo_electronico_comprador }}</td>
                             <td>{{ c.numero_celular_comprador }}</td>
@@ -672,7 +674,9 @@
             </thead>
             <tbody>
                 <tr *ngFor="let c of resultadosBusqueda">
-                    <td class="ps-3">{{ c.nombres_completos }} {{ c.apellidos_completos }}</td>
+                    <td class="ps-3">{{ c.nombres_completos }} {{ c.apellidos_completos }}
+                        <small *ngFor="let fiscal of billingProfiles(c)" class="d-block mt-1">Datos de facturación: <strong>{{ fiscal.name || fiscal.alias }}</strong> · {{ fiscal.document }}</small>
+                    </td>
                     <td>{{ c.documento }}</td>
                     <td>{{ c.correo_electronico_comprador }}</td>
                     <td>{{ c.numero_celular_comprador }}</td>

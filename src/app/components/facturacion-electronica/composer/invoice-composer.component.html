@@ -1,6 +1,6 @@
 <div class="composer-page">
   <div class="pedidos-topbar">
-    <div><h2 class="pedidos-topbar__h">Nueva factura</h2><p class="pedidos-topbar__sub">Prepara los datos y revisa el resumen antes de emitir.</p></div>
+    <div><h2 class="pedidos-topbar__h">{{ restored ? (pending ? 'Verificar operación anterior' : 'Factura guardada') : 'Nueva factura' }}</h2><p class="pedidos-topbar__sub">{{ restored ? 'Consulta el estado o continúa una factura que ya habías preparado.' : 'Prepara los datos y revisa el resumen antes de emitir.' }}</p></div>
     <span class="composer-chip">{{ integration?.config?.environment === 'produccion' ? 'Producción · Documento real' : 'Vista previa · Sin emisión' }}</span>
     <button type="button" class="btn btn-outline-primary" (click)="showDrafts = !showDrafts" [disabled]="loading || pending || companyChanged"><i class="pi pi-folder"></i> Borradores</button>
   </div>
@@ -38,9 +38,31 @@
   </div>
   <div class="composer-layout">
     <div class="composer-editor">
-      <app-manual-invoice-form [hidden]="mode !== 'manual' || restored" [companyId]="companyId" [disabled]="editorDisabled" (saveDraft)="saveDraft($event)" (review)="reviewManual($event)" (edited)="invalidate()"></app-manual-invoice-form>
+      <ng-template #observationsField>
+        <section class="invoice-panel invoice-observations">
+          <div class="invoice-panel__heading"><span class="step-dot"><i class="pi pi-comment" aria-hidden="true"></i></span><div><h3><label for="invoice-observations">Observaciones <small>Opcional</small></label></h3><p>Un mensaje para tu cliente: el período del servicio, instrucciones de pago u otra aclaración.</p></div></div>
+          <textarea id="invoice-observations" class="form-control" rows="4" [ngModel]="observations" (ngModelChange)="changeObservations($event)" [ngModelOptions]="{standalone: true}" [disabled]="editorDisabled" [maxlength]="maxObservationsLength" [class.is-invalid]="!!observationsError" [attr.aria-invalid]="!!observationsError" aria-describedby="invoice-observations-help invoice-observations-error" placeholder="Ej.: Mensualidad Katuq correspondiente a agosto. Indicar el número de factura al realizar el pago."></textarea>
+          <div id="invoice-observations-help" class="invoice-observations__help"><span>Se guardan con la factura y aparecen en su PDF y XML. No incluyas notas internas.</span><span>{{ observations.length }} / {{ maxObservationsLength }}</span></div>
+          <p id="invoice-observations-error" class="field-error" role="alert" *ngIf="observationsError">{{ observationsError }}</p>
+        </section>
+      </ng-template>
+      <app-manual-invoice-form [hidden]="mode !== 'manual' || restored" [companyId]="companyId" [disabled]="editorDisabled" (saveDraft)="saveDraft($event)" (review)="reviewManual($event)" (edited)="invalidate()">
+        <ng-container *ngIf="mode === 'manual' && !restored"><ng-container *ngTemplateOutlet="observationsField"></ng-container></ng-container>
+      </app-manual-invoice-form>
+      <ng-container *ngIf="mode === 'order' && !restored"><ng-container *ngTemplateOutlet="observationsField"></ng-container></ng-container>
       <app-invoice-order-picker *ngIf="mode === 'order' && !restored" [companyId]="companyId" [disabled]="editorDisabled" (selected)="reviewOrder($event)"></app-invoice-order-picker>
-      <div class="invoice-panel" *ngIf="restored"><h3>Revisión recuperada</h3><p>El resumen guardado está disponible. Antes de emitir, el servidor volverá a verificar el cliente y el pedido.</p></div>
+      <div class="invoice-panel" *ngIf="restored">
+        <ng-container *ngIf="pending; else savedInvoice">
+          <h3>{{ loading ? 'Consultando la operación anterior…' : 'Hay una operación por confirmar' }}</h3>
+          <p>Antes de abrir otra factura necesitamos saber qué ocurrió con el envío anterior. Consultar su estado no vuelve a enviarlo.</p>
+          <button type="button" class="btn btn-outline-primary" (click)="refreshStatus()" [disabled]="loading || companyChanged">Consultar estado</button>
+        </ng-container>
+        <ng-template #savedInvoice>
+          <h3>Estás viendo una factura guardada</h3>
+          <p>No es una factura nueva. Puedes revisar su resumen o empezar otra. Los borradores guardados y el historial se conservan.</p>
+          <button type="button" class="btn btn-primary" (click)="requestNewInvoice()" [disabled]="loading || companyChanged"><i class="pi pi-plus"></i> Crear una factura nueva</button>
+        </ng-template>
+      </div>
     </div>
     <aside class="invoice-summary" aria-label="Resumen de la factura" aria-live="polite">
       <div class="invoice-summary__head"><i class="pi pi-file"></i><h3>Resumen de factura</h3></div>
@@ -62,6 +84,7 @@
           <div class="preview-totals__total"><dt>Total a facturar</dt><dd>{{ preview.totals.payable | currency:'COP':'symbol-narrow':'1.2-2' }}</dd></div></dl>
         <p class="field-hint">{{ preview.payment.meansId === '2' ? 'A crédito' : 'De contado' }} · {{ paymentLabel(preview.payment.meansCode) }}<br *ngIf="preview.payment.dueDate"><span *ngIf="preview.payment.dueDate">Vence: {{ preview.payment.dueDate }}</span></p>
         <p class="composer-message" *ngIf="mode === 'order'"><i class="pi pi-lock"></i> Los importes vienen del pedido. Si necesitas cambiarlos, edita el pedido y vuelve a revisarlo.</p>
+        <div class="preview-observations" *ngIf="preview.observations"><strong>Observaciones</strong><p>{{ preview.observations }}</p></div>
         <div class="composer-message" *ngIf="record?.status === 'ready'">
           <strong>Revisa y confirma una factura real</strong>
           <p>Emitir consume un consecutivo de producción y envía el documento a la DIAN. No es una prueba. El correo se enviará si está activado en la configuración del comercio.</p>

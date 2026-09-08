@@ -291,7 +291,6 @@
                     <p-table #dt
                              [value]="clientes"
                              [loading]="cargando"
-                             [globalFilterFields]="['documento','nombres_completos','apellidos_completos','correo_electronico_comprador','numero_celular_comprador','numero_celular_whatsapp']"
                              [paginator]="true"
                              [rows]="rows"
                              [totalRecords]="totalRecords"
@@ -359,6 +358,11 @@
                                           [pTooltip]="cliente.nombres_completos">
                                         {{cliente.nombres_completos || 'Sin nombre'}}
                                     </span>
+                                    <div *ngFor="let fiscal of billingProfiles(cliente)" class="small mt-2 text-wrap">
+                                        <span class="text-muted">Datos de facturación:</span>
+                                        <strong class="d-block">{{ fiscal.name || fiscal.alias || 'Perfil fiscal' }}</strong>
+                                        <span class="d-block">{{ fiscal.document }}<ng-container *ngIf="fiscal.email"> · {{ fiscal.email }}</ng-container></span>
+                                    </div>
                                 </td>
 
                                 <!-- Documento -->

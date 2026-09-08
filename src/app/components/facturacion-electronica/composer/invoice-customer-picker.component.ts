@@ -65,13 +65,23 @@ export class InvoiceCustomerPickerComponent implements OnDestroy {
     if (this.search.trim().length < 2) { this.error = 'Escribe al menos dos caracteres del nombre o documento.'; return; }
     this.loading = true;
     this.request = defer(() => this.maestro.searchClients(this.search.trim(), 10)).pipe(finalize(() => this.loading = false)).subscribe({
-      next: (results: any) => { if (this.sameCompany()) this.results = Array.isArray(results) ? results : []; },
+      next: (results: any) => {
+        if (!this.sameCompany()) return;
+        this.results = (Array.isArray(results) ? results : []).flatMap(client => {
+          const profiles = Array.isArray(client.matchedBillingProfiles) ? client.matchedBillingProfiles : [];
+          return profiles.length ? profiles.map(profile => ({ ...client, suggestedBillingProfile: profile.index,
+            searchName: profile.name || profile.alias, searchDocument: profile.document, searchEmail: profile.email,
+            searchOwner: [client.nombres_completos, client.apellidos_completos].filter(Boolean).join(' '),
+          })) : [client];
+        });
+      },
       error: () => { this.error = 'No pudimos buscar los clientes. Inténtalo de nuevo.'; },
     });
   }
   choose(result: any): void {
     if (this.disabled || !this.sameCompany()) return;
-    this.billingProfile = -1; this.addressIndex = undefined;
+    this.billingProfile = Number.isInteger(result.suggestedBillingProfile) && result.suggestedBillingProfile >= -1 ? result.suggestedBillingProfile : -1;
+    this.addressIndex = undefined;
     this.refresh(String(result.cd || result.id || ''));
   }
   refresh(id = this.customer?.id || '', restoringDraft = false): void {

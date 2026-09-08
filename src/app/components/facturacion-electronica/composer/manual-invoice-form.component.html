@@ -37,6 +37,7 @@
         <label *ngIf="form.get('payment.meansId')?.value === '2'">Fecha límite de pago<input class="form-control" type="date" formControlName="dueDate" [min]="minDate" [class.is-invalid]="invalid('payment.dueDate')"></label>
       </div>
     </section>
+    <ng-content></ng-content>
     <div class="draft-footer">
       <div><small>Total del borrador</small><strong>{{ totals.total | currency:'COP':'symbol-narrow':'1.2-2' }}</strong>
         <small *ngIf="totals.discount">Antes de descuentos {{ totals.subtotal + totals.discount | currency:'COP':'symbol-narrow':'1.2-2' }} · Descuento − {{ totals.discount | currency:'COP':'symbol-narrow':'1.2-2' }}</small>

@@ -4,7 +4,7 @@ import { finalize } from 'rxjs/operators';
 import { IntegrationsService } from '../../integrations/integrations.service';
 import { DianInvoiceService } from './dian-invoice.service';
 import { ManualInvoiceFormComponent } from './manual-invoice-form.component';
-import { InvoicePreview, InvoiceRequest, InvoiceSelection, ManualInvoice, PAYMENT_METHODS } from './invoice-composer.models';
+import { InvoicePreview, InvoiceRequest, InvoiceSelection, ManualInvoice, PAYMENT_METHODS, MAX_INVOICE_OBSERVATIONS_LENGTH } from './invoice-composer.models';
 
 @Component({
   selector: 'app-invoice-composer',
@@ -33,6 +33,11 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   draftId = '';
   draftVersion = 0;
   draftMessage = '';
+  observations = '';
+  readonly maxObservationsLength = MAX_INVOICE_OBSERVATIONS_LENGTH;
+  private observationsDirty = false;
+  private checkingStoredRequest = false;
+  private startNewAfterRecovery = false;
   private notified = '';
   private request?: Subscription;
 
@@ -44,7 +49,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
       const saved = JSON.parse(localStorage.getItem(this.storageKey) || 'null');
       if (saved && /^[a-zA-Z0-9-]{16,80}$/.test(saved.requestId)) {
         this.requestId = saved.requestId; this.phase = saved.phase === 'submit' ? 'submit' : 'review';
-        this.unknown = true; this.restored = true; this.refreshStatus();
+        this.unknown = true; this.restored = true; this.checkingStoredRequest = true; this.refreshStatus();
       }
     } catch (_) { this.storageError = 'No pudimos recuperar el último envío del navegador. No emitas hasta revisar el historial.'; }
   }
@@ -56,7 +61,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   get pending(): boolean { return this.unknown || ['processing', 'uncertain'].includes(this.record?.status || ''); }
   get editorDisabled(): boolean { return this.loading || this.companyChanged || this.pending || this.record?.status === 'accepted' || this.restored; }
   get canEmit(): boolean {
-    return !this.loading && !this.companyChanged && !this.storageError && !this.pending &&
+    return !this.loading && !this.companyChanged && !this.storageError && !this.observationsError && !this.pending &&
       this.record?.status === 'ready' && this.record?.delivery?.ready !== false && this.confirmed &&
       this.integration?.enabled === true && this.integration?.config?.environment === 'produccion';
   }
@@ -83,6 +88,19 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     if (this.editorDisabled || this.mode === mode) return;
     this.mode = mode; this.invalidate();
   }
+  get observationsError(): string {
+    if (this.observations.length > this.maxObservationsLength) return 'Las observaciones admiten hasta 1000 caracteres.';
+    if (/[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/u.test(this.observations)) {
+      return 'Las observaciones contienen caracteres no admitidos. Escríbelas como texto normal.';
+    }
+    return '';
+  }
+  changeObservations(value: string): void {
+    if (this.editorDisabled) return;
+    this.observations = value.replace(/\r\n?/g, '\n');
+    this.observationsDirty = true;
+    this.invalidate();
+  }
   invalidate(): void {
     if (this.loading || this.pending || this.record?.status === 'accepted') return;
     if (this.draftId) this.draftMessage = 'Hay cambios sin guardar en este borrador.';
@@ -90,10 +108,28 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.confirmed = false; this.error = '';
     try { localStorage.removeItem(this.storageKey); } catch (_) {}
   }
+  requestNewInvoice(): void {
+    if (this.companyChanged) return;
+    // El clic explícito puede llegar mientras ngOnInit consulta la referencia
+    // anterior. Esperar su resultado sin destruir el componente ni repetir envíos.
+    if (this.checkingStoredRequest && this.loading) {
+      this.startNewAfterRecovery = true;
+      return;
+    }
+    if (this.loading || this.pending) {
+      this.error ||= 'Primero debemos confirmar la operación anterior. Usa Consultar estado; no se ha abierto ni enviado otra factura.';
+      return;
+    }
+    this.startNew();
+  }
   startNew(): void {
     if (this.loading || this.pending || this.companyChanged) return;
+    if (!this.record && (this.manualForm?.form.dirty || this.observationsDirty) &&
+      !window.confirm('Tienes datos sin guardar. ¿Quieres dejarlos y empezar una factura nueva? Los borradores ya guardados se conservan en Borradores.')) return;
     this.record = null; this.restored = false; this.invalidate(); this.manualForm?.resetDraft();
+    this.mode = 'manual'; this.phase = 'review'; this.unknown = false; this.showDrafts = false;
     this.draftId = ''; this.draftVersion = 0; this.draftMessage = '';
+    this.observations = ''; this.observationsDirty = false;
   }
   get canCorrect(): boolean {
     return !this.loading && !this.pending && !this.companyChanged &&
@@ -107,6 +143,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
     this.restored = false; this.record = null; this.unknown = false;
     this.invalidate(); this.draftId = ''; this.draftVersion = 0;
     this.mode = original.source;
+    this.observations = original.observations || ''; this.observationsDirty = false;
     if (original.source === 'manual') {
       this.manualForm?.restoreDraft(original.invoice);
       this.draftMessage = 'Datos recuperados del intento anterior. Revisa y guarda nuevamente antes de emitir. El rechazo original permanece en el historial.';
@@ -114,23 +151,29 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   saveDraft(invoice: ManualInvoice): void {
     if (this.editorDisabled) return;
+    if (this.observationsError) { this.error = this.observationsError; return; }
     this.invalidate(); this.showDrafts = false; this.draftMessage = '';
     try { this.draftId ||= crypto.randomUUID(); } catch (_) { this.error = 'No pudimos identificar el borrador.'; return; }
     this.loading = true;
-    this.request = defer(() => this.invoices.saveDraft(this.draftId, invoice, this.draftVersion))
+    this.request = defer(() => this.invoices.saveDraft(this.draftId, invoice, this.draftVersion, this.observations.trim()))
       .pipe(finalize(() => this.loading = false)).subscribe({
         next: record => {
           if (this.companyChanged) return;
           this.draftVersion = record.version || 0;
+          if (this.observations.trim() !== (record.selection?.observations || '')) {
+            this.error = 'El servidor no confirmó las observaciones guardadas. Conservamos tu texto; actualiza el backend antes de continuar.';
+            return;
+          }
           this.draftMessage = 'Borrador guardado en este comercio. Puedes cerrar la página y continuarlo desde Borradores. No se ha emitido.';
           this.manualForm?.form.markAsPristine();
+          this.observationsDirty = false;
         },
         error: error => { if (!this.companyChanged) this.error = error?.error?.message || 'No se confirmó el guardado. Consulta Borradores antes de guardar otra copia.'; },
       });
   }
   openDraft(id: string): void {
     if (this.loading || this.pending || this.companyChanged) return;
-    if (this.manualForm?.form.dirty && !window.confirm('Abrir otro borrador reemplaza los datos sin guardar de este formulario. ¿Continuar?')) return;
+    if ((this.manualForm?.form.dirty || this.observationsDirty) && !window.confirm('Abrir otro borrador reemplaza los datos sin guardar de este formulario. ¿Continuar?')) return;
     this.loading = true; this.error = '';
     this.request = defer(() => this.invoices.status(id)).pipe(finalize(() => this.loading = false)).subscribe({
       next: record => {
@@ -140,6 +183,7 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
           this.requestId = ''; this.confirmed = false; this.unknown = false;
           try { localStorage.removeItem(this.storageKey); } catch (_) {}
           this.manualForm?.restoreDraft(record.selection.invoice);
+          this.observations = record.selection.observations || ''; this.observationsDirty = false;
           this.draftId = id; this.draftVersion = record.version || 0;
           this.draftMessage = 'Borrador recuperado. Comprobamos nuevamente los datos del cliente antes de revisar.';
         } else {
@@ -156,6 +200,9 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   reviewOrder(orderId: string): void { this.review({ source: 'order', orderId }); }
   review(selection: InvoiceSelection): void {
     if (this.editorDisabled) return;
+    if (this.observationsError) { this.error = this.observationsError; return; }
+    const observations = this.observations.trim();
+    selection = { ...selection, ...(observations ? { observations } : {}) };
     this.preview = null; this.record = null; this.confirmed = false; this.error = '';
     this.selection = selection;
     try { this.requestId = this.mode === 'manual' && this.draftId ? this.draftId : crypto.randomUUID(); }
@@ -193,9 +240,17 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   refreshStatus(): void {
     if (this.loading || this.companyChanged || !this.requestId) return;
     this.loading = true; this.error = '';
-    this.request = defer(() => this.invoices.status(this.requestId)).pipe(finalize(() => this.loading = false)).subscribe({
+    this.request = defer(() => this.invoices.status(this.requestId)).pipe(finalize(() => {
+      this.loading = false;
+      this.checkingStoredRequest = false;
+      if (this.startNewAfterRecovery) {
+        this.startNewAfterRecovery = false;
+        this.requestNewInvoice();
+      }
+    })).subscribe({
       next: record => this.adopt(record),
       error: error => {
+        if (this.companyChanged) return;
         this.error = this.message(error);
         if (error?.error?.code === 'DIAN_REQUEST_NOT_FOUND' && this.phase === 'review') {
           // Crear una revisión no envía. Una revisión perdida puede prepararse de nuevo.
@@ -215,7 +270,15 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   private adopt(record: InvoiceRequest): void {
     if (this.companyChanged || record.requestId !== this.requestId) return;
+    if (record.status === 'ready' && this.selection &&
+      (record.preview?.observations || '') !== (this.selection.observations || '')) {
+      this.error = 'Las observaciones del resumen no coinciden con las escritas. No emitas: actualiza el backend y vuelve a revisar.';
+      this.record = null; this.preview = null; this.confirmed = false;
+      return;
+    }
     this.record = record; this.preview = record.preview; this.mode = record.source;
+    this.observations = record.preview?.observations || record.selection?.observations || '';
+    this.observationsDirty = false;
     if (record.status !== 'draft') { this.draftId = ''; this.draftVersion = 0; this.draftMessage = ''; }
     this.unknown = false; this.confirmed = false;
     if (record.status === 'accepted' && this.notified !== record.requestId) {
@@ -229,5 +292,8 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
       : 'No pudimos completar la operación. Consulta el estado antes de intentar otro envío.');
   }
   paymentLabel(code: string): string { return PAYMENT_METHODS.find(item => item.code === code)?.label || code; }
-  ngOnDestroy(): void { this.request?.unsubscribe(); }
+  ngOnDestroy(): void {
+    this.startNewAfterRecovery = false;
+    this.request?.unsubscribe();
+  }
 }

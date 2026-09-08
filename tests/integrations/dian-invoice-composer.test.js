@@ -46,6 +46,201 @@ function formFixture() {
   return form;
 }
 
+test('Nueva factura espera la consulta inicial y abre limpio, sin borrar el borrador o documento guardado', () => {
+  for (const status of ['draft','ready','accepted','rejected','failed']) {
+    const local=storageFixture(), id='previous-invoice-0001', response=new Subject();let reads=0, resets=0;
+    local.setItem('katuq.dian.invoice-request.ShopA',JSON.stringify({requestId:id,phase:'submit'}));
+    const stored={requestId:id,status,source:'order',preview:{observations:'Observación anterior'},invoice:{number:'UNIT1'}};
+    const before=JSON.stringify(stored);
+    const Composer=loadClass('invoice-composer.component.ts',{localStorage:local});
+    const composer=new Composer({status:()=>{reads++;return response;}},{getActiveCompanyId:()=> 'ShopA'});
+    composer.manualForm={form:{dirty:false},resetDraft(){resets++;}};
+    composer.ngOnInit();composer.requestNewInvoice();composer.requestNewInvoice();
+    assert.equal(reads,1);assert.equal(resets,0);assert.equal(composer.requestId,id);
+    response.next(stored);response.complete();
+    assert.equal(composer.restored,false);assert.equal(composer.editorDisabled,false);
+    assert.equal(composer.record,null);assert.equal(composer.preview,null);assert.equal(composer.requestId,'');
+    assert.equal(composer.mode,'manual');assert.equal(composer.phase,'review');assert.equal(composer.observations,'');
+    assert.equal(resets,1);assert.equal(local.getItem(composer.storageKey),null);
+    assert.equal(JSON.stringify(stored),before,'no actualiza ni elimina la factura guardada');
+    assert.equal(composer.canEmit,false);
+  }
+});
+
+test('Nueva factura también funciona si la consulta inicial terminó antes del clic', () => {
+  const local=storageFixture(), id='previous-invoice-0001';
+  local.setItem('katuq.dian.invoice-request.ShopA',JSON.stringify({requestId:id,phase:'review'}));
+  const Composer=loadClass('invoice-composer.component.ts',{localStorage:local});
+  const composer=new Composer({status:()=>of({requestId:id,status:'ready',source:'manual',preview:{}})},{getActiveCompanyId:()=> 'ShopA'});
+  composer.ngOnInit();assert.equal(composer.restored,true);
+  composer.requestNewInvoice();assert.equal(composer.restored,false);assert.equal(composer.record,null);
+  composer.requestNewInvoice();assert.equal(composer.editorDisabled,false);assert.equal(composer.requestId,'');
+});
+
+test('Nueva factura no oculta envíos en proceso, inciertos ni una consulta de estado fallida', () => {
+  for (const outcome of ['processing','uncertain','timeout','submit-not-found']) {
+    const local=storageFixture(), id='pending-invoice-0001', response=new Subject();let resets=0;
+    const saved=JSON.stringify({requestId:id,phase:'submit'});
+    local.setItem('katuq.dian.invoice-request.ShopA',saved);
+    const Composer=loadClass('invoice-composer.component.ts',{localStorage:local});
+    const composer=new Composer({status:()=>response},{getActiveCompanyId:()=> 'ShopA'});
+    composer.manualForm={form:{dirty:false},resetDraft(){resets++;}};
+    composer.ngOnInit();composer.requestNewInvoice();
+    if(outcome==='timeout') response.error({name:'TimeoutError'});
+    else if(outcome==='submit-not-found') response.error({status:404,error:{code:'DIAN_REQUEST_NOT_FOUND'}});
+    else {response.next({requestId:id,status:outcome,source:'manual',preview:{}});response.complete();}
+    assert.equal(resets,0);assert.equal(composer.requestId,id);assert.equal(composer.pending,true);
+    assert.equal(composer.restored,true);assert.equal(composer.editorDisabled,true);assert.equal(composer.canEmit,false);
+    assert.equal(local.getItem(composer.storageKey),saved);assert.ok(composer.error);
+  }
+});
+
+test('una revisión perdida que nunca se envió permite abrir una nueva, sin reintento fiscal', () => {
+  const local=storageFixture(), id='missing-review-0001', response=new Subject();
+  local.setItem('katuq.dian.invoice-request.ShopA',JSON.stringify({requestId:id,phase:'review'}));
+  const Composer=loadClass('invoice-composer.component.ts',{localStorage:local});
+  const composer=new Composer({status:()=>response},{getActiveCompanyId:()=> 'ShopA'});
+  composer.ngOnInit();composer.requestNewInvoice();
+  response.error({status:404,error:{code:'DIAN_REQUEST_NOT_FOUND'}});
+  assert.equal(composer.pending,false);assert.equal(composer.restored,false);assert.equal(composer.requestId,'');
+  assert.equal(composer.error,'');assert.equal(composer.editorDisabled,false);
+});
+
+test('un clic durante un envío real no lo cancela ni borra su resultado al terminar', () => {
+  const Composer=loadClass('invoice-composer.component.ts');const response=new Subject();let sends=0;
+  const composer=new Composer({submit:()=>{sends++;return response;}},{getActiveCompanyId:()=> 'ShopA'});
+  composer.integration={enabled:true,config:{environment:'produccion'}};
+  composer.requestId='current-invoice-0001';composer.record={status:'ready'};composer.preview={fingerprint:'unit'};composer.confirmed=true;
+  composer.emitInvoice();composer.requestNewInvoice();
+  assert.equal(sends,1);assert.equal(composer.loading,true);
+  response.next({requestId:'current-invoice-0001',status:'accepted',source:'manual',preview:{},invoice:{number:'UNIT1'}});response.complete();
+  assert.equal(composer.record.status,'accepted');assert.equal(composer.requestId,'current-invoice-0001');
+});
+
+test('Nueva factura protege datos sin guardar y limpia sólo después de confirmar', () => {
+  let approved=false,resets=0,confirms=0;
+  const Composer=loadClass('invoice-composer.component.ts',{window:{confirm:()=>{confirms++;return approved;}}});
+  const composer=new Composer({}, {getActiveCompanyId:()=> 'ShopA'});
+  composer.manualForm={form:{dirty:true},resetDraft(){resets++;}};composer.observations='Pendiente';
+  composer.requestNewInvoice();assert.equal(resets,0);assert.equal(composer.observations,'Pendiente');
+  approved=true;composer.requestNewInvoice();assert.equal(resets,1);assert.equal(composer.observations,'');assert.equal(confirms,2);
+});
+
+test('cambio de comercio o cierre durante recuperación no ejecuta el inicio nuevo aplazado', () => {
+  for(const stop of ['tenant','destroy']) {
+    const local=storageFixture(),id='stored-invoice-0001',response=new Subject();let tenant='ShopA',resets=0;
+    const saved=JSON.stringify({requestId:id,phase:'submit'});
+    local.setItem('katuq.dian.invoice-request.ShopA',saved);
+    const Composer=loadClass('invoice-composer.component.ts',{localStorage:local});
+    const composer=new Composer({status:()=>response},{getActiveCompanyId:()=>tenant});
+    composer.manualForm={form:{dirty:false},resetDraft(){resets++;}};
+    composer.ngOnInit();composer.requestNewInvoice();
+    if(stop==='tenant') tenant='ShopB'; else composer.ngOnDestroy();
+    response.next({requestId:id,status:'accepted',source:'manual',preview:{}});response.complete();
+    assert.equal(resets,0);assert.equal(local.getItem(composer.storageKey),saved);
+  }
+});
+
+test('abrir explícitamente una revisión desde Borradores sigue mostrando su resumen', () => {
+  const Composer=loadClass('invoice-composer.component.ts');const id='draft-review-00001';
+  const composer=new Composer({status:()=>of({requestId:id,status:'ready',source:'manual',preview:{observations:'Guardado'}})},
+    {getActiveCompanyId:()=> 'ShopA'});
+  composer.requestNewInvoice();composer.openDraft(id);
+  assert.equal(composer.restored,true);assert.equal(composer.requestId,id);assert.equal(composer.observations,'Guardado');
+});
+
+test('la recuperación explica el pendiente y ofrece crear nueva cuando el estado ya está confirmado', () => {
+  const html=fs.readFileSync(path.resolve(__dirname,'../../src/app/components/facturacion-electronica/composer/invoice-composer.component.html'),'utf8');
+  assert.doesNotMatch(html,/<h3>Revisión recuperada<\/h3>/);
+  assert.match(html,/Hay una operación por confirmar/);assert.match(html,/Crear una factura nueva/);
+  assert.match(html,/\(click\)="requestNewInvoice\(\)"/);
+});
+
+test('observaciones se guardan con borrador y llegan a revisión de factura libre y pedido sin emitir', () => {
+  const Composer=loadClass('invoice-composer.component.ts'); const calls=[];
+  const composer=new Composer({saveDraft(id,invoice,version,observations){calls.push({kind:'draft',observations});return of({version:1,selection:{source:'manual',invoice,observations}});},
+    createReview(id,selection){calls.push(selection);return of({requestId:id,status:'ready',source:selection.source,preview:{observations:selection.observations}});}},
+    {getActiveCompanyId:()=> 'ShopA'});
+  composer.changeObservations('  Agosto\r\nReferencia & pago  ');
+  composer.saveDraft({items:[]}); composer.reviewManual({items:[]});
+  assert.equal(calls[0].observations,'Agosto\nReferencia & pago');
+  assert.equal(calls[1].observations,calls[0].observations);
+  assert.equal(composer.preview.observations,calls[0].observations);
+  composer.setMode('order'); composer.reviewOrder('order-unit');
+  assert.equal(calls[2].source,'order'); assert.equal(calls[2].observations,calls[0].observations);
+  assert.equal(composer.canEmit,false);
+});
+
+test('editar observaciones invalida confirmación y no permite editar aceptados, pendientes o restaurados', () => {
+  const Composer=loadClass('invoice-composer.component.ts',{window:{confirm:()=>true}});
+  const composer=new Composer({}, {getActiveCompanyId:()=> 'ShopA'});
+  composer.record={status:'ready'};composer.preview={observations:'Original'};composer.confirmed=true;
+  composer.changeObservations('Nuevo');
+  assert.equal(composer.record,null);assert.equal(composer.preview,null);assert.equal(composer.confirmed,false);
+  for (const status of ['accepted','processing','uncertain']) {
+    composer.record={status};composer.changeObservations('No permitido');assert.equal(composer.observations,'Nuevo');
+  }
+  composer.record=null;composer.restored=true;composer.changeObservations('No permitido');assert.equal(composer.observations,'Nuevo');
+  composer.restored=false;composer.startNew();assert.equal(composer.observations,'');
+});
+
+test('reabrir borrador y corregir rechazo conserva observaciones; protege cambios sin guardar', () => {
+  let approved=false, reads=0;
+  const Composer=loadClass('invoice-composer.component.ts',{window:{confirm:()=>approved}});
+  const invoice={items:[]};
+  const composer=new Composer({status:id=>{reads++;return of({requestId:id,status:'draft',version:1,selection:{source:'manual',invoice,observations:'Guardada'}});}},
+    {getActiveCompanyId:()=> 'ShopA'});
+  composer.manualForm={form:{dirty:false},restoreDraft:()=>{}};
+  composer.changeObservations('Sin guardar');composer.openDraft('draft-notes-00001');assert.equal(reads,0);
+  approved=true;composer.openDraft('draft-notes-00001');assert.equal(composer.observations,'Guardada');
+  composer.record={status:'rejected',selection:{source:'manual',invoice,observations:'Rechazada'}};composer.correctInvoice();
+  assert.equal(composer.observations,'Rechazada');assert.equal(composer.canEmit,false);
+});
+
+test('validación de observaciones bloquea revisión y guardado; vacío conserva payload anterior', () => {
+  const Composer=loadClass('invoice-composer.component.ts');const calls=[];
+  const composer=new Composer({saveDraft:()=>{throw Error('No debe guardar');},createReview:(id,selection)=>{calls.push(selection);return of({requestId:id,status:'ready',source:'manual',preview:{}});}},
+    {getActiveCompanyId:()=> 'ShopA'});
+  for(const value of ['x'.repeat(1001),'Inválido\u0000','\uD800']) {
+    composer.changeObservations(value);composer.saveDraft({items:[]});composer.reviewManual({items:[]});
+    assert.ok(composer.observationsError);assert.equal(calls.length,0);
+  }
+  composer.changeObservations(' \n ');composer.reviewManual({items:[]});
+  assert.equal(Object.hasOwn(calls[0],'observations'),false);
+});
+
+test('servicio incluye observaciones en el guardado del borrador únicamente cuando existen', () => {
+  const calls=[];
+  const Service=loadClass('dian-invoice.service.ts',{Injectable:()=>value=>value,
+    BaseService:class {put(url,body){calls.push(body);return of({success:true,data:{version:1}});}},
+    ...require('rxjs/operators')});
+  const service=new Service({});
+  service.saveDraft('draft-notes-00001',{items:[]},0,'Agosto\nPago').subscribe();
+  service.saveDraft('draft-notes-00002',{items:[]},0).subscribe();
+  assert.equal(calls[0].observations,'Agosto\nPago');assert.equal(Object.hasOwn(calls[1],'observations'),false);
+});
+
+test('campo de observaciones es visible antes de revisar, accesible y su resumen no interpreta HTML', () => {
+  const base=path.resolve(__dirname,'../../src/app/components/facturacion-electronica/composer');
+  const html=fs.readFileSync(path.join(base,'invoice-composer.component.html'),'utf8');
+  const form=fs.readFileSync(path.join(base,'manual-invoice-form.component.html'),'utf8');
+  assert.match(html,/for="invoice-observations"/);assert.match(html,/\[maxlength\]="maxObservationsLength"/);
+  assert.match(html,/\{\{ preview.observations \}\}/);assert.doesNotMatch(html,/\[innerHTML\]/);
+  assert.ok(form.indexOf('<ng-content>')<form.indexOf('class="draft-footer"'));
+});
+
+test('backend desactualizado no puede descartar observaciones y permitir emitir o anunciar guardado completo', () => {
+  const Composer=loadClass('invoice-composer.component.ts');
+  const composer=new Composer({saveDraft:()=>of({version:1,selection:{source:'manual',invoice:{}}}),
+    createReview:id=>of({requestId:id,status:'ready',source:'manual',preview:{}})}, {getActiveCompanyId:()=> 'ShopA'});
+  composer.changeObservations('No perder este texto');composer.saveDraft({items:[]});
+  assert.match(composer.error,/no confirmó las observaciones/);assert.equal(composer.observations,'No perder este texto');
+  assert.equal(composer.draftMessage,'');composer.reviewManual({items:[]});
+  assert.match(composer.error,/no coinciden/);assert.equal(composer.observations,'No perder este texto');
+  composer.integration={enabled:true,config:{environment:'produccion'}};composer.confirmed=true;
+  assert.equal(composer.canEmit,false);assert.equal(composer.preview,null);
+});
+
 test('recuperar archivos no emite, requiere aceptación y bloquea doble clic',()=>{
  const Composer=loadClass('invoice-composer.component.ts');const response=new Subject();let calls=0;
  const composer=new Composer({recoverDocuments:()=>{calls++;return response;}},{getActiveCompanyId:()=> 'ShopA'});
@@ -268,6 +463,29 @@ test('rechazo de revisión por datos desactualizados permite revisar, sin declar
   assert.equal(composer.record.status,'ready');assert.equal(composer.pending,false);assert.equal(composer.confirmed,false);
   assert.match(composer.error,/Cliente actualizado/);
 });
+test('buscar empresa muestra cada perfil fiscal y reconsulta el seleccionado, sin emitir ni crear clientes', () => {
+  const Picker=loadClass('invoice-customer-picker.component.ts');const reads=[],selected=[];
+  const row={cd:'contact-unit',nombres_completos:'Representante',documento:'Empresa Uno',matchedBillingProfiles:[
+    {index:0,name:'Empresa Uno SAS',document:'900111111',email:'uno@example.invalid'},
+    {index:2,name:'Empresa Dos SAS',document:'900222222',email:'dos@example.invalid'}]};
+  const picker=new Picker({searchClients:()=>of([row])},{customer:(id,profile)=>{
+    reads.push({id,profile});return of({id,billingProfiles:[],addresses:[],fiscal:{name:'Empresa Dos SAS',documentType:'NIT',documentNumber:'900222222',email:'actual@example.invalid'}});
+  }},{getActiveCompanyId:()=> 'ShopA'});
+  picker.companyId='ShopA';picker.search='empresa';picker.selected.subscribe(x=>selected.push(x));picker.find();
+  assert.equal(picker.results.length,2);assert.equal(picker.results[1].searchName,'Empresa Dos SAS');
+  assert.equal(picker.results[1].searchOwner,'Representante');assert.equal(reads.length,0);
+  picker.choose(picker.results[1]);assert.deepEqual(reads,[{id:'contact-unit',profile:2}]);
+  assert.equal(selected.at(-1).billingProfile,2);assert.equal(picker.customer.fiscal.email,'actual@example.invalid');
+});
+
+test('buscador descarta los resultados si cambió el comercio', () => {
+  const Picker=loadClass('invoice-customer-picker.component.ts');const response=new Subject();let company='ShopA';
+  const picker=new Picker({searchClients:()=>response},{},{getActiveCompanyId:()=>company});
+  picker.companyId='ShopA';picker.search='empresa';picker.find();company='ShopB';
+  response.next([{cd:'private-client',matchedBillingProfiles:[{index:0,name:'Privado'}]}]);response.complete();
+  assert.equal(picker.results.length,0);
+});
+
 test('selector de clientes reconsulta el maestro y no selecciona fichas incompletas', () => {
   const Picker=loadClass('invoice-customer-picker.component.ts');const selected=[];
   const record={id:'client-unit',name:'Actual',documentNumber:'900123456',billingProfiles:[],addresses:[],
@@ -376,7 +594,7 @@ test('el modal compartido comprueba el comercio también después de la búsqued
 
 test('Actualizar ficha abre el editor completo y su entrada sólo consulta el cliente', () => {
   const html=fs.readFileSync(path.resolve(__dirname,'../../src/app/components/facturacion-electronica/composer/invoice-customer-picker.component.html'),'utf8');
-  assert.match(html,/routerLink="\/ventas\/clientes" \[queryParams\]="\{invoiceCustomer:customer.documentNumber\}"/);
+  assert.match(html,/routerLink="\/ventas\/clientes" \[queryParams\]="\{invoiceCustomer:customer.fiscal.documentNumber \|\| customer.documentNumber\}"/);
   const source=fs.readFileSync(path.resolve(__dirname,'../../src/app/components/ventas/clientes/clientes.component.ts'),'utf8');
   const start=source.indexOf('const invoiceCustomer = this.route.snapshot.queryParamMap');
   const entry=source.slice(start,source.indexOf('// Si ya tenemos clienteEdit',start));
