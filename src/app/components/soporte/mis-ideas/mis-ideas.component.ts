@@ -76,13 +76,13 @@ export class MisIdeasComponent implements OnInit {
     // Filter by search text if provided
     if (this.searchText && this.searchText.trim() !== '') {
       const searchLower = this.searchText.toLowerCase().trim();
-      filteredResults = filteredResults.filter(idea => {
+      filteredResults = filteredResults.filter((idea: any) => {
         // Search in asunto, ticketComments and other relevant fields
         return (
           (idea.asunto && idea.asunto.toLowerCase().includes(searchLower)) ||
           (idea.nombreUsuarioReporta && idea.nombreUsuarioReporta.toLowerCase().includes(searchLower)) ||
-          (idea.ticketComments && idea.ticketComments.some((comment: any) => 
-            comment.contenido && comment.contenido.toLowerCase().includes(searchLower))
+          (idea.ticketComments && idea.ticketComments.some((comment: any) =>
+            !comment.esNota && comment.contenido && comment.contenido.toLowerCase().includes(searchLower))
           )
         );
       });
@@ -90,6 +90,13 @@ export class MisIdeasComponent implements OnInit {
 
     // Update filtered tasks
     this.filteredTasks = filteredResults;
+  }
+
+  // Las notas internas del equipo de soporte no se le muestran al comercio.
+  // Se filtran solo al pintar: el arreglo original se conserva para que comentar
+  // desde aquí no las borre al reenviar el registro completo.
+  comentariosVisibles(idea: any): any[] {
+    return (idea?.ticketComments || []).filter((comment: any) => !comment?.esNota);
   }
 
   // Apply date filtering based on selected option

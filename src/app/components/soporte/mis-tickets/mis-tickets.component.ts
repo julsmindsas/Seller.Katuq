@@ -84,6 +84,13 @@ export class MisTicketsComponent implements OnInit {
     return 'assets/icons/video-placeholder.png';
   }
   
+  // Las notas internas del equipo de soporte no se le muestran al comercio.
+  // Se filtran solo al pintar: el arreglo original se conserva para que responder
+  // desde aquí no las borre al reenviar el ticket completo.
+  comentariosVisibles(ticket: any): any[] {
+    return (ticket?.ticketComments || []).filter((comment: any) => !comment?.esNota);
+  }
+
   // Los adjuntos son URLs de Storage; el tipo se deduce por la extensión de la ruta
   tipoAdjunto(url: string): 'imagen' | 'video' | 'documento' {
     if (!url) return 'imagen';
@@ -197,8 +204,8 @@ export class MisTicketsComponent implements OnInit {
         return (
           (task.asunto && task.asunto.toLowerCase().includes(searchLower)) ||
           (task.nombreUsuarioReporta && task.nombreUsuarioReporta.toLowerCase().includes(searchLower)) ||
-          (task.ticketComments && task.ticketComments.some((comment: any) => 
-            comment.contenido && comment.contenido.toLowerCase().includes(searchLower)
+          (task.ticketComments && task.ticketComments.some((comment: any) =>
+            !comment.esNota && comment.contenido && comment.contenido.toLowerCase().includes(searchLower)
           ))
         );
       });

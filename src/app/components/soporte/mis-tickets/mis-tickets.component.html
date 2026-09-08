@@ -184,10 +184,10 @@
 
         <!-- Comments Section -->
         <div class="ticket-section comments-section">
-          <h4><i class="fa fa-comments"></i> Comentarios ({{ticket.ticketComments?.length || 0}})</h4>
+          <h4><i class="fa fa-comments"></i> Comentarios ({{comentariosVisibles(ticket).length}})</h4>
           
-          <div class="comments-timeline" *ngIf="ticket.ticketComments?.length">
-            <div class="comment-item" *ngFor="let comment of ticket.ticketComments">
+          <div class="comments-timeline" *ngIf="comentariosVisibles(ticket).length">
+            <div class="comment-item" *ngFor="let comment of comentariosVisibles(ticket)">
               <div class="comment-avatar" [ngStyle]="{'background-color': comment.autor.color}">
                 {{comment.autor.iniciales}}
               </div>
@@ -218,7 +218,7 @@
           </div>
           
           <!-- No Comments Message -->
-          <div class="no-comments-message" *ngIf="!ticket.ticketComments?.length">
+          <div class="no-comments-message" *ngIf="!comentariosVisibles(ticket).length">
             <p>No hay comentarios para este ticket. Sé el primero en comentar.</p>
           </div>
           
