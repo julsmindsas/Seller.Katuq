@@ -52,6 +52,11 @@ export class DianInvoiceService extends BaseService {
       '/v1/accounting/dian/invoice-requests/' + encodeURIComponent(requestId),
     ).pipe(timeout(45000), this.unwrap<InvoiceRequest>());
   }
+  recoverDocuments(requestId: string) {
+    return this.post<{success: boolean; data: InvoiceRequest}>(
+      '/v1/accounting/dian/invoice-requests/' + encodeURIComponent(requestId) + '/recover-documents', {})
+      .pipe(timeout(150000), this.unwrap<InvoiceRequest>());
+  }
 
   preview(selection: InvoiceSelection) {
     return this.post<{ success: boolean; data: InvoicePreview; message?: string }>(

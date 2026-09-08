@@ -205,6 +205,14 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
       },
     });
   }
+  recoverDocuments(): void {
+    if (this.loading || this.companyChanged || this.record?.status !== 'accepted' || this.record.invoice?.artifactsAvailable) return;
+    this.loading = true; this.error = '';
+    this.request = defer(() => this.invoices.recoverDocuments(this.requestId)).pipe(finalize(() => this.loading = false)).subscribe({
+      next: record => this.adopt(record),
+      error: error => { if (!this.companyChanged) this.error = error?.error?.message || 'No se completó la recuperación. La factura sigue aceptada; no la emitas otra vez.'; },
+    });
+  }
   private adopt(record: InvoiceRequest): void {
     if (this.companyChanged || record.requestId !== this.requestId) return;
     this.record = record; this.preview = record.preview; this.mode = record.source;

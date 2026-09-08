@@ -23,6 +23,7 @@
     <ng-container *ngIf="record?.status === 'accepted'">
       <p *ngIf="record?.invoice?.artifactsAvailable">PDF y XML guardados. Puedes descargarlos en Facturas y notas.</p>
       <p *ngIf="!record?.invoice?.artifactsAvailable">La factura está aceptada, pero falta confirmar sus archivos. No vuelvas a emitirla.</p>
+      <button type="button" class="btn btn-primary" *ngIf="!record?.invoice?.artifactsAvailable" [disabled]="loading || companyChanged" (click)="recoverDocuments()">Recuperar PDF y XML · Sin emitir otra factura</button>
       <p *ngIf="record?.invoice?.emailDelivery?.sent">Correo enviado a {{ record.invoice.emailDelivery.recipient }}. Referencia: {{ record.invoice.emailDelivery.messageId }}. El envío no confirma recepción en la bandeja del cliente.</p>
       <p *ngIf="record?.invoice?.emailDelivery?.requested && !record?.invoice?.emailDelivery?.sent">No se pudo enviar el correo: {{ record.invoice.emailDelivery.error }}. La factura sigue aceptada; no la emitas otra vez.</p>
       <p *ngIf="record?.invoice?.emailDelivery && !record.invoice.emailDelivery.requested">No se solicitó envío por correo.</p>

@@ -1,5 +1,16 @@
 # Revisión técnica del XML DIAN - 7 de septiembre de 2026
 
+## Reparación de Storage y recuperación de JULS41
+
+- JULS41 fue aceptada por la DIAN; el guardado posterior falló porque Firebase Admin no tenía bucket predeterminado. Se configuró explícitamente el bucket usado por Katuq (`FIREBASE_STORAGE_BUCKET`, predeterminado `julsmind-katuq.appspot.com`).
+- Antes de reservar numeración de facturas/notas se verifica existencia y permisos reales del bucket. Antes de transmitir se guardan y se releen el XML firmado exacto y PDF en una ruta de preparación aislada por comercio y CUFE/CUDE. Si falla la copia, no se transmite. Esto no impide una indisponibilidad posterior de Storage, pero preserva la copia previa.
+- Los XML finales usan creación condicional y comparación byte a byte: un original distinto nunca se sobrescribe. La detección de conflicto ocurre antes de tocar los otros archivos del número.
+- Implementados `GetXmlByDocumentKey` y recuperación autenticada de documentos de facturas aceptadas. Se verifica CUFE, número, emisor, comprador y total contra el registro. Recuperar no firma de nuevo, no emite, no cambia numeración ni envía correo.
+- Recuperación real completada para JULS41: XML original (19590 bytes), PDF (25642 bytes), ApplicationResponse (11413 bytes) y AttachedDocument (43345 bytes), bajo `dian/Julsmind/JULS41/`. Se descargaron los cuatro desde Storage para verificar lectura; firma digital del XML original verificada. Referencias guardadas en `dian_documents` y disponibilidad actualizada en `dian_invoice_requests`.
+- PDF regenerado a partir del XML recuperado, revisado visualmente; se corrigió el recorte del CUFE y se muestran identificación y correo del comprador. La recuperación mantiene el correo pendiente de envío. No se emitió JULS42 en esta reparación.
+- Limitación: recuperación desde el compositor implementada para facturas aceptadas COP; no modifica su XML. No se declara recuperación de notas ni soporte de otros documentos en este endpoint.
+- Verificación final: 101 pruebas backend y 39 frontend aprobadas, compilador Angular sin errores. Backend local reiniciado con SMTP verificado. En Edge, JULS41 aparece aceptada y con botones PDF/XML habilitados.
+
 ## Actualización: correo local y borradores
 
 - Credencial SMTP autorizada cargada únicamente en memoria del backend local mediante un preload temporal externo al repositorio. El backend reiniciado verificó autenticación SMTP; la pantalla ya informa correo configurado. No se enviaron correos. Un arranque ordinario sin ese preload seguirá necesitando configurar `SMTP_PASS` de forma segura.

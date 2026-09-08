@@ -46,6 +46,16 @@ function formFixture() {
   return form;
 }
 
+test('recuperar archivos no emite, requiere aceptación y bloquea doble clic',()=>{
+ const Composer=loadClass('invoice-composer.component.ts');const response=new Subject();let calls=0;
+ const composer=new Composer({recoverDocuments:()=>{calls++;return response;}},{getActiveCompanyId:()=> 'ShopA'});
+ composer.record={status:'rejected'};composer.recoverDocuments();assert.equal(calls,0);
+ composer.record={status:'accepted',invoice:{artifactsAvailable:false}};composer.requestId='accepted-unit';
+ composer.recoverDocuments();composer.recoverDocuments();assert.equal(calls,1);
+ response.next({status:'accepted',requestId:'accepted-unit',source:'manual',invoice:{artifactsAvailable:true}});response.complete();
+ assert.equal(composer.record.invoice.artifactsAvailable,true);assert.equal(composer.canEmit,false);
+});
+
 test('corregir rechazo recupera datos sin emitir, conserva descuento y exige nueva revisión', () => {
   const Composer=loadClass('invoice-composer.component.ts',{window:{confirm:()=>true}});
   const composer=new Composer({}, {getActiveCompanyId:()=> 'ShopA'});
