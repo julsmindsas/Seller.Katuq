@@ -5775,3 +5775,16 @@ Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
 **Verificación manual (T-3.3), ejecutada por el usuario el mismo día** contra el front en `:4200` y el backend local en `:3300` con el fix cargado: el cambio de IVA sobre un pedido real recalculó los totales correctamente, y los tres guardarraíles respondieron como especifica el delta — pedido ya facturado rechazado (`ORDER_ALREADY_INVOICED`; corregir el IVA después de facturar sigue siendo nota de crédito, fuera de alcance), pedido congelado bloqueado, y tarifa fuera del catálogo (37%) rechazada con 400 `IVA_NOT_ALLOWED` — el bug de 3.1.1 confirmado corregido de punta a punta, no solo en el test.
 
 **Pendiente:** actualizar la tarea ClickUp `wdu9v75nat` (fuera del alcance de la sesión de código).
+
+## D-259 (2026-09-07) — Facturación electrónica, Contabilidad y asistente DIAN adoptan el lenguaje visual comercial
+
+**Disparador.** Diseño aprobado en Claude Design ("Facturacion Electronica.dc.html", proyecto `cef2b209…`) para el centro DIAN, con la instrucción de extender la misma filosofía a Contabilidad y a lo que faltara de facturación electrónica.
+
+**Decisión.** Las tres pantallas usan el parcial compartido `src/app/shared/styles/_katuq-comercial.scss` (el de Cotizaciones: acento `#6C4CE0`, Nunito + Baloo 2, tarjetas radio 16–20 px, semánticos en par fuerte/fondo suave, plano sin gradientes). Es el mismo tema que ya adoptó venta asistida por decisión de Daniel; NO se crearon tokens nuevos ni se tocó `_katuq-tokens.scss`. La banda de Total del mockup traía gradiente: se implementó plana, como manda el sistema de diseño.
+
+**Qué cambió (solo frontend, rama `feature/venta-asistida-mejorada`):**
+- **Facturación electrónica** (`components/facturacion-electronica/`): una sola franja de estado con acción, KPIs clicables, pestañas pastilla, tabla con menú de acciones y fila expandida para rechazadas, filtro segmentado por estado, pestaña "Desde pedidos" con selección múltiple y **emisión en lote** (mismo endpoint por pedido, una confirmación Swal; bloquea pedidos sin correo o cancelados porque la DIAN los rechaza). Compositor con pasos que se marcan en verde, resumen en vivo fijo y lista "Falta para poder emitir". Los `window.confirm` del compositor pasaron a SweetAlert2 (regla dura).
+- **Contabilidad** (`components/contabilidad/`): misma estructura (franja, KPIs, pestañas), filtro de comprobantes por estado, balance y plan de cuentas en tabla. Lógica intacta.
+- **Asistente DIAN** dentro del modal de integraciones (`integrations.component.html` líneas del bloque `selectedIntegrationType === 'dian'` y su SCSS): riel de pasos, paneles, ambiente como tarjetas radio, mismos bindings y validaciones; el resto del modal de integraciones NO se tocó (tiene su propio mockup "Modal Configurar Integracion", pendiente).
+
+**Límites conocidos:** la columna Cliente del listado DIAN muestra el correo del destinatario porque el registro (`dianXMLProvider.#audit`) no guarda el nombre; "Reenviar al cliente" del mockup se omitió porque no existe endpoint. Commits FE 4f1795e1 y 15b1b562; desplegado a hosting el mismo día.
