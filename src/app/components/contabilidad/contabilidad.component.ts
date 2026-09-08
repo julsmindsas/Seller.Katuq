@@ -30,6 +30,7 @@ export class ContabilidadComponent implements OnInit {
   showManualEntry = false;
   expandedEntryId = '';
   search = '';
+  entryFilter: 'all' | 'posted' | 'draft' = 'all';
   periodFrom = `${new Date().getFullYear()}-01-01`;
   periodTo = new Date().toISOString().slice(0, 10);
   manual = this.emptyManualEntry();
@@ -56,9 +57,57 @@ export class ContabilidadComponent implements OnInit {
 
   get filteredEntries(): JournalEntry[] {
     const term = this.search.trim().toLowerCase();
-    if (!term) return this.entries;
-    return this.entries.filter((entry) => [entry.number, entry.description, entry.documentNumber, entry.sourceType]
-      .filter(Boolean).join(' ').toLowerCase().includes(term));
+    return this.entries.filter((entry) => {
+      if (this.entryFilter !== 'all' && entry.status !== this.entryFilter) return false;
+      if (!term) return true;
+      return [entry.number, entry.description, entry.documentNumber, entry.sourceType]
+        .filter(Boolean).join(' ').toLowerCase().includes(term);
+    });
+  }
+
+  get postedCount(): number { return this.entries.filter((entry) => entry.status === 'posted').length; }
+  get draftCount(): number { return this.entries.filter((entry) => entry.status === 'draft').length; }
+  get balanceOk(): boolean { return (this.balance?.difference || 0) === 0; }
+
+  get nextTask(): { tone: 'warning' | 'danger' | 'success' | 'info'; icon: string; title: string; description: string; button: string } {
+    if (!this.isReady) {
+      return { tone: 'warning', icon: 'pi-shield', title: 'La contabilidad está preparada, pero aún no está activa',
+        description: 'Revisa las cuentas principales. Mientras tanto, documentos y recaudos quedan como borradores y no afectan el balance.',
+        button: 'Revisar y activar' };
+    }
+    if (!this.balanceOk) {
+      return { tone: 'danger', icon: 'pi-exclamation-triangle', title: 'El balance del período no cuadra',
+        description: 'Débitos y créditos no coinciden. Revisa los comprobantes del período antes de cerrar.',
+        button: 'Ver balance' };
+    }
+    const drafts = this.overview?.journal?.drafts || 0;
+    if (drafts > 0) {
+      return { tone: 'info', icon: 'pi-pencil', title: `Hay ${drafts} comprobante${drafts === 1 ? '' : 's'} por revisar`,
+        description: 'Son documentos creados antes de activar la contabilidad. Puedes consultarlos en Comprobantes.',
+        button: 'Ver comprobantes' };
+    }
+    return { tone: 'success', icon: 'pi-check-circle', title: 'Los libros están al día',
+      description: 'No hay borradores pendientes y el balance del período está cuadrado. Las facturas, notas DIAN y pagos aprobados se contabilizan solos.',
+      button: 'Ver balance' };
+  }
+
+  doNextTask(): void {
+    if (!this.isReady) { this.selectTab('settings'); return; }
+    if (!this.balanceOk) { this.selectTab('balance'); return; }
+    if ((this.overview?.journal?.drafts || 0) > 0) { this.entryFilter = 'draft'; this.selectTab('journal'); return; }
+    this.selectTab('balance');
+  }
+
+  openManualEntry(): void {
+    this.selectTab('journal');
+    this.showManualEntry = true;
+  }
+
+  openEntry(entry: JournalEntry): void {
+    this.selectTab('journal');
+    this.entryFilter = 'all';
+    this.search = '';
+    this.expandedEntryId = entry.id;
   }
 
   get manualTotals(): { debit: number; credit: number; difference: number } {
@@ -106,7 +155,7 @@ export class ContabilidadComponent implements OnInit {
       showCancelButton: true,
       confirmButtonText: 'Sí, preparar contabilidad',
       cancelButtonText: 'Ahora no',
-      confirmButtonColor: '#2f6fed',
+      confirmButtonColor: '#6c4ce0',
     }).then((result) => {
       if (!result.isConfirmed) return;
       this.saving = true;
