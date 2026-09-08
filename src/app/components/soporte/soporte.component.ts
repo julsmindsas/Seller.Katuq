@@ -22,15 +22,58 @@ export class SoporteComponent implements OnInit {
   subcategories: any[] = [];
   canales: any;
   fileBase64String: any;
-  // Cada imagen elegida viaja con su miniatura (objectURL) en el mismo objeto,
+  // Una sola lista para toda la evidencia: archivo y su miniatura viajan juntos,
   // así el orden y la eliminación son siempre consistentes
-  imagePreviews: { file: File; url: string }[] = [];
-  videoPreviews: any[] = [];
-  // Documentos (PDF, Office, texto, comprimidos)
-  documentFiles: File[] = [];
+  archivos: { file: File; tipo: 'imagen' | 'video' | 'documento'; url: string }[] = [];
+  clasOpen = false;
   // Límite prometido en la interfaz ("Máximo 50MB por archivo")
   readonly MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
   readonly DOC_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar'];
+  readonly MIN_ASUNTO = 8;
+  readonly MIN_DESC = 30;
+
+  // Qué necesita el comercio; define a qué equipo llega el ticket
+  readonly tiposSolicitud = [
+    {
+      key: 'bug', motivo: 'soporte', label: 'Algo no funciona',
+      hint: 'Un error o algo que dejó de andar', iconBg: '#FCE9E8', iconColor: '#C0392F'
+    },
+    {
+      key: 'ayuda', motivo: 'soporte', label: 'Necesito ayuda',
+      hint: 'Una duda de cómo usar Katuq', iconBg: '#EEE9FD', iconColor: '#6C4CE0'
+    },
+    {
+      key: 'idea', motivo: 'idea', label: 'Tengo una idea',
+      hint: 'Propón una mejora o función nueva', iconBg: '#E3F6EC', iconColor: '#15803D'
+    }
+  ];
+
+  readonly categorias = [
+    { valor: 'funcionalidad katuq', label: 'Funcionalidad Katuq' },
+    { valor: 'facturación electrónica', label: 'Facturación electrónica' },
+    { valor: 'inventarios', label: 'Inventarios' },
+    { valor: 'pagos y cartera', label: 'Pagos y cartera' }
+  ];
+
+  readonly subcategorias = [
+    { valor: 'general', label: 'General' },
+    { valor: 'ventas pos', label: 'Ventas POS' },
+    { valor: 'pedidos', label: 'Pedidos' },
+    { valor: 'reportes', label: 'Reportes' }
+  ];
+
+  readonly prioridades = [
+    { valor: 'baja', label: 'Baja' },
+    { valor: 'media', label: 'Media' },
+    { valor: 'alta', label: 'Alta' }
+  ];
+
+  // Pistas de redacción: marcan lo que ya cubre la descripción
+  private readonly pistas = [
+    { label: 'Qué hiciste antes', re: /pas|clic|entr|abr|intent|cuando|al /i },
+    { label: 'Qué esperabas', re: /esper|deber|suponí|correcto/i },
+    { label: 'Qué ocurrió', re: /error|no |falló|salió|apareci|mostr/i }
+  ];
   isSubmitting: boolean = false;
   isDragging: boolean = false;
   selectedPriority: string = 'media'; // Default priority
@@ -55,13 +98,17 @@ export class SoporteComponent implements OnInit {
       ticketComments: [''],
       canal: ['web', Validators.required],
       tienda: ['tienda web', Validators.required],
-      categoria: [{ value: 'funcionalidad katuq', disabled: true }, Validators.required],
-      subcategoria: [{ value: 'general', disabled: true }, Validators.required],
+      categoria: ['funcionalidad katuq', Validators.required],
+      subcategoria: ['general', Validators.required],
+      // motivo conserva los valores que ya entiende Support ('soporte' | 'idea');
+      // tipoSolicitud guarda el matiz que elige el comercio (bug | ayuda | idea)
       motivo: ['soporte', Validators.required],
+      tipoSolicitud: ['', Validators.required],
       nombreUsuarioReporta: [this.currentUser?.name || this.currentUser?.email || '', Validators.required], // Nombre o correo del usuario logueado; editable
       fechaRegistro: [today, Validators.required],
       fechaEvento: [today, Validators.required], // Set default to today's date
-      asunto: ['', Validators.required],
+      asunto: ['', [Validators.required, Validators.minLength(this.MIN_ASUNTO)]],
+      descripcion: ['', [Validators.required, Validators.minLength(this.MIN_DESC)]],
       usuarioMesaAyuda: ['Pendiente', Validators.required],
       status: ['Pendiente'],
       prioridad: ['media'] // Add priority field
@@ -198,13 +245,9 @@ export class SoporteComponent implements OnInit {
     }
   }
 
-  // Todo lo que se subirá a Storage al enviar: imágenes y videos, en ese orden
+  // Todo lo que se subirá a Storage al enviar, en el orden en que se eligió
   get selectedFiles(): File[] {
-    return [
-      ...this.imagePreviews.map(p => p.file),
-      ...this.videoPreviews.map(v => v.file as File),
-      ...this.documentFiles
-    ];
+    return this.archivos.map(a => a.file);
   }
 
   private extensionDe(file: File): string {
@@ -237,21 +280,12 @@ export class SoporteComponent implements OnInit {
         continue;
       }
 
-      if (esImagen) {
-        // objectURL es síncrono: la miniatura queda en la misma posición que el archivo
-        this.imagePreviews.push({ file, url: URL.createObjectURL(file) });
-      } else if (esVideo) {
-        this.generateVideoThumbnail(file).then(thumbnail => {
-          this.videoPreviews.push({
-            url: URL.createObjectURL(file),
-            type: file.type,
-            file: file,
-            thumbnail
-          });
-        });
-      } else {
-        this.documentFiles.push(file);
-      }
+      // objectURL es síncrono: la miniatura queda en la misma posición que el archivo
+      this.archivos.push({
+        file,
+        tipo: esImagen ? 'imagen' : (esVideo ? 'video' : 'documento'),
+        url: URL.createObjectURL(file)
+      });
     }
 
     if (rechazados.length > 0) {
@@ -264,59 +298,6 @@ export class SoporteComponent implements OnInit {
     }
   }
 
-  // Captura un fotograma real: se salta a 0.1s tras cargar metadatos y se dibuja en 'seeked'.
-  // Si el navegador no puede decodificar el video, resuelve '' y la plantilla muestra un ícono.
-  generateVideoThumbnail(file: File): Promise<string> {
-    return new Promise((resolve) => {
-      const video = document.createElement('video');
-      const objectUrl = URL.createObjectURL(file);
-      let resuelto = false;
-
-      const terminar = (thumbnail: string) => {
-        if (resuelto) return;
-        resuelto = true;
-        URL.revokeObjectURL(objectUrl);
-        resolve(thumbnail);
-      };
-
-      video.muted = true;
-      video.playsInline = true;
-      video.preload = 'metadata';
-
-      video.addEventListener('loadedmetadata', () => {
-        // Algunos videos muy cortos no permiten 0.1s; usar la mitad si hace falta
-        video.currentTime = Math.min(0.1, (video.duration || 1) / 2);
-      });
-
-      video.addEventListener('seeked', () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 150;
-        canvas.height = 150;
-        const ctx = canvas.getContext('2d');
-        if (!ctx || !video.videoWidth || !video.videoHeight) {
-          terminar('');
-          return;
-        }
-        // Recorte centrado para no deformar el fotograma
-        const lado = Math.min(video.videoWidth, video.videoHeight);
-        const sx = (video.videoWidth - lado) / 2;
-        const sy = (video.videoHeight - lado) / 2;
-        ctx.drawImage(video, sx, sy, lado, lado, 0, 0, 150, 150);
-        try {
-          terminar(canvas.toDataURL('image/jpeg', 0.8));
-        } catch {
-          terminar('');
-        }
-      });
-
-      video.addEventListener('error', () => terminar(''));
-      // Red de seguridad si nunca llega 'seeked'
-      setTimeout(() => terminar(''), 8000);
-
-      video.src = objectUrl;
-    });
-  }
-
   onFileChange(event: any): void {
     if (event.target.files) {
       this.handleFiles(event.target.files);
@@ -325,30 +306,21 @@ export class SoporteComponent implements OnInit {
     }
   }
 
-  removeImage(index: number): void {
-    const [quitada] = this.imagePreviews.splice(index, 1);
-    if (quitada) {
-      URL.revokeObjectURL(quitada.url);
+  quitarArchivo(index: number): void {
+    const [quitado] = this.archivos.splice(index, 1);
+    if (quitado) {
+      URL.revokeObjectURL(quitado.url);
     }
   }
 
-  removeVideo(preview: any): void {
-    const index = this.videoPreviews.indexOf(preview);
-    if (index !== -1) {
-      this.videoPreviews.splice(index, 1);
-      if (preview?.url) {
-        URL.revokeObjectURL(preview.url);
-      }
+  abrirArchivo(archivo: any): void {
+    if (archivo?.url) {
+      window.open(archivo.url, '_blank');
     }
   }
 
   private liberarVistasPrevias(): void {
-    this.imagePreviews.forEach(p => URL.revokeObjectURL(p.url));
-    this.videoPreviews.forEach(v => v?.url && URL.revokeObjectURL(v.url));
-  }
-
-  removeDocument(index: number): void {
-    this.documentFiles.splice(index, 1);
+    this.archivos.forEach(a => URL.revokeObjectURL(a.url));
   }
 
   formatearTamano(bytes: number): string {
@@ -357,28 +329,116 @@ export class SoporteComponent implements OnInit {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-  // Open image preview modal (mismo mecanismo que el de video); si no hay Bootstrap, pestaña nueva
-  openImagePreview(imageUrl: string): void {
-    this.selectedPreviewImage = imageUrl;
-    const modalElement = document.getElementById('imagePreviewModal');
-    if (modalElement && (window as any).bootstrap) {
-      const modal = new (window as any).bootstrap.Modal(modalElement);
-      modal.show();
-    } else {
-      window.open(imageUrl, '_blank');
-    }
+  // ===== Estado del formulario para la maqueta =====
+  private valor(campo: string): string {
+    return (this.ticketForm?.get(campo)?.value || '').toString().trim();
   }
 
-  // Open video preview modal
-  openVideoPreview(video: any): void {
-    this.selectedPreviewVideo = video;
-    // This assumes you have a Bootstrap modal with id 'videoPreviewModal'
-    // You might need to trigger it differently if not using jQuery
-    const modalElement = document.getElementById('videoPreviewModal');
-    if (modalElement && (window as any).bootstrap) {
-      const modal = new (window as any).bootstrap.Modal(modalElement);
-      modal.show();
+  get tipoElegido(): string {
+    return this.valor('tipoSolicitud');
+  }
+
+  get motivoOk(): boolean {
+    return !!this.tipoElegido;
+  }
+
+  get asuntoOk(): boolean {
+    return this.valor('asunto').length >= this.MIN_ASUNTO;
+  }
+
+  get descOk(): boolean {
+    return this.valor('descripcion').length >= this.MIN_DESC;
+  }
+
+  get largoDesc(): number {
+    return (this.ticketForm?.get('descripcion')?.value || '').length;
+  }
+
+  get hayArchivos(): boolean {
+    return this.archivos.length > 0;
+  }
+
+  get listoParaEnviar(): boolean {
+    return this.motivoOk && this.asuntoOk && this.descOk;
+  }
+
+  // El avance refleja lo que falta de verdad, no un porcentaje arbitrario
+  get progreso(): number {
+    const hechos = [this.motivoOk, this.asuntoOk, this.descOk, this.hayArchivos];
+    return Math.round(hechos.filter(Boolean).length / hechos.length * 100);
+  }
+
+  get anilloFondo(): string {
+    const parte = this.progreso / 100;
+    const color = this.progreso >= 100 ? '#15803D' : '#6C4CE0';
+    return this.progreso >= 100
+      ? `conic-gradient(${color} 0turn, ${color} 1turn)`
+      : `conic-gradient(${color} 0turn, ${color} ${parte}turn, #ECEDF3 ${parte}turn)`;
+  }
+
+  get progresoTitulo(): string {
+    return this.listoParaEnviar ? 'Listo para enviar' : 'Falta poco';
+  }
+
+  get progresoPista(): string {
+    if (this.listoParaEnviar) {
+      return 'Puedes enviarlo cuando quieras';
     }
+    if (!this.motivoOk) {
+      return 'Elige qué necesitas';
+    }
+    return this.asuntoOk ? 'Amplía la descripción' : 'Escribe el asunto';
+  }
+
+  get placeholderDescripcion(): string {
+    if (this.tipoElegido === 'bug') {
+      return 'Qué hiciste, qué esperabas y qué salió en cambio. Si hay un mensaje de error, cópialo aquí.';
+    }
+    if (this.tipoElegido === 'idea') {
+      return 'Qué te gustaría poder hacer y en qué te ayudaría en tu día a día.';
+    }
+    return 'Describe con detalle lo que necesitas resolver.';
+  }
+
+  get pistasRedaccion(): { label: string; ok: boolean }[] {
+    const texto = this.valor('descripcion');
+    return this.pistas.map(p => ({ label: p.label, ok: p.re.test(texto) }));
+  }
+
+  get verificaciones(): { label: string; ok: boolean }[] {
+    return [
+      { ok: this.motivoOk, label: this.motivoOk ? 'Tipo de solicitud elegido' : 'Elige qué necesitas' },
+      { ok: this.asuntoOk, label: this.asuntoOk ? 'Asunto claro' : `Escribe un asunto de al menos ${this.MIN_ASUNTO} caracteres` },
+      { ok: this.descOk, label: this.descOk ? 'Descripción con detalle' : `La descripción necesita ${this.MIN_DESC} caracteres o más` },
+      { ok: this.hayArchivos, label: this.hayArchivos ? 'Con evidencia adjunta' : 'Adjunta evidencia (opcional, pero ayuda)' }
+    ];
+  }
+
+  get resumenClasificacion(): string {
+    const cat = this.categorias.find(c => c.valor === this.valor('categoria'))?.label || 'Sin categoría';
+    const sub = this.subcategorias.find(s => s.valor === this.valor('subcategoria'))?.label || 'General';
+    return `${cat} · ${sub} · ${this.eventoEsHoy ? 'hoy' : this.valor('fechaEvento')}`;
+  }
+
+  get eventoEsHoy(): boolean {
+    return this.valor('fechaEvento') === new Date().toISOString().split('T')[0];
+  }
+
+  get nombreComercio(): string {
+    return this.securityService.getCompanyInformationLogged()?.nombreComercio || '';
+  }
+
+  get inicialReporta(): string {
+    const nombre = this.valor('nombreUsuarioReporta');
+    return nombre ? nombre.trim()[0].toUpperCase() : 'U';
+  }
+
+  elegirTipo(tipo: any): void {
+    this.ticketForm.patchValue({ tipoSolicitud: tipo.key, motivo: tipo.motivo });
+  }
+
+  toggleClasificacion(): void {
+    this.clasOpen = !this.clasOpen;
   }
 
   // Reset form to initial state
@@ -397,10 +457,8 @@ export class SoporteComponent implements OnInit {
         // Reset form state
         this.ticketForm.reset();
         this.liberarVistasPrevias();
-        this.imagePreviews = [];
-        this.videoPreviews = [];
-        this.documentFiles = [];
-        
+        this.archivos = [];
+
         // Reset to defaults
         const today = new Date().toISOString().split('T')[0];
         this.ticketForm.patchValue({
@@ -409,7 +467,8 @@ export class SoporteComponent implements OnInit {
           categoria: 'funcionalidad katuq',
           subcategoria: 'general',
           motivo: 'soporte',
-          nombreUsuarioReporta: this.currentUser?.name || '',
+          tipoSolicitud: '',
+          nombreUsuarioReporta: this.currentUser?.name || this.currentUser?.email || '',
           fechaRegistro: today,
           fechaEvento: today,
           status: 'Pendiente',

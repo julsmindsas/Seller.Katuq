@@ -1,252 +1,242 @@
-<app-breadcrumb [title]="'Tickets'" [items]="['Crear Tickets']" [active_item]="'Crear Tickets'"></app-breadcrumb>
+<div class="ct-page">
 
-<div class="create-ticket-container">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="title">Crear Nuevo Ticket de Soporte</h2>
-            <p class="subtitle">Complete el formulario para enviar su solicitud de soporte</p>
-        </div>
-        <div class="card-body">
-            <!-- Progress indicator for form completion -->
-            <div class="progress-container mb-4">
-                <div class="progress">
-                    <div class="progress-bar" role="progressbar" [style.width]="getFormProgress() + '%'" 
-                         [attr.aria-valuenow]="getFormProgress()" aria-valuemin="0" aria-valuemax="100">
-                        {{getFormProgress()}}%
-                    </div>
-                </div>
-                <small class="form-text text-muted">Completando información: {{getFormProgress()}}%</small>
-            </div>
-
-            <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()" class="ticket-form">
-                <!-- Form sections for better organization -->
-                <div class="form-section">
-                    <h4 class="section-title">Información de Clasificación</h4>
-
-                    <div class="row">
-                        <!-- Categoría -->
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="categoria">Categoría</label>
-                                <div class="input-group">
-                                    <select id="categoria" formControlName="categoria" class="form-control" disabled>
-                                        <option value="funcionalidad katuq" selected>Funcionalidad Katuq</option>
-                                    </select>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text d-flex align-items-center justify-content-center" 
-                                              title="Categoría establecida por defecto">
-                                            <i class="fa fa-info-circle"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                
-                        <!-- Subcategoría -->
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="subcategoria">Subcategoría</label>
-                                <div class="input-group">
-                                    <select id="subcategoria" formControlName="subcategoria" class="form-control" disabled>
-                                        <option value="general" selected>General</option>
-                                    </select>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text d-flex align-items-center justify-content-center" 
-                                              title="Subcategoría establecida por defecto">
-                                            <i class="fa fa-info-circle"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                
-                        <!-- Motivo -->
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="motivo">Motivo</label>
-                                <select id="motivo" formControlName="motivo" class="form-control">
-                                    <option value="">Seleccione un motivo</option>
-                                    <option value="soporte">Soporte</option>
-                                    <option value="idea">Idea</option>
-                                </select>
-                                <small class="form-text text-muted">Seleccione si necesita ayuda o quiere proponer una idea</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h4 class="section-title">Información del Reporte</h4>
-                    <div class="row">
-                        <!-- Nombre del Usuario que Reporta -->
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="nombreUsuarioReporta">Nombre del Usuario que Reporta <span class="required-asterisk">*</span></label>
-                                <input id="nombreUsuarioReporta" formControlName="nombreUsuarioReporta" type="text" 
-                                      class="form-control" [ngClass]="{'is-invalid': isFieldInvalid('nombreUsuarioReporta')}" required 
-                                      placeholder="Ej: Juan Pérez" />
-                                <div *ngIf="isFieldInvalid('nombreUsuarioReporta')" class="invalid-feedback">
-                                    El nombre es obligatorio.
-                                </div>
-                            </div>
-                        </div>
-                
-                        <!-- Fecha del Evento -->
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="fechaEvento">Fecha del Evento <span class="required-asterisk">*</span></label>
-                                <input id="fechaEvento" formControlName="fechaEvento" type="date" 
-                                      class="form-control" [ngClass]="{'is-invalid': isFieldInvalid('fechaEvento')}" required />
-                                <div *ngIf="isFieldInvalid('fechaEvento')" class="invalid-feedback">
-                                    Fecha del evento es obligatoria.
-                                </div>
-                                <small class="form-text text-muted">Indique cuándo ocurrió el problema</small>
-                            </div>
-                        </div>
-                    </div>
-                
-                    <!-- Descripción Detallada -->
-                    <div class="form-group">
-                        <label for="asunto">Descripción Detallada <span class="required-asterisk">*</span></label>
-                        <textarea id="asunto" formControlName="asunto" rows="4" 
-                                 [ngClass]="{'is-invalid': isFieldInvalid('asunto')}" 
-                                 class="form-control" required 
-                                 placeholder="Describa en detalle el problema que experimenta o la idea que quiere compartir..."></textarea>
-                        <div *ngIf="isFieldInvalid('asunto')" class="invalid-feedback">
-                            La descripción es obligatoria.
-                        </div>
-                        <small class="form-text text-muted">
-                            Proporcione la mayor cantidad de detalles posibles para ayudarnos a entender su solicitud
-                        </small>
-                    </div>
-                </div>
-                
-                <div class="form-section">
-                    <h4 class="section-title">Archivos Adjuntos</h4>
-                    <!-- Adjuntar Imágenes y Videos -->
-                    <div class="form-group file-upload-area">
-                        <label for="adjuntos" class="file-upload-label" 
-                              (dragover)="$event.preventDefault()" 
-                              (drop)="onFileDrop($event)">
-                            <div class="upload-zone">
-                                <i class="fa fa-cloud-upload-alt fa-3x"></i>
-                                <span class="label-text">Arrastre archivos aquí o haga clic para seleccionar</span>
-                                <div class="upload-button">
-                                    <i class="fa fa-upload"></i> Seleccionar Archivos
-                                </div>
-                                <small>Formatos aceptados: imágenes (JPG, PNG, GIF), videos (MP4, MOV, AVI) y documentos (PDF, Word, Excel, PowerPoint, TXT, CSV, ZIP) - Máximo 50MB por archivo</small>
-                            </div>
-                        </label>
-                        <input type="file" id="adjuntos" (change)="onFileChange($event)" multiple class="custom-file-input" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" />
-                    </div>
-                
-                    <!-- Vista Previa de Imágenes -->
-                    <div class="image-previews" *ngIf="imagePreviews.length > 0">
-                        <h5>Vista previa de las imágenes ({{imagePreviews.length}})</h5>
-                        <div class="preview-container">
-                            <div class="preview" *ngFor="let preview of imagePreviews; let i = index">
-                                <img [src]="preview.url" alt="Vista previa" class="preview-image"
-                                     (click)="openImagePreview(preview.url)" />
-                                <button type="button" class="remove-image-btn" (click)="removeImage(i)" title="Eliminar imagen">
-                                    &times;
-                                </button>
-                                <span class="image-number">{{i+1}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Vista Previa de Videos -->
-                    <div class="video-previews" *ngIf="videoPreviews.length > 0">
-                        <h5>Vista previa de los videos ({{videoPreviews.length}})</h5>
-                        <div class="preview-container">
-                            <div class="preview video-preview" *ngFor="let preview of videoPreviews; let i = index">
-                                <img *ngIf="preview.thumbnail; else sinMiniatura" [src]="preview.thumbnail" alt="Miniatura de video" class="video-thumbnail" />
-                                <ng-template #sinMiniatura>
-                                    <i class="fa fa-file-video-o fa-3x video-placeholder"></i>
-                                </ng-template>
-                                <span class="play-icon">&#9658;</span>
-                                <button
-                                    type="button"
-                                    class="remove-video-btn"
-                                    (click)="removeVideo(preview)"
-                                    title="Eliminar video"
-                                    aria-label="Eliminar video"
-                                >
-                                    X
-                                </button>
-                                <span class="video-number">{{i+1}}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Documentos adjuntos -->
-                    <div class="document-previews" *ngIf="documentFiles.length > 0">
-                        <h5>Documentos ({{documentFiles.length}})</h5>
-                        <ul class="document-list">
-                            <li class="document-item" *ngFor="let doc of documentFiles; let i = index">
-                                <i class="fa fa-file-o"></i>
-                                <span class="document-name" [title]="doc.name">{{doc.name}}</span>
-                                <span class="document-size">{{formatearTamano(doc.size)}}</span>
-                                <button type="button" class="remove-document-btn" (click)="removeDocument(i)" title="Quitar documento" aria-label="Quitar documento">&times;</button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            
-                <div class="form-help-text">
-                    <span class="required-note"><span class="required-asterisk">*</span> indica campos obligatorios</span>
-                </div>
-            
-                <div class="form-actions mt-4">
-                    <button type="button" class="btn btn-outline-secondary mr-2" (click)="resetForm()">
-                        <i class="fa fa-undo"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
-                        <i class="fa fa-paper-plane" *ngIf="!isSubmitting"></i>
-                        <span *ngIf="!isSubmitting">Crear Ticket</span>
-                        <span *ngIf="isSubmitting">
-                            <i class="fa fa-spinner fa-spin"></i> Procesando...
-                        </span>
-                    </button>
-                </div>
-            </form>
-        </div>
+  <!-- ===== Ruta, título y avance ===== -->
+  <div class="ct-head">
+    <div class="ct-head-text">
+      <div class="ct-crumbs">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+        <a [routerLink]="['/misTickets']">Tickets</a>
+        <span class="ct-crumb-sep">/</span>
+        <span class="ct-crumb-actual">Crear ticket</span>
+      </div>
+      <h1 class="ct-title">Crear ticket de soporte</h1>
+      <p class="ct-subtitle">Cuéntanos qué pasó. Mientras más claro sea, más rápido lo resolvemos.</p>
     </div>
-</div>
 
-<!-- Modal para preview de imágenes -->
-<div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="imagePreviewModalLabel">Vista ampliada</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body text-center">
-                <img [src]="selectedPreviewImage" class="img-fluid" alt="Vista ampliada">
-            </div>
-        </div>
+    <div class="ct-progress">
+      <span class="ct-ring" [ngStyle]="{'background': anilloFondo}">
+        <span class="ct-ring-in" [ngStyle]="{'color': progreso >= 100 ? '#15803D' : '#6C4CE0'}">{{ progreso }}%</span>
+      </span>
+      <div class="ct-progress-text">
+        <div class="ct-progress-title">{{ progresoTitulo }}</div>
+        <div class="ct-progress-hint">{{ progresoPista }}</div>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Modal para preview de videos -->
-<div class="modal fade" id="videoPreviewModal" tabindex="-1" role="dialog" aria-labelledby="videoPreviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="videoPreviewModalLabel">Vista ampliada</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body text-center">
-                <video class="img-fluid" controls>
-                    <source [src]="selectedPreviewVideo.url" [type]="selectedPreviewVideo.type">
-                    Tu navegador no soporta el elemento de video.
-                </video>
-            </div>
+  <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()" class="ct-grid">
+
+    <div class="ct-main">
+
+      <!-- ===== 1. Qué necesitas ===== -->
+      <section class="ct-card">
+        <div class="ct-card-head">
+          <span class="ct-step" [class.is-ok]="motivoOk">
+            <svg *ngIf="motivoOk; else paso1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <ng-template #paso1>1</ng-template>
+          </span>
+          <div class="ct-card-title">
+            <div class="ct-card-name">¿Qué necesitas?</div>
+            <div class="ct-card-hint">Esto define a qué equipo llega tu ticket.</div>
+          </div>
         </div>
+
+        <div class="ct-tipos">
+          <button type="button" class="ct-tipo" *ngFor="let tipo of tiposSolicitud"
+            [class.is-on]="tipoElegido === tipo.key" (click)="elegirTipo(tipo)">
+            <span class="ct-tipo-icon"
+              [ngStyle]="{'background': tipoElegido === tipo.key ? tipo.iconBg : '#F7F8FC', 'color': tipoElegido === tipo.key ? tipo.iconColor : '#8A90A2'}">
+              <svg *ngIf="tipo.key === 'bug'" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <svg *ngIf="tipo.key === 'ayuda'" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <svg *ngIf="tipo.key === 'idea'" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"></path></svg>
+            </span>
+            <span class="ct-tipo-text">
+              <span class="ct-tipo-label">{{ tipo.label }}</span>
+              <span class="ct-tipo-hint">{{ tipo.hint }}</span>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== 2. Qué pasó ===== -->
+      <section class="ct-card">
+        <div class="ct-card-head">
+          <span class="ct-step" [class.is-ok]="asuntoOk && descOk">
+            <svg *ngIf="asuntoOk && descOk; else paso2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <ng-template #paso2>2</ng-template>
+          </span>
+          <div class="ct-card-title">
+            <div class="ct-card-name">Cuéntanos qué pasó <span class="ct-req">*</span></div>
+            <div class="ct-card-hint">Un título corto y el detalle de lo que ocurrió.</div>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="asunto">Asunto</label>
+          <input id="asunto" type="text" formControlName="asunto" class="ct-input" [class.is-ok]="asuntoOk"
+            placeholder="Ej.: El total del ticket no cuadra al aplicar un cupón" />
+        </div>
+
+        <div class="ct-field">
+          <div class="ct-label-row">
+            <label class="ct-label" for="descripcion">Descripción</label>
+            <span class="ct-counter" [class.is-ok]="descOk">{{ largoDesc }} / {{ MIN_DESC }} mín.</span>
+          </div>
+          <textarea id="descripcion" formControlName="descripcion" rows="5" class="ct-textarea" [class.is-ok]="descOk"
+            [placeholder]="placeholderDescripcion"></textarea>
+
+          <div class="ct-tips">
+            <span class="ct-tip" *ngFor="let pista of pistasRedaccion" [class.is-ok]="pista.ok">
+              <svg *ngIf="pista.ok; else pendiente" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <ng-template #pendiente>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="12" cy="12" r="9"></circle></svg>
+              </ng-template>
+              {{ pista.label }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 3. Evidencia ===== -->
+      <section class="ct-card">
+        <div class="ct-card-head">
+          <span class="ct-step is-plain">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+          </span>
+          <div class="ct-card-title">
+            <div class="ct-card-name">Adjunta evidencia <span class="ct-badge">OPCIONAL</span></div>
+            <div class="ct-card-hint">Una captura o un video corto resuelve el ticket mucho más rápido.</div>
+          </div>
+        </div>
+
+        <label class="ct-drop" [class.is-dragging]="isDragging"
+          (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onFileDrop($event)">
+          <span class="ct-drop-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          </span>
+          <span class="ct-drop-title">Arrastra archivos o haz clic para elegir</span>
+          <span class="ct-drop-hint">Imágenes, video o documentos · hasta 50 MB cada uno</span>
+          <input type="file" multiple (change)="onFileChange($event)" hidden
+            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" />
+        </label>
+
+        <div class="ct-files" *ngIf="hayArchivos">
+          <div class="ct-file" *ngFor="let archivo of archivos; let i = index">
+            <span class="ct-file-icon" [ngClass]="'is-' + archivo.tipo" (click)="abrirArchivo(archivo)">
+              <img *ngIf="archivo.tipo === 'imagen'" [src]="archivo.url" [alt]="archivo.file.name" />
+              <svg *ngIf="archivo.tipo === 'video'" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+              <svg *ngIf="archivo.tipo === 'documento'" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            </span>
+            <span class="ct-file-text">
+              <span class="ct-file-name" [title]="archivo.file.name">{{ archivo.file.name }}</span>
+              <span class="ct-file-size">{{ formatearTamano(archivo.file.size) }}</span>
+            </span>
+            <button type="button" class="ct-file-del" title="Quitar" aria-label="Quitar archivo" (click)="quitarArchivo(i)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 4. Clasificación ===== -->
+      <section class="ct-card is-flush">
+        <button type="button" class="ct-collapse" (click)="toggleClasificacion()">
+          <span class="ct-step is-plain">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          </span>
+          <span class="ct-card-title">
+            <span class="ct-card-name">Clasificación</span>
+            <span class="ct-card-hint">{{ resumenClasificacion }}</span>
+          </span>
+          <svg class="ct-chevron" [class.is-open]="clasOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+
+        <div class="ct-collapse-body" *ngIf="clasOpen">
+          <div class="ct-field">
+            <label class="ct-label" for="categoria">Categoría</label>
+            <select id="categoria" formControlName="categoria" class="ct-input">
+              <option *ngFor="let cat of categorias" [value]="cat.valor">{{ cat.label }}</option>
+            </select>
+          </div>
+
+          <div class="ct-field">
+            <label class="ct-label" for="subcategoria">Subcategoría</label>
+            <select id="subcategoria" formControlName="subcategoria" class="ct-input">
+              <option *ngFor="let sub of subcategorias" [value]="sub.valor">{{ sub.label }}</option>
+            </select>
+          </div>
+
+          <div class="ct-field">
+            <label class="ct-label" for="fechaEvento">Cuándo ocurrió</label>
+            <div class="ct-date">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#626878" stroke-width="2.3" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
+              <input id="fechaEvento" type="date" formControlName="fechaEvento" />
+              <span class="ct-today" *ngIf="eventoEsHoy">HOY</span>
+            </div>
+          </div>
+
+          <div class="ct-field">
+            <label class="ct-label">Prioridad</label>
+            <div class="ct-prioridades">
+              <button type="button" *ngFor="let p of prioridades" [class.is-on]="selectedPriority === p.valor"
+                (click)="setPriority(p.valor)">{{ p.label }}</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
+
+    <!-- ===== Lateral: quién reporta y envío ===== -->
+    <aside class="ct-side">
+
+      <div class="ct-card ct-side-card">
+        <div class="ct-side-title">Reporta</div>
+        <div class="ct-reporter">
+          <span class="ct-avatar">{{ inicialReporta }}</span>
+          <span class="ct-reporter-text">
+            <span class="ct-reporter-name">{{ ticketForm.get('nombreUsuarioReporta')?.value || 'Sin nombre' }}</span>
+            <span class="ct-reporter-shop">{{ nombreComercio }}</span>
+          </span>
+        </div>
+        <div class="ct-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+          <span>Te avisamos en la campana y verás cada respuesta en Mis tickets.</span>
+        </div>
+      </div>
+
+      <div class="ct-check" [class.is-ok]="listoParaEnviar">
+        <div class="ct-check-head">
+          <span class="ct-check-icon">
+            <svg *ngIf="listoParaEnviar; else faltaIcono" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <ng-template #faltaIcono>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            </ng-template>
+          </span>
+          <span class="ct-check-title">{{ listoParaEnviar ? 'Todo listo' : 'Falta para enviar' }}</span>
+        </div>
+        <div class="ct-check-list">
+          <div class="ct-check-row" *ngFor="let item of verificaciones" [class.is-ok]="item.ok">
+            <svg *ngIf="item.ok; else pendienteCheck" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <ng-template #pendienteCheck>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="12" cy="12" r="9"></circle></svg>
+            </ng-template>
+            <span>{{ item.label }}</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="ct-send" [disabled]="!listoParaEnviar || isSubmitting">
+        <svg *ngIf="!isSubmitting" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+        {{ isSubmitting ? 'Enviando…' : 'Enviar ticket' }}
+      </button>
+
+      <button type="button" class="ct-cancel" (click)="cancelForm()">Cancelar</button>
+
+      <div class="ct-foot-note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>Podrás seguir el estado del ticket en Mis tickets. Los reportes de error se atienden primero.</span>
+      </div>
+    </aside>
+  </form>
 </div>
