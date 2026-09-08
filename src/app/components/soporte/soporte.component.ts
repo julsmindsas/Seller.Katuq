@@ -22,9 +22,9 @@ export class SoporteComponent implements OnInit {
   subcategories: any[] = [];
   canales: any;
   fileBase64String: any;
-  // Imágenes elegidas, en el mismo orden que imagePreviews (índice a índice)
-  imageFiles: File[] = [];
-  imagePreviews: any[] = [];
+  // Cada imagen elegida viaja con su miniatura (objectURL) en el mismo objeto,
+  // así el orden y la eliminación son siempre consistentes
+  imagePreviews: { file: File; url: string }[] = [];
   videoPreviews: any[] = [];
   // Documentos (PDF, Office, texto, comprimidos)
   documentFiles: File[] = [];
@@ -201,7 +201,7 @@ export class SoporteComponent implements OnInit {
   // Todo lo que se subirá a Storage al enviar: imágenes y videos, en ese orden
   get selectedFiles(): File[] {
     return [
-      ...this.imageFiles,
+      ...this.imagePreviews.map(p => p.file),
       ...this.videoPreviews.map(v => v.file as File),
       ...this.documentFiles
     ];
@@ -238,12 +238,8 @@ export class SoporteComponent implements OnInit {
       }
 
       if (esImagen) {
-        this.imageFiles.push(file);
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-          this.imagePreviews.push(e.target.result);
-        };
-        reader.readAsDataURL(file);
+        // objectURL es síncrono: la miniatura queda en la misma posición que el archivo
+        this.imagePreviews.push({ file, url: URL.createObjectURL(file) });
       } else if (esVideo) {
         this.generateVideoThumbnail(file).then(thumbnail => {
           this.videoPreviews.push({
@@ -268,25 +264,56 @@ export class SoporteComponent implements OnInit {
     }
   }
 
+  // Captura un fotograma real: se salta a 0.1s tras cargar metadatos y se dibuja en 'seeked'.
+  // Si el navegador no puede decodificar el video, resuelve '' y la plantilla muestra un ícono.
   generateVideoThumbnail(file: File): Promise<string> {
     return new Promise((resolve) => {
       const video = document.createElement('video');
-      video.src = URL.createObjectURL(file);
-      video.currentTime = 0.1;
+      const objectUrl = URL.createObjectURL(file);
+      let resuelto = false;
+
+      const terminar = (thumbnail: string) => {
+        if (resuelto) return;
+        resuelto = true;
+        URL.revokeObjectURL(objectUrl);
+        resolve(thumbnail);
+      };
+
       video.muted = true;
       video.playsInline = true;
-      video.addEventListener('loadeddata', () => {
+      video.preload = 'metadata';
+
+      video.addEventListener('loadedmetadata', () => {
+        // Algunos videos muy cortos no permiten 0.1s; usar la mitad si hace falta
+        video.currentTime = Math.min(0.1, (video.duration || 1) / 2);
+      });
+
+      video.addEventListener('seeked', () => {
         const canvas = document.createElement('canvas');
         canvas.width = 150;
         canvas.height = 150;
         const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, 150, 150);
-          resolve(canvas.toDataURL('image/png'));
-        } else {
-          resolve('');
+        if (!ctx || !video.videoWidth || !video.videoHeight) {
+          terminar('');
+          return;
+        }
+        // Recorte centrado para no deformar el fotograma
+        const lado = Math.min(video.videoWidth, video.videoHeight);
+        const sx = (video.videoWidth - lado) / 2;
+        const sy = (video.videoHeight - lado) / 2;
+        ctx.drawImage(video, sx, sy, lado, lado, 0, 0, 150, 150);
+        try {
+          terminar(canvas.toDataURL('image/jpeg', 0.8));
+        } catch {
+          terminar('');
         }
       });
+
+      video.addEventListener('error', () => terminar(''));
+      // Red de seguridad si nunca llega 'seeked'
+      setTimeout(() => terminar(''), 8000);
+
+      video.src = objectUrl;
     });
   }
 
@@ -298,11 +325,10 @@ export class SoporteComponent implements OnInit {
     }
   }
 
-  removeImage(preview: string): void {
-    const index = this.imagePreviews.indexOf(preview);
-    if (index !== -1) {
-      this.imagePreviews.splice(index, 1);
-      this.imageFiles.splice(index, 1);
+  removeImage(index: number): void {
+    const [quitada] = this.imagePreviews.splice(index, 1);
+    if (quitada) {
+      URL.revokeObjectURL(quitada.url);
     }
   }
 
@@ -310,7 +336,15 @@ export class SoporteComponent implements OnInit {
     const index = this.videoPreviews.indexOf(preview);
     if (index !== -1) {
       this.videoPreviews.splice(index, 1);
+      if (preview?.url) {
+        URL.revokeObjectURL(preview.url);
+      }
     }
+  }
+
+  private liberarVistasPrevias(): void {
+    this.imagePreviews.forEach(p => URL.revokeObjectURL(p.url));
+    this.videoPreviews.forEach(v => v?.url && URL.revokeObjectURL(v.url));
   }
 
   removeDocument(index: number): void {
@@ -323,11 +357,16 @@ export class SoporteComponent implements OnInit {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-  // Open image preview modal
+  // Open image preview modal (mismo mecanismo que el de video); si no hay Bootstrap, pestaña nueva
   openImagePreview(imageUrl: string): void {
     this.selectedPreviewImage = imageUrl;
-    // If using jQuery with Bootstrap modal:
-    // $('#imagePreviewModal').modal('show');
+    const modalElement = document.getElementById('imagePreviewModal');
+    if (modalElement && (window as any).bootstrap) {
+      const modal = new (window as any).bootstrap.Modal(modalElement);
+      modal.show();
+    } else {
+      window.open(imageUrl, '_blank');
+    }
   }
 
   // Open video preview modal
@@ -357,7 +396,7 @@ export class SoporteComponent implements OnInit {
       if (result.isConfirmed) {
         // Reset form state
         this.ticketForm.reset();
-        this.imageFiles = [];
+        this.liberarVistasPrevias();
         this.imagePreviews = [];
         this.videoPreviews = [];
         this.documentFiles = [];
