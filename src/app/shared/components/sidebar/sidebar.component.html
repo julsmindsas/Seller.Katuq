@@ -195,6 +195,7 @@
         
         <!-- Título de sección -->
         <button class="section-header"
+                [id]="'section-header-' + sectionIndex"
                 *ngIf="section.isHeaderSection && !isCompactMode && (!collapseMenu || isTemporarilyExpanded)"
                 (click)="toggleSection(section)"
                 [class.expanded]="!section.collapsed"
@@ -274,11 +275,12 @@
             <!-- Item con hijos (Submenu) -->
             <button *ngIf="item.children" 
                     class="menu-link submenu-toggle"
+                    [id]="getMenuKey(item) + '-toggle'"
                     [class.collapsed-link]="collapseMenu && !isTemporarilyExpanded"
                     (click)="toggletNavActive(item, $event)"
-                    [class.active]="item.active && !collapseMenu"
-                    [attr.aria-expanded]="item.active && !collapseMenu"
-                    [attr.aria-controls]="!collapseMenu ? 'submenu-' + item.title?.replace(' ', '-') : null"
+                    [class.active]="item.active && (!collapseMenu || isTemporarilyExpanded)"
+                    [attr.aria-expanded]="item.active && (!collapseMenu || isTemporarilyExpanded)"
+                    [attr.aria-controls]="(!collapseMenu || isTemporarilyExpanded) ? getMenuKey(item) : null"
                     [attr.title]="collapseMenu ? (item.title | translate) : ''"
                     role="menuitem"
                     [attr.aria-haspopup]="true">
@@ -304,11 +306,11 @@
             <!-- Submenú -->
             <ul class="submenu"
                 *ngIf="item.children && (!collapseMenu || isTemporarilyExpanded)"
-                [id]="'submenu-' + item.title?.replace(' ', '-')"
+                [id]="getMenuKey(item)"
                 [class.expanded]="item.active"
                 [class.compact-submenu]="isCompactMode"
                 role="menu"
-                [attr.aria-labelledby]="item.title">
+                [attr.aria-labelledby]="getMenuKey(item) + '-toggle'">
               
               <li class="submenu-item" 
                   *ngFor="let child of item.children"

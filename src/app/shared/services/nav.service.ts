@@ -26,7 +26,7 @@ export interface Menu {
   providedIn: "root",
 })
 export class NavService implements OnDestroy {
-  private unsubscriber: Subject<any> = new Subject();
+  private unsubscriber = new Subject<void>();
   public screenWidth: BehaviorSubject<number> = new BehaviorSubject(
     window.innerWidth,
   );
@@ -97,13 +97,14 @@ export class NavService implements OnDestroy {
           this.megaMenuColapse = true;
         }
       });
-    if (window.innerWidth < 991) {
-      this.router.events.subscribe((event) => {
+    // Evaluar el ancho al navegar: una sesión iniciada en móvil puede pasar a escritorio.
+    this.router.events.pipe(takeUntil(this.unsubscriber)).subscribe(() => {
+      if (window.innerWidth < 992) {
         this.collapseSidebar = true;
         this.megaMenu = false;
         this.levelMenu = false;
-      });
-    }
+      }
+    });
     this.ALLMENUITEMS = this.utils.deepClone(this.MENUITEMS);
     this.filterMenuItemsByAuthorization();
   }
@@ -117,6 +118,7 @@ export class NavService implements OnDestroy {
   }
 
   ngOnDestroy() {
+    this.unsubscriber.next();
     this.unsubscriber.complete();
   }
 

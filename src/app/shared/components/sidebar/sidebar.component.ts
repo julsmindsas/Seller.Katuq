@@ -216,8 +216,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Nueva propiedad para las secciones colapsables
   public sections: SidebarSection[] = [];
 
-  // ACCORDION: Set centralizado para trackear menús abiertos (soluciona problema de referencias)
-  public openMenus: Set<string> = new Set();
+  // La identidad del nodo evita colisiones entre títulos repetidos, como Logística.
+  private menuKeys = new WeakMap<Menu, string>();
+  private nextMenuKey = 0;
 
   // Propiedades para notificaciones
   public unreadNotificationCount: number = 0;
@@ -1004,63 +1005,37 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
 
-  // ==================== ACCORDION CON SET CENTRALIZADO ====================
+  // ==================== ESTADO DEL ACORDEÓN ====================
 
   /**
    * Genera una clave única para identificar un item del menú
    */
   getMenuKey(item: Menu): string {
-    return item.title || item.path || '';
+    if (!this.menuKeys.has(item)) {
+      this.menuKeys.set(item, `sidebar-menu-${this.nextMenuKey++}`);
+    }
+    return this.menuKeys.get(item);
   }
 
   /**
-   * Verifica si un menú está abierto usando el Set centralizado
+   * Usa el mismo estado que renderiza la plantilla, también tras navegar o cambiar de tamaño.
    */
   isMenuOpen(item: Menu): boolean {
-    return this.openMenus.has(this.getMenuKey(item));
+    return !!item.active;
   }
 
   /**
    * Cierra TODOS los menús de primer nivel (ACCORDION GLOBAL)
    */
   private closeAllFirstLevelMenus(): void {
-    // Limpiar el Set y también item.active para que la UI se actualice
     this.sections.forEach(section => {
       section.items.forEach(menuItem => {
         if (menuItem.children) {
-          const key = this.getMenuKey(menuItem);
-          this.openMenus.delete(key);
-          menuItem.active = false; // Actualizar estado visual
-          // También cerrar submenús
-          this.closeChildrenInSet(menuItem);
-          this.closeChildrenActive(menuItem);
+          menuItem.active = false;
+          this.closeChildrenRecursive(menuItem);
         }
       });
     });
-  }
-
-  /**
-   * Cierra los hijos de un item (propiedad active)
-   */
-  private closeChildrenActive(item: Menu): void {
-    if (item.children) {
-      item.children.forEach(child => {
-        child.active = false;
-        this.closeChildrenActive(child);
-      });
-    }
-  }
-
-  /**
-   * Cierra los hijos de un item en el Set
-   */
-  private closeChildrenInSet(item: Menu): void {
-    if (item.children) {
-      item.children.forEach(child => {
-        this.openMenus.delete(this.getMenuKey(child));
-        this.closeChildrenInSet(child);
-      });
-    }
   }
 
   // Click Toggle menu - Para submenús dentro de items
@@ -1070,8 +1045,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       event.preventDefault();
     }
 
-    const menuKey = this.getMenuKey(item);
-    const isCurrentlyOpen = this.openMenus.has(menuKey);
+    const isCurrentlyOpen = this.isMenuOpen(item);
     const isFirstLevel = this.isFirstLevelItem(item);
 
     // En estado colapsado para desktop (sin expansión temporal), mostrar submenú flotante
@@ -1085,7 +1059,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (!isCurrentlyOpen && isFirstLevel) {
         this.closeAllFirstLevelMenus();
       }
-      this.openMenus.add(menuKey);
       item.active = true;
       this.cdr.detectChanges();
       return;
@@ -1106,13 +1079,11 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.closeSiblings(item);
     }
 
-    // Toggle del estado en el Set
+    // Alternar el estado que usa la vista.
     if (isCurrentlyOpen) {
-      this.openMenus.delete(menuKey);
-      this.closeChildrenInSet(item);
+      this.closeChildrenRecursive(item);
       item.active = false;
     } else {
-      this.openMenus.add(menuKey);
       item.active = true;
     }
 
@@ -1143,7 +1114,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   private closeChildrenRecursive(item: Menu): void {
     if (item.children) {
       item.children.forEach(child => {
-        this.openMenus.delete(this.getMenuKey(child));
         child.active = false;
         this.closeChildrenRecursive(child);
       });
@@ -1153,7 +1123,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ACCORDION GLOBAL: Cerrar hermanos del item en el mismo nivel (TODAS las secciones)
   private closeSiblings(item: Menu): void {
-    const itemTitle = item.title;
     const isFirstLevel = this.isFirstLevelItem(item);
 
     // Si es de primer nivel, cerrar TODOS los otros items de primer nivel en TODAS las secciones
@@ -1161,8 +1130,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       // Cerrar directamente en sections (la vista que se renderiza)
       this.sections.forEach(section => {
         section.items.forEach(menuItem => {
-          if (menuItem.title && menuItem.title !== itemTitle && menuItem.active && menuItem.children) {
-            this.openMenus.delete(this.getMenuKey(menuItem));
+          if (menuItem !== item && menuItem.active && menuItem.children) {
             menuItem.active = false;
             this.closeChildrenRecursive(menuItem);
           }
@@ -1172,8 +1140,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       // También cerrar en originalMenuItems para mantener sincronizado
       const originalMenuItems = this.navServices.getMenuItems();
       originalMenuItems.forEach(menuItem => {
-        if (menuItem.title && menuItem.title !== itemTitle && menuItem.active && menuItem.children) {
-          this.openMenus.delete(this.getMenuKey(menuItem));
+        if (menuItem !== item && menuItem.active && menuItem.children) {
           menuItem.active = false;
           this.closeChildrenRecursive(menuItem);
         }
@@ -1200,13 +1167,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Helper para cerrar hermanos dentro de un array de hijos
   private closeSiblingsInChildren(children: Menu[], targetItem: Menu): void {
     // Verificar si el targetItem está en este nivel
-    const isInThisLevel = children.some(child => child === targetItem || child.title === targetItem.title);
+    const isInThisLevel = children.includes(targetItem);
 
     if (isInThisLevel) {
       // Cerrar todos los hermanos excepto el target
       children.forEach(child => {
-        if (child !== targetItem && child.title !== targetItem.title && child.active) {
-          this.openMenus.delete(this.getMenuKey(child));
+        if (child !== targetItem && child.active) {
           child.active = false;
           this.closeChildrenRecursive(child);
         }
@@ -1224,7 +1190,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Verificar si un item es de primer nivel (está directamente en sections.items)
   private isFirstLevelItem(item: Menu): boolean {
     const result = this.sections.some(section =>
-      section.items.some(menuItem => menuItem === item || menuItem.title === item.title)
+      section.items.includes(item)
     );
     return result;
   }
