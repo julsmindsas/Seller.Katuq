@@ -180,10 +180,10 @@
 
         <!-- Comments Section -->
         <div class="ticket-section comments-section">
-          <h4><i class="fa fa-comments"></i> Comentarios ({{idea.ticketComments?.length || 0}})</h4>
+          <h4><i class="fa fa-comments"></i> Comentarios ({{comentariosVisibles(idea).length}})</h4>
           
-          <div class="comments-timeline" *ngIf="idea.ticketComments?.length">
-            <div class="comment-item" *ngFor="let comment of idea.ticketComments">
+          <div class="comments-timeline" *ngIf="comentariosVisibles(idea).length">
+            <div class="comment-item" *ngFor="let comment of comentariosVisibles(idea)">
               <div class="comment-avatar" [ngStyle]="{'background-color': comment.autor.color}">
                 {{comment.autor.iniciales}}
               </div>
@@ -209,7 +209,7 @@
           </div>
           
           <!-- No Comments Message -->
-          <div class="no-comments-message" *ngIf="!idea.ticketComments?.length">
+          <div class="no-comments-message" *ngIf="!comentariosVisibles(idea).length">
             <p>No hay comentarios para esta idea. Sé el primero en comentar.</p>
           </div>
           

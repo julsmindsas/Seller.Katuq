@@ -22,9 +22,15 @@ export class SoporteComponent implements OnInit {
   subcategories: any[] = [];
   canales: any;
   fileBase64String: any;
-  selectedFiles: unknown[] = [];
-  imagePreviews: any[] = [];
+  // Cada imagen elegida viaja con su miniatura (objectURL) en el mismo objeto,
+  // así el orden y la eliminación son siempre consistentes
+  imagePreviews: { file: File; url: string }[] = [];
   videoPreviews: any[] = [];
+  // Documentos (PDF, Office, texto, comprimidos)
+  documentFiles: File[] = [];
+  // Límite prometido en la interfaz ("Máximo 50MB por archivo")
+  readonly MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+  readonly DOC_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar'];
   isSubmitting: boolean = false;
   isDragging: boolean = false;
   selectedPriority: string = 'media'; // Default priority
@@ -192,10 +198,49 @@ export class SoporteComponent implements OnInit {
     }
   }
 
+  // Todo lo que se subirá a Storage al enviar: imágenes y videos, en ese orden
+  get selectedFiles(): File[] {
+    return [
+      ...this.imagePreviews.map(p => p.file),
+      ...this.videoPreviews.map(v => v.file as File),
+      ...this.documentFiles
+    ];
+  }
+
+  private extensionDe(file: File): string {
+    const partes = file.name.split('.');
+    return partes.length > 1 ? partes.pop()!.toLowerCase() : '';
+  }
+
+  private esDocumentoPermitido(file: File): boolean {
+    return this.DOC_EXTENSIONS.includes(this.extensionDe(file));
+  }
+
   handleFiles(files: FileList): void {
-    if (files && files.length > 0) {
-      const validFiles = Array.from(files).filter(file => file.type.startsWith('video/'));
-      for (const file of validFiles) {
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const rechazados: string[] = [];
+
+    for (const file of Array.from(files)) {
+      const esImagen = file.type.startsWith('image/');
+      const esVideo = file.type.startsWith('video/');
+      const esDocumento = !esImagen && !esVideo && this.esDocumentoPermitido(file);
+
+      if (!esImagen && !esVideo && !esDocumento) {
+        rechazados.push(`${file.name} (formato no permitido)`);
+        continue;
+      }
+      if (file.size > this.MAX_FILE_SIZE_BYTES) {
+        rechazados.push(`${file.name} (supera 50MB)`);
+        continue;
+      }
+
+      if (esImagen) {
+        // objectURL es síncrono: la miniatura queda en la misma posición que el archivo
+        this.imagePreviews.push({ file, url: URL.createObjectURL(file) });
+      } else if (esVideo) {
         this.generateVideoThumbnail(file).then(thumbnail => {
           this.videoPreviews.push({
             url: URL.createObjectURL(file),
@@ -204,48 +249,86 @@ export class SoporteComponent implements OnInit {
             thumbnail
           });
         });
+      } else {
+        this.documentFiles.push(file);
       }
+    }
+
+    if (rechazados.length > 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Algunos archivos no se adjuntaron',
+        html: rechazados.map(r => `<div>${r}</div>`).join(''),
+        confirmButtonText: 'Entendido'
+      });
     }
   }
 
+  // Captura un fotograma real: se salta a 0.1s tras cargar metadatos y se dibuja en 'seeked'.
+  // Si el navegador no puede decodificar el video, resuelve '' y la plantilla muestra un ícono.
   generateVideoThumbnail(file: File): Promise<string> {
     return new Promise((resolve) => {
       const video = document.createElement('video');
-      video.src = URL.createObjectURL(file);
-      video.currentTime = 0.1;
+      const objectUrl = URL.createObjectURL(file);
+      let resuelto = false;
+
+      const terminar = (thumbnail: string) => {
+        if (resuelto) return;
+        resuelto = true;
+        URL.revokeObjectURL(objectUrl);
+        resolve(thumbnail);
+      };
+
       video.muted = true;
       video.playsInline = true;
-      video.addEventListener('loadeddata', () => {
+      video.preload = 'metadata';
+
+      video.addEventListener('loadedmetadata', () => {
+        // Algunos videos muy cortos no permiten 0.1s; usar la mitad si hace falta
+        video.currentTime = Math.min(0.1, (video.duration || 1) / 2);
+      });
+
+      video.addEventListener('seeked', () => {
         const canvas = document.createElement('canvas');
         canvas.width = 150;
         canvas.height = 150;
         const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, 150, 150);
-          resolve(canvas.toDataURL('image/png'));
-        } else {
-          resolve('');
+        if (!ctx || !video.videoWidth || !video.videoHeight) {
+          terminar('');
+          return;
+        }
+        // Recorte centrado para no deformar el fotograma
+        const lado = Math.min(video.videoWidth, video.videoHeight);
+        const sx = (video.videoWidth - lado) / 2;
+        const sy = (video.videoHeight - lado) / 2;
+        ctx.drawImage(video, sx, sy, lado, lado, 0, 0, 150, 150);
+        try {
+          terminar(canvas.toDataURL('image/jpeg', 0.8));
+        } catch {
+          terminar('');
         }
       });
+
+      video.addEventListener('error', () => terminar(''));
+      // Red de seguridad si nunca llega 'seeked'
+      setTimeout(() => terminar(''), 8000);
+
+      video.src = objectUrl;
     });
   }
 
   onFileChange(event: any): void {
     if (event.target.files) {
       this.handleFiles(event.target.files);
+      // Permite volver a elegir el mismo archivo tras quitarlo
+      event.target.value = '';
     }
   }
 
-  removeImage(preview: string): void {
-    const index = this.imagePreviews.indexOf(preview);
-    if (index !== -1) {
-      this.imagePreviews.splice(index, 1);
-      
-      // Also remove from selectedFiles array
-      if (this.selectedFiles && this.selectedFiles.length > index) {
-        this.selectedFiles = Array.from(this.selectedFiles);
-        this.selectedFiles.splice(index, 1);
-      }
+  removeImage(index: number): void {
+    const [quitada] = this.imagePreviews.splice(index, 1);
+    if (quitada) {
+      URL.revokeObjectURL(quitada.url);
     }
   }
 
@@ -253,14 +336,37 @@ export class SoporteComponent implements OnInit {
     const index = this.videoPreviews.indexOf(preview);
     if (index !== -1) {
       this.videoPreviews.splice(index, 1);
+      if (preview?.url) {
+        URL.revokeObjectURL(preview.url);
+      }
     }
   }
 
-  // Open image preview modal
+  private liberarVistasPrevias(): void {
+    this.imagePreviews.forEach(p => URL.revokeObjectURL(p.url));
+    this.videoPreviews.forEach(v => v?.url && URL.revokeObjectURL(v.url));
+  }
+
+  removeDocument(index: number): void {
+    this.documentFiles.splice(index, 1);
+  }
+
+  formatearTamano(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  // Open image preview modal (mismo mecanismo que el de video); si no hay Bootstrap, pestaña nueva
   openImagePreview(imageUrl: string): void {
     this.selectedPreviewImage = imageUrl;
-    // If using jQuery with Bootstrap modal:
-    // $('#imagePreviewModal').modal('show');
+    const modalElement = document.getElementById('imagePreviewModal');
+    if (modalElement && (window as any).bootstrap) {
+      const modal = new (window as any).bootstrap.Modal(modalElement);
+      modal.show();
+    } else {
+      window.open(imageUrl, '_blank');
+    }
   }
 
   // Open video preview modal
@@ -290,9 +396,10 @@ export class SoporteComponent implements OnInit {
       if (result.isConfirmed) {
         // Reset form state
         this.ticketForm.reset();
-        this.selectedFiles = [];
+        this.liberarVistasPrevias();
         this.imagePreviews = [];
         this.videoPreviews = [];
+        this.documentFiles = [];
         
         // Reset to defaults
         const today = new Date().toISOString().split('T')[0];
@@ -331,56 +438,37 @@ export class SoporteComponent implements OnInit {
   }
 
   // Existing methods
+  // Sube imágenes, videos y documentos a Storage conservando nombre y extensión originales,
+  // para que Support pueda distinguir el tipo y mostrar el nombre del archivo
   async subirImagenesAFirebase(): Promise<string[]> {
     const urls: string[] = [];
-    
-    // Upload images
+
     for (const file of this.selectedFiles) {
       if (file instanceof File) {
-        if (file.type.startsWith('image/')) {
-          const url = await this.subirImagenFirebase(file, `tickets/${Date.now()}_${file.name}`);
-          urls.push(url);
-        } else if (file.type.startsWith('video/')) {
-          const url = await this.subirVideoFirebase(file, `tickets/${Date.now()}_${file.name}`);
-          urls.push(url);
-        }
+        const nombreSeguro = file.name.replace(/[^\w.\-]+/g, '_');
+        const url = await this.subirArchivoFirebase(file, `tickets/${Date.now()}_${nombreSeguro}`);
+        urls.push(url);
       }
     }
-    
+
     return urls;
   }
 
-  subirImagenFirebase(file: File, fileName: string): Promise<string> {
+  subirArchivoFirebase(file: File, fileName: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const fileRef = this.storage.ref(fileName);
-      const task = this.storage.upload(fileName, file);
-      
-      task.snapshotChanges().pipe(
-        finalize(() => {
-          fileRef.getDownloadURL().subscribe(url => {
-            resolve(url);
-          }, error => {
-            reject(error);
-          });
-        })
-      ).subscribe();
-    });
-  }
+      const task = this.storage.upload(fileName, file, { contentType: file.type || undefined });
 
-  subirVideoFirebase(file: File, fileName: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const fileRef = this.storage.ref(fileName);
-      const task = this.storage.upload(fileName, file);
-      
       task.snapshotChanges().pipe(
         finalize(() => {
-          fileRef.getDownloadURL().subscribe(url => {
-            resolve(url);
-          }, error => {
-            reject(error);
+          fileRef.getDownloadURL().subscribe({
+            next: (url) => resolve(url),
+            error: (error) => reject(error)
           });
         })
-      ).subscribe();
+      ).subscribe({
+        error: (error) => reject(error)
+      });
     });
   }
 
@@ -448,7 +536,7 @@ export class SoporteComponent implements OnInit {
       // Process images if any
       if (this.selectedFiles && this.selectedFiles.length > 0) {
         currentStep = 2;
-        loadingStep = 'Subiendo imágenes...';
+        loadingStep = 'Subiendo archivos adjuntos...';
         Swal.update({
           html: `Paso ${currentStep}/${totalSteps}: ${loadingStep}`
         });
