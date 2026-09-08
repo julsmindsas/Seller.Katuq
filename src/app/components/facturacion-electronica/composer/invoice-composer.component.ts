@@ -1,10 +1,13 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { defer, Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 import { IntegrationsService } from '../../integrations/integrations.service';
 import { DianInvoiceService } from './dian-invoice.service';
 import { ManualInvoiceFormComponent } from './manual-invoice-form.component';
-import { InvoicePreview, InvoiceRequest, InvoiceSelection, ManualInvoice, PAYMENT_METHODS, MAX_INVOICE_OBSERVATIONS_LENGTH } from './invoice-composer.models';
+import { InvoicePreview, InvoiceRequest, InvoiceSelection, ManualInvoice, PAYMENT_METHODS, MAX_INVOICE_OBSERVATIONS_LENGTH, invoiceTotals } from './invoice-composer.models';
+
+const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 @Component({
   selector: 'app-invoice-composer',
@@ -124,8 +127,19 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   startNew(): void {
     if (this.loading || this.pending || this.companyChanged) return;
-    if (!this.record && (this.manualForm?.form.dirty || this.observationsDirty) &&
-      !window.confirm('Tienes datos sin guardar. ¿Quieres dejarlos y empezar una factura nueva? Los borradores ya guardados se conservan en Borradores.')) return;
+    if (!this.record && (this.manualForm?.form.dirty || this.observationsDirty)) {
+      this.confirm('¿Empezar una factura nueva?', 'Tienes datos sin guardar. Los borradores ya guardados se conservan en Borradores.', 'Sí, empezar otra')
+        .then(ok => { if (ok) this.resetComposer(); });
+      return;
+    }
+    this.resetComposer();
+  }
+  private confirm(title: string, text: string, confirmButtonText: string): Promise<boolean> {
+    return Swal.fire({ icon: 'question', title, text, showCancelButton: true, confirmButtonText, cancelButtonText: 'Cancelar', confirmButtonColor: '#6c4ce0' })
+      .then(result => result.isConfirmed);
+  }
+  private resetComposer(): void {
+    if (this.loading || this.pending || this.companyChanged) return;
     this.record = null; this.restored = false; this.invalidate(); this.manualForm?.resetDraft();
     this.mode = 'manual'; this.phase = 'review'; this.unknown = false; this.showDrafts = false;
     this.draftId = ''; this.draftVersion = 0; this.draftMessage = '';
@@ -137,8 +151,15 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   correctInvoice(): void {
     if (!this.canCorrect) return;
-    if (/Regla:\s*90\b|procesado anteriormente/i.test(this.record?.message || '') &&
-      !window.confirm('La DIAN reportó un documento procesado anteriormente. Continúa solo si verificaste el historial y corregiste la numeración o la causa del duplicado. Esto recupera los datos, NO emite. ¿Continuar?')) return;
+    if (/Regla:\s*90\b|procesado anteriormente/i.test(this.record?.message || '')) {
+      this.confirm('Documento procesado anteriormente',
+        'La DIAN reportó un documento procesado anteriormente. Continúa solo si verificaste el historial y corregiste la numeración o la causa del duplicado. Esto recupera los datos, NO emite.',
+        'Continuar').then(ok => { if (ok && this.canCorrect) this.restoreForCorrection(); });
+      return;
+    }
+    this.restoreForCorrection();
+  }
+  private restoreForCorrection(): void {
     const original = this.record!.selection!;
     this.restored = false; this.record = null; this.unknown = false;
     this.invalidate(); this.draftId = ''; this.draftVersion = 0;
@@ -173,7 +194,15 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
   }
   openDraft(id: string): void {
     if (this.loading || this.pending || this.companyChanged) return;
-    if ((this.manualForm?.form.dirty || this.observationsDirty) && !window.confirm('Abrir otro borrador reemplaza los datos sin guardar de este formulario. ¿Continuar?')) return;
+    if (this.manualForm?.form.dirty || this.observationsDirty) {
+      this.confirm('¿Abrir este borrador?', 'Abrir otro borrador reemplaza los datos sin guardar de este formulario.', 'Sí, abrir')
+        .then(ok => { if (ok) this.loadDraft(id); });
+      return;
+    }
+    this.loadDraft(id);
+  }
+  private loadDraft(id: string): void {
+    if (this.loading || this.pending || this.companyChanged) return;
     this.loading = true; this.error = '';
     this.request = defer(() => this.invoices.status(id)).pipe(finalize(() => this.loading = false)).subscribe({
       next: record => {
@@ -290,6 +319,44 @@ export class InvoiceComposerComponent implements OnInit, OnDestroy {
       ? 'La conexión no confirmó el resultado. Usa Consultar estado; no crees otra factura para esta venta.'
       : error?.status === 404 ? 'No encontramos esta operación. Verifica que el backend esté actualizado.'
       : 'No pudimos completar la operación. Consulta el estado antes de intentar otro envío.');
+  }
+  // ===== Resumen en vivo y lista de pendientes (panel lateral) =====
+  get liveTotals() {
+    const items = this.manualForm?.items.getRawValue() || [];
+    return invoiceTotals(items);
+  }
+  get liveItemCount(): number { return this.manualForm?.items.length || 0; }
+  get customerDone(): boolean { return !!this.manualForm?.form.get('customerId')?.value; }
+  get itemsDone(): boolean {
+    const items = this.manualForm?.items;
+    if (!items || !items.length) return false;
+    return items.controls.every(item => item.valid) && this.liveTotals.total > 0;
+  }
+  get paymentDone(): boolean { return !!this.manualForm?.form.get('payment')?.valid; }
+  get readyToReview(): boolean {
+    return this.mode === 'manual' ? this.customerDone && this.itemsDone && this.paymentDone && !this.observationsError : false;
+  }
+  get checks(): { ok: boolean; label: string }[] {
+    return [
+      { ok: this.customerDone, label: this.customerDone ? 'Cliente con datos fiscales completos' : 'Elige un cliente registrado' },
+      { ok: this.itemsDone, label: this.itemsDone ? 'Conceptos con nombre y valor' : 'Agrega al menos un concepto con valor' },
+      { ok: this.paymentDone, label: this.paymentDone ? 'Forma y medio de pago definidos' : 'Elige el medio de pago' },
+    ];
+  }
+  reviewFromSummary(): void { if (!this.editorDisabled) this.manualForm?.reviewInvoice(); }
+  saveDraftFromSummary(): void { if (!this.editorDisabled) this.manualForm?.storeDraft(); }
+  get observationTemplates(): { label: string; text: string }[] {
+    const now = new Date();
+    return [
+      { label: 'Periodo del servicio', text: `Servicio correspondiente a ${MONTHS[now.getMonth()]} de ${now.getFullYear()}.` },
+      { label: 'Instrucciones de pago', text: 'Indicar el número de factura al realizar el pago.' },
+      { label: 'Gracias por tu compra', text: 'Gracias por tu compra. Cualquier inquietud sobre esta factura escríbenos.' },
+    ];
+  }
+  applyTemplate(text: string): void {
+    if (this.editorDisabled) return;
+    const next = (this.observations.trim() ? this.observations.trim() + ' ' : '') + text;
+    this.changeObservations(next.slice(0, this.maxObservationsLength));
   }
   paymentLabel(code: string): string { return PAYMENT_METHODS.find(item => item.code === code)?.label || code; }
   ngOnDestroy(): void {

@@ -17,6 +17,7 @@ export class ManualInvoiceFormComponent implements OnDestroy {
   @Output() edited = new EventEmitter<void>();
   @ViewChild(InvoiceCustomerPickerComponent) customerPicker?: InvoiceCustomerPickerComponent;
   paymentMethods = PAYMENT_METHODS;
+  readonly paymentIcons: Record<string, string> = { '10': 'pi-money-bill', '42': 'pi-building', '47': 'pi-arrow-right-arrow-left', '48': 'pi-credit-card', '49': 'pi-credit-card' };
   attempted = false;
   form = this.fb.group({
     customerId: ['', Validators.required], billingProfile: [-1], addressIndex: [null],
@@ -29,6 +30,22 @@ export class ManualInvoiceFormComponent implements OnDestroy {
   get totals() { return invoiceTotals(this.items.getRawValue()); }
   lineTotal(index: number): number { return invoiceTotals([this.items.at(index).value]).total; }
   lineDiscount(index: number): number { return invoiceTotals([this.items.at(index).value]).discount; }
+  get customerDone(): boolean { return !!this.form.get('customerId')?.value; }
+  get itemsDone(): boolean { return this.items.length > 0 && this.items.controls.every(item => item.valid) && this.totals.total > 0; }
+  get paymentDone(): boolean { return !!this.form.get('payment')?.valid; }
+  get isCredit(): boolean { return this.form.get('payment.meansId')?.value === '2'; }
+  get meansCode(): string { return String(this.form.get('payment.meansCode')?.value || ''); }
+  setMeans(meansId: '1' | '2'): void {
+    if (this.disabled) return;
+    this.form.get('payment.meansId')?.setValue(meansId);
+    this.form.get('payment.meansId')?.markAsTouched();
+    this.changePayment();
+  }
+  setMethod(code: string): void {
+    if (this.disabled) return;
+    const control = this.form.get('payment.meansCode');
+    control?.setValue(code); control?.markAsTouched();
+  }
   get minDate(): string { return new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10); }
   createItem() {
     return this.fb.group({

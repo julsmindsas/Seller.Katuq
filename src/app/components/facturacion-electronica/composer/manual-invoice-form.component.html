@@ -1,52 +1,79 @@
 <form [formGroup]="form" (ngSubmit)="reviewInvoice()" novalidate>
   <fieldset [disabled]="disabled">
-    <section class="invoice-panel">
-      <div class="invoice-panel__heading"><span class="step-dot">1</span><div><h3>¿A quién le vas a facturar?</h3><p>Elige un cliente de Katuq. Usaremos su ficha actual, no datos escritos aparte.</p></div></div>
+    <section class="invoice-panel" [class.is-done]="customerDone">
+      <div class="invoice-panel__heading">
+        <span class="step-dot" [class.is-done]="customerDone"><i class="pi pi-check" *ngIf="customerDone; else s1"></i><ng-template #s1>1</ng-template></span>
+        <div><h3>¿A quién le vas a facturar?</h3><p>Elige un cliente de Katuq. Usamos su ficha actual, no datos escritos aparte.</p></div>
+      </div>
       <app-invoice-customer-picker [companyId]="companyId" [disabled]="disabled" (selected)="chooseCustomer($event)"></app-invoice-customer-picker>
       <p class="field-error" *ngIf="invalid('customerId')">Selecciona un cliente registrado con sus datos fiscales completos.</p>
     </section>
 
-    <section class="invoice-panel">
-      <div class="invoice-panel__heading"><span class="step-dot">2</span><div><h3>¿Qué vas a facturar?</h3><p>Escribe el inicio del nombre para buscar conceptos guardados o usados en hasta 100 facturas libres aceptadas en Katuq. También puedes escribir uno nuevo y pulsar Guardar concepto.</p></div></div>
+    <section class="invoice-panel invoice-panel--flush" [class.is-done]="itemsDone">
+      <div class="invoice-panel__heading invoice-panel__heading--padded">
+        <span class="step-dot" [class.is-done]="itemsDone"><i class="pi pi-check" *ngIf="itemsDone; else s2"></i><ng-template #s2>2</ng-template></span>
+        <div><h3>¿Qué vas a facturar?</h3><p>Busca un concepto guardado o escribe uno nuevo. Valores en COP, IVA 0 %, 5 % o 19 %.</p></div>
+        <span class="count-chip">{{ items.length }} {{ items.length === 1 ? 'concepto' : 'conceptos' }}</span>
+      </div>
       <div class="table-responsive">
         <table class="table composer-table" formArrayName="items">
-          <thead><tr><th>Producto o servicio</th><th>Cantidad</th><th>Valor unitario sin IVA</th><th>IVA</th><th>Descuento %</th><th class="text-end">Total con IVA</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
+          <thead><tr><th class="concept-head">Producto o servicio</th><th class="text-center">Cant.</th><th class="text-end">Valor sin IVA</th><th class="text-center">IVA</th><th class="text-center">Desc. %</th><th class="text-end total-head">Total</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
           <tbody><tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
             <td class="concept-cell" data-label="Producto o servicio"><app-invoice-concept-picker [item]="item" [companyId]="companyId" [disabled]="disabled" [index]="i"></app-invoice-concept-picker>
               <small class="field-error" *ngIf="invalid('items.' + i + '.description')">Escribe el producto o servicio.</small></td>
             <td data-label="Cantidad"><input class="form-control number-input" type="number" min="0.001" max="1000000" step="0.001" formControlName="quantity" [class.is-invalid]="invalid('items.' + i + '.quantity')" [attr.aria-label]="'Cantidad del concepto ' + (i + 1)"></td>
-            <td data-label="Valor unitario sin IVA"><input class="form-control price-input" type="number" min="0.01" max="1000000000" step="0.01" formControlName="unitPrice" [class.is-invalid]="invalid('items.' + i + '.unitPrice')" [attr.aria-label]="'Valor sin IVA del concepto ' + (i + 1)" placeholder="0"></td>
+            <td data-label="Valor sin IVA"><div class="price-field" [class.is-filled]="item.get('unitPrice')?.value > 0" [class.is-invalid]="invalid('items.' + i + '.unitPrice')"><span>$</span><input class="form-control price-input" type="number" min="0.01" max="1000000000" step="0.01" formControlName="unitPrice" [attr.aria-label]="'Valor sin IVA del concepto ' + (i + 1)" placeholder="0"></div></td>
             <td data-label="IVA"><select class="form-select tax-input" formControlName="taxRate" [class.is-invalid]="invalid('items.' + i + '.taxRate')" [attr.aria-label]="'IVA del concepto ' + (i + 1)"><option [ngValue]="null">Elige</option><option [ngValue]="0">0 %</option><option [ngValue]="5">5 %</option><option [ngValue]="19">19 %</option></select></td>
-            <td data-label="Descuento %"><input class="form-control discount-input" type="number" min="0" max="99.99" step="0.01" formControlName="discountPercent" [class.is-invalid]="invalid('items.' + i + '.discountPercent')" [attr.aria-label]="'Descuento porcentual del concepto ' + (i + 1)">
-              <small class="discount-amount">− {{ lineDiscount(i) | currency:'COP':'symbol-narrow':'1.2-2' }}</small>
+            <td data-label="Desc. %"><input class="form-control discount-input" type="number" min="0" max="99.99" step="0.01" formControlName="discountPercent" [class.is-invalid]="invalid('items.' + i + '.discountPercent')" [attr.aria-label]="'Descuento porcentual del concepto ' + (i + 1)">
               <small class="field-error" *ngIf="invalid('items.' + i + '.discountPercent')">De 0 a 99,99 %, máximo 2 decimales.</small></td>
-            <td class="text-end line-amount" data-label="Total con IVA">{{ lineTotal(i) | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
-            <td><button type="button" class="icon-action" [disabled]="items.length === 1" (click)="removeItem(i)" [attr.aria-label]="'Quitar concepto ' + (i + 1)"><i class="pi pi-trash"></i></button></td>
+            <td class="text-end total-cell" data-label="Total"><span class="line-amount" [class.is-empty]="!lineTotal(i)">{{ lineTotal(i) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+              <small class="discount-amount" *ngIf="lineDiscount(i)">− {{ lineDiscount(i) | currency:'COP':'symbol-narrow':'1.0-0' }}</small></td>
+            <td><button type="button" class="icon-action" [disabled]="items.length === 1" (click)="removeItem(i)" [attr.aria-label]="'Quitar concepto ' + (i + 1)" title="Quitar"><i class="pi pi-trash"></i></button></td>
           </tr></tbody>
         </table>
       </div>
-      <button class="btn btn-outline-primary add-concept" type="button" (click)="addItem()" [disabled]="items.length >= 100"><i class="pi pi-plus"></i> Agregar otro concepto</button>
-      <p class="field-hint">Descuento comercial por concepto, aplicado antes del IVA. Valores en COP, IVA 0 %, 5 % o 19 %. Sin retenciones ni descuento global. El descuento de esta factura no cambia el servicio guardado.</p>
+      <div class="invoice-panel__foot">
+        <button class="btn btn-soft add-concept" type="button" (click)="addItem()" [disabled]="items.length >= 100"><i class="pi pi-plus"></i> Agregar concepto</button>
+        <span class="field-hint">El descuento se aplica antes del IVA y no cambia el concepto guardado. Sin retenciones ni descuento global.</span>
+      </div>
     </section>
 
-    <section class="invoice-panel">
-      <div class="invoice-panel__heading"><span class="step-dot">3</span><div><h3>¿Cómo se paga?</h3><p>Selecciona las condiciones de esta venta.</p></div></div>
-      <div formGroupName="payment" class="customer-grid">
-        <label>Forma de pago<select class="form-select" formControlName="meansId" (change)="changePayment()"><option value="1">Contado</option><option value="2">Crédito · Se paga después</option></select></label>
-        <label>Medio de pago<select class="form-select" formControlName="meansCode" [class.is-invalid]="invalid('payment.meansCode')"><option value="">Selecciona</option><option *ngFor="let method of paymentMethods" [value]="method.code">{{ method.label }}</option></select></label>
-        <label *ngIf="form.get('payment.meansId')?.value === '2'">Fecha límite de pago<input class="form-control" type="date" formControlName="dueDate" [min]="minDate" [class.is-invalid]="invalid('payment.dueDate')"></label>
+    <section class="invoice-panel" [class.is-done]="paymentDone">
+      <div class="invoice-panel__heading">
+        <span class="step-dot" [class.is-done]="paymentDone"><i class="pi pi-check" *ngIf="paymentDone; else s3"></i><ng-template #s3>3</ng-template></span>
+        <div><h3>¿Cómo se paga?</h3><p>Condiciones de esta venta.</p></div>
+      </div>
+      <div formGroupName="payment" class="payment-block">
+        <div>
+          <span class="field-label">Forma de pago</span>
+          <div class="pay-options" role="radiogroup" aria-label="Forma de pago">
+            <button type="button" class="pay-option" role="radio" [attr.aria-checked]="!isCredit" [class.is-active]="!isCredit" (click)="setMeans('1')">
+              <span class="pay-option__radio"><span></span></span>
+              <span><b>Contado</b><small>Se paga al emitir</small></span>
+            </button>
+            <button type="button" class="pay-option" role="radio" [attr.aria-checked]="isCredit" [class.is-active]="isCredit" (click)="setMeans('2')">
+              <span class="pay-option__radio"><span></span></span>
+              <span><b>Crédito</b><small>Con plazo de pago</small></span>
+            </button>
+          </div>
+        </div>
+        <div class="pay-due" *ngIf="isCredit">
+          <label for="invoice-due-date" class="field-label">Vence</label>
+          <input id="invoice-due-date" class="form-control" type="date" formControlName="dueDate" [min]="minDate" [class.is-invalid]="invalid('payment.dueDate')">
+          <small class="field-error" *ngIf="invalid('payment.dueDate')">Indica la fecha límite de pago.</small>
+        </div>
+        <div>
+          <span class="field-label">Medio de pago</span>
+          <div class="pay-methods" role="radiogroup" aria-label="Medio de pago">
+            <button type="button" class="pay-method" role="radio" *ngFor="let method of paymentMethods" [attr.aria-checked]="meansCode === method.code" [class.is-active]="meansCode === method.code" (click)="setMethod(method.code)">
+              <i class="pi" [ngClass]="paymentIcons[method.code] || 'pi-wallet'"></i> {{ method.label }}
+            </button>
+          </div>
+          <small class="field-error" *ngIf="invalid('payment.meansCode')">Elige el medio de pago.</small>
+        </div>
       </div>
     </section>
     <ng-content></ng-content>
-    <div class="draft-footer">
-      <div><small>Total del borrador</small><strong>{{ totals.total | currency:'COP':'symbol-narrow':'1.2-2' }}</strong>
-        <small *ngIf="totals.discount">Antes de descuentos {{ totals.subtotal + totals.discount | currency:'COP':'symbol-narrow':'1.2-2' }} · Descuento − {{ totals.discount | currency:'COP':'symbol-narrow':'1.2-2' }}</small>
-        <small>Base neta {{ totals.subtotal | currency:'COP':'symbol-narrow':'1.2-2' }} + IVA {{ totals.tax | currency:'COP':'symbol-narrow':'1.2-2' }}</small></div>
-      <div class="customer-actions">
-        <button class="btn btn-outline-primary" type="button" (click)="storeDraft()"><i class="pi pi-save"></i> Guardar borrador</button>
-        <button class="btn btn-primary" type="submit"><i class="pi pi-eye"></i> Revisar factura</button>
-      </div>
-    </div>
-    <p role="alert" class="field-error" *ngIf="attempted && form.invalid">Faltan datos. Revisa los campos señalados antes de continuar.</p>
+    <p role="alert" class="field-error form-summary-error" *ngIf="attempted && form.invalid">Faltan datos. Revisa los campos señalados antes de continuar.</p>
   </fieldset>
 </form>

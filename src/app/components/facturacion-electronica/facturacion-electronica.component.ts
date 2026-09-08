@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { defer, forkJoin, of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
@@ -10,6 +10,8 @@ import { InvoiceComposerComponent } from './composer/invoice-composer.component'
 
 type DianDocumentType = 'invoice' | 'creditNote' | 'debitNote';
 type DianStatus = 'accepted' | 'rejected' | 'failed' | string;
+type DianStatusGroup = 'accepted' | 'rejected' | 'pending';
+type DashboardTab = 'documents' | 'invoice' | 'compose' | 'guide';
 
 interface DianDocument {
   id?: string;
@@ -27,8 +29,13 @@ interface DianDocument {
   correction?: { code?: string; description?: string };
   artifacts?: any;
   error?: { code?: string; message?: string };
+  emailDelivery?: { requested?: boolean; sent?: boolean; recipient?: string };
   dianResponse?: any;
 }
+
+interface OrderReadiness { ok: boolean; blocked: boolean; label: string; tone: 'success' | 'warning' | 'error' }
+
+const AVATAR_PALETTE = ['#6C4CE0', '#14B8A6', '#E0891B', '#2F6FE0', '#C43E74', '#17994F', '#7A6BC0', '#D6455B'];
 
 @Component({
   selector: 'app-facturacion-electronica',
@@ -36,22 +43,26 @@ interface DianDocument {
   styleUrls: ['./facturacion-electronica.component.scss'],
 })
 export class FacturacionElectronicaComponent implements OnInit {
-  activeTab: 'documents' | 'invoice' | 'compose' | 'guide' = 'documents';
+  activeTab: DashboardTab = 'documents';
   composerOpened = false;
   @ViewChild('composerPanel', { static: true }) composerPanel: ElementRef<HTMLElement>;
   @ViewChild(InvoiceComposerComponent) composer?: InvoiceComposerComponent;
   documents: DianDocument[] = [];
   technicalHistory: any[] = [];
+  historyOpen = false;
   configurationError = '';
   pendingOrders: any[] = [];
   queuedOrders = new Set<string>();
+  selectedOrders = new Set<string>();
   integration: any = null;
   loading = false;
+  lastSync: Date | null = null;
   documentsError = '';
   ordersError = '';
   search = '';
-  statusFilter = 'all';
-  typeFilter = 'all';
+  statusFilter: 'all' | DianStatusGroup = 'all';
+  typeFilter: 'all' | 'notes' = 'all';
+  openMenu = '';
 
   constructor(
     private integrationsService: IntegrationsService,
@@ -62,6 +73,14 @@ export class FacturacionElectronicaComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboard();
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeMenus(event: Event): void {
+    if (!this.openMenu) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest?.('[data-menu-cell]')) return;
+    this.openMenu = '';
   }
 
   get isConfigured(): boolean {
@@ -76,10 +95,6 @@ export class FacturacionElectronicaComponent implements OnInit {
     return this.documents.some((document) => document.type === 'invoice' && document.status === 'accepted');
   }
 
-  get setupProgress(): number {
-    return [this.isConfigured, this.isProduction, this.hasAcceptedInvoice].filter(Boolean).length;
-  }
-
   get commerceName(): string {
     try {
       const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
@@ -87,6 +102,24 @@ export class FacturacionElectronicaComponent implements OnInit {
     } catch (_) {
       return 'este comercio';
     }
+  }
+
+  get environmentLabel(): string {
+    const environment = this.integration?.config?.environment;
+    if (environment === 'produccion') return 'Producción';
+    if (environment === 'habilitacion') return 'Pruebas';
+    return 'Sin configurar';
+  }
+
+  get environmentTone(): 'success' | 'warning' | 'muted' {
+    if (this.isConfigured && this.isProduction) return 'success';
+    if (this.isConfigured) return 'warning';
+    return 'muted';
+  }
+
+  get nextNumber(): string {
+    const numbering = this.integration?.config?.numbering;
+    return numbering?.prefix && numbering?.current ? numbering.prefix + numbering.current : '';
   }
 
   get nextTask(): { tone: 'warning' | 'danger' | 'success' | 'info'; icon: string; title: string; description: string; button: string } {
@@ -97,44 +130,41 @@ export class FacturacionElectronicaComponent implements OnInit {
     }
     if (!this.isConfigured) {
       return {
-        tone: 'warning', icon: 'pi-cog', title: 'Primero: conecte este comercio con la DIAN',
-        description: 'El asistente le pedirá los datos del comercio, el certificado y la numeración. Puede hacerlo acompañado de su contador.',
+        tone: 'warning', icon: 'pi-cog', title: 'Primero conecta este comercio con la DIAN',
+        description: 'El asistente pide los datos del comercio, el certificado y la numeración. Puedes hacerlo con tu contador.',
         button: 'Comenzar configuración',
       };
     }
     if (!this.isProduction) {
       return {
-        tone: 'info', icon: 'pi-verified', title: 'Siguiente paso: terminar las pruebas de habilitación',
-        description: 'La conexión está guardada, pero todavía está en pruebas. Complete el set de habilitación y luego cambie a Producción.',
+        tone: 'info', icon: 'pi-verified', title: 'Termina las pruebas de habilitación',
+        description: 'La conexión está guardada, pero sigue en pruebas. Completa el set de habilitación y pasa a Producción.',
         button: 'Continuar habilitación',
       };
     }
     if (this.rejectedCount > 0) {
+      const n = this.rejectedCount;
       return {
-        tone: 'danger', icon: 'pi-exclamation-triangle', title: `${this.rejectedCount} documento${this.rejectedCount === 1 ? '' : 's'} necesita${this.rejectedCount === 1 ? '' : 'n'} revisión`,
-        description: 'Abra los documentos con inconvenientes, lea el mensaje y corrija el pedido antes de intentar nuevamente.',
+        tone: 'danger', icon: 'pi-exclamation-triangle', title: `${n} documento${n === 1 ? '' : 's'} necesita${n === 1 ? '' : 'n'} revisión`,
+        description: n === 1
+          ? 'Ábrelo, lee el mensaje de la DIAN y corrige el pedido antes de intentar de nuevo.'
+          : 'Ábrelos, lee el mensaje de la DIAN y corrige los pedidos antes de intentar de nuevo.',
         button: 'Revisar inconvenientes',
       };
     }
     if (this.pendingOrders.length > 0) {
+      const n = this.pendingOrders.length;
       return {
-        tone: 'warning', icon: 'pi-send', title: `${this.pendingOrders.length} pedido${this.pendingOrders.length === 1 ? '' : 's'} listo${this.pendingOrders.length === 1 ? '' : 's'} para facturar`,
-        description: 'Revise el cliente, los productos y los impuestos. Después pulse Facturar; Katuq hará el envío a la DIAN.',
+        tone: 'warning', icon: 'pi-send', title: `${n} pedido${n === 1 ? '' : 's'} sin factura`,
+        description: 'Revisa el cliente, los productos y los impuestos. Después emítelos y Katuq hace el envío a la DIAN.',
         button: 'Ver pedidos',
       };
     }
     return {
       tone: 'success', icon: 'pi-check-circle', title: 'Todo está al día',
-      description: 'No hay pedidos recientes pendientes ni documentos con inconvenientes. Puede consultar o descargar lo emitido.',
+      description: 'No hay pedidos recientes pendientes ni documentos con inconvenientes. Puedes consultar o descargar lo emitido.',
       button: 'Ver documentos',
     };
-  }
-
-  get environmentLabel(): string {
-    const environment = this.integration?.config?.environment;
-    if (environment === 'produccion') return 'Producción';
-    if (environment === 'habilitacion') return 'Pruebas';
-    return 'Sin definir';
   }
 
   get acceptedCount(): number {
@@ -142,7 +172,11 @@ export class FacturacionElectronicaComponent implements OnInit {
   }
 
   get rejectedCount(): number {
-    return this.documents.filter((document) => document.status === 'rejected' || document.status === 'failed').length;
+    return this.documents.filter((document) => this.statusGroup(document) === 'rejected').length;
+  }
+
+  get pendingCount(): number {
+    return this.documents.filter((document) => this.statusGroup(document) === 'pending').length;
   }
 
   get notesCount(): number {
@@ -152,8 +186,8 @@ export class FacturacionElectronicaComponent implements OnInit {
   get filteredDocuments(): DianDocument[] {
     const term = this.search.trim().toLowerCase();
     return this.documents.filter((document) => {
-      const matchesStatus = this.statusFilter === 'all' || document.status === this.statusFilter;
-      const matchesType = this.typeFilter === 'all' || document.type === this.typeFilter;
+      const matchesStatus = this.statusFilter === 'all' || this.statusGroup(document) === this.statusFilter;
+      const matchesType = this.typeFilter === 'all' || document.type !== 'invoice';
       const haystack = [
         document.number,
         document.orderId,
@@ -161,9 +195,19 @@ export class FacturacionElectronicaComponent implements OnInit {
         document.cufe,
         document.cude,
         document.correction?.description,
+        document.emailDelivery?.recipient,
       ].filter(Boolean).join(' ').toLowerCase();
       return matchesStatus && matchesType && (!term || haystack.includes(term));
     });
+  }
+
+  get selectableOrders(): any[] {
+    return this.pendingOrders.filter((order) => !this.orderReadiness(order).blocked && !this.isQueued(order));
+  }
+
+  get allSelected(): boolean {
+    const selectable = this.selectableOrders;
+    return selectable.length > 0 && selectable.every((order) => this.selectedOrders.has(this.orderId(order)));
   }
 
   loadDashboard(): void {
@@ -210,11 +254,15 @@ export class FacturacionElectronicaComponent implements OnInit {
         this.technicalHistory = list.history;
         const orderList = Array.isArray(orders?.orders) ? orders.orders : [];
         this.pendingOrders = orderList.filter((order: any) => this.isPendingInvoice(order));
+        const ids = new Set(this.pendingOrders.map((order) => this.orderId(order)));
+        this.selectedOrders.forEach((id) => { if (!ids.has(id)) this.selectedOrders.delete(id); });
+        this.lastSync = new Date();
       });
   }
 
-  selectTab(tab: 'documents' | 'invoice' | 'compose' | 'guide'): void {
+  selectTab(tab: DashboardTab): void {
     this.activeTab = tab;
+    this.openMenu = '';
     if (tab === 'compose') {
       this.composerOpened = true;
       // Render before focusing: the panel can still be hidden on the first click.
@@ -226,6 +274,13 @@ export class FacturacionElectronicaComponent implements OnInit {
     }
   }
 
+  showDocuments(status: 'all' | DianStatusGroup, type: 'all' | 'notes' = 'all'): void {
+    this.statusFilter = status;
+    this.typeFilter = type;
+    this.search = '';
+    this.selectTab('documents');
+  }
+
   doNextTask(): void {
     if (this.configurationError) { this.loadDashboard(); return; }
     if (!this.isConfigured || !this.isProduction) {
@@ -233,98 +288,156 @@ export class FacturacionElectronicaComponent implements OnInit {
       return;
     }
     if (this.rejectedCount > 0) {
-      this.statusFilter = 'rejected';
-      this.typeFilter = 'all';
-      this.search = '';
-      this.activeTab = 'documents';
+      this.showDocuments('rejected');
       return;
     }
-    this.activeTab = this.pendingOrders.length > 0 ? 'invoice' : 'documents';
+    if (this.pendingOrders.length > 0) this.selectTab('invoice');
+    else this.showDocuments('all');
   }
 
-  openGuide(): void {
-    this.activeTab = 'guide';
+  toggleHistory(event?: Event): void {
+    event?.preventDefault();
+    this.historyOpen = !this.historyOpen;
   }
 
-  showConcept(concept: 'invoice' | 'credit' | 'debit' | 'status'): void {
-    const concepts = {
-      invoice: {
-        title: 'Factura electrónica',
-        text: 'Es el documento de la venta. Katuq toma un pedido, genera la factura, la firma y la envía a la DIAN.',
-      },
-      credit: {
-        title: 'Nota crédito',
-        text: 'Se usa para disminuir el valor o anular una factura ya aceptada. No borra la factura original: deja registrada la corrección.',
-      },
-      debit: {
-        title: 'Nota débito',
-        text: 'Se usa para aumentar el valor de una factura ya aceptada, por ejemplo por intereses o un valor adicional.',
-      },
-      status: {
-        title: 'Estados de la DIAN',
-        text: 'Aceptada significa válida. Rechazada significa que la DIAN encontró algo por corregir. No enviada significa que Katuq no alcanzó a completar la transmisión.',
-      },
-    };
-    const item = concepts[concept];
-    Swal.fire({ icon: 'info', title: item.title, text: item.text, confirmButtonText: 'Entendido' });
+  toggleMenu(document: DianDocument, event: Event): void {
+    event.stopPropagation();
+    const key = this.trackByDocument(0, document);
+    this.openMenu = this.openMenu === key ? '' : key;
+  }
+
+  isMenuOpen(document: DianDocument): boolean {
+    return this.openMenu === this.trackByDocument(0, document);
   }
 
   goToConfiguration(): void {
     this.router.navigate(['/integrations/configure'], { queryParams: { provider: 'dian' } });
   }
 
-  invoiceOrder(order: any): void {
-    if (!this.isConfigured) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Primero active la conexión con la DIAN',
-        text: 'Abra Configuración DIAN y complete el asistente del comercio.',
-        confirmButtonText: 'Ir a configuración',
-      }).then((result) => {
-        if (result.isConfirmed) this.goToConfiguration();
-      });
-      return;
-    }
+  // ===== Pedidos sin factura =====
 
+  toggleOrder(order: any): void {
+    const readiness = this.orderReadiness(order);
+    if (readiness.blocked || this.isQueued(order)) return;
+    const id = this.orderId(order);
+    if (this.selectedOrders.has(id)) this.selectedOrders.delete(id);
+    else this.selectedOrders.add(id);
+  }
+
+  toggleAllOrders(): void {
+    if (this.allSelected) { this.selectedOrders.clear(); return; }
+    this.selectableOrders.forEach((order) => this.selectedOrders.add(this.orderId(order)));
+  }
+
+  isSelected(order: any): boolean {
+    return this.selectedOrders.has(this.orderId(order));
+  }
+
+  orderReadiness(order: any): OrderReadiness {
+    if (['Cancelado', 'Precancelado'].includes(order?.estadoPago)) return { ok: false, blocked: true, label: 'Cancelado', tone: 'error' };
+    if (!this.orderEmail(order)) return { ok: false, blocked: true, label: 'Falta correo', tone: 'warning' };
+    if (order?.estadoPago && order.estadoPago !== 'Aprobado') return { ok: true, blocked: false, label: 'Pago pendiente', tone: 'warning' };
+    return { ok: true, blocked: false, label: 'Sí', tone: 'success' };
+  }
+
+  emitSelected(): void {
+    const orders = this.pendingOrders.filter((order) => this.selectedOrders.has(this.orderId(order)) && !this.isQueued(order));
+    if (!orders.length) return;
+    if (!this.isConfigured) { this.askForConfiguration(); return; }
+    const total = orders.reduce((sum, order) => sum + this.orderTotal(order), 0);
+    Swal.fire({
+      icon: 'question',
+      title: orders.length === 1 ? '¿Enviar esta factura a la DIAN?' : `¿Enviar ${orders.length} facturas a la DIAN?`,
+      html: `<p>${orders.length === 1 ? 'Pedido' : 'Pedidos'} <strong>${orders.map((order) => this.escapeHtml(order.nroPedido || this.orderId(order))).join(', ')}</strong></p>`
+        + `<p>Total ${this.escapeHtml(this.formatCop(total))}. Cada pedido consume un consecutivo real. Revisa cliente, productos e impuestos antes de confirmar.</p>`,
+      showCancelButton: true,
+      confirmButtonText: orders.length === 1 ? 'Sí, facturar' : 'Sí, emitir todos',
+      cancelButtonText: 'Todavía no',
+      confirmButtonColor: '#6c4ce0',
+    }).then((confirmation) => {
+      if (!confirmation.isConfirmed) return;
+      orders.forEach((order) => this.queueInvoice(order));
+      this.selectedOrders.clear();
+      Swal.fire({
+        icon: 'success',
+        title: orders.length === 1 ? 'Factura enviada a procesar' : `${orders.length} facturas enviadas a procesar`,
+        text: 'Katuq las firmará, las enviará a la DIAN y actualizará cada pedido. Puedes seguir trabajando.',
+        confirmButtonText: 'Entendido',
+      });
+    });
+  }
+
+  invoiceOrder(order: any): void {
+    if (!this.isConfigured) { this.askForConfiguration(); return; }
     const orderId = this.orderId(order);
     if (!orderId) {
       Swal.fire({ icon: 'error', title: 'Pedido sin identificación', text: 'No fue posible identificar este pedido.' });
       return;
     }
-
     Swal.fire({
       icon: 'question',
       title: '¿Enviar esta factura a la DIAN?',
-      html: `<p>Pedido <strong>${this.escapeHtml(order.nroPedido || orderId)}</strong></p><p>Revise antes que el cliente, los productos y los impuestos estén correctos.</p>`,
+      html: `<p>Pedido <strong>${this.escapeHtml(order.nroPedido || orderId)}</strong></p><p>Revisa antes que el cliente, los productos y los impuestos estén correctos.</p>`,
       showCancelButton: true,
       confirmButtonText: 'Sí, facturar',
       cancelButtonText: 'Todavía no',
-      confirmButtonColor: '#2f6fed',
+      confirmButtonColor: '#6c4ce0',
     }).then((confirmation) => {
       if (!confirmation.isConfirmed) return;
-      this.queuedOrders.add(orderId);
-      this.integrationsService.createAccountingInvoiceAsync('dian', orderId).subscribe({
-        next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Factura enviada a procesar',
-            text: 'Katuq la firmará, la enviará a la DIAN y actualizará el pedido. Puede continuar trabajando.',
-            confirmButtonText: 'Entendido',
-          });
-        },
-        error: (error) => {
-          this.queuedOrders.delete(orderId);
-          Swal.fire({
-            icon: 'error',
-            title: 'No se pudo iniciar la factura',
-            text: this.errorMessage(error, 'Revise los datos del pedido e inténtelo nuevamente.'),
-          });
-        },
-      });
+      this.queueInvoice(order, true);
     });
   }
 
+  retryDocument(document: DianDocument): void {
+    if (document.orderId) {
+      this.invoiceOrder({ _id: document.orderId, nroPedido: document.orderId });
+      return;
+    }
+    this.selectTab('compose');
+  }
+
+  private queueInvoice(order: any, notify = false): void {
+    const orderId = this.orderId(order);
+    this.queuedOrders.add(orderId);
+    this.integrationsService.createAccountingInvoiceAsync('dian', orderId).subscribe({
+      next: () => {
+        if (notify) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Factura enviada a procesar',
+            text: 'Katuq la firmará, la enviará a la DIAN y actualizará el pedido. Puedes continuar trabajando.',
+            confirmButtonText: 'Entendido',
+          });
+        }
+      },
+      error: (error) => {
+        this.queuedOrders.delete(orderId);
+        Swal.fire({
+          icon: 'error',
+          title: `No se pudo iniciar la factura del pedido ${order.nroPedido || orderId}`,
+          text: this.errorMessage(error, 'Revisa los datos del pedido e inténtalo nuevamente.'),
+        });
+      },
+    });
+  }
+
+  private askForConfiguration(): void {
+    Swal.fire({
+      icon: 'info',
+      title: 'Primero activa la conexión con la DIAN',
+      text: 'Abre Configuración DIAN y completa el asistente del comercio.',
+      showCancelButton: true,
+      confirmButtonText: 'Ir a configuración',
+      cancelButtonText: 'Ahora no',
+    }).then((result) => {
+      if (result.isConfirmed) this.goToConfiguration();
+    });
+  }
+
+  // ===== Documentos =====
+
   checkStatus(document: DianDocument): void {
+    this.openMenu = '';
     const trackId = document.cufe || document.cude;
     if (!trackId) {
       Swal.fire({ icon: 'info', title: 'Sin código de seguimiento', text: 'Este intento no alcanzó a generar CUFE o CUDE.' });
@@ -345,13 +458,18 @@ export class FacturacionElectronicaComponent implements OnInit {
       error: (error) => Swal.fire({
         icon: 'error',
         title: 'No se pudo consultar la DIAN',
-        text: this.errorMessage(error, 'Inténtelo nuevamente.'),
+        text: this.errorMessage(error, 'Inténtalo nuevamente.'),
       }),
     });
   }
 
   download(document: DianDocument, kind: 'xml' | 'pdf' | 'applicationResponse' | 'attachedDocument'): void {
+    this.openMenu = '';
     if (!document.number) return;
+    if (document.status !== 'accepted') {
+      Swal.fire({ icon: 'info', title: 'Archivo no disponible', text: 'Solo los documentos aceptados por la DIAN tienen PDF y XML.' });
+      return;
+    }
     this.integrationsService.downloadDianArtifact(document.number, kind).subscribe({
       next: (blob: Blob) => {
         const extension = kind === 'pdf' ? 'pdf' : 'xml';
@@ -371,6 +489,7 @@ export class FacturacionElectronicaComponent implements OnInit {
   }
 
   createNote(document: DianDocument): void {
+    this.openMenu = '';
     if (document.type !== 'invoice' || document.status !== 'accepted') return;
     if (!document.orderId || !document.number || !document.cufe) {
       Swal.fire({
@@ -382,18 +501,18 @@ export class FacturacionElectronicaComponent implements OnInit {
     }
 
     Swal.fire({
-      title: '¿Qué necesita corregir?',
+      title: '¿Qué necesitas corregir?',
       input: 'select',
       inputOptions: {
         credit_adjust: 'Disminuir un valor (nota crédito)',
         debit: 'Aumentar un valor (nota débito)',
         credit_full: 'Anular toda la factura (nota crédito)',
       },
-      inputPlaceholder: 'Seleccione una opción',
+      inputPlaceholder: 'Selecciona una opción',
       showCancelButton: true,
       confirmButtonText: 'Continuar',
       cancelButtonText: 'Cancelar',
-      inputValidator: (value) => value ? null : 'Seleccione lo que necesita hacer',
+      inputValidator: (value) => value ? null : 'Selecciona lo que necesitas hacer',
     }).then((result) => {
       if (!result.isConfirmed || !result.value) return;
       if (result.value === 'credit_full') this.confirmFullCreditNote(document);
@@ -407,17 +526,58 @@ export class FacturacionElectronicaComponent implements OnInit {
     return 'Factura';
   }
 
+  statusGroup(document: DianDocument): DianStatusGroup {
+    if (document.status === 'accepted') return 'accepted';
+    if (document.status === 'rejected' || document.status === 'failed') return 'rejected';
+    return 'pending';
+  }
+
   statusLabel(status: DianStatus): string {
     if (status === 'accepted') return 'Aceptada';
     if (status === 'rejected') return 'Rechazada';
     if (status === 'failed') return 'No enviada';
-    return status || 'Desconocido';
+    if (status === 'processing' || status === 'pending') return 'En proceso';
+    return status || 'En proceso';
   }
 
-  statusClass(status: DianStatus): string {
-    if (status === 'accepted') return 'status status--accepted';
-    if (status === 'rejected' || status === 'failed') return 'status status--error';
-    return 'status status--pending';
+  statusIcon(document: DianDocument): string {
+    const group = this.statusGroup(document);
+    return group === 'accepted' ? 'pi-check' : group === 'rejected' ? 'pi-times' : 'pi-clock';
+  }
+
+  rejectionCode(document: DianDocument): string {
+    return document.error?.code || document.dianResponse?.statusCode || '';
+  }
+
+  rejectionMessage(document: DianDocument): string {
+    const response = document.dianResponse || {};
+    const messages = Array.isArray(response.errorMessages) ? response.errorMessages : [];
+    return document.error?.message
+      || (messages.length ? messages.join(' · ') : '')
+      || response.statusDescription
+      || 'La DIAN no aceptó el documento. Consulta el detalle y corrige los datos antes de reintentar.';
+  }
+
+  documentCustomer(document: DianDocument): string {
+    return document.emailDelivery?.recipient || '';
+  }
+
+  historyLabel(entry: any): string {
+    if (entry?.type === 'habilitationSet') return 'Set de pruebas';
+    if (entry?.type === 'habilitationStatus') return 'Consulta';
+    return 'Registro';
+  }
+
+  historyMessage(entry: any): string {
+    if (entry?.type === 'habilitationSet') return 'Envío del set de pruebas de habilitación a la DIAN.';
+    if (entry?.type === 'habilitationStatus') return 'Consulta del estado del set de pruebas.';
+    return entry?.message || entry?.error?.message || 'Registro técnico de la integración.';
+  }
+
+  historyTone(entry: any): 'success' | 'error' | 'info' {
+    if (entry?.status === 'accepted' || entry?.status === 'success') return 'success';
+    if (entry?.status === 'rejected' || entry?.status === 'failed' || entry?.error) return 'error';
+    return 'info';
   }
 
   documentDate(document: DianDocument): Date | null {
@@ -425,15 +585,28 @@ export class FacturacionElectronicaComponent implements OnInit {
     return this.asDate(document.createdAt);
   }
 
+  entryDate(entry: any): Date | null {
+    return this.asDate(entry?.createdAt);
+  }
+
   orderDate(order: any): Date | null {
     return this.asDate(order?.fechaCreacion || order?.createdAt || order?.fecha);
   }
 
   orderCustomer(order: any): string {
-    return order?.cliente?.nombres_completos
+    return order?.facturacion?.nombres
+      || order?.cliente?.nombres_completos
       || order?.cliente?.nombre
       || order?.datosFacturacion?.nombres_completos
       || 'Cliente sin nombre';
+  }
+
+  orderEmail(order: any): string {
+    return order?.facturacion?.correoElectronico
+      || order?.cliente?.correo_electronico_comprador
+      || order?.cliente?.correoElectronico
+      || order?.cliente?.email
+      || '';
   }
 
   orderTotal(order: any): number {
@@ -446,6 +619,17 @@ export class FacturacionElectronicaComponent implements OnInit {
 
   isQueued(order: any): boolean {
     return this.queuedOrders.has(this.orderId(order));
+  }
+
+  initial(value: string): string {
+    return (value || '?').trim().charAt(0).toUpperCase() || '?';
+  }
+
+  avatarColor(value: string): string {
+    const text = value || '';
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+    return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
   }
 
   hasAcceptedCreditNote(document: DianDocument): boolean {
@@ -468,7 +652,7 @@ export class FacturacionElectronicaComponent implements OnInit {
 
   private confirmFullCreditNote(document: DianDocument): void {
     if (this.hasAcceptedCreditNote(document)) {
-      Swal.fire({ icon: 'info', title: 'Esta factura ya tiene nota crédito', text: 'Revise la nota en la bandeja antes de generar otra corrección.' });
+      Swal.fire({ icon: 'info', title: 'Esta factura ya tiene nota crédito', text: 'Revisa la nota en la bandeja antes de generar otra corrección.' });
       return;
     }
     Swal.fire({
@@ -500,7 +684,7 @@ export class FacturacionElectronicaComponent implements OnInit {
         <div class="dian-note-form">
           <label for="dian-note-cause">Motivo</label>
           <select id="dian-note-cause" class="swal2-select">${options}</select>
-          <label for="dian-note-description">Explique el ajuste</label>
+          <label for="dian-note-description">Explica el ajuste</label>
           <input id="dian-note-description" class="swal2-input" placeholder="Ejemplo: descuento acordado con el cliente">
           <label for="dian-note-base">Valor antes de IVA</label>
           <input id="dian-note-base" type="number" min="0.01" step="0.01" class="swal2-input" placeholder="0">
@@ -516,8 +700,8 @@ export class FacturacionElectronicaComponent implements OnInit {
         const description = (popup?.querySelector('#dian-note-description') as HTMLInputElement)?.value.trim();
         const baseAmount = Number((popup?.querySelector('#dian-note-base') as HTMLInputElement)?.value);
         const taxRate = Number((popup?.querySelector('#dian-note-tax') as HTMLSelectElement)?.value);
-        if (!description) return Swal.showValidationMessage('Escriba por qué necesita el ajuste');
-        if (!Number.isFinite(baseAmount) || baseAmount <= 0) return Swal.showValidationMessage('Ingrese un valor mayor que cero');
+        if (!description) return Swal.showValidationMessage('Escribe por qué necesitas el ajuste');
+        if (!Number.isFinite(baseAmount) || baseAmount <= 0) return Swal.showValidationMessage('Ingresa un valor mayor que cero');
         return { code, description, baseAmount, taxRate };
       },
     }).then((result) => {
@@ -560,13 +744,13 @@ export class FacturacionElectronicaComponent implements OnInit {
       error: (error) => Swal.fire({
         icon: 'error',
         title: 'La nota no pudo completarse',
-        text: this.errorMessage(error, 'Revise los datos e inténtelo nuevamente.'),
+        text: this.errorMessage(error, 'Revisa los datos e inténtalo nuevamente.'),
       }),
     });
   }
 
   private isPendingInvoice(order: any): boolean {
-    if (!order || order.nroFactura) return false;
+    if (!order || order.nroFactura || order.facturacionElectronica?.invoiceId) return false;
     if (!Array.isArray(order.carrito) || order.carrito.length === 0) return false;
     return true;
   }
@@ -584,6 +768,10 @@ export class FacturacionElectronicaComponent implements OnInit {
   private dateOnly(value: any): string {
     const date = this.asDate(value);
     return date ? date.toISOString().slice(0, 10) : '';
+  }
+
+  private formatCop(value: number): string {
+    return '$' + Math.round(value || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
 
   private errorMessage(error: any, fallback: string): string {

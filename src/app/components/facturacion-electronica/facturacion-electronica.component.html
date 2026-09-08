@@ -1,352 +1,347 @@
-<div class="container-fluid dian-page">
-  <div class="dian-header">
-    <div>
-      <div class="dian-eyebrow">KATUQ + DIAN</div>
+<div class="fe-page">
+
+  <!-- ===== Encabezado ===== -->
+  <header class="fe-header">
+    <div class="fe-header__copy">
+      <div class="fe-eyebrow">
+        <span class="fe-eyebrow__brand">KATUQ + DIAN</span>
+        <span class="fe-env fe-env--{{ environmentTone }}"><span class="fe-env__dot"></span>{{ environmentLabel }}</span>
+      </div>
       <h1>Facturación electrónica</h1>
       <p>Prepara facturas libres o desde pedidos, revisa las respuestas de la DIAN y encuentra tus notas.</p>
     </div>
-    <div class="header-actions">
-      <button type="button" class="btn btn-primary" (click)="selectTab('compose')">
+    <div class="fe-header__actions">
+      <button type="button" class="fe-btn fe-btn--primary" (click)="selectTab('compose')">
         <i class="pi pi-plus"></i> Nueva factura
       </button>
-      <button type="button" class="btn btn-light" (click)="openGuide()">
-        <i class="pi pi-question-circle"></i>
-        Cómo se usa
-      </button>
-      <button type="button" class="btn btn-light" (click)="loadDashboard()" [disabled]="loading">
+      <button type="button" class="fe-iconbtn fe-iconbtn--accent" title="Actualizar" aria-label="Actualizar" (click)="loadDashboard()" [disabled]="loading">
         <i class="pi pi-refresh" [class.pi-spin]="loading"></i>
-        Actualizar
       </button>
-      <button type="button" class="btn btn-outline-primary" (click)="goToConfiguration()">
-        <i class="pi pi-cog"></i>
-        Configuración DIAN
+      <button type="button" class="fe-iconbtn" title="Cómo se usa" aria-label="Cómo se usa" (click)="selectTab('guide')">
+        <i class="pi pi-question-circle"></i>
+      </button>
+      <button type="button" class="fe-btn fe-btn--ghost" (click)="goToConfiguration()">
+        <i class="pi pi-cog fe-accent"></i> Configuración DIAN
       </button>
     </div>
-  </div>
+  </header>
 
-  <div class="connection-card" [class.connection-card--ready]="isConfigured">
-    <span class="connection-icon"><i class="pi" [ngClass]="isConfigured ? 'pi-check-circle' : 'pi-exclamation-circle'"></i></span>
-    <div class="connection-copy">
-      <strong>{{ configurationError ? 'No pudimos consultar la configuración' : (isConfigured ? 'Configuración DIAN guardada' : 'La conexión DIAN necesita configuración') }}</strong>
-      <span *ngIf="isConfigured">Ambiente: {{ environmentLabel }}. Cada comercio usa sus propios datos, certificado y numeración.</span>
-      <span *ngIf="!isConfigured && !configurationError">Complete una sola vez el asistente del comercio antes de emitir documentos.</span>
-      <span *ngIf="configurationError">Tus datos no se han borrado. Pulsa Actualizar para volver a consultar.</span>
+  <!-- ===== Franja de estado ===== -->
+  <section class="fe-strip fe-strip--{{ nextTask.tone }}" aria-live="polite">
+    <span class="fe-strip__icon"><i class="pi" [ngClass]="nextTask.icon"></i></span>
+    <div class="fe-strip__copy">
+      <strong>{{ nextTask.title }}</strong>
+      <span>{{ nextTask.description }}</span>
     </div>
-    <button *ngIf="!isConfigured && !configurationError && !loading" type="button" class="btn btn-primary" (click)="goToConfiguration()">Configurar ahora</button>
-  </div>
-
-  <details class="alert alert-info" *ngIf="technicalHistory.length">
-    <summary>Historial técnico: {{ technicalHistory.length }} registros de envíos y consultas</summary>
-    <p>Estos registros no son facturas ni notas y no se suman a los contadores. El estado de un lote no determina si Katuq está habilitado.</p>
-    <p *ngFor="let entry of technicalHistory">
-      {{ entry.type === 'habilitationSet' ? 'Envío del set de pruebas' : (entry.type === 'habilitationStatus' ? 'Consulta del set de pruebas' : 'Registro técnico') }}
-      — {{ documentDate(entry) ? (documentDate(entry) | date:'dd/MM/yyyy') : 'Sin fecha' }}.
-    </p>
-  </details>
-
-  <section class="next-task" [ngClass]="'next-task--' + nextTask.tone" aria-live="polite">
-    <span class="next-task__icon"><i class="pi" [ngClass]="nextTask.icon"></i></span>
-    <div class="next-task__copy">
-      <small>QUÉ DEBO HACER AHORA</small>
-      <h2>{{ nextTask.title }}</h2>
-      <p>{{ nextTask.description }}</p>
-    </div>
-    <button type="button" class="btn next-task__button" (click)="doNextTask()">
+    <button type="button" class="fe-btn fe-strip__cta" (click)="doNextTask()" [disabled]="loading && configurationError">
       {{ nextTask.button }} <i class="pi pi-arrow-right"></i>
     </button>
+    <span class="fe-strip__divider"></span>
+    <div class="fe-strip__meta">
+      <span class="fe-strip__state" [class.is-ok]="isConfigured" [class.is-warn]="!isConfigured">
+        <i class="pi" [ngClass]="isConfigured ? 'pi-check' : 'pi-exclamation-circle'"></i>
+        {{ configurationError ? 'Configuración sin consultar' : (isConfigured ? 'Configuración guardada' : 'Sin configurar') }}
+      </span>
+      <a href="#" class="fe-strip__hist" *ngIf="technicalHistory.length" (click)="toggleHistory($event)" [attr.aria-expanded]="historyOpen">
+        Historial técnico ({{ technicalHistory.length }})
+        <i class="pi pi-chevron-down" [class.is-open]="historyOpen"></i>
+      </a>
+    </div>
   </section>
 
-  <div class="summary-grid" aria-label="Resumen de facturación">
-    <article class="summary-card summary-card--blue">
-      <span>Documentos</span>
-      <strong>{{ documents.length }}</strong>
-      <small>Últimos registros DIAN</small>
-    </article>
-    <article class="summary-card summary-card--green">
-      <span>Aceptados</span>
-      <strong>{{ acceptedCount }}</strong>
-      <small>Facturas y notas válidas</small>
-    </article>
-    <article class="summary-card summary-card--orange">
-      <span>Por facturar</span>
-      <strong>{{ pendingOrders.length }}</strong>
-      <small>Pedidos recientes sin factura</small>
-    </article>
-    <article class="summary-card summary-card--purple">
-      <span>Notas</span>
-      <strong>{{ notesCount }}</strong>
-      <small>Crédito y débito</small>
-    </article>
+  <section class="fe-card fe-history" *ngIf="historyOpen && technicalHistory.length">
+    <div class="fe-history__head">Historial técnico · últimos envíos y consultas</div>
+    <p class="fe-history__note">Estos registros no son facturas ni notas y no se suman a los contadores.</p>
+    <div class="fe-history__row" *ngFor="let entry of technicalHistory">
+      <span class="fe-history__dot fe-history__dot--{{ historyTone(entry) }}"></span>
+      <span class="fe-history__time">{{ entryDate(entry) ? (entryDate(entry) | date:'dd/MM HH:mm') : 'Sin fecha' }}</span>
+      <span class="fe-history__tag fe-history__tag--{{ historyTone(entry) }}">{{ historyLabel(entry) }}</span>
+      <span class="fe-history__msg">{{ historyMessage(entry) }}</span>
+    </div>
+  </section>
+
+  <!-- ===== KPIs ===== -->
+  <div class="fe-kpis" aria-label="Resumen de facturación">
+    <button type="button" class="fe-kpi fe-kpi--accent" (click)="showDocuments('all')">
+      <div><span class="fe-kpi__label">Documentos</span><strong>{{ documents.length }}</strong><small>últimos registros DIAN</small></div>
+      <span class="fe-kpi__icon"><i class="pi pi-file"></i></span>
+    </button>
+    <button type="button" class="fe-kpi fe-kpi--green" (click)="showDocuments('accepted')">
+      <div><span class="fe-kpi__label">Aceptados</span><strong>{{ acceptedCount }}</strong><small>facturas y notas válidas</small></div>
+      <span class="fe-kpi__icon"><i class="pi pi-check"></i></span>
+    </button>
+    <button type="button" class="fe-kpi fe-kpi--orange" (click)="selectTab('invoice')">
+      <div><span class="fe-kpi__label">Por facturar</span><strong>{{ pendingOrders.length }}</strong><small>pedidos recientes sin factura</small></div>
+      <span class="fe-kpi__icon"><i class="pi pi-send"></i></span>
+    </button>
+    <button type="button" class="fe-kpi fe-kpi--slate" (click)="showDocuments('all', 'notes')">
+      <div><span class="fe-kpi__label">Notas</span><strong>{{ notesCount }}</strong><small>crédito y débito</small></div>
+      <span class="fe-kpi__icon"><i class="pi pi-replay"></i></span>
+    </button>
   </div>
 
-  <nav class="work-tabs" aria-label="Opciones de facturación">
-    <button type="button" [class.active]="activeTab === 'compose'" (click)="selectTab('compose')">
+  <!-- ===== Pestañas ===== -->
+  <nav class="fe-tabs" aria-label="Opciones de facturación">
+    <button type="button" [class.is-active]="activeTab === 'documents'" (click)="selectTab('documents')">
+      <i class="pi pi-file"></i> Facturas y notas <span class="fe-tabs__count">{{ documents.length }}</span>
+    </button>
+    <button type="button" [class.is-active]="activeTab === 'compose'" (click)="selectTab('compose')">
       <i class="pi pi-plus"></i> Nueva factura
     </button>
-    <button type="button" [class.active]="activeTab === 'documents'" (click)="selectTab('documents')">
-      <i class="pi pi-file"></i>
-      Facturas y notas
-      <span>{{ documents.length }}</span>
+    <button type="button" [class.is-active]="activeTab === 'invoice'" (click)="selectTab('invoice')">
+      <i class="pi pi-send"></i> Desde pedidos <span class="fe-tabs__count">{{ pendingOrders.length }}</span>
     </button>
-    <button type="button" [class.active]="activeTab === 'invoice'" (click)="selectTab('invoice')">
-      <i class="pi pi-send"></i>
-      Emisión desde pedidos
-      <span>{{ pendingOrders.length }}</span>
-    </button>
-    <button type="button" [class.active]="activeTab === 'guide'" (click)="selectTab('guide')">
-      <i class="pi pi-question-circle"></i>
-      Guía paso a paso
+    <button type="button" [class.is-active]="activeTab === 'guide'" (click)="selectTab('guide')">
+      <i class="pi pi-question-circle"></i> Guía paso a paso
     </button>
   </nav>
 
-  <section #composerPanel class="composer-panel" tabindex="-1" aria-label="Preparar nueva factura" [hidden]="activeTab !== 'compose'">
+  <!-- ===== Nueva factura ===== -->
+  <section #composerPanel class="fe-composer" tabindex="-1" aria-label="Preparar nueva factura" [hidden]="activeTab !== 'compose'">
     <app-invoice-composer *ngIf="composerOpened" [integration]="integration" (issued)="loadDashboard()" (documentsRequested)="selectTab('documents')"></app-invoice-composer>
   </section>
 
-  <section class="workspace-card" *ngIf="activeTab === 'documents'">
-    <div class="section-heading">
-      <div>
+  <!-- ===== Facturas y notas ===== -->
+  <section class="fe-card fe-list" *ngIf="activeTab === 'documents'">
+    <div class="fe-list__head">
+      <div class="fe-list__title">
         <h2>Facturas y notas</h2>
-        <p>Aquí aparecen los documentos enviados por este comercio.</p>
+        <p>Documentos enviados por este comercio</p>
       </div>
-      <div class="filters">
-        <label class="search-box">
+      <div class="fe-list__tools">
+        <label class="fe-search" [class.is-active]="search">
           <i class="pi pi-search"></i>
-          <input type="search" [(ngModel)]="search" placeholder="Buscar número o pedido" aria-label="Buscar documentos">
+          <input type="search" [(ngModel)]="search" placeholder="Número, pedido o correo" aria-label="Buscar documentos">
         </label>
-        <select [(ngModel)]="typeFilter" aria-label="Filtrar por tipo">
-          <option value="all">Todos los documentos</option>
-          <option value="invoice">Facturas</option>
-          <option value="creditNote">Notas crédito</option>
-          <option value="debitNote">Notas débito</option>
-        </select>
-        <select [(ngModel)]="statusFilter" aria-label="Filtrar por estado">
-          <option value="all">Todos los estados</option>
-          <option value="accepted">Aceptados</option>
-          <option value="rejected">Rechazados</option>
-          <option value="failed">No enviados</option>
-        </select>
+        <div class="fe-segment" role="group" aria-label="Filtrar por estado">
+          <button type="button" [class.is-active]="statusFilter === 'all'" (click)="statusFilter = 'all'">Todos <b>{{ documents.length }}</b></button>
+          <button type="button" [class.is-active]="statusFilter === 'accepted'" (click)="statusFilter = 'accepted'">Aceptadas <b>{{ acceptedCount }}</b></button>
+          <button type="button" [class.is-active]="statusFilter === 'pending'" (click)="statusFilter = 'pending'">En proceso <b>{{ pendingCount }}</b></button>
+          <button type="button" [class.is-active]="statusFilter === 'rejected'" (click)="statusFilter = 'rejected'">Rechazadas <b>{{ rejectedCount }}</b></button>
+        </div>
+        <button type="button" class="fe-filterchip" *ngIf="typeFilter === 'notes'" (click)="typeFilter = 'all'" title="Quitar filtro">
+          Solo notas <i class="pi pi-times"></i>
+        </button>
       </div>
     </div>
 
-    <div class="friendly-alert friendly-alert--error" *ngIf="documentsError">
+    <div class="fe-alert fe-alert--error" *ngIf="documentsError">
       <i class="pi pi-exclamation-triangle"></i>
       <div><strong>No pudimos cargar la bandeja</strong><span>{{ documentsError }}</span></div>
-      <button type="button" class="btn btn-sm btn-outline-danger" (click)="loadDashboard()">Reintentar</button>
+      <button type="button" class="fe-btn fe-btn--danger-ghost" (click)="loadDashboard()">Reintentar</button>
     </div>
 
-    <div class="loading-state" *ngIf="loading">
-      <i class="pi pi-spin pi-spinner"></i>
-      <span>Cargando la información del comercio…</span>
+    <div class="fe-state" *ngIf="loading">
+      <i class="pi pi-spin pi-spinner"></i><span>Cargando la información del comercio…</span>
     </div>
 
-    <div class="empty-state" *ngIf="!loading && !documentsError && filteredDocuments.length === 0">
-      <span class="empty-state__icon"><i class="pi pi-file"></i></span>
-      <h3>{{ documents.length ? 'No hay resultados con esos filtros' : 'Todavía no hay documentos DIAN' }}</h3>
-      <p>{{ documents.length ? 'Cambie la búsqueda o seleccione otro estado.' : 'Cuando facture el primer pedido, aparecerá aquí con su estado y archivos.' }}</p>
-      <button *ngIf="!documents.length" type="button" class="btn btn-primary" (click)="selectTab('invoice')">Facturar un pedido</button>
-    </div>
-
-    <div class="table-responsive" *ngIf="!loading && filteredDocuments.length">
-      <table class="table dian-table">
+    <div class="fe-table-wrap" *ngIf="!loading && filteredDocuments.length">
+      <table class="fe-table">
         <thead>
           <tr>
-            <th>Documento</th>
-            <th>Fecha</th>
-            <th>Pedido / referencia</th>
+            <th class="fe-table__doc">Documento</th>
+            <th>Cliente</th>
+            <th>Pedido</th>
             <th class="text-end">Valor</th>
-            <th>Estado DIAN</th>
-            <th class="text-end">Qué desea hacer</th>
+            <th class="text-center">Estado DIAN</th>
+            <th class="text-center fe-table__actions">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let document of filteredDocuments; trackBy: trackByDocument">
-            <td>
-              <div class="document-main">
-                <span class="document-icon" [class.document-icon--note]="document.type !== 'invoice'">
-                  <i class="pi" [ngClass]="document.type === 'invoice' ? 'pi-file' : 'pi-pencil'"></i>
-                </span>
-                <div>
-                  <strong>{{ document.number || 'Sin consecutivo' }}</strong>
-                  <small>{{ documentTypeLabel(document.type) }}</small>
+          <ng-container *ngFor="let document of filteredDocuments; trackBy: trackByDocument">
+            <tr [class.is-rejected]="statusGroup(document) === 'rejected'">
+              <td>
+                <div class="fe-doc">
+                  <span class="fe-doc__icon" [class.fe-doc__icon--note]="document.type !== 'invoice'">
+                    <i class="pi" [ngClass]="document.type === 'invoice' ? 'pi-file' : 'pi-replay'"></i>
+                  </span>
+                  <div>
+                    <strong>{{ document.number || 'Sin consecutivo' }}</strong>
+                    <small>{{ documentTypeLabel(document.type) }} · {{ documentDate(document) ? (documentDate(document) | date:'dd/MM/yyyy') : 'sin fecha' }}</small>
+                  </div>
                 </div>
+              </td>
+              <td>
+                <div class="fe-client" *ngIf="documentCustomer(document); else noClient">
+                  <span class="fe-avatar" [style.background]="avatarColor(documentCustomer(document))">{{ initial(documentCustomer(document)) }}</span>
+                  <span class="fe-client__name" [title]="documentCustomer(document)">{{ documentCustomer(document) }}</span>
+                </div>
+                <ng-template #noClient><span class="fe-dim">—</span></ng-template>
+              </td>
+              <td class="fe-mono" [class.fe-dim]="!(document.type === 'invoice' ? document.orderId : document.reference?.number)">
+                {{ document.type === 'invoice' ? (document.orderId || '—') : (document.reference?.number || '—') }}
+                <small class="fe-cellnote" *ngIf="document.correction?.description">{{ document.correction?.description }}</small>
+              </td>
+              <td class="text-end fe-amount">{{ document.amount != null ? (document.amount | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</td>
+              <td class="text-center">
+                <span class="fe-pill fe-pill--{{ statusGroup(document) }}"><i class="pi" [ngClass]="statusIcon(document)"></i>{{ statusLabel(document.status) }}</span>
+              </td>
+              <td>
+                <div class="fe-rowactions" data-menu-cell="1">
+                  <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="download(document, 'pdf')" [disabled]="document.status !== 'accepted'" title="Descargar representación gráfica">
+                    <i class="pi pi-file-pdf fe-red"></i> PDF
+                  </button>
+                  <button type="button" class="fe-kebab" [class.is-open]="isMenuOpen(document)" (click)="toggleMenu(document, $event)" title="Más acciones" aria-haspopup="menu" [attr.aria-expanded]="isMenuOpen(document)">
+                    <i class="pi pi-ellipsis-v"></i>
+                  </button>
+                  <div class="fe-menu" role="menu" *ngIf="isMenuOpen(document)">
+                    <button type="button" role="menuitem" class="fe-menu__item fe-menu__item--accent" (click)="checkStatus(document)" [disabled]="!document.cufe && !document.cude">
+                      <i class="pi pi-search"></i> Consultar en la DIAN
+                    </button>
+                    <button type="button" role="menuitem" class="fe-menu__item fe-menu__item--blue" (click)="download(document, 'attachedDocument')" [disabled]="document.status !== 'accepted'">
+                      <i class="pi pi-download"></i> Descargar XML
+                    </button>
+                    <ng-container *ngIf="document.type === 'invoice'">
+                      <div class="fe-menu__sep"></div>
+                      <button type="button" role="menuitem" class="fe-menu__item fe-menu__item--orange" (click)="createNote(document)" [disabled]="document.status !== 'accepted'">
+                        <i class="pi pi-replay"></i> Crear nota de crédito
+                      </button>
+                    </ng-container>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr class="fe-reject" *ngIf="statusGroup(document) === 'rejected'">
+              <td colspan="6">
+                <div class="fe-reject__body">
+                  <span class="fe-reject__icon"><i class="pi pi-times"></i></span>
+                  <div class="fe-reject__copy">
+                    <span class="fe-reject__title">Respuesta de la DIAN<ng-container *ngIf="rejectionCode(document)"> · {{ rejectionCode(document) }}</ng-container></span>
+                    <span class="fe-reject__msg">{{ rejectionMessage(document) }}</span>
+                  </div>
+                  <button type="button" class="fe-btn fe-btn--sm fe-btn--danger" (click)="retryDocument(document)">
+                    <i class="pi pi-pencil"></i> Corregir y reenviar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fe-empty" *ngIf="!loading && !documentsError && filteredDocuments.length === 0">
+      <span class="fe-empty__icon"><i class="pi" [ngClass]="documents.length ? 'pi-search' : 'pi-file'"></i></span>
+      <strong>{{ documents.length ? 'Ningún documento coincide' : 'Todavía no hay documentos DIAN' }}</strong>
+      <span>{{ documents.length ? 'Ajusta la búsqueda o el filtro de estado' : 'Cuando emitas la primera factura aparecerá aquí con su estado y archivos.' }}</span>
+      <button *ngIf="!documents.length" type="button" class="fe-btn fe-btn--primary" (click)="selectTab('compose')"><i class="pi pi-plus"></i> Nueva factura</button>
+    </div>
+
+    <div class="fe-list__foot" *ngIf="!loading">
+      <span>Mostrando <b>{{ filteredDocuments.length }}</b> de <b>{{ documents.length }}</b> documentos</span>
+      <span class="fe-list__sync" *ngIf="lastSync"><i class="pi pi-clock"></i> Última consulta a la DIAN {{ lastSync | date:'HH:mm' }}</span>
+    </div>
+  </section>
+
+  <!-- ===== Desde pedidos ===== -->
+  <section class="fe-card fe-list" *ngIf="activeTab === 'invoice'">
+    <div class="fe-list__head">
+      <div class="fe-list__title">
+        <h2>Pedidos sin factura</h2>
+        <p>Emite en lote los pedidos ya entregados y pagados</p>
+      </div>
+      <button type="button" class="fe-btn fe-btn--primary fe-list__cta" (click)="emitSelected()" [disabled]="!selectedOrders.size || loading">
+        <i class="pi pi-send"></i> Emitir seleccionados<ng-container *ngIf="selectedOrders.size"> ({{ selectedOrders.size }})</ng-container>
+      </button>
+    </div>
+
+    <div class="fe-alert fe-alert--info" *ngIf="!isConfigured && !loading">
+      <i class="pi pi-info-circle"></i>
+      <div><strong>Antes de facturar</strong><span>Completa la configuración DIAN de este comercio. Tus pedidos no se pierden.</span></div>
+      <button type="button" class="fe-btn fe-btn--sm fe-btn--primary" (click)="goToConfiguration()">Configurar</button>
+    </div>
+
+    <div class="fe-alert fe-alert--error" *ngIf="ordersError">
+      <i class="pi pi-exclamation-triangle"></i>
+      <div><strong>No pudimos cargar los pedidos</strong><span>{{ ordersError }}</span></div>
+      <button type="button" class="fe-btn fe-btn--danger-ghost" (click)="loadDashboard()">Reintentar</button>
+    </div>
+
+    <div class="fe-state" *ngIf="loading">
+      <i class="pi pi-spin pi-spinner"></i><span>Buscando pedidos sin factura…</span>
+    </div>
+
+    <div class="fe-empty" *ngIf="!loading && !ordersError && pendingOrders.length === 0">
+      <span class="fe-empty__icon fe-empty__icon--ok"><i class="pi pi-check"></i></span>
+      <strong>No hay pedidos pendientes</strong>
+      <span>Los pedidos recientes ya tienen factura o aún no tienen productos.</span>
+    </div>
+
+    <div class="fe-table-wrap" *ngIf="!loading && pendingOrders.length">
+      <table class="fe-table fe-table--orders">
+        <thead>
+          <tr>
+            <th class="fe-table__check">
+              <span class="fe-check" [class.is-on]="allSelected" [class.is-disabled]="!selectableOrders.length" role="checkbox" [attr.aria-checked]="allSelected" tabindex="0" title="Seleccionar todos los listos" (click)="toggleAllOrders()" (keydown.enter)="toggleAllOrders()" (keydown.space)="$event.preventDefault(); toggleAllOrders()">
+                <i class="pi pi-check" *ngIf="allSelected"></i>
+              </span>
+            </th>
+            <th>Pedido</th>
+            <th class="fe-table__client">Cliente</th>
+            <th>Fecha</th>
+            <th class="text-end">Valor</th>
+            <th class="text-center">Listo para facturar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of pendingOrders; trackBy: trackByOrder" [class.is-selected]="isSelected(order)" [class.is-blocked]="orderReadiness(order).blocked">
+            <td>
+              <span class="fe-check" *ngIf="!isQueued(order); else queuedIcon" [class.is-on]="isSelected(order)" [class.is-disabled]="orderReadiness(order).blocked" role="checkbox" [attr.aria-checked]="isSelected(order)" [attr.aria-disabled]="orderReadiness(order).blocked" tabindex="0" (click)="toggleOrder(order)" (keydown.enter)="toggleOrder(order)" (keydown.space)="$event.preventDefault(); toggleOrder(order)">
+                <i class="pi pi-check" *ngIf="isSelected(order)"></i>
+              </span>
+              <ng-template #queuedIcon><i class="pi pi-spin pi-spinner fe-accent" title="Procesando"></i></ng-template>
+            </td>
+            <td class="fe-mono fe-mono--strong">{{ order.nroPedido || orderId(order) }}</td>
+            <td>
+              <div class="fe-client">
+                <span class="fe-avatar" [style.background]="avatarColor(orderCustomer(order))">{{ initial(orderCustomer(order)) }}</span>
+                <span class="fe-client__name" [title]="orderCustomer(order)">{{ orderCustomer(order) }}</span>
               </div>
             </td>
-            <td>{{ documentDate(document) ? (documentDate(document) | date:'dd/MM/yyyy') : '—' }}</td>
-            <td>
-              <strong>{{ document.type === 'invoice' ? (document.orderId || '—') : (document.reference?.number || '—') }}</strong>
-              <small class="cell-note" *ngIf="document.correction?.description">{{ document.correction?.description }}</small>
-            </td>
-            <td class="text-end amount">{{ document.amount != null ? (document.amount | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</td>
-            <td>
-              <span [class]="statusClass(document.status)"><i class="pi pi-circle-fill"></i>{{ statusLabel(document.status) }}</span>
-              <small class="cell-note" *ngIf="document.error?.message">{{ document.error?.message }}</small>
-            </td>
-            <td>
-              <div class="row-actions">
-                <button type="button" class="action-button" (click)="checkStatus(document)" [disabled]="!document.cufe && !document.cude" title="Consultar respuesta actual">
-                  <i class="pi pi-search"></i><span>Consultar</span>
-                </button>
-                <button type="button" class="action-button" (click)="download(document, 'pdf')" [disabled]="document.status !== 'accepted'" title="Descargar representación gráfica">
-                  <i class="pi pi-file-pdf"></i><span>PDF</span>
-                </button>
-                <button type="button" class="action-button" (click)="download(document, 'attachedDocument')" [disabled]="document.status !== 'accepted'" title="Descargar documento electrónico completo">
-                  <i class="pi pi-download"></i><span>XML</span>
-                </button>
-                <button *ngIf="document.type === 'invoice'" type="button" class="action-button action-button--primary" (click)="createNote(document)" [disabled]="document.status !== 'accepted'" title="Corregir o anular esta factura">
-                  <i class="pi pi-pencil"></i><span>Crear nota</span>
-                </button>
-              </div>
+            <td class="fe-dim">{{ orderDate(order) ? (orderDate(order) | date:'dd/MM/yyyy') : '—' }}</td>
+            <td class="text-end fe-amount">{{ orderTotal(order) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td class="text-center">
+              <span class="fe-pill fe-pill--{{ orderReadiness(order).tone }}" *ngIf="!isQueued(order); else queuedPill">
+                <i class="pi" [ngClass]="orderReadiness(order).ok ? (orderReadiness(order).tone === 'success' ? 'pi-check' : 'pi-clock') : 'pi-exclamation-triangle'"></i>{{ orderReadiness(order).label }}
+              </span>
+              <ng-template #queuedPill><span class="fe-pill fe-pill--pending"><i class="pi pi-clock"></i>Procesando</span></ng-template>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <div class="fe-list__foot" *ngIf="!loading && pendingOrders.length">
+      <span><b>{{ selectedOrders.size }}</b> seleccionado{{ selectedOrders.size === 1 ? '' : 's' }} de <b>{{ pendingOrders.length }}</b> pedidos</span>
+      <span class="fe-list__sync" *ngIf="pendingOrders.length >= 100"><i class="pi pi-info-circle"></i> Mostramos los 100 pedidos más recientes sin factura</span>
+    </div>
   </section>
 
-  <section class="workspace-card" *ngIf="activeTab === 'invoice'">
-    <div class="section-heading">
-      <div>
-        <h2>Pedidos listos para facturar</h2>
-        <p>Elija un pedido, confirme y Katuq se encarga de firmar y enviarlo a la DIAN.</p>
-      </div>
-      <div class="simple-steps" aria-label="Proceso de facturación">
-        <span><b>1</b> Revise</span><i class="pi pi-angle-right"></i>
-        <span><b>2</b> Confirme</span><i class="pi pi-angle-right"></i>
-        <span><b>3</b> Katuq envía</span>
-      </div>
-    </div>
-
-    <div class="friendly-alert friendly-alert--info" *ngIf="!isConfigured">
-      <i class="pi pi-info-circle"></i>
-      <div><strong>Antes de facturar</strong><span>Complete la configuración DIAN de este comercio. Sus pedidos no se perderán.</span></div>
-      <button type="button" class="btn btn-sm btn-primary" (click)="goToConfiguration()">Configurar</button>
-    </div>
-
-    <div class="friendly-alert friendly-alert--error" *ngIf="ordersError">
-      <i class="pi pi-exclamation-triangle"></i>
-      <div><strong>No pudimos cargar los pedidos</strong><span>{{ ordersError }}</span></div>
-      <button type="button" class="btn btn-sm btn-outline-danger" (click)="loadDashboard()">Reintentar</button>
-    </div>
-
-    <div class="loading-state" *ngIf="loading">
-      <i class="pi pi-spin pi-spinner"></i><span>Buscando pedidos sin factura…</span>
-    </div>
-
-    <div class="empty-state" *ngIf="!loading && !ordersError && pendingOrders.length === 0">
-      <span class="empty-state__icon empty-state__icon--success"><i class="pi pi-check"></i></span>
-      <h3>No hay pedidos pendientes</h3>
-      <p>Los pedidos recientes de esta lista ya tienen factura o aún no tienen productos.</p>
-    </div>
-
-    <div class="order-list" *ngIf="!loading && pendingOrders.length">
-      <article class="order-card" *ngFor="let order of pendingOrders; trackBy: trackByOrder">
-        <div class="order-card__identity">
-          <span class="order-card__icon"><i class="pi pi-shopping-bag"></i></span>
-          <div>
-            <small>Pedido</small>
-            <strong>{{ order.nroPedido || orderId(order) }}</strong>
-          </div>
-        </div>
-        <div class="order-card__customer">
-          <small>Cliente</small>
-          <strong>{{ orderCustomer(order) }}</strong>
-        </div>
-        <div class="order-card__date">
-          <small>Fecha</small>
-          <strong>{{ orderDate(order) ? (orderDate(order) | date:'dd/MM/yyyy') : '—' }}</strong>
-        </div>
-        <div class="order-card__amount">
-          <small>Total</small>
-          <strong>{{ orderTotal(order) | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
-        </div>
-        <button type="button" class="btn invoice-button" (click)="invoiceOrder(order)" [disabled]="isQueued(order)">
-          <i class="pi" [ngClass]="isQueued(order) ? 'pi-spin pi-spinner' : 'pi-send'"></i>
-          {{ isQueued(order) ? 'Procesando…' : 'Facturar' }}
-        </button>
-      </article>
-    </div>
-
-    <p class="list-footnote" *ngIf="pendingOrders.length >= 100">
-      <i class="pi pi-info-circle"></i> Mostramos los 100 pedidos más recientes sin factura. Use el listado de ventas para buscar pedidos anteriores.
-    </p>
-  </section>
-
-  <section class="workspace-card guide-workspace" *ngIf="activeTab === 'guide'">
-    <div class="section-heading">
-      <div>
-        <h2>Guía para manejar la facturación</h2>
-        <p>No necesita conocer términos técnicos. Siga el orden y Katuq le indicará cuándo puede continuar.</p>
-      </div>
-      <span class="guide-progress">{{ setupProgress }} de 3 pasos iniciales</span>
-    </div>
-
-    <div class="guide-layout">
-      <section class="guide-block">
-        <div class="guide-block__heading">
-          <span>1</span>
-          <div><h3>Preparar {{ commerceName }}</h3><p>Esto se hace una sola vez por comercio.</p></div>
-        </div>
-        <div class="setup-checklist">
-          <article [class.is-complete]="isConfigured">
-            <span class="check-icon"><i class="pi" [ngClass]="isConfigured ? 'pi-check' : 'pi-clock'"></i></span>
-            <div><strong>Guardar datos, certificado y numeración</strong><small>{{ isConfigured ? 'La conexión está guardada.' : 'Use el asistente de Configuración DIAN.' }}</small></div>
-            <button *ngIf="!isConfigured" type="button" class="btn btn-sm btn-outline-primary" (click)="goToConfiguration()">Hacer ahora</button>
-          </article>
-          <article [class.is-complete]="isProduction">
-            <span class="check-icon"><i class="pi" [ngClass]="isProduction ? 'pi-check' : 'pi-clock'"></i></span>
-            <div><strong>Completar la habilitación ante la DIAN</strong><small>{{ isProduction ? 'El comercio está configurado para producción.' : 'Envíe el grupo de pruebas y espere la aprobación.' }}</small></div>
-            <button *ngIf="isConfigured && !isProduction" type="button" class="btn btn-sm btn-outline-primary" (click)="goToConfiguration()">Continuar</button>
-          </article>
-          <article [class.is-complete]="hasAcceptedInvoice">
-            <span class="check-icon"><i class="pi" [ngClass]="hasAcceptedInvoice ? 'pi-check' : 'pi-clock'"></i></span>
-            <div><strong>Emitir y revisar la primera factura</strong><small>{{ hasAcceptedInvoice ? 'Ya existe una factura aceptada.' : 'Cuando esté en producción, facture un pedido y confirme que quede Aceptada.' }}</small></div>
-            <button *ngIf="isProduction && !hasAcceptedInvoice" type="button" class="btn btn-sm btn-outline-primary" (click)="selectTab('invoice')">Ver pedidos</button>
-          </article>
-        </div>
-      </section>
-
-      <section class="guide-block">
-        <div class="guide-block__heading">
-          <span>2</span>
-          <div><h3>La rutina de todos los días</h3><p>Cuatro revisiones sencillas.</p></div>
-        </div>
-        <ol class="daily-routine">
-          <li><b>Abra “Facturar pedidos”.</b><span>Verá solamente pedidos recientes que todavía no tienen factura.</span></li>
-          <li><b>Revise antes de enviar.</b><span>Confirme nombre y documento del cliente, productos, cantidades, precios e impuestos.</span></li>
-          <li><b>Pulse “Facturar”.</b><span>Katuq prepara, firma y transmite. Usted puede continuar trabajando mientras termina.</span></li>
-          <li><b>Compruebe que diga “Aceptada”.</b><span>Después podrá descargar PDF/XML o crear una nota si necesita corregir.</span></li>
-        </ol>
-        <button type="button" class="btn btn-primary guide-primary-action" (click)="selectTab('invoice')" [disabled]="!isProduction">
-          <i class="pi pi-send"></i> Ir a facturar pedidos
-        </button>
-      </section>
-
-      <section class="guide-block guide-block--wide">
-        <div class="guide-block__heading">
-          <span>3</span>
-          <div><h3>¿Qué significa cada cosa?</h3><p>Pulse una tarjeta para ver la explicación.</p></div>
-        </div>
-        <div class="concept-grid">
-          <button type="button" (click)="showConcept('invoice')"><i class="pi pi-file"></i><strong>Factura</strong><span>Registrar una venta</span></button>
-          <button type="button" (click)="showConcept('credit')"><i class="pi pi-arrow-down"></i><strong>Nota crédito</strong><span>Disminuir o anular</span></button>
-          <button type="button" (click)="showConcept('debit')"><i class="pi pi-arrow-up"></i><strong>Nota débito</strong><span>Aumentar un valor</span></button>
-          <button type="button" (click)="showConcept('status')"><i class="pi pi-info-circle"></i><strong>Estados DIAN</strong><span>Aceptada o por corregir</span></button>
-        </div>
-      </section>
-
-      <section class="guide-block guide-block--wide help-scenarios">
-        <div class="guide-block__heading">
-          <span>4</span>
-          <div><h3>Si ocurre esto, haga esto</h3><p>Una referencia rápida para no quedarse bloqueado.</p></div>
-        </div>
-        <div class="scenario-grid">
-          <article><i class="pi pi-check-circle"></i><div><strong>Dice “Aceptada”</strong><span>Terminó correctamente. Puede descargarla o enviarla al cliente.</span></div></article>
-          <article><i class="pi pi-times-circle"></i><div><strong>Dice “Rechazada”</strong><span>Pulse Consultar, lea el mensaje y corrija los datos indicados antes de volver a facturar.</span></div></article>
-          <article><i class="pi pi-ban"></i><div><strong>Quiero anular</strong><span>Abra la factura aceptada, pulse Crear nota y elija “Anular toda la factura”.</span></div></article>
-          <article><i class="pi pi-pencil"></i><div><strong>Cambió el valor</strong><span>Use nota crédito para disminuir o nota débito para aumentar. Nunca borre la factura original.</span></div></article>
-        </div>
-      </section>
-    </div>
+  <!-- ===== Guía ===== -->
+  <section class="fe-guide" *ngIf="activeTab === 'guide'" aria-label="Guía paso a paso">
+    <article class="fe-card fe-guide__card" [class.is-done]="isConfigured && isProduction">
+      <span class="fe-guide__n"><i class="pi pi-check" *ngIf="isConfigured && isProduction; else n1"></i><ng-template #n1>1</ng-template></span>
+      <h3>Configura la DIAN una vez</h3>
+      <p>Ambiente, certificado y numeración por comercio.
+        {{ isConfigured && isProduction ? 'Ya está guardada en Producción.' : (isConfigured ? 'Está guardada en Pruebas: completa la habilitación.' : 'Todavía no está guardada para ' + commerceName + '.') }}</p>
+      <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" *ngIf="!(isConfigured && isProduction)" (click)="goToConfiguration()">{{ isConfigured ? 'Continuar habilitación' : 'Configurar ahora' }}</button>
+    </article>
+    <article class="fe-card fe-guide__card">
+      <span class="fe-guide__n">2</span>
+      <h3>Revisa la ficha del cliente</h3>
+      <p>Nombre, documento y correo. Si falta un dato fiscal, la DIAN rechaza el documento.</p>
+    </article>
+    <article class="fe-card fe-guide__card">
+      <span class="fe-guide__n">3</span>
+      <h3>Arma la factura</h3>
+      <p>Libre o desde un pedido. El descuento va antes del IVA y no altera el concepto guardado.</p>
+      <button type="button" class="fe-btn fe-btn--sm fe-btn--ghost" (click)="selectTab('compose')">Nueva factura</button>
+    </article>
+    <article class="fe-card fe-guide__card" [class.is-done]="hasAcceptedInvoice">
+      <span class="fe-guide__n"><i class="pi pi-check" *ngIf="hasAcceptedInvoice; else n4"></i><ng-template #n4>4</ng-template></span>
+      <h3>Revisa y emite</h3>
+      <p>Revisar no consume consecutivo. Al emitir, el número se confirma y el cliente recibe el correo.
+        Si la DIAN responde <b>Rechazada</b>, lee el mensaje, corrige y reenvía. Para anular o ajustar una factura aceptada usa <b>Crear nota</b>.</p>
+    </article>
   </section>
 </div>
