@@ -1796,8 +1796,15 @@ export class CrearVentasComponent
       this.pedidoGral.envio = undefined;
       this.pedidoGral.facturacion = undefined;
 
-      // Cargar datos de facturación y entrega
-      this.verDatosFacturacion();
+      // Los datos de facturación ya vienen en el resultado del autocompletado;
+      // volver a pedirlos por documento era un viaje extra al backend por cada
+      // cliente elegido, y ese endpoint es el que se cuelga cuando el documento
+      // no da coincidencia exacta.
+      this.activarDatosFact = true;
+      this.datosFacturacionElectronica = Array.isArray(cliente.datosFacturacionElectronica)
+        ? [...cliente.datosFacturacionElectronica]
+        : [];
+      this.originalDataFacturacionElectronica = this.utils.deepClone(this.datosFacturacionElectronica) || [];
       this.datosEntregas = [];
       if (cliente.datosEntrega) {
         cliente.datosEntrega.forEach((x) => {

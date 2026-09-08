@@ -5788,3 +5788,26 @@ Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
 - **Asistente DIAN** dentro del modal de integraciones (`integrations.component.html` líneas del bloque `selectedIntegrationType === 'dian'` y su SCSS): riel de pasos, paneles, ambiente como tarjetas radio, mismos bindings y validaciones; el resto del modal de integraciones NO se tocó (tiene su propio mockup "Modal Configurar Integracion", pendiente).
 
 **Límites conocidos:** la columna Cliente del listado DIAN muestra el correo del destinatario porque el registro (`dianXMLProvider.#audit`) no guarda el nombre; "Reenviar al cliente" del mockup se omitió porque no existe endpoint. Commits FE 4f1795e1 y 15b1b562; desplegado a hosting el mismo día.
+
+## D-260 (2026-09-08) — La búsqueda de clientes deja de leer la colección completa
+
+**Disparador.** Daniel reporta que en venta asistida "demora muchísimo la base de datos cuando se busca un cliente". Medido contra Firestore de producción: `POST /v1/clients/search` traía todos los clientes de la empresa y filtraba en Node. Para ALMARA FELICIDAD son **69.301 documentos y 70 MB en cada búsqueda** (40,9 s desde un portátil; 7,1 s incluso trayendo solo el campo `documento`, o sea que el costo es leer los documentos, no el ancho de banda). El filtro en memoria costaba 150 ms: optimizar el matcher no habría servido de nada. FLORECER (8.841 clientes) también pagaba ~7,5 s. Total de la colección: 80.940 clientes en 13 empresas.
+
+**Tres amplificadores encontrados en la misma revisión:**
+1. El `switchMap` del frontend cancela la petición del navegador, pero el escaneo sigue corriendo en el backend: escribir cinco letras dejaba hasta cinco escaneos simultáneos en un Node de un solo hilo, y eso arrastraba todo el backend, no solo venta asistida.
+2. El buscador global del header dispara la misma búsqueda desde cualquier pantalla con apenas 2 caracteres (su propio comentario decía "no baja los 7k+ clientes", que es justo lo que hacía).
+3. `GET /v1/clients/doc` tenía un escaneo completo de respaldo que se disparaba cuando el documento no daba coincidencia exacta — es decir, **cada vez que se iba a crear un cliente nuevo**. Y `crear-ventas` lo llamaba otra vez justo después de elegir un cliente, para leer datos de facturación que el resultado del autocompletado ya traía.
+
+**Decisión.** Se conecta el índice `clients_search_index` que la spec 007 (D-038) ya había especificado y dejado construido en `services/clientSearch/` **sin cablear a ningún controlador**. Se le cerraron los huecos que impedían usarlo:
+- Cubre los perfiles fiscales (68.291 de 69.301 clientes de ALMARA tienen `datosFacturacionElectronica` anidado): `documentosNorm` guarda cada documento con sus variantes en dígitos, con y sin dígito de verificación, así que buscar por el NIT de facturación sigue funcionando.
+- `prefijos` (3 a 6 letras por palabra, con `array-contains`) permite las palabras interiores a medias ("gome" → Gómez); Firestore no sabe buscar subcadenas.
+- Términos de varias palabras ("juan gomez") se resuelven con la palabra más larga contra el índice y refinamiento en memoria.
+- `searchClients` consulta el índice, acota, y **rehidrata los clientes completos desde `clients`**: la respuesta al frontend no cambia de forma. El índice solo dice a quién mirar; la fuente de verdad sigue siendo `clients`.
+- El índice se mantiene en crear, editar y borrar. En editar se reconstruye leyendo el documento **ya fusionado**, porque `update` es un merge superficial y armarlo con el parche dejaría en blanco lo que el parche no trae.
+- `documentVariants` y `billingProfiles` quedan con una sola definición (en `normalize.js`) para que el índice y el filtro no lean perfiles fiscales distintos.
+
+**Guardarraíl explícito.** Si una empresa tiene clientes pero todavía no tiene índice, el endpoint responde **503 `CLIENT_SEARCH_INDEX_MISSING`**, no una lista vacía: un vacío se lee como "ese cliente no existe" y llevaría al vendedor a crear un duplicado. Una empresa sin clientes sí devuelve vacío. El test de contrato cuenta los `.get()` sin tope sobre `clients` y **falla si alguien reintroduce el escaneo**.
+
+**Orden de despliegue (obligatorio).** 1) crear los 9 índices compuestos (`firestore.indexes.clientsearch.json`, solo los nuevos, nunca `--force`); 2) correr `scripts/backfill-client-search-index.js` primero en simulación y luego con `--apply`; 3) desplegar el backend; 4) desplegar el frontend. Si se invierte, la búsqueda responde 503 mientras falte el índice.
+
+**Estado:** implementado y con tests en verde (38 verificaciones en `npm run test:client-search`), build del frontend limpio. **Sin desplegar ni backfillear todavía.** Falta medir contra producción después del despliegue.
