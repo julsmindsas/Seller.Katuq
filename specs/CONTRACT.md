@@ -5788,3 +5788,43 @@ Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
 - **Asistente DIAN** dentro del modal de integraciones (`integrations.component.html` líneas del bloque `selectedIntegrationType === 'dian'` y su SCSS): riel de pasos, paneles, ambiente como tarjetas radio, mismos bindings y validaciones; el resto del modal de integraciones NO se tocó (tiene su propio mockup "Modal Configurar Integracion", pendiente).
 
 **Límites conocidos:** la columna Cliente del listado DIAN muestra el correo del destinatario porque el registro (`dianXMLProvider.#audit`) no guarda el nombre; "Reenviar al cliente" del mockup se omitió porque no existe endpoint. Commits FE 4f1795e1 y 15b1b562; desplegado a hosting el mismo día.
+
+## D-260 (2026-09-08) — La búsqueda de clientes deja de leer la colección completa
+
+**Disparador.** Daniel reporta que en venta asistida "demora muchísimo la base de datos cuando se busca un cliente". Medido contra Firestore de producción: `POST /v1/clients/search` traía todos los clientes de la empresa y filtraba en Node. Para ALMARA FELICIDAD son **69.301 documentos y 70 MB en cada búsqueda** (40,9 s desde un portátil; 7,1 s incluso trayendo solo el campo `documento`, o sea que el costo es leer los documentos, no el ancho de banda). El filtro en memoria costaba 150 ms: optimizar el matcher no habría servido de nada. FLORECER (8.841 clientes) también pagaba ~7,5 s. Total de la colección: 80.940 clientes en 13 empresas.
+
+**Tres amplificadores encontrados en la misma revisión:**
+1. El `switchMap` del frontend cancela la petición del navegador, pero el escaneo sigue corriendo en el backend: escribir cinco letras dejaba hasta cinco escaneos simultáneos en un Node de un solo hilo, y eso arrastraba todo el backend, no solo venta asistida.
+2. El buscador global del header dispara la misma búsqueda desde cualquier pantalla con apenas 2 caracteres (su propio comentario decía "no baja los 7k+ clientes", que es justo lo que hacía).
+3. `GET /v1/clients/doc` tenía un escaneo completo de respaldo que se disparaba cuando el documento no daba coincidencia exacta — es decir, **cada vez que se iba a crear un cliente nuevo**. Y `crear-ventas` lo llamaba otra vez justo después de elegir un cliente, para leer datos de facturación que el resultado del autocompletado ya traía.
+
+**Decisión.** Se conecta el índice `clients_search_index` que la spec 007 (D-038) ya había especificado y dejado construido en `services/clientSearch/` **sin cablear a ningún controlador**. Se le cerraron los huecos que impedían usarlo:
+- Cubre los perfiles fiscales (68.291 de 69.301 clientes de ALMARA tienen `datosFacturacionElectronica` anidado): `documentosNorm` guarda cada documento con sus variantes en dígitos, con y sin dígito de verificación, así que buscar por el NIT de facturación sigue funcionando.
+- `prefijos` (3 a 6 letras por palabra, con `array-contains`) permite las palabras interiores a medias ("gome" → Gómez); Firestore no sabe buscar subcadenas.
+- Términos de varias palabras ("juan gomez") se resuelven con la palabra más larga contra el índice y refinamiento en memoria.
+- `searchClients` consulta el índice, acota, y **rehidrata los clientes completos desde `clients`**: la respuesta al frontend no cambia de forma. El índice solo dice a quién mirar; la fuente de verdad sigue siendo `clients`.
+- El índice se mantiene en crear, editar y borrar. En editar se reconstruye leyendo el documento **ya fusionado**, porque `update` es un merge superficial y armarlo con el parche dejaría en blanco lo que el parche no trae.
+- `documentVariants` y `billingProfiles` quedan con una sola definición (en `normalize.js`) para que el índice y el filtro no lean perfiles fiscales distintos.
+
+**Guardarraíl explícito.** Si una empresa tiene clientes pero todavía no tiene índice, el endpoint responde **503 `CLIENT_SEARCH_INDEX_MISSING`**, no una lista vacía: un vacío se lee como "ese cliente no existe" y llevaría al vendedor a crear un duplicado. Una empresa sin clientes sí devuelve vacío. El test de contrato cuenta los `.get()` sin tope sobre `clients` y **falla si alguien reintroduce el escaneo**.
+
+**Orden de despliegue (obligatorio).** 1) crear los 9 índices compuestos (`firestore.indexes.clientsearch.json`, solo los nuevos, nunca `--force`); 2) correr `scripts/backfill-client-search-index.js` primero en simulación y luego con `--apply`; 3) desplegar el backend; 4) desplegar el frontend. Si se invierte, la búsqueda responde 503 mientras falte el índice.
+
+**Estado:** implementado y con tests en verde (38 verificaciones en `npm run test:client-search`), build del frontend limpio. **Sin desplegar ni backfillear todavía.** Falta medir contra producción después del despliegue.
+
+## D-261 (2026-09-08) — El edit genérico de pedidos borraba silenciosamente overrides de línea (IVA en $0 en SIIGO)
+
+**Renumerada de D-260 a D-261 por colisión** con la entrada anterior (búsqueda de clientes, sesión concurrente que llegó primero a `origin`). Todas las referencias de este cambio (`orders.js`, `openspec/changes/preserve-order-line-overrides-on-edit/`, memoria de sesión) quedan actualizadas a D-261.
+
+**Disparador.** Reporte del usuario con evidencia (`C:\Users\julia\Downloads\caso131\caso 2\{8870,8871}.pdf`): pedidos **DAD-012848** y **DAD-012849** (ALMARA FELICIDAD, producto ALM-1757) facturados por SIIGO con **IVA en $0**.
+
+**Investigación (read-only contra Firestore, `functions/scripts/inspect-order-line-iva.js`):**
+- El catálogo de ALM-1757 tiene `precio.precioUnitarioIva: "0"` (dato incorrecto, mismo patrón que DAD-012406/D-221 — catálogo, no código, fuera de alcance de este fix).
+- Los vendedores corrigieron correctamente vía **"Editar IVA de línea"** (D-135): `ivaOverrideHistory` de ambos pedidos registra `0% → 19%` con usuario y fecha (2026-09-07).
+- **Al facturar, la corrección ya no estaba**: el `carrito` persistido no tenía `_ivaManualOverride` ni campos canónicos (`tarifaEfectiva`/`ivaLinea`/`precioSinIvaResuelto`), y **`totalImpuesto` del propio pedido estaba en $0** — no solo la factura SIIGO. El dato se perdió en el pedido, antes de llegar a SIIGO.
+
+**Causa raíz confirmada en código:** `updateOrderInternal` (`functions/controllers/orders.js`, endpoint genérico `PUT /v1/orders/edit`, usado por ~20 acciones de `list.component.ts` — cambiar estado, agregar nota, reprogramar entrega, agregar producto...) hace `updateData = {...orderData}`, sobreescribiendo el `carrito` completo con lo que el navegador tenga en memoria. El candado optimista (`_baseVersion`/`date_upd`) protege contra escribir con una versión vieja, pero NO contra que el navegador nunca haya cargado un campo por-línea que otra acción (u otra pestaña/usuario) agregó después — cualquier guardado genérico posterior borra esos campos sin error ni aviso. El endpoint dedicado `editLineaIva` (D-135) está bien; el problema es exclusivo del edit genérico. Distinto de D-239 (SIIGO ya lee bien el IVA efectivo de línea cuando existe — el problema es que para cuando factura, ya no existe).
+
+**Decisión.** Se aprueba el fix defensivo: en `updateOrderInternal`, antes de recalcular totales, se completan en cada línea entrante (por índice + `producto.cd`, mismo criterio que `editLineaIva`) los campos `_ivaManualOverride`, `_precioManualOverride`, `tarifaEfectiva`, `ivaLinea`, `precioSinIvaResuelto` que ya existían en el pedido persistido y que el payload entrante no trae (`undefined`). Nunca pisa un valor que el payload SÍ trae explícito (incluido `null`, para no bloquear una futura función de "quitar override"). Sin flag — retrocompatible por construcción. No corrige DAD-012848/DAD-012849 ni sus facturas ya emitidas (requiere nota de crédito, decisión de negocio aparte). Propuesta OpenSpec: `katuq_admin_back_firebase/openspec/changes/preserve-order-line-overrides-on-edit/`.
+
+**Estado:** implementado y verificado. `preserveLineOverrides()` agregada en `updateOrderInternal` (`functions/controllers/orders.js`), invocada antes de `calculateOrderTotals`. Contract test nuevo `test-preserve-line-overrides.js` 9/9 PASS; sin regresión en `test-iva-persist-option-a.js` (8/8) ni `test-order-line-iva-edit.js` (47/47). Backend local reiniciado limpio. Pendiente: verificación manual en navegador y commit (no se commitea sin pedido explícito del usuario).

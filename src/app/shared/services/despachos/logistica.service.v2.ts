@@ -378,6 +378,7 @@ export class LogisticaServiceV2 extends BaseService {
      * @returns Observable con métricas precalculadas
      */
     getShippingMetrics(params?: {
+        scope?: 'operationalQueue';
         fechaInicio?: string;
         fechaFin?: string;
     }): Observable<{
@@ -392,6 +393,7 @@ export class LogisticaServiceV2 extends BaseService {
     }> {
         let url = `${this.apiUrl}/v1/logistica/shippingorders/metrics`;
         const queryParams: string[] = [];
+        if (params?.scope) queryParams.push(`scope=${params.scope}`);
 
         if (params?.fechaInicio) {
             queryParams.push(`fechaInicio=${params.fechaInicio}`);
