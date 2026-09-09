@@ -2606,46 +2606,14 @@ export class CrearVentasComponent
             }
 
             if (formaEntrega && formaEntrega.includes("recoge")) {
-              // Crear datos de envío simplificados para recogida en tienda
-              const envioRecoge = {
-                alias: "Recoge",
-                nombres: "N/A",
-                apellidos: "N/A",
-                indicativoCel: "N/A",
-                celular: "N/A",
-                indicativoOtroNumero: "N/A",
-                otroNumero: "N/A",
-                direccionEntrega: "N/A",
-                observaciones: "N/A",
-                barrio: "N/A",
-                nombreUnidad: "N/A",
-                especificacionesInternas: "N/A",
-                pais: "N/A",
-                departamento: "N/A",
-                ciudad: this.selectedCity || "N/A",
-                zonaCobro: "N/A",
-                valorZonaCobro: 0,
-                codigoPV: "N/A",
-              };
-
-              // Asignar al pedido
-              this.pedidoGral.envio = envioRecoge;
-              this.pedidoGral.formaEntrega = "Recoge";
-              this.pedidoGral.totalEnvio = 0;
-
-              // Marcar que es recoge en tienda para ocultar tab de envío
-              this.esRecogeEnTienda = true;
-
-              // Activar directamente el tab de facturación
-              setTimeout(() => {
-                const tabFacturacion = document.getElementById('tab-facturacion');
-                if (tabFacturacion) {
-                  tabFacturacion.click();
-                }
-              }, 100);
+              // Recoge en tienda: oculta el tab de envío y llena el envío mínimo
+              this.aplicarRecogeEnTienda();
+              this.activarTabFacturacion();
             } else if (this.selectedFormaEntrega === 'Recoge') {
-              // Si ya se había seleccionado "Recoge" manualmente (pedido sin configuración)
-              this.esRecogeEnTienda = true;
+              // Si ya se había seleccionado "Recoge" manualmente (pedido sin
+              // configuración) también hay que llenar el envío, no solo marcar
+              // la bandera, o el pedido se queda sin `envio` y no avanza a Pago
+              this.aplicarRecogeEnTienda();
             } else {
               this.esRecogeEnTienda = false;
             }
@@ -2919,28 +2887,7 @@ export class CrearVentasComponent
 
                 // Si es recogida en tienda y no hay datos de envío, crear datos mínimos
                 if (!this.pedidoGral.envio) {
-                  const envioRecoge = {
-                    alias: "Recoge",
-                    nombres: "N/A",
-                    apellidos: "N/A",
-                    indicativoCel: "N/A",
-                    celular: "N/A",
-                    indicativoOtroNumero: "N/A",
-                    otroNumero: "N/A",
-                    direccionEntrega: "N/A",
-                    observaciones: "N/A",
-                    barrio: "N/A",
-                    nombreUnidad: "N/A",
-                    especificacionesInternas: "N/A",
-                    pais: "N/A",
-                    departamento: "N/A",
-                    ciudad: this.selectedCity || "N/A",
-                    zonaCobro: "N/A",
-                    valorZonaCobro: 0,
-                    codigoPV: "N/A",
-                  };
-                  this.pedidoGral.envio = envioRecoge;
-                  this.pedidoGral.formaEntrega = "Recoge";
+                  this.aplicarRecogeEnTienda();
                 }
               }
             }
@@ -2989,28 +2936,7 @@ export class CrearVentasComponent
               .includes("recoge")
           ) {
             this.activarEntrega = false;
-            const envioRecoge = {
-              alias: "Recoge",
-              nombres: "N/A",
-              apellidos: "N/A",
-              indicativoCel: "N/A",
-              celular: "N/A",
-              indicativoOtroNumero: "N/A",
-              otroNumero: "N/A",
-              direccionEntrega: "N/A",
-              observaciones: "N/A",
-              barrio: "N/A",
-              nombreUnidad: "N/A",
-              especificacionesInternas: "N/A",
-              pais: "N/A",
-              departamento: "N/A",
-              ciudad:
-                this.pedidoGral.envio?.ciudad || this.selectedCity || "N/A",
-              zonaCobro: "N/A",
-              valorZonaCobro: 0,
-              codigoPV: "N/A",
-            };
-            this.pedidoGral.envio = envioRecoge;
+            this.pedidoGral.envio = this.construirEnvioRecoge();
           }
         }
       } catch (e) {}
@@ -3318,10 +3244,16 @@ export class CrearVentasComponent
 
   overridePedido(event: Pedido) {
     this.pedidoGral = event;
-    console.log(this.pedidoGral);
+
+    // Red de seguridad: si el pedido vuelve del hijo sin envío y es recoge en
+    // tienda, se reconstruye el envío mínimo (si no, el paso queda trabado)
+    if (this.esRecogeEnTienda && !this.pedidoGral?.envio) {
+      this.aplicarRecogeEnTienda();
+    }
 
     // Recargar datos de entrega cuando se actualiza el pedido
-    if (this.pedidoGral?.cliente?.documento) {
+    // (en recoge en tienda no aplica: no hay dirección que elegir)
+    if (this.pedidoGral?.cliente?.documento && !this.esRecogeEnTienda) {
       this.documentoBuscar = this.pedidoGral.cliente.documento;
       this.cargarDatosEntregaCliente();
     }
@@ -3436,6 +3368,65 @@ export class CrearVentasComponent
   }
 
   /**
+   * Datos de envío mínimos para un pedido que el cliente recoge en tienda.
+   * Recoge no pide dirección, pero el pedido igual necesita el bloque `envio`
+   * para poder avanzar al pago.
+   */
+  private construirEnvioRecoge(): any {
+    return {
+      alias: "Recoge",
+      nombres: "N/A",
+      apellidos: "N/A",
+      indicativoCel: "N/A",
+      celular: "N/A",
+      indicativoOtroNumero: "N/A",
+      otroNumero: "N/A",
+      direccionEntrega: "N/A",
+      observaciones: "N/A",
+      barrio: "N/A",
+      nombreUnidad: "N/A",
+      especificacionesInternas: "N/A",
+      pais: "N/A",
+      departamento: "N/A",
+      ciudad: this.pedidoGral?.envio?.ciudad || this.selectedCity || "N/A",
+      zonaCobro: "N/A",
+      valorZonaCobro: 0,
+      codigoPV: "N/A",
+    };
+  }
+
+  /**
+   * Marca el pedido como recoge en tienda y garantiza sus datos de envío.
+   * Es el ÚNICO punto que debe activar `esRecogeEnTienda`: si se marca sin
+   * asignar el envío, el tab de envío se oculta y el botón de Pago queda
+   * bloqueado con "Falta completar envío" sin forma de completarlo.
+   */
+  private aplicarRecogeEnTienda(): void {
+    this.esRecogeEnTienda = true;
+    this.pedidoGral.envio = this.construirEnvioRecoge();
+    this.pedidoGral.formaEntrega = "Recoge";
+    this.pedidoGral.totalEnvio = 0;
+  }
+
+  /** Activa el tab de facturación (recoge no muestra el de envío) */
+  private activarTabFacturacion(): void {
+    setTimeout(() => {
+      const tabFacturacion = document.getElementById('tab-facturacion');
+      if (tabFacturacion) {
+        tabFacturacion.click();
+      }
+    }, 100);
+  }
+
+  /**
+   * El envío está resuelto cuando hay datos de envío o cuando el pedido es
+   * recoge en tienda (que no los requiere). Gobierna el botón de Pago.
+   */
+  get envioListo(): boolean {
+    return this.esRecogeEnTienda || !!this.pedidoGral?.envio;
+  }
+
+  /**
    * Maneja el cambio de forma de entrega para pedidos sin configuración
    * @param nuevaFormaEntrega La nueva forma de entrega seleccionada ('Domicilio' o 'Recoge')
    */
@@ -3443,35 +3434,8 @@ export class CrearVentasComponent
     this.selectedFormaEntrega = nuevaFormaEntrega;
 
     if (nuevaFormaEntrega === 'Recoge') {
-      // Configurar como recoge en tienda
-      this.esRecogeEnTienda = true;
-
-      // Crear datos de envío simplificados para recogida en tienda
-      const envioRecoge = {
-        alias: "Recoge",
-        nombres: "N/A",
-        apellidos: "N/A",
-        indicativoCel: "N/A",
-        celular: "N/A",
-        indicativoOtroNumero: "N/A",
-        otroNumero: "N/A",
-        direccionEntrega: "N/A",
-        observaciones: "N/A",
-        barrio: "N/A",
-        nombreUnidad: "N/A",
-        especificacionesInternas: "N/A",
-        pais: "N/A",
-        departamento: "N/A",
-        ciudad: this.selectedCity || "N/A",
-        zonaCobro: "N/A",
-        valorZonaCobro: 0,
-        codigoPV: "N/A",
-      };
-
-      // Asignar al pedido
-      this.pedidoGral.envio = envioRecoge;
-      this.pedidoGral.formaEntrega = "Recoge";
-      this.pedidoGral.totalEnvio = 0;
+      // Configurar como recoge en tienda (marca la bandera y llena el envío)
+      this.aplicarRecogeEnTienda();
 
       // Actualizar configuración de todos los productos del carrito
       if (this.pedidoGral.carrito && this.pedidoGral.carrito.length > 0) {
@@ -3490,12 +3454,7 @@ export class CrearVentasComponent
       this.actualizarFormaEntregaEnCarritoLocalStorage("Recoge");
 
       // Activar directamente el tab de facturación
-      setTimeout(() => {
-        const tabFacturacion = document.getElementById('tab-facturacion');
-        if (tabFacturacion) {
-          tabFacturacion.click();
-        }
-      }, 100);
+      this.activarTabFacturacion();
 
     } else {
       // Configurar como domicilio
@@ -4744,8 +4703,12 @@ export class CrearVentasComponent
         error: (err) => {
           this.originalDataEntregas = [];
           this.datosEntregas = [];
-          // Limpiar envío para evitar que persista una dirección de otro cliente
-          this.pedidoGral.envio = undefined;
+          // Limpiar envío para evitar que persista una dirección de otro cliente.
+          // En recoge en tienda NO se toca: el envío es el mínimo de recoge y
+          // borrarlo dejaría el pedido sin forma de completar el paso.
+          if (!this.esRecogeEnTienda) {
+            this.pedidoGral.envio = undefined;
+          }
           this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
           this.ref.detectChanges();
         },

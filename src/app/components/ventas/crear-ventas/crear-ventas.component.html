@@ -857,14 +857,14 @@
                   <i class="fa fa-arrow-left"></i>
                   Volver al Carrito
                 </button>
-                <div class="footer-message" *ngIf="!pedidoGral?.envio || !pedidoGral?.facturacion">
+                <div class="footer-message" *ngIf="!envioListo || !pedidoGral?.facturacion">
                   <i class="fa fa-info-circle"></i>
-                  <span *ngIf="!pedidoGral?.envio && !pedidoGral?.facturacion">Complete envío y facturación</span>
-                  <span *ngIf="pedidoGral?.envio && !pedidoGral?.facturacion">Falta completar facturación</span>
-                  <span *ngIf="!pedidoGral?.envio && pedidoGral?.facturacion">Falta completar envío</span>
+                  <span *ngIf="!envioListo && !pedidoGral?.facturacion">Complete envío y facturación</span>
+                  <span *ngIf="envioListo && !pedidoGral?.facturacion">Falta completar facturación</span>
+                  <span *ngIf="!envioListo && pedidoGral?.facturacion">Falta completar envío</span>
                 </div>
                 <button class="next-step-btn" type="button" awNextStep (click)="reviewStepAndExecute(4)"
-                  [disabled]="!pedidoGral?.envio || !pedidoGral?.facturacion || !pedidoGral">
+                  [disabled]="!envioListo || !pedidoGral?.facturacion || !pedidoGral">
                   Pago
                   <i class="fa fa-arrow-right"></i>
                 </button>
