@@ -3,7 +3,7 @@
     <div class="opttia-identity">
       <span class="opttia-mark" aria-hidden="true"><i class="fa fa-bolt"></i></span>
       <div>
-        <strong>Opttia</strong>
+        <strong>Opttia · chat básico</strong>
         <small><span class="status-dot"></span> {{ opttia.commerceName }}</small>
       </div>
     </div>
@@ -39,7 +39,9 @@
         <i class="fa" [ngClass]="message.role === 'user' ? 'fa-user' : 'fa-bolt'"></i>
       </span>
       <div class="bubble">
-        <div class="message-text">{{ message.content }}</div>
+        <app-opttia-markdown *ngIf="message.role === 'assistant'; else plainMessage"
+          [content]="message.content"></app-opttia-markdown>
+        <ng-template #plainMessage><div class="message-text">{{ message.content }}</div></ng-template>
         <time>{{ message.createdAt | date:'HH:mm' }}</time>
       </div>
     </article>
@@ -100,7 +102,7 @@
     </button>
   </form>
 
-  <p class="disclaimer">Opttia puede equivocarse. Verifica la información importante antes de hacer cambios.</p>
+  <p class="disclaimer">Consultas breves y de solo lectura. Para agentes y automatizaciones usa opttia.com.</p>
 </section>
 
 <ng-template #consentView>

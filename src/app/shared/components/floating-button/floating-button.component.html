@@ -32,11 +32,16 @@
           <img src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="32" height="32" decoding="async">
         </span>
         <span class="feature-copy">
-          <span class="feature-title">Hablar con Opttia <span class="feature-badge">IA</span></span>
-          <span class="feature-description">Ventas, pedidos e inventario.<br>Tu negocio, en una conversación.</span>
-          <span class="feature-action">Iniciar conversación <i class="fa fa-arrow-right" aria-hidden="true"></i></span>
+          <span class="feature-title">Consulta rápida <span class="feature-badge">Opttia</span></span>
+          <span class="feature-description">Respuestas breves sobre ventas, pedidos e inventario.</span>
+          <span class="feature-action">Abrir chat básico <i class="fa fa-arrow-right" aria-hidden="true"></i></span>
         </span>
       </button>
+
+      <a class="opttia-full-link" href="https://www.opttia.com/" target="_blank" rel="noopener noreferrer">
+        <span><strong>Opttia completa</strong><small>Agentes, análisis y automatizaciones en opttia.com</small></span>
+        <i class="fa fa-external-link" aria-hidden="true"></i>
+      </a>
 
       <!-- K.A.I. Chat, Voz y Live Audio están deprecados y no se ofrecen en este menú. -->
       <h3 class="menu-section-title">SOPORTE Y SEGUIMIENTO</h3>
@@ -105,7 +110,7 @@
   <div *ngIf="chatFormVisible && !chatMinimized" class="floating-chat-overlay" [ngClass]="{'maximized': chatMaximized}">
     <!-- Barra de título del chat -->
     <div class="chat-header" (dblclick)="toggleChatSize($event)">
-      <span class="chat-title">Opttia · Inteligencia operacional</span>
+      <span class="chat-title">Opttia · Consulta rápida</span>
       <div class="chat-controls">
         <button class="chat-control-btn" (click)="toggleChatSize($event)" title="Cambiar tamaño">
           <i class="fa" [ngClass]="chatMaximized ? 'fa-compress' : 'fa-expand'"></i>

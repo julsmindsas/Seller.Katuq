@@ -1,0 +1,30 @@
+app-opttia-markdown {
+  display: block;
+  min-width: 0;
+  .opttia-markdown-content {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    line-height: 1.5;
+    > :first-child { margin-top: 0; }
+    > :last-child { margin-bottom: 0; }
+    p, ul, ol, blockquote, pre, table { margin: 0 0 10px; }
+    h1, h2, h3, h4, h5, h6 {
+      margin: 14px 0 8px;
+      color: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+    ul, ol { padding-left: 22px; }
+    li { margin-bottom: 4px; }
+    li > p { margin-bottom: 4px; }
+    a { color: #7354cf; text-decoration: underline; }
+    blockquote { border-left: 3px solid #aaa; padding-left: 10px; }
+    pre, table { display: block; max-width: 100%; overflow-x: auto; }
+    pre { padding: 10px; background: rgba(127, 127, 127, .12); border-radius: 6px; white-space: pre; }
+    code { color: inherit; font-size: 12px; }
+    table { border-collapse: collapse; }
+    th, td { padding: 6px 8px; border: 1px solid #aaa; min-width: 70px; }
+  }
+}

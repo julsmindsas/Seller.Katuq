@@ -104,10 +104,10 @@ export class OpttiaChatService implements OnDestroy {
       this.accessLoading = false;
     }
   }
-  private readonly endpoint = `${(
+  private readonly endpoint = (environment as typeof environment & { opttiaBasicApi?: string }).opttiaBasicApi || `${(
     (environment as typeof environment & { opttiaApi?: string }).opttiaApi
     || 'https://back.katuq.com/adk'
-  ).replace(/\/$/, '')}/agui/v2`;
+  ).replace(/\/$/, '')}/agui/basic/v1`;
   private readonly initialMessage: OpttiaChatMessage = {
     id: 'opttia-welcome',
     role: 'assistant',
@@ -190,15 +190,9 @@ export class OpttiaChatService implements OnDestroy {
 
     const body = {
       company: session.companyId,
-      messages: this.messagesSubject.value
-        .filter(message => message.includeInContext !== false)
-        .map(message => ({ role: message.role, content: message.content })),
-      session_id: this.sessionId || undefined,
-      capabilities: {
-        a2ui: false,
-        catalogs: [],
-        interrupts: true
-      }
+      // El chat embebido es deliberadamente efímero: el endpoint básico recibe
+      // solo la pregunta actual y no hereda memoria ni potencia de opttia.com.
+      messages: [{ role: 'user' as const, content: text }]
     };
 
     const requestController = new AbortController();
