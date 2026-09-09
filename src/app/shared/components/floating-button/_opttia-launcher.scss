@@ -24,11 +24,11 @@
     border: 1px solid rgba(255, 255, 255, .35);
     box-shadow: 0 6px 18px rgba(72, 40, 146, .22), 0 2px 4px rgba(40, 24, 71, .1);
     overflow: visible;
-    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+    transition: background .18s ease, box-shadow .18s ease;
 
-    &:hover { background: #6137cc; transform: translateY(-2px); }
+    &:hover { background: #6137cc; transform: none; }
     &.active { background: #372653; }
-    &:active { transform: scale(.97); }
+    &:active { transform: none; }
     &:focus-visible { outline: 3px solid #bca4ff; outline-offset: 4px; }
   }
 
@@ -40,7 +40,8 @@
     color: #7046df;
     background: #fff;
     border-radius: 50%;
-    svg { width: 27px; height: 27px; }
+    overflow: hidden;
+    img { display: block; width: 32px; height: 32px; object-fit: contain; }
   }
 
   .launcher-label { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 650; letter-spacing: -.3px; }
@@ -91,7 +92,16 @@
     transition: border-color .18s ease, background .18s ease;
     &:hover { border-color: #b8a1ec; }
   }
-  .feature-mark { flex: 0 0 38px; display: grid; place-items: center; height: 38px; background: var(--menu-accent); color: white; border-radius: 12px; svg { width: 26px; height: 26px; } }
+  .feature-mark {
+    flex: 0 0 38px;
+    display: grid;
+    place-items: center;
+    height: 38px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    img { display: block; width: 32px; height: 32px; object-fit: contain; }
+  }
   .feature-copy { min-width: 0; }
   .feature-title { display: flex; align-items: center; gap: 7px; color: var(--menu-ink); font-size: 14px; font-weight: 650; }
   .feature-badge { padding: 2px 5px; color: var(--menu-accent); border: 1px solid #cabbec; border-radius: 5px; font-size: 9px; }
@@ -123,7 +133,6 @@
   --menu-soft: #2e2939;
   --menu-accent: #bea3ff;
   --menu-tint: #352b48;
-  .feature-mark { background: #7850cf; }
 }
 
 @keyframes opttia-menu-enter {
@@ -142,8 +151,8 @@
     .floating-button {
       width: 60px; height: 64px; padding: 7px 5px;
       flex-direction: column; gap: 3px; border-radius: 20px;
-      .launcher-symbol { flex: 0 0 29px; width: 29px; height: 29px; background: transparent; color: white; }
-      .launcher-symbol svg { width: 28px; height: 28px; }
+      .launcher-symbol { flex: 0 0 29px; width: 29px; height: 29px; }
+      .launcher-symbol img { width: 25px; height: 25px; }
       .launcher-label { font-size: 10px; letter-spacing: 0; }
       .launcher-ai, .launcher-toggle { display: none; }
     }

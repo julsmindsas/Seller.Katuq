@@ -5,10 +5,7 @@
     [attr.aria-expanded]="optionsPanelVisible" aria-controls="opttia-menu"
     [class.active]="optionsPanelVisible" [class.has-unread]="hasUnreadMessages">
     <span class="launcher-symbol" aria-hidden="true">
-      <svg viewBox="0 0 32 32" fill="none">
-        <path d="M15 5c1.5 7 3 8.5 10 10-7 1.5-8.5 3-10 10-1.5-7-3-8.5-10-10 7-1.5 8.5-3 10-10Z" fill="currentColor"/>
-        <path d="M26 2v7M22.5 5.5h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
+      <img src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="32" height="32" decoding="async">
     </span>
     <span class="launcher-label">Opttia <span class="launcher-ai">IA</span></span>
     <i class="fa launcher-toggle" [ngClass]="optionsPanelVisible ? 'fa-times' : 'fa-angle-up'" aria-hidden="true"></i>
@@ -32,10 +29,7 @@
     <div class="opttia-menu-body">
       <button type="button" class="opttia-feature" (click)="selectMode('opttia', $event)">
         <span class="feature-mark" aria-hidden="true">
-          <svg viewBox="0 0 32 32" fill="none">
-            <path d="M15 5c1.5 7 3 8.5 10 10-7 1.5-8.5 3-10 10-1.5-7-3-8.5-10-10 7-1.5 8.5-3 10-10Z" fill="currentColor"/>
-            <path d="M26 2v7M22.5 5.5h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
+          <img src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="32" height="32" decoding="async">
         </span>
         <span class="feature-copy">
           <span class="feature-title">Hablar con Opttia <span class="feature-badge">IA</span></span>

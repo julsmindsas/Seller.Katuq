@@ -5863,3 +5863,13 @@ Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
 **Defecto detectado y NO corregido (queda pendiente con dueño).** `registerSupportApp` arma `ticketData` con valores por defecto y luego guarda `req.body`: ningún default llega al documento y `date_add` nunca se persiste. Solo afecta al documento guardado, no al correo (el notificador recibe `{ ...req.body, ...ticketData }`). Se deja fuera de este despliegue a propósito, para no sumar un cambio de persistencia no pedido encima de 12 commits ajenos sin revisar. **Dueño: próxima sesión de soporte.**
 
 **Estado:** reconciliado, commiteado y **pusheado** (`ae43449`), con `node --check` limpio y backend local arrancando en :3300 con SMTP verificado. **Producción todavía en `11cd94c`: falta el `git pull` + `pm2 restart katuq-api` en 13.222.206.185** (el clasificador de permisos bloqueó la escritura sobre el servidor en esta sesión). Verificado antes de intentarlo: el rango son 13 commits / 6 archivos, `functions/package.json` NO cambia (no hace falta `npm install`), el árbol de prod está limpio salvo basura sin trackear, y `SOPORTE_EMAILS` **no** está definida en el `.env` de producción, así que aplica la lista nueva del código.
+
+## D-264 (2026-09-09) — Tuki como imagen del botón de Opttia
+
+**Aprobación.** Daniel eligió integrar la mascota en el botón existente de Opttia y aprobó la propuesta visual con «me gusta». Tuki representa la mascota de Katuq; el asistente sigue identificado como Opttia.
+
+**Alcance.** Ajuste visual del acceso existente: sustituir el símbolo del botón y el de «Hablar con Opttia» por la miniatura aprobada. Se mantienen los eventos de apertura, el chat, soporte, tickets, ideas, permisos y rutas. La mascota es estática; el botón deja de desplazarse o escalar al pasar el puntero o pulsarlo. No se agregan aperturas automáticas, mensajes proactivos ni un segundo acceso.
+
+**Implementación.** `floating-button.component.html`, `_opttia-launcher.scss` y `assets/images/opttia/tuki-avatar-v1.webp`. Avatar de 160 × 160 px, 4.334 bytes; presentación de 32 px en escritorio y 25 px en móvil. Se usa la versión aprobada sobre blanco, contenida en una superficie blanca: este archivo no representa la extracción con transparencia solicitada anteriormente. Imagen decorativa con `alt=""`; el botón conserva su nombre accesible y estado expandido.
+
+**Validación.** Compilación Angular completa correcta ejecutando el CLI directamente, sin incrementar versión, con salida en `/tmp/katuq-tuki-validation`; `git diff --check` correcto. La compilación emite avisos de Sass y dependencias CommonJS existentes. Sin prueba visual dentro de una sesión autenticada. Cambio local, pendiente de despliegue.
