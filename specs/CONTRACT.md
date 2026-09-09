@@ -5848,7 +5848,7 @@ Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
 
 **Fuera de alcance a propósito.** El mockup trae un botón **"Ya se resolvió"** que cerraría el ticket desde el comercio. No se implementa: el ciclo de vida del estado lo gobierna la app de Support y dejar que el comercio escriba `status` desde aquí cambia un flujo compartido — necesita acuerdo con ese equipo antes de existir. Tampoco se replica la barra superior ni la píldora de Opttia del mockup: son chrome de la aplicación, no de esta pantalla.
 
-**Estado:** implementado, build del frontend limpio (`npm run build`, sin errores). Sin desplegar.
+**Estado:** **desplegado** el 2026-09-09 (versión `2026.09.09.7`, commits `8f60190e` + `7cbdc348`). Compilado desde un worktree limpio del commit para no arrastrar árbol de sesiones paralelas; verificado en producción buscando `mt-detalle` en los chunks servidos (chunk `4583.5656830da753160f.js`).
 
 ## D-263 (2026-09-09) — Los correos de ticket llegan al equipo: reconciliado con la implementación que ya existía
 
@@ -5862,4 +5862,4 @@ Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
 
 **Defecto detectado y NO corregido (queda pendiente con dueño).** `registerSupportApp` arma `ticketData` con valores por defecto y luego guarda `req.body`: ningún default llega al documento y `date_add` nunca se persiste. Solo afecta al documento guardado, no al correo (el notificador recibe `{ ...req.body, ...ticketData }`). Se deja fuera de este despliegue a propósito, para no sumar un cambio de persistencia no pedido encima de 12 commits ajenos sin revisar. **Dueño: próxima sesión de soporte.**
 
-**Estado:** reconciliado, `node --check` limpio y backend local arrancando en :3300 con SMTP verificado.
+**Estado:** reconciliado, commiteado y **pusheado** (`ae43449`), con `node --check` limpio y backend local arrancando en :3300 con SMTP verificado. **Producción todavía en `11cd94c`: falta el `git pull` + `pm2 restart katuq-api` en 13.222.206.185** (el clasificador de permisos bloqueó la escritura sobre el servidor en esta sesión). Verificado antes de intentarlo: el rango son 13 commits / 6 archivos, `functions/package.json` NO cambia (no hace falta `npm install`), el árbol de prod está limpio salvo basura sin trackear, y `SOPORTE_EMAILS` **no** está definida en el `.env` de producción, así que aplica la lista nueva del código.
