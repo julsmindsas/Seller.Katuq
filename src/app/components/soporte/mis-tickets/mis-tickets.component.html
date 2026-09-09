@@ -1,276 +1,336 @@
-<app-breadcrumb [title]="'Tickets'" [items]="['Mis Tickets']" [active_item]="'Mis tickets'"></app-breadcrumb>
+<div class="mt-page">
 
-<div class="tickets-dashboard" [class.loading]="isLoading">
-  <!-- Loading overlay when fetching data -->
-  <div class="loading-overlay" *ngIf="isLoading">
-    <div class="spinner"></div>
-  </div>
-
-  <!-- Header Stats Section -->
-  <div class="dashboard-header">
-    <div class="dashboard-title">
-      <h1><i class="fa fa-ticket-alt"></i> Mis Tickets</h1>
-      <p class="text-muted">Gestiona tus solicitudes de soporte y sugerencias</p>
+  <!-- ===== Encabezado ===== -->
+  <header class="mt-head">
+    <div class="mt-head__copy">
+      <nav class="mt-crumbs">
+        <i class="pi pi-home"></i>
+        <a routerLink="/soporte">Soporte</a>
+        <span class="mt-crumbs__sep">/</span>
+        <span class="mt-crumbs__here">Mis tickets</span>
+      </nav>
+      <h1>Mis tickets</h1>
+      <p>Sigue tus solicitudes de soporte y responde a los agentes.</p>
     </div>
-    <div class="dashboard-actions">
-      <button class="btn-create" routerLink="/soporte">
-        <i class="fa fa-plus"></i> Crear Nuevo Ticket
+
+    <div class="mt-head__actions">
+      <button type="button" class="mt-iconbtn" (click)="recargar()" [disabled]="isLoading"
+              title="Actualizar" aria-label="Actualizar tickets">
+        <i class="pi" [ngClass]="isLoading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+      </button>
+      <button type="button" class="mt-btn mt-btn--primary" routerLink="/soporte">
+        <i class="pi pi-plus"></i> Crear ticket
       </button>
     </div>
-  </div>
+  </header>
 
-  <!-- Filters Section -->
-  <div class="filters-section">
-    <div class="filters-header">
-      <h5><i class="fa fa-filter"></i> Filtros</h5>
+  <!-- ===== Barra de filtros: los conteos son las pestañas ===== -->
+  <div class="mt-toolbar">
+    <div class="mt-tabs" role="tablist" aria-label="Filtrar por estado">
+      <button type="button" class="mt-tab" *ngFor="let tab of tabs"
+              role="tab"
+              [class.is-on]="selectedStatus === tab.key"
+              [attr.aria-selected]="selectedStatus === tab.key"
+              (click)="setTab(tab.key)">
+        <span class="mt-tab__dot" [style.background]="selectedStatus === tab.key ? '#fff' : tab.dot"></span>
+        {{ tab.label }}
+        <span class="mt-tab__count">{{ conteos[tab.key || 'todos'] }}</span>
+      </button>
     </div>
-    <div class="filters-body">
-      <div class="filter-group">
-        <label for="statusFilter" [class.has-active-filter]="selectedStatus">Estado:</label>
-        <div class="select-wrapper">
-          <select id="statusFilter" class="form-control" 
-                  [class.active-filter]="selectedStatus"
-                  [(ngModel)]="selectedStatus" 
-                  (change)="filterTickets()">
-            <option value="">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="haciendo">En Progreso</option>
-            <option value="resuelto">Resuelto</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="filter-group">
-        <label for="dateFilter" [class.has-active-filter]="dateFilter !== 'all'">Fecha:</label>
-        <div class="select-wrapper">
-          <select id="dateFilter" class="form-control"
-                  [class.active-filter]="dateFilter !== 'all'"
-                  [(ngModel)]="dateFilter" 
-                  (change)="filterTickets()">
-            <option value="all">Todos los tiempos</option>
-            <option value="today">Hoy</option>
-            <option value="week">Esta semana</option>
-            <option value="month">Este mes</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="filter-group search-group">
-        <label for="searchFilter" [class.has-active-filter]="searchText.trim()">Buscar:</label>
-        <div class="search-wrapper">
-          <input type="text" id="searchFilter" class="form-control" 
-                 [class.active-filter]="searchText.trim()"
-                 placeholder="Buscar por asunto o contenido..." 
-                 [(ngModel)]="searchText" 
-                 (input)="onSearchChange($event)" />
-          <i class="fa fa-search search-icon"></i>
-          <i *ngIf="searchText.trim()" 
-             class="fa fa-times clear-search" 
-             (click)="clearSearch()"></i>
-        </div>
-      </div>
+
+    <div class="mt-search" [class.is-on]="searchText.trim()">
+      <i class="pi pi-search"></i>
+      <input type="text" [(ngModel)]="searchText" (ngModelChange)="filterTickets()"
+             placeholder="Buscar por asunto o número…" aria-label="Buscar tickets" />
+      <button type="button" class="mt-search__clear" *ngIf="searchText.trim()"
+              (click)="clearSearch()" aria-label="Limpiar búsqueda">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="mt-select" [class.is-on]="dateFilter !== 'all'">
+      <select [(ngModel)]="dateFilter" (ngModelChange)="filterTickets()" aria-label="Filtrar por fecha">
+        <option value="all">Todos los tiempos</option>
+        <option value="today">Hoy</option>
+        <option value="week">Esta semana</option>
+        <option value="month">Este mes</option>
+      </select>
+      <i class="pi pi-chevron-down"></i>
     </div>
   </div>
 
-  <!-- Ticket Statistics -->
-  <div class="ticket-stats">
-    <div class="stat-box pending">
-      <div class="stat-icon">
-        <i class="fa fa-clock"></i>
-      </div>
-      <div class="stat-info">
-        <span class="stat-count">{{getTicketCountByStatus('pendiente')}}</span>
-        <span class="stat-label">Pendientes</span>
-      </div>
-    </div>
-    
-    <div class="stat-box progress">
-      <div class="stat-icon">
-        <i class="fa fa-spinner fa-pulse"></i>
-      </div>
-      <div class="stat-info">
-        <span class="stat-count">{{getTicketCountByStatus('haciendo')}}</span>
-        <span class="stat-label">En Progreso</span>
-      </div>
-    </div>
-    
-    <div class="stat-box resolved">
-      <div class="stat-icon">
-        <i class="fa fa-check-circle"></i>
-      </div>
-      <div class="stat-info">
-        <span class="stat-count">{{getTicketCountByStatus('resuelto')}}</span>
-        <span class="stat-label">Resueltos</span>
-      </div>
-    </div>
-  </div>
+  <!-- ===== Maestro + detalle ===== -->
+  <div class="mt-grid">
 
-  <!-- No tickets message -->
-  <div class="empty-state" *ngIf="filteredTasks?.length === 0">
-    <div class="empty-icon">
-      <i class="fa fa-ticket-alt"></i>
-    </div>
-    <h3>No hay tickets que mostrar</h3>
-    <p>No se encontraron tickets con los filtros actuales</p>
-    <button class="btn-primary" routerLink="/soporte">Crear un ticket</button>
-  </div>
+    <!-- Lista -->
+    <aside class="mt-list">
+      <div class="mt-list__head">
+        <span class="mt-list__title">{{ listTitle }}</span>
+        <span class="mt-list__count">{{ filteredTasks.length }}</span>
+      </div>
 
-  <!-- Tickets List -->
-  <div class="tickets-list" *ngIf="filteredTasks?.length > 0">
-    <div class="ticket-card" *ngFor="let ticket of filteredTasks; let i = index">
-      <div class="ticket-header" 
-           (click)="toggleTicket(i)" 
-           [class.expanded]="expandedTickets[i]"
-           role="button"
-           aria-expanded="{{expandedTickets[i]}}"
-           tabindex="0"
-           [attr.aria-controls]="'ticket-details-' + i">
-        <div class="ticket-info">
-          <div class="ticket-id">#{{ticket.nroTicket || ticket.cd || 'Sin ID'}}</div>
-          <h3 class="ticket-title">{{ticket.asunto}}</h3>
-          <div class="ticket-meta">
-            <span class="ticket-date"><i class="fa fa-calendar"></i> {{ticket.fechaRegistro | date:'dd/MM/yyyy'}}</span>
-            <span class="ticket-reporter"><i class="fa fa-user"></i> {{ticket.nombreUsuarioReporta}}</span>
-          </div>
-        </div>
-        <div class="ticket-status-wrapper">
-          <span class="ticket-status" [ngClass]="ticket.status.toLowerCase()">
-            <i class="fa" 
-               [ngClass]="{
-                 'fa-clock': ticket.status.toLowerCase() === 'pendiente',
-                 'fa-spinner fa-spin': ticket.status.toLowerCase() === 'haciendo',
-                 'fa-check-circle': ticket.status.toLowerCase() === 'resuelto',
-                 'fa-archive': ticket.status.toLowerCase() === 'archivado'
-               }"></i>
-            {{ticket.status}}
+      <!-- Esqueleto mientras carga -->
+      <div class="mt-list__body" *ngIf="isLoading">
+        <div class="mt-skeleton" *ngFor="let s of [1,2,3,4]">
+          <span class="mt-skeleton__icon"></span>
+          <span class="mt-skeleton__lines">
+            <span class="mt-skeleton__bar mt-skeleton__bar--sm"></span>
+            <span class="mt-skeleton__bar"></span>
+            <span class="mt-skeleton__bar mt-skeleton__bar--xs"></span>
           </span>
-          <div class="expand-icon">
-            <i class="fa" [ngClass]="expandedTickets[i] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-          </div>
         </div>
       </div>
 
-      <!-- Ticket Details Section (Expanded) with animation -->
-      <div id="ticket-details-{{i}}" class="ticket-details" *ngIf="expandedTickets[i]" [class.expanded]="expandedTickets[i]">
-        <div class="ticket-section description-section">
-          <h4><i class="fa fa-align-left"></i> Descripción</h4>
-          <p class="ticket-description">{{ticket.asunto}}</p>
+      <div class="mt-list__body" *ngIf="!isLoading && filteredTasks.length">
+        <button type="button" class="mt-row"
+                *ngFor="let ticket of filteredTasks; trackBy: trackTicket"
+                [class.is-on]="ticket === selected"
+                (click)="seleccionar(ticket)">
+          <span class="mt-row__icon"
+                [style.background]="ticket === selected ? tipoDe(ticket).bg : '#f7f8fc'"
+                [style.color]="ticket === selected ? tipoDe(ticket).fg : '#8a90a2'">
+            <ng-container *ngTemplateOutlet="iconoTipo; context: { key: tipoKey(ticket), tam: 16 }"></ng-container>
+          </span>
+
+          <span class="mt-row__body">
+            <span class="mt-row__top">
+              <span class="mt-row__id">#{{ ticket.nroTicket || ticket.cd }}</span>
+              <span class="mt-row__estado"
+                    [style.background]="estadoDe(ticket).bg"
+                    [style.color]="estadoDe(ticket).fg">{{ estadoDe(ticket).label }}</span>
+            </span>
+
+            <span class="mt-row__asunto">{{ ticket.asunto }}</span>
+
+            <span class="mt-row__meta">
+              <span class="mt-row__edad" [class.is-viejo]="esViejo(ticket)">
+                <i class="pi pi-clock"></i>{{ edad(ticket.fechaRegistro) }}
+              </span>
+              <span class="mt-row__com" *ngIf="tieneRespuestas(ticket)">
+                <i class="pi pi-comments"></i>{{ ticket.comentariosVista.length }}
+              </span>
+              <span class="mt-row__adj" *ngIf="ticket.adjuntos?.length">
+                <i class="pi pi-paperclip"></i>
+              </span>
+            </span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Vacío -->
+      <div class="mt-empty" *ngIf="!isLoading && !filteredTasks.length">
+        <span class="mt-empty__icon"><i class="pi" [ngClass]="hayFiltros ? 'pi-search' : 'pi-ticket'"></i></span>
+        <ng-container *ngIf="hayFiltros; else sinTickets">
+          <span class="mt-empty__title">Ningún ticket coincide</span>
+          <span class="mt-empty__hint">Prueba con otro filtro o limpia la búsqueda</span>
+          <button type="button" class="mt-btn mt-btn--ghost" (click)="limpiarFiltros()">Limpiar filtros</button>
+        </ng-container>
+        <ng-template #sinTickets>
+          <span class="mt-empty__title">Aún no tienes tickets</span>
+          <span class="mt-empty__hint">Cuando algo falle o tengas una idea, cuéntanos por aquí</span>
+          <button type="button" class="mt-btn mt-btn--primary" routerLink="/soporte">
+            <i class="pi pi-plus"></i> Crear ticket
+          </button>
+        </ng-template>
+      </div>
+    </aside>
+
+    <!-- Detalle -->
+    <section class="mt-detail" id="mt-detalle" *ngIf="selected">
+
+      <!-- Cabecera + descripción en la misma tarjeta -->
+      <article class="mt-card">
+        <div class="mt-detail__head">
+          <div class="mt-detail__id">
+            <div class="mt-detail__chips">
+              <span class="mt-detail__num">#{{ selected.nroTicket || selected.cd }}</span>
+              <span class="mt-pill"
+                    [style.background]="estadoDe(selected).bg"
+                    [style.color]="estadoDe(selected).fg">
+                <i class="pi" [ngClass]="estadoDe(selected).icon"></i>{{ estadoDe(selected).label }}
+              </span>
+              <span class="mt-pill"
+                    [style.background]="tipoDe(selected).bg"
+                    [style.color]="tipoDe(selected).fg">
+                <ng-container *ngTemplateOutlet="iconoTipo; context: { key: tipoKey(selected), tam: 11 }"></ng-container>{{ tipoDe(selected).label }}
+              </span>
+              <span class="mt-pill mt-pill--soft" *ngIf="selected.prioridad">
+                Prioridad {{ selected.prioridad }}
+              </span>
+            </div>
+            <h2 class="mt-detail__asunto">{{ selected.asunto }}</h2>
+          </div>
+
+          <!-- Meta alineada en una sola fila -->
+          <div class="mt-meta">
+            <div class="mt-meta__item">
+              <span class="mt-meta__label">Abierto</span>
+              <span class="mt-meta__value">
+                <i class="pi pi-calendar"></i>
+                {{ edad(selected.fechaRegistro) }} · {{ selected.fechaRegistro | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+            <div class="mt-meta__item">
+              <span class="mt-meta__label">Reportado por</span>
+              <span class="mt-meta__value">
+                <i class="pi pi-user"></i>{{ selected.nombreUsuarioReporta || 'Sin registrar' }}
+              </span>
+            </div>
+            <div class="mt-meta__item">
+              <span class="mt-meta__label">Última respuesta</span>
+              <span class="mt-meta__value" [class.is-muted]="!tieneRespuestas(selected)">
+                <i class="pi pi-comment"></i>{{ ultimaRespuesta(selected) }}
+              </span>
+            </div>
+            <div class="mt-meta__item" *ngIf="selected.categoria">
+              <span class="mt-meta__label">Categoría</span>
+              <span class="mt-meta__value"><i class="pi pi-tag"></i>{{ selected.categoria }}</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Attachments Section -->
-        <div class="ticket-section attachments-section" *ngIf="ticket.adjuntos?.length > 0">
-          <h4><i class="fa fa-paperclip"></i> Adjuntos ({{ticket.adjuntos.length}})</h4>
-          <div class="attachments-gallery">
-            <div class="attachment-item" *ngFor="let adjunto of ticket.adjuntos">
-              <div class="attachment-preview" [ngSwitch]="tipoAdjunto(adjunto)">
-                <video *ngSwitchCase="'video'" [src]="adjunto" class="attachment-img" controls preload="metadata"></video>
-                <div *ngSwitchCase="'documento'" class="attachment-doc" (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
-                  <i class="fa fa-file-o fa-2x"></i>
-                  <span>{{nombreAdjunto(adjunto)}}</span>
-                </div>
-                <img *ngSwitchDefault [src]="adjunto" alt="Adjunto" class="attachment-img" (click)="openInNewTab(adjunto)" (error)="handleImageError($event)">
-              </div>
-              <div class="attachment-actions">
-                <button class="attachment-btn view" (click)="openInNewTab(adjunto)" title="Ver completo">
-                  <i class="fa fa-eye"></i>
-                </button>
-                <button class="attachment-btn download" (click)="openInNewTab(adjunto)" title="Descargar">
-                  <i class="fa fa-download"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div class="mt-detail__body">
+          <span class="mt-label">Descripción</span>
+          <p class="mt-desc">{{ descripcionDe(selected) }}</p>
 
-        <!-- Comments Section -->
-        <div class="ticket-section comments-section">
-          <h4><i class="fa fa-comments"></i> Comentarios ({{comentariosVisibles(ticket).length}})</h4>
-          
-          <div class="comments-timeline" *ngIf="comentariosVisibles(ticket).length">
-            <div class="comment-item" *ngFor="let comment of comentariosVisibles(ticket)">
-              <div class="comment-avatar" [ngStyle]="{'background-color': comment.autor.color}">
-                {{comment.autor.iniciales}}
-              </div>
-              <div class="comment-content">
-                <div class="comment-header">
-                  <span class="comment-author">{{comment.autor.nombreCompleto}}</span>
-                  <span class="comment-date">{{comment.fechaCreacion | date:'dd MMM yyyy, HH:mm'}}</span>
-                </div>
-                <div class="comment-body">
-                  <p>{{comment.contenido}}</p>
-                  
-                  <!-- Comment Attachments -->
-                  <div class="comment-attachments" *ngIf="comment.adjuntos?.length">
-                    <div class="attachment-thumbnails">
-                      <div class="thumbnail-item" *ngFor="let adjunto of comment.adjuntos" [ngSwitch]="tipoAdjunto(adjunto)">
-                        <video *ngSwitchCase="'video'" [src]="adjunto" controls preload="metadata"></video>
-                        <div *ngSwitchCase="'documento'" class="attachment-doc" (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
-                          <i class="fa fa-file-o"></i>
-                          <span>{{nombreAdjunto(adjunto)}}</span>
-                        </div>
-                        <img *ngSwitchDefault [src]="adjunto" alt="Adjunto" (click)="openInNewTab(adjunto)">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div class="mt-adj" *ngIf="selected.adjuntos?.length">
+            <div class="mt-thumbs" *ngIf="selected.adjuntosImagenes.length">
+              <button type="button" class="mt-thumb" *ngFor="let adjunto of selected.adjuntosImagenes"
+                      (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                <img [src]="adjunto" alt="Adjunto del ticket" (error)="handleImageError($event)" />
+              </button>
             </div>
-          </div>
-          
-          <!-- No Comments Message -->
-          <div class="no-comments-message" *ngIf="!comentariosVisibles(ticket).length">
-            <p>No hay comentarios para este ticket. Sé el primero en comentar.</p>
-          </div>
-          
-          <!-- Add Comment Form -->
-          <div class="add-comment-form">
-            <h5><i class="fa fa-reply"></i> Añadir comentario</h5>
-            <div class="form-group">
-              <textarea 
-                [(ngModel)]="newComment" 
-                class="form-control" 
-                rows="3" 
-                placeholder="Escribe tu comentario aquí..."></textarea>
-            </div>
-            
-            <!-- File Upload -->
-            <div class="file-upload-section">
-              <div class="upload-button-wrap">
-                <button type="button" class="btn-attach" (click)="fileInput.click()">
-                  <i class="fa fa-paperclip"></i> Adjuntar archivos
-                </button>
-                <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="hidden-file-input" />
-              </div>
-              
-              <!-- Upload Preview -->
-              <div class="upload-preview" *ngIf="imagePreviews.length > 0">
-                <div class="preview-item" *ngFor="let preview of imagePreviews; let i = index">
-                  <div class="preview-image">
-                    <img [src]="preview" alt="Vista previa">
-                    <button class="remove-preview" (click)="removeImage(i)">
-                      <i class="fa fa-times"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="form-actions">
-              <button type="button" class="btn-send-comment" [disabled]="!newComment.trim() && imagePreviews.length === 0" (click)="addNewComment(ticket)">
-                <i class="fa fa-paper-plane"></i> Enviar comentario
+
+            <div class="mt-files" *ngIf="selected.adjuntosArchivos.length">
+              <button type="button" class="mt-file" *ngFor="let adjunto of selected.adjuntosArchivos"
+                      (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                <i class="pi" [ngClass]="iconoAdjunto(adjunto)"></i>
+                <span class="mt-file__name">{{ nombreAdjunto(adjunto) }}</span>
+                <i class="pi pi-external-link mt-file__go"></i>
               </button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </article>
+
+      <!-- Conversación -->
+      <article class="mt-card">
+        <div class="mt-conv__head">
+          <span class="mt-conv__icon"><i class="pi pi-comments"></i></span>
+          <span class="mt-conv__title">Conversación</span>
+          <span class="mt-conv__count">{{ selected.comentariosVista.length }}</span>
+        </div>
+
+        <div class="mt-conv__empty" *ngIf="!selected.comentariosVista.length">
+          <span class="mt-empty__icon"><i class="pi pi-comment"></i></span>
+          <span class="mt-empty__title">Aún nadie ha respondido</span>
+          <span class="mt-empty__hint">Si tienes algo más que agregar, escríbelo abajo.</span>
+        </div>
+
+        <div class="mt-conv__list" *ngIf="selected.comentariosVista.length">
+          <div class="mt-msg" *ngFor="let comment of selected.comentariosVista">
+            <span class="mt-msg__avatar" [style.background]="colorAutor(comment)">
+              {{ comment.autor?.iniciales || iniciales(comment.autor?.nombreCompleto) }}
+            </span>
+            <div class="mt-msg__body">
+              <div class="mt-msg__top">
+                <span class="mt-msg__autor">{{ comment.autor?.nombreCompleto || 'Soporte Katuq' }}</span>
+                <span class="mt-msg__tag" *ngIf="!comment.esDelComercio">SOPORTE</span>
+                <span class="mt-msg__fecha">{{ comment.fechaCreacion | date:'dd MMM yyyy, HH:mm' }}</span>
+              </div>
+              <div class="mt-bubble" [class.is-agente]="!comment.esDelComercio">
+                <p *ngIf="comment.contenido">{{ comment.contenido }}</p>
+
+                <div class="mt-thumbs" *ngIf="comment.imagenes?.length">
+                  <button type="button" class="mt-thumb mt-thumb--sm" *ngFor="let adjunto of comment.imagenes"
+                          (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                    <img [src]="adjunto" alt="Adjunto del comentario" (error)="handleImageError($event)" />
+                  </button>
+                </div>
+
+                <div class="mt-files" *ngIf="comment.archivos?.length">
+                  <button type="button" class="mt-file" *ngFor="let adjunto of comment.archivos"
+                          (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
+                    <i class="pi" [ngClass]="iconoAdjunto(adjunto)"></i>
+                    <span class="mt-file__name">{{ nombreAdjunto(adjunto) }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Responder -->
+        <div class="mt-composer">
+          <span class="mt-msg__avatar mt-msg__avatar--mio">{{ misIniciales }}</span>
+          <div class="mt-composer__body">
+            <textarea [(ngModel)]="newComment" rows="3"
+                      [class.is-on]="newComment.trim()"
+                      [disabled]="enviandoComentario"
+                      placeholder="Escribe tu respuesta…"
+                      aria-label="Escribe tu respuesta"></textarea>
+
+            <div class="mt-files" *ngIf="archivos.length">
+              <span class="mt-file mt-file--nuevo" *ngFor="let archivo of archivos; let i = index">
+                <i class="pi" [ngClass]="iconoArchivo(archivo)"></i>
+                <span class="mt-file__name">{{ archivo.file.name }}</span>
+                <button type="button" class="mt-file__del" (click)="quitarArchivo(i)"
+                        title="Quitar" aria-label="Quitar adjunto">
+                  <i class="pi pi-times"></i>
+                </button>
+              </span>
+            </div>
+
+            <div class="mt-composer__actions">
+              <button type="button" class="mt-btn mt-btn--ghost" (click)="fileInput.click()"
+                      [disabled]="enviandoComentario">
+                <i class="pi pi-paperclip"></i> Adjuntar
+              </button>
+              <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="mt-hidden-input" />
+
+              <div class="mt-composer__send">
+                <span class="mt-composer__hint">
+                  {{ puedeResponder ? 'Se avisa al agente' : 'Escribe algo para responder' }}
+                </span>
+                <button type="button" class="mt-btn mt-btn--primary"
+                        [disabled]="!puedeResponder"
+                        (click)="addNewComment(selected)">
+                  <i class="pi" [ngClass]="enviandoComentario ? 'pi-spin pi-spinner' : 'pi-send'"></i>
+                  {{ enviandoComentario ? 'Enviando…' : 'Responder' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
   </div>
 
-  <!-- Comment success notification -->
-  <div class="comment-notification" [class.show]="showCommentSuccess">
-    <div class="notification-content">
-      <i class="fa fa-check-circle"></i>
-      <span>Comentario añadido correctamente</span>
-    </div>
+  <!-- Aviso de respuesta enviada -->
+  <div class="mt-toast" [class.show]="showCommentSuccess">
+    <i class="pi pi-check-circle"></i>
+    <span>Tu respuesta se envió correctamente</span>
   </div>
 </div>
+
+<!-- Íconos de tipo: los mismos trazos que la pantalla de creación del ticket -->
+<ng-template #iconoTipo let-key="key" let-tam="tam">
+  <svg *ngIf="key === 'bug'" [attr.width]="tam" [attr.height]="tam" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+    <line x1="12" y1="9" x2="12" y2="13"></line>
+    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+  </svg>
+  <svg *ngIf="key === 'ayuda'" [attr.width]="tam" [attr.height]="tam" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"></circle>
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+  </svg>
+  <svg *ngIf="key === 'idea'" [attr.width]="tam" [attr.height]="tam" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 18h6"></path>
+    <path d="M10 22h4"></path>
+    <path d="M12 2a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"></path>
+  </svg>
+</ng-template>

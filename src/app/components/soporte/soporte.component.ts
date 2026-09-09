@@ -622,8 +622,9 @@ export class SoporteComponent implements OnInit {
 
           // Notificar al equipo de soporte (ticketId como string, no el objeto)
           this.ticketService.addNotification(`Nuevo ticket #${numeroVisible} creado`, ticketId);
-          // Campana del comercio (payload tipado y accionable) + correos encolados
-          // (comercio + equipo operativo), todo idempotente ante reintentos
+          // Campana del comercio (payload tipado y accionable), idempotente ante
+          // reintentos. El correo al equipo de soporte NO sale de aquí: lo manda el
+          // backend al crear el ticket (services/notifications/supportTicketNotifier.js).
           this.ticketNotificaciones.notificarCreacion({
             ticketCd: ticketId,
             numero: formData.nroTicket,

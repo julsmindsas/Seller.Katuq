@@ -5828,3 +5828,38 @@ Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
 **Decisión.** Se aprueba el fix defensivo: en `updateOrderInternal`, antes de recalcular totales, se completan en cada línea entrante (por índice + `producto.cd`, mismo criterio que `editLineaIva`) los campos `_ivaManualOverride`, `_precioManualOverride`, `tarifaEfectiva`, `ivaLinea`, `precioSinIvaResuelto` que ya existían en el pedido persistido y que el payload entrante no trae (`undefined`). Nunca pisa un valor que el payload SÍ trae explícito (incluido `null`, para no bloquear una futura función de "quitar override"). Sin flag — retrocompatible por construcción. No corrige DAD-012848/DAD-012849 ni sus facturas ya emitidas (requiere nota de crédito, decisión de negocio aparte). Propuesta OpenSpec: `katuq_admin_back_firebase/openspec/changes/preserve-order-line-overrides-on-edit/`.
 
 **Estado:** implementado y verificado. `preserveLineOverrides()` agregada en `updateOrderInternal` (`functions/controllers/orders.js`), invocada antes de `calculateOrderTotals`. Contract test nuevo `test-preserve-line-overrides.js` 9/9 PASS; sin regresión en `test-iva-persist-option-a.js` (8/8) ni `test-order-line-iva-edit.js` (47/47). Backend local reiniciado limpio. Pendiente: verificación manual en navegador y commit (no se commitea sin pedido explícito del usuario).
+
+## D-262 (2026-09-09) — "Mis tickets" adopta el lenguaje visual comercial y pasa a maestro–detalle
+
+**Disparador.** Mockup `Mis Tickets.dc.html` del proyecto de Claude Design `cef2b209-6a56-4932-aba5-ab92bdd0f68d`, traído con `DesignSync`. La pantalla anterior apilaba tres tarjetas de conteo grandes, un bloque de filtros aparte y un acordeón: para leer un ticket había que expandirlo y perder de vista los demás, y los conteos no servían para filtrar.
+
+**Decisión.** Se rediseña `src/app/components/soporte/mis-tickets/` completo (TS, HTML, SCSS) sobre `_katuq-comercial.scss` (`@include kc-tokens`, mixins `kc-*`), plano y sin gradientes (D-131), sin tokens propios:
+- Los **conteos son las pestañas de filtro** (Todos / Pendientes / En progreso / Resueltos), en la misma barra que la búsqueda y el rango de fechas. Desaparecen las tres tarjetas de estadística.
+- **Maestro–detalle**: lista a la izquierda (350 px, con scroll propio) y el ticket abierto a la derecha; en menos de 980 px se apilan y al tocar un ticket la vista salta al detalle. Reemplaza al acordeón.
+- Cabecera del ticket, meta (Abierto / Reportado por / Última respuesta / Categoría) y descripción viven en **una sola tarjeta**; la conversación en otra, con el redactor de respuesta al pie.
+- Los conteos de las pestañas se calculan sobre lo ya filtrado por fecha y texto, para que no prometan tickets que la lista no muestra.
+- Los íconos de tipo (Error / Consulta / Sugerencia) son los **mismos trazos** que la pantalla de creación (`soporte.component.html`), no íconos distintos.
+
+**Cuatro defectos corregidos de paso** (visibles solo al rediseñar):
+1. La descripción mostraba `ticket.asunto` — el mismo texto del título — en vez de `ticket.descripcion`.
+2. El autor de toda respuesta se guardaba como **"Desconocido" / "UD"**: se leía el correo del usuario y nunca se usaba. Ahora va el usuario logueado.
+3. `applyDateFilter` parseaba `'YYYY-MM-DD'` con `new Date()`, que lo interpreta en UTC: en Colombia (UTC-5) el filtro "Hoy" dejaba fuera los tickets de hoy. Se parsea en horario local.
+4. Los adjuntos que no eran imagen se previsualizaban con `readAsDataURL` dentro de un `<img>` (miniatura rota). Ahora la lista de archivos por enviar es una sola (`archivos: {file, tipo, url}`, mismo patrón que la pantalla de creación), con ícono por tipo y `URL.revokeObjectURL` al quitar o salir. Además, si el guardado falla, el comentario ya no se queda pintado como enviado: se revierte y se avisa con SweetAlert2.
+
+**Fuera de alcance a propósito.** El mockup trae un botón **"Ya se resolvió"** que cerraría el ticket desde el comercio. No se implementa: el ciclo de vida del estado lo gobierna la app de Support y dejar que el comercio escriba `status` desde aquí cambia un flujo compartido — necesita acuerdo con ese equipo antes de existir. Tampoco se replica la barra superior ni la píldora de Opttia del mockup: son chrome de la aplicación, no de esta pantalla.
+
+**Estado:** implementado, build del frontend limpio (`npm run build`, sin errores). Sin desplegar.
+
+## D-263 (2026-09-09) — Los correos de ticket llegan al equipo: reconciliado con la implementación que ya existía
+
+**Disparador.** Daniel pide que crear un ticket, además del aviso in-app, mande correo a `dgarciah@katuq.com`, `jarango@katuq.com` y `jnavarro@katuq.com`.
+
+**Lo que encontré primero (y resultó estar desactualizado).** En la copia local, `POST /v1/support/ticket/create` → `registerSupportApp` (`functions/controllers/errorcenter.js`) solo escribía a Slack. Construí un notificador y un template propios. **Al ir a desplegar apareció que `origin/backend-aws-security` estaba 12 commits adelante y otra sesión ya había hecho ese trabajo, mejor:** `services/notifications/supportTicketNotifier.js` (355 líneas) cubre todo el ciclo del ticket — creación, cambio de estado, cierre, reapertura, asignación y respuesta —, es idempotente contra reintentos (colección `support_notificaciones`, id determinístico por ticket+evento+destinatario), descarta al actor para que nadie reciba correo por su propia acción, y le confirma también al comercio. El mío solo cubría creación.
+
+**Decisión: se descarta mi implementación y se conserva la de la otra sesión.** Desplegar ambas habría mandado dos correos por cada ticket. Sobre la suya, el único cambio necesario era el que Daniel pidió, que su código dejaba pendiente con un TODO explícito ("falta confirmar y agregar el correo de Daniel"): `correosEquipo()` tenía `sgarcia@katuq.com` como único valor por defecto. Ahora la lista por defecto es **dgarciah, jarango, jnavarro y sgarcia** — se conserva sgarcia porque venía de la lista heredada de las dos apps y nadie pidió sacarlo. `SOPORTE_EMAILS` (separados por coma) sigue reemplazando la lista sin tocar código, y queda documentada en `.env.example` junto con `SUPPORT_APP_URL` y `SELLER_APP_URL`, que tampoco estaban.
+
+**Lo que entra en el mismo despliegue y NO revisé.** La unidad de despliegue es la rama: esos 12 commits traen además el blindaje de las rutas de tickets (`GET/PUT/DELETE /ticket/*` y comentarios pasan a exigir sesión — antes cualquiera en internet podía listar, modificar y borrar tickets de todos los comercios), filtrado por empresa según el tenant del JWT (`Julsmind` = visión total), y scripts de alta de agentes y de respaldo. Verificado que el interceptor del frontend sí manda `Bearer` a `api.katuq.com`, así que "Mis tickets" no se cae por el auth nuevo. **No verificado:** que el filtro por tenant deje ver exactamente los mismos tickets que antes.
+
+**Defecto detectado y NO corregido (queda pendiente con dueño).** `registerSupportApp` arma `ticketData` con valores por defecto y luego guarda `req.body`: ningún default llega al documento y `date_add` nunca se persiste. Solo afecta al documento guardado, no al correo (el notificador recibe `{ ...req.body, ...ticketData }`). Se deja fuera de este despliegue a propósito, para no sumar un cambio de persistencia no pedido encima de 12 commits ajenos sin revisar. **Dueño: próxima sesión de soporte.**
+
+**Estado:** reconciliado, `node --check` limpio y backend local arrancando en :3300 con SMTP verificado.
