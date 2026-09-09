@@ -5873,3 +5873,24 @@ Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
 **Implementación.** `floating-button.component.html`, `_opttia-launcher.scss` y `assets/images/opttia/tuki-avatar-v1.webp`. Avatar de 160 × 160 px, 4.334 bytes; presentación de 32 px en escritorio y 25 px en móvil. Se usa la versión aprobada sobre blanco, contenida en una superficie blanca: este archivo no representa la extracción con transparencia solicitada anteriormente. Imagen decorativa con `alt=""`; el botón conserva su nombre accesible y estado expandido.
 
 **Validación.** Compilación Angular completa correcta ejecutando el CLI directamente, sin incrementar versión, con salida en `/tmp/katuq-tuki-validation`; `git diff --check` correcto. La compilación emite avisos de Sass y dependencias CommonJS existentes. Sin prueba visual dentro de una sesión autenticada. Cambio local, pendiente de despliegue.
+
+## D-265 (2026-09-09) — El IVA de la venta asistida se cobraba sobre el precio de lista, no sobre el rebajado
+
+**Síntoma.** Un pedido de OH MY STORE con cliente Mayorista y producto en campaña mostraba en el resumen del checkout: costo de productos $302.513 (correcto, el precio con la rebaja sin IVA), IVA 19% $63.864 y total a pagar $366.377. El precio real del producto era $359.991. El IVA correcto era $57.478 y el total $359.991: se cobraban $6.386 de más por unidad.
+
+**Causa.** Las dos mitades del resumen resolvían el precio por caminos distintos. El subtotal (`PaymentService.checkPriceScale`) leía `producto.precio.precioUnitarioSinIva`, que `aplicarPrecioDeLista` ya deja con la campaña aplicada. El desglose de IVA (`PaymentService.checkIVAPrice`) volvía a buscar la fila en `preciosPorTipoCliente` y tomaba `precioCategoria.precioConIva`, que por diseño de D-219 es el precio de lista SIN rebajar — el que se tacha en pantalla — porque la campaña vive aparte en `precioDescuentoConIva` + `descuentoHasta`. Resultado: base con descuento, IVA sin descuento.
+
+**Regla que queda escrita.** El IVA se calcula siempre sobre el precio que el cliente realmente paga. Al leer una fila de lista de tipo de cliente hay que resolver la campaña vigente antes de usar el precio; nunca leer `precio`/`precioConIva` directo. El helper de presentación es `shared/utils/precio-por-tipo-cliente.ts::precioEfectivoDeFila`; el de cálculo, autocontenido y sin dependencias, es `filaSinIVAEfectivo` (existe igual en el núcleo canónico del frontend y en el del backend).
+
+**Alcance.** Cuatro puntos, todos de lectura de precio; ninguno toca la jerarquía manual → tipo de cliente → volumen → base, ni el ancla IVA = sinIVA × tarifa.
+1. `payment.service.ts::checkIVAPrice` — lo que se ve en pantalla; usa `precioEfectivoDeFila`.
+2. `payment.service.ts` (HTML de correo y comanda) — mismo criterio, derivando el sin-IVA de la fila.
+3. `iva-canonico.ts::resolverPrecioLinea` — nuevo `filaSinIVAEfectivo`. Estaba apagado por el flag `ivaCalcUnificado`, pero al encenderlo el subtotal *también* se habría ido al precio de lista.
+4. Backend `orderCalculationService.js::resolverPrecioLinea` — espejo del anterior. Alimenta la auditoría de divergencia de IVA, así que sin esto reportaba diferencias falsas contra lo que sí se persiste.
+5. `PrecioPorTipoCliente` (modelo del frontend) gana los campos de campaña de D-219, que no estaban declarados.
+
+**Lo que NO cambió.** El pedido que se guarda: `calculateOrderTotals` → `getSubTotalPedido`/`getTotalImpuesto` se anclan en `producto.precio.*`, que el frontend ya manda con la campaña aplicada. Las órdenes en Firestore no quedaron mal por esto; el error era del resumen que ve el vendedor y de lo que habrían dicho el correo y la comanda.
+
+**Validación.** Tres fixtures dorados nuevos en `specs/010-.../contracts/iva-fixtures.json`: campaña vigente, campaña vencida (el precio debe volver solo al de lista) y campaña que solo trae el valor con IVA (se deriva). Los dos harness contra el mismo archivo: frontend 17 PASS / 0 FAIL, backend 17 PASS / 0 FAIL — y antes del arreglo el backend fallaba justo esos dos casos, que es la prueba de que el fixture muerde. `test-line-discount-contract.js` sigue en 26 PASS / 0 FAIL. `tsc --noEmit` limpio. Falta la validación en pantalla con el pedido real.
+
+**Deuda que queda anotada.** El núcleo canónico del frontend ya no es espejo exacto del backend: el backend tiene la rama de precio promocional congelado (`_precioPromocional`) y la corrección de tiers sin límite de D-256, y el del frontend no. Se atiende cuando se encienda el flag, no antes.

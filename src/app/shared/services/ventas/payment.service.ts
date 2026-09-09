@@ -21,6 +21,10 @@ import {
   calcularTotalesCanonico,
   baseExcluidaCanonica,
 } from "./iva-canonico"; // Núcleo canónico spec 010 (espejo del backend)
+import {
+  precioEfectivoDeFila,
+  descuentoVigente,
+} from "../../utils/precio-por-tipo-cliente";
 import { AuthService } from "../firebase/auth.service";
 
 declare var WidgetCheckout: any;
@@ -417,7 +421,13 @@ export class PaymentService extends BaseService {
       // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
       else if (precioCategoria) {
         // Si hay precio por categoría, usarlo y su porcentaje de IVA
-        precioConIvaItem = Number(precioCategoria.precioConIva) || 0;
+        // La fila de la lista guarda el descuento AL LADO del precio de lista
+        // (D-219): `precioConIva` es el que se tacha en pantalla y la campaña vive
+        // en `precioDescuentoConIva`. El IVA va sobre el precio que realmente se
+        // cobra, que es el mismo que ya usa checkPriceScale (aplicarPrecioDeLista
+        // lo dejó en producto.precio.precioUnitarioSinIva). Leer el de lista aquí
+        // inflaba el IVA y el total cuando la lista tenía campaña vigente.
+        precioConIvaItem = Number(precioEfectivoDeFila(precioCategoria)) || 0;
         porcentajeIvaItemStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaUnitario;
         // No aplicar precios por volumen cuando hay precio por categoría
       }
@@ -1295,11 +1305,22 @@ export class PaymentService extends BaseService {
         valorIva = precioUnitarioSinIva * (porcentajeIvaNum / 100);
         precioUnitarioConIva = precioUnitarioSinIva + valorIva;
       } else if (usaPrecioCategoria) {
-        // Si hay precio por categoría, usarlo directamente
-        precioUnitarioSinIva = Number(precioCategoria.precio) || 0;
-        precioUnitarioConIva = Number(precioCategoria.precioConIva) || 0;
-        valorIva = Number(precioCategoria.valorIva) || 0;
+        // Precio de la lista del cliente, con SU campaña si sigue vigente (D-219):
+        // `precio`/`precioConIva` son el de lista (el que se tacha) y la rebaja vive
+        // en `precioDescuento`/`precioDescuentoConIva`. Mismo criterio que
+        // aplicarPrecioDeLista y checkIVAPrice; leer solo el de lista hacía que el
+        // correo y la comanda cobraran más caro que el checkout.
         porcentajeIva = precioCategoria.porcentajeIva?.toString() ?? producto?.precio?.precioUnitarioIva ?? "0";
+        const tarifaFila = (Number(porcentajeIva) || 0) / 100;
+        const hayCampana = descuentoVigente(precioCategoria);
+        precioUnitarioConIva = Number(precioEfectivoDeFila(precioCategoria)) || 0;
+        const sinIvaFila = hayCampana
+          ? Number(precioCategoria.precioDescuento) || 0
+          : Number(precioCategoria.precio) || 0;
+        precioUnitarioSinIva = sinIvaFila > 0
+          ? sinIvaFila
+          : (1 + tarifaFila !== 0 ? precioUnitarioConIva / (1 + tarifaFila) : precioUnitarioConIva);
+        valorIva = Math.round((precioUnitarioConIva - precioUnitarioSinIva) * 100) / 100;
       } else if (preciosVolumen.length > 0) {
         // Si no hay precio por categoría ni manual, verificar volumen
         // Filtrar solo rangos con límites válidos definidos

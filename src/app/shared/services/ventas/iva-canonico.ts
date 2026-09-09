@@ -48,6 +48,41 @@ export const tierSinIVA = (rango: any): number => {
   return 0; // sin dato derivable → el caller cae a base
 };
 
+/**
+ * Precio SIN IVA efectivo de una fila de lista de tipo de cliente (D-219).
+ *
+ * La campaña se guarda AL LADO del precio de lista, nunca encima: `precio` /
+ * `precioConIva` son el precio de lista (el que se tacha en pantalla) y la rebaja
+ * vigente vive en `precioDescuento` / `precioDescuentoConIva` + `descuentoHasta`.
+ * Leer solo el de lista cobraba IVA sobre un precio que el cliente no paga.
+ *
+ * Espejo (sin dependencias) de `filaDeTipoCliente`/`precioEfectivoDeFila` en
+ * `shared/utils/precio-por-tipo-cliente.ts`; el núcleo se mantiene autocontenido
+ * para poder compilarse solo en el harness de contrato y en el backend.
+ */
+export const filaSinIVAEfectivo = (fila: any, hoyISO?: string): number => {
+  const tarifa = _num(fila?.porcentajeIva);
+  const conIva = _num(fila?.precioConIva);
+  const rebajaConIva =
+    fila?.precioDescuentoConIva == null ? NaN : Number(fila.precioDescuentoConIva);
+
+  let campanaVigente =
+    Number.isFinite(rebajaConIva) && rebajaConIva > 0 && rebajaConIva < conIva;
+  if (campanaVigente && fila?.descuentoHasta) {
+    const hasta = String(fila.descuentoHasta).slice(0, 10);
+    const hoy = (hoyISO || new Date().toISOString()).slice(0, 10);
+    campanaVigente = hasta >= hoy;
+  }
+
+  const sinIvaDirecto = campanaVigente
+    ? _num(fila?.precioDescuento)
+    : _num(fila?.precio);
+  if (sinIvaDirecto > 0) return sinIvaDirecto;
+
+  const conIvaEfectivo = campanaVigente ? rebajaConIva : conIva;
+  return conIvaEfectivo > 0 ? conIvaEfectivo / (1 + tarifa / 100) : 0;
+};
+
 const _rangoVolumenPorCantidad = (preciosVolumen: any, cantidad: number): any => {
   if (!Array.isArray(preciosVolumen)) return null;
   for (const x of preciosVolumen) {
@@ -93,7 +128,7 @@ export const resolverPrecioLinea = (item: any, ctx: { categoriaClienteId?: any }
     if (pc) {
       return {
         fuentePrecio: "categoria",
-        precioSinIVA: _num(pc.precio),
+        precioSinIVA: filaSinIVAEfectivo(pc),
         tarifa: ivaManual !== null ? ivaManual : _num(pc.porcentajeIva),
       };
     }

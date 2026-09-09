@@ -20,6 +20,16 @@ export interface PrecioPorTipoCliente {
   precioConIva: number;
   activo: boolean;
   /**
+   * Campaña de la lista (D-219). Se guarda AL LADO del precio de lista, nunca
+   * encima: `precio`/`precioConIva` son el de lista (el que se tacha) y estos
+   * campos la rebaja vigente, así el precio vuelve solo cuando la campaña vence.
+   * Ver `shared/utils/precio-por-tipo-cliente.ts`.
+   */
+  precioDescuento?: number | null;
+  precioDescuentoConIva?: number | null;
+  descuentoPorcentaje?: number | null;
+  descuentoHasta?: string | null;
+  /**
    * Solo para mostrar: la descripción del tipo de cliente, resuelta desde el
    * catálogo al pintar. NO se guarda en el producto — las descripciones son
    * párrafos largos y no caben en una tabla; van al tooltip.

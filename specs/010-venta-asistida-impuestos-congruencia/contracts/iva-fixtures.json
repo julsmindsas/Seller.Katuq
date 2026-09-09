@@ -159,6 +159,63 @@
         { "cantidad": 1, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } } }
       ],
       "esperado": { "subtotalSinDescuento": 100, "totalDescuento": 0, "totalEnvio": 10, "totalImpuesto": 20.9, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 20.9 }, "total": 130.9 }
+    },
+    {
+      "id": "F-15-categoria-con-campana-vigente",
+      "_regla": "D-219: la campaña de la lista del cliente vive AL LADO del precio de lista (precioDescuento/precioDescuentoConIva + descuentoHasta), no encima. Se cobra —y se grava— el precio rebajado, no el de lista. Lista 100 @19, campaña 90, qty 2.",
+      "_computo": "sinIVA=90 (NO 100); subtotal=180; IVA=90*0.19*2=34.2; total=214.2",
+      "ctx": { "categoriaClienteId": "MAYORISTA", "porceDescuento": 0 },
+      "carrito": [
+        {
+          "cantidad": 2,
+          "producto": {
+            "procesoComercial": { "permitePrecioManual": false },
+            "preciosPorTipoCliente": [
+              { "tipoClienteId": "MAYORISTA", "precio": 100, "precioConIva": 119, "porcentajeIva": 19, "valorIva": 19, "precioDescuento": 90, "precioDescuentoConIva": 107.1, "descuentoPorcentaje": 10, "descuentoHasta": "2999-12-31", "activo": true }
+            ],
+            "precio": { "precioUnitarioSinIva": 150, "precioUnitarioIva": "19", "preciosVolumen": [] }
+          }
+        }
+      ],
+      "esperado": { "subtotalSinDescuento": 180, "totalDescuento": 0, "totalImpuesto": 34.2, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 34.2 }, "total": 214.2 }
+    },
+    {
+      "id": "F-16-categoria-campana-vencida",
+      "_regla": "D-219: campaña con descuentoHasta ya pasado → el precio vuelve solo al de lista. Mismo dato que F-15 pero vencido.",
+      "_computo": "sinIVA=100 (lista); subtotal=200; IVA=100*0.19*2=38; total=238",
+      "ctx": { "categoriaClienteId": "MAYORISTA", "porceDescuento": 0 },
+      "carrito": [
+        {
+          "cantidad": 2,
+          "producto": {
+            "procesoComercial": { "permitePrecioManual": false },
+            "preciosPorTipoCliente": [
+              { "tipoClienteId": "MAYORISTA", "precio": 100, "precioConIva": 119, "porcentajeIva": 19, "valorIva": 19, "precioDescuento": 90, "precioDescuentoConIva": 107.1, "descuentoPorcentaje": 10, "descuentoHasta": "2020-01-01", "activo": true }
+            ],
+            "precio": { "precioUnitarioSinIva": 150, "precioUnitarioIva": "19", "preciosVolumen": [] }
+          }
+        }
+      ],
+      "esperado": { "subtotalSinDescuento": 200, "totalDescuento": 0, "totalImpuesto": 38, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 38 }, "total": 238 }
+    },
+    {
+      "id": "F-17-categoria-campana-solo-conIVA",
+      "_regla": "D-219: la fila trae la campaña solo con IVA incluido (sin precioDescuento). El sin-IVA se deriva con la tarifa de la fila, igual que el tier de volumen legacy.",
+      "_computo": "sinIVA=107.1/1.19=90; subtotal=180; IVA=34.2; total=214.2",
+      "ctx": { "categoriaClienteId": "MAYORISTA", "porceDescuento": 0 },
+      "carrito": [
+        {
+          "cantidad": 2,
+          "producto": {
+            "procesoComercial": { "permitePrecioManual": false },
+            "preciosPorTipoCliente": [
+              { "tipoClienteId": "MAYORISTA", "precio": 100, "precioConIva": 119, "porcentajeIva": 19, "valorIva": 19, "precioDescuentoConIva": 107.1, "descuentoHasta": null, "activo": true }
+            ],
+            "precio": { "precioUnitarioSinIva": 150, "precioUnitarioIva": "19", "preciosVolumen": [] }
+          }
+        }
+      ],
+      "esperado": { "subtotalSinDescuento": 180, "totalDescuento": 0, "totalImpuesto": 34.2, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 34.2 }, "total": 214.2 }
     }
   ],
   "_pendientes": {
