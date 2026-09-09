@@ -1,6 +1,18 @@
 <!-- <app-breadcrumb [title]="'Empresas'" [items]="['Maestros']" [active_item]="'Empresas'"></app-breadcrumb> -->
 
-<div class="container-fluid">
+<!-- ══════════════════════════════════════════════════════════════════════════
+     Esta pantalla tiene DOS caras según quién entra, y es a propósito: es un
+     solo sitio para "configurar la empresa", no dos pantallas que se parecen.
+
+     · Julsmind (dueño de la plataforma) → la CONSOLA: todas las empresas que
+       usan Katuq, con sus métricas. NO ve "Modo de precios": Katuq vende planes
+       y servicios, no productos, así que ese ajuste no le aplica.
+     · Cualquier otro comercio → SU configuración: sus datos y su Modo de
+       precios, que es el que decide cómo le cobra a sus clientes.
+     ══════════════════════════════════════════════════════════════════════ -->
+<app-consola-plataforma *ngIf="isJulsmind"></app-consola-plataforma>
+
+<div class="container-fluid" *ngIf="!isJulsmind">
   <div class="row">
     <div class="col-sm-12">
       <br />
@@ -107,33 +119,14 @@
         <!-- Header de la página -->
         <div class="card-header bg-white">
           <div class="row align-items-center">
-            <div class="col-md-6">
+            <div class="col-md-12">
               <h4 class="mb-0 text-primary">
                 <i class="icofont icofont-building-alt me-2"></i>
-                {{ 'Empresas' | translate }}
+                {{ 'Mi empresa' | translate }}
               </h4>
               <p class="text-muted mb-0 small">
-                Gestión y administración de empresas del sistema
+                Datos de tu empresa. Para editarlos, usa el lápiz de la fila.
               </p>
-            </div>
-            <div class="col-md-6 text-end" *ngIf="isJulsmind">
-              <button 
-                class="btn btn-primary me-2" 
-                type="button" 
-                (click)="crearEmpresa()"
-                [disabled]="cargando">
-                <i class="icofont icofont-plus me-1"></i>
-                {{ 'Crear Empresa' | translate }}
-              </button>
-              <button 
-                class="btn btn-outline-success" 
-                type="button" 
-                (click)="exportarExcel()"
-                [disabled]="exportando || rows.length === 0">
-                <i class="icofont icofont-file-excel me-1" *ngIf="!exportando"></i>
-                <i class="icofont icofont-spinner-alt-3 icofont-spin me-1" *ngIf="exportando"></i>
-                {{ exportando ? ('Exportando...' | translate) : ('Exportar Excel' | translate) }}
-              </button>
             </div>
           </div>
         </div>
@@ -288,22 +281,7 @@
           <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <span class="text-muted small">
               {{ 'Mostrando' | translate }} {{ rows.length }} {{ 'de' | translate }} {{ totalRecords }} {{ 'empresas' | translate }}
-              <span *ngIf="isAdminUser && empresasSeleccionadas.length > 0" class="ms-2 badge bg-primary">
-                {{ empresasSeleccionadas.length }} {{ 'seleccionada(s)' | translate }}
-              </span>
             </span>
-            <div *ngIf="isAdminUser">
-              <button
-                class="btn btn-danger btn-sm"
-                type="button"
-                (click)="eliminarSeleccionadas()"
-                [disabled]="empresasSeleccionadas.length === 0 || eliminandoSeleccionadas">
-                <i class="icofont icofont-trash me-1" *ngIf="!eliminandoSeleccionadas"></i>
-                <i class="icofont icofont-spinner-alt-3 icofont-spin me-1" *ngIf="eliminandoSeleccionadas"></i>
-                {{ eliminandoSeleccionadas ? ('Eliminando...' | translate) : ('Eliminar seleccionadas' | translate) }}
-                <span *ngIf="empresasSeleccionadas.length > 0"> ({{ empresasSeleccionadas.length }})</span>
-              </button>
-            </div>
           </div>
 
           <!-- Tabla principal -->
@@ -317,7 +295,6 @@
             [sortField]="'nombre'"
             [sortOrder]="1"
             [responsive]="true"
-            [(selection)]="empresasSeleccionadas"
             dataKey="_docId"
             styleClass="p-datatable-sm p-datatable-striped"
             [tableStyle]="{'min-width': '900px'}"
@@ -325,9 +302,6 @@
             
             <ng-template pTemplate="header">
               <tr>
-                <th *ngIf="isAdminUser" style="width: 3rem" class="text-center">
-                  <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-                </th>
                 <th *ngIf="!isMobile" pSortableColumn="nit" style="width: 10%">
                   {{ 'NIT' | translate }}
                   <p-sortIcon field="nit"></p-sortIcon>
@@ -344,20 +318,12 @@
                 <th *ngIf="!isMobile" style="width: 14%">{{ 'Email' | translate }}</th>
                 <th *ngIf="!isMobile" style="width: 7%">{{ 'País' | translate }}</th>
                 <th *ngIf="!isMobile" style="width: 7%">{{ 'Estado' | translate }}</th>
-                <th *ngIf="isAdminUser && !isMobile" style="width: 9%">{{ 'Plan' | translate }}</th>
-                <th *ngIf="isAdminUser && !isMobile" pSortableColumn="nextBillingDate" style="width: 9%">
-                  {{ 'Expiración' | translate }}
-                  <p-sortIcon field="nextBillingDate"></p-sortIcon>
-                </th>
                 <th [style.width]="isMobile ? '40%' : '10%'" class="text-center">{{ 'Acciones' | translate }}</th>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-empresa let-rowIndex="rowIndex">
               <tr [class.table-warning]="!empresa.activo">
-                <td *ngIf="isAdminUser" class="text-center">
-                  <p-tableCheckbox [value]="empresa"></p-tableCheckbox>
-                </td>
                 <!-- NIT -->
                 <td *ngIf="!isMobile">
                   <span class="fw-bold">{{ formatearNit(empresa) }}</span>
@@ -411,38 +377,6 @@
                   </p-tag>
                 </td>
                 
-                <!-- Plan - Solo para superadmin, desktop -->
-                <td *ngIf="isAdminUser && !isMobile">
-                  <button class="btn-plan"
-                    [class.btn-plan--premium]="empresa.subscriptionPlan === 'premium'"
-                    [class.btn-plan--freemium]="empresa.subscriptionPlan !== 'premium'"
-                    (click)="cambiarPlan(empresa)"
-                    [disabled]="upgradingPlan.has(empresa.nit || empresa.nomComercial)"
-                    [title]="empresa.subscriptionPlan === 'premium' ? 'Click para bajar a Freemium' : 'Click para subir a Premium'">
-                    <span *ngIf="!upgradingPlan.has(empresa.nit || empresa.nomComercial)">
-                      {{ empresa.subscriptionPlan === 'premium' ? '★ Premium' : 'Freemium' }}
-                    </span>
-                    <i *ngIf="upgradingPlan.has(empresa.nit || empresa.nomComercial)"
-                       class="fa fa-spinner fa-spin"></i>
-                  </button>
-                </td>
-
-                <!-- Expiración del plan - Solo para superadmin, desktop -->
-                <td *ngIf="isAdminUser && !isMobile">
-                  <span *ngIf="getExpirationDate(empresa) as expDate"
-                    class="badge"
-                    [class.bg-danger]="isExpired(empresa)"
-                    [class.text-white]="isExpired(empresa)"
-                    [class.bg-warning]="isExpiringSoon(empresa) && !isExpired(empresa)"
-                    [class.text-dark]="isExpiringSoon(empresa) && !isExpired(empresa)"
-                    [class.bg-light]="!isExpired(empresa) && !isExpiringSoon(empresa)"
-                    [class.text-dark]="!isExpired(empresa) && !isExpiringSoon(empresa)"
-                    [title]="isExpired(empresa) ? 'Plan expirado' : 'Fecha de próxima facturación'">
-                    {{ expDate }}
-                  </span>
-                  <span *ngIf="!getExpirationDate(empresa)" class="text-muted">-</span>
-                </td>
-
                 <!-- Acciones -->
                 <td class="text-center">
                   <div class="action-btns" [class.flex-column]="isMobile">
@@ -452,18 +386,11 @@
                       <i class="icofont icofont-pencil-alt-5"></i>
                     </button>
 
-                    <button class="action-btn-icon action-btn-icon--warn"
-                      (click)="toggleEstado(empresa)"
-                      [title]="empresa.activo ? 'Desactivar' : 'Activar'">
-                      <i class="icofont" [ngClass]="empresa.activo ? 'icofont-ban' : 'icofont-check-circled'"></i>
-                    </button>
-
-                    <button class="action-btn-icon action-btn-icon--danger"
-                      *ngIf="isAdminUser"
-                      (click)="eliminarEmpresa(empresa)"
-                      title="Eliminar empresa">
-                      <i class="icofont icofont-trash"></i>
-                    </button>
+                    <!-- Activar/desactivar y eliminar NO van acá: en esta vista
+                         la única empresa listada es la TUYA, y desactivarla
+                         dejaría a todos tus usuarios sin poder entrar (el login
+                         valida `activo`). Son acciones de plataforma y viven en
+                         la consola de Julsmind. -->
                   </div>
                 </td>
               </tr>
@@ -471,7 +398,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td [attr.colspan]="isMobile ? (isAdminUser ? 4 : 3) : (isAdminUser ? 10 : 8)" class="text-center py-4">
+                <td [attr.colspan]="isMobile ? 3 : 8" class="text-center py-4">
                   <div class="text-muted">
                     <i class="icofont icofont-search-document display-4"></i>
                     <p class="mt-2 mb-0">{{ 'No se encontraron empresas' | translate }}</p>

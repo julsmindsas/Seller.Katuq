@@ -101,6 +101,18 @@ export const content: Routes = [
       ).then((m) => m.CrearEmpresasModule),
     canActivate: [AuthGuard], // Agregar el guard
   },
+  {
+    // Editar tiene DIRECCIÓN PROPIA. Antes crear y editar compartían la misma
+    // URL y lo que las distinguía viajaba en IndexedDB: no se podía recargar ni
+    // compartir el enlace de una edición, y si ese almacén fallaba el formulario
+    // abría en blanco sobre una empresa real.
+    path: "empresas/editar/:id",
+    loadChildren: () =>
+      import(
+        "../../components/empresas/crearEmpresa/crear-empresa/crear-empresa.module"
+      ).then((m) => m.CrearEmpresasModule),
+    canActivate: [AuthGuard],
+  },
   // {
   //   path: 'roles/crearRol',
   //   loadChildren: () => import('../../components/rol/crear-rol/crear-rol.module').then(m => m.CrearRolModule),

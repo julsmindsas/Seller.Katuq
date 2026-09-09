@@ -112,8 +112,10 @@ export class AuthService implements OnInit {
       const isJulsmindAdmin = result.rol === 'Administrador' && result.company === 'Julsmind';
 
       if (isSuperAdmin) {
-        // Redirigir a la página principal de superadmin
-        this.router.navigate(["/superadmin/clientes"]);
+        // La consola de plataforma vive en "Configuración de empresa": un solo
+        // sitio para administrar empresas. `/superadmin/clientes` sigue
+        // existiendo como redirect para enlaces guardados.
+        this.router.navigate(["/empresas"]);
         this.services.getEmpresaByName({ company: result.company });
       } else if (isJulsmindAdmin) {
         // Redirigir a la página de administración de Julsmind

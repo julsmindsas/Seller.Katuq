@@ -1,0 +1,661 @@
+<div class="consola">
+
+  <!-- Encabezado -->
+  <header class="consola-head">
+    <div>
+      <h4 class="consola-titulo">Consola de plataforma</h4>
+      <p class="consola-sub">
+        Las empresas que usan Katuq y cómo se están moviendo
+        <span class="sello" *ngIf="generadoEn && !cargando">· datos {{ antiguedad(generadoEn) }}</span>
+      </p>
+    </div>
+    <div class="head-acciones">
+      <!-- Dos oficios, una pantalla: administrar empresas y cobrarles. -->
+      <div class="vista-switch" role="tablist">
+        <button type="button" role="tab" [class.activa]="vista === 'empresas'"
+                (click)="cambiarVista('empresas')">Empresas</button>
+        <button type="button" role="tab" [class.activa]="vista === 'cobros'"
+                (click)="cambiarVista('cobros')">Cobros del mes</button>
+      </div>
+
+      <button type="button" class="btn-refrescar" (click)="refrescar()" [disabled]="cargando"
+              title="Vuelve a calcular las métricas de todas las empresas, sin usar el caché">
+        <i class="fa" [ngClass]="cargando ? 'fa-spinner fa-spin' : 'fa-refresh'"></i>
+        {{ cargando ? (recalculando ? 'Recalculando…' : 'Cargando…') : 'Actualizar' }}
+      </button>
+      <button type="button" class="btn-primario" (click)="crearEmpresa()">
+        <i class="fa fa-plus"></i> Crear empresa
+      </button>
+    </div>
+  </header>
+
+  <!-- Error: se muestra como error, nunca se rellena con datos de ejemplo -->
+  <div class="aviso-error" *ngIf="error && !cargando">
+    <i class="fa fa-exclamation-triangle"></i>
+    <div>
+      <strong>No se pudieron cargar los datos</strong>
+      <p>{{ error }}</p>
+    </div>
+    <button type="button" class="btn-reintentar" (click)="refrescar()">Reintentar</button>
+  </div>
+
+  <!-- Cargando -->
+  <div class="cargando" *ngIf="cargando">
+    <i class="fa fa-spinner fa-spin"></i>
+    <span *ngIf="!recalculando">Calculando el panorama de la plataforma…</span>
+    <span *ngIf="recalculando">Recalculando todas las empresas sin caché… puede tardar un poco.</span>
+  </div>
+
+  <ng-container *ngIf="vista === 'empresas' && !cargando && !error && totales">
+
+    <!-- ── FRANJA DE INDICADORES ────────────────────────────────────────── -->
+    <section class="kpis">
+
+      <button type="button" class="kpi" [class.kpi--activo]="filtroEstado === 'activas'"
+              (click)="filtrarPor('activas')">
+        <span class="kpi-label">Empresas activas</span>
+        <span class="kpi-valor">{{ num(totales.activas) }}<small class="kpi-de">/ {{ num(totales.empresas) }}</small></span>
+        <span class="kpi-pie">{{ num(totales.premium) }} premium · {{ num(totales.freemium) }} freemium</span>
+      </button>
+
+      <button type="button" class="kpi" [class.kpi--activo]="orden === 'pedidos30d'"
+              (click)="ordenarPor('pedidos30d')"
+              title="Ordenar: las empresas con más pedidos arriba">
+        <span class="kpi-label">Pedidos {{ ventanaDias }} días</span>
+        <span class="kpi-valor">{{ num(totales.pedidos30d) }}</span>
+        <span class="kpi-pie">{{ num(totales.pedidosNetos30d) }} netos, sin anulados</span>
+      </button>
+
+      <button type="button" class="kpi" [class.kpi--activo]="orden === 'facturado'"
+              (click)="ordenarPor('facturado')"
+              title="Ordenar: las empresas que más facturan arriba">
+        <span class="kpi-label">Ticket promedio</span>
+        <span class="kpi-valor kpi-valor--money">{{ dinero(totales.ticketPromedio30d) }}</span>
+        <span class="kpi-pie">{{ dinero(totales.facturado30d) }} facturado</span>
+      </button>
+
+      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'sinMovimiento'"
+              [class.kpi--encendida]="totales.empresasSinMovimiento > 0"
+              (click)="filtrarPor('sinMovimiento')">
+        <span class="kpi-label">Sin movimiento</span>
+        <span class="kpi-valor">{{ num(totales.empresasSinMovimiento) }}</span>
+        <span class="kpi-pie">activas sin vender en {{ ventanaDias }} días</span>
+      </button>
+
+      <button type="button" class="kpi" [class.kpi--activo]="orden === 'usuarios'"
+              (click)="ordenarPor('usuarios')"
+              title="Ordenar: las empresas con más usuarios arriba">
+        <span class="kpi-label">Usuarios</span>
+        <span class="kpi-valor">{{ num(totales.usuarios) }}</span>
+        <span class="kpi-pie">personas usando Katuq</span>
+      </button>
+
+      <!-- Antigüedad de la plataforma. Solo promedia las que tienen fecha de
+           alta: el pie dice cuántas son, para que el número no prometa de más. -->
+      <button type="button" class="kpi" [class.kpi--activo]="orden === 'antiguedad'"
+              (click)="ordenarPor('antiguedad')"
+              title="Cuánto lleva en Katuq la empresa promedio, contando desde que se creó. Tócala para ordenar: las más antiguas arriba.">
+        <span class="kpi-label">Tiempo promedio en Katuq</span>
+        <span class="kpi-valor kpi-valor--texto">{{ antiguedadMedia() }}</span>
+        <span class="kpi-pie">desde que se creó · {{ num(totales.empresasConFechaAlta) }} de {{ num(totales.empresas) }} con fecha</span>
+      </button>
+
+      <!-- Cuentas abandonadas: activas donde nadie inicia sesión. Las que no
+           tienen dato van en el pie, NUNCA sumadas al número: no saber cuándo
+           entró alguien no es lo mismo que saber que no entra. -->
+      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'sinEntrar'"
+              [class.kpi--encendida]="totales.empresasSinEntrar30d > 0"
+              (click)="filtrarPor('sinEntrar')">
+        <span class="kpi-label">Sin entrar 30 días</span>
+        <span class="kpi-valor">{{ num(totales.empresasSinEntrar30d) }}</span>
+        <span class="kpi-pie">{{ num(totales.empresasSinIngresoConocido) }} sin dato de ingreso</span>
+      </button>
+
+      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'porVencer'"
+              [class.kpi--encendida]="totales.planesVencidos > 0"
+              (click)="filtrarPor('porVencer')">
+        <span class="kpi-label">Planes</span>
+        <span class="kpi-valor">{{ num(totales.planesVencidos) }}<small class="kpi-de">vencidos</small></span>
+        <span class="kpi-pie">{{ num(totales.planesPorVencer) }} vencen esta semana</span>
+      </button>
+
+    </section>
+
+    <!-- Aviso de filtro activo. Existe porque una tarjeta puede dejar la lista
+         en cero (p. ej. "Planes" cuando no hay ninguno vencido) y sin este aviso
+         parece que las empresas desaparecieron. -->
+    <div class="filtro-activo" *ngIf="filtroEstado !== 'todas'">
+      <span>
+        Mostrando solo <strong>{{ etiquetaFiltro() }}</strong>
+        — {{ empresas.length - empresasFiltradas.length }} empresas ocultas
+      </span>
+      <button type="button" (click)="filtrarPor(filtroEstado)">
+        <i class="fa fa-times"></i> Ver todas
+      </button>
+    </div>
+
+    <!-- ── FILTROS ──────────────────────────────────────────────────────── -->
+    <section class="barra-filtros">
+      <div class="buscador">
+        <i class="fa fa-search"></i>
+        <input type="text" [(ngModel)]="busqueda" (ngModelChange)="buscarDesdeElPrincipio()"
+               placeholder="Buscar por nombre, NIT, correo o ciudad…" />
+        <button type="button" class="limpiar-busqueda" *ngIf="busqueda" (click)="busqueda=''; buscarDesdeElPrincipio()">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+
+      <div class="controles">
+        <label class="control">
+          <span class="control-label">Estado</span>
+          <select [(ngModel)]="filtroEstado" (ngModelChange)="buscarDesdeElPrincipio()">
+            <option value="todas">Todas</option>
+            <option value="activas">Activas</option>
+            <option value="inactivas">Inactivas</option>
+            <option value="sinMovimiento">Sin movimiento</option>
+            <option value="porVencer">Plan vencido o por vencer</option>
+          </select>
+        </label>
+
+        <label class="control">
+          <span class="control-label">Ordenar por</span>
+          <select [(ngModel)]="orden" (ngModelChange)="buscarDesdeElPrincipio()">
+            <option value="nombre">Nombre</option>
+            <option value="pedidos30d">Más pedidos</option>
+            <option value="facturado">Más facturado</option>
+            <option value="ultimoPedido">Venta más reciente</option>
+            <option value="ultimoIngreso">Ingreso más reciente</option>
+            <option value="antiguedad">Más antiguas</option>
+          </select>
+        </label>
+
+        <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Limpiar</button>
+      </div>
+    </section>
+
+    <p class="conteo-resultados">
+      Mostrando {{ num(desdeVisible) }}–{{ num(hastaVisible) }}
+      de {{ num(empresasFiltradas.length) }} empresas<span *ngIf="empresasFiltradas.length !== empresas.length">
+        (filtradas de {{ num(empresas.length) }})</span>
+    </p>
+
+    <!-- ── LISTADO ──────────────────────────────────────────────────────── -->
+    <section class="tabla">
+
+      <div class="tabla-head">
+        <span class="col-empresa">Empresa</span>
+        <span class="col-num">Pedidos {{ ventanaDias }}d</span>
+        <span class="col-num">Ticket</span>
+        <span class="col-num">Última venta</span>
+        <span class="col-num">Último ingreso</span>
+        <span class="col-plan">Plan</span>
+        <span class="col-acciones">Acciones</span>
+      </div>
+
+      <div class="fila-vacia" *ngIf="empresasFiltradas.length === 0">
+        <i class="fa fa-inbox"></i>
+        <p>Ninguna empresa coincide con el filtro</p>
+        <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Quitar filtros</button>
+      </div>
+
+      <ng-container *ngFor="let empresa of empresasPagina; trackBy: trackPorId">
+        <div class="fila" [class.fila--inactiva]="!empresa.activo"
+             [class.fila--abierta]="expandidaId === empresa._docId"
+             (click)="alternarFicha(empresa)">
+
+          <!-- Empresa. Los distintivos van DENTRO de la segunda línea, con el
+               NIT: colgados al lado del nombre se iban a un renglón nuevo cuando
+               el nombre era largo, y cada fila terminaba de una altura distinta.
+               Así toda fila mide exactamente dos líneas. -->
+          <div class="col-empresa">
+            <span class="avatar" [class.avatar--off]="!empresa.activo">{{ iniciales(empresa.nomComercial || empresa.nombre) }}</span>
+            <span class="empresa-txt">
+              <strong [title]="empresa.nomComercial || empresa.nombre">{{ empresa.nomComercial || empresa.nombre || 'Sin nombre' }}</strong>
+              <small class="empresa-meta">
+                <span class="empresa-nit">NIT {{ nitCompleto(empresa) }}</span>
+                <span *ngIf="empresa.ciudad" class="empresa-ciudad">· {{ empresa.ciudad }}</span>
+
+                <span class="chip chip--mini chip--bloqueada" *ngIf="!empresa.activo"
+                      [title]="empresa.bloqueo
+                        ? 'Bloqueada por ' + empresa.bloqueo.por + ' — ' + empresa.bloqueo.motivo
+                        : 'Sus usuarios no pueden iniciar sesión'">
+                  <i class="fa fa-lock"></i> Bloqueada
+                </span>
+                <span class="chip chip--mini chip--alerta"
+                      *ngIf="empresa.activo && sinMovimiento(empresa)"
+                      title="Activa, pero no ha vendido en 30 días">Sin movimiento</span>
+              </small>
+            </span>
+          </div>
+
+          <!-- Pedidos -->
+          <div class="col-num" [attr.data-label]="'Pedidos ' + ventanaDias + 'd'">
+            <strong>{{ num(empresa.metricas?.pedidos30d) }}</strong>
+          </div>
+
+          <!-- Ticket -->
+          <div class="col-num" data-label="Ticket">{{ dinero(empresa.metricas?.ticketPromedio30d) }}</div>
+
+          <!-- Última venta -->
+          <div class="col-num col-num--fecha" data-label="Última venta">
+            <span *ngIf="diasDesdeUltimoPedido(empresa) !== null; else nunca">
+              hace {{ diasDesdeUltimoPedido(empresa) }} d
+            </span>
+            <ng-template #nunca><span class="muted">Nunca</span></ng-template>
+          </div>
+
+          <!-- Último ingreso: la señal de cuenta abandonada. "Nunca" NO es
+               cero días — hay 30 empresas donde nadie ha entrado todavía. -->
+          <div class="col-num col-num--fecha" data-label="Último ingreso">
+            <span *ngIf="diasDesdeUltimoIngreso(empresa) !== null; else nuncaEntro">
+              hace {{ diasDesdeUltimoIngreso(empresa) }} d
+            </span>
+            <ng-template #nuncaEntro><span class="muted">Nunca</span></ng-template>
+          </div>
+
+          <!-- Plan -->
+          <div class="col-plan" data-label="Plan">
+            <button type="button" class="chip-plan"
+                    [class.chip-plan--premium]="empresa.plan === 'premium'"
+                    [disabled]="cambiandoPlan.has(empresa._docId)"
+                    (click)="cambiarPlan(empresa, $event)"
+                    [title]="tituloPlan(empresa)">
+              <i class="fa fa-spinner fa-spin" *ngIf="cambiandoPlan.has(empresa._docId)"></i>
+              <ng-container *ngIf="!cambiandoPlan.has(empresa._docId)">
+                {{ empresa.plan === 'premium' ? '★ Premium' : 'Freemium' }}
+              </ng-container>
+            </button>
+            <small class="plan-expira" *ngIf="planVencido(empresa)">Vencido</small>
+            <small class="plan-porvencer" *ngIf="planPorVencer(empresa)">Vence {{ fechaCorta(expiracion(empresa)) }}</small>
+          </div>
+
+          <!-- Acciones -->
+          <!-- Acciones. Solo dos, y ninguna borra nada:
+               · Editar  → abre el formulario con los datos completos.
+               · Bloquear/Desbloquear → corta o devuelve el acceso. Reversible.
+               Eliminar NO existe acá a propósito: es irreversible y un clic
+               distraído se llevaría por delante a una empresa entera. -->
+          <div class="col-acciones">
+            <button type="button" class="btn-icono"
+                    (click)="editarEmpresa(empresa, $event)"
+                    title="Editar datos de la empresa">
+              <i class="fa fa-pencil"></i>
+            </button>
+
+            <button type="button" class="btn-icono"
+                    [class.btn-icono--peligro]="empresa.activo"
+                    [class.btn-icono--exito]="!empresa.activo"
+                    [disabled]="cambiandoEstado.has(empresa._docId)"
+                    (click)="alternarEstado(empresa, $event)"
+                    [title]="empresa.activo
+                      ? 'Bloquear: sus usuarios no podrán iniciar sesión'
+                      : 'Desbloquear: sus usuarios vuelven a entrar'">
+              <i class="fa" [ngClass]="cambiandoEstado.has(empresa._docId)
+                   ? 'fa-spinner fa-spin'
+                   : (empresa.activo ? 'fa-lock' : 'fa-unlock')"></i>
+            </button>
+
+            <span class="chevron" [class.chevron--abierto]="expandidaId === empresa._docId">
+              <i class="fa fa-chevron-down"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- ── FICHA INDIVIDUAL ───────────────────────────────────────────── -->
+        <div class="ficha" *ngIf="expandidaId === empresa._docId">
+
+          <!-- Antigüedad y último ingreso van en una línea aparte, no como
+               tarjetas del reparto: son datos de la CUENTA, no del negocio, y
+               meterlos en la rejilla de 5 dejaba una fila coja. -->
+          <p class="ficha-meta">
+            <span *ngIf="empresa.creadaEn; else sinFechaAlta">
+              Creada el <strong>{{ fechaCorta(empresa.creadaEn) }}</strong>
+              · <strong>{{ antiguedadEmpresa(empresa) }}</strong> en Katuq
+            </span>
+            <ng-template #sinFechaAlta>
+              <span class="muted">Sin fecha de creación registrada</span>
+            </ng-template>
+
+            <span class="ficha-meta-sep">·</span>
+
+            <span *ngIf="empresa.ultimoIngreso; else sinIngreso">
+              Último ingreso <strong>{{ fechaCorta(empresa.ultimoIngreso) }}</strong>
+              (hace {{ diasDesdeUltimoIngreso(empresa) }} d)
+            </span>
+            <ng-template #sinIngreso>
+              <span class="muted">Nadie ha iniciado sesión todavía</span>
+            </ng-template>
+
+            <span class="ficha-meta-sep">·</span>
+
+            <!-- Renovación del plan. Freemium no vence: se dice así, no con "—",
+                 que se leería como un dato que falta. -->
+            <ng-container [ngSwitch]="empresa.renovacion?.estado">
+              <span *ngSwitchCase="'noAplica'" class="muted">Plan Freemium: no vence</span>
+              <span *ngSwitchCase="'sinFecha'" class="muted">Plan sin fecha de renovación</span>
+              <span *ngSwitchCase="'vencido'" class="ficha-meta-alerta">
+                Renovación <strong>vencida</strong> el {{ fechaCorta(empresa.renovacion?.fecha) }}
+              </span>
+              <span *ngSwitchDefault>
+                Renueva el <strong>{{ fechaCorta(empresa.renovacion?.fecha) }}</strong>
+                (en {{ empresa.renovacion?.diasRestantes }} d)<span *ngIf="empresa.renovacion?.periodo">, cobro {{ empresa.renovacion?.periodo }}</span><span
+                  *ngIf="empresa.renovacion?.estimada" class="muted"> · estimada</span>
+              </span>
+            </ng-container>
+          </p>
+
+          <div class="ficha-grid">
+            <div class="dato"><span class="dato-label">Productos</span><span class="dato-valor">{{ num(empresa.metricas?.productos) }}</span></div>
+            <div class="dato"><span class="dato-label">Clientes</span><span class="dato-valor">{{ num(empresa.metricas?.clientes) }}</span></div>
+
+            <div class="dato">
+              <span class="dato-label">Unidades en inventario</span>
+              <span class="dato-valor" *ngIf="unidadesDe(empresa) as u">{{ num(u.unidades) }}</span>
+              <span class="dato-valor dato-valor--cargando" *ngIf="cargandoUnidades.has(empresa._docId)">
+                <i class="fa fa-spinner fa-spin"></i>
+              </span>
+              <span class="dato-valor muted" *ngIf="errorUnidades.get(empresa._docId)">—</span>
+              <small class="dato-nota" *ngIf="unidadesDe(empresa) as u">
+                {{ num(u.registros) }} registros<span *ngIf="u.duplicadosDescartados > 0">
+                  · {{ num(u.duplicadosDescartados) }} espejos descartados</span>
+              </small>
+              <small class="dato-nota dato-nota--error" *ngIf="errorUnidades.get(empresa._docId) as e">{{ e }}</small>
+            </div>
+
+            <div class="dato"><span class="dato-label">Pedidos (histórico)</span><span class="dato-valor">{{ num(empresa.metricas?.pedidos) }}</span></div>
+            <div class="dato">
+              <span class="dato-label">Pedidos {{ ventanaDias }} días</span>
+              <span class="dato-valor">{{ num(empresa.metricas?.pedidos30d) }}</span>
+              <small class="dato-nota" *ngIf="empresa.metricas?.pedidosAnulados30d">
+                {{ num(empresa.metricas?.pedidosAnulados30d) }} anulados
+              </small>
+            </div>
+            <div class="dato"><span class="dato-label">Ticket promedio</span><span class="dato-valor">{{ dinero(empresa.metricas?.ticketPromedio30d) }}</span></div>
+            <div class="dato"><span class="dato-label">Facturado {{ ventanaDias }} días</span><span class="dato-valor">{{ dinero(empresa.metricas?.facturadoNeto30d) }}</span></div>
+            <div class="dato"><span class="dato-label">Usuarios</span><span class="dato-valor">{{ num(empresa.metricas?.usuarios) }}</span></div>
+            <div class="dato"><span class="dato-label">Roles</span><span class="dato-valor">{{ num(empresa.metricas?.roles) }}</span></div>
+
+            <div class="dato">
+              <span class="dato-label">Último pedido</span>
+              <span class="dato-valor dato-valor--sm">{{ fechaCorta(empresa.metricas?.ultimoPedido) }}</span>
+              <small class="dato-nota" *ngIf="empresa.metricas?.ultimoPedidoNro">{{ empresa.metricas?.ultimoPedidoNro }}</small>
+            </div>
+          </div>
+
+          <!-- Una empresa sin acceso tiene que decir POR QUÉ, o se confunde con
+               una caída del sistema. -->
+          <div class="aviso-bloqueo" *ngIf="!empresa.activo">
+            <i class="fa fa-lock"></i>
+            <span *ngIf="empresa.bloqueo; else sinDetalle">
+              Bloqueada por <strong>{{ empresa.bloqueo.por }}</strong>
+              el {{ fechaCorta(empresa.bloqueo.fecha) }} —
+              <em>{{ empresa.bloqueo.motivo }}</em>
+            </span>
+            <ng-template #sinDetalle>
+              Bloqueada. No hay registro de quién ni por qué (se bloqueó antes de que
+              se guardara ese dato).
+            </ng-template>
+          </div>
+
+          <div class="ficha-pie">
+            <div class="ficha-contacto">
+              <span *ngIf="empresa.nombre"><i class="fa fa-building-o"></i> {{ empresa.nombre }}</span>
+              <span *ngIf="empresa.emailContactoGeneral">
+                <i class="fa fa-envelope-o"></i>
+                <a [href]="'mailto:' + empresa.emailContactoGeneral">{{ empresa.emailContactoGeneral }}</a>
+              </span>
+              <span><i class="fa fa-phone"></i> {{ telefono(empresa) }}</span>
+              <span *ngIf="empresa.pais"><i class="fa fa-map-marker"></i> {{ empresa.pais }}</span>
+            </div>
+            <small class="ficha-sello" *ngIf="empresa._cachedAt">
+              Métricas calculadas {{ antiguedad(empresa._cachedAt) }}
+            </small>
+          </div>
+        </div>
+      </ng-container>
+    </section>
+
+    <!-- Paginador. Con 64 empresas la lista pedía scroll a ciegas: para abrir la
+         ficha de una del final había que recorrerla entera cada vez. -->
+    <div class="paginador" *ngIf="empresasFiltradas.length > 0">
+      <div class="paginador-tamano">
+        <label for="porPagina">Filas por página</label>
+        <select id="porPagina" [ngModel]="porPagina" (ngModelChange)="cambiarTamanoPagina($event)">
+          <option *ngFor="let t of tamanosPagina" [ngValue]="t">{{ t }}</option>
+        </select>
+      </div>
+
+      <div class="paginador-controles" *ngIf="totalPaginas > 1">
+        <button type="button" (click)="irAPagina(1)" [disabled]="pagina === 1" title="Primera">
+          <i class="fa fa-angle-double-left"></i>
+        </button>
+        <button type="button" (click)="irAPagina(pagina - 1)" [disabled]="pagina === 1" title="Anterior">
+          <i class="fa fa-angle-left"></i>
+        </button>
+        <span class="paginador-pos">Página {{ num(pagina) }} de {{ num(totalPaginas) }}</span>
+        <button type="button" (click)="irAPagina(pagina + 1)" [disabled]="pagina === totalPaginas" title="Siguiente">
+          <i class="fa fa-angle-right"></i>
+        </button>
+        <button type="button" (click)="irAPagina(totalPaginas)" [disabled]="pagina === totalPaginas" title="Última">
+          <i class="fa fa-angle-double-right"></i>
+        </button>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ── COBROS DEL MES ──────────────────────────────────────────────────
+       Solo LEE. Cobrar es del cron de facturación, no de esta pantalla. -->
+  <ng-container *ngIf="vista === 'cobros'">
+
+    <div class="cargando" *ngIf="cargandoCobros">
+      <i class="fa fa-spinner fa-spin"></i> Cargando los cobros del mes…
+    </div>
+
+    <div class="aviso-error" *ngIf="errorCobros && !cargandoCobros">
+      <i class="fa fa-exclamation-triangle"></i>
+      <div>
+        <strong>No se pudieron cargar los cobros</strong>
+        <p>{{ errorCobros }}</p>
+      </div>
+      <button type="button" class="btn-reintentar" (click)="cargarCobros()">Reintentar</button>
+    </div>
+
+    <ng-container *ngIf="cobros && !cargandoCobros && !errorCobros">
+
+      <section class="kpis kpis--cobros">
+        <button type="button" class="kpi" [class.kpi--activo]="filtroCobros === 'aCobrar'"
+                (click)="filtrarCobros('aCobrar')"
+                title="Ver solo las empresas que suman en este total">
+          <span class="kpi-label">A cobrar este periodo</span>
+          <span class="kpi-valor kpi-valor--money">{{ dinero(cobros.totales.montoTotalCOP) }}</span>
+          <span class="kpi-pie">
+            {{ num(cobros.totales.empresasConMonto) }} de {{ num(cobros.totales.aCobrar) }} empresas calculadas
+          </span>
+        </button>
+
+        <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroCobros === 'sinTarjeta'"
+                [class.kpi--encendida]="cobros.totales.cobroManual > 0"
+                (click)="filtrarCobros('sinTarjeta')"
+                title="Ver solo las que no tienen tarjeta y reciben link de pago">
+          <span class="kpi-label">Sin tarjeta inscrita</span>
+          <span class="kpi-valor">{{ num(cobros.totales.cobroManual) }}</span>
+          <span class="kpi-pie">{{ num(cobros.totales.cobroAutomatico) }} se cobran solas con tarjeta</span>
+        </button>
+
+        <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroCobros === 'vencidas'"
+                [class.kpi--encendida]="cobros.totales.vencidas > 0"
+                (click)="filtrarCobros('vencidas')"
+                title="Ver solo las que ya pasaron su fecha de corte">
+          <span class="kpi-label">Corte vencido</span>
+          <span class="kpi-valor">{{ num(cobros.totales.vencidas) }}</span>
+          <span class="kpi-pie">{{ num(cobros.totales.porVencer) }} vencen esta semana</span>
+        </button>
+
+        <button type="button" class="kpi" [class.kpi--activo]="filtroCobros === 'todas'"
+                (click)="filtrarCobros('todas')"
+                title="Ver todas las empresas con plan pago">
+          <span class="kpi-label">Clientes con plan pago</span>
+          <span class="kpi-valor">
+            {{ num(cobros.totales.dePago) }}<small class="kpi-de">de {{ num(cobros.totales.totalEmpresas) }}</small>
+          </span>
+          <span class="kpi-pie">
+            {{ num(cobros.totales.sinPlanPago) }} freemium, no se cobran<span *ngIf="cobros.totales.cortesia">
+              · {{ num(cobros.totales.cortesia) }} de cortesía</span>
+          </span>
+        </button>
+      </section>
+
+      <!-- Un filtro puede dejar la lista corta; sin este aviso parece que las
+           empresas desaparecieron. Muestra además lo que suma lo filtrado. -->
+      <div class="filtro-activo" *ngIf="filtroCobros !== 'todas'">
+        <span>
+          Mostrando solo <strong>{{ etiquetaFiltroCobros() }}</strong>
+          — {{ num(cobrosFiltrados.length) }} de {{ num(cobros.empresas.length) }},
+          <strong>{{ dinero(montoFiltrado) }}</strong>
+        </span>
+        <button type="button" class="btn-limpiar" (click)="filtrarCobros('todas')">Quitar filtro</button>
+      </div>
+
+      <div class="filtro-activo" *ngIf="cobros.meta.recalculando">
+        <span>
+          Calculando los montos de <strong>{{ num(cobros.meta.empresasPorRecalcular) }}</strong> empresas.
+          Vuelve a entrar en unos minutos y ya estarán.
+        </span>
+      </div>
+
+      <!-- Ver fechas de corte sin saber que el cobro está apagado da falsa
+           tranquilidad: parecería que alguien las está ejecutando, y no. -->
+      <div class="aviso-error aviso-error--tibio" *ngIf="!cobros.meta.cobroAutomaticoEncendido">
+        <i class="fa fa-pause-circle"></i>
+        <div>
+          <strong>El cobro automático está apagado</strong>
+          <p>
+            Hoy no se cobra ninguna tarjeta ni se envía ningún link de pago. Las fechas de abajo
+            son las que corresponden, pero nadie las está ejecutando todavía.
+          </p>
+        </div>
+      </div>
+
+      <div class="cobros-barra">
+        <span class="cobros-nota">{{ cobros.meta.nota }}</span>
+        <button type="button" class="btn-refrescar" (click)="exportarCobros()"
+                title="Baja la lista que estás viendo, con el filtro aplicado">
+          <i class="fa fa-download"></i>
+          Descargar CSV<span *ngIf="filtroCobros !== 'todas'"> ({{ num(cobrosFiltrados.length) }})</span>
+        </button>
+      </div>
+
+      <section class="tabla tabla--cobros">
+        <div class="tabla-head">
+          <span class="col-empresa">Empresa</span>
+          <span class="col-num">Renueva</span>
+          <span class="col-num">Periodo</span>
+          <span class="col-num">Plan</span>
+          <span class="col-num">Ventas del mes</span>
+          <span class="col-num">A cobrar</span>
+          <span class="col-plan">Cómo se cobra</span>
+          <span class="col-plan">Última factura</span>
+        </div>
+
+        <div class="fila" *ngFor="let c of cobrosPagina; trackBy: trackPorId"
+             [class.fila--inactiva]="!c.activo">
+          <div class="col-empresa">
+            <span class="avatar" [class.avatar--off]="!c.activo">{{ iniciales(c.nomComercial) }}</span>
+            <span class="empresa-txt">
+              <strong [title]="c.nomComercial">{{ c.nomComercial }}</strong>
+              <small class="empresa-meta">
+                <span class="empresa-nit">NIT {{ c.nit || '—' }}</span>
+                <span *ngIf="c.correo" class="empresa-ciudad">· {{ c.correo }}</span>
+              </small>
+            </span>
+          </div>
+
+          <div class="col-num col-num--fecha" data-label="Renueva">
+            <span *ngIf="c.renovacion?.fecha; else sinCorte"
+                  [class.texto-vencido]="c.renovacion?.estado === 'vencido'">
+              {{ fechaCorta(c.renovacion?.fecha) }}
+              <small class="dias-restantes">{{ c.renovacion?.diasRestantes }} d</small>
+            </span>
+            <ng-template #sinCorte><span class="muted">Sin fecha</span></ng-template>
+          </div>
+
+          <div class="col-num" data-label="Periodo">{{ etiquetaPeriodo(c) }}</div>
+
+          <div class="col-num" data-label="Plan">
+            <span *ngIf="c.tierNombre; else sinTier">{{ c.tierNombre }}</span>
+            <ng-template #sinTier>
+              <span class="muted" *ngIf="!c.recalculando">—</span>
+              <i class="fa fa-spinner fa-spin muted" *ngIf="c.recalculando"></i>
+            </ng-template>
+          </div>
+
+          <div class="col-num" data-label="Ventas del mes">
+            {{ c.ventasMes === null ? '—' : dinero(c.ventasMes) }}
+          </div>
+
+          <div class="col-num" data-label="A cobrar">
+            <strong>{{ c.montoPeriodoCOP === null ? '—' : dinero(c.montoPeriodoCOP) }}</strong>
+          </div>
+
+          <div class="col-plan" data-label="Cómo se cobra">
+            <span class="chip chip--mini"
+                  [class.chip--alerta]="c.modoCobro === 'manual'"
+                  [class.chip--off]="c.modoCobro === 'cortesia'"
+                  [title]="c.modoCobro === 'manual'
+                    ? 'No tiene tarjeta guardada: el sistema le genera factura y link de pago, y el cobro depende de que el cliente lo pague'
+                    : (c.modoCobro === 'automatico'
+                        ? 'Tiene tarjeta inscrita y cobro recurrente: el sistema le cobra solo'
+                        : 'Premium de cortesía: no se le cobra a propósito')">
+              {{ etiquetaModo(c.modoCobro) }}
+            </span>
+          </div>
+
+          <div class="col-plan" data-label="Última factura">
+            <span [class.muted]="!c.ultimaFactura">{{ etiquetaFactura(c) }}</span>
+          </div>
+        </div>
+
+        <div class="fila-vacia" *ngIf="cobrosFiltrados.length === 0">
+          <i class="fa fa-inbox"></i>
+          <p *ngIf="filtroCobros === 'todas'">No hay empresas con plan de pago</p>
+          <p *ngIf="filtroCobros !== 'todas'">Ninguna empresa coincide con este filtro</p>
+          <button type="button" class="btn-limpiar" *ngIf="filtroCobros !== 'todas'"
+                  (click)="filtrarCobros('todas')">Quitar filtro</button>
+        </div>
+      </section>
+
+      <div class="paginador" *ngIf="cobrosFiltrados.length > 0">
+        <div class="paginador-tamano">
+          <label for="porPaginaCobros">Filas por página</label>
+          <select id="porPaginaCobros" [ngModel]="porPaginaCobros"
+                  (ngModelChange)="cambiarTamanoPaginaCobros($event)">
+            <option *ngFor="let t of tamanosPagina" [ngValue]="t">{{ t }}</option>
+          </select>
+          <span class="paginador-conteo">
+            Mostrando {{ num(desdeVisibleCobros) }}–{{ num(hastaVisibleCobros) }}
+            de {{ num(cobrosFiltrados.length) }}
+          </span>
+        </div>
+
+        <div class="paginador-controles" *ngIf="totalPaginasCobros > 1">
+          <button type="button" (click)="irAPaginaCobros(1)" [disabled]="paginaCobros === 1" title="Primera">
+            <i class="fa fa-angle-double-left"></i>
+          </button>
+          <button type="button" (click)="irAPaginaCobros(paginaCobros - 1)" [disabled]="paginaCobros === 1" title="Anterior">
+            <i class="fa fa-angle-left"></i>
+          </button>
+          <span class="paginador-pos">Página {{ num(paginaCobros) }} de {{ num(totalPaginasCobros) }}</span>
+          <button type="button" (click)="irAPaginaCobros(paginaCobros + 1)" [disabled]="paginaCobros === totalPaginasCobros" title="Siguiente">
+            <i class="fa fa-angle-right"></i>
+          </button>
+          <button type="button" (click)="irAPaginaCobros(totalPaginasCobros)" [disabled]="paginaCobros === totalPaginasCobros" title="Última">
+            <i class="fa fa-angle-double-right"></i>
+          </button>
+        </div>
+      </div>
+
+    </ng-container>
+  </ng-container>
+
+</div>

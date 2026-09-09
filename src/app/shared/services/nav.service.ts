@@ -307,12 +307,10 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        {
-          path: "superadmin/clientes",
-          title: "Clientes plataforma",
-          type: "link",
-          icon: "users",
-        },
+        // La consola de plataforma (todas las empresas + métricas) NO va acá:
+        // vive en "Configuración de empresa", en el botón de perfil, junto con
+        // Usuarios y Roles. El sidebar oculta a propósito todo lo que sea
+        // Empresa/Usuarios/Roles (ver `shouldHide` en sidebar.component.ts).
         {
           path: "superadmin/campanas",
           title: "Campañas de registro",

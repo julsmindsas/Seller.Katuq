@@ -5,10 +5,11 @@ import { MaestroService } from '../../../../shared/services/maestros/maestro.ser
 import { InfoPaises } from '../../../../../Mock/pais-estado-ciudad'
 import { InfoIndicativos } from '../../../../../Mock/indicativosPais'
 import { finalize, take } from 'rxjs';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { DataStoreService } from '../../../../shared/services/dataStoreService';
 import { DaneCodesService } from '../../../../shared/services/dane-codes.service';
+import { CompaniesService } from '../../../../services/companies.service';
 import { MunicipioDane } from '../../../../shared/data/colombia-dane-codes';
 @Component({
   selector: 'app-crear-empresa',
@@ -189,6 +190,15 @@ export class CrearEmpresaComponent implements OnInit {
   indicativosLocales: any[];
   edit: any;
   mostrarCrear: boolean;
+
+  /**
+   * docId de la empresa que se está editando, tomado de la RUTA
+   * (`empresas/editar/:id`). En blanco cuando se está creando.
+   */
+  empresaId: string | null = null;
+  cargandoEmpresa = false;
+  errorCarga = '';
+  guardando = false;
   sedess: { nombreSede: string; direccionSede: string; paisSede: string; dptoSede: string; ciudadSede: string; codigoPostalSede: string; rotuloDireccionSede: string; comoLlegarSede: string; linkGoogleMaps: string; barrio: string }[] = [];
   contactos: { nomCompletoContacto: any; indicativoTelContacto: any; telContacto: any; indicativoFijoContacto: any; fijoContacto: any; extensionFijoContacto: any; telefonoLogisticaContacto: any; emailContacto: any; cargoContacto: any }[] = [];
   ciudadesss: any;
@@ -212,6 +222,8 @@ export class CrearEmpresaComponent implements OnInit {
     private inforPaises: InfoPaises,
     private infoIndicativo: InfoIndicativos,
     private router: Router,
+    private route: ActivatedRoute,
+    private companiesService: CompaniesService,
     private dataStoreService: DataStoreService,
     private daneCodesService: DaneCodesService
   ) {
@@ -447,12 +459,40 @@ export class CrearEmpresaComponent implements OnInit {
     this.canalesComunicacion.removeAt(i);
   }
 
+  /**
+   * El modo lo dice la RUTA: `empresas/editar/:id` edita, `empresas/crearEmpresa`
+   * crea. Antes viajaba en IndexedDB (`infoFormsCompany`) y eso costaba caro:
+   * no se podía compartir ni recargar el enlace de una edición, "Crear" tenía
+   * que borrar el borrador anterior para no abrir con datos ajenos, y si el
+   * almacén del navegador fallaba el botón quedaba mudo sin decir nada.
+   */
   ngAfterContentInit() {
-    this.mostrarCrear = true
-    this.dataStoreService.get<any>('infoFormsCompany').then(data => {
-      this.edit = data;
-      if (this.edit != null) {
-        this.mostrarCrear = false
+    this.empresaId = this.route.snapshot.paramMap.get('id');
+    this.mostrarCrear = !this.empresaId;
+
+    if (!this.empresaId) return;
+
+    // Editando: la empresa se pide COMPLETA al backend. La fila de la tabla es
+    // una proyección de ~15 campos, y el formulario también persiste `sedes`,
+    // `contactos`, `horarioPV` y `canalesComunicacion`: abrirlo con la fila los
+    // borraba al guardar.
+    this.cargandoEmpresa = true;
+    this.companiesService.getCompanyById(this.empresaId).subscribe({
+      next: (empresa) => {
+        this.cargandoEmpresa = false;
+        this.volcarEmpresaEnFormulario(empresa);
+      },
+      error: () => {
+        this.cargandoEmpresa = false;
+        this.errorCarga = 'No se pudieron cargar los datos de la empresa. No se muestra el formulario para no arriesgar sus sedes y contactos.';
+      },
+    });
+  }
+
+  /** Vuelca la empresa recibida del backend en el formulario. */
+  private volcarEmpresaEnFormulario(data: any): void {
+    this.edit = data;
+    if (this.edit != null) {
 
         this.contactos = Array.isArray(this.edit.contactos) ? this.edit.contactos : []
         this.sedess = Array.isArray(this.edit.sedes) ? this.edit.sedes : []
@@ -482,8 +522,7 @@ export class CrearEmpresaComponent implements OnInit {
         this.identificarDepto()
 
         this.identificarCiu()
-      }
-    });
+    }
   }
 
 
@@ -571,22 +610,44 @@ export class CrearEmpresaComponent implements OnInit {
   formatMunicipioDane(municipio: MunicipioDane): string {
     return this.daneCodesService.formatMunicipioLabel(municipio);
   }
+  /**
+   * CREAR una empresa. Va contra `POST /companies/create`, que rechaza un NIT
+   * repetido con un 400 claro.
+   *
+   * Antes llamaba a `editCompany`, que solo crea cuando el NIT está libre: si el
+   * NIT ya existía, "Guardar" **sobreescribía en silencio la empresa de ese NIT**
+   * en vez de avisar que estaba repetido.
+   */
   guardar() {
+    if (this.guardando) return;
 
     this.f.controls['ciudadess'].setValue(this.ciudadess.value)
     this.f.controls['contactos'].setValue(this.contactos)
     this.f.controls['sedes'].setValue(this.sedess)
-    this.service.editCompany(this.f.value).subscribe(r => {
 
-      Swal.fire({
-        title: 'Guardado!',
-        text: 'Guardado con exito',
-        icon: 'success',
-        confirmButtonText: 'Ok'
-      }).then(() => {
-        // Volver al listado
-        this.volverAlListado();
-      });
+    this.guardando = true;
+    this.service.createCompany(this.f.value).subscribe({
+      next: () => {
+        this.guardando = false;
+        Swal.fire({
+          title: 'Guardado!',
+          text: 'Guardado con exito',
+          icon: 'success',
+          confirmButtonText: 'Ok'
+        }).then(() => {
+          // Volver al listado
+          this.volverAlListado();
+        });
+      },
+      error: (err) => {
+        this.guardando = false;
+        Swal.fire({
+          title: 'No se pudo guardar',
+          text: err?.error?.error || 'No se pudo crear la empresa. Intenta de nuevo.',
+          icon: 'error',
+          confirmButtonText: 'Ok'
+        });
+      },
     });
   }
   editar() {
@@ -606,8 +667,26 @@ export class CrearEmpresaComponent implements OnInit {
     this.f.controls['ciudadess'].setValue(this.ciudadess.value)
     this.f.controls['contactos'].setValue(this.contactos)
     this.f.controls['sedes'].setValue(this.sedess)
-    this.service.editCompany(this.f.value).subscribe(r => {
-      this.dataStoreService.set('infoFormsCompany', this.f.value).then(() => {
+
+    // Se guarda por docId. El endpoint viejo identificaba la empresa por el NIT
+    // del cuerpo: si no calzaba con ninguna, creaba una empresa NUEVA en vez de
+    // editar la que estaba en pantalla.
+    if (!this.empresaId) {
+      Swal.fire({
+        title: 'No se pudo editar',
+        text: 'No se sabe qué empresa se está editando. Vuelve al listado y ábrela de nuevo.',
+        icon: 'error',
+        confirmButtonText: 'Ok'
+      });
+      return;
+    }
+
+    if (this.guardando) return;
+    this.guardando = true;
+
+    this.companiesService.updateCompanyById(this.empresaId, this.f.value).subscribe({
+      next: () => {
+        this.guardando = false;
         Swal.fire({
           title: 'Editado!',
           text: 'Editado con exito',
@@ -617,7 +696,16 @@ export class CrearEmpresaComponent implements OnInit {
           // Volver al listado
           this.volverAlListado();
         });
-      });
+      },
+      error: (err) => {
+        this.guardando = false;
+        Swal.fire({
+          title: 'No se pudo editar',
+          text: err?.error?.error || 'No se pudieron guardar los cambios. Intenta de nuevo.',
+          icon: 'error',
+          confirmButtonText: 'Ok'
+        });
+      },
     });
   }
 

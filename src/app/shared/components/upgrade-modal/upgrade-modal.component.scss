@@ -1,4 +1,11 @@
 ::ng-deep .upgrade-modal {
+  /* Que nunca sea más alto que la pantalla: en un portátil el encabezado y el
+     botón Continuar se salían por arriba y por abajo. El contenido scrollea
+     por dentro. */
+  max-height: 90vh;
+
+  .p-dialog-content { max-height: calc(90vh - 12rem); overflow-y: auto; }
+
   .p-dialog-header {
     background: #ffffff;
     color: #0f172a;

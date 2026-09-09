@@ -5894,3 +5894,225 @@ Commits: backend 9c8ce66, ef7c949; kai d98c8aa; supplykai 1a80ccc.
 **Validación.** Tres fixtures dorados nuevos en `specs/010-.../contracts/iva-fixtures.json`: campaña vigente, campaña vencida (el precio debe volver solo al de lista) y campaña que solo trae el valor con IVA (se deriva). Los dos harness contra el mismo archivo: frontend 17 PASS / 0 FAIL, backend 17 PASS / 0 FAIL — y antes del arreglo el backend fallaba justo esos dos casos, que es la prueba de que el fixture muerde. `test-line-discount-contract.js` sigue en 26 PASS / 0 FAIL. `tsc --noEmit` limpio. Falta la validación en pantalla con el pedido real.
 
 **Deuda que queda anotada.** El núcleo canónico del frontend ya no es espejo exacto del backend: el backend tiene la rama de precio promocional congelado (`_precioPromocional`) y la corrección de tiers sin límite de D-256, y el del frontend no. Se atiende cuando se encienda el flag, no antes.
+## D-262 (2026-09-08) — La consola del Super Administrador se reconstruye: de una pantalla con datos falsos a la consola de plataforma con métricas
+
+**Disparador.** Pedido del usuario: reconstruir la pantalla del Super Administrador para poder administrar mejor, con métricas del comercio (productos, clientes, unidades en inventario, pedidos procesados, ticket promedio, usuarios, roles) tanto en conjunto como en una ficha por empresa.
+
+**Diagnóstico de la pantalla actual (`superadmin/clientes`, a donde `auth.service.ts:116` redirige tras el login). Cinco fallas verificadas en código:**
+1. **Las acciones apuntaban a un id inexistente.** `GET /v1/companies/all` devuelve `_docId`; el componente hacía `id: empresa.id || index + 1` → usaba la POSICIÓN en el arreglo. `getCompanyById("1")`, `updateCompanyStatus("3")`, `deleteCompany("5")`: ver detalle siempre 404, cambiar estado y eliminar nunca funcionaron.
+2. **Un fallo se disfrazaba de datos buenos.** `CompaniesService.getAllCompanies()` tenía `catchError(() => of(companiesMock))` y `getCompanyById()` caía a `companyDetailMock`: ante error de red o 403, el operador veía "Empresa X/Y/Z" sin ninguna señal de que algo falló.
+3. **Contrato front↔back roto.** El front mandaba `POST /changeStatus {id, status}`; el backend esperaba `{companyId, estado}` con texto (`"Activo"|"Bloqueado"|"Pendiente"`) y escribía un campo `estado` **que ningún otro módulo lee** — el login valida el booleano `activo` (`authentication.js:129`). Desactivar una empresa NO la desactivaba. Igual en delete: el front mandaba `{id}`, el backend exige `companyDocId` o `nit`.
+4. **Columnas vacías**: la tabla leía `emailContacto`/`telContacto`; los campos reales son `emailContactoGeneral` y `cel`/`fijo`.
+5. **Crear, Editar y Exportar eran stubs** ("en desarrollo").
+
+**Además, los endpoints de métricas por empresa devolvían 0 siempre:** `getCompanyProducts`/`getCompanyProductStats` consultaban la colección `productos` (**la real es `products`** — 131 usos contra 3, los 3 en `companies.js`) y filtraban por el docId de la empresa; `getCompanyOrders`/`getCompanyOrderStats` filtraban `orders` por la razón social `nombre` cuando **la llave de tenant es `nomComercial`** (el login resuelve la empresa con `.where('nomComercial','==',userData.empresa)` y ese string es el que queda en el campo `company` de cada documento). Ambos, además, hacían `.get()` de la colección completa: con ALMARA (~69.000 clientes, D-251/D-252) es impagable.
+
+**Y había dos pantallas para lo mismo:** `components/empresas/` administraba empresas en paralelo, con comportamiento distinto y lo destructivo gateado por un email cableado (`dgarciah@julsmind.com`).
+
+**Decisiones aprobadas por el usuario (checkpoint explícito, reglas de `openspec/config.yaml`):**
+- **Endpoint nuevo `GET /v1/companies/overview`** — una sola llamada devuelve todas las empresas con métricas + totales de plataforma. Candado: `req.headers.company === "Julsmind"`, si no 403.
+- **Colección nueva `metricas_empresas`** — un documento por empresa, SOLO caché derivado (borrable sin pérdida, se regenera). Stale-while-revalidate 60 min espejando el patrón ya existente de `metricas_globales`. Se descartó guardar las métricas como campo `_metricas` dentro de `companies` para no mezclar caché derivado con el registro maestro.
+- **Reparto de responsabilidades**: `superadmin/clientes` = consola de plataforma (todas las empresas, métricas, planes, borrado); `empresas` = configuración de la PROPIA empresa (Modo de precios D-206 + datos del tenant). Un solo sitio administra empresas.
+
+**Regla técnica central: las métricas se resuelven con AGGREGATION QUERIES, nunca leyendo documentos.** `count()`, `sum()` y `average()` están disponibles en el `firebase-admin ^12.7.0` del repo (verificado). El costo se cobra por entradas de índice recorridas, así que NO crece con el tamaño del tenant. Los índices necesarios (`company + fechaCreacion`, `company + estadoProceso + fechaCreacion`) ya existían: no se creó ninguno.
+
+**Métricas elegidas.** Arriba, 5 indicadores de MOVIMIENTO (no siete tarjetas de conteo, que saturan y no cambian de un día a otro): empresas activas/premium · pedidos 30 días · ticket promedio · **empresas sin movimiento** · planes vencidos o por vencer. El de "sin movimiento" (empresa ACTIVA sin ningún pedido en 30 días) es el único que anticipa que se va un cliente y no existía en ninguna pantalla; las empresas desactivadas se excluyen a propósito, porque ya son una decisión tomada y no una alerta. Los conteos (productos, clientes, usuarios, roles) son *tamaño de la cuenta* y viven en la ficha individual, que se abre al expandir la fila.
+
+**Ticket promedio sobre pedidos NETOS.** Se descuentan los `estadoProceso` `Rechazado` y `Cancelado` con dos aggregation queries de igualdad (valores del mismo campo → mutuamente excluyentes, no hay doble descuento). Limitación declarada en el payload (`meta.exclusion`): un pedido cancelado solo en `estadoPago` sigue contando como neto; hacerlo exacto exigiría leer los documentos, que es justo lo que se evita.
+
+**Unidades de inventario, aparte y bajo demanda.** `sum('cantidad')` sobre `inventory` infla el total ~60%: un mismo producto+bodega puede tener dos documentos espejo (`productoId` = docId y = referencia) y la regla del dominio es **MAX-WINS, jamás sumar** (REGLA CRÍTICA DOBLE CONTEO). Deduplicar exige leer, así que se calcula solo al abrir la ficha de una empresa, en `GET /v1/companies/:id/inventory-units`.
+
+**Un número que no se pudo calcular se muestra como "—", nunca como 0.** Un 0 falso parece una respuesta y no lo es; es la misma clase de error que el mock silencioso.
+
+**Estado:** implementado y verificado localmente. Backend: `controllers/platformOverview.js` (nuevo), `services/platformMetrics/{companyMetrics,computePlatformTotals}.js` (nuevos), `services/companies/resolveActivo.js` (nuevo), correcciones en `controllers/companies.js`, ruta `/overview` registrada ANTES de `/:id`. Tests nuevos: `computePlatformTotals` 16/16, `tenantKeys` 10/10, `resolveActivo` 14/14 — **40/40 PASS** (`npm run test:platform-overview`). Frontend: `superadmin-clientes` reconstruido completo (TS/HTML/SCSS con tema canónico D-131), `companies.service.ts` sin fallback a mocks y con tipos, `empresas` reducido a configuración propia, menú renombrado a "Consola de plataforma". Build de producción limpio. Propuesta OpenSpec: `katuq_admin_back_firebase/openspec/changes/consola-superadmin-plataforma/`. **Pendiente: verificación en navegador por la usuaria y commit (no se commitea sin pedido explícito).**
+
+## D-263 (2026-09-08) — La consola de plataforma se fusiona con "Configuración de empresa": una sola pantalla, no dos
+
+**Revierte la separación de pantallas decidida en D-262** (el resto de D-262 —endpoint `overview`, aggregation queries, caché `metricas_empresas`, correcciones de llaves de tenant— sigue vigente sin cambios).
+
+**Disparador.** La usuaria probó la consola y pidió lo contrario de lo que se había aprobado: *"¿por qué las métricas las redireccionas a una consola de plataforma? ¿No queda mejor en la misma pantalla?"*. En el papel el reparto "consola de plataforma / configuración propia" se veía limpio; usándolo obliga a saltar entre dos sitios para administrar lo mismo, que es justo el problema que D-262 quería resolver. La decisión de producto la toma quien la usa.
+
+**Decisión.** `empresas` (a donde llega el botón **Configuración de empresa** del menú de perfil) es la ÚNICA pantalla, con dos caras según quién entra:
+
+- **Julsmind** → la consola completa: los 5 indicadores de plataforma, todas las empresas con su ficha, planes y acciones. **NO ve el card de Modo de precios.**
+- **Cualquier otro comercio** → su configuración: sus datos y su Modo de precios.
+
+**Por qué el Modo de precios se oculta solo para Julsmind, y no se elimina.** La usuaria lo planteó como "Katuq no vende productos, vende planes y servicios". Es cierto para Julsmind, y por eso ahí se esconde. Pero el card NO se puede quitar para todos: ALMARA FELICIDAD, DEL RANCHO GREEN y CAFE ESCOBAR facturan por volumen, y HARMONY LENS y OH MY STORE por tipo de cliente (censo real de producción). Ese ajuste es el que decide cómo le cobran a sus clientes; borrarlo les rompería la facturación. Se oculta por tenant, no se elimina.
+
+**Implementación.** El componente de la consola se movió de `components/superadmin/superadmin-clientes/` a `components/empresas/consola/` (`ConsolaPlataformaComponent`, selector `app-consola-plataforma`) y se declara en `EmpresasModule`. `empresas.component.html` bifurca con `*ngIf="isJulsmind"`. `superadmin/clientes` queda como **redirect** a `/empresas` para no romper enlaces guardados, y el redirect de login del Super Administrador (`auth.service.ts`) apunta ahora a `/empresas`. Se retiró el ítem "Consola de plataforma" del menú lateral: el sidebar oculta a propósito todo lo que sea Empresa/Usuarios/Roles (`shouldHide` en `sidebar.component.ts`), que viven en el botón de perfil.
+
+**Además, en la vista del comercio se retiró el botón de activar/desactivar.** En esa vista la única empresa listada es la propia, y desactivarla dejaba a TODOS sus usuarios sin poder iniciar sesión (el login valida `activo`). Es una acción de plataforma y ahora solo existe en la consola de Julsmind.
+
+**Orden visual (petición explícita: "simétrico, organizado, lindo e intuitivo").** Los repartos con `auto-fit` dejaban tarjetas huérfanas según el ancho, así que se fijaron: los 5 indicadores van 5 / 2 (la quinta a ancho completo) / 1, y los 10 datos de la ficha 5 / 2 / 1 — todos los repartos quedan llenos. Las columnas numéricas se alinearon a la derecha con `tabular-nums` para poder compararlas de un vistazo, y en móvil cada dato rotula qué es vía `data-label` en vez de etiquetas duplicadas en el HTML.
+
+**Estado:** implementado, `tsc` limpio y build de producción sin errores. El chunk de `empresas` pasó de 393 KB a 519 KB (absorbió la consola). **Pendiente: verificación en navegador y commit.**
+
+## D-264 (2026-09-08) — Consola de plataforma: la columna Acciones deja de poder borrar una empresa, y se arregla el IndexedDB que dejaba mudos a 11 pantallas
+
+Continúa D-262/D-263. Tres hallazgos de la verificación en navegador por la usuaria.
+
+### 1. Eliminar sale de la fila; el bloqueo la reemplaza
+
+Petición de la usuaria, y coincide con la práctica estándar de las consolas SaaS: *"el botón de eliminar no debería estar, imagínate que por error eliminemos una empresa"*. ALMARA tiene 69.311 clientes y 14.424 pedidos; borrar es irreversible y no puede ser un ícono al lado de "editar".
+
+- **Eliminar se retira de la consola.** El endpoint backend sigue existiendo (lo usan scripts), solo desaparece de la pantalla.
+- **Bloquear/Desbloquear** queda como la única acción destructiva, y es reversible: escribe el booleano canónico `activo` (el que valida el login), no borra nada y se deshace con otro clic.
+- **El bloqueo exige motivo** y guarda `bloqueo: { fecha, por, motivo }` en el documento de la empresa, más una línea de auditoría en el log. Razón: una empresa sin acceso y sin explicación es indistinguible de una caída del sistema — nadie sabría si fue una decisión o un error. Al desbloquear, `bloqueo` vuelve a `null`. La ficha muestra quién bloqueó, cuándo y por qué.
+
+### 2. El botón Editar borraba las sedes y los contactos
+
+`editarEmpresa` pasaba al formulario la FILA de la tabla — la proyección de ~15 campos que devuelve `/overview`. Pero `crear-empresa.component.ts` lee además `sedes`, `contactos`, `horarioPV` y `canalesComunicacion`, y al guardar persiste lo que tenga cargado: abrir y guardar habría **borrado silenciosamente** las sedes y contactos de esa empresa. Ahora se pide el documento COMPLETO (`GET /v1/companies/:id`) antes de navegar, y si esa carga falla **no se abre el formulario**.
+
+### 3. El bug de IndexedDB que dejaba botones mudos (PREEXISTENTE, no introducido acá)
+
+Error reportado: `NotFoundError: One of the specified object stores was not found` en `dataStoreService.ts:41`.
+
+`DataStoreService` creaba el almacén `keyValueStore` en el constructor **sin esperar**, y luego cada operación reabría la base con la versión fija `1`. Si la base `appDatabase` ya existía sin ese almacén, `onupgradeneeded` no volvía a dispararse nunca y TODA operación fallaba. Y como el patrón de uso es `set(...).then(() => router.navigate(...))`, el rechazo dejaba el `.then` sin ejecutar: **el botón no navegaba y no mostraba ningún error**.
+
+Corregido: una sola conexión compartida; si al abrir falta el almacén, se cierra y se reabre **subiendo la versión**, que es lo único que permite crearlo en IndexedDB. Se maneja `onversionchange` (otra pestaña) y no se cachea una conexión fallida. API pública idéntica (`set`/`get`/`remove`/`clear`).
+
+**Alcance real del arreglo: 11 pantallas** usaban el servicio y fallaban igual de silenciosamente mientras la base estuviera en ese estado — crear/editar empresa, formas de pago (normales y POS), clientes y su listado, el selector de bodega del POS y el selector de plan.
+
+### 4. Los índices de la suma: bloqueados por permisos, no por decisión
+
+`facturado` y `ticket` siguen en "—" porque faltan dos índices (`orders: company + fechaCreacion + totalPedididoConDescuento` y `orders: company + estadoProceso + fechaCreacion + totalPedididoConDescuento`). Quedaron escritos en `firestore.indexes.json` y hay script dedicado (`scripts/create-platform-metrics-indexes.js`, con `--dry-run` por defecto), pero **la cuenta de servicio devuelve 403: no tiene permiso para crear índices** (rol Cloud Datastore Index Admin). Pendiente: o se le da el rol, o se crean con un clic desde los enlaces que devuelve Firestore (`scripts/print-missing-index-links.js` los imprime).
+
+**⚠️ Hallazgo aparte, importante:** hay **137 índices vivos en producción que NO están en `firestore.indexes.json`**. Por eso `firebase deploy --only firestore:indexes` falla en modo no interactivo: exige `--force`, y **`--force` los borraría**, rompiendo consultas por toda la app. Nadie debe correr ese comando con `--force` hasta sincronizar el archivo.
+
+**Estado:** implementado, `tsc` limpio, build de producción sin errores, 57/57 pruebas backend. Sin commitear.
+
+## D-266 (2026-09-09) — El botón "Actualizar" de la consola de plataforma recalcula de verdad
+
+**Disparador.** Se crearon los dos índices que faltaban para la suma (ver D-264 §4) y la pantalla **siguió mostrando "—"** en ticket promedio y facturado. No era el índice: el endpoint sirve el caché vencido y recalcula por detrás (*stale-while-revalidate*, TTL 60 min), así que **un arreglo siempre se ve una carga tarde**. Verificado: a las 15:05 se guardaron los valores buenos de las 64 empresas y el pantallazo de las 15:09 mostraba los `null` de la carga anterior.
+
+**Decisión.** `GET /v1/companies/overview?recalcular=1` ignora el caché y recalcula TODAS las empresas antes de responder (**~9,4 s medidos**, en tandas de 5). El botón **Actualizar** lo usa; la primera carga de la pantalla (`ngOnInit`) NO fuerza, para que abrir la consola siga siendo instantáneo. Forzando ni se leen los 64 documentos de caché: se van a pisar igual.
+
+La regla salió a un helper puro `decidirCache(cache, ahora, forzar)` → `"recalcular"` / `"refrescar-despues"` / `"servir"`, exportado como `_decidirCache`. La respuesta declara `meta.forzado`.
+
+**Validación.** `tests/platformMetrics/cacheDecision.test.js`, 7 casos (incluido "forzado le gana a un caché fresco"). Medido contra el backend: normal 1,7 s con `empresasRecalculadas: 0`; forzado 9,4 s con `empresasRecalculadas: 64`. Totales que salieron: ticket $174.805 · facturado $206.969.247 · 1.185 pedidos.
+
+---
+
+## D-267 (2026-09-09) — La ficha de empresa tiene dirección propia, y la identidad deja de ser el NIT
+
+**Disparador.** Pregunta del usuario: si crear y editar empresas debían vivir en un módulo aparte, dado que hoy son botones dentro del listado de "Configuración de empresa". Al revisarlo aparecieron tres cosas peores que el reparto de carpetas.
+
+**Diagnóstico.**
+
+1. **El módulo aparte ya existía** (`empresas/crearEmpresa`, lazy). Lo que no estaba separado era la **dirección**: crear y editar compartían URL y el modo viajaba en IndexedDB (`infoFormsCompany`). De ahí que "Crear empresa" tuviera que *borrar* el borrador anterior antes de navegar — un parche a que el estado vivía en el lugar equivocado. Nadie podía recargar ni compartir el enlace de una edición, y si el almacén fallaba el botón quedaba mudo (ver D-264 §3).
+
+2. **Dos puertas llenaban ese almacén distinto.** La consola pedía el documento completo (D-264), pero la lista del comercio (`empresas.component.ts`) seguía pasando **la fila de la tabla** — el mismo bug que borra `sedes`, `contactos`, `horarioPV` y `canalesComunicacion` al guardar. Estaba vivo.
+
+3. **`POST /v1/companies/edit` identifica la empresa POR EL NIT del cuerpo.** Si el NIT no calzaba con ninguna empresa (vacío o cambiado), caía a `createCompany` y **creaba una empresa nueva** en vez de editar la de la pantalla. Y `update(req.body)` dejaba que el formulario pisara `activo` —el booleano que valida el login— y `bloqueo`: guardar la ficha podía **desbloquear** una empresa bloqueada a propósito.
+
+**Decisión.** No se crea un módulo nuevo: se arregla la dirección y la identidad.
+
+- Ruta propia `empresas/editar/:id`; `empresas/crearEmpresa` sigue siendo crear. El modo lo dice la **ruta**, no el almacén del navegador.
+- El formulario pide él mismo el documento completo (`GET /v1/companies/:id`). Mientras carga no se dibuja el formulario, y si falla no se abre: nadie escribe sobre campos vacíos.
+- Las dos listas **solo navegan**. Ninguna vuelve a escribir en IndexedDB para abrir la ficha. La lista del comercio rechaza filas con `_docId` sintético (`nit__nombre__índice`), que darían 404.
+- **`PUT /v1/companies/:id`** nuevo: identidad por docId. Un comercio solo puede actualizar su propia empresa; solo Julsmind edita ajenas. El cuerpo se limpia antes de escribir (`services/companies/sanitizeCompanyUpdate.js`): la ficha no toca `nit`, `digitoVerificacion`, `activo`, `bloqueo` ni `authorizationCode`, y un NIT distinto al guardado se rechaza con 409 en vez de crear otra empresa.
+- **El NIT se precarga y queda de solo lectura al editar** (con el DV). Es la identidad: cambiarlo no era "editar", era crear otra empresa.
+- **Crear** pasa a `POST /companies/create`. Antes usaba `editCompany`, que solo crea cuando el NIT está libre: con un NIT ya existente, "Guardar" **sobreescribía en silencio la empresa de ese NIT** en vez de avisar que estaba repetido.
+- `POST /companies/edit` se deja intacto: lo siguen usando `plan-selector` y otros llamadores.
+
+**Lo que NO cambió.** El formulario: mismos campos, mismas pestañas, mismos botones. El botón Editar sigue en la fila de las dos listas.
+
+**Validación.** `tests/companies/sanitizeCompanyUpdate.test.js`, 13 casos. Contra el backend real, con la empresa de pruebas *Prueba Onboarding Katuq Verificada*: id inexistente → 404; NIT distinto → 409 (y ninguna empresa nueva); cuerpo solo con campos prohibidos → 400; otro tenant → 403; edición legítima → 200 **y `activo` siguió en `true` aunque el cuerpo mandaba `activo: false`**. Suite backend 77/77. `tsc --noEmit` limpio y `ng serve` compilando.
+
+**Deuda anotada.** `plan-selector.component.ts` sigue escribiendo `infoFormsCompany`, una llave que ya nadie lee, y sigue guardando por `POST /companies/edit`. No estorba, pero cuando se toque ese componente conviene pasarlo a `PUT /:id`.
+
+---
+
+## D-268 (2026-09-09) — Antigüedad y último ingreso en la consola: dos datos que no estaban donde deberían
+
+**Disparador.** Pedido del usuario: ver cuándo se creó cada empresa y cuándo inició sesión por última vez, para saber su antigüedad.
+
+**Lo que se encontró al buscar los datos (censo sobre las 65 empresas y 116 usuarios de producción, 2026-09-09).**
+
+1. **La fecha de alta vive en cuatro campos distintos** según la época: `date_add` (31), `date_added` (24), `subscriptionStartDate` (30) y `created_at` (1). Existe además `fechaCreacion` en 8 documentos, **siempre en `null`**: leer solo ese campo habría dejado sin fecha a empresas que sí la tienen en otro lado. Uniendo todos, **62 de 65 tienen fecha y 3 no tienen ninguna** (HASU, DEL RANCHO GREEN, Yavalva by Yania Valencia).
+2. **El último ingreso se guarda por USUARIO, no por empresa.** Cada login escribe `ultimoIngreso` en `users` (`controllers/authentication.js:118`), y el campo de tenant ahí es `empresa`, no `company`. El de la empresa es el máximo de los suyos. **38 de 116 usuarios nunca han entrado**, así que solo **32 empresas** tienen ingreso conocido.
+
+**Decisión.**
+
+- `resolverFechaCreacion` recorre los cinco campos en orden, con `fechaCreacion` primero (es el nombre canónico cuando trae valor) y `subscriptionStartDate` de último (es cuándo empezó a pagar, que se le parece pero no es lo mismo). Normaliza Timestamp / Date / número / texto y **descarta 1970 y años imposibles**: un `0` mal interpretado no es una fecha de alta.
+- El último ingreso se calcula **fuera del caché de métricas**, de una sola lectura de `users` (~116 documentos). Servirlo con una hora de atraso lo vuelve inútil: es justo el dato que dice si una cuenta está abandonada. Si esa lectura falla, la consola sigue funcionando.
+- **En pantalla:** columna **Último ingreso** en el listado (junto a Última venta), nuevo orden "Ingreso más reciente", y en la ficha una línea de contexto: *"Creada el … · 1 año 3 meses en Katuq · Último ingreso … (hace N d)"*. Va como línea aparte y no como tarjetas del reparto de datos: son datos de la CUENTA, no del negocio, y meterlos en la rejilla de 5 dejaba una fila coja (D-262).
+- **"Nunca" no es "hace 0 días"**, y una empresa sin fecha de alta dice "Sin fecha de creación registrada". Misma regla de siempre: lo que no se sabe no se dibuja como un número.
+
+**Validación.** `tests/platformMetrics/companyAge.test.js`, 15 casos. Contra el backend real: 61 de 64 empresas con fecha, 32 con último ingreso, y el reparto de campos que efectivamente se usaron (`date_add` 31, `date_added` 24, `subscriptionStartDate` 6). Suite backend **92/92**; `tsc` limpio.
+
+**Hallazgo anotado, sin actuar.** Hay una empresa que **el listado nunca ha mostrado**: el documento `Improtic` (NIT 071787292) no tiene `nombre` ni `nomComercial`, y como `getPlatformOverview` ordena por `nombre`, Firestore lo excluye en silencio — por eso la consola dice 64 y en Firestore hay 65. El usuario decidió dejarlo así por ahora.
+
+### Ampliación del mismo día — también arriba, y la tabla vuelve a ser simétrica
+
+El usuario pidió los dos datos **también en la franja de indicadores**, y que la tabla no quedara descuadrada con la columna nueva.
+
+- **Dos tarjetas nuevas**: **Antigüedad media** (`5 m`, con el pie "61 de 64 con fecha"; al tocarla ordena por las más antiguas) y **Sin entrar 30 días** (18 empresas; filtra la lista, como Sin movimiento). Las **32 empresas sin dato de ingreso van en el pie, nunca sumadas al número**: no saber cuándo entró alguien no es lo mismo que saber que no entra.
+- **Simetría de la franja:** con la sexta tarjeta el reparto era `repeat(6, 1fr)`; con ocho pasa a **`repeat(4, 1fr)` → 4×2 en escritorio, 2×4 en tableta, 1 en móvil**. Todos los repartos quedan llenos, sin tarjetas huérfanas (misma regla de D-262).
+- **Simetría de la tabla:** las siete columnas eran anchos fijos distintos y con la nueva quedaban apretadas. Ahora las **cuatro columnas de datos son iguales entre sí** (`repeat(4, minmax(86px, 1fr))`), Empresa se estira con lo que sobre y Plan/Acciones quedan fijas en 110/104 px — 104 es el mínimo real de Acciones (dos botones de 32 px + chevron + huecos).
+- El backend calcula ambos números en `computePlatformTotals`: `antiguedadMediaDias` (promedia SOLO las que tienen fecha; `null` si ninguna), `empresasSinEntrar30d` y `empresasSinIngresoConocido`. Una empresa **bloqueada no cuenta como abandonada**: ya es una decisión tomada, igual que en `sinMovimiento`.
+
+**Validación.** 5 casos nuevos en `computePlatformTotals.test.js` (24/24). Suite backend **97/97**. Contra producción: antigüedad media **156 días ≈ 5 meses** sobre 61 de 64 empresas, **18** sin entrar hace más de 30 días y **32** sin dato de ingreso.
+
+**Corrección tras verlo en pantalla (mismo día).** El desorden de la tabla no era de anchos, era de ALTURAS: el distintivo "Sin movimiento" colgaba al lado del nombre con `flex-wrap: wrap`, así que con un nombre largo se iba a un tercer renglón y cada fila medía distinto. Los distintivos pasaron **dentro de la segunda línea, junto al NIT** (variante `chip--mini`), el nombre va en una sola línea con puntos suspensivos y la celda mide **siempre dos líneas**. Además las cuatro columnas de datos pasaron de elásticas a **fijas en 118 px**: con `1fr` cada número quedaba a ~190 px del siguiente en pantalla ancha y se leían como islas sueltas; ahora la holgura se la lleva Empresa, que es la única con texto de largo variable.
+
+También se rebautizó la tarjeta: **"Antigüedad media / 5 m"** no se entendía (¿meses?, ¿minutos?). Ahora dice **"Tiempo promedio en Katuq / 5 meses"**, con el pie "desde que se creó · 61 de 64 con fecha". Regla que queda: en las tarjetas, un valor en palabras se escribe completo — abreviar un número está bien, abreviar una unidad no.
+
+---
+
+## D-269 (2026-09-09) — Fecha de renovación del plan, leída del sistema de facturación (no recalculada)
+
+**Disparador.** Pedido del usuario: ver cuándo renueva cada empresa según el plan que compró.
+
+**Censo previo (65 empresas de producción).** 10 premium, 51 freemium, 4 sin plan. **Las 10 premium tienen `nextBillingDate` y `subscriptionStartDate`**, y hoy todas renuevan el mismo día: **1 oct 2026** (facturación mensual anclada al día 1, no a la fecha de alta de cada una — de ahí que el intervalo desde su inicio varíe entre 31 y 333 días). `planPago: "Mensual"` en 32 documentos y `billingPeriod: "monthly"` en 1; no hay ningún plan anual todavía.
+
+**Decisión.**
+
+- La consola **LEE `nextBillingDate`, no lo calcula**: quien lo mantiene es el sistema de facturación (`services/billingService.js`, `controllers/subscriptions.js`, con su `billingPeriod` y su `billingAnchorDay`). Una segunda fórmula acá terminaría discrepando del cobro real.
+- **Freemium responde `aplica: false`** — "no vence", no "—". Un guion se lee como dato faltante; ponerle fecha sería inventarle un cobro a quien no paga.
+- Si algún día falta `nextBillingDate`, se **estima** desde `subscriptionStartDate` + el periodo y se marca `estimada: true`, que la pantalla muestra como "· estimada". Una estimación no puede parecer un cobro confirmado. Hoy ninguna empresa cae ahí.
+- **La periodicidad desconocida NO se asume mensual**: se muestra la fecha sin decir cada cuánto.
+- En pantalla: tercer segmento de la línea de contexto de la ficha ("Renueva el 1 oct 2026 (en 22 d), cobro mensual"; en rojo si está vencida) y **el globo del chip de plan** ahora dice también cuándo renueva, no solo qué pasa si se toca.
+
+**Deuda saldada de paso.** `resolverExpiracion` estaba **duplicada** en `computePlatformTotals`; ahora ambas —la tarjeta "Planes" y la ficha— usan `services/platformMetrics/planRenewal.js`. Dos copias de la misma regla habrían terminado mostrando una empresa vencida en la tarjeta y vigente en su ficha.
+
+**Validación.** `tests/platformMetrics/planRenewal.test.js`, 11 casos. Suite backend **108/108**. Contra producción: 10 empresas en `vigente` (renuevan el 1 oct, cobro mensual, ninguna estimada) y 54 en `noAplica`.
+
+---
+
+## D-270 (2026-09-09) — "Cobros del mes": Katuq por fin ve a quién tiene que facturarle
+
+**Disparador.** Pregunta del usuario: cómo tener control y recordatorio de cuándo se vence el plan de cada cliente para poder cobrarle, y si eso debía ser un módulo de recordatorios aparte.
+
+### Lo que se verificó antes de construir
+
+1. **Los precios SÍ existen**, en `functions/config/subscriptionLimits.js` → `BILLING_TIERS`: Base 27 USD, Origen 47, Esencia 77, Impulso 147, Expansión 247, Liderazgo 427 y Cumbre a convenir. **El precio no es fijo por empresa: se deriva de sus ventas** (`getPaidBillingTier(promedioMensual)`), se cobra en USD convertido con la TRM del día, y el periodo multiplica: mensual ×1, trimestral ×3×0,9, **anual ×12×0,8** (20 % de descuento, idéntico en front y back).
+2. **La maquinaria de cobro ya estaba construida** — factura mensual, link de pago 7 días antes, recordatorios, conciliación con Wompi, mora y suspensión — **y apagada**: el cron vive detrás de `BILLING_CRON_ENABLED`.
+3. **Nadie está cobrando por ahí.** `billing_invoices` tiene **4 facturas y las 4 son de la empresa de pruebas**. De las 10 empresas premium, **9 no tienen medio de pago ni cobro recurrente**: son candidatas a cobro MANUAL (tienen fecha de corte). Las suscripciones sueltas que existen están en `pending_payment`/`suspended` con montos incoherentes (1.500 · 50.000 · 180.000 · 1.836.000).
+4. **`subscriptionPlans` no es el catálogo**: tiene 1 documento y es una campaña promocional. El catálogo vendible está en código (backend y `pricing.component.ts`), y `plan-selector.component.ts` conserva **otro catálogo viejo que ya no coincide con nada** (EARLY ADOPTER, PLAN #1/2/3, PLAN POS).
+5. **`/billing` es la pantalla del COMERCIO** (sus propias facturas), no la de Katuq. Katuq no tenía dónde ver a quién cobrar.
+
+**Conclusión: no faltaba un módulo de recordatorios — faltaba la vista.** Se descarta el módulo aparte: los datos ya viven en la consola y una segunda pantalla se desincroniza (ya pasó con `resolverExpiracion` duplicada, D-269).
+
+### Lo que se hizo
+
+- **`GET /v1/companies/billing-overview`** (solo Julsmind): empresas de pago con fecha de corte, **cómo se les cobra** (`automatico` / `manual` / `cortesia`), plan resultante, ventas del mes, monto a cobrar, y estado de la última factura. **Solo lee**: no cobra ni crea facturas.
+- Los montos **no se recalculan acá**: los da `billingService.getCompanyBillingInfo`, la misma función que ve el comercio en su pantalla de plan. Una segunda fórmula le mostraría a Katuq un valor y le cobraría otro al cliente.
+- **Pestaña "Cobros del mes"** en la consola, junto a "Empresas": cuatro indicadores (a cobrar este periodo · cuántas hay que cobrar a mano · cortes vencidos · empresas de pago), tabla ordenada por urgencia (vencidas primero) y **descarga en CSV** para pasarle la lista a facturación — que es lo que hoy se hace a mano.
+
+### ⚠️ Hallazgo grave: facturar una empresa grande cuesta 6 minutos
+
+`billingService._calculateMonthlySales` (línea 2131) **lee TODOS los pedidos históricos de la empresa** y filtra las fechas en memoria; el comentario lo justifica con "no necesita índice compuesto". Medido hoy contra producción:
+
+| Empresa | Pedidos leídos | Tiempo |
+|---|---|---|
+| ALMARA FELICIDAD | 14.453 | **348 s** |
+| OH MY STORE | — | 13,8 s |
+| CAFE ESCOBAR | — | 10,9 s |
+| Las 10 juntas | — | **387 s** |
+
+Esto no es solo lentitud de la pantalla: es lo que va a costar **cada corrida real de facturación**, y en lecturas de Firestore. Por eso la vista guarda caché (`metricas_cobros`, TTL 6 h, refresco por detrás) y responde en **1,2 s**.
+
+**El arreglo de fondo NO se hizo acá a propósito**: es el camino del dinero. Filtrar por rango en Firestore exige que todos los pedidos tengan `fechaCreacion` en el mismo formato — hoy `getBillableOrderDate` acepta varias formas —, y un filtro estricto que deje pedidos afuera **factura de menos**. Antes de cambiarlo hay que comparar, empresa por empresa, el total viejo contra el nuevo. Queda anotado como trabajo aparte.
+
+**Validación.** Endpoint probado contra producción: 10 empresas de pago, 1 automática y 9 manuales, 0 de cortesía; 8 calculadas al primer barrido. `tsc` limpio, `ng serve` compilando, suite backend 108/108 sin cambios.

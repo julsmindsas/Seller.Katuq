@@ -1,7 +1,13 @@
+<!-- appendTo="body" + baseZIndex: el diálogo se dibujaba DEBAJO de la barra
+     superior (el header es sticky con z-index 1025) y quedaba cortado por el
+     buscador. Sacándolo del árbol de la página deja de competir con cualquier
+     contenedor que cree su propio contexto de apilamiento. -->
 <p-dialog
   [(visible)]="visible"
   styleClass="upgrade-modal"
   [modal]="true"
+  appendTo="body"
+  [baseZIndex]="10000"
   [draggable]="false"
   [resizable]="false"
   [closable]="!loading"

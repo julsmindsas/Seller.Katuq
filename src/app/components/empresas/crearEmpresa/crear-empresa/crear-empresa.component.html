@@ -8,7 +8,19 @@
             {{ mostrarCrear ? 'Crear Empresa' : 'Editar Empresa' }}
         </h5>
     </div>
-    <div class="row">
+
+    <!-- Editando: mientras llega la empresa no se muestra el formulario, para que
+         nadie escriba sobre campos vacíos y termine borrando sedes y contactos. -->
+    <div class="alert alert-light d-flex align-items-center gap-2" *ngIf="cargandoEmpresa">
+        <i class="fa fa-spinner fa-spin"></i> Cargando los datos de la empresa…
+    </div>
+    <div class="alert alert-danger" *ngIf="errorCarga">
+        <strong>No se pudo abrir la empresa.</strong>
+        <div>{{ errorCarga }}</div>
+        <button type="button" class="btn btn-sm btn-light mt-2" (click)="volverAlListado()">Volver al listado</button>
+    </div>
+
+    <div class="row" *ngIf="!cargandoEmpresa && !errorCarga">
         <div class="col-sm-12">
             <div class="card">
 
@@ -38,14 +50,18 @@
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label" for="validationCustom01">CC o Nit </label>
                                         <input formControlName="nit" class="form-control" id="validationCustom01"
-                                            type="text" placeholder="Nit/CC sin DV" required="">
+                                            type="text" placeholder="Nit/CC sin DV" required=""
+                                            [readonly]="!mostrarCrear"
+                                            [title]="mostrarCrear ? '' : 'El NIT identifica a la empresa y no se cambia desde aquí'">
 
                                     </div>
                                     <div class="col-md-1 mb-3">
                                         <label class="form-label" for="validationCustom01">DV</label>
                                         <input formControlName="digitoVerificacion" class="form-control"
                                             id="validationCustom01" type="text" maxlength="1" placeholder="DV"
-                                            required="">
+                                            required=""
+                                            [readonly]="!mostrarCrear"
+                                            [title]="mostrarCrear ? '' : 'El dígito de verificación va con el NIT'">
 
                                     </div>
                                 </div>
