@@ -36,7 +36,9 @@
       [class.user-message]="message.role === 'user'"
       [class.assistant-message]="message.role === 'assistant'">
       <span class="avatar" aria-hidden="true">
-        <i class="fa" [ngClass]="message.role === 'user' ? 'fa-user' : 'fa-bolt'"></i>
+        <img *ngIf="message.role === 'assistant'; else userAvatar"
+          src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="28" height="28" decoding="async">
+        <ng-template #userAvatar><i class="fa fa-user"></i></ng-template>
       </span>
       <div class="bubble">
         <app-opttia-markdown *ngIf="message.role === 'assistant'; else plainMessage"
