@@ -76,6 +76,13 @@ export interface EmpresaPanorama {
     diasRestantes: number | null;
     estado: 'noAplica' | 'sinFecha' | 'vencido' | 'porVencer' | 'vigente';
   };
+  /**
+   * Integraciones conectadas por esta empresa. Se calcula fresco (no entra al
+   * caché): es una sola lectura de una colección de ~1 fila por
+   * empresa+proveedor. `null` cuando el censo falló — distinto de `activas: 0`,
+   * que sí afirma que no tiene ninguna.
+   */
+  integraciones: IntegracionesEmpresa | null;
   _cachedAt: number | null;
   _stale: boolean;
 }
@@ -105,6 +112,58 @@ export interface TotalesPlataforma {
   empresasSinEntrar30d: number;
   /** Activas donde nadie ha iniciado sesión nunca: sin dato, no abandonadas. */
   empresasSinIngresoConocido: number;
+  /**
+   * Integraciones CONECTADAS en toda la plataforma. `null` si el censo no se
+   * pudo leer — un 0 se leería como "ninguna empresa tiene integraciones".
+   */
+  integracionesActivas: number | null;
+  /** Empresas con al menos una integración conectada. `null` si no hay censo. */
+  empresasConIntegracion: number | null;
+  /** ACTIVAS con cero integraciones conectadas. */
+  empresasSinIntegrar: number;
+  /** ACTIVAS que ya toparon el máximo de su plan (freemium permite 1). */
+  empresasEnLimiteIntegraciones: number;
+}
+
+/** Una integración conectada por una empresa. */
+export interface IntegracionEmpresa {
+  /** id del proveedor tal como lo guarda el backend (`shopify`, `siigo`…). */
+  id: string;
+  nombre: string;
+  categoria: 'ecommerce' | 'pagos' | 'logistica' | 'contabilidad' | 'otras';
+  /** El backend ya no reconoce este proveedor: se muestra con su id crudo. */
+  desconocido: boolean;
+  activa: boolean;
+  estado: string | null;
+  conectadaEn: string | null;
+  /**
+   * Última edición de la CONFIGURACIÓN. NO es la última vez que la integración
+   * movió algo: no existe ese dato.
+   */
+  actualizadaEn: string | null;
+  conectadaPor: string | null;
+}
+
+/**
+ * Integraciones de una empresa. `null` en `EmpresaPanorama.integraciones`
+ * significa "no se pudo leer el censo", que no es lo mismo que `activas: 0`.
+ */
+export interface IntegracionesEmpresa {
+  activas: number;
+  inactivas: number;
+  proveedores: IntegracionEmpresa[];
+}
+
+/** Una integración mirada desde el lado del proveedor: cuántas empresas la usan. */
+export interface FilaCatalogoIntegracion {
+  id: string;
+  nombre: string;
+  categoria: string;
+  desconocido: boolean;
+  /** Empresas que la tienen configurada, conectada o no. */
+  empresas: number;
+  /** Empresas que la tienen conectada AHORA. */
+  empresasActivas: number;
 }
 
 /**
@@ -141,7 +200,21 @@ export interface FilaCobro {
   montoMensualCOP: number | null;
   montoPeriodoCOP: number | null;
   trm: number | null;
-  ultimaFactura: { id: string | null; estado: string | null; fecha: string | null; monto: number | null } | null;
+  /**
+   * El último COBRO de esta empresa (lo que Katuq le factura), no el documento
+   * fiscal. Ese va aparte en `facturaDian`: son dos cosas distintas y
+   * confundirlas fue justo lo que hizo ilegible esta columna.
+   */
+  ultimaFactura: {
+    id: string | null;
+    estado: string | null;
+    fecha: string | null;
+    monto: number | null;
+    /** La factura electrónica DIAN emitida por ese cobro. `null` = todavía no. */
+    facturaDian?: { numero: string | null; cufe: string | null; fecha: string | null } | null;
+    /** Por qué falló el último intento de emitirla. `null` = no falló. */
+    facturaDianProblema?: string | null;
+  } | null;
   calculadoEn: number | null;
   /** El monto de esta empresa se está recalculando por detrás. */
   recalculando: boolean;
@@ -179,6 +252,17 @@ export interface PlatformOverview {
   ventanaDias: number;
   totales: TotalesPlataforma;
   empresas: EmpresaPanorama[];
+  /**
+   * Lo integrado mirado por proveedor: cuántas empresas tiene cada uno y cuáles
+   * no tiene nadie. Es la respuesta a "¿valió la pena lo que construimos?".
+   */
+  integraciones?: {
+    disponible: boolean;
+    configuraciones: number;
+    catalogo: FilaCatalogoIntegracion[];
+    sinNingunaEmpresa: Array<{ id: string; nombre: string; categoria: string }>;
+    nota: string;
+  };
   meta: {
     cacheTtlMinutos: number;
     forzado?: boolean;

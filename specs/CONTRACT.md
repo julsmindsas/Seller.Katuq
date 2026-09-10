@@ -6116,3 +6116,102 @@ Esto no es solo lentitud de la pantalla: es lo que va a costar **cada corrida re
 **El arreglo de fondo NO se hizo acá a propósito**: es el camino del dinero. Filtrar por rango en Firestore exige que todos los pedidos tengan `fechaCreacion` en el mismo formato — hoy `getBillableOrderDate` acepta varias formas —, y un filtro estricto que deje pedidos afuera **factura de menos**. Antes de cambiarlo hay que comparar, empresa por empresa, el total viejo contra el nuevo. Queda anotado como trabajo aparte.
 
 **Validación.** Endpoint probado contra producción: 10 empresas de pago, 1 automática y 9 manuales, 0 de cortesía; 8 calculadas al primer barrido. `tsc` limpio, `ng serve` compilando, suite backend 108/108 sin cambios.
+
+## D-271 (2026-09-10) — Integraciones en la consola de plataforma: cuáles usa cada empresa, y cuáles no usa nadie
+
+**Disparador.** Pregunta del usuario: si se puede ver en la pantalla del Super Administrador cuántas y cuáles integraciones usa cada empresa, "para mirar el impacto de lo que hemos integrado".
+
+### Lo que se verificó antes de construir
+
+1. **La fuente buena es `integration_configs`** (`services/integrationConfigService.js`): un documento por empresa+proveedor, con `companyId`, `provider`, `status`, `createdAt`, `updatedAt`, `createdBy`. El docId es `companyId+provider` (`generateConfigId`), **así que no hay duplicados que deduplicar** — nada del problema de los documentos espejo del inventario (D-262).
+2. **La llave de tenant es `companyId` y su valor es el `nomComercial`**, la misma que ya usa toda la consola: `saveConfig` busca la empresa con `where('nomComercial','==',companyId)`.
+3. **La colección es chiquita y NO crece con el tenant**: tope de ~64 empresas × 15 proveedores. ALMARA, con sus 69.000 clientes, aporta como mucho 15 filas. Por eso este módulo **sí puede leer la colección entera**, que es lo contrario de la regla de `companyMetrics` — y a propósito.
+4. **La vitrina del front miente sobre el tamaño del catálogo.** `integrations.service.ts` muestra **34 integraciones**; `PROVIDER_SCHEMAS` del backend solo acepta **15**, y `saveConfig` rechaza el resto con "Proveedor no soportado". Listar contra la vitrina llenaría la consola de 19 proveedores que nunca van a tener un dato. (Al revés también hay desfase: `virtual_store` existe en el backend y no está en la vitrina.)
+5. **No existe dato de USO por empresa.** `integrationEvents` casi nunca guarda la empresa —solo `integrationControllerV2` escribe `companyId`—, así que agrupar por empresa daría números falsos; y los pedidos solo marcan su origen (`integrations.woocommerce` / `integrations.shopify`) para 2 de los 15 proveedores.
+
+### La decisión que define la pantalla
+
+**Se mide "conectada", no "usada", y la pantalla lo dice con esas palabras.** `updatedAt` es la última edición de las CREDENCIALES, no la última vez que entró un pedido: una Shopify conectada en marzo y nunca tocada se ve idéntica a una que factura a diario. Prometer "uso" con este dato sería mentir, y la nota del panel y el subtítulo de la ficha existen para que el número no se lea así.
+
+### Lo que se hizo
+
+- **`services/platformMetrics/integrationsCensus.js`**: una lectura de `integration_configs` con `select()`, agrupada por empresa (`resumirPorEmpresa`) y por proveedor (`contarCatalogo`). Funciones puras, probadas sin tocar Firestore. **Sin índices nuevos, sin aggregation queries, sin caché.**
+- **Va FUERA del caché de `metricas_empresas`**, igual que el último ingreso (D-268): es tan barato que cachearlo solo serviría para mostrar una integración recién conectada como inexistente durante una hora. `VERSION_CALCULO` no sube: el caché por empresa no cambió.
+- **`GET /v1/companies/overview`** gana `empresa.integraciones` y un bloque `integraciones` de plataforma (catálogo por proveedor + `sinNingunaEmpresa`).
+- **Dos tarjetas nuevas**: "Integraciones conectadas" (abre el desglose por proveedor) y "Sin integrar" (filtra: activas con cero). La franja pasó de **8 tarjetas en 4×2 a 10 en 5×2**, con cortes 5/2/1 — los únicos divisores de 10 que no dejan tarjetas huérfanas (misma regla de D-268). La tabla ganó la columna Integr. y bajó las columnas de datos de 118 a 108 px para no ensancharse.
+- **El panel por proveedor** responde la pregunta al revés —cuántas empresas tiene cada integración— e incluye **`sinNingunaEmpresa`, la mitad incómoda**: lo que se construyó y no usa nadie.
+
+### Reglas que se mantienen
+
+- **Un número que no se pudo calcular va "—", nunca 0.** Si el censo falla, `integracionesActivas` sale `null`: un 0 se leería como "ninguna empresa tiene integraciones", que es una afirmación, no un dato ausente. En la fila, `integraciones: null` (censo caído) es distinto de `activas: 0` (no tiene ninguna).
+- **Una configuración desconectada no se cuenta como activa, pero tampoco se esconde**: aparece apagada en la ficha y como "+N la desconectaron" en el panel. Que alguien la conectara y la apagara es información; borrarla haría creer que nunca existió.
+- **Un proveedor fuera del catálogo se cuenta igual**, con su id crudo y marcado "sin catálogo". Descartarlo dejaría el conteo de la empresa más bajo que la realidad sin decir por qué.
+- **"Sin integrar" y "topó el límite" solo miran empresas ACTIVAS**, como "sin movimiento" y "sin entrar" (D-262): una empresa bloqueada no es una alerta ni una oportunidad comercial.
+- **El límite del plan sale de `config/subscriptionLimits.js`** (freemium 1, pago ilimitado `-1`), la misma tabla que usa el candado de `saveConfig`. Una segunda fórmula diría "topada" en empresas que todavía pueden conectar.
+
+### La trampa que se dejó cerrada
+
+`tests/platformMetrics/integrationsCensus.test.js` **compara la tabla de proveedores de la consola contra `PROVIDER_SCHEMAS`**: si alguien agrega un proveedor al backend y se olvida de la consola, la prueba se cae en vez de dejar salir la integración con su id crudo como nombre.
+
+**Validación.** Suite backend **124/124** (108 previas + 16 nuevas), `tsc --noEmit` limpio y build de producción del front en verde. **Falta probar en el navegador contra datos reales**: el censo de producción no se pudo correr desde acá.
+
+## D-272 (2026-09-10) — La membresía que Katuq vende se factura sola ante la DIAN
+
+**Disparador.** Pedido del usuario: *"lo que necesito es que la factura se cree automáticamente para cliente sin necesidad de nosotros crearla manual"*, y la corrección de que **NO hay que hacerlo con Siigo** porque el equipo ya había construido un módulo propio.
+
+### Lo que se verificó antes de construir
+
+1. **El módulo DIAN propio existe y está muchísimo más avanzado de lo que dicen los papeles.** `services/accounting/dian/` (~3.500 líneas): UBL 2.1, firma XAdES-EPES, CUFE, SOAP directo, numeración transaccional. `PROGRESO.md` y el registro de la línea 50 de este archivo dicen "fase 4 bloqueada por trámite" (5 jul), pero `git log` dice otra cosa: SOAP implementado (`0c9ea61` 30-jul, `fe18eec` 12-ago), set de habilitación corregido (`b7b6a9f` 31-ago) y último commit el **7 de septiembre**. **Nunca confiar en un PROGRESO.md sin mirar el historial.**
+2. **Katuq ya está habilitada**: pantallazo del usuario — *JULSMIND SAS · KATUQ + DIAN · PRODUCCIÓN · Configuración guardada · 3 facturas aceptadas*. Cero trámite pendiente.
+3. **`billingService` no tenía UNA SOLA referencia a la DIAN.** Su único gancho de facturación era `_createSiigoInvoice` (línea 2281): completo, con credenciales Siigo propias de Katuq, y **no lo llama nadie**. Código muerto.
+4. **Las membresías van SIN IVA** (confirmado con el negocio). El código de Siigo ya tenía `taxes: [{id: 0}]` con el comentario "ajustar según régimen" — una tarifa que nadie confirmó y que se veía idéntica a una decidida.
+
+### Las tres decisiones que definen el puente (`services/billing/membershipInvoicing.js`)
+
+- **Se emite cuando el cliente PAGA, no al generar el cobro.** Casi todos pagan por link y eso llega días después del corte; emitir antes deja facturas ante la DIAN por plata que no entró, y deshacerlas exige nota crédito. Gancho: donde ya se manda el comprobante PDF.
+- **No se llama al proveedor directo: se usa `InvoiceRequests`**, el mismo camino de la pantalla. Da gratis idempotencia por `requestId` (derivado del id del cobro), guardarrail de huella, auditoría, recuperación sin reenviar, y que la factura salga en la misma pantalla. Un camino paralelo habría que endurecerlo entero de nuevo y las dos copias terminarían discrepando.
+- **El total facturado debe ser EXACTAMENTE el cobrado.** El cargo ya ocurrió; la factura lo documenta, no lo decide. Si no se puede reproducir al centavo, **no se emite**.
+
+**La ficha del cliente se crea sola** desde el documento de la empresa (la DIAN solo factura a clientes registrados). Con dos fichas del mismo NIT no elige ninguna: facturarle a la equivocada emite a nombre de otro.
+
+### El hallazgo de redondeo (no aplica hoy, pero es caro de redescubrir)
+
+La DIAN trabaja a dos decimales, así que el total de una línea solo cae en `c + redondeo(c·tarifa)` y **esa función se salta valores**. Medido de $1 a $200.000: **con IVA 19 % el 15,9 % de los montos no tiene base exacta** (1 de cada 6 cobros quedaría sin factura); con 5 %, el 5,5 %; con 0 %, nunca. **Como las membresías van sin IVA, no aplica.** `siguienteMontoFacturable` queda lista por si algún día llevan IVA: mueve el cobro **como máximo 3 pesos** (medido, constante en todo el rango) para que siempre sea facturable.
+
+**Método:** el tope se adivinó mal tres veces seguidas (±3 centavos, ≤2 pesos, "desde $1.000") y las tres veces lo desmintió un barrido de a un peso. Sin ese barrido, esto se descubría con una factura mal emitida en producción.
+
+### Candados
+
+- **Apagado por omisión** (`MEMBERSHIP_INVOICING_ENABLED`), tarifa de IVA **sin valor por omisión** (adivinarla emite un documento legal equivocado), emisor configurable (`Julsmind`).
+- **Prueba en seco** (`MEMBERSHIP_INVOICING_DRY_RUN` o el parámetro `dryRun`): hace todo el camino y se detiene antes de `submit`, la única llamada que transmite.
+- **El candado de "cobro de prueba" bloquea la EMISIÓN, no el ensayo.** Bloquear ambos dejaba el puente sin forma de verificarse: durante meses el único cobro pagado de la plataforma fue una prueba productiva de $1.500. El ensayo lo marca con `sobreUnCobroDePrueba`.
+- **`InvoiceRequests.create` NO valida emisor activo / ambiente producción / correo** — esos tres candados están en `submit`, que el ensayo no ejecuta. Un ensayo en verde no probaba nada de eso. Se replican en `verificarEmisorListo` con el mismo `emailReadiness`.
+
+**Validación.** Ensayo contra producción sobre el cobro `6so5IDG10j6eLX0o4FwP_20260901`: factura armada completa, ficha de cliente creada sola, **totales exactos $1.500 = $1.500 con IVA $0**, emisor activo y en `produccion`. Lo único que faltaría para transmitir es `SMTP_PASS`, ausente en el `.env` local (Julsmind tiene `sendEmail: true`). **34 pruebas nuevas**, `test:dian-invoice` 60/60 y las 11 suites de `subscriptions` sin cambios.
+
+## D-273 (2026-09-10) — "Cobros del mes" tumbaba el backend por falta de memoria
+
+**Disparador.** Abriendo la pestaña en local, el proceso murió con **"JavaScript heap out of memory"** tras agotar 4 GB. En el log, justo antes: `[cobros] recalculada` por 8 empresas.
+
+**Causa.** `billingService._calculateMonthlySales` hacía `.get()` de TODOS los pedidos históricos del comercio y los sostenía en memoria a la vez. Con ALMARA (14.453 pedidos) por las 10 empresas de pago de la pantalla, eso revienta el heap. En producción es la API caída y lo que estuviera en curso cortado.
+
+**Arreglo: `.get()` a `.stream()`.** Procesa un documento a la vez y solo acumula contadores; la memoria queda plana sin importar el tamaño del comercio.
+
+- **Misma consulta, mismos documentos, misma lógica.** No se tocó qué pedidos entran ni cuánto suman — este es el camino del dinero y un filtro más barato puede facturar de menos. **Tampoco se usó `select()`**: además de riesgoso acá, no abarata las lecturas de Firestore.
+- **Lo único que el flujo introduce y `.get()` no tenía: el corte a mitad de camino.** Un total parcial se ve idéntico a uno completo y facturaría de menos en silencio, así que el error se propaga siempre. Es la prueba central de `tests/billing/monthlySalesStream.test.js` (7 casos).
+- **Rompió un doble de prueba** (`subscriptionBillingRetrySafety`) que solo implementaba `.get()`. Se arregló el doble; darle al código un `.get()` de respaldo para complacer al doble habría dejado viva la ruta que revienta.
+- **Sigue siendo LENTO**: lee todos los pedidos igual. Solo dejó de reventar la memoria. El arreglo de fondo (filtrar por rango en Firestore) sigue pendiente por lo de D-270: formatos de fecha mezclados, y un filtro estricto factura de menos.
+
+**Antes de desplegar:** `node --max-old-space-size=8192 scripts/verify-monthly-sales-stream.js` compara flujo contra `.get()` empresa por empresa en producción. No debe moverse un peso.
+
+## D-274 (2026-09-10) — La columna "Última factura" enlaza al documento fiscal
+
+**Disparador.** Pedido del usuario: *"esa columna de última factura no debería ser tipo botón para que me redirija"*.
+
+**Lo que hacía ilegible la columna era mezclar dos documentos distintos**: el COBRO (lo que Katuq factura, sin validez fiscal) y la FACTURA DIAN (el documento legal con CUFE). Ahora van separados: arriba el estado del cobro, abajo el número de la factura como enlace, *"Pendiente de facturar"* si pagó y no tiene documento, o *"No se pudo facturar"* con el motivo si el intento falló.
+
+- **"Editar" no existe ni puede existir**: una factura DIAN aceptada solo se deshace con nota crédito, y el cobro interno tampoco es editable. La acción posible es **ver**.
+- `billingOverview` devuelve `ultimaFactura.facturaDian` y `.facturaDianProblema`. **`VERSION_CALCULO` sube a 2**: sin eso el caché de 6 h serviría filas sin el campo nuevo y la columna se vería vacía como si nadie tuviera factura (misma trampa de D-265).
+- La pantalla de Facturación electrónica **no leía parámetros de la URL**; se le agregó `?documento=` con el número o el CUFE, que abre la lista con esa búsqueda. **No es una vista de detalle**: la pantalla no tiene rutas por documento y fabricarle una era un módulo aparte.
+
+**Limitación declarada:** una membresía facturada **a mano** desde el composer seguirá diciendo "Pendiente de facturar" para siempre. El composer no escribe en `billing_invoices` y no hay llave que las correlacione. Solo el puente de D-272 llena ese campo.

@@ -119,6 +119,98 @@
         <span class="kpi-pie">{{ num(totales.planesPorVencer) }} vencen esta semana</span>
       </button>
 
+      <!-- Integraciones CONECTADAS. La palabra importa: no hay dato de cuántos
+           pedidos entró cada una, así que la pantalla no puede prometer "uso".
+           Esta tarjeta abre el desglose por proveedor en vez de ordenar la
+           lista: la pregunta detrás es cuáles integraciones se usan, no qué
+           empresa tiene más. -->
+      <button type="button" class="kpi" [class.kpi--activo]="panelIntegraciones"
+              (click)="alternarPanelIntegraciones()"
+              title="Ver cuántas empresas tiene conectada cada integración">
+        <span class="kpi-label">Integraciones conectadas</span>
+        <span class="kpi-valor">{{ num(totales.integracionesActivas) }}</span>
+        <span class="kpi-pie">
+          en {{ num(totales.empresasConIntegracion) }} de {{ num(totales.empresas) }} empresas
+        </span>
+      </button>
+
+      <!-- La contracara: quién no ha conectado nada. El pie lleva las que ya no
+           pueden conectar más sin cambiar de plan — son la lista de upgrade. -->
+      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'sinIntegrar'"
+              [class.kpi--encendida]="totales.empresasSinIntegrar > 0"
+              (click)="filtrarPor('sinIntegrar')"
+              title="Empresas activas que no tienen ninguna integración conectada">
+        <span class="kpi-label">Sin integrar</span>
+        <span class="kpi-valor">{{ num(totales.empresasSinIntegrar) }}</span>
+        <span class="kpi-pie">{{ num(totales.empresasEnLimiteIntegraciones) }} toparon el límite de su plan</span>
+      </button>
+
+    </section>
+
+    <!-- ── DESGLOSE POR PROVEEDOR ───────────────────────────────────────────
+         Lo integrado mirado al revés: no qué tiene cada empresa, sino cuántas
+         empresas tiene cada integración. Es la única vista que dice si lo que
+         construimos se está usando. -->
+    <section class="panel-integraciones" *ngIf="panelIntegraciones">
+
+      <div class="panel-head">
+        <h5>Qué integración usa cada empresa</h5>
+        <button type="button" class="btn-cerrar-panel" (click)="alternarPanelIntegraciones()"
+                title="Cerrar">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Sin esta advertencia el número se lee como uso, y no lo es. -->
+      <p class="panel-nota">
+        <i class="fa fa-info-circle"></i>
+        Cuenta integraciones <strong>conectadas</strong>, no usadas: no existe el dato de cuántos
+        pedidos entró cada una.
+      </p>
+
+      <div class="aviso-error aviso-error--suave" *ngIf="!censoIntegracionesOk">
+        <i class="fa fa-exclamation-triangle"></i>
+        <div>
+          <strong>No se pudo leer el censo de integraciones</strong>
+          <p>Los conteos de esta sección aparecen como "—". El resto de la consola no se ve afectado.</p>
+        </div>
+      </div>
+
+      <ng-container *ngIf="censoIntegracionesOk">
+        <div class="prov-lista" *ngIf="catalogoIntegraciones.length > 0; else ningunaConectada">
+          <div class="prov" *ngFor="let p of catalogoIntegraciones">
+            <span class="prov-nombre">
+              {{ p.nombre }}
+              <small class="prov-cat">{{ etiquetaCategoria(p.categoria) }}</small>
+              <small class="chip chip--mini chip--alerta" *ngIf="p.desconocido"
+                     title="El backend ya no reconoce este proveedor: alguien lo configuró y después se quitó del catálogo">
+                sin catálogo
+              </small>
+            </span>
+            <span class="prov-num">
+              <strong>{{ num(p.empresasActivas) }}</strong>
+              <small>{{ p.empresasActivas === 1 ? 'empresa' : 'empresas' }}</small>
+            </span>
+            <!-- Una configuración apagada no es lo mismo que no haberla tenido
+                 nunca: esa diferencia es la que dice si la integración se probó
+                 y se abandonó. -->
+            <small class="prov-apagadas" *ngIf="p.empresas > p.empresasActivas">
+              + {{ num(p.empresas - p.empresasActivas) }} la desconectaron
+            </small>
+          </div>
+        </div>
+
+        <ng-template #ningunaConectada>
+          <p class="panel-vacio">Ninguna empresa tiene integraciones configuradas todavía.</p>
+        </ng-template>
+
+        <!-- La mitad incómoda de la respuesta: lo que se construyó y nadie usa. -->
+        <div class="prov-sin-nadie" *ngIf="integracionesSinNadie.length > 0">
+          <span class="prov-sin-nadie-label">Sin ninguna empresa conectada:</span>
+          <span class="chip chip--mini" *ngFor="let p of integracionesSinNadie"
+                [title]="etiquetaCategoria(p.categoria)">{{ p.nombre }}</span>
+        </div>
+      </ng-container>
     </section>
 
     <!-- Aviso de filtro activo. Existe porque una tarjeta puede dejar la lista
@@ -154,6 +246,7 @@
             <option value="inactivas">Inactivas</option>
             <option value="sinMovimiento">Sin movimiento</option>
             <option value="porVencer">Plan vencido o por vencer</option>
+            <option value="sinIntegrar">Sin ninguna integración</option>
           </select>
         </label>
 
@@ -166,6 +259,7 @@
             <option value="ultimoPedido">Venta más reciente</option>
             <option value="ultimoIngreso">Ingreso más reciente</option>
             <option value="antiguedad">Más antiguas</option>
+            <option value="integraciones">Más integraciones</option>
           </select>
         </label>
 
@@ -188,6 +282,7 @@
         <span class="col-num">Ticket</span>
         <span class="col-num">Última venta</span>
         <span class="col-num">Último ingreso</span>
+        <span class="col-num">Integr.</span>
         <span class="col-plan">Plan</span>
         <span class="col-acciones">Acciones</span>
       </div>
@@ -251,6 +346,16 @@
               hace {{ diasDesdeUltimoIngreso(empresa) }} d
             </span>
             <ng-template #nuncaEntro><span class="muted">Nunca</span></ng-template>
+          </div>
+
+          <!-- Integraciones conectadas. Sin censo va "—", nunca 0: no saber
+               cuántas tiene no es lo mismo que saber que no tiene ninguna. -->
+          <div class="col-num" data-label="Integraciones" [title]="tituloIntegraciones(empresa)">
+            <strong *ngIf="integracionesDe(empresa) as i; else sinCenso">{{ num(i.activas) }}</strong>
+            <ng-template #sinCenso><span class="muted">—</span></ng-template>
+            <small class="col-num-nota col-num-nota--alerta" *ngIf="enLimiteIntegraciones(empresa)">
+              tope del plan
+            </small>
           </div>
 
           <!-- Plan -->
@@ -380,6 +485,47 @@
               <span class="dato-valor dato-valor--sm">{{ fechaCorta(empresa.metricas?.ultimoPedido) }}</span>
               <small class="dato-nota" *ngIf="empresa.metricas?.ultimoPedidoNro">{{ empresa.metricas?.ultimoPedidoNro }}</small>
             </div>
+          </div>
+
+          <!-- Integraciones de ESTA empresa, con nombre y fecha. Va en su
+               propio bloque y no en la rejilla de datos: son una lista de largo
+               variable, y meterla ahí dejaba filas de alturas distintas. -->
+          <div class="ficha-integraciones">
+            <span class="ficha-bloque-label">
+              Integraciones conectadas
+              <small class="ficha-bloque-nota">conectadas, no necesariamente en uso</small>
+            </span>
+
+            <ng-container *ngIf="integracionesDe(empresa) as i; else fichaSinCenso">
+              <div class="integr-chips" *ngIf="i.proveedores.length > 0; else sinIntegraciones">
+                <span class="integr" *ngFor="let p of i.proveedores"
+                      [class.integr--off]="!p.activa"
+                      [title]="(p.activa ? 'Conectada' : 'Desconectada (estado: ' + (p.estado || 'sin estado') + ')')
+                        + (p.conectadaPor ? ' · la conectó ' + p.conectadaPor : '')">
+                  <i class="fa" [ngClass]="p.activa ? 'fa-plug' : 'fa-ban'"></i>
+                  {{ p.nombre }}
+                  <small class="integr-cat">{{ etiquetaCategoria(p.categoria) }}</small>
+                  <small class="integr-fecha" *ngIf="p.conectadaEn">{{ fechaCorta(p.conectadaEn) }}</small>
+                </span>
+              </div>
+
+              <ng-template #sinIntegraciones>
+                <p class="integr-vacio">
+                  No tiene ninguna integración configurada.
+                  <span *ngIf="empresa.plan !== 'premium'">Su plan freemium permite una.</span>
+                </p>
+              </ng-template>
+
+              <p class="integr-tope" *ngIf="enLimiteIntegraciones(empresa)">
+                <i class="fa fa-lock"></i>
+                Ya usó la única integración que permite el plan freemium: para conectar otra
+                tiene que pasar a un plan pago.
+              </p>
+            </ng-container>
+
+            <ng-template #fichaSinCenso>
+              <p class="integr-vacio muted">No se pudo leer el censo de integraciones.</p>
+            </ng-template>
           </div>
 
           <!-- Una empresa sin acceso tiene que decir POR QUÉ, o se confunde con
@@ -611,8 +757,32 @@
             </span>
           </div>
 
+          <!-- Dos datos distintos en una celda, y a propósito: arriba el COBRO
+               (lo que Katuq le factura) y abajo el documento FISCAL. Antes solo
+               estaba el primero, y no había forma de saber si a un cobro pagado
+               ya se le había emitido su factura electrónica. -->
           <div class="col-plan" data-label="Última factura">
             <span [class.muted]="!c.ultimaFactura">{{ etiquetaFactura(c) }}</span>
+
+            <ng-container *ngIf="c.ultimaFactura as f">
+              <!-- Emitida: enlace al documento en Facturación electrónica. -->
+              <button type="button" class="link-dian" *ngIf="f.facturaDian as dian"
+                      (click)="verFacturaDian(dian, $event)"
+                      [title]="'Factura ' + (dian.numero || '') + ' · CUFE ' + (dian.cufe || '') + ' — abrir en Facturación electrónica'">
+                <i class="fa fa-file-text-o"></i> {{ dian.numero || 'Emitida' }}
+              </button>
+
+              <!-- Se intentó y falló: es distinto de "todavía no se intentó". -->
+              <small class="dian-problema" *ngIf="!f.facturaDian && f.facturaDianProblema"
+                     [title]="f.facturaDianProblema">
+                <i class="fa fa-exclamation-triangle"></i> No se pudo facturar
+              </small>
+
+              <!-- Pagado y sin documento fiscal: el hueco que importa ver. -->
+              <small class="dian-pendiente" *ngIf="!f.facturaDian && !f.facturaDianProblema && f.estado === 'paid'">
+                Pendiente de facturar
+              </small>
+            </ng-container>
           </div>
         </div>
 

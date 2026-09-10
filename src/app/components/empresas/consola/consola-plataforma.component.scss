@@ -147,14 +147,20 @@ $r-sm: 11px;
    sobra una tarjeta suelta al final. */
 .kpis {
   display: grid;
-  /* 8 tarjetas: 4×2 en escritorio, 2×4 en tableta, 1 columna en móvil. Todos
-     los repartos quedan LLENOS — con auto-fit quedaban tarjetas huérfanas. */
-  grid-template-columns: repeat(4, 1fr);
+  /* 10 tarjetas: 5×2 en escritorio, 2×5 en tableta, 1 columna en móvil. Todos
+     los repartos quedan LLENOS — con auto-fit quedaban tarjetas huérfanas, y
+     con las 4 columnas de antes las dos de integraciones dejaban una fila a
+     medias. 10 es divisible por 5 y por 2, así que ningún corte deja huecos. */
+  grid-template-columns: repeat(5, 1fr);
   gap: 14px;
   margin-bottom: 18px;
 }
 
-@media (max-width: 1279px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+/* Los cortes son 5 / 2 / 1 porque son los ÚNICOS divisores de 10 que sirven:
+   con 4 columnas quedarían dos tarjetas huérfanas en la última fila. Se baja a
+   2 antes que antes (1379 en vez de 1279) porque cinco columnas necesitan más
+   ancho que las cuatro de la versión anterior. */
+@media (max-width: 1379px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px)  { .kpis { grid-template-columns: 1fr; } }
 
 /* Aviso de filtro activo */
@@ -366,13 +372,14 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 .tabla-head,
 .fila {
   display: grid;
-  /* Las cuatro columnas de datos miden EXACTAMENTE lo mismo y NO crecen: los
+  /* Las CINCO columnas de datos miden EXACTAMENTE lo mismo y NO crecen: los
      números quedan en una banda pareja a la derecha, cada valor bajo su
      encabezado. El espacio sobrante se lo lleva Empresa, la única columna con
      texto de largo variable. Con columnas elásticas, en pantalla ancha cada
-     número terminaba a 190 px del siguiente y la tabla se leía como cuatro
-     islas sueltas. */
-  grid-template-columns: minmax(220px, 1fr) repeat(4, 118px) 110px 104px;
+     número terminaba a 190 px del siguiente y la tabla se leía como islas
+     sueltas. Bajaron de 118 a 108 px al entrar Integraciones, para que la
+     tabla no ganara ancho: ninguna de las cinco necesita más. */
+  grid-template-columns: minmax(220px, 1fr) repeat(5, 108px) 110px 104px;
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
@@ -524,6 +531,20 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 
   strong { font-weight: 700; }
   &--fecha { color: $muted; font-size: 0.8rem; }
+}
+
+/* Nota bajo un número de la tabla ("tope del plan"). Va en su propio renglón
+   para no empujar la cifra fuera de la banda alineada a la derecha. */
+.col-num-nota {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: $muted;
+  line-height: 1.3;
+
+  &--alerta { color: $alerta; }
 }
 
 .tabla-head .col-num { text-align: right; }
@@ -730,6 +751,239 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   font-style: italic;
 }
 
+/* ── Integraciones de la ficha ──────────────────────────────────────────── */
+/* Bloque propio y no una casilla del reparto de datos: la lista es de largo
+   variable (de cero a quince nombres) y metida en la rejilla dejaba filas de
+   alturas distintas. */
+.ficha-integraciones {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid $acento-borde;
+}
+
+.ficha-bloque-label {
+  display: block;
+  font-size: 0.63rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: $muted;
+  margin-bottom: 8px;
+}
+
+/* La advertencia va pegada al título, en minúscula: el número de al lado se
+   lee como uso si nadie dice lo contrario. */
+.ficha-bloque-nota {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  font-style: italic;
+  opacity: 0.85;
+  margin-left: 6px;
+}
+
+.integr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.integr {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  background: $superficie;
+  border: 1px solid $acento-borde;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $ink;
+
+  > i { font-size: 0.7rem; color: $acento; }
+
+  /* Desconectada: se ve apagada pero SIGUE VISIBLE. Que alguien la conectara y
+     la apagara es información; esconderla haría creer que nunca existió. */
+  &--off {
+    background: $fondo;
+    border-color: $linea;
+    color: $muted;
+    > i { color: $muted; }
+  }
+}
+
+.integr-cat,
+.integr-fecha {
+  font-size: 0.66rem;
+  font-weight: 500;
+  color: $muted;
+}
+
+.integr-fecha { font-variant-numeric: tabular-nums; }
+
+.integr-vacio {
+  margin: 0;
+  font-size: 0.8rem;
+  color: $muted;
+}
+
+.integr-tope {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  background: $alerta-suave;
+  border: 1px solid rgba($alerta, 0.25);
+  border-radius: $r-sm;
+  font-size: 0.78rem;
+  color: $ink;
+
+  > i { color: $alerta; }
+}
+
+/* ── Panel de integraciones por proveedor ───────────────────────────────── */
+.panel-integraciones {
+  background: $superficie;
+  border: 1px solid $acento-borde;
+  border-radius: $r-md;
+  padding: 16px 20px 18px;
+  margin-bottom: 18px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: $ink;
+  }
+}
+
+.btn-cerrar-panel {
+  background: transparent;
+  border: 1px solid $linea;
+  border-radius: $r-sm;
+  width: 28px;
+  height: 28px;
+  color: $muted;
+  cursor: pointer;
+
+  &:hover { border-color: $acento-borde; color: $acento; background: $acento-suave; }
+}
+
+.panel-nota {
+  margin: 6px 0 14px;
+  font-size: 0.76rem;
+  color: $muted;
+
+  > i { margin-right: 5px; opacity: 0.75; }
+  strong { color: $ink; }
+}
+
+.panel-vacio {
+  margin: 0;
+  font-size: 0.82rem;
+  color: $muted;
+}
+
+/* Cuatro columnas fijas: con `auto-fit` las tarjetas de los proveedores
+   quedaban de anchos distintos según cuántos hubiera ese día. */
+.prov-lista {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 1279px) { .prov-lista { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .prov-lista { grid-template-columns: 1fr; } }
+
+.prov {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: $fondo;
+  border: 1px solid $linea;
+  border-radius: $r-sm;
+  padding: 10px 14px;
+}
+
+.prov-nombre {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: $ink;
+}
+
+.prov-cat {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: $muted;
+}
+
+.prov-num {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+
+  strong { font-size: 1.15rem; font-weight: 700; color: $ink; }
+  small { font-size: 0.7rem; color: $muted; }
+}
+
+.prov-apagadas {
+  font-size: 0.68rem;
+  color: $alerta;
+}
+
+.prov-sin-nadie {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed $linea;
+
+  .chip {
+    background: $fondo;
+    color: $muted;
+    border: 1px solid $linea;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+}
+
+.prov-sin-nadie-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $muted;
+  margin-right: 4px;
+}
+
+/* Error de una sección, no de la pantalla: informa sin el peso del aviso rojo
+   de arriba, porque el resto de la consola sí cargó. */
+.aviso-error--suave {
+  background: $alerta-suave;
+  border-color: rgba($alerta, 0.25);
+  margin: 0 0 12px;
+
+  > i { color: $alerta; }
+  strong, p { color: $ink; }
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .tabla-head { display: none; }
@@ -826,6 +1080,47 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 
   .fila { cursor: default; }
   .fila:hover { background: $fondo; }
+}
+
+/* ── Factura DIAN en la celda de cobro ──────────────────────────────────── */
+/* El documento fiscal va DEBAJO del estado del cobro, no al lado: son dos
+   datos distintos y en la misma línea se leían como uno solo. */
+.link-dian {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: $acento;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+
+  i { font-size: 0.65rem; }
+  &:hover { text-decoration: underline; }
+}
+
+/* Se intentó emitir y falló. Es distinto de "todavía no se intentó", y por eso
+   tiene su propio aviso en vez de quedar como pendiente. */
+.dian-problema {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: $peligro;
+
+  i { margin-right: 4px; }
+}
+
+/* Pagó y todavía no tiene documento fiscal: el hueco que importa ver. */
+.dian-pendiente {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.66rem;
+  color: $alerta;
 }
 
 .texto-vencido {

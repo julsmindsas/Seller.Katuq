@@ -8,7 +8,9 @@ import {
   CobrosOverview,
   CompaniesService,
   EmpresaPanorama,
+  FilaCatalogoIntegracion,
   FilaCobro,
+  IntegracionesEmpresa,
   InventoryUnits,
   TotalesPlataforma,
 } from '../../../services/companies.service';
@@ -19,7 +21,14 @@ import { SubscriptionService } from '../../../shared/services/subscription.servi
 /** Filtros de la pestaña de cobros. Cada tarjeta enciende el suyo. */
 type FiltroCobros = 'todas' | 'aCobrar' | 'sinTarjeta' | 'vencidas';
 
-type FiltroEstado = 'todas' | 'activas' | 'inactivas' | 'sinMovimiento' | 'sinEntrar' | 'porVencer';
+type FiltroEstado =
+  | 'todas'
+  | 'activas'
+  | 'inactivas'
+  | 'sinMovimiento'
+  | 'sinEntrar'
+  | 'porVencer'
+  | 'sinIntegrar';
 type Orden =
   | 'nombre'
   | 'pedidos30d'
@@ -27,11 +36,18 @@ type Orden =
   | 'ultimoPedido'
   | 'ultimoIngreso'
   | 'antiguedad'
-  | 'usuarios';
+  | 'usuarios'
+  | 'integraciones';
 
 const MS_DIA = 24 * 60 * 60 * 1000;
 const DIAS_SIN_MOVIMIENTO = 30;
 const DIAS_POR_VENCER = 7;
+/**
+ * Integraciones que permite el plan freemium. Espejo de
+ * `config/subscriptionLimits.js` en el backend, solo para pintar el distintivo
+ * "topada": el candado real que impide conectar la segunda está allá.
+ */
+const LIMITE_INTEGRACIONES_FREEMIUM = 1;
 
 /**
  * Consola de plataforma del Super Administrador.
@@ -64,6 +80,21 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   busqueda = '';
   filtroEstado: FiltroEstado = 'todas';
   orden: Orden = 'nombre';
+
+  /**
+   * Lo integrado mirado por PROVEEDOR, no por empresa: cuántas empresas tiene
+   * cada integración. Es la única vista que responde "¿valió la pena lo que
+   * construimos?" — una integración que costó semanas y tiene una sola empresa
+   * se ve de inmediato.
+   *
+   * Va en un panel plegado porque es una pregunta que se hace de vez en cuando,
+   * no en cada carga de la pantalla.
+   */
+  catalogoIntegraciones: FilaCatalogoIntegracion[] = [];
+  /** Proveedores que el backend soporta y no tiene conectados NADIE. */
+  integracionesSinNadie: Array<{ id: string; nombre: string; categoria: string }> = [];
+  censoIntegracionesOk = true;
+  panelIntegraciones = false;
 
   // Ficha individual: una expandida a la vez, para no disparar N consultas de
   // inventario de golpe.
@@ -148,6 +179,11 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           this.empresas = res.empresas || [];
           this.generadoEn = res.generadoEn;
           this.ventanaDias = res.ventanaDias || 30;
+          this.catalogoIntegraciones = res.integraciones?.catalogo || [];
+          this.integracionesSinNadie = res.integraciones?.sinNingunaEmpresa || [];
+          // Un backend viejo (sin desplegar todavía) no manda el bloque: se
+          // trata como censo caído, que dibuja "—", en vez de como cero.
+          this.censoIntegracionesOk = res.integraciones?.disponible === true;
           this.aplicarFiltros();
         },
         error: (err) => {
@@ -264,6 +300,20 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   }
 
   /** Estado de la última factura, en palabras. */
+  /**
+   * Abre la factura electrónica en su pantalla, buscada por número.
+   *
+   * No navega a un detalle: la pantalla de Facturación electrónica no tiene
+   * rutas por documento. Se le pasa el número como parámetro y ella abre la
+   * lista con esa búsqueda puesta, que es lo que el operador necesita ver.
+   */
+  verFacturaDian(dian: { numero: string | null; cufe: string | null }, evento: Event): void {
+    evento.stopPropagation();
+    this.router.navigate(['/facturacion-electronica'], {
+      queryParams: { documento: dian.numero || dian.cufe || '' },
+    });
+  }
+
   etiquetaFactura(fila: FilaCobro): string {
     const e = fila.ultimaFactura?.estado;
     if (!e) return 'Sin facturas';
@@ -348,6 +398,8 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           return this.sinEntrar(e);
         case 'porVencer':
           return this.planVencido(e) || this.planPorVencer(e);
+        case 'sinIntegrar':
+          return this.sinIntegrar(e);
         default:
           return true;
       }
@@ -361,6 +413,8 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           return (b.metricas?.facturadoNeto30d || 0) - (a.metricas?.facturadoNeto30d || 0);
         case 'usuarios':
           return (b.metricas?.usuarios || 0) - (a.metricas?.usuarios || 0);
+        case 'integraciones':
+          return (b.integraciones?.activas || 0) - (a.integraciones?.activas || 0);
         case 'ultimoPedido':
           return this.aMs(b.metricas?.ultimoPedido) - this.aMs(a.metricas?.ultimoPedido);
         case 'ultimoIngreso':
@@ -481,6 +535,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       case 'sinMovimiento': return 'empresas sin movimiento';
       case 'sinEntrar': return 'empresas donde nadie entra hace 30 días';
       case 'porVencer': return 'planes vencidos o por vencer';
+      case 'sinIntegrar': return 'empresas activas sin ninguna integración conectada';
       default: return '';
     }
   }
@@ -708,6 +763,82 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     const ultimo = this.aMs(empresa.metricas?.ultimoPedido);
     if (!ultimo) return true;
     return Date.now() - ultimo > DIAS_SIN_MOVIMIENTO * MS_DIA;
+  }
+
+  /**
+   * Abre o cierra el desglose por proveedor.
+   *
+   * La tarjeta de integraciones NO ordena la lista como las de pedidos o
+   * ticket: la pregunta que lleva detrás no es "¿qué empresa tiene más?" sino
+   * "¿cuáles integraciones se usan?", y eso no se responde reordenando
+   * empresas. Ordenar por integraciones sigue disponible en el desplegable.
+   */
+  alternarPanelIntegraciones(): void {
+    this.panelIntegraciones = !this.panelIntegraciones;
+  }
+
+  /** Etiqueta legible de la categoría de un proveedor. */
+  etiquetaCategoria(categoria: string): string {
+    switch (categoria) {
+      case 'ecommerce': return 'E-commerce';
+      case 'pagos': return 'Pagos';
+      case 'logistica': return 'Logística';
+      case 'contabilidad': return 'Contabilidad';
+      default: return 'Otras';
+    }
+  }
+
+  /**
+   * Empresa activa sin ninguna integración CONECTADA.
+   *
+   * Con el censo caído (`integraciones === null`) devuelve `false`: no saber si
+   * tiene integraciones no es lo mismo que saber que no tiene, y acusarla acá
+   * la metería en una lista de "hay que llamarla" sin fundamento.
+   */
+  sinIntegrar(empresa: EmpresaPanorama): boolean {
+    if (!empresa.activo) return false;
+    if (!empresa.integraciones) return false;
+    return empresa.integraciones.activas === 0;
+  }
+
+  /**
+   * Las integraciones que se muestran en la fila y en la ficha.
+   *
+   * Devuelve `null` cuando no hay censo, para que la plantilla dibuje "—" en
+   * vez de un 0. La lista ya viene ordenada del backend (activas primero).
+   */
+  integracionesDe(empresa: EmpresaPanorama): IntegracionesEmpresa | null {
+    return empresa.integraciones || null;
+  }
+
+  /**
+   * Texto del tooltip de la columna: los nombres, sin obligar a abrir la ficha.
+   */
+  tituloIntegraciones(empresa: EmpresaPanorama): string {
+    const integraciones = empresa.integraciones;
+    if (!integraciones) return 'No se pudo leer el censo de integraciones';
+    if (!integraciones.proveedores.length) return 'No tiene ninguna integración configurada';
+
+    const activas = integraciones.proveedores.filter((p) => p.activa).map((p) => p.nombre);
+    const apagadas = integraciones.proveedores.filter((p) => !p.activa).map((p) => p.nombre);
+
+    const partes: string[] = [];
+    if (activas.length) partes.push(`Conectadas: ${activas.join(', ')}`);
+    if (apagadas.length) partes.push(`Desconectadas: ${apagadas.join(', ')}`);
+    return partes.join(' · ');
+  }
+
+  /**
+   * ¿Esta empresa ya no puede conectar más integraciones con el plan que tiene?
+   *
+   * El límite freemium es 1 (`config/subscriptionLimits` en el backend) y los
+   * planes pagos son ilimitados. Se repite acá porque es solo un distintivo
+   * visual; el candado que de verdad bloquea vive en el backend, en
+   * `integrationConfigService.saveConfig`.
+   */
+  enLimiteIntegraciones(empresa: EmpresaPanorama): boolean {
+    if (!empresa.activo || empresa.plan === 'premium') return false;
+    return (empresa.integraciones?.activas || 0) >= LIMITE_INTEGRACIONES_FREEMIUM;
   }
 
   /** Expiración del plan: `nextBillingDate`, o inicio + 1 mes. */

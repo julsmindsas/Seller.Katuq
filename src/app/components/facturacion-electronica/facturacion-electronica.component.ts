@@ -1,7 +1,7 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
-import { Router } from '@angular/router';
-import { defer, forkJoin, of } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { defer, forkJoin, of, Subject } from 'rxjs';
+import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { IntegrationsService } from '../integrations/integrations.service';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
@@ -42,7 +42,7 @@ const AVATAR_PALETTE = ['#6C4CE0', '#14B8A6', '#E0891B', '#2F6FE0', '#C43E74', '
   templateUrl: './facturacion-electronica.component.html',
   styleUrls: ['./facturacion-electronica.component.scss'],
 })
-export class FacturacionElectronicaComponent implements OnInit {
+export class FacturacionElectronicaComponent implements OnInit, OnDestroy {
   activeTab: DashboardTab = 'documents';
   composerOpened = false;
   @ViewChild('composerPanel', { static: true }) composerPanel: ElementRef<HTMLElement>;
@@ -64,15 +64,40 @@ export class FacturacionElectronicaComponent implements OnInit {
   typeFilter: 'all' | 'notes' = 'all';
   openMenu = '';
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private integrationsService: IntegrationsService,
     private ventasService: VentasService,
     private router: Router,
+    private route: ActivatedRoute,
     private changeDetector: ChangeDetectorRef,
   ) {}
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   ngOnInit(): void {
     this.loadDashboard();
+
+    // `?documento=<número o CUFE>` abre directamente la lista buscando ese
+    // documento. Lo usa la consola de plataforma para saltar desde el cobro de
+    // una membresía a su factura electrónica; sin esto el operador aterrizaba
+    // en el tablero y tenía que buscarla a mano.
+    //
+    // Va como búsqueda y no como ruta propia a propósito: la pantalla no tiene
+    // vista de detalle por documento, y fabricarle una para esto sería un
+    // módulo nuevo. La lista filtrada muestra lo mismo que se necesita ver.
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const documento = (params.get('documento') || '').trim();
+      if (!documento) return;
+      this.statusFilter = 'all';
+      this.typeFilter = 'all';
+      this.search = documento;
+      this.selectTab('documents');
+    });
   }
 
   @HostListener('document:click', ['$event'])
