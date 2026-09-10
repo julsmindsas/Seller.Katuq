@@ -361,13 +361,18 @@ a {
 .minimized-chat-bubble {
     display: flex;
     align-items: center;
+    gap: 10px;
     background-color: $white;
-    border-radius: 30px;
-    padding: 0 15px;
-    box-shadow: $shadow-standard;
-    height: 50px;
+    color: #252139;
+    border: 1px solid rgba(112, 70, 223, .2);
+    border-radius: 26px;
+    padding: 5px 8px 5px 6px;
+    box-shadow: 0 8px 24px rgba(35, 23, 62, .2);
+    height: 52px;
     width: 100%;
     transition: $transition-standard;
+    cursor: pointer;
+    pointer-events: auto;
     
     &:hover {
         transform: translateY(-2px);
@@ -376,10 +381,28 @@ a {
     
     .minimize-text {
         flex: 1;
-        font-weight: 500;
+        font-size: 13px;
+        font-weight: 650;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .minimized-chat-avatar {
+        display: grid;
+        place-items: center;
+        flex: 0 0 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f3efff;
+        overflow: hidden;
+
+        img {
+            display: block;
+            width: 34px;
+            height: 34px;
+            object-fit: contain;
+        }
     }
     
     .notification-indicator {
@@ -392,8 +415,7 @@ a {
     }
     
     .maximize-chat-btn {
-        background-color: transparent;
-        border: none;
+        background-color: #f3efff;
         width: 30px;
         height: 30px;
         border-radius: 50%;
@@ -401,13 +423,7 @@ a {
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
         transition: all 0.2s;
-        
-        &:hover {
-            background-color: rgba($primary-color, 0.1);
-            transform: scale(1.1);
-        }
     }
 }
 

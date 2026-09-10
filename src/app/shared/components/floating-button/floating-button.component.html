@@ -98,13 +98,17 @@
   </div>
 
   <!-- Burbuja de chat minimizada -->
-  <div *ngIf="chatMinimized" class="minimized-chat-bubble" (click)="maximizeChat($event)">
-    <span class="minimize-text">Opttia</span>
+  <button *ngIf="chatMinimized" type="button" class="minimized-chat-bubble"
+    (click)="maximizeChat($event)" aria-label="Restaurar chat de Opttia">
+    <span class="minimized-chat-avatar" aria-hidden="true">
+      <img src="assets/images/opttia/tuki-avatar-v1.webp" alt="" width="32" height="32" decoding="async">
+    </span>
+    <span class="minimize-text">Continuar con Opttia</span>
     <span class="notification-indicator" *ngIf="hasUnreadMessages"></span>
-    <button class="maximize-chat-btn" (click)="maximizeChat($event)">
+    <span class="maximize-chat-btn" aria-hidden="true">
       <i class="fa fa-expand"></i>
-    </button>
-  </div>
+    </span>
+  </button>
 
   <!-- Contenedor de chat completo -->
   <div *ngIf="chatFormVisible && !chatMinimized" class="floating-chat-overlay" [ngClass]="{'maximized': chatMaximized}">

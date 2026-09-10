@@ -92,8 +92,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
         // Los modos K.A.I. guardados pertenecen a la experiencia deprecada.
         this.selectedMode = 'opttia';
 
-        // Si había una conversación en curso, mostrar el chat como minimizado
-        if (this.conversationState && Object.keys(this.conversationState).length > 0) {
+        // Un chat minimizado sigue abierto, incluso si aún no hay mensajes guardados.
+        if (this.chatMinimized || (this.conversationState && Object.keys(this.conversationState).length > 0)) {
           this.chatFormVisible = true;
           this.chatMinimized = true;
         }
@@ -736,8 +736,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   minimizeChat(event?: MouseEvent) {
     if (event) event.stopPropagation();
     this.chatMinimized = true;
-    // Cerrar completamente el cuadro al minimizar
-    this.chatFormVisible = false;
+    // Minimizar conserva la sesión abierta; cerrar es una acción independiente.
+    this.chatFormVisible = true;
     this.optionsPanelVisible = false;
     this.chatMaximized = false;
     this.saveState();

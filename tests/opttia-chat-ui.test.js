@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const floating = fs.readFileSync('src/app/shared/components/floating-button/floating-button.component.html', 'utf8');
+const floatingComponent = fs.readFileSync('src/app/shared/components/floating-button/floating-button.component.ts', 'utf8');
 const chat = fs.readFileSync('src/app/shared/components/opttia-chat/opttia-chat.component.html', 'utf8');
 
 test('el chat ofrece minimizar separado de maximizar y cerrar', () => {
@@ -11,6 +12,8 @@ test('el chat ofrece minimizar separado de maximizar y cerrar', () => {
   assert.match(floating, /aria-label="Minimizar chat de Opttia"/);
   assert.match(floating, /\(click\)="toggleChatSize\(\$event\)"/);
   assert.match(floating, /aria-label="Cerrar chat de Opttia"/);
+  assert.match(floating, /aria-label="Restaurar chat de Opttia"/);
+  assert.match(floatingComponent, /minimizeChat[\s\S]*?this\.chatMinimized = true;[\s\S]*?this\.chatFormVisible = true;/);
 });
 
 test('Tuki aparece únicamente como avatar de las respuestas de Opttia', () => {

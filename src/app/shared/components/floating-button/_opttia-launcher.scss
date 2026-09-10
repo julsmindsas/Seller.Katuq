@@ -132,6 +132,16 @@
   // El contenedor es transparente a clics; las superficies activas los reciben.
   .floating-chat-overlay, .minimized-chat-bubble { pointer-events: auto; }
   &.open.options-visible .opttia-menu { bottom: 0; }
+
+  // Minimizar mantiene una superficie visible y separada del botón lanzador.
+  &.open.minimized {
+    right: 24px;
+    bottom: 24px;
+    width: 210px;
+    height: 52px;
+
+    .floating-button { display: none; }
+  }
 }
 
 :host-context(body.dark-only) .opttia-launcher,
@@ -186,6 +196,20 @@
     right: 0; bottom: 0;
     .floating-button { display: none; }
     .floating-chat-overlay { height: 100dvh; max-height: 100dvh; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  }
+
+  .opttia-launcher.open.minimized {
+    right: 16px;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    width: 210px;
+    height: 52px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+  .opttia-launcher.open.minimized {
+    right: 24px;
+    bottom: 96px;
   }
 }
 
