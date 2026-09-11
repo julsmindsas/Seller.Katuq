@@ -815,11 +815,12 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     this.actualizarVistaPrevia();
 
     // Restaurar lista completa de municipios (base DANE ya cargada)
-    this.municipios = [...new Set(
-      this.datosColombiaCompletos.reduce(
-        (acc: string[], region: any) => acc.concat(region.ciudades), []
-      )
-    )].sort((a: string, b: string) => a.localeCompare(b));
+    const todasLasCiudades: string[] = [];
+    this.datosColombiaCompletos.forEach((region: any) => {
+      todasLasCiudades.push(...region.ciudades);
+    });
+    this.municipios = [...new Set<string>(todasLasCiudades)]
+      .sort((a, b) => a.localeCompare(b));
   }
 
   // Cierra el modal sin aplicar cambios
