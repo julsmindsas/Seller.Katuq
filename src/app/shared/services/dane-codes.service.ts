@@ -46,13 +46,9 @@ export class DaneCodesService {
       return of(this.searchCache.get(cacheKey) || []);
     }
 
-    // Buscar municipios
-    let resultados = buscarMunicipio(query);
-
-    // Filtrar por departamento si está especificado
-    if (departamento) {
-      resultados = resultados.filter(m => m.departamento === departamento);
-    }
+    // Buscar municipios (el filtro por departamento se aplica dentro, antes
+    // del tope de 50 resultados)
+    const resultados = buscarMunicipio(query, departamento);
 
     // Guardar en cache
     this.searchCache.set(cacheKey, resultados);

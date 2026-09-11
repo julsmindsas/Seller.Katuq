@@ -814,15 +814,12 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     this.actualizarValidadores();
     this.actualizarVistaPrevia();
 
-    // Restaurar lista completa de municipios
-    const colombia = this.infoPaises.paises.find(p => p.Pais === 'Colombia');
-    if (colombia && colombia.Regiones) {
-      this.municipios = [];
-      colombia.Regiones.forEach(region => {
-        this.municipios.push(...region.ciudades);
-      });
-      this.municipios = [...new Set(this.municipios)].sort();
-    }
+    // Restaurar lista completa de municipios (base DANE ya cargada)
+    this.municipios = [...new Set(
+      this.datosColombiaCompletos.reduce(
+        (acc: string[], region: any) => acc.concat(region.ciudades), []
+      )
+    )].sort((a: string, b: string) => a.localeCompare(b));
   }
 
   // Cierra el modal sin aplicar cambios
@@ -906,7 +903,7 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   // Auto-seleccionar departamento basado en la ciudad
   private autoSeleccionarDepartamento(ciudad: string): void {
     const regionEncontrada = this.datosColombiaCompletos.find(
-      region => region.ciudades.includes(ciudad)
+      region => region.ciudades.some((c: string) => this.mismoMunicipio(c, ciudad))
     );
     
     if (regionEncontrada) {
@@ -927,7 +924,9 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
         region => region.departamento === this.departamentoSeleccionado
       );
       
-      if (regionSeleccionada && !regionSeleccionada.ciudades.includes(ciudadActual)) {
+      if (regionSeleccionada && !regionSeleccionada.ciudades.some(
+        (c: string) => this.mismoMunicipio(c, ciudadActual)
+      )) {
         // La ciudad no pertenece al departamento, limpiar
         this.direccionForm.get('ciudad')?.setValue('');
         this.ciudadSeleccionada = '';
@@ -936,6 +935,22 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
         this.ciudadInvalida = false;
       }
     }
+  }
+
+  /**
+   * Compara nombres de municipio tolerando tildes y el sufijo "D.C.", para que
+   * una dirección guardada con el nombre viejo ("Bogota", "Manati") siga
+   * reconociéndose contra la base DANE.
+   */
+  private mismoMunicipio(a: string, b: string): boolean {
+    const norm = (t: string) => (t || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[,.]/g, '')
+      .replace(/\s+d\s*c$/, '')
+      .trim();
+    return !!a && !!b && norm(a) === norm(b);
   }
 
   // Obtener municipios del departamento seleccionado
@@ -959,19 +974,29 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       this.departamentos = deptos;
     });
 
-    // Cargar todos los municipios DANE
-    // Usamos el fallback de InfoPaises para compatibilidad inicial
-    const colombia = this.infoPaises.paises.find(p => p.Pais === 'Colombia');
-    if (colombia && colombia.Regiones) {
-      this.datosColombiaCompletos = colombia.Regiones;
-
-      // Obtener todos los municipios únicos (para compatibilidad)
-      this.municipios = [];
-      colombia.Regiones.forEach(region => {
-        this.municipios.push(...region.ciudades);
+    // Municipios desde la base DANE (1.122 municipios). Antes se usaba el mock
+    // InfoPaises, que traía los departamentos sin tildes y con listas
+    // incompletas: como el selector de departamento sí venía del DANE, el
+    // nombre nunca coincidía ("Atlántico" vs "Atlantico") y el desplegable de
+    // municipios quedaba vacío.
+    this.daneCodesService.getTodosLosMunicipios().subscribe(todos => {
+      const porDepartamento = new Map<string, string[]>();
+      todos.forEach(m => {
+        const ciudades = porDepartamento.get(m.departamento) || [];
+        ciudades.push(m.nombre);
+        porDepartamento.set(m.departamento, ciudades);
       });
-      this.municipios = [...new Set(this.municipios)].sort();
-    }
+
+      this.datosColombiaCompletos = Array.from(porDepartamento.entries())
+        .map(([departamento, ciudades]) => ({
+          departamento,
+          ciudades: ciudades.sort((a, b) => a.localeCompare(b))
+        }))
+        .sort((a, b) => a.departamento.localeCompare(b.departamento));
+
+      this.municipios = [...new Set(todos.map(m => m.nombre))]
+        .sort((a, b) => a.localeCompare(b));
+    });
 
     // Cargar municipios principales como sugerencias
     this.daneCodesService.getMunicipiosPrincipales().subscribe(principales => {

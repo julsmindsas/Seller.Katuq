@@ -214,7 +214,7 @@ export const MUNICIPIOS_COLOMBIA: MunicipioDane[] = [
   // BOGOTÁ D.C. - 1 municipio
   { codigo: "11001", nombre: "Bogotá D.C.", departamento: "Bogotá D.C." },
 
-  // BOLÍVAR - 45 municipios (continuaré con más municipios...)
+  // BOLÍVAR - 46 municipios
   { codigo: "13001", nombre: "Cartagena", departamento: "Bolívar" },
   { codigo: "13006", nombre: "Achí", departamento: "Bolívar" },
   { codigo: "13030", nombre: "Altos del Rosario", departamento: "Bolívar" },
@@ -238,6 +238,7 @@ export const MUNICIPIOS_COLOMBIA: MunicipioDane[] = [
   { codigo: "13458", nombre: "Montecristo", departamento: "Bolívar" },
   { codigo: "13468", nombre: "Mompós", departamento: "Bolívar" },
   { codigo: "13473", nombre: "Morales", departamento: "Bolívar" },
+  { codigo: "13490", nombre: "Norosí", departamento: "Bolívar" },
   { codigo: "13549", nombre: "Pinillos", departamento: "Bolívar" },
   { codigo: "13580", nombre: "Regidor", departamento: "Bolívar" },
   { codigo: "13600", nombre: "Río Viejo", departamento: "Bolívar" },
@@ -641,6 +642,27 @@ export const MUNICIPIOS_COLOMBIA: MunicipioDane[] = [
   { codigo: "18756", nombre: "Solano", departamento: "Caquetá" },
   { codigo: "18785", nombre: "Solita", departamento: "Caquetá" },
   { codigo: "18860", nombre: "Valparaíso", departamento: "Caquetá" },
+
+  // CASANARE - 19 municipios
+  { codigo: "85001", nombre: "Yopal", departamento: "Casanare" },
+  { codigo: "85010", nombre: "Aguazul", departamento: "Casanare" },
+  { codigo: "85015", nombre: "Chámeza", departamento: "Casanare" },
+  { codigo: "85125", nombre: "Hato Corozal", departamento: "Casanare" },
+  { codigo: "85136", nombre: "La Salina", departamento: "Casanare" },
+  { codigo: "85139", nombre: "Maní", departamento: "Casanare" },
+  { codigo: "85162", nombre: "Monterrey", departamento: "Casanare" },
+  { codigo: "85225", nombre: "Nunchía", departamento: "Casanare" },
+  { codigo: "85230", nombre: "Orocué", departamento: "Casanare" },
+  { codigo: "85250", nombre: "Paz de Ariporo", departamento: "Casanare" },
+  { codigo: "85263", nombre: "Pore", departamento: "Casanare" },
+  { codigo: "85279", nombre: "Recetor", departamento: "Casanare" },
+  { codigo: "85300", nombre: "Sabanalarga", departamento: "Casanare" },
+  { codigo: "85315", nombre: "Sácama", departamento: "Casanare" },
+  { codigo: "85325", nombre: "San Luis de Palenque", departamento: "Casanare" },
+  { codigo: "85400", nombre: "Támara", departamento: "Casanare" },
+  { codigo: "85410", nombre: "Tauramena", departamento: "Casanare" },
+  { codigo: "85430", nombre: "Trinidad", departamento: "Casanare" },
+  { codigo: "85440", nombre: "Villanueva", departamento: "Casanare" },
 
   // CESAR - 25 municipios
   { codigo: "20001", nombre: "Valledupar", departamento: "Cesar" },
@@ -1188,10 +1210,13 @@ export const MUNICIPIOS_COLOMBIA: MunicipioDane[] = [
   { codigo: "73870", nombre: "Villahermosa", departamento: "Tolima" },
   { codigo: "73873", nombre: "Villarrica", departamento: "Tolima" },
 
-  // VAUPÉS - 3 municipios
+  // VAUPÉS - 6 municipios
   { codigo: "97001", nombre: "Mitú", departamento: "Vaupés" },
   { codigo: "97161", nombre: "Carurú", departamento: "Vaupés" },
   { codigo: "97511", nombre: "Pacoa", departamento: "Vaupés" },
+  { codigo: "97666", nombre: "Taraira", departamento: "Vaupés" },
+  { codigo: "97777", nombre: "Papunaua", departamento: "Vaupés" },
+  { codigo: "97889", nombre: "Yavaraté", departamento: "Vaupés" },
 
   // VICHADA - 4 municipios
   { codigo: "99001", nombre: "Puerto Carreño", departamento: "Vichada" },
@@ -1218,13 +1243,17 @@ function normalizeText(text: string): string {
  * Busca por: nombre de municipio, departamento y código DANE
  * Tolerante a búsquedas sin tildes y errores ortográficos menores
  */
-export function buscarMunicipio(query: string): MunicipioDane[] {
+export function buscarMunicipio(query: string, departamento?: string): MunicipioDane[] {
   const searchTerm = normalizeText(query);
+  const deptoTerm = normalizeText(departamento || '');
 
   return MUNICIPIOS_COLOMBIA.filter(municipio =>
-    normalizeText(municipio.nombre).includes(searchTerm) ||
-    municipio.codigo.includes(searchTerm) ||
-    normalizeText(municipio.departamento).includes(searchTerm)
+    // El filtro por departamento va ANTES del corte de 50: si se recortara
+    // primero, un municipio del departamento pedido podia quedar fuera.
+    (!deptoTerm || normalizeText(municipio.departamento) === deptoTerm) &&
+    (normalizeText(municipio.nombre).includes(searchTerm) ||
+      municipio.codigo.includes(searchTerm) ||
+      normalizeText(municipio.departamento).includes(searchTerm))
   ).slice(0, 50); // Limitar a 50 resultados
 }
 
