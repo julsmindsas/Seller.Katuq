@@ -268,7 +268,22 @@
 
                                         <!-- Sección única para subir archivos -->
                                         <div class="col-md-12 mb-3">
-                                            <h4>Carga de Archivos para Personalizar la Experiencia con KAI</h4>
+                                            <h4>Documentos de tu marca para Opttia</h4>
+                                            <p>Guarda los cambios de la empresa y prepara los archivos para que Opttia pueda consultarlos.
+                                                Esta primera versión admite PDF con texto y TXT, hasta 5 MB por archivo.
+                                                Los documentos estarán disponibles para usuarios con permiso de lectura de marca.</p>
+                                            <button type="button" class="btn btn-outline-primary mb-3"
+                                                [disabled]="!empresaId || brandDocumentsBusy" (click)="loadBrandDocuments()">
+                                                {{ brandDocumentsBusy ? 'Procesando…' : 'Consultar estado de documentos' }}
+                                            </button>
+                                            <p *ngIf="brandDocumentsError" class="text-danger" role="alert">{{ brandDocumentsError }}</p>
+                                            <div *ngFor="let document of brandDocuments" class="d-flex align-items-center gap-2 mb-2">
+                                                <span>{{ document.name }} — {{ document.status === 'ready' ? 'Listo' : document.status === 'processing' ? 'Procesando' : document.status === 'failed' ? 'Falló' : 'Pendiente' }}</span>
+                                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    [disabled]="brandDocumentsBusy" (click)="indexBrandDocument(document.id)">
+                                                    {{ document.status === 'ready' ? 'Actualizar' : 'Preparar archivo' }}
+                                                </button>
+                                            </div>
                                             <p>Sube documentos clave para que KAI entienda a fondo tu marca y pueda
                                                 brindar una experiencia personalizada.</p>
                                             <ul>

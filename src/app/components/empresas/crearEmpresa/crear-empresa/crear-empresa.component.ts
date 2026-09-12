@@ -205,13 +205,43 @@ export class CrearEmpresaComponent implements OnInit {
   frmPersonificaTuMarca: FormGroup
   archivos: any[];
   uploadedFiles: { name: string; url: string }[] = [];
+  brandDocuments: { id: string; name: string; status: string; message: string }[] = [];
+  brandDocumentsBusy = false;
+  brandDocumentsError = '';
+
+  loadBrandDocuments(): void {
+    if (!this.empresaId || this.brandDocumentsBusy) return;
+    this.brandDocumentsBusy = true;
+    this.brandDocumentsError = '';
+    this.companiesService.getBrandDocumentStatus(this.empresaId).subscribe({
+      next: documents => { this.brandDocuments = documents; this.brandDocumentsBusy = false; },
+      error: () => {
+        this.brandDocumentsBusy = false;
+        this.brandDocumentsError = 'No se pudo consultar. Debes tener permiso de marca y trabajar en la empresa de tu sesión.';
+      }
+    });
+  }
+
+  indexBrandDocument(id: string): void {
+    if (!this.empresaId || this.brandDocumentsBusy) return;
+    this.brandDocumentsBusy = true;
+    this.brandDocumentsError = '';
+    this.companiesService.indexBrandDocument(this.empresaId, id).subscribe({
+      next: () => { this.brandDocumentsBusy = false; this.loadBrandDocuments(); },
+      error: () => {
+        this.brandDocumentsBusy = false;
+        this.brandDocumentsError = 'No se pudo preparar el archivo. Revisa tu permiso de administrador, formato, tamaño y cupo.';
+      }
+    });
+  }
   // Objetos para seguir el progreso y almacenar URLs por tipo
   uploadProgress: { [key: string]: number } = {};
   downloadURLs: { [key: string]: string } = {};
 
 
   handleFilesUploaded(files: { name: string; url: string }[]): void {
-    this.uploadedFiles = files;
+    this.uploadedFiles = Array.from(new Map([...(this.uploadedFiles || []), ...files]
+      .map(file => [file.url, file])).values());
   }
 
 
@@ -620,6 +650,7 @@ export class CrearEmpresaComponent implements OnInit {
    */
   guardar() {
     if (this.guardando) return;
+    if (!this.prepareBrandProfile()) return;
 
     this.f.controls['ciudadess'].setValue(this.ciudadess.value)
     this.f.controls['contactos'].setValue(this.contactos)
@@ -651,18 +682,7 @@ export class CrearEmpresaComponent implements OnInit {
     });
   }
   editar() {
-
-    if (this.frmPersonificaTuMarca.valid) {
-      const formularioData = {
-        ...this.frmPersonificaTuMarca.value,
-        archivos: this.uploadedFiles
-      };
-      console.log('Datos del formulario:', formularioData);
-      this.f.controls["personalidadMarca"].setValue(formularioData);
-      // Aquí puedes implementar la lógica para enviar los datos a un servidor
-    } else {
-      console.log('Formulario inválido');
-    }
+    if (!this.prepareBrandProfile()) return;
 
     this.f.controls['ciudadess'].setValue(this.ciudadess.value)
     this.f.controls['contactos'].setValue(this.contactos)
@@ -711,6 +731,20 @@ export class CrearEmpresaComponent implements OnInit {
 
   volverAlListado(): void {
     this.router.navigateByUrl('empresas');
+  }
+
+  private prepareBrandProfile(): boolean {
+    const values = this.frmPersonificaTuMarca.getRawValue();
+    const hasProfile = Object.values(values).some(value => typeof value === 'string' && value.trim());
+    if (hasProfile && !this.frmPersonificaTuMarca.valid) {
+      this.frmPersonificaTuMarca.markAllAsTouched();
+      Swal.fire('Revisa la personalidad de marca', 'Completa los campos de Personifica tu marca antes de guardar.', 'warning');
+      return false;
+    }
+    this.f.controls['personalidadMarca'].setValue({
+      ...(this.edit?.personalidadMarca || {}), ...values, archivos: this.uploadedFiles || []
+    });
+    return true;
   }
 
   identificarDepto() {

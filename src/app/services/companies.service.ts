@@ -448,6 +448,15 @@ export class CompaniesService {
     return this.http.put<any>(`${this.apiUrl}/v1/companies/${id}`, companyData);
   }
 
+  getBrandDocumentStatus(companyId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/v1/opttia/brand/documents`, { params: { companyDocId: companyId } });
+  }
+
+  indexBrandDocument(companyId: string, documentId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/v1/opttia/brand/documents/${encodeURIComponent(documentId)}/index`, {},
+      { params: { companyDocId: companyId } });
+  }
+
   /**
    * Elimina una empresa por su ID
    * @param id ID de la empresa a eliminar
@@ -811,4 +820,4 @@ export class CompaniesService {
       })
     );
   }
-} 
+}
