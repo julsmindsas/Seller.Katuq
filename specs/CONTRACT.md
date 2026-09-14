@@ -6214,4 +6214,25 @@ La DIAN trabaja a dos decimales, así que el total de una línea solo cae en `c 
 - `billingOverview` devuelve `ultimaFactura.facturaDian` y `.facturaDianProblema`. **`VERSION_CALCULO` sube a 2**: sin eso el caché de 6 h serviría filas sin el campo nuevo y la columna se vería vacía como si nadie tuviera factura (misma trampa de D-265).
 - La pantalla de Facturación electrónica **no leía parámetros de la URL**; se le agregó `?documento=` con el número o el CUFE, que abre la lista con esa búsqueda. **No es una vista de detalle**: la pantalla no tiene rutas por documento y fabricarle una era un módulo aparte.
 
+## D-275 (2026-09-14) — Un pago rechazado bloqueaba para siempre reintentar el mismo comprobante
+
+**Disparador.** Reporte real: pedido `DAD-012918` (ALMARA FELICIDAD). El vendedor adjuntó por error un comprobante que no correspondía; Don Jairo (tesorería) lo rechazó. Al intentar corregir subiendo la evidencia correcta con el mismo número de comprobante (`87500`, el número real de la transacción bancaria, no algo inventado), el sistema respondía *"Ya existe un pago con el mismo número de comprobante"* y no dejaba adjuntar nada.
+
+**Causa.** `registerPayment()` en `services/treasury/treasuryService.js` — el guard de doble-submit por comprobante buscaba coincidencias en **todo** `PagosAsentados` sin mirar `estadoVerificacion`. Rechazar un pago nunca lo borra del array (solo cambia su estado), así que su comprobante quedaba bloqueado de forma permanente. Verificado contra el pedido real: comprobante `92900` (Aprobado, $40.000) + `87500` (Rechazado 2026-09-10, $28.900) — cualquier reingreso de `87500` caía en el guard.
+
+**Arreglo.** El guard (extraído a `findBlockingDuplicateComprobante`, exportado como helper puro) ahora excluye pagos `Rechazado`/`Cancelado` de la comparación — un comprobante repetido solo bloquea si el pago previo con ese número sigue Pendiente/Aprobado o no tiene `estadoVerificacion` (legacy). Contract test nuevo: `tests/treasury/duplicateComprobante.test.js` (8/8), sin tocar Firestore. `scripts/test-013-treasury.js` (suite pura de spec 013) sigue en 76/76.
+
+- **No se tocó** `computeApprovedAnticipo` ni el flujo de aprobación/rechazo — el fix es solo el guard de duplicados.
+- **Pendiente de aplicar en el pedido real** `DAD-012918`: el vendedor puede reintentar el comprobante `87500` una vez el fix esté desplegado; no se tocó el documento directamente (cero-escrituras salvo pedido explícito del usuario).
+
+## D-276 (2026-09-14) — Hallazgo sin corregir: un pago Rechazado sigue contando en `anticipo`/`faltaPorPagar`
+
+**Disparador.** Investigando D-275 contra el pedido real `DAD-012918`: `anticipo: 68900`, `faltaPorPagar: 0` — el pedido se ve como pagado al 100% ($40.000 Aprobado + $28.900 **Rechazado**), cuando en realidad solo hay $40.000 aprobados.
+
+**Causa (sin corregir).** `calculateOrderTotals()` en `services/orderCalculationService.js` (líneas ~467-483) suma **todos** los `PagosAsentados` por `valor`/`valorRegistrado`, y solo excluye pagos Wompi Pendientes — no excluye `Rechazado`/`Cancelado`. Es la misma fórmula (con el mismo hueco) que ya estaba marcada `@deprecated` en `controllers/orders.js` (`getValorACobrarPorPedido`, sin llamadores) y duplicada sin advertencia en `controllers/logistica.js` (también sin llamadores — código muerto, no es la causa). `calculateOrderTotals()` sí está activa y es la que corre hoy en el guardado de pedidos.
+
+**Por qué es más grave que D-275:** un pedido puede aparecer "pagado" (`faltaPorPagar: 0`) y despacharse/facturarse sin haber cobrado el saldo real. No es exclusivo de este pedido — afecta a cualquier pedido con un pago Rechazado en `PagosAsentados`.
+
+**Decisión:** el usuario priorizó primero D-275 (desbloquear el reingreso del comprobante). Este hallazgo queda **registrado y sin corregir** — pendiente de decisión sobre alcance del fix (¿solo `calculateOrderTotals`? ¿reconciliar pedidos ya afectados en producción?) antes de tocar código de cálculo de totales, módulo sensible con reglas propias en `openspec/config.yaml`.
+
 **Limitación declarada:** una membresía facturada **a mano** desde el composer seguirá diciendo "Pendiente de facturar" para siempre. El composer no escribe en `billing_invoices` y no hay llave que las correlacione. Solo el puente de D-272 llena ese campo.
