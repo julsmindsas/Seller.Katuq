@@ -48,104 +48,157 @@
 
   <ng-container *ngIf="vista === 'empresas' && !cargando && !error && totales">
 
-    <!-- ── FRANJA DE INDICADORES ────────────────────────────────────────── -->
+    <!-- ── FRANJA DE INDICADORES ──────────────────────────────────────────
+         CINCO tarjetas, no diez. El operador abre esta pantalla a responder
+         tres preguntas —cuánto voy a facturar, a quién estoy por perder, a
+         quién llamo hoy— y con diez tarjetas todo cabía pero nada resaltaba.
+
+         Lo que salió de tarjeta NO desapareció: bajó a la línea de contexto de
+         abajo, que sigue visible sin un clic y conserva todos sus filtros. -->
     <section class="kpis">
+
+      <!-- La tarjeta que faltaba: cuánto deja Katuq. La pantalla mostraba quién
+           paga (Premium/Freemium, que es el interruptor de permisos) y nunca
+           cuánto. El escalón de cada cliente se deduce de sus ventas con la
+           misma función que usa la facturación — ver planPricing en el back. -->
+      <button type="button" class="kpi kpi--principal" [class.kpi--activo]="filtroEstado === 'premium'"
+              (click)="filtrarPor('premium')"
+              title="Suma del escalón de precio de cada cliente con plan pago, deducido de sus ventas. Es una estimación: el cobro real usa el período de cada empresa y excluye pedidos cancelados.">
+        <span class="kpi-label">Ingreso del mes</span>
+        <span class="kpi-valor kpi-valor--money">{{ dineroUSD(totales.ingresoEstimadoUSD) }}</span>
+        <span class="kpi-pie">
+          estimado · {{ num(totales.empresasQuePagan) }} clientes con plan pago
+          <em class="kpi-salvedad" *ngIf="totales.empresasSinPrecio">
+            · {{ num(totales.empresasSinPrecio) }} sin ventas medidas
+          </em>
+          <em class="kpi-salvedad" *ngIf="totales.empresasPrecioAMedida">
+            · {{ num(totales.empresasPrecioAMedida) }} a medida
+          </em>
+        </span>
+      </button>
 
       <button type="button" class="kpi" [class.kpi--activo]="filtroEstado === 'activas'"
               (click)="filtrarPor('activas')">
         <span class="kpi-label">Empresas activas</span>
         <span class="kpi-valor">{{ num(totales.activas) }}<small class="kpi-de">/ {{ num(totales.empresas) }}</small></span>
-        <span class="kpi-pie">{{ num(totales.premium) }} premium · {{ num(totales.freemium) }} freemium</span>
+        <span class="kpi-pie">{{ num(totales.empresasQuePagan) }} pagan · {{ num(totales.freemium) }} en el plan gratis</span>
+      </button>
+
+      <!-- Las inactivas tienen tarjeta propia, no un renglón escondido en el
+           "64 de 68" de la de al lado. No son un descarte: son la lista de a
+           quién llamar para recuperar, y el pie dice cuántas PAGABAN, que es lo
+           que separa una oportunidad real de una baja sin consecuencia.
+
+           No lleva el estilo de alerta a propósito: una empresa desactivada ya
+           es una decisión tomada, no algo que se acaba de romper. -->
+      <button type="button" class="kpi" [class.kpi--activo]="filtroEstado === 'inactivas'"
+              (click)="filtrarPor('inactivas')"
+              title="Empresas desactivadas o bloqueadas. Tócala para ver solo esas: es la lista para recuperar clientes.">
+        <span class="kpi-label">Inactivas</span>
+        <span class="kpi-valor">{{ num(totales.inactivas) }}</span>
+        <span class="kpi-pie">
+          <ng-container *ngIf="totales.inactivasQuePagaban">
+            {{ num(totales.inactivasQuePagaban) }} tenían plan pago
+          </ng-container>
+          <ng-container *ngIf="!totales.inactivasQuePagaban">ninguna tenía plan pago</ng-container>
+        </span>
+      </button>
+
+      <!-- EN RIESGO fusiona "sin movimiento" y "sin entrar". Eran dos tarjetas
+           que respondían la misma pregunta, y una cuenta abandonada aparecía en
+           las dos: obligaban a leer dos números para no saber cuántos clientes
+           eran. El total es la UNIÓN, nunca la suma. -->
+      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'enRiesgo'"
+              [class.kpi--encendida]="totales.empresasEnRiesgo > 0"
+              (click)="filtrarPor('enRiesgo')"
+              title="Empresas activas que dejaron de vender o donde nadie entra hace 30 días. Las que cumplen las dos cosas se cuentan una sola vez.">
+        <span class="kpi-label">En riesgo</span>
+        <span class="kpi-valor">{{ num(totales.empresasEnRiesgo) }}</span>
+        <span class="kpi-pie">sin vender o sin entrar en {{ ventanaDias }} días</span>
+      </button>
+
+      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'porVencer'"
+              [class.kpi--encendida]="totales.planesVencidos > 0 || totales.planesPorVencer > 0"
+              (click)="filtrarPor('porVencer')">
+        <span class="kpi-label">Por cobrar</span>
+        <span class="kpi-valor">{{ num(totales.planesVencidos + totales.planesPorVencer) }}</span>
+        <span class="kpi-pie">{{ num(totales.planesVencidos) }} vencidos · {{ num(totales.planesPorVencer) }} esta semana</span>
       </button>
 
       <button type="button" class="kpi" [class.kpi--activo]="orden === 'pedidos30d'"
               (click)="ordenarPor('pedidos30d')"
-              title="Ordenar: las empresas con más pedidos arriba">
-        <span class="kpi-label">Pedidos {{ ventanaDias }} días</span>
-        <span class="kpi-valor">{{ num(totales.pedidos30d) }}</span>
-        <span class="kpi-pie">{{ num(totales.pedidosNetos30d) }} netos, sin anulados</span>
-      </button>
-
-      <button type="button" class="kpi" [class.kpi--activo]="orden === 'facturado'"
-              (click)="ordenarPor('facturado')"
-              title="Ordenar: las empresas que más facturan arriba">
-        <span class="kpi-label">Ticket promedio</span>
-        <span class="kpi-valor kpi-valor--money">{{ dinero(totales.ticketPromedio30d) }}</span>
+              title="Lo que se movió en toda la plataforma. Tócala para subir arriba las empresas con más pedidos.">
+        <span class="kpi-label">Volumen {{ ventanaDias }} días</span>
+        <span class="kpi-valor">{{ num(totales.pedidos30d) }}<small class="kpi-de">pedidos</small></span>
         <span class="kpi-pie">{{ dinero(totales.facturado30d) }} facturado</span>
       </button>
 
-      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'sinMovimiento'"
-              [class.kpi--encendida]="totales.empresasSinMovimiento > 0"
-              (click)="filtrarPor('sinMovimiento')">
-        <span class="kpi-label">Sin movimiento</span>
-        <span class="kpi-valor">{{ num(totales.empresasSinMovimiento) }}</span>
-        <span class="kpi-pie">activas sin vender en {{ ventanaDias }} días</span>
-      </button>
-
-      <button type="button" class="kpi" [class.kpi--activo]="orden === 'usuarios'"
-              (click)="ordenarPor('usuarios')"
-              title="Ordenar: las empresas con más usuarios arriba">
-        <span class="kpi-label">Usuarios</span>
-        <span class="kpi-valor">{{ num(totales.usuarios) }}</span>
-        <span class="kpi-pie">personas usando Katuq</span>
-      </button>
-
-      <!-- Antigüedad de la plataforma. Solo promedia las que tienen fecha de
-           alta: el pie dice cuántas son, para que el número no prometa de más. -->
-      <button type="button" class="kpi" [class.kpi--activo]="orden === 'antiguedad'"
-              (click)="ordenarPor('antiguedad')"
-              title="Cuánto lleva en Katuq la empresa promedio, contando desde que se creó. Tócala para ordenar: las más antiguas arriba.">
-        <span class="kpi-label">Tiempo promedio en Katuq</span>
-        <span class="kpi-valor kpi-valor--texto">{{ antiguedadMedia() }}</span>
-        <span class="kpi-pie">desde que se creó · {{ num(totales.empresasConFechaAlta) }} de {{ num(totales.empresas) }} con fecha</span>
-      </button>
-
-      <!-- Cuentas abandonadas: activas donde nadie inicia sesión. Las que no
-           tienen dato van en el pie, NUNCA sumadas al número: no saber cuándo
-           entró alguien no es lo mismo que saber que no entra. -->
-      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'sinEntrar'"
-              [class.kpi--encendida]="totales.empresasSinEntrar30d > 0"
-              (click)="filtrarPor('sinEntrar')">
-        <span class="kpi-label">Sin entrar 30 días</span>
-        <span class="kpi-valor">{{ num(totales.empresasSinEntrar30d) }}</span>
-        <span class="kpi-pie">{{ num(totales.empresasSinIngresoConocido) }} sin dato de ingreso</span>
-      </button>
-
-      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'porVencer'"
-              [class.kpi--encendida]="totales.planesVencidos > 0"
-              (click)="filtrarPor('porVencer')">
-        <span class="kpi-label">Planes</span>
-        <span class="kpi-valor">{{ num(totales.planesVencidos) }}<small class="kpi-de">vencidos</small></span>
-        <span class="kpi-pie">{{ num(totales.planesPorVencer) }} vencen esta semana</span>
-      </button>
-
-      <!-- Integraciones CONECTADAS. La palabra importa: no hay dato de cuántos
-           pedidos entró cada una, así que la pantalla no puede prometer "uso".
-           Esta tarjeta abre el desglose por proveedor en vez de ordenar la
-           lista: la pregunta detrás es cuáles integraciones se usan, no qué
-           empresa tiene más. -->
-      <button type="button" class="kpi" [class.kpi--activo]="panelIntegraciones"
-              (click)="alternarPanelIntegraciones()"
-              title="Ver cuántas empresas tiene conectada cada integración">
-        <span class="kpi-label">Integraciones conectadas</span>
-        <span class="kpi-valor">{{ num(totales.integracionesActivas) }}</span>
-        <span class="kpi-pie">
-          en {{ num(totales.empresasConIntegracion) }} de {{ num(totales.empresas) }} empresas
-        </span>
-      </button>
-
-      <!-- La contracara: quién no ha conectado nada. El pie lleva las que ya no
-           pueden conectar más sin cambiar de plan — son la lista de upgrade. -->
-      <button type="button" class="kpi kpi--alerta" [class.kpi--activo]="filtroEstado === 'sinIntegrar'"
-              [class.kpi--encendida]="totales.empresasSinIntegrar > 0"
-              (click)="filtrarPor('sinIntegrar')"
-              title="Empresas activas que no tienen ninguna integración conectada">
-        <span class="kpi-label">Sin integrar</span>
-        <span class="kpi-valor">{{ num(totales.empresasSinIntegrar) }}</span>
-        <span class="kpi-pie">{{ num(totales.empresasEnLimiteIntegraciones) }} toparon el límite de su plan</span>
-      </button>
-
     </section>
+
+    <!-- ── LÍNEA DE CONTEXTO ──────────────────────────────────────────────
+         Dos renglones con dos oficios distintos, y esa separación es el punto.
+
+         Arriba, FILTROS: cada uno parte la lista en dos y al tocarlo se ve
+         cambiar. Abajo, DATOS: no se tocan.
+
+         La primera versión los mezcló, y tres de los botones —ticket, usuarios,
+         antigüedad— solo REORDENABAN la lista. Tocarlos no se notaba y parecían
+         rotos. Ordenar ya vive en el desplegable "Ordenar por", que es donde se
+         busca; acá volvieron a ser lo que son, cifras. -->
+    <section class="kpis-contexto">
+      <span class="ctx-rotulo">Filtrar:</span>
+
+      <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'sinMovimiento'"
+              (click)="filtrarPor('sinMovimiento')"
+              title="Activas que no han vendido nada en la ventana">
+        <strong>{{ num(totales.empresasSinMovimiento) }}</strong> sin vender
+      </button>
+
+      <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'sinEntrar'"
+              (click)="filtrarPor('sinEntrar')"
+              [title]="num(totales.empresasSinIngresoConocido) + ' empresas no tienen dato de ingreso: no se cuentan acá, porque no saber cuándo entró alguien no es lo mismo que saber que no entra'">
+        <strong>{{ num(totales.empresasSinEntrar30d) }}</strong> sin entrar
+      </button>
+
+      <!-- Las dos caras del cobro, juntas: quién se cobra solo y a quién hay
+           que perseguirle el pago. Separadas obligaban a restar de cabeza, y la
+           resta da mal porque la cortesía no está en ninguno de los dos. -->
+      <button type="button" class="ctx ctx--ok" [class.ctx--activo]="filtroEstado === 'conTarjeta'"
+              (click)="filtrarPor('conTarjeta')"
+              title="Clientes con tarjeta inscrita: el día del corte se les cobra solo, sin que nadie haga nada">
+        <i class="fa fa-credit-card"></i>
+        <strong>{{ num(totales.empresasConTarjeta) }}</strong> con tarjeta
+      </button>
+
+      <button type="button" class="ctx ctx--pendiente" [class.ctx--activo]="filtroEstado === 'sinTarjeta'"
+              (click)="filtrarPor('sinTarjeta')"
+              title="Clientes con plan pago que NO tienen tarjeta inscrita: hay que enviarles link de pago y perseguir el cobro">
+        <i class="fa fa-link"></i>
+        <strong>{{ num(totales.empresasSinTarjeta) }}</strong> sin tarjeta
+      </button>
+
+      <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'sinIntegrar'"
+              (click)="filtrarPor('sinIntegrar')"
+              [title]="num(totales.empresasEnLimiteIntegraciones) + ' toparon el límite de su plan: son la lista de upgrade'">
+        <strong>{{ num(totales.empresasSinIntegrar) }}</strong> sin integrar
+      </button>
+
+      <button type="button" class="ctx" [class.ctx--activo]="panelIntegraciones"
+              (click)="alternarPanelIntegraciones()"
+              title="Ver cuántas empresas tiene conectada cada integración. Cuenta conectadas, no usadas.">
+        <i class="fa fa-plug"></i>
+        <strong>{{ num(totales.integracionesActivas) }}</strong> integraciones
+      </button>
+    </section>
+
+    <!-- Cifras de tamaño de la plataforma. No se tocan: para ordenar por ellas
+         está el desplegable "Ordenar por". -->
+    <p class="kpis-datos">
+      Ticket promedio <strong>{{ dinero(totales.ticketPromedio30d) }}</strong>
+      · <strong>{{ num(totales.usuarios) }}</strong> usuarios
+      · <strong>{{ antiguedadMedia() }}</strong> de antigüedad media
+      <span class="kpis-datos-nota">(sobre {{ num(totales.empresasConFechaAlta) }} de {{ num(totales.empresas) }} con fecha de alta)</span>
+    </p>
 
     <!-- ── DESGLOSE POR PROVEEDOR ───────────────────────────────────────────
          Lo integrado mirado al revés: no qué tiene cada empresa, sino cuántas
@@ -216,12 +269,21 @@
     <!-- Aviso de filtro activo. Existe porque una tarjeta puede dejar la lista
          en cero (p. ej. "Planes" cuando no hay ninguno vencido) y sin este aviso
          parece que las empresas desaparecieron. -->
-    <div class="filtro-activo" *ngIf="filtroEstado !== 'todas'">
+    <!-- El aviso tiene que nombrar LOS DOS filtros.
+         Estado y Escalón se combinan, y cuando solo se anunciaba el primero
+         pasaba esto: con Escalón en "Base" puesto de antes, filtrar por Estado
+         "Freemium" devolvía CERO empresas —ningún freemium tiene escalón— y en
+         pantalla no había nada que explicara por qué. Parecía un filtro roto. -->
+    <div class="filtro-activo" *ngIf="filtroEstado !== 'todas' || filtroEscalon !== 'todos'">
       <span>
-        Mostrando solo <strong>{{ etiquetaFiltro() }}</strong>
+        Mostrando solo<ng-container *ngIf="filtroEstado !== 'todas'">
+          <strong>{{ etiquetaFiltro() }}</strong></ng-container><ng-container
+          *ngIf="filtroEstado !== 'todas' && filtroEscalon !== 'todos'"> y</ng-container><ng-container
+          *ngIf="filtroEscalon !== 'todos'">
+          escalón <strong>{{ etiquetaEscalon() }}</strong></ng-container>
         — {{ empresas.length - empresasFiltradas.length }} empresas ocultas
       </span>
-      <button type="button" (click)="filtrarPor(filtroEstado)">
+      <button type="button" (click)="quitarFiltrosDeLista()">
         <i class="fa fa-times"></i> Ver todas
       </button>
     </div>
@@ -238,28 +300,58 @@
       </div>
 
       <div class="controles">
-        <label class="control">
+        <label class="control" [class.control--activo]="filtroEstado !== 'todas'">
           <span class="control-label">Estado</span>
+          <!-- TODOS los valores que puede tomar el filtro tienen su opción. Si
+               falta una, tocar la tarjeta correspondiente deja este desplegable
+               en blanco: la lista queda filtrada y el control que debería
+               decirlo no dice nada. Faltaban tres. -->
+          <!-- En orden ALFABÉTICO. Con once opciones, agruparlas "por tema" solo
+               tiene sentido para quien las escribió: quien busca "Inactivas"
+               recorre la lista con la I en la cabeza, no con la categoría. -->
           <select [(ngModel)]="filtroEstado" (ngModelChange)="buscarDesdeElPrincipio()">
             <option value="todas">Todas</option>
             <option value="activas">Activas</option>
+            <option value="conTarjeta">Con tarjeta inscrita</option>
+            <option value="enRiesgo">En riesgo</option>
+            <option value="freemium">Freemium (gratis)</option>
             <option value="inactivas">Inactivas</option>
-            <option value="sinMovimiento">Sin movimiento</option>
+            <option value="anual">Pagan por año</option>
             <option value="porVencer">Plan vencido o por vencer</option>
+            <option value="pactado">Precio pactado a mano</option>
+            <option value="premium">Premium (de pago)</option>
+            <option value="sinEntrar">Sin entrar hace 30 días</option>
+            <option value="sinMovimiento">Sin vender hace 30 días</option>
             <option value="sinIntegrar">Sin ninguna integración</option>
+            <option value="sinTarjeta">Sin tarjeta inscrita</option>
+          </select>
+        </label>
+
+        <!-- El escalón va en su PROPIO desplegable, no mezclado con el estado:
+             así se puede pedir "los de Liderazgo que están en riesgo". -->
+        <label class="control" [class.control--activo]="filtroEscalon !== 'todos'">
+          <span class="control-label">Escalón</span>
+          <select [(ngModel)]="filtroEscalon" (ngModelChange)="buscarDesdeElPrincipio()">
+            <option value="todos">Todos</option>
+            <option value="freemium">Freemium (no se cobra)</option>
+            <option *ngFor="let e of escalones" [value]="e.id">
+              {{ e.nombre }}{{ e.usd ? ' — US$' + e.usd : '' }}
+            </option>
           </select>
         </label>
 
         <label class="control">
           <span class="control-label">Ordenar por</span>
           <select [(ngModel)]="orden" (ngModelChange)="buscarDesdeElPrincipio()">
-            <option value="nombre">Nombre</option>
-            <option value="pedidos30d">Más pedidos</option>
-            <option value="facturado">Más facturado</option>
+            <!-- Alfabético, salvo Nombre que va primero por ser el de salida. -->
+            <option value="nombre">Nombre (A–Z)</option>
             <option value="ultimoPedido">Venta más reciente</option>
-            <option value="ultimoIngreso">Ingreso más reciente</option>
+            <option value="precio">Más caras (escalón)</option>
+            <option value="facturado">Más facturado</option>
             <option value="antiguedad">Más antiguas</option>
             <option value="integraciones">Más integraciones</option>
+            <option value="pedidos30d">Más pedidos</option>
+            <option value="ultimoIngreso">Ingreso más reciente</option>
           </select>
         </label>
 
@@ -283,13 +375,33 @@
         <span class="col-num">Última venta</span>
         <span class="col-num">Último ingreso</span>
         <span class="col-num">Integr.</span>
+        <span class="col-estado">Estado</span>
         <span class="col-plan">Plan</span>
         <span class="col-acciones">Acciones</span>
       </div>
 
+      <!-- Un "no hay resultados" a secas no dice si el filtro está mal puesto o
+           si de verdad no hay ninguna. Se nombra el filtro que dejó la lista
+           vacía, que es lo que permite darse cuenta del error. -->
       <div class="fila-vacia" *ngIf="empresasFiltradas.length === 0">
         <i class="fa fa-inbox"></i>
-        <p>Ninguna empresa coincide con el filtro</p>
+        <p *ngIf="filtroEstado !== 'todas'">
+          Ninguna de las {{ num(empresas.length) }} empresas es
+          <strong>{{ etiquetaFiltro() }}</strong><ng-container *ngIf="filtroEscalon !== 'todos'">
+            con escalón <strong>{{ etiquetaEscalon() }}</strong></ng-container>
+        </p>
+
+        <!-- Estos dos salen vacíos mientras nadie haya guardado el acuerdo, y
+             sin esta nota el filtro parece roto en vez de vacío. -->
+        <p class="vacia-pista" *ngIf="filtroEstado === 'anual' || filtroEstado === 'pactado'">
+          Se guarda en el chip del <strong>Plan</strong> de cada empresa: ahí se elige el
+          escalón pactado y si paga mensual o anual. Mientras no se guarde, el sistema
+          la trata como mensual y le calcula el escalón por sus ventas.
+        </p>
+        <p *ngIf="filtroEstado === 'todas' && busqueda">
+          Ninguna empresa coincide con «{{ busqueda }}»
+        </p>
+        <p *ngIf="filtroEstado === 'todas' && !busqueda">Ninguna empresa coincide con el filtro</p>
         <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Quitar filtros</button>
       </div>
 
@@ -359,20 +471,90 @@
           </div>
 
           <!-- Plan -->
-          <div class="col-plan" data-label="Plan">
-            <button type="button" class="chip-plan"
-                    [class.chip-plan--premium]="empresa.plan === 'premium'"
-                    [disabled]="cambiandoPlan.has(empresa._docId)"
-                    (click)="cambiarPlan(empresa, $event)"
-                    [title]="tituloPlan(empresa)">
+          <!-- El estado en una palabra. Hasta ahora había que deducirlo: la
+               fila inactiva se veía apagada, el plan vencido salía en rojo bajo
+               el chip y "en riesgo" solo existía como número en una tarjeta.
+               Se resuelve con `*ngIf ... as` para calcularlo UNA vez por fila y
+               no tres veces por ciclo de detección de cambios. -->
+          <div class="col-estado" data-label="Estado">
+            <span class="chip-estado" *ngIf="estadoEmpresa(empresa) as est"
+                  [ngClass]="'chip-estado--' + est.clave"
+                  [title]="est.titulo">{{ est.etiqueta }}</span>
+          </div>
+
+          <!-- LA CELDA ENTERA es el botón que abre el editor del plan.
+               Antes solo lo era la primera línea: las otras dos llevaban
+               `cursor: help` por el globo explicativo, así que al hacer clic
+               sobre el precio salía un signo de interrogación y no pasaba nada.
+               Las tres líneas hablan del plan y el formulario edita las tres:
+               partir el clic en una zona viva y dos muertas no tenía sentido. -->
+          <button type="button" class="col-plan celda-plan" data-label="Plan"
+                  [disabled]="cambiandoPlan.has(empresa._docId)"
+                  (click)="cambiarPlan(empresa, $event)"
+                  [title]="tituloPlan(empresa)">
+            <span class="chip-plan"
+                  [class.chip-plan--premium]="empresa.plan === 'premium'">
               <i class="fa fa-spinner fa-spin" *ngIf="cambiandoPlan.has(empresa._docId)"></i>
+              <!-- Premium/Freemium arriba, que es lo que decide qué PUEDE hacer
+                   el cliente. El escalón —cuánto paga— va debajo: son dos datos
+                   distintos y ninguno reemplaza al otro. -->
               <ng-container *ngIf="!cambiandoPlan.has(empresa._docId)">
                 {{ empresa.plan === 'premium' ? '★ Premium' : 'Freemium' }}
               </ng-container>
-            </button>
-            <small class="plan-expira" *ngIf="planVencido(empresa)">Vencido</small>
-            <small class="plan-porvencer" *ngIf="planPorVencer(empresa)">Vence {{ fechaCorta(expiracion(empresa)) }}</small>
-          </div>
+            </span>
+            <small class="plan-escalon" *ngIf="empresa.escalon?.aplica"
+                   [title]="escalonTitulo(empresa)">
+              <ng-container *ngIf="empresa.escalon?.conocido; else escalonDesconocido">
+                <!-- El candado marca un acuerdo cerrado: ese precio NO cambia
+                     con las ventas, y sin la marca se leería como una
+                     estimación más. -->
+                <i class="fa fa-lock plan-pactado" *ngIf="escalonPactado(empresa)"></i>
+                {{ empresa.escalon?.nombre }} ·
+                {{ empresa.escalon?.aMedida
+                    ? 'a medida'
+                    : (empresa.escalon?.periodo === 'anual'
+                        ? dineroUSD(empresa.escalon?.precioPeriodoUSD) + '/año'
+                        : dineroUSD(empresa.escalon?.precioUSD)) }}
+              </ng-container>
+              <ng-template #escalonDesconocido>
+                <span class="muted">escalón sin calcular</span>
+              </ng-template>
+            </small>
+
+            <!-- Antes esta línea aparecía SOLO si el plan estaba vencido o por
+                 vencer. Para llevar el control hay que poder ver la fecha del
+                 próximo cobro ANTES de que sea una urgencia, así que ahora se
+                 muestra siempre que el cliente pague; el color es lo único que
+                 cambia cuando se acerca. Freemium no la lleva: no vence. -->
+            <small class="plan-renueva"
+                   *ngIf="empresa.escalon?.aplica"
+                   [class.plan-renueva--vencido]="planVencido(empresa)"
+                   [class.plan-renueva--pronto]="planPorVencer(empresa)"
+                   [title]="tituloRenovacion(empresa)">
+              <!-- El icono dice CÓMO se le cobra: con tarjeta el cron le cobra
+                   solo; sin tarjeta hay que mandarle link y perseguir el pago.
+                   Es la diferencia entre un cobro hecho y un cobro pendiente. -->
+              <i class="fa plan-modo"
+                 *ngIf="empresa.modoCobro"
+                 [ngClass]="{
+                   'fa-credit-card': empresa.modoCobro === 'automatico',
+                   'fa-link plan-modo--manual': empresa.modoCobro === 'manual',
+                   'fa-gift plan-modo--cortesia': empresa.modoCobro === 'cortesia'
+                 }"></i>
+              <ng-container [ngSwitch]="empresa.renovacion?.estado">
+                <span *ngSwitchCase="'vencido'">venció {{ fechaDiaMes(empresa.renovacion?.fecha) }}</span>
+                <span *ngSwitchCase="'sinFecha'">sin fecha</span>
+                <span *ngSwitchDefault>
+                  cobra {{ fechaDiaMes(empresa.renovacion?.fecha) }}<em *ngIf="empresa.renovacion?.estimada">*</em>
+                </span>
+              </ng-container>
+            </small>
+
+            <!-- Aparece al pasar el mouse. Un chip de colores se lee como una
+                 etiqueta, no como algo que se pueda tocar; sin esta pista no
+                 hay forma de saber que ahí se edita el plan. -->
+            <span class="plan-editar"><i class="fa fa-pencil"></i> editar plan</span>
+          </button>
 
           <!-- Acciones -->
           <!-- Acciones. Solo dos, y ninguna borra nada:
@@ -381,6 +563,20 @@
                Eliminar NO existe acá a propósito: es irreversible y un clic
                distraído se llevaría por delante a una empresa entera. -->
           <div class="col-acciones">
+            <!-- Editar el plan también desde acá.
+                 La celda del Plan abre el mismo formulario, pero un botón en la
+                 columna de Acciones no deja lugar a dudas: es el mismo patrón de
+                 los dos que ya están y que se usan sin problema. Dos caminos al
+                 mismo sitio es mejor que uno que hay que adivinar. -->
+            <button type="button" class="btn-icono btn-icono--plan"
+                    [disabled]="cambiandoPlan.has(empresa._docId)"
+                    (click)="cambiarPlan(empresa, $event)"
+                    title="Editar el plan: Premium/Freemium, escalón pactado, mensual o anual, y fecha de cobro">
+              <i class="fa" [ngClass]="cambiandoPlan.has(empresa._docId)
+                   ? 'fa-spinner fa-spin'
+                   : 'fa-dollar'"></i>
+            </button>
+
             <button type="button" class="btn-icono"
                     (click)="editarEmpresa(empresa, $event)"
                     title="Editar datos de la empresa">
@@ -409,6 +605,98 @@
         <!-- ── FICHA INDIVIDUAL ───────────────────────────────────────────── -->
         <div class="ficha" *ngIf="expandidaId === empresa._docId">
 
+          <!-- ENCABEZADO: quién es, cuánto paga y a quién se llama. Son las tres
+               cosas que el operador necesita antes de mirar un solo número de
+               operación, y estaban repartidas entre la fila, el pie de la ficha
+               y la pestaña de Cobros. -->
+          <header class="ficha-head">
+            <div class="ficha-head-quien">
+              <strong class="ficha-head-nombre">
+                {{ empresa.nomComercial || empresa.nombre || 'Sin nombre' }}
+              </strong>
+              <span class="ficha-head-nit" *ngIf="empresa.nit">
+                NIT {{ empresa.nit }}<ng-container *ngIf="empresa.digitoVerificacion">-{{ empresa.digitoVerificacion }}</ng-container>
+              </span>
+              <span class="ficha-head-razon"
+                    *ngIf="empresa.nombre && empresa.nomComercial && empresa.nombre !== empresa.nomComercial">
+                {{ empresa.nombre }}
+              </span>
+            </div>
+
+            <!-- El precio, con su salvedad dentro del globo: es una estimación
+                 y decirlo en la pantalla es más honesto que dejarlo pasar por
+                 un cobro confirmado. -->
+            <div class="ficha-head-plan" [title]="escalonTitulo(empresa)">
+              <!-- Los dos datos, en dos renglones: arriba QUÉ plan tiene
+                   (Premium o Freemium, que es lo que decide qué puede hacer),
+                   abajo CUÁNTO paga (el escalón, que lo deciden sus ventas).
+                   Juntarlos en una sola línea los hacía parecer lo mismo. -->
+              <span class="ficha-head-plan-nombre"
+                    [class.ficha-head-plan-nombre--pago]="empresa.plan === 'premium'">
+                {{ empresa.plan === 'premium' ? '★ PREMIUM' : 'FREEMIUM' }}
+                <em class="ficha-head-periodo" *ngIf="empresa.escalon?.periodo === 'anual'">· ANUAL</em>
+                <em class="ficha-head-periodo" *ngIf="escalonPactado(empresa)"
+                    title="Escalón pactado con el cliente: no depende de sus ventas">· PACTADO</em>
+              </span>
+              <span class="ficha-head-escalon"
+                    [class.ficha-head-escalon--pago]="empresa.escalon?.aplica">
+                {{ escalonTexto(empresa) }}
+              </span>
+              <small class="ficha-head-renueva">
+                <ng-container [ngSwitch]="empresa.renovacion?.estado">
+                  <span *ngSwitchCase="'noAplica'">el plan gratis no vence</span>
+                  <span *ngSwitchCase="'vencido'" class="ficha-head-alerta">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    se le venció el {{ fechaCorta(empresa.renovacion?.fecha) }}
+                    (hace {{ -(empresa.renovacion?.diasRestantes || 0) }} d)
+                  </span>
+                  <span *ngSwitchCase="'sinFecha'" class="muted">sin fecha de renovación</span>
+                  <span *ngSwitchDefault>
+                    próximo cobro el <strong>{{ fechaCorta(empresa.renovacion?.fecha) }}</strong>
+                    <ng-container *ngIf="empresa.renovacion?.diasRestantes !== null">
+                      (en {{ empresa.renovacion?.diasRestantes }} d)</ng-container><ng-container
+                      *ngIf="empresa.renovacion?.periodo">, cobro {{ empresa.renovacion?.periodo }}</ng-container>
+                    <em *ngIf="empresa.renovacion?.estimada" class="muted">· fecha estimada</em>
+                  </span>
+                </ng-container>
+              </small>
+
+              <!-- Cómo se le cobra, en palabras. Ver la fecha del corte sin
+                   saber si hay tarjeta da falsa tranquilidad: son dos finales
+                   distintos el mismo día. -->
+              <small class="ficha-head-modo" *ngIf="empresa.modoCobro"
+                     [class.ficha-head-modo--manual]="empresa.modoCobro === 'manual'">
+                <ng-container [ngSwitch]="empresa.modoCobro">
+                  <span *ngSwitchCase="'automatico'">
+                    <i class="fa fa-credit-card"></i> tarjeta inscrita · se cobra solo
+                  </span>
+                  <span *ngSwitchCase="'manual'">
+                    <i class="fa fa-link"></i> sin tarjeta · hay que enviarle link de pago
+                  </span>
+                  <span *ngSwitchCase="'cortesia'">
+                    <i class="fa fa-gift"></i> cortesía · no se le cobra
+                  </span>
+                </ng-container>
+              </small>
+            </div>
+
+            <!-- El correo es el que bloquea la factura electrónica de la
+                 membresía: si falta, se dice acá y no al intentar facturar. -->
+            <div class="ficha-head-contacto">
+              <span *ngIf="empresa.emailContactoGeneral; else sinCorreo">
+                <i class="fa fa-envelope-o"></i> {{ empresa.emailContactoGeneral }}
+              </span>
+              <ng-template #sinCorreo>
+                <span class="ficha-head-alerta" title="Sin correo no se le puede emitir la factura electrónica de la membresía">
+                  <i class="fa fa-exclamation-triangle"></i> sin correo
+                </span>
+              </ng-template>
+              <span *ngIf="empresa.cel || empresa.fijo">
+                <i class="fa fa-phone"></i> {{ empresa.cel || empresa.fijo }}
+              </span>
+            </div>
+          </header>
+
           <!-- Antigüedad y último ingreso van en una línea aparte, no como
                tarjetas del reparto: son datos de la CUENTA, no del negocio, y
                meterlos en la rejilla de 5 dejaba una fila coja. -->
@@ -431,22 +719,6 @@
               <span class="muted">Nadie ha iniciado sesión todavía</span>
             </ng-template>
 
-            <span class="ficha-meta-sep">·</span>
-
-            <!-- Renovación del plan. Freemium no vence: se dice así, no con "—",
-                 que se leería como un dato que falta. -->
-            <ng-container [ngSwitch]="empresa.renovacion?.estado">
-              <span *ngSwitchCase="'noAplica'" class="muted">Plan Freemium: no vence</span>
-              <span *ngSwitchCase="'sinFecha'" class="muted">Plan sin fecha de renovación</span>
-              <span *ngSwitchCase="'vencido'" class="ficha-meta-alerta">
-                Renovación <strong>vencida</strong> el {{ fechaCorta(empresa.renovacion?.fecha) }}
-              </span>
-              <span *ngSwitchDefault>
-                Renueva el <strong>{{ fechaCorta(empresa.renovacion?.fecha) }}</strong>
-                (en {{ empresa.renovacion?.diasRestantes }} d)<span *ngIf="empresa.renovacion?.periodo">, cobro {{ empresa.renovacion?.periodo }}</span><span
-                  *ngIf="empresa.renovacion?.estimada" class="muted"> · estimada</span>
-              </span>
-            </ng-container>
           </p>
 
           <div class="ficha-grid">
@@ -663,10 +935,22 @@
         <button type="button" class="btn-limpiar" (click)="filtrarCobros('todas')">Quitar filtro</button>
       </div>
 
+      <!-- Sin decir CUÁNTO tarda, un spinner que no se mueve en cinco minutos
+           se lee como la pantalla colgada. Calcular el monto de una empresa
+           exige sumar todos sus pedidos del mes, y en las grandes eso son
+           varios minutos POR EMPRESA. -->
       <div class="filtro-activo" *ngIf="cobros.meta.recalculando">
         <span>
+          <i class="fa fa-spinner fa-spin"></i>
           Calculando los montos de <strong>{{ num(cobros.meta.empresasPorRecalcular) }}</strong> empresas.
-          Vuelve a entrar en unos minutos y ya estarán.
+          Las filas con <i class="fa fa-spinner fa-spin"></i> muestran “—” hasta que termine:
+          un monto a medio calcular sería peor que ninguno.
+          <br>
+          <small>
+            Puede tardar <b>varios minutos</b> — en las empresas con muchos pedidos, la suma
+            del mes es lenta. Sigue corriendo aunque cierres la pantalla: vuelve a entrar
+            más tarde y ya estarán.
+          </small>
         </span>
       </div>
 

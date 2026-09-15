@@ -211,8 +211,30 @@ export class SubscriptionService {
   /**
    * Cambiar plan de CUALQUIER empresa — solo superadmin (Julsmind)
    */
-  adminUpgradePlan(targetCompany: string, plan: 'premium' | 'freemium'): Observable<any> {
-    return this.http.post(`${this.baseUrl}/admin-upgrade`, { targetCompany, plan });
+  /**
+   * Cambia el plan de CUALQUIER empresa (solo Julsmind).
+   *
+   * `acuerdo` es opcional y cada campo suyo también: lo que no se manda **no se
+   * toca**. Sirve para guardar lo que se pactó con el cliente y que el sistema
+   * no puede adivinar — un escalón fijo (`tierContratado`) y si paga mensual o
+   * anual (`billingPeriod`). Sin esto se le cobraba por ventas y en mensual
+   * aunque el acuerdo dijera otra cosa.
+   */
+  adminUpgradePlan(
+    targetCompany: string,
+    plan: 'premium' | 'freemium',
+    acuerdo?: {
+      tierContratado?: string | null;
+      billingPeriod?: 'monthly' | 'yearly';
+      /** ISO (yyyy-mm-dd). Vacío = no tocar la fecha que ya tenga. */
+      nextBillingDate?: string;
+    }
+  ): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin-upgrade`, {
+      targetCompany,
+      plan,
+      ...(acuerdo || {}),
+    });
   }
 
   /**

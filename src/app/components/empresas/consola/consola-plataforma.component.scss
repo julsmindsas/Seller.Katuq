@@ -147,21 +147,131 @@ $r-sm: 11px;
    sobra una tarjeta suelta al final. */
 .kpis {
   display: grid;
-  /* 10 tarjetas: 5×2 en escritorio, 2×5 en tableta, 1 columna en móvil. Todos
-     los repartos quedan LLENOS — con auto-fit quedaban tarjetas huérfanas, y
-     con las 4 columnas de antes las dos de integraciones dejaban una fila a
-     medias. 10 es divisible por 5 y por 2, así que ningún corte deja huecos. */
-  grid-template-columns: repeat(5, 1fr);
+  /* SEIS tarjetas en UNA fila. Antes eran 10 en 5×2: cabían, pero dos filas de
+     tarjetas iguales se leen como un censo y ninguna destaca. Los datos que
+     bajaron de rango viven en `.kpis-contexto` y `.kpis-datos`, justo debajo.
+
+     6 es mejor número que 5 para esto: se parte en 3, 2 y 1 sin dejar nunca una
+     tarjeta huérfana al final de la última fila. */
+  grid-template-columns: repeat(6, 1fr);
   gap: 14px;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
 }
 
-/* Los cortes son 5 / 2 / 1 porque son los ÚNICOS divisores de 10 que sirven:
-   con 4 columnas quedarían dos tarjetas huérfanas en la última fila. Se baja a
-   2 antes que antes (1379 en vez de 1279) porque cinco columnas necesitan más
-   ancho que las cuatro de la versión anterior. */
-@media (max-width: 1379px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px)  { .kpis { grid-template-columns: 1fr; } }
+/* Los cortes son los divisores de 6: 3 / 2 / 1. Ningún reparto deja huecos. */
+@media (max-width: 1599px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1023px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+
+/* La pestaña de Cobros comparte la clase .kpis pero tiene CUATRO tarjetas: sin
+   este reparto propio quedaban cuatro en una rejilla de cinco, con un hueco al
+   final. Va después de los cortes de .kpis para ganarle por orden. */
+.kpis--cobros { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1379px) { .kpis--cobros { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .kpis--cobros { grid-template-columns: 1fr; } }
+
+/* ── Línea de contexto ──────────────────────────────────────────────────────
+   Lo que dejó de ser tarjeta. Sigue visible sin un clic y sigue siendo botón:
+   cada dato conserva el filtro o el orden que tenía. En texto, no en tarjeta,
+   porque son tamaño de la plataforma y no decisiones del día. */
+.kpis-contexto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 4px;
+  margin-bottom: 8px;
+  padding: 2px 0;
+}
+
+/* Sin este rótulo la fila se lee como texto informativo y nadie la toca. Decir
+   "Filtrar:" es la diferencia entre una cifra y un botón. */
+.ctx-rotulo {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $muted;
+  margin-right: 4px;
+}
+
+/* Las cifras que NO se tocan. Van en su propio renglón: mezclarlas con los
+   filtros hacía que se les diera clic esperando que pasara algo. */
+.kpis-datos {
+  margin: 0 0 18px;
+  font-size: 0.78rem;
+  color: $muted;
+
+  strong {
+    color: $ink;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.kpis-datos-nota { opacity: 0.7; }
+
+.ctx {
+  border: 1px solid $linea;
+  background: $superficie;
+  border-radius: $r-sm;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  color: $muted;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+
+  strong {
+    color: $ink;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &:hover {
+    border-color: $acento-borde;
+    background: $acento-suave;
+    color: $ink;
+  }
+
+  /* El mismo distintivo que una tarjeta encendida: si no, un filtro puesto
+     desde acá abajo se aplica sin que se vea de dónde salió. */
+  &--activo {
+    border-color: $acento;
+    background: $acento-suave;
+    color: $ink;
+  }
+}
+
+.ctx i { margin-right: 4px; opacity: 0.8; }
+
+/* Las dos caras del cobro se distinguen por color: con tarjeta ya está
+   resuelto, sin tarjeta es trabajo pendiente del mes. */
+.ctx--ok strong { color: $exito; }
+.ctx--pendiente {
+  border-color: rgba($alerta, 0.35);
+  strong, i { color: $alerta; }
+}
+
+@media (max-width: 560px) {
+  .kpis { grid-template-columns: 1fr; }
+  .kpi-valor { font-size: 1.6rem; }
+  .ctx { font-size: 0.74rem; padding: 4px 8px; }
+}
+
+/* Un desplegable con filtro puesto se marca: el problema no era el filtro sino
+   no poder ver, de un vistazo, cuáles están activos. */
+.control--activo {
+  .control-label { color: $acento; font-weight: 700; }
+  select { border-color: $acento; background: $acento-suave; }
+}
+
+.vacia-pista {
+  max-width: 460px;
+  margin: 6px auto 0;
+  font-size: 0.78rem;
+  color: $muted;
+  line-height: 1.5;
+}
 
 /* Aviso de filtro activo */
 .filtro-activo {
@@ -247,6 +357,27 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 .kpi-pie {
   font-size: 0.75rem;
   color: $muted;
+}
+
+/* El ingreso es la única tarjeta con jerarquía propia: es la respuesta a la
+   pregunta por la que se abre la pantalla. Sin esto compite de igual a igual
+   con "sin integrar", que no decide nada. */
+.kpi--principal {
+  border-color: $acento-borde;
+  background: linear-gradient(180deg, $acento-suave 0%, $superficie 70%);
+
+  /* Un punto menos que el resto: en seis columnas "US$1.240" se parte en dos
+     renglones al tamaño de los demás números. */
+  .kpi-valor { font-size: 1.6rem; }
+  .kpi-label { color: $acento; }
+}
+
+/* Las salvedades del ingreso: cuántos clientes NO entraron en la suma. Van en
+   el pie y en cursiva porque el total no las incluye, y un total que calla lo
+   que se dejó por fuera se lee como si estuviera completo. */
+.kpi-salvedad {
+  font-style: italic;
+  opacity: 0.85;
 }
 
 /* Solo se enciende cuando de verdad hay algo que atender. */
@@ -379,7 +510,10 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
      número terminaba a 190 px del siguiente y la tabla se leía como islas
      sueltas. Bajaron de 118 a 108 px al entrar Integraciones, para que la
      tabla no ganara ancho: ninguna de las cinco necesita más. */
-  grid-template-columns: minmax(220px, 1fr) repeat(5, 108px) 110px 104px;
+  /* Entró Estado: las cinco columnas de datos bajan de 108 a 100 px para que la
+     tabla no gane ancho de más. Siguen midiendo todas lo mismo entre sí, que es
+     lo que mantiene los números en una banda pareja. */
+  grid-template-columns: minmax(190px, 1fr) repeat(5, 96px) 104px 110px 132px;
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
@@ -551,14 +685,65 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 
 .muted { color: $muted; }
 
+/* Tres renglones, de mayor a menor: QUE plan tiene (el boton), CUANTO paga
+   (el escalon) y CUANDO se le cobra. Apilados y alineados a la izquierda para
+   que se lean como una sola respuesta y no como tres datos sueltos. */
 .col-plan {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   align-items: flex-start;
+  line-height: 1.25;
+}
+
+/* La celda del plan ES el botón que abre su editor.
+   Antes solo lo era el chip de arriba, y las dos líneas de abajo llevaban
+   `cursor: help` por el globo explicativo: al hacer clic sobre el precio salía
+   un signo de interrogación y no pasaba nada. Se le quitan al botón sus estilos
+   propios —fondo, borde, tipografía— para que siga leyéndose como una celda. */
+.celda-plan {
+  position: relative;
+  border: 1px solid transparent;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border-radius: $r-sm;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover:not(:disabled) {
+    border-color: $acento-borde;
+    background: $acento-suave;
+
+    .plan-editar { opacity: 1; }
+  }
+
+  &:disabled { cursor: default; opacity: 0.7; }
+}
+
+/* La pista de que se puede editar. Un chip de colores se lee como una etiqueta,
+   no como algo que se pueda tocar. Ocupa su sitio siempre (`height`) para que la
+   fila no dé un salto al pasar el mouse. */
+.plan-editar {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $acento;
+  opacity: 0;
+  height: 11px;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+
+  i { margin-right: 3px; }
 }
 
 .chip-plan {
+  display: inline-flex;
+  align-items: center;
   border: 1px solid $linea;
   background: $fondo;
   color: $muted;
@@ -566,10 +751,7 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   padding: 4px 12px;
   font-size: 0.72rem;
   font-weight: 700;
-  cursor: pointer;
-
-  &:hover:not(:disabled) { border-color: $acento-borde; color: $acento; }
-  &:disabled { opacity: 0.6; cursor: default; }
+  line-height: 1.15;
 
   &--premium {
     background: $exito-suave;
@@ -578,16 +760,117 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   }
 }
 
-.plan-expira {
-  font-size: 0.66rem;
-  font-weight: 700;
-  color: $peligro;
-}
-
-.plan-porvencer {
+/* El escalón y su precio, bajo el chip. Medio tono más bajo: el plan es el
+   dato primario y el escalón su consecuencia. */
+.plan-escalon {
   font-size: 0.66rem;
   font-weight: 600;
-  color: $alerta;
+  color: $ink;
+  white-space: nowrap;
+}
+
+/* Un acuerdo cerrado no es una estimación: se marca para que nadie lo lea como
+   un número que el sistema va a recalcular solo. */
+.plan-pactado {
+  font-size: 0.6rem;
+  margin-right: 3px;
+  opacity: 0.6;
+}
+
+.ficha-head-periodo {
+  font-style: normal;
+  font-weight: 700;
+  opacity: 0.75;
+  margin-left: 3px;
+}
+
+/* La fecha del próximo cobro, siempre visible para quien paga. En gris es un
+   dato; el color aparece solo cuando hay algo que hacer. Si solo se mostrara
+   en rojo no habría forma de planear: se enteraría el día que ya se venció. */
+.plan-renueva {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: $muted;
+  white-space: nowrap;
+
+  /* El asterisco de "fecha estimada": marca sin ocupar espacio en 104 px. */
+  em { font-style: normal; opacity: 0.7; }
+
+  &--pronto { color: $alerta; }
+
+  /* El icono del modo de cobro va dentro de la línea de la fecha: son el mismo
+     dato — cuándo se cobra y cómo. */
+  .plan-modo {
+    margin-right: 4px;
+    opacity: 0.75;
+  }
+
+  /* Sin tarjeta no es un detalle: ese cobro no ocurre solo. */
+  .plan-modo--manual { color: $alerta; opacity: 1; }
+  .plan-modo--cortesia { opacity: 0.5; }
+
+  &--vencido {
+    color: $peligro;
+    font-weight: 700;
+  }
+}
+
+/* ── Estado ────────────────────────────────────────────────────────────────
+   Un solo distintivo por fila: gana el más grave (ver `estadoEmpresa`). El
+   color hace el trabajo de un vistazo y el globo cuenta el porqué. */
+.col-estado {
+  display: flex;
+  align-items: center;
+}
+
+.chip-estado {
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: help;
+  border: 1px solid transparent;
+
+  /* Al día y Activa NO son verdes chillones: que todo esté bien es lo normal y
+     no tiene que competir por la mirada con lo que sí necesita atención. */
+  &--aldia {
+    background: $exito-suave;
+    color: $exito;
+    border-color: rgba($exito, 0.22);
+  }
+
+  &--activa {
+    background: $fondo;
+    color: $muted;
+    border-color: $linea;
+  }
+
+  &--riesgo {
+    background: $alerta-suave;
+    color: $alerta;
+    border-color: rgba($alerta, 0.3);
+  }
+
+  &--porvencer {
+    background: $fondo;
+    color: $alerta;
+    border-color: rgba($alerta, 0.3);
+  }
+
+  &--vencida,
+  &--bloqueada {
+    background: $peligro-suave;
+    color: $peligro;
+    border-color: rgba($peligro, 0.3);
+  }
+}
+
+/* El botón del plan se distingue de los otros dos: editar datos y bloquear son
+   acciones sobre la empresa; esta es sobre lo que se le cobra. */
+.btn-icono--plan:hover:not(:disabled) {
+  border-color: rgba($exito, 0.4);
+  color: $exito;
 }
 
 .col-acciones {
@@ -655,6 +938,108 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 /* Son 10 datos: 5 columnas dan dos filas exactas, y 2 columnas dan cinco.
    Ambos repartos quedan llenos — nunca una casilla suelta al final. */
 /* Antigüedad y último ingreso: una línea de contexto sobre el reparto de datos. */
+/* ── Encabezado de la ficha ────────────────────────────────────────────────
+   Quién es · cuánto paga · a quién se llama. Tres columnas que se apilan en
+   pantallas angostas. Va antes que cualquier número de operación: sin saber si
+   el cliente paga, el resto de la ficha no se sabe cómo leer. */
+.ficha-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px 20px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid $linea;
+}
+
+.ficha-head-quien {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ficha-head-nombre {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $ink;
+}
+
+.ficha-head-nit,
+.ficha-head-razon {
+  font-size: 0.75rem;
+  color: $muted;
+}
+
+.ficha-head-plan {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: right;
+  cursor: help;
+}
+
+.ficha-head-plan-nombre {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: $muted;
+
+  &--pago { color: $exito; }
+}
+
+.ficha-head-escalon {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: $muted;
+
+  /* Solo se distingue quien paga: pintar también al freemium volvería el color
+     decoración en vez de información. */
+  &--pago { color: $exito; }
+}
+
+.ficha-head-renueva {
+  font-size: 0.72rem;
+  color: $muted;
+
+  em { font-style: italic; opacity: 0.85; }
+}
+
+.ficha-head-modo {
+  font-size: 0.72rem;
+  color: $muted;
+
+  i { margin-right: 3px; opacity: 0.8; }
+
+  /* El único de los tres que deja trabajo pendiente el día del corte. */
+  &--manual { color: $alerta; font-weight: 600; }
+}
+
+.ficha-head-contacto {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.75rem;
+  color: $muted;
+  min-width: 0;
+  word-break: break-word;
+
+  i { width: 13px; opacity: 0.7; }
+}
+
+/* Un correo que falta no es un hueco cosmético: sin él no se puede emitir la
+   factura electrónica de la membresía. Se ve como lo que es, un pendiente. */
+.ficha-head-alerta {
+  color: $peligro;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .ficha-head { grid-template-columns: 1fr; }
+  .ficha-head-plan { align-items: flex-start; text-align: left; }
+}
+
 .ficha-meta {
   margin: 0 0 14px;
   font-size: 0.78rem;
@@ -1001,12 +1386,16 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
      `data-label` del propio elemento, así no hay etiquetas duplicadas
      en el HTML que puedan quedar desincronizadas. */
   .col-num,
-  .col-plan {
+  .col-plan,
+  .col-estado {
     text-align: left;
   }
 
+  .col-estado { display: block; }
+
   .col-num::before,
-  .col-plan::before {
+  .col-plan::before,
+  .col-estado::before {
     content: attr(data-label);
     display: block;
     font-size: 0.62rem;

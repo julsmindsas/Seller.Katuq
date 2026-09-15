@@ -6236,3 +6236,64 @@ La DIAN trabaja a dos decimales, así que el total de una línea solo cae en `c 
 **Decisión:** el usuario priorizó primero D-275 (desbloquear el reingreso del comprobante). Este hallazgo queda **registrado y sin corregir** — pendiente de decisión sobre alcance del fix (¿solo `calculateOrderTotals`? ¿reconciliar pedidos ya afectados en producción?) antes de tocar código de cálculo de totales, módulo sensible con reglas propias en `openspec/config.yaml`.
 
 **Limitación declarada:** una membresía facturada **a mano** desde el composer seguirá diciendo "Pendiente de facturar" para siempre. El composer no escribe en `billing_invoices` y no hay llave que las correlacione. Solo el puente de D-272 llena ese campo.
+
+## D-275 (2026-09-14) — La franja de la consola: de 10 tarjetas a 6 + línea de filtros
+
+**Disparador.** Pedido del usuario: *"la idea es poner lo más importante y que no se sature de información"*.
+
+Diez tarjetas arriba y diez datos en la ficha: todo cabía, nada resaltaba. Criterio de poda: la pantalla responde **tres preguntas** —cuánto voy a facturar, a quién estoy por perder, a quién llamo hoy— y lo que no responde una de esas baja de rango, **no desaparece**.
+
+- Seis tarjetas: **Ingreso del mes · Empresas activas · Inactivas · En riesgo · Por cobrar · Volumen**. 6 se parte en 3/2/1 sin dejar tarjeta huérfana; 5 no.
+- Lo demás bajó a dos renglones con oficios distintos: `Filtrar:` (botones que parten la lista) y `.kpis-datos` (cifras que no se tocan). **Tres botones que solo REORDENABAN se quitaron de ahí**: tocarlos no se notaba y se leían como rotos. Ordenar vive en su desplegable.
+- **"En riesgo" es la UNIÓN** de "sin vender" y "sin entrar", nunca la suma: una cuenta abandonada cumple las dos y sumarlas la contaría dos veces.
+- **Inactivas no lleva estilo de alerta y no entra en "En riesgo"**: una desactivada ya es una decisión tomada. Su pie dice cuántas **pagaban**, que es lo que separa una oportunidad real de una baja sin consecuencia.
+- Columna **Estado** con UNA etiqueta por fila y orden de prioridad fijo: Bloqueada > Plan vencido > En riesgo > Vence pronto > Al día/Activa. Un freemium sano dice **"Activa"**, no "Al día": "al día" se leería como que paga puntual y no paga nada.
+
+## D-276 (2026-09-14) — Cuánto deja cada cliente: el escalón de precio en la consola
+
+**Disparador.** Pregunta del usuario: *"en la columna plan que dice premium o freemium, ¿de dónde los sacaste? en los planes veo Origen, Esencia, Impulso"*.
+
+**Katuq tiene DOS planes y SIETE precios, y la consola solo mostraba lo primero.** `subscriptionPlan` es un interruptor de permisos (`premium`/`freemium`); los siete escalones dan exactamente lo mismo (`getLimitsForPlan` devuelve `paid` para cualquiera) y solo cambian el precio, **que lo deciden las ventas** y se escribe en la FACTURA, no en la empresa.
+
+- Módulo nuevo `services/platformMetrics/planPricing.js`: deduce el escalón desde `facturadoNeto30d` —que ya está en caché, **cero lecturas nuevas**— con la MISMA `getPaidBillingTier` que factura, para que consola y factura no discrepen. Se calcula al responder, **fuera del caché**.
+- Tarjeta **Ingreso del mes**: cierra el pendiente de D-270. Suma el **equivalente mensual** de cada cliente.
+- **El plan y el escalón son dos datos distintos y ninguno reemplaza al otro.** El botón dice `★ Premium` porque es lo único que cambia al tocarlo; el escalón va debajo, fuera del botón, porque es una consecuencia, no una decisión.
+- Sin ventas medidas **no se supone el escalón más barato** (dibuja "—"), y el total sale `null` en vez de 0 si nadie aportó precio.
+- `resolverModoCobro` se subió de `billingOverview` a `planPricing`: es **función pura del documento** (cero lecturas) y ahora las pestañas de Empresas y Cobros no pueden decir cosas distintas del mismo cliente. **Con tarjeta** y **sin tarjeta** se cuentan por separado, nunca restando: la cortesía no está en ninguno de los dos grupos.
+
+## D-277 (2026-09-14) — El acuerdo comercial: escalón pactado y plan anual
+
+**Disparador.** Caso real: *"ALMACEN BOMBAS compró un plan anual y se le pactó Liderazgo, pero en Cobros dice mensual y 83.951"*.
+
+**No era un error de cálculo: el acuerdo no vivía en ninguna parte del sistema.** `getCompanyBillingInfo` hace `company.billingPeriod || 'monthly'` y `getPaidBillingTier(currentSales)`; sin ventas cae en Base (US27 × TRM ≈ 83.9k). `lockedPricing` **no sirve** para esto: sale de una factura previa con `pricingLocked` y es para reemitir, no para un precio negociado.
+
+- Campo nuevo **`tierContratado`**. **Un pacto le gana a las ventas** y se marca `pactado: true` para que no se confunda con una estimación. Un id inválido **no inventa precio**: cae al cálculo por ventas.
+- **Las DOS rutas lo respetan**: `processCompanyBilling` (la factura real) y `getCompanyBillingInfo` (la proyección de Cobros). Solo una habría proyectado un monto y cobrado otro. `VERSION_CALCULO` de `billingOverview` sube a **3**.
+- Periodo: `estimarEscalon` devuelve `periodo`, `precioPeriodoUSD` (12 meses con 20% dto) y **`precioMensualEquivalenteUSD`**. El ingreso de la plataforma suma el equivalente mensual: **sumar la factura anual entera dispararía el ingreso el mes del cobro y lo desplomaría los once siguientes**.
+- En un alta anual, `nextBillingDate` va a **+12 meses**. Con la fecha al mes siguiente se le cobraría doce veces lo pactado.
+- **`adminUpgrade` se partió en ALTA vs EDICIÓN** (`yaEraPremium`). Reutilizado para editar el acuerdo de una empresa que ya pagaba, el bloque de alta reescribía `subscriptionStartDate` (borrando desde cuándo es cliente), ponía `billingManaged`/`recurringBillingEnabled` en false —**desinscribiendo la tarjeta**— y pisaba `premiumOrigen`.
+- El chip del plan pasó de sí/no a un **formulario**: Plan · Escalón · Cada cuánto paga · Próximo cobro. Avisa si se marca anual con la fecha a menos de 180 días.
+
+**Lo que NO cambió: el cobro sigue saliendo de las ventas para todas las empresas.** El pacto es una excepción que hay que activar a mano, empresa por empresa.
+
+## D-278 (2026-09-14) — Filtros que se combinan tienen que anunciarse los dos
+
+**Disparador.** Reporte del usuario: *"si filtro las que son freemium en el select de estado no arroja ninguna empresa, pero si la filtro en el select de escalón sí filtra, no entiendo"*.
+
+Estado y Escalón son dos filtros independientes que se aplican **juntos**, pero el aviso solo nombraba el de Estado. Con Escalón en "Base" puesto de antes, filtrar por Estado "Freemium" devuelve cero —ningún freemium tiene escalón— y **nada en pantalla lo explicaba**.
+
+- El aviso nombra **los dos**, "Ver todas" limpia ambos sin borrar la búsqueda, y cada desplegable con filtro puesto se marca en color.
+- **Cada valor del tipo `FiltroEstado` necesita su `<option>`.** Faltaban tres: con `[(ngModel)]`, un valor sin opción deja el select **en blanco** mientras la lista sí está filtrada.
+- Se retiró `'pagan'`: era **exactamente el mismo conjunto** que `'premium'` con otro nombre.
+- El vacío de la tabla **nombra el filtro** que la dejó en cero, y en "Pagan por año" / "Precio pactado a mano" explica **dónde se guarda** el dato — esos dos salen vacíos hasta que alguien registre un acuerdo, y sin la nota parecen rotos.
+
+## D-279 (2026-09-14) — `cursor: help` sobre algo clickeable
+
+**Disparador.** Reporte del usuario: *"le doy clic y aparece un signo de interrogación, no me redirige a ninguna parte"*.
+
+La celda del Plan tiene tres renglones pero **solo el chip era `<button>`**; los otros dos llevaban `cursor: help` por su globo explicativo. El clic sobre el precio no hacía nada y el cursor `?` lo confirmaba.
+
+- **La celda ENTERA es el botón.** Si una celda tiene varios renglones y todos hablan del mismo dato, el clic va en la celda completa, no en una zona viva rodeada de zonas muertas. El chip pasó de `<button>` a `<span>`: no se pueden anidar botones.
+- Pista **"EDITAR PLAN"** al pasar el mouse, con `height` fija para que la fila no salte: un chip de colores se lee como una etiqueta, no como algo que se pueda tocar.
+- **Segundo camino**: botón de plan en la columna Acciones, con el patrón de los dos que ya se usaban sin problema.
+- **`cambiarPlan` envuelto en try/catch** que muestra el error. Un formulario que no abre y no dice nada es indistinguible de un clic que no llegó, y se pierde el tiempo buscando el problema donde no está.

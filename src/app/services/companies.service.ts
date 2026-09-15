@@ -83,6 +83,25 @@ export interface EmpresaPanorama {
    * que sí afirma que no tiene ninguna.
    */
   integraciones: IntegracionesEmpresa | null;
+  /**
+   * Cuánto pagaría esta empresa este mes, deducido de sus ventas. Es la mitad
+   * que faltaba: la columna Plan decía "Premium" (el interruptor de permisos)
+   * sin decir nunca cuánto deja el cliente.
+   */
+  escalon: EscalonPrecio;
+  /**
+   * Cómo se le cobra el día del corte. `null` en freemium: no se le cobra.
+   *
+   * `automatico` = tiene tarjeta inscrita y el cron le cobra solo.
+   * `manual` = SIN tarjeta: se le manda factura y link de pago, y el cobro
+   * depende de que el cliente entre a pagarlo.
+   * `cortesia` = premium de regalo, no se le cobra a propósito.
+   */
+  modoCobro: 'automatico' | 'manual' | 'cortesia' | null;
+  /** El escalón fijo pactado, si lo hay. `null` = lo deciden las ventas. */
+  tierContratado?: string | null;
+  /** `monthly` | `yearly`. Lo que se pactó, crudo. */
+  billingPeriod?: string | null;
   _cachedAt: number | null;
   _stale: boolean;
 }
@@ -123,6 +142,39 @@ export interface TotalesPlataforma {
   empresasSinIntegrar: number;
   /** ACTIVAS que ya toparon el máximo de su plan (freemium permite 1). */
   empresasEnLimiteIntegraciones: number;
+  /**
+   * Activas que dejaron de vender O de entrar. Es una UNIÓN, no la suma de
+   * `empresasSinMovimiento` + `empresasSinEntrar30d`: una cuenta abandonada
+   * suele cumplir las dos y sumarlas la contaría dos veces.
+   */
+  empresasEnRiesgo: number;
+  /**
+   * Clientes de pago SIN tarjeta inscrita. No se les cobra solo: se les manda
+   * link de pago y el cobro depende de que entren a pagarlo.
+   */
+  empresasSinTarjeta: number;
+  /** Clientes de pago CON tarjeta inscrita: a estos el cron les cobra solo. */
+  empresasConTarjeta: number;
+  /**
+   * De las inactivas, cuántas tenían plan pago. Es lo que vuelve la lista de
+   * inactivas una lista de trabajo: una freemium que se fue no dejó de pagar
+   * nada; un cliente que pagaba y se desactivó es ingreso perdido con nombre.
+   */
+  inactivasQuePagaban: number;
+  /**
+   * Lo que Katuq espera facturar este mes, en USD (la tabla de precios es
+   * contractual en dólares). `null` si NINGUNA empresa aportó precio — un $0
+   * ahí se leería como "este mes no entra nada".
+   */
+  ingresoEstimadoUSD: number | null;
+  /** Clientes con plan pago. */
+  empresasQuePagan: number;
+  /** De esos, cuántos aportaron un precio al total. */
+  empresasConPrecioEstimado: number;
+  /** Pagan, pero no se pudo medir cuánto vendieron. */
+  empresasSinPrecio: number;
+  /** Pagan y están en Cumbre: precio negociado, fuera del total. */
+  empresasPrecioAMedida: number;
 }
 
 /** Una integración conectada por una empresa. */
@@ -152,6 +204,48 @@ export interface IntegracionesEmpresa {
   activas: number;
   inactivas: number;
   proveedores: IntegracionEmpresa[];
+}
+
+/**
+ * El escalón de precio estimado de una empresa.
+ *
+ * Katuq NO guarda el precio en la empresa: lo decide el día del cobro según
+ * cuánto vendió, y lo escribe en la factura. El backend lo deduce de las ventas
+ * con la misma función que usa la facturación
+ * (`services/platformMetrics/planPricing`), así que la consola y la factura no
+ * pueden discrepar de escalón — sí de monto, porque el período no es el mismo.
+ *
+ * `aplica: false` = freemium, no se cobra.
+ * `conocido: false` = paga, pero no se pudo medir cuánto vendió: la pantalla
+ * dibuja "—". Suponerle el escalón más barato sería inventar un dato.
+ */
+export interface EscalonPrecio {
+  aplica: boolean;
+  conocido?: boolean;
+  id?: string;
+  nombre?: string;
+  /** Precio de lista MENSUAL. `null` en Cumbre: se negocia. */
+  precioUSD?: number | null;
+  /** Mensual o anual. El anual factura 12 meses con 20% de descuento. */
+  periodo?: 'mensual' | 'anual';
+  /** Lo que se le factura DE UNA en su periodo. */
+  precioPeriodoUSD?: number | null;
+  /**
+   * Lo que el cliente vale AL MES. Un anual aporta su doceava parte, no la
+   * factura entera: si no, el ingreso mensual se dispara el mes que alguien
+   * paga el año y se desploma los once siguientes.
+   */
+  precioMensualEquivalenteUSD?: number | null;
+  /**
+   * El escalón se PACTÓ con el cliente y no sale de sus ventas. Un acuerdo
+   * comercial no es una estimación y no puede ceder ante las ventas del mes.
+   */
+  pactado?: boolean;
+  aMedida?: boolean;
+  /** Las ventas con las que se dedujo el escalón. */
+  ventasBase?: number;
+  topeVentasCOP?: number | null;
+  motivo?: string;
 }
 
 /** Una integración mirada desde el lado del proveedor: cuántas empresas la usan. */

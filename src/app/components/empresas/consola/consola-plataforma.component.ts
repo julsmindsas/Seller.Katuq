@@ -25,6 +25,13 @@ type FiltroEstado =
   | 'todas'
   | 'activas'
   | 'inactivas'
+  | 'conTarjeta'
+  | 'sinTarjeta'
+  | 'premium'
+  | 'freemium'
+  | 'anual'
+  | 'pactado'
+  | 'enRiesgo'
   | 'sinMovimiento'
   | 'sinEntrar'
   | 'porVencer'
@@ -37,6 +44,7 @@ type Orden =
   | 'ultimoIngreso'
   | 'antiguedad'
   | 'usuarios'
+  | 'precio'
   | 'integraciones';
 
 const MS_DIA = 24 * 60 * 60 * 1000;
@@ -48,6 +56,24 @@ const DIAS_POR_VENCER = 7;
  * "topada": el candado real que impide conectar la segunda está allá.
  */
 const LIMITE_INTEGRACIONES_FREEMIUM = 1;
+
+/**
+ * Escalones de precio, espejo de `config/subscriptionLimits.BILLING_TIERS`.
+ *
+ * Está acá SOLO para armar el desplegable del acuerdo; el precio que se muestra
+ * en la pantalla y el que se cobra salen del backend. Si esta lista se
+ * desactualiza, el backend rechaza el id con INVALID_TIER en vez de guardar
+ * algo que nadie sabe cobrar.
+ */
+const ESCALONES = [
+  { id: 'base', nombre: 'Base', hasta: '$15M', usd: 27 },
+  { id: 'origen', nombre: 'Origen', hasta: '$30M', usd: 47 },
+  { id: 'esencia', nombre: 'Esencia', hasta: '$60M', usd: 77 },
+  { id: 'impulso', nombre: 'Impulso', hasta: '$150M', usd: 147 },
+  { id: 'expansion', nombre: 'Expansión', hasta: '$300M', usd: 247 },
+  { id: 'liderazgo', nombre: 'Liderazgo', hasta: '$500M', usd: 427 },
+  { id: 'cumbre', nombre: 'Cumbre', hasta: 'sin tope', usd: 0 },
+];
 
 /**
  * Consola de plataforma del Super Administrador.
@@ -79,6 +105,16 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   // Filtros
   busqueda = '';
   filtroEstado: FiltroEstado = 'todas';
+  /**
+   * Filtro por escalón de precio, INDEPENDIENTE del de estado.
+   *
+   * Son dos preguntas distintas —"¿en qué escalón está?" y "¿cómo va?"— y
+   * meterlas en un solo desplegable obligaría a renunciar a una: no se podría
+   * pedir "los de Liderazgo que están en riesgo", que es justo la consulta que
+   * importa.
+   */
+  filtroEscalon = 'todos';
+  readonly escalones = ESCALONES;
   orden: Orden = 'nombre';
 
   /**
@@ -387,11 +423,43 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
         }
       }
 
+      if (this.filtroEscalon !== 'todos') {
+        if (this.filtroEscalon === 'freemium') {
+          if (e.escalon?.aplica) return false;
+        } else if (e.escalon?.id !== this.filtroEscalon) {
+          return false;
+        }
+      }
+
       switch (this.filtroEstado) {
         case 'activas':
           return e.activo;
         case 'inactivas':
           return !e.activo;
+        // 'pagan' se retiró: era EXACTAMENTE el mismo conjunto que 'premium'
+        // con otro nombre. Dos entradas del desplegable que devuelven la misma
+        // lista solo sirven para hacer dudar de si son lo mismo.
+        case 'premium':
+          return e.plan === 'premium';
+        case 'freemium':
+          return e.plan !== 'premium';
+        case 'anual':
+          return e.escalon?.periodo === 'anual';
+        // Clientes con acuerdo cerrado: su precio NO sale de las ventas, así que
+        // son los que hay que revisar a mano cuando cambia la tabla de precios.
+        case 'pactado':
+          return e.escalon?.pactado === true;
+        // Los que pagan pero NO tienen tarjeta: a estos hay que mandarles link
+        // y perseguir el pago. La cortesía no entra: no se le cobra a propósito.
+        case 'conTarjeta':
+          return e.modoCobro === 'automatico';
+        case 'sinTarjeta':
+          return e.modoCobro === 'manual';
+        // EN RIESGO es la unión de las dos señales de abandono, igual que el
+        // total del backend. Si acá fuera un AND, la tarjeta diría 18 y la
+        // lista mostraría 4.
+        case 'enRiesgo':
+          return this.sinMovimiento(e) || this.sinEntrar(e);
         case 'sinMovimiento':
           return this.sinMovimiento(e);
         case 'sinEntrar':
@@ -411,6 +479,14 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           return (b.metricas?.pedidos30d || 0) - (a.metricas?.pedidos30d || 0);
         case 'facturado':
           return (b.metricas?.facturadoNeto30d || 0) - (a.metricas?.facturadoNeto30d || 0);
+        // Por lo que DEJA cada cliente al mes, no por lo que vende. Usa el
+        // equivalente mensual para que un anual no se cuele arriba por traer la
+        // factura del año entero.
+        case 'precio':
+          return (
+            (b.escalon?.precioMensualEquivalenteUSD || 0) -
+            (a.escalon?.precioMensualEquivalenteUSD || 0)
+          );
         case 'usuarios':
           return (b.metricas?.usuarios || 0) - (a.metricas?.usuarios || 0);
         case 'integraciones':
@@ -527,11 +603,38 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     this.buscarDesdeElPrincipio();
   }
 
+  /** Nombre legible del escalón filtrado, para el aviso. */
+  etiquetaEscalon(): string {
+    if (this.filtroEscalon === 'todos') return '';
+    if (this.filtroEscalon === 'freemium') return 'Freemium (no se cobra)';
+    return this.escalones.find((e) => e.id === this.filtroEscalon)?.nombre || this.filtroEscalon;
+  }
+
+  /**
+   * Quita los filtros de la lista pero DEJA la búsqueda.
+   *
+   * Existe aparte de `limpiarFiltros` porque el aviso aparece cuando un filtro
+   * escondió empresas, y borrarle de paso lo que escribió en el buscador sería
+   * hacer más de lo que dice el botón.
+   */
+  quitarFiltrosDeLista(): void {
+    this.filtroEstado = 'todas';
+    this.filtroEscalon = 'todos';
+    this.buscarDesdeElPrincipio();
+  }
+
   /** Nombre legible del filtro activo, para el aviso. */
   etiquetaFiltro(): string {
     switch (this.filtroEstado) {
       case 'activas': return 'empresas activas';
       case 'inactivas': return 'empresas inactivas';
+      case 'premium': return 'clientes Premium (de pago)';
+      case 'freemium': return 'clientes Freemium (gratis)';
+      case 'anual': return 'clientes que pagan por año';
+      case 'pactado': return 'clientes con precio pactado a mano';
+      case 'conTarjeta': return 'clientes con tarjeta inscrita';
+      case 'sinTarjeta': return 'clientes sin tarjeta inscrita (se les envía link de pago)';
+      case 'enRiesgo': return 'empresas que dejaron de vender o de entrar';
       case 'sinMovimiento': return 'empresas sin movimiento';
       case 'sinEntrar': return 'empresas donde nadie entra hace 30 días';
       case 'porVencer': return 'planes vencidos o por vencer';
@@ -540,10 +643,20 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Limpiar deja la pantalla como recién cargada.
+   *
+   * Incluye el filtro de la pestaña de COBROS a propósito: es el mismo botón
+   * para el operador, y dejar filtrada la otra pestaña hacía que "Limpiar"
+   * pareciera no haber servido en cuanto se cambiaba de vista.
+   */
   limpiarFiltros(): void {
     this.busqueda = '';
     this.filtroEstado = 'todas';
+    this.filtroEscalon = 'todos';
     this.orden = 'nombre';
+    this.filtroCobros = 'todas';
+    this.paginaCobros = 1;
     this.buscarDesdeElPrincipio();
   }
 
@@ -669,31 +782,157 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * El plan del cliente: qué plan tiene, qué se le pactó y cada cuánto paga.
+   *
+   * Antes esto era un sí/no —Premium o Freemium— y todo lo demás lo deducía el
+   * sistema de las ventas. Eso funciona mientras no haya acuerdo: un cliente al
+   * que se le pactó un escalón fijo, o que compró un año por adelantado,
+   * terminaba cobrado por Base y en mensual porque el acuerdo no estaba escrito
+   * en ninguna parte. Acá se escribe.
+   *
+   * Lo que NO se toca desde acá: el escalón cuando se deja en "automático", que
+   * lo siguen decidiendo las ventas mes a mes.
+   */
   async cambiarPlan(empresa: EmpresaPanorama, evento: Event): Promise<void> {
     evento.stopPropagation();
+    try {
+      await this.abrirEditorDePlan(empresa, evento);
+    } catch (e: any) {
+      // Un formulario que no abre y no dice nada es indistinguible de un clic
+      // que no llegó: se pierde el tiempo buscando el problema donde no está.
+      console.error('[consola] no se pudo abrir el editor de plan:', e);
+      this.notificationService.error(
+        'No se pudo abrir el editor de plan',
+        e?.message || 'Error inesperado. Mira la consola del navegador (F12).'
+      );
+    }
+  }
 
+  private async abrirEditorDePlan(empresa: EmpresaPanorama, evento: Event): Promise<void> {
     const nombre = empresa.nomComercial || empresa.nombre || '';
-    const actual = empresa.plan || 'freemium';
-    const nuevo: 'premium' | 'freemium' = actual === 'premium' ? 'freemium' : 'premium';
-    const subiendo = nuevo === 'premium';
+    const eraPremium = (empresa.plan || 'freemium') === 'premium';
+    const pactoActual = (empresa.tierContratado || '').toLowerCase();
+    const periodoActual = empresa.billingPeriod === 'yearly' ? 'yearly' : 'monthly';
+    // El <input type="date"> solo entiende yyyy-mm-dd.
+    const msFecha = this.aMs(empresa.renovacion?.fecha);
+    const fechaActual = msFecha ? new Date(msFecha).toISOString().slice(0, 10) : '';
 
-    const confirmacion = await Swal.fire({
-      title: subiendo ? '¿Activar Premium?' : '¿Bajar a Freemium?',
-      html: `<b>${nombre}</b><br><small class="text-muted">${actual.toUpperCase()} → ${nuevo.toUpperCase()}</small>`,
-      icon: subiendo ? 'success' : 'warning',
+    const opciones = ESCALONES.map(
+      (e) =>
+        `<option value="${e.id}" ${pactoActual === e.id ? 'selected' : ''}>` +
+        `${e.nombre} — ${e.usd ? 'US$' + e.usd + '/mes' : 'a medida'} (hasta ${e.hasta})</option>`
+    ).join('');
+
+    const resultado = await Swal.fire({
+      title: 'Plan del cliente',
+      width: 520,
+      html: `
+        <div style="text-align:left;font-size:.9rem">
+          <p style="margin:0 0 14px"><b>${nombre}</b></p>
+
+          <label style="display:block;font-weight:600;margin-bottom:4px">Plan</label>
+          <select id="sw-plan" class="swal2-select" style="width:100%;margin:0 0 14px">
+            <option value="premium" ${eraPremium ? 'selected' : ''}>★ Premium — sin límites, se le cobra</option>
+            <option value="freemium" ${!eraPremium ? 'selected' : ''}>Freemium — gratis, 15 pedidos al mes</option>
+          </select>
+
+          <div id="sw-pago">
+            <label style="display:block;font-weight:600;margin-bottom:4px">Escalón de precio</label>
+            <select id="sw-tier" class="swal2-select" style="width:100%;margin:0 0 4px">
+              <option value="auto" ${!pactoActual ? 'selected' : ''}>Automático — lo deciden sus ventas</option>
+              ${opciones}
+            </select>
+            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">
+              Elige uno fijo solo si se pactó con el cliente. En automático, el escalón
+              cambia solo cada mes según lo que venda.
+            </p>
+
+            <label style="display:block;font-weight:600;margin-bottom:4px">Cada cuánto paga</label>
+            <select id="sw-periodo" class="swal2-select" style="width:100%;margin:0 0 4px">
+              <option value="monthly" ${periodoActual === 'monthly' ? 'selected' : ''}>Mensual</option>
+              <option value="yearly" ${periodoActual === 'yearly' ? 'selected' : ''}>Anual — 12 meses con 20% de descuento</option>
+            </select>
+            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">
+              El anual cobra el año completo de una sola vez.
+            </p>
+
+            <label style="display:block;font-weight:600;margin-bottom:4px">Próximo cobro</label>
+            <input id="sw-fecha" type="date" class="swal2-input"
+                   style="width:100%;margin:0 0 4px" value="${fechaActual}">
+            <p style="margin:0;font-size:.75rem;color:#6b7280">
+              El día en que se le cobra. <b>Déjalo como está si no lo vas a cambiar.</b>
+              En un plan anual esta fecha debe ir a un año: si queda al mes siguiente,
+              se le cobraría el año entero doce veces.
+            </p>
+          </div>
+        </div>`,
+      didOpen: () => {
+        // Los campos de cobro no tienen sentido en freemium: a nadie se le pacta
+        // un escalón que no se le va a cobrar.
+        const plan = document.getElementById('sw-plan') as HTMLSelectElement;
+        const pago = document.getElementById('sw-pago') as HTMLElement;
+        const sincronizar = () => (pago.style.display = plan.value === 'premium' ? '' : 'none');
+        plan.addEventListener('change', sincronizar);
+        sincronizar();
+      },
+      preConfirm: () => ({
+        plan: (document.getElementById('sw-plan') as HTMLSelectElement).value as 'premium' | 'freemium',
+        tierContratado: (document.getElementById('sw-tier') as HTMLSelectElement).value,
+        billingPeriod: (document.getElementById('sw-periodo') as HTMLSelectElement).value as
+          | 'monthly'
+          | 'yearly',
+        nextBillingDate: (document.getElementById('sw-fecha') as HTMLInputElement).value,
+      }),
       showCancelButton: true,
-      confirmButtonText: subiendo ? '★ Activar Premium' : 'Bajar a Freemium',
+      confirmButtonText: 'Guardar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: subiendo ? '#0F9D58' : '#6b7280',
+      confirmButtonColor: '#0F9D58',
       reverseButtons: true,
+      focusConfirm: false,
     });
 
-    if (!confirmacion.isConfirmed) return;
+    if (!resultado.isConfirmed || !resultado.value) return;
+
+    const v = resultado.value;
+    if (v.plan === 'premium' && v.billingPeriod === 'yearly' && v.nextBillingDate) {
+      const dias = (new Date(v.nextBillingDate).getTime() - Date.now()) / MS_DIA;
+      if (dias < 180) {
+        const sigue = await Swal.fire({
+          title: 'Revisa la fecha',
+          html:
+            `Marcaste <b>plan anual</b> pero el próximo cobro queda en <b>${Math.round(dias)} días</b>.<br><br>` +
+            'En anual se cobra el año completo de una vez: con esa fecha se le cobraría ' +
+            'el año entero antes de que termine el que ya pagó.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar así',
+          cancelButtonText: 'Volver a corregir',
+          confirmButtonColor: '#d9534f',
+          reverseButtons: true,
+        });
+        if (!sigue.isConfirmed) return this.abrirEditorDePlan(empresa, evento);
+      }
+    }
+
+    const nuevo = resultado.value.plan;
+    // Bajar a gratis borra el acuerdo: no se manda nada que el backend tenga que
+    // ignorar, y él ya se encarga de limpiar el pacto viejo.
+    const acuerdo =
+      nuevo === 'premium'
+        ? {
+            tierContratado: resultado.value.tierContratado,
+            billingPeriod: resultado.value.billingPeriod,
+            // Vacío = no la toques. El backend distingue "no vino el campo" de
+            // "vino con valor", así que no hay forma de borrarla sin querer.
+            nextBillingDate: resultado.value.nextBillingDate || undefined,
+          }
+        : undefined;
 
     this.cambiandoPlan.add(empresa._docId);
 
     this.subscriptionService
-      .adminUpgradePlan(nombre, nuevo)
+      .adminUpgradePlan(nombre, nuevo, acuerdo)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.cambiandoPlan.delete(empresa._docId))
@@ -701,9 +940,20 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           empresa.plan = nuevo;
+          empresa.tierContratado =
+            nuevo === 'premium' && acuerdo && acuerdo.tierContratado !== 'auto'
+              ? acuerdo.tierContratado
+              : null;
+          empresa.billingPeriod = nuevo === 'premium' && acuerdo ? acuerdo.billingPeriod : null;
           this.recalcularTotalesLocales();
           this.aplicarFiltros();
-          this.notificationService.success('Listo', `${nombre} ahora es ${nuevo.toUpperCase()}`);
+          // El escalón y el monto los recalcula el BACKEND con las ventas y el
+          // periodo: repetir esa cuenta acá sería una segunda tabla de precios.
+          // Se refrescan al recargar; mientras tanto no se inventan.
+          this.notificationService.success(
+            'Listo',
+            `${nombre} quedó en ${nuevo.toUpperCase()}. Dale a Actualizar para ver el precio recalculado.`
+          );
         },
         error: (err) =>
           this.notificationService.error(
@@ -750,10 +1000,95 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       premium: this.empresas.filter((e) => e.plan === 'premium').length,
       freemium: this.empresas.filter((e) => e.plan !== 'premium').length,
       empresasSinMovimiento: this.empresas.filter((e) => this.sinMovimiento(e)).length,
+      empresasEnRiesgo: this.empresas.filter(
+        (e) => this.sinMovimiento(e) || this.sinEntrar(e)
+      ).length,
+      empresasSinTarjeta: this.empresas.filter((e) => e.modoCobro === 'manual').length,
+      empresasConTarjeta: this.empresas.filter((e) => e.modoCobro === 'automatico').length,
+      // El ingreso NO se recalcula acá: subir una empresa a plan pago le cambia
+      // el escalón, y ese lo deduce el backend de sus ventas. Inventarlo en el
+      // front sería una segunda copia de la tabla de precios, que es justo lo
+      // que `planPricing` existe para evitar. Se corrige en el próximo refresco.
     };
   }
 
   // ── Estado derivado de una empresa ────────────────────────────────────────
+
+  /**
+   * EL estado de una empresa, en una sola palabra.
+   *
+   * Una empresa puede estar bloqueada, con el plan vencido y sin vender al
+   * mismo tiempo. Mostrar las tres etiquetas volvería la columna ilegible y
+   * mostrar una al azar sería peor, así que hay un ORDEN DE PRIORIDAD fijo y
+   * gana la más grave. El globo cuenta el detalle completo.
+   *
+   * El orden responde a "¿qué hago con este cliente hoy?":
+   * 1. **Bloqueada** — no puede entrar. Nada más importa hasta resolver eso.
+   * 2. **Plan vencido** — dinero que ya se debía cobrar.
+   * 3. **En riesgo** — se está yendo; es lo único que se puede prevenir.
+   * 4. **Vence pronto** — rutina de la semana.
+   * 5. **Al día / Activa** — no hay nada que hacer.
+   */
+  estadoEmpresa(empresa: EmpresaPanorama): {
+    clave: string;
+    etiqueta: string;
+    titulo: string;
+  } {
+    if (!empresa.activo) {
+      const b = empresa.bloqueo;
+      return {
+        clave: 'bloqueada',
+        etiqueta: 'Bloqueada',
+        titulo: b?.motivo
+          ? `Bloqueada el ${this.fechaCorta(b.fecha)} por ${b.por || 'alguien'}: ${b.motivo}`
+          : 'Desactivada: sus usuarios no pueden entrar a Katuq. Sin motivo registrado.',
+      };
+    }
+
+    if (this.planVencido(empresa)) {
+      return {
+        clave: 'vencida',
+        etiqueta: 'Plan vencido',
+        titulo: `Se le venció el ${this.fechaCorta(empresa.renovacion?.fecha)} y sigue usando Katuq: hay un cobro pendiente.`,
+      };
+    }
+
+    const noVende = this.sinMovimiento(empresa);
+    const noEntra = this.sinEntrar(empresa);
+    if (noVende || noEntra) {
+      const razones = [];
+      if (noVende) razones.push(`no vende hace ${this.ventanaDias} días`);
+      if (noEntra) razones.push('nadie inicia sesión hace más de 30 días');
+      return {
+        clave: 'riesgo',
+        etiqueta: 'En riesgo',
+        titulo: `Se está enfriando: ${razones.join(' y ')}.`,
+      };
+    }
+
+    if (this.planPorVencer(empresa)) {
+      return {
+        clave: 'porvencer',
+        etiqueta: 'Vence pronto',
+        titulo: `Renueva el ${this.fechaCorta(empresa.renovacion?.fecha)}, esta semana.`,
+      };
+    }
+
+    // Freemium "al día" se leería como que está pagando puntual. No paga nada.
+    if (!empresa.escalon?.aplica) {
+      return {
+        clave: 'activa',
+        etiqueta: 'Activa',
+        titulo: 'Operando con el plan gratis. No tiene ningún cobro pendiente porque no se le cobra.',
+      };
+    }
+
+    return {
+      clave: 'aldia',
+      etiqueta: 'Al día',
+      titulo: 'Operando, vendiendo y con el plan vigente.',
+    };
+  }
 
   /** Empresa activa que no ha vendido nada en la ventana. */
   sinMovimiento(empresa: EmpresaPanorama): boolean {
@@ -978,6 +1313,119 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       currency: 'COP',
       maximumFractionDigits: 0,
     });
+  }
+
+  /**
+   * Los precios de Katuq son contractuales en DÓLARES (`BILLING_TIERS`), y el
+   * monto en pesos depende de la TRM del día del cobro. Mostrar un valor en COP
+   * acá obligaría a pedir la TRM en cada carga de la pantalla para acabar
+   * enseñando un número que el día del cobro va a ser otro.
+   */
+  dineroUSD(valor: number | null | undefined): string {
+    if (valor === null || valor === undefined) return '—';
+    return 'US$' + valor.toLocaleString('es-CO', { maximumFractionDigits: 0 });
+  }
+
+  /**
+   * El escalón de precio de una empresa, listo para pintar.
+   *
+   * Los tres casos son distintos a propósito y ninguno puede caer en el otro:
+   * freemium no se cobra, Cumbre se negocia, y "sin dato" es no haber podido
+   * medir las ventas — que NO es lo mismo que vender poco.
+   */
+  escalonTexto(empresa: EmpresaPanorama): string {
+    const e = empresa.escalon;
+    // El renglón de arriba ya dice FREEMIUM: repetirlo acá gastaría la línea en
+    // no decir nada. Lo que falta saber de un freemium es que no se le cobra.
+    if (!e || !e.aplica) return 'sin cobro · 15 pedidos al mes';
+    if (e.aMedida) return `${e.nombre} · a medida`;
+    if (!e.conocido) return 'escalón sin calcular · —';
+
+    // En anual, el número que importa es lo que se le factura DE UNA. Mostrar
+    // solo el mensual haría esperar un cobro doce veces más chico del que sale.
+    if (e.periodo === 'anual') {
+      return `${e.nombre} · ${this.dineroUSD(e.precioPeriodoUSD)} al año`;
+    }
+    return `${e.nombre} · ${this.dineroUSD(e.precioUSD)} al mes`;
+  }
+
+  /** ¿El escalón lo decidió un acuerdo y no las ventas? */
+  escalonPactado(empresa: EmpresaPanorama): boolean {
+    return empresa.escalon?.pactado === true;
+  }
+
+  /** Por qué dice ese escalón. Va en el globo, no en la tarjeta. */
+  escalonTitulo(empresa: EmpresaPanorama): string {
+    const e = empresa.escalon;
+    if (!e || !e.aplica) {
+      return 'Plan gratis: 15 pedidos al mes, 1 bodega, 5 usuarios y 1 integración. No se le cobra.';
+    }
+    if (!e.conocido) {
+      return 'Paga, pero no se pudieron medir sus ventas del período: sin ellas no se puede saber el escalón.';
+    }
+
+    const periodo =
+      e.periodo === 'anual'
+        ? ` Paga ANUAL: se le factura ${this.dineroUSD(e.precioPeriodoUSD)} de una vez (12 meses con 20% de descuento), que equivale a ${this.dineroUSD(e.precioMensualEquivalenteUSD)} al mes.`
+        : '';
+
+    // Un acuerdo cerrado y una estimación no se pueden contar igual: el primero
+    // es un compromiso y el segundo puede cambiar el mes que viene.
+    if (e.pactado) {
+      return (
+        `PACTADO con el cliente en ${e.nombre} (${this.dineroUSD(e.precioUSD)} al mes de lista). ` +
+        `No depende de sus ventas: se le cobra esto venda lo que venda.${periodo}`
+      );
+    }
+
+    const ventas = this.dinero(e.ventasBase);
+    if (e.aMedida) {
+      return `Vendió ${ventas} en ${this.ventanaDias} días, por encima del último escalón: el precio se negocia.`;
+    }
+    return (
+      `Estimado: vendió ${ventas} en ${this.ventanaDias} días y eso cae en el escalón ${e.nombre} ` +
+      `(${this.dineroUSD(e.precioUSD)} al mes). El cobro real usa su propio período y excluye los ` +
+      `pedidos cancelados, así que el monto puede variar un poco.${periodo}`
+    );
+  }
+
+  /**
+   * Fecha corta de verdad ("1 oct"), para la columna del plan: el chip mide
+   * 104 px y "1 oct 2026" lo desborda. El año va en el globo y en la ficha,
+   * donde sí hay espacio.
+   */
+  fechaDiaMes(valor: any): string {
+    const ms = this.aMs(valor);
+    if (!ms) return '—';
+    return new Date(ms).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  }
+
+  /**
+   * El globo de la fecha de cobro: la fecha completa, cuánto falta y si es
+   * estimada. Una fecha estimada no puede leerse como un cobro confirmado.
+   */
+  /** Etiqueta corta del periodo, para la lista. '' cuando es mensual. */
+  etiquetaPeriodoPlan(empresa: EmpresaPanorama): string {
+    return empresa.escalon?.periodo === 'anual' ? 'anual' : '';
+  }
+
+  tituloRenovacion(empresa: EmpresaPanorama): string {
+    const r = empresa.renovacion;
+    if (!r || !r.aplica) return 'El plan gratis no vence.';
+    if (!r.fecha) {
+      return 'Paga, pero no tiene fecha de renovación registrada por el sistema de facturación.';
+    }
+
+    const cuando = this.fechaCorta(r.fecha);
+    const periodo = r.periodo ? `, cobro ${r.periodo}` : '';
+    const origen = r.estimada
+      ? ' Es una fecha ESTIMADA desde el inicio de la suscripción, no la confirmó el sistema de facturación.'
+      : '';
+
+    if (r.estado === 'vencido') {
+      return `Se le venció el ${cuando}${periodo}.${origen}`;
+    }
+    return `Próximo cobro el ${cuando} (en ${r.diasRestantes} días)${periodo}.${origen}`;
   }
 
   fechaCorta(valor: any): string {
