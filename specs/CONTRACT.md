@@ -6297,3 +6297,27 @@ La celda del Plan tiene tres renglones pero **solo el chip era `<button>`**; los
 - Pista **"EDITAR PLAN"** al pasar el mouse, con `height` fija para que la fila no salte: un chip de colores se lee como una etiqueta, no como algo que se pueda tocar.
 - **Segundo camino**: botón de plan en la columna Acciones, con el patrón de los dos que ya se usaban sin problema.
 - **`cambiarPlan` envuelto en try/catch** que muestra el error. Un formulario que no abre y no dice nada es indistinguible de un clic que no llegó, y se pierde el tiempo buscando el problema donde no está.
+
+## D-282 (2026-09-14) — Filtro "Sin foto" en la lista de productos (OH MY STORE)
+
+**Disparador.** Pedido real: *"que en la lista de productos tengamos un filtro para identificar los productos que no tienen foto para subirlas... con 8.000 productos es difícil, la idea es que busquen productos sin imágenes"*.
+
+**Arreglo.** Nuevo filtro `sinFoto` en `ProductosComponent` (dropdown junto a Completitud, mismo patrón de chip/contador/reset que el resto). Reutiliza `imagenesCount` — ya calculado en `getSearchIndex()` para `nivelCompletitud()` — así que no hace falta backfill ni índice compuesto nuevo: `candidates.filter(p => (p.imagenesCount || 0) === 0)` en `controllers/productos.js#getAll`, en la misma rama in-memory que ya resuelve `completitud`/`categoria` sobre el catálogo completo (evita la trampa de truncar a 500 docs que spec 023 ya había corregido).
+
+- **Verificado contra producción (solo lectura):** OH MY STORE — **36 de 8.460 productos sin foto**, paginación (`totalItems`, `totalPages`) correcta.
+- **Sin Firestore query nativo**: un `array` vacío o campo ausente no se puede indexar de forma útil sin un booleano denormalizado (`tieneImagen` + backfill + índice compuesto) — innecesario dado que el índice en memoria ya cubre el catálogo completo de OH MY STORE para filtros equivalentes.
+- **No se verificó en navegador** (sin credenciales de esta sesión para OH MY STORE) — compila sin errores (`ng serve`) y el endpoint se probó invocando `Controller.getAll` directo contra Firestore real.
+
+## D-283 (2026-09-14) — La app del transportador pisaba la fecha PACTADA de entrega, no solo la real (ALMARA)
+
+**Disparador.** Reporte real, pedido `DAD-012963` (ALMARA FELICIDAD). La vendedora Yulie Osorno discutía con una clienta: en "Pedidos" la fecha de entrega seguía siendo la pactada (11-sep), pero el PDF/rótulo de despacho mostraba otra fecha (10-sep, un día antes). El dueño diagnosticó correctamente: adelantar la entrega desde logística es un proceso legítimo y trazable (fechas reales de producción/empaque/despacho aparte), pero la fecha PACTADA no debería cambiar salvo que alguien la edite explícitamente desde Pedidos.
+
+**Causa — confirmada contra el pedido real.** Dos campos coexisten para "fecha de entrega":
+- `carrito[0].configuracion.datosEntrega.fechaEntrega` ({year,month,day}) — la pactada. La grilla de "Pedidos" lee ESTE campo, por eso mostraba bien.
+- `fechaEntrega` (plano, ISO string) — usado por el rótulo de despacho, `generar-orden`, `ordenes-despacho`, `seguimiento-modal`, `detalle-entrega` y el recibo POS (`factura-tirilla`). En el pedido real valía `2026-09-10T15:29:06.489135` — **sin "Z" y con microsegundos de 6 dígitos, formato que ningún código JS de este repo produce** (`toISOString()` siempre da milisegundos + "Z"). Es la huella de `DateTime.now().toIso8601String()` de Flutter/Dart: la app móvil del transportador ("App Mensajeros") manda su propio `fechaEntrega` (la hora en que ENTREGÓ) al marcar el pedido como Entregado.
+- `controllers/orders.js#editByTransporter` (`POST /v1/orders/carrier/edit`, autenticado con apiKey compartida) hacía `update = {...orderData, ...req.body, estadoProceso, date_edit}` — **sin lista blanca**. El `fechaEntrega` de la app pisaba directo la fecha pactada en Firestore, sin tocar el campo anidado que lee la grilla — de ahí la inconsistencia exacta que reportaron.
+
+**Arreglo.** Lista blanca explícita, extraída a `buildTransporterUpdate` (helper puro, testeable — mismo patrón que `preserveLineOverrides` D-261): el transportador solo puede escribir `motivoRechazo`, `observaciones`, y su fecha real de entrega — que ahora se guarda en `fechaEntregaReal` (mismo nombre que ya usa el webhook de Enviame para lo mismo), **nunca** en `fechaEntrega`. Contract test `scripts/test-transporter-update-guard.js` (13/13 PASS) reproduce el caso real de DAD-012963. Sin regresiones: `test-order-line-iva-edit.js` (47/47) y `test-preserve-line-overrides.js` (9/9) siguen en verde.
+
+- **No se corrigió el pedido `DAD-012963` en Firestore** — cero-escrituras salvo pedido explícito; su `fechaEntrega` queda con el valor corrompido histórico hasta que se decida si vale la pena un backfill.
+- **Fuera de alcance de este fix:** los dos campos ("plano" vs "anidado") siguen coexistiendo — no se unificó la fuente de verdad entre pantallas. El fix cierra la vía de corrupción conocida; no audita si hay OTRO escritor del campo plano fuera de este endpoint.

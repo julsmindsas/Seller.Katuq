@@ -338,6 +338,11 @@
                                 <option value="parcial">🟡 Parciales</option>
                                 <option value="incompleto">🔴 Incompletos</option>
                             </select>
+                            <select class="fs-select" [class.fs-active]="filtros.sinFoto"
+                                [(ngModel)]="filtros.sinFoto" (change)="onFiltroChange()">
+                                <option value="">Foto</option>
+                                <option value="true">📷 Sin foto</option>
+                            </select>
                             <select class="fs-select" [class.fs-active]="filtros.ultimaEdicion"
                                 [(ngModel)]="filtros.ultimaEdicion" (change)="onFiltroChange()">
                                 <option value="">Editado</option>

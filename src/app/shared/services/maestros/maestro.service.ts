@@ -271,6 +271,7 @@ export class MaestroService {
     if (filtros.inventariable) params = params.set('inventariable', filtros.inventariable);
     if (filtros.ultimaEdicion) params = params.set('ultimaEdicion', filtros.ultimaEdicion);
     if (filtros.completitud) params = params.set('completitud', filtros.completitud);
+    if (filtros.sinFoto) params = params.set('sinFoto', 'true');
     if (filtros.categoria) params = params.set('categoria', filtros.categoria);
     if (filtros.subcategoria) params = params.set('subcategoria', filtros.subcategoria);
     if (filtros.exposicion) params = params.set('exposicion', filtros.exposicion);

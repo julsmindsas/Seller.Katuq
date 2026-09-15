@@ -92,6 +92,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
     inventariable: '',
     ultimaEdicion: '',
     completitud: '',
+    sinFoto: '',
     // Nuevos filtros
     categoria: '',
     subcategoria: '',
@@ -128,7 +129,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
       this.filtros.requiereProduccion ||
       this.filtros.inventariable ||
       this.filtros.ultimaEdicion ||
-      this.filtros.completitud
+      this.filtros.completitud ||
+      this.filtros.sinFoto
     );
   }
 
@@ -623,6 +625,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
     if (this.filtros.completitud === 'completo') chips.push({ label: 'Completos', key: 'completitud' });
     if (this.filtros.completitud === 'parcial') chips.push({ label: 'Parciales', key: 'completitud' });
     if (this.filtros.completitud === 'incompleto') chips.push({ label: 'Incompletos', key: 'completitud' });
+    if (this.filtros.sinFoto) chips.push({ label: '📷 Sin foto', key: 'sinFoto' });
     if (this.filtros.categoria) {
       chips.push({
         label: this.filtros.categoria === ProductosComponent.SIN_CATEGORIA
@@ -682,6 +685,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
     if (this.filtros.inventariable) count++;
     if (this.filtros.ultimaEdicion) count++;
     if (this.filtros.completitud) count++;
+    if (this.filtros.sinFoto) count++;
     if (this.filtros.categoria) count++;
     if (this.filtros.subcategoria) count++;
     if (this.filtros.exposicion) count++;
@@ -705,6 +709,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
     else if (key === 'inventariable') this.filtros.inventariable = '';
     else if (key === 'ultimaEdicion') this.filtros.ultimaEdicion = '';
     else if (key === 'completitud') this.filtros.completitud = '';
+    else if (key === 'sinFoto') this.filtros.sinFoto = '';
     else if (key === 'categoria') { this.filtros.categoria = ''; this.filtros.subcategoria = ''; this.subcategoriasList = []; }
     else if (key === 'subcategoria') this.filtros.subcategoria = '';
     else if (key === 'exposicion') this.filtros.exposicion = '';
@@ -869,6 +874,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
       inventariable: '',
       ultimaEdicion: '',
       completitud: '',
+      sinFoto: '',
       categoria: '',
       subcategoria: '',
       exposicion: '',
