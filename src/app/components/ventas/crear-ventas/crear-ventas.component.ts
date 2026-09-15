@@ -23,6 +23,11 @@ import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
 import { DaneCodesService } from "../../../shared/services/dane-codes.service";
 import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 import { normalizarCiudad } from "../../../shared/utils/ciudad.util";
+import {
+  correoValidator,
+  normalizarCorreo,
+  correoSoloFallaPorTildes,
+} from "../../../shared/utils/correo.util";
 import { zonaCubreCiudad } from "../../../shared/util/zona-cobro.util";
 import { QuickViewComponent } from "../quick-view/quick-view.component";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
@@ -1238,10 +1243,10 @@ export class CrearVentasComponent
       documento: ["", Validators.required],
       indicativo_celular_comprador: ["57", Validators.required], // Valor por defecto: Colombia +57
       numero_celular_comprador: ["", Validators.required],
-      correo_electronico_comprador: [
-        "",
-        [Validators.required, Validators.email],
-      ],
+      // Ticket 1015: `Validators.email` marcaba el correo con tilde como inválido
+      // sin distinguirlo de uno mal escrito. `correoValidator` separa los dos casos
+      // para que la pantalla pueda decir cuál es y ofrecer la corrección.
+      correo_electronico_comprador: ["", [Validators.required, correoValidator]],
       indicativo_celular_whatsapp: ["57", Validators.required], // Valor por defecto: Colombia +57
       numero_celular_whatsapp: ["", Validators.required],
       datosFacturacionElectronica: [[""]],
@@ -1368,15 +1373,120 @@ export class CrearVentasComponent
       });
     });
   }
+  /**
+   * Ticket 1015 — Etiquetas legibles de los campos del formulario de cliente.
+   * Sin esto el aviso de "falta algo" nombraba claves internas o no decía nada.
+   */
+  private readonly etiquetasCampoCliente: { [campo: string]: string } = {
+    tipo_documento_comprador: "Tipo de documento",
+    documento: "Documento",
+    nombres_completos: "Nombres",
+    apellidos_completos: "Apellidos",
+    indicativo_celular_comprador: "Indicativo del celular",
+    numero_celular_comprador: "Celular",
+    correo_electronico_comprador: "Email",
+    indicativo_celular_whatsapp: "Indicativo de WhatsApp",
+    numero_celular_whatsapp: "WhatsApp",
+  };
+
+  /**
+   * Ticket 1015 — `true` cuando el campo está mal Y el vendedor ya lo tocó o ya
+   * intentó guardar. Antes el botón simplemente se apagaba y no se decía nada,
+   * así que un correo con tilde o un cliente viejo sin WhatsApp dejaban la
+   * pantalla trabada sin explicación.
+   */
+  campoClienteInvalido(campo: string): boolean {
+    const control = this.formulario?.get(campo);
+    if (!control) return false;
+    return control.invalid && (control.touched || control.dirty);
+  }
+
+  /** Ticket 1015 — Mensaje concreto de por qué el campo está mal. */
+  errorDeCampoCliente(campo: string): string {
+    const control = this.formulario?.get(campo);
+    if (!control || !control.errors) return "";
+    if (control.errors["required"]) {
+      return `${this.etiquetasCampoCliente[campo] || "Este dato"} es obligatorio.`;
+    }
+    if (control.errors["correoConTildes"]) {
+      return "El correo no puede llevar tildes ni ñ.";
+    }
+    if (control.errors["correoInvalido"] || control.errors["email"]) {
+      return "El correo no tiene un formato válido (ejemplo: nombre@dominio.com).";
+    }
+    return "Revise este dato.";
+  }
+
+  /** Ticket 1015 — `true` si el correo solo falla por llevar tildes o ñ. */
+  get correoClienteTieneTildes(): boolean {
+    return correoSoloFallaPorTildes(
+      this.formulario?.get("correo_electronico_comprador")?.value,
+    );
+  }
+
+  /**
+   * Ticket 1015 — Quita tildes y pasa a minúscula el correo del formulario.
+   * Lo dispara el vendedor desde el botón "Corregir": no se toca lo que escribió
+   * sin que se entere.
+   */
+  corregirCorreoCliente(): void {
+    const control = this.formulario?.get("correo_electronico_comprador");
+    if (!control) return;
+    control.setValue(normalizarCorreo(control.value));
+    control.markAsDirty();
+    control.updateValueAndValidity();
+    this.ref.detectChanges();
+  }
+
+  /**
+   * Ticket 1015 — Marca todo el formulario como tocado (para que se pinten los
+   * errores), devuelve la lista de campos con problema y lleva el foco al primero.
+   */
+  private revisarFormularioCliente(): string[] {
+    this.formulario.markAllAsTouched();
+
+    const problemas: string[] = [];
+    Object.keys(this.formulario.controls).forEach((campo) => {
+      const control = this.formulario.get(campo);
+      if (control?.invalid && this.etiquetasCampoCliente[campo]) {
+        problemas.push(
+          `${this.etiquetasCampoCliente[campo]}: ${this.errorDeCampoCliente(campo)}`,
+        );
+      }
+    });
+
+    this.ref.detectChanges();
+
+    const primerError = document.querySelector(
+      ".step1-form-section .field-input.campo-con-error",
+    ) as HTMLElement | null;
+    if (primerError) {
+      primerError.scrollIntoView({ behavior: "smooth", block: "center" });
+      primerError.focus({ preventScroll: true });
+    }
+
+    return problemas;
+  }
+
+  /** Ticket 1015 — Aviso único que enumera exactamente qué falta corregir. */
+  private avisarFormularioClienteIncompleto(problemas: string[]): void {
+    const lista = problemas.map((p) => `<li>${p}</li>`).join("");
+    Swal.fire({
+      title: "Faltan datos del cliente",
+      html: `<p class="mb-2">Corrija lo siguiente para poder guardar:</p>
+             <ul class="text-start mb-0" style="padding-left:1.2rem">${lista}</ul>`,
+      icon: "warning",
+      confirmButtonText: "Ok",
+    });
+  }
+
   editarCliente() {
-    // Verificar si el formulario es válido antes de proceder
+    // Ticket 1015: antes el botón se apagaba con `formulario.invalid` y no decía
+    // nada; un cliente traído de otro canal sin WhatsApp o con correo con tilde
+    // quedaba imposible de editar. Ahora el botón siempre responde y el aviso
+    // enumera qué corregir.
     if (this.formulario.invalid) {
-      Swal.fire({
-        title: "Formulario Incompleto",
-        text: "Por favor complete todos los campos requeridos antes de guardar.",
-        icon: "warning",
-        confirmButtonText: "Ok",
-      });
+      this.avisarFormularioClienteIncompleto(this.revisarFormularioCliente());
       return;
     }
 
@@ -3775,14 +3885,10 @@ export class CrearVentasComponent
 
   // NUEVO MÉTODO: Crear cliente de forma rápida usando los datos mínimos del formulario
   crearClienteRapido() {
-    // Validar que el formulario sea válido antes de proceder
+    // Ticket 1015: el botón ya no se apaga en silencio — si falta algo, se
+    // enumera campo por campo y se lleva el foco al primero.
     if (this.formulario.invalid) {
-      Swal.fire({
-        title: "Formulario Incompleto",
-        text: "Por favor complete todos los campos requeridos antes de guardar el cliente.",
-        icon: "warning",
-        confirmButtonText: "Ok",
-      });
+      this.avisarFormularioClienteIncompleto(this.revisarFormularioCliente());
       return;
     }
 
@@ -4894,6 +5000,20 @@ export class CrearVentasComponent
    * existente en vez de duplicarla.
    */
   completarConfiguracionPendienteSidebar(item: any): void {
+    this.abrirEdicionDeLineaSidebar(item);
+  }
+
+  /**
+   * Ticket 1015 (ALMARA FELICIDAD) — en el paso de Productos el carrito lateral
+   * solo dejaba eliminar la línea: si se detectaba un error de configuración
+   * había que borrarla y volverla a agregar. Reusa el mismo camino de edición
+   * de D-147, abierto ahora para cualquier línea.
+   */
+  editarProductoSidebar(item: any): void {
+    this.abrirEdicionDeLineaSidebar(item);
+  }
+
+  private abrirEdicionDeLineaSidebar(item: any): void {
     if (!item) return;
 
     const ref = this.modalService.open(ConfProductToCartComponent, {

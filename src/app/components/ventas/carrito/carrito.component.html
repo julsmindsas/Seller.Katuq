@@ -153,6 +153,11 @@
             <!-- Acciones -->
             <td class="col-actions">
               <div class="item-actions">
+                <!-- Ticket 1015: reabre la configuración del producto (adiciones,
+                     preferencias, variables) sin tener que borrar y volver a agregar. -->
+                <button class="act-btn" (click)="editarProducto(itemCarrito)" title="Editar producto">
+                  <i class="pi pi-cog"></i>
+                </button>
                 <button class="act-btn act-danger" (click)="removeThisProduct(itemCarrito)" title="Eliminar">
                   <i class="pi pi-trash"></i>
                 </button>

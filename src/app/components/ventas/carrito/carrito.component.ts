@@ -88,6 +88,23 @@ export class CarritoComponent implements OnInit {
    * existente vía `updateProductQuantity`, no agrega un ítem duplicado.
    */
   completarConfiguracionPendiente(item: any): void {
+    this.abrirEdicionDeLinea(item);
+  }
+
+  /**
+   * Ticket 1015 (ALMARA FELICIDAD) — "si en este momento se detecta que algo
+   * faltó, no deja editar los productos". El carrito dejaba cambiar cantidad,
+   * precio, IVA y descuento, pero no las adiciones, preferencias ni variables:
+   * tocaba borrar la línea y volverla a agregar.
+   *
+   * Es el mismo camino de edición que ya existía para los combos con
+   * configuración pendiente (D-147), abierto ahora para cualquier línea.
+   */
+  editarProducto(item: any): void {
+    this.abrirEdicionDeLinea(item);
+  }
+
+  private abrirEdicionDeLinea(item: any): void {
     if (!item) return;
 
     const ref = this.modalService.open(ConfProductToCartComponent, {

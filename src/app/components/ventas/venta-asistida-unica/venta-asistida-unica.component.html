@@ -178,23 +178,39 @@
               <div class="form-grid">
                 <div class="form-field">
                   <label>Tipo Doc. <span class="required">*</span></label>
-                  <select class="field-input" formControlName="tipo_documento_comprador">
+                  <select class="field-input" formControlName="tipo_documento_comprador"
+                          [class.campo-con-error]="campoClienteInvalido('tipo_documento_comprador')">
                     <option value="CC-NIT">CC-NIT</option>
                     <option value="PA">PA</option>
                     <option value="TI">TI</option>
                   </select>
+                  <small class="field-error" *ngIf="campoClienteInvalido('tipo_documento_comprador')">
+                    {{ errorDeCampoCliente('tipo_documento_comprador') }}
+                  </small>
                 </div>
                 <div class="form-field span-2">
                   <label>Documento <span class="required">*</span></label>
-                  <input class="field-input" type="text" formControlName="documento" placeholder="Número de documento" />
+                  <input class="field-input" type="text" formControlName="documento" placeholder="Número de documento"
+                         [class.campo-con-error]="campoClienteInvalido('documento')" />
+                  <small class="field-error" *ngIf="campoClienteInvalido('documento')">
+                    {{ errorDeCampoCliente('documento') }}
+                  </small>
                 </div>
                 <div class="form-field span-2">
                   <label>Nombres <span class="required">*</span></label>
-                  <input class="field-input" type="text" formControlName="nombres_completos" placeholder="Nombres completos" />
+                  <input class="field-input" type="text" formControlName="nombres_completos" placeholder="Nombres completos"
+                         [class.campo-con-error]="campoClienteInvalido('nombres_completos')" />
+                  <small class="field-error" *ngIf="campoClienteInvalido('nombres_completos')">
+                    {{ errorDeCampoCliente('nombres_completos') }}
+                  </small>
                 </div>
                 <div class="form-field span-2">
                   <label>Apellidos <span class="required">*</span></label>
-                  <input class="field-input" type="text" formControlName="apellidos_completos" placeholder="Apellidos completos" />
+                  <input class="field-input" type="text" formControlName="apellidos_completos" placeholder="Apellidos completos"
+                         [class.campo-con-error]="campoClienteInvalido('apellidos_completos')" />
+                  <small class="field-error" *ngIf="campoClienteInvalido('apellidos_completos')">
+                    {{ errorDeCampoCliente('apellidos_completos') }}
+                  </small>
                 </div>
               </div>
             </div>
@@ -210,12 +226,26 @@
                       <option value="57">+57</option>
                       <option *ngFor="let item of indicativos" value="{{ item.phone_code }}">+{{ item.phone_code }}</option>
                     </select>
-                    <input class="field-input" type="text" formControlName="numero_celular_comprador" placeholder="Número" />
+                    <input class="field-input" type="text" formControlName="numero_celular_comprador" placeholder="Número"
+                           [class.campo-con-error]="campoClienteInvalido('numero_celular_comprador')" />
                   </div>
+                  <small class="field-error" *ngIf="campoClienteInvalido('numero_celular_comprador')">
+                    {{ errorDeCampoCliente('numero_celular_comprador') }}
+                  </small>
                 </div>
                 <div class="form-field span-2">
                   <label>Email <span class="required">*</span></label>
-                  <input class="field-input" type="email" formControlName="correo_electronico_comprador" placeholder="correo@ejemplo.com" />
+                  <input class="field-input" type="email" formControlName="correo_electronico_comprador" placeholder="correo@ejemplo.com"
+                         [class.campo-con-error]="campoClienteInvalido('correo_electronico_comprador')" />
+                  <!-- Ticket 1015: un correo con tilde dejaba el botón apagado sin
+                       explicación. Se dice el motivo y se ofrece corregirlo. -->
+                  <small class="field-error" *ngIf="campoClienteInvalido('correo_electronico_comprador')">
+                    {{ errorDeCampoCliente('correo_electronico_comprador') }}
+                    <button type="button" class="btn-corregir-correo" *ngIf="correoClienteTieneTildes"
+                            (click)="corregirCorreoCliente()">
+                      Corregir
+                    </button>
+                  </small>
                 </div>
                 <div class="form-field span-full">
                   <div class="whatsapp-header">
@@ -230,8 +260,13 @@
                       <option value="57">+57</option>
                       <option *ngFor="let item of indicativos" value="{{ item.phone_code }}">+{{ item.phone_code }}</option>
                     </select>
-                    <input class="field-input" type="text" formControlName="numero_celular_whatsapp" placeholder="Número de WhatsApp" />
+                    <input class="field-input" type="text" formControlName="numero_celular_whatsapp" placeholder="Número de WhatsApp"
+                           [class.campo-con-error]="campoClienteInvalido('numero_celular_whatsapp')" />
                   </div>
+                  <small class="field-error" *ngIf="campoClienteInvalido('numero_celular_whatsapp')">
+                    {{ errorDeCampoCliente('numero_celular_whatsapp') }}
+                    Marque "Mismo número de celular" si no tiene uno aparte.
+                  </small>
                 </div>
               </div>
             </div>
@@ -241,13 +276,15 @@
               <button type="button" class="btn-cancel" (click)="cancelarEdicionCliente()">
                 Cancelar
               </button>
+              <!-- Ticket 1015: estos botones estaban atados a `formulario.invalid`,
+                   así que se apagaban sin decir qué faltaba. Ahora siempre responden
+                   y el método enumera los campos con problema. -->
               <button *ngIf="!encontrado" type="button" class="btn-save" (click)="crearClienteRapido()"
-                [disabled]="formulario.invalid || creandoCliente">
+                [disabled]="creandoCliente">
                 <span *ngIf="creandoCliente" class="spinner-border spinner-border-sm"></span>
                 {{ creandoCliente ? 'Guardando...' : 'Guardar Cliente' }}
               </button>
-              <button *ngIf="encontrado" type="button" class="btn-save" (click)="editarCliente()"
-                [disabled]="formulario.invalid">
+              <button *ngIf="encontrado" type="button" class="btn-save" (click)="editarCliente()">
                 Actualizar Cliente
               </button>
             </div>
