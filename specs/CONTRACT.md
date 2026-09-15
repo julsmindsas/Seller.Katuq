@@ -6321,3 +6321,114 @@ La celda del Plan tiene tres renglones pero **solo el chip era `<button>`**; los
 
 - **No se corrigió el pedido `DAD-012963` en Firestore** — cero-escrituras salvo pedido explícito; su `fechaEntrega` queda con el valor corrompido histórico hasta que se decida si vale la pena un backfill.
 - **Fuera de alcance de este fix:** los dos campos ("plano" vs "anidado") siguen coexistiendo — no se unificó la fuente de verdad entre pantallas. El fix cierra la vía de corrupción conocida; no audita si hay OTRO escritor del campo plano fuera de este endpoint.
+
+
+## D-284 (2026-09-14) — Un formulario no se apaga en silencio: dice qué falta
+
+**Disparador.** Ticket 1015 de ALMARA FELICIDAD (Sara Restrepo, comercial3@almara.com.co): *"Errores que no muestra... el correo con tilde no dejaba avanzar pero no mostraba error ni nada. También hay clientes cuyos datos aparecen incorrectos y el sistema no permite editarlos. Ni al tomar el pedido en la parte de producto deja volverlo a editar."* Tres quejas, dos causas.
+
+### La causa común de las dos primeras
+
+El formulario de cliente de la venta asistida **no tenía un solo mensaje de error**. Los botones "Guardar Cliente" y "Actualizar Cliente" estaban atados a `formulario.invalid`: si algo estaba mal, el botón se apagaba y ahí terminaba la conversación con el vendedor.
+
+- **El correo con tilde.** `Validators.email` de Angular usa una expresión ASCII estricta: `Andrés.giron2026@gmail.com` es inválido por la `é`, igual que `sin-arroba`. Desde la pantalla los dos casos se veían idénticos — es decir, no se veían.
+- **"No permite editar clientes" era el MISMO botón apagado.** El formulario exige correo válido **y `numero_celular_whatsapp`**. Un cliente viejo, importado o traído de otro canal sin WhatsApp deja "Actualizar Cliente" apagado para siempre. No es que la edición esté bloqueada: es que nadie dice qué corregir.
+
+**El patrón es el defecto, no el caso particular.** `[disabled]="form.invalid"` sin mensajes de error convierte cualquier regla de validación en una pantalla muerta. Se invirtió: el botón siempre responde, y al hacer clic se marcan los campos en rojo, se enumera qué falta y el foco salta al primero.
+
+### Tildes en el correo: avisar y ofrecer, no corregir a escondidas
+
+`correoValidator` (`shared/utils/correo.util.ts`) separa **`correoConTildes`** (sin las tildes sí sería válido) de **`correoInvalido`** (está mal escrito de verdad), porque son dos mensajes distintos para el vendedor. En el primer caso aparece un botón "Corregir" que normaliza (NFD + quitar diacríticos + minúscula): `Andrés.Girón2026@Gmail.com` → `andres.giron2026@gmail.com`.
+
+**No se normaliza mientras teclea.** Cambiarle el correo al vendedor sin que se entere es peor que el error: si el cliente de verdad tiene otro correo, el pedido sale con una dirección inventada. Los dominios reales (Gmail incluido) no entregan a direcciones con tilde, así que en la práctica siempre es un error de digitación — pero la confirmación la da la persona.
+
+### Tercera falla: editar un producto ya agregado
+
+El carrito lateral del paso Productos solo tenía eliminar; la tabla del paso Carrito dejaba cambiar cantidad, precio, IVA y descuento, pero **no adiciones, preferencias ni variables**. Tocaba borrar la línea y rehacerla.
+
+**No se construyó nada nuevo: se abrió lo que ya existía.** El camino de edición (`ConfProductToCartComponent` con `isEdit` + `configuracionCarrito`, que actualiza la línea vía `updateProductQuantity` en vez de duplicarla) llevaba desde D-147 encerrado detrás del flag `_requiereConfiguracionPendiente` de los combos. Ahora hay botón "Editar producto" en las dos listas. `addToCart` asigna `cartItemId` a toda línea, así que la actualización cae siempre sobre la correcta.
+
+### Alcance
+
+El arreglo del formulario se aplicó **a las dos pantallas de venta asistida** — `crear-ventas` (la del ticket) y `/ventas/venta-asistida`, que hereda del mismo componente y arrastraba el mismo HTML. Arreglar solo la reportada dejaba la trampa viva en la otra.
+
+**Pendiente:** prueba en pantalla con un cliente real sin WhatsApp antes de dar el ticket por resuelto.
+
+## D-285 (2026-09-14) — El detector de cambios de Cereza no veía las campañas
+
+**Disparador.** Ticket 1017 de OH MY STORE (Estefani Calderón): la referencia GCJ3933 tiene descuento en Cereza mayorista y Katuq la cobra a precio lleno. Números de las capturas: mayorista $845.900, con descuento **$634.425** (25%) en cerezamayorista.com el mismo día; Katuq cobrando $845.900.
+
+### Katuq tenía el descuento bien. Lo que tenía mal era la fecha
+
+El documento del producto guarda `precioDescuentoConIva: 634425` y `descuentoPorcentaje: 25` — idénticos a Cereza. Lo que estaba viejo era `descuentoHasta: 2026-09-06`, y el frontend solo aplica el descuento si esa fecha sigue vigente (`precio-por-tipo-cliente.ts::descuentoVigente`). **El dato estaba, la vigencia no.**
+
+### La inconsistencia: el detector y el mapeo miran campos distintos
+
+`_huellaProducto` (`osmosis-product-changed.trigger.js`) decidía qué re-emitir con `active`, `reference`, `price[]` (incluido `discount_price`) y la ficha. **`discounts{}` quedaba fuera a propósito**, con el comentario "se deja fuera lo volátil (descuentos con fechas)". Eso era cierto antes de D-219 — pero D-219 convirtió `discounts{}` en la **autoridad** del descuento de cada lista, y para la lista mayorista el `discount_price` de la fila **no se usa nunca** (la API lo calcula con el % de la tienda pública; bug de Cereza).
+
+Resultado: si Cereza **prorroga** una campaña —mismo %, mismos precios, nueva `end_date`— no se mueve un solo campo de la huella. El trigger concluye "no cambió nada", no emite, y Katuq conserva la fecha vieja: da por vencida una campaña que sigue viva y vuelve a cobrar el precio de lista.
+
+**Por qué no se notó antes.** Cuando una campaña *empieza* o *termina de verdad*, `discount_price` cambia y la huella sí se mueve. Por eso 902 de 954 filas mayoristas están al día: el pipeline funciona salvo en la prórroga.
+
+### Medición antes de tocar nada (8.460 productos de OH MY STORE)
+
+| Lista | Filas con descuento | Vigentes | Con fecha vencida |
+| --- | --- | --- | --- |
+| Precio a mayoristas | 954 | 902 | **52** |
+| Precio para Público en general | 947 | 896 | **51** |
+
+Son las mismas ~52 referencias (103 filas), agrupadas en dos fechas: 27-ago (52) y 6-sep (50).
+
+### El arreglo, y el candado que trae pegado
+
+`_huellaCampanias` agrega `tienda:percent:end_date` de cada campaña, ordenado. La `end_date` entra completa: prorrogar sin mover el porcentaje es justamente el caso que se escapaba.
+
+**Agregar un campo a la huella invalida las ~8.400 huellas guardadas de un golpe**, y la primera corrida emitiría el catálogo entero — cada emisión arrastra un upsert en Katuq más escrituras en Shopify. Por eso la huella se versiona (`h1:` → `h2:`) y `_huellaLegadoSinCampanias` se conserva **solo para leer el estado viejo**: en la corrida de transición se compara con la regla vieja (emite solo lo que de verdad cambió) y se guarda ya la huella nueva. Se agota sola.
+
+**Los 52 de hoy NO los recoge la transición** — bajo la regla vieja no cambió nada en ellos. Se reparan aparte.
+
+### Medir antes de reparar
+
+Una fecha vencida tiene dos lecturas opuestas que Firestore no distingue: la campaña terminó de verdad (cobrar el precio de lista está BIEN) o se prorrogó (estamos cobrando de más). `scripts/medir-campanias-vencidas-cereza.js` le pregunta a Cereza cuál es, referencia por referencia, y cuantifica la plata. **No escribe nada y no tiene modo de escritura.** Reparar los vencidos a ciegas reviviría descuentos que el comercio ya dio por terminados.
+
+Corre en el EC2: `INTEGRATION_ENCRYPTION_KEY` no está en el `.env` local, así que desde la máquina de desarrollo la mitad de Firestore funciona y la de Cereza no. Ritmo 900 ms entre llamadas (con 350 ms la API corta con `429`).
+
+**Pruebas:** 13 casos nuevos en `tests/flows/osmosisProductHuella.test.js` — prórroga, cambio de %, campaña de cada tienda por separado, orden de tiendas, producto sin campañas, y las cuatro combinaciones de la transición `h1:`/`h2:`.
+
+**Medido el mismo día, ya con la llave de producción: 101 de las 103 filas son prórrogas VIVAS.** Todas las campañas de Cereza vencen ahora el **2026-09-16** — prorrogó en bloque y Katuq se quedó con el 27-ago y el 6-sep. Lista pública: 49 productos, $5.041.230 de diferencia por unidad; mayorista: 52 productos, $1.921.510. Solo 2 filas eran campañas terminadas de verdad.
+
+**La primera corrida dijo lo contrario —"0 prórrogas, 103 terminadas"— y era un defecto del script de medición**, no un hallazgo: `getProductsByReference` devuelve el SOBRE de la API (`{success, products}`) y el script leía `.discounts` del sobre, que siempre es `undefined`. Todo producto parecía "sin campaña". Un falso "no hay nada que reparar" es el resultado más caro que puede dar una medición, porque cierra el caso. Quedó corregido en el script con el porqué escrito al lado.
+
+**Pendiente:** reparar las 101 filas. El arreglo de la huella NO las recoge — bajo la regla vieja no cambió nada en ellas.
+
+## D-286 (2026-09-14) — Tres semanas sin nada hacia Shopify por un identificador fuera de alcance
+
+**Disparador.** Investigando los tickets 1019 y 1021 de OH MY STORE, dos agentes que trabajaban por separado encontraron lo mismo: el nodo que empuja a Shopify revienta en cada ítem.
+
+### El defecto
+
+`shopify-product-upsert.action.js` línea 449 decía `const syncImages = params?.syncImages !== false;` dentro de `_processSingleItem`, que solo recibe `{ companyId, logger }`. **`params` se declara únicamente en `execute`.** Las líneas hermanas de la misma función sí usan la forma correcta (`ctx.params?.extraTags`, `ctx.params?.publishToOnlineStore`).
+
+**Leer un identificador no declarado es `ReferenceError`. El `?.` no protege contra eso** — protege contra un valor nulo de un binding que existe. Y la línea está en el camino directo de todo ítem que pase el guardarraíl de precio, así que el push entero moría ahí.
+
+### Lo medido, no lo supuesto
+
+- `shopify_push_log`: 52.276 documentos, **44.645 con `errorMessage: "params is not defined"`** sobre 44.940 errores totales — el **99,3%** de todos los errores de push.
+- Entró con el commit `318ff33` (2026-08-24 16:12, "D-230 fotos, bajo pedido y ciudad de entrega"), nunca se revirtió, y producción lo tenía desplegado hoy (`backend-aws-security`, `fbdc0db`).
+- Tres semanas sin que llegara a la tienda **ni catálogo, ni fotos, ni stock, ni precios**.
+
+**Cabo suelto declarado:** hay 7.336 éxitos en ese log, el último el 12-sep. Con la línea en el camino directo no se explica cómo pasaron; la hipótesis es que PM2 sostuvo el módulo viejo en memoria entre despliegues. No se probó.
+
+### Por qué esto tapaba dos tickets
+
+El ítem fallido sale por el puerto `error` y la price list cuelga del puerto `main`, así que `shopify-pricelist-sync` **no recibía nada**. El ticket 1021 (descuento mayorista que no llega a Shopify) era inverificable: cualquier arreglo desplegado encima no habría producido una sola escritura y habría parecido inútil. El 1019 (fotos) tenía este candado encima del suyo propio.
+
+### El guardarraíl, que es la mitad que importa
+
+Nada lo detectó: `node --check` solo mira sintaxis y ningún test ejecuta `_processSingleItem`. Parchear la línea sola dejaba viva la clase entera.
+
+`tests/flows/nodosSinIdentificadoresLibres.test.js` (`npm run test:flow-nodes-scope`) parsea con acorn los **82** archivos de `services/flows/nodes/`, lleva una pila de alcances real —declaraciones antes de resolver lecturas, por el hoisting— y marca toda lectura de un identificador que no esté en su cadena de alcance ni sea un global conocido. Ignora propiedades (`a.params`), llaves de objeto y etiquetas.
+
+**La prueba se verifica a sí misma**: incluye la muestra del defecto original y afirma que la detecta. Una prueba de este tipo que no falla ante el caso que la originó no protege nada, y eso no se nota hasta el siguiente incidente.
+
+Hoy: 82 archivos, 0 lecturas fuera de alcance.
