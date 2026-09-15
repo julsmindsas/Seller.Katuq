@@ -6237,7 +6237,7 @@ La DIAN trabaja a dos decimales, así que el total de una línea solo cae en `c 
 
 **Limitación declarada:** una membresía facturada **a mano** desde el composer seguirá diciendo "Pendiente de facturar" para siempre. El composer no escribe en `billing_invoices` y no hay llave que las correlacione. Solo el puente de D-272 llena ese campo.
 
-## D-275 (2026-09-14) — La franja de la consola: de 10 tarjetas a 6 + línea de filtros
+## D-277 (2026-09-14) — La franja de la consola: de 10 tarjetas a 6 + línea de filtros
 
 **Disparador.** Pedido del usuario: *"la idea es poner lo más importante y que no se sature de información"*.
 
@@ -6249,7 +6249,7 @@ Diez tarjetas arriba y diez datos en la ficha: todo cabía, nada resaltaba. Crit
 - **Inactivas no lleva estilo de alerta y no entra en "En riesgo"**: una desactivada ya es una decisión tomada. Su pie dice cuántas **pagaban**, que es lo que separa una oportunidad real de una baja sin consecuencia.
 - Columna **Estado** con UNA etiqueta por fila y orden de prioridad fijo: Bloqueada > Plan vencido > En riesgo > Vence pronto > Al día/Activa. Un freemium sano dice **"Activa"**, no "Al día": "al día" se leería como que paga puntual y no paga nada.
 
-## D-276 (2026-09-14) — Cuánto deja cada cliente: el escalón de precio en la consola
+## D-278 (2026-09-14) — Cuánto deja cada cliente: el escalón de precio en la consola
 
 **Disparador.** Pregunta del usuario: *"en la columna plan que dice premium o freemium, ¿de dónde los sacaste? en los planes veo Origen, Esencia, Impulso"*.
 
@@ -6261,7 +6261,7 @@ Diez tarjetas arriba y diez datos en la ficha: todo cabía, nada resaltaba. Crit
 - Sin ventas medidas **no se supone el escalón más barato** (dibuja "—"), y el total sale `null` en vez de 0 si nadie aportó precio.
 - `resolverModoCobro` se subió de `billingOverview` a `planPricing`: es **función pura del documento** (cero lecturas) y ahora las pestañas de Empresas y Cobros no pueden decir cosas distintas del mismo cliente. **Con tarjeta** y **sin tarjeta** se cuentan por separado, nunca restando: la cortesía no está en ninguno de los dos grupos.
 
-## D-277 (2026-09-14) — El acuerdo comercial: escalón pactado y plan anual
+## D-279 (2026-09-14) — El acuerdo comercial: escalón pactado y plan anual
 
 **Disparador.** Caso real: *"ALMACEN BOMBAS compró un plan anual y se le pactó Liderazgo, pero en Cobros dice mensual y 83.951"*.
 
@@ -6276,7 +6276,7 @@ Diez tarjetas arriba y diez datos en la ficha: todo cabía, nada resaltaba. Crit
 
 **Lo que NO cambió: el cobro sigue saliendo de las ventas para todas las empresas.** El pacto es una excepción que hay que activar a mano, empresa por empresa.
 
-## D-278 (2026-09-14) — Filtros que se combinan tienen que anunciarse los dos
+## D-280 (2026-09-14) — Filtros que se combinan tienen que anunciarse los dos
 
 **Disparador.** Reporte del usuario: *"si filtro las que son freemium en el select de estado no arroja ninguna empresa, pero si la filtro en el select de escalón sí filtra, no entiendo"*.
 
@@ -6287,7 +6287,7 @@ Estado y Escalón son dos filtros independientes que se aplican **juntos**, pero
 - Se retiró `'pagan'`: era **exactamente el mismo conjunto** que `'premium'` con otro nombre.
 - El vacío de la tabla **nombra el filtro** que la dejó en cero, y en "Pagan por año" / "Precio pactado a mano" explica **dónde se guarda** el dato — esos dos salen vacíos hasta que alguien registre un acuerdo, y sin la nota parecen rotos.
 
-## D-279 (2026-09-14) — `cursor: help` sobre algo clickeable
+## D-281 (2026-09-14) — `cursor: help` sobre algo clickeable
 
 **Disparador.** Reporte del usuario: *"le doy clic y aparece un signo de interrogación, no me redirige a ninguna parte"*.
 
