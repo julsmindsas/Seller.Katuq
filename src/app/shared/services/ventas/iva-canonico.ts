@@ -86,6 +86,10 @@ export const filaSinIVAEfectivo = (fila: any, hoyISO?: string): number => {
 const _rangoVolumenPorCantidad = (preciosVolumen: any, cantidad: number): any => {
   if (!Array.isArray(preciosVolumen)) return null;
   for (const x of preciosVolumen) {
+    // Espejo del backend (orderCalculationService.js): un escalón que no declara NI
+    // inicio NI límite no tiene rango y absorbería cualquier cantidad, ganándole al
+    // precio base incluso con 1 unidad. Ticket 1024 (ORE-000949).
+    if (x?.numeroUnidadesInicial == null && x?.numeroUnidadesLimite == null) continue;
     const ini = _num(x?.numeroUnidadesInicial);
     const lim = x?.numeroUnidadesLimite == null ? Infinity : _num(x.numeroUnidadesLimite);
     if (cantidad >= ini && cantidad <= lim) return x;
