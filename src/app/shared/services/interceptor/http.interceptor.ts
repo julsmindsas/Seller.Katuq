@@ -59,6 +59,16 @@ export class HttpInterceptor2 implements HttpInterceptor {
             });
           }
 
+          // Cuenta en SOLO LECTURA (suspendida o pausada). Llega como 423 y no
+          // como 403 justamente para no caer en la rama de abajo: un 403 se
+          // evalúa como posible sesión inválida, y sacar al login a un cliente
+          // suspendido lo deja sin poder ver su información ni pagar para
+          // reactivarse. Acá no se cierra nada: se explica y se sigue.
+          if (err.status === 423 && err.error?.code === 'TENANT_SOLO_LECTURA') {
+            this.avisarSoloLectura(err.error?.message);
+            return throwError(err);
+          }
+
           if ([401, 403].indexOf(err.status) !== -1 && !isPublicRoute) {
             if (this.esSesionInvalida(err)) {
               // Sesión inservible: seguir "adentro" de la app solo produce
@@ -86,6 +96,32 @@ export class HttpInterceptor2 implements HttpInterceptor {
 
           return throwError(err);
         }));
+  }
+
+  /** Momento del último aviso de solo lectura, para no repetirlo en ráfaga. */
+  private static ultimoAvisoSoloLectura = 0;
+
+  /**
+   * Avisa que la cuenta está en solo lectura.
+   *
+   * Una pantalla puede disparar varias escrituras de golpe (guardar + subir
+   * imagen + recalcular) y las tres rebotarían: sin este freno, el usuario
+   * recibe tres avisos idénticos por un solo clic. Se muestra uno cada 10
+   * segundos y el resto se traga.
+   */
+  private avisarSoloLectura(mensaje?: string): void {
+    const ahora = Date.now();
+    if (ahora - HttpInterceptor2.ultimoAvisoSoloLectura < 10000) {
+      return;
+    }
+    HttpInterceptor2.ultimoAvisoSoloLectura = ahora;
+
+    this.toastr.warning(
+      mensaje ||
+        'Tu cuenta está en solo lectura: puedes consultar toda tu información, pero no registrar cambios.',
+      'Cuenta en solo lectura',
+      { timeOut: 12000, closeButton: true, progressBar: true }
+    );
   }
 
   /**

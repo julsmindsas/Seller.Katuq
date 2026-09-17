@@ -6432,3 +6432,377 @@ Nada lo detectó: `node --check` solo mira sintaxis y ningún test ejecuta `_pro
 **La prueba se verifica a sí misma**: incluye la muestra del defecto original y afirma que la detecta. Una prueba de este tipo que no falla ante el caso que la originó no protege nada, y eso no se nota hasta el siguiente incidente.
 
 Hoy: 82 archivos, 0 lecturas fuera de alcance.
+
+---
+
+## D-287 (2026-09-15) — Ciclo de vida del cliente: suspender deja de ser echar
+
+**Disparador.** Pedido del negocio: estados explícitos (prueba → activo → mora → suspendido → cancelado → eliminado), gracia configurable, suspensión en SOLO LECTURA que nunca borra datos, reactivación en un clic y pausa para clientes estacionales.
+
+### Lo que había, medido antes de tocar nada
+
+Censo de producción del 2026-09-15 sobre las **65 empresas**:
+
+| Campo | Realidad |
+|---|---|
+| `subscriptionStatus` | 61 `active`, 4 sin el campo. **Cero** trial, suspended o cancelled |
+| `activo` | 61 `true`, 2 `false`, **2 sin el campo** |
+| objeto `bloqueo` | **0** — el botón de bloquear con motivo nunca se usó |
+| gracia / fin de trial / cancelación | **0, 0, 0** |
+| `subscriptions` | 12 docs: 6 `pending_payment`, 3 `renewed`, **2 `suspended`**, 1 `active` |
+
+Dos conclusiones que cambiaron el diseño:
+
+1. **`subscriptionStatus` era decorativo**: nadie lo movió nunca de su valor por defecto. Eso permitió **reusarlo como campo canónico** ampliándole el vocabulario, en vez de inventar un tercer campo de estado.
+2. **La desincronía ya era real**: 2 suscripciones suspendidas y **ninguna empresa suspendida**. La suspensión ocurría en `subscriptions` y no llegaba ni al login ni a la consola.
+
+### La decisión
+
+Estado canónico = `companies.subscriptionStatus`, vocabulario `trial | active | past_due | suspended | paused | blocked | cancelled | deleted`. `activo` se conserva **derivado** y lo escribe el mismo que escribe el estado (`services/companies/cicloVida.js::camposParaEstado`), que es lo que impide que vuelvan a contradecirse. `blocked` existe para que las 4 empresas sin acceso de hoy **no cambien de comportamiento** al estrenar el ciclo.
+
+| Estado | Entra | Escribe | Se le cobra |
+|---|---|---|---|
+| En prueba | sí | sí | no |
+| Activo | sí | sí | sí |
+| En mora | sí | **sí** | sí |
+| Suspendido | **sí** | no | sí |
+| Pausado | sí | no | no |
+| Bloqueado / Cancelado / Eliminado | no | no | no |
+
+**En mora se sigue operando completo**: cortarle el negocio a alguien el primer día de retraso pierde al cliente y no cobra la deuda. **Un suspendido entra** a propósito: si no pudiera, tampoco podría consultar su información ni pagar para reactivarse.
+
+### La trampa que definió el guardia de solo lectura
+
+"Bloquear todo lo que no sea GET" **rompe la lectura**. En esta API hay 639 rutas mutantes, y **63 de esas rutas POST son lecturas disfrazadas**: `POST /v1/companies` es `getCompany`, `POST /v1/clients/search` busca, `POST /v1/orders/all/filter` lista. Un suspendido se habría quedado sin ver sus propios pedidos — exactamente lo contrario de lo prometido.
+
+Y al revés: **`POST /v1/orders/getnextConsecutive` se llama `getNextConsecutive` y escribe** (`controllers/orders.js:2836` hace `transaction.update` e incrementa el consecutivo). La clasificación se hizo leyendo controladores, no nombres.
+
+Por eso `tests/companies/soloLectura.test.js` incluye un **verificador que recorre los routers de verdad** y falla si aparece un POST con pinta de lectura sin clasificar. Sin él la lista envejece en silencio y el síntoma tarda meses en aparecer.
+
+### 423, no 403
+
+El rechazo es **423 Locked** con `code: 'TENANT_SOLO_LECTURA'`. Un 403 lo evalúa el interceptor como posible sesión inválida y **saca al usuario al login** — a un cliente suspendido eso lo deja sin poder ver por qué lo suspendieron ni pagar para salir. Ver el razonamiento de los tres 403 distintos en `http.interceptor.ts::esSesionInvalida`.
+
+Rutas siempre permitidas aunque esté en solo lectura, porque sin ellas queda encerrado: `/v1/subscriptions`, `/v1/billing`, `/v1/support`, cambio de contraseña y login.
+
+### Dónde vive
+
+El guardia se engancha **dentro de `middleware/auth.js`**, después de decodificar el token, no montado en `index.js`: el tenant que vale es el **firmado en el JWT**. Si se leyera del header `company`, un suspendido se destrabaría cambiando una cabecera. De paso cubre por construcción toda ruta autenticada, incluidas las que se agreguen después.
+
+El caché de estado por tenant (60 s) evita una lectura de Firestore por escritura; el endpoint que cambia el estado lo **olvida** al instante, que es lo que hace que "reactivar en un clic" se sienta inmediato.
+
+Si el guardia falla (Firestore caído), **deja pasar**: negar por error le corta el negocio a alguien que sí pagó, que es peor que dejar escribir a un suspendido un rato.
+
+### En la UI
+
+No hay módulo nuevo. En la consola de plataforma (dentro de Configuración de empresa), el botón del candado pasó a ser el botón de **Estado del cliente**: mismo lugar, ahora con selector de estados válidos, motivo obligatorio cuando se le quita acceso o escritura, y días de gracia pactados por empresa. El estado se muestra como chip en la fila y explicado en la ficha. Ámbar para "solo lectura", rojo solo para quien perdió el acceso: pintarlos igual hace creer que se dejó a alguien por fuera cuando no fue así.
+
+### Eliminación
+
+`deleted` **solo marca**. `puedeEliminar()` exige estado marcado a mano + retención cumplida (30 días por defecto), y aun así el borrado es manual y con exportación previa. **Nada se borra por falta de pago**, y el contract test afirma que ningún estado escribe un campo de borrado.
+
+### Lo que NO entró
+
+- **La automatización mora → suspensión no se encendió.** La maquinaria existe (`cronService.js:1125`, `BILLING_GRACE_DAYS`) pero los crones están apagados (`CRON_ENABLED != true`) y nunca han corrido: 0 fechas de gracia en producción. Encenderla debe empezar en modo "avisa pero no suspende".
+- El bypass por `x-api-key` (agentes internos) no pasa por el guardia: no lleva tenant firmado.
+
+### Hallazgo aparte
+
+**`DEL RANCHO GREEN` no tiene el campo `activo`** y el login exige `activo === true` explícito: sus **2 usuarios no pueden iniciar sesión** hoy, con el mensaje "La empresa se encuentra inactiva" y sin motivo. Se dejó **sin tocar** por decisión de la dueña del producto. Con el ciclo de vida al menos ya se ve en la consola como "Bloqueado" en vez de ser invisible.
+
+---
+
+## D-288 (2026-09-15) — Cortesía: las empresas de Katuq no son clientes morosos
+
+**Disparador.** Captura de "Cobros del mes" del 2026-09-14: **FLORECER, Prueba Onboarding Katuq Verificada, Julsmind y Mi Campo Verde** aparecían con *"Mensual · Base · $ 83.951 · LINK DE PAGO"*, exactamente igual que un cliente que debe plata. Son empresas de Katuq y demo: tienen premium, entran a todo, y no se les cobra ni mensual ni anualmente.
+
+### Por qué el sistema las trataba como clientes
+
+`isManualBillingCandidate` ya contemplaba la cortesía, pero solo de refilón: había que ponerle a la empresa un `premiumOrigen` de una lista (`promocion`, `regalo`, `gift`…) que nadie recordaba. Como las cuatro tenían `nextBillingDate`, caían en la única rama que quedaba: **cobro manual**.
+
+Y no había forma limpia de marcarlas:
+
+- **Bajarlas a freemium** les quita las funciones — justo lo que una demo tiene que poder mostrar.
+- **Marcarlas `premiumOrigen: 'promocion'`** las mete en `premiumPromocionalService`, que **las devuelve a freemium al vencer**. Una empresa de Katuq no puede caducar.
+
+### La decisión
+
+Campo propio y explícito: **`companies.cobroCortesia: true`** + `motivoCortesia`. Es sobre el COBRO, no sobre el plan, y por eso vive aparte de `subscriptionPlan`. La lógica quedó en un solo lugar, `subscriptionBillingUtils.esCortesia()`, que respeta además los orígenes viejos para no cambiarle el trato a nadie.
+
+Consecuencias, todas por esa única marca:
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Motor de facturación | cobro manual: factura + link de pago | queda `unmanaged`: no se le emite nada |
+| Columna Periodo | "Mensual" | **"Cortesía"** (el tercer valor pedido) |
+| Columna A cobrar | "$ 83.951" | "No se cobra" + el motivo en el tooltip |
+| Columna Renueva | "01 de oct · 17 d" | "No vence" |
+| Totales de Cobros | las sumaba | ya las excluía (`modoCobro !== 'cortesia'`) |
+| **Ingreso del mes** | **las sumaba** | **no las cuenta** |
+
+### El error de plata que apareció de paso
+
+`estimarEscalon` solo miraba `pagaPlan`, así que a las cuatro les asignaba escalón Base y **`sumarIngresoEstimado` las metía en "Ingreso del mes"**: la consola reportaba ~US$108 mensuales de ingreso que nadie iba a cobrar nunca. Ahora devuelve `aplica: false, motivo: 'cortesia'`.
+
+### Por qué "No se cobra" y no "$ 0"
+
+Un cero en esa columna se lee como *"este mes no vendió"*, y un monto tachado invita a cobrarlo igual. El monto que tendría queda en el tooltip, por si algún día hay que decidir cobrarle.
+
+### Cómo se marca
+
+Casilla **"No se le cobra (cortesía)"** en el editor de plan de la consola, junto al escalón y la periodicidad — donde vive el resto del acuerdo comercial. Se manda siempre (true o false) para poder **quitarla**: si solo viajara al activarla, no habría forma de volver a cobrarle a una empresa desde esa pantalla.
+
+Para las cuatro existentes: `scripts/marcar-empresas-cortesia.js` (con `--dry-run` por defecto; el dry-run del 15-09 encontró las 4, sin ambigüedad de nombre, las 4 en premium).
+
+### El hueco que apareció al verificar contra producción
+
+Marcadas las cuatro, la verificación mostró que **"Prueba Onboarding Katuq Verificada" seguía saliendo como `automatico`**: tiene **tarjeta inscrita y cobro recurrente** (en la captura: "TARJETA INSCRITA · Pagada"). Como `isAutomaticBilling` se evaluaba ANTES que la cortesía, el cron le habría cobrado la tarjeta de verdad aunque la pantalla dijera "Cortesía" — el peor de los dos mundos: silencio en la UI y cobro en el banco.
+
+Corregido en la raíz: `isAutomaticBilling` devuelve `false` para una empresa de cortesía. **Tener con qué cobrar no es lo mismo que tener que cobrar.** Verificado contra producción: las 4 quedan `auto=false, manual=false` (el motor no las toca) y CAFE ESCOBAR / OH MY STORE siguen en `manual=true`.
+
+Aplicado en producción el 2026-09-15 a los 4 documentos (`FLORECER`, `Prueba Onboarding Katuq Verificada`, `Julsmind`, `Mi Campo Verde`).
+
+### Segunda pasada: sacarlas de la lista y del resto de la consola
+
+Con la marca puesta no alcanzaba. Revisando la pantalla con las cuatro ya marcadas quedaban tres sitios diciendo lo contrario:
+
+1. **Seguían listadas en Cobros del mes.** Esa pestaña responde UNA pregunta —a quién hay que cobrarle este mes— y ellas no son parte de la respuesta: mezclarlas obliga a acordarse, fila por fila, de cuáles saltarse. Ahora la lista por defecto las excluye y aparece una tarjeta **"De cortesía"** que las muestra en un clic. No se esconden, se sacan de la respuesta.
+2. **La pestaña Empresas seguía mostrando el precio.** La fila decía *"Base · US$27 · cobra 1 de oct"* y la ficha *"Base · US$27 al mes · próximo cobro el 01 de oct de 2026, cobro mensual"*. Ahora: **"Cortesía · no se cobra"** en la fila, **· CORTESÍA** junto a PREMIUM en la ficha, y *"no vence · no se le cobra ni mensual ni anualmente"* donde iba la fecha.
+3. **`escalonTexto` las mandaba a la rama de freemium**, así que la ficha decía *"sin cobro · 15 pedidos al mes"* de una empresa **premium sin ningún tope**. Lo cierto es que no se le cobra, no que esté limitada.
+
+Y dos conteos que las incluían y no debían:
+
+- **`resolverRenovacion`** les devolvía la fecha de corte vieja, así que entraban en las tarjetas **"por vencer"** y **"vencidos"** — la lista de a quién perseguir por plata. Ahora no aplica.
+- **`computePlatformTotals`** las sumaba en `planesVencidos` por la misma razón.
+
+**De paso, un ahorro:** las de cortesía ya no entran al recálculo de montos de Cobros. Sumar los pedidos del mes de una empresa es lo más caro de esa pantalla (ALMARA: 348 s) y acá servía para llegar a un monto que nadie va a cobrar.
+
+---
+
+## D-289 (2026-09-15) — El ciclo de facturación: rango editable y prorrateo por salto de escalón
+
+**Disparador.** Al auditar el cobro antes de encender la facturación automática aparecieron dos cosas que facturan mal, y una decisión pendiente del negocio.
+
+### Lo que se midió antes de tocar nada
+
+De las 8 empresas premium, **solo 4 son clientes de pago** (CAFE ESCOBAR, ALMARA FELICIDAD, OH MY STORE, ALMACEN BOMBAS); las otras 4 son las de cortesía de D-288.
+
+- **Ninguna de las 4 tenía `billingPeriod`.** El código cae a `'monthly'`, así que a ALMACEN BOMBAS —que es anual— **se le habría cobrado mensual**, sin el 20% de descuento y sin cobrar los 12 meses de una.
+- **El precio se cobra `USD × TRM del día`**, no el `priceCOP` de la tabla. Con la TRM en $3.100, Base se cobra **$83.712** mientras la tabla dice **$108.000**: la tabla asume un dólar a $4.000 y está **23% desfasada**. No se usa para cobrar, pero quien la mire cree otra cosa.
+- **El escalón se mide sobre la venta CON IVA y CON flete** (`subtotal + impuesto`, envío incluido). Decisión del negocio: **se deja así**.
+
+### El rango del ciclo, ahora editable (`services/billing/cicloFacturacion.js`)
+
+El inicio del ciclo se deducía restándole un período al corte. Para un mensual da igual; **para un anual no**: el año contratado arranca el día que se acordó con el cliente. Ahora `companies.billingPeriodStart` lo fija a mano y manda sobre el calculado, con las dos fechas editables desde el editor de plan.
+
+Lo medido: con las mismas ventas de $360 M, un rango de 12 meses da un promedio mensual de **$30 M** y uno corrido de 4 meses da **$90 M** — tres escalones de diferencia.
+
+Falla suave a propósito: una fecha inválida o posterior al corte **no rompe el cobro**, se factura con el rango calculado y queda la advertencia. Un rango que no cuadra con el período se respeta pero se advierte: puede haber un acuerdo detrás.
+
+### El prorrateo (`services/billing/prorrateoEscalon.js`)
+
+**Antes:** quien se pasaba del tope el día 25 pagaba el escalón grande **por el mes entero**.
+**Ahora:** el período se parte en tramos por el día en que las ventas acumuladas cruzaron cada tope, y cada tramo se cobra al escalón que regía esos días.
+
+El tope de un período es `maxSalesCOP × meses` ($15 M en un mes de Base, $180 M en un año). Cruzarlo equivale exactamente a superar el tope con el promedio mensual —que es como se decidía el escalón al cierre—, así que **el escalón final no cambia**; lo que agrega es saber CUÁNDO se cruzó.
+
+**Verificado contra ventas reales de septiembre:**
+
+| Empresa | Ventas del mes | Escalón | Antes | Ahora | Diferencia |
+|---|---|---|---|---|---|
+| CAFE ESCOBAR | $8.886.650 | Base, sin saltos | $83.712 | $83.712 | $0 |
+| OH MY STORE | $142.469.361 | Impulso, **3 saltos** | $455.766 | **$353.451** | −$102.315 |
+
+OH MY STORE pasó por Base (6 días), Origen (2), Esencia (1) e Impulso (21). **Es menos ingreso para Katuq**: $102.315 en un cliente en un mes. Es el precio de cobrar justo, y el contract test garantiza que la regla nueva **nunca cobra más** que la vieja (probado en los 29 días posibles de salto).
+
+Decisiones que quedaron dentro:
+
+- **Se cobra todo junto en el corte**, no con un link a mitad de ciclo: 3 de los 4 clientes no tienen tarjeta y perseguir un segundo cobro en el mismo mes no funciona.
+- **Un escalón pactado no salta.** Se le prometió un precio cerrado y ese vale, venda lo que venda.
+- **Todos los tramos usan la TRM del ciclo.** Dos dólares distintos en una misma factura no se pueden explicar.
+- **En anual el 20% se aplica en cada tramo**, no solo en el primero.
+- **El reparto del redondeo va por residuo mayor**, para que las líneas sumen EXACTAMENTE el total: una factura que no cuadra consigo misma no se puede defender.
+- **Cumbre no se cobra sola** — se marca para acordar el precio en vez de facturar $0.
+- El desglose se guarda **en la factura** (`prorrateo.tramos`) y viaja congelado con `pricingLocked`, para que un reintento no genere una segunda explicación del mismo monto.
+
+### De paso: la proyección medía otro período
+
+`getCompanyBillingInfo` medía del **día 1 del mes calendario**, mientras la factura mide del corte anterior al corte. Con todos los cortes el día 1 coincidía por casualidad; a un cliente con corte el 15 la pantalla le proyectaba un período y la factura le cobraba otro. Ahora las dos usan `resolverRangoCiclo` y el mismo motor de prorrateo, así que la consola muestra lo que se va a cobrar.
+
+### Pendiente del negocio
+
+**La TRM está sin decidir.** Opción 3 (tasa congelada el día del corte, que ya es lo que hace el motor vía `pricingLocked`) contra tasa diaria. Mientras no se defina **no se toca la tabla de precios en pesos ni el aviso previo al cliente**.
+
+### D-289 · CORRECCIÓN (2026-09-15) — el prorrateo NO se aplica
+
+Presentadas las dos reglas con números reales, el negocio eligió **cobrar el escalón al que llegó, completo**:
+
+| Caso | Regla elegida | Prorrateado |
+|---|---|---|
+| Panadería, $50 M en el mes | Esencia · **$238.735** | ~$180.000 |
+| OH MY STORE, $284 M | Expansión · **$765.811** | $508.474 |
+
+**El argumento que decidió: con el escalón completo el cliente puede predecir su factura mirando la tabla de planes** ("vendí $50 millones, eso es Esencia, pago US$77"). Con el prorrateo la factura depende del día exacto en que cruzó cada tope — un dato que el comercio no tiene y no puede verificar, así que cada factura se vuelve una conversación.
+
+El motor prorrateado **se conserva completo y probado** detrás de `BILLING_PRORRATEO_ENABLED` (apagado). Encenderlo es una variable de entorno; con él apagado el cobro es exactamente el de siempre, `escalón × período`.
+
+**Lo que sí quedó de esta ronda, y era el aporte real:** el rango del ciclo editable (necesario para el anual de ALMACEN BOMBAS), la corrección de la proyección —que medía el mes calendario mientras la factura mide el ciclo— y las ventas caídas visibles en la ficha.
+
+### Tres confusiones que valieron la pena aclarar
+
+Quedan escritas porque volverán a aparecer:
+
+1. **No se cobra por día.** Es UNA factura el día del corte. El desglose por tramos era la forma de calcular ese único monto, no una serie de cobros.
+2. **Pagar tarde no cambia el monto.** La factura ya está emitida; si paga tres días después, paga esa misma factura. Los días de retraso no se trasladan a la factura siguiente. Lo que desencadena es la gracia y la suspensión (D-287), no un cobro extra. **Intereses de mora: decidido no implementarlos por ahora.**
+3. **"Se cobra en el siguiente corte" significaba "en la factura de ese mismo mes"**, no en la del mes siguiente. Nada se arrastra de un ciclo al otro.
+
+## D-290 (2026-09-15) — La ficha sumaba ventas que nunca se van a cobrar
+
+**Disparador.** La ficha de OH MY STORE mostraba **$187.209.253** y el cobro contaba **$142.469.361**. Dos pantallas, dos números, ninguna explicación: la conclusión razonable era que una de las dos estaba mal.
+
+### Las dos diferencias, medidas
+
+| Cifra | Qué mide |
+|---|---|
+| $187.209.253 | Últimos **30 días** (16-ago → hoy), sin descontar pedidos con el pago cancelado |
+| $160.081.632 | El **ciclo de cobro** (1-sep → hoy), sin descontar |
+| $142.469.361 | El ciclo de cobro, descontando lo no facturable |
+
+1. **Ventana distinta**: la ficha usa 30 días móviles; el cobro usa el ciclo (1-sep → 1-oct), que a mitad de mes va por la mitad.
+2. **37 pedidos por $17.612.270 con el pago cancelado.** El cobro los excluye —una venta caída no se factura—; la ficha no, porque solo mira `estadoProceso` y no `estadoPago` (limitación declarada en `companyMetrics`: usa agregaciones para no leer los documentos).
+
+Censo de los estados reales en las 4 empresas de pago: los únicos valores que excluyen son **`Cancelado`** y **`Rechazado`**, ambos en `estadoPago`. Ninguna tiene pedidos anulados por `estadoProceso`, así que **hoy toda la exclusión viene del pago**.
+
+### Lo que se hizo
+
+- La tarjeta ambigua pasó de "Facturado 30 días" a **"Vendido 30 días"**, con la nota *"todo lo que entró, sin descontar lo caído"*.
+- Tarjeta nueva **"No se cobra"**: valor y cuántos pedidos de cuántos.
+- Detalle bajo demanda (`GET /companies/:id/pedidos-excluidos`): cada pedido con número, fecha de venta, **fecha de caída**, días transcurridos, motivo y valor. Los caídos en un mes distinto al de la venta se marcan — son los que pudieron haberse contado en un cobro anterior.
+
+Va bajo demanda y consulta por `company + fechaCreacion >= desde`, que usa el índice existente: lee los cientos de pedidos de la ventana, no el histórico completo.
+
+### ⚠️ Deuda: no se guarda cuándo se anula un pedido
+
+Los pedidos **no tienen campo de fecha de anulación**. Lo más cercano es `date_edit`, la última edición del documento: coincide si nadie volvió a tocarlo y se corre si sí. La respuesta lo marca como `fechaAproximada` y la pantalla lo dice. El arreglo de fondo es escribir `fechaAnulacion` al cambiar el estado, en `controllers/orders.js`.
+
+Dato de paso: en OH MY STORE las 37 caídas se cancelaron **dentro del mismo mes** (máximo 13 días después), y la mayoría el mismo día, en bloque.
+
+## D-291 (2026-09-15) — El precio queda en dólares, y las pantallas lo dicen
+
+**Decisión del negocio:** el precio de los planes **se mantiene en dólares**, convertido con la TRM oficial del **día del corte**, que queda fija para esa factura. Con eso se destrabaron tres cosas que estaban esperando.
+
+### 1. La tabla de precios en pesos dejó de mentir
+
+El `priceCOP` de `config/subscriptionLimits.js` es un número escrito a mano que asume el dólar a $4.000. Con la TRM en $3.100 decía **$108.000** donde se cobran **$83.712** — 23% de diferencia entre la pantalla y la factura. Ahora `getCompanyBillingInfo` devuelve cada escalón con `priceCOPEstimado` calculado con la TRM viva y marcado como aproximado. El precio contractual sigue siendo el de dólares; el de pesos es una conversión y se presenta como tal.
+
+### 2. "Ingreso del mes" pasó a pesos
+
+La tarjeta mostraba dólares (`US$1.200`), que no dice nada hasta convertirlo. Ahora va en pesos con la TRM del día —la misma con la que se factura— y el pie muestra los dólares y la tasa usada. Si la fuente oficial no responde, `trm: null` y la tarjeta vuelve a dólares: **nunca una conversión inventada**. La TRM se cachea 6 horas en memoria porque la consola se recarga muchas veces al día y el valor oficial cambia una.
+
+### 3. El aviso previo (`services/billing/avisoPrevioCorte.js`)
+
+Correo N días antes del corte (3 por defecto, `BILLING_AVISO_PREVIO_DIAS`) con tres datos: cuánto vendió, en qué escalón quedó y cuánto se le cobraría — **marcado como estimado**, con la TRM de hoy y la advertencia de que el valor definitivo se fija el día del corte.
+
+Esa advertencia no es letra chica: es la razón de ser del aviso. Mandar un monto "en firme" que después cambia es peor que no avisar, y el contract test falla si el correo no la trae.
+
+Guardas: **dos llaves para enviar** (el flag `BILLING_AVISO_PREVIO_ENABLED` y el `--enviar` del script), ensayo por defecto, y no se avisa dos veces del mismo corte — la marca se compara contra la fecha del corte, no contra "hace cuánto se avisó", para que un aviso viejo no tape el del ciclo siguiente. Se marca **después** de enviar: al revés, un fallo de correo se tragaría el aviso de ese corte para siempre. Freemium y cortesía quedan fuera: avisarles de un cobro que no existe es la peor clase de correo.
+
+Ensayo del 15-09: a las 4 empresas les faltan 16 días para el corte, así que hoy no le toca a nadie. El 28 de septiembre les tocaría a las cuatro.
+
+### La ficha: la resta ya viene hecha
+
+Las dos tarjetas de D-290 obligaban a restar a mano para saber sobre qué se cobra. Se unificaron en una sola tarjeta con la cuenta armada como en una factura:
+
+```
+Vendió en 30 días        $187.209.253
+Ventas caídas (37)      − $19.236.871   [ver cuáles]
+─────────────────────────────────────
+Base del cobro           $167.972.382
+```
+
+Si el detalle no se pudo leer, la tarjeta dice que **puede incluir ventas caídas** en vez de afirmar un número limpio que no lo es.
+
+---
+
+## D-292 (2026-09-17) — La secuencia de renovación: cinco correos, un solo cron
+
+El aviso previo de D-291 era **uno solo** (3 días antes). Pasa a ser la secuencia completa: **7 y 3 días antes, el día del corte, y +3 y +7 después**.
+
+**Por qué no arranca a 15 días** (se propuso y se descartó el mismo día): el ciclo de cobro va del corte al corte, así que a 15 días apenas se vendió la mitad del período. El escalón y el monto estimado saldrían calculados sobre medias ventas y el cliente vería cerca de la mitad de lo que va a pagar. Un estimado que se equivoca por el doble es peor que no avisar. A 7 días ya transcurrió ~77% del ciclo y a 3 días ~90%.
+
+### Los dos lados del corte no son lo mismo
+
+- **Antes** el correo **informa**: cuánto vendiste, en qué escalón quedaste, cuánto te va a llegar (estimado, con la advertencia de la TRM de D-291). Mandarlo nunca hace daño.
+- **Después** el correo **cobra**. Y ahí está la decisión que hace esto seguro: **los tres posteriores exigen factura emitida y sin pagar**. Se consulta `billing_invoices` por el id determinístico del ciclo (`empresa_AAAAMMDD`) — un `get` por id, sin query ni índice. Sin factura → no sale nada. Factura `paid`, `custom`, `cancelled` o `void` → tampoco.
+
+Eso permite dejar la secuencia encendida **mientras el motor de cobro sigue apagado**: como nunca se ha emitido una factura real, los avisos de mora simplemente no disparan. Y cuando se encienda, no puede perseguir a quien pagó por transferencia —que hoy es como pagan 9 de cada 10 clientes— porque una factura conciliada queda en `paid`. Si la lectura de la factura falla, se trata como saldada: ante la duda, no se cobra.
+
+### Los avisos atrasados no se acumulan
+
+Si la pasada diaria no corrió por unos días y hoy faltan 2 para el corte, sale **solo** el de 3 y el de 7 se da por servido (viaja en `vencidos` y se marca sin enviarse). Tres correos seguidos el mismo día por una caída nuestra parecen un error del sistema, que es lo contrario de lo que un aviso de cobro debe transmitir. En mora manda el hito **más reciente alcanzado**, no el más viejo: el correo que corresponde es "van 7 días", no "vence hoy".
+
+Pasados 7 días del último hito (`DIAS_TOLERANCIA_MORA`) el correo automático se calla: a esa altura o está en gestión humana o algo pasó con la fecha de corte.
+
+### La marca pasó de una fecha a un objeto
+
+Antes `avisoPrevioCorte` guardaba la fecha del corte ya avisado. Ahora `avisosCorte: { corte, previos: [], mora: [] }` marca **por hito**, sin lo cual el segundo correo de la secuencia no tendría cómo saber que el primero ya salió. Se sigue comparando contra la **fecha del corte** y no contra "hace cuánto se avisó", para que un corte corrido no quede tapado por la marca vieja. La marca vieja se sigue leyendo: si una empresa ya recibió su aviso de ese corte, se dan por servidos todos los previos.
+
+### Un cron, no seis
+
+`CRON_SCHEDULES.avisosRenovacion` (8:00 Bogotá, `BILLING_AVISO_CRON_SCHEDULE`) hace **una** pasada diaria que evalúa los cinco hitos y manda como mucho un correo por empresa. Va **después** del job de facturación de las 7: si ese día se emitió la factura, el aviso del día del corte ya la encuentra y puede mandar el monto en firme en vez de callarse.
+
+Candado propio (`BILLING_AVISO_PREVIO_ENABLED`) **aparte** del de facturación, bajo el maestro `CRON_ENABLED`: avisar no mueve plata, así que puede encenderse mucho antes que el motor de cobro.
+
+### Configuración y pruebas
+
+- `BILLING_AVISO_PREVIO_DIAS` pasó de un número a una lista (`"7,3"`). La configuración vieja de un solo número sigue valiendo.
+- `BILLING_AVISO_MORA_DIAS` (`"0,3,7"`); lista vacía apaga ese lado del corte.
+- El calendario vive puro y aparte en `services/billing/calendarioAvisos.js` — se prueba entero sin Firestore.
+- 38 pruebas verdes en `npm run test:aviso-previo` (11 del aviso previo original + 17 del calendario + 10 de la secuencia). `npm run avisos:corte` sigue siendo el ensayo y ahora muestra qué hito le tocaría a cada empresa.
+
+**Costo:** cero. Es SMTP propio (`notificaciones@katuq.com`), una corrida diaria sobre las 65 empresas y un `get` por id solo cuando hay que cobrar. Nada de esto toca ninguna pantalla.
+
+### Cómo se prueba (agregado 2026-09-17)
+
+Tres modos en `scripts/avisar-corte-proximo.js`, pensados para verificar la entrega **sin escribirle a un cliente**:
+
+- `--vista-previa` escribe los **cinco** correos de una empresa a archivos HTML con sus datos reales. No envía, no marca, no necesita SMTP. Los tres de cobro salen con el monto proyectado (la factura de ese ciclo no existe todavía) y el nombre del archivo lo declara.
+- `--a tu@correo.com` manda **de verdad** el correo que hoy corresponde, con los datos reales de la empresa, pero a la dirección que se le pase. **No marca hitos** — si los marcara, una prueba se comería el aviso que el cliente tenía que recibir, y hay un contract test que lo sostiene. No exige `BILLING_AVISO_PREVIO_ENABLED`: el destinatario es uno solo y lo eligió quien corre el comando.
+- `--solo "EMPRESA"` limita cualquiera de los modos a una empresa.
+
+El ensayo ahora además **muestra a qué buzón le llegaría** a cada una, que es la pregunta que siempre aparece antes de encender esto.
+
+### Dos cosas que estaban rotas y aparecieron al probar
+
+1. **`info.billingEmail` no existe.** El destinatario era `emailFactuElec || emailContactoGeneral || info.billingEmail`, y `getCompanyBillingInfo` **nunca devuelve** `billingEmail`: ese tercer intento era siempre `undefined`. Una empresa que solo tuviera cargado `correoElectronico` quedaba fuera con "sin correo de facturación" aunque la factura sí le llegara. Ahora el aviso usa **el mismo resolvedor que la factura** (`billingService._resolveBillingEmail`, ocho campos en orden fijo), inyectado como dependencia para que los tests sigan sin tocar Firestore.
+2. **El script no leía el `.env`.** No cargaba `dotenv`, así que corriéndolo a mano se ignoraban los hitos configurados y, sobre todo, `SMTP_PASS` — no habría salido un solo correo y el motivo habría sido invisible.
+
+---
+
+## D-293 (2026-09-17) — Los avisos se verifican desde la pantalla, no desde los logs
+
+D-292 dejaba el rastro de los envíos en el documento de la empresa y en los logs del servidor. Para el Super Administrador eso equivale a no tener nada: la pregunta real es *"¿le llegó el correo a este cliente?"* y no había dónde mirarla.
+
+### Dónde va: columna "Avisos" en Cobros del mes
+
+Los **cinco casilleros van siempre**, enviados o no (`−7 −3 día0 +3 +7`), en verde los que ya salieron. Un casillero vacío al lado de uno lleno dice en qué punto de la secuencia está cada empresa; una lista de solo lo enviado no. Al pasar el mouse por cada uno: *"Enviado el 24 sept 8:02 a pagos@ohmystore.co"*, o *"Sin enviar · sale 3 días antes del corte"*.
+
+**No cuesta una sola lectura más.** El registro vive en el documento de empresa que esa pantalla ya carga para armar la fila, así que viaja gratis. Tampoco toca `VERSION_CALCULO`: el campo no pasa por el caché de montos, se lee del documento en cada respuesta.
+
+Los días de cada casillero **no están escritos en el front**: el backend manda `hitosAvisos` una vez por respuesta (no por fila). Si mañana se cambian los días por variable de entorno, la columna los sigue sola.
+
+### La palabra "hito" se queda, con su explicación
+
+Es la que usan el código, el script y los logs; cambiarla en la pantalla habría dejado dos vocabularios para lo mismo. Va explicada una vez en el encabezado de la columna: *"Un hito es cada momento en que se manda un correo: −7 es siete días antes del corte, día 0 es el día del vencimiento, +3 es tres días después."*
+
+### El registro se reinicia con cada corte
+
+`avisosCorte.historial` guarda hito, tipo, fecha y destinatario, **por ciclo**: al cambiar la fecha de corte arranca vacío. Así la consola responde "qué pasó con ESTE cobro" sin que el documento de empresa crezca sin fin. Tope de 12 entradas por si algo se desboca.
+
+### De paso: dos columnas que se leían mal
+
+- **Empresas — "Última venta" y "Último ingreso"** mostraban solo "hace N d". Ahora va la **fecha** arriba y el relativo abajo (`hoy`, `ayer`, `hace 12 días`). "Hace 0 días" no distinguía esta mañana de anoche, y "hace 412 días" no se entiende hasta convertirlo a fecha mentalmente.
+- **Cobros — "A cobrar"** mostraba solo pesos. Ahora lleva el **dólar debajo**, porque el precio del plan está en dólares y sin eso un mismo escalón parece cambiar de precio cada mes. El dólar **se deriva del monto en pesos con la misma TRM que lo produjo** (`COP = round(USD × TRM)`), no de la tabla de precios: tomarlo de la lista los haría discrepar justo en los casos que importan —período anual, escalón pactado, cobro prorrateado— y ahí es donde alguien "corrige" el número que estaba bien. Sin TRM no se pinta nada: inventar la conversión sería peor.
+- **El correo que muestra Cobros del mes** usaba `emailFactuElec || emailContactoGeneral`, el mismo desajuste que D-292 corrigió en el aviso: podía mostrar una dirección distinta a la que recibe el cobro. Ya usa el resolvedor de la factura.
+
+39 pruebas verdes en `npm run test:aviso-previo`.

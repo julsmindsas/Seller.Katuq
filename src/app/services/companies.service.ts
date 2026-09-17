@@ -27,6 +27,26 @@ export interface MetricasEmpresa {
   _cachedAt?: number;
 }
 
+/**
+ * Los estados por los que pasa un cliente de Katuq. El valor es el que guarda
+ * el backend; la etiqueta que ve el humano viaja en `estadoCicloInfo`.
+ *
+ * Los tres que importan y no son obvios:
+ *  - `past_due` (en mora): la factura se venció y corre la gracia. SIGUE
+ *    OPERANDO completo.
+ *  - `suspended`: solo lectura. Entra y ve todo lo suyo, no puede cambiar nada.
+ *  - `paused`: igual que suspendido, pero acordado con el cliente y sin cobro.
+ */
+export type EstadoCiclo =
+  | 'trial'
+  | 'active'
+  | 'past_due'
+  | 'suspended'
+  | 'paused'
+  | 'blocked'
+  | 'cancelled'
+  | 'deleted';
+
 export interface EmpresaPanorama {
   _docId: string;
   nit: string | null;
@@ -44,6 +64,38 @@ export interface EmpresaPanorama {
   nextBillingDate: any;
   /** Quién bloqueó la empresa y por qué. `null` si está operando normal. */
   bloqueo: { fecha: string; por: string; motivo: string } | null;
+  /**
+   * Estado del ciclo de vida, resuelto por el BACKEND.
+   *
+   * No se deduce acá de `activo` + `subscriptionStatus`: si el frontend tuviera
+   * su propia regla, la consola podría decir "Activo" mientras el login le
+   * niega la entrada al cliente. La regla vive en
+   * `services/companies/cicloVida.js` y esto es su resultado.
+   */
+  estadoCiclo: EstadoCiclo;
+  estadoCicloInfo: {
+    estado: EstadoCiclo;
+    etiqueta: string;
+    descripcion: string;
+    /** Sus usuarios pueden iniciar sesión. */
+    entra: boolean;
+    /** Puede modificar datos. En `false` la app le queda en SOLO LECTURA. */
+    escribe: boolean;
+    /** Se le factura este mes. */
+    cobra: boolean;
+  };
+  estadoCambiadoEl: string | null;
+  estadoCambiadoPor: string | null;
+  estadoMotivo: string | null;
+  /**
+   * Cortesía: premium con acceso a TODO y sin cobro — las empresas de Katuq y
+   * las demo. Es independiente del plan a propósito: bajarlas a freemium para
+   * no cobrarles les quitaría las funciones, que es lo contrario de lo que son.
+   */
+  cobroCortesia: boolean;
+  motivoCortesia: string | null;
+  /** Días de gracia pactados con esta empresa. `null` = se usa el default. */
+  diasGracia: number | null;
   metricas: MetricasEmpresa;
   /**
    * Fecha de alta. Sale de cuatro campos distintos según la época en que se dio
@@ -102,11 +154,17 @@ export interface EmpresaPanorama {
   tierContratado?: string | null;
   /** `monthly` | `yearly`. Lo que se pactó, crudo. */
   billingPeriod?: string | null;
+  /**
+   * Inicio del ciclo FIJADO a mano: desde cuándo se cuentan las ventas que
+   * deciden el escalón. `null` = lo calcula el sistema restándole un período a
+   * la fecha de cobro. En un anual las dos fechas son un acuerdo comercial.
+   */
+  billingPeriodStart?: any;
   _cachedAt: number | null;
   _stale: boolean;
 }
 
-export interface TotalesPlataforma {
+export interface TotalesPlataformaBase {
   empresas: number;
   activas: number;
   inactivas: number;
@@ -175,7 +233,19 @@ export interface TotalesPlataforma {
   empresasSinPrecio: number;
   /** Pagan y están en Cumbre: precio negociado, fuera del total. */
   empresasPrecioAMedida: number;
+  /**
+   * El mismo ingreso, en PESOS. Los planes están en dólares y se convierten con
+   * la TRM del día — la misma con la que se factura. `null` cuando la fuente
+   * oficial no respondió: la pantalla vuelve a mostrar dólares en vez de
+   * inventar una conversión.
+   */
+  ingresoEstimadoCOP?: number | null;
+  /** La TRM con la que se hizo esa conversión. */
+  trm?: number | null;
 }
+
+/** Alias histórico: el nombre que ya usaba la consola. */
+export type TotalesPlataforma = TotalesPlataformaBase;
 
 /** Una integración conectada por una empresa. */
 export interface IntegracionEmpresa {
@@ -279,6 +349,11 @@ export interface FilaCobro {
    * `cortesia` = premium de regalo, no se le cobra a propósito.
    */
   modoCobro: 'automatico' | 'manual' | 'cortesia';
+  /**
+   * Por qué no se le cobra, cuando es de cortesía. Sin esto, una empresa
+   * premium sin monto parece un cálculo que falló.
+   */
+  motivoCortesia: string | null;
   renovacion: {
     aplica: boolean;
     fecha: string | null;
@@ -291,6 +366,50 @@ export interface FilaCobro {
   tier: string | null;
   tierNombre: string | null;
   periodo: string;
+  /**
+   * Desglose del cobro cuando el comercio saltó de escalón dentro del período.
+   * `null` = no hubo salto (o no se pudo calcular): se cobra un solo escalón.
+   *
+   * Existe porque el monto prorrateado es MENOR que el escalón que aparece al
+   * lado, y sin el desglose eso se lee como un error de cálculo.
+   */
+  prorrateo: {
+    aplicado: boolean;
+    saltos: number;
+    montoSinProrrateo: number;
+    ahorroCliente: number;
+    tramos: Array<{
+      desde: string;
+      hasta: string;
+      dias: number;
+      escalon: string;
+      escalonNombre: string;
+      ventasAlCerrar: number;
+      montoCOP: number;
+    }>;
+  } | null;
+  /** El rango exacto de ventas que se midió para este cobro. */
+  periodoMedido: { inicio: string; fin: string } | null;
+  /**
+   * Los avisos de renovación que ya salieron para ESTE corte.
+   *
+   * `null` = a esta empresa todavía no se le mandó ninguno (o el corte cambió y
+   * el registro se reinició). No es un error: la columna dibuja los hitos vacíos.
+   */
+  avisos: {
+    corte: string | null;
+    /** Días ANTES del corte de cada aviso ya enviado. */
+    previos: number[];
+    /** Días DESPUÉS del corte. `0` es el aviso del día del vencimiento. */
+    mora: number[];
+    /** Cuándo salió cada uno y a qué buzón. Es la verificación. */
+    historial: Array<{
+      hito: number | null;
+      tipo: 'previo' | 'vencimiento' | 'mora' | null;
+      el: string | null;
+      a: string | null;
+    }>;
+  } | null;
   montoMensualCOP: number | null;
   montoPeriodoCOP: number | null;
   trm: number | null;
@@ -314,9 +433,67 @@ export interface FilaCobro {
   recalculando: boolean;
 }
 
+/**
+ * Un pedido de funcionalidad de un cliente, anotado por el equipo de Katuq.
+ *
+ * `tema` es la clave normalizada que agrupa el mismo pedido entre empresas;
+ * `temaTexto` es como se escribio para leerlo. Los dos existen porque agrupar
+ * y mostrar no son lo mismo.
+ */
+export interface PedidoFuncionalidad {
+  id: string;
+  titulo: string;
+  detalle: string;
+  /**
+   * El cliente que hizo el pedido.
+   *
+   * Se llama `cliente` y no `empresa` a proposito: el backend trata
+   * `body.empresa` como la empresa de la SESION y rechaza con 403 si no coincide
+   * con el JWT. Acá el valor es otra empresa, la que pidió.
+   */
+  cliente: string | null;
+  clienteId: string | null;
+  tema: string | null;
+  temaTexto: string;
+  estado: string;
+  /** Qué clase de cosa pidió: integracion | modulo | mejora | reporte | correccion. */
+  tipo: string;
+  creadoEl: string | null;
+  creadoPor: string | null;
+  actualizadoEl: string | null;
+  actualizadoPor: string | null;
+}
+
+/** Un tema con cuantos CLIENTES DISTINTOS lo pidieron. Es el insumo de roadmap. */
+export interface TemaFuncionalidad {
+  tema: string;
+  titulo: string;
+  clientes: string[];
+  cuantosClientes: number;
+  pedidos: number;
+  abiertos: number;
+  estados: string[];
+}
+
+export interface PedidosFuncionalidad {
+  success: boolean;
+  pedidos: PedidoFuncionalidad[];
+  /** Calculado SIEMPRE sobre el total, aunque se filtre por empresa. */
+  temas: TemaFuncionalidad[];
+  catalogo: { estados: Record<string, string>; tipos: Record<string, string>; abiertos: string[] };
+  total: number;
+  topeAlcanzado: boolean;
+}
+
 export interface CobrosOverview {
   generadoEn: number;
   empresas: FilaCobro[];
+  /**
+   * Los avisos que componen la secuencia de renovación, tal como están
+   * configurados en el backend. Vienen de allá para que la pantalla no repita
+   * la configuración: si mañana se cambian los días, la columna los sigue sola.
+   */
+  hitosAvisos?: { previos: number[]; mora: number[] };
   totales: {
     totalEmpresas: number;
     sinPlanPago: number;
@@ -419,6 +596,47 @@ export class CompaniesService {
    */
   getBillingOverview(): Observable<CobrosOverview> {
     return this.http.get<CobrosOverview>(`${this.apiUrl}/v1/companies/billing-overview`);
+  }
+
+  /**
+   * Los pedidos de funcionalidad de los clientes, con su vista agrupada.
+   *
+   * Las dos cosas vienen en la misma respuesta porque salen de la misma lectura
+   * y la pantalla necesita las dos a la vez: la lista para trabajar y los temas
+   * para decidir que construir.
+   */
+  getPedidosFuncionalidad(cliente?: string): Observable<PedidosFuncionalidad> {
+    const query = cliente ? `?cliente=${encodeURIComponent(cliente)}` : '';
+    return this.http.get<PedidosFuncionalidad>(`${this.apiUrl}/v1/feature-requests${query}`);
+  }
+
+  crearPedidoFuncionalidad(pedido: {
+    titulo: string;
+    cliente: string;
+    clienteId?: string | null;
+    detalle?: string;
+    tema?: string;
+    tipo?: string;
+  }): Observable<{ success: boolean; pedido: PedidoFuncionalidad }> {
+    return this.http.post<{ success: boolean; pedido: PedidoFuncionalidad }>(
+      `${this.apiUrl}/v1/feature-requests`,
+      pedido
+    );
+  }
+
+  /** Cambia estado, tema o texto. La empresa no se mueve: seria otro pedido. */
+  actualizarPedidoFuncionalidad(
+    id: string,
+    cambios: { estado?: string; titulo?: string; detalle?: string; tema?: string; tipo?: string }
+  ): Observable<{ success: boolean; pedido: PedidoFuncionalidad }> {
+    return this.http.patch<{ success: boolean; pedido: PedidoFuncionalidad }>(
+      `${this.apiUrl}/v1/feature-requests/${id}`,
+      cambios
+    );
+  }
+
+  eliminarPedidoFuncionalidad(id: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/v1/feature-requests/${id}`);
   }
 
   /**
@@ -589,6 +807,78 @@ export class CompaniesService {
       catchError(error => {
         console.error(`Error al actualizar estado de empresa ${companyId}:`, error);
         return throwError(() => new Error('Error al actualizar estado. Inténtalo de nuevo más tarde.'));
+      })
+    );
+  }
+
+  /**
+   * Mueve una empresa por el ciclo de vida del cliente.
+   *
+   * Reemplaza a `updateCompanyStatus` para todo lo que no sea el prender/apagar
+   * de siempre: el backend valida que la transición exista, exige motivo cuando
+   * se le quita acceso o escritura a alguien, y deja historial. `diasGracia` va
+   * en la misma llamada porque se pacta en el mismo formulario.
+   */
+  cambiarEstadoCiclo(
+    companyId: string,
+    estado: string,
+    motivo?: string,
+    diasGracia?: number | null
+  ): Observable<any> {
+    return this.http
+      .post<any>(`${this.apiUrl}/v1/companies/estado-ciclo`, { companyId, estado, motivo, diasGracia })
+      .pipe(
+        catchError(error => {
+          // El mensaje del backend explica POR QUÉ no se pudo (transición
+          // inválida, falta el motivo). Tragárselo y poner un texto genérico
+          // deja al administrador adivinando.
+          const detalle = error?.error?.error || error?.error?.message;
+          console.error(`Error al cambiar el estado de la empresa ${companyId}:`, error);
+          return throwError(() => new Error(detalle || 'No se pudo cambiar el estado de la empresa.'));
+        })
+      );
+  }
+
+  /**
+   * El catálogo de estados con sus reglas y transiciones.
+   *
+   * Se pide al backend en vez de escribirlo acá: si las etiquetas y las
+   * transiciones vivieran en los dos lados, la consola terminaría ofreciendo un
+   * cambio que el backend rechaza.
+   */
+  getCatalogoEstados(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/v1/companies/estado-ciclo/catalogo`).pipe(
+      catchError(error => {
+        console.error('Error al leer el catálogo de estados:', error);
+        return throwError(() => new Error('No se pudo leer el catálogo de estados.'));
+      })
+    );
+  }
+
+  /**
+   * Los pedidos que el cobro NO cuenta: ventas que se cayeron.
+   *
+   * Va bajo demanda —solo al abrir la ficha— porque lee los pedidos de la
+   * ventana en vez de un agregado. Es lo que explica por qué "facturado" y "lo
+   * que se cobra" no dan el mismo número.
+   */
+  getPedidosExcluidos(companyId: string, dias = 30): Observable<any> {
+    return this.http
+      .get<any>(`${this.apiUrl}/v1/companies/${companyId}/pedidos-excluidos?dias=${dias}`)
+      .pipe(
+        catchError(error => {
+          console.error(`Error al leer los pedidos excluidos de ${companyId}:`, error);
+          return throwError(() => new Error('No se pudieron leer los pedidos que no se cobran.'));
+        })
+      );
+  }
+
+  /** El historial de estados de una empresa: quién la movió, cuándo y por qué. */
+  getHistorialEstado(companyId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/v1/companies/${companyId}/historial-estado`).pipe(
+      catchError(error => {
+        console.error(`Error al leer el historial de ${companyId}:`, error);
+        return throwError(() => new Error('No se pudo leer el historial de estados.'));
       })
     );
   }
