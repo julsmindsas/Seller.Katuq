@@ -103,7 +103,14 @@
                 </div>
                 <div class="info-content">
                     <label>{{ 'Fecha y Hora de Entrega' | translate }}</label>
-                    <span class="info-value">{{ pedido?.fechaEntrega | date: 'dd/MM/yyyy HH:mm' || 'N/A' }}</span>
+                    <!-- Ticket 1022: la hora real de la entrega vive en fechaEntregaReal;
+                         fechaEntrega es la PACTADA y siempre viene a medianoche, así que
+                         pintarla con HH:mm hacía que toda entrega se viera a las 00:00. -->
+                    <span class="info-value">{{ fechaEntregaMostrada | date: 'dd/MM/yyyy HH:mm' }}</span>
+                    <small class="info-subtitle" *ngIf="fechaEntregaMostrada && !pedido?.fechaEntregaReal">
+                        {{ 'Fecha pactada' | translate }}
+                    </small>
+                    <span class="info-value" *ngIf="!fechaEntregaMostrada">N/A</span>
                 </div>
             </div>
         </div>

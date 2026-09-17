@@ -103,6 +103,21 @@ export class DetalleEntregaComponent implements OnInit, OnChanges {
   }
 
   /**
+   * Fecha que se muestra como "Fecha y Hora de Entrega".
+   *
+   * Ticket 1022: se venía pintando `fechaEntrega`, que es la fecha PACTADA con el
+   * cliente y siempre viene a medianoche; con formato `HH:mm` toda entrega salía a
+   * las 00:00 aunque la hora real estuviera guardada. El momento en que el mensajero
+   * cerró la entrega vive en `fechaEntregaReal` (lo escriben la app del mensajero y
+   * el webhook de Enviame). Si no hay hora real todavía, se cae a la pactada y la
+   * plantilla lo rotula como tal para no hacer pasar una por la otra.
+   */
+  get fechaEntregaMostrada(): string | null {
+    const o: any = this.pedido || {};
+    return o.fechaEntregaReal || o.fechaEntrega || null;
+  }
+
+  /**
    * Todas las imágenes de evidencia en una sola galería: las del mensajero propio
    * (fotosEvidencia/fotoEvidencia) + las de Cereza (evidenciasEntrega que sean imagen).
    * Un pedido normalmente se entrega por un solo canal, pero si tuviera ambos se
