@@ -233,6 +233,11 @@ export class GeocodingService {
       [/\bcir\b/gi, 'Circular'],
       [/\bkm\b/gi, 'Kilometro'],
       [/\bno\.\s*/gi, '#'],
+      // Nomenclatura por manzana (ticket 1027): "Mz 36 Cs 26 Urb Corales"
+      [/\bmz\.?(?=\s|\d)/gi, 'Manzana'],
+      [/\bcs\.?(?=\s|\d)/gi, 'Casa'],
+      [/\blt\.?(?=\s|\d)/gi, 'Lote'],
+      [/\burb\.?(?=\s)/gi, 'Urbanización'],
     ];
 
     let dir = direccion.trim().replace(/\s+/g, ' ');

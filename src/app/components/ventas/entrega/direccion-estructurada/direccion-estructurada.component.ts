@@ -161,6 +161,11 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     "Granja",
   ];
 
+  // Nomenclatura por manzana (urbanizaciones y conjuntos): "Manzana 36 Casa 26".
+  // Ticket 1027 (OH MY STORE): el modal solo armaba Calle/Carrera o rural, así que
+  // estas direcciones no se podían registrar y viajaban mal a Cereza y Fullpi.
+  tiposInmuebleManzana: string[] = ["Casa", "Lote", "Apartamento", "Interior", "Local"];
+
   // Propiedades para el mapa
   map: any;
   marker: any;
@@ -269,6 +274,17 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       // Ciudad requerida
       ciudad: [this.ciudadActual || "", Validators.required],
 
+      // Tipo de nomenclatura: "urbana" (Calle/Carrera), "manzana" (Manzana/Casa) o "rural".
+      // esRural se mantiene sincronizado para no tocar el contrato de salida del modal.
+      tipoNomenclatura: ["urbana"],
+
+      // Formulario por manzana (alternativo)
+      manzana: [""],
+      tipoInmueble: ["Casa"],
+      numeroInmueble: [""],
+      etapa: [""],
+      urbanizacion: [""],
+
       // Formulario rural (alternativo)
       esRural: [false],
       tipoNomenclaturaRural: ["Vereda"],
@@ -284,9 +300,13 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       this.ciudadSeleccionada = this.ciudadActual;
     }
 
-    // Suscribirse a cambios en el tipo de dirección (urbana/rural)
-    this.direccionForm.get("esRural")?.valueChanges.subscribe((esRural) => {
+    // Suscribirse a cambios en el tipo de dirección (urbana/manzana/rural)
+    this.direccionForm.get("tipoNomenclatura")?.valueChanges.subscribe((tipo) => {
+      const esRural = tipo === "rural";
       this.esDireccionRural = esRural;
+      if (this.direccionForm.get("esRural")?.value !== esRural) {
+        this.direccionForm.get("esRural")?.setValue(esRural, { emitEvent: false });
+      }
       this.actualizarValidadores();
     });
 
@@ -314,6 +334,8 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
 
       if (esRural) {
         this.parsearDireccionRural(direccion);
+      } else if (/^(Manzana|Mz\.?)\s*[A-Z0-9]/i.test(direccion)) {
+        this.parsearDireccionManzana(direccion);
       } else {
         this.parsearDireccionUrbana(direccion);
       }
@@ -395,6 +417,38 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     if (numeroCasa) this.direccionForm.get("numeroCasa")?.setValue(numeroCasa[1]);
   }
 
+  // Parsea una dirección por manzana: "Manzana 36 Casa 26 Etapa 2 Urbanización Corales"
+  // (también acepta las abreviaturas Mz / Cs / Lt / Apto / Int / Urb con que suelen dictarla).
+  private parsearDireccionManzana(direccion: string): void {
+    const patron =
+      /^(?:Manzana|Mz\.?)\s*([A-Z0-9]+)\s+(Casa|Cs\.?|Lote|Lt\.?|Apartamento|Apto\.?|Interior|Int\.?|Local)\s*([A-Z0-9-]+)(?:\s+Etapa\s+([A-Z0-9]+))?(?:\s+(?:Urbanizaci[oó]n|Urb\.?|Conjunto)\s+(.+?))?\s*$/i;
+    const m = direccion.match(patron);
+    if (!m) {
+      // Empieza por "Manzana" pero no se entiende del todo: al menos abrir el modo
+      // correcto para que la asesora complete, en vez de mostrarle Calle/Carrera vacío.
+      this.direccionForm.get("tipoNomenclatura")?.setValue("manzana");
+      return;
+    }
+
+    const inmueble: Record<string, string> = {
+      cs: "Casa", lt: "Lote", apto: "Apartamento", int: "Interior",
+    };
+    const tipoCrudo = m[2].replace(".", "").toLowerCase();
+    const tipoInmueble =
+      inmueble[tipoCrudo] ||
+      this.tiposInmuebleManzana.find((t) => t.toLowerCase() === tipoCrudo) ||
+      "Casa";
+
+    this.direccionForm.patchValue({
+      tipoNomenclatura: "manzana",
+      manzana: m[1].toUpperCase(),
+      tipoInmueble,
+      numeroInmueble: m[3].toUpperCase(),
+      etapa: (m[4] || "").toUpperCase(),
+      urbanizacion: (m[5] || "").trim(),
+    });
+  }
+
   // Parsea una dirección rural colombiana
   private parsearDireccionRural(direccion: string): void {
     const patronRural =
@@ -402,7 +456,8 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
 
     const matchRural = direccion.match(patronRural);
     if (matchRural) {
-      this.direccionForm.get("esRural")?.setValue(true);
+      this.direccionForm.get("tipoNomenclatura")?.setValue("rural");
+      this.direccionForm.get("esRural")?.setValue(true, { emitEvent: false });
       this.direccionForm.get("tipoNomenclaturaRural")?.setValue(matchRural[1]);
       this.direccionForm.get("nombreRural")?.setValue(matchRural[2].trim());
 
@@ -448,6 +503,25 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Dirección por manzana, en forma canónica: "Manzana 36 Casa 26 Etapa 2 Urbanización Corales"
+    if (form.tipoNomenclatura === "manzana") {
+      if (!form.manzana || !form.numeroInmueble) {
+        this.vistaPrevia = "Completa el formulario para ver la dirección";
+        return;
+      }
+      let direccionManzana =
+        `Manzana ${String(form.manzana).trim().toUpperCase()} ` +
+        `${form.tipoInmueble || "Casa"} ${String(form.numeroInmueble).trim().toUpperCase()}`;
+      if (form.etapa) {
+        direccionManzana += ` Etapa ${String(form.etapa).trim().toUpperCase()}`;
+      }
+      if (form.urbanizacion) {
+        direccionManzana += ` Urbanización ${String(form.urbanizacion).trim()}`;
+      }
+      this.vistaPrevia = direccionManzana;
+      return;
+    }
+
     // Validar campos requeridos para dirección urbana
     if (!form.tipoVia || !form.numeroVia || !form.numero || !form.numeroCasa) {
       this.vistaPrevia = "Completa el formulario para ver la dirección";
@@ -482,9 +556,20 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
 
   // Actualiza validadores según el tipo de dirección (urbana/rural)
   actualizarValidadores(): void {
-    const esRural = this.direccionForm.get("esRural")?.value;
+    const tipo = this.direccionForm.get("tipoNomenclatura")?.value || "urbana";
+    const esRural = tipo === "rural";
+    const esManzana = tipo === "manzana";
 
-    if (esRural) {
+    // Campos de manzana: solo obligatorios en su modo
+    const validadoresManzana = esManzana ? [Validators.required] : [];
+    this.direccionForm.get("manzana")?.setValidators(validadoresManzana);
+    this.direccionForm.get("numeroInmueble")?.setValidators(validadoresManzana);
+
+    if (esManzana) {
+      // Ni urbanos ni rurales aplican
+      ["tipoVia", "numeroVia", "numero", "numeroCasa", "tipoNomenclaturaRural", "nombreRural"]
+        .forEach((k) => this.direccionForm.get(k)?.clearValidators());
+    } else if (esRural) {
       // Validadores para dirección rural
       this.direccionForm
         .get("tipoNomenclaturaRural")
@@ -523,7 +608,24 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     const form = this.direccionForm.value;
 
     // Validación básica simplificada y más permisiva
-    if (form.esRural) {
+    if (form.tipoNomenclatura === "manzana") {
+      if (!form.manzana || !form.numeroInmueble) {
+        this.mensajeError = "Indica la manzana y el número de casa, lote o apartamento";
+        return false;
+      }
+      if (!/^[A-Z0-9]{1,6}$/i.test(String(form.manzana).trim())) {
+        this.mensajeError = "La manzana debe ser un número o código corto (ej: 36, 12A, K)";
+        return false;
+      }
+      if (!/^[A-Z0-9-]{1,8}$/i.test(String(form.numeroInmueble).trim())) {
+        this.mensajeError = "El número de casa/lote/apto debe ser un código corto (ej: 26, 26B, 4-2)";
+        return false;
+      }
+      if (form.etapa && !/^[A-Z0-9]{1,6}$/i.test(String(form.etapa).trim())) {
+        this.mensajeError = "La etapa debe ser un número o código corto";
+        return false;
+      }
+    } else if (form.esRural) {
       // Validación rural
       if (!form.tipoNomenclaturaRural || !form.nombreRural) {
         this.mensajeError = "Completa el tipo y nombre de la ubicación rural";
@@ -761,6 +863,17 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   private obtenerEstructuraDireccion(): any {
     const form = this.direccionForm.value;
 
+    if (form.tipoNomenclatura === "manzana") {
+      return {
+        tipo: "manzana",
+        manzana: String(form.manzana || "").trim().toUpperCase(),
+        tipoInmueble: form.tipoInmueble || "Casa",
+        numeroInmueble: String(form.numeroInmueble || "").trim().toUpperCase(),
+        etapa: String(form.etapa || "").trim().toUpperCase(),
+        urbanizacion: String(form.urbanizacion || "").trim(),
+      };
+    }
+
     if (form.esRural) {
       return {
         tipo: "rural",
@@ -783,18 +896,28 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     };
   }
 
-  // Método para cambiar entre dirección urbana y rural
-  cambiarTipoDireccion(): void {
-    const esRural = this.direccionForm.get("esRural")?.value;
+  // Método para cambiar entre dirección urbana, por manzana y rural
+  cambiarTipoDireccion(tipo?: "urbana" | "manzana" | "rural"): void {
+    if (tipo) {
+      this.direccionForm.get("tipoNomenclatura")?.setValue(tipo);
+    }
+    const esRural = this.direccionForm.get("tipoNomenclatura")?.value === "rural";
     this.esDireccionRural = esRural;
+    this.direccionForm.get("esRural")?.setValue(esRural, { emitEvent: false });
     this.actualizarValidadores();
     this.actualizarVistaPrevia();
+  }
+
+  get tipoNomenclatura(): string {
+    return this.direccionForm?.get("tipoNomenclatura")?.value || "urbana";
   }
 
   // Método para limpiar el formulario
   limpiarFormulario(): void {
     this.direccionForm.reset({
       tipoVia: "Calle",
+      tipoNomenclatura: "urbana",
+      tipoInmueble: "Casa",
       esRural: false,
       tipoNomenclaturaRural: "Vereda",
       ciudad: this.ciudadActual || "",
