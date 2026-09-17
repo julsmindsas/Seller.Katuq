@@ -118,11 +118,12 @@
           id="alias_facturacion_crear" [(ngModel)]="alias_facturacion" />
       </div>
       <div class="col-sm-6 mb-3">
-        <label class="form-label" for="razon_social_crear">{{ 'Razón Social / Nombre Completo:' | translate }}</label>
-        <input class="form-control" type="text" id="razon_social_crear" [(ngModel)]="razon_social" />
+        <label class="form-label" for="razon_social_crear">{{ 'Razón Social / Nombre Completo:' | translate }} <span class="text-danger">*</span></label>
+        <input class="form-control" type="text" id="razon_social_crear" [(ngModel)]="razon_social"
+          placeholder="Como aparece en el RUT (no el nombre del contacto)" />
       </div>
       <div class="col-sm-6 mb-3">
-        <label class="form-label" for="tipo_documento_facturacion_crear">{{ 'Tipo de Documento:' | translate }}</label>
+        <label class="form-label" for="tipo_documento_facturacion_crear">{{ 'Tipo de Documento:' | translate }} <span class="text-danger">*</span></label>
         <select class="form-control" id="tipo_documento_facturacion_crear" [(ngModel)]="tipo_documento_facturacion">
           <option value="CC-NIT">{{ 'Cedula de Ciudadania' | translate }}</option>
           <option value="PA">PA</option>
@@ -131,9 +132,10 @@
         </select>
       </div>
       <div class="col-sm-6 mb-3">
-        <label class="form-label" for="numero_documento_facturacion_crear">{{ 'Documento:' | translate }}</label>
+        <label class="form-label" for="numero_documento_facturacion_crear">{{ 'Documento:' | translate }} <span class="text-danger">*</span></label>
         <input class="form-control" type="text" id="numero_documento_facturacion_crear"
-          [(ngModel)]="numero_documento_facturacion" />
+          [(ngModel)]="numero_documento_facturacion"
+          placeholder="Solo números; NIT con guion y dígito: 901072822-4" />
       </div>
     </div>
     <div class="row">
@@ -213,7 +215,7 @@
     <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('Cancel')">
       {{ 'Cancelar' | translate }}
     </button>
-    <button type="button" class="btn btn-primary" (click)="guardarDatosFacturacionElectronica(); modal.dismiss('Save')">
+    <button type="button" class="btn btn-primary" (click)="guardarDatosFacturacionElectronica() && modal.dismiss('Save')">
       {{ 'Guardar' | translate }}
     </button>
   </div>
@@ -239,11 +241,12 @@
           [(ngModel)]="alias_facturacion" />
       </div>
       <div class="col-sm-6">
-        <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo:' | translate }}</label>
-        <input class="form-control" type="text" id="razon_social" [(ngModel)]="razon_social" />
+        <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo:' | translate }} <span class="text-danger">*</span></label>
+        <input class="form-control" type="text" id="razon_social" [(ngModel)]="razon_social"
+          placeholder="Como aparece en el RUT (no el nombre del contacto)" />
       </div>
       <div class="col-sm-6">
-        <label class="form-label" for="tipo_documento_facturacion">{{ 'Tipo de Documento:' | translate }}</label>
+        <label class="form-label" for="tipo_documento_facturacion">{{ 'Tipo de Documento:' | translate }} <span class="text-danger">*</span></label>
         <select class="form-control" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion">
           <option value="CC-NIT">{{ 'Cedula de Ciudadania' | translate }}</option>
           <option value="PA">PA</option>
@@ -252,9 +255,10 @@
         </select>
       </div>
       <div class="col-sm-6">
-        <label class="form-label" for="tipo_documento_facturacion">{{ 'Documento:' | translate }}</label>
+        <label class="form-label" for="numero_documento_facturacion">{{ 'Documento:' | translate }} <span class="text-danger">*</span></label>
         <input class="form-control" type="text" id="numero_documento_facturacion"
-          [(ngModel)]="numero_documento_facturacion" />
+          [(ngModel)]="numero_documento_facturacion"
+          placeholder="Solo números; NIT con guion y dígito: 901072822-4" />
       </div>
     </div>
     <div class="row">

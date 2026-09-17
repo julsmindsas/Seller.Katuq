@@ -130,7 +130,61 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     }
   }
 
-  guardarDatosFacturacionElectronica() {
+  /**
+   * Ticket 1029 (ALMARA): los datos de facturación se guardaban con lo que
+   * hubiera, y con eso se emitía la factura electrónica. Un documento "-4" hizo
+   * que una factura saliera a nombre de otra persona (ticket 1028). Acá se exige
+   * lo mínimo con lo que una factura ante la DIAN sale bien y se explica qué falta.
+   * Devuelve true si los datos sirven para facturar.
+   */
+  validarDatosFacturacion(): boolean {
+    const faltan: string[] = [];
+    const razon = String(this.razon_social || "").trim();
+    const tipo = String(this.tipo_documento_facturacion || "").trim();
+    const doc = String(this.numero_documento_facturacion || "").trim();
+    const correo = String(this.correo_electronico_facturacion || "").trim();
+    const celular = String(this.numero_celular_facturacion || "").trim();
+    const ciudad = String(this.ciudad_municipio || "").trim();
+
+    if (razon.length < 3) { faltan.push("Razón social o nombre completo"); }
+    if (!tipo) { faltan.push("Tipo de documento"); }
+    if (!doc) { faltan.push("Número de documento"); }
+    if (!ciudad) { faltan.push("Ciudad"); }
+    if (!celular) { faltan.push("Celular"); }
+    if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { faltan.push("Correo electrónico válido"); }
+
+    // El documento debe tener forma de documento: el "-4" no pasa.
+    let docInvalido = "";
+    if (doc) {
+      const limpio = doc.replace(/[\s.]/g, "").toUpperCase();
+      if (tipo === "NIT") {
+        if (!/^\d{6,12}(-\d)?$/.test(limpio)) { docInvalido = "El NIT debe ser numérico, con el dígito de verificación opcional después de un guion (ej: 901072822-4)."; }
+      } else if (tipo === "PA") {
+        if (!/^[A-Z0-9]{4,20}$/.test(limpio)) { docInvalido = "El pasaporte debe tener solo letras y números (entre 4 y 20)."; }
+      } else if (!/^\d{4,15}$/.test(limpio.split("-")[0])) {
+        docInvalido = "El número de documento debe ser numérico (entre 4 y 15 dígitos).";
+      }
+    }
+
+    if (!faltan.length && !docInvalido) { return true; }
+
+    const partes: string[] = [];
+    if (faltan.length) {
+      partes.push(`<b>Faltan o están mal:</b><ul style="text-align:left;margin:8px 0 0 18px">${faltan.map((f) => `<li>${f}</li>`).join("")}</ul>`);
+    }
+    if (docInvalido) { partes.push(`<div style="text-align:left;margin-top:8px">${docInvalido}</div>`); }
+    Swal.fire({
+      icon: "warning",
+      title: "Revisa los datos de facturación",
+      html: partes.join(""),
+      footer: "Con estos datos se emite la factura electrónica; si están mal, la factura sale mal.",
+      confirmButtonText: "Corregir",
+    });
+    return false;
+  }
+
+  guardarDatosFacturacionElectronica(): boolean {
+    if (!this.validarDatosFacturacion()) { return false; }
     const datosFacturacionElec = {
       alias: this.alias_facturacion,
       nombres: this.razon_social,
@@ -365,7 +419,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       });
     });
   }
-  editarDatosFacturacion() {
+  editarDatosFacturacion(): boolean {
+    if (!this.validarDatosFacturacion()) { return false; }
     const datosFacturacionElec = {
       alias: this.alias_facturacion,
       nombres: this.razon_social,
