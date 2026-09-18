@@ -640,3 +640,12 @@ $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
   }
 }
+// Ticket 1036 — decir qué falta en vez de esconder el selector de productos.
+.traslado-aviso {
+  padding: 10px 14px;
+  border: 1px solid #ddd6f5;
+  border-radius: 11px;
+  background: #f4f1fd;
+  color: #211f3a;
+  font-size: 13.5px;
+}

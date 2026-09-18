@@ -280,6 +280,10 @@ export interface UbicacionCatalogo {
 export interface ProductoEnUbicacion {
   productoId: string;
   referencia: string | null;
+  /** Nombre del producto. Lo resuelve el backend (ticket 1034): el mapa de la
+   *  bodega mostraba solo el código y el operario no sabía qué estaba mirando.
+   *  Puede venir null si el producto ya no existe en el catálogo. */
+  nombre: string | null;
   cantidad: number;
   ubicacion: string | null;
 }

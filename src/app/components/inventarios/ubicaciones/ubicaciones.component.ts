@@ -80,7 +80,7 @@ export class UbicacionesComponent implements OnInit {
     return this.mapa.ubicaciones.filter((u: any) => {
       if (u.codigo.toLowerCase().includes(termino)) return true;
       return (u.productos || []).some((p: ProductoEnUbicacion) =>
-        (p.referencia || p.productoId).toLowerCase().includes(termino),
+        this.coincide(p, termino),
       );
     });
   }
@@ -89,9 +89,27 @@ export class UbicacionesComponent implements OnInit {
     if (!this.mapa) return [];
     const termino = this.busqueda.trim().toLowerCase();
     if (!termino) return this.mapa.sinUbicar;
-    return this.mapa.sinUbicar.filter((p) =>
-      (p.referencia || p.productoId).toLowerCase().includes(termino),
-    );
+    return this.mapa.sinUbicar.filter((p) => this.coincide(p, termino));
+  }
+
+  /**
+   * Ticket 1034: la búsqueda solo miraba la referencia, así que buscar
+   * "bomba" no encontraba nada. Ahora también mira el nombre del producto.
+   */
+  private coincide(producto: ProductoEnUbicacion, termino: string): boolean {
+    const campos = [producto.nombre, producto.referencia, producto.productoId];
+    return campos.some((c) => (c || '').toLowerCase().includes(termino));
+  }
+
+  /** Lo que se muestra en grande: el nombre si lo hay, si no el código. */
+  nombreVisible(producto: ProductoEnUbicacion): string {
+    return producto.nombre || producto.referencia || producto.productoId;
+  }
+
+  /** El código, solo cuando aporta algo distinto de lo que ya se ve arriba. */
+  codigoVisible(producto: ProductoEnUbicacion): string {
+    const codigo = producto.referencia || producto.productoId;
+    return producto.nombre ? codigo : '';
   }
 
   /**
@@ -196,7 +214,7 @@ export class UbicacionesComponent implements OnInit {
     }
 
     const { value: codigo } = await Swal.fire({
-      title: `¿Dónde guardar ${producto.referencia || producto.productoId}?`,
+      title: `¿Dónde guardar ${this.nombreVisible(producto)}?`,
       input: 'select',
       inputOptions: opciones,
       inputValue: producto.ubicacion || '',

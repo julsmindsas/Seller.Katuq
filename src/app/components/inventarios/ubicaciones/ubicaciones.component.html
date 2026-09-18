@@ -86,7 +86,7 @@
 
     <div class="ubi-filtros">
       <input class="ubi-buscar" type="text" [(ngModel)]="busqueda"
-             placeholder="Buscar por ubicación o referencia…" />
+             placeholder="Buscar por producto, ubicación o referencia…" />
     </div>
 
     <!-- Productos sin lugar: primero, porque son los que hacen perder tiempo -->
@@ -98,7 +98,8 @@
       <ul class="ubi-lista">
         <li *ngFor="let producto of productosSinUbicar()">
           <div>
-            <span class="ubi-referencia">{{ producto.referencia || producto.productoId }}</span>
+            <span class="ubi-nombre">{{ nombreVisible(producto) }}</span>
+            <span class="ubi-referencia" *ngIf="codigoVisible(producto)">{{ codigoVisible(producto) }}</span>
             <span class="ubi-cantidad">{{ producto.cantidad | number }} unidades</span>
           </div>
           <button class="ubi-accion" (click)="ubicarProducto(producto)" [disabled]="guardando">
@@ -159,7 +160,10 @@
 
           <ul class="ubi-celda-productos" *ngIf="ubicacion.productos.length > 0">
             <li *ngFor="let producto of ubicacion.productos">
-              <span>{{ producto.referencia || producto.productoId }}</span>
+              <span class="ubi-celda-producto">
+                <span class="ubi-nombre">{{ nombreVisible(producto) }}</span>
+                <span class="ubi-referencia" *ngIf="codigoVisible(producto)">{{ codigoVisible(producto) }}</span>
+              </span>
               <span class="ubi-cantidad">{{ producto.cantidad | number }}</span>
               <button class="ubi-sacar" (click)="quitarDeUbicacion(producto)" [disabled]="guardando"
                       title="Quitar de esta ubicación">
