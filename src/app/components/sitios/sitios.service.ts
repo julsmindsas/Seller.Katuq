@@ -30,6 +30,46 @@ export interface TiendaSitio {
   categoriasOcultas?: string[];
   minimoCompra: number;
   mensajeConfirmacion: string;
+
+  /**
+   * Recoger en tienda: puntos donde el comprador puede pasar por su pedido.
+   * Sin puntos, el checkout ni siquiera muestra la opción.
+   */
+  retiroEnTienda?: {
+    activo: boolean;
+    texto: string;
+    puntos: {
+      id: string;
+      nombre: string;
+      direccion: string;
+      ciudad: string;
+      horario: string;
+      telefono: string;
+      /** Business code de la bodega que despacha ese punto. Vacío = la de la tienda. */
+      bodegaId: string;
+    }[];
+  };
+
+  /**
+   * Cupones de descuento. La regla vive aquí, pero el descuento lo calcula
+   * SIEMPRE el servidor: los códigos nunca bajan al navegador del comprador.
+   */
+  cupones?: CuponSitio[];
+}
+
+export interface CuponSitio {
+  codigo: string;
+  tipo: "porcentaje" | "monto";
+  valor: number;
+  activo: boolean;
+  minimoCompra: number;
+  /** Fecha ISO "2026-12-31". Vacío = no vence. */
+  vence: string;
+  /** 0 = sin tope. */
+  usosMaximos: number;
+  usos: number;
+  soloPrimeraCompra: boolean;
+  aplicaAEnvio: boolean;
 }
 
 /** Lo que propone la IA: solo lo validado por el servidor. */
@@ -74,10 +114,55 @@ export interface AnaliticaSitio {
   googleVerificacion: string;
   /** Consent Mode v2 de Google. Encenderlo sin banner apaga la medición. */
   consentimiento: boolean;
+
+  /**
+   * Credenciales de la medición desde el servidor.
+   *
+   * El token de Meta y la clave de GA4 NO viajan hasta aquí: son secretos del
+   * comerciante y el servidor los guarda sin devolverlos. El editor solo
+   * recibe si están puestos, y los escribe cuando el comerciante pega uno
+   * nuevo. Mandar la cadena vacía a propósito es como se quitan.
+   */
+  metaConversionsPuesto?: boolean;
+  ga4SecretoPuesto?: boolean;
+  metaConversionsToken?: string;
+  ga4ApiSecret?: string;
+  /** Código del Administrador de eventos para que la prueba no ensucie datos. */
+  metaTestEventCode?: string;
+}
+
+/** El parte de una plataforma tras el evento de prueba. */
+export interface ParteMedicion {
+  proveedor: string;
+  ok: boolean;
+  estado: number;
+  detalle: string | null;
+}
+
+/**
+ * Una página propia del sitio: "Nosotros", "Políticas de devolución".
+ *
+ * Es el mismo material del inicio (los mismos bloques) con dirección y
+ * metadatos propios. Vive dentro del contenido del sitio, no en una colección
+ * aparte: una página sin su sitio no significa nada.
+ */
+export interface PaginaSitio {
+  id: string;
+  /** Lo que va después del dominio: "nosotros" → tutienda.katuq.com/nosotros */
+  ruta: string;
+  titulo: string;
+  descripcion: string;
+  /** Si sale en el menú del pie. Una página de campaña puede no salir. */
+  enMenu: boolean;
+  /** Si Google la puede indexar. */
+  indexable: boolean;
+  bloques: BloqueSitio[];
 }
 
 export interface ContenidoSitio {
   bloques: BloqueSitio[];
+  /** Páginas además del inicio. Vacío en un sitio de una sola página. */
+  paginas?: PaginaSitio[];
   tema: TemaSitio;
   seo: { titulo: string; descripcion: string; imagen: string; favicon?: string };
   tienda: TiendaSitio;
@@ -215,6 +300,37 @@ export class SitiosService extends BaseService {
   /** Propuesta de diseño con IA (vía KAI) sobre el contenido tal como está en el editor. */
   disenarConIA(id: string, contenido: ContenidoSitio, indicaciones: string): Observable<Respuesta<PropuestaDiseno>> {
     return this.post<Respuesta<PropuestaDiseno>>(`/v1/sites/${id}/disenar-ia`, { contenido, indicaciones });
+  }
+
+  /**
+   * Dispara un evento de prueba contra las plataformas de pauta configuradas.
+   *
+   * Existe porque hasta ahora la única forma de saber si un píxel quedó bien
+   * puesto era pautar y esperar días. El código de prueba hace que el evento
+   * entre a la pestaña de pruebas de la plataforma y no a las métricas reales.
+   */
+  probarMedicion(
+    id: string,
+    testCode?: string
+  ): Observable<Respuesta<{ partes: ParteMedicion[] }>> {
+    return this.post<Respuesta<{ partes: ParteMedicion[] }>>(
+      `/v1/sites/${id}/medicion/prueba`,
+      { testCode: testCode || "" }
+    );
+  }
+
+  /**
+   * Borradores de las páginas legales, escritos con la configuración real de
+   * la tienda. Solo devuelve: el comerciante decide si las guarda y qué ajusta.
+   */
+  paginasLegales(
+    id: string,
+    paginas?: string[]
+  ): Observable<Respuesta<{ paginas: PaginaSitio[]; yaExisten: string[] }>> {
+    return this.post<Respuesta<{ paginas: PaginaSitio[]; yaExisten: string[] }>>(
+      `/v1/sites/${id}/paginas/legales`,
+      { paginas: paginas || [] }
+    );
   }
 
   /** Categorías reales (nombre, total, foto) para la previa y el panel de tienda. */

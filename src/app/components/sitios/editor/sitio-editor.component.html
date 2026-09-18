@@ -63,13 +63,77 @@
       <div class="panel__contenido" *ngIf="panel === 'bloques'">
         <!-- Drill-in: con una sección elegida, la lista se aparta y el panel es solo su formulario. -->
         <ng-container *ngIf="seleccionado < 0">
+
+        <!-- ── Páginas del sitio ──
+             Un sitio dejó de ser una sola página. Aquí se elige sobre cuál se
+             trabaja; el resto del panel funciona igual para todas. -->
+        <div class="paginas">
+          <div class="paginas__fila">
+            <button class="paginas__chip" [class.is-active]="paginaActiva === -1"
+                    (click)="irAPagina(-1)">Inicio</button>
+            <button class="paginas__chip" *ngFor="let p of paginas; let i = index"
+                    [class.is-active]="paginaActiva === i" (click)="irAPagina(i)">
+              {{ p.titulo }}
+            </button>
+            <button class="paginas__mas" (click)="agregarPagina()" title="Nueva página">+</button>
+          </div>
+
+          <div class="paginas__barra" *ngIf="paginaEnEdicion as pag">
+            <span class="paginas__url">/{{ pag.ruta }}</span>
+            <span class="paginas__relleno"></span>
+            <button class="paginas__accion" (click)="renombrarPagina()">Renombrar</button>
+            <button class="paginas__accion is-peligro" (click)="borrarPagina()">Borrar</button>
+          </div>
+
+          <div class="paginas__opciones" *ngIf="paginaEnEdicion as pag">
+            <label class="paginas__check">
+              <input type="checkbox" [(ngModel)]="pag.enMenu" (ngModelChange)="marcarSucio()" />
+              Mostrarla en el pie de página
+            </label>
+            <label class="paginas__check">
+              <input type="checkbox" [(ngModel)]="pag.indexable" (ngModelChange)="marcarSucio()" />
+              Dejar que Google la encuentre
+            </label>
+          </div>
+
+          <button class="paginas__legales" *ngIf="paginaActiva === -1" [disabled]="generandoLegales"
+                  (click)="traerPaginasLegales()">
+            {{ generandoLegales ? 'Escribiendo…' : 'Crear las páginas legales que me faltan' }}
+          </button>
+          <p class="nota" *ngIf="paginaActiva === -1 && !paginas.length">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01"/></svg>
+            Tu tienda todavía no tiene políticas publicadas. Meta las pide para aprobarte una
+            cuenta publicitaria, y las pasarelas para dejarte cobrar.
+          </p>
+        </div>
+
+        <!-- ── Qué te falta ──
+             Lo que convierte una caja de piezas en una tienda que se termina:
+             una lista corta y honesta de lo que falta para publicar tranquilo. -->
+        <div class="pendientes" [class.is-listo]="!pendientes.length">
+          <div class="pendientes__cabeza">
+            <strong>{{ pendientes.length ? 'Te falta' : 'Lista para publicar' }}</strong>
+            <span *ngIf="pendientes.length">{{ pendientes.length }}</span>
+          </div>
+          <button type="button" class="pendientes__item" *ngFor="let p of pendientes" (click)="irAPendiente(p)">
+            <span>{{ p.texto }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <p class="pendientes__ok" *ngIf="!pendientes.length">Logo, contacto, políticas, descripción y productos: todo está.</p>
+        </div>
+
         <p class="nota">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01"/></svg>
-          Tu página está hecha de secciones, como bloques de lego. Ordénalas, ocúltalas o quítalas —
-          nada se borra de tu catálogo.
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 10v10"/></svg>
+          <strong>Toca cualquier parte de la vista previa</strong> para editarla. Aquí abajo puedes
+          reordenar, ocultar o agregar secciones.
         </p>
 
-        <div class="secciones" cdkDropList (cdkDropListDropped)="soltarSeccion($event)">
+        <button type="button" class="plegar" (click)="listaAbierta = !listaAbierta">
+          <span>{{ listaAbierta ? 'Ocultar la lista de secciones' : 'Reordenar u ocultar secciones' }}</span>
+          <small>{{ bloques.length }}</small>
+        </button>
+
+        <div class="secciones" *ngIf="listaAbierta" cdkDropList (cdkDropListDropped)="soltarSeccion($event)">
           <div class="seccion" *ngFor="let b of bloques; let i = index"
                cdkDrag [cdkDragData]="i"
                [class.is-elegida]="i === seleccionado"
@@ -134,7 +198,7 @@
         </ng-container>
 
         <!-- Propiedades de la sección elegida -->
-        <section class="propiedades" *ngIf="bloqueActual as b">
+        <section class="propiedades" *ngIf="bloqueActual as b" [class.propiedades--simple]="!masOpciones.has(b.id)">
           <div class="propiedades__cabecera">
             <button class="propiedades__volver" (click)="cerrarSeccion()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
@@ -198,14 +262,14 @@
               <span class="palanca"><span></span></span>
             </button>
 
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Nombre visible</label>
               <input type="text" [(ngModel)]="b.datos.nombre" (ngModelChange)="marcarSucio()"
                      maxlength="60" [placeholder]="negocio || 'El nombre de tu negocio'" />
               <small>Déjalo vacío para usar el nombre de tu empresa.</small>
             </div>
 
-            <button class="opcion" [class.is-active]="b.datos.fijo"
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.fijo"
                     (click)="b.datos.fijo = !b.datos.fijo; marcarSucio()">
               <span class="opcion__texto">
                 <strong>Que siga visible al bajar</strong>
@@ -224,7 +288,7 @@
               <span class="palanca"><span></span></span>
             </button>
 
-            <button class="opcion" [class.is-active]="b.datos.mostrarBuscador"
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.mostrarBuscador"
                     (click)="b.datos.mostrarBuscador = !b.datos.mostrarBuscador; marcarSucio()">
               <span class="opcion__texto">
                 <strong>Buscador en la barra</strong>
@@ -244,11 +308,11 @@
               <span class="palanca"><span></span></span>
             </button>
 
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="30" />
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Destino del botón</label>
               <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
             </div>
@@ -297,16 +361,16 @@
               <label>Subtítulo</label>
               <input type="text" [(ngModel)]="b.datos.subtitulo" (ngModelChange)="marcarSucio()" maxlength="240" />
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="40" />
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Destino del botón</label>
               <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
               <small>Una sección de la página (#productos, #contacto) o una dirección https.</small>
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Alineación</label>
               <select [(ngModel)]="b.datos.alineacion" (ngModelChange)="marcarSucio()">
                 <option value="izquierda">Izquierda</option>
@@ -329,7 +393,7 @@
                 se muestra: quítala para verlo.</small>
             </div>
 
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Mosaico (opcional)</label>
               <small>De 2 a 4 fotos de producto en rejilla, con el titular al lado. Se ve
                 cuando no hay imagen de fondo ni carrusel.</small>
@@ -346,7 +410,7 @@
               </label>
             </div>
 
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Carrusel (opcional)</label>
               <small>Sube dos o más fotos y la portada las rota sola, con puntos para saltar.
                 Manda sobre la imagen de fondo.</small>
@@ -363,7 +427,7 @@
               </label>
             </div>
 
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Alto de la portada</label>
               <div class="segmentado">
                 <button [class.is-active]="b.datos.altura !== 'completa'"
@@ -378,7 +442,7 @@
             <!-- El velo y su color solo tienen sentido si hay foto (de fondo o
                  de carrusel): sin ella oscurecerían el fondo del sitio. -->
             <ng-container *ngIf="b.datos.imagen || b.datos.imagenes?.length">
-              <div class="campo">
+              <div class="campo campo--avanzado">
                 <label>Qué tan oscura se ve la foto</label>
                 <div class="deslizador">
                   <input type="range" min="0" max="85" step="5"
@@ -390,7 +454,7 @@
                   cual.</small>
               </div>
 
-              <button class="opcion" [class.is-active]="b.datos.veloClaro"
+              <button class="opcion campo--avanzado" [class.is-active]="b.datos.veloClaro"
                       (click)="b.datos.veloClaro = !b.datos.veloClaro; marcarSucio()">
                 <span class="opcion__texto">
                   <strong>Aclarar en vez de oscurecer</strong>
@@ -505,7 +569,7 @@
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.etiqueta" (ngModelChange)="marcarSucio()" maxlength="40" />
             </div>
-            <button class="opcion" [class.is-active]="b.datos.flotante"
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.flotante"
                     title="La burbuja verde acompaña al visitante en toda la página, abajo a la izquierda"
                     (click)="b.datos.flotante = !b.datos.flotante; marcarSucio()">
               <span class="opcion__texto"><strong>Burbuja flotante</strong><small>Siempre visible, abajo a la izquierda</small></span>
@@ -539,11 +603,11 @@
               <label>Texto</label>
               <textarea rows="3" [(ngModel)]="b.datos.texto" (ngModelChange)="marcarSucio()" maxlength="240"></textarea>
             </div>
-            <div class="campo campo--doble">
+            <div class="campo campo--avanzado campo--doble">
               <div><label>Texto del botón</label><input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="40" /></div>
               <div><label>A dónde lleva</label><input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="/?catalogo=1" /></div>
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Cuántas veces sale</label>
               <select [(ngModel)]="b.datos.frecuencia" (ngModelChange)="marcarSucio()">
                 <option value="dia">Una vez al día por visitante</option>
@@ -551,7 +615,7 @@
                 <option value="siempre">Cada vez que entra</option>
               </select>
             </div>
-            <div class="campo campo--doble">
+            <div class="campo campo--avanzado campo--doble">
               <div><label>Espera antes de salir (segundos)</label><input type="number" min="8" max="60" [(ngModel)]="b.datos.demora" (ngModelChange)="marcarSucio()" />
                 <small *ngIf="!(b.datos.demora >= 8)" class="aviso">Sale a los 8 segundos como mínimo: antes taparía la tienda sin que el visitante haya visto un producto (en celular, la pantalla entera). También sale al bajar el 40% de la página o cuando el cursor va a cerrar la pestaña.</small></div>
               <div><label>Hasta (opcional)</label><input type="date" [(ngModel)]="b.datos.hasta" (ngModelChange)="marcarSucio()" /></div>
@@ -612,13 +676,13 @@
             <button class="opcion" [class.is-active]="b.datos.mostrarOcasion" (click)="b.datos.mostrarOcasion = !b.datos.mostrarOcasion; marcarSucio()">
               <span class="opcion__texto"><strong>Ocasión</strong><small>Cumpleaños, aniversario… las de tus productos</small></span><span class="palanca"><span></span></span>
             </button>
-            <button class="opcion" [class.is-active]="b.datos.mostrarPrecio" (click)="b.datos.mostrarPrecio = !b.datos.mostrarPrecio; marcarSucio()">
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.mostrarPrecio" (click)="b.datos.mostrarPrecio = !b.datos.mostrarPrecio; marcarSucio()">
               <span class="opcion__texto"><strong>Presupuesto</strong></span><span class="palanca"><span></span></span>
             </button>
-            <button class="opcion" [class.is-active]="b.datos.mostrarPalabra" (click)="b.datos.mostrarPalabra = !b.datos.mostrarPalabra; marcarSucio()">
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.mostrarPalabra" (click)="b.datos.mostrarPalabra = !b.datos.mostrarPalabra; marcarSucio()">
               <span class="opcion__texto"><strong>Palabra clave</strong></span><span class="palanca"><span></span></span>
             </button>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.textoBoton" (ngModelChange)="marcarSucio()" maxlength="30" />
             </div>
@@ -654,7 +718,7 @@
               </button>
             </div>
 
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Texto del botón</label>
               <input type="text" [(ngModel)]="b.datos.textoBoton" (ngModelChange)="marcarSucio()" maxlength="40" />
             </div>
@@ -696,7 +760,7 @@
               </span>
               <span class="palanca"><span></span></span>
             </button>
-            <button class="opcion" [class.is-active]="b.datos.mostrarCategorias !== false"
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.mostrarCategorias !== false"
                     (click)="b.datos.mostrarCategorias = b.datos.mostrarCategorias === false; marcarSucio()">
               <span class="opcion__texto">
                 <strong>Filtro por categorías</strong>
@@ -704,7 +768,7 @@
               </span>
               <span class="palanca"><span></span></span>
             </button>
-            <button class="opcion" [class.is-active]="b.datos.mostrarPrecio !== false"
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.mostrarPrecio !== false"
                     (click)="b.datos.mostrarPrecio = b.datos.mostrarPrecio === false; marcarSucio()">
               <span class="opcion__texto">
                 <strong>Filtro de precio y ofertas</strong>
@@ -724,7 +788,7 @@
               Para que el botón aparezca, enciende la tienda en la pestaña <strong>Tienda</strong>.
             </p>
 
-            <button class="opcion" [class.is-active]="b.datos.enPagina"
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.enPagina"
                     (click)="b.datos.enPagina = !b.datos.enPagina; marcarSucio()">
               <span class="opcion__texto">
                 <strong>El catálogo va en su propia página</strong>
@@ -734,7 +798,7 @@
               <span class="palanca"><span></span></span>
             </button>
 
-            <div class="campo" *ngIf="b.datos.enPagina">
+            <div class="campo campo--avanzado" *ngIf="b.datos.enPagina">
               <label>Texto del botón de la banda</label>
               <input type="text" [(ngModel)]="b.datos.textoExplorar" (ngModelChange)="marcarSucio()"
                      maxlength="40" placeholder="Explorar la tienda" />
@@ -743,7 +807,7 @@
 
           <!-- Imagen con texto -->
           <ng-container *ngIf="b.tipo === 'promo'">
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Palabrita de arriba (opcional)</label>
               <input type="text" [(ngModel)]="b.datos.etiqueta" (ngModelChange)="marcarSucio()"
                      maxlength="40" placeholder="NUEVO · SOLO ESTA SEMANA" />
@@ -766,18 +830,18 @@
                 </label>
               </div>
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>La foto va a la</label>
               <select [(ngModel)]="b.datos.lado" (ngModelChange)="marcarSucio()">
                 <option value="izquierda">Izquierda</option>
                 <option value="derecha">Derecha</option>
               </select>
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Texto del botón (opcional)</label>
               <input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="40" />
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Destino del botón</label>
               <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#catalogo o https://…" />
             </div>
@@ -833,11 +897,11 @@
               <label>Cuando termine, decir</label>
               <input type="text" [(ngModel)]="b.datos.mensajeFin" (ngModelChange)="marcarSucio()" maxlength="90" />
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Texto del botón (opcional)</label>
               <input type="text" [(ngModel)]="b.datos.ctaTexto" (ngModelChange)="marcarSucio()" maxlength="40" />
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Destino del botón</label>
               <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#destacado o #catalogo" />
             </div>
@@ -1010,12 +1074,12 @@
               <label>Ciudad</label>
               <input type="text" [(ngModel)]="b.datos.ciudad" (ngModelChange)="marcarSucio()" maxlength="80" />
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Punto de referencia</label>
               <input type="text" [(ngModel)]="b.datos.referencia" (ngModelChange)="marcarSucio()"
                      maxlength="200" placeholder="Ej: frente al parque principal" />
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Horario</label>
               <input type="text" [(ngModel)]="b.datos.horario" (ngModelChange)="marcarSucio()"
                      maxlength="200" placeholder="Ej: lunes a sábado, 9am a 7pm" />
@@ -1042,7 +1106,7 @@
                         placeholder="Lunes a viernes: 10am a 6pm&#10;Sábados: 9am a 2pm"></textarea>
               <small>Un renglón por línea. "Día: horas" se alinea solo.</small>
             </div>
-            <button class="opcion" [class.is-active]="b.datos.mostrarMediosPago"
+            <button class="opcion campo--avanzado" [class.is-active]="b.datos.mostrarMediosPago"
                     title="Franja con lo que aceptas: tarjetas, PSE, Nequi, contra entrega… según tu pestaña Tienda"
                     (click)="b.datos.mostrarMediosPago = !b.datos.mostrarMediosPago; marcarSucio()">
               <span class="opcion__texto"><strong>Mostrar medios de pago</strong><small>Los de tu pestaña Tienda</small></span>
@@ -1137,7 +1201,7 @@
               <label>Al tocarla, ir a (opcional)</label>
               <input type="text" [(ngModel)]="b.datos.enlace" (ngModelChange)="marcarSucio()" placeholder="#productos" />
             </div>
-            <div class="campo">
+            <div class="campo campo--avanzado">
               <label>Tamaño</label>
               <select [(ngModel)]="b.datos.tamano" (ngModelChange)="marcarSucio()">
                 <option value="normal">Normal</option>
@@ -1187,6 +1251,10 @@
             </button>
           </ng-container>
 
+          <!-- ── Herramientas avanzadas: lienzo libre y objetos colocables ──
+               Las usa una minoría y le suman ruido a todos: viven detrás de la
+               palanca de Ajustes, que arranca encendida solo si el sitio ya las usa. -->
+          <ng-container *ngIf="herramientasAvanzadas">
           <!-- ── Elementos de ESTA sección ──
                Vale para cualquier tipo de bloque, no solo la sección libre:
                a una portada o a un bloque de preguntas también se le puede
@@ -1492,6 +1560,17 @@
               </ng-container>
             </p>
 
+          </ng-container>
+
+          <!-- ── Más opciones: lo que no es esencial de esta sección ──
+               Cada sección muestra primero sus tres controles principales. El
+               resto sigue ahí, a un clic, sin quitar nada. -->
+          <button type="button" class="mas-opciones" *ngIf="avanzadosDe(b) > 0"
+                  (click)="alternarMasOpciones(b.id)">
+            <span>{{ masOpciones.has(b.id) ? 'Menos opciones' : 'Más opciones' }}</span>
+            <small *ngIf="!masOpciones.has(b.id)">{{ avanzadosDe(b) }} más</small>
+          </button>
+
           <!-- ── Estilo de ESTA sección ── -->
           <div class="estilo-seccion">
             <button class="estilo-seccion__cabeza" (click)="mostrandoEstilo = !mostrandoEstilo">
@@ -1640,8 +1719,8 @@
              está escrito. Cambia SOLO la apariencia: no agrega, quita ni
              reordena una sola sección, así que no hay forma de perder nada. -->
         <div class="grupo" *ngIf="vestidos.length">
-          <h3>Pruébate otro vestido</h3>
-          <p>El look completo de otra plantilla, sobre lo que ya escribiste. No cambia ni una sección.</p>
+          <h3>Tema</h3>
+          <p>El diseño completo de otra plantilla, sobre lo que ya escribiste. No cambia ni una sección.</p>
 
           <div class="vestidos">
             <button class="vestido" *ngFor="let v of vestidos"
@@ -1673,8 +1752,8 @@
         </div>
 
         <div class="grupo">
-          <h3>Elige un look</h3>
-          <p>Combinaciones de color ya armadas. Toca una y mira la vista previa.</p>
+          <h3>Colores</h3>
+          <p>Combinaciones ya armadas. Toca una y mira la vista previa.</p>
           <div class="paletas">
             <button class="paleta" *ngFor="let p of paletas"
                     [class.is-active]="paletaActiva === p.id"
@@ -1693,8 +1772,8 @@
         </div>
 
         <div class="grupo">
-          <h3>Estilo de la página</h3>
-          <p>Cambia esquinas, sombras, aire y el peso de los títulos, todo de una.</p>
+          <h3>Forma</h3>
+          <p>Esquinas, sombras, aire y peso de los títulos, todo de una.</p>
           <div class="estilos">
             <button class="estilo" *ngFor="let e of estilosPagina"
                     [class.is-active]="estiloActivo === e.id"
@@ -1714,7 +1793,7 @@
         </div>
 
         <div class="grupo">
-          <h3>Tipo de letra</h3>
+          <h3>Letra</h3>
           <p>Parejas ya combinadas: una para los títulos y otra para el texto.</p>
           <div class="parejas">
             <button class="pareja" *ngFor="let p of parejas"
@@ -1788,7 +1867,7 @@
              cambiar un color es lo primero que intenta todo el mundo, y detrás
              de "Elegir mis propios colores" nadie los encontraba. -->
         <div class="grupo">
-          <h3>Tus colores</h3>
+          <h3>Colores a tu gusto</h3>
           <p>Toca un círculo y elige el color. Cambia toda la página al instante.</p>
           <div class="colores">
             <label class="color">
@@ -1875,6 +1954,102 @@
               <input type="text" maxlength="160" [(ngModel)]="contenido.tienda.envio.texto"
                      (ngModelChange)="marcarSucio()" placeholder="Entregas en 24 a 48 horas" />
             </div>
+          </div>
+
+          <!-- ── Recoger en tienda ── -->
+          <div class="grupo" *ngIf="retiro as r">
+            <h3>Recoger en tienda</h3>
+            <button class="opcion" [class.is-active]="r.activo"
+                    (click)="r.activo = !r.activo; marcarSucio()">
+              <span class="opcion__texto">
+                <strong>Dejar que pasen a recoger</strong>
+                <small>El comprador elige el punto, no paga domicilio y tú no pagas mensajero.
+                  Solo aparece si tienes al menos un punto.</small>
+              </span>
+              <span class="palanca"><span></span></span>
+            </button>
+
+            <ng-container *ngIf="r.activo">
+              <div class="repetible" *ngFor="let p of r.puntos; let i = index">
+                <input type="text" maxlength="80" [(ngModel)]="p.nombre" (ngModelChange)="marcarSucio()"
+                       placeholder="Nombre del punto (Local Centro)" />
+                <input type="text" maxlength="200" [(ngModel)]="p.direccion" (ngModelChange)="marcarSucio()"
+                       placeholder="Dirección (Cra 50 #52-10)" />
+                <div class="campo-doble">
+                  <input type="text" maxlength="80" [(ngModel)]="p.ciudad" (ngModelChange)="marcarSucio()"
+                         placeholder="Ciudad" />
+                  <input type="text" maxlength="30" [(ngModel)]="p.telefono" (ngModelChange)="marcarSucio()"
+                         placeholder="Teléfono" />
+                </div>
+                <input type="text" maxlength="160" [(ngModel)]="p.horario" (ngModelChange)="marcarSucio()"
+                       placeholder="Horario (Lunes a viernes 9am a 6pm)" />
+                <select [(ngModel)]="p.bodegaId" (ngModelChange)="marcarSucio()">
+                  <option value="">Despacha de la bodega de la tienda</option>
+                  <option *ngFor="let b of bodegas" [value]="b.codigo">{{ b.nombre }}</option>
+                </select>
+                <button class="enlace-sutil" (click)="quitarPunto(i)">Quitar este punto</button>
+              </div>
+              <button class="boton-secundario" (click)="agregarPunto()" *ngIf="r.puntos.length < 8">
+                Agregar un punto
+              </button>
+              <div class="campo">
+                <label>Nota sobre el retiro</label>
+                <input type="text" maxlength="160" [(ngModel)]="r.texto" (ngModelChange)="marcarSucio()"
+                       placeholder="Te avisamos por WhatsApp cuando esté listo" />
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- ── Cupones ── -->
+          <div class="grupo">
+            <h3>Cupones de descuento</h3>
+            <p class="nota">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01"/></svg>
+              Los códigos no viajan a la página: el comprador escribe el suyo y nuestro servidor
+              decide si aplica y cuánto rebaja. Nadie los puede leer del código fuente.
+            </p>
+
+            <div class="repetible" *ngFor="let c of cupones; let i = index">
+              <div class="campo-doble">
+                <input type="text" maxlength="24" [(ngModel)]="c.codigo"
+                       (ngModelChange)="c.codigo = normalizarCodigoCupon(c.codigo); marcarSucio()"
+                       placeholder="BIENVENIDO" />
+                <select [(ngModel)]="c.tipo" (ngModelChange)="marcarSucio()">
+                  <option value="porcentaje">% de descuento</option>
+                  <option value="monto">Pesos fijos</option>
+                </select>
+              </div>
+              <div class="campo-doble">
+                <input type="number" min="1" [max]="c.tipo === 'porcentaje' ? 90 : null"
+                       [(ngModel)]="c.valor" (ngModelChange)="marcarSucio()"
+                       [placeholder]="c.tipo === 'porcentaje' ? '10' : '20000'" />
+                <input type="number" min="0" [(ngModel)]="c.minimoCompra" (ngModelChange)="marcarSucio()"
+                       placeholder="Compra mínima" />
+              </div>
+              <div class="campo-doble">
+                <input type="date" [(ngModel)]="c.vence" (ngModelChange)="marcarSucio()" />
+                <input type="number" min="0" [(ngModel)]="c.usosMaximos" (ngModelChange)="marcarSucio()"
+                       placeholder="Usos máximos (0 = sin tope)" />
+              </div>
+              <label class="paginas__check">
+                <input type="checkbox" [(ngModel)]="c.soloPrimeraCompra" (ngModelChange)="marcarSucio()" />
+                Solo para la primera compra
+              </label>
+              <label class="paginas__check">
+                <input type="checkbox" [(ngModel)]="c.aplicaAEnvio" (ngModelChange)="marcarSucio()" />
+                Que también descuente el envío
+              </label>
+              <label class="paginas__check">
+                <input type="checkbox" [(ngModel)]="c.activo" (ngModelChange)="marcarSucio()" />
+                Activo
+              </label>
+              <p class="nota" *ngIf="c.usos > 0">Se ha usado {{ c.usos }} vez(ces).</p>
+              <button class="enlace-sutil" (click)="quitarCupon(i)">Quitar este cupón</button>
+            </div>
+
+            <button class="boton-secundario" (click)="agregarCupon()" *ngIf="cupones.length < 40">
+              Crear un cupón
+            </button>
           </div>
 
           <div class="grupo">
@@ -1988,6 +2163,20 @@
             <small>Sale en Meta Business, en Seguridad de la marca → Dominios. Sin esto no puedes
               pautar contra tu propio enlace.</small>
           </div>
+          <div class="campo">
+            <label>
+              Token de Conversions API
+              <span class="pastilla" *ngIf="contenido.analitica.metaConversionsPuesto">Configurado</span>
+            </label>
+            <input type="password" autocomplete="off"
+                   [(ngModel)]="tokenMetaNuevo" (ngModelChange)="marcarSucio()"
+                   [placeholder]="contenido.analitica.metaConversionsPuesto ? 'Escribe uno nuevo para reemplazarlo' : 'EAAG…'" />
+            <small>Con esto tus ventas le llegan a Meta desde nuestro servidor, no solo desde el
+              navegador del comprador. Recuperas las que hoy se pierden por bloqueadores y por
+              iPhone. Lo generas en Administrador de eventos → Configuración → Conversions API.</small>
+            <button type="button" class="enlace-sutil" *ngIf="contenido.analitica.metaConversionsPuesto"
+                    (click)="quitarTokenMeta()">Quitar el token</button>
+          </div>
         </div>
 
         <div class="grupo">
@@ -2010,9 +2199,28 @@
             <label>Google Analytics 4</label>
             <input type="text" [(ngModel)]="contenido.analitica.ga4" (ngModelChange)="marcarSucio()" placeholder="G-XXXXXXXXXX" />
           </div>
+          <div class="campo" *ngIf="contenido.analitica.ga4">
+            <label>
+              Clave del protocolo de medición
+              <span class="pastilla" *ngIf="contenido.analitica.ga4SecretoPuesto">Configurada</span>
+            </label>
+            <input type="password" autocomplete="off"
+                   [(ngModel)]="secretoGa4Nuevo" (ngModelChange)="marcarSucio()"
+                   [placeholder]="contenido.analitica.ga4SecretoPuesto ? 'Escribe una nueva para reemplazarla' : 'Pégala aquí'" />
+            <small>Hace que tus ventas pagadas lleguen a Analytics desde nuestro servidor, y de ahí
+              las importas a Google Ads como conversión. La generas en Analytics → Administrar →
+              Flujos de datos → tu flujo → Protocolo de medición.</small>
+            <button type="button" class="enlace-sutil" *ngIf="contenido.analitica.ga4SecretoPuesto"
+                    (click)="quitarSecretoGa4()">Quitar la clave</button>
+          </div>
           <div class="campo">
             <label>Google Tag Manager</label>
             <input type="text" [(ngModel)]="contenido.analitica.gtm" (ngModelChange)="marcarSucio()" placeholder="GTM-XXXXXX" />
+            <small><strong>Ojo:</strong> aquí solo funcionan las etiquetas propias de Google
+              (Analytics, Ads, Floodlight). Una etiqueta de HTML personalizado, o de otro
+              proveedor, no se ejecuta: tu página bloquea el código que no armamos nosotros, y esa
+              es la razón por la que nadie te puede inyectar nada. Para Meta y TikTok usa los
+              campos de arriba, que sí miden.</small>
           </div>
           <div class="campo">
             <label>Verificación de Search Console</label>
@@ -2043,11 +2251,28 @@
           </button>
         </div>
 
+        <div class="grupo" *ngIf="contenido.analitica.metaConversionsPuesto || contenido.analitica.ga4SecretoPuesto">
+          <h3>Comprobar que llega</h3>
+          <div class="campo">
+            <label>Código de prueba</label>
+            <input type="text" [(ngModel)]="codigoPrueba" placeholder="TEST12345" maxlength="25" />
+            <small>Lo ves en Meta, en Administrador de eventos → Probar eventos. Con él puesto, la
+              prueba entra a esa pestaña y no ensucia tus métricas reales.</small>
+          </div>
+          <button type="button" class="boton-secundario" [disabled]="probandoMedicion"
+                  (click)="probarMedicion()">
+            {{ probandoMedicion ? 'Enviando…' : 'Enviar evento de prueba' }}
+          </button>
+          <p class="aviso" *ngIf="resultadoPrueba">{{ resultadoPrueba }}</p>
+        </div>
+
         <p class="nota">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
           Lo que se reporta solo, sin que configures nada más: quién te escribe por WhatsApp, quién
           deja sus datos en el formulario y —si vendes— agregar al carrito, iniciar compra y compra
-          hecha, con el valor y los productos.
+          hecha, con el valor y los productos. La compra se cuenta cuando la venta es real: contra
+          entrega al confirmar el pedido, y con pago en línea solo cuando la pasarela aprueba el
+          pago.
         </p>
       </div>
 
@@ -2068,6 +2293,18 @@
           <small [class.is-error]="!slugValido">
             {{ slugMensaje || 'Este es el enlace que compartes por WhatsApp o Instagram.' }}
           </small>
+        </div>
+
+        <div class="grupo">
+          <h3>Herramientas avanzadas</h3>
+          <button class="opcion" [class.is-active]="herramientasAvanzadas" (click)="alternarAvanzadas()">
+            <span class="opcion__texto">
+              <strong>Lienzo libre y objetos colocables</strong>
+              <small>Para poner botones, textos o tarjetas en coordenadas exactas dentro de una sección.
+                La mayoría de las tiendas no lo necesita; apagado, el editor es más simple.</small>
+            </span>
+            <span class="palanca"><span></span></span>
+          </button>
         </div>
 
         <div class="grupo">
@@ -2274,7 +2511,9 @@
         <button class="btn-fantasma btn-fantasma--sm crudos" (click)="mostrandoTiposCrudos = false">
           ← Ver secciones ya armadas
         </button>
-        <button class="disponible" *ngFor="let c of catalogoBloques" (click)="agregar(c.tipo)">
+        <ng-container *ngFor="let f of catalogoPorFamilia">
+        <h4 class="familia">{{ f.nombre }}</h4>
+        <button class="disponible" *ngFor="let c of f.bloques" (click)="agregar(c.tipo)">
           <span class="disponible__icono">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path [attr.d]="c.icono"/></svg>
           </span>
@@ -2284,6 +2523,7 @@
           </span>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
         </button>
+        </ng-container>
       </ng-container>
     </div>
   </div>
