@@ -145,11 +145,21 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     const correo = String(this.correo_electronico_facturacion || "").trim();
     const celular = String(this.numero_celular_facturacion || "").trim();
     const ciudad = String(this.ciudad_municipio || "").trim();
+    const depto = String(this.departamento || "").trim();
 
     if (razon.length < 3) { faltan.push("Razón social o nombre completo"); }
     if (!tipo) { faltan.push("Tipo de documento"); }
     if (!doc) { faltan.push("Número de documento"); }
-    if (!ciudad) { faltan.push("Ciudad"); }
+    // Ticket 1040 (OH MY STORE): decir solo "Ciudad" dejaba al vendedor sin
+    // salida, porque la ciudad es un desplegable en cascada que permanece
+    // vacío hasta elegir el departamento. El aviso ahora dice qué hacer.
+    if (!ciudad) {
+      faltan.push(
+        depto
+          ? "Ciudad"
+          : "Departamento y luego Ciudad (la lista de ciudades se llena al elegir el departamento)",
+      );
+    }
     if (!celular) { faltan.push("Celular"); }
     if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { faltan.push("Correo electrónico válido"); }
 
