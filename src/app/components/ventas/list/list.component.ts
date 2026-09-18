@@ -20,6 +20,7 @@ import {
   animate,
 } from "@angular/animations";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
+import { PaginatedOrdersResponse } from "../../despachos/interfaces/paginated-orders.interface";
 import {
   Carrito,
   Cliente,
@@ -54,8 +55,8 @@ import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
-import { Subject, forkJoin, of } from "rxjs";
-import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from "rxjs/operators";
+import { Observable, Subject, forkJoin, of } from "rxjs";
+import { debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
 import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
@@ -3554,7 +3555,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Usar forkJoin con tipos explícitos para evitar errores de TypeScript
       // Métricas solo en página 1: no cambian al paginar y en páginas siguientes
       // se conservan las de la página 1 (backendMetrics solo se pisa si vienen).
-      const paginatedRequest = this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.pageSize, this.currentPage === 1);
+      // En produccion la tabla de productos no tiene paginacion de servidor:
+      // pinta lo que reciba. Si solo llega la pagina 1, los pedidos que sobran
+      // desaparecen sin aviso (ticket 1038: 248 pedidos para hoy, solo 50 visibles).
+      // Por eso en produccion se traen TODAS las paginas y se unen.
+      const paginatedRequest = this.isFromProduction
+        ? this.cargarTodasLasPaginasProduccion(filter)
+        : this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.pageSize, this.currentPage === 1);
       
       // Cargar pedidos paginados primero
       paginatedRequest.pipe(
@@ -3594,6 +3601,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Usar método sin paginación
       this.refrescarDatosSinPaginacion();
     }
+  }
+
+  /**
+   * Trae todas las paginas del endpoint paginado (de a 100, el maximo que
+   * acepta el servidor) y devuelve una sola respuesta con los pedidos unidos.
+   * Solo se usa en produccion, donde la vista necesita el rango completo.
+   */
+  private cargarTodasLasPaginasProduccion(filter: any): Observable<PaginatedOrdersResponse> {
+    const TAMANO_PAGINA = 100;
+    const TOPE_PAGINAS = 50; // 5.000 pedidos: freno de seguridad, no un limite esperado
+    const acumulado: any[] = [];
+    const pedirPagina = (pagina: number): Observable<PaginatedOrdersResponse> =>
+      this.ventasService.getOrdersByFilterOptimized(filter, pagina, TAMANO_PAGINA, pagina === 1).pipe(
+        switchMap((resp: PaginatedOrdersResponse) => {
+          acumulado.push(...(resp?.orders || []));
+          const hayMas = !!resp?.pagination?.hasNextPage && pagina < TOPE_PAGINAS;
+          if (hayMas) {
+            return pedirPagina(pagina + 1).pipe(
+              map((ultima) => ({ ...resp, ...ultima, orders: acumulado, metrics: resp.metrics || ultima.metrics }))
+            );
+          }
+          return of({
+            ...resp,
+            orders: acumulado,
+            pagination: resp?.pagination
+              ? { ...resp.pagination, currentPage: 1, itemsPerPage: acumulado.length, hasNextPage: false, hasPreviousPage: false }
+              : resp?.pagination,
+          } as PaginatedOrdersResponse);
+        })
+      );
+    return pedirPagina(1);
   }
 
   /**
