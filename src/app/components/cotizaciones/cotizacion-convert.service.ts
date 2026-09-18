@@ -5,6 +5,7 @@ import { CartSingletonService } from "src/app/shared/services/ventas/cart.single
 import { BodegaService } from "src/app/shared/services/bodegas/bodega.service";
 import { LeadToSalesService } from "../crm/services/lead-to-sales.service";
 import { Cotizacion } from "./modelo/cotizacion";
+import { buscarMunicipio } from "src/app/shared/data/colombia-dane-codes";
 
 /**
  * Conversión de una cotización a pedido (spec 008.2).
@@ -84,11 +85,27 @@ export class CotizacionConvertService {
     const optsBodega = bodegas
       .map((b) => `<option value="${b.idBodega}">${this.escape(b.nombre)}</option>`)
       .join("");
-    const optsCiudad = ciudades.length
-      ? ciudades
-          .map((c) => `<option value="${this.escape(c.value)}" ${c.value === ciudadPre ? "selected" : ""}>${this.escape(c.label)}</option>`)
-          .join("")
-      : `<option value="">(sin ciudades configuradas)</option>`;
+    // Ticket 1031 (ALMACEN BOMBAS): si la empresa no tiene ciudades de entrega
+    // configuradas, el select quedaba con "(sin ciudades configuradas)" y la
+    // conversión no se podía terminar. En ese caso se ofrece el buscador del
+    // catálogo DANE, que es lo mismo que ya hace la venta asistida.
+    const usarBuscadorDane = ciudades.length === 0;
+    const optsCiudad = ciudades
+      .map((c) => `<option value="${this.escape(c.value)}" ${c.value === ciudadPre ? "selected" : ""}>${this.escape(c.label)}</option>`)
+      .join("");
+
+    const campoCiudad = usarBuscadorDane
+      ? `<input id="conv-ciudad-dane" class="swal2-input" style="width:100%;margin:0"
+                list="conv-ciudad-lista" autocomplete="off"
+                placeholder="Escriba el municipio, por ejemplo Rionegro" />
+         <datalist id="conv-ciudad-lista"></datalist>
+         <small style="display:block;margin-top:6px;color:#6b6785">
+           Su empresa no tiene ciudades de entrega configuradas, así que puede
+           escoger cualquier municipio del país.
+         </small>`
+      : `<select id="conv-ciudad" class="swal2-input" style="width:100%;margin:0">
+           <option value="">Seleccionar…</option>${optsCiudad}
+         </select>`;
 
     const result = await Swal.fire({
       title: "Convertir a pedido",
@@ -100,23 +117,47 @@ export class CotizacionConvertService {
              <option value="">Seleccionar…</option>${optsBodega}
            </select>
            <label style="font-weight:600;display:block;margin:6px 0 2px">Ciudad de entrega</label>
-           <select id="conv-ciudad" class="swal2-input" style="width:100%;margin:0">
-             <option value="">Seleccionar…</option>${optsCiudad}
-           </select>
+           ${campoCiudad}
          </div>`,
       showCancelButton: true,
       confirmButtonText: "Continuar",
       cancelButtonText: "Cancelar",
       focusConfirm: false,
+      didOpen: () => {
+        if (!usarBuscadorDane) return;
+        // El catálogo DANE es local: se filtra en el momento, sin pedirle nada
+        // al servidor. Dos letras es el mínimo que acepta la búsqueda.
+        const input = document.getElementById("conv-ciudad-dane") as HTMLInputElement;
+        const lista = document.getElementById("conv-ciudad-lista") as HTMLDataListElement;
+        if (!input || !lista) return;
+        if (ciudadCliente) input.value = ciudadCliente;
+        const pintar = () => {
+          const texto = (input.value || "").trim();
+          if (texto.length < 2) {
+            lista.innerHTML = "";
+            return;
+          }
+          lista.innerHTML = buscarMunicipio(texto)
+            .slice(0, 20)
+            .map((m) => `<option value="${this.escape(m.nombre + ", " + m.departamento)}"></option>`)
+            .join("");
+        };
+        input.addEventListener("input", pintar);
+        pintar();
+      },
       preConfirm: () => {
         const bodegaId = (document.getElementById("conv-bodega") as HTMLSelectElement)?.value || "";
-        const ciudad = (document.getElementById("conv-ciudad") as HTMLSelectElement)?.value || "";
+        const ciudad = usarBuscadorDane
+          ? ((document.getElementById("conv-ciudad-dane") as HTMLInputElement)?.value || "").trim()
+          : (document.getElementById("conv-ciudad") as HTMLSelectElement)?.value || "";
         if (!bodegaId) {
           Swal.showValidationMessage("Selecciona una bodega");
           return false;
         }
         if (!ciudad) {
-          Swal.showValidationMessage("Selecciona una ciudad");
+          Swal.showValidationMessage(
+            usarBuscadorDane ? "Escriba la ciudad de entrega" : "Selecciona una ciudad",
+          );
           return false;
         }
         return { bodegaId, ciudad };
