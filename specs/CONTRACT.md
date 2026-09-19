@@ -6672,3 +6672,27 @@ Propuesta: `openspec/changes/tienda-cuenta-comprador/`.
 Solo toca la capa Angular del editor; el render publicado y el backend quedan intactos. Revisados a mano los 29 tipos: en portada manda la foto, en encabezado el menú de categorías, en catálogo el "se puede comprar" y en promo la foto (la regla de posición los había dejado atrás). El selector de tipos crudos pasó de lista plana a cuatro familias (vender, contar, que te escriban, estructura). **Pendiente**: verlo en vivo con Daniel logueado (la extensión no entra a sellercenter).
 
 Propuesta: `openspec/changes/editor-sitios-facil/`.
+
+## D-299 (2026-09-18) — El MCP puede servir pantallas, y la primera es el tablero de inventario
+
+**Contexto.** El inventario se contestaba en prosa: el agente leía los tools, sumaba y narraba. Y dos tools se contradecían sobre la misma empresa en el mismo instante — el 16-sep `get_low_stock_products` decía "no hay inventario configurado, un 0 aquí es ausencia de datos" mientras `get_stock_levels` cantaba "1 producto sin stock requiere atención inmediata". La extensión de apps de MCP quedó estable el 26-ene-2026 y Claude web y escritorio la renderizan, que es por donde los comercios ya entran al conector.
+
+**Decisión.** El servidor MCP gana la capacidad de servir interfaces (`resources` + recursos `ui://`) y un tool puede declarar la pantalla que lo acompaña. La primera es el tablero de inventario, con dos pestañas: **Existencias** para cualquier comercio (unidades y valor por bodega, agotados, bajo umbral, sin datos, búsqueda de producto) y **Salud** solo para la empresa operadora (duplicados, bodegas con saldo fuera del maestro, etiquetas `idBodega` con id de documento). La pestaña de salud se decide en el servidor: con credencial de comercio el bloque no viaja en la respuesta. El tablero es de solo lectura y no tiene un control que ajuste, traslade ni repare nada.
+
+Tres correcciones sobre el plan original, todas registradas en el diseño: (1) el paquete `ext-apps` es ESM sin condición `require` y el backend es CommonJS con Node 20 declarado, así que las constantes del protocolo viven copiadas en `services/mcp/uiExtension.js` y un test las compara contra el paquete real — el servidor no lo importa, queda como dependencia de desarrollo; (2) **no** se extrajo `calcularMetricasPorBodega` de `controllers/inventory.js` (6.869 líneas, módulo sensible): la capa compartida ya existía en `services/productStockHelper.js` y el tablero se compone de los tools que ya suman bien; (3) el hueco de permisos que se había reportado en `create_katuq_site` y `publish_katuq_site` **ya estaba cerrado centralmente** por `071c989` (16-sep), que mueve la validación de empresa y permiso a `toolRegistry.executeTool`; en vez de duplicar la verificación por tool se dejó la regresión que fija ese contrato.
+
+`get_stock_levels` adopta el estado explícito de `get_low_stock_products` y deja de contar como agotados los productos sin registro de inventario: los mueve a `productos_sin_datos`. **Es ruptura de lectura** para quien consuma `productos_sin_stock` de ese tool. Verificado contra producción: en ALMARA los agotados de los dos tools coinciden (186) y los sin datos también (109).
+
+**Hallazgo de paso.** El tablero encontró en producción lo que buscaba: OH MY STORE tiene 3 bodegas con saldo fuera del maestro (BOD-009/010/011, 415 unidades entre las tres) y ALMARA un registro de inventario etiquetado con el id de documento de la bodega en vez de `BOD-003`. El tablero los muestra marcados, no los esconde.
+
+Propuesta: `openspec/changes/tablero-inventario-mcp-app/` (repo katuq_admin_back_firebase).
+
+---
+
+## D-299 (2026-09-19) — Agregar donde uno mira y arrastrar desde el borde
+
+**Contexto.** "Agregar una sección" la mandaba al final y había que subirla a mano; arrastrar exigía elegir la sección y apuntarle al asa chiquita de la barra flotante; y mientras se arrastraba solo se veía el bloque flotando, no dónde iba a caer.
+
+**Decisión.** En la vista previa: un "+" en la unión de cada par de secciones (y uno al final) que abre el selector e **inserta justo ahí**; sin "+", la nueva entra después de la sección elegida. Un **agarre en todo el borde izquierdo** de cada sección, visible al pasar el mouse, además del asa de la barra —en el borde y no en el cuerpo a propósito: escribir sobre un texto no puede empezar a mover la sección—. Y un **hueco punteado** donde va a caer. Los "+" se esconden mientras se arrastra. Solo toca el editor; el render publicado no cambia.
+
+Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastrar una foto del escritorio a la vista previa, reordenar columnas y tarjetas dentro de una sección, y redimensionar con asa.

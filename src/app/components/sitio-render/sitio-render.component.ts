@@ -299,6 +299,8 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
    * texto y los elementos: aquí solo se avisa y el editor reordena su modelo.
    */
   @Output() bloqueMovido = new EventEmitter<{ desde: number; hasta: number }>();
+  /** El "+" entre secciones: en qué posición quiere el comerciante la nueva. */
+  @Output() agregarEn = new EventEmitter<number>();
 
   nombre = "";
   telefono = "";

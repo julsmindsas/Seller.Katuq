@@ -2457,7 +2457,8 @@
               (elementoMovido)="aplicarElementoMovido($event)"
               (bloqueSeleccionado)="seleccionarDesdePrevia($event)"
               (accionBloque)="accionDesdePrevia($event)"
-              (bloqueMovido)="moverDesdePrevia($event)">
+              (bloqueMovido)="moverDesdePrevia($event)"
+              (agregarEn)="abrirAgregarEn($event)">
             </app-sitio-render>
           </div>
         </div>
@@ -2469,7 +2470,7 @@
 <!-- ═══ Agregar sección ═════════════════════════════════════════════════════
      Con `appAlBody`: dentro de `.page-body` el velo quedaría por debajo del
      menú lateral. Ver al-body.directive.ts. -->
-<div class="velo" *ngIf="mostrandoAgregar" appAlBody (click)="mostrandoAgregar = false">
+<div class="velo" *ngIf="mostrandoAgregar" appAlBody (click)="mostrandoAgregar = false; insercionEn = null">
   <div class="caja" (click)="$event.stopPropagation()">
     <header class="caja__cabecera">
       <div>

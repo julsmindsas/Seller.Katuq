@@ -1698,16 +1698,38 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
+  /**
+   * Dónde va a entrar la próxima sección. La pone el "+" de la vista previa;
+   * sin ella, la nueva va después de la sección elegida, y si no hay ninguna,
+   * al final. Antes siempre iba al final y había que subirla a mano.
+   */
+  insercionEn: number | null = null;
+
+  abrirAgregarEn(indice: number): void {
+    this.insercionEn = Math.max(0, Math.min(indice, this.bloques.length));
+    this.mostrandoAgregar = true;
+  }
+
   agregar(tipo: string): void {
     if (!this.contenido) return;
     const datos = JSON.parse(JSON.stringify(BLOQUE_NUEVO[tipo] || {}));
     // El id local solo sirve para identificar el bloque en pantalla; el backend
     // lo normaliza al guardar.
     const id = `b_${Date.now()}_${tipo}`;
-    this.fijarBloques([...this.bloques, { id, tipo, visible: true, datos }]);
-    this.seleccionado = this.bloques.length - 1;
+    const nuevos = [...this.bloques];
+    const en =
+      this.insercionEn !== null
+        ? this.insercionEn
+        : this.seleccionado >= 0
+        ? this.seleccionado + 1
+        : nuevos.length;
+    nuevos.splice(en, 0, { id, tipo, visible: true, datos });
+    this.fijarBloques(nuevos);
+    this.seleccionado = en;
+    this.insercionEn = null;
     this.mostrandoAgregar = false;
     this.marcarSucio();
+    this.resolverProductosDePrevia();
   }
 
   /** Copia un valor de DNS al portapapeles, para que nadie lo transcriba a mano. */
