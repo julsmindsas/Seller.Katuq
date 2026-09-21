@@ -6741,7 +6741,7 @@ Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastra
 
 ---
 
-## D-301 (2026-09-21) — Una foto se suelta donde se quiere ver
+## D-306 (2026-09-21) — Una foto se suelta donde se quiere ver
 
 **Contexto.** Subir una foto era ir al panel, encontrar el campo correcto entre 220 controles y elegir el archivo. En Wix se arrastra desde el escritorio y se suelta sobre la sección.
 
@@ -6749,25 +6749,25 @@ Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastra
 
 ---
 
-## D-302 (2026-09-21) — Todas las listas del panel se reordenan arrastrando
+## D-307 (2026-09-21) — Todas las listas del panel se reordenan arrastrando
 
 **Contexto.** Los enlaces del encabezado y del pie, las preguntas frecuentes, las reseñas, las columnas, los botones, los puntos de retiro y los cupones no se podían reordenar; los banners, solo con flechitas.
 
-**Decisión.** Las nueve listas del panel reciben la misma mecánica que las secciones: asa de puntos, arrastre y hueco punteado donde cae. Una sola función `soltarLista` sirve para todas. Las flechitas de los banners se van. Con esto se cierra el hilo de arrastre (D-299 a D-302); queda fuera redimensionar con asa, que es el más caro porque cada bloque decide distinto qué significa "más grande".
+**Decisión.** Las nueve listas del panel reciben la misma mecánica que las secciones: asa de puntos, arrastre y hueco punteado donde cae. Una sola función `soltarLista` sirve para todas. Las flechitas de los banners se van. Con esto se cierra el hilo de arrastre (D-299, D-305 a D-307); queda fuera redimensionar con asa, que es el más caro porque cada bloque decide distinto qué significa "más grande".
 
 ---
 
-## D-303 (2026-09-21) — Estirar una sección con el asa, por escalones
+## D-308 (2026-09-21) — Estirar una sección con el asa, por escalones
 
-**Contexto.** El alto de la portada, del banner, del separador y el tamaño de una imagen se cambiaban con un desplegable en el panel. Era el último gesto que faltaba del hilo de arrastre (D-299 a D-302).
+**Contexto.** El alto de la portada, del banner, del separador y el tamaño de una imagen se cambiaban con un desplegable en el panel. Era el último gesto que faltaba del hilo de arrastre (D-299, D-305 a D-307).
 
 **Decisión.** Un asa en el borde inferior de esas cuatro secciones, visible al pasar el mouse, que al arrastrar cambia de escalón cada 60 px. **Por escalones y no por píxeles libres**, a propósito: el sitio publicado no guarda alturas en píxeles — las decide con clases que además se adaptan al celular. Un asa de píxeles daría una libertad que el render no puede honrar, y el comerciante vería una cosa en el editor y otra publicada. Los desplegables del panel siguen ahí: quien prefiera elegir por nombre, puede.
 
-Con esto se cierra el hilo de arrastre completo.
+Con esto se cierra el hilo de arrastre completo (D-299, D-305 a D-308).
 
 ---
 
-## D-304 (2026-09-21) — Reseñas de compradores verificados, con colección propia
+## D-309 (2026-09-21) — Reseñas de compradores verificados, con colección propia
 
 **Contexto.** El bloque "reseñas" era texto que escribía el propio comerciante. No es prueba social: el comprador nuevo distingue un testimonio a mano de la opinión de alguien que compró, y esa diferencia decide la primera venta de una tienda que empieza.
 
