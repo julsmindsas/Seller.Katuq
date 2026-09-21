@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, CuponSitio, PaginaSitio, PropuestaDiseno, Sitio, SitiosService, TiendaSitio, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, CuponSitio, PaginaSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TiendaSitio, VentaConfig } from "../sitios.service";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
@@ -582,7 +582,67 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   /** Índice del bloque en edición. -1 = ninguno. */
   seleccionado = -1;
   dispositivo: "escritorio" | "movil" = "escritorio";
-  panel: "bloques" | "diseno" | "tienda" | "pauta" | "ajustes" = "bloques";
+  panel: "bloques" | "diseno" | "tienda" | "resenas" | "pauta" | "ajustes" = "bloques";
+
+  // ── Opiniones de compradores ────────────────────────────────────────────
+  resenas: ResenaSitio[] = [];
+  cargandoResenas = false;
+
+  /** Cuántas esperan decisión: es el número de la pestaña. */
+  get resenasPendientes(): number {
+    return this.resenas.filter((r) => r.estado === "pendiente").length;
+  }
+
+  estrellasDe(n: number): string {
+    const llenas = Math.min(5, Math.max(0, Math.round(Number(n) || 0)));
+    return "★".repeat(llenas) + "☆".repeat(5 - llenas);
+  }
+
+  nombreEstado(estado: string): string {
+    if (estado === "publicada") return "Publicada";
+    if (estado === "oculta") return "Oculta";
+    return "Sin revisar";
+  }
+
+  cargarResenas(): void {
+    if (this.cargandoResenas) return;
+    this.cargandoResenas = true;
+    this.service.resenas(this.id).subscribe({
+      next: (res) => {
+        this.cargandoResenas = false;
+        this.resenas = (res && res.data && res.data.resenas) || [];
+      },
+      error: () => {
+        this.cargandoResenas = false;
+        this.toastr.error("No pudimos traer las opiniones.");
+      },
+    });
+  }
+
+  /**
+   * Publica, oculta o guarda la respuesta. Lo que escribió el comprador no
+   * viaja: el servidor ignora texto y estrellas aunque se manden, y aquí
+   * tampoco se ofrecen.
+   */
+  moderar(r: ResenaSitio, estado?: "publicada" | "oculta"): void {
+    const cambios: { estado?: "publicada" | "oculta"; respuesta?: string } = {
+      respuesta: r.respuesta || "",
+    };
+    if (estado) cambios.estado = estado;
+    this.service.moderarResena(this.id, r.id, cambios).subscribe({
+      next: () => {
+        if (estado) r.estado = estado;
+        this.toastr.success(
+          estado === "publicada"
+            ? "Publicada: ya la ven tus clientes."
+            : estado === "oculta"
+            ? "Oculta: deja de verse en la tienda."
+            : "Respuesta guardada."
+        );
+      },
+      error: () => this.toastr.error("No pudimos guardar el cambio."),
+    });
+  }
 
   /** Bodegas del comercio, para el selector de despacho de la tienda. */
   bodegas: { codigo: string; nombre: string }[] = [];

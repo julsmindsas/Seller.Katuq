@@ -2771,3 +2771,50 @@
 .lista-arrastrable.cdk-drop-list-dragging .repetible:not(.cdk-drag-placeholder) {
   transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
 }
+
+/* ── Moderar opiniones ─────────────────────────────────────────────────────
+   El comerciante publica, oculta y responde. Lo que escribió el comprador se
+   muestra pero no se puede editar: eso es lo que la hace valer. */
+.pestana-aviso {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: #b3261e;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.resena-mod {
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 13px;
+  background: var(--kb-surface-3);
+}
+.resena-mod__cab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+.resena-mod__estrellas { color: #f5a623; letter-spacing: 0.05em; }
+.resena-mod__estado {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: var(--kb-warn-wash, #fff8ea);
+  color: #8a5a12;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+
+  &.is-publicada { background: #f1faf4; color: #137a3a; }
+  &.is-oculta { background: var(--kb-surface-3); color: var(--kb-muted); }
+}
+.resena-mod__pedido { margin: 0 0 6px; font-size: 11.5px; color: var(--kb-muted); }
+.resena-mod__texto { margin: 0 0 10px; font-size: 13px; line-height: 1.55; }
+.resena-mod__texto--vacio { color: var(--kb-muted); font-style: italic; }
+.resena-mod__acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
