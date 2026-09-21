@@ -2742,3 +2742,32 @@
   text-transform: uppercase;
   color: var(--kb-muted);
 }
+
+/* Listas del panel que se reordenan arrastrando. */
+.lista-arrastrable {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.lista-arrastrable .repetible {
+  position: relative;
+  padding-left: 26px;
+  margin-bottom: 0;
+}
+.repetible__asa {
+  position: absolute;
+  left: 7px;
+  top: 12px;
+  color: var(--kb-muted);
+  cursor: grab;
+  &:active { cursor: grabbing; }
+}
+.repetible__hueco {
+  height: 44px;
+  border: 2px dashed var(--kb-accent);
+  border-radius: 13px;
+  background: var(--kb-accent-wash);
+}
+.lista-arrastrable.cdk-drop-list-dragging .repetible:not(.cdk-drag-placeholder) {
+  transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
+}

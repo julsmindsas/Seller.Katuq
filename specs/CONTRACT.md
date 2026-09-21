@@ -6746,3 +6746,11 @@ Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastra
 **Contexto.** Subir una foto era ir al panel, encontrar el campo correcto entre 220 controles y elegir el archivo. En Wix se arrastra desde el escritorio y se suelta sobre la sección.
 
 **Decisión.** Soltar una imagen sobre una sección de la vista previa la sube y la pone donde corresponde según el tipo: fondo en la portada, una más en galería, banner e Instagram, logo en marcas, la foto en imagen, promo y popup. En cualquier otra sección se vuelve **fondo de la sección con velo**, para que el texto siga legible. Mientras la foto está en el aire, la sección se resalta y dice "Suelta la foto aquí". Solo se aceptan imágenes, y el arrastre propio de las secciones no se confunde con un archivo. Reusa la misma subida (con variantes) del panel.
+
+---
+
+## D-302 (2026-09-21) — Todas las listas del panel se reordenan arrastrando
+
+**Contexto.** Los enlaces del encabezado y del pie, las preguntas frecuentes, las reseñas, las columnas, los botones, los puntos de retiro y los cupones no se podían reordenar; los banners, solo con flechitas.
+
+**Decisión.** Las nueve listas del panel reciben la misma mecánica que las secciones: asa de puntos, arrastre y hueco punteado donde cae. Una sola función `soltarLista` sirve para todas. Las flechitas de los banners se van. Con esto se cierra el hilo de arrastre (D-299 a D-302); queda fuera redimensionar con asa, que es el más caro porque cada bloque decide distinto qué significa "más grande".

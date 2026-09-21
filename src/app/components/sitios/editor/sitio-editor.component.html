@@ -321,10 +321,14 @@
               <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
             </div>
 
-            <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.enlaces)">
+            <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="30" />
               <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="#productos" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarEnlace()"
                     *ngIf="(b.datos.enlaces?.length || 0) < 4">
@@ -632,15 +636,17 @@
               Sube tus imágenes de promoción a lo ancho. Con <strong>dos o más</strong>, rotan solas y llevan
               flechas y puntos. Cada banner puede llevar a un enlace (por ejemplo, una categoría del catálogo).
             </p>
-            <div class="repetible repetible--banner" *ngFor="let bn of b.datos.banners; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.banners)">
+            <div class="repetible repetible--banner" *ngFor="let bn of b.datos.banners; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <img [src]="bn.url" alt="" class="repetible__foto" />
               <input type="text" [(ngModel)]="bn.enlace" (ngModelChange)="marcarSucio()" placeholder="Enlace al tocar (opcional)" />
               <input type="text" [(ngModel)]="bn.alt" (ngModelChange)="marcarSucio()" placeholder="Qué muestra (para accesibilidad)" maxlength="120" />
               <div class="repetible__acciones">
-                <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="moverBanner(b, i, -1)" [disabled]="i === 0" title="Mover antes">↑</button>
-                <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="moverBanner(b, i, 1)" [disabled]="i === b.datos.banners.length - 1" title="Mover después">↓</button>
                 <button type="button" class="repetible__quitar" (click)="quitarBanner(b, i)">Quitar</button>
               </div>
+            </div>
             </div>
             <label class="archivo" *ngIf="(b.datos.banners?.length || 0) < 6">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
@@ -735,10 +741,14 @@
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
-            <div class="repetible" *ngFor="let p of b.datos.preguntas; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.preguntas)">
+            <div class="repetible" *ngFor="let p of b.datos.preguntas; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="p.pregunta" (ngModelChange)="marcarSucio()" placeholder="Pregunta" maxlength="200" />
               <textarea rows="2" [(ngModel)]="p.respuesta" (ngModelChange)="marcarSucio()" placeholder="Respuesta" maxlength="2000"></textarea>
               <button class="repetible__quitar" (click)="quitarPregunta(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarPregunta()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
@@ -1045,7 +1055,10 @@
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
-            <div class="repetible" *ngFor="let r of b.datos.items; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.items)">
+            <div class="repetible" *ngFor="let r of b.datos.items; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <textarea rows="2" [(ngModel)]="r.texto" (ngModelChange)="marcarSucio()"
                         placeholder="Lo que dijo tu cliente" maxlength="400"></textarea>
               <input type="text" [(ngModel)]="r.autor" (ngModelChange)="marcarSucio()"
@@ -1057,6 +1070,7 @@
                         [attr.aria-label]="n + ' estrellas'">★</button>
               </div>
               <button class="repetible__quitar" (click)="quitarResena(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarResena()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
@@ -1116,10 +1130,14 @@
               <span class="opcion__texto"><strong>Mostrar medios de pago</strong><small>Los de tu pestaña Tienda</small></span>
               <span class="palanca"><span></span></span>
             </button>
-            <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.enlaces)">
+            <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="60" />
               <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://…" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarEnlace()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
@@ -1155,7 +1173,10 @@
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
 
-            <div class="repetible" *ngFor="let c of b.datos.columnas; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.columnas)">
+            <div class="repetible" *ngFor="let c of b.datos.columnas; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <span class="repetible__nombre">Columna {{ i + 1 }}</span>
               <input type="text" [(ngModel)]="c.titulo" (ngModelChange)="marcarSucio()"
                      placeholder="Título" maxlength="90" />
@@ -1174,6 +1195,7 @@
               <input type="text" [(ngModel)]="c.ctaUrl" (ngModelChange)="marcarSucio()"
                      placeholder="#contacto o https://…" />
               <button class="repetible__quitar" (click)="quitarColumna(i)">Quitar columna</button>
+            </div>
             </div>
 
             <button class="agregar agregar--sm" (click)="agregarColumna()"
@@ -1216,7 +1238,10 @@
 
           <!-- Fila de botones -->
           <ng-container *ngIf="b.tipo === 'botones'">
-            <div class="repetible" *ngFor="let bt of b.datos.botones; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.botones)">
+            <div class="repetible" *ngFor="let bt of b.datos.botones; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="bt.etiqueta" (ngModelChange)="marcarSucio()"
                      placeholder="Texto del botón" maxlength="40" />
               <input type="text" [(ngModel)]="bt.url" (ngModelChange)="marcarSucio()"
@@ -1226,6 +1251,7 @@
                 <option value="secundario">Solo borde</option>
               </select>
               <button class="repetible__quitar" (click)="quitarBoton(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarBoton()"
                     *ngIf="(b.datos.botones?.length || 0) < 4">
@@ -1974,7 +2000,10 @@
             </button>
 
             <ng-container *ngIf="r.activo">
-              <div class="repetible" *ngFor="let p of r.puntos; let i = index">
+              <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, r.puntos)">
+              <div class="repetible" *ngFor="let p of r.puntos; let i = index" cdkDrag>
+                <div class="repetible__hueco" *cdkDragPlaceholder></div>
+                <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
                 <input type="text" maxlength="80" [(ngModel)]="p.nombre" (ngModelChange)="marcarSucio()"
                        placeholder="Nombre del punto (Local Centro)" />
                 <input type="text" maxlength="200" [(ngModel)]="p.direccion" (ngModelChange)="marcarSucio()"
@@ -1992,6 +2021,7 @@
                   <option *ngFor="let b of bodegas" [value]="b.codigo">{{ b.nombre }}</option>
                 </select>
                 <button class="enlace-sutil" (click)="quitarPunto(i)">Quitar este punto</button>
+              </div>
               </div>
               <button class="boton-secundario" (click)="agregarPunto()" *ngIf="r.puntos.length < 8">
                 Agregar un punto
@@ -2013,7 +2043,10 @@
               decide si aplica y cuánto rebaja. Nadie los puede leer del código fuente.
             </p>
 
-            <div class="repetible" *ngFor="let c of cupones; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, cupones)">
+            <div class="repetible" *ngFor="let c of cupones; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <div class="campo-doble">
                 <input type="text" maxlength="24" [(ngModel)]="c.codigo"
                        (ngModelChange)="c.codigo = normalizarCodigoCupon(c.codigo); marcarSucio()"
@@ -2049,6 +2082,7 @@
               </label>
               <p class="nota" *ngIf="c.usos > 0">Se ha usado {{ c.usos }} vez(ces).</p>
               <button class="enlace-sutil" (click)="quitarCupon(i)">Quitar este cupón</button>
+            </div>
             </div>
 
             <button class="boton-secundario" (click)="agregarCupon()" *ngIf="cupones.length < 40">

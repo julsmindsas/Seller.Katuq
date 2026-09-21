@@ -1903,6 +1903,17 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     this.marcarSucio();
   }
 
+  /**
+   * Reordenar arrastrando cualquier lista del panel: enlaces del encabezado y
+   * del pie, preguntas, reseñas, columnas, botones, banners, puntos de retiro
+   * y cupones. Antes eran flechitas (solo en banners) o nada.
+   */
+  soltarLista(evento: CdkDragDrop<any>, lista: any[]): void {
+    if (!Array.isArray(lista) || evento.previousIndex === evento.currentIndex) return;
+    moveItemInArray(lista, evento.previousIndex, evento.currentIndex);
+    this.marcarSucio();
+  }
+
   moverBanner(bloque: any, i: number, delta: number): void {
     const lista = bloque.datos.banners || [];
     const j = i + delta;
