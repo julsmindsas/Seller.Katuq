@@ -20,6 +20,9 @@
          [ngStyle]="estiloDeBloque(bloque)"
          [class.envoltura--editable]="previsualizacion"
          [class.envoltura--activa]="previsualizacion && bloque.id === bloqueActivo"
+         [class.envoltura--soltando]="soltandoEn === bloque.id"
+         (dragenter)="arrastreEntra($event, bloque.id)" (dragover)="arrastreEntra($event, bloque.id)"
+         (dragleave)="arrastreSale(bloque.id)" (drop)="soltarArchivo($event, bloque.id)"
          [class.envoltura--oculta]="bloque.visible === false"
          cdkDrag [cdkDragDisabled]="!previsualizacion"
          (click)="seleccionar(bloque.id)">

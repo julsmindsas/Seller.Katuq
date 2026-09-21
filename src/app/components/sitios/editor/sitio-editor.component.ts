@@ -560,6 +560,10 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
  * La vista previa usa `app-sitio-render`, el mismo componente de la página
  * pública: lo que se ve editando es lo que se publica.
  */
+type DestinoImagen =
+  | "hero" | "galeria" | "seo" | "favicon" | "imagenBloque" | "fondoSeccion" | "promo"
+  | "marcas" | "heroCarrusel" | "heroMosaico" | "instagram" | "banner" | "popup";
+
 @Component({
   selector: "app-sitio-editor",
   templateUrl: "./sitio-editor.component.html",
@@ -2989,6 +2993,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   subirImagen(
     evento: Event,
+    destino: DestinoImagen
+  ): void {
+    return this.subirImagenDestino(evento, destino);
+  }
+  private subirImagenDestino(
+    evento: Event,
     destino:
       | "hero"
       | "galeria"
@@ -3007,12 +3017,47 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
     if (!archivo) return;
+    this.subirArchivo(archivo, destino, () => (input.value = ""));
+  }
 
+  /**
+   * Una foto soltada sobre una sección de la vista previa.
+   *
+   * El destino sale del TIPO de sección: en la portada es el fondo, en una
+   * galería se agrega, en una vitrina de marcas es un logo. En cualquier otra
+   * se vuelve fondo de la sección, con velo para que el texto siga legible.
+   * Antes había que ir al panel, buscar el campo y subir; ahora se suelta
+   * donde se quiere ver.
+   */
+  soltarArchivoEnBloque(ev: { bloqueId: string; archivo: File }): void {
+    const i = this.bloques.findIndex((b) => b.id === ev.bloqueId);
+    if (i < 0) return;
+    if (!/^image\//.test(ev.archivo.type)) {
+      this.toastr.warning("Solo se pueden soltar fotos.");
+      return;
+    }
+    this.seleccionar(i);
+    const tipo = this.bloques[i].tipo;
+    const destino =
+      ({
+        hero: "hero",
+        galeria: "galeria",
+        imagen: "imagenBloque",
+        promo: "promo",
+        marcas: "marcas",
+        instagram: "instagram",
+        banner: "banner",
+        popup: "popup",
+      } as Record<string, DestinoImagen>)[tipo] || "fondoSeccion";
+    this.subirArchivo(ev.archivo, destino);
+  }
+
+  private subirArchivo(archivo: File, destino: DestinoImagen, alTerminar?: () => void): void {
     this.subiendo = true;
     this.service.subirImagen(archivo).subscribe({
       next: (res) => {
         this.subiendo = false;
-        input.value = "";
+        if (alTerminar) alTerminar();
         if (!res || !res.success || !res.url) {
           this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
           return;
@@ -3059,7 +3104,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       },
       error: (e) => {
         this.subiendo = false;
-        input.value = "";
+        if (alTerminar) alTerminar();
         this.toastr.error((e && e.error && e.error.error) || "No pudimos subir la imagen.");
       },
     });

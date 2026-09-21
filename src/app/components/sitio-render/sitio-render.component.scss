@@ -709,6 +709,29 @@ h3 {
   }
 }
 
+// Una foto en el aire sobre la sección: se resalta y dice qué va a pasar.
+.envoltura--soltando {
+  outline: 3px dashed #5F3FE0;
+  outline-offset: -3px;
+  background-color: rgba(95, 63, 224, 0.06) !important;
+
+  &::after {
+    content: "Suelta la foto aquí";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 6;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: #5F3FE0;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    pointer-events: none;
+  }
+}
+
 .envoltura--editable:hover > .envoltura__agarre,
 .envoltura--activa > .envoltura__agarre {
   opacity: 1;

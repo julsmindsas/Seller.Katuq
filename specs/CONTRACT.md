@@ -6738,3 +6738,11 @@ Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastra
 **Contexto.** Con las páginas propias (D-295) no había forma de pasar un bloque de "Inicio" a "Nosotros" sin rehacerlo. Arrastrarlo no sirve: el editor solo muestra una página a la vez.
 
 **Decisión.** "Mover a otra página" en la barra flotante y en la lista de secciones, solo cuando el sitio tiene más de una página. Un diálogo elige el destino y ofrece **copiar en vez de mover**. El editor salta a la página destino con la sección elegida, para que se vea dónde quedó. En el inicio entra antes del pie; en una página propia, al final. **Encabezado y pie no se mueven**: las páginas propias los heredan del inicio, y moverlos dejaría al inicio sin menú y a la otra página con dos.
+
+---
+
+## D-301 (2026-09-21) — Una foto se suelta donde se quiere ver
+
+**Contexto.** Subir una foto era ir al panel, encontrar el campo correcto entre 220 controles y elegir el archivo. En Wix se arrastra desde el escritorio y se suelta sobre la sección.
+
+**Decisión.** Soltar una imagen sobre una sección de la vista previa la sube y la pone donde corresponde según el tipo: fondo en la portada, una más en galería, banner e Instagram, logo en marcas, la foto en imagen, promo y popup. En cualquier otra sección se vuelve **fondo de la sección con velo**, para que el texto siga legible. Mientras la foto está en el aire, la sección se resalta y dice "Suelta la foto aquí". Solo se aceptan imágenes, y el arrastre propio de las secciones no se confunde con un archivo. Reusa la misma subida (con variantes) del panel.

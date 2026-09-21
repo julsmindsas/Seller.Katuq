@@ -303,6 +303,31 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Output() agregarEn = new EventEmitter<number>();
   /** Si el sitio tiene más páginas, la barra ofrece "Mover a otra página". */
   @Input() hayOtrasPaginas = false;
+  /** Una foto soltada desde el escritorio sobre una sección. */
+  @Output() archivoSoltado = new EventEmitter<{ bloqueId: string; archivo: File }>();
+  /** La sección sobre la que hay un archivo en el aire (para resaltarla). */
+  soltandoEn: string | null = null;
+
+  arrastreEntra(ev: DragEvent, bloqueId: string): void {
+    if (!this.previsualizacion || !ev.dataTransfer) return;
+    // Solo archivos: el arrastre de las propias secciones (CDK) no trae files.
+    if (![].slice.call(ev.dataTransfer.types).includes("Files")) return;
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = "copy";
+    this.soltandoEn = bloqueId;
+  }
+  arrastreSale(bloqueId: string): void {
+    if (this.soltandoEn === bloqueId) this.soltandoEn = null;
+  }
+  soltarArchivo(ev: DragEvent, bloqueId: string): void {
+    if (!this.previsualizacion) return;
+    const archivo = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+    this.soltandoEn = null;
+    if (!archivo) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    this.archivoSoltado.emit({ bloqueId, archivo });
+  }
 
   nombre = "";
   telefono = "";

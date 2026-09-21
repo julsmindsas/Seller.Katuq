@@ -2463,7 +2463,8 @@
               (accionBloque)="accionDesdePrevia($event)"
               (bloqueMovido)="moverDesdePrevia($event)"
               (agregarEn)="abrirAgregarEn($event)"
-              [hayOtrasPaginas]="paginas.length > 0">
+              [hayOtrasPaginas]="paginas.length > 0"
+              (archivoSoltado)="soltarArchivoEnBloque($event)">
             </app-sitio-render>
           </div>
         </div>
