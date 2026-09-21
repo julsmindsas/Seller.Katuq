@@ -409,6 +409,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       this.departamento = this.departamentoInicial || "";
       this.ciudad_municipio = this.ciudad || "";
       this.codigo_postal = this.codigoPostal || "";
+      // Ticket 1041: se asignaba el pais y el departamento pero no se cargaban
+      // sus listas (eso solo pasaba al CAMBIAR el select). El desplegable de
+      // departamentos salia vacio hasta cambiar de pais y volver a Colombia.
+      this.identificarDepto();
+      this.identificarCiu();
     } else {
       this.razon_social = "";
       this.tipo_documento_facturacion = "";
@@ -757,6 +762,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
 
   abrirModalCrearFacturacion(modal): void {
     this.limpiarVariables();
+    // Ticket 1041: arrancar con el pais del cliente (o Colombia) y sus
+    // departamentos ya cargados, para que el desplegable no salga vacio.
+    this.pais = this.paisInicial || "Colombia";
+    this.identificarDepto();
     this.modalService.open(modal, { size: "lg" }).result.then(
       () => {
         this.limpiarVariables();
