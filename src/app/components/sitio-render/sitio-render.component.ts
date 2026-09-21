@@ -305,6 +305,58 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Input() hayOtrasPaginas = false;
   /** Una foto soltada desde el escritorio sobre una sección. */
   @Output() archivoSoltado = new EventEmitter<{ bloqueId: string; archivo: File }>();
+  /** El asa de tamaño: qué campo del bloque cambia y a qué escalón. */
+  @Output() tamanoCambiado = new EventEmitter<{ bloqueId: string; campo: string; valor: string }>();
+
+  /**
+   * Los tamaños que admite cada tipo de bloque, en orden de menor a mayor.
+   *
+   * Se estira por ESCALONES y no por píxeles libres: el sitio publicado no
+   * guarda alturas en píxeles, las decide con clases que además se adaptan al
+   * celular. Un asa de píxeles daría una libertad que el render no puede
+   * honrar, y el comerciante vería una cosa en el editor y otra publicada.
+   */
+  private readonly ESCALONES: Record<string, { campo: string; valores: string[] }> = {
+    hero: { campo: "altura", valores: ["", "completa"] },
+    banner: { campo: "alto", valores: ["bajo", "medio", "alto"] },
+    separador: { campo: "alto", valores: ["pequeno", "medio", "grande"] },
+    imagen: { campo: "tamano", valores: ["normal", "completo"] },
+  };
+
+  puedeEstirarse(bloque: BloqueSitio): boolean {
+    return this.previsualizacion && !!this.ESCALONES[bloque.tipo];
+  }
+
+  /** Arrastre vertical del asa: cada 60 px sube o baja un escalón. */
+  estirar(ev: PointerEvent, bloque: BloqueSitio): void {
+    const paso = this.ESCALONES[bloque.tipo];
+    if (!paso) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const asa = ev.target as HTMLElement;
+    try {
+      asa.setPointerCapture(ev.pointerId);
+    } catch (e) {
+      /* sin captura sigue funcionando mientras el puntero esté encima */
+    }
+    const y0 = ev.clientY;
+    const actual = String((bloque.datos as any)[paso.campo] ?? paso.valores[0]);
+    const i0 = Math.max(0, paso.valores.indexOf(actual));
+    let ultimo = i0;
+    const mover = (e: PointerEvent) => {
+      const pasos = Math.round((e.clientY - y0) / 60);
+      const i = Math.min(paso.valores.length - 1, Math.max(0, i0 + pasos));
+      if (i === ultimo) return;
+      ultimo = i;
+      this.tamanoCambiado.emit({ bloqueId: bloque.id, campo: paso.campo, valor: paso.valores[i] });
+    };
+    const soltar = () => {
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+    };
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
+  }
   /** La sección sobre la que hay un archivo en el aire (para resaltarla). */
   soltandoEn: string | null = null;
 

@@ -3040,6 +3040,14 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * Antes había que ir al panel, buscar el campo y subir; ahora se suelta
    * donde se quiere ver.
    */
+  /** El asa de tamaño de la vista previa movió una sección de escalón. */
+  cambiarTamanoDesdePrevia(ev: { bloqueId: string; campo: string; valor: string }): void {
+    const b = this.bloques.find((x) => x.id === ev.bloqueId);
+    if (!b) return;
+    (b.datos as any)[ev.campo] = ev.valor;
+    this.marcarSucio();
+  }
+
   soltarArchivoEnBloque(ev: { bloqueId: string; archivo: File }): void {
     const i = this.bloques.findIndex((b) => b.id === ev.bloqueId);
     if (i < 0) return;

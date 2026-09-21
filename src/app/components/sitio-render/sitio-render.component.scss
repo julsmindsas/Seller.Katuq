@@ -709,6 +709,40 @@ h3 {
   }
 }
 
+// Asa de tamaño, centrada en el borde de abajo de la sección.
+.envoltura__estirar {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: 46px;
+  height: 12px;
+  border-radius: 999px;
+  background: #5F3FE0;
+  cursor: ns-resize;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  touch-action: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.envoltura--editable:hover > .envoltura__estirar,
+.envoltura--activa > .envoltura__estirar {
+  opacity: 1;
+}
+
 // Una foto en el aire sobre la sección: se resalta y dice qué va a pasar.
 .envoltura--soltando {
   outline: 3px dashed #5F3FE0;

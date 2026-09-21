@@ -2498,7 +2498,8 @@
               (bloqueMovido)="moverDesdePrevia($event)"
               (agregarEn)="abrirAgregarEn($event)"
               [hayOtrasPaginas]="paginas.length > 0"
-              (archivoSoltado)="soltarArchivoEnBloque($event)">
+              (archivoSoltado)="soltarArchivoEnBloque($event)"
+              (tamanoCambiado)="cambiarTamanoDesdePrevia($event)">
             </app-sitio-render>
           </div>
         </div>

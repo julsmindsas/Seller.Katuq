@@ -39,6 +39,11 @@
            flotando y no dónde termina. -->
       <div class="envoltura__hueco" *cdkDragPlaceholder></div>
 
+      <!-- Asa de tamaño: estira la sección por escalones, no por píxeles. -->
+      <span class="envoltura__estirar" *ngIf="puedeEstirarse(bloque)"
+            title="Arrastra para hacerla más alta o más baja"
+            (pointerdown)="estirar($event, bloque)" (click)="$event.stopPropagation()"></span>
+
       <!-- Editar señalando: el nombre aparece al pasar el mouse, y al elegir el
            bloque sale su barra de acciones — sin ir a buscarlo al panel. -->
       <span class="etiqueta-bloque" *ngIf="previsualizacion && bloque.id !== bloqueActivo">
