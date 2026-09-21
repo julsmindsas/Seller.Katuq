@@ -6764,3 +6764,17 @@ Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastra
 **Decisión.** Un asa en el borde inferior de esas cuatro secciones, visible al pasar el mouse, que al arrastrar cambia de escalón cada 60 px. **Por escalones y no por píxeles libres**, a propósito: el sitio publicado no guarda alturas en píxeles — las decide con clases que además se adaptan al celular. Un asa de píxeles daría una libertad que el render no puede honrar, y el comerciante vería una cosa en el editor y otra publicada. Los desplegables del panel siguen ahí: quien prefiera elegir por nombre, puede.
 
 Con esto se cierra el hilo de arrastre completo.
+
+---
+
+## D-304 (2026-09-21) — Reseñas de compradores verificados, con colección propia
+
+**Contexto.** El bloque "reseñas" era texto que escribía el propio comerciante. No es prueba social: el comprador nuevo distingue un testimonio a mano de la opinión de alguien que compró, y esa diferencia decide la primera venta de una tienda que empieza.
+
+**Decisión.** **Solo reseña quien compró**: no hay formulario abierto, el candado es un enlace firmado por pedido y por producto que llega por correo cuando el pedido pasa a entregado, y sirve una sola vez. El comerciante **modera y responde, pero no escribe**: puede publicar, ocultar y contestar; cambiar el texto o las estrellas las volvería otra vez un testimonio suyo, y la petición ignora esos campos aunque vengan. La ficha muestra las publicadas con el sello de compra verificada, y la nota entra al dato estructurado para las estrellas de Google — solo con reseñas reales, porque inventarla hace que Google castigue el sitio entero.
+
+**Colección nueva `reviews`, aprobada explícitamente por Daniel** (la regla del proyecto lo exige). Las consultas usan solo filtros de igualdad y ordenan en memoria, para no pedir un índice compuesto nuevo. `orders.js` e `inventoryService.js` quedaron intactos: el enganche cuelga de `orderNotificationService.notifyStatusChange`.
+
+**Pendiente**: el panel del comerciante para moderar desde el editor, y la prueba con un pedido entregado real.
+
+Propuesta: `openspec/changes/tienda-resenas-compradores/`.
