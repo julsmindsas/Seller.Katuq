@@ -7107,3 +7107,52 @@ Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastra
 - Solo ALMARA FELICIDAD, solo pedidos con saldo pendiente creados antes del 16-sep, solo carritos de **un solo ítem** (la heurística de "precio unitario implícito" no es confiable con varios ítems mezclados).
 - Pedidos ya `Aprobado` no se revisaron — si alguno se sobrecobró y el cliente pagó de más sin reclamar, sigue sin detectarse.
 - Otras empresas con `preciosVolumen` no se tocaron.
+
+---
+
+## D-302 (2026-09-21) — El aviso de renovación avisa de la FECHA, no del monto; y los documentos de cobro llevan el logo de verdad
+
+**Disparador.** Revisión de la vista previa de los correos con la dueña del negocio. Dos observaciones: *"la factura debe ir con el logo de la empresa, en el ejemplo se ve feo"* y *"no sé si sea prudente que el cliente sepa que se le cobra según la TRM; eso es algo interno nuestro"*.
+
+### Decisión 1 — Se quita la explicación del dólar y la TRM
+
+El aviso previo tenía un recuadro que explicaba que el precio del plan está en dólares, mostraba la TRM del día y advertía que el valor definitivo podía cambiar.
+
+**Se quitó entero.** Cómo se calcula el precio es maquinaria nuestra; explicarle la conversión al cliente lo invita a discutir el dólar en vez del servicio.
+
+**No es esconder nada**, y esto es lo que hizo la decisión fácil: la pantalla `/billing` que ve el propio comercio **ya muestra el precio en USD, una tarjeta "TRM del Día" y una columna "Precio USD"** en la tabla de planes. Quien quiera el detalle lo tiene. El correo simplemente deja de ser el lugar donde se cuenta.
+
+### Decisión 2 — El correo pasa a ser un recordatorio de FECHA
+
+Antes abría con *"Tu próxima factura"* y el peso caía en el monto. Ahora abre con **"Se acerca tu fecha de pago"**, y los días que faltan van destacados arriba de todo.
+
+El párrafo que advertía que el valor podía moverse **también se quitó**, a pedido expreso: sembraba duda justo en el momento en que el cliente no tiene nada que hacer al respecto.
+
+**Pero la fila conserva la palabra "estimado".** Una palabra, no un párrafo. El monto SÍ puede cambiar y no por el dólar: **el escalón sale de las ventas del período y el comercio sigue vendiendo esos 7 días**. Un salto de escalón mueve el monto mucho más que la TRM. Con esa palabra, si llega distinto no hay reclamo; sin ella, el correo prometió un número.
+
+Tres pruebas nuevas fijan la decisión y fallan si alguien vuelve a colar la palabra TRM, la palabra dólar o el párrafo de advertencia.
+
+### Decisión 3 — El logo viaja DENTRO del correo, nunca como URL
+
+`services/branding/katuqLogo.js` (nuevo) es el único lugar que sirve el logo, en tres formas: adjunto embebido para correo, banda oscura lista para encabezar, y base64 para pdfmake.
+
+**Va con `cid:` y no con `<img src="https://...">` por dos razones:**
+
+1. Gmail y Outlook **bloquean las imágenes remotas por omisión**. Un logo remoto se ve como un recuadro vacío hasta que el cliente pulsa "mostrar imágenes", y la primera impresión de una cuenta de cobro no puede depender de eso.
+2. **Ya está pasando.** `services/cronService.js` manda cuatro correos con `https://app.katuq.com/assets/img/logo.png`, y **esa ruta no existe**: no hay carpeta `src/assets/img` en el front. Es el mismo tropiezo de `assets/img/placeholder.png` en Productos.
+
+Se usa la versión de letras blancas (`katuq-dark.png`) y por eso **siempre va sobre banda oscura**; sobre fondo blanco sería invisible. La versión turquesa existe pero queda floja. Un solo archivo para los cuatro documentos. **Si el archivo falta, cada plantilla vuelve a escribir "KATUQ" como texto**: facturar no se puede caer por una imagen.
+
+Quedó en el PDF de la cuenta de cobro y en los tres correos de facturación (aviso previo, día del corte, mora). De paso el aviso previo dejó de ser texto suelto: ahora tiene encabezado y el cuerpo va en una tarjeta con borde, como el de cobro.
+
+### Los 4 correos de `cronService.js` NO se tocaron — están muertos
+
+`sendPaymentLinkEmail`, `sendPaymentReminder`, `sendGracePeriodWarning` y `sendSuspensionEmail` se llaman **únicamente** desde `initSubscriptionCheckJob()`, que está comentado en `cronService.js:107` y tiene una **prueba de contrato que exige que siga apagado** (*"el cron legacy con precios fijos debe permanecer desactivado"*).
+
+Nunca le han llegado a nadie. Ponerles el logo sería maquillar código que no corre y, peor, hacerlo parecer vivo.
+
+Además **duplican la secuencia nueva**: renovación, recordatorio, gracia y suspensión, con `subscription.amount` fijo — un monto que ya no significa nada desde que el precio se deriva de las ventas. Si alguien reactivara ese job, el cliente recibiría dos tandas de correos por el mismo cobro, con cifras distintas. Borrarlo es una tarea aparte que exige verificar que `enforceExpiredPlans` cubra todo lo que hacía.
+
+### Estado
+
+7 baterías de pruebas de facturación verdes. **Nada de esto está desplegado**, y hay algo peor: los commits del **jueves 17** que traen toda la secuencia de avisos (`3358a87` en el back, `9312a37f` en el front) **nunca se pushearon** — se commitearon a las 17:25 y quedaron en el disco, mientras los del 18 y 19 sí subieron. El servidor de producción todavía no sabe que estos correos existen.
