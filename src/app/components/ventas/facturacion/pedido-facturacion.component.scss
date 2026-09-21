@@ -11,6 +11,18 @@
   color: var(--kc-ink);
 }
 
+// Ticket 1041: los modales de ng-bootstrap se montan colgados del <body>, FUERA
+// del host, asi que las variables definidas arriba no llegan adentro. Con
+// `background: var(--kc-accent) !important` sin variable, el boton Guardar y el
+// encabezado quedaban en blanco (invisibles) en el modal de crear y de editar
+// datos de facturacion. Se redeclaran los tokens dentro del modal.
+.modal-header,
+.modal-body,
+.modal-footer {
+  @include kc-tokens;
+  --katuq-primary: #6c4ce0;
+}
+
 .facturacion-section {
   h5 {
     font-family: var(--kc-font-head);

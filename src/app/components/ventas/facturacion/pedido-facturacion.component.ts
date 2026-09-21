@@ -213,7 +213,20 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       documento: this.documentoBusqueda,
     };
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
+    // Ticket 1041: sin documento del cliente o sin formulario, la consulta
+    // fallaba en silencio y "Guardar" no hacia nada. Ahora se avisa.
+    if (!this.documentoBusqueda || !this.formulario) {
+      Swal.fire({
+        title: "No se pudo guardar",
+        text: "Primero busque y seleccione el cliente del pedido; los datos de facturación se guardan sobre ese cliente.",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
+      return false;
+    }
+
+    this.service.getClientByDocument(data).subscribe({
+      next: (res: any) => {
       // Reconstruir la lista manteniendo el orden correcto
       const nuevaLista = [];
 
@@ -270,7 +283,21 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
           });
         },
       });
+      },
+      error: (err) => {
+        console.error("Error consultando el cliente para guardar facturación:", err);
+        Swal.fire({
+          title: "No se pudo guardar",
+          text: "No se pudo consultar el cliente del pedido. Revise la conexión e intente de nuevo.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      },
     });
+    // El modal lo cierra el exito del guardado (dismissAll). Devolver false evita
+    // que el `&& modal.dismiss('Save')` del template lo cierre antes de tiempo y
+    // deje al usuario sin ver el aviso de error, con los datos perdidos.
+    return false;
   }
 
   seleccionarDireccionFE(index) {
