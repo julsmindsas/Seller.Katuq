@@ -225,8 +225,9 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       return false;
     }
 
-    this.service.getClientByDocument(data).subscribe({
-      next: (res: any) => {
+    // Guarda el dato sobre la ficha `res` (la que devolvió el servidor o, si el
+    // documento está repetido, la que el pedido ya tenía seleccionada).
+    const guardarSobreFicha = (res: any) => {
       // Reconstruir la lista manteniendo el orden correcto
       const nuevaLista = [];
 
@@ -283,12 +284,33 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
           });
         },
       });
-      },
+    };
+
+    this.service.getClientByDocument(data).subscribe({
+      next: (res: any) => guardarSobreFicha(res),
       error: (err) => {
+        // Ticket 1041: cuando hay varias fichas con el mismo documento el
+        // servidor responde 409 y no elige ninguna. Pero el pedido YA sabe cuál
+        // ficha eligió el vendedor (formulario.cd) y ya tiene su lista de datos
+        // de facturación cargada, así que se guarda sobre esa sin volver a buscar.
+        const cdSeleccionado = this.formulario?.value?.cd;
+        if (err?.status === 409 && cdSeleccionado) {
+          guardarSobreFicha({
+            cd: cdSeleccionado,
+            datosFacturacionElectronica: Array.isArray(this.datosFacturacionElectronica)
+              ? [...this.datosFacturacionElectronica]
+              : [],
+            datosEntrega: this.formulario.value.datosEntrega,
+            notas: this.formulario.value.notas,
+            estado: this.formulario.value.estado,
+          });
+          return;
+        }
         console.error("Error consultando el cliente para guardar facturación:", err);
         Swal.fire({
           title: "No se pudo guardar",
-          text: "No se pudo consultar el cliente del pedido. Revise la conexión e intente de nuevo.",
+          text: err?.error?.error || err?.error?.message ||
+            "No se pudo consultar el cliente del pedido. Intente de nuevo.",
           icon: "error",
           confirmButtonText: "Ok",
         });
