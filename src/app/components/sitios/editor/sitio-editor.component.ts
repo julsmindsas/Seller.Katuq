@@ -828,8 +828,18 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private completar(draft: any): ContenidoSitio {
     const d = draft || {};
     const envio = (d.tienda && d.tienda.envio) || {};
+    // Se PARTE de lo guardado y solo se rellenan los huecos. Antes se
+    // reconstruía campo por campo, y cualquier cosa que el editor no nombrara
+    // aquí desaparecía al abrir el sitio: el siguiente guardado mandaba el
+    // borrador sin ella y la pisaba en Firestore. Así se perdían en silencio
+    // las páginas propias, los cupones, los puntos de retiro, la venta cruzada
+    // y las categorías ocultas. Agregar un campo nuevo al modelo NO puede
+    // exigir acordarse de tocar esta función.
     return {
+      ...(d as object),
       bloques: Array.isArray(d.bloques) ? d.bloques : [],
+      // Páginas propias: si no son un arreglo, arreglo vacío; nunca se quitan.
+      paginas: Array.isArray(d.paginas) ? d.paginas : [],
       // El tema se completa campo por campo, no con `d.tema || {…}`: un sitio
       // creado antes de que existieran las fuentes por separado o el estilo
       // llega con el objeto viejo, y el panel enlazaría contra `undefined`.
@@ -849,6 +859,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       // Un sitio creado antes de que existiera la tienda llega sin esto. Nace
       // apagada: nadie empieza a vender porque se desplegó una versión nueva.
       tienda: {
+        ...((d.tienda as object) || {}),
         habilitada: (d.tienda && d.tienda.habilitada) === true,
         bodegaId: (d.tienda && d.tienda.bodegaId) || "",
         envio: {
@@ -864,8 +875,21 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           : [],
         minimoCompra: Number(d.tienda && d.tienda.minimoCompra) || 0,
         mensajeConfirmacion: (d.tienda && d.tienda.mensajeConfirmacion) || "",
+        // Cupones y puntos de retiro: lo guardado manda; vacío si no hay.
+        cupones: Array.isArray(d.tienda && d.tienda.cupones) ? d.tienda.cupones : [],
+        retiroEnTienda: {
+          activo: !!(d.tienda && d.tienda.retiroEnTienda && d.tienda.retiroEnTienda.activo),
+          texto: (d.tienda && d.tienda.retiroEnTienda && d.tienda.retiroEnTienda.texto) || "",
+          puntos:
+            (d.tienda &&
+              d.tienda.retiroEnTienda &&
+              Array.isArray(d.tienda.retiroEnTienda.puntos) &&
+              d.tienda.retiroEnTienda.puntos) ||
+            [],
+        },
       },
       analitica: {
+        ...((d.analitica as object) || {}),
         ga4: (d.analitica && d.analitica.ga4) || "",
         googleAds: (d.analitica && d.analitica.googleAds) || "",
         googleAdsConversion: (d.analitica && d.analitica.googleAdsConversion) || "",
