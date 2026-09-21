@@ -427,7 +427,9 @@ export class PaymentService extends BaseService {
         // cobra, que es el mismo que ya usa checkPriceScale (aplicarPrecioDeLista
         // lo dejó en producto.precio.precioUnitarioSinIva). Leer el de lista aquí
         // inflaba el IVA y el total cuando la lista tenía campaña vigente.
-        precioConIvaItem = Number(precioEfectivoDeFila(precioCategoria)) || 0;
+        // Ticket 1042: la vigencia se mide contra la FECHA DEL PEDIDO, no contra
+        // hoy; si no, un pedido tomado en campaña sube de IVA cuando ésta vence.
+        precioConIvaItem = Number(precioEfectivoDeFila(precioCategoria, (pedido as any)?.fechaCreacion)) || 0;
         porcentajeIvaItemStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaUnitario;
         // No aplicar precios por volumen cuando hay precio por categoría
       }
