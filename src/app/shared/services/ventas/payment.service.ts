@@ -1312,8 +1312,9 @@ export class PaymentService extends BaseService {
         // correo y la comanda cobraran más caro que el checkout.
         porcentajeIva = precioCategoria.porcentajeIva?.toString() ?? producto?.precio?.precioUnitarioIva ?? "0";
         const tarifaFila = (Number(porcentajeIva) || 0) / 100;
-        const hayCampana = descuentoVigente(precioCategoria);
-        precioUnitarioConIva = Number(precioEfectivoDeFila(precioCategoria)) || 0;
+        // Ticket 1042: el pedido ya está tomado; la campaña se mide contra SU fecha.
+        const hayCampana = descuentoVigente(precioCategoria, pedido?.fechaCreacion as any);
+        precioUnitarioConIva = Number(precioEfectivoDeFila(precioCategoria, pedido?.fechaCreacion as any)) || 0;
         const sinIvaFila = hayCampana
           ? Number(precioCategoria.precioDescuento) || 0
           : Number(precioCategoria.precio) || 0;

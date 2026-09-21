@@ -102,7 +102,16 @@ const _rangoVolumenPorCantidad = (preciosVolumen: any, cantidad: number): any =>
  * @param item ítem del carrito
  * @param ctx  { categoriaClienteId }
  */
-export const resolverPrecioLinea = (item: any, ctx: { categoriaClienteId?: any } = {}): FuenteLinea => {
+/** YYYY-MM-DD de la fecha del pedido, o undefined (= hoy) si no la trae. Ticket 1042. */
+export const fechaDelPedido = (order: any): string | undefined => {
+  const cruda = order?.fechaCreacion || order?.fecha || null;
+  if (!cruda) return undefined;
+  const texto = typeof cruda === "string" ? cruda : new Date(cruda).toISOString();
+  const soloFecha = texto.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(soloFecha) ? soloFecha : undefined;
+};
+
+export const resolverPrecioLinea = (item: any, ctx: { categoriaClienteId?: any; fechaPedido?: string } = {}): FuenteLinea => {
   const producto = item?.producto || {};
   const precio = producto.precio || {};
   const cantidad = _num(item?.cantidad);
@@ -132,7 +141,8 @@ export const resolverPrecioLinea = (item: any, ctx: { categoriaClienteId?: any }
     if (pc) {
       return {
         fuentePrecio: "categoria",
-        precioSinIVA: filaSinIVAEfectivo(pc),
+        // Ticket 1042: la campaña se mide contra la fecha del pedido, no contra hoy.
+        precioSinIVA: filaSinIVAEfectivo(pc, ctx.fechaPedido),
         tarifa: ivaManual !== null ? ivaManual : _num(pc.porcentajeIva),
       };
     }
@@ -162,7 +172,7 @@ export const resolverPrecioLinea = (item: any, ctx: { categoriaClienteId?: any }
  * Envío (D-058): order.totalEnvio SIN IVA + order.tarifaEnvio; IVA del envío una sola vez.
  */
 export const calcularTotalesCanonico = (order: any): TotalesCanonicos => {
-  const ctx = { categoriaClienteId: order?.cliente?.categoria?.id ?? null };
+  const ctx = { categoriaClienteId: order?.cliente?.categoria?.id ?? null, fechaPedido: fechaDelPedido(order) };
   const porceDesc = _num(order?.porceDescuento) / 100;
   const carrito = Array.isArray(order?.carrito) ? order.carrito : [];
 
@@ -241,7 +251,7 @@ export const calcularTotalesCanonico = (order: any): TotalesCanonicos => {
  * "totalExcluidos" del FE (presentación). El núcleo de totales se mantiene idéntico al BE.
  */
 export const baseExcluidaCanonica = (order: any): number => {
-  const ctx = { categoriaClienteId: order?.cliente?.categoria?.id ?? null };
+  const ctx = { categoriaClienteId: order?.cliente?.categoria?.id ?? null, fechaPedido: fechaDelPedido(order) };
   const porceDesc = _num(order?.porceDescuento) / 100;
   const carrito = Array.isArray(order?.carrito) ? order.carrito : [];
   let excluida = 0;
