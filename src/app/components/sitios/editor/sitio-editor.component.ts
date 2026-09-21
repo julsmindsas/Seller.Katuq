@@ -1633,6 +1633,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       case "bajar":
         this.mover(i, 1);
         break;
+      case "mover":
+        this.moverAPagina(i);
+        break;
       case "duplicar":
         this.duplicar(i);
         break;
@@ -1704,6 +1707,73 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * al final. Antes siempre iba al final y había que subirla a mano.
    */
   insercionEn: number | null = null;
+
+  /**
+   * Lleva una sección del inicio a otra página, o al revés.
+   *
+   * Con las páginas propias no había forma de pasar un bloque de "Inicio" a
+   * "Nosotros" sin rehacerlo. Arrastrarlo no sirve: solo se ve una página a
+   * la vez. Se elige el destino en un diálogo y el editor salta a esa página
+   * con la sección elegida, para que se vea dónde quedó.
+   *
+   * Encabezado y pie no se mueven: las páginas propias los heredan del inicio,
+   * y moverlos dejaría al inicio sin menú y a la otra página con dos.
+   */
+  async moverAPagina(i: number): Promise<void> {
+    const bloque = this.bloques[i];
+    if (!bloque || !this.contenido) return;
+    if (bloque.tipo === "encabezado" || bloque.tipo === "footer") {
+      this.toastr.info("El encabezado y el pie viven en el inicio y todas las páginas los heredan.");
+      return;
+    }
+    const destinos: { valor: string; texto: string }[] = [];
+    if (this.paginaActiva !== -1) destinos.push({ valor: "-1", texto: "Inicio" });
+    this.paginas.forEach((p, k) => {
+      if (k !== this.paginaActiva) destinos.push({ valor: String(k), texto: p.titulo });
+    });
+    if (!destinos.length) {
+      this.toastr.info("Crea otra página primero.");
+      return;
+    }
+    const opciones: Record<string, string> = {};
+    destinos.forEach((d) => (opciones[d.valor] = d.texto));
+    const r = await Swal.fire({
+      title: `Mover "${this.nombreDeTipo(bloque.tipo)}"`,
+      input: "select",
+      inputOptions: opciones,
+      inputPlaceholder: "¿A cuál página?",
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: "Mover",
+      denyButtonText: "Copiar en vez de mover",
+      cancelButtonText: "Cancelar",
+      inputValidator: (v) => (v === "" || v === undefined ? "Elige una página" : null),
+    });
+    if (!r.isConfirmed && !r.isDenied) return;
+    const destino = Number(r.value);
+    if (!Number.isFinite(destino)) return;
+
+    const copia = JSON.parse(JSON.stringify(bloque));
+    if (r.isDenied) copia.id = `b_${Date.now()}_${bloque.tipo}`;
+    else {
+      const sinEl = [...this.bloques];
+      sinEl.splice(i, 1);
+      this.fijarBloques(sinEl);
+    }
+    const listaDestino =
+      destino === -1 ? this.contenido.bloques : (this.paginas[destino].bloques = this.paginas[destino].bloques || []);
+    // Una página propia hereda encabezado y pie del inicio: la sección entra
+    // al final; en el inicio, antes del pie para que no quede debajo de él.
+    const pie = destino === -1 ? listaDestino.findIndex((b) => b.tipo === "footer") : -1;
+    const en = pie >= 0 ? pie : listaDestino.length;
+    listaDestino.splice(en, 0, copia);
+    this.marcarSucio();
+    this.irAPagina(destino);
+    this.seleccionado = en;
+    this.toastr.success(
+      (r.isDenied ? "Copiada a " : "Movida a ") + (destino === -1 ? "Inicio" : this.paginas[destino].titulo)
+    );
+  }
 
   abrirAgregarEn(indice: number): void {
     this.insercionEn = Math.max(0, Math.min(indice, this.bloques.length));

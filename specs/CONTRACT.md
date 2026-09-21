@@ -6730,3 +6730,11 @@ Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastra
 - Solo ALMARA FELICIDAD, solo pedidos con saldo pendiente creados antes del 16-sep, solo carritos de **un solo ítem** (la heurística de "precio unitario implícito" no es confiable con varios ítems mezclados).
 - Pedidos ya `Aprobado` no se revisaron — si alguno se sobrecobró y el cliente pagó de más sin reclamar, sigue sin detectarse.
 - Otras empresas con `preciosVolumen` no se tocaron.
+
+---
+
+## D-305 (2026-09-21) — Mover una sección a otra página se hace eligiendo, no arrastrando
+
+**Contexto.** Con las páginas propias (D-295) no había forma de pasar un bloque de "Inicio" a "Nosotros" sin rehacerlo. Arrastrarlo no sirve: el editor solo muestra una página a la vez.
+
+**Decisión.** "Mover a otra página" en la barra flotante y en la lista de secciones, solo cuando el sitio tiene más de una página. Un diálogo elige el destino y ofrece **copiar en vez de mover**. El editor salta a la página destino con la sección elegida, para que se vea dónde quedó. En el inicio entra antes del pie; en una página propia, al final. **Encabezado y pie no se mueven**: las páginas propias los heredan del inicio, y moverlos dejaría al inicio sin menú y a la otra página con dos.

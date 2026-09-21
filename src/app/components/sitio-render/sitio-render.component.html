@@ -53,6 +53,10 @@
         <button type="button" title="Bajar" (click)="accionar(bloque.id, 'bajar', $event)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
         </button>
+        <button type="button" title="Mover a otra página" *ngIf="hayOtrasPaginas"
+                (click)="accionar(bloque.id, 'mover', $event)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h9M4 12h9M4 18h9"/><path d="m17 8 4 4-4 4"/></svg>
+        </button>
         <button type="button" title="Duplicar" (click)="accionar(bloque.id, 'duplicar', $event)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
         </button>

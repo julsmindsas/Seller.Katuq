@@ -291,7 +291,7 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
    */
   @Output() accionBloque = new EventEmitter<{
     bloqueId: string;
-    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar";
+    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar" | "mover";
   }>();
 
   /**
@@ -301,6 +301,8 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Output() bloqueMovido = new EventEmitter<{ desde: number; hasta: number }>();
   /** El "+" entre secciones: en qué posición quiere el comerciante la nueva. */
   @Output() agregarEn = new EventEmitter<number>();
+  /** Si el sitio tiene más páginas, la barra ofrece "Mover a otra página". */
+  @Input() hayOtrasPaginas = false;
 
   nombre = "";
   telefono = "";
@@ -741,7 +743,7 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
 
   accionar(
     bloqueId: string,
-    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar",
+    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar" | "mover",
     evento: Event
   ): void {
     // Sin esto el clic también "elige" el bloque y, al quitar, la selección
