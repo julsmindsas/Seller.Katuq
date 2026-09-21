@@ -81,6 +81,17 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   // Cache de todos los productos — solo se carga para exportar
   private _todosLosProductos: Producto[] | null = null;
 
+  /**
+   * Ticket 1032 (ALMACEN BOMBAS): no había forma de saber a qué productos les
+   * falta el costo. Con esto la exportación de la pestaña Costos sale solo con
+   * los que están en cero, que es la lista que el comercio necesita para
+   * corregir y volver a importar por el mismo camino.
+   */
+  soloSinCosto = false;
+  /** Cuántos quedaron sin costo en la última exportación. null = aún no se sabe. */
+  sinCostoContados: number | null = null;
+  totalContados: number | null = null;
+
   constructor(
     private service: MaestroService,
     private modalService: NgbModal,
@@ -818,10 +829,30 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
         workbook = this.generarExcelVolumen(productos);
         filename = `Exportado_Precios_Volumen_${fecha}.xlsx`;
         break;
-      case this.COSTO_TAB_INDEX:
-        workbook = this.generarExcelCostos(productos);
-        filename = `Exportado_Costos_${fecha}.xlsx`;
+      case this.COSTO_TAB_INDEX: {
+        // Ticket 1032: el filtro se aplica aquí y no en la tabla porque la
+        // tabla la pagina el servidor; filtrarla a medias mostraría un conteo
+        // que no es el real.
+        this.totalContados = productos.length;
+        const sinCosto = productos.filter((p) => this.obtenerCostoUnitario(p) <= 0);
+        this.sinCostoContados = sinCosto.length;
+
+        const aExportar = this.soloSinCosto ? sinCosto : productos;
+        if (this.soloSinCosto && aExportar.length === 0) {
+          this.cerrarCargando();
+          Swal.fire(
+            'Todos tienen costo',
+            `Revisamos los ${productos.length} productos y ninguno está sin costo.`,
+            'success',
+          );
+          return;
+        }
+        workbook = this.generarExcelCostos(aExportar);
+        filename = this.soloSinCosto
+          ? `Exportado_Costos_SIN_COSTO_${fecha}.xlsx`
+          : `Exportado_Costos_${fecha}.xlsx`;
         break;
+      }
       default:
         this.cerrarCargando();
         return;

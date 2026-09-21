@@ -672,6 +672,123 @@ h3 {
   outline-offset: -4px;
 }
 
+// El hueco de destino: una franja baja con línea punteada en vez del bloque
+// entero atenuado. Dice "aquí cae" sin ocupar media pantalla.
+.envoltura__hueco {
+  height: 56px;
+  margin: 6px 0;
+  border: 2px dashed #5F3FE0;
+  border-radius: 12px;
+  background: rgba(95, 63, 224, 0.07);
+}
+
+// Agarre de todo el borde izquierdo de la sección en el editor.
+.envoltura__agarre {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  z-index: 4;
+  cursor: grab;
+  border-radius: 12px 0 0 12px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(95, 63, 224, 0.55) 0 3px,
+    transparent 3px 7px
+  ) center / 4px 60% no-repeat;
+  opacity: 0;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    background-color: rgba(95, 63, 224, 0.12);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.envoltura--editable:hover > .envoltura__agarre,
+.envoltura--activa > .envoltura__agarre {
+  opacity: 1;
+}
+
+// El "+" entre secciones: una línea fina que aparece al pasar el mouse por la
+// unión de dos bloques, con el botón en el centro.
+.insertar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 50%;
+    height: 2px;
+    background: #5F3FE0;
+    border-radius: 2px;
+  }
+
+  span {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: #5F3FE0;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 4px 14px rgba(95, 63, 224, 0.35);
+  }
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+  }
+}
+
+// Al final siempre se ve: es el reemplazo del botón "Agregar una sección" del
+// panel para quien trabaja mirando la página.
+.insertar--final {
+  height: auto;
+  margin: 18px 0 10px;
+  padding: 10px;
+  gap: 8px;
+  opacity: 0.85;
+  color: #5F3FE0;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+
+  &::before {
+    display: none;
+  }
+}
+
+// Mientras se arrastra, los "+" estorban: se esconden.
+.cdk-drop-list-dragging .insertar {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .cdk-drop-list-dragging .envoltura:not(.cdk-drag-placeholder) {
   transition: transform 0.2s cubic-bezier(0, 0, 0.2, 1);
 }

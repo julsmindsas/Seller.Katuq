@@ -3,7 +3,14 @@
      cdkDropList [cdkDropListDisabled]="!previsualizacion"
      (cdkDropListDropped)="soltarBloque($event)">
 
-  <ng-container *ngFor="let bloque of bloquesVisibles">
+  <ng-container *ngFor="let bloque of bloquesVisibles; let i = index">
+    <!-- Insertar AQUÍ: la línea con el "+" entre dos secciones. Es el gesto de
+         Wix y Shopify: agregar donde uno está mirando, no al final para luego
+         subirla. Solo en el editor. -->
+    <button type="button" class="insertar" *ngIf="previsualizacion"
+            (click)="agregarEn.emit(i); $event.stopPropagation()" title="Agregar una sección aquí">
+      <span>+</span>
+    </button>
     <!-- El estilo propio de la sección se aplica en la envoltura: así vale para
          cualquier tipo de bloque sin repetirlo en cada plantilla.
          El arrastre va por el asa de la barra flotante, no por el cuerpo: si
@@ -18,6 +25,16 @@
          (click)="seleccionar(bloque.id)">
 
       <span class="etiqueta-oculto" *ngIf="previsualizacion && bloque.visible === false">Oculto</span>
+
+      <!-- Agarre de todo el borde izquierdo: se puede arrastrar la sección sin
+           tener que elegirla primero ni apuntarle al asa chiquita de la barra.
+           Va en el borde y no en el cuerpo a propósito: escribir sobre un texto
+           no puede empezar a mover la sección. -->
+      <span class="envoltura__agarre" *ngIf="previsualizacion" cdkDragHandle
+            title="Arrastra para mover esta sección" (click)="$event.stopPropagation()"></span>
+      <!-- El hueco que queda donde va a caer: sin él, solo se ve el bloque
+           flotando y no dónde termina. -->
+      <div class="envoltura__hueco" *cdkDragPlaceholder></div>
 
       <!-- Editar señalando: el nombre aparece al pasar el mouse, y al elegir el
            bloque sale su barra de acciones — sin ir a buscarlo al panel. -->
@@ -860,6 +877,10 @@
       </div>
     </div>
   </ng-container>
+  <button type="button" class="insertar insertar--final" *ngIf="previsualizacion && bloquesVisibles.length"
+          (click)="agregarEn.emit(bloquesVisibles.length); $event.stopPropagation()" title="Agregar una sección al final">
+    <span>+</span> Agregar una sección
+  </button>
 
   <div class="estado" *ngIf="!bloquesVisibles.length">
     <p>Esta página todavía no tiene bloques.</p>

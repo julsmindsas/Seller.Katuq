@@ -248,8 +248,30 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
   }
 }
 
-.ubi-referencia { font-weight: 600; margin-right: 10px; }
+// Ticket 1034: manda el nombre del producto; la referencia queda de apoyo,
+// en tono apagado, para quien trabaja con el código en la mano.
+.ubi-nombre { font-weight: 600; margin-right: 10px; }
+.ubi-referencia {
+  color: $muted;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  margin-right: 10px;
+}
 .ubi-cantidad { color: $muted; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+
+.ubi-celda-producto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .ubi-nombre {
+    margin-right: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ubi-referencia { margin-right: 0; }
+}
 
 .ubi-accion {
   border: 1px solid $acento;

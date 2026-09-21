@@ -2407,3 +2407,338 @@
 
 /* Dos campos cortos en una fila. */
 .campo--doble { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; > div { display: grid; gap: 0.3rem; } }
+
+/* ── Credenciales de medición ──────────────────────────────────────────────
+   El token de Conversions API y la clave de GA4 no vuelven del servidor: el
+   editor solo muestra si están puestos y ofrece reemplazarlos. La pastilla es
+   ese "ya está configurado", y el enlace sutil es la salida para quitarlo. */
+.pastilla {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--kb-accent-wash);
+  border: 1px solid var(--kb-line-4);
+  color: var(--kb-accent);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.enlace-sutil {
+  align-self: start;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--kb-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: #b3261e;
+  }
+}
+
+.boton-secundario {
+  padding: 9px 15px;
+  border-radius: 11px;
+  border: 1.5px solid var(--kb-line-4);
+  background: var(--kb-surface-3);
+  color: var(--kb-accent);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--kb-accent-wash);
+    border-color: var(--kb-accent);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+/* ── Páginas del sitio ──────────────────────────────────────────────────────
+   Un sitio dejó de ser una sola página: además del inicio puede tener
+   "Nosotros" o "Políticas de devolución". Este selector decide sobre cuál
+   trabaja el panel de secciones; todo lo demás funciona igual para todas. */
+.paginas {
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  margin-bottom: 13px;
+  border: 1.5px solid var(--kb-line-4);
+  border-radius: 13px;
+  background: var(--kb-surface-3);
+}
+
+.paginas__fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.paginas__chip {
+  padding: 6px 12px;
+  border-radius: 99px;
+  border: 1.5px solid var(--kb-line-4);
+  background: #fff;
+  color: var(--kb-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color 0.16s ease, background 0.16s ease;
+
+  &:hover {
+    border-color: var(--kb-accent);
+  }
+
+  &.is-active {
+    background: var(--kb-accent);
+    border-color: var(--kb-accent);
+    color: #fff;
+  }
+}
+
+.paginas__mas {
+  width: 28px;
+  height: 28px;
+  border-radius: 99px;
+  border: 1.5px dashed var(--kb-line-4);
+  background: transparent;
+  color: var(--kb-accent);
+  font-size: 17px;
+  line-height: 1;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash);
+  }
+}
+
+.paginas__barra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paginas__url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--kb-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paginas__relleno {
+  flex: 1;
+}
+
+.paginas__accion {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--kb-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--kb-accent);
+  }
+
+  &.is-peligro:hover {
+    color: #b3261e;
+  }
+}
+
+.paginas__opciones {
+  display: grid;
+  gap: 5px;
+}
+
+.paginas__check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--kb-ink);
+  cursor: pointer;
+
+  input {
+    width: auto;
+    margin: 0;
+    accent-color: var(--kb-accent);
+  }
+}
+
+.paginas__legales {
+  padding: 9px 13px;
+  border-radius: 11px;
+  border: 1.5px dashed var(--kb-line-4);
+  background: transparent;
+  color: var(--kb-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover:not(:disabled) {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+/* Dos campos en una fila: sirve para código+tipo, valor+mínimo, fecha+usos. */
+.campo-doble {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ── Editor fácil ──────────────────────────────────────────────────────────
+   Modo simple: cada sección muestra primero lo esencial. Lo marcado como
+   avanzado sigue en el DOM (nada se pierde) y aparece con "Más opciones". */
+.propiedades--simple .campo--avanzado {
+  display: none;
+}
+
+.mas-opciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 4px 0 12px;
+  padding: 9px 13px;
+  border-radius: 11px;
+  border: 1.5px dashed var(--kb-line-4);
+  background: transparent;
+  color: var(--kb-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  small {
+    font-weight: 600;
+    color: var(--kb-muted);
+  }
+
+  &:hover {
+    border-color: var(--kb-accent);
+    background: var(--kb-accent-wash);
+  }
+}
+
+.plegar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 10px 13px;
+  border-radius: 11px;
+  border: 1.5px solid var(--kb-line-4);
+  background: var(--kb-surface-3);
+  color: var(--kb-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  small {
+    padding: 1px 8px;
+    border-radius: 99px;
+    background: var(--kb-accent-wash);
+    color: var(--kb-accent);
+    font-weight: 700;
+  }
+}
+
+/* "Qué te falta": la lista corta y honesta de lo que falta para publicar. */
+.pendientes {
+  margin-bottom: 12px;
+  padding: 11px 12px;
+  border-radius: 13px;
+  border: 1.5px solid #f6dfb8;
+  background: var(--kb-warn-wash, #fff8ea);
+
+  &.is-listo {
+    border-color: #cde9d6;
+    background: #f1faf4;
+  }
+}
+
+.pendientes__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  color: var(--kb-ink);
+
+  span {
+    padding: 1px 8px;
+    border-radius: 99px;
+    background: #8a5a12;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+  }
+}
+
+.pendientes__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 0;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: none;
+  color: var(--kb-ink);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--kb-accent);
+  }
+}
+
+.pendientes__ok {
+  margin: 0;
+  font-size: 12px;
+  color: #137a3a;
+}
+
+/* Familias del selector de secciones crudas: 29 tipos en cuatro grupos. */
+.familia {
+  margin: 14px 0 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--kb-muted);
+}

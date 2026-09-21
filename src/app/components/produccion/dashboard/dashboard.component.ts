@@ -190,9 +190,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     ];
 
 
-    const cincoDias = 30 * 24 * 60 * 60 * 1000; // Cinco días en milisegundos
-    this.fechaInicial = new Date();
-    this.fechaFinal = new Date(new Date().getTime() + cincoDias);
+    this.aplicarRangoPorDefecto();
 
 
     this.config.filterMatchModeOptions = {
@@ -265,6 +263,29 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       return result;
 
     });
+  }
+
+  /**
+   * El "desde" siempre arranca a medianoche. Si arranca a la hora actual, los
+   * pedidos con entrega HOY (guardados a las 00:00) quedan por fuera del tablero
+   * hasta que el operario filtra a mano.
+   */
+  private static inicioDeHoy(): Date {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  private static finDentroDe30Dias(): Date {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }
+
+  private aplicarRangoPorDefecto(): void {
+    this.fechaInicial = DashboardComponent.inicioDeHoy();
+    this.fechaFinal = DashboardComponent.finDentroDe30Dias();
   }
 
   ngOnInit(): void {
@@ -383,9 +404,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
    * la pantalla al operario ni interrumpir lo que está haciendo.
    */
   async refrescarDatos(silencioso: boolean = false) {
+    const fechaInicial = new Date(this.fechaInicial || DashboardComponent.inicioDeHoy());
+    fechaInicial.setHours(0, 0, 0, 0);
+    const fechaFinal = new Date(this.fechaFinal || DashboardComponent.finDentroDe30Dias());
+    fechaFinal.setHours(23, 59, 59, 999);
     const filter = {
-      fechaInicial: this.fechaInicial,
-      fechaFinal: this.fechaFinal,
+      fechaInicial,
+      fechaFinal,
       estadosPago: ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
       company: JSON.parse(localStorage.getItem("currentCompany") || '{}').nomComercial || ''
     }
@@ -922,10 +947,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Si no hay fechas configuradas, usar rango por defecto (hoy a 30 días)
     if (!fechaInicial) {
-      fechaInicial = new Date();
+      fechaInicial = DashboardComponent.inicioDeHoy();
     }
     if (!fechaFinal) {
-      fechaFinal = new Date(new Date().getTime() + (30 * 24 * 60 * 60 * 1000));
+      fechaFinal = DashboardComponent.finDentroDe30Dias();
     }
 
     // Corregir si las fechas están al revés
@@ -2858,8 +2883,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   clearAllFilters(): void {
-    this.fechaInicial = new Date();
-    this.fechaFinal = new Date(new Date().getTime() + (30 * 24 * 60 * 60 * 1000));
+    this.aplicarRangoPorDefecto();
     this.nroPedido = null;
     this.selectedProcesosFilter = null;
     this.quickFilters = {
@@ -2932,8 +2956,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initializeDefaultFilters(): void {
-    this.fechaInicial = new Date();
-    this.fechaFinal = new Date(new Date().getTime() + (30 * 24 * 60 * 60 * 1000));
+    this.aplicarRangoPorDefecto();
     this.nroPedido = null;
     this.selectedProcesosFilter = null;
     this.quickFilters = {

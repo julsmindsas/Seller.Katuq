@@ -2561,14 +2561,22 @@ export class DespachosComponent implements OnInit, OnDestroy {
         order.despachador = undefined;
         order.fechaYHorarioDespachado = undefined;
         order.transportador = undefined;
+        // Retroceso deliberado desde el tablero: el backend lo honra solo si va declarado.
+        (order as any)._estadoProcesoExplicitlyChanged = true;
         break;
       case 3:
+        // Ticket 1026 (ALMARA): al retirar un pedido de una planilla ya despachada
+        // este retroceso Despachado → Empacado llegaba sin declarar y el backend lo
+        // bloquea siempre como "retroceso crítico" (posible escritura obsoleta). Como
+        // además no había manejo de error, la planilla quedaba sin el pedido pero el
+        // pedido seguía Despachado y atado a esa planilla: no se podía reasignar.
         order.estadoProceso = EstadoProceso.Empacado;
         order.shippingOrder = undefined;
         order.nroShippingOrder = undefined;
         order.despachador = undefined;
         order.fechaYHorarioDespachado = undefined;
         order.transportador = undefined;
+        (order as any)._estadoProcesoExplicitlyChanged = true;
         break;
       case 4:
         order.estadoProceso = EstadoProceso.Despachado;
@@ -2589,6 +2597,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
     this.ventasService.editOrder(order)
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
+        delete (order as any)._estadoProcesoExplicitlyChanged; // flag de transporte, no se guarda
         this.refrescarDatos(false); // No mostrar alertas al cambiar estado
 
         // Si el pedido se cambió a "Despachado", intentar geocodificarlo automáticamente
@@ -2617,6 +2626,17 @@ export class DespachosComponent implements OnInit, OnDestroy {
           showConfirmButton: false,
           timer: 1500,
         });
+      }, (error) => {
+        delete (order as any)._estadoProcesoExplicitlyChanged;
+        // Antes este error se perdía en consola y la pantalla decía que todo salió bien.
+        const detalle = error?.error?.error || error?.error?.message || error?.message || "";
+        Swal.fire({
+          icon: "error",
+          title: `No se pudo cambiar el estado del pedido ${order.nroPedido || ""}`,
+          text: detalle || "El servidor rechazó el cambio. Recarga la pantalla y vuelve a intentar.",
+          confirmButtonText: "Entendido",
+        });
+        this.refrescarDatos(false);
       });
   }
 

@@ -9,15 +9,27 @@
     <strong>Editando:</strong> {{ direccionActual }}
   </div>
 
-  <!-- Selector tipo de dirección -->
+  <!-- Selector tipo de nomenclatura -->
   <div class="row mb-3">
     <div class="col-12">
-      <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="esRural" formControlName="esRural" (change)="cambiarTipoDireccion()">
-        <label class="form-check-label" for="esRural">
-          <strong>Dirección rural</strong> (Vereda, Corregimiento, Finca, etc.)
-        </label>
+      <label class="form-label small text-muted mb-1">Tipo de dirección</label>
+      <div class="btn-group w-100" role="group" aria-label="Tipo de nomenclatura">
+        <input type="radio" class="btn-check" id="nomUrbana" name="tipoNomenclatura" autocomplete="off"
+               [checked]="tipoNomenclatura === 'urbana'" (change)="cambiarTipoDireccion('urbana')">
+        <label class="btn btn-outline-primary btn-sm" for="nomUrbana">Calle / Carrera</label>
+
+        <input type="radio" class="btn-check" id="nomManzana" name="tipoNomenclatura" autocomplete="off"
+               [checked]="tipoNomenclatura === 'manzana'" (change)="cambiarTipoDireccion('manzana')">
+        <label class="btn btn-outline-primary btn-sm" for="nomManzana">Manzana / Casa</label>
+
+        <input type="radio" class="btn-check" id="nomRural" name="tipoNomenclatura" autocomplete="off"
+               [checked]="tipoNomenclatura === 'rural'" (change)="cambiarTipoDireccion('rural')">
+        <label class="btn btn-outline-primary btn-sm" for="nomRural">Rural</label>
       </div>
+      <small class="form-text text-muted">
+        <ng-container *ngIf="tipoNomenclatura === 'manzana'">Para urbanizaciones y conjuntos: "Manzana 36 Casa 26".</ng-container>
+        <ng-container *ngIf="tipoNomenclatura === 'rural'">Vereda, Corregimiento, Finca, etc.</ng-container>
+      </small>
     </div>
   </div>
 
@@ -27,7 +39,7 @@
       <form [formGroup]="direccionForm" class="labeled-form">
         
         <!-- FORMULARIO RURAL -->
-        <div *ngIf="esDireccionRural" class="rural-form">
+        <div *ngIf="tipoNomenclatura === 'rural'" class="rural-form">
           <!-- Tipo de nomenclatura rural -->
           <div class="mb-3">
             <label class="form-label">Tipo de ubicación rural</label>
@@ -49,8 +61,47 @@
           </div>
         </div>
 
+        <!-- FORMULARIO POR MANZANA -->
+        <div *ngIf="tipoNomenclatura === 'manzana'" class="manzana-form">
+          <div class="mb-3">
+            <label class="form-label">Manzana y casa</label>
+            <div class="row g-2">
+              <div class="col-4">
+                <label class="form-label small">Manzana</label>
+                <input type="text" class="form-control" placeholder="Ej: 36" formControlName="manzana"
+                       maxlength="6" style="text-transform: uppercase;">
+              </div>
+              <div class="col-4">
+                <label class="form-label small">Tipo</label>
+                <select class="form-select" formControlName="tipoInmueble">
+                  <option *ngFor="let tipo of tiposInmuebleManzana" [value]="tipo">{{ tipo }}</option>
+                </select>
+              </div>
+              <div class="col-4">
+                <label class="form-label small">Número</label>
+                <input type="text" class="form-control" placeholder="Ej: 26" formControlName="numeroInmueble"
+                       maxlength="8" style="text-transform: uppercase;">
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="row g-2">
+              <div class="col-4">
+                <label class="form-label small">Etapa (opcional)</label>
+                <input type="text" class="form-control" placeholder="Ej: 2" formControlName="etapa"
+                       maxlength="6" style="text-transform: uppercase;">
+              </div>
+              <div class="col-8">
+                <label class="form-label small">Urbanización / conjunto (opcional)</label>
+                <input type="text" class="form-control" placeholder="Ej: Corales" formControlName="urbanizacion">
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- FORMULARIO URBANO -->
-        <div *ngIf="!esDireccionRural" class="urban-form">
+        <div *ngIf="tipoNomenclatura === 'urbana'" class="urban-form">
           <!-- Vía principal -->
           <div class="mb-3">
             <label class="form-label">Vía principal</label>

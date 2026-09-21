@@ -41,6 +41,17 @@
                   pTooltip="Eliminar todos los precios por tipo de cliente" tooltipPosition="bottom">
                   <i class="pi pi-trash"></i> Limpiar precios
                 </button>
+
+                <!-- Ticket 1032: auditar los productos a los que les falta el costo. -->
+                <label class="lp-solo-sin-costo" *ngIf="activeTab === COSTO_TAB_INDEX"
+                  pTooltip="Exporta únicamente los productos que están sin costo, para corregirlos y volverlos a importar"
+                  tooltipPosition="bottom">
+                  <input type="checkbox" [(ngModel)]="soloSinCosto" />
+                  <span>Solo sin costo</span>
+                  <span class="lp-chip-conteo" *ngIf="sinCostoContados !== null">
+                    {{ sinCostoContados | number }} de {{ totalContados | number }}
+                  </span>
+                </label>
               </div>
             </div>
           </div>

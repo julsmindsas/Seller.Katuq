@@ -130,7 +130,71 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     }
   }
 
-  guardarDatosFacturacionElectronica() {
+  /**
+   * Ticket 1029 (ALMARA): los datos de facturación se guardaban con lo que
+   * hubiera, y con eso se emitía la factura electrónica. Un documento "-4" hizo
+   * que una factura saliera a nombre de otra persona (ticket 1028). Acá se exige
+   * lo mínimo con lo que una factura ante la DIAN sale bien y se explica qué falta.
+   * Devuelve true si los datos sirven para facturar.
+   */
+  validarDatosFacturacion(): boolean {
+    const faltan: string[] = [];
+    const razon = String(this.razon_social || "").trim();
+    const tipo = String(this.tipo_documento_facturacion || "").trim();
+    const doc = String(this.numero_documento_facturacion || "").trim();
+    const correo = String(this.correo_electronico_facturacion || "").trim();
+    const celular = String(this.numero_celular_facturacion || "").trim();
+    const ciudad = String(this.ciudad_municipio || "").trim();
+    const depto = String(this.departamento || "").trim();
+
+    if (razon.length < 3) { faltan.push("Razón social o nombre completo"); }
+    if (!tipo) { faltan.push("Tipo de documento"); }
+    if (!doc) { faltan.push("Número de documento"); }
+    // Ticket 1040 (OH MY STORE): decir solo "Ciudad" dejaba al vendedor sin
+    // salida, porque la ciudad es un desplegable en cascada que permanece
+    // vacío hasta elegir el departamento. El aviso ahora dice qué hacer.
+    if (!ciudad) {
+      faltan.push(
+        depto
+          ? "Ciudad"
+          : "Departamento y luego Ciudad (la lista de ciudades se llena al elegir el departamento)",
+      );
+    }
+    if (!celular) { faltan.push("Celular"); }
+    if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { faltan.push("Correo electrónico válido"); }
+
+    // El documento debe tener forma de documento: el "-4" no pasa.
+    let docInvalido = "";
+    if (doc) {
+      const limpio = doc.replace(/[\s.]/g, "").toUpperCase();
+      if (tipo === "NIT") {
+        if (!/^\d{6,12}(-\d)?$/.test(limpio)) { docInvalido = "El NIT debe ser numérico, con el dígito de verificación opcional después de un guion (ej: 901072822-4)."; }
+      } else if (tipo === "PA") {
+        if (!/^[A-Z0-9]{4,20}$/.test(limpio)) { docInvalido = "El pasaporte debe tener solo letras y números (entre 4 y 20)."; }
+      } else if (!/^\d{4,15}$/.test(limpio.split("-")[0])) {
+        docInvalido = "El número de documento debe ser numérico (entre 4 y 15 dígitos).";
+      }
+    }
+
+    if (!faltan.length && !docInvalido) { return true; }
+
+    const partes: string[] = [];
+    if (faltan.length) {
+      partes.push(`<b>Faltan o están mal:</b><ul style="text-align:left;margin:8px 0 0 18px">${faltan.map((f) => `<li>${f}</li>`).join("")}</ul>`);
+    }
+    if (docInvalido) { partes.push(`<div style="text-align:left;margin-top:8px">${docInvalido}</div>`); }
+    Swal.fire({
+      icon: "warning",
+      title: "Revisa los datos de facturación",
+      html: partes.join(""),
+      footer: "Con estos datos se emite la factura electrónica; si están mal, la factura sale mal.",
+      confirmButtonText: "Corregir",
+    });
+    return false;
+  }
+
+  guardarDatosFacturacionElectronica(): boolean {
+    if (!this.validarDatosFacturacion()) { return false; }
     const datosFacturacionElec = {
       alias: this.alias_facturacion,
       nombres: this.razon_social,
@@ -149,7 +213,21 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       documento: this.documentoBusqueda,
     };
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
+    // Ticket 1041: sin documento del cliente o sin formulario, la consulta
+    // fallaba en silencio y "Guardar" no hacia nada. Ahora se avisa.
+    if (!this.documentoBusqueda || !this.formulario) {
+      Swal.fire({
+        title: "No se pudo guardar",
+        text: "Primero busque y seleccione el cliente del pedido; los datos de facturación se guardan sobre ese cliente.",
+        icon: "warning",
+        confirmButtonText: "Ok",
+      });
+      return false;
+    }
+
+    // Guarda el dato sobre la ficha `res` (la que devolvió el servidor o, si el
+    // documento está repetido, la que el pedido ya tenía seleccionada).
+    const guardarSobreFicha = (res: any) => {
       // Reconstruir la lista manteniendo el orden correcto
       const nuevaLista = [];
 
@@ -206,7 +284,42 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
           });
         },
       });
+    };
+
+    this.service.getClientByDocument(data).subscribe({
+      next: (res: any) => guardarSobreFicha(res),
+      error: (err) => {
+        // Ticket 1041: cuando hay varias fichas con el mismo documento el
+        // servidor responde 409 y no elige ninguna. Pero el pedido YA sabe cuál
+        // ficha eligió el vendedor (formulario.cd) y ya tiene su lista de datos
+        // de facturación cargada, así que se guarda sobre esa sin volver a buscar.
+        const cdSeleccionado = this.formulario?.value?.cd;
+        if (err?.status === 409 && cdSeleccionado) {
+          guardarSobreFicha({
+            cd: cdSeleccionado,
+            datosFacturacionElectronica: Array.isArray(this.datosFacturacionElectronica)
+              ? [...this.datosFacturacionElectronica]
+              : [],
+            datosEntrega: this.formulario.value.datosEntrega,
+            notas: this.formulario.value.notas,
+            estado: this.formulario.value.estado,
+          });
+          return;
+        }
+        console.error("Error consultando el cliente para guardar facturación:", err);
+        Swal.fire({
+          title: "No se pudo guardar",
+          text: err?.error?.error || err?.error?.message ||
+            "No se pudo consultar el cliente del pedido. Intente de nuevo.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      },
     });
+    // El modal lo cierra el exito del guardado (dismissAll). Devolver false evita
+    // que el `&& modal.dismiss('Save')` del template lo cierre antes de tiempo y
+    // deje al usuario sin ver el aviso de error, con los datos perdidos.
+    return false;
   }
 
   seleccionarDireccionFE(index) {
@@ -296,6 +409,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       this.departamento = this.departamentoInicial || "";
       this.ciudad_municipio = this.ciudad || "";
       this.codigo_postal = this.codigoPostal || "";
+      // Ticket 1041: se asignaba el pais y el departamento pero no se cargaban
+      // sus listas (eso solo pasaba al CAMBIAR el select). El desplegable de
+      // departamentos salia vacio hasta cambiar de pais y volver a Colombia.
+      this.identificarDepto();
+      this.identificarCiu();
     } else {
       this.razon_social = "";
       this.tipo_documento_facturacion = "";
@@ -365,7 +483,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       });
     });
   }
-  editarDatosFacturacion() {
+  editarDatosFacturacion(): boolean {
+    if (!this.validarDatosFacturacion()) { return false; }
     const datosFacturacionElec = {
       alias: this.alias_facturacion,
       nombres: this.razon_social,
@@ -643,6 +762,10 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
 
   abrirModalCrearFacturacion(modal): void {
     this.limpiarVariables();
+    // Ticket 1041: arrancar con el pais del cliente (o Colombia) y sus
+    // departamentos ya cargados, para que el desplegable no salga vacio.
+    this.pais = this.paisInicial || "Colombia";
+    this.identificarDepto();
     this.modalService.open(modal, { size: "lg" }).result.then(
       () => {
         this.limpiarVariables();

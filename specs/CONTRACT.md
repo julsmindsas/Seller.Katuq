@@ -6806,3 +6806,304 @@ Es la que usan el código, el script y los logs; cambiarla en la pantalla habrí
 - **El correo que muestra Cobros del mes** usaba `emailFactuElec || emailContactoGeneral`, el mismo desajuste que D-292 corrigió en el aviso: podía mostrar una dirección distinta a la que recibe el cobro. Ya usa el resolvedor de la factura.
 
 39 pruebas verdes en `npm run test:aviso-previo`.
+
+---
+
+
+## D-287 (2026-09-16) — Los filtros del backlog de Support: a la vista y sin reventar con tickets sin asignar
+
+**Disparador.** Revisión de la app de Support con Daniel: la lista de tickets "parece scroll infinito, no tiene flechitas de páginas" y "los filtros horribles, no se entiende bien".
+
+### Lo que estaba pasando
+
+Los filtros vivían tras el botón **Filtros** y, adentro, cada uno era otro acordeón cerrado: saber por qué estado se estaba filtrando costaba tres clics, y el único rastro de filtro activo era un número en el botón. Tres defectos escondidos ahí:
+
+1. **Filtrar por responsable reventaba** si había un solo ticket sin asignar: `toggleUserSelection` leía `task.usuarioMesaAyuda.iniciales` de todas las tareas, y en las no asignadas ese objeto es nulo.
+2. **"Limpiar todo" no quitaba ese filtro.** La selección se guardaba marcando `selected` *dentro del objeto responsable de cada ticket*, y el reset limpiaba la lista fija de agentes, que es otra cosa. Quedabas con la lista recortada y sin señal de por qué.
+3. **El contador de filtros activos nunca contó los responsables**, por el mismo motivo.
+
+La selección pasó a ser un `Set` de nombres en el componente. Un filtro es un dato de la pantalla, no una marca escondida en los datos que se pintan.
+
+### Lo que quedó
+
+- Barra de filtros siempre visible: buscador, Responsable (múltiple, con opción **Sin asignar**, que es la que sirve para repartir backlog), Estado, Motivo, Tienda, Orden y Agrupar. Cada control se tiñe cuando tiene algo puesto.
+- Fichas quitables debajo con lo que se está filtrando ahora mismo, más "Limpiar todo".
+- Paginación numerada (primera · ‹ · 1 2 3 … 12 · › · última) en vez de dos flechas y un "Página 3 de 12"; para llegar a la 9 había que pulsar seis veces. Tamaño por defecto 50 → 25, para que la paginación se note.
+
+## D-288 (2026-09-16) — El ticket de soporte se guardaba crudo y el PUT escribía lo que le mandaran
+
+**Disparador.** Auditoría de `controllers/errorcenter.js` (colección `support`) en la misma sesión.
+
+### Los dos defectos
+
+**Al crear**, el handler armaba un objeto con valores por defecto (`status: 'Pendiente'`, `prioridad: 'media'`, `canal`, `fechaRegistro`…) y luego guardaba `req.body` **crudo**: los defaults solo alimentaban el mensaje de Slack y el correo. Un ticket que llegara sin `status` entraba sin estado y el tablero lo perdía. Ahora se guarda `{ ...req.body, ...ticketData }`: los campos conocidos quedan normalizados y los demás (nroTicket, company, nit, descripción) se conservan.
+
+**Al actualizar**, `docRef.update(req.body)` escribía lo que viniera. La pertenencia se validaba contra el ticket *actual*, así que el mismo PUT podía cambiar `company` y llevarse el ticket al tenant de al lado — y de paso reescribir `date_add` o inventar campos. Ahora hay lista blanca:
+
+- Editables por cualquiera con acceso al ticket: los 18 campos del formulario (asunto, descripción, estado, prioridad, responsable, comentarios, historial, adjuntos…).
+- `company`, `tienda` y `nit`: **solo el equipo operador** (Julsmind). Ningún cliente los edita hoy; el Seller y Support los reenvían iguales en cada guardado, así que ignorarlos no pierde nada.
+
+Un `undefined` no se escribe: Firestore lo rechaza y borraría lo que el ticket ya tiene.
+
+`registerSupportApp` además respondía `res.send(err)` en el catch — status 200 con cuerpo vacío, y el cliente celebraba un ticket que nunca se guardó. Ahora es 500 explícito.
+
+**Guardarraíl:** `tests/support/ticketWriteSet.test.js` (`node tests/support/ticketWriteSet.test.js`, 5/5) fija el write-set, incluido el caso que lo originó: un comercio que manda otro `company` en el PUT.
+
+### Cabo suelto declarado
+
+El correo de Julián Navarro está desalineado entre las tres listas de agentes que hay escritas a mano: `jnavarrog@katuq.com` en la lista del front de Support y en `tools/_supportTickets.js`, `jnavarro@katuq.com` en `EQUIPO_POR_DEFECTO` del notificador. Una de las dos direcciones no recibe. No se tocó porque desde el código no se puede saber cuál existe; hay que confirmarlo con él. La causa de fondo es que la lista de agentes está triplicada y todavía no tiene un origen único.
+
+## D-289 (2026-09-16) — El correo de un ticket se lee como el tablero, no como un aviso genérico
+
+**Disparador.** Daniel, revisando lo anterior: *"necesito que se mejore el template del correo, está bien pero se puede poner más lindo"*.
+
+### Qué cambió y qué NO
+
+Se reescribió **solo** `cuerpoHtml` de `services/notifications/supportTicketNotifier.js`. `templates/base.js` no se tocó a propósito: lo comparten los correos de pedidos, pagos y encuestas, y un cambio ahí se lleva por delante seis plantillas que hoy funcionan.
+
+- Cinta superior con el color del evento: verde si se resolvió, ámbar si se reabrió, el color del estado nuevo si cambió de estado, lila en los demás. El número de ticket se lee de un vistazo.
+- Estado y prioridad como píldoras con los mismos colores del tablero de Support (Pendiente rojo, Haciendo ámbar, Resuelto verde, Archivado gris). El correo y la app dicen lo mismo con el mismo color.
+- Un cambio de estado se **dibuja**: `Pendiente → Haciendo`, en vez de narrarlo en una frase.
+- El comentario va como cita con la voz del autor, no como párrafo suelto.
+- Ficha con asunto, comercio, responsable, prioridad y quién reportó. **Cada fila se omite sola si no hay dato**: media tabla diciendo "No especificado" no informa nada.
+- Al comercio no se le muestran responsable, prioridad ni comercio: son cocina interna.
+- Pie que explica por qué le llega el correo, distinto para el equipo y para el comercio.
+
+`tests/support/previewCorreoTicket.js` genera los 8 eventos en HTML sin enviar nada ni tocar Firestore, para revisar la plantilla antes de soltarla.
+
+### Lo que se revisó del MCP antes de dar esto por cerrado
+
+Las tools MCP (`update_support_ticket`, `add_support_ticket_comment`) **comparten este notificador**, así que heredan la plantilla nueva sin tocarlas. Y escriben a Firestore directo, con su propia lista de campos (`prioridad, asunto, categoria, subcategoria, motivo, usuarioMesaAyuda, status, historyStatus`), toda contenida en la lista blanca del PUT (D-288) y sin `company`/`tienda`/`nit`: la lista blanca no las rompe ni las deja desalineadas. Queda anotado que son **dos puertas de escritura** a la misma colección con dos listas distintas; hoy coinciden, y eso no lo garantiza nada más que la lectura de esta sesión.
+
+## D-290 (2026-09-16) — La respuesta del comercio era el aviso peor cubierto del ciclo
+
+**Disparador.** Daniel pregunta cómo está el aviso al comercio mientras se trabaja un ticket, y si vale la pena un chat de soporte.
+
+### Lo que ya funciona
+
+El comercio recibe correo y campana en Seller Center cuando crea el ticket, cuando cambia de estado (incluido el paso a *Haciendo*, que es el "ya lo estamos trabajando"), cuando le responden, cuando se resuelve y cuando se reabre. No se le dice a quién se asignó: es cocina interna. En `/misTickets` tiene la conversación completa con adjuntos y caja de respuesta.
+
+### El agujero, que iba en el otro sentido
+
+Cuando el **comercio** respondía:
+
+- el correo del evento `respuesta` sólo iba al agente asignado, y **sin responsable la lista quedaba vacía**: no salía correo a nadie;
+- la campana de Support la escribe el front, o sea sólo cuando actúa alguien del equipo — una respuesta desde Seller Center no entraba nunca.
+
+Juntos: un ticket sin dueño con una respuesta del comercio esperaba a que alguien abriera el backlog y la viera de casualidad.
+
+Ahora, si el comentario lo escribe el comercio: sin responsable el correo va al grupo, con responsable sigue siendo suyo, y además entra en la campana de Support con `destinatarios: null` cuando el ticket no tiene dueño — que es como esa campana dice "es de todos".
+
+**Quién escribe se decide por correo y al revés de lo obvio:** no se compara contra quien reportó el ticket, porque en un comercio suele responder un compañero del que lo abrió, sino que se pregunta si el correo **no** es de la casa (`@katuq.com` o lista del equipo). Ante la duda avisa de más: un agente que no esté en las listas provoca un aviso sobrante, no un mensaje de cliente perdido.
+
+`services/notifications/supportTicketInApp.js` replica el formato del front (`ticket-notificaciones.service.ts`), clave idempotente incluida. **Es un contrato duplicado**: si el front cambia el formato de la campana, hay que cambiarlo aquí. Queda dicho en el encabezado del archivo.
+
+### Sobre el chat de soporte: no
+
+El hilo del ticket ya es un chat asíncrono con historial, adjuntos y estado. Un chat en vivo promete respuesta en minutos sin nadie de turno, parte el historial en dos sitios y suma otra bandeja que mirar. Si algún día hace falta inmediatez, el camino es WhatsApp con un número de Katuq y que cada conversación caiga en un ticket, no un widget que cree historia aparte.
+
+Pendientes de la misma conversación, no hechos: marcar en el backlog los tickets con respuesta del comercio sin leer, y decirle al comercio quién lo atiende al pasar a *Haciendo*.
+
+## D-291 (2026-09-16) — El aislamiento del MCP deja de depender de que cada tool se acuerde
+
+**Disparador.** Daniel, revisando las tools: *"ese aislamiento por empresa no sirve pa un culo"*. Tenía razón, y mi revisión previa fue floja: había verificado que las 49 tools *mencionan* `company`, no que aíslen.
+
+### Lo que estaba mal
+
+La empresa y los permisos se resolvían en la credencial pero se **aplicaban dentro de cada tool**: 49 tools, 49 oportunidades de olvidarlo. Seis lo olvidaron — los cuatro de reportes y los dos de sitios escribían sin mirar permisos, aunque su propia cabecera decía "requiere write" y la de publicar reportes decía "solo admin". Con una llave de solo lectura se podían crear, editar, publicar y borrar reportes, y publicar un sitio, que es contenido público. `tools/list` además ofrecía las 49 a cualquiera.
+
+Y una llave marcada como de prueba tomaba la empresa del **query string**: quien la tuviera leía cualquier comercio con `?company=`. El inventario posterior mostró que las dos que existían están dadas de baja y sin uso, así que el riesgo era real pero nunca se ejerció.
+
+### Lo que quedó
+
+- **Una sola puerta**: `toolRegistry.executeTool` valida empresa y permiso antes de invocar nada, y los tres transportes (REST, SSE, Streamable HTTP) pasan por ella. El contexto llega congelado: una tool no puede cambiarse de empresa ni ampliarse permisos a mitad de camino.
+- **Toda tool declara su permiso** o **el servidor no arranca**. Un fallo ruidoso al arrancar es mejor que descubrirlo en producción; ya sirvió: `run_katuq_report` no estaba declarado y el arranque lo cantó.
+- **La llave sigue llevando el nombre de la empresa** (decisión de Daniel: es lo que guardan `orders`, `products` e `inventory`). Lo que cambia es que ese nombre se resuelve **una vez** contra `companies.nomComercial` y a las tools viaja el nombre exacto. Antes cada tool comparaba el string como llegara y un espacio de más dejaba al dueño sin ver sus datos. Si el nombre no está en `companies` se usa tal cual: hay llaves antiguas así.
+- `tools/list` se recorta a lo que esa credencial puede ejecutar.
+
+**Guardarraíles:** `tests/mcp/registryPermisos.test.js` (7 casos, incluida una llave de lectura contra las 15 tools de escritura), `tests/mcp/companyResolver.test.js` (6), y el e2e de seguridad sigue en 12/12. `scripts/auditar-llaves-mcp.js` inventaría las llaves vivas.
+
+### Hallazgo abierto y serio: Opttia opera como ALMARA FELICIDAD
+
+Opttia (el ADK) se conecta con **una API key fija** (`KATUQ_MCP_API_KEY`, la única activa, de ALMARA FELICIDAD) y elige la empresa de cada conversación del lado del ADK, no de la credencial. Con la empresa saliendo siempre del token, un bot de otro comercio recibiría 403 o vería datos de ALMARA. Hoy parece que solo ALMARA tiene bot, así que no hay fuga confirmada, pero **el diseño no aguanta el segundo comercio**. Lo correcto es una credencial de servicio que pida un token acotado a la empresa de cada conversación (token exchange), y que el canal — el número de WhatsApp, que ya sabe de qué comercio es — decida qué empresa puede representar. No implementado.
+
+## D-292 (2026-09-16) — Quién entra por OAuth y quién por API key
+
+Se conservan las dos formas de autenticarse contra el MCP, pero deja de ser elección de gusto:
+
+- **Personas y sus asistentes** (Claude web/escritorio/Code, Codex/ChatGPT, Cursor) → **OAuth**. Cada quien entra con su usuario de Katuq y la empresa sale de ahí. Un comercio nuevo se conecta solo, sin que nadie emita nada.
+- **Servicios sin persona detrás** (Opttia, scripts) → **API key**, con la empresa pegada a la llave, permisos mínimos y expiración.
+
+El motivo no es ceremonia: una llave no sabe quién la usa, así que todo lo que pase queda a nombre de la empresa de la llave y sin rastro de la persona.
+
+Queda escrito en `docs/MCP/COMO_CONECTARSE.md` (al que apuntan los demás manuales) y como regla de sesión en el `CLAUDE.md` del backend. De paso se corrigió lo que los manuales decían y ya no es cierto: el secreto de administración publicado en el repositorio, las "keys de test con acceso global" y las "5 herramientas" cuando son 49.
+
+## D-293 (2026-09-17) — Opttia atiende a cada comercio con su propia identidad, no con la llave de ALMARA
+
+**Disparador.** D-291 dejó el hallazgo abierto: Opttia corría con una API key fija de ALMARA FELICIDAD y elegía la empresa de cada conversación del lado del ADK. Daniel: *"arreglemos lo de opttia"*, y confirmó que todavía no tiene clientes operando, así que el cambio se pudo hacer sin ventana.
+
+### Por qué no era OAuth
+
+Opttia es un proceso, no una persona: no puede hacer login por cada chat. Meterlo por el OAuth de personas obligaría a guardar las credenciales de un humano en el servidor, que es peor que la llave actual.
+
+### Llave de servicio con empresas declaradas
+
+Una llave de servicio dice **por escrito** a qué empresas puede representar (`allowedCompanies`). La empresa de cada petición llega en la cabecera `X-Company` —que el puente del ADK ya enviaba, y que el backend ignoraba— y solo se acepta si está en esa lista: cualquier otra recibe 403, y sin cabecera responde 400 en vez de adivinar. La empresa sigue saliendo de lo que la credencial autoriza; lo que cambia es que una credencial puede autorizar a varias, y el log dice por cuenta de quién actuó.
+
+Dos cierres que evitan que esto vuelva a ser un colador: una llave normal **no** gana poderes mandando `X-Company` (ahí se ignora), y una llave de servicio **sin lista no se puede emitir**, que es como termina siempre en "démosle acceso a todas".
+
+### Verificado en producción
+
+Llave `OPTTIA` emitida para ALMARA FELICIDAD y OH MY STORE, puesta en `KATUQ_MCP_API_KEY` del ADK (respaldo del `.env` en `~/kai/adk_agent/.env.bak-20260917-193243`), servicio reiniciado y sano. Contra el MCP real:
+
+- `X-Company: ALMARA FELICIDAD` → **200**, y la tool respondió con esa empresa.
+- `X-Company: FLORECER` (no declarada) → **403**, sin ejecutar la tool.
+- Sin cabecera → **400**.
+
+`scripts/emitir-llave-servicio-mcp.js` emite o rota la llave y verifica cada nombre contra `companies.nomComercial` antes de guardar. Agregar un comercio al bot es volver a correrlo con la lista completa, sin tocar código.
+
+### Pendiente
+
+La llave vieja de ALMARA sigue **activa** a propósito: el camino web de Opttia puede resolver credenciales desde `empresas/{company}/settings/mcp_config`, y si alguna empresa tiene esa llave guardada ahí, darla de baja la dejaría sin MCP. Hay que revisar esos documentos antes de desactivarla.
+
+---
+
+## D-294 (2026-09-17) — La compra se cuenta cuando la venta es real, y el servidor también la informa
+
+**Contexto.** Al revisar si se podía pautar con las tiendas del builder aparecieron tres defectos que hacían que el comerciante pagara publicidad contra números falsos. El más caro: el navegador disparaba la conversión de compra en cuanto el servidor creaba el pedido, y con pago en línea el comprador se iba a la pasarela 1,2 segundos después. Si no pagaba, la reserva se anulaba a los 60 minutos pero Meta y Google ya habían contado la venta. El retorno salía inflado y el algoritmo aprendía a buscar gente que abandona el pago.
+
+**Decisión.**
+
+1. Con contra entrega o forma manual, la compra se cuenta al confirmar el pedido: ahí la venta es real. Con pasarela, el navegador dispara inicio de pago y **la compra la cuenta la página de confirmación**, solo si el servidor verifica que el pago quedó aprobado.
+2. Cada pedido nace con un identificador de evento único. El navegador y el servidor informan la misma venta con ese identificador, que es el mecanismo con el que Meta y Google saben que no son dos.
+3. Cuando el webhook de pago aprueba un pedido, el servidor informa la conversión por Conversions API de Meta y por el protocolo de medición de GA4, con los datos personales cifrados. Es lo que recupera las conversiones que pierden los bloqueadores y el rastreo limitado de iOS.
+4. Google Tag Manager carga, pero la política de seguridad de estas páginas bloquea cualquier etiqueta de HTML personalizado. **El editor ahora lo dice**, en vez de dejar que el comerciante lo descubra semanas después.
+
+**Lo que esto cambia el primer día:** las conversiones reportadas BAJAN, porque dejan de contarse pedidos sin pagar. Es la verdad, no una regresión, y hay que avisarle al comerciante antes de desplegarlo.
+
+**Guardarraíl.** El token de Conversions API y la clave de GA4 son secretos: no vuelven al editor y guardar el panel de medición no los borra. Sigue prohibido guardar un fragmento de código pegado por el comerciante — solo entran identificadores con formato verificado.
+
+Propuesta: `openspec/changes/pauta-confiable-sitios/`.
+
+---
+
+## D-295 (2026-09-17) — Un sitio deja de ser una sola página, y el comprador por fin recibe correos
+
+**Contexto.** Medido en producción sobre Florecer Regalos: `/nosotros`, `/blog` y `/politicas` devolvían la **portada con código 200**. Para Google eso es la misma página repetida en infinitas direcciones. Y sin políticas publicadas, Meta rechaza cuentas publicitarias y las pasarelas piden esos enlaces para aprobar un comercio. Aparte, el pedido se creaba, el vendedor se enteraba, y al comprador no le llegaba nada: ni confirmación, ni aviso de pago, ni "ya salió tu pedido".
+
+**Decisión.** Un sitio puede tener hasta doce páginas además del inicio, cada una con su dirección, su título y los **mismos bloques de la lista blanca** —una página propia no es una puerta trasera para meter contenido sin sanear—. Una ruta que no corresponde a nada responde 404 de verdad. Las páginas entran solas al pie y al mapa del sitio, con palanca por página para no indexar.
+
+Las páginas legales nacen escritas con lo que el comercio ya configuró: su tarifa de envío, su envío gratis desde, sus formas de pago y su contacto. Lo que nadie decidió queda **marcado como pendiente**, no inventado: un borrador que rellena el vacío con "30 días" hace que el comerciante publique y quede obligado a un plazo que no eligió.
+
+Y la tienda le escribe al comprador en cuatro momentos —pedido recibido, pago confirmado, despachado, entregado— con la marca de la tienda donde compró, no con la de Katuq, que él no conoce. Cada correo se manda una sola vez por pedido y momento, con la marca guardada en una transacción **antes** del envío: la pasarela reintenta, y sin eso el comprador recibiría cuatro veces "tu pago quedó confirmado".
+
+**`orders.js` no se tocó.** Los correos de despacho y entrega cuelgan de `orderNotificationService.notifyStatusChange`, y van por fuera del flag de migración: el comprador no tiene por qué quedarse sin saber que su pedido salió porque el comercio todavía no esté migrado.
+
+**Pendiente:** correr el llenado hacia atrás de las fotos viejas con `--apply`. El ensayo en seco encontró 14 fotos sin variantes en Florecer Regalos, todas por debajo de 1600 px. Reescribe contenido publicado de una tienda viva, así que lo dispara Daniel.
+
+Propuesta: `openspec/changes/tienda-paginas-y-correos/`.
+
+---
+
+## D-296 (2026-09-17) — Cupones y retiro en tienda, con el descuento guardado como porcentaje
+
+**Contexto.** El builder no tenía cupones de ningún tipo, y la forma de entrega estaba clavada en domicilio: quien tiene local no podía ofrecer que el comprador pasara a recoger. Tampoco había catálogo de productos para Google Merchant Center ni para Meta, así que solo se podía pautar con texto e imágenes sueltas.
+
+**Decisión.** Cupones con las reglas que trae cualquier tienda, y **el descuento lo calcula siempre el servidor**: el navegador manda el código escrito a mano y nada más, y los códigos nunca bajan al HTML. Retiro en tienda con hasta ocho puntos, cada uno con su bodega; quien recoge no paga domicilio, no da dirección, y el pedido nace con la forma de entrega correcta para que no entre a la planilla del mensajero.
+
+**La decisión técnica que importa:** el descuento se persiste como **`porceDescuento`**, no como monto fijo. La razón es que "Todos los pedidos" recalcula y persiste los totales con `orderCalculationService`, que tiene dos caminos —el viejo y el canónico, según una variable de entorno— y lo único que los dos honran igual es el porcentaje. Un descuento guardado como monto en `totalDescuento` sobrevive al camino viejo pero el canónico lo rearma desde el porcentaje y lo borra: el comprador vería su rebaja desaparecer en la primera recarga de la lista. Hay prueba de contrato que compara los totales persistidos contra el calculador real con cupón aplicado.
+
+También entran el feed de productos para Merchant Center y el catálogo de Meta, y el "avísame cuando llegue" en la ficha de un agotado, que hasta ahora era un callejón sin salida: el comprador más interesado del día se iba sin dejar rastro.
+
+**Hallazgo de paso:** el saneador de enteros lleva lo que se sale de rango al extremo más cercano, así que un cupón que el comerciante dejara en cero se convertía en uno del 1% y salía vivo. Ahora el valor se mira en crudo antes de acotarlo.
+
+Propuesta: `openspec/changes/tienda-cupones-y-retiro/`.
+
+---
+
+## D-297 (2026-09-17) — Cuenta del comprador por código al correo, no por WhatsApp
+
+**Contexto.** La única forma de que alguien entrara a una tienda era que el comerciante le generara un link desde el CRM. Sirve para el mayorista al que se le manda su lista de precios, pero deja por fuera al comprador común: no podía ver en qué iba su pedido —la llamada de soporte más frecuente de cualquier tienda pequeña— ni volver a comprar sin escribir otra vez todos sus datos.
+
+**Decisión.** El comprador entra con su correo y un código de seis dígitos. Se reusa **entero** el mecanismo de sesión que ya existía, así que entrar por código y entrar por el link del comerciante dejan exactamente la misma sesión: precios por lista y todo lo personalizado siguen funcionando sin tocarse.
+
+**Por qué correo y no WhatsApp**, que era lo natural dado el canal que ya tenemos: mandar un WhatsApp fuera de la ventana de 24 horas exige plantilla aprobada y **cuesta plata por mensaje**. Un código de acceso es justo el caso en que el destinatario no ha escrito antes, así que cada intento de entrar le costaría al comerciante. El correo es gratis y ya está montado. WhatsApp queda como camino aparte, cuando haya plantilla aprobada.
+
+**Guardarraíles del código**, que es una credencial que viaja por correo: seis dígitos con aleatoriedad criptográfica, guardado solo como resumen salado con el identificador del cliente, quince minutos de vigencia, cinco intentos, un solo uso, y un minuto de espera entre envíos. La respuesta al pedir un código es idéntica exista o no el correo, y el envío va fuera del camino de la respuesta para que el tiempo tampoco delate quién es cliente de quién.
+
+El código solo se le manda a quien **ya compró**: si le llegara a cualquier correo, esto sería una máquina de mandar correos a desconocidos con el nombre del comercio encima.
+
+**Trampa encontrada:** `data-kq-cuenta` ya era el contador del carrito en la barra. La cuenta usa `data-kq-mi-cuenta`; reusarlo habría hecho que tocar el numerito del carrito abriera la sesión.
+
+Propuesta: `openspec/changes/tienda-cuenta-comprador/`.
+
+
+---
+
+## D-298 (2026-09-18) — El editor de sitios muestra primero lo esencial
+
+**Contexto.** Daniel: "la veo muy compleja, controles escondidos, no se relaciona una cosa con la otra". Medido: 34 tipos de bloque y 220 controles al mismo nivel; la portada y el encabezado con 10 cada uno; tres subtítulos seguidos para el mismo concepto de estilo ("vestido", "look", "estilo de la página"); lienzo libre y objetos colocables —que usa una minoría— junto a "cambiar el título"; y nada que dijera qué falta para terminar.
+
+**Decisión.** Sin quitar una sola función: (1) **modo simple** — cada sección muestra sus tres controles principales y "Más opciones" despliega el resto (31 controles pasan detrás); (2) **un vocabulario**: Tema, Colores, Forma, Letra; (3) **la vista previa es la puerta** — la lista de secciones queda plegada detrás de "Reordenar u ocultar"; (4) **lienzo y objetos colocables detrás de una palanca** en Ajustes (30 controles), apagada de fábrica, recordada por navegador y **encendida sola si el sitio ya los usa**; (5) **"Te falta"**: logo, contacto, descripción para Google, bodega, productos y políticas, cada uno con salto a donde se arregla.
+
+Solo toca la capa Angular del editor; el render publicado y el backend quedan intactos. Revisados a mano los 29 tipos: en portada manda la foto, en encabezado el menú de categorías, en catálogo el "se puede comprar" y en promo la foto (la regla de posición los había dejado atrás). El selector de tipos crudos pasó de lista plana a cuatro familias (vender, contar, que te escriban, estructura). **Pendiente**: verlo en vivo con Daniel logueado (la extensión no entra a sellercenter).
+
+Propuesta: `openspec/changes/editor-sitios-facil/`.
+
+## D-299 (2026-09-18) — El MCP puede servir pantallas, y la primera es el tablero de inventario
+
+**Contexto.** El inventario se contestaba en prosa: el agente leía los tools, sumaba y narraba. Y dos tools se contradecían sobre la misma empresa en el mismo instante — el 16-sep `get_low_stock_products` decía "no hay inventario configurado, un 0 aquí es ausencia de datos" mientras `get_stock_levels` cantaba "1 producto sin stock requiere atención inmediata". La extensión de apps de MCP quedó estable el 26-ene-2026 y Claude web y escritorio la renderizan, que es por donde los comercios ya entran al conector.
+
+**Decisión.** El servidor MCP gana la capacidad de servir interfaces (`resources` + recursos `ui://`) y un tool puede declarar la pantalla que lo acompaña. La primera es el tablero de inventario, con dos pestañas: **Existencias** para cualquier comercio (unidades y valor por bodega, agotados, bajo umbral, sin datos, búsqueda de producto) y **Salud** solo para la empresa operadora (duplicados, bodegas con saldo fuera del maestro, etiquetas `idBodega` con id de documento). La pestaña de salud se decide en el servidor: con credencial de comercio el bloque no viaja en la respuesta. El tablero es de solo lectura y no tiene un control que ajuste, traslade ni repare nada.
+
+Tres correcciones sobre el plan original, todas registradas en el diseño: (1) el paquete `ext-apps` es ESM sin condición `require` y el backend es CommonJS con Node 20 declarado, así que las constantes del protocolo viven copiadas en `services/mcp/uiExtension.js` y un test las compara contra el paquete real — el servidor no lo importa, queda como dependencia de desarrollo; (2) **no** se extrajo `calcularMetricasPorBodega` de `controllers/inventory.js` (6.869 líneas, módulo sensible): la capa compartida ya existía en `services/productStockHelper.js` y el tablero se compone de los tools que ya suman bien; (3) el hueco de permisos que se había reportado en `create_katuq_site` y `publish_katuq_site` **ya estaba cerrado centralmente** por `071c989` (16-sep), que mueve la validación de empresa y permiso a `toolRegistry.executeTool`; en vez de duplicar la verificación por tool se dejó la regresión que fija ese contrato.
+
+`get_stock_levels` adopta el estado explícito de `get_low_stock_products` y deja de contar como agotados los productos sin registro de inventario: los mueve a `productos_sin_datos`. **Es ruptura de lectura** para quien consuma `productos_sin_stock` de ese tool. Verificado contra producción: en ALMARA los agotados de los dos tools coinciden (186) y los sin datos también (109).
+
+**Hallazgo de paso.** El tablero encontró en producción lo que buscaba: OH MY STORE tiene 3 bodegas con saldo fuera del maestro (BOD-009/010/011, 415 unidades entre las tres) y ALMARA un registro de inventario etiquetado con el id de documento de la bodega en vez de `BOD-003`. El tablero los muestra marcados, no los esconde.
+
+Propuesta: `openspec/changes/tablero-inventario-mcp-app/` (repo katuq_admin_back_firebase).
+
+---
+
+## D-299 (2026-09-19) — Agregar donde uno mira y arrastrar desde el borde
+
+**Contexto.** "Agregar una sección" la mandaba al final y había que subirla a mano; arrastrar exigía elegir la sección y apuntarle al asa chiquita de la barra flotante; y mientras se arrastraba solo se veía el bloque flotando, no dónde iba a caer.
+
+**Decisión.** En la vista previa: un "+" en la unión de cada par de secciones (y uno al final) que abre el selector e **inserta justo ahí**; sin "+", la nueva entra después de la sección elegida. Un **agarre en todo el borde izquierdo** de cada sección, visible al pasar el mouse, además del asa de la barra —en el borde y no en el cuerpo a propósito: escribir sobre un texto no puede empezar a mover la sección—. Y un **hueco punteado** donde va a caer. Los "+" se esconden mientras se arrastra. Solo toca el editor; el render publicado no cambia.
+
+Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastrar una foto del escritorio a la vista previa, reordenar columnas y tarjetas dentro de una sección, y redimensionar con asa.
+
+---
+
+## D-300 (2026-09-21) — Editar dirección de entrega de un pedido no propagaba el cambio al pedido (ticket DAD-013148)
+
+**Contexto.** Ticket: en el pedido DAD-013148 se cambió la dirección de entrega (misma calle, pero zona "ENTREGA A DOMICILIO EN HORARIO ESPECIAL MEDELLIN" en vez de "Medellin") desde el modal "Editar dirección de entrega" (`list.component.ts::editDatosEntrega`) y el modal mostró éxito, pero el pedido siguió con `envio.zonaCobro="Medellin"` / `totalEnvio=13200`. Se confirmó comparando el pedido (`orders`) contra la libreta de direcciones del cliente (`clients.datosEntrega`, documento 1104428769): la libreta del cliente **sí** tenía la zona/valor nuevos (33.600); el pedido no.
+
+**Causa raíz.** `pedido-entrega.component.ts::editarDatosEntrega()` solo propagaba la dirección editada al pedido (`overridePedido.emit`) si `pedidoGral.envio.alias === originalAliasEntrega`. La mayoría de pedidos no guardan `envio.alias` (queda `undefined`), así que la condición nunca se cumplía: el cambio se guardaba en `editClient()` (de ahí el toast de éxito) pero jamás llegaba al pedido. El modal de edición (`list.component.html` → `datosEnregaModal`) tampoco tiene botón "Guardar" propio; el guardado real ocurre en `list.component.ts::openEntregaModal` cuando el modal se cierra con una razón distinta de `'Cross click'` (vía `modalService.dismissAll()` dentro de `editarDatosEntrega`), recalculando envío con los datos —viejos— de `order.envio`.
+
+**Fix.** Se agregó `originalDireccionEntrega` (capturado en `editarDatos()` junto a `originalAliasEntrega`) y la condición de propagación ahora acepta coincidencia por alias **o** por `direccionEntrega` original. `Seller.Katuq/src/app/components/ventas/entrega/pedido-entrega.component.ts` (líneas ~55-56, ~513-527, ~825-826). Compilación verificada (`ng serve` recompiló `ventas-ventas-module` sin errores).
+
+**Corrección de dato.** `functions/scripts/fix-dad-013148-direccion-envio.js` (repo backend), `--dry-run` primero y luego `--apply`: `envio` (zonaCobro/valorZonaCobro) y `totalEnvio` (13.200→33.600) tomados de la libreta del cliente; `subtotal` y `totalPedididoConDescuento` recalculados con el mismo delta (+20.400); `anticipo` y `faltaPorPagar` NO se tocaron.
+
+**Hallazgo aparte, sin resolver.** `anticipo` de DAD-013148 = 334.400, pero es la suma de los 3 comprobantes cargados en `PagosAsentados` **sin filtrar por `estadoVerificacion`**: 2 están `Rechazado` (comprobante ajeno) y 1 sigue `Pendiente` de revisión — ninguno `Aprobado`. Por eso `faltaPorPagar` da $0 aunque nada esté verificado todavía. No se tocó en esta sesión; queda para revisar cómo se calcula `anticipo` a partir de `PagosAsentados` (posible bug de alcance mayor, no exclusivo de este pedido).
+
+---
+
+## D-301 (2026-09-21) — DAD-012848 "PreAprobado" con saldo pendiente pero ya pagado por completo: el total quedó congelado con el precio BASE de `preciosVolumen`, no el tier real
+
+**Disparador.** Ticket ALMARA: DAD-012848 mostraba `estadoPago: PreAprobado` con `faltaPorPagar: $45.840`, pero la clienta insistía en que ya había pagado todo. Primer diagnóstico (equivocado): busqué un segundo comprobante sin registrar en `PagosAsentados`/`payments`/`integrationEvents`/Storage — no encontré ninguno, así que concluí que faltaba plata. El usuario adjuntó una captura de la pantalla de Pedidos que mostraba `Total = Anticipo = $756.120` (sin fila "Falta por pagar"), contradiciendo el dato de Firestore. Ahí apareció la causa real.
+
+**Causa raíz.** El pedido (1 producto, ALM-1757, cantidad=120) tiene `preciosVolumen` con un tier[0] SIN `numeroUnidadesInicial`/`numeroUnidadesLimite` (precio base $6.403, pensado para "1 a N-1" unidades) y un tier real 101-200 a $6.021. `totalPedidoSinDescuento` guardado (768.360) = 6.403 × 120 — el precio BASE, no el tier 101-200 que le corresponde a cantidad=120. Es el mismo bug de [[project_d256_volumen_tier_siempre_base]] (D-256, ticket 1024): el tier sin rango explícito se trataba como [0, ∞) y ganaba siempre. La corrección de D-256 tuvo dos rondas — commit `653652c` (2026-09-03, una copia de `_rangoVolumenPorCantidad`) y commit `4643e02` (**2026-09-16**, "las otras cinco copias del escalón de volumen sin rango", ticket 1024). **DAD-012848 se creó 2026-09-07 y se editó por última vez 2026-09-10 — antes del segundo fix** — y su total nunca se recalculó después. La clienta SÍ pagó el valor correcto ($722.520 + $33.600 domicilio = $756.120) el 7-8 de septiembre; el sistema seguía comparando ese pago contra un total inflado por el bug ya corregido en el código pero no en el dato histórico.
+
+**Por qué la pantalla de Pedidos mostraba bien y Firestore mal.** `list.component.ts::necesitaRecalculoFrontend()` fuerza un recálculo en vivo (`checkPriceScale`/`tienePreciosPorVolumen`) para CUALQUIER pedido con producto de precio por volumen, sin importar `_calculadoEnBackend`. Ese recálculo usa la tabla de precios ACTUAL (ya con el fix de 4643e02), así que "autocura" la vista aunque el dato guardado esté mal. Es un patrón riesgoso aparte — si el precio del producto cambiara desde la creación del pedido por una razón legítima (no un bug), la pantalla mostraría un total distinto al que realmente se cobró, en cualquier dirección. **No se tocó en esta sesión** — queda como deuda a evaluar (¿la lista debería confiar siempre en `_calculadoEnBackend` y dejar de recalcular en vivo?).
+
+**Corrección de datos — 4 pedidos de ALMARA, con `--dry-run` antes de cada `--apply`:**
+- `functions/scripts/fix-dad-012848-tier-volumen.js`: DAD-012848, total 801.960→756.120, `faltaPorPagar` 45.840→0, `estadoPago` PreAprobado→**Aprobado**.
+- `functions/scripts/audit-tier-volumen-pendientes.js` (solo lectura): escaneó 556 pedidos ALMARA (`PreAprobado`/`Pendiente`/`Pospendiente`, creados antes de 2026-09-16, un solo ítem en carrito) comparando el precio unitario implícito contra el tier correcto. Encontró 3 más con el mismo patrón.
+- `functions/scripts/fix-tier-volumen-batch-sep16.js`: aplicó los 3 — DAD-011928 (1.800 u., $1.800.000→$1.674.000, sigue PreAprobado, sin anticipo), DAD-012886 (180 u., $310.200→$304.260, sigue PreAprobado), DAD-013012 (30 u., $232.200→$227.820, sigue PreAprobado). Ninguno de los 3 llegó a $0 — son sobrecobros reales, no casos de "ya pagado pero el sistema no se entera"; `anticipo` no se tocó en ninguno.
+
+**Alcance NO cubierto por la auditoría (deuda abierta):**
+- Solo ALMARA FELICIDAD, solo pedidos con saldo pendiente creados antes del 16-sep, solo carritos de **un solo ítem** (la heurística de "precio unitario implícito" no es confiable con varios ítems mezclados).
+- Pedidos ya `Aprobado` no se revisaron — si alguno se sobrecobró y el cliente pagó de más sin reclamar, sigue sin detectarse.
+- Otras empresas con `preciosVolumen` no se tocaron.

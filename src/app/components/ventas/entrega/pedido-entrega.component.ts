@@ -53,6 +53,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   @Input() pedidoGral: Pedido;
   idenxEntrega: any;
   private originalAliasEntrega: string;
+  private originalDireccionEntrega: string;
   filteredResults: any;
   allBillingZone: any;
   ciudades1: any;
@@ -511,8 +512,18 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     };
     this.datosEntregas[this.idenxEntrega] = datosEntreg;
 
-    // Si la dirección editada es la que está en uso en el pedido, actualizarla
-    if (this.pedidoGral?.envio && this.pedidoGral.envio.alias === this.originalAliasEntrega) {
+    // Si la dirección editada es la que está en uso en el pedido, actualizarla.
+    // Muchos pedidos no guardan `envio.alias` (queda undefined), así que comparar
+    // solo por alias nunca coincide y el cambio se pierde en el pedido aunque sí
+    // quede guardado en la libreta de direcciones del cliente (editClient más abajo).
+    // Por eso también se compara por `direccionEntrega` capturada ANTES de aplicar
+    // los valores nuevos del formulario (originalDireccionEntrega).
+    const envioActivo = this.pedidoGral?.envio;
+    const esLaDireccionEnUso = !!envioActivo && (
+      (!!this.originalAliasEntrega && envioActivo.alias === this.originalAliasEntrega) ||
+      (!!this.originalDireccionEntrega && envioActivo.direccionEntrega === this.originalDireccionEntrega)
+    );
+    if (esLaDireccionEnUso) {
       this.pedidoGral.envio = { ...datosEntreg };
       this.pedidoGral = { ...this.pedidoGral };
       this.overridePedido.emit(this.pedidoGral);
@@ -823,6 +834,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   editarDatos(modal, index) {
     this.idenxEntrega = index;
     this.originalAliasEntrega = this.datosEntregas[index].alias;
+    this.originalDireccionEntrega = this.datosEntregas[index].direccionEntrega;
     this.editandodato = true;
     this.alias_entrega = this.datosEntregas[index].alias;
     this.nombres_entrega = this.datosEntregas[index].nombres;

@@ -1,11 +1,11 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit } from "@angular/core";
+import { AfterViewChecked, ChangeDetectorRef, Component, ElementRef, HostListener, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, PropuestaDiseno, Sitio, SitiosService, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, CuponSitio, PaginaSitio, PropuestaDiseno, Sitio, SitiosService, TiendaSitio, VentaConfig } from "../sitios.service";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
@@ -565,7 +565,7 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
   templateUrl: "./sitio-editor.component.html",
   styleUrls: ["./sitio-editor.component.scss"],
 })
-export class SitioEditorComponent implements OnInit, OnDestroy {
+export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked {
   cargando = true;
   guardando = false;
   publicando = false;
@@ -601,6 +601,33 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
   fondosSugeridos = ["#f7f7fb", "#f3f0ff", "#fff8f0", "#f2f9f5", "#211d33"];
 
   catalogoBloques = CATALOGO_BLOQUES;
+
+  /**
+   * Los 29 tipos crudos, en cuatro familias. Una lista plana de 29 obliga a
+   * leerla entera; con familias, quien busca "algo para vender" mira una sola.
+   */
+  readonly FAMILIAS_BLOQUE: { nombre: string; tipos: string[] }[] = [
+    { nombre: "Para vender", tipos: ["catalogo", "productos", "destacado", "categorias", "buscador", "promo", "contador"] },
+    { nombre: "Para contarles", tipos: ["hero", "texto", "columnas", "seccion", "galeria", "imagen", "video", "banner", "resenas", "faq", "marcas", "instagram"] },
+    { nombre: "Para que te escriban", tipos: ["whatsapp", "formulario", "suscripcion", "ubicacion", "popup"] },
+    { nombre: "Estructura", tipos: ["encabezado", "anuncio", "botones", "separador", "footer"] },
+  ];
+  get catalogoPorFamilia(): { nombre: string; bloques: typeof CATALOGO_BLOQUES }[] {
+    const porTipo = new Map(this.catalogoBloques.map((c) => [c.tipo, c]));
+    const usados = new Set<string>();
+    const familias = this.FAMILIAS_BLOQUE.map((f) => ({
+      nombre: f.nombre,
+      bloques: f.tipos.map((t) => porTipo.get(t)).filter((c): c is (typeof CATALOGO_BLOQUES)[number] => {
+        if (!c) return false;
+        usados.add(c.tipo);
+        return true;
+      }),
+    }));
+    // Un tipo nuevo que nadie clasificó no puede desaparecer del selector.
+    const sueltos = this.catalogoBloques.filter((c) => !usados.has(c.tipo));
+    if (sueltos.length) familias.push({ nombre: "Otros", bloques: sueltos });
+    return familias.filter((f) => f.bloques.length);
+  }
 
   /** Hay cambios sin guardar. Se usa para avisar antes de publicar. */
   /**
@@ -647,7 +674,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
     private service: SitiosService,
     private bodegaService: BodegaService,
     private toastr: ToastrService,
-    private host: ElementRef<HTMLElement>
+    private host: ElementRef<HTMLElement>,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -689,6 +717,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
         }
         this.sitio = res.data;
         this.contenido = this.completar(res.data.draft);
+        // Con el contenido cargado ya se sabe si el sitio usa lienzo u objetos.
+        this.decidirAvanzadas();
         this.nombre = res.data.nombre;
         this.slug = res.data.slug;
         this.dominioPropio = (res.data as any).dominioPropio || "";
@@ -889,8 +919,441 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
     return "Tienes el pago en línea encendido sin una pasarela propia configurada: los pagos NO llegarían a tu cuenta. Configura Wompi o ePayco en Integraciones, o apaga el pago en línea y usa contra entrega.";
   }
 
+  // ── Páginas del sitio ───────────────────────────────────────────────────
+  // Un sitio dejó de ser una sola página: además del inicio puede tener
+  // "Nosotros", "Políticas de devolución", "Envíos". Todas se editan con el
+  // mismo panel de secciones; lo único que cambia es sobre qué lista de
+  // bloques se trabaja. -1 es el inicio.
+  paginaActiva = -1;
+
+  /** Las páginas propias del sitio, siempre un arreglo. */
+  get paginas(): PaginaSitio[] {
+    if (!this.contenido) return [];
+    if (!Array.isArray((this.contenido as any).paginas)) (this.contenido as any).paginas = [];
+    return (this.contenido as any).paginas as PaginaSitio[];
+  }
+
+  /** La página que se está editando, o null si es el inicio. */
+  get paginaEnEdicion(): PaginaSitio | null {
+    return this.paginaActiva >= 0 ? this.paginas[this.paginaActiva] || null : null;
+  }
+
+  get nombrePaginaActiva(): string {
+    const p = this.paginaEnEdicion;
+    return p ? p.titulo : "Inicio";
+  }
+
   get bloques(): BloqueSitio[] {
+    const pagina = this.paginaEnEdicion;
+    if (pagina) {
+      if (!Array.isArray(pagina.bloques)) pagina.bloques = [];
+      return pagina.bloques;
+    }
     return (this.contenido && this.contenido.bloques) || [];
+  }
+
+  /**
+   * Escribe la lista de bloques donde toque.
+   *
+   * Existe para que las diez operaciones que mueven, agregan o quitan
+   * secciones no tengan que preguntar cada una si están sobre el inicio o
+   * sobre una página propia. Antes escribían directo en `contenido.bloques`.
+   */
+  private fijarBloques(nuevos: BloqueSitio[]): void {
+    const pagina = this.paginaEnEdicion;
+    if (pagina) pagina.bloques = nuevos;
+    else if (this.contenido) this.contenido.bloques = nuevos;
+  }
+
+  // ── Recoger en tienda y cupones ─────────────────────────────────────────
+
+  /**
+   * La configuración de retiro, creada al vuelo si el sitio es anterior.
+   *
+   * Los sitios que existían antes de esta función no traen el campo, y la
+   * plantilla no puede escribir sobre `undefined`. Se rellena aquí para que
+   * el panel funcione igual en un sitio viejo que en uno nuevo.
+   */
+  get retiro(): NonNullable<TiendaSitio["retiroEnTienda"]> | null {
+    if (!this.contenido || !this.contenido.tienda) return null;
+    const t = this.contenido.tienda as TiendaSitio;
+    if (!t.retiroEnTienda) t.retiroEnTienda = { activo: false, texto: "", puntos: [] };
+    if (!Array.isArray(t.retiroEnTienda.puntos)) t.retiroEnTienda.puntos = [];
+    return t.retiroEnTienda;
+  }
+
+  get cupones(): CuponSitio[] {
+    if (!this.contenido || !this.contenido.tienda) return [];
+    const t = this.contenido.tienda as TiendaSitio;
+    if (!Array.isArray(t.cupones)) t.cupones = [];
+    return t.cupones;
+  }
+
+  agregarPunto(): void {
+    const r = this.retiro;
+    if (!r || r.puntos.length >= 8) return;
+    r.puntos.push({
+      id: `pt_${Date.now().toString(36)}`,
+      nombre: "",
+      direccion: "",
+      ciudad: "",
+      horario: "",
+      telefono: "",
+      bodegaId: "",
+    });
+    this.cargarBodegas();
+    this.marcarSucio();
+  }
+
+  quitarPunto(i: number): void {
+    const r = this.retiro;
+    if (!r) return;
+    r.puntos.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  agregarCupon(): void {
+    const cupones = this.cupones;
+    if (cupones.length >= 40) return;
+    cupones.push({
+      codigo: "",
+      tipo: "porcentaje",
+      valor: 10,
+      activo: true,
+      minimoCompra: 0,
+      vence: "",
+      usosMaximos: 0,
+      usos: 0,
+      soloPrimeraCompra: false,
+      aplicaAEnvio: false,
+    });
+    this.marcarSucio();
+  }
+
+  quitarCupon(i: number): void {
+    this.cupones.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  /**
+   * El código, tal como lo va a guardar el servidor.
+   *
+   * Se normaliza mientras se escribe para que el comerciante vea desde el
+   * principio el código real. Sin esto escribía "verano 25", se guardaba
+   * "VERANO25", y al probarlo en su tienda con el texto que él recordaba no
+   * le funcionaba.
+   */
+  normalizarCodigoCupon(valor: string): string {
+    return String(valor || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9-]/g, "")
+      .slice(0, 24);
+  }
+
+  // ── Editor fácil: modo simple, herramientas avanzadas y "qué te falta" ──
+  // El editor tenía 34 tipos de bloque y 220 controles al mismo nivel. El
+  // motor es bueno; lo que sobraba era superficie. Nada de esto quita una
+  // función: solo decide qué se ve primero.
+
+  /** Secciones a las que el comerciante pidió ver "más opciones". */
+  masOpciones = new Set<string>();
+  /** La lista de secciones, plegada: la puerta es la vista previa. */
+  listaAbierta = false;
+  /** Lienzo libre y objetos colocables. Apagado de fábrica; se recuerda por navegador. */
+  herramientasAvanzadas = false;
+  private readonly LLAVE_AVANZADAS = "kq.sitios.avanzadas";
+
+  alternarMasOpciones(id: string): void {
+    if (this.masOpciones.has(id)) this.masOpciones.delete(id);
+    else this.masOpciones.add(id);
+  }
+
+  /**
+   * Cuántos controles esconde el modo simple en esta sección.
+   *
+   * Se cuenta en el DOM y no en un mapa por tipo: así cualquier campo marcado
+   * `campo--avanzado` en la plantilla entra solo, sin una lista que se
+   * desactualice. Se cachea por sección porque Angular lo pregunta en cada
+   * ciclo.
+   */
+  /**
+   * Se mide DESPUÉS de que Angular pintó (ngAfterViewChecked), nunca durante
+   * el render: leer el DOM desde un getter de plantilla devuelve 0 en la
+   * primera pasada y N en la segunda, y Angular en desarrollo lo reporta como
+   * "expresión cambió después de revisarla".
+   */
+  avanzadosVisibles = 0;
+  avanzadosDe(_b: BloqueSitio): number {
+    return this.avanzadosVisibles;
+  }
+  ngAfterViewChecked(): void {
+    let n = 0;
+    try {
+      const raiz = (this.host.nativeElement as HTMLElement).querySelector(".propiedades");
+      if (raiz) n = raiz.querySelectorAll(".campo--avanzado").length;
+    } catch (e) {
+      n = 0;
+    }
+    if (n !== this.avanzadosVisibles) {
+      this.avanzadosVisibles = n;
+      // Se aplica en el siguiente ciclo, ya fuera de la verificación.
+      Promise.resolve().then(() => this.cdr.markForCheck());
+    }
+  }
+
+  alternarAvanzadas(): void {
+    this.herramientasAvanzadas = !this.herramientasAvanzadas;
+    try {
+      localStorage.setItem(this.LLAVE_AVANZADAS, this.herramientasAvanzadas ? "1" : "0");
+    } catch (e) {
+      /* sin almacenamiento, se queda para esta sesión */
+    }
+  }
+
+  /**
+   * Decide el estado inicial de las herramientas avanzadas.
+   *
+   * Si el sitio YA usa lienzo u objetos, arrancan encendidas: apagarlas le
+   * escondería al comerciante algo que él mismo puso. Si no, manda lo que
+   * eligió la última vez en este navegador, y de fábrica van apagadas.
+   */
+  private decidirAvanzadas(): void {
+    const usa = (bloques: BloqueSitio[]) =>
+      bloques.some((b: any) => b && (b.lienzo || (Array.isArray(b.elementos) && b.elementos.length)));
+    const todas = [...this.bloques, ...this.paginas.flatMap((p) => p.bloques || [])];
+    if (usa(todas)) {
+      this.herramientasAvanzadas = true;
+      return;
+    }
+    try {
+      this.herramientasAvanzadas = localStorage.getItem(this.LLAVE_AVANZADAS) === "1";
+    } catch (e) {
+      this.herramientasAvanzadas = false;
+    }
+  }
+
+  /**
+   * Qué le falta al sitio para publicarse con tranquilidad.
+   *
+   * Cada punto es algo que un comprador o una plataforma de pauta va a
+   * echar de menos, y lleva a donde se arregla. Es la diferencia entre una
+   * caja de piezas y una tienda que se termina.
+   */
+  get pendientes(): { texto: string; ir: () => void }[] {
+    const c = this.contenido;
+    if (!c) return [];
+    const lista: { texto: string; ir: () => void }[] = [];
+    const bloques = c.bloques || [];
+    const tiene = (tipo: string) => bloques.some((b) => b.tipo === tipo && b.visible !== false);
+    const tienda = (c.tienda || {}) as TiendaSitio;
+
+    if (!this.logo) {
+      lista.push({ texto: "Sube tu logo en Mi marca", ir: () => this.router.navigate(["/sitios/marca"]) });
+    }
+    if (!tiene("whatsapp") && !tiene("formulario") && !tiene("footer")) {
+      lista.push({ texto: "Pon una forma de contacto (WhatsApp, formulario o pie)", ir: () => (this.panel = "bloques") });
+    }
+    if (!(c.seo && c.seo.descripcion)) {
+      lista.push({ texto: "Escribe la descripción que verá Google", ir: () => (this.panel = "ajustes") });
+    }
+    if (tienda.habilitada) {
+      if (!tienda.bodegaId) {
+        lista.push({ texto: "Elige la bodega que despacha", ir: () => (this.panel = "tienda") });
+      }
+      if (!tiene("catalogo") && !tiene("productos") && !tiene("destacado")) {
+        lista.push({ texto: "Muestra productos: agrega catálogo o vitrina", ir: () => (this.panel = "bloques") });
+      }
+      const rutas = new Set(this.paginas.map((p) => p.ruta));
+      if (!rutas.has("politica-de-privacidad") || !rutas.has("cambios-y-devoluciones")) {
+        lista.push({ texto: "Publica tus políticas (Meta y las pasarelas las piden)", ir: () => this.traerPaginasLegales() });
+      }
+    }
+    return lista;
+  }
+
+  irAPendiente(p: { ir: () => void }): void {
+    p.ir();
+  }
+
+  /** Rutas que una página propia no puede tomar: son del render. */
+  private readonly RUTAS_RESERVADAS = [
+    "p", "c", "gracias", "catalogo", "api", "inicio", "home", "index",
+    "render", "public", "assets",
+  ];
+
+  /** La dirección, normalizada igual que en el servidor. */
+  private rutaDesde(valor: string): string {
+    return String(valor || "")
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60);
+  }
+
+  /** Abre una página para editarla. -1 es el inicio. */
+  irAPagina(indice: number): void {
+    this.paginaActiva = indice;
+    this.seleccionado = -1;
+    this.panel = "bloques";
+    this.resolverProductosDePrevia();
+  }
+
+  /** Crea una página en blanco y la abre. */
+  async agregarPagina(): Promise<void> {
+    if (!this.contenido) return;
+    if (this.paginas.length >= 12) {
+      this.toastr.warning("Una página más no cabe: el tope son 12 además del inicio.");
+      return;
+    }
+    const r = await Swal.fire({
+      title: "Nueva página",
+      input: "text",
+      inputLabel: "¿Cómo se llama?",
+      inputPlaceholder: "Nosotros",
+      showCancelButton: true,
+      confirmButtonText: "Crear",
+      cancelButtonText: "Cancelar",
+      inputValidator: (v) => (String(v || "").trim() ? null : "Ponle un nombre"),
+    });
+    if (!r.isConfirmed) return;
+
+    const titulo = String(r.value || "").trim().slice(0, 80);
+    const ruta = this.rutaDesde(titulo);
+    if (!ruta || this.RUTAS_RESERVADAS.includes(ruta)) {
+      this.toastr.error("Ese nombre no sirve como dirección. Prueba con otro.");
+      return;
+    }
+    if (this.paginas.some((p) => p.ruta === ruta)) {
+      this.toastr.warning("Ya tienes una página con esa dirección.");
+      return;
+    }
+
+    this.paginas.push({
+      id: `pg_${Date.now().toString(36)}`,
+      ruta,
+      titulo,
+      descripcion: "",
+      enMenu: true,
+      indexable: true,
+      bloques: [],
+    });
+    this.marcarSucio();
+    this.irAPagina(this.paginas.length - 1);
+  }
+
+  /** Cambia el nombre y la dirección de la página abierta. */
+  async renombrarPagina(): Promise<void> {
+    const pagina = this.paginaEnEdicion;
+    if (!pagina) return;
+    const r = await Swal.fire({
+      title: "Nombre y dirección",
+      html:
+        `<input id="kq-tit" class="swal2-input" placeholder="Nombre" value="${pagina.titulo.replace(/"/g, "&quot;")}" />` +
+        `<input id="kq-ruta" class="swal2-input" placeholder="direccion" value="${pagina.ruta}" />` +
+        `<div style="font-size:12.5px;color:#6b6685;margin-top:6px">Cambiar la dirección rompe los enlaces que ya compartiste a esta página.</div>`,
+      showCancelButton: true,
+      confirmButtonText: "Guardar",
+      cancelButtonText: "Cancelar",
+      preConfirm: () => ({
+        titulo: (document.getElementById("kq-tit") as HTMLInputElement)?.value || "",
+        ruta: (document.getElementById("kq-ruta") as HTMLInputElement)?.value || "",
+      }),
+    });
+    if (!r.isConfirmed || !r.value) return;
+
+    const titulo = String(r.value.titulo || "").trim().slice(0, 80);
+    const ruta = this.rutaDesde(r.value.ruta || titulo);
+    if (!titulo) {
+      this.toastr.error("La página necesita un nombre.");
+      return;
+    }
+    if (!ruta || this.RUTAS_RESERVADAS.includes(ruta)) {
+      this.toastr.error("Esa dirección está reservada. Elige otra.");
+      return;
+    }
+    if (this.paginas.some((p, i) => p.ruta === ruta && i !== this.paginaActiva)) {
+      this.toastr.warning("Otra página ya usa esa dirección.");
+      return;
+    }
+    pagina.titulo = titulo;
+    pagina.ruta = ruta;
+    this.marcarSucio();
+  }
+
+  /** Borra la página abierta, con confirmación: se lleva sus secciones. */
+  async borrarPagina(): Promise<void> {
+    const pagina = this.paginaEnEdicion;
+    if (!pagina) return;
+    const r = await Swal.fire({
+      title: `¿Borrar "${pagina.titulo}"?`,
+      text: "Se va con todo lo que tiene adentro. Esto no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, borrarla",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#b3261e",
+    });
+    if (!r.isConfirmed) return;
+    this.paginas.splice(this.paginaActiva, 1);
+    this.marcarSucio();
+    this.irAPagina(-1);
+  }
+
+  /**
+   * Pide los borradores legales y los agrega como páginas.
+   *
+   * Sin políticas publicadas, Meta rechaza cuentas publicitarias y las
+   * pasarelas piden esos enlaces para aprobar un comercio. El comerciante
+   * pequeño no las escribe y termina copiando las de otra tienda, con el
+   * nombre de esa otra tienda adentro.
+   */
+  generandoLegales = false;
+  async traerPaginasLegales(): Promise<void> {
+    if (this.generandoLegales || !this.contenido) return;
+    const r = await Swal.fire({
+      title: "Páginas que toda tienda necesita",
+      html:
+        "<div style='text-align:left;font-size:13.5px;line-height:1.6'>" +
+        "Vamos a crear los borradores de <b>quiénes somos, privacidad, cambios y devoluciones, " +
+        "envíos y términos</b>, escritos con tu tarifa de envío, tus formas de pago y tu contacto." +
+        "<br /><br />Léelos y ajústalos antes de publicar: son un punto de partida, no asesoría legal. " +
+        "Donde falte un dato que solo tú puedes decidir, queda marcado.</div>",
+      showCancelButton: true,
+      confirmButtonText: "Crear los borradores",
+      cancelButtonText: "Ahora no",
+    });
+    if (!r.isConfirmed) return;
+
+    this.generandoLegales = true;
+    this.service.paginasLegales(this.id).subscribe({
+      next: (res) => {
+        this.generandoLegales = false;
+        if (!res || !res.success || !res.data) {
+          this.toastr.error((res && res.message) || "No se pudieron generar.");
+          return;
+        }
+        let nuevas = 0;
+        for (const pagina of res.data.paginas || []) {
+          if (this.paginas.some((p) => p.ruta === pagina.ruta)) continue;
+          if (this.paginas.length >= 12) break;
+          this.paginas.push(pagina);
+          nuevas += 1;
+        }
+        this.marcarSucio();
+        this.toastr.success(
+          nuevas
+            ? `Listas ${nuevas} páginas. Revísalas y llena lo que quedó marcado.`
+            : "Ya tenías todas esas páginas."
+        );
+      },
+      error: (e) => {
+        this.generandoLegales = false;
+        this.toastr.error((e && e.error && e.error.message) || "No se pudieron generar.");
+      },
+    });
   }
 
   get bloqueActual(): BloqueSitio | null {
@@ -1228,11 +1691,23 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
     };
     if (preset.estilo) bloque.estilo = JSON.parse(JSON.stringify(preset.estilo));
 
-    this.contenido.bloques = [...this.bloques, bloque];
-    this.seleccionado = this.contenido.bloques.length - 1;
+    this.fijarBloques([...this.bloques, bloque]);
+    this.seleccionado = this.bloques.length - 1;
     this.mostrandoAgregar = false;
     this.mostrandoTiposCrudos = false;
     this.marcarSucio();
+  }
+
+  /**
+   * Dónde va a entrar la próxima sección. La pone el "+" de la vista previa;
+   * sin ella, la nueva va después de la sección elegida, y si no hay ninguna,
+   * al final. Antes siempre iba al final y había que subirla a mano.
+   */
+  insercionEn: number | null = null;
+
+  abrirAgregarEn(indice: number): void {
+    this.insercionEn = Math.max(0, Math.min(indice, this.bloques.length));
+    this.mostrandoAgregar = true;
   }
 
   agregar(tipo: string): void {
@@ -1241,10 +1716,20 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
     // El id local solo sirve para identificar el bloque en pantalla; el backend
     // lo normaliza al guardar.
     const id = `b_${Date.now()}_${tipo}`;
-    this.contenido.bloques = [...this.bloques, { id, tipo, visible: true, datos }];
-    this.seleccionado = this.contenido.bloques.length - 1;
+    const nuevos = [...this.bloques];
+    const en =
+      this.insercionEn !== null
+        ? this.insercionEn
+        : this.seleccionado >= 0
+        ? this.seleccionado + 1
+        : nuevos.length;
+    nuevos.splice(en, 0, { id, tipo, visible: true, datos });
+    this.fijarBloques(nuevos);
+    this.seleccionado = en;
+    this.insercionEn = null;
     this.mostrandoAgregar = false;
     this.marcarSucio();
+    this.resolverProductosDePrevia();
   }
 
   /** Copia un valor de DNS al portapapeles, para que nadie lo transcriba a mano. */
@@ -1368,7 +1853,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
     copia.id = `b_${Date.now()}_${copia.tipo}`;
     const nuevos = [...this.bloques];
     nuevos.splice(i + 1, 0, copia);
-    this.contenido.bloques = nuevos;
+    this.fijarBloques(nuevos);
     this.seleccionado = i + 1;
     this.marcarSucio();
   }
@@ -1377,7 +1862,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
     if (!this.contenido) return;
     const nuevos = [...this.bloques];
     nuevos.splice(i, 1);
-    this.contenido.bloques = nuevos;
+    this.fijarBloques(nuevos);
     if (this.seleccionado === i) this.seleccionado = -1;
     else if (this.seleccionado > i) this.seleccionado--;
     this.marcarSucio();
@@ -1395,7 +1880,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
 
     const nuevos = [...this.bloques];
     moveItemInArray(nuevos, desde, hasta);
-    this.contenido.bloques = nuevos;
+    this.fijarBloques(nuevos);
 
     // La selección sigue al bloque movido, no a la posición.
     if (this.seleccionado === desde) this.seleccionado = hasta;
@@ -1411,7 +1896,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
     if (destino < 0 || destino >= this.bloques.length) return;
     const nuevos = [...this.bloques];
     [nuevos[i], nuevos[destino]] = [nuevos[destino], nuevos[i]];
-    this.contenido.bloques = nuevos;
+    this.fijarBloques(nuevos);
     if (this.seleccionado === i) this.seleccionado = destino;
     this.marcarSucio();
   }
@@ -1420,7 +1905,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
     if (!this.contenido) return;
     const nuevos = [...this.bloques];
     nuevos[i] = { ...nuevos[i], visible: nuevos[i].visible === false };
-    this.contenido.bloques = nuevos;
+    this.fijarBloques(nuevos);
     this.marcarSucio();
   }
 
@@ -2753,7 +3238,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
         nombre: this.nombre.trim(),
         slug: this.slug.trim(),
         dominioPropio: this.dominioPropio.trim(),
-        contenido: this.contenido,
+        contenido: this.contenidoParaGuardar(),
       })
       .subscribe({
         next: (res) => {
@@ -2775,6 +3260,100 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
       });
   }
 
+  // ── Medición desde el servidor ──────────────────────────────────────────
+  // El token de Conversions API y la clave de GA4 son secretos: el servidor no
+  // los devuelve nunca, así que aquí solo se escriben. Viven en campos aparte
+  // para que guardar el panel de pauta no los borre al reenviar un valor vacío
+  // que en realidad es "no lo recibí", no "quítalo".
+
+  /** Token nuevo de Conversions API, mientras el comerciante lo escribe. */
+  tokenMetaNuevo = "";
+  /** Clave nueva del protocolo de medición de GA4. */
+  secretoGa4Nuevo = "";
+  /** Código del Administrador de eventos para el disparo de prueba. */
+  codigoPrueba = "";
+  probandoMedicion = false;
+  resultadoPrueba = "";
+
+  /**
+   * El contenido tal como se manda a guardar.
+   *
+   * Las credenciales solo viajan si el comerciante escribió una, o si pidió
+   * quitarla. En cualquier otro caso ni siquiera aparece la llave, y el
+   * servidor conserva la que tiene.
+   */
+  private contenidoParaGuardar(): any {
+    const contenido: any = { ...this.contenido };
+    const analitica: any = { ...(contenido.analitica || {}) };
+    delete analitica.metaConversionsToken;
+    delete analitica.ga4ApiSecret;
+    if (this.tokenMetaNuevo.trim()) analitica.metaConversionsToken = this.tokenMetaNuevo.trim();
+    if (this.quitarMeta) analitica.metaConversionsToken = "";
+    if (this.secretoGa4Nuevo.trim()) analitica.ga4ApiSecret = this.secretoGa4Nuevo.trim();
+    if (this.quitarGa4) analitica.ga4ApiSecret = "";
+    contenido.analitica = analitica;
+    return contenido;
+  }
+
+  private quitarMeta = false;
+  private quitarGa4 = false;
+
+  quitarTokenMeta(): void {
+    this.quitarMeta = true;
+    this.tokenMetaNuevo = "";
+    if (this.contenido && this.contenido.analitica) {
+      (this.contenido.analitica as any).metaConversionsPuesto = false;
+    }
+    this.marcarSucio();
+  }
+
+  quitarSecretoGa4(): void {
+    this.quitarGa4 = true;
+    this.secretoGa4Nuevo = "";
+    if (this.contenido && this.contenido.analitica) {
+      (this.contenido.analitica as any).ga4SecretoPuesto = false;
+    }
+    this.marcarSucio();
+  }
+
+  /**
+   * Dispara un evento de prueba contra las plataformas configuradas.
+   *
+   * Antes de esto, comprobar que un píxel quedaba bien puesto exigía pautar y
+   * esperar. Ahora el comerciante ve en su propio panel, en segundos, si la
+   * conexión funciona. Se guarda primero porque la prueba corre contra lo que
+   * está guardado en el servidor, no contra lo que hay en pantalla.
+   */
+  probarMedicion(): void {
+    if (this.probandoMedicion) return;
+    this.probandoMedicion = true;
+    this.resultadoPrueba = "";
+    this.service.probarMedicion(this.id, this.codigoPrueba.trim()).subscribe({
+      next: (res) => {
+        this.probandoMedicion = false;
+        const partes = (res && res.data && res.data.partes) || [];
+        if (res && res.success) {
+          this.resultadoPrueba =
+            "La conexión funciona. Revisa el evento de prueba en el panel de tu plataforma.";
+          this.toastr.success("Evento de prueba enviado");
+          return;
+        }
+        const fallidas = partes
+          .filter((p) => !p.ok)
+          .map((p) => `${p.proveedor}: ${p.detalle || "sin detalle"}`)
+          .join(" · ");
+        this.resultadoPrueba =
+          fallidas || (res && res.message) || "No se pudo enviar el evento de prueba.";
+        this.toastr.warning("La prueba no pasó. Mira el detalle.");
+      },
+      error: (e) => {
+        this.probandoMedicion = false;
+        this.resultadoPrueba =
+          (e && e.error && e.error.message) || "No se pudo enviar el evento de prueba.";
+      },
+    });
+  }
+
   /**
    * Refleja lo que el servidor guardó de verdad.
    *
@@ -2788,6 +3367,14 @@ export class SitioEditorComponent implements OnInit, OnDestroy {
     data: { nombre: string; slug: string; draft: ContenidoSitio } | undefined
   ): void {
     if (!data || !data.draft) return;
+
+    // Las credenciales de medición ya quedaron guardadas: se limpian los
+    // campos de escritura para que un segundo guardado no las vuelva a mandar
+    // ni deje un secreto escrito en pantalla.
+    this.tokenMetaNuevo = "";
+    this.secretoGa4Nuevo = "";
+    this.quitarMeta = false;
+    this.quitarGa4 = false;
 
     const perdidos = this.camposPerdidos(this.contenido, data.draft);
 

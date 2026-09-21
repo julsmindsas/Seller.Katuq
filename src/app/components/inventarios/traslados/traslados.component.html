@@ -58,6 +58,16 @@
                 </div>
             </div>
 
+            <!-- Ticket 1036: el selector de productos solo existía cuando ya
+                 estaban elegidas AMBAS bodegas, y al faltar la de destino
+                 desaparecía sin explicación: parecía que no dejaba seleccionar
+                 nada. Ahora se dice qué falta. -->
+            <div class="mb-4 traslado-aviso"
+                 *ngIf="bodegaForm.get('bodegaOrigenId')?.value && !bodegaForm.get('bodegaDestinoId')?.value && !errorMensaje">
+                <i class="pi pi-info-circle me-1"></i>
+                Elija la bodega de destino para poder escoger los productos que va a trasladar.
+            </div>
+
             <!-- Agregar productos (solo si hay bodegas seleccionadas) -->
             <div class="mb-4" *ngIf="bodegaForm.get('bodegaOrigenId')?.value && bodegaForm.get('bodegaDestinoId')?.value && !errorMensaje">
 
@@ -76,8 +86,21 @@
                             {{ item.producto?.identificacion?.referencia }} — {{ item.producto?.crearProducto?.titulo }} ({{ item.cantidad }} disp.)
                         </option>
                     </select>
-                    <div *ngIf="productosFiltrados.length === 0 && busquedaProducto" class="text-muted small mt-1">
-                        Sin resultados para "{{ busquedaProducto }}"
+                    <!-- Ticket 1036: antes la lista se esfumaba en silencio
+                         cuando no había nada que mostrar. Ahora se dice por qué. -->
+                    <div *ngIf="productosFiltrados.length === 0" class="text-muted small mt-1">
+                        <ng-container *ngIf="busquedaProducto">
+                            Sin resultados para "{{ busquedaProducto }}".
+                        </ng-container>
+                        <ng-container *ngIf="!busquedaProducto && productosOrigen.length === 0 && !loadingProductos">
+                            Esta bodega no tiene productos con existencias para trasladar.
+                        </ng-container>
+                        <ng-container *ngIf="!busquedaProducto && productosOrigen.length > 0">
+                            Ya agregó todos los productos disponibles de esta bodega.
+                        </ng-container>
+                        <ng-container *ngIf="loadingProductos">
+                            Cargando los productos de la bodega…
+                        </ng-container>
                     </div>
                 </div>
 
