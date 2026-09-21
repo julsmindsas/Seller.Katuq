@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, CuponSitio, PaginaSitio, PropuestaDiseno, Sitio, SitiosService, TiendaSitio, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, CuponSitio, PaginaSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TiendaSitio, VentaConfig } from "../sitios.service";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
@@ -560,6 +560,10 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
  * La vista previa usa `app-sitio-render`, el mismo componente de la página
  * pública: lo que se ve editando es lo que se publica.
  */
+type DestinoImagen =
+  | "hero" | "galeria" | "seo" | "favicon" | "imagenBloque" | "fondoSeccion" | "promo"
+  | "marcas" | "heroCarrusel" | "heroMosaico" | "instagram" | "banner" | "popup";
+
 @Component({
   selector: "app-sitio-editor",
   templateUrl: "./sitio-editor.component.html",
@@ -578,7 +582,67 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   /** Índice del bloque en edición. -1 = ninguno. */
   seleccionado = -1;
   dispositivo: "escritorio" | "movil" = "escritorio";
-  panel: "bloques" | "diseno" | "tienda" | "pauta" | "ajustes" = "bloques";
+  panel: "bloques" | "diseno" | "tienda" | "resenas" | "pauta" | "ajustes" = "bloques";
+
+  // ── Opiniones de compradores ────────────────────────────────────────────
+  resenas: ResenaSitio[] = [];
+  cargandoResenas = false;
+
+  /** Cuántas esperan decisión: es el número de la pestaña. */
+  get resenasPendientes(): number {
+    return this.resenas.filter((r) => r.estado === "pendiente").length;
+  }
+
+  estrellasDe(n: number): string {
+    const llenas = Math.min(5, Math.max(0, Math.round(Number(n) || 0)));
+    return "★".repeat(llenas) + "☆".repeat(5 - llenas);
+  }
+
+  nombreEstado(estado: string): string {
+    if (estado === "publicada") return "Publicada";
+    if (estado === "oculta") return "Oculta";
+    return "Sin revisar";
+  }
+
+  cargarResenas(): void {
+    if (this.cargandoResenas) return;
+    this.cargandoResenas = true;
+    this.service.resenas(this.id).subscribe({
+      next: (res) => {
+        this.cargandoResenas = false;
+        this.resenas = (res && res.data && res.data.resenas) || [];
+      },
+      error: () => {
+        this.cargandoResenas = false;
+        this.toastr.error("No pudimos traer las opiniones.");
+      },
+    });
+  }
+
+  /**
+   * Publica, oculta o guarda la respuesta. Lo que escribió el comprador no
+   * viaja: el servidor ignora texto y estrellas aunque se manden, y aquí
+   * tampoco se ofrecen.
+   */
+  moderar(r: ResenaSitio, estado?: "publicada" | "oculta"): void {
+    const cambios: { estado?: "publicada" | "oculta"; respuesta?: string } = {
+      respuesta: r.respuesta || "",
+    };
+    if (estado) cambios.estado = estado;
+    this.service.moderarResena(this.id, r.id, cambios).subscribe({
+      next: () => {
+        if (estado) r.estado = estado;
+        this.toastr.success(
+          estado === "publicada"
+            ? "Publicada: ya la ven tus clientes."
+            : estado === "oculta"
+            ? "Oculta: deja de verse en la tienda."
+            : "Respuesta guardada."
+        );
+      },
+      error: () => this.toastr.error("No pudimos guardar el cambio."),
+    });
+  }
 
   /** Bodegas del comercio, para el selector de despacho de la tienda. */
   bodegas: { codigo: string; nombre: string }[] = [];
@@ -764,8 +828,18 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private completar(draft: any): ContenidoSitio {
     const d = draft || {};
     const envio = (d.tienda && d.tienda.envio) || {};
+    // Se PARTE de lo guardado y solo se rellenan los huecos. Antes se
+    // reconstruía campo por campo, y cualquier cosa que el editor no nombrara
+    // aquí desaparecía al abrir el sitio: el siguiente guardado mandaba el
+    // borrador sin ella y la pisaba en Firestore. Así se perdían en silencio
+    // las páginas propias, los cupones, los puntos de retiro, la venta cruzada
+    // y las categorías ocultas. Agregar un campo nuevo al modelo NO puede
+    // exigir acordarse de tocar esta función.
     return {
+      ...(d as object),
       bloques: Array.isArray(d.bloques) ? d.bloques : [],
+      // Páginas propias: si no son un arreglo, arreglo vacío; nunca se quitan.
+      paginas: Array.isArray(d.paginas) ? d.paginas : [],
       // El tema se completa campo por campo, no con `d.tema || {…}`: un sitio
       // creado antes de que existieran las fuentes por separado o el estilo
       // llega con el objeto viejo, y el panel enlazaría contra `undefined`.
@@ -785,6 +859,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       // Un sitio creado antes de que existiera la tienda llega sin esto. Nace
       // apagada: nadie empieza a vender porque se desplegó una versión nueva.
       tienda: {
+        ...((d.tienda as object) || {}),
         habilitada: (d.tienda && d.tienda.habilitada) === true,
         bodegaId: (d.tienda && d.tienda.bodegaId) || "",
         envio: {
@@ -800,8 +875,21 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           : [],
         minimoCompra: Number(d.tienda && d.tienda.minimoCompra) || 0,
         mensajeConfirmacion: (d.tienda && d.tienda.mensajeConfirmacion) || "",
+        // Cupones y puntos de retiro: lo guardado manda; vacío si no hay.
+        cupones: Array.isArray(d.tienda && d.tienda.cupones) ? d.tienda.cupones : [],
+        retiroEnTienda: {
+          activo: !!(d.tienda && d.tienda.retiroEnTienda && d.tienda.retiroEnTienda.activo),
+          texto: (d.tienda && d.tienda.retiroEnTienda && d.tienda.retiroEnTienda.texto) || "",
+          puntos:
+            (d.tienda &&
+              d.tienda.retiroEnTienda &&
+              Array.isArray(d.tienda.retiroEnTienda.puntos) &&
+              d.tienda.retiroEnTienda.puntos) ||
+            [],
+        },
       },
       analitica: {
+        ...((d.analitica as object) || {}),
         ga4: (d.analitica && d.analitica.ga4) || "",
         googleAds: (d.analitica && d.analitica.googleAds) || "",
         googleAdsConversion: (d.analitica && d.analitica.googleAdsConversion) || "",
@@ -1633,6 +1721,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       case "bajar":
         this.mover(i, 1);
         break;
+      case "mover":
+        this.moverAPagina(i);
+        break;
       case "duplicar":
         this.duplicar(i);
         break;
@@ -1704,6 +1795,73 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * al final. Antes siempre iba al final y había que subirla a mano.
    */
   insercionEn: number | null = null;
+
+  /**
+   * Lleva una sección del inicio a otra página, o al revés.
+   *
+   * Con las páginas propias no había forma de pasar un bloque de "Inicio" a
+   * "Nosotros" sin rehacerlo. Arrastrarlo no sirve: solo se ve una página a
+   * la vez. Se elige el destino en un diálogo y el editor salta a esa página
+   * con la sección elegida, para que se vea dónde quedó.
+   *
+   * Encabezado y pie no se mueven: las páginas propias los heredan del inicio,
+   * y moverlos dejaría al inicio sin menú y a la otra página con dos.
+   */
+  async moverAPagina(i: number): Promise<void> {
+    const bloque = this.bloques[i];
+    if (!bloque || !this.contenido) return;
+    if (bloque.tipo === "encabezado" || bloque.tipo === "footer") {
+      this.toastr.info("El encabezado y el pie viven en el inicio y todas las páginas los heredan.");
+      return;
+    }
+    const destinos: { valor: string; texto: string }[] = [];
+    if (this.paginaActiva !== -1) destinos.push({ valor: "-1", texto: "Inicio" });
+    this.paginas.forEach((p, k) => {
+      if (k !== this.paginaActiva) destinos.push({ valor: String(k), texto: p.titulo });
+    });
+    if (!destinos.length) {
+      this.toastr.info("Crea otra página primero.");
+      return;
+    }
+    const opciones: Record<string, string> = {};
+    destinos.forEach((d) => (opciones[d.valor] = d.texto));
+    const r = await Swal.fire({
+      title: `Mover "${this.nombreDeTipo(bloque.tipo)}"`,
+      input: "select",
+      inputOptions: opciones,
+      inputPlaceholder: "¿A cuál página?",
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: "Mover",
+      denyButtonText: "Copiar en vez de mover",
+      cancelButtonText: "Cancelar",
+      inputValidator: (v) => (v === "" || v === undefined ? "Elige una página" : null),
+    });
+    if (!r.isConfirmed && !r.isDenied) return;
+    const destino = Number(r.value);
+    if (!Number.isFinite(destino)) return;
+
+    const copia = JSON.parse(JSON.stringify(bloque));
+    if (r.isDenied) copia.id = `b_${Date.now()}_${bloque.tipo}`;
+    else {
+      const sinEl = [...this.bloques];
+      sinEl.splice(i, 1);
+      this.fijarBloques(sinEl);
+    }
+    const listaDestino =
+      destino === -1 ? this.contenido.bloques : (this.paginas[destino].bloques = this.paginas[destino].bloques || []);
+    // Una página propia hereda encabezado y pie del inicio: la sección entra
+    // al final; en el inicio, antes del pie para que no quede debajo de él.
+    const pie = destino === -1 ? listaDestino.findIndex((b) => b.tipo === "footer") : -1;
+    const en = pie >= 0 ? pie : listaDestino.length;
+    listaDestino.splice(en, 0, copia);
+    this.marcarSucio();
+    this.irAPagina(destino);
+    this.seleccionado = en;
+    this.toastr.success(
+      (r.isDenied ? "Copiada a " : "Movida a ") + (destino === -1 ? "Inicio" : this.paginas[destino].titulo)
+    );
+  }
 
   abrirAgregarEn(indice: number): void {
     this.insercionEn = Math.max(0, Math.min(indice, this.bloques.length));
@@ -1826,6 +1984,17 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   quitarBanner(bloque: any, i: number): void {
     bloque.datos.banners.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  /**
+   * Reordenar arrastrando cualquier lista del panel: enlaces del encabezado y
+   * del pie, preguntas, reseñas, columnas, botones, banners, puntos de retiro
+   * y cupones. Antes eran flechitas (solo en banners) o nada.
+   */
+  soltarLista(evento: CdkDragDrop<any>, lista: any[]): void {
+    if (!Array.isArray(lista) || evento.previousIndex === evento.currentIndex) return;
+    moveItemInArray(lista, evento.previousIndex, evento.currentIndex);
     this.marcarSucio();
   }
 
@@ -2919,6 +3088,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   subirImagen(
     evento: Event,
+    destino: DestinoImagen
+  ): void {
+    return this.subirImagenDestino(evento, destino);
+  }
+  private subirImagenDestino(
+    evento: Event,
     destino:
       | "hero"
       | "galeria"
@@ -2937,12 +3112,55 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
     if (!archivo) return;
+    this.subirArchivo(archivo, destino, () => (input.value = ""));
+  }
 
+  /**
+   * Una foto soltada sobre una sección de la vista previa.
+   *
+   * El destino sale del TIPO de sección: en la portada es el fondo, en una
+   * galería se agrega, en una vitrina de marcas es un logo. En cualquier otra
+   * se vuelve fondo de la sección, con velo para que el texto siga legible.
+   * Antes había que ir al panel, buscar el campo y subir; ahora se suelta
+   * donde se quiere ver.
+   */
+  /** El asa de tamaño de la vista previa movió una sección de escalón. */
+  cambiarTamanoDesdePrevia(ev: { bloqueId: string; campo: string; valor: string }): void {
+    const b = this.bloques.find((x) => x.id === ev.bloqueId);
+    if (!b) return;
+    (b.datos as any)[ev.campo] = ev.valor;
+    this.marcarSucio();
+  }
+
+  soltarArchivoEnBloque(ev: { bloqueId: string; archivo: File }): void {
+    const i = this.bloques.findIndex((b) => b.id === ev.bloqueId);
+    if (i < 0) return;
+    if (!/^image\//.test(ev.archivo.type)) {
+      this.toastr.warning("Solo se pueden soltar fotos.");
+      return;
+    }
+    this.seleccionar(i);
+    const tipo = this.bloques[i].tipo;
+    const destino =
+      ({
+        hero: "hero",
+        galeria: "galeria",
+        imagen: "imagenBloque",
+        promo: "promo",
+        marcas: "marcas",
+        instagram: "instagram",
+        banner: "banner",
+        popup: "popup",
+      } as Record<string, DestinoImagen>)[tipo] || "fondoSeccion";
+    this.subirArchivo(ev.archivo, destino);
+  }
+
+  private subirArchivo(archivo: File, destino: DestinoImagen, alTerminar?: () => void): void {
     this.subiendo = true;
     this.service.subirImagen(archivo).subscribe({
       next: (res) => {
         this.subiendo = false;
-        input.value = "";
+        if (alTerminar) alTerminar();
         if (!res || !res.success || !res.url) {
           this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
           return;
@@ -2989,7 +3207,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       },
       error: (e) => {
         this.subiendo = false;
-        input.value = "";
+        if (alTerminar) alTerminar();
         this.toastr.error((e && e.error && e.error.error) || "No pudimos subir la imagen.");
       },
     });

@@ -131,6 +131,25 @@ export interface AnaliticaSitio {
   metaTestEventCode?: string;
 }
 
+/**
+ * Una reseña de un comprador verificado.
+ *
+ * El comerciante la publica, la oculta o la responde. No puede cambiar ni el
+ * texto ni las estrellas: eso la volvería un testimonio escrito por él.
+ */
+export interface ResenaSitio {
+  id: string;
+  productoId: string;
+  nroPedido: string;
+  estrellas: number;
+  texto: string;
+  autor: string;
+  estado: "pendiente" | "publicada" | "oculta";
+  compraVerificada: boolean;
+  respuesta: string;
+  createdAt: string;
+}
+
 /** El parte de una plataforma tras el evento de prueba. */
 export interface ParteMedicion {
   proveedor: string;
@@ -331,6 +350,23 @@ export class SitiosService extends BaseService {
       `/v1/sites/${id}/paginas/legales`,
       { paginas: paginas || [] }
     );
+  }
+
+  /** Las reseñas de la tienda, para moderarlas. */
+  resenas(id: string): Observable<Respuesta<{ resenas: ResenaSitio[] }>> {
+    return this.get<Respuesta<{ resenas: ResenaSitio[] }>>(`/v1/sites/${id}/resenas`);
+  }
+
+  /**
+   * Publica, oculta o responde una reseña. El texto y las estrellas NO se
+   * pueden cambiar: el servidor los ignora aunque se manden.
+   */
+  moderarResena(
+    id: string,
+    resenaId: string,
+    cambios: { estado?: "pendiente" | "publicada" | "oculta"; respuesta?: string }
+  ): Observable<Respuesta<null>> {
+    return this.put<Respuesta<null>>(`/v1/sites/${id}/resenas`, { resenaId, ...cambios });
   }
 
   /** Categorías reales (nombre, total, foto) para la previa y el panel de tienda. */

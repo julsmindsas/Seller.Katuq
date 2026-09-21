@@ -7156,3 +7156,51 @@ Además **duplican la secuencia nueva**: renovación, recordatorio, gracia y sus
 ### Estado
 
 7 baterías de pruebas de facturación verdes. **Nada de esto está desplegado**, y hay algo peor: los commits del **jueves 17** que traen toda la secuencia de avisos (`3358a87` en el back, `9312a37f` en el front) **nunca se pushearon** — se commitearon a las 17:25 y quedaron en el disco, mientras los del 18 y 19 sí subieron. El servidor de producción todavía no sabe que estos correos existen.
+
+---
+
+## D-305 (2026-09-21) — Mover una sección a otra página se hace eligiendo, no arrastrando
+
+**Contexto.** Con las páginas propias (D-295) no había forma de pasar un bloque de "Inicio" a "Nosotros" sin rehacerlo. Arrastrarlo no sirve: el editor solo muestra una página a la vez.
+
+**Decisión.** "Mover a otra página" en la barra flotante y en la lista de secciones, solo cuando el sitio tiene más de una página. Un diálogo elige el destino y ofrece **copiar en vez de mover**. El editor salta a la página destino con la sección elegida, para que se vea dónde quedó. En el inicio entra antes del pie; en una página propia, al final. **Encabezado y pie no se mueven**: las páginas propias los heredan del inicio, y moverlos dejaría al inicio sin menú y a la otra página con dos.
+
+---
+
+## D-306 (2026-09-21) — Una foto se suelta donde se quiere ver
+
+**Contexto.** Subir una foto era ir al panel, encontrar el campo correcto entre 220 controles y elegir el archivo. En Wix se arrastra desde el escritorio y se suelta sobre la sección.
+
+**Decisión.** Soltar una imagen sobre una sección de la vista previa la sube y la pone donde corresponde según el tipo: fondo en la portada, una más en galería, banner e Instagram, logo en marcas, la foto en imagen, promo y popup. En cualquier otra sección se vuelve **fondo de la sección con velo**, para que el texto siga legible. Mientras la foto está en el aire, la sección se resalta y dice "Suelta la foto aquí". Solo se aceptan imágenes, y el arrastre propio de las secciones no se confunde con un archivo. Reusa la misma subida (con variantes) del panel.
+
+---
+
+## D-307 (2026-09-21) — Todas las listas del panel se reordenan arrastrando
+
+**Contexto.** Los enlaces del encabezado y del pie, las preguntas frecuentes, las reseñas, las columnas, los botones, los puntos de retiro y los cupones no se podían reordenar; los banners, solo con flechitas.
+
+**Decisión.** Las nueve listas del panel reciben la misma mecánica que las secciones: asa de puntos, arrastre y hueco punteado donde cae. Una sola función `soltarLista` sirve para todas. Las flechitas de los banners se van. Con esto se cierra el hilo de arrastre (D-299, D-305 a D-307); queda fuera redimensionar con asa, que es el más caro porque cada bloque decide distinto qué significa "más grande".
+
+---
+
+## D-308 (2026-09-21) — Estirar una sección con el asa, por escalones
+
+**Contexto.** El alto de la portada, del banner, del separador y el tamaño de una imagen se cambiaban con un desplegable en el panel. Era el último gesto que faltaba del hilo de arrastre (D-299, D-305 a D-307).
+
+**Decisión.** Un asa en el borde inferior de esas cuatro secciones, visible al pasar el mouse, que al arrastrar cambia de escalón cada 60 px. **Por escalones y no por píxeles libres**, a propósito: el sitio publicado no guarda alturas en píxeles — las decide con clases que además se adaptan al celular. Un asa de píxeles daría una libertad que el render no puede honrar, y el comerciante vería una cosa en el editor y otra publicada. Los desplegables del panel siguen ahí: quien prefiera elegir por nombre, puede.
+
+Con esto se cierra el hilo de arrastre completo (D-299, D-305 a D-308).
+
+---
+
+## D-309 (2026-09-21) — Reseñas de compradores verificados, con colección propia
+
+**Contexto.** El bloque "reseñas" era texto que escribía el propio comerciante. No es prueba social: el comprador nuevo distingue un testimonio a mano de la opinión de alguien que compró, y esa diferencia decide la primera venta de una tienda que empieza.
+
+**Decisión.** **Solo reseña quien compró**: no hay formulario abierto, el candado es un enlace firmado por pedido y por producto que llega por correo cuando el pedido pasa a entregado, y sirve una sola vez. El comerciante **modera y responde, pero no escribe**: puede publicar, ocultar y contestar; cambiar el texto o las estrellas las volvería otra vez un testimonio suyo, y la petición ignora esos campos aunque vengan. La ficha muestra las publicadas con el sello de compra verificada, y la nota entra al dato estructurado para las estrellas de Google — solo con reseñas reales, porque inventarla hace que Google castigue el sitio entero.
+
+**Colección nueva `reviews`, aprobada explícitamente por Daniel** (la regla del proyecto lo exige). Las consultas usan solo filtros de igualdad y ordenan en memoria, para no pedir un índice compuesto nuevo. `orders.js` e `inventoryService.js` quedaron intactos: el enganche cuelga de `orderNotificationService.notifyStatusChange`.
+
+**Pendiente**: el panel del comerciante para moderar desde el editor, y la prueba con un pedido entregado real.
+
+Propuesta: `openspec/changes/tienda-resenas-compradores/`.

@@ -291,7 +291,7 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
    */
   @Output() accionBloque = new EventEmitter<{
     bloqueId: string;
-    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar";
+    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar" | "mover";
   }>();
 
   /**
@@ -301,6 +301,85 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
   @Output() bloqueMovido = new EventEmitter<{ desde: number; hasta: number }>();
   /** El "+" entre secciones: en qué posición quiere el comerciante la nueva. */
   @Output() agregarEn = new EventEmitter<number>();
+  /** Si el sitio tiene más páginas, la barra ofrece "Mover a otra página". */
+  @Input() hayOtrasPaginas = false;
+  /** Una foto soltada desde el escritorio sobre una sección. */
+  @Output() archivoSoltado = new EventEmitter<{ bloqueId: string; archivo: File }>();
+  /** El asa de tamaño: qué campo del bloque cambia y a qué escalón. */
+  @Output() tamanoCambiado = new EventEmitter<{ bloqueId: string; campo: string; valor: string }>();
+
+  /**
+   * Los tamaños que admite cada tipo de bloque, en orden de menor a mayor.
+   *
+   * Se estira por ESCALONES y no por píxeles libres: el sitio publicado no
+   * guarda alturas en píxeles, las decide con clases que además se adaptan al
+   * celular. Un asa de píxeles daría una libertad que el render no puede
+   * honrar, y el comerciante vería una cosa en el editor y otra publicada.
+   */
+  private readonly ESCALONES: Record<string, { campo: string; valores: string[] }> = {
+    hero: { campo: "altura", valores: ["", "completa"] },
+    banner: { campo: "alto", valores: ["bajo", "medio", "alto"] },
+    separador: { campo: "alto", valores: ["pequeno", "medio", "grande"] },
+    imagen: { campo: "tamano", valores: ["normal", "completo"] },
+  };
+
+  puedeEstirarse(bloque: BloqueSitio): boolean {
+    return this.previsualizacion && !!this.ESCALONES[bloque.tipo];
+  }
+
+  /** Arrastre vertical del asa: cada 60 px sube o baja un escalón. */
+  estirar(ev: PointerEvent, bloque: BloqueSitio): void {
+    const paso = this.ESCALONES[bloque.tipo];
+    if (!paso) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const asa = ev.target as HTMLElement;
+    try {
+      asa.setPointerCapture(ev.pointerId);
+    } catch (e) {
+      /* sin captura sigue funcionando mientras el puntero esté encima */
+    }
+    const y0 = ev.clientY;
+    const actual = String((bloque.datos as any)[paso.campo] ?? paso.valores[0]);
+    const i0 = Math.max(0, paso.valores.indexOf(actual));
+    let ultimo = i0;
+    const mover = (e: PointerEvent) => {
+      const pasos = Math.round((e.clientY - y0) / 60);
+      const i = Math.min(paso.valores.length - 1, Math.max(0, i0 + pasos));
+      if (i === ultimo) return;
+      ultimo = i;
+      this.tamanoCambiado.emit({ bloqueId: bloque.id, campo: paso.campo, valor: paso.valores[i] });
+    };
+    const soltar = () => {
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+    };
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
+  }
+  /** La sección sobre la que hay un archivo en el aire (para resaltarla). */
+  soltandoEn: string | null = null;
+
+  arrastreEntra(ev: DragEvent, bloqueId: string): void {
+    if (!this.previsualizacion || !ev.dataTransfer) return;
+    // Solo archivos: el arrastre de las propias secciones (CDK) no trae files.
+    if (![].slice.call(ev.dataTransfer.types).includes("Files")) return;
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = "copy";
+    this.soltandoEn = bloqueId;
+  }
+  arrastreSale(bloqueId: string): void {
+    if (this.soltandoEn === bloqueId) this.soltandoEn = null;
+  }
+  soltarArchivo(ev: DragEvent, bloqueId: string): void {
+    if (!this.previsualizacion) return;
+    const archivo = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+    this.soltandoEn = null;
+    if (!archivo) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    this.archivoSoltado.emit({ bloqueId, archivo });
+  }
 
   nombre = "";
   telefono = "";
@@ -741,7 +820,7 @@ export class SitioRenderComponent implements OnChanges, OnInit, OnDestroy {
 
   accionar(
     bloqueId: string,
-    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar",
+    accion: "subir" | "bajar" | "duplicar" | "visibilidad" | "estilo" | "eliminar" | "mover",
     evento: Event
   ): void {
     // Sin esto el clic también "elige" el bloque y, al quitar, la selección
