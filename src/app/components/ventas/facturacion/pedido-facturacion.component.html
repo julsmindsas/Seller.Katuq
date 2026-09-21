@@ -166,7 +166,10 @@
           [(ngModel)]="correo_electronico_facturacion" />
       </div>
     </div>
-    <!--
+    <!-- Ticket 1041 (OH MY STORE): este bloque estaba comentado desde hace meses,
+         y desde el 17 de septiembre la validacion exige Ciudad. Resultado: no se
+         podian crear datos de facturacion nuevos porque el campo no existia.
+         El formulario de EDITAR siempre lo tuvo; ahora los dos son iguales. -->
     <div class="row">
       <div class="col-sm-12">
         <label class="form-label" for="direccion">{{ 'Dirección del Comprador:' | translate}}</label>
@@ -209,7 +212,6 @@
         </button>
       </div>
     </div>
-    -->
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('Cancel')">
