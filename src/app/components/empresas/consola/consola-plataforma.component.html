@@ -16,9 +16,9 @@
                 (click)="cambiarVista('empresas')">Empresas</button>
         <button type="button" role="tab" [class.activa]="vista === 'cobros'"
                 (click)="cambiarVista('cobros')">Cobros del mes</button>
-        <button type="button" role="tab" [class.activa]="vista === 'pedidos'"
-                (click)="cambiarVista('pedidos')"
-                title="Qué le está pidiendo cada cliente a Katuq, y cuántos piden lo mismo">Pedidos</button>
+        <button type="button" role="tab" [class.activa]="vista === 'sugerencias'"
+                (click)="cambiarVista('sugerencias')"
+                title="Lo que los clientes le piden a Katuq, y cuántos piden lo mismo">Sugerencias</button>
         <button type="button" role="tab" [class.activa]="vista === 'pauta'"
                 (click)="cambiarVista('pauta')"
                 title="Registros y vendedores activos por campaña de pauta">Pauta</button>
@@ -951,6 +951,161 @@
             </ng-template>
           </div>
 
+          <!-- SOPORTE: lo que ESTE cliente nos ha reportado.
+               Los errores y las consultas van separados a propósito. Doce
+               "algo no funciona" y doce "necesito ayuda" no son el mismo
+               cliente: al primero le está fallando el producto, el segundo no
+               lo sabe usar. Uno se arregla con código y el otro acompañándolo,
+               y sumados en una sola cifra se ven idénticos. -->
+          <div class="ficha-soporte">
+            <!-- El título a la izquierda y el acceso a la plataforma a la
+                 derecha. El enlace abre la bandeja COMPLETA y lo dice: la
+                 plataforma de soporte no guarda el filtro en la dirección, así
+                 que no se puede llegar filtrado por esta empresa. -->
+            <div class="sop-head">
+              <span class="ficha-bloque-label">
+                Soporte
+                <small class="ficha-bloque-nota">lo que este cliente ha reportado</small>
+              </span>
+              <a class="sop-bandeja" [href]="urlBandejaSoporte" target="_blank" rel="noopener"
+                 title="Abre la bandeja completa de soporte en otra pestaña. No llega filtrada por esta empresa: hay que filtrarla allá.">
+                Abrir la bandeja <i class="fa fa-external-link"></i>
+              </a>
+            </div>
+
+            <p class="sop-vacio" *ngIf="cargandoSoporte">
+              <i class="fa fa-spinner fa-spin"></i> Cargando tickets…
+            </p>
+
+            <!-- Sin el dato no se dice "0 tickets": un cero afirma que el
+                 cliente nunca reportó nada, y eso no se puede sostener. -->
+            <p class="sop-vacio sop-vacio--error" *ngIf="!cargandoSoporte && errorSoporte">
+              <i class="fa fa-exclamation-triangle"></i> {{ errorSoporte }}
+            </p>
+
+            <ng-container *ngIf="!cargandoSoporte && !errorSoporte">
+              <ng-container *ngIf="soporteDe(empresa) as s; else sinTickets">
+
+                <!-- Las tarjetas SON el filtro: pulsar "Errores" deja abajo sus
+                     errores y nada más, y volverla a pulsar los muestra todos.
+                     Son <button> y no <div> porque se pulsan: así responden al
+                     teclado y el lector de pantalla las anuncia como lo que son.
+                     "Último ticket" no filtra —abre ese ticket—, por eso es un
+                     enlace y se ve distinta. -->
+                <div class="sop-cifras">
+                  <button type="button"
+                          class="sop-cifra sop-cifra--error"
+                          [class.sop-cifra--activa]="filtroTicketsDe(empresa) === 'errores'"
+                          [disabled]="!s.errores"
+                          [attr.aria-pressed]="filtroTicketsDe(empresa) === 'errores'"
+                          [title]="s.errores ? 'Ver solo los errores' : 'No ha reportado ningún error'"
+                          (click)="alternarFiltroTickets(empresa, 'errores')">
+                    <span class="sop-num">{{ num(s.errores) }}</span>
+                    <span class="sop-lbl">Errores</span>
+                    <small class="sop-hint">algo no le funciona</small>
+                  </button>
+
+                  <button type="button"
+                          class="sop-cifra sop-cifra--consulta"
+                          [class.sop-cifra--activa]="filtroTicketsDe(empresa) === 'consultas'"
+                          [disabled]="!s.consultas"
+                          [attr.aria-pressed]="filtroTicketsDe(empresa) === 'consultas'"
+                          [title]="s.consultas ? 'Ver solo las consultas' : 'No ha hecho ninguna consulta'"
+                          (click)="alternarFiltroTickets(empresa, 'consultas')">
+                    <span class="sop-num">{{ num(s.consultas) }}</span>
+                    <span class="sop-lbl">Consultas</span>
+                    <small class="sop-hint">dudas de cómo usarlo</small>
+                  </button>
+
+                  <button type="button"
+                          class="sop-cifra"
+                          [class.sop-cifra--abierto]="s.abiertos > 0"
+                          [class.sop-cifra--activa]="filtroTicketsDe(empresa) === 'abiertos'"
+                          [disabled]="!s.abiertos"
+                          [attr.aria-pressed]="filtroTicketsDe(empresa) === 'abiertos'"
+                          [title]="s.abiertos ? 'Ver solo los que siguen abiertos' : 'No le queda ninguno abierto'"
+                          (click)="alternarFiltroTickets(empresa, 'abiertos')">
+                    <span class="sop-num">{{ num(s.abiertos) }}</span>
+                    <span class="sop-lbl">Abiertos</span>
+                    <small class="sop-hint">{{ num(s.resueltos) }} ya resueltos</small>
+                  </button>
+
+                  <!-- Esta no filtra: lleva al ticket. Filtrar por "el último"
+                       daría una lista de uno, que no es un filtro. -->
+                  <a class="sop-cifra sop-cifra--enlace"
+                     *ngIf="ultimoTicket(empresa) as ult"
+                     [href]="urlTicket(ult.cd)" target="_blank" rel="noopener"
+                     [title]="'Abrir el último ticket: ' + ult.asunto">
+                    <span class="sop-num sop-num--sm">{{ fechaCorta(s.ultimo) }}</span>
+                    <span class="sop-lbl">Último ticket <i class="fa fa-external-link"></i></span>
+                    <small class="sop-hint" *ngIf="s.ideas">
+                      + {{ num(s.ideas) }} {{ s.ideas === 1 ? 'idea' : 'ideas' }}
+                    </small>
+                  </a>
+                </div>
+
+                <!-- Los viejos no guardaban de qué tipo eran. Se dice, no se
+                     reparten a ojo entre errores y consultas. Y también filtra:
+                     es la única forma de ver CUÁLES son los que no se sabe. -->
+                <p class="sop-sinclasificar" *ngIf="s.sinClasificar">
+                  <i class="fa fa-info-circle"></i>
+                  <span>
+                    {{ num(s.sinClasificar) }} de sus {{ num(s.total) }} tickets son anteriores
+                    a que se preguntara el tipo: no se sabe si eran errores o consultas.
+                  </span>
+                  <button type="button" class="sop-verlos"
+                          [attr.aria-pressed]="filtroTicketsDe(empresa) === 'sinClasificar'"
+                          (click)="alternarFiltroTickets(empresa, 'sinClasificar')">
+                    {{ filtroTicketsDe(empresa) === 'sinClasificar' ? 'ver todos' : 'ver cuáles' }}
+                  </button>
+                </p>
+
+                <!-- Qué se está viendo, en palabras. Con el filtro puesto, una
+                     lista corta sin explicación se lee como "solo tiene estos". -->
+                <p class="sop-filtro-activo" *ngIf="filtroTicketsDe(empresa) !== 'todos'">
+                  <i class="fa fa-filter"></i>
+                  Viendo {{ ticketsFiltrados(empresa).length }} de {{ num(s.total) }} tickets.
+                  <button type="button" class="sop-verlos" (click)="alternarFiltroTickets(empresa, filtroTicketsDe(empresa))">
+                    quitar el filtro
+                  </button>
+                </p>
+
+                <div class="sop-lista">
+                  <a class="sop-ticket"
+                     *ngFor="let t of ticketsVisibles(empresa)"
+                     [href]="urlTicket(t.cd)" target="_blank" rel="noopener"
+                     [title]="tituloTicket(t)">
+                    <span class="sop-punto" [ngClass]="claseEstadoTicket(t.status)"></span>
+                    <span class="sop-asunto">{{ t.asunto }}</span>
+                    <span class="sop-tipo" [class.sop-tipo--bug]="t.tipo === 'bug'">
+                      {{ tipoTicket(t.tipo) }}
+                    </span>
+                    <span class="sop-estado">{{ estadoTicket(t.status) }}</span>
+                    <span class="sop-fecha">{{ fechaCorta(t.fecha) }}</span>
+                  </a>
+                </div>
+
+                <p class="sop-pie" *ngIf="ticketsOcultos(empresa) as ocultos">
+                  <button type="button" class="sop-verlos" (click)="desplegarTickets(empresa)">
+                    Ver los {{ ocultos }} restantes
+                  </button>
+                </p>
+              </ng-container>
+
+              <ng-template #sinTickets>
+                <p class="sop-vacio">Nunca ha abierto un ticket.</p>
+                <!-- Solo acá: si hay tickets que no calzaron con ninguna ficha,
+                     este es el sitio donde alguien se preguntaría por qué esta
+                     empresa no tiene ninguno. -->
+                <p class="sop-huerfanos" *ngIf="ticketsHuerfanos">
+                  <i class="fa fa-question-circle"></i>
+                  Hay {{ num(ticketsHuerfanos) }} tickets cuya empresa no coincide con
+                  ninguna ficha ({{ huerfanosTexto }}): si alguno era suyo, está ahí.
+                </p>
+              </ng-template>
+            </ng-container>
+          </div>
+
           <!-- Una empresa sin acceso tiene que decir POR QUÉ, o se confunde con
                una caída del sistema. -->
           <!-- Estado del ciclo de vida. Antes este aviso solo aparecía si la
@@ -1342,16 +1497,16 @@
     </ng-container>
   </ng-container>
 
-  <!-- ══ Pedidos de funcionalidad ══════════════════════════════════════════
+  <!-- ══ Sugerencias de los clientes ═══════════════════════════════════════
        Lo que le piden los clientes a Katuq. La tabla de arriba es la que
        decide el roadmap: cuenta CLIENTES DISTINTOS por tema, no anotaciones,
        porque tres notas del que más llama no son tres clientes. -->
   <app-pauta-campanas *ngIf="vista === 'pauta'"></app-pauta-campanas>
 
-  <ng-container *ngIf="vista === 'pedidos'">
+  <ng-container *ngIf="vista === 'sugerencias'">
 
     <div class="cargando" *ngIf="cargandoPedidos">
-      <i class="fa fa-spinner fa-spin"></i> Cargando pedidos…
+      <i class="fa fa-spinner fa-spin"></i> Cargando sugerencias…
     </div>
 
     <div class="aviso-error" *ngIf="errorPedidos">
@@ -1378,16 +1533,16 @@
           </p>
         </div>
         <button type="button" class="btn-primario" (click)="abrirAnotacion()" *ngIf="!anotando">
-          <i class="fa fa-plus"></i> Anotar pedido
+          <i class="fa fa-plus"></i> Anotar sugerencia
         </button>
       </div>
 
-      <!-- Anotar. Corto a propósito: si anotar cuesta, no se anota, y un pedido
+      <!-- Anotar. Corto a propósito: si anotar cuesta, no se anota, y una sugerencia
            que no se registra no agrupa con nada. -->
       <form class="pedido-form" *ngIf="anotando" (ngSubmit)="guardarPedido()"
             [class.pedido-form--editando]="pedidoEditando">
         <p class="pedido-form-titulo" *ngIf="pedidoEditando">
-          Corrigiendo un pedido
+          Corrigiendo una sugerencia
           <small>No se crea uno nuevo: se actualiza el que tocaste.</small>
         </p>
 
@@ -1404,7 +1559,7 @@
             </select>
           </label>
           <label>
-            <span>¿Qué clase de pedido es?</span>
+            <span>¿Qué clase de sugerencia es?</span>
             <select [(ngModel)]="nuevoPedido.tipo" name="tipo">
               <option *ngFor="let t of tiposPedido" [value]="t.valor">{{ t.etiqueta }}</option>
             </select>
@@ -1421,11 +1576,11 @@
              qué escribir: el problema no era saber qué poner, era no entender
              por qué existía el campo. -->
         <label class="crece campo-tema">
-          <span>Nombre común del pedido</span>
+          <span>Nombre común de la sugerencia</span>
           <small class="campo-ayuda">
-            Es lo que hace que este pedido <strong>se sume con los de otros clientes</strong> que
+            Es lo que hace que esta sugerencia <strong>se sume con las de otros clientes</strong> que
             pidieron lo mismo. Si ya hay un nombre parecido en la lista, elegí ese: así los dos
-            cuentan juntos y ves que son dos clientes pidiéndolo, no dos pedidos sueltos.
+            cuentan juntos y ves que son dos clientes pidiéndolo, no dos sugerencias sueltas.
           </small>
           <input type="text" [(ngModel)]="nuevoPedido.tema" name="tema" list="temas-existentes"
                  placeholder="Déjalo vacío y se usa lo que escribiste arriba" maxlength="140">
@@ -1465,8 +1620,8 @@
         <div>
           <strong>Acá se va a armar tu lista de prioridades.</strong>
           <p>
-            Cada pedido que anotes abajo aparece acá agrupado por su nombre común, ordenado por
-            <strong>cuántos clientes distintos</strong> lo pidieron. Con tres o cuatro pedidos ya
+            Cada sugerencia que anotes abajo aparece acá agrupada por su nombre común, ordenada por
+            <strong>cuántos clientes distintos</strong> la pidieron. Con tres o cuatro sugerencias ya
             empieza a servir: deja de ser una lista de deseos y pasa a ser un orden.
           </p>
         </div>
@@ -1474,9 +1629,9 @@
 
       <section class="tabla tabla--temas" *ngIf="pedidos.temas.length">
         <div class="tabla-head">
-          <span class="col-empresa">Pedido</span>
+          <span class="col-empresa">Tema</span>
           <span class="col-num" title="Clientes distintos que lo pidieron. No cuenta anotaciones repetidas del mismo cliente.">Clientes</span>
-          <span class="col-num">Pedidos</span>
+          <span class="col-num">Sugerencias</span>
           <span class="col-num">Abiertos</span>
           <span class="col-plan">Quiénes</span>
         </div>
@@ -1532,19 +1687,20 @@
 
       <section class="tabla tabla--pedidos">
         <div class="tabla-head">
-          <span class="col-empresa">Pedido</span>
+          <span class="col-empresa">Sugerencia y detalle</span>
           <span class="col-plan">Cliente</span>
           <span class="col-plan">Tipo</span>
-          <span class="col-plan" title="El nombre común que agrupa este pedido con los de otros clientes">Se cuenta con</span>
+          <span class="col-plan" title="El nombre común que agrupa esta sugerencia con las de otros clientes">Se cuenta con</span>
           <span class="col-plan">Estado</span>
           <span class="col-num">Anotado</span>
+          <span class="col-acciones">Acciones</span>
         </div>
 
         <div class="fila" *ngFor="let p of pedidosVisibles"
              [class.fila--resaltada]="busquedaTema && p.tema === busquedaTema">
-          <div class="col-empresa" data-label="Pedido">
-            <strong>{{ p.titulo }}</strong>
-            <small class="pedido-detalle" *ngIf="p.detalle">{{ p.detalle }}</small>
+          <div class="col-empresa" data-label="Sugerencia y detalle">
+            <strong [title]="p.titulo">{{ p.titulo }}</strong>
+            <small class="pedido-detalle" *ngIf="p.detalle" [title]="p.detalle">{{ p.detalle }}</small>
           </div>
           <div class="col-plan" data-label="Cliente">{{ p.cliente }}</div>
           <div class="col-plan" data-label="Tipo">
@@ -1562,12 +1718,31 @@
                [title]="'Por ' + (p.creadoPor || 'alguien')">
             {{ fechaCorta(p.creadoEl) }}
           </div>
+
+          <!-- Corregir y Borrar. Estaban escritos en el componente desde el
+               principio —con su confirmación y todo— pero nunca se puso el
+               botón: la columna existía en la rejilla, vacía. Borrar es para
+               deshacer una anotación equivocada; si el cliente SÍ lo pidió y
+               se decidió no hacerlo, el camino es el estado Descartado, que
+               deja el rastro de que se evaluó. -->
+          <div class="col-acciones" data-label="Acciones">
+            <button type="button" class="btn-icono"
+                    (click)="editarPedido(p)"
+                    title="Corregir el texto, el tema o el tipo de esta sugerencia">
+              <i class="fa fa-pencil"></i>
+            </button>
+            <button type="button" class="btn-icono btn-icono--peligro"
+                    (click)="eliminarPedido(p)"
+                    title="Borrar esta anotación. Si el cliente sí la pidió y no se va a hacer, mejor marcarla como Descartada.">
+              <i class="fa fa-trash-o"></i>
+            </button>
+          </div>
         </div>
 
         <div class="fila-vacia" *ngIf="pedidosVisibles.length === 0">
           <i class="fa fa-lightbulb-o"></i>
-          <p *ngIf="!pedidos.total">Todavía no hay ningún pedido anotado</p>
-          <p *ngIf="pedidos.total">Ningún pedido coincide con este filtro</p>
+          <p *ngIf="!pedidos.total">Todavía no hay ninguna sugerencia anotada</p>
+          <p *ngIf="pedidos.total">Ninguna sugerencia coincide con este filtro</p>
           <p class="vacia-pista" *ngIf="!pedidos.total">
             Cada vez que un cliente pida algo —en una llamada, por WhatsApp, en un ticket—
             anotalo acá. Con seis meses de esto, el roadmap se decide con datos y no con

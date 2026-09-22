@@ -7864,3 +7864,95 @@ El 29-sep estaban rotas las dos:
   - El buscador se quedaba mostrando el producto elegido. Ponerle null al modelo dentro del mismo `change` no le llega a ng-select; ahora se vacía con `clearModel()`, que exige `clearable` (la "×" queda oculta).
   - La nota del pie salía en azul. Una regla global vieja, `span.ng-star-inserted`, pinta todo `span` creado por `*ngIf`, así que esos spans llevan color propio. Ojo con esto en cualquier pantalla nueva.
   - Verificado en 2026.10.02.3: listado con su combo, indicadores, filtro y nota en gris; el modal de editar con fotos, referencias y precios; el buscador agrega, se vacía y no repite lo que ya está en el combo; el total y la vista previa se actualizan (de $78.000 a $113.000). Se canceló sin guardar.
+---
+
+## D-338 (2026-09-22) — Soporte en la ficha del cliente: los errores y las consultas NO se suman
+
+**Contexto.** La consola de plataforma decía cuánto vende y cuánto paga cada cliente, pero nada de lo que ese cliente nos ha reportado. Los tickets ya existían (colección `support`, con visión total para Julsmind) y hasta tenían enlace propio a `support.katuq.com`; simplemente no se veían desde la ficha.
+
+**Decisión.** Bloque **Soporte** en la ficha de la empresa, con los tickets **separados en dos cifras: errores y consultas**. No es cosmético: el formulario de soporte guarda en `tipoSolicitud` cuál de los tres botones apretó el comercio (`bug` | `ayuda` | `idea`), y doce "algo no funciona" no significan lo mismo que doce "necesito ayuda" — al primero le está fallando el producto, el segundo no lo sabe usar. Uno se arregla con código y el otro acompañándolo; sumados en un solo número los dos clientes se ven idénticos y se atienden mal. Se muestran además los abiertos (pendiente + en progreso), el último ticket y los 5 más recientes, cada uno enlazado a la plataforma de soporte, que es donde se trabaja.
+
+**Lo que NO se cuenta como ticket.** Las **ideas** (`motivo: 'idea'`) viven en la misma colección pero son pedidos de funcionalidad, no incidencias: van en su propia cifra para no inflarle el soporte a un cliente que solo propuso mejoras. Y los tickets anteriores al campo `tipoSolicitud` se cuentan como **`sinClasificar`** con un aviso explícito — **no se reparten a ojo** entre errores y consultas.
+
+**Se lee la colección entera, no una consulta por empresa.** El ticket guarda el **nombre** del comercio, no su docId, y a veces en `company` y a veces en `tienda` (según el origen que lo creó). Un `where` por nombre exacto se pierde los que difieren en mayúsculas o los que solo traen `tienda`, y ese fallo **se ve como "0 tickets"**, indistinguible de un cliente que nunca reportó nada. Leyendo entero (tope 2.000; hoy son 45) se normaliza el nombre una vez, se cubren los dos campos y se paga **una** lectura para las 64 fichas en vez de 64 consultas. Ningún índice compuesto nuevo.
+
+**Un ticket nunca desaparece en silencio**: los que no calzan con ninguna ficha se devuelven en `huerfanos` y se anuncian en la ficha de un cliente sin tickets, que es donde alguien se preguntaría por qué no tiene ninguno. Si el resumen falla, el bloque dice que falta el dato: **nunca "0 tickets"**, que sería una afirmación falsa.
+
+- Back: `services/platformMetrics/supportSummary.js` (puro, sin Firestore), `GET /v1/companies/tickets-resumen` en `controllers/platformOverview.js` — candado `requireJwtTenant` + `ONLY_ADMIN` + tenant Julsmind, y la ruta **antes de `/:id`** o el GET la captura como docId. Pruebas: `tests/platformMetrics/supportSummary.test.js` (17), suite de la consola **194/194**.
+- Front: `SoporteResumen` en `companies.service.ts`, bloque en la ficha de `consola-plataforma.component`. Se pide **una vez al cargar la pantalla**, en paralelo y sin bloquear el panorama.
+
+**Pendiente**: probarlo en el navegador. Siguen en la lista, sin empezar: pedidos de funcionalidad por cliente en la ficha, conectar "Mis ideas" con la pestaña de Pedidos, notas internas con próxima acción, e incidentes de negocio por cliente.
+
+**Ampliación del mismo día — las tarjetas filtran.** Pedido de la usuaria al revisarlo: las tres tarjetas de conteo son **botones** (no `div`) y filtran la lista de abajo; pulsar la misma otra vez quita el filtro, porque si no la única salida sería cerrar y abrir la ficha. Una tarjeta en cero se **deshabilita** en vez de dejar vaciar la lista sin explicación, y sigue visible porque el cero informa. La de "Último ticket" **no filtra: abre ese ticket** —filtrar por "el último" daría una lista de uno, que no es un filtro— y por eso es un enlace y se ve distinta. Con filtro puesto se anuncia "Viendo X de Y tickets": una lista corta sin explicación se lee como "solo tiene estos".
+
+Para que el filtro no mienta, el backend ahora manda **todos** los tickets de la empresa (tope 50 por ficha) en vez de los 5 de la vista: filtrar una muestra de cinco daría un conteo que no cuadra con el número de la tarjeta recién pulsada. La ficha pinta 5 y ofrece "ver los N restantes". El campo pasó de `recientes` a `tickets`.
+
+---
+
+## D-339 (2026-09-22) — La pestaña "Pedidos" de la consola pasa a llamarse "Sugerencias"
+
+**Contexto.** La tercera pestaña de la consola (pedidos de funcionalidad) se llamaba **Pedidos**. En Katuq "pedido" significa **pedido de venta** en todas las demás pantallas —incluida la columna "Pedidos 30 días" de la tabla de al lado—, así que el nombre prometía una cosa y mostraba otra. Lo señaló la usuaria al revisar D-338.
+
+**Decisión.** En pantalla se llama **Sugerencias**, y con ella todos los textos de la pestaña ("Anotar sugerencia", "Nombre común de la sugerencia", "Todavía no hay ninguna sugerencia anotada"…). **Sugerencia es la palabra que la app YA usa**: cuando un comercio manda una idea desde soporte, la etiqueta que ve dice "Sugerencia" (`mis-tickets.component.ts`). Inventar una palabra nueva habría dejado tres nombres para lo mismo.
+
+La columna "Pedido" de la tabla de temas pasa a **"Tema"** (ahí la fila es el tema que agrupa, no una sugerencia suelta) y la de la tabla de abajo a **"Sugerencia"**. La llave interna de la pestaña también cambió (`vista === 'pedidos'` → `'sugerencias'`): leyendo el código se confundía con los pedidos de venta igual que en pantalla.
+
+**Deuda anotada, no olvidada.** En el código los identificadores siguen diciendo `pedido de funcionalidad` (`cargarPedidos`, `PedidoFuncionalidad`, `nuevoPedido`…), unos 70 en el componente. **El backend no cambia**: su endpoint ya se llama bien, `/v1/feature-requests`. Renombrarlos es un refactor aparte, con riesgo y sin valor para quien usa la pantalla; queda una nota de vocabulario en la cabecera de las dos secciones del componente para que nadie crea que es un descuido.
+
+**Ojo para la próxima sesión:** `consola-plataforma.component.html` tiene finales de línea **MEZCLADOS** (parte LF, parte CRLF). Un reemplazo de texto que abarque dos renglones no encuentra nada y parece que el patrón está mal escrito; hay que trabajar línea por línea.
+
+---
+
+## D-340 (2026-09-22) — Corregir y Borrar una sugerencia: los botones que nunca se pusieron
+
+**Contexto.** La usuaria quiso borrar una sugerencia de prueba que había anotado y solo encontró la opción de marcarla **Descartada**. Preguntó si era a propósito, por trazabilidad.
+
+**La mitad de la respuesta sí era a propósito**, y sigue en pie: `descartado` existe para **no borrar** lo que se evaluó y se decidió no hacer — sin ese rastro la misma sugerencia vuelve a entrar en tres meses y se discute de cero. La regla está escrita en `services/roadmap/featureRequests.js`.
+
+**La otra mitad era un olvido.** Borrar de verdad —para deshacer una anotación equivocada: una prueba, un duplicado— **ya estaba construido de punta a punta**: el endpoint `DELETE /v1/feature-requests/:id`, el método del servicio, y `eliminarPedido()` en el componente con su confirmación y su advertencia de "mejor márcala como Descartada". Lo mismo `editarPedido()`, que abre el formulario en modo "Corrigiendo". **Nunca se puso la celda con los botones**: la rejilla de la tabla ya reservaba la séptima columna de 84 px y estaba vacía, así que las dos funciones eran código muerto y el modo "Corrigiendo" del formulario era inalcanzable.
+
+**Decisión.** Columna **Acciones** en la tabla de sugerencias, con **Corregir** (lápiz) y **Borrar** (papelera, en rojo). Se reusan `.btn-icono` y `.btn-icono--peligro` de la tabla de empresas, el mismo patrón que el operador ya usa. El diálogo de borrado se reescribió al vocabulario de D-339 y con los acentos que le faltaban; sigue empujando a Descartada antes que a borrar, porque esa jerarquía es la correcta.
+
+**Lección, no anécdota:** una acción "implementada" que ningún elemento de la pantalla invoca es una acción que no existe. Vale la pena, al cerrar una pantalla, verificar que cada método público del componente tenga quien lo llame.
+
+**Barrido del resto de la pantalla** (se hizo a raíz de esto): los demás métodos del componente sí tienen quien los llame. Quedan dos sin uso que **no** son botones faltantes sino código superado: `alternarEstado` (el bloquear/desbloquear de D-264, reemplazado por el ciclo de vida de D-287 — la fila hoy llama `cambiarEstadoCiclo`) y `etiquetaPeriodoPlan` (la plantilla pinta "· ANUAL" en línea). No se borran en esta sesión: es limpieza aparte y no se pidió.
+
+---
+
+## D-341 (2026-09-22) — El detalle de una sugerencia iba AL LADO del título y se lo comía
+
+**Contexto.** Lo reportó la usuaria al probar D-340: escribió un detalle en una sugerencia y en la lista aparecía el detalle, pero el título ya no se leía.
+
+**Causa.** La celda de la primera columna reusa `.col-empresa`, que es un **flex horizontal** (`align-items: center`, `flex-wrap: nowrap`, `overflow: hidden`) porque en la tabla de empresas tiene que poner el avatar junto al nombre. En la tabla de sugerencias esa misma clase ponía el detalle **al lado** del título: los dos competían por el mismo ancho, se encogían a la vez y con un detalle largo el título quedaba recortado hasta desaparecer. El `display: block` del detalle no alcanzaba — dentro de un contenedor flex un hijo sigue siendo un elemento más de la fila, el `display` propio no lo baja de renglón.
+
+**Decisión.** `.col-empresa` pasa a `flex-direction: column` **solo dentro de `.tabla--pedidos`**: título arriba, detalle debajo, que es como estaba pensado (el detalle ya traía su `margin-top`). La tabla de empresas no se toca. El título se recorta con puntos suspensivos y el detalle se limita a **dos renglones**, para que una sugerencia con tres párrafos no haga una fila cuatro veces más alta que las demás. Lo recortado **no se pierde sin aviso**: los dos muestran el texto completo en el globo al pasar el mouse, y entero al abrir Corregir.
+
+**Lección:** reusar una clase de layout de otra tabla trae su dirección de flujo. `.col-empresa` estaba pensada para una línea con avatar; cualquier celda que quiera dos renglones tiene que decirlo.
+
+---
+
+## D-342 (2026-09-22) — El aviso "Acá se va a armar tu lista de prioridades" compartía renglón con su párrafo
+
+**Contexto.** Lo reportó la usuaria con un pantallazo: el título en negrita del recuadro vacío de "Qué construir primero" aparecía **pegado al final del párrafo**, como si fuera parte de la misma frase, en vez de encima.
+
+**Causa.** `.tema-vacio` confiaba en el flujo normal para que el título quedara arriba y el párrafo abajo, y no declaraba ninguna de las dos cosas: ni `display: block` en el `strong`, ni dirección de columna en la caja de texto, ni `flex: 1` en ella. `.aviso-error` —que tiene exactamente la misma forma, ícono + bloque de texto— **sí traía `strong { display: block }` y `div { flex: 1 }`**: el patrón ya estaba resuelto en este mismo archivo y `.tema-vacio`, escrito después, no lo copió.
+
+**Decisión.** La caja de texto se declara explícita: `flex: 1`, `flex-direction: column`, `gap: 6px` y `min-width: 0`; el `strong` pasa a `display: block` con tamaño propio (0.95rem, mayor que el párrafo) para que se lea como el título que es. Nada de esto depende ya del flujo por defecto.
+
+**Tercer caso del mismo error en dos días** (D-341 fue el detalle de la sugerencia al lado del título): **una caja con `display: flex` acomoda a sus hijos en fila, y el `display` del hijo no lo baja de renglón.** Cualquier bloque de este archivo que quiera dos renglones tiene que decirlo. Vale la pena revisar el resto de los recuadros con forma de ícono + texto antes de dar por cerrada la pantalla.
+
+**Revisión hecha en el momento:** los otros recuadros con esa forma (`No se pudieron cargar los datos`, `No se pudo leer el censo de integraciones`, `El cobro automático está apagado`, `No se pudieron cargar los cobros`) usan `.aviso-error` y ya venían con `strong { display: block }` + `div { flex: 1 }`. El de `.pedidos-intro` lleva el `strong` en línea a propósito, como parte de la frase. **`.tema-vacio` era el único suelto**; no queda ninguno más por revisar en esta pantalla.
+
+---
+
+## D-343 (2026-09-22) — Acceso a la bandeja de soporte desde la ficha, y por qué NO va filtrado
+
+**Contexto.** Se quería que la ficha llevara a los tickets de ESA empresa en la plataforma de soporte (`support.katuq.com`, que es una aplicación aparte). La usuaria pasó la dirección de la bandeja: `https://support.katuq.com/tickets/backlog-tickets`, **sin ningún parámetro de filtro**.
+
+**Decisión.** La ficha lleva un enlace **"Abrir la bandeja"** a esa dirección, y el globo dice explícitamente que **no llega filtrada por esa empresa**. No se inventa un `?company=…`: un parámetro que la plataforma no lee daría un enlace que *parece* filtrar y no filtra, que es peor que no tenerlo — el operador creería estar viendo los tickets de un cliente y estaría viendo los de todos.
+
+Filtrar por empresa desde la consola ya está resuelto **dentro** de la ficha (D-338): las tarjetas de Errores / Consultas / Abiertos filtran la lista, y cada ticket individual sí abre directo en soporte (`/tickets/ticket/:id`, la única ruta con identidad propia que expone esa plataforma).
+
+El dominio queda en una sola constante `BASE_SOPORTE` del componente, que usan el enlace del ticket y el de la bandeja: el día que cambie de dominio se toca en un solo sitio.
+
+**Si algún día la plataforma de soporte empieza a guardar el filtro en la dirección**, conectarlo es un cambio de cinco minutos: agregar el parámetro en `urlBandejaSoporte` con el `nomComercial` de la empresa.

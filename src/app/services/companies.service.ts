@@ -542,6 +542,66 @@ export interface PlatformOverview {
   };
 }
 
+/**
+ * Lo que un cliente le ha reportado a Katuq.
+ *
+ * `errores` y `consultas` van SEPARADOS a propósito: doce "algo no funciona" y
+ * doce "necesito ayuda" no dicen lo mismo —al primero le falla el producto, el
+ * segundo no sabe usarlo— y sumados se ven idénticos en pantalla.
+ */
+export interface SoporteEmpresa {
+  /** Tickets (incidencias). NO incluye las ideas. */
+  total: number;
+  /** "Algo no funciona": el producto le está fallando. */
+  errores: number;
+  /** "Necesito ayuda": una duda de uso. Se arregla acompañando, no con código. */
+  consultas: number;
+  /** Tickets viejos, anteriores al campo `tipoSolicitud`. No se adivinan. */
+  sinClasificar: number;
+  /** Pendiente o En progreso: todavía le debemos una respuesta. */
+  abiertos: number;
+  resueltos: number;
+  /** Ideas que propuso. Van aparte: son pedidos de funcionalidad, no fallas. */
+  ideas: number;
+  /** Fecha del último ticket (ISO o AAAA-MM-DD), o null si no tiene. */
+  ultimo: string | null;
+  /**
+   * TODOS sus tickets (hasta el tope del backend), del más nuevo al más viejo.
+   *
+   * Vienen completos y no los cinco de la vista porque las tarjetas filtran
+   * esta lista: filtrar una muestra de cinco daría un conteo que no cuadra con
+   * el número de la tarjeta que se acaba de pulsar.
+   */
+  tickets: TicketReciente[];
+}
+
+export interface TicketReciente {
+  cd: string;
+  nroTicket: number | null;
+  asunto: string;
+  status: string;
+  /** bug | ayuda | null (los viejos no lo guardaban). */
+  tipo: string | null;
+  categoria: string | null;
+  prioridad: string | null;
+  fecha: string | null;
+}
+
+export interface SoporteResumen {
+  /** Indexado por docId de la empresa: la unión por nombre ya la hizo el back. */
+  porEmpresa: Record<string, SoporteEmpresa>;
+  /** Tickets cuya empresa no coincide con ninguna ficha. No se ocultan. */
+  huerfanos: { nombre: string; tickets: number }[];
+  meta: {
+    ticketsLeidos: number;
+    empresasConTickets: number;
+    sinTenant: number;
+    tope: number;
+    truncado: boolean;
+    generadoEn: string;
+  };
+}
+
 export interface InventoryUnits {
   empresa: string;
   unidades: number;
@@ -637,6 +697,18 @@ export class CompaniesService {
 
   eliminarPedidoFuncionalidad(id: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(`${this.apiUrl}/v1/feature-requests/${id}`);
+  }
+
+  /**
+   * Los tickets de soporte de TODAS las empresas, ya agrupados por ficha.
+   *
+   * Viene todo de una porque el ticket guarda el NOMBRE del comercio, no su
+   * docId, y a veces en `company` y a veces en `tienda`: preguntar empresa por
+   * empresa se pierde los que no calcen exacto, y ese fallo se ve como
+   * "0 tickets", que es indistinguible de un cliente que nunca reportó nada.
+   */
+  getTicketsResumen(): Observable<SoporteResumen> {
+    return this.http.get<SoporteResumen>(`${this.apiUrl}/v1/companies/tickets-resumen`);
   }
 
   /**

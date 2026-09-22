@@ -1278,6 +1278,276 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   > i { color: $alerta; }
 }
 
+/* ── Soporte de la ficha ────────────────────────────────────────────────── */
+/* Errores y consultas se ven como DOS cifras, nunca como una.
+   Son diagnósticos opuestos —producto que falla vs. cliente que no sabe
+   usarlo— y el color los separa antes de que nadie lea la etiqueta. */
+.ficha-soporte {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid $acento-borde;
+}
+
+/* Título a la izquierda, acceso a la plataforma a la derecha. Envuelve en
+   pantallas angostas para que el enlace no empuje al título fuera de la caja. */
+.sop-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .ficha-bloque-label { margin-bottom: 0; }
+}
+
+.sop-bandeja {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: $acento;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover { color: darken($acento, 10%); text-decoration: underline; }
+  > i { font-size: 0.62rem; margin-left: 2px; opacity: 0.8; }
+}
+
+.sop-cifras {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+@media (max-width: 1279px) { .sop-cifras { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .sop-cifras { grid-template-columns: 1fr; } }
+
+/* Las tarjetas son el filtro, así que son <button> (y la del último ticket, un
+   enlace). Hay que apagarles el estilo nativo: el navegador les pone su fondo
+   gris y les centra el texto. */
+.sop-cifra {
+  appearance: none;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: $fondo;
+  border: 1px solid $linea;
+  border-radius: $r-sm;
+  transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+
+  &:hover:not(:disabled) { border-color: $acento-borde; }
+
+  /* La pulsada se marca con el borde del acento y un anillo suave: el color de
+     la cifra ya está ocupado diciendo de qué tipo de ticket habla. */
+  &--activa {
+    border-color: $acento;
+    box-shadow: 0 0 0 3px rgba($acento, 0.14);
+  }
+
+  /* En cero no hay nada que filtrar: se deshabilita en vez de dejar vaciar la
+     lista sin explicación. Sigue visible, porque el cero informa. */
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+
+  /* La del último ticket no filtra: abre el ticket. */
+  &--enlace {
+    color: $ink;
+    &:hover { background: $acento-suave; }
+    .sop-lbl > i { font-size: 0.6rem; margin-left: 3px; opacity: 0.7; }
+  }
+
+  /* El error toma el color de peligro solo cuando existe: una empresa sin
+     errores no debe verse en rojo pálido, que ya parece una advertencia. */
+  &--error .sop-num { color: $peligro; }
+  &--consulta .sop-num { color: $acento; }
+  &--abierto {
+    background: $alerta-suave;
+    border-color: rgba($alerta, 0.25);
+    .sop-num { color: $alerta; }
+  }
+}
+
+.sop-num {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: $ink;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+
+  &--sm { font-size: 0.9rem; font-weight: 600; }
+}
+
+.sop-lbl {
+  font-size: 0.63rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: $muted;
+}
+
+.sop-hint {
+  font-size: 0.68rem;
+  color: $muted;
+  font-style: italic;
+}
+
+.sop-sinclasificar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  background: $alerta-suave;
+  border: 1px solid rgba($alerta, 0.25);
+  border-radius: $r-sm;
+  font-size: 0.76rem;
+  color: $ink;
+
+  > i { color: $alerta; }
+  > span { flex: 1; }
+}
+
+/* Con un filtro puesto, una lista corta y sin explicación se lee como "solo
+   tiene estos". Esta línea dice cuántos se están viendo y de cuántos. */
+.sop-filtro-activo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 0.76rem;
+  color: $muted;
+
+  > i { color: $acento; }
+}
+
+.sop-verlos {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: $acento;
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:hover { color: darken($acento, 10%); }
+}
+
+.sop-lista {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Cada ticket es un enlace entero: se trabaja en la plataforma de soporte, no
+   acá. Abre en otra pestaña para no perder la consola. */
+.sop-ticket {
+  display: grid;
+  grid-template-columns: 10px 1fr auto auto 78px;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid $linea;
+  border-radius: $r-sm;
+  background: $superficie;
+  color: $ink;
+  text-decoration: none;
+  font-size: 0.8rem;
+
+  &:hover {
+    border-color: $acento-borde;
+    background: $acento-suave;
+    color: $ink;
+    text-decoration: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .sop-ticket {
+    grid-template-columns: 10px 1fr auto;
+    .sop-estado, .sop-fecha { display: none; }
+  }
+}
+
+.sop-punto {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: $muted;
+
+  &.tk--pendiente { background: #E0891B; }
+  &.tk--haciendo  { background: $acento; }
+  &.tk--resuelto  { background: #22C55E; }
+  &.tk--archivado { background: #B0B6C5; }
+}
+
+.sop-asunto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.sop-tipo {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $muted;
+  background: $fondo;
+  border: 1px solid $linea;
+  border-radius: 999px;
+  padding: 2px 8px;
+
+  &--bug {
+    color: $peligro;
+    background: $peligro-suave;
+    border-color: rgba($peligro, 0.22);
+  }
+}
+
+.sop-estado { font-size: 0.72rem; color: $muted; }
+
+.sop-fecha {
+  font-size: 0.72rem;
+  color: $muted;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.sop-pie,
+.sop-vacio {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: $muted;
+}
+
+.sop-vacio--error { color: $peligro; }
+
+.sop-huerfanos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  background: $fondo;
+  border: 1px dashed $acento-borde;
+  border-radius: $r-sm;
+  font-size: 0.76rem;
+  color: $muted;
+
+  > i { color: $acento; }
+}
+
 /* ── Panel de integraciones por proveedor ───────────────────────────────── */
 .panel-integraciones {
   background: $superficie;
@@ -1995,17 +2265,45 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
     grid-template-columns: minmax(220px, 1fr) 135px 115px 150px 135px 100px 84px;
   }
 
+  /* El título ARRIBA y el detalle DEBAJO.
+     `.col-empresa` es una fila horizontal —así ordena el avatar junto al nombre
+     en la tabla de empresas—, y acá eso ponía el detalle AL LADO del título:
+     los dos competían por el mismo ancho, y con un detalle largo el título
+     quedaba recortado hasta desaparecer. El `display: block` del detalle no
+     alcanzaba: dentro de un flex sigue siendo un elemento más de la fila. */
+  .col-empresa {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+
+    /* Un título largo se corta con puntos suspensivos en vez de empujar la
+       columna: el texto completo está a un clic en Corregir. */
+    > strong {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
   .fila { cursor: default; }
   /* El tema elegido arriba se resalta acá: es el puente entre las dos tablas. */
   .fila--resaltada { background: $acento-suave; }
 }
 
+/* Dos renglones como máximo: el detalle da contexto en la lista, no la vuelve
+   un documento. Lo que no quepa se recorta y el texto completo sale en el globo
+   al pasar el mouse (y entero al Corregir), nunca se pierde sin aviso. */
 .pedido-detalle {
-  display: block;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 100%;
   font-size: 0.76rem;
   color: $muted;
   line-height: 1.4;
-  margin-top: 2px;
 }
 
 .select-estado {
@@ -2037,6 +2335,9 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
     .tabla-head { display: none; }
     .fila { grid-template-columns: 1fr 1fr; row-gap: 8px; }
     .col-empresa { grid-column: 1 / -1; }
+    /* En celular las acciones se van a la izquierda con el resto: alineadas a
+       la derecha quedaban colgando solas al final de la tarjeta. */
+    .col-acciones { grid-column: 1 / -1; justify-content: flex-start; }
   }
 }
 
@@ -2122,10 +2423,33 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
     margin-top: 2px;
   }
 
-  strong { color: $ink; }
+  /* El texto, en COLUMNA y declarado acá.
+     Antes el título y el párrafo dependían del flujo normal para quedar uno
+     debajo del otro, y terminaban compartiendo renglón: el título se leía
+     pegado al final del párrafo, como si fuera parte de la misma frase.
+     Decirlo explícito —columna + separación— no deja que eso vuelva a pasar. */
+  > div {
+    /* `flex: 1` como en `.aviso-error`, que tiene esta misma forma (ícono +
+       texto) y ya lo traía: sin él la caja de texto se dimensiona por su
+       contenido y se encoge contra el ícono. */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  /* `display: block` a propósito: un `strong` es de línea, y basta con que su
+     contenedor cambie de dirección para que se acomode al lado del párrafo. */
+  strong {
+    display: block;
+    color: $ink;
+    font-size: 0.95rem;
+    line-height: 1.35;
+  }
 
   p {
-    margin: 4px 0 0;
+    margin: 0;
     font-size: 0.83rem;
     color: $muted;
     line-height: 1.5;

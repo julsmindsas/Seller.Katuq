@@ -15,6 +15,9 @@ import {
   FilaCobro,
   IntegracionesEmpresa,
   InventoryUnits,
+  SoporteEmpresa,
+  SoporteResumen,
+  TicketReciente,
   TotalesPlataforma,
 } from '../../../services/companies.service';
 import { DataStoreService } from '../../../shared/services/dataStoreService';
@@ -23,6 +26,15 @@ import { SubscriptionService } from '../../../shared/services/subscription.servi
 
 /** Filtros de la pestaña de cobros. Cada tarjeta enciende el suyo. */
 type FiltroCobros = 'todas' | 'aCobrar' | 'sinTarjeta' | 'vencidas' | 'cortesia';
+
+/** Qué tickets muestra la ficha. Lo enciende la tarjeta del mismo nombre. */
+type FiltroTickets = 'todos' | 'errores' | 'consultas' | 'abiertos' | 'sinClasificar';
+
+/**
+ * La plataforma de soporte, que es una aplicación aparte. En un solo sitio para
+ * que el día que cambie de dominio no haya que buscarla por toda la pantalla.
+ */
+const BASE_SOPORTE = 'https://support.katuq.com';
 
 type FiltroEstado =
   | 'todas'
@@ -159,6 +171,29 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   cargandoUnidades = new Set<string>();
   errorUnidades = new Map<string, string>();
 
+  /**
+   * Los tickets de soporte de todas las empresas, ya agrupados por ficha.
+   *
+   * Se piden UNA vez al cargar la pantalla, no al abrir cada ficha: son una
+   * sola lectura de decenas de documentos para las 64 empresas, y pedirlos por
+   * ficha costaría una consulta por cada una para el mismo dato. `null` = no se
+   * pudo leer; entonces el bloque dice que falta el dato y nunca "0 tickets".
+   */
+  soporte: SoporteResumen | null = null;
+  cargandoSoporte = false;
+  errorSoporte = '';
+
+  /**
+   * Qué tarjeta de soporte está pulsada en cada ficha. Las tarjetas son el
+   * filtro: pulsar "Errores" muestra sus errores y nada más, y volverla a
+   * pulsar quita el filtro. Es por empresa porque cada ficha se mira aparte.
+   */
+  filtroTickets = new Map<string, FiltroTickets>();
+  /** Fichas donde se pidió ver la lista completa y no solo las primeras. */
+  ticketsDesplegados = new Set<string>();
+  /** Cuántos tickets se pintan antes de pedir "ver los N restantes". */
+  readonly ticketsVisiblesPorDefecto = 5;
+
   // Acciones en vuelo, por docId
   cambiandoPlan = new Set<string>();
   cambiandoEstado = new Set<string>();
@@ -175,9 +210,15 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * empresas y cobrarles. Comparten los mismos datos, así que viven en la misma
    * pantalla en vez de en dos módulos que se desincronizan.
    */
-  vista: 'empresas' | 'cobros' | 'pedidos' | 'pauta' = 'empresas';
+  vista: 'empresas' | 'cobros' | 'sugerencias' | 'pauta' = 'empresas';
 
-  // ── Pedidos de funcionalidad ────────────────────────────────────────────
+  // ── Sugerencias de los clientes ─────────────────────────────────────────
+  //
+  // En PANTALLA se llaman "Sugerencias": "Pedidos" chocaba de frente con los
+  // pedidos de venta, que es lo que esa palabra significa en todo Katuq.
+  // En el código siguen siendo `pedido de funcionalidad` (y el endpoint,
+  // `/v1/feature-requests`): renombrar los ~70 identificadores es un refactor
+  // aparte, sin valor para quien usa la pantalla. Deuda anotada en D-339.
   pedidos: PedidosFuncionalidad | null = null;
   cargandoPedidos = false;
   errorPedidos = '';
@@ -234,6 +275,34 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.cargar();
     this.cargarCatalogoEstados();
+    this.cargarSoporte();
+  }
+
+  /**
+   * Los tickets de todas las empresas. Va en paralelo con el panorama y NO lo
+   * bloquea: si el soporte falla, las métricas se ven igual y el único que
+   * avisa del problema es su propio bloque.
+   */
+  private cargarSoporte(): void {
+    this.cargandoSoporte = true;
+    this.errorSoporte = '';
+
+    this.companiesService
+      .getTicketsResumen()
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.cargandoSoporte = false))
+      )
+      .subscribe({
+        next: (res) => (this.soporte = res),
+        error: (err) => {
+          // `null` y no `{}`: con un objeto vacío toda empresa diría "sin
+          // tickets", que es una afirmación —y es falsa.
+          this.soporte = null;
+          this.errorSoporte =
+            err?.error?.error || 'No se pudieron leer los tickets de soporte.';
+        },
+      });
   }
 
   /**
@@ -313,12 +382,12 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   // ── Cobros ────────────────────────────────────────────────────────────────
 
-  cambiarVista(vista: 'empresas' | 'cobros' | 'pedidos' | 'pauta'): void {
+  cambiarVista(vista: 'empresas' | 'cobros' | 'sugerencias' | 'pauta'): void {
     this.vista = vista;
     if (vista === 'cobros' && !this.cobros && !this.cargandoCobros) this.cargarCobros();
     // Cada pestaña carga lo suyo al abrirse por primera vez: traer los pedidos
     // al entrar a la consola sería pagar una lectura que casi nunca se mira.
-    if (vista === 'pedidos' && !this.pedidos && !this.cargandoPedidos) this.cargarPedidos();
+    if (vista === 'sugerencias' && !this.pedidos && !this.cargandoPedidos) this.cargarPedidos();
   }
 
   cargarCobros(): void {
@@ -507,7 +576,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * que nadie toque el front. Mientras la respuesta no los traiga se usan los
    * que hay hoy, para que la columna no quede en blanco contra un backend viejo.
    */
-  // ── Pedidos de funcionalidad ────────────────────────────────────────────
+  // ── Sugerencias de los clientes (ver la nota de vocabulario arriba) ──────
 
   cargarPedidos(): void {
     this.cargandoPedidos = true;
@@ -692,24 +761,28 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Borra un pedido, con confirmacion.
+   * Borra una sugerencia, con confirmación.
    *
-   * Borrar es para deshacer una anotacion equivocada. Si el pedido era real y
-   * se decidio no hacerlo, el camino es el estado `Descartado`: deja el rastro
-   * de que se evaluo, y sin eso el mismo pedido vuelve a entrar en tres meses.
+   * Borrar es para deshacer una anotación equivocada —una prueba, un duplicado—.
+   * Si el cliente SÍ la pidió y se decidió no hacerla, el camino es el estado
+   * `Descartado`: deja el rastro de que se evaluó, y sin eso la misma sugerencia
+   * vuelve a entrar en tres meses y se discute de cero.
+   *
+   * El botón que llama a esto vivió meses sin existir: el método estaba escrito
+   * y la columna reservada en la rejilla, pero la celda nunca se puso (D-340).
    */
   async eliminarPedido(pedido: PedidoFuncionalidad): Promise<void> {
     const confirmacion = await Swal.fire({
-      title: 'Borrar este pedido',
+      title: 'Borrar esta sugerencia',
       html:
         `<div style="text-align:left">` +
         `<p>${pedido.titulo}</p>` +
-        `<p class="text-muted" style="font-size:.9em">Si el cliente si lo pidio y decidiste no hacerlo, ` +
-        `mejor marcalo como <b>Descartado</b>: queda el registro de que se evaluo. ` +
-        `Borrar es para una anotacion equivocada.</p></div>`,
+        `<p class="text-muted" style="font-size:.9em">Si el cliente sí la pidió y decidiste no hacerla, ` +
+        `mejor márcala como <b>Descartada</b>: queda el registro de que se evaluó y de que se dijo que no. ` +
+        `Borrar es para una anotación equivocada — una prueba, un duplicado.</p></div>`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Si, borrar',
+      confirmButtonText: 'Sí, borrar',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: '#D7263D',
       reverseButtons: true,
@@ -722,7 +795,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => this.cargarPedidos(),
         error: (err) => {
-          this.errorPedidos = err?.error?.error || 'No se pudo borrar el pedido.';
+          this.errorPedidos = err?.error?.error || 'No se pudo borrar la sugerencia.';
         },
       });
   }
@@ -1159,6 +1232,11 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   alternarFicha(empresa: EmpresaPanorama): void {
     if (this.expandidaId === empresa._docId) {
       this.expandidaId = null;
+      // El filtro de tickets muere con la ficha: volver a abrirla con un filtro
+      // puesto de la vez pasada haría creer que el cliente tiene menos tickets
+      // de los que tiene.
+      this.filtroTickets.delete(empresa._docId);
+      this.ticketsDesplegados.delete(empresa._docId);
       return;
     }
 
@@ -1224,6 +1302,155 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   unidadesDe(empresa: EmpresaPanorama): InventoryUnits | undefined {
     return this.unidadesPorEmpresa.get(empresa._docId);
+  }
+
+  // ── Soporte ───────────────────────────────────────────────────────────────
+
+  /**
+   * Los tickets de esta empresa. `undefined` = no tiene ninguno (respuesta
+   * real); si el resumen entero falló, `soporte` es null y el bloque muestra el
+   * error en vez de un cero.
+   */
+  soporteDe(empresa: EmpresaPanorama): SoporteEmpresa | undefined {
+    return this.soporte?.porEmpresa[empresa._docId];
+  }
+
+  /**
+   * Tickets que no calzaron con ninguna empresa. Solo se anuncian en la ficha
+   * de un cliente SIN tickets, que es donde alguien se preguntaría por qué no
+   * tiene ninguno; repetirlo en las 64 fichas sería ruido.
+   */
+  get ticketsHuerfanos(): number {
+    return (this.soporte?.huerfanos || []).reduce((suma, h) => suma + h.tickets, 0);
+  }
+
+  get huerfanosTexto(): string {
+    return (this.soporte?.huerfanos || [])
+      .slice(0, 3)
+      .map((h) => `${h.nombre || 'sin nombre'} (${h.tickets})`)
+      .join(', ');
+  }
+
+  /** Qué filtro tiene puesto esta ficha. Sin pulsar nada, todos. */
+  filtroTicketsDe(empresa: EmpresaPanorama): FiltroTickets {
+    return this.filtroTickets.get(empresa._docId) || 'todos';
+  }
+
+  /**
+   * Pulsar una tarjeta filtra por ella; volverla a pulsar quita el filtro.
+   *
+   * Sin el segundo clic la única forma de volver a verlos todos sería cerrar y
+   * abrir la ficha, y el operador no tiene por qué adivinar eso.
+   */
+  alternarFiltroTickets(empresa: EmpresaPanorama, filtro: FiltroTickets): void {
+    const actual = this.filtroTicketsDe(empresa);
+    if (actual === filtro) this.filtroTickets.delete(empresa._docId);
+    else this.filtroTickets.set(empresa._docId, filtro);
+
+    // Cambiar de filtro vuelve a plegar la lista: lo que quedaba desplegado era
+    // de la selección anterior y su "ver los N restantes" ya no significa nada.
+    this.ticketsDesplegados.delete(empresa._docId);
+  }
+
+  /** Los tickets que pasan el filtro. Es la lista COMPLETA, sin recortar. */
+  ticketsFiltrados(empresa: EmpresaPanorama): TicketReciente[] {
+    const todos = this.soporteDe(empresa)?.tickets || [];
+    switch (this.filtroTicketsDe(empresa)) {
+      case 'errores':
+        return todos.filter((t) => t.tipo === 'bug');
+      case 'consultas':
+        return todos.filter((t) => t.tipo === 'ayuda');
+      case 'sinClasificar':
+        return todos.filter((t) => !t.tipo);
+      case 'abiertos':
+        return todos.filter((t) => this.ticketAbierto(t));
+      default:
+        return todos;
+    }
+  }
+
+  /** Lo que se pinta: las primeras, salvo que se haya pedido verlas todas. */
+  ticketsVisibles(empresa: EmpresaPanorama): TicketReciente[] {
+    const filtrados = this.ticketsFiltrados(empresa);
+    if (this.ticketsDesplegados.has(empresa._docId)) return filtrados;
+    return filtrados.slice(0, this.ticketsVisiblesPorDefecto);
+  }
+
+  ticketsOcultos(empresa: EmpresaPanorama): number {
+    return Math.max(0, this.ticketsFiltrados(empresa).length - this.ticketsVisibles(empresa).length);
+  }
+
+  desplegarTickets(empresa: EmpresaPanorama): void {
+    this.ticketsDesplegados.add(empresa._docId);
+  }
+
+  /** Mismo criterio que el backend: cerrado es resuelto o archivado. */
+  private ticketAbierto(t: TicketReciente): boolean {
+    const k = String(t.status || '').toLowerCase();
+    return k !== 'resuelto' && k !== 'archivado';
+  }
+
+  /**
+   * El ticket más reciente de la empresa, para que la tarjeta "Último ticket"
+   * lleve a alguna parte. La lista viene ordenada del más nuevo al más viejo.
+   */
+  ultimoTicket(empresa: EmpresaPanorama): TicketReciente | null {
+    return this.soporteDe(empresa)?.tickets[0] || null;
+  }
+
+  /** El ticket se abre en la plataforma de soporte, que es donde se trabaja. */
+  urlTicket(cd: string): string {
+    return `${BASE_SOPORTE}/tickets/ticket/${cd}`;
+  }
+
+  /**
+   * La bandeja completa de soporte.
+   *
+   * Va SIN filtrar por esta empresa, y no es un olvido: la plataforma de
+   * soporte no guarda el filtro en la dirección —filtrar allá no cambia la
+   * URL—, así que no hay ningún parámetro que mandarle. Inventarse uno daría
+   * un enlace que parece filtrar y no filtra, que es peor que no tenerlo.
+   */
+  get urlBandejaSoporte(): string {
+    return `${BASE_SOPORTE}/tickets/backlog-tickets`;
+  }
+
+  /** Mismo lenguaje que la pantalla de tickets del comercio: Error / Consulta. */
+  tipoTicket(tipo: string | null): string {
+    if (tipo === 'bug') return 'Error';
+    if (tipo === 'ayuda') return 'Consulta';
+    if (tipo === 'idea') return 'Sugerencia';
+    return 'Sin clasificar';
+  }
+
+  estadoTicket(status: string): string {
+    const k = String(status || '').toLowerCase();
+    if (k === 'haciendo') return 'En progreso';
+    if (k === 'pendiente') return 'Pendiente';
+    if (k === 'resuelto') return 'Resuelto';
+    if (k === 'archivado') return 'Archivado';
+    return status || 'Pendiente';
+  }
+
+  /**
+   * El detalle que no cabe en la fila: categoría, prioridad y fecha. Va en el
+   * globo para que la lista se lea de un vistazo sin perder el contexto.
+   */
+  tituloTicket(t: TicketReciente): string {
+    const partes = [this.tipoTicket(t.tipo), this.estadoTicket(t.status)];
+    if (t.categoria) partes.push(t.categoria);
+    if (t.prioridad) partes.push(`prioridad ${t.prioridad}`);
+    if (t.fecha) partes.push(this.fechaCorta(t.fecha));
+    return partes.join(' · ');
+  }
+
+  /** Clase del punto de estado. Lo desconocido se pinta como pendiente. */
+  claseEstadoTicket(status: string): string {
+    const k = String(status || '').toLowerCase();
+    if (k === 'resuelto') return 'tk--resuelto';
+    if (k === 'archivado') return 'tk--archivado';
+    if (k === 'haciendo') return 'tk--haciendo';
+    return 'tk--pendiente';
   }
 
   // ── Acciones ──────────────────────────────────────────────────────────────
