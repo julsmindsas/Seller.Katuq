@@ -1350,7 +1350,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         type: this.type,
         sourceColumns: this.sourceColumns,
         sampleRows: sampleRows,
-        companyId: company.cd || company._id
+        // El backend ata esta ruta al tenant del JWT, que es el nombre comercial
+        // (el mismo que usa la importación). Con el id del documento respondía
+        // 403 TENANT_MISMATCH y el mapeo con IA nunca corría.
+        companyId: company.nomComercial
       };
 
       // Techo de espera. El proxy del backend le da 60s a KAI, y si KAI no
