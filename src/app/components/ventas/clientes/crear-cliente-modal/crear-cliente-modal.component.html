@@ -242,6 +242,58 @@
           </div>
         </div>
 
+        <!-- ── Dirección de entrega (opcional, ticket 1046) ── -->
+        <div class="col-12" *ngIf="permiteDireccion">
+          <div class="form-section-modern">
+            <div class="section-header">
+              <i class="pi pi-map-marker" style="color:#8b5cf6;"></i>
+              <h6>{{ "Dirección de entrega" | translate }}</h6>
+              <small class="text-muted ms-2">{{ "Opcional" | translate }}</small>
+            </div>
+
+            <div *ngIf="direccionesExistentes.length > 0" class="mb-3">
+              <label class="form-label-modern mb-1">{{ "Direcciones guardadas" | translate }}</label>
+              <div *ngFor="let e of direccionesExistentes" class="d-flex align-items-start gap-2 mb-1" style="font-size:0.85rem;">
+                <i class="pi pi-map-marker text-muted mt-1"></i>
+                <span>{{ e.direccionEntrega }}<span *ngIf="e.ciudad"> — {{ e.ciudad }}</span></span>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-7">
+                <label class="form-label-modern" for="crear-cliente-direccion">
+                  {{ (direccionesExistentes.length ? "Agregar otra dirección" : "Dirección") | translate }}
+                </label>
+                <div class="d-flex gap-2">
+                  <input id="crear-cliente-direccion" pInputText type="text" readonly class="flex-grow-1" style="cursor:pointer;"
+                    [value]="entregaNueva?.direccionEntrega || ''"
+                    placeholder="{{ 'Clic para escribir la dirección' | translate }}"
+                    (click)="abrirModalDireccion()" (keydown.enter)="abrirModalDireccion()">
+                  <button pButton type="button" icon="pi pi-map-marker" class="p-button-outlined"
+                    [attr.aria-label]="'Escribir dirección' | translate" (click)="abrirModalDireccion()"></button>
+                  <button *ngIf="entregaNueva" pButton type="button" icon="pi pi-times"
+                    class="p-button-outlined p-button-secondary"
+                    [attr.aria-label]="'Quitar dirección' | translate" (click)="quitarDireccion()"></button>
+                </div>
+                <small *ngIf="entregaNueva?.ciudad" class="text-muted d-block mt-1">
+                  {{ entregaNueva.ciudad }}<span *ngIf="entregaNueva.departamento">, {{ entregaNueva.departamento }}</span>
+                </small>
+              </div>
+              <div class="col-12 col-md-5" *ngIf="entregaNueva">
+                <label class="form-label-modern" for="crear-cliente-barrio">{{ "Barrio" | translate }}</label>
+                <input id="crear-cliente-barrio" pInputText type="text" class="w-100"
+                  [(ngModel)]="entregaNueva.barrio" [ngModelOptions]="{ standalone: true }">
+              </div>
+              <div class="col-12" *ngIf="entregaNueva">
+                <label class="form-label-modern" for="crear-cliente-indicaciones">{{ "Indicaciones para la entrega" | translate }}</label>
+                <input id="crear-cliente-indicaciones" pInputText type="text" class="w-100"
+                  placeholder="{{ 'Ej: portería, segundo piso, horario' | translate }}"
+                  [(ngModel)]="entregaNueva.observaciones" [ngModelOptions]="{ standalone: true }">
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </form>
   </div>

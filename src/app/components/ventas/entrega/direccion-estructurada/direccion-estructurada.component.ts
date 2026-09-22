@@ -850,6 +850,8 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       coordenadas: this.direccionForm.get("coordenadas")?.value,
       esRural: this.direccionForm.get("esRural")?.value,
       ciudad: this.direccionForm.get("ciudad")?.value,
+      // Ticket 1046: el departamento ya se resolvía aquí pero no se devolvía.
+      departamento: this.departamentoSeleccionado || this.direccionForm.get("departamento")?.value || "",
       referencias: this.direccionForm.get("referencias")?.value,
       // Datos estructurados para facilitar posteriores usos
       estructura: this.obtenerEstructuraDireccion(),

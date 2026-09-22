@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { FormGroup, FormBuilder, Validators } from "@angular/forms";
-import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
+import { NgbActiveModal, NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { map } from "rxjs/operators";
 import { throwError } from "rxjs";
 import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
@@ -8,6 +8,8 @@ import { CorporateClientsService } from "../services/corporate-clients.service";
 import { CrmService } from "../../../crm/services/crm.service";
 import { ClientConfigService, ClientTag } from "../services/client-config.service";
 import { InfoIndicativos } from "../../../../../Mock/indicativosPais";
+import { DireccionEstructuradaComponent } from "../../entrega/direccion-estructurada/direccion-estructurada.component";
+import { DaneCodesService } from "../../../../shared/services/dane-codes.service";
 import Swal from "sweetalert2";
 
 @Component({
@@ -63,6 +65,20 @@ export class CrearClienteModalComponent implements OnInit {
   etiquetasSeleccionadas: string[] = [];
   tipoDocSeleccionado: string = 'CC';
 
+  /**
+   * Ticket 1046 (ALMACEN BOMBAS): este formulario no tenía dónde registrar la
+   * dirección de entrega, así que los clientes creados desde el listado o el
+   * POS quedaban sin dirección. Es opcional y usa el mismo modal de dirección
+   * estructurada de la pantalla completa de clientes.
+   */
+  entregaNueva: any = null;
+  /** Direcciones que el cliente ya tiene (solo se muestran; al guardar se conservan). */
+  direccionesExistentes: any[] = [];
+  /** Solo para clientes habituales que se guardan: corporativos van por CRM y el borrador no persiste. */
+  get permiteDireccion(): boolean {
+    return this.target === 'client' && this.persist;
+  }
+
   readonly tipoDocOptions = [
     { label: 'CC - Cédula de ciudadanía', value: 'CC' },
     { label: 'NIT', value: 'NIT' },
@@ -86,12 +102,17 @@ export class CrearClienteModalComponent implements OnInit {
     public activeModal: NgbActiveModal,
     private infoIndicativos: InfoIndicativos,
     private clientConfig: ClientConfigService,
+    private modalService: NgbModal,
+    private daneCodes: DaneCodesService,
   ) {
     this.initForm();
   }
 
   ngOnInit(): void {
     this.indicativos = this.infoIndicativos.datos;
+    this.direccionesExistentes = this.isEdit && Array.isArray(this.clienteData?.datosEntrega)
+      ? this.clienteData.datosEntrega.filter((e: any) => e && e.direccionEntrega)
+      : [];
     if (this.tagsCatalog) {
       this.clientTagsCatalog = this.tagsCatalog;
     } else {
@@ -378,8 +399,20 @@ export class CrearClienteModalComponent implements OnInit {
       return;
     }
 
+    if (this.permiteDireccion && this.entregaNueva && (!this.entregaNueva.direccionEntrega || !this.entregaNueva.ciudad)) {
+      Swal.fire({
+        title: 'Falta completar la dirección',
+        text: 'Escribe la dirección con su ciudad, o quítala si no la vas a registrar ahora.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#8b5cf6',
+      });
+      return;
+    }
+
     const formValue = this.formulario.getRawValue();
-    const clienteData = {
+    const entrega = this.permiteDireccion && this.entregaNueva ? this.construirEntrega(formValue) : null;
+    const clienteData: any = {
       ...formValue,
       nombres_completos: this.toTitleCase(formValue.nombres_completos),
       apellidos_completos: this.toTitleCase(formValue.apellidos_completos),
@@ -399,8 +432,9 @@ export class CrearClienteModalComponent implements OnInit {
     }
 
     if (this.isEdit) {
-      this.ejecutarEdicion(clienteData);
+      this.ejecutarEdicion(clienteData, entrega);
     } else {
+      if (entrega) clienteData.datosEntrega = [entrega];
       this.verificarYCrearCliente(clienteData);
     }
   }
@@ -446,9 +480,33 @@ export class CrearClienteModalComponent implements OnInit {
     return this.failOnCrmError<any>(this.crmService.updateLead(payload.cd, payload, true));
   }
 
-  private ejecutarEdicion(clienteData: any) {
+  private ejecutarEdicion(clienteData: any, entrega: any = null) {
     const payload = { ...clienteData, cd: this.clienteData.cd || this.clienteData.id };
+    if (!entrega) {
+      this.enviarEdicion(payload);
+      return;
+    }
+    // La dirección nueva se AGREGA a las que ya tiene. Se leen del cliente
+    // guardado (no de lo que trajo la pantalla) para no perder ninguna.
+    this.lookupByDocument(payload.documento).subscribe({
+      next: (res: any) => {
+        const guardado = Array.isArray(res) ? res[0] : res;
+        const existentes = Array.isArray(guardado?.datosEntrega)
+          ? guardado.datosEntrega
+          : (Array.isArray(this.clienteData?.datosEntrega) ? this.clienteData.datosEntrega : []);
+        this.enviarEdicion({ ...payload, datosEntrega: [...existentes, entrega] });
+      },
+      error: () => {
+        if (Array.isArray(this.clienteData?.datosEntrega)) {
+          this.enviarEdicion({ ...payload, datosEntrega: [...this.clienteData.datosEntrega, entrega] });
+          return;
+        }
+        Swal.fire('No se pudo agregar la dirección', 'No logramos leer las direcciones que ya tiene el cliente. Intenta de nuevo en un momento.', 'error');
+      },
+    });
+  }
 
+  private enviarEdicion(payload: any) {
     this.persistEdit(payload).subscribe({
       next: () => {
         this.lookupByDocument(payload.documento).subscribe({
@@ -488,7 +546,8 @@ export class CrearClienteModalComponent implements OnInit {
           Swal.fire({
             title: `${this.entityLabel} ya registrado`,
             html: `<p>El documento <strong>${clienteData.documento}</strong> ya está registrado.</p>
-                   <p><strong>${this.entityLabel}:</strong> ${clienteEncontrado.nombres_completos} ${clienteEncontrado.apellidos_completos || ""}</p>`,
+                   <p><strong>${this.entityLabel}:</strong> ${clienteEncontrado.nombres_completos} ${clienteEncontrado.apellidos_completos || ""}</p>
+                   ${clienteData.datosEntrega?.length ? '<p class="text-muted" style="font-size:0.9em;">La dirección que escribiste no se guardó: edita ese cliente para agregarla.</p>' : ''}`,
             icon: "info",
             confirmButtonText: "Entendido",
           }).then(() => {
@@ -522,6 +581,87 @@ export class CrearClienteModalComponent implements OnInit {
         Swal.fire("Error", `Ocurrió un error al crear el ${this.entityLabel.toLowerCase()}`, "error");
       },
     });
+  }
+
+  // ── Dirección de entrega (ticket 1046) ─────────────────────────────
+  abrirModalDireccion(): void {
+    const ref = this.modalService.open(DireccionEstructuradaComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      keyboard: false,
+    });
+    ref.componentInstance.direccionActual = this.entregaNueva?.direccionEntrega || '';
+    ref.componentInstance.ciudadActual = this.entregaNueva?.ciudad || '';
+    ref.result.then(
+      (r: any) => {
+        if (!r) return;
+        const previo = this.entregaNueva || {};
+        if (typeof r === 'string') {
+          this.entregaNueva = { ...previo, direccionEntrega: r };
+          return;
+        }
+        const [lat, lng] = String(r.coordenadas || '').split(',').map((c: string) => c.trim());
+        this.entregaNueva = {
+          ...previo,
+          direccionEntrega: r.direccion || '',
+          ciudad: r.ciudad || previo.ciudad || '',
+          departamento: r.departamento || '',
+          pais: 'Colombia',
+          coordenadas: r.coordenadas || '',
+          latitud: lat || '',
+          longitud: lng || '',
+          especificacionesInternas: r.referencias || previo.especificacionesInternas || '',
+        };
+        if (!this.entregaNueva.departamento && this.entregaNueva.ciudad) {
+          this.completarDepartamento(this.entregaNueva.ciudad);
+        }
+      },
+      () => {},
+    );
+  }
+
+  quitarDireccion(): void {
+    this.entregaNueva = null;
+  }
+
+  /** Solo llena el departamento cuando la ciudad corresponde a UN único departamento. */
+  private completarDepartamento(ciudad: string): void {
+    const clave = (t: any) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+    this.daneCodes.searchMunicipios(ciudad).subscribe((municipios: any[]) => {
+      const exactos = (municipios || []).filter((m: any) => clave(m.nombre) === clave(ciudad));
+      const departamentos = Array.from(new Set(exactos.map((m: any) => m.departamento)));
+      if (departamentos.length === 1 && this.entregaNueva && !this.entregaNueva.departamento) {
+        this.entregaNueva.departamento = departamentos[0];
+      }
+    });
+  }
+
+  /** Misma forma que guarda la pantalla completa de clientes (clientes.component::guardarDatosEntrega). */
+  private construirEntrega(fv: any): any {
+    const e = this.entregaNueva || {};
+    return {
+      alias: e.alias || '',
+      nombres: this.toTitleCase(fv.nombres_completos || ''),
+      apellidos: this.toTitleCase(fv.apellidos_completos || ''),
+      indicativoCel: String(fv.indicativo_celular_comprador || '57'),
+      celular: String(fv.numero_celular_comprador || ''),
+      indicativoOtroNumero: String(fv.indicativo_celular_comprador || '57'),
+      otroNumero: '',
+      direccionEntrega: e.direccionEntrega || '',
+      observaciones: e.observaciones || '',
+      barrio: e.barrio || '',
+      nombreUnidad: '',
+      especificacionesInternas: e.especificacionesInternas || '',
+      pais: e.pais || 'Colombia',
+      departamento: e.departamento || '',
+      ciudad: e.ciudad || '',
+      zonaCobro: '',
+      valorZonaCobro: '',
+      codigoPV: '',
+      latitud: e.latitud || '',
+      longitud: e.longitud || '',
+      coordenadas: e.coordenadas || '',
+    };
   }
 
   private marcarControlesComoTocados() {
