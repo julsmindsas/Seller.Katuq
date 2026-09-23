@@ -7258,3 +7258,13 @@ Propuesta: `openspec/changes/tienda-carrito-abandonado/` (backend). Backend `91d
 **Decisión.** `MetaPixelService` carga el píxel KATUQ PIXEL **solo en la página pública de registro** (nunca en el panel del comercio) y solo en producción. Manda `PageView` al abrirla y `CompleteRegistration` cuando el registro queda aprobado; los que el anti-abuso deja en revisión NO se le cuentan a Meta, para no enseñarle a traer más de esos. Los `utm_*` y `fbclid` del anuncio viajan con el registro (`origenCampana`) y quedan en `surveyResponses`, que ya guarda el cuerpo completo: se cruza pauta contra registros desde Katuq sin depender de Meta. Sin cambios en el backend.
 
 **Después.** Cambiar el evento de optimización de las campañas a `CompleteRegistration`, excluir Audience Network a nivel de cuenta y juntar el público general (video Nextech) y el de moda en una sola campaña con presupuesto compartido (~$25.000/día).
+
+## D-316 (2026-09-23) — Promociones automáticas en las tiendas: 2x1, porcentaje y por volumen
+
+> Los commits de esta decisión dicen **D-315** (backend `acea75c`, front `3022c62f`): dos sesiones tomaron el mismo número en paralelo y D-315 quedó registrada para el píxel de Meta en el registro. Esta es la D-316.
+
+**Contexto.** La tienda solo tenía cupones (el comprador escribe un código). Faltaban las promociones que se aplican solas, las que más se usan: 2x1, "15% en chocolates", precio por volumen.
+
+**Decisión.** `tienda.promociones[]` (hasta 20): `nxm` (lleva N paga M del mismo producto), `porcentaje`, `volumen` (X% desde N unidades de lo que cubre); alcance toda la tienda / categorías / productos; vigencia y activa. **Las calcula siempre el servidor** con la regla guardada y su precio. A cada línea UNA promoción, la que más rebaja (no se acumulan entre sí); el cupón se suma encima; tope 90%. Entran por el mismo camino del cupón (`porceDescuento`, lo único que honran los dos calculadores de pedidos) y el pedido guarda cuáles fueron (`promocionesTienda`). El carrito cotiza en el servidor (`POST /public/:slug/cotizar`) y muestra cada promoción; la ficha lleva la insignia; confirmación y correo la nombran. Editor: sección "Promociones automáticas" junto a los cupones. Venta asistida y POS sin cambios (money-path 26/26, promo-line 12/12).
+
+**Pendiente**: insignia en las tarjetas del catálogo (hoy solo en la ficha) y 2x1 entre productos distintos.
