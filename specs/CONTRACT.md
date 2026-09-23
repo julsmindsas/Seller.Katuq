@@ -7242,3 +7242,11 @@ Propuesta: `openspec/changes/tienda-pago-abandonado/` (backend). Backend `33ccd7
 Commit `0a41139`, **ya en producción** (entró por el pull de otra sesión el 23-sep: la unidad de despliegue es la rama). Verificado en vivo contra `api.katuq.com`: las herramientas responden con credencial de la operadora, el registro cargó las 51 y el endpoint sigue cerrado sin token. 8 pruebas nuevas; las 16 del tablero y las pantallas siguen verdes.
 
 Numerada D-314 y no D-313 porque el commit del carrito abandonado ya había citado D-313 en git, y la historia publicada no se reescribe por algo cosmético.
+
+## D-313 (2026-09-23) — Carrito abandonado, y el comercio por fin ve quién le dejó sus datos
+
+**Contexto.** No existía el carrito abandonado. Y al diseñarlo salieron dos cosas: (1) **`/v1/prospectos` estaba abierto** —sin sesión, y leyendo la colección entera de TODAS las empresas; también crear, editar y "generar datos de prueba"—. Hoy vacía, pero ahí caen el formulario de contacto y el "Avísame" de las tiendas: con el primero, cualquiera en internet los habría leído. (2) **El comercio no tenía dónde ver esos contactos**: se guardaban y nadie los miraba.
+
+**Decisión.** Se cierra `/v1/prospectos` (sesión obligatoria, empresa firmada en el token, listado por empresa, 404 para lo de otra) **antes** de guardar el primer carrito. El carrito vive como prospecto (`tipo: "carrito-abandonado"`, uno por comprador y tienda, sin colección nueva): se guarda al pasar sus datos al resumen, se cierra (o se borra si el comercio no lo tocó) al confirmar, y a la hora sale UN correo con la marca de la tienda y "Volver a mi carrito" (enlace firmado que SUMA lo que falte al carrito de ese navegador; reemplazarlo borraba lo que tenía, visto en la prueba en vivo). Máximo uno por día; vence al día. "Cómo va tu página" gana **Tus contactos** (formulario, Avísame y carritos, con WhatsApp con el mensaje escrito) y la cifra de lo **recuperado** por los recordatorios. Candado `CARRITO_ABANDONADO_CRON_ENABLED` (encendido en prod el 23-sep tras ensayo en seco).
+
+Propuesta: `openspec/changes/tienda-carrito-abandonado/` (backend). Backend `91d54f4`, front `2026.09.23.1`.
