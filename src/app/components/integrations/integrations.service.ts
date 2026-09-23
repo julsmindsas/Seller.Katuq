@@ -1182,6 +1182,9 @@ export class IntegrationsService {
     if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
     if (options?.prefijoId) body.prefijoId = options.prefijoId;
     if (options?.dueDate) body.dueDate = options.dueDate; // D-042: vencimiento de crédito (yyyy-MM-dd)
+    // Ticket 1054: observaciones (orden de compra, notas) y retenciones elegidas.
+    if (options?.observaciones) body.observaciones = options.observaciones;
+    if (Array.isArray(options?.retenciones) && options.retenciones.length) body.retenciones = options.retenciones;
 
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order-async`,
@@ -1206,6 +1209,14 @@ export class IntegrationsService {
    * Obtiene formas de pago disponibles en el proveedor contable.
    * Para World Office: GET /v1/accounting/world_office/payment-types
    */
+  /** Ticket 1054: impuestos del sistema contable (de aquí salen las retenciones). */
+  getAccountingTaxes(provider: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/${provider}/taxes`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
   getAccountingPaymentTypes(provider: string): Observable<any> {
     return this.http.get<any>(
       `${environment.urlApi}/v1/accounting/${provider}/payment-types`,

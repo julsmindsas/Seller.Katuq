@@ -56,7 +56,7 @@ import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
 import { Observable, Subject, forkJoin, of } from "rxjs";
-import { debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
 import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
@@ -134,6 +134,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   facturaPlazo: string = ""; // '8' | '15' | '30' | ... | '120' | 'exacta'
   facturaDueDate: string = ""; // yyyy-MM-dd
   facturaGenerando: boolean = false;
+  /** Ticket 1054: observaciones de la factura (orden de compra, notas). */
+  facturaObservaciones: string = "";
+  /** Ticket 1054: retenciones del SIIGO de la empresa, agrupadas por tipo, y la elegida en cada una. */
+  facturaRetencionesPorTipo: { tipo: string; etiqueta: string; opciones: { id: number; name: string }[] }[] = [];
+  facturaRetencionSel: { [tipo: string]: number | null } = {};
   // SIIGO no define plazos: los define Katuq y se calcula la fecha. 'exacta' abre date-picker.
   readonly facturaPlazosCredito: { value: string; label: string }[] = [
     { value: "8", label: "8 días" },
@@ -999,9 +1004,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     forkJoin({
       docs: this.integrationsService.getAccountingDocumentTypes(provider),
-      pays: this.integrationsService.getAccountingPaymentTypes(provider)
+      pays: this.integrationsService.getAccountingPaymentTypes(provider),
+      // Ticket 1054: si no cargan los impuestos, se factura igual (sin retenciones).
+      taxes: this.integrationsService.getAccountingTaxes(provider).pipe(catchError(() => of(null)))
     }).subscribe({
-      next: ({ docs, pays }) => {
+      next: ({ docs, pays, taxes }) => {
         Swal.close();
 
         const documentTypes = this.extraerListaFactura(docs, 'documentTypes');
@@ -1025,6 +1032,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.facturaPlazo = '';
         this.facturaDueDate = '';
         this.facturaGenerando = false;
+        this.facturaObservaciones = '';
+        this.facturaRetencionesPorTipo = this.agruparRetencionesFactura(this.extraerListaFactura(taxes, 'taxes'));
+        this.facturaRetencionSel = {};
+        this.facturaRetencionesPorTipo.forEach((g) => (this.facturaRetencionSel[g.tipo] = null));
 
         this.modalService.open(this.facturaSiigoModal, {
           size: 'md',
@@ -1043,6 +1054,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     });
+  }
+
+  /**
+   * Ticket 1054: de los impuestos del SIIGO de la empresa, solo las retenciones activas,
+   * agrupadas por tipo (una por tipo, como exige SIIGO). El backend vuelve a validar.
+   */
+  private agruparRetencionesFactura(impuestos: any[]): { tipo: string; etiqueta: string; opciones: { id: number; name: string }[] }[] {
+    const tipos: { tipo: string; etiqueta: string }[] = [
+      { tipo: 'Retefuente', etiqueta: 'Retención en la fuente' },
+      { tipo: 'ReteICA', etiqueta: 'ReteICA' },
+      { tipo: 'ReteIVA', etiqueta: 'ReteIVA' },
+      { tipo: 'Autorretencion', etiqueta: 'Autorretención' },
+    ];
+    const lista = Array.isArray(impuestos) ? impuestos : [];
+    return tipos
+      .map((t) => ({
+        ...t,
+        opciones: lista
+          .filter((i: any) => i && i.type === t.tipo && i.active !== false && i.id != null)
+          .map((i: any) => ({ id: Number(i.id), name: String(i.name || `${t.etiqueta} ${i.percentage ?? ''}`) })),
+      }))
+      .filter((g) => g.opciones.length > 0);
   }
 
   /** Normaliza la lista (documentTypes/paymentTypes) sin importar cómo venga envuelta la respuesta. */
@@ -1118,8 +1151,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       : undefined;
     const dueDate = this.facturaEsCredito ? (this.facturaDueDate || undefined) : undefined;
 
+    // Ticket 1054: observaciones y retenciones elegidas.
+    const extras = {
+      observaciones: (this.facturaObservaciones || '').trim(),
+      retenciones: Object.values(this.facturaRetencionSel || {})
+        .filter((v) => v !== null && v !== undefined)
+        .map((v) => Number(v)),
+    };
+
     modal.close();
-    this.ejecutarFacturacionSiigo(pedido, documentTypeId, undefined, paymentTypeId, dueDate);
+    this.ejecutarFacturacionSiigo(pedido, documentTypeId, undefined, paymentTypeId, dueDate, extras);
   }
 
   /**
@@ -1247,7 +1288,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param paymentTypeId ID de la forma de pago en SIIGO (D-042)
    * @param dueDate Fecha de vencimiento de crédito en formato yyyy-MM-dd (D-042)
    */
-  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string): void {
+  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string, extras?: { observaciones?: string; retenciones?: number[] }): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const nroPedido = pedido.nroPedido || pedido.referencia || pedido._id;
 
@@ -1267,6 +1308,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (prefijoId) options.prefijoId = prefijoId;
     if (paymentTypeId) options.paymentTypeId = paymentTypeId; // D-042: forma de pago SIIGO
     if (dueDate) options.dueDate = dueDate; // D-042: vencimiento de crédito (yyyy-MM-dd)
+    if (extras?.observaciones) options.observaciones = extras.observaciones; // ticket 1054
+    if (extras?.retenciones?.length) options.retenciones = extras.retenciones; // ticket 1054
 
     // Usar endpoint async para no bloquear (responde 202 inmediato)
     const provider = this.activeAccountingProvider || 'siigo';
