@@ -747,6 +747,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   ) {}
 
   ngOnInit(): void {
+    this.cargarTextosCorreo();
     this.id = this.route.snapshot.paramMap.get("id") || "";
     // El editor ocupa la pantalla entera: sin menú ni cabecera del panel, la
     // previa "Computador" cabe de verdad y hay un solo scroll por columna.
@@ -1124,6 +1125,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   cargandoPrevia = false;
   enviandoPrueba = false;
   private textosCorreoPedidos = false;
+  /**
+   * La sección solo se muestra si el backend ya la conoce (responde los
+   * textos). Si el front sale antes que el backend, un backend viejo
+   * descartaría la configuración al guardar y el comercio perdería lo que
+   * escribió sin enterarse: mejor no mostrarla.
+   */
+  soportaCorreos = false;
 
   get correos(): CorreosTienda {
     const t = (this.contenido && this.contenido.tienda) as TiendaSitio;
@@ -1142,8 +1150,11 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (this.textosCorreoPedidos) return;
     this.textosCorreoPedidos = true;
     this.service.correosPredeterminados().subscribe({
-      next: (r) => (this.textosCorreo = (r && r.success && r.data && r.data.momentos) || {}),
-      error: () => (this.textosCorreoPedidos = false),
+      next: (r) => {
+        this.textosCorreo = (r && r.success && r.data && r.data.momentos) || {};
+        this.soportaCorreos = Object.keys(this.textosCorreo).length > 0;
+      },
+      error: () => (this.soportaCorreos = false),
     });
   }
 

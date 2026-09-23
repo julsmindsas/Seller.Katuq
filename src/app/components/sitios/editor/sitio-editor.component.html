@@ -2161,8 +2161,8 @@
             </button>
           </div>
 
-          <!-- ── Correos de tu tienda (D-317) ── -->
-          <div class="grupo">
+          <!-- ── Correos de tu tienda (D-317) ── solo si el backend ya los conoce -->
+          <div class="grupo" *ngIf="soportaCorreos">
             <h3>Correos de tu tienda</h3>
             <p class="nota">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
