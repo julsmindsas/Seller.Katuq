@@ -57,6 +57,30 @@ export interface TiendaSitio {
   cupones?: CuponSitio[];
   /** Promociones que se aplican solas (D-315). Las calcula el servidor. */
   promociones?: PromocionSitio[];
+  /** Los correos que la tienda le manda al comprador, personalizados (D-317). */
+  correos?: CorreosTienda;
+}
+
+/** Un correo de la tienda: si sale y qué dice. Vacío = el texto de siempre. */
+export interface CorreoMomento {
+  activo: boolean;
+  asunto: string;
+  titulo: string;
+  mensaje: string;
+}
+
+export interface CorreosTienda {
+  diseno: { color: string; pie: string; responderA: string };
+  momentos: { [momento: string]: CorreoMomento };
+}
+
+/** Lo que dice un correo por defecto, y cuándo sale. */
+export interface TextoCorreo {
+  nombre: string;
+  cuando: string;
+  asunto: string;
+  titulo: string;
+  mensaje: string;
 }
 
 /** Una promoción automática: 2x1, porcentaje o por volumen. */
@@ -388,6 +412,23 @@ export class SitiosService extends BaseService {
   }
 
   /** Las reseñas de la tienda, para moderarlas. */
+  /** Lo que dice cada correo de la tienda si el comercio no lo cambia. */
+  correosPredeterminados(): Observable<Respuesta<{ momentos: { [m: string]: TextoCorreo }; variables: string[] }>> {
+    return this.get<Respuesta<{ momentos: { [m: string]: TextoCorreo }; variables: string[] }>>(
+      `/v1/sites/correos/predeterminados`
+    );
+  }
+
+  /** El correo con lo que se está editando, con un pedido de ejemplo. */
+  vistaPreviaCorreo(id: string, momento: string, correos: CorreosTienda): Observable<Respuesta<{ asunto: string; html: string }>> {
+    return this.post<Respuesta<{ asunto: string; html: string }>>(`/v1/sites/${id}/correos/vista-previa`, { momento, correos });
+  }
+
+  /** Manda el correo de ejemplo al correo de quien está editando. */
+  pruebaCorreo(id: string, momento: string, correos: CorreosTienda): Observable<Respuesta<{ enviadoA: string }>> {
+    return this.post<Respuesta<{ enviadoA: string }>>(`/v1/sites/${id}/correos/prueba`, { momento, correos });
+  }
+
   resenas(id: string): Observable<Respuesta<{ resenas: ResenaSitio[] }>> {
     return this.get<Respuesta<{ resenas: ResenaSitio[] }>>(`/v1/sites/${id}/resenas`);
   }

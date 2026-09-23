@@ -2161,6 +2161,60 @@
             </button>
           </div>
 
+          <!-- ── Correos de tu tienda (D-317) ── -->
+          <div class="grupo">
+            <h3>Correos de tu tienda</h3>
+            <p class="nota">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              Lo que tu tienda le escribe al comprador, con tu logo y tu nombre. Aquí cambias lo que dice
+              cada correo; lo que dejes vacío sale con el texto de siempre.
+            </p>
+            <div class="campo-doble">
+              <label class="campo-mini"><span>Color de los botones</span>
+                <input type="color" [ngModel]="correos.diseno.color || contenido.tema.colorPrimario || '#211f3a'"
+                       (ngModelChange)="correos.diseno.color = $event; marcarSucio()" /></label>
+              <label class="campo-mini"><span>Las respuestas llegan a</span>
+                <input type="email" maxlength="120" [(ngModel)]="correos.diseno.responderA" (ngModelChange)="marcarSucio()"
+                       placeholder="El correo de tu empresa" /></label>
+            </div>
+            <label class="campo-mini"><span>Pie de tus correos</span>
+              <textarea rows="2" maxlength="400" [(ngModel)]="correos.diseno.pie" (ngModelChange)="marcarSucio()"
+                        placeholder="Horarios, redes, políticas de cambio…"></textarea></label>
+            <p class="nota">Puedes usar {{ variablesCorreo }} en los textos.</p>
+
+            <div class="correo" *ngFor="let m of MOMENTOS_CORREO">
+              <div class="correo__cabeza">
+                <button type="button" class="correo__titulo" (click)="abrirCorreo(m)">
+                  <strong>{{ (textosCorreo[m] && textosCorreo[m].nombre) || m }}</strong>
+                  <small *ngIf="textosCorreo[m]">{{ textosCorreo[m].cuando }}</small>
+                </button>
+                <label class="paginas__check correo__sale">
+                  <input type="checkbox" [(ngModel)]="correos.momentos[m].activo" (ngModelChange)="marcarSucio()" />
+                  Sale
+                </label>
+              </div>
+              <div class="correo__cuerpo" *ngIf="correoAbierto === m">
+                <label class="campo-mini"><span>Asunto</span>
+                  <input type="text" maxlength="120" [(ngModel)]="correos.momentos[m].asunto" (ngModelChange)="marcarSucio()"
+                         [placeholder]="(textosCorreo[m] && textosCorreo[m].asunto) || ''" /></label>
+                <label class="campo-mini"><span>Título</span>
+                  <input type="text" maxlength="120" [(ngModel)]="correos.momentos[m].titulo" (ngModelChange)="marcarSucio()"
+                         [placeholder]="(textosCorreo[m] && textosCorreo[m].titulo) || ''" /></label>
+                <label class="campo-mini"><span>Mensaje</span>
+                  <textarea rows="3" maxlength="600" [(ngModel)]="correos.momentos[m].mensaje" (ngModelChange)="marcarSucio()"
+                            [placeholder]="(textosCorreo[m] && textosCorreo[m].mensaje) || ''"></textarea></label>
+                <div class="correo__acciones">
+                  <button type="button" class="boton-secundario" (click)="verCorreo(m)" [disabled]="cargandoPrevia">
+                    {{ cargandoPrevia ? 'Armando…' : 'Vista previa' }}
+                  </button>
+                  <button type="button" class="boton-secundario" (click)="probarCorreo(m)" [disabled]="enviandoPrueba">
+                    {{ enviandoPrueba ? 'Enviando…' : 'Enviarme una prueba' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="grupo">
             <h3>Cómo te pagan</h3>
             <button class="opcion" [class.is-active]="contenido.tienda.pagoEnLinea"
@@ -2713,6 +2767,18 @@
 </div>
 
 <!-- Selector de productos de la sección en edición -->
+<!-- Vista previa de un correo de la tienda: el HTML del servidor en un iframe con sandbox -->
+<div class="correo-previa" appAlBody *ngIf="previaCorreo" (click)="previaCorreo = null">
+  <div class="correo-previa__caja" (click)="$event.stopPropagation()">
+    <div class="correo-previa__cabeza">
+      <div><small>Asunto</small><strong>{{ previaCorreo.asunto }}</strong></div>
+      <button type="button" class="boton-secundario" (click)="previaCorreo = null">Cerrar</button>
+    </div>
+    <iframe class="correo-previa__marco" sandbox="" [srcdoc]="previaCorreo.html" title="Vista previa del correo"></iframe>
+    <p class="correo-previa__nota">Así lo recibe el comprador, con un pedido de ejemplo. Los cambios se aplican al publicar.</p>
+  </div>
+</div>
+
 <!-- Productos de una promoción automática -->
 <app-selector-productos
   *ngIf="promoEditandoProductos"

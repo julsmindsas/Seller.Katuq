@@ -5,7 +5,8 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, CuponSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TiendaSitio, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
+import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
@@ -741,7 +742,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     private bodegaService: BodegaService,
     private toastr: ToastrService,
     private host: ElementRef<HTMLElement>,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -1100,6 +1102,91 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (!r) return;
     r.puntos.splice(i, 1);
     this.marcarSucio();
+  }
+
+  // ── Correos de la tienda (D-317) ────────────────────────────────────────
+  // El comercio personaliza lo que su tienda le escribe al comprador. El
+  // remitente sigue siendo notificaciones@katuq.com; los de Katuq no cambian.
+
+  readonly MOMENTOS_CORREO = [
+    "pedido_creado",
+    "pago_aprobado",
+    "pago_pendiente",
+    "carrito_abandonado",
+    "pedido_despachado",
+    "pedido_entregado",
+  ];
+  /** Con llaves literales: en la plantilla de Angular, "{" abre un mensaje ICU. */
+  readonly variablesCorreo = "{nombre}, {pedido}, {tienda} y {total}";
+  textosCorreo: { [m: string]: TextoCorreo } = {};
+  correoAbierto: string | null = null;
+  previaCorreo: { asunto: string; html: SafeHtml } | null = null;
+  cargandoPrevia = false;
+  enviandoPrueba = false;
+  private textosCorreoPedidos = false;
+
+  get correos(): CorreosTienda {
+    const t = (this.contenido && this.contenido.tienda) as TiendaSitio;
+    if (!t) return { diseno: { color: "", pie: "", responderA: "" }, momentos: {} };
+    if (!t.correos) t.correos = { diseno: { color: "", pie: "", responderA: "" }, momentos: {} };
+    if (!t.correos.diseno) t.correos.diseno = { color: "", pie: "", responderA: "" };
+    if (!t.correos.momentos) t.correos.momentos = {};
+    for (const m of this.MOMENTOS_CORREO) {
+      if (!t.correos.momentos[m]) t.correos.momentos[m] = { activo: true, asunto: "", titulo: "", mensaje: "" };
+    }
+    return t.correos;
+  }
+
+  /** Los textos por defecto, una sola vez: son los que se ven como ejemplo. */
+  cargarTextosCorreo(): void {
+    if (this.textosCorreoPedidos) return;
+    this.textosCorreoPedidos = true;
+    this.service.correosPredeterminados().subscribe({
+      next: (r) => (this.textosCorreo = (r && r.success && r.data && r.data.momentos) || {}),
+      error: () => (this.textosCorreoPedidos = false),
+    });
+  }
+
+  abrirCorreo(m: string): void {
+    this.cargarTextosCorreo();
+    this.correoAbierto = this.correoAbierto === m ? null : m;
+  }
+
+  verCorreo(m: string): void {
+    if (!this.id || this.cargandoPrevia) return;
+    this.cargandoPrevia = true;
+    this.service.vistaPreviaCorreo(this.id, m, this.correos).subscribe({
+      next: (r) => {
+        this.cargandoPrevia = false;
+        if (!r || !r.success || !r.data) {
+          this.toastr.error((r && r.message) || "No pudimos armar la vista previa.");
+          return;
+        }
+        // HTML armado por nuestro servidor (lo del comercio va escapado) y
+        // pintado en un iframe con sandbox: no puede ejecutar nada.
+        this.previaCorreo = { asunto: r.data.asunto, html: this.sanitizer.bypassSecurityTrustHtml(r.data.html) };
+      },
+      error: () => {
+        this.cargandoPrevia = false;
+        this.toastr.error("No pudimos armar la vista previa.");
+      },
+    });
+  }
+
+  probarCorreo(m: string): void {
+    if (!this.id || this.enviandoPrueba) return;
+    this.enviandoPrueba = true;
+    this.service.pruebaCorreo(this.id, m, this.correos).subscribe({
+      next: (r) => {
+        this.enviandoPrueba = false;
+        if (r && r.success && r.data) this.toastr.success(`Te la mandamos a ${r.data.enviadoA}. Revisa tu bandeja.`);
+        else this.toastr.error((r && r.message) || "No pudimos enviar la prueba.");
+      },
+      error: (e) => {
+        this.enviandoPrueba = false;
+        this.toastr.error((e && e.error && e.error.message) || "No pudimos enviar la prueba.");
+      },
+    });
   }
 
   // ── Promociones automáticas (D-315) ─────────────────────────────────────
