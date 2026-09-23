@@ -2642,7 +2642,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       item.subtotal = subtotalProductos - descuento + envio;
       const ivaResult = this.checkIVAPrice(item);
-      item.totalImpuesto = Number(ivaResult.totalPrecioIVADef || item.totalImpuesto || 0);
+      item.totalImpuesto = this.ivaCalculadoOGuardado(ivaResult, item);
       item.totalPedididoConDescuento = item.subtotal + item.totalImpuesto;
 
       // Recalcular anticipo desde PagosAsentados (igual que en procesarRespuestaPaginada)
@@ -3236,6 +3236,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Determina si un pedido necesita recálculo de totales en frontend.
    */
+  /**
+   * Ticket 1055 (ALMACEN BOMBAS): el IVA recalculado puede ser 0 de verdad (línea
+   * pasada a 0% para una universidad). `x || guardado` lo tomaba como "sin dato" y
+   * dejaba el IVA viejo del 19% en pantalla y en el PDF. Solo se conserva el guardado
+   * cuando el pedido no tiene líneas con qué calcular.
+   */
+  private ivaCalculadoOGuardado(ivaResult: any, pedido: any): number {
+    const tieneLineas = Array.isArray(pedido?.carrito) && pedido.carrito.length > 0;
+    const calculado = Number(ivaResult?.totalPrecioIVADef);
+    if (tieneLineas && Number.isFinite(calculado)) return calculado;
+    return Number(pedido?.totalImpuesto || 0);
+  }
+
   private necesitaRecalculoFrontend(order: any): boolean {
     return !order._calculadoEnBackend
       || this.tienePreciosManualActivos(order)
@@ -3723,7 +3736,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
             const ivaResult = this.checkIVAPrice(order);
-            order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || order.totalImpuesto || 0);
+            order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResult, order);
 
             // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
             order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -4073,7 +4086,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
               // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
               const ivaResultSinPag = this.checkIVAPrice(order);
-              order.totalImpuesto = Number(ivaResultSinPag.totalPrecioIVADef || order.totalImpuesto || 0);
+              order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResultSinPag, order);
 
               // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
               order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -5495,7 +5508,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
     const ivaResultTotales = this.checkIVAPrice(pedido);
-    const totalImpuesto = Number(ivaResultTotales.totalPrecioIVADef || pedido.totalImpuesto || 0);
+    const totalImpuesto = this.ivaCalculadoOGuardado(ivaResultTotales, pedido);
     pedido.totalImpuesto = totalImpuesto;
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
@@ -5609,7 +5622,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
     const ivaResultRecalc = this.checkIVAPrice(order);
-    order.totalImpuesto = Number(ivaResultRecalc.totalPrecioIVADef || order.totalImpuesto || 0);
+    order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResultRecalc, order);
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
     order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -7679,7 +7692,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado)
     const ivaResult = this.checkIVAPrice(order);
-    order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || order.totalImpuesto || 0);
+    order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResult, order);
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
     order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -8101,7 +8114,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
           const ivaResultExport = this.checkIVAPrice(order);
-          order.totalImpuesto = Number(ivaResultExport.totalPrecioIVADef || order.totalImpuesto || 0);
+          order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResultExport, order);
 
           // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
           order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;

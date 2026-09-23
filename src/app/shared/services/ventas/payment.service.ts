@@ -29,6 +29,14 @@ import { AuthService } from "../firebase/auth.service";
 
 declare var WidgetCheckout: any;
 
+/**
+ * Tickets 1055/1056 (ALMACEN BOMBAS): la tarifa de IVA llega como número (19) en
+ * 936 de sus 1.247 productos, y como "0.00"/"0.0" en otros comercios. El desglose
+ * comparaba contra el texto exacto ("19", "0"), así que esas líneas sumaban al
+ * total de IVA pero no a ninguna fila: "Iva 19%" salía en $0. Se normaliza la clave.
+ */
+export const claveTarifaIva = (tarifa: any): string => String(Math.round(Number(tarifa) || 0));
+
 @Injectable({
   providedIn: "root",
 })
@@ -517,7 +525,7 @@ export class PaymentService extends BaseService {
       // Acumular solo si valorIvaItem es un número válido
       if (!isNaN(valorIvaItem)) {
         totalPrecioIVADef += valorIvaItem;
-        switch (porcentajeIvaItemStr) {
+        switch (claveTarifaIva(porcentajeIvaItemStr)) {
           // Acumular valor con descuento si es un número válido
           case "0":
             totalExcluidosDef += isNaN(valorTotalConIvaProductoConDesc)
@@ -567,7 +575,7 @@ export class PaymentService extends BaseService {
 
           if (!isNaN(ivaAdicion)) {
             totalPrecioIVADef += ivaAdicion;
-            switch (porcentajeAdicionStr) {
+            switch (claveTarifaIva(porcentajeAdicionStr)) {
               case "0":
                 totalExcluidosDef += isNaN(valorAdicionConIvaConDesc)
                   ? 0
@@ -622,7 +630,7 @@ export class PaymentService extends BaseService {
 
             if (!isNaN(ivaPreferencia)) {
               totalPrecioIVADef += ivaPreferencia;
-              switch (porcentajePreferenciaStr) {
+              switch (claveTarifaIva(porcentajePreferenciaStr)) {
                 case "0":
                   totalExcluidosDef += isNaN(valorPreferenciaConIvaConDesc)
                     ? 0
@@ -680,7 +688,7 @@ export class PaymentService extends BaseService {
 
     if (!isNaN(ivaEnvio)) {
       totalPrecioIVADef += ivaEnvio;
-      switch (porcentajeIvaEnvioStr) {
+      switch (claveTarifaIva(porcentajeIvaEnvioStr)) {
         case "0":
           totalExcluidosDef += isNaN(costoEnvioConIva) ? 0 : costoEnvioConIva;
           break;
