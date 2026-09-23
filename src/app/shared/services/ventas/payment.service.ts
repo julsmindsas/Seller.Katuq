@@ -16,7 +16,7 @@ import {
   Preferencia,
   Tarjeta,
 } from "../../../components/ventas/modelo/pedido"; // Importar tipos necesarios
-import { forkJoin, map, Observable, of, switchMap, catchError } from "rxjs"; // Importar operadores RxJS
+import { forkJoin, map, Observable, of, switchMap, catchError, firstValueFrom, take } from "rxjs"; // Importar operadores RxJS
 import {
   calcularTotalesCanonico,
   baseExcluidaCanonica,
@@ -904,6 +904,44 @@ export class PaymentService extends BaseService {
     );
   }
 
+  /**
+   * Ticket 1053 (ALMACEN BOMBAS): getHtmlContent es sincrónico y, si los maestros
+   * todavía no han cargado (justo después de iniciar sesión), devuelve un aviso de
+   * "Cargando datos maestros..." EN LUGAR del pedido. Ese aviso quedaba fijo en la
+   * vista para imprimir y llegaba así en el correo al cliente.
+   *
+   * prepararMaestros() espera a que carguen (máx. 10 s); getHtmlContentAsync() arma
+   * el HTML ya con ellos y NUNCA devuelve el aviso: si siguen sin estar, devuelve
+   * null y el backend omite el correo en vez de mandar el aviso.
+   */
+  async prepararMaestros(): Promise<void> {
+    try {
+      await firstValueFrom(this.pedidoUtilService.waitUntilLoaded().pipe(take(1)));
+    } catch (_) { /* se decide abajo con lo que haya */ }
+    if (!this.maestros || Object.keys(this.maestros).length === 0) {
+      try {
+        this.maestros = await firstValueFrom(this.pedidoUtilService.getAllMaestro$().pipe(take(1)));
+      } catch (_) { /* getHtmlContent devolverá el aviso y se trata como "no listo" */ }
+    }
+  }
+
+  async getHtmlContentAsync(pedido: Pedido, isComanda: boolean = false): Promise<SafeHtml | null> {
+    if (!pedido) return null;
+    await this.prepararMaestros();
+    return this.sinEspera(this.getHtmlContent(pedido, isComanda));
+  }
+
+  /** true si el HTML es uno de los avisos de espera, no el pedido. */
+  esHtmlDeEspera(html: any): boolean {
+    const texto = html && (html.changingThisBreaksApplicationSecurity ?? html);
+    return typeof texto === 'string' && texto.includes('data-katuq-espera');
+  }
+
+  /** Para correos: un aviso de espera jamás se envía; se cambia por null. */
+  sinEspera(html: SafeHtml | null): SafeHtml | null {
+    return this.esHtmlDeEspera(html) ? null : html;
+  }
+
   // Método principal para generar el HTML del correo/comanda (sincrónico, mejorado)
   getHtmlContent(pedido: Pedido, isComanda: boolean = false): SafeHtml | null {
     if (!pedido) return null;
@@ -912,7 +950,7 @@ export class PaymentService extends BaseService {
     if (!this.pedidoUtilService.isMaestrosReady()) {
       console.warn("Maestros not ready for synchronous HTML generation");
       return this.sanitizer.bypassSecurityTrustHtml(
-        `<div class="alert alert-info text-center p-3">
+        `<div class="alert alert-info text-center p-3" data-katuq-espera="1">
           <div class="spinner-border spinner-border-sm me-2" role="status"></div>
           <span>Cargando datos maestros...</span>
         </div>`
@@ -930,7 +968,7 @@ export class PaymentService extends BaseService {
       });
 
       return this.sanitizer.bypassSecurityTrustHtml(
-        `<div class="alert alert-warning text-center p-3">
+        `<div class="alert alert-warning text-center p-3" data-katuq-espera="1">
           <h6>⚠️ Recargando datos maestros</h6>
           <p>Use getHtmlContentObservable() para mejor manejo asíncrono.</p>
         </div>`
@@ -945,7 +983,7 @@ export class PaymentService extends BaseService {
       );
       if (!this.allBillingZone) {
         return this.sanitizer.bypassSecurityTrustHtml(
-          `<div class="alert alert-warning text-center p-3">
+          `<div class="alert alert-warning text-center p-3" data-katuq-espera="1">
             <h6>⚠️ Zonas de facturación no disponibles</h6>
             <p>Los datos de facturación no están cargados.</p>
           </div>`

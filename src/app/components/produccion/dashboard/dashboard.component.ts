@@ -479,6 +479,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     document.body.style.top = `-${scrollY}px`;
 
     this.htmlModal = this.paymentService.getHtmlContent(order);
+    // Ticket 1053: si los maestros aún no cargaban, reemplazar el aviso cuando lleguen.
+    if (this.paymentService.esHtmlDeEspera(this.htmlModal)) {
+      this.paymentService.getHtmlContentAsync(order)
+        .then((h) => { if (h) this.htmlModal = h; });
+    }
     this.modalService.open(content, {
       size: 'lg',
       scrollable: true,

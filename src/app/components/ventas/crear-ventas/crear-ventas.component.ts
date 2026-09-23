@@ -3224,7 +3224,12 @@ export class CrearVentasComponent
   }
 
   // Método para continuar con la creación del pedido normal (no Wompi)
+  /** Ticket 1053: el correo del pedido se arma con los maestros ya cargados. */
   private continuarCreacionPedido() {
+    this.pyamentService.prepararMaestros().then(() => this.continuarCreacionPedidoConMaestros());
+  }
+
+  private continuarCreacionPedidoConMaestros() {
     const context = this;
     context.ventasService
       .validateNroPedido(context.pedidoGral.nroPedido as string)
@@ -3250,9 +3255,9 @@ export class CrearVentasComponent
           );
 
           // Generar contenido HTML del pedido
-          const htmlSanizado = context.pyamentService.getHtmlContent(
+          const htmlSanizado = context.pyamentService.sinEspera(context.pyamentService.getHtmlContent(
             context.pedidoGral,
-          );
+          ));
 
           // DEBUG: Log antes de crear el pedido
           console.log('🚀 ===== CREAR PEDIDO - DATOS ANTES DE ENVIAR =====');
@@ -4299,7 +4304,13 @@ export class CrearVentasComponent
   }
 
   // Nuevo método para guardar el pedido antes de iniciar el pago con Wompi
-  private guardarPedidoParaWompi(): Promise<boolean> {
+  /** Ticket 1053: igual que la creación normal, espera los maestros antes del correo. */
+  private async guardarPedidoParaWompi(): Promise<boolean> {
+    await this.pyamentService.prepararMaestros();
+    return this.guardarPedidoParaWompiConMaestros();
+  }
+
+  private guardarPedidoParaWompiConMaestros(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const context = this;
       context.ventasService
@@ -4320,9 +4331,9 @@ export class CrearVentasComponent
               context.pedidoGral.totalPedididoConDescuento - (Number(context.pedidoGral.anticipo) || 0)
             );
 
-            const htmlSanizado = context.pyamentService.getHtmlContent(
+            const htmlSanizado = context.pyamentService.sinEspera(context.pyamentService.getHtmlContent(
               context.pedidoGral,
-            );
+            ));
 
             // DEBUG: Log antes de guardar pedido para Wompi
             console.log('💳 ===== GUARDAR PEDIDO PARA WOMPI =====');
@@ -4402,18 +4413,18 @@ export class CrearVentasComponent
     this.ventasService.editOrder(this.pedidoGral).subscribe({
       next: (res: any) => {
         // Opcionalmente, también podemos enviar el correo de confirmación si es necesario
-        const htmlSanizado = this.pyamentService.getHtmlContent(
-          this.pedidoGral,
-        );
-        this.ventasService
-          .enviarCorreoConfirmacionPedido({
-            order: this.pedidoGral,
-            emailHtml: htmlSanizado,
-          })
-          .subscribe({
-            next: (emailRes: any) => {},
-            error: (emailErr: any) => {},
-          });
+        this.pyamentService.getHtmlContentAsync(this.pedidoGral).then((htmlSanizado) => {
+          if (!htmlSanizado) return; // ticket 1053: nunca el aviso de "Cargando…"
+          this.ventasService
+            .enviarCorreoConfirmacionPedido({
+              order: this.pedidoGral,
+              emailHtml: htmlSanizado,
+            })
+            .subscribe({
+              next: (emailRes: any) => {},
+              error: (emailErr: any) => {},
+            });
+        });
       },
       error: (err: any) => {},
     });

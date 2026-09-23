@@ -518,6 +518,11 @@ export class CerrararticuloComponent implements OnInit {
       pedidoActualizado,
       true // isFromProduction = true
     );
+    // Ticket 1053: si los maestros aún no cargaban, reemplazar el aviso cuando lleguen.
+    if (this.paymentService.esHtmlDeEspera(this.htmlModal)) {
+      this.paymentService.getHtmlContentAsync(pedidoActualizado, true)
+        .then((h) => { if (h) this.htmlModal = h; });
+    }
 
     // Solo mostrar PDF sin actualizar el pedido
     // (comentamos la actualización para evitar errores innecesarios)

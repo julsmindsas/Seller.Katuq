@@ -5111,6 +5111,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       pedidoActualizado, // ← Pedido con valores actualizados
       this.isFromProduction,
     );
+    // Ticket 1053: si los maestros aún no cargaban, reemplazar el aviso cuando lleguen.
+    if (this.paymentService.esHtmlDeEspera(this.htmlModal)) {
+      this.paymentService.getHtmlContentAsync(pedidoActualizado, this.isFromProduction)
+        .then((h) => { if (h) this.htmlModal = h; });
+    }
 
     // Registrar la fecha/hora de impresión solo cuando se usa desde producción
     if (this.isFromProduction) {
@@ -9566,10 +9571,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             .padStart(6, "0");
           cloned.nroPedido = `${ultimasLetras}-${nextConsecutive}`;
 
-          const html = this.paymentService.getHtmlContent(
+          this.paymentService.getHtmlContentAsync(
             cloned,
             this.isFromProduction,
-          );
+          ).then((html) => {
           this.ventasService
             .createOrder({ order: cloned, emailHtml: html })
             .subscribe({
@@ -9587,6 +9592,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 );
               },
             });
+          });
         },
         error: () => {
           this.toastrService.error(
