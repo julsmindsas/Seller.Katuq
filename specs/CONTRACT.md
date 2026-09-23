@@ -7204,3 +7204,17 @@ Con esto se cierra el hilo de arrastre completo (D-299, D-305 a D-308).
 **Pendiente**: el panel del comerciante para moderar desde el editor, y la prueba con un pedido entregado real.
 
 Propuesta: `openspec/changes/tienda-resenas-compradores/`.
+
+## D-310 (2026-09-22) — Las tiendas publicadas hablan el idioma de Google, de Meta y de los asistentes de IA
+
+**Contexto.** Auditando qué necesitaba Baudio para posicionar su tienda salió que el motor de las páginas publicadas le hablaba mal al buscador. Cada categoría (`/c/chocolates`) declaraba como canónica a la portada, así que Google no indexaba ninguna; tenía título genérico ("Todos los regalos") y no tenía H1. La portada se declaraba como 8 productos con precio y la ficha como 9 (el suyo más los relacionados), sin marca, sin descripción, sin envío y sin miga de pan. No había organización (quién vende, sus redes, su contacto) ni `llms.txt`. Y la ficha **nunca** mandaba "vio el producto", así que el remarketing dinámico de Meta y de Google Ads no tenía de qué alimentarse.
+
+**Decisión.** El dato estructurado sale del render, no lo escribe el comerciante: **OnlineStore/Organization** con logo, redes (`sameAs`), contacto y razón social aparte de la marca; **WebSite** en la raíz; en la ficha, **UN Product** completo (descripción, todas las fotos, marca, condición, vendedor, envío solo si es tarifa fija —con tarifas por ciudad no hay un número único y uno inventado es peor que ninguno—) más **BreadcrumbList**; las vitrinas y el catálogo se dicen como **ItemList** de enlaces a sus fichas. Cada categoría tiene su canónica `/c/<categoría>`, título "Categoría · Tienda", H1 y descripción propios; una categoría que no existe da **404** (solo si la consulta respondió: un error pasajero no es un 404). Búsquedas y filtros llevan `noindex,follow` y **sin canónica**, porque "no me indexes, pero la buena es aquella" es una señal contradictoria. La ficha se comparte como `og:type=product` con precio, disponibilidad y `product:retailer_item_id` = el mismo id del feed y del píxel; la pestaña dice "Producto · Tienda"; la descripción se corta en 160 caracteres en palabra entera. La ficha dispara `view_item` (Meta `ViewContent` con `content_ids`; Google Ads con `id` y `google_business_vertical`). **`/llms.txt`** cuenta la tienda a los asistentes de IA desde lo publicado (envío, pagos, retiro, categorías, páginas, feed, contacto), con su handle en Caddy.
+
+Verificado con datos reales de FLORECER renderizando contra Firestore de producción en solo lectura. 280 pruebas en verde.
+
+## D-311 (2026-09-22) — Toda empresa nace viendo "Mis páginas"
+
+**Contexto.** La plantilla del rol Administrador al registrarse no traía el constructor de sitios; lo agregaba la recomendación de módulos de la IA, que está caída desde el 3-sep. Resultado: 8 empresas registradas desde entonces no veían el constructor, entre ellas **Baudio**.
+
+**Decisión.** `sitios` entra a los menús base del registro (`controllers/diagnostics.js`). Para las ya registradas sirve el script que ya existía desde el lanzamiento del constructor, `scripts/backfill-menu-sitios.js` (ensayo en seco por defecto, `--empresa` para una sola): se aplicó **solo a Baudio**; las otras seis (Recarga gamer, Estructuras Infinity, Bejarano Corradine, Granja las Nubes y dos de prueba) quedan a decisión de Daniel. Miniconcept no tiene rol Administrador y se revisa a mano.
