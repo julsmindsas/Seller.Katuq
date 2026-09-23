@@ -248,7 +248,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
   get filasSinCategoria(): number {
     if (this.type !== 'product' || !this.parsedData.length) return 0;
-    const col = this.confirmedMappings['categoria'];
+    // La plantilla nombra el campo `categoria`; KAI lo devuelve como `categoriaNombre`.
+    const col = this.confirmedMappings['categoria'] ?? this.confirmedMappings['categoriaNombre'];
     const firma = `${this.parsedData.length}|${col ?? ''}`;
     if (this._sinCategoriaCache?.firma === firma) return this._sinCategoriaCache.valor;
 
@@ -2121,6 +2122,16 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
   /** Escribe un valor en un campo anidado (notación de punto) o simple */
   private setNestedValue(obj: any, katuqField: string, value: any, index: number): void {
+    // Las fotos llegan del archivo como una o varias URL en texto; el producto las
+    // guarda como lista de imágenes. Escrito como texto, la foto no se mostraba.
+    if (/^crearProducto\.imagenes(Principales|Secundarias)$/.test(katuqField) && typeof value === 'string') {
+      const principal = katuqField.endsWith('Principales');
+      value = value
+        .split(/[\s,;|]+/)
+        .map(u => u.trim())
+        .filter(u => /^https?:\/\//i.test(u))
+        .map((urls, i) => ({ path: '', urls, tipo: 'url', nombreImagen: principal && i === 0 ? 'principal' : `imagen-${i + 1}` }));
+    }
     if (katuqField.includes('.')) {
       const parts = katuqField.split('.');
       let current = obj;
@@ -2433,6 +2444,11 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'grupoProducto': 'categoriaNombre',
       'grupo_producto': 'categoriaNombre',
       'linea': 'categoriaNombre',
+      // Los nombres que devuelve KAI (sin punto) también tienen que llegar: sin
+      // estas tres, la categoría que la IA reconocía se descartaba en silencio.
+      'categoriaNombre': 'categoriaNombre',
+      'subcategoriaNombre': 'subcategoriaNombre',
+      'subsubcategoriaNombre': 'subsubcategoriaNombre',
       'lineaProducto': 'categoriaNombre',
       'familia': 'categoriaNombre',
       'clasificacion': 'categoriaNombre',
@@ -2485,14 +2501,24 @@ export class ImportModalComponent implements OnInit, OnDestroy {
    */
   private calculateDerivedFields(product: any): void {
     if (product.precio) {
-      const precioSinIva = parseFloat(product.precio.precioUnitarioSinIva) || 0;
+      let precioSinIva = parseFloat(product.precio.precioUnitarioSinIva) || 0;
       const porcentajeIva = parseFloat(product.precio.precioUnitarioIva) || 0;
 
-      const valorIva = precioSinIva * (porcentajeIva / 100);
-      const precioConIva = precioSinIva + valorIva;
-
-      product.precio.valorIva = valorIva;
-      product.precio.precioUnitarioConIva = precioConIva;
+      // Si el archivo solo trae el precio con IVA (lo normal en un "precio de
+      // venta"), el precio sin IVA sale de él. Antes se recalculaba el total
+      // desde un precio sin IVA vacío y el producto quedaba en $0.
+      const precioConIvaArchivo = parseFloat(product.precio.precioUnitarioConIva) || 0;
+      if (!precioSinIva && precioConIvaArchivo > 0) {
+        // El total es el que escribió el comercio: se respeta al centavo.
+        precioSinIva = +(precioConIvaArchivo / (1 + porcentajeIva / 100)).toFixed(2);
+        product.precio.precioUnitarioSinIva = precioSinIva;
+        product.precio.valorIva = +(precioConIvaArchivo - precioSinIva).toFixed(2);
+        product.precio.precioUnitarioConIva = precioConIvaArchivo;
+      } else {
+        const valorIva = precioSinIva * (porcentajeIva / 100);
+        product.precio.valorIva = valorIva;
+        product.precio.precioUnitarioConIva = precioSinIva + valorIva;
+      }
     }
 
     // Asegurar que el código de barras tenga valor si la referencia tiene
