@@ -836,6 +836,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       tipoCliente: [''],
       fechaCumpleanos: [''],
       comoNosConocio: [''],
+      // Crédito y plazo de pago (spec 014 — CxC/Cartera). Mismo par de campos
+      // que ya captura CrearClienteModalComponent (D-303) — sin esto, un
+      // cliente creado desde este formulario nacía sin cupo/plazo y había
+      // que volver a editarlo desde "Listado de clientes" para completarlos.
+      creditLimit: [0, [Validators.min(0)]],
+      payTermDays: [0, [Validators.min(0)]],
       etiquetas: [[]],
       datosFacturacionElectronica: [['']],
       datosEntrega: [['']],

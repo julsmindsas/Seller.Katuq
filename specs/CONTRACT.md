@@ -6730,3 +6730,39 @@ Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastra
 - Solo ALMARA FELICIDAD, solo pedidos con saldo pendiente creados antes del 16-sep, solo carritos de **un solo ítem** (la heurística de "precio unitario implícito" no es confiable con varios ítems mezclados).
 - Pedidos ya `Aprobado` no se revisaron — si alguno se sobrecobró y el cliente pagó de más sin reclamar, sigue sin detectarse.
 - Otras empresas con `preciosVolumen` no se tocaron.
+
+---
+
+## D-302 (2026-09-23) — Filtro "sin foto" del catálogo de Productos: la lógica está bien, el cache-miss del índice tarda 45-79s (OH MY STORE, 8.533 productos)
+
+**Disparador.** Ticket real: "Al usar el filtro de 'productos sin foto' en el catálogo, no carga correctamente. Se espera que el filtro muestre únicamente los productos que no tienen imagen asignada".
+
+**Diagnóstico (read-only, contra Firestore real).** El filtro `sinFoto` (D-282, `controllers/productos.js::getAll`) filtra correctamente: `Controller.getAll({company:"OH MY STORE", sinFoto:"true"})` devuelve 32 productos, idénticos 1:1 a un conteo crudo aparte (sin caché) sobre `imagenesPrincipales`/`imagenesSecundarias` vacíos. No hay bug de datos.
+
+El problema real es el costo de reconstruir `getSearchIndex(company)` cuando el caché (TTL 5 min) vence: escanea todo el catálogo de la empresa. Medido dos veces contra producción real: **45-79s en frío, ~0.85s en caliente** (~90x). `getSearchIndex` es compartido por 10+ filtros in-memory de `getAll` (categoría, completitud, canal, tipoEntrega, tiempoEntrega, adiciones, calendario, precio manual, rango de precio, sort), `quickSearchProducts`, `searchIndexLookup` y la tool MCP `search_products` — no es un defecto exclusivo de `sinFoto`, pero es el filtro que más sesiones largas genera hoy (OH MY STORE subiendo fotos faltantes, navegando varias páginas, cruzando el TTL de 5 min entre una y otra).
+
+**Nota de contexto.** El propio commit D-282 registra que nunca se verificó en navegador por falta de credenciales — este ticket es, con toda probabilidad, el primer uso real end-to-end.
+
+**Decisión.** Propuesta OpenSpec (repo backend, CLI no instalado en esta máquina — artefactos creados a mano siguiendo el patrón de `fix-volumen-tier-base-siempre-gana`): `openspec/changes/optimizar-cache-indice-productos/`. Diseño recomendado: **stale-while-revalidate** en `getSearchIndex()` — dos umbrales (`SOFT_TTL` 5 min sirve caliente, `HARD_TTL` 60 min sirve stale de inmediato y refresca en segundo plano, más allá de `HARD_TTL` vuelve a bloquear), con guard para no disparar refrescos duplicados si llegan varias consultas mientras uno está en curso. `invalidateSearchIndex` (ya existente, dispara en cada create/edit/delete de producto) sigue invalidando de inmediato sin cambios — "stale" nunca significa desincronizado con una edición real. Se evaluó y descartó denormalizar un campo indexable en Firestore (ej. `tieneImagen` + índice compuesto): requeriría backfill de escritura sobre 8.500+ productos y solo resolvería `sinFoto`/`completitud`, no los otros 8 filtros in-memory con el mismo cuello de botella.
+
+**Sin código tocado todavía** — proposal + design + specs delta + tasks creados, pendiente `/opsx:apply` con autorización explícita. Cero escrituras en esta sesión, todo el diagnóstico fue solo lectura.
+
+**Fuera de alcance.** No se confirmó si producción tiene un timeout de proxy/gateway (nginx u otro) que corte la petición antes de responder — no hay acceso SSH a la instancia real desde esta sesión.
+
+---
+
+## D-303 (2026-09-23) — "Crear cliente" nacía sin cupo de crédito ni plazo de pago (los tenía el modal del listado, pero no la página del menú)
+
+**Disparador.** Pedido real: "sería bueno que desde un comienzo pudiésemos ingresar la mayor cantidad de datos de nuestros clientes" — el usuario notó que editar un cliente desde "Listado de clientes" muestra cupo de crédito y días de plazo, pero crearlo desde el menú "Crear cliente" no.
+
+**Diagnóstico.** Hay dos componentes de cliente distintos, no una sola pantalla con dos modos: el menú "Crear cliente" (`ventas/clientes`) abre `ClientesComponent` (~3.000 líneas TS+HTML, también embebido como `app-clientes` en pedidos y en el dashboard de producción para edición inline); "Listado de clientes" → Editar/Crear usa `CrearClienteModalComponent`, más nuevo. Verificado campo por campo: el modal tiene `creditLimit`/`payTermDays` (spec 014, D-110) pero **ningún campo de dirección**; `ClientesComponent` tiene captura de dirección de entrega (`formularioEntrega`, con búsqueda DANE) pero **no tenía** `creditLimit`/`payTermDays`. Ninguno de los dos formularios de facturación (`formularioFacturacion` en `ClientesComponent`, ni el modal) captura dirección de facturación — no existe ese campo en ningún lado todavía.
+
+`ClientesComponent` resultó tener, además, duplicación interna real: un `<ng-template #formBody>` (usado solo cuando `isEdit=true`, embebido) y un `<p-dialog>` separado con el formulario copiado a mano (el que realmente abre el botón "Crear Cliente" en la página standalone) — no comparten template, hay que mantenerlos sincronizados a mano.
+
+**Verificado antes de escribir código** (pedido explícito del usuario: "verifica primero que capturemos la misma información y quede un registro útil donde debe ser"): `POST /v1/clients/create` y `/v1/clients/edit` (`controllers/clients.js`) no filtran campos — persisten `req.body` completo tal cual en `clients` (create) o hacen `update()` sin whitelist (edit). `carteraService.js:341` lee `creditLimit`/`payTermDays` como campos raíz del mismo documento (`.select("documento", "creditLimit", "payTermDays")`). Mismo shape, mismo lugar que ya usa Cartera/CxC — confirmado que agregar los campos al formulario de `ClientesComponent` no requiere ningún cambio de backend ni deja los datos en un lugar distinto al que ya lee Cartera.
+
+**Decisión.** Se agregaron `creditLimit`/`payTermDays` (mismo patrón visual y de validación que el modal: `Validators.min(0)`, "0 = sin cupo"/"0 = contado") **solo al `<p-dialog>` que abre "Crear Cliente"** (`clientes.component.html:1034-1051`) y al `FormGroup` compartido (`clientes.component.ts`), no al `formBody` embebido en pedidos/producción — fuera de alcance de este pedido, evaluar aparte si también debe mostrarse ahí. La dirección de entrega/facturación queda **fuera de este cambio**: agregarla al modal del listado hubiera sido más trabajo (formulario DANE completo) para una brecha que hoy nadie pidió cerrar explícitamente; el usuario priorizó cupo/días.
+
+**Sin verificación en navegador todavía** — el frontend/backend locales se cayeron por presión de memoria del sistema a mitad de sesión y no se reiniciaron (instrucción explícita de no reiniciarlos sin pedido). Pendiente: levantar ambos y probar crear un cliente con cupo/días desde el menú, confirmar que aparece en Cartera.
+
+**Fuera de alcance, deuda registrada:** unificar `ClientesComponent`/`CrearClienteModalComponent` en un solo formulario (se consideró y se descartó por ahora — más riesgo que el pedido puntual); dirección de facturación electrónica (no existe en ningún formulario hoy); mostrar cupo/días también en las vistas embebidas de pedidos/producción.
