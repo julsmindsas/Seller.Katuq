@@ -2094,6 +2094,73 @@
             </button>
           </div>
 
+          <!-- ── Promociones automáticas (D-315) ── -->
+          <div class="grupo">
+            <h3>Promociones automáticas</h3>
+            <p class="nota">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+              Se aplican solas, sin código: un 2x1, un porcentaje en unas categorías o un precio por
+              volumen. A cada producto le toca la mejor, y la calcula nuestro servidor al cobrar.
+            </p>
+
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, promociones)">
+            <div class="repetible" *ngFor="let p of promociones; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+              <input type="text" maxlength="60" [(ngModel)]="p.nombre" (ngModelChange)="marcarSucio()"
+                     placeholder="Nombre que ve el comprador: 2x1 en chocolates" />
+              <select [(ngModel)]="p.tipo" (ngModelChange)="marcarSucio()">
+                <option value="nxm">Lleva N y paga M (2x1, 3x2)</option>
+                <option value="porcentaje">% de descuento</option>
+                <option value="volumen">% de descuento desde N unidades</option>
+              </select>
+              <div class="campo-doble" *ngIf="p.tipo === 'nxm'">
+                <label class="campo-mini"><span>Lleva</span>
+                  <input type="number" min="2" max="10" [(ngModel)]="p.lleva" (ngModelChange)="marcarSucio()" /></label>
+                <label class="campo-mini"><span>Paga</span>
+                  <input type="number" min="1" max="9" [(ngModel)]="p.paga" (ngModelChange)="marcarSucio()" /></label>
+              </div>
+              <div class="campo-doble" *ngIf="p.tipo !== 'nxm'">
+                <label class="campo-mini"><span>% de descuento</span>
+                  <input type="number" min="1" max="90" [(ngModel)]="p.valor" (ngModelChange)="marcarSucio()" /></label>
+                <label class="campo-mini" *ngIf="p.tipo === 'volumen'"><span>Desde (unidades)</span>
+                  <input type="number" min="2" max="100" [(ngModel)]="p.desdeUnidades" (ngModelChange)="marcarSucio()" /></label>
+              </div>
+              <select [(ngModel)]="p.alcance.tipo" (ngModelChange)="cambiarAlcancePromo(p)">
+                <option value="todo">En toda la tienda</option>
+                <option value="categorias">En unas categorías</option>
+                <option value="productos">En unos productos</option>
+              </select>
+              <div class="casillas" *ngIf="p.alcance.tipo === 'categorias' && categorias.length">
+                <label class="casilla" *ngFor="let c of categorias">
+                  <input type="checkbox" [checked]="categoriaEnPromo(p, c.nombre)" (change)="alternarCategoriaPromo(p, c.nombre)" />
+                  <span class="casilla__nombre">{{ c.nombre }}</span>
+                  <span class="casilla__total">{{ c.total }}</span>
+                </label>
+              </div>
+              <button class="boton-secundario" *ngIf="p.alcance.tipo === 'productos'" (click)="promoEditandoProductos = p">
+                Elegir productos ({{ p.alcance.valores.length }})
+              </button>
+              <div class="campo-doble">
+                <label class="campo-mini"><span>Desde</span>
+                  <input type="date" [(ngModel)]="p.desde" (ngModelChange)="marcarSucio()" /></label>
+                <label class="campo-mini"><span>Hasta</span>
+                  <input type="date" [(ngModel)]="p.hasta" (ngModelChange)="marcarSucio()" /></label>
+              </div>
+              <label class="paginas__check">
+                <input type="checkbox" [(ngModel)]="p.activa" (ngModelChange)="marcarSucio()" />
+                Activa
+              </label>
+              <p class="nota nota--resumen">{{ describirPromo(p) }}</p>
+              <button class="enlace-sutil" (click)="quitarPromo(i)">Quitar esta promoción</button>
+            </div>
+            </div>
+
+            <button class="boton-secundario" (click)="agregarPromo()" *ngIf="promociones.length < 20">
+              Crear una promoción
+            </button>
+          </div>
+
           <div class="grupo">
             <h3>Cómo te pagan</h3>
             <button class="opcion" [class.is-active]="contenido.tienda.pagoEnLinea"
@@ -2646,6 +2713,14 @@
 </div>
 
 <!-- Selector de productos de la sección en edición -->
+<!-- Productos de una promoción automática -->
+<app-selector-productos
+  *ngIf="promoEditandoProductos"
+  [seleccionados]="promoEditandoProductos.alcance.valores"
+  (confirmar)="aplicarProductosPromo($event)"
+  (cerrar)="promoEditandoProductos = null">
+</app-selector-productos>
+
 <app-selector-productos
   *ngIf="mostrandoSelector && bloqueActual"
   [seleccionados]="bloqueActual.datos.productoIds || []"

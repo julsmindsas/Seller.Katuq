@@ -2829,3 +2829,23 @@
 .resena-mod__texto { margin: 0 0 10px; font-size: 13px; line-height: 1.55; }
 .resena-mod__texto--vacio { color: var(--kb-muted); font-style: italic; }
 .resena-mod__acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+// Promociones automáticas: cada número lleva su etiqueta arriba, porque
+// "2" y "1" sueltos no dicen cuál es lleva y cuál paga.
+.campo-mini {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b6890;
+
+  input { text-transform: none; letter-spacing: normal; font-weight: 400; }
+}
+
+// La promoción en una frase, para confirmar que quedó como se quería.
+.nota--resumen {
+  font-weight: 600;
+  color: #211f3a;
+}

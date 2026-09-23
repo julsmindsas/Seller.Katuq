@@ -5,7 +5,7 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, CuponSitio, PaginaSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TiendaSitio, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, CuponSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TiendaSitio, VentaConfig } from "../sitios.service";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 
@@ -1100,6 +1100,97 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (!r) return;
     r.puntos.splice(i, 1);
     this.marcarSucio();
+  }
+
+  // ── Promociones automáticas (D-315) ─────────────────────────────────────
+
+  get promociones(): PromocionSitio[] {
+    if (!this.contenido || !this.contenido.tienda) return [];
+    const t = this.contenido.tienda as TiendaSitio;
+    if (!Array.isArray(t.promociones)) t.promociones = [];
+    return t.promociones;
+  }
+
+  /** La promoción a la que se le están eligiendo productos (abre el selector). */
+  promoEditandoProductos: PromocionSitio | null = null;
+
+  agregarPromo(): void {
+    const lista = this.promociones;
+    if (lista.length >= 20) return;
+    lista.push({
+      id: `promo_${Date.now().toString(36)}`,
+      nombre: "",
+      tipo: "nxm",
+      activa: true,
+      desde: "",
+      hasta: "",
+      alcance: { tipo: "todo", valores: [] },
+      lleva: 2,
+      paga: 1,
+      valor: 10,
+      desdeUnidades: 3,
+    });
+    this.marcarSucio();
+  }
+
+  quitarPromo(i: number): void {
+    this.promociones.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  /** Cambiar el alcance vacía la lista: categorías y productos no se mezclan. */
+  cambiarAlcancePromo(p: PromocionSitio): void {
+    p.alcance.valores = [];
+    this.marcarSucio();
+  }
+
+  /** El servidor guarda las categorías en minúscula y sin tildes. */
+  private claveCategoria(nombre: string): string {
+    return String(nombre || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
+
+  categoriaEnPromo(p: PromocionSitio, nombre: string): boolean {
+    const clave = this.claveCategoria(nombre);
+    return (p.alcance.valores || []).some((v) => this.claveCategoria(v) === clave);
+  }
+
+  alternarCategoriaPromo(p: PromocionSitio, nombre: string): void {
+    const clave = this.claveCategoria(nombre);
+    const valores = p.alcance.valores || [];
+    p.alcance.valores = this.categoriaEnPromo(p, nombre)
+      ? valores.filter((v) => this.claveCategoria(v) !== clave)
+      : [...valores, nombre];
+    this.marcarSucio();
+  }
+
+  aplicarProductosPromo(ids: string[]): void {
+    if (this.promoEditandoProductos) {
+      this.promoEditandoProductos.alcance.valores = ids || [];
+      this.marcarSucio();
+    }
+    this.promoEditandoProductos = null;
+  }
+
+  /** La promoción en una frase, como la entiende el comerciante. */
+  describirPromo(p: PromocionSitio): string {
+    const que =
+      p.tipo === "nxm"
+        ? `Lleva ${p.lleva || 2} y paga ${p.paga || 1} (del mismo producto)`
+        : p.tipo === "volumen"
+        ? `${p.valor || 0}% menos desde ${p.desdeUnidades || 2} unidades`
+        : `${p.valor || 0}% menos`;
+    const donde =
+      p.alcance.tipo === "todo"
+        ? "en toda la tienda"
+        : p.alcance.tipo === "categorias"
+        ? p.alcance.valores.length
+          ? `en ${p.alcance.valores.join(", ")}`
+          : "— elige al menos una categoría"
+        : p.alcance.valores.length
+        ? `en ${p.alcance.valores.length} producto(s)`
+        : "— elige al menos un producto";
+    const invalida = p.tipo === "nxm" && (p.paga || 0) >= (p.lleva || 0) ? " — paga tiene que ser menor que lleva" : "";
+    return `${que} ${donde}${invalida}.`;
   }
 
   agregarCupon(): void {

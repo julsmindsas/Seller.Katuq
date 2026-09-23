@@ -55,6 +55,27 @@ export interface TiendaSitio {
    * SIEMPRE el servidor: los códigos nunca bajan al navegador del comprador.
    */
   cupones?: CuponSitio[];
+  /** Promociones que se aplican solas (D-315). Las calcula el servidor. */
+  promociones?: PromocionSitio[];
+}
+
+/** Una promoción automática: 2x1, porcentaje o por volumen. */
+export interface PromocionSitio {
+  id: string;
+  nombre: string;
+  tipo: "nxm" | "porcentaje" | "volumen";
+  activa: boolean;
+  /** Fechas ISO "2026-12-01"; vacías = sin límite. */
+  desde: string;
+  hasta: string;
+  alcance: { tipo: "todo" | "categorias" | "productos"; valores: string[] };
+  /** nxm: lleva N, paga M. */
+  lleva?: number;
+  paga?: number;
+  /** porcentaje y volumen: % de descuento. */
+  valor?: number;
+  /** volumen: desde cuántas unidades. */
+  desdeUnidades?: number;
 }
 
 export interface CuponSitio {
