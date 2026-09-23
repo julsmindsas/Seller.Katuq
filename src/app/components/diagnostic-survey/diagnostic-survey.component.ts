@@ -211,6 +211,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         this.metaPixel.iniciar();
         this.cargarPromocionPendiente();
         this.loadProgress();
+        this.abrirRegistroRapidoSiLoPide();
         this.setupAutoSave();
         
         // Escuchar cambios en el formulario para autoguardado
@@ -441,6 +442,23 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     }
     get currentQuestion() {
         return this.currentSection.questions[this.currentQuestionIndex];
+    }
+
+    /**
+     * `?registro=rapido` (enlaces de pauta): entra directo a los cuatro datos del
+     * registro Gratis, sin la pantalla de bienvenida. Cada paso de más antes de
+     * escribir el primer dato es gente que se va. Si ya venía a mitad de un
+     * registro guardado, se respeta dónde iba.
+     */
+    private abrirRegistroRapidoSiLoPide(): void {
+        try {
+            const pideRapido = new URLSearchParams(window.location.search).get('registro') === 'rapido';
+            if (pideRapido && this.currentStep === 'welcome') {
+                this.startFreeRegistration();
+            }
+        } catch {
+            // Sin parámetros legibles se muestra la bienvenida de siempre.
+        }
     }
 
     /**
@@ -844,6 +862,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             }
             
             if (this.registrationIndex < this.registrationQuestions.length - 1) {
+                // Pasar del nombre de la empresa al siguiente dato = empezó a registrarse.
+                if (this.registrationIndex === 0) this.metaPixel.inicioRegistro();
                 this.registrationIndex++;
             } else {
                 this.confirmFinish();

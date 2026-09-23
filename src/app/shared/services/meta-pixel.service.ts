@@ -41,6 +41,7 @@ export class MetaPixelService {
     "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid",
   ];
   private cargado = false;
+  private inicioContado = false;
 
   /** En desarrollo no se carga: las pruebas locales ensuciarían las métricas de la pauta. */
   private get habilitado(): boolean {
@@ -70,6 +71,21 @@ export class MetaPixelService {
       }
       w.fbq("init", this.PIXEL_ID);
       w.fbq("track", "PageView");
+    } catch {
+      // La medición nunca puede tumbar el registro.
+    }
+  }
+
+  /**
+   * La persona escribió el nombre de su empresa y siguió: ya está registrándose.
+   * Pasa muchas más veces que el registro completo, y con poco presupuesto es
+   * el éxito del que Meta alcanza a aprender. Se cuenta una vez por visita.
+   */
+  inicioRegistro(): void {
+    if (!this.habilitado || !window.fbq || this.inicioContado) return;
+    this.inicioContado = true;
+    try {
+      window.fbq("track", "Lead", { content_name: "Inicio registro Katuq" });
     } catch {
       // La medición nunca puede tumbar el registro.
     }
