@@ -15,6 +15,7 @@ import { Disponibilidad } from '../../models/productos/Disponibilidad';
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Role, Menu } from '../../models/roles/roles';
 import { Rol } from '../../models/roles/roles.type';
+import { OrigenCampana } from '../meta-pixel.service';
 
 // Interfaces para el Quick Start
 export interface DiagnosticResponse {
@@ -34,6 +35,8 @@ export interface DiagnosticResponse {
   };
   /** Código de campaña con el que llegó, si vino por un enlace de pauta. */
   codigoPromocional?: string | null;
+  /** utm_* del anuncio por el que llegó (queda guardado con el diagnóstico). */
+  origenCampana?: OrigenCampana | null;
 }
 
 /** Cómo le fue al código promocional en el registro. */
@@ -447,7 +450,10 @@ export class KatuqQuickStartService {
       procesoCompletado: true,
       // Código de campaña (opcional). El backend lo revalida y descuenta cupo;
       // si no sirve, el registro se completa igual en plan gratuito.
-      codigoPromocional: diagnosticData.codigoPromocional || null
+      codigoPromocional: diagnosticData.codigoPromocional || null,
+      // De qué anuncio llegó. El backend guarda el cuerpo completo en
+      // `surveyResponses`, así que ahí queda para cruzar pauta contra registros.
+      origenCampana: diagnosticData.origenCampana || null
     };
 
     try {

@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { KatuqQuickStartService, DiagnosticResponse, PromocionRegistro } from '../../shared/services/quickstart/katuq-quickstart.service';
 import { ContextualQuestionsService, ContextualQuestion } from '../../shared/services/quickstart/contextual-questions.service';
 import { PromocionesService, PromocionPublica } from '../../shared/services/promociones.service';
+import { MetaPixelService } from '../../shared/services/meta-pixel.service';
 import { Subscription } from 'rxjs';
 import { clearOnboardingStorage } from '../onboarding/utils/onboarding-v2.utils';
 
@@ -186,7 +187,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         private router: Router,
         private quickStartService: KatuqQuickStartService,
         private contextualQuestionsService: ContextualQuestionsService,
-        private promocionesService: PromocionesService
+        private promocionesService: PromocionesService,
+        private metaPixel: MetaPixelService
     ) {
         // No se vuelve a asignar registrationQuestions aquí
         this.mainForm = this.fb.group({
@@ -204,6 +206,9 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        // Medición de la pauta: de qué anuncio llegó y la visita al registro.
+        this.metaPixel.capturarOrigen();
+        this.metaPixel.iniciar();
         this.cargarPromocionPendiente();
         this.loadProgress();
         this.setupAutoSave();
@@ -663,7 +668,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 complejidad: 'basica',
                 canales: ['POS']
             },
-            codigoPromocional: this.codigoPromocional
+            codigoPromocional: this.codigoPromocional,
+            origenCampana: this.metaPixel.obtenerOrigen()
         };
 
         try {
@@ -695,9 +701,14 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
 
                 if (quickStartResult.pendingReview) {
                     // Cuarentena anti-abuso: NO hay credenciales todavía, no redirigir al panel.
+                    // Tampoco se le cuenta a Meta como registro (ver MetaPixelService).
                     this.registrationPendingReview = true;
+                    this.metaPixel.limpiarOrigen();
                     return;
                 }
+
+                this.metaPixel.registroCompleto();
+                this.metaPixel.limpiarOrigen();
 
                 this.quickStartCompleted = true;
                 this.nextSteps = quickStartResult.nextSteps || [];
