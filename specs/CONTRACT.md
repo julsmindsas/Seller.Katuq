@@ -7228,3 +7228,17 @@ Verificado con datos reales de FLORECER renderizando contra Firestore de producc
 **Pendiente de aprobación de Daniel**: el desvío de 36 líneas en `controllers/integration.js` (webhook de pagos de todos los canales) que le entrega a la tienda los pagos de enlace que no son de venta asistida. Sin él, el pago se concilia solo cuando el comprador vuelve a la tienda. El candado del recordatorio se enciende después de ese desvío.
 
 Propuesta: `openspec/changes/tienda-pago-abandonado/` (backend). Backend `33ccd75`.
+
+## D-314 (2026-09-23) — El MCP se parte por audiencia, no por dominio, y Opttia queda blindado con prueba
+
+**Contexto.** Daniel pidió separar el MCP en uno interno y otro para los comercios, con la condición de no afectar a Opttia. Revisando el reparto real aparecieron dos cosas que no eran de catálogo sino de autorización: `list_support_agents` no filtraba por empresa, así que cualquier comercio conectado listaba la mesa de ayuda de Katuq con nombres y correos del equipo (dos de ellos personales); y un comercio con permiso de escritura podía actualizar su propio ticket, ponerlo en Resuelto y reasignarlo a un agente de Katuq, porque la verificación era "el ticket es tuyo o tienes visión total" y ser dueño alcanzaba.
+
+**Decisión.** El corte es por **audiencia**, no por dominio. Cada herramienta declara `ambas` (el default, 49 de 51) o `interno`; el catálogo no le lista las internas a un comercio y la ejecución las rechaza aunque tenga el permiso, en el mismo punto único donde ya viven el aislamiento por empresa y los permisos. Los tickets **no** son un dominio interno: el comercio los abre y responde, así que listar, leer, comentar y adjuntar evidencia de los suyos siguen en `ambas`. Internas quedan dos: la nómina de la mesa de ayuda y el cambio de estado/responsable.
+
+**Por qué no dos servidores, todavía.** Un endpoint interno aparte es la versión física de lo mismo y cuesta otro cliente de OAuth, otro conector registrado en Claude y otro camino que probar en cada despliegue. Queda como propuesta para después de la feria; la metadata de audiencia es el insumo que necesita igual. El problema de tamaño de catálogo (51 herramientas en un solo conector, que ya le pesa al modelo para elegir) es un eje distinto y se resuelve extendiendo el mismo campo a dominio, sin multiplicar endpoints.
+
+**Cómo queda blindado Opttia.** Opttia pide sus herramientas por nombre (las listas de ventas, inventario, logística, escritura de pedidos, facturación y reportes del ADK) y ninguna es de soporte; su llave de servicio resuelve la empresa a la delegada, o sea audiencia de comercio. La prueba recorre esa lista de 29 nombres y falla si alguna deja de estar visible para un comercio: marcar por error una herramienta de Opttia como interna ya no la dejaría sin avisar, rompería el test. Verificado además que la app de Support no pasa por el MCP (escribe por REST) y que nada más en el backend llama esas dos herramientas.
+
+Commit `0a41139`, **ya en producción** (entró por el pull de otra sesión el 23-sep: la unidad de despliegue es la rama). Verificado en vivo contra `api.katuq.com`: las herramientas responden con credencial de la operadora, el registro cargó las 51 y el endpoint sigue cerrado sin token. 8 pruebas nuevas; las 16 del tablero y las pantallas siguen verdes.
+
+Numerada D-314 y no D-313 porque el commit del carrito abandonado ya había citado D-313 en git, y la historia publicada no se reescribe por algo cosmético.
