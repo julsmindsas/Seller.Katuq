@@ -246,3 +246,72 @@
   display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
   @media (max-width: 560px) { grid-template-columns: 1fr; }
 }
+
+// Lo que recuperaron los recordatorios: en verde, es plata que se iba a perder.
+.recuperado {
+  margin: 0 0 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kb-ink-2);
+
+  strong { font-weight: 800; color: #15803d; }
+}
+
+// Quién dejó sus datos: la lista para trabajar, con WhatsApp a un clic.
+.contactos {
+  margin-top: 1.4rem;
+
+  h6 { margin: 0 0 0.55rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: #6b6890; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+
+  &__filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.7rem;
+
+    button {
+      border: 1px solid var(--kb-line-3);
+      background: var(--kb-surface-2);
+      border-radius: 999px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--kb-ink-2);
+      cursor: pointer;
+
+      &.is-active { border-color: var(--kb-accent); color: var(--kb-accent); background: var(--kb-accent-wash-4); }
+    }
+  }
+}
+
+.contacto {
+  padding: 0.7rem 0.85rem;
+  border-radius: 11px;
+  background: var(--kb-surface-2);
+
+  &__cabeza { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.88rem; }
+  &__fecha { margin-left: auto; font-size: 0.75rem; color: var(--kb-muted-2); }
+  &__nota { margin: 0.35rem 0 0; font-size: 0.8rem; line-height: 1.45; color: var(--kb-ink-2); }
+  &__acciones { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; flex-wrap: wrap; }
+  &__pista { font-size: 0.74rem; color: var(--kb-muted-2); }
+
+  &__chip {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    background: var(--kb-chip-2);
+    color: var(--kb-ink-2);
+
+    &--carrito-abandonado { background: rgba(245, 158, 11, 0.14); color: #b45309; }
+    &--avisame-stock { background: rgba(14, 165, 233, 0.12); color: #0369a1; }
+    &--contacto { background: var(--kb-accent-wash-4); color: var(--kb-accent); }
+  }
+}

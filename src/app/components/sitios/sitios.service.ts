@@ -248,6 +248,20 @@ export interface MetricasSitio {
   serie: DiaMetricas[];
   historico: { vistas: number; leads: number; pedidos: number };
   truncado: boolean;
+  /** Lo que trajeron de vuelta los recordatorios de pago y de carrito. */
+  recuperado?: { pagos: number; carritos: number; valor: number };
+}
+
+/** Alguien que le dejó sus datos a la tienda. */
+export interface ContactoSitio {
+  id: string;
+  tipo: "contacto" | "avisame-stock" | "carrito-abandonado";
+  nombre: string;
+  telefono: string;
+  correo: string;
+  nota: string;
+  fecha: string;
+  carrito?: { estado: string; total: number; recordado: boolean };
 }
 
 export interface KitDeMarca {
@@ -377,6 +391,11 @@ export class SitiosService extends BaseService {
   /** Qué está pasando en una página: visitas, contactos, pedidos e ingresos. */
   metricas(id: string, dias = 30): Observable<Respuesta<MetricasSitio>> {
     return this.get<Respuesta<MetricasSitio>>(`/v1/sites/${id}/metricas?dias=${dias}`);
+  }
+
+  /** Quién le dejó sus datos a la tienda: formulario, Avísame y carritos. */
+  contactos(id: string): Observable<Respuesta<{ contactos: ContactoSitio[] }>> {
+    return this.get<Respuesta<{ contactos: ContactoSitio[] }>>(`/v1/sites/${id}/contactos`);
   }
 
   crear(body: {

@@ -56,6 +56,12 @@
             </div>
           </div>
 
+          <!-- Lo que recuperaron los recordatorios de pago y de carrito -->
+          <div class="recuperado" *ngIf="datos.recuperado && (datos.recuperado.pagos + datos.recuperado.carritos) > 0">
+            <strong>{{ dinero(datos.recuperado.valor) }}</strong> recuperados por los recordatorios:
+            {{ datos.recuperado.pagos }} pago(s) y {{ datos.recuperado.carritos }} carrito(s) que se iban a perder.
+          </div>
+
           <p class="conversion" *ngIf="datos.conversion !== null">
             De cada 100 personas que entran, <strong>{{ datos.conversion }}</strong> te escriben o compran.
           </p>
@@ -136,6 +142,39 @@
           </p>
         </ng-container>
       </ng-container>
+
+      <!-- Quién dejó sus datos: fuera del bloque de tráfico, porque la lista
+           sirve aunque las visitas del rango sean pocas. -->
+      <section class="contactos" *ngIf="!cargando && contactos.length">
+        <h6>Tus contactos ({{ contactos.length }})</h6>
+        <div class="contactos__filtros">
+          <button [class.is-active]="filtroContactos === 'todos'" (click)="filtroContactos = 'todos'">Todos</button>
+          <button *ngIf="cuantos('carrito-abandonado')" [class.is-active]="filtroContactos === 'carrito-abandonado'"
+                  (click)="filtroContactos = 'carrito-abandonado'">Carritos ({{ cuantos('carrito-abandonado') }})</button>
+          <button *ngIf="cuantos('contacto')" [class.is-active]="filtroContactos === 'contacto'"
+                  (click)="filtroContactos = 'contacto'">Te escribieron ({{ cuantos('contacto') }})</button>
+          <button *ngIf="cuantos('avisame-stock')" [class.is-active]="filtroContactos === 'avisame-stock'"
+                  (click)="filtroContactos = 'avisame-stock'">Avísame ({{ cuantos('avisame-stock') }})</button>
+        </div>
+        <ul>
+          <li *ngFor="let c of contactosVisibles" class="contacto">
+            <div class="contacto__cabeza">
+              <span class="contacto__chip" [class]="'contacto__chip contacto__chip--' + c.tipo">{{ etiquetaContacto(c) }}</span>
+              <strong>{{ c.nombre || c.correo || c.telefono }}</strong>
+              <span class="contacto__fecha">{{ fechaCorta(c.fecha) }}</span>
+            </div>
+            <p class="contacto__nota" *ngIf="c.nota">{{ c.nota }}</p>
+            <div class="contacto__acciones">
+              <a *ngIf="enlaceWhatsapp(c)" class="btn-fantasma btn-fantasma--sm" [href]="enlaceWhatsapp(c)"
+                 target="_blank" rel="noopener">WhatsApp</a>
+              <a *ngIf="c.correo" class="btn-fantasma btn-fantasma--sm" [href]="'mailto:' + c.correo">Correo</a>
+              <span class="contacto__pista" *ngIf="c.carrito && c.carrito.recordado && c.carrito.estado !== 'comprado'">
+                Ya le recordamos por correo
+              </span>
+            </div>
+          </li>
+        </ul>
+      </section>
     </div>
 
     <footer class="caja__pie">

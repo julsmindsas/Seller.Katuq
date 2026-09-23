@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
-import { MetricasSitio, SitiosService } from "../sitios.service";
+import { ContactoSitio, MetricasSitio, SitiosService } from "../sitios.service";
 
 /**
  * Qué está pasando en una página publicada.
@@ -33,10 +33,67 @@ export class MetricasComponent implements OnInit {
   ];
   rango = 30;
 
+  /** Quién dejó sus datos. No depende del rango: es la lista para trabajar. */
+  contactos: ContactoSitio[] = [];
+  filtroContactos: "todos" | ContactoSitio["tipo"] = "todos";
+
   constructor(private service: SitiosService) {}
 
   ngOnInit(): void {
     this.cargar();
+    this.cargarContactos();
+  }
+
+  cargarContactos(): void {
+    if (!this.siteId) return;
+    this.service.contactos(this.siteId).subscribe({
+      next: (res) => (this.contactos = (res && res.success && res.data && res.data.contactos) || []),
+      // Sin la lista, las métricas siguen sirviendo: no se muestra error.
+      error: () => (this.contactos = []),
+    });
+  }
+
+  get contactosVisibles(): ContactoSitio[] {
+    return this.filtroContactos === "todos"
+      ? this.contactos
+      : this.contactos.filter((c) => c.tipo === this.filtroContactos);
+  }
+
+  cuantos(tipo: ContactoSitio["tipo"]): number {
+    return this.contactos.filter((c) => c.tipo === tipo).length;
+  }
+
+  etiquetaContacto(c: ContactoSitio): string {
+    if (c.tipo === "carrito-abandonado") {
+      return c.carrito && c.carrito.estado === "comprado" ? "Compró" : "Dejó el carrito";
+    }
+    return c.tipo === "avisame-stock" ? "Avísame" : "Te escribió";
+  }
+
+  /**
+   * WhatsApp con el mensaje ya escrito, según por qué dejó sus datos. Un
+   * celular colombiano de 10 dígitos sale con su 57.
+   */
+  enlaceWhatsapp(c: ContactoSitio): string {
+    let tel = (c.telefono || "").replace(/\D/g, "");
+    if (/^3\d{9}$/.test(tel)) tel = `57${tel}`;
+    if (tel.length < 10) return "";
+    const nombre = (c.nombre || "").split(" ")[0];
+    const tienda = this.nombre || (this.datos && this.datos.sitio.nombre) || "la tienda";
+    const saludo = `Hola${nombre ? ` ${nombre}` : ""}, te escribo de ${tienda}.`;
+    const motivo =
+      c.tipo === "carrito-abandonado"
+        ? " Vi que dejaste unos productos en tu carrito. ¿Te ayudo a terminar tu pedido?"
+        : c.tipo === "avisame-stock"
+        ? " Nos pediste que te avisáramos: ya tenemos de nuevo el producto que buscabas."
+        : " Recibimos tu mensaje, ¿en qué te podemos ayudar?";
+    return `https://wa.me/${tel}?text=${encodeURIComponent(saludo + motivo)}`;
+  }
+
+  fechaCorta(iso: string): string {
+    const t = Date.parse(iso || "");
+    if (!Number.isFinite(t)) return "";
+    return new Date(t).toLocaleDateString("es-CO", { day: "numeric", month: "short", timeZone: "America/Bogota" });
   }
 
   cargar(): void {
