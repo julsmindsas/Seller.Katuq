@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, ChangeDetectorRef } from '@angular/core';
 import { zonaCubreCiudad } from '../../../shared/util/zona-cobro.util';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { alMenosUnTelefono, PATRON_TELEFONO_FIJO } from './cliente-telefonos.validator';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2'
 import { DataStoreService } from '../../../shared/services/dataStoreService';
@@ -829,9 +830,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       tipo_documento_comprador: ['CC', Validators.required],
       documento: ['', Validators.required],
       indicativo_celular_comprador: ['57', Validators.required],
-      numero_celular_comprador: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
-      indicativo_celular_whatsapp: ['57', Validators.required],
-      numero_celular_whatsapp: ['', Validators.required],
+      // Ticket 1050: celular o fijo, al menos uno (validador del grupo). WhatsApp
+      // deja de ser obligatorio, igual que en el formulario corto.
+      numero_celular_comprador: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+      telefono_fijo: ['', [Validators.pattern(PATRON_TELEFONO_FIJO)]],
+      indicativo_celular_whatsapp: ['57'],
+      numero_celular_whatsapp: [''],
       correo_electronico_comprador: ['', [Validators.required, Validators.email]],
       tipoCliente: [''],
       fechaCumpleanos: [''],
@@ -840,8 +844,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       datosFacturacionElectronica: [['']],
       datosEntrega: [['']],
       notas: [['']],
-      estado: ['activo']
-    });
+      estado: ['activo'],
+      // Ticket 1050: cupo y plazo de crédito también al crear desde el menú
+      // (antes solo existían en el formulario corto del listado).
+      creditLimit: [0, [Validators.min(0)]],
+      payTermDays: [0, [Validators.min(0)]],
+    }, { validators: alMenosUnTelefono });
 
     this.formularioFacturacion = this.formBuilder.group({
       alias_facturacion: [''],
@@ -1594,7 +1602,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         indicativo_celular_comprador: '57',
         indicativo_celular_whatsapp: '57',
         tipo_documento_comprador: 'CC',
-        estado: 'activo'
+        estado: 'activo',
+        creditLimit: 0,
+        payTermDays: 0,
       });
     }
     this.showClienteModal = true;

@@ -142,7 +142,8 @@
                         <span class="c360-dot">·</span>
                         <i class="pi pi-envelope"></i> {{ datos.correo_electronico_comprador }}
                         <span class="c360-dot">·</span>
-                        <i class="pi pi-phone"></i> {{ datos.indicativo_celular_comprador ? '+' + datos.indicativo_celular_comprador + ' ' : '' }}{{ datos.numero_celular_comprador }}
+                        <ng-container *ngIf="datos.numero_celular_comprador"><i class="pi pi-phone"></i> {{ datos.indicativo_celular_comprador ? '+' + datos.indicativo_celular_comprador + ' ' : '' }}{{ datos.numero_celular_comprador }}</ng-container>
+                        <ng-container *ngIf="datos.telefono_fijo"><span class="c360-dot">·</span><i class="pi pi-home"></i> {{ datos.telefono_fijo }}</ng-container>
                     </div>
                 </div>
                 <div class="c360-chips-actions">
@@ -798,6 +799,21 @@
                             [appendTo]="'body'">
                         </p-calendar>
                     </div>
+                    <!-- Crédito (ticket 1050): mismo cupo y plazo que el formulario corto -->
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-modern">
+                            <i class="pi pi-credit-card me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Cupo de crédito" | translate }}
+                        </label>
+                        <input pInputText type="number" min="0" formControlName="creditLimit" placeholder="0" class="w-100">
+                        <small class="text-muted">{{ "0 = sin cupo. Se usa en Cartera (CxC)." | translate }}</small>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-modern">
+                            <i class="pi pi-clock me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Plazo de pago (días)" | translate }}
+                        </label>
+                        <input pInputText type="number" min="0" formControlName="payTermDays" placeholder="0" class="w-100">
+                        <small class="text-muted">{{ "0 = contado. Define el vencimiento en Cartera." | translate }}</small>
+                    </div>
                     <!-- Etiquetas con catálogo -->
                     <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
                         <div class="d-flex align-items-center justify-content-between mb-1">
@@ -851,7 +867,7 @@
                 <div class="row g-3">
                     <!-- Teléfono Celular -->
                     <div class="col-12">
-                        <label class="form-label-modern">{{ "Teléfono Celular" | translate }} <span class="required">*</span></label>
+                        <label class="form-label-modern">{{ "Teléfono Celular" | translate }}</label>
                         <div class="phone-input-group">
                             <p-dropdown [options]="indicativos"
                                         optionLabel="phone_code" optionValue="phone_code"
@@ -868,6 +884,19 @@
                             <i class="pi pi-exclamation-circle"></i>
                             <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
                             <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                        </div>
+                    </div>
+                    <!-- Teléfono fijo (ticket 1050): el RUT suele traer fijo y no celular -->
+                    <div class="col-12">
+                        <label class="form-label-modern">{{ "Teléfono fijo" | translate }}</label>
+                        <input pInputText type="text" placeholder="{{ 'Ej: 6044441234' | translate }}"
+                               formControlName="telefono_fijo" autocomplete="tel" maxlength="10"
+                               (keypress)="validarSoloNumeros($event)" class="w-100">
+                        <div *ngIf="formulario.get('telefono_fijo')?.hasError('pattern') && formulario.get('telefono_fijo')?.touched" class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i><span>{{ "Entre 7 y 10 dígitos" | translate }}</span>
+                        </div>
+                        <div *ngIf="formulario.hasError('sinTelefono') && (formulario.get('numero_celular_comprador')?.touched || formulario.get('telefono_fijo')?.touched)" class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i><span>{{ "Registra al menos un teléfono: celular o fijo" | translate }}</span>
                         </div>
                     </div>
                     <!-- Correo + Cómo nos conoció en misma fila -->
@@ -1031,6 +1060,21 @@
                                 [appendTo]="'body'">
                             </p-calendar>
                         </div>
+                    <!-- Crédito (ticket 1050): mismo cupo y plazo que el formulario corto -->
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-modern">
+                            <i class="pi pi-credit-card me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Cupo de crédito" | translate }}
+                        </label>
+                        <input pInputText type="number" min="0" formControlName="creditLimit" placeholder="0" class="w-100">
+                        <small class="text-muted">{{ "0 = sin cupo. Se usa en Cartera (CxC)." | translate }}</small>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-modern">
+                            <i class="pi pi-clock me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Plazo de pago (días)" | translate }}
+                        </label>
+                        <input pInputText type="number" min="0" formControlName="payTermDays" placeholder="0" class="w-100">
+                        <small class="text-muted">{{ "0 = contado. Define el vencimiento en Cartera." | translate }}</small>
+                    </div>
                         <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
                             <div class="d-flex align-items-center justify-content-between mb-1">
                                 <label class="form-label-modern mb-0">
@@ -1077,7 +1121,7 @@
                     </div>
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label-modern">{{ "Teléfono Celular" | translate }} <span class="required">*</span></label>
+                            <label class="form-label-modern">{{ "Teléfono Celular" | translate }}</label>
                             <div class="phone-input-group">
                                 <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
                                     placeholder="{{ 'Código' | translate }}"
@@ -1094,6 +1138,19 @@
                                 <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
                             </div>
                         </div>
+                    <!-- Teléfono fijo (ticket 1050): el RUT suele traer fijo y no celular -->
+                    <div class="col-12">
+                        <label class="form-label-modern">{{ "Teléfono fijo" | translate }}</label>
+                        <input pInputText type="text" placeholder="{{ 'Ej: 6044441234' | translate }}"
+                               formControlName="telefono_fijo" autocomplete="tel" maxlength="10"
+                               (keypress)="validarSoloNumeros($event)" class="w-100">
+                        <div *ngIf="formulario.get('telefono_fijo')?.hasError('pattern') && formulario.get('telefono_fijo')?.touched" class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i><span>{{ "Entre 7 y 10 dígitos" | translate }}</span>
+                        </div>
+                        <div *ngIf="formulario.hasError('sinTelefono') && (formulario.get('numero_celular_comprador')?.touched || formulario.get('telefono_fijo')?.touched)" class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i><span>{{ "Registra al menos un teléfono: celular o fijo" | translate }}</span>
+                        </div>
+                    </div>
                         <!-- Correo + Cómo nos conoció en misma fila -->
                         <div class="col-12 col-sm-7">
                             <label class="form-label-modern">{{ "Correo Electrónico" | translate }} <span class="required">*</span></label>

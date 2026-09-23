@@ -10,6 +10,7 @@ import { ClientConfigService, ClientTag } from "../services/client-config.servic
 import { InfoIndicativos } from "../../../../../Mock/indicativosPais";
 import { DireccionEstructuradaComponent } from "../../entrega/direccion-estructurada/direccion-estructurada.component";
 import { DaneCodesService } from "../../../../shared/services/dane-codes.service";
+import { alMenosUnTelefono, PATRON_TELEFONO_FIJO } from "../cliente-telefonos.validator";
 import Swal from "sweetalert2";
 
 @Component({
@@ -186,6 +187,9 @@ export class CrearClienteModalComponent implements OnInit {
             String(this.clienteData.numero_celular_comprador)
           );
         }
+        if (this.clienteData.telefono_fijo != null) {
+          this.formulario.controls['telefono_fijo'].setValue(String(this.clienteData.telefono_fijo));
+        }
         if (this.clienteData.numero_celular_whatsapp != null) {
           this.formulario.controls['numero_celular_whatsapp'].setValue(
             String(this.clienteData.numero_celular_whatsapp)
@@ -291,7 +295,9 @@ export class CrearClienteModalComponent implements OnInit {
       nombres_completos: ["", Validators.required],
       apellidos_completos: ["", Validators.required],
       indicativo_celular_comprador: ["57", Validators.required],
-      numero_celular_comprador: ["", [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      // Ticket 1050: celular o fijo, al menos uno (validador del grupo).
+      numero_celular_comprador: ["", [Validators.pattern(/^[0-9]{10}$/)]],
+      telefono_fijo: ["", [Validators.pattern(PATRON_TELEFONO_FIJO)]],
       correo_electronico_comprador: ["", [Validators.required, Validators.email]],
       indicativo_celular_whatsapp: ["57"],
       numero_celular_whatsapp: [""],
@@ -306,7 +312,7 @@ export class CrearClienteModalComponent implements OnInit {
       // fechaEntrega + payTermDays).
       creditLimit: [0, [Validators.min(0)]],
       payTermDays: [0, [Validators.min(0)]],
-    });
+    }, { validators: alMenosUnTelefono });
   }
 
   validarSoloNumeros(event: any) {
@@ -372,12 +378,15 @@ export class CrearClienteModalComponent implements OnInit {
       nombres_completos:             'Nombres Completos',
       apellidos_completos:           'Apellidos Completos',
       indicativo_celular_comprador:  'Indicativo Celular',
-      numero_celular_comprador:      'Teléfono Celular',
+      numero_celular_comprador:      'Teléfono Celular (10 dígitos)',
+      telefono_fijo:                 'Teléfono fijo (7 a 10 dígitos)',
       correo_electronico_comprador:  'Correo Electrónico',
     };
-    return Object.entries(labels)
+    const faltantes = Object.entries(labels)
       .filter(([key]) => this.formulario.get(key)?.invalid)
       .map(([, label]) => label);
+    if (this.formulario.hasError('sinTelefono')) faltantes.push('Un teléfono: celular o fijo');
+    return faltantes;
   }
 
   guardarCliente() {
@@ -419,7 +428,10 @@ export class CrearClienteModalComponent implements OnInit {
       etiquetas: Array.isArray(formValue.etiquetas)
         ? formValue.etiquetas.map((e: string) => this.toTitleCase(e))
         : formValue.etiquetas,
-      numero_celular_comprador: Number(formValue.numero_celular_comprador),
+      numero_celular_comprador: formValue.numero_celular_comprador
+        ? Number(formValue.numero_celular_comprador)
+        : null,
+      telefono_fijo: String(formValue.telefono_fijo || '').trim(),
       numero_celular_whatsapp: formValue.numero_celular_whatsapp
         ? Number(formValue.numero_celular_whatsapp)
         : null,

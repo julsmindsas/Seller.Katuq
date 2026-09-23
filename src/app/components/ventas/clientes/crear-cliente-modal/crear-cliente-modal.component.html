@@ -162,7 +162,7 @@
 
               <!-- Teléfono -->
               <div class="col-12">
-                <label class="form-label-modern">{{ "Teléfono Celular" | translate }} <span class="required">*</span></label>
+                <label class="form-label-modern">{{ "Teléfono Celular" | translate }}</label>
                 <div class="phone-input-group">
                   <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
                     placeholder="{{ 'Código' | translate }}"
@@ -177,6 +177,20 @@
                   <i class="pi pi-exclamation-circle"></i>
                   <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
                   <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                </div>
+              </div>
+
+              <!-- Teléfono fijo (ticket 1050): el RUT suele traer fijo y no celular -->
+              <div class="col-12">
+                <label class="form-label-modern" for="crear-cliente-fijo">{{ "Teléfono fijo" | translate }}</label>
+                <input id="crear-cliente-fijo" pInputText type="text" placeholder="{{ 'Ej: 6044441234' | translate }}"
+                  formControlName="telefono_fijo" autocomplete="tel" maxlength="10"
+                  (keypress)="validarSoloNumeros($event)" class="w-100">
+                <div *ngIf="formulario.get('telefono_fijo')?.hasError('pattern') && formulario.get('telefono_fijo')?.touched" class="error-message mt-1">
+                  <i class="pi pi-exclamation-circle"></i><span>{{ "Entre 7 y 10 dígitos" | translate }}</span>
+                </div>
+                <div *ngIf="formulario.hasError('sinTelefono') && (formulario.get('numero_celular_comprador')?.touched || formulario.get('telefono_fijo')?.touched)" class="error-message mt-1">
+                  <i class="pi pi-exclamation-circle"></i><span>{{ "Registra al menos un teléfono: celular o fijo" | translate }}</span>
                 </div>
               </div>
 
