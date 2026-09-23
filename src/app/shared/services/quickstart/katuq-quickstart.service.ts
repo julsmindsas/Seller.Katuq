@@ -15,7 +15,7 @@ import { Disponibilidad } from '../../models/productos/Disponibilidad';
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Role, Menu } from '../../models/roles/roles';
 import { Rol } from '../../models/roles/roles.type';
-import { OrigenCampana } from '../meta-pixel.service';
+import { OrigenCampana } from '../pixeles-pauta.service';
 
 // Interfaces para el Quick Start
 export interface DiagnosticResponse {

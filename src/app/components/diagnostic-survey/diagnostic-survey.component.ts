@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 import { KatuqQuickStartService, DiagnosticResponse, PromocionRegistro } from '../../shared/services/quickstart/katuq-quickstart.service';
 import { ContextualQuestionsService, ContextualQuestion } from '../../shared/services/quickstart/contextual-questions.service';
 import { PromocionesService, PromocionPublica } from '../../shared/services/promociones.service';
-import { MetaPixelService } from '../../shared/services/meta-pixel.service';
+import { PixelesPautaService } from '../../shared/services/pixeles-pauta.service';
 import { Subscription } from 'rxjs';
 import { clearOnboardingStorage } from '../onboarding/utils/onboarding-v2.utils';
 
@@ -188,7 +188,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         private quickStartService: KatuqQuickStartService,
         private contextualQuestionsService: ContextualQuestionsService,
         private promocionesService: PromocionesService,
-        private metaPixel: MetaPixelService
+        private pixeles: PixelesPautaService
     ) {
         // No se vuelve a asignar registrationQuestions aquí
         this.mainForm = this.fb.group({
@@ -207,8 +207,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
 
     ngOnInit() {
         // Medición de la pauta: de qué anuncio llegó y la visita al registro.
-        this.metaPixel.capturarOrigen();
-        this.metaPixel.iniciar();
+        this.pixeles.capturarOrigen();
+        this.pixeles.iniciar();
         this.cargarPromocionPendiente();
         this.loadProgress();
         this.abrirRegistroRapidoSiLoPide();
@@ -687,7 +687,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 canales: ['POS']
             },
             codigoPromocional: this.codigoPromocional,
-            origenCampana: this.metaPixel.obtenerOrigen()
+            origenCampana: this.pixeles.obtenerOrigen()
         };
 
         try {
@@ -719,14 +719,14 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
 
                 if (quickStartResult.pendingReview) {
                     // Cuarentena anti-abuso: NO hay credenciales todavía, no redirigir al panel.
-                    // Tampoco se le cuenta a Meta como registro (ver MetaPixelService).
+                    // Tampoco se le cuenta a las plataformas de pauta (ver PixelesPautaService).
                     this.registrationPendingReview = true;
-                    this.metaPixel.limpiarOrigen();
+                    this.pixeles.limpiarOrigen();
                     return;
                 }
 
-                this.metaPixel.registroCompleto();
-                this.metaPixel.limpiarOrigen();
+                this.pixeles.registroCompleto();
+                this.pixeles.limpiarOrigen();
 
                 this.quickStartCompleted = true;
                 this.nextSteps = quickStartResult.nextSteps || [];
@@ -863,7 +863,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             
             if (this.registrationIndex < this.registrationQuestions.length - 1) {
                 // Pasar del nombre de la empresa al siguiente dato = empezó a registrarse.
-                if (this.registrationIndex === 0) this.metaPixel.inicioRegistro();
+                if (this.registrationIndex === 0) this.pixeles.inicioRegistro();
                 this.registrationIndex++;
             } else {
                 this.confirmFinish();
