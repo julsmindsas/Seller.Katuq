@@ -2351,6 +2351,17 @@
 
   &__paso { margin: 0.55rem 0 0.4rem; line-height: 1.5; }
 
+  // Poner la tienda en la raíz reemplaza la web que ya viva ahí: se avisa
+  // ANTES de los registros, no después de que la página desaparezca.
+  &__aviso {
+    margin: 0.55rem 0;
+    padding: 0.55rem 0.75rem;
+    border-radius: 9px;
+    border: 1px solid rgba(217, 119, 6, 0.35);
+    background: rgba(245, 158, 11, 0.1);
+    line-height: 1.5;
+  }
+
   // Cada registro DNS como bloque apilado: el panel es angosto y una tabla
   // de 4 columnas empujaba los botones Copiar fuera de la tarjeta.
   &__registro {

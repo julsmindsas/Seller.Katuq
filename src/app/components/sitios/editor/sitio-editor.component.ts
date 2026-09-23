@@ -716,7 +716,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   slug = "";
   dominioPropio = "";
   comprobandoDominio = false;
-  estadoDominio: { raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean } | null = null;
+  estadoDominio: {
+    dominio?: string; subdominio?: boolean; raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean;
+  } | null = null;
 
   /** Sufijo del dominio, para la barra del navegador de la previa. */
   dominioSitios = environment.dominioSitios || "katuq.com";
@@ -1920,14 +1922,41 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 
+  /**
+   * El dominio escrito, partido en raíz y subdominio. Decide qué registros se
+   * piden: un subdominio (tienda.baudiocorp.com) lleva UN registro y deja la
+   * web de la raíz intacta; la raíz lleva A en @ y reemplaza lo que haya ahí.
+   * Mismo criterio que `partesDeDominio` del backend.
+   */
+  get partesDominio(): { raiz: string; subdominio: string } {
+    const dobles = ["com.co", "net.co", "org.co", "edu.co", "gov.co", "nom.co", "mil.co",
+      "com.mx", "com.ar", "com.pe", "com.ec", "com.br", "com.ve", "com.uy", "com.py",
+      "com.bo", "com.gt", "com.pa", "com.do", "co.uk", "com.es", "com.au"];
+    const limpio = (this.dominioPropio || "").trim().toLowerCase()
+      .replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
+    const partes = limpio.split(".").filter(Boolean);
+    const n = partes.length >= 3 && dobles.includes(partes.slice(-2).join(".")) ? 3 : 2;
+    if (partes.length <= n) return { raiz: partes.join("."), subdominio: "" };
+    return { raiz: partes.slice(-n).join("."), subdominio: partes.slice(0, partes.length - n).join(".") };
+  }
+
   /** El estado del DNS, dicho en cristiano. */
   get mensajeDominio(): string {
     const d = this.estadoDominio;
     if (!d) return "";
+    if (d.subdominio) {
+      return d.raiz
+        ? "✅ El subdominio ya apunta. El candado verde se activa solo con la primera visita."
+        : "⏳ Todavía no vemos el registro. El DNS puede tardar de minutos a un par de horas — vuelve a comprobar más tarde.";
+    }
     if (d.raiz && d.www) return "✅ Los dos registros apuntan bien. El candado verde se activa solo con la primera visita.";
     if (d.raiz) return "✅ El registro A ya apunta. Falta el CNAME de www — tu página ya funciona sin www.";
     if (d.www) return "✅ El www ya apunta. Falta el registro A de la raíz (@) — sin él, el dominio sin www no abre.";
-    if (d.raizApuntaOtroLado) return "⚠️ Tu dominio apunta a OTRO servidor. Edita el registro A existente y ponle 34.225.223.187.";
+    // No se le dice "cámbialo": si ese dominio ya tiene una web, cambiar el
+    // registro A la tumba. Primero se pregunta qué quiere conservar.
+    if (d.raizApuntaOtroLado) {
+      return `⚠️ ${d.dominio} ya muestra una página en otro servidor. Si la quieres conservar, usa un subdominio como tienda.${d.dominio}. Solo si quieres REEMPLAZARLA por esta, edita el registro A existente y ponle 34.225.223.187.`;
+    }
     return "⏳ Todavía no vemos los registros. El DNS puede tardar de minutos a un par de horas — vuelve a comprobar más tarde.";
   }
 

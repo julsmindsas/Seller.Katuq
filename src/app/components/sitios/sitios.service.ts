@@ -421,7 +421,9 @@ export class SitiosService extends BaseService {
 
   /** ¿El DNS del dominio propio ya apunta a nuestros servidores? */
   dominioEstado(dominio: string): Observable<
-    Respuesta<{ dominio: string; raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean }>
+    Respuesta<{
+      dominio: string; subdominio?: boolean; raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean;
+    }>
   > {
     return this.get<any>(`/v1/sites/dominio-estado?dominio=${encodeURIComponent(dominio)}`);
   }

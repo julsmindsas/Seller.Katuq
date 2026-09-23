@@ -2411,6 +2411,33 @@
               <b>{{ dominioPropio }}</b> (GoDaddy, Namecheap, Hostinger…) y busca la
               sección <b>DNS</b> o <b>Administrar registros</b>.</p>
 
+            <ng-container *ngIf="partesDominio.subdominio; else dnsRaiz">
+              <p class="dns__paso"><b>3.</b> Crea este registro, tal cual:</p>
+              <div class="dns__registro">
+                <div class="dns__linea">
+                  <span class="dns__etiqueta">Tipo</span>
+                  <b>CNAME</b>
+                </div>
+                <div class="dns__linea">
+                  <span class="dns__etiqueta">Nombre / Host</span>
+                  <code>{{ partesDominio.subdominio }}</code>
+                </div>
+                <div class="dns__linea">
+                  <span class="dns__etiqueta">Valor / Apunta a</span>
+                  <code>{{ slug || 'tu-pagina' }}.{{ dominioSitios }}</code>
+                  <button class="btn-fantasma btn-fantasma--sm"
+                          (click)="copiarDns((slug || 'tu-pagina') + '.' + dominioSitios)">Copiar</button>
+                </div>
+              </div>
+              <small>Tu página principal (<b>{{ partesDominio.raiz }}</b>) no se toca: sigue
+                igual, y esta tienda vive en <b>{{ dominioPropio }}</b>.</small>
+            </ng-container>
+            <ng-template #dnsRaiz>
+            <p class="dns__aviso">
+              ⚠️ Esto hace que <b>{{ partesDominio.raiz }}</b> muestre esta página. Si ya tienes
+              una web en ese dominio, se reemplaza. Para conservarla, escribe un subdominio,
+              por ejemplo <b>tienda.{{ partesDominio.raiz }}</b>.
+            </p>
             <p class="dns__paso"><b>3.</b> Crea estos dos registros, tal cual:</p>
 
             <div class="dns__registro">
@@ -2448,6 +2475,8 @@
             </div>
             <small>Si ya existe un registro A en &#64; o un CNAME en www apuntando a
               otro lado, edítalo en vez de crear uno nuevo.</small>
+
+            </ng-template>
 
             <p class="dns__paso"><b>4.</b> Espera un rato (de minutos a un par de
               horas) y comprueba aquí mismo:</p>
