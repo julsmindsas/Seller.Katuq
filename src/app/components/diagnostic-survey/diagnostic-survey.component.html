@@ -1,20 +1,31 @@
-<div class="survey-container">
-  <!-- Logo posicionado en la esquina superior izquierda -->
-  <img class="survey-logo" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo">
-  
+<!-- Diseño del registro (aprobado por Daniel 2026-09-24): dos columnas en la
+     bienvenida, los pasos y la confirmación; el diagnóstico largo conserva su vista. -->
+<ng-container *ngIf="{ nuevo: ['welcome', 'registration', 'summary', 'quickstart-success'].includes(currentStep) } as vista">
+<div class="survey-container" [class.reg-layout]="vista.nuevo">
+  <!-- Logo del diagnóstico largo (en el diseño nuevo va en la barra superior) -->
+  <img *ngIf="!vista.nuevo" class="survey-logo" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo">
+
   <!-- Indicador de guardado automático -->
   <div class="autosave-indicator" *ngIf="showAutoSaveIndicator" role="status" aria-live="polite">
     <span class="autosave-icon">💾</span>
     <span class="autosave-text">Progreso guardado</span>
   </div>
-  
+
+  <div class="reg-shell">
+  <div class="reg-main">
+  <div *ngIf="vista.nuevo" class="reg-topbar">
+    <!-- Logo en línea: el SVG del asset trae márgenes internos y descuadra la barra -->
+    <svg class="reg-topbar__logo" viewBox="0 0 1000.48 286.72" role="img" aria-label="Katuq"><path fill="#211F3A" d="m0,221.82V6.96h50.68v93.5L121.65,6.96h61.05l-81.05,102.24,87.42,112.61h-61.94L50.68,122.84v98.98H0Z"/><path fill="#211F3A" d="m425.41,221.82V51.86h-68.31V6.96h187.59v44.9h-68.01v169.96h-51.27Z"/><path fill="#211F3A" d="m617.89,6.96v118.1c0,18.97,3.48,33.17,10.45,42.6,6.96,9.43,17.51,14.15,31.64,14.15s24.03-4.39,31.19-13.19c7.16-8.79,10.74-21.58,10.74-38.38V6.96h45.79v123.28c0,31.02-7.95,55.2-23.86,72.53-15.91,17.34-37.98,26-66.23,26s-50.75-8.59-66.6-25.78c-15.86-17.19-23.78-41.34-23.78-72.46V6.96h50.68Z"/><path fill="#211F3A" d="m805.48,238.86c1.28-7.02,3.01-14.03,5.19-21.04,2.17-7.01,4.89-14.17,8.15-21.49-12.35-11.06-21.66-23.63-27.93-37.71-6.27-14.08-9.41-29.31-9.41-45.71,0-12.64,1.93-24.89,5.78-36.75,3.85-11.85,9.48-22.67,16.89-32.45,10.47-13.93,23.26-24.69,38.38-32.3,15.11-7.61,31.27-11.41,48.45-11.41,12.25,0,24.03,1.95,35.34,5.85,11.31,3.9,21.8,9.66,31.49,17.26,13.73,10.77,24.28,24,31.64,39.71,7.36,15.71,11.04,32.89,11.04,51.56,0,14.82-2.87,29.09-8.59,42.82-5.73,13.73-13.78,25.63-24.15,35.71-9.29,9.29-19.83,16.47-31.64,21.56-11.81,5.09-23.59,7.63-35.34,7.63-5.04,0-13.63-1.28-25.78-3.85l-.3-.15-.44,3.11c6.72,1.48,21.63,6.12,44.75,13.93,23.12,7.8,42.92,12.15,59.42,13.04l-12.45,38.53c-18.28-1.38-43.71-9.04-76.31-22.97-4.25-1.78-7.46-3.11-9.63-4l-1.78-.74c-27.96-11.85-52.21-18.57-72.75-20.15Zm28.75-124.47c0,18.67,5.46,34.3,16.37,46.9,10.91,12.59,24.38,18.89,40.38,18.89s29.58-6.27,40.45-18.82c10.87-12.54,16.3-28.2,16.3-46.97s-5.43-34.6-16.3-47.19c-10.87-12.59-24.35-18.89-40.45-18.89s-29.46,6.3-40.38,18.89c-10.92,12.6-16.37,28.33-16.37,47.19Z"/><polygon fill="#5F3FE0" points="293.77 225.68 388.87 225.68 310.15 4.41 219.45 5.14 293.77 225.68"/><polygon fill="#00c9b1" opacity=".9" points="134.75 223.31 233.62 223.31 309.83 3.5 215.36 3.5 134.75 223.31"/></svg>
+    <span class="reg-topbar__login">¿Ya tienes cuenta? <button type="button" class="reg-topbar__link" (click)="goToLogin()">Entrar</button></span>
+  </div>
+
   <div class="survey-form animate-fancy">
     <!-- Mostrar mensaje de éxito del Quick Start -->
     <div *ngIf="currentStep === 'quickstart-success'">
       <!-- Proceso de configuración automática -->
       <div *ngIf="quickStartInProgress" class="quickstart-processing">
         <div class="welcome-text" style="margin-top:20px;">
-          {{ 'Configurando tu comercio automáticamente...' | translate }}
+          Creando tu cuenta…
         </div>
         <div class="quickstart-message" style="font-size: 1.2rem; margin: 20px 0;">
           {{ quickStartMessage }}
@@ -24,6 +35,42 @@
 
       <!-- Quick Start completado exitosamente -->
       <div *ngIf="quickStartCompleted && !quickStartInProgress" class="quickstart-success">
+        <!-- Eligió su contraseña (D-319): confirmación corta y entra de una vez -->
+        <ng-container *ngIf="eligioContrasena; else exitoClasico">
+          <div class="reg-done">
+            <span class="reg-eyebrow">Cuenta creada</span>
+            <h1 class="reg-h1">¡Listo, {{ welcomeMessage }}!</h1>
+
+            <div *ngIf="promocionAplicada" class="promo-aplicada">
+              <p class="promo-aplicada__titulo">Tienes Premium activo</p>
+              <p class="promo-aplicada__texto">
+                Aplicamos el código <strong>{{ promocionAplicada.codigo }}</strong>: tu cuenta queda con el
+                plan Premium completo. Te avisaremos por correo antes de que termine.
+              </p>
+            </div>
+            <div *ngIf="promocionNoAplicada" class="promo-no-aplicada">
+              <p class="promo-no-aplicada__titulo">Tu cuenta quedó creada en el plan gratuito</p>
+              <p class="promo-no-aplicada__texto">
+                La promoción con la que llegaste ya no estaba disponible cuando terminaste el registro.
+                Puedes pasarte a Premium cuando quieras.
+              </p>
+            </div>
+
+            <ul class="reg-done__list">
+              <li><span class="reg-tick" aria-hidden="true">✓</span>Tu cuenta quedó creada</li>
+              <li *ngIf="!promocionAplicada"><span class="reg-tick" aria-hidden="true">✓</span>Plan gratis activo: 15 pedidos al mes</li>
+              <li><span class="reg-tick" aria-hidden="true">✓</span>Tu panel está listo para subir tus productos</li>
+            </ul>
+
+            <div class="entrando-cuenta" role="status" aria-live="polite">
+              <span *ngIf="entrandoACuenta" class="entrando-cuenta__spinner" aria-hidden="true"></span>
+              <span>{{ entrandoACuenta ? 'Entrando a tu cuenta…' : 'Tu cuenta quedó creada.' }}</span>
+            </div>
+            <p class="reg-fine">Tu primer paso adentro: subir tu primer producto.</p>
+          </div>
+        </ng-container>
+
+        <ng-template #exitoClasico>
         <div class="welcome-text">
           {{ '¡PERFECTO!' | translate }} <span class="highlight">{{ welcomeMessage | uppercase }}</span>
         </div>
@@ -56,12 +103,6 @@
             Puedes operar hasta 15 pedidos sin tarjeta. Cuando necesites más capacidad o funciones avanzadas,
             podrás activar Premium desde Katuq.
           </p>
-        </div>
-
-        <!-- D-319: eligió su contraseña, entra de una vez -->
-        <div *ngIf="eligioContrasena" class="entrando-cuenta" role="status" aria-live="polite">
-          <span class="entrando-cuenta__spinner" aria-hidden="true"></span>
-          <span>{{ entrandoACuenta ? 'Entrando a tu cuenta…' : 'Tu cuenta quedó creada.' }}</span>
         </div>
 
         <!-- Credenciales: la contraseña solo llega por correo, hay que decírselo al usuario -->
@@ -98,6 +139,7 @@
             {{ 'Ir al Panel Principal' | translate }} 🚀
           </button>
         </div>
+        </ng-template>
       </div>
 
       <!-- Registro en revisión / cuarentena anti-abuso (202) -->
@@ -229,42 +271,24 @@
     <div *ngIf="!submissionSuccess">
       <!-- Paso 0: Página de Bienvenida/Landing -->
       <div *ngIf="currentStep === 'welcome'" class="welcome-landing" role="main" aria-label="Crea tu cuenta en Katuq">
-        <div class="welcome-content">
-          <p class="welcome-kicker">EMPIEZA SIN RIESGO</p>
-          <h1 class="welcome-title">Crea tu cuenta Gratis y empieza a vender</h1>
-          <p class="welcome-subtitle">Katuq te guía paso a paso. No necesitas saber de sistemas ni configurar todo hoy.</p>
-          
-          <div class="benefits-list">
-            <div class="benefit-item">
-              <span class="benefit-icon">✓</span>
-              <span class="benefit-text"><strong>Plan Gratis</strong><br>Hasta 15 pedidos para comenzar</span>
-            </div>
-            <div class="benefit-item">
-              <span class="benefit-icon">✓</span>
-              <span class="benefit-text"><strong>Sin tarjeta</strong><br>Premium solo si decides activarlo</span>
-            </div>
-            <div class="benefit-item">
-              <span class="benefit-icon">✓</span>
-              <span class="benefit-text"><strong>Ayuda incluida</strong><br>Te acompañamos hasta tu primera venta</span>
-            </div>
-            <div class="benefit-item">
-              <span class="benefit-icon">✓</span>
-              <span class="benefit-text"><strong>Solo 4 datos y tu contraseña</strong><br>Entras de una vez y completas lo demás cuando estés listo</span>
-            </div>
-          </div>
+        <div class="welcome-content reg-welcome">
+          <span class="reg-eyebrow">Plan gratis · Sin tarjeta</span>
+          <h1 class="reg-h1">Vende en línea desde hoy, <span class="reg-hl">gratis</span></h1>
+          <p class="reg-lead">Tu tienda, tus pedidos y tu inventario en un solo lugar. Creas tu cuenta en un minuto y Katuq te guía paso a paso.</p>
 
-          <div class="welcome-cta">
-            <button class="cta-button primary large" (click)="startFreeRegistration()" type="button">
-              Crear mi cuenta Gratis
-            </button>
-            <button class="cta-button secondary diagnostic-option" (click)="startDiagnostic()" type="button">
-              Personalizar primero con un diagnóstico
-            </button>
-            <button class="video-help-link" (click)="showIntroVideo()" type="button">
-              Ver video de 15 segundos
-            </button>
-            <p class="cta-subtext">El diagnóstico es opcional y puedes hacerlo después.</p>
+          <ul class="reg-perks">
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>15 pedidos gratis cada mes</strong>Pasas a Premium solo si lo necesitas.</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Tu tienda lista con tus productos</strong>En tu propia dirección katuq.com.</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Te acompañamos hasta tu primera venta</strong>Una persona del equipo te escribe por WhatsApp.</span></li>
+          </ul>
+
+          <div class="reg-cta">
+            <button class="reg-btn" (click)="startFreeRegistration()" type="button">Crear mi cuenta gratis</button>
+            <p class="reg-fine">Son 5 datos. Toma menos de 1 minuto.</p>
           </div>
+          <p class="reg-alt">¿Prefieres que te recomendemos por dónde empezar?
+            <button class="reg-link" (click)="startDiagnostic()" type="button">Haz el diagnóstico de 5 minutos</button>
+          </p>
         </div>
       </div>
 
@@ -425,58 +449,115 @@
           </span>
         </div>
 
-        <h2>{{ 'Información Básica de tu Empresa' | translate }}</h2>
-        <p class="registration-help" *ngIf="registrationOnly">
-          Solo 4 datos y tu contraseña. Después te guiamos para completar tu negocio.
-        </p>
-        <p class="registration-help" *ngIf="!registrationOnly">Cada dato nos ayuda a personalizar mejor tu experiencia</p>
+        <!-- Avance: paso N de 5 -->
+        <div class="reg-progress" role="progressbar"
+             [attr.aria-valuenow]="registrationIndex + 1"
+             [attr.aria-valuemin]="1"
+             [attr.aria-valuemax]="registrationQuestions.length"
+             [attr.aria-label]="'Paso ' + (registrationIndex + 1) + ' de ' + registrationQuestions.length">
+          <div class="reg-progress__top">
+            <span>Paso {{ registrationIndex + 1 }} de {{ registrationQuestions.length }}</span>
+            <span class="reg-progress__hint">{{ pasoActual === 'password' ? 'Último paso' : 'Menos de 1 minuto' }}</span>
+          </div>
+          <div class="reg-progress__bar"><i [style.width.%]="(registrationIndex + 1) / registrationQuestions.length * 100"></i></div>
+        </div>
         <!-- 🍯 Honeypot anti-bot: oculto para humanos (fuera de pantalla, sin tab ni autocompletar). -->
         <input type="text" formControlName="website" autocomplete="off" tabindex="-1"
                aria-hidden="true"
                style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;">
 
-        <!-- Nombre empresa -->
+        <!-- Nombre del negocio -->
         <ng-container *ngIf="pasoActual === 'nombre'">
-          <div class="survey-question">
-            <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ pregunta('nombre').question }} <span class="required-indicator">*</span>
-            </p>
-            <div class="input-container">
-              <input type="text" 
-                     class="material-input" 
-                     [placeholder]="pregunta('nombre').placeholder"
-                     formControlName="nombre" 
+          <div class="survey-question reg-field">
+            <h2 class="reg-q">{{ pregunta('nombre').question }}</h2>
+            <label class="reg-label" for="reg-nombre">Nombre del negocio</label>
+            <div class="input-container reg-input" [class.is-error]="isFieldInvalid('nombre')">
+              <input id="reg-nombre"
+                     type="text"
+                     class="material-input"
+                     placeholder="Ej: Tienda Aurora"
+                     formControlName="nombre"
+                     autocomplete="organization"
                      (keyup.enter)="moveNextStep()"
                      [class.invalid]="isFieldInvalid('nombre')"
                      [class.valid]="isFieldValid('nombre')">
-              <div class="validation-icons">
-                <span *ngIf="isFieldValid('nombre')" class="valid-icon">✓</span>
-                <span *ngIf="isFieldInvalid('nombre')" class="invalid-icon">✗</span>
-              </div>
+              <span *ngIf="isFieldValid('nombre')" class="reg-input__ok" aria-hidden="true">✓</span>
             </div>
+            <p *ngIf="!getFieldError('nombre')" class="reg-help">Así te verán tus clientes en tu tienda.</p>
             <div *ngIf="getFieldError('nombre')" class="error-message">
               {{ getFieldError('nombre') }}
             </div>
           </div>
         </ng-container>
+        <!-- Correo -->
+        <ng-container *ngIf="pasoActual === 'correo'">
+          <div class="survey-question reg-field">
+            <h2 class="reg-q">{{ pregunta('correo').question }}</h2>
+            <label class="reg-label" for="reg-correo">Correo</label>
+            <div class="input-container reg-input" [class.is-error]="isFieldInvalid('correo')">
+              <input id="reg-correo"
+                     type="email"
+                     class="material-input"
+                     placeholder="tu@correo.com"
+                     formControlName="correo"
+                     autocomplete="email"
+                     inputmode="email"
+                     autocapitalize="off"
+                     spellcheck="false"
+                     (keyup.enter)="moveNextStep()"
+                     [class.invalid]="isFieldInvalid('correo')"
+                     [class.valid]="isFieldValid('correo')">
+              <span *ngIf="isFieldValid('correo')" class="reg-input__ok" aria-hidden="true">✓</span>
+            </div>
+            <p *ngIf="!getFieldError('correo')" class="reg-help">Con este correo entras a Katuq y te llegan los avisos de tus pedidos.</p>
+            <div *ngIf="getFieldError('correo')" class="error-message">
+              {{ getFieldError('correo') }}
+            </div>
+          </div>
+        </ng-container>
+        <!-- Celular -->
+        <ng-container *ngIf="pasoActual === 'celular'">
+          <div class="survey-question reg-field">
+            <h2 class="reg-q">{{ pregunta('celular').question }}</h2>
+            <label class="reg-label" for="reg-celular">Celular (WhatsApp)</label>
+            <div class="input-container reg-input" [class.is-error]="isFieldInvalid('celular')">
+              <span class="reg-input__prefix" aria-hidden="true">+57</span>
+              <input id="reg-celular"
+                     type="tel"
+                     class="material-input"
+                     placeholder="3001234567"
+                     formControlName="celular"
+                     autocomplete="tel-national"
+                     inputmode="tel"
+                     maxlength="10"
+                     (keyup.enter)="moveNextStep()"
+                     [class.invalid]="isFieldInvalid('celular')"
+                     [class.valid]="isFieldValid('celular')">
+              <span *ngIf="isFieldValid('celular')" class="reg-input__ok" aria-hidden="true">✓</span>
+            </div>
+            <p *ngIf="!getFieldError('celular')" class="reg-help">Te escribimos por WhatsApp si necesitas ayuda. Nada de spam.</p>
+            <div *ngIf="getFieldError('celular')" class="error-message">
+              {{ getFieldError('celular') }}
+            </div>
+          </div>
+        </ng-container>
         <!-- Cédula o NIT -->
         <ng-container *ngIf="pasoActual === 'nit'">
-          <div class="survey-question">
-            <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ pregunta('nit').question }} <span class="required-indicator">*</span>
-            </p>
-            <div class="input-container">
-              <input type="text" 
-                     class="material-input" 
-                     [placeholder]="pregunta('nit').placeholder"
-                     formControlName="nit" 
+          <div class="survey-question reg-field">
+            <h2 class="reg-q">{{ pregunta('nit').question }}</h2>
+            <label class="reg-label" for="reg-nit">Cédula o NIT</label>
+            <div class="input-container reg-input" [class.is-error]="isFieldInvalid('nit')">
+              <input id="reg-nit"
+                     type="text"
+                     class="material-input"
+                     placeholder="Solo números"
+                     formControlName="nit"
+                     autocomplete="off"
+                     inputmode="numeric"
                      (keyup.enter)="moveNextStep()"
                      [class.invalid]="isFieldInvalid('nit')"
                      [class.valid]="isFieldValid('nit')">
-              <div class="validation-icons">
-                <span *ngIf="isFieldValid('nit')" class="valid-icon">✓</span>
-                <span *ngIf="isFieldInvalid('nit')" class="invalid-icon">✗</span>
-              </div>
+              <span *ngIf="isFieldValid('nit')" class="reg-input__ok" aria-hidden="true">✓</span>
             </div>
             <div *ngIf="getFieldError('nit')" class="error-message">
               {{ getFieldError('nit') }}
@@ -487,64 +568,14 @@
             </p>
           </div>
         </ng-container>
-        <!-- Correo -->
-        <ng-container *ngIf="pasoActual === 'correo'">
-          <div class="survey-question">
-            <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ pregunta('correo').question }} <span class="required-indicator">*</span>
-            </p>
-            <div class="input-container">
-              <input type="email" 
-                     class="material-input" 
-                     placeholder="ejemplo@dominio.com"
-                     formControlName="correo" 
-                     (keyup.enter)="moveNextStep()"
-                     [class.invalid]="isFieldInvalid('correo')"
-                     [class.valid]="isFieldValid('correo')">
-              <div class="validation-icons">
-                <span *ngIf="isFieldValid('correo')" class="valid-icon">✓</span>
-                <span *ngIf="isFieldInvalid('correo')" class="invalid-icon">✗</span>
-              </div>
-            </div>
-            <div *ngIf="getFieldError('correo')" class="error-message">
-              {{ getFieldError('correo') }}
-            </div>
-          </div>
-        </ng-container>
-        <!-- Celular -->
-        <ng-container *ngIf="pasoActual === 'celular'">
-          <div class="survey-question">
-            <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ pregunta('celular').question }} <span class="required-indicator">*</span>
-            </p>
-            <div class="input-container">
-              <input type="tel" 
-                     class="material-input" 
-                     placeholder="3001234567"
-                     formControlName="celular" 
-                     (keyup.enter)="moveNextStep()"
-                     [class.invalid]="isFieldInvalid('celular')"
-                     [class.valid]="isFieldValid('celular')"
-                     maxlength="10">
-              <div class="validation-icons">
-                <span *ngIf="isFieldValid('celular')" class="valid-icon">✓</span>
-                <span *ngIf="isFieldInvalid('celular')" class="invalid-icon">✗</span>
-              </div>
-            </div>
-            <div *ngIf="getFieldError('celular')" class="error-message">
-              {{ getFieldError('celular') }}
-            </div>
-          </div>
-        </ng-container>
         <!-- Contraseña: la elige la persona y entra de una vez al terminar (D-319) -->
         <ng-container *ngIf="pasoActual === 'password'">
-          <div class="survey-question">
-            <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ pregunta('password').question }} <span class="required-indicator">*</span>
-            </p>
-            <p class="password-help">Con ella entras a Katuq apenas termines.</p>
-            <div class="input-container">
-              <input [type]="mostrarContrasena ? 'text' : 'password'"
+          <div class="survey-question reg-field">
+            <h2 class="reg-q">{{ pregunta('password').question }}</h2>
+            <label class="reg-label" for="reg-password">Contraseña</label>
+            <div class="input-container reg-input" [class.is-error]="isFieldInvalid('password')">
+              <input id="reg-password"
+                     [type]="mostrarContrasena ? 'text' : 'password'"
                      class="material-input material-input--password"
                      [placeholder]="pregunta('password').placeholder"
                      formControlName="password"
@@ -564,25 +595,35 @@
               </button>
             </div>
             <ul id="reglas-contrasena" class="password-rules" aria-live="polite">
-              <li [class.ok]="reglasDeContrasena.largo">Mínimo 8 caracteres</li>
-              <li [class.ok]="reglasDeContrasena.letra">Al menos una letra</li>
-              <li [class.ok]="reglasDeContrasena.numero">Al menos un número</li>
+              <li [class.ok]="reglasDeContrasena.largo">8 caracteres o más</li>
+              <li [class.ok]="reglasDeContrasena.letra">Una letra</li>
+              <li [class.ok]="reglasDeContrasena.numero">Un número</li>
             </ul>
+            <p *ngIf="!getFieldError('password')" class="password-help">Con ella entras de una vez, sin esperar ningún correo.</p>
             <div *ngIf="getFieldError('password')" class="error-message">
               {{ getFieldError('password') }}
             </div>
           </div>
         </ng-container>
-        <div class="navigation-buttons">
-          <button type="button" class="back-button" (click)="backRegistration()">{{ 'Volver' | translate }}</button>
-          <button type="button" 
-                  class="next-button" 
+        <div class="reg-actions">
+          <button type="button"
+                  class="reg-btn"
                   (click)="moveNextStep()"
                   [class.disabled]="!isCurrentRegistrationFieldValid()"
                   [disabled]="!isCurrentRegistrationFieldValid()">
-            {{ registrationIndex === registrationQuestions.length - 1 ? ('Finalizar' | translate) : '→' }}
+            {{ registrationIndex === registrationQuestions.length - 1 ? 'Crear mi cuenta' : 'Continuar' }}
           </button>
+          <div class="reg-actions__row">
+            <button type="button" class="reg-back" (click)="backRegistration()">
+              ← {{ registrationIndex === 0 && registrationOnly ? 'Volver al inicio' : 'Atrás' }}
+            </button>
+            <span class="reg-kbd">o presiona <kbd>Enter</kbd></span>
+          </div>
         </div>
+        <p class="reg-secure">
+          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 1 1 6 0v3H9Z"/></svg>
+          Tus datos solo se usan para crear tu cuenta.
+        </p>
       </div>
 
       <!-- Paso 3: Resumen de Respuestas -->
@@ -601,4 +642,44 @@
       </div>
     </div>
   </div>
+  </div><!-- /reg-main -->
+
+  <!-- Qué obtiene: tienda y pedido de ejemplo (ilustración, no datos reales) -->
+  <aside *ngIf="vista.nuevo" class="reg-aside" aria-label="Qué obtienes con Katuq">
+    <h2 class="reg-aside__title">Así se ve tu negocio con <span>Katuq</span></h2>
+    <div class="reg-demo">
+      <div class="reg-store">
+        <div class="reg-store__bar">
+          <span class="reg-store__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="reg-store__url"><b>tienda-aurora</b>.katuq.com</span>
+        </div>
+        <div class="reg-store__body">
+          <div class="reg-store__head">
+            <span class="reg-store__name">Tienda Aurora</span>
+            <span class="reg-chip reg-chip--ok">Publicada</span>
+          </div>
+          <div class="reg-store__prods">
+            <div class="reg-prod"><div class="reg-prod__ph reg-prod__ph--a"></div><span class="reg-prod__name">Vestido lino</span><span class="reg-prod__price">$189.000</span></div>
+            <div class="reg-prod"><div class="reg-prod__ph reg-prod__ph--b"></div><span class="reg-prod__name">Camisa oxford</span><span class="reg-prod__price">$95.000</span></div>
+            <div class="reg-prod"><div class="reg-prod__ph reg-prod__ph--c"></div><span class="reg-prod__name">Bolso tejido</span><span class="reg-prod__price">$120.000</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="reg-toast" role="img" aria-label="Aviso de pedido nuevo de ejemplo">
+        <span class="reg-toast__ico">$</span>
+        <div>
+          <div class="reg-toast__t1">Pedido nuevo</div>
+          <div class="reg-toast__t2"><span class="reg-toast__num">#AUR-000124</span> · $189.000 · contra entrega</div>
+        </div>
+      </div>
+    </div>
+    <div class="reg-steps">
+      <div><div class="reg-steps__n">Hoy</div><div class="reg-steps__t">Creas tu cuenta</div></div>
+      <div><div class="reg-steps__n">En minutos</div><div class="reg-steps__t">Subes tus productos con una foto</div></div>
+      <div><div class="reg-steps__n">Después</div><div class="reg-steps__t">Recibes pedidos ordenados</div></div>
+    </div>
+    <p class="reg-aside__note">Tienda y pedido de ejemplo.</p>
+  </aside>
+  </div><!-- /reg-shell -->
 </div>
+</ng-container>

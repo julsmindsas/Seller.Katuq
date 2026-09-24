@@ -2445,3 +2445,749 @@
     font-weight: 600;
     line-height: 1.45;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   Diseño nuevo del registro (aprobado por Daniel el 2026-09-24).
+   Aplica a la bienvenida, los pasos, el resumen y la confirmación
+   (clase `.reg-layout` en `.survey-container`). El diagnóstico largo
+   conserva su vista. Tema canónico: acento #5F3FE0, plano, sin gradientes
+   (openspec/specs/design-system). Primero celular.
+   ═════════════════════════════════════════════════════════════════════ */
+
+$reg-accent: #5F3FE0;
+$reg-accent-hover: #4a2fc0;
+$reg-accent-2: #7C5CFF;
+$reg-accent-soft: #efe9ff;
+$reg-ink: #211F3A;
+$reg-body: #5b5878;
+$reg-muted: #8f8bab;
+$reg-line: #ececf4;
+$reg-chip-bg: #f5f4fa;
+$reg-chip-border: #e9e7f3;
+$reg-tile: #f3f1fb;
+$reg-tint: #faf9fe;
+$reg-ok: #1E874B;
+$reg-ok-soft: #E6F7EE;
+$reg-err: #D64545;
+$reg-err-soft: #FDECEC;
+$reg-info: #1E6FD9;
+$reg-cyan: #00c9b1;
+$reg-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
+$reg-shadow-float: 0 18px 40px -18px rgba(50, 40, 110, .35);
+$reg-display: 'Geometr415BlkBTBlack', 'Segoe UI', system-ui, sans-serif;
+$reg-text: 'Geometr415L', 'Segoe UI', system-ui, sans-serif;
+$reg-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+/* Fuera del diseño nuevo, los contenedores no alteran el layout de siempre. */
+.reg-shell,
+.reg-main {
+    display: contents;
+}
+
+.survey-container.reg-layout {
+    color: $reg-ink;
+    font-family: $reg-text;
+
+    .reg-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+        width: 100%;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 16px 16px 32px;
+        box-sizing: border-box;
+    }
+
+    .reg-main {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 0;
+    }
+
+    @media (min-width: 960px) {
+        .reg-shell {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+            gap: 48px;
+            min-height: 100vh;
+            padding: 24px 32px;
+            align-items: stretch;
+        }
+        .reg-main { padding-block: 8px; }
+        .reg-aside { order: 2; }
+    }
+
+    /* Barra superior: logo y acceso para quien ya tiene cuenta */
+    .reg-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+
+        &__logo { display: block; height: 24px; width: auto; }
+
+        &__login { font-size: 14px; color: $reg-body; }
+
+        &__link {
+            border: 0;
+            background: none;
+            padding: 6px 2px;
+            color: $reg-accent;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            &:hover { text-decoration: underline; }
+        }
+    }
+
+    /* El formulario ocupa su columna, sin el alto de pantalla completo */
+    .survey-form {
+        width: 100%;
+        max-width: 480px;
+        min-height: 0;
+        padding: 0;
+        font-size: 15px;
+        font-family: $reg-text;
+        color: $reg-ink;
+        text-align: left;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .main-progress-container { display: none; }
+
+    :focus-visible { outline: 3px solid $reg-accent-2; outline-offset: 2px; }
+
+    /* ── Piezas comunes ── */
+    .reg-eyebrow {
+        display: inline-flex;
+        align-self: flex-start;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .8px;
+        text-transform: uppercase;
+        color: $reg-accent;
+        background: $reg-accent-soft;
+        border: 1px solid #ddd3fb;
+        border-radius: 20px;
+        padding: 5px 12px;
+        font-family: $reg-display;
+    }
+
+    .reg-h1 {
+        margin: 0;
+        font-family: $reg-display;
+        font-size: clamp(28px, 7vw, 40px);
+        line-height: 1.08;
+        letter-spacing: -.3px;
+        color: $reg-ink;
+        text-wrap: balance;
+    }
+
+    .reg-hl { color: $reg-accent; }
+
+    .reg-lead {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.55;
+        color: $reg-body;
+        max-width: 40ch;
+    }
+
+    .reg-tick {
+        flex: none;
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        background: $reg-ok-soft;
+        color: $reg-ok;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 14px;
+    }
+
+    .reg-btn {
+        appearance: none;
+        width: 100%;
+        min-height: 54px;
+        padding: 0 22px;
+        border: 0;
+        border-radius: 11px;
+        background: $reg-accent;
+        color: #fff;
+        font-family: $reg-display;
+        font-size: 17px;
+        letter-spacing: .2px;
+        box-shadow: $reg-shadow-btn;
+        cursor: pointer;
+        transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+
+        &:hover:not(:disabled) { background: $reg-accent-hover; transform: translateY(-1px); }
+        &:disabled,
+        &.disabled { background: #d8d4ea; box-shadow: none; cursor: not-allowed; transform: none; }
+    }
+
+    .reg-fine {
+        margin: 0;
+        font-size: 13px;
+        color: $reg-muted;
+    }
+
+    .reg-link {
+        border: 0;
+        background: none;
+        padding: 0;
+        color: $reg-accent;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        text-align: left;
+        &:hover { text-decoration: underline; }
+    }
+
+    /* ── Bienvenida ── */
+    .welcome-landing {
+        max-width: none;
+        padding: 8px 0;
+        margin: 0;
+        animation: none;
+    }
+
+    .reg-welcome {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        text-align: left;
+    }
+
+    .reg-perks {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 12px;
+
+        li {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            font-size: 14.5px;
+            line-height: 1.45;
+            color: $reg-body;
+        }
+
+        strong {
+            display: block;
+            color: $reg-ink;
+            font-family: $reg-display;
+            font-weight: normal;
+            font-size: 15px;
+        }
+    }
+
+    .reg-cta {
+        display: grid;
+        gap: 10px;
+        .reg-fine { text-align: center; }
+    }
+
+    .reg-alt {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: $reg-body;
+    }
+
+    /* ── Pasos del registro ── */
+    .reg-progress {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 24px;
+
+        &__top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .4px;
+            text-transform: uppercase;
+            color: $reg-muted;
+            font-family: $reg-display;
+        }
+
+        &__hint { color: $reg-accent; }
+
+        &__bar {
+            height: 6px;
+            border-radius: 20px;
+            background: $reg-chip-bg;
+            overflow: hidden;
+
+            i {
+                display: block;
+                height: 100%;
+                border-radius: 20px;
+                background: $reg-accent;
+                transition: width .3s ease;
+            }
+        }
+    }
+
+    .survey-question.reg-field {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 22px;
+    }
+
+    .reg-q {
+        margin: 0 0 6px;
+        font-family: $reg-display;
+        font-size: clamp(24px, 6vw, 30px);
+        line-height: 1.15;
+        color: $reg-ink;
+        text-wrap: balance;
+    }
+
+    .reg-label {
+        font-family: $reg-display;
+        font-size: 11px;
+        letter-spacing: .6px;
+        text-transform: uppercase;
+        color: $reg-muted;
+        margin: 0;
+    }
+
+    .input-container.reg-input {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        min-height: 56px;
+        padding: 0 8px 0 14px;
+        background: $reg-chip-bg;
+        border: 1.5px solid $reg-chip-border;
+        border-radius: 11px;
+        box-sizing: border-box;
+        transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+
+        &:focus-within {
+            background: #fff;
+            border-color: $reg-accent;
+            box-shadow: 0 0 0 4px rgba(95, 63, 224, .12);
+        }
+
+        &.is-error {
+            background: #fff;
+            border-color: $reg-err;
+        }
+
+        .material-input {
+            flex: 1;
+            min-width: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            padding: 14px 0;
+            font-family: $reg-text;
+            font-size: 18px;
+            color: $reg-ink;
+            animation: none;
+
+            &::placeholder { color: #b4b0cb; }
+            &:focus { border: 0; outline: none; }
+            &.valid,
+            &.invalid { background: transparent; }
+        }
+
+        .material-input--password { padding-right: 0; }
+    }
+
+    .reg-input__prefix {
+        flex: none;
+        padding-right: 10px;
+        border-right: 1px solid $reg-chip-border;
+        font-family: $reg-display;
+        font-size: 16px;
+        color: $reg-body;
+    }
+
+    .reg-input__ok {
+        flex: none;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: $reg-ok-soft;
+        color: $reg-ok;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 13px;
+    }
+
+    .password-toggle {
+        position: static;
+        transform: none;
+        flex: none;
+        min-width: 0;
+        height: 38px;
+        padding: 0 12px;
+        font-family: $reg-display;
+        font-size: 13px;
+    }
+
+    .password-rules { margin: 2px 0 0; }
+
+    .reg-help,
+    .password-help,
+    .document-help {
+        margin: 0;
+        font-size: 13.5px;
+        line-height: 1.45;
+        color: $reg-body;
+    }
+
+    .document-warning { margin: 0; }
+
+    .error-message {
+        margin: 0;
+        padding: 8px 12px;
+        border-radius: 9px;
+        background: $reg-err-soft;
+        color: $reg-err;
+        font-family: $reg-text;
+        font-size: 13.5px;
+        line-height: 1.4;
+        animation: none;
+    }
+
+    .reg-actions {
+        display: grid;
+        gap: 6px;
+
+        &__row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+    }
+
+    .reg-back {
+        border: 0;
+        background: none;
+        min-height: 44px;
+        padding: 0 4px;
+        color: $reg-body;
+        font-family: $reg-text;
+        font-size: 14.5px;
+        cursor: pointer;
+        &:hover { color: $reg-accent; }
+    }
+
+    .reg-kbd {
+        font-size: 12px;
+        color: $reg-muted;
+
+        kbd {
+            font-family: $reg-mono;
+            font-size: 11px;
+            padding: 1px 5px;
+            border: 1px solid $reg-chip-border;
+            border-bottom-width: 2px;
+            border-radius: 5px;
+            background: $reg-chip-bg;
+            color: $reg-body;
+        }
+
+        @media (hover: none) { display: none; }
+    }
+
+    .reg-secure {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 18px 0 0;
+        font-size: 12.5px;
+        color: $reg-muted;
+    }
+
+    .promo-franja { margin-bottom: 20px; }
+
+    /* ── Resumen (solo si el flujo lo muestra) ── */
+    .summary-container {
+        border: 1px solid $reg-line;
+        border-radius: 16px;
+        background: $reg-tint;
+        padding: 16px 18px;
+        box-shadow: none;
+    }
+
+    .navigation-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .next-button {
+        background: $reg-accent;
+        box-shadow: $reg-shadow-btn;
+        border-radius: 11px;
+    }
+
+    .back-button {
+        background: #fff;
+        color: $reg-body;
+        border: 1px solid #e4e2ef;
+        box-shadow: none;
+        border-radius: 11px;
+    }
+
+    /* ── Confirmación y entrada ── */
+    .quickstart-processing,
+    .quickstart-success {
+        text-align: left;
+        animation: none;
+        padding: 8px 0;
+    }
+
+    .quickstart-processing .welcome-text {
+        font-size: 28px;
+        margin-top: 0 !important;
+    }
+
+    .reg-done {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+
+        &__list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 12px;
+
+            li {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 15.5px;
+                color: $reg-ink;
+            }
+        }
+
+        .entrando-cuenta {
+            margin: 0;
+            max-width: none;
+            justify-content: flex-start;
+        }
+    }
+
+    /* ── Columna de marca: qué obtiene (ilustración con datos de ejemplo) ── */
+    .reg-aside {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        padding: 26px 20px;
+        border-radius: 20px;
+        background: $reg-tile;
+        overflow: hidden;
+
+        @media (min-width: 960px) {
+            padding: 44px 40px;
+            justify-content: center;
+        }
+
+        &__title {
+            margin: 0;
+            font-family: $reg-display;
+            font-size: 20px;
+            line-height: 1.2;
+            color: $reg-ink;
+            text-wrap: balance;
+            span { color: $reg-accent; }
+        }
+
+        &__note {
+            margin: 0;
+            font-size: 11.5px;
+            color: $reg-muted;
+        }
+    }
+
+    .reg-demo {
+        display: grid;
+        gap: 14px;
+        max-width: 440px;
+    }
+
+    .reg-store {
+        background: #fff;
+        border: 1px solid $reg-line;
+        border-radius: 16px;
+        box-shadow: $reg-shadow-float;
+        overflow: hidden;
+
+        &__bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-bottom: 1px solid $reg-line;
+            background: $reg-tint;
+        }
+
+        &__dots {
+            display: flex;
+            gap: 5px;
+            i { width: 8px; height: 8px; border-radius: 50%; background: #dcd8ec; }
+        }
+
+        &__url {
+            font-family: $reg-mono;
+            font-size: 12px;
+            color: $reg-body;
+            background: #fff;
+            border: 1px solid $reg-line;
+            border-radius: 20px;
+            padding: 3px 10px;
+            b { color: $reg-accent; font-weight: 500; }
+        }
+
+        &__body { padding: 16px; display: grid; gap: 12px; }
+
+        &__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        &__name { font-family: $reg-display; font-size: 16px; }
+
+        &__prods {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+    }
+
+    .reg-chip {
+        font-family: $reg-display;
+        font-size: 10.5px;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        border-radius: 20px;
+        padding: 4px 9px;
+
+        &--ok { background: $reg-ok-soft; color: $reg-ok; }
+    }
+
+    .reg-prod {
+        display: grid;
+        gap: 6px;
+
+        &__ph {
+            position: relative;
+            aspect-ratio: 4 / 5;
+            max-width: 100%;
+            border-radius: 10px;
+
+            &::after {
+                content: "";
+                position: absolute;
+                inset: 22% 26% 30%;
+                border-radius: 40% 40% 12px 12px;
+                background: rgba(33, 31, 58, .08);
+            }
+
+            &--a { background: #e9e3fb; }
+            &--b { background: #dff5f1; }
+            &--c { background: #fbe9e3; }
+        }
+
+        &__name { font-size: 12px; line-height: 1.2; color: $reg-ink; }
+        &__price {
+            font-family: $reg-display;
+            font-size: 12.5px;
+            color: $reg-accent;
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    .reg-toast {
+        margin-left: auto;
+        width: min(300px, 92%);
+        display: grid;
+        grid-template-columns: 36px 1fr;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 14px;
+        background: #fff;
+        border: 1px solid $reg-line;
+        border-radius: 14px;
+        box-shadow: $reg-shadow-float;
+        animation: reg-pop .5s ease both .6s;
+
+        &__ico {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: $reg-accent-soft;
+            color: $reg-accent;
+            display: grid;
+            place-items: center;
+            font-family: $reg-display;
+        }
+
+        &__t1 { font-family: $reg-display; font-size: 13px; }
+        &__t2 { font-size: 12px; color: $reg-body; font-variant-numeric: tabular-nums; }
+        &__num { font-family: $reg-mono; color: $reg-info; }
+    }
+
+    .reg-steps {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+
+        > div {
+            background: #fff;
+            border: 1px solid $reg-line;
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+
+        &__n {
+            font-family: $reg-display;
+            font-size: 10.5px;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: $reg-muted;
+        }
+
+        &__t { font-size: 13.5px; line-height: 1.25; color: $reg-ink; }
+
+        @media (max-width: 520px) { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    /* En celular la ilustración va después del formulario y se simplifica */
+    @media (max-width: 959px) {
+        .reg-steps,
+        .reg-aside__note { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .reg-toast { animation: none; }
+        .reg-progress__bar i { transition: none; }
+    }
+}
+
+@keyframes reg-pop {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
