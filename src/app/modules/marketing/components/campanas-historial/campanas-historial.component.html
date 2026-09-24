@@ -1,15 +1,66 @@
 <div class="container-fluid campanas-historial">
   <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div>
-      <h4 class="mb-0">Campañas de WhatsApp</h4>
-      <small class="text-muted">Historial y conversión — un contacto "convierte" si compra dentro de los 30 días después del envío</small>
+      <h4 class="mb-0">{{ canal === 'correo' ? 'Campañas de correo' : 'Campañas de WhatsApp' }}</h4>
+      <small class="text-muted" *ngIf="canal === 'whatsapp'">Historial y conversión — un contacto "convierte" si compra dentro de los 30 días después del envío</small>
+      <small class="text-muted" *ngIf="canal === 'correo'">Correos con el nombre de tu tienda a quienes autorizaron recibirlos</small>
     </div>
     <div class="d-flex gap-2">
       <a routerLink="/marketing" class="btn btn-outline-secondary btn-sm">← Dashboard</a>
-      <button class="btn btn-outline-secondary btn-sm" (click)="cargar()" [disabled]="loading"><i class="fa fa-refresh"></i></button>
-      <a routerLink="/marketing/campanas/whatsapp" class="btn btn-primary btn-sm"><i class="fa fa-paper-plane me-1"></i>Nueva campaña</a>
+      <ng-container *ngIf="canal === 'whatsapp'">
+        <button class="btn btn-outline-secondary btn-sm" (click)="cargar()" [disabled]="loading"><i class="fa fa-refresh"></i></button>
+        <a routerLink="/marketing/campanas/whatsapp" class="btn btn-primary btn-sm"><i class="fa fa-paper-plane me-1"></i>Nueva campaña</a>
+      </ng-container>
+      <ng-container *ngIf="canal === 'correo'">
+        <a routerLink="/marketing/suscriptores" class="btn btn-outline-secondary btn-sm"><i class="fa fa-users me-1"></i>Suscriptores</a>
+        <a routerLink="/marketing/campanas/correo" class="btn btn-primary btn-sm"><i class="fa fa-envelope me-1"></i>Nueva campaña de correo</a>
+      </ng-container>
     </div>
   </div>
+
+  <!-- Canal (la pestaña de correo solo existe si el servidor ya la tiene, D-318) -->
+  <div class="canales" *ngIf="correoDisponible">
+    <button type="button" [class.is-on]="canal === 'whatsapp'" (click)="canal = 'whatsapp'"><i class="fa fa-whatsapp"></i> WhatsApp</button>
+    <button type="button" [class.is-on]="canal === 'correo'" (click)="canal = 'correo'"><i class="fa fa-envelope-o"></i> Correo</button>
+  </div>
+
+  <!-- ═══ Correo ═══ -->
+  <div class="panel-card" *ngIf="canal === 'correo'">
+    <div *ngIf="cargandoCorreo" class="panel-loading"><i class="fa fa-spinner fa-spin"></i> Cargando campañas…</div>
+    <div *ngIf="!cargandoCorreo && campanasCorreo.length === 0" class="panel-empty">
+      Aún no has enviado campañas de correo.
+      <a routerLink="/marketing/campanas/correo">Crea la primera</a> — verás cuántos la abrieron, hicieron clic y cuánto vendió.
+    </div>
+    <div class="table-responsive" *ngIf="!cargandoCorreo && campanasCorreo.length > 0">
+      <table class="table table-sm table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Campaña</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th class="text-end">Personas</th>
+            <th class="text-end">Enviados</th>
+            <th class="text-end">Clics</th>
+            <th class="text-end">Bajas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of campanasCorreo" class="fila-link" [routerLink]="['/marketing/campanas/correo', c.id]">
+            <td class="fw-semibold">{{ c.nombre }}<div class="text-muted small">{{ c.asunto }}</div></td>
+            <td><span class="estado-correo is-{{ c.estado }}">{{ etiquetaEstado(c.estado) }}</span></td>
+            <td class="text-muted">{{ (c.programadaPara || c.creadoEn) | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td class="text-end">{{ c.totales.destinatarios || 0 }}</td>
+            <td class="text-end">{{ c.totales.enviados || 0 }}</td>
+            <td class="text-end">{{ c.totales.clics || 0 }}</td>
+            <td class="text-end">{{ c.totales.bajas || 0 }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ WhatsApp ═══ -->
+  <ng-container *ngIf="canal === 'whatsapp'">
 
   <!-- Totales -->
   <div class="row g-3 mb-3" *ngIf="campanas.length > 0">
@@ -83,4 +134,5 @@
       </table>
     </div>
   </div>
+  </ng-container>
 </div>

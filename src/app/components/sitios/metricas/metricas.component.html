@@ -155,6 +155,8 @@
                   (click)="filtroContactos = 'contacto'">Te escribieron ({{ cuantos('contacto') }})</button>
           <button *ngIf="cuantos('avisame-stock')" [class.is-active]="filtroContactos === 'avisame-stock'"
                   (click)="filtroContactos = 'avisame-stock'">Avísame ({{ cuantos('avisame-stock') }})</button>
+          <button *ngIf="cuantos('boletin')" [class.is-active]="filtroContactos === 'boletin'"
+                  (click)="filtroContactos = 'boletin'">Boletín ({{ cuantos('boletin') }})</button>
         </div>
         <ul>
           <li *ngFor="let c of contactosVisibles" class="contacto">

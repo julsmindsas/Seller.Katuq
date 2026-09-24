@@ -68,3 +68,43 @@ table {
     white-space: nowrap;
   }
 }
+
+// ── Canales (D-318) ──────────────────────────────────────────────────────────
+.canales {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: #f3f1fb;
+
+  button {
+    border: 0;
+    background: transparent;
+    padding: 7px 14px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #8f8bab;
+    cursor: pointer;
+
+    &.is-on { background: #fff; color: #5f3fe0; box-shadow: 0 1px 3px rgba(30, 20, 80, 0.08); }
+  }
+}
+
+.fila-link { cursor: pointer; }
+
+.estado-correo {
+  display: inline-flex;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 20px;
+  color: #5a6b78;
+  background: #eef0f3;
+
+  &.is-enviando, &.is-programada { color: #5f3fe0; background: #efe9ff; }
+  &.is-terminada { color: #1e874b; background: #e6f7ee; }
+  &.is-pausada_auto { color: #d64545; background: #fdecec; }
+}

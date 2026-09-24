@@ -1,0 +1,20 @@
+<div class="vp">
+  <div class="vp__barra">
+    <div class="vp__meta">
+      <span class="vp__de">{{ remitente || 'Tu tienda' }}</span>
+      <span class="vp__asunto">{{ asunto || 'Sin asunto' }}</span>
+    </div>
+    <div class="vp__modos" role="group" aria-label="Tamaño de la vista previa">
+      <button type="button" [class.is-on]="modo === 'movil'" (click)="modo = 'movil'" title="Celular">
+        <i class="fa fa-mobile" aria-hidden="true"></i>
+      </button>
+      <button type="button" [class.is-on]="modo === 'computador'" (click)="modo = 'computador'" title="Computador">
+        <i class="fa fa-desktop" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+  <div class="vp__marco" [class.is-movil]="modo === 'movil'">
+    <iframe *ngIf="html; else vacio" sandbox="" [srcdoc]="documento" title="Vista previa del correo"></iframe>
+    <ng-template #vacio><div class="vp__vacio">Arma el correo para verlo aquí.</div></ng-template>
+  </div>
+</div>

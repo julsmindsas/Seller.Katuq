@@ -1,0 +1,52 @@
+<div class="sc">
+  <header class="sc__header">
+    <div>
+      <h1 class="sc__title">Suscriptores</h1>
+      <p class="sc__subtitle">Quienes autorizaron recibir los correos de tu tienda, con la prueba de cada autorización.</p>
+    </div>
+    <a routerLink="/marketing/campanas" [queryParams]="{ canal: 'correo' }" class="sc__back">← Campañas</a>
+  </header>
+
+  <div class="sc__aviso" *ngIf="noDisponible">Las campañas de correo todavía no están disponibles en tu cuenta.</div>
+
+  <ng-container *ngIf="!noDisponible">
+    <div class="sc__kpis">
+      <div class="sc__kpi"><span class="sc__label">Suscritos</span><span class="sc__valor">{{ totales.suscritos | number: '1.0-0' }}</span></div>
+      <div class="sc__kpi"><span class="sc__label">Se dieron de baja</span><span class="sc__valor">{{ totales.bajas | number: '1.0-0' }}</span></div>
+      <div class="sc__kpi"><span class="sc__label">Bloqueados por rebote o queja</span><span class="sc__valor">{{ totales.suprimidos | number: '1.0-0' }}</span></div>
+    </div>
+
+    <div class="sc__panel">
+      <div class="sc__filtros">
+        <select *ngIf="sitios.length > 1" [(ngModel)]="siteId" (ngModelChange)="cargar()">
+          <option *ngFor="let s of sitios" [value]="s.id">{{ s.nombre }}</option>
+        </select>
+        <input [(ngModel)]="busqueda" placeholder="Buscar por correo o nombre" />
+        <div class="sc__chips">
+          <button type="button" *ngFor="let f of [['todos','Todos'],['suscrito','Suscritos'],['baja','Bajas'],['suprimido','Bloqueados']]"
+                  [class.is-on]="filtro === f[0]" (click)="filtro = $any(f[0])">{{ f[1] }}</button>
+        </div>
+      </div>
+
+      <div class="sc__vacio" *ngIf="cargando">Cargando…</div>
+      <div class="sc__vacio" *ngIf="!cargando && !items.length">
+        Todavía nadie se ha suscrito. Llegan por la casilla del checkout, el boletín, el formulario de contacto y la cuenta del comprador.
+      </div>
+
+      <table class="sc__tabla" *ngIf="!cargando && items.length">
+        <thead>
+          <tr><th>Correo</th><th>Estado</th><th>Desde</th><th>Cómo autorizó</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of visibles">
+            <td><b>{{ s.correo }}</b><span class="sc__nombre" *ngIf="s.nombre">{{ s.nombre }}</span></td>
+            <td><span class="sc__estado is-{{ s.estado }}">{{ s.estado === 'suscrito' ? 'Suscrito' : s.estado === 'baja' ? 'Baja' : 'Bloqueado (' + s.motivo + ')' }}</span></td>
+            <td>{{ s.desde ? (s.desde | date: 'dd/MM/yyyy') : '—' }}</td>
+            <td>{{ s.autorizacion ? (origenes[s.autorizacion.origen] || s.autorizacion.origen) : '—' }}</td>
+            <td class="sc__acc"><button type="button" *ngIf="s.autorizacion" (click)="verEvidencia(s)">Ver prueba</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>

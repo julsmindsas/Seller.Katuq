@@ -300,7 +300,8 @@ export interface MetricasSitio {
 /** Alguien que le dejó sus datos a la tienda. */
 export interface ContactoSitio {
   id: string;
-  tipo: "contacto" | "avisame-stock" | "carrito-abandonado";
+  /** "boletin": se suscribió a las novedades desde el bloque de boletín (D-318). */
+  tipo: "contacto" | "avisame-stock" | "carrito-abandonado" | "boletin";
   nombre: string;
   telefono: string;
   correo: string;
