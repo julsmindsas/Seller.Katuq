@@ -7327,3 +7327,22 @@ La regla: el límite cae sobre el comercio, nunca sobre el comprador; ningún pe
 Implementada en las ramas `feature/campanas-correo`: backend aaf6cf9 y 4b7c713, front 1ee60562. Todas las pruebas en verde. **Sale después de la feria**, junto con las campañas de correo.
 
 La prueba de punta a punta se hace en ATELIER 90 (demo de moda autorizada), pasándola a gratis durante la prueba y devolviéndole después su plan. El cupo gratis de las campañas quedó en 200 al mes (antes 500, D-318).
+
+## D-320 (2026-09-24) — Facturación SIIGO: Katuq se adapta al tipo de factura de cada comercio; el vendedor se escoge al facturar (ticket 1052, APROBADA y desplegada)
+
+**Contexto.** El reintento de BAS-000016 (ALMACEN BOMBAS) fue rechazado por SIIGO con `document_settings / seller`. Sus 3 tipos de factura electrónica, uno por sede, manejan **vendedor por ítem** y **exigen centro de costo**. En sus 205 facturas reales el pago es **base + IVA − retenciones**. ALMARA y OH MY STORE no tienen esas opciones en su tipo de factura.
+
+**Decisión de Daniel:**
+- Katuq soporta cómo tenga cada comercio configurado SIIGO; no se le pide al comercio cambiar su forma de trabajar.
+- El **vendedor se escoge en la ventana de la factura**, ya marcado. **No va en una pantalla de configuración**: *"estás obligando al usuario a estar yendo a una pantalla a cambiar el vendedor por factura"*. Una sección de configuración que se alcanzó a construir se retiró antes de publicar.
+
+**Qué quedó:**
+- Al facturar, el servidor lee el tipo de factura en SIIGO. Con vendedor por ítem, pone el vendedor en cada ítem y no en la factura. Si el tipo exige centro de costo y no llega ninguno, responde con un mensaje claro sin enviar nada.
+- El pago descuenta lo que retiene el cliente, calculado como SIIGO: Retefuente sobre la base del ítem, ReteIVA sobre el IVA y ReteICA por mil. Esto **corrige el supuesto del ticket 1054** ("base + IVA").
+- Sin impuesto configurado, el 19% toma el IVA de productos, no el de servicios.
+- En la ventana, el vendedor viene marcado así: primero quien factura, si es vendedor en SIIGO; si no, el último usado; si no, "Automático", como hasta hoy. El centro de costo solo aparece si el tipo lo maneja y viene marcado desde el servidor (`documentTypeSettings` por tipo).
+- Configuración inicial de ALMACEN BOMBAS, aprobada por Daniel: centro de costo por tipo, 26903 → 132 Medellín, 26905 → 134 Cali y 26907 → 136 Bogotá; IVA 19% → 16233.
+
+**Desplegado:** servidor `4cebbd1` (rama backend-aws-security, con el arreglo del teléfono numérico de ALMARA) y front 2026.09.24.1.
+
+**Pruebas:** `scripts/test-1052-tipo-de-factura-siigo.js`, 15 casos; 14 fallan contra el código anterior. Además, la factura real de BAS-000016 se simuló contra su SIIGO en solo lectura.
