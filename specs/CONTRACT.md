@@ -7305,7 +7305,7 @@ Pide aprobar **tres colecciones nuevas**: `email_campaigns`, `email_usage` y `em
 
 El subdominio `novedades.katuq.com` y el remitente con el nombre de la tienda se toman como vienen. **Se despliega después de la feria.** Para que el despliegue del MCP de otra sesión no se lo lleve antes de tiempo (como pasó con los correos personalizables), el código vive en ramas propias, `feature/campanas-correo`, en el backend y en el front, y no en `backend-aws-security`.
 
-## D-319 (2026-09-24) — PROPUESTA: límites del plan gratis en las tiendas (versión "más agresiva")
+## D-319 (2026-09-24) — Límites del plan gratis en las tiendas (versión "más agresiva", APROBADA)
 
 **Contexto.** Daniel: que el plan gratis deje operar la tienda con límites "medio agresivos"; luego eligió la versión **más agresiva** y que, al llegar al tope de pedidos, el checkout pase a WhatsApp. Hallazgo: **los pedidos de la tienda no cuentan en el tope de 15 al mes del plan gratis** (solo `/v1/orders/create` usa `validateOrderLimit`), así que hoy se vende sin límite por la tienda. Medición en producción (solo lectura, 24-sep): 64 empresas gratis y 10 premium, y ninguna gratis tiene tienda publicada. Los límites no le rompen nada a nadie hoy.
 
@@ -7322,4 +7322,8 @@ El subdominio `novedades.katuq.com` y el remitente con el nombre de la tienda se
 
 La regla: el límite cae sobre el comercio, nunca sobre el comprador; ningún pedido cobrado se rechaza.
 
-**Estado**: propuesta validada, **pendiente de aprobación de Daniel**. El paso que cuenta los pedidos de la tienda toca el checkout (módulo sensible), así que va con diff y aprobación explícita antes de aplicarse.
+**Estado**: **APROBADA por Daniel el 2026-09-24**: los 50 productos visibles son los más recientes, y el diff del checkout se aprobó a la vista.
+
+Implementada en las ramas `feature/campanas-correo`: backend aaf6cf9 y 4b7c713, front 1ee60562. Todas las pruebas en verde. **Sale después de la feria**, junto con las campañas de correo.
+
+La prueba de punta a punta se hace en ATELIER 90 (demo de moda autorizada), pasándola a gratis durante la prueba y devolviéndole después su plan. El cupo gratis de las campañas quedó en 200 al mes (antes 500, D-318).

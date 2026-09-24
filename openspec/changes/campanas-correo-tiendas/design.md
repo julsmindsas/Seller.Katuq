@@ -216,7 +216,7 @@ El tope se ajusta por variable de entorno, dentro de lo que permita el plan de M
 
 - Propuesta aprobada completa, con las tres colecciones.
 - Proveedor: MailerSend.
-- Cupos: 500 al mes en el plan gratis y 5.000 en premium, tope de 5.000 por campaña, sin cobro.
+- Cupos: 5.000 al mes en premium, tope de 5.000 por campaña, sin cobro. El plan gratis quedó en 200 al mes y 1 campaña (D-319, 24-sep).
 
 ## Open Questions
 
