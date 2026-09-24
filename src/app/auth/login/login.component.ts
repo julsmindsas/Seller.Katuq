@@ -20,6 +20,8 @@ export class LoginComponent implements OnInit {
   public fondoNuevo = true;
 
   public show: boolean = false;
+  /** Viene del registro con la cuenta creada pero sin sesión abierta (D-319). */
+  public cuentaCreada = false;
   public loginForm: FormGroup;
   public errorMessage: any;
   user: any;
@@ -47,6 +49,14 @@ export class LoginComponent implements OnInit {
     // ?fondo=actual muestra la pieza anterior; sin parámetro, la nueva.
     this.fondoNuevo =
       this.route.snapshot.queryParamMap.get('fondo') !== 'actual';
+
+    // D-319: si el registro no pudo abrir la sesión solo, llega aquí con el
+    // correo para que la persona solo escriba la contraseña que creó.
+    const correo = this.route.snapshot.queryParamMap.get('correo');
+    if (correo) {
+      this.loginForm.patchValue({ email: correo });
+    }
+    this.cuentaCreada = this.route.snapshot.queryParamMap.get('cuenta') === 'creada';
 
     this.redirectIfLoggedIn();
   }

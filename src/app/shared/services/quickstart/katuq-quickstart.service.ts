@@ -37,6 +37,12 @@ export interface DiagnosticResponse {
   codigoPromocional?: string | null;
   /** utm_* del anuncio por el que llegó (queda guardado con el diagnóstico). */
   origenCampana?: OrigenCampana | null;
+  /**
+   * Contraseña elegida en el registro, YA con `utils.hash` (D-319): el mismo
+   * formato que manda el login. Nunca el texto plano. Sin ella, el backend
+   * crea la cuenta con contraseña temporal por correo (flujo anterior).
+   */
+  contrasenaHash?: string | null;
 }
 
 /** Cómo le fue al código promocional en el registro. */
@@ -58,6 +64,8 @@ export interface QuickStartResult {
   message?: string;
   error?: string;
   errorCode?: string; // COMERCIO_YA_EXISTE | EMAIL_YA_EXISTE | USUARIO_YA_EXISTE | VALIDATION_ERROR | REGISTRATION_BLOCKED
+  /** Campos que el backend rechazó con VALIDATION_ERROR (ej: [{ field: 'password' }]). */
+  errorFields?: { field: string; message: string }[];
   pendingReview?: boolean; // 202: registro en cuarentena, pendiente de revisión humana
   promocion?: PromocionRegistro | null; // null = se registró sin código de campaña
   nextSteps?: string[];
@@ -213,6 +221,7 @@ export class KatuqQuickStartService {
         success: false,
         error: error.message || 'Error en la configuración automática',
         errorCode: error.code,
+        errorFields: Array.isArray(error.fields) ? error.fields : undefined,
         message: 'Error durante la configuración automática. Por favor, intenta nuevamente.'
       };
     }
@@ -445,7 +454,9 @@ export class KatuqQuickStartService {
       timestamp: new Date().toISOString(),
       respuestas: diagnosticData.responses,
       recomendacionesIA: diagnosticData.aiRecommendation,
-      registro: diagnosticData.registration,
+      registro: diagnosticData.contrasenaHash
+        ? { ...diagnosticData.registration, password: diagnosticData.contrasenaHash }
+        : diagnosticData.registration,
       sector: diagnosticData.responses.q1 || 'No especificado',
       procesoCompletado: true,
       // Código de campaña (opcional). El backend lo revalida y descuenta cupo;
@@ -472,6 +483,7 @@ export class KatuqQuickStartService {
       const err: any = new Error(backendMessage || `Error al guardar el diagnóstico: ${error.message || error}`);
       err.status = error?.status;
       err.code = error?.error?.error; // COMERCIO_YA_EXISTE | EMAIL_YA_EXISTE | USUARIO_YA_EXISTE
+      err.fields = error?.error?.fields;
       throw err;
     }
   }

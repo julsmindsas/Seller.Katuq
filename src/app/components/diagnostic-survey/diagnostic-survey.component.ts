@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { KatuqQuickStartService, DiagnosticResponse, PromocionRegistro } from '../../shared/services/quickstart/katuq-quickstart.service';
@@ -8,6 +8,34 @@ import { PromocionesService, PromocionPublica } from '../../shared/services/prom
 import { PixelesPautaService } from '../../shared/services/pixeles-pauta.service';
 import { Subscription } from 'rxjs';
 import { clearOnboardingStorage } from '../onboarding/utils/onboarding-v2.utils';
+import { AuthService } from '../../shared/services/firebase/auth.service';
+import { UtilsService } from '../../shared/services/utils.service';
+
+/** Contraseñas por defecto del sistema: el backend las rechaza (D-319). */
+const CONTRASENAS_POR_DEFECTO = ['Katuq2025!', 'Default@123'];
+
+/**
+ * Reglas mínimas de la contraseña del registro (D-319, decisión de Daniel):
+ * 8 caracteres, al menos una letra y un número. Nada más, para no frenar el
+ * registro en el último paso.
+ */
+export function reglasContrasena(valor: string): { largo: boolean; letra: boolean; numero: boolean } {
+    const texto = valor || '';
+    return {
+        largo: texto.length >= 8,
+        letra: /[A-Za-zÀ-ÿ]/.test(texto),
+        numero: /\d/.test(texto),
+    };
+}
+
+function validarContrasenaRegistro(control: AbstractControl): ValidationErrors | null {
+    const valor: string = control.value || '';
+    if (!valor) return null; // de eso se encarga `required`
+    const reglas = reglasContrasena(valor);
+    if (!reglas.largo || !reglas.letra || !reglas.numero) return { reglas: true };
+    if (CONTRASENAS_POR_DEFECTO.includes(valor)) return { porDefecto: true };
+    return null;
+}
 
 @Component({
     selector: 'app-diagnostic-survey',
@@ -173,14 +201,29 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     videoPlaying: boolean = true; // Empieza reproduciendo
     videoEnded: boolean = false; // Controla si el video terminó
 
-    // Registro simplificado: solo 4 campos esenciales
+    // Registro simplificado: 4 datos esenciales + la contraseña con la que entra
+    // de una vez al terminar (D-319).
     registrationQuestions = [
         { formControl: 'nombre', question: '¿Cuál es el nombre de tu empresa?', placeholder: 'Nombre de la empresa' },
         { formControl: 'nit', question: '¿Cuál es tu NIT o documento de identidad?', placeholder: 'NIT o cédula' },
         { formControl: 'correo', question: '¿Cuál es tu correo electrónico?', placeholder: 'correo@ejemplo.com' },
-        { formControl: 'celular', question: '¿Cuál es tu número de celular?', placeholder: 'Número de celular' }
+        { formControl: 'celular', question: '¿Cuál es tu número de celular?', placeholder: 'Número de celular' },
+        { formControl: 'password', question: 'Crea tu contraseña', placeholder: 'Mínimo 8 caracteres' }
     ];
     registrationIndex = 0;
+    private readonly PASO_CONTRASENA = 4;
+
+    mostrarContrasena = false;
+    /** Tras un registro aprobado, mientras abre la sesión (D-319). */
+    entrandoACuenta = false;
+    /** La persona eligió su contraseña: no hay credenciales por correo. */
+    eligioContrasena = false;
+    /**
+     * Hash de la contraseña (nunca el texto plano) entre el registro y el login.
+     * Solo en memoria: no entra al borrador ni a ningún storage, y se borra
+     * apenas se intenta entrar.
+     */
+    private contrasenaHash: string | null = null;
 
     constructor(
         private fb: FormBuilder, 
@@ -188,7 +231,9 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         private quickStartService: KatuqQuickStartService,
         private contextualQuestionsService: ContextualQuestionsService,
         private promocionesService: PromocionesService,
-        private pixeles: PixelesPautaService
+        private pixeles: PixelesPautaService,
+        private authService: AuthService,
+        private utils: UtilsService
     ) {
         // No se vuelve a asignar registrationQuestions aquí
         this.mainForm = this.fb.group({
@@ -197,6 +242,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 nit: ['', [Validators.required, Validators.pattern('^[0-9]{8,11}$')]],
                 correo: ['', [Validators.required, Validators.email, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')]],
                 celular: ['', [Validators.required, Validators.pattern('^3[0-9]{9}$')]],
+                // Nunca se guarda en el borrador (saveProgress la excluye).
+                password: ['', [Validators.required, validarContrasenaRegistro]],
                 // 🍯 Honeypot anti-bot: invisible para humanos. Si llega con valor, el
                 // backend descarta el registro en silencio. Sin validadores (no debe
                 // afectar la validez del formulario para usuarios reales).
@@ -246,10 +293,12 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
      */
     private saveProgress(): void {
         try {
+            // La contraseña NUNCA va al borrador de localStorage (D-319).
+            const { password, ...registrationData } = this.mainForm.get('registration')?.value || {};
             const progress = {
                 responses: this.responses,
                 contextualResponses: this.contextualResponses,
-                registrationData: this.mainForm.get('registration')?.value,
+                registrationData,
                 currentStep: this.currentStep,
                 currentSectionIndex: this.currentSectionIndex,
                 currentQuestionIndex: this.currentQuestionIndex,
@@ -292,7 +341,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
 
                 // Restaurar datos de registro
                 if (progress.registrationData) {
-                    this.mainForm.get('registration')?.patchValue(progress.registrationData);
+                    const { password, ...datos } = progress.registrationData;
+                    this.mainForm.get('registration')?.patchValue(datos);
                 }
 
                 // Restaurar índices de navegación
@@ -315,6 +365,12 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                     this.currentStep = ['video', 'welcome', 'quickstart-success'].includes(progress.currentStep)
                         ? 'welcome'
                         : progress.currentStep;
+                }
+
+                // La contraseña no se guarda: si iba en el resumen, vuelve a pedirla.
+                if (this.currentStep === 'summary') {
+                    this.currentStep = 'registration';
+                    this.registrationIndex = this.PASO_CONTRASENA;
                 }
 
                 // Si había preguntas contextuales, cargarlas
@@ -390,6 +446,15 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             if (field.errors?.['minlength']) {
                 return this.getMinLengthMessage(fieldName);
             }
+            if (field.errors?.['reglas']) {
+                return 'Te falta cumplir las reglas de abajo';
+            }
+            if (field.errors?.['porDefecto']) {
+                return 'Esa contraseña no se puede usar. Elige otra.';
+            }
+            if (field.errors?.['servidor']) {
+                return field.errors['servidor'];
+            }
         }
         return null;
     }
@@ -399,7 +464,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             'nombre': 'El nombre de la empresa es requerido',
             'nit': 'El NIT o documento de identidad es requerido',
             'correo': 'El correo electrónico es requerido',
-            'celular': 'El número de celular es requerido'
+            'celular': 'El número de celular es requerido',
+            'password': 'Crea una contraseña para entrar'
         };
         return messages[fieldName] || 'Este campo es requerido';
     }
@@ -435,6 +501,10 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         const currentField = this.registrationQuestions[this.registrationIndex].formControl;
         const field = this.mainForm.get(`registration.${currentField}`);
         return field ? field.valid : false;
+    }
+
+    get reglasDeContrasena() {
+        return reglasContrasena(this.mainForm.get('registration.password')?.value);
     }
 
     get currentSection() {
@@ -561,6 +631,10 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         }
         summary += `<h3 style="margin: 20px 0 10px; color: #9020FF; font-size: 1.5em;">Información de Empresa</h3>`;
         this.registrationQuestions.forEach(item => {
+            if (item.formControl === 'password') {
+                summary += `<p style="margin: 0 0 10px;"><strong>Contraseña</strong><br><em>La que acabas de crear</em></p>`;
+                return;
+            }
             const value = this.mainForm.get('registration.' + item.formControl)?.value;
             summary += `<p style="margin: 0 0 10px;"><strong>${item.question}</strong><br><em>${this.escapeHtml(value || 'Sin respuesta')}</em></p>`;
         });
@@ -591,7 +665,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         if (regGroup) {
             const keys = Object.keys(regGroup.value);
             const trimmedValues: { [key: string]: string } = {};
-            keys.forEach(key => {
+            keys.filter(key => key !== 'password').forEach(key => {
                 const value = regGroup.get(key)?.value;
                 trimmedValues[key] = value ? value.trim() : '';
             });
@@ -639,7 +713,10 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 answer: this.responses[q.id] || ''
             }));
         });
-        const registrationData = this.mainForm.get('registration')?.value;
+        // La contraseña no viaja en `registration`: va aparte y ya con hash.
+        const { password, ...registrationData } = this.mainForm.get('registration')?.value || {};
+        this.contrasenaHash = password ? this.utils.hash(password) : null;
+        this.eligioContrasena = !!this.contrasenaHash;
         
         try {
             // Iniciar Quick Start directamente (el service se encarga de guardar el diagnóstico)
@@ -687,7 +764,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 canales: ['POS']
             },
             codigoPromocional: this.codigoPromocional,
-            origenCampana: this.pixeles.obtenerOrigen()
+            origenCampana: this.pixeles.obtenerOrigen(),
+            contrasenaHash: this.contrasenaHash
         };
 
         try {
@@ -718,8 +796,9 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 this.promocionesService.limpiarCodigoPendiente();
 
                 if (quickStartResult.pendingReview) {
-                    // Cuarentena anti-abuso: NO hay credenciales todavía, no redirigir al panel.
+                    // Cuarentena anti-abuso: la cuenta queda inactiva, no se intenta entrar.
                     // Tampoco se le cuenta a las plataformas de pauta (ver PixelesPautaService).
+                    this.olvidarContrasena();
                     this.registrationPendingReview = true;
                     this.pixeles.limpiarOrigen();
                     return;
@@ -731,20 +810,27 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 this.quickStartCompleted = true;
                 this.nextSteps = quickStartResult.nextSteps || [];
 
-                // Redirigir después de mostrar éxito
-                setTimeout(() => {
-                    this.redirectToMainSystem();
-                }, 8000);
+                if (this.contrasenaHash) {
+                    // D-319: entra de una vez con la contraseña que acaba de crear.
+                    await this.entrarConLaCuentaNueva(registrationData.correo);
+                } else {
+                    // Sin contraseña elegida (no debería pasar): el flujo anterior.
+                    setTimeout(() => {
+                        this.redirectToMainSystem();
+                    }, 8000);
+                }
 
             } else {
                 const err: any = new Error(quickStartResult.error || 'Error en configuración automática');
                 err.code = quickStartResult.errorCode;
+                err.fields = quickStartResult.errorFields;
                 throw err;
             }
 
         } catch (error) {
             console.error('Error en Quick Start:', error);
             this.quickStartInProgress = false;
+            this.contrasenaHash = null; // si reintenta, se vuelve a calcular del formulario
 
             // Si el comercio/usuario ya existe, NO mostrar el mensaje de éxito:
             // informar claramente y ofrecer ir al login
@@ -752,6 +838,19 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             if (duplicateCodes.includes(error.code)) {
                 this.registrationAlreadyExists = true;
                 this.quickStartError = error.message || 'Ya existe un registro con estos datos. Si ya tienes cuenta, ingresa con tu correo y contraseña.';
+                return;
+            }
+
+            // La contraseña no pasó en el servidor: volver a ese paso con su mensaje.
+            const errorContrasena = (Array.isArray(error.fields) ? error.fields : []).find((f: any) => f && f.field === 'password');
+            if (error.code === 'VALIDATION_ERROR' && errorContrasena) {
+                this.olvidarContrasena();
+                this.currentStep = 'registration';
+                this.registrationIndex = this.PASO_CONTRASENA;
+                const control = this.mainForm.get('registration.password');
+                control?.setValue('');
+                control?.markAsTouched();
+                control?.setErrors({ servidor: errorContrasena.message || 'Elige otra contraseña.' });
                 return;
             }
 
@@ -798,6 +897,37 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 message: 'Tu comercio ha sido configurado exitosamente. Usa las credenciales proporcionadas para ingresar.'
             }
         });
+    }
+
+    /**
+     * D-319: abre la sesión con el login de siempre apenas queda creada la
+     * cuenta, sin pasar por /login ni esperar. Si no entra (red, o una
+     * respuesta que no creó nada), manda a /login con el correo puesto y el
+     * aviso de que la cuenta quedó creada.
+     */
+    private async entrarConLaCuentaNueva(correo: string): Promise<void> {
+        const hash = this.contrasenaHash;
+        this.olvidarContrasena();
+        if (!hash) {
+            this.irAlLoginConCuentaCreada(correo);
+            return;
+        }
+        this.entrandoACuenta = true;
+        const entro = await this.authService.signInAfterRegistration(correo, hash);
+        if (!entro) {
+            this.entrandoACuenta = false;
+            this.irAlLoginConCuentaCreada(correo);
+        }
+    }
+
+    private irAlLoginConCuentaCreada(correo: string): void {
+        this.router.navigate(['/login'], { queryParams: { correo, cuenta: 'creada' } });
+    }
+
+    /** Borra la contraseña de la memoria del componente y del formulario. */
+    private olvidarContrasena(): void {
+        this.contrasenaHash = null;
+        this.mainForm.get('registration.password')?.setValue('', { emitEvent: false });
     }
 
     processAndRedirect(): void {

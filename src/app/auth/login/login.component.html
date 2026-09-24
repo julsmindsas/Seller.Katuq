@@ -23,6 +23,11 @@
       <h1 class="login-title">{{ 'Ingresa a tu cuenta' | translate }}</h1>
       <p class="login-subtitle">{{ 'Ingresa tu correo y tu contraseña' | translate }}</p>
 
+      <!-- D-319: viene del registro, la cuenta ya existe -->
+      <div *ngIf="cuentaCreada" class="login-cuenta-creada" role="status">
+        Tu cuenta quedó creada. Entra con tu correo y la contraseña que acabas de crear.
+      </div>
+
       <!-- Login Form -->
       <form class="theme-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <!-- Email Field -->

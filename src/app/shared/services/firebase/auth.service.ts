@@ -71,6 +71,27 @@ export class AuthService implements OnInit {
     });
   }
 
+  /**
+   * Entrada directa al terminar el registro (D-319). Es el login de siempre
+   * (`POST /v1/authentication`) con el mismo enrutamiento que `SignIn`, pero
+   * sin alertas y avisando si entró: si no, el registro manda a /login con el
+   * correo puesto. `passwordHash` ya viene con `utils.hash`.
+   */
+  async signInAfterRegistration(email: string, passwordHash: string): Promise<boolean> {
+    try {
+      const result: any = await this.services
+        .signInWithEmailAndPassword({ email: email.toLowerCase(), password: passwordHash, token: '' })
+        .toPromise();
+      if (!result || result.error || !result.token) {
+        return false;
+      }
+      await this.handleSignInSuccess(result);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   private async handleSignInSuccess(result: any): Promise<void> {
     if (result.error) {
       this.showLoader = false; // Desactivar indicador de carga

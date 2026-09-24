@@ -58,8 +58,14 @@
           </p>
         </div>
 
+        <!-- D-319: eligió su contraseña, entra de una vez -->
+        <div *ngIf="eligioContrasena" class="entrando-cuenta" role="status" aria-live="polite">
+          <span class="entrando-cuenta__spinner" aria-hidden="true"></span>
+          <span>{{ entrandoACuenta ? 'Entrando a tu cuenta…' : 'Tu cuenta quedó creada.' }}</span>
+        </div>
+
         <!-- Credenciales: la contraseña solo llega por correo, hay que decírselo al usuario -->
-        <div *ngIf="credentialsEmailSent" class="credentials-notice" style="background: #f8f9fa; border-left: 4px solid #9020FF; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
+        <div *ngIf="credentialsEmailSent && !eligioContrasena" class="credentials-notice" style="background: #f8f9fa; border-left: 4px solid #9020FF; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
           <p style="margin: 0 0 6px; font-weight: bold; color: #9020FF;">📧 {{ 'Revisa tu correo para ingresar' | translate }}</p>
           <p style="margin: 0; font-size: 1.05rem;">
             {{ 'Te enviamos tu usuario y contraseña a' | translate }}
@@ -68,7 +74,7 @@
           </p>
         </div>
 
-        <div *ngIf="!credentialsEmailSent" class="credentials-notice" style="background: #fff8e1; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
+        <div *ngIf="!credentialsEmailSent && !eligioContrasena" class="credentials-notice" style="background: #fff8e1; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
           <p style="margin: 0 0 6px; font-weight: bold; color: #92400e;">Tu cuenta está lista, pero el correo no pudo salir</p>
           <p style="margin: 0; font-size: 1.05rem;">
             Ve al login y usa <strong>“Olvidé mi contraseña”</strong> con
@@ -87,7 +93,7 @@
           </ul>
         </div>
 
-        <div class="quick-actions" style="margin: 30px 0;">
+        <div *ngIf="!eligioContrasena" class="quick-actions" style="margin: 30px 0;">
           <button class="cta-button primary" (click)="redirectToMainSystem()">
             {{ 'Ir al Panel Principal' | translate }} 🚀
           </button>
@@ -101,10 +107,16 @@
           {{ quickStartMessage }}
         </div>
         <div style="background: #fff8e1; border-left: 4px solid #FF9800; padding: 16px; margin: 20px auto; max-width: 560px; text-align: left; border-radius: 6px;">
-          <p style="margin: 0;">
+          <p *ngIf="!eligioContrasena" style="margin: 0;">
             {{ 'Por seguridad validamos algunos registros manualmente. Te enviaremos tu usuario y contraseña a' | translate }}
             <strong>{{ mainForm.get('registration.correo')?.value }}</strong>
             {{ 'en cuanto se complete. ¿Dudas? Escríbenos a' | translate }} <a href="mailto:soporte@katuq.com">soporte@katuq.com</a>.
+          </p>
+          <p *ngIf="eligioContrasena" style="margin: 0;">
+            Por seguridad validamos algunos registros a mano. Te escribimos a
+            <strong>{{ mainForm.get('registration.correo')?.value }}</strong>
+            apenas quede aprobado, y entras con ese correo y la contraseña que creaste.
+            ¿Dudas? Escríbenos a <a href="mailto:soporte@katuq.com">soporte@katuq.com</a>.
           </p>
         </div>
         <button class="cta-button secondary" (click)="goToLogin()">
@@ -237,7 +249,7 @@
             </div>
             <div class="benefit-item">
               <span class="benefit-icon">✓</span>
-              <span class="benefit-text"><strong>Solo 4 datos</strong><br>Completa lo demás cuando estés listo</span>
+              <span class="benefit-text"><strong>Solo 4 datos y tu contraseña</strong><br>Entras de una vez y completas lo demás cuando estés listo</span>
             </div>
           </div>
 
@@ -415,7 +427,7 @@
 
         <h2>{{ 'Información Básica de tu Empresa' | translate }}</h2>
         <p class="registration-help" *ngIf="registrationOnly">
-          Solo necesitamos estos 4 datos. Después te guiaremos para completar tu negocio.
+          Solo 4 datos y tu contraseña. Después te guiamos para completar tu negocio.
         </p>
         <p class="registration-help" *ngIf="!registrationOnly">Cada dato nos ayuda a personalizar mejor tu experiencia</p>
         <!-- 🍯 Honeypot anti-bot: oculto para humanos (fuera de pantalla, sin tab ni autocompletar). -->
@@ -517,6 +529,43 @@
             </div>
             <div *ngIf="getFieldError('celular')" class="error-message">
               {{ getFieldError('celular') }}
+            </div>
+          </div>
+        </ng-container>
+        <!-- Contraseña: la elige la persona y entra de una vez al terminar (D-319) -->
+        <ng-container *ngIf="registrationIndex === 4">
+          <div class="survey-question">
+            <p style="font-size: 2rem; margin-bottom:10px;">
+              {{ registrationQuestions[4].question }} <span class="required-indicator">*</span>
+            </p>
+            <p class="password-help">Con ella entras a Katuq apenas termines.</p>
+            <div class="input-container">
+              <input [type]="mostrarContrasena ? 'text' : 'password'"
+                     class="material-input material-input--password"
+                     [placeholder]="registrationQuestions[4].placeholder"
+                     formControlName="password"
+                     autocomplete="new-password"
+                     autocapitalize="off"
+                     spellcheck="false"
+                     aria-describedby="reglas-contrasena"
+                     (keyup.enter)="moveNextStep()"
+                     [class.invalid]="isFieldInvalid('password')"
+                     [class.valid]="isFieldValid('password')">
+              <button type="button"
+                      class="password-toggle"
+                      (click)="mostrarContrasena = !mostrarContrasena"
+                      [attr.aria-pressed]="mostrarContrasena"
+                      [attr.aria-label]="mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+                {{ mostrarContrasena ? 'Ocultar' : 'Ver' }}
+              </button>
+            </div>
+            <ul id="reglas-contrasena" class="password-rules" aria-live="polite">
+              <li [class.ok]="reglasDeContrasena.largo">Mínimo 8 caracteres</li>
+              <li [class.ok]="reglasDeContrasena.letra">Al menos una letra</li>
+              <li [class.ok]="reglasDeContrasena.numero">Al menos un número</li>
+            </ul>
+            <div *ngIf="getFieldError('password')" class="error-message">
+              {{ getFieldError('password') }}
             </div>
           </div>
         </ng-container>
