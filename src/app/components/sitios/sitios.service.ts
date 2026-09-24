@@ -269,6 +269,8 @@ export interface DiaMetricas {
 }
 
 export interface MetricasSitio {
+  /** Cuántos días deja ver el plan (D-319): 1 en el plan gratis. */
+  diasPermitidos?: number;
   sitio: { id: string; nombre: string; slug: string; estado: string };
   dias: number;
   totales: {
@@ -300,7 +302,8 @@ export interface MetricasSitio {
 /** Alguien que le dejó sus datos a la tienda. */
 export interface ContactoSitio {
   id: string;
-  tipo: "contacto" | "avisame-stock" | "carrito-abandonado";
+  /** "boletin": se suscribió a las novedades desde el bloque de boletín (D-318). */
+  tipo: "contacto" | "avisame-stock" | "carrito-abandonado" | "boletin";
   nombre: string;
   telefono: string;
   correo: string;

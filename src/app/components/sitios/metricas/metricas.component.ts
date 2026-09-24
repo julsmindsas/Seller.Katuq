@@ -39,6 +39,11 @@ export class MetricasComponent implements OnInit {
 
   constructor(private service: SitiosService) {}
 
+  /** Plan gratis (D-319): el servidor solo deja ver el día. */
+  get soloHoy(): boolean {
+    return !!this.datos && this.datos.diasPermitidos === 1;
+  }
+
   ngOnInit(): void {
     this.cargar();
     this.cargarContactos();
@@ -67,6 +72,7 @@ export class MetricasComponent implements OnInit {
     if (c.tipo === "carrito-abandonado") {
       return c.carrito && c.carrito.estado === "comprado" ? "Compró" : "Dejó el carrito";
     }
+    if (c.tipo === "boletin") return "Boletín";
     return c.tipo === "avisame-stock" ? "Avísame" : "Te escribió";
   }
 
@@ -86,6 +92,8 @@ export class MetricasComponent implements OnInit {
         ? " Vi que dejaste unos productos en tu carrito. ¿Te ayudo a terminar tu pedido?"
         : c.tipo === "avisame-stock"
         ? " Nos pediste que te avisáramos: ya tenemos de nuevo el producto que buscabas."
+        : c.tipo === "boletin"
+        ? " Gracias por suscribirte a nuestras novedades."
         : " Recibimos tu mensaje, ¿en qué te podemos ayudar?";
     return `https://wa.me/${tel}?text=${encodeURIComponent(saludo + motivo)}`;
   }

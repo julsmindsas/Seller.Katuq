@@ -1,0 +1,357 @@
+// Campaña de correo (D-318) — el mismo lenguaje del asistente de WhatsApp,
+// plano y sin gradientes.
+@import '../../../../shared/styles/katuq-marketing';
+
+:host {
+  @include km-tokens;
+  display: block;
+}
+
+@mixin boton-primario {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: var(--km-accent);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 11px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px -6px rgba(95, 63, 224, 0.6);
+
+  &:hover:not(:disabled) { filter: brightness(1.05); }
+  &:disabled { background: #eeecf6; color: #b0abc4; box-shadow: none; cursor: not-allowed; }
+}
+
+@mixin etiqueta {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--km-muted);
+}
+
+.cc {
+  padding: 18px 22px 32px;
+  background: var(--km-canvas);
+  min-height: calc(100vh - 80px);
+  font-family: var(--km-font);
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  &__title { font-size: 22px; font-weight: 800; color: var(--km-ink); margin: 0; }
+  &__subtitle { font-size: 13px; color: var(--km-muted); margin: 3px 0 0; font-weight: 500; }
+
+  &__back {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--km-muted);
+    text-decoration: none;
+    &:hover { color: var(--km-accent); }
+  }
+
+  &__aviso {
+    @include km-card;
+    padding: 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--km-ink2);
+
+    &.is-info { background: var(--km-accent-wash2); }
+    a { color: var(--km-accent); font-weight: 700; }
+  }
+
+  // ── Pasos
+  &__pasos { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+
+  &__paso {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--km-line2);
+    background: var(--km-surface);
+    color: var(--km-muted);
+    border-radius: 99px;
+    padding: 7px 14px 7px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &.is-activo { color: var(--km-accent); border-color: #d9cffb; background: var(--km-accent-wash); }
+    &.is-hecho { color: var(--km-green-ink); }
+  }
+
+  &__paso-n {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--km-accent-wash2);
+    font-size: 11.5px;
+    font-weight: 800;
+  }
+
+  &__cuerpo {
+    @include km-card;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &.is-corto { max-width: 140px; }
+
+    input, select {
+      border: 1px solid var(--km-line2);
+      border-radius: 11px;
+      background: #faf9fe;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      color: var(--km-ink);
+      font-family: inherit;
+
+      &:focus { outline: none; border-color: var(--km-accent); background: #fff; }
+    }
+  }
+
+  &__label { @include etiqueta; }
+
+  &__pista { margin: 0; font-size: 11.5px; color: var(--km-muted); }
+
+  &__dos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    @media (max-width: 720px) { grid-template-columns: 1fr; }
+  }
+
+  // ── Segmentos
+  &__segmentos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+  }
+
+  &__segmento {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    text-align: left;
+    border: 1.5px solid var(--km-line2);
+    background: var(--km-surface);
+    border-radius: 14px;
+    padding: 12px 14px;
+    cursor: pointer;
+
+    &.is-elegido { border-color: var(--km-accent); background: var(--km-accent-wash2); }
+  }
+
+  &__segmento-icono {
+    @include km-icon-tile(30px);
+    color: var(--km-accent);
+    background: var(--km-accent-wash);
+    margin-bottom: 4px;
+  }
+
+  &__segmento-nombre { font-size: 13.5px; font-weight: 800; color: var(--km-ink); }
+  &__segmento-desc { font-size: 12px; color: var(--km-muted); line-height: 1.4; }
+
+  &__params { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+
+  // ── Conteo
+  &__conteo {
+    border-radius: 14px;
+    background: var(--km-accent-wash2);
+    padding: 12px 14px;
+  }
+
+  &__conteo-principal {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--km-ink2);
+  }
+
+  &__conteo-n { font-size: 22px; font-weight: 800; color: var(--km-accent); }
+
+  &__conteo-nota {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: var(--km-muted);
+
+    &.is-alerta { color: var(--km-orange-ink); }
+  }
+
+  // ── Opttia
+  &__opttia {
+    border: 1px dashed #d9cffb;
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .cc__label i { color: var(--km-accent); }
+  }
+
+  &__opttia-fila {
+    display: flex;
+    gap: 8px;
+
+    input {
+      flex: 1;
+      border: 1px solid var(--km-line2);
+      border-radius: 11px;
+      background: #faf9fe;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      font-family: inherit;
+
+      &:focus { outline: none; border-color: var(--km-accent); background: #fff; }
+    }
+  }
+
+  // ── Revisar
+  &__revisar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 16px;
+    align-items: start;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+
+    @media (max-width: 980px) { grid-template-columns: 1fr; }
+  }
+
+  &__revisar-lado {
+    @include km-card;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  &__problemas {
+    background: var(--km-orange-wash);
+    border-radius: 12px;
+    padding: 10px 12px;
+
+    p { margin: 6px 0 0; font-size: 12.5px; color: var(--km-orange-ink); font-weight: 600; }
+  }
+
+  &__plan {
+    background: var(--km-accent-wash2);
+    border-radius: 12px;
+    padding: 10px 12px;
+
+    p { margin: 6px 0 0; font-size: 12.5px; color: var(--km-ink2); }
+    a { color: var(--km-accent); font-weight: 800; }
+  }
+
+  &__resumen p, &__cuando label { margin: 6px 0 0; font-size: 12.5px; color: var(--km-ink2); display: block; }
+
+  &__cuando input[type='datetime-local'] {
+    margin-top: 8px;
+    width: 100%;
+    border: 1px solid var(--km-line2);
+    border-radius: 11px;
+    padding: 8px 10px;
+    font-family: inherit;
+  }
+
+  &__cuando .cc__pista { margin-top: 8px; }
+
+  &__acciones { display: flex; flex-direction: column; gap: 8px; }
+
+  &__volver {
+    border: 0;
+    background: none;
+    color: var(--km-muted);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    align-self: flex-start;
+    &:hover { color: var(--km-accent); }
+  }
+
+  // ── Pie de paso
+  &__pie {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--km-line);
+  }
+
+  &__pie-der { display: flex; gap: 8px; }
+
+  &__btn { @include boton-primario; justify-content: center; }
+  &__btn-ghost { @include km-btn-ghost; justify-content: center; }
+
+  // ── Detalle
+  &__estado {
+    @include km-card;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  &__estado-acciones { margin-left: auto; display: flex; gap: 8px; }
+
+  &__motivo { font-size: 12.5px; color: var(--km-ink2); }
+
+  &__chip {
+    @include km-chip(var(--km-ink2), var(--km-line));
+    text-transform: uppercase;
+
+    &.is-enviando, &.is-programada { @include km-chip(var(--km-accent), var(--km-accent-wash)); text-transform: uppercase; }
+    &.is-terminada { @include km-chip(var(--km-green-ink), var(--km-green-wash)); text-transform: uppercase; }
+    &.is-pausada_auto { @include km-chip(var(--km-red), var(--km-red-wash)); text-transform: uppercase; }
+  }
+
+  &__kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+  }
+
+  &__kpi {
+    @include km-card;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    &.is-destacado { background: var(--km-accent-wash2); }
+  }
+
+  &__kpi-label { @include etiqueta; }
+  &__kpi-valor { font-size: 22px; font-weight: 800; color: var(--km-ink); }
+  &__kpi.is-destacado &__kpi-valor { color: var(--km-accent); }
+  &__kpi-sub { font-size: 11.5px; color: var(--km-muted); }
+}

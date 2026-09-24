@@ -9,6 +9,7 @@ import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, PaginaSitio,
 import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
+import { LimitesPlanService } from "../../../shared/services/limites-plan.service";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -743,7 +744,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     private toastr: ToastrService,
     private host: ElementRef<HTMLElement>,
     private cdr: ChangeDetectorRef,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    public plan: LimitesPlanService
   ) {}
 
   ngOnInit(): void {
@@ -3691,6 +3693,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         },
         error: (e) => {
           this.guardando = false;
+          // Plan gratis (D-319): se explica con la opción de mejorar el plan.
+          if (this.plan.manejar(e)) return;
           this.toastr.error((e && e.error && e.error.message) || "No pudimos guardar.");
         },
       });
@@ -3895,6 +3899,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       },
       error: (e) => {
         this.publicando = false;
+        // Plan gratis (D-319): se explica con la opción de mejorar el plan.
+        if (this.plan.manejar(e)) return;
         this.toastr.error((e && e.error && e.error.message) || "No pudimos publicar.");
       },
     });

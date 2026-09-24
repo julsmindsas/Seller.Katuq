@@ -12,11 +12,15 @@
     </header>
 
     <div class="caja__cuerpo">
-      <div class="rangos">
+      <div class="rangos" *ngIf="!soloHoy">
         <button *ngFor="let r of rangos" [class.is-active]="rango === r.dias" (click)="cambiarRango(r.dias)">
           {{ r.nombre }}
         </button>
       </div>
+      <!-- Plan gratis (D-319): solo el día. -->
+      <p class="plan-hoy" *ngIf="soloHoy">
+        Tu plan muestra las métricas de hoy. <a routerLink="/pricing">Mejora tu plan</a> para ver 7, 30 y 90 días.
+      </p>
 
       <p class="estado" *ngIf="cargando">Cargando…</p>
       <p class="estado" *ngIf="error">{{ error }}</p>
@@ -155,6 +159,8 @@
                   (click)="filtroContactos = 'contacto'">Te escribieron ({{ cuantos('contacto') }})</button>
           <button *ngIf="cuantos('avisame-stock')" [class.is-active]="filtroContactos === 'avisame-stock'"
                   (click)="filtroContactos = 'avisame-stock'">Avísame ({{ cuantos('avisame-stock') }})</button>
+          <button *ngIf="cuantos('boletin')" [class.is-active]="filtroContactos === 'boletin'"
+                  (click)="filtroContactos = 'boletin'">Boletín ({{ cuantos('boletin') }})</button>
         </div>
         <ul>
           <li *ngFor="let c of contactosVisibles" class="contacto">

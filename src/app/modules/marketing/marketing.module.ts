@@ -7,7 +7,13 @@ import { NgxEchartsModule } from 'ngx-echarts';
 import { MarketingDashboardComponent } from './components/marketing-dashboard/marketing-dashboard.component';
 import { CampanaWhatsappComponent } from './components/campana-whatsapp/campana-whatsapp.component';
 import { CampanasHistorialComponent } from './components/campanas-historial/campanas-historial.component';
+import { CampanaCorreoComponent } from './components/campana-correo/campana-correo.component';
+import { EditorBloquesCorreoComponent } from './components/editor-bloques-correo/editor-bloques-correo.component';
+import { VistaPreviaCorreoComponent } from './components/vista-previa-correo/vista-previa-correo.component';
+import { SuscriptoresCorreoComponent } from './components/suscriptores-correo/suscriptores-correo.component';
+import { SelectorProductosModule } from '../../components/sitios/selector-productos/selector-productos.module';
 import { MarketingService } from './services/marketing.service';
+import { MarketingCorreoService } from './services/marketing-correo.service';
 import { MarketingGuard } from './guards/marketing.guard';
 
 const routes: Routes = [
@@ -26,6 +32,22 @@ const routes: Routes = [
     component: CampanaWhatsappComponent,
     canActivate: [MarketingGuard],
   },
+  // Campañas de correo de las tiendas (D-318).
+  {
+    path: 'campanas/correo',
+    component: CampanaCorreoComponent,
+    canActivate: [MarketingGuard],
+  },
+  {
+    path: 'campanas/correo/:id',
+    component: CampanaCorreoComponent,
+    canActivate: [MarketingGuard],
+  },
+  {
+    path: 'suscriptores',
+    component: SuscriptoresCorreoComponent,
+    canActivate: [MarketingGuard],
+  },
 ];
 
 /**
@@ -37,15 +59,24 @@ const routes: Routes = [
  * la misma librería del dashboard gerencial (chart.js NO está instalado).
  */
 @NgModule({
-  declarations: [MarketingDashboardComponent, CampanaWhatsappComponent, CampanasHistorialComponent],
+  declarations: [
+    MarketingDashboardComponent,
+    CampanaWhatsappComponent,
+    CampanasHistorialComponent,
+    CampanaCorreoComponent,
+    EditorBloquesCorreoComponent,
+    VistaPreviaCorreoComponent,
+    SuscriptoresCorreoComponent,
+  ],
   imports: [
     CommonModule,
     FormsModule,
+    SelectorProductosModule,
     RouterModule.forChild(routes),
     NgxEchartsModule.forRoot({
       echarts: () => import('echarts'),
     }),
   ],
-  providers: [MarketingService, MarketingGuard],
+  providers: [MarketingService, MarketingCorreoService, MarketingGuard],
 })
 export class MarketingModule {}
