@@ -183,6 +183,11 @@
           <p *ngFor="let p of vista?.problemas"><i class="fa fa-exclamation-circle"></i> {{ p }}</p>
         </div>
 
+        <div class="cc__plan" *ngIf="plan.limites as l">
+          <span class="cc__label">Plan gratis</span>
+          <p>{{ l.campanasPorMes }} campaña al mes, hasta {{ l.correosCampanaPorMes }} personas. <a routerLink="/pricing">Mejorar plan</a></p>
+        </div>
+
         <div class="cc__resumen">
           <span class="cc__label">Resumen</span>
           <p><b>{{ conteo?.alcance?.salen || 0 | number: '1.0-0' }}</b> personas · {{ opcion.nombre }}</p>

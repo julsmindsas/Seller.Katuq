@@ -47,6 +47,16 @@
     </button>
   </header>
 
+  <!-- Plan gratis (D-319): lo que el plan permite, a la vista. El servidor lo hace cumplir. -->
+  <div class="plan-gratis" *ngIf="plan.limites as l">
+    <span class="plan-gratis__chip">PLAN GRATIS</span>
+    <span>
+      1 tienda publicada · {{ l.productosVisibles }} productos visibles · {{ l.cuponesActivos }} cupón y {{ l.promocionesActivas }} promoción activos · {{ l.paginasPropias }} páginas · sin dominio propio ni reseñas
+      <ng-container *ngIf="plan.pedidosRestantes >= 0"> · te quedan <b>{{ plan.pedidosRestantes }}</b> pedidos este mes (al llegar a 0, tu tienda recibe por WhatsApp)</ng-container>
+    </span>
+    <a routerLink="/pricing" class="plan-gratis__mejorar">Mejorar plan</a>
+  </div>
+
   <div class="cuerpo">
 
     <!-- ═══ Panel de trabajo ═══════════════════════════════════════════════ -->

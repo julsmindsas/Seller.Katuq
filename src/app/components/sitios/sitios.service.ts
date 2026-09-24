@@ -269,6 +269,8 @@ export interface DiaMetricas {
 }
 
 export interface MetricasSitio {
+  /** Cuántos días deja ver el plan (D-319): 1 en el plan gratis. */
+  diasPermitidos?: number;
   sitio: { id: string; nombre: string; slug: string; estado: string };
   dias: number;
   totales: {

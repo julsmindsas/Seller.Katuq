@@ -4,6 +4,7 @@ import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { Sitio, SitiosService } from '../../../../components/sitios/sitios.service';
+import { LimitesPlanService } from '../../../../shared/services/limites-plan.service';
 import {
   AudienciaCorreo,
   BloqueCorreo,
@@ -88,6 +89,7 @@ export class CampanaCorreoComponent implements OnInit, OnDestroy {
     private sitiosService: SitiosService,
     private route: ActivatedRoute,
     private router: Router,
+    public plan: LimitesPlanService,
   ) {}
 
   ngOnInit(): void {
@@ -346,6 +348,8 @@ export class CampanaCorreoComponent implements OnInit, OnDestroy {
       },
       error: (e) => {
         this.enviando = false;
+        // Plan gratis (D-319): una campaña al mes; se explica con la opción de mejorar.
+        if (this.plan.manejar(e)) return;
         if (e && e.status === 409 && e.error?.data?.alcance) {
           // El cupo del mes no alcanza para todos: se decide explícitamente.
           Swal.fire({

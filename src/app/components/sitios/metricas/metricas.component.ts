@@ -39,6 +39,11 @@ export class MetricasComponent implements OnInit {
 
   constructor(private service: SitiosService) {}
 
+  /** Plan gratis (D-319): el servidor solo deja ver el día. */
+  get soloHoy(): boolean {
+    return !!this.datos && this.datos.diasPermitidos === 1;
+  }
+
   ngOnInit(): void {
     this.cargar();
     this.cargarContactos();

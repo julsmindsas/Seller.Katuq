@@ -315,3 +315,15 @@
     &--contacto { background: var(--kb-accent-wash-4); color: var(--kb-accent); }
   }
 }
+
+// Plan gratis (D-319)
+.plan-hoy {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  background: #f3f1fb;
+  font-size: 12.5px;
+  color: #4b4763;
+
+  a { color: #5f3fe0; font-weight: 800; }
+}
