@@ -2842,14 +2842,21 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       if (!result?.confirmed || !result?.carrierCode) {
         return; // canceló
       }
-      this.despacharConCereza(result.carrierCode, result.carrierName);
+      this.despacharConCereza(result.carrierCode, result.carrierName, {
+        transportationFee: result.transportationFee,
+        managementFee: result.managementFee,
+      });
     });
   }
 
   /**
    * Envía los pedidos seleccionados a Cereza con la transportadora elegida.
    */
-  private despacharConCereza(carrierCode: string, carrierName: string): void {
+  private despacharConCereza(
+    carrierCode: string,
+    carrierName: string,
+    cargos: { transportationFee?: number; managementFee?: number } = {},
+  ): void {
     this.isSaving = true;
 
     const payload = {
@@ -2862,9 +2869,14 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       },
       // Cada pedido lleva su transportadora: el backend la usa como carrier_code
       // y, si no viniera, caería en la configurada por defecto de la empresa.
+      // Transporte y manejo (ticket 1059) solo viajan si el operador los cambió.
       shipments: this.pedidosSeleccionados.map((pedido) => ({
         pedido,
-        options: { carrierCode }
+        options: {
+          carrierCode,
+          ...(cargos.transportationFee != null ? { transportationFee: cargos.transportationFee } : {}),
+          ...(cargos.managementFee != null ? { managementFee: cargos.managementFee } : {}),
+        }
       })),
       globalOptions: {}
     };
