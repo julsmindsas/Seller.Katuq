@@ -7279,7 +7279,7 @@ Propuesta: `openspec/changes/tienda-carrito-abandonado/` (backend). Backend `91d
 
 **Actualización 2026-09-23 16:32 UTC — el backend quedó en producción sin haberlo decidido esta sesión.** Daniel le pidió a la otra sesión desplegar el MCP y el `git pull` se llevó la rama entera (prod en `326bccc`, que tiene `685eea0` debajo): otra vez la unidad de despliegue es la rama. Verificado en prod a las 16:40 UTC: los 6 correos se arman bien con el Node de producción (color de la tienda, sin llaves sin llenar; apagar un correo y el asunto propio se respetan); portada, `/llms.txt`, `robots`, `sitemap` y `feed.xml` en 200 sin ETag (sin el 304 que rompía el nonce); `/pagar` con firma mala y `/gracias` sin pedido dan 404 a propósito, y `/gracias?pedido=` da 200; los endpoints nuevos y `/v1/prospectos` responden 401 sin token; cero errores de sitios o correos en el log desde el despliegue. Lo que ya cambió para los compradores: los correos salen con el color de la tienda y las respuestas le llegan al comercio (`contacto.email` del sitio) en vez de a Katuq. **El front con la sección NO ha salido** (el bundle publicado no la trae): los comercios todavía no pueden configurar nada. Ojo: como el backend ya responde, el próximo release del front desde `feature/venta-asistida-mejorada` la enciende.
 
-## D-318 (2026-09-23) — PROPUESTA: campañas de correo y remarketing de las tiendas (pendiente de aprobación de Daniel)
+## D-318 (2026-09-23) — Campañas de correo y remarketing de las tiendas (APROBADA el 23-sep; en ramas feature/campanas-correo)
 
 **Contexto.** Daniel: "poder enviar y hacer remarketing" por correo. Las tiendas ya juntan contactos (compradores, carritos, "Avísame", boletín), pero no hay envío masivo, ni autorización de publicidad, ni baja; el boletín guarda correos a los que nadie les escribe. La única difusión existente es la de WhatsApp en el módulo Marketing (D-092, D-096, D-098).
 
@@ -7304,3 +7304,22 @@ Pide aprobar **tres colecciones nuevas**: `email_campaigns`, `email_usage` y `em
 - los cupos: 500 al mes en el plan gratis y 5.000 en premium, tope de 5.000 por campaña, sin cobro.
 
 El subdominio `novedades.katuq.com` y el remitente con el nombre de la tienda se toman como vienen. **Se despliega después de la feria.** Para que el despliegue del MCP de otra sesión no se lo lleve antes de tiempo (como pasó con los correos personalizables), el código vive en ramas propias, `feature/campanas-correo`, en el backend y en el front, y no en `backend-aws-security`.
+
+## D-319 (2026-09-24) — PROPUESTA: límites del plan gratis en las tiendas (versión "más agresiva")
+
+**Contexto.** Daniel: que el plan gratis deje operar la tienda con límites "medio agresivos"; luego eligió la versión **más agresiva** y que, al llegar al tope de pedidos, el checkout pase a WhatsApp. Hallazgo: **los pedidos de la tienda no cuentan en el tope de 15 al mes del plan gratis** (solo `/v1/orders/create` usa `validateOrderLimit`), así que hoy se vende sin límite por la tienda. Medición en producción (solo lectura, 24-sep): 64 empresas gratis y 10 premium, y ninguna gratis tiene tienda publicada. Los límites no le rompen nada a nadie hoy.
+
+**Propuesta** (`openspec/changes/limites-plan-gratis-tiendas/`). En gratis:
+- 1 tienda publicada, sin dominio propio y con el sello "Hecho con Katuq";
+- 50 productos visibles;
+- los pedidos de la tienda cuentan en los 15 del mes, y al tope el checkout pasa a "Pídelo por WhatsApp";
+- 3 páginas, 1 cupón, 1 promoción y 1 punto de retiro;
+- sin recordatorio de carrito abandonado (el pago abandonado sí), sin reseñas y con los correos al comprador estándar;
+- campañas: 1 al mes de hasta 200 personas (baja desde los 500 de D-318), y del remarketing automático solo "Volvió";
+- sin catálogo para pauta ni conversiones de anuncios;
+- métricas solo del día;
+- Opttia, 3 páginas al mes.
+
+La regla: el límite cae sobre el comercio, nunca sobre el comprador; ningún pedido cobrado se rechaza.
+
+**Estado**: propuesta validada, **pendiente de aprobación de Daniel**. El paso que cuenta los pedidos de la tienda toca el checkout (módulo sensible), así que va con diff y aprobación explícita antes de aplicarse.
