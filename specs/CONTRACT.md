@@ -7346,3 +7346,32 @@ La prueba de punta a punta se hace en ATELIER 90 (demo de moda autorizada), pas�
 **Desplegado:** servidor `4cebbd1` (rama backend-aws-security, con el arreglo del teléfono numérico de ALMARA) y front 2026.09.24.1.
 
 **Pruebas:** `scripts/test-1052-tipo-de-factura-siigo.js`, 15 casos; 14 fallan contra el código anterior. Además, la factura real de BAS-000016 se simuló contra su SIIGO en solo lectura.
+
+## D-321 (2026-09-24) — Quien se registra elige su contraseña y entra de una vez
+
+**Contexto.** El 23 y 24-sep la pauta trajo 6 registros y 5 nunca entraron. Al terminar `/registrarse` la persona iba a `/login` con una contraseña aleatoria que solo llegaba por correo, y el correo de `notificaciones@katuq.com` falla DMARC y cae en spam.
+
+**Decisión** (`openspec/changes/entrar-directo-al-registrarse/`, aprobada por Daniel el 24-sep). Los commits dicen "D-319" porque ese número lo tomó a la vez otra sesión para los límites del plan gratis; esta es la entrada que vale.
+- El registro pide una contraseña con reglas mínimas: 8 caracteres, al menos una letra y un número. No entra al borrador de `localStorage`.
+- Viaja como `utils.hash` (el mismo formato del login). El backend la saca del cuerpo antes del log, de `surveyResponses`, de la IA, de la auditoría y de los avisos. La guarda con el mismo bcrypt del login y `mustChangePassword: false`. Rechaza con 422, sin crear nada, un formato inválido o las contraseñas por defecto.
+- Con un 200, el front abre la sesión con el login de siempre (`POST /v1/authentication`); el endpoint de registro no entrega sesiones. Si el login falla, va a `/login` con el correo puesto y el aviso de que la cuenta quedó creada.
+- En revisión (202) no hay sesión. La contraseña elegida queda guardada con la cuenta inactiva, así que al aprobarla la persona entra con ella.
+- La bienvenida ya no lleva contraseña.
+- Compatibilidad: sin `registro.password` (front viejo en caché) todo sigue igual, con contraseña temporal por correo. Ese camino se retira el 2026-10-25 (dueño: Claude).
+- Con el rediseño aprobado por Daniel (prototipo de la sesión "videos"), el orden de los pasos pasa a ser nombre, correo, celular, cédula o NIT y contraseña. El HTML elige cada paso por su campo, no por su número. "Crear mi cuenta" en el último paso crea la cuenta, sin "Revisa tus datos"; el diagnóstico largo conserva su resumen.
+
+**En producción:** backend `4b3252a` (en `4cebbd1`) y front 2026.09.24.2 (release `1c9b9d7e`, base 24.1 `46c278ff` sin "Correos de tu tienda"). Prueba real el 24-sep, con los píxeles bloqueados: de "Crear mi cuenta" a estar dentro de `/onboarding` en 11 s. Quedó bcrypt con `mustChangePassword: false`, `surveyResponses` y la auditoría sin la contraseña, y volver a entrar funcionó. La empresa de prueba se borró (42 documentos).
+
+**Siguiente:** medir cuántos registros de pauta entran al panel el mismo día (antes: 1 de 6).
+
+## D-322 (2026-09-24) — "Cédula o NIT": el documento dudoso se marca, no se rechaza
+
+**Contexto.** Por Meta, 7 personas empezaron el registro y 4 lo terminaron. El formulario rechazaba las cédulas de 6 y 7 dígitos (exigía de 8 a 11; el backend acepta de 6 a 15). Además, el detector de números inventados no reconocía casos reales como 123456778.
+
+**Decisión** (`openspec/changes/cedula-o-nit-en-el-registro/`, aprobada por Daniel el 24-sep con las dos recomendaciones del diseño):
+- El campo se llama "¿Cuál es tu cédula o NIT?", con la ayuda "Si no tienes NIT, pon tu cédula", y acepta de 6 a 11 números.
+- Si todos los dígitos son iguales o hay una serie de 7 o más seguidos, sale un aviso amable que no bloquea. Con 6 caería una cédula normal como 43123456. Un NIT con dígito de verificación válido nunca cuenta.
+- La cuenta entra igual y la empresa queda con `documentoPorConfirmar: true` y `motivoDocumento` en `serie` o `repetido`. Los reportes la separan con ese campo. El puntaje de riesgo no cambia (`looksFakeNit` intacto), así que no manda más registros a revisión.
+- A Meta y TikTok se les sigue contando como registro completo. No se le escribe a la persona para confirmar: eso queda para el seguimiento por WhatsApp de la primera hora.
+
+**En producción:** backend `7d1e841` y front 2026.09.24.2. Prueba real: un documento en serie quedó marcado, con riesgo 0 y el chip "Documento por confirmar" en el aviso interno.
