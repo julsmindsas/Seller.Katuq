@@ -436,15 +436,15 @@
                style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;">
 
         <!-- Nombre empresa -->
-        <ng-container *ngIf="registrationIndex === 0">
+        <ng-container *ngIf="pasoActual === 'nombre'">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[0].question }} <span class="required-indicator">*</span>
+              {{ pregunta('nombre').question }} <span class="required-indicator">*</span>
             </p>
             <div class="input-container">
               <input type="text" 
                      class="material-input" 
-                     [placeholder]="registrationQuestions[0].placeholder"
+                     [placeholder]="pregunta('nombre').placeholder"
                      formControlName="nombre" 
                      (keyup.enter)="moveNextStep()"
                      [class.invalid]="isFieldInvalid('nombre')"
@@ -460,15 +460,15 @@
           </div>
         </ng-container>
         <!-- Cédula o NIT -->
-        <ng-container *ngIf="registrationIndex === 1">
+        <ng-container *ngIf="pasoActual === 'nit'">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[1].question }} <span class="required-indicator">*</span>
+              {{ pregunta('nit').question }} <span class="required-indicator">*</span>
             </p>
             <div class="input-container">
               <input type="text" 
                      class="material-input" 
-                     [placeholder]="registrationQuestions[1].placeholder"
+                     [placeholder]="pregunta('nit').placeholder"
                      formControlName="nit" 
                      (keyup.enter)="moveNextStep()"
                      [class.invalid]="isFieldInvalid('nit')"
@@ -488,10 +488,10 @@
           </div>
         </ng-container>
         <!-- Correo -->
-        <ng-container *ngIf="registrationIndex === 2">
+        <ng-container *ngIf="pasoActual === 'correo'">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[2].question }} <span class="required-indicator">*</span>
+              {{ pregunta('correo').question }} <span class="required-indicator">*</span>
             </p>
             <div class="input-container">
               <input type="email" 
@@ -512,10 +512,10 @@
           </div>
         </ng-container>
         <!-- Celular -->
-        <ng-container *ngIf="registrationIndex === 3">
+        <ng-container *ngIf="pasoActual === 'celular'">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[3].question }} <span class="required-indicator">*</span>
+              {{ pregunta('celular').question }} <span class="required-indicator">*</span>
             </p>
             <div class="input-container">
               <input type="tel" 
@@ -537,16 +537,16 @@
           </div>
         </ng-container>
         <!-- Contraseña: la elige la persona y entra de una vez al terminar (D-319) -->
-        <ng-container *ngIf="registrationIndex === 4">
+        <ng-container *ngIf="pasoActual === 'password'">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
-              {{ registrationQuestions[4].question }} <span class="required-indicator">*</span>
+              {{ pregunta('password').question }} <span class="required-indicator">*</span>
             </p>
             <p class="password-help">Con ella entras a Katuq apenas termines.</p>
             <div class="input-container">
               <input [type]="mostrarContrasena ? 'text' : 'password'"
                      class="material-input material-input--password"
-                     [placeholder]="registrationQuestions[4].placeholder"
+                     [placeholder]="pregunta('password').placeholder"
                      formControlName="password"
                      autocomplete="new-password"
                      autocapitalize="off"

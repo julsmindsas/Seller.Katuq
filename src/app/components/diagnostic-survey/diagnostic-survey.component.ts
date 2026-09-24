@@ -234,16 +234,37 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     videoEnded: boolean = false; // Controla si el video terminó
 
     // Registro simplificado: 4 datos esenciales + la contraseña con la que entra
-    // de una vez al terminar (D-319).
+    // de una vez al terminar (D-319). El orden lo aprobó Daniel con el rediseño
+    // (2026-09-24): el documento va de cuarto porque es donde más gente se cae.
+    // El HTML pinta cada paso por su `formControl` (ver `pasoActual`), así que
+    // reordenar es solo mover esta lista. La contraseña va siempre de última.
     registrationQuestions = [
-        { formControl: 'nombre', question: '¿Cuál es el nombre de tu empresa?', placeholder: 'Nombre de la empresa' },
+        { formControl: 'nombre', question: '¿Cómo se llama tu negocio?', placeholder: 'Nombre de la empresa' },
+        { formControl: 'correo', question: '¿Con qué correo vas a entrar?', placeholder: 'correo@ejemplo.com' },
+        { formControl: 'celular', question: '¿A qué celular te escribimos?', placeholder: 'Número de celular' },
         { formControl: 'nit', question: '¿Cuál es tu cédula o NIT?', placeholder: 'Cédula o NIT' },
-        { formControl: 'correo', question: '¿Cuál es tu correo electrónico?', placeholder: 'correo@ejemplo.com' },
-        { formControl: 'celular', question: '¿Cuál es tu número de celular?', placeholder: 'Número de celular' },
         { formControl: 'password', question: 'Crea tu contraseña', placeholder: 'Mínimo 8 caracteres' }
     ];
     registrationIndex = 0;
-    private readonly PASO_CONTRASENA = 4;
+
+    /** Campo del paso en pantalla (el HTML elige el paso por esto, no por su número). */
+    get pasoActual(): string {
+        return this.registrationQuestions[this.registrationIndex]?.formControl;
+    }
+
+    pregunta(formControl: string) {
+        return this.registrationQuestions.find(q => q.formControl === formControl);
+    }
+
+    private get PASO_CONTRASENA(): number {
+        return this.registrationQuestions.findIndex(q => q.formControl === 'password');
+    }
+
+    /** Primer paso con el dato vacío o inválido (la contraseña nunca se guarda). */
+    private primerPasoPendiente(): number {
+        const i = this.registrationQuestions.findIndex(q => this.mainForm.get('registration.' + q.formControl)?.invalid);
+        return i === -1 ? this.registrationQuestions.length - 1 : i;
+    }
 
     mostrarContrasena = false;
     /** Tras un registro aprobado, mientras abre la sesión (D-319). */
@@ -388,9 +409,10 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 if (progress.currentContextualIndex !== undefined) {
                     this.currentContextualIndex = progress.currentContextualIndex;
                 }
-                if (progress.registrationIndex !== undefined) {
-                    this.registrationIndex = progress.registrationIndex;
-                }
+                // El número de paso guardado no se reusa: un borrador de antes del
+                // cambio de orden abriría en otro campo. Se reanuda en el primer
+                // dato que falta.
+                this.registrationIndex = this.primerPasoPendiente();
                 this.registrationOnly = progress.registrationOnly === true;
 
                 // Restaurar paso actual (con validación)
@@ -403,7 +425,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 // La contraseña no se guarda: si iba en el resumen, vuelve a pedirla.
                 if (this.currentStep === 'summary') {
                     this.currentStep = 'registration';
-                    this.registrationIndex = this.PASO_CONTRASENA;
+                    this.registrationIndex = this.primerPasoPendiente();
                 }
 
                 // Si había preguntas contextuales, cargarlas
