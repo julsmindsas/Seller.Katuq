@@ -346,6 +346,9 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
      * Guarda el progreso del usuario en localStorage
      */
     private saveProgress(): void {
+        // Un registro ya enviado no se vuelve a guardar: sus datos no deben
+        // reaparecer para la siguiente persona que use este navegador.
+        if (this.currentStep === 'quickstart-success') return;
         try {
             // La contraseña NUNCA va al borrador de localStorage (D-319).
             const { password, ...registrationData } = this.mainForm.get('registration')?.value || {};
@@ -735,6 +738,11 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     }
 
     async submitResponses() {
+        // Sin "Revisa tus datos", el autoguardado de la última tecla puede seguir
+        // programado: se cancela para que no guarde después del envío.
+        if (this.autoSaveTimeout) {
+            clearTimeout(this.autoSaveTimeout);
+        }
         // Validar que todas las preguntas estén respondidas
         const unansweredQuestions = this.surveyData.sections.flatMap(section => 
             section.questions.filter(q => !this.responses[q.id])
@@ -1056,7 +1064,14 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 // Pasar del nombre de la empresa al siguiente dato = empezó a registrarse.
                 if (this.registrationIndex === 0) this.pixeles.inicioRegistro();
                 this.registrationIndex++;
+            } else if (this.registrationOnly) {
+                // Rediseño aprobado por Daniel (2026-09-24): sin "Revisa tus datos";
+                // "Crear mi cuenta" en el último paso crea la cuenta de una vez.
+                // Sin guardar borrador: el envío lo limpia y no debe reaparecer.
+                this.submitResponses();
+                return;
             } else {
+                // El diagnóstico largo conserva su resumen.
                 this.confirmFinish();
                 this.currentStep = 'summary';
             }
