@@ -46,21 +46,24 @@
 
 ## Decisions
 
-### 1. Proveedor: SES por SMTP, detrás de una interfaz
+### 1. Proveedor: MailerSend por su API HTTP, detrás de una interfaz (decidido por Daniel el 2026-09-23)
 
-`services/marketing/proveedorEnvio.js` expone `enviar({de, para, responderA, asunto, html, texto, cabeceras, etiquetas}) → {messageId}`.
+`services/marketing/proveedorEnvio.js` expone `enviar({de, para, responderA, asunto, html, texto, cabeceras, etiquetas}) → {messageId}` y `listo()`.
 
-La primera implementación usa un **segundo transporte de nodemailer** contra el SMTP de SES. Nodemailer ya está instalado, así que no hay dependencia nueva que instalar en prod.
-- El configuration set y las etiquetas viajan en `X-SES-CONFIGURATION-SET` y `X-SES-MESSAGE-TAGS`.
+- **La implementación es MailerSend** (`POST https://api.mailersend.com/v1/email`, token Bearer en `MAILERSEND_API_TOKEN`). Se llama con el `fetch` nativo de Node 20, que es el que corre en prod, así que **no se instala ninguna dependencia**.
+- Del encabezado `X-Message-Id` de la respuesta sale el `messageId` que se guarda en la fila de `email_usage`. Con él se cruzan después los avisos del webhook.
+- **Velocidad:** es configurable (`MAILERSEND_POR_MINUTO`), porque el límite de peticiones depende del plan de la cuenta. Si una campaña grande no alcanza, el mismo adaptador puede pasar al envío por lotes del proveedor sin tocar el resto.
+- **Seguimiento propio:** en el dominio de envío se desactiva el seguimiento de aperturas y clics de MailerSend, porque el nuestro (decisión 6) es el que atribuye ventas.
+- **Por verificar en la cuenta** (tarea 0.2): el plan, el límite de peticiones y si deja poner cabeceras propias (`List-Unsubscribe` y `List-Unsubscribe-Post`). Si el plan no las permite, se usa la baja nativa de MailerSend y el aviso `activity.unsubscribed` se sincroniza con `email_subscribers`.
 - **Alternativas descartadas:**
-  - `@aws-sdk/client-sesv2`: es una dependencia nueva, y el SMTP basta para enviar.
-  - `aws-sdk` v2: ya no tiene soporte desde 2025.
-  - MailerSend o Brevo: posibles con la misma interfaz. MailerSend ya aparece en el SPF de katuq.com; si Katuq tiene cuenta ahí, se evalúa como plan B.
-- **La cuenta de SES no puede ser la de Red de Acopio.** Se recomienda una cuenta de AWS propia de Katuq, o por lo menos una región distinta con una solicitud de producción honesta que describa el opt-in, la baja y los rebotes (lo que implementa este cambio). La decisión es de Daniel.
+  - SES: la cuenta en producción es de Red de Acopio, y una aprobación nueva tarda.
+  - El SDK `mailersend`: es una dependencia nueva, y `fetch` basta.
+  - El SMTP de MailerSend: no devuelve un id que cruce limpio con los webhooks.
+- Hoy katuq.com no tiene registros de MailerSend. El `_spf.mlsend.com` que aparece en el SPF es un resto de otra configuración, y el dominio que se verifica es `novedades.katuq.com`.
 
 ### 2. Subdominio de envío: `novedades.katuq.com`
 - **Remitente:** `"<Nombre de la tienda>" <<slug>@novedades.katuq.com>`, con `Reply-To` = correo de respuesta de la tienda (D-317) o el contacto del sitio.
-- **Autenticación:** DKIM de SES en el subdominio, MAIL FROM propio (`rebote.novedades.katuq.com`, MX y SPF) para alinear SPF, y DMARC propio con `p=none` al inicio y `quarantine` después del calentamiento.
+- **Autenticación:** los registros que pide MailerSend para el subdominio (SPF, DKIM `mlsend2._domainkey` y return-path propio) y DMARC propio, con `p=none` al inicio y `quarantine` después del calentamiento.
 - **Choque con las tiendas:** como las tiendas viven en `*.katuq.com`, al crear registros bajo `novedades` el comodín deja de responder por ese nombre. Por eso `novedades` entra en `SLUGS_RESERVADOS` y una tarea verifica que ninguna tienda lo use hoy.
 - **Envío bloqueado sin verificación:** hasta que la identidad esté verificada, `proveedorEnvio.listo()` devuelve `false` y bloquea el envío.
 
@@ -75,7 +78,7 @@ La primera implementación usa un **segundo transporte de nodemailer** contra el
   - `supresion: {motivo: rebote|queja, fecha}|null`
   - `creadoEn`, `actualizadoEn`
 - Es por tienda, así que queda aislado por empresa. "Suscritos de la tienda" se resuelve con `company + siteId + estado`.
-- **Supresión global sin colección global:** un rebote definitivo o una queja marca `supresion` en **todas** las filas de ese hash (`where("emailHash","==",h)`). Además, la lista de supresión de SES a nivel de cuenta hace de respaldo. Los transaccionales no la leen.
+- **Supresión global sin colección global:** un rebote definitivo o una queja marca `supresion` en **todas** las filas de ese hash (`where("emailHash","==",h)`). Además, la lista de supresión de MailerSend a nivel de cuenta hace de respaldo. Los transaccionales no la leen.
 
 **`email_campaigns/{id}`**
 - Campos:
@@ -119,7 +122,7 @@ La primera implementación usa un **segundo transporte de nodemailer** contra el
 | Semana 3 | 5.000 |
 | Después | 15.000 |
 
-El tope se ajusta por variable de entorno, y la cuota de SES se pide acorde.
+El tope se ajusta por variable de entorno, dentro de lo que permita el plan de MailerSend.
 
 ### 5. Contenido: HTML armado una vez por campaña
 - `utils/campanaCorreo.js` es un módulo puro. Arma el HTML desde los bloques con la envoltura de `siteCorreos` (se exporta `envoltura`).
@@ -134,12 +137,17 @@ El tope se ajusta por variable de entorno, y la cuota de SES se pide acorde.
 - **Aperturas:** píxel `GET /v1/marketing/email/o/:token.gif`, marcado como "aproximadas" por la protección de privacidad de Apple Mail.
 - **Ventas atribuidas:** se calculan **al leer** las métricas, sin escribir nada en pedidos. Cuentan los pedidos con `campana.utm_campaign == id`, más los pedidos del mismo hash dentro de los 7 días siguientes a su clic.
 
-### 7. Rebotes y quejas: webhook SNS
+### 7. Rebotes y quejas: webhook de MailerSend
 - `POST /v1/marketing/email/eventos` (sin sesión, como todo webhook):
-  1. Valida la firma de SNS: el certificado tiene que venir de `sns.<region>.amazonaws.com` y el `TopicArn` tiene que ser el configurado.
-  2. Guarda el crudo en `rawIntegrationEvents` con docId `ses_<MessageId>` y `create()`. Si el mensaje llega repetido, no se procesa dos veces (Artículos V y X).
-  3. Aplica `entregado`, `rebotado` (solo los `Permanent` suprimen) o `queja` (suprime).
-- La suscripción de SNS se confirma solo si el `TopicArn` coincide.
+  1. Valida la cabecera `Signature`: HMAC-SHA256 del cuerpo crudo con `MAILERSEND_WEBHOOK_SECRET`, comparado en tiempo constante. Sin firma válida responde 401 (Artículo X).
+  2. Guarda el crudo en `rawIntegrationEvents` con docId `mailersend_<id del evento>` y `create()`. Si el aviso llega repetido, no se procesa dos veces (Artículo V).
+  3. Aplica los eventos:
+     - `activity.delivered` → entregado;
+     - `activity.hard_bounced` → rebotado y suprimido;
+     - `activity.soft_bounced` → solo se cuenta;
+     - `activity.spam_complaint` → queja y suprimido;
+     - `activity.unsubscribed` → baja.
+- La fila se encuentra por `messageId`.
 
 ### 8. Baja
 - **Enlace visible:** `https://<tienda>/baja?t=<token>` con token HMAC de `siteId.emailHash`. `baja` entra en `RUTAS_PAGINA_RESERVADAS`. La página confirma la baja y ofrece deshacerla.
@@ -182,7 +190,7 @@ El tope se ajusta por variable de entorno, y la cuota de SES se pide acorde.
 ## Risks / Trade-offs
 
 - **[Los transaccionales ya fallan DMARC]** → Prerrequisito de Daniel: DKIM de Google más SPF con Google. Sin eso no se enciende nada.
-- **[AWS no aprueba o tarda con SES]** → La interfaz permite MailerSend o Brevo sin tocar el resto.
+- **[El plan de MailerSend limita la velocidad o las cabeceras]** → La velocidad es configurable, se pueden usar lotes y la baja nativa del proveedor; y la interfaz permite cambiar de proveedor sin tocar el resto.
 - **[Pocos suscritos al principio]** (solo cuenta la autorización desde hoy) → Se enciende primero la captura en las tiendas, semanas antes de las campañas. No se permite importar listas en esta fase.
 - **[Doble envío por reinicio o por dos instancias]** → docId determinista, arrendamiento por campaña y el estado `incierto` sin reintento.
 - **[El checkout se rompe por la casilla]** → Escritura aparte con `try/catch` y una prueba de pedido de punta a punta antes del despliegue. Venta asistida y POS no se tocan.
@@ -192,19 +200,22 @@ El tope se ajusta por variable de entorno, y la cuota de SES se pide acorde.
 
 ## Migration Plan
 
-1. **Daniel:** arreglar DNS y Google para katuq.com; decidir la cuenta de SES; pedir producción; publicar los registros de `novedades.katuq.com`.
+1. **Daniel:** arreglar DNS y Google para katuq.com. En MailerSend: agregar y verificar `novedades.katuq.com` con sus registros de DNS, crear el token de API y el webhook, y cargar `MAILERSEND_API_TOKEN` y `MAILERSEND_WEBHOOK_SECRET` en prod.
 2. **Desplegar la captura de autorización y la baja** en las tiendas. No manda nada; solo junta suscritos.
-3. **Desplegar las campañas con la bandera apagada**, y probar en FLORECER con direcciones internas (sandbox de SES).
+3. **Desplegar las campañas con la bandera apagada**, y probar en FLORECER con direcciones internas.
 4. **Encender para Julsmind y FLORECER**, luego para cada comercio que lo pida, siguiendo el calentamiento.
 5. **Fase 2:** primero "Volvió", después "Bienvenida" y "Te extrañamos".
 - **Reversa:** `EMAIL_CAMPAIGNS_ENABLED=false` y `pm2 reload --update-env`. Las campañas quedan pausadas, no perdidas, y las autorizaciones se conservan.
 - **Retiro de la bandera:** dueño Daniel, retiro el 2027-01-31. Después queda solo el interruptor operativo, documentado en el contrato.
 
+## Decisiones de Daniel (2026-09-23)
+
+- Propuesta aprobada completa, con las tres colecciones.
+- Proveedor: MailerSend.
+- Cupos: 500 al mes en el plan gratis y 5.000 en premium, tope de 5.000 por campaña, sin cobro.
+
 ## Open Questions
 
-1. ¿Cuenta de AWS propia de Katuq para SES, o región nueva en la cuenta actual? ¿Katuq tiene cuenta en MailerSend (está en el SPF)?
-2. ¿`novedades.katuq.com` como subdominio de envío?
-3. ¿Está bien el remitente "Nombre de la tienda" `<slug@novedades.katuq.com>`, con las respuestas al comercio?
-4. Cupos por plan. Propuesta: gratis 500 al mes, premium 5.000 al mes, tope por campaña de 5.000, sin cobro por ahora.
-5. ¿Se aprueban `email_campaigns`, `email_usage` y `email_subscribers`?
-6. Validación legal: textos de autorización, horario y frecuencia (Ley 1581 de 2012 y Ley 2300 de 2023).
+1. El subdominio (`novedades.katuq.com`) y el remitente ("Nombre de la tienda" `<slug@novedades.katuq.com>`, respuestas al comercio) se toman como vienen, salvo que Daniel diga otra cosa.
+2. Validación legal de los textos de autorización, del horario y de la frecuencia (Ley 1581 de 2012 y Ley 2300 de 2023), antes de encender los envíos.
+3. El plan de la cuenta de MailerSend: velocidad y cabeceras propias.

@@ -1,8 +1,9 @@
 ## 0. Prerrequisitos (Daniel; sin esto no se enciende nada)
 
 - [ ] 0.1 Activar DKIM de Google Workspace para katuq.com y publicar `google._domainkey`. Agregar `include:_spf.google.com` al SPF. Llevar el `rua` de DMARC a un buzón de Katuq. Verificar en los encabezados de un correo real que SPF, DKIM y DMARC den `pass`.
-- [ ] 0.2 Decidir la cuenta de envío masivo (preguntas abiertas 1–3). Pedir producción de SES con el caso de uso real de Katuq (autorización previa, baja de un clic, rebotes y quejas).
-- [ ] 0.3 Aprobar las colecciones `email_campaigns`, `email_usage` y `email_subscribers`, y los cupos por plan (preguntas 4–5).
+- [x] 0.2a Proveedor decidido: MailerSend (Daniel, 2026-09-23).
+- [ ] 0.2 En MailerSend: agregar y verificar `novedades.katuq.com` (SPF, DKIM y return-path en el DNS), apagar su seguimiento de aperturas y clics, crear el token de API y el webhook (eventos delivered, hard_bounced, soft_bounced, spam_complaint, unsubscribed), cargar `MAILERSEND_API_TOKEN` y `MAILERSEND_WEBHOOK_SECRET` en prod, y confirmar el plan: velocidad y cabeceras propias.
+- [x] 0.3 Colecciones `email_campaigns`, `email_usage` y `email_subscribers` aprobadas; cupos de 500 gratis y 5.000 premium, tope de 5.000 por campaña, sin cobro (Daniel, 2026-09-23).
 - [ ] 0.4 Validar con un asesor el texto de autorización, la política de privacidad y el horario y la frecuencia (pregunta 6).
 - [ ] 0.5 Registrar la decisión en `specs/CONTRACT.md`, incluida la excepción al Artículo IX (Angular 14).
 
@@ -21,9 +22,9 @@
 
 ## 2. Proveedor, entregabilidad y eventos
 
-- [ ] 2.1 Prueba de contrato del webhook `POST /v1/marketing/email/eventos`: firma SNS válida, inválida y repetida; confirmación de suscripción solo con el `TopicArn` configurado.
-- [ ] 2.2 `services/marketing/proveedorEnvio.js`: interfaz y adaptador SES por SMTP con nodemailer, con `listo()`, configuration set y etiquetas. Sin dependencias nuevas.
-- [ ] 2.3 Webhook de eventos: guarda el crudo en `rawIntegrationEvents` (`ses_<MessageId>`, `create()`) antes de procesar. Aplica entregado, rebote permanente o queja, y la supresión en todas las filas del hash.
+- [ ] 2.1 Prueba de contrato del webhook `POST /v1/marketing/email/eventos`: firma de MailerSend válida, inválida, ausente y repetida.
+- [ ] 2.2 `services/marketing/proveedorEnvio.js`: interfaz y adaptador de MailerSend por HTTP con `fetch` nativo, con `listo()`, `messageId` desde `X-Message-Id`, velocidad configurable y errores transitorios (429 y 5xx) distinguidos de los definitivos. Sin dependencias nuevas.
+- [ ] 2.3 Webhook de eventos: guarda el crudo en `rawIntegrationEvents` (`mailersend_<id>`, `create()`) antes de procesar. Aplica entregado, rebote definitivo, queja y baja, y la supresión en todas las filas del hash.
 - [ ] 2.4 Módulo puro `utils/ventanaEnvio.js`: horario permitido y festivos de Colombia (Ley Emiliani), con el siguiente horario válido. Pruebas con Semana Santa, festivos trasladados y sábado a las 15:00.
 - [ ] 2.5 Módulo puro `utils/cuposCorreo.js`: cupo mensual por plan (con `subscriptionValidator`), tope por campaña, tope diario por etapa de calentamiento y regla de pausa automática. Con pruebas.
 
@@ -51,7 +52,7 @@
 
 ## 5. Encendido controlado
 
-- [ ] 5.1 Desplegar con `EMAIL_CAMPAIGNS_ENABLED=false`. Encender solo para FLORECER y enviar a direcciones internas: SPF, DKIM y DMARC en `pass`, baja de un clic en Gmail, rebote simulado de SES → suprimido.
+- [ ] 5.1 Desplegar con `EMAIL_CAMPAIGNS_ENABLED=false`. Encender solo para FLORECER y enviar a direcciones internas: SPF, DKIM y DMARC en `pass`, baja de un clic en Gmail, rebote de prueba → suprimido.
 - [ ] 5.2 Campaña real pequeña de Julsmind o FLORECER. Revisar métricas, atribución y pausa automática forzada.
 - [ ] 5.3 Registrar el resultado en CONTRACT.md y en la memoria. Abrir por comercio, siguiendo el calentamiento.
 

@@ -7297,3 +7297,10 @@ Propuesta: `openspec/changes/tienda-carrito-abandonado/` (backend). Backend `91d
 Pide aprobar **tres colecciones nuevas**: `email_campaigns`, `email_usage` y `email_subscribers`. Registra una excepción al Artículo IX: Angular 14 no tiene signals ni `@if`, así que se sigue el estilo del módulo.
 
 **Estado**: propuesta escrita y validada; **no se implementa nada hasta que Daniel la apruebe y responda las 6 preguntas abiertas del diseño**. El prerrequisito de DNS (hallazgo 1) vale por sí solo, haya o no campañas.
+
+**Aprobada por Daniel el 2026-09-23:**
+- la propuesta completa, con las tres colecciones;
+- el proveedor es **MailerSend** (por su API, con el `fetch` de Node 20 y sin dependencias nuevas);
+- los cupos: 500 al mes en el plan gratis y 5.000 en premium, tope de 5.000 por campaña, sin cobro.
+
+El subdominio `novedades.katuq.com` y el remitente con el nombre de la tienda se toman como vienen. **Se despliega después de la feria.** Para que el despliegue del MCP de otra sesión no se lo lleve antes de tiempo (como pasó con los correos personalizables), el código vive en ramas propias, `feature/campanas-correo`, en el backend y en el front, y no en `backend-aws-security`.

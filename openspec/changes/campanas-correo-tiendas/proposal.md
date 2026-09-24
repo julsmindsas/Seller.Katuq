@@ -71,7 +71,7 @@ A esto se suma la ley colombiana. La Ley 1581 de 2012 exige autorización previa
   - activar DKIM de Google Workspace para katuq.com;
   - agregar `include:_spf.google.com` al SPF;
   - llevar los reportes DMARC a un buzón de Katuq;
-  - decidir la cuenta de envío masivo (recomendado: SES en una cuenta o región propia de Katuq, con su propio caso de uso) y publicar los registros del subdominio de envío.
+  - en MailerSend (el proveedor que eligió Daniel el 23-sep): verificar el subdominio de envío con sus registros de DNS y crear el token y el webhook.
 - **Backend** (`katuq_admin_back_firebase/functions`):
   - rutas nuevas bajo `/v1/marketing/email/*` con autenticación y aislamiento por empresa;
   - un webhook de rebotes y quejas firmado, que guarda el evento crudo en `rawIntegrationEvents` antes de procesarlo;
