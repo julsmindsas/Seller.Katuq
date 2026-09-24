@@ -7278,3 +7278,22 @@ Propuesta: `openspec/changes/tienda-carrito-abandonado/` (backend). Backend `91d
 **Estado**: listo en las dos ramas (backend `685eea0`, front `cc472f40`), **sin desplegar por decisión de Daniel: después de la feria**, junto con la tanda del MCP de la otra sesión. Orden: backend primero, luego front.
 
 **Actualización 2026-09-23 16:32 UTC — el backend quedó en producción sin haberlo decidido esta sesión.** Daniel le pidió a la otra sesión desplegar el MCP y el `git pull` se llevó la rama entera (prod en `326bccc`, que tiene `685eea0` debajo): otra vez la unidad de despliegue es la rama. Verificado en prod a las 16:40 UTC: los 6 correos se arman bien con el Node de producción (color de la tienda, sin llaves sin llenar; apagar un correo y el asunto propio se respetan); portada, `/llms.txt`, `robots`, `sitemap` y `feed.xml` en 200 sin ETag (sin el 304 que rompía el nonce); `/pagar` con firma mala y `/gracias` sin pedido dan 404 a propósito, y `/gracias?pedido=` da 200; los endpoints nuevos y `/v1/prospectos` responden 401 sin token; cero errores de sitios o correos en el log desde el despliegue. Lo que ya cambió para los compradores: los correos salen con el color de la tienda y las respuestas le llegan al comercio (`contacto.email` del sitio) en vez de a Katuq. **El front con la sección NO ha salido** (el bundle publicado no la trae): los comercios todavía no pueden configurar nada. Ojo: como el backend ya responde, el próximo release del front desde `feature/venta-asistida-mejorada` la enciende.
+
+## D-318 (2026-09-23) — PROPUESTA: campañas de correo y remarketing de las tiendas (pendiente de aprobación de Daniel)
+
+**Contexto.** Daniel: "poder enviar y hacer remarketing" por correo. Las tiendas ya juntan contactos (compradores, carritos, "Avísame", boletín), pero no hay envío masivo, ni autorización de publicidad, ni baja; el boletín guarda correos a los que nadie les escribe. La única difusión existente es la de WhatsApp en el módulo Marketing (D-092, D-096, D-098).
+
+**Hallazgos que condicionan todo (verificados el 23-sep):**
+1. Los correos transaccionales de `notificaciones@katuq.com` fallan la verificación de remitente: SPF `softfail` (el SPF no incluye a Google), DKIM solo con el dominio genérico `gappssmtp.com` y **DMARC `fail`**. Los reportes DMARC van a `lovable.dev`. Esto afecta HOY la entrega de confirmaciones de pedido y pago de todos los comercios; se arregla en DNS y en la consola de Google (Daniel).
+2. SES está en producción en la cuenta 011528299077 (`us-east-1`), pero aprobado para Red de Acopio como "solo transaccional, nunca publicidad". No se usa para campañas de Katuq.
+3. La política de privacidad que se genera para las tiendas declara que los datos se usan "únicamente" para el pedido: escribir publicidad sin una autorización nueva va contra la Ley 1581 de 2012.
+
+**Propuesta** (`openspec/changes/campanas-correo-tiendas/`):
+- autorización expresa por tienda, con evidencia, y baja de un clic;
+- campañas en el módulo Marketing, con segmentos, bloques, vista previa, prueba, horario legal, métricas y ventas atribuidas;
+- envío por un proveedor masivo detrás de una interfaz (SES por SMTP en una cuenta propia de Katuq, recomendado), desde `novedades.katuq.com`, con cupos, calentamiento, pausa automática e idempotencia;
+- fase 2: "Volvió", "Bienvenida" y "Te extrañamos".
+
+Pide aprobar **tres colecciones nuevas**: `email_campaigns`, `email_usage` y `email_subscribers`. Registra una excepción al Artículo IX: Angular 14 no tiene signals ni `@if`, así que se sigue el estilo del módulo.
+
+**Estado**: propuesta escrita y validada; **no se implementa nada hasta que Daniel la apruebe y responda las 6 preguntas abiertas del diseño**. El prerrequisito de DNS (hallazgo 1) vale por sí solo, haya o no campañas.
