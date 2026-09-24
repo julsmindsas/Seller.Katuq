@@ -459,7 +459,7 @@
             </div>
           </div>
         </ng-container>
-        <!-- NIT -->
+        <!-- Cédula o NIT -->
         <ng-container *ngIf="registrationIndex === 1">
           <div class="survey-question">
             <p style="font-size: 2rem; margin-bottom:10px;">
@@ -481,6 +481,10 @@
             <div *ngIf="getFieldError('nit')" class="error-message">
               {{ getFieldError('nit') }}
             </div>
+            <p *ngIf="!getFieldError('nit') && !avisoDocumento" class="document-help">Si no tienes NIT, pon tu cédula.</p>
+            <p *ngIf="avisoDocumento" class="document-warning" role="status">
+              ¿Seguro que es tu número? Parece una serie. Si no tienes NIT, pon tu cédula. Si es correcto, sigue sin problema.
+            </p>
           </div>
         </ng-container>
         <!-- Correo -->

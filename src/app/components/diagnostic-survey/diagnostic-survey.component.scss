@@ -2427,3 +2427,21 @@
 @keyframes entrando-giro {
     to { transform: rotate(360deg); }
 }
+
+/* ─── "Cédula o NIT": ayuda y aviso que no bloquea ─── */
+.document-help {
+    margin: 6px 0 0;
+    color: #8f8bab;
+    font-size: 0.95rem;
+}
+
+.document-warning {
+    margin: 8px 0 0;
+    padding: 10px 14px;
+    border-radius: 11px;
+    background: #FFF1DF;
+    color: #9a5a00;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.45;
+}

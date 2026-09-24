@@ -28,6 +28,38 @@ export function reglasContrasena(valor: string): { largo: boolean; letra: boolea
     };
 }
 
+/** Dígito de verificación DIAN de un NIT de 9 dígitos + DV (igual al backend). */
+function nitConDigitoValido(digitos: string): boolean {
+    if (digitos.length < 9 || digitos.length > 10) return false;
+    const pesos = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+    const base = digitos.slice(0, -1).split('').reverse();
+    const suma = base.reduce((acc, d, i) => acc + Number(d) * pesos[i], 0);
+    const residuo = suma % 11;
+    return (residuo > 1 ? 11 - residuo : residuo) === Number(digitos.slice(-1));
+}
+
+/**
+ * "Cédula o NIT": ¿el número parece inventado? Solo para el aviso amable (no
+ * bloquea). Misma regla que `documentoPareceInventado` del backend: todos los
+ * dígitos iguales o una serie de 7+ seguidos (123456778 sí, 43123456 no), y un
+ * NIT con dígito de verificación válido nunca cuenta.
+ */
+export function documentoPareceInventado(valor: string): boolean {
+    const d = (valor || '').replace(/\D/g, '');
+    if (d.length < 6 || nitConDigitoValido(d)) return false;
+    if (/^(\d)\1+$/.test(d)) return true;
+    let sube = 1;
+    let baja = 1;
+    for (let i = 1; i < d.length; i++) {
+        const actual = Number(d[i]);
+        const previo = Number(d[i - 1]);
+        sube = actual === (previo + 1) % 10 ? sube + 1 : 1;
+        baja = actual === (previo + 9) % 10 ? baja + 1 : 1;
+        if (sube >= 7 || baja >= 7) return true;
+    }
+    return false;
+}
+
 function validarContrasenaRegistro(control: AbstractControl): ValidationErrors | null {
     const valor: string = control.value || '';
     if (!valor) return null; // de eso se encarga `required`
@@ -205,7 +237,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     // de una vez al terminar (D-319).
     registrationQuestions = [
         { formControl: 'nombre', question: '¿Cuál es el nombre de tu empresa?', placeholder: 'Nombre de la empresa' },
-        { formControl: 'nit', question: '¿Cuál es tu NIT o documento de identidad?', placeholder: 'NIT o cédula' },
+        { formControl: 'nit', question: '¿Cuál es tu cédula o NIT?', placeholder: 'Cédula o NIT' },
         { formControl: 'correo', question: '¿Cuál es tu correo electrónico?', placeholder: 'correo@ejemplo.com' },
         { formControl: 'celular', question: '¿Cuál es tu número de celular?', placeholder: 'Número de celular' },
         { formControl: 'password', question: 'Crea tu contraseña', placeholder: 'Mínimo 8 caracteres' }
@@ -239,7 +271,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         this.mainForm = this.fb.group({
             registration: this.fb.group({
                 nombre: ['', [Validators.required, Validators.minLength(2), Validators.pattern('^[a-zA-ZÀ-ÿ\\s]+$')]],
-                nit: ['', [Validators.required, Validators.pattern('^[0-9]{8,11}$')]],
+                // Cédulas de 6 y 7 dígitos también (el backend acepta de 6 a 15).
+                nit: ['', [Validators.required, Validators.pattern('^[0-9]{6,11}$')]],
                 correo: ['', [Validators.required, Validators.email, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')]],
                 celular: ['', [Validators.required, Validators.pattern('^3[0-9]{9}$')]],
                 // Nunca se guarda en el borrador (saveProgress la excluye).
@@ -462,7 +495,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     private getRequiredMessage(fieldName: string): string {
         const messages: { [key: string]: string } = {
             'nombre': 'El nombre de la empresa es requerido',
-            'nit': 'El NIT o documento de identidad es requerido',
+            'nit': 'Escribe tu cédula o NIT',
             'correo': 'El correo electrónico es requerido',
             'celular': 'El número de celular es requerido',
             'password': 'Crea una contraseña para entrar'
@@ -473,7 +506,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     private getPatternMessage(fieldName: string): string {
         const messages: { [key: string]: string } = {
             'nombre': 'Solo se permiten letras y espacios',
-            'nit': 'Debe contener entre 8 y 11 dígitos',
+            'nit': 'Debe tener entre 6 y 11 números, sin puntos ni guiones',
             'correo': 'Ingresa un correo válido (ejemplo@dominio.com)',
             'celular': 'Debe ser un celular colombiano válido (3XXXXXXXXX)'
         };
@@ -501,6 +534,12 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         const currentField = this.registrationQuestions[this.registrationIndex].formControl;
         const field = this.mainForm.get(`registration.${currentField}`);
         return field ? field.valid : false;
+    }
+
+    /** Aviso amable, no bloquea: el número parece una serie o dígitos repetidos. */
+    get avisoDocumento(): boolean {
+        const control = this.mainForm.get('registration.nit');
+        return !!control && control.valid && documentoPareceInventado(control.value);
     }
 
     get reglasDeContrasena() {
