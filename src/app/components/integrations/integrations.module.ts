@@ -36,6 +36,7 @@ import { IntegrationManualControlService } from './integration-manual-control.se
 // Siigo Components
 import { SiigoConfigComponent } from './siigo-config/siigo-config.component';
 import { SiigoMappingComponent } from './siigo-config/siigo-mapping/siigo-mapping.component';
+import { SiigoFacturacionPorTipoComponent } from './siigo-facturacion-por-tipo/siigo-facturacion-por-tipo.component';
 
 // Shopify Dashboard Components
 import { ShopifyDashboardComponent } from './shopify-dashboard/shopify-dashboard.component';
@@ -92,6 +93,7 @@ const routes: Routes = [
     CredentialStrengthIndicatorComponent,
     SiigoConfigComponent,
     SiigoMappingComponent,
+    SiigoFacturacionPorTipoComponent,
     ShopifyDashboardComponent,
     SyncLogsComponent,
     FieldMappingComponent,

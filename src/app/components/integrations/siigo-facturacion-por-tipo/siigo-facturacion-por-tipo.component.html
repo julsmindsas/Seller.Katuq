@@ -1,0 +1,53 @@
+<div class="fpt">
+  <p class="fpt-intro">
+    Escoge el centro de costo y el vendedor con los que Katuq factura en cada tipo de factura de tu SIIGO.
+  </p>
+
+  <div *ngIf="cargando" class="fpt-estado">
+    <i class="fa fa-spinner fa-spin"></i> Leyendo tu SIIGO…
+  </div>
+
+  <div *ngIf="!cargando && errorCarga" class="fpt-estado fpt-estado--error">
+    <span>{{ errorCarga }}</span>
+    <button type="button" class="fpt-btn fpt-btn--ghost" (click)="cargar()">Reintentar</button>
+  </div>
+
+  <ng-container *ngIf="!cargando && !errorCarga">
+    <div class="fpt-fila" *ngFor="let t of tipos">
+      <div class="fpt-tipo">
+        <span class="fpt-nombre">{{ t.nombre }}</span>
+        <div class="fpt-chips">
+          <span class="fpt-chip" *ngIf="t.electronica">Electrónica</span>
+          <span class="fpt-chip" *ngIf="t.vendedorPorProducto">Vendedor por producto</span>
+          <span class="fpt-chip" *ngIf="t.centroCostoObligatorio">Centro de costo obligatorio</span>
+        </div>
+      </div>
+
+      <div class="fpt-campos">
+        <label class="fpt-campo">
+          <span class="fpt-label">Centro de costo</span>
+          <select [(ngModel)]="ajustes[t.id].costCenterId" [ngModelOptions]="{ standalone: true }" [class.fpt-falta]="faltaCentro(t)">
+            <option [ngValue]="null">Sin centro de costo</option>
+            <option *ngFor="let c of centros" [ngValue]="c.id">{{ c.nombre }}</option>
+          </select>
+          <small class="fpt-aviso" *ngIf="faltaCentro(t)">SIIGO exige centro de costo en este tipo de factura.</small>
+        </label>
+
+        <label class="fpt-campo">
+          <span class="fpt-label">Vendedor</span>
+          <select [(ngModel)]="ajustes[t.id].sellerId" [ngModelOptions]="{ standalone: true }">
+            <option [ngValue]="null">El primero activo en SIIGO</option>
+            <option *ngFor="let v of vendedores" [ngValue]="v.id">{{ v.nombre }}</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="fpt-acciones">
+      <button type="button" class="fpt-btn" [disabled]="guardando" (click)="guardar()">
+        <i class="fa" [class.fa-spinner]="guardando" [class.fa-spin]="guardando" [class.fa-check]="!guardando"></i>
+        Guardar facturación por tipo
+      </button>
+    </div>
+  </ng-container>
+</div>

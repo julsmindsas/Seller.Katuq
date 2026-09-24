@@ -978,6 +978,14 @@ export class IntegrationsService {
     );
   }
 
+  /** Ticket 1052: vendedores activos de Siigo, para el vendedor de cada tipo de factura. */
+  getSiigoSellers(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/sellers`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
   /**
    * Obtener tipos de documento de Siigo
    */

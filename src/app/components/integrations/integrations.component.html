@@ -2225,6 +2225,18 @@
             </div>
           </div>
 
+          <!-- Facturación por tipo de factura (ticket 1052): solo con SIIGO ya conectado -->
+          <div class="card mb-4" *ngIf="editingIntegrationId">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-file-invoice me-2"></i>Facturación por tipo de factura
+              </h6>
+            </div>
+            <div class="card-body">
+              <app-siigo-facturacion-por-tipo></app-siigo-facturacion-por-tipo>
+            </div>
+          </div>
+
           <!-- Opciones de Automatización -->
           <div class="card mb-4">
             <div class="card-header bg-light">
