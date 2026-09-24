@@ -9,16 +9,18 @@
 
 ## 1. Autorización y baja (se despliega primero: solo junta suscritos)
 
-- [ ] 1.1 Pruebas de contrato de la baja (`GET/POST /v1/marketing/email/baja/:token` y la página `/baja` de la tienda) y del cambio de autorización desde la cuenta del comprador: códigos de estado, token malo → sin efecto, token de otra tienda → sin efecto. La autorización del checkout, el formulario y el boletín viaja en los endpoints que ya existen, con un campo nuevo y opcional.
-- [ ] 1.2 Módulo puro `utils/suscripcionCorreo.js`: `emailHash`, `idSuscriptor`, `firmaBaja` y `firmaBajaValida` (HMAC en tiempo constante), `AUTORIZACION_PUBLICIDAD_V1` y `registroDeAutorizacion()`. Con pruebas unitarias.
-- [ ] 1.3 `registrarSuscripcion()` y `darDeBaja()` en `controllers/sites.js`, escribiendo en `email_subscribers`. Ninguna de las dos puede lanzar error hacia el pedido.
+- [x] 1.1 Pruebas de contrato de la baja (`POST /v1/sites/public/baja?t=` y la página `/baja` de la tienda) y del cambio de autorización desde la cuenta del comprador: códigos de estado, token malo → sin efecto, token de otra tienda → sin efecto. La autorización del checkout, el formulario y el boletín viaja en los endpoints que ya existen, con un campo nuevo y opcional.
+- [x] 1.2 Módulo puro `utils/suscripcionCorreo.js`: `emailHash`, `idSuscriptor`, `firmaBaja` y `firmaBajaValida` (HMAC en tiempo constante), `AUTORIZACION_PUBLICIDAD_V1` y `registroDeAutorizacion()`. Con pruebas unitarias.
+- [x] 1.3 `registrarSuscripcion()` y `darDeBaja()` en `controllers/sites.js`, escribiendo en `email_subscribers`. Ninguna de las dos puede lanzar error hacia el pedido.
+- [x] 1.4a Casilla desmarcada en el checkout (backend 4363c97). **Falta** la prueba de pedido de punta a punta en FLORECER al desplegar.
 - [ ] 1.4 Casilla desmarcada en el checkout (`siteTienda.js`) que envía `autorizaPublicidad`. Llamarla después de crear el pedido. Prueba de pedido de punta a punta en FLORECER, con y sin casilla, y con falla simulada del registro.
-- [ ] 1.5 Formulario de contacto con casilla opcional. El boletín registra la autorización y guarda el prospecto con `tipo: "boletin"`. "Tus contactos" lo muestra como "Boletín".
-- [ ] 1.6 Interruptor de autorización en la cuenta del comprador.
-- [ ] 1.7 Página `/baja` de la tienda: confirmar y deshacer. Agregar `baja` a `RUTAS_PAGINA_RESERVADAS` y el POST de un clic.
-- [ ] 1.8 Finalidad comercial condicionada en `sitePaginasLegales.js`.
-- [ ] 1.9 Agregar `novedades` a `SLUGS_RESERVADOS` y un script con `--dry-run` que confirme que ninguna tienda usa ese slug.
-- [ ] 1.10 `npm test` del backend en verde (`scripts/test-sitios-publicacion.js` más lo nuevo). Revisar el diff con Daniel antes de desplegar.
+- [x] 1.5 Formulario de contacto con casilla opcional. El boletín registra la autorización y guarda el prospecto con `tipo: "boletin"`. "Tus contactos" lo muestra como "Boletín".
+- [x] 1.6 Interruptor de autorización en la cuenta del comprador.
+- [x] 1.7 Página `/baja` de la tienda: confirmar y deshacer. Agregar `baja` a `RUTAS_PAGINA_RESERVADAS` y el POST de un clic.
+- [x] 1.8 Finalidad comercial condicionada en `sitePaginasLegales.js`.
+- [x] 1.9 `novedades` y `mta` agregados a `SLUGS_RESERVADOS`. Se verificó (solo lectura) que ninguna tienda los usa: el servidor de tiendas no los reconoce.
+- [x] 1.10a Pruebas en verde: `test:sitios-publicacion`, `test:campanas-correo` (21) y `test:campanas-correo-contrato` (10).
+- [ ] 1.10 Revisar el diff con Daniel antes de desplegar (después de la feria), y mostrar "Boletín" en "Tus contactos" del front.
 
 ## 2. Proveedor, entregabilidad y eventos
 

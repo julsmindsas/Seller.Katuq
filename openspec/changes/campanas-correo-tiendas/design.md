@@ -150,11 +150,15 @@ El tope se ajusta por variable de entorno, dentro de lo que permita el plan de M
 - La fila se encuentra por `messageId`.
 
 ### 8. Baja
-- **Enlace visible:** `https://<tienda>/baja?t=<token>` con token HMAC de `siteId.emailHash`. `baja` entra en `RUTAS_PAGINA_RESERVADAS`. La página confirma la baja y ofrece deshacerla.
+- **Enlace visible:** `https://<tienda>/baja?t=<token>`, con token HMAC de `siteId.emailHash` (`utils/suscripcionCorreo.js`). `baja` entra en `RUTAS_PAGINA_RESERVADAS`.
+  - La página envía sola un formulario al cargar. Así, un escáner de enlaces que solo pide la página no da de baja a nadie. Sin JavaScript queda el botón.
+  - Después confirma la baja y ofrece deshacerla.
 - **Un clic (RFC 8058):**
-  - `List-Unsubscribe: <https://back.katuq.com/v1/marketing/email/baja/<token>>`
+  - `List-Unsubscribe: <https://back.katuq.com/v1/sites/public/baja?t=<token>>`
   - `List-Unsubscribe-Post: List-Unsubscribe=One-Click`
-  - El `POST` da de baja sin pedir nada más.
+  - El `POST` da de baja sin pedir nada más y responde 200.
+  - La página usa el mismo endpoint con `volver=1`, que redirige a `/baja` con el resultado.
+- La baja va por el `siteId` del token y no por el slug: si el comercio renombra su tienda, las bajas de correos viejos siguen sirviendo.
 
 ### 9. Autorización en la tienda
 - **Checkout:** `siteTienda.js` pinta la casilla desmarcada, con el texto versionado `AUTORIZACION_PUBLICIDAD_V1` y el enlace a la política. El pedido viaja con `autorizaPublicidad: true|false`.
