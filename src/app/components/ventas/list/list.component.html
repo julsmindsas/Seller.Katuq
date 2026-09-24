@@ -2494,12 +2494,31 @@
         <div class="form-group mb-3">
             <label for="facturaDocumentType">Tipo de documento <span class="text-danger">*</span></label>
             <select id="facturaDocumentType" class="form-select form-control"
-                    [(ngModel)]="facturaDocumentTypeId">
+                    [(ngModel)]="facturaDocumentTypeId"
+                    (ngModelChange)="onFacturaDocumentTypeChange()">
                 <option [ngValue]="null" disabled>Seleccione un tipo de documento</option>
                 <option *ngFor="let dt of facturaDocumentTypes" [ngValue]="dt.id">
                     {{ dt.name || dt.nombre || ('Documento ' + dt.id) }}
                 </option>
             </select>
+        </div>
+
+        <!-- Ticket 1052: vendedor y centro de costo, ya marcados; se pueden cambiar en cada factura -->
+        <div class="row g-2 mb-3" *ngIf="facturaDocumentTypeId && (facturaVendedores.length || facturaUsaCentroCosto)">
+            <div class="col-12" [class.col-sm-6]="facturaUsaCentroCosto" *ngIf="facturaVendedores.length">
+                <label for="facturaVendedor">Vendedor</label>
+                <select id="facturaVendedor" class="form-select form-control" [(ngModel)]="facturaVendedorId">
+                    <option [ngValue]="null">Automático</option>
+                    <option *ngFor="let v of facturaVendedores" [ngValue]="v.id">{{ v.nombre }}</option>
+                </select>
+            </div>
+            <div class="col-12" [class.col-sm-6]="facturaVendedores.length" *ngIf="facturaUsaCentroCosto">
+                <label for="facturaCentroCosto">Centro de costo <span class="text-danger" *ngIf="facturaExigeCentroCosto">*</span></label>
+                <select id="facturaCentroCosto" class="form-select form-control" [(ngModel)]="facturaCentroCostoId">
+                    <option [ngValue]="null" [disabled]="facturaExigeCentroCosto">{{ facturaExigeCentroCosto ? 'Seleccione un centro de costo' : 'Sin centro de costo' }}</option>
+                    <option *ngFor="let c of facturaCentrosCosto" [ngValue]="c.id">{{ c.nombre }}</option>
+                </select>
+            </div>
         </div>
 
         <!-- 2. Forma de pago (deshabilitada hasta elegir tipo de documento) -->

@@ -978,7 +978,7 @@ export class IntegrationsService {
     );
   }
 
-  /** Ticket 1052: vendedores activos de Siigo, para el vendedor de cada tipo de factura. */
+  /** Ticket 1052: vendedores activos de Siigo, para escoger el vendedor al facturar. */
   getSiigoSellers(): Observable<any> {
     return this.http.get<any>(
       `${environment.urlApi}/v1/accounting/siigo/sellers`,
@@ -1193,6 +1193,9 @@ export class IntegrationsService {
     // Ticket 1054: observaciones (orden de compra, notas) y retenciones elegidas.
     if (options?.observaciones) body.observaciones = options.observaciones;
     if (Array.isArray(options?.retenciones) && options.retenciones.length) body.retenciones = options.retenciones;
+    // Ticket 1052: vendedor y centro de costo elegidos en la ventana de factura.
+    if (options?.sellerId) body.sellerId = options.sellerId;
+    if (options?.costCenterId) body.costCenterId = options.costCenterId;
 
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order-async`,

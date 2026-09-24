@@ -139,6 +139,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Ticket 1054: retenciones del SIIGO de la empresa, agrupadas por tipo, y la elegida en cada una. */
   facturaRetencionesPorTipo: { tipo: string; etiqueta: string; opciones: { id: number; name: string }[] }[] = [];
   facturaRetencionSel: { [tipo: string]: number | null } = {};
+  /**
+   * Ticket 1052: vendedor y centro de costo de la factura, de los del SIIGO de la empresa.
+   * Vienen ya marcados (quien factura si es vendedor en SIIGO, o lo último usado en ese tipo
+   * de factura) y se pueden cambiar en cada factura.
+   */
+  facturaVendedores: { id: number; nombre: string; email: string | null }[] = [];
+  facturaCentrosCosto: { id: number; nombre: string }[] = [];
+  facturaVendedorId: number | null = null;
+  facturaCentroCostoId: number | null = null;
+  private facturaAjustesPorTipo: { [tipo: string]: { costCenterId?: number; sellerId?: number } } = {};
   // SIIGO no define plazos: los define Katuq y se calcula la fecha. 'exacta' abre date-picker.
   readonly facturaPlazosCredito: { value: string; label: string }[] = [
     { value: "8", label: "8 días" },
@@ -1002,13 +1012,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       didOpen: () => Swal.showLoading()
     });
 
+    const esSiigo = provider === 'siigo';
     forkJoin({
       docs: this.integrationsService.getAccountingDocumentTypes(provider),
       pays: this.integrationsService.getAccountingPaymentTypes(provider),
       // Ticket 1054: si no cargan los impuestos, se factura igual (sin retenciones).
-      taxes: this.integrationsService.getAccountingTaxes(provider).pipe(catchError(() => of(null)))
+      taxes: this.integrationsService.getAccountingTaxes(provider).pipe(catchError(() => of(null))),
+      // Ticket 1052: si no cargan, se factura igual y el servidor escoge el vendedor.
+      sellers: esSiigo ? this.integrationsService.getSiigoSellers().pipe(catchError(() => of(null))) : of(null),
+      centers: esSiigo ? this.integrationsService.getSiigoCostCenters().pipe(catchError(() => of(null))) : of(null),
+      config: esSiigo ? this.integrationsService.loadSiigoConfig().pipe(catchError(() => of(null))) : of(null)
     }).subscribe({
-      next: ({ docs, pays, taxes }) => {
+      next: ({ docs, pays, taxes, sellers, centers, config }) => {
         Swal.close();
 
         const documentTypes = this.extraerListaFactura(docs, 'documentTypes');
@@ -1036,6 +1051,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.facturaRetencionesPorTipo = this.agruparRetencionesFactura(this.extraerListaFactura(taxes, 'taxes'));
         this.facturaRetencionSel = {};
         this.facturaRetencionesPorTipo.forEach((g) => (this.facturaRetencionSel[g.tipo] = null));
+        this.facturaVendedores = this.extraerListaFactura(sellers, 'sellers')
+          .filter((v: any) => v && v.id != null)
+          .map((v: any) => ({ id: Number(v.id), nombre: String(v.nombre || v.first_name || `Vendedor ${v.id}`), email: v.email || null }));
+        this.facturaCentrosCosto = this.extraerListaFactura(centers, 'costCenters')
+          .filter((c: any) => c && c.id != null && c.active !== false)
+          .map((c: any) => ({ id: Number(c.id), nombre: [c.code, c.name].filter(Boolean).join(' · ') || `Centro ${c.id}` }));
+        const cfgSiigo = config?.config?.config ?? config?.config ?? {};
+        this.facturaAjustesPorTipo = cfgSiigo.documentTypeSettings || {};
+        this.facturaVendedorId = null;
+        this.facturaCentroCostoId = null;
 
         this.modalService.open(this.facturaSiigoModal, {
           size: 'md',
@@ -1088,6 +1113,62 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return [];
   }
 
+  /** Tipo de factura elegido, con su configuración en SIIGO (vendedor por ítem, centro de costo). */
+  get facturaTipoSeleccionado(): any {
+    return this.facturaDocumentTypes.find((d) => String(d.id) === String(this.facturaDocumentTypeId)) || null;
+  }
+
+  /** Ticket 1052: el tipo de factura maneja centro de costo en SIIGO. */
+  get facturaUsaCentroCosto(): boolean {
+    const t = this.facturaTipoSeleccionado;
+    return !!t && (t.cost_center === true || t.cost_center_mandatory === true) && this.facturaCentrosCosto.length > 0;
+  }
+
+  /** Ticket 1052: SIIGO rechaza la factura de este tipo sin centro de costo. */
+  get facturaExigeCentroCosto(): boolean {
+    return this.facturaUsaCentroCosto && this.facturaTipoSeleccionado?.cost_center_mandatory === true;
+  }
+
+  /**
+   * Ticket 1052: al escoger el tipo de factura se marcan vendedor y centro de costo:
+   * quien factura si es vendedor en SIIGO, si no lo último usado en ese tipo, si no lo configurado.
+   */
+  onFacturaDocumentTypeChange(): void {
+    const tipo = String(this.facturaDocumentTypeId ?? '');
+    const recordado = this.leerFacturaRecordada(tipo);
+    const configurado = this.facturaAjustesPorTipo[tipo] || {};
+    const correo = String(this.UserLogged?.email || '').trim().toLowerCase();
+    const propio = correo ? this.facturaVendedores.find((v) => (v.email || '').trim().toLowerCase() === correo) : undefined;
+    const valido = (lista: { id: number }[], id: any): number | null =>
+      lista.some((x) => x.id === Number(id)) ? Number(id) : null;
+    this.facturaVendedorId = propio?.id
+      ?? valido(this.facturaVendedores, recordado.sellerId)
+      ?? valido(this.facturaVendedores, configurado.sellerId);
+    this.facturaCentroCostoId = valido(this.facturaCentrosCosto, recordado.costCenterId)
+      ?? valido(this.facturaCentrosCosto, configurado.costCenterId);
+  }
+
+  /** Lo último usado en este tipo de factura, en este navegador (comodidad; puede no existir). */
+  private leerFacturaRecordada(tipo: string): { sellerId?: number; costCenterId?: number } {
+    try {
+      return JSON.parse(localStorage.getItem(this.claveFacturaRecordada(tipo)) || '{}') || {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  private recordarFactura(tipo: string, valores: { sellerId?: number; costCenterId?: number }): void {
+    try {
+      localStorage.setItem(this.claveFacturaRecordada(tipo), JSON.stringify(valores));
+    } catch (_) { /* sin almacenamiento: la próxima vez se vuelve a escoger */ }
+  }
+
+  private claveFacturaRecordada(tipo: string): string {
+    let empresa = '';
+    try { empresa = this.integrationsService.getActiveCompanyId(); } catch (_) { empresa = ''; }
+    return `katuq.siigo.factura.${empresa}.${tipo}`;
+  }
+
   /** Forma de pago seleccionada en el modal (objeto completo de SIIGO). */
   get facturaPaymentTypeSeleccionado(): any {
     return this.facturaPaymentTypes.find(
@@ -1104,6 +1185,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   get facturaFormValido(): boolean {
     if (!this.facturaDocumentTypeId || !this.facturaPaymentTypeId) return false;
     if (this.facturaEsCredito && !this.facturaDueDate) return false;
+    if (this.facturaExigeCentroCosto && !this.facturaCentroCostoId) return false; // ticket 1052
     return true;
   }
 
@@ -1151,13 +1233,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       : undefined;
     const dueDate = this.facturaEsCredito ? (this.facturaDueDate || undefined) : undefined;
 
-    // Ticket 1054: observaciones y retenciones elegidas.
+    // Ticket 1054: observaciones y retenciones elegidas. Ticket 1052: vendedor y centro de costo.
     const extras = {
       observaciones: (this.facturaObservaciones || '').trim(),
       retenciones: Object.values(this.facturaRetencionSel || {})
         .filter((v) => v !== null && v !== undefined)
         .map((v) => Number(v)),
+      sellerId: this.facturaVendedorId || undefined,
+      costCenterId: this.facturaUsaCentroCosto ? (this.facturaCentroCostoId || undefined) : undefined,
     };
+    if (documentTypeId && (extras.sellerId || extras.costCenterId)) {
+      this.recordarFactura(String(documentTypeId), { sellerId: extras.sellerId, costCenterId: extras.costCenterId });
+    }
 
     modal.close();
     this.ejecutarFacturacionSiigo(pedido, documentTypeId, undefined, paymentTypeId, dueDate, extras);
@@ -1288,7 +1375,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param paymentTypeId ID de la forma de pago en SIIGO (D-042)
    * @param dueDate Fecha de vencimiento de crédito en formato yyyy-MM-dd (D-042)
    */
-  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string, extras?: { observaciones?: string; retenciones?: number[] }): void {
+  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string, extras?: { observaciones?: string; retenciones?: number[]; sellerId?: number; costCenterId?: number }): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const nroPedido = pedido.nroPedido || pedido.referencia || pedido._id;
 
@@ -1310,6 +1397,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (dueDate) options.dueDate = dueDate; // D-042: vencimiento de crédito (yyyy-MM-dd)
     if (extras?.observaciones) options.observaciones = extras.observaciones; // ticket 1054
     if (extras?.retenciones?.length) options.retenciones = extras.retenciones; // ticket 1054
+    if (extras?.sellerId) options.sellerId = extras.sellerId; // ticket 1052
+    if (extras?.costCenterId) options.costCenterId = extras.costCenterId; // ticket 1052
 
     // Usar endpoint async para no bloquear (responde 202 inmediato)
     const provider = this.activeAccountingProvider || 'siigo';
