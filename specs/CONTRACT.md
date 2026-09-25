@@ -7337,6 +7337,15 @@ Al salir:
 
 Al desplegar se verifican las tiendas (portada, checkout, /pagar, /baja, llms.txt).
 
+**DESPLEGADO el 2026-09-25 a las 18:03 UTC** (backend 74baa62, aprobado por Daniel). El front 2026.09.25.3, que otra sesión publicó desde la punta de la rama, ya traía las pantallas, así que ahora front y backend coinciden.
+
+Verificado en producción:
+- FLORECER y ATELIER 90 responden 200 en portada, llms.txt, robots y sitemap;
+- la casilla de autorización está en el checkout y el sello no sale en las tiendas premium;
+- `/baja` sin token muestra "Este enlace no funciona" y con un token válido muestra la página de la tienda (CSP estricta, sin dar de baja a nadie);
+- los endpoints nuevos responden 401 sin sesión o sin firma;
+- no hay errores nuevos en el log.
+
 ## D-320 (2026-09-24) — Facturación SIIGO: Katuq se adapta al tipo de factura de cada comercio; el vendedor se escoge al facturar (ticket 1052, APROBADA y desplegada)
 
 **Contexto.** El reintento de BAS-000016 (ALMACEN BOMBAS) fue rechazado por SIIGO con `document_settings / seller`. Sus 3 tipos de factura electrónica, uno por sede, manejan **vendedor por ítem** y **exigen centro de costo**. En sus 205 facturas reales el pago es **base + IVA − retenciones**. ALMARA y OH MY STORE no tienen esas opciones en su tipo de factura.
