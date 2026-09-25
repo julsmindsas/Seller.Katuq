@@ -62,5 +62,5 @@
 - [x] 8.1 Diagnóstico con datos: 2 de 2 registros de TikTok sin contraseña, user agent `open_news` (WebView de ByteDance); simulación de la web publicada con los user agents de `open_news`, TikTok Android y TikTok iOS: la contraseña viaja
 - [x] 8.2 Front: recarga única con `?v=` si la versión publicada no es la cargada; `versionFront` en el envío
 - [x] 8.3 Backend: mensaje de la web vieja con dónde buscar la contraseña y aviso interno "Escríbele"; versión de la web en el aviso
-- [ ] 8.4 Publicar backend y front (con OK de Daniel)
+- [x] 8.4 Publicar backend y front (con OK de Daniel)
 - [ ] 8.5 Pauta: cambiar la URL de los anuncios de TikTok para saltarse la copia guardada (sesión "videos")
