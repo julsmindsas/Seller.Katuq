@@ -110,13 +110,32 @@ export class VersionCheckService implements OnDestroy {
   }
 
   /**
+   * Consulta única: la versión publicada si es distinta de la cargada, o null
+   * (también sin red). Para pantallas que no pueden correr con código viejo,
+   * como el registro.
+   */
+  async consultarAhora(): Promise<VersionPublicada | null> {
+    try {
+      const r = await fetch(`assets/version.json?t=${Date.now()}`, { cache: 'no-store' });
+      const data: VersionPublicada | null = r.ok ? await r.json() : null;
+      return data && data.version && this.esDistinta(data.version, this.versionActual) ? data : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Parte numérica de una versión (`2026.07.28.9`), sin fecha en texto ni "(Beta)". */
+  numero(version: string): string {
+    return ((version || '').match(/\d{4}\.\d{2}\.\d{2}\.\d+/) || [''])[0];
+  }
+
+  /**
    * Compara solo la parte numérica (`2026.07.28.9`), ignorando la fecha en
    * texto y el sufijo "(Beta)" que también viajan en environment.version.
    */
   private esDistinta(publicada: string, actual: string): boolean {
-    const num = (v: string) => (v.match(/\d{4}\.\d{2}\.\d{2}\.\d+/) || [''])[0];
-    const a = num(publicada);
-    const b = num(actual);
+    const a = this.numero(publicada);
+    const b = this.numero(actual);
     if (!a || !b) return false;
     return a !== b;
   }

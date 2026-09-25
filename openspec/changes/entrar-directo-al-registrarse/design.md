@@ -91,3 +91,10 @@ Prototipo aprobado: https://claude.ai/artifact/FPrj4XQeifaXRwQ5i8EV2P. Dos colum
 - Reglas de contraseña: **mínimas** (8 caracteres, al menos una letra y un número), D4.
 - Propuesta **aprobada** para implementar. OK de Daniel antes de cada despliegue a producción.
 - Registro de prueba en producción **autorizado** con un correo de Julsmind; la empresa de prueba se borra al terminar.
+
+### D11. Copias viejas guardadas por los navegadores de anuncios (25-sep)
+El 24-sep llegaron 2 registros sin contraseña desde el navegador de `open_news`, un WebView de ByteDance donde TikTok Ads muestra anuncios por la red Pangle. Esas apps guardan una copia completa de la página del anuncio (HTML y JS) y la muestran aunque ya se haya publicado otra versión. Así corrió la web 24.1, que no tenía el paso de contraseña. Nuestras cabeceras están bien: `index` con `no-cache` y el paquete de la versión anterior ya no existe en Hosting. Simulando la web publicada con los user agents de `open_news` y de TikTok en Android e iOS, la contraseña sí viaja.
+- **Front:** al abrir el registro se compara `environment.version` con `assets/version.json?t=`. Si no coinciden, recarga UNA vez con `?v=<versión>`, una dirección que la copia no tiene. Así se protegen las próximas publicaciones; la copia de la 24.1 no tiene este código.
+- **Backend (para las copias que ya andan sueltas):** sin contraseña elegida, el `message` del 200, que la web vieja muestra en su éxito, dice que busque la contraseña en Spam o Promociones. El aviso interno llega con el asunto "Escríbele: … se registró y no entró", para que alguien le escriba en la primera hora.
+- **Pauta:** cambiar la URL de los anuncios de TikTok (por ejemplo, agregar `&v=20260925`) obliga a esas apps a bajar la página de nuevo.
+- El envío lleva `versionFront`, que queda en `surveyResponses` y en el aviso interno. Así una copia vieja se detecta sin adivinar.

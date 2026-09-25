@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { clearOnboardingStorage } from '../onboarding/utils/onboarding-v2.utils';
 import { AuthService } from '../../shared/services/firebase/auth.service';
 import { UtilsService } from '../../shared/services/utils.service';
+import { VersionCheckService } from '../../shared/services/version-check.service';
 
 /** Contraseñas por defecto del sistema: el backend las rechaza (D-319). */
 const CONTRASENAS_POR_DEFECTO = ['Katuq2025!', 'Default@123'];
@@ -286,7 +287,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         private promocionesService: PromocionesService,
         private pixeles: PixelesPautaService,
         private authService: AuthService,
-        private utils: UtilsService
+        private utils: UtilsService,
+        private versionCheck: VersionCheckService
     ) {
         // No se vuelve a asignar registrationQuestions aquí
         this.mainForm = this.fb.group({
@@ -307,6 +309,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        this.recargarSiEstaDesactualizado();
         // Medición de la pauta: de qué anuncio llegó y la visita al registro.
         this.pixeles.capturarOrigen();
         this.pixeles.iniciar();
@@ -322,6 +325,28 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 this.debouncedSave();
             });
             this.subscriptions.push(formSubscription);
+        }
+    }
+
+    /**
+     * Los navegadores de algunos anuncios (la red Pangle de TikTok Ads, `open_news`)
+     * guardan una copia completa de esta página y la muestran aunque ya se haya
+     * publicado otra: el 24-sep así llegaron registros con el formulario viejo, sin
+     * contraseña. Si la versión publicada no es la que está corriendo, se recarga UNA
+     * vez con la dirección cambiada (`?v=`), que esa copia no tiene guardada.
+     */
+    private async recargarSiEstaDesactualizado(): Promise<void> {
+        const publicada = await this.versionCheck.consultarAhora();
+        if (!publicada) return;
+        const numero = this.versionCheck.numero(publicada.version);
+        try {
+            const url = new URL(window.location.href);
+            // Si ya se recargó para esta versión y sigue vieja, no insistir (sin bucles).
+            if (!numero || url.searchParams.get('v') === numero) return;
+            url.searchParams.set('v', numero);
+            window.location.replace(url.toString());
+        } catch {
+            // Sin URL manipulable: sigue con lo que tiene; el backend avisa al equipo.
         }
     }
 

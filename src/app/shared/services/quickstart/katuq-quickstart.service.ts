@@ -464,7 +464,10 @@ export class KatuqQuickStartService {
       codigoPromocional: diagnosticData.codigoPromocional || null,
       // De qué anuncio llegó. El backend guarda el cuerpo completo en
       // `surveyResponses`, así que ahí queda para cruzar pauta contra registros.
-      origenCampana: diagnosticData.origenCampana || null
+      origenCampana: diagnosticData.origenCampana || null,
+      // Con qué versión de la web se registró: delata copias viejas guardadas
+      // por los navegadores de los anuncios (queda en surveyResponses y en el aviso).
+      versionFront: environment.version || null
     };
 
     try {
