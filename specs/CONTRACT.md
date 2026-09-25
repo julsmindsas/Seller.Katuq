@@ -7328,6 +7328,15 @@ Implementada en las ramas `feature/campanas-correo`: backend aaf6cf9 y 4b7c713, 
 
 La prueba de punta a punta se hace en ATELIER 90 (demo de moda autorizada), pasándola a gratis durante la prueba y devolviéndole después su plan. El cupo gratis de las campañas quedó en 200 al mes (antes 500, D-318).
 
+**Fusión en las ramas principales (2026-09-25, pedido de Daniel):** las campañas de correo (D-318) y los límites del plan gratis (D-319) quedaron en `backend-aws-security` (74baa62) y en `feature/venta-asistida-mejorada` (13840645). **Todavía no están desplegados**: sale con el próximo despliegue de cualquier sesión, y ya se les avisó a las sesiones que despliegan.
+
+Al salir:
+- en las 3 tiendas publicadas aparecen la casilla de autorización, la política de privacidad con la sección de novedades y la página /baja;
+- los límites solo aplican a freemium, y hoy ninguna empresa gratis tiene tienda publicada;
+- las campañas no envían nada sin MailerSend ni con `EMAIL_CAMPAIGNS_ENABLED` apagada.
+
+Al desplegar se verifican las tiendas (portada, checkout, /pagar, /baja, llms.txt).
+
 ## D-320 (2026-09-24) — Facturación SIIGO: Katuq se adapta al tipo de factura de cada comercio; el vendedor se escoge al facturar (ticket 1052, APROBADA y desplegada)
 
 **Contexto.** El reintento de BAS-000016 (ALMACEN BOMBAS) fue rechazado por SIIGO con `document_settings / seller`. Sus 3 tipos de factura electrónica, uno por sede, manejan **vendedor por ítem** y **exigen centro de costo**. En sus 205 facturas reales el pago es **base + IVA − retenciones**. ALMARA y OH MY STORE no tienen esas opciones en su tipo de factura.
