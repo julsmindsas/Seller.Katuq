@@ -821,7 +821,7 @@
         <strong class="d-block">Cada comercial ve solo sus leads</strong>
         <small class="text-muted">Los vendedores ven y trabajan únicamente los leads y tareas asignados a ellos. Los administradores siguen viendo todo.</small>
       </span>
-      <p-inputSwitch [ngModel]="equipo.config.crmSoloPropios" [disabled]="guardandoEquipo"
+      <p-inputSwitch [(ngModel)]="configEquipo.crmSoloPropios" [disabled]="guardandoEquipo"
         (onChange)="guardarConfigEquipo('crmSoloPropios', $event.checked)"></p-inputSwitch>
     </div>
     <div class="config-list-item d-flex align-items-start justify-content-between gap-3 mb-2">
@@ -829,10 +829,10 @@
         <strong class="d-block">Recordar las tareas por correo</strong>
         <small class="text-muted">Al asignar una tarea le llega un correo al responsable, y cada mañana recibe las que vencen ese día o ya vencieron.</small>
       </span>
-      <p-inputSwitch [ngModel]="equipo.config.crmRecordatoriosCorreo" [disabled]="guardandoEquipo"
+      <p-inputSwitch [(ngModel)]="configEquipo.crmRecordatoriosCorreo" [disabled]="guardandoEquipo"
         (onChange)="guardarConfigEquipo('crmRecordatoriosCorreo', $event.checked)"></p-inputSwitch>
     </div>
-    <small class="text-muted d-block mt-2">{{ equipo.comerciales.length }} personas del equipo. El comercial de cada lead se elige al crearlo o en su detalle.</small>
+    <small class="text-muted d-block mt-2">{{ equipo.comerciales.length }} {{ equipo.comerciales.length === 1 ? 'persona' : 'personas' }} del equipo. El comercial de cada lead se elige al crearlo o en su detalle.</small>
   </div>
 </p-dialog>
 

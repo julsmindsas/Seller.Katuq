@@ -1256,19 +1256,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Ticket 1074: la vista previa ya no corresponde a lo elegido en la ventana. */
   get facturaVistaPreviaDesactualizada(): boolean {
-    return !!this.facturaVistaPrevia && this.facturaVistaPreviaFirma !== JSON.stringify(this.facturaOpcionesActuales());
+    return !!this.facturaVistaPrevia
+      && this.facturaVistaPreviaFirma !== JSON.stringify({ pedidoId: this.facturaPedido?._id, ...this.facturaOpcionesActuales() });
   }
 
   /** Ticket 1074: pide al backend el desglose de la factura sin emitirla. */
   verVistaPreviaFactura(): void {
     if (!this.facturaFormValido || !this.facturaPedido || this.facturaVistaPreviaCargando) return;
     const opciones = this.facturaOpcionesActuales();
-    const firma = JSON.stringify(opciones);
+    const pedidoId = this.facturaPedido._id;
+    const firma = JSON.stringify({ pedidoId, ...opciones });
     const provider = this.activeAccountingProvider || 'siigo';
     this.facturaVistaPreviaCargando = true;
     this.facturaVistaPreviaError = '';
-    this.integrationsService.previewAccountingInvoice(provider, this.facturaPedido._id, opciones).subscribe({
+    // Revisión 1074: si mientras llega la respuesta se abrió la ventana de otro pedido,
+    // esa respuesta se descarta.
+    const vigente = () => this.facturaPedido?._id === pedidoId;
+    this.integrationsService.previewAccountingInvoice(provider, pedidoId, opciones).subscribe({
       next: (response: any) => {
+        if (!vigente()) return;
         this.facturaVistaPreviaCargando = false;
         if (response?.success && response.data) {
           this.facturaVistaPrevia = response.data;
@@ -1279,6 +1285,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       },
       error: (error) => {
+        if (!vigente()) return;
         this.facturaVistaPreviaCargando = false;
         this.facturaVistaPrevia = null;
         this.facturaVistaPreviaError = error?.error?.message || 'No se pudo armar la vista previa.';

@@ -75,6 +75,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
   selectedTagNames: string[] = [];
   /** Ticket 1064: equipo comercial y filtro por comercial ('' todos, '__sin__' sin asignar). */
   equipo: CrmEquipo | null = null;
+  /** Estado de los interruptores de "Comerciales" (enlazado en ambos sentidos). */
+  configEquipo = { crmSoloPropios: false, crmRecordatoriosCorreo: false };
   selectedComercial = '';
   showEquipoModal = false;
   guardandoEquipo = false;
@@ -195,7 +197,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     // Ticket 1064: comerciales para asignar y si este usuario solo ve sus leads.
     this.crmService.getEquipo()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(eq => { this.equipo = eq; });
+      .subscribe(eq => { this.equipo = eq; this.configEquipo = { ...eq.config }; });
   }
 
   /** Ticket 1064: la caché del pipeline es por usuario (un comercial no ve la de otro). */
@@ -233,7 +235,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
         this.equipo = { ...this.equipo!, config: { ...this.equipo!.config, [campo]: valor } };
         this.messageService.add({ severity: 'success', summary: 'Guardado', life: 2500 });
       } else {
-        this.equipo = { ...this.equipo!, config: { ...this.equipo!.config, [campo]: !valor } };
+        // Revisión 1064: el interruptor vuelve a lo que de verdad quedó guardado.
+        this.configEquipo = { ...this.configEquipo, [campo]: !valor };
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar.' });
       }
     });
@@ -318,7 +321,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       etiquetas: Array.isArray(formData.etiquetas) ? formData.etiquetas : [],
       activo: true,
       pipelineCreatedAt: new Date().toISOString(),
-      assignedTo: formData.assignedTo || this.equipo?.yo || null,
+      assignedTo: formData.assignedTo === null ? null : (formData.assignedTo || this.equipo?.yo || null),
     };
     this.leads = [newLead, ...this.leads];
     this.groupByStage();

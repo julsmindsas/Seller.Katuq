@@ -151,6 +151,11 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   subiendoAnexo = false;
   guardandoCondiciones = false;
 
+  /** Revisión 1081: el anexo de ESTA cotización solo cambia mientras no se ha enviado. */
+  get anexoEditable(): boolean {
+    return !this.cotizacionId || String(this.cotizacion.estadoCotizacion || "borrador").toLowerCase() === "borrador";
+  }
+
   /** Solo administradores cambian las condiciones de todas las cotizaciones. */
   get esAdminCotizaciones(): boolean {
     try {
@@ -223,8 +228,10 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
             this.subiendoAnexo = false;
             if (res && res.success) {
               this.configCotizacion = { ...(this.configCotizacion || { terminosBase: "" }), anexo };
-              this.cotizacion.anexoCondiciones = anexo;
-              this.toastr.success("El PDF quedó como anexo de todas las cotizaciones nuevas.", "Anexo guardado");
+              if (this.anexoEditable) this.cotizacion.anexoCondiciones = anexo;
+              this.toastr.success(this.anexoEditable
+                ? "El PDF quedó como anexo de todas las cotizaciones nuevas."
+                : "El PDF quedó para las cotizaciones nuevas. Esta ya enviada conserva el suyo.", "Anexo guardado");
             } else {
               this.toastr.error((res && res.message) || "No se pudo guardar el anexo.");
             }
@@ -257,8 +264,8 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       next: (res) => {
         if (res && res.success) {
           this.configCotizacion = { ...(this.configCotizacion || { terminosBase: "" }), anexo: null };
-          this.cotizacion.anexoCondiciones = null;
-          this.toastr.success("Se quitó el anexo.");
+          if (this.anexoEditable) this.cotizacion.anexoCondiciones = null;
+          this.toastr.success(this.anexoEditable ? "Se quitó el anexo." : "Se quitó para las cotizaciones nuevas. Esta ya enviada conserva el suyo.");
         } else {
           this.toastr.error((res && res.message) || "No se pudo quitar el anexo.");
         }
@@ -412,8 +419,9 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
         if (base && !this.cotizacion.terminos) {
           this.cotizacion.terminos = base;
         }
-        // Ticket 1081: una cotización nueva lleva el anexo vigente de la empresa.
-        if (!this.cotizacionId && this.cotizacion.anexoCondiciones === undefined) {
+        // Ticket 1081: una cotización nueva (o un borrador de antes, que aún no se ha
+        // enviado) lleva el anexo vigente de la empresa. Una enviada conserva el suyo.
+        if (this.cotizacion.anexoCondiciones === undefined && this.anexoEditable) {
           this.cotizacion.anexoCondiciones = (res && res.data && res.data.anexo) || null;
         }
       },
