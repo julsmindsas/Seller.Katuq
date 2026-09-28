@@ -2102,6 +2102,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ordenes: any;
   ordersByName: any;
   searchQuery: string = "";
+  /**
+   * Ticket 1075: mientras se ubica la fecha del pedido pedido por enlace
+   * (?buscar=DAD-013699 sin fecha), no se carga la lista: la búsqueda en 2 años
+   * no alcanzaba a responder y la pantalla quedaba en 0.
+   */
+  private ubicandoPedidoBuscado = false;
   showSuggestions: boolean = false;
   UserLogged: UserLogged;
   allBillingZone: any;
@@ -3239,6 +3245,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       if (params['buscar']) {
         this.searchQuery = params['buscar'];
 
+        // Ticket 1075: un número de pedido sin fecha (enlaces de notificaciones)
+        // se abre en el día en que se creó el pedido, no en 2 años.
+        if (!params['fecha'] && !params['fechaInicial'] && this.esNumeroDePedido(params['buscar'])) {
+          this.abrirEnElDiaDelPedido(params['buscar']);
+          return;
+        }
+
         // Prioridad: 1) fechaInicial/fechaFinal explícitos (panel WhatsApp),
         // 2) fecha exacta del pedido (customer-metrics), 3) últimos 2 años.
         const isoRegex2 = /^\d{4}-\d{2}-\d{2}$/;
@@ -3598,6 +3611,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   refrescarDatos(forceRefresh: boolean = false, isPageChange: boolean = false) {
+    // Ticket 1075: la carga sale cuando se sepa la fecha del pedido buscado.
+    if (this.ubicandoPedidoBuscado) {
+      return;
+    }
+
     // Log del stack trace para identificar de dónde viene la llamada
     const stackTrace = new Error().stack;
     const caller = stackTrace?.split('\n')[2]?.trim() || 'unknown';
@@ -9216,6 +9234,50 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // en el throttle de 5s ni descartarse por un refresco en vuelo
     this.refrescarDatos(true);
     this.saveFiltersState();
+  }
+
+  /** Ticket 1075: "DAD-013699", "DAD-13699" o "dad013699"; no un nombre o un teléfono. */
+  private esNumeroDePedido(texto: string): boolean {
+    return /^[A-Za-z]{2,5}-?\d{3,}$/.test(String(texto || '').trim());
+  }
+
+  /**
+   * Ticket 1075: busca el pedido por su número (una consulta directa, ~1 s) y abre
+   * la lista en el día en que se creó. Si no aparece, sigue como antes: 2 años.
+   */
+  private abrirEnElDiaDelPedido(nroPedido: string): void {
+    this.ubicandoPedidoBuscado = true;
+    this.ventasService.getOrdersByNroPedido(nroPedido.trim()).pipe(
+      catchError(() => of([])),
+      takeUntil(this.destroy$),
+    ).subscribe((resp: any) => {
+      const lista: any[] = Array.isArray(resp) ? resp : (resp?.data || []);
+      const pedido = lista.find((p) => String(p?.nroPedido || '').toUpperCase() === nroPedido.trim().toUpperCase()) || lista[0];
+      const creado = pedido?.fechaCreacion ? new Date(pedido.fechaCreacion) : null;
+
+      let desde: Date;
+      let hasta: Date;
+      if (creado && !isNaN(creado.getTime())) {
+        desde = new Date(creado); desde.setHours(0, 0, 0, 0);
+        hasta = new Date(creado); hasta.setHours(23, 59, 59, 999);
+      } else {
+        desde = new Date(); desde.setFullYear(desde.getFullYear() - 2);
+        hasta = new Date();
+      }
+
+      this.fechaInicial = desde.toISOString().split('T')[0];
+      this.fechaFinal = hasta.toISOString().split('T')[0];
+      this.fechaInicialDate = desde;
+      this.fechaFinalDate = hasta;
+      this.sharedFilterService.updateFilterState({
+        searchQuery: this.searchQuery,
+        fechaInicial: desde,
+        fechaFinal: hasta,
+      });
+
+      this.ubicandoPedidoBuscado = false;
+      this.refrescarDatos(true);
+    });
   }
 
   // Métodos para persistir estado de filtros
