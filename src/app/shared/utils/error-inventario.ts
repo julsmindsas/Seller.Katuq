@@ -25,13 +25,16 @@ export interface ErrorInventarioLeido {
 
 /** Extrae el mensaje del backend sin importar en qué campo venga. */
 export function mensajeDeErrorBackend(error: any): string {
-  return (
-    error?.error?.error ||
-    error?.error?.message ||
-    error?.error ||
-    error?.message ||
-    ''
-  ).toString();
+  // Ticket 1082: sin respuesta del servidor (reiniciándose en un despliegue, caído o
+  // sin internet) Angular entrega status 0 o un 502/503/504 sin texto, y el error es
+  // un ProgressEvent: mostrado tal cual salía "[object ProgressEvent]".
+  const status = Number(error?.status);
+  if (status === 0 || status === 502 || status === 503 || status === 504) {
+    return 'No hubo respuesta de Katuq. Espera un minuto y, antes de volver a guardar, revisa en el inventario si el cambio ya quedó.';
+  }
+  const texto = [error?.error?.error, error?.error?.message, error?.error, error?.message]
+    .find((t) => typeof t === 'string' && t.trim());
+  return texto || '';
 }
 
 export function leerErrorInventario(error: any): ErrorInventarioLeido {
