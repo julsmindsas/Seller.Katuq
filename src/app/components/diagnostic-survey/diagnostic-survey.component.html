@@ -142,28 +142,13 @@
         </ng-template>
       </div>
 
-      <!-- Registro en revisión / cuarentena anti-abuso (202) -->
-      <div *ngIf="registrationPendingReview && !quickStartInProgress" class="quickstart-review" style="text-align:center;">
-        <div class="welcome-text">🔎 {{ 'Tu registro está en revisión' | translate }}</div>
-        <div class="welcome-text-sm" style="margin: 20px 0;">
-          {{ quickStartMessage }}
+      <!-- D-323: registro dudoso. Confirma su correo con el código y entra. -->
+      <div *ngIf="correoPorVerificar && !quickStartInProgress" class="quickstart-verificar">
+        <app-codigo-correo *ngIf="!entrandoACuenta" [email]="correoPorVerificar" (entro)="alConfirmarCorreo($event)"></app-codigo-correo>
+        <div *ngIf="entrandoACuenta" class="entrando-cuenta" role="status" aria-live="polite">
+          <span class="entrando-cuenta__spinner" aria-hidden="true"></span>
+          <span>Entrando a tu cuenta…</span>
         </div>
-        <div style="background: #fff8e1; border-left: 4px solid #FF9800; padding: 16px; margin: 20px auto; max-width: 560px; text-align: left; border-radius: 6px;">
-          <p *ngIf="!eligioContrasena" style="margin: 0;">
-            {{ 'Por seguridad validamos algunos registros manualmente. Te enviaremos tu usuario y contraseña a' | translate }}
-            <strong>{{ mainForm.get('registration.correo')?.value }}</strong>
-            {{ 'en cuanto se complete. ¿Dudas? Escríbenos a' | translate }} <a href="mailto:soporte@katuq.com">soporte@katuq.com</a>.
-          </p>
-          <p *ngIf="eligioContrasena" style="margin: 0;">
-            Por seguridad validamos algunos registros a mano. Te escribimos a
-            <strong>{{ mainForm.get('registration.correo')?.value }}</strong>
-            apenas quede aprobado, y entras con ese correo y la contraseña que creaste.
-            ¿Dudas? Escríbenos a <a href="mailto:soporte@katuq.com">soporte@katuq.com</a>.
-          </p>
-        </div>
-        <button class="cta-button secondary" (click)="goToLogin()">
-          {{ 'Ir al login' | translate }}
-        </button>
       </div>
 
       <!-- Registro bloqueado o datos inválidos (403 / 422) -->
@@ -200,7 +185,7 @@
       </div>
 
       <!-- Error en Quick Start - Fallback -->
-      <div *ngIf="quickStartError && !registrationAlreadyExists && !registrationBlocked && !registrationPendingReview && !quickStartInProgress" class="quickstart-error">
+      <div *ngIf="quickStartError && !registrationAlreadyExists && !registrationBlocked && !correoPorVerificar && !quickStartInProgress" class="quickstart-error">
         <div style="color: #ff6b6b; font-size: 1.3rem; margin: 20px 0;">
           {{ quickStartError }}
         </div>

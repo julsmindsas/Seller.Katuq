@@ -3191,3 +3191,14 @@ $reg-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     from { transform: translateY(8px); opacity: 0; }
     to { transform: none; opacity: 1; }
 }
+
+// D-323: la pantalla del código (componente compartido) con las fuentes de esta página.
+.quickstart-verificar {
+    padding: 8px 0 24px;
+
+    ::ng-deep .codigo-correo__titulo,
+    ::ng-deep .codigo-correo__texto strong {
+        font-family: $reg-display;
+        font-weight: 400;
+    }
+}
