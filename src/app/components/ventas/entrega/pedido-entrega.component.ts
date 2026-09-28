@@ -153,7 +153,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     if (this.isEdit) {
       const data = { documento: this.documentoBusqueda };
-      this.service.getClientByDocument(data).subscribe((res: any) => {
+      this.buscarCliente(data.documento).subscribe((res: any) => {
         let entregasArray: any[] = [];
         if (res && res.datosEntrega) {
           entregasArray = Array.isArray(res.datosEntrega)
@@ -261,7 +261,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       const data = {
         documento: this.documentoBusqueda,
       };
-      this.service.getClientByDocument(data).subscribe((res: any) => {
+      this.buscarCliente(data.documento).subscribe((res: any) => {
         if (res && res.datosEntrega && Array.isArray(res.datosEntrega)) {
           res.datosEntrega.map((x) => {
             this.datosEntregas.push(x);
@@ -290,6 +290,27 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     };
     reader.readAsBinaryString(this.file);
   }
+  /**
+   * Ticket 1067 (ALMARA): busca al cliente por documento mandando también la
+   * ficha del pedido (`cd`). ALMARA tiene 361 documentos con más de una ficha y
+   * la búsqueda solo por documento responde "hay varias fichas" (409). Aquí esa
+   * respuesta no se manejaba: la dirección nueva nunca se guardaba y la lista
+   * quedaba vacía, sin ningún aviso.
+   */
+  private buscarCliente(documento: any) {
+    const cd = (this.pedidoGral?.cliente as any)?.cd || this.formulario?.value?.cd || undefined;
+    return this.service.getClientByDocument(cd ? { documento, cd } : { documento });
+  }
+
+  private avisarErrorCliente(err: any): void {
+    Swal.fire({
+      title: 'No se pudo guardar la dirección',
+      text: err?.error?.error || 'No logramos encontrar la ficha del cliente. Intenta de nuevo en un momento.',
+      icon: 'error',
+      confirmButtonText: 'Ok',
+    });
+  }
+
   guardarDatosEntrega() {
     if (!this.nombres_entrega || !this.numero_celular_entrega || !this.direccion_entrega || !this.ciudad_municipio_entrega) {
       Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Dirección y Ciudad son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
@@ -337,7 +358,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       };
     }
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
+    this.buscarCliente(data.documento).subscribe((res: any) => {
       if (res && res.datosEntrega && Array.isArray(res.datosEntrega)) {
         res.datosEntrega.map((x) => {
           this.datosEntregas.push(x);
@@ -354,8 +375,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       this.service.editClient(this.formulario.value).subscribe({
         next: (r) => {
         // Recargar los datos de entrega del servidor
-        this.service
-          .getClientByDocument({ documento: this.documentoBusqueda })
+        this.buscarCliente(this.documentoBusqueda)
           .subscribe((clientRes: any) => {
             if (
               clientRes &&
@@ -434,7 +454,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
           });
         },
       });
-    });
+    }, (err: any) => this.avisarErrorCliente(err));
   }
 
   trackByIndex(index: number): number {
@@ -543,8 +563,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.editandodato = false;
 
         // Recargar los datos del servidor para actualizar la lista
-        this.service
-          .getClientByDocument({ documento: this.documentoBusqueda })
+        this.buscarCliente(this.documentoBusqueda)
           .subscribe((clientRes: any) => {
             if (
               clientRes &&
@@ -635,7 +654,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     const data = {
       documento: this.formulario.value.documento,
     };
-    this.service.getClientByDocument(data).subscribe((res: any) => {
+    this.buscarCliente(data.documento).subscribe((res: any) => {
       // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
       this.formulario.controls["cd"].setValue(res.cd);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
@@ -966,7 +985,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       documento: this.documentoBusqueda,
     };
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
+    this.buscarCliente(data.documento).subscribe((res: any) => {
       // Actualizar los datos de facturación electrónica
       if (!res.datosFacturacionElectronica) {
         res.datosFacturacionElectronica = [];
