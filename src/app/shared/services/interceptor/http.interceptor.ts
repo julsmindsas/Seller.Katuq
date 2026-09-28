@@ -26,6 +26,7 @@ export class HttpInterceptor2 implements HttpInterceptor {
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // Verificar si es una ruta pública (diagnóstico/encuesta/video-agent/agendamiento/login)
     const isPublicRoute = request.url.includes('/diagnostics/saveSurveyResponse') ||
+                         request.url.includes('/v1/registro/') ||
                          request.url.includes('/diagnostico') ||
                          window.location.pathname.includes('/registrarse') ||
                          window.location.pathname.includes('/nuevo-registro') ||

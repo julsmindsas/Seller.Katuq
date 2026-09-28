@@ -4,6 +4,7 @@ import { DiagnosticSurveyComponent } from './diagnostic-survey.component';
 import { RouterModule, Routes } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { CodigoCorreoModule } from '../../shared/components/codigo-correo/codigo-correo.module';
 
 const routes: Routes = [
   { path: '', component: DiagnosticSurveyComponent }
@@ -15,7 +16,8 @@ const routes: Routes = [
     CommonModule,
     ReactiveFormsModule,
     RouterModule.forChild(routes),
-    TranslateModule // Importar el módulo de traducción
+    TranslateModule, // Importar el módulo de traducción
+    CodigoCorreoModule
   ],
   exports: [DiagnosticSurveyComponent]
 })

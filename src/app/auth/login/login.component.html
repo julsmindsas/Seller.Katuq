@@ -19,6 +19,15 @@
         <img class="img-fluid for-dark" src="assets/images/logo/Katuq/katuq_light.svg" alt="Katuq" />
       </div>
 
+      <!-- D-323: la contraseña es correcta pero falta confirmar el correo -->
+      <ng-container *ngIf="correoPorVerificar">
+        <app-codigo-correo [email]="correoPorVerificar" (entro)="alConfirmarCorreo($event)"></app-codigo-correo>
+        <div class="text-center mt-3">
+          <button type="button" class="btn-katuq-link" (click)="volverAlLogin()">Entrar con otra cuenta</button>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="!correoPorVerificar">
       <!-- Header -->
       <h1 class="login-title">{{ 'Ingresa a tu cuenta' | translate }}</h1>
       <p class="login-subtitle">{{ 'Ingresa tu correo y tu contraseña' | translate }}</p>
@@ -111,6 +120,7 @@
         <!-- Version -->
         <p class="version-text text-center">{{ 'Versión' | translate }}: {{version}}</p>
       </form>
+      </ng-container>
     </div>
   </div>
 </div>

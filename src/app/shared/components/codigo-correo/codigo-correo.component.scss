@@ -1,0 +1,145 @@
+// Tema canónico de Katuq (openspec/specs/design-system): acento #5F3FE0,
+// tinta #211F3A, superficies lila, plano y sin gradientes.
+:host {
+  --cc-acento: #5f3fe0;
+  --cc-acento-suave: #efebfd;
+  --cc-tinta: #211f3a;
+  --cc-texto: #4a4763;
+  --cc-apagado: #6b6685;
+  --cc-linea: #e4e0f5;
+  --cc-error: #c62828;
+  --cc-error-suave: #fdecec;
+  --cc-exito: #1b7a4a;
+  display: block;
+}
+
+.codigo-correo {
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
+  color: var(--cc-tinta);
+}
+
+.codigo-correo__icono {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 16px;
+  background: var(--cc-acento-suave);
+  color: var(--cc-acento);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.codigo-correo__titulo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: var(--cc-tinta);
+}
+
+.codigo-correo__texto {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--cc-texto);
+  margin: 0 0 22px;
+  overflow-wrap: anywhere;
+}
+
+.codigo-correo__form {
+  text-align: left;
+}
+
+.codigo-correo__label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cc-apagado);
+  margin-bottom: 6px;
+}
+
+.codigo-correo__input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-align: center;
+  padding: 12px 10px;
+  border: 1.5px solid var(--cc-linea);
+  border-radius: 11px;
+  background: #faf9ff;
+  color: var(--cc-tinta);
+  outline: none;
+
+  &:focus {
+    border-color: var(--cc-acento);
+    box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.15);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--cc-error);
+  }
+}
+
+.codigo-correo__error,
+.codigo-correo__aviso {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.codigo-correo__error {
+  background: var(--cc-error-suave);
+  color: var(--cc-error);
+}
+
+.codigo-correo__aviso {
+  background: var(--cc-acento-suave);
+  color: var(--cc-acento);
+}
+
+.codigo-correo__boton {
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--cc-acento);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.codigo-correo__ayuda {
+  font-size: 0.88rem;
+  color: var(--cc-apagado);
+  margin: 18px 0 6px;
+}
+
+.codigo-correo__reenviar {
+  background: none;
+  border: 0;
+  padding: 6px;
+  color: var(--cc-acento);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+
+  &:disabled {
+    color: var(--cc-apagado);
+    cursor: default;
+  }
+}

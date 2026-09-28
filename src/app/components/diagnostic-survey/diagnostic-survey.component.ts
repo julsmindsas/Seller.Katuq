@@ -9,6 +9,7 @@ import { PixelesPautaService } from '../../shared/services/pixeles-pauta.service
 import { Subscription } from 'rxjs';
 import { clearOnboardingStorage } from '../onboarding/utils/onboarding-v2.utils';
 import { AuthService } from '../../shared/services/firebase/auth.service';
+import { SesionConfirmada } from '../../shared/services/registro-verificacion.service';
 import { UtilsService } from '../../shared/services/utils.service';
 import { VersionCheckService } from '../../shared/services/version-check.service';
 
@@ -202,7 +203,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     quickStartCompleted: boolean = false;
     quickStartError: string = "";
     registrationAlreadyExists: boolean = false; // 409: comercio/usuario ya registrado
-    registrationPendingReview: boolean = false; // 202: registro en cuarentena anti-abuso
+    /** D-323: registro dudoso que confirma su correo con un código antes de entrar. */
+    correoPorVerificar: string | null = null;
     registrationBlocked: boolean = false; // 403/422: bloqueado o datos inválidos
     credentialsEmailSent: boolean = true;
     quickStartMessage: string = "";
@@ -859,7 +861,9 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             },
             codigoPromocional: this.codigoPromocional,
             origenCampana: this.pixeles.obtenerOrigen(),
-            contrasenaHash: this.contrasenaHash
+            contrasenaHash: this.contrasenaHash,
+            dispositivoId: this.dispositivoDeEsteNavegador(),
+            automatizado: typeof navigator !== 'undefined' && (navigator as any).webdriver === true
         };
 
         try {
@@ -889,12 +893,12 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 }
                 this.promocionesService.limpiarCodigoPendiente();
 
-                if (quickStartResult.pendingReview) {
-                    // Cuarentena anti-abuso: la cuenta queda inactiva, no se intenta entrar.
-                    // Tampoco se le cuenta a las plataformas de pauta (ver PixelesPautaService).
+                if (quickStartResult.verificationRequired) {
+                    // D-323: la cuenta quedó creada, pero entra cuando escriba el
+                    // código que le llegó al correo. La pauta todavía no cuenta el
+                    // registro: se cuenta al confirmar (alConfirmarCorreo).
                     this.olvidarContrasena();
-                    this.registrationPendingReview = true;
-                    this.pixeles.limpiarOrigen();
+                    this.correoPorVerificar = registrationData.correo;
                     return;
                 }
 
@@ -1014,6 +1018,40 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         }
     }
 
+    /** Confirmó el código: el registro cuenta en la pauta (una sola vez) y entra. */
+    async alConfirmarCorreo(sesion: SesionConfirmada): Promise<void> {
+        if (sesion.firePixel) {
+            this.pixeles.registroCompleto();
+        }
+        this.pixeles.limpiarOrigen();
+        this.entrandoACuenta = true;
+        await this.authService.entrarConSesion(sesion);
+    }
+
+    /**
+     * Identificador aleatorio de este navegador, guardado para la próxima vez.
+     * Señal del filtro del registro (D-323): dos empresas nuevas desde el mismo
+     * navegador en un mes. No identifica a la persona.
+     */
+    private dispositivoDeEsteNavegador(): string | null {
+        try {
+            const LLAVE = 'katuq_dispositivo';
+            let id = localStorage.getItem(LLAVE);
+            if (!id || !/^[A-Za-z0-9-]{8,64}$/.test(id)) {
+                const cripto: any = window.crypto;
+                id = typeof cripto?.randomUUID === 'function'
+                    ? cripto.randomUUID()
+                    : Array.from(cripto.getRandomValues(new Uint8Array(16)) as Uint8Array)
+                        .map((b) => b.toString(16).padStart(2, '0'))
+                        .join('');
+                localStorage.setItem(LLAVE, id);
+            }
+            return id;
+        } catch {
+            return null;
+        }
+    }
+
     private irAlLoginConCuentaCreada(correo: string): void {
         this.router.navigate(['/login'], { queryParams: { correo, cuenta: 'creada' } });
     }
@@ -1044,7 +1082,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     backToRegistration(): void {
         this.registrationAlreadyExists = false;
         this.registrationBlocked = false;
-        this.registrationPendingReview = false;
+        this.correoPorVerificar = null;
         this.quickStartError = "";
         this.currentStep = 'registration';
         this.registrationIndex = 0;

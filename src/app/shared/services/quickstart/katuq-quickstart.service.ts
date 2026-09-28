@@ -38,6 +38,12 @@ export interface DiagnosticResponse {
   /** utm_* del anuncio por el que llegó (queda guardado con el diagnóstico). */
   origenCampana?: OrigenCampana | null;
   /**
+   * Identificador aleatorio de este navegador y si se declara automatizado:
+   * señales del filtro del registro (D-323). No identifican a nadie.
+   */
+  dispositivoId?: string | null;
+  automatizado?: boolean;
+  /**
    * Contraseña elegida en el registro, YA con `utils.hash` (D-319): el mismo
    * formato que manda el login. Nunca el texto plano. Sin ella, el backend
    * crea la cuenta con contraseña temporal por correo (flujo anterior).
@@ -67,6 +73,8 @@ export interface QuickStartResult {
   /** Campos que el backend rechazó con VALIDATION_ERROR (ej: [{ field: 'password' }]). */
   errorFields?: { field: string; message: string }[];
   pendingReview?: boolean; // 202: registro en cuarentena, pendiente de revisión humana
+  /** D-323: la cuenta quedó creada sin sesión; entra al confirmar el código que le llegó al correo. */
+  verificationRequired?: boolean;
   promocion?: PromocionRegistro | null; // null = se registró sin código de campaña
   nextSteps?: string[];
   adminUser?: any;
@@ -192,10 +200,14 @@ export class KatuqQuickStartService {
       // El backend puede responder 202 con status PENDING_REVIEW cuando el registro
       // entra en cuarentena anti-abuso: la empresa se crea inactiva y un humano la revisa.
       const pendingReview = serverResponse?.status === 'PENDING_REVIEW';
+      // D-323: registro dudoso. La empresa quedó creada pero sin sesión hasta
+      // que la persona escriba el código que le llegó al correo.
+      const verificationRequired = serverResponse?.verificationRequired === true;
 
       return {
         success: true,
         pendingReview,
+        verificationRequired,
         promocion: serverResponse?.promocion ?? null,
         empresa: empresa,
         rol: rol,
@@ -467,7 +479,9 @@ export class KatuqQuickStartService {
       origenCampana: diagnosticData.origenCampana || null,
       // Con qué versión de la web se registró: delata copias viejas guardadas
       // por los navegadores de los anuncios (queda en surveyResponses y en el aviso).
-      versionFront: environment.version || null
+      versionFront: environment.version || null,
+      dispositivoId: diagnosticData.dispositivoId || null,
+      automatizado: diagnosticData.automatizado === true
     };
 
     try {
