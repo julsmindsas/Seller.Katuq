@@ -7393,3 +7393,26 @@ Verificado en producción:
 - A Meta y TikTok se les sigue contando como registro completo. No se le escribe a la persona para confirmar: eso queda para el seguimiento por WhatsApp de la primera hora.
 
 **En producción:** backend `7d1e841` y front 2026.09.24.2. Prueba real: un documento en serie quedó marcado, con riesgo 0 y el chip "Documento por confirmar" en el aviso interno.
+
+## D-324 (2026-09-27) — PROPUESTA: la tienda queda publicada al terminar el registro (pendiente de aprobación de Daniel)
+
+**Contexto.** Daniel: "hagamos lo que prometemos, con lo de la página web, pero ten en cuenta los otros comercios". La pauta promete "crea tu tienda gratis" y, de 31 registros del 23 al 27-sep, **ninguno** tiene página. 11 terminaron la configuración inicial y quedaron en venta asistida, y solo 1 volvió a entrar. El pedido llegó por la sesión de videos.
+
+**Huecos encontrados en el código:**
+1. el producto de la configuración inicial nace con `cantidadDisponible: 0`, así que la tienda lo muestra agotado;
+2. los sitios creados por código nacen con la tienda apagada y sin bodega;
+3. sin pasarela propia, `pagoEnLinea` queda encendido por defecto y cobraría en la cuenta de Katuq.
+
+**Propuesta** (`openspec/changes/tienda-al-registrarse/`):
+- "Publicar mi tienda" en 1 clic al terminar, lista para vender, según el tipo de negocio:
+  - productos: con compra;
+  - por mayor y comida: pedido por WhatsApp;
+  - servicios: "Cotizar por WhatsApp".
+- Pagos honestos (Nequi, Daviplata, transferencia y efectivo, confirmados por WhatsApp; nunca en la cuenta de Katuq).
+- Producto disponible desde el primer momento.
+- Aviso "Crea tu tienda en 1 clic" a los ya registrados, sin publicar nada sin su permiso.
+- Métrica "tiendas publicadas en las primeras 24 h", con meta de 1 de cada 4. Es el indicador para subir la pauta de $35.000 a $50.000.
+- Los comercios con tiendas no cambian.
+- Se recomienda encender antes el filtro del registro (propuesta de cuentas falsas, D-323), o salir juntos.
+
+**Estado:** propuesta validada, pendiente de aprobación.
