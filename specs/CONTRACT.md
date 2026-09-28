@@ -7476,7 +7476,7 @@ Se despliega primero en sombra.
 - la métrica de 24 h en el panel del Super Admin;
 - la línea base de 0 de 31 registros.
 
-## D-325 (2026-09-28) — PROPUESTA: secuencia automática por correo para que los registrados usen Katuq
+## D-325 (2026-09-28) — Secuencia automática por correo para que los registrados usen Katuq (APROBADA)
 
 **Contexto.** Daniel: "yo quiero algo automatizado, no me pongas a hacerlo persona a persona". De los 31 registros del 23 al 27-sep ninguno publicó tienda y solo 1 volvió a entrar. Jairo les escribió a mano a 29. Canal: **solo correo** (decisión de Daniel, 28-sep). El pedido llegó por la sesión de videos.
 
@@ -7496,4 +7496,6 @@ Se despliega primero en sombra.
 
 Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Daniel. Los registros exactos están en el diseño.
 
-**Estado:** propuesta, pendiente de aprobación.
+**Aprobación (Daniel, 28-sep):** propuesta aprobada, con remitente A (correo actual, `notificaciones@katuq.com` por Workspace). Sale apagada, luego sombra y luego envío, con los textos y videos de la sesión de videos. El DNS de katuq.com lo aplica Daniel.
+
+**Estado:** aprobada, en implementación.

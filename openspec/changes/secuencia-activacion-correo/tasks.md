@@ -1,6 +1,6 @@
 ## 0. Decisiones
-- [ ] 0.1 Daniel aprueba la propuesta y escoge el remitente (A, el correo actual, o B, MailerSend).
-- [ ] 0.2 Registrar D-325 en `specs/CONTRACT.md`.
+- [x] 0.1 Daniel aprueba la propuesta y escoge el remitente (A, el correo actual, o B, MailerSend). Aprobada el 28-sep con A.
+- [x] 0.2 Registrar D-325 en `specs/CONTRACT.md`.
 - [ ] 0.3 Daniel aplica el DNS de katuq.com (y, con B, el de `novedades.katuq.com`). Comprobar `PASS` en SPF, DKIM y DMARC.
 
 ## 1. Contrato primero
