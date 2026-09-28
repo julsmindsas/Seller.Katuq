@@ -8,6 +8,8 @@ import {
   switchMap,
 } from "rxjs/operators";
 import { ToastrService } from "ngx-toastr";
+import Swal from "sweetalert2";
+import { AngularFireStorage } from "@angular/fire/compat/storage";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
@@ -140,8 +142,130 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     private modal: NgbModal,
     private toastr: ToastrService,
     private convertService: CotizacionConvertService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private storage: AngularFireStorage
   ) {}
+
+  // ---- Ticket 1081: condiciones fijas de la empresa y documento anexo ----
+  configCotizacion: { terminosBase: string; personalizados?: boolean; anexo?: { url: string; nombre: string } | null } | null = null;
+  subiendoAnexo = false;
+  guardandoCondiciones = false;
+
+  /** Solo administradores cambian las condiciones de todas las cotizaciones. */
+  get esAdminCotizaciones(): boolean {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "null");
+      return /administrador/i.test(String(u?.rol || ""));
+    } catch {
+      return false;
+    }
+  }
+
+  /** Guarda el texto de esta cotización como condiciones de todas las nuevas. */
+  async guardarCondicionesPredeterminadas(): Promise<void> {
+    const texto = (this.cotizacion.terminos || "").trim();
+    if (!texto || this.guardandoCondiciones) return;
+    const r = await Swal.fire({
+      title: "¿Usar estos términos en todas las cotizaciones?",
+      text: "Las cotizaciones nuevas saldrán con este texto. Las que ya existen no cambian.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, guardar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+    });
+    if (!r.isConfirmed) return;
+    this.guardandoCondiciones = true;
+    this.subs.push(this.service.updateConfig({ terminosBase: texto }).subscribe({
+      next: (res) => {
+        this.guardandoCondiciones = false;
+        if (res && res.success) {
+          this.configCotizacion = { ...(this.configCotizacion || { terminosBase: texto }), terminosBase: texto, personalizados: true };
+          this.toastr.success("Las cotizaciones nuevas saldrán con estos términos.", "Guardado");
+        } else {
+          this.toastr.error((res && res.message) || "No se pudieron guardar los términos.");
+        }
+      },
+      error: (e) => {
+        this.guardandoCondiciones = false;
+        this.toastr.error(e?.error?.msg || e?.error?.message || "No se pudieron guardar los términos.");
+      },
+    }));
+  }
+
+  /** Sube el PDF de condiciones comerciales y queda como anexo de todas las cotizaciones. */
+  onAnexoSeleccionado(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files[0];
+    input.value = "";
+    if (!file) return;
+    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
+      this.toastr.warning("El anexo debe ser un archivo PDF.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      this.toastr.warning("El PDF no puede pesar más de 10 MB.");
+      return;
+    }
+    let empresa = "empresa";
+    try { empresa = String(JSON.parse(localStorage.getItem("user") || "{}").company || "empresa"); } catch { /* ruta genérica */ }
+    empresa = empresa.replace(/[^A-Za-z0-9_-]+/g, "_");
+    const limpio = file.name.replace(/[^A-Za-z0-9._-]+/g, "_");
+    const ruta = `cotizaciones-anexos/${empresa}/${Date.now()}_${limpio}`;
+    const nombre = file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim() || "Condiciones comerciales";
+    this.subiendoAnexo = true;
+    this.storage.upload(ruta, file, { contentType: "application/pdf" })
+      .then(() => firstValueFrom(this.storage.ref(ruta).getDownloadURL()))
+      .then((url: string) => {
+        const anexo = { url, nombre };
+        this.subs.push(this.service.updateConfig({ anexo }).subscribe({
+          next: (res) => {
+            this.subiendoAnexo = false;
+            if (res && res.success) {
+              this.configCotizacion = { ...(this.configCotizacion || { terminosBase: "" }), anexo };
+              this.cotizacion.anexoCondiciones = anexo;
+              this.toastr.success("El PDF quedó como anexo de todas las cotizaciones nuevas.", "Anexo guardado");
+            } else {
+              this.toastr.error((res && res.message) || "No se pudo guardar el anexo.");
+            }
+          },
+          error: (e) => {
+            this.subiendoAnexo = false;
+            this.toastr.error(e?.error?.msg || e?.error?.message || "No se pudo guardar el anexo.");
+          },
+        }));
+      })
+      .catch(() => {
+        this.subiendoAnexo = false;
+        this.toastr.error("No se pudo subir el PDF. Intenta de nuevo.");
+      });
+  }
+
+  /** Deja de adjuntar el PDF en las cotizaciones nuevas. */
+  async quitarAnexo(): Promise<void> {
+    const r = await Swal.fire({
+      title: "¿Quitar el PDF de condiciones?",
+      text: "Las cotizaciones nuevas saldrán sin anexo. Las que ya enviaste lo conservan.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, quitar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#5F3FE0",
+    });
+    if (!r.isConfirmed) return;
+    this.subs.push(this.service.updateConfig({ anexo: null }).subscribe({
+      next: (res) => {
+        if (res && res.success) {
+          this.configCotizacion = { ...(this.configCotizacion || { terminosBase: "" }), anexo: null };
+          this.cotizacion.anexoCondiciones = null;
+          this.toastr.success("Se quitó el anexo.");
+        } else {
+          this.toastr.error((res && res.message) || "No se pudo quitar el anexo.");
+        }
+      },
+      error: () => this.toastr.error("No se pudo quitar el anexo."),
+    }));
+  }
 
   /** True si la cotización en edición puede convertirse a pedido (aceptada). */
   get puedeConvertir(): boolean {
@@ -262,10 +386,9 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
           this.recalcularVencimiento();
         }
         this.clienteTerm = this.clienteNombre(c.cliente);
-        // Si no trae términos, precargar el default de empresa.
-        if (!this.cotizacion.terminos) {
-          this.cargarTerminosDefault();
-        }
+        // Si no trae términos, precargar el default de empresa. Ticket 1081: la
+        // config se lee siempre, para mostrar el anexo y sus acciones.
+        this.cargarTerminosDefault();
         this.loading = false;
         if (this.abrirPreviewAlCargar) {
           // Una sola vez: si el usuario cierra el documento, no debe reaparecer.
@@ -285,8 +408,13 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     const sub = this.service.getConfig().subscribe({
       next: (res) => {
         const base = res && res.data ? res.data.terminosBase : "";
+        if (res && res.data) this.configCotizacion = res.data;
         if (base && !this.cotizacion.terminos) {
           this.cotizacion.terminos = base;
+        }
+        // Ticket 1081: una cotización nueva lleva el anexo vigente de la empresa.
+        if (!this.cotizacionId && this.cotizacion.anexoCondiciones === undefined) {
+          this.cotizacion.anexoCondiciones = (res && res.data && res.data.anexo) || null;
         }
       },
       error: () => {

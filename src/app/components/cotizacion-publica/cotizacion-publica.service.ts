@@ -31,6 +31,8 @@ export interface CotizacionPublicaView {
   totalImpuesto: number;
   total: number;
   terminos: string;
+  /** Ticket 1081: documento anexo de condiciones comerciales. */
+  anexo?: { url: string; nombre: string } | null;
   fechaEmision: string;
   fechaVencimiento: string;
   validezDias: number | null;

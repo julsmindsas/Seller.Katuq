@@ -407,6 +407,28 @@
           ></textarea>
           <small class="cot-hint">Precargados del default de la empresa. Editables por cotización.</small>
         </div>
+
+        <!-- Ticket 1081: documento anexo y condiciones de todas las cotizaciones -->
+        <div class="cot-anexo" *ngIf="cotizacion.anexoCondiciones as anexo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+          <span>Se adjunta: <a [href]="anexo.url" target="_blank" rel="noopener">{{ anexo.nombre }} (PDF)</a></span>
+        </div>
+        <div class="cot-condiciones-acciones" *ngIf="esAdminCotizaciones">
+          <button type="button" class="btn btn-link btn-sm p-0"
+                  [disabled]="guardandoCondiciones || !(cotizacion.terminos || '').trim()"
+                  (click)="guardarCondicionesPredeterminadas()">
+            Usar estos términos en todas las cotizaciones
+          </button>
+          <span class="cot-sep">·</span>
+          <label class="btn btn-link btn-sm p-0 mb-0" [class.disabled]="subiendoAnexo">
+            {{ subiendoAnexo ? 'Subiendo PDF…' : (configCotizacion?.anexo ? 'Cambiar PDF de condiciones' : 'Adjuntar PDF de condiciones') }}
+            <input type="file" accept="application/pdf,.pdf" hidden [disabled]="subiendoAnexo" (change)="onAnexoSeleccionado($event)">
+          </label>
+          <ng-container *ngIf="configCotizacion?.anexo">
+            <span class="cot-sep">·</span>
+            <button type="button" class="btn btn-link btn-sm p-0 text-danger" (click)="quitarAnexo()">Quitar PDF</button>
+          </ng-container>
+        </div>
       </section>
     </div>
 
@@ -638,6 +660,9 @@
       </div>
 
       <div class="doc-notes" *ngIf="(cotizacion.terminos || '').trim()" [innerHTML]="cotizacion.terminos | linkify"></div>
+      <div class="doc-notes doc-anexo" *ngIf="cotizacion.anexoCondiciones as anexo">
+        Anexo: <a [href]="anexo.url" target="_blank" rel="noopener">{{ anexo.nombre }}</a> — hace parte de esta cotización.
+      </div>
 
       <img
         *ngIf="bannerPiePagina"

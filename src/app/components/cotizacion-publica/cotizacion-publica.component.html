@@ -94,9 +94,13 @@
     </div>
 
     <!-- Términos -->
-    <section *ngIf="cot.terminos" class="cp-terminos">
+    <section *ngIf="cot.terminos || cot.anexo" class="cp-terminos">
       <div class="cp-label">Términos y condiciones</div>
-      <p [innerHTML]="cot.terminos | linkify"></p>
+      <p *ngIf="cot.terminos" [innerHTML]="cot.terminos | linkify"></p>
+      <!-- Ticket 1081: documento anexo de condiciones comerciales -->
+      <a *ngIf="cot.anexo as anexo" class="cp-anexo" [href]="anexo.url" target="_blank" rel="noopener">
+        <span aria-hidden="true">📄</span> {{ anexo.nombre }} (PDF)
+      </a>
     </section>
 
     <!-- Acciones del cliente -->

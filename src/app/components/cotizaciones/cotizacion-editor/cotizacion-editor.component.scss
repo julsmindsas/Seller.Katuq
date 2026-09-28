@@ -1539,3 +1539,32 @@
     overflow: auto;
   }
 }
+
+/* Ticket 1081: anexo de condiciones y acciones del administrador */
+.cot-anexo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  border: 1px solid #E6E2F5;
+  background: #F6F4FC;
+  color: #211F3A;
+  font-size: 13px;
+  svg { color: #5F3FE0; flex: 0 0 auto; }
+  a { color: #5F3FE0; font-weight: 600; }
+}
+.cot-condiciones-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  .btn-link { color: #5F3FE0; text-decoration: none; font-size: 13px; }
+  .btn-link.text-danger { color: #C62828 !important; }
+  .btn-link.disabled { opacity: .55; pointer-events: none; }
+  .cot-sep { color: #B7B3CC; }
+}
+.doc-anexo a { color: #5F3FE0; font-weight: 600; }
