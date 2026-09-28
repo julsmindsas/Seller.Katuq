@@ -7,7 +7,7 @@
 
 - [x] 1.1 Confirmar que no haya CDN delante de `back.katuq.com`. (27-sep: el DNS apunta directo al EC2 y responde nginx; el `location /` no manda ni `X-Real-IP` ni `X-Forwarded-For`.)
 - [x] 1.2 Prueba de `getClientIp` (`X-Real-IP`, luego `X-Forwarded-For`, luego `req.ip`) y el cambio.
-- [ ] 1.3 Con OK de Daniel: respaldo del `.conf`, `proxy_set_header X-Real-IP`, `nginx -t` y `reload`. Verificar la IP real en la auditoría.
+- [x] 1.3 Con OK de Daniel: respaldo del `.conf`, `proxy_set_header X-Real-IP`, `nginx -t` y `reload`. Verificar la IP real en la auditoría.
 
 ## 2. Contrato primero
 
@@ -42,6 +42,6 @@
 
 ## 5. Despliegue (con OK de Daniel)
 
-- [ ] 5.1 Backend en sombra (umbral 1000), con la rama medida contra producción. Dos días de pauta y revisión de razones y puntajes.
-- [ ] 5.2 Front desde una copia limpia.
+- [x] 5.1 Backend en sombra (umbral 1000), con la rama medida contra producción. Dos días de pauta y revisión de razones y puntajes.
+- [x] 5.2 Front desde una copia limpia.
 - [ ] 5.3 Umbral a 30 y prueba real con un registro falso controlado.

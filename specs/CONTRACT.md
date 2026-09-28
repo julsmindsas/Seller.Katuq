@@ -7394,7 +7394,7 @@ Verificado en producción:
 
 **En producción:** backend `7d1e841` y front 2026.09.24.2. Prueba real: un documento en serie quedó marcado, con riesgo 0 y el chip "Documento por confirmar" en el aviso interno.
 
-## D-323 (2026-09-27) — El filtro del registro: el sospechoso confirma un código por correo antes de entrar (APROBADA, IMPLEMENTADA, SIN DESPLEGAR)
+## D-323 (2026-09-27) — El filtro del registro: el sospechoso confirma un código por correo antes de entrar (APROBADA, EN PRODUCCIÓN EN SOMBRA desde el 28-sep)
 
 **Contexto.** El caso Aurora (25-sep): entró con datos inventados y riesgo 0, y le contó a la pauta como registro real. Daniel pidió "el filtro solo pa'l registro por ahora": el sospechoso verifica con un código por correo antes de entrar, sin modo limitado dentro de la app ni captcha. También eligió que salga **antes** que la tienda en 1 clic (D-324). El número D-323 lo reservó la propuesta amplia "blindar el registro contra cuentas falsas", de otra sesión, que queda en espera junto con su fase 0.
 
@@ -7423,7 +7423,14 @@ Se despliega primero en sombra.
 
 **Orden de despliegue (con OK de Daniel):** 1) nginx; 2) backend con `REG_VERIFY_THRESHOLD=1000` (sombra) y la rama medida contra producción; 3) front desde una copia limpia; 4) dos días de pauta y revisar `registrationSignals`; 5) umbral a 30 y prueba con un registro falso controlado.
 
-**Estado:** aprobada e implementada en ramas; sin desplegar.
+**Despliegue (28-sep, con OK de Daniel):**
+- nginx: `proxy_set_header X-Real-IP $remote_addr;` en el `location /` de back.katuq.com; respaldo `back.katuq.com.conf.bak.20260928-xrealip`, `nginx -t` y recarga. Verificado: un `X-Real-IP` inventado no cambia el conteo del limitador;
+- backend: `backend-aws-security` a 1ff1bda (solo este commit sobre a025c2c), `REG_VERIFY_THRESHOLD=1000` en `functions/.env` (respaldo `.env.bak.20260928-filtro-registro`), pruebas de contrato corridas en el servidor, `pm2 reload`. Verificado: endpoints nuevos (200 uniforme, 422, 400), login igual (401 sin usuario), log limpio;
+- front: 2026.09.28.1 (merge fe53377a, release b09f8a93) desde la copia limpia; el bundle en vivo trae la pantalla y el identificador del navegador.
+
+**Pendiente:** con dos días de pauta, revisar `companies.registrationSignals` (puntaje y razones) de los registros nuevos y, si ningún real llega a 30, bajar `REG_VERIFY_THRESHOLD` a 30 (`pm2 reload katuq-api --update-env`) y probar con un registro falso controlado. Reversa: volver a 1000, sin desplegar.
+
+**Estado:** en producción en sombra.
 
 ## D-324 (2026-09-27) — La tienda queda publicada al terminar el registro (APROBADA)
 
