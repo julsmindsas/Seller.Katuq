@@ -81,6 +81,10 @@
         <section class="step-card" aria-labelledby="active-step-title" [ngSwitch]="activeId">
           <ng-container *ngSwitchCase="'goal'">
             <p class="step-intro">¿Qué te gustaría conseguir primero? Puedes cambiar de ruta cuando quieras.</p>
+            <p class="aviso-spam">
+              <i class="pi pi-envelope" aria-hidden="true"></i>
+              Te escribimos desde <strong>notificaciones&#64;katuq.com</strong> con tus siguientes pasos. Si no ves nuestros correos, búscalos en <strong>Spam</strong> o <strong>Promociones</strong> y márcalos como “No es spam”.
+            </p>
             <div class="choice-list choice-list--goals">
               <button type="button" class="choice-card" [class.is-selected]="goal === 'sell_today'"
                       [attr.aria-pressed]="goal === 'sell_today'" (click)="selectGoal('sell_today')">

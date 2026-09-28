@@ -3202,3 +3202,15 @@ $reg-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
         font-weight: 400;
     }
 }
+
+// Aviso de revisar Spam: el correo de katuq.com todavía no pasa DMARC (28-sep).
+.aviso-spam {
+    margin: 16px 0;
+    padding: 12px 14px;
+    border-radius: 11px;
+    background: #efebfd;
+    color: #211f3a;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: left;
+}

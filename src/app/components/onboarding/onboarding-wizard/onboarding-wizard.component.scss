@@ -795,3 +795,19 @@ input:focus-visible {
   color: #c62828 !important;
   overflow-wrap: anywhere;
 }
+
+// Aviso de revisar Spam: el correo de katuq.com todavía no pasa DMARC (28-sep).
+.aviso-spam {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: #efebfd;
+  color: #211f3a;
+  font-size: 0.92rem;
+  line-height: 1.5;
+
+  i { color: #5f3fe0; margin-top: 3px; }
+}
