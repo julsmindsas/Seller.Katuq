@@ -7475,3 +7475,25 @@ Se despliega primero en sombra.
 - el aviso a los ya registrados en `/welcome` y el correo único (`--dry-run` primero);
 - la métrica de 24 h en el panel del Super Admin;
 - la línea base de 0 de 31 registros.
+
+## D-325 (2026-09-28) — PROPUESTA: secuencia automática por correo para que los registrados usen Katuq
+
+**Contexto.** Daniel: "yo quiero algo automatizado, no me pongas a hacerlo persona a persona". De los 31 registros del 23 al 27-sep ninguno publicó tienda y solo 1 volvió a entrar. Jairo les escribió a mano a 29. Canal: **solo correo** (decisión de Daniel, 28-sep). El pedido llegó por la sesión de videos.
+
+**Propuesta** (`openspec/changes/secuencia-activacion-correo/`):
+- tres correos por comportamiento que se detienen solos:
+  - 1 h sin producto;
+  - 24 h con producto y sin tienda;
+  - 3 días con tienda y sin pedidos;
+- personalizados con el negocio, el producto y un video;
+- solo registros desde el encendido, sin `metricsExcluded` ni cuentas sin verificar; un correo al día como máximo, tres en total, con baja en un clic;
+- medición por paso (enviados, abiertos, clics, completaron en 7 días, bajas);
+- bandera apagada, sombra o envío; sin colecciones nuevas (`companies.activacion`).
+
+**Remitente a escoger por Daniel:**
+- A, el correo actual de Workspace: recomendado para empezar, $0;
+- B, MailerSend.
+
+Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Daniel. Los registros exactos están en el diseño.
+
+**Estado:** propuesta, pendiente de aprobación.
