@@ -7476,7 +7476,7 @@ Se despliega primero en sombra.
 - la métrica de 24 h en el panel del Super Admin;
 - la línea base de 0 de 31 registros.
 
-## D-325 (2026-09-28) — Secuencia automática por correo para que los registrados usen Katuq (APROBADA, EN PRODUCCIÓN EN SOMBRA desde el 28-sep)
+## D-325 (2026-09-28) — Secuencia automática por correo para que los registrados usen Katuq (APROBADA, ENVIANDO desde el 28-sep)
 
 **Contexto.** Daniel: "yo quiero algo automatizado, no me pongas a hacerlo persona a persona". De los 31 registros del 23 al 27-sep ninguno publicó tienda y solo 1 volvió a entrar. Jairo les escribió a mano a 29. Canal: **solo correo** (decisión de Daniel, 28-sep). El pedido llegó por la sesión de videos.
 
@@ -7518,4 +7518,9 @@ Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Danie
 
 **Textos aprobados por Daniel (28-sep):** los finales de la sesión de videos, con "con las formas de pago de tu cuenta" en el paso de la tienda. Están en producción desde e974510 (desplegado por la sesión de tickets), con la secuencia todavía en sombra. Para pasar a `envio` falta el DNS de katuq.com y, opcionalmente, los videos.
 
-**Estado:** en producción en sombra.
+**Encendida (28-sep, ~15:10 UTC):** Daniel: "si prendelo ya, y en el registro digales que revisen spam esa configuracion aun no la puedo hacer".
+- `SECUENCIA_ACTIVACION=envio`, sin el DNS (respaldo `.env.bak.20260928-secuencia-envio`).
+- Aviso de revisar Spam o Promociones al terminar el registro y en el primer paso de la configuración inicial (web 2026.09.28.7).
+- Riesgo aceptado: parte de los correos caerá en Spam hasta que Daniel arregle el DNS de katuq.com.
+
+**Estado:** enviando. Pendiente: DNS de katuq.com (Daniel) y videos (opcional).
