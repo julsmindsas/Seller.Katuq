@@ -319,8 +319,8 @@
                       [style.color]="getPriorityColor(lead.priority)">
                       {{ getPriorityLabel(lead.priority) }}
                     </span>
-                    <small class="text-muted" *ngIf="lead.assignedTo">
-                      <i class="fa fa-user-o me-1"></i>{{ nombreComercial(lead.assignedTo) }}
+                    <small class="text-muted" *ngIf="duenoEfectivo(lead)">
+                      <i class="fa fa-user-o me-1"></i>{{ nombreComercial(duenoEfectivo(lead)) }}
                     </small>
                     <span class="stat-badge badge-sm" *ngIf="getContactBadge(lead) as cb"
                       [style.background-color]="cb.bg" [style.color]="cb.color"
@@ -424,7 +424,7 @@
                     {{ getPriorityLabel(lead.priority) }}
                   </span>
                 </td>
-                <td (click)="$event.stopPropagation()" style="cursor:default"><small>{{ lead.assignedTo ? nombreComercial(lead.assignedTo) : '-' }}</small></td>
+                <td (click)="$event.stopPropagation()" style="cursor:default"><small>{{ duenoEfectivo(lead) ? nombreComercial(duenoEfectivo(lead)) : '-' }}</small></td>
                 <td>
                   <small *ngIf="lead.estimatedValue" style="color:#8b5cf6; font-weight:600;">
                     {{ formatCurrency(lead.estimatedValue) }}

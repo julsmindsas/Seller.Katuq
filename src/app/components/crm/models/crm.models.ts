@@ -41,6 +41,9 @@ export interface CrmLead {
   // CRM pipeline
   stage: string;
   assignedTo?: string;
+  /** Ticket 1064: sin comercial decidido; entonces es de quien lo creó (`creadoPor`). */
+  sinDueno?: boolean;
+  creadoPor?: string | null;
   priority?: Priority;
   estimatedValue?: number;
   source?: string;

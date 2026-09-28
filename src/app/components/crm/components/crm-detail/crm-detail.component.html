@@ -81,10 +81,10 @@
             <div class="info-row">
               <span class="info-label">{{ 'Comercial' | translate }}</span>
               <p-dropdown *ngIf="equipo?.puedeAsignar && equipo?.comerciales?.length; else soloNombre"
-                [options]="opcionesComercial" [ngModel]="(lead.pipeline?.assignedTo || '').trim().toLowerCase() || null"
+                [options]="opcionesComercial" [ngModel]="duenoDelLead"
                 (onChange)="cambiarComercial($event.value)" [style]="{'width':'220px'}" [filter]="true"
                 filterBy="label" placeholder="Sin asignar"></p-dropdown>
-              <ng-template #soloNombre><span>{{ nombreComercial(lead.pipeline?.assignedTo) }}</span></ng-template>
+              <ng-template #soloNombre><span>{{ nombreComercial(duenoDelLead) }}</span></ng-template>
             </div>
             <div class="info-row" *ngIf="lead.entity?.subscriptionPlan">
               <span class="info-label">{{ 'Plan' | translate }}</span>

@@ -219,9 +219,15 @@ export class CrmListComponent implements OnInit, OnDestroy {
     return !!(this.equipo?.puedeAsignar && this.equipo.comerciales.length);
   }
 
+  /** Ticket 1064: el comercial del lead; si nadie lo decidió, quien lo creó. */
+  duenoEfectivo(l: CrmLead): string | null {
+    const e = l.assignedTo || (l.sinDueno ? l.creadoPor : null);
+    return e ? String(e).trim().toLowerCase() : null;
+  }
+
   private pasaFiltroComercial(l: CrmLead): boolean {
     if (!this.selectedComercial) return true;
-    const asignado = String(l.assignedTo || '').trim().toLowerCase();
+    const asignado = this.duenoEfectivo(l) || '';
     return this.selectedComercial === '__sin__' ? !asignado : asignado === this.selectedComercial;
   }
 
@@ -959,7 +965,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     const map = new Map<string, { total: number; won: number; lost: number }>();
 
     for (const lead of [...this.leads, ...this.closedLeads]) {
-      const agent = (lead.assignedTo || '').trim().toLowerCase() || 'Sin asignar';
+      const agent = this.duenoEfectivo(lead) || 'Sin asignar';
       if (!map.has(agent)) map.set(agent, { total: 0, won: 0, lost: 0 });
       const row = map.get(agent);
       row.total++;
@@ -1129,7 +1135,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       'NIT/Doc': l.nit || '',
       'Etapa': this.getStageLabel(l.stage),
       'Prioridad': l.priority || '',
-      'Asignado': l.assignedTo || '',
+      'Asignado': this.duenoEfectivo(l) || '',
       'Valor Estimado': l.estimatedValue || 0,
       'Plan': l.subscriptionPlan || '',
       'Estado': l.activo ? 'Activo' : 'Inactivo',

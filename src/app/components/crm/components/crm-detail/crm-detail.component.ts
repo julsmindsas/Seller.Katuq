@@ -270,7 +270,14 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   cambiarComercial(email: string | null): void {
     if (!this.lead) return;
     this.lead.pipeline = { ...(this.lead.pipeline || {}), assignedTo: email };
+    this.lead.duenoEfectivo = email;
     this.updateField('assignedTo', email);
+  }
+
+  /** Ticket 1064: el comercial del lead; si nadie lo decidió, quien lo creó (lo calcula el servidor). */
+  get duenoDelLead(): string | null {
+    const e = this.lead?.duenoEfectivo !== undefined ? this.lead.duenoEfectivo : this.lead?.pipeline?.assignedTo;
+    return e ? String(e).trim().toLowerCase() : null;
   }
 
   /** Ticket 1064: se ve y se puede escoger el responsable de la tarea. */
@@ -291,7 +298,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
       return;
     }
     const enEquipo = (e: string | null) => !!e && this.opcionesComercial.some(o => o.value === e);
-    const delLead = this.lead?.pipeline?.assignedTo ? String(this.lead.pipeline.assignedTo).trim().toLowerCase() : null;
+    const delLead = this.duenoDelLead;
     const yo = this.equipo?.yo || null;
     this.taskForm.patchValue({ assignedTo: enEquipo(delLead) ? delLead : (enEquipo(yo) ? yo : null) });
   }
@@ -388,6 +395,8 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
           this.activities = [activity, ...this.activities];
           this.activityForm.reset({ type: 'note', description: '', detail: '' });
           this.messageService.add({ severity: 'success', summary: 'Actividad registrada' });
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'No se guardó la actividad', detail: 'Intenta de nuevo. Si el lead no es tuyo, pídele al administrador que la registre.' });
         }
       });
   }
