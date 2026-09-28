@@ -106,7 +106,20 @@ const _rangoVolumenPorCantidad = (preciosVolumen: any, cantidad: number): any =>
 export const fechaDelPedido = (order: any): string | undefined => {
   const cruda = order?.fechaCreacion || order?.fecha || null;
   if (!cruda) return undefined;
-  const texto = typeof cruda === "string" ? cruda : new Date(cruda).toISOString();
+  let texto: string;
+  if (typeof cruda === "string") {
+    texto = cruda;
+  } else {
+    // Timestamp de Firestore serializado por la API ({_seconds}/{seconds}), Date o
+    // milisegundos. Algo ilegible no puede tumbar la pantalla del pedido: se trata
+    // como "sin fecha" (= hoy). Espejo de orderCalculationService.fechaDelPedido.
+    const segundos = cruda._seconds ?? cruda.seconds;
+    const fecha = typeof cruda.toDate === "function" ? cruda.toDate()
+      : segundos != null ? new Date(Number(segundos) * 1000)
+        : new Date(cruda);
+    if (!(fecha instanceof Date) || isNaN(fecha.getTime())) return undefined;
+    texto = fecha.toISOString();
+  }
   const soloFecha = texto.slice(0, 10);
   return /^\d{4}-\d{2}-\d{2}$/.test(soloFecha) ? soloFecha : undefined;
 };
