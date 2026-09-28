@@ -3,7 +3,7 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { CrmLead, CrmActivity, CrmTask, CrmStats, CrmPaginatedResponse, CrmStage } from '../models/crm.models';
+import { CrmLead, CrmActivity, CrmTask, CrmStats, CrmPaginatedResponse, CrmStage, CrmEquipo } from '../models/crm.models';
 
 @Injectable({ providedIn: 'root' })
 export class CrmService {
@@ -129,6 +129,27 @@ export class CrmService {
   getStages(): Observable<{ stages: CrmStage[]; entityType: string }> {
     return this.http.get<{ success: boolean; data: CrmStage[]; entityType: string }>(`${this.base}/stages`)
       .pipe(map(r => ({ stages: r.data || [], entityType: r.entityType || 'client' })), catchError(() => of({ stages: [], entityType: 'client' })));
+  }
+
+  // ─── Equipo (ticket 1064) ───────────────────────────────────
+
+  /** Comerciales para asignar y si quien pregunta ve solo sus leads. */
+  getEquipo(): Observable<CrmEquipo> {
+    const vacio: CrmEquipo = { comerciales: [], yo: null, soloPropios: false, puedeAsignar: false, config: { crmSoloPropios: false, crmRecordatoriosCorreo: false } };
+    return this.http.get<any>(`${this.base}/equipo`)
+      .pipe(
+        map(r => (r && r.success ? {
+          comerciales: r.comerciales || [], yo: r.yo || null, soloPropios: !!r.soloPropios,
+          puedeAsignar: !!r.puedeAsignar, config: r.config || vacio.config,
+        } : vacio)),
+        catchError(() => of(vacio)),
+      );
+  }
+
+  /** Enciende o apaga la visibilidad por comercial y los recordatorios por correo (administradores). */
+  saveConfig(cambios: { crmSoloPropios?: boolean; crmRecordatoriosCorreo?: boolean }): Observable<boolean> {
+    return this.http.put<{ success: boolean }>(`${this.base}/config`, cambios)
+      .pipe(map(r => !!r.success), catchError(() => of(false)));
   }
 
   saveStages(stages: CrmStage[]): Observable<boolean> {

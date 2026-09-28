@@ -458,3 +458,12 @@
 
   &.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 3px currentColor; }
 }
+
+/* Ticket 1064: filtro por comercial en la barra de segmentación */
+.crm-filtro-comercial {
+  width: auto;
+  min-width: 190px;
+  max-width: 240px;
+  height: 31px;
+  font-size: 13px;
+}

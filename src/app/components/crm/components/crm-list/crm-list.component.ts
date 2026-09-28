@@ -13,7 +13,7 @@ import { ClientTag } from '../../../ventas/clientes/services/client-config.servi
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
-import { CrmLead, CrmStats, CrmStage, CrmTask, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
+import { CrmLead, CrmStats, CrmStage, CrmTask, CrmEquipo, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
 import { resolverNombreApellido } from '../../../../shared/utils/nombre-apellido.util';
 
 @Component({
@@ -73,6 +73,11 @@ export class CrmListComponent implements OnInit, OnDestroy {
   etiquetasSeleccionadas: string[] = [];
   // Filtro por etiqueta (segmentación del pipeline)
   selectedTagNames: string[] = [];
+  /** Ticket 1064: equipo comercial y filtro por comercial ('' todos, '__sin__' sin asignar). */
+  equipo: CrmEquipo | null = null;
+  selectedComercial = '';
+  showEquipoModal = false;
+  guardandoEquipo = false;
   // Modal de configuración de etiquetas
   showConfigModal = false;
   editableTags: ClientTag[] = [];
@@ -186,12 +191,58 @@ export class CrmListComponent implements OnInit, OnDestroy {
       });
 
     this.loadStats();
+
+    // Ticket 1064: comerciales para asignar y si este usuario solo ve sus leads.
+    this.crmService.getEquipo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(eq => { this.equipo = eq; });
+  }
+
+  /** Ticket 1064: la caché del pipeline es por usuario (un comercial no ve la de otro). */
+  private claveCache(base: string): string {
+    const email = this.getCurrentUserEmail();
+    return email ? `${base}:${email}` : base;
+  }
+
+  /** Ticket 1064: nombre del comercial, o su correo si ya no está en el equipo. */
+  nombreComercial(email?: string | null): string {
+    if (!email) return 'Sin asignar';
+    const e = String(email).trim().toLowerCase();
+    const c = this.equipo?.comerciales.find(x => x.email === e);
+    return c ? c.nombre : e.split('@')[0];
+  }
+
+  /** Ticket 1064: hay a quién asignar (administrador y equipo cargado). */
+  get puedeAsignarComercial(): boolean {
+    return !!(this.equipo?.puedeAsignar && this.equipo.comerciales.length);
+  }
+
+  private pasaFiltroComercial(l: CrmLead): boolean {
+    if (!this.selectedComercial) return true;
+    const asignado = String(l.assignedTo || '').trim().toLowerCase();
+    return this.selectedComercial === '__sin__' ? !asignado : asignado === this.selectedComercial;
+  }
+
+  /** Ticket 1064: interruptores del equipo comercial (solo administradores). */
+  guardarConfigEquipo(campo: 'crmSoloPropios' | 'crmRecordatoriosCorreo', valor: boolean): void {
+    if (!this.equipo) return;
+    this.guardandoEquipo = true;
+    this.crmService.saveConfig({ [campo]: valor }).subscribe(ok => {
+      this.guardandoEquipo = false;
+      if (ok) {
+        this.equipo = { ...this.equipo!, config: { ...this.equipo!.config, [campo]: valor } };
+        this.messageService.add({ severity: 'success', summary: 'Guardado', life: 2500 });
+      } else {
+        this.equipo = { ...this.equipo!, config: { ...this.equipo!.config, [campo]: !valor } };
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar.' });
+      }
+    });
   }
 
   private restoreFromCache(): void {
     try {
       const cs = localStorage.getItem('crm_stages_v1');
-      const cl = localStorage.getItem('crm_leads_v1');
+      const cl = localStorage.getItem(this.claveCache('crm_leads_v1'));
       if (cs) {
         const s = JSON.parse(cs);
         this.stages = s.stages || [];
@@ -207,7 +258,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
   private saveToCache(): void {
     try {
       localStorage.setItem('crm_stages_v1', JSON.stringify({ stages: this.stages, entityType: this.entityType }));
-      localStorage.setItem('crm_leads_v1', JSON.stringify(this.leads));
+      localStorage.setItem(this.claveCache('crm_leads_v1'), JSON.stringify(this.leads));
+      localStorage.removeItem('crm_leads_v1'); // caché vieja, compartida entre usuarios
     } catch (_) {}
   }
 
@@ -241,6 +293,10 @@ export class CrmListComponent implements OnInit, OnDestroy {
     ref.componentInstance.isEdit = false;
     ref.componentInstance.title = 'Nuevo lead';
     ref.componentInstance.tagsCatalog = this.clientTagsCatalog;
+    if (this.puedeAsignarComercial) {
+      ref.componentInstance.comerciales = this.equipo!.comerciales;
+      ref.componentInstance.comercialPorDefecto = this.equipo!.yo;
+    }
     ref.result.then((value) => { if (value) this.submitCreate(value); }).catch(() => {});
   }
 
@@ -262,6 +318,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       etiquetas: Array.isArray(formData.etiquetas) ? formData.etiquetas : [],
       activo: true,
       pipelineCreatedAt: new Date().toISOString(),
+      assignedTo: formData.assignedTo || this.equipo?.yo || null,
     };
     this.leads = [newLead, ...this.leads];
     this.groupByStage();
@@ -374,6 +431,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
         this.selectedTagNames.every(tn => (l.etiquetas || []).includes(tn))
       );
     }
+    if (this.selectedComercial) filtered = filtered.filter(l => this.pasaFiltroComercial(l)); // ticket 1064
 
     // Ordenar: más recientes primero
     const sorted = [...filtered].sort((a, b) => {
@@ -898,7 +956,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     const map = new Map<string, { total: number; won: number; lost: number }>();
 
     for (const lead of [...this.leads, ...this.closedLeads]) {
-      const agent = (lead.assignedTo || '').trim() || 'Sin asignar';
+      const agent = (lead.assignedTo || '').trim().toLowerCase() || 'Sin asignar';
       if (!map.has(agent)) map.set(agent, { total: 0, won: 0, lost: 0 });
       const row = map.get(agent);
       row.total++;
@@ -1043,6 +1101,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
         this.selectedTagNames.every(tn => (l.etiquetas || []).includes(tn))
       );
     }
+    if (this.selectedComercial) list = list.filter(l => this.pasaFiltroComercial(l)); // ticket 1064
     return list;
   }
 

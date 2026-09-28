@@ -88,6 +88,24 @@ export interface CrmTask {
   lastReviewedAt?: string;
 }
 
+/** Ticket 1064: comercial de la empresa para asignar leads y tareas. */
+export interface CrmComercial {
+  email: string;
+  nombre: string;
+  rol: string;
+  comercial: boolean;
+}
+
+/** Ticket 1064: equipo y alcance de quien usa el CRM. */
+export interface CrmEquipo {
+  comerciales: CrmComercial[];
+  yo: string | null;
+  /** true = este usuario solo ve sus leads (visibilidad por comercial encendida). */
+  soloPropios: boolean;
+  puedeAsignar: boolean;
+  config: { crmSoloPropios: boolean; crmRecordatoriosCorreo: boolean };
+}
+
 export interface CrmStats {
   total: number;
   byStage: Record<string, number>;

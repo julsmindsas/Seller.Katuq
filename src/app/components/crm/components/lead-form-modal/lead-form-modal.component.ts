@@ -42,6 +42,10 @@ export class LeadFormModalComponent implements OnInit {
   @Input() tagsCatalog: LeadTag[] = [];
   /** Título del modal. */
   @Input() title = 'Nuevo corporativo';
+  /** Ticket 1064: comerciales a los que se puede asignar el lead (vacío = no se muestra). */
+  @Input() comerciales: { email: string; nombre: string }[] = [];
+  /** Ticket 1064: comercial por defecto (quien crea el lead). */
+  @Input() comercialPorDefecto: string | null = null;
 
   form: FormGroup;
   etiquetasSeleccionadas: string[] = [];
@@ -83,10 +87,14 @@ export class LeadFormModalComponent implements OnInit {
       estimatedValue: [null],
       productoInteres:[''],
       etiquetas:      [[]],
+      assignedTo:     [null],
     });
   }
 
   ngOnInit(): void {
+    // Ticket 1064: solo si hay a quién asignar; si no, el campo no viaja.
+    if (!this.comerciales.length) this.form.removeControl('assignedTo');
+    else if (!this.isEdit) this.form.patchValue({ assignedTo: this.comercialPorDefecto });
     if (this.isEdit && this.leadData) {
       const d = this.leadData;
       // Acepta tanto la forma de lead (name/nit/email/phone) como la de
@@ -104,6 +112,7 @@ export class LeadFormModalComponent implements OnInit {
         productoInteres: d.productoInteres || '',
         etiquetas:       this.etiquetasSeleccionadas,
       });
+      if (this.form.contains('assignedTo')) this.form.patchValue({ assignedTo: d.assignedTo || null });
     }
   }
 
