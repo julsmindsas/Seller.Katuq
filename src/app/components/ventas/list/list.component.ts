@@ -149,6 +149,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   facturaVendedorId: number | null = null;
   facturaCentroCostoId: number | null = null;
   private facturaAjustesPorTipo: { [tipo: string]: { costCenterId?: number; sellerId?: number } } = {};
+  /** Ticket 1074: vista previa de la factura (lo que saldría en SIIGO) y con qué opciones se pidió. */
+  facturaVistaPrevia: any = null;
+  facturaVistaPreviaCargando: boolean = false;
+  facturaVistaPreviaError: string = "";
+  private facturaVistaPreviaFirma: string = "";
   // SIIGO no define plazos: los define Katuq y se calcula la fecha. 'exacta' abre date-picker.
   readonly facturaPlazosCredito: { value: string; label: string }[] = [
     { value: "8", label: "8 días" },
@@ -1061,6 +1066,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.facturaAjustesPorTipo = cfgSiigo.documentTypeSettings || {};
         this.facturaVendedorId = null;
         this.facturaCentroCostoId = null;
+        this.facturaVistaPrevia = null;
+        this.facturaVistaPreviaCargando = false;
+        this.facturaVistaPreviaError = '';
+        this.facturaVistaPreviaFirma = '';
 
         this.modalService.open(this.facturaSiigoModal, {
           size: 'md',
@@ -1228,6 +1237,53 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
+  }
+
+  /** Ticket 1074: opciones de la ventana tal como se mandarían al facturar. */
+  private facturaOpcionesActuales(): any {
+    return {
+      documentTypeId: this.facturaDocumentTypeId ? parseInt(String(this.facturaDocumentTypeId), 10) : undefined,
+      paymentTypeId: this.facturaPaymentTypeId ? parseInt(String(this.facturaPaymentTypeId), 10) : undefined,
+      dueDate: this.facturaEsCredito ? (this.facturaDueDate || undefined) : undefined,
+      observaciones: (this.facturaObservaciones || '').trim() || undefined,
+      retenciones: Object.values(this.facturaRetencionSel || {})
+        .filter((v) => v !== null && v !== undefined)
+        .map((v) => Number(v)),
+      sellerId: this.facturaVendedorId || undefined,
+      costCenterId: this.facturaUsaCentroCosto ? (this.facturaCentroCostoId || undefined) : undefined,
+    };
+  }
+
+  /** Ticket 1074: la vista previa ya no corresponde a lo elegido en la ventana. */
+  get facturaVistaPreviaDesactualizada(): boolean {
+    return !!this.facturaVistaPrevia && this.facturaVistaPreviaFirma !== JSON.stringify(this.facturaOpcionesActuales());
+  }
+
+  /** Ticket 1074: pide al backend el desglose de la factura sin emitirla. */
+  verVistaPreviaFactura(): void {
+    if (!this.facturaFormValido || !this.facturaPedido || this.facturaVistaPreviaCargando) return;
+    const opciones = this.facturaOpcionesActuales();
+    const firma = JSON.stringify(opciones);
+    const provider = this.activeAccountingProvider || 'siigo';
+    this.facturaVistaPreviaCargando = true;
+    this.facturaVistaPreviaError = '';
+    this.integrationsService.previewAccountingInvoice(provider, this.facturaPedido._id, opciones).subscribe({
+      next: (response: any) => {
+        this.facturaVistaPreviaCargando = false;
+        if (response?.success && response.data) {
+          this.facturaVistaPrevia = response.data;
+          this.facturaVistaPreviaFirma = firma;
+        } else {
+          this.facturaVistaPrevia = null;
+          this.facturaVistaPreviaError = response?.message || 'No se pudo armar la vista previa.';
+        }
+      },
+      error: (error) => {
+        this.facturaVistaPreviaCargando = false;
+        this.facturaVistaPrevia = null;
+        this.facturaVistaPreviaError = error?.error?.message || 'No se pudo armar la vista previa.';
+      },
+    });
   }
 
   /** Confirma el modal y dispara la facturación con forma de pago + vencimiento. */

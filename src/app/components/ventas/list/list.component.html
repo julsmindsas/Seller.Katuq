@@ -2579,10 +2579,76 @@
             </div>
             <small class="text-muted">Salen de tu SIIGO. SIIGO calcula el valor de cada retención.</small>
         </div>
+
+        <!-- Ticket 1074: vista previa de lo que saldrá en la factura -->
+        <div class="factura-vista-previa mt-3" *ngIf="facturaVistaPreviaError">
+            <p class="text-danger mb-0"><i class="fa fa-exclamation-circle me-1"></i>{{ facturaVistaPreviaError }}</p>
+        </div>
+        <div class="factura-vista-previa mt-3" *ngIf="facturaVistaPrevia as vp">
+            <div class="fvp-titulo">
+                <span>Vista previa de la factura</span>
+                <small class="text-muted" *ngIf="vp.tipoFactura?.nombre">{{ vp.tipoFactura.nombre }}</small>
+            </div>
+            <p class="fvp-aviso" *ngIf="facturaVistaPreviaDesactualizada">
+                Cambiaste opciones de la factura. Vuelve a ver la vista previa.
+            </p>
+            <p class="fvp-aviso" *ngFor="let a of vp.avisos">{{ a }}</p>
+            <div class="table-responsive">
+                <table class="table table-sm fvp-tabla mb-2">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-end">Cant.</th>
+                            <th class="text-end">Base</th>
+                            <th class="text-end">IVA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let l of vp.lineas">
+                            <td>
+                                <div class="fvp-producto">{{ l.descripcion }}</div>
+                                <small class="text-muted">
+                                    {{ l.precioUnitario | currency:'USD':'symbol':'1.0-2' }} c/u
+                                    <span *ngIf="l.descuento > 0"> · desc. −{{ l.descuento | currency:'USD':'symbol':'1.0-2' }}</span>
+                                </small>
+                            </td>
+                            <td class="text-end">{{ l.cantidad }}</td>
+                            <td class="text-end">{{ l.base | currency:'USD':'symbol':'1.0-2' }}</td>
+                            <td class="text-end">
+                                {{ l.iva | currency:'USD':'symbol':'1.0-2' }}
+                                <small class="text-muted d-block">{{ l.tarifaIva }}%</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <dl class="fvp-totales">
+                <div *ngIf="vp.totales.descuento > 0"><dt>Descuentos</dt><dd>−{{ vp.totales.descuento | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div><dt>Subtotal (base)</dt><dd>{{ vp.totales.base | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div><dt>IVA</dt><dd>{{ vp.totales.iva | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div class="fvp-fuerte"><dt>Total factura</dt><dd>{{ vp.totales.totalFactura | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+                <div *ngFor="let r of vp.totales.retenciones" [class.fvp-informativa]="r.informativa">
+                    <dt>{{ r.nombre }}<small *ngIf="r.informativa"> (la paga tu empresa, no se descuenta)</small></dt>
+                    <dd>{{ r.informativa ? '' : '−' }}{{ r.valor | currency:'USD':'symbol':'1.0-2' }}</dd>
+                </div>
+                <div class="fvp-fuerte fvp-pagar"><dt>Valor a pagar</dt><dd>{{ vp.totales.aPagar | currency:'USD':'symbol':'1.0-2' }}</dd></div>
+            </dl>
+            <p class="fvp-aviso mb-0" *ngIf="!vp.cuadra">
+                El valor a pagar no coincide con el total menos las retenciones. Revisa antes de facturar.
+            </p>
+            <small class="text-muted">Así se enviará a SIIGO. Todavía no se ha generado nada.</small>
+        </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
             <i class="fa fa-times me-1"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-outline-primary"
+                *ngIf="(activeAccountingProvider || 'siigo') === 'siigo'"
+                [disabled]="!facturaFormValido || facturaVistaPreviaCargando"
+                (click)="verVistaPreviaFactura()">
+            <i class="fa me-1" [ngClass]="facturaVistaPreviaCargando ? 'fa-spinner fa-spin' : 'fa-eye'"></i>
+            {{ facturaVistaPreviaDesactualizada ? 'Actualizar vista previa' : 'Ver vista previa' }}
         </button>
         <button type="button" class="btn btn-primary"
                 [disabled]="!facturaFormValido"

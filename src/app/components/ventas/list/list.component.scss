@@ -6578,3 +6578,60 @@ $pd-chip-border: #e9e7f3;
     &:hover { background: var(--kc-accent-wash); color: var(--kc-accent); }
   }
 }
+
+/* ---- Ticket 1074: vista previa de la factura en la ventana de facturación ---- */
+.factura-vista-previa {
+  border: 1px solid $pd-chip-border;
+  background: $pd-chip-bg;
+  border-radius: 11px;
+  padding: 12px 14px;
+  color: $pd-ink;
+
+  .fvp-titulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: $pd-muted;
+    small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  }
+
+  .fvp-aviso {
+    background: #fff4e5;
+    color: #8a5300;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+
+  .fvp-tabla {
+    font-size: 13px;
+    background: transparent;
+    th { font-size: 11px; font-weight: 700; color: $pd-muted; text-transform: uppercase; border-color: $pd-line; }
+    td { border-color: $pd-line; vertical-align: top; }
+    .fvp-producto { font-weight: 600; line-height: 1.25; }
+  }
+
+  .fvp-totales {
+    margin: 0 0 6px;
+    font-size: 13px;
+    > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 3px 0;
+    }
+    dt { font-weight: 500; margin: 0; }
+    dd { margin: 0; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .fvp-informativa { color: $pd-muted; }
+    .fvp-fuerte { font-weight: 700; border-top: 1px solid $pd-line; padding-top: 6px; margin-top: 3px; }
+    .fvp-fuerte dt { font-weight: 700; }
+    .fvp-pagar dd { color: $pd-accent; font-size: 15px; }
+  }
+}

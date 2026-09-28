@@ -1205,6 +1205,28 @@ export class IntegrationsService {
   }
 
   /**
+   * Ticket 1074: vista previa de la factura (IVA, descuentos, retenciones, valor a pagar)
+   * con las mismas opciones de la ventana de factura. No emite nada.
+   */
+  previewAccountingInvoice(provider: string, orderId: string, options?: any): Observable<any> {
+    const body: any = { orderId };
+    if (options?.documentTypeId) body.documentTypeId = options.documentTypeId;
+    if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
+    if (options?.prefijoId) body.prefijoId = options.prefijoId;
+    if (options?.dueDate) body.dueDate = options.dueDate;
+    if (options?.observaciones) body.observaciones = options.observaciones;
+    if (Array.isArray(options?.retenciones) && options.retenciones.length) body.retenciones = options.retenciones;
+    if (options?.sellerId) body.sellerId = options.sellerId;
+    if (options?.costCenterId) body.costCenterId = options.costCenterId;
+
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/${provider}/invoices/preview`,
+      body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
    * Resolver prefijos de facturación por texto.
    * Envía textos del rol (ej: ["FE", "POS"]) y retorna los prefijos del proveedor que matchean + default.
    */
