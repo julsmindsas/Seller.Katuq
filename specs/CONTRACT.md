@@ -7476,7 +7476,7 @@ Se despliega primero en sombra.
 - la métrica de 24 h en el panel del Super Admin;
 - la línea base de 0 de 31 registros.
 
-## D-325 (2026-09-28) — Secuencia automática por correo para que los registrados usen Katuq (APROBADA)
+## D-325 (2026-09-28) — Secuencia automática por correo para que los registrados usen Katuq (APROBADA, EN PRODUCCIÓN EN SOMBRA desde el 28-sep)
 
 **Contexto.** Daniel: "yo quiero algo automatizado, no me pongas a hacerlo persona a persona". De los 31 registros del 23 al 27-sep ninguno publicó tienda y solo 1 volvió a entrar. Jairo les escribió a mano a 29. Canal: **solo correo** (decisión de Daniel, 28-sep). El pedido llegó por la sesión de videos.
 
@@ -7498,4 +7498,22 @@ Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Danie
 
 **Aprobación (Daniel, 28-sep):** propuesta aprobada, con remitente A (correo actual, `notificaciones@katuq.com` por Workspace). Sale apagada, luego sombra y luego envío, con los textos y videos de la sesión de videos. El DNS de katuq.com lo aplica Daniel.
 
-**Estado:** aprobada, en implementación.
+**Despliegue en sombra (28-sep, 14:37 UTC):**
+- backend 8cbdd81, solo ese commit sobre 0cb7d4b;
+- en `functions/.env`: `SECUENCIA_ACTIVACION=sombra` y `SECUENCIA_ACTIVACION_DESDE=2026-09-28T14:37:37Z` (respaldo `.env.bak.20260928-secuencia`);
+- prueba de contrato corrida en el servidor y rutas verificadas: `/ir` 302, `/baja` con token falso 400, `/metricas` sin sesión 401;
+- el trabajo corre cada 15 min y no envía nada.
+
+**Implementado:**
+- `services/activacion/` (pasos puros, estado, enlaces firmados, motor);
+- las plantillas `templates/activacion.js`, con textos provisionales;
+- `/v1/activacion/{ir,baja,metricas}`;
+- `List-Unsubscribe` en `services/email.js`;
+- `tests/onboarding/secuenciaActivacion.contract.test.js`, con mutaciones verificadas.
+
+**Para pasar a `envio`:**
+1. el DNS de katuq.com da `PASS` (paso de Daniel, registros en el diseño);
+2. los textos finales y los videos de la sesión de videos (`ACTIVACION_VIDEO_PRODUCTO|TIENDA|COMPARTIR`);
+3. revisar `/v1/activacion/metricas` tras dos días de sombra.
+
+**Estado:** en producción en sombra.
