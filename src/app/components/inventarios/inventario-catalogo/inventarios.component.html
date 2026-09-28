@@ -211,6 +211,27 @@
                                         </select>
                                     </div>
 
+                                    <!-- Ticket 1062: categoría y subcategoría (familias de producto) -->
+                                    <div class="inv-field" *ngIf="categoriasInventario.length">
+                                        <label for="inv-categoria"><i class="pi pi-tags"></i>Categoría</label>
+                                        <select id="inv-categoria"
+                                                [(ngModel)]="filtrosConsolidados.categoria"
+                                                (change)="onCategoriaConsolidadoChange()">
+                                            <option value="">Todas</option>
+                                            <option *ngFor="let c of categoriasInventario" [value]="c.nombre">{{ c.nombre }} ({{ c.total | number }})</option>
+                                            <option *ngIf="categoriasSinCategoria" [value]="valorSinCategoria">Sin categoría ({{ categoriasSinCategoria | number }})</option>
+                                        </select>
+                                    </div>
+                                    <div class="inv-field" *ngIf="subcategoriasFiltro.length">
+                                        <label for="inv-subcategoria"><i class="pi pi-tag"></i>Subcategoría</label>
+                                        <select id="inv-subcategoria"
+                                                [(ngModel)]="filtrosConsolidados.subcategoria"
+                                                (change)="aplicarFiltrosYResetear()">
+                                            <option value="">Todas</option>
+                                            <option *ngFor="let s of subcategoriasFiltro" [value]="s.nombre">{{ s.nombre }} ({{ s.total | number }})</option>
+                                        </select>
+                                    </div>
+
                                     <!-- Fulfillment -->
                                     <div class="inv-field" *ngIf="fulfillmentEnabled">
                                         <label for="inv-fulfillment"><i class="pi pi-cloud"></i>Fulfillment</label>
@@ -300,6 +321,10 @@
                                     <span class="inv-chip" *ngIf="filtrosConsolidados.bodegaId">
                                         <i class="pi pi-box"></i>{{ getNombreBodegaById(filtrosConsolidados.bodegaId) }}
                                         <i class="pi pi-times inv-chip-x" (click)="filtrosConsolidados.bodegaId = ''; aplicarFiltrosYResetear()"></i>
+                                    </span>
+                                    <span class="inv-chip" *ngIf="filtrosConsolidados.categoria">
+                                        <i class="pi pi-tags"></i>{{ etiquetaCategoriaFiltro }}
+                                        <i class="pi pi-times inv-chip-x" (click)="filtrosConsolidados.categoria = ''; filtrosConsolidados.subcategoria = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
                                     <span class="inv-chip is-blue" *ngIf="filtrosConsolidados.fulfillment">
                                         <i class="pi pi-cloud"></i>{{ filtrosConsolidados.fulfillment === 'con' ? 'Con enlace' : 'Sin enlace' }}

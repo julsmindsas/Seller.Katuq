@@ -269,7 +269,14 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     fulfillment: "", // 'con', 'sin', '' — opera sobre productos: producto con
                     // costoFuente=aliaddo-api o integrations.fulfillment.id (con) / ninguno (sin).
                     // Param backend: linkedToFulfillment.
+    categoria: "", // ticket 1062: familia del producto ('' = todas)
+    subcategoria: "",
   };
+  /** Ticket 1062: categorías y subcategorías que tienen los productos (del backend). */
+  categoriasInventario: { nombre: string; total: number; subcategorias: { nombre: string; total: number }[] }[] = [];
+  categoriasSinCategoria = 0;
+  valorSinCategoria = "__sin_categoria__";
+  private _categoriasCargadas = false;
   estadisticasConsolidadas: {
     totalStock: number;
     productosSinStock: number;
@@ -623,6 +630,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
 
   cargarInventarioConsolidado(page: number = 1): void {
     this.loadingConsolidado = true;
+    if (!this._categoriasCargadas) this.cargarCategoriasInventario();
 
     // Primera carga: pedir métricas + productos.
     // Cambios de página: solo productos (las métricas globales no cambian entre páginas).
@@ -638,6 +646,8 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       bodega: this.filtrosConsolidados.bodegaId || undefined,
       // Filtro fulfillment a nivel producto: con/sin sync de costo Aliaddo.
       linkedToFulfillment: this.filtrosConsolidados.fulfillment || undefined,
+      categoria: this.filtrosConsolidados.categoria || undefined, // ticket 1062
+      subcategoria: this.filtrosConsolidados.subcategoria || undefined,
     })
     .pipe(takeUntil(this.destroy$))
     .subscribe({
@@ -690,6 +700,40 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
         this.loadingConsolidado = false;
       },
     });
+  }
+
+  /** Ticket 1062: opciones de categoría y subcategoría. Si falla, el filtro no aparece. */
+  private cargarCategoriasInventario(): void {
+    this._categoriasCargadas = true;
+    this.inventarioService.obtenerCategoriasInventario()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (r) => {
+          this.categoriasInventario = r?.success ? (r.categorias || []) : [];
+          this.categoriasSinCategoria = r?.sinCategoria || 0;
+          if (r?.valorSinCategoria) this.valorSinCategoria = r.valorSinCategoria;
+        },
+        error: () => { this._categoriasCargadas = false; },
+      });
+  }
+
+  /** Ticket 1062: subcategorías de la categoría elegida. */
+  get subcategoriasFiltro(): { nombre: string; total: number }[] {
+    const cat = this.categoriasInventario.find((c) => c.nombre === this.filtrosConsolidados.categoria);
+    return cat ? cat.subcategorias : [];
+  }
+
+  /** Ticket 1062: al cambiar de categoría la subcategoría anterior deja de aplicar. */
+  onCategoriaConsolidadoChange(): void {
+    this.filtrosConsolidados.subcategoria = "";
+    this.aplicarFiltrosYResetear();
+  }
+
+  get etiquetaCategoriaFiltro(): string {
+    const c = this.filtrosConsolidados.categoria;
+    if (!c) return "";
+    const base = c === this.valorSinCategoria ? "Sin categoría" : c;
+    return this.filtrosConsolidados.subcategoria ? `${base} › ${this.filtrosConsolidados.subcategoria}` : base;
   }
 
   /**
@@ -762,6 +806,8 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       estadoStock: "",
       bodegaId: "",
       fulfillment: "",
+      categoria: "",
+      subcategoria: "",
     };
     this.aplicarFiltrosYResetear();
   }
@@ -774,7 +820,8 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       this.filtrosConsolidados.busqueda ||
       this.filtrosConsolidados.estadoStock ||
       this.filtrosConsolidados.bodegaId ||
-      this.filtrosConsolidados.fulfillment
+      this.filtrosConsolidados.fulfillment ||
+      this.filtrosConsolidados.categoria
     );
   }
 
@@ -859,6 +906,8 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       search: this.filtrosConsolidados.busqueda?.trim() || undefined,
       stockFilter: this.filtrosConsolidados.estadoStock || undefined,
       soloInventariables: true,
+      categoria: this.filtrosConsolidados.categoria || undefined, // ticket 1062
+      subcategoria: this.filtrosConsolidados.subcategoria || undefined,
     })
     .pipe(takeUntil(this.destroy$))
     .subscribe({
@@ -1922,6 +1971,8 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       const row: any = {
         Referencia: producto.referencia || "",
         Nombre: producto.nombre || "",
+        Categoría: producto.categoria || "", // ticket 1062
+        Subcategoría: producto.subcategoria || "",
       };
 
       // Agregar columna por cada bodega

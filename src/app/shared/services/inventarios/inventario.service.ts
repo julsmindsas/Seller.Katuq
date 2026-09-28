@@ -416,6 +416,9 @@ export interface ProductoConsolidado {
   id: string;
   referencia: string;
   nombre: string;
+  /** Ticket 1062: familia del producto (ruta guardada en el producto). */
+  categoria?: string;
+  subcategoria?: string;
   imagen: string | null;
   precio: number;
   precioSinIva: number;
@@ -792,6 +795,8 @@ export class InventarioService {
     soloInventariables?: boolean;
     fechaCorte?: string;
     status?: InventarioCorteEstado;
+    categoria?: string;
+    subcategoria?: string;
   } = {}): Observable<Blob> {
     let params = new HttpParams();
     if (options.bodega) params = params.set('bodega', options.bodega);
@@ -802,6 +807,8 @@ export class InventarioService {
     if (options.soloInventariables !== undefined) params = params.set('soloInventariables', String(options.soloInventariables));
     if (options.fechaCorte) params = params.set('fechaCorte', options.fechaCorte);
     if (options.status) params = params.set('status', options.status);
+    if (options.categoria) params = params.set('categoria', options.categoria);
+    if (options.subcategoria) params = params.set('subcategoria', options.subcategoria);
 
     return this.http.get(`${this.apiUrl}/inventory/export-excel`, {
       params,
@@ -1020,6 +1027,9 @@ export class InventarioService {
     fulfillment?: string;
     /** 'con' = producto con costoFuente=aliaddo-api o integrations.fulfillment.id; 'sin' = ninguno. */
     linkedToFulfillment?: string;
+    /** Ticket 1062: familia de producto. */
+    categoria?: string;
+    subcategoria?: string;
   } = {}): Observable<InventarioConsolidadoResponse> {
     let params = new HttpParams();
 
@@ -1033,11 +1043,23 @@ export class InventarioService {
     if (options.bodega) params = params.set('bodega', options.bodega);
     if (options.fulfillment) params = params.set('fulfillment', options.fulfillment);
     if (options.linkedToFulfillment) params = params.set('linkedToFulfillment', options.linkedToFulfillment);
+    if (options.categoria) params = params.set('categoria', options.categoria);
+    if (options.subcategoria) params = params.set('subcategoria', options.subcategoria);
 
     return this.http.get<InventarioConsolidadoResponse>(
       `${this.apiUrl}/inventory/consolidado`,
       { params }
     );
+  }
+
+  /** Ticket 1062: categorías y subcategorías que tienen los productos del inventario. */
+  obtenerCategoriasInventario(): Observable<{
+    success: boolean;
+    categorias: { nombre: string; total: number; subcategorias: { nombre: string; total: number }[] }[];
+    sinCategoria: number;
+    valorSinCategoria: string;
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/inventory/consolidado/categorias`);
   }
 
   getBodegas(): Observable<Bodega[]> {
