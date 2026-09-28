@@ -469,6 +469,8 @@ export interface MetricasIABodega {
  */
 export interface MetricasBodega {
   valorTotal: number;
+  /** Ticket 1063: el mismo valor, con el precio SIN IVA. */
+  valorTotalSinIva?: number;
   /** Valor a costo del inventario (suma de costoUnitario * stock) */
   valorCostoTotal?: number;
   /** Valor venta por cada tipo de cliente { tipoClienteId → total }. */
@@ -522,6 +524,8 @@ export interface TotalesGlobales {
     productosConStock: number;
   };
   valorTotal: number;
+  /** Ticket 1063: el mismo valor, con el precio SIN IVA. */
+  valorTotalSinIva?: number;
   /** Valor a costo total del inventario */
   valorCostoTotal?: number;
   /** Valor venta global por cada tipo de cliente. */
@@ -545,6 +549,7 @@ export interface TotalesFiltrados {
   productosBajoStock: number;
   porBodega: { [bodegaId: string]: number };
   valorTotal?: number;
+  valorTotalSinIva?: number;
   valorCostoTotal?: number;
   valorPorTipoCliente?: { [tipoClienteId: string]: number };
 }

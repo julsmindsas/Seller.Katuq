@@ -299,6 +299,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   totalesGlobales: {
     valorTotal: number;
     valorCostoTotal?: number;
+    valorTotalSinIva?: number; // ticket 1063
     valorPorTipoCliente?: { [tipoClienteId: string]: number };
     margenEstimado?: number;
     totalUnidades: number;
@@ -819,6 +820,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     porBodega: { [id: string]: number };
     valorTotal?: number;
     valorCostoTotal?: number;
+    valorTotalSinIva?: number; // ticket 1063
     valorPorTipoCliente?: { [tipoClienteId: string]: number };
   } | null = null;
 
@@ -827,11 +829,22 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   // valorTotal/valorCostoTotal/valorPorTipoCliente ya recalculados sobre los
   // productos filtrados — preferimos esos en lugar de re-derivar en cliente.
 
+  // Ticket 1063 (ALMACEN BOMBAS): el valor del inventario va SIN IVA, igual que la
+  // columna de precio. Si el backend todavía no manda el valor sin IVA, se
+  // muestra el de siempre en vez de cero.
   getMetricaValorTotal(): number {
-    if (!this.hayFiltrosActivos()) return this.totalesGlobales.valorTotal ?? 0;
-    return this._totalesFiltrados?.valorTotal
-      ?? this.totalesGlobales.valorTotal
-      ?? 0;
+    const global = this.totalesGlobales.valorTotalSinIva ?? this.totalesGlobales.valorTotal ?? 0;
+    if (!this.hayFiltrosActivos()) return global;
+    return this._totalesFiltrados?.valorTotalSinIva
+      ?? this._totalesFiltrados?.valorTotal
+      ?? global;
+  }
+
+  /** Precio unitario sin IVA de una fila del consolidado (ticket 1063). */
+  precioSinIvaFila(producto: any): number {
+    const sinIva = Number(producto?.precioSinIva);
+    if (sinIva > 0) return sinIva;
+    return Number(producto?.precio) || 0;
   }
 
   /** Exporta el inventario consolidado actual a Excel respetando los filtros activos.

@@ -82,7 +82,7 @@
                     <select class="form-select" size="5"
                             (change)="onProductoSeleccionadoSelect($event)"
                             *ngIf="productosFiltrados.length > 0">
-                        <option *ngFor="let item of productosFiltrados" [value]="item.producto?.cd">
+                        <option *ngFor="let item of productosFiltrados" [value]="idProducto(item)">
                             {{ item.producto?.identificacion?.referencia }} — {{ item.producto?.crearProducto?.titulo }} ({{ item.cantidad }} disp.)
                         </option>
                     </select>
