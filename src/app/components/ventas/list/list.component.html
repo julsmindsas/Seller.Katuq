@@ -2498,7 +2498,7 @@
                     (ngModelChange)="onFacturaDocumentTypeChange()">
                 <option [ngValue]="null" disabled>Seleccione un tipo de documento</option>
                 <option *ngFor="let dt of facturaDocumentTypes" [ngValue]="dt.id">
-                    {{ dt.name || dt.nombre || ('Documento ' + dt.id) }}
+                    {{ dt.etiqueta }}
                 </option>
             </select>
         </div>

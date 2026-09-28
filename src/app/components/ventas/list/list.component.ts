@@ -1040,7 +1040,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Inicializar estado del modal
         this.facturaPedido = pedido;
-        this.facturaDocumentTypes = documentTypes;
+        this.facturaDocumentTypes = documentTypes.map((dt: any) => ({ ...dt, etiqueta: this.etiquetaTipoDocumento(dt) }));
         this.facturaPaymentTypes = paymentTypes;
         this.facturaDocumentTypeId = null;
         this.facturaPaymentTypeId = null;
@@ -1101,6 +1101,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           .map((i: any) => ({ id: Number(i.id), name: String(i.name || `${t.etiqueta} ${i.percentage ?? ''}`) })),
       }))
       .filter((g) => g.opciones.length > 0);
+  }
+
+  /**
+   * Ticket 1072: un comercio puede tener en SIIGO varios tipos de factura con el mismo nombre
+   * (ALMACEN BOMBAS: uno por sede). Se muestran como en SIIGO: "FV - 2 - Factura Electrónica de Venta".
+   */
+  private etiquetaTipoDocumento(dt: any): string {
+    const nombre = dt?.name || dt?.nombre || `Documento ${dt?.id}`;
+    return dt?.type && dt?.code != null && dt.code !== '' ? `${dt.type} - ${dt.code} - ${nombre}` : nombre;
   }
 
   /** Normaliza la lista (documentTypes/paymentTypes) sin importar cómo venga envuelta la respuesta. */
