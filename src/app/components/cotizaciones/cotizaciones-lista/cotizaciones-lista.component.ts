@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { Router } from "@angular/router";
-import { Subject, Subscription, of } from "rxjs";
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from "rxjs/operators";
+import { Subject, Subscription } from "rxjs";
+import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { ToastrService } from "ngx-toastr";
 import * as XLSX from "xlsx";
 import { CotizacionesService } from "../cotizaciones.service";
@@ -293,14 +293,14 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     delete copia.fechaCreacion;
     delete copia.convertidaAPedido;
     delete copia.pedidoGenerado;
-    // Revisión 1081: la copia es una cotización nueva, lleva el anexo vigente de la empresa.
-    const sub = this.service.getConfig().pipe(
-      catchError(() => of(null)),
-      switchMap((cfg: any) => {
-        copia.anexoCondiciones = (cfg && cfg.data && cfg.data.anexo) || null;
-        return this.service.create(copia);
-      })
-    ).subscribe({
+    // Revisión 1081: la copia es una cotización nueva. Sin estos campos, el servidor le pone
+    // el anexo vigente de la empresa y no le hereda el enlace público de la original.
+    delete copia.anexoCondiciones;
+    delete (copia as any).publicToken;
+    delete (copia as any).publicTokenCreatedAt;
+    delete copia.vistaCliente;
+    delete copia.fechaPrimeraVista;
+    const sub = this.service.create(copia).subscribe({
       next: (res) => {
         const num = res && res.data ? res.data.nroCotizacion : "";
         this.toastr.success("Copia creada: " + (num || ""));

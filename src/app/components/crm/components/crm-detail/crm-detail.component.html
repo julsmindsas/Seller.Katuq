@@ -162,7 +162,7 @@
           <div class="card-body py-2">
             <form [formGroup]="taskForm" (ngSubmit)="createTask()">
               <div class="row">
-                <div class="mb-2" [ngClass]="opcionesComercial.length > 1 && equipo?.puedeAsignar ? 'col-md-12' : 'col-md-5'">
+                <div class="mb-2" [ngClass]="puedeEscogerResponsable ? 'col-md-12' : 'col-md-5'">
                   <input pInputText formControlName="title"
                     placeholder="¿Qué hay que hacer? Ej: Llamar al cliente para confirmar la cotización"
                     pTooltip="Describe la acción pendiente con el cliente (una tarea concreta de seguimiento)"
@@ -182,7 +182,7 @@
                     [style]="{'width':'100%'}"></p-calendar>
                 </div>
                 <!-- Ticket 1064: responsable de la tarea (le llegan los recordatorios) -->
-                <div class="col-md-5 mb-2" *ngIf="opcionesComercial.length > 1 && equipo?.puedeAsignar">
+                <div class="col-md-5 mb-2" *ngIf="puedeEscogerResponsable">
                   <p-dropdown [options]="opcionesComercial.slice(1)" formControlName="assignedTo" optionLabel="label" optionValue="value"
                     placeholder="Responsable" [filter]="true" filterBy="label" appendTo="body"
                     [style]="{'width':'100%'}"></p-dropdown>

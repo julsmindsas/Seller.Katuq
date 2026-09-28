@@ -273,13 +273,27 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     this.updateField('assignedTo', email);
   }
 
-  /** Ticket 1064: al abrir "Nueva tarea", el responsable es el comercial del lead. */
+  /** Ticket 1064: se ve y se puede escoger el responsable de la tarea. */
+  get puedeEscogerResponsable(): boolean {
+    return !!this.equipo?.puedeAsignar && this.opcionesComercial.length > 1;
+  }
+
+  /**
+   * Ticket 1064: al abrir "Nueva tarea", si se puede escoger, queda marcado el
+   * comercial del lead (si sigue en el equipo) o quien la crea. Si no se ve el
+   * selector, no se llena nada por dentro: la tarea queda de quien la crea.
+   */
   toggleTaskForm(): void {
     this.showTaskForm = !this.showTaskForm;
-    if (this.showTaskForm && !this.taskForm.value.assignedTo) {
-      const delLead = this.lead?.pipeline?.assignedTo ? String(this.lead.pipeline.assignedTo).trim().toLowerCase() : null;
-      this.taskForm.patchValue({ assignedTo: delLead || this.equipo?.yo || null });
+    if (!this.showTaskForm || this.taskForm.value.assignedTo) return;
+    if (!this.puedeEscogerResponsable) {
+      this.taskForm.patchValue({ assignedTo: null });
+      return;
     }
+    const enEquipo = (e: string | null) => !!e && this.opcionesComercial.some(o => o.value === e);
+    const delLead = this.lead?.pipeline?.assignedTo ? String(this.lead.pipeline.assignedTo).trim().toLowerCase() : null;
+    const yo = this.equipo?.yo || null;
+    this.taskForm.patchValue({ assignedTo: enEquipo(delLead) ? delLead : (enEquipo(yo) ? yo : null) });
   }
 
   updateField(field: string, value: any): void {
@@ -384,7 +398,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     if (this.taskForm.invalid) return;
     const data = { ...this.taskForm.value };
     if (data.dueDate instanceof Date) data.dueDate = data.dueDate.toISOString();
-    if (!data.assignedTo) delete data.assignedTo; // el backend usa el comercial del lead
+    if (!data.assignedTo || !this.puedeEscogerResponsable) delete data.assignedTo; // queda de quien la crea
 
     this.crmService.createTask(this.entityId, data)
       .pipe(takeUntil(this.destroy$))
@@ -394,6 +408,9 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
           this.taskForm.reset({ type: 'follow_up', priority: 'medium', assignedTo: null });
           this.showTaskForm = false;
           this.messageService.add({ severity: 'success', summary: 'Tarea creada' });
+        } else {
+          // Revisión 1064: antes un rechazo del servidor (p. ej. responsable fuera del equipo) no decía nada.
+          this.messageService.add({ severity: 'error', summary: 'No se creó la tarea', detail: 'Revisa el responsable e intenta de nuevo.' });
         }
       });
   }
