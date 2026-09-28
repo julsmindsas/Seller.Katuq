@@ -93,7 +93,7 @@
                     <div class="inv-stat is-accent">
                         <div class="inv-stat-body">
                             <div class="inv-stat-value">{{ formatearValorAbreviado(getMetricaValorTotal()) }}</div>
-                            <div class="inv-stat-label">Valor total inventario</div>
+                            <div class="inv-stat-label">Valor total inventario (sin IVA)</div>
                         </div>
                         <i class="pi pi-dollar"></i>
                     </div>
@@ -211,6 +211,27 @@
                                         </select>
                                     </div>
 
+                                    <!-- Ticket 1062: categoría y subcategoría (familias de producto) -->
+                                    <div class="inv-field" *ngIf="categoriasInventario.length">
+                                        <label for="inv-categoria"><i class="pi pi-tags"></i>Categoría</label>
+                                        <select id="inv-categoria"
+                                                [(ngModel)]="filtrosConsolidados.categoria"
+                                                (change)="onCategoriaConsolidadoChange()">
+                                            <option value="">Todas</option>
+                                            <option *ngFor="let c of categoriasInventario" [value]="c.nombre">{{ c.nombre }} ({{ c.total | number }})</option>
+                                            <option *ngIf="categoriasSinCategoria" [value]="valorSinCategoria">Sin categoría ({{ categoriasSinCategoria | number }})</option>
+                                        </select>
+                                    </div>
+                                    <div class="inv-field" *ngIf="subcategoriasFiltro.length">
+                                        <label for="inv-subcategoria"><i class="pi pi-tag"></i>Subcategoría</label>
+                                        <select id="inv-subcategoria"
+                                                [(ngModel)]="filtrosConsolidados.subcategoria"
+                                                (change)="aplicarFiltrosYResetear()">
+                                            <option value="">Todas</option>
+                                            <option *ngFor="let s of subcategoriasFiltro" [value]="s.nombre">{{ s.nombre }} ({{ s.total | number }})</option>
+                                        </select>
+                                    </div>
+
                                     <!-- Fulfillment -->
                                     <div class="inv-field" *ngIf="fulfillmentEnabled">
                                         <label for="inv-fulfillment"><i class="pi pi-cloud"></i>Fulfillment</label>
@@ -301,6 +322,10 @@
                                         <i class="pi pi-box"></i>{{ getNombreBodegaById(filtrosConsolidados.bodegaId) }}
                                         <i class="pi pi-times inv-chip-x" (click)="filtrosConsolidados.bodegaId = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
+                                    <span class="inv-chip" *ngIf="filtrosConsolidados.categoria">
+                                        <i class="pi pi-tags"></i>{{ etiquetaCategoriaFiltro }}
+                                        <i class="pi pi-times inv-chip-x" (click)="filtrosConsolidados.categoria = ''; filtrosConsolidados.subcategoria = ''; aplicarFiltrosYResetear()"></i>
+                                    </span>
                                     <span class="inv-chip is-blue" *ngIf="filtrosConsolidados.fulfillment">
                                         <i class="pi pi-cloud"></i>{{ filtrosConsolidados.fulfillment === 'con' ? 'Con enlace' : 'Sin enlace' }}
                                         <i class="pi pi-times inv-chip-x" (click)="filtrosConsolidados.fulfillment = ''; aplicarFiltrosYResetear()"></i>
@@ -356,7 +381,7 @@
                                             <!-- Columna Costo Unitario -->
                                             <th style="width: 110px; min-width: 110px;" class="text-end" pTooltip="Costo de compra unitario (importado de fulfillment)">Costo</th>
                                             <!-- Columna Precio -->
-                                            <th style="width: 120px; min-width: 120px;" class="text-end">Precio</th>
+                                            <th style="width: 120px; min-width: 120px;" class="text-end" pTooltip="Precio de venta unitario, sin IVA">Precio sin IVA</th>
                                             <!-- Columnas Dinámicas por Tipo de Cliente (lista de precios) -->
                                             <th *ngFor="let tc of tiposClienteActivos"
                                                 style="width: 130px; min-width: 130px;"
@@ -368,7 +393,7 @@
                                                 </span>
                                             </th>
                                             <!-- Columna Valor Total a precio venta -->
-                                            <th style="width: 130px; min-width: 130px;" class="text-end" pTooltip="Stock × precio de venta">Valor Total</th>
+                                            <th style="width: 130px; min-width: 130px;" class="text-end" pTooltip="Stock × precio de venta sin IVA">Valor Total</th>
                                             <!-- Columna Valor a Costo -->
                                             <th style="width: 130px; min-width: 130px;" class="text-end pe-3" pTooltip="Stock × costo unitario">Valor a Costo</th>
                                             <!-- Columna Acciones -->
@@ -484,7 +509,7 @@
                                             </td>
                                             <!-- Precio -->
                                             <td class="text-end" style="white-space: nowrap;">
-                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #172b4d; font-size: 0.9rem;">{{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #172b4d; font-size: 0.9rem;">{{ precioSinIvaFila(producto) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">Sin precio</span>
                                             </td>
                                             <!-- Valores por Tipo de Cliente (lista de precios) -->
@@ -501,7 +526,7 @@
                                             </td>
                                             <!-- Valor Total (precio × stock) -->
                                             <td class="text-end" style="white-space: nowrap;">
-                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #5c6ac4; font-size: 0.9rem;">{{ (producto.precio * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #5c6ac4; font-size: 0.9rem;">{{ (precioSinIvaFila(producto) * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">—</span>
                                             </td>
                                             <!-- Valor a Costo (costo × stock) — siempre visible -->

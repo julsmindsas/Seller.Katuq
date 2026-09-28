@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, ChangeDetectorRef } from '@angular/core';
 import { zonaCubreCiudad } from '../../../shared/util/zona-cobro.util';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { alMenosUnTelefono, PATRON_TELEFONO_FIJO } from './cliente-telefonos.validator';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2'
 import { DataStoreService } from '../../../shared/services/dataStoreService';
@@ -144,6 +145,20 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   onTipoDocChange(value: string): void {
     this.tipoDocSeleccionado = value;
     this.formulario.controls['tipo_documento_comprador'].setValue(value);
+  }
+
+  /** Ticket 1083: con NIT (persona jurídica) no hay apellidos, solo razón social. */
+  get esPersonaJuridica(): boolean {
+    const tipo = this.formulario?.getRawValue?.()?.tipo_documento_comprador;
+    return tipo === 'NIT' || tipo === 'NIT_EXT';
+  }
+
+  /** Ticket 1083: "Apellidos" es obligatorio solo para persona natural. */
+  private ajustarApellidosSegunTipoDoc(): void {
+    const apellidos = this.formulario?.controls?.['apellidos_completos'];
+    if (!apellidos) return;
+    apellidos.setValidators(this.esPersonaJuridica ? null : Validators.required);
+    apellidos.updateValueAndValidity({ emitEvent: false });
   }
 
   /**
@@ -829,9 +844,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       tipo_documento_comprador: ['CC', Validators.required],
       documento: ['', Validators.required],
       indicativo_celular_comprador: ['57', Validators.required],
-      numero_celular_comprador: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
-      indicativo_celular_whatsapp: ['57', Validators.required],
-      numero_celular_whatsapp: ['', Validators.required],
+      // Ticket 1050: celular o fijo, al menos uno (validador del grupo). WhatsApp
+      // deja de ser obligatorio, igual que en el formulario corto.
+      numero_celular_comprador: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+      telefono_fijo: ['', [Validators.pattern(PATRON_TELEFONO_FIJO)]],
+      indicativo_celular_whatsapp: ['57'],
+      numero_celular_whatsapp: [''],
       correo_electronico_comprador: ['', [Validators.required, Validators.email]],
       tipoCliente: [''],
       fechaCumpleanos: [''],
@@ -846,8 +864,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       datosFacturacionElectronica: [['']],
       datosEntrega: [['']],
       notas: [['']],
-      estado: ['activo']
-    });
+      estado: ['activo'],
+    }, { validators: alMenosUnTelefono });
 
     this.formularioFacturacion = this.formBuilder.group({
       alias_facturacion: [''],
@@ -870,6 +888,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       ciudad_municipio_entrega: ['', Validators.required],
       codigo_postal_entrega: ['', Validators.required]
     });
+
+    // Ticket 1083: con NIT, "Apellidos" deja de ser obligatorio.
+    this.formulario.controls['tipo_documento_comprador'].valueChanges.subscribe(() => this.ajustarApellidosSegunTipoDoc());
   }
   validarSoloNumeros(event: KeyboardEvent) {
     if (!/[0-9]/.test(event.key)) {
@@ -1600,7 +1621,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         indicativo_celular_comprador: '57',
         indicativo_celular_whatsapp: '57',
         tipo_documento_comprador: 'CC',
-        estado: 'activo'
+        estado: 'activo',
+        creditLimit: 0,
+        payTermDays: 0,
       });
     }
     this.showClienteModal = true;

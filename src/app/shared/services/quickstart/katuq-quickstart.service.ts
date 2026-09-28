@@ -15,6 +15,7 @@ import { Disponibilidad } from '../../models/productos/Disponibilidad';
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Role, Menu } from '../../models/roles/roles';
 import { Rol } from '../../models/roles/roles.type';
+import { OrigenCampana } from '../pixeles-pauta.service';
 
 // Interfaces para el Quick Start
 export interface DiagnosticResponse {
@@ -34,6 +35,20 @@ export interface DiagnosticResponse {
   };
   /** Código de campaña con el que llegó, si vino por un enlace de pauta. */
   codigoPromocional?: string | null;
+  /** utm_* del anuncio por el que llegó (queda guardado con el diagnóstico). */
+  origenCampana?: OrigenCampana | null;
+  /**
+   * Identificador aleatorio de este navegador y si se declara automatizado:
+   * señales del filtro del registro (D-323). No identifican a nadie.
+   */
+  dispositivoId?: string | null;
+  automatizado?: boolean;
+  /**
+   * Contraseña elegida en el registro, YA con `utils.hash` (D-319): el mismo
+   * formato que manda el login. Nunca el texto plano. Sin ella, el backend
+   * crea la cuenta con contraseña temporal por correo (flujo anterior).
+   */
+  contrasenaHash?: string | null;
 }
 
 /** Cómo le fue al código promocional en el registro. */
@@ -55,7 +70,11 @@ export interface QuickStartResult {
   message?: string;
   error?: string;
   errorCode?: string; // COMERCIO_YA_EXISTE | EMAIL_YA_EXISTE | USUARIO_YA_EXISTE | VALIDATION_ERROR | REGISTRATION_BLOCKED
+  /** Campos que el backend rechazó con VALIDATION_ERROR (ej: [{ field: 'password' }]). */
+  errorFields?: { field: string; message: string }[];
   pendingReview?: boolean; // 202: registro en cuarentena, pendiente de revisión humana
+  /** D-323: la cuenta quedó creada sin sesión; entra al confirmar el código que le llegó al correo. */
+  verificationRequired?: boolean;
   promocion?: PromocionRegistro | null; // null = se registró sin código de campaña
   nextSteps?: string[];
   adminUser?: any;
@@ -181,10 +200,14 @@ export class KatuqQuickStartService {
       // El backend puede responder 202 con status PENDING_REVIEW cuando el registro
       // entra en cuarentena anti-abuso: la empresa se crea inactiva y un humano la revisa.
       const pendingReview = serverResponse?.status === 'PENDING_REVIEW';
+      // D-323: registro dudoso. La empresa quedó creada pero sin sesión hasta
+      // que la persona escriba el código que le llegó al correo.
+      const verificationRequired = serverResponse?.verificationRequired === true;
 
       return {
         success: true,
         pendingReview,
+        verificationRequired,
         promocion: serverResponse?.promocion ?? null,
         empresa: empresa,
         rol: rol,
@@ -210,6 +233,7 @@ export class KatuqQuickStartService {
         success: false,
         error: error.message || 'Error en la configuración automática',
         errorCode: error.code,
+        errorFields: Array.isArray(error.fields) ? error.fields : undefined,
         message: 'Error durante la configuración automática. Por favor, intenta nuevamente.'
       };
     }
@@ -442,12 +466,22 @@ export class KatuqQuickStartService {
       timestamp: new Date().toISOString(),
       respuestas: diagnosticData.responses,
       recomendacionesIA: diagnosticData.aiRecommendation,
-      registro: diagnosticData.registration,
+      registro: diagnosticData.contrasenaHash
+        ? { ...diagnosticData.registration, password: diagnosticData.contrasenaHash }
+        : diagnosticData.registration,
       sector: diagnosticData.responses.q1 || 'No especificado',
       procesoCompletado: true,
       // Código de campaña (opcional). El backend lo revalida y descuenta cupo;
       // si no sirve, el registro se completa igual en plan gratuito.
-      codigoPromocional: diagnosticData.codigoPromocional || null
+      codigoPromocional: diagnosticData.codigoPromocional || null,
+      // De qué anuncio llegó. El backend guarda el cuerpo completo en
+      // `surveyResponses`, así que ahí queda para cruzar pauta contra registros.
+      origenCampana: diagnosticData.origenCampana || null,
+      // Con qué versión de la web se registró: delata copias viejas guardadas
+      // por los navegadores de los anuncios (queda en surveyResponses y en el aviso).
+      versionFront: environment.version || null,
+      dispositivoId: diagnosticData.dispositivoId || null,
+      automatizado: diagnosticData.automatizado === true
     };
 
     try {
@@ -466,6 +500,7 @@ export class KatuqQuickStartService {
       const err: any = new Error(backendMessage || `Error al guardar el diagnóstico: ${error.message || error}`);
       err.status = error?.status;
       err.code = error?.error?.error; // COMERCIO_YA_EXISTE | EMAIL_YA_EXISTE | USUARIO_YA_EXISTE
+      err.fields = error?.error?.fields;
       throw err;
     }
   }

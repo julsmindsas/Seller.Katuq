@@ -702,3 +702,112 @@ input:focus-visible {
   .progress-track span,
   .onboarding-sidebar { transition: none; }
 }
+
+// D-324: tienda en 1 clic. Tema canónico: plano, acento #5F3FE0, tinta #211F3A.
+.tienda-1clic {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #e4e0f5;
+  border-radius: 16px;
+  background: #faf9ff;
+  color: #211f3a;
+
+  h4 { margin: 6px 0 6px; font-size: 1.15rem; font-weight: 800; color: #211f3a; }
+  p { margin: 0 0 14px; color: #4a4763; line-height: 1.5; }
+}
+
+.tienda-1clic__etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6685;
+
+  &--ok { color: #1b7a4a; }
+}
+
+.tienda-1clic__tipos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+
+  button {
+    padding: 8px 14px;
+    border: 1px solid #e4e0f5;
+    border-radius: 20px;
+    background: #fff;
+    color: #211f3a;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.is-selected { border-color: #5f3fe0; background: #efebfd; color: #5f3fe0; }
+  }
+}
+
+.tienda-1clic__publicar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 11px;
+  background: #5f3fe0;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.6; cursor: wait; }
+  &:hover { color: #fff; }
+}
+
+.tienda-1clic__url {
+  display: block;
+  margin: 4px 0 14px;
+  font-weight: 700;
+  color: #5f3fe0;
+  overflow-wrap: anywhere;
+}
+
+.tienda-1clic__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.tienda-1clic__mas {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.92rem;
+  color: #5f3fe0;
+}
+
+.tienda-1clic__error {
+  margin: 12px 0 0 !important;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #fdecec;
+  color: #c62828 !important;
+  overflow-wrap: anywhere;
+}
+
+// Aviso de revisar Spam: el correo de katuq.com todavía no pasa DMARC (28-sep).
+.aviso-spam {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: #efebfd;
+  color: #211f3a;
+  font-size: 0.92rem;
+  line-height: 1.5;
+
+  i { color: #5f3fe0; margin-top: 3px; }
+}

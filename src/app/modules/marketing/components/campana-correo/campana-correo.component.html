@@ -1,0 +1,224 @@
+<div class="cc">
+  <header class="cc__header">
+    <div>
+      <h1 class="cc__title">{{ editable ? (id ? 'Campaña de correo' : 'Nueva campaña de correo') : nombre }}</h1>
+      <p class="cc__subtitle">
+        Un correo con el nombre de tu tienda para quienes autorizaron recibir tus novedades.
+      </p>
+    </div>
+    <a routerLink="/marketing/campanas" [queryParams]="{ canal: 'correo' }" class="cc__back">← Campañas</a>
+  </header>
+
+  <div class="cc__aviso" *ngIf="cargando">Cargando…</div>
+
+  <div class="cc__aviso is-info" *ngIf="!cargando && noDisponible">
+    Las campañas de correo todavía no están disponibles en tu cuenta.
+  </div>
+
+  <div class="cc__aviso" *ngIf="!cargando && !noDisponible && !sitios.length">
+    Necesitas una tienda publicada para enviar campañas. <a routerLink="/sitios">Ir a mis páginas</a>
+  </div>
+
+  <!-- ═══════════════════ DETALLE: la campaña ya salió ═══════════════════ -->
+  <ng-container *ngIf="!cargando && !editable">
+    <div class="cc__estado">
+      <span class="cc__chip is-{{ estado }}">{{ etiquetaEstado(estado) }}</span>
+      <span class="cc__motivo" *ngIf="metricas?.motivoPausa">{{ metricas?.motivoPausa }}</span>
+      <div class="cc__estado-acciones">
+        <button type="button" class="cc__btn-ghost" *ngIf="estado === 'enviando'" (click)="pausar()"><i class="fa fa-pause"></i> Pausar</button>
+        <button type="button" class="cc__btn-ghost" *ngIf="estado === 'pausada_auto'" (click)="cancelar()"><i class="fa fa-ban"></i> Cancelar</button>
+      </div>
+    </div>
+
+    <div class="cc__kpis" *ngIf="metricas as m">
+      <div class="cc__kpi">
+        <span class="cc__kpi-label">Enviados</span>
+        <span class="cc__kpi-valor">{{ m.totales.enviados || 0 | number: '1.0-0' }}</span>
+        <span class="cc__kpi-sub">de {{ m.totales.destinatarios || 0 | number: '1.0-0' }} personas</span>
+      </div>
+      <div class="cc__kpi">
+        <span class="cc__kpi-label">Entregados</span>
+        <span class="cc__kpi-valor">{{ m.totales.entregados || 0 | number: '1.0-0' }}</span>
+        <span class="cc__kpi-sub">{{ porcentaje(m.totales.entregados, m.totales.enviados) }} %</span>
+      </div>
+      <div class="cc__kpi">
+        <span class="cc__kpi-label">Aperturas (aprox.)</span>
+        <span class="cc__kpi-valor">{{ m.totales.aperturas || 0 | number: '1.0-0' }}</span>
+        <span class="cc__kpi-sub">{{ porcentaje(m.totales.aperturas, m.totales.entregados) }} % · el iPhone las infla</span>
+      </div>
+      <div class="cc__kpi">
+        <span class="cc__kpi-label">Clics</span>
+        <span class="cc__kpi-valor">{{ m.totales.clics || 0 | number: '1.0-0' }}</span>
+        <span class="cc__kpi-sub">{{ porcentaje(m.totales.clics, m.totales.entregados) }} %</span>
+      </div>
+      <div class="cc__kpi is-destacado">
+        <span class="cc__kpi-label">Ventas que trajo</span>
+        <span class="cc__kpi-valor">{{ m.ventasAtribuidas.valor | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</span>
+        <span class="cc__kpi-sub">{{ m.ventasAtribuidas.pedidos }} pedido(s) por el correo o hasta 7 días después del clic</span>
+      </div>
+      <div class="cc__kpi">
+        <span class="cc__kpi-label">Bajas · rebotes · quejas</span>
+        <span class="cc__kpi-valor">{{ m.totales.bajas || 0 }} · {{ m.totales.rebotes || 0 }} · {{ m.totales.quejas || 0 }}</span>
+        <span class="cc__kpi-sub">Se sacan solos de tus próximos envíos</span>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ═══════════════════ ASISTENTE ═══════════════════ -->
+  <ng-container *ngIf="!cargando && !noDisponible && editable && sitios.length">
+    <nav class="cc__pasos" aria-label="Pasos de la campaña">
+      <button type="button" class="cc__paso" [class.is-activo]="paso === 1" [class.is-hecho]="paso > 1" (click)="irAlPaso(1)">
+        <span class="cc__paso-n">1</span> A quién
+      </button>
+      <button type="button" class="cc__paso" [class.is-activo]="paso === 2" [class.is-hecho]="paso > 2" [disabled]="!puedeIrAContenido" (click)="irAlPaso(2)">
+        <span class="cc__paso-n">2</span> Qué dice
+      </button>
+      <button type="button" class="cc__paso" [class.is-activo]="paso === 3" [disabled]="!puedeIrAContenido || !puedeIrARevisar" (click)="irAlPaso(3)">
+        <span class="cc__paso-n">3</span> Revisar y enviar
+      </button>
+    </nav>
+
+    <!-- ── Paso 1 ── -->
+    <section class="cc__cuerpo" *ngIf="paso === 1">
+      <label class="cc__campo" *ngIf="sitios.length > 1">
+        <span class="cc__label">Tienda</span>
+        <select [(ngModel)]="siteId" (ngModelChange)="cambioAudiencia()">
+          <option *ngFor="let s of sitios" [value]="s.id">{{ s.nombre }}</option>
+        </select>
+      </label>
+
+      <div class="cc__segmentos">
+        <button type="button" class="cc__segmento" *ngFor="let s of segmentos"
+                [class.is-elegido]="audiencia.segmento === s.segmento" (click)="elegirSegmento(s)">
+          <span class="cc__segmento-icono"><i class="fa {{ s.icono }}" aria-hidden="true"></i></span>
+          <span class="cc__segmento-nombre">{{ s.nombre }}</span>
+          <span class="cc__segmento-desc">{{ s.desc }}</span>
+        </button>
+      </div>
+
+      <div class="cc__params" *ngIf="opcion.pideDias || opcion.pideProducto">
+        <label class="cc__campo is-corto" *ngIf="opcion.pideDias">
+          <span class="cc__label">Días</span>
+          <input type="number" min="1" max="365" [(ngModel)]="audiencia.parametros.dias" (ngModelChange)="cambioAudiencia()" />
+        </label>
+        <div class="cc__campo" *ngIf="opcion.pideProducto">
+          <span class="cc__label">Producto{{ audiencia.segmento === 'pidieron_aviso' ? ' (opcional)' : '' }}</span>
+          <button type="button" class="cc__btn-ghost" (click)="eligiendoProductoAudiencia = true">
+            <i class="fa fa-tag"></i> {{ audiencia.parametros.productoId ? 'Cambiar producto' : 'Elegir producto' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="cc__conteo" *ngIf="conteo as c">
+        <div class="cc__conteo-principal">
+          <span class="cc__conteo-n">{{ contando ? '…' : (c.destinatarios | number: '1.0-0') }}</span>
+          <span>personas pueden recibirlo</span>
+        </div>
+        <p class="cc__conteo-nota" *ngIf="c.sinAutorizacion || c.suprimidos">
+          {{ c.sinAutorizacion }} no autorizaron publicidad y {{ c.suprimidos }} tienen el correo bloqueado por rebote o queja: no les llega.
+        </p>
+        <p class="cc__conteo-nota" *ngIf="c.alcance.quedan > 0">
+          Tu cupo del mes alcanza para {{ c.alcance.salen | number: '1.0-0' }}; te quedan {{ c.cupoRestante | number: '1.0-0' }} correos este mes.
+        </p>
+        <p class="cc__conteo-nota is-alerta" *ngIf="!contando && c.destinatarios === 0">
+          Nadie de este grupo ha autorizado recibir correos. Los suscritos llegan por la casilla del checkout, el boletín y la cuenta del comprador.
+        </p>
+      </div>
+
+      <div class="cc__pie">
+        <span></span>
+        <button type="button" class="cc__btn" [disabled]="!puedeIrAContenido" (click)="irAlPaso(2)">Siguiente <i class="fa fa-arrow-right"></i></button>
+      </div>
+    </section>
+
+    <!-- ── Paso 2 ── -->
+    <section class="cc__cuerpo" *ngIf="paso === 2">
+      <div class="cc__dos">
+        <label class="cc__campo">
+          <span class="cc__label">Nombre interno</span>
+          <input [(ngModel)]="nombre" maxlength="80" placeholder="Promo amor y amistad" />
+        </label>
+        <label class="cc__campo">
+          <span class="cc__label">Asunto</span>
+          <input [(ngModel)]="contenido.asunto" maxlength="120" placeholder="Llegaron los ramos de temporada" />
+        </label>
+      </div>
+      <label class="cc__campo">
+        <span class="cc__label">Texto de vista previa (lo que se lee junto al asunto)</span>
+        <input [(ngModel)]="contenido.preheader" maxlength="150" placeholder="Solo esta semana, con envío el mismo día" />
+      </label>
+      <p class="cc__pista">En el asunto y en los textos, {{ ejemploNombre }} se cambia por el nombre de cada persona.</p>
+
+      <div class="cc__opttia">
+        <span class="cc__label"><i class="fa fa-magic"></i> Escríbelo con Opttia</span>
+        <div class="cc__opttia-fila">
+          <input [(ngModel)]="ideaOpttia" maxlength="400" placeholder="Cuéntale la idea: promo de amor y amistad para los ramos…" />
+          <button type="button" class="cc__btn-ghost" [disabled]="!ideaOpttia.trim() || pensandoOpttia" (click)="sugerirConOpttia()">
+            {{ pensandoOpttia ? 'Pensando…' : 'Sugerir' }}
+          </button>
+        </div>
+        <p class="cc__pista">Opttia propone el asunto, el título y el texto. Todo queda editable y nada sale sin que lo revises.</p>
+      </div>
+
+      <app-editor-bloques-correo [bloques]="contenido.bloques" [cupones]="cupones" (bloquesChange)="bloquesCambiados($event)"></app-editor-bloques-correo>
+
+      <div class="cc__pie">
+        <button type="button" class="cc__btn-ghost" (click)="irAlPaso(1)"><i class="fa fa-arrow-left"></i> Atrás</button>
+        <div class="cc__pie-der">
+          <button type="button" class="cc__btn-ghost" [disabled]="guardando" (click)="guardar()">Guardar borrador</button>
+          <button type="button" class="cc__btn" [disabled]="!puedeIrARevisar" (click)="irAlPaso(3)">Revisar <i class="fa fa-arrow-right"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Paso 3 ── -->
+    <section class="cc__cuerpo cc__revisar" *ngIf="paso === 3">
+      <div class="cc__revisar-vista">
+        <app-vista-previa-correo [html]="vista?.html || ''" [asunto]="vista?.asunto || contenido.asunto" [remitente]="remitente"></app-vista-previa-correo>
+      </div>
+
+      <aside class="cc__revisar-lado">
+        <div class="cc__problemas" *ngIf="vista?.problemas?.length">
+          <span class="cc__label">Antes de enviar</span>
+          <p *ngFor="let p of vista?.problemas"><i class="fa fa-exclamation-circle"></i> {{ p }}</p>
+        </div>
+
+        <div class="cc__plan" *ngIf="plan.limites as l">
+          <span class="cc__label">Plan gratis</span>
+          <p>{{ l.campanasPorMes }} campaña al mes, hasta {{ l.correosCampanaPorMes }} personas. <a routerLink="/pricing">Mejorar plan</a></p>
+        </div>
+
+        <div class="cc__resumen">
+          <span class="cc__label">Resumen</span>
+          <p><b>{{ conteo?.alcance?.salen || 0 | number: '1.0-0' }}</b> personas · {{ opcion.nombre }}</p>
+          <p>Sale como <b>{{ remitente }}</b>; si responden, te llega a ti.</p>
+          <p>Cada correo trae el enlace para darse de baja; quien lo use no vuelve a recibir campañas de tu tienda.</p>
+        </div>
+
+        <div class="cc__cuando">
+          <span class="cc__label">Cuándo</span>
+          <label><input type="radio" name="cuando" value="ya" [(ngModel)]="cuando" /> En el próximo horario permitido</label>
+          <label><input type="radio" name="cuando" value="programar" [(ngModel)]="cuando" /> Programar</label>
+          <input type="datetime-local" *ngIf="cuando === 'programar'" [(ngModel)]="fechaProgramada" />
+          <p class="cc__pista">Por ley, los correos comerciales salen de lunes a viernes de 7 a. m. a 7 p. m. y los sábados de 8 a. m. a 3 p. m., sin domingos ni festivos.</p>
+        </div>
+
+        <div class="cc__acciones">
+          <button type="button" class="cc__btn-ghost" [disabled]="guardando" (click)="enviarPrueba()"><i class="fa fa-envelope-o"></i> Enviarme una prueba</button>
+          <button type="button" class="cc__btn-ghost" [disabled]="guardando" (click)="guardar()">Guardar borrador</button>
+          <button type="button" class="cc__btn" [disabled]="enviando || guardando || !!vista?.problemas?.length || (cuando === 'programar' && !fechaProgramada)" (click)="enviar()">
+            <i class="fa fa-paper-plane"></i> {{ enviando ? 'Programando…' : 'Enviar' }}
+          </button>
+        </div>
+        <button type="button" class="cc__volver" (click)="irAlPaso(2)"><i class="fa fa-arrow-left"></i> Volver a editar</button>
+      </aside>
+    </section>
+  </ng-container>
+</div>
+
+<app-selector-productos
+  *ngIf="eligiendoProductoAudiencia"
+  [seleccionados]="audiencia.parametros.productoId ? [audiencia.parametros.productoId] : []"
+  (confirmar)="productoDeAudiencia($event)"
+  (cerrar)="eligiendoProductoAudiencia = false"
+></app-selector-productos>

@@ -7,7 +7,7 @@ import Swal from "sweetalert2";
 import { NavService } from "../nav.service";
 import { InitializationService } from "../initialization.service";
 import { OnboardingService } from "../../../components/onboarding/services/onboarding.service";
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { syncSentryUserContext } from "../errores/sentry-context";
 import { clearOnboardingStorage } from "../../../components/onboarding/utils/onboarding-v2.utils";
 import { LoaderService } from "../loader.service";
@@ -29,6 +29,13 @@ export class AuthService implements OnInit {
   public showLoader$ = this._showLoader.asObservable();
 
   public userData: any;
+
+  /**
+   * La contraseña fue correcta pero el registro todavía no confirma su correo
+   * (D-323): el login muestra la pantalla del código para ese correo.
+   */
+  private _verificacionPendiente = new Subject<string>();
+  public verificacionPendiente$ = this._verificacionPendiente.asObservable();
 
   constructor(
     private services: ServiciosService,
@@ -65,10 +72,43 @@ export class AuthService implements OnInit {
     this.services.signInWithEmailAndPassword(datos).subscribe({
       next: (result: any) => this.handleSignInSuccess(result),
       error: (err) => {
-        this.handleSignInError(err);
         this.showLoader = false; // Desactivar indicador de carga en caso de error
+        if (err?.status === 403 && err?.error?.code === 'VERIFICACION_PENDIENTE') {
+          this._verificacionPendiente.next(err.error.email || datos.email);
+          return;
+        }
+        this.handleSignInError(err);
       }
     });
+  }
+
+  /**
+   * Abre la sesión con una respuesta que ya trae el token, igual que el login:
+   * la usa la confirmación del código del registro (D-323).
+   */
+  entrarConSesion(result: any): Promise<void> {
+    return this.handleSignInSuccess(result);
+  }
+
+  /**
+   * Entrada directa al terminar el registro (D-319). Es el login de siempre
+   * (`POST /v1/authentication`) con el mismo enrutamiento que `SignIn`, pero
+   * sin alertas y avisando si entró: si no, el registro manda a /login con el
+   * correo puesto. `passwordHash` ya viene con `utils.hash`.
+   */
+  async signInAfterRegistration(email: string, passwordHash: string): Promise<boolean> {
+    try {
+      const result: any = await this.services
+        .signInWithEmailAndPassword({ email: email.toLowerCase(), password: passwordHash, token: '' })
+        .toPromise();
+      if (!result || result.error || !result.token) {
+        return false;
+      }
+      await this.handleSignInSuccess(result);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private async handleSignInSuccess(result: any): Promise<void> {

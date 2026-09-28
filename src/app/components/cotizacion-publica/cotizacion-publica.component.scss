@@ -196,3 +196,18 @@
   font-size: 12px;
   color: #9ca3af;
 }
+
+/* Ticket 1081: documento anexo de condiciones comerciales */
+.cp-anexo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 11px;
+  border: 1px solid #E6E2F5;
+  background: #F6F4FC;
+  color: #5F3FE0;
+  font-weight: 700;
+  text-decoration: none;
+}

@@ -389,6 +389,13 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   &.kpi--activo { border-color: $peligro; }
 }
 
+/* Cortesía: ni alerta ni logro — es aparte. Va en el acento de la marca para
+   que se lea como "esto es otra categoría", no como un problema. */
+.kpi--cortesia {
+  .kpi-valor { color: $acento; }
+  &.kpi--activo { border-color: $acento; }
+}
+
 /* ── Barra de filtros ───────────────────────────────────────────────────── */
 .barra-filtros {
   display: flex;
@@ -636,6 +643,16 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
     border: 1px solid rgba($peligro, 0.28);
     i { margin-right: 4px; }
   }
+
+  /* Solo lectura (suspendido o pausado). Deliberadamente NO es rojo: el cliente
+     no perdió el acceso ni sus datos, y pintarlo igual que un bloqueo hace que
+     el operador lo lea como algo más grave de lo que es. */
+  &--lectura {
+    background: $alerta-suave;
+    color: $alerta;
+    border: 1px solid rgba($alerta, 0.3);
+    i { margin-right: 4px; }
+  }
 }
 
 /* Motivo del bloqueo dentro de la ficha */
@@ -653,6 +670,16 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 
   > i { color: $peligro; }
   em { color: $muted; font-style: italic; }
+
+  /* Cuando el cliente TODAVÍA entra (en mora, suspendido, pausado) el aviso va
+     en ámbar: rojo es "perdió el acceso", y confundirlos hace que el operador
+     crea que dejó a alguien por fuera cuando no fue así. */
+  &--lectura {
+    background: $alerta-suave;
+    border-color: rgba($alerta, 0.28);
+
+    > i { color: $alerta; }
+  }
 }
 
 /* Los números van a la derecha: alineados por la unidad se comparan de un
@@ -769,6 +796,14 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   white-space: nowrap;
 }
 
+/* Cortesía en la celda del plan: va en el acento y no en el gris del precio,
+   porque no es un precio — es la razón por la que no hay ninguno. */
+.plan-escalon--cortesia {
+  color: $acento;
+
+  i { margin-right: 3px; }
+}
+
 /* Un acuerdo cerrado no es una estimación: se marca para que nadie lo lea como
    un número que el sistema va a recalcular solo. */
 .plan-pactado {
@@ -782,6 +817,13 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   font-weight: 700;
   opacity: 0.75;
   margin-left: 3px;
+}
+
+/* La cortesía no se atenúa como las otras marcas del encabezado: es la que
+   explica por qué debajo no hay precio ni fecha de cobro. */
+.ficha-head-periodo--cortesia {
+  color: $acento;
+  opacity: 1;
 }
 
 /* La fecha del próximo cobro, siempre visible para quien paga. En gris es un
@@ -897,6 +939,15 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
     border-color: rgba($peligro, 0.35);
     color: $peligro;
     background: $peligro-suave;
+  }
+
+  /* Una empresa en solo lectura: ámbar, no rojo. Todavía entra y ve lo suyo. */
+  &--alerta {
+    border-color: rgba($alerta, 0.35);
+    color: $alerta;
+    background: $alerta-suave;
+
+    &:hover:not(:disabled) { background: $alerta; color: #fff; border-color: $alerta; }
   }
 
   /* Una empresa bloqueada muestra el candado abierto en verde: la acción que
@@ -1464,11 +1515,49 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 .tabla--cobros {
   .tabla-head,
   .fila {
-    grid-template-columns: minmax(200px, 1fr) repeat(5, 108px) 118px 122px;
+    grid-template-columns: minmax(200px, 1fr) repeat(5, 108px) 118px 122px 132px;
   }
 
   .fila { cursor: default; }
   .fila:hover { background: $fondo; }
+}
+
+/* Cortesía: el tercer valor de la columna Periodo. Va como pastilla y no como
+   texto suelto porque no es una periodicidad —es la razón por la que no hay
+   cobro— y mezclarlo con "Mensual"/"Anual" en el mismo tono lo escondía. */
+.chip-cortesia {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: $acento-suave;
+  border: 1px solid $acento-borde;
+  color: $acento;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* "No se cobra" donde iría el monto: en cursiva y apagado para que nunca se
+   confunda con una cifra. */
+.sin-cobro {
+  font-style: italic;
+  font-size: 0.78rem;
+}
+
+/* La marca de prorrateo va DEBAJO del monto, no al lado: es la explicación de
+   esa cifra, y en la misma línea competía con ella. */
+.prorrateo-nota {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $acento;
+  cursor: help;
+
+  i { margin-right: 3px; }
 }
 
 /* ── Factura DIAN en la celda de cobro ──────────────────────────────────── */
@@ -1607,4 +1696,516 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 
 @media (max-width: 560px) {
   .paginador { justify-content: center; }
+}
+
+/* La tarjeta del cobro ocupa dos columnas: lleva una cuenta de tres líneas y
+   apretada en una sola columna los números se montaban entre sí. */
+.dato--cobro {
+  grid-column: span 2;
+
+  .dato-valor { color: $acento; }
+}
+
+.dato-cuenta {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: $muted;
+}
+
+.cuenta-linea {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 0;
+
+  b { font-variant-numeric: tabular-nums; color: $ink; font-weight: 700; }
+}
+
+.cuenta-linea--resta b { color: $alerta; }
+
+/* La base del cobro se separa con una línea, como en una factura: es el
+   resultado de la cuenta de arriba, no un dato más de la lista. */
+.cuenta-linea--total {
+  border-top: 1px solid $linea;
+  margin-top: 3px;
+  padding-top: 4px;
+
+  b { color: $acento; }
+}
+
+.cuenta-nota { display: block; padding-top: 2px; }
+
+@media (max-width: 720px) {
+  .dato--cobro { grid-column: span 1; }
+}
+
+/* ── Ventas que se cayeron ──────────────────────────────────────────────── */
+/* La tarjeta va en ámbar y no en rojo: una venta caída no es una falla del
+   sistema, es parte del negocio. Lo que importa es que no se confunda con lo
+   que sí se cobra. */
+.dato--caida-hay {
+  .dato-valor { color: $alerta; }
+}
+
+.ver-caidas {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: $acento;
+  font-size: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.ficha-caidas {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: $superficie;
+  border: 1px solid $linea;
+  border-radius: $r-sm;
+}
+
+.caidas-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+
+  strong { font-size: 0.86rem; }
+}
+
+.caidas-resumen { font-size: 0.75rem; color: $muted; }
+
+.caidas-aviso {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  color: $muted;
+
+  i { margin-right: 4px; }
+}
+
+/* Scroll propio: una empresa puede tener decenas de ventas caídas y no pueden
+   empujar el resto de la ficha fuera de la pantalla. */
+.caidas-tabla {
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.caidas-fila {
+  display: grid;
+  grid-template-columns: minmax(110px, 1.2fr) 90px 120px minmax(120px, 1fr) 110px;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid $linea;
+  font-size: 0.75rem;
+  align-items: baseline;
+
+  &--head {
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $muted;
+    position: sticky;
+    top: 0;
+    background: $superficie;
+  }
+
+  &:last-child { border-bottom: none; }
+}
+
+.caidas-nro { font-weight: 700; font-variant-numeric: tabular-nums; }
+.caidas-motivo { color: $muted; }
+.caidas-valor { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+/* Se cayó en otro mes: es la señal de que esa venta ya pudo contarse en un
+   cobro anterior, así que se destaca. */
+.caidas-otromes {
+  color: $alerta;
+  font-weight: 700;
+}
+
+.caidas-nota {
+  margin: 8px 0 0;
+  font-size: 0.7rem;
+  color: $muted;
+}
+
+/* Avisos de renovación: los casilleros de la secuencia.
+
+   Los cinco van siempre, enviados o no. El vacío al lado del lleno es la mitad
+   de la información: "ya salió el de −7 y todavía no el de −3" se lee de un
+   golpe, cosa que una lista de lo enviado no permite. */
+.col-avisos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+}
+
+.aviso {
+  display: inline-block;
+  min-width: 26px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.4;
+  cursor: help;
+
+  /* Sin enviar: presente pero apagado. No es una alerta — que falte el de +7
+     es lo normal antes del corte. */
+  background: $fondo;
+  border: 1px solid rgba(33, 31, 58, 0.08);
+  color: $muted;
+}
+
+.aviso--ok {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.25);
+  color: #15803d;
+}
+
+/* ── Pedidos de funcionalidad ─────────────────────────────────────────────── */
+
+.pedidos-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.pedidos-intro {
+  margin: 0;
+  font-size: 0.85rem;
+  color: $muted;
+
+  strong { color: $ink; }
+}
+
+/* El formulario de anotar. Plano y corto: si anotar cuesta, no se anota. */
+.pedido-form {
+  background: $superficie;
+  border: 1px solid $acento-borde;
+  border-radius: $r-md;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+
+    > span {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: $muted;
+    }
+
+    /* La aclaración no va en mayúsculas: es una frase, no una etiqueta. */
+    small {
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 400;
+      opacity: 0.8;
+    }
+  }
+
+  input,
+  select,
+  textarea {
+    border: 1px solid $linea;
+    border-radius: $r-sm;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 0.88rem;
+    color: $ink;
+    background: $superficie;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: $acento;
+      background: $acento-suave;
+    }
+  }
+}
+
+.pedido-form-fila {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  > label { min-width: 200px; }
+  > label.crece { flex: 1; }
+}
+
+.pedido-form .crece { flex: 1; }
+
+.pedido-form-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* La tabla que decide el roadmap. Se puede tocar: filtra la lista de abajo. */
+.tabla--temas {
+  margin-bottom: 20px;
+
+  .tabla-head,
+  .fila {
+    grid-template-columns: minmax(220px, 1fr) 90px 90px 90px minmax(180px, 1.2fr);
+  }
+
+  .fila { cursor: pointer; }
+  .fila:hover { background: $acento-suave; }
+  .fila--activa { background: $acento-suave; box-shadow: inset 3px 0 0 $acento; }
+}
+
+/* El número que justifica construir algo. Merece pesar más que los de al lado. */
+.tema-cuenta {
+  font-size: 1.05rem;
+  color: $acento;
+}
+
+.tema-empresas {
+  font-size: 0.78rem;
+  color: $muted;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabla--pedidos {
+  .tabla-head,
+  .fila {
+    grid-template-columns: minmax(220px, 1fr) 135px 115px 150px 135px 100px 84px;
+  }
+
+  .fila { cursor: default; }
+  /* El tema elegido arriba se resalta acá: es el puente entre las dos tablas. */
+  .fila--resaltada { background: $acento-suave; }
+}
+
+.pedido-detalle {
+  display: block;
+  font-size: 0.76rem;
+  color: $muted;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.select-estado {
+  border: 1px solid $linea;
+  border-radius: $r-sm;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 0.78rem;
+  color: $ink;
+  background: $superficie;
+  cursor: pointer;
+
+  &:focus { outline: none; border-color: $acento; }
+}
+
+.pedidos-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+
+  select.ctx { cursor: pointer; }
+}
+
+@media (max-width: 1023px) {
+  .tabla--temas,
+  .tabla--pedidos {
+    .tabla-head { display: none; }
+    .fila { grid-template-columns: 1fr 1fr; row-gap: 8px; }
+    .col-empresa { grid-column: 1 / -1; }
+  }
+}
+
+/* El título de la tabla que decide el roadmap. Sin él, dos tablas seguidas se
+   leen como una sola lista larga y se pierde que hacen cosas distintas. */
+.pedidos-subtitulo {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: $ink;
+
+  small {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 400;
+    color: $muted;
+    margin-top: 2px;
+  }
+}
+
+/* La frontera con soporte. Es la confusión más cara de esta pantalla: si los
+   bugs entran acá, esto se vuelve una segunda mesa de ayuda que nadie atiende. */
+.pedidos-frontera {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: $alerta;
+  background: $alerta-suave;
+  border: 1px solid rgba($alerta, 0.2);
+  border-radius: $r-sm;
+  padding: 7px 10px;
+
+  i { margin-right: 5px; }
+  strong { color: darken($alerta, 8%); }
+}
+
+/* La ayuda del campo que nadie entendía. Va ARRIBA del campo y no como
+   placeholder: un placeholder desaparece apenas se escribe, justo cuando la
+   duda sigue viva. */
+.campo-ayuda {
+  font-size: 0.76rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: $muted;
+  line-height: 1.45;
+  margin-bottom: 2px;
+
+  strong { color: $ink; }
+}
+
+.campo-tema {
+  background: $fondo;
+  border: 1px solid $linea;
+  border-radius: $r-sm;
+  padding: 10px 12px;
+}
+
+/* Cada clase de pedido con su color: en una tabla larga, "qué nos piden más"
+   se responde mirando, sin contar. */
+.chip--tipo {
+  &[data-tipo='integracion'] { background: #EAF2FE; color: #1D4ED8; }
+  &[data-tipo='modulo']      { background: $acento-suave; color: $acento; }
+  &[data-tipo='reporte']     { background: $exito-suave; color: $exito; }
+  &[data-tipo='correccion']  { background: $alerta-suave; color: $alerta; }
+}
+
+/* La tabla de prioridades cuando todavía no hay datos.
+   Ocupa el mismo lugar que ocupará la tabla, y dice qué va a pasar ahí. Una
+   sección que solo existe cuando ya hay datos no se descubre nunca. */
+.tema-vacio {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: $superficie;
+  border: 1px dashed $acento-borde;
+  border-radius: $r-md;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+
+  > i {
+    font-size: 1.3rem;
+    color: $acento;
+    margin-top: 2px;
+  }
+
+  strong { color: $ink; }
+
+  p {
+    margin: 4px 0 0;
+    font-size: 0.83rem;
+    color: $muted;
+    line-height: 1.5;
+    max-width: 60ch;
+  }
+}
+
+/* Los dos botones de la fila. Juntos y a la derecha: son acciones sobre esa
+   fila, no datos, y mezclarlos con las columnas de contenido los hace pesar
+   más de lo que merecen. */
+.col-acciones {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+
+  .btn-icono {
+    width: 28px;
+    height: 28px;
+    font-size: 0.78rem;
+  }
+}
+
+/* El formulario cuando está corrigiendo y no creando. Sin esta marca, editar
+   se siente igual que anotar y uno no sabe si va a duplicar el pedido. */
+.pedido-form--editando {
+  border-color: $alerta;
+  background: $alerta-suave;
+}
+
+.pedido-form-titulo {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: $ink;
+
+  small {
+    display: block;
+    font-weight: 400;
+    font-size: 0.76rem;
+    color: $muted;
+    margin-top: 2px;
+  }
+}
+
+/* El aviso de "tu pedido no se borró, cambió de filtro". Verde y no ámbar:
+   marcar algo como entregado es una buena noticia, no una advertencia. */
+.pedido-aviso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  background: $exito-suave;
+  border: 1px solid rgba($exito, 0.25);
+  border-radius: $r-sm;
+  font-size: 0.82rem;
+  color: $ink;
+
+  > i { color: $exito; }
+
+  button {
+    margin-left: auto;
+    border: 1px solid rgba($exito, 0.3);
+    background: transparent;
+    color: $exito;
+    border-radius: 7px;
+    padding: 3px 10px;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover { background: rgba($exito, 0.1); }
+  }
+}
+
+/* El conteo dentro del filtro. Tabular para que no bailen los botones al
+   cambiar de 9 a 10. */
+.pedidos-filtros .ctx strong {
+  font-variant-numeric: tabular-nums;
+  margin-left: 3px;
 }

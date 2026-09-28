@@ -293,6 +293,13 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     delete copia.fechaCreacion;
     delete copia.convertidaAPedido;
     delete copia.pedidoGenerado;
+    // Revisión 1081: la copia es una cotización nueva. Sin estos campos, el servidor le pone
+    // el anexo vigente de la empresa y no le hereda el enlace público de la original.
+    delete copia.anexoCondiciones;
+    delete (copia as any).publicToken;
+    delete (copia as any).publicTokenCreatedAt;
+    delete copia.vistaCliente;
+    delete copia.fechaPrimeraVista;
     const sub = this.service.create(copia).subscribe({
       next: (res) => {
         const num = res && res.data ? res.data.nroCotizacion : "";

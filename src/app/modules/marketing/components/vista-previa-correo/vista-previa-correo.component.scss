@@ -1,0 +1,92 @@
+@import '../../../../shared/styles/katuq-marketing';
+
+:host {
+  @include km-tokens;
+  display: block;
+}
+
+.vp {
+  @include km-card;
+  overflow: hidden;
+
+  &__barra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--km-line);
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__de {
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--km-muted);
+  }
+
+  &__asunto {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--km-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__modos {
+    display: flex;
+    gap: 4px;
+    flex: none;
+
+    button {
+      width: 34px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid var(--km-line2);
+      background: var(--km-surface);
+      color: var(--km-muted);
+      cursor: pointer;
+
+      &.is-on {
+        color: var(--km-accent);
+        background: var(--km-accent-wash);
+        border-color: #d9cffb;
+      }
+    }
+  }
+
+  &__marco {
+    background: #f4f3f8;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+
+    iframe {
+      width: 100%;
+      max-width: 680px;
+      height: 620px;
+      border: 0;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    &.is-movil iframe {
+      max-width: 375px;
+    }
+  }
+
+  &__vacio {
+    padding: 60px 20px;
+    color: var(--km-muted);
+    font-weight: 700;
+    font-size: 13px;
+  }
+}

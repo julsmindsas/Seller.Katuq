@@ -660,7 +660,9 @@ export class NavService implements OnDestroy {
       active: false,
     },
     {
-      title: "Campañas WhatsApp",
+      // WhatsApp y, desde D-318, correo: los dos canales viven en la misma
+      // pantalla. Misma ruta, así que los permisos de los roles no cambian.
+      title: "Campañas",
       icon: "send",
       type: "link",
       path: "/marketing/campanas",

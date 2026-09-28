@@ -1,0 +1,44 @@
+<section class="codigo-correo" aria-labelledby="codigo-correo-titulo">
+  <div class="codigo-correo__icono" aria-hidden="true">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+    </svg>
+  </div>
+
+  <h2 id="codigo-correo-titulo" class="codigo-correo__titulo">Confirma tu correo</h2>
+  <p class="codigo-correo__texto">
+    Te enviamos un código de 6 dígitos a <strong>{{ email }}</strong>. Escríbelo aquí para entrar.
+  </p>
+
+  <form class="codigo-correo__form" (ngSubmit)="confirmar()" novalidate>
+    <label for="codigo-correo-input" class="codigo-correo__label">Código</label>
+    <input
+      id="codigo-correo-input"
+      class="codigo-correo__input"
+      type="text"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      maxlength="6"
+      placeholder="000000"
+      name="codigo"
+      [ngModel]="codigo"
+      (ngModelChange)="normalizar($event)"
+      [attr.aria-invalid]="!!error"
+      aria-describedby="codigo-correo-ayuda"
+    />
+    <p *ngIf="error" class="codigo-correo__error" role="alert">{{ error }}</p>
+    <p *ngIf="aviso && !error" class="codigo-correo__aviso" role="status">{{ aviso }}</p>
+
+    <button type="submit" class="codigo-correo__boton" [disabled]="!completo || confirmando">
+      {{ confirmando ? 'Confirmando…' : 'Confirmar y entrar' }}
+    </button>
+  </form>
+
+  <p id="codigo-correo-ayuda" class="codigo-correo__ayuda">
+    ¿No te llegó? Búscalo en Spam o Promociones. Vence en 15 minutos.
+  </p>
+  <button type="button" class="codigo-correo__reenviar" (click)="reenviar()" [disabled]="segundos > 0 || reenviando">
+    {{ segundos > 0 ? 'Reenviar código en ' + segundos + ' s' : (reenviando ? 'Enviando…' : 'Reenviar código') }}
+  </button>
+</section>

@@ -186,6 +186,18 @@
               pTooltip="Renombrar, agregar o reordenar las etapas del pipeline" tooltipPosition="bottom">
               <i class="fa fa-list-ol"></i> Etapas
             </button>
+            <!-- Ticket 1064: equipo comercial -->
+            <button *ngIf="canManageStages && equipo" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" (click)="showEquipoModal = true"
+              pTooltip="Quién ve qué leads y recordatorios de tareas por correo" tooltipPosition="bottom">
+              <i class="fa fa-users"></i> Comerciales
+            </button>
+            <select *ngIf="puedeAsignarComercial" class="form-select form-select-sm crm-filtro-comercial"
+              [(ngModel)]="selectedComercial" (ngModelChange)="groupByStage()" aria-label="Filtrar por comercial">
+              <option value="">Todos los comerciales</option>
+              <option value="__sin__">Sin asignar</option>
+              <option *ngFor="let c of equipo?.comerciales" [value]="c.email">{{ c.nombre }}</option>
+            </select>
+            <small *ngIf="equipo?.soloPropios" class="text-muted"><i class="fa fa-user-o me-1"></i>Ves solo tus leads</small>
             <ng-container *ngIf="clientTagsCatalog.length > 0">
               <small class="text-muted ms-2 me-1"><i class="pi pi-tags me-1"></i>Segmentar:</small>
               <span *ngFor="let tag of clientTagsCatalog" class="tag-filter-chip"
@@ -307,8 +319,8 @@
                       [style.color]="getPriorityColor(lead.priority)">
                       {{ getPriorityLabel(lead.priority) }}
                     </span>
-                    <small class="text-muted" *ngIf="lead.assignedTo">
-                      <i class="fa fa-user-o me-1"></i>{{ lead.assignedTo?.split('@')[0] }}
+                    <small class="text-muted" *ngIf="duenoEfectivo(lead)">
+                      <i class="fa fa-user-o me-1"></i>{{ nombreComercial(duenoEfectivo(lead)) }}
                     </small>
                     <span class="stat-badge badge-sm" *ngIf="getContactBadge(lead) as cb"
                       [style.background-color]="cb.bg" [style.color]="cb.color"
@@ -412,7 +424,7 @@
                     {{ getPriorityLabel(lead.priority) }}
                   </span>
                 </td>
-                <td (click)="$event.stopPropagation()" style="cursor:default"><small>{{ lead.assignedTo || '-' }}</small></td>
+                <td (click)="$event.stopPropagation()" style="cursor:default"><small>{{ duenoEfectivo(lead) ? nombreComercial(duenoEfectivo(lead)) : '-' }}</small></td>
                 <td>
                   <small *ngIf="lead.estimatedValue" style="color:#8b5cf6; font-weight:600;">
                     {{ formatCurrency(lead.estimatedValue) }}
@@ -717,7 +729,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let row of conversionRows">
-          <td>{{ row.assignedTo }}</td>
+          <td>{{ row.assignedTo === 'Sin asignar' ? 'Sin asignar' : nombreComercial(row.assignedTo) }}</td>
           <td class="text-end">{{ row.total }}</td>
           <td class="text-end" style="color:#059669;">{{ row.won }}</td>
           <td class="text-end" style="color:#dc2626;">{{ row.lost }}</td>
@@ -798,6 +810,30 @@
     <button pButton type="button" label="Guardar" icon="pi pi-check"
       class="p-button-primary" (click)="guardarEtapas()"></button>
   </ng-template>
+</p-dialog>
+
+<!-- Ticket 1064: equipo comercial (solo administradores) -->
+<p-dialog header="Comerciales" [(visible)]="showEquipoModal"
+  [modal]="true" [closable]="true" [style]="{width: '480px'}" [breakpoints]="{'640px': '94vw'}">
+  <div *ngIf="equipo" class="config-list">
+    <div class="config-list-item d-flex align-items-start justify-content-between gap-3 mb-3">
+      <span>
+        <strong class="d-block">Cada comercial ve solo sus leads</strong>
+        <small class="text-muted">Los vendedores ven y trabajan únicamente los leads y tareas asignados a ellos. Los administradores siguen viendo todo.</small>
+      </span>
+      <p-inputSwitch [(ngModel)]="configEquipo.crmSoloPropios" [disabled]="guardandoEquipo"
+        (onChange)="guardarConfigEquipo('crmSoloPropios', $event.checked)"></p-inputSwitch>
+    </div>
+    <div class="config-list-item d-flex align-items-start justify-content-between gap-3 mb-2">
+      <span>
+        <strong class="d-block">Recordar las tareas por correo</strong>
+        <small class="text-muted">Al asignar una tarea le llega un correo al responsable, y cada mañana recibe las que vencen ese día o ya vencieron.</small>
+      </span>
+      <p-inputSwitch [(ngModel)]="configEquipo.crmRecordatoriosCorreo" [disabled]="guardandoEquipo"
+        (onChange)="guardarConfigEquipo('crmRecordatoriosCorreo', $event.checked)"></p-inputSwitch>
+    </div>
+    <small class="text-muted d-block mt-2">{{ equipo.comerciales.length }} {{ equipo.comerciales.length === 1 ? 'persona' : 'personas' }} del equipo. El comercial de cada lead se elige al crearlo o en su detalle.</small>
+  </div>
 </p-dialog>
 
 <p-confirmDialog acceptLabel="Eliminar" rejectLabel="Cancelar"></p-confirmDialog>

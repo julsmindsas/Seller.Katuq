@@ -6,7 +6,7 @@ import { MaestroService } from '../../../shared/services/maestros/maestro.servic
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
-import { leerErrorInventario } from 'src/app/shared/utils/error-inventario';
+import { leerErrorInventario, nombrarProductosEnError } from 'src/app/shared/utils/error-inventario';
 import { ConfirmationService } from 'primeng/api';
 import { MovimientoInventario } from '../model/movimientoinventario';
 import { Producto } from '../../../shared/models/productos/Producto';
@@ -265,12 +265,26 @@ export class RecepcionMercanciaComponent implements OnInit {
     }
 
     // Cualquier otro error: el motivo del backend, con su instrucción debajo.
+    // Ticket 1071: el producto por su referencia y nombre, no por su id interno.
+    const { html: motivo, nombrados } = nombrarProductosEnError(
+      leido.motivo,
+      this.productos.map(p => ({
+        id: p.producto?.cd || p.id,
+        nombre: [p.producto?.identificacion?.referencia, p.producto?.crearProducto?.titulo]
+          .filter(Boolean).join(' · ') || p.producto?.cd || p.id,
+      })),
+    );
+    // Las validaciones y la escritura van en una sola transacción: si un producto falla, no entra ninguno.
+    const nadaGuardado = nombrados.length > 0 && this.productos.length > 1
+      ? `<p class="text-muted mb-0">No se guardó ningún producto de la lista. Corrige o quita ese producto y vuelve a guardar.</p>`
+      : '';
     Swal.fire({
       icon: 'error',
       title: 'No se guardó la recepción',
       html: leido.motivo
-        ? `<p>${leido.motivo}</p>` +
-          (leido.sugerencia ? `<p class="text-muted mb-0">${leido.sugerencia}</p>` : '')
+        ? `<p>${motivo}</p>` +
+          (leido.sugerencia ? `<p class="text-muted mb-0">${leido.sugerencia}</p>` : '') +
+          nadaGuardado
         : 'No se pudo guardar la recepción de mercancía.',
       confirmButtonColor: '#5F3FE0',
     });

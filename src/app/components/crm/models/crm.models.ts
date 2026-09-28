@@ -41,6 +41,9 @@ export interface CrmLead {
   // CRM pipeline
   stage: string;
   assignedTo?: string;
+  /** Ticket 1064: sin comercial decidido; entonces es de quien lo creó (`creadoPor`). */
+  sinDueno?: boolean;
+  creadoPor?: string | null;
   priority?: Priority;
   estimatedValue?: number;
   source?: string;
@@ -86,6 +89,24 @@ export interface CrmTask {
   createdAt: string;
   createdBy: string;
   lastReviewedAt?: string;
+}
+
+/** Ticket 1064: comercial de la empresa para asignar leads y tareas. */
+export interface CrmComercial {
+  email: string;
+  nombre: string;
+  rol: string;
+  comercial: boolean;
+}
+
+/** Ticket 1064: equipo y alcance de quien usa el CRM. */
+export interface CrmEquipo {
+  comerciales: CrmComercial[];
+  yo: string | null;
+  /** true = este usuario solo ve sus leads (visibilidad por comercial encendida). */
+  soloPropios: boolean;
+  puedeAsignar: boolean;
+  config: { crmSoloPropios: boolean; crmRecordatoriosCorreo: boolean };
 }
 
 export interface CrmStats {

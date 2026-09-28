@@ -1,0 +1,100 @@
+@import '../../../../shared/styles/katuq-marketing';
+
+:host {
+  @include km-tokens;
+  display: block;
+}
+
+@mixin etiqueta {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--km-muted);
+}
+
+.sc {
+  padding: 18px 22px 32px;
+  background: var(--km-canvas);
+  min-height: calc(100vh - 80px);
+  font-family: var(--km-font);
+
+  &__header { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  &__title { font-size: 22px; font-weight: 800; color: var(--km-ink); margin: 0; }
+  &__subtitle { font-size: 13px; color: var(--km-muted); margin: 3px 0 0; }
+  &__back { font-size: 12.5px; font-weight: 700; color: var(--km-muted); text-decoration: none; &:hover { color: var(--km-accent); } }
+  &__aviso { @include km-card; padding: 18px; font-weight: 600; color: var(--km-ink2); }
+
+  &__kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  &__kpi { @include km-card; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+  &__label { @include etiqueta; }
+  &__valor { font-size: 22px; font-weight: 800; color: var(--km-accent); }
+
+  &__panel { @include km-card; padding: 14px 16px; }
+
+  &__filtros {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 12px;
+
+    input, select {
+      border: 1px solid var(--km-line2);
+      border-radius: 11px;
+      background: #faf9fe;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      min-width: 220px;
+      &:focus { outline: none; border-color: var(--km-accent); background: #fff; }
+    }
+  }
+
+  &__chips {
+    display: flex;
+    gap: 6px;
+
+    button {
+      border: 1px solid var(--km-line2);
+      background: var(--km-surface);
+      color: var(--km-ink2);
+      border-radius: 99px;
+      padding: 6px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      &.is-on { color: var(--km-accent); background: var(--km-accent-wash); border-color: #d9cffb; }
+    }
+  }
+
+  &__vacio { padding: 26px; text-align: center; color: var(--km-muted); font-weight: 600; font-size: 13px; }
+
+  &__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th { @include etiqueta; text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--km-line); }
+    td { padding: 10px; border-bottom: 1px solid var(--km-line); color: var(--km-ink2); vertical-align: middle; }
+    tr:hover td { background: #faf9ff; }
+  }
+
+  &__nombre { display: block; font-size: 11.5px; color: var(--km-muted); }
+
+  &__estado {
+    @include km-chip(var(--km-ink2), var(--km-line));
+    text-transform: uppercase;
+    &.is-suscrito { @include km-chip(var(--km-green-ink), var(--km-green-wash)); text-transform: uppercase; }
+    &.is-suprimido { @include km-chip(var(--km-red), var(--km-red-wash)); text-transform: uppercase; }
+  }
+
+  &__acc button {
+    border: 0;
+    background: none;
+    color: var(--km-accent);
+    font-weight: 700;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+}

@@ -28,6 +28,15 @@ export class ConfirmComponent implements OnInit {
     // valor ya marcado como confiable devuelve el HTML original sin tocarlo.
     const html = this.sanitizer.sanitize(SecurityContext.HTML, this.htmlContent) ?? '';
     this.renderer.setProperty(this.contentToPrint.nativeElement, 'innerHTML', html);
+    // Ticket 1053: si los maestros aún no cargaban, pintar el pedido cuando lleguen.
+    if (this.paymentService.esHtmlDeEspera(this.htmlContent)) {
+      this.paymentService.getHtmlContentAsync(this.pedido).then((h) => {
+        if (!h) return;
+        this.htmlContent = h;
+        this.renderer.setProperty(this.contentToPrint.nativeElement, 'innerHTML',
+          this.sanitizer.sanitize(SecurityContext.HTML, h) ?? '');
+      });
+    }
   }
   generarNuevoPedido(){
     window.location.reload();

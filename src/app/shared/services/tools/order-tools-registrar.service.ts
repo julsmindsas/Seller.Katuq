@@ -1188,7 +1188,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
           await this.ventasService.validateNroPedido(this.pedidoEnProgreso.nroPedido as string).toPromise();
           
           // Generar contenido HTML para email
-          const htmlContent = this.paymentService.getHtmlContent(this.pedidoEnProgreso);
+          const htmlContent = await this.paymentService.getHtmlContentAsync(this.pedidoEnProgreso); // ticket 1053
           
           // Crear el pedido
           const result = await this.ventasService.createOrder({ 
@@ -3632,7 +3632,7 @@ export class OrderToolsRegistrarService implements ToolRegistrar {
       this.pedidoEnProgreso.totalPedididoConDescuento = (this.pedidoEnProgreso.subtotal || 0) + (this.pedidoEnProgreso.totalImpuesto || 0) + (this.pedidoEnProgreso.totalEnvio || 0);
       
       // Generar contenido HTML para email
-      const htmlContent = this.paymentService.getHtmlContent(this.pedidoEnProgreso);
+      const htmlContent = await this.paymentService.getHtmlContentAsync(this.pedidoEnProgreso); // ticket 1053
       
       // Crear el pedido
       const result = await this.ventasService.createOrder({ 

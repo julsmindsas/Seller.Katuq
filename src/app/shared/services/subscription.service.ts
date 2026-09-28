@@ -228,6 +228,20 @@ export class SubscriptionService {
       billingPeriod?: 'monthly' | 'yearly';
       /** ISO (yyyy-mm-dd). Vacío = no tocar la fecha que ya tenga. */
       nextBillingDate?: string;
+      /**
+       * Cortesía: premium con acceso a todo y sin cobro (empresas de Katuq y
+       * demo). Se manda siempre que el plan sea premium —true o false— para
+       * poder QUITARLA; si solo se mandara al activarla, no habría forma de
+       * volver a cobrarle a una empresa desde esta pantalla.
+       */
+      /**
+       * Inicio del período: desde cuándo se cuentan las ventas que deciden el
+       * escalón. Cadena vacía = volver al cálculo automático (distinto de no
+       * mandarlo, que es "no lo toques").
+       */
+      billingPeriodStart?: string;
+      cobroCortesia?: boolean;
+      motivoCortesia?: string;
     }
   ): Observable<any> {
     return this.http.post(`${this.baseUrl}/admin-upgrade`, {

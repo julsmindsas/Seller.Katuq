@@ -47,6 +47,16 @@
     </button>
   </header>
 
+  <!-- Plan gratis (D-319): lo que el plan permite, a la vista. El servidor lo hace cumplir. -->
+  <div class="plan-gratis" *ngIf="plan.limites as l">
+    <span class="plan-gratis__chip">PLAN GRATIS</span>
+    <span>
+      1 tienda publicada · {{ l.productosVisibles }} productos visibles · {{ l.cuponesActivos }} cupón y {{ l.promocionesActivas }} promoción activos · {{ l.paginasPropias }} páginas · sin dominio propio ni reseñas
+      <ng-container *ngIf="plan.pedidosRestantes >= 0"> · te quedan <b>{{ plan.pedidosRestantes }}</b> pedidos este mes (al llegar a 0, tu tienda recibe por WhatsApp)</ng-container>
+    </span>
+    <a routerLink="/pricing" class="plan-gratis__mejorar">Mejorar plan</a>
+  </div>
+
   <div class="cuerpo">
 
     <!-- ═══ Panel de trabajo ═══════════════════════════════════════════════ -->
@@ -55,6 +65,10 @@
         <button [class.is-active]="panel === 'bloques'" (click)="panel = 'bloques'">Secciones</button>
         <button [class.is-active]="panel === 'diseno'" (click)="panel = 'diseno'; cargarMuestrasDeLetra()">Estilo</button>
         <button [class.is-active]="panel === 'tienda'" (click)="panel = 'tienda'; cargarBodegas()">Tienda</button>
+        <button [class.is-active]="panel === 'resenas'" (click)="panel = 'resenas'; cargarResenas()">
+          Opiniones
+          <span class="pestana-aviso" *ngIf="resenasPendientes">{{ resenasPendientes }}</span>
+        </button>
         <button [class.is-active]="panel === 'pauta'" (click)="panel = 'pauta'">Pauta</button>
         <button [class.is-active]="panel === 'ajustes'" (click)="panel = 'ajustes'">Ajustes</button>
       </nav>
@@ -179,6 +193,10 @@
               <button class="icono" title="Bajar" [disabled]="i === bloques.length - 1"
                       (click)="$event.stopPropagation(); mover(i, 1)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+              </button>
+              <button class="icono" title="Mover a otra página" *ngIf="paginas.length"
+                      (click)="$event.stopPropagation(); moverAPagina(i)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 6h9M4 12h9M4 18h9"/><path d="m17 8 4 4-4 4"/></svg>
               </button>
               <button class="icono" title="Duplicar" (click)="$event.stopPropagation(); duplicar(i)">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
@@ -317,10 +335,14 @@
               <input type="text" [(ngModel)]="b.datos.ctaUrl" (ngModelChange)="marcarSucio()" placeholder="#productos" />
             </div>
 
-            <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.enlaces)">
+            <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="30" />
               <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="#productos" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarEnlace()"
                     *ngIf="(b.datos.enlaces?.length || 0) < 4">
@@ -628,15 +650,17 @@
               Sube tus imágenes de promoción a lo ancho. Con <strong>dos o más</strong>, rotan solas y llevan
               flechas y puntos. Cada banner puede llevar a un enlace (por ejemplo, una categoría del catálogo).
             </p>
-            <div class="repetible repetible--banner" *ngFor="let bn of b.datos.banners; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.banners)">
+            <div class="repetible repetible--banner" *ngFor="let bn of b.datos.banners; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <img [src]="bn.url" alt="" class="repetible__foto" />
               <input type="text" [(ngModel)]="bn.enlace" (ngModelChange)="marcarSucio()" placeholder="Enlace al tocar (opcional)" />
               <input type="text" [(ngModel)]="bn.alt" (ngModelChange)="marcarSucio()" placeholder="Qué muestra (para accesibilidad)" maxlength="120" />
               <div class="repetible__acciones">
-                <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="moverBanner(b, i, -1)" [disabled]="i === 0" title="Mover antes">↑</button>
-                <button type="button" class="btn-fantasma btn-fantasma--sm" (click)="moverBanner(b, i, 1)" [disabled]="i === b.datos.banners.length - 1" title="Mover después">↓</button>
                 <button type="button" class="repetible__quitar" (click)="quitarBanner(b, i)">Quitar</button>
               </div>
+            </div>
             </div>
             <label class="archivo" *ngIf="(b.datos.banners?.length || 0) < 6">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2"/></svg>
@@ -731,10 +755,14 @@
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
-            <div class="repetible" *ngFor="let p of b.datos.preguntas; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.preguntas)">
+            <div class="repetible" *ngFor="let p of b.datos.preguntas; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="p.pregunta" (ngModelChange)="marcarSucio()" placeholder="Pregunta" maxlength="200" />
               <textarea rows="2" [(ngModel)]="p.respuesta" (ngModelChange)="marcarSucio()" placeholder="Respuesta" maxlength="2000"></textarea>
               <button class="repetible__quitar" (click)="quitarPregunta(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarPregunta()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
@@ -1041,7 +1069,10 @@
               <label>Título</label>
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
-            <div class="repetible" *ngFor="let r of b.datos.items; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.items)">
+            <div class="repetible" *ngFor="let r of b.datos.items; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <textarea rows="2" [(ngModel)]="r.texto" (ngModelChange)="marcarSucio()"
                         placeholder="Lo que dijo tu cliente" maxlength="400"></textarea>
               <input type="text" [(ngModel)]="r.autor" (ngModelChange)="marcarSucio()"
@@ -1053,6 +1084,7 @@
                         [attr.aria-label]="n + ' estrellas'">★</button>
               </div>
               <button class="repetible__quitar" (click)="quitarResena(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarResena()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
@@ -1112,10 +1144,14 @@
               <span class="opcion__texto"><strong>Mostrar medios de pago</strong><small>Los de tu pestaña Tienda</small></span>
               <span class="palanca"><span></span></span>
             </button>
-            <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.enlaces)">
+            <div class="repetible" *ngFor="let e of b.datos.enlaces; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="e.etiqueta" (ngModelChange)="marcarSucio()" placeholder="Nombre del enlace" maxlength="60" />
               <input type="text" [(ngModel)]="e.url" (ngModelChange)="marcarSucio()" placeholder="https://…" />
               <button class="repetible__quitar" (click)="quitarEnlace(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarEnlace()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"/></svg>
@@ -1151,7 +1187,10 @@
               <input type="text" [(ngModel)]="b.datos.titulo" (ngModelChange)="marcarSucio()" maxlength="120" />
             </div>
 
-            <div class="repetible" *ngFor="let c of b.datos.columnas; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.columnas)">
+            <div class="repetible" *ngFor="let c of b.datos.columnas; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <span class="repetible__nombre">Columna {{ i + 1 }}</span>
               <input type="text" [(ngModel)]="c.titulo" (ngModelChange)="marcarSucio()"
                      placeholder="Título" maxlength="90" />
@@ -1170,6 +1209,7 @@
               <input type="text" [(ngModel)]="c.ctaUrl" (ngModelChange)="marcarSucio()"
                      placeholder="#contacto o https://…" />
               <button class="repetible__quitar" (click)="quitarColumna(i)">Quitar columna</button>
+            </div>
             </div>
 
             <button class="agregar agregar--sm" (click)="agregarColumna()"
@@ -1212,7 +1252,10 @@
 
           <!-- Fila de botones -->
           <ng-container *ngIf="b.tipo === 'botones'">
-            <div class="repetible" *ngFor="let bt of b.datos.botones; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, b.datos.botones)">
+            <div class="repetible" *ngFor="let bt of b.datos.botones; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <input type="text" [(ngModel)]="bt.etiqueta" (ngModelChange)="marcarSucio()"
                      placeholder="Texto del botón" maxlength="40" />
               <input type="text" [(ngModel)]="bt.url" (ngModelChange)="marcarSucio()"
@@ -1222,6 +1265,7 @@
                 <option value="secundario">Solo borde</option>
               </select>
               <button class="repetible__quitar" (click)="quitarBoton(i)">Quitar</button>
+            </div>
             </div>
             <button class="agregar agregar--sm" (click)="agregarBoton()"
                     *ngIf="(b.datos.botones?.length || 0) < 4">
@@ -1970,7 +2014,10 @@
             </button>
 
             <ng-container *ngIf="r.activo">
-              <div class="repetible" *ngFor="let p of r.puntos; let i = index">
+              <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, r.puntos)">
+              <div class="repetible" *ngFor="let p of r.puntos; let i = index" cdkDrag>
+                <div class="repetible__hueco" *cdkDragPlaceholder></div>
+                <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
                 <input type="text" maxlength="80" [(ngModel)]="p.nombre" (ngModelChange)="marcarSucio()"
                        placeholder="Nombre del punto (Local Centro)" />
                 <input type="text" maxlength="200" [(ngModel)]="p.direccion" (ngModelChange)="marcarSucio()"
@@ -1988,6 +2035,7 @@
                   <option *ngFor="let b of bodegas" [value]="b.codigo">{{ b.nombre }}</option>
                 </select>
                 <button class="enlace-sutil" (click)="quitarPunto(i)">Quitar este punto</button>
+              </div>
               </div>
               <button class="boton-secundario" (click)="agregarPunto()" *ngIf="r.puntos.length < 8">
                 Agregar un punto
@@ -2009,7 +2057,10 @@
               decide si aplica y cuánto rebaja. Nadie los puede leer del código fuente.
             </p>
 
-            <div class="repetible" *ngFor="let c of cupones; let i = index">
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, cupones)">
+            <div class="repetible" *ngFor="let c of cupones; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
               <div class="campo-doble">
                 <input type="text" maxlength="24" [(ngModel)]="c.codigo"
                        (ngModelChange)="c.codigo = normalizarCodigoCupon(c.codigo); marcarSucio()"
@@ -2046,10 +2097,132 @@
               <p class="nota" *ngIf="c.usos > 0">Se ha usado {{ c.usos }} vez(ces).</p>
               <button class="enlace-sutil" (click)="quitarCupon(i)">Quitar este cupón</button>
             </div>
+            </div>
 
             <button class="boton-secundario" (click)="agregarCupon()" *ngIf="cupones.length < 40">
               Crear un cupón
             </button>
+          </div>
+
+          <!-- ── Promociones automáticas (D-315) ── -->
+          <div class="grupo">
+            <h3>Promociones automáticas</h3>
+            <p class="nota">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+              Se aplican solas, sin código: un 2x1, un porcentaje en unas categorías o un precio por
+              volumen. A cada producto le toca la mejor, y la calcula nuestro servidor al cobrar.
+            </p>
+
+            <div class="lista-arrastrable" cdkDropList (cdkDropListDropped)="soltarLista($event, promociones)">
+            <div class="repetible" *ngFor="let p of promociones; let i = index" cdkDrag>
+              <div class="repetible__hueco" *cdkDragPlaceholder></div>
+              <span class="repetible__asa" cdkDragHandle title="Arrastra para reordenar"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg></span>
+              <input type="text" maxlength="60" [(ngModel)]="p.nombre" (ngModelChange)="marcarSucio()"
+                     placeholder="Nombre que ve el comprador: 2x1 en chocolates" />
+              <select [(ngModel)]="p.tipo" (ngModelChange)="marcarSucio()">
+                <option value="nxm">Lleva N y paga M (2x1, 3x2)</option>
+                <option value="porcentaje">% de descuento</option>
+                <option value="volumen">% de descuento desde N unidades</option>
+              </select>
+              <div class="campo-doble" *ngIf="p.tipo === 'nxm'">
+                <label class="campo-mini"><span>Lleva</span>
+                  <input type="number" min="2" max="10" [(ngModel)]="p.lleva" (ngModelChange)="marcarSucio()" /></label>
+                <label class="campo-mini"><span>Paga</span>
+                  <input type="number" min="1" max="9" [(ngModel)]="p.paga" (ngModelChange)="marcarSucio()" /></label>
+              </div>
+              <div class="campo-doble" *ngIf="p.tipo !== 'nxm'">
+                <label class="campo-mini"><span>% de descuento</span>
+                  <input type="number" min="1" max="90" [(ngModel)]="p.valor" (ngModelChange)="marcarSucio()" /></label>
+                <label class="campo-mini" *ngIf="p.tipo === 'volumen'"><span>Desde (unidades)</span>
+                  <input type="number" min="2" max="100" [(ngModel)]="p.desdeUnidades" (ngModelChange)="marcarSucio()" /></label>
+              </div>
+              <select [(ngModel)]="p.alcance.tipo" (ngModelChange)="cambiarAlcancePromo(p)">
+                <option value="todo">En toda la tienda</option>
+                <option value="categorias">En unas categorías</option>
+                <option value="productos">En unos productos</option>
+              </select>
+              <div class="casillas" *ngIf="p.alcance.tipo === 'categorias' && categorias.length">
+                <label class="casilla" *ngFor="let c of categorias">
+                  <input type="checkbox" [checked]="categoriaEnPromo(p, c.nombre)" (change)="alternarCategoriaPromo(p, c.nombre)" />
+                  <span class="casilla__nombre">{{ c.nombre }}</span>
+                  <span class="casilla__total">{{ c.total }}</span>
+                </label>
+              </div>
+              <button class="boton-secundario" *ngIf="p.alcance.tipo === 'productos'" (click)="promoEditandoProductos = p">
+                Elegir productos ({{ p.alcance.valores.length }})
+              </button>
+              <div class="campo-doble">
+                <label class="campo-mini"><span>Desde</span>
+                  <input type="date" [(ngModel)]="p.desde" (ngModelChange)="marcarSucio()" /></label>
+                <label class="campo-mini"><span>Hasta</span>
+                  <input type="date" [(ngModel)]="p.hasta" (ngModelChange)="marcarSucio()" /></label>
+              </div>
+              <label class="paginas__check">
+                <input type="checkbox" [(ngModel)]="p.activa" (ngModelChange)="marcarSucio()" />
+                Activa
+              </label>
+              <p class="nota nota--resumen">{{ describirPromo(p) }}</p>
+              <button class="enlace-sutil" (click)="quitarPromo(i)">Quitar esta promoción</button>
+            </div>
+            </div>
+
+            <button class="boton-secundario" (click)="agregarPromo()" *ngIf="promociones.length < 20">
+              Crear una promoción
+            </button>
+          </div>
+
+          <!-- ── Correos de tu tienda (D-317) ── solo si el backend ya los conoce -->
+          <div class="grupo" *ngIf="soportaCorreos">
+            <h3>Correos de tu tienda</h3>
+            <p class="nota">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              Lo que tu tienda le escribe al comprador, con tu logo y tu nombre. Aquí cambias lo que dice
+              cada correo; lo que dejes vacío sale con el texto de siempre.
+            </p>
+            <div class="campo-doble">
+              <label class="campo-mini"><span>Color de los botones</span>
+                <input type="color" [ngModel]="correos.diseno.color || contenido.tema.colorPrimario || '#211f3a'"
+                       (ngModelChange)="correos.diseno.color = $event; marcarSucio()" /></label>
+              <label class="campo-mini"><span>Las respuestas llegan a</span>
+                <input type="email" maxlength="120" [(ngModel)]="correos.diseno.responderA" (ngModelChange)="marcarSucio()"
+                       placeholder="El correo de tu empresa" /></label>
+            </div>
+            <label class="campo-mini"><span>Pie de tus correos</span>
+              <textarea rows="2" maxlength="400" [(ngModel)]="correos.diseno.pie" (ngModelChange)="marcarSucio()"
+                        placeholder="Horarios, redes, políticas de cambio…"></textarea></label>
+            <p class="nota">Puedes usar {{ variablesCorreo }} en los textos.</p>
+
+            <div class="correo" *ngFor="let m of MOMENTOS_CORREO">
+              <div class="correo__cabeza">
+                <button type="button" class="correo__titulo" (click)="abrirCorreo(m)">
+                  <strong>{{ (textosCorreo[m] && textosCorreo[m].nombre) || m }}</strong>
+                  <small *ngIf="textosCorreo[m]">{{ textosCorreo[m].cuando }}</small>
+                </button>
+                <label class="paginas__check correo__sale">
+                  <input type="checkbox" [(ngModel)]="correos.momentos[m].activo" (ngModelChange)="marcarSucio()" />
+                  Sale
+                </label>
+              </div>
+              <div class="correo__cuerpo" *ngIf="correoAbierto === m">
+                <label class="campo-mini"><span>Asunto</span>
+                  <input type="text" maxlength="120" [(ngModel)]="correos.momentos[m].asunto" (ngModelChange)="marcarSucio()"
+                         [placeholder]="(textosCorreo[m] && textosCorreo[m].asunto) || ''" /></label>
+                <label class="campo-mini"><span>Título</span>
+                  <input type="text" maxlength="120" [(ngModel)]="correos.momentos[m].titulo" (ngModelChange)="marcarSucio()"
+                         [placeholder]="(textosCorreo[m] && textosCorreo[m].titulo) || ''" /></label>
+                <label class="campo-mini"><span>Mensaje</span>
+                  <textarea rows="3" maxlength="600" [(ngModel)]="correos.momentos[m].mensaje" (ngModelChange)="marcarSucio()"
+                            [placeholder]="(textosCorreo[m] && textosCorreo[m].mensaje) || ''"></textarea></label>
+                <div class="correo__acciones">
+                  <button type="button" class="boton-secundario" (click)="verCorreo(m)" [disabled]="cargandoPrevia">
+                    {{ cargandoPrevia ? 'Armando…' : 'Vista previa' }}
+                  </button>
+                  <button type="button" class="boton-secundario" (click)="probarCorreo(m)" [disabled]="enviandoPrueba">
+                    {{ enviandoPrueba ? 'Enviando…' : 'Enviarme una prueba' }}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="grupo">
@@ -2139,6 +2312,47 @@
           <p class="aviso" *ngIf="avisoTienda">{{ avisoTienda }}</p>
         </ng-container>
 
+      </div>
+
+      <!-- ── Opiniones de compradores ── -->
+      <div class="panel__contenido" *ngIf="panel === 'resenas'">
+        <p class="nota">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.6.2-.9.8-.9 1.4v.3M12 17h.01"/></svg>
+          Solo puede opinar quien compró: le llega un enlace cuando le entregas el pedido. Tú decides
+          cuáles se publican y puedes responderlas — <strong>no puedes cambiar lo que escribieron</strong>,
+          y eso es justo lo que hace que tus clientes les crean.
+        </p>
+
+        <p class="nota nota--simple" *ngIf="cargandoResenas">Buscando opiniones…</p>
+        <p class="nota nota--simple" *ngIf="!cargandoResenas && !resenas.length">
+          Todavía no hay opiniones. Aparecen solas cuando marques un pedido como entregado.
+        </p>
+
+        <div class="resena-mod" *ngFor="let r of resenas">
+          <div class="resena-mod__cab">
+            <span class="resena-mod__estrellas">{{ estrellasDe(r.estrellas) }}</span>
+            <strong>{{ r.autor }}</strong>
+            <span class="resena-mod__estado" [class.is-publicada]="r.estado === 'publicada'"
+                  [class.is-oculta]="r.estado === 'oculta'">{{ nombreEstado(r.estado) }}</span>
+          </div>
+          <p class="resena-mod__pedido">Pedido {{ r.nroPedido }}</p>
+          <p class="resena-mod__texto" *ngIf="r.texto">{{ r.texto }}</p>
+          <p class="resena-mod__texto resena-mod__texto--vacio" *ngIf="!r.texto">Calificó sin escribir nada.</p>
+
+          <div class="campo">
+            <label>Tu respuesta (la ven todos)</label>
+            <textarea rows="2" maxlength="400" [(ngModel)]="r.respuesta"
+                      placeholder="Responder bien una mala opinión vende más que no tener ninguna."></textarea>
+          </div>
+
+          <div class="resena-mod__acciones">
+            <button class="boton-secundario" *ngIf="r.estado !== 'publicada'"
+                    (click)="moderar(r, 'publicada')">Publicar</button>
+            <button class="boton-secundario" *ngIf="r.estado !== 'oculta'"
+                    (click)="moderar(r, 'oculta')">Ocultar</button>
+            <button class="enlace-sutil" (click)="moderar(r)">Guardar respuesta</button>
+          </div>
+        </div>
       </div>
 
       <!-- ── Pauta ── -->
@@ -2328,6 +2542,33 @@
               <b>{{ dominioPropio }}</b> (GoDaddy, Namecheap, Hostinger…) y busca la
               sección <b>DNS</b> o <b>Administrar registros</b>.</p>
 
+            <ng-container *ngIf="partesDominio.subdominio; else dnsRaiz">
+              <p class="dns__paso"><b>3.</b> Crea este registro, tal cual:</p>
+              <div class="dns__registro">
+                <div class="dns__linea">
+                  <span class="dns__etiqueta">Tipo</span>
+                  <b>CNAME</b>
+                </div>
+                <div class="dns__linea">
+                  <span class="dns__etiqueta">Nombre / Host</span>
+                  <code>{{ partesDominio.subdominio }}</code>
+                </div>
+                <div class="dns__linea">
+                  <span class="dns__etiqueta">Valor / Apunta a</span>
+                  <code>{{ slug || 'tu-pagina' }}.{{ dominioSitios }}</code>
+                  <button class="btn-fantasma btn-fantasma--sm"
+                          (click)="copiarDns((slug || 'tu-pagina') + '.' + dominioSitios)">Copiar</button>
+                </div>
+              </div>
+              <small>Tu página principal (<b>{{ partesDominio.raiz }}</b>) no se toca: sigue
+                igual, y esta tienda vive en <b>{{ dominioPropio }}</b>.</small>
+            </ng-container>
+            <ng-template #dnsRaiz>
+            <p class="dns__aviso">
+              ⚠️ Esto hace que <b>{{ partesDominio.raiz }}</b> muestre esta página. Si ya tienes
+              una web en ese dominio, se reemplaza. Para conservarla, escribe un subdominio,
+              por ejemplo <b>tienda.{{ partesDominio.raiz }}</b>.
+            </p>
             <p class="dns__paso"><b>3.</b> Crea estos dos registros, tal cual:</p>
 
             <div class="dns__registro">
@@ -2365,6 +2606,8 @@
             </div>
             <small>Si ya existe un registro A en &#64; o un CNAME en www apuntando a
               otro lado, edítalo en vez de crear uno nuevo.</small>
+
+            </ng-template>
 
             <p class="dns__paso"><b>4.</b> Espera un rato (de minutos a un par de
               horas) y comprueba aquí mismo:</p>
@@ -2458,7 +2701,10 @@
               (bloqueSeleccionado)="seleccionarDesdePrevia($event)"
               (accionBloque)="accionDesdePrevia($event)"
               (bloqueMovido)="moverDesdePrevia($event)"
-              (agregarEn)="abrirAgregarEn($event)">
+              (agregarEn)="abrirAgregarEn($event)"
+              [hayOtrasPaginas]="paginas.length > 0"
+              (archivoSoltado)="soltarArchivoEnBloque($event)"
+              (tamanoCambiado)="cambiarTamanoDesdePrevia($event)">
             </app-sitio-render>
           </div>
         </div>
@@ -2531,6 +2777,26 @@
 </div>
 
 <!-- Selector de productos de la sección en edición -->
+<!-- Vista previa de un correo de la tienda: el HTML del servidor en un iframe con sandbox -->
+<div class="correo-previa" appAlBody *ngIf="previaCorreo" (click)="previaCorreo = null">
+  <div class="correo-previa__caja" (click)="$event.stopPropagation()">
+    <div class="correo-previa__cabeza">
+      <div><small>Asunto</small><strong>{{ previaCorreo.asunto }}</strong></div>
+      <button type="button" class="boton-secundario" (click)="previaCorreo = null">Cerrar</button>
+    </div>
+    <iframe class="correo-previa__marco" sandbox="" [srcdoc]="previaCorreo.html" title="Vista previa del correo"></iframe>
+    <p class="correo-previa__nota">Así lo recibe el comprador, con un pedido de ejemplo. Los cambios se aplican al publicar.</p>
+  </div>
+</div>
+
+<!-- Productos de una promoción automática -->
+<app-selector-productos
+  *ngIf="promoEditandoProductos"
+  [seleccionados]="promoEditandoProductos.alcance.valores"
+  (confirmar)="aplicarProductosPromo($event)"
+  (cerrar)="promoEditandoProductos = null">
+</app-selector-productos>
+
 <app-selector-productos
   *ngIf="mostrandoSelector && bloqueActual"
   [seleccionados]="bloqueActual.datos.productoIds || []"

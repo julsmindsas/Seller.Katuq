@@ -3080,6 +3080,15 @@ export class CrearVentasComponent
       });
   }
 
+  /**
+   * Ticket 1069 (ALMARA): candado mientras se crea el pedido. Desde el 1053 la
+   * creación espera a que carguen los maestros (hasta ~10 s) sin nada en
+   * pantalla, el botón del checkout se rehabilita al segundo y cada clic dejaba
+   * otra creación en cola: DAD-013776/77/78 salieron idénticos en el mismo
+   * milisegundo. Con el candado, los clics de más mientras tanto no crean nada.
+   */
+  private creandoPedido = false;
+
   // Método para procesar el pago después de recibir los datos completos del checkout
   async comprarYPagar(pedidoProcesado: Pedido) {
     // Asegurarnos de mantener la información correcta del pedido
@@ -3166,6 +3175,12 @@ export class CrearVentasComponent
     // Actualizar estado según los productos
     this.cambiarEstadoSegunLosProductos();
 
+    if (this.creandoPedido) {
+      this.toastrService.info('El pedido se está creando. Espera unos segundos, no hace falta volver a darle clic.');
+      return;
+    }
+    this.creandoPedido = true;
+
     // Verificar la forma de pago
     const formaPago = this.pedidoGral.formaDePago?.toLowerCase() || "";
     if (formaPago.includes("wompi")) {
@@ -3216,7 +3231,7 @@ export class CrearVentasComponent
             confirmButtonText: "Ok",
           });
         }
-      });
+      }).finally(() => { this.creandoPedido = false; });
     } else {
       // Si no es Wompi, continuar con el proceso normal de creación de pedido
       this.continuarCreacionPedido();
@@ -3224,7 +3239,14 @@ export class CrearVentasComponent
   }
 
   // Método para continuar con la creación del pedido normal (no Wompi)
+  /** Ticket 1053: el correo del pedido se arma con los maestros ya cargados. */
   private continuarCreacionPedido() {
+    this.pyamentService.prepararMaestros()
+      .then(() => this.continuarCreacionPedidoConMaestros())
+      .catch(() => { this.creandoPedido = false; });
+  }
+
+  private continuarCreacionPedidoConMaestros() {
     const context = this;
     context.ventasService
       .validateNroPedido(context.pedidoGral.nroPedido as string)
@@ -3250,9 +3272,9 @@ export class CrearVentasComponent
           );
 
           // Generar contenido HTML del pedido
-          const htmlSanizado = context.pyamentService.getHtmlContent(
+          const htmlSanizado = context.pyamentService.sinEspera(context.pyamentService.getHtmlContent(
             context.pedidoGral,
-          );
+          ));
 
           // DEBUG: Log antes de crear el pedido
           console.log('🚀 ===== CREAR PEDIDO - DATOS ANTES DE ENVIAR =====');
@@ -3273,6 +3295,7 @@ export class CrearVentasComponent
             .createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado })
             .subscribe({
               next: (res: any) => {
+                this.creandoPedido = false;
                 const orderSiigo =
                   context.facturacionElectronicaService.transformarPedidoLite(
                     context.pedidoGral,
@@ -3314,6 +3337,7 @@ export class CrearVentasComponent
                 this.mywizard.goToNextStep();
               },
               error: (err: any) => {
+                this.creandoPedido = false;
                 Swal.fire({
                   title: "Error",
                   text: "No se pudo crear el pedido. Por favor intente nuevamente.",
@@ -3327,6 +3351,7 @@ export class CrearVentasComponent
           this.mywizard.goToNextStep();
         },
         error: (err) => {
+          this.creandoPedido = false;
           Swal.fire({
             title: "Error",
             text: "No se pudo validar el número de pedido. Por favor intente nuevamente.",
@@ -4299,7 +4324,13 @@ export class CrearVentasComponent
   }
 
   // Nuevo método para guardar el pedido antes de iniciar el pago con Wompi
-  private guardarPedidoParaWompi(): Promise<boolean> {
+  /** Ticket 1053: igual que la creación normal, espera los maestros antes del correo. */
+  private async guardarPedidoParaWompi(): Promise<boolean> {
+    await this.pyamentService.prepararMaestros();
+    return this.guardarPedidoParaWompiConMaestros();
+  }
+
+  private guardarPedidoParaWompiConMaestros(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const context = this;
       context.ventasService
@@ -4320,9 +4351,9 @@ export class CrearVentasComponent
               context.pedidoGral.totalPedididoConDescuento - (Number(context.pedidoGral.anticipo) || 0)
             );
 
-            const htmlSanizado = context.pyamentService.getHtmlContent(
+            const htmlSanizado = context.pyamentService.sinEspera(context.pyamentService.getHtmlContent(
               context.pedidoGral,
-            );
+            ));
 
             // DEBUG: Log antes de guardar pedido para Wompi
             console.log('💳 ===== GUARDAR PEDIDO PARA WOMPI =====');
@@ -4402,18 +4433,18 @@ export class CrearVentasComponent
     this.ventasService.editOrder(this.pedidoGral).subscribe({
       next: (res: any) => {
         // Opcionalmente, también podemos enviar el correo de confirmación si es necesario
-        const htmlSanizado = this.pyamentService.getHtmlContent(
-          this.pedidoGral,
-        );
-        this.ventasService
-          .enviarCorreoConfirmacionPedido({
-            order: this.pedidoGral,
-            emailHtml: htmlSanizado,
-          })
-          .subscribe({
-            next: (emailRes: any) => {},
-            error: (emailErr: any) => {},
-          });
+        this.pyamentService.getHtmlContentAsync(this.pedidoGral).then((htmlSanizado) => {
+          if (!htmlSanizado) return; // ticket 1053: nunca el aviso de "Cargando…"
+          this.ventasService
+            .enviarCorreoConfirmacionPedido({
+              order: this.pedidoGral,
+              emailHtml: htmlSanizado,
+            })
+            .subscribe({
+              next: (emailRes: any) => {},
+              error: (emailErr: any) => {},
+            });
+        });
       },
       error: (err: any) => {},
     });
@@ -4800,13 +4831,22 @@ export class CrearVentasComponent
   private cargarDatosEntregaCliente(): void {
     if (!this.documentoBuscar) return;
 
+    // Ticket 1067: con la ficha del pedido (`cd`) el backend resuelve los
+    // documentos repetidos en vez de responder "hay varias fichas" (409), que
+    // vaciaba la lista y borraba el envío del pedido.
+    const cd = (this.pedidoGral?.cliente as any)?.cd;
     this.service
-      .getClientByDocument({ documento: this.documentoBuscar })
+      .getClientByDocument(cd ? { documento: this.documentoBuscar, cd } : { documento: this.documentoBuscar })
       .subscribe({
         next: (res: any) => {
           this.procesarDatosEntregaCliente(res);
         },
         error: (err) => {
+          // Si aun así llega 409, las direcciones del cliente del pedido sirven.
+          if (err?.status === 409 && Array.isArray(this.pedidoGral?.cliente?.datosEntrega)) {
+            this.procesarDatosEntregaCliente(this.pedidoGral.cliente);
+            return;
+          }
           this.originalDataEntregas = [];
           this.datosEntregas = [];
           // Limpiar envío para evitar que persista una dirección de otro cliente.

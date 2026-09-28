@@ -1,17 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../shared/services/firebase/auth.service';
 import { ServiciosService } from '../../shared/services/servicios.service';
 import { UtilsService } from '../../shared/services/utils.service';
 import { environment } from '../../../environments/environment';
+import { PixelesPautaService } from '../../shared/services/pixeles-pauta.service';
+import { SesionConfirmada } from '../../shared/services/registro-verificacion.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
 
   /**
    * Pieza gráfica del panel izquierdo. Se dejan las dos para poder compararlas:
@@ -20,6 +23,11 @@ export class LoginComponent implements OnInit {
   public fondoNuevo = true;
 
   public show: boolean = false;
+  /** Viene del registro con la cuenta creada pero sin sesión abierta (D-319). */
+  public cuentaCreada = false;
+  /** Registro que todavía no confirma su correo (D-323): se muestra la pantalla del código. */
+  public correoPorVerificar: string | null = null;
+  private suscripciones: Subscription[] = [];
   public loginForm: FormGroup;
   public errorMessage: any;
   user: any;
@@ -33,7 +41,8 @@ export class LoginComponent implements OnInit {
     private utils: UtilsService,
     private fb: FormBuilder,
     private route: ActivatedRoute,
-    private router: Router) {
+    private router: Router,
+    private pixeles: PixelesPautaService) {
 
       this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -48,7 +57,38 @@ export class LoginComponent implements OnInit {
     this.fondoNuevo =
       this.route.snapshot.queryParamMap.get('fondo') !== 'actual';
 
+    // D-319: si el registro no pudo abrir la sesión solo, llega aquí con el
+    // correo para que la persona solo escriba la contraseña que creó.
+    const correo = this.route.snapshot.queryParamMap.get('correo');
+    if (correo) {
+      this.loginForm.patchValue({ email: correo });
+    }
+    this.cuentaCreada = this.route.snapshot.queryParamMap.get('cuenta') === 'creada';
+
+    this.suscripciones.push(
+      this.authService.verificacionPendiente$.subscribe((correoPendiente) => {
+        this.correoPorVerificar = correoPendiente;
+      })
+    );
+
     this.redirectIfLoggedIn();
+  }
+
+  ngOnDestroy(): void {
+    this.suscripciones.forEach((s) => s.unsubscribe());
+  }
+
+  /** Confirmó el código: el registro cuenta en la pauta (una sola vez) y entra. */
+  alConfirmarCorreo(sesion: SesionConfirmada): void {
+    if (sesion.firePixel) {
+      this.pixeles.iniciar();
+      this.pixeles.registroCompleto();
+    }
+    this.authService.entrarConSesion(sesion);
+  }
+
+  volverAlLogin(): void {
+    this.correoPorVerificar = null;
   }
 
   /**

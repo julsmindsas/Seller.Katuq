@@ -67,6 +67,8 @@ export class OrdenesDespachoV2Component implements OnInit {
   showEnviameOptionsModal: boolean = false;
   /** Transportadora elegida para el despacho por Guía Cereza (solo ese proveedor). */
   cerezaCarrierCode: string | null = null;
+  /** Transporte y manejo escogidos en la ventana de Guía Cereza (ticket 1059). */
+  cerezaCargos: { transportationFee?: number; managementFee?: number } = {};
   enviameSelectedOption: 'quote' | 'other' | '' = '';
   showAlternativeTransporters: boolean = false;
 
@@ -321,6 +323,7 @@ export class OrdenesDespachoV2Component implements OnInit {
       this.selectedOrderForDispatch = order;
       this.selectedTransporter = '';
       this.cerezaCarrierCode = null; // no arrastrar la elección de otro despacho
+      this.cerezaCargos = {};
       this.showTransporterModal = true;
     } else {
       this.onDispatchOrder.emit(order);
@@ -890,6 +893,10 @@ export class OrdenesDespachoV2Component implements OnInit {
         return;
       }
       this.cerezaCarrierCode = result.carrierCode;
+      this.cerezaCargos = {
+        transportationFee: result.transportationFee,
+        managementFee: result.managementFee,
+      };
       this.createShipmentDirectly();
     });
   }
@@ -1110,6 +1117,9 @@ export class OrdenesDespachoV2Component implements OnInit {
         // Solo aplica a Guía Cereza; los demás proveedores lo ignoran. Si no
         // viene, el backend usa la transportadora configurada para la empresa.
         ...(this.cerezaCarrierCode ? { carrierCode: this.cerezaCarrierCode } : {}),
+        // Transporte y manejo escogidos en la misma ventana (ticket 1059).
+        ...(this.cerezaCargos.transportationFee != null ? { transportationFee: this.cerezaCargos.transportationFee } : {}),
+        ...(this.cerezaCargos.managementFee != null ? { managementFee: this.cerezaCargos.managementFee } : {}),
       },
     };
 

@@ -5,9 +5,11 @@ import { ToastrService } from "ngx-toastr";
 import Swal from "sweetalert2";
 import { environment } from "../../../../environments/environment";
 import { BloqueSitio } from "../../sitio-render/sitio-render.component";
-import { CategoriaSitio, ContenidoSitio, CuponSitio, PaginaSitio, PropuestaDiseno, Sitio, SitiosService, TiendaSitio, VentaConfig } from "../sitios.service";
+import { CategoriaSitio, ContenidoSitio, CorreosTienda, CuponSitio, PaginaSitio, PromocionSitio, PropuestaDiseno, ResenaSitio, Sitio, SitiosService, TextoCorreo, TiendaSitio, VentaConfig } from "../sitios.service";
+import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
+import { LimitesPlanService } from "../../../shared/services/limites-plan.service";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -560,6 +562,10 @@ const BLOQUE_NUEVO: { [tipo: string]: any } = {
  * La vista previa usa `app-sitio-render`, el mismo componente de la página
  * pública: lo que se ve editando es lo que se publica.
  */
+type DestinoImagen =
+  | "hero" | "galeria" | "seo" | "favicon" | "imagenBloque" | "fondoSeccion" | "promo"
+  | "marcas" | "heroCarrusel" | "heroMosaico" | "instagram" | "banner" | "popup";
+
 @Component({
   selector: "app-sitio-editor",
   templateUrl: "./sitio-editor.component.html",
@@ -578,7 +584,67 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   /** Índice del bloque en edición. -1 = ninguno. */
   seleccionado = -1;
   dispositivo: "escritorio" | "movil" = "escritorio";
-  panel: "bloques" | "diseno" | "tienda" | "pauta" | "ajustes" = "bloques";
+  panel: "bloques" | "diseno" | "tienda" | "resenas" | "pauta" | "ajustes" = "bloques";
+
+  // ── Opiniones de compradores ────────────────────────────────────────────
+  resenas: ResenaSitio[] = [];
+  cargandoResenas = false;
+
+  /** Cuántas esperan decisión: es el número de la pestaña. */
+  get resenasPendientes(): number {
+    return this.resenas.filter((r) => r.estado === "pendiente").length;
+  }
+
+  estrellasDe(n: number): string {
+    const llenas = Math.min(5, Math.max(0, Math.round(Number(n) || 0)));
+    return "★".repeat(llenas) + "☆".repeat(5 - llenas);
+  }
+
+  nombreEstado(estado: string): string {
+    if (estado === "publicada") return "Publicada";
+    if (estado === "oculta") return "Oculta";
+    return "Sin revisar";
+  }
+
+  cargarResenas(): void {
+    if (this.cargandoResenas) return;
+    this.cargandoResenas = true;
+    this.service.resenas(this.id).subscribe({
+      next: (res) => {
+        this.cargandoResenas = false;
+        this.resenas = (res && res.data && res.data.resenas) || [];
+      },
+      error: () => {
+        this.cargandoResenas = false;
+        this.toastr.error("No pudimos traer las opiniones.");
+      },
+    });
+  }
+
+  /**
+   * Publica, oculta o guarda la respuesta. Lo que escribió el comprador no
+   * viaja: el servidor ignora texto y estrellas aunque se manden, y aquí
+   * tampoco se ofrecen.
+   */
+  moderar(r: ResenaSitio, estado?: "publicada" | "oculta"): void {
+    const cambios: { estado?: "publicada" | "oculta"; respuesta?: string } = {
+      respuesta: r.respuesta || "",
+    };
+    if (estado) cambios.estado = estado;
+    this.service.moderarResena(this.id, r.id, cambios).subscribe({
+      next: () => {
+        if (estado) r.estado = estado;
+        this.toastr.success(
+          estado === "publicada"
+            ? "Publicada: ya la ven tus clientes."
+            : estado === "oculta"
+            ? "Oculta: deja de verse en la tienda."
+            : "Respuesta guardada."
+        );
+      },
+      error: () => this.toastr.error("No pudimos guardar el cambio."),
+    });
+  }
 
   /** Bodegas del comercio, para el selector de despacho de la tienda. */
   bodegas: { codigo: string; nombre: string }[] = [];
@@ -652,7 +718,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   slug = "";
   dominioPropio = "";
   comprobandoDominio = false;
-  estadoDominio: { raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean } | null = null;
+  estadoDominio: {
+    dominio?: string; subdominio?: boolean; raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean;
+  } | null = null;
 
   /** Sufijo del dominio, para la barra del navegador de la previa. */
   dominioSitios = environment.dominioSitios || "katuq.com";
@@ -675,10 +743,13 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     private bodegaService: BodegaService,
     private toastr: ToastrService,
     private host: ElementRef<HTMLElement>,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer,
+    public plan: LimitesPlanService
   ) {}
 
   ngOnInit(): void {
+    this.cargarTextosCorreo();
     this.id = this.route.snapshot.paramMap.get("id") || "";
     // El editor ocupa la pantalla entera: sin menú ni cabecera del panel, la
     // previa "Computador" cabe de verdad y hay un solo scroll por columna.
@@ -764,8 +835,18 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   private completar(draft: any): ContenidoSitio {
     const d = draft || {};
     const envio = (d.tienda && d.tienda.envio) || {};
+    // Se PARTE de lo guardado y solo se rellenan los huecos. Antes se
+    // reconstruía campo por campo, y cualquier cosa que el editor no nombrara
+    // aquí desaparecía al abrir el sitio: el siguiente guardado mandaba el
+    // borrador sin ella y la pisaba en Firestore. Así se perdían en silencio
+    // las páginas propias, los cupones, los puntos de retiro, la venta cruzada
+    // y las categorías ocultas. Agregar un campo nuevo al modelo NO puede
+    // exigir acordarse de tocar esta función.
     return {
+      ...(d as object),
       bloques: Array.isArray(d.bloques) ? d.bloques : [],
+      // Páginas propias: si no son un arreglo, arreglo vacío; nunca se quitan.
+      paginas: Array.isArray(d.paginas) ? d.paginas : [],
       // El tema se completa campo por campo, no con `d.tema || {…}`: un sitio
       // creado antes de que existieran las fuentes por separado o el estilo
       // llega con el objeto viejo, y el panel enlazaría contra `undefined`.
@@ -785,6 +866,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       // Un sitio creado antes de que existiera la tienda llega sin esto. Nace
       // apagada: nadie empieza a vender porque se desplegó una versión nueva.
       tienda: {
+        ...((d.tienda as object) || {}),
         habilitada: (d.tienda && d.tienda.habilitada) === true,
         bodegaId: (d.tienda && d.tienda.bodegaId) || "",
         envio: {
@@ -800,8 +882,21 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
           : [],
         minimoCompra: Number(d.tienda && d.tienda.minimoCompra) || 0,
         mensajeConfirmacion: (d.tienda && d.tienda.mensajeConfirmacion) || "",
+        // Cupones y puntos de retiro: lo guardado manda; vacío si no hay.
+        cupones: Array.isArray(d.tienda && d.tienda.cupones) ? d.tienda.cupones : [],
+        retiroEnTienda: {
+          activo: !!(d.tienda && d.tienda.retiroEnTienda && d.tienda.retiroEnTienda.activo),
+          texto: (d.tienda && d.tienda.retiroEnTienda && d.tienda.retiroEnTienda.texto) || "",
+          puntos:
+            (d.tienda &&
+              d.tienda.retiroEnTienda &&
+              Array.isArray(d.tienda.retiroEnTienda.puntos) &&
+              d.tienda.retiroEnTienda.puntos) ||
+            [],
+        },
       },
       analitica: {
+        ...((d.analitica as object) || {}),
         ga4: (d.analitica && d.analitica.ga4) || "",
         googleAds: (d.analitica && d.analitica.googleAds) || "",
         googleAdsConversion: (d.analitica && d.analitica.googleAdsConversion) || "",
@@ -1010,6 +1105,192 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     if (!r) return;
     r.puntos.splice(i, 1);
     this.marcarSucio();
+  }
+
+  // ── Correos de la tienda (D-317) ────────────────────────────────────────
+  // El comercio personaliza lo que su tienda le escribe al comprador. El
+  // remitente sigue siendo notificaciones@katuq.com; los de Katuq no cambian.
+
+  readonly MOMENTOS_CORREO = [
+    "pedido_creado",
+    "pago_aprobado",
+    "pago_pendiente",
+    "carrito_abandonado",
+    "pedido_despachado",
+    "pedido_entregado",
+  ];
+  /** Con llaves literales: en la plantilla de Angular, "{" abre un mensaje ICU. */
+  readonly variablesCorreo = "{nombre}, {pedido}, {tienda} y {total}";
+  textosCorreo: { [m: string]: TextoCorreo } = {};
+  correoAbierto: string | null = null;
+  previaCorreo: { asunto: string; html: SafeHtml } | null = null;
+  cargandoPrevia = false;
+  enviandoPrueba = false;
+  private textosCorreoPedidos = false;
+  /**
+   * La sección solo se muestra si el backend ya la conoce (responde los
+   * textos). Si el front sale antes que el backend, un backend viejo
+   * descartaría la configuración al guardar y el comercio perdería lo que
+   * escribió sin enterarse: mejor no mostrarla.
+   */
+  soportaCorreos = false;
+
+  get correos(): CorreosTienda {
+    const t = (this.contenido && this.contenido.tienda) as TiendaSitio;
+    if (!t) return { diseno: { color: "", pie: "", responderA: "" }, momentos: {} };
+    if (!t.correos) t.correos = { diseno: { color: "", pie: "", responderA: "" }, momentos: {} };
+    if (!t.correos.diseno) t.correos.diseno = { color: "", pie: "", responderA: "" };
+    if (!t.correos.momentos) t.correos.momentos = {};
+    for (const m of this.MOMENTOS_CORREO) {
+      if (!t.correos.momentos[m]) t.correos.momentos[m] = { activo: true, asunto: "", titulo: "", mensaje: "" };
+    }
+    return t.correos;
+  }
+
+  /** Los textos por defecto, una sola vez: son los que se ven como ejemplo. */
+  cargarTextosCorreo(): void {
+    if (this.textosCorreoPedidos) return;
+    this.textosCorreoPedidos = true;
+    this.service.correosPredeterminados().subscribe({
+      next: (r) => {
+        this.textosCorreo = (r && r.success && r.data && r.data.momentos) || {};
+        this.soportaCorreos = Object.keys(this.textosCorreo).length > 0;
+      },
+      error: () => (this.soportaCorreos = false),
+    });
+  }
+
+  abrirCorreo(m: string): void {
+    this.cargarTextosCorreo();
+    this.correoAbierto = this.correoAbierto === m ? null : m;
+  }
+
+  verCorreo(m: string): void {
+    if (!this.id || this.cargandoPrevia) return;
+    this.cargandoPrevia = true;
+    this.service.vistaPreviaCorreo(this.id, m, this.correos).subscribe({
+      next: (r) => {
+        this.cargandoPrevia = false;
+        if (!r || !r.success || !r.data) {
+          this.toastr.error((r && r.message) || "No pudimos armar la vista previa.");
+          return;
+        }
+        // HTML armado por nuestro servidor (lo del comercio va escapado) y
+        // pintado en un iframe con sandbox: no puede ejecutar nada.
+        this.previaCorreo = { asunto: r.data.asunto, html: this.sanitizer.bypassSecurityTrustHtml(r.data.html) };
+      },
+      error: () => {
+        this.cargandoPrevia = false;
+        this.toastr.error("No pudimos armar la vista previa.");
+      },
+    });
+  }
+
+  probarCorreo(m: string): void {
+    if (!this.id || this.enviandoPrueba) return;
+    this.enviandoPrueba = true;
+    this.service.pruebaCorreo(this.id, m, this.correos).subscribe({
+      next: (r) => {
+        this.enviandoPrueba = false;
+        if (r && r.success && r.data) this.toastr.success(`Te la mandamos a ${r.data.enviadoA}. Revisa tu bandeja.`);
+        else this.toastr.error((r && r.message) || "No pudimos enviar la prueba.");
+      },
+      error: (e) => {
+        this.enviandoPrueba = false;
+        this.toastr.error((e && e.error && e.error.message) || "No pudimos enviar la prueba.");
+      },
+    });
+  }
+
+  // ── Promociones automáticas (D-315) ─────────────────────────────────────
+
+  get promociones(): PromocionSitio[] {
+    if (!this.contenido || !this.contenido.tienda) return [];
+    const t = this.contenido.tienda as TiendaSitio;
+    if (!Array.isArray(t.promociones)) t.promociones = [];
+    return t.promociones;
+  }
+
+  /** La promoción a la que se le están eligiendo productos (abre el selector). */
+  promoEditandoProductos: PromocionSitio | null = null;
+
+  agregarPromo(): void {
+    const lista = this.promociones;
+    if (lista.length >= 20) return;
+    lista.push({
+      id: `promo_${Date.now().toString(36)}`,
+      nombre: "",
+      tipo: "nxm",
+      activa: true,
+      desde: "",
+      hasta: "",
+      alcance: { tipo: "todo", valores: [] },
+      lleva: 2,
+      paga: 1,
+      valor: 10,
+      desdeUnidades: 3,
+    });
+    this.marcarSucio();
+  }
+
+  quitarPromo(i: number): void {
+    this.promociones.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  /** Cambiar el alcance vacía la lista: categorías y productos no se mezclan. */
+  cambiarAlcancePromo(p: PromocionSitio): void {
+    p.alcance.valores = [];
+    this.marcarSucio();
+  }
+
+  /** El servidor guarda las categorías en minúscula y sin tildes. */
+  private claveCategoria(nombre: string): string {
+    return String(nombre || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
+
+  categoriaEnPromo(p: PromocionSitio, nombre: string): boolean {
+    const clave = this.claveCategoria(nombre);
+    return (p.alcance.valores || []).some((v) => this.claveCategoria(v) === clave);
+  }
+
+  alternarCategoriaPromo(p: PromocionSitio, nombre: string): void {
+    const clave = this.claveCategoria(nombre);
+    const valores = p.alcance.valores || [];
+    p.alcance.valores = this.categoriaEnPromo(p, nombre)
+      ? valores.filter((v) => this.claveCategoria(v) !== clave)
+      : [...valores, nombre];
+    this.marcarSucio();
+  }
+
+  aplicarProductosPromo(ids: string[]): void {
+    if (this.promoEditandoProductos) {
+      this.promoEditandoProductos.alcance.valores = ids || [];
+      this.marcarSucio();
+    }
+    this.promoEditandoProductos = null;
+  }
+
+  /** La promoción en una frase, como la entiende el comerciante. */
+  describirPromo(p: PromocionSitio): string {
+    const que =
+      p.tipo === "nxm"
+        ? `Lleva ${p.lleva || 2} y paga ${p.paga || 1} (del mismo producto)`
+        : p.tipo === "volumen"
+        ? `${p.valor || 0}% menos desde ${p.desdeUnidades || 2} unidades`
+        : `${p.valor || 0}% menos`;
+    const donde =
+      p.alcance.tipo === "todo"
+        ? "en toda la tienda"
+        : p.alcance.tipo === "categorias"
+        ? p.alcance.valores.length
+          ? `en ${p.alcance.valores.join(", ")}`
+          : "— elige al menos una categoría"
+        : p.alcance.valores.length
+        ? `en ${p.alcance.valores.length} producto(s)`
+        : "— elige al menos un producto";
+    const invalida = p.tipo === "nxm" && (p.paga || 0) >= (p.lleva || 0) ? " — paga tiene que ser menor que lleva" : "";
+    return `${que} ${donde}${invalida}.`;
   }
 
   agregarCupon(): void {
@@ -1633,6 +1914,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       case "bajar":
         this.mover(i, 1);
         break;
+      case "mover":
+        this.moverAPagina(i);
+        break;
       case "duplicar":
         this.duplicar(i);
         break;
@@ -1705,6 +1989,73 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    */
   insercionEn: number | null = null;
 
+  /**
+   * Lleva una sección del inicio a otra página, o al revés.
+   *
+   * Con las páginas propias no había forma de pasar un bloque de "Inicio" a
+   * "Nosotros" sin rehacerlo. Arrastrarlo no sirve: solo se ve una página a
+   * la vez. Se elige el destino en un diálogo y el editor salta a esa página
+   * con la sección elegida, para que se vea dónde quedó.
+   *
+   * Encabezado y pie no se mueven: las páginas propias los heredan del inicio,
+   * y moverlos dejaría al inicio sin menú y a la otra página con dos.
+   */
+  async moverAPagina(i: number): Promise<void> {
+    const bloque = this.bloques[i];
+    if (!bloque || !this.contenido) return;
+    if (bloque.tipo === "encabezado" || bloque.tipo === "footer") {
+      this.toastr.info("El encabezado y el pie viven en el inicio y todas las páginas los heredan.");
+      return;
+    }
+    const destinos: { valor: string; texto: string }[] = [];
+    if (this.paginaActiva !== -1) destinos.push({ valor: "-1", texto: "Inicio" });
+    this.paginas.forEach((p, k) => {
+      if (k !== this.paginaActiva) destinos.push({ valor: String(k), texto: p.titulo });
+    });
+    if (!destinos.length) {
+      this.toastr.info("Crea otra página primero.");
+      return;
+    }
+    const opciones: Record<string, string> = {};
+    destinos.forEach((d) => (opciones[d.valor] = d.texto));
+    const r = await Swal.fire({
+      title: `Mover "${this.nombreDeTipo(bloque.tipo)}"`,
+      input: "select",
+      inputOptions: opciones,
+      inputPlaceholder: "¿A cuál página?",
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: "Mover",
+      denyButtonText: "Copiar en vez de mover",
+      cancelButtonText: "Cancelar",
+      inputValidator: (v) => (v === "" || v === undefined ? "Elige una página" : null),
+    });
+    if (!r.isConfirmed && !r.isDenied) return;
+    const destino = Number(r.value);
+    if (!Number.isFinite(destino)) return;
+
+    const copia = JSON.parse(JSON.stringify(bloque));
+    if (r.isDenied) copia.id = `b_${Date.now()}_${bloque.tipo}`;
+    else {
+      const sinEl = [...this.bloques];
+      sinEl.splice(i, 1);
+      this.fijarBloques(sinEl);
+    }
+    const listaDestino =
+      destino === -1 ? this.contenido.bloques : (this.paginas[destino].bloques = this.paginas[destino].bloques || []);
+    // Una página propia hereda encabezado y pie del inicio: la sección entra
+    // al final; en el inicio, antes del pie para que no quede debajo de él.
+    const pie = destino === -1 ? listaDestino.findIndex((b) => b.tipo === "footer") : -1;
+    const en = pie >= 0 ? pie : listaDestino.length;
+    listaDestino.splice(en, 0, copia);
+    this.marcarSucio();
+    this.irAPagina(destino);
+    this.seleccionado = en;
+    this.toastr.success(
+      (r.isDenied ? "Copiada a " : "Movida a ") + (destino === -1 ? "Inicio" : this.paginas[destino].titulo)
+    );
+  }
+
   abrirAgregarEn(indice: number): void {
     this.insercionEn = Math.max(0, Math.min(indice, this.bloques.length));
     this.mostrandoAgregar = true;
@@ -1762,14 +2113,41 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     });
   }
 
+  /**
+   * El dominio escrito, partido en raíz y subdominio. Decide qué registros se
+   * piden: un subdominio (tienda.baudiocorp.com) lleva UN registro y deja la
+   * web de la raíz intacta; la raíz lleva A en @ y reemplaza lo que haya ahí.
+   * Mismo criterio que `partesDeDominio` del backend.
+   */
+  get partesDominio(): { raiz: string; subdominio: string } {
+    const dobles = ["com.co", "net.co", "org.co", "edu.co", "gov.co", "nom.co", "mil.co",
+      "com.mx", "com.ar", "com.pe", "com.ec", "com.br", "com.ve", "com.uy", "com.py",
+      "com.bo", "com.gt", "com.pa", "com.do", "co.uk", "com.es", "com.au"];
+    const limpio = (this.dominioPropio || "").trim().toLowerCase()
+      .replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/^www\./, "");
+    const partes = limpio.split(".").filter(Boolean);
+    const n = partes.length >= 3 && dobles.includes(partes.slice(-2).join(".")) ? 3 : 2;
+    if (partes.length <= n) return { raiz: partes.join("."), subdominio: "" };
+    return { raiz: partes.slice(-n).join("."), subdominio: partes.slice(0, partes.length - n).join(".") };
+  }
+
   /** El estado del DNS, dicho en cristiano. */
   get mensajeDominio(): string {
     const d = this.estadoDominio;
     if (!d) return "";
+    if (d.subdominio) {
+      return d.raiz
+        ? "✅ El subdominio ya apunta. El candado verde se activa solo con la primera visita."
+        : "⏳ Todavía no vemos el registro. El DNS puede tardar de minutos a un par de horas — vuelve a comprobar más tarde.";
+    }
     if (d.raiz && d.www) return "✅ Los dos registros apuntan bien. El candado verde se activa solo con la primera visita.";
     if (d.raiz) return "✅ El registro A ya apunta. Falta el CNAME de www — tu página ya funciona sin www.";
     if (d.www) return "✅ El www ya apunta. Falta el registro A de la raíz (@) — sin él, el dominio sin www no abre.";
-    if (d.raizApuntaOtroLado) return "⚠️ Tu dominio apunta a OTRO servidor. Edita el registro A existente y ponle 34.225.223.187.";
+    // No se le dice "cámbialo": si ese dominio ya tiene una web, cambiar el
+    // registro A la tumba. Primero se pregunta qué quiere conservar.
+    if (d.raizApuntaOtroLado) {
+      return `⚠️ ${d.dominio} ya muestra una página en otro servidor. Si la quieres conservar, usa un subdominio como tienda.${d.dominio}. Solo si quieres REEMPLAZARLA por esta, edita el registro A existente y ponle 34.225.223.187.`;
+    }
     return "⏳ Todavía no vemos los registros. El DNS puede tardar de minutos a un par de horas — vuelve a comprobar más tarde.";
   }
 
@@ -1826,6 +2204,17 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   quitarBanner(bloque: any, i: number): void {
     bloque.datos.banners.splice(i, 1);
+    this.marcarSucio();
+  }
+
+  /**
+   * Reordenar arrastrando cualquier lista del panel: enlaces del encabezado y
+   * del pie, preguntas, reseñas, columnas, botones, banners, puntos de retiro
+   * y cupones. Antes eran flechitas (solo en banners) o nada.
+   */
+  soltarLista(evento: CdkDragDrop<any>, lista: any[]): void {
+    if (!Array.isArray(lista) || evento.previousIndex === evento.currentIndex) return;
+    moveItemInArray(lista, evento.previousIndex, evento.currentIndex);
     this.marcarSucio();
   }
 
@@ -2919,6 +3308,12 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   subirImagen(
     evento: Event,
+    destino: DestinoImagen
+  ): void {
+    return this.subirImagenDestino(evento, destino);
+  }
+  private subirImagenDestino(
+    evento: Event,
     destino:
       | "hero"
       | "galeria"
@@ -2937,12 +3332,55 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     const input = evento.target as HTMLInputElement;
     const archivo = input.files && input.files[0];
     if (!archivo) return;
+    this.subirArchivo(archivo, destino, () => (input.value = ""));
+  }
 
+  /**
+   * Una foto soltada sobre una sección de la vista previa.
+   *
+   * El destino sale del TIPO de sección: en la portada es el fondo, en una
+   * galería se agrega, en una vitrina de marcas es un logo. En cualquier otra
+   * se vuelve fondo de la sección, con velo para que el texto siga legible.
+   * Antes había que ir al panel, buscar el campo y subir; ahora se suelta
+   * donde se quiere ver.
+   */
+  /** El asa de tamaño de la vista previa movió una sección de escalón. */
+  cambiarTamanoDesdePrevia(ev: { bloqueId: string; campo: string; valor: string }): void {
+    const b = this.bloques.find((x) => x.id === ev.bloqueId);
+    if (!b) return;
+    (b.datos as any)[ev.campo] = ev.valor;
+    this.marcarSucio();
+  }
+
+  soltarArchivoEnBloque(ev: { bloqueId: string; archivo: File }): void {
+    const i = this.bloques.findIndex((b) => b.id === ev.bloqueId);
+    if (i < 0) return;
+    if (!/^image\//.test(ev.archivo.type)) {
+      this.toastr.warning("Solo se pueden soltar fotos.");
+      return;
+    }
+    this.seleccionar(i);
+    const tipo = this.bloques[i].tipo;
+    const destino =
+      ({
+        hero: "hero",
+        galeria: "galeria",
+        imagen: "imagenBloque",
+        promo: "promo",
+        marcas: "marcas",
+        instagram: "instagram",
+        banner: "banner",
+        popup: "popup",
+      } as Record<string, DestinoImagen>)[tipo] || "fondoSeccion";
+    this.subirArchivo(ev.archivo, destino);
+  }
+
+  private subirArchivo(archivo: File, destino: DestinoImagen, alTerminar?: () => void): void {
     this.subiendo = true;
     this.service.subirImagen(archivo).subscribe({
       next: (res) => {
         this.subiendo = false;
-        input.value = "";
+        if (alTerminar) alTerminar();
         if (!res || !res.success || !res.url) {
           this.toastr.error((res && res.error) || "No pudimos subir la imagen.");
           return;
@@ -2989,7 +3427,7 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       },
       error: (e) => {
         this.subiendo = false;
-        input.value = "";
+        if (alTerminar) alTerminar();
         this.toastr.error((e && e.error && e.error.error) || "No pudimos subir la imagen.");
       },
     });
@@ -3255,6 +3693,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
         },
         error: (e) => {
           this.guardando = false;
+          // Plan gratis (D-319): se explica con la opción de mejorar el plan.
+          if (this.plan.manejar(e)) return;
           this.toastr.error((e && e.error && e.error.message) || "No pudimos guardar.");
         },
       });
@@ -3459,6 +3899,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       },
       error: (e) => {
         this.publicando = false;
+        // Plan gratis (D-319): se explica con la opción de mejorar el plan.
+        if (this.plan.manejar(e)) return;
         this.toastr.error((e && e.error && e.error.message) || "No pudimos publicar.");
       },
     });

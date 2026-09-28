@@ -55,6 +55,51 @@ export interface TiendaSitio {
    * SIEMPRE el servidor: los códigos nunca bajan al navegador del comprador.
    */
   cupones?: CuponSitio[];
+  /** Promociones que se aplican solas (D-315). Las calcula el servidor. */
+  promociones?: PromocionSitio[];
+  /** Los correos que la tienda le manda al comprador, personalizados (D-317). */
+  correos?: CorreosTienda;
+}
+
+/** Un correo de la tienda: si sale y qué dice. Vacío = el texto de siempre. */
+export interface CorreoMomento {
+  activo: boolean;
+  asunto: string;
+  titulo: string;
+  mensaje: string;
+}
+
+export interface CorreosTienda {
+  diseno: { color: string; pie: string; responderA: string };
+  momentos: { [momento: string]: CorreoMomento };
+}
+
+/** Lo que dice un correo por defecto, y cuándo sale. */
+export interface TextoCorreo {
+  nombre: string;
+  cuando: string;
+  asunto: string;
+  titulo: string;
+  mensaje: string;
+}
+
+/** Una promoción automática: 2x1, porcentaje o por volumen. */
+export interface PromocionSitio {
+  id: string;
+  nombre: string;
+  tipo: "nxm" | "porcentaje" | "volumen";
+  activa: boolean;
+  /** Fechas ISO "2026-12-01"; vacías = sin límite. */
+  desde: string;
+  hasta: string;
+  alcance: { tipo: "todo" | "categorias" | "productos"; valores: string[] };
+  /** nxm: lleva N, paga M. */
+  lleva?: number;
+  paga?: number;
+  /** porcentaje y volumen: % de descuento. */
+  valor?: number;
+  /** volumen: desde cuántas unidades. */
+  desdeUnidades?: number;
 }
 
 export interface CuponSitio {
@@ -131,6 +176,25 @@ export interface AnaliticaSitio {
   metaTestEventCode?: string;
 }
 
+/**
+ * Una reseña de un comprador verificado.
+ *
+ * El comerciante la publica, la oculta o la responde. No puede cambiar ni el
+ * texto ni las estrellas: eso la volvería un testimonio escrito por él.
+ */
+export interface ResenaSitio {
+  id: string;
+  productoId: string;
+  nroPedido: string;
+  estrellas: number;
+  texto: string;
+  autor: string;
+  estado: "pendiente" | "publicada" | "oculta";
+  compraVerificada: boolean;
+  respuesta: string;
+  createdAt: string;
+}
+
 /** El parte de una plataforma tras el evento de prueba. */
 export interface ParteMedicion {
   proveedor: string;
@@ -205,6 +269,8 @@ export interface DiaMetricas {
 }
 
 export interface MetricasSitio {
+  /** Cuántos días deja ver el plan (D-319): 1 en el plan gratis. */
+  diasPermitidos?: number;
   sitio: { id: string; nombre: string; slug: string; estado: string };
   dias: number;
   totales: {
@@ -229,6 +295,21 @@ export interface MetricasSitio {
   serie: DiaMetricas[];
   historico: { vistas: number; leads: number; pedidos: number };
   truncado: boolean;
+  /** Lo que trajeron de vuelta los recordatorios de pago y de carrito. */
+  recuperado?: { pagos: number; carritos: number; valor: number };
+}
+
+/** Alguien que le dejó sus datos a la tienda. */
+export interface ContactoSitio {
+  id: string;
+  /** "boletin": se suscribió a las novedades desde el bloque de boletín (D-318). */
+  tipo: "contacto" | "avisame-stock" | "carrito-abandonado" | "boletin";
+  nombre: string;
+  telefono: string;
+  correo: string;
+  nota: string;
+  fecha: string;
+  carrito?: { estado: string; total: number; recordado: boolean };
 }
 
 export interface KitDeMarca {
@@ -333,6 +414,40 @@ export class SitiosService extends BaseService {
     );
   }
 
+  /** Las reseñas de la tienda, para moderarlas. */
+  /** Lo que dice cada correo de la tienda si el comercio no lo cambia. */
+  correosPredeterminados(): Observable<Respuesta<{ momentos: { [m: string]: TextoCorreo }; variables: string[] }>> {
+    return this.get<Respuesta<{ momentos: { [m: string]: TextoCorreo }; variables: string[] }>>(
+      `/v1/sites/correos/predeterminados`
+    );
+  }
+
+  /** El correo con lo que se está editando, con un pedido de ejemplo. */
+  vistaPreviaCorreo(id: string, momento: string, correos: CorreosTienda): Observable<Respuesta<{ asunto: string; html: string }>> {
+    return this.post<Respuesta<{ asunto: string; html: string }>>(`/v1/sites/${id}/correos/vista-previa`, { momento, correos });
+  }
+
+  /** Manda el correo de ejemplo al correo de quien está editando. */
+  pruebaCorreo(id: string, momento: string, correos: CorreosTienda): Observable<Respuesta<{ enviadoA: string }>> {
+    return this.post<Respuesta<{ enviadoA: string }>>(`/v1/sites/${id}/correos/prueba`, { momento, correos });
+  }
+
+  resenas(id: string): Observable<Respuesta<{ resenas: ResenaSitio[] }>> {
+    return this.get<Respuesta<{ resenas: ResenaSitio[] }>>(`/v1/sites/${id}/resenas`);
+  }
+
+  /**
+   * Publica, oculta o responde una reseña. El texto y las estrellas NO se
+   * pueden cambiar: el servidor los ignora aunque se manden.
+   */
+  moderarResena(
+    id: string,
+    resenaId: string,
+    cambios: { estado?: "pendiente" | "publicada" | "oculta"; respuesta?: string }
+  ): Observable<Respuesta<null>> {
+    return this.put<Respuesta<null>>(`/v1/sites/${id}/resenas`, { resenaId, ...cambios });
+  }
+
   /** Categorías reales (nombre, total, foto) para la previa y el panel de tienda. */
   categorias(id: string): Observable<Respuesta<CategoriaSitio[]>> {
     return this.get<Respuesta<CategoriaSitio[]>>(`/v1/sites/${id}/categorias`);
@@ -341,6 +456,11 @@ export class SitiosService extends BaseService {
   /** Qué está pasando en una página: visitas, contactos, pedidos e ingresos. */
   metricas(id: string, dias = 30): Observable<Respuesta<MetricasSitio>> {
     return this.get<Respuesta<MetricasSitio>>(`/v1/sites/${id}/metricas?dias=${dias}`);
+  }
+
+  /** Quién le dejó sus datos a la tienda: formulario, Avísame y carritos. */
+  contactos(id: string): Observable<Respuesta<{ contactos: ContactoSitio[] }>> {
+    return this.get<Respuesta<{ contactos: ContactoSitio[] }>>(`/v1/sites/${id}/contactos`);
   }
 
   crear(body: {
@@ -385,7 +505,9 @@ export class SitiosService extends BaseService {
 
   /** ¿El DNS del dominio propio ya apunta a nuestros servidores? */
   dominioEstado(dominio: string): Observable<
-    Respuesta<{ dominio: string; raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean }>
+    Respuesta<{
+      dominio: string; subdominio?: boolean; raiz: boolean; www: boolean; raizApuntaOtroLado: boolean; listo: boolean;
+    }>
   > {
     return this.get<any>(`/v1/sites/dominio-estado?dominio=${encodeURIComponent(dominio)}`);
   }

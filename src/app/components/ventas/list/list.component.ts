@@ -56,7 +56,7 @@ import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
 import { Observable, Subject, forkJoin, of } from "rxjs";
-import { debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
 import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
@@ -134,6 +134,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   facturaPlazo: string = ""; // '8' | '15' | '30' | ... | '120' | 'exacta'
   facturaDueDate: string = ""; // yyyy-MM-dd
   facturaGenerando: boolean = false;
+  /** Ticket 1054: observaciones de la factura (orden de compra, notas). */
+  facturaObservaciones: string = "";
+  /** Ticket 1054: retenciones del SIIGO de la empresa, agrupadas por tipo, y la elegida en cada una. */
+  facturaRetencionesPorTipo: { tipo: string; etiqueta: string; opciones: { id: number; name: string }[] }[] = [];
+  facturaRetencionSel: { [tipo: string]: number | null } = {};
+  /**
+   * Ticket 1052: vendedor y centro de costo de la factura, de los del SIIGO de la empresa.
+   * Vienen ya marcados (quien factura si es vendedor en SIIGO, o lo último usado en ese tipo
+   * de factura) y se pueden cambiar en cada factura.
+   */
+  facturaVendedores: { id: number; nombre: string; email: string | null }[] = [];
+  facturaCentrosCosto: { id: number; nombre: string }[] = [];
+  facturaVendedorId: number | null = null;
+  facturaCentroCostoId: number | null = null;
+  private facturaAjustesPorTipo: { [tipo: string]: { costCenterId?: number; sellerId?: number } } = {};
+  /** Ticket 1074: vista previa de la factura (lo que saldría en SIIGO) y con qué opciones se pidió. */
+  facturaVistaPrevia: any = null;
+  facturaVistaPreviaCargando: boolean = false;
+  facturaVistaPreviaError: string = "";
+  private facturaVistaPreviaFirma: string = "";
   // SIIGO no define plazos: los define Katuq y se calcula la fecha. 'exacta' abre date-picker.
   readonly facturaPlazosCredito: { value: string; label: string }[] = [
     { value: "8", label: "8 días" },
@@ -997,11 +1017,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       didOpen: () => Swal.showLoading()
     });
 
+    const esSiigo = provider === 'siigo';
     forkJoin({
       docs: this.integrationsService.getAccountingDocumentTypes(provider),
-      pays: this.integrationsService.getAccountingPaymentTypes(provider)
+      pays: this.integrationsService.getAccountingPaymentTypes(provider),
+      // Ticket 1054: si no cargan los impuestos, se factura igual (sin retenciones).
+      taxes: this.integrationsService.getAccountingTaxes(provider).pipe(catchError(() => of(null))),
+      // Ticket 1052: si no cargan, se factura igual y el servidor escoge el vendedor.
+      sellers: esSiigo ? this.integrationsService.getSiigoSellers().pipe(catchError(() => of(null))) : of(null),
+      centers: esSiigo ? this.integrationsService.getSiigoCostCenters().pipe(catchError(() => of(null))) : of(null),
+      config: esSiigo ? this.integrationsService.loadSiigoConfig().pipe(catchError(() => of(null))) : of(null)
     }).subscribe({
-      next: ({ docs, pays }) => {
+      next: ({ docs, pays, taxes, sellers, centers, config }) => {
         Swal.close();
 
         const documentTypes = this.extraerListaFactura(docs, 'documentTypes');
@@ -1018,13 +1045,31 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Inicializar estado del modal
         this.facturaPedido = pedido;
-        this.facturaDocumentTypes = documentTypes;
+        this.facturaDocumentTypes = documentTypes.map((dt: any) => ({ ...dt, etiqueta: this.etiquetaTipoDocumento(dt) }));
         this.facturaPaymentTypes = paymentTypes;
         this.facturaDocumentTypeId = null;
         this.facturaPaymentTypeId = null;
         this.facturaPlazo = '';
         this.facturaDueDate = '';
         this.facturaGenerando = false;
+        this.facturaObservaciones = '';
+        this.facturaRetencionesPorTipo = this.agruparRetencionesFactura(this.extraerListaFactura(taxes, 'taxes'));
+        this.facturaRetencionSel = {};
+        this.facturaRetencionesPorTipo.forEach((g) => (this.facturaRetencionSel[g.tipo] = null));
+        this.facturaVendedores = this.extraerListaFactura(sellers, 'sellers')
+          .filter((v: any) => v && v.id != null)
+          .map((v: any) => ({ id: Number(v.id), nombre: String(v.nombre || v.first_name || `Vendedor ${v.id}`), email: v.email || null }));
+        this.facturaCentrosCosto = this.extraerListaFactura(centers, 'costCenters')
+          .filter((c: any) => c && c.id != null && c.active !== false)
+          .map((c: any) => ({ id: Number(c.id), nombre: [c.code, c.name].filter(Boolean).join(' · ') || `Centro ${c.id}` }));
+        const cfgSiigo = config?.config?.config ?? config?.config ?? {};
+        this.facturaAjustesPorTipo = cfgSiigo.documentTypeSettings || {};
+        this.facturaVendedorId = null;
+        this.facturaCentroCostoId = null;
+        this.facturaVistaPrevia = null;
+        this.facturaVistaPreviaCargando = false;
+        this.facturaVistaPreviaError = '';
+        this.facturaVistaPreviaFirma = '';
 
         this.modalService.open(this.facturaSiigoModal, {
           size: 'md',
@@ -1045,6 +1090,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Ticket 1054: de los impuestos del SIIGO de la empresa, solo las retenciones activas,
+   * agrupadas por tipo (una por tipo, como exige SIIGO). El backend vuelve a validar.
+   */
+  private agruparRetencionesFactura(impuestos: any[]): { tipo: string; etiqueta: string; opciones: { id: number; name: string }[] }[] {
+    const tipos: { tipo: string; etiqueta: string }[] = [
+      { tipo: 'Retefuente', etiqueta: 'Retención en la fuente' },
+      { tipo: 'ReteICA', etiqueta: 'ReteICA' },
+      { tipo: 'ReteIVA', etiqueta: 'ReteIVA' },
+      { tipo: 'Autorretencion', etiqueta: 'Autorretención' },
+    ];
+    const lista = Array.isArray(impuestos) ? impuestos : [];
+    return tipos
+      .map((t) => ({
+        ...t,
+        opciones: lista
+          .filter((i: any) => i && i.type === t.tipo && i.active !== false && i.id != null)
+          .map((i: any) => ({ id: Number(i.id), name: String(i.name || `${t.etiqueta} ${i.percentage ?? ''}`) })),
+      }))
+      .filter((g) => g.opciones.length > 0);
+  }
+
+  /**
+   * Ticket 1072: un comercio puede tener en SIIGO varios tipos de factura con el mismo nombre
+   * (ALMACEN BOMBAS: uno por sede). Se muestran como en SIIGO: "FV - 2 - Factura Electrónica de Venta".
+   */
+  private etiquetaTipoDocumento(dt: any): string {
+    const nombre = dt?.name || dt?.nombre || `Documento ${dt?.id}`;
+    return dt?.type && dt?.code != null && dt.code !== '' ? `${dt.type} - ${dt.code} - ${nombre}` : nombre;
+  }
+
   /** Normaliza la lista (documentTypes/paymentTypes) sin importar cómo venga envuelta la respuesta. */
   private extraerListaFactura(response: any, key: string): any[] {
     if (Array.isArray(response?.data?.[key])) return response.data[key];
@@ -1053,6 +1129,62 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (Array.isArray(response?.[key])) return response[key];
     if (Array.isArray(response)) return response;
     return [];
+  }
+
+  /** Tipo de factura elegido, con su configuración en SIIGO (vendedor por ítem, centro de costo). */
+  get facturaTipoSeleccionado(): any {
+    return this.facturaDocumentTypes.find((d) => String(d.id) === String(this.facturaDocumentTypeId)) || null;
+  }
+
+  /** Ticket 1052: el tipo de factura maneja centro de costo en SIIGO. */
+  get facturaUsaCentroCosto(): boolean {
+    const t = this.facturaTipoSeleccionado;
+    return !!t && (t.cost_center === true || t.cost_center_mandatory === true) && this.facturaCentrosCosto.length > 0;
+  }
+
+  /** Ticket 1052: SIIGO rechaza la factura de este tipo sin centro de costo. */
+  get facturaExigeCentroCosto(): boolean {
+    return this.facturaUsaCentroCosto && this.facturaTipoSeleccionado?.cost_center_mandatory === true;
+  }
+
+  /**
+   * Ticket 1052: al escoger el tipo de factura se marcan vendedor y centro de costo:
+   * quien factura si es vendedor en SIIGO, si no lo último usado en ese tipo, si no lo configurado.
+   */
+  onFacturaDocumentTypeChange(): void {
+    const tipo = String(this.facturaDocumentTypeId ?? '');
+    const recordado = this.leerFacturaRecordada(tipo);
+    const configurado = this.facturaAjustesPorTipo[tipo] || {};
+    const correo = String(this.UserLogged?.email || '').trim().toLowerCase();
+    const propio = correo ? this.facturaVendedores.find((v) => (v.email || '').trim().toLowerCase() === correo) : undefined;
+    const valido = (lista: { id: number }[], id: any): number | null =>
+      lista.some((x) => x.id === Number(id)) ? Number(id) : null;
+    this.facturaVendedorId = propio?.id
+      ?? valido(this.facturaVendedores, recordado.sellerId)
+      ?? valido(this.facturaVendedores, configurado.sellerId);
+    this.facturaCentroCostoId = valido(this.facturaCentrosCosto, recordado.costCenterId)
+      ?? valido(this.facturaCentrosCosto, configurado.costCenterId);
+  }
+
+  /** Lo último usado en este tipo de factura, en este navegador (comodidad; puede no existir). */
+  private leerFacturaRecordada(tipo: string): { sellerId?: number; costCenterId?: number } {
+    try {
+      return JSON.parse(localStorage.getItem(this.claveFacturaRecordada(tipo)) || '{}') || {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  private recordarFactura(tipo: string, valores: { sellerId?: number; costCenterId?: number }): void {
+    try {
+      localStorage.setItem(this.claveFacturaRecordada(tipo), JSON.stringify(valores));
+    } catch (_) { /* sin almacenamiento: la próxima vez se vuelve a escoger */ }
+  }
+
+  private claveFacturaRecordada(tipo: string): string {
+    let empresa = '';
+    try { empresa = this.integrationsService.getActiveCompanyId(); } catch (_) { empresa = ''; }
+    return `katuq.siigo.factura.${empresa}.${tipo}`;
   }
 
   /** Forma de pago seleccionada en el modal (objeto completo de SIIGO). */
@@ -1071,6 +1203,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   get facturaFormValido(): boolean {
     if (!this.facturaDocumentTypeId || !this.facturaPaymentTypeId) return false;
     if (this.facturaEsCredito && !this.facturaDueDate) return false;
+    if (this.facturaExigeCentroCosto && !this.facturaCentroCostoId) return false; // ticket 1052
     return true;
   }
 
@@ -1106,6 +1239,60 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return `${yyyy}-${mm}-${dd}`;
   }
 
+  /** Ticket 1074: opciones de la ventana tal como se mandarían al facturar. */
+  private facturaOpcionesActuales(): any {
+    return {
+      documentTypeId: this.facturaDocumentTypeId ? parseInt(String(this.facturaDocumentTypeId), 10) : undefined,
+      paymentTypeId: this.facturaPaymentTypeId ? parseInt(String(this.facturaPaymentTypeId), 10) : undefined,
+      dueDate: this.facturaEsCredito ? (this.facturaDueDate || undefined) : undefined,
+      observaciones: (this.facturaObservaciones || '').trim() || undefined,
+      retenciones: Object.values(this.facturaRetencionSel || {})
+        .filter((v) => v !== null && v !== undefined)
+        .map((v) => Number(v)),
+      sellerId: this.facturaVendedorId || undefined,
+      costCenterId: this.facturaUsaCentroCosto ? (this.facturaCentroCostoId || undefined) : undefined,
+    };
+  }
+
+  /** Ticket 1074: la vista previa ya no corresponde a lo elegido en la ventana. */
+  get facturaVistaPreviaDesactualizada(): boolean {
+    return !!this.facturaVistaPrevia
+      && this.facturaVistaPreviaFirma !== JSON.stringify({ pedidoId: this.facturaPedido?._id, ...this.facturaOpcionesActuales() });
+  }
+
+  /** Ticket 1074: pide al backend el desglose de la factura sin emitirla. */
+  verVistaPreviaFactura(): void {
+    if (!this.facturaFormValido || !this.facturaPedido || this.facturaVistaPreviaCargando) return;
+    const opciones = this.facturaOpcionesActuales();
+    const pedidoId = this.facturaPedido._id;
+    const firma = JSON.stringify({ pedidoId, ...opciones });
+    const provider = this.activeAccountingProvider || 'siigo';
+    this.facturaVistaPreviaCargando = true;
+    this.facturaVistaPreviaError = '';
+    // Revisión 1074: si mientras llega la respuesta se abrió la ventana de otro pedido,
+    // esa respuesta se descarta.
+    const vigente = () => this.facturaPedido?._id === pedidoId;
+    this.integrationsService.previewAccountingInvoice(provider, pedidoId, opciones).subscribe({
+      next: (response: any) => {
+        if (!vigente()) return;
+        this.facturaVistaPreviaCargando = false;
+        if (response?.success && response.data) {
+          this.facturaVistaPrevia = response.data;
+          this.facturaVistaPreviaFirma = firma;
+        } else {
+          this.facturaVistaPrevia = null;
+          this.facturaVistaPreviaError = response?.message || 'No se pudo armar la vista previa.';
+        }
+      },
+      error: (error) => {
+        if (!vigente()) return;
+        this.facturaVistaPreviaCargando = false;
+        this.facturaVistaPrevia = null;
+        this.facturaVistaPreviaError = error?.error?.message || 'No se pudo armar la vista previa.';
+      },
+    });
+  }
+
   /** Confirma el modal y dispara la facturación con forma de pago + vencimiento. */
   confirmarFacturaSiigo(modal: any): void {
     if (!this.facturaFormValido || !this.facturaPedido) return;
@@ -1118,8 +1305,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       : undefined;
     const dueDate = this.facturaEsCredito ? (this.facturaDueDate || undefined) : undefined;
 
+    // Ticket 1054: observaciones y retenciones elegidas. Ticket 1052: vendedor y centro de costo.
+    const extras = {
+      observaciones: (this.facturaObservaciones || '').trim(),
+      retenciones: Object.values(this.facturaRetencionSel || {})
+        .filter((v) => v !== null && v !== undefined)
+        .map((v) => Number(v)),
+      sellerId: this.facturaVendedorId || undefined,
+      costCenterId: this.facturaUsaCentroCosto ? (this.facturaCentroCostoId || undefined) : undefined,
+    };
+    if (documentTypeId && (extras.sellerId || extras.costCenterId)) {
+      this.recordarFactura(String(documentTypeId), { sellerId: extras.sellerId, costCenterId: extras.costCenterId });
+    }
+
     modal.close();
-    this.ejecutarFacturacionSiigo(pedido, documentTypeId, undefined, paymentTypeId, dueDate);
+    this.ejecutarFacturacionSiigo(pedido, documentTypeId, undefined, paymentTypeId, dueDate, extras);
   }
 
   /**
@@ -1247,7 +1447,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param paymentTypeId ID de la forma de pago en SIIGO (D-042)
    * @param dueDate Fecha de vencimiento de crédito en formato yyyy-MM-dd (D-042)
    */
-  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string): void {
+  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string, extras?: { observaciones?: string; retenciones?: number[]; sellerId?: number; costCenterId?: number }): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const nroPedido = pedido.nroPedido || pedido.referencia || pedido._id;
 
@@ -1267,6 +1467,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (prefijoId) options.prefijoId = prefijoId;
     if (paymentTypeId) options.paymentTypeId = paymentTypeId; // D-042: forma de pago SIIGO
     if (dueDate) options.dueDate = dueDate; // D-042: vencimiento de crédito (yyyy-MM-dd)
+    if (extras?.observaciones) options.observaciones = extras.observaciones; // ticket 1054
+    if (extras?.retenciones?.length) options.retenciones = extras.retenciones; // ticket 1054
+    if (extras?.sellerId) options.sellerId = extras.sellerId; // ticket 1052
+    if (extras?.costCenterId) options.costCenterId = extras.costCenterId; // ticket 1052
 
     // Usar endpoint async para no bloquear (responde 202 inmediato)
     const provider = this.activeAccountingProvider || 'siigo';
@@ -1898,6 +2102,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ordenes: any;
   ordersByName: any;
   searchQuery: string = "";
+  /**
+   * Ticket 1075: mientras se ubica la fecha del pedido pedido por enlace
+   * (?buscar=DAD-013699 sin fecha), no se carga la lista: la búsqueda en 2 años
+   * no alcanzaba a responder y la pantalla quedaba en 0.
+   */
+  private ubicandoPedidoBuscado = false;
   showSuggestions: boolean = false;
   UserLogged: UserLogged;
   allBillingZone: any;
@@ -2642,7 +2852,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       item.subtotal = subtotalProductos - descuento + envio;
       const ivaResult = this.checkIVAPrice(item);
-      item.totalImpuesto = Number(ivaResult.totalPrecioIVADef || item.totalImpuesto || 0);
+      item.totalImpuesto = this.ivaCalculadoOGuardado(ivaResult, item);
       item.totalPedididoConDescuento = item.subtotal + item.totalImpuesto;
 
       // Recalcular anticipo desde PagosAsentados (igual que en procesarRespuestaPaginada)
@@ -3035,6 +3245,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       if (params['buscar']) {
         this.searchQuery = params['buscar'];
 
+        // Ticket 1075: un número de pedido sin fecha (enlaces de notificaciones)
+        // se abre en el día en que se creó el pedido, no en 2 años.
+        if (!params['fecha'] && !params['fechaInicial'] && this.esNumeroDePedido(params['buscar'])) {
+          this.abrirEnElDiaDelPedido(params['buscar']);
+          return;
+        }
+
         // Prioridad: 1) fechaInicial/fechaFinal explícitos (panel WhatsApp),
         // 2) fecha exacta del pedido (customer-metrics), 3) últimos 2 años.
         const isoRegex2 = /^\d{4}-\d{2}-\d{2}$/;
@@ -3236,6 +3453,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Determina si un pedido necesita recálculo de totales en frontend.
    */
+  /**
+   * Ticket 1055 (ALMACEN BOMBAS): el IVA recalculado puede ser 0 de verdad (línea
+   * pasada a 0% para una universidad). `x || guardado` lo tomaba como "sin dato" y
+   * dejaba el IVA viejo del 19% en pantalla y en el PDF. Solo se conserva el guardado
+   * cuando el pedido no tiene líneas con qué calcular.
+   */
+  private ivaCalculadoOGuardado(ivaResult: any, pedido: any): number {
+    const tieneLineas = Array.isArray(pedido?.carrito) && pedido.carrito.length > 0;
+    const calculado = Number(ivaResult?.totalPrecioIVADef);
+    if (tieneLineas && Number.isFinite(calculado)) return calculado;
+    return Number(pedido?.totalImpuesto || 0);
+  }
+
   private necesitaRecalculoFrontend(order: any): boolean {
     return !order._calculadoEnBackend
       || this.tienePreciosManualActivos(order)
@@ -3381,6 +3611,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   refrescarDatos(forceRefresh: boolean = false, isPageChange: boolean = false) {
+    // Ticket 1075: la carga sale cuando se sepa la fecha del pedido buscado.
+    if (this.ubicandoPedidoBuscado) {
+      return;
+    }
+
     // Log del stack trace para identificar de dónde viene la llamada
     const stackTrace = new Error().stack;
     const caller = stackTrace?.split('\n')[2]?.trim() || 'unknown';
@@ -3723,7 +3958,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
             const ivaResult = this.checkIVAPrice(order);
-            order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || order.totalImpuesto || 0);
+            order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResult, order);
 
             // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
             order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -4073,7 +4308,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
               // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
               const ivaResultSinPag = this.checkIVAPrice(order);
-              order.totalImpuesto = Number(ivaResultSinPag.totalPrecioIVADef || order.totalImpuesto || 0);
+              order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResultSinPag, order);
 
               // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
               order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -5111,6 +5346,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       pedidoActualizado, // ← Pedido con valores actualizados
       this.isFromProduction,
     );
+    // Ticket 1053: si los maestros aún no cargaban, reemplazar el aviso cuando lleguen.
+    if (this.paymentService.esHtmlDeEspera(this.htmlModal)) {
+      this.paymentService.getHtmlContentAsync(pedidoActualizado, this.isFromProduction)
+        .then((h) => { if (h) this.htmlModal = h; });
+    }
 
     // Registrar la fecha/hora de impresión solo cuando se usa desde producción
     if (this.isFromProduction) {
@@ -5490,7 +5730,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
     const ivaResultTotales = this.checkIVAPrice(pedido);
-    const totalImpuesto = Number(ivaResultTotales.totalPrecioIVADef || pedido.totalImpuesto || 0);
+    const totalImpuesto = this.ivaCalculadoOGuardado(ivaResultTotales, pedido);
     pedido.totalImpuesto = totalImpuesto;
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
@@ -5604,7 +5844,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
     const ivaResultRecalc = this.checkIVAPrice(order);
-    order.totalImpuesto = Number(ivaResultRecalc.totalPrecioIVADef || order.totalImpuesto || 0);
+    order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResultRecalc, order);
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
     order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -7674,7 +7914,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado)
     const ivaResult = this.checkIVAPrice(order);
-    order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || order.totalImpuesto || 0);
+    order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResult, order);
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
     order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -8096,7 +8336,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
           const ivaResultExport = this.checkIVAPrice(order);
-          order.totalImpuesto = Number(ivaResultExport.totalPrecioIVADef || order.totalImpuesto || 0);
+          order.totalImpuesto = this.ivaCalculadoOGuardado(ivaResultExport, order);
 
           // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
           order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -8996,6 +9236,50 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.saveFiltersState();
   }
 
+  /** Ticket 1075: "DAD-013699", "DAD-13699" o "dad013699"; no un nombre o un teléfono. */
+  private esNumeroDePedido(texto: string): boolean {
+    return /^[A-Za-z]{2,5}-?\d{3,}$/.test(String(texto || '').trim());
+  }
+
+  /**
+   * Ticket 1075: busca el pedido por su número (una consulta directa, ~1 s) y abre
+   * la lista en el día en que se creó. Si no aparece, sigue como antes: 2 años.
+   */
+  private abrirEnElDiaDelPedido(nroPedido: string): void {
+    this.ubicandoPedidoBuscado = true;
+    this.ventasService.getOrdersByNroPedido(nroPedido.trim()).pipe(
+      catchError(() => of([])),
+      takeUntil(this.destroy$),
+    ).subscribe((resp: any) => {
+      const lista: any[] = Array.isArray(resp) ? resp : (resp?.data || []);
+      const pedido = lista.find((p) => String(p?.nroPedido || '').toUpperCase() === nroPedido.trim().toUpperCase()) || lista[0];
+      const creado = pedido?.fechaCreacion ? new Date(pedido.fechaCreacion) : null;
+
+      let desde: Date;
+      let hasta: Date;
+      if (creado && !isNaN(creado.getTime())) {
+        desde = new Date(creado); desde.setHours(0, 0, 0, 0);
+        hasta = new Date(creado); hasta.setHours(23, 59, 59, 999);
+      } else {
+        desde = new Date(); desde.setFullYear(desde.getFullYear() - 2);
+        hasta = new Date();
+      }
+
+      this.fechaInicial = desde.toISOString().split('T')[0];
+      this.fechaFinal = hasta.toISOString().split('T')[0];
+      this.fechaInicialDate = desde;
+      this.fechaFinalDate = hasta;
+      this.sharedFilterService.updateFilterState({
+        searchQuery: this.searchQuery,
+        fechaInicial: desde,
+        fechaFinal: hasta,
+      });
+
+      this.ubicandoPedidoBuscado = false;
+      this.refrescarDatos(true);
+    });
+  }
+
   // Métodos para persistir estado de filtros
   private loadFiltersState(): void {
     // Si hay navegación directa a un pedido (buscar + fecha en URL), no pisar las
@@ -9566,10 +9850,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             .padStart(6, "0");
           cloned.nroPedido = `${ultimasLetras}-${nextConsecutive}`;
 
-          const html = this.paymentService.getHtmlContent(
+          this.paymentService.getHtmlContentAsync(
             cloned,
             this.isFromProduction,
-          );
+          ).then((html) => {
           this.ventasService
             .createOrder({ order: cloned, emailHtml: html })
             .subscribe({
@@ -9587,6 +9871,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 );
               },
             });
+          });
         },
         error: () => {
           this.toastrService.error(

@@ -48,6 +48,8 @@ export interface Cotizacion {
   total?: number;
   // Términos y condiciones (precargados del default de empresa).
   terminos?: string;
+  /** Ticket 1081: documento anexo de condiciones comerciales (PDF), copiado de la empresa al crearla. */
+  anexoCondiciones?: AnexoCondiciones | null;
   fechaCreacion?: string;
   fechaEmision?: string;
   fechaVencimiento?: string;
@@ -76,9 +78,18 @@ export interface CotizacionMetrics {
   porEstado?: { [estado: string]: number };
 }
 
+/** Ticket 1081: documento anexo (PDF) de las condiciones comerciales. */
+export interface AnexoCondiciones {
+  url: string;
+  nombre: string;
+}
+
 // Config de términos base por empresa (GET/PUT /v1/cotizaciones/config).
 export interface CotizacionConfig {
   terminosBase: string;
+  /** true = la empresa ya guardó sus propios términos (no los de Katuq por defecto). */
+  personalizados?: boolean;
+  anexo?: AnexoCondiciones | null;
 }
 
 export interface CotizacionListFilter {

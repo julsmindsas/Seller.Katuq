@@ -96,10 +96,21 @@ export class TrasladosComponent implements OnInit {
     });
   }
 
+  /**
+   * Ticket 1070 (ALMACEN BOMBAS): el id del producto sale de `producto.id` (el
+   * docId que arma el backend en getProductosBodega). Antes se leía
+   * `producto.cd`, que solo tiene 1 de sus 1.247 productos: la opción quedaba
+   * con valor "undefined", el clic no encontraba nada y no se podía trasladar.
+   * `productoId` del registro de inventario ya viene normalizado al docId.
+   */
+  idProducto(item: any): string {
+    return item?.producto?.id || item?.producto?.cd || item?.productoId || '';
+  }
+
   // Productos filtrados por búsqueda que NO están ya en la tabla
   get productosFiltrados(): any[] {
     const idsSeleccionados = new Set(this.productosTraslado.map(p => p.productoId));
-    let filtrados = this.productosOrigen.filter(p => !idsSeleccionados.has(p.producto?.cd));
+    let filtrados = this.productosOrigen.filter(p => !idsSeleccionados.has(this.idProducto(p)));
     if (this.busquedaProducto.trim()) {
       const search = this.busquedaProducto.toLowerCase();
       filtrados = filtrados.filter(p =>
@@ -118,19 +129,20 @@ export class TrasladosComponent implements OnInit {
   onProductoSeleccionadoSelect(event: any): void {
     const cd = event.target.value;
     if (!cd) return;
-    const item = this.productosFiltrados.find((p: any) => p.producto?.cd === cd);
+    const item = this.productosFiltrados.find((p: any) => this.idProducto(p) === cd);
     if (item) this.agregarProducto(item);
     event.target.value = '';
   }
 
   agregarProducto(item: any): void {
     const prod = item.producto;
-    if (!prod?.cd) return;
+    const productoId = this.idProducto(item);
+    if (!prod || !productoId) return;
     // Evitar duplicados
-    if (this.productosTraslado.some(p => p.productoId === prod.cd)) return;
+    if (this.productosTraslado.some(p => p.productoId === productoId)) return;
 
     this.productosTraslado.push({
-      productoId: prod.cd,
+      productoId,
       titulo: prod.crearProducto?.titulo || 'Sin nombre',
       imagen: urlImagenAbsoluta(prod.crearProducto?.imagenesPrincipales?.[0]?.urls),
       referencia: prod.identificacion?.referencia || '',

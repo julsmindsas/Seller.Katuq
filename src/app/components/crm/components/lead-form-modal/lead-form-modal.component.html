@@ -74,6 +74,15 @@
         </select>
       </div>
 
+      <!-- Ticket 1064: comercial responsable del lead -->
+      <div class="col-12 col-sm-6" *ngIf="comerciales.length">
+        <label class="form-label fw-semibold">Comercial responsable</label>
+        <select formControlName="assignedTo" class="form-control form-select w-100">
+          <option [ngValue]="null">Sin asignar</option>
+          <option *ngFor="let c of comerciales" [ngValue]="c.email">{{ c.nombre }}</option>
+        </select>
+      </div>
+
       <!-- Etiquetas -->
       <div class="col-12">
         <label class="form-label fw-semibold mb-1">

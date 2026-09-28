@@ -9,7 +9,7 @@ import { CrmService } from '../../services/crm.service';
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
 import {
-  CrmActivity, CrmTask, CrmStage, getStageSeverity, getPrioritySeverity,
+  CrmActivity, CrmTask, CrmStage, CrmEquipo, getStageSeverity, getPrioritySeverity,
   ACTIVITY_TYPE_OPTIONS, TASK_TYPE_OPTIONS, PRIORITY_OPTIONS,
 } from '../../models/crm.models';
 
@@ -37,6 +37,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   editForm: FormGroup;
   clientTagsCatalog: ClientTag[] = [];
   etiquetasSeleccionadas: string[] = [];
+
+  /** Ticket 1064: comerciales para asignar el lead y sus tareas. */
+  equipo: CrmEquipo | null = null;
+  opcionesComercial: { label: string; value: string | null }[] = [];
 
   // Options
   activityTypes = ACTIVITY_TYPE_OPTIONS;
@@ -80,6 +84,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
       priority: ['medium'],
       dueDate: [null],
       description: [''],
+      assignedTo: [null], // ticket 1064
     });
     this.editForm = this.fb.group({
       name: ['', Validators.required],
@@ -100,6 +105,15 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     }
     this.loadStages();
     this.loadLead();
+    this.crmService.getEquipo()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(eq => {
+        this.equipo = eq;
+        this.opcionesComercial = [
+          { label: 'Sin asignar', value: null },
+          ...eq.comerciales.map(c => ({ label: c.nombre, value: c.email })),
+        ];
+      });
 
     this.corpConfig.loadTags()
       .pipe(takeUntil(this.destroy$))
@@ -245,6 +259,50 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Ticket 1064: nombre del comercial (o su correo si no está en el equipo). */
+  nombreComercial(email?: string | null): string {
+    if (!email) return 'Sin asignar';
+    const c = this.equipo?.comerciales.find(x => x.email === String(email).trim().toLowerCase());
+    return c ? c.nombre : email;
+  }
+
+  /** Ticket 1064: el administrador cambia el comercial del lead. */
+  cambiarComercial(email: string | null): void {
+    if (!this.lead) return;
+    this.lead.pipeline = { ...(this.lead.pipeline || {}), assignedTo: email };
+    this.lead.duenoEfectivo = email;
+    this.updateField('assignedTo', email);
+  }
+
+  /** Ticket 1064: el comercial del lead; si nadie lo decidió, quien lo creó (lo calcula el servidor). */
+  get duenoDelLead(): string | null {
+    const e = this.lead?.duenoEfectivo !== undefined ? this.lead.duenoEfectivo : this.lead?.pipeline?.assignedTo;
+    return e ? String(e).trim().toLowerCase() : null;
+  }
+
+  /** Ticket 1064: se ve y se puede escoger el responsable de la tarea. */
+  get puedeEscogerResponsable(): boolean {
+    return !!this.equipo?.puedeAsignar && this.opcionesComercial.length > 1;
+  }
+
+  /**
+   * Ticket 1064: al abrir "Nueva tarea", si se puede escoger, queda marcado el
+   * comercial del lead (si sigue en el equipo) o quien la crea. Si no se ve el
+   * selector, no se llena nada por dentro: la tarea queda de quien la crea.
+   */
+  toggleTaskForm(): void {
+    this.showTaskForm = !this.showTaskForm;
+    if (!this.showTaskForm || this.taskForm.value.assignedTo) return;
+    if (!this.puedeEscogerResponsable) {
+      this.taskForm.patchValue({ assignedTo: null });
+      return;
+    }
+    const enEquipo = (e: string | null) => !!e && this.opcionesComercial.some(o => o.value === e);
+    const delLead = this.duenoDelLead;
+    const yo = this.equipo?.yo || null;
+    this.taskForm.patchValue({ assignedTo: enEquipo(delLead) ? delLead : (enEquipo(yo) ? yo : null) });
+  }
+
   updateField(field: string, value: any): void {
     this.crmService.updatePipeline(this.entityId, { [field]: value })
       .pipe(takeUntil(this.destroy$))
@@ -337,6 +395,8 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
           this.activities = [activity, ...this.activities];
           this.activityForm.reset({ type: 'note', description: '', detail: '' });
           this.messageService.add({ severity: 'success', summary: 'Actividad registrada' });
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'No se guardó la actividad', detail: 'Intenta de nuevo. Si el lead no es tuyo, pídele al administrador que la registre.' });
         }
       });
   }
@@ -347,15 +407,19 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     if (this.taskForm.invalid) return;
     const data = { ...this.taskForm.value };
     if (data.dueDate instanceof Date) data.dueDate = data.dueDate.toISOString();
+    if (!data.assignedTo || !this.puedeEscogerResponsable) delete data.assignedTo; // queda de quien la crea
 
     this.crmService.createTask(this.entityId, data)
       .pipe(takeUntil(this.destroy$))
       .subscribe(task => {
         if (task) {
           this.tasks = [task, ...this.tasks];
-          this.taskForm.reset({ type: 'follow_up', priority: 'medium' });
+          this.taskForm.reset({ type: 'follow_up', priority: 'medium', assignedTo: null });
           this.showTaskForm = false;
           this.messageService.add({ severity: 'success', summary: 'Tarea creada' });
+        } else {
+          // Revisión 1064: antes un rechazo del servidor (p. ej. responsable fuera del equipo) no decía nada.
+          this.messageService.add({ severity: 'error', summary: 'No se creó la tarea', detail: 'Revisa el responsable e intenta de nuevo.' });
         }
       });
   }

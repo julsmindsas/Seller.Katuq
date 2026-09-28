@@ -6,6 +6,9 @@ import Swal from 'sweetalert2';
 
 import {
   CobrosOverview,
+  PedidosFuncionalidad,
+  PedidoFuncionalidad,
+  TemaFuncionalidad,
   CompaniesService,
   EmpresaPanorama,
   FilaCatalogoIntegracion,
@@ -19,7 +22,7 @@ import { NotificationService } from '../../../shared/services/notification.servi
 import { SubscriptionService } from '../../../shared/services/subscription.service';
 
 /** Filtros de la pestaña de cobros. Cada tarjeta enciende el suyo. */
-type FiltroCobros = 'todas' | 'aCobrar' | 'sinTarjeta' | 'vencidas';
+type FiltroCobros = 'todas' | 'aCobrar' | 'sinTarjeta' | 'vencidas' | 'cortesia';
 
 type FiltroEstado =
   | 'todas'
@@ -97,6 +100,23 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   totales: TotalesPlataforma | null = null;
   empresas: EmpresaPanorama[] = [];
+  /**
+   * Catálogo del ciclo de vida, indexado por estado. Lo llena el backend.
+   * Vacío mientras carga (o si falló): el botón de estado se deshabilita solo.
+   */
+  catalogoEstados: Record<string, any> = {};
+  /** Empresas cuyo estado se está guardando ahora mismo. */
+  cambiandoCiclo = new Set<string>();
+
+  /**
+   * Los pedidos que NO se cobran, por empresa. Se piden al abrir la ficha y se
+   * guardan: son la explicación de por qué "facturado" y "lo que se cobra" no
+   * dan lo mismo, y sin ellos esa diferencia parece un error de cálculo.
+   */
+  excluidosPorEmpresa: Record<string, any> = {};
+  cargandoExcluidos = new Set<string>();
+  /** Empresas cuyo detalle de pedidos caídos está desplegado. */
+  detalleExcluidosAbierto = new Set<string>();
   empresasFiltradas: EmpresaPanorama[] = [];
 
   generadoEn: number | null = null;
@@ -155,7 +175,34 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * empresas y cobrarles. Comparten los mismos datos, así que viven en la misma
    * pantalla en vez de en dos módulos que se desincronizan.
    */
-  vista: 'empresas' | 'cobros' = 'empresas';
+  vista: 'empresas' | 'cobros' | 'pedidos' = 'empresas';
+
+  // ── Pedidos de funcionalidad ────────────────────────────────────────────
+  pedidos: PedidosFuncionalidad | null = null;
+  cargandoPedidos = false;
+  errorPedidos = '';
+  /** Filtra la lista por empresa. Los TEMAS siguen contando a todo el mundo. */
+  filtroClientePedidos = '';
+  /**
+   * Qué pedidos se ven. Arranca en `pendientes` porque es lo que se mira el 90%
+   * del tiempo, pero es un filtro CON NOMBRE y no un interruptor: con el
+   * interruptor, marcar algo como entregado lo hacia desaparecer de la lista sin
+   * ninguna pista de adonde se fue.
+   */
+  filtroEstadoPedidos: 'pendientes' | 'entregados' | 'descartados' | 'todos' = 'pendientes';
+
+  /** Aviso corto cuando un pedido sale del filtro actual al cambiarle el estado. */
+  avisoPedido = '';
+  /** El formulario de anotar, abierto o cerrado. */
+  anotando = false;
+  guardandoPedido = false;
+  nuevoPedido: { titulo: string; cliente: string; detalle: string; tema: string; tipo: string } = {
+    titulo: '',
+    cliente: '',
+    detalle: '',
+    tema: '',
+    tipo: 'mejora',
+  };
 
   cobros: CobrosOverview | null = null;
   cargandoCobros = false;
@@ -186,6 +233,26 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargar();
+    this.cargarCatalogoEstados();
+  }
+
+  /**
+   * El catálogo del ciclo de vida. Se pide una vez y se guarda: las etiquetas y
+   * las transiciones válidas son del backend, para que la consola no ofrezca un
+   * cambio que el servidor va a rechazar.
+   */
+  private cargarCatalogoEstados(): void {
+    this.companiesService
+      .getCatalogoEstados()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          (res?.estados || []).forEach((e: any) => (this.catalogoEstados[e.estado] = e));
+        },
+        // Sin catálogo el botón de estado queda deshabilitado, no roto: es
+        // preferible a mostrar un selector vacío que no hace nada.
+        error: () => (this.catalogoEstados = {}),
+      });
   }
 
   ngOnDestroy(): void {
@@ -246,9 +313,12 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   // ── Cobros ────────────────────────────────────────────────────────────────
 
-  cambiarVista(vista: 'empresas' | 'cobros'): void {
+  cambiarVista(vista: 'empresas' | 'cobros' | 'pedidos'): void {
     this.vista = vista;
     if (vista === 'cobros' && !this.cobros && !this.cargandoCobros) this.cargarCobros();
+    // Cada pestaña carga lo suyo al abrirse por primera vez: traer los pedidos
+    // al entrar a la consola sería pagar una lectura que casi nunca se mira.
+    if (vista === 'pedidos' && !this.pedidos && !this.cargandoPedidos) this.cargarPedidos();
   }
 
   cargarCobros(): void {
@@ -287,9 +357,21 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
         return filas.filter((c) => c.modoCobro === 'manual');
       case 'vencidas':
         return filas.filter((c) => c.renovacion?.estado === 'vencido');
+      case 'cortesia':
+        return filas.filter((c) => c.modoCobro === 'cortesia');
       default:
-        return filas;
+        // Esta pantalla responde UNA pregunta: a quién hay que cobrarle este
+        // mes. Las de cortesía no son parte de esa respuesta, así que por
+        // defecto no se listan — mezclarlas obliga a acordarse, fila por fila,
+        // de cuáles hay que saltarse. No se esconden: la tarjeta "Cortesía" las
+        // muestra en un clic.
+        return filas.filter((c) => c.modoCobro !== 'cortesia');
     }
+  }
+
+  /** Cuántas quedaron fuera de la lista por ser de cortesía. */
+  get cuantasDeCortesia(): number {
+    return (this.cobros?.empresas || []).filter((c) => c.modoCobro === 'cortesia').length;
   }
 
   filtrarCobros(filtro: FiltroCobros): void {
@@ -304,6 +386,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       case 'aCobrar': return 'las empresas que se cobran este periodo';
       case 'sinTarjeta': return 'las empresas sin tarjeta inscrita';
       case 'vencidas': return 'las empresas con el corte vencido';
+      case 'cortesia': return 'las empresas de cortesía, a las que no se les cobra';
       default: return '';
     }
   }
@@ -326,13 +409,424 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     return 'Cortesía';
   }
 
-  /** El periodo tal como se factura. */
+  /**
+   * El periodo tal como se factura.
+   *
+   * "Cortesía" es el tercer valor y no es una periodicidad: es la respuesta
+   * honesta a "¿cada cuánto paga?" cuando la respuesta es *nunca*. Las empresas
+   * de Katuq y las demo salían acá como "Mensual" con su monto al lado,
+   * indistinguibles de un cliente que debe plata.
+   */
   etiquetaPeriodo(fila: FilaCobro): string {
+    if (fila.modoCobro === 'cortesia') return 'Cortesía';
     const p = (fila.renovacion?.periodo || fila.periodo || '').toLowerCase();
     if (p === 'anual' || p === 'yearly') return 'Anual';
     if (p === 'quarterly') return 'Trimestral';
     if (p === 'mensual' || p === 'monthly') return 'Mensual';
     return '—';
+  }
+
+  /**
+   * El desglose del prorrateo, en palabras, para el globo de la fila.
+   *
+   * Un monto más bajo que el escalón que aparece al lado se lee como un error
+   * de cálculo. Acá se explica: qué días estuvo en cada escalón, cuánto llevaba
+   * vendido al saltar y cuánto vale cada tramo.
+   */
+  detalleProrrateo(fila: FilaCobro): string {
+    const p = fila.prorrateo;
+    if (!p || !p.aplicado) return '';
+
+    const lineas = p.tramos.map(
+      (t) =>
+        `${this.fechaCorta(t.desde)} a ${this.fechaCorta(t.hasta)} · ${t.dias} d · ` +
+        `${t.escalonNombre} · ${this.dinero(t.montoCOP)}`
+    );
+
+    return (
+      `Saltó ${p.saltos} ${p.saltos === 1 ? 'escalón' : 'escalones'} dentro del período, ` +
+      `así que cada tramo se cobra al escalón que regía esos días:\n` +
+      lineas.join('\n') +
+      `\n\nCon la regla anterior habrían sido ${this.dinero(p.montoSinProrrateo)} ` +
+      `(el escalón grande por el período entero): ${this.dinero(p.ahorroCliente)} menos para el cliente.`
+    );
+  }
+
+  /**
+   * El monto de la fila, en dólares.
+   *
+   * NO se lee de una tabla de precios: se deriva del monto en pesos con la
+   * misma TRM que lo produjo (`COP = round(USD × TRM)`), así que los dos
+   * números de la celda siempre cuentan la misma historia. Tomarlo del precio
+   * de lista los haría discrepar justo en los casos que importan —un período
+   * anual, un escalón pactado, un cobro prorrateado— y ahí es donde alguien
+   * "corrige" el que está bien.
+   *
+   * Sin TRM devuelve cadena vacía y la nota no se pinta: inventar la
+   * conversión sería peor que no mostrarla.
+   */
+  dolaresDelCobro(c: FilaCobro): string {
+    if (c.montoPeriodoCOP === null || !c.trm) return '';
+    return this.dineroUSD(Math.round(c.montoPeriodoCOP / c.trm));
+  }
+
+  /** Por qué el mismo escalón cuesta distinto en pesos cada mes. */
+  tituloDolares(c: FilaCobro): string {
+    if (!c.trm) return '';
+    const periodo = String(c.periodo || '').toLowerCase().startsWith('y') ||
+      String(c.periodo || '').toLowerCase().startsWith('a')
+      ? 'por el año'
+      : 'al mes';
+    return (
+      `El precio del plan está en dólares: ${this.dolaresDelCobro(c)} ${periodo}. ` +
+      `Los pesos son la conversión con la TRM de hoy (${this.dinero(c.trm)}), y ` +
+      `el valor definitivo se fija con la TRM del día del corte.`
+    );
+  }
+
+  /**
+   * Qué es un "hito", explicado una sola vez en el encabezado de la columna.
+   *
+   * La palabra viene del backend y se mantiene a propósito —es la que aparece
+   * en los logs, en el script y en los comentarios del código—, pero nadie
+   * tiene por qué adivinar qué significa al mirar una tabla.
+   */
+  readonly ayudaAvisos =
+    'Los correos de la secuencia de renovación que ya salieron para este corte.\n\n' +
+    'Un HITO es cada momento en que se manda uno: "−7" es siete días antes del ' +
+    'corte, "día 0" es el día del vencimiento, "+3" es tres días después.\n\n' +
+    'En verde los que ya se enviaron. Pasá el mouse por cada uno para ver cuándo ' +
+    'salió y a qué correo.';
+
+  /**
+   * Los casilleros de avisos de una fila: los cinco momentos de la secuencia,
+   * marcando cuáles ya salieron.
+   *
+   * Los días NO están escritos acá: vienen del backend (`hitosAvisos`), que es
+   * donde están configurados. Si mañana se cambian, la columna los sigue sin
+   * que nadie toque el front. Mientras la respuesta no los traiga se usan los
+   * que hay hoy, para que la columna no quede en blanco contra un backend viejo.
+   */
+  // ── Pedidos de funcionalidad ────────────────────────────────────────────
+
+  cargarPedidos(): void {
+    this.cargandoPedidos = true;
+    this.errorPedidos = '';
+
+    this.companiesService
+      .getPedidosFuncionalidad()
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.cargandoPedidos = false))
+      )
+      .subscribe({
+        next: (res) => (this.pedidos = res),
+        error: (err) => {
+          this.pedidos = null;
+          this.errorPedidos = err?.error?.error || 'No se pudieron cargar los pedidos.';
+        },
+      });
+  }
+
+  /**
+   * La lista que se ve, con los dos filtros aplicados.
+   *
+   * El filtro se hace acá y no en el servidor a proposito: son decenas de
+   * documentos ya cargados, y una consulta por cada cambio de filtro seria
+   * pagar una lectura para no mostrar nada nuevo.
+   */
+  get pedidosVisibles(): PedidoFuncionalidad[] {
+    const todos = this.pedidos?.pedidos || [];
+    const abiertos = this.pedidos?.catalogo?.abiertos || [];
+    return todos.filter((p) => {
+      if (this.filtroClientePedidos && p.cliente !== this.filtroClientePedidos) return false;
+      if (this.filtroEstadoPedidos === 'pendientes') return abiertos.includes(p.estado);
+      if (this.filtroEstadoPedidos === 'entregados') return p.estado === 'entregado';
+      if (this.filtroEstadoPedidos === 'descartados') return p.estado === 'descartado';
+      return true;
+    });
+  }
+
+  /**
+   * Cuantos pedidos hay en cada filtro.
+   *
+   * El numero al lado del filtro es lo que contesta "y los entregados donde
+   * quedaron" ANTES de que la pregunta aparezca: se ve que existen y cuantos
+   * son sin tener que ir a buscarlos.
+   */
+  get cuentasPedidos(): { pendientes: number; entregados: number; descartados: number; todos: number } {
+    const todos = this.pedidos?.pedidos || [];
+    const abiertos = this.pedidos?.catalogo?.abiertos || [];
+    const delCliente = this.filtroClientePedidos
+      ? todos.filter((p) => p.cliente === this.filtroClientePedidos)
+      : todos;
+
+    return {
+      pendientes: delCliente.filter((p) => abiertos.includes(p.estado)).length,
+      entregados: delCliente.filter((p) => p.estado === 'entregado').length,
+      descartados: delCliente.filter((p) => p.estado === 'descartado').length,
+      todos: delCliente.length,
+    };
+  }
+
+  /** Como se llama un estado para un humano. */
+  etiquetaEstadoPedido(estado: string): string {
+    return this.pedidos?.catalogo?.estados?.[estado] || estado;
+  }
+
+  /** Los tipos disponibles, con su etiqueta. Salen del backend, no de aca. */
+  get tiposPedido(): Array<{ valor: string; etiqueta: string }> {
+    const c = this.pedidos?.catalogo?.tipos || {};
+    return Object.keys(c).map((valor) => ({ valor, etiqueta: c[valor] }));
+  }
+
+  /** Como se llama un tipo para un humano. */
+  etiquetaTipoPedido(tipo: string): string {
+    return this.pedidos?.catalogo?.tipos?.[tipo] || tipo;
+  }
+
+  /**
+   * Una palabra corta para la pastilla de la lista.
+   *
+   * La etiqueta larga ("Integracion con otro sistema") sirve en el formulario,
+   * donde hay que elegir; en una tabla de treinta filas ocupa toda la columna
+   * y deja de leerse.
+   */
+  tipoCorto(tipo: string): string {
+    const corto: Record<string, string> = {
+      integracion: 'Integración',
+      modulo: 'Módulo nuevo',
+      mejora: 'Mejora',
+      reporte: 'Reporte',
+      correccion: 'Corrección',
+    };
+    return corto[tipo] || tipo;
+  }
+
+  /** Los estados disponibles, para el desplegable de cada fila. */
+  get estadosPedido(): Array<{ valor: string; etiqueta: string }> {
+    const c = this.pedidos?.catalogo?.estados || {};
+    return Object.keys(c).map((valor) => ({ valor, etiqueta: c[valor] }));
+  }
+
+  /**
+   * Los temas que ya existen, para engancharse a uno en vez de crear otro.
+   *
+   * Es lo unico que evita que el mismo pedido quede partido en dos grupos y
+   * ninguno se vea lo bastante grande como para construirlo.
+   */
+  get temasExistentes(): string[] {
+    return (this.pedidos?.temas || []).map((t) => t.titulo);
+  }
+
+  abrirAnotacion(cliente?: string): void {
+    this.anotando = true;
+    this.pedidoEditando = '';
+    this.nuevoPedido = { titulo: '', cliente: cliente || '', detalle: '', tema: '', tipo: 'mejora' };
+  }
+
+  guardarPedido(): void {
+    const p = this.nuevoPedido;
+    if (!p.titulo.trim() || !p.cliente.trim()) return;
+
+    this.guardandoPedido = true;
+
+    // El mismo formulario crea y corrige. Si hay un pedido cargado va un PATCH
+    // con los campos del formulario; si no, un POST.
+    const cuerpo = {
+      titulo: p.titulo.trim(),
+      detalle: p.detalle.trim(),
+      tema: p.tema.trim() || undefined,
+      tipo: p.tipo,
+    };
+    const peticion = this.pedidoEditando
+      ? this.companiesService.actualizarPedidoFuncionalidad(this.pedidoEditando, cuerpo)
+      : this.companiesService.crearPedidoFuncionalidad({ ...cuerpo, cliente: p.cliente.trim() });
+
+    peticion
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.guardandoPedido = false))
+      )
+      .subscribe({
+        next: () => {
+          this.anotando = false;
+          this.pedidoEditando = '';
+          // Se recarga en vez de insertar a mano: los TEMAS se recalculan en
+          // el servidor y meter la fila sola dejaria el conteo desactualizado,
+          // que es justo el numero que se usa para decidir.
+          this.cargarPedidos();
+        },
+        error: (err) => {
+          this.errorPedidos = err?.error?.error || 'No se pudo guardar el pedido.';
+        },
+      });
+  }
+
+  /**
+   * Abre el formulario con un pedido cargado para corregirlo.
+   *
+   * El CLIENTE no se puede cambiar y por eso el desplegable queda bloqueado:
+   * si el pedido era de otro cliente es otro pedido, y moverlo falsearia el
+   * conteo que decide que se construye.
+   */
+  editarPedido(pedido: PedidoFuncionalidad): void {
+    this.pedidoEditando = pedido.id;
+    this.anotando = true;
+    this.nuevoPedido = {
+      titulo: pedido.titulo,
+      cliente: pedido.cliente || '',
+      detalle: pedido.detalle || '',
+      tema: pedido.temaTexto || '',
+      tipo: pedido.tipo,
+    };
+
+    // El formulario vive ARRIBA de la lista. Si se edita un pedido que está
+    // abajo, se abre fuera de pantalla y el boton parece no haber hecho nada.
+    // El setTimeout espera a que Angular lo pinte: sin eso no hay a donde ir.
+    setTimeout(() => {
+      document
+        .querySelector('.pedido-form')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  /**
+   * Borra un pedido, con confirmacion.
+   *
+   * Borrar es para deshacer una anotacion equivocada. Si el pedido era real y
+   * se decidio no hacerlo, el camino es el estado `Descartado`: deja el rastro
+   * de que se evaluo, y sin eso el mismo pedido vuelve a entrar en tres meses.
+   */
+  async eliminarPedido(pedido: PedidoFuncionalidad): Promise<void> {
+    const confirmacion = await Swal.fire({
+      title: 'Borrar este pedido',
+      html:
+        `<div style="text-align:left">` +
+        `<p>${pedido.titulo}</p>` +
+        `<p class="text-muted" style="font-size:.9em">Si el cliente si lo pidio y decidiste no hacerlo, ` +
+        `mejor marcalo como <b>Descartado</b>: queda el registro de que se evaluo. ` +
+        `Borrar es para una anotacion equivocada.</p></div>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Si, borrar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#D7263D',
+      reverseButtons: true,
+    });
+    if (!confirmacion.isConfirmed) return;
+
+    this.companiesService
+      .eliminarPedidoFuncionalidad(pedido.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.cargarPedidos(),
+        error: (err) => {
+          this.errorPedidos = err?.error?.error || 'No se pudo borrar el pedido.';
+        },
+      });
+  }
+
+  /** Id del pedido que se esta editando. Vacio = el formulario crea uno nuevo. */
+  pedidoEditando = '';
+
+  cambiarEstadoPedido(pedido: PedidoFuncionalidad, estado: string): void {
+    if (estado === pedido.estado) return;
+    const anterior = pedido.estado;
+    pedido.estado = estado; // optimista: el desplegable no puede quedarse quieto
+
+    // Si con el estado nuevo el pedido sale del filtro actual, se avisa ANTES de
+    // que desaparezca. Una fila que se esfuma sola se lee como "se borro", y ese
+    // susto ya paso una vez.
+    const abiertos = this.pedidos?.catalogo?.abiertos || [];
+    const saleDeLaLista =
+      (this.filtroEstadoPedidos === 'pendientes' && !abiertos.includes(estado)) ||
+      (this.filtroEstadoPedidos === 'entregados' && estado !== 'entregado') ||
+      (this.filtroEstadoPedidos === 'descartados' && estado !== 'descartado');
+
+    this.avisoPedido = saleDeLaLista
+      ? `"${pedido.titulo}" quedó como ${this.etiquetaEstadoPedido(estado)} y por eso ya no aparece en este filtro. Está en "${this.etiquetaEstadoPedido(estado)}" o en "Todos".`
+      : '';
+
+    this.companiesService
+      .actualizarPedidoFuncionalidad(pedido.id, { estado })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.cargarPedidos(),
+        error: (err) => {
+          pedido.estado = anterior; // se deshace: la pantalla no puede mentir
+          this.errorPedidos = err?.error?.error || 'No se pudo cambiar el estado.';
+        },
+      });
+  }
+
+  /** Filtra la lista por el tema que se toco en la tabla de arriba. */
+  verTema(tema: TemaFuncionalidad): void {
+    this.filtroClientePedidos = '';
+    this.filtroEstadoPedidos = 'todos';
+    this.busquedaTema = this.busquedaTema === tema.tema ? '' : tema.tema;
+  }
+
+  /** Tema resaltado en la lista. Vacio = ninguno. */
+  busquedaTema = '';
+
+  /** Los hitos configurados en el backend, si la respuesta ya llegó. */
+  get hitosAvisos(): { previos: number[]; mora: number[] } | undefined {
+    return this.cobros?.hitosAvisos;
+  }
+
+  avisosDeLaFila(c: FilaCobro): Array<{ etiqueta: string; enviado: boolean; detalle: string }> {
+    const previos = this.hitosAvisos?.previos?.length ? this.hitosAvisos.previos : [7, 3];
+    const mora = this.hitosAvisos?.mora?.length ? this.hitosAvisos.mora : [0, 3, 7];
+
+    const casilla = (dias: number, lado: 'previos' | 'mora') => {
+      const etiqueta = lado === 'previos' ? `−${dias}` : dias === 0 ? 'día 0' : `+${dias}`;
+      const enviado = (c.avisos?.[lado] || []).includes(dias);
+      const registro = (c.avisos?.historial || []).find(
+        (h) => h.hito === dias && (lado === 'previos' ? h.tipo === 'previo' : h.tipo !== 'previo')
+      );
+
+      const cuando = lado === 'previos'
+        ? `${dias} días antes del corte`
+        : dias === 0 ? 'el día del corte' : `${dias} días después del corte`;
+
+      return {
+        etiqueta,
+        enviado,
+        detalle: enviado
+          ? registro?.el
+            ? `Enviado el ${this.fechaHora(registro.el)}${registro.a ? ' a ' + registro.a : ''}`
+            : 'Enviado (sin fecha registrada: salió antes de que se guardara el detalle)'
+          : `Sin enviar · sale ${cuando}`,
+      };
+    };
+
+    // Descendente en los previos (−7 antes que −3) y ascendente en los de mora:
+    // así la fila se lee en orden cronológico de izquierda a derecha.
+    return [
+      ...[...previos].sort((a, b) => b - a).map((d) => casilla(d, 'previos')),
+      ...[...mora].sort((a, b) => a - b).map((d) => casilla(d, 'mora')),
+    ];
+  }
+
+  /** Fecha con hora, para poder decir "salió el 24 de septiembre a las 8:02". */
+  fechaHora(valor: any): string {
+    const ms = this.aMs(valor);
+    if (!ms) return '—';
+    return new Date(ms).toLocaleString('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  /** Por qué esta empresa no paga, para el tooltip de la fila. */
+  motivoDeCortesia(fila: FilaCobro): string {
+    return (
+      fila.motivoCortesia ||
+      'Empresa de Katuq o demo: tiene premium y acceso a todo, y no se le factura.'
+    );
   }
 
   /** Estado de la última factura, en palabras. */
@@ -675,6 +1169,40 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     if (!this.unidadesPorEmpresa.has(empresa._docId) && !this.cargandoUnidades.has(empresa._docId)) {
       this.cargarUnidades(empresa);
     }
+
+    // Lo mismo con las ventas que se cayeron: se leen los pedidos de la ventana
+    // (cientos), no un agregado, así que se piden solo al abrir y una vez.
+    if (!this.excluidosPorEmpresa[empresa._docId] && !this.cargandoExcluidos.has(empresa._docId)) {
+      this.cargarExcluidos(empresa);
+    }
+  }
+
+  private cargarExcluidos(empresa: EmpresaPanorama): void {
+    this.cargandoExcluidos.add(empresa._docId);
+    this.companiesService
+      .getPedidosExcluidos(empresa._docId, this.ventanaDias)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.cargandoExcluidos.delete(empresa._docId))
+      )
+      .subscribe({
+        next: (res) => (this.excluidosPorEmpresa[empresa._docId] = res),
+        // Sin el dato, la tarjeta dice "—". Un 0 afirmaría que no se cayó
+        // ninguna venta, que es una afirmación que no se puede sostener.
+        error: () => (this.excluidosPorEmpresa[empresa._docId] = null),
+      });
+  }
+
+  /** Las ventas caídas de una empresa, o `null` mientras cargan o si fallaron. */
+  excluidosDe(empresa: EmpresaPanorama): any {
+    return this.excluidosPorEmpresa[empresa._docId] || null;
+  }
+
+  alternarDetalleExcluidos(empresa: EmpresaPanorama, evento: Event): void {
+    evento.stopPropagation();
+    const id = empresa._docId;
+    if (this.detalleExcluidosAbierto.has(id)) this.detalleExcluidosAbierto.delete(id);
+    else this.detalleExcluidosAbierto.add(id);
   }
 
   private cargarUnidades(empresa: EmpresaPanorama): void {
@@ -699,6 +1227,129 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   }
 
   // ── Acciones ──────────────────────────────────────────────────────────────
+
+  /**
+   * Mueve una empresa por el ciclo de vida: prueba, activo, mora, suspendido,
+   * pausado, cancelado.
+   *
+   * Reemplaza al botón de candado, que solo sabía prender y apagar el acceso.
+   * La diferencia que importa para el cliente: **suspender ya no es echarlo**.
+   * Un suspendido entra, ve todo lo suyo y no puede escribir — así puede
+   * consultar su información y pagar para reactivarse. Antes, la única
+   * herramienta era bloquear, que lo dejaba por fuera y sin forma de arreglarlo
+   * sin llamar a soporte.
+   *
+   * Nada de esto borra datos, y todo se deshace con otro clic.
+   */
+  async cambiarEstadoCiclo(empresa: EmpresaPanorama, evento: Event): Promise<void> {
+    evento.stopPropagation();
+
+    const actual = empresa.estadoCiclo;
+    const info = this.catalogoEstados[actual];
+    const destinos: string[] = info?.transiciones || [];
+
+    if (!destinos.length) {
+      this.notificationService.error(
+        'Sin movimientos',
+        info
+          ? `Desde "${info.etiqueta}" no hay a dónde moverla`
+          : 'Todavía no cargó el catálogo de estados'
+      );
+      return;
+    }
+
+    const nombre = empresa.nomComercial || empresa.nombre || 'esta empresa';
+    const usuarios = empresa.metricas?.usuarios;
+    const opciones = destinos
+      .map((e) => {
+        const d = this.catalogoEstados[e];
+        return `<option value="${e}">${d?.etiqueta || e}</option>`;
+      })
+      .join('');
+
+    // Qué implica cada destino, en el mismo diálogo. Sin esto, "Suspendido" y
+    // "Bloqueado" se ven igual de graves y se elige el equivocado.
+    const consecuencias = destinos
+      .map((e) => {
+        const d = this.catalogoEstados[e] || {};
+        return `<li><b>${d.etiqueta || e}:</b> ${d.descripcion || ''}</li>`;
+      })
+      .join('');
+
+    const resultado = await Swal.fire({
+      title: `Estado de ${nombre}`,
+      html:
+        `<div style="text-align:left">` +
+        `<p style="margin:0 0 .75rem">Hoy está en <b>${info?.etiqueta || actual}</b>` +
+        (empresa.estadoMotivo ? ` — <i>${empresa.estadoMotivo}</i>` : '') +
+        `. Tiene <b>${typeof usuarios === 'number' ? usuarios : '—'}</b> usuarios.</p>` +
+        `<label style="display:block;font-size:.85em;margin-bottom:.25rem">Nuevo estado</label>` +
+        `<select id="sw-estado" class="swal2-select" style="width:100%;margin:0 0 .75rem">${opciones}</select>` +
+        `<label style="display:block;font-size:.85em;margin-bottom:.25rem">Motivo</label>` +
+        `<textarea id="sw-motivo" class="swal2-textarea" style="width:100%;margin:0 0 .75rem" ` +
+        `placeholder="Ej: factura de agosto sin pagar, pausa acordada hasta diciembre…"></textarea>` +
+        `<label style="display:block;font-size:.85em;margin-bottom:.25rem">Días de gracia antes de suspender` +
+        ` <small class="text-muted">(vacío = el estándar)</small></label>` +
+        `<input id="sw-gracia" type="number" min="0" max="180" class="swal2-input" style="width:100%;margin:0 0 .75rem" ` +
+        `value="${empresa.diasGracia ?? ''}" placeholder="7">` +
+        `<p class="text-muted" style="font-size:.8em;margin:.5rem 0 0"><b>Nada de esto borra datos.</b> ` +
+        `Todo se deshace volviendo a este mismo botón.</p>` +
+        `<ul class="text-muted" style="font-size:.78em;margin:.4rem 0 0;padding-left:1.1rem">${consecuencias}</ul>` +
+        `</div>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Cambiar estado',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      focusCancel: true,
+      preConfirm: () => {
+        const estado = (document.getElementById('sw-estado') as HTMLSelectElement)?.value;
+        const motivo = ((document.getElementById('sw-motivo') as HTMLTextAreaElement)?.value || '').trim();
+        const graciaCruda = (document.getElementById('sw-gracia') as HTMLInputElement)?.value ?? '';
+
+        const destino = this.catalogoEstados[estado] || {};
+        // El backend exige lo mismo; validarlo acá evita el viaje de ida y vuelta.
+        if ((!destino.entra || !destino.escribe) && motivo.length < 4) {
+          Swal.showValidationMessage('Escribe el motivo: queda en el historial de la empresa');
+          return false;
+        }
+
+        const dias = graciaCruda === '' ? null : Number(graciaCruda);
+        if (dias !== null && (!Number.isFinite(dias) || dias < 0 || dias > 180)) {
+          Swal.showValidationMessage('Los días de gracia deben ir entre 0 y 180');
+          return false;
+        }
+
+        return { estado, motivo, diasGracia: dias };
+      },
+    });
+
+    if (!resultado.isConfirmed || !resultado.value) return;
+
+    const { estado, motivo, diasGracia } = resultado.value as any;
+    this.cambiandoCiclo.add(empresa._docId);
+
+    this.companiesService
+      .cambiarEstadoCiclo(empresa._docId, estado, motivo, diasGracia)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.cambiandoCiclo.delete(empresa._docId))
+      )
+      .subscribe({
+        next: (res) => {
+          empresa.estadoCiclo = res.estado;
+          empresa.estadoCicloInfo = res.descripcion;
+          empresa.activo = res.activo;
+          empresa.bloqueo = res.bloqueo || null;
+          empresa.estadoMotivo = motivo || null;
+          if (diasGracia !== null) empresa.diasGracia = diasGracia;
+          this.recalcularTotalesLocales();
+          this.aplicarFiltros();
+          this.notificationService.success('Listo', res.message);
+        },
+        error: (err) => this.notificationService.error('No se pudo', err.message),
+      });
+  }
 
   /**
    * Bloquea o desbloquea una empresa.
@@ -817,6 +1468,8 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     // El <input type="date"> solo entiende yyyy-mm-dd.
     const msFecha = this.aMs(empresa.renovacion?.fecha);
     const fechaActual = msFecha ? new Date(msFecha).toISOString().slice(0, 10) : '';
+    const msInicio = this.aMs(empresa.billingPeriodStart);
+    const inicioActual = msInicio ? new Date(msInicio).toISOString().slice(0, 10) : '';
 
     const opciones = ESCALONES.map(
       (e) =>
@@ -857,14 +1510,45 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
               El anual cobra el año completo de una sola vez.
             </p>
 
+            <!-- Las dos fechas del ciclo, editables a mano. La de arriba dice
+                 DESDE CUÁNDO se miden las ventas (que es lo que decide el
+                 escalón) y la de abajo CUÁNDO se cobra. En un anual las dos son
+                 un acuerdo comercial, no una cuenta: el año arranca el día que
+                 se pactó con el cliente, no doce meses antes del corte. -->
+            <label style="display:block;font-weight:600;margin-bottom:4px">Inicio del período</label>
+            <input id="sw-inicio" type="date" class="swal2-input"
+                   style="width:100%;margin:0 0 4px" value="${inicioActual}">
+            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">
+              Desde cuándo se cuentan sus ventas para decidir el escalón.
+              <b>Vacío = lo calcula el sistema</b> restándole un período a la fecha de cobro.
+            </p>
+
             <label style="display:block;font-weight:600;margin-bottom:4px">Próximo cobro</label>
             <input id="sw-fecha" type="date" class="swal2-input"
                    style="width:100%;margin:0 0 4px" value="${fechaActual}">
-            <p style="margin:0;font-size:.75rem;color:#6b7280">
+            <p style="margin:0 0 14px;font-size:.75rem;color:#6b7280">
               El día en que se le cobra. <b>Déjalo como está si no lo vas a cambiar.</b>
               En un plan anual esta fecha debe ir a un año: si queda al mes siguiente,
               se le cobraría el año entero doce veces.
             </p>
+
+            <!-- Cortesía. Va ACÁ, junto al resto del acuerdo comercial, y no en
+                 el selector de plan: son dos preguntas distintas —qué puede
+                 hacer el cliente y qué se le cobra— y juntarlas obligaría a
+                 bajar a freemium a una demo para no cobrarle, quitándole
+                 justamente las funciones que tiene que poder mostrar. -->
+            <label style="display:flex;gap:8px;align-items:flex-start;font-weight:600;margin-bottom:4px">
+              <input id="sw-cortesia" type="checkbox" style="margin-top:3px"
+                     ${empresa.cobroCortesia ? 'checked' : ''}>
+              <span>No se le cobra (cortesía)</span>
+            </label>
+            <p style="margin:0 0 8px;font-size:.75rem;color:#6b7280">
+              Para las empresas de Katuq y las demo: <b>conservan premium y el acceso a todo</b>,
+              pero desaparecen de Cobros del mes y no entran en el ingreso estimado.
+            </p>
+            <input id="sw-motivo-cortesia" type="text" class="swal2-input"
+                   style="width:100%;margin:0" placeholder="¿Por qué no se le cobra? Ej: empresa de Katuq, demo comercial"
+                   value="${(empresa.motivoCortesia || '').replace(/"/g, '&quot;')}">
           </div>
         </div>`,
       didOpen: () => {
@@ -883,6 +1567,9 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           | 'monthly'
           | 'yearly',
         nextBillingDate: (document.getElementById('sw-fecha') as HTMLInputElement).value,
+        billingPeriodStart: (document.getElementById('sw-inicio') as HTMLInputElement).value,
+        cobroCortesia: (document.getElementById('sw-cortesia') as HTMLInputElement).checked,
+        motivoCortesia: (document.getElementById('sw-motivo-cortesia') as HTMLInputElement).value.trim(),
       }),
       showCancelButton: true,
       confirmButtonText: 'Guardar',
@@ -926,6 +1613,12 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
             // Vacío = no la toques. El backend distingue "no vino el campo" de
             // "vino con valor", así que no hay forma de borrarla sin querer.
             nextBillingDate: resultado.value.nextBillingDate || undefined,
+            // Acá SÍ viaja el vacío: vaciar el campo significa "vuelve a
+            // calcularlo el sistema", que es una edición distinta de "no lo
+            // toques". El backend distingue las dos.
+            billingPeriodStart: resultado.value.billingPeriodStart,
+            cobroCortesia: resultado.value.cobroCortesia,
+            motivoCortesia: resultado.value.motivoCortesia || undefined,
           }
         : undefined;
 
@@ -945,6 +1638,10 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
               ? acuerdo.tierContratado
               : null;
           empresa.billingPeriod = nuevo === 'premium' && acuerdo ? acuerdo.billingPeriod : null;
+          empresa.cobroCortesia = nuevo === 'premium' && !!acuerdo?.cobroCortesia;
+          empresa.motivoCortesia = empresa.cobroCortesia
+            ? acuerdo?.motivoCortesia || 'Empresa de Katuq / demo'
+            : null;
           this.recalcularTotalesLocales();
           this.aplicarFiltros();
           // El escalón y el monto los recalcula el BACKEND con las ventas y el
@@ -1289,6 +1986,20 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     return `${parteAnios} ${resto === 1 ? '1 mes' : resto + ' meses'}`;
   }
 
+  /**
+   * "hoy", "ayer", "hace 12 días". Acompaña a la fecha, no la reemplaza.
+   *
+   * El conteo suelto se quedaba corto en los dos extremos: "hace 0 días" no
+   * distingue esta mañana de anoche, y "hace 412 días" no le dice nada a nadie
+   * hasta que lo convierte a fecha mentalmente.
+   */
+  haceDias(dias: number | null): string {
+    if (dias === null || dias === undefined) return '';
+    if (dias <= 0) return 'hoy';
+    if (dias === 1) return 'ayer';
+    return `hace ${dias} días`;
+  }
+
   diasDesdeUltimoPedido(empresa: EmpresaPanorama): number | null {
     const ultimo = this.aMs(empresa.metricas?.ultimoPedido);
     if (!ultimo) return null;
@@ -1333,8 +2044,27 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * freemium no se cobra, Cumbre se negocia, y "sin dato" es no haber podido
    * medir las ventas — que NO es lo mismo que vender poco.
    */
+  /**
+   * ¿Es una empresa de cortesía? Premium con acceso a todo y sin cobro: las de
+   * Katuq y las demo. Se pregunta por el MODO DE COBRO, que lo resuelve el
+   * backend, y no por el plan: siguen siendo premium.
+   */
+  esCortesia(empresa: EmpresaPanorama): boolean {
+    return empresa.modoCobro === 'cortesia' || empresa.cobroCortesia === true;
+  }
+
   escalonTexto(empresa: EmpresaPanorama): string {
     const e = empresa.escalon;
+
+    // Cortesía primero: sin esto caía en la rama de freemium y la ficha decía
+    // "sin cobro · 15 pedidos al mes" de una empresa PREMIUM sin ningún tope.
+    // Lo cierto es que no se le cobra, no que esté limitada.
+    if (this.esCortesia(empresa)) {
+      return empresa.motivoCortesia
+        ? `cortesía · ${empresa.motivoCortesia.toLowerCase()}`
+        : 'cortesía · no se le cobra';
+    }
+
     // El renglón de arriba ya dice FREEMIUM: repetirlo acá gastaría la línea en
     // no decir nada. Lo que falta saber de un freemium es que no se le cobra.
     if (!e || !e.aplica) return 'sin cobro · 15 pedidos al mes';
@@ -1357,6 +2087,16 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   /** Por qué dice ese escalón. Va en el globo, no en la tarjeta. */
   escalonTitulo(empresa: EmpresaPanorama): string {
     const e = empresa.escalon;
+
+    if (this.esCortesia(empresa)) {
+      return (
+        `CORTESÍA${empresa.motivoCortesia ? ': ' + empresa.motivoCortesia : ''}. ` +
+        'Tiene premium y acceso a todo, y no se le factura ni mensual ni anualmente. ' +
+        'No aparece en Cobros del mes ni suma en el ingreso estimado. ' +
+        'Se quita desde el editor de plan, destildando "No se le cobra (cortesía)".'
+      );
+    }
+
     if (!e || !e.aplica) {
       return 'Plan gratis: 15 pedidos al mes, 1 bodega, 5 usuarios y 1 integración. No se le cobra.';
     }
@@ -1411,6 +2151,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   tituloRenovacion(empresa: EmpresaPanorama): string {
     const r = empresa.renovacion;
+    if (this.esCortesia(empresa)) return 'De cortesía: no vence y no se le cobra.';
     if (!r || !r.aplica) return 'El plan gratis no vence.';
     if (!r.fecha) {
       return 'Paga, pero no tiene fecha de renovación registrada por el sistema de facturación.';

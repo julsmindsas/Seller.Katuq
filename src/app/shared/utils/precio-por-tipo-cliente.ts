@@ -43,20 +43,35 @@ export function filaDeTipoCliente(
  * ¿La campaña de esa fila sigue vigente? `descuentoHasta` viene de la campaña
  * de SU tienda en Cereza (puede traer hora y zona: se compara por fecha).
  */
-export function descuentoVigente(fila: PrecioTipoCliente | null): boolean {
+export function descuentoVigente(fila: PrecioTipoCliente | null, fechaRef?: string | null): boolean {
   if (!fila) return false;
   const conIva = Number(fila.precioConIva) || 0;
   const desc = fila.precioDescuentoConIva == null ? NaN : Number(fila.precioDescuentoConIva);
   if (!Number.isFinite(desc) || desc <= 0 || desc >= conIva) return false;
   if (!fila.descuentoHasta) return true; // sin fecha = sin vencimiento conocido
   const hasta = String(fila.descuentoHasta).slice(0, 10);
-  const hoy = new Date().toISOString().slice(0, 10);
+  // Ticket 1042: para un pedido YA tomado la vigencia se mide contra la fecha
+  // del pedido (fechaRef), no contra hoy. Si no, un pedido tomado con campaña
+  // viva se pintaba a precio de lista en cuanto la campaña vencía, y la
+  // pantalla dejaba de cuadrar con el total guardado y con la factura.
+  // Sin fechaRef (catálogo, carrito en curso) se sigue midiendo contra hoy.
+  const hoy = fechaDeReferencia(fechaRef);
   return hasta >= hoy;
 }
 
+/** YYYY-MM-DD de la fecha dada, o de hoy si no viene o no se puede leer. */
+export function fechaDeReferencia(fechaRef?: string | Date | null): string {
+  if (fechaRef) {
+    const texto = fechaRef instanceof Date ? fechaRef.toISOString() : String(fechaRef);
+    const soloFecha = texto.slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(soloFecha)) return soloFecha;
+  }
+  return new Date().toISOString().slice(0, 10);
+}
+
 /** Precio efectivo CON IVA de la fila: el rebajado si la campaña vive, si no el de lista. */
-export function precioEfectivoDeFila(fila: PrecioTipoCliente): number {
-  return descuentoVigente(fila)
+export function precioEfectivoDeFila(fila: PrecioTipoCliente, fechaRef?: string | null): number {
+  return descuentoVigente(fila, fechaRef)
     ? Number(fila.precioDescuentoConIva)
     : Number(fila.precioConIva) || 0;
 }
@@ -69,11 +84,11 @@ export function precioEfectivoDeFila(fila: PrecioTipoCliente): number {
  *
  * Devuelve el producto intacto si el cliente no tiene fila para ese tipo.
  */
-export function aplicarPrecioDeLista(producto: any, tipoClienteId: string | null | undefined): any {
+export function aplicarPrecioDeLista(producto: any, tipoClienteId: string | null | undefined, fechaRef?: string | null): any {
   const fila = filaDeTipoCliente(producto, tipoClienteId);
   if (!fila || !(Number(fila.precioConIva) > 0)) return producto;
 
-  const hayDescuento = descuentoVigente(fila);
+  const hayDescuento = descuentoVigente(fila, fechaRef);
   const conIva = hayDescuento ? Number(fila.precioDescuentoConIva) : Number(fila.precioConIva);
   const tarifa = Number(fila.porcentajeIva) || 0;
   const sinIva = hayDescuento

@@ -81,3 +81,84 @@
   font-size: 12.5px;
   color: $goe-muted;
 }
+
+// Ticket 1059: transporte y manejo
+.goe-cargos {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid $goe-chip-border;
+  border-radius: 11px;
+  background: $goe-chip-bg;
+
+  &__titulo {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: $goe-muted;
+    margin-bottom: 8px;
+  }
+  &__fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    @media (max-width: 480px) { grid-template-columns: 1fr; }
+  }
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: $goe-ink;
+  }
+  &__input {
+    display: flex;
+    align-items: center;
+    height: 38px;
+    padding: 0 10px;
+    background: #fff;
+    border: 1px solid $goe-chip-border;
+    border-radius: 10px;
+    &:focus-within { border-color: $goe-accent; }
+    b { color: $goe-muted; font-weight: 600; margin-right: 6px; }
+    input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 13px;
+      color: $goe-ink;
+    }
+  }
+  &__nota {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: $goe-muted;
+  }
+  &__cambios {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    li {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: $goe-warn-bg;
+      color: $goe-ink;
+      font-size: 12px;
+      i { color: $goe-warn; margin-top: 2px; }
+      &.is-bloqueado {
+        background: $goe-danger-bg;
+        i { color: $goe-danger; }
+      }
+    }
+  }
+}

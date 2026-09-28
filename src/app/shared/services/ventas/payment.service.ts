@@ -16,7 +16,7 @@ import {
   Preferencia,
   Tarjeta,
 } from "../../../components/ventas/modelo/pedido"; // Importar tipos necesarios
-import { forkJoin, map, Observable, of, switchMap, catchError } from "rxjs"; // Importar operadores RxJS
+import { forkJoin, map, Observable, of, switchMap, catchError, firstValueFrom, take } from "rxjs"; // Importar operadores RxJS
 import {
   calcularTotalesCanonico,
   baseExcluidaCanonica,
@@ -28,6 +28,14 @@ import {
 import { AuthService } from "../firebase/auth.service";
 
 declare var WidgetCheckout: any;
+
+/**
+ * Tickets 1055/1056 (ALMACEN BOMBAS): la tarifa de IVA llega como número (19) en
+ * 936 de sus 1.247 productos, y como "0.00"/"0.0" en otros comercios. El desglose
+ * comparaba contra el texto exacto ("19", "0"), así que esas líneas sumaban al
+ * total de IVA pero no a ninguna fila: "Iva 19%" salía en $0. Se normaliza la clave.
+ */
+export const claveTarifaIva = (tarifa: any): string => String(Math.round(Number(tarifa) || 0));
 
 @Injectable({
   providedIn: "root",
@@ -427,7 +435,9 @@ export class PaymentService extends BaseService {
         // cobra, que es el mismo que ya usa checkPriceScale (aplicarPrecioDeLista
         // lo dejó en producto.precio.precioUnitarioSinIva). Leer el de lista aquí
         // inflaba el IVA y el total cuando la lista tenía campaña vigente.
-        precioConIvaItem = Number(precioEfectivoDeFila(precioCategoria)) || 0;
+        // Ticket 1042: la vigencia se mide contra la FECHA DEL PEDIDO, no contra
+        // hoy; si no, un pedido tomado en campaña sube de IVA cuando ésta vence.
+        precioConIvaItem = Number(precioEfectivoDeFila(precioCategoria, (pedido as any)?.fechaCreacion)) || 0;
         porcentajeIvaItemStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaUnitario;
         // No aplicar precios por volumen cuando hay precio por categoría
       }
@@ -515,7 +525,7 @@ export class PaymentService extends BaseService {
       // Acumular solo si valorIvaItem es un número válido
       if (!isNaN(valorIvaItem)) {
         totalPrecioIVADef += valorIvaItem;
-        switch (porcentajeIvaItemStr) {
+        switch (claveTarifaIva(porcentajeIvaItemStr)) {
           // Acumular valor con descuento si es un número válido
           case "0":
             totalExcluidosDef += isNaN(valorTotalConIvaProductoConDesc)
@@ -565,7 +575,7 @@ export class PaymentService extends BaseService {
 
           if (!isNaN(ivaAdicion)) {
             totalPrecioIVADef += ivaAdicion;
-            switch (porcentajeAdicionStr) {
+            switch (claveTarifaIva(porcentajeAdicionStr)) {
               case "0":
                 totalExcluidosDef += isNaN(valorAdicionConIvaConDesc)
                   ? 0
@@ -620,7 +630,7 @@ export class PaymentService extends BaseService {
 
             if (!isNaN(ivaPreferencia)) {
               totalPrecioIVADef += ivaPreferencia;
-              switch (porcentajePreferenciaStr) {
+              switch (claveTarifaIva(porcentajePreferenciaStr)) {
                 case "0":
                   totalExcluidosDef += isNaN(valorPreferenciaConIvaConDesc)
                     ? 0
@@ -678,7 +688,7 @@ export class PaymentService extends BaseService {
 
     if (!isNaN(ivaEnvio)) {
       totalPrecioIVADef += ivaEnvio;
-      switch (porcentajeIvaEnvioStr) {
+      switch (claveTarifaIva(porcentajeIvaEnvioStr)) {
         case "0":
           totalExcluidosDef += isNaN(costoEnvioConIva) ? 0 : costoEnvioConIva;
           break;
@@ -902,6 +912,44 @@ export class PaymentService extends BaseService {
     );
   }
 
+  /**
+   * Ticket 1053 (ALMACEN BOMBAS): getHtmlContent es sincrónico y, si los maestros
+   * todavía no han cargado (justo después de iniciar sesión), devuelve un aviso de
+   * "Cargando datos maestros..." EN LUGAR del pedido. Ese aviso quedaba fijo en la
+   * vista para imprimir y llegaba así en el correo al cliente.
+   *
+   * prepararMaestros() espera a que carguen (máx. 10 s); getHtmlContentAsync() arma
+   * el HTML ya con ellos y NUNCA devuelve el aviso: si siguen sin estar, devuelve
+   * null y el backend omite el correo en vez de mandar el aviso.
+   */
+  async prepararMaestros(): Promise<void> {
+    try {
+      await firstValueFrom(this.pedidoUtilService.waitUntilLoaded().pipe(take(1)));
+    } catch (_) { /* se decide abajo con lo que haya */ }
+    if (!this.maestros || Object.keys(this.maestros).length === 0) {
+      try {
+        this.maestros = await firstValueFrom(this.pedidoUtilService.getAllMaestro$().pipe(take(1)));
+      } catch (_) { /* getHtmlContent devolverá el aviso y se trata como "no listo" */ }
+    }
+  }
+
+  async getHtmlContentAsync(pedido: Pedido, isComanda: boolean = false): Promise<SafeHtml | null> {
+    if (!pedido) return null;
+    await this.prepararMaestros();
+    return this.sinEspera(this.getHtmlContent(pedido, isComanda));
+  }
+
+  /** true si el HTML es uno de los avisos de espera, no el pedido. */
+  esHtmlDeEspera(html: any): boolean {
+    const texto = html && (html.changingThisBreaksApplicationSecurity ?? html);
+    return typeof texto === 'string' && texto.includes('data-katuq-espera');
+  }
+
+  /** Para correos: un aviso de espera jamás se envía; se cambia por null. */
+  sinEspera(html: SafeHtml | null): SafeHtml | null {
+    return this.esHtmlDeEspera(html) ? null : html;
+  }
+
   // Método principal para generar el HTML del correo/comanda (sincrónico, mejorado)
   getHtmlContent(pedido: Pedido, isComanda: boolean = false): SafeHtml | null {
     if (!pedido) return null;
@@ -910,7 +958,7 @@ export class PaymentService extends BaseService {
     if (!this.pedidoUtilService.isMaestrosReady()) {
       console.warn("Maestros not ready for synchronous HTML generation");
       return this.sanitizer.bypassSecurityTrustHtml(
-        `<div class="alert alert-info text-center p-3">
+        `<div class="alert alert-info text-center p-3" data-katuq-espera="1">
           <div class="spinner-border spinner-border-sm me-2" role="status"></div>
           <span>Cargando datos maestros...</span>
         </div>`
@@ -928,7 +976,7 @@ export class PaymentService extends BaseService {
       });
 
       return this.sanitizer.bypassSecurityTrustHtml(
-        `<div class="alert alert-warning text-center p-3">
+        `<div class="alert alert-warning text-center p-3" data-katuq-espera="1">
           <h6>⚠️ Recargando datos maestros</h6>
           <p>Use getHtmlContentObservable() para mejor manejo asíncrono.</p>
         </div>`
@@ -943,7 +991,7 @@ export class PaymentService extends BaseService {
       );
       if (!this.allBillingZone) {
         return this.sanitizer.bypassSecurityTrustHtml(
-          `<div class="alert alert-warning text-center p-3">
+          `<div class="alert alert-warning text-center p-3" data-katuq-espera="1">
             <h6>⚠️ Zonas de facturación no disponibles</h6>
             <p>Los datos de facturación no están cargados.</p>
           </div>`
@@ -1312,8 +1360,9 @@ export class PaymentService extends BaseService {
         // correo y la comanda cobraran más caro que el checkout.
         porcentajeIva = precioCategoria.porcentajeIva?.toString() ?? producto?.precio?.precioUnitarioIva ?? "0";
         const tarifaFila = (Number(porcentajeIva) || 0) / 100;
-        const hayCampana = descuentoVigente(precioCategoria);
-        precioUnitarioConIva = Number(precioEfectivoDeFila(precioCategoria)) || 0;
+        // Ticket 1042: el pedido ya está tomado; la campaña se mide contra SU fecha.
+        const hayCampana = descuentoVigente(precioCategoria, pedido?.fechaCreacion as any);
+        precioUnitarioConIva = Number(precioEfectivoDeFila(precioCategoria, pedido?.fechaCreacion as any)) || 0;
         const sinIvaFila = hayCampana
           ? Number(precioCategoria.precioDescuento) || 0
           : Number(precioCategoria.precio) || 0;

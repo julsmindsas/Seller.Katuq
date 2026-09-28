@@ -25,13 +25,16 @@ export interface ErrorInventarioLeido {
 
 /** Extrae el mensaje del backend sin importar en qué campo venga. */
 export function mensajeDeErrorBackend(error: any): string {
-  return (
-    error?.error?.error ||
-    error?.error?.message ||
-    error?.error ||
-    error?.message ||
-    ''
-  ).toString();
+  // Ticket 1082: sin respuesta del servidor (reiniciándose en un despliegue, caído o
+  // sin internet) Angular entrega status 0 o un 502/503/504 sin texto, y el error es
+  // un ProgressEvent: mostrado tal cual salía "[object ProgressEvent]".
+  const status = Number(error?.status);
+  if (status === 0 || status === 502 || status === 503 || status === 504) {
+    return 'No hubo respuesta de Katuq. Espera un minuto y, antes de volver a guardar, revisa en el inventario si el cambio ya quedó.';
+  }
+  const texto = [error?.error?.error, error?.error?.message, error?.error, error?.message]
+    .find((t) => typeof t === 'string' && t.trim());
+  return texto || '';
 }
 
 export function leerErrorInventario(error: any): ErrorInventarioLeido {
@@ -54,4 +57,30 @@ export function leerErrorInventario(error: any): ErrorInventarioLeido {
     esNoInventariable,
     productoId: conId ? conId[1] : null,
   };
+}
+
+/**
+ * Ticket 1071: el backend nombra los productos por su id interno ("Stock insuficiente para
+ * producto FxXMzFMt9a5wlfQppPAP…"), que el usuario no reconoce en una lista de varios. Si el id
+ * es de una de las líneas que se intentó guardar, se cambia por su referencia y nombre.
+ * Devuelve HTML con el texto escapado y el producto en negrita.
+ */
+export function nombrarProductosEnError(
+  mensaje: string,
+  productos: { id: string; nombre: string }[],
+): { html: string; nombrados: string[] } {
+  const escapar = (t: string) =>
+    t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  let html = escapar(mensaje);
+  const nombrados: string[] = [];
+  for (const p of productos) {
+    if (!p.id || nombrados.includes(p.nombre)) continue;
+    // El id completo, no como pedazo de otra palabra (sin lookbehind: Safari viejo no lo soporta).
+    const id = new RegExp(`(^|[^\\w-])${escapar(p.id).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`, 'g');
+    const nuevo = html.replace(id, (_m, antes) => `${antes}<strong>${escapar(p.nombre)}</strong>`);
+    if (nuevo === html) continue;
+    html = nuevo;
+    nombrados.push(p.nombre);
+  }
+  return { html, nombrados };
 }

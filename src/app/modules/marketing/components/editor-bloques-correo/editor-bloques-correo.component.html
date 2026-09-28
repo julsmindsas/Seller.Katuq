@@ -1,0 +1,78 @@
+<div class="eb">
+  <div class="eb__vacio" *ngIf="!bloques.length">
+    Empieza con un título y un texto, y agrega los productos que quieres mostrar.
+  </div>
+
+  <div class="eb__bloque" *ngFor="let b of bloques; let i = index; let primero = first; let ultimo = last; trackBy: trackPorIndice">
+    <div class="eb__cabeza">
+      <span class="eb__tipo"><i class="fa {{ iconoDe(b.tipo) }}" aria-hidden="true"></i> {{ nombreDe(b.tipo) }}</span>
+      <div class="eb__acciones">
+        <button type="button" (click)="mover(i, -1)" [disabled]="primero" title="Subir" aria-label="Subir"><i class="fa fa-arrow-up"></i></button>
+        <button type="button" (click)="mover(i, 1)" [disabled]="ultimo" title="Bajar" aria-label="Bajar"><i class="fa fa-arrow-down"></i></button>
+        <button type="button" (click)="quitar(i)" title="Quitar" aria-label="Quitar" class="is-quitar"><i class="fa fa-trash-o"></i></button>
+      </div>
+    </div>
+
+    <ng-container [ngSwitch]="b.tipo">
+      <input *ngSwitchCase="'titulo'" class="eb__campo" [(ngModel)]="b.texto" (ngModelChange)="cambio()"
+             maxlength="140" placeholder="Llegaron los ramos de temporada" />
+
+      <ng-container *ngSwitchCase="'texto'">
+        <textarea class="eb__campo" rows="4" [(ngModel)]="b.texto" (ngModelChange)="cambio()" maxlength="2000"
+                  [placeholder]="placeholderTexto"></textarea>
+        <p class="eb__pista">Escribe <code>{{ '{' }}nombre{{ '}' }}</code> y cada persona verá su nombre.</p>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'imagen'">
+        <input class="eb__campo" [(ngModel)]="b.url" (ngModelChange)="cambio()" maxlength="1000" placeholder="https://… (dirección de la imagen)" />
+        <div class="eb__dos">
+          <input class="eb__campo" [(ngModel)]="b.alt" (ngModelChange)="cambio()" maxlength="120" placeholder="Qué muestra la imagen" />
+          <input class="eb__campo" [(ngModel)]="b.enlace" (ngModelChange)="cambio()" maxlength="1000" placeholder="https://… (a dónde lleva, opcional)" />
+        </div>
+      </ng-container>
+
+      <div class="eb__dos" *ngSwitchCase="'boton'">
+        <input class="eb__campo" [(ngModel)]="b.texto" (ngModelChange)="cambio()" maxlength="40" placeholder="Ver la colección" />
+        <input class="eb__campo" [(ngModel)]="b.enlace" (ngModelChange)="cambio()" maxlength="1000" placeholder="https://tutienda.katuq.com/…" />
+      </div>
+
+      <ng-container *ngSwitchCase="'productos'">
+        <input class="eb__campo" [(ngModel)]="b.titulo" (ngModelChange)="cambio()" maxlength="80" placeholder="Título de la sección (opcional)" />
+        <button type="button" class="eb__elegir" (click)="eligiendoProductos = i">
+          <i class="fa fa-th-large" aria-hidden="true"></i>
+          {{ (b.productoIds?.length || 0) ? 'Cambiar productos (' + b.productoIds?.length + ')' : 'Elegir productos' }}
+        </button>
+        <p class="eb__pista">Hasta 6. Salen con el precio y la promoción del momento en que se envía; los agotados no salen.</p>
+      </ng-container>
+
+      <ng-container *ngSwitchCase="'cupon'">
+        <div class="eb__dos">
+          <select class="eb__campo" [(ngModel)]="b.codigo" (ngModelChange)="cambio()" *ngIf="cupones.length; else sinCupones">
+            <option *ngFor="let c of cupones" [value]="c">{{ c }}</option>
+          </select>
+          <ng-template #sinCupones>
+            <input class="eb__campo" [(ngModel)]="b.codigo" (ngModelChange)="cambio()" maxlength="30" placeholder="CÓDIGO" />
+          </ng-template>
+          <input class="eb__campo" [(ngModel)]="b.texto" (ngModelChange)="cambio()" maxlength="160" placeholder="Usa este código y lleva 10 % menos" />
+        </div>
+        <p class="eb__pista" *ngIf="!cupones.length">Esta tienda no tiene cupones activos: créalo primero en el editor de la tienda o no funcionará.</p>
+      </ng-container>
+
+      <p class="eb__pista" *ngSwitchCase="'separador'">Una línea para separar secciones.</p>
+    </ng-container>
+  </div>
+
+  <div class="eb__agregar">
+    <span class="eb__agregar-label">Agregar</span>
+    <button type="button" class="eb__chip" *ngFor="let t of tipos" (click)="agregar(t.tipo)">
+      <i class="fa {{ t.icono }}" aria-hidden="true"></i> {{ t.nombre }}
+    </button>
+  </div>
+</div>
+
+<app-selector-productos
+  *ngIf="eligiendoProductos !== null"
+  [seleccionados]="bloques[eligiendoProductos]?.productoIds || []"
+  (confirmar)="productosElegidos($event)"
+  (cerrar)="eligiendoProductos = null"
+></app-selector-productos>

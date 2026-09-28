@@ -1,0 +1,138 @@
+@import '../../../../shared/styles/katuq-marketing';
+
+:host {
+  @include km-tokens;
+  display: block;
+}
+
+.eb {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__vacio {
+    padding: 18px;
+    border: 2px dashed var(--km-line2);
+    border-radius: var(--km-radius-sm);
+    color: var(--km-muted);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  &__bloque {
+    background: var(--km-surface);
+    border: 1px solid var(--km-line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__cabeza {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__tipo {
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--km-muted);
+
+    i { color: var(--km-accent); margin-right: 4px; }
+  }
+
+  &__acciones {
+    display: flex;
+    gap: 4px;
+
+    button {
+      width: 30px;
+      height: 28px;
+      border-radius: 9px;
+      border: 1px solid var(--km-line2);
+      background: var(--km-surface);
+      color: var(--km-muted);
+      cursor: pointer;
+
+      &:disabled { opacity: 0.4; cursor: not-allowed; }
+      &.is-quitar:hover { color: var(--km-red); border-color: var(--km-red-wash); }
+    }
+  }
+
+  &__campo {
+    width: 100%;
+    border: 1px solid var(--km-line2);
+    border-radius: 11px;
+    background: #faf9fe;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    color: var(--km-ink);
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--km-accent);
+      background: #fff;
+    }
+  }
+
+  &__dos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    @media (max-width: 640px) { grid-template-columns: 1fr; }
+  }
+
+  &__pista {
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--km-muted);
+
+    code { color: var(--km-accent); background: var(--km-accent-wash); padding: 1px 5px; border-radius: 6px; }
+  }
+
+  &__elegir {
+    @include km-btn-ghost;
+    align-self: flex-start;
+  }
+
+  &__agregar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 4px;
+  }
+
+  &__agregar-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--km-muted);
+    margin-right: 4px;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--km-line2);
+    background: var(--km-surface);
+    color: var(--km-ink2);
+    border-radius: 99px;
+    padding: 7px 12px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+
+    i { color: var(--km-accent); }
+    &:hover { border-color: #d9cffb; color: var(--km-accent); }
+  }
+}

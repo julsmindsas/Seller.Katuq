@@ -978,6 +978,14 @@ export class IntegrationsService {
     );
   }
 
+  /** Ticket 1052: vendedores activos de Siigo, para escoger el vendedor al facturar. */
+  getSiigoSellers(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/sellers`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
   /**
    * Obtener tipos de documento de Siigo
    */
@@ -1182,9 +1190,37 @@ export class IntegrationsService {
     if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
     if (options?.prefijoId) body.prefijoId = options.prefijoId;
     if (options?.dueDate) body.dueDate = options.dueDate; // D-042: vencimiento de crédito (yyyy-MM-dd)
+    // Ticket 1054: observaciones (orden de compra, notas) y retenciones elegidas.
+    if (options?.observaciones) body.observaciones = options.observaciones;
+    if (Array.isArray(options?.retenciones) && options.retenciones.length) body.retenciones = options.retenciones;
+    // Ticket 1052: vendedor y centro de costo elegidos en la ventana de factura.
+    if (options?.sellerId) body.sellerId = options.sellerId;
+    if (options?.costCenterId) body.costCenterId = options.costCenterId;
 
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order-async`,
+      body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Ticket 1074: vista previa de la factura (IVA, descuentos, retenciones, valor a pagar)
+   * con las mismas opciones de la ventana de factura. No emite nada.
+   */
+  previewAccountingInvoice(provider: string, orderId: string, options?: any): Observable<any> {
+    const body: any = { orderId };
+    if (options?.documentTypeId) body.documentTypeId = options.documentTypeId;
+    if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
+    if (options?.prefijoId) body.prefijoId = options.prefijoId;
+    if (options?.dueDate) body.dueDate = options.dueDate;
+    if (options?.observaciones) body.observaciones = options.observaciones;
+    if (Array.isArray(options?.retenciones) && options.retenciones.length) body.retenciones = options.retenciones;
+    if (options?.sellerId) body.sellerId = options.sellerId;
+    if (options?.costCenterId) body.costCenterId = options.costCenterId;
+
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/${provider}/invoices/preview`,
       body,
       { headers: this.getApiHeaders() }
     );
@@ -1206,6 +1242,14 @@ export class IntegrationsService {
    * Obtiene formas de pago disponibles en el proveedor contable.
    * Para World Office: GET /v1/accounting/world_office/payment-types
    */
+  /** Ticket 1054: impuestos del sistema contable (de aquí salen las retenciones). */
+  getAccountingTaxes(provider: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/${provider}/taxes`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
   getAccountingPaymentTypes(provider: string): Observable<any> {
     return this.http.get<any>(
       `${environment.urlApi}/v1/accounting/${provider}/payment-types`,

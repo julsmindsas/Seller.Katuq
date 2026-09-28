@@ -689,3 +689,15 @@ $font-family-primary:
         display: none;
     }
 }
+
+/* D-319: aviso al llegar del registro sin sesión abierta. Tema canónico. */
+.login-cuenta-creada {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border-radius: 11px;
+  background: #E6F7EE;
+  color: #1E874B;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+}

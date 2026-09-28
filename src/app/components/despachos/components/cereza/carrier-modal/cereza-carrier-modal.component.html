@@ -69,6 +69,51 @@
         </p>
       </div>
 
+      <!-- Ticket 1059: cargos que Cereza factura como líneas de la venta -->
+      <div class="goe-cargos">
+        <div class="goe-cargos__titulo">
+          Cargos que factura Cereza<span *ngIf="cantidadPedidos > 1"> (por pedido)</span>
+        </div>
+        <div class="goe-cargos__fila">
+          <label class="goe-cargos__campo">
+            <span>Transporte</span>
+            <span class="goe-cargos__input">
+              <b>$</b>
+              <input type="number" min="0" step="100"
+                     [(ngModel)]="transporte"
+                     (ngModelChange)="recalcularCambios()"
+                     [placeholder]="cantidadPedidos > 1 ? 'Envío de cada pedido' : '0'" />
+            </span>
+          </label>
+          <label class="goe-cargos__campo">
+            <span>Manejo</span>
+            <span class="goe-cargos__input">
+              <b>$</b>
+              <input type="number" min="0" step="100"
+                     [(ngModel)]="manejo"
+                     (ngModelChange)="recalcularCambios()"
+                     placeholder="0" />
+            </span>
+          </label>
+        </div>
+        <p class="goe-cargos__nota" *ngIf="cambios.length === 0">
+          Así como está, el pedido sale con el envío que ya tiene.
+        </p>
+        <ul class="goe-cargos__cambios" *ngIf="cambios.length > 0">
+          <li *ngFor="let c of cambios" [class.is-bloqueado]="c.facturado">
+            <i class="pi" [ngClass]="c.facturado ? 'pi-ban' : 'pi-exclamation-triangle'"></i>
+            <span *ngIf="!c.facturado">
+              <b>{{ c.nroPedido }}</b>: el total pasa de {{ formatoPesos(c.totalAnterior) }} a
+              <b>{{ formatoPesos(c.totalNuevo) }}</b>.
+              {{ c.diferencia > 0 ? 'Quedan ' + formatoPesos(c.diferencia) + ' por cobrar.' : 'Baja ' + formatoPesos(-c.diferencia) + '.' }}
+            </span>
+            <span *ngIf="c.facturado">
+              <b>{{ c.nroPedido }}</b> ya tiene factura electrónica: no se le puede cambiar el total.
+            </span>
+          </li>
+        </ul>
+      </div>
+
       <!-- Resumen de la elección -->
       <div class="goe-tr__resumen" *ngIf="seleccionada">
         <span class="goe-tr__resumen-icon"><i class="pi pi-check"></i></span>
@@ -83,7 +128,7 @@
       <div class="goe-tr__actions">
         <button type="button" class="goe-btn goe-btn--ghost" (click)="cancelar()">Cancelar</button>
         <button type="button" class="goe-btn goe-btn--primario"
-                [disabled]="!seleccionada"
+                [disabled]="!seleccionada || hayFacturadoConCambio || cargosInvalidos"
                 (click)="confirmar()">
           <i class="pi pi-send"></i>
           Despachar

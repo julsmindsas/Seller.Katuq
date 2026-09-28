@@ -187,10 +187,12 @@ export class PosOrderCreatorService {
   /**
    * Envía el email de confirmación con el número de pedido correcto
    */
-  private sendConfirmationEmail(order: any): void {
+  private async sendConfirmationEmail(order: any): Promise<void> {
     try {
-      // Generar HTML con el número de pedido CORRECTO que viene del backend
-      const htmlWithCorrectNumber = this.paymentService.getHtmlContent(order);
+      // Generar HTML con el número de pedido CORRECTO que viene del backend.
+      // Ticket 1053: espera los maestros y nunca manda el aviso de "Cargando…".
+      const htmlWithCorrectNumber = await this.paymentService.getHtmlContentAsync(order);
+      if (!htmlWithCorrectNumber) return;
 
       // Enviar email de confirmación
       this.ventasService.enviarCorreoConfirmacionPedido({

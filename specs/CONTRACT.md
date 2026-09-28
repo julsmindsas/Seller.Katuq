@@ -6433,6 +6433,383 @@ Nada lo detectó: `node --check` solo mira sintaxis y ningún test ejecuta `_pro
 
 Hoy: 82 archivos, 0 lecturas fuera de alcance.
 
+---
+
+## D-287 (2026-09-15) — Ciclo de vida del cliente: suspender deja de ser echar
+
+**Disparador.** Pedido del negocio: estados explícitos (prueba → activo → mora → suspendido → cancelado → eliminado), gracia configurable, suspensión en SOLO LECTURA que nunca borra datos, reactivación en un clic y pausa para clientes estacionales.
+
+### Lo que había, medido antes de tocar nada
+
+Censo de producción del 2026-09-15 sobre las **65 empresas**:
+
+| Campo | Realidad |
+|---|---|
+| `subscriptionStatus` | 61 `active`, 4 sin el campo. **Cero** trial, suspended o cancelled |
+| `activo` | 61 `true`, 2 `false`, **2 sin el campo** |
+| objeto `bloqueo` | **0** — el botón de bloquear con motivo nunca se usó |
+| gracia / fin de trial / cancelación | **0, 0, 0** |
+| `subscriptions` | 12 docs: 6 `pending_payment`, 3 `renewed`, **2 `suspended`**, 1 `active` |
+
+Dos conclusiones que cambiaron el diseño:
+
+1. **`subscriptionStatus` era decorativo**: nadie lo movió nunca de su valor por defecto. Eso permitió **reusarlo como campo canónico** ampliándole el vocabulario, en vez de inventar un tercer campo de estado.
+2. **La desincronía ya era real**: 2 suscripciones suspendidas y **ninguna empresa suspendida**. La suspensión ocurría en `subscriptions` y no llegaba ni al login ni a la consola.
+
+### La decisión
+
+Estado canónico = `companies.subscriptionStatus`, vocabulario `trial | active | past_due | suspended | paused | blocked | cancelled | deleted`. `activo` se conserva **derivado** y lo escribe el mismo que escribe el estado (`services/companies/cicloVida.js::camposParaEstado`), que es lo que impide que vuelvan a contradecirse. `blocked` existe para que las 4 empresas sin acceso de hoy **no cambien de comportamiento** al estrenar el ciclo.
+
+| Estado | Entra | Escribe | Se le cobra |
+|---|---|---|---|
+| En prueba | sí | sí | no |
+| Activo | sí | sí | sí |
+| En mora | sí | **sí** | sí |
+| Suspendido | **sí** | no | sí |
+| Pausado | sí | no | no |
+| Bloqueado / Cancelado / Eliminado | no | no | no |
+
+**En mora se sigue operando completo**: cortarle el negocio a alguien el primer día de retraso pierde al cliente y no cobra la deuda. **Un suspendido entra** a propósito: si no pudiera, tampoco podría consultar su información ni pagar para reactivarse.
+
+### La trampa que definió el guardia de solo lectura
+
+"Bloquear todo lo que no sea GET" **rompe la lectura**. En esta API hay 639 rutas mutantes, y **63 de esas rutas POST son lecturas disfrazadas**: `POST /v1/companies` es `getCompany`, `POST /v1/clients/search` busca, `POST /v1/orders/all/filter` lista. Un suspendido se habría quedado sin ver sus propios pedidos — exactamente lo contrario de lo prometido.
+
+Y al revés: **`POST /v1/orders/getnextConsecutive` se llama `getNextConsecutive` y escribe** (`controllers/orders.js:2836` hace `transaction.update` e incrementa el consecutivo). La clasificación se hizo leyendo controladores, no nombres.
+
+Por eso `tests/companies/soloLectura.test.js` incluye un **verificador que recorre los routers de verdad** y falla si aparece un POST con pinta de lectura sin clasificar. Sin él la lista envejece en silencio y el síntoma tarda meses en aparecer.
+
+### 423, no 403
+
+El rechazo es **423 Locked** con `code: 'TENANT_SOLO_LECTURA'`. Un 403 lo evalúa el interceptor como posible sesión inválida y **saca al usuario al login** — a un cliente suspendido eso lo deja sin poder ver por qué lo suspendieron ni pagar para salir. Ver el razonamiento de los tres 403 distintos en `http.interceptor.ts::esSesionInvalida`.
+
+Rutas siempre permitidas aunque esté en solo lectura, porque sin ellas queda encerrado: `/v1/subscriptions`, `/v1/billing`, `/v1/support`, cambio de contraseña y login.
+
+### Dónde vive
+
+El guardia se engancha **dentro de `middleware/auth.js`**, después de decodificar el token, no montado en `index.js`: el tenant que vale es el **firmado en el JWT**. Si se leyera del header `company`, un suspendido se destrabaría cambiando una cabecera. De paso cubre por construcción toda ruta autenticada, incluidas las que se agreguen después.
+
+El caché de estado por tenant (60 s) evita una lectura de Firestore por escritura; el endpoint que cambia el estado lo **olvida** al instante, que es lo que hace que "reactivar en un clic" se sienta inmediato.
+
+Si el guardia falla (Firestore caído), **deja pasar**: negar por error le corta el negocio a alguien que sí pagó, que es peor que dejar escribir a un suspendido un rato.
+
+### En la UI
+
+No hay módulo nuevo. En la consola de plataforma (dentro de Configuración de empresa), el botón del candado pasó a ser el botón de **Estado del cliente**: mismo lugar, ahora con selector de estados válidos, motivo obligatorio cuando se le quita acceso o escritura, y días de gracia pactados por empresa. El estado se muestra como chip en la fila y explicado en la ficha. Ámbar para "solo lectura", rojo solo para quien perdió el acceso: pintarlos igual hace creer que se dejó a alguien por fuera cuando no fue así.
+
+### Eliminación
+
+`deleted` **solo marca**. `puedeEliminar()` exige estado marcado a mano + retención cumplida (30 días por defecto), y aun así el borrado es manual y con exportación previa. **Nada se borra por falta de pago**, y el contract test afirma que ningún estado escribe un campo de borrado.
+
+### Lo que NO entró
+
+- **La automatización mora → suspensión no se encendió.** La maquinaria existe (`cronService.js:1125`, `BILLING_GRACE_DAYS`) pero los crones están apagados (`CRON_ENABLED != true`) y nunca han corrido: 0 fechas de gracia en producción. Encenderla debe empezar en modo "avisa pero no suspende".
+- El bypass por `x-api-key` (agentes internos) no pasa por el guardia: no lleva tenant firmado.
+
+### Hallazgo aparte
+
+**`DEL RANCHO GREEN` no tiene el campo `activo`** y el login exige `activo === true` explícito: sus **2 usuarios no pueden iniciar sesión** hoy, con el mensaje "La empresa se encuentra inactiva" y sin motivo. Se dejó **sin tocar** por decisión de la dueña del producto. Con el ciclo de vida al menos ya se ve en la consola como "Bloqueado" en vez de ser invisible.
+
+---
+
+## D-288 (2026-09-15) — Cortesía: las empresas de Katuq no son clientes morosos
+
+**Disparador.** Captura de "Cobros del mes" del 2026-09-14: **FLORECER, Prueba Onboarding Katuq Verificada, Julsmind y Mi Campo Verde** aparecían con *"Mensual · Base · $ 83.951 · LINK DE PAGO"*, exactamente igual que un cliente que debe plata. Son empresas de Katuq y demo: tienen premium, entran a todo, y no se les cobra ni mensual ni anualmente.
+
+### Por qué el sistema las trataba como clientes
+
+`isManualBillingCandidate` ya contemplaba la cortesía, pero solo de refilón: había que ponerle a la empresa un `premiumOrigen` de una lista (`promocion`, `regalo`, `gift`…) que nadie recordaba. Como las cuatro tenían `nextBillingDate`, caían en la única rama que quedaba: **cobro manual**.
+
+Y no había forma limpia de marcarlas:
+
+- **Bajarlas a freemium** les quita las funciones — justo lo que una demo tiene que poder mostrar.
+- **Marcarlas `premiumOrigen: 'promocion'`** las mete en `premiumPromocionalService`, que **las devuelve a freemium al vencer**. Una empresa de Katuq no puede caducar.
+
+### La decisión
+
+Campo propio y explícito: **`companies.cobroCortesia: true`** + `motivoCortesia`. Es sobre el COBRO, no sobre el plan, y por eso vive aparte de `subscriptionPlan`. La lógica quedó en un solo lugar, `subscriptionBillingUtils.esCortesia()`, que respeta además los orígenes viejos para no cambiarle el trato a nadie.
+
+Consecuencias, todas por esa única marca:
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Motor de facturación | cobro manual: factura + link de pago | queda `unmanaged`: no se le emite nada |
+| Columna Periodo | "Mensual" | **"Cortesía"** (el tercer valor pedido) |
+| Columna A cobrar | "$ 83.951" | "No se cobra" + el motivo en el tooltip |
+| Columna Renueva | "01 de oct · 17 d" | "No vence" |
+| Totales de Cobros | las sumaba | ya las excluía (`modoCobro !== 'cortesia'`) |
+| **Ingreso del mes** | **las sumaba** | **no las cuenta** |
+
+### El error de plata que apareció de paso
+
+`estimarEscalon` solo miraba `pagaPlan`, así que a las cuatro les asignaba escalón Base y **`sumarIngresoEstimado` las metía en "Ingreso del mes"**: la consola reportaba ~US$108 mensuales de ingreso que nadie iba a cobrar nunca. Ahora devuelve `aplica: false, motivo: 'cortesia'`.
+
+### Por qué "No se cobra" y no "$ 0"
+
+Un cero en esa columna se lee como *"este mes no vendió"*, y un monto tachado invita a cobrarlo igual. El monto que tendría queda en el tooltip, por si algún día hay que decidir cobrarle.
+
+### Cómo se marca
+
+Casilla **"No se le cobra (cortesía)"** en el editor de plan de la consola, junto al escalón y la periodicidad — donde vive el resto del acuerdo comercial. Se manda siempre (true o false) para poder **quitarla**: si solo viajara al activarla, no habría forma de volver a cobrarle a una empresa desde esa pantalla.
+
+Para las cuatro existentes: `scripts/marcar-empresas-cortesia.js` (con `--dry-run` por defecto; el dry-run del 15-09 encontró las 4, sin ambigüedad de nombre, las 4 en premium).
+
+### El hueco que apareció al verificar contra producción
+
+Marcadas las cuatro, la verificación mostró que **"Prueba Onboarding Katuq Verificada" seguía saliendo como `automatico`**: tiene **tarjeta inscrita y cobro recurrente** (en la captura: "TARJETA INSCRITA · Pagada"). Como `isAutomaticBilling` se evaluaba ANTES que la cortesía, el cron le habría cobrado la tarjeta de verdad aunque la pantalla dijera "Cortesía" — el peor de los dos mundos: silencio en la UI y cobro en el banco.
+
+Corregido en la raíz: `isAutomaticBilling` devuelve `false` para una empresa de cortesía. **Tener con qué cobrar no es lo mismo que tener que cobrar.** Verificado contra producción: las 4 quedan `auto=false, manual=false` (el motor no las toca) y CAFE ESCOBAR / OH MY STORE siguen en `manual=true`.
+
+Aplicado en producción el 2026-09-15 a los 4 documentos (`FLORECER`, `Prueba Onboarding Katuq Verificada`, `Julsmind`, `Mi Campo Verde`).
+
+### Segunda pasada: sacarlas de la lista y del resto de la consola
+
+Con la marca puesta no alcanzaba. Revisando la pantalla con las cuatro ya marcadas quedaban tres sitios diciendo lo contrario:
+
+1. **Seguían listadas en Cobros del mes.** Esa pestaña responde UNA pregunta —a quién hay que cobrarle este mes— y ellas no son parte de la respuesta: mezclarlas obliga a acordarse, fila por fila, de cuáles saltarse. Ahora la lista por defecto las excluye y aparece una tarjeta **"De cortesía"** que las muestra en un clic. No se esconden, se sacan de la respuesta.
+2. **La pestaña Empresas seguía mostrando el precio.** La fila decía *"Base · US$27 · cobra 1 de oct"* y la ficha *"Base · US$27 al mes · próximo cobro el 01 de oct de 2026, cobro mensual"*. Ahora: **"Cortesía · no se cobra"** en la fila, **· CORTESÍA** junto a PREMIUM en la ficha, y *"no vence · no se le cobra ni mensual ni anualmente"* donde iba la fecha.
+3. **`escalonTexto` las mandaba a la rama de freemium**, así que la ficha decía *"sin cobro · 15 pedidos al mes"* de una empresa **premium sin ningún tope**. Lo cierto es que no se le cobra, no que esté limitada.
+
+Y dos conteos que las incluían y no debían:
+
+- **`resolverRenovacion`** les devolvía la fecha de corte vieja, así que entraban en las tarjetas **"por vencer"** y **"vencidos"** — la lista de a quién perseguir por plata. Ahora no aplica.
+- **`computePlatformTotals`** las sumaba en `planesVencidos` por la misma razón.
+
+**De paso, un ahorro:** las de cortesía ya no entran al recálculo de montos de Cobros. Sumar los pedidos del mes de una empresa es lo más caro de esa pantalla (ALMARA: 348 s) y acá servía para llegar a un monto que nadie va a cobrar.
+
+---
+
+## D-289 (2026-09-15) — El ciclo de facturación: rango editable y prorrateo por salto de escalón
+
+**Disparador.** Al auditar el cobro antes de encender la facturación automática aparecieron dos cosas que facturan mal, y una decisión pendiente del negocio.
+
+### Lo que se midió antes de tocar nada
+
+De las 8 empresas premium, **solo 4 son clientes de pago** (CAFE ESCOBAR, ALMARA FELICIDAD, OH MY STORE, ALMACEN BOMBAS); las otras 4 son las de cortesía de D-288.
+
+- **Ninguna de las 4 tenía `billingPeriod`.** El código cae a `'monthly'`, así que a ALMACEN BOMBAS —que es anual— **se le habría cobrado mensual**, sin el 20% de descuento y sin cobrar los 12 meses de una.
+- **El precio se cobra `USD × TRM del día`**, no el `priceCOP` de la tabla. Con la TRM en $3.100, Base se cobra **$83.712** mientras la tabla dice **$108.000**: la tabla asume un dólar a $4.000 y está **23% desfasada**. No se usa para cobrar, pero quien la mire cree otra cosa.
+- **El escalón se mide sobre la venta CON IVA y CON flete** (`subtotal + impuesto`, envío incluido). Decisión del negocio: **se deja así**.
+
+### El rango del ciclo, ahora editable (`services/billing/cicloFacturacion.js`)
+
+El inicio del ciclo se deducía restándole un período al corte. Para un mensual da igual; **para un anual no**: el año contratado arranca el día que se acordó con el cliente. Ahora `companies.billingPeriodStart` lo fija a mano y manda sobre el calculado, con las dos fechas editables desde el editor de plan.
+
+Lo medido: con las mismas ventas de $360 M, un rango de 12 meses da un promedio mensual de **$30 M** y uno corrido de 4 meses da **$90 M** — tres escalones de diferencia.
+
+Falla suave a propósito: una fecha inválida o posterior al corte **no rompe el cobro**, se factura con el rango calculado y queda la advertencia. Un rango que no cuadra con el período se respeta pero se advierte: puede haber un acuerdo detrás.
+
+### El prorrateo (`services/billing/prorrateoEscalon.js`)
+
+**Antes:** quien se pasaba del tope el día 25 pagaba el escalón grande **por el mes entero**.
+**Ahora:** el período se parte en tramos por el día en que las ventas acumuladas cruzaron cada tope, y cada tramo se cobra al escalón que regía esos días.
+
+El tope de un período es `maxSalesCOP × meses` ($15 M en un mes de Base, $180 M en un año). Cruzarlo equivale exactamente a superar el tope con el promedio mensual —que es como se decidía el escalón al cierre—, así que **el escalón final no cambia**; lo que agrega es saber CUÁNDO se cruzó.
+
+**Verificado contra ventas reales de septiembre:**
+
+| Empresa | Ventas del mes | Escalón | Antes | Ahora | Diferencia |
+|---|---|---|---|---|---|
+| CAFE ESCOBAR | $8.886.650 | Base, sin saltos | $83.712 | $83.712 | $0 |
+| OH MY STORE | $142.469.361 | Impulso, **3 saltos** | $455.766 | **$353.451** | −$102.315 |
+
+OH MY STORE pasó por Base (6 días), Origen (2), Esencia (1) e Impulso (21). **Es menos ingreso para Katuq**: $102.315 en un cliente en un mes. Es el precio de cobrar justo, y el contract test garantiza que la regla nueva **nunca cobra más** que la vieja (probado en los 29 días posibles de salto).
+
+Decisiones que quedaron dentro:
+
+- **Se cobra todo junto en el corte**, no con un link a mitad de ciclo: 3 de los 4 clientes no tienen tarjeta y perseguir un segundo cobro en el mismo mes no funciona.
+- **Un escalón pactado no salta.** Se le prometió un precio cerrado y ese vale, venda lo que venda.
+- **Todos los tramos usan la TRM del ciclo.** Dos dólares distintos en una misma factura no se pueden explicar.
+- **En anual el 20% se aplica en cada tramo**, no solo en el primero.
+- **El reparto del redondeo va por residuo mayor**, para que las líneas sumen EXACTAMENTE el total: una factura que no cuadra consigo misma no se puede defender.
+- **Cumbre no se cobra sola** — se marca para acordar el precio en vez de facturar $0.
+- El desglose se guarda **en la factura** (`prorrateo.tramos`) y viaja congelado con `pricingLocked`, para que un reintento no genere una segunda explicación del mismo monto.
+
+### De paso: la proyección medía otro período
+
+`getCompanyBillingInfo` medía del **día 1 del mes calendario**, mientras la factura mide del corte anterior al corte. Con todos los cortes el día 1 coincidía por casualidad; a un cliente con corte el 15 la pantalla le proyectaba un período y la factura le cobraba otro. Ahora las dos usan `resolverRangoCiclo` y el mismo motor de prorrateo, así que la consola muestra lo que se va a cobrar.
+
+### Pendiente del negocio
+
+**La TRM está sin decidir.** Opción 3 (tasa congelada el día del corte, que ya es lo que hace el motor vía `pricingLocked`) contra tasa diaria. Mientras no se defina **no se toca la tabla de precios en pesos ni el aviso previo al cliente**.
+
+### D-289 · CORRECCIÓN (2026-09-15) — el prorrateo NO se aplica
+
+Presentadas las dos reglas con números reales, el negocio eligió **cobrar el escalón al que llegó, completo**:
+
+| Caso | Regla elegida | Prorrateado |
+|---|---|---|
+| Panadería, $50 M en el mes | Esencia · **$238.735** | ~$180.000 |
+| OH MY STORE, $284 M | Expansión · **$765.811** | $508.474 |
+
+**El argumento que decidió: con el escalón completo el cliente puede predecir su factura mirando la tabla de planes** ("vendí $50 millones, eso es Esencia, pago US$77"). Con el prorrateo la factura depende del día exacto en que cruzó cada tope — un dato que el comercio no tiene y no puede verificar, así que cada factura se vuelve una conversación.
+
+El motor prorrateado **se conserva completo y probado** detrás de `BILLING_PRORRATEO_ENABLED` (apagado). Encenderlo es una variable de entorno; con él apagado el cobro es exactamente el de siempre, `escalón × período`.
+
+**Lo que sí quedó de esta ronda, y era el aporte real:** el rango del ciclo editable (necesario para el anual de ALMACEN BOMBAS), la corrección de la proyección —que medía el mes calendario mientras la factura mide el ciclo— y las ventas caídas visibles en la ficha.
+
+### Tres confusiones que valieron la pena aclarar
+
+Quedan escritas porque volverán a aparecer:
+
+1. **No se cobra por día.** Es UNA factura el día del corte. El desglose por tramos era la forma de calcular ese único monto, no una serie de cobros.
+2. **Pagar tarde no cambia el monto.** La factura ya está emitida; si paga tres días después, paga esa misma factura. Los días de retraso no se trasladan a la factura siguiente. Lo que desencadena es la gracia y la suspensión (D-287), no un cobro extra. **Intereses de mora: decidido no implementarlos por ahora.**
+3. **"Se cobra en el siguiente corte" significaba "en la factura de ese mismo mes"**, no en la del mes siguiente. Nada se arrastra de un ciclo al otro.
+
+## D-290 (2026-09-15) — La ficha sumaba ventas que nunca se van a cobrar
+
+**Disparador.** La ficha de OH MY STORE mostraba **$187.209.253** y el cobro contaba **$142.469.361**. Dos pantallas, dos números, ninguna explicación: la conclusión razonable era que una de las dos estaba mal.
+
+### Las dos diferencias, medidas
+
+| Cifra | Qué mide |
+|---|---|
+| $187.209.253 | Últimos **30 días** (16-ago → hoy), sin descontar pedidos con el pago cancelado |
+| $160.081.632 | El **ciclo de cobro** (1-sep → hoy), sin descontar |
+| $142.469.361 | El ciclo de cobro, descontando lo no facturable |
+
+1. **Ventana distinta**: la ficha usa 30 días móviles; el cobro usa el ciclo (1-sep → 1-oct), que a mitad de mes va por la mitad.
+2. **37 pedidos por $17.612.270 con el pago cancelado.** El cobro los excluye —una venta caída no se factura—; la ficha no, porque solo mira `estadoProceso` y no `estadoPago` (limitación declarada en `companyMetrics`: usa agregaciones para no leer los documentos).
+
+Censo de los estados reales en las 4 empresas de pago: los únicos valores que excluyen son **`Cancelado`** y **`Rechazado`**, ambos en `estadoPago`. Ninguna tiene pedidos anulados por `estadoProceso`, así que **hoy toda la exclusión viene del pago**.
+
+### Lo que se hizo
+
+- La tarjeta ambigua pasó de "Facturado 30 días" a **"Vendido 30 días"**, con la nota *"todo lo que entró, sin descontar lo caído"*.
+- Tarjeta nueva **"No se cobra"**: valor y cuántos pedidos de cuántos.
+- Detalle bajo demanda (`GET /companies/:id/pedidos-excluidos`): cada pedido con número, fecha de venta, **fecha de caída**, días transcurridos, motivo y valor. Los caídos en un mes distinto al de la venta se marcan — son los que pudieron haberse contado en un cobro anterior.
+
+Va bajo demanda y consulta por `company + fechaCreacion >= desde`, que usa el índice existente: lee los cientos de pedidos de la ventana, no el histórico completo.
+
+### ⚠️ Deuda: no se guarda cuándo se anula un pedido
+
+Los pedidos **no tienen campo de fecha de anulación**. Lo más cercano es `date_edit`, la última edición del documento: coincide si nadie volvió a tocarlo y se corre si sí. La respuesta lo marca como `fechaAproximada` y la pantalla lo dice. El arreglo de fondo es escribir `fechaAnulacion` al cambiar el estado, en `controllers/orders.js`.
+
+Dato de paso: en OH MY STORE las 37 caídas se cancelaron **dentro del mismo mes** (máximo 13 días después), y la mayoría el mismo día, en bloque.
+
+## D-291 (2026-09-15) — El precio queda en dólares, y las pantallas lo dicen
+
+**Decisión del negocio:** el precio de los planes **se mantiene en dólares**, convertido con la TRM oficial del **día del corte**, que queda fija para esa factura. Con eso se destrabaron tres cosas que estaban esperando.
+
+### 1. La tabla de precios en pesos dejó de mentir
+
+El `priceCOP` de `config/subscriptionLimits.js` es un número escrito a mano que asume el dólar a $4.000. Con la TRM en $3.100 decía **$108.000** donde se cobran **$83.712** — 23% de diferencia entre la pantalla y la factura. Ahora `getCompanyBillingInfo` devuelve cada escalón con `priceCOPEstimado` calculado con la TRM viva y marcado como aproximado. El precio contractual sigue siendo el de dólares; el de pesos es una conversión y se presenta como tal.
+
+### 2. "Ingreso del mes" pasó a pesos
+
+La tarjeta mostraba dólares (`US$1.200`), que no dice nada hasta convertirlo. Ahora va en pesos con la TRM del día —la misma con la que se factura— y el pie muestra los dólares y la tasa usada. Si la fuente oficial no responde, `trm: null` y la tarjeta vuelve a dólares: **nunca una conversión inventada**. La TRM se cachea 6 horas en memoria porque la consola se recarga muchas veces al día y el valor oficial cambia una.
+
+### 3. El aviso previo (`services/billing/avisoPrevioCorte.js`)
+
+Correo N días antes del corte (3 por defecto, `BILLING_AVISO_PREVIO_DIAS`) con tres datos: cuánto vendió, en qué escalón quedó y cuánto se le cobraría — **marcado como estimado**, con la TRM de hoy y la advertencia de que el valor definitivo se fija el día del corte.
+
+Esa advertencia no es letra chica: es la razón de ser del aviso. Mandar un monto "en firme" que después cambia es peor que no avisar, y el contract test falla si el correo no la trae.
+
+Guardas: **dos llaves para enviar** (el flag `BILLING_AVISO_PREVIO_ENABLED` y el `--enviar` del script), ensayo por defecto, y no se avisa dos veces del mismo corte — la marca se compara contra la fecha del corte, no contra "hace cuánto se avisó", para que un aviso viejo no tape el del ciclo siguiente. Se marca **después** de enviar: al revés, un fallo de correo se tragaría el aviso de ese corte para siempre. Freemium y cortesía quedan fuera: avisarles de un cobro que no existe es la peor clase de correo.
+
+Ensayo del 15-09: a las 4 empresas les faltan 16 días para el corte, así que hoy no le toca a nadie. El 28 de septiembre les tocaría a las cuatro.
+
+### La ficha: la resta ya viene hecha
+
+Las dos tarjetas de D-290 obligaban a restar a mano para saber sobre qué se cobra. Se unificaron en una sola tarjeta con la cuenta armada como en una factura:
+
+```
+Vendió en 30 días        $187.209.253
+Ventas caídas (37)      − $19.236.871   [ver cuáles]
+─────────────────────────────────────
+Base del cobro           $167.972.382
+```
+
+Si el detalle no se pudo leer, la tarjeta dice que **puede incluir ventas caídas** en vez de afirmar un número limpio que no lo es.
+
+---
+
+## D-292 (2026-09-17) — La secuencia de renovación: cinco correos, un solo cron
+
+El aviso previo de D-291 era **uno solo** (3 días antes). Pasa a ser la secuencia completa: **7 y 3 días antes, el día del corte, y +3 y +7 después**.
+
+**Por qué no arranca a 15 días** (se propuso y se descartó el mismo día): el ciclo de cobro va del corte al corte, así que a 15 días apenas se vendió la mitad del período. El escalón y el monto estimado saldrían calculados sobre medias ventas y el cliente vería cerca de la mitad de lo que va a pagar. Un estimado que se equivoca por el doble es peor que no avisar. A 7 días ya transcurrió ~77% del ciclo y a 3 días ~90%.
+
+### Los dos lados del corte no son lo mismo
+
+- **Antes** el correo **informa**: cuánto vendiste, en qué escalón quedaste, cuánto te va a llegar (estimado, con la advertencia de la TRM de D-291). Mandarlo nunca hace daño.
+- **Después** el correo **cobra**. Y ahí está la decisión que hace esto seguro: **los tres posteriores exigen factura emitida y sin pagar**. Se consulta `billing_invoices` por el id determinístico del ciclo (`empresa_AAAAMMDD`) — un `get` por id, sin query ni índice. Sin factura → no sale nada. Factura `paid`, `custom`, `cancelled` o `void` → tampoco.
+
+Eso permite dejar la secuencia encendida **mientras el motor de cobro sigue apagado**: como nunca se ha emitido una factura real, los avisos de mora simplemente no disparan. Y cuando se encienda, no puede perseguir a quien pagó por transferencia —que hoy es como pagan 9 de cada 10 clientes— porque una factura conciliada queda en `paid`. Si la lectura de la factura falla, se trata como saldada: ante la duda, no se cobra.
+
+### Los avisos atrasados no se acumulan
+
+Si la pasada diaria no corrió por unos días y hoy faltan 2 para el corte, sale **solo** el de 3 y el de 7 se da por servido (viaja en `vencidos` y se marca sin enviarse). Tres correos seguidos el mismo día por una caída nuestra parecen un error del sistema, que es lo contrario de lo que un aviso de cobro debe transmitir. En mora manda el hito **más reciente alcanzado**, no el más viejo: el correo que corresponde es "van 7 días", no "vence hoy".
+
+Pasados 7 días del último hito (`DIAS_TOLERANCIA_MORA`) el correo automático se calla: a esa altura o está en gestión humana o algo pasó con la fecha de corte.
+
+### La marca pasó de una fecha a un objeto
+
+Antes `avisoPrevioCorte` guardaba la fecha del corte ya avisado. Ahora `avisosCorte: { corte, previos: [], mora: [] }` marca **por hito**, sin lo cual el segundo correo de la secuencia no tendría cómo saber que el primero ya salió. Se sigue comparando contra la **fecha del corte** y no contra "hace cuánto se avisó", para que un corte corrido no quede tapado por la marca vieja. La marca vieja se sigue leyendo: si una empresa ya recibió su aviso de ese corte, se dan por servidos todos los previos.
+
+### Un cron, no seis
+
+`CRON_SCHEDULES.avisosRenovacion` (8:00 Bogotá, `BILLING_AVISO_CRON_SCHEDULE`) hace **una** pasada diaria que evalúa los cinco hitos y manda como mucho un correo por empresa. Va **después** del job de facturación de las 7: si ese día se emitió la factura, el aviso del día del corte ya la encuentra y puede mandar el monto en firme en vez de callarse.
+
+Candado propio (`BILLING_AVISO_PREVIO_ENABLED`) **aparte** del de facturación, bajo el maestro `CRON_ENABLED`: avisar no mueve plata, así que puede encenderse mucho antes que el motor de cobro.
+
+### Configuración y pruebas
+
+- `BILLING_AVISO_PREVIO_DIAS` pasó de un número a una lista (`"7,3"`). La configuración vieja de un solo número sigue valiendo.
+- `BILLING_AVISO_MORA_DIAS` (`"0,3,7"`); lista vacía apaga ese lado del corte.
+- El calendario vive puro y aparte en `services/billing/calendarioAvisos.js` — se prueba entero sin Firestore.
+- 38 pruebas verdes en `npm run test:aviso-previo` (11 del aviso previo original + 17 del calendario + 10 de la secuencia). `npm run avisos:corte` sigue siendo el ensayo y ahora muestra qué hito le tocaría a cada empresa.
+
+**Costo:** cero. Es SMTP propio (`notificaciones@katuq.com`), una corrida diaria sobre las 65 empresas y un `get` por id solo cuando hay que cobrar. Nada de esto toca ninguna pantalla.
+
+### Cómo se prueba (agregado 2026-09-17)
+
+Tres modos en `scripts/avisar-corte-proximo.js`, pensados para verificar la entrega **sin escribirle a un cliente**:
+
+- `--vista-previa` escribe los **cinco** correos de una empresa a archivos HTML con sus datos reales. No envía, no marca, no necesita SMTP. Los tres de cobro salen con el monto proyectado (la factura de ese ciclo no existe todavía) y el nombre del archivo lo declara.
+- `--a tu@correo.com` manda **de verdad** el correo que hoy corresponde, con los datos reales de la empresa, pero a la dirección que se le pase. **No marca hitos** — si los marcara, una prueba se comería el aviso que el cliente tenía que recibir, y hay un contract test que lo sostiene. No exige `BILLING_AVISO_PREVIO_ENABLED`: el destinatario es uno solo y lo eligió quien corre el comando.
+- `--solo "EMPRESA"` limita cualquiera de los modos a una empresa.
+
+El ensayo ahora además **muestra a qué buzón le llegaría** a cada una, que es la pregunta que siempre aparece antes de encender esto.
+
+### Dos cosas que estaban rotas y aparecieron al probar
+
+1. **`info.billingEmail` no existe.** El destinatario era `emailFactuElec || emailContactoGeneral || info.billingEmail`, y `getCompanyBillingInfo` **nunca devuelve** `billingEmail`: ese tercer intento era siempre `undefined`. Una empresa que solo tuviera cargado `correoElectronico` quedaba fuera con "sin correo de facturación" aunque la factura sí le llegara. Ahora el aviso usa **el mismo resolvedor que la factura** (`billingService._resolveBillingEmail`, ocho campos en orden fijo), inyectado como dependencia para que los tests sigan sin tocar Firestore.
+2. **El script no leía el `.env`.** No cargaba `dotenv`, así que corriéndolo a mano se ignoraban los hitos configurados y, sobre todo, `SMTP_PASS` — no habría salido un solo correo y el motivo habría sido invisible.
+
+---
+
+## D-293 (2026-09-17) — Los avisos se verifican desde la pantalla, no desde los logs
+
+D-292 dejaba el rastro de los envíos en el documento de la empresa y en los logs del servidor. Para el Super Administrador eso equivale a no tener nada: la pregunta real es *"¿le llegó el correo a este cliente?"* y no había dónde mirarla.
+
+### Dónde va: columna "Avisos" en Cobros del mes
+
+Los **cinco casilleros van siempre**, enviados o no (`−7 −3 día0 +3 +7`), en verde los que ya salieron. Un casillero vacío al lado de uno lleno dice en qué punto de la secuencia está cada empresa; una lista de solo lo enviado no. Al pasar el mouse por cada uno: *"Enviado el 24 sept 8:02 a pagos@ohmystore.co"*, o *"Sin enviar · sale 3 días antes del corte"*.
+
+**No cuesta una sola lectura más.** El registro vive en el documento de empresa que esa pantalla ya carga para armar la fila, así que viaja gratis. Tampoco toca `VERSION_CALCULO`: el campo no pasa por el caché de montos, se lee del documento en cada respuesta.
+
+Los días de cada casillero **no están escritos en el front**: el backend manda `hitosAvisos` una vez por respuesta (no por fila). Si mañana se cambian los días por variable de entorno, la columna los sigue sola.
+
+### La palabra "hito" se queda, con su explicación
+
+Es la que usan el código, el script y los logs; cambiarla en la pantalla habría dejado dos vocabularios para lo mismo. Va explicada una vez en el encabezado de la columna: *"Un hito es cada momento en que se manda un correo: −7 es siete días antes del corte, día 0 es el día del vencimiento, +3 es tres días después."*
+
+### El registro se reinicia con cada corte
+
+`avisosCorte.historial` guarda hito, tipo, fecha y destinatario, **por ciclo**: al cambiar la fecha de corte arranca vacío. Así la consola responde "qué pasó con ESTE cobro" sin que el documento de empresa crezca sin fin. Tope de 12 entradas por si algo se desboca.
+
+### De paso: dos columnas que se leían mal
+
+- **Empresas — "Última venta" y "Último ingreso"** mostraban solo "hace N d". Ahora va la **fecha** arriba y el relativo abajo (`hoy`, `ayer`, `hace 12 días`). "Hace 0 días" no distinguía esta mañana de anoche, y "hace 412 días" no se entiende hasta convertirlo a fecha mentalmente.
+- **Cobros — "A cobrar"** mostraba solo pesos. Ahora lleva el **dólar debajo**, porque el precio del plan está en dólares y sin eso un mismo escalón parece cambiar de precio cada mes. El dólar **se deriva del monto en pesos con la misma TRM que lo produjo** (`COP = round(USD × TRM)`), no de la tabla de precios: tomarlo de la lista los haría discrepar justo en los casos que importan —período anual, escalón pactado, cobro prorrateado— y ahí es donde alguien "corrige" el número que estaba bien. Sin TRM no se pinta nada: inventar la conversión sería peor.
+- **El correo que muestra Cobros del mes** usaba `emailFactuElec || emailContactoGeneral`, el mismo desajuste que D-292 corrigió en el aviso: podía mostrar una dirección distinta a la que recibe el cobro. Ya usa el resolvedor de la factura.
+
+39 pruebas verdes en `npm run test:aviso-previo`.
+
+---
+
+
 ## D-287 (2026-09-16) — Los filtros del backlog de Support: a la vista y sin reventar con tickets sin asignar
 
 **Disparador.** Revisión de la app de Support con Daniel: la lista de tickets "parece scroll infinito, no tiene flechitas de páginas" y "los filtros horribles, no se entiende bien".
@@ -6733,23 +7110,420 @@ Pendientes del mismo hilo, en orden: mover una sección a otra página, arrastra
 
 ---
 
-## D-302 (2026-09-23) — Filtro "sin foto" del catálogo de Productos: la lógica está bien, el cache-miss del índice tarda 45-79s (OH MY STORE, 8.533 productos)
+## D-302 (2026-09-21) — El aviso de renovación avisa de la FECHA, no del monto; y los documentos de cobro llevan el logo de verdad
 
-**Disparador.** Ticket real: "Al usar el filtro de 'productos sin foto' en el catálogo, no carga correctamente. Se espera que el filtro muestre únicamente los productos que no tienen imagen asignada".
+**Disparador.** Revisión de la vista previa de los correos con la dueña del negocio. Dos observaciones: *"la factura debe ir con el logo de la empresa, en el ejemplo se ve feo"* y *"no sé si sea prudente que el cliente sepa que se le cobra según la TRM; eso es algo interno nuestro"*.
 
-**Diagnóstico (read-only, contra Firestore real).** El filtro `sinFoto` (D-282, `controllers/productos.js::getAll`) filtra correctamente: `Controller.getAll({company:"OH MY STORE", sinFoto:"true"})` devuelve 32 productos, idénticos 1:1 a un conteo crudo aparte (sin caché) sobre `imagenesPrincipales`/`imagenesSecundarias` vacíos. No hay bug de datos.
+### Decisión 1 — Se quita la explicación del dólar y la TRM
 
-El problema real es el costo de reconstruir `getSearchIndex(company)` cuando el caché (TTL 5 min) vence: escanea todo el catálogo de la empresa. Medido dos veces contra producción real: **45-79s en frío, ~0.85s en caliente** (~90x). `getSearchIndex` es compartido por 10+ filtros in-memory de `getAll` (categoría, completitud, canal, tipoEntrega, tiempoEntrega, adiciones, calendario, precio manual, rango de precio, sort), `quickSearchProducts`, `searchIndexLookup` y la tool MCP `search_products` — no es un defecto exclusivo de `sinFoto`, pero es el filtro que más sesiones largas genera hoy (OH MY STORE subiendo fotos faltantes, navegando varias páginas, cruzando el TTL de 5 min entre una y otra).
+El aviso previo tenía un recuadro que explicaba que el precio del plan está en dólares, mostraba la TRM del día y advertía que el valor definitivo podía cambiar.
 
-**Nota de contexto.** El propio commit D-282 registra que nunca se verificó en navegador por falta de credenciales — este ticket es, con toda probabilidad, el primer uso real end-to-end.
+**Se quitó entero.** Cómo se calcula el precio es maquinaria nuestra; explicarle la conversión al cliente lo invita a discutir el dólar en vez del servicio.
 
-**Decisión.** Propuesta OpenSpec (repo backend, CLI no instalado en esta máquina — artefactos creados a mano siguiendo el patrón de `fix-volumen-tier-base-siempre-gana`): `openspec/changes/optimizar-cache-indice-productos/`. Diseño recomendado: **stale-while-revalidate** en `getSearchIndex()` — dos umbrales (`SOFT_TTL` 5 min sirve caliente, `HARD_TTL` 60 min sirve stale de inmediato y refresca en segundo plano, más allá de `HARD_TTL` vuelve a bloquear), con guard para no disparar refrescos duplicados si llegan varias consultas mientras uno está en curso. `invalidateSearchIndex` (ya existente, dispara en cada create/edit/delete de producto) sigue invalidando de inmediato sin cambios — "stale" nunca significa desincronizado con una edición real. Se evaluó y descartó denormalizar un campo indexable en Firestore (ej. `tieneImagen` + índice compuesto): requeriría backfill de escritura sobre 8.500+ productos y solo resolvería `sinFoto`/`completitud`, no los otros 8 filtros in-memory con el mismo cuello de botella.
+**No es esconder nada**, y esto es lo que hizo la decisión fácil: la pantalla `/billing` que ve el propio comercio **ya muestra el precio en USD, una tarjeta "TRM del Día" y una columna "Precio USD"** en la tabla de planes. Quien quiera el detalle lo tiene. El correo simplemente deja de ser el lugar donde se cuenta.
 
-**Sin código tocado todavía** — proposal + design + specs delta + tasks creados, pendiente `/opsx:apply` con autorización explícita. Cero escrituras en esta sesión, todo el diagnóstico fue solo lectura.
+### Decisión 2 — El correo pasa a ser un recordatorio de FECHA
 
-**Fuera de alcance.** No se confirmó si producción tiene un timeout de proxy/gateway (nginx u otro) que corte la petición antes de responder — no hay acceso SSH a la instancia real desde esta sesión.
+Antes abría con *"Tu próxima factura"* y el peso caía en el monto. Ahora abre con **"Se acerca tu fecha de pago"**, y los días que faltan van destacados arriba de todo.
+
+El párrafo que advertía que el valor podía moverse **también se quitó**, a pedido expreso: sembraba duda justo en el momento en que el cliente no tiene nada que hacer al respecto.
+
+**Pero la fila conserva la palabra "estimado".** Una palabra, no un párrafo. El monto SÍ puede cambiar y no por el dólar: **el escalón sale de las ventas del período y el comercio sigue vendiendo esos 7 días**. Un salto de escalón mueve el monto mucho más que la TRM. Con esa palabra, si llega distinto no hay reclamo; sin ella, el correo prometió un número.
+
+Tres pruebas nuevas fijan la decisión y fallan si alguien vuelve a colar la palabra TRM, la palabra dólar o el párrafo de advertencia.
+
+### Decisión 3 — El logo viaja DENTRO del correo, nunca como URL
+
+`services/branding/katuqLogo.js` (nuevo) es el único lugar que sirve el logo, en tres formas: adjunto embebido para correo, banda oscura lista para encabezar, y base64 para pdfmake.
+
+**Va con `cid:` y no con `<img src="https://...">` por dos razones:**
+
+1. Gmail y Outlook **bloquean las imágenes remotas por omisión**. Un logo remoto se ve como un recuadro vacío hasta que el cliente pulsa "mostrar imágenes", y la primera impresión de una cuenta de cobro no puede depender de eso.
+2. **Ya está pasando.** `services/cronService.js` manda cuatro correos con `https://app.katuq.com/assets/img/logo.png`, y **esa ruta no existe**: no hay carpeta `src/assets/img` en el front. Es el mismo tropiezo de `assets/img/placeholder.png` en Productos.
+
+Se usa la versión de letras blancas (`katuq-dark.png`) y por eso **siempre va sobre banda oscura**; sobre fondo blanco sería invisible. La versión turquesa existe pero queda floja. Un solo archivo para los cuatro documentos. **Si el archivo falta, cada plantilla vuelve a escribir "KATUQ" como texto**: facturar no se puede caer por una imagen.
+
+Quedó en el PDF de la cuenta de cobro y en los tres correos de facturación (aviso previo, día del corte, mora). De paso el aviso previo dejó de ser texto suelto: ahora tiene encabezado y el cuerpo va en una tarjeta con borde, como el de cobro.
+
+### Los 4 correos de `cronService.js` NO se tocaron — están muertos
+
+`sendPaymentLinkEmail`, `sendPaymentReminder`, `sendGracePeriodWarning` y `sendSuspensionEmail` se llaman **únicamente** desde `initSubscriptionCheckJob()`, que está comentado en `cronService.js:107` y tiene una **prueba de contrato que exige que siga apagado** (*"el cron legacy con precios fijos debe permanecer desactivado"*).
+
+Nunca le han llegado a nadie. Ponerles el logo sería maquillar código que no corre y, peor, hacerlo parecer vivo.
+
+Además **duplican la secuencia nueva**: renovación, recordatorio, gracia y suspensión, con `subscription.amount` fijo — un monto que ya no significa nada desde que el precio se deriva de las ventas. Si alguien reactivara ese job, el cliente recibiría dos tandas de correos por el mismo cobro, con cifras distintas. Borrarlo es una tarea aparte que exige verificar que `enforceExpiredPlans` cubra todo lo que hacía.
+
+### Estado
+
+7 baterías de pruebas de facturación verdes. **Nada de esto está desplegado**, y hay algo peor: los commits del **jueves 17** que traen toda la secuencia de avisos (`3358a87` en el back, `9312a37f` en el front) **nunca se pushearon** — se commitearon a las 17:25 y quedaron en el disco, mientras los del 18 y 19 sí subieron. El servidor de producción todavía no sabe que estos correos existen.
 
 ---
+
+## D-305 (2026-09-21) — Mover una sección a otra página se hace eligiendo, no arrastrando
+
+**Contexto.** Con las páginas propias (D-295) no había forma de pasar un bloque de "Inicio" a "Nosotros" sin rehacerlo. Arrastrarlo no sirve: el editor solo muestra una página a la vez.
+
+**Decisión.** "Mover a otra página" en la barra flotante y en la lista de secciones, solo cuando el sitio tiene más de una página. Un diálogo elige el destino y ofrece **copiar en vez de mover**. El editor salta a la página destino con la sección elegida, para que se vea dónde quedó. En el inicio entra antes del pie; en una página propia, al final. **Encabezado y pie no se mueven**: las páginas propias los heredan del inicio, y moverlos dejaría al inicio sin menú y a la otra página con dos.
+
+---
+
+## D-306 (2026-09-21) — Una foto se suelta donde se quiere ver
+
+**Contexto.** Subir una foto era ir al panel, encontrar el campo correcto entre 220 controles y elegir el archivo. En Wix se arrastra desde el escritorio y se suelta sobre la sección.
+
+**Decisión.** Soltar una imagen sobre una sección de la vista previa la sube y la pone donde corresponde según el tipo: fondo en la portada, una más en galería, banner e Instagram, logo en marcas, la foto en imagen, promo y popup. En cualquier otra sección se vuelve **fondo de la sección con velo**, para que el texto siga legible. Mientras la foto está en el aire, la sección se resalta y dice "Suelta la foto aquí". Solo se aceptan imágenes, y el arrastre propio de las secciones no se confunde con un archivo. Reusa la misma subida (con variantes) del panel.
+
+---
+
+## D-307 (2026-09-21) — Todas las listas del panel se reordenan arrastrando
+
+**Contexto.** Los enlaces del encabezado y del pie, las preguntas frecuentes, las reseñas, las columnas, los botones, los puntos de retiro y los cupones no se podían reordenar; los banners, solo con flechitas.
+
+**Decisión.** Las nueve listas del panel reciben la misma mecánica que las secciones: asa de puntos, arrastre y hueco punteado donde cae. Una sola función `soltarLista` sirve para todas. Las flechitas de los banners se van. Con esto se cierra el hilo de arrastre (D-299, D-305 a D-307); queda fuera redimensionar con asa, que es el más caro porque cada bloque decide distinto qué significa "más grande".
+
+---
+
+## D-308 (2026-09-21) — Estirar una sección con el asa, por escalones
+
+**Contexto.** El alto de la portada, del banner, del separador y el tamaño de una imagen se cambiaban con un desplegable en el panel. Era el último gesto que faltaba del hilo de arrastre (D-299, D-305 a D-307).
+
+**Decisión.** Un asa en el borde inferior de esas cuatro secciones, visible al pasar el mouse, que al arrastrar cambia de escalón cada 60 px. **Por escalones y no por píxeles libres**, a propósito: el sitio publicado no guarda alturas en píxeles — las decide con clases que además se adaptan al celular. Un asa de píxeles daría una libertad que el render no puede honrar, y el comerciante vería una cosa en el editor y otra publicada. Los desplegables del panel siguen ahí: quien prefiera elegir por nombre, puede.
+
+Con esto se cierra el hilo de arrastre completo (D-299, D-305 a D-308).
+
+---
+
+## D-309 (2026-09-21) — Reseñas de compradores verificados, con colección propia
+
+**Contexto.** El bloque "reseñas" era texto que escribía el propio comerciante. No es prueba social: el comprador nuevo distingue un testimonio a mano de la opinión de alguien que compró, y esa diferencia decide la primera venta de una tienda que empieza.
+
+**Decisión.** **Solo reseña quien compró**: no hay formulario abierto, el candado es un enlace firmado por pedido y por producto que llega por correo cuando el pedido pasa a entregado, y sirve una sola vez. El comerciante **modera y responde, pero no escribe**: puede publicar, ocultar y contestar; cambiar el texto o las estrellas las volvería otra vez un testimonio suyo, y la petición ignora esos campos aunque vengan. La ficha muestra las publicadas con el sello de compra verificada, y la nota entra al dato estructurado para las estrellas de Google — solo con reseñas reales, porque inventarla hace que Google castigue el sitio entero.
+
+**Colección nueva `reviews`, aprobada explícitamente por Daniel** (la regla del proyecto lo exige). Las consultas usan solo filtros de igualdad y ordenan en memoria, para no pedir un índice compuesto nuevo. `orders.js` e `inventoryService.js` quedaron intactos: el enganche cuelga de `orderNotificationService.notifyStatusChange`.
+
+**Pendiente**: el panel del comerciante para moderar desde el editor, y la prueba con un pedido entregado real.
+
+Propuesta: `openspec/changes/tienda-resenas-compradores/`.
+
+## D-310 (2026-09-22) — Las tiendas publicadas hablan el idioma de Google, de Meta y de los asistentes de IA
+
+**Contexto.** Auditando qué necesitaba Baudio para posicionar su tienda salió que el motor de las páginas publicadas le hablaba mal al buscador. Cada categoría (`/c/chocolates`) declaraba como canónica a la portada, así que Google no indexaba ninguna; tenía título genérico ("Todos los regalos") y no tenía H1. La portada se declaraba como 8 productos con precio y la ficha como 9 (el suyo más los relacionados), sin marca, sin descripción, sin envío y sin miga de pan. No había organización (quién vende, sus redes, su contacto) ni `llms.txt`. Y la ficha **nunca** mandaba "vio el producto", así que el remarketing dinámico de Meta y de Google Ads no tenía de qué alimentarse.
+
+**Decisión.** El dato estructurado sale del render, no lo escribe el comerciante: **OnlineStore/Organization** con logo, redes (`sameAs`), contacto y razón social aparte de la marca; **WebSite** en la raíz; en la ficha, **UN Product** completo (descripción, todas las fotos, marca, condición, vendedor, envío solo si es tarifa fija —con tarifas por ciudad no hay un número único y uno inventado es peor que ninguno—) más **BreadcrumbList**; las vitrinas y el catálogo se dicen como **ItemList** de enlaces a sus fichas. Cada categoría tiene su canónica `/c/<categoría>`, título "Categoría · Tienda", H1 y descripción propios; una categoría que no existe da **404** (solo si la consulta respondió: un error pasajero no es un 404). Búsquedas y filtros llevan `noindex,follow` y **sin canónica**, porque "no me indexes, pero la buena es aquella" es una señal contradictoria. La ficha se comparte como `og:type=product` con precio, disponibilidad y `product:retailer_item_id` = el mismo id del feed y del píxel; la pestaña dice "Producto · Tienda"; la descripción se corta en 160 caracteres en palabra entera. La ficha dispara `view_item` (Meta `ViewContent` con `content_ids`; Google Ads con `id` y `google_business_vertical`). **`/llms.txt`** cuenta la tienda a los asistentes de IA desde lo publicado (envío, pagos, retiro, categorías, páginas, feed, contacto), con su handle en Caddy.
+
+Verificado con datos reales de FLORECER renderizando contra Firestore de producción en solo lectura. 280 pruebas en verde.
+
+## D-311 (2026-09-22) — Toda empresa nace viendo "Mis páginas"
+
+**Contexto.** La plantilla del rol Administrador al registrarse no traía el constructor de sitios; lo agregaba la recomendación de módulos de la IA, que está caída desde el 3-sep. Resultado: 8 empresas registradas desde entonces no veían el constructor, entre ellas **Baudio**.
+
+**Decisión.** `sitios` entra a los menús base del registro (`controllers/diagnostics.js`). Para las ya registradas sirve el script que ya existía desde el lanzamiento del constructor, `scripts/backfill-menu-sitios.js` (ensayo en seco por defecto, `--empresa` para una sola): se aplicó **solo a Baudio**; las otras seis (Recarga gamer, Estructuras Infinity, Bejarano Corradine, Granja las Nubes y dos de prueba) quedan a decisión de Daniel. Miniconcept no tiene rol Administrador y se revisa a mano.
+
+## D-312 (2026-09-23) — Pago abandonado: la tienda le recuerda al comprador, y el pago en línea por fin encuentra su pedido
+
+**Contexto.** Daniel pidió recuperar el pago abandonado (quien llegó a Wompi y no pagó). Revisando el camino del pago salieron tres defectos de producción, ninguno visto porque ninguna tienda había cobrado en línea: (1) **las transacciones de un enlace de Wompi traen una referencia propia** (`<enlace>_<fecha>_<azar>`, 188 de 188 eventos reales) y el pedido de tienda no guardaba el enlace, así que ningún webhook lo encontraba: el comprador pagaba y el barrido **anulaba el pedido a los 60 minutos**; (2) **`/gracias` respondía 404** desde el 2-sep (Caddy empezó a mandar la ruta y se tomaba como página propia): quien pagaba veía "Página no disponible" y el píxel no contaba la compra; (3) un pago **rechazado** dejaba la mercancía apartada para siempre.
+
+**Decisión.** El pedido guarda TODOS sus enlaces (`pagoTienda.linkIds`) y el pago se ubica primero por enlace —único; el número de pedido no lo es: su prefijo son las 3 últimas letras de la empresa y todas las "…SAS" numeran `SAS-000001`—. Al volver a `/gracias` el servidor consulta la transacción a Wompi y concilia si el enlace es del pedido; el cambio de estado va en transacción y un evento viejo no tumba un pago aprobado. **Recordatorio**: tarea cada 5 min con candado `PAGO_PENDIENTE_CRON_ENABLED` que escribe UNA vez, entre los 20 y 55 min, a quien no pagó o le rechazaron el pago; el botón va a `/pagar` de la tienda (firmado), que mira el estado al abrirse. Lo pagado después del recordatorio queda marcado (`recuperadoPorRecordatorio`, evento `pago_recuperado`). Canal: **correo**; WhatsApp necesita plantilla aprobada por Meta y va en otra fase. Sin colecciones nuevas; `orders.js` e `inventoryService.js` intactos.
+
+**Pendiente de aprobación de Daniel**: el desvío de 36 líneas en `controllers/integration.js` (webhook de pagos de todos los canales) que le entrega a la tienda los pagos de enlace que no son de venta asistida. Sin él, el pago se concilia solo cuando el comprador vuelve a la tienda. El candado del recordatorio se enciende después de ese desvío.
+
+Propuesta: `openspec/changes/tienda-pago-abandonado/` (backend). Backend `33ccd75`.
+
+## D-314 (2026-09-23) — El MCP se parte por audiencia, no por dominio, y Opttia queda blindado con prueba
+
+**Contexto.** Daniel pidió separar el MCP en uno interno y otro para los comercios, con la condición de no afectar a Opttia. Revisando el reparto real aparecieron dos cosas que no eran de catálogo sino de autorización: `list_support_agents` no filtraba por empresa, así que cualquier comercio conectado listaba la mesa de ayuda de Katuq con nombres y correos del equipo (dos de ellos personales); y un comercio con permiso de escritura podía actualizar su propio ticket, ponerlo en Resuelto y reasignarlo a un agente de Katuq, porque la verificación era "el ticket es tuyo o tienes visión total" y ser dueño alcanzaba.
+
+**Decisión.** El corte es por **audiencia**, no por dominio. Cada herramienta declara `ambas` (el default, 49 de 51) o `interno`; el catálogo no le lista las internas a un comercio y la ejecución las rechaza aunque tenga el permiso, en el mismo punto único donde ya viven el aislamiento por empresa y los permisos. Los tickets **no** son un dominio interno: el comercio los abre y responde, así que listar, leer, comentar y adjuntar evidencia de los suyos siguen en `ambas`. Internas quedan dos: la nómina de la mesa de ayuda y el cambio de estado/responsable.
+
+**Por qué no dos servidores, todavía.** Un endpoint interno aparte es la versión física de lo mismo y cuesta otro cliente de OAuth, otro conector registrado en Claude y otro camino que probar en cada despliegue. Queda como propuesta para después de la feria; la metadata de audiencia es el insumo que necesita igual. El problema de tamaño de catálogo (51 herramientas en un solo conector, que ya le pesa al modelo para elegir) es un eje distinto y se resuelve extendiendo el mismo campo a dominio, sin multiplicar endpoints.
+
+**Cómo queda blindado Opttia.** Opttia pide sus herramientas por nombre (las listas de ventas, inventario, logística, escritura de pedidos, facturación y reportes del ADK) y ninguna es de soporte; su llave de servicio resuelve la empresa a la delegada, o sea audiencia de comercio. La prueba recorre esa lista de 29 nombres y falla si alguna deja de estar visible para un comercio: marcar por error una herramienta de Opttia como interna ya no la dejaría sin avisar, rompería el test. Verificado además que la app de Support no pasa por el MCP (escribe por REST) y que nada más en el backend llama esas dos herramientas.
+
+Commit `0a41139`, **ya en producción** (entró por el pull de otra sesión el 23-sep: la unidad de despliegue es la rama). Verificado en vivo contra `api.katuq.com`: las herramientas responden con credencial de la operadora, el registro cargó las 51 y el endpoint sigue cerrado sin token. 8 pruebas nuevas; las 16 del tablero y las pantallas siguen verdes.
+
+Numerada D-314 y no D-313 porque el commit del carrito abandonado ya había citado D-313 en git, y la historia publicada no se reescribe por algo cosmético.
+
+## D-313 (2026-09-23) — Carrito abandonado, y el comercio por fin ve quién le dejó sus datos
+
+**Contexto.** No existía el carrito abandonado. Y al diseñarlo salieron dos cosas: (1) **`/v1/prospectos` estaba abierto** —sin sesión, y leyendo la colección entera de TODAS las empresas; también crear, editar y "generar datos de prueba"—. Hoy vacía, pero ahí caen el formulario de contacto y el "Avísame" de las tiendas: con el primero, cualquiera en internet los habría leído. (2) **El comercio no tenía dónde ver esos contactos**: se guardaban y nadie los miraba.
+
+**Decisión.** Se cierra `/v1/prospectos` (sesión obligatoria, empresa firmada en el token, listado por empresa, 404 para lo de otra) **antes** de guardar el primer carrito. El carrito vive como prospecto (`tipo: "carrito-abandonado"`, uno por comprador y tienda, sin colección nueva): se guarda al pasar sus datos al resumen, se cierra (o se borra si el comercio no lo tocó) al confirmar, y a la hora sale UN correo con la marca de la tienda y "Volver a mi carrito" (enlace firmado que SUMA lo que falte al carrito de ese navegador; reemplazarlo borraba lo que tenía, visto en la prueba en vivo). Máximo uno por día; vence al día. "Cómo va tu página" gana **Tus contactos** (formulario, Avísame y carritos, con WhatsApp con el mensaje escrito) y la cifra de lo **recuperado** por los recordatorios. Candado `CARRITO_ABANDONADO_CRON_ENABLED` (encendido en prod el 23-sep tras ensayo en seco).
+
+Propuesta: `openspec/changes/tienda-carrito-abandonado/` (backend). Backend `91d54f4`, front `2026.09.23.1`.
+
+## D-315 (2026-09-23) — El registro le avisa a Meta cuándo alguien se registra de verdad
+
+**Contexto.** Las campañas de pauta en Meta optimizaban `cta_click`: clic en cualquier botón de katuq.com, incluido "Ingresar". La de Nextech gastó $28.215 en dos días con 206 clics (198 de Audience Network, clic accidental en apps de terceros) y trajo un solo registro, que quedó en revisión. La de moda apunta directo a `sellercenter.katuq.com/registrarse`, que no tenía píxel: Meta no podía ver ni la visita ni el registro.
+
+**Decisión.** `MetaPixelService` carga el píxel KATUQ PIXEL **solo en la página pública de registro** (nunca en el panel del comercio) y solo en producción. Manda `PageView` al abrirla y `CompleteRegistration` cuando el registro queda aprobado; los que el anti-abuso deja en revisión NO se le cuentan a Meta, para no enseñarle a traer más de esos. Los `utm_*` y `fbclid` del anuncio viajan con el registro (`origenCampana`) y quedan en `surveyResponses`, que ya guarda el cuerpo completo: se cruza pauta contra registros desde Katuq sin depender de Meta. Sin cambios en el backend.
+
+**Después.** Cambiar el evento de optimización de las campañas a `CompleteRegistration`, excluir Audience Network a nivel de cuenta y juntar el público general (video Nextech) y el de moda en una sola campaña con presupuesto compartido (~$25.000/día).
+
+## D-316 (2026-09-23) — Promociones automáticas en las tiendas: 2x1, porcentaje y por volumen
+
+> Los commits de esta decisión dicen **D-315** (backend `acea75c`, front `3022c62f`): dos sesiones tomaron el mismo número en paralelo y D-315 quedó registrada para el píxel de Meta en el registro. Esta es la D-316.
+
+**Contexto.** La tienda solo tenía cupones (el comprador escribe un código). Faltaban las promociones que se aplican solas, las que más se usan: 2x1, "15% en chocolates", precio por volumen.
+
+**Decisión.** `tienda.promociones[]` (hasta 20): `nxm` (lleva N paga M del mismo producto), `porcentaje`, `volumen` (X% desde N unidades de lo que cubre); alcance toda la tienda / categorías / productos; vigencia y activa. **Las calcula siempre el servidor** con la regla guardada y su precio. A cada línea UNA promoción, la que más rebaja (no se acumulan entre sí); el cupón se suma encima; tope 90%. Entran por el mismo camino del cupón (`porceDescuento`, lo único que honran los dos calculadores de pedidos) y el pedido guarda cuáles fueron (`promocionesTienda`). El carrito cotiza en el servidor (`POST /public/:slug/cotizar`) y muestra cada promoción; la ficha lleva la insignia; confirmación y correo la nombran. Editor: sección "Promociones automáticas" junto a los cupones. Venta asistida y POS sin cambios (money-path 26/26, promo-line 12/12).
+
+**Pendiente**: insignia en las tarjetas del catálogo (hoy solo en la ficha) y 2x1 entre productos distintos.
+
+## D-317 (2026-09-23) — El comercio personaliza los correos de su tienda (sin cambiar el remitente)
+
+**Contexto.** Daniel: que el comercio personalice los correos de su página web; el remitente puede seguir siendo notificaciones@katuq.com y los correos de Katuq siguen estándar. Los 6 correos al comprador tenían textos fijos, no se podían apagar ni previsualizar, y el pie prometía "responde este correo" cuando la respuesta le llegaba a Katuq.
+
+**Decisión.** `tienda.correos`: diseño (color de botones, pie propio, correo al que llegan las respuestas) y por correo: si sale, asunto, título y mensaje con `{nombre} {pedido} {tienda} {total}`; vacío = el texto de siempre. Las líneas del sistema (estado del pago, tabla, guía, botón de pago; el correo de pago RECHAZADO) no se editan. Todo lo del comercio va escapado: nunca HTML. El remitente no cambia: se agrega `replyTo` al correo del comercio, y sin esa opción `enviarEmail` hace lo mismo que antes. Editor: sección "Correos de tu tienda" con vista previa (iframe con sandbox, pedido de ejemplo) y "Enviarme una prueba" al correo de la sesión, una cada 20 s. **La sección solo aparece si el backend responde `/v1/sites/correos/predeterminados`**: si el front sale antes, un backend viejo descartaría la configuración al guardar. De paso: el color salía de `tema.primario`, que no existe (`colorPrimario`).
+
+**Estado**: listo en las dos ramas (backend `685eea0`, front `cc472f40`), **sin desplegar por decisión de Daniel: después de la feria**, junto con la tanda del MCP de la otra sesión. Orden: backend primero, luego front.
+
+**Actualización 2026-09-23 16:32 UTC — el backend quedó en producción sin haberlo decidido esta sesión.** Daniel le pidió a la otra sesión desplegar el MCP y el `git pull` se llevó la rama entera (prod en `326bccc`, que tiene `685eea0` debajo): otra vez la unidad de despliegue es la rama. Verificado en prod a las 16:40 UTC: los 6 correos se arman bien con el Node de producción (color de la tienda, sin llaves sin llenar; apagar un correo y el asunto propio se respetan); portada, `/llms.txt`, `robots`, `sitemap` y `feed.xml` en 200 sin ETag (sin el 304 que rompía el nonce); `/pagar` con firma mala y `/gracias` sin pedido dan 404 a propósito, y `/gracias?pedido=` da 200; los endpoints nuevos y `/v1/prospectos` responden 401 sin token; cero errores de sitios o correos en el log desde el despliegue. Lo que ya cambió para los compradores: los correos salen con el color de la tienda y las respuestas le llegan al comercio (`contacto.email` del sitio) en vez de a Katuq. **El front con la sección NO ha salido** (el bundle publicado no la trae): los comercios todavía no pueden configurar nada. Ojo: como el backend ya responde, el próximo release del front desde `feature/venta-asistida-mejorada` la enciende.
+
+## D-318 (2026-09-23) — Campañas de correo y remarketing de las tiendas (APROBADA el 23-sep; en ramas feature/campanas-correo)
+
+**Contexto.** Daniel: "poder enviar y hacer remarketing" por correo. Las tiendas ya juntan contactos (compradores, carritos, "Avísame", boletín), pero no hay envío masivo, ni autorización de publicidad, ni baja; el boletín guarda correos a los que nadie les escribe. La única difusión existente es la de WhatsApp en el módulo Marketing (D-092, D-096, D-098).
+
+**Hallazgos que condicionan todo (verificados el 23-sep):**
+1. Los correos transaccionales de `notificaciones@katuq.com` fallan la verificación de remitente: SPF `softfail` (el SPF no incluye a Google), DKIM solo con el dominio genérico `gappssmtp.com` y **DMARC `fail`**. Los reportes DMARC van a `lovable.dev`. Esto afecta HOY la entrega de confirmaciones de pedido y pago de todos los comercios; se arregla en DNS y en la consola de Google (Daniel).
+2. SES está en producción en la cuenta 011528299077 (`us-east-1`), pero aprobado para Red de Acopio como "solo transaccional, nunca publicidad". No se usa para campañas de Katuq.
+3. La política de privacidad que se genera para las tiendas declara que los datos se usan "únicamente" para el pedido: escribir publicidad sin una autorización nueva va contra la Ley 1581 de 2012.
+
+**Propuesta** (`openspec/changes/campanas-correo-tiendas/`):
+- autorización expresa por tienda, con evidencia, y baja de un clic;
+- campañas en el módulo Marketing, con segmentos, bloques, vista previa, prueba, horario legal, métricas y ventas atribuidas;
+- envío por un proveedor masivo detrás de una interfaz (SES por SMTP en una cuenta propia de Katuq, recomendado), desde `novedades.katuq.com`, con cupos, calentamiento, pausa automática e idempotencia;
+- fase 2: "Volvió", "Bienvenida" y "Te extrañamos".
+
+Pide aprobar **tres colecciones nuevas**: `email_campaigns`, `email_usage` y `email_subscribers`. Registra una excepción al Artículo IX: Angular 14 no tiene signals ni `@if`, así que se sigue el estilo del módulo.
+
+**Estado**: propuesta escrita y validada; **no se implementa nada hasta que Daniel la apruebe y responda las 6 preguntas abiertas del diseño**. El prerrequisito de DNS (hallazgo 1) vale por sí solo, haya o no campañas.
+
+**Aprobada por Daniel el 2026-09-23:**
+- la propuesta completa, con las tres colecciones;
+- el proveedor es **MailerSend** (por su API, con el `fetch` de Node 20 y sin dependencias nuevas);
+- los cupos: 500 al mes en el plan gratis y 5.000 en premium, tope de 5.000 por campaña, sin cobro.
+
+El subdominio `novedades.katuq.com` y el remitente con el nombre de la tienda se toman como vienen. **Se despliega después de la feria.** Para que el despliegue del MCP de otra sesión no se lo lleve antes de tiempo (como pasó con los correos personalizables), el código vive en ramas propias, `feature/campanas-correo`, en el backend y en el front, y no en `backend-aws-security`.
+
+## D-319 (2026-09-24) — Límites del plan gratis en las tiendas (versión "más agresiva", APROBADA)
+
+**Contexto.** Daniel: que el plan gratis deje operar la tienda con límites "medio agresivos"; luego eligió la versión **más agresiva** y que, al llegar al tope de pedidos, el checkout pase a WhatsApp. Hallazgo: **los pedidos de la tienda no cuentan en el tope de 15 al mes del plan gratis** (solo `/v1/orders/create` usa `validateOrderLimit`), así que hoy se vende sin límite por la tienda. Medición en producción (solo lectura, 24-sep): 64 empresas gratis y 10 premium, y ninguna gratis tiene tienda publicada. Los límites no le rompen nada a nadie hoy.
+
+**Propuesta** (`openspec/changes/limites-plan-gratis-tiendas/`). En gratis:
+- 1 tienda publicada, sin dominio propio y con el sello "Hecho con Katuq";
+- 50 productos visibles;
+- los pedidos de la tienda cuentan en los 15 del mes, y al tope el checkout pasa a "Pídelo por WhatsApp";
+- 3 páginas, 1 cupón, 1 promoción y 1 punto de retiro;
+- sin recordatorio de carrito abandonado (el pago abandonado sí), sin reseñas y con los correos al comprador estándar;
+- campañas: 1 al mes de hasta 200 personas (baja desde los 500 de D-318), y del remarketing automático solo "Volvió";
+- sin catálogo para pauta ni conversiones de anuncios;
+- métricas solo del día;
+- Opttia, 3 páginas al mes.
+
+La regla: el límite cae sobre el comercio, nunca sobre el comprador; ningún pedido cobrado se rechaza.
+
+**Estado**: **APROBADA por Daniel el 2026-09-24**: los 50 productos visibles son los más recientes, y el diff del checkout se aprobó a la vista.
+
+Implementada en las ramas `feature/campanas-correo`: backend aaf6cf9 y 4b7c713, front 1ee60562. Todas las pruebas en verde. **Sale después de la feria**, junto con las campañas de correo.
+
+La prueba de punta a punta se hace en ATELIER 90 (demo de moda autorizada), pasándola a gratis durante la prueba y devolviéndole después su plan. El cupo gratis de las campañas quedó en 200 al mes (antes 500, D-318).
+
+**Fusión en las ramas principales (2026-09-25, pedido de Daniel):** las campañas de correo (D-318) y los límites del plan gratis (D-319) quedaron en `backend-aws-security` (74baa62) y en `feature/venta-asistida-mejorada` (13840645). **Todavía no están desplegados**: sale con el próximo despliegue de cualquier sesión, y ya se les avisó a las sesiones que despliegan.
+
+Al salir:
+- en las 3 tiendas publicadas aparecen la casilla de autorización, la política de privacidad con la sección de novedades y la página /baja;
+- los límites solo aplican a freemium, y hoy ninguna empresa gratis tiene tienda publicada;
+- las campañas no envían nada sin MailerSend ni con `EMAIL_CAMPAIGNS_ENABLED` apagada.
+
+Al desplegar se verifican las tiendas (portada, checkout, /pagar, /baja, llms.txt).
+
+**DESPLEGADO el 2026-09-25 a las 18:03 UTC** (backend 74baa62, aprobado por Daniel). El front 2026.09.25.3, que otra sesión publicó desde la punta de la rama, ya traía las pantallas, así que ahora front y backend coinciden.
+
+Verificado en producción:
+- FLORECER y ATELIER 90 responden 200 en portada, llms.txt, robots y sitemap;
+- la casilla de autorización está en el checkout y el sello no sale en las tiendas premium;
+- `/baja` sin token muestra "Este enlace no funciona" y con un token válido muestra la página de la tienda (CSP estricta, sin dar de baja a nadie);
+- los endpoints nuevos responden 401 sin sesión o sin firma;
+- no hay errores nuevos en el log.
+
+## D-320 (2026-09-24) — Facturación SIIGO: Katuq se adapta al tipo de factura de cada comercio; el vendedor se escoge al facturar (ticket 1052, APROBADA y desplegada)
+
+**Contexto.** El reintento de BAS-000016 (ALMACEN BOMBAS) fue rechazado por SIIGO con `document_settings / seller`. Sus 3 tipos de factura electrónica, uno por sede, manejan **vendedor por ítem** y **exigen centro de costo**. En sus 205 facturas reales el pago es **base + IVA − retenciones**. ALMARA y OH MY STORE no tienen esas opciones en su tipo de factura.
+
+**Decisión de Daniel:**
+- Katuq soporta cómo tenga cada comercio configurado SIIGO; no se le pide al comercio cambiar su forma de trabajar.
+- El **vendedor se escoge en la ventana de la factura**, ya marcado. **No va en una pantalla de configuración**: *"estás obligando al usuario a estar yendo a una pantalla a cambiar el vendedor por factura"*. Una sección de configuración que se alcanzó a construir se retiró antes de publicar.
+
+**Qué quedó:**
+- Al facturar, el servidor lee el tipo de factura en SIIGO. Con vendedor por ítem, pone el vendedor en cada ítem y no en la factura. Si el tipo exige centro de costo y no llega ninguno, responde con un mensaje claro sin enviar nada.
+- El pago descuenta lo que retiene el cliente, calculado como SIIGO: Retefuente sobre la base del ítem, ReteIVA sobre el IVA y ReteICA por mil. Esto **corrige el supuesto del ticket 1054** ("base + IVA").
+- Sin impuesto configurado, el 19% toma el IVA de productos, no el de servicios.
+- En la ventana, el vendedor viene marcado así: primero quien factura, si es vendedor en SIIGO; si no, el último usado; si no, "Automático", como hasta hoy. El centro de costo solo aparece si el tipo lo maneja y viene marcado desde el servidor (`documentTypeSettings` por tipo).
+- Configuración inicial de ALMACEN BOMBAS, aprobada por Daniel: centro de costo por tipo, 26903 → 132 Medellín, 26905 → 134 Cali y 26907 → 136 Bogotá; IVA 19% → 16233.
+
+**Desplegado:** servidor `4cebbd1` (rama backend-aws-security, con el arreglo del teléfono numérico de ALMARA) y front 2026.09.24.1.
+
+**Pruebas:** `scripts/test-1052-tipo-de-factura-siigo.js`, 15 casos; 14 fallan contra el código anterior. Además, la factura real de BAS-000016 se simuló contra su SIIGO en solo lectura.
+
+## D-321 (2026-09-24) — Quien se registra elige su contraseña y entra de una vez
+
+**Contexto.** El 23 y 24-sep la pauta trajo 6 registros y 5 nunca entraron. Al terminar `/registrarse` la persona iba a `/login` con una contraseña aleatoria que solo llegaba por correo, y el correo de `notificaciones@katuq.com` falla DMARC y cae en spam.
+
+**Decisión** (`openspec/changes/entrar-directo-al-registrarse/`, aprobada por Daniel el 24-sep). Los commits dicen "D-319" porque ese número lo tomó a la vez otra sesión para los límites del plan gratis; esta es la entrada que vale.
+- El registro pide una contraseña con reglas mínimas: 8 caracteres, al menos una letra y un número. No entra al borrador de `localStorage`.
+- Viaja como `utils.hash` (el mismo formato del login). El backend la saca del cuerpo antes del log, de `surveyResponses`, de la IA, de la auditoría y de los avisos. La guarda con el mismo bcrypt del login y `mustChangePassword: false`. Rechaza con 422, sin crear nada, un formato inválido o las contraseñas por defecto.
+- Con un 200, el front abre la sesión con el login de siempre (`POST /v1/authentication`); el endpoint de registro no entrega sesiones. Si el login falla, va a `/login` con el correo puesto y el aviso de que la cuenta quedó creada.
+- En revisión (202) no hay sesión. La contraseña elegida queda guardada con la cuenta inactiva, así que al aprobarla la persona entra con ella.
+- La bienvenida ya no lleva contraseña.
+- Compatibilidad: sin `registro.password` (front viejo en caché) todo sigue igual, con contraseña temporal por correo. Ese camino se retira el 2026-10-25 (dueño: Claude).
+- Con el rediseño aprobado por Daniel (prototipo de la sesión "videos"), el orden de los pasos pasa a ser nombre, correo, celular, cédula o NIT y contraseña. El HTML elige cada paso por su campo, no por su número. "Crear mi cuenta" en el último paso crea la cuenta, sin "Revisa tus datos"; el diagnóstico largo conserva su resumen.
+
+**En producción:** backend `4b3252a` (en `4cebbd1`) y front 2026.09.24.2 (release `1c9b9d7e`, base 24.1 `46c278ff` sin "Correos de tu tienda"). Prueba real el 24-sep, con los píxeles bloqueados: de "Crear mi cuenta" a estar dentro de `/onboarding` en 11 s. Quedó bcrypt con `mustChangePassword: false`, `surveyResponses` y la auditoría sin la contraseña, y volver a entrar funcionó. La empresa de prueba se borró (42 documentos).
+
+**Siguiente:** medir cuántos registros de pauta entran al panel el mismo día (antes: 1 de 6).
+
+## D-322 (2026-09-24) — "Cédula o NIT": el documento dudoso se marca, no se rechaza
+
+**Contexto.** Por Meta, 7 personas empezaron el registro y 4 lo terminaron. El formulario rechazaba las cédulas de 6 y 7 dígitos (exigía de 8 a 11; el backend acepta de 6 a 15). Además, el detector de números inventados no reconocía casos reales como 123456778.
+
+**Decisión** (`openspec/changes/cedula-o-nit-en-el-registro/`, aprobada por Daniel el 24-sep con las dos recomendaciones del diseño):
+- El campo se llama "¿Cuál es tu cédula o NIT?", con la ayuda "Si no tienes NIT, pon tu cédula", y acepta de 6 a 11 números.
+- Si todos los dígitos son iguales o hay una serie de 7 o más seguidos, sale un aviso amable que no bloquea. Con 6 caería una cédula normal como 43123456. Un NIT con dígito de verificación válido nunca cuenta.
+- La cuenta entra igual y la empresa queda con `documentoPorConfirmar: true` y `motivoDocumento` en `serie` o `repetido`. Los reportes la separan con ese campo. El puntaje de riesgo no cambia (`looksFakeNit` intacto), así que no manda más registros a revisión.
+- A Meta y TikTok se les sigue contando como registro completo. No se le escribe a la persona para confirmar: eso queda para el seguimiento por WhatsApp de la primera hora.
+
+**En producción:** backend `7d1e841` y front 2026.09.24.2. Prueba real: un documento en serie quedó marcado, con riesgo 0 y el chip "Documento por confirmar" en el aviso interno.
+
+## D-323 (2026-09-27) — El filtro del registro: el sospechoso confirma un código por correo antes de entrar (APROBADA, ACTIVA desde el 28-sep)
+
+**Contexto.** El caso Aurora (25-sep): entró con datos inventados y riesgo 0, y le contó a la pauta como registro real. Daniel pidió "el filtro solo pa'l registro por ahora": el sospechoso verifica con un código por correo antes de entrar, sin modo limitado dentro de la app ni captcha. También eligió que salga **antes** que la tienda en 1 clic (D-324). El número D-323 lo reservó la propuesta amplia "blindar el registro contra cuentas falsas", de otra sesión, que queda en espera junto con su fase 0.
+
+**Propuesta** (`openspec/changes/filtro-registro-verificacion/`):
+- tres niveles: aprobado, verificar o rechazado. Las señales nuevas nunca rechazan, y el umbral de verificar (30) está calibrado para que ningún registro real de pauta llegue;
+- verificar significa que no hay sesión hasta escribir el código de 6 dígitos del correo. Reemplaza la cuarentena sin salida;
+- Opttia solo en la zona gris;
+- IP real por nginx, con OK de Daniel, porque hoy el límite por IP es global;
+- el píxel de registro sale solo al aprobar o al confirmar.
+
+Se despliega primero en sombra.
+
+**Aprobación (Daniel, 27-sep):** alcance recortado aprobado, y la línea `proxy_set_header X-Real-IP $remote_addr;` en el `location /` de back.katuq.com, con respaldo, `nginx -t` y recarga.
+
+**Implementado** (ramas `feature/filtro-registro` en el backend, 1ff1bda, y en el front, 0b0923b9; nada en producción):
+- backend: `services/registro/filtroRegistro.js` (coincidencias y Opttia en la zona gris), `verificacionCorreo.js` (código con la mecánica de `siteCuenta`), `coherenciaOpttia.js`; señales puras en `registrationSecurity.js`; `POST /v1/registro/codigo` y `/confirmar`; el login responde 403 `VERIFICACION_PENDIENTE` y reenvía el código; `construirSesion` sale del login sin cambiar su respuesta; la promoción se canjea al confirmar; la consola no cuenta a los pendientes;
+- front: componente `app-codigo-correo` en `/registrarse` y en el login; el píxel sale al confirmar;
+- pruebas: `npm run test:filtro-registro` (contrato con los casos de la spec, mutaciones verificadas) y las suites de sitios, métricas, campañas y límites en verde; `npm run build` del front sin errores.
+
+**Desvíos del diseño:**
+- el X-Real-IP también lo leen los limitadores "por visitante" (`utils/rateLimitKeys.js`). Hallazgo: hoy nginx no manda la IP del visitante en `location /`, así que esos limitadores cuentan a **todos** en una sola cubeta (por ejemplo, 20 pedidos de tienda cada 15 min para todas las tiendas juntas). Con la línea de nginx quedan por visitante, que era su intención;
+- con la IP de nginx no se cuenta nada por IP: antes, 12 registros de cualquiera en una hora rechazaban a todos;
+- "misma IP en 24 h" se guarda como el último registro por IP (`registration_rate/ultimo_<ip>`), no como un contador diario;
+- el 403 del login usa `code`, como el `EMPRESA_SIN_ACCESO` que ya existía;
+- la calibración contra los registros reales de septiembre no se corrió: el permiso para leer datos personales de producción se negó. La hace el modo sombra.
+
+**Orden de despliegue (con OK de Daniel):** 1) nginx; 2) backend con `REG_VERIFY_THRESHOLD=1000` (sombra) y la rama medida contra producción; 3) front desde una copia limpia; 4) dos días de pauta y revisar `registrationSignals`; 5) umbral a 30 y prueba con un registro falso controlado.
+
+**Despliegue (28-sep, con OK de Daniel):**
+- nginx: `proxy_set_header X-Real-IP $remote_addr;` en el `location /` de back.katuq.com; respaldo `back.katuq.com.conf.bak.20260928-xrealip`, `nginx -t` y recarga. Verificado: un `X-Real-IP` inventado no cambia el conteo del limitador;
+- backend: `backend-aws-security` a 1ff1bda (solo este commit sobre a025c2c), `REG_VERIFY_THRESHOLD=1000` en `functions/.env` (respaldo `.env.bak.20260928-filtro-registro`), pruebas de contrato corridas en el servidor, `pm2 reload`. Verificado: endpoints nuevos (200 uniforme, 422, 400), login igual (401 sin usuario), log limpio;
+- front: 2026.09.28.1 (merge fe53377a, release b09f8a93) desde la copia limpia; el bundle en vivo trae la pantalla y el identificador del navegador.
+
+**Pendiente:** con dos días de pauta, revisar `companies.registrationSignals` (puntaje y razones) de los registros nuevos y, si ningún real llega a 30, bajar `REG_VERIFY_THRESHOLD` a 30 (`pm2 reload katuq-api --update-env`) y probar con un registro falso controlado. Reversa: volver a 1000, sin desplegar.
+
+**Activación (28-sep, ~12:20 UTC):** Daniel: "habilita todo ya, nada de pruebas todo produccion para aprovechar la pauta". Se saltó la sombra: `REG_VERIFY_THRESHOLD=30` en `functions/.env` y `pm2 reload`. Riesgo aceptado: el código sale por el correo de Katuq, que falla DMARC y puede caer en Spam (la pantalla lo avisa y permite reenviar). Reversa: 1000, sin desplegar.
+
+**Estado:** activo en producción.
+
+## D-324 (2026-09-27) — La tienda queda publicada al terminar el registro (APROBADA, EN PRODUCCIÓN desde el 28-sep)
+
+**Contexto.** Daniel: "hagamos lo que prometemos, con lo de la página web, pero ten en cuenta los otros comercios". La pauta promete "crea tu tienda gratis" y, de 31 registros del 23 al 27-sep, **ninguno** tiene página. 11 terminaron la configuración inicial y quedaron en venta asistida, y solo 1 volvió a entrar. El pedido llegó por la sesión de videos.
+
+**Huecos encontrados en el código:**
+1. el producto de la configuración inicial nace con `cantidadDisponible: 0`, así que la tienda lo muestra agotado;
+2. los sitios creados por código nacen con la tienda apagada y sin bodega;
+3. sin pasarela propia, `pagoEnLinea` queda encendido por defecto y cobraría en la cuenta de Katuq.
+
+**Propuesta** (`openspec/changes/tienda-al-registrarse/`):
+- "Publicar mi tienda" en 1 clic al terminar, lista para vender, según el tipo de negocio:
+  - productos: con compra;
+  - por mayor y comida: pedido por WhatsApp;
+  - servicios: "Cotizar por WhatsApp".
+- Pagos honestos (Nequi, Daviplata, transferencia y efectivo, confirmados por WhatsApp; nunca en la cuenta de Katuq).
+- Producto disponible desde el primer momento.
+- Aviso "Crea tu tienda en 1 clic" a los ya registrados, sin publicar nada sin su permiso.
+- Métrica "tiendas publicadas en las primeras 24 h", con meta de 1 de cada 4. Es el indicador para subir la pauta de $35.000 a $50.000.
+- Los comercios con tiendas no cambian.
+- Se recomienda encender antes el filtro del registro (propuesta de cuentas falsas, D-323), o salir juntos.
+
+**Estado:** APROBADA por Daniel el 2026-09-27.
+- El filtro del registro va primero: cambio `filtro-registro-verificacion`, D-323.
+- En modo WhatsApp el pedido también queda en Katuq ("Por confirmar"), con diff de `crearPedido` aprobado antes de aplicarlo.
+- La invitación a los ya registrados llega al entrar y por correo.
+
+**Despliegue (28-sep, con OK de Daniel: "subelo y despliega"):**
+- parte 1, backend b326fef: el producto de la configuración inicial nace con `cantidadDisponible` = cantidad inicial, y "Nequi"/"Daviplata" reusan la "NEQUI - DAVIPLATA" del registro;
+- tienda en 1 clic, backend b983d39 y web 2026.09.28.4 (0585425f + release fe12d624):
+  - `crearTiendaInicial` y `GET/POST /v1/onboarding/tienda` (empresa del token), con bandera `TIENDA_AL_REGISTRARSE`, que por defecto va encendida;
+  - la tienda nace habilitada, con BOD-001, las formas manuales, contra entrega si eligió efectivo y pago en línea solo con pasarela propia;
+  - la plantilla se escoge por pistas de lo que vende, con texto neutro si no hay pista;
+  - se guarda `primeraTiendaPublicadaAt` en toda primera publicación;
+- pruebas: `tests/onboarding/tiendaAlRegistrarse.contract.test.js`, con mutaciones verificadas y corrida en el servidor.
+
+**Desvío:** comida y por mayor salen con el checkout normal, y el pedido llega a Katuq. El pedido por WhatsApp toca `crearPedido`, así que va aparte, con el diff aprobado por Daniel.
+
+**Pendiente:**
+- el aviso a los ya registrados en `/welcome` y el correo único (`--dry-run` primero);
+- la métrica de 24 h en el panel del Super Admin;
+- la línea base de 0 de 31 registros.
+
+## D-325 (2026-09-28) — Secuencia automática por correo para que los registrados usen Katuq (APROBADA, ENVIANDO desde el 28-sep)
+
+**Contexto.** Daniel: "yo quiero algo automatizado, no me pongas a hacerlo persona a persona". De los 31 registros del 23 al 27-sep ninguno publicó tienda y solo 1 volvió a entrar. Jairo les escribió a mano a 29. Canal: **solo correo** (decisión de Daniel, 28-sep). El pedido llegó por la sesión de videos.
+
+**Propuesta** (`openspec/changes/secuencia-activacion-correo/`):
+- tres correos por comportamiento que se detienen solos:
+  - 1 h sin producto;
+  - 24 h con producto y sin tienda;
+  - 3 días con tienda y sin pedidos;
+- personalizados con el negocio, el producto y un video;
+- solo registros desde el encendido, sin `metricsExcluded` ni cuentas sin verificar; un correo al día como máximo, tres en total, con baja en un clic;
+- medición por paso (enviados, abiertos, clics, completaron en 7 días, bajas);
+- bandera apagada, sombra o envío; sin colecciones nuevas (`companies.activacion`).
+
+**Remitente a escoger por Daniel:**
+- A, el correo actual de Workspace: recomendado para empezar, $0;
+- B, MailerSend.
+
+Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Daniel. Los registros exactos están en el diseño.
+
+**Aprobación (Daniel, 28-sep):** propuesta aprobada, con remitente A (correo actual, `notificaciones@katuq.com` por Workspace). Sale apagada, luego sombra y luego envío, con los textos y videos de la sesión de videos. El DNS de katuq.com lo aplica Daniel.
+
+**Despliegue en sombra (28-sep, 14:37 UTC):**
+- backend 8cbdd81, solo ese commit sobre 0cb7d4b;
+- en `functions/.env`: `SECUENCIA_ACTIVACION=sombra` y `SECUENCIA_ACTIVACION_DESDE=2026-09-28T14:37:37Z` (respaldo `.env.bak.20260928-secuencia`);
+- prueba de contrato corrida en el servidor y rutas verificadas: `/ir` 302, `/baja` con token falso 400, `/metricas` sin sesión 401;
+- el trabajo corre cada 15 min y no envía nada.
+
+**Implementado:**
+- `services/activacion/` (pasos puros, estado, enlaces firmados, motor);
+- las plantillas `templates/activacion.js`, con textos provisionales;
+- `/v1/activacion/{ir,baja,metricas}`;
+- `List-Unsubscribe` en `services/email.js`;
+- `tests/onboarding/secuenciaActivacion.contract.test.js`, con mutaciones verificadas.
+
+**Para pasar a `envio`:**
+1. el DNS de katuq.com da `PASS` (paso de Daniel, registros en el diseño);
+2. los textos finales y los videos de la sesión de videos (`ACTIVACION_VIDEO_PRODUCTO|TIENDA|COMPARTIR`);
+3. revisar `/v1/activacion/metricas` tras dos días de sombra.
+
+**Textos aprobados por Daniel (28-sep):** los finales de la sesión de videos, con "con las formas de pago de tu cuenta" en el paso de la tienda. Están en producción desde e974510 (desplegado por la sesión de tickets), con la secuencia todavía en sombra. Para pasar a `envio` falta el DNS de katuq.com y, opcionalmente, los videos.
+
+**Encendida (28-sep, ~15:10 UTC):** Daniel: "si prendelo ya, y en el registro digales que revisen spam esa configuracion aun no la puedo hacer".
+- `SECUENCIA_ACTIVACION=envio`, sin el DNS (respaldo `.env.bak.20260928-secuencia-envio`).
+- Aviso de revisar Spam o Promociones al terminar el registro y en el primer paso de la configuración inicial (web 2026.09.28.7).
+- Riesgo aceptado: parte de los correos caerá en Spam hasta que Daniel arregle el DNS de katuq.com.
+
+**Estado:** enviando. Pendiente: DNS de katuq.com (Daniel) y videos (opcional).
 
 ## D-303 (2026-09-23) — "Crear cliente" nacía sin cupo de crédito ni plazo de pago (los tenía el modal del listado, pero no la página del menú)
 
@@ -6766,3 +7540,21 @@ El problema real es el costo de reconstruir `getSearchIndex(company)` cuando el 
 **Sin verificación en navegador todavía** — el frontend/backend locales se cayeron por presión de memoria del sistema a mitad de sesión y no se reiniciaron (instrucción explícita de no reiniciarlos sin pedido). Pendiente: levantar ambos y probar crear un cliente con cupo/días desde el menú, confirmar que aparece en Cartera.
 
 **Fuera de alcance, deuda registrada:** unificar `ClientesComponent`/`CrearClienteModalComponent` en un solo formulario (se consideró y se descartó por ahora — más riesgo que el pedido puntual); dirección de facturación electrónica (no existe en ningún formulario hoy); mostrar cupo/días también en las vistas embebidas de pedidos/producción.
+
+## D-326 (2026-09-23) — Filtro "sin foto" del catálogo de Productos: la lógica está bien, el cache-miss del índice tarda 45-79s (OH MY STORE, 8.533 productos)
+
+> Numerada D-326 y no D-302: esta sesión tomó D-302 en local sin haber bajado todavía la rama remota, que ya tenía un D-302 distinto (2026-09-21, aviso de renovación) publicado y con 123 commits encima. Mismo patrón de colisión que D-313/D-314 y D-315/D-316 — se renumera la entrada local, la historia publicada no se reescribe.
+
+**Disparador.** Ticket real: "Al usar el filtro de 'productos sin foto' en el catálogo, no carga correctamente. Se espera que el filtro muestre únicamente los productos que no tienen imagen asignada".
+
+**Diagnóstico (read-only, contra Firestore real).** El filtro `sinFoto` (D-282, `controllers/productos.js::getAll`) filtra correctamente: `Controller.getAll({company:"OH MY STORE", sinFoto:"true"})` devuelve 32 productos, idénticos 1:1 a un conteo crudo aparte (sin caché) sobre `imagenesPrincipales`/`imagenesSecundarias` vacíos. No hay bug de datos.
+
+El problema real es el costo de reconstruir `getSearchIndex(company)` cuando el caché (TTL 5 min) vence: escanea todo el catálogo de la empresa. Medido dos veces contra producción real: **45-79s en frío, ~0.85s en caliente** (~90x). `getSearchIndex` es compartido por 10+ filtros in-memory de `getAll` (categoría, completitud, canal, tipoEntrega, tiempoEntrega, adiciones, calendario, precio manual, rango de precio, sort), `quickSearchProducts`, `searchIndexLookup` y la tool MCP `search_products` — no es un defecto exclusivo de `sinFoto`, pero es el filtro que más sesiones largas genera hoy (OH MY STORE subiendo fotos faltantes, navegando varias páginas, cruzando el TTL de 5 min entre una y otra).
+
+**Nota de contexto.** El propio commit D-282 registra que nunca se verificó en navegador por falta de credenciales — este ticket es, con toda probabilidad, el primer uso real end-to-end.
+
+**Decisión.** Propuesta OpenSpec (repo backend, CLI no instalado en esta máquina — artefactos creados a mano siguiendo el patrón de `fix-volumen-tier-base-siempre-gana`): `openspec/changes/optimizar-cache-indice-productos/`. Diseño recomendado: **stale-while-revalidate** en `getSearchIndex()` — dos umbrales (`SOFT_TTL` 5 min sirve caliente, `HARD_TTL` 60 min sirve stale de inmediato y refresca en segundo plano, más allá de `HARD_TTL` vuelve a bloquear), con guard para no disparar refrescos duplicados si llegan varias consultas mientras uno está en curso. `invalidateSearchIndex` (ya existente, dispara en cada create/edit/delete de producto) sigue invalidando de inmediato sin cambios — "stale" nunca significa desincronizado con una edición real. Se evaluó y descartó denormalizar un campo indexable en Firestore (ej. `tieneImagen` + índice compuesto): requeriría backfill de escritura sobre 8.500+ productos y solo resolvería `sinFoto`/`completitud`, no los otros 8 filtros in-memory con el mismo cuello de botella.
+
+**Sin código tocado todavía** — proposal + design + specs delta + tasks creados, pendiente `/opsx:apply` con autorización explícita. Cero escrituras en esta sesión, todo el diagnóstico fue solo lectura.
+
+**Fuera de alcance.** No se confirmó si producción tiene un timeout de proxy/gateway (nginx u otro) que corte la petición antes de responder — no hay acceso SSH a la instancia real desde esta sesión.

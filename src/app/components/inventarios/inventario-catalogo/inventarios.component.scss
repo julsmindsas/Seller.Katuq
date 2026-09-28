@@ -1469,13 +1469,18 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   margin-bottom: 18px;
 }
 .inv-filters-row {
-  display: grid;
-  grid-template-columns: 1.4fr 200px 1fr auto;
+  // Ticket 1062: flex en vez de 4 columnas fijas, para que categoría, subcategoría
+  // y fulfillment quepan sin descuadrar el contador del final.
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
-  align-items: end;
+  align-items: flex-end;
 
-  @media (max-width: 1200px) { grid-template-columns: 1fr 1fr; }
-  @media (max-width: 640px)  { grid-template-columns: 1fr; }
+  > .inv-field { flex: 1 1 170px; }
+  > .inv-field:first-child { flex: 2 1 240px; }
+  > .inv-filters-end { margin-left: auto; }
+
+  @media (max-width: 640px) { > .inv-field { flex-basis: 100%; } }
 }
 .inv-field {
   display: flex;
