@@ -27,7 +27,7 @@ Además, la configuración inicial no pregunta el tipo de negocio. El sector del
   - por mayor (distribuidores): catálogo con pedido por WhatsApp;
   - servicios: página con "Cotizar por WhatsApp";
   - comida: menú con pedido por WhatsApp.
-- **Pedido por WhatsApp como forma de la tienda.** El carrito termina en un mensaje de WhatsApp al comercio, con el pedido escrito. Es la misma pieza que ya usa el plan gratis cuando llega a su tope. Sirve a distribuidores y comida, y a cualquier tienda que lo prefiera.
+- **Pedido por WhatsApp como forma de la tienda.** El carrito crea el pedido en Katuq como "Por confirmar" y abre WhatsApp al comercio con el número del pedido y su detalle. Así Daniel decidió que el pedido quede en Katuq. Sirve a distribuidores y comida, y a cualquier tienda que lo prefiera.
 - **Pagos honestos.** La tienda nueva muestra los métodos que eligió el comercio (Nequi, Daviplata, transferencia, efectivo) y confirma por WhatsApp. **No cobra en línea** mientras el comercio no conecte su propia pasarela. Nunca cobra en la cuenta de Katuq.
 - **El producto no nace agotado.** Al crearse en la configuración inicial, su disponibilidad en la tienda queda con la cantidad inicial que escribió el comercio.
 - **Los que ya se registraron.** Ven en su inicio un aviso "Crea tu tienda en 1 clic" con lo que ya cargaron. Nada se publica a su nombre sin que lo acepten. Los comercios con tiendas (ALMARA, OH MY STORE, FLORECER, ATELIER 90…) no ven nada ni cambian.

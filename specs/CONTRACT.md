@@ -7394,7 +7394,22 @@ Verificado en producción:
 
 **En producción:** backend `7d1e841` y front 2026.09.24.2. Prueba real: un documento en serie quedó marcado, con riesgo 0 y el chip "Documento por confirmar" en el aviso interno.
 
-## D-324 (2026-09-27) — PROPUESTA: la tienda queda publicada al terminar el registro (pendiente de aprobación de Daniel)
+## D-323 (2026-09-27) — PROPUESTA: el filtro del registro (el sospechoso confirma un código por correo antes de entrar)
+
+**Contexto.** El caso Aurora (25-sep): entró con datos inventados y riesgo 0, y le contó a la pauta como registro real. Daniel pidió "el filtro solo pa'l registro por ahora": el sospechoso verifica con un código por correo antes de entrar, sin modo limitado dentro de la app ni captcha. También eligió que salga **antes** que la tienda en 1 clic (D-324). El número D-323 lo reservó la propuesta amplia "blindar el registro contra cuentas falsas", de otra sesión, que queda en espera junto con su fase 0.
+
+**Propuesta** (`openspec/changes/filtro-registro-verificacion/`):
+- tres niveles: aprobado, verificar o rechazado. Las señales nuevas nunca rechazan, y el umbral de verificar (30) está calibrado para que ningún registro real de pauta llegue;
+- verificar significa que no hay sesión hasta escribir el código de 6 dígitos del correo. Reemplaza la cuarentena sin salida;
+- Opttia solo en la zona gris;
+- IP real por nginx, con OK de Daniel, porque hoy el límite por IP es global;
+- el píxel de registro sale solo al aprobar o al confirmar.
+
+Se despliega primero en sombra.
+
+**Estado:** propuesta validada, pendiente de aprobación.
+
+## D-324 (2026-09-27) — La tienda queda publicada al terminar el registro (APROBADA)
 
 **Contexto.** Daniel: "hagamos lo que prometemos, con lo de la página web, pero ten en cuenta los otros comercios". La pauta promete "crea tu tienda gratis" y, de 31 registros del 23 al 27-sep, **ninguno** tiene página. 11 terminaron la configuración inicial y quedaron en venta asistida, y solo 1 volvió a entrar. El pedido llegó por la sesión de videos.
 
@@ -7415,4 +7430,7 @@ Verificado en producción:
 - Los comercios con tiendas no cambian.
 - Se recomienda encender antes el filtro del registro (propuesta de cuentas falsas, D-323), o salir juntos.
 
-**Estado:** propuesta validada, pendiente de aprobación.
+**Estado:** APROBADA por Daniel el 2026-09-27.
+- El filtro del registro va primero: cambio `filtro-registro-verificacion`, D-323.
+- En modo WhatsApp el pedido también queda en Katuq ("Por confirmar"), con diff de `crearPedido` aprobado antes de aplicarlo.
+- La invitación a los ya registrados llega al entrar y por correo.

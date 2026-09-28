@@ -68,8 +68,11 @@
 
 4. **`modoPedido: "whatsapp"`** en `normalizarTienda`. Por defecto es `"checkout"`, así que las tiendas de hoy no cambian.
    - El script de la tienda reusa el modo WhatsApp de D-319: `modoWhatsapp = topeAlcanzado || modoPedido === "whatsapp"`.
-   - Antes de abrir WhatsApp, el carrito se guarda como prospecto `tipo: "pedido-whatsapp"`, con los productos y el total, para que el comercio lo vea en "Tus contactos". Es el mismo patrón del carrito abandonado.
-   - **No crea un pedido en Katuq ni toca `crearPedido`.** Registrar el pedido de verdad queda para después, si hace falta.
+   - **Decisión de Daniel (27-sep): el pedido también queda en Katuq.**
+     - El carrito pide solo nombre y celular.
+     - Crea el pedido en estado "Por confirmar", con la forma de pago "Acordar por WhatsApp", y después abre WhatsApp con el número del pedido y su detalle.
+     - Toca `crearPedido`, que es módulo sensible: un cambio a la vez y diff aprobado por Daniel antes de aplicarlo.
+     - Cuenta en el tope de pedidos del plan como cualquier pedido de la tienda.
    - El número sale de `tienda.whatsapp` o del celular de la empresa. Sin número, se muestra el contacto y el editor avisa.
 
 5. **Producto disponible desde el primer momento.**
@@ -77,7 +80,7 @@
    - Es la creación del producto en su propio dominio, no una operación de inventario: D-134 no aplica, porque ninguna operación de inventario escribe `products`.
    - El paso de producto ofrece subir una foto, de forma opcional, con el mismo servicio de fotos de producto.
 
-6. **Aviso a los ya registrados** en `/welcome`. Se muestra al administrador de una empresa que cumpla todo esto:
+6. **Aviso a los ya registrados** en `/welcome` y **por correo** (decisión de Daniel, 27-sep). El correo sale una sola vez por empresa, con el enlace directo al "1 clic", marcado en `companies.invitacionTiendaEnviadaAt`, y solo a empresas verificadas. El aviso en `/welcome` Se muestra al administrador de una empresa que cumpla todo esto:
    - `canalInscripcion` es "Encuesta" o "Campaña";
    - registrada desde el 2026-09-01;
    - sin ningún sitio;
@@ -97,7 +100,6 @@
 
 - **[Phishing con una tienda publicada en 1 clic en `*.katuq.com`]** → Se recomienda encender antes el filtro del registro ("el sospechoso verifica con un código antes de entrar", propuesta aparte). Además, la tienda nueva no cobra en la cuenta de Katuq. El orden lo decide Daniel.
 - **[Una tienda de un solo producto se ve pobre]** → Foto opcional en el paso de producto, y el resultado invita a "agregar más productos" con el enlace directo.
-- **[Pedido por WhatsApp sin pedido en Katuq]** → El prospecto `pedido-whatsapp` deja rastro y la métrica de tiendas no depende de pedidos. Si hace falta, se decide después crear el pedido.
 - **[Slug ocupado]** → El mismo verificador del editor, más un sufijo numérico.
 - **[Premium temporal que vence]** → El cron de vencimiento está apagado (pendiente conocido). Cuando se encienda, la tienda en 1 clic ya cumple el plan gratis: 1 tienda y 50 productos.
 
@@ -112,6 +114,7 @@
 
 ## Open Questions
 
-1. ¿Encender primero el filtro del registro (propuesta de cuentas falsas) o salir juntos? Recomendado: el filtro primero, o juntos.
-2. En modo WhatsApp, ¿basta con el mensaje y el prospecto, o se quiere el pedido registrado en Katuq desde ya?
-3. ¿El aviso a los ya registrados también por correo, o solo al entrar? Casi ninguno vuelve a entrar.
+Resueltas por Daniel el 27-sep:
+1. El filtro del registro va primero (cambio `filtro-registro-verificacion`, D-323). La tienda en 1 clic sale después.
+2. En modo WhatsApp, el pedido también queda en Katuq ("Por confirmar").
+3. El aviso a los ya registrados llega al entrar y por correo.

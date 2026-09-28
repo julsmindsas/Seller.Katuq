@@ -1,6 +1,6 @@
 ## 0. Decisiones
 
-- [ ] 0.1 Daniel aprueba la propuesta y responde las 3 preguntas abiertas (orden con el filtro del registro, pedido por WhatsApp y aviso por correo).
+- [x] 0.1 Aprobada por Daniel el 27-sep. El filtro del registro va primero; en modo WhatsApp el pedido también queda en Katuq; el aviso llega al entrar y por correo.
 - [ ] 0.2 Registrar D-324 en `specs/CONTRACT.md` (D-323 es de la propuesta de cuentas falsas).
 
 ## 1. Que la tienda no nazca vacía (independiente, primero)
@@ -12,9 +12,10 @@
 
 ## 2. Pedido por WhatsApp en la tienda
 
-- [ ] 2.1 Prueba de contrato: `modoPedido` por defecto `"checkout"` (las tiendas de hoy no cambian); con `"whatsapp"`, el carrito termina en WhatsApp y guarda el prospecto `pedido-whatsapp`.
+- [ ] 2.1 Prueba de contrato: `modoPedido` por defecto `"checkout"` (las tiendas de hoy no cambian); con `"whatsapp"`, se crea el pedido "Por confirmar" con la forma de pago "Acordar por WhatsApp" (cuenta en el tope del plan) y la respuesta trae el enlace de WhatsApp con el número del pedido.
 - [ ] 2.2 `normalizarTienda` y el guard de fusión del editor aceptan `modoPedido`, con la lección de D-317: el campo nuevo en la lista del guard.
-- [ ] 2.3 `siteTienda.js`: `modoWhatsapp = topeAlcanzado || modoPedido === "whatsapp"`, y el prospecto se guarda antes de abrir WhatsApp.
+- [ ] 2.3 **Módulo sensible:** mostrar el diff de `crearPedido` (modo WhatsApp) a Daniel antes de aplicarlo.
+- [ ] 2.3b `siteTienda.js`: con `modoPedido === "whatsapp"`, el carrito pide nombre y celular, crea el pedido y abre WhatsApp con el número. El modo del tope (`topeAlcanzado`) sigue abriendo WhatsApp sin crear pedido.
 - [ ] 2.4 Editor de la tienda: la opción "Recibir los pedidos por WhatsApp", con aviso si falta el número.
 
 ## 3. Tienda en 1 clic
@@ -38,11 +39,12 @@
 ## 4. Los ya registrados y la medición
 
 - [ ] 4.1 Aviso en `/welcome` para registrados desde el 1-sep, sin sitios y con producto: borrador, vista previa y "Publicar".
+- [ ] 4.1b Correo "Crea tu tienda en 1 clic": una sola vez por empresa verificada, con el enlace directo y la marca `invitacionTiendaEnviadaAt`. Script con `--dry-run` primero para los ya registrados.
 - [ ] 4.2 `primeraTiendaPublicadaAt` y el evento `sitio_publicado` en toda primera publicación (editor, Opttia, 1 clic).
 - [ ] 4.3 Métrica semanal "tiendas en las primeras 24 h" en `platformMetrics` y en el panel del Super Admin, sin las empresas excluidas.
 - [ ] 4.4 Contar a los 31 registros del 23 al 27-sep como línea de base (0 %) y registrarlo en CONTRACT.md.
 
-## 5. Cierre
+## 5. Cierre (después de que salga el filtro del registro)
 
 - [ ] 5.1 Despliegue con OK de Daniel, midiendo la rama contra producción. Verificar la primera tienda real publicada en 1 clic y registrarla en CONTRACT.md y en la memoria.
 - [ ] 5.2 Retirar la bandera según el plan.
