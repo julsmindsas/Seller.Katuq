@@ -299,12 +299,50 @@
                 </li>
               </ul>
 
-              <div class="free-plan-note" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell">
+              <!-- D-324: la tienda en línea en 1 clic -->
+              <section class="tienda-1clic" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell && tiendaHabilitada" aria-labelledby="tienda-1clic-titulo">
+                <ng-container *ngIf="!tiendaInicial">
+                  <span class="tienda-1clic__etiqueta">Tu tienda en línea</span>
+                  <h4 id="tienda-1clic-titulo">Publícala ahora con lo que ya cargaste</h4>
+                  <p>Queda en tu propia dirección de Katuq, lista para recibir pedidos. Cobras como elegiste y la puedes cambiar cuando quieras.</p>
+                  <div class="tienda-1clic__tipos" role="radiogroup" aria-label="¿Cómo vendes?">
+                    <button type="button" *ngFor="let t of tiposNegocio" role="radio"
+                      [class.is-selected]="tipoNegocio === t.id" [attr.aria-checked]="tipoNegocio === t.id"
+                      (click)="tipoNegocio = t.id">{{ t.label }}</button>
+                  </div>
+                  <button type="button" class="tienda-1clic__publicar" (click)="publicarTienda()" [disabled]="publicandoTienda">
+                    <i [class]="publicandoTienda ? 'pi pi-spin pi-spinner' : 'pi pi-globe'" aria-hidden="true"></i>
+                    {{ publicandoTienda ? 'Publicando tu tienda…' : 'Publicar mi tienda' }}
+                  </button>
+                </ng-container>
+
+                <ng-container *ngIf="tiendaInicial">
+                  <span class="tienda-1clic__etiqueta tienda-1clic__etiqueta--ok"><i class="pi pi-check" aria-hidden="true"></i> Tu tienda está publicada</span>
+                  <h4 id="tienda-1clic-titulo">Compártela y recibe tu primer pedido</h4>
+                  <a class="tienda-1clic__url" [href]="tiendaInicial.urlPublica" target="_blank" rel="noopener">{{ tiendaInicial.urlPublica }}</a>
+                  <div class="tienda-1clic__acciones">
+                    <a class="tienda-1clic__publicar" [href]="tiendaInicial.urlPublica" target="_blank" rel="noopener"><i class="pi pi-external-link" aria-hidden="true"></i> Verla</a>
+                    <button type="button" class="btn-ghost" (click)="compartirTiendaPorWhatsApp()"><i class="pi pi-whatsapp" aria-hidden="true"></i> Compartir por WhatsApp</button>
+                    <button type="button" class="btn-ghost" (click)="copiarTextoInstagram()"><i class="pi pi-copy" aria-hidden="true"></i> {{ textoCopiado ? 'Copiado' : 'Copiar para Instagram' }}</button>
+                  </div>
+                  <a class="tienda-1clic__mas" routerLink="/productos/crear">Agregar más productos</a>
+                </ng-container>
+
+                <p class="tienda-1clic__error" *ngIf="errorTienda" role="alert">{{ errorTienda }}</p>
+              </section>
+
+              <div class="free-plan-note" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell && !planPremium">
                 <div>
                   <span>Empiezas en el plan Gratis</span>
                   <strong>15 pedidos al mes, sin tarjeta y con tus datos siempre disponibles.</strong>
                 </div>
                 <a routerLink="/pricing">Conocer Premium</a>
+              </div>
+              <div class="free-plan-note" *ngIf="!isCheckingReadiness && readiness?.ready_to_sell && planPremium">
+                <div>
+                  <span>Tienes Premium activo</span>
+                  <strong>Todas las funciones de Katuq, sin tope de pedidos.</strong>
+                </div>
               </div>
 
               <button *ngIf="!isCheckingReadiness && !readiness?.ready_to_sell" type="button" class="btn-ghost verify-button" (click)="retryReadiness()">

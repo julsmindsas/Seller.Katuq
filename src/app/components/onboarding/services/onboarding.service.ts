@@ -68,6 +68,17 @@ export interface OnboardingEntryState {
  * Servicio principal para gestionar el estado y progreso del onboarding
  * Maneja la persistencia en localStorage y sincronización con backend
  */
+/** Cómo vende el comercio: decide la plantilla de la tienda en 1 clic (D-324). */
+export type TipoNegocio = 'productos' | 'mayor' | 'comida' | 'servicios';
+
+export interface TiendaInicial {
+  id?: string;
+  slug: string;
+  estado: string;
+  urlPublica: string;
+  urlEditor?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -1106,6 +1117,26 @@ export class OnboardingService {
     }
 
     return response?.data || response?.product || response?.producto || response;
+  }
+
+  /**
+   * Tienda en 1 clic (D-324): si está encendida y si la empresa ya tiene la
+   * tienda del registro. La empresa sale del token en el backend.
+   */
+  async estadoTiendaInicial(): Promise<{ habilitada: boolean; tieneSitios: boolean; tienda: TiendaInicial | null }> {
+    const response: any = await this.http.get(`${this.urlBase}/v1/onboarding/tienda`, this.httpOptions).toPromise();
+    const data = response?.data || {};
+    return { habilitada: data.habilitada === true, tieneSitios: data.tieneSitios === true, tienda: data.tienda || null };
+  }
+
+  /** Crea y publica la tienda del registro. Idempotente: la segunda vez devuelve la misma. */
+  async crearTiendaInicial(tipoNegocio: TipoNegocio, pistas: string): Promise<TiendaInicial> {
+    const response: any = await this.http.post(
+      `${this.urlBase}/v1/onboarding/tienda`,
+      { tipoNegocio, pistas },
+      this.httpOptions
+    ).toPromise();
+    return response?.data;
   }
 
   /** Carga el progreso V2 del usuario y tenant derivados de la sesión. */

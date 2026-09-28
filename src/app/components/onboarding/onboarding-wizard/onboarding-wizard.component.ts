@@ -6,8 +6,7 @@ import {
   MinimalOnboardingProduct,
   OnboardingReadiness,
   OnboardingService,
-  OnboardingV2Progress
-} from '../services/onboarding.service';
+  OnboardingV2Progress, TiendaInicial, TipoNegocio } from '../services/onboarding.service';
 import {
   buildOnboardingStorageKey,
   parseLowStockThreshold
@@ -77,6 +76,21 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
   };
 
   paymentMethods: string[] = [];
+
+  // Tienda en 1 clic (D-324).
+  tiendaHabilitada = false;
+  tiendaInicial: TiendaInicial | null = null;
+  tipoNegocio: TipoNegocio = 'productos';
+  readonly tiposNegocio: { id: TipoNegocio; label: string }[] = [
+    { id: 'productos', label: 'Vendo productos' },
+    { id: 'mayor', label: 'Por mayor' },
+    { id: 'comida', label: 'Comida' },
+    { id: 'servicios', label: 'Servicios' }
+  ];
+  publicandoTienda = false;
+  errorTienda = '';
+  textoCopiado = false;
+  planPremium = false;
   customPayment = '';
   readonly paymentOptions = [
     { label: 'Efectivo', hint: 'Pago en caja o contraentrega' },
@@ -114,6 +128,7 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
     this.loaderService.suppressGlobalLoader();
     const user = this.readJson(localStorage.getItem('user'));
     const currentCompany = this.readJson(localStorage.getItem('currentCompany'));
+    this.planPremium = String(currentCompany?.subscriptionPlan || '').toLowerCase() === 'premium';
     const sessionCompany = this.readJson(sessionStorage.getItem('currentCompany'));
     const hasSessionCompany = sessionCompany && typeof sessionCompany === 'object' &&
       Object.keys(sessionCompany).length > 0;
@@ -802,6 +817,8 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       if (readiness.product_ready) this.status = { ...this.status, product: 'done' };
       else delete this.status.product;
 
+      if (readiness.ready_to_sell) this.cargarTiendaInicial();
+
       if (readiness.payment_ready) {
         // Tener un método previo permite confirmar este paso con un clic, pero
         // no debe saltárselo: la persona necesita entender cómo se registran
@@ -1047,6 +1064,51 @@ export class OnboardingWizardComponent implements OnInit, OnDestroy {
       }
     } catch { /* fallback */ }
     return `onb-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  /** Si la tienda en 1 clic está encendida y si ya existe (para no ofrecerla dos veces). */
+  private async cargarTiendaInicial(): Promise<void> {
+    try {
+      const estado = await this.onboardingService.estadoTiendaInicial();
+      this.tiendaInicial = estado.tienda && estado.tienda.estado === 'publicado' ? estado.tienda : null;
+      // Quien ya tiene páginas propias las maneja desde "Mis páginas".
+      this.tiendaHabilitada = estado.habilitada && (!estado.tieneSitios || !!estado.tienda);
+      if (!this.tiendaInicial && this.offering === 'services') this.tipoNegocio = 'servicios';
+    } catch {
+      this.tiendaHabilitada = false;
+    }
+  }
+
+  async publicarTienda(): Promise<void> {
+    if (this.publicandoTienda) return;
+    this.publicandoTienda = true;
+    this.errorTienda = '';
+    try {
+      const pistas = [this.product?.nombre, this.offering].filter(Boolean).join(' ');
+      this.tiendaInicial = await this.onboardingService.crearTiendaInicial(this.tipoNegocio, pistas);
+    } catch (error: any) {
+      this.errorTienda = error?.error?.error || 'No pudimos publicar tu tienda ahora. Puedes hacerlo después desde "Mis páginas".';
+    } finally {
+      this.publicandoTienda = false;
+    }
+  }
+
+  compartirTiendaPorWhatsApp(): void {
+    if (!this.tiendaInicial) return;
+    const texto = `¡Ya puedes pedir en mi tienda en línea! ${this.tiendaInicial.urlPublica}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+  }
+
+  async copiarTextoInstagram(): Promise<void> {
+    if (!this.tiendaInicial) return;
+    const texto = `Abrimos nuestra tienda en línea 🛍️ Pide aquí: ${this.tiendaInicial.urlPublica}`;
+    try {
+      await navigator.clipboard.writeText(texto);
+      this.textoCopiado = true;
+    } catch {
+      this.textoCopiado = false;
+      this.errorTienda = `Copia este texto: ${texto}`;
+    }
   }
 
   private readJson(raw: string | null): any {
