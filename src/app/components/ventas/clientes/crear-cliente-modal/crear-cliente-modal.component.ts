@@ -149,10 +149,14 @@ export class CrearClienteModalComponent implements OnInit {
 
         // Legacy: algunos clientes guardan el nombre completo en `nombres_completos`
         // con `apellidos_completos` vacío. Separar para que cada campo muestre lo suyo.
-        const split = this.splitNombreApellido(
-          this.clienteData.nombres_completos,
-          this.clienteData.apellidos_completos,
-        );
+        // Ticket 1083: una empresa (NIT) no se parte: su razón social va entera en nombres.
+        const tipoGuardado = this.normalizeTipoDoc(this.clienteData.tipo_documento_comprador);
+        const split = tipoGuardado === 'NIT' || tipoGuardado === 'NIT_EXT'
+          ? { nombres: String(this.clienteData.nombres_completos || '').trim(), apellidos: String(this.clienteData.apellidos_completos || '').trim() }
+          : this.splitNombreApellido(
+            this.clienteData.nombres_completos,
+            this.clienteData.apellidos_completos,
+          );
         this.formulario.controls['nombres_completos'].setValue(split.nombres);
         this.formulario.controls['apellidos_completos'].setValue(split.apellidos);
 
@@ -242,6 +246,20 @@ export class CrearClienteModalComponent implements OnInit {
     this.formulario.controls['tipo_documento_comprador'].setValue(value);
   }
 
+  /** Ticket 1083: con NIT (persona jurídica) no hay apellidos, solo razón social. */
+  get esPersonaJuridica(): boolean {
+    const tipo = this.formulario?.getRawValue?.()?.tipo_documento_comprador;
+    return tipo === 'NIT' || tipo === 'NIT_EXT';
+  }
+
+  /** Ticket 1083: "Apellidos" es obligatorio solo para persona natural. */
+  private ajustarApellidosSegunTipoDoc(): void {
+    const apellidos = this.formulario?.controls?.['apellidos_completos'];
+    if (!apellidos) return;
+    apellidos.setValidators(this.esPersonaJuridica ? null : Validators.required);
+    apellidos.updateValueAndValidity({ emitEvent: false });
+  }
+
   /**
    * Separa nombre completo en nombres + apellidos cuando los apellidos vienen
    * vacíos (datos legacy). Si ya hay apellidos, NO toca nada.
@@ -313,6 +331,9 @@ export class CrearClienteModalComponent implements OnInit {
       creditLimit: [0, [Validators.min(0)]],
       payTermDays: [0, [Validators.min(0)]],
     }, { validators: alMenosUnTelefono });
+
+    // Ticket 1083: con NIT, "Apellidos" deja de ser obligatorio.
+    this.formulario.controls['tipo_documento_comprador'].valueChanges.subscribe(() => this.ajustarApellidosSegunTipoDoc());
   }
 
   validarSoloNumeros(event: any) {

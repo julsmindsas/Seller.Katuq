@@ -147,6 +147,20 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.formulario.controls['tipo_documento_comprador'].setValue(value);
   }
 
+  /** Ticket 1083: con NIT (persona jurídica) no hay apellidos, solo razón social. */
+  get esPersonaJuridica(): boolean {
+    const tipo = this.formulario?.getRawValue?.()?.tipo_documento_comprador;
+    return tipo === 'NIT' || tipo === 'NIT_EXT';
+  }
+
+  /** Ticket 1083: "Apellidos" es obligatorio solo para persona natural. */
+  private ajustarApellidosSegunTipoDoc(): void {
+    const apellidos = this.formulario?.controls?.['apellidos_completos'];
+    if (!apellidos) return;
+    apellidos.setValidators(this.esPersonaJuridica ? null : Validators.required);
+    apellidos.updateValueAndValidity({ emitEvent: false });
+  }
+
   /**
    * Convierte el valor guardado (que puede ser un código válido, un combinado
    * legacy "CC-NIT" o el texto completo "Cédula de ciudadanía") al código del
@@ -872,6 +886,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       ciudad_municipio_entrega: ['', Validators.required],
       codigo_postal_entrega: ['', Validators.required]
     });
+
+    // Ticket 1083: con NIT, "Apellidos" deja de ser obligatorio.
+    this.formulario.controls['tipo_documento_comprador'].valueChanges.subscribe(() => this.ajustarApellidosSegunTipoDoc());
   }
   validarSoloNumeros(event: KeyboardEvent) {
     if (!/[0-9]/.test(event.key)) {

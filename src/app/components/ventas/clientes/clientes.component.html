@@ -743,7 +743,7 @@
                     </div>
                     <!-- Nombres -->
                     <div class="col-12 col-sm-6">
-                        <label class="form-label-modern">{{ "Nombres Completos" | translate }} <span class="required">*</span></label>
+                        <label class="form-label-modern">{{ (esPersonaJuridica ? "Razón social" : "Nombres Completos") | translate }} <span class="required">*</span></label>
                         <input pInputText type="text" placeholder="{{ 'Nombres completos' | translate }}"
                             formControlName="nombres_completos" class="w-100">
                         <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched"
@@ -753,7 +753,7 @@
                     </div>
                     <!-- Apellidos -->
                     <div class="col-12 col-sm-6">
-                        <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required">*</span></label>
+                        <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required" *ngIf="!esPersonaJuridica">*</span><span class="text-muted" *ngIf="esPersonaJuridica"> ({{ "opcional" | translate }})</span></label>
                         <input pInputText type="text" placeholder="{{ 'Apellidos completos' | translate }}"
                             formControlName="apellidos_completos" class="w-100">
                         <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched"
@@ -1025,12 +1025,12 @@
                                 formControlName="documento" [attr.disabled]="encontrado ? true : null" class="w-100">
                         </div>
                         <div class="col-12 col-sm-6">
-                            <label class="form-label-modern">{{ "Nombres Completos" | translate }} <span class="required">*</span></label>
+                            <label class="form-label-modern">{{ (esPersonaJuridica ? "Razón social" : "Nombres Completos") | translate }} <span class="required">*</span></label>
                             <input pInputText type="text" placeholder="{{ 'Nombres completos' | translate }}"
                                 formControlName="nombres_completos" class="w-100">
                         </div>
                         <div class="col-12 col-sm-6">
-                            <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required">*</span></label>
+                            <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required" *ngIf="!esPersonaJuridica">*</span><span class="text-muted" *ngIf="esPersonaJuridica"> ({{ "opcional" | translate }})</span></label>
                             <input pInputText type="text" placeholder="{{ 'Apellidos completos' | translate }}"
                                 formControlName="apellidos_completos" class="w-100">
                         </div>
