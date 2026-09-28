@@ -23,7 +23,7 @@
 - [x] 2.5 `GET /v1/activacion/metricas` (Super Admin).
 
 ## 3. Contenido (sesión de videos)
-- [ ] 3.1 Textos finales de los tres correos, dentro de los largos.
+- [x] 3.1 Textos finales de los tres correos, dentro de los largos.
 - [ ] 3.2 Tres videos de 30 a 45 s, con sus enlaces.
 
 ## 4. Despliegue (con OK de Daniel)

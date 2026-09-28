@@ -7516,4 +7516,6 @@ Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Danie
 2. los textos finales y los videos de la sesión de videos (`ACTIVACION_VIDEO_PRODUCTO|TIENDA|COMPARTIR`);
 3. revisar `/v1/activacion/metricas` tras dos días de sombra.
 
+**Textos aprobados por Daniel (28-sep):** los finales de la sesión de videos, con "con las formas de pago de tu cuenta" en el paso de la tienda. Están en producción desde e974510 (desplegado por la sesión de tickets), con la secuencia todavía en sombra. Para pasar a `envio` falta el DNS de katuq.com y, opcionalmente, los videos.
+
 **Estado:** en producción en sombra.
