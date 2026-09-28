@@ -7394,7 +7394,7 @@ Verificado en producción:
 
 **En producción:** backend `7d1e841` y front 2026.09.24.2. Prueba real: un documento en serie quedó marcado, con riesgo 0 y el chip "Documento por confirmar" en el aviso interno.
 
-## D-323 (2026-09-27) — PROPUESTA: el filtro del registro (el sospechoso confirma un código por correo antes de entrar)
+## D-323 (2026-09-27) — El filtro del registro: el sospechoso confirma un código por correo antes de entrar (APROBADA, IMPLEMENTADA, SIN DESPLEGAR)
 
 **Contexto.** El caso Aurora (25-sep): entró con datos inventados y riesgo 0, y le contó a la pauta como registro real. Daniel pidió "el filtro solo pa'l registro por ahora": el sospechoso verifica con un código por correo antes de entrar, sin modo limitado dentro de la app ni captcha. También eligió que salga **antes** que la tienda en 1 clic (D-324). El número D-323 lo reservó la propuesta amplia "blindar el registro contra cuentas falsas", de otra sesión, que queda en espera junto con su fase 0.
 
@@ -7407,7 +7407,23 @@ Verificado en producción:
 
 Se despliega primero en sombra.
 
-**Estado:** propuesta validada, pendiente de aprobación.
+**Aprobación (Daniel, 27-sep):** alcance recortado aprobado, y la línea `proxy_set_header X-Real-IP $remote_addr;` en el `location /` de back.katuq.com, con respaldo, `nginx -t` y recarga.
+
+**Implementado** (ramas `feature/filtro-registro` en el backend, 1ff1bda, y en el front, 0b0923b9; nada en producción):
+- backend: `services/registro/filtroRegistro.js` (coincidencias y Opttia en la zona gris), `verificacionCorreo.js` (código con la mecánica de `siteCuenta`), `coherenciaOpttia.js`; señales puras en `registrationSecurity.js`; `POST /v1/registro/codigo` y `/confirmar`; el login responde 403 `VERIFICACION_PENDIENTE` y reenvía el código; `construirSesion` sale del login sin cambiar su respuesta; la promoción se canjea al confirmar; la consola no cuenta a los pendientes;
+- front: componente `app-codigo-correo` en `/registrarse` y en el login; el píxel sale al confirmar;
+- pruebas: `npm run test:filtro-registro` (contrato con los casos de la spec, mutaciones verificadas) y las suites de sitios, métricas, campañas y límites en verde; `npm run build` del front sin errores.
+
+**Desvíos del diseño:**
+- el X-Real-IP también lo leen los limitadores "por visitante" (`utils/rateLimitKeys.js`). Hallazgo: hoy nginx no manda la IP del visitante en `location /`, así que esos limitadores cuentan a **todos** en una sola cubeta (por ejemplo, 20 pedidos de tienda cada 15 min para todas las tiendas juntas). Con la línea de nginx quedan por visitante, que era su intención;
+- con la IP de nginx no se cuenta nada por IP: antes, 12 registros de cualquiera en una hora rechazaban a todos;
+- "misma IP en 24 h" se guarda como el último registro por IP (`registration_rate/ultimo_<ip>`), no como un contador diario;
+- el 403 del login usa `code`, como el `EMPRESA_SIN_ACCESO` que ya existía;
+- la calibración contra los registros reales de septiembre no se corrió: el permiso para leer datos personales de producción se negó. La hace el modo sombra.
+
+**Orden de despliegue (con OK de Daniel):** 1) nginx; 2) backend con `REG_VERIFY_THRESHOLD=1000` (sombra) y la rama medida contra producción; 3) front desde una copia limpia; 4) dos días de pauta y revisar `registrationSignals`; 5) umbral a 30 y prueba con un registro falso controlado.
+
+**Estado:** aprobada e implementada en ramas; sin desplegar.
 
 ## D-324 (2026-09-27) — La tienda queda publicada al terminar el registro (APROBADA)
 
