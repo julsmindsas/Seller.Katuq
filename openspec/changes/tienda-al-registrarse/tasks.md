@@ -1,13 +1,13 @@
 ## 0. Decisiones
 
 - [x] 0.1 Aprobada por Daniel el 27-sep. El filtro del registro va primero; en modo WhatsApp el pedido también queda en Katuq; el aviso llega al entrar y por correo.
-- [ ] 0.2 Registrar D-324 en `specs/CONTRACT.md` (D-323 es de la propuesta de cuentas falsas).
+- [x] 0.2 Registrar D-324 en `specs/CONTRACT.md` (D-323 es de la propuesta de cuentas falsas).
 
 ## 1. Que la tienda no nazca vacía (independiente, primero)
 
-- [ ] 1.1 Prueba de contrato: el producto de la configuración inicial con 10 unidades sale disponible en la vitrina; sin inventario, también.
-- [ ] 1.2 `buildMinimalProduct`: `cantidadDisponible = initialQuantity` al crearlo. El write-set es solo el producto que se crea; no toca `inventory` ni precios.
-- [ ] 1.3 `savePaymentMethods`: "Nequi" y "Daviplata" reconocen "NEQUI - DAVIPLATA" y no duplican. Con prueba.
+- [x] 1.1 Prueba de contrato: el producto de la configuración inicial con 10 unidades sale disponible en la vitrina; sin inventario, también.
+- [x] 1.2 `buildMinimalProduct`: `cantidadDisponible = initialQuantity` al crearlo. El write-set es solo el producto que se crea; no toca `inventory` ni precios.
+- [x] 1.3 `savePaymentMethods`: "Nequi" y "Daviplata" reconocen "NEQUI - DAVIPLATA" y no duplican. Con prueba.
 - [ ] 1.4 Foto opcional en el paso de producto, con el servicio de fotos de producto que ya existe.
 
 ## 2. Pedido por WhatsApp en la tienda
@@ -20,16 +20,16 @@
 
 ## 3. Tienda en 1 clic
 
-- [ ] 3.1 Prueba de contrato de `POST /v1/onboarding/tienda`:
+- [x] 3.1 Prueba de contrato de `POST /v1/onboarding/tienda`:
   - empresa del token;
   - idempotente;
   - por cada tipo de negocio, la plantilla y el `modoPedido` que corresponden;
   - tienda habilitada con bodega, `pagoEnLinea` en false sin pasarela propia;
   - respeta "1 tienda en gratis";
   - no escribe pedidos, inventario ni precios.
-- [ ] 3.2 `crearTiendaInicial` en `controllers/sites.js` (plantilla, generador sin IA, tienda lista, publicación compartida) y el endpoint.
+- [x] 3.2 `crearTiendaInicial` en `controllers/sites.js` (plantilla, generador sin IA, tienda lista, publicación compartida) y el endpoint.
 - [ ] 3.3 `companies.tipoNegocio`: la pregunta en el paso de contexto, preseleccionada desde el registro.
-- [ ] 3.4 Paso de resultado:
+- [x] 3.4 Paso de resultado:
   - "Publicar mi tienda";
   - luego "Verla", "Compartir por WhatsApp" y "Copiar para Instagram";
   - el plan real;
@@ -40,7 +40,7 @@
 
 - [ ] 4.1 Aviso en `/welcome` para registrados desde el 1-sep, sin sitios y con producto: borrador, vista previa y "Publicar".
 - [ ] 4.1b Correo "Crea tu tienda en 1 clic": una sola vez por empresa verificada, con el enlace directo y la marca `invitacionTiendaEnviadaAt`. Script con `--dry-run` primero para los ya registrados.
-- [ ] 4.2 `primeraTiendaPublicadaAt` y el evento `sitio_publicado` en toda primera publicación (editor, Opttia, 1 clic).
+- [x] 4.2 `primeraTiendaPublicadaAt` y el evento `sitio_publicado` en toda primera publicación (editor, Opttia, 1 clic).
 - [ ] 4.3 Métrica semanal "tiendas en las primeras 24 h" en `platformMetrics` y en el panel del Super Admin, sin las empresas excluidas.
 - [ ] 4.4 Contar a los 31 registros del 23 al 27-sep como línea de base (0 %) y registrarlo en CONTRACT.md.
 

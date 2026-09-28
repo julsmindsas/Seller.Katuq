@@ -7394,7 +7394,7 @@ Verificado en producción:
 
 **En producción:** backend `7d1e841` y front 2026.09.24.2. Prueba real: un documento en serie quedó marcado, con riesgo 0 y el chip "Documento por confirmar" en el aviso interno.
 
-## D-323 (2026-09-27) — El filtro del registro: el sospechoso confirma un código por correo antes de entrar (APROBADA, EN PRODUCCIÓN EN SOMBRA desde el 28-sep)
+## D-323 (2026-09-27) — El filtro del registro: el sospechoso confirma un código por correo antes de entrar (APROBADA, ACTIVA desde el 28-sep)
 
 **Contexto.** El caso Aurora (25-sep): entró con datos inventados y riesgo 0, y le contó a la pauta como registro real. Daniel pidió "el filtro solo pa'l registro por ahora": el sospechoso verifica con un código por correo antes de entrar, sin modo limitado dentro de la app ni captcha. También eligió que salga **antes** que la tienda en 1 clic (D-324). El número D-323 lo reservó la propuesta amplia "blindar el registro contra cuentas falsas", de otra sesión, que queda en espera junto con su fase 0.
 
@@ -7430,9 +7430,11 @@ Se despliega primero en sombra.
 
 **Pendiente:** con dos días de pauta, revisar `companies.registrationSignals` (puntaje y razones) de los registros nuevos y, si ningún real llega a 30, bajar `REG_VERIFY_THRESHOLD` a 30 (`pm2 reload katuq-api --update-env`) y probar con un registro falso controlado. Reversa: volver a 1000, sin desplegar.
 
-**Estado:** en producción en sombra.
+**Activación (28-sep, ~12:20 UTC):** Daniel: "habilita todo ya, nada de pruebas todo produccion para aprovechar la pauta". Se saltó la sombra: `REG_VERIFY_THRESHOLD=30` en `functions/.env` y `pm2 reload`. Riesgo aceptado: el código sale por el correo de Katuq, que falla DMARC y puede caer en Spam (la pantalla lo avisa y permite reenviar). Reversa: 1000, sin desplegar.
 
-## D-324 (2026-09-27) — La tienda queda publicada al terminar el registro (APROBADA)
+**Estado:** activo en producción.
+
+## D-324 (2026-09-27) — La tienda queda publicada al terminar el registro (APROBADA, EN PRODUCCIÓN desde el 28-sep)
 
 **Contexto.** Daniel: "hagamos lo que prometemos, con lo de la página web, pero ten en cuenta los otros comercios". La pauta promete "crea tu tienda gratis" y, de 31 registros del 23 al 27-sep, **ninguno** tiene página. 11 terminaron la configuración inicial y quedaron en venta asistida, y solo 1 volvió a entrar. El pedido llegó por la sesión de videos.
 
@@ -7457,3 +7459,19 @@ Se despliega primero en sombra.
 - El filtro del registro va primero: cambio `filtro-registro-verificacion`, D-323.
 - En modo WhatsApp el pedido también queda en Katuq ("Por confirmar"), con diff de `crearPedido` aprobado antes de aplicarlo.
 - La invitación a los ya registrados llega al entrar y por correo.
+
+**Despliegue (28-sep, con OK de Daniel: "subelo y despliega"):**
+- parte 1, backend b326fef: el producto de la configuración inicial nace con `cantidadDisponible` = cantidad inicial, y "Nequi"/"Daviplata" reusan la "NEQUI - DAVIPLATA" del registro;
+- tienda en 1 clic, backend b983d39 y web 2026.09.28.4 (0585425f + release fe12d624):
+  - `crearTiendaInicial` y `GET/POST /v1/onboarding/tienda` (empresa del token), con bandera `TIENDA_AL_REGISTRARSE`, que por defecto va encendida;
+  - la tienda nace habilitada, con BOD-001, las formas manuales, contra entrega si eligió efectivo y pago en línea solo con pasarela propia;
+  - la plantilla se escoge por pistas de lo que vende, con texto neutro si no hay pista;
+  - se guarda `primeraTiendaPublicadaAt` en toda primera publicación;
+- pruebas: `tests/onboarding/tiendaAlRegistrarse.contract.test.js`, con mutaciones verificadas y corrida en el servidor.
+
+**Desvío:** comida y por mayor salen con el checkout normal, y el pedido llega a Katuq. El pedido por WhatsApp toca `crearPedido`, así que va aparte, con el diff aprobado por Daniel.
+
+**Pendiente:**
+- el aviso a los ya registrados en `/welcome` y el correo único (`--dry-run` primero);
+- la métrica de 24 h en el panel del Super Admin;
+- la línea base de 0 de 31 registros.
