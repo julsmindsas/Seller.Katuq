@@ -47,6 +47,17 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
   enviandoComentario = false;
   showCommentSuccess = false;
 
+  // ── ¿Se resolvió? (D-328) ───────────────────────────────────────────────
+  confirmacionModo: '' | 'si' | 'no' = '';
+  calificacion: number | null = null;
+  calificacionHover = 0;
+  comentarioConfirmacion = '';
+  motivoRechazo = '';
+  enviandoConfirmacion = false;
+  readonly estrellas = [1, 2, 3, 4, 5];
+  readonly MAX_TEXTO_CONFIRMACION = 1000;
+  private guardandoTarea = false;
+
   isLoading = true;
 
   private currentUser: any = null;
@@ -269,6 +280,7 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
     this.selected = ticket;
     this.newComment = '';
     this.limpiarArchivos();
+    this.limpiarConfirmacion();
 
     // En pantalla angosta la lista y el detalle quedan apilados: sin esto el
     // toque en un ticket no muestra nada porque el detalle está más abajo.
@@ -285,9 +297,19 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
       return;
     }
     if (!this.selected || this.filteredTasks.indexOf(this.selected) === -1) {
+      // Tras recargar los tickets son objetos nuevos: se conserva el que
+      // estaba abierto si sigue en la lista
+      const mismo = this.selected
+        ? this.filteredTasks.find(t => t.cd && t.cd === this.selected.cd)
+        : null;
+      if (mismo) {
+        this.selected = mismo;
+        return;
+      }
       this.selected = this.filteredTasks[0];
       this.newComment = '';
       this.limpiarArchivos();
+      this.limpiarConfirmacion();
     }
   }
 
@@ -588,6 +610,187 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
         error: (err) => reject(err)
       });
     });
+  }
+
+  // ===========================================================================
+  // Resolución, tareas y "¿Se resolvió?" (D-328)
+  // ===========================================================================
+
+  resolucionDe(ticket: any): { texto: string; version: string } | null {
+    const texto = String(ticket?.resolucion?.texto || '').trim();
+    if (!texto) { return null; }
+    return { texto, version: String(ticket?.resolucion?.version || '').trim() };
+  }
+
+  tareasDe(ticket: any): any[] {
+    const tareas = Array.isArray(ticket?.tareasComercio) ? ticket.tareasComercio : [];
+    return tareas.filter((t: any) => t && String(t.texto || '').trim());
+  }
+
+  tareasPendientes(ticket: any): number {
+    return this.tareasDe(ticket).filter(t => !t.hecha).length;
+  }
+
+  /**
+   * Marca o desmarca una tarea. Se manda solo `tareasComercio`: el ticket
+   * completo podría devolver un estado viejo y deshacer lo que hizo el equipo.
+   */
+  async toggleTarea(ticket: any, tarea: any): Promise<void> {
+    if (!ticket || !tarea || this.guardandoTarea) { return; }
+    this.guardandoTarea = true;
+
+    const previas = (ticket.tareasComercio || []).map((t: any) => ({ ...t }));
+    const hecha = !tarea.hecha;
+    ticket.tareasComercio = (ticket.tareasComercio || []).map((t: any) => {
+      if (t.id !== tarea.id) { return t; }
+      const cambiada = { ...t, hecha };
+      if (hecha) {
+        cambiada.completada = new Date().toISOString();
+      } else {
+        delete cambiada.completada;
+      }
+      return cambiada;
+    });
+
+    try {
+      await this.saveChanges({ cd: ticket.cd, tareasComercio: ticket.tareasComercio });
+    } catch (error) {
+      ticket.tareasComercio = previas;
+      console.error('Error guardando la tarea:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'No pudimos guardar la tarea',
+        text: 'Revisa tu conexión e inténtalo de nuevo.',
+        confirmButtonText: 'Entendido'
+      });
+    } finally {
+      this.guardandoTarea = false;
+    }
+  }
+
+  /**
+   * A qué cierre responde la confirmación: la última vez que pasó a Resuelto.
+   * Es la misma regla del backend (services/soporte/confirmacionResolucion.js);
+   * si no coinciden, el backend responde 409 y la pantalla se recarga.
+   */
+  private cierreVigente(ticket: any): string {
+    const historial = Array.isArray(ticket?.historyStatus) ? ticket.historyStatus : [];
+    for (let i = historial.length - 1; i >= 0; i--) {
+      const entrada = historial[i];
+      if (String(entrada?.Status || '').trim().toLowerCase() === 'resuelto' && String(entrada?.DateTime || '').trim()) {
+        return String(entrada.DateTime).trim();
+      }
+    }
+    return String(ticket?.resolucion?.fecha || '').trim() || 'sin-historial';
+  }
+
+  /** La respuesta del comercio para el cierre vigente, si ya la dio */
+  confirmacionVigente(ticket: any): any {
+    const lista = Array.isArray(ticket?.confirmacionesComercio) ? ticket.confirmacionesComercio : [];
+    const cierre = this.cierreVigente(ticket);
+    return lista.find((c: any) => c && String(c.cierre || '').trim() === cierre) || null;
+  }
+
+  preguntarConfirmacion(ticket: any): boolean {
+    return this.estadoKey(ticket) === 'resuelto' && !this.confirmacionVigente(ticket);
+  }
+
+  elegirConfirmacion(modo: 'si' | 'no'): void {
+    this.confirmacionModo = this.confirmacionModo === modo ? '' : modo;
+  }
+
+  elegirCalificacion(valor: number): void {
+    this.calificacion = this.calificacion === valor ? null : valor;
+  }
+
+  get puedeEnviarConfirmacion(): boolean {
+    if (this.enviandoConfirmacion) { return false; }
+    if (this.confirmacionModo === 'si') {
+      return this.comentarioConfirmacion.length <= this.MAX_TEXTO_CONFIRMACION;
+    }
+    if (this.confirmacionModo === 'no') {
+      const motivo = this.motivoRechazo.trim();
+      return !!motivo && motivo.length <= this.MAX_TEXTO_CONFIRMACION;
+    }
+    return false;
+  }
+
+  async enviarConfirmacion(ticket: any): Promise<void> {
+    if (!ticket || !this.puedeEnviarConfirmacion) { return; }
+
+    const resuelto = this.confirmacionModo === 'si';
+    const cuerpo = resuelto
+      ? { resuelto: true, calificacion: this.calificacion, comentario: this.comentarioConfirmacion.trim() }
+      : { resuelto: false, motivo: this.motivoRechazo.trim() };
+
+    this.enviandoConfirmacion = true;
+    try {
+      const respuesta: any = await new Promise((resolve, reject) => {
+        this.ticketService.confirmarResolucionTicket(ticket.cd, cuerpo).subscribe({
+          next: resolve,
+          error: reject
+        });
+      });
+
+      this.limpiarConfirmacion();
+
+      if (resuelto) {
+        const confirmacion = respuesta?.result?.confirmacion;
+        if (confirmacion) {
+          ticket.confirmacionesComercio = [...(ticket.confirmacionesComercio || []), confirmacion];
+        }
+        Swal.fire({
+          icon: 'success',
+          title: '¡Gracias por contarnos!',
+          text: 'Tu respuesta le llega al equipo de soporte.',
+          timer: 2500,
+          showConfirmButton: false
+        });
+      } else {
+        // El ticket cambió de estado, historial e hilo: se trae de nuevo
+        // para no mostrar ni reenviar una copia vieja
+        Swal.fire({
+          icon: 'info',
+          title: 'Reabrimos tu ticket',
+          text: 'El equipo de soporte ya recibió lo que nos contaste y lo retoma.',
+          confirmButtonText: 'Entendido'
+        });
+        this.cargarTickets();
+      }
+    } catch (error: any) {
+      console.error('Error enviando la confirmación:', error);
+      if (error?.status === 409) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Este ticket ya cambió',
+          text: error?.error?.message || 'Lo actualizamos para que veas cómo quedó.',
+          confirmButtonText: 'Entendido'
+        });
+        this.limpiarConfirmacion();
+        this.cargarTickets();
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'No pudimos guardar tu respuesta',
+          text: error?.status === 400 && error?.error?.message
+            ? error.error.message
+            : error?.status === 404
+              ? 'Esta opción todavía no está disponible. Inténtalo más tarde o respóndenos en la conversación.'
+              : 'Revisa tu conexión e inténtalo de nuevo. Lo que escribiste sigue ahí.',
+          confirmButtonText: 'Entendido'
+        });
+      }
+    } finally {
+      this.enviandoConfirmacion = false;
+    }
+  }
+
+  private limpiarConfirmacion(): void {
+    this.confirmacionModo = '';
+    this.calificacion = null;
+    this.calificacionHover = 0;
+    this.comentarioConfirmacion = '';
+    this.motivoRechazo = '';
   }
 
   // ===========================================================================

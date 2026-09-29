@@ -1002,6 +1002,15 @@ editTicket(newTicket: any): Observable<any>  {
   return this.httpClient.put('https://api.katuq.com/v1/support/ticket/'+newTicket.cd, newTicket);
 }
 
+/**
+ * El comercio contesta "¿Se resolvió?" (D-328). Sí: { resuelto: true,
+ * calificacion?: 1-5, comentario? }. No: { resuelto: false, motivo }, y el
+ * backend reabre el ticket. El interceptor pone el token.
+ */
+confirmarResolucionTicket(ticketId: string, confirmacion: any): Observable<any> {
+  return this.httpClient.post('https://api.katuq.com/v1/support/ticket/' + ticketId + '/confirmacion', confirmacion);
+}
+
 addNotification(message: string, ticketId: string) {
 
   const ref = this.db.list('notificaciones');

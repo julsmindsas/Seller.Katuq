@@ -213,6 +213,113 @@
         </div>
       </article>
 
+      <!-- Resolución, tareas y "¿Se resolvió?" (D-328) -->
+      <article class="mt-card mt-res"
+               *ngIf="resolucionDe(selected) || tareasDe(selected).length || estadoKey(selected) === 'resuelto' || confirmacionVigente(selected)">
+        <div class="mt-conv__head">
+          <span class="mt-res__icon"><i class="pi pi-check-circle"></i></span>
+          <span class="mt-conv__title">Resolución</span>
+          <span class="mt-res__version" *ngIf="resolucionDe(selected)?.version">
+            Disponible desde la versión {{ resolucionDe(selected)?.version }}
+          </span>
+        </div>
+
+        <div class="mt-res__body">
+          <p class="mt-desc" *ngIf="resolucionDe(selected) as res">{{ res.texto }}</p>
+          <p class="mt-res__sin" *ngIf="!resolucionDe(selected) && estadoKey(selected) === 'resuelto'">
+            El equipo marcó este ticket como resuelto.
+          </p>
+
+          <!-- Lo que le queda al comercio -->
+          <div class="mt-tareas" *ngIf="tareasDe(selected).length">
+            <span class="mt-label">
+              Lo que te toca
+              <ng-container *ngIf="tareasPendientes(selected)"> · {{ tareasPendientes(selected) }} pendiente{{ tareasPendientes(selected) === 1 ? '' : 's' }}</ng-container>
+            </span>
+            <button type="button" class="mt-tarea" *ngFor="let tarea of tareasDe(selected)"
+                    [class.is-hecha]="tarea.hecha"
+                    role="checkbox" [attr.aria-checked]="!!tarea.hecha"
+                    (click)="toggleTarea(selected, tarea)">
+              <span class="mt-tarea__box"><i class="pi pi-check" *ngIf="tarea.hecha"></i></span>
+              <span class="mt-tarea__texto">{{ tarea.texto }}</span>
+            </button>
+          </div>
+
+          <!-- Pregunta -->
+          <div class="mt-confirma" *ngIf="preguntarConfirmacion(selected)">
+            <span class="mt-confirma__titulo">¿Se resolvió tu problema?</span>
+            <div class="mt-confirma__opciones">
+              <button type="button" class="mt-opcion is-si" [class.is-on]="confirmacionModo === 'si'"
+                      [disabled]="enviandoConfirmacion" (click)="elegirConfirmacion('si')">
+                <i class="pi pi-thumbs-up"></i> Sí, quedó resuelto
+              </button>
+              <button type="button" class="mt-opcion is-no" [class.is-on]="confirmacionModo === 'no'"
+                      [disabled]="enviandoConfirmacion" (click)="elegirConfirmacion('no')">
+                <i class="pi pi-thumbs-down"></i> No, sigue fallando
+              </button>
+            </div>
+
+            <div class="mt-confirma__form" *ngIf="confirmacionModo === 'si'">
+              <span class="mt-label">¿Cómo te atendimos? <span class="mt-opcional">Opcional</span></span>
+              <div class="mt-estrellas" (mouseleave)="calificacionHover = 0" role="radiogroup" aria-label="Calificación de 1 a 5">
+                <button type="button" class="mt-estrella" *ngFor="let n of estrellas"
+                        [class.is-on]="n <= (calificacionHover || calificacion || 0)"
+                        role="radio" [attr.aria-checked]="calificacion === n" [attr.aria-label]="n + ' de 5'"
+                        (mouseenter)="calificacionHover = n" (click)="elegirCalificacion(n)">
+                  <i class="pi" [ngClass]="n <= (calificacionHover || calificacion || 0) ? 'pi-star-fill' : 'pi-star'"></i>
+                </button>
+              </div>
+              <textarea [(ngModel)]="comentarioConfirmacion" rows="2" [maxlength]="MAX_TEXTO_CONFIRMACION"
+                        [disabled]="enviandoConfirmacion"
+                        placeholder="Si quieres, cuéntanos algo más (opcional)"
+                        aria-label="Comentario opcional"></textarea>
+              <div class="mt-confirma__acciones">
+                <button type="button" class="mt-btn mt-btn--primary" [disabled]="!puedeEnviarConfirmacion"
+                        (click)="enviarConfirmacion(selected)">
+                  <i class="pi" [ngClass]="enviandoConfirmacion ? 'pi-spin pi-spinner' : 'pi-check'"></i>
+                  {{ enviandoConfirmacion ? 'Enviando…' : 'Enviar' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-confirma__form" *ngIf="confirmacionModo === 'no'">
+              <span class="mt-label">¿Qué sigue fallando?</span>
+              <textarea [(ngModel)]="motivoRechazo" rows="3" [maxlength]="MAX_TEXTO_CONFIRMACION"
+                        [class.is-on]="motivoRechazo.trim()"
+                        [disabled]="enviandoConfirmacion"
+                        placeholder="Cuéntanos qué pasa ahora para que el equipo lo retome"
+                        aria-label="Qué sigue fallando"></textarea>
+              <div class="mt-confirma__acciones">
+                <span class="mt-composer__hint">El ticket vuelve a Pendiente y se avisa al equipo</span>
+                <button type="button" class="mt-btn mt-btn--primary" [disabled]="!puedeEnviarConfirmacion"
+                        (click)="enviarConfirmacion(selected)">
+                  <i class="pi" [ngClass]="enviandoConfirmacion ? 'pi-spin pi-spinner' : 'pi-replay'"></i>
+                  {{ enviandoConfirmacion ? 'Enviando…' : 'Reabrir ticket' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Respuesta ya dada -->
+          <div class="mt-confirmado" *ngIf="confirmacionVigente(selected) as conf"
+               [class.is-no]="!conf.resuelto">
+            <i class="pi" [ngClass]="conf.resuelto ? 'pi-thumbs-up' : 'pi-replay'"></i>
+            <div class="mt-confirmado__texto">
+              <span class="mt-confirmado__titulo">
+                {{ conf.resuelto ? 'Confirmaste que quedó resuelto' : 'Nos dijiste que no quedó resuelto' }}
+                <span class="mt-confirmado__fecha">· {{ conf.fecha | date:'dd MMM yyyy, HH:mm' }}</span>
+              </span>
+              <span class="mt-estrellas mt-estrellas--quieta" *ngIf="conf.resuelto && conf.calificacion">
+                <i class="pi" *ngFor="let n of estrellas" [ngClass]="n <= conf.calificacion ? 'pi-star-fill is-on' : 'pi-star'"></i>
+              </span>
+              <span class="mt-confirmado__nota" *ngIf="conf.resuelto ? conf.comentario : conf.motivo">
+                “{{ conf.resuelto ? conf.comentario : conf.motivo }}”
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+
       <!-- Conversación -->
       <article class="mt-card">
         <div class="mt-conv__head">

@@ -7588,3 +7588,37 @@ El problema real es el costo de reconstruir `getSearchIndex(company)` cuando el 
 **Sin código tocado todavía** — proposal + design + specs delta + tasks creados, pendiente `/opsx:apply` con autorización explícita. Cero escrituras en esta sesión, todo el diagnóstico fue solo lectura.
 
 **Fuera de alcance.** No se confirmó si producción tiene un timeout de proxy/gateway (nginx u otro) que corte la petición antes de responder — no hay acceso SSH a la instancia real desde esta sesión.
+
+## D-328 (2026-09-29) — El comercio confirma si su ticket quedó resuelto; un "No" lo reabre (IMPLEMENTADA, SIN COMMIT NI DEPLOY)
+
+**Contexto.** Punto #3 de la lluvia de ideas de Support ([ClickUp wdu9v7ajj9](https://app.clickup.com/t/wdu9v7ajj9)). El correo de cierre decía "si el problema sigue, respóndelo y lo reabrimos", pero el comercio no tenía dónde decirlo, y las métricas contaban como resuelto lo que el equipo cerró. Mis tickets tampoco mostraba la resolución ni las tareas del comercio, aunque el correo le pedía "márcalo como hecho".
+
+**Decisión** (`katuq_admin_back_firebase/openspec/changes/confirmacion-resolucion-ticket/`, aprobada por el usuario el 29-sep):
+- **Seller › Mis tickets:** en un ticket Resuelto se muestran la resolución, con la versión, y las tareas del comercio con casilla. Al marcar una tarea se manda solo `tareasComercio`. Luego pregunta "¿Se resolvió tu problema?":
+  - **Sí:** estrellas de 1 a 5 y comentario, los dos opcionales.
+  - **No:** motivo obligatorio. El ticket se reabre a **Pendiente**, tenga o no responsable.
+- **Backend:** `POST /v1/support/ticket/:id/confirmacion`, en el router existente, con `auth`.
+  - Transacción Firestore; responde 403 para otra empresa y **para el equipo Julsmind** (nadie contesta por el comercio), y 409 si el ticket no está Resuelto o si ese cierre ya tiene respuesta.
+  - Guarda `confirmacionesComercio[]` en el mismo documento de `support`: una entrada por cierre, identificada por el `DateTime` de la última entrada Resuelto del historial. Sin colección nueva.
+  - El campo **no** está en la lista blanca del PUT.
+  - El usuario sale de la sesión, nunca del cuerpo.
+  - Reglas puras en `services/soporte/confirmacionResolucion.js`.
+- **Avisos:** un No manda **un** correo de reapertura con el motivo ("reabierto por el comercio"). El comentario del motivo (`origen: 'confirmacion'`) no genera además un correo de "Nueva respuesta", pero sí escribe en la campana de Support. El cierre entra en la clave de idempotencia para que un segundo No, tras otro cierre, también avise. Un Sí no manda correo. La cola del correo de cierre ahora dice "Confírmanos en Mis tickets si quedó resuelto".
+- **Support:**
+  - Detalle: sección "Confirmación del comercio".
+  - Tablero y backlog: chip "Reabierto por el comercio".
+  - Métricas: tarjeta "Lo que dice el comercio" (% confirmados, % reabiertos por el comercio, calificación promedio y sin respuesta, sobre los cierres del periodo).
+  - La entrada del historial que escribe el comercio lleva `origen: 'confirmacion'`, y `correosDelEquipo` la ignora; si no, las métricas lo contarían como agente.
+
+**Verificado:**
+- 16 + 6 pruebas nuevas en el backend (`npm run test:soporte-confirmacion`, junto con las de write-set, tareas y respuesta del comercio: 49/49).
+- Backend local: sin token 401; validación 400; ticket inexistente 404; equipo Julsmind 403.
+- Build de producción de Seller y de Support en verde.
+- Escenario de métricas de la spec (10 cierres → 60 % / 10 % / 4,5).
+- **No** probado en navegador ni contra un ticket real.
+
+**Orden de despliegue:** backend → Support → Seller. Si el Seller sale antes, el botón responde 404 y la pantalla dice "todavía no está disponible".
+
+**Riesgo conocido, no introducido aquí:** Support y Seller guardan el ticket con PUT completo (`status`, `ticketComments`). Un detalle abierto desde antes de la reapertura puede devolver el estado a Resuelto o borrar el comentario del motivo al guardar.
+
+**Pendiente:** commits en los tres repos, deploy, prueba de punta a punta con la empresa de pruebas y actualizar ClickUp.
