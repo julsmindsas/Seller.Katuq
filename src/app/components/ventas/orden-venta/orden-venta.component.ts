@@ -4,6 +4,7 @@ import { Empresa } from "../../../shared/models/empresa/empresa";
 import { CompanyInformation } from "../../../shared/models/User/CompanyInformation";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
 import { SecurityService } from "../../../shared/services/security/security.service";
+import { CotizacionesService } from "../../cotizaciones/cotizaciones.service";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
@@ -47,10 +48,34 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
   pdfProgress: number = 0;
   currentProgressMessage: string = "";
 
+  /**
+   * Ticket 1084: logo de la tienda ya convertido a data URL. html2canvas no puede
+   * leer Firebase Storage por CORS (por eso el <img> estuvo comentado); se pide
+   * por el proxy del backend, igual que los banners del PDF de cotizaciones.
+   * Este componente vive oculto en la lista de pedidos, así que el logo queda
+   * precargado antes de que alguien pulse "Orden de venta".
+   */
+  logoDataUrl: string | null = null;
+  private logoUrlCargado: string | null = null;
+
   constructor(
     @Optional() public activeModal: NgbActiveModal,
     private securityService: SecurityService,
+    private cotizacionesService: CotizacionesService,
   ) {}
+
+  private cargarLogo(url: string | undefined | null): void {
+    if (!url || url === this.logoUrlCargado) return;
+    this.logoUrlCargado = url;
+    this.cotizacionesService
+      .imageToBase64(url)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => { this.logoDataUrl = res?.success && res.dataUrl ? res.dataUrl : null; },
+        // Sin logo el documento sale igual, con el nombre de la tienda.
+        error: () => { this.logoDataUrl = null; },
+      });
+  }
 
   ngOnInit(): void {
     this.cargarDatosEmpresa();
@@ -96,6 +121,7 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
         }
         this.companyInformation = companyInfo;
         this.logoError = false; // Reset error state when company info changes
+        this.cargarLogo(companyInfo?.imgUrlLogo);
         console.log("✅ Company information cargada:", this.companyInformation);
       });
   }

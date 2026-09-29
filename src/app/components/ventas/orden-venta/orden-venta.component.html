@@ -4,15 +4,12 @@
   <!-- Header con logo y datos de empresa -->
   <div class="pdf-header">
     <div class="empresa-info">
-      <!-- Imagen temporal removida mientras se configura Firebase
-      <img
-        [src]="getLogoUrl()"
-        (error)="onLogoError($event)"
-        alt="Logo"
-        class="logo-empresa"> -->
+      <!-- Ticket 1084: el logo llega como data URL (proxy) para que html2canvas lo capture -->
+      <img *ngIf="logoDataUrl" [src]="logoDataUrl" alt="Logo" class="logo-empresa">
       <div class="empresa-datos">
         <h1 class="empresa-nombre">{{ nombreEmpresa }}</h1>
         <p class="empresa-nit">NIT: {{ nitEmpresaFormateado }}</p>
+        <p class="empresa-contacto" *ngIf="direccionEmpresa !== 'No disponible'">{{ direccionEmpresa }}</p>
         <p class="empresa-contacto">{{ telefonoEmpresa }} | {{ emailEmpresa }}</p>
       </div>
     </div>
@@ -109,6 +106,13 @@
     </div>
   </div>
 
+
+  <!-- Ticket 1084: la orden viaja con el pedido como remisión: constancia de recibido -->
+  <div class="recibido-section">
+    <div class="recibido-campo"><span class="recibido-linea"></span>Recibido por (nombre)</div>
+    <div class="recibido-campo"><span class="recibido-linea"></span>Firma / C.C.</div>
+    <div class="recibido-campo"><span class="recibido-linea"></span>Fecha</div>
+  </div>
 
   <!-- Footer con logo Katuq -->
   <div class="pdf-footer">

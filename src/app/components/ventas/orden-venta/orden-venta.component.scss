@@ -433,6 +433,29 @@ $color-danger: #e74c3c;
 }
 
 // ============================================================
+// RECIBIDO (ticket 1084: la orden se entrega como remisión)
+// ============================================================
+.recibido-section {
+  display: flex;
+  gap: 18px;
+  margin-top: 28px;
+  page-break-inside: avoid;
+
+  .recibido-campo {
+    flex: 1;
+    font-size: 8pt;
+    color: $color-text-light;
+    text-align: center;
+  }
+
+  .recibido-linea {
+    display: block;
+    border-top: 1px solid $color-border-dark;
+    margin-bottom: 4px;
+  }
+}
+
+// ============================================================
 // FOOTER (Compacto)
 // ============================================================
 .pdf-footer {
