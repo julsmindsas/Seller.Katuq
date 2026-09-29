@@ -261,7 +261,25 @@
     <div *ngIf="!submissionSuccess">
       <!-- Paso 0: Página de Bienvenida/Landing -->
       <div *ngIf="currentStep === 'welcome'" class="welcome-landing" role="main" aria-label="Crea tu cuenta en Katuq">
-        <div class="welcome-content reg-welcome">
+        <!-- D-327: la campaña de vendedores (perfil=vendedor) le habla a quien ya vende, sin "gratis" (aprobado por Daniel, 29-sep). -->
+        <div *ngIf="perfilRegistro" class="welcome-content reg-welcome">
+          <span class="reg-eyebrow">Para negocios que ya venden</span>
+          <h1 class="reg-h1">Tus pedidos, inventario y cobros <span class="reg-hl">en un solo lugar</span></h1>
+          <p class="reg-lead">Para quien ya vende por WhatsApp, Instagram o su local y necesita orden. Creas tu cuenta en un minuto.</p>
+
+          <ul class="reg-perks">
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Todos tus pedidos en un solo lugar</strong>Registras los de WhatsApp, tu tienda en línea y tu local, sin perder ninguno.</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Inventario al día</strong>Sabes qué tienes y qué se está agotando.</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Cobros y facturación</strong>Contra entrega, transferencia o en línea con tu pasarela, y factura electrónica con tu SIIGO o World Office.</span></li>
+          </ul>
+
+          <div class="reg-cta">
+            <button class="reg-btn" (click)="startFreeRegistration()" type="button">Crear mi cuenta</button>
+            <p class="reg-fine">Son 5 datos. Toma menos de 1 minuto.</p>
+          </div>
+        </div>
+
+        <div *ngIf="!perfilRegistro" class="welcome-content reg-welcome">
           <span class="reg-eyebrow">Plan gratis · Sin tarjeta</span>
           <h1 class="reg-h1">Vende en línea desde hoy, <span class="reg-hl">gratis</span></h1>
           <p class="reg-lead">Tu tienda, tus pedidos y tu inventario en un solo lugar. Creas tu cuenta en un minuto y Katuq te guía paso a paso.</p>
@@ -269,7 +287,7 @@
           <ul class="reg-perks">
             <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>15 pedidos gratis cada mes</strong>Pasas a Premium solo si lo necesitas.</span></li>
             <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Tu tienda lista con tus productos</strong>En tu propia dirección katuq.com.</span></li>
-            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Te acompañamos hasta tu primera venta</strong>Una persona del equipo te escribe por WhatsApp.</span></li>
+            <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Te acompañamos hasta tu primera venta</strong>Te guiamos por correo, paso a paso.</span></li>
           </ul>
 
           <div class="reg-cta">
