@@ -7622,3 +7622,27 @@ El problema real es el costo de reconstruir `getSearchIndex(company)` cuando el 
 **Riesgo conocido, no introducido aquí:** Support y Seller guardan el ticket con PUT completo (`status`, `ticketComments`). Un detalle abierto desde antes de la reapertura puede devolver el estado a Resuelto o borrar el comentario del motivo al guardar.
 
 **Pendiente:** commits en los tres repos, deploy, prueba de punta a punta con la empresa de pruebas y actualizar ClickUp.
+
+## D-329 (2026-09-29) — Buscar o filtrar pedidos ya no tumba el servidor por memoria (ticket 1081, DESPLEGADA)
+
+**Contexto.** En la revisión de salud del 28-sep, `katuq-api` llevaba 56 caídas por "JavaScript heap out of memory" desde el 5-ago (el tope de Node es ~2 GB). 43 coincidían con una búsqueda de un número de pedido de ALMARA. El listado con búsqueda global o filtros de columna (`getAllByFilterOptimized`, rama de filtros en memoria) traía **completos** todos los pedidos del rango, con el carrito y la copia de cada producto (~260 KB por pedido en memoria). El enlace "Ver pedido" sin fecha ponía 2 años: ~15.000 pedidos ≈ 3,2 GB.
+
+**Decisión.**
+- **Frontend:** ticket 1075, otra sesión, publicado en 2026.09.29.7. El enlace "Ver pedido" abre el pedido en su día.
+- **Backend:** `fa3ad3e` en `controllers/orders.js`.
+  - Se filtra leyendo solo los 17 campos que usan los filtros (`.select`).
+  - Se leen completos únicamente los pedidos que pasan: por lotes (3 × 200) si son pocos, o recorriendo la consulta con `stream()` si pasan más del 70 %.
+  - De cada uno queda un resumen con los totales (`calculateOrderTotals`) para métricas y orden; la página se vuelve a leer completa.
+  - Filtros, orden, totales y métricas no cambian.
+
+**Verificado.**
+- 8 casos contra datos reales, solo lectura, con la versión vieja y la nueva corriendo a la vez: respuesta idéntica (pedidos, orden, paginación, totales y métricas).
+- Buscar DAD-013449 en 2 años: 3.188 MB / 334 s → 108 MB / 9 s.
+- Filtros amplios: de 290-693 MB a 70-97 MB, con tiempo parecido.
+- Desplegado el 29-sep a las 22:03 UTC. El despliegue solo llevaba este commit. Primera petición real sin errores: ALMARA, 1.298 pedidos filtrados en 1,6 s.
+
+**Pendiente (ticket 1081, en ese orden):**
+1. Configuración de PM2 (`wait_ready`/`listen_timeout`/`kill_timeout` y `process.send('ready')`) para quitar los 502 de cada despliegue.
+2. `restoreStock` (lee después de escribir dentro de la transacción): 7 pedidos y 48 unidades sin devolver.
+3. Métricas del listado sin filtros (`limit(50000)` de pedidos completos) y exportación de pedidos.
+4. Recargar labsMobile: sin SMS desde el 3-sep.
