@@ -201,6 +201,16 @@
               </button>
             </div>
 
+            <!-- Ticket 1068: audios (incluso de WhatsApp) y videos se reproducen aquí mismo -->
+            <div *ngFor="let adjunto of selected.adjuntosAudios" style="margin: 8px 0;">
+              <span class="mt-file__name" style="display: block; font-size: 12px; margin-bottom: 4px;">{{ nombreAdjunto(adjunto) }}</span>
+              <audio controls preload="metadata" [src]="adjunto" style="width: 100%; max-width: 360px;"></audio>
+            </div>
+            <div *ngFor="let adjunto of selected.adjuntosVideos" style="margin: 8px 0;">
+              <span class="mt-file__name" style="display: block; font-size: 12px; margin-bottom: 4px;">{{ nombreAdjunto(adjunto) }}</span>
+              <video controls preload="metadata" [src]="adjunto" style="width: 100%; max-width: 420px; max-height: 320px; border-radius: 8px; background: #000;"></video>
+            </div>
+
             <div class="mt-files" *ngIf="selected.adjuntosArchivos.length">
               <button type="button" class="mt-file" *ngFor="let adjunto of selected.adjuntosArchivos"
                       (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
@@ -355,6 +365,14 @@
                   </button>
                 </div>
 
+                <!-- Ticket 1068: audios y videos del comentario se reproducen en línea -->
+                <div *ngFor="let adjunto of comment.audios" style="margin: 6px 0;">
+                  <audio controls preload="metadata" [src]="adjunto" [title]="nombreAdjunto(adjunto)" style="width: 100%; max-width: 320px;"></audio>
+                </div>
+                <div *ngFor="let adjunto of comment.videos" style="margin: 6px 0;">
+                  <video controls preload="metadata" [src]="adjunto" [title]="nombreAdjunto(adjunto)" style="width: 100%; max-width: 360px; max-height: 280px; border-radius: 8px; background: #000;"></video>
+                </div>
+
                 <div class="mt-files" *ngIf="comment.archivos?.length">
                   <button type="button" class="mt-file" *ngFor="let adjunto of comment.archivos"
                           (click)="openInNewTab(adjunto)" [title]="nombreAdjunto(adjunto)">
@@ -393,7 +411,9 @@
                       [disabled]="enviandoComentario">
                 <i class="pi pi-paperclip"></i> Adjuntar
               </button>
-              <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="mt-hidden-input" />
+              <!-- Ticket 1068: también audios (.ogg/.opus de WhatsApp, mp3, m4a...) y más formatos de video -->
+              <input #fileInput type="file" multiple (change)="onFileSelected($event)" class="mt-hidden-input"
+                     accept="image/*,video/*,audio/*,.ogg,.opus,.oga,.mp3,.m4a,.wav,.aac,.mp4,.mov,.webm,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" />
 
               <div class="mt-composer__send">
                 <span class="mt-composer__hint">

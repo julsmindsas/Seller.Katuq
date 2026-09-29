@@ -24,11 +24,20 @@ export class SoporteComponent implements OnInit {
   fileBase64String: any;
   // Una sola lista para toda la evidencia: archivo y su miniatura viajan juntos,
   // así el orden y la eliminación son siempre consistentes
-  archivos: { file: File; tipo: 'imagen' | 'video' | 'documento'; url: string }[] = [];
+  archivos: { file: File; tipo: 'imagen' | 'video' | 'audio' | 'documento'; url: string }[] = [];
   clasOpen = false;
   // Límite prometido en la interfaz ("Máximo 50MB por archivo")
   readonly MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
   readonly DOC_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar'];
+  // Ticket 1068: audios de WhatsApp (.ogg/.opus) y otros formatos de audio.
+  // Windows a veces no reporta el MIME de .opus/.ogg, por eso también se mira la extensión.
+  readonly AUDIO_EXTENSIONS = ['ogg', 'opus', 'oga', 'mp3', 'm4a', 'wav', 'aac'];
+  readonly VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm'];
+  private readonly MIME_POR_EXTENSION: Record<string, string> = {
+    ogg: 'audio/ogg', opus: 'audio/ogg', oga: 'audio/ogg', mp3: 'audio/mpeg',
+    m4a: 'audio/mp4', wav: 'audio/wav', aac: 'audio/aac',
+    mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm'
+  };
   readonly MIN_ASUNTO = 8;
   readonly MIN_DESC = 30;
 
@@ -267,11 +276,14 @@ export class SoporteComponent implements OnInit {
     const rechazados: string[] = [];
 
     for (const file of Array.from(files)) {
+      const ext = this.extensionDe(file);
       const esImagen = file.type.startsWith('image/');
-      const esVideo = file.type.startsWith('video/');
-      const esDocumento = !esImagen && !esVideo && this.esDocumentoPermitido(file);
+      // Ticket 1068: un .ogg puede llegar como video/ogg; si la extensión es de audio, es audio
+      const esAudio = !esImagen && (this.AUDIO_EXTENSIONS.includes(ext) || file.type.startsWith('audio/'));
+      const esVideo = !esImagen && !esAudio && (file.type.startsWith('video/') || this.VIDEO_EXTENSIONS.includes(ext));
+      const esDocumento = !esImagen && !esVideo && !esAudio && this.esDocumentoPermitido(file);
 
-      if (!esImagen && !esVideo && !esDocumento) {
+      if (!esImagen && !esVideo && !esAudio && !esDocumento) {
         rechazados.push(`${file.name} (formato no permitido)`);
         continue;
       }
@@ -283,7 +295,7 @@ export class SoporteComponent implements OnInit {
       // objectURL es síncrono: la miniatura queda en la misma posición que el archivo
       this.archivos.push({
         file,
-        tipo: esImagen ? 'imagen' : (esVideo ? 'video' : 'documento'),
+        tipo: esImagen ? 'imagen' : (esVideo ? 'video' : (esAudio ? 'audio' : 'documento')),
         url: URL.createObjectURL(file)
       });
     }
@@ -516,7 +528,10 @@ export class SoporteComponent implements OnInit {
   subirArchivoFirebase(file: File, fileName: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const fileRef = this.storage.ref(fileName);
-      const task = this.storage.upload(fileName, file, { contentType: file.type || undefined });
+      // Ticket 1068: si el navegador no reporta el MIME (.opus/.ogg en Windows), se deduce
+      // por la extensión para que el audio/video se reproduzca bien desde Storage
+      const contentType = file.type || this.MIME_POR_EXTENSION[this.extensionDe(file)] || undefined;
+      const task = this.storage.upload(fileName, file, { contentType });
 
       task.snapshotChanges().pipe(
         finalize(() => {

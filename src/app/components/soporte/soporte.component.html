@@ -115,21 +115,28 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
           </span>
           <span class="ct-drop-title">Arrastra archivos o haz clic para elegir</span>
-          <span class="ct-drop-hint">Imágenes, video o documentos · hasta 50 MB cada uno</span>
+          <span class="ct-drop-hint">Imágenes, video, audios (incluso de WhatsApp) o documentos · hasta 50 MB cada uno</span>
+          <!-- Ticket 1068: se aceptan audios (.ogg/.opus de WhatsApp, mp3, m4a...) y más formatos de video -->
           <input type="file" multiple (change)="onFileChange($event)" hidden
-            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" />
+            accept="image/*,video/*,audio/*,.ogg,.opus,.oga,.mp3,.m4a,.wav,.aac,.mp4,.mov,.webm,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" />
         </label>
 
         <div class="ct-files" *ngIf="hayArchivos">
           <div class="ct-file" *ngFor="let archivo of archivos; let i = index">
-            <span class="ct-file-icon" [ngClass]="'is-' + archivo.tipo" (click)="abrirArchivo(archivo)">
+            <span class="ct-file-icon" [ngClass]="'is-' + archivo.tipo" (click)="abrirArchivo(archivo)"
+              [ngStyle]="archivo.tipo === 'audio' ? { background: '#EEE9FD', color: '#6C4CE0' } : null">
               <img *ngIf="archivo.tipo === 'imagen'" [src]="archivo.url" [alt]="archivo.file.name" />
               <svg *ngIf="archivo.tipo === 'video'" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+              <!-- Ticket 1068: el audio lleva ícono de nota musical, nunca un <img> -->
+              <svg *ngIf="archivo.tipo === 'audio'" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
               <svg *ngIf="archivo.tipo === 'documento'" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
             </span>
             <span class="ct-file-text">
               <span class="ct-file-name" [title]="archivo.file.name">{{ archivo.file.name }}</span>
               <span class="ct-file-size">{{ formatearTamano(archivo.file.size) }}</span>
+              <!-- Ticket 1068: el comercio puede escuchar el audio antes de enviarlo -->
+              <audio *ngIf="archivo.tipo === 'audio'" controls preload="metadata" [src]="archivo.url"
+                style="display: block; width: 100%; max-width: 280px; height: 32px; margin-top: 4px;"></audio>
             </span>
             <button type="button" class="ct-file-del" title="Quitar" aria-label="Quitar archivo" (click)="quitarArchivo(i)">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>

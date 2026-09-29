@@ -18,7 +18,7 @@ interface Descriptor {
 
 interface ArchivoNuevo {
   file: File;
-  tipo: 'imagen' | 'video' | 'documento';
+  tipo: 'imagen' | 'video' | 'audio' | 'documento';
   url: string;
 }
 
@@ -65,6 +65,15 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
 
   readonly MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
   readonly DOC_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar'];
+  // Ticket 1068: audios de WhatsApp (.ogg/.opus) y otros formatos de audio.
+  // Windows a veces no reporta el MIME de .opus/.ogg, por eso también se mira la extensión.
+  readonly AUDIO_EXTENSIONS = ['ogg', 'opus', 'oga', 'mp3', 'm4a', 'wav', 'aac'];
+  readonly VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm'];
+  private readonly MIME_POR_EXTENSION: { [ext: string]: string } = {
+    ogg: 'audio/ogg', opus: 'audio/ogg', oga: 'audio/ogg', mp3: 'audio/mpeg',
+    m4a: 'audio/mp4', wav: 'audio/wav', aac: 'audio/aac',
+    mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm'
+  };
 
   // Los conteos y el color de cada estado viven en un solo mapa para que la
   // lista, las píldoras y las pestañas no se desincronicen entre sí.
@@ -159,14 +168,29 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
     comentarios.forEach((c: any) => {
       const adjuntos: string[] = c?.adjuntos || [];
       c.imagenes = adjuntos.filter(a => this.tipoAdjunto(a) === 'imagen');
-      c.archivos = adjuntos.filter(a => this.tipoAdjunto(a) !== 'imagen');
+      // Ticket 1068: audio y video se reproducen en línea; el resto queda como archivo
+      c.audios = adjuntos.filter(a => this.tipoAdjunto(a) === 'audio');
+      c.videos = adjuntos.filter(a => this.esVideoReproducible(a));
+      c.archivos = adjuntos.filter(a => this.esArchivoParaAbrir(a));
       c.esDelComercio = this.esDelComercio(c);
     });
 
     const adjuntos: string[] = ticket?.adjuntos || [];
     ticket.comentariosVista = comentarios;
     ticket.adjuntosImagenes = adjuntos.filter(a => this.tipoAdjunto(a) === 'imagen');
-    ticket.adjuntosArchivos = adjuntos.filter(a => this.tipoAdjunto(a) !== 'imagen');
+    ticket.adjuntosAudios = adjuntos.filter(a => this.tipoAdjunto(a) === 'audio');
+    ticket.adjuntosVideos = adjuntos.filter(a => this.esVideoReproducible(a));
+    ticket.adjuntosArchivos = adjuntos.filter(a => this.esArchivoParaAbrir(a));
+  }
+
+  /** Ticket 1068: solo mp4/mov/webm/m4v se reproducen en línea; avi/mkv se abren aparte */
+  private esVideoReproducible(url: string): boolean {
+    return this.tipoAdjunto(url) === 'video' && /\.(mp4|mov|webm|m4v)(\?|$)/i.test(this.rutaAdjunto(url));
+  }
+
+  private esArchivoParaAbrir(url: string): boolean {
+    const tipo = this.tipoAdjunto(url);
+    return tipo === 'documento' || (tipo === 'video' && !this.esVideoReproducible(url));
   }
 
   // ===========================================================================
@@ -391,9 +415,21 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
   // Adjuntos ya guardados
   // ===========================================================================
 
-  tipoAdjunto(url: string): 'imagen' | 'video' | 'documento' {
+  /**
+   * Las URL de Storage traen la ruta codificada (tickets%2F...) y ?alt=media&token=...:
+   * se decodifica solo la ruta, antes del '?'
+   */
+  private rutaAdjunto(url: string): string {
+    let ruta = String(url || '').split('?')[0];
+    try { ruta = decodeURIComponent(ruta); } catch { /* ruta mal codificada: se usa tal cual */ }
+    return ruta.toLowerCase();
+  }
+
+  tipoAdjunto(url: string): 'imagen' | 'video' | 'audio' | 'documento' {
     if (!url) { return 'imagen'; }
-    const ruta = decodeURIComponent(String(url).split('?')[0]).toLowerCase();
+    const ruta = this.rutaAdjunto(url);
+    // Ticket 1068: audios de WhatsApp y otros formatos de audio
+    if (/\.(ogg|opus|oga|mp3|m4a|wav|aac)$/.test(ruta)) { return 'audio'; }
     if (/\.(mp4|mov|avi|webm|mkv|m4v)$/.test(ruta)) { return 'video'; }
     if (/\.(pdf|docx?|xlsx?|pptx?|txt|csv|zip|rar)$/.test(ruta)) { return 'documento'; }
     return 'imagen';
@@ -401,6 +437,7 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
 
   iconoAdjunto(url: string): string {
     const tipo = this.tipoAdjunto(url);
+    if (tipo === 'audio') { return 'pi-volume-up'; }
     if (tipo === 'video') { return 'pi-video'; }
     if (tipo === 'documento') { return 'pi-file'; }
     return 'pi-image';
@@ -441,12 +478,14 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
     const rechazados: string[] = [];
 
     for (const file of Array.from(files)) {
-      const esImagen = file.type.startsWith('image/');
-      const esVideo = file.type.startsWith('video/');
       const extension = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : '';
-      const esDocumento = !esImagen && !esVideo && this.DOC_EXTENSIONS.includes(extension);
+      const esImagen = file.type.startsWith('image/');
+      // Ticket 1068: un .ogg puede llegar como video/ogg; si la extensión es de audio, es audio
+      const esAudio = !esImagen && (this.AUDIO_EXTENSIONS.includes(extension) || file.type.startsWith('audio/'));
+      const esVideo = !esImagen && !esAudio && (file.type.startsWith('video/') || this.VIDEO_EXTENSIONS.includes(extension));
+      const esDocumento = !esImagen && !esVideo && !esAudio && this.DOC_EXTENSIONS.includes(extension);
 
-      if (!esImagen && !esVideo && !esDocumento) {
+      if (!esImagen && !esVideo && !esAudio && !esDocumento) {
         rechazados.push(`${file.name} (formato no permitido)`);
         continue;
       }
@@ -458,7 +497,7 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
       // objectURL es síncrono: la miniatura queda en la misma posición que el archivo
       this.archivos.push({
         file,
-        tipo: esImagen ? 'imagen' : (esVideo ? 'video' : 'documento'),
+        tipo: esImagen ? 'imagen' : (esVideo ? 'video' : (esAudio ? 'audio' : 'documento')),
         url: URL.createObjectURL(file)
       });
     }
@@ -482,6 +521,7 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
   }
 
   iconoArchivo(archivo: ArchivoNuevo): string {
+    if (archivo.tipo === 'audio') { return 'pi-volume-up'; }
     if (archivo.tipo === 'video') { return 'pi-video'; }
     if (archivo.tipo === 'documento') { return 'pi-file'; }
     return 'pi-image';
@@ -587,7 +627,11 @@ export class MisTicketsComponent implements OnInit, OnDestroy {
 
   subirImagenFirebase(file: File, fileName: string): Promise<string> {
     const ref = this.storage.ref(`tickets/${fileName}`);
-    const task = this.storage.upload(`tickets/${fileName}`, file);
+    // Ticket 1068: se guarda el tipo real para que audio y video se reproduzcan desde Storage;
+    // si el navegador no lo reporta (.opus/.ogg en Windows) se deduce por la extensión
+    const extension = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : '';
+    const contentType = file.type || this.MIME_POR_EXTENSION[extension] || undefined;
+    const task = this.storage.upload(`tickets/${fileName}`, file, { contentType });
 
     return new Promise((resolve, reject) => {
       task.snapshotChanges()
