@@ -7525,6 +7525,19 @@ Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Danie
 
 **Estado:** enviando. Pendiente: DNS de katuq.com (Daniel) y videos (opcional).
 
+## D-326 (2026-09-29) — PROPUESTA: señal de "vendedor activo" en el registro para la campaña de Meta del 1-oct
+
+**Contexto.** Daniel quiere atraer "personas o negocios que YA venden y son serios; no tienen que ser formales", por el mismo registro, sin llamadas y sin mencionar precio ni "gratis". De 36 registros de pauta, 35 con cédula y casi todos micro. Meta necesita una señal para optimizar por calidad. El pedido llegó por la sesión de videos.
+
+**Propuesta** (`openspec/changes/registro-vendedores-activos/`):
+- la pregunta "¿Cuántos pedidos recibes a la semana?" con botones en el primer paso del registro;
+- `CompleteRegistration` con `pedidos_semana` y la calificación, y el evento propio `VendedorActivo` para quien recibe 10 o más; los dos con `event_id` y solo para registros aprobados o verificados;
+- la API de conversiones preparada y apagada;
+- métrica por `utm_campaign` en el Super Admin, con el costo cargado a mano en `config/pautaCostos`;
+- opcional: la configuración inicial según la respuesta.
+
+**Estado:** propuesta, pendiente de aprobación.
+
 ## D-303 (2026-09-23) — "Crear cliente" nacía sin cupo de crédito ni plazo de pago (los tenía el modal del listado, pero no la página del menú)
 
 **Disparador.** Pedido real: "sería bueno que desde un comienzo pudiésemos ingresar la mayor cantidad de datos de nuestros clientes" — el usuario notó que editar un cliente desde "Listado de clientes" muestra cupo de crédito y días de plazo, pero crearlo desde el menú "Crear cliente" no.
