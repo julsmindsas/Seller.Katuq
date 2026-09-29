@@ -7525,7 +7525,7 @@ Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Danie
 
 **Estado:** enviando. Pendiente: DNS de katuq.com (Daniel) y videos (opcional).
 
-## D-327 (2026-09-29) — PROPUESTA: señal de "vendedor activo" en el registro para la campaña de Meta del 1-oct
+## D-327 (2026-09-29) — Señal de "vendedor activo" en el registro para la campaña de Meta del 1-oct (APROBADA)
 
 **Contexto.** Daniel quiere atraer "personas o negocios que YA venden y son serios; no tienen que ser formales", por el mismo registro, sin llamadas y sin mencionar precio ni "gratis". De 36 registros de pauta, 35 con cédula y casi todos micro. Meta necesita una señal para optimizar por calidad. El pedido llegó por la sesión de videos.
 
@@ -7536,7 +7536,9 @@ Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Danie
 - métrica por `utm_campaign` en el Super Admin, con el costo cargado a mano en `config/pautaCostos`;
 - opcional: la configuración inicial según la respuesta.
 
-**Estado:** propuesta, pendiente de aprobación.
+**Aprobación (Daniel, 29-sep):** la versión ajustada, con la pregunta solo con `perfil=vendedor`, opcional, y el registro general sin cambios. Antes del 1-oct. La personalización de la configuración inicial queda para después.
+
+**Estado:** aprobada, en implementación.
 
 ## D-303 (2026-09-23) — "Crear cliente" nacía sin cupo de crédito ni plazo de pago (los tenía el modal del listado, pero no la página del menú)
 

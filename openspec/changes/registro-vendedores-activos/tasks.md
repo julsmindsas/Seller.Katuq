@@ -1,6 +1,6 @@
 ## 0. Decisiones
-- [ ] 0.1 Daniel aprueba la propuesta (y si la personalización, la parte 4, entra ahora o después).
-- [ ] 0.2 Registrar D-327 en `specs/CONTRACT.md`.
+- [x] 0.1 Daniel aprueba la propuesta (y si la personalización, la parte 4, entra ahora o después).
+- [x] 0.2 Registrar D-327 en `specs/CONTRACT.md`.
 
 ## 1. Backend
 - [ ] 1.1 Prueba de contrato:
