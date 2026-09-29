@@ -5,7 +5,24 @@ import { environment } from '../../../environments/environment';
 import { KatuqQuickStartService, DiagnosticResponse, PromocionRegistro } from '../../shared/services/quickstart/katuq-quickstart.service';
 import { ContextualQuestionsService, ContextualQuestion } from '../../shared/services/quickstart/contextual-questions.service';
 import { PromocionesService, PromocionPublica } from '../../shared/services/promociones.service';
-import { PixelesPautaService } from '../../shared/services/pixeles-pauta.service';
+import { PixelesPautaService, PixelRegistro } from '../../shared/services/pixeles-pauta.service';
+
+/**
+ * Preguntas extra según el perfil de la campaña (D-327). Solo salen cuando el
+ * enlace del anuncio trae `perfil=<clave>`; sin perfil, el registro es el de
+ * siempre. Una campaña futura agrega su perfil aquí y el flujo no cambia.
+ */
+const PERFILES_REGISTRO: { [perfil: string]: { pregunta: string; opciones: { valor: string; etiqueta: string; calificacion: number }[] } } = {
+    vendedor: {
+        pregunta: '¿Cuántos pedidos recibes a la semana?',
+        opciones: [
+            { valor: 'no_vendo', etiqueta: 'Todavía no vendo', calificacion: 0 },
+            { valor: 'menos_10', etiqueta: 'Menos de 10', calificacion: 1 },
+            { valor: '10_50', etiqueta: '10 a 50', calificacion: 2 },
+            { valor: 'mas_50', etiqueta: 'Más de 50', calificacion: 3 }
+        ]
+    }
+};
 import { Subscription } from 'rxjs';
 import { clearOnboardingStorage } from '../onboarding/utils/onboarding-v2.utils';
 import { AuthService } from '../../shared/services/firebase/auth.service';
@@ -250,6 +267,21 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     ];
     registrationIndex = 0;
 
+    /** Pregunta del perfil de la campaña (D-327), o null en el registro general. */
+    perfilRegistro: (typeof PERFILES_REGISTRO)[string] | null = null;
+    /** Respuesta opcional a los pedidos por semana. */
+    pedidosSemana: string | null = null;
+
+    elegirPedidosSemana(valor: string): void {
+        // Tocar la misma opción otra vez la quita: la pregunta es opcional.
+        this.pedidosSemana = this.pedidosSemana === valor ? null : valor;
+    }
+
+    private calificacionPedidos(): number | null {
+        const opcion = this.perfilRegistro?.opciones.find(o => o.valor === this.pedidosSemana);
+        return opcion ? opcion.calificacion : null;
+    }
+
     /** Campo del paso en pantalla (el HTML elige el paso por esto, no por su número). */
     get pasoActual(): string {
         return this.registrationQuestions[this.registrationIndex]?.formControl;
@@ -314,6 +346,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         this.recargarSiEstaDesactualizado();
         // Medición de la pauta: de qué anuncio llegó y la visita al registro.
         this.pixeles.capturarOrigen();
+        this.perfilRegistro = PERFILES_REGISTRO[this.pixeles.obtenerOrigen()?.perfil || ''] || null;
         this.pixeles.iniciar();
         this.cargarPromocionPendiente();
         this.loadProgress();
@@ -863,6 +896,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             origenCampana: this.pixeles.obtenerOrigen(),
             contrasenaHash: this.contrasenaHash,
             dispositivoId: this.dispositivoDeEsteNavegador(),
+            pedidosSemana: this.perfilRegistro ? this.pedidosSemana : null,
             automatizado: typeof navigator !== 'undefined' && (navigator as any).webdriver === true
         };
 
@@ -902,7 +936,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                     return;
                 }
 
-                this.pixeles.registroCompleto();
+                this.pixeles.registroCompleto(quickStartResult.serverResponse?.pixel as PixelRegistro | undefined);
                 this.pixeles.limpiarOrigen();
 
                 this.quickStartCompleted = true;
@@ -1021,7 +1055,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     /** Confirmó el código: el registro cuenta en la pauta (una sola vez) y entra. */
     async alConfirmarCorreo(sesion: SesionConfirmada): Promise<void> {
         if (sesion.firePixel) {
-            this.pixeles.registroCompleto();
+            this.pixeles.registroCompleto(sesion.pixel as PixelRegistro | undefined);
         }
         this.pixeles.limpiarOrigen();
         this.entrandoACuenta = true;
@@ -1125,7 +1159,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
             
             if (this.registrationIndex < this.registrationQuestions.length - 1) {
                 // Pasar del nombre de la empresa al siguiente dato = empezó a registrarse.
-                if (this.registrationIndex === 0) this.pixeles.inicioRegistro();
+                if (this.registrationIndex === 0) this.pixeles.inicioRegistro(this.pedidosSemana, this.calificacionPedidos());
                 this.registrationIndex++;
             } else if (this.registrationOnly) {
                 // Rediseño aprobado por Daniel (2026-09-24): sin "Revisa tus datos";

@@ -14,6 +14,21 @@ export interface OrigenCampana {
   ttclid?: string;
   /** Primera página por la que entró, sin parámetros. */
   landing?: string;
+  /**
+   * Perfil de la campaña (D-327): `perfil=vendedor` en el enlace del anuncio
+   * hace que el registro pregunte los pedidos por semana. Sin él, el registro
+   * es el de siempre.
+   */
+  perfil?: string;
+}
+
+/** Lo que el servidor devuelve para los eventos del registro (D-327). */
+export interface PixelRegistro {
+  eventId: string;
+  pedidosSemana: string | null;
+  calificacion: number | null;
+  vendedorActivo: boolean;
+  eventIdVendedor: string;
 }
 
 declare global {
@@ -47,7 +62,7 @@ export class PixelesPautaService {
   private readonly TIKTOK_PIXEL_ID = "DAQ20GBC77UFPT802PLG";
   private readonly LLAVE_ORIGEN = "katuq_origen_campana";
   private readonly CAMPOS: (keyof OrigenCampana)[] = [
-    "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "ttclid",
+    "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "ttclid", "perfil",
   ];
   private cargado = false;
   private inicioContado = false;
@@ -70,25 +85,50 @@ export class PixelesPautaService {
    * Pasa muchas más veces que el registro completo, y con poco presupuesto es
    * el éxito del que la plataforma alcanza a aprender. Se cuenta una vez por visita.
    */
-  inicioRegistro(): void {
+  inicioRegistro(pedidosSemana?: string | null, calificacion?: number | null): void {
     if (!this.habilitado || this.inicioContado) return;
     this.inicioContado = true;
-    this.enMeta((fbq) => fbq("track", "Lead", { content_name: "Inicio registro Katuq" }));
-    this.enTiktok((ttq) => ttq.track("SubmitForm", { content_name: "Inicio registro Katuq" }));
+    // Con respuesta a los pedidos por semana (solo en la campaña de vendedores, D-327).
+    const datos = pedidosSemana ? { pedidos_semana: pedidosSemana, lead_score: calificacion } : {};
+    this.enMeta((fbq) => fbq("track", "Lead", { content_name: "Inicio registro Katuq", ...datos }));
+    this.enTiktok((ttq) => ttq.track("SubmitForm", { content_name: "Inicio registro Katuq", ...datos }));
   }
 
   /**
    * Registro terminado y aprobado. No se dispara para los registros que el
    * anti-abuso deja en revisión: le enseñarían a la plataforma a traer más de esos.
    */
-  registroCompleto(): void {
+  registroCompleto(pixel?: PixelRegistro | null): void {
     if (!this.habilitado) return;
     const origen = this.obtenerOrigen();
     const campana = origen?.utm_campaign ? { utm_campaign: origen.utm_campaign } : {};
+    // D-327: solo si respondió los pedidos por semana. Sin respuesta, igual que antes.
+    const calificado = pixel?.pedidosSemana
+      ? { pedidos_semana: pixel.pedidosSemana, calificacion: pixel.calificacion, lead_score: pixel.calificacion, value: pixel.calificacion, currency: "COP" }
+      : {};
+    // El event_id permite que Meta deduplique cuando se encienda la API de
+    // conversiones. Solo en las campañas con perfil: sin él, el evento es
+    // idéntico al de siempre (pedido de Daniel).
+    const conPerfil = !!origen?.perfil;
+    const meta = conPerfil && pixel?.eventId ? { eventID: pixel.eventId } : undefined;
     this.enMeta((fbq) =>
-      fbq("track", "CompleteRegistration", { content_name: "Registro Katuq", status: true, ...campana }),
+      fbq("track", "CompleteRegistration", { content_name: "Registro Katuq", status: true, ...campana, ...calificado }, meta),
     );
-    this.enTiktok((ttq) => ttq.track("CompleteRegistration", { content_name: "Registro Katuq", ...campana }));
+    this.enTiktok((ttq) =>
+      ttq.track("CompleteRegistration", { content_name: "Registro Katuq", ...campana, ...calificado }, meta ? { event_id: pixel?.eventId } : undefined),
+    );
+    if (pixel?.vendedorActivo) this.vendedorActivo(pixel, campana);
+  }
+
+  /**
+   * Quien ya recibe 10 o más pedidos a la semana (D-327). Evento propio: para
+   * optimizar la campaña, marketing le asigna una categoría estándar y arma la
+   * conversión personalizada en Events Manager.
+   */
+  private vendedorActivo(pixel: PixelRegistro, campana: object): void {
+    const datos = { pedidos_semana: pixel.pedidosSemana, calificacion: pixel.calificacion, lead_score: pixel.calificacion, ...campana };
+    this.enMeta((fbq) => fbq("trackCustom", "VendedorActivo", datos, { eventID: pixel.eventIdVendedor }));
+    this.enTiktok((ttq) => ttq.track("VendedorActivo", datos, { event_id: pixel.eventIdVendedor }));
   }
 
   /**

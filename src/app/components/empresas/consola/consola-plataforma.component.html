@@ -19,6 +19,9 @@
         <button type="button" role="tab" [class.activa]="vista === 'pedidos'"
                 (click)="cambiarVista('pedidos')"
                 title="Qué le está pidiendo cada cliente a Katuq, y cuántos piden lo mismo">Pedidos</button>
+        <button type="button" role="tab" [class.activa]="vista === 'pauta'"
+                (click)="cambiarVista('pauta')"
+                title="Registros y vendedores activos por campaña de pauta">Pauta</button>
       </div>
 
       <button type="button" class="btn-refrescar" (click)="refrescar()" [disabled]="cargando"
@@ -1343,6 +1346,8 @@
        Lo que le piden los clientes a Katuq. La tabla de arriba es la que
        decide el roadmap: cuenta CLIENTES DISTINTOS por tema, no anotaciones,
        porque tres notas del que más llama no son tres clientes. -->
+  <app-pauta-campanas *ngIf="vista === 'pauta'"></app-pauta-campanas>
+
   <ng-container *ngIf="vista === 'pedidos'">
 
     <div class="cargando" *ngIf="cargandoPedidos">

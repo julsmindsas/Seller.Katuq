@@ -7,6 +7,8 @@ import { BaseService } from './base.service';
 export interface SesionConfirmada {
   token: string;
   firePixel?: boolean;
+  /** Datos de los eventos del registro para la pauta (D-327). */
+  pixel?: any;
   [campo: string]: any;
 }
 

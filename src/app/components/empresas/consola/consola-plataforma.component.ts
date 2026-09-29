@@ -175,7 +175,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * empresas y cobrarles. Comparten los mismos datos, así que viven en la misma
    * pantalla en vez de en dos módulos que se desincronizan.
    */
-  vista: 'empresas' | 'cobros' | 'pedidos' = 'empresas';
+  vista: 'empresas' | 'cobros' | 'pedidos' | 'pauta' = 'empresas';
 
   // ── Pedidos de funcionalidad ────────────────────────────────────────────
   pedidos: PedidosFuncionalidad | null = null;
@@ -313,7 +313,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   // ── Cobros ────────────────────────────────────────────────────────────────
 
-  cambiarVista(vista: 'empresas' | 'cobros' | 'pedidos'): void {
+  cambiarVista(vista: 'empresas' | 'cobros' | 'pedidos' | 'pauta'): void {
     this.vista = vista;
     if (vista === 'cobros' && !this.cobros && !this.cargandoCobros) this.cargarCobros();
     // Cada pestaña carga lo suyo al abrirse por primera vez: traer los pedidos

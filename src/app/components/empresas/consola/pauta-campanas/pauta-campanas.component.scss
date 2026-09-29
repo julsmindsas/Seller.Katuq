@@ -1,0 +1,21 @@
+// Tema canónico: acento #5F3FE0, tinta #211F3A, plano.
+.pauta { padding: 8px 0; color: #211f3a; }
+.pauta__head { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end; margin-bottom: 14px; }
+.pauta__titulo { margin: 0 0 4px; font-weight: 800; }
+.pauta__sub { margin: 0; color: #6b6685; font-size: 0.9rem; max-width: 640px; }
+.pauta__desde { display: flex; flex-direction: column; gap: 4px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b6685;
+  input { padding: 8px 10px; border: 1px solid #e4e0f5; border-radius: 11px; font-size: 0.95rem; }
+}
+.pauta__error { padding: 10px 12px; border-radius: 11px; background: #fdecec; color: #c62828; }
+.pauta__vacio { color: #6b6685; }
+.pauta__tabla-wrap { overflow-x: auto; border: 1px solid #e4e0f5; border-radius: 16px; background: #fff; }
+.pauta__tabla { width: 100%; border-collapse: collapse; font-size: 0.92rem;
+  th { text-align: left; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6685; padding: 10px 12px; border-bottom: 1px solid #e4e0f5; white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f1eefb; white-space: nowrap; }
+  .num { text-align: right; }
+}
+.pauta__costo { display: inline-flex; gap: 6px;
+  input { width: 120px; padding: 6px 8px; border: 1px solid #e4e0f5; border-radius: 8px; text-align: right; }
+  button { padding: 6px 10px; border: 0; border-radius: 8px; background: #5f3fe0; color: #fff; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: 0.6; }
+}

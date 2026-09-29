@@ -5,6 +5,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { EmpresasRoutingModule } from './empresas-routing.module';
 import { EmpresasComponent } from './empresas.component';
 import { ConsolaPlataformaComponent } from './consola/consola-plataforma.component';
+import { PautaCampanasComponent } from './consola/pauta-campanas/pauta-campanas.component';
 import { CrearEmpresaComponent } from './crearEmpresa/crear-empresa/crear-empresa.component';
 import { ModulosVariablesModule } from './modulovariable/modulovariable.module';
 
@@ -46,6 +47,6 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
     PanelModule,
     ProgressSpinnerModule
   ],
-  declarations: [EmpresasComponent, ConsolaPlataformaComponent]
+  declarations: [EmpresasComponent, ConsolaPlataformaComponent, PautaCampanasComponent]
 })
 export class EmpresasModule { }

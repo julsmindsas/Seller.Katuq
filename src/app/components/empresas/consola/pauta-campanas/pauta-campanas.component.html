@@ -1,0 +1,50 @@
+<section class="pauta">
+  <header class="pauta__head">
+    <div>
+      <h5 class="pauta__titulo">Registros por campaña</h5>
+      <p class="pauta__sub">Vendedores activos = responden que reciben 10 o más pedidos a la semana (solo en campañas con <code>perfil=vendedor</code>). Sin cuentas de prueba ni registros sin confirmar su correo.</p>
+    </div>
+    <label class="pauta__desde">
+      <span>Desde</span>
+      <input type="date" [(ngModel)]="desde" (change)="cargar()" />
+    </label>
+  </header>
+
+  <p class="pauta__error" *ngIf="error" role="alert">{{ error }}</p>
+  <p class="pauta__vacio" *ngIf="cargando">Cargando…</p>
+  <p class="pauta__vacio" *ngIf="!cargando && !error && !filas.length">No hay registros desde esa fecha.</p>
+
+  <div class="pauta__tabla-wrap" *ngIf="!cargando && filas.length">
+    <table class="pauta__tabla">
+      <thead>
+        <tr>
+          <th>Campaña</th>
+          <th class="num">Registros</th>
+          <th class="num">Respondieron</th>
+          <th class="num">Vendedores activos</th>
+          <th class="num">%</th>
+          <th class="num">Costo (COP)</th>
+          <th class="num">Por registro</th>
+          <th class="num">Por vendedor activo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let f of filas">
+          <td>{{ f.campana }}</td>
+          <td class="num">{{ f.registros }}</td>
+          <td class="num">{{ f.respondieron }}</td>
+          <td class="num"><strong>{{ f.vendedoresActivos }}</strong></td>
+          <td class="num">{{ f.porcentajeActivos }} %</td>
+          <td class="num">
+            <div class="pauta__costo">
+              <input type="number" min="0" step="1000" [(ngModel)]="costos[f.campana]" [attr.aria-label]="'Costo de ' + f.campana" />
+              <button type="button" (click)="guardarCosto(f)" [disabled]="guardando === f.campana">{{ guardando === f.campana ? '…' : 'Guardar' }}</button>
+            </div>
+          </td>
+          <td class="num">{{ f.costoPorRegistro !== null ? (f.costoPorRegistro | number:'1.0-0') : '—' }}</td>
+          <td class="num">{{ f.costoPorVendedorActivo !== null ? (f.costoPorVendedorActivo | number:'1.0-0') : '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

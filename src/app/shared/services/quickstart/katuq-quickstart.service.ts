@@ -43,6 +43,8 @@ export interface DiagnosticResponse {
    */
   dispositivoId?: string | null;
   automatizado?: boolean;
+  /** Respuesta opcional de la campaña de vendedores (D-327). */
+  pedidosSemana?: string | null;
   /**
    * Contraseña elegida en el registro, YA con `utils.hash` (D-319): el mismo
    * formato que manda el login. Nunca el texto plano. Sin ella, el backend
@@ -481,7 +483,8 @@ export class KatuqQuickStartService {
       // por los navegadores de los anuncios (queda en surveyResponses y en el aviso).
       versionFront: environment.version || null,
       dispositivoId: diagnosticData.dispositivoId || null,
-      automatizado: diagnosticData.automatizado === true
+      automatizado: diagnosticData.automatizado === true,
+      ...(diagnosticData.pedidosSemana ? { pedidosSemana: diagnosticData.pedidosSemana } : {})
     };
 
     try {

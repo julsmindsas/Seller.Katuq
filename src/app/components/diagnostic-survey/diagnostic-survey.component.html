@@ -477,6 +477,17 @@
             <div *ngIf="getFieldError('nombre')" class="error-message">
               {{ getFieldError('nombre') }}
             </div>
+
+            <!-- D-327: solo con perfil de campaña (perfil=vendedor). Opcional. -->
+            <fieldset *ngIf="perfilRegistro" class="reg-perfil">
+              <legend class="reg-perfil__pregunta">{{ perfilRegistro.pregunta }} <span class="reg-perfil__opcional">(opcional)</span></legend>
+              <div class="reg-perfil__opciones" role="radiogroup">
+                <button type="button" *ngFor="let o of perfilRegistro.opciones" role="radio"
+                        class="reg-perfil__opcion" [class.is-selected]="pedidosSemana === o.valor"
+                        [attr.aria-checked]="pedidosSemana === o.valor"
+                        (click)="elegirPedidosSemana(o.valor)">{{ o.etiqueta }}</button>
+              </div>
+            </fieldset>
           </div>
         </ng-container>
         <!-- Correo -->

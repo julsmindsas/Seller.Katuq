@@ -82,7 +82,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   alConfirmarCorreo(sesion: SesionConfirmada): void {
     if (sesion.firePixel) {
       this.pixeles.iniciar();
-      this.pixeles.registroCompleto();
+      this.pixeles.registroCompleto(sesion.pixel);
     }
     this.authService.entrarConSesion(sesion);
   }
