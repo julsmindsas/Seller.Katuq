@@ -7530,8 +7530,8 @@ Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Danie
 **Contexto.** Daniel quiere atraer "personas o negocios que YA venden y son serios; no tienen que ser formales", por el mismo registro, sin llamadas y sin mencionar precio ni "gratis". De 36 registros de pauta, 35 con cédula y casi todos micro. Meta necesita una señal para optimizar por calidad. El pedido llegó por la sesión de videos.
 
 **Propuesta** (`openspec/changes/registro-vendedores-activos/`):
-- la pregunta "¿Cuántos pedidos recibes a la semana?" con botones en el primer paso del registro;
-- `CompleteRegistration` con `pedidos_semana` y la calificación, y el evento propio `VendedorActivo` para quien recibe 10 o más; los dos con `event_id` y solo para registros aprobados o verificados;
+- la pregunta "¿Cuántos pedidos recibes a la semana?" con botones opcionales en el primer paso, **solo si el enlace trae `perfil=vendedor`**. Ajuste pedido por Daniel: "si cambiamos descuidamos a los que quiero que se registren gratis, porque eso genera tracción para inversionistas". El registro general no cambia, y el mecanismo sirve para campañas futuras;
+- `CompleteRegistration` y `Lead` con `pedidos_semana`, la calificación y `lead_score` (solo si hubo respuesta), y el evento propio `VendedorActivo` para quien recibe 10 o más; los dos con `event_id` y solo para registros aprobados o verificados;
 - la API de conversiones preparada y apagada;
 - métrica por `utm_campaign` en el Super Admin, con el costo cargado a mano en `config/pautaCostos`;
 - opcional: la configuración inicial según la respuesta.

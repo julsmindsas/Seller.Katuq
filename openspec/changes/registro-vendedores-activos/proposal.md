@@ -10,11 +10,14 @@ Al optimizar por conversiones, Meta amplía los intereses de todos modos. La cal
 
 ## What Changes
 
-1. **Una pregunta de un toque en el registro, sin pantalla nueva:** "¿Cuántos pedidos recibes a la semana?", con las opciones Todavía no vendo · Menos de 10 · 10 a 50 · Más de 50.
-   - Va como botones debajo del nombre del negocio, en el primer paso. Es la pantalla que más gente ve, y queda respondida mucho antes del evento de registro.
-   - Se guarda en la empresa (`pedidosSemana`) junto con el origen de la campaña (`origenCampana`), que hoy solo queda en la encuesta.
+1. **El registro general NO cambia.** Daniel: "si cambiamos descuidamos a los que quiero que se registren gratis, porque eso genera tracción para inversionistas".
+   - La pregunta "¿Cuántos pedidos recibes a la semana?" (Todavía no vendo · Menos de 10 · 10 a 50 · Más de 50) sale **solo** cuando el enlace del anuncio trae `perfil=vendedor`.
+   - Sin esa marca, el registro y el píxel son idénticos a los de hoy.
+   - Es **opcional**: sale como botones debajo del nombre del negocio, sin pantalla nueva. Si no la responde, se registra igual, sin mensaje ni bloqueo.
+   - Queda **reutilizable**: cada perfil de campaña (`perfil=<nombre>`) define su pregunta en una lista del front. Una campaña futura trae su enlace y el flujo del registro no se toca.
+   - La respuesta se guarda en la empresa (`pedidosSemana`) junto con `origenCampana` (incluido `perfil`), que hoy solo queda en la encuesta.
 2. **Señal a Meta**, solo para registros aprobados o que confirmaron su correo (las mismas reglas del filtro):
-   - el `CompleteRegistration` de siempre lleva `pedidos_semana` y un valor de calificación (0 a 3);
+   - solo cuando hubo respuesta: `CompleteRegistration` y `Lead` llevan `pedidos_semana`, `calificacion` y `lead_score` (el mismo valor, 0 a 3; `lead_score` es la clave B2B que recomienda Meta). Sin respuesta, salen como hoy;
    - además, quien recibe 10 o más pedidos a la semana dispara un evento propio, `VendedorActivo`. Con él se arma la conversión personalizada para optimizar la campaña nueva;
    - los dos llevan `event_id` estable. Queda listo el envío por la API de conversiones, con el mismo `event_id` para que Meta no cuente doble; la API se enciende aparte.
 3. **Métrica por campaña en el panel del Super Admin.** Por `utm_campaign` muestra registros, cuántos venden 10 o más a la semana, el porcentaje y el costo por vendedor activo. El costo lo escribe el Super Admin, o la sesión de marketing, mientras no haya integración con Meta.

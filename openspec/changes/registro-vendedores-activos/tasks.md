@@ -13,8 +13,8 @@
 - [ ] 1.4 El adaptador de la API de conversiones, apagado.
 
 ## 2. Front
-- [ ] 2.1 Botones en el primer paso del registro, con la bandera `PREGUNTA_PEDIDOS_SEMANA`.
-- [ ] 2.2 `CompleteRegistration` + `VendedorActivo` con `event_id` (Meta y TikTok). `Lead` con `pedidos_semana`.
+- [ ] 2.1 `perfil` en `capturarOrigen`, la lista `PERFILES_REGISTRO` y los botones opcionales en el primer paso, solo con `perfil=vendedor`. Sin la marca, prueba de que el registro no cambia.
+- [ ] 2.2 `CompleteRegistration` + `VendedorActivo` con `event_id` (Meta y TikTok); `pedidos_semana`, `calificacion` y `lead_score` solo con respuesta, también en `Lead`.
 - [ ] 2.3 La tabla por campaña en el panel del Super Admin.
 - [ ] 2.4 `npm run build` sin errores.
 
