@@ -217,6 +217,9 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
 }
 
 .cnt-referencia { font-weight: 600; }
+/* Ticket 1034: nombre del producto arriba y el código de apoyo debajo */
+.cnt-nombre { display: block; font-weight: 600; line-height: 1.25; }
+.cnt-codigo { display: block; font-size: 11.5px; color: #8f8bab; margin-top: 2px; }
 .cnt-ubicacion {
   font-size: 12px;
   background: $acento-suave;

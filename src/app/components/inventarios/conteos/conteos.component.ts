@@ -209,7 +209,7 @@ export class ConteosComponent implements OnInit {
         // Se conserva el PORQUÉ, no solo cuál falló: un listado de referencias
         // sin motivo obliga a adivinar qué pasó con cada una.
         const leido = leerErrorInventario(error);
-        fallidos.push(ajuste.referencia || ajuste.productoId);
+        fallidos.push((ajuste as any).nombre || ajuste.referencia || ajuste.productoId);
         if (leido.motivo) motivosFallo.add(leido.motivo);
       }
     }

@@ -224,6 +224,8 @@ export type EstadoConteo = 'abierta' | 'contada' | 'aplicada' | 'cancelada';
 export interface LineaConteo {
   productoId: string;
   referencia: string | null;
+  /** Ticket 1034: nombre del producto (el operario cuenta por nombre, no por id). */
+  nombre?: string | null;
   ubicacion: string | null;
   /** Lo que el sistema dice que debería haber. */
   esperado: number;

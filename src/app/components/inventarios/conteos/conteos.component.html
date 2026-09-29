@@ -140,7 +140,9 @@
           <tbody>
             <tr *ngFor="let linea of s.lineas" [ngClass]="claseLinea(linea)">
               <td>
-                <span class="cnt-referencia">{{ linea.referencia || linea.productoId }}</span>
+                <!-- Ticket 1034: el nombre manda; la referencia queda debajo, como en el mapa de la bodega -->
+                <span class="cnt-nombre" *ngIf="linea.nombre">{{ linea.nombre }}</span>
+                <span [ngClass]="linea.nombre ? 'cnt-codigo' : 'cnt-referencia'">{{ linea.referencia || linea.productoId }}</span>
               </td>
               <td>
                 <span class="cnt-ubicacion" *ngIf="linea.ubicacion">{{ linea.ubicacion }}</span>
