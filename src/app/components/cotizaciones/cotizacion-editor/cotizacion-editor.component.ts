@@ -99,6 +99,10 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   productoTerm = "";
   productoSuggestions: Producto[] = [];
   buscandoProducto = false;
+  // Ticket 1086: los combos viven en su propia colección (D-147), el buscador
+  // de productos no los trae. Se cargan una vez y se filtran por nombre aquí.
+  private combos: any[] = [];
+  comboSuggestions: any[] = [];
   private productoSearch$ = new Subject<string>();
 
   // Catálogo de tipos de cliente de la empresa. Solo se usa para poner el NOMBRE
@@ -287,6 +291,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.configurarBusquedaCliente();
     this.configurarBusquedaProducto();
+    this.cargarCombos();
     this.cargarTiposCliente();
     this.cotizacionId = this.route.snapshot.paramMap.get("id");
     // Llegada desde el botón "Vista previa" del listado: se abre el documento
@@ -601,7 +606,70 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     if (!term) {
       this.productoSuggestions = [];
     }
+    this.comboSuggestions = this.filtrarCombos(this.productoTerm);
     this.productoSearch$.next(this.productoTerm);
+  }
+
+  /** Solo combos activos: uno desactivado no debe seguir siendo un atajo (igual que venta asistida). */
+  private cargarCombos(): void {
+    const sub = this.maestro.getCombos().subscribe({
+      next: (res: any) => {
+        this.combos = (Array.isArray(res) ? res : []).filter((c: any) => c && c.activo !== false);
+      },
+      error: () => { this.combos = []; },
+    });
+    this.subs.push(sub);
+  }
+
+  private filtrarCombos(term: string): any[] {
+    const t = (term || "").toLowerCase().trim();
+    if (t.length < 2) return [];
+    return this.combos.filter((c: any) => (c.nombre || "").toLowerCase().includes(t)).slice(0, 5);
+  }
+
+  /**
+   * Ticket 1086: agrega un combo desglosado, una línea por producto con el precio
+   * del tipo de cliente de la cotización. Un combo no tiene precio propio (D-147).
+   * Los productos se resuelven por id porque el buscador es paginado. Sin control
+   * de stock: una cotización no reserva existencias.
+   */
+  agregarCombo(combo: any): void {
+    const ids: string[] = (combo?.productos || []).map((p: any) => p?.productoId).filter((id: any) => !!id);
+    this.productoTerm = "";
+    this.productoSuggestions = [];
+    this.comboSuggestions = [];
+    if (ids.length === 0) {
+      this.toastr.warning(`El combo "${combo?.nombre || ""}" no tiene productos.`, "Combo vacío");
+      return;
+    }
+    this.maestro.getProductsByIds(ids).subscribe({
+      next: (res: any) => {
+        const porId = new Map<string, Producto>((res?.products || []).map((p: any) => [p.cd, p]));
+        let agregados = 0;
+        let noDisponibles = 0;
+        let configurables = 0;
+        ids.forEach((id) => {
+          const producto = porId.get(id);
+          if (!producto || (producto as any)?.exposicion?.activar === false) {
+            noDisponibles++;
+            return;
+          }
+          if (this.requiereConfiguracion(producto)) configurables++;
+          this.agregarDirecto(producto, false);
+          agregados++;
+        });
+        let mensaje = `${agregados} producto(s) de "${combo?.nombre || "Combo"}" agregados a la cotización`;
+        if (noDisponibles > 0) mensaje += `. ${noDisponibles} ya no están disponibles y no se agregaron.`;
+        if (configurables > 0) mensaje += `. ${configurables} se configuran al convertirla en pedido.`;
+        if (agregados > 0) {
+          this.toastr.success(mensaje, "Combo agregado", { timeOut: 5000, positionClass: "toast-bottom-right" });
+        } else {
+          this.toastr.warning(mensaje, "Combo");
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => this.toastr.error("No se pudo agregar el combo."),
+    });
   }
 
   /**
@@ -694,7 +762,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   }
 
   /** Línea directa (sin popup) para productos que no requieren configuración. */
-  private agregarDirecto(producto: Producto): void {
+  private agregarDirecto(producto: Producto, mostrarToast = true): void {
     const productoConPrecio = this.aplicarPrecioCategoria(producto);
     const cantidadMinima = (producto as any)?.disponibilidad?.cantidadMinVenta || 1;
     const hoy = new Date();
@@ -725,6 +793,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       cantidad: cantidadMinima,
     };
     this.cotizacion.items = [...this.cotizacion.items, linea];
+    if (!mostrarToast) return;
     this.toastr.success(
       (this.itemTitulo(linea) || "Producto") + " agregado",
       "Agregado",

@@ -195,6 +195,21 @@
           <div class="cot-suggestions" *ngIf="productoTerm && productoTerm.length >= 2">
             <div class="cot-sugg-loading" *ngIf="buscandoProducto">Buscando…</div>
             <ng-container *ngIf="!buscandoProducto">
+              <!-- Ticket 1086: combos (colección aparte, D-147), se agregan desglosados -->
+              <button
+                type="button"
+                class="cot-sugg-item cot-sugg-prod"
+                *ngFor="let c of comboSuggestions"
+                (click)="agregarCombo(c)"
+              >
+                <span class="cot-sugg-txt">
+                  <span class="cot-sugg-name">{{ c.nombre }}</span>
+                  <span class="cot-sugg-sub">
+                    {{ c.productos?.length || 0 }} producto(s) · se agregan con su precio
+                    <span class="cot-sugg-tag">combo</span>
+                  </span>
+                </span>
+              </button>
               <button
                 type="button"
                 class="cot-sugg-item cot-sugg-prod"
@@ -219,7 +234,7 @@
                   </span>
                 </span>
               </button>
-              <div class="cot-sugg-empty" *ngIf="productoSuggestions.length === 0">
+              <div class="cot-sugg-empty" *ngIf="productoSuggestions.length === 0 && comboSuggestions.length === 0">
                 Sin resultados.
               </div>
             </ng-container>
