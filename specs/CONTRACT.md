@@ -7525,7 +7525,7 @@ Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Danie
 
 **Estado:** enviando. Pendiente: DNS de katuq.com (Daniel) y videos (opcional).
 
-## D-327 (2026-09-29) — Señal de "vendedor activo" en el registro para la campaña de Meta del 1-oct (APROBADA)
+## D-327 (2026-09-29) — Señal de "vendedor activo" en el registro para la campaña de Meta del 1-oct (APROBADA, EN PRODUCCIÓN desde el 29-sep)
 
 **Contexto.** Daniel quiere atraer "personas o negocios que YA venden y son serios; no tienen que ser formales", por el mismo registro, sin llamadas y sin mencionar precio ni "gratis". De 36 registros de pauta, 35 con cédula y casi todos micro. Meta necesita una señal para optimizar por calidad. El pedido llegó por la sesión de videos.
 
@@ -7538,7 +7538,22 @@ Las dos opciones requieren el arreglo del DNS de katuq.com, que es paso de Danie
 
 **Aprobación (Daniel, 29-sep):** la versión ajustada, con la pregunta solo con `perfil=vendedor`, opcional, y el registro general sin cambios. Antes del 1-oct. La personalización de la configuración inicial queda para después.
 
-**Estado:** aprobada, en implementación.
+**Despliegue (29-sep, con OK de Daniel):**
+- backend 42a6b9e, solo ese commit sobre 49938a8; pruebas corridas en el servidor;
+- web 2026.09.29.4 (7520dc23 + release b9c0cc94). Incluye, con OK de Daniel, el cupo de crédito y plazo en "Crear cliente" de jlbatty (88be2271, D-303), que estaba en la rama sin publicar;
+- verificado:
+  - el bundle trae la pregunta y `VendedorActivo`;
+  - sin `perfil=vendedor`, el registro no cambia (revisado a la vista en local);
+  - `/v1/registro/metricas-campana` responde 401 sin sesión.
+
+**Enlace del anuncio:** `https://sellercenter.katuq.com/registrarse?perfil=vendedor&utm_source=facebook&utm_medium=paid&utm_campaign=registros-vendedores&utm_content={{ad.name}}`
+
+**Pendiente:**
+- marketing crea la conversión personalizada sobre `VendedorActivo` (con categoría estándar) y prueba con la herramienta de prueba de eventos;
+- la API de conversiones sigue apagada;
+- la personalización de la configuración inicial queda para después.
+
+**Estado:** en producción.
 
 ## D-303 (2026-09-23) — "Crear cliente" nacía sin cupo de crédito ni plazo de pago (los tenía el modal del listado, pero no la página del menú)
 
