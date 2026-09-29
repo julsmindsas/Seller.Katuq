@@ -39,7 +39,7 @@ Al optimizar por conversiones, Meta amplía los intereses de todos modos. La cal
 - **Datos:** sin colecciones nuevas.
   - En `companies`: `pedidosSemana`, `origenCampana` y `registrationEventId`.
   - El costo por campaña va en un documento nuevo de la colección `config`, que ya existe.
-- **Decisión:** D-326.
+- **Decisión:** D-327.
 - **No-goals:**
   - el envío real por la API de conversiones (queda preparado);
   - cambiar el anuncio o la campaña (lo hace la sesión de videos);
