@@ -7646,3 +7646,25 @@ El problema real es el costo de reconstruir `getSearchIndex(company)` cuando el 
 2. `restoreStock` (lee después de escribir dentro de la transacción): 7 pedidos y 48 unidades sin devolver.
 3. Métricas del listado sin filtros (`limit(50000)` de pedidos completos) y exportación de pedidos.
 4. Recargar labsMobile: sin SMS desde el 3-sep.
+
+## D-330 (2026-09-29) — Desplegar el backend sin cortes y arranque automático de PM2 (ticket 1081, DESPLEGADA)
+
+**Contexto.**
+- Cada `pm2 reload` de `katuq-api` dejaba 3-4 s de 502 (16 errores en el deploy del 28-sep): PM2 apagaba el proceso viejo a los ~3 s y el nuevo tarda 6-7 s en escuchar.
+- Ninguno de los dos daemons de PM2 (ubuntu: `katuq-api`; root: KAI `index` y `shopify-watcher`) tenía servicio de arranque. Las listas guardadas eran del 14-may. Un reinicio de la máquina dejaba el API caído hasta levantarlo a mano.
+
+**Decisión.**
+- **Commit `55c8490`:**
+  - `ecosystem.config.js` con `wait_ready`, `listen_timeout` 20 s y `kill_timeout` 10 s.
+  - `process.send("ready")` al escuchar el puerto.
+  - `gracefulShutdown` apaga primero SQS, crones y la cola de correos, y después el HTTP. Con `wait_ready` el proceso nuevo ya arrancó sus crones cuando el viejo recibe la señal.
+- **Arranque:** `pm2 save` y `pm2 startup systemd` para ubuntu y root (`pm2-ubuntu.service`, `pm2-root.service`, habilitados). En pm2 5.4.3 solo ejecuta `systemctl enable`: no reinició nada (mismos PID).
+
+**Verificado.**
+- Sonda cada 0,2 s durante la recarga: 165/165 respuestas del API y 0 errores 502.
+- El nuevo quedó escuchando a los 10 s; el viejo salió por SIGINT a los 5 s.
+
+**Reglas que quedan.**
+- Si cambia `ecosystem.config.js`: `pm2 reload ecosystem.config.js --update-env` y luego `pm2 save`.
+- No hacer `systemctl start pm2-ubuntu|pm2-root` con los daemons vivos: el `resurrect` reiniciaría los procesos.
+- La prueba real del arranque automático es un reinicio de la máquina (pendiente de agendar).
