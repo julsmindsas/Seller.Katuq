@@ -106,6 +106,14 @@ export function aplicarPrecioDeLista(producto: any, tipoClienteId: string | null
       precioUnitarioConIva: conIva,
       precioUnitarioSinIva: sinIva,
       valorIva: Math.round((conIva - sinIva) * 100) / 100,
+      // Ticket 1090: el % de IVA viaja con el precio de la lista. Sin esto la
+      // línea conservaba el % del producto: en OH MY STORE 113 productos tienen
+      // 0% en su precio base y 19% en sus listas, y el pedido se cobraba al
+      // precio sin IVA de la lista y sin sumarle el IVA (checkIVAPrice y
+      // orderCalculationService leen precioUnitarioIva). Cotizaciones ya lo hacía.
+      ...(fila.porcentajeIva != null && Number.isFinite(Number(fila.porcentajeIva))
+        ? { precioUnitarioIva: String(Number(fila.porcentajeIva)) }
+        : {}),
     },
     _precioAplicadoPorCategoria: {
       tipoClienteId: fila.tipoClienteId,

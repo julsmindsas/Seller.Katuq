@@ -88,6 +88,23 @@ describe('precio-por-tipo-cliente (D-219)', () => {
     expect(p.precio.precioUnitarioSinIva).toBe(Math.round((43120 / 1.19) * 100) / 100);
   });
 
+  it('el IVA de la lista viaja con su precio aunque el producto tenga otro (ticket 1090)', () => {
+    // JCR4166 de OH MY STORE: 0% en el precio base y 19% en sus listas.
+    const body = {
+      precio: { precioUnitarioConIva: 50627, precioUnitarioSinIva: 50627, precioUnitarioIva: '0' },
+      preciosPorTipoCliente: [
+        { tipoClienteId: 'MOD', activo: true, precioConIva: 37971, precio: 31908, valorIva: 6063, porcentajeIva: 19 },
+        { tipoClienteId: 'SIN', activo: true, precioConIva: 30000, precio: 30000, valorIva: 0 },
+      ],
+    };
+    const p = aplicarPrecioDeLista(body, 'MOD');
+    expect(p.precio.precioUnitarioIva).toBe('19');
+    expect(p.precio.precioUnitarioSinIva).toBe(31908);
+    expect(p.precio.precioUnitarioConIva).toBe(37971);
+    // Fila sin porcentaje: se conserva el del producto, como antes.
+    expect(aplicarPrecioDeLista(body, 'SIN').precio.precioUnitarioIva).toBe('0');
+  });
+
   it('helpers sueltos', () => {
     expect(filaDeTipoCliente(pijama(), MAY)?.precioConIva).toBe(53900);
     expect(filaDeTipoCliente(pijama(), null)).toBeNull();
