@@ -7741,8 +7741,16 @@ El 29-sep estaban rotas las dos:
 
 **Decisión** (Daniel, 30-sep): son internos, Comercializadora → Lumina.
 - **Despacho** (`bdcdaf3`, backend): el pedido del cliente no cambia; los cargos quedan en `cargosCereza`. `calcularCargos` devuelve `paraCereza` con los totales sumados, solo para el pedido que viaja a Cereza, cuya API exige que `total_price` los traiga. Lo que recibe Cereza no cambia: si esas líneas deben ir o no en su ERP lo decide el comercio. Un pedido facturado ya no bloquea el despacho. `updateOrderInternal` conserva `cargosCereza` pero ya no fuerza el envío ni los totales.
-- **Factura** (otra sesión): SIIGO y la DIAN toman `cargosCereza.envioOriginal`, nunca transporte ni manejo.
+- **Factura** (backend `1435275` y `1965111`): SIIGO y la DIAN facturan el envío del pedido (`totalEnvio`), nunca el transporte ni el manejo. La regla vive en un solo lugar, `services/accounting/utils/envioFacturable.js`, y la usan `siigoDataMapper`, `accountingManager` y `ublInvoiceMapper`. El primer arreglo tomaba `cargosCereza.envioOriginal`, porque el despacho todavía pisaba `totalEnvio`. Cuando el despacho dejó de tocar el pedido, esa foto quedaba vieja si alguien corregía el envío después de despachar, y el ajuste pasó a `totalEnvio`. La prueba `tests/accounting/envioFacturable.test.js` cubre ese caso y falla con la regla anterior.
 - **Ventana de despacho** (`c928d6dc`, front): muestra lo que recibe Cereza frente al total del cliente, que no cambia.
 - **Reparación de los 18 pedidos** (`reparar-1092.js`, en seco por defecto): resta exactamente lo que sumó el despacho y deja la huella en `cargosCereza.totalesRevertidos`. En el ensayo en seco, los 18 vuelven a su total original y ninguno tiene pagos de más. Las facturas de los 14 facturados no se tocan: si hacen falta notas, las hace el comercio.
 
 **Desplegado** (30-sep): backend `c4a7775`, con un solo reload a las 16:51 UTC, encima del `1435275` de la factura. Front 2026.09.30.2. Reparación aplicada a los 18 pedidos: al repetir el ensayo en seco, 0 por reparar y 18 revertidos. ORE-001247 quedó en $23.000 y ORE-001221 en $372.890,08, los dos iguales a su total original.
+
+**Factura desplegada y verificada** (30-sep): `1435275` a las 16:41 UTC y `1965111` a las 17:37 UTC, cada uno en su propio reload, con 0 errores 5xx.
+- En el servidor, con el código desplegado y pedidos reales: ORE-001268 sale con $14.900 de envío (antes $8.500), ORE-001247 sin envío y ORE-001230 igual; en la DIAN, lo mismo.
+- Las 14 facturas ya emitidas se leyeron en SIIGO (solo GET) y coinciden con el listado: línea ENVIO sin impuesto y total igual a su "antes".
+- Los 34 pedidos con `cargosCereza` son todos de OH MY STORE, y en los 34 `totalEnvio` es igual a `envioOriginal`: el ajuste no cambió ninguna factura.
+- Ticket 1092 Resuelto con el listado adjunto y 14 tareas para el comercio (las notas débito y crédito son trámite suyo).
+- **Falta:** la primera factura real de un pedido despachado por Cereza después del despliegue (16 por facturar).
+- **Pendiente de aprobación:** `321fe13` (despacho), para que `calcularCargos` parta del `totalEnvio` actual y no de `previo.envioOriginal`. Así, al redespachar, Cereza recibe el envío corregido. Está listo y probado.
