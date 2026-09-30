@@ -7722,7 +7722,7 @@ El 29-sep estaban rotas las dos:
 - El registro `b2b-enrollment` en `shopify_push_log` se escribe cada hora mientras haya reportados. Si hace ruido, contar solo mutaciones.
 - Para pausar: `cron_jobs_config/<id>.handlerParams.pausado = true`.
 
-## D-332 (2026-09-30) — El precio de la lista del tipo de cliente se cobra con el IVA de esa lista (ticket 1090, PENDIENTE DE DESPLIEGUE)
+## D-332 (2026-09-30) — El precio de la lista del tipo de cliente se cobra con el IVA de esa lista (ticket 1090, EN PRODUCCIÓN desde 2026.09.30.1)
 
 **Contexto.** Ticket 1090 (OH MY STORE): en venta asistida el resumen del JCR4166 no discriminaba subtotal ni IVA. La causa:
 - `aplicarPrecioDeLista` (front) copiaba el precio de la fila del tipo de cliente, pero no su `porcentajeIva`. La línea se quedaba con el `precioUnitarioIva` del producto.
@@ -7735,7 +7735,7 @@ El 29-sep estaban rotas las dos:
 - No se tocan productos ni pedidos pasados. El 0% del precio base de los 113 productos es un dato del comercio y queda para que lo confirme.
 - Commit `96767dd1` (front). Relacionado: el `e340dcce` (ticket 1089) pone en venta asistida los doce tipos de documento de la lista de clientes.
 
-## D-333 (2026-09-30) — El transporte y el manejo del despacho a Guía Cereza son internos (ticket 1092, PENDIENTE DE DESPLIEGUE; reemplaza la regla del 24-sep del ticket 1059)
+## D-333 (2026-09-30) — El transporte y el manejo del despacho a Guía Cereza son internos (ticket 1092, EN PRODUCCIÓN; reemplaza la regla del 24-sep del ticket 1059)
 
 **Contexto.** Con el ticket 1059 (regla del 24-sep), el transporte y el manejo que se escogen al despachar por Guía Cereza cambiaban el envío, el total, el IVA y el saldo por cobrar del pedido del cliente, y de ahí pasaban a la factura. Sindy (OH MY STORE, ticket 1092) reportó que la factura electrónica salía con esos cargos internos. Hay 18 pedidos con el envío interno, 14 de ellos facturados. En 12 el total quedó por debajo del del cliente (el transporte interno era más barato); en 6 quedó por encima (ORE-001247 con 3.500 por cobrar que no se debían).
 
@@ -7744,3 +7744,5 @@ El 29-sep estaban rotas las dos:
 - **Factura** (otra sesión): SIIGO y la DIAN toman `cargosCereza.envioOriginal`, nunca transporte ni manejo.
 - **Ventana de despacho** (`c928d6dc`, front): muestra lo que recibe Cereza frente al total del cliente, que no cambia.
 - **Reparación de los 18 pedidos** (`reparar-1092.js`, en seco por defecto): resta exactamente lo que sumó el despacho y deja la huella en `cargosCereza.totalesRevertidos`. En el ensayo en seco, los 18 vuelven a su total original y ninguno tiene pagos de más. Las facturas de los 14 facturados no se tocan: si hacen falta notas, las hace el comercio.
+
+**Desplegado** (30-sep): backend `c4a7775`, con un solo reload a las 16:51 UTC, encima del `1435275` de la factura. Front 2026.09.30.2. Reparación aplicada a los 18 pedidos: al repetir el ensayo en seco, 0 por reparar y 18 revertidos. ORE-001247 quedó en $23.000 y ORE-001221 en $372.890,08, los dos iguales a su total original.
