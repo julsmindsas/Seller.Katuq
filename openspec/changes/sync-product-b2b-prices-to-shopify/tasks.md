@@ -6,14 +6,14 @@
 - [ ] 1.3 Verificar con un buyer modelo logueado (o contextualPricing) que el storefront resuelve el precio modelo
 
 ## 2. Refresco de precio para productos no-Cereza
-- [ ] 2.1 Extender/replicar el seed `add-pricelist-node-to-cereza-flow.js` para inyectar `shopify-pricelist-sync` en rama paralela del flow `katuq-web-to-shopify` (leer el flow real antes; NO tocar sus ramas de producto/stock)
-- [ ] 2.2 Verificar un run del flow con el nodo activo: producto no-Cereza con cambio de precio refresca su price list
+- [x] 2.1 **Reemplazado (D-331):** no se tocó el flow mixto `katuq-web-to-shopify` (D-134). Se programó el barrido del ticket 1021 (`oms-shopify-pricelist-sweep`, handler `shopifyPricelistExpirySweep`, 1:40/7:40/13:40/19:40 COT), que reconcilia TODO el catálogo publicado contra el precio efectivo de Katuq, Cereza y no-Cereza. El 29-sep faltaban 120 productos no-Cereza en la lista Mayorista (p. ej. JCR4202 BODY ROJO: mayorista veía $177.196 en vez de $88.598).
+- [x] 2.2 Verificado en seco en el EC2 (69 s, 205 MB, 3.756 productos por corrida; los 2.427 sin variantes cacheadas entran de a 300 con cursor).
 
 ## 3. Cambio de precio manual en Katuq
-- [ ] 3.1 Detectar cambio de `preciosPorTipoCliente` en la edición de producto y disparar el refresco del SKU (definir evento vs llamada directa con traza; leer el controller antes)
-- [ ] 3.2 Test: editar precio mayorista de 1 SKU en Katuq → price list actualizada sin re-escribir el resto
+- [x] 3.1 **Cubierto por el barrido (D-331):** un cambio manual llega a la price list en la siguiente corrida (máx. ~6 h). Sin evento nuevo en la edición de producto.
+- [x] 3.2 Cubierto por `tests/shopify/marketPricingSweep.test.js` (reconcilia contra el precio efectivo de Katuq).
 
 ## 4. Cobertura y cierre
-- [ ] 4.1 Contract test del write-set: falla si sale una mutación distinta de price list / companies-market (nunca producto, precio público, InventoryLevel, ni escrituras en Katuq)
-- [ ] 4.2 Reporte de cobertura por perfil (Katuq vs fixed prices en Shopify) para responderle a CreaCTA con números
+- [x] 4.1 `tests/shopify/marketPricingTierPrice.test.js` (price list) y `tests/shopify/b2bEnrollmentService.test.js` (companies/contactos/roles/market).
+- [x] 4.2 Cobertura medida el 29-sep (Mayorista): 6.160 de 6.168 productos con precio correcto (antes 6.019); 2 con variante inexistente y 6 con dos productos de Katuq apuntando al mismo de Shopify.
 - [ ] 4.3 Build sin errores; registrar cierre en CONTRACT.md + actualizar tarea ClickUp + correo a CreaCTA

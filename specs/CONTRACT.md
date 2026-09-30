@@ -7668,3 +7668,56 @@ El problema real es el costo de reconstruir `getSearchIndex(company)` cuando el 
 - Si cambia `ecosystem.config.js`: `pm2 reload ecosystem.config.js --update-env` y luego `pm2 save`.
 - No hacer `systemctl start pm2-ubuntu|pm2-root` con los daemons vivos: el `resurrect` reiniciaría los procesos.
 - La prueba real del arranque automático es un reinicio de la máquina (pendiente de agendar).
+
+## D-331 (2026-09-29) — Precios por tipo de cliente de OH MY STORE en Shopify: inscripción B2B y barrido de precios automáticos (ticket 1088, EN PRODUCCIÓN)
+
+**Contexto.** Ticket 1088 (OH MY STORE): un cliente mayorista en Katuq entraba a ohmystore.shop y veía precio público. Para ver el precio de su tipo tienen que cumplirse dos cosas:
+- **El cliente:** un Customer con su correo, que sea contacto de una Company, con rol de comprador en una sede, y esa sede en el Market de su tipo.
+- **El producto:** precio fijo en la Price List de ese Market.
+
+El 29-sep estaban rotas las dos:
+- 94 de 233 mayoristas no tenían company. La inscripción era un script manual (`sync-b2b-companies.js`) que no se corría desde junio. Después de correrlo, 20 quedaron como contacto sin rol.
+- 120 productos no tenían precio mayorista y 29 lo tenían desactualizado por campañas. El flow `katuq-web-to-shopify` (productos no-Cereza, JCR/CT) no tiene nodo de price list, y D-134 impide ampliarlo. El barrido del ticket 1021 existía, pero nunca se programó. Ejemplo: JCR4202 BODY ROJO le salía al mayorista a $177.196, cuando su precio es $88.598.
+
+**Decisión** (aprobada por Daniel el 29-sep; todo corre en el servidor):
+- **Datos del día** (ticket 1061, otra sesión, con aprobación de Daniel en cada paso): inscripción de los que faltaban, carga de precios, limpieza de 21 companies vacías y roles.
+- **`oms-shopify-b2b-enrollment`** (`cron_jobs_config`, `20 * * * *` COT, handler `shopifyB2bEnrollmentSweep`):
+  - Usa `services/shopify/b2bEnrollmentService.js`. El script quedó como línea de comandos encima.
+  - Resuelve **primero por correo**. Si el correo ya es contacto de una company, usa esa y le da el rol si le falta. Buscar primero por NIT es lo que dejó las 21 companies vacías.
+  - Sin correo no crea company.
+  - Reporta sin tocar tres casos: company con otro contacto, correo que es contacto de la company de OTRO cliente de Katuq (por externalId) y sede que ya está en el Market de otro tipo.
+  - Camino rápido: `clients.integrations.shopify.compradorVerificadoEn` de menos de 7 días; con eso no consulta Shopify.
+  - **Desvío** de `sync-customer-type-to-shopify` 5.2: corre por cron y no por evento. Es más simple y cubre las reclasificaciones.
+- **`oms-shopify-pricelist-sweep`** (`40 1,7,13,19 * * *` COT, handler `shopifyPricelistExpirySweep`):
+  - Es el barrido del ticket 1021 sobre todo el catálogo publicado: Cereza, no-Cereza y campañas.
+  - Reemplaza las tareas 2 y 3 de `sync-product-b2b-prices-to-shopify` sin tocar el flow mixto.
+- **Los dos crones:**
+  - `_sinSolaparse`: si la corrida anterior sigue viva, la nueva se salta.
+  - `handlerParams.pausado` y `apply` se releen de Firestore en cada corrida, así que se pausan sin reiniciar la API.
+- **`shopify-product-upsert`:** con error permanente de Shopify (userErrors o 4xx salvo 429) ya no mueve `date_edit`. Ese campo es el cursor del trigger `katuq-product-changed`. CT-JDI-111-BRUNO fallaba cada 10 minutos ("Product does not exist", 392 veces en 3 días) y dejaba "partial" 391 de 392 corridas.
+
+**Verificado en producción** (29-sep, backend `d136f45`):
+- El reload no dio ningún 5xx; `wait_ready` viene del ticket 1081.
+- **Inscripción, 19:21 COT:** success. 212 verificados y 0 cambios, porque el 1061 ya había dejado los datos bien.
+  - Medición completa: **217 de 233 mayoristas** compran con su precio, 211 con su propia company y 6 con un correo que es contacto de otro cliente. Los modelos, **2 de 2**.
+  - JCR4202 para un mayorista: **$88.598**.
+- **Precios:** 6.160 de 6.168 productos correctos en la lista Mayorista (antes 6.019).
+- **Barrido, 19:41 COT:** success.
+  - 5.416 precios mayorista y 2.602 modelo; 674 con campaña vigente y 6 devueltos a precio de lista.
+  - 4 `VARIANT_NOT_FOUND`: 2 productos con variante vieja.
+  - Servidor: 859 MB, 0 reinicios, 0 5xx.
+- **Pruebas:** 7 de inscripción y 1 de push fallido. Las mutaciones de cada regla nueva hacen caer las pruebas.
+- **BRUNO:** falló una última vez a las 19:25 COT, sin mover `date_edit`. En las vueltas de las 19:36 y las 19:47 ya no lo tomó, y el flow `katuq-web-to-shopify` volvió a "success" después de 391 corridas "partial".
+
+**Pendiente del comercio** (datos, no código):
+- 15 mayoristas sin correo.
+- 6 correos compartidos entre dos clientes: Inversiones Giraldo ↔ Eventi Group, David Alexander ↔ Juan Carlos Mejía, Group SD ↔ Steven Valencia y 2 fichas de Glimpse.
+- Laura Vanessa Jiménez: su NIT está en Shopify a nombre de otra persona.
+- 2 BRUNO duplicados (CT-JDI-111-BRUNO y CT--943957; el bueno es CT--274153).
+- 6 productos con dos fichas de Katuq sobre el mismo de Shopify: GCTT8706X/GCTT8706*, GCC193-E, GCLG1301, GCC739 y GCC360.
+- 2 con variante vieja: EX--130308 y EX-CLA-6028-ANESTY-250ML.
+
+**Notas:**
+- `tests/flows/shopifyPrecioTachado.test.js` y `tests/flows/nodeCatalogCoverage.test.js` ya fallaban en `0366349`, antes de estos cambios.
+- El registro `b2b-enrollment` en `shopify_push_log` se escribe cada hora mientras haya reportados. Si hace ruido, contar solo mutaciones.
+- Para pausar: `cron_jobs_config/<id>.handlerParams.pausado = true`.
