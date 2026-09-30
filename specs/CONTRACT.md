@@ -7752,5 +7752,17 @@ El 29-sep estaban rotas las dos:
 - Las 14 facturas ya emitidas se leyeron en SIIGO (solo GET) y coinciden con el listado: línea ENVIO sin impuesto y total igual a su "antes".
 - Los 34 pedidos con `cargosCereza` son todos de OH MY STORE, y en los 34 `totalEnvio` es igual a `envioOriginal`: el ajuste no cambió ninguna factura.
 - Ticket 1092 Resuelto con el listado adjunto y 14 tareas para el comercio (las notas débito y crédito son trámite suyo).
-- **Falta:** la primera factura real de un pedido despachado por Cereza después del despliegue (16 por facturar).
-- **Pendiente de aprobación:** `321fe13` (despacho), para que `calcularCargos` parta del `totalEnvio` actual y no de `previo.envioOriginal`. Así, al redespachar, Cereza recibe el envío corregido. Está listo y probado.
+- **Probado con facturas reales:** entre las 20:04 y las 20:09 UTC el comercio emitió 6 facturas de pedidos despachados por Cereza, y las 6 salieron bien en SIIGO. ORE-001271 (6913) y ORE-001259 (6914) salieron sin envío; antes habrían llevado $17.000 y $8.500 internos. Las otras cuatro salieron con los $14.900 del cliente, entre ellas ORE-001286 (6915), que antes habría llevado $8.500. El PDF de la 6915 quedó adjunto al ticket 1092.
+- **Redespacho** (backend `5f4f1a9`, reload a las 20:41:53 UTC, aprobado por Daniel): `calcularCargos` parte del `totalEnvio` actual y no de `previo.envioOriginal`. Así, al redespachar, Cereza recibe el envío corregido.
+
+## D-334 (2026-09-30) — Los regalos en $0 se facturan en SIIGO con su valor real y el IVA a cargo del comercio (ticket 1098, EN PRODUCCIÓN)
+
+**Contexto.** OH MY STORE no podía facturar el ORE-000899. SIIGO respondía "The field taxpayer is required" en items[3], un lubricante (GCC411) regalado con descuento del 100%. Para un ítem con `price` 0, SIIGO exige su valor real (`tax_base`, unitario sin IVA) y quién asume el IVA (`taxpayer`: "Customer" o "Company"). Katuq no mandaba ninguno de los dos, así que ningún regalo se podía facturar. Hasta hoy, el ORE-000899 es el único pedido con ese rechazo (4 intentos). La ayuda de SIIGO ("Manejo factura electrónica de obsequios") dice que, si el IVA lo asume la empresa, no suma al total de la factura; si lo asume el cliente, sí.
+
+**Decisión** (Daniel, 30-sep): el IVA del regalo lo asume el comercio (`taxpayer: "Company"`), porque el cliente no lo pagó y el total de la factura tiene que ser el del pedido.
+- `siigoDataMapper`: todo renglón que viaja en $0 lleva `tax_base` y `taxpayer: "Company"`. El valor sale de `precioBaseSinIva` (`lineasEnCero.js`, mismo criterio que el 1018). El pago no cambia.
+- Un regalo sin precio en el catálogo no se puede declarar. `accountingManager` lo frena antes de enviar, con un mensaje que dice qué hacer (`regalosSinValor`), y la vista previa lo avisa, igual que avisa qué renglones van de regalo.
+- El freno del 1018 no cambia: los ceros sin explicación se siguen frenando, y los regalados a propósito pasan.
+- No cubre la DIAN directa (`ublInvoiceMapper`) ni World Office.
+
+**Desplegado** (30-sep): backend `31a02cc`, con reload a las 20:40:58 UTC. Prueba: `tests/accounting/regaloEnCero.test.js` (falla sin el arreglo); 1018, 1052, 1054, 1055, 1074 y DIAN siguen en verde. En el servidor, con el pedido real, el regalo sale con `tax_base` 21008 y `taxpayer` Company, y el pago es $2.467.706,57, el total del pedido. Queda por verificar la factura real del ORE-000899: se le pidió al comercio que vuelva a facturarlo. Si su SIIGO exige una cuenta para el IVA asumido de los regalos, el error lo dirá.
