@@ -7721,3 +7721,16 @@ El 29-sep estaban rotas las dos:
 - `tests/flows/shopifyPrecioTachado.test.js` y `tests/flows/nodeCatalogCoverage.test.js` ya fallaban en `0366349`, antes de estos cambios.
 - El registro `b2b-enrollment` en `shopify_push_log` se escribe cada hora mientras haya reportados. Si hace ruido, contar solo mutaciones.
 - Para pausar: `cron_jobs_config/<id>.handlerParams.pausado = true`.
+
+## D-332 (2026-09-30) — El precio de la lista del tipo de cliente se cobra con el IVA de esa lista (ticket 1090, PENDIENTE DE DESPLIEGUE)
+
+**Contexto.** Ticket 1090 (OH MY STORE): en venta asistida el resumen del JCR4166 no discriminaba subtotal ni IVA. La causa:
+- `aplicarPrecioDeLista` (front) copiaba el precio de la fila del tipo de cliente, pero no su `porcentajeIva`. La línea se quedaba con el `precioUnitarioIva` del producto.
+- 113 productos de OH MY STORE, casi todos JCR, tienen 0% en el precio base y 19% en sus tres listas.
+- `calculateOrderTotals`, que guarda el total, y `checkIVAPrice` leen `precioUnitarioIva` de la línea: IVA 0 y total igual al precio sin IVA de la lista. El cálculo canónico (`calcularTotalesPedido`, solo auditoría) sí usaba el de la fila.
+- Impacto del 31-ago al 30-sep: 82 pedidos E-commerce y 191 líneas, 184 de ellas de la lista de mayoristas, con ~$12,46 M sin cobrar. Por ejemplo, el ORE-001276 salió en $31.908 en vez de $37.971.
+
+**Decisión.** Al aplicar la lista, `precioUnitarioIva` toma el `porcentajeIva` de la fila, si la fila lo trae, como ya hacía cotizaciones. Se cobra el precio final de la lista del cliente.
+- Simulado con los dos cálculos del servidor: el ORE-001276 da 31.908 + 6.063 = 37.971 y un mayorista 21.272 + 4.042 = 25.314. Sin tipo de cliente no cambia nada.
+- No se tocan productos ni pedidos pasados. El 0% del precio base de los 113 productos es un dato del comercio y queda para que lo confirme.
+- Commit `96767dd1` (front). Relacionado: el `e340dcce` (ticket 1089) pone en venta asistida los doce tipos de documento de la lista de clientes.
