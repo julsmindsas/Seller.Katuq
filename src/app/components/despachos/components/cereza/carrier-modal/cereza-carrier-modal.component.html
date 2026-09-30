@@ -69,10 +69,10 @@
         </p>
       </div>
 
-      <!-- Ticket 1059: cargos que Cereza factura como líneas de la venta -->
+      <!-- Tickets 1059/1092: cargos internos que solo recibe Cereza -->
       <div class="goe-cargos">
         <div class="goe-cargos__titulo">
-          Cargos que factura Cereza<span *ngIf="cantidadPedidos > 1"> (por pedido)</span>
+          Cargos internos para Cereza<span *ngIf="cantidadPedidos > 1"> (por pedido)</span>
         </div>
         <div class="goe-cargos__fila">
           <label class="goe-cargos__campo">
@@ -99,16 +99,15 @@
         <p class="goe-cargos__nota" *ngIf="cambios.length === 0">
           Así como está, el pedido sale con el envío que ya tiene.
         </p>
+        <p class="goe-cargos__nota" *ngIf="cambios.length > 0">
+          Son internos: el pedido del cliente, su saldo y su factura no cambian.
+        </p>
         <ul class="goe-cargos__cambios" *ngIf="cambios.length > 0">
-          <li *ngFor="let c of cambios" [class.is-bloqueado]="c.facturado">
-            <i class="pi" [ngClass]="c.facturado ? 'pi-ban' : 'pi-exclamation-triangle'"></i>
-            <span *ngIf="!c.facturado">
-              <b>{{ c.nroPedido }}</b>: el total pasa de {{ formatoPesos(c.totalAnterior) }} a
-              <b>{{ formatoPesos(c.totalNuevo) }}</b>.
-              {{ c.diferencia > 0 ? 'Quedan ' + formatoPesos(c.diferencia) + ' por cobrar.' : 'Baja ' + formatoPesos(-c.diferencia) + '.' }}
-            </span>
-            <span *ngIf="c.facturado">
-              <b>{{ c.nroPedido }}</b> ya tiene factura electrónica: no se le puede cambiar el total.
+          <li *ngFor="let c of cambios">
+            <i class="pi pi-info-circle"></i>
+            <span>
+              <b>{{ c.nroPedido }}</b>: Cereza recibe <b>{{ formatoPesos(c.totalCereza) }}</b>;
+              el cliente sigue en {{ formatoPesos(c.totalCliente) }}.
             </span>
           </li>
         </ul>

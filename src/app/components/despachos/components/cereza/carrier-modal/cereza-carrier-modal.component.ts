@@ -8,13 +8,12 @@ interface CerezaCarrier {
   name: string;
 }
 
-/** Cómo queda un pedido con el transporte y el manejo escogidos (ticket 1059). */
+/** Lo que recibe Cereza con el transporte y el manejo escogidos (tickets 1059/1092). */
 interface CambioPedido {
   nroPedido: string;
-  totalAnterior: number;
-  totalNuevo: number;
+  totalCliente: number;
+  totalCereza: number;
   diferencia: number;
-  facturado: boolean;
 }
 
 /**
@@ -26,10 +25,11 @@ interface CambioPedido {
  * configurada para la empresa: en el caso normal despachar es un solo clic.
  *
  * Ticket 1059: en la misma ventana van el transporte y el manejo que Cereza
- * factura como líneas de la venta. Transporte viene con el envío del pedido y
- * manejo en 0: dejarlo así es igual que siempre. Si cambian, el total del
- * pedido cambia en Katuq y en Cereza, y la ventana muestra cuánto antes de
- * despachar. Un pedido con factura electrónica no deja cambiarlos.
+ * registra como líneas de la venta. Transporte viene con el envío del pedido y
+ * manejo en 0: dejarlo así es igual que siempre. Ticket 1092 (Daniel, 30-sep):
+ * son internos (Comercializadora → Lumina). Solo cambian lo que recibe Cereza;
+ * el pedido del cliente, su saldo y su factura no, así que un pedido facturado
+ * también se puede despachar con cargos.
  */
 @Component({
   selector: 'app-cereza-carrier-modal',
@@ -141,11 +141,7 @@ export class CerezaCarrierModalComponent implements OnInit {
     return Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
   }
 
-  private tieneFactura(pedido: any): boolean {
-    return Boolean(pedido?.facturacionElectronica?.invoiceId || pedido?.nroFactura);
-  }
-
-  /** Misma cuenta que hace el servidor, para mostrarla antes de despachar. */
+  /** Misma cuenta que hace el servidor, para mostrar lo que recibe Cereza antes de despachar. */
   recalcularCambios(): void {
     const transporte = this.pesos(this.transporte);
     const manejo = this.pesos(this.manejo) || 0;
@@ -157,20 +153,15 @@ export class CerezaCarrierModalComponent implements OnInit {
         const tarifaEnvio = Number(pedido?.tarifaEnvio) || 0;
         const delta = envioNuevo - envioActual;
         const diferencia = Math.round(delta * (1 + tarifaEnvio / 100) * 100) / 100;
-        const totalAnterior = Number(pedido?.totalPedididoConDescuento) || 0;
+        const totalCliente = Number(pedido?.totalPedididoConDescuento) || 0;
         return {
           nroPedido: pedido?.nroPedido || 'Pedido',
-          totalAnterior,
-          totalNuevo: totalAnterior + diferencia,
+          totalCliente,
+          totalCereza: totalCliente + diferencia,
           diferencia,
-          facturado: this.tieneFactura(pedido),
         };
       })
       .filter((c) => Math.abs(c.diferencia) >= 0.5);
-  }
-
-  get hayFacturadoConCambio(): boolean {
-    return this.cambios.some((c) => c.facturado);
   }
 
   get cargosInvalidos(): boolean {
@@ -191,10 +182,6 @@ export class CerezaCarrierModalComponent implements OnInit {
     }
     if (this.cargosInvalidos) {
       this.toastr.warning('Revisa el valor de transporte o manejo.', 'Valor no válido');
-      return;
-    }
-    if (this.hayFacturadoConCambio) {
-      this.toastr.warning('Un pedido ya facturado no puede cambiar de total. Deja el transporte y el manejo como venían.', 'Pedido facturado');
       return;
     }
     const transporte = this.pesos(this.transporte);
