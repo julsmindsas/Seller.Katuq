@@ -1256,6 +1256,18 @@ export class CrearVentasComponent
       estado: ["Activo"],
       cd: [""],
     });
+    // Ticket 1100: con NIT (empresa) el apellido es opcional, igual que en Clientes.
+    this.formulario.get("tipo_documento_comprador")?.valueChanges.subscribe(() => this.ajustarApellidosSegunTipoDoc());
+    this.ajustarApellidosSegunTipoDoc();
+  }
+
+  /** Apellidos obligatorios solo para persona natural; con NIT son opcionales. */
+  private ajustarApellidosSegunTipoDoc(): void {
+    const apellidos = this.formulario?.get("apellidos_completos");
+    if (!apellidos) return;
+    const esEmpresa = esTipoDocumentoEmpresa(this.formulario.get("tipo_documento_comprador")?.value);
+    apellidos.setValidators(esEmpresa ? null : Validators.required);
+    apellidos.updateValueAndValidity({ emitEvent: false });
   }
 
   downloadExcel(): void {
@@ -1586,40 +1598,53 @@ export class CrearVentasComponent
    * Método para abrir el formulario de edición con los datos actuales del cliente
    */
   abrirFormularioEdicion() {
-    if (this.pedidoGral?.cliente) {
-      // Llenar el formulario con los datos actuales del cliente
-      this.formulario.patchValue({
-        nombres_completos: this.pedidoGral.cliente.nombres_completos,
-        apellidos_completos: this.pedidoGral.cliente.apellidos_completos,
-        tipo_documento_comprador:
-          this.pedidoGral.cliente.tipo_documento_comprador,
-        documento: this.pedidoGral.cliente.documento,
-        indicativo_celular_comprador:
-          this.pedidoGral.cliente.indicativo_celular_comprador,
-        numero_celular_comprador:
-          this.pedidoGral.cliente.numero_celular_comprador,
-        indicativo_celular_whatsapp:
-          this.pedidoGral.cliente.indicativo_celular_whatsapp,
-        numero_celular_whatsapp:
-          this.pedidoGral.cliente.numero_celular_whatsapp,
-        correo_electronico_comprador:
-          this.pedidoGral.cliente.correo_electronico_comprador,
-        estado: this.pedidoGral.cliente.estado || "activo",
-      });
-
-      // Asegurar que los datos de facturación y entrega estén disponibles
-      this.datosFacturacionElectronica =
-        this.pedidoGral.cliente.datosFacturacionElectronica || [];
-      this.datosEntregas = this.pedidoGral.cliente.datosEntrega || [];
-      this.originalDataEntregas =
-        this.utils.deepClone(this.datosEntregas) || [];
-
-      // Mostrar el formulario de edición
-      this.mostrarFormularioCliente = true;
-
-      // Forzar detección de cambios
-      this.ref.detectChanges();
+    const actual = this.pedidoGral?.cliente;
+    if (!actual) return;
+    // Ticket 1100: la copia del cliente es la de cuando se escogió en la venta. Si
+    // lo editaron después en Clientes, guardar desde aquí pisaba esos cambios con
+    // los datos viejos. Se relee el cliente guardado antes de mostrar el formulario.
+    if (!actual.documento) {
+      this.llenarFormularioEdicion(actual);
+      return;
     }
+    this.service.getClientByDocument({ documento: actual.documento }).subscribe({
+      next: (res: any) => {
+        const guardado = Array.isArray(res) ? res[0] : res;
+        const cliente = guardado && guardado.documento ? { ...actual, ...guardado } : actual;
+        this.pedidoGral.cliente = cliente;
+        sessionStorage.setItem("cliente", JSON.stringify(cliente));
+        this.llenarFormularioEdicion(cliente);
+      },
+      error: () => this.llenarFormularioEdicion(actual),
+    });
+  }
+
+  private llenarFormularioEdicion(cliente: any) {
+    // Llenar el formulario con los datos actuales del cliente
+    this.formulario.patchValue({
+      cd: cliente.cd || this.formulario.value.cd,
+      nombres_completos: cliente.nombres_completos,
+      apellidos_completos: cliente.apellidos_completos,
+      tipo_documento_comprador: cliente.tipo_documento_comprador,
+      documento: cliente.documento,
+      indicativo_celular_comprador: cliente.indicativo_celular_comprador,
+      numero_celular_comprador: cliente.numero_celular_comprador,
+      indicativo_celular_whatsapp: cliente.indicativo_celular_whatsapp,
+      numero_celular_whatsapp: cliente.numero_celular_whatsapp,
+      correo_electronico_comprador: cliente.correo_electronico_comprador,
+      estado: cliente.estado || "activo",
+    });
+
+    // Asegurar que los datos de facturación y entrega estén disponibles
+    this.datosFacturacionElectronica = cliente.datosFacturacionElectronica || [];
+    this.datosEntregas = cliente.datosEntrega || [];
+    this.originalDataEntregas = this.utils.deepClone(this.datosEntregas) || [];
+
+    // Mostrar el formulario de edición
+    this.mostrarFormularioCliente = true;
+
+    // Forzar detección de cambios
+    this.ref.detectChanges();
   }
 
   /**

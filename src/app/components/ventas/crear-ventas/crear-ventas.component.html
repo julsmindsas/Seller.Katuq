@@ -445,7 +445,7 @@
                         </small>
                       </div>
                       <div class="form-field span-2">
-                        <label>Apellidos <span class="required">*</span></label>
+                        <label>Apellidos <span class="required" *ngIf="!esDocEmpresa(formulario.get('tipo_documento_comprador')?.value)">*</span><span class="opcional" *ngIf="esDocEmpresa(formulario.get('tipo_documento_comprador')?.value)">(opcional)</span></label>
                         <input class="field-input" type="text" formControlName="apellidos_completos" placeholder="Apellidos completos"
                                [class.campo-con-error]="campoClienteInvalido('apellidos_completos')" />
                         <small class="field-error" *ngIf="campoClienteInvalido('apellidos_completos')">

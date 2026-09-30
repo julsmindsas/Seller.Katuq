@@ -535,6 +535,7 @@
     }
 
     .required { color: var(--kc-red); }
+    .opcional { color: var(--kc-muted, #6b6b8a); font-weight: 400; }
   }
 
   .field-input,

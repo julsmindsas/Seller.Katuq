@@ -2802,6 +2802,12 @@ $step1-radius: 8px;
         .required {
           color: #ef4444;
         }
+
+        .opcional {
+          color: $step1-text;
+          opacity: 0.6;
+          font-weight: 400;
+        }
       }
 
       .field-input {

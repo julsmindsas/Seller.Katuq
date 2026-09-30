@@ -160,9 +160,9 @@ export class CrearClienteModalComponent implements OnInit {
         this.formulario.controls['nombres_completos'].setValue(split.nombres);
         this.formulario.controls['apellidos_completos'].setValue(split.apellidos);
 
-        this.etiquetasSeleccionadas = Array.isArray(this.clienteData.etiquetas)
+        this.etiquetasSeleccionadas = this.sinEtiquetasRepetidas(Array.isArray(this.clienteData.etiquetas)
           ? [...this.clienteData.etiquetas]
-          : [];
+          : []);
         this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
 
         // tipo_documento: normaliza el valor guardado (puede venir legacy como
@@ -228,9 +228,9 @@ export class CrearClienteModalComponent implements OnInit {
           this.tipoDocSeleccionado = tipoDoc;
           this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
 
-          this.etiquetasSeleccionadas = Array.isArray(this.prefill.etiquetas)
+          this.etiquetasSeleccionadas = this.sinEtiquetasRepetidas(Array.isArray(this.prefill.etiquetas)
             ? [...this.prefill.etiquetas]
-            : [];
+            : []);
           this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
 
           // Marca los campos faltantes para que el usuario vea de una qué debe
@@ -357,10 +357,27 @@ export class CrearClienteModalComponent implements OnInit {
     }
   }
 
+  // Ticket 1100: el catálogo trae "CONTADO" y el cliente guarda "Contado" (se
+  // guarda en formato título). Comparar exacto hacía que la etiqueta nunca se
+  // viera marcada, que marcarla la repitiera y que desmarcarla no la quitara.
+  private normalizarEtiqueta(nombre: any): string {
+    return String(nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  }
+
+  private sinEtiquetasRepetidas(etiquetas: string[]): string[] {
+    const vistas = new Set<string>();
+    return etiquetas.filter((e) => {
+      const clave = this.normalizarEtiqueta(e);
+      if (!clave || vistas.has(clave)) return false;
+      vistas.add(clave);
+      return true;
+    });
+  }
+
   toggleEtiqueta(nombre: string): void {
-    const idx = this.etiquetasSeleccionadas.indexOf(nombre);
-    if (idx >= 0) {
-      this.etiquetasSeleccionadas.splice(idx, 1);
+    const clave = this.normalizarEtiqueta(nombre);
+    if (this.tieneEtiqueta(nombre)) {
+      this.etiquetasSeleccionadas = this.etiquetasSeleccionadas.filter((e) => this.normalizarEtiqueta(e) !== clave);
     } else {
       this.etiquetasSeleccionadas.push(nombre);
     }
@@ -368,7 +385,8 @@ export class CrearClienteModalComponent implements OnInit {
   }
 
   tieneEtiqueta(nombre: string): boolean {
-    return this.etiquetasSeleccionadas.includes(nombre);
+    const clave = this.normalizarEtiqueta(nombre);
+    return this.etiquetasSeleccionadas.some((e) => this.normalizarEtiqueta(e) === clave);
   }
 
   getTagColor(tag: ClientTag): string {
@@ -447,7 +465,7 @@ export class CrearClienteModalComponent implements OnInit {
       nombres_completos: this.toTitleCase(formValue.nombres_completos),
       apellidos_completos: this.toTitleCase(formValue.apellidos_completos),
       etiquetas: Array.isArray(formValue.etiquetas)
-        ? formValue.etiquetas.map((e: string) => this.toTitleCase(e))
+        ? this.sinEtiquetasRepetidas(formValue.etiquetas.map((e: string) => this.toTitleCase(e)))
         : formValue.etiquetas,
       numero_celular_comprador: formValue.numero_celular_comprador
         ? Number(formValue.numero_celular_comprador)
