@@ -23,6 +23,7 @@ import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
 import { DaneCodesService } from "../../../shared/services/dane-codes.service";
 import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 import { normalizarCiudad } from "../../../shared/utils/ciudad.util";
+import { TIPOS_DOCUMENTO, esTipoDocumentoAnterior, esTipoDocumentoEmpresa } from "../../../shared/utils/tipos-documento";
 import {
   correoValidator,
   normalizarCorreo,
@@ -3459,9 +3460,21 @@ export class CrearVentasComponent
    * Si al menos un producto NO tiene calendario activado, SÍ se muestra el selector.
    */
 
+  /** Ticket 1089: la misma lista de tipos de documento que la de clientes. */
+  readonly tiposDocumento = TIPOS_DOCUMENTO;
+
+  /** El cliente trae un tipo que ya no está en la lista (p. ej. "CC-NIT"): se muestra tal cual. */
+  esTipoDocAnterior(valor: any): boolean {
+    return esTipoDocumentoAnterior(valor);
+  }
+
+  esDocEmpresa(valor: any): boolean {
+    return esTipoDocumentoEmpresa(valor);
+  }
+
   /** true cuando el cliente activo es persona jurídica (NIT / empresa) */
   get clienteEsEmpresa(): boolean {
-    return this.pedidoGral?.cliente?.tipo_documento_comprador === 'CC-NIT';
+    return esTipoDocumentoEmpresa(this.pedidoGral?.cliente?.tipo_documento_comprador);
   }
 
   /** Nombre de empresa: nombres_completos para NIT, nombre completo para persona natural */
@@ -3472,7 +3485,7 @@ export class CrearVentasComponent
   /** Contacto principal: apellidos_completos solo cuando es empresa (NIT) */
   get clienteNombreContacto(): string {
     const c = this.pedidoGral?.cliente;
-    if (!c || c.tipo_documento_comprador !== 'CC-NIT') return '';
+    if (!c || !esTipoDocumentoEmpresa(c.tipo_documento_comprador)) return '';
     return c.apellidos_completos || '';
   }
 
@@ -3887,7 +3900,7 @@ export class CrearVentasComponent
 
     // Establecer valores por defecto
     this.formulario.patchValue({
-      tipo_documento_comprador: "CC-NIT",
+      tipo_documento_comprador: "CC",
       indicativo_celular_comprador: "57",
       indicativo_celular_whatsapp: "57",
     });

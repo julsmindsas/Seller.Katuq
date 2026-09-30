@@ -125,10 +125,8 @@
       <div class="col-sm-6 mb-3">
         <label class="form-label" for="tipo_documento_facturacion_crear">{{ 'Tipo de Documento:' | translate }} <span class="text-danger">*</span></label>
         <select class="form-control" id="tipo_documento_facturacion_crear" [(ngModel)]="tipo_documento_facturacion">
-          <option value="CC-NIT">{{ 'Cedula de Ciudadania' | translate }}</option>
-          <option value="PA">PA</option>
-          <option value="TI">TI</option>
-          <option value="NIT">NIT</option>
+          <option *ngIf="esTipoDocAnterior(tipo_documento_facturacion)" [value]="tipo_documento_facturacion">{{ tipo_documento_facturacion }} (anterior)</option>
+          <option *ngFor="let t of tiposDocumento" [value]="t.value">{{ t.label }}</option>
         </select>
       </div>
       <div class="col-sm-6 mb-3">
@@ -250,10 +248,8 @@
       <div class="col-sm-6">
         <label class="form-label" for="tipo_documento_facturacion">{{ 'Tipo de Documento:' | translate }} <span class="text-danger">*</span></label>
         <select class="form-control" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion">
-          <option value="CC-NIT">{{ 'Cedula de Ciudadania' | translate }}</option>
-          <option value="PA">PA</option>
-          <option value="TI">TI</option>
-          <option value="NIT">NIT</option>
+          <option *ngIf="esTipoDocAnterior(tipo_documento_facturacion)" [value]="tipo_documento_facturacion">{{ tipo_documento_facturacion }} (anterior)</option>
+          <option *ngFor="let t of tiposDocumento" [value]="t.value">{{ t.label }}</option>
         </select>
       </div>
       <div class="col-sm-6">

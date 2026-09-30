@@ -12,6 +12,7 @@ import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { InfoIndicativos } from "src/Mock/indicativosPais";
 import { InfoPaises } from "src/Mock/pais-estado-ciudad";
 import { MaestroService } from "src/app/shared/services/maestros/maestro.service";
+import { TIPOS_DOCUMENTO, esTipoDocumentoAnterior } from "src/app/shared/utils/tipos-documento";
 
 @Component({
   selector: "app-pedido-facturacion",
@@ -23,6 +24,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   alias_facturacion: any;
   razon_social: any;
   tipo_documento_facturacion: any;
+  /** Ticket 1089: la misma lista de tipos de documento que la de clientes. */
+  readonly tiposDocumento = TIPOS_DOCUMENTO;
   numero_documento_facturacion: any;
   indicativo_celular_facturacion: any;
   numero_celular_facturacion: any;
@@ -128,6 +131,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         this.datosFacturacionElectronica = [];
       }
     }
+  }
+
+  /** El dato trae un tipo que ya no está en la lista (p. ej. "CC-NIT"): se muestra tal cual. */
+  esTipoDocAnterior(valor: any): boolean {
+    return esTipoDocumentoAnterior(valor);
   }
 
   /**
