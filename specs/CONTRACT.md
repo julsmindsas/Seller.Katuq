@@ -7734,3 +7734,13 @@ El 29-sep estaban rotas las dos:
 - Simulado con los dos cálculos del servidor: el ORE-001276 da 31.908 + 6.063 = 37.971 y un mayorista 21.272 + 4.042 = 25.314. Sin tipo de cliente no cambia nada.
 - No se tocan productos ni pedidos pasados. El 0% del precio base de los 113 productos es un dato del comercio y queda para que lo confirme.
 - Commit `96767dd1` (front). Relacionado: el `e340dcce` (ticket 1089) pone en venta asistida los doce tipos de documento de la lista de clientes.
+
+## D-333 (2026-09-30) — El transporte y el manejo del despacho a Guía Cereza son internos (ticket 1092, PENDIENTE DE DESPLIEGUE; reemplaza la regla del 24-sep del ticket 1059)
+
+**Contexto.** Con el ticket 1059 (regla del 24-sep), el transporte y el manejo que se escogen al despachar por Guía Cereza cambiaban el envío, el total, el IVA y el saldo por cobrar del pedido del cliente, y de ahí pasaban a la factura. Sindy (OH MY STORE, ticket 1092) reportó que la factura electrónica salía con esos cargos internos. Hay 18 pedidos con el envío interno, 14 de ellos facturados. En 12 el total quedó por debajo del del cliente (el transporte interno era más barato); en 6 quedó por encima (ORE-001247 con 3.500 por cobrar que no se debían).
+
+**Decisión** (Daniel, 30-sep): son internos, Comercializadora → Lumina.
+- **Despacho** (`bdcdaf3`, backend): el pedido del cliente no cambia; los cargos quedan en `cargosCereza`. `calcularCargos` devuelve `paraCereza` con los totales sumados, solo para el pedido que viaja a Cereza, cuya API exige que `total_price` los traiga. Lo que recibe Cereza no cambia: si esas líneas deben ir o no en su ERP lo decide el comercio. Un pedido facturado ya no bloquea el despacho. `updateOrderInternal` conserva `cargosCereza` pero ya no fuerza el envío ni los totales.
+- **Factura** (otra sesión): SIIGO y la DIAN toman `cargosCereza.envioOriginal`, nunca transporte ni manejo.
+- **Ventana de despacho** (`c928d6dc`, front): muestra lo que recibe Cereza frente al total del cliente, que no cambia.
+- **Reparación de los 18 pedidos** (`reparar-1092.js`, en seco por defecto): resta exactamente lo que sumó el despacho y deja la huella en `cargosCereza.totalesRevertidos`. En el ensayo en seco, los 18 vuelven a su total original y ninguno tiene pagos de más. Las facturas de los 14 facturados no se tocan: si hacen falta notas, las hace el comercio.
