@@ -7766,3 +7766,13 @@ El 29-sep estaban rotas las dos:
 - No cubre la DIAN directa (`ublInvoiceMapper`) ni World Office.
 
 **Desplegado** (30-sep): backend `31a02cc`, con reload a las 20:40:58 UTC. Prueba: `tests/accounting/regaloEnCero.test.js` (falla sin el arreglo); 1018, 1052, 1054, 1055, 1074 y DIAN siguen en verde. En el servidor, con el pedido real, el regalo sale con `tax_base` 21008 y `taxpayer` Company, y el pago es $2.467.706,57, el total del pedido. **Verificado con la factura real:** el comercio facturó el ORE-000899 a las 20:45 UTC (factura 6937, PDF adjunto al ticket). SIIGO la aceptó: el lubricante sale en $0 con IVA de $3.991,52 (19% de $21.008) asumido por el comercio, y el total a pagar es $2.467.706,57, igual al del pedido. No pidió ninguna cuenta extra. Ticket 1098 Resuelto.
+
+## D-335 (2026-10-01) — Cotizaciones sin decimales como opción por empresa (ticket 1102, EN PRODUCCIÓN)
+
+**Contexto.** Boris (ALMACEN BOMBAS) pidió quitar los decimales de las cotizaciones porque cuesta leer los valores. ALMARA pidió lo contrario en el ticket 1103: 2 decimales siempre, como SIIGO. El editor usaba tres formatos distintos ('1.0-2', '1.2-2' y '1.0-0'); el listado y la vista del cliente ya mostraban pesos enteros.
+
+**Decisión** (Daniel, 1-oct; opción 1 de dos): una opción por empresa, apagada por defecto.
+- **Backend** (`d495607`): `cotizaciones_config.valoresSinDecimales`. `getConfig` la devuelve, `updateConfig` la acepta sola (si no es booleano responde 400) y `getPublica` la incluye. Prueba en el emulador: 6/6, y la del anexo (1081) sigue en 5/5.
+- **Front** (`91a00523`, salió en 2026.10.01.1 junto con el 1094): los 27 valores con decimales del editor y del documento, de donde también sale el PDF, siguen a `digitosValor`/`digitosValorFijo`. Hay una casilla "Mostrar valores sin decimales" junto a los términos, solo para administradores.
+- Solo cambia la vista; los cálculos conservan los centavos. Por el redondeo, la suma de las líneas puede diferir del total en $1.
+- Activada solo para ALMACEN BOMBAS, con aprobación de Daniel; sus términos y su anexo no se tocaron. ALMARA y las demás siguen como antes. Lo que pide ALMARA en el 1103 queda aparte.
