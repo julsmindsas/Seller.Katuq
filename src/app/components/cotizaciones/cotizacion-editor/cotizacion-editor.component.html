@@ -337,7 +337,7 @@
                     </select>
                   </div>
                   <div class="cl-price-orig" *ngIf="mostrarPrecioOriginal(item)">
-                    <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':'1.2-2' }}</s>
+                    <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</s>
                     <span class="cl-price-orig-iva">(IVA {{ itemIvaOriginal(item) }}%)</span>
                   </div>
                 </div>
@@ -346,7 +346,7 @@
                 <!-- Precio fijo + IVA editable -->
                 <div class="cl-price-edit">
                   <div class="cl-price-row">
-                    <span class="cl-price-value">{{ itemPrecio(item) | currency:'COP':'symbol-narrow':'1.2-2' }}</span>
+                    <span class="cl-price-value">{{ itemPrecio(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
                     <select
                       class="form-select form-select-sm cl-iva-select"
                       [ngModel]="getIvaActual(item)"
@@ -359,7 +359,7 @@
                     </select>
                   </div>
                   <div class="cl-price-orig" *ngIf="mostrarPrecioOriginal(item)">
-                    <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':'1.2-2' }}</s>
+                    <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</s>
                   </div>
                 </div>
               </ng-template>
@@ -380,18 +380,18 @@
                 </div>
               </div>
             </span>
-            <span class="cl-bruto">{{ getValorBruto(item) | currency:'COP':'symbol-narrow':'1.2-2' }}</span>
+            <span class="cl-bruto">{{ getValorBruto(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
             <span class="cl-desc-monto">
-              {{ descLineaPct(item) > 0 ? (getDescuentoUnitario(item) | currency:'COP':'symbol-narrow':'1.2-2') : '—' }}
+              {{ descLineaPct(item) > 0 ? (getDescuentoUnitario(item) | currency:'COP':'symbol-narrow':digitosValorFijo) : '—' }}
             </span>
-            <span class="cl-sin-iva">{{ getPrecioSinIvaNeto(item) | currency:'COP':'symbol-narrow':'1.2-2' }}</span>
+            <span class="cl-sin-iva">{{ getPrecioSinIvaNeto(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
             <span class="cl-pct-iva">{{ getIvaActual(item) }}%</span>
-            <span class="cl-valor-iva">{{ getValorIvaNeto(item) | currency:'COP':'symbol-narrow':'1.2-2' }}</span>
-            <span class="cl-total-iva">{{ getPrecioTotalConIvaNeto(item) | currency:'COP':'symbol-narrow':'1.2-2' }}</span>
+            <span class="cl-valor-iva">{{ getValorIvaNeto(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-total-iva">{{ getPrecioTotalConIvaNeto(item) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
             <span class="cl-sub">
-              <span class="cl-sub-net">{{ itemSubtotal(item) | currency:'COP':'symbol-narrow':'1.0-2' }}</span>
+              <span class="cl-sub-net">{{ itemSubtotal(item) | currency:'COP':'symbol-narrow':digitosValor }}</span>
               <s class="cl-sub-orig" *ngIf="descLineaPct(item) > 0">
-                {{ itemSubtotalBruto(item) | currency:'COP':'symbol-narrow':'1.0-2' }}
+                {{ itemSubtotalBruto(item) | currency:'COP':'symbol-narrow':digitosValor }}
               </s>
             </span>
             <span class="cl-acc">
@@ -443,6 +443,13 @@
             <span class="cot-sep">·</span>
             <button type="button" class="btn btn-link btn-sm p-0 text-danger" (click)="quitarAnexo()">Quitar PDF</button>
           </ng-container>
+          <!-- Ticket 1102: pesos enteros en todas las cotizaciones de la empresa -->
+          <span class="cot-sep">·</span>
+          <label class="cot-check mb-0" [class.disabled]="guardandoDecimales">
+            <input type="checkbox" [checked]="!!configCotizacion?.valoresSinDecimales" [disabled]="guardandoDecimales"
+                   (change)="cambiarValoresSinDecimales($any($event.target).checked)">
+            Mostrar valores sin decimales
+          </label>
         </div>
       </section>
     </div>
@@ -452,23 +459,23 @@
       <div class="cot-summary">
         <div class="sum-row">
           <span>Subtotal</span>
-          <span>{{ subtotal | currency:'COP':'symbol-narrow':'1.0-2' }}</span>
+          <span>{{ subtotal | currency:'COP':'symbol-narrow':digitosValor }}</span>
         </div>
         <div class="sum-row muted" *ngIf="totalDescuentoLineas > 0">
           <span>Desc. por producto</span>
-          <span>− {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':'1.0-2' }}</span>
+          <span>− {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':digitosValor }}</span>
         </div>
         <div class="sum-row muted" *ngIf="totalDescuentoGlobal > 0">
           <span>Desc. global</span>
-          <span>− {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':'1.0-2' }}</span>
+          <span>− {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':digitosValor }}</span>
         </div>
         <div class="sum-row">
           <span>Base gravable</span>
-          <span>{{ baseGravable | currency:'COP':'symbol-narrow':'1.0-2' }}</span>
+          <span>{{ baseGravable | currency:'COP':'symbol-narrow':digitosValor }}</span>
         </div>
         <div class="sum-row">
           <span>IVA</span>
-          <span>{{ totalImpuesto | currency:'COP':'symbol-narrow':'1.0-2' }}</span>
+          <span>{{ totalImpuesto | currency:'COP':'symbol-narrow':digitosValor }}</span>
         </div>
         <div class="sum-global">
           <span class="muted">Descuento global</span>
@@ -486,7 +493,7 @@
         </div>
         <div class="sum-total">
           <span>Total</span>
-          <strong>{{ total | currency:'COP':'symbol-narrow':'1.0-2' }}</strong>
+          <strong>{{ total | currency:'COP':'symbol-narrow':digitosValor }}</strong>
         </div>
         <p class="sum-foot">
           {{ cotizacion.items.length }} ítem(s)
@@ -613,29 +620,29 @@
                  cifra sumaba ~25px por columna y era parte de lo que empujaba la
                  tabla fuera de la hoja. Los centavos siguen saliendo cuando los hay. -->
             <td>{{ it.cantidad }}</td>
-            <td>{{ getValorBruto(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
-            <td>{{ descLineaPct(it) > 0 ? (getDescuentoUnitario(it) | currency:'COP':'symbol-narrow':'1.0-2') : '—' }}</td>
-            <td>{{ getPrecioSinIvaNeto(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
+            <td>{{ getValorBruto(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ descLineaPct(it) > 0 ? (getDescuentoUnitario(it) | currency:'COP':'symbol-narrow':digitosValor) : '—' }}</td>
+            <td>{{ getPrecioSinIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
             <td>{{ getIvaActual(it) }}%</td>
-            <td>{{ getValorIvaNeto(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
-            <td>{{ getPrecioTotalConIvaNeto(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
-            <td>{{ itemSubtotal(it) | currency:'COP':'symbol-narrow':'1.0-2' }}</td>
+            <td>{{ getValorIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ getPrecioTotalConIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ itemSubtotal(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
           </tr>
         </tbody>
       </table>
 
       <div class="doc-totals">
-        <div><span>Subtotal</span><span>{{ subtotal | currency:'COP':'symbol-narrow':'1.0-2' }}</span></div>
+        <div><span>Subtotal</span><span>{{ subtotal | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
         <div *ngIf="totalDescuentoLineas > 0">
           <span>Descuento por producto</span>
-          <span>– {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':'1.0-2' }}</span>
+          <span>– {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':digitosValor }}</span>
         </div>
         <div *ngIf="descGlobalPct > 0">
           <span>Descuento global ({{ descGlobalPct }}%)</span>
-          <span>– {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':'1.0-2' }}</span>
+          <span>– {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':digitosValor }}</span>
         </div>
-        <div><span>IVA</span><span>{{ totalImpuesto | currency:'COP':'symbol-narrow':'1.0-2' }}</span></div>
-        <div class="doc-total"><span>Total</span><span>{{ total | currency:'COP':'symbol-narrow':'1.0-2' }}</span></div>
+        <div><span>IVA</span><span>{{ totalImpuesto | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
+        <div class="doc-total"><span>Total</span><span>{{ total | currency:'COP':'symbol-narrow':digitosValor }}</span></div>
       </div>
 
       <!-- ANEXO: precios sugeridos por tipo de cliente.

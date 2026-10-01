@@ -1566,5 +1566,8 @@
   .btn-link.text-danger { color: #C62828 !important; }
   .btn-link.disabled { opacity: .55; pointer-events: none; }
   .cot-sep { color: #B7B3CC; }
+  .cot-check { display: inline-flex; align-items: center; gap: 6px; color: #211F3A; cursor: pointer; }
+  .cot-check input { accent-color: #5F3FE0; }
+  .cot-check.disabled { opacity: .55; pointer-events: none; }
 }
 .doc-anexo a { color: #5F3FE0; font-weight: 600; }

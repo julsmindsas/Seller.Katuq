@@ -151,9 +151,44 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   ) {}
 
   // ---- Ticket 1081: condiciones fijas de la empresa y documento anexo ----
-  configCotizacion: { terminosBase: string; personalizados?: boolean; anexo?: { url: string; nombre: string } | null } | null = null;
+  configCotizacion: { terminosBase: string; personalizados?: boolean; anexo?: { url: string; nombre: string } | null; valoresSinDecimales?: boolean } | null = null;
   subiendoAnexo = false;
   guardandoCondiciones = false;
+  guardandoDecimales = false;
+
+  // Ticket 1102: la empresa puede ver sus cotizaciones en pesos enteros
+  // (ALMACEN BOMBAS). Solo cambia cómo se muestran los valores; los cálculos
+  // siguen con sus centavos. Sin la opción, todo queda como antes.
+  get digitosValor(): string {
+    return this.configCotizacion?.valoresSinDecimales ? "1.0-0" : "1.0-2";
+  }
+
+  get digitosValorFijo(): string {
+    return this.configCotizacion?.valoresSinDecimales ? "1.0-0" : "1.2-2";
+  }
+
+  /** Guarda para toda la empresa si las cotizaciones se ven sin decimales. */
+  cambiarValoresSinDecimales(valor: boolean): void {
+    const anterior = !!this.configCotizacion?.valoresSinDecimales;
+    this.configCotizacion = { ...(this.configCotizacion || { terminosBase: "" }), valoresSinDecimales: valor };
+    this.guardandoDecimales = true;
+    this.subs.push(this.service.updateConfig({ valoresSinDecimales: valor }).subscribe({
+      next: (res) => {
+        this.guardandoDecimales = false;
+        if (res && res.success) {
+          this.toastr.success(valor ? "Las cotizaciones se verán sin decimales." : "Las cotizaciones volverán a mostrar los decimales.", "Guardado");
+        } else {
+          this.configCotizacion = { ...(this.configCotizacion as any), valoresSinDecimales: anterior };
+          this.toastr.error((res && res.message) || "No se pudo guardar la opción.");
+        }
+      },
+      error: (e) => {
+        this.guardandoDecimales = false;
+        this.configCotizacion = { ...(this.configCotizacion as any), valoresSinDecimales: anterior };
+        this.toastr.error(e?.error?.message || "No se pudo guardar la opción.");
+      },
+    }));
+  }
 
   /** Revisión 1081: el anexo de ESTA cotización solo cambia mientras no se ha enviado. */
   get anexoEditable(): boolean {

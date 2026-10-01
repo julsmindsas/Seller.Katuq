@@ -90,6 +90,8 @@ export interface CotizacionConfig {
   /** true = la empresa ya guardó sus propios términos (no los de Katuq por defecto). */
   personalizados?: boolean;
   anexo?: AnexoCondiciones | null;
+  /** Ticket 1102: la empresa ve los valores de sus cotizaciones en pesos enteros. */
+  valoresSinDecimales?: boolean;
 }
 
 export interface CotizacionListFilter {

@@ -76,7 +76,7 @@ export class CotizacionesService extends BaseService {
   }
 
   /** Ticket 1081: términos de todas las cotizaciones nuevas y/o documento anexo (null lo quita). */
-  updateConfig(cambios: string | { terminosBase?: string; anexo?: { url: string; nombre: string } | null }): Observable<{ success: boolean; message?: string }> {
+  updateConfig(cambios: string | { terminosBase?: string; anexo?: { url: string; nombre: string } | null; valoresSinDecimales?: boolean }): Observable<{ success: boolean; message?: string }> {
     const body = typeof cambios === "string" ? { terminosBase: cambios } : cambios;
     return this.put<{ success: boolean; message?: string }>("/v1/cotizaciones/config", body);
   }
