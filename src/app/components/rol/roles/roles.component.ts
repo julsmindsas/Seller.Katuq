@@ -9,6 +9,20 @@ import Swal from 'sweetalert2';
 import { UtilsService } from '../../../shared/services/utils.service';
 import { ROLE_TEMPLATES, RoleTemplate } from '../../../shared/models/roles/role-templates';
 
+/**
+ * Ticket 1108: permisos asignables a un rol que NO aparecen en el menú lateral,
+ * agrupados por la sección del menú bajo la que se muestran. Mismo path, título
+ * e ícono con que quedaron guardados en los roles que ya los tienen (así el
+ * selector los reconoce como ya asignados y no los duplica).
+ */
+const PERMISOS_FUERA_DEL_MENU: { [seccion: string]: Menu[] } = {
+  Productos: [
+    // Lo lee productos.component.ts (puedeEdicionRapida): formulario rápido en
+    // "Crear Producto" y "Edición rápida" en cada fila.
+    { path: 'productos/crear-rapido', title: 'Creación rápida', type: 'link', icon: 'zap' } as Menu,
+  ],
+};
+
 @Component({
   selector: 'app-roles',
   templateUrl: './roles.component.html',
@@ -119,6 +133,13 @@ export class RolesComponent implements OnInit {
           child['index'] = index++;
         });
         childrenMenus = childrenMenus.concat(menu.children);
+        // Ticket 1108: permisos que ya no están en el menú lateral pero que el
+        // código sigue exigiendo por rol. "Creación rápida" se sacó del menú
+        // (se entra desde Crear Producto) y con eso dejó de poder asignarse:
+        // ningún rol nuevo podía tener la creación/edición rápida de productos.
+        (PERMISOS_FUERA_DEL_MENU[menu.title || ''] || []).forEach(permiso => {
+          childrenMenus.push({ ...permiso, movable: true, index: index++ } as any);
+        });
       } else if (menu.path && menu.type === 'link') {
         // Links de PRIMER NIVEL del menú (sin submenu), ej: "Tesorería"
         // (spec 013, path "tesoreria"). Antes quedaban FUERA del catálogo
