@@ -3208,11 +3208,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // productos en ráfaga rápida (múltiples editOrder en vuelo simultáneos)
     this.editOrderSubject.pipe(
       debounceTime(400),
-      switchMap(order => this.ventasService.editOrder(order)),
+      // Ticket 1094: el error se atrapa en cada guardado. Antes el primero terminaba el
+      // flujo y los guardados siguientes de la sesión ya no salían, sin ningún aviso.
+      switchMap(order => this.ventasService.editOrder(order).pipe(
+        catchError((e) => {
+          Swal.fire({ icon: 'error', title: 'Error al actualizar el pedido',
+                      text: e?.isStaleWrite ? e.message : 'No se pudieron guardar los cambios. Intenta nuevamente.' });
+          return of(null);
+        })
+      )),
       takeUntil(this.destroy$)
     ).subscribe({
-      next: () => {
+      next: (res) => {
+        if (!res) return;
         this.refrescarDatos(true);
+        const bloqueo = res?.details?.estadoPagoBloqueado;
+        if (bloqueo) {
+          this.avisarBloqueoEstadoPago(bloqueo, 'Los demás cambios del pedido sí se guardaron.');
+          return;
+        }
         Swal.fire({ icon: 'success', title: 'Pedido actualizado correctamente',
                     showConfirmButton: false, timer: 1500 });
       },
@@ -6159,6 +6173,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private editOrder(order: Pedido, skipEstadoPagoCheck = false) {
+    this.prepararParaGuardar(order, skipEstadoPagoCheck);
+    this.editOrderSubject.next(order);
+  }
+
+  /** Normaliza el pedido antes de guardarlo (entrega, forma de entrega, saldo). */
+  private prepararParaGuardar(order: Pedido, skipEstadoPagoCheck = false) {
     if (order.carrito && order.carrito.length > 0) {
       const fechaEntrega =
         order.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega;
@@ -6230,8 +6250,29 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       })),
       payloadCompleto: order,
     });
+  }
 
-    this.editOrderSubject.next(order);
+  /**
+   * Ticket 1094: con Tesorería activa, el servidor no deja cambiar el estado de pago de
+   * un pedido con pagos por verificar (ni a un rol sin permiso). Antes el cambio se
+   * descartaba en silencio y la pantalla decía "actualizado".
+   */
+  private avisarBloqueoEstadoPago(
+    bloqueo: { intento?: string; motivo?: string; porVerificar?: number },
+    nota = "",
+  ) {
+    const valor = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 })
+      .format(Number(bloqueo.porVerificar) || 0);
+    const motivo = bloqueo.motivo === "pagos-en-verificacion"
+      ? `Este pedido tiene ${valor} en pagos por verificar en Tesorería. Mientras estén pendientes, el estado lo cambia Tesorería: aprueba o rechaza esos pagos en Finanzas → Tesorería y el pedido se actualiza solo.`
+      : `Tu rol no puede pasar pedidos a ${bloqueo.intento || "ese estado"}. Pídeselo a Tesorería o a un administrador.`;
+    Swal.fire({
+      icon: "warning",
+      title: "El estado de pago no cambió",
+      text: nota ? `${motivo} ${nota}` : motivo,
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#5F3FE0",
+    });
   }
 
   // NUEVO MÉTODO SEGURO: Solo actualizar notas sin tocar carrito
@@ -6744,19 +6785,39 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       (orderToUpdate as any).preAprobadoManual = true;
     }
 
-    // Actualizar el pedido (skip check: el usuario cambió el estado manualmente)
-    this.editOrder(orderToUpdate as Pedido, true);
-
     // Cerrar el modal como confirmado para no ejecutar la restauración del handler de cancelación.
     this.modalService.dismissAll("confirmed");
 
-    // Mostrar mensaje de confirmación
-    Swal.fire({
-      icon: "success",
-      title: "Estado de pago actualizado",
-      text: `El estado se cambió a: ${orderToUpdate.estadoPago}`,
-      showConfirmButton: false,
-      timer: 1500,
+    // Ticket 1094: se espera la respuesta del servidor antes de decir que cambió. Con
+    // Tesorería activa puede no dejarlo (pagos por verificar o rol sin permiso).
+    // skip check: el usuario cambió el estado manualmente.
+    this.prepararParaGuardar(orderToUpdate as Pedido, true);
+    Swal.fire({ title: "Guardando…", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    this.ventasService.editOrder(orderToUpdate as Pedido).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        this.refrescarDatos(true);
+        const bloqueo = res?.details?.estadoPagoBloqueado;
+        if (bloqueo) {
+          this.avisarBloqueoEstadoPago(bloqueo);
+          return;
+        }
+        Swal.fire({
+          icon: "success",
+          title: "Estado de pago actualizado",
+          text: `El estado se cambió a: ${orderToUpdate.estadoPago}`,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      },
+      error: (e) => {
+        order.estadoPago = this.originalEstadoPago;
+        order.estadoProceso = this.originalEstadoProceso;
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo cambiar el estado de pago",
+          text: e?.isStaleWrite ? e.message : "El cambio no se guardó. Intenta de nuevo.",
+        });
+      },
     });
   }
 
