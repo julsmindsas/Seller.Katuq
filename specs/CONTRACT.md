@@ -7776,3 +7776,25 @@ El 29-sep estaban rotas las dos:
 - **Front** (`91a00523`, salió en 2026.10.01.1 junto con el 1094): los 27 valores con decimales del editor y del documento, de donde también sale el PDF, siguen a `digitosValor`/`digitosValorFijo`. Hay una casilla "Mostrar valores sin decimales" junto a los términos, solo para administradores.
 - Solo cambia la vista; los cálculos conservan los centavos. Por el redondeo, la suma de las líneas puede diferir del total en $1.
 - Activada solo para ALMACEN BOMBAS, con aprobación de Daniel; sus términos y su anexo no se tocaron. ALMARA y las demás siguen como antes. Lo que pide ALMARA en el 1103 queda aparte.
+
+## D-336 (2026-10-01) — Cancelar un pedido con dos o más productos vuelve a devolver el inventario (ticket 1107, SUBIDA; el despliegue lo hace la sesión tiket-apoyo)
+
+**Contexto.** Laura (ALMACEN BOMBAS, ticket 1107) canceló dos pedidos de prueba y en el historial no apareció la devolución. Son dos casos distintos:
+- **BAS-000020** (2 productos, Sin producir, pago cancelado): es la falla del punto 4 del ticket 1081. `restoreStock` leía y escribía producto por producto dentro de la misma transacción, y Firestore rechazaba la transacción entera desde el segundo producto ("all reads to be executed before all writes"). Los pedidos de un producto sí devolvían; por eso pasó desapercibido hasta que el 1035 activó la devolución por pago cancelado.
+- **POS-000003** (1 producto, Entregado, pago cancelado): no es falla. `decidirDevolucionPorPago` responde `MERCANCIA_YA_SALIO`: cancelar el cobro de una venta entregada es tema de cartera y no devuelve mercancía.
+
+**Decisión** (Daniel, 1-oct): arreglar y reponer los dos pedidos de prueba de Laura. Los 7 pedidos viejos del 1081 (48 unidades) se reponen después de confirmar con ALMARA y Cereza.
+- Backend `0bb2676`, solo `services/inventoryService.js`: `restoreStock` en dos fases, el mismo patrón de `updateByPOS`. Primero todas las lecturas y después todas las escrituras. El movimiento de ingreso se escribe en la misma transacción que el saldo; antes iba en un batch aparte y, si ese batch fallaba, `_hasBeenRestored` no veía la devolución y un reintento devolvía dos veces.
+- Write-set sin cambios: `inventory`, `inventoryMovement` e `inventory_audit`. No toca `products`, precios ni listas de precios.
+- Prueba nueva: `tests/inventory/restoreStock.test.js`, con un Firestore falso que aplica la regla de lecturas antes que escrituras. Con el código anterior falla con el mismo error de producción; con el arreglo pasan los 6 casos (dos productos, idempotencia, un producto, saldo inexistente, rechazo y contrato del write-set). Las otras 37 pruebas de inventario sin emulador siguen pasando.
+- Fuera de alcance, sigue abierto: `_hasBeenRestored` da por devuelto un pedido si existe cualquier ingreso "producto removido".
+
+## D-337 (2026-10-01) — Opttia para los vendedores de ALMACEN BOMBAS: permisos de ver productos e inventario (ticket 1051, APLICADA)
+
+**Contexto.** Arturo (ALMACEN BOMBAS) necesita que los comerciales respondan "¿tenemos 4 de FN-32P?" sin abrir una venta ni una cotización. Daniel decidió el 23-sep resolverlo con Opttia. Opttia le da a cada rol las herramientas de su campo `permissions`, y los dos roles "Vendedor" de Bombas lo tenían vacío: respondía "Tu rol no tiene permisos para consultar Katuq con Opttia". La pantalla de Roles no permite marcar esos permisos sueltos. Solo los llena una plantilla, que además reemplaza los menús y el nombre del rol.
+
+**Decisión** (Daniel, 1-oct): los activamos nosotros, sin tocar los menús.
+- Se agregó `productos: ['view']` e `inventario: ['view']` a los dos roles "Vendedor" de ALMACEN BOMBAS (`rF9jupW43po4ogLFkdaE` y `u6gL1e10z9PEalv2cZn4`). Hay dos roles con el mismo nombre y Opttia toma uno con `limit(1)`, por eso van los dos. Solo lectura: no lleva `adjust` ni `edit`. Primero se corrió en seco; los 15 menús de cada rol quedaron intactos.
+- Verificado con la misma regla del router de Opttia (`opttiaAccessPolicy`) y el rol guardado: los 6 vendedores activos pasan de 0 a 9 herramientas de consulta (productos, existencias por bodega, movimientos y bodegas). Editar el rol después no borra los permisos, porque `loadRoleToEdit` los conserva.
+- No verificado: una conversación real de un vendedor con Opttia (no hay credenciales de vendedor).
+- Hueco de producto: la pantalla de Roles no tiene cómo marcar estos permisos. Otra empresa que lo pida necesita el mismo cambio por base de datos o una casilla nueva.
