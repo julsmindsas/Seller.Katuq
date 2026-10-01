@@ -23,7 +23,7 @@ import { icons } from 'feather-icons';
 import { stat } from 'fs';
 import { VentasService } from '../../../shared/services/ventas/ventas.service';
 import { FilterService } from 'primeng/api';
-import { finalize } from 'rxjs';
+import { finalize, timeout } from 'rxjs';
 import { parse } from 'flatted';
 import { ListOrdersComponent } from '../../ventas/list/list.component';
 import { environment } from '../../../../environments/environment';
@@ -423,7 +423,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.orders = data.orders;
       },
       (error) => {
-        if (!silencioso) { this.loading = false; }
+        if (!silencioso) {
+          this.loading = false;
+          this.avisarErrorCarga(error);
+        }
         console.error('Error al cargar los datos:', error);
       }
     );
@@ -997,7 +1000,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('🔍 [DEBUG] Filtro enviado al API:', filter);
     console.log('🔍 [DEBUG] Proceso seleccionado:', this.selectedProcesosFilter);
 
-    this.produccionService.getOrdersByFiltersFlatProduct(filter).subscribe((data) => {
+    // Ticket 1101: sin tope ni manejo de error, si el servidor no respondía la
+    // pantalla quedaba cargando para siempre ("el módulo no me carga").
+    this.produccionService.getOrdersByFiltersFlatProduct(filter).pipe(timeout(60000)).subscribe((data) => {
       console.log('📡 [DEBUG] Respuesta del API recibida:', data);
       console.log('📡 [DEBUG] Cantidad de órdenes del API:', data.orders?.length || 0);
       let filteredOrders = data.orders;
@@ -1288,7 +1293,26 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       // Después de cargar los datos, clasificar los pedidos
       this.clasificarPedidosPorUrgencia();
       this.calcularEstadisticasProduccion();
+    }, (error) => {
+      if (!silencioso) {
+        this.loading = false;
+        this.avisarErrorCarga(error);
+      }
+      console.error('Error al cargar producción:', error);
     });
+  }
+
+  /** Ticket 1101: aviso visible en vez de una pantalla en blanco o cargando sin fin. */
+  private avisarErrorCarga(error: any): void {
+    const lento = error?.name === 'TimeoutError';
+    const t = this.toastr.error(
+      lento
+        ? 'El servidor está tardando más de lo normal. Toca aquí para intentar de nuevo.'
+        : 'No se pudieron cargar los pedidos de producción. Toca aquí para intentar de nuevo.',
+      'Producción',
+      { timeOut: 15000, tapToDismiss: true }
+    );
+    t?.onTap?.subscribe(() => this.refrescarDatosEnsamble());
   }
 
   onDateFilter(value: Date, filterCallback: Function, dt: any) {
@@ -2919,6 +2943,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         if (state.fechaFinal) {
           this.fechaFinal = new Date(state.fechaFinal);
+        }
+        // Ticket 1101: un rango amplio guardado de una visita anterior hacía que
+        // abrir el módulo pidiera miles de pedidos (2 años de ALMARA ≈ 13.600) y
+        // tumbara el servidor. Al restaurar se limita a 31 días desde el inicio.
+        const MAX_DIAS_RESTAURADOS = 31;
+        if (this.fechaInicial && this.fechaFinal) {
+          const tope = new Date(this.fechaInicial.getTime() + MAX_DIAS_RESTAURADOS * 86400000);
+          if (this.fechaFinal > tope) { this.fechaFinal = tope; }
         }
         if (state.nroPedido) {
           this.nroPedido = state.nroPedido;
