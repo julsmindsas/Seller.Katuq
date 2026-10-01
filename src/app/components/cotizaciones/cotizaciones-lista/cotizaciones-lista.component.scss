@@ -347,7 +347,8 @@
 
   svg { flex-shrink: 0; }
 
-  input {
+  input,
+  select {
     border: none;
     background: transparent;
     outline: none;

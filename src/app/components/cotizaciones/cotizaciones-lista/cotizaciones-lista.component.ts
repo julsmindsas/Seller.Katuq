@@ -44,6 +44,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   filtroEstado: EstadoCotizacion | "" = "";
   q = "";
   filtroPedido = "";
+  /** Ticket 1104: filtrar por el comercial que hizo la cotización. */
+  filtroVendedor = "";
 
   // Paginación (server-side)
   page = 1;
@@ -126,6 +128,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         estado: this.filtroEstado || undefined,
         q: this.q || undefined,
         pedido: this.filtroPedido || undefined,
+        vendedor: this.filtroVendedor || undefined,
         page: this.page,
         limit: this.limit,
       })
@@ -152,6 +155,12 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   }
 
   // ---- Filtros ----
+  setVendedor(value: string): void {
+    this.filtroVendedor = value || "";
+    this.page = 1;
+    this.cargar();
+  }
+
   setEstado(value: EstadoCotizacion | ""): void {
     this.filtroEstado = value;
     this.page = 1;
@@ -249,6 +258,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         estado: this.filtroEstado || undefined,
         q: this.q || undefined,
         pedido: this.filtroPedido || undefined,
+        vendedor: this.filtroVendedor || undefined,
         page: 1,
         limit: 5000,
       })

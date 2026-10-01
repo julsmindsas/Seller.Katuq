@@ -36,6 +36,9 @@ export class CotizacionesService extends BaseService {
     if (filter.pedido) {
       url += `&pedido=${encodeURIComponent(filter.pedido)}`;
     }
+    if (filter.vendedor) {
+      url += `&vendedor=${encodeURIComponent(filter.vendedor)}`;
+    }
     return this.get<CotizacionPaginatedResponse>(url);
   }
 

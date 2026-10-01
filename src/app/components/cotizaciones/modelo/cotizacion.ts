@@ -76,6 +76,8 @@ export interface CotizacionMetrics {
   borradores: number;
   total?: number;
   porEstado?: { [estado: string]: number };
+  /** Ticket 1104: comerciales con cotizaciones (para el filtro del listado). */
+  vendedores?: { email: string; nombre: string; total: number }[];
 }
 
 /** Ticket 1081: documento anexo (PDF) de las condiciones comerciales. */
@@ -98,6 +100,8 @@ export interface CotizacionListFilter {
   estado?: EstadoCotizacion | "";
   q?: string;
   pedido?: string;
+  /** Ticket 1104: correo del comercial (vendedor.email). */
+  vendedor?: string;
   page?: number;
   limit?: number;
 }
