@@ -7,6 +7,7 @@ import { TicketNotificacionesSellerService } from '../../shared/services/ticket-
 import Swal from 'sweetalert2';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { finalize } from 'rxjs/operators';
+import { CATEGORIAS_TICKET, CATEGORIA_POR_DEFECTO, subcategoriasDe } from '../../shared/data/clasificacion-tickets';
 
 @Component({
   selector: 'app-soporte',
@@ -57,19 +58,13 @@ export class SoporteComponent implements OnInit {
     }
   ];
 
-  readonly categorias = [
-    { valor: 'funcionalidad katuq', label: 'Funcionalidad Katuq' },
-    { valor: 'facturación electrónica', label: 'Facturación electrónica' },
-    { valor: 'inventarios', label: 'Inventarios' },
-    { valor: 'pagos y cartera', label: 'Pagos y cartera' }
-  ];
+  // Ticket 1013: categoría = sección del menú y subcategoría = módulo de esa
+  // sección, la misma lista que usa la app de Soporte.
+  readonly categorias = CATEGORIAS_TICKET;
 
-  readonly subcategorias = [
-    { valor: 'general', label: 'General' },
-    { valor: 'ventas pos', label: 'Ventas POS' },
-    { valor: 'pedidos', label: 'Pedidos' },
-    { valor: 'reportes', label: 'Reportes' }
-  ];
+  get subcategorias() {
+    return subcategoriasDe(this.valor('categoria'));
+  }
 
   readonly prioridades = [
     { valor: 'baja', label: 'Baja' },
@@ -107,8 +102,8 @@ export class SoporteComponent implements OnInit {
       ticketComments: [''],
       canal: ['web', Validators.required],
       tienda: ['tienda web', Validators.required],
-      categoria: ['funcionalidad katuq', Validators.required],
-      subcategoria: ['general', Validators.required],
+      categoria: [CATEGORIA_POR_DEFECTO.valor, Validators.required],
+      subcategoria: [CATEGORIA_POR_DEFECTO.subcategorias[0].valor, Validators.required],
       // motivo conserva los valores que ya entiende Support ('soporte' | 'idea');
       // tipoSolicitud guarda el matiz que elige el comercio (bug | ayuda | idea)
       motivo: ['soporte', Validators.required],
@@ -217,7 +212,13 @@ export class SoporteComponent implements OnInit {
   }
 
   onCategoryChange(selectedCategory: string) {
-    // ...existing code...
+    // Ticket 1013: la subcategoría depende de la categoría; si la actual no es
+    // de la nueva sección, se toma su primer módulo.
+    const opciones = subcategoriasDe(selectedCategory);
+    const actual = this.ticketForm.get('subcategoria')?.value;
+    if (!opciones.some(s => s.valor === actual)) {
+      this.ticketForm.get('subcategoria')?.setValue(opciones[0]?.valor ?? '');
+    }
   }
 
   // Drag and drop functionality
@@ -476,8 +477,8 @@ export class SoporteComponent implements OnInit {
         this.ticketForm.patchValue({
           canal: 'web',
           tienda: 'tienda web',
-          categoria: 'funcionalidad katuq',
-          subcategoria: 'general',
+          categoria: CATEGORIA_POR_DEFECTO.valor,
+          subcategoria: CATEGORIA_POR_DEFECTO.subcategorias[0].valor,
           motivo: 'soporte',
           tipoSolicitud: '',
           nombreUsuarioReporta: this.currentUser?.name || this.currentUser?.email || '',
