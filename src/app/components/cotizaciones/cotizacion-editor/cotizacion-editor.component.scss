@@ -694,6 +694,14 @@
     color: var(--muted);
   }
 
+  // Ticket 1095: detalle por línea, solo para esta cotización
+  .cl-detalle {
+    margin-top: 4px;
+    font-size: 12px;
+    resize: vertical;
+    min-height: 30px;
+  }
+
   .cl-segmentos {
     display: flex;
     flex-wrap: wrap;
@@ -1298,6 +1306,14 @@
     .doc-ref {
       color: var(--muted);
       font-size: 9.5px;
+    }
+
+    // Ticket 1095: detalle escrito para esta cotización, respeta saltos de línea
+    .doc-detalle {
+      display: block;
+      font-size: 9.5px;
+      white-space: pre-line;
+      margin-top: 2px;
     }
 
     // Lista de precios aplicada. En renglón aparte y discreta: acompaña al

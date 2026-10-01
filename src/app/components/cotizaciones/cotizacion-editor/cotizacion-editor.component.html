@@ -299,6 +299,14 @@
                 placeholder="Descripción del ítem"
                 [(ngModel)]="item.producto.crearProducto.titulo"
               />
+              <!-- Ticket 1095: detalle técnico solo para esta cotización (no edita el producto) -->
+              <textarea
+                class="form-control form-control-sm cl-detalle"
+                rows="1"
+                placeholder="Detalle para esta cotización (opcional)"
+                [(ngModel)]="item.descripcionCotizacion"
+                maxlength="1000"
+              ></textarea>
             </span>
             <span class="cl-cant">
               <input
@@ -607,6 +615,8 @@
                 <span class="doc-prod-txt">
                   {{ itemTitulo(it) }}
                   <span class="doc-ref" *ngIf="itemReferencia(it)"> · Ref: {{ itemReferencia(it) }}</span>
+                  <!-- Ticket 1095: detalle escrito para esta cotización -->
+                  <span class="doc-detalle" *ngIf="it.descripcionCotizacion?.trim()">{{ it.descripcionCotizacion.trim() }}</span>
                   <!-- Solo la lista aplicada, con su precio. Las otras tarifas se
                        quedan en el editor: este documento lo recibe el cliente y
                        listarlas le mostraría al mayorista lo que paga público general. -->

@@ -6,6 +6,8 @@ import { BaseService } from "../../shared/services/base.service";
 /** Vista pública (segura) de una cotización para la landing de aprobación (spec 008.3). */
 export interface CotizacionPublicaItem {
   titulo: string;
+  /** Ticket 1095: detalle escrito para esta cotización. */
+  descripcion?: string | null;
   cantidad: number;
   /** Desglose numérico por unidad (ClickUp wdu9v75qpz) — todos netos del descuento de línea salvo valorBruto. */
   valorBruto: number;

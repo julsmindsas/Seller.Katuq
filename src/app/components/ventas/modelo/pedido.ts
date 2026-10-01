@@ -356,6 +356,8 @@ export interface Carrito {
   configuracion?: Configuracion;
   cantidad?: number;
   notaProduccion?: Notas[];
+  /** Ticket 1095: detalle escrito en una cotización para esta línea (no edita el producto). */
+  descripcionCotizacion?: string;
   _precioManualOverride?: number;
   _ivaManualOverride?: number;
   _precioManualTemp?: any;

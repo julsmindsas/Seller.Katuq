@@ -67,7 +67,11 @@
         </thead>
         <tbody>
           <tr *ngFor="let it of cot.items">
-            <td>{{ it.titulo }}</td>
+            <td>
+              {{ it.titulo }}
+              <!-- Ticket 1095: detalle escrito para esta cotización -->
+              <div class="cp-detalle" *ngIf="it.descripcion">{{ it.descripcion }}</div>
+            </td>
             <td class="cp-c">{{ it.cantidad }}</td>
             <td class="cp-r">{{ money(it.valorBruto) }}</td>
             <td class="cp-r">{{ it.descuentoPct > 0 ? money(it.descuentoUnitario) : '—' }}</td>
