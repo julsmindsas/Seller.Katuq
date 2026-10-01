@@ -16,7 +16,7 @@ import {
   Preferencia,
   Tarjeta,
 } from "../../../components/ventas/modelo/pedido"; // Importar tipos necesarios
-import { forkJoin, map, Observable, of, switchMap, catchError, firstValueFrom, take } from "rxjs"; // Importar operadores RxJS
+import { forkJoin, from, map, Observable, of, switchMap, catchError, firstValueFrom, take } from "rxjs"; // Importar operadores RxJS
 import {
   calcularTotalesCanonico,
   baseExcluidaCanonica,
@@ -46,6 +46,35 @@ export class PaymentService extends BaseService {
   // ocasiones: any;
   allBillingZone: any;
   maestros: any = {}; // Para almacenar maestros cargados
+
+  // Ticket 1106: el pedido guarda del asesor solo nombre, correo y NIT; el celular
+  // vive en users.cel. Se carga una vez (usuarios de la empresa) para el PDF.
+  private celularesAsesor: Map<string, string> | null = null;
+
+  private async cargarCelularesAsesor(): Promise<void> {
+    if (this.celularesAsesor) return;
+    try {
+      const usuarios: any = await firstValueFrom(this.service.consultarUsuarios().pipe(take(1)));
+      const mapa = new Map<string, string>();
+      (Array.isArray(usuarios) ? usuarios : []).forEach((u: any) => {
+        const correo = String(u?.email || '').trim().toLowerCase();
+        const cel = String(u?.cel || '').replace(/\D/g, '');
+        if (correo && cel) mapa.set(correo, cel);
+      });
+      this.celularesAsesor = mapa;
+    } catch (_) { /* sin celular el PDF sale igual, con nombre y correo */ }
+  }
+
+  /** Ticket 1106: "correo · Cel. 300..." del asesor, o '' si no hay nada que mostrar. */
+  private contactoAsesor(asesor: any): string {
+    const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const correo = String(asesor?.email || '').trim();
+    const partes: string[] = [];
+    if (correo) partes.push(esc(correo));
+    const cel = this.celularesAsesor?.get(correo.toLowerCase());
+    if (cel) partes.push(`Cel. ${cel}`);
+    return partes.join(' · ');
+  }
 
   constructor(
     private service: MaestroService,
@@ -888,6 +917,8 @@ export class PaymentService extends BaseService {
     }
 
     return this.pedidoUtilService.waitUntilLoaded().pipe(
+      // Ticket 1106: celular del asesor; si falla, el PDF sale igual.
+      switchMap(() => from(this.cargarCelularesAsesor())),
       switchMap(() => {
         // Asegurarse que allBillingZone esté cargado
         if (!this.allBillingZone) {
@@ -931,6 +962,8 @@ export class PaymentService extends BaseService {
         this.maestros = await firstValueFrom(this.pedidoUtilService.getAllMaestro$().pipe(take(1)));
       } catch (_) { /* getHtmlContent devolverá el aviso y se trata como "no listo" */ }
     }
+    // Ticket 1106: el correo al cliente también lleva el contacto del asesor.
+    await this.cargarCelularesAsesor();
   }
 
   async getHtmlContentAsync(pedido: Pedido, isComanda: boolean = false): Promise<SafeHtml | null> {
@@ -2651,7 +2684,8 @@ export class PaymentService extends BaseService {
                                 <tr>
                                   <td style="padding: ${styles.spacing.lg};">
                                     <table width="100%" cellpadding="0" cellspacing="0">
-                                      <tr><td style="padding: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body}; line-height: 1.5;"><strong style="color: ${styles.colors.text};">Asesor Asignado:</strong> ${pedido?.asesorAsignado?.name ?? "N/A"}</td></tr>
+                                      <tr><td style="padding: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body}; line-height: 1.5;"><strong style="color: ${styles.colors.text};">Asesor Asignado:</strong> ${pedido?.asesorAsignado?.name ?? "N/A"}</td></tr>${this.contactoAsesor(pedido?.asesorAsignado) ? `
+                                      <tr><td style="padding: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body}; line-height: 1.5;"><strong style="color: ${styles.colors.text};">Contacto Asesor:</strong> ${this.contactoAsesor(pedido?.asesorAsignado)}</td></tr>` : ""}
                                       <tr><td style="padding: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body}; line-height: 1.5;"><strong style="color: ${styles.colors.text};">Fecha Compra:</strong> ${this.customFormatDateHour(pedido?.fechaCreacion)}</td></tr>
                                       <tr><td style="padding: ${styles.spacing.xs} 0; color: ${styles.colors.textMuted}; font-size: ${styles.typography.body}; line-height: 1.5;"><strong style="color: ${styles.colors.text};">Fuente:</strong> <strong style="color: ${styles.colors.primary};">SELLERCENTER</strong></td></tr>
                                     </table>
