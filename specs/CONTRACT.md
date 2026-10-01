@@ -1327,6 +1327,10 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-10-01 (sesión tiket-apoyo — publicaciones y ticket 1107)
+- **Publicado:** backend `d495607` → `2fc5a05` (cotizaciones 1104/1095, mensajero 1093) y luego `0bb2676` (D-336); web 2026.10.01.2 (1101, 1095, 1104; release `7912b33b`, base `60e247f5`); app de soporte `cbfc37f` (1068, 1016, confirmación D-328 y pantalla de métricas). Verificado servido.
+- **Ticket 1107 cerrado:** arreglo desplegado, dos pedidos de prueba de Laura repuestos y verificados. Queda la decisión sobre los otros pedidos sin devolución (ver D-336).
+
 ### 2026-08-24 (sesión Guía Cereza — avisar precios faltantes por lista, D-224)
 - **Hecho y en producción (frontend 2026.08.24.10):** el catálogo de venta asistida avisa cuando al
   cliente en pantalla se le está cobrando el precio general porque al producto le falta la lista de
@@ -7777,7 +7781,7 @@ El 29-sep estaban rotas las dos:
 - Solo cambia la vista; los cálculos conservan los centavos. Por el redondeo, la suma de las líneas puede diferir del total en $1.
 - Activada solo para ALMACEN BOMBAS, con aprobación de Daniel; sus términos y su anexo no se tocaron. ALMARA y las demás siguen como antes. Lo que pide ALMARA en el 1103 queda aparte.
 
-## D-336 (2026-10-01) — Cancelar un pedido con dos o más productos vuelve a devolver el inventario (ticket 1107, SUBIDA; el despliegue lo hace la sesión tiket-apoyo)
+## D-336 (2026-10-01) — Cancelar un pedido con dos o más productos vuelve a devolver el inventario (ticket 1107, DESPLEGADA Y VERIFICADA)
 
 **Contexto.** Laura (ALMACEN BOMBAS, ticket 1107) canceló dos pedidos de prueba y en el historial no apareció la devolución. Son dos casos distintos:
 - **BAS-000020** (2 productos, Sin producir, pago cancelado): es la falla del punto 4 del ticket 1081. `restoreStock` leía y escribía producto por producto dentro de la misma transacción, y Firestore rechazaba la transacción entera desde el segundo producto ("all reads to be executed before all writes"). Los pedidos de un producto sí devolvían; por eso pasó desapercibido hasta que el 1035 activó la devolución por pago cancelado.
@@ -7788,6 +7792,12 @@ El 29-sep estaban rotas las dos:
 - Write-set sin cambios: `inventory`, `inventoryMovement` e `inventory_audit`. No toca `products`, precios ni listas de precios.
 - Prueba nueva: `tests/inventory/restoreStock.test.js`, con un Firestore falso que aplica la regla de lecturas antes que escrituras. Con el código anterior falla con el mismo error de producción; con el arreglo pasan los 6 casos (dos productos, idempotencia, un producto, saldo inexistente, rechazo y contrato del write-set). Las otras 37 pruebas de inventario sin emulador siguen pasando.
 - Fuera de alcance, sigue abierto: `_hasBeenRestored` da por devuelto un pedido si existe cualquier ingreso "producto removido".
+
+**Despliegue y reposición (1-oct, sesión tiket-apoyo).**
+- Backend en EC2: prod `2fc5a05` → `0bb2676` (pull fast-forward + `pm2 reload katuq-api`, 12 s, sin errores). Antes de subirlo: la prueba nueva falla con el código viejo y pasa 6/6 con el arreglo; write-guard, dedup, payment-policy, order-effect-policy y safety-contract en verde.
+- Reposición aprobada por Daniel en el chat de tiket-apoyo, con el `restoreStock` arreglado corrido contra producción: **BAS-000020** +3 HCP-00-00-F21U3 y +1 FTN-01-05-4JB1T en BOD-006 (saldos −3/−1 → 0/0) y **POS-000003** +1 HCP-00-00-FN32TU3 en BOD-002 (0 → 1). Tres movimientos `INGRESO_DEVOLUCION_CANCELACION` "Devolución por cancelación de pedido #…", usuario dgarciah@julsmind.com. La transacción de dos productos pasó contra Firestore real: es la prueba del arreglo con el motor de verdad.
+- Verificado con el handler de la pantalla (`controllers/inventory.getHistorialMovimientos`, ALMACEN BOMBAS, 1-oct): las tres devoluciones salen junto a sus salidas. No se vio la pantalla en el navegador (el Chrome disponible tenía sesión de un usuario de OH MY STORE). Ticket 1107 en Resuelto.
+- Barrido de solo lectura (estado actual de los pedidos con pago o proceso cancelado desde el 18-sep que, por la regla del 1035, debían devolver y no tienen ingreso de devolución): además de BAS-000020 salen **ORE-001032** (10 productos, 14 uds) y **ORE-001209** (4 productos, 4 uds) de OH MY STORE, **BAR-000441** de CAFE ESCOBAR (2 productos, 3 uds) y **DAD-013458** de ALMARA (1 producto, 1 ud: no es este error, probablemente se canceló antes del despliegue del 1035). No coincide con la lista de 7 pedidos / 48 uds del 1081, que se armó con otro corte: reconciliar las dos listas antes de reponer. Pendiente de decisión de Daniel; en OH MY STORE revisar antes si la devolución en Katuq termina publicada a Shopify.
 
 ## D-337 (2026-10-01) — Opttia para los vendedores de ALMACEN BOMBAS: permisos de ver productos e inventario (ticket 1051, APLICADA)
 
