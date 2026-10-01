@@ -7798,3 +7798,13 @@ El 29-sep estaban rotas las dos:
 - Verificado con la misma regla del router de Opttia (`opttiaAccessPolicy`) y el rol guardado: los 6 vendedores activos pasan de 0 a 9 herramientas de consulta (productos, existencias por bodega, movimientos y bodegas). Editar el rol después no borra los permisos, porque `loadRoleToEdit` los conserva.
 - No verificado: una conversación real de un vendedor con Opttia (no hay credenciales de vendedor).
 - Hueco de producto: la pantalla de Roles no tiene cómo marcar estos permisos. Otra empresa que lo pida necesita el mismo cambio por base de datos o una casilla nueva.
+
+## D-338 (2026-10-01) — La campana del Seller recibe los avisos de pedidos y de stock (ticket 1109, EN PRODUCCIÓN)
+
+**Contexto.** Laura (ALMACEN BOMBAS, ticket 1109) tenía todas las preferencias de la campana activas, pero solo le llegaban tickets. No era de Bombas: en la campana (Realtime DB `ActualizacionTicket{empresa}`) no había ni un aviso de pedido ni de stock en ninguna empresa. Bombas tenía 31 entre tickets y facturas, ALMARA 58 y OH MY STORE 300, todos de esos dos tipos. `writeSellerNotification` (`notificationHooks.js`), que escriben `orders.js` (crear, editar, transportador), `sites.js` y las alertas de stock de `inventoryService.js`, sale sin hacer nada si `ENABLE_IN_APP_NOTIFICATIONS` no es `"true"`. Esa variable no existía en el `.env` de producción, y `.env.example` la trae en `false`. `ALLOWED_NOTIFICATION_COMPANIES` está vacía (todas las empresas) y `config/feature_flags` no existe en Firestore. El front ya estaba listo: mapea los tipos y respeta las preferencias de cada usuario.
+
+**Decisión** (Daniel, 1-oct): prenderla para todas las empresas.
+- `ENABLE_IN_APP_NOTIFICATIONS=true` en `functions/.env` de producción (línea 148). Respaldo en `functions/.env.bak-1109-20261001T210738Z`. Recarga `pm2 reload katuq-api --update-env` a las 21:11:35 UTC, sin pull (HEAD `0bb2676`), coordinada con la sesión tiket-apoyo.
+- Solo afecta la campana: no envía correos, SMS ni WhatsApp a clientes.
+- Empiezan a llegar también las alertas de stock bajo y de producto agotado. Cada usuario las apaga en Preferencias, y cada empresa puede apagar tipos con `company_notification_preferences.in_app_notifications`.
+- Verificado: a las 21:13:27 UTC la campana de ALMARA recibió su primer `PAYMENT_APPROVED`. La de Bombas queda confirmada con su próximo movimiento de pedido.
