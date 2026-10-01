@@ -218,6 +218,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   currentPage: number = 1;
   pageSize: number = 50;
   totalRecords: number = 0;
+  /**
+   * Pedidos de punto de venta (POS) del filtro. Se cargan aparte y SOLO en la
+   * página 1, y no entran en las métricas del backend: por eso "resultados"
+   * (normales + POS) y la tarjeta TOTAL (solo normales) no coinciden. Se guarda
+   * para decirlo en pantalla (D-346).
+   */
+  totalPOS: number = 0;
+  /** Por qué fecha filtró la última búsqueda: entrega, o creación si se buscó un número. */
+  tipoFechaFiltroActual: "fechaEntrega" | "fechaCreacion" = "fechaEntrega";
   first: number = 0;
   
   // Métricas del backend (calculadas sobre todos los pedidos, no solo los paginados)
@@ -3696,6 +3705,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Cuando hay búsqueda por número de pedido, usar fechaCreacion para que el rango
     // coincida con la fecha del pedido seleccionado (no la fecha de entrega).
     const tipoFechaFiltro = (this.searchQuery && this.searchQuery.trim()) ? "fechaCreacion" : "fechaEntrega";
+    this.tipoFechaFiltroActual = tipoFechaFiltro;
 
     const filter: any = {
       fechaInicial: startDate.toISOString(),
@@ -3912,6 +3922,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       if (paginatedResponse?.pagination) {
         const totalNormales = paginatedResponse.pagination.totalItems;
         const totalPOS = posOrdersArray?.length || 0;
+        // En las páginas 2+ no se piden los POS: se conserva el conteo de la 1.
+        if (shouldLoadPOS) this.totalPOS = totalPOS;
         
         // El total de registros es la suma de normales + POS
         this.totalRecords = totalNormales + totalPOS;
@@ -4766,6 +4778,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Obtener total de pedidos (usa métricas del backend si están disponibles)
    */
+  /** Cancelados + rechazados (por el pago) que la tarjeta TOTAL SÍ incluye. */
+  getCaidosCount(): number {
+    const m = this.backendMetrics || {};
+    return (Number(m.cancelados) || 0) + (Number(m.rechazados) || 0);
+  }
+
+  /** "entrega" o "creación", para el subtítulo del encabezado. */
+  get nombreFechaFiltro(): string {
+    return this.tipoFechaFiltroActual === "fechaCreacion" ? "creación" : "entrega";
+  }
+
   getTotalPedidos(): number {
     // Si hay métricas del backend, usar el total (más preciso, incluye todos los pedidos)
     if (this.backendMetrics && this.backendMetrics.totalPedidos !== undefined) {

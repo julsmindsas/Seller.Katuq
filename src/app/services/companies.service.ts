@@ -10,6 +10,24 @@ import { companiesMock, companyDetailMock, successResponseMock } from './mock-da
  * falló: la pantalla los muestra como "—", nunca como 0 — un 0 falso parece una
  * respuesta y no lo es.
  */
+/**
+ * Los pedidos de UN mes calendario (D-345). `pedidos` NO incluye los caídos:
+ * cancelados o rechazados en el pago, o anulados en el proceso — la misma regla
+ * que usa el cobro. Los caídos van aparte en `caidos`.
+ */
+export interface ResumenMes {
+  /** Nombre del mes en minúscula: "septiembre". */
+  mes: string;
+  desde: string;
+  hasta: string;
+  /** true si el mes ya terminó; false para el mes en curso (va del 1 a hoy). */
+  completo: boolean;
+  pedidos: number;
+  caidos: number;
+  facturado: number;
+  ticketPromedio: number;
+}
+
 export interface MetricasEmpresa {
   productos: number | null;
   clientes: number | null;
@@ -21,6 +39,10 @@ export interface MetricasEmpresa {
   pedidosNetos30d: number | null;
   facturadoNeto30d: number | null;
   ticketPromedio30d: number | null;
+  /** D-345: del 1 del mes a hoy, en hora de Colombia, sin pedidos caídos. */
+  mesActual?: ResumenMes | null;
+  /** D-345: el mes anterior completo, del 1 al último día. */
+  mesAnterior?: ResumenMes | null;
   ultimoPedido: string | null;
   ultimoPedidoNro: string | null;
   ventanaDias: number;
@@ -177,6 +199,8 @@ export interface TotalesPlataformaBase {
   pedidosNetos30d: number;
   facturado30d: number | null;
   ticketPromedio30d: number | null;
+  mesActual?: ResumenMes | null;
+  mesAnterior?: ResumenMes | null;
   usuarios: number | null;
   empresasConUsuarios: number;
   /**
@@ -494,10 +518,14 @@ export interface CobrosOverview {
    * la configuración: si mañana se cambian los días, la columna los sigue sola.
    */
   hitosAvisos?: { previos: number[]; mora: number[] };
+  /** Las que el ciclo de vida sacó del cobro, con nombre y estado. */
+  sinCobroPorEstado?: { _docId: string; nomComercial: string | null; estado: string; etiqueta: string }[];
   totales: {
     totalEmpresas: number;
     sinPlanPago: number;
     dePago: number;
+    /** Plan de pago pero bloqueadas/pausadas/canceladas: no salen en la lista. */
+    sinCobroPorEstado?: number;
     aCobrar: number;
     cobroAutomatico: number;
     cobroManual: number;

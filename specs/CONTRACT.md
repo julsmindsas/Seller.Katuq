@@ -7956,3 +7956,60 @@ Filtrar por empresa desde la consola ya está resuelto **dentro** de la ficha (D
 El dominio queda en una sola constante `BASE_SOPORTE` del componente, que usan el enlace del ticket y el de la bandeja: el día que cambie de dominio se toca en un solo sitio.
 
 **Si algún día la plataforma de soporte empieza a guardar el filtro en la dirección**, conectarlo es un cambio de cinco minutos: agregar el parámetro en `urlBandejaSoporte` con el `nomComercial` de la empresa.
+
+## D-344 (2026-09-28) — Las ventas caídas se descuentan solo si se cayeron HASTA el corte; la ficha mide el mismo ciclo que el cobro
+
+**Contexto.** La regla de negocio: si al llegar al corte hay ventas caídas, se cobra según lo que entró (vendió $10 M, se cayeron $2 M → se cobra sobre $8 M). Lo que se caiga DESPUÉS del corte —por ejemplo mientras el comercio se demora 3 o 5 días en pagar— ya no se descuenta. El código no podía cumplirla: los pedidos no guardaban cuándo se anulaban y el cobro miraba el estado ACTUAL al calcularse, así que un cobro calculado tarde descontaba también las caídas posteriores al corte. Y la tarjeta de la ficha medía 30 días móviles, no el ciclo: la ficha y el cobro no podían cuadrar.
+
+**Decisión.**
+1. **`fechaAnulacion`** en el pedido: se sella cuando deja de ser venta (mismos estados que excluye el cobro: `estadoPago` Cancelado/Rechazado/…, `estadoProceso` Anulado/Devuelto/…), se conserva si ya estaba caído (un webhook repetido no la corre) y se limpia si vuelve a ser venta. Helper único `sellarFechaAnulacion` (`services/subscriptionBillingUtils.js`), aplicado en la edición de pedidos, el cambio de estado en lote, el transportador, los pagos Wompi/ePayco/asentados, WooCommerce y MultiOP.
+2. **El cobro** (`_calculateMonthlySales`) descuenta una caída solo si `fechaAnulacion <= fin de la ventana` (`getBillingOrderExclusionReasonAt`). Los pedidos caídos ANTES de este cambio no tienen fecha y se siguen descontando: todas esas caídas son anteriores al primer corte en que rige la regla (01-oct), siempre que esto salga antes. Versión de criterio `subscription-sales-v2`; caché de Cobros `VERSION_CALCULO = 5`.
+3. **La ficha** (`GET /companies/:id/pedidos-excluidos`) mide el ciclo de cobro con `resolverRangoCiclo` (misma función del cobro) hasta hoy o hasta el corte, con la misma regla; las empresas sin corte siguen en ventana de días. Devuelve `caidasDespuesDelCorte` (se muestran como "se cobran") y la fecha de caída es exacta salvo en los pedidos legacy, que la pantalla cuenta y marca como aproximados.
+
+**Riesgo anotado.** Si el backend sale DESPUÉS del 01-oct, las caídas entre el corte y el despliegue no tendrán fecha y se descontarían como hasta hoy. Desplegar el back antes del corte.
+
+**Estado.** Sin commitear. 14 comprobaciones nuevas verdes (`tests/subscriptions/fechaAnulacionCorte.test.js`) + las de cobro. `subscriptionBillingRetrySafety.test.js` ya fallaba antes (no espera `ventasPorDia`, D-289).
+
+## D-345 (2026-10-01) — La consola cuenta pedidos por MES CALENDARIO y sin caídos; fecha de formulario en hora de Colombia; filtros Nuevas y Cortesía
+
+**Contexto.** En ALMARA, la pantalla de Pedidos (01–30 sep) decía "1334 resultados" arriba y "TOTAL 1307" en la tarjeta, y la consola decía otra cifra. Ninguna estaba mal, pero cada una contaba algo distinto: 1307 son los pedidos que no son POS, por **fechaEntrega** e incluidos los cancelados; 1334 son esos 1307 más **27 POS por fechaCreacion**, que no entran en ninguna tarjeta. La consola mostraba los **últimos 30 días móviles** (ni el mes ni el ciclo de cobro) e **incluía los cancelados**: solo descontaba por `estadoProceso`, y ALMARA cancela en el **pago** (46 en septiembre, ninguno descontado).
+
+**Decisión (aprobada por el usuario).**
+1. La consola muestra el **mes actual (del 01 a hoy)** y el **mes anterior completo (del 01 al último día)**, en hora de Colombia (UTC-5 fijo). **Por FECHA DE ENTREGA** (decisión del usuario, misma fecha): es como filtra la pantalla de Pedidos, y así cuadran — ALMARA sep: 1.282 válidos + 52 caídos = **1.334**, igual que "Listado de pedidos". Es la fecha PROGRAMADA, no la real: de los 1.307 no-POS de ALMARA con entrega en sep, 1.054 están Entregados, 186 Despachados y 67 en producción. **El cobro NO cambia: sigue por fecha de creación** (cobrar por entrega o solo lo Entregado queda como decisión aparte). La ventana de 30 días ("sin movimiento", estimación de escalón) sigue por creación. Caché v4. Va en la tarjeta de pedidos, en la columna de la tabla (abajo, el mes anterior) y en la ficha. La columna Ticket pasa al mes anterior completo.
+2. **No se cuentan los caídos**, con la regla del cobro (`isBillableSubscriptionOrder`: anulado en proceso O cancelado/rechazado en pago). Los caídos se muestran aparte en la ficha. Los campos `*30d` se conservan con la misma regla para "sin movimiento" y la estimación de escalón.
+3. **Excepción a la regla de "solo aggregation"** de `companyMetrics`: se leen 4 campos de los pedidos de 2 meses (~2.700 lecturas para ALMARA, como mucho una vez por hora). Contar "todos − caídos por proceso − caídos por pago" con aggregation exige índices nuevos, y sin el índice el conteo sale null. Caché `metricas_empresas` v3.
+4. **Fechas de formulario**: `fechaDelFormulario` (`services/billing/cicloFacturacion.js`) lee "YYYY-MM-DD" como medianoche de Bogotá. Antes `new Date("2027-10-01")` era medianoche UTC = 30-sep 7 p. m. en Colombia, y ALMACEN BOMBAS quedó con `billingAnchorDay` 30. Ya se re-guardó y quedó bien (corte 01-oct-2027, día 1). Guardar el plan borra `metricas_cobros/{docId}` y la consola recarga la fila.
+5. Consola: filtros **Nuevas (registradas en los últimos 30 días)** y **Cortesía**; desglose del precio anual ("US$427/mes × 12 − 20% por ser anual"); se quita la pestaña **Sugerencias** (decisión previa del usuario).
+
+**Verificado.** ALMARA septiembre por creación: 1.283 válidos + 46 caídos = 1.329; por entrega: 1.307 no-POS + 27 POS = 1.334 (conteo directo en Firestore). La diferencia de 5 = 72 pedidos creados antes de sep y entregados en sep − 67 creados en sep y entregados en oct. 11/11 archivos de `tests/platformMetrics` verdes.
+
+**Pendiente, no hecho.** La pantalla de Pedidos sigue sumando los POS solo en el encabezado y filtrando cada grupo por una fecha distinta (entrega vs. creación).
+
+**Estado.** Sin commitear ni desplegar (front y back).
+
+## D-346 (2026-10-01) — Pantalla de Pedidos: los totales dicen de qué están hechos
+
+**Contexto.** ALMARA, 01–30 sep: "Listado de pedidos · 1334 resultados" arriba y "TOTAL 1307" en la tarjeta, sin explicación. 1334 = 1307 pedidos de venta normal + 27 de punto de venta (POS). Los POS se piden en otra consulta, solo en la página 1, y no entran en las métricas del backend. TOTAL incluye cancelados y rechazados (52), y el filtro es por **fecha de entrega** (por creación solo si se busca un número de pedido).
+
+**Decisión.** No se cambia ningún cálculo, solo se rotula:
+- debajo del encabezado: "= 1307 pedidos + 27 de punto de venta (POS)" y "Por fecha de entrega · incluye N cancelados o rechazados";
+- en la tarjeta TOTAL: "Total sin POS", con un tooltip que lo explica;
+- en el chip "Todos": un tooltip que dice adónde se suman los POS.
+
+`totalPOS` se conserva en las páginas 2 y siguientes, donde no se piden los POS.
+
+**Estado.** Sin commitear. `ng build` sin errores.
+
+## D-347 (2026-10-01) — Consola: columna "Ventas" en la tabla de Empresas
+
+Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada empresa en el mes. **Corregido el mismo día:** la primera versión mezclaba en cada celda el mes en curso y el anterior, con el ticket de otro mes, y el usuario no la entendía. Ahora hay un selector **"Mes"** junto a los filtros, que arranca en el último mes COMPLETO, y Pedidos · Ventas · Ticket y la tarjeta de pedidos son todos de ese mes, sin segunda línea. "Más pedidos" y "Más facturado" ordenan por el mes elegido. Además, el desglose del precio anual parte en dos renglones porque se montaba sobre los botones de Acciones. Va entre Pedidos y Ticket y se lee igual que Pedidos: arriba el mes en curso y debajo el anterior completo. Usa la misma base que D-345: fecha de entrega, sin cancelados ni rechazados, y es la suma de `totalPedididoConDescuento` (`mesActual.facturado` / `mesAnterior.facturado`). Se muestra abreviado ("$160,6 M") por el ancho de la columna (96 px); el valor exacto sale en el globo. La rejilla pasa de 5 a 6 columnas de datos de 96 px. No cambia nada del cobro. Sin commitear; `ng build` sin errores.
+
+## D-348 (2026-10-01) — La ficha de la consola abre en ~1-2 s (antes 25-30 s)
+
+**Causa.** Al abrir la ficha, `GET /companies/:id/pedidos-excluidos` (`controllers/pedidosExcluidos.js`) leía los pedidos del ciclo **enteros** (carrito, productos, fotos, direcciones). Medido contra producción: ALMARA 30,6 s y OH MY STORE 24,6 s. La otra consulta de la ficha, `inventory-units`, tarda 2-4 s.
+
+**Decisión.** Se agrega `.select()` con los 12 campos que usa la cuenta (fechas de `getBillableOrderDate`, estados, `fechaAnulacion`, `date_edit`, los tres campos de `resolveGrandTotal`, `nroPedido`, `cliente.nombre`, `cliente.razonSocial`). Resultado: ALMARA 1,6 s y OH MY STORE 1,0 s, con la respuesta **idéntica en tamaño** (15.481 B y 24.609 B, antes y después). `select` no abarata las lecturas, que se cobran igual por documento: lo que se reduce es lo que viaja.
+
+**No se tocó** `_calculateMonthlySales` (el cobro), que tiene anotada la decisión de no usar `select` por ser el camino del dinero.
+
+**Estado.** Sin commitear.

@@ -6635,3 +6635,19 @@ $pd-chip-border: #e9e7f3;
     .fvp-pagar dd { color: $pd-accent; font-size: 15px; }
   }
 }
+
+// D-346: el desglose de los totales (normales + POS, fecha del filtro, caídos).
+.pedidos-desglose {
+  font-weight: 400;
+  opacity: 0.85;
+}
+.pedidos-desglose--linea {
+  display: block;
+  font-size: 0.72rem;
+}
+.metric-nota {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: none;
+  opacity: 0.8;
+}

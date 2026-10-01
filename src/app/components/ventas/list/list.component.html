@@ -18,6 +18,15 @@
                         <small class="pedidos-topbar__sub" *ngIf="!isFromProduction">
                             {{ "Listado de pedidos" | translate }} ·
                             <b>{{ totalRecords || orders.length }}</b> {{ "resultados" | translate }}
+                            <!-- D-346: de qué está hecho este número. Antes decía 1334 arriba y
+                                 1307 en TOTAL sin explicar que la diferencia son los POS. -->
+                            <span class="pedidos-desglose" *ngIf="totalPOS">
+                                = {{ getTotalPedidos() }} pedidos + {{ totalPOS }} de punto de venta (POS)
+                            </span>
+                            <span class="pedidos-desglose pedidos-desglose--linea">
+                                Por fecha de {{ nombreFechaFiltro }}<ng-container *ngIf="getCaidosCount()">
+                                · incluye {{ getCaidosCount() }} cancelados o rechazados</ng-container>
+                            </span>
                         </small>
                     </div>
                     <div class="pedidos-topbar__actions">
@@ -150,10 +159,10 @@
                                             <!-- Total Pedidos -->
                                             <div class="metric-chip metric-chip-primary"
                                                  (click)="onMetricClick('all')"
-                                                 pTooltip="{{ 'Ver todos los pedidos' | translate }}"
+                                                 [pTooltip]="'Pedidos de venta normal por fecha de ' + nombreFechaFiltro + (totalPOS ? ', SIN los ' + totalPOS + ' de punto de venta (POS)' : '') + (getCaidosCount() ? '. Incluye ' + getCaidosCount() + ' cancelados o rechazados.' : '.')"
                                                  tooltipPosition="top">
                                                 <i class="pi pi-shopping-cart"></i>
-                                                <span class="metric-label">Total</span>
+                                                <span class="metric-label">Total<small class="metric-nota" *ngIf="totalPOS"> sin POS</small></span>
                                                 <span class="metric-badge">{{ getTotalPedidos() }}</span>
                                             </div>
 
@@ -292,7 +301,8 @@
                                                     <span class="pedidos-list-pane__count">{{ totalRecords || orders.length }}</span>
                                                 </div>
                                                 <div class="pedidos-triage">
-                                                    <button type="button" class="pedidos-triage__chip is-active" (click)="onMetricClick('all')">
+                                                    <button type="button" class="pedidos-triage__chip is-active" (click)="onMetricClick('all')"
+                                                            [title]="totalPOS ? 'Pedidos de venta normal. Los ' + totalPOS + ' de punto de venta (POS) se suman al número de arriba.' : 'Todos los pedidos del filtro'">
                                                         {{ 'Todos' | translate }} · {{ getTotalPedidos() }}
                                                     </button>
                                                     <button type="button" class="pedidos-triage__chip pedidos-triage__chip--danger" (click)="onMetricClick('urgentes')">

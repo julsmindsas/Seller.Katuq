@@ -520,7 +520,8 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   /* Entró Estado: las cinco columnas de datos bajan de 108 a 100 px para que la
      tabla no gane ancho de más. Siguen midiendo todas lo mismo entre sí, que es
      lo que mantiene los números en una banda pareja. */
-  grid-template-columns: minmax(190px, 1fr) repeat(5, 96px) 104px 110px 132px;
+  /* Entró Ventas (D-347): seis columnas de datos, mismas 96 px. */
+  grid-template-columns: minmax(190px, 1fr) repeat(6, 96px) 104px 110px 132px;
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
@@ -2532,4 +2533,15 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 .pedidos-filtros .ctx strong {
   font-variant-numeric: tabular-nums;
   margin-left: 3px;
+}
+
+// El desglose del precio anual, bajo el escalón: un recordatorio, no un dato principal.
+.plan-desglose-anual {
+  display: block;
+  font-size: 11px;
+  color: $muted;
+  // Parte en dos renglones: en una sola línea se montaba sobre los botones de Acciones.
+  white-space: normal;
+  max-width: 132px;
+  line-height: 1.3;
 }

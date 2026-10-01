@@ -11,6 +11,7 @@ import {
   TemaFuncionalidad,
   CompaniesService,
   EmpresaPanorama,
+  ResumenMes,
   FilaCatalogoIntegracion,
   FilaCobro,
   IntegracionesEmpresa,
@@ -50,7 +51,9 @@ type FiltroEstado =
   | 'sinMovimiento'
   | 'sinEntrar'
   | 'porVencer'
-  | 'sinIntegrar';
+  | 'sinIntegrar'
+  | 'nuevas'
+  | 'cortesia';
 type Orden =
   | 'nombre'
   | 'pedidos30d'
@@ -134,6 +137,17 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   generadoEn: number | null = null;
   ventanaDias = 30;
 
+  /**
+   * Cuántos días cuenta una empresa como "nueva". Es la misma ventana de
+   * 30 días del resto de la consola: lo que se registró en el último mes.
+   */
+  readonly diasEmpresaNueva = 30;
+  /** De qué mes son las columnas Pedidos, Ventas y Ticket (D-347). */
+  mesTabla: 'mesActual' | 'mesAnterior' = 'mesAnterior';
+  /** Conteos de los botones Nuevas y Cortesía. Se calculan al cargar, no en un getter. */
+  cuantasNuevas = 0;
+  cuantasCortesia = 0;
+
   // Filtros
   busqueda = '';
   filtroEstado: FiltroEstado = 'todas';
@@ -210,7 +224,7 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * empresas y cobrarles. Comparten los mismos datos, así que viven en la misma
    * pantalla en vez de en dos módulos que se desincronizan.
    */
-  vista: 'empresas' | 'cobros' | 'sugerencias' | 'pauta' = 'empresas';
+  vista: 'empresas' | 'cobros' | 'pauta' = 'empresas';
 
   // ── Sugerencias de los clientes ─────────────────────────────────────────
   //
@@ -356,6 +370,8 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           // Un backend viejo (sin desplegar todavía) no manda el bloque: se
           // trata como censo caído, que dibuja "—", en vez de como cero.
           this.censoIntegracionesOk = res.integraciones?.disponible === true;
+          this.cuantasNuevas = this.empresas.filter((e) => this.esNueva(e)).length;
+          this.cuantasCortesia = this.empresas.filter((e) => this.esCortesia(e)).length;
           this.aplicarFiltros();
         },
         error: (err) => {
@@ -382,12 +398,9 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
   // ── Cobros ────────────────────────────────────────────────────────────────
 
-  cambiarVista(vista: 'empresas' | 'cobros' | 'sugerencias' | 'pauta'): void {
+  cambiarVista(vista: 'empresas' | 'cobros' | 'pauta'): void {
     this.vista = vista;
     if (vista === 'cobros' && !this.cobros && !this.cargandoCobros) this.cargarCobros();
-    // Cada pestaña carga lo suyo al abrirse por primera vez: traer los pedidos
-    // al entrar a la consola sería pagar una lectura que casi nunca se mira.
-    if (vista === 'sugerencias' && !this.pedidos && !this.cargandoPedidos) this.cargarPedidos();
   }
 
   cargarCobros(): void {
@@ -441,6 +454,13 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   /** Cuántas quedaron fuera de la lista por ser de cortesía. */
   get cuantasDeCortesia(): number {
     return (this.cobros?.empresas || []).filter((c) => c.modoCobro === 'cortesia').length;
+  }
+
+  /** Cuáles se apartaron de Cobros por su estado, para el tooltip. */
+  nombresSinCobroPorEstado(): string {
+    return (this.cobros?.sinCobroPorEstado || [])
+      .map((e) => `${e.nomComercial || e._docId} (${e.etiqueta})`)
+      .join('\n');
   }
 
   filtrarCobros(filtro: FiltroCobros): void {
@@ -1035,6 +1055,10 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
           return this.planVencido(e) || this.planPorVencer(e);
         case 'sinIntegrar':
           return this.sinIntegrar(e);
+        case 'nuevas':
+          return this.esNueva(e);
+        case 'cortesia':
+          return this.esCortesia(e);
         default:
           return true;
       }
@@ -1042,10 +1066,13 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
 
     resultado = resultado.sort((a, b) => {
       switch (this.orden) {
+        // Por el mes elegido en "Mes", que es el de la columna que se ve.
         case 'pedidos30d':
-          return (b.metricas?.pedidos30d || 0) - (a.metricas?.pedidos30d || 0);
+          return (
+            (this.mesDe(b)?.pedidos || 0) - (this.mesDe(a)?.pedidos || 0)
+          );
         case 'facturado':
-          return (b.metricas?.facturadoNeto30d || 0) - (a.metricas?.facturadoNeto30d || 0);
+          return (this.mesDe(b)?.facturado || 0) - (this.mesDe(a)?.facturado || 0);
         // Por lo que DEJA cada cliente al mes, no por lo que vende. Usa el
         // equivalente mensual para que un anual no se cuele arriba por traer la
         // factura del año entero.
@@ -1206,6 +1233,8 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
       case 'sinEntrar': return 'empresas donde nadie entra hace 30 días';
       case 'porVencer': return 'planes vencidos o por vencer';
       case 'sinIntegrar': return 'empresas activas sin ninguna integración conectada';
+      case 'nuevas': return 'empresas nuevas (registradas en los últimos ' + this.diasEmpresaNueva + ' días)';
+      case 'cortesia': return 'empresas de cortesía (no se les cobra)';
       default: return '';
     }
   }
@@ -1871,9 +1900,15 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
             : null;
           this.recalcularTotalesLocales();
           this.aplicarFiltros();
-          // El escalón y el monto los recalcula el BACKEND con las ventas y el
-          // periodo: repetir esa cuenta acá sería una segunda tabla de precios.
-          // Se refrescan al recargar; mientras tanto no se inventan.
+          // El escalón, el monto y la FECHA DE COBRO los resuelve el BACKEND:
+          // repetir esa cuenta acá sería una segunda tabla de precios. Antes se
+          // esperaba a que alguien recargara la página, y la fila seguía diciendo
+          // "cobra 30 de sept" con el corte ya corregido (ALMACEN BOMBAS). Se
+          // vuelven a pedir ya, y Cobros del mes se suelta para que se recargue
+          // al abrirla (el backend ya borró su caché al guardar).
+          this.cobros = null;
+          if (this.vista === 'cobros') this.cargarCobros();
+          this.cargar();
           this.notificationService.success(
             'Listo',
             `${nombre} quedó en ${nuevo.toUpperCase()}. Dale a Actualizar para ver el precio recalculado.`
@@ -2054,6 +2089,16 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * tiene integraciones no es lo mismo que saber que no tiene, y acusarla acá
    * la metería en una lista de "hay que llamarla" sin fundamento.
    */
+  /**
+   * ¿Se registró en los últimos 30 días? Una empresa sin fecha de alta NO
+   * cuenta como nueva: no saber cuándo llegó no es saber que llegó hace poco.
+   */
+  esNueva(empresa: EmpresaPanorama): boolean {
+    const creada = this.aMs(empresa.creadaEn);
+    if (!creada) return false;
+    return Date.now() - creada <= this.diasEmpresaNueva * 86400000;
+  }
+
   sinIntegrar(empresa: EmpresaPanorama): boolean {
     if (!empresa.activo) return false;
     if (!empresa.integraciones) return false;
@@ -2244,6 +2289,21 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     return valor.toLocaleString('es-CO');
   }
 
+  /**
+   * Pesos abreviados para una columna angosta: "$160,6 M", "$345 mil".
+   * El valor exacto va en el globo con `dinero()`.
+   */
+  dineroCorto(valor: number | null | undefined): string {
+    if (valor === null || valor === undefined) return '—';
+    const abs = Math.abs(valor);
+    const fmt = (v: number, dec: number) =>
+      v.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: dec });
+    if (abs >= 1e9) return '$' + fmt(valor / 1e9, 2) + ' mil M';
+    if (abs >= 1e6) return '$' + fmt(valor / 1e6, 1) + ' M';
+    if (abs >= 1e3) return '$' + fmt(valor / 1e3, 0) + ' mil';
+    return '$' + fmt(valor, 0);
+  }
+
   dinero(valor: number | null | undefined): string {
     if (valor === null || valor === undefined) return '—';
     return valor.toLocaleString('es-CO', {
@@ -2278,6 +2338,21 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    */
   esCortesia(empresa: EmpresaPanorama): boolean {
     return empresa.modoCobro === 'cortesia' || empresa.cobroCortesia === true;
+  }
+
+  /**
+   * El desglose del precio anual: el mensual del escalón y el descuento.
+   * El porcentaje se deduce de los dos precios que manda el backend en vez de
+   * repetir el 20% acá: si algún día cambia, la pantalla no queda mintiendo.
+   */
+  desgloseAnual(empresa: EmpresaPanorama): { mensual: number; descuento: number } | null {
+    const e = empresa.escalon;
+    if (!e?.conocido || e.aMedida || e.periodo !== 'anual' || this.esCortesia(empresa)) return null;
+    const mensual = Number(e.precioUSD) || 0;
+    const anual = Number(e.precioPeriodoUSD) || 0;
+    if (!mensual || !anual) return null;
+    const descuento = Math.round((1 - anual / (mensual * 12)) * 100);
+    return { mensual, descuento: Math.max(0, descuento) };
   }
 
   escalonTexto(empresa: EmpresaPanorama): string {
@@ -2361,6 +2436,45 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
    * 104 px y "1 oct 2026" lo desborda. El año va en el globo y en la ficha,
    * donde sí hay espacio.
    */
+  /** El mes elegido de UNA empresa. */
+  mesDe(empresa: EmpresaPanorama): ResumenMes | null | undefined {
+    return empresa.metricas?.[this.mesTabla];
+  }
+
+  /** El mes elegido, sumado para toda la plataforma. */
+  mesTotales(): ResumenMes | null | undefined {
+    return this.totales?.[this.mesTabla];
+  }
+
+  /** El globo de los encabezados: qué mes y con qué regla se cuenta. */
+  tituloMes(que: string): string {
+    const mes = this.mesTotales();
+    return `${que} de ${this.nombreMes(mes)} (${this.rangoMes(mes)}), por fecha de entrega y sin cancelados ni rechazados. El mes se cambia en el selector "Mes".`;
+  }
+
+  nombreMesMayus(mes: ResumenMes | null | undefined): string {
+    const nombre = this.nombreMes(mes);
+    return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+  }
+
+  /** "octubre", o "—" si el backend todavía no manda los meses (sin desplegar). */
+  nombreMes(mes: ResumenMes | null | undefined): string {
+    return mes?.mes || '—';
+  }
+
+  /** "01 a hoy" para el mes en curso; "01 al 30" para uno cerrado. */
+  rangoMes(mes: ResumenMes | null | undefined): string {
+    if (!mes) return '';
+    if (!mes.completo) return '01 a hoy';
+    // El último día en hora de Colombia: el cierre es la medianoche del 1 del
+    // mes siguiente, así que se le resta un instante y se lee en Bogotá.
+    const ultimo = new Date(new Date(mes.hasta).getTime() - 1).toLocaleDateString('es-CO', {
+      day: '2-digit',
+      timeZone: 'America/Bogota',
+    });
+    return '01 al ' + ultimo;
+  }
+
   fechaDiaMes(valor: any): string {
     const ms = this.aMs(valor);
     if (!ms) return '—';

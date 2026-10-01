@@ -16,9 +16,6 @@
                 (click)="cambiarVista('empresas')">Empresas</button>
         <button type="button" role="tab" [class.activa]="vista === 'cobros'"
                 (click)="cambiarVista('cobros')">Cobros del mes</button>
-        <button type="button" role="tab" [class.activa]="vista === 'sugerencias'"
-                (click)="cambiarVista('sugerencias')"
-                title="Lo que los clientes le piden a Katuq, y cuántos piden lo mismo">Sugerencias</button>
         <button type="button" role="tab" [class.activa]="vista === 'pauta'"
                 (click)="cambiarVista('pauta')"
                 title="Registros y vendedores activos por campaña de pauta">Pauta</button>
@@ -144,10 +141,18 @@
 
       <button type="button" class="kpi" [class.kpi--activo]="orden === 'pedidos30d'"
               (click)="ordenarPor('pedidos30d')"
-              title="Lo que se movió en toda la plataforma. Tócala para subir arriba las empresas con más pedidos.">
-        <span class="kpi-label">Volumen {{ ventanaDias }} días</span>
-        <span class="kpi-valor">{{ num(totales.pedidos30d) }}<small class="kpi-de">pedidos</small></span>
-        <span class="kpi-pie">{{ dinero(totales.facturado30d) }} facturado</span>
+              title="Pedidos de toda la plataforma por FECHA DE ENTREGA en el mes calendario (hora de Colombia), como filtra la pantalla de Pedidos, SIN los cancelados ni rechazados. El cobro sigue por fecha de creación. Tócala para subir arriba las empresas con más pedidos.">
+        <!-- D-345: mes calendario por FECHA DE ENTREGA, como la pantalla de Pedidos
+             del comercio. Con los 30 días móviles por creación ninguna cifra cuadraba. -->
+        <span class="kpi-label">Pedidos de {{ nombreMes(mesTotales()) }} <small>({{ rangoMes(mesTotales()) }})</small></span>
+        <span class="kpi-valor">{{ num(mesTotales()?.pedidos) }}<small class="kpi-de">pedidos</small></span>
+        <!-- Los cancelados se nombran: sin ellos, el número bajaba de un día para
+             otro (de "todo lo que entró" a "solo lo vendido") y parecía que se
+             habían perdido pedidos. -->
+        <span class="kpi-pie" *ngIf="mesTotales()?.caidos">
+          + {{ num(mesTotales()?.caidos) }} cancelados o rechazados = {{ num((mesTotales()?.pedidos || 0) + (mesTotales()?.caidos || 0)) }} en total
+        </span>
+        <span class="kpi-pie">{{ dinero(mesTotales()?.facturado) }} en ventas</span>
       </button>
 
     </section>
@@ -164,6 +169,21 @@
          busca; acá volvieron a ser lo que son, cifras. -->
     <section class="kpis-contexto">
       <span class="ctx-rotulo">Filtrar:</span>
+
+      <!-- Las que se acaban de registrar: las que hay que acompañar en el arranque. -->
+      <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'nuevas'"
+              (click)="filtrarPor('nuevas')"
+              [title]="'Empresas que se registraron en Katuq en los últimos ' + diasEmpresaNueva + ' días'">
+        <i class="fa fa-star"></i>
+        <strong>{{ num(cuantasNuevas) }}</strong> nuevas
+      </button>
+
+      <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'cortesia'"
+              (click)="filtrarPor('cortesia')"
+              title="Empresas de cortesía: tienen todo y no se les cobra (las de Katuq y las demo)">
+        <i class="fa fa-gift"></i>
+        <strong>{{ num(cuantasCortesia) }}</strong> cortesía
+      </button>
 
       <button type="button" class="ctx" [class.ctx--activo]="filtroEstado === 'sinMovimiento'"
               (click)="filtrarPor('sinMovimiento')"
@@ -330,9 +350,11 @@
             <option value="todas">Todas</option>
             <option value="activas">Activas</option>
             <option value="conTarjeta">Con tarjeta inscrita</option>
+            <option value="cortesia">Cortesía (no se cobra)</option>
             <option value="enRiesgo">En riesgo</option>
             <option value="freemium">Freemium (gratis)</option>
             <option value="inactivas">Inactivas</option>
+            <option value="nuevas">Nuevas (últimos 30 días)</option>
             <option value="anual">Pagan por año</option>
             <option value="porVencer">Plan vencido o por vencer</option>
             <option value="pactado">Precio pactado a mano</option>
@@ -354,6 +376,17 @@
             <option *ngFor="let e of escalones" [value]="e.id">
               {{ e.nombre }}{{ e.usd ? ' — US$' + e.usd : '' }}
             </option>
+          </select>
+        </label>
+
+        <!-- El mes de las columnas Pedidos, Ventas y Ticket y de la tarjeta de
+             pedidos. Arranca en el último mes COMPLETO: el mes en curso, a
+             principio de mes, sale casi todo en cero. -->
+        <label class="control" [class.control--activo]="mesTabla === 'mesActual'">
+          <span class="control-label">Mes</span>
+          <select [(ngModel)]="mesTabla" (ngModelChange)="buscarDesdeElPrincipio()">
+            <option value="mesAnterior">{{ nombreMesMayus(totales?.mesAnterior) }} ({{ rangoMes(totales?.mesAnterior) }})</option>
+            <option value="mesActual">{{ nombreMesMayus(totales?.mesActual) }} ({{ rangoMes(totales?.mesActual) }})</option>
           </select>
         </label>
 
@@ -387,8 +420,9 @@
 
       <div class="tabla-head">
         <span class="col-empresa">Empresa</span>
-        <span class="col-num">Pedidos {{ ventanaDias }}d</span>
-        <span class="col-num">Ticket</span>
+        <span class="col-num" [title]="tituloMes('Pedidos')">Pedidos</span>
+        <span class="col-num" [title]="tituloMes('Plata vendida')">Ventas</span>
+        <span class="col-num" [title]="tituloMes('Ticket promedio')">Ticket</span>
         <span class="col-num">Última venta</span>
         <span class="col-num">Último ingreso</span>
         <span class="col-num">Integr.</span>
@@ -463,13 +497,27 @@
             </span>
           </div>
 
-          <!-- Pedidos -->
-          <div class="col-num" [attr.data-label]="'Pedidos ' + ventanaDias + 'd'">
-            <strong>{{ num(empresa.metricas?.pedidos30d) }}</strong>
+          <!-- Pedidos, Ventas y Ticket: los TRES del mismo mes, el que se elige en
+          "Mes" (D-347). La primera versión mezclaba el mes en curso y el anterior en
+          cada celda y el ticket de otro mes: no se entendía. -->
+          <!-- De qué está hecho el número, como en la ficha, para no tener que
+               abrirla: los válidos arriba y, si hubo, los caídos y el total que
+               cuadra con "Listado de pedidos" de la pantalla de Pedidos. -->
+          <div class="col-num" data-label="Pedidos"
+               [title]="num(mesDe(empresa)?.pedidos) + ' pedidos válidos por fecha de entrega' + (mesDe(empresa)?.caidos ? ' + ' + num(mesDe(empresa)?.caidos) + ' cancelados o rechazados = ' + num((mesDe(empresa)?.pedidos || 0) + (mesDe(empresa)?.caidos || 0)) + ', el total de la pantalla de Pedidos' : '')">
+            <strong>{{ num(mesDe(empresa)?.pedidos) }}</strong>
+            <ng-container *ngIf="mesDe(empresa)?.caidos">
+              <small class="col-num-nota">+ {{ num(mesDe(empresa)?.caidos) }} cancelados</small>
+              <small class="col-num-nota">= {{ num((mesDe(empresa)?.pedidos || 0) + (mesDe(empresa)?.caidos || 0)) }} total</small>
+            </ng-container>
           </div>
 
-          <!-- Ticket -->
-          <div class="col-num" data-label="Ticket">{{ dinero(empresa.metricas?.ticketPromedio30d) }}</div>
+          <!-- Abreviado ("160,6 M"): el valor completo no cabe en la columna; va entero en el globo. -->
+          <div class="col-num" data-label="Ventas" [title]="dinero(mesDe(empresa)?.facturado)">
+            <strong>{{ dineroCorto(mesDe(empresa)?.facturado) }}</strong>
+          </div>
+
+          <div class="col-num" data-label="Ticket">{{ dinero(mesDe(empresa)?.ticketPromedio) }}</div>
 
           <!-- Última venta. La FECHA arriba y el "hace N días" debajo: la fecha
                se puede cruzar con cualquier otra cosa ("¿qué pasó esa semana?")
@@ -560,6 +608,13 @@
               <ng-template #escalonDesconocido>
                 <span class="muted">escalón sin calcular</span>
               </ng-template>
+            </small>
+
+            <!-- De dónde sale el precio anual: el mensual del escalón menos el
+                 descuento. Sin esto, US$4.099/año no se reconoce como el plan de
+                 US$427 y parece un precio equivocado. -->
+            <small class="plan-desglose-anual" *ngIf="desgloseAnual(empresa) as d">
+              {{ dineroUSD(d.mensual) }}/mes × 12 − {{ d.descuento }}% por ser anual
             </small>
 
             <!-- Antes esta línea aparecía SOLO si el plan estaba vencido o por
@@ -803,14 +858,18 @@
             </div>
 
             <div class="dato"><span class="dato-label">Pedidos (histórico)</span><span class="dato-valor">{{ num(empresa.metricas?.pedidos) }}</span></div>
-            <div class="dato">
-              <span class="dato-label">Pedidos {{ ventanaDias }} días</span>
-              <span class="dato-valor">{{ num(empresa.metricas?.pedidos30d) }}</span>
-              <small class="dato-nota" *ngIf="empresa.metricas?.pedidosAnulados30d">
-                {{ num(empresa.metricas?.pedidosAnulados30d) }} anulados
+            <!-- D-345: los dos meses calendario, en hora de Colombia. "Pedidos" ya
+                 viene SIN caídos; los caídos se dicen aparte para que la cifra
+                 se pueda cuadrar contra la pantalla de Pedidos del comercio. -->
+            <div class="dato" *ngFor="let mes of [empresa.metricas?.mesActual, empresa.metricas?.mesAnterior]">
+              <span class="dato-label">Pedidos {{ nombreMes(mes) }} <small>({{ rangoMes(mes) }})</small></span>
+              <span class="dato-valor">{{ num(mes?.pedidos) }}</span>
+              <small class="dato-nota">
+                Por fecha de entrega.<ng-container *ngIf="mes?.caidos"> + {{ num(mes?.caidos) }} cancelados o rechazados
+                = {{ num((mes?.pedidos || 0) + (mes?.caidos || 0)) }}, el total de la pantalla de Pedidos</ng-container>
               </small>
             </div>
-            <div class="dato"><span class="dato-label">Ticket promedio</span><span class="dato-valor">{{ dinero(empresa.metricas?.ticketPromedio30d) }}</span></div>
+            <div class="dato"><span class="dato-label">Ticket promedio {{ nombreMes(empresa.metricas?.mesAnterior) }}</span><span class="dato-valor">{{ dinero(empresa.metricas?.mesAnterior?.ticketPromedio) }}</span></div>
             <!-- LA CUENTA COMPLETA, en una sola tarjeta y con la resta HECHA.
                  Antes eran dos cifras sueltas —lo vendido y lo caído— y para
                  saber sobre qué se cobra había que restarlas a mano. La cifra
@@ -827,7 +886,8 @@
               </span>
               <small class="dato-cuenta" *ngIf="excluidosDe(empresa) as ex">
                 <span class="cuenta-linea">
-                  <span>Vendió en {{ ex.ventanaDias }} días</span>
+                  <span *ngIf="ex.ventana === 'ciclo'">Vendió en el ciclo, desde el {{ fechaCorta(ex.desde) }}</span>
+                  <span *ngIf="ex.ventana !== 'ciclo'">Vendió en {{ ex.ventanaDias }} días</span>
                   <b>{{ dinero(ex.totalFacturableCOP + ex.totalExcluidoCOP) }}</b>
                 </span>
                 <span class="cuenta-linea cuenta-linea--resta" *ngIf="ex.totalExcluidoCOP">
@@ -845,6 +905,10 @@
                 </span>
                 <span class="cuenta-nota" *ngIf="!ex.totalExcluidoCOP">
                   ninguna venta se cayó: se cobra sobre todo lo vendido
+                </span>
+                <!-- D-344: lo que se cae después del corte no se descuenta. -->
+                <span class="cuenta-nota" *ngIf="ex.caidasDespuesDelCorte">
+                  {{ num(ex.caidasDespuesDelCorte) }} se cayeron después del corte ({{ dinero(ex.caidasDespuesDelCorteCOP) }}): se cobran
                 </span>
               </small>
               <!-- Sin el detalle no se puede afirmar nada: se dice que falta el
@@ -873,17 +937,17 @@
               <strong>Ventas que no se cobran</strong>
               <span class="caidas-resumen">
                 {{ num(ex.pedidosExcluidos) }} pedidos · {{ dinero(ex.totalExcluidoCOP) }}
-                · últimos {{ ex.ventanaDias }} días
+                · {{ ex.ventana === 'ciclo' ? 'ciclo de cobro desde el ' + fechaCorta(ex.desde) : 'últimos ' + ex.ventanaDias + ' días' }}
               </span>
             </div>
 
             <!-- La fecha de caída es aproximada y hay que decirlo: los pedidos
                  no guardan cuándo se anularon, así que se usa la última vez que
                  se tocó el documento. -->
-            <p class="caidas-aviso">
+            <p class="caidas-aviso" *ngIf="ex.fechasAproximadas">
               <i class="fa fa-info-circle"></i>
-              La fecha de caída es <b>aproximada</b>: se toma de la última edición del pedido,
-              porque hoy no se guarda el momento exacto en que se anula.
+              {{ num(ex.fechasAproximadas) }} de estas se cayeron antes de que se guardara la fecha exacta:
+              su fecha de caída es <b>aproximada</b> (la última edición del pedido).
             </p>
 
             <div class="caidas-tabla">
@@ -1244,6 +1308,10 @@
           <span class="kpi-pie">
             {{ num(cobros.totales.sinPlanPago) }} freemium, no se cobran
           </span>
+          <span class="kpi-pie" *ngIf="cobros.totales.sinCobroPorEstado"
+                [title]="nombresSinCobroPorEstado()">
+            {{ num(cobros.totales.sinCobroPorEstado) }} bloqueadas o pausadas, fuera del cobro
+          </span>
         </button>
 
         <!-- Cortesía: las empresas de Katuq y las demo. NO están en la lista de
@@ -1497,261 +1565,7 @@
     </ng-container>
   </ng-container>
 
-  <!-- ══ Sugerencias de los clientes ═══════════════════════════════════════
-       Lo que le piden los clientes a Katuq. La tabla de arriba es la que
-       decide el roadmap: cuenta CLIENTES DISTINTOS por tema, no anotaciones,
-       porque tres notas del que más llama no son tres clientes. -->
   <app-pauta-campanas *ngIf="vista === 'pauta'"></app-pauta-campanas>
 
-  <ng-container *ngIf="vista === 'sugerencias'">
-
-    <div class="cargando" *ngIf="cargandoPedidos">
-      <i class="fa fa-spinner fa-spin"></i> Cargando sugerencias…
-    </div>
-
-    <div class="aviso-error" *ngIf="errorPedidos">
-      <i class="fa fa-exclamation-triangle"></i>
-      <div>
-        <strong>No se pudo</strong>
-        <p>{{ errorPedidos }}</p>
-      </div>
-      <button type="button" class="btn-reintentar" (click)="cargarPedidos()">Reintentar</button>
-    </div>
-
-    <ng-container *ngIf="!cargandoPedidos && pedidos">
-
-      <div class="pedidos-head">
-        <div class="pedidos-intro">
-          <p>
-            <strong>Lo que los clientes nos piden a Katuq:</strong> una integración, un módulo
-            nuevo, un reporte, que algo funcione distinto.
-          </p>
-          <p class="pedidos-frontera">
-            <i class="fa fa-info-circle"></i>
-            Si algo está <strong>roto y no los deja trabajar</strong>, eso es un ticket de soporte,
-            no va acá. Esto es para lo que todavía no existe o debería ser distinto.
-          </p>
-        </div>
-        <button type="button" class="btn-primario" (click)="abrirAnotacion()" *ngIf="!anotando">
-          <i class="fa fa-plus"></i> Anotar sugerencia
-        </button>
-      </div>
-
-      <!-- Anotar. Corto a propósito: si anotar cuesta, no se anota, y una sugerencia
-           que no se registra no agrupa con nada. -->
-      <form class="pedido-form" *ngIf="anotando" (ngSubmit)="guardarPedido()"
-            [class.pedido-form--editando]="pedidoEditando">
-        <p class="pedido-form-titulo" *ngIf="pedidoEditando">
-          Corrigiendo una sugerencia
-          <small>No se crea uno nuevo: se actualiza el que tocaste.</small>
-        </p>
-
-        <div class="pedido-form-fila">
-          <label>
-            <span>¿Qué cliente lo pidió?</span>
-            <!-- Bloqueado al corregir: mover un pedido de cliente falsearía el
-                 conteo que decide qué se construye. Si era de otro cliente, es
-                 otro pedido. -->
-            <select [(ngModel)]="nuevoPedido.cliente" name="cliente" required
-                    [disabled]="!!pedidoEditando">
-              <option value="">Elegir…</option>
-              <option *ngFor="let e of empresas" [value]="e.nomComercial">{{ e.nomComercial }}</option>
-            </select>
-          </label>
-          <label>
-            <span>¿Qué clase de sugerencia es?</span>
-            <select [(ngModel)]="nuevoPedido.tipo" name="tipo">
-              <option *ngFor="let t of tiposPedido" [value]="t.valor">{{ t.etiqueta }}</option>
-            </select>
-          </label>
-        </div>
-
-        <label class="crece">
-          <span>¿Qué pidió? <small>— en pocas palabras, como lo diría el cliente</small></span>
-          <input type="text" [(ngModel)]="nuevoPedido.titulo" name="titulo" required
-                 placeholder="Ej: que el reporte de ventas se pueda ver por vendedor" maxlength="140">
-        </label>
-
-        <!-- El campo que no se explicaba solo. La ayuda dice PARA QUÉ sirve, no
-             qué escribir: el problema no era saber qué poner, era no entender
-             por qué existía el campo. -->
-        <label class="crece campo-tema">
-          <span>Nombre común de la sugerencia</span>
-          <small class="campo-ayuda">
-            Es lo que hace que esta sugerencia <strong>se sume con las de otros clientes</strong> que
-            pidieron lo mismo. Si ya hay un nombre parecido en la lista, elegí ese: así los dos
-            cuentan juntos y ves que son dos clientes pidiéndolo, no dos sugerencias sueltas.
-          </small>
-          <input type="text" [(ngModel)]="nuevoPedido.tema" name="tema" list="temas-existentes"
-                 placeholder="Déjalo vacío y se usa lo que escribiste arriba" maxlength="140">
-          <datalist id="temas-existentes">
-            <option *ngFor="let t of temasExistentes" [value]="t"></option>
-          </datalist>
-        </label>
-
-        <label class="crece">
-          <span>Detalle <small>— opcional, pero es lo que se agradece en seis meses</small></span>
-          <textarea [(ngModel)]="nuevoPedido.detalle" name="detalle" rows="2"
-                    placeholder="Para qué lo necesita, qué hace hoy en su lugar, qué le cuesta no tenerlo"></textarea>
-        </label>
-
-        <div class="pedido-form-acciones">
-          <button type="button" class="btn-refrescar" (click)="anotando = false; pedidoEditando = ''">Cancelar</button>
-          <button type="submit" class="btn-primario"
-                  [disabled]="guardandoPedido || !nuevoPedido.titulo.trim() || !nuevoPedido.cliente">
-            <i class="fa" [ngClass]="guardandoPedido ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-            {{ pedidoEditando ? 'Guardar cambios' : 'Guardar' }}
-          </button>
-        </div>
-      </form>
-
-      <!-- Los temas: la tabla que se mira para decidir qué construir. -->
-      <!-- El título va SIEMPRE, con tabla o sin ella. Estaba condicionado a que
-           hubiera datos y el resultado era que, el día que abrís la pantalla por
-           primera vez, la parte más importante no existe — y nadie descubre algo
-           que solo aparece cuando ya sabías que estaba. -->
-      <h3 class="pedidos-subtitulo">
-        Qué construir primero
-        <small>— lo mismo pedido por varios clientes pesa más que lo pedido muchas veces por uno</small>
-      </h3>
-
-      <div class="tema-vacio" *ngIf="!pedidos.temas.length">
-        <i class="fa fa-list-ol"></i>
-        <div>
-          <strong>Acá se va a armar tu lista de prioridades.</strong>
-          <p>
-            Cada sugerencia que anotes abajo aparece acá agrupada por su nombre común, ordenada por
-            <strong>cuántos clientes distintos</strong> la pidieron. Con tres o cuatro sugerencias ya
-            empieza a servir: deja de ser una lista de deseos y pasa a ser un orden.
-          </p>
-        </div>
-      </div>
-
-      <section class="tabla tabla--temas" *ngIf="pedidos.temas.length">
-        <div class="tabla-head">
-          <span class="col-empresa">Tema</span>
-          <span class="col-num" title="Clientes distintos que lo pidieron. No cuenta anotaciones repetidas del mismo cliente.">Clientes</span>
-          <span class="col-num">Sugerencias</span>
-          <span class="col-num">Abiertos</span>
-          <span class="col-plan">Quiénes</span>
-        </div>
-
-        <div class="fila" *ngFor="let t of pedidos.temas"
-             [class.fila--activa]="busquedaTema === t.tema"
-             (click)="verTema(t)">
-          <div class="col-empresa"><strong>{{ t.titulo }}</strong></div>
-          <div class="col-num"><strong class="tema-cuenta">{{ t.cuantosClientes }}</strong></div>
-          <div class="col-num">{{ t.pedidos }}</div>
-          <div class="col-num" [class.muted]="!t.abiertos">{{ t.abiertos }}</div>
-          <div class="col-plan tema-empresas" [title]="t.clientes.join(', ')">{{ t.clientes.join(', ') }}</div>
-        </div>
-      </section>
-
-      <!-- La lista para trabajar. -->
-      <!-- Los cuatro filtros van a la vista, CON su conteo. Antes era un solo
-           interruptor "Solo pendientes" y al marcar algo como entregado la fila
-           desaparecía sin dejar rastro de adónde se había ido. -->
-      <div class="pedidos-filtros">
-        <label class="ctx-rotulo">Ver:</label>
-        <button type="button" class="ctx" [class.ctx--activo]="filtroEstadoPedidos === 'pendientes'"
-                (click)="filtroEstadoPedidos = 'pendientes'; avisoPedido = ''">
-          Pendientes <strong>{{ cuentasPedidos.pendientes }}</strong>
-        </button>
-        <button type="button" class="ctx ctx--ok" [class.ctx--activo]="filtroEstadoPedidos === 'entregados'"
-                (click)="filtroEstadoPedidos = 'entregados'; avisoPedido = ''">
-          Entregados <strong>{{ cuentasPedidos.entregados }}</strong>
-        </button>
-        <button type="button" class="ctx" [class.ctx--activo]="filtroEstadoPedidos === 'descartados'"
-                (click)="filtroEstadoPedidos = 'descartados'; avisoPedido = ''">
-          Descartados <strong>{{ cuentasPedidos.descartados }}</strong>
-        </button>
-        <button type="button" class="ctx" [class.ctx--activo]="filtroEstadoPedidos === 'todos'"
-                (click)="filtroEstadoPedidos = 'todos'; avisoPedido = ''">
-          Todos <strong>{{ cuentasPedidos.todos }}</strong>
-        </button>
-
-        <select class="ctx" [(ngModel)]="filtroClientePedidos" name="filtroCliente">
-          <option value="">Todos los clientes</option>
-          <option *ngFor="let e of empresas" [value]="e.nomComercial">{{ e.nomComercial }}</option>
-        </select>
-        <button type="button" class="ctx" *ngIf="busquedaTema" (click)="busquedaTema = ''">
-          <i class="fa fa-times"></i> Quitar resaltado
-        </button>
-      </div>
-
-      <!-- Dónde se fue la fila que acaba de desaparecer. -->
-      <p class="pedido-aviso" *ngIf="avisoPedido">
-        <i class="fa fa-check-circle"></i> {{ avisoPedido }}
-        <button type="button" (click)="avisoPedido = ''">Entendido</button>
-      </p>
-
-      <section class="tabla tabla--pedidos">
-        <div class="tabla-head">
-          <span class="col-empresa">Sugerencia y detalle</span>
-          <span class="col-plan">Cliente</span>
-          <span class="col-plan">Tipo</span>
-          <span class="col-plan" title="El nombre común que agrupa esta sugerencia con las de otros clientes">Se cuenta con</span>
-          <span class="col-plan">Estado</span>
-          <span class="col-num">Anotado</span>
-          <span class="col-acciones">Acciones</span>
-        </div>
-
-        <div class="fila" *ngFor="let p of pedidosVisibles"
-             [class.fila--resaltada]="busquedaTema && p.tema === busquedaTema">
-          <div class="col-empresa" data-label="Sugerencia y detalle">
-            <strong [title]="p.titulo">{{ p.titulo }}</strong>
-            <small class="pedido-detalle" *ngIf="p.detalle" [title]="p.detalle">{{ p.detalle }}</small>
-          </div>
-          <div class="col-plan" data-label="Cliente">{{ p.cliente }}</div>
-          <div class="col-plan" data-label="Tipo">
-            <span class="chip chip--mini chip--tipo" [attr.data-tipo]="p.tipo"
-                  [title]="etiquetaTipoPedido(p.tipo)">{{ tipoCorto(p.tipo) }}</span>
-          </div>
-          <div class="col-plan" data-label="Se cuenta con"><span class="chip chip--mini">{{ p.temaTexto }}</span></div>
-          <div class="col-plan" data-label="Estado">
-            <select class="select-estado" [ngModel]="p.estado" name="estado-{{ p.id }}"
-                    (ngModelChange)="cambiarEstadoPedido(p, $event)">
-              <option *ngFor="let e of estadosPedido" [value]="e.valor">{{ e.etiqueta }}</option>
-            </select>
-          </div>
-          <div class="col-num col-num--fecha" data-label="Anotado"
-               [title]="'Por ' + (p.creadoPor || 'alguien')">
-            {{ fechaCorta(p.creadoEl) }}
-          </div>
-
-          <!-- Corregir y Borrar. Estaban escritos en el componente desde el
-               principio —con su confirmación y todo— pero nunca se puso el
-               botón: la columna existía en la rejilla, vacía. Borrar es para
-               deshacer una anotación equivocada; si el cliente SÍ lo pidió y
-               se decidió no hacerlo, el camino es el estado Descartado, que
-               deja el rastro de que se evaluó. -->
-          <div class="col-acciones" data-label="Acciones">
-            <button type="button" class="btn-icono"
-                    (click)="editarPedido(p)"
-                    title="Corregir el texto, el tema o el tipo de esta sugerencia">
-              <i class="fa fa-pencil"></i>
-            </button>
-            <button type="button" class="btn-icono btn-icono--peligro"
-                    (click)="eliminarPedido(p)"
-                    title="Borrar esta anotación. Si el cliente sí la pidió y no se va a hacer, mejor marcarla como Descartada.">
-              <i class="fa fa-trash-o"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="fila-vacia" *ngIf="pedidosVisibles.length === 0">
-          <i class="fa fa-lightbulb-o"></i>
-          <p *ngIf="!pedidos.total">Todavía no hay ninguna sugerencia anotada</p>
-          <p *ngIf="pedidos.total">Ninguna sugerencia coincide con este filtro</p>
-          <p class="vacia-pista" *ngIf="!pedidos.total">
-            Cada vez que un cliente pida algo —en una llamada, por WhatsApp, en un ticket—
-            anotalo acá. Con seis meses de esto, el roadmap se decide con datos y no con
-            quién llamó más fuerte.
-          </p>
-        </div>
-      </section>
-
-    </ng-container>
-  </ng-container>
 
 </div>
