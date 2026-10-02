@@ -1327,6 +1327,10 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 > Resumen breve de cada sesión: qué hicimos, qué queda. Evita perder hilo.
 
+### 2026-10-02 (sesión tiket-apoyo — OH MY STORE en cero)
+- **1087 cerrado solo con configuración:** el envío de las facturas de OH MY STORE sale con el producto SIIGO `TSV` "TRANSPORTE DOMICILIO EN VENTAS" (código encontrado recorriendo su catálogo SIIGO en solo lectura; guardado con `IntegrationConfigService.saveConfig`, verificado con la vista previa del ORE-001355).
+- **1110 cerrado:** ver D-340. OH MY STORE queda sin tickets abiertos.
+
 ### 2026-10-01 (sesión tiket-apoyo — publicaciones y ticket 1107)
 - **Publicado:** backend `d495607` → `2fc5a05` (cotizaciones 1104/1095, mensajero 1093) y luego `0bb2676` (D-336); web 2026.10.01.2 (1101, 1095, 1104; release `7912b33b`, base `60e247f5`); app de soporte `cbfc37f` (1068, 1016, confirmación D-328 y pantalla de métricas). Verificado servido.
 - **Ticket 1107 cerrado:** arreglo desplegado, dos pedidos de prueba de Laura repuestos y verificados. Queda la decisión sobre los otros pedidos sin devolución (ver D-336).
@@ -7831,3 +7835,13 @@ El 29-sep estaban rotas las dos:
 - El anexo de precios sugeridos de la cotización no lista los productos de un combo cerrado.
 - Utilidad común `src/app/shared/utils/combo-lineas.ts` (+ spec). Backend: `controllers/cotizaciones.js` (`_agruparCombosPublicos`) + `tests/cotizaciones/combosVistaPublica.test.js` (7 casos; falla con el código anterior).
 - Propuesta: `openspec/changes/combos-una-linea/`. Modifica el requisito de D-147 "sin línea combo colapsada" solo en la presentación; el precio sigue saliendo de las líneas.
+
+## D-340 (2026-10-02) — Los errores de facturación los lee el comercio: qué pasó y qué hacer, sin jerga (ticket 1110, DESPLEGADA)
+
+**Contexto.** OH MY STORE no podía facturar el ORE-001331 y el aviso decía "1 de 5 productos no se pudieron llevar a siigo … REAN06G : ya existe con otro dato en el sistema contable". La referencia en Katuq era "REAN06G " (espacio al final); en SIIGO es "REAN06G". La búsqueda por código no lo encontraba, Katuq intentaba crearlo y SIIGO respondía `already_exists`. Daniel: *"necesito que los errores que salgan sean más explícitos, sin ambigüedades, no son para personas técnicas"*.
+
+**Decisión** (Daniel, 2-oct):
+- Backend `800378f`: `primerCodigo` (primer código no vacío, sin espacios a los lados) en los tres que arman el código al facturar: AccountingManager, `SiigoDataMapper.extractProductCode` y `siigoProvider.findOrCreateProduct`. Búsqueda, creación y línea de la factura usan el mismo código. No toca `products`.
+- Backend `a40f374`: regla para todo aviso de facturación que ve el comercio: nombra el producto por su nombre y referencia, dice qué pasó y qué hacer, y termina en "vuelve a facturar". Sin "sistema contable", SKU, credenciales, códigos de SIIGO ni JSON. Si SIIGO no da motivo claro: "escríbenos por soporte con el número del pedido". Sin conexión o tiempo agotado: "espera unos minutos". La factura rechazada pierde el prefijo "Error creando factura:" porque el aviso ya antepone "No se pudo facturar el pedido:".
+- Pruebas: `scripts/test-1110-referencia-con-espacios.js` (8/8, incluye un barrido de jerga sobre todos los motivos) y `test-1043` reescrita con los textos nuevos (6/6); 1052 y 1054 siguen en verde. Simulado sin emitir sobre el ORE-001331: los 5 productos se encuentran en SIIGO y la vista previa sale sin avisos.
+- Desplegado en EC2 el 2-oct (prod `12dfb48` → `a40f374`, reload 12 s sin errores). Ticket 1110 en Resuelto; Jerónimo reintenta la factura.
