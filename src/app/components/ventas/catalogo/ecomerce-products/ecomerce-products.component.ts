@@ -1757,9 +1757,7 @@ export class EcomerceProductsComponent
     // 1.b Sin existencias en la bodega de trabajo no se agrega. El botón
     // "Agregar" no validaba stock (solo lo hacía el modal Configurar), así que
     // un producto agotado en esta bodega entraba al carrito sin aviso.
-    const inventariable = producto.disponibilidad?.inventariable !== false;
-    const disponible = producto.disponibilidad?.cantidadDisponible || 0;
-    if (inventariable && disponible <= 0) {
+    if (!this.tieneExistencias(producto)) {
       if (mostrarToast) {
         const dondeSiHay = this.bodega?.nombre ? ` en ${this.bodega.nombre}` : "";
         this.toastrService.error(
@@ -1875,6 +1873,13 @@ export class EcomerceProductsComponent
     return true;
   }
 
+  /** ¿Se puede vender en la bodega de trabajo? (los no inventariables siempre). */
+  private tieneExistencias(producto: Producto): boolean {
+    const inventariable = producto.disponibilidad?.inventariable !== false;
+    const disponible = producto.disponibilidad?.cantidadDisponible || 0;
+    return !inventariable || disponible > 0;
+  }
+
   /** Abre el picker de combos (buscador + lista) — escala a cualquier cantidad de combos. */
   abrirCombosPicker(tpl: TemplateRef<any>): void {
     this.comboFiltro = '';
@@ -1931,55 +1936,70 @@ export class EcomerceProductsComponent
         const productosResueltos: Producto[] = this.aplicarStockDeBodega(res?.products || []);
         const mapaPorId = new Map(productosResueltos.map((p: any) => [p.cd, p]));
 
-        let agregados = 0;
-        let pendientesConfig = 0;
+        // Ticket 1112: primero se mira qué se puede agregar. Producto que ya no
+        // existe o está inactivo se omite sin bloquear el resto (D-147); el que
+        // no tiene existencias en la bodega tampoco entra.
+        const agregables: Producto[] = [];
         let noDisponibles = 0;
         let sinStock = 0;
-
         ids.forEach((id) => {
           const producto = mapaPorId.get(id);
-          // Producto ya no existe o está inactivo: se omite del agregado sin
-          // bloquear el resto del combo (D-147).
           if (!producto) {
             noDisponibles++;
-            return;
+          } else if (!this.tieneExistencias(producto)) {
+            sinStock++;
+          } else {
+            agregables.push(producto);
           }
+        });
 
+        const nombreCombo = combo?.nombre || 'Combo';
+        const enBodega = this.bodega?.nombre ? ` en ${this.bodega.nombre}` : '';
+        const faltantes: string[] = [];
+        if (sinStock > 0) faltantes.push(`${sinStock} sin existencias${enBodega}`);
+        if (noDisponibles > 0) faltantes.push(`${noDisponibles} que ya no está(n) disponible(s)`);
+        const avisoOpts = { timeOut: 7000, progressBar: true, positionClass: 'toast-bottom-right' };
+
+        // Nada que agregar: se dice claro, sin "Combo agregado".
+        if (agregables.length === 0) {
+          this.toastrService.warning(
+            `No se agregó "${nombreCombo}": de sus ${ids.length} productos, ${faltantes.join(' y ')}. Cambia de bodega o revisa las existencias.`,
+            'Combo sin existencias',
+            avisoOpts
+          );
+          return;
+        }
+
+        // Combo completo → una sola línea (ticket 1097). Incompleto → los que sí
+        // hay entran sueltos: llamarlo "combo" en el pedido sería engañoso.
+        const completo = agregables.length === ids.length;
+        let pendientesConfig = 0;
+        agregables.forEach((producto) => {
           const requiereConfig = this.requiereConfiguracion(producto);
           const agregado = this.agregarProductoAlCarritoInterno(producto, {
             requiereConfiguracionPendiente: requiereConfig,
             mostrarToast: false,
-            combo: marcaCombo
+            combo: completo ? marcaCombo : undefined
           });
-          if (!agregado) {
-            sinStock++;
-            return;
-          }
-          if (requiereConfig) {
-            pendientesConfig++;
-          }
-          agregados++;
+          if (agregado && requiereConfig) pendientesConfig++;
         });
 
-        // Toast único de resumen (no uno por producto del combo).
-        const nombreCombo = combo?.nombre || 'Combo';
-        let mensaje = `Combo "${nombreCombo}" agregado al carrito en una sola línea (${agregados} producto(s))`;
-        if (pendientesConfig > 0) {
-          mensaje += ` (${pendientesConfig} requiere${pendientesConfig > 1 ? 'n' : ''} configuración — revisa el carrito)`;
+        const config = pendientesConfig > 0
+          ? ` ${pendientesConfig} requiere${pendientesConfig > 1 ? 'n' : ''} configuración: revisa el carrito.`
+          : '';
+        if (completo) {
+          this.toastrService.success(
+            `Combo "${nombreCombo}" agregado al carrito en una sola línea (${agregables.length} productos).${config}`,
+            'Combo agregado',
+            { timeOut: 5000, progressBar: true, positionClass: 'toast-bottom-right' }
+          );
+        } else {
+          this.toastrService.warning(
+            `"${nombreCombo}" quedó incompleto: se agregaron por separado ${agregables.length} de ${ids.length} productos; faltan ${faltantes.join(' y ')}.${config}`,
+            'Combo incompleto',
+            avisoOpts
+          );
         }
-        if (noDisponibles > 0) {
-          mensaje += `. ${noDisponibles} producto(s) del combo ya no están disponibles y no se agregaron.`;
-        }
-        if (sinStock > 0) {
-          const enBodega = this.bodega?.nombre ? ` en ${this.bodega.nombre}` : "";
-          mensaje += `. ${sinStock} producto(s) sin existencias${enBodega} quedaron fuera.`;
-        }
-
-        this.toastrService.success(mensaje, 'Combo agregado', {
-          timeOut: 5000,
-          progressBar: true,
-          positionClass: 'toast-bottom-right'
-        });
       },
       error: (err) => {
         console.error('Error al resolver productos del combo:', err);

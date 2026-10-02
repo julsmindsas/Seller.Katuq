@@ -699,26 +699,39 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     this.maestro.getProductsByIds(ids).subscribe({
       next: (res: any) => {
         const porId = new Map<string, Producto>((res?.products || []).map((p: any) => [p.cd, p]));
-        let agregados = 0;
-        let noDisponibles = 0;
+        // Ticket 1112: el que ya no existe o está inactivo se omite (D-147). Si
+        // falta alguno, los demás entran sueltos: un combo incompleto con el
+        // nombre del combo engañaría al cliente.
+        const agregables = ids
+          .map((id) => porId.get(id))
+          .filter((p): p is Producto => !!p && (p as any)?.exposicion?.activar !== false);
+        const noDisponibles = ids.length - agregables.length;
+        if (agregables.length === 0) {
+          this.toastr.warning(
+            `No se agregó "${marca.nombre}": ninguno de sus productos está disponible.`,
+            "Combo sin productos"
+          );
+          return;
+        }
+        const completo = noDisponibles === 0;
         let configurables = 0;
-        ids.forEach((id) => {
-          const producto = porId.get(id);
-          if (!producto || (producto as any)?.exposicion?.activar === false) {
-            noDisponibles++;
-            return;
-          }
+        agregables.forEach((producto) => {
           if (this.requiereConfiguracion(producto)) configurables++;
-          this.agregarDirecto(producto, false, marca);
-          agregados++;
+          this.agregarDirecto(producto, false, completo ? marca : undefined);
         });
-        let mensaje = `Combo "${marca.nombre}" agregado en una sola línea (${agregados} producto(s)); usa "Abrir combo" si el cliente debe ver cada producto`;
-        if (noDisponibles > 0) mensaje += `. ${noDisponibles} ya no están disponibles y no se agregaron.`;
-        if (configurables > 0) mensaje += `. ${configurables} se configuran al convertirla en pedido.`;
-        if (agregados > 0) {
-          this.toastr.success(mensaje, "Combo agregado", { timeOut: 5000, positionClass: "toast-bottom-right" });
+        const config = configurables > 0 ? ` ${configurables} se configuran al convertirla en pedido.` : "";
+        if (completo) {
+          this.toastr.success(
+            `Combo "${marca.nombre}" agregado en una sola línea (${agregables.length} productos); usa "Abrir combo" si el cliente debe ver cada producto.${config}`,
+            "Combo agregado",
+            { timeOut: 5000, positionClass: "toast-bottom-right" }
+          );
         } else {
-          this.toastr.warning(mensaje, "Combo");
+          this.toastr.warning(
+            `"${marca.nombre}" quedó incompleto: se agregaron por separado ${agregables.length} de ${ids.length} productos; ${noDisponibles} ya no está(n) disponible(s).${config}`,
+            "Combo incompleto",
+            { timeOut: 7000, positionClass: "toast-bottom-right" }
+          );
         }
         this.cdr.detectChanges();
       },
