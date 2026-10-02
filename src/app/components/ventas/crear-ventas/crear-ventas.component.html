@@ -646,7 +646,33 @@
 
                   <!-- Lista de productos en el carrito -->
                   <div class="sidebar-cart-items">
-                    <div class="cart-item" *ngFor="let item of productosCarritoSidebar; let i = index">
+                    <ng-container *ngFor="let fila of filasCarritoSidebar">
+                    <!-- Ticket 1097: combo cerrado en una sola línea -->
+                    <div class="cart-item" *ngIf="esComboFilaSidebar(fila)">
+                      <div class="cart-item-image">
+                        <div class="cart-item-no-image">
+                          <i class="fa fa-cubes"></i>
+                        </div>
+                      </div>
+                      <div class="cart-item-info">
+                        <div class="cart-item-name">{{fila.combo.nombre | slice:0:30}}{{fila.combo.nombre?.length > 30 ? '...' : ''}}</div>
+                        <div class="cart-item-details">
+                          <span class="cart-item-qty">Combo · x{{fila.cantidad}}</span>
+                          <span class="cart-item-price">${{precioComboSidebar(fila) | number:'1.0-0'}}</span>
+                        </div>
+                        <button *ngIf="pendienteDelComboSidebar(fila) as pendiente" type="button"
+                          class="cart-item-config-pill" (click)="completarConfiguracionPendienteSidebar(pendiente)"
+                          title="Un producto del combo necesita configuración adicional. Click para completarla.">
+                          <i class="fa fa-exclamation-triangle"></i> Requiere configuración
+                        </button>
+                      </div>
+                      <div class="cart-item-actions">
+                        <button class="cart-item-remove" (click)="eliminarComboSidebar(fila)" title="Quitar el combo">
+                          <i class="fa fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="cart-item" *ngIf="!esComboFilaSidebar(fila) && fila.item as item">
                       <div class="cart-item-image">
                         <img [src]="item?.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls | imagenProducto: 'assets/images/placeholder.png'"
                              [alt]="item?.producto?.crearProducto?.titulo"
@@ -680,6 +706,7 @@
                         </button>
                       </div>
                     </div>
+                    </ng-container>
                   </div>
 
                   <!-- Total del carrito -->

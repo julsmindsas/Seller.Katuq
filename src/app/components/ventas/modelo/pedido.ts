@@ -4,6 +4,7 @@ import {
 } from "../../../shared/models/productos/Producto";
 import { UserLite } from "../../../shared/models/User/UserLite";
 import { PagoInformation } from "../../pos/pos-modelo/pedido";
+import { ComboLinea } from "../../../shared/utils/combo-lineas";
 
 export interface DescuentoAplicado {
   descuentoId: string;
@@ -363,6 +364,8 @@ export interface Carrito {
   _precioManualTemp?: any;
   /** Descuento opcional por línea (porcentaje 0–100). Usado en cotizaciones. */
   descuentoLinea?: number;
+  /** Ticket 1097: la línea entró por un combo; si está cerrado se ve junto con los demás productos del combo. */
+  combo?: ComboLinea;
 }
 
 export interface Facturacion {

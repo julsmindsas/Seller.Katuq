@@ -30,6 +30,17 @@ import { LeadToSalesService } from "../../crm/services/lead-to-sales.service";
 import { resolverPrecioLinea } from "../../../shared/services/ventas/iva-canonico";
 import { environment } from "../../../../environments/environment";
 import { urlImagenAbsoluta } from "../../../shared/utils/imagen-producto";
+import {
+  ComboLinea,
+  FilaAgrupada,
+  FilaCombo,
+  agruparLineasCombo,
+  comboDeLinea,
+  iniciaComboAbierto,
+  lineasDelGrupo,
+  nuevoGrupoCombo,
+  valorComun,
+} from "../../../shared/utils/combo-lineas";
 
 /**
  * Una lista de precios por tipo de cliente, resuelta para una línea concreta.
@@ -663,10 +674,13 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Ticket 1086: agrega un combo desglosado, una línea por producto con el precio
-   * del tipo de cliente de la cotización. Un combo no tiene precio propio (D-147).
+   * Ticket 1086: agrega un combo, una línea por producto con el precio del tipo
+   * de cliente de la cotización. Un combo no tiene precio propio (D-147).
    * Los productos se resuelven por id porque el buscador es paginado. Sin control
    * de stock: una cotización no reserva existencias.
+   *
+   * Ticket 1097: las líneas llevan la marca del combo y entran cerradas, así que
+   * la cotización lo muestra en una sola fila hasta que el comercial lo abra.
    */
   agregarCombo(combo: any): void {
     const ids: string[] = (combo?.productos || []).map((p: any) => p?.productoId).filter((id: any) => !!id);
@@ -677,6 +691,11 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       this.toastr.warning(`El combo "${combo?.nombre || ""}" no tiene productos.`, "Combo vacío");
       return;
     }
+    const marca = {
+      id: String(combo?.id || ""),
+      nombre: String(combo?.nombre || "Combo").trim() || "Combo",
+      grupo: nuevoGrupoCombo(String(combo?.id || "")),
+    };
     this.maestro.getProductsByIds(ids).subscribe({
       next: (res: any) => {
         const porId = new Map<string, Producto>((res?.products || []).map((p: any) => [p.cd, p]));
@@ -690,10 +709,10 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
             return;
           }
           if (this.requiereConfiguracion(producto)) configurables++;
-          this.agregarDirecto(producto, false);
+          this.agregarDirecto(producto, false, marca);
           agregados++;
         });
-        let mensaje = `${agregados} producto(s) de "${combo?.nombre || "Combo"}" agregados a la cotización`;
+        let mensaje = `Combo "${marca.nombre}" agregado en una sola línea (${agregados} producto(s)); usa "Abrir combo" si el cliente debe ver cada producto`;
         if (noDisponibles > 0) mensaje += `. ${noDisponibles} ya no están disponibles y no se agregaron.`;
         if (configurables > 0) mensaje += `. ${configurables} se configuran al convertirla en pedido.`;
         if (agregados > 0) {
@@ -796,8 +815,15 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     );
   }
 
-  /** Línea directa (sin popup) para productos que no requieren configuración. */
-  private agregarDirecto(producto: Producto, mostrarToast = true): void {
+  /**
+   * Línea directa (sin popup) para productos que no requieren configuración.
+   * `combo` (ticket 1097): la línea entra marcada como parte de ese combo, cerrado.
+   */
+  private agregarDirecto(
+    producto: Producto,
+    mostrarToast = true,
+    combo?: { id: string; nombre: string; grupo: string }
+  ): void {
     const productoConPrecio = this.aplicarPrecioCategoria(producto);
     const cantidadMinima = (producto as any)?.disponibilidad?.cantidadMinVenta || 1;
     const hoy = new Date();
@@ -827,6 +853,9 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       } as any,
       cantidad: cantidadMinima,
     };
+    if (combo) {
+      linea.combo = { ...combo, cantidadPorCombo: cantidadMinima, abierto: false };
+    }
     this.cotizacion.items = [...this.cotizacion.items, linea];
     if (!mostrarToast) return;
     this.toastr.success(
@@ -892,6 +921,148 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     const n = Math.max(1, Math.floor(Number(value) || 1));
     item.cantidad = n;
     if (item.configuracion) (item.configuracion as any).cantidad = n;
+  }
+
+  // ---- Ticket 1097: combos en una sola línea ----
+  // El editor y el documento pintan `filas`: un combo cerrado es UNA fila que
+  // suma sus productos; abierto, cada producto vuelve a su fila. Los totales de
+  // la cotización no cambian: siguen saliendo de las líneas (D-147).
+
+  private filasMemo: { items: Carrito[]; firma: string; filas: FilaAgrupada<Carrito>[] } | null = null;
+
+  /** Filas de la cotización. Se recalculan solo si cambian las líneas o se abre/cierra un combo. */
+  get filas(): FilaAgrupada<Carrito>[] {
+    const items = this.cotizacion?.items || [];
+    const firma = items
+      .map((it) => {
+        const c = comboDeLinea(it);
+        return c ? `${c.grupo}:${c.abierto ? 1 : 0}` : "-";
+      })
+      .join("|");
+    if (!this.filasMemo || this.filasMemo.items !== items || this.filasMemo.firma !== firma) {
+      this.filasMemo = { items, firma, filas: agruparLineasCombo(items) };
+    }
+    return this.filasMemo.filas;
+  }
+
+  /** Productos sueltos que ve el cliente (las líneas de un combo cerrado no salen por separado). */
+  get lineasVisibles(): Carrito[] {
+    return this.filas.filter((f) => f.tipo === "linea").map((f) => (f as any).item as Carrito);
+  }
+
+  /** Mantiene la misma fila en pantalla mientras se escribe (no pierde el foco). */
+  trackFila(_i: number, fila: FilaAgrupada<Carrito>): any {
+    return fila.tipo === "combo" ? `combo:${fila.combo.grupo}` : fila.item;
+  }
+
+  esComboFila(fila: FilaAgrupada<Carrito>): fila is FilaCombo<Carrito> {
+    return fila.tipo === "combo";
+  }
+
+  /** Encabezado "Combo … · Cerrar combo" antes del primer producto de un combo abierto. */
+  iniciaComboAbierto(indice: number): boolean {
+    return iniciaComboAbierto(this.cotizacion.items || [], indice);
+  }
+
+  comboDe(item: Carrito): ComboLinea | null {
+    return comboDeLinea(item);
+  }
+
+  productosDelCombo(grupo: string): number {
+    return lineasDelGrupo(this.cotizacion.items || [], grupo);
+  }
+
+  private marcarCombo(grupo: string, abierto: boolean): void {
+    this.cotizacion.items = (this.cotizacion.items || []).map((it) => {
+      const c = comboDeLinea(it);
+      if (!c || c.grupo !== grupo) return it;
+      it.combo = { ...c, abierto };
+      return it;
+    });
+  }
+
+  /** El comercial abre el combo: cada producto se edita y se ve por separado. */
+  abrirCombo(grupo: string): void {
+    this.marcarCombo(grupo, true);
+  }
+
+  /** Vuelve a mostrar el combo en una sola línea. */
+  cerrarCombo(grupo: string): void {
+    this.marcarCombo(grupo, false);
+  }
+
+  eliminarCombo(fila: FilaCombo<Carrito>): void {
+    const grupo = fila.combo.grupo;
+    this.cotizacion.items = (this.cotizacion.items || []).filter(
+      (it) => comboDeLinea(it)?.grupo !== grupo
+    );
+  }
+
+  /** Cantidad de combos: cada producto queda en sus unidades por combo × la cantidad. */
+  setCantidadCombo(fila: FilaCombo<Carrito>, value: any): void {
+    const k = Math.max(1, Math.floor(Number(value) || 1));
+    fila.lineas.forEach((l) => {
+      const base = Number(comboDeLinea(l)?.cantidadPorCombo) || 1;
+      this.setCantidad(l, base * k);
+    });
+    fila.cantidad = k;
+  }
+
+  /** El descuento del combo se aplica igual a cada producto. */
+  onDescComboChange(fila: FilaCombo<Carrito>, value: any): void {
+    fila.lineas.forEach((l) => this.onDescLineaChange(l, value));
+  }
+
+  /** % de descuento del combo si todos sus productos llevan el mismo; null si varían. */
+  descComboPct(fila: FilaCombo<Carrito>): number | null {
+    return valorComun(fila.lineas.map((l) => this.descLineaPct(l)));
+  }
+
+  /** % de IVA del combo si todos sus productos llevan el mismo; null = "Varios". */
+  ivaCombo(fila: FilaCombo<Carrito>): number | null {
+    return valorComun(fila.lineas.map((l) => Number(this.getIvaActual(l)) || 0));
+  }
+
+  /** Valor por combo: suma de (valor unitario × unidades) de sus productos ÷ cantidad de combos. */
+  private porCombo(fila: FilaCombo<Carrito>, valorUnitario: (l: Carrito) => number): number {
+    const total = fila.lineas.reduce((acc, l) => acc + valorUnitario(l) * (Number(l?.cantidad) || 0), 0);
+    return total / (fila.cantidad || 1);
+  }
+
+  comboPrecio(fila: FilaCombo<Carrito>): number {
+    return this.porCombo(fila, (l) => this.itemPrecio(l));
+  }
+
+  comboValorBruto(fila: FilaCombo<Carrito>): number {
+    return this.porCombo(fila, (l) => this.getValorBruto(l));
+  }
+
+  comboDescuentoUnitario(fila: FilaCombo<Carrito>): number {
+    return this.porCombo(fila, (l) => this.getDescuentoUnitario(l));
+  }
+
+  comboPrecioSinIvaNeto(fila: FilaCombo<Carrito>): number {
+    return this.porCombo(fila, (l) => this.getPrecioSinIvaNeto(l));
+  }
+
+  comboValorIvaNeto(fila: FilaCombo<Carrito>): number {
+    return this.porCombo(fila, (l) => this.getValorIvaNeto(l));
+  }
+
+  comboPrecioTotalConIvaNeto(fila: FilaCombo<Carrito>): number {
+    return this.porCombo(fila, (l) => this.getPrecioTotalConIvaNeto(l));
+  }
+
+  comboSubtotal(fila: FilaCombo<Carrito>): number {
+    return fila.lineas.reduce((acc, l) => acc + this.itemSubtotal(l), 0);
+  }
+
+  comboSubtotalBruto(fila: FilaCombo<Carrito>): number {
+    return fila.lineas.reduce((acc, l) => acc + this.itemSubtotalBruto(l), 0);
+  }
+
+  comboTieneDescuento(fila: FilaCombo<Carrito>): boolean {
+    return fila.lineas.some((l) => this.descLineaPct(l) > 0);
   }
 
   // ---- Helpers de presentación de producto / línea ----
@@ -1292,11 +1463,12 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return this.segmentosDeLinea(item).sugeridos;
   }
 
-  /** Hay algo que anexar: al menos una línea con listas para sugerir. */
+  /**
+   * Hay algo que anexar: al menos una línea con listas para sugerir. Ticket 1097:
+   * los productos de un combo cerrado no van al anexo, sería desglosarlo por la puerta de atrás.
+   */
   get hayPreciosSugeridos(): boolean {
-    return (this.cotizacion?.items || []).some(
-      (it) => this.preciosSugeridos(it).length > 0
-    );
+    return this.lineasVisibles.some((it) => this.preciosSugeridos(it).length > 0);
   }
 
   /**
@@ -1664,7 +1836,8 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   private async preloadItemImagesForPdf(): Promise<void> {
     const urls = Array.from(
       new Set(
-        (this.cotizacion.items || [])
+        // Ticket 1097: un combo cerrado sale sin fotos de sus productos.
+        this.lineasVisibles
           .map((it) => this.itemImagenAbsoluta(it))
           // Solo remotas: un `assets/...` local html2canvas ya lo rasteriza sin
           // ayuda, y mandarlo al proxy solo saca un 400 (no es una URL absoluta).

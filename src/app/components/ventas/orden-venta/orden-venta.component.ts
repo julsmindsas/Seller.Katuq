@@ -7,6 +7,7 @@ import { SecurityService } from "../../../shared/services/security/security.serv
 import { CotizacionesService } from "../../cotizaciones/cotizaciones.service";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
+import { FilaAgrupada, FilaCombo, agruparLineasCombo, valorComun } from "../../../shared/utils/combo-lineas";
 
 @Component({
   selector: "app-orden-venta",
@@ -140,6 +141,36 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
   calcularTotalProducto(item: any): number {
     const cantidad = item.cantidad || 0;
     return cantidad * this.getPrecioUnitario(item);
+  }
+
+  // ---- Ticket 1097: un combo cerrado sale en una sola fila ----
+  // El pedido sigue teniendo una línea por producto (inventario y SIIGO); aquí
+  // solo se juntan para el cliente, salvo que el vendedor haya abierto el combo.
+  private filasMemo: { carrito: any[]; filas: FilaAgrupada<any>[] } | null = null;
+
+  get filas(): FilaAgrupada<any>[] {
+    const carrito = this.pedido?.carrito || [];
+    if (!this.filasMemo || this.filasMemo.carrito !== carrito) {
+      this.filasMemo = { carrito, filas: agruparLineasCombo(carrito) };
+    }
+    return this.filasMemo.filas;
+  }
+
+  esComboFila(fila: FilaAgrupada<any>): fila is FilaCombo<any> {
+    return fila.tipo === "combo";
+  }
+
+  comboTotal(fila: FilaCombo<any>): number {
+    return fila.lineas.reduce((acc, l) => acc + this.calcularTotalProducto(l), 0);
+  }
+
+  comboPrecioUnitario(fila: FilaCombo<any>): number {
+    return this.comboTotal(fila) / (fila.cantidad || 1);
+  }
+
+  /** % de descuento del combo si todos sus productos llevan el mismo (0 si varía o no hay). */
+  comboDescPct(fila: FilaCombo<any>): number {
+    return valorComun(fila.lineas.map((l) => this.descLineaPct(l))) || 0;
   }
 
   /**

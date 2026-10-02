@@ -69,6 +69,8 @@
           <tr *ngFor="let it of cot.items">
             <td>
               {{ it.titulo }}
+              <!-- Ticket 1097: un combo cerrado llega ya sumado en una sola fila -->
+              <span class="cp-combo" *ngIf="it.esCombo">· Combo</span>
               <!-- Ticket 1095: detalle escrito para esta cotización -->
               <div class="cp-detalle" *ngIf="it.descripcion">{{ it.descripcion }}</div>
             </td>
@@ -76,7 +78,7 @@
             <td class="cp-r">{{ money(it.valorBruto) }}</td>
             <td class="cp-r">{{ it.descuentoPct > 0 ? money(it.descuentoUnitario) : '—' }}</td>
             <td class="cp-r">{{ money(it.precioUnitarioSinIva) }}</td>
-            <td class="cp-r">{{ it.porcentajeIva }}%</td>
+            <td class="cp-r">{{ it.porcentajeIva === null ? 'Varios' : it.porcentajeIva + '%' }}</td>
             <td class="cp-r">{{ money(it.valorIva) }}</td>
             <td class="cp-r">{{ money(it.precioUnitarioConIva) }}</td>
             <td class="cp-r">{{ money(it.subtotal) }}</td>

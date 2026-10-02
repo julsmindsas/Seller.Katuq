@@ -198,6 +198,9 @@ export class CotizacionConvertService {
         // (el cliente aceptaba un precio con descuento y el pedido facturaba el
         // precio lleno). El vendedor sigue pudiendo editarlo en el carrito.
         descuentoLinea: item.descuentoLinea,
+        // Ticket 1097: el combo llega al pedido como estaba en la cotización
+        // (en una sola línea o abierto) y así sale en sus documentos.
+        combo: item.combo,
       };
     });
 

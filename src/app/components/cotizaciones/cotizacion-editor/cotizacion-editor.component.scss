@@ -1587,3 +1587,81 @@
   .cot-check.disabled { opacity: .55; pointer-events: none; }
 }
 .doc-anexo a { color: #5F3FE0; font-weight: 600; }
+
+// Ticket 1097: combo en una sola línea (cerrado) y su encabezado cuando se abre.
+// Tema "Todos los pedidos": acento #5F3FE0, superficie lila, plano.
+.cot-line-row.cot-line-combo {
+  background: #F6F4FC;
+
+  .cl-combo-ic {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    border: 1px solid #E6E2F5;
+    background: #fff;
+    color: #5F3FE0;
+  }
+
+  .cl-combo-iva {
+    font-size: 11px;
+    color: #6B6785;
+    white-space: nowrap;
+  }
+}
+
+.cl-combo-tag {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #EEE9FD;
+  color: #5F3FE0;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cl-combo-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid #D9D2F7;
+  background: #fff;
+  color: #5F3FE0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: #EEE9FD; }
+}
+
+.cot-combo-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-top: 1px solid #E6E2F5;
+  background: #F6F4FC;
+  color: #211F3A;
+  font-size: 13px;
+
+  .cot-combo-head-sub { color: #6B6785; }
+  .cl-combo-btn { margin-top: 0; margin-left: auto; }
+}
+
+// Productos de un combo abierto: tinte suave, sin borde de acento (D-131).
+.cot-line-row.cot-line-en-combo {
+  background: #FBFAFE;
+}
+
+.cot-doc .doc-tbl .doc-row-combo .doc-ref {
+  color: #5F3FE0;
+  font-weight: 600;
+}

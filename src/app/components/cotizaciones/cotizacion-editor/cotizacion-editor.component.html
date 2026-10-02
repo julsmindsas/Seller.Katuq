@@ -195,7 +195,7 @@
           <div class="cot-suggestions" *ngIf="productoTerm && productoTerm.length >= 2">
             <div class="cot-sugg-loading" *ngIf="buscandoProducto">Buscando…</div>
             <ng-container *ngIf="!buscandoProducto">
-              <!-- Ticket 1086: combos (colección aparte, D-147), se agregan desglosados -->
+              <!-- Ticket 1086: combos (colección aparte, D-147). Ticket 1097: entran en una sola línea -->
               <button
                 type="button"
                 class="cot-sugg-item cot-sugg-prod"
@@ -205,7 +205,7 @@
                 <span class="cot-sugg-txt">
                   <span class="cot-sugg-name">{{ c.nombre }}</span>
                   <span class="cot-sugg-sub">
-                    {{ c.productos?.length || 0 }} producto(s) · se agregan con su precio
+                    {{ c.productos?.length || 0 }} producto(s) · en una sola línea, con su precio
                     <span class="cot-sugg-tag">combo</span>
                   </span>
                 </span>
@@ -263,7 +263,91 @@
             <span class="cl-sub">Subtotal</span>
             <span class="cl-acc"></span>
           </div>
-          <div class="cot-line-row" *ngFor="let item of cotizacion.items; let i = index">
+          <ng-container *ngFor="let fila of filas; trackBy: trackFila">
+          <!-- Ticket 1097: combo cerrado = una sola línea con la suma de sus productos.
+               Por dentro siguen siendo líneas por producto (inventario y SIIGO). -->
+          <div class="cot-line-row cot-line-combo" *ngIf="esComboFila(fila)">
+            <span class="cl-prod">
+              <span class="cl-combo-ic" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              </span>
+              <span class="cl-prod-txt">
+                <span class="cl-titulo">{{ fila.combo.nombre }}</span>
+                <span class="cl-ref">
+                  <span class="cl-combo-tag">combo</span>
+                  {{ fila.lineas.length }} producto(s) en una sola línea
+                </span>
+                <button type="button" class="cl-combo-btn" (click)="abrirCombo(fila.combo.grupo)"
+                        title="El cliente verá cada producto del combo por separado">
+                  Abrir combo
+                </button>
+              </span>
+            </span>
+            <span class="cl-cant">
+              <input
+                type="number"
+                min="1"
+                class="form-control form-control-sm"
+                [value]="fila.cantidad"
+                (change)="setCantidadCombo(fila, $any($event.target).value)"
+                title="Cantidad de combos"
+              />
+            </span>
+            <span class="cl-precio">
+              <div class="cl-price-edit">
+                <div class="cl-price-row">
+                  <span class="cl-price-value">{{ comboPrecio(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+                  <span class="cl-combo-iva">IVA {{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'varios' }}</span>
+                </div>
+              </div>
+              <div class="cl-desc-linea">
+                <label>Desc.</label>
+                <div class="cl-desc-input">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    class="form-control form-control-sm"
+                    [ngModel]="descComboPct(fila) || null"
+                    (ngModelChange)="onDescComboChange(fila, $event)"
+                    [placeholder]="descComboPct(fila) === null ? 'varios' : '0'"
+                  />
+                  <span class="cl-desc-pct">%</span>
+                </div>
+              </div>
+            </span>
+            <span class="cl-bruto">{{ comboValorBruto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-desc-monto">
+              {{ comboTieneDescuento(fila) ? (comboDescuentoUnitario(fila) | currency:'COP':'symbol-narrow':digitosValorFijo) : '—' }}
+            </span>
+            <span class="cl-sin-iva">{{ comboPrecioSinIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-pct-iva">{{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'Varios' }}</span>
+            <span class="cl-valor-iva">{{ comboValorIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-total-iva">{{ comboPrecioTotalConIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValorFijo }}</span>
+            <span class="cl-sub">
+              <span class="cl-sub-net">{{ comboSubtotal(fila) | currency:'COP':'symbol-narrow':digitosValor }}</span>
+              <s class="cl-sub-orig" *ngIf="comboTieneDescuento(fila)">
+                {{ comboSubtotalBruto(fila) | currency:'COP':'symbol-narrow':digitosValor }}
+              </s>
+            </span>
+            <span class="cl-acc">
+              <button type="button" class="cot-del" (click)="eliminarCombo(fila)" title="Quitar el combo">
+                🗑
+              </button>
+            </span>
+          </div>
+          <ng-container *ngIf="!esComboFila(fila)">
+          <!-- Ticket 1097: combo abierto — encabezado para volver a juntarlo -->
+          <div class="cot-combo-head" *ngIf="iniciaComboAbierto(fila.indice)">
+            <span class="cl-combo-tag">combo</span>
+            <strong>{{ comboDe(fila.item)?.nombre }}</strong>
+            <span class="cot-combo-head-sub">· {{ productosDelCombo(comboDe(fila.item)?.grupo || '') }} producto(s), el cliente los ve por separado</span>
+            <button type="button" class="cl-combo-btn" (click)="cerrarCombo(comboDe(fila.item)?.grupo || '')">
+              Cerrar combo
+            </button>
+          </div>
+          <div class="cot-line-row" [class.cot-line-en-combo]="!!comboDe(fila.item)" *ngIf="fila.item as item">
             <span class="cl-prod">
               <ng-container *ngIf="!itemEsLibre(item)">
                 <!-- Foto + texto. La foto la resuelve el pipe (rutas relativas de
@@ -403,11 +487,13 @@
               </s>
             </span>
             <span class="cl-acc">
-              <button type="button" class="cot-del" (click)="eliminarItem(i)" title="Eliminar">
+              <button type="button" class="cot-del" (click)="eliminarItem(fila.indice)" title="Eliminar">
                 🗑
               </button>
             </span>
           </div>
+          </ng-container>
+          </ng-container>
         </div>
       </section>
 
@@ -504,7 +590,8 @@
           <strong>{{ total | currency:'COP':'symbol-narrow':digitosValor }}</strong>
         </div>
         <p class="sum-foot">
-          {{ cotizacion.items.length }} ítem(s)
+          <!-- Ticket 1097: un combo cerrado cuenta como un ítem, como lo ve el cliente -->
+          {{ filas.length }} ítem(s)
           <ng-container *ngIf="fechaVencimiento"> · válida hasta {{ fechaVencimiento }}</ng-container>
         </p>
       </div>
@@ -600,7 +687,27 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let it of cotizacion.items">
+          <ng-container *ngFor="let fila of filas; trackBy: trackFila">
+          <!-- Ticket 1097: el combo cerrado sale en una sola fila, sin sus productos -->
+          <tr *ngIf="esComboFila(fila)" class="doc-row-combo">
+            <td>
+              <div class="doc-prod">
+                <span class="doc-prod-txt">
+                  {{ fila.combo.nombre }}
+                  <span class="doc-ref"> · Combo</span>
+                </span>
+              </div>
+            </td>
+            <td>{{ fila.cantidad }}</td>
+            <td>{{ comboValorBruto(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ comboTieneDescuento(fila) ? (comboDescuentoUnitario(fila) | currency:'COP':'symbol-narrow':digitosValor) : '—' }}</td>
+            <td>{{ comboPrecioSinIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'Varios' }}</td>
+            <td>{{ comboValorIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ comboPrecioTotalConIvaNeto(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+            <td>{{ comboSubtotal(fila) | currency:'COP':'symbol-narrow':digitosValor }}</td>
+          </tr>
+          <tr *ngIf="!esComboFila(fila) && fila.item as it">
             <td>
               <!-- Foto + texto, la misma que ve el vendedor en el editor. El `src`
                    sale de `itemImagenDoc`, que devuelve el data URL precargado: la
@@ -638,6 +745,7 @@
             <td>{{ getPrecioTotalConIvaNeto(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
             <td>{{ itemSubtotal(it) | currency:'COP':'symbol-narrow':digitosValor }}</td>
           </tr>
+          </ng-container>
         </tbody>
       </table>
 
@@ -665,7 +773,8 @@
         <div class="doc-sug-nota">
           Valores unitarios con IVA, de referencia. El precio facturado es el de la tabla anterior.
         </div>
-        <ng-container *ngFor="let it of cotizacion.items">
+        <!-- Ticket 1097: sin los productos de un combo cerrado -->
+        <ng-container *ngFor="let it of lineasVisibles">
           <!-- Cada producto es un bloque completo: `break-inside: avoid` para
                que el PDF no parta el título de sus precios. -->
           <div class="doc-sug-prod" *ngIf="preciosSugeridos(it).length">

@@ -26,6 +26,7 @@ import {
   descuentoVigente,
 } from "../../utils/precio-por-tipo-cliente";
 import { AuthService } from "../firebase/auth.service";
+import { FilaCombo, agruparLineasCombo, comboDeLinea, valorComun } from "../../utils/combo-lineas";
 
 declare var WidgetCheckout: any;
 
@@ -173,6 +174,45 @@ export class PaymentService extends BaseService {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join(""); // "37c8407747e595535433ef8f6a811d853cd943046624a0ec04662b17bbf33bf5"
     return hashHex;
+  }
+
+  /**
+   * Ticket 1097: fila de un combo cerrado en el correo/PDF del pedido. Mismo
+   * diseño que la fila de un producto, con el nombre del combo, cuántos combos
+   * son y la suma de lo que cobran sus productos.
+   */
+  private filaComboDocumento(fila: FilaCombo<any>, total: number, styles: any): string {
+    const nombre = String(fila.combo?.nombre || "Combo")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+    const desc = valorComun(
+      fila.lineas.map((l: any) => Math.round(Math.min(100, Math.max(0, Number(l?.descuentoLinea) || 0))))
+    );
+    const badge = desc && desc > 0
+      ? ` <span style="display: inline-block; margin-left: 6px; padding: 2px 6px; border-radius: 10px; background-color: #E6F4EA; color: #0B8A4B; font-weight: 700; font-size: 11px;">-${desc}%</span>`
+      : "";
+    return `
+          <tr style="background-color: ${styles.colors.grayLight};">
+            <th style="padding: ${styles.spacing.md}; text-align: left; font-size: ${styles.typography.bodySmall}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.gray};">Producto</th>
+            <th style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.gray};">Total</th>
+          </tr>
+          <tr style="border-bottom: 1px solid ${styles.colors.divider};">
+            <td style="padding: ${styles.spacing.lg} ${styles.spacing.md};">
+              <div style="display: inline-block; vertical-align: middle;">
+                <div style="font-size: ${styles.typography.body}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold}; line-height: 1.4;">
+                  ${nombre}
+                </div>
+                <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; margin-top: ${styles.spacing.xs}; line-height: 1.4;">
+                  Combo • Cantidad: ${fila.cantidad}${badge}
+                </div>
+              </div>
+            </td>
+            <td style="padding: ${styles.spacing.lg} ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.body}; color: ${styles.colors.black};">
+              ${this.formatCurrency(total)} COP
+            </td>
+          </tr>`;
   }
 
   // Cambiado a COP y locale 'es-CO' para consistencia
@@ -1336,6 +1376,22 @@ export class PaymentService extends BaseService {
 
     let productoIndex = 0; // Contador de productos para encabezados
 
+    // Ticket 1097: en el documento del cliente (no en la comanda, que es para
+    // producción) un combo cerrado sale en UNA fila con la suma de sus productos.
+    // Sus líneas dejan una marca donde iba el primero y al final se cambia por la fila.
+    const combosCerrados = new Map<string, { fila: FilaCombo<any>; total: number; marca: string; pintado: boolean }>();
+    if (!isComanda) {
+      agruparLineasCombo(pedido.carrito ?? []).forEach((f) => {
+        if (f.tipo !== "combo") return;
+        combosCerrados.set(f.combo.grupo, {
+          fila: f,
+          total: 0,
+          marca: `<!--katuq-combo-${combosCerrados.size}-->`,
+          pintado: false,
+        });
+      });
+    }
+
     (pedido.carrito ?? []).forEach((item) => {
       productoIndex++;
       const producto = item?.producto;
@@ -1701,6 +1757,15 @@ export class PaymentService extends BaseService {
 
       } else {
         // ========== MODO EMAIL: Diseño Uber/Nubank (SIN CAMBIOS) ==========
+        // Ticket 1097: un producto de combo cerrado no lleva fila propia, suma al combo.
+        const comboCerrado = combosCerrados.get(comboDeLinea(item)?.grupo || "");
+        if (comboCerrado) {
+          comboCerrado.total += totalDisplayProducto;
+          if (!comboCerrado.pintado) {
+            comboCerrado.pintado = true;
+            carritoHtml += comboCerrado.marca;
+          }
+        } else {
         carritoHtml += `
           <tr style="background-color: ${styles.colors.grayLight};">
             <th style="padding: ${styles.spacing.md}; text-align: left; font-size: ${styles.typography.bodySmall}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.gray};">Producto</th>
@@ -1730,6 +1795,7 @@ export class PaymentService extends BaseService {
             </tr>
           ` : ""}
         `;
+        }
 
         // Preferencias estilo Nubank/Uber
         if (
@@ -1967,6 +2033,11 @@ export class PaymentService extends BaseService {
       }
       // carritoHtml += `<tr><td colspan="8" style="border-bottom: 2px solid #ccc; padding: 5px 0;"></td></tr>`; // Separador visual - ELIMINADO para diseño más limpio
     }); // Fin forEach carrito
+
+    // Ticket 1097: cada combo cerrado ocupa el lugar de su primer producto.
+    combosCerrados.forEach((c) => {
+      carritoHtml = carritoHtml.replace(c.marca, this.filaComboDocumento(c.fila, c.total, styles));
+    });
 
     // Cerrar tabla para modo comanda (DESPUÉS del forEach)
     if (isComanda) {

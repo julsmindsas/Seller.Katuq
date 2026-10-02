@@ -14,7 +14,10 @@ export interface CotizacionPublicaItem {
   descuentoPct: number;
   descuentoUnitario: number;
   precioUnitarioSinIva: number;
-  porcentajeIva: number;
+  /** null en un combo cuyos productos tienen tarifas distintas ("Varios"). */
+  porcentajeIva: number | null;
+  /** Ticket 1097: fila de un combo cerrado (ya trae la suma de sus productos). */
+  esCombo?: boolean;
   valorIva: number;
   precioUnitarioConIva: number;
   subtotal: number;

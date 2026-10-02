@@ -34,6 +34,7 @@ import { InventarioService } from "../../../../shared/services/inventarios/inven
 import { CartSingletonService } from "../../../../shared/services/ventas/cart.singleton.service";
 import { ToastrService } from "ngx-toastr";
 import { aplicarPrecioDeLista, filaDeTipoCliente, descuentoVigente, precioEfectivoDeFila } from '../../../../shared/utils/precio-por-tipo-cliente';
+import { nuevoGrupoCombo } from '../../../../shared/utils/combo-lineas';
 
 @Component({
   selector: "app-ecomerce-products",
@@ -1744,7 +1745,12 @@ export class EcomerceProductsComponent
    */
   private agregarProductoAlCarritoInterno(
     producto: Producto,
-    opts: { requiereConfiguracionPendiente?: boolean; mostrarToast?: boolean } = {}
+    opts: {
+      requiereConfiguracionPendiente?: boolean;
+      mostrarToast?: boolean;
+      /** Ticket 1097: la línea entra como parte de este combo, cerrado (una sola fila). */
+      combo?: { id: string; nombre: string; grupo: string };
+    } = {}
   ): boolean {
     const mostrarToast = opts.mostrarToast !== false;
 
@@ -1809,6 +1815,9 @@ export class EcomerceProductsComponent
     };
     if (opts.requiereConfiguracionPendiente) {
       productoCompra._requiereConfiguracionPendiente = true;
+    }
+    if (opts.combo) {
+      productoCompra.combo = { ...opts.combo, cantidadPorCombo: cantidadMinima, abierto: false };
     }
 
     // 6. Agregar al carrito - DIFERENCIADO POR MODO
@@ -1905,6 +1914,15 @@ export class EcomerceProductsComponent
       return;
     }
 
+    // Ticket 1097: las líneas del combo quedan marcadas para verse en una sola
+    // fila (el carrito y los documentos del pedido); cada producto sigue siendo
+    // su propia línea para inventario y SIIGO.
+    const marcaCombo = {
+      id: String(combo?.id || ''),
+      nombre: String(combo?.nombre || 'Combo').trim() || 'Combo',
+      grupo: nuevoGrupoCombo(String(combo?.id || '')),
+    };
+
     this.maestroService.getProductsByIds(ids).subscribe({
       next: (res: any) => {
         // Los productos del combo se resuelven por ID y llegan con el stock
@@ -1930,7 +1948,8 @@ export class EcomerceProductsComponent
           const requiereConfig = this.requiereConfiguracion(producto);
           const agregado = this.agregarProductoAlCarritoInterno(producto, {
             requiereConfiguracionPendiente: requiereConfig,
-            mostrarToast: false
+            mostrarToast: false,
+            combo: marcaCombo
           });
           if (!agregado) {
             sinStock++;
@@ -1944,7 +1963,7 @@ export class EcomerceProductsComponent
 
         // Toast único de resumen (no uno por producto del combo).
         const nombreCombo = combo?.nombre || 'Combo';
-        let mensaje = `${agregados} producto(s) de "${nombreCombo}" agregados al carrito`;
+        let mensaje = `Combo "${nombreCombo}" agregado al carrito en una sola línea (${agregados} producto(s))`;
         if (pendientesConfig > 0) {
           mensaje += ` (${pendientesConfig} requiere${pendientesConfig > 1 ? 'n' : ''} configuración — revisa el carrito)`;
         }

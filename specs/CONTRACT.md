@@ -7818,3 +7818,16 @@ El 29-sep estaban rotas las dos:
 - Solo afecta la campana: no envía correos, SMS ni WhatsApp a clientes.
 - Empiezan a llegar también las alertas de stock bajo y de producto agotado. Cada usuario las apaga en Preferencias, y cada empresa puede apagar tipos con `company_notification_preferences.in_app_notifications`.
 - Verificado: a las 21:13:27 UTC la campana de ALMARA recibió su primer `PAYMENT_APPROVED`. La de Bombas queda confirmada con su próximo movimiento de pedido.
+
+## D-339 (2026-10-02) — Un combo se ve en una sola línea y el comercial decide si lo abre (ticket 1097, EN DESARROLLO)
+
+**Contexto.** ALMACEN BOMBAS (Laura, ticket 1097): al elegir un combo en la cotización o en el pedido, Katuq lo desglosaba en sus productos (D-147, y el buscador de cotizaciones del ticket 1086). Bombas pide que el combo no se desglose necesariamente y que el comercial decida si lo abre: "el combo es más un tema para contabilidad e inventario". Su combo activo, ENSAMBLE MONOBLOQUE 5BF MOTOR 10HP 2P 3F, tiene 3 productos.
+
+**Decisión** (Daniel pidió hacerlo el 1-oct y cerrar los tickets de Bombas el 2-oct). Se agrupa en la presentación, no en los datos:
+- Cada línea que entra por un combo lleva `combo: { id, nombre, grupo, cantidadPorCombo, abierto }`. El pedido y la cotización siguen guardando una línea por producto, con su precio, su IVA y su descuento. **Inventario descuenta cada producto y SIIGO factura cada producto, igual que antes**: no se tocaron `inventoryService.js`, `orderCalculationService.js` ni la facturación.
+- Cerrado (por defecto) se ve como UNA fila, con la suma de sus productos, en: el editor de cotizaciones, su vista previa/PDF, el enlace público `/c/:token` (backend `_vistaPublicaCotizacion`), el carrito de la venta asistida, la orden de venta y el PDF/correo del pedido. La comanda (producción) sigue mostrando cada producto.
+- En la fila cerrada se cambia la cantidad de combos (cada producto queda en `cantidadPorCombo × combos`) y un descuento que se aplica igual a todos sus productos. El IVA sale como un % si todos coinciden; si no, "Varios".
+- "Abrir combo" muestra cada producto (en pantalla y en los documentos) y deja editarlo como antes; "Cerrar combo" lo vuelve a juntar. Abierto o cerrado viaja de la cotización al pedido al convertirla.
+- El anexo de precios sugeridos de la cotización no lista los productos de un combo cerrado.
+- Utilidad común `src/app/shared/utils/combo-lineas.ts` (+ spec). Backend: `controllers/cotizaciones.js` (`_agruparCombosPublicos`) + `tests/cotizaciones/combosVistaPublica.test.js` (7 casos; falla con el código anterior).
+- Propuesta: `openspec/changes/combos-una-linea/`. Modifica el requisito de D-147 "sin línea combo colapsada" solo en la presentación; el precio sigue saliendo de las líneas.

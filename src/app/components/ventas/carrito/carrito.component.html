@@ -20,10 +20,86 @@
         </tr>
       </thead>
       <tbody>
-        <ng-container *ngFor="let itemCarrito of productos">
+        <ng-container *ngFor="let fila of filas; trackBy: trackFila">
+
+        <!-- Ticket 1097: combo cerrado = una sola fila con la suma de sus productos.
+             El pedido sigue llevando cada producto (inventario y SIIGO). -->
+        <tr class="cart-row cart-row-combo" *ngIf="esComboFila(fila)">
+          <td>
+            <div class="item-info">
+              <div class="item-thumb item-thumb-combo">
+                <i class="pi pi-box"></i>
+              </div>
+              <div class="item-meta">
+                <span class="item-name">{{ fila.combo.nombre }}</span>
+                <span class="item-sku"><span class="combo-tag">Combo</span> {{ fila.lineas.length }} producto(s) en una sola línea</span>
+                <button type="button" class="combo-btn" (click)="abrirCombo(fila.combo.grupo)"
+                  ngbTooltip="Muestra cada producto del combo, también en los documentos del pedido">
+                  Abrir combo
+                </button>
+                <button *ngIf="comboConfigPendiente(fila)" type="button" class="config-pendiente-pill"
+                  (click)="abrirCombo(fila.combo.grupo)"
+                  ngbTooltip="Un producto del combo necesita configuración. Abre el combo para completarla.">
+                  <i class="pi pi-exclamation-triangle"></i> Requiere configuración
+                </button>
+              </div>
+            </div>
+          </td>
+          <td class="col-price">
+            <div class="price-editable">
+              <span class="price-value">{{ comboPrecio(fila) | currency:'USD':'symbol':'1.0-0' }}</span>
+              <span class="combo-iva">IVA {{ ivaCombo(fila) !== null ? ivaCombo(fila) + '%' : 'varios' }}</span>
+              <div class="price-descuento-linea">
+                <label>Desc. %</label>
+                <input class="desc-linea-input" type="number"
+                       [ngModel]="descComboPct(fila)"
+                       (ngModelChange)="onDescComboChange(fila, $event)"
+                       [placeholder]="descComboPct(fila) === null ? 'varios' : '0'"
+                       [min]="0" [max]="100" step="1">
+              </div>
+            </div>
+          </td>
+          <td class="col-qty">
+            <div class="qty-spinner">
+              <button type="button" (click)="menosCombo(fila)" [disabled]="fila.cantidad <= 1">
+                <i class="pi pi-minus"></i>
+              </button>
+              <input type="number" [value]="fila.cantidad" min="1"
+                     (change)="setCantidadCombo(fila, $any($event.target).value)"
+                     title="Cantidad de combos">
+              <button type="button" (click)="masCombo(fila)">
+                <i class="pi pi-plus"></i>
+              </button>
+            </div>
+          </td>
+          <td class="col-subtotal text-center">
+            <span class="subtotal-value">{{ comboSubtotal(fila) | currency:'USD':'symbol':'1.0-0' }}</span>
+          </td>
+          <td class="col-actions">
+            <div class="item-actions">
+              <button class="act-btn act-danger" (click)="eliminarCombo(fila)" title="Quitar el combo">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <ng-container *ngIf="!esComboFila(fila) && fila.item as itemCarrito">
+
+          <!-- Ticket 1097: combo abierto — encabezado para volver a juntarlo -->
+          <tr class="combo-head-row" *ngIf="iniciaComboAbierto(fila.indice)">
+            <td colspan="5">
+              <span class="combo-tag">Combo</span>
+              <strong>{{ comboDe(itemCarrito)?.nombre }}</strong>
+              <span class="combo-head-sub">· {{ productosDelCombo(comboDe(itemCarrito)?.grupo || '') }} producto(s), el cliente los ve por separado</span>
+              <button type="button" class="combo-btn" (click)="cerrarCombo(comboDe(itemCarrito)?.grupo || '')">
+                Cerrar combo
+              </button>
+            </td>
+          </tr>
 
           <!-- Fila principal del producto -->
-          <tr class="cart-row">
+          <tr class="cart-row" [class.cart-row-en-combo]="!!comboDe(itemCarrito)">
             <!-- Imagen + nombre -->
             <td>
               <div class="item-info">
@@ -206,6 +282,7 @@
             </tr>
           </ng-container>
 
+        </ng-container>
         </ng-container>
       </tbody>
     </table>

@@ -219,3 +219,10 @@
   white-space: pre-line;
   margin-top: 2px;
 }
+
+// Ticket 1097: rótulo de la fila de un combo cerrado.
+.cp-combo {
+  color: #5F3FE0;
+  font-weight: 600;
+  font-size: 12px;
+}

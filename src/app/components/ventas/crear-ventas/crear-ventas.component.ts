@@ -64,6 +64,7 @@ import { InventarioService } from "../../../shared/services/inventarios/inventar
 import { IntegrationsService } from "../../integrations/integrations.service";
 import { Subscription, Subject, of } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from "rxjs/operators";
+import { FilaAgrupada, FilaCombo, agruparLineasCombo } from "../../../shared/utils/combo-lineas";
 
 @Component({
   selector: "app-pedido",
@@ -662,6 +663,8 @@ export class CrearVentasComponent
             // al reconstruir este array con una whitelist de campos.
             cartItemId: item.cartItemId,
             _requiereConfiguracionPendiente: item._requiereConfiguracionPendiente,
+            // Ticket 1097: a qué combo pertenece la línea y si se ve en una sola fila.
+            combo: item.combo,
           }));
 
           // Forzar detección de cambios para actualizar la UI y notificar al componente de notas
@@ -5068,6 +5071,39 @@ export class CrearVentasComponent
    */
   eliminarDelCarritoSidebar(item: any): void {
     this.cartService.removeProduct(item);
+  }
+
+  // ---- Ticket 1097: el resumen lateral muestra el combo cerrado en una sola línea ----
+  private filasSidebarMemo: { items: any[]; filas: FilaAgrupada<any>[] } | null = null;
+
+  get filasCarritoSidebar(): FilaAgrupada<any>[] {
+    const items = this.productosCarritoSidebar || [];
+    if (!this.filasSidebarMemo || this.filasSidebarMemo.items !== items) {
+      this.filasSidebarMemo = { items, filas: agruparLineasCombo(items) };
+    }
+    return this.filasSidebarMemo.filas;
+  }
+
+  esComboFilaSidebar(fila: FilaAgrupada<any>): fila is FilaCombo<any> {
+    return fila.tipo === "combo";
+  }
+
+  /** Precio de un combo: lo que suman sus productos por cada combo. */
+  precioComboSidebar(fila: FilaCombo<any>): number {
+    const total = fila.lineas.reduce(
+      (acc, l) => acc + (Number(l?.producto?.precio?.precioUnitarioConIva) || 0) * (Number(l?.cantidad) || 0),
+      0
+    );
+    return total / (fila.cantidad || 1);
+  }
+
+  /** Primer producto del combo que aún pide configuración (D-147), o null. */
+  pendienteDelComboSidebar(fila: FilaCombo<any>): any {
+    return fila.lineas.find((l) => !!l?._requiereConfiguracionPendiente) || null;
+  }
+
+  eliminarComboSidebar(fila: FilaCombo<any>): void {
+    fila.lineas.forEach((l) => this.cartService.removeProduct(l));
   }
 
   /**

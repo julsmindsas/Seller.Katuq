@@ -62,17 +62,31 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let item of pedido?.carrito; let i = index">
-          <td class="col-item">{{ i + 1 }}</td>
-          <td class="col-codigo">{{ getReferencia(item) }}</td>
-          <td class="col-descripcion">{{ getNombreProducto(item) }}</td>
-          <td class="col-cantidad">{{ item.cantidad || 0 }}</td>
-          <td class="col-unitario">
-            {{ getPrecioUnitario(item) | currency:'COP':'':'1.0-0' }}
-            <span class="desc-linea-badge" *ngIf="descLineaPct(item) > 0">-{{ descLineaPct(item) }}%</span>
-          </td>
-          <td class="col-total">{{ calcularTotalProducto(item) | currency:'COP':'':'1.0-0' }}</td>
-        </tr>
+        <ng-container *ngFor="let fila of filas; let i = index">
+          <!-- Ticket 1097: combo cerrado = una sola fila, sin sus productos -->
+          <tr *ngIf="esComboFila(fila)">
+            <td class="col-item">{{ i + 1 }}</td>
+            <td class="col-codigo">COMBO</td>
+            <td class="col-descripcion">{{ fila.combo.nombre }}</td>
+            <td class="col-cantidad">{{ fila.cantidad }}</td>
+            <td class="col-unitario">
+              {{ comboPrecioUnitario(fila) | currency:'COP':'':'1.0-0' }}
+              <span class="desc-linea-badge" *ngIf="comboDescPct(fila) > 0">-{{ comboDescPct(fila) }}%</span>
+            </td>
+            <td class="col-total">{{ comboTotal(fila) | currency:'COP':'':'1.0-0' }}</td>
+          </tr>
+          <tr *ngIf="!esComboFila(fila) && fila.item as item">
+            <td class="col-item">{{ i + 1 }}</td>
+            <td class="col-codigo">{{ getReferencia(item) }}</td>
+            <td class="col-descripcion">{{ getNombreProducto(item) }}</td>
+            <td class="col-cantidad">{{ item.cantidad || 0 }}</td>
+            <td class="col-unitario">
+              {{ getPrecioUnitario(item) | currency:'COP':'':'1.0-0' }}
+              <span class="desc-linea-badge" *ngIf="descLineaPct(item) > 0">-{{ descLineaPct(item) }}%</span>
+            </td>
+            <td class="col-total">{{ calcularTotalProducto(item) | currency:'COP':'':'1.0-0' }}</td>
+          </tr>
+        </ng-container>
         <tr *ngIf="!pedido?.carrito || pedido.carrito.length === 0">
           <td colspan="6" class="sin-productos">No hay productos en esta orden</td>
         </tr>

@@ -8,6 +8,16 @@ import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { parse as flattedParse } from "flatted";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { ConfProductToCartComponent } from "../catalogo/conf-product-to-cart/conf-product-to-cart.component";
+import {
+  ComboLinea,
+  FilaAgrupada,
+  FilaCombo,
+  agruparLineasCombo,
+  comboDeLinea,
+  iniciaComboAbierto,
+  lineasDelGrupo,
+  valorComun,
+} from "../../../shared/utils/combo-lineas";
 
 @Component({
   selector: "app-carrito",
@@ -77,6 +87,112 @@ export class CarritoComponent implements OnInit {
   removeThisProduct(producto: any): void {
     if (!producto) return;
     this.carsingleton.removeProduct(producto);
+  }
+
+  // ---- Ticket 1097: combos en una sola línea ----
+  // El carrito pinta `filas`: un combo cerrado es UNA fila que suma sus
+  // productos; abierto, cada producto vuelve a su fila. Las líneas no cambian
+  // (D-147): el pedido descuenta inventario y factura producto por producto.
+
+  private filasMemo: { items: any[]; firma: string; filas: FilaAgrupada<any>[] } | null = null;
+
+  get filas(): FilaAgrupada<any>[] {
+    const items = this.productos || [];
+    const firma = items
+      .map((it) => {
+        const c = comboDeLinea(it);
+        return c ? `${c.grupo}:${c.abierto ? 1 : 0}` : "-";
+      })
+      .join("|");
+    if (!this.filasMemo || this.filasMemo.items !== items || this.filasMemo.firma !== firma) {
+      this.filasMemo = { items, firma, filas: agruparLineasCombo(items) };
+    }
+    return this.filasMemo.filas;
+  }
+
+  trackFila(_i: number, fila: FilaAgrupada<any>): any {
+    if (fila.tipo === "combo") return `combo:${fila.combo.grupo}`;
+    return fila.item?.cartItemId || fila.item;
+  }
+
+  esComboFila(fila: FilaAgrupada<any>): fila is FilaCombo<any> {
+    return fila.tipo === "combo";
+  }
+
+  iniciaComboAbierto(indice: number): boolean {
+    return iniciaComboAbierto(this.productos || [], indice);
+  }
+
+  comboDe(item: any): ComboLinea | null {
+    return comboDeLinea(item);
+  }
+
+  productosDelCombo(grupo: string): number {
+    return lineasDelGrupo(this.productos || [], grupo);
+  }
+
+  private marcarCombo(grupo: string, abierto: boolean): void {
+    (this.productos || [])
+      .filter((l) => comboDeLinea(l)?.grupo === grupo)
+      .forEach((l) => this.carsingleton.updateProductQuantity({ ...l, combo: { ...l.combo, abierto } }));
+  }
+
+  /** El vendedor abre el combo: cada producto se ve y se edita por separado. */
+  abrirCombo(grupo: string): void {
+    this.marcarCombo(grupo, true);
+  }
+
+  cerrarCombo(grupo: string): void {
+    this.marcarCombo(grupo, false);
+  }
+
+  eliminarCombo(fila: FilaCombo<any>): void {
+    fila.lineas.forEach((l) => this.carsingleton.removeProduct(l));
+  }
+
+  /** Cantidad de combos: cada producto queda en sus unidades por combo × la cantidad. */
+  setCantidadCombo(fila: FilaCombo<any>, value: any): void {
+    const k = Math.max(1, Math.floor(Number(value) || 1));
+    fila.lineas.forEach((l) => {
+      const base = Number(comboDeLinea(l)?.cantidadPorCombo) || 1;
+      l.cantidad = base * k;
+      this.carsingleton.updateProductQuantity(l);
+    });
+  }
+
+  menosCombo(fila: FilaCombo<any>): void {
+    if (fila.cantidad > 1) this.setCantidadCombo(fila, fila.cantidad - 1);
+  }
+
+  masCombo(fila: FilaCombo<any>): void {
+    this.setCantidadCombo(fila, fila.cantidad + 1);
+  }
+
+  /** El descuento del combo se aplica igual a cada producto. */
+  onDescComboChange(fila: FilaCombo<any>, value: any): void {
+    fila.lineas.forEach((l) => this.onDescLineaChange(l, value));
+  }
+
+  descComboPct(fila: FilaCombo<any>): number | null {
+    return valorComun(fila.lineas.map((l) => this.descLineaPct(l)));
+  }
+
+  ivaCombo(fila: FilaCombo<any>): number | null {
+    return valorComun(fila.lineas.map((l) => Number(this.getIvaActual(l)) || 0));
+  }
+
+  /** Total del combo con IVA y descuentos, igual que la suma de sus líneas. */
+  comboSubtotal(fila: FilaCombo<any>): number {
+    return fila.lineas.reduce((acc, l) => acc + this.checkPriceScale(l) * (Number(l?.cantidad) || 0), 0);
+  }
+
+  /** Precio de un combo (con IVA, neto de descuento). */
+  comboPrecio(fila: FilaCombo<any>): number {
+    return this.comboSubtotal(fila) / (fila.cantidad || 1);
+  }
+
+  comboConfigPendiente(fila: FilaCombo<any>): boolean {
+    return fila.lineas.some((l) => !!l?._requiereConfiguracionPendiente);
   }
 
   /**
