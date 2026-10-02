@@ -18,7 +18,7 @@
       <div class="cbm-row2">
         <label class="cbm-field">
           <span class="cbm-label">Nombre del combo</span>
-          <input type="text" class="cbm-input" formControlName="nombre" maxlength="120"
+          <input type="text" class="cbm-input" formControlName="nombre"
                  placeholder="Ej.: Ensamble bomba + motor 10 HP" [class.cbm-invalid]="faltaNombre">
           <span class="cbm-error" *ngIf="faltaNombre">Ponle un nombre al combo.</span>
         </label>
@@ -93,7 +93,7 @@
 
       <label class="cbm-field">
         <span class="cbm-label">Descripción <span class="cbm-label-hint">(opcional, solo la ve tu equipo)</span></span>
-        <textarea class="cbm-input cbm-textarea" formControlName="descripcion" rows="2" maxlength="300"
+        <textarea class="cbm-input cbm-textarea" formControlName="descripcion" rows="2"
                   placeholder="Ej.: armar con el acople de 1 1/2 pulgadas"></textarea>
       </label>
     </form>

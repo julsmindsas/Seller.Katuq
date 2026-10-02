@@ -244,11 +244,22 @@ export class CrearComboComponent implements OnInit, OnDestroy {
   }
 
   /** Nombre y al menos un producto; si falta algo se marca en el formulario. */
+  /**
+   * Ticket 1114: valida solo lo obligatorio (nombre y al menos un producto) y
+   * dice qué falta. Antes miraba `form.invalid`, y un límite de largo en la
+   * descripción dejaba inválido un combo con su descripción ya guardada:
+   * salía "Falta información" sin que faltara nada.
+   */
   private validar(): boolean {
     this.intentoGuardar = true;
     this.form.markAllAsTouched();
-    if (this.form.invalid || this.productosSeleccionados.length === 0) {
-      Swal.fire('Falta información', 'Ponle un nombre al combo y agrega al menos un producto.', 'warning');
+    const faltaNombre = !String(this.form.get('nombre')?.value || '').trim();
+    const faltanProductos = this.productosSeleccionados.length === 0;
+    if (faltaNombre || faltanProductos) {
+      const que = faltaNombre && faltanProductos
+        ? 'Ponle un nombre al combo y agrega al menos un producto.'
+        : faltaNombre ? 'Ponle un nombre al combo.' : 'Agrega al menos un producto al combo.';
+      Swal.fire('Falta información', que, 'warning');
       return false;
     }
     return true;
