@@ -7851,7 +7851,7 @@ El 29-sep estaban rotas las dos:
 - Pruebas: `scripts/test-1110-referencia-con-espacios.js` (8/8, incluye un barrido de jerga sobre todos los motivos) y `test-1043` reescrita con los textos nuevos (6/6); 1052 y 1054 siguen en verde. Simulado sin emitir sobre el ORE-001331: los 5 productos se encuentran en SIIGO y la vista previa sale sin avisos.
 - Desplegado en EC2 el 2-oct (prod `12dfb48` → `a40f374`, reload 12 s sin errores). Ticket 1110 en Resuelto; Jerónimo reintenta la factura.
 
-## D-341 (2026-10-02) — La pantalla de Combos con el estilo del registro (EN DESARROLLO)
+## D-341 (2026-10-02) — La pantalla de Combos con el estilo del registro (EN PRODUCCIÓN Y VERIFICADA)
 
 **Contexto.** Al probar el ticket 1097, Daniel vio la pantalla de Combos (Inventarios y Productos → Productos → Combos). Era una tabla PrimeNG con un aviso azul de Bootstrap que todavía decía que el combo "se agrega como líneas normales del carrito". Pidió modernizarla "con estilo parecido al registro y las otras pantallas", usando Claude Design.
 
@@ -7860,3 +7860,7 @@ El 29-sep estaban rotas las dos:
 - **Listado:** encabezado con buscador (por nombre, producto o referencia, sin tildes) y "Nuevo combo"; tres indicadores (activos, inactivos, productos en combos); filtro Todos/Activos/Inactivos; filas con los productos en pastillas (3 y "+N"), el estado y las acciones (Editar, Desactivar; un inactivo se puede eliminar). Muestra 20 combos y "Ver más". Tiene estado vacío y "ninguno coincide".
 - **Modal crear/editar:** formulario a la izquierda (nombre, Activo, buscador que solo agrega, lista con foto, referencia y precio general, descripción interna) y panel lila "Así lo ve tu cliente" a la derecha: la línea del combo en una cotización (D-339) y cómo se comportan el precio, el inventario y la factura.
 - Mismos servicios y el mismo payload `{nombre, descripcion, activo, productos:[{productoId, referencia, nombre}]}`: sin cambios de backend ni de datos. El precio que muestra el modal es informativo (D-147: el combo no guarda precio).
+- Publicada en 2026.10.02.2 (`0b6e9c0f`) y corregida en 2026.10.02.3 (`13b63797`) tras revisarla en producción (FLORECER):
+  - El buscador se quedaba mostrando el producto elegido. Ponerle null al modelo dentro del mismo `change` no le llega a ng-select; ahora se vacía con `clearModel()`, que exige `clearable` (la "×" queda oculta).
+  - La nota del pie salía en azul. Una regla global vieja, `span.ng-star-inserted`, pinta todo `span` creado por `*ngIf`, así que esos spans llevan color propio. Ojo con esto en cualquier pantalla nueva.
+  - Verificado en 2026.10.02.3: listado con su combo, indicadores, filtro y nota en gris; el modal de editar con fotos, referencias y precios; el buscador agrega, se vacía y no repite lo que ya está en el combo; el total y la vista previa se actualizan (de $78.000 a $113.000). Se canceló sin guardar.
