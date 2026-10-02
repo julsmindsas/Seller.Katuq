@@ -7823,7 +7823,7 @@ El 29-sep estaban rotas las dos:
 - Empiezan a llegar también las alertas de stock bajo y de producto agotado. Cada usuario las apaga en Preferencias, y cada empresa puede apagar tipos con `company_notification_preferences.in_app_notifications`.
 - Verificado: a las 21:13:27 UTC la campana de ALMARA recibió su primer `PAYMENT_APPROVED`. La de Bombas queda confirmada con su próximo movimiento de pedido.
 
-## D-339 (2026-10-02) — Un combo se ve en una sola línea y el comercial decide si lo abre (ticket 1097, EN DESARROLLO)
+## D-339 (2026-10-02) — Un combo se ve en una sola línea y el comercial decide si lo abre (ticket 1097, EN PRODUCCIÓN Y VERIFICADA)
 
 **Contexto.** ALMACEN BOMBAS (Laura, ticket 1097): al elegir un combo en la cotización o en el pedido, Katuq lo desglosaba en sus productos (D-147, y el buscador de cotizaciones del ticket 1086). Bombas pide que el combo no se desglose necesariamente y que el comercial decida si lo abre: "el combo es más un tema para contabilidad e inventario". Su combo activo, ENSAMBLE MONOBLOQUE 5BF MOTOR 10HP 2P 3F, tiene 3 productos.
 
@@ -7835,6 +7835,11 @@ El 29-sep estaban rotas las dos:
 - El anexo de precios sugeridos de la cotización no lista los productos de un combo cerrado.
 - Utilidad común `src/app/shared/utils/combo-lineas.ts` (+ spec). Backend: `controllers/cotizaciones.js` (`_agruparCombosPublicos`) + `tests/cotizaciones/combosVistaPublica.test.js` (7 casos; falla con el código anterior).
 - Propuesta: `openspec/changes/combos-una-linea/`. Modifica el requisito de D-147 "sin línea combo colapsada" solo en la presentación; el precio sigue saliendo de las líneas.
+
+**Despliegue y verificación (2-oct).** Backend `12dfb48` con reload a las 12:53:39 UTC (el rango era solo ese commit: `5b0852c` ya corría desde el 1-oct 21:36 UTC). Front 2026.10.02.1 (`c48b12c4`, base `36b8483d`), que trajo además lo pendiente de la rama: 1106 (`e3080b10`), 1108 (`21e82171`) y 1013 (`fa17ea15`). La publicación del front la bloqueó el modo automático y salió cuando Daniel lo quitó. Probado en FLORECER con un combo de prueba ("COMBO PRUEBA KATUQ 1097", 2 productos):
+- La cotización COT-2026-1002-0001 muestra una sola fila y "1 ítem(s)". Abrir/Cerrar combo funciona. Con 2 combos, el total pasa a $156.000 con $78.000 por combo, en el editor, la vista previa y el enlace público `/c/:token`. En Firestore quedan 2 líneas, cada una con cantidad 2 y la marca `combo` cerrada.
+- Convertida a pedido, el carrito y el resumen lateral muestran el combo en una fila, y abierto se ve cada producto. **No se creó el pedido**: los clientes de FLORECER son reales. La orden de venta y el PDF/correo del pedido con combo quedan verificados por código y compilación, no en pantalla.
+- Se quedan en FLORECER el combo de prueba y la cotización de prueba (cliente "PRUEBA Claude BORRAR").
 
 ## D-340 (2026-10-02) — Los errores de facturación los lee el comercio: qué pasó y qué hacer, sin jerga (ticket 1110, DESPLEGADA)
 

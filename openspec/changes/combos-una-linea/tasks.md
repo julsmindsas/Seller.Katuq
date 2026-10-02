@@ -8,4 +8,4 @@
 - [x] 6. Conversión cotización → pedido conserva la marca; `crear-ventas` también.
 - [x] 7. Carrito de venta asistida: fila del combo y encabezado del combo abierto.
 - [x] 8. Orden de venta y PDF/correo del pedido (no la comanda).
-- [ ] 9. Build de producción sin errores, despliegue (front + back) y verificación en producción.
+- [x] 9. Build de producción sin errores, despliegue (front 2026.10.02.1 + back 12dfb48) y verificación en FLORECER (cotización, enlace público y carrito).
