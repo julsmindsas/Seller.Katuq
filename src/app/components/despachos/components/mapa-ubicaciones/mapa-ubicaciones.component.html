@@ -172,6 +172,39 @@
     </div>
   </div>
 
+  <!-- Mensajeros de la empresa en el mapa: estado de su ubicación y acciones -->
+  <div class="mapa-mensajeros" *ngIf="mostrarControles && mostrarMensajeros && (mensajeros.length > 0 || mensajerosSinUbicacion > 0)">
+    <div class="mapa-mensajeros__titulo">
+      {{ 'Mensajeros' | translate }} <b>({{ mensajeros.length }})</b>
+      <span class="mapa-mensajeros__nota" *ngIf="mensajerosSinUbicacion > 0">
+        · {{ mensajerosSinUbicacion }} {{ 'sin ubicación reciente' | translate }}
+      </span>
+    </div>
+    <div class="mapa-mensajeros__lista">
+      <div class="mapa-mensajero" *ngFor="let m of mensajeros; trackBy: trackMensajero"
+        [class.mapa-mensajero--seguido]="mensajeroSeguido === m.id">
+        <span class="mapa-mensajero__punto" [ngClass]="'mapa-mensajero__punto--' + m.estado"></span>
+        <div class="mapa-mensajero__info">
+          <div class="mapa-mensajero__nombre">{{ m.nombre }}</div>
+          <div class="mapa-mensajero__estado">{{ textoEstadoMensajero(m) }}</div>
+          <div class="mapa-mensajero__extra">
+            <span *ngIf="m.pedidosEnRuta > 0">{{ m.pedidosEnRuta }} {{ (m.pedidosEnRuta === 1 ? 'pedido en ruta' : 'pedidos en ruta') | translate }}</span>
+            <span *ngIf="m.bateria !== undefined" [class.mapa-mensajero__bateria--baja]="m.bateria < 20">
+              {{ 'Batería' | translate }} {{ m.bateria | number:'1.0-0' }}%
+            </span>
+          </div>
+        </div>
+        <div class="mapa-mensajero__acciones">
+          <button type="button" class="mapa-mensajero__btn" (click)="verMensajero(m)">{{ 'Ver' | translate }}</button>
+          <button type="button" class="mapa-mensajero__btn" [class.mapa-mensajero__btn--activo]="mensajeroSeguido === m.id"
+            (click)="seguirMensajero(m)">
+            {{ (mensajeroSeguido === m.id ? 'Siguiendo' : 'Seguir') | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Barra de progreso inferior durante geocodificación -->
   <div class="geocoding-bottom-progress" *ngIf="geocodingInProgress">
     <div class="progress-line" [style.width.%]="geocodingProgress"></div>

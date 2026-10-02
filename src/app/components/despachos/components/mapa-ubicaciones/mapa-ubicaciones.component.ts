@@ -17,12 +17,24 @@ interface UbicacionPedido {
   tiempoEstimado?: number;
 }
 
+/** Estado de la ubicación de un mensajero según qué tan reciente es y si la app sigue conectada. */
+type EstadoMensajero = 'en-vivo' | 'sin-senal' | 'desconectado';
+
 interface UbicacionMensajero {
+  /** Id del transportador en Katuq (o su clave de rastreo si no tiene). */
   id: string;
+  nombre: string;
   lat: number;
   lng: number;
-  timestamp: string;
-  nombre?: string;
+  /** Hora (ms, reloj del servidor) del último punto recibido. */
+  ultimaActualizacion: number;
+  /** false cuando la app se cerró o perdió la conexión sin ponerse fuera de línea. */
+  conectado: boolean;
+  precision?: number;
+  velocidad?: number;
+  bateria?: number;
+  estado: EstadoMensajero;
+  pedidosEnRuta: number;
 }
 
 interface MapaMetricas {
@@ -70,6 +82,12 @@ interface ConfiguracionMapa {
   ubicaciones: UbicacionPedido[];
 }
 
+/** Un punto con menos de 3 min se muestra "en vivo" (la app publica al menos cada minuto mientras está en línea). */
+const EN_VIVO_MS = 3 * 60 * 1000;
+/** Puntos más viejos que esto no se muestran: el mensajero ya no está trabajando. */
+const MAX_ANTIGUEDAD_MS = 8 * 60 * 60 * 1000;
+const MAX_PUNTOS_RECORRIDO = 60;
+
 @Component({
   selector: 'app-mapa-ubicaciones',
   templateUrl: './mapa-ubicaciones.component.html',
@@ -90,6 +108,15 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   @Input() geocodingInProgress: boolean = false;
   @Input() geocodingProgress: number = 0;
   @Input() verMensajeros: boolean = true;
+
+  /**
+   * Transportadores de la empresa (los de Despachos). El mapa solo escucha la ubicación de estos, cada uno en su
+   * propio nodo de `active_users`: nunca descarga ni muestra mensajeros de otras empresas.
+   */
+  @Input() set transportadores(lista: any[] | null) {
+    this.transportadoresEmpresa = Array.isArray(lista) ? lista : [];
+    if (this.mostrarMensajeros) this.escucharUbicacionMensajeros();
+  }
   @Input() configuracionZonas: ConfiguracionZonas = {
     zonas: [],
     mostrarZonas: true,
@@ -110,18 +137,32 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   private capaMensajeros: any = null;
   private capaZonasEntrega: any = null;
   private poligonosZonas: any[] = [];
-  private mensajerosSubscription: Subscription | null = null;
-  private marcadorUbicacionUsuario: any = null;
+    private marcadorUbicacionUsuario: any = null;
   
   public mostrarMensajeros: boolean = true;
   public mostrarZonasEntrega: boolean = true;
   public mensajeros: UbicacionMensajero[] = [];
 
   intervalTimer: any = null;
+  private transportadoresEmpresa: any[] = [];
+  /** Suscripción por clave de rastreo (`active_users/{clave}`). */
+  private suscripcionesRastreo = new Map<string, Subscription>();
+  /** Último dato recibido por clave de rastreo. */
+  private datosRastreo = new Map<string, any>();
+  /** Clave de rastreo -> transportador al que pertenece. */
+  private transportadorPorClave = new Map<string, any>();
+  private offsetServidorMs = 0;
+  private offsetSubscription: Subscription | null = null;
+  private marcadoresMensajero = new Map<string, any>();
+  private recorridos = new Map<string, Array<[number, number]>>();
+  private lineasRecorrido = new Map<string, any>();
+  /** Mensajero al que el mapa sigue (se centra en cada actualización). */
+  public mensajeroSeguido: string | null = null;
+  /** Mensajeros de la empresa sin una ubicación reciente (no aparecen en el mapa). */
+  public mensajerosSinUbicacion = 0;
   leafletCargado: boolean = false;
   marcadoresAnimandose: Set<string> = new Set();
   ultimosLocationsProcesados: number = 0;
-  private companyName: string;
   private ubicacionUsuario: { lat: number; lng: number } | null = null;
   private usandoUbicacionUsuario: boolean = false;
 
@@ -156,14 +197,6 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   ) { }
 
   ngOnInit(): void {
-    const companyInfo = this.securityService.getCompanyInformationLogged();
-    if (companyInfo && companyInfo.nombreComercio) {
-      this.companyName = companyInfo.nombreComercio.toUpperCase();
-    } else {
-      console.warn('No se pudo obtener el nombre del comercio. El filtro de mensajeros por comercio puede no funcionar.');
-      this.companyName = '';
-    }
-    
     this.mostrarMensajeros = this.verMensajeros;
     this.cargarLeaflet();
     if (this.mostrarMensajeros) {
@@ -184,14 +217,11 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.intervalTimer) {
       clearInterval(this.intervalTimer);
     }
+    this.dejarDeEscucharMensajeros();
     if (this.mapa) {
       this.mapa.remove();
       this.mapa = null;
     }
-    if (this.mensajerosSubscription) {
-      this.mensajerosSubscription.unsubscribe();
-    }
-
     // Limpiar referencias del contenedor de Leaflet
     if (this.mapaContainer?.nativeElement) {
       const contenedor = this.mapaContainer.nativeElement;
@@ -222,6 +252,8 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
     // Limpiar capas
     this.capaMensajeros = null;
+    this.marcadoresMensajero.clear();
+    this.lineasRecorrido.clear();
     this.capaZonasEntrega = null;
 
     // Reinicializar si Leaflet está disponible
@@ -664,73 +696,95 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private actualizarMarcadoresMensajeros(): void {
-    // console.log('🗺️ [DEBUG] Actualizando marcadores de mensajeros...');
-    // console.log('🗺️ [DEBUG] Mapa cargado:', !!this.mapa);
-    // console.log('🗺️ [DEBUG] Leaflet cargado:', this.leafletCargado);
-    // console.log('🗺️ [DEBUG] Capa mensajeros:', !!this.capaMensajeros);
-    // console.log('🗺️ [DEBUG] Mostrar mensajeros:', this.mostrarMensajeros);
-
-    if (!this.mapa || !this.leafletCargado || !this.capaMensajeros) {
-      // console.log('🗺️ [DEBUG] No se puede actualizar marcadores - falta inicialización');
-      return;
-    }
-
-    this.capaMensajeros.clearLayers();
-
-    if (!this.mostrarMensajeros) {
-      // console.log('🗺️ [DEBUG] Mostrar mensajeros está desactivado');
-      return;
-    }
-
+    if (!this.mapa || !this.leafletCargado || !this.capaMensajeros) return;
     const L = (window as any).L;
 
-    // console.log(`🗺️ [DEBUG] Procesando ${this.mensajeros.length} mensajeros para marcadores`);
+    if (!this.mostrarMensajeros) {
+      this.capaMensajeros.clearLayers();
+      this.marcadoresMensajero.clear();
+      this.lineasRecorrido.clear();
+      this.recorridos.clear();
+      return;
+    }
 
-    this.mensajeros.forEach((mensajero, index) => {
-      // console.log(`🗺️ [DEBUG] Mensajero ${index + 1}:`, {
-      //   id: mensajero.id,
-      //   nombre: mensajero.nombre,
-      //   lat: mensajero.lat,
-      //   lng: mensajero.lng,
-      //   timestamp: mensajero.timestamp
-      // });
-
-      if (mensajero.lat && mensajero.lng) {
-        const iconoMensajero = L.divIcon({
-          className: 'custom-marker-mensajero',
-          html: `
-            <div class="marker-mensajero-content" title="Mensajero: ${mensajero.nombre || mensajero.id}">
-              <span class="marker-mensajero-icon">🛵</span>
-              <div class="marker-mensajero-pulse"></div>
-            </div>
-          `,
-          iconSize: [40, 40],
-          iconAnchor: [20, 40]
-        });
-
-        const marcador = L.marker([mensajero.lat, mensajero.lng], { icon: iconoMensajero });
-        
-        const popupContent = `
-          <div style="font-size: 12px; color: #333;">
-            <strong style="color: #007bff;">Mensajero</strong><br>
-            <strong>ID:</strong> ${mensajero.id}<br>
-            ${mensajero.nombre ? `<strong>Nombre:</strong> ${mensajero.nombre}<br>` : ''}
-            <strong>Actualizado:</strong> ${new Date(mensajero.timestamp).toLocaleTimeString()}
-          </div>
-        `;
-        marcador.bindPopup(popupContent);
-        this.capaMensajeros.addLayer(marcador);
-
-        // console.log(`✅ [DEBUG] Marcador de mensajero creado exitosamente para: ${mensajero.nombre || mensajero.id} en [${mensajero.lat}, ${mensajero.lng}]`);
-      } else {
-        // console.log(`❌ [DEBUG] Mensajero ${mensajero.nombre || mensajero.id} no tiene coordenadas válidas:`, {
-        //   lat: mensajero.lat,
-        //   lng: mensajero.lng
-        // });
-      }
+    const vigentes = new Set(this.mensajeros.map(m => m.id));
+    // Mensajeros que ya no están (fuera de línea, o su último punto venció): se quitan del mapa.
+    Array.from(this.marcadoresMensajero.keys()).filter(id => !vigentes.has(id)).forEach(id => {
+      this.capaMensajeros.removeLayer(this.marcadoresMensajero.get(id));
+      this.marcadoresMensajero.delete(id);
+      const linea = this.lineasRecorrido.get(id);
+      if (linea) this.capaMensajeros.removeLayer(linea);
+      this.lineasRecorrido.delete(id);
+      this.recorridos.delete(id);
+      if (this.mensajeroSeguido === id) this.mensajeroSeguido = null;
     });
 
-    // console.log(`🗺️ [DEBUG] Actualización de marcadores completada. Total marcadores activos: ${this.mensajeros.filter(m => m.lat && m.lng).length}`);
+    this.mensajeros.forEach(m => {
+      const posicion: [number, number] = [m.lat, m.lng];
+      const icono = L.divIcon({
+        className: 'custom-marker-mensajero',
+        html: `<div class="marker-mensajero-content marker-mensajero--${m.estado}">
+                 <span class="marker-mensajero-icon">🛵</span>
+                 ${m.estado === 'en-vivo' ? '<div class="marker-mensajero-pulse"></div>' : ''}
+               </div>
+               <div class="marker-mensajero-nombre">${this.escaparHtml(m.nombre.split(' ')[0])}</div>`,
+        iconSize: [40, 54],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -36],
+      });
+      let marcador = this.marcadoresMensajero.get(m.id);
+      if (!marcador) {
+        marcador = L.marker(posicion, { icon: icono, zIndexOffset: 1000 });
+        marcador.bindPopup(this.crearPopupMensajero(m));
+        this.capaMensajeros.addLayer(marcador);
+        this.marcadoresMensajero.set(m.id, marcador);
+      } else {
+        marcador.setLatLng(posicion);
+        marcador.setIcon(icono);
+        marcador.setPopupContent(this.crearPopupMensajero(m));
+      }
+
+      // Recorrido desde que se abrió el mapa (últimos puntos, solo si se movió).
+      const recorrido = this.recorridos.get(m.id) || [];
+      const ultimo = recorrido[recorrido.length - 1];
+      if (!ultimo || this.mapa.distance(ultimo, posicion) > 10) {
+        recorrido.push(posicion);
+        if (recorrido.length > MAX_PUNTOS_RECORRIDO) recorrido.shift();
+        this.recorridos.set(m.id, recorrido);
+      }
+      let linea = this.lineasRecorrido.get(m.id);
+      if (recorrido.length > 1) {
+        if (!linea) {
+          linea = L.polyline(recorrido, { color: '#6C4CE0', weight: 3, opacity: 0.55, dashArray: '6 6' });
+          this.capaMensajeros.addLayer(linea);
+          this.lineasRecorrido.set(m.id, linea);
+        } else {
+          linea.setLatLngs(recorrido);
+        }
+      }
+
+      if (this.mensajeroSeguido === m.id) this.mapa.panTo(posicion);
+    });
+  }
+
+  /** Ficha del mensajero. Todo lo que viene de datos se escapa antes de ir al HTML de Leaflet. */
+  private crearPopupMensajero(m: UbicacionMensajero): string {
+    const filas: string[] = [];
+    filas.push(`<strong>${this.escaparHtml(this.textoEstadoMensajero(m))}</strong>`);
+    if (m.pedidosEnRuta > 0) filas.push(`${m.pedidosEnRuta} pedido${m.pedidosEnRuta === 1 ? '' : 's'} en ruta`);
+    if (m.velocidad !== undefined && m.velocidad > 0.5) filas.push(`${Math.round(m.velocidad * 3.6)} km/h`);
+    if (m.bateria !== undefined) filas.push(`Batería ${Math.round(m.bateria)}%`);
+    if (m.precision !== undefined) filas.push(`Precisión ±${Math.round(m.precision)} m`);
+    return `<div class="popup-mensajero">
+              <div class="popup-mensajero__nombre">${this.escaparHtml(m.nombre)}</div>
+              <div class="popup-mensajero__detalle">${filas.join('<br>')}</div>
+            </div>`;
+  }
+
+  private escaparHtml(texto: string): string {
+    return String(texto ?? '').replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>
+    )[c]);
   }
 
   private crearContenidoPopup(ubicacion: UbicacionPedido): string {
@@ -789,7 +843,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   public ajustarVistaAMarcadores(): void {
-    if (!this.mapa || this.marcadores.length === 0) {
+    if (!this.mapa || (this.marcadores.length === 0 && this.marcadoresMensajero.size === 0)) {
       return;
     }
 
@@ -808,30 +862,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private iniciarActualizacionTiempoReal(): void {
-    // Actualizar posiciones cada 30 segundos (simulado)
-    this.intervalTimer = setInterval(() => {
-      this.simularMovimientoPedidos();
-    }, 30000);
-  }
-
-  private simularMovimientoPedidos(): void {
-    // Simular pequeños movimientos para pedidos en ruta
-    this.configuracion.ubicaciones.forEach(ubicacion => {
-      if (ubicacion.estado === 'Despachado' && ubicacion.latitud && ubicacion.longitud) {
-        // Pequeño movimiento aleatorio (simulando avance en la ruta)
-        const variacion = 0.001; // Aproximadamente 100 metros
-        ubicacion.latitud += (Math.random() - 0.5) * variacion;
-        ubicacion.longitud += (Math.random() - 0.5) * variacion;
-        
-        // Actualizar tiempo estimado (reducir aleatoriamente)
-        if (ubicacion.tiempoEstimado && ubicacion.tiempoEstimado > 5) {
-          ubicacion.tiempoEstimado -= Math.floor(Math.random() * 3) + 1;
-        }
-      }
-    });
-
-    // Actualizar marcadores en el mapa
-    this.agregarMarcadores();
+    // El tiempo real son las ubicaciones de los mensajeros (RTDB). Antes este temporizador movía los pedidos al azar
+    // para simular avance, y el mapa mostraba posiciones que no existían.
+    if (this.mostrarMensajeros) this.escucharUbicacionMensajeros();
   }
 
   // Método público para actualizar configuración
@@ -987,131 +1020,133 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     return Math.round(tiempos.reduce((sum, tiempo) => sum + tiempo, 0) / tiempos.length);
   }
 
+  /**
+   * Clave con la que la app del mensajero publica su ubicación (`active_users/{clave}`): igual que Android, Flutter e
+   * iOS, `nombres_apellidos_empresa` con todo lo que no sea letra, número o `_` cambiado por `_`, los `_` repetidos
+   * colapsados y en minúsculas. Se incluye la variante sin `_` en los bordes (nombres con espacios sobrantes).
+   */
+  private clavesRastreo(t: any): string[] {
+    const cruda = `${t?.nombres || ''}_${t?.apellidos || ''}_${t?.company || ''}`
+      .replace(/[^a-zA-Z0-9_]/g, '_')
+      .replace(/_+/g, '_')
+      .toLowerCase();
+    const recortada = cruda.replace(/^_+|_+$/g, '');
+    return Array.from(new Set([cruda, recortada].filter(c => c.length > 1)));
+  }
+
+  private nombreTransportador(t: any): string {
+    return `${t?.nombres || ''} ${t?.apellidos || ''}`.replace(/\s+/g, ' ').trim() || 'Mensajero';
+  }
+
+  /** Escucha la ubicación de cada transportador de la empresa en su propio nodo (nunca todo `active_users`). */
   private escucharUbicacionMensajeros(): void {
-    if (this.mensajerosSubscription) {
-      this.mensajerosSubscription.unsubscribe();
+    if (!this.offsetSubscription) {
+      // Diferencia entre el reloj del navegador y el del servidor, para medir bien hace cuánto llegó cada punto.
+      this.offsetSubscription = this.db.object<number>('.info/serverTimeOffset').valueChanges()
+        .subscribe(offset => this.offsetServidorMs = Number(offset) || 0);
     }
+    const claves = new Map<string, any>();
+    this.transportadoresEmpresa.forEach(t => this.clavesRastreo(t).forEach(clave => claves.set(clave, t)));
 
-    // console.log('🔍 [DEBUG] Iniciando escucha de ubicaciones de mensajeros...');
-    // console.log('🔍 [DEBUG] Nombre de empresa para filtrar:', this.companyName);
-
-    const activeUsersRef = this.db.list('active_users');
-    this.mensajerosSubscription = activeUsersRef.snapshotChanges().subscribe(snapshots => {
-      // console.log('🔍 [DEBUG] Snapshots recibidos desde Firebase:', snapshots.length);
-
-      // Log de todas las claves recibidas para debugging
-      const allKeys = snapshots.map(s => s.key);
-      // console.log('🔍 [DEBUG] Todas las claves en Firebase active_users:', allKeys);
-
-      this.mensajeros = snapshots
-        .filter(snapshot => {
-          if (!this.companyName) {
-            // console.log('🔍 [DEBUG] No hay nombre de empresa configurado');
-            return false;
-          }
-          const key = snapshot.key as string;
-          const keyParts = key.split('_');
-
-          // console.log(`🔍 [DEBUG] Procesando clave: "${key}" -> partes:`, keyParts);
-
-          // Nuevo filtro más flexible: buscar la empresa en cualquier parte de la clave
-          const keyUpperCase = key.toUpperCase();
-          const companyNameUpper = this.companyName.toUpperCase();
-
-          // Buscar coincidencias parciales en las partes de la clave
-          const hasCompanyMatch = keyParts.some(part => {
-            const partUpper = part.toUpperCase();
-            return partUpper.includes(companyNameUpper) || companyNameUpper.includes(partUpper);
-          });
-
-          // También buscar en la clave completa por si la empresa tiene espacios/guiones
-          const hasKeyMatch = keyUpperCase.includes(companyNameUpper) ||
-                             companyNameUpper.includes(keyUpperCase.replace(/_/g, ' '));
-
-          const match = hasCompanyMatch || hasKeyMatch;
-
-          // console.log(`🔍 [DEBUG] Filtro flexible - Empresa: "${this.companyName}"`);
-          // console.log(`🔍 [DEBUG] - ¿Coincidencia en partes?: ${hasCompanyMatch}`);
-          // console.log(`🔍 [DEBUG] - ¿Coincidencia en clave?: ${hasKeyMatch}`);
-          // console.log(`🔍 [DEBUG] - Resultado final: ${match}`);
-
-          return match;
-        })
-        .filter(snapshot => {
-          // Filtrar por timestamp - solo mostrar mensajeros activos del día actual
-          const data = snapshot.payload.val() as any;
-          const timestamp = data?.timestamp;
-
-          if (!timestamp) {
-            // console.log(`🕒 [DEBUG] Mensajero ${snapshot.key} no tiene timestamp`);
-            return false;
-          }
-
-          const timestampDate = new Date(timestamp);
-          const today = new Date();
-
-          // Comparar solo la fecha (año, mes, día) sin las horas
-          const isToday = timestampDate.getFullYear() === today.getFullYear() &&
-                         timestampDate.getMonth() === today.getMonth() &&
-                         timestampDate.getDate() === today.getDate();
-
-          const hoursAgo = (today.getTime() - timestampDate.getTime()) / (1000 * 60 * 60);
-
-          // console.log(`🕒 [DEBUG] Mensajero ${snapshot.key}:`);
-          // console.log(`🕒 [DEBUG] - Timestamp: ${timestamp}`);
-          // console.log(`🕒 [DEBUG] - Fecha timestamp: ${timestampDate.toLocaleDateString()}`);
-          // console.log(`🕒 [DEBUG] - Fecha hoy: ${today.toLocaleDateString()}`);
-          // console.log(`🕒 [DEBUG] - ¿Es de hoy?: ${isToday}`);
-          // console.log(`🕒 [DEBUG] - Horas transcurridas: ${hoursAgo.toFixed(1)}`);
-
-          return isToday;
-        })
-        .map(snapshot => {
-          const key = snapshot.key as string;
-          const keyParts = key.split('_');
-
-          // Reconstruir el nombre del mensajero de manera más inteligente
-          // Tomar las primeras partes que parecen ser nombres propios
-          const nombreParts = keyParts.slice(0, -2); // Asumir que las últimas 2 partes son apellidos o empresa
-          const nombreMensajero = nombreParts.length > 0
-            ? nombreParts.join(' ').replace(/[_-]/g, ' ')
-            : key.replace(/[_-]/g, ' ');
-
-          const data = snapshot.payload.val() as any;
-          const mensajero = {
-            id: key,
-            nombre: nombreMensajero,
-            ...data
-          };
-
-          // console.log('🔍 [DEBUG] Mensajero encontrado:', mensajero);
-          return mensajero;
-        });
-
-      // console.log(`🔍 [DEBUG] ====== RESUMEN DE FILTROS ======`);
-      // console.log(`🔍 [DEBUG] - Total snapshots de Firebase: ${snapshots.length}`);
-      // console.log(`🔍 [DEBUG] - Después de filtro empresa: ${snapshots.filter(s => {
-      //   if (!this.companyName) return false;
-      //   const key = s.key as string;
-      //   const keyParts = key.split('_');
-      //   const keyUpperCase = key.toUpperCase();
-      //   const companyNameUpper = this.companyName.toUpperCase();
-      //   const hasCompanyMatch = keyParts.some(part => {
-      //     const partUpper = part.toUpperCase();
-      //     return partUpper.includes(companyNameUpper) || companyNameUpper.includes(partUpper);
-      //   });
-      //   const hasKeyMatch = keyUpperCase.includes(companyNameUpper) ||
-      //                      companyNameUpper.includes(keyUpperCase.replace(/_/g, ' '));
-      //   return hasCompanyMatch || hasKeyMatch;
-      // }).length}`);
-      // console.log(`🔍 [DEBUG] - Después de filtro timestamp (hoy): ${this.mensajeros.length}`);
-      // console.log('🔍 [DEBUG] - Mensajeros finales:', this.mensajeros);
-
-      this.actualizarMarcadoresMensajeros();
-      this.cd.detectChanges(); // Forzar detección de cambios para el contador
-    }, error => {
-      console.error('❌ [ERROR] Error escuchando ubicación de mensajeros:', error);
+    // Fuera las claves de transportadores que ya no están en la lista.
+    Array.from(this.suscripcionesRastreo.keys()).filter(clave => !claves.has(clave)).forEach(clave => {
+      this.suscripcionesRastreo.get(clave)?.unsubscribe();
+      this.suscripcionesRastreo.delete(clave);
+      this.datosRastreo.delete(clave);
     });
+    this.transportadorPorClave = claves;
+    claves.forEach((_, clave) => {
+      if (this.suscripcionesRastreo.has(clave)) return;
+      const sub = this.db.object<any>(`active_users/${clave}`).valueChanges().subscribe(
+        dato => {
+          if (dato) this.datosRastreo.set(clave, dato); else this.datosRastreo.delete(clave);
+          this.recalcularMensajeros();
+        },
+        error => console.error('No se pudo escuchar la ubicación de un mensajero:', error?.message || error),
+      );
+      this.suscripcionesRastreo.set(clave, sub);
+    });
+
+    if (!this.intervalTimer) {
+      // Cada 30 s se recalcula si cada mensajero sigue en vivo, aunque no lleguen puntos nuevos.
+      this.intervalTimer = setInterval(() => this.recalcularMensajeros(), 30000);
+    }
+    this.recalcularMensajeros();
+  }
+
+  private dejarDeEscucharMensajeros(): void {
+    this.suscripcionesRastreo.forEach(sub => sub.unsubscribe());
+    this.suscripcionesRastreo.clear();
+    this.datosRastreo.clear();
+    this.offsetSubscription?.unsubscribe();
+    this.offsetSubscription = null;
+    if (this.intervalTimer) {
+      clearInterval(this.intervalTimer);
+      this.intervalTimer = null;
+    }
+  }
+
+  private ahoraServidor(): number {
+    return Date.now() + this.offsetServidorMs;
+  }
+
+  /** Hora (ms) de un punto: `lastUpdate` del servidor; los datos viejos solo traen el `timestamp` del teléfono. */
+  private horaDelPunto(dato: any): number {
+    const servidor = Number(dato?.lastUpdate);
+    if (servidor > 0) return servidor;
+    const telefono = Date.parse(dato?.timestamp || '');
+    return isNaN(telefono) ? 0 : telefono;
+  }
+
+  /** Une los datos recibidos con los transportadores: un mensajero por transportador, con su punto más reciente. */
+  private recalcularMensajeros(): void {
+    const ahora = this.ahoraServidor();
+    const porTransportador = new Map<string, UbicacionMensajero>();
+    this.datosRastreo.forEach((dato, clave) => {
+      const t = this.transportadorPorClave.get(clave);
+      const lat = Number(dato?.lat);
+      const lng = Number(dato?.lng);
+      if (!t || !isFinite(lat) || !isFinite(lng) || (lat === 0 && lng === 0)) return;
+      const hora = this.horaDelPunto(dato);
+      if (!hora || ahora - hora > MAX_ANTIGUEDAD_MS) return;
+      const id = String(t.id || clave);
+      const previo = porTransportador.get(id);
+      if (previo && previo.ultimaActualizacion >= hora) return;
+      const conectado = dato?.conectado !== false;
+      porTransportador.set(id, {
+        id,
+        nombre: this.nombreTransportador(t),
+        lat,
+        lng,
+        ultimaActualizacion: hora,
+        conectado,
+        precision: isFinite(Number(dato?.accuracy)) ? Number(dato.accuracy) : undefined,
+        velocidad: isFinite(Number(dato?.velocidad)) ? Number(dato.velocidad) : undefined,
+        bateria: isFinite(Number(dato?.bateria)) ? Number(dato.bateria) : undefined,
+        estado: !conectado ? 'desconectado' : ahora - hora <= EN_VIVO_MS ? 'en-vivo' : 'sin-senal',
+        pedidosEnRuta: this.contarPedidosEnRuta(t),
+      });
+    });
+    const orden: Record<EstadoMensajero, number> = { 'en-vivo': 0, 'sin-senal': 1, 'desconectado': 2 };
+    this.mensajeros = Array.from(porTransportador.values())
+      .sort((a, b) => orden[a.estado] - orden[b.estado] || a.nombre.localeCompare(b.nombre));
+    this.mensajerosSinUbicacion = Math.max(0, this.transportadoresEmpresa.length - this.mensajeros.length);
+    this.actualizarMarcadoresMensajeros();
+    this.cd.markForCheck();
+  }
+
+  /** Pedidos del mapa que van con este transportador y siguen en ruta. */
+  private contarPedidosEnRuta(t: any): number {
+    const nombre = this.normalizarTexto(this.nombreTransportador(t));
+    if (!nombre) return 0;
+    return (this.configuracion?.ubicaciones || []).filter(u =>
+      (u.estado === 'Despachado' || u.estado === 'EnDespacho') &&
+      this.normalizarTexto(u.transportador || '').startsWith(nombre)
+    ).length;
+  }
+
+  private normalizarTexto(texto: string): string {
+    return (texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
   }
 
   public toggleMensajeros(event: any): void {
@@ -1119,16 +1154,47 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.mostrarMensajeros) {
       this.escucharUbicacionMensajeros();
     } else {
-      if (this.mensajerosSubscription) {
-        this.mensajerosSubscription.unsubscribe();
-        this.mensajerosSubscription = null;
-      }
+      this.dejarDeEscucharMensajeros();
       this.mensajeros = [];
-      if (this.capaMensajeros) {
-        this.capaMensajeros.clearLayers();
-      }
+      this.mensajeroSeguido = null;
+      this.actualizarMarcadoresMensajeros();
     }
     this.cd.detectChanges();
+  }
+
+  /** Centra el mapa en el mensajero y abre su ficha. */
+  public verMensajero(m: UbicacionMensajero): void {
+    if (!this.mapa) return;
+    this.mapa.setView([m.lat, m.lng], Math.max(this.mapa.getZoom(), 15));
+    this.marcadoresMensajero.get(m.id)?.openPopup();
+  }
+
+  /** Sigue al mensajero: el mapa se mueve con cada punto nuevo. Otro clic deja de seguirlo. */
+  public seguirMensajero(m: UbicacionMensajero): void {
+    this.mensajeroSeguido = this.mensajeroSeguido === m.id ? null : m.id;
+    if (this.mensajeroSeguido) this.verMensajero(m);
+  }
+
+  public trackMensajero(_: number, m: UbicacionMensajero): string {
+    return m.id;
+  }
+
+  public textoEstadoMensajero(m: UbicacionMensajero): string {
+    const hace = this.textoHace(m.ultimaActualizacion);
+    switch (m.estado) {
+      case 'en-vivo': return `En vivo · ${hace}`;
+      case 'sin-senal': return `Sin señal · último punto ${hace}`;
+      default: return `App cerrada · último punto ${hace}`;
+    }
+  }
+
+  private textoHace(hora: number): string {
+    const segundos = Math.max(0, Math.round((this.ahoraServidor() - hora) / 1000));
+    if (segundos < 60) return 'hace menos de 1 min';
+    const minutos = Math.round(segundos / 60);
+    if (minutos < 60) return `hace ${minutos} min`;
+    const horas = Math.floor(minutos / 60);
+    return `hace ${horas} h ${minutos % 60} min`;
   }
 
   /**

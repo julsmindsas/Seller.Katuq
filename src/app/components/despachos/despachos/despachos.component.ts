@@ -1226,7 +1226,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
           pedido.envio?.direccionEntrega || "Dirección no especificada",
         latitud: latitud,
         longitud: longitud,
-        transportador: pedido.transportador?.nombres || "Sin asignar",
+        transportador: this.nombreTransportadorPedido(pedido.transportador),
         fechaEntrega: pedido.fechaEntrega || "",
         horaEstimada: pedido.horarioEntrega || "",
         distanciaRestante: Math.floor(Math.random() * 20) + 1, // 1-20 km
@@ -1254,6 +1254,18 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
 
   // Método para obtener datos del mapa (unificado con configuracionMapa)
+  /**
+   * Nombre del mensajero de un pedido para el mapa: los pedidos guardan "Nombres Apellidos-teléfono" (texto) o, si los
+   * asignó una integración, un objeto con nombres y apellidos.
+   */
+  private nombreTransportadorPedido(transportador: any): string {
+    if (!transportador) return "Sin asignar";
+    if (typeof transportador === "string") {
+      return transportador.replace(/\s*-\s*[+\d\s]{6,}$/, "").trim() || "Sin asignar";
+    }
+    return `${transportador.nombres || ""} ${transportador.apellidos || ""}`.trim() || "Sin asignar";
+  }
+
   obtenerDatosMapa() {
     // Asegurar que configuracionMapa esté actualizado
     if (!this.configuracionMapa.ubicaciones || this.configuracionMapa.ubicaciones.length === 0) {
