@@ -215,6 +215,18 @@ export class PaymentService extends BaseService {
           </tr>`;
   }
 
+  /**
+   * Ticket 1111 (ALMARA, pedido DAD-014006): en una preferencia de imagen el
+   * valor es el nombre del archivo subido (un código de 150 caracteres sin
+   * espacios) y en el PDF del cliente no le dice nada. Si la preferencia trae
+   * imagen y el valor parece un nombre de archivo, se muestra "imagen adjunta".
+   */
+  private textoPreferenciaCliente(pref: any): string {
+    const valor = String(pref?.subtitulo ?? '');
+    const pareceArchivo = !/\s/.test(valor) && (valor.length > 40 || /\.(png|jpe?g|gif|webp|heic|pdf)$/i.test(valor));
+    return pref?.imagen && pareceArchivo ? 'imagen adjunta' : valor;
+  }
+
   // Cambiado a COP y locale 'es-CO' para consistencia
   formatCurrency(value: number): string {
     // Añadir chequeo explícito para NaN además de null/undefined
@@ -1564,7 +1576,7 @@ export class PaymentService extends BaseService {
                   <td style="font-size: 9px; color: #333; padding: 1px 0 1px 4px; width: 40px;">
                     ${imagenUrl ? `<img src="${imagenFinal}" alt="${pref.titulo || 'Pref'}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 3px; vertical-align: middle;">` : '•'}
                   </td>
-                  <td style="font-size: 9px; color: #333; padding: 1px 0;">
+                  <td style="font-size: 9px; color: #333; padding: 1px 0; word-break: break-word; overflow-wrap: anywhere;">
                     ${pref.titulo || ''}: ${pref.subtitulo || ''}
                   </td>
                   <td style="font-size: 9px; color: #000; font-weight: bold; text-align: right; padding: 1px 4px 1px 0; white-space: nowrap;">
@@ -1735,7 +1747,7 @@ export class PaymentService extends BaseService {
                   <td style="font-size: 9px; color: #333; padding: 1px 0 1px 4px; width: 40px;">
                     ${imagenUrl ? `<img src="${imagenFinal}" alt="${adic.titulo || 'Adic'}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 3px; vertical-align: middle;">` : '•'}
                   </td>
-                  <td style="font-size: 9px; color: #333; padding: 1px 0;">
+                  <td style="font-size: 9px; color: #333; padding: 1px 0; word-break: break-word; overflow-wrap: anywhere;">
                     ${adic.titulo || ''}: ${adic.subtitulo || ''} ${cantidadTotalAdicion > 1 ? `(x${cantidadTotalAdicion})` : ''}
                   </td>
                   <td style="font-size: 9px; color: #000; font-weight: bold; text-align: right; padding: 1px 4px 1px 0; white-space: nowrap;">
@@ -1827,8 +1839,8 @@ export class PaymentService extends BaseService {
               <tr style="border-bottom: 1px solid ${styles.colors.divider};">
                 <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
                   ${imagenUrl ? `<img src="${imagenFinal}" alt="${pref.titulo || 'Preferencia'}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
-                  <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle;">
-                    ${pref.titulo || ''}: ${pref.subtitulo || ''}
+                  <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle; word-break: break-word; overflow-wrap: anywhere;">
+                    ${pref.titulo || ''}: ${this.textoPreferenciaCliente(pref)}
                   </span>
                 </td>
                 <td style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black};">
@@ -1868,7 +1880,7 @@ export class PaymentService extends BaseService {
               <tr style="border-bottom: 1px solid ${styles.colors.divider};">
                 <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
                   ${imagenUrl ? `<img src="${imagenFinal}" alt="${adic.titulo || 'Adición'}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
-                  <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle;">
+                  <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle; word-break: break-word; overflow-wrap: anywhere;">
                     ${adic.titulo || ''}: ${adic.subtitulo || ''} ${cantidadTotalAdicion > 1 ? `(x${cantidadTotalAdicion})` : ''}
                   </span>
                 </td>
@@ -1971,7 +1983,7 @@ export class PaymentService extends BaseService {
                         ${observaciones ? `
                         <div style="margin: ${styles.spacing.sm} 0 0 0;">
                           <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">Observaciones: </span>
-                          <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; margin-top: ${styles.spacing.xs}; line-height: 1.6;">
+                          <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; margin-top: ${styles.spacing.xs}; line-height: 1.6; word-break: break-word; overflow-wrap: anywhere;">
                             ${observaciones}
                           </div>
                         </div>` : ''}
