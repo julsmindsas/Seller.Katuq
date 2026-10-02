@@ -1,2 +1,412 @@
-// El componente lista hereda estilos de Bootstrap + PrimeNG.
-// Sin estilos adicionales necesarios.
+// Combos — listado con el estilo del registro (D-341). Diseño de referencia:
+// Claude Design "Rediseño de Combos" (artboard "Combos · listado").
+@import './combos-tema';
+
+.cb-page {
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 32px 28px 48px;
+  background: $cb-canvas;
+  font-family: $cb-text;
+  color: $cb-ink;
+}
+
+.cb-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+// ---- Encabezado ----
+.cb-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.cb-head-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 660px;
+}
+
+.cb-eyebrow {
+  @include cb-chip-accent;
+  align-self: flex-start;
+}
+
+.cb-title {
+  margin: 0;
+  font-family: $cb-display;
+  font-size: 30px;
+  line-height: 1.15;
+  color: $cb-ink;
+
+  span { color: $cb-accent; }
+}
+
+.cb-sub {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: $cb-body;
+}
+
+.cb-head-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cb-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  min-width: 260px;
+  margin: 0;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border-radius: 11px;
+  border: 1px solid $cb-chip-border;
+  background: #fff;
+  color: $cb-muted;
+  transition: border-color .15s ease, box-shadow .15s ease;
+
+  &:focus-within {
+    border-color: $cb-accent-line;
+    box-shadow: 0 0 0 3px $cb-accent-soft;
+  }
+
+  input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-family: $cb-text;
+    font-size: 14px;
+    color: $cb-ink;
+
+    &::placeholder { color: $cb-muted; }
+  }
+}
+
+.cb-btn-primary { @include cb-btn-primary; }
+.cb-btn-ghost { @include cb-btn-ghost; }
+
+.cb-btn-icon {
+  @include cb-btn-ghost;
+  width: 40px;
+  padding: 0;
+}
+
+.cb-btn-danger {
+  @include cb-btn-ghost;
+  border-color: #f6d3d3;
+  background: $cb-err-soft;
+  color: $cb-err;
+
+  &:hover { border-color: $cb-err; color: $cb-err; }
+}
+
+// ---- Indicadores ----
+.cb-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.cb-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #eeecf7;
+  box-shadow: $cb-shadow-panel;
+  transition: transform .15s ease;
+
+  &:hover { transform: translateY(-1px); }
+}
+
+.cb-stat-label { @include cb-label; }
+
+.cb-stat-value {
+  font-family: $cb-display;
+  font-size: 24px;
+  line-height: 1.2;
+  color: $cb-accent;
+}
+
+.cb-stat-value-slate { color: $cb-slate; }
+.cb-stat-value-ink { color: $cb-ink; }
+
+.cb-stat-hint {
+  font-size: 13px;
+  color: $cb-body;
+}
+
+// ---- Panel del listado ----
+.cb-panel {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid $cb-line;
+  box-shadow: $cb-shadow-panel;
+  overflow: hidden;
+}
+
+.cb-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  border-bottom: 1px solid $cb-line-soft;
+}
+
+.cb-toolbar-note {
+  font-size: 13px;
+  color: $cb-muted;
+}
+
+// Control segmentado del tema (spec design-system: toggle de vistas).
+.cb-seg {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: $cb-chip-bg;
+  border: 1px solid $cb-chip-border;
+
+  button {
+    height: 34px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: $cb-body;
+    font-family: $cb-text;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+
+    &:hover { color: $cb-accent; }
+
+    &.on {
+      background: #fff;
+      color: $cb-accent;
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(30, 20, 80, .12);
+    }
+  }
+}
+
+.cb-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 20px;
+  color: $cb-muted;
+  font-size: 14px;
+}
+
+// Filas: ícono · combo · productos · estado · acciones.
+.cb-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1.5fr) minmax(0, 1.9fr) 112px 200px;
+  gap: 18px;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid $cb-line-soft;
+  transition: background .15s ease;
+
+  &:hover { background: #faf9ff; }
+}
+
+.cb-row-head {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background: $cb-tint;
+  @include cb-label;
+
+  &:hover { background: $cb-tint; }
+}
+
+.cb-right { text-align: right; }
+
+.cb-tile {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cb-name {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.cb-name-txt {
+  font-family: $cb-display;
+  font-size: 16px;
+  line-height: 1.3;
+  color: $cb-ink;
+  overflow-wrap: anywhere;
+}
+
+.cb-row-off .cb-name-txt { color: $cb-body; }
+
+.cb-desc {
+  font-size: 13px;
+  line-height: 1.4;
+  color: $cb-muted;
+}
+
+.cb-prods {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cb-prods-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: $cb-body;
+}
+
+.cb-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cb-chip {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: $cb-chip-bg;
+  border: 1px solid $cb-chip-border;
+  font-size: 12px;
+  color: $cb-ink;
+}
+
+.cb-chip-more {
+  background: $cb-accent-soft;
+  border-color: $cb-accent-soft;
+  color: $cb-accent;
+  font-weight: 700;
+}
+
+.cb-pill {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.cb-pill-on { background: $cb-ok-soft; color: $cb-ok; }
+.cb-pill-off { background: $cb-slate-soft; color: $cb-slate; }
+
+.cb-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cb-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  font-size: 13px;
+  color: $cb-muted;
+}
+
+.cb-foot-note { text-align: right; }
+
+// ---- Vacío ----
+.cb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 24px 72px;
+  text-align: center;
+}
+
+.cb-empty-sm { padding: 40px 24px; }
+
+.cb-empty-ic {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $cb-tile;
+  color: $cb-accent;
+}
+
+.cb-empty-title {
+  font-family: $cb-display;
+  font-size: 20px;
+  color: $cb-ink;
+}
+
+.cb-empty-txt {
+  max-width: 440px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: $cb-body;
+}
+
+// ---- Pantallas angostas: cada combo pasa a tarjeta ----
+@media (max-width: 991px) {
+  .cb-stats { grid-template-columns: 1fr; }
+
+  .cb-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 10px 14px;
+  }
+
+  .cb-row-head { display: none; }
+
+  .cb-prods,
+  .cb-actions,
+  .cb-row > span:nth-child(4) { grid-column: 2; }
+
+  .cb-actions { justify-content: flex-start; }
+  .cb-foot-note { text-align: left; }
+}
+
+@media (max-width: 575px) {
+  .cb-page { padding: 20px 16px 32px; }
+  .cb-title { font-size: 24px; }
+  .cb-search { min-width: 0; flex: 1 1 100%; }
+  .cb-head-actions { width: 100%; }
+  .cb-head-actions .cb-btn-primary { flex: 1 1 100%; }
+}

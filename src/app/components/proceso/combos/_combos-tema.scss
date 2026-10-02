@@ -1,0 +1,138 @@
+// Tema de la pantalla de Combos (rediseño 2026-10-02, D-341).
+// Mismos tokens y fuentes de marca que el registro (`diagnostic-survey`,
+// `$reg-*`), que a su vez siguen openspec/specs/design-system: acento #5F3FE0,
+// tinta #211F3A, superficies lila, plano y sin gradientes.
+
+@font-face {
+  font-family: 'Geometr415BlkBTBlack';
+  src: url('/assets/images/logo/Katuq/Geometr415%20Blk%20BT%20Black.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Geometr415L';
+  src: url('/assets/images/logo/Katuq/GEO415L.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+$cb-accent: #5F3FE0;
+$cb-accent-hover: #4a2fc0;
+$cb-accent-soft: #efe9ff;
+$cb-accent-line: #ddd3fb;
+$cb-ink: #211F3A;
+$cb-body: #5b5878;
+// Más oscuro que el muted del tema (#8f8bab) para que los rótulos pequeños
+// pasen contraste 4.5:1 sobre blanco.
+$cb-muted: #6f6b8f;
+$cb-line: #ececf4;
+$cb-line-soft: #f1f0f7;
+$cb-chip-bg: #f5f4fa;
+$cb-chip-border: #e9e7f3;
+$cb-ghost-border: #e4e2ef;
+$cb-tile: #f3f1fb;
+$cb-tint: #faf9fe;
+$cb-canvas: #f6f5fb;
+$cb-ok: #1E874B;
+$cb-ok-soft: #E6F7EE;
+$cb-err: #B83232;
+$cb-err-soft: #FDECEC;
+$cb-slate: #5A6B78;
+$cb-slate-soft: #eef0f3;
+$cb-info: #1E6FD9;
+
+$cb-shadow-panel: 0 1px 3px rgba(30, 20, 80, .04);
+$cb-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
+$cb-shadow-float: 0 18px 40px -18px rgba(50, 40, 110, .35);
+
+$cb-display: 'Geometr415BlkBTBlack', 'Segoe UI', system-ui, sans-serif;
+$cb-text: 'Geometr415L', 'Segoe UI', system-ui, sans-serif;
+$cb-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+// Rótulo de campo o sección: UPPERCASE pequeño en muted.
+@mixin cb-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: $cb-muted;
+}
+
+// Pastilla (chip) de acento.
+@mixin cb-chip-accent {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 20px;
+  background: $cb-accent-soft;
+  border: 1px solid $cb-accent-line;
+  color: $cb-accent;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+@mixin cb-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 11px;
+  background: $cb-accent;
+  color: #fff;
+  font-family: $cb-display;
+  font-size: 15px;
+  box-shadow: $cb-shadow-btn;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+
+  &:hover { background: $cb-accent-hover; }
+  &:active { transform: translateY(1px); }
+  &:disabled { opacity: .6; cursor: default; }
+}
+
+@mixin cb-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid $cb-ghost-border;
+  background: #fff;
+  color: $cb-body;
+  font-family: $cb-text;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease;
+
+  &:hover { border-color: $cb-accent-line; color: $cb-accent; }
+}
+
+@mixin cb-input {
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid $cb-chip-border;
+  background: $cb-chip-bg;
+  font-family: $cb-text;
+  font-size: 14px;
+  color: $cb-ink;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+
+  &::placeholder { color: $cb-muted; }
+  &:focus {
+    background: #fff;
+    border-color: $cb-accent-line;
+    box-shadow: 0 0 0 3px $cb-accent-soft;
+  }
+}

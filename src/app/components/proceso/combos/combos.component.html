@@ -1,114 +1,147 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-sm-12 p-2">
-      <br />
-      <div class="card">
-        <i class="icon-bg" width="80" height="80" style="
-              opacity: 0.4;
-              position: absolute;
-              color: #6ec0d4;
-              top: 10px;
-              left: 10px;
-          "></i>
-        <div class="loader-box" *ngIf="cargando">
-          <div class="loader-8"></div>
-        </div>
+<!-- Combos — rediseño con el estilo del registro (D-341). -->
+<div class="cb-page">
+  <div class="cb-wrap">
 
-        <!-- Header Standar -->
-        <div class="row col-12 p-4 pb-0">
-          <div class="col-6">
-            <p class="text-left fc-secondary fw-bold fs-24 m-0 p-0">{{ "Combos" | translate }}</p>
-            <p class="text-left text-muted fs-18 m-0 p-0">{{ "Arma combos de productos para agregarlos con un solo click en venta asistida. Sin precio propio: el total es siempre la suma de los productos." | translate }}</p>
-          </div>
-
-          <div class="col-6 p-3" style="text-align: end">
-            <input type="text" class="form-control d-inline-block w-auto mr-2"
-              placeholder="{{ 'Buscar combo...' | translate }}" (input)="updateFilter($event)">
-            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="openCrearModal()">
-              <i placement="top" ngbTooltip="Nuevo combo" style="font-size: 18px; color: white; cursor: pointer;"
-                 class="icofont icofont-plus"></i>&nbsp;
-              <span style="color: white">{{ "Crear Combo" | translate }}</span>
-            </button>
-          </div>
-        </div>
-        <!-- FIN Header Standar -->
-
-        <div class="card-body custom-datatable" *ngIf="!cargando">
-          <p-table #dt [value]="rows" [paginator]="true" [rows]="10"
-            [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
-            styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
-            [sortField]="'nombre'" [sortOrder]="1" [globalFilterFields]="[
-                'nombre'
-            ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
-            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
-
-            <ng-template pTemplate="header">
-              <tr>
-                <th class="text-center" pSortableColumn="nombre">
-                  {{ "Nombre" | translate }}
-                  <p-sortIcon field="nombre"></p-sortIcon>
-                </th>
-                <th class="text-center">{{ "Descripción" | translate }}</th>
-                <th class="text-center">{{ "Productos" | translate }}</th>
-                <th class="text-center">{{ "Estado" | translate }}</th>
-                <th class="text-center">{{ "Acciones" | translate }}</th>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="body" let-row>
-              <tr>
-                <td>{{ row.nombre }}</td>
-                <td class="text-center">{{ row.descripcion || '—' }}</td>
-                <td class="text-center">
-                  <span class="badge bg-secondary fw-bold" ngbTooltip="{{ (row.productos || []).length }} producto(s)">
-                    {{ (row.productos || []).length }}
-                  </span>
-                  <small class="text-muted d-block" *ngIf="(row.productos || []).length">
-                    {{ resumenProductos(row) }}
-                  </small>
-                </td>
-                <td class="text-center">
-                  <span [ngClass]="{
-                    'badge bg-success': row.activo !== false,
-                    'badge bg-danger':  row.activo === false
-                  }">
-                    {{ row.activo !== false ? 'Activo' : 'Inactivo' }}
-                  </span>
-                </td>
-                <td class="text-center">
-                  <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
-                    style="font-size: 18px; margin-left: 10px; cursor: pointer;"
-                    class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
-                  </i>
-                  <i *ngIf="row.activo !== false" placement="top" ngbTooltip="{{ 'Inhabilitar' | translate }}"
-                    style="font-size: 18px; margin-left: 10px; cursor: pointer;"
-                    class="icofont icofont-trash fc-danger" (click)="eliminar(row)">
-                  </i>
-                  <button *ngIf="row.activo === false" type="button"
-                    class="btn btn-sm btn-danger"
-                    style="margin-left: 10px; padding: 2px 8px;"
-                    placement="top" ngbTooltip="{{ 'Eliminar permanentemente' | translate }}"
-                    (click)="eliminarPermanente(row)">
-                    <i class="fa fa-trash"></i>&nbsp;{{ 'Eliminar' | translate }}
-                  </button>
-                </td>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td [attr.colspan]="5">{{ "No hay combos registrados" | translate }}</td>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="summary">
-              <div class="flex align-items-center justify-content-between">
-                {{ "Total en esta consulta" | translate }}: {{ rows ? rows.length : 0 }} {{ "registros" | translate }}.
-              </div>
-            </ng-template>
-          </p-table>
-        </div>
+    <header class="cb-head">
+      <div class="cb-head-txt">
+        <span class="cb-eyebrow">Productos · Combos</span>
+        <h1 class="cb-title">Combos que se venden <span>en una sola línea</span></h1>
+        <p class="cb-sub">
+          Junta los productos que tus clientes llevan juntos. En la cotización y en el pedido el cliente
+          ve una línea con el total; el inventario y la factura siguen saliendo producto por producto.
+        </p>
       </div>
-    </div>
+      <div class="cb-head-actions">
+        <label class="cb-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="20" y1="20" x2="16.65" y2="16.65"></line></svg>
+          <input type="search" placeholder="Buscar combo o producto…" aria-label="Buscar combo o producto"
+                 [value]="busqueda" (input)="onBuscar($any($event.target).value)">
+        </label>
+        <button type="button" class="cb-btn-primary" (click)="openCrearModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Nuevo combo
+        </button>
+      </div>
+    </header>
+
+    <section class="cb-stats" aria-label="Resumen de combos">
+      <div class="cb-stat">
+        <span class="cb-stat-label">Combos activos</span>
+        <span class="cb-stat-value">{{ totalActivos }}</span>
+        <span class="cb-stat-hint">Se pueden elegir al cotizar y al vender</span>
+      </div>
+      <div class="cb-stat">
+        <span class="cb-stat-label">Inactivos</span>
+        <span class="cb-stat-value cb-stat-value-slate">{{ totalInactivos }}</span>
+        <span class="cb-stat-hint">Ocultos al vender; se pueden reactivar</span>
+      </div>
+      <div class="cb-stat">
+        <span class="cb-stat-label">Productos en combos</span>
+        <span class="cb-stat-value cb-stat-value-ink">{{ productosEnCombos }}</span>
+        <span class="cb-stat-hint">Cada uno conserva su precio y su inventario</span>
+      </div>
+    </section>
+
+    <section class="cb-panel">
+      <div class="cb-toolbar">
+        <div class="cb-seg" role="group" aria-label="Filtrar por estado">
+          <button type="button" [class.on]="filtro === 'todos'" [attr.aria-pressed]="filtro === 'todos'"
+                  (click)="cambiarFiltro('todos')">Todos · {{ combos.length }}</button>
+          <button type="button" [class.on]="filtro === 'activos'" [attr.aria-pressed]="filtro === 'activos'"
+                  (click)="cambiarFiltro('activos')">Activos · {{ totalActivos }}</button>
+          <button type="button" [class.on]="filtro === 'inactivos'" [attr.aria-pressed]="filtro === 'inactivos'"
+                  (click)="cambiarFiltro('inactivos')">Inactivos · {{ totalInactivos }}</button>
+        </div>
+        <span class="cb-toolbar-note">Ordenados por nombre</span>
+      </div>
+
+      <!-- Cargando -->
+      <div class="cb-loading" *ngIf="cargando">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Cargando combos…
+      </div>
+
+      <ng-container *ngIf="!cargando">
+        <!-- Sin combos todavía -->
+        <div class="cb-empty" *ngIf="combos.length === 0">
+          <span class="cb-empty-ic" aria-hidden="true">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+          </span>
+          <span class="cb-empty-title">Aún no tienes combos</span>
+          <span class="cb-empty-txt">
+            Arma uno con los productos que tus clientes llevan juntos, por ejemplo una bomba con su motor.
+            Se agrega con un clic al cotizar o al vender.
+          </span>
+          <button type="button" class="cb-btn-primary" (click)="openCrearModal()">Crear el primer combo</button>
+        </div>
+
+        <!-- Hay combos pero ninguno coincide -->
+        <div class="cb-empty cb-empty-sm" *ngIf="combos.length > 0 && filtrados.length === 0">
+          <span class="cb-empty-title">Ningún combo coincide</span>
+          <span class="cb-empty-txt">Prueba con otro nombre, producto o referencia, o cambia el filtro.</span>
+        </div>
+
+        <ng-container *ngIf="filtrados.length > 0">
+          <div class="cb-row cb-row-head" aria-hidden="true">
+            <span></span>
+            <span>Combo</span>
+            <span>Productos que incluye</span>
+            <span>Estado</span>
+            <span class="cb-right">Acciones</span>
+          </div>
+
+          <div class="cb-row" *ngFor="let c of pagina; let i = index; trackBy: trackCombo"
+               [class.cb-row-off]="c.activo === false">
+            <span class="cb-tile" [style.background]="tono(c, i).fondo" [style.color]="tono(c, i).color" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            </span>
+
+            <span class="cb-name">
+              <span class="cb-name-txt">{{ c.nombre }}</span>
+              <span class="cb-desc" *ngIf="c.descripcion">{{ c.descripcion }}</span>
+            </span>
+
+            <span class="cb-prods">
+              <span class="cb-prods-count">{{ (c.productos || []).length }} producto(s)</span>
+              <span class="cb-chips">
+                <span class="cb-chip" *ngFor="let p of productosVisibles(c)" [title]="p.nombre">{{ p.nombre }}</span>
+                <span class="cb-chip cb-chip-more" *ngIf="productosRestantes(c) > 0">+{{ productosRestantes(c) }}</span>
+              </span>
+            </span>
+
+            <span>
+              <span class="cb-pill" [class.cb-pill-on]="c.activo !== false" [class.cb-pill-off]="c.activo === false">
+                {{ c.activo !== false ? 'Activo' : 'Inactivo' }}
+              </span>
+            </span>
+
+            <span class="cb-actions">
+              <button type="button" class="cb-btn-ghost" (click)="openEditarModal(c)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
+                Editar
+              </button>
+              <button *ngIf="c.activo !== false" type="button" class="cb-btn-icon" (click)="eliminar(c)"
+                      aria-label="Desactivar combo" title="Desactivar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+              </button>
+              <button *ngIf="c.activo === false" type="button" class="cb-btn-danger" (click)="eliminarPermanente(c)"
+                      title="Eliminar para siempre">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+                Eliminar
+              </button>
+            </span>
+          </div>
+
+          <div class="cb-foot">
+            <span>Mostrando {{ pagina.length }} de {{ filtrados.length }} combo(s)</span>
+            <button type="button" class="cb-btn-ghost" *ngIf="pagina.length < filtrados.length" (click)="verMas()">Ver más</button>
+            <span class="cb-foot-note" *ngIf="pagina.length >= filtrados.length">
+              Un combo inactivo no se puede elegir al vender; lo que ya se cotizó o vendió no cambia.
+            </span>
+          </div>
+        </ng-container>
+      </ng-container>
+    </section>
+
   </div>
 </div>

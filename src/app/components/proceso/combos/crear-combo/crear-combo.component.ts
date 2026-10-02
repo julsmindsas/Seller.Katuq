@@ -12,6 +12,8 @@ interface ComboProductoUI {
   referencia: string;
   imagen?: string | null;
   descripcion?: string | null;
+  /** Precio general con IVA, solo para mostrar (el combo no guarda precio, D-147). */
+  precio?: number | null;
 }
 
 @Component({
@@ -25,17 +27,20 @@ export class CrearComboComponent implements OnInit, OnDestroy {
 
   form: FormGroup;
 
-  // ── Selector multi-producto (typeahead server-side) ──────────────────────
-  // Mismo patrón que crear-descuento-promocion.component.ts (búsqueda por
-  // producto específico), en modo ng-select[multiple] para elegir N productos.
-  // `imagen`/`descripcion` se guardan solo para pintar la lista tipo "listado
-  // de productos" debajo del selector — el payload que se persiste (armarPayload)
-  // sigue siendo solo {productoId, referencia, nombre}, sin estos campos.
+  // ── Buscador para agregar productos (typeahead server-side) ──────────────
+  // Rediseño D-341: el buscador solo agrega; lo elegido se ve en la lista de
+  // abajo (imagen, nombre, referencia y precio). `imagen`, `descripcion` y
+  // `precio` son solo para pintar: el payload que se guarda (armarPayload)
+  // sigue siendo {productoId, referencia, nombre}.
   productosBuscados: ComboProductoUI[] = [];
   productosSeleccionados: ComboProductoUI[] = [];
+  productoElegido: ComboProductoUI | null = null;
   productoInput$ = new Subject<string>();
   productoLoading = false;
   cargandoSeleccionados = false;
+  /** Se pidió guardar: desde ahí se muestran los avisos de lo que falta. */
+  intentoGuardar = false;
+  guardando = false;
   private productoSub?: Subscription;
 
   constructor(
@@ -60,20 +65,19 @@ export class CrearComboComponent implements OnInit, OnDestroy {
 
       // Prealimentar con lo guardado (nombre/referencia, sin imagen/descripción
       // — el combo no las persiste) y de inmediato resolver los productos
-      // completos por id para poder pintar imagen + descripción también al
+      // completos por id para pintar imagen, descripción y precio también al
       // editar, no solo cuando se buscan de nuevo.
       const productosGuardados: ComboProductoUI[] = (this.comboData.productos || []).map((p: any) => ({
         cd: p.productoId,
         titulo: p.nombre || '(producto)',
         referencia: p.referencia || ''
       }));
-      this.productosBuscados = productosGuardados;
       this.productosSeleccionados = productosGuardados;
       this.resolverProductosGuardados(productosGuardados.map(p => p.cd));
     }
   }
 
-  /** Trae imagen + descripción reales de los productos ya guardados en el combo. */
+  /** Trae imagen, descripción y precio reales de los productos ya guardados en el combo. */
   private resolverProductosGuardados(ids: string[]): void {
     if (ids.length === 0) return;
     this.cargandoSeleccionados = true;
@@ -81,9 +85,8 @@ export class CrearComboComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         const items = this.mapProductos(res?.products || []);
         const porId = new Map(items.map(i => [i.cd, i]));
-        // Mantiene el orden guardado; completa imagen/descripción donde haya match.
+        // Mantiene el orden guardado; completa lo que traiga el producto.
         this.productosSeleccionados = this.productosSeleccionados.map(p => porId.get(p.cd) || p);
-        this.productosBuscados = this.productosSeleccionados;
         this.cargandoSeleccionados = false;
       },
       error: () => { this.cargandoSeleccionados = false; }
@@ -94,14 +97,15 @@ export class CrearComboComponent implements OnInit, OnDestroy {
     this.productoSub?.unsubscribe();
   }
 
-  /** Mapea productos completos (Firestore) al shape liviano del selector, con imagen + descripción para la lista tipo "listado de productos". */
+  /** Mapea productos completos (Firestore) al shape liviano del selector. */
   private mapProductos(products: any[]): ComboProductoUI[] {
     return (products || []).map((p: any) => ({
       cd: p.cd,
       titulo: p.crearProducto?.titulo || p.identificacion?.referencia || '(sin título)',
       referencia: p.identificacion?.referencia || '',
       imagen: p.crearProducto?.imagenesPrincipales?.[0]?.urls || null,
-      descripcion: p.crearProducto?.descripcion || null
+      descripcion: p.crearProducto?.descripcion || null,
+      precio: Number(p.precio?.precioUnitarioConIva) || null
     }));
   }
 
@@ -112,18 +116,59 @@ export class CrearComboComponent implements OnInit, OnDestroy {
     return texto.length > maxLen ? `${texto.slice(0, maxLen)}…` : texto;
   }
 
-  /** Quita un producto de la selección (usado desde la lista tipo "listado de productos"). */
-  quitarProducto(item: ComboProductoUI): void {
-    this.productosSeleccionados = this.productosSeleccionados.filter(p => p.cd !== item.cd);
+  /**
+   * Resultados del buscador sin los productos que ya están en el combo. Es un
+   * campo (no un getter) para que el desplegable no reciba un arreglo nuevo en
+   * cada detección de cambios.
+   */
+  opcionesBusqueda: ComboProductoUI[] = [];
+
+  private refrescarOpciones(): void {
+    const elegidos = new Set(this.productosSeleccionados.map(p => p.cd));
+    this.opcionesBusqueda = this.productosBuscados.filter(p => !elegidos.has(p.cd));
   }
 
-  /**
-   * Comparador para ng-select: sin `bindValue`, el ngModel guarda los objetos
-   * completos (no solo `cd`) para que `productosSeleccionados` ya traiga
-   * imagen/descripción — compara por `cd` para que ng-select reconozca
-   * correctamente qué opciones ya están seleccionadas entre búsquedas.
-   */
-  compararProducto = (a: ComboProductoUI, b: ComboProductoUI): boolean => a?.cd === b?.cd;
+  /** Agrega el producto elegido en el buscador y lo deja listo para otro. */
+  agregarProducto(item: ComboProductoUI | null): void {
+    if (item && !this.productosSeleccionados.some(p => p.cd === item.cd)) {
+      this.productosSeleccionados = [...this.productosSeleccionados, item];
+      this.refrescarOpciones();
+    }
+    this.productoElegido = null;
+  }
+
+  /** Quita un producto del combo. */
+  quitarProducto(item: ComboProductoUI): void {
+    this.productosSeleccionados = this.productosSeleccionados.filter(p => p.cd !== item.cd);
+    this.refrescarOpciones();
+  }
+
+  trackProducto(_i: number, p: ComboProductoUI): string {
+    return p.cd;
+  }
+
+  // ── Vista previa "Así lo ve tu cliente" ──────────────────────────────────
+  get nombrePreview(): string {
+    return String(this.form.get('nombre')?.value || '').trim() || 'Nombre del combo';
+  }
+
+  /** Suma de los precios generales; el valor real sale de la lista de cada cliente al vender. */
+  get totalGeneral(): number {
+    return this.productosSeleccionados.reduce((acc, p) => acc + (Number(p.precio) || 0), 0);
+  }
+
+  /** ¿Se conoce el precio de todos los productos? (los recién guardados llegan sin precio hasta resolverse). */
+  get todosConPrecio(): boolean {
+    return this.productosSeleccionados.length > 0 && this.productosSeleccionados.every(p => Number(p.precio) > 0);
+  }
+
+  get faltaNombre(): boolean {
+    return !!this.form.get('nombre')?.invalid && (this.intentoGuardar || !!this.form.get('nombre')?.touched);
+  }
+
+  get faltanProductos(): boolean {
+    return this.intentoGuardar && this.productosSeleccionados.length === 0;
+  }
 
   // ── Búsqueda de productos con typeahead (server-side) ────────────────────
   private initBusquedaProductos(): void {
@@ -142,28 +187,32 @@ export class CrearComboComponent implements OnInit, OnDestroy {
         );
       }),
       tap(() => (this.productoLoading = false))
-    ).subscribe((items: any[]) => {
-      // Se agregan al set buscado sin perder los ya seleccionados (que pueden
-      // no estar en el resultado de la búsqueda actual).
-      const existentes = new Map(this.productosSeleccionados.map(p => [p.cd, p]));
-      items.forEach(i => existentes.set(i.cd, i));
-      this.productosBuscados = Array.from(existentes.values());
+    ).subscribe((items: ComboProductoUI[]) => {
+      this.productosBuscados = items;
+      this.refrescarOpciones();
     });
   }
 
-  guardar() {
-    if (this.form.invalid || this.productosSeleccionados.length === 0) {
-      this.form.markAllAsTouched();
-      Swal.fire('Error', 'Completa el nombre y selecciona al menos 1 producto', 'error');
-      return;
+  guardarOEditar(): void {
+    if (this.mostrarCrear) {
+      this.guardar();
+    } else {
+      this.editar();
     }
+  }
+
+  guardar() {
+    if (!this.validar()) return;
     const payload = this.armarPayload();
+    this.guardando = true;
     this.service.createCombo(payload).subscribe({
       next: () => {
-        Swal.fire('¡Creado!', 'El combo fue creado exitosamente.', 'success')
+        this.guardando = false;
+        Swal.fire('¡Creado!', 'El combo quedó listo para cotizar y vender.', 'success')
           .then(() => this.activeModal.close('success'));
       },
       error: (err) => {
+        this.guardando = false;
         const msg = err?.error?.message || 'No se pudo crear el combo.';
         Swal.fire('Error', msg, 'error');
       }
@@ -171,22 +220,32 @@ export class CrearComboComponent implements OnInit, OnDestroy {
   }
 
   editar() {
-    if (this.form.invalid || this.productosSeleccionados.length === 0) {
-      this.form.markAllAsTouched();
-      Swal.fire('Error', 'Completa el nombre y selecciona al menos 1 producto', 'error');
-      return;
-    }
+    if (!this.validar()) return;
     const payload = this.armarPayload();
+    this.guardando = true;
     this.service.editCombo(payload).subscribe({
       next: () => {
+        this.guardando = false;
         Swal.fire('¡Actualizado!', 'El combo fue actualizado.', 'success')
           .then(() => this.activeModal.close('success'));
       },
       error: (err) => {
+        this.guardando = false;
         const msg = err?.error?.message || 'No se pudo actualizar el combo.';
         Swal.fire('Error', msg, 'error');
       }
     });
+  }
+
+  /** Nombre y al menos un producto; si falta algo se marca en el formulario. */
+  private validar(): boolean {
+    this.intentoGuardar = true;
+    this.form.markAllAsTouched();
+    if (this.form.invalid || this.productosSeleccionados.length === 0) {
+      Swal.fire('Falta información', 'Ponle un nombre al combo y agrega al menos un producto.', 'warning');
+      return false;
+    }
+    return true;
   }
 
   // Sin campo de precio a propósito (D-147): el combo solo lleva la lista de

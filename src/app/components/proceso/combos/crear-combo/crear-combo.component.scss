@@ -1,192 +1,583 @@
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
+// Crear / editar combo — estilo del registro (D-341). Diseño de referencia:
+// Claude Design "Rediseño de Combos" (artboard "Combos · nuevo combo").
+@import '../combos-tema';
+
+// El marco del modal (.modal-dialog/.modal-content) vive fuera de este
+// componente: se alcanza por la clase que le pone CombosComponent al abrirlo.
+::ng-deep .kq-combo-modal {
+  .modal-dialog { max-width: 1040px; }
+
+  .modal-content {
+    border: 0;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 30px 70px -24px rgba(30, 20, 80, .55);
+  }
 }
 
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+:host { display: block; }
+
+.cbm {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+  font-family: $cb-text;
+  color: $cb-ink;
+  background: #fff;
 }
 
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: 0.4s;
+// ---- Columna del formulario ----
+.cbm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px 32px 24px;
+  min-width: 0;
 }
 
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.4s;
+.cbm-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
 }
 
-input:checked + .slider {
-  background-color: var(--theme-primary, #7366ff);
+.cbm-head-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-input:checked + .slider:before {
-  transform: translateX(26px);
+.cbm-eyebrow {
+  @include cb-chip-accent;
+  align-self: flex-start;
+  padding: 4px 10px;
 }
 
-.slider.round {
-  border-radius: 24px;
+.cbm-title {
+  margin: 0;
+  font-family: $cb-display;
+  font-size: 24px;
+  line-height: 1.2;
+  color: $cb-ink;
 }
 
-.slider.round:before {
-  border-radius: 50%;
+.cbm-close {
+  @include cb-btn-ghost;
+  flex-shrink: 0;
+  width: 40px;
+  padding: 0;
 }
 
-// Cada opción del dropdown de búsqueda (ng-select) — imagen + nombre +
-// descripción, para reconocer el producto visualmente antes de elegirlo.
-::ng-deep .combo-opcion-producto {
+.cbm-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cbm-row2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: 16px;
+  align-items: start;
+}
+
+.cbm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  min-width: 0;
+}
+
+.cbm-label { @include cb-label; }
+
+.cbm-label-hint {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+.cbm-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.cbm-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: $cb-accent-soft;
+  color: $cb-accent;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cbm-input {
+  @include cb-input;
+  width: 100%;
+}
+
+.cbm-textarea {
+  height: auto;
+  min-height: 64px;
+  padding: 10px 14px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.cbm-invalid {
+  border-color: #f0b4b4;
+  background: #fff;
+}
+
+.cbm-error {
+  font-size: 12.5px;
+  color: $cb-err;
+}
+
+// Interruptor de estado: casilla nativa (accesible) dentro de una tarjeta.
+.cbm-switch {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 2px 0;
+  gap: 10px;
+  min-height: 44px;
+  margin: 23px 0 0;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: $cb-chip-bg;
+  border: 1px solid $cb-chip-border;
+  cursor: pointer;
 
-  .combo-opcion-thumb {
-    width: 34px;
-    height: 34px;
-    flex: none;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    object-fit: cover;
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: $cb-accent;
+    cursor: pointer;
+  }
+}
+
+.cbm-switch-txt {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.cbm-switch-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: $cb-ink;
+}
+
+.cbm-switch-sub {
+  font-size: 12px;
+  color: $cb-muted;
+}
+
+// Buscador para agregar productos (ng-select con el look de los inputs del tema).
+:host ::ng-deep .cbm-buscador.ng-select {
+  .ng-select-container {
+    min-height: 44px;
+    border-radius: 10px;
+    border: 1px solid $cb-chip-border;
+    background: $cb-chip-bg;
+    box-shadow: none;
+    cursor: text;
   }
 
-  .combo-opcion-thumb-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9ca3af;
-    background: #f9fafb;
+  &.ng-select-focused:not(.ng-select-opened) > .ng-select-container,
+  &.ng-select-opened > .ng-select-container {
+    background: #fff;
+    border-color: $cb-accent-line;
+    box-shadow: 0 0 0 3px $cb-accent-soft;
+  }
+
+  .ng-value-container {
+    padding-left: 14px;
+  }
+
+  .ng-placeholder {
+    color: $cb-muted;
+    font-family: $cb-text;
     font-size: 14px;
   }
 
-  .combo-opcion-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    min-width: 0;
-    flex: 1 1 auto;
+  .ng-input > input {
+    font-family: $cb-text;
+    font-size: 14px;
+    color: $cb-ink;
   }
 
-  .combo-opcion-titulo {
-    font-weight: 700;
+  .ng-arrow-wrapper { display: none; }
+
+  .ng-dropdown-panel {
+    border: 1px solid $cb-line;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: $cb-shadow-float;
+    margin-top: 6px;
+  }
+
+  .ng-dropdown-panel .ng-dropdown-panel-items .ng-option {
+    padding: 8px 12px;
+
+    &.ng-option-marked { background: #faf9ff; }
+  }
+
+  .ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-disabled {
+    font-family: $cb-text;
     font-size: 13px;
-    color: #211f3a;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .combo-opcion-desc {
-    font-size: 11.5px;
-    color: #8b8fa3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: $cb-muted;
   }
 }
 
-// Lista de productos seleccionados del combo — imagen + nombre + descripción,
-// mismo lenguaje visual que el listado de administración de productos.
-.combo-productos-list {
-  margin-top: 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+.cbm-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cbm-opt-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cbm-opt-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: $cb-ink;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+.cbm-thumb {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: cover;
+  border: 1px solid $cb-line;
+  background: $cb-tile;
+}
+
+.cbm-thumb-lg {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+}
+
+.cbm-thumb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8f8bab;
+}
+
+.cbm-ref {
+  font-family: $cb-mono;
+  font-size: 11.5px;
+  color: $cb-info;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  .combo-productos-list-header {
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: #6b7280;
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
+.cbm-price {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: $cb-ink;
+  white-space: nowrap;
+}
+
+// Lista de productos del combo.
+.cbm-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid $cb-line;
+  overflow: hidden;
+}
+
+.cbm-item {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto 34px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid $cb-line-soft;
+  background: #fff;
+}
+
+.cbm-item-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cbm-item-name {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: $cb-ink;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cbm-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #8f8bab;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+
+  &:hover {
+    background: $cb-err-soft;
+    color: $cb-err;
   }
+}
 
-  .combo-producto-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+.cbm-list-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: $cb-tint;
+  font-size: 13px;
+  color: $cb-body;
 
-    & + .combo-producto-row {
-      border-top: 1px solid #f0f0f2;
-    }
+  strong {
+    font-family: $cb-display;
+    font-size: 15px;
+    font-weight: normal;
+    color: $cb-accent;
   }
+}
 
-  .combo-producto-thumb {
-    width: 44px;
-    height: 44px;
-    flex: none;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    object-fit: cover;
+.cbm-list-empty {
+  padding: 18px 16px;
+  border-radius: 14px;
+  border: 1px dashed $cb-chip-border;
+  background: $cb-tint;
+  font-size: 13px;
+  line-height: 1.5;
+  color: $cb-body;
+  text-align: center;
+}
+
+.cbm-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.cbm-btn-ghost {
+  @include cb-btn-ghost;
+  height: 44px;
+  padding: 0 18px;
+  font-size: 15px;
+}
+
+.cbm-btn-primary { @include cb-btn-primary; }
+
+// ---- Vista previa (panel lila, como el registro) ----
+.cbm-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 32px 30px;
+  background: $cb-tile;
+  min-width: 0;
+}
+
+.cbm-preview-title {
+  margin: 0;
+  font-family: $cb-display;
+  font-size: 20px;
+  line-height: 1.25;
+  color: $cb-ink;
+
+  span { color: $cb-accent; }
+}
+
+.cbm-doc {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #ebe8f7;
+  box-shadow: $cb-shadow-float;
+  overflow: hidden;
+}
+
+.cbm-doc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid $cb-line-soft;
+}
+
+.cbm-doc-tag {
+  font-family: $cb-mono;
+  font-size: 12px;
+  color: $cb-info;
+}
+
+.cbm-doc-cols,
+.cbm-doc-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px auto;
+  gap: 10px;
+  padding: 9px 16px;
+}
+
+.cbm-doc-cols {
+  background: $cb-tint;
+  @include cb-label;
+  font-size: 10.5px;
+}
+
+.cbm-doc-row {
+  align-items: center;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-size: 13.5px;
+}
+
+.cbm-doc-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cbm-doc-name-txt {
+  font-weight: 700;
+  line-height: 1.3;
+  color: $cb-ink;
+  overflow-wrap: anywhere;
+}
+
+.cbm-doc-combo {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: $cb-accent-soft;
+  color: $cb-accent;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+.cbm-doc-money {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.cbm-doc-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-top: 1px solid $cb-line-soft;
+  font-size: 13px;
+  color: $cb-body;
+
+  strong {
+    font-family: $cb-display;
+    font-size: 18px;
+    font-weight: normal;
+    color: $cb-accent;
   }
+}
 
-  .combo-producto-thumb-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9ca3af;
-    background: #f9fafb;
-  }
+.cbm-center { text-align: center; }
+.cbm-right { text-align: right; }
 
-  .combo-producto-info {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-    flex: 1 1 auto;
-  }
+.cbm-tip {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #ebe8f7;
+  font-size: 13px;
+  line-height: 1.5;
+  color: $cb-body;
 
-  .combo-producto-titulo {
-    font-weight: 800;
-    font-size: 13.5px;
-    color: #211f3a;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  strong { color: $cb-ink; }
+}
 
-  .combo-producto-ref {
-    font-size: 11.5px;
-    color: #8b8fa3;
-    font-weight: 600;
-  }
+.cbm-tip-ic {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: $cb-accent-soft;
+  color: $cb-accent;
+}
 
-  .combo-producto-desc {
-    font-size: 12px;
-    color: #6b7280;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.cbm-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
 
-  .combo-producto-quitar {
-    flex: none;
-    border: none;
-    background: transparent;
-    color: #9ca3af;
-    cursor: pointer;
-    padding: 4px;
+.cbm-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #ebe8f7;
+  font-size: 13px;
+  line-height: 1.4;
+  color: $cb-ink;
 
-    &:hover { color: #d33; }
-  }
+  .cbm-label { font-size: 10.5px; }
+}
+
+.cbm-caption {
+  font-size: 12px;
+  color: $cb-muted;
+}
+
+// ---- Pantallas angostas: la vista previa pasa debajo del formulario ----
+@media (max-width: 991px) {
+  .cbm { grid-template-columns: 1fr; }
+  .cbm-preview { padding: 24px 22px; }
+}
+
+@media (max-width: 575px) {
+  .cbm-form { padding: 22px 18px 20px; }
+  .cbm-row2 { grid-template-columns: 1fr; }
+  .cbm-switch { margin-top: 0; }
+  .cbm-tiles { grid-template-columns: 1fr; }
+  .cbm-item { grid-template-columns: 44px minmax(0, 1fr) 34px; }
+  .cbm-item .cbm-price { grid-column: 2; grid-row: 2; }
 }
