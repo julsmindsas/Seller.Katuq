@@ -277,6 +277,8 @@
                   <span class="cl-combo-tag">combo</span>
                   {{ fila.lineas.length }} producto(s) en una sola línea
                 </span>
+                <!-- Ticket 1116: la descripción del combo, igual que la ve el cliente -->
+                <span class="cl-combo-desc" *ngIf="fila.combo.descripcion">{{ fila.combo.descripcion }}</span>
                 <button type="button" class="cl-combo-btn" (click)="abrirCombo(fila.combo.grupo)"
                         title="El cliente verá cada producto del combo por separado">
                   Abrir combo
@@ -695,6 +697,8 @@
                 <span class="doc-prod-txt">
                   {{ fila.combo.nombre }}
                   <span class="doc-ref"> · Combo</span>
+                  <!-- Ticket 1116: la descripción del combo la ve el cliente -->
+                  <span class="doc-detalle" *ngIf="fila.combo.descripcion">{{ fila.combo.descripcion }}</span>
                 </span>
               </div>
             </td>

@@ -187,6 +187,11 @@ export class PaymentService extends BaseService {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
+    const descripcion = String(fila.combo?.descripcion || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
     const desc = valorComun(
       fila.lineas.map((l: any) => Math.round(Math.min(100, Math.max(0, Number(l?.descuentoLinea) || 0))))
     );
@@ -207,6 +212,7 @@ export class PaymentService extends BaseService {
                 <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; margin-top: ${styles.spacing.xs}; line-height: 1.4;">
                   Combo • Cantidad: ${fila.cantidad}${badge}
                 </div>
+                ${descripcion ? `<div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; margin-top: ${styles.spacing.xs}; line-height: 1.5; white-space: pre-line; word-break: break-word; overflow-wrap: anywhere;">${descripcion}</div>` : ""}
               </div>
             </td>
             <td style="padding: ${styles.spacing.lg} ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.body}; color: ${styles.colors.black};">

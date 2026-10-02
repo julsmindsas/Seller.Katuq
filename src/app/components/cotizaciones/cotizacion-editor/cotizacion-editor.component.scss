@@ -1309,11 +1309,14 @@
     }
 
     // Ticket 1095: detalle escrito para esta cotización, respeta saltos de línea
+    // Color propio: es un span con *ngIf y la regla global vieja
+    // `span.ng-star-inserted` lo pintaría de azul.
     .doc-detalle {
       display: block;
       font-size: 9.5px;
       white-space: pre-line;
       margin-top: 2px;
+      color: var(--ink2);
     }
 
     // Lista de precios aplicada. En renglón aparte y discreta: acompaña al
@@ -1604,6 +1607,20 @@
     border: 1px solid #E6E2F5;
     background: #fff;
     color: #5F3FE0;
+  }
+
+  // Ticket 1116: descripción del combo bajo su nombre (color propio por el *ngIf).
+  .cl-combo-desc {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #6B6785;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .cl-combo-iva {

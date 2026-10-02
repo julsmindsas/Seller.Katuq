@@ -92,9 +92,9 @@
       </div>
 
       <label class="cbm-field">
-        <span class="cbm-label">Descripción <span class="cbm-label-hint">(opcional, solo la ve tu equipo)</span></span>
+        <span class="cbm-label">Descripción <span class="cbm-label-hint">(opcional, la ve el cliente bajo el nombre del combo)</span></span>
         <textarea class="cbm-input cbm-textarea" formControlName="descripcion" rows="2"
-                  placeholder="Ej.: armar con el acople de 1 1/2 pulgadas"></textarea>
+                  placeholder="Ej.: bomba centrífuga con motor de 10 HP, lista para instalar"></textarea>
       </label>
     </form>
 
@@ -125,6 +125,7 @@
         <span class="cbm-doc-name">
           <span class="cbm-doc-name-txt">{{ nombrePreview }}</span>
           <span class="cbm-doc-combo">Combo</span>
+          <span class="cbm-doc-desc" *ngIf="descripcionPreview">{{ descripcionPreview }}</span>
         </span>
         <span class="cbm-center">1</span>
         <span class="cbm-right cbm-doc-money">{{ todosConPrecio ? (totalGeneral | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}</span>

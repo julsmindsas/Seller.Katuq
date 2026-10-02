@@ -750,3 +750,11 @@ $color-danger: #e74c3c;
     image-rendering: crisp-edges;
   }
 }
+// Ticket 1116: descripción del combo bajo su nombre.
+.combo-descripcion {
+  margin-top: 2px;
+  font-size: 0.85em;
+  color: #5b5878;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}

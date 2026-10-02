@@ -499,6 +499,19 @@
   text-transform: uppercase;
 }
 
+// Ticket 1116: descripción del combo en la vista previa (color propio por el *ngIf).
+.cbm-doc-desc {
+  font-size: 12px;
+  line-height: 1.45;
+  color: $cb-body;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .cbm-doc-money {
   font-weight: 800;
   white-space: nowrap;

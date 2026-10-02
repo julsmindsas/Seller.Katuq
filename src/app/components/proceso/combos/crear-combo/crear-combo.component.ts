@@ -158,6 +158,11 @@ export class CrearComboComponent implements OnInit, OnDestroy {
     return String(this.form.get('nombre')?.value || '').trim() || 'Nombre del combo';
   }
 
+  /** Ticket 1116: la descripción la ve el cliente bajo el nombre del combo. */
+  get descripcionPreview(): string {
+    return String(this.form.get('descripcion')?.value || '').trim();
+  }
+
   /** Suma de los precios generales; el valor real sale de la lista de cada cliente al vender. */
   get totalGeneral(): number {
     return this.productosSeleccionados.reduce((acc, p) => acc + (Number(p.precio) || 0), 0);

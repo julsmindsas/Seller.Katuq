@@ -67,7 +67,11 @@
           <tr *ngIf="esComboFila(fila)">
             <td class="col-item">{{ i + 1 }}</td>
             <td class="col-codigo">COMBO</td>
-            <td class="col-descripcion">{{ fila.combo.nombre }}</td>
+            <td class="col-descripcion">
+              {{ fila.combo.nombre }}
+              <!-- Ticket 1116: la descripción del combo la ve el cliente -->
+              <div class="combo-descripcion" *ngIf="fila.combo.descripcion">{{ fila.combo.descripcion }}</div>
+            </td>
             <td class="col-cantidad">{{ fila.cantidad }}</td>
             <td class="col-unitario">
               {{ comboPrecioUnitario(fila) | currency:'COP':'':'1.0-0' }}

@@ -18,6 +18,8 @@ export interface ComboLinea {
   cantidadPorCombo: number;
   /** true = el comercial lo abrió y cada producto se ve en su propia fila. */
   abierto?: boolean;
+  /** Ticket 1116: descripción del combo cuando se agregó; la ve el cliente bajo el nombre. */
+  descripcion?: string;
 }
 
 export interface FilaLinea<T> {

@@ -695,6 +695,8 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       id: String(combo?.id || ""),
       nombre: String(combo?.nombre || "Combo").trim() || "Combo",
       grupo: nuevoGrupoCombo(String(combo?.id || "")),
+      // Ticket 1116: la descripción del combo la ve el cliente bajo el nombre.
+      descripcion: String(combo?.descripcion || "").trim(),
     };
     this.maestro.getProductsByIds(ids).subscribe({
       next: (res: any) => {
@@ -835,7 +837,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   private agregarDirecto(
     producto: Producto,
     mostrarToast = true,
-    combo?: { id: string; nombre: string; grupo: string }
+    combo?: { id: string; nombre: string; grupo: string; descripcion?: string }
   ): void {
     const productoConPrecio = this.aplicarPrecioCategoria(producto);
     const cantidadMinima = (producto as any)?.disponibilidad?.cantidadMinVenta || 1;

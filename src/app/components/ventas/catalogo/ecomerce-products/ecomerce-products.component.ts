@@ -1749,7 +1749,7 @@ export class EcomerceProductsComponent
       requiereConfiguracionPendiente?: boolean;
       mostrarToast?: boolean;
       /** Ticket 1097: la línea entra como parte de este combo, cerrado (una sola fila). */
-      combo?: { id: string; nombre: string; grupo: string };
+      combo?: { id: string; nombre: string; grupo: string; descripcion?: string };
     } = {}
   ): boolean {
     const mostrarToast = opts.mostrarToast !== false;
@@ -1926,6 +1926,8 @@ export class EcomerceProductsComponent
       id: String(combo?.id || ''),
       nombre: String(combo?.nombre || 'Combo').trim() || 'Combo',
       grupo: nuevoGrupoCombo(String(combo?.id || '')),
+      // Ticket 1116: la descripción del combo la ve el cliente bajo el nombre.
+      descripcion: String(combo?.descripcion || '').trim(),
     };
 
     this.maestroService.getProductsByIds(ids).subscribe({
