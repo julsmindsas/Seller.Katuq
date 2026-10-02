@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, ViewChild } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgSelectComponent } from '@ng-select/ng-select';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, map, catchError, tap } from 'rxjs/operators';
@@ -34,8 +35,9 @@ export class CrearComboComponent implements OnInit, OnDestroy {
   // sigue siendo {productoId, referencia, nombre}.
   productosBuscados: ComboProductoUI[] = [];
   productosSeleccionados: ComboProductoUI[] = [];
-  productoElegido: ComboProductoUI | null = null;
   productoInput$ = new Subject<string>();
+  /** El buscador: se vacía después de agregar para dejarlo listo para otro producto. */
+  @ViewChild('buscador') buscador?: NgSelectComponent;
   productoLoading = false;
   cargandoSeleccionados = false;
   /** Se pidió guardar: desde ahí se muestran los avisos de lo que falta. */
@@ -128,13 +130,17 @@ export class CrearComboComponent implements OnInit, OnDestroy {
     this.opcionesBusqueda = this.productosBuscados.filter(p => !elegidos.has(p.cd));
   }
 
-  /** Agrega el producto elegido en el buscador y lo deja listo para otro. */
+  /**
+   * Agrega el producto elegido en el buscador y lo deja listo para otro.
+   * `clearModel()` vuelve a emitir `change` con null: ese segundo llamado no hace nada.
+   */
   agregarProducto(item: ComboProductoUI | null): void {
-    if (item && !this.productosSeleccionados.some(p => p.cd === item.cd)) {
+    if (!item) return;
+    if (!this.productosSeleccionados.some(p => p.cd === item.cd)) {
       this.productosSeleccionados = [...this.productosSeleccionados, item];
       this.refrescarOpciones();
     }
-    this.productoElegido = null;
+    this.buscador?.clearModel();
   }
 
   /** Quita un producto del combo. */

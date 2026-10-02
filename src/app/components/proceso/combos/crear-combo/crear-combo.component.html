@@ -41,11 +41,13 @@
           </span>
         </div>
 
-        <ng-select class="cbm-buscador" [items]="opcionesBusqueda" bindLabel="titulo"
-          [(ngModel)]="productoElegido" [ngModelOptions]="{standalone: true}" (change)="agregarProducto($event)"
+        <!-- Solo agrega: al elegir, el producto pasa a la lista y el buscador se vacía
+             (clearModel exige clearable; la "×" se oculta en el SCSS). -->
+        <ng-select #buscador class="cbm-buscador" [items]="opcionesBusqueda" bindLabel="titulo"
+          (change)="agregarProducto($event)"
           [typeahead]="productoInput$" [loading]="productoLoading" [minTermLength]="2"
           typeToSearchText="Escribe al menos 2 letras…" notFoundText="Sin resultados" loadingText="Buscando…"
-          placeholder="Busca por nombre o referencia para agregar…" [clearable]="false"
+          placeholder="Busca por nombre o referencia para agregar…" [clearable]="true"
           labelForId="cbm-buscar" aria-labelledby="cbm-productos">
           <ng-template ng-option-tmp let-item="item">
             <div class="cbm-opt">

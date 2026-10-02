@@ -346,7 +346,12 @@
   color: $cb-muted;
 }
 
-.cb-foot-note { text-align: right; }
+// Color explícito: es un span con *ngIf y la regla global vieja
+// `span.ng-star-inserted` lo pintaría de azul.
+.cb-foot-note {
+  text-align: right;
+  color: $cb-muted;
+}
 
 // ---- Vacío ----
 .cb-empty {

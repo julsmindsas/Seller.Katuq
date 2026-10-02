@@ -113,6 +113,9 @@
   color: $cb-accent;
   font-size: 12px;
   font-weight: 700;
+
+  // Ver `.cbm-btn-primary .spinner-border`: el spinner del *ngIf toma el color del chip.
+  .spinner-border { color: inherit; }
 }
 
 .cbm-input {
@@ -212,7 +215,8 @@
     color: $cb-ink;
   }
 
-  .ng-arrow-wrapper { display: none; }
+  .ng-arrow-wrapper,
+  .ng-clear-wrapper { display: none; }
 
   .ng-dropdown-panel {
     border: 1px solid $cb-line;
@@ -396,7 +400,13 @@
   font-size: 15px;
 }
 
-.cbm-btn-primary { @include cb-btn-primary; }
+.cbm-btn-primary {
+  @include cb-btn-primary;
+
+  // Un span creado por *ngIf lleva `ng-star-inserted`, y una regla global
+  // vieja (`span.ng-star-inserted`) lo pinta de azul: el spinner va en blanco.
+  .spinner-border { color: #fff; }
+}
 
 // ---- Vista previa (panel lila, como el registro) ----
 .cbm-preview {
