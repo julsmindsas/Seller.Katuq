@@ -88,6 +88,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
   newTagColor = 'violet';
   // Modal de configuración de etapas (solo administradores)
   canManageStages = false;
+  /** Ve las tareas de todo el equipo (administrador, gerente, supervisor…). Ver computeVeEquipo. */
+  veEquipo = false;
   showStagesModal = false;
   editableStages: CrmStage[] = [];
   readonly sourceOptions = [
@@ -130,6 +132,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     private leadToSales: LeadToSalesService,
   ) {
     this.canManageStages = this.computeCanManageStages();
+    this.veEquipo = this.computeVeEquipo();
     this.createForm = this.fb.group({
       name:            ['', Validators.required],
       tipoDocumento:   ['CC'],
@@ -142,6 +145,22 @@ export class CrmListComponent implements OnInit, OnDestroy {
       productoInteres: [''],
       etiquetas:       [[]],
     });
+  }
+
+  /**
+   * Administradores y quienes dirigen al equipo (gerente, supervisor, director, jefe,
+   * coordinador, líder). Mismo criterio que el backend (`crmAcceso.esRolComercial`): estos
+   * roles nunca quedan restringidos a sus propios leads, así que ven las tareas de todos.
+   */
+  private computeVeEquipo(): boolean {
+    if (this.canManageStages) return true;
+    try {
+      const rol = String(JSON.parse(localStorage.getItem('user') || '{}')?.rol || '')
+        .toLowerCase();
+      return /administrador|director|gerente|jefe|coordinador|supervisor|lider|líder/.test(rol);
+    } catch (_) {
+      return false;
+    }
   }
 
   private computeCanManageStages(): boolean {
@@ -837,19 +856,33 @@ export class CrmListComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Abre el diálogo con las tareas asignadas al usuario logueado para HOY o los próximos 7 días.
+   * Título de la card de tareas próximas. El administrador ve las de todo el equipo; el
+   * vendedor, solo las suyas. Antes el administrador veía "Mis tareas" junto a cards que son
+   * de todo el equipo, y no se entendía de quién era cada número.
+   */
+  get tasksCardLabel(): string {
+    return this.veEquipo ? 'Tareas del equipo' : 'Mis tareas';
+  }
+
+  /**
+   * Abre el diálogo con las tareas para HOY o los próximos 7 días (del equipo o mías, según el rol).
    * No incluye vencidas a propósito: esas ya tienen su propia card ("Tareas vencidas"), que
    * lista TODAS las asignaciones. Evita mostrar el mismo pendiente vencido en dos diálogos distintos.
    */
   openMyTasksToday(): void {
-    this.tasksDialogTitle = 'Mis tareas (hoy y próx. 7 días)';
+    this.tasksDialogTitle = `${this.tasksCardLabel} (hoy y próx. 7 días)`;
     this.loadPendingTasksDialog(t => this.isMyTaskInWindow(t));
   }
 
-  /** Asignada a mí y con vencimiento entre hoy y +7 días (o sin fecha). Excluye vencidas a propósito (van en "Tareas vencidas"). */
+  /**
+   * Con vencimiento entre hoy y +7 días (o sin fecha), excluye vencidas (van en "Tareas vencidas").
+   * El vendedor solo cuenta las asignadas a él; el administrador, las de todos.
+   */
   private isMyTaskInWindow(t: CrmTask): boolean {
-    const email = this.getCurrentUserEmail();
-    if (!email || (t.assignedTo || '').toLowerCase() !== email) return false;
+    if (!this.veEquipo) {
+      const email = this.getCurrentUserEmail();
+      if (!email || (t.assignedTo || '').toLowerCase() !== email) return false;
+    }
     if (!t.dueDate) return true;
     const startOfToday = new Date().setHours(0, 0, 0, 0);
     const in7d = Date.now() + 7 * 86400000;
@@ -857,7 +890,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     return !isNaN(ms) && ms >= startOfToday && ms <= in7d;
   }
 
-  /** Cuenta mis tareas pendientes dentro de la ventana, para el número en la card "Mis tareas". */
+  /** Cuenta las tareas pendientes dentro de la ventana, para el número de la card ("Mis tareas" o "Tareas del equipo"). */
   private loadMyTasksCount(): void {
     this.crmService.getTasks({ status: 'pending' })
       .pipe(takeUntil(this.destroy$))

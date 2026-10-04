@@ -135,9 +135,9 @@
             </div>
             <div class="dash-card dash-indigo cursor-pointer"
               (click)="openMyTasksToday()"
-              pTooltip="Tareas asignadas a ti para hoy o los próximos 7 días. Las vencidas están en la card 'Tareas vencidas'."
+              [pTooltip]="veEquipo ? 'Tareas de todos los comerciales para hoy o los próximos 7 días. Las vencidas están en la card \'Tareas vencidas\'.' : 'Tareas asignadas a ti para hoy o los próximos 7 días. Las vencidas están en la card \'Tareas vencidas\'.'"
               tooltipPosition="top">
-              <div class="dash-label">Mis tareas</div>
+              <div class="dash-label">{{ tasksCardLabel }}</div>
               <div class="dash-value">{{ myTasksCount || 0 | number }}</div>
               <div class="dash-sub">hoy o próx. 7 días</div>
             </div>
@@ -687,6 +687,7 @@
         <small class="text-muted d-block">
           <i class="fa fa-user-o me-1"></i>{{ taskLeadName(task) }}
           <span *ngIf="task.dueDate"><i class="fa fa-calendar-o ms-2 me-1"></i>{{ task.dueDate | date:'dd/MM/yyyy' }}</span>
+          <span *ngIf="veEquipo"><i class="fa fa-id-badge ms-2 me-1"></i>{{ task.assignedTo ? nombreComercial(task.assignedTo) : 'Sin asignar' }}</span>
         </small>
       </div>
       <span class="stat-badge badge-sm" *ngIf="taskGroupLabel(task) as tg"
