@@ -30,6 +30,14 @@ export class MaestroService {
   updateUser(usuario: any) {
     return this.http.post(this.urlBase + '/v1/users/edit', usuario, this.httpOptions);
   }
+  /** D-349: ¿la empresa tiene prendido "cada vendedor ve solo sus métricas"? */
+  getMetricasEquipo() {
+    return this.http.get<{ success: boolean; activado: boolean }>(this.urlBase + '/v1/users/metricas-equipo', this.httpOptions);
+  }
+  /** D-349: prende o apaga "cada vendedor ve solo sus métricas" para toda la empresa (Administrador). */
+  saveMetricasEquipo(activado: boolean) {
+    return this.http.put<{ success: boolean; activado: boolean }>(this.urlBase + '/v1/users/metricas-equipo', { activado }, this.httpOptions);
+  }
   eliminarCliente(id: any) {
     return this.http.post(this.urlBase + '/v1/clients/delete', { cd: id }, this.httpOptions);
 

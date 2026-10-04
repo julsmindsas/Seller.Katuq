@@ -138,7 +138,22 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   // card. "Ventas de hoy" son cifras globales del comercio — solo roles con
   // analíticas (un vendedor sin dashboards no debe ver ventas de otros).
   get showVentasHoy(): boolean {
-    return this.canAccess('dashboards') || this.canAccess('dashboards/builder');
+    return this.canAccess('dashboards') || this.canAccess('dashboards/builder') || this.soloMisMetricas;
+  }
+
+  /**
+   * D-349: el administrador le marcó "Ver solo sus propias métricas" en Usuarios → Editar.
+   * El backend ya filtra ventas, despachos y tareas por el token; acá solo se rotulan
+   * las cards como suyas y se ocultan las de clientes (cálculo de toda la empresa).
+   * Viene del login: el backend lo manda en false para administradores y gerentes.
+   */
+  get soloMisMetricas(): boolean {
+    return this.userActive?.soloMisMetricas === true;
+  }
+
+  /** "Ventas de hoy" lleva a Dashboards solo si el rol tiene acceso; si no, la card no navega. */
+  get ventasHoyLink(): string | null {
+    return (this.canAccess('dashboards') || this.canAccess('dashboards/builder')) ? '/dashboards' : null;
   }
 
   get showDespachosHoy(): boolean {
@@ -154,7 +169,8 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   }
 
   get showClientesResumen(): boolean {
-    return this.canAccess('ventas/clienteslista');
+    // Con solo sus métricas (D-349) se ocultan: son de toda la empresa y vienen cacheadas.
+    return this.canAccess('ventas/clienteslista') && !this.soloMisMetricas;
   }
 
   get showNegocioHoy(): boolean {

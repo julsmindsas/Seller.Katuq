@@ -16,6 +16,14 @@
                 placeholder="{{ 'Escribe texto que deseas filtrar' | translate }}" (keyup)='updateFilter($event)' />
             </div>
             <div class="col-sm-6 mb-3" style="text-align: end;">
+              <!-- D-349: un solo botón para todo el equipo de ventas -->
+              <button *ngIf="metricasCargado" type="button" class="metricas-equipo-btn mb-2"
+                [class.metricas-equipo-btn--propias]="metricasSoloPropias"
+                placement="bottom" [ngbTooltip]="metricasTooltip"
+                (click)="cambiarMetricasEquipo()">
+                <i class="fa" [ngClass]="metricasSoloPropias ? 'fa-user' : 'fa-users'"></i>
+                {{ metricasBotonTexto }}
+              </button>
               <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearUsuario()">
                 <span style="color: white;">{{ 'Crear Usuario' | translate }}</span>
                 <i placement="top" ngbTooltip="{{ 'Nuevo' | translate }}"

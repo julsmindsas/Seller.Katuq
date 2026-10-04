@@ -47,6 +47,82 @@ export class UsuariosComponent implements OnInit {
     if (window.screen.width < 700) {
       this.isMobile = true;
     }
+    this.service.getMetricasEquipo().subscribe({
+      next: (r: any) => { this.metricasSoloPropias = !!r?.activado; this.metricasCargado = true; },
+      error: () => { this.metricasCargado = false; },
+    });
+  }
+
+  // ─── D-349: un solo botón para que el equipo de ventas vea solo sus métricas ───
+
+  /** null mientras carga; true = cada vendedor ve solo lo suyo. */
+  metricasSoloPropias: boolean | null = null;
+  metricasCargado = false;
+
+  /** Rol de ventas (mismo criterio que el backend, services/metricasPropias.js). */
+  private esRolVentas(rol: any): boolean {
+    const r = String(rol || '').toLowerCase();
+    if (/administrador|director|gerente|jefe|coordinador|supervisor|lider|líder/.test(r)) return false;
+    return /vendedor|seller|asesor|ventas|comercial/.test(r);
+  }
+
+  /** Usuarios de la empresa de la sesión a los que les aplica (rol de ventas). */
+  get usuariosVentas(): any[] {
+    let empresa = '';
+    try { empresa = JSON.parse(localStorage.getItem('user') || '{}')?.company || ''; } catch (_) { }
+    return (this.temp || []).filter(u =>
+      this.esRolVentas(u.roles) && (!empresa || !u.empresa || u.empresa === empresa));
+  }
+
+  get metricasBotonTexto(): string {
+    return this.metricasSoloPropias ? 'Vendedores: solo sus métricas' : 'Vendedores: métricas de todos';
+  }
+
+  get metricasTooltip(): string {
+    return this.metricasSoloPropias
+      ? 'Cada vendedor ve en la bienvenida y en Dashboards solo sus ventas, despachos y tareas. Clic para cambiarlo.'
+      : 'Los vendedores ven en la bienvenida y en Dashboards las cifras de toda la empresa. Clic para cambiarlo.';
+  }
+
+  cambiarMetricasEquipo(): void {
+    if (!this.metricasCargado) return;
+    const nuevo = !this.metricasSoloPropias;
+    const ventas = this.usuariosVentas;
+    const lista = ventas.length
+      ? '<ul style="text-align:left;max-height:160px;overflow:auto;margin:8px 0 0;">' + ventas.map(u =>
+          `<li>${this.escapar([u.nombre, u.apellido].filter(Boolean).join(' ') || u.email)} <small style="color:#6b7280;">(${this.escapar(u.roles)})</small></li>`).join('') + '</ul>'
+      : '<p style="color:#6b7280;margin:8px 0 0;">Hoy no hay usuarios con rol de ventas. Les aplicará a los que se creen.</p>';
+
+    Swal.fire({
+      title: nuevo ? '¿Cada vendedor verá solo sus métricas?' : '¿Los vendedores verán las métricas de todos?',
+      html: (nuevo
+        ? 'En la pantalla de bienvenida y en Dashboards, cada usuario con rol de ventas verá <b>solo sus ventas, sus despachos y sus tareas del CRM</b>. No verá las de sus compañeros.'
+        : 'En la pantalla de bienvenida y en Dashboards, los usuarios con rol de ventas volverán a ver <b>las cifras de toda la empresa</b>.')
+        + `<p style="margin:12px 0 0;"><b>Les aplica a ${ventas.length} ${ventas.length === 1 ? 'usuario' : 'usuarios'}:</b></p>` + lista
+        + '<p style="color:#6b7280;margin:12px 0 0;font-size:13px;">Administradores, gerentes, supervisores y demás roles siguen viendo todo.</p>',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cambiar',
+      cancelButtonText: 'Cancelar',
+    }).then(r => {
+      if (!r.isConfirmed) return;
+      this.service.saveMetricasEquipo(nuevo).subscribe({
+        next: () => {
+          this.metricasSoloPropias = nuevo;
+          Swal.fire({
+            icon: 'success',
+            title: nuevo ? 'Cada vendedor verá solo sus métricas' : 'Los vendedores verán las métricas de todos',
+            text: 'Las cifras cambian de inmediato. Los títulos de la bienvenida ("Mis ventas de hoy"…) se actualizan cuando vuelvan a iniciar sesión.',
+            confirmButtonText: 'Entendido',
+          });
+        },
+        error: (e) => Swal.fire('Error', e?.error?.message || 'No fue posible guardar el cambio.', 'error'),
+      });
+    });
+  }
+
+  private escapar(v: any): string {
+    return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as any)[c]);
   }
   
   crearUsuario() {

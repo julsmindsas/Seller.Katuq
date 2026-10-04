@@ -6,6 +6,10 @@
             <div class="header-title-section">
                 <h1 class="dashboard-title">{{ 'Panel de Control' | translate }}</h1>
                 <p class="header-subtitle">{{ 'Métricas clave y análisis de rendimiento' | translate }}</p>
+                <!-- D-349: el backend filtró por el asesor; se dice para que no se lea como el total. -->
+                <p class="header-subtitle" *ngIf="$any(coreData)?.soloMisMetricas">
+                    <i class="fa fa-user me-1"></i>Estás viendo solo tus ventas.
+                </p>
             </div>
             <div class="header-controls">
                 <!-- Date Range Controls - PrimeNG Style -->

@@ -8013,3 +8013,21 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 **No se tocó** `_calculateMonthlySales` (el cobro), que tiene anotada la decisión de no usar `select` por ser el camino del dinero.
 
 **Estado.** Sin commitear.
+
+## D-349 (2026-10-04) — Un solo botón: "cada vendedor ve solo sus métricas" en bienvenida y Dashboards
+
+**Contexto.** Se pidió que un vendedor (ej. `comercial6@almara.com.co`) vea en la bienvenida solo sus ventas, sus despachos y sus tareas, no las de los demás; administradores y gerentes ven todo.
+
+**Decisión** (usuaria, 4-oct; primero se hizo por usuario y ella pidió UN solo botón "para no hacerlo usuario por usuario"):
+- Opción de EMPRESA, no de usuario: `companyConfig/{empresa}.metricasSoloPropias` (por defecto apagada). Cubre también a los vendedores que se creen después.
+- Botón único arriba de la lista de Usuarios ("Vendedores: métricas de todos" / "Vendedores: solo sus métricas"), con confirmación que lista a quiénes les aplica. Rutas `GET/PUT /v1/users/metricas-equipo` (`requireJwtTenant`; el PUT solo Administrador). Guarda quién y cuándo lo cambió.
+- Solo restringe roles de ventas (vendedor, asesor, ventas, comercial, seller), el criterio del CRM del ticket 1064. Nunca administrador, director, gerente, jefe, coordinador, supervisor, líder, ni roles de otras áreas (bodega, contabilidad).
+- El backend lee la opción en cada consulta (`services/metricasPropias.js`, rol/correo/empresa del token): las cifras cambian de inmediato. Los rótulos de la bienvenida vienen del login (`soloMisMetricas`) y cambian al volver a entrar.
+- Un pedido es del vendedor si `asesorAsignado.email` (o `usuarioEmail` en pedidos viejos) es su correo. Los de Shopify/WooCommerce llegan sin asesor y no cuentan para nadie.
+- Filtrado: `dashboard-core` y `dashboard-details` (bienvenida "Ventas de hoy" y tablero clásico), `shippingorders/metrics?scope=operationalQueue` ("Por despachar"), `crm/stats` (tareas) y el motor de reportes (fuerza el filtro de vendedor).
+- Bienvenida: rótulos "Mis…", "Ventas de hoy" visible aunque el rol no tenga Dashboards (sin enlace), y se ocultan las cards de clientes (cálculo de toda la empresa, cacheado 30 min).
+- Sin colecciones ni índices nuevos: se filtra en memoria sobre las mismas consultas.
+
+**No cubre:** las listas (Pedidos, Despachos) siguen mostrando todo según el rol; los reportes públicos por enlace no filtran; el Super Administrador (Julsmind) cambia la opción de su propia sesión, no la de otra empresa.
+
+**Estado.** Sin commitear. Sin probar en navegador.

@@ -26,3 +26,28 @@
   .form-control {
     margin-bottom: 0.5rem;
   }
+
+// D-349: botón "qué métricas ven los vendedores". Chip plano del tema (acento #5F3FE0).
+.metricas-equipo-btn {
+  margin-right: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #ddd6fe;
+  background: #f5f3ff;
+  color: #5F3FE0;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+
+  i { margin-right: 6px; }
+
+  &:hover { border-color: #5F3FE0; }
+
+  &--propias {
+    background: #5F3FE0;
+    border-color: #5F3FE0;
+    color: #fff;
+  }
+}

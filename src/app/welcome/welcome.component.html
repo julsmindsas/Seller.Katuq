@@ -89,8 +89,8 @@
     <h2 class="section-title mb-2">Tu negocio hoy</h2>
     <div class="row g-2">
         <div class="col-6 col-lg-3" *ngIf="showVentasHoy">
-            <a routerLink="/dashboards" class="indicator-card indicator-card--primary negocio-card">
-                <small class="indicator-label">Ventas de hoy</small>
+            <a [routerLink]="ventasHoyLink" class="indicator-card indicator-card--primary negocio-card">
+                <small class="indicator-label">{{ soloMisMetricas ? 'Mis ventas de hoy' : 'Ventas de hoy' }}</small>
                 <span class="indicator-value">
                     <span class="skeleton" *ngIf="ventasHoy.cargando" aria-hidden="true"></span>
                     <ng-container *ngIf="!ventasHoy.cargando">{{ ventasHoy.total !== null ? ('$' + (ventasHoy.total | number:'1.0-0')) : '—' }}</ng-container>
@@ -102,7 +102,7 @@
         </div>
         <div class="col-6 col-lg-3" *ngIf="showDespachosHoy">
             <a routerLink="/despachos" class="indicator-card indicator-card--warning negocio-card">
-                <small class="indicator-label">Por despachar</small>
+                <small class="indicator-label">{{ soloMisMetricas ? 'Mis pedidos por despachar' : 'Por despachar' }}</small>
                 <span class="indicator-value">
                     <span class="skeleton" *ngIf="despachosHoy.cargando" aria-hidden="true"></span>
                     <ng-container *ngIf="!despachosHoy.cargando">{{ despachosHoy.paraDespacho !== null ? despachosHoy.paraDespacho : '—' }}</ng-container>
@@ -127,7 +127,7 @@
         </div>
         <div class="col-6 col-lg-3" *ngIf="showCrmTareas">
             <a routerLink="/crm/list" class="indicator-card indicator-card--danger negocio-card">
-                <small class="indicator-label">Tareas CRM vencidas</small>
+                <small class="indicator-label">{{ soloMisMetricas ? 'Mis tareas CRM vencidas' : 'Tareas CRM vencidas' }}</small>
                 <span class="indicator-value">
                     <span class="skeleton" *ngIf="crmTareas.cargando" aria-hidden="true"></span>
                     <ng-container *ngIf="!crmTareas.cargando">{{ crmTareas.vencidas !== null ? crmTareas.vencidas : '—' }}</ng-container>
