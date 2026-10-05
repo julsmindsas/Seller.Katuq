@@ -15,6 +15,8 @@ interface ComboProductoUI {
   descripcion?: string | null;
   /** Precio general con IVA, solo para mostrar (el combo no guarda precio, D-147). */
   precio?: number | null;
+  /** Ticket 1131: el mismo precio sin IVA, que es el que el comercio toma de referencia. */
+  precioSinIva?: number | null;
 }
 
 @Component({
@@ -107,8 +109,22 @@ export class CrearComboComponent implements OnInit, OnDestroy {
       referencia: p.identificacion?.referencia || '',
       imagen: p.crearProducto?.imagenesPrincipales?.[0]?.urls || null,
       descripcion: p.crearProducto?.descripcion || null,
-      precio: Number(p.precio?.precioUnitarioConIva) || null
+      precio: Number(p.precio?.precioUnitarioConIva) || null,
+      precioSinIva: this.precioSinIvaDe(p.precio)
     }));
+  }
+
+  /**
+   * Precio general sin IVA, el mismo que la cotización usa como valor bruto.
+   * Si el producto no lo trae guardado, se saca del precio con IVA y su tarifa.
+   */
+  private precioSinIvaDe(precio: any): number | null {
+    const sinIva = Number(precio?.precioUnitarioSinIva) || 0;
+    if (sinIva > 0) return sinIva;
+    const conIva = Number(precio?.precioUnitarioConIva) || 0;
+    if (conIva <= 0) return null;
+    const tarifa = Number(precio?.precioUnitarioIva) || 0;
+    return conIva / (1 + tarifa / 100);
   }
 
   /** Texto plano y recortado de la descripción (puede traer HTML — no se renderiza crudo). */
@@ -166,6 +182,15 @@ export class CrearComboComponent implements OnInit, OnDestroy {
   /** Suma de los precios generales; el valor real sale de la lista de cada cliente al vender. */
   get totalGeneral(): number {
     return this.productosSeleccionados.reduce((acc, p) => acc + (Number(p.precio) || 0), 0);
+  }
+
+  /** Ticket 1131: la misma suma sin IVA (lo que la cotización llama base gravable). */
+  get totalSinIva(): number {
+    return this.productosSeleccionados.reduce((acc, p) => acc + (Number(p.precioSinIva) || 0), 0);
+  }
+
+  get totalIva(): number {
+    return this.totalGeneral - this.totalSinIva;
   }
 
   /** ¿Se conoce el precio de todos los productos? (los recién guardados llegan sin precio hasta resolverse). */

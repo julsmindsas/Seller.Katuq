@@ -294,12 +294,23 @@
   white-space: nowrap;
 }
 
+// Ticket 1131: arriba el precio sin IVA; debajo, pequeño, el mismo con IVA.
 .cbm-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
   flex-shrink: 0;
   font-size: 14px;
   font-weight: 700;
   color: $cb-ink;
   white-space: nowrap;
+}
+
+.cbm-price-iva {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: $cb-muted;
 }
 
 // Lista de productos del combo.
@@ -372,6 +383,17 @@
     font-size: 15px;
     font-weight: normal;
     color: $cb-accent;
+  }
+}
+
+// El total con IVA, debajo del total sin IVA y más discreto.
+.cbm-list-foot-iva {
+  padding-top: 0;
+  font-size: 12px;
+
+  b {
+    font-weight: 700;
+    color: $cb-ink;
   }
 }
 
@@ -517,6 +539,23 @@
   white-space: nowrap;
 }
 
+// Ticket 1131: base gravable e IVA antes del total, como en la cotización.
+.cbm-doc-sum {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px 0;
+  font-size: 12.5px;
+  color: $cb-body;
+
+  b {
+    font-weight: 700;
+    color: $cb-ink;
+  }
+
+  & + .cbm-doc-total { margin-top: 8px; }
+}
+
 .cbm-doc-total {
   display: flex;
   justify-content: space-between;
@@ -602,5 +641,5 @@
   .cbm-switch { margin-top: 0; }
   .cbm-tiles { grid-template-columns: 1fr; }
   .cbm-item { grid-template-columns: 44px minmax(0, 1fr) 34px; }
-  .cbm-item .cbm-price { grid-column: 2; grid-row: 2; }
+  .cbm-item .cbm-price { grid-column: 2; grid-row: 2; align-items: flex-start; }
 }
