@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import {
   CarteraCliente,
+  CarteraPedido,
   CarteraResponse,
 } from '../../../../shared/services/cartera/cartera.models';
 import {
@@ -193,6 +194,23 @@ export class CarteraClientesComponent implements OnChanges {
         return { cssClass: b.cssClass, pct: (monto / total) * 100, label: b.label, monto };
       })
       .filter((s) => s.monto > 0);
+  }
+
+  // ── Plazo y vencimiento (ticket 1129) ─────────────────────────────────────
+  /** El plazo de pago que se le puso al cliente al crearlo o editarlo. */
+  textoPlazo(cliente: CarteraCliente): string {
+    const dias = Number(cliente.payTermDays) || 0;
+    if (dias <= 0) return 'Contado';
+    return `Plazo ${dias} ${dias === 1 ? 'día' : 'días'}`;
+  }
+
+  /** Cuánto le falta al pedido para vencer, o cuántos días lleva vencido. */
+  textoVencimiento(pedido: CarteraPedido): string {
+    const dias = Number(pedido.diasVencido);
+    if (!pedido.payDueDate || !Number.isFinite(dias)) return '—';
+    if (dias < 0) return `vence en ${-dias} d`;
+    if (dias === 0) return 'vence hoy';
+    return `${dias} d vencido`;
   }
 
   // ── Detalle de pedidos ────────────────────────────────────────────────────

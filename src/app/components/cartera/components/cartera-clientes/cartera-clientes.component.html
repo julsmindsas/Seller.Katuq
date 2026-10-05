@@ -96,6 +96,7 @@
             <span *ngIf="c.vendedor" class="cx-meta-vendedor"><i class="pi pi-user"></i>{{ c.vendedor }}</span>
             <span><i class="pi pi-shopping-cart"></i>{{ c.pedidosActivos | number }} pedido(s)</span>
             <span class="cx-dso"><i class="pi pi-clock"></i>DSO {{ c.dso | number:'1.0-0' }} d</span>
+            <span class="cx-plazo" title="Plazo de pago acordado con el cliente"><i class="pi pi-calendar"></i>{{ textoPlazo(c) }}</span>
           </div>
         </div>
 
@@ -173,7 +174,7 @@
                 <th class="text-end">Total</th>
                 <th class="text-end">Pagado</th>
                 <th class="text-end">Saldo</th>
-                <th class="text-center">Días venc.</th>
+                <th class="text-center">Vencimiento</th>
               </tr>
             </thead>
             <tbody>
@@ -187,8 +188,9 @@
                 <td class="text-end">{{ p.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                 <td class="text-end">{{ p.pagado | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                 <td class="text-end cx-cell-strong">{{ p.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                <td class="text-center" [class.cx-dias-venc]="p.diasVencido > 15">
-                  {{ p.diasVencido > 0 ? p.diasVencido : 0 }}
+                <td class="text-center" [class.cx-dias-venc]="p.diasVencido > 15"
+                    [class.cx-dias-al-dia]="p.diasVencido <= 0">
+                  {{ textoVencimiento(p) }}
                 </td>
               </tr>
             </tbody>

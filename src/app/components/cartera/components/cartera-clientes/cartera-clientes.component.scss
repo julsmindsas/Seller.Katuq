@@ -94,7 +94,8 @@
 
   .cx-meta-vendedor { color: var(--kc-accent); }
 
-  .cx-dso {
+  .cx-dso,
+  .cx-plazo {
     background: var(--kc-canvas);
     border-radius: 999px;
     padding: 4px 11px;
@@ -298,3 +299,4 @@
   tbody tr:first-child td { border-top: none; }
 }
 .cx-dias-venc { color: #{$cx-aging-60}; font-weight: 800; }
+.cx-dias-al-dia { color: var(--kc-muted); white-space: nowrap; }
