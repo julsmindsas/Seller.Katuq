@@ -7865,6 +7865,19 @@ El 29-sep estaban rotas las dos:
   - La nota del pie salía en azul. Una regla global vieja, `span.ng-star-inserted`, pinta todo `span` creado por `*ngIf`, así que esos spans llevan color propio. Ojo con esto en cualquier pantalla nueva.
   - Verificado en 2026.10.02.3: listado con su combo, indicadores, filtro y nota en gris; el modal de editar con fotos, referencias y precios; el buscador agrega, se vacía y no repite lo que ya está en el combo; el total y la vista previa se actualizan (de $78.000 a $113.000). Se canceló sin guardar.
 ---
+## D-350 (2026-10-03) — Automatizaciones sin tecnicismos + webhook directo como camino canónico (PROPUESTA, pendiente de aprobación)
+
+**Contexto.** Daniel pidió analizar `/flows`, cruzarlo con las memorias y armar "un plan que no genere afectaciones, arquitectónico, teniendo en cuenta que ya hay webhooks que funcionan con Shopify; dejar el flow listo y fácil de configurar por personas no técnicas; revisar los conectores". Relevamiento del 3-oct (dos agentes de solo lectura + consultas a Firestore):
+- Los pedidos de Shopify de OMS entran porque Shopify le pega **directo** a `POST /v1/flows/triggers/webhook/<flowId>/<nodeId>` (3 corridas el 2-oct, `success`, `triggeredBy: webhook`). `shopify_webhook_events`, `integration_events` y `dispatch_jobs` están **vacías**: las Cloud Functions que las consumirían no corren en EC2. El webhook se creó a mano en el admin de Shopify (`listWebhooks` por API devuelve 0).
+- Ese endpoint **no verifica firma** (el trigger de OMS no tiene `webhookSecret`; el handler espera `x-katuq-signature`, que Shopify no manda), **no deduplica** y **responde 200 aunque el run falle**. La URL que muestra la pantalla está mal (`/api/webhooks/...`).
+- `config/test` responde éxito falso para todo proveedor salvo SIIGO, World Office, Fullpi y Alegra. El catálogo de pasos llega al front sin `credentials`, así que el chequeo de integraciones de las plantillas nunca bloquea. 140 textos con jerga; estados en inglés; 96 parámetros sin título.
+
+**Propuesta** (`openspec/changes/automatizaciones-sin-tecnicismos/`, validada con la CLI): (A) blindar el webhook directo sin cambiar su forma — dedup por id de entrega reutilizando `shopify_webhook_dedup`/`wc_webhook_dedup`, firma del proveedor primero en **sombra** a `integration_audit` y luego exigida por flag, error HTTP en run fallido solo con dedup encendida y por flag; endpoint `GET /v1/flows/:id/health`. (B) conectores honestos: `config/test` delega a las pruebas reales existentes y dice "no verificable" donde no hay. (C) pantalla **Automatizaciones**: glosario único front+canvas, tablero con semáforo y "última vez hace X", "cuándo arranca" en tres modos con la URL correcta e instrucciones por proveedor, plantillas por objetivo con asistente de 3 pasos, historial humano con "Detalles técnicos" plegado, editor visual como Modo avanzado, tema canónico, script `build:flow-canvas`.
+
+**No-goals:** motor, flows activos, flows mixtos de OMS (D-134), revivir colas/Cloud Functions, registro automático del webhook en Shopify, multi-cuenta (`credentialRef`), webhook entrante de Cereza (sin HMAC; propuesta aparte), colecciones nuevas, alertas.
+
+**Estado:** propuesta escrita; **no se ha implementado nada**. Siguiente paso: checkpoint humano de proposal → design → tasks, luego `/opsx:apply`.
+---
 
 ## D-338 (2026-09-22) — Soporte en la ficha del cliente: los errores y las consultas NO se suman
 
