@@ -9,6 +9,7 @@ import { MaestroService } from '../../../shared/services/maestros/maestro.servic
  * Step: First Product Configuration (Optional)
  * Creación del primer producto - paso opcional
  */
+import { AVISO_REFERENCIA_CON_ESPACIOS, limpiarReferencia, referenciaTieneEspacios } from 'src/app/shared/utils/referencia-producto';
 @Component({
   selector: 'app-first-product-step',
   templateUrl: './first-product-step.component.html',
@@ -162,6 +163,19 @@ export class FirstProductStepComponent implements OnInit, OnDestroy {
         severity: 'warn',
         summary: 'Formulario Incompleto',
         detail: 'Por favor completa todos los campos requeridos'
+      });
+      return;
+    }
+
+    // Ticket 1113: sin espacios a los lados; en el medio SIIGO la rechaza.
+    const referencia = limpiarReferencia(this.productForm.value.referencia);
+    this.productForm.patchValue({ referencia }, { emitEvent: false });
+    if (referenciaTieneEspacios(referencia)) {
+      this.productForm.get('referencia')?.markAsTouched();
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Referencia con espacios',
+        detail: AVISO_REFERENCIA_CON_ESPACIOS
       });
       return;
     }

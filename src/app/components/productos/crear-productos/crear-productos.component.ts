@@ -56,6 +56,7 @@ import { Proveedor } from "../../dropshipping/interfaces";
 import { DaneCodesService } from "../../../shared/services/dane-codes.service";
 import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 
+import { AVISO_REFERENCIA_CON_ESPACIOS, limpiarReferencia, referenciaRechazada } from 'src/app/shared/utils/referencia-producto';
 @Component({
   selector: "app-crear-productos",
   templateUrl: "./crear-productos.component.html",
@@ -1560,6 +1561,15 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     const tipoRef = this.identificacion.get('tipoReferencia')?.value;
     // Referencias automáticas ('propio') son únicas por diseño — no validar
     if (tipoRef === 'propio') return Promise.resolve(true);
+
+    // Ticket 1113: sin espacios a los lados, y en el medio solo si ya la tenía así.
+    const escrita = this.identificacion.getRawValue().referencia;
+    const limpia = limpiarReferencia(escrita);
+    if (limpia !== escrita) this.identificacion.get('referencia').setValue(limpia, { emitEvent: false });
+    if (referenciaRechazada(limpia, this.edit?.identificacion?.referencia)) {
+      this.referenciaError = AVISO_REFERENCIA_CON_ESPACIOS;
+      return Promise.resolve(false);
+    }
 
     const ref = this.identificacion.getRawValue().referencia;
     if (!ref) return Promise.resolve(true);

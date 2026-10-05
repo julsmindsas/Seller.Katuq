@@ -47,6 +47,7 @@ interface OpcionCategoria {
   nodo: any;
 }
 
+import { AVISO_REFERENCIA_CON_ESPACIOS, limpiarReferencia, referenciaTieneEspacios } from 'src/app/shared/utils/referencia-producto';
 @Component({
   selector: "app-crear-producto-lite",
   templateUrl: "./crear-producto-lite.component.html",
@@ -925,6 +926,17 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
       // La referencia manual tiene que ser única dentro de la empresa; el
       // backend genera una nueva en silencio si choca, y el usuario terminaría
       // con una referencia distinta de la que escribió sin enterarse.
+      if (this.referenciaManual && !this.editando) {
+        // Ticket 1113: sin espacios a los lados; en el medio SIIGO la rechaza.
+        const control = this.formulario.get("referencia");
+        const limpia = limpiarReferencia(control.value);
+        if (limpia !== control.value) control.setValue(limpia, { emitEvent: false });
+        if (referenciaTieneEspacios(limpia)) {
+          this.guardando = false;
+          Swal.fire("La referencia tiene espacios", AVISO_REFERENCIA_CON_ESPACIOS, "warning");
+          return;
+        }
+      }
       if (this.referenciaManual) {
         const libre = await this.referenciaEstaLibre();
         if (!libre) {
