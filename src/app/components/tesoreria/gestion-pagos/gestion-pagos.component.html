@@ -45,8 +45,8 @@
     </div>
     <div class="tk-card tk-accent-blue">
       <div class="tk-label">Sin pago</div>
-      <div class="tk-value">{{ metrics.sinPago.cantidad | number }}</div>
-      <div class="tk-sub">pedidos sin comprobante</div>
+      <div class="tk-value">{{ sinPagoCantidad !== null ? (sinPagoCantidad | number) : (sinPagoError ? '—' : '…') }}</div>
+      <div class="tk-sub">pedidos sin pago completo · último año</div>
     </div>
     <div class="tk-card" [ngClass]="metrics.alertasActivas.cantidad > 0 ? 'tk-accent-red' : 'tk-accent-gray'">
       <div class="tk-label">Alertas activas</div>

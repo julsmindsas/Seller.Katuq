@@ -12,6 +12,50 @@ export const PRESET_POR_REVISAR: string[] = ['Pospendiente'];
 export const PRESET_SIN_PAGO: string[] = ['Pendiente', 'PreAprobado'];
 export const PRESET_RECHAZADOS: string[] = ['Rechazado'];
 
+/** "YYYY-MM-DD" de una fecha. */
+export function fechaIso(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
+
+/** Suma días a una fecha "YYYY-MM-DD" y retorna "YYYY-MM-DD". */
+export function sumarDias(isoDate: string, dias: number): string {
+  if (!isoDate) return isoDate;
+  const d = new Date(`${isoDate}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + dias);
+  return fechaIso(d);
+}
+
+/**
+ * Rango por defecto de las listas de pedidos: último año → hoy (la cola de
+ * tesorería no debe ocultar pedidos pendientes antiguos). La tarjeta "Sin pago"
+ * cuenta con este mismo rango (ticket 1127).
+ */
+export function rangoPorDefecto(hoy: Date = new Date()): { desde: string; hasta: string } {
+  const haceUnAnio = new Date(hoy);
+  haceUnAnio.setFullYear(hoy.getFullYear() - 1);
+  return { desde: fechaIso(haceUnAnio), hasta: fechaIso(hoy) };
+}
+
+/**
+ * Filtro de pedidos por estado de pago y fecha de creación. Lo usan la lista de
+ * cada pestaña y la tarjeta "Sin pago": antes la tarjeta contaba otra cosa
+ * (solo "Pendiente", de toda la historia) y no cuadraba con la lista (ticket 1127).
+ */
+export function filtroPedidosTesoreria(company: string, estadosPago: string[], desde: string, hasta: string): any {
+  return {
+    company,
+    estadosPago,
+    tipoFecha: 'fechaCreacion',
+    fechaInicial: desde,
+    // El backend compara strings: `fechaCreacion <= fechaFinal`. Con la fecha
+    // sola ("2026-07-02") los pedidos de ESE día quedan fuera porque su ISO trae
+    // hora ("2026-07-02T19:42..." > "2026-07-02"). Se envía el día siguiente
+    // para que el rango sea inclusivo (incidente Almara: los pedidos de hoy no
+    // aparecían en la cola Por revisar).
+    fechaFinal: sumarDias(hasta, 1),
+  };
+}
+
 /** Matriz de transiciones manuales permitidas (CA-09).
  * Espejo de treasuryConstants.js del backend — el enforcement real es server-side.
  * D-077: Pospendiente permite Precancelado (cancelar pedido con pago en revisión;

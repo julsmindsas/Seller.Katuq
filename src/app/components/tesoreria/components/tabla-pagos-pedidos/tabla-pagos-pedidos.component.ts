@@ -17,7 +17,12 @@ import Swal from 'sweetalert2';
 
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
-import { metaEstado, PaymentStateMeta } from '../../tesoreria.constants';
+import {
+  filtroPedidosTesoreria,
+  metaEstado,
+  PaymentStateMeta,
+  rangoPorDefecto,
+} from '../../tesoreria.constants';
 import { RevisarPagoComponent } from '../revisar-pago/revisar-pago.component';
 import { RegistrarPagoComponent } from '../registrar-pago/registrar-pago.component';
 import { CambiarEstadoPagoComponent } from '../cambiar-estado-pago/cambiar-estado-pago.component';
@@ -74,13 +79,10 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     private maestro: MaestroService,
     private modal: NgbModal,
   ) {
-    // Rango por defecto: último año → hoy (la cola de tesorería no debe ocultar
-    // pedidos pendientes antiguos). El usuario puede ajustarlo.
-    const hoy = new Date();
-    const haceUnAnio = new Date();
-    haceUnAnio.setFullYear(hoy.getFullYear() - 1);
-    this.fechaHasta = this.toIso(hoy);
-    this.fechaDesde = this.toIso(haceUnAnio);
+    // Rango por defecto: último año → hoy. El usuario puede ajustarlo.
+    const rango = rangoPorDefecto();
+    this.fechaDesde = rango.desde;
+    this.fechaHasta = rango.hasta;
 
     this.search$
       .pipe(debounceTime(350), takeUntil(this.destroy$))
@@ -129,18 +131,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
 
   private buildFilter(): any {
     const company = JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial;
-    const filter: any = {
-      company,
-      estadosPago: this.estadosPago,
-      tipoFecha: 'fechaCreacion',
-      fechaInicial: this.fechaDesde,
-      // El backend compara strings: `fechaCreacion <= fechaFinal`. Con la
-      // fecha sola ("2026-07-02") los pedidos de ESE día quedan fuera porque
-      // su ISO trae hora ("2026-07-02T19:42..." > "2026-07-02"). Se envía el
-      // día siguiente para que el rango sea inclusivo (incidente Almara:
-      // los pedidos de hoy no aparecían en la cola Por revisar).
-      fechaFinal: this.addDays(this.fechaHasta, 1),
-    };
+    const filter: any = filtroPedidosTesoreria(company, this.estadosPago, this.fechaDesde, this.fechaHasta);
 
     const term = (this.searchTerm || '').trim();
     if (term) {
@@ -315,17 +306,5 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
 
   trackByPedido(_index: number, pedido: any): string {
     return pedido?._id || pedido?.nroPedido || `row-${_index}`;
-  }
-
-  private toIso(d: Date): string {
-    return d.toISOString().split('T')[0];
-  }
-
-  /** Suma días a una fecha "YYYY-MM-DD" y retorna "YYYY-MM-DD". */
-  private addDays(isoDate: string, days: number): string {
-    if (!isoDate) return isoDate;
-    const d = new Date(`${isoDate}T00:00:00Z`);
-    d.setUTCDate(d.getUTCDate() + days);
-    return this.toIso(d);
   }
 }

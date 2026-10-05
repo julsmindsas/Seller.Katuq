@@ -3,10 +3,13 @@ import { Subject } from 'rxjs';
 import { takeUntil, timeout } from 'rxjs/operators';
 import { TreasuryService } from '../../../shared/services/treasury/treasury.service';
 import { TreasuryMetrics } from '../../../shared/services/treasury/treasury.models';
+import { VentasService } from '../../../shared/services/ventas/ventas.service';
 import {
+  filtroPedidosTesoreria,
   PRESET_POR_REVISAR,
   PRESET_SIN_PAGO,
   PRESET_RECHAZADOS,
+  rangoPorDefecto,
 } from '../tesoreria.constants';
 
 /**
@@ -24,6 +27,10 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
   metricsError = false;
   metrics: TreasuryMetrics | null = null;
 
+  /** Pedidos de la lista "Sin pago" con su rango por defecto (null = cargando). */
+  sinPagoCantidad: number | null = null;
+  sinPagoError = false;
+
   activeIndex = 0;
 
   readonly presetPorRevisar = PRESET_POR_REVISAR;
@@ -32,7 +39,7 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private treasury: TreasuryService) {}
+  constructor(private treasury: TreasuryService, private ventas: VentasService) {}
 
   ngOnInit(): void {
     this.loadMetrics();
@@ -57,6 +64,32 @@ export class GestionPagosComponent implements OnInit, OnDestroy {
         error: () => {
           this.metricsError = true;
           this.loadingMetrics = false;
+        },
+      });
+    this.loadSinPago();
+  }
+
+  /**
+   * Ticket 1127: la tarjeta "Sin pago" decía 414 y la lista 170, porque la
+   * tarjeta contaba solo "Pendiente" de toda la historia. Ahora cuenta con la
+   * misma consulta y el mismo filtro que la lista con su rango por defecto.
+   */
+  private loadSinPago(): void {
+    const company = JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial;
+    const rango = rangoPorDefecto();
+    const filtro = filtroPedidosTesoreria(company, PRESET_SIN_PAGO, rango.desde, rango.hasta);
+    this.sinPagoCantidad = null;
+    this.sinPagoError = false;
+    this.ventas
+      // Solo hace falta el total: sin las métricas de la lista, que son pesadas.
+      .getOrdersByFilterOptimized(filtro, 1, 1, false)
+      .pipe(timeout(15000), takeUntil(this.destroy$))
+      .subscribe({
+        next: (res: any) => {
+          this.sinPagoCantidad = Number(res?.pagination?.totalItems) || 0;
+        },
+        error: () => {
+          this.sinPagoError = true;
         },
       });
   }
