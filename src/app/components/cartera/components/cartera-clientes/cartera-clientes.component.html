@@ -40,7 +40,7 @@
   </div>
 
   <!-- Filtros -->
-  <div class="cx-toolbar">
+  <div class="cx-toolbar cx-toolbar-clientes">
     <div class="cx-field">
       <label for="cx-search">Buscar</label>
       <input id="cx-search" type="text" [(ngModel)]="searchTerm" (input)="onFilterChange()"
@@ -59,6 +59,38 @@
         <option *ngFor="let v of vendorOptions" [value]="v">{{ v }}</option>
       </select>
     </div>
+    <div class="cx-field">
+      <label for="cx-age">Antigüedad</label>
+      <select id="cx-age" [(ngModel)]="antiguedadFilter" (change)="onFilterChange()">
+        <option *ngFor="let opt of antiguedadOptions" [value]="opt.value">{{ opt.label }}</option>
+      </select>
+    </div>
+    <div class="cx-field">
+      <label for="cx-sort">Ordenar</label>
+      <select id="cx-sort" [(ngModel)]="orden" (change)="onFilterChange()">
+        <option *ngFor="let opt of ordenOptions" [value]="opt.value">{{ opt.label }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Resultado del filtro + descargas (ticket 1130) -->
+  <div class="cx-resultbar" *ngIf="clientes.length > 0">
+    <div class="cx-result-text">
+      <strong>{{ filtered.length | number }}</strong> cliente(s) ·
+      <strong>{{ totalVisible | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      {{ antiguedadFilter === 'todas' ? 'de saldo' : 'de saldo en este rango' }}
+    </div>
+    <div class="cx-result-actions">
+      <button type="button" class="cx-export" (click)="descargarExcel()" [disabled]="filtered.length === 0">
+        <i class="pi pi-file-excel"></i>
+        Descargar Excel
+      </button>
+      <button type="button" class="cx-export" (click)="descargarPdf()"
+              [disabled]="filtered.length === 0 || generandoPdf">
+        <i class="pi" [ngClass]="generandoPdf ? 'pi-spin pi-spinner' : 'pi-file-pdf'"></i>
+        Descargar PDF
+      </button>
+    </div>
   </div>
 
   <!-- Empty: sin cartera en absoluto -->
@@ -72,7 +104,7 @@
   <div *ngIf="clientes.length > 0 && filtered.length === 0" class="cx-empty">
     <i class="pi pi-filter-slash"></i>
     <div class="cx-empty-title">Ningún cliente coincide con el filtro</div>
-    <div>Ajusta la búsqueda, el riesgo o el vendedor.</div>
+    <div>Ajusta la búsqueda, el riesgo, el vendedor o la antigüedad.</div>
   </div>
 
   <!-- Lista de clientes -->
@@ -101,8 +133,8 @@
         </div>
 
         <div class="cx-client-saldo">
-          <div class="cx-saldo-value">{{ c.saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
-          <div class="cx-saldo-label">Saldo pendiente</div>
+          <div class="cx-saldo-value">{{ saldoVisible(c) | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+          <div class="cx-saldo-label">{{ antiguedadFilter === 'todas' ? 'Saldo pendiente' : 'Saldo en este rango' }}</div>
         </div>
 
         <span class="cx-chevron">
@@ -178,7 +210,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let p of c.pedidos; trackBy: trackByPedido">
+              <tr *ngFor="let p of pedidosVisibles(c); trackBy: trackByPedido">
                 <td class="cx-cell-strong">{{ p.nroPedido || '—' }}</td>
                 <td class="text-center">
                   <span class="cx-badge" [ngClass]="metaPago(p.estadoPago).badgeClass">{{ metaPago(p.estadoPago).label }}</span>

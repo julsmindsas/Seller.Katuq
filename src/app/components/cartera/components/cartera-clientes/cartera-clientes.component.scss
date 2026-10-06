@@ -300,3 +300,42 @@
 }
 .cx-dias-venc { color: #{$cx-aging-60}; font-weight: 800; }
 .cx-dias-al-dia { color: var(--kc-muted); white-space: nowrap; }
+
+// ── Filtros, resultado y descargas (ticket 1130) ──────────────────────────
+.cx-toolbar.cx-toolbar-clientes {
+  grid-template-columns: minmax(200px, 1fr) repeat(4, minmax(150px, 190px));
+
+  @media (max-width: 1200px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 640px)  { grid-template-columns: 1fr; }
+}
+
+.cx-resultbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 0 4px;
+}
+
+.cx-result-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kc-ink2);
+
+  strong { color: var(--kc-ink); font-weight: 800; }
+}
+
+.cx-result-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cx-export {
+  @include kc-btn-ghost;
+  padding: 9px 14px;
+  font-size: 13px;
+
+  i { color: var(--kc-accent); }
+}
