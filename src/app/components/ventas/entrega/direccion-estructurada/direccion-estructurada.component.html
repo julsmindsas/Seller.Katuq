@@ -113,8 +113,10 @@
                 </select>
               </div>
               <div class="col-4">
-                <label class="form-label small">Número</label>
-                <input type="text" class="form-control" placeholder="Ej: 80" formControlName="numeroVia">
+                <label class="form-label small">{{ viaAdmiteNombre(direccionForm.get('tipoVia')?.value) ? 'Número o nombre' : 'Número' }}</label>
+                <input type="text" class="form-control"
+                       [placeholder]="viaAdmiteNombre(direccionForm.get('tipoVia')?.value) ? 'Ej: 80 o El Dorado' : 'Ej: 80'"
+                       formControlName="numeroVia">
               </div>
               <div class="col-3">
                 <label class="form-label small">Letra</label>

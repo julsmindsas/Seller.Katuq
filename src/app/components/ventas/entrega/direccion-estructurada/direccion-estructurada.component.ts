@@ -410,7 +410,16 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     const numeroCasa = direccion.match(/(?:CASA\s+|\-\s*)(\d+)/i);
 
     if (tipoVia) this.direccionForm.get("tipoVia")?.setValue(tipoVia[1]);
-    if (numeroVia) this.direccionForm.get("numeroVia")?.setValue(numeroVia[1]);
+    if (numeroVia) {
+      this.direccionForm.get("numeroVia")?.setValue(numeroVia[1]);
+    } else if (tipoVia && this.viaAdmiteNombre(tipoVia[1])) {
+      // Ticket 1144: "Avenida Principal Aguaclara #26-96" → la vía es un nombre:
+      // lo que va entre el tipo de vía y el primer número de cruce.
+      const nombreVia = direccion.match(
+        /^(?:Avenida|Autopista|Vía|Circunvalar|Bulevar|Carretera|Variante|Troncal|Anillo Vial)\s+([A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ .'-]*?)\s*(?:#|\s)\s*\d+/i,
+      );
+      if (nombreVia) this.direccionForm.get("numeroVia")?.setValue(nombreVia[1].trim());
+    }
     if (letraVia) this.direccionForm.get("letraVia")?.setValue(letraVia[1].toUpperCase());
     if (numeroCruce) this.direccionForm.get("numero")?.setValue(numeroCruce[1]);
     if (letraCruce) this.direccionForm.get("letraCruce")?.setValue(letraCruce[1].toUpperCase());
@@ -603,6 +612,19 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Ticket 1144: vías que en Colombia suelen identificarse por nombre y no por número
+  // (Avenida El Dorado, Autopista Norte, Vía Las Palmas, Circunvalar...).
+  private static readonly VIAS_CON_NOMBRE = [
+    "Avenida", "Autopista", "Vía", "Circunvalar", "Bulevar", "Carretera",
+    "Variante", "Troncal", "Anillo Vial",
+  ];
+
+  viaAdmiteNombre(tipoVia: string): boolean {
+    return DireccionEstructuradaComponent.VIAS_CON_NOMBRE.some(
+      (v) => v.toLowerCase() === String(tipoVia || "").trim().toLowerCase(),
+    );
+  }
+
   // Valida una dirección colombiana específica
   validarDireccionColombiana(): boolean {
     const form = this.direccionForm.value;
@@ -638,9 +660,21 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
         return false;
       }
 
-      // Validar que los números sean válidos
-      if (!/^\d+$/.test(form.numeroVia) || !/^\d+$/.test(form.numero) || !/^\d+$/.test(form.numeroCasa)) {
-        this.mensajeError = "Los números de vía, cruce y casa deben ser valores numéricos";
+      // Validar que los números sean válidos. Ticket 1144: la vía principal puede
+      // tener nombre en vez de número ("Avenida Principal Aguaclara 26-96",
+      // "Avenida El Dorado 68-50"); el cruce y la casa siguen siendo numéricos.
+      const viaConNombre = this.viaAdmiteNombre(form.tipoVia);
+      const numeroViaValido = viaConNombre
+        ? /^[A-Z0-9ÁÉÍÓÚÜÑ][A-Z0-9ÁÉÍÓÚÜÑ .'-]{0,49}$/i.test(String(form.numeroVia).trim())
+        : /^\d+$/.test(form.numeroVia);
+      if (!numeroViaValido) {
+        this.mensajeError = viaConNombre
+          ? "El nombre o número de la vía solo admite letras, números, espacios, puntos y guiones"
+          : "Los números de vía, cruce y casa deben ser valores numéricos";
+        return false;
+      }
+      if (!/^\d+$/.test(form.numero) || !/^\d+$/.test(form.numeroCasa)) {
+        this.mensajeError = "Los números de cruce y casa deben ser valores numéricos";
         return false;
       }
 
