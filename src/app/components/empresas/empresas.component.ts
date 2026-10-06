@@ -286,8 +286,11 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     // Procesar y normalizar datos
     this.temp = datos.map((empresa, idx) => ({
       ...empresa,
-      // Garantizar clave única para la tabla (fallback si no viene _docId del backend)
-      _docId: empresa._docId || `${empresa.nit || 'sin-nit'}__${empresa.nomComercial || empresa.nombre || 'sin-nombre'}__${idx}`,
+      // Garantizar clave única para la tabla (fallback si no viene _docId del backend).
+      // Ticket 1143: para una empresa que no es Julsmind, `/companies/all` delega en
+      // `getCompanyByName`, que trae el id en `cd` y no en `_docId`; sin este fallback
+      // todo comercio caía en la llave sintética y el lápiz decía "no tiene identificador".
+      _docId: empresa._docId || (empresa as any).cd || `${empresa.nit || 'sin-nit'}__${empresa.nomComercial || empresa.nombre || 'sin-nombre'}__${idx}`,
       // Normalizar campos de teléfono
       celular: empresa.cel || empresa.celular,
       // Procesar fechas si existen
