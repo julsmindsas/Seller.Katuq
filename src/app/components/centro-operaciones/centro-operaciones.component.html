@@ -14,11 +14,11 @@
             </div>
         </header>
 
-        <!-- Empresa sin la opción encendida -->
+        <!-- Rol sin el centro de operaciones en sus menús -->
         <div class="co__vacio" *ngIf="noDisponible">
             <span class="co__vacio-icon"><i class="pi pi-lock"></i></span>
-            <h2 class="co__vacio-title">Esta pantalla aún no está activa para tu empresa</h2>
-            <p class="co__vacio-text">Mientras tanto, la operación de despachos sigue en Envíos y entregas.</p>
+            <h2 class="co__vacio-title">Tu rol no tiene activo el Centro de operaciones</h2>
+            <p class="co__vacio-text">Un administrador lo activa en Roles: agrega "Centro de operaciones" a los menús del rol y vuelve a iniciar sesión. Mientras tanto, los despachos siguen en Envíos y entregas.</p>
             <a class="co__btn" routerLink="/despachos"><i class="pi pi-send"></i><span>Ir a Envíos y entregas</span></a>
         </div>
 

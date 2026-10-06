@@ -206,7 +206,7 @@ export const content: Routes = [
     canActivate: [AuthGuard], // Agregar el guard
   },
   {
-    // D-354: nace apagado por empresa; sin la opción la pantalla dice "no disponible".
+    // D-354: sin "Centro de operaciones" en los menús del rol, la pantalla dice "no disponible".
     path: "centro-operaciones",
     loadChildren: () =>
       import("../../components/centro-operaciones/centro-operaciones.module").then(

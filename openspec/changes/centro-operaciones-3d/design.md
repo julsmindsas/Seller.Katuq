@@ -54,6 +54,8 @@ La foto tarda 6 a 9 s desde un equipo local (lo pesa el carrito de cada pedido) 
    - **Empresa apagada → 200 `{ disponible: false }`, no 403:** el interceptor anuncia todo 403 que no es de sesión como "Límite de suscripción".
    - **Productos sin inventario:** van como mesas de producción, sin conteo.
    - **Cliente:** el nombre sale de `cliente.nombres_completos`, porque `envio` suele traer "N/A".
+8. **Una sola llave (2026-10-06).** Reemplaza la doble llave de la decisión 3. La pantalla y la consulta se habilitan con la entrada `centro-operaciones` en los menús del rol, que el administrador agrega en Roles. La opción `companyConfig.centroOperaciones3d` queda sin uso: no tenía pantalla para prenderla.
+9. **Flota.** Los mensajeros de la colección `transportadores` (todos en moto) salen con nombre, placa, moto, estado en línea y proveedor de guía (Katuq Delivery = guía Katuq), nunca con `pwd` ni cédula. Las transportadoras externas son camiones.
 
 ## Risks / Trade-offs
 

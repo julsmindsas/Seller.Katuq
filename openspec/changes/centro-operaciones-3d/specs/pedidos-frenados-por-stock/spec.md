@@ -43,8 +43,8 @@ La foto MUST salir solo de la empresa del token. Con "solo sus métricas" activo
 - **WHEN** un vendedor con "solo sus métricas" pide la foto
 - **THEN** solo ve los pedidos donde él es el asesor
 
-#### Scenario: Empresa apagada
-- **WHEN** una empresa sin la opción encendida pide la foto
+#### Scenario: Rol sin acceso
+- **WHEN** un usuario cuyo rol no tiene "Centro de operaciones" en sus menús pide la foto
 - **THEN** recibe una respuesta de "no disponible" sin datos
 
 #### Scenario: Sin escrituras

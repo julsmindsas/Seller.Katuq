@@ -497,7 +497,7 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "despachos", title: "Envíos y entregas", type: "link", icon: "send" },
-        // D-354: nace apagado por empresa (companyConfig + menú del rol por backfill).
+        // D-354: lo ve el rol que tenga esta entrada en sus menús (se agrega en Roles).
         { path: "centro-operaciones", title: "Centro de operaciones", type: "link", icon: "layers" },
       ],
     },

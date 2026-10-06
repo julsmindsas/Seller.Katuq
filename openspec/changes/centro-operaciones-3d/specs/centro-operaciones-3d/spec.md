@@ -1,15 +1,15 @@
 ## ADDED Requirements
 
-### Requirement: Pantalla encendida por comercio
-El sistema SHALL mostrar el Centro de operaciones solo a las empresas que lo tengan encendido y a los roles con su entrada de menú. Para los comercios actuales MUST nacer apagado.
+### Requirement: Pantalla encendida por rol
+El sistema SHALL mostrar el Centro de operaciones solo a los roles que tengan su entrada en los menús, que el administrador agrega en Roles. Para los roles actuales MUST nacer apagado.
 
-#### Scenario: Comercio sin la opción
-- **WHEN** un usuario de una empresa sin la opción encendida inicia sesión
-- **THEN** no ve la entrada en el menú, y si abre la ruta directo la pantalla le dice que no está disponible para su empresa y no muestra datos
+#### Scenario: Rol sin la entrada
+- **WHEN** un usuario cuyo rol no tiene "Centro de operaciones" en sus menús abre la ruta directo
+- **THEN** la pantalla le dice que su rol no la tiene activa, cómo activarla, y no muestra datos
 
-#### Scenario: Empresa de prueba
-- **WHEN** un administrador de FLORECER inicia sesión después de activarla
-- **THEN** ve la entrada "Centro de operaciones" en el menú y la pantalla carga
+#### Scenario: Activado en Roles
+- **WHEN** el administrador agrega "Centro de operaciones" al rol y el usuario vuelve a iniciar sesión
+- **THEN** ve la entrada en Logística y la pantalla carga
 
 ### Requirement: Escena de tres niveles
 La pantalla SHALL mostrar una escena 3D navegable con dos niveles en esta entrega, bodega y muelles. La cámara MUST poder acercarse y alejarse entre ellos sin cambiar de pantalla.
