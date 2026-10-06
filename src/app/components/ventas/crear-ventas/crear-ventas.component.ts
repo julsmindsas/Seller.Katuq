@@ -3196,10 +3196,20 @@ export class CrearVentasComponent
     // Verificar que se haya seleccionado una bodega
     if (this.bodega) {
       this.pedidoGral.bodegaId = this.bodega?.idBodega;
+    } else if (this.catalogoSinInventario && this.carritoSoloBajoPedido()) {
+      // Ticket 1146: en el modo "Sin inventario" el selector de bodega queda
+      // inhabilitado, pero este chequeo seguía exigiéndola y el pedido no se
+      // podía crear si el vendedor no tenía una bodega recordada. Los productos
+      // bajo pedido no viven en ninguna bodega: va el centinela "-1", que el
+      // backend ya trata como "sin bodega" (inventoryService.updateByChannel y
+      // movementWriteGuard) y no descuenta inventario.
+      this.pedidoGral.bodegaId = "-1";
     } else {
       Swal.fire({
         title: "Error",
-        text: "No se ha seleccionado una bodega",
+        text: this.catalogoSinInventario
+          ? "El carrito tiene productos con inventario: selecciona la bodega de la que salen, o déjalos solo con productos bajo pedido."
+          : "No se ha seleccionado una bodega",
         icon: "error",
       });
       return;
@@ -4246,6 +4256,18 @@ export class CrearVentasComponent
         this.toastrService.error("Error al cargar las bodegas", "Error");
       },
     });
+  }
+
+  /**
+   * Ticket 1146: ¿todo el carrito es bajo pedido? Un producto es bajo pedido
+   * cuando `disponibilidad.inventariable === false` (misma regla que el
+   * catálogo y que el backend al decidir si descuenta inventario).
+   */
+  private carritoSoloBajoPedido(): boolean {
+    const items = this.pedidoGral?.carrito || [];
+    return items.length > 0 && items.every(
+      (item: any) => item?.producto?.disponibilidad?.inventariable === false,
+    );
   }
 
   /**
