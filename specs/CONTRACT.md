@@ -8090,3 +8090,11 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 - La base común de las escenas pasa de `welcome/escena-3d/` a `shared/escena-3d/` (la usan la bienvenida y pedidos).
 
 **Estado.** Compila en el servidor local. Probado en el banco de pruebas con los seis estados (en producción, producido, empacado, en camino, entregado, rechazado; urgente). NO probado con sesión real. En la rama aparte `feature/pedido-3d`, sin publicar: falta la autorización de Daniel para publicar.
+
+## D-354 (2026-10-05) — Centro de operaciones 3D: bodega + muelles + pedidos frenados por stock (PROPUESTA, pendiente de aprobación)
+
+**Contexto.** Daniel pidió una pantalla nueva, 100 % operativa y visual, que combinara dos pantallas, y aprobó arrancar con la propuesta ("dale, arranca con la propuesta pa ya").
+
+**Propuesta** (`openspec/changes/centro-operaciones-3d/`): una escena 3D con bodega (stock por producto en la bodega, solo lectura) y muelles (cola operativa por etapa, urgentes y camiones por transportador). Marca como **frenado** el pedido en cola con un producto en negativo en su bodega; por la política de negativo visible, la venta ya descontó el stock. Una consulta nueva de solo lectura arma la foto con `getRealStockMap` (sin doble conteo). Generar guía y abrir detalle se hacen directo. Despachar e imprimir se entregan a Despachos con los pedidos preseleccionados: único cambio en Despachos, aditivo y con diff aparte. Doble llave por comercio: menú por rol y `companyConfig.centroOperaciones3d`. Nace apagado y se prueba en FLORECER. País, repetición del día y Opttia van en etapas posteriores.
+
+**Estado.** Propuesta escrita y validada (`openspec validate` ok). Sin código. Esperando aprobación de Daniel.
