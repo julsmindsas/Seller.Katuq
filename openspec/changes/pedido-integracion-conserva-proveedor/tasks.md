@@ -7,8 +7,8 @@
 
 ## 2. Reparación de pedidos abiertos
 - [x] 2.1 Script `functions/scripts/` con `--dry-run` por defecto: pedidos con `sourceOrder` de integración, abiertos, filtrados por `company`; reporta pedido, línea y la identidad que agregaría
-- [ ] 2.2 Revisar la salida del dry-run con Daniel
-- [ ] 2.3 Aplicar solo con autorización explícita, con respaldo previo de los pedidos tocados
+- [x] 2.2 Revisar la salida del dry-run con Daniel
+- [x] 2.3 Aplicar solo con autorización explícita, con respaldo previo de los pedidos tocados
 
 ## 3. Verificación y cierre
 - [x] 3.1 `node --check` y tests del backend sin errores
