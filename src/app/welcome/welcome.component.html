@@ -84,82 +84,24 @@
     </section>
 </div>
 
-<!-- Tu negocio hoy — métricas del comercio calculadas server-side -->
+<!-- Tu negocio hoy — maqueta 3D + panel con las métricas calculadas server-side -->
 <div class="container-fluid px-4 mb-4" *ngIf="showNegocioHoy">
-    <h2 class="section-title mb-2">Tu negocio hoy</h2>
-    <div class="row g-2">
-        <div class="col-6 col-lg-3" *ngIf="showVentasHoy">
-            <a [routerLink]="ventasHoyLink" class="indicator-card indicator-card--primary negocio-card">
-                <small class="indicator-label">{{ soloMisMetricas ? 'Mis ventas de hoy' : 'Ventas de hoy' }}</small>
-                <span class="indicator-value">
-                    <span class="skeleton" *ngIf="ventasHoy.cargando" aria-hidden="true"></span>
-                    <ng-container *ngIf="!ventasHoy.cargando">{{ ventasHoy.total !== null ? ('$' + (ventasHoy.total | number:'1.0-0')) : '—' }}</ng-container>
-                </span>
-                <small class="indicator-sub">
-                    {{ ventasHoy.pedidos !== null ? (ventasHoy.pedidos + (ventasHoy.pedidos === 1 ? ' pedido' : ' pedidos')) : 'Ver analíticas' }}
-                </small>
-            </a>
-        </div>
-        <div class="col-6 col-lg-3" *ngIf="showDespachosHoy">
-            <a routerLink="/despachos" class="indicator-card indicator-card--warning negocio-card">
-                <small class="indicator-label">{{ soloMisMetricas ? 'Mis pedidos por despachar' : 'Por despachar' }}</small>
-                <span class="indicator-value">
-                    <span class="skeleton" *ngIf="despachosHoy.cargando" aria-hidden="true"></span>
-                    <ng-container *ngIf="!despachosHoy.cargando">{{ despachosHoy.paraDespacho !== null ? despachosHoy.paraDespacho : '—' }}</ng-container>
-                </span>
-                <small class="indicator-sub">
-                    {{ despachosHoy.urgentes !== null ? (despachosHoy.urgentes + ' con entrega hoy o vencida') : 'Cola completa de despachos' }}
-                </small>
-            </a>
-        </div>
-        <div class="col-6 col-lg-3" *ngIf="showStockCritico">
-            <a routerLink="/inventario/inventario-catalogo" class="indicator-card indicator-card--danger negocio-card">
-                <small class="indicator-label">Sin stock</small>
-                <span class="indicator-value">
-                    <span class="skeleton" *ngIf="stockCritico.cargando" aria-hidden="true"></span>
-                    <ng-container *ngIf="!stockCritico.cargando">{{ stockCritico.sinStock !== null ? stockCritico.sinStock : '—' }}</ng-container>
-                </span>
-                <small class="indicator-sub">
-                    {{ stockCritico.bajoStock !== null ? (stockCritico.bajoStock + ' en bajo stock') : 'Inventario' }}
-                    <ng-container *ngIf="stockCritico.sinDatos"> · {{ stockCritico.sinDatos }} sin datos</ng-container>
-                </small>
-            </a>
-        </div>
-        <div class="col-6 col-lg-3" *ngIf="showCrmTareas">
-            <a routerLink="/crm/list" class="indicator-card indicator-card--danger negocio-card">
-                <small class="indicator-label">{{ soloMisMetricas ? 'Mis tareas CRM vencidas' : 'Tareas CRM vencidas' }}</small>
-                <span class="indicator-value">
-                    <span class="skeleton" *ngIf="crmTareas.cargando" aria-hidden="true"></span>
-                    <ng-container *ngIf="!crmTareas.cargando">{{ crmTareas.vencidas !== null ? crmTareas.vencidas : '—' }}</ng-container>
-                </span>
-                <small class="indicator-sub">
-                    {{ crmTareas.paraHoy ? (crmTareas.paraHoy + ' para hoy') : 'Seguimiento comercial' }}
-                </small>
-            </a>
-        </div>
-        <div class="col-6 col-lg-3" *ngIf="showClientesResumen">
-            <a routerLink="/ventas/clienteslista" class="indicator-card indicator-card--success negocio-card">
-                <small class="indicator-label" title="Primera compra observada en los últimos 30 días dentro del historial de 12 meses. No representa altas de clientes.">Primera compra reciente</small>
-                <span class="indicator-value">
-                    <span class="skeleton" *ngIf="clientesResumen.cargando" aria-hidden="true"></span>
-                    <ng-container *ngIf="!clientesResumen.cargando">{{ clientesResumen.nuevosMes !== null ? clientesResumen.nuevosMes : '—' }}</ng-container>
-                </span>
-                <small class="indicator-sub">
-                    30 días · historial de 12 meses
-                </small>
-            </a>
-        </div>
-        <div class="col-6 col-lg-3" *ngIf="showClientesResumen">
-            <a routerLink="/ventas/clienteslista" class="indicator-card indicator-card--warning negocio-card">
-                <small class="indicator-label">Recompra estimada</small>
-                <span class="indicator-value">
-                    <span class="skeleton" *ngIf="clientesResumen.cargando" aria-hidden="true"></span>
-                    <ng-container *ngIf="!clientesResumen.cargando">{{ clientesResumen.enAlerta !== null ? clientesResumen.enAlerta : '—' }}</ng-container>
-                </span>
-                <small class="indicator-sub">según frecuencia histórica · no son tareas</small>
-            </a>
-        </div>
-    </div>
+    <app-negocio-3d
+        [empresa]="currentCompany?.nombreComercio"
+        [logoComercio]="currentCompany?.imgUrlLogo"
+        [soloMisMetricas]="soloMisMetricas"
+        [ventasHoyLink]="ventasHoyLink"
+        [showVentas]="showVentasHoy"
+        [showDespachos]="showDespachosHoy"
+        [showStock]="showStockCritico"
+        [showCrm]="showCrmTareas"
+        [showClientes]="showClientesResumen"
+        [ventasHoy]="ventasHoy"
+        [despachosHoy]="despachosHoy"
+        [stockCritico]="stockCritico"
+        [crmTareas]="crmTareas"
+        [clientesResumen]="clientesResumen">
+    </app-negocio-3d>
 </div>
 
 <!-- Acciones rápidas — solo si el usuario tiene acceso a al menos una -->

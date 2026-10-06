@@ -239,7 +239,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
             pedidos: r?.kpis?.totalPedidos ?? null,
           };
         },
-        error: () => { this.ventasHoy.cargando = false; },
+        error: () => { this.ventasHoy = { ...this.ventasHoy, cargando: false }; },
       });
     }
 
@@ -254,7 +254,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
             urgentes: r?.pedidosUrgentes ?? null,
           };
         },
-        error: () => { this.despachosHoy.cargando = false; },
+        error: () => { this.despachosHoy = { ...this.despachosHoy, cargando: false }; },
       });
     }
 
@@ -273,7 +273,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
           this.stockCritico = { cargando: false, sinStock, bajoStock,
             sinDatos: alerts?.productosSinDatos ?? null };
         },
-        error: () => { this.stockCritico.cargando = false; },
+        error: () => { this.stockCritico = { ...this.stockCritico, cargando: false }; },
       });
     }
 
@@ -290,7 +290,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
             paraHoy: r ? (r.tasksDueToday ?? 0) : null,
           };
         },
-        error: () => { this.crmTareas.cargando = false; },
+        error: () => { this.crmTareas = { ...this.crmTareas, cargando: false }; },
       });
     }
 
@@ -308,7 +308,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
             total: r?.totalClientes ?? null,
           };
         },
-        error: () => { this.clientesResumen.cargando = false; },
+        error: () => { this.clientesResumen = { ...this.clientesResumen, cargando: false }; },
       });
     }
   }

@@ -1,0 +1,76 @@
+<section class="kq3d" [class.kq3d--sin-3d]="webglOk === false" aria-labelledby="kq3d-titulo">
+    <!-- Maqueta 3D: decorativa para lectores de pantalla; el panel tiene la misma información -->
+    <div class="kq3d__stage" #stage>
+        <canvas #canvas class="kq3d__canvas" [class.is-lista]="webglOk" aria-hidden="true"></canvas>
+
+        <div class="kq3d__head">
+            <span class="kq3d__eyebrow">Tu negocio hoy</span>
+            <span class="kq3d__fecha">{{ fecha }}</span>
+        </div>
+
+        <div class="kq3d__labels" *ngIf="webglOk">
+            <ng-container *ngFor="let e of etiquetas; trackBy: trackEtiqueta">
+                <a #etiqueta class="kq3d__label" [attr.data-zona]="e.zona"
+                   [class]="'kq3d__label kq3d__label--' + e.tono"
+                   [class.is-activa]="zonaActiva === e.zona"
+                   [routerLink]="e.link" [attr.aria-hidden]="true" tabindex="-1"
+                   (mouseenter)="resaltar(e.zona)" (mouseleave)="resaltar(null)">
+                    <span class="kq3d__label-icon"><i [class]="e.icono"></i></span>
+                    <span class="kq3d__label-text">
+                        <small class="kq3d__label-title">{{ e.titulo }}</small>
+                        <strong class="kq3d__label-value">{{ e.cargando ? '…' : e.valor }}</strong>
+                    </span>
+                </a>
+            </ng-container>
+        </div>
+
+        <div class="kq3d__controls" *ngIf="webglOk" role="group" aria-label="Mover la vista 3D">
+            <button type="button" (click)="acercar()" title="Acercar" aria-label="Acercar"><i class="pi pi-plus"></i></button>
+            <button type="button" (click)="alejar()" title="Alejar" aria-label="Alejar"><i class="pi pi-minus"></i></button>
+            <span class="kq3d__controls-sep"></span>
+            <button type="button" (click)="girar(-30)" title="Girar a la izquierda" aria-label="Girar a la izquierda"><i class="pi pi-replay"></i></button>
+            <button type="button" (click)="girar(30)" title="Girar a la derecha" aria-label="Girar a la derecha"><i class="pi pi-refresh"></i></button>
+            <button type="button" (click)="centrar()" title="Volver a la vista inicial" aria-label="Volver a la vista inicial"><i class="pi pi-home"></i></button>
+        </div>
+
+        <div class="kq3d__hint" *ngIf="webglOk">
+            <i class="pi pi-arrows-h"></i>
+            <span class="kq3d__hint-text">Arrastra para girar · toca una zona para abrirla</span>
+        </div>
+    </div>
+
+    <!-- Panel con las cifras: flota sobre la maqueta en pantallas anchas, va debajo en las demás -->
+    <aside class="kq3d__panel" #panel>
+        <header class="kq3d__panel-head">
+            <div class="kq3d__marca">
+                <img *ngIf="logoComercio && !logoRoto; else sinLogo" class="kq3d__marca-logo" [src]="logoComercio" alt=""
+                     (error)="logoRoto = true">
+                <ng-template #sinLogo><b class="kq3d__marca-logo kq3d__marca-logo--iniciales" aria-hidden="true">{{ iniciales }}</b></ng-template>
+                <div>
+                    <small class="kq3d__panel-eyebrow">Resumen del día</small>
+                    <h2 id="kq3d-titulo" class="kq3d__panel-title">{{ empresa || 'Tu negocio hoy' }}</h2>
+                </div>
+            </div>
+            <span class="kq3d__live" *ngIf="hora"><span class="kq3d__live-dot"></span>{{ hora }}</span>
+        </header>
+
+        <div class="kq3d__rows">
+            <a *ngFor="let f of filas; trackBy: trackFila" class="kq3d__row"
+               [class.is-activa]="zonaActiva === f.zona" [class.is-mudo]="!f.link"
+               [routerLink]="f.link" [attr.title]="f.ayuda || null"
+               (mouseenter)="resaltar(f.zona)" (mouseleave)="resaltar(null)"
+               (focus)="resaltar(f.zona)" (blur)="resaltar(null)">
+                <span class="kq3d__row-icon" [class]="'kq3d__row-icon kq3d__row-icon--' + f.tono"><i [class]="f.icono"></i></span>
+                <span class="kq3d__row-body">
+                    <small class="kq3d__row-title">{{ f.titulo }}</small>
+                    <span class="kq3d__row-value">
+                        <span class="kq3d__skeleton" *ngIf="f.cargando" aria-hidden="true"></span>
+                        <ng-container *ngIf="!f.cargando">{{ f.valor }}</ng-container>
+                    </span>
+                    <small class="kq3d__row-sub">{{ f.detalle }}</small>
+                </span>
+                <span class="kq3d__pill" *ngIf="!f.cargando && f.valor !== '—'" [class]="'kq3d__pill kq3d__pill--' + f.tono">{{ f.estado }}</span>
+            </a>
+        </div>
+    </aside>
+</section>

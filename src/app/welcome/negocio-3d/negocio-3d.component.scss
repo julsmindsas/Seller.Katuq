@@ -1,0 +1,492 @@
+// ==========================================================================
+// "Tu negocio hoy" en 3D — tema canónico (openspec/specs/design-system):
+// acento #5F3FE0, tinta #211F3A, lilas, semánticos en par fuerte/suave,
+// radios 16/11/20, sombras violeta difusas, plano y sin gradientes.
+// ==========================================================================
+
+$kq-accent: #5F3FE0;
+$kq-accent-2: #7C5CFF;
+$kq-accent-soft: #efe9ff;
+$kq-ink: #211F3A;
+$kq-muted: #8f8bab;
+$kq-muted-2: #9995b3;
+$kq-line: #ececf4;
+$kq-line-soft: #f1f0f7;
+$kq-chip-bg: #f5f4fa;
+$kq-chip-border: #e9e7f3;
+$kq-escena: #E7E2F7; // = color de fondo de la escena (sin costura mientras carga)
+
+$kq-tonos: (
+  accent: ($kq-accent, $kq-accent-soft),
+  success: (#1E874B, #E6F7EE),
+  warning: (#D9820A, #FFF1DF),
+  danger: (#D64545, #FDECEC),
+);
+
+$kq-shadow-panel: 0 1px 3px rgba(30, 20, 80, .04);
+$kq-shadow-float: 0 6px 14px -8px rgba(50, 40, 110, .35);
+$kq-panel-w: 330px;
+
+:host { display: block; }
+
+.kq3d {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid #eeecf7;
+  background: #fff;
+  box-shadow: $kq-shadow-panel;
+  overflow: hidden;
+}
+
+// ------------------------------------------------------------------ escena
+.kq3d__stage {
+  position: relative;
+  height: 500px;
+  background: $kq-escena;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.kq3d__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity .5s ease;
+  outline: none;
+
+  &.is-lista { opacity: 1; }
+}
+
+.kq3d__head {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .88);
+  border: 1px solid $kq-line;
+  box-shadow: $kq-shadow-float;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.kq3d__eyebrow {
+  color: $kq-accent;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.kq3d__fecha {
+  color: $kq-ink;
+  font-size: 13px;
+  font-weight: 700;
+  &::first-letter { text-transform: uppercase; }
+}
+
+// Etiquetas que siguen a cada zona (posición la pone el componente por frame)
+.kq3d__labels {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.kq3d__label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 4px;
+  margin-top: -10px;
+  border-radius: 11px;
+  background: #fff;
+  border: 1px solid $kq-line;
+  box-shadow: $kq-shadow-float;
+  color: $kq-ink;
+  text-decoration: none;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .2s ease, box-shadow .15s ease, border-color .15s ease;
+  will-change: transform;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    width: 9px;
+    height: 9px;
+    background: #fff;
+    border-right: 1px solid $kq-line;
+    border-bottom: 1px solid $kq-line;
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  &:hover,
+  &.is-activa {
+    border-color: #d9cffb;
+    box-shadow: 0 10px 22px -10px rgba(95, 63, 224, .55);
+    color: $kq-ink;
+  }
+}
+
+.kq3d__label-icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.kq3d__label-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  color: $kq-ink;
+}
+
+.kq3d__label-title {
+  color: $kq-muted;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+.kq3d__label-value {
+  color: $kq-ink;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+@each $tono, $par in $kq-tonos {
+  .kq3d__label--#{$tono} .kq3d__label-icon {
+    color: nth($par, 1);
+    background: nth($par, 2);
+  }
+}
+
+// Controles de vista (como el ejemplo: zoom, girar, volver)
+.kq3d__controls {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid $kq-line;
+  box-shadow: $kq-shadow-float;
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #5b5878;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+
+    &:hover { background: $kq-accent-soft; color: $kq-accent; }
+    &:focus-visible { outline: 2px solid $kq-accent; outline-offset: 1px; }
+  }
+}
+
+.kq3d__controls-sep {
+  height: 1px;
+  margin: 2px 4px;
+  background: $kq-line-soft;
+}
+
+.kq3d__hint {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .85);
+  border: 1px solid $kq-line;
+  color: $kq-muted;
+  font-size: 11px;
+  font-weight: 600;
+  pointer-events: none;
+
+  i { font-size: 11px; color: $kq-accent; }
+}
+
+.kq3d__hint-text { color: $kq-muted; }
+
+// ------------------------------------------------------------------- panel
+.kq3d__panel {
+  position: absolute;
+  top: 16px;
+  right: 62px; // deja libres los controles
+  bottom: 16px;
+  z-index: 3;
+  width: $kq-panel-w;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .94);
+  border: 1px solid $kq-line;
+  box-shadow: $kq-shadow-float;
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.kq3d__panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid $kq-line-soft;
+}
+
+.kq3d__marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.kq3d__marca-logo {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  border: 1px solid $kq-line;
+  background: #fff;
+  object-fit: contain;
+  padding: 3px;
+
+  &--iniciales {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border-color: #e4dcfd;
+    background: $kq-accent-soft;
+    color: $kq-accent;
+    font-size: 14px;
+    font-weight: 800;
+  }
+}
+
+.kq3d__panel-eyebrow {
+  display: block;
+  color: $kq-muted;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.kq3d__panel-title {
+  margin: 2px 0 0;
+  color: $kq-ink;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.kq3d__live {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: #E6F7EE;
+  color: #1E874B;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.kq3d__live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1E874B;
+}
+
+.kq3d__rows {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 4px 8px 6px;
+}
+
+.kq3d__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  color: $kq-ink;
+  text-decoration: none;
+  transition: background .12s ease, border-color .12s ease;
+
+  & + & { margin-top: 2px; }
+
+  &:hover,
+  &:focus-visible,
+  &.is-activa {
+    background: rgba(124, 92, 255, .07);
+    border-color: #e4dcfd;
+    color: $kq-ink;
+  }
+
+  &:focus-visible { outline: 2px solid $kq-accent; outline-offset: 1px; }
+  &.is-mudo { cursor: default; }
+}
+
+.kq3d__row-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+@each $tono, $par in $kq-tonos {
+  .kq3d__row-icon--#{$tono} { color: nth($par, 1); background: nth($par, 2); }
+  .kq3d__pill--#{$tono} { color: nth($par, 1); background: nth($par, 2); }
+}
+
+.kq3d__row-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  color: $kq-ink;
+}
+
+.kq3d__row-title {
+  color: $kq-muted;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+.kq3d__row-value {
+  min-height: 21px;
+  color: $kq-accent;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.kq3d__row-sub {
+  overflow: hidden;
+  color: $kq-muted-2;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kq3d__pill {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+
+.kq3d__skeleton {
+  display: inline-block;
+  width: 72px;
+  height: 16px;
+  border-radius: 6px;
+  background: $kq-chip-bg;
+  color: transparent;
+  vertical-align: middle;
+  animation: kq3d-pulso 1.2s ease-in-out infinite;
+}
+
+@keyframes kq3d-pulso {
+  50% { opacity: .45; }
+}
+
+// ------------------------------------------------------------ responsive
+// Por debajo de 1200px el panel deja de flotar y va debajo de la maqueta.
+@media (max-width: 1199.98px) {
+  .kq3d__stage { height: 380px; }
+
+  .kq3d__panel {
+    position: static;
+    width: auto;
+    border: 0;
+    border-top: 1px solid $kq-line;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    background: #fff;
+  }
+
+  .kq3d__rows {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+
+    .kq3d__row + .kq3d__row { margin-top: 0; }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .kq3d__stage { height: 300px; }
+  // En celular no caben las etiquetas: quedan los pines de color y las cifras justo debajo.
+  .kq3d__labels { display: none; }
+  .kq3d__rows { grid-template-columns: 1fr; }
+  .kq3d__hint { display: none; }
+  .kq3d__head { top: 10px; left: 10px; padding: 6px 10px; }
+  .kq3d__controls { top: 10px; right: 10px; }
+  .kq3d__label { padding: 3px 8px 3px 3px; gap: 5px; }
+  .kq3d__label-icon { width: 22px; height: 22px; font-size: 10px; }
+  .kq3d__label-value { font-size: 12.5px; }
+}
+
+// Sin WebGL: queda el panel solo, con todas las cifras
+.kq3d--sin-3d {
+  .kq3d__stage { display: none; }
+  .kq3d__panel {
+    position: static;
+    width: auto;
+    border: 0;
+    box-shadow: none;
+    background: #fff;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kq3d__canvas,
+  .kq3d__label { transition: none; }
+  .kq3d__skeleton { animation: none; }
+}

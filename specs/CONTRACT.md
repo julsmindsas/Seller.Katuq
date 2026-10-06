@@ -8044,3 +8044,19 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 **No cubre:** las listas (Pedidos, Despachos) siguen mostrando todo según el rol; los reportes públicos por enlace no filtran; el Super Administrador (Julsmind) cambia la opción de su propia sesión, no la de otra empresa.
 
 **Estado.** Sin commitear. Sin probar en navegador.
+
+## D-351 (2026-10-05) — "Tu negocio hoy" en la bienvenida pasa a ser una maqueta 3D con panel de cifras
+
+**Contexto.** Daniel pidió un tablero 3D para la bienvenida inspirado en un ejemplo de three.js (bodega isométrica con camiones, estibas y paneles flotantes), con los colores y la información de Katuq, "más liviano pero útil y bonito". Después pidió el logo de Katuq y el del comercio flotando en la escena.
+
+**Decisión:**
+- La sección "Tu negocio hoy" deja las tarjetas planas y pasa a un componente propio (`src/app/welcome/negocio-3d/`): maqueta isométrica + panel con las MISMAS seis cifras, rótulos "Mis…" de D-349 y los mismos permisos por rol. No hay endpoints ni datos nuevos: usa lo que ya cargaba la bienvenida.
+- Cada zona de la maqueta es una pantalla: tienda = ventas, bodega con muelles = despachos (camiones en muelle = pedidos por despachar, máx. 3, baliza naranja si hay urgentes), estibas = inventario (estiba vacía con anillo rojo si hay sin stock, casi vacía con anillo naranja si hay bajo stock), oficina = CRM, casas = clientes. Pines de color semántico, anillo de selección al pasar el mouse por la zona o por la fila del panel, clic abre la pantalla.
+- Logos flotantes: Katuq sobre la bodega (asset local) y el del comercio sobre su tienda. El logo del comercio vive en Storage sin CORS, así que se pide por el proxy existente `/v1/cotizaciones/image-proxy` (el mismo de la orden de venta); sin logo o si falla, la placa muestra las iniciales.
+- Liviano: three y la escena se cargan diferidos solo en la bienvenida; materiales Lambert, geometría compartida e instancias; sin sombras en táctil o equipos de ≤4 núcleos/≤4 GB; ~40 fps y se pausa fuera de pantalla o con la pestaña oculta; nada se mueve con "reducir movimiento"; contexto WebGL liberado al salir. Cámara propia sin rueda del mouse (no secuestra el scroll) y en táctil el dedo hace scroll.
+- Sin WebGL queda solo el panel con todas las cifras. En celular se ocultan las etiquetas sobre la maqueta (quedan los pines) y las cifras van debajo.
+- Tema canónico de diseño (acento #5F3FE0, semánticos en par, sin gradientes). Se quitaron los estilos muertos de las tarjetas viejas.
+
+**No cubre:** mapa del país del comercio (preguntado como idea, no aprobado).
+
+**Estado.** Compila en el servidor local. Probado en navegador con un banco de pruebas aislado (escena real + estilos reales, datos de ejemplo) en escritorio, tableta y celular. NO probado con sesión real (el local pide credenciales). Sin desplegar.

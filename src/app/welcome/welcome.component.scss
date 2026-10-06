@@ -318,101 +318,6 @@
   .start-center-actions { grid-template-columns: 1fr; }
 }
 
-.indicator-card {
-  background: #fff;
-  border: 1px solid $katuq-gray-100;
-  border-left: 3px solid;
-  border-radius: 8px;
-  padding: 10px 12px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-
-  .indicator-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: $katuq-gray-500;
-    font-weight: 600;
-  }
-
-  .indicator-value {
-    font-size: 1.1rem;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  .indicator-sub {
-    font-size: 0.7rem;
-    color: $katuq-gray-500;
-  }
-}
-
-// Variantes: border de acento claro, valor en la variante oscura del token
-// para cumplir contraste AA sobre blanco.
-.indicator-card--primary {
-  border-left-color: $katuq-primary;
-
-  .indicator-value {
-    color: $katuq-primary-dark;
-  }
-}
-
-.indicator-card--success {
-  border-left-color: $katuq-success;
-
-  .indicator-value {
-    color: $katuq-success-dark;
-  }
-}
-
-.indicator-card--warning {
-  border-left-color: $katuq-warning;
-
-  .indicator-value {
-    color: $katuq-warning-text;
-  }
-}
-
-.indicator-card--danger {
-  border-left-color: $katuq-danger;
-
-  .indicator-value {
-    color: $katuq-danger-dark;
-  }
-}
-
-// Skeleton por card mientras carga su métrica (pulso flat, sin gradiente)
-.skeleton {
-  display: inline-block;
-  width: 72px;
-  height: 1.05rem;
-  margin: 2px 0;
-  border-radius: 6px;
-  background: $katuq-gray-200;
-  animation: skeleton-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
-}
-
-// Cards de "Tu negocio hoy": mismos indicator-card pero navegables
-.negocio-card {
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: $katuq-primary-light;
-    box-shadow: 0 2px 12px rgba($katuq-primary, 0.08);
-    transform: translateY(-1px);
-    text-decoration: none;
-  }
-}
-
 // ==========================================
 // ACTION CARDS (main shortcuts)
 // ==========================================
@@ -646,14 +551,6 @@
 
     .tool-label {
       font-size: 0.7rem;
-    }
-  }
-
-  .indicator-card {
-    padding: 8px 10px;
-
-    .indicator-value {
-      font-size: 0.95rem;
     }
   }
 }
