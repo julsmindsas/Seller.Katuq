@@ -52,7 +52,24 @@ export interface ProductoCola {
 }
 
 export interface BodegaCola { id: string | null; nombre: string; pedidos: number; frenados: number; }
-export interface TransportadorCola { nombre: string; pedidos: number; }
+export interface TransportadorCola {
+  nombre: string;
+  pedidos: number;
+  /** true = es un mensajero de la empresa (va en moto); false = transportadora externa (camión). */
+  esMensajero?: boolean;
+}
+
+/** Mensajero de la empresa (todos van en moto). Katuq Delivery = guía de Katuq. */
+export interface MensajeroFlota {
+  id: string;
+  nombre: string;
+  placa: string;
+  moto: string;
+  enLinea: boolean;
+  guia: 'katuq' | 'enviame' | 'propia';
+  /** Pedidos de la cola viva asignados a este mensajero. */
+  pedidos: number;
+}
 
 export interface ResumenCola {
   cola: number;
@@ -77,6 +94,7 @@ export interface FotoOperacion {
   productos?: ProductoCola[];
   bodegas?: BodegaCola[];
   transportadores?: TransportadorCola[];
+  flota?: MensajeroFlota[];
   resumen?: ResumenCola;
 }
 

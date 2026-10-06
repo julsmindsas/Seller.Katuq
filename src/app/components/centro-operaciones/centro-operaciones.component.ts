@@ -9,7 +9,7 @@ import type { AnclaZona } from '../../shared/escena-3d/escena-base';
 import { LogisticaServiceV2 } from '../../shared/services/despachos/logistica.service.v2';
 import type { CentroOperacionesEscena, NivelCentro, ResultadoEscena } from './centro-operaciones.scene';
 import {
-  CentroOperacionesService, ETAPAS_COLA, EtapaCola, FotoOperacion, NOMBRE_ETAPA, PedidoCola, ProductoCola,
+  CentroOperacionesService, ETAPAS_COLA, EtapaCola, FotoOperacion, MensajeroFlota, NOMBRE_ETAPA, PedidoCola, ProductoCola,
 } from './centro-operaciones.service';
 
 type Tono = 'accent' | 'warning' | 'danger' | 'muted';
@@ -89,6 +89,8 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
   vivos: PedidoCola[] = [];
   rezagados: PedidoCola[] = [];
   rezagadosVisibles: PedidoCola[] = [];
+  flota: MensajeroFlota[] = [];
+  enLinea = 0;
   frenados: PedidoCola[] = [];
   porEtapa = {} as Record<EtapaCola, PedidoCola[]>;
 
@@ -111,6 +113,17 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
   }
   get transportadorSel(): string | null {
     return this.sel?.startsWith('t:') ? this.sel.slice(2) : null;
+  }
+  get mensajeroSel(): MensajeroFlota | null {
+    return this.sel?.startsWith('v:') ? this.flota.find((m) => m.id === this.sel!.slice(2)) || null : null;
+  }
+  get pedidosDelMensajero(): PedidoCola[] {
+    const m = this.mensajeroSel;
+    return m ? this.ordenar(this.vivos.filter((p) => !!p.transportador && this.clave(p.transportador) === this.clave(m.nombre))) : [];
+  }
+
+  guiaTexto(m: MensajeroFlota): string {
+    return m.guia === 'katuq' ? 'Katuq Delivery' : m.guia === 'enviame' ? 'Guía de Enviame' : 'Sin proveedor de guía';
   }
   get pedidosDelProducto(): PedidoCola[] {
     const pr = this.productoSel;
@@ -144,6 +157,10 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
     }
     if (id.startsWith('m:')) return NOMBRE_ETAPA[id.slice(2) as EtapaCola] || '';
     if (id.startsWith('t:')) return id.slice(2);
+    if (id.startsWith('v:')) {
+      const m = this.flota.find((x) => x.id === id.slice(2));
+      return m ? `${m.nombre} · ${m.enLinea ? 'en línea' : 'desconectado'}` : '';
+    }
     return id === 'rez' ? 'Pedidos rezagados' : '';
   }
 
@@ -368,6 +385,8 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
     this.frenados = this.vivos.filter((p) => p.frenado);
     this.porEtapa = {} as Record<EtapaCola, PedidoCola[]>;
     for (const etapa of ETAPAS_COLA) this.porEtapa[etapa] = this.vivos.filter((p) => p.etapa === etapa);
+    this.flota = this.foto?.flota || [];
+    this.enLinea = this.flota.filter((m) => m.enLinea).length;
     this.productosPorId = new Map((this.foto?.productos || []).map((p) => [p.id, p]));
     this.pedidosPorId = new Map((this.foto?.pedidos || []).map((p) => [p.id, p]));
     const bodegas = this.foto?.bodegas || [];
@@ -379,6 +398,7 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
     if (id.startsWith('p:')) return this.pedidosPorId.has(id.slice(2));
     if (id.startsWith('s:')) return this.productosPorId.has(id.slice(2));
     if (id.startsWith('t:')) return this.vivos.some((p) => p.transportador === id.slice(2));
+    if (id.startsWith('v:')) return this.flota.some((m) => m.id === id.slice(2));
     if (id === 'rez') return (this.resumen?.rezagados || 0) > 0;
     return id.startsWith('m:');
   }
@@ -412,7 +432,11 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
       const n = this.vivos.filter((p) => p.transportador === t).length;
       out.push({ id: `t:${t}`, titulo: t, valor: `${n} ${n === 1 ? 'pedido' : 'pedidos'}`, tono: 'accent', icono: 'pi pi-truck', elige: `t:${t}` });
     }
-    if (r && !r.camiones.length) out.push({ id: 'z:salida', titulo: 'Salida', valor: 'Sin transportador asignado', tono: 'muted', icono: 'pi pi-truck', elige: null });
+    if (r && !r.camiones.length) out.push({ id: 'z:salida', titulo: 'Transportadoras', valor: 'Sin pedidos asignados', tono: 'muted', icono: 'pi pi-truck', elige: null });
+    if (r?.motos) {
+      const mas = r.motosOcultas ? ` · +${r.motosOcultas}` : '';
+      out.push({ id: 'z:mensajeros', titulo: 'Mensajeros', valor: `${this.enLinea} en línea de ${this.flota.length}${mas}`, tono: this.enLinea ? 'accent' : 'muted', icono: 'pi pi-car', elige: null });
+    }
     if (f.resumen?.rezagados) {
       out.push({ id: 'z:rez', titulo: 'Rezagados', valor: this.fmt(f.resumen.rezagados), tono: 'muted', icono: 'pi pi-history', elige: 'rez' });
     }
@@ -463,6 +487,10 @@ export class CentroOperacionesComponent implements AfterViewInit, OnDestroy {
   private ordenar(lista: PedidoCola[]): PedidoCola[] {
     const peso = (p: PedidoCola) => (p.frenado ? 10 : 0) + (p.urgencia === 'vencido' ? 3 : p.urgencia === 'hoy' ? 2 : p.urgencia === 'proximo' ? 1 : 0);
     return [...lista].sort((a, b) => peso(b) - peso(a) || (a.entrega || '9').localeCompare(b.entrega || '9'));
+  }
+
+  private clave(v: string): string {
+    return (v || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
   }
 
   private esc(s: string): string {

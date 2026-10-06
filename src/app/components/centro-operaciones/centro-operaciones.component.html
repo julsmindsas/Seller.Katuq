@@ -210,6 +210,29 @@
                         </div>
                     </section>
 
+                    <!-- ===== Mensajero (moto) elegido ===== -->
+                    <section class="co__det" *ngIf="mensajeroSel as m">
+                        <div class="co__det-head">
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <div>
+                                <small class="co__label-mini">Mensajero</small>
+                                <h2 class="co__det-title">{{ m.nombre }}</h2>
+                            </div>
+                            <span class="co__pill" [class.co__pill--ok]="m.enLinea" [class.co__pill--muted]="!m.enLinea">{{ m.enLinea ? 'En línea' : 'Desconectado' }}</span>
+                        </div>
+                        <dl class="co__datos">
+                            <div><dt>Moto</dt><dd>{{ m.moto || '—' }}<span class="co__muted" *ngIf="m.placa"> · {{ m.placa }}</span></dd></div>
+                            <div><dt>Guía</dt><dd>{{ guiaTexto(m) }}</dd></div>
+                        </dl>
+                        <small class="co__label-mini">{{ pedidosDelMensajero.length ? 'Pedidos asignados en la cola' : 'Sin pedidos asignados en la cola' }}</small>
+                        <ng-container *ngIf="pedidosDelMensajero.length">
+                            <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: pedidosDelMensajero }"></ng-container>
+                        </ng-container>
+                        <div class="co__acciones" *ngIf="pedidosDelMensajero.length">
+                            <button type="button" class="co__btn" (click)="despachar(pedidosDelMensajero, m.nombre)"><i class="pi pi-send"></i><span>Abrir en Despachos</span></button>
+                        </div>
+                    </section>
+
                     <!-- ===== Rezagados ===== -->
                     <section class="co__det" *ngIf="sel === 'rez'">
                         <div class="co__det-head">
@@ -237,6 +260,21 @@
                             <ng-container *ngIf="webglOk === false">
                                 <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: porEtapa[etapa] }"></ng-container>
                             </ng-container>
+                        </section>
+                        <section class="co__bloque" *ngIf="flota.length">
+                            <small class="co__label-mini">Mensajeros · {{ enLinea }} en línea de {{ flota.length }}</small>
+                            <ul class="co__pedidos">
+                                <li *ngFor="let m of flota; trackBy: trackId">
+                                    <button type="button" class="co__pedido" (click)="seleccionar('v:' + m.id)">
+                                        <span class="co__pedido-punto" [class.is-ok]="m.enLinea" [class.is-off]="!m.enLinea"></span>
+                                        <span class="co__pedido-main">
+                                            <span class="co__pedido-nombre">{{ m.nombre }}</span>
+                                            <span class="co__pedido-sub">{{ guiaTexto(m) }}{{ m.placa ? ' · ' + m.placa : '' }}</span>
+                                        </span>
+                                        <span class="co__pedido-side">{{ m.pedidos ? m.pedidos + (m.pedidos === 1 ? ' pedido' : ' pedidos') : (m.enLinea ? 'En línea' : 'Desconectado') }}</span>
+                                    </button>
+                                </li>
+                            </ul>
                         </section>
                         <p class="co__nota" *ngIf="!vivos.length && !r.rezagados">No hay pedidos en cola por despachar.</p>
                     </ng-container>

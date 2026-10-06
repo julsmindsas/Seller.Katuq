@@ -490,7 +490,11 @@ button.co__stat {
   background: $co-accent-2;
   &.is-warning { background: #D9820A; }
   &.is-danger { background: #D64545; }
+  &.is-ok { background: #1E874B; }
+  &.is-off { background: #a7a3bd; }
 }
+
+.co__pedido-nombre { font-size: 12.5px; font-weight: 700; color: $co-ink; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .co__pedido-main { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
 .co__pedido-nro { font-family: $co-mono; font-size: 12px; font-weight: 700; color: $co-info; }
@@ -547,6 +551,8 @@ button.co__stat {
 
   &--warning { background: #FFF1DF; color: #D9820A; }
   &--danger { background: #FDECEC; color: #D64545; }
+  &--ok { background: #E6F7EE; color: #1E874B; }
+  &--muted { background: #eef0f3; color: #5A6B78; }
 }
 
 .co__datos {
