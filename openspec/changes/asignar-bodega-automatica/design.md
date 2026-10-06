@@ -31,12 +31,14 @@ Firma de proveedor del producto (desde el maestro, solo lectura): `integrations.
 Para cada línea se calcula el conjunto de bodegas compatibles con existencias suficientes (`inventory` normalizado por docId/referencia y deduplicado, como exige CLAUDE.md).
 1. Si una bodega cubre todas las líneas: todo va ahí.
 2. Si no: cobertura voraz — se toma la bodega que cubre más líneas pendientes, se le asignan, y se repite.
-3. Desempates, en orden: `preferredWarehouse` → misma ciudad del envío (texto normalizado: minúsculas, sin tildes, sin "D.C." ni departamento, contra `ciudad` y `ciudadesCobertura[].nombre`) → más unidades disponibles → menor `idBodega`.
+3. Desempates, en orden: bodega que ya es parte del pedido → misma ciudad del envío (texto normalizado: minúsculas, sin tildes, sin "D.C." ni departamento, contra `ciudad` y `ciudadesCobertura[].nombre`) → `preferredWarehouse` → más unidades disponibles → menor `idBodega`. La ciudad va antes que la preferida porque en Shopify la preferida es la constante del mapeo (Cereza Medellín) y anularía la regla de cercanía.
 4. Línea sin existencias suficientes en ninguna compatible: va a la compatible con más unidades (política de negativo visible), y queda registrada en `warehouseAllocation.shortages`.
 5. Una línea nunca se divide.
 
 ### 5. No inventariables
-Bodega de sus últimas salidas en `inventoryMovement` (empresa + producto, las más recientes, solo bodegas candidatas). Sin historia: se suma a la parte con más líneas compatible con su firma; si ninguna, a la candidata propia de menor código.
+La bodega compatible desde donde más unidades han salido según `inventoryMovement` (empresa + producto, solo bodegas candidatas; empate → la más reciente). No la última salida: en ORE-001393 la última fue justo el descuento erróneo en Cereza Medellín. Sin historia: se suma a la parte con más líneas compatible con su firma; si ninguna, a la candidata de menor código.
+
+Línea cuyo producto no existe en Katuq (referencia sin resolver): no se conoce su proveedor, es compatible con cualquier bodega y se suma a la parte más grande; no arma una parte propia.
 
 ### 6. Qué se guarda
 - `carrito[i].idBodega`: código de negocio.
@@ -53,5 +55,6 @@ Bodega de sus últimas salidas en `inventoryMovement` (empresa + producto, las m
 `ALLOCATION_MODE` global (`off|shadow|active`) y `companyConfig.warehouseAllocation.mode` por empresa (gana la empresa). Sombra: calcula y guarda `warehouseAllocation` con `mode: 'shadow'` sin cambiar líneas ni descuento. Una semana de sombra en todas las empresas, comparación con lo que hizo el sistema, y luego activo. Los flags se retiran (Artículo XII) cuando el modo activo cumpla 30 días sin incidentes.
 
 ## Risks / Trade-offs
+- Prueba en solo lectura sobre los 20 pedidos de integración reales desde agosto (2026-10-06): solo ORE-001393 queda en varias bodegas (Distri Sex + Fullpi Medellín + Cereza Medellín, cliente en Medellín); los demás quedan en una bodega. Tiempo medido desde local 0,8–2,5 s por pedido (idas y vueltas a Firestore); se mide en el servidor durante la sombra.
 - Lecturas extra al crear el pedido (inventario por bodega candidata): acotadas a las líneas del pedido y a las bodegas candidatas; sin caché nueva.
 - La cobertura voraz no es óptima en todos los casos; es explicable, determinista y suficiente para carritos de pocas líneas.

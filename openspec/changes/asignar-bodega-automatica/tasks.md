@@ -3,9 +3,9 @@
 Módulo sensible (orders/inventory): un cambio a la vez, cada uno con diff y aprobación explícita antes de aplicar.
 
 ## 1. Servicio de asignación (sin efectos)
-- [ ] 1.1 Leer completos `orderService.js`, `controllers/orders.js` (create), `inventoryService.js` (updateByChannel, _planDescuento, updateByChannelFromWebhook), `orderInventoryEffectLedger.js` y `orderInventoryRolloutService.js`
-- [ ] 1.2 Servicio puro `warehouseAllocationService` (candidatas, afinidad de proveedor, cobertura voraz, desempates, no inventariables por historial); solo lecturas filtradas por `company`
-- [ ] 1.3 Tests unitarios con los casos reales: ORE-001393, comercio de una bodega, canal sin asociaciones, asociación cruzada de otra empresa, ciudad "Bogotá D.C.", faltante, producto sin bodega de su proveedor
+- [x] 1.1 Leer completos `orderService.js`, `controllers/orders.js` (create), `inventoryService.js` (updateByChannel, _planDescuento, updateByChannelFromWebhook), `orderInventoryEffectLedger.js` y `orderInventoryRolloutService.js`
+- [x] 1.2 Servicio puro `warehouseAllocationService` (candidatas, afinidad de proveedor, cobertura voraz, desempates, no inventariables por historial); solo lecturas filtradas por `company`
+- [x] 1.3 Tests unitarios con los casos reales: ORE-001393, comercio de una bodega, canal sin asociaciones, asociación cruzada de otra empresa, ciudad "Bogotá D.C.", faltante, producto sin bodega de su proveedor
 
 ## 2. Sombra
 - [ ] 2.1 Flags `ALLOCATION_MODE` y `companyConfig.warehouseAllocation.mode`; en sombra guardar solo `warehouseAllocation` con `mode: 'shadow'`
