@@ -98,8 +98,10 @@ export class CrmService {
   }
 
   createLead(data: Record<string, any>, forceCorporate?: boolean): Observable<any> {
+    // Se conservan el mensaje y el código del backend (p. ej. 409 EXISTE_OTRO_COMERCIAL)
+    // para que la pantalla le explique al comercial por qué no se creó.
     return this.http.post<any>(`${this.base}/leads`, data, this.corporateOpts(forceCorporate))
-      .pipe(catchError(() => of({ success: false })));
+      .pipe(catchError((err) => of({ success: false, error: err?.error?.error || null, code: err?.error?.code || null })));
   }
 
   // ─── Delete ─────────────────────────────────────────────────

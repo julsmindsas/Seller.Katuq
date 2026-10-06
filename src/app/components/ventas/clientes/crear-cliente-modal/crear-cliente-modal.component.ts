@@ -509,7 +509,9 @@ export class CrearClienteModalComponent implements OnInit {
   private failOnCrmError<T>(source: any) {
     return source.pipe(
       map((res: any) => {
-        if (res && res.success === false) throw new Error('crm_persist_failed');
+        if (res && res.success === false) {
+          throw Object.assign(new Error(res.error || 'crm_persist_failed'), { code: res.code || null });
+        }
         return res as T;
       }),
     );
@@ -628,7 +630,16 @@ export class CrearClienteModalComponent implements OnInit {
         });
         this.activeModal.close({ cliente: { ...clienteData, ...clienteCreado }, action: 'created' });
       },
-      error: () => {
+      error: (err: any) => {
+        if (err?.code === 'EXISTE_OTRO_COMERCIAL') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Este cliente ya existe',
+            text: `${clienteData.nombres_completos || 'Este cliente'} ya está registrado y lo atiende otro comercial, así que no se creó de nuevo. Si crees que debería ser tuyo, pídele al administrador que te lo asigne.`,
+            confirmButtonText: 'Entendido',
+          });
+          return;
+        }
         Swal.fire("Error", `Ocurrió un error al crear el ${this.entityLabel.toLowerCase()}`, "error");
       },
     });

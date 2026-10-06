@@ -8172,3 +8172,11 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 **1142, segunda parte (sin código).** Los 1 % y 4 % que pidieron como "IVA" para asesorías y fletes son las tarifas de retención en la fuente (servicios 4 %, transporte de carga 1 %), no de IVA. Katuq ya las aplica al facturar a SIIGO desde el ticket 1054: modal de facturar → "Retenciones (opcional)" → "Retención en la fuente", con los impuestos que la empresa tenga creados en su SIIGO. No se agregan 1 % ni 4 % a las tarifas de IVA (`iva-canonico.ts`, `editar-iva-linea-pedido`).
 
 **Hallazgo colateral (seguridad, sin tocar).** `GET /v1/companies/:id` (`getCompanyById`) no valida que el id pedido sea la empresa del usuario: cualquier usuario autenticado puede leer la ficha de otra empresa si conoce su docId. Requiere su propio cambio en el backend.
+
+## D-358 (2026-10-06) — El comercial ve por qué no se creó un cliente que ya atiende otro comercial
+
+**Contexto.** Con el CRM por comercial encendido (ticket 1064), el backend frena con `409 EXISTE_OTRO_COMERCIAL` ("Ese cliente ya existe y lo atiende otro comercial.") cuando un comercial crea un corporativo cuyo documento ya existe. El frontend tragaba el mensaje: `crmService.createLead` devolvía `{success:false}` a secas y la pantalla decía "No se pudo crear el lead. Revisa que el backend esté corriendo." Probado en ALMARA con comercial6.
+
+**Decisión.** `createLead` conserva `error` y `code` del backend. Pipeline (crm-list) y el formulario de Clientes corporativos (crear-cliente-modal) muestran una alerta de advertencia "Este cliente ya existe" que explica que lo atiende otro comercial y que el administrador puede asignárselo. Los demás errores muestran el mensaje del backend. Solo frontend.
+
+**Pendiente.** El backend dice "otro comercial" aunque el corporativo sea del mismo comercial o no tenga dueño: solo revisa que el documento exista.

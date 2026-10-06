@@ -374,7 +374,16 @@ export class CrmListComponent implements OnInit, OnDestroy {
           // Rollback: quitar la tarjeta optimista
           this.leads = this.leads.filter(l => l.id !== tempId);
           this.groupByStage();
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el lead. Revisa que el backend esté corriendo.' });
+          if (res?.code === 'EXISTE_OTRO_COMERCIAL') {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Este cliente ya existe',
+              text: `${formData.name || 'Este cliente'} ya está registrado y lo atiende otro comercial, así que no se creó un lead nuevo. Si crees que debería ser tuyo, pídele al administrador que te lo asigne.`,
+              confirmButtonText: 'Entendido',
+            });
+          } else {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: res?.error || 'No se pudo crear el lead. Revisa que el backend esté corriendo.' });
+          }
         }
       });
   }
