@@ -8153,6 +8153,8 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 
 **Verificación.** Compilación AOT sin errores en los archivos tocados. En este clon el build completo no termina por dos problemas previos y ajenos: `markdown-it` no está instalado en `node_modules` (de julio) y el `environment` local no tiene `apiUrl`. Las publicaciones de hoy no salen de este clon. Tras desplegar: `curl -I https://sellercenter.katuq.com/ngsw.json` y `/9999.deadbeef.js` deben dar 404.
 
+**Publicado 2026-10-06 como 2026.10.06.4** (Daniel: "publica, y cierra lo pendiente"), desde este clon tras `npm ci --legacy-peer-deps` y completar `environment.prod.ts` con los campos del bundle vivo 2026.10.06.3 (`apiUrl`, `metaAppId`, `metaLoginConfigId`, `opttiaApi`, `opttiaBasicApi`, `user`, `geocoding.apiKey`, `googleMapsApiKey`; respaldo en `~/.katuq-env-backup`). Verificado en vivo: `/ngsw.json` y `/9999.deadbeef.js` → 404; `ngsw-worker.js` → safety worker; main, polyfills, runtime, styles y un chunk lazy → 200 inmutable; bundle con `urlApi`/`apiUrl` = back.katuq.com. Ticket 1078 cerrado.
+
 **Para la usuaria mientras tanto:** cerrar Katuq y la app instalada, `chrome://settings/content/all` → `katuq.com` → "Borrar datos", y volver a entrar. Ctrl+F5 no borra un Service Worker.
 
 **Hallazgos colaterales del mismo barrido de tickets (cada uno por su lado).**
