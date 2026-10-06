@@ -8,8 +8,8 @@ Módulo sensible (orders/inventory): un cambio a la vez, cada uno con diff y apr
 - [x] 1.3 Tests unitarios con los casos reales: ORE-001393, comercio de una bodega, canal sin asociaciones, asociación cruzada de otra empresa, ciudad "Bogotá D.C.", faltante, producto sin bodega de su proveedor
 
 ## 2. Sombra
-- [ ] 2.1 Flags `ALLOCATION_MODE` y `companyConfig.warehouseAllocation.mode`; en sombra guardar solo `warehouseAllocation` con `mode: 'shadow'`
-- [ ] 2.2 Invocar en `orderService.createOrder` y en `controllers/orders.js` create (solo pedidos sin bodega escogida) y en `katuq-order-upsert` con `preferredWarehouse`
+- [x] 2.1 Flags `ALLOCATION_MODE` y `companyConfig.warehouseAllocation.mode`; en sombra guardar solo `warehouseAllocation` con `mode: 'shadow'`
+- [x] 2.2 Invocar en `orderService.createOrder` y en `controllers/orders.js` create (solo pedidos sin bodega escogida) y en `katuq-order-upsert` con `preferredWarehouse`
 - [ ] 2.3 Desplegar en sombra, 7 días; reporte de solo lectura que compare la asignación sombra con lo que hizo el sistema
 
 ## 3. Activo
