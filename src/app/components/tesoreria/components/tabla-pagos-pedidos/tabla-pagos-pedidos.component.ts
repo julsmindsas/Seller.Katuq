@@ -11,12 +11,13 @@ import {
 import { Table } from 'primeng/table';
 import { LazyLoadEvent } from 'primeng/api';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
 import { MaestroService } from '../../../../shared/services/maestros/maestro.service';
+import { TreasuryService } from '../../../../shared/services/treasury/treasury.service';
 import {
   filtroPedidosTesoreria,
   metaEstado,
@@ -40,6 +41,8 @@ const AVATAR_PALETTE = [
  * Tabla lazy server-side de pedidos filtrados por estadoPago (preset por pestaña).
  * Reusa POST /v1/orders/all/filter/optimized. Abre sus propios modales y, tras
  * una acción exitosa, recarga su página y emite (changed) para refrescar los KPIs.
+ * La pestaña "Por revisar" usa la cola de comprobantes pendientes (ticket 1126):
+ * una fila por comprobante, sea cual sea el estado del pedido.
  */
 @Component({
   selector: 'app-tabla-pagos-pedidos',
@@ -78,6 +81,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     private ventas: VentasService,
     private maestro: MaestroService,
     private modal: NgbModal,
+    private treasury: TreasuryService,
   ) {
     // Rango por defecto: último año → hoy. El usuario puede ajustarlo.
     const rango = rangoPorDefecto();
@@ -110,10 +114,22 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
       this.page = Math.floor((event.first || 0) / (event.rows || this.pageSize)) + 1;
     }
 
-    const filter = this.buildFilter();
     this.loading = true;
-    this.ventas
-      .getOrdersByFilterOptimized(filter, this.page, this.pageSize)
+    // Ticket 1126: "Por revisar" lista comprobantes pendientes (la tarjeta cuenta
+    // lo mismo), no pedidos en "Pospendiente": un pedido que cambió de estado por
+    // otro camino dejaba su comprobante pendiente por fuera de la lista.
+    const datos$: Observable<any> =
+      this.mode === 'porRevisar'
+        ? this.treasury.getReviewQueue({
+            desde: this.fechaDesde,
+            hasta: this.fechaHasta,
+            search: (this.searchTerm || '').trim(),
+            formaPago: this.formaPagoFilter,
+            page: this.page,
+            pageSize: this.pageSize,
+          })
+        : this.ventas.getOrdersByFilterOptimized(this.buildFilter(), this.page, this.pageSize);
+    datos$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
@@ -227,8 +243,12 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
     return AVATAR_PALETTE[(index || 0) % AVATAR_PALETTE.length];
   }
 
-  /** Último pago de PagosAsentados que sigue en verificación "Pendiente". */
+  /**
+   * El comprobante de la fila: en "Por revisar" viene de la cola (`_pagoPendiente`);
+   * si no, el último pago de PagosAsentados que sigue en verificación "Pendiente".
+   */
   private pagoPendiente(pedido: any): any | null {
+    if (pedido?._pagoPendiente) return pedido._pagoPendiente;
     const pagos = pedido?.PagosAsentados || [];
     for (let i = pagos.length - 1; i >= 0; i--) {
       if (pagos[i]?.estadoVerificacion === 'Pendiente') return pagos[i];
@@ -271,6 +291,16 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
       });
       return;
     }
+    if (pedido?._pagoFueraDelPedido) {
+      // La revisión exige que el pago esté guardado dentro del pedido; si no, el
+      // servidor lo rechaza y la ventana diría que "otro usuario ya decidió".
+      Swal.fire({
+        icon: 'info',
+        title: 'Este comprobante no se puede revisar aquí',
+        text: `El pago quedó registrado, pero no quedó guardado dentro del pedido ${pedido?.nroPedido || ''}, así que no se puede aprobar ni rechazar desde esta pantalla. Escríbenos por soporte con el número del pedido y lo revisamos.`,
+      });
+      return;
+    }
     const ref = this.modal.open(RevisarPagoComponent, { size: 'lg', centered: true, scrollable: true });
     ref.componentInstance.pedido = pedido;
     ref.componentInstance.pago = pago;
@@ -305,6 +335,7 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
   }
 
   trackByPedido(_index: number, pedido: any): string {
-    return pedido?._id || pedido?.nroPedido || `row-${_index}`;
+    // En "Por revisar" puede haber dos comprobantes del mismo pedido: una fila por comprobante.
+    return pedido?._filaId || pedido?._id || pedido?.nroPedido || `row-${_index}`;
   }
 }

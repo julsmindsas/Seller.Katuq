@@ -151,6 +151,26 @@ export interface PaymentsHistoryFilters {
   pageSize?: number;
 }
 
+/** Filtros de la cola "Por revisar" (ticket 1126). Fechas sobre la creación del pago. */
+export interface ReviewQueueFilters {
+  formaPago?: string;
+  desde?: string;
+  hasta?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * GET /payments/queue: una fila por comprobante pendiente, con la forma de la
+ * tabla de pedidos. Cada fila es el pedido + `_pagoPendiente`; `_pagoFueraDelPedido`
+ * cuando el pedido no tiene ese pago (no se puede aprobar ni rechazar desde aquí).
+ */
+export interface ReviewQueueResponse {
+  orders: any[];
+  pagination: { totalItems: number; currentPage: number; pageSize: number };
+}
+
 /** Item de la colección `treasury_alerts`. */
 export interface TreasuryAlert {
   id?: string;

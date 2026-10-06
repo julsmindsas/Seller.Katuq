@@ -14,6 +14,8 @@ import {
   PaymentsHistoryFilters,
   AlertsResponse,
   ReviewAction,
+  ReviewQueueFilters,
+  ReviewQueueResponse,
 } from './treasury.models';
 
 /**
@@ -91,6 +93,12 @@ export class TreasuryService extends BaseService {
   getPayments(filtros: PaymentsHistoryFilters = {}): Observable<PaymentsHistoryResponse> {
     const qs = this.buildQuery(filtros);
     return this.get<PaymentsHistoryResponse>(`${this.base}/payments${qs ? '?' + qs : ''}`);
+  }
+
+  /** GET /payments/queue — cola "Por revisar": todo comprobante pendiente (ticket 1126). */
+  getReviewQueue(filtros: ReviewQueueFilters = {}): Observable<ReviewQueueResponse> {
+    const qs = this.buildQuery(filtros);
+    return this.get<ReviewQueueResponse>(`${this.base}/payments/queue${qs ? '?' + qs : ''}`);
   }
 
   /** GET /alerts — lista de alertas (opcionalmente filtrada por resolved). */
