@@ -2,7 +2,7 @@ import type * as ThreeNS from 'three';
 import type { RoundedBoxGeometry as RoundedBoxCtor } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 // ==========================================================================
-// Base de las escenas 3D de la bienvenida (maqueta del negocio y mapa del país).
+// Base de las escenas 3D de Katuq (bienvenida: maqueta y mapa; pedidos: recorrido).
 // Pone lo que es igual en las dos: renderer, cámara orbital propia (sin rueda
 // del mouse, en táctil el dedo hace scroll), selección con el puntero, etiquetas
 // HTML ancladas a puntos 3D, ~40 fps con pausa fuera de pantalla y limpieza total.

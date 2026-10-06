@@ -1,0 +1,65 @@
+// Recorrido 3D del pedido — tema canónico (openspec/specs/design-system): plano, lilas, acento #5F3FE0.
+
+:host { display: block; }
+
+.p3d {
+  position: relative;
+  height: 168px;
+  margin: 4px 0 10px;
+  border-radius: 14px;
+  border: 1px solid #eeecf7;
+  background: #E7E2F7; // = fondo de la escena
+  overflow: hidden;
+  touch-action: pan-y;
+
+  &.is-oculto { display: none; }
+}
+
+.p3d__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity .4s ease;
+
+  &.is-lista { opacity: 1; }
+}
+
+.p3d__chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: -6px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #ececf4;
+  box-shadow: 0 6px 14px -8px rgba(50, 40, 110, .35);
+  color: #5F3FE0;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
+  will-change: transform;
+
+  i { font-size: 11px; color: inherit; }
+
+  &--ok { color: #1E874B; border-color: #cdeedb; }
+  &--error { color: #D64545; border-color: #f6cfcf; }
+  &--alerta { color: #D9820A; border-color: #f7dfbd; }
+  &--destino { color: #211F3A; font-weight: 700; }
+}
+
+.p3d__chip-txt { color: inherit; }
+.p3d__chip-sub { color: #8f8bab; font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .p3d__canvas, .p3d__chip { transition: none; }
+}

@@ -437,6 +437,8 @@
                                                             <span class="pedido-valid-chip">{{ 'Validación' | translate }}: {{ pedidoDetalle.validacion ? ('Sí' | translate) : ('No' | translate) }}</span>
                                                         </div>
 
+                                                        <!-- recorrido 3D del pedido (solo presentación; la línea de abajo dice lo mismo) -->
+                                                        <app-pedido-3d [completados]="getProgresoCompletados(pedidoDetalle?.estadoProceso)" [estadoProceso]="pedidoDetalle?.estadoProceso" [carrito]="pedidoDetalle?.carrito" [ciudad]="pedidoDetalle?.envio?.ciudad" [transportador]="pedidoDetalle?.transportador" [urgente]="isPedidoUrgente(pedidoDetalle)"></app-pedido-3d>
                                                         <!-- línea de progreso -->
                                                         <div class="pedido-timeline" *ngIf="getProgresoCompletados(pedidoDetalle?.estadoProceso) >= 0">
                                                             <div class="pedido-timeline__label">{{ 'PROGRESO DEL PEDIDO' | translate }}</div>

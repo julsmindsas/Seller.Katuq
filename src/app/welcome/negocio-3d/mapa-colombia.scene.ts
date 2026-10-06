@@ -1,5 +1,5 @@
 import type * as ThreeNS from 'three';
-import { DEG, EscenaBase, OpcionesEscena, RoundedBox, Three, VistaCamara } from '../escena-3d/escena-base';
+import { DEG, EscenaBase, OpcionesEscena, RoundedBox, Three, VistaCamara } from '../../shared/escena-3d/escena-base';
 import type { MapaPedidosResponse } from '../../shared/services/dashboard/mapa-pedidos.service';
 import { RAMPA_MAPA } from './mapa-rampa';
 

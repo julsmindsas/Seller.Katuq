@@ -1,0 +1,16 @@
+<!-- Decorativo: la línea de progreso de abajo dice lo mismo en texto -->
+<div class="p3d" #stage [class.is-oculto]="webglOk === false" aria-hidden="true">
+    <canvas #canvas class="p3d__canvas" [class.is-lista]="webglOk"></canvas>
+    <span #actual class="p3d__chip"
+          [class.p3d__chip--ok]="completados === 4"
+          [class.p3d__chip--error]="completados < 0"
+          [class.p3d__chip--alerta]="urgente && completados >= 0 && completados < 4">
+        <i class="pi" [class.pi-box]="completados >= 0 && completados < 3" [class.pi-truck]="completados === 3"
+           [class.pi-check-circle]="completados === 4" [class.pi-times-circle]="completados < 0"></i>
+        <span class="p3d__chip-txt">{{ etapa }}</span>
+        <span class="p3d__chip-sub" *ngIf="unidades && completados >= 0 && completados < 3">· {{ unidades }} {{ unidades === 1 ? 'unidad' : 'unidades' }}</span>
+    </span>
+    <span #destino class="p3d__chip p3d__chip--destino">
+        <i class="pi pi-map-marker"></i><span class="p3d__chip-txt">{{ ciudad || 'Cliente' }}</span>
+    </span>
+</div>

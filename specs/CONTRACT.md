@@ -8078,3 +8078,15 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 **Riesgo / orden de despliegue:** desplegar el backend ANTES que el frontend. Si el front sale primero, "Mi país" muestra "No pudimos armar el mapa" con botón Reintentar (no rompe la maqueta).
 
 **Estado.** Frontend compila y se probó en el banco de pruebas con los datos reales de ALMARA y OH MY STORE (escritorio, tableta, celular). Backend con `node --check` y la agregación probada contra Firestore real; NO probado por HTTP ni desplegado. Nada desplegado.
+
+## D-353 (2026-10-05) — Recorrido 3D del pedido en el panel de detalle de "Todos los pedidos"
+
+**Contexto.** Daniel pidió "algo con three.js" al ver el detalle de cada pedido, en todos los pedidos. Se le propuso el recorrido del pedido y lo aprobó ("DALE"). Pedidos es módulo sensible: el cambio es solo de presentación.
+
+**Decisión:**
+- Componente nuevo `app-pedido-3d` (`components/ventas/list/pedido-3d/`), arriba de la línea de progreso del panel. Cuatro estaciones: producción → empaque → despacho → casa del cliente. Las cajas (1 a 4 según las unidades del carrito) están en la etapa real que da `getProgresoCompletados()`, la misma de la línea de progreso. Despachado = el camión anda hacia la casa con el nombre del transportador. Entregado = cajas en la puerta y sello verde. Rechazado = equis roja. Urgente (`isPedidoUrgente`) = anillo naranja. La ciudad de envío va sobre la casa.
+- Cambios en archivos de pedidos: UNA línea en `list.component.html` y la declaración en `ventas.module.ts`. No toca lógica, métodos ni datos del pedido. No escribe nada.
+- Liviano: three y la escena se cargan solo al abrir un pedido. Un solo visor para todos los pedidos (cambiar de pedido solo mueve la escena). Pausa fuera de pantalla. Sin WebGL el bloque no aparece y queda la línea de progreso de siempre.
+- La base común de las escenas pasa de `welcome/escena-3d/` a `shared/escena-3d/` (la usan la bienvenida y pedidos).
+
+**Estado.** Compila en el servidor local. Probado en el banco de pruebas con los seis estados (en producción, producido, empacado, en camino, entregado, rechazado; urgente). NO probado con sesión real. En la rama aparte `feature/pedido-3d`, sin publicar: falta la autorización de Daniel para publicar.

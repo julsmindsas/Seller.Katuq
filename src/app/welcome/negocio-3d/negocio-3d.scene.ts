@@ -1,5 +1,5 @@
 import type * as ThreeNS from 'three';
-import { AnclaZona, DEG, EscenaBase, OpcionesEscena, VistaCamara } from '../escena-3d/escena-base';
+import { AnclaZona, DEG, EscenaBase, OpcionesEscena, VistaCamara } from '../../shared/escena-3d/escena-base';
 
 // ==========================================================================
 // Escena 3D del welcome: una maqueta isométrica del negocio. Cada zona de la
@@ -12,7 +12,7 @@ import { AnclaZona, DEG, EscenaBase, OpcionesEscena, VistaCamara } from '../esce
 // pausa cuando el bloque no se ve, y nada se mueve con "reducir movimiento".
 // ==========================================================================
 
-export type { AnclaZona } from '../escena-3d/escena-base';
+export type { AnclaZona } from '../../shared/escena-3d/escena-base';
 export type ZonaId = 'ventas' | 'despachos' | 'inventario' | 'crm' | 'clientes';
 export type Tono = 'accent' | 'success' | 'warning' | 'danger';
 

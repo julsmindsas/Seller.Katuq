@@ -5,7 +5,7 @@ import {
 import { Router } from '@angular/router';
 import { CotizacionesService } from '../../components/cotizaciones/cotizaciones.service';
 import { CiudadMapa, MapaPedidosResponse, MapaPedidosService } from '../../shared/services/dashboard/mapa-pedidos.service';
-import type { AnclaZona } from '../escena-3d/escena-base';
+import type { AnclaZona } from '../../shared/escena-3d/escena-base';
 import type { EstadoEscena, FuenteLogo, LogoId, NegocioEscena, Tono, ZonaId } from './negocio-3d.scene';
 import type { GeoColombia, MapaColombiaEscena } from './mapa-colombia.scene';
 import { RAMPA_MAPA } from './mapa-rampa';
