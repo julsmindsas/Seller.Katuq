@@ -69,8 +69,8 @@
 
 <body>
   <app-root></app-root>
-  <!-- Service Worker desactivado (2026-03-25) - duplicaba requests HTTP y degradaba rendimiento
-       Si se necesita reactivar: angular.json > configurations.production > "serviceWorker": true
+  <!-- Service Worker desactivado (2026-03-25) - duplicaba requests HTTP y degradaba rendimiento.
+       Ticket 1078 (D-356): se desinstala el que haya quedado de antes. Ver src/ngsw-worker.js. -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -80,7 +80,6 @@
       });
     }
   </script>
-  -->
 </body>
 
 </html>

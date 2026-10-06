@@ -473,9 +473,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
       });
     }
 
-    const currentCompany = localStorage.getItem("currentCompany");
-    this.empresaActual = currentCompany ? JSON.parse(currentCompany) : {};
-    const texto = this.empresaActual.nomComercial.toString();
+    // Ticket 1078 (D-356): si `currentCompany` no está, viene dañado o sin
+    // nomComercial, esto lanzaba en ngOnInit y la pantalla quedaba en blanco.
+    try {
+      this.empresaActual = JSON.parse(localStorage.getItem("currentCompany") || "{}") || {};
+    } catch {
+      this.empresaActual = {};
+    }
+    const texto = String(this.empresaActual?.nomComercial ?? "");
     this.ultimasLetras = texto.substring(texto.length - 3);
     this.puedeEliminarBaseDatos = this.esRolAdministrador();
     this.puedeEdicionRapida = this.calcularPuedeEdicionRapida();

@@ -62,6 +62,16 @@
     ],
     "rewrites": [
       {
+        "//": "Ticket 1078 (D-356): el manifiesto del Service Worker viejo debe dar 404. Es la senal con la que el worker de Angular se desinstala solo; con el catch-all respondia el index.html con 200 y el worker viejo quedaba vivo para siempre. Apuntar a un archivo que no existe devuelve 404 (probado en el emulador).",
+        "source": "/ngsw.json",
+        "destination": "/__no-existe__"
+      },
+      {
+        "//": "Ticket 1078 (D-356): un archivo con hash que ya no existe (de un despliegue anterior) debe dar 404, no el index.html. Con el catch-all llegaba HTML con 200 y la regla immutable lo guardaba un ano en el navegador como si fuera el JS. Los que si existen se sirven antes de llegar a los rewrites.",
+        "source": "/*.*.@(js|css)",
+        "destination": "/__no-existe__"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

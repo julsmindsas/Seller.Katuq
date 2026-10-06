@@ -94,6 +94,7 @@
               "src/assets/images/dashboard/katuqIA.png",
               "src/assets",
               "src/manifest.webmanifest",
+              "src/ngsw-worker.js",
               {
                 "glob": "**/*.worklet.js",
                 "input": "src/app/shared/worklets/gemini/",

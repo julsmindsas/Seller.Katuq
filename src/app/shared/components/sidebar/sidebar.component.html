@@ -138,7 +138,7 @@
       <div class="search-result" 
            *ngFor="let result of searchResults"
            role="option">
-        <a [routerLink]="result.path" 
+        <a [routerLink]="rutaMenu(result.path)" 
            (click)="clearSearch(); onMobileLinkClick()"
            class="search-result-link">
           <i class="fa" [ngClass]="getMenuIcon(result.icon, result.title)" aria-hidden="true"></i>
@@ -168,7 +168,7 @@
       <li class="favorite-item" 
           *ngFor="let favorite of favoriteItems" 
           role="listitem">
-        <a [routerLink]="favorite.path"
+        <a [routerLink]="rutaMenu(favorite.path)"
            (click)="onMenuItemClick(favorite); onMobileLinkClick()"
            class="favorite-link"
            [attr.aria-label]="'Ir a ' + (favorite.title | translate)">
@@ -228,7 +228,7 @@
             
             <!-- Item sin hijos (Link directo) -->
             <a *ngIf="!item.children && item.type === 'link'"
-               [routerLink]="item.path"
+               [routerLink]="rutaMenu(item.path)"
                (click)="onMenuItemClick(item); onMobileLinkClick()"
                routerLinkActive="active"
                class="menu-link"
@@ -319,7 +319,7 @@
                 
                 <!-- Subitem sin hijos -->
                 <a *ngIf="!child.children && child.type === 'link'"
-                   [routerLink]="child.path"
+                   [routerLink]="rutaMenu(child.path)"
                    (click)="onSubMenuItemClick($event); onMobileLinkClick()"
                    routerLinkActive="active"
                    class="submenu-link"
@@ -356,7 +356,7 @@
                       *ngFor="let grandchild of child.children"
                       [class.active]="grandchild.active"
                       role="none">
-                    <a [routerLink]="grandchild.path"
+                    <a [routerLink]="rutaMenu(grandchild.path)"
                        (click)="onSubMenuItemClick($event); onMobileLinkClick()"
                        routerLinkActive="active"
                        class="sub-submenu-link"

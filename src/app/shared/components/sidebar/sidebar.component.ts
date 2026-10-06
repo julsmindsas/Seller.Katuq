@@ -1018,6 +1018,18 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
+   * Ticket 1078 (D-356): ruta del menú siempre absoluta. El menú trae rutas
+   * relativas ("inventario/inventario-catalogo") y un `[routerLink]` relativo se
+   * resuelve contra la ruta donde está montado el layout: estando en /pricing
+   * (a donde manda el guard de suscripción) cada clic iba a
+   * /pricing/inventario/... y daba 404.
+   */
+  rutaMenu(path: string | undefined): string | undefined {
+    if (!path) { return path; }
+    return path.startsWith('/') ? path : `/${path}`;
+  }
+
+  /**
    * Usa el mismo estado que renderiza la plantilla, también tras navegar o cambiar de tamaño.
    */
   isMenuOpen(item: Menu): boolean {
@@ -2355,7 +2367,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       const itemElement = this.renderer.createElement('a');
 
       if (childItem.type === 'link') {
-        this.renderer.setAttribute(itemElement, 'href', childItem.path || '#');
+        this.renderer.setAttribute(itemElement, 'href', this.rutaMenu(childItem.path) || '#');
         this.renderer.listen(itemElement, 'click', (e) => {
           e.preventDefault();
           if (childItem.path) {
