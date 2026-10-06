@@ -1,5 +1,5 @@
 import type * as ThreeNS from 'three';
-import type { RoundedBoxGeometry as RoundedBoxCtor } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { AnclaZona, DEG, EscenaBase, OpcionesEscena, VistaCamara } from '../escena-3d/escena-base';
 
 // ==========================================================================
 // Escena 3D del welcome: una maqueta isométrica del negocio. Cada zona de la
@@ -12,6 +12,7 @@ import type { RoundedBoxGeometry as RoundedBoxCtor } from 'three/examples/jsm/ge
 // pausa cuando el bloque no se ve, y nada se mueve con "reducir movimiento".
 // ==========================================================================
 
+export type { AnclaZona } from '../escena-3d/escena-base';
 export type ZonaId = 'ventas' | 'despachos' | 'inventario' | 'crm' | 'clientes';
 export type Tono = 'accent' | 'success' | 'warning' | 'danger';
 
@@ -27,8 +28,6 @@ export interface EstadoEscena {
   estibasBajas: number;
 }
 
-export interface AnclaZona { x: number; y: number; }
-
 export type LogoId = 'katuq' | 'comercio';
 
 /** Imagen del logo, o null para pintar las iniciales del texto. */
@@ -37,17 +36,7 @@ export interface FuenteLogo {
   texto: string;
 }
 
-export interface EscenaOpciones {
-  canvas: HTMLCanvasElement;
-  reducirMovimiento: boolean;
-  calidadBaja: boolean;
-  onHover: (zona: ZonaId | null) => void;
-  onClick: (zona: ZonaId) => void;
-  /** Posición en px (relativa al canvas) de cada etiqueta, después de cada render. */
-  onFrame: (anclas: Partial<Record<ZonaId, AnclaZona>>) => void;
-}
-
-type Three = typeof ThreeNS;
+export type EscenaOpciones = OpcionesEscena<ZonaId>;
 
 // Paleta canónica (openspec/specs/design-system): acento, lilas y semánticos.
 const C = {
@@ -82,7 +71,6 @@ const TONO: Record<Tono, number> = {
   danger: 0xd64545,
 };
 
-const DEG = Math.PI / 180;
 const ALTURA_LOTE = 0.24;
 
 interface ZonaRuntime {
@@ -95,17 +83,22 @@ interface ZonaRuntime {
   visible: boolean;
 }
 
-export class NegocioEscena {
-  private renderer!: ThreeNS.WebGLRenderer;
-  private scene!: ThreeNS.Scene;
-  private camera!: ThreeNS.OrthographicCamera;
-  private raycaster!: ThreeNS.Raycaster;
-  private clock!: ThreeNS.Clock;
+export class NegocioEscena extends EscenaBase<ZonaId> {
+  protected readonly animaContinuo = true;
+  protected readonly vista: VistaCamara = {
+    az: 38 * DEG,
+    pol: 56 * DEG,
+    centro: { x: 0, y: 0, z: -2.6 },
+    mirarY: 1.2,
+    limAz: [-25 * DEG, 100 * DEG],
+    limPol: [38 * DEG, 66 * DEG],
+    limZoom: [0.75, 2.2],
+    // En pantallas angostas se recorta a lo central (tienda → estibas) en vez de encoger todo.
+    altoMundo: (util) => Math.max(24, (util < 1.6 ? 36 : 57) / Math.max(util, 0.6)),
+    bajada: 0.06,
+    fondo: C.fondo,
+  };
 
-  private readonly geoCache = new Map<string, ThreeNS.BufferGeometry>();
-  private readonly matCache = new Map<number, ThreeNS.MeshLambertMaterial>();
-  private readonly texturas: ThreeNS.Texture[] = [];
-  private readonly pickables: ThreeNS.Object3D[] = [];
   private readonly zonas = new Map<ZonaId, ZonaRuntime>();
 
   // Dinámicos que cambian con los datos
@@ -118,76 +111,9 @@ export class NegocioEscena {
   private estado: EstadoEscena | null = null;
   private readonly logos = new Map<LogoId, { grupo: ThreeNS.Group; cara: ThreeNS.MeshBasicMaterial; base: ThreeNS.Vector3; fase: number }>();
   private readonly logosPendientes = new Map<LogoId, FuenteLogo>();
+  private readonly vAncla = new Map<ZonaId, ThreeNS.Vector3>();
 
-  // Cámara orbital propia (más liviana que OrbitControls y sin secuestrar el scroll)
-  private readonly AZ_DEF = 38 * DEG;
-  private readonly POL_DEF = 56 * DEG;
-  private az = this.AZ_DEF;
-  private pol = this.POL_DEF;
-  private zoom = 1;
-  private azObj = this.AZ_DEF;
-  private polObj = this.POL_DEF;
-  private zoomObj = 1;
-  private readonly centro = { x: 0, y: 0, z: -2.6 };
-
-  private ancho = 1;
-  private alto = 1;
-  private margenDerecho = 0;
-  private raf = 0;
-  private ultimoFrame = 0;
-  private pausado = false;
-  private sucio = true;
-  private resaltada: ZonaId | null = null;
-  private hover: ZonaId | null = null;
-  private puntero: { x: number; y: number } | null = null;
-  private elegirPendiente = false;
-  private arrastre: { x: number; y: number; movido: boolean; id: number } | null = null;
-  private readonly finoPuntero: boolean;
-
-  constructor(
-    private readonly T: Three,
-    private readonly RoundedBox: typeof RoundedBoxCtor,
-    private readonly opts: EscenaOpciones,
-  ) {
-    this.finoPuntero = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: fine)').matches;
-  }
-
-  // ------------------------------------------------------------------ ciclo
-
-  /** Crea el renderer. Lanza si el navegador no tiene WebGL (el componente muestra el panel solo). */
-  iniciar(): void {
-    const T = this.T;
-    this.renderer = new T.WebGLRenderer({
-      canvas: this.opts.canvas,
-      antialias: true,
-      alpha: false,
-      powerPreference: 'low-power',
-    });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.opts.calidadBaja ? 1.25 : 1.75));
-    this.renderer.setClearColor(C.fondo, 1);
-    this.renderer.shadowMap.enabled = !this.opts.calidadBaja;
-    this.renderer.shadowMap.type = T.PCFSoftShadowMap;
-
-    this.scene = new T.Scene();
-    this.camera = new T.OrthographicCamera(-10, 10, 10, -10, 0.1, 400);
-    this.raycaster = new T.Raycaster();
-    this.clock = new T.Clock();
-
-    this.luces();
-    this.suelo();
-    this.tienda();
-    this.oficina();
-    this.bodega();
-    this.estibas();
-    this.casas();
-    this.arboles();
-    this.vehiculos();
-    this.pines();
-    this.crearLogos();
-
-    this.escucharPuntero();
-    this.raf = requestAnimationFrame(this.loop);
-  }
+  // ------------------------------------------------------------------ API
 
   actualizar(estado: EstadoEscena): void {
     this.estado = estado;
@@ -196,7 +122,6 @@ export class NegocioEscena {
     const enMuelle = Math.max(0, Math.min(3, estado.camionesEnMuelle));
     this.camionesMuelle.forEach((c, i) => (c.visible = i < enMuelle));
     this.baliza.visible = estado.urgentes && enMuelle > 0;
-    // Si no hay nada en muelle, la baliza viaja en el primer camión visible (ninguno).
 
     this.recalcularCajas(estado);
 
@@ -217,110 +142,49 @@ export class NegocioEscena {
     const anterior = logo.cara.map;
     logo.cara.map = this.texturaLogo(fuente);
     logo.cara.needsUpdate = true;
-    if (anterior) {
-      anterior.dispose();
-      const i = this.texturas.indexOf(anterior);
-      if (i >= 0) this.texturas.splice(i, 1);
-    }
+    this.liberarTextura(anterior);
     this.sucio = true;
   }
 
-  resaltar(zona: ZonaId | null): void {
-    this.resaltada = zona;
-    this.sucio = true;
+  // -------------------------------------------------------------- ganchos
+
+  protected construir(): void {
+    this.luces();
+    this.suelo();
+    this.tienda();
+    this.oficina();
+    this.bodega();
+    this.estibas();
+    this.casas();
+    this.arboles();
+    this.vehiculos();
+    this.pines();
+    this.crearLogos();
   }
 
-  redimensionar(ancho: number, alto: number, margenDerecho = 0): void {
-    if (!this.renderer || ancho < 2 || alto < 2) return;
-    this.ancho = ancho;
-    this.alto = alto;
-    this.margenDerecho = margenDerecho;
-    this.renderer.setSize(ancho, alto, false);
-    this.encuadrar();
-    this.sucio = true;
+  protected seleccionable(id: ZonaId): boolean {
+    return !!this.zonas.get(id)?.visible;
   }
 
-  pausar(pausado: boolean): void {
-    if (this.pausado === pausado) return;
-    this.pausado = pausado;
-    if (!pausado) {
-      this.clock?.getDelta();
-      this.sucio = true;
-      cancelAnimationFrame(this.raf);
-      this.raf = requestAnimationFrame(this.loop);
-    }
-  }
-
-  acercar(factor: number): void {
-    this.zoomObj = Math.min(2.2, Math.max(0.75, this.zoomObj * factor));
-  }
-
-  girar(grados: number): void {
-    this.azObj = this.limAz(this.azObj + grados * DEG);
-  }
-
-  centrar(): void {
-    this.azObj = this.AZ_DEF;
-    this.polObj = this.POL_DEF;
-    this.zoomObj = 1;
-  }
-
-  destruir(): void {
-    cancelAnimationFrame(this.raf);
-    this.pausado = true;
-    const c = this.opts.canvas;
-    c.removeEventListener('pointerdown', this.onDown);
-    c.removeEventListener('pointermove', this.onMove);
-    c.removeEventListener('pointerup', this.onUp);
-    c.removeEventListener('pointercancel', this.onCancel);
-    c.removeEventListener('pointerleave', this.onLeave);
-    const geos = new Set<ThreeNS.BufferGeometry>(this.geoCache.values());
-    const mats = new Set<ThreeNS.Material>(this.matCache.values());
-    this.scene?.traverse((o) => {
-      const m = o as ThreeNS.Mesh;
-      if (!m.isMesh) return;
-      geos.add(m.geometry);
-      const mat = m.material as ThreeNS.Material | ThreeNS.Material[];
-      (Array.isArray(mat) ? mat : [mat]).forEach((x) => mats.add(x));
-    });
-    geos.forEach((g) => g.dispose());
-    mats.forEach((m) => m.dispose());
-    this.texturas.forEach((t) => t.dispose());
-    if (this.renderer) {
-      this.renderer.dispose();
-      // Chrome limita los contextos WebGL vivos: liberar el de esta vista ya.
-      this.renderer.forceContextLoss();
-    }
-  }
-
-  // ------------------------------------------------------------------ loop
-
-  private readonly loop = (ahora: number): void => {
-    if (this.pausado) return;
-    this.raf = requestAnimationFrame(this.loop);
-    if (ahora - this.ultimoFrame < 24) return; // ~40 fps alcanza para una maqueta
-    this.ultimoFrame = ahora;
-
-    const dt = Math.min(this.clock.getDelta(), 0.1);
-    const t = this.opts.reducirMovimiento ? 0 : this.clock.elapsedTime;
-
-    const camMovio = this.amortiguarCamara();
-    const animando = !this.opts.reducirMovimiento;
-    const ringsMovieron = this.animarAnillos();
-
-    if (animando) this.animar(t, dt);
+  protected cuadro(t: number, dt: number): boolean {
+    const anillos = this.animarAnillos();
+    if (!this.opts.reducirMovimiento) this.animar(t, dt);
     this.moverLogos(t);
-    if (this.elegirPendiente && !this.arrastre) {
-      this.elegirPendiente = false;
-      this.elegir();
-    }
+    return anillos;
+  }
 
-    if (animando || camMovio || ringsMovieron || this.sucio) {
-      this.renderer.render(this.scene, this.camera);
-      this.emitirAnclas();
-      this.sucio = false;
+  protected *anclas(): Iterable<[ZonaId, ThreeNS.Vector3]> {
+    for (const [id, z] of this.zonas) {
+      if (!z.visible) continue;
+      let v = this.vAncla.get(id);
+      if (!v) { v = new this.T.Vector3(); this.vAncla.set(id, v); }
+      v.copy(z.ancla);
+      v.y += z.pin.position.y - z.pinBase.y;
+      yield [id, v];
     }
-  };
+  }
+
+  // ------------------------------------------------------------ animación
 
   private animar(t: number, dt: number): void {
     // Pines: flotan suave, desfasados
@@ -337,15 +201,10 @@ export class NegocioEscena {
     if (p.x > 34) p.x = -34;
     // Montacargas yendo y viniendo entre estibas y muelle
     const fase = (Math.sin(t * 0.55) + 1) / 2; // 0..1
-    const x = 9.6 + fase * 6.2;
-    const dir = Math.cos(t * 0.55) >= 0 ? 1 : -1;
-    this.montacargas.position.x = x;
-    this.montacargas.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+    this.montacargas.position.x = 9.6 + fase * 6.2;
+    this.montacargas.rotation.y = Math.cos(t * 0.55) >= 0 ? Math.PI / 2 : -Math.PI / 2;
     // Baliza de urgente
-    if (this.baliza.visible) {
-      const s = 1 + Math.sin(t * 6) * 0.25;
-      this.baliza.scale.setScalar(s);
-    }
+    if (this.baliza.visible) this.baliza.scale.setScalar(1 + Math.sin(t * 6) * 0.25);
     // Anillos de estiba vacía/baja: respiran
     this.anillosEstiba.forEach((r, k) => {
       if (!r.visible) return;
@@ -361,20 +220,6 @@ export class NegocioEscena {
     }
   }
 
-  private amortiguarCamara(): boolean {
-    const k = 0.14;
-    const dAz = this.azObj - this.az;
-    const dPol = this.polObj - this.pol;
-    const dZoom = this.zoomObj - this.zoom;
-    const quieto = Math.abs(dAz) < 1e-4 && Math.abs(dPol) < 1e-4 && Math.abs(dZoom) < 1e-4;
-    if (quieto && !this.sucio) return false;
-    this.az += dAz * k;
-    this.pol += dPol * k;
-    this.zoom += dZoom * k;
-    this.posicionarCamara();
-    return !quieto;
-  }
-
   private animarAnillos(): boolean {
     let movio = false;
     for (const [id, z] of this.zonas) {
@@ -387,215 +232,12 @@ export class NegocioEscena {
       mat.opacity = nuevo;
       relleno.opacity = nuevo * 0.16;
       z.anillo.visible = z.relleno.visible = nuevo > 0.01;
-      const s = 1 + nuevo * 0.25;
-      z.pinCabeza.scale.setScalar(s);
+      z.pinCabeza.scale.setScalar(1 + nuevo * 0.25);
     }
     return movio;
   }
 
-  // --------------------------------------------------------------- cámara
-
-  private limAz(a: number): number {
-    return Math.min(100 * DEG, Math.max(-25 * DEG, a));
-  }
-
-  private encuadrar(): void {
-    const aspecto = this.ancho / this.alto;
-    // Alto del mundo visible: más en pantallas angostas para que quepa la maqueta.
-    const util = Math.max(1, this.ancho - this.margenDerecho) / this.alto;
-    // En pantallas angostas se recorta a lo central (tienda → estibas) en vez de encoger todo.
-    const anchoObjetivo = util < 1.6 ? 36 : 57;
-    const altoMundo = Math.max(24, anchoObjetivo / Math.max(util, 0.6));
-    const anchoMundo = altoMundo * aspecto;
-    // Correr la maqueta a la izquierda cuando el panel flota a la derecha,
-    // y un poco hacia abajo para que los pines de atrás no rocen el borde.
-    const corrimiento = (this.margenDerecho / 2 / this.ancho) * anchoMundo;
-    const bajada = altoMundo * 0.06;
-    this.camera.left = -anchoMundo / 2 + corrimiento;
-    this.camera.right = anchoMundo / 2 + corrimiento;
-    this.camera.top = altoMundo / 2 + bajada;
-    this.camera.bottom = -altoMundo / 2 + bajada;
-    this.posicionarCamara();
-  }
-
-  private posicionarCamara(): void {
-    const r = 120;
-    const { x, y, z } = this.centro;
-    this.camera.position.set(
-      x + r * Math.sin(this.pol) * Math.sin(this.az),
-      y + r * Math.cos(this.pol),
-      z + r * Math.sin(this.pol) * Math.cos(this.az),
-    );
-    this.camera.zoom = this.zoom;
-    this.camera.lookAt(x, y + 1.2, z);
-    this.camera.updateProjectionMatrix();
-  }
-
-  private vTmp: ThreeNS.Vector3 | null = null;
-
-  private emitirAnclas(): void {
-    const v = this.vTmp ?? (this.vTmp = new this.T.Vector3());
-    const out: Partial<Record<ZonaId, AnclaZona>> = {};
-    for (const [id, z] of this.zonas) {
-      if (!z.visible) continue;
-      v.copy(z.ancla);
-      v.y += z.pin.position.y - z.pinBase.y;
-      v.project(this.camera);
-      out[id] = { x: (v.x + 1) / 2 * this.ancho, y: (1 - v.y) / 2 * this.alto };
-    }
-    this.opts.onFrame(out);
-  }
-
-  // -------------------------------------------------------------- puntero
-
-  private escucharPuntero(): void {
-    const c = this.opts.canvas;
-    c.addEventListener('pointerdown', this.onDown);
-    c.addEventListener('pointermove', this.onMove);
-    c.addEventListener('pointerup', this.onUp);
-    c.addEventListener('pointercancel', this.onCancel);
-    c.addEventListener('pointerleave', this.onLeave);
-  }
-
-  private readonly onDown = (e: PointerEvent): void => {
-    this.arrastre = { x: e.clientX, y: e.clientY, movido: false, id: e.pointerId };
-    // Solo con mouse se gira arrastrando; en táctil el dedo hace scroll de la página.
-    if (this.finoPuntero && e.pointerType === 'mouse') this.opts.canvas.setPointerCapture?.(e.pointerId);
-  };
-
-  private readonly onMove = (e: PointerEvent): void => {
-    const rect = this.opts.canvas.getBoundingClientRect();
-    this.puntero = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    this.elegirPendiente = e.pointerType === 'mouse';
-    const a = this.arrastre;
-    if (!a || e.pointerType !== 'mouse') return;
-    const dx = e.clientX - a.x;
-    const dy = e.clientY - a.y;
-    if (!a.movido && Math.hypot(dx, dy) < 5) return;
-    a.movido = true;
-    this.opts.canvas.style.cursor = 'grabbing';
-    this.azObj = this.limAz(this.azObj - dx * 0.006);
-    this.polObj = Math.min(66 * DEG, Math.max(38 * DEG, this.polObj - dy * 0.004));
-    a.x = e.clientX;
-    a.y = e.clientY;
-  };
-
-  private readonly onUp = (e: PointerEvent): void => {
-    const a = this.arrastre;
-    this.arrastre = null;
-    if (this.opts.canvas.hasPointerCapture?.(e.pointerId)) this.opts.canvas.releasePointerCapture(e.pointerId);
-    if (a && !a.movido) {
-      const rect = this.opts.canvas.getBoundingClientRect();
-      this.puntero = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-      const zona = this.zonaEn(this.puntero.x, this.puntero.y);
-      if (zona) this.opts.onClick(zona);
-    }
-    if (e.pointerType !== 'mouse') this.puntero = null; // en táctil no hay "hover" que seguir
-    this.opts.canvas.style.cursor = this.hover ? 'pointer' : '';
-  };
-
-  private readonly onCancel = (): void => { this.arrastre = null; };
-
-  private readonly onLeave = (): void => {
-    this.puntero = null;
-    if (!this.arrastre) this.cambiarHover(null);
-  };
-
-  private elegir(): void {
-    if (!this.puntero) return;
-    this.cambiarHover(this.zonaEn(this.puntero.x, this.puntero.y));
-  }
-
-  private zonaEn(x: number, y: number): ZonaId | null {
-    const ndc = new this.T.Vector2((x / this.ancho) * 2 - 1, -(y / this.alto) * 2 + 1);
-    this.raycaster.setFromCamera(ndc, this.camera);
-    const hits = this.raycaster.intersectObjects(this.pickables, true);
-    for (const h of hits) {
-      let o: ThreeNS.Object3D | null = h.object;
-      while (o && !o.userData['zona']) o = o.parent;
-      const zona = o?.userData['zona'] as ZonaId | undefined;
-      if (zona && this.zonas.get(zona)?.visible) return zona;
-    }
-    return null;
-  }
-
-  private cambiarHover(zona: ZonaId | null): void {
-    if (zona === this.hover) return;
-    this.hover = zona;
-    this.opts.canvas.style.cursor = zona ? 'pointer' : '';
-    this.opts.onHover(zona);
-    this.sucio = true;
-  }
-
   // ------------------------------------------------------------- utilidades
-
-  private mat(color: number): ThreeNS.MeshLambertMaterial {
-    let m = this.matCache.get(color);
-    if (!m) {
-      m = new this.T.MeshLambertMaterial({ color });
-      this.matCache.set(color, m);
-    }
-    return m;
-  }
-
-  private geoCaja(w: number, h: number, d: number, r = 0): ThreeNS.BufferGeometry {
-    const k = `b|${w}|${h}|${d}|${r}`;
-    let g = this.geoCache.get(k);
-    if (!g) {
-      g = r > 0 ? new this.RoundedBox(w, h, d, 2, r) : new this.T.BoxGeometry(w, h, d);
-      this.geoCache.set(k, g);
-    }
-    return g;
-  }
-
-  /** Caja apoyada: `y` es la base, no el centro. */
-  private caja(
-    padre: ThreeNS.Object3D, w: number, h: number, d: number, color: number,
-    x: number, y: number, z: number, r = 0, sombra = true,
-  ): ThreeNS.Mesh {
-    const m = new this.T.Mesh(this.geoCaja(w, h, d, r), this.mat(color));
-    m.position.set(x, y + h / 2, z);
-    m.castShadow = sombra;
-    m.receiveShadow = true;
-    padre.add(m);
-    return m;
-  }
-
-  private cilindro(
-    padre: ThreeNS.Object3D, rad: number, h: number, color: number,
-    x: number, y: number, z: number, segmentos = 16,
-  ): ThreeNS.Mesh {
-    const k = `c|${rad}|${h}|${segmentos}`;
-    let g = this.geoCache.get(k);
-    if (!g) {
-      g = new this.T.CylinderGeometry(rad, rad, h, segmentos);
-      this.geoCache.set(k, g);
-    }
-    const m = new this.T.Mesh(g, this.mat(color));
-    m.position.set(x, y, z);
-    m.castShadow = true;
-    padre.add(m);
-    return m;
-  }
-
-  private texturaTexto(texto: string, color: string, fondo: string, w = 512, h = 128, peso = 800): ThreeNS.Texture {
-    const cv = document.createElement('canvas');
-    cv.width = w;
-    cv.height = h;
-    const ctx = cv.getContext('2d')!;
-    ctx.fillStyle = fondo;
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = color;
-    ctx.font = `${peso} ${Math.round(h * 0.56)}px Georama, "Segoe UI", system-ui, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(texto, w / 2, h / 2 + h * 0.03);
-    const tex = new this.T.CanvasTexture(cv);
-    tex.colorSpace = this.T.SRGBColorSpace;
-    tex.anisotropy = 4;
-    this.texturas.push(tex);
-    return tex;
-  }
 
   private letrero(
     padre: ThreeNS.Object3D, texto: string, w: number, h: number,
@@ -610,11 +252,7 @@ export class NegocioEscena {
   }
 
   private zonaGrupo(id: ZonaId): ThreeNS.Group {
-    const g = new this.T.Group();
-    g.userData['zona'] = id;
-    this.scene.add(g);
-    this.pickables.push(g);
-    return g;
+    return this.grupoSeleccionable(id);
   }
 
   // -------------------------------------------------------------- escenario
@@ -859,20 +497,6 @@ export class NegocioEscena {
     });
     // Un repartidor llegando: caja frente a una puerta
     this.caja(g, 0.6, 0.5, 0.6, C.carton, -7.3, y0, z0 - 2.3, 0.04);
-  }
-
-  private esfera(padre: ThreeNS.Object3D, r: number, color: number, x: number, y: number, z: number): ThreeNS.Mesh {
-    const k = `s|${r}`;
-    let geo = this.geoCache.get(k);
-    if (!geo) {
-      geo = new this.T.IcosahedronGeometry(r, 1);
-      this.geoCache.set(k, geo);
-    }
-    const m = new this.T.Mesh(geo, this.mat(color));
-    m.position.set(x, y, z);
-    m.castShadow = true;
-    padre.add(m);
-    return m;
   }
 
   private arboles(): void {

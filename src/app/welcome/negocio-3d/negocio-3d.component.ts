@@ -1,12 +1,33 @@
 import {
   AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input,
-  NgZone, OnChanges, OnDestroy, QueryList, ViewChild, ViewChildren,
+  NgZone, OnChanges, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { CotizacionesService } from '../../components/cotizaciones/cotizaciones.service';
-import type { AnclaZona, EstadoEscena, FuenteLogo, LogoId, NegocioEscena, Tono, ZonaId } from './negocio-3d.scene';
+import { CiudadMapa, MapaPedidosResponse, MapaPedidosService } from '../../shared/services/dashboard/mapa-pedidos.service';
+import type { AnclaZona } from '../escena-3d/escena-base';
+import type { EstadoEscena, FuenteLogo, LogoId, NegocioEscena, Tono, ZonaId } from './negocio-3d.scene';
+import type { GeoColombia, MapaColombiaEscena } from './mapa-colombia.scene';
+import { RAMPA_MAPA } from './mapa-rampa';
 
 const LOGO_KATUQ = 'assets/images/logo/Katuq/katuq-logo-solo.png';
+const GEO_COLOMBIA = 'assets/geo/colombia.json';
+const DIAS_MAPA = 90;
+const CLAVE_VISTA = 'kq3d.vista';
+
+export type Vista = 'negocio' | 'mapa';
+
+// El contorno del país es estático: se baja una vez por sesión de la página.
+let geoColombia: Promise<GeoColombia> | null = null;
+function cargarGeoColombia(): Promise<GeoColombia> {
+  if (!geoColombia) {
+    geoColombia = fetch(GEO_COLOMBIA).then((r) => {
+      if (!r.ok) throw new Error('mapa');
+      return r.json() as Promise<GeoColombia>;
+    }).catch((e) => { geoColombia = null; throw e; });
+  }
+  return geoColombia;
+}
 
 // Mismos objetos que ya arma WelcomeComponent (valor null = el endpoint falló → "—").
 export interface VentasHoy { cargando: boolean; total: number | null; pedidos: number | null; }
@@ -30,7 +51,8 @@ interface FilaNegocio {
 }
 
 interface EtiquetaZona {
-  zona: ZonaId;
+  /** zona de la maqueta, o `c:<DANE>` / `d:<ISO>` en el mapa */
+  id: string;
   icono: string;
   titulo: string;
   valor: string;
@@ -50,7 +72,7 @@ interface EtiquetaZona {
   styleUrls: ['./negocio-3d.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
+export class Negocio3dComponent implements OnChanges, OnInit, AfterViewInit, OnDestroy {
   @Input() empresa: string | null | undefined = null;
   /** imgUrlLogo de la empresa activa; sin logo la placa muestra sus iniciales. */
   @Input() logoComercio: string | null | undefined = null;
@@ -70,20 +92,40 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
   @Input() clientesResumen!: ClientesResumen;
 
   @ViewChild('stage', { static: true }) private stageRef!: ElementRef<HTMLElement>;
-  @ViewChild('canvas', { static: true }) private canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('canvas') private canvasRef?: ElementRef<HTMLCanvasElement>;
   @ViewChild('panel', { static: true }) private panelRef!: ElementRef<HTMLElement>;
   @ViewChildren('etiqueta') private etiquetasRef!: QueryList<ElementRef<HTMLElement>>;
 
   filas: FilaNegocio[] = [];
   etiquetas: EtiquetaZona[] = [];
   zonaActiva: ZonaId | null = null;
+
+  /** Vista del bloque: la maqueta del negocio o el mapa del país. */
+  vista: Vista = 'negocio';
+  /** El canvas se rehace al cambiar de vista (un contexto WebGL liberado no se reusa). */
+  vistasCanvas: Vista[] = ['negocio'];
+  readonly rampa = RAMPA_MAPA;
+  readonly diasMapa = DIAS_MAPA;
+  mapa: { cargando: boolean; error: boolean; datos: MapaPedidosResponse | null } = { cargando: false, error: false, datos: null };
+  ciudadesTop: Array<CiudadMapa & { parte: number }> = [];
+  etiquetasMapa: EtiquetaZona[] = [];
+  mapaActivo: string | null = null;
+  private geo: GeoColombia | null = null;
+  /** Ubicación del navegador para el "estás aquí". Solo en memoria: no se envía ni se guarda. */
+  ubicacion: { estado: 'nada' | 'buscando' | 'lista' | 'fuera' | 'error'; depto?: string } = { estado: 'nada' };
+  private coordenadas: { lon: number; lat: number } | null = null;
   /** null = todavía cargando la librería; false = sin WebGL (queda solo el panel). */
   webglOk: boolean | null = null;
   readonly fecha = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
     .format(new Date());
   hora = '';
 
-  private escena: NegocioEscena | null = null;
+  private escena: NegocioEscena | MapaColombiaEscena | null = null;
+  private libs: {
+    T: typeof import('three');
+    rb: typeof import('three/examples/jsm/geometries/RoundedBoxGeometry.js');
+  } | null = null;
+  private observando = false;
   private resizeObs: ResizeObserver | null = null;
   private interObs: IntersectionObserver | null = null;
   private visibleEnPantalla = true;
@@ -101,7 +143,22 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
     private readonly cotizacionesService: CotizacionesService,
+    private readonly mapaPedidosService: MapaPedidosService,
   ) {}
+
+  /** El mapa muestra cifras de ventas de la empresa: mismo permiso que "Ventas de hoy". */
+  get puedeVerMapa(): boolean {
+    return this.showVentas;
+  }
+
+  get etiquetasVista(): EtiquetaZona[] {
+    return this.vista === 'mapa' ? this.etiquetasMapa : this.etiquetas;
+  }
+
+  get porcentajeUbicado(): number {
+    const d = this.mapa.datos;
+    return d && d.totalPedidos ? Math.round((d.conCiudad / d.totalPedidos) * 100) : 0;
+  }
 
   get iniciales(): string {
     return (this.empresa || 'K').trim().split(/\s+/).slice(0, 2).map((p) => p.charAt(0)).join('').toUpperCase();
@@ -109,11 +166,22 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
 
   ngOnChanges(): void {
     this.construirFilas();
-    this.escena?.actualizar(this.estadoEscena());
+    this.negocio()?.actualizar(this.estadoEscena());
     if (this.logoComercio !== this.logoPedido) {
       this.logoPedido = this.logoComercio;
       this.logoRoto = false;
       this.cargarLogoComercio(this.logoComercio);
+    }
+  }
+
+  ngOnInit(): void {
+    // Cada quien vuelve a la vista que dejó (preferencia del navegador, no del comercio).
+    let guardada: string | null = null;
+    try { guardada = localStorage.getItem(CLAVE_VISTA); } catch { /* sin almacenamiento */ }
+    if (guardada === 'mapa' && this.puedeVerMapa) {
+      this.vista = 'mapa';
+      this.vistasCanvas = ['mapa'];
+      this.cargarDatosMapa();
     }
   }
 
@@ -139,68 +207,233 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
 
   resaltar(zona: ZonaId | null): void {
     this.zonaActiva = zona;
-    this.escena?.resaltar(zona);
+    this.negocio()?.resaltar(zona);
+  }
+
+  resaltarMapa(id: string | null): void {
+    this.mapaActivo = id;
+    this.mapaEscena()?.resaltar(id);
+    this.actualizarTooltipMapa(id);
+  }
+
+  cambiarVista(vista: Vista): void {
+    if (vista === this.vista || (vista === 'mapa' && !this.puedeVerMapa)) return;
+    try { localStorage.setItem(CLAVE_VISTA, vista); } catch { /* sin almacenamiento */ }
+    this.escena?.destruir();
+    this.escena = null;
+    this.vista = vista;
+    this.vistasCanvas = [vista];
+    this.zonaActiva = null;
+    this.mapaActivo = null;
+    this.etiquetasMapa = this.etiquetasMapa.filter((e) => !e.id.startsWith('d:'));
+    this.cdr.detectChanges(); // canvas nuevo en el DOM antes de montar
+    if (vista === 'mapa' && !this.mapa.datos && !this.mapa.cargando) this.cargarDatosMapa();
+    if (this.webglOk !== false) this.zone.runOutsideAngular(() => { void this.montarEscena(); });
+  }
+
+  hoverEtiqueta(id: string | null): void {
+    if (this.vista === 'negocio') this.resaltar(id as ZonaId | null);
+    else this.resaltarMapa(id);
+  }
+
+  /** 12.345 (separador de miles colombiano). */
+  fmt(n: number | null | undefined): string {
+    return this.moneda.format(n ?? 0);
+  }
+
+  reintentarMapa(): void {
+    this.cargarDatosMapa();
   }
 
   trackFila = (_: number, f: FilaNegocio) => f.clave;
-  trackEtiqueta = (_: number, e: EtiquetaZona) => e.zona;
+  trackEtiqueta = (_: number, e: EtiquetaZona) => e.id;
+  trackCiudad = (_: number, c: CiudadMapa) => c.dane;
 
   // ---------------------------------------------------------------- escena
 
+  private negocio(): NegocioEscena | null {
+    return this.vista === 'negocio' ? this.escena as NegocioEscena | null : null;
+  }
+
+  private mapaEscena(): MapaColombiaEscena | null {
+    return this.vista === 'mapa' ? this.escena as MapaColombiaEscena | null : null;
+  }
+
   private async montarEscena(): Promise<void> {
     if (!this.soportaWebgl()) { this.marcarSinWebgl(); return; }
+    const vista = this.vista;
     try {
-      // Carga diferida: three solo baja cuando el welcome lo necesita.
-      const [T, rb, mod] = await Promise.all([
-        import('three'),
-        import('three/examples/jsm/geometries/RoundedBoxGeometry.js'),
-        import('./negocio-3d.scene'),
-      ]);
-      if (this.destruido) return;
+      // Carga diferida: three y cada escena solo bajan cuando se ven.
+      if (!this.libs) {
+        const [T, rb] = await Promise.all([
+          import('three'),
+          import('three/examples/jsm/geometries/RoundedBoxGeometry.js'),
+        ]);
+        this.libs = { T, rb };
+      }
+      const { T, rb } = this.libs;
+      const canvas = this.canvasRef?.nativeElement;
+      if (this.destruido || vista !== this.vista || !canvas) return;
 
       const reducir = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
       const nav = navigator as Navigator & { deviceMemory?: number };
       const calidadBaja = !!window.matchMedia?.('(pointer: coarse)').matches
         || (nav.hardwareConcurrency || 8) <= 4 || (nav.deviceMemory || 8) <= 4;
+      const base = { canvas, reducirMovimiento: reducir, calidadBaja, onFrame: (a: Partial<Record<string, AnclaZona>>) => this.posicionarEtiquetas(a) };
 
-      const escena = new mod.NegocioEscena(T, rb.RoundedBoxGeometry, {
-        canvas: this.canvasRef.nativeElement,
-        reducirMovimiento: reducir,
-        calidadBaja,
-        onHover: (z) => this.zone.run(() => { this.zonaActiva = z; this.cdr.markForCheck(); }),
-        onClick: (z) => this.zone.run(() => this.abrir(z)),
-        onFrame: (a) => this.posicionarEtiquetas(a),
-      });
-      escena.iniciar();
-      this.escena = escena;
-      escena.actualizar(this.estadoEscena());
-      this.fuentesLogo.forEach((f, id) => escena.ponerLogo(id, f));
-      this.cargarImagen(LOGO_KATUQ, (img) => this.aplicarLogo('katuq', { imagen: img, texto: 'Katuq' }));
+      if (vista === 'negocio') {
+        const mod = await import('./negocio-3d.scene');
+        if (this.destruido || vista !== this.vista) return;
+        const escena = new mod.NegocioEscena(T, rb.RoundedBoxGeometry, {
+          ...base,
+          onHover: (z) => this.zone.run(() => { this.zonaActiva = z; this.cdr.markForCheck(); }),
+          onClick: (z) => this.zone.run(() => this.abrir(z)),
+        });
+        escena.iniciar();
+        this.escena = escena;
+        escena.actualizar(this.estadoEscena());
+        this.fuentesLogo.forEach((f, id) => escena.ponerLogo(id, f));
+        if (!this.fuentesLogo.has('katuq')) {
+          this.cargarImagen(LOGO_KATUQ, (img) => this.aplicarLogo('katuq', { imagen: img, texto: 'Katuq' }));
+        }
+      } else {
+        const [mod, geo] = await Promise.all([import('./mapa-colombia.scene'), cargarGeoColombia()]);
+        if (this.destruido || vista !== this.vista) return;
+        this.geo = geo;
+        const escena = new mod.MapaColombiaEscena(T, rb.RoundedBoxGeometry, {
+          ...base,
+          onHover: (id) => this.zone.run(() => { this.mapaActivo = id; this.actualizarTooltipMapa(id); this.cdr.markForCheck(); }),
+          onClick: (id) => this.zone.run(() => this.resaltarMapa(this.mapaActivo === id ? null : id)),
+        }, geo);
+        escena.iniciar();
+        this.escena = escena;
+        if (this.mapa.datos) {
+          escena.ponerDatos(this.mapa.datos);
+          this.zone.run(() => { this.construirMapa(); this.cdr.markForCheck(); });
+        }
+        if (this.coordenadas) this.zone.run(() => this.aplicarUbicacion());
+        else void this.ubicarSiHayPermiso();
+      }
 
-      this.resizeObs = new ResizeObserver(() => this.ajustarTamano());
-      this.resizeObs.observe(this.stageRef.nativeElement);
+      this.observar();
       this.ajustarTamano();
-
-      this.interObs = new IntersectionObserver((entries) => {
-        this.visibleEnPantalla = entries.some((e) => e.isIntersecting);
-        this.actualizarPausa();
-      });
-      this.interObs.observe(this.stageRef.nativeElement);
-      document.addEventListener('visibilitychange', this.onVisibilidad);
-
+      this.actualizarPausa();
       this.zone.run(() => { this.webglOk = true; this.cdr.markForCheck(); });
     } catch {
       this.escena?.destruir();
       this.escena = null;
+      if (vista === 'mapa' && this.webglOk) {
+        // WebGL sí funciona: falló el contorno del mapa. Queda el listado de ciudades.
+        this.zone.run(() => { this.mapa = { ...this.mapa, error: !this.mapa.datos }; this.cdr.markForCheck(); });
+        return;
+      }
       this.marcarSinWebgl();
     }
+  }
+
+  private observar(): void {
+    if (this.observando) return;
+    this.observando = true;
+    this.resizeObs = new ResizeObserver(() => this.ajustarTamano());
+    this.resizeObs.observe(this.stageRef.nativeElement);
+    this.interObs = new IntersectionObserver((entries) => {
+      this.visibleEnPantalla = entries.some((e) => e.isIntersecting);
+      this.actualizarPausa();
+    });
+    this.interObs.observe(this.stageRef.nativeElement);
+    document.addEventListener('visibilitychange', this.onVisibilidad);
+  }
+
+  // ------------------------------------------------------------------ mapa
+
+  /** Botón "Mi ubicación": aquí sí se pide el permiso del navegador. */
+  pedirUbicacion(): void {
+    if (!('geolocation' in navigator)) { this.ubicacion = { estado: 'error' }; return; }
+    this.ubicacion = { estado: 'buscando' };
+    navigator.geolocation.getCurrentPosition(
+      (pos) => this.zone.run(() => {
+        this.coordenadas = { lon: pos.coords.longitude, lat: pos.coords.latitude };
+        this.aplicarUbicacion();
+        this.cdr.markForCheck();
+      }),
+      () => this.zone.run(() => { this.ubicacion = { estado: 'error' }; this.cdr.markForCheck(); }),
+      // Precisión baja basta a escala de país y gasta menos batería.
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 10 * 60 * 1000 },
+    );
+  }
+
+  /** Si el permiso ya estaba dado, el punto aparece solo; si no, no se pregunta al abrir. */
+  private async ubicarSiHayPermiso(): Promise<void> {
+    try {
+      const estado = await navigator.permissions?.query({ name: 'geolocation' as PermissionName });
+      if (estado?.state === 'granted') this.zone.run(() => this.pedirUbicacion());
+    } catch { /* navegador sin Permissions API: queda el botón */ }
+  }
+
+  private aplicarUbicacion(): void {
+    const escena = this.mapaEscena();
+    if (!escena || !this.coordenadas) return;
+    const depto = escena.ponerUbicacion(this.coordenadas.lon, this.coordenadas.lat);
+    this.ubicacion = depto ? { estado: 'lista', depto: depto.nombre } : { estado: 'fuera' };
+    this.etiquetasMapa = [
+      ...this.etiquetasMapa.filter((e) => e.id !== 'yo'),
+      ...(depto ? [{ id: 'yo', icono: 'pi pi-user', titulo: 'Estás aquí', valor: depto.nombre, tono: 'accent' as Tono, link: null, cargando: false }] : []),
+    ];
+  }
+
+  private cargarDatosMapa(): void {
+    this.mapa = { cargando: true, error: false, datos: this.mapa.datos };
+    this.cdr.markForCheck();
+    this.mapaPedidosService.getMapaPedidos(DIAS_MAPA).subscribe({
+      next: (datos) => {
+        this.mapa = { cargando: false, error: false, datos };
+        this.mapaEscena()?.ponerDatos(datos);
+        this.construirMapa();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.mapa = { cargando: false, error: true, datos: null };
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  /** Lista del panel y etiquetas de las ciudades con más pedidos. */
+  private construirMapa(): void {
+    const d = this.mapa.datos;
+    if (!d) { this.ciudadesTop = []; this.etiquetasMapa = []; return; }
+    const total = Math.max(1, d.conCiudad);
+    this.ciudadesTop = d.ciudades.slice(0, 8).map((c) => ({ ...c, parte: Math.round((c.pedidos / total) * 1000) / 10 }));
+    const conCoord = this.geo ? d.ciudades.filter((c) => this.geo!.ciudades[c.dane]) : [];
+    const yo = this.etiquetasMapa.filter((e) => e.id === 'yo');
+    this.etiquetasMapa = [...yo, ...conCoord.slice(0, 5).map((c) => ({
+      id: `c:${c.dane}`, icono: 'pi pi-map-marker', titulo: c.nombre,
+      valor: `${this.moneda.format(c.pedidos)} ${c.pedidos === 1 ? 'pedido' : 'pedidos'}`,
+      tono: 'accent' as Tono, link: null, cargando: false,
+    }))];
+    this.actualizarTooltipMapa(this.mapaActivo);
+  }
+
+  /** Al pasar por un departamento aparece su etiqueta con los pedidos. */
+  private actualizarTooltipMapa(id: string | null): void {
+    const fijas = this.etiquetasMapa.filter((e) => !e.id.startsWith('d:'));
+    if (!id || !id.startsWith('d:') || !this.geo) { this.etiquetasMapa = fijas; return; }
+    const iso = id.slice(2);
+    const depto = this.geo.departamentos.find((x) => x.iso === iso);
+    const dato = this.mapa.datos?.departamentos.find((x) => x.iso === iso);
+    const n = dato?.pedidos ?? 0;
+    this.etiquetasMapa = [...fijas, {
+      id, icono: 'pi pi-map', titulo: depto?.nombre || iso,
+      valor: n ? `${this.moneda.format(n)} ${n === 1 ? 'pedido' : 'pedidos'}` : 'Sin pedidos',
+      tono: n ? 'accent' : 'success', link: null, cargando: false,
+    }];
   }
 
   // ------------------------------------------------------------------ logos
 
   private aplicarLogo(id: LogoId, fuente: FuenteLogo): void {
     this.fuentesLogo.set(id, fuente);
-    this.escena?.ponerLogo(id, fuente);
+    this.negocio()?.ponerLogo(id, fuente);
   }
 
   /**
@@ -261,21 +494,44 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
     this.escena?.redimensionar(stage.clientWidth, stage.clientHeight, margen);
   }
 
-  private posicionarEtiquetas(anclas: Partial<Record<ZonaId, AnclaZona>>): void {
+  private posicionarEtiquetas(anclas: Partial<Record<string, AnclaZona>>): void {
     const alto = this.stageRef.nativeElement.clientHeight;
     const limiteX = this.limiteX;
-    this.etiquetasRef?.forEach(({ nativeElement: el }) => {
-      const p = anclas[el.dataset['zona'] as ZonaId];
-      const dentro = !!p && p.x > 12 && p.x < limiteX - 12 && p.y > 44 && p.y < alto + 8;
-      if (!p || !dentro) { el.style.opacity = '0'; el.style.pointerEvents = 'none'; return; }
+    const ocupadas: Array<[number, number, number, number]> = [];
+    const els = this.etiquetasRef?.map((r) => r.nativeElement) ?? [];
+    // La etiqueta del puntero (departamento) va primero: nunca la tapa otra.
+    const prioridad = (el: HTMLElement) => {
+      const id = el.dataset['id'] || '';
+      return id.startsWith('d:') ? 2 : id === 'yo' ? 1 : 0;
+    };
+    els.sort((a, b) => prioridad(b) - prioridad(a));
+    // Primero se mide todo y después se mueve (leer y escribir intercalado fuerza recálculos).
+    const medidas = els.map((el) => [el.offsetWidth, el.offsetHeight + 10] as const);
+    els.forEach((el, i) => {
+      const p = anclas[el.dataset['id'] || ''];
+      let visible = !!p && p.x > 12 && p.x < limiteX - 12 && p.y > 44 && p.y < alto + 8;
+      // "Estás aquí" cuelga debajo de su punto; las demás van encima de su ancla.
+      const abajo = el.dataset['id'] === 'yo';
+      if (p && visible) {
+        // Si se monta con una de mayor rango (las primeras de la lista), se esconde.
+        const [w, h] = medidas[i];
+        const r: [number, number, number, number] = abajo
+          ? [p.x - w / 2, p.y + 4, p.x + w / 2, p.y + h + 4]
+          : [p.x - w / 2, p.y - h, p.x + w / 2, p.y];
+        visible = !ocupadas.some((o) => r[0] < o[2] && r[2] > o[0] && r[1] < o[3] && r[3] > o[1]);
+        if (visible) ocupadas.push(r);
+      }
+      if (!p || !visible) { el.style.opacity = '0'; el.style.pointerEvents = 'none'; return; }
       el.style.opacity = '1';
       el.style.pointerEvents = 'auto';
-      el.style.transform = `translate3d(${Math.round(p.x)}px, ${Math.round(p.y)}px, 0) translate(-50%, -100%)`;
+      el.style.transform = abajo
+        ? `translate3d(${Math.round(p.x)}px, ${Math.round(p.y) + 22}px, 0) translate(-50%, 0)`
+        : `translate3d(${Math.round(p.x)}px, ${Math.round(p.y)}px, 0) translate(-50%, -100%)`;
     });
   }
 
   abrir(zona: ZonaId): void {
-    const link = this.etiquetas.find((e) => e.zona === zona)?.link;
+    const link = this.etiquetas.find((e) => e.id === zona)?.link;
     if (link) void this.router.navigateByUrl(link);
   }
 
@@ -315,7 +571,7 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
         detalle: v.pedidos !== null ? `${v.pedidos} ${v.pedidos === 1 ? 'pedido' : 'pedidos'}` : 'Ver analíticas',
         tono: 'accent', estado: v.pedidos ? 'Vendiendo' : 'Sin ventas aún', link: this.ventasHoyLink, cargando: v.cargando,
       });
-      etiquetas.push({ zona: 'ventas', icono: 'pi pi-shopping-bag', titulo: 'Ventas hoy',
+      etiquetas.push({ id: 'ventas', icono: 'pi pi-shopping-bag', titulo: 'Ventas hoy',
         valor: v.total !== null ? this.compacto(v.total) : '—', tono: 'accent', link: this.ventasHoyLink, cargando: v.cargando });
     }
 
@@ -330,7 +586,7 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
         tono, estado: tono === 'warning' ? 'Urgentes' : tono === 'success' ? 'Al día' : 'En cola',
         link: '/despachos', cargando: d.cargando,
       });
-      etiquetas.push({ zona: 'despachos', icono: 'pi pi-truck', titulo: 'Por despachar',
+      etiquetas.push({ id: 'despachos', icono: 'pi pi-truck', titulo: 'Por despachar',
         valor: d.paraDespacho !== null ? String(d.paraDespacho) : '—', tono, link: '/despachos', cargando: d.cargando });
     }
 
@@ -345,7 +601,7 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
         tono, estado: tono === 'danger' ? 'Reponer' : tono === 'warning' ? 'Revisar' : 'Al día',
         link: '/inventario/inventario-catalogo', cargando: s.cargando,
       });
-      etiquetas.push({ zona: 'inventario', icono: 'pi pi-box', titulo: 'Sin stock',
+      etiquetas.push({ id: 'inventario', icono: 'pi pi-box', titulo: 'Sin stock',
         valor: s.sinStock !== null ? String(s.sinStock) : '—', tono, link: '/inventario/inventario-catalogo', cargando: s.cargando });
     }
 
@@ -360,7 +616,7 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
         tono, estado: tono === 'danger' ? 'Atrasadas' : tono === 'warning' ? 'Para hoy' : 'Al día',
         link: '/crm/list', cargando: c.cargando,
       });
-      etiquetas.push({ zona: 'crm', icono: 'pi pi-comments', titulo: 'Tareas vencidas',
+      etiquetas.push({ id: 'crm', icono: 'pi pi-comments', titulo: 'Tareas vencidas',
         valor: c.vencidas !== null ? String(c.vencidas) : '—', tono, link: '/crm/list', cargando: c.cargando });
     }
 
@@ -377,7 +633,7 @@ export class Negocio3dComponent implements OnChanges, AfterViewInit, OnDestroy {
         valor: k.enAlerta !== null ? String(k.enAlerta) : '—', detalle: 'según frecuencia histórica · no son tareas',
         tono: 'warning', estado: 'Por volver', link: '/ventas/clienteslista', cargando: k.cargando,
       });
-      etiquetas.push({ zona: 'clientes', icono: 'pi pi-users', titulo: 'Primera compra',
+      etiquetas.push({ id: 'clientes', icono: 'pi pi-users', titulo: 'Primera compra',
         valor: k.nuevosMes !== null ? String(k.nuevosMes) : '—', tono: 'accent', link: '/ventas/clienteslista', cargando: k.cargando });
     }
 

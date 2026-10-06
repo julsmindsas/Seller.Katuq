@@ -8060,3 +8060,21 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 **No cubre:** mapa del país del comercio (preguntado como idea, no aprobado).
 
 **Estado.** Compila en el servidor local. Probado en navegador con un banco de pruebas aislado (escena real + estilos reales, datos de ejemplo) en escritorio, tableta y celular. NO probado con sesión real (el local pide credenciales). Sin desplegar.
+
+## D-352 (2026-10-05) — Bienvenida: vista "Mi país" con mapa 3D de Colombia, calor de pedidos y "Estás aquí"
+
+**Contexto.** Sobre la maqueta de D-351, Daniel pidió una vista del mapa del país del comercio (Colombia) con un mapa de calor según sus pedidos, con la misma dinámica en three.js, y después que apareciera la ubicación actual.
+
+**Decisión:**
+- Selector "Mi negocio / Mi país" en el mismo bloque. El mapa usa el mismo permiso que "Ventas de hoy" y respeta "solo sus métricas" (D-349). Cada persona vuelve a la vista que dejó (preferencia del navegador).
+- **Backend (sin commitear, falta confirmación):** `GET /v1/analytics/logistica/mapa-pedidos?dias=90` (auth, empresa del token). Lee los pedidos del periodo con `.select()` de solo los campos de ciudad, quita cancelados (`isCancelledOrder`) y los ubica en su municipio DANE con `services/geo/ubicacionPedido.js`. Orden de confianza: `envio.ciudad/departamento` → `ciudadNombre` → `cliente.datosEntrega[0]` → `facturacion`. Nombres repetidos sin departamento se desempatan con los departamentos donde más vende la empresa. Tope de 20.000 pedidos por consulta (`truncado`). Solo lectura, sin colecciones ni índices nuevos (usa company + fechaCreacion desc, que ya existe). El endpoint viejo `analisis-geografico` no servía: solo reconoce 5 ciudades buscando el nombre en la dirección.
+- Verificado contra producción (solo lectura, 90 días): ALMARA FELICIDAD 3.025 pedidos, 97 % con ciudad, 21 ciudades; OH MY STORE 859 pedidos, 99 % con ciudad, 29 ciudades. Los que no se ubican no tienen ningún dato de ciudad (POS) o traen texto de prueba.
+- Mapa: Natural Earth 1:10m (dominio público) simplificado a 3.367 puntos + 117 ciudades con coordenadas cruzadas con los códigos DANE, en `src/assets/geo/colombia.json` (61 KB, 19 KB comprimido; se regenera con `scripts/build-mapa-colombia.js`). San Andrés va en recuadro fuera de escala. Bogotá corregida a CO-DC (Natural Earth la trae como CO-CUN).
+- Escena: departamentos en relieve; el calor se pinta una sola vez en una textura con rampa secuencial de un solo tono morado (de claro a oscuro, con leyenda). Columnas en las 8 ciudades con más pedidos. Al pasar el puntero, el departamento se levanta y muestra sus pedidos. No anima de fondo: solo pinta cuando algo cambia.
+- "Estás aquí": ubicación del navegador con precisión baja. Aparece sola solo si el permiso ya estaba dado; si no, la pide el botón de la brújula (no se pregunta al abrir la bienvenida). No se envía al servidor ni se guarda. Fuera de Colombia no se dibuja y se avisa.
+- Panel del mapa = versión en tabla: pedidos, % con ciudad, ciudades, top 8 con su porcentaje, leyenda y cuántos pedidos no tienen ciudad.
+- Refactor: la cámara, el puntero, el ritmo de cuadros y la limpieza pasan a `src/app/welcome/escena-3d/escena-base.ts`; la maqueta y el mapa heredan de ahí.
+
+**Riesgo / orden de despliegue:** desplegar el backend ANTES que el frontend. Si el front sale primero, "Mi país" muestra "No pudimos armar el mapa" con botón Reintentar (no rompe la maqueta).
+
+**Estado.** Frontend compila y se probó en el banco de pruebas con los datos reales de ALMARA y OH MY STORE (escritorio, tableta, celular). Backend con `node --check` y la agregación probada contra Firestore real; NO probado por HTTP ni desplegado. Nada desplegado.

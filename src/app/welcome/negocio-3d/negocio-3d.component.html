@@ -1,20 +1,23 @@
 <section class="kq3d" [class.kq3d--sin-3d]="webglOk === false" aria-labelledby="kq3d-titulo">
-    <!-- Maqueta 3D: decorativa para lectores de pantalla; el panel tiene la misma información -->
+    <!-- Escena 3D: decorativa para lectores de pantalla; el panel tiene la misma información -->
     <div class="kq3d__stage" #stage>
-        <canvas #canvas class="kq3d__canvas" [class.is-lista]="webglOk" aria-hidden="true"></canvas>
+        <canvas #canvas *ngFor="let v of vistasCanvas" class="kq3d__canvas" [class.is-lista]="webglOk" aria-hidden="true"></canvas>
 
         <div class="kq3d__head">
-            <span class="kq3d__eyebrow">Tu negocio hoy</span>
-            <span class="kq3d__fecha">{{ fecha }}</span>
+            <ng-container *ngTemplateOutlet="selectorVista"></ng-container>
+            <span class="kq3d__fecha" *ngIf="vista === 'negocio'">{{ fecha }}</span>
+            <span class="kq3d__fecha" *ngIf="vista === 'mapa'">Pedidos de los últimos {{ diasMapa }} días</span>
         </div>
 
         <div class="kq3d__labels" *ngIf="webglOk">
-            <ng-container *ngFor="let e of etiquetas; trackBy: trackEtiqueta">
-                <a #etiqueta class="kq3d__label" [attr.data-zona]="e.zona"
+            <ng-container *ngFor="let e of etiquetasVista; trackBy: trackEtiqueta">
+                <a #etiqueta [attr.data-id]="e.id"
                    [class]="'kq3d__label kq3d__label--' + e.tono"
-                   [class.is-activa]="zonaActiva === e.zona"
+                   [class.is-activa]="vista === 'negocio' ? zonaActiva === e.id : mapaActivo === e.id"
+                   [class.is-mudo]="!e.link"
+                   [class.kq3d__label--abajo]="e.id === 'yo'"
                    [routerLink]="e.link" [attr.aria-hidden]="true" tabindex="-1"
-                   (mouseenter)="resaltar(e.zona)" (mouseleave)="resaltar(null)">
+                   (mouseenter)="hoverEtiqueta(e.id)" (mouseleave)="hoverEtiqueta(null)">
                     <span class="kq3d__label-icon"><i [class]="e.icono"></i></span>
                     <span class="kq3d__label-text">
                         <small class="kq3d__label-title">{{ e.titulo }}</small>
@@ -31,15 +34,29 @@
             <button type="button" (click)="girar(-30)" title="Girar a la izquierda" aria-label="Girar a la izquierda"><i class="pi pi-replay"></i></button>
             <button type="button" (click)="girar(30)" title="Girar a la derecha" aria-label="Girar a la derecha"><i class="pi pi-refresh"></i></button>
             <button type="button" (click)="centrar()" title="Volver a la vista inicial" aria-label="Volver a la vista inicial"><i class="pi pi-home"></i></button>
+            <ng-container *ngIf="vista === 'mapa'">
+                <span class="kq3d__controls-sep"></span>
+                <button type="button" (click)="pedirUbicacion()" title="Mostrar mi ubicación" aria-label="Mostrar mi ubicación"
+                        [class.is-activa]="ubicacion.estado === 'lista'" [disabled]="ubicacion.estado === 'buscando'">
+                    <i class="pi" [class.pi-compass]="ubicacion.estado !== 'buscando'" [class.pi-spin]="ubicacion.estado === 'buscando'" [class.pi-spinner]="ubicacion.estado === 'buscando'"></i>
+                </button>
+            </ng-container>
         </div>
 
         <div class="kq3d__hint" *ngIf="webglOk">
             <i class="pi pi-arrows-h"></i>
-            <span class="kq3d__hint-text">Arrastra para girar · toca una zona para abrirla</span>
+            <span class="kq3d__hint-text" *ngIf="vista === 'negocio'">Arrastra para girar · toca una zona para abrirla</span>
+            <span class="kq3d__hint-text" *ngIf="vista === 'mapa' && ubicacion.estado !== 'fuera' && ubicacion.estado !== 'error'">Arrastra para girar · pasa por un departamento para ver sus pedidos</span>
+            <span class="kq3d__hint-text" *ngIf="vista === 'mapa' && ubicacion.estado === 'fuera'">Tu ubicación está fuera de Colombia</span>
+            <span class="kq3d__hint-text" *ngIf="vista === 'mapa' && ubicacion.estado === 'error'">No pudimos ver tu ubicación: revisa el permiso del navegador</span>
+        </div>
+
+        <div class="kq3d__cargando" *ngIf="vista === 'mapa' && mapa.cargando && webglOk" aria-hidden="true">
+            <span class="kq3d__cargando-punto"></span><span class="kq3d__cargando-texto">Ubicando tus pedidos…</span>
         </div>
     </div>
 
-    <!-- Panel con las cifras: flota sobre la maqueta en pantallas anchas, va debajo en las demás -->
+    <!-- Panel con las cifras: flota sobre la escena en pantallas anchas, va debajo en las demás -->
     <aside class="kq3d__panel" #panel>
         <header class="kq3d__panel-head">
             <div class="kq3d__marca">
@@ -47,14 +64,21 @@
                      (error)="logoRoto = true">
                 <ng-template #sinLogo><b class="kq3d__marca-logo kq3d__marca-logo--iniciales" aria-hidden="true">{{ iniciales }}</b></ng-template>
                 <div>
-                    <small class="kq3d__panel-eyebrow">Resumen del día</small>
+                    <small class="kq3d__panel-eyebrow">{{ vista === 'mapa' ? 'Pedidos por ciudad' : 'Resumen del día' }}</small>
                     <h2 id="kq3d-titulo" class="kq3d__panel-title">{{ empresa || 'Tu negocio hoy' }}</h2>
                 </div>
             </div>
-            <span class="kq3d__live" *ngIf="hora"><span class="kq3d__live-dot"></span>{{ hora }}</span>
+            <span class="kq3d__live" *ngIf="vista === 'negocio' && hora"><span class="kq3d__live-dot"></span>{{ hora }}</span>
+            <span class="kq3d__live kq3d__live--neutro" *ngIf="vista === 'mapa'">{{ diasMapa }} días</span>
         </header>
 
-        <div class="kq3d__rows">
+        <!-- Sin WebGL el selector va en el panel (la escena no se muestra) -->
+        <div class="kq3d__panel-selector" *ngIf="webglOk === false">
+            <ng-container *ngTemplateOutlet="selectorVista"></ng-container>
+        </div>
+
+        <!-- Vista negocio -->
+        <div class="kq3d__rows" *ngIf="vista === 'negocio'">
             <a *ngFor="let f of filas; trackBy: trackFila" class="kq3d__row"
                [class.is-activa]="zonaActiva === f.zona" [class.is-mudo]="!f.link"
                [routerLink]="f.link" [attr.title]="f.ayuda || null"
@@ -72,5 +96,89 @@
                 <span class="kq3d__pill" *ngIf="!f.cargando && f.valor !== '—'" [class]="'kq3d__pill kq3d__pill--' + f.tono">{{ f.estado }}</span>
             </a>
         </div>
+
+        <!-- Vista mapa: el listado es también la versión en tabla del mapa de calor -->
+        <div class="kq3d__mapa" *ngIf="vista === 'mapa'">
+            <div class="kq3d__mapa-estado" *ngIf="mapa.cargando && !mapa.datos">
+                <span class="kq3d__skeleton kq3d__skeleton--ancho"></span>
+                <span class="kq3d__skeleton kq3d__skeleton--ancho"></span>
+                <span class="kq3d__skeleton kq3d__skeleton--ancho"></span>
+            </div>
+
+            <div class="kq3d__mapa-estado kq3d__mapa-estado--error" *ngIf="mapa.error">
+                <i class="pi pi-map"></i>
+                <strong class="kq3d__mapa-estado-titulo">No pudimos armar el mapa</strong>
+                <small class="kq3d__mapa-estado-sub">Revisa tu conexión e inténtalo de nuevo.</small>
+                <button type="button" class="kq3d__btn" (click)="reintentarMapa()">Reintentar</button>
+            </div>
+
+            <ng-container *ngIf="mapa.datos as d">
+                <div class="kq3d__mapa-estado" *ngIf="!d.conCiudad && !d.soloDepartamento">
+                    <i class="pi pi-map-marker"></i>
+                    <strong class="kq3d__mapa-estado-titulo">Aún no hay pedidos con ciudad</strong>
+                    <small class="kq3d__mapa-estado-sub">Cuando tus pedidos tengan dirección de envío, aquí verás de dónde te compran.</small>
+                </div>
+
+                <ng-container *ngIf="d.conCiudad || d.soloDepartamento">
+                    <div class="kq3d__resumen">
+                        <div class="kq3d__resumen-item">
+                            <small class="kq3d__row-title">Pedidos</small>
+                            <strong class="kq3d__resumen-valor">{{ fmt(d.totalPedidos) }}</strong>
+                        </div>
+                        <div class="kq3d__resumen-item">
+                            <small class="kq3d__row-title">Con ciudad</small>
+                            <strong class="kq3d__resumen-valor">{{ porcentajeUbicado }}%</strong>
+                        </div>
+                        <div class="kq3d__resumen-item">
+                            <small class="kq3d__row-title">Ciudades</small>
+                            <strong class="kq3d__resumen-valor">{{ d.ciudadesAlcanzadas }}</strong>
+                        </div>
+                    </div>
+
+                    <ol class="kq3d__ciudades" aria-label="Ciudades con más pedidos">
+                        <li *ngFor="let c of ciudadesTop; let i = index; trackBy: trackCiudad" class="kq3d__ciudad"
+                            [class.is-activa]="mapaActivo === 'c:' + c.dane"
+                            (mouseenter)="resaltarMapa('c:' + c.dane)" (mouseleave)="resaltarMapa(null)">
+                            <span class="kq3d__ciudad-rank">{{ i + 1 }}</span>
+                            <span class="kq3d__ciudad-body">
+                                <span class="kq3d__ciudad-linea">
+                                    <span class="kq3d__ciudad-nombre">{{ c.nombre }}</span>
+                                    <span class="kq3d__ciudad-valor">{{ fmt(c.pedidos) }}</span>
+                                </span>
+                                <span class="kq3d__barra" aria-hidden="true"><span class="kq3d__barra-fill" [style.width.%]="c.parte"></span></span>
+                                <small class="kq3d__row-sub">{{ c.departamento }} · {{ c.parte }}% de los pedidos</small>
+                            </span>
+                        </li>
+                    </ol>
+
+                    <div class="kq3d__leyenda" aria-hidden="true">
+                        <small class="kq3d__leyenda-txt">Menos</small>
+                        <span class="kq3d__leyenda-escala">
+                            <span *ngFor="let col of rampa" class="kq3d__leyenda-paso" [style.background]="col"></span>
+                        </span>
+                        <small class="kq3d__leyenda-txt">Más pedidos</small>
+                    </div>
+
+                    <small class="kq3d__nota" *ngIf="d.sinUbicacion">
+                        {{ fmt(d.sinUbicacion) }} {{ d.sinUbicacion === 1 ? 'pedido no tiene' : 'pedidos no tienen' }} ciudad registrada y no aparecen en el mapa.
+                    </small>
+                    <small class="kq3d__nota" *ngIf="d.soloPropias">Solo tus pedidos como asesor.</small>
+                </ng-container>
+            </ng-container>
+        </div>
     </aside>
 </section>
+
+<ng-template #selectorVista>
+    <div class="kq3d__selector" role="group" aria-label="Qué ver" *ngIf="puedeVerMapa; else soloTitulo">
+        <button type="button" class="kq3d__selector-op" [class.is-activa]="vista === 'negocio'"
+                [attr.aria-pressed]="vista === 'negocio'" (click)="cambiarVista('negocio')">
+            <i class="pi pi-building"></i><span class="kq3d__selector-txt">Mi negocio</span>
+        </button>
+        <button type="button" class="kq3d__selector-op" [class.is-activa]="vista === 'mapa'"
+                [attr.aria-pressed]="vista === 'mapa'" (click)="cambiarVista('mapa')">
+            <i class="pi pi-map"></i><span class="kq3d__selector-txt">Mi país</span>
+        </button>
+    </div>
+    <ng-template #soloTitulo><span class="kq3d__eyebrow">Tu negocio hoy</span></ng-template>
+</ng-template>
