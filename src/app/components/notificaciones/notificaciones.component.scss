@@ -184,3 +184,102 @@
     }
 
 }
+// Ticket 1128: "Pedidos nuevos: avisar a tu equipo". Colores del tema canónico
+// (design-system: acento #5F3FE0, ink #211F3A, superficies lila, plano sin gradientes).
+// Los span creados con *ngFor llevan color propio: hay una regla global vieja que
+// pinta de azul todo span.ng-star-inserted.
+.team-alerts {
+  margin-top: 16px;
+
+  &__titulo {
+    margin: 0 0 4px;
+    font-weight: 700;
+    color: #211F3A;
+  }
+
+  &__ayuda,
+  &__vacio {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: #6B6890;
+  }
+
+  &__lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px 4px 12px;
+    border-radius: 999px;
+    border: 1px solid #E4DEFA;
+    background: #F5F3FF;
+    color: #211F3A;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__correo {
+    color: #211F3A;
+  }
+
+  &__quitar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #6B6890;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: #E9E4FF;
+      color: #5F3FE0;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: .5;
+    }
+  }
+
+  &__form {
+    display: flex;
+    gap: 8px;
+    max-width: 480px;
+  }
+
+  &__input {
+    border-radius: 11px;
+    border-color: #E4DEFA;
+    color: #211F3A;
+
+    &:focus {
+      border-color: #5F3FE0;
+      box-shadow: 0 0 0 3px rgba(95, 63, 224, .15);
+    }
+  }
+
+  &__agregar {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 11px;
+    padding: 0 18px;
+    background: #5F3FE0;
+    color: #ffffff;
+    font-weight: 700;
+
+    &:disabled {
+      background: #CFC7F5;
+      cursor: not-allowed;
+    }
+  }
+}

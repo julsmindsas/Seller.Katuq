@@ -30,6 +30,13 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
   public isSaving = false;
   private empresaActual: any;
 
+  // Ticket 1128: personas del equipo que reciben un correo con cada pedido nuevo.
+  public avisosPedidoNuevo: string[] = [];
+  public nuevoCorreoAviso = '';
+  public guardandoAvisos = false;
+  public readonly maxAvisos = 5;
+  private readonly correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   // Categorías: Email y SMS funcionales; WhatsApp decorativo (próximamente)
   public preferences: NotificationPreferenceView[] = [
     {
@@ -143,6 +150,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
               }
             });
           }
+          const avisos = saved?.team_alerts?.order_created;
+          this.avisosPedidoNuevo = Array.isArray(avisos) ? [...avisos] : [];
           this.isLoading = false;
         },
         error: () => {
@@ -189,6 +198,58 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     const previousValue = pref.channels.whatsapp;
     pref.channels.whatsapp = !pref.channels.whatsapp;
     this.saveToFirestore(() => { pref.channels.whatsapp = previousValue; });
+  }
+
+  /** Agrega un correo a la lista de "Pedidos nuevos" y la guarda. */
+  public agregarCorreoAviso(): void {
+    const correo = (this.nuevoCorreoAviso || '').trim().toLowerCase();
+    if (!correo || this.guardandoAvisos) return;
+    if (!this.correoValido.test(correo)) {
+      this.toastr.warning('Escribe un correo completo, por ejemplo logistica@tuempresa.com.', 'Pedidos nuevos');
+      return;
+    }
+    if (this.avisosPedidoNuevo.includes(correo)) {
+      this.toastr.info('Ese correo ya está en la lista.', 'Pedidos nuevos');
+      this.nuevoCorreoAviso = '';
+      return;
+    }
+    if (this.avisosPedidoNuevo.length >= this.maxAvisos) {
+      this.toastr.warning(`Puedes avisar hasta a ${this.maxAvisos} personas. Quita una para agregar otra.`, 'Pedidos nuevos');
+      return;
+    }
+    const anterior = [...this.avisosPedidoNuevo];
+    this.avisosPedidoNuevo = [...this.avisosPedidoNuevo, correo];
+    this.nuevoCorreoAviso = '';
+    this.guardarAvisos(anterior);
+  }
+
+  /** Quita un correo de la lista de "Pedidos nuevos" y la guarda. */
+  public quitarCorreoAviso(correo: string): void {
+    if (this.guardandoAvisos) return;
+    const anterior = [...this.avisosPedidoNuevo];
+    this.avisosPedidoNuevo = this.avisosPedidoNuevo.filter(c => c !== correo);
+    this.guardarAvisos(anterior);
+  }
+
+  /** Guarda solo la lista de avisos; el resto de preferencias queda como estaba. */
+  private guardarAvisos(anterior: string[]): void {
+    const companyName = this.empresaActual?.nomComercial;
+    if (!companyName) return;
+
+    this.guardandoAvisos = true;
+    this.maestroService.saveCompanyNotificationPreferences(companyName, { team_alerts: { order_created: this.avisosPedidoNuevo } })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.guardandoAvisos = false;
+          this.toastr.success('Lista guardada.', 'Pedidos nuevos');
+        },
+        error: () => {
+          this.guardandoAvisos = false;
+          this.avisosPedidoNuevo = anterior;
+          this.toastr.error('No se pudo guardar la lista. Intenta de nuevo.', 'Pedidos nuevos');
+        }
+      });
   }
 
   /** Guarda todas las preferencias de la empresa en Firestore */
