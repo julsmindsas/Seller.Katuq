@@ -40,6 +40,7 @@
         <th class="text-center" style="min-width: 130px">Estado</th>
         <th style="min-width: 170px">Subido por</th>
         <th style="min-width: 170px">Revisado por</th>
+        <th style="min-width: 200px">Notas</th>
       </tr>
     </ng-template>
 
@@ -72,12 +73,14 @@
         </td>
         <td class="tk-cell-user">{{ item?.registradoPor || '—' }}</td>
         <td class="tk-cell-user">{{ item?.revisadoPor || '—' }}</td>
+        <!-- Ticket 1140: nota escrita al asentar el pago -->
+        <td class="tk-cell-notas" [title]="item?.notas || ''">{{ item?.notas || '—' }}</td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="8">
+        <td colspan="9">
           <div class="tk-empty"><i class="pi pi-list"></i> No hay pagos en el historial para este filtro.</div>
         </td>
       </tr>

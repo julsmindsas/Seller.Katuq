@@ -25,6 +25,23 @@
 .tk-money { font-weight: 700; font-family: 'Courier New', monospace; }
 .tk-pago-file { align-items: flex-start; }
 
+// Ticket 1140: nota escrita al asentar el pago en Pedidos
+.tk-notas-vendedor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid $katuq-gray-500;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+}
+.tk-notas-texto {
+  font-size: 0.9rem;
+  color: $katuq-gray-800;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .tk-resumen {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

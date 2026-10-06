@@ -35,6 +35,13 @@
     </div>
   </div>
 
+  <!-- Notas del vendedor (ticket 1140): la nota que escribió quien asentó el pago en Pedidos
+       llegaba a Firestore pero Tesorería nunca la mostraba, y es clave para aprobar o rechazar. -->
+  <div class="tk-notas-vendedor mb-3" *ngIf="pago?.notas?.trim()">
+    <span class="tk-pago-label"><i class="pi pi-comment me-1"></i>Notas de quien registró el pago</span>
+    <p class="tk-notas-texto mb-0">{{ pago.notas }}</p>
+  </div>
+
   <!-- Resumen de saldo -->
   <div class="tk-resumen mb-3">
     <div class="tk-resumen-col"><span class="tk-resumen-label">Total del pedido</span><span class="tk-resumen-num">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
