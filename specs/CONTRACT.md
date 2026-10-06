@@ -8091,10 +8091,19 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 
 **Estado.** Compila en el servidor local. Probado en el banco de pruebas con los seis estados (en producción, producido, empacado, en camino, entregado, rechazado; urgente). NO probado con sesión real. En la rama aparte `feature/pedido-3d`, sin publicar: falta la autorización de Daniel para publicar.
 
-## D-354 (2026-10-05) — Centro de operaciones 3D: bodega + muelles + pedidos frenados por stock (PROPUESTA, pendiente de aprobación)
+## D-354 (2026-10-05) — Centro de operaciones 3D: bodega + muelles + pedidos frenados por stock (APROBADA 2026-10-06, en construcción)
 
 **Contexto.** Daniel pidió una pantalla nueva, 100 % operativa y visual, que combinara dos pantallas, y aprobó arrancar con la propuesta ("dale, arranca con la propuesta pa ya").
 
 **Propuesta** (`openspec/changes/centro-operaciones-3d/`): una escena 3D con bodega (stock por producto en la bodega, solo lectura) y muelles (cola operativa por etapa, urgentes y camiones por transportador). Marca como **frenado** el pedido en cola con un producto en negativo en su bodega; por la política de negativo visible, la venta ya descontó el stock. Una consulta nueva de solo lectura arma la foto con `getRealStockMap` (sin doble conteo). Generar guía y abrir detalle se hacen directo. Despachar e imprimir se entregan a Despachos con los pedidos preseleccionados: único cambio en Despachos, aditivo y con diff aparte. Doble llave por comercio: menú por rol y `companyConfig.centroOperaciones3d`. Nace apagado y se prueba en FLORECER. País, repetición del día y Opttia van en etapas posteriores.
 
-**Estado.** Propuesta escrita y validada (`openspec validate` ok). Sin código. Esperando aprobación de Daniel.
+**Estado.** Aprobada por Daniel el 2026-10-06 ("aprobado"), con la propuesta de roles por defecto: administrador y roles que ya tienen Despachos.
+
+**Medición previa (2026-10-06, solo lectura).** ALMARA: 329 pedidos en cola, 319 con la entrega vencida hace más de 7 días (99 ya con orden de envío: salieron y nadie les cambió el estado); cola viva 10. OH MY STORE: 323 en cola, 300 vencidos; cola viva 23. Frenados: 11 y 6, todos entre los vencidos. FLORECER: sin pedidos (la prueba necesita pedidos de demo).
+
+**Desvíos del diseño, con razón:**
+1. **Rezagados aparte.** Pedido en cola con la entrega vencida hace más de 7 días = rezagado: pila propia con su conteo y lista, sin stock evaluado. Sin esto la escena serían 300 pedidos "urgentes" que ya salieron.
+2. **`getRealStockMap` muestra los negativos como 0.** Se le agregó la opción `conNegativos` (aditiva; el resto de pantallas sigue igual) para que el servicio vea el saldo real.
+3. **Empresa apagada → 200 `{ disponible: false }`, no 403.** El interceptor anuncia todo 403 que no es de sesión como "Límite de suscripción".
+4. **Productos sin control de inventario** (casi toda la cola de ALMARA, que produce por pedido) van como mesas de producción, sin conteo y sin frenar.
+5. **Despachar con preselección queda para un cambio aparte.** Despachos carga solo los pedidos de hoy, paginados, y arma el despacho en su ventana "Generar orden": preseleccionar exige tocar su carga inicial. Mientras se aprueba ese diff, el botón dice "Abrir en Despachos" y avisa si hay pedidos sin unidades.

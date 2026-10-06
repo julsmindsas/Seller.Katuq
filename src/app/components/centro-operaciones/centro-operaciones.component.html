@@ -1,0 +1,263 @@
+<div class="container-fluid co-page">
+    <section class="co" [class.co--sin-3d]="webglOk === false" aria-labelledby="co-titulo">
+        <header class="co__head">
+            <div>
+                <small class="co__eyebrow">Logística</small>
+                <h1 id="co-titulo" class="co__title">Centro de operaciones</h1>
+                <p class="co__sub">La bodega y los muelles de despacho en una sola vista, con los pedidos que no tienen unidades.</p>
+            </div>
+            <div class="co__head-actions" *ngIf="foto">
+                <span class="co__live"><span class="co__live-dot"></span>Actualizado {{ actualizado }}</span>
+                <button type="button" class="co__btn co__btn--ghost" (click)="cargar()" title="Actualizar ahora">
+                    <i class="pi pi-refresh"></i><span>Actualizar</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Empresa sin la opción encendida -->
+        <div class="co__vacio" *ngIf="noDisponible">
+            <span class="co__vacio-icon"><i class="pi pi-lock"></i></span>
+            <h2 class="co__vacio-title">Esta pantalla aún no está activa para tu empresa</h2>
+            <p class="co__vacio-text">Mientras tanto, la operación de despachos sigue en Envíos y entregas.</p>
+            <a class="co__btn" routerLink="/despachos"><i class="pi pi-send"></i><span>Ir a Envíos y entregas</span></a>
+        </div>
+
+        <div class="co__vacio" *ngIf="error && !noDisponible">
+            <span class="co__vacio-icon co__vacio-icon--error"><i class="pi pi-exclamation-triangle"></i></span>
+            <h2 class="co__vacio-title">No pudimos cargar la operación</h2>
+            <p class="co__vacio-text">Revisa tu conexión e intenta de nuevo.</p>
+            <button type="button" class="co__btn" (click)="cargar()"><i class="pi pi-refresh"></i><span>Reintentar</span></button>
+        </div>
+
+        <div class="co__body" [class.is-oculto]="noDisponible || error">
+            <!-- Escena: decorativa para lectores de pantalla; el panel tiene la misma información -->
+            <div class="co__stage" #stage [class.is-oculto]="webglOk === false">
+                <canvas #canvas class="co__canvas" [class.is-lista]="webglOk && foto" aria-hidden="true"></canvas>
+
+                <div class="co__labels" *ngIf="webglOk && foto">
+                    <ng-container *ngFor="let e of etiquetas; trackBy: trackId">
+                        <button #etiqueta type="button" [attr.data-id]="e.id" tabindex="-1" aria-hidden="true"
+                                [class]="'co__label co__label--' + e.tono"
+                                [class.co__label--hover]="e.id === 'h' || e.id === 'sel'"
+                                [class.co__label--sel]="e.id === 'sel'"
+                                [class.co__label--muelle]="e.elige?.startsWith('m:')"
+                                [class.is-activa]="e.elige && e.elige === sel"
+                                (click)="e.elige && seleccionar(e.elige)">
+                            <ng-container *ngIf="e.id !== 'h' && e.id !== 'sel'; else hover">
+                                <span class="co__label-icon" *ngIf="!e.elige?.startsWith('m:')"><i [class]="e.icono"></i></span>
+                                <span class="co__label-text">
+                                    <small class="co__label-title">{{ e.titulo }}</small>
+                                    <strong class="co__label-value">{{ e.valor }}</strong>
+                                </span>
+                            </ng-container>
+                            <ng-template #hover><span class="co__label-hover">{{ e.id === 'sel' ? selTexto : hoverTexto }}</span></ng-template>
+                        </button>
+                    </ng-container>
+                </div>
+
+                <div class="co__overlay" *ngIf="webglOk && foto">
+                    <div class="co__chips" role="group" aria-label="Acercar a una zona">
+                        <button type="button" [class.is-activo]="nivel === 'todo'" (click)="enfocar('todo')">Todo</button>
+                        <button type="button" [class.is-activo]="nivel === 'bodega'" (click)="enfocar('bodega')">Bodega</button>
+                        <button type="button" [class.is-activo]="nivel === 'muelles'" (click)="enfocar('muelles')">Muelles</button>
+                    </div>
+                    <div class="co__chips co__chips--bodegas" role="group" aria-label="Bodega" *ngIf="(foto.bodegas?.length || 0) > 1">
+                        <button type="button" *ngFor="let b of foto.bodegas" [class.is-activo]="b.id === bodega" (click)="elegirBodega(b.id)">
+                            <span>{{ b.nombre }}</span><b>{{ b.pedidos }}</b>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="co__controls" *ngIf="webglOk" role="group" aria-label="Mover la vista 3D">
+                    <button type="button" (click)="acercar()" title="Acercar" aria-label="Acercar"><i class="pi pi-plus"></i></button>
+                    <button type="button" (click)="alejar()" title="Alejar" aria-label="Alejar"><i class="pi pi-minus"></i></button>
+                    <span class="co__controls-sep"></span>
+                    <button type="button" (click)="girar(-30)" title="Girar a la izquierda" aria-label="Girar a la izquierda"><i class="pi pi-replay"></i></button>
+                    <button type="button" (click)="girar(30)" title="Girar a la derecha" aria-label="Girar a la derecha"><i class="pi pi-refresh"></i></button>
+                    <button type="button" (click)="centrar()" title="Volver a la vista inicial" aria-label="Volver a la vista inicial"><i class="pi pi-home"></i></button>
+                </div>
+
+                <div class="co__hint" *ngIf="webglOk && foto">
+                    <i class="pi pi-arrows-h"></i>
+                    <span>Arrastra para girar · toca un pedido, una estantería o un muelle</span>
+                </div>
+
+                <div class="co__aviso" *ngIf="webglOk && foto && !vivos.length">
+                    <i class="pi pi-check-circle"></i>
+                    <span>No hay pedidos en cola por despachar</span>
+                </div>
+
+                <div class="co__cargando" *ngIf="cargando" aria-hidden="true">
+                    <span class="co__cargando-punto"></span><span>Armando la foto de tu operación…</span>
+                </div>
+            </div>
+
+            <!-- Panel en texto: la misma información de la escena, y lo único que queda sin 3D -->
+            <aside class="co__panel" aria-label="Detalle de la operación">
+                <div class="co__cargando-panel" *ngIf="cargando && !foto">Cargando…</div>
+
+                <ng-container *ngIf="foto && resumen as r">
+                    <div class="co__stats">
+                        <button type="button" class="co__stat" (click)="seleccionar(null)" [class.is-activo]="!sel">
+                            <small>En cola</small><strong>{{ fmt(r.vivos) }}</strong>
+                        </button>
+                        <div class="co__stat co__stat--warning"><small>Urgentes</small><strong>{{ fmt(r.urgentes) }}</strong></div>
+                        <div class="co__stat" [class.co__stat--danger]="r.frenados"><small>Sin unidades</small><strong>{{ fmt(r.frenados) }}</strong></div>
+                        <button type="button" class="co__stat co__stat--muted" (click)="seleccionar('rez')" [class.is-activo]="sel === 'rez'"
+                                [disabled]="!r.rezagados">
+                            <small>Rezagados</small><strong>{{ fmt(r.rezagados) }}</strong>
+                        </button>
+                    </div>
+                    <p class="co__nota" *ngIf="foto.soloPropias">Ves solo los pedidos donde eres el asesor.</p>
+                    <p class="co__nota" *ngIf="foto.truncado">Tu cola es muy grande: se muestran los primeros 3.000 pedidos.</p>
+
+                    <!-- Sin 3D (y en el teléfono) la elección de bodega va en el panel -->
+                    <div class="co__chips co__chips--panel" *ngIf="(foto.bodegas?.length || 0) > 1">
+                        <button type="button" *ngFor="let b of foto.bodegas" [class.is-activo]="b.id === bodega" (click)="elegirBodega(b.id)">
+                            <span>{{ b.nombre }}</span><b>{{ b.pedidos }}</b>
+                        </button>
+                    </div>
+
+                    <!-- ===== Pedido elegido ===== -->
+                    <section class="co__det" *ngIf="pedidoSel as p">
+                        <div class="co__det-head">
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <div>
+                                <small class="co__label-mini">Pedido</small>
+                                <h2 class="co__nro">{{ p.nroPedido }}</h2>
+                            </div>
+                            <span class="co__pill" [class.co__pill--danger]="p.frenado" [class.co__pill--warning]="!p.frenado && (p.urgencia === 'hoy' || p.urgencia === 'vencido')">
+                                {{ p.frenado ? 'Sin unidades' : nombreEtapa[p.etapa] }}
+                            </span>
+                        </div>
+                        <dl class="co__datos">
+                            <div><dt>Cliente</dt><dd>{{ p.cliente || '—' }}</dd></div>
+                            <div><dt>Ciudad</dt><dd>{{ p.ciudad || '—' }}</dd></div>
+                            <div><dt>Entrega</dt><dd>{{ entregaTexto(p) }}<span class="co__muted" *ngIf="p.horario"> · {{ p.horario }}</span></dd></div>
+                            <div><dt>Etapa</dt><dd>{{ nombreEtapa[p.etapa] }}<span class="co__muted" *ngIf="p.transportador"> · {{ p.transportador }}</span></dd></div>
+                        </dl>
+                        <div class="co__faltan" *ngIf="p.frenado">
+                            <i class="pi pi-exclamation-triangle"></i>
+                            <div>
+                                <strong>No hay unidades para despacharlo</strong>
+                                <span *ngFor="let f of p.faltantes">Faltan {{ fmt(f.faltan) }} de {{ f.nombre }} en la bodega.</span>
+                            </div>
+                        </div>
+                        <small class="co__label-mini">Productos</small>
+                        <ul class="co__lineas">
+                            <li *ngFor="let l of p.lineas" (click)="tieneEstante(l.productoId) && seleccionar('s:' + l.productoId)" [class.is-click]="tieneEstante(l.productoId)">
+                                <span class="co__linea-cant">{{ fmt(l.cantidad) }}×</span>
+                                <span class="co__linea-nombre">{{ l.nombre }}</span>
+                            </li>
+                        </ul>
+                        <div class="co__acciones">
+                            <button type="button" class="co__btn" (click)="despachar([p], p.transportador)"><i class="pi pi-send"></i><span>Abrir en Despachos</span></button>
+                            <button type="button" class="co__btn co__btn--ghost" (click)="generarGuia(p)" [disabled]="generandoGuia === p.id">
+                                <i class="pi" [class.pi-file-pdf]="generandoGuia !== p.id" [class.pi-spin]="generandoGuia === p.id" [class.pi-spinner]="generandoGuia === p.id"></i><span>Generar guía</span>
+                            </button>
+                            <button type="button" class="co__btn co__btn--ghost" (click)="verDetalle(p)"><i class="pi pi-external-link"></i><span>Ver detalle</span></button>
+                        </div>
+                    </section>
+
+                    <!-- ===== Producto (estantería) elegido ===== -->
+                    <section class="co__det" *ngIf="productoSel as pr">
+                        <div class="co__det-head">
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <div>
+                                <small class="co__label-mini">Producto{{ pr.referencia ? ' · ' + pr.referencia : '' }}</small>
+                                <h2 class="co__det-title">{{ pr.nombre }}</h2>
+                            </div>
+                        </div>
+                        <p class="co__texto" *ngIf="!pr.inventariable">No lleva control de inventario: se hace o se consigue por pedido, así que nunca frena un despacho.</p>
+                        <small class="co__label-mini" *ngIf="pr.inventariable">Existencias por bodega</small>
+                        <ul class="co__bodegas" *ngIf="pr.inventariable">
+                            <li *ngFor="let b of bodegasDelProducto(pr)" [class.is-neg]="b.saldo < 0">
+                                <span>{{ b.nombre }}</span><b>{{ b.saldo < 0 ? 'Faltan ' + fmt(-b.saldo) : fmt(b.saldo) }}</b>
+                            </li>
+                            <li *ngIf="!bodegasDelProducto(pr).length"><span>Sin existencias registradas</span><b>0</b></li>
+                        </ul>
+                        <small class="co__label-mini">{{ fmt(pr.enCola) }} unidades en {{ pedidosDelProducto.length }} {{ pedidosDelProducto.length === 1 ? 'pedido' : 'pedidos' }} de la cola</small>
+                        <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: pedidosDelProducto }"></ng-container>
+                    </section>
+
+                    <!-- ===== Muelle elegido ===== -->
+                    <section class="co__det" *ngIf="etapaSel as etapa">
+                        <div class="co__det-head">
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <div>
+                                <small class="co__label-mini">Muelle</small>
+                                <h2 class="co__det-title">{{ nombreEtapa[etapa] }} · {{ porEtapa[etapa].length }}</h2>
+                            </div>
+                        </div>
+                        <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: porEtapa[etapa] }"></ng-container>
+                        <div class="co__acciones" *ngIf="etapa === 'ParaDespachar' && porEtapa[etapa].length">
+                            <button type="button" class="co__btn" (click)="despachar(porEtapa[etapa])"><i class="pi pi-send"></i><span>Abrir estos {{ porEtapa[etapa].length }} en Despachos</span></button>
+                        </div>
+                    </section>
+
+                    <!-- ===== Camión elegido ===== -->
+                    <section class="co__det" *ngIf="transportadorSel as t">
+                        <div class="co__det-head">
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <div>
+                                <small class="co__label-mini">Transportador</small>
+                                <h2 class="co__det-title">{{ t }}</h2>
+                            </div>
+                        </div>
+                        <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: pedidosDelTransportador }"></ng-container>
+                        <div class="co__acciones">
+                            <button type="button" class="co__btn" (click)="despachar(pedidosDelTransportador, t)"><i class="pi pi-send"></i><span>Abrir el camión en Despachos</span></button>
+                        </div>
+                    </section>
+
+                    <!-- ===== Rezagados ===== -->
+                    <section class="co__det" *ngIf="sel === 'rez'">
+                        <div class="co__det-head">
+                            <button type="button" class="co__volver" (click)="seleccionar(null)" aria-label="Volver al resumen"><i class="pi pi-arrow-left"></i></button>
+                            <div>
+                                <small class="co__label-mini">Rezagados</small>
+                                <h2 class="co__det-title">{{ fmt(r.rezagados) }} pedidos con la entrega vencida hace más de {{ r.diasRezago }} días</h2>
+                            </div>
+                        </div>
+                        <p class="co__texto">Siguen en la cola de despacho, pero su fecha de entrega ya pasó hace días. Muchos ya salieron y les falta el cambio de estado: revísalos para que la cola muestre solo lo que de verdad falta despachar.</p>
+                        <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: rezagadosVisibles }"></ng-container>
+                        <p class="co__nota" *ngIf="rezagados.length > 50">Y {{ fmt(rezagados.length - 50) }} más.</p>
+                    </section>
+
+                    <!-- ===== Resumen (sin nada elegido) ===== -->
+                    <ng-container *ngIf="!sel">
+                        <section class="co__bloque" *ngIf="frenados.length">
+                            <small class="co__label-mini co__label-mini--danger">Pedidos sin unidades</small>
+                            <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: frenados }"></ng-container>
+                        </section>
+                        <section class="co__bloque" *ngFor="let etapa of etapas">
+                            <button type="button" class="co__etapa" (click)="seleccionar('m:' + etapa)">
+                                <span>{{ nombreEtapa[etapa] }}</span><b>{{ porEtapa[etapa].length }}</b><i class="pi pi-angle-right"></i>
+                            </button>
+                            <ng-container *ngIf="webglOk === false">
+                                <ng-container *ngTemplateOutlet="listaPedidos; context: { $implicit: porEtapa[etapa] }"></ng-container>
+                            </ng-container>
+                        </section>
+                        <p class="co__nota" *ngIf="!vivos.length && !r.rezagados">No hay pedidos en cola por despachar.</p>
+                    </ng-container>
+                </ng-container>
+            </aside>
+        </div>
+    </section>
+</div>
+
+<ng-template #listaPedidos let-lista>
+    <ul class="co__pedidos">
+        <li *ngFor="let p of lista; trackBy: trackId">
+            <button type="button" class="co__pedido" (click)="seleccionar('p:' + p.id)" [class.is-activo]="sel === 'p:' + p.id">
+                <span class="co__pedido-punto" [class.is-danger]="p.frenado" [class.is-warning]="!p.frenado && (p.urgencia === 'hoy' || p.urgencia === 'vencido')"></span>
+                <span class="co__pedido-main">
+                    <span class="co__pedido-nro">{{ p.nroPedido }}</span>
+                    <span class="co__pedido-sub">{{ p.cliente || p.ciudad || 'Sin cliente' }}</span>
+                </span>
+                <span class="co__pedido-side" [class.is-danger]="p.frenado">{{ p.frenado ? 'Faltan ' + fmt(p.faltantes[0].faltan) : entregaTexto(p) }}</span>
+            </button>
+        </li>
+        <li class="co__pedidos-vacio" *ngIf="!lista.length">Sin pedidos</li>
+    </ul>
+</ng-template>

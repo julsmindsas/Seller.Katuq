@@ -7,6 +7,16 @@
 - **Despachar.** `despachos.component.ts:3790-3835` (8.112 líneas) arma `nuevaOrdenEnvio`, cambia cada pedido (transportador, despachador, estado, número de orden) y llama `dispatchShippingOrder`. **Generar guía** es una sola llamada: `generarGuia(orderId)` (`:4669`).
 - **Menú.** La visibilidad sale de `roles.menus` en el login. Un módulo nuevo nace invisible hasta que se le hace backfill al rol (`backfill-menu-sitios.js` como molde).
 
+## Medición previa (2026-10-06, solo lectura)
+
+| Empresa | En cola | Vencidos > 7 días | Cola viva | Frenados | Sin bodega | Productos en la cola viva |
+|---|---|---|---|---|---|---|
+| ALMARA FELICIDAD | 329 | 319 (99 con orden de envío) | 10 | 11, todos vencidos | 65 | 10 (7 sin inventario) |
+| OH MY STORE | 323 | 300 | 23 | 6, todos vencidos | 0 | 79 |
+| FLORECER | 0 | — | 0 | — | — | — |
+
+La foto tarda 6 a 9 s desde un equipo local (lo pesa el carrito de cada pedido) y pesa 170 a 220 KB. El tope de 60 por muelle no se acerca con la cola viva.
+
 ## Goals / Non-Goals
 
 **Goals:** una pantalla con bodega y muelles en una sola escena, con los pedidos frenados por stock visibles. Generar guía y abrir detalle directo desde la escena. Despachar e imprimir con entrega a Despachos sin duplicar su lógica. Panel en texto equivalente. Encendida solo en FLORECER al inicio.
@@ -38,6 +48,13 @@
    - Refresco: cada 60 s mientras está visible, y al volver de Despachos.
 6. **Front.** Módulo lazy `components/centro-operaciones/`, servicio `CentroOperacionesService extends BaseService` y ruta `centro-operaciones` con `AuthGuard`. Tema canónico; reusa el estilo de etiquetas y panel de la bienvenida.
 
+7. **Ajustes tras la medición.**
+   - **Rezagados:** con la entrega vencida hace más de 7 días, van a una pila aparte con conteo y lista. No se evalúa su stock, así que las lecturas de inventario quedan en las de la cola viva.
+   - **`getRealStockMap({ conNegativos: true })`:** opción aditiva. Sin ella, la función muestra los negativos como 0.
+   - **Empresa apagada → 200 `{ disponible: false }`, no 403:** el interceptor anuncia todo 403 que no es de sesión como "Límite de suscripción".
+   - **Productos sin inventario:** van como mesas de producción, sin conteo.
+   - **Cliente:** el nombre sale de `cliente.nombres_completos`, porque `envio` suele traer "N/A".
+
 ## Risks / Trade-offs
 
 - [Cola grande en comercios con mucho volumen] → `.select()`, una lectura de stock por bodega con el índice `company+idBodega+productoId` que ya existe, y tope de 3.000 pedidos con aviso de "truncado".
@@ -55,5 +72,6 @@
 
 ## Open Questions
 
-- ¿Qué roles de FLORECER llevan el menú: solo administrador, o también bodega y despachos? Propuesta: administrador y roles con `despachos` en su menú.
-- ¿El tope de 60 pedidos por muelle sirve para los comercios grandes o hay que agrupar por día de entrega? Se mide con datos reales antes de encender a un cliente.
+- ~~Roles de FLORECER con el menú~~ → administrador y roles con `despachos` en su menú (aprobado 2026-10-06).
+- ~~Tope de 60 por muelle~~ → la cola viva medida es de 10 a 23 pedidos; el tope queda como protección.
+- **Preselección en Despachos:** Despachos carga solo los pedidos de hoy, paginados, y arma el despacho en su ventana "Generar orden". Preseleccionar exige ajustar su carga inicial (rango de fechas de los pedidos recibidos) antes de abrir esa ventana. Va como cambio aparte (tarea 4.3) con diff aprobado.

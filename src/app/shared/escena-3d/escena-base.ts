@@ -166,6 +166,12 @@ export abstract class EscenaBase<Id extends string> {
     this.azObj = this.limAz(this.azObj + grados * DEG);
   }
 
+  /** Lleva el zoom a un valor (dentro de los límites) con la misma transición suave. */
+  zoomA(z: number): void {
+    const [min, max] = this.vista.limZoom;
+    this.zoomObj = Math.min(max, Math.max(min, z));
+  }
+
   centrar(): void {
     this.azObj = this.vista.az;
     this.polObj = this.vista.pol;

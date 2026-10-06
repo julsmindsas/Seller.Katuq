@@ -1,15 +1,15 @@
 ## 1. Medición previa (sin código de producto)
 
-- [ ] 1.1 Con un script de solo lectura, medir para FLORECER, ALMARA FELICIDAD y OH MY STORE: tamaño de la cola operativa, productos únicos en la cola, pedidos sin `bodegaId` y cuántos saldrían frenados. Anotar los números en `design.md`.
-- [ ] 1.2 Confirmar con Daniel qué roles de FLORECER llevan el menú (pregunta abierta del diseño).
+- [x] 1.1 Con un script de solo lectura, medir para FLORECER, ALMARA FELICIDAD y OH MY STORE: tamaño de la cola operativa, productos únicos en la cola, pedidos sin `bodegaId` y cuántos saldrían frenados. Anotar los números en `design.md`.
+- [x] 1.2 Confirmar con Daniel qué roles de FLORECER llevan el menú (pregunta abierta del diseño).
 
 ## 2. Backend: foto de la operación (solo lectura)
 
-- [ ] 2.1 Servicio `services/operacion/fotoOperacion.js`: cola (`READY_STATES`, `.select()`, sin cancelados, alcance D-349), productos únicos, `getRealStockMap` por bodega y regla de frenado con respaldo `stockTotal` si falta `bodegaId`.
-- [ ] 2.2 Ruta `GET /v1/analytics/logistica/centro-operaciones` con `auth`; empresa del token; 403 "no disponible" si `companyConfig/{empresa}.centroOperaciones3d !== true`; tope de 3.000 pedidos con `truncado`.
-- [ ] 2.3 Prueba de contrato del write-set: falla si el servicio escribe en `inventory`, `inventoryMovement`, `products`, precios, listas de precios o cualquier colección.
-- [ ] 2.4 Prueba de la regla: negativo en la bodega frena; no inventariable no frena; registro duplicado por referencia y por docId cuenta una vez; respaldo por `stockTotal`.
-- [ ] 2.5 `node --check` y la prueba del 2.4 contra datos reales de FLORECER (solo lectura).
+- [x] 2.1 Servicio `services/operacion/fotoOperacion.js`: cola (`READY_STATES`, `.select()`, sin cancelados, alcance D-349), productos únicos, `getRealStockMap` por bodega y regla de frenado con respaldo `stockTotal` si falta `bodegaId`.
+- [x] 2.2 Ruta `GET /v1/analytics/logistica/centro-operaciones` con `auth`; empresa del token; `{ disponible: false }` (200, no 403: ver diseño 7) si `companyConfig/{empresa}.centroOperaciones3d !== true`; tope de 3.000 pedidos con `truncado`.
+- [x] 2.3 Prueba de contrato del write-set: falla si el servicio escribe en `inventory`, `inventoryMovement`, `products`, precios, listas de precios o cualquier colección.
+- [x] 2.4 Prueba de la regla: negativo en la bodega frena; no inventariable no frena; registro duplicado por referencia y por docId cuenta una vez; respaldo por `stockTotal`.
+- [x] 2.5 `node --check` y la prueba del 2.4; foto contra datos reales de ALMARA y OH MY STORE (FLORECER no tiene pedidos), solo lectura.
 
 ## 3. Frontend: pantalla y escena
 

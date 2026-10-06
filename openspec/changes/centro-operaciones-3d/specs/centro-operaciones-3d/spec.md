@@ -22,6 +22,14 @@ La pantalla SHALL mostrar una escena 3D navegable con dos niveles en esta entreg
 - **WHEN** hay pedidos en la cola operativa (producido totalmente, empacado o listo para despachar)
 - **THEN** cada pedido aparece en el muelle de su etapa, los que tienen entrega hoy o vencida se marcan como urgentes, y los asignados a un transportador aparecen en su camión
 
+#### Scenario: Producto sin control de inventario
+- **WHEN** la cola lleva un producto que no lleva inventario (se hace por pedido)
+- **THEN** aparece como mesa de producción, sin conteo, y nunca se marca en rojo
+
+#### Scenario: Rezagados
+- **WHEN** hay pedidos en cola con la entrega vencida hace más de 7 días
+- **THEN** se ven en una pila aparte con su conteo, y al tocarla el panel los lista del más viejo al más nuevo con la explicación de por qué están ahí
+
 ### Requirement: Pedidos frenados por stock visibles
 La pantalla SHALL marcar como "frenado" todo pedido de la cola con al menos un producto en negativo en la bodega del pedido. MUST mostrar qué producto falta y cuántas unidades.
 

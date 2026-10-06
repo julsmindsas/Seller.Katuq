@@ -29,6 +29,13 @@ Un pedido de la cola SHALL quedar frenado cuando al menos uno de sus productos t
 - **WHEN** un pedido lleva solo productos no inventariables
 - **THEN** el pedido no sale frenado
 
+### Requirement: Pedidos rezagados
+Un pedido de la cola con la entrega vencida hace más de 7 días SHALL marcarse como rezagado. Los rezagados MUST contarse aparte de la cola viva y MUST NOT evaluarse como frenados.
+
+#### Scenario: Pedido que ya salió sin cambiar de estado
+- **WHEN** un pedido sigue empacado con la entrega vencida hace 30 días
+- **THEN** sale como rezagado, no cuenta en la cola viva ni en los urgentes, y aparece en la lista de rezagados
+
 ### Requirement: Alcance y aislamiento
 La foto MUST salir solo de la empresa del token. Con "solo sus métricas" activo, MUST incluir solo los pedidos del asesor. El sistema MUST NOT escribir en ninguna colección al armarla.
 

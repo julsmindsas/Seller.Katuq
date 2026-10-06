@@ -206,6 +206,15 @@ export const content: Routes = [
     canActivate: [AuthGuard], // Agregar el guard
   },
   {
+    // D-354: nace apagado por empresa; sin la opción la pantalla dice "no disponible".
+    path: "centro-operaciones",
+    loadChildren: () =>
+      import("../../components/centro-operaciones/centro-operaciones.module").then(
+        (m) => m.CentroOperacionesModule,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: "chat",
     loadChildren: () =>
       import("../../components/chat/chat.module").then((m) => m.ChatModule),
