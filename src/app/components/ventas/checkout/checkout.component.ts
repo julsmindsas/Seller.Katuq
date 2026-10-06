@@ -268,7 +268,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     // Si cambia el pedido, actualizar la referencia
     if (changes['pedido'] && changes['pedido'].currentValue) {
-      this.pedido = { ...this.pedido };
+      // Ticket 1132: el resumen trabaja sobre el MISMO pedido que el carrito. Antes se
+      // copiaba aquí ({ ...this.pedido }) y lo que el carrito escribía después (el código
+      // de descuento) no llegaba ni al resumen ni al pedido que se crea: se cobraba completo.
       this.pedidoUtilService.pedido = this.pedido;
 
       // Inicializar la forma de entrega
@@ -885,7 +887,8 @@ export class CheckOutComponent implements OnInit, OnChanges {
       }
       
       // Información adicional
-      this.pedido.cuponAplicado = ''; 
+      // Ticket 1132: el código de descuento aplicado viaja con el pedido (antes se borraba).
+      this.pedido.cuponAplicado = this.pedido?.descuentoAplicado?.codigoPersonalizado || '';
       this.pedido.anticipo = 0; // Valor por defecto
       this.pedido.faltaPorPagar = this.pedido.totalPedididoConDescuento; // Por defecto, falta todo por pagar
       
