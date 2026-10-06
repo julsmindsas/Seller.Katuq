@@ -1915,7 +1915,9 @@ export class CrearVentasComponent
         estado: cliente.estado || "activo",
       });
 
-      // Inicializar notas del pedido
+      // Inicializar notas del pedido. Al entrar al paso del cliente el pedido ya
+      // trae notasPedido con las listas vacías: si solo se llenaran cuando no
+      // existe, las notas del cliente elegido nunca se verían (ticket 1135).
       if (!this.pedidoGral.notasPedido) {
         this.pedidoGral.notasPedido = {
           notasCliente: this.formulario.value.notas as Notas[],
@@ -1924,6 +1926,8 @@ export class CrearVentasComponent
           notasProduccion: [] as Notas[],
           notasFacturacionPagos: [] as Notas[],
         };
+      } else {
+        this.pedidoGral.notasPedido.notasCliente = this.formulario.value.notas as Notas[];
       }
 
       this.datos = cliente;
