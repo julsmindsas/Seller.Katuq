@@ -279,6 +279,8 @@ export class CrearVentasComponent
    * aparece de una vez, sin exigir bodega ni ciudad.
    */
   public catalogoSinInventario: boolean = false;
+  /** Último rechazo al guardar el pedido para Wompi, para explicar el motivo (D-362). */
+  private errorGuardarPedidoWompi: any = null;
 
   // Formulario y propiedades para notas de cliente
   notasClienteForm: FormGroup;
@@ -3267,10 +3269,15 @@ export class CrearVentasComponent
             });
         } else {
           // Si hubo un error al guardar el pedido
+          const aviso = this.mensajeErrorCrearPedido(
+            this.errorGuardarPedidoWompi,
+            "No se pudo guardar el pedido. Por favor intente nuevamente.",
+          );
+          this.errorGuardarPedidoWompi = null;
           Swal.fire({
-            title: "Error",
-            text: "No se pudo guardar el pedido. Por favor intente nuevamente.",
-            icon: "error",
+            title: aviso.titulo,
+            text: aviso.texto,
+            icon: aviso.icono,
             confirmButtonText: "Ok",
           });
         }
@@ -3279,6 +3286,20 @@ export class CrearVentasComponent
       // Si no es Wompi, continuar con el proceso normal de creación de pedido
       this.continuarCreacionPedido();
     }
+  }
+
+  /**
+   * D-362 (ticket 1149): si la empresa no vende sin existencias, el servidor
+   * dice qué productos faltan y en qué bodega; se muestra tal cual.
+   */
+  private mensajeErrorCrearPedido(
+    err: any,
+    porDefecto: string,
+  ): { titulo: string; texto: string; icono: "error" | "warning" } {
+    if (err?.error?.error === "SIN_EXISTENCIAS" && err.error.msg) {
+      return { titulo: "Sin existencias en esta bodega", texto: err.error.msg, icono: "warning" };
+    }
+    return { titulo: "Error", texto: porDefecto, icono: "error" };
   }
 
   // Método para continuar con la creación del pedido normal (no Wompi)
@@ -3381,10 +3402,20 @@ export class CrearVentasComponent
               },
               error: (err: any) => {
                 this.creandoPedido = false;
+                // El paso de confirmación se abrió antes de la respuesta: si el
+                // pedido no se creó, se vuelve a Pago en vez de mostrar "éxito".
+                this.showPedidoConfirm = false;
+                if (this.mywizard?.currentStepIndex === 5) {
+                  this.mywizard.goToPreviousStep();
+                }
+                const aviso = this.mensajeErrorCrearPedido(
+                  err,
+                  "No se pudo crear el pedido. Por favor intente nuevamente.",
+                );
                 Swal.fire({
-                  title: "Error",
-                  text: "No se pudo crear el pedido. Por favor intente nuevamente.",
-                  icon: "error",
+                  title: aviso.titulo,
+                  text: aviso.texto,
+                  icon: aviso.icono,
                   confirmButtonText: "Ok",
                 });
               },
@@ -4468,6 +4499,7 @@ export class CrearVentasComponent
                   resolve(true); // Pedido guardado exitosamente
                 },
                 error: (err: any) => {
+                  context.errorGuardarPedidoWompi = err;
                   resolve(false); // Error al guardar el pedido
                 },
               });
