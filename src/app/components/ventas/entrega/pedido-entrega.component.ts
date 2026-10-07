@@ -7,6 +7,7 @@ import {
   Output,
 } from "@angular/core";
 import Swal from "sweetalert2";
+import { coordenadasCoincidenConZona } from "../../../shared/util/geocoding-validador.util";
 import * as XLSX from "xlsx";
 import { zonaCubreCiudad } from "../../../shared/util/zona-cobro.util";
 import { Pedido } from "../modelo/pedido";
@@ -806,6 +807,32 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       this.valor_zona_cobro = '';
       console.warn(`⚠️ No se encontró valor para la zona: ${this.zona_cobro}`);
     }
+    this.verificarCoordenadasContraZona();
+  }
+
+  /**
+   * Ticket 1136 (D7): si la zona de cobro nombra un corregimiento y las
+   * coordenadas actuales caen lejos de él (p. ej. "Corregimiento San Antonio
+   * de Prado" con el punto en Belén), avisar y ofrecer volver a ubicar. No
+   * bloquea: el comercio puede tener razones para cobrar otra zona.
+   */
+  private verificarCoordenadasContraZona(): void {
+    const r = coordenadasCoincidenConZona(
+      this.latitud, this.longitud, this.zona_cobro, this.ciudad_municipio_entrega,
+    );
+    if (!r.aplica || r.coincide) { return; }
+    const km = r.distanciaKm != null ? r.distanciaKm.toFixed(1) : "?";
+    Swal.fire({
+      icon: "warning",
+      title: "La ubicación no coincide con la zona",
+      html: `El punto del mapa queda a <b>${km} km</b> de <b>${r.area?.nombre}</b>, la zona de cobro elegida. ` +
+        `Si la dirección es de ${r.area?.nombre}, vuelve a ubicarla para que el mensajero no llegue a otro barrio.`,
+      showCancelButton: true,
+      confirmButtonText: "Volver a ubicar",
+      cancelButtonText: "Dejar así",
+    }).then((res) => {
+      if (res.isConfirmed) { this.abrirModalDireccion(); }
+    });
   }
 
   datosEntregass(event) {
@@ -1059,6 +1086,11 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     modalRef.componentInstance.direccionActual = this.direccion_entrega || "";
     modalRef.componentInstance.ciudadActual =
       this.ciudad_municipio_entrega || "";
+    // Ticket 1136: el barrio/corregimiento y la zona de cobro entran a la
+    // geocodificación para que "Carrera 65B #52B Sur-54" de San Antonio de
+    // Prado no caiga en Belén.
+    modalRef.componentInstance.barrioActual = this.barrio || "";
+    modalRef.componentInstance.zonaCobroActual = this.zona_cobro || "";
 
     // Suscribirse al resultado del modal
     modalRef.result.then(
@@ -1107,6 +1139,9 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
               this.latitud = coords[0];
               this.longitud = coords[1];
             }
+            // Ticket 1136: si la zona ya estaba elegida, revisar que el punto
+            // nuevo le corresponda.
+            this.verificarCoordenadasContraZona();
           }
         } else {
           this.direccion_entrega = resultado;
