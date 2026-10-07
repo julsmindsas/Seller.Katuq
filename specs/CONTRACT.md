@@ -8241,5 +8241,5 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
   - Pedido nuevo en Cereza Medellín con el GCC411 ($54.900).
   - Inventario: vuelven a Cereza Medellín las dos unidades mal descontadas y se descuenta el JCR4026 de Fullpi Medellín. El Elixir no tiene control de inventario.
 
-**Estado.** Código subido. Desplegar, aplicar los dos scripts y verificar en producción queda pendiente: el modo automático bloquea el despliegue.
+**Estado (2026-10-07).** El backend `b4a75c6` ya está en producción: `pm2 reload katuq-api`, en línea y sin errores de arranque. Salió junto con D-359, cuyas 16 pruebas pasan. Desde ese momento, los pedidos nuevos que mezclan proveedores se reparten. Siguen pendientes la publicación del front (`464819f1`), el `--apply` de los dos scripts y la verificación de ORE-001393 en pantalla: el modo automático los bloqueó.
 
