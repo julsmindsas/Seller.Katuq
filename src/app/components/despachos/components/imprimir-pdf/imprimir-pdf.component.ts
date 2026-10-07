@@ -1,29 +1,35 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Pedido } from '../../../ventas/modelo/pedido';
 import { PaymentService } from '../../../../shared/services/ventas/payment.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ToastrService } from 'ngx-toastr';
+import { descargarPdfAislado, imprimirAislado, TiempoAgotadoError } from '../../../../shared/utils/impresion-aislada';
 
 @Component({
   selector: 'app-imprimir-pdf',
   templateUrl: './imprimir-pdf.component.html',
   styleUrls: ['./imprimir-pdf.component.scss']
 })
-export class ImprimirPdfComponent implements OnInit {
+export class ImprimirPdfComponent implements OnInit, OnChanges {
   @Input() pedido!: Pedido;
   @Input() htmlContent: string | SafeHtml = '';
-  
+
   @Output() onClose = new EventEmitter<void>();
   @Output() onPrint = new EventEmitter<void>();
-  
+
+  @ViewChild('vistaPrevia') vistaPrevia?: ElementRef<HTMLElement>;
+
   safeHtmlContent: SafeHtml = '';
   isLoadingContent: boolean = false;
   hasError: boolean = false;
   errorMessage: string = '';
   isGeneratingPDF: boolean = false;
-  
+  isPrinting: boolean = false;
+
   constructor(
     private paymentService: PaymentService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
@@ -32,6 +38,20 @@ export class ImprimirPdfComponent implements OnInit {
     } else {
       this.setHtmlContent(this.htmlContent);
     }
+  }
+
+  // Ticket 1053/1151: el padre reemplaza el aviso "Cargando datos maestros..." por el
+  // pedido cuando llegan los maestros; sin esto la vista se quedaba con el aviso.
+  ngOnChanges(changes: SimpleChanges): void {
+    const cambio = changes['htmlContent'];
+    if (cambio && !cambio.firstChange && cambio.currentValue) {
+      this.hasError = false;
+      this.setHtmlContent(cambio.currentValue);
+    }
+  }
+
+  get ocupado(): boolean {
+    return this.isLoadingContent || this.hasError || this.isGeneratingPDF || this.isPrinting;
   }
 
   private loadHtmlContent(): void {
@@ -91,80 +111,59 @@ export class ImprimirPdfComponent implements OnInit {
   closeModal(): void {
     this.onClose.emit();
   }
-  
-  async imprimirPdf(): Promise<void> {
-    // Verificar que el contenido esté listo
-    if (this.isLoadingContent || this.hasError || this.isGeneratingPDF) {
-      if (this.hasError) {
-        this.retryLoadContent();
-      }
+
+  /** Lo que se ve en la vista previa es exactamente lo que se imprime. */
+  private contenidoVistaPrevia(): string | null {
+    const html = this.vistaPrevia?.nativeElement?.innerHTML?.trim();
+    return html ? html : null;
+  }
+
+  private get tituloDocumento(): string {
+    return this.pedido?.nroPedido ? `pedido-${this.pedido.nroPedido}` : `pedido-${Date.now()}`;
+  }
+
+  /** Ticket 1151: diálogo de impresión del navegador (imprimir o "Guardar como PDF"). */
+  async imprimir(): Promise<void> {
+    if (this.ocupado) {
+      if (this.hasError) this.retryLoadContent();
       return;
     }
+    const contenido = this.contenidoVistaPrevia();
+    if (!contenido) return;
 
-    const printContent = document.getElementById('htmlPdf');
-    if (!printContent) return;
+    this.isPrinting = true;
+    try {
+      await imprimirAislado(contenido, this.tituloDocumento);
+      this.onPrint.emit();
+    } catch (error) {
+      console.error('Error preparando la impresión:', error);
+      this.toastr.error('No se pudo abrir la impresión. Intenta de nuevo.', 'Imprimir');
+    } finally {
+      this.isPrinting = false;
+    }
+  }
+
+  /** Descarga como archivo PDF; con tope de tiempo para que nunca quede girando. */
+  async descargarPdf(): Promise<void> {
+    if (this.ocupado) {
+      if (this.hasError) this.retryLoadContent();
+      return;
+    }
+    const contenido = this.contenidoVistaPrevia();
+    if (!contenido) return;
 
     this.isGeneratingPDF = true;
-
     try {
-      // Lazy loading de librerías para reducir bundle inicial
-      const html2canvas = (await import('html2canvas')).default;
-      const { jsPDF } = await import('jspdf');
-
-      // Configuración optimizada: scale 2 (vs 3) reduce ~55% tiempo de procesamiento
-      const options = {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        letterRendering: true,
-        width: printContent.scrollWidth,
-        height: printContent.scrollHeight,
-      };
-
-      const canvas = await html2canvas(printContent, options);
-
-      // JPEG 92% vs PNG reduce ~70% el tamaño del archivo
-      const imgData = canvas.toDataURL('image/jpeg', 0.92);
-
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4',
-        compress: true,
-      });
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const ratio = canvas.width / canvas.height;
-      const imgWidth = pageWidth;
-      const imgHeight = imgWidth / ratio;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // JPEG en lugar de PNG
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      const filename = this.pedido?.nroPedido
-        ? `pedido-${this.pedido.nroPedido}.pdf`
-        : `pedido-${Date.now()}.pdf`;
-
-      pdf.save(filename);
+      await descargarPdfAislado(contenido, this.tituloDocumento, `${this.tituloDocumento}.pdf`);
       this.onPrint.emit();
     } catch (error) {
       console.error('Error generando PDF:', error);
+      const mensaje = error instanceof TiempoAgotadoError
+        ? 'El PDF tardó demasiado. Usa "Imprimir" y elige "Guardar como PDF".'
+        : 'No se pudo generar el PDF. Usa "Imprimir" y elige "Guardar como PDF".';
+      this.toastr.warning(mensaje, 'Descargar PDF');
     } finally {
       this.isGeneratingPDF = false;
     }
   }
-} 
+}

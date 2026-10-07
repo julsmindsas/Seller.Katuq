@@ -1,8 +1,6 @@
 <div class="modal-header">
   <h4 class="modal-title">{{ 'Vista previa de impresión' | translate }}</h4>
-  <button type="button" class="close" aria-label="Close" (click)="closeModal()">
-    <span aria-hidden="true">&times;</span>
-  </button>
+  <button type="button" class="btn-close" aria-label="Close" (click)="closeModal()"></button>
 </div>
 
 <div class="modal-body">
@@ -26,7 +24,7 @@
     </div>
 
     <!-- Content -->
-    <div *ngIf="!isLoadingContent && !hasError" class="pdf-preview" id="htmlPdf" [innerHTML]="safeHtmlContent"></div>
+    <div *ngIf="!isLoadingContent && !hasError" #vistaPrevia class="pdf-preview" id="htmlPdf" [innerHTML]="safeHtmlContent"></div>
   </div>
 </div>
 
@@ -36,11 +34,20 @@
   </button>
   <button
     type="button"
-    class="btn btn-primary"
-    [disabled]="isLoadingContent || hasError || isGeneratingPDF"
-    (click)="imprimirPdf()">
-    <div *ngIf="isLoadingContent || isGeneratingPDF" class="spinner-border spinner-border-sm me-2" role="status"></div>
-    <i *ngIf="!isLoadingContent && !isGeneratingPDF" class="pi pi-print me-1"></i>
-    {{ (isLoadingContent ? 'Cargando...' : isGeneratingPDF ? 'Generando PDF...' : 'Imprimir PDF') | translate }}
+    class="btn btn-outline-primary"
+    [disabled]="ocupado"
+    (click)="descargarPdf()">
+    <div *ngIf="isGeneratingPDF" class="spinner-border spinner-border-sm me-2" role="status"></div>
+    <i *ngIf="!isGeneratingPDF" class="pi pi-download me-1"></i>
+    {{ (isGeneratingPDF ? 'Generando PDF...' : 'Descargar PDF') | translate }}
   </button>
-</div> 
+  <button
+    type="button"
+    class="btn btn-primary"
+    [disabled]="ocupado"
+    (click)="imprimir()">
+    <div *ngIf="isLoadingContent || isPrinting" class="spinner-border spinner-border-sm me-2" role="status"></div>
+    <i *ngIf="!isLoadingContent && !isPrinting" class="pi pi-print me-1"></i>
+    {{ (isLoadingContent ? 'Cargando...' : isPrinting ? 'Preparando...' : 'Imprimir') | translate }}
+  </button>
+</div>
