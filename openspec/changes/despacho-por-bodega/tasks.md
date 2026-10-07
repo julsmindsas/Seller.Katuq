@@ -1,5 +1,7 @@
 # Tasks
 
+> **SUPERSEDED en parte por D-361 (2026-10-07).** Los pedidos de integración que mezclan proveedores se reparten en un pedido por bodega (`orderSplitService`). Este cambio queda en espera: solo se retoma si se decide volver a partes dentro del mismo pedido.
+
 Módulo sensible (orders/despachos): un cambio a la vez, cada uno con diff y aprobación explícita antes de aplicar.
 
 ## 1. Modelo y resolver

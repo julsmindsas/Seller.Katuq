@@ -8134,6 +8134,8 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 
 **Avance del cambio 2 (2026-10-06).** Servicio `warehouseAllocationService` (`2e525d2`, 18 pruebas con los casos reales). Ajustes de regla por la prueba sobre datos reales: (1) la ciudad del cliente desempata antes que la bodega del mapeo (en Shopify es la constante Cereza Medellín); (2) un no inventariable va a la bodega compatible desde donde más unidades han salido, no a la última (la última del Elixir era justo el descuento erróneo de ORE-001393); (3) una línea cuyo producto no existe en Katuq se suma a la parte existente. Prueba en solo lectura sobre los 20 pedidos de integración desde agosto: solo ORE-001393 queda en varias bodegas. **Sombra desplegada** con aprobación de Daniel ("si"): backend `a414cab` en producción (se descartó en el servidor una copia local de `clone-company.js` idéntica a `c04c3f5` para poder actualizar). Al crear un pedido de integración o sin bodega, calcula y anota `orders.warehouseAllocation` (`mode: 'shadow'`) sin cambiar el pedido; venta asistida, POS y la app no se tocan. Interruptores: `WAREHOUSE_ALLOCATION_MODE` (no definido en el servidor → sombra para todos) y `companyConfig/{empresa}.warehouseAllocation.mode`. Verificado en producción con ORE-001393: anotado Distri Sex + Fullpi Medellín + Cereza Medellín, el pedido conserva su bodega. Reporte: `node scripts/reporte-sombra-asignacion-bodega.js` (solo lectura). **Revisión de la semana: 2026-10-13**, antes de pasar a activo.
 
+**SUPERSEDED en parte por D-361 (2026-10-07).** Para pedidos de integración que mezclan proveedores, el cambio 3 (`despacho-por-bodega`, partes dentro del mismo pedido) y las decisiones (b) y (c) quedan reemplazados por un pedido por bodega. La decisión (a) se mantiene: el envío se cobra solo en el pedido principal. El cambio 2 sigue en sombra para todo lo demás.
+
 ## D-356 (2026-10-06) — La app deja de quedar en blanco por un Service Worker viejo, archivos inexistentes cacheados y el menú bajo /pricing
 
 **Origen.** Ticket 1078 (ALMARA, con 1101 y 1138 del mismo usuario): "el módulo de productos no carga", en Chrome normal sigue en blanco y en incógnito funciona (28-sep, 30-sep, 6-oct). Daniel: "atiende a todos".
@@ -8207,3 +8209,32 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 - `POST /updateAuthorizationCodes` no tiene `auth`: cualquiera en internet puede regenerar el `authorizationCode` de todas las empresas.
 - Los chequeos de "solo Julsmind" de `POST /estado-ciclo`, `GET /overview` y `/:id/pedidos-excluidos` / `historial-estado` leen el header `company`. Un administrador de cualquier comercio que mande `company: Julsmind` pasa. En las dos rutas `/:id` ahora solo alcanza su propia empresa; `/estado-ciclo` y `/overview` siguen abiertas.
 - `POST /changeStatus`, `/create`, `/edit` y `/delete` solo piden rol Administrador, sin validar la empresa.
+
+## D-361 (2026-10-07) — Pedido de integración que mezcla proveedores: un pedido por bodega (SUPERSEDE en parte D-355)
+
+**Origen.** Ticket 1120 sin resolver y OH MY STORE llamando a Daniel. Daniel: "corrige de una vez". Las partes dentro del mismo pedido (cambio 3 de D-355) tomaban varios días: Cereza, Fullpi, Despachos y los ocho escritores de estado tendrían que entender partes. Se le propuso un pedido por bodega, como OH MY STORE ya trabaja en venta asistida (150 pedidos en Cereza Medellín, 23 en Distri Sex, 19 en Fullpi en sus últimos 300; ninguno mezclado). Daniel escogió "Un pedido por bodega".
+
+**Decisión.**
+- Un pedido de integración (Shopify, WooCommerce, cualquier flow con `katuq-order-upsert`) cuyas líneas son de proveedores distintos (Cereza, Fullpi, propio) se crea como **un pedido por bodega**. La bodega de cada línea la decide `planWarehouseAllocation` (D-355 cambio 2).
+- Los pedidos de un solo proveedor no cambian, y el cambio 2 sigue en sombra para ellos.
+- El **principal** es la parte de mayor valor. Conserva el vínculo con la tienda (`integrations.shopify`), el envío cobrado y el único aviso de "pedido creado".
+- Montos repartidos por línea: el principal absorbe los centavos y la suma de los pedidos es exactamente el original. Lo pagado se reparte en la misma proporción.
+- Enlace: `splitOrder` (`groupId` = número del principal, `part`, `totalParts`, `provider`, `idBodega`, `siblings`), más una nota en `notasDespachos` de cada pedido.
+- Si una parte no se puede crear tras 3 intentos, el principal queda con atención `reparto_incompleto` y la lista de lo que falta.
+- Flow: `katuq-order-upsert` emite un item por pedido. Una entrega repetida del mismo pedido devuelve las partes sin pisarlas. `osmosis-order-create` salta las partes que no son de Cereza (`split_part_not_cereza`).
+- Inventario: el mapeo del ajuste usa la bodega de la línea (`$json.idBodega`) y el número de su pedido. Sin reparto queda igual que antes.
+
+**Costos aceptados.** El cliente queda con varios números de pedido, y las facturas y la analítica cuentan uno por bodega. Cada parte consume cupo del plan.
+
+**Código.** Backend `1f44d63`: `services/orderSplitService.js`, `katuq-order-upsert`, `osmosis-order-create`, `orderService.createOrder({ skipDuplicateCheck })`, partes con `provider` y `name` en `planWarehouseAllocation`. Pruebas: `npm run test:reparto-por-bodega` (8 + 3 casos, con los montos reales de ORE-001393). También pasan `test:asignacion-bodega`, `test:resolver-identidad-proveedor` y los tests de flows, pedidos y logística. Tres pruebas ya fallaban antes y no tienen que ver con este cambio: `nodeCatalogCoverage`, `shopifyPrecioTachado` y `preciosPorTipoFase0`.
+
+**Scripts, ambos con dry-run.**
+- `scripts/flow-inventario-por-bodega-1120.js`: dry-run listo, solo cambia el flow `shopify-orders-to-cereza-7e6ab5a3` de OMS.
+- `scripts/repartir-pedido-por-bodega-1120.js --company --pedido`: dry-run de ORE-001393 listo.
+  - ORE-001393 queda en Distri Sex, con el Elixir y el envío (total $194.800).
+  - Pedido nuevo en Fullpi Medellín con el JCR4026 ($173.578).
+  - Pedido nuevo en Cereza Medellín con el GCC411 ($54.900).
+  - Inventario: vuelven a Cereza Medellín las dos unidades mal descontadas y se descuenta el JCR4026 de Fullpi Medellín. El Elixir no tiene control de inventario.
+
+**Estado.** Código subido. Desplegar, aplicar los dos scripts y verificar en producción queda pendiente: el modo automático bloquea el despliegue.
+
