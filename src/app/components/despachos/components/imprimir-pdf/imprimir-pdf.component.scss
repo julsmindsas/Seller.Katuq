@@ -9,8 +9,20 @@ $warning-color: $katuq-warning;
 $danger-color: $katuq-danger;
 $light-color: $katuq-gray-50;
 
+// Ticket 1151: el host queda entre .modal-content y header/body/footer; sin ser
+// columna flexible, en pantallas bajas el pie (botón Imprimir) se salía de la ventana.
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
 // Estilos para la modal
 .modal-header {
+  flex-shrink: 0;
   background-color: $light-color;
   border-bottom: 2px solid darken($light-color, 5%);
 }
@@ -21,12 +33,14 @@ $light-color: $katuq-gray-50;
 }
 
 .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 0;
-  max-height: calc(100vh - 120px);
   overflow-y: auto;
 }
 
 .modal-footer {
+  flex-shrink: 0;
   background-color: $light-color;
   border-top: 1px solid darken($light-color, 5%);
 }
