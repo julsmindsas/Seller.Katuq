@@ -6580,6 +6580,20 @@ $pd-chip-border: #e9e7f3;
 }
 
 /* ---- Ticket 1074: vista previa de la factura en la ventana de facturación ---- */
+// Ticket 1145: la factura saldría a Consumidor Final aunque el cliente tiene documento.
+.factura-aviso-cf {
+  background: #fff4e5;
+  color: #8a5300;
+  border: 1px solid #f5d6a8;
+  border-radius: 11px;
+  padding: 10px 12px;
+  font-size: 13px;
+
+  .form-check-label {
+    font-weight: 600;
+  }
+}
+
 .factura-vista-previa {
   border: 1px solid $pd-chip-border;
   background: $pd-chip-bg;

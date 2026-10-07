@@ -1227,6 +1227,21 @@ export class IntegrationsService {
   }
 
   /**
+   * Ticket 1145: quita del pedido una factura ya anulada con nota crédito para poder
+   * corregir los datos y volver a facturar. No anula nada en el sistema contable.
+   */
+  releaseOrderInvoice(orderId: string, notaCredito: string | null, motivo?: string): Observable<any> {
+    const body: any = {};
+    if (notaCredito) body.notaCredito = notaCredito;
+    if (motivo) body.motivo = motivo;
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/orders/${encodeURIComponent(orderId)}/release-invoice`,
+      body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
    * Resolver prefijos de facturación por texto.
    * Envía textos del rol (ej: ["FE", "POS"]) y retorna los prefijos del proveedor que matchean + default.
    */

@@ -43,6 +43,8 @@ import { PedidoEntregaComponent } from "../entrega/pedido-entrega.component";
 import { PedidosUtilService } from "../service/pedidos.util.service";
 import { UserLogged } from "../../../shared/models/User/UserLogged";
 import { UserLite } from "../../../shared/models/User/UserLite";
+import { ClienteFactura, clienteDeFactura, facturaPorErrorAConsumidorFinal } from "../../../shared/utils/cliente-factura";
+import { escaparHtml } from "../../../shared/utils/escapar-html";
 import { FilterService, LazyLoadEvent, MenuItem } from "primeng/api";
 import { FilterService as SharedFilterService } from "../../../shared/services/filters/filter.service";
 import { ServiciosService } from "../../../shared/services/servicios.service";
@@ -55,7 +57,7 @@ import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
-import { Observable, Subject, forkJoin, of } from "rxjs";
+import { Observable, Subject, firstValueFrom, forkJoin, of } from "rxjs";
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
@@ -154,6 +156,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   facturaVistaPreviaCargando: boolean = false;
   facturaVistaPreviaError: string = "";
   private facturaVistaPreviaFirma: string = "";
+  /** Ticket 1145: quien factura confirmó que el pedido sí es para Consumidor Final. */
+  facturaConfirmaConsumidorFinal: boolean = false;
   // SIIGO no define plazos: los define Katuq y se calcula la fecha. 'exacta' abre date-picker.
   readonly facturaPlazosCredito: { value: string; label: string }[] = [
     { value: "8", label: "8 días" },
@@ -1079,6 +1083,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.facturaVistaPreviaCargando = false;
         this.facturaVistaPreviaError = '';
         this.facturaVistaPreviaFirma = '';
+        this.facturaConfirmaConsumidorFinal = false;
 
         this.modalService.open(this.facturaSiigoModal, {
           size: 'md',
@@ -1216,6 +1221,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return true;
   }
 
+  /**
+   * Ticket 1145: a quién sale la factura. Es la sección "Facturación" del pedido, no el
+   * cliente: BAS-000026 mostraba a Geronimo y la factura salió a Consumidor Final.
+   */
+  get facturaDestino(): ClienteFactura | null {
+    return this.facturaPedido ? clienteDeFactura(this.facturaPedido) : null;
+  }
+
+  /** Ticket 1145: saldría a Consumidor Final aunque el cliente tiene documento propio. */
+  get facturaAConsumidorFinalPorError(): boolean {
+    return !!this.facturaPedido && facturaPorErrorAConsumidorFinal(this.facturaPedido);
+  }
+
+  /** Ticket 1145: no se emite a Consumidor Final por error sin que alguien lo confirme. */
+  get facturaDestinoConfirmado(): boolean {
+    return !this.facturaAConsumidorFinalPorError || this.facturaConfirmaConsumidorFinal;
+  }
+
   /** Fecha de hoy (yyyy-MM-dd) — usada como mínimo del date-picker de vencimiento. */
   get facturaHoy(): string {
     return this.calcularVencimiento(0);
@@ -1304,7 +1327,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Confirma el modal y dispara la facturación con forma de pago + vencimiento. */
   confirmarFacturaSiigo(modal: any): void {
-    if (!this.facturaFormValido || !this.facturaPedido) return;
+    if (!this.facturaFormValido || !this.facturaPedido || !this.facturaDestinoConfirmado) return;
     const pedido = this.facturaPedido;
     const documentTypeId = this.facturaDocumentTypeId
       ? parseInt(String(this.facturaDocumentTypeId), 10)
@@ -1421,18 +1444,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Confirmación de facturación. Si prefijoUnico viene, lo muestra y lo envía como prefijoId. */
   private mostrarConfirmacionFactura(pedido: Pedido, providerDisplayName: string, prefijoUnico?: any): void {
+    // Ticket 1145: se muestra a quién sale la factura, no el cliente del pedido.
+    const destino = clienteDeFactura(pedido);
+    const porError = facturaPorErrorAConsumidorFinal(pedido);
     Swal.fire({
       title: '¿Generar Factura Electrónica?',
       html: `
-        <p>Se generará una factura en <strong>${providerDisplayName}</strong> para:</p>
-        <p><strong>${pedido.nroPedido}</strong></p>
-        <p class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</p>
+        <p>Se generará una factura en <strong>${escaparHtml(providerDisplayName)}</strong> para:</p>
+        <p><strong>${escaparHtml(pedido.nroPedido)}</strong></p>
+        <p>Se factura a: <strong>${escaparHtml(destino.nombre || 'N/A')}</strong> · ${escaparHtml(destino.tipoDocumento)} ${escaparHtml(destino.documento)}</p>
+        ${porError ? `<p style="color:#B45309"><strong>Ojo:</strong> la factura saldrá a CONSUMIDOR FINAL, no a ${escaparHtml(pedido.cliente?.nombres_completos || 'el cliente')} (${escaparHtml(pedido.cliente?.documento)}). Si es para el cliente, cancela y corrige primero "Facturación" en el pedido.</p>` : ''}
         <p class="text-muted">Total: $${(pedido.subtotal || 0).toLocaleString()}</p>
-        ${prefijoUnico ? `<p class="text-muted">Prefijo: ${prefijoUnico.nombre || prefijoUnico.codigo}</p>` : ''}
+        ${prefijoUnico ? `<p class="text-muted">Prefijo: ${escaparHtml(prefijoUnico.nombre || prefijoUnico.codigo)}</p>` : ''}
       `,
-      icon: 'question',
+      icon: porError ? 'warning' : 'question',
+      ...(porError ? {
+        input: 'checkbox' as const,
+        inputValue: 0,
+        inputPlaceholder: 'Sí, es una venta a Consumidor Final',
+        inputValidator: (marcado: any) => (marcado ? null : 'Marca la casilla o corrige los datos de facturación del pedido.'),
+      } : {}),
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
+      confirmButtonColor: '#5F3FE0',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Generar factura',
       cancelButtonText: 'Cancelar'
@@ -1516,6 +1549,92 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           { timeOut: 15000 }
         );
       }
+    });
+  }
+
+  /**
+   * Ticket 1145: el pedido tiene una factura electrónica que se puede liberar (ya anulada
+   * con nota crédito). Mismos roles que el backend (INVOICE_RELEASE_ROLES); allá se vuelve a validar.
+   */
+  puedeLiberarFactura(pedido: Pedido): boolean {
+    if (this.isFromProduction || !(pedido as any)?.facturacionElectronica?.invoiceId) return false;
+    const rol = String(this.UserLogged?.rol || '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    return /(^|[^a-z0-9])administrador([^a-z0-9]|$)/.test(rol) || rol === 'tesorero' || rol === 'tesoreria';
+  }
+
+  /**
+   * Ticket 1145: quita del pedido una factura que ya se anuló con nota crédito, para
+   * corregir los datos de facturación y volver a facturar. Katuq no anula nada en el
+   * sistema contable; la factura queda en el historial del pedido.
+   */
+  liberarFactura(pedido: Pedido): void {
+    const fiscal = (pedido as any)?.facturacionElectronica || {};
+    const numero = escaparHtml(fiscal.invoiceNumber || pedido.nroFactura || '');
+    const esDian = fiscal.provider === 'dian';
+    const notaTotalDian = esDian
+      ? (Array.isArray(fiscal.notes) ? fiscal.notes : []).find((n: any) => n && n.type === 'credit' && !n.adjustment)
+      : null;
+    if (esDian && !notaTotalDian) {
+      Swal.fire({
+        title: 'Primero la nota crédito',
+        html: `Para liberar la factura <strong>${numero}</strong> primero anúlala con <strong>Nota crédito</strong> (anulación total DIAN) desde este pedido.`,
+        icon: 'info',
+        confirmButtonColor: '#5F3FE0',
+      });
+      return;
+    }
+    const sistema = escaparHtml(esDian ? 'la DIAN' : this.getAccountingProviderDisplayName());
+
+    Swal.fire({
+      title: `Liberar la factura ${numero}`,
+      html: `
+        <p style="text-align:left">Úsalo solo si la factura <strong>${numero}</strong> ya está anulada con una nota crédito en ${sistema}.
+        Katuq no anula nada en ${sistema}: solo quita la factura de este pedido para que puedas corregir
+        "Facturación" y volver a facturar.</p>
+        <p style="text-align:left" class="text-muted mb-0">La factura anulada queda en el historial del pedido.</p>
+        ${esDian ? `<p style="text-align:left" class="mt-2">Nota crédito DIAN: <strong>${escaparHtml(notaTotalDian.number || notaTotalDian.cude)}</strong></p>` : ''}
+      `,
+      icon: 'warning',
+      ...(esDian ? {} : {
+        input: 'text' as const,
+        inputLabel: 'Número de la nota crédito',
+        inputPlaceholder: 'Ej.: NC-1234',
+        inputAttributes: { maxlength: '60', autocomplete: 'off' },
+        inputValidator: (valor: string) => ((valor || '').trim() ? null : 'Escribe el número de la nota crédito.'),
+      }),
+      showCancelButton: true,
+      confirmButtonColor: '#5F3FE0',
+      confirmButtonText: 'Liberar factura',
+      cancelButtonText: 'Cancelar',
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      preConfirm: (valor: string) =>
+        firstValueFrom(this.integrationsService.releaseOrderInvoice(pedido._id, esDian ? null : (valor || '').trim()))
+          .catch((error) => {
+            Swal.showValidationMessage(error?.error?.message || 'No se pudo liberar la factura.');
+            return null;
+          }),
+    }).then((result) => {
+      const data = result.isConfirmed ? (result.value as any)?.data : null;
+      if (!data) return;
+      // Mismo cambio que hizo el servidor, para que se habiliten "Facturación" y "Facturar".
+      const p: any = pedido;
+      delete p.nroFactura;
+      delete p.pdfUrlInvoice;
+      delete p.facturacionElectronica;
+      delete p.facturacionEnProceso;
+      delete p._facturando;
+      p.facturasAnuladas = [...(Array.isArray(p.facturasAnuladas) ? p.facturasAnuladas : []), data.registro];
+      if (data.date_upd) p.date_upd = data.date_upd;
+      this.changeDetectorRef.detectChanges();
+      Swal.fire({
+        title: 'Factura liberada',
+        html: `La factura <strong>${numero}</strong> ya no está en el pedido.<br>
+          Ahora corrige <strong>Facturación</strong> con los datos del cliente y usa <strong>Facturar</strong>.`,
+        icon: 'success',
+        confirmButtonColor: '#5F3FE0',
+      });
     });
   }
 

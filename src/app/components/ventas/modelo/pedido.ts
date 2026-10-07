@@ -22,6 +22,8 @@ export interface Pedido {
   providerShipment?: string;
   generarFacturaElectronica?: any;
   pdfUrlInvoice?: string;
+  /** Ticket 1145: facturas anuladas con nota crédito y liberadas del pedido (las escribe el backend). */
+  facturasAnuladas?: { invoiceNumber?: any; notaCredito?: string; provider?: string; liberadaEn?: string; liberadaPor?: string }[];
   pagoRecibido?: any;
   cambioEntregado?: any;
   transaccionId?: any;
