@@ -1,0 +1,309 @@
+// Modal de integraciones con el look de Combos y del registro (2026-10-07).
+// 1) Cambia los tokens kc-* del rediseño anterior por los de Combos: el
+//    encabezado, la barra de lo elegido, la prueba y el pie se actualizan solos.
+// 2) Viste con el mismo lenguaje los restos de Bootstrap de cada proveedor.
+// Todo bajo .kx-modal-int porque el componente usa ViewEncapsulation.None.
+@import '../proceso/combos/combos-tema';
+
+// Marco del modal (lo pone el listado con windowClass).
+.kq-int-modal {
+  .modal-dialog { max-width: 880px; }
+
+  .modal-content {
+    border: 0;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 30px 70px -24px rgba(30, 20, 80, .55);
+  }
+}
+
+@mixin ig-tokens-combos {
+  --kc-accent: #{$cb-accent};
+  --kc-accent-ink: #{$cb-accent-hover};
+  --kc-accent-wash: #{$cb-accent-soft};
+  --kc-ink: #{$cb-ink};
+  --kc-ink2: #{$cb-body};
+  --kc-muted: #{$cb-muted};
+  --kc-muted2: #{$cb-muted};
+  --kc-line: #{$cb-line};
+  --kc-line2: #{$cb-line-soft};
+  --kc-canvas: #{$cb-canvas};
+  --kc-green: #{$cb-ok};
+  --kc-green-wash: #{$cb-ok-soft};
+  --kc-red: #{$cb-err};
+  --kc-red-wash: #{$cb-err-soft};
+  --kc-font-head: #{$cb-display};
+  --kc-font-body: #{$cb-text};
+}
+
+.kx-modal-int {
+  @include ig-tokens-combos;
+  font-family: $cb-text;
+  color: $cb-ink;
+
+  // El asistente DIAN vuelve a declarar sus tokens en .dk: se alinean también.
+  .dk { @include ig-tokens-combos; }
+
+  h2, h3, h4, h5, h6 { font-family: $cb-display; font-weight: normal; color: $cb-ink; }
+
+  // ---------- Etiquetas, ayudas y errores ----------
+  .form-group > label,
+  .field-col > label,
+  .form-group label[for]:not(.switch):not(.form-check-label) {
+    @include cb-label;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 7px;
+
+    > i.fa { display: none; }
+  }
+
+  .field-required, .kx-req, .required-badge { color: $cb-accent; }
+
+  small.form-text, .form-text.text-muted, small.text-muted {
+    display: block;
+    margin-top: 6px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: $cb-muted;
+  }
+
+  .text-danger {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: $cb-err !important;
+  }
+
+  // ---------- Campos ----------
+  .input-with-icon input,
+  input.form-control:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+  select.form-control,
+  select.custom-select,
+  input[pInputText],
+  .p-password input {
+    height: 44px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid $cb-chip-border;
+    background: $cb-chip-bg;
+    font-family: $cb-text;
+    font-size: 14px;
+    color: $cb-ink;
+    box-shadow: none;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+
+    &::placeholder { color: $cb-muted; }
+
+    &:focus {
+      background: #fff;
+      border-color: $cb-accent-line;
+      box-shadow: 0 0 0 3px $cb-accent-soft;
+    }
+  }
+
+  select.custom-select, select.form-control { width: 100%; padding: 0 12px; }
+
+  .input-with-icon {
+    .prefix-icon, .suffix-icon {
+      background: transparent;
+      border: 0;
+      color: $cb-muted;
+    }
+    .suffix-icon:hover, .suffix-icon:focus-visible { color: $cb-accent; outline: none; }
+  }
+
+  .p-dropdown {
+    min-height: 44px;
+    border-radius: 10px;
+    border: 1px solid $cb-chip-border;
+    background: $cb-chip-bg;
+    box-shadow: none;
+  }
+
+  .form-group { margin-bottom: 16px; }
+
+  // ---------- Interruptores ----------
+  .toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .switch { position: relative; display: inline-block; width: 42px; height: 24px; margin: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; cursor: pointer; border-radius: 20px;
+      background: #d9d6e6; transition: background .15s ease;
+
+      &::before {
+        content: ""; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px;
+        border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+        transition: transform .15s ease;
+      }
+    }
+    .switch input:checked + .slider { background: $cb-accent; }
+    .switch input:checked + .slider::before { transform: translateX(18px); }
+    .switch input:focus-visible + .slider { box-shadow: 0 0 0 3px $cb-accent-soft; }
+
+    .toggle-label { font-size: 13px; font-weight: 700; color: $cb-body; }
+    .toggle-label.active { color: $cb-accent; }
+  }
+
+  // ---------- Bloques informativos ----------
+  .integration-info-box {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: $cb-tint;
+    border: 1px solid $cb-accent-line;
+    color: $cb-body;
+    font-size: 13.5px;
+    line-height: 1.5;
+
+    > i.fa { color: $cb-accent; margin-top: 2px; }
+    > span { flex: 1 1 280px; color: $cb-body; }
+    strong { color: $cb-ink; }
+    .learn-more { color: $cb-accent; font-weight: 700; text-decoration: none; white-space: nowrap; }
+  }
+
+  .alert.alert-info, .alert.alert-success {
+    border-radius: 12px;
+    border: 1px solid $cb-accent-line;
+    background: $cb-tint;
+    color: $cb-body;
+  }
+  .alert.alert-success { border-color: #c9ecd8; background: $cb-ok-soft; }
+
+  // Tarjetas internas (SIIGO, World Office): planas y con borde lila.
+  .integration-form .card {
+    border: 1px solid $cb-line;
+    border-radius: 16px;
+    box-shadow: none;
+    overflow: hidden;
+
+    .card-header, .card-header.bg-light {
+      background: $cb-tint !important;
+      border-bottom: 1px solid $cb-line-soft;
+      padding: 12px 16px;
+
+      h6 { font-family: $cb-display; font-size: 14px; color: $cb-ink; margin: 0; }
+      h6 i.fa { color: $cb-accent; }
+    }
+  }
+
+  // ---------- Lo nuevo de este rediseño ----------
+  .kx-guardadas {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: $cb-chip-bg;
+    border: 1px solid $cb-chip-border;
+    font-size: 13px;
+    line-height: 1.45;
+    color: $cb-body;
+
+    i.fa { color: $cb-accent; margin-top: 2px; }
+  }
+
+  .kx-avanzadas {
+    margin: 4px 0 16px;
+    border: 1px solid $cb-line;
+    border-radius: 14px;
+    background: #fff;
+
+    > summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      cursor: pointer;
+      list-style: none;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: $cb-body;
+
+      &::-webkit-details-marker { display: none; }
+      &::before {
+        content: "";
+        width: 7px; height: 7px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(-45deg);
+        transition: transform .15s ease;
+      }
+      &:hover { color: $cb-accent; }
+      &:focus-visible { outline: none; box-shadow: 0 0 0 3px $cb-accent-soft; border-radius: 14px; }
+    }
+
+    &[open] > summary { border-bottom: 1px solid $cb-line-soft; color: $cb-ink; }
+    &[open] > summary::before { transform: rotate(45deg); }
+    &[open] { padding-bottom: 4px; }
+    &[open] > :not(summary) { margin-left: 14px; margin-right: 14px; }
+    &[open] > :nth-child(2) { margin-top: 14px; }
+  }
+
+  .kx-avanzadas__nota { font-size: 13px; color: $cb-body; }
+
+  .kx-enlace {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: $cb-accent;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .kx-error-guardar {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: $cb-err-soft;
+    border: 1px solid #f6d3d3;
+    color: $cb-err;
+    font-size: 13.5px;
+    line-height: 1.45;
+
+    span { color: $cb-err; }
+  }
+
+  // La prueba: plano tintado, sin borde de acento a la izquierda (D-131).
+  .kx-prueba {
+    border-radius: 14px;
+    border: 1px solid $cb-accent-line;
+    border-left-width: 1px;
+    background: $cb-tint;
+
+    .kx-prueba__icon { color: $cb-accent; background: #fff; }
+    .kx-prueba__txt span { color: $cb-body; font-weight: 400; }
+
+    &.kx-prueba--ok { background: $cb-ok-soft; border-color: #c9ecd8; }
+    &.kx-prueba--error { background: $cb-err-soft; border-color: #f6d3d3; }
+  }
+
+  .kx-b--guardar, .kx-b--primary {
+    background: $cb-accent;
+    border-color: $cb-accent;
+    color: #fff;
+    font-family: $cb-display;
+    box-shadow: $cb-shadow-btn;
+
+    &:hover:not(:disabled) { background: $cb-accent-hover; filter: none; }
+  }
+}
+
+@media (max-width: 600px) {
+  .kx-modal-int .integration-info-box > span { flex-basis: 100%; }
+}

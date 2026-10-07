@@ -252,6 +252,29 @@ export class WhatsappIntegrationConfigService extends BaseService {
   }
 
   /**
+   * Resumen de solo lectura para la tarjeta de Integraciones: con UNA consulta
+   * dice si WhatsApp está encendido, con qué número y cómo está el bot.
+   */
+  getResumenEstado(): Observable<{
+    activo: boolean;
+    numeroPropio: string | null;
+    bot: WhatsappBotConfig | null;
+  }> {
+    return this.get<any>(this.basePath).pipe(
+      map((raw: any) => {
+        const cfg = this.normalizarConfig(raw);
+        const plano = raw?.data || raw?.config || raw || {};
+        const propio = cfg.ownCredentials;
+        return {
+          activo: cfg.enabled,
+          numeroPropio: propio.enabled ? propio.numeroVerificado || null : null,
+          bot: plano.bot ? (plano.bot as WhatsappBotConfig) : null,
+        };
+      })
+    );
+  }
+
+  /**
    * Guarda SOLO el bloque del bot (el backend hace merge con lo demás).
    * Si el comercio no tiene número propio, el backend responde 422 con
    * `BOT_REQUIERE_NUMERO_PROPIO` — el componente lo traduce.

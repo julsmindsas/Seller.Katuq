@@ -16,6 +16,40 @@ import { MunicipioDane } from '../../shared/data/colombia-dane-codes';
 import { describeDianBatchStatus, DianBatchStatus } from './dian-batch-status';
 import { DIAN_SECRET_FIELDS, dianConfigError, dianNumberingError } from './dian-config-feedback';
 
+// Campos del formulario que el backend guarda cifrados y NO devuelve al editar
+// (espejo de PROVIDER_SCHEMAS.sensitive, con los nombres de los controles).
+// Al editar llegan vacíos: dejarlos así conserva la clave guardada.
+const CLAVES_GUARDADAS: { [proveedor: string]: string[] } = {
+  shopify: ['apiSecret', 'accessToken'],
+  wompi: ['privateKey', 'eventsSecret', 'integritySecret'],
+  woocommerce: ['consumerSecret', 'webhookSecret'],
+  enviame: ['apiKey'],
+  partners_logistics: ['apiKey'],
+  aliaddo_fulfillment: ['apiToken', 'webhookSecret'],
+  siigo: ['accessKey'],
+  world_office: ['apiToken'],
+  prindel: ['customerToken'],
+  multiop: ['apiKey'],
+  osmosis: ['clientId', 'clientSecret'],
+  fullpi: ['secret'],
+};
+
+// Nombres que entiende el comercio para los campos que nombran los mensajes del backend.
+const NOMBRES_CAMPO: { [campo: string]: string } = {
+  shopDomain: 'dirección de tu tienda Shopify', shopUrl: 'dirección de tu tienda', storeUrl: 'dirección de tu tienda',
+  publicKey: 'llave pública', privateKey: 'llave privada', eventsSecret: 'secreto de eventos',
+  integritySecret: 'secreto de integridad', consumerKey: 'Consumer Key', consumerSecret: 'Consumer Secret',
+  webhookSecret: 'secreto de avisos', webhook_secret: 'secreto de avisos', apiKey: 'clave de acceso',
+  apiToken: 'token de acceso', accessKey: 'clave de acceso (Access Key)', username: 'usuario',
+  apiUrl: 'dirección del servicio', webhookUrl: 'dirección de avisos', environment: 'ambiente',
+  id_seller: 'número de vendedor', warehouse_code: 'código de bodega', carrier_code: 'código de transportadora',
+  default_carrier: 'transportadora', default_service: 'tipo de servicio', customerToken: 'token de cliente',
+  nodeSlug: 'identificador del nodo', idEmpresa: 'empresa', secret: 'clave secreta', bodegaCode: 'bodega',
+  customerId: 'número de cliente', responseUrl: 'dirección de respuesta', confirmationUrl: 'dirección de confirmación',
+  clientId: 'Client ID', clientSecret: 'Client Secret', terceroInternoId: 'tercero interno',
+  apiSecret: 'Client Secret', accessToken: 'token de acceso',
+};
+
 // El catálogo DIAN asigna este mismo rango a software propio en habilitación.
 // No se le pide al comercio copiarlo: no es una resolución de producción.
 const DIAN_HABILITATION_NUMBERING = Object.freeze({
@@ -196,7 +230,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     }
     
     if (this.integrationToEdit) {
+      this.abiertoConProveedor = true;
       this.editIntegration(this.integrationToEdit);
+      // Una conexión nueva elegida en el listado va directo al formulario.
+      // Antes volvía a mostrar el catálogo y obligaba a elegir dos veces.
+      if (!this.integrationToEdit.id) this.showOnlyForm = true;
       if (this.integrationToEdit.category) {
         this.selectedCategory = this.integrationToEdit.category;
       }
@@ -717,6 +755,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
     this.statusMessage = null;
     this.editingIntegrationId = null;
+    this.mensajePrueba = '';
+    this.errorGuardado = '';
+    this.pruebaConexion = 'idle';
     
     // Limpiar estado de validación
     this.validationResult = null;
@@ -871,6 +912,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.isLoadingEdit = false;
+          // Conexión nueva (sin id): que no exista en el backend es lo normal.
+          // Se conservan las validaciones del formulario; antes se borraban y
+          // se podía intentar guardar con los campos obligatorios vacíos.
+          if (!integration.id) return;
           if (integration.type === 'dian') {
             this.dianLoadError = 'No pudimos cargar la configuración guardada. Vuelve a cargarla antes de editar.';
             return;
@@ -1071,7 +1116,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       apiUrl: ['https://api.enviame.io/api/s2/v2/companies/', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
       webhookUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
       environment: ['production', Validators.required],
-      country: ['CL', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
+      country: ['CO', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
       carrier_code: ['', [Validators.required]],
       timeout: [30],
       notifyErrors: [true],
@@ -1097,7 +1142,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       enabled: [true],
       apiKey: ['', [Validators.required, Validators.minLength(10)]],
       apiUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
-      webhookUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      webhookUrl: [`${environment.urlApi}/v1/webhooks/partner-logistica`, [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
       environment: ['production', Validators.required],
       timeout: [30],
       retryAttempts: [3],
@@ -1658,6 +1703,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     }
     
     // Validación previa con API V2 antes de guardar
+    this.errorGuardado = '';
     const formData = this.integrationForm.value;
     const credentials = this.buildCredentials(formData);
     const provider = this.selectedIntegrationType;
@@ -1768,7 +1814,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           return;
         }
         const errorMessage = error?.error?.message || error?.message || 'Error al guardar la integración';
-        this.uiHelper.showError(errorMessage);
+        this.errorGuardado = this.traducirError(errorMessage);
+        this.uiHelper.showError(this.errorGuardado);
       }
     });
   }
@@ -1778,6 +1825,16 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       this.integrationForm.markAllAsTouched();
       return;
     }
+
+    // Al editar, las claves guardadas no llegan al navegador: probar con los
+    // campos vacíos siempre fallaba aunque la conexión funcionara.
+    const faltan = this.clavesVaciasAlEditar();
+    if (faltan.length) {
+      this.pruebaConexion = 'idle';
+      this.mensajePrueba = `Para probar, vuelve a escribir ${this.unirNombres(faltan)}. Si no las cambias, al guardar se conservan las que ya tienes.`;
+      return;
+    }
+    this.mensajePrueba = '';
     
     const formData = this.integrationForm.value;
     const credentials = this.buildCredentials(formData);
@@ -1795,6 +1852,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       next: (result) => {
         this.isTesting = false;
         this.pruebaConexion = result.success ? 'ok' : 'error';
+        this.mensajePrueba = this.limpiarMensaje(result.message) ||
+          (result.success ? 'Los datos responden bien.' : 'El servicio no aceptó estos datos.');
         if (result.success) {
           this.showStatus('success', '✅ Conexión exitosa: ' + result.message);
 
@@ -1810,9 +1869,87 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       error: (error) => {
         this.isTesting = false;
         this.pruebaConexion = 'error';
+        this.mensajePrueba = 'No pudimos hacer la prueba. Revisa tu internet y vuelve a intentar.';
         this.showStatus('error', '❌ Error al probar la conexión: ' + error.message);
       }
     });
+  }
+
+  /** Título del modal sin jerga. */
+  get tituloModal(): string {
+    const nombre = this.plataformaElegida?.name || this.selectedIntegrationName || 'la integración';
+    if (this.editingIntegrationId) return nombre;
+    if (this.abiertoConProveedor) return `Conectar ${nombre}`;
+    return 'Conectar una integración';
+  }
+
+  get subtituloModal(): string {
+    const nombre = this.plataformaElegida?.name || 'el servicio';
+    if (this.editingIntegrationId) return 'Revisa o cambia los datos de esta conexión.';
+    if (this.abiertoConProveedor) return `Pega los datos que te da ${nombre}. Te decimos dónde encontrarlos.`;
+    return this.showOnlyForm ? 'Paso 2 de 2 · pega los datos de conexión' : 'Paso 1 de 2 · elige qué quieres conectar';
+  }
+
+  /** ¿Este proveedor tiene claves que no se muestran al editar? */
+  get tieneClavesGuardadas(): boolean {
+    return !!this.editingIntegrationId && !!CLAVES_GUARDADAS[this.selectedIntegrationType];
+  }
+
+  /** Claves guardadas que, al editar, siguen vacías (no se pueden usar para probar). */
+  private clavesVaciasAlEditar(): string[] {
+    if (!this.editingIntegrationId) return [];
+    const campos = (CLAVES_GUARDADAS[this.selectedIntegrationType] || [])
+      .filter((campo) => !!this.integrationForm.get(campo));
+    const vacias = campos.filter((campo) => !String(this.integrationForm.get(campo)?.value ?? '').trim());
+    // Solo se frena la prueba si no hay NINGUNA clave escrita.
+    return vacias.length === campos.length ? vacias : [];
+  }
+
+  private nombreCampo(campo: string): string {
+    return NOMBRES_CAMPO[campo] || campo;
+  }
+
+  private unirNombres(campos: string[]): string {
+    const nombres = campos.map((c) => this.nombreCampo(c));
+    if (nombres.length <= 1) return nombres.join('');
+    return `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}`;
+  }
+
+  /** Quita emojis y prefijos técnicos de los mensajes que llegan del servidor. */
+  private limpiarMensaje(texto: string | undefined | null): string {
+    return String(texto || '').replace(/[✅❌⚠️]/g, '').trim();
+  }
+
+  /** Traduce el error del backend: nombres de campo legibles y "Falta completar: …". */
+  traducirError(mensaje: string): string {
+    let texto = this.limpiarMensaje(mensaje).replace(/^Error guardando configuración:\s*/i, '')
+      .replace(/^Configuración inválida:\s*/i, '');
+    const faltan: string[] = [];
+    texto = texto.replace(/Campo requerido faltante:\s*([A-Za-z_]+)\s*,?\s*/g, (_m, campo) => {
+      faltan.push(campo);
+      return '';
+    }).trim().replace(/^,\s*/, '');
+    for (const [campo, nombre] of Object.entries(NOMBRES_CAMPO)) {
+      texto = texto.replace(new RegExp(`\\b${campo}\\b`, 'g'), nombre);
+    }
+    const partes: string[] = [];
+    if (faltan.length) partes.push(`Falta completar: ${this.unirNombres(faltan)}.`);
+    if (texto) partes.push(texto.charAt(0).toUpperCase() + texto.slice(1));
+    return partes.join(' ') || 'No se pudo guardar. Revisa los datos y vuelve a intentar.';
+  }
+
+  /** Mostrar u ocultar la clave del campo donde está el ojo. */
+  alternarVisible(event: Event): void {
+    const contenedor = (event.target as HTMLElement)?.parentElement;
+    const campo = contenedor?.querySelector('input') as HTMLInputElement | null;
+    if (!campo) return;
+    campo.type = campo.type === 'password' ? 'text' : 'password';
+  }
+
+  /** Cierra el modal (si lo hay) y lleva a otra pantalla. */
+  irA(ruta: string): void {
+    if (this.isModalMode && this.activeModal) this.activeModal.dismiss('navegar');
+    this.router.navigate([ruta]);
   }
 
   trackById(index: number, item: any): any {
@@ -2042,7 +2179,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           retryAttempts: formData.retryAttempts,
           enableAutoSync: formData.enableAutoSync,
           webhookUrl: formData.webhookUrl,
-          webhookSecret: formData.webhookSecret
+          webhookSecret: formData.webhookSecret,
+          // Sin esto el backend no puede crear remisiones (fulfillmentIntegrations lo lee de config).
+          terceroInternoId: formData.terceroInternoId
         };
         break;
       case 'prindel':
@@ -2225,6 +2364,15 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   /** Resultado de la última prueba de conexión, para el aviso del paso 2. */
   pruebaConexion: "idle" | "ok" | "error" = "idle";
 
+  /** Abierto desde una tarjeta del listado: ya se sabe qué se va a conectar. */
+  abiertoConProveedor = false;
+
+  /** Detalle de la última prueba (antes no se mostraba en el paso 2). */
+  mensajePrueba = "";
+
+  /** Último error al guardar, en palabras del comercio. */
+  errorGuardado = "";
+
   elegirCategoria(category: IntegrationCategory | null): void {
     if (category === null) {
       this.verTodasCategorias = true;
@@ -2308,6 +2456,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
    */
   elegirPlataforma(integration: any): void {
     if (!integration?.active) return;
+    if (integration.id === 'flows') {
+      this.irA('/flows');
+      return;
+    }
     if (this.selectedIntegrationType === integration.id) return;
     this.selectedIntegrationType = integration.id;
     this.pruebaConexion = "idle";

@@ -1,453 +1,177 @@
-<div class="kx-integraciones">
+<!-- Integraciones — rediseño para personas no técnicas, estilo registro/Combos (2026-10-07). -->
+<div class="ig-page">
+  <div class="ig-wrap">
 
-  <!-- ===== ENCABEZADO + INDICADORES (una sola tarjeta) ===== -->
-  <section class="kx-card kx-hero">
-    <div class="kx-hero__top">
-      <div class="kx-hero__title">
-        <span class="kx-chip-icon">
-          <i class="fa fa-plug"></i>
-        </span>
-        <div>
-          <h1>Integraciones</h1>
-          <p>Conecta pasarelas, transportadoras y facturación a Katuq</p>
-        </div>
+    <header class="ig-head">
+      <div class="ig-head-txt">
+        <span class="ig-eyebrow">Configuración · Integraciones</span>
+        <h1 class="ig-title">Conecta Katuq con <span>lo que ya usas</span></h1>
+        <p class="ig-sub">
+          Elige dónde vendes, cómo cobras, cómo envías y cómo facturas. Katuq se encarga de que los
+          pedidos, los pagos y las facturas pasen solos de un lado a otro.
+        </p>
       </div>
-
-      <div class="kx-hero__actions">
-        <span *ngIf="uiHelper.isAnyLoading()" class="kx-spin" title="Cargando">
-          <i class="fa fa-spinner fa-spin"></i>
-        </span>
-
-        <div class="kx-segmented" role="group" aria-label="Modo de vista">
-          <button type="button" [class.is-on]="viewMode === 'grid'" (click)="setViewMode('grid')" title="Vista de tarjetas">
-            <i class="fa fa-th-large"></i>
-          </button>
-          <button type="button" [class.is-on]="viewMode === 'list'" (click)="setViewMode('list')" title="Vista de lista">
-            <i class="fa fa-list"></i>
-          </button>
-        </div>
-
-        <div ngbDropdown class="d-inline-block">
-          <button type="button" class="kx-btn kx-btn--primary" id="addIntegrationDropdown" ngbDropdownToggle>
-            <i class="fa fa-plus"></i>
-            <span>Nueva integración</span>
-          </button>
-          <div ngbDropdownMenu aria-labelledby="addIntegrationDropdown" class="kx-menu">
-            <h6 class="dropdown-header">Selecciona una categoría</h6>
-            <div class="dropdown-divider"></div>
-            <button type="button" ngbDropdownItem *ngFor="let category of categories"
-                    (click)="openIntegrationConfigByCategory(category)">
-              <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-              {{ getCategoryLabel(category) }}
-            </button>
-          </div>
-        </div>
-
-        <button type="button" class="kx-btn kx-btn--icon" (click)="openTutorial()" title="Ayuda">
-          <i class="fa fa-question-circle"></i>
-        </button>
+      <div class="ig-head-actions">
+        <label class="ig-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="20" y1="20" x2="16.65" y2="16.65"></line></svg>
+          <input type="search" placeholder="Buscar, por ejemplo Wompi o guías…" aria-label="Buscar integración"
+                 [value]="busquedaDir" (input)="busquedaDir = $any($event.target).value">
+        </label>
+        <button type="button" class="ig-btn-ghost" (click)="openTutorial()">¿Cómo funciona?</button>
       </div>
-    </div>
+    </header>
 
-    <div class="kx-kpis">
-      <div class="kx-kpi kx-kpi--accent">
-        <span class="kx-kpi__icon"><i class="fa fa-plug"></i></span>
-        <div>
-          <div class="kx-kpi__value">{{ getTotalIntegrationsCount() }}</div>
-          <div class="kx-kpi__label">Conectadas</div>
-        </div>
+    <section class="ig-stats" aria-label="Resumen de integraciones">
+      <div class="ig-stat">
+        <span class="ig-stat-label">Conectadas</span>
+        <span class="ig-stat-value">{{ listaCargada ? totalConectadas : '–' }}</span>
+        <span class="ig-stat-hint">Trabajando con Katuq</span>
       </div>
-      <div class="kx-kpi kx-kpi--green">
-        <span class="kx-kpi__icon"><i class="fa fa-check-circle"></i></span>
-        <div>
-          <div class="kx-kpi__value">{{ getActiveIntegrationsCount() }}</div>
-          <div class="kx-kpi__label">Activas</div>
-        </div>
+      <div class="ig-stat">
+        <span class="ig-stat-label">Para conectar</span>
+        <span class="ig-stat-value ig-stat-value-ink">{{ listaCargada ? totalParaConectar : '–' }}</span>
+        <span class="ig-stat-hint">Ya funcionan con Katuq; te faltan por activar</span>
       </div>
-      <div class="kx-kpi kx-kpi--orange">
-        <span class="kx-kpi__icon"><i class="fa fa-exclamation-triangle"></i></span>
-        <div>
-          <div class="kx-kpi__value">{{ getPendingCredentialsCount() }}</div>
-          <div class="kx-kpi__label">Sin credencial</div>
-        </div>
-      </div>
-      <div class="kx-kpi kx-kpi--blue">
-        <span class="kx-kpi__icon"><i class="fa fa-bolt"></i></span>
-        <div>
-          <div class="kx-kpi__value">{{ getRecentTransactionsCount() }}</div>
-          <div class="kx-kpi__label">Transacciones 24 h</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== AVISO: ACTIVAS SIN CREDENCIAL ===== -->
-  <section class="kx-aviso" *ngIf="!loading && getPendingCredentialsCount() > 0">
-    <span class="kx-aviso__icon"><i class="fa fa-exclamation-triangle"></i></span>
-    <div class="kx-aviso__texto">
-      <div class="kx-aviso__titulo">
-        {{ getPendingCredentialsCount() }}
-        {{ getPendingCredentialsCount() === 1 ? 'integración activa sin credencial' : 'integraciones activas sin credencial' }}
-      </div>
-      <p>Están encendidas pero no pueden procesar nada hasta que configures sus llaves de API.</p>
-    </div>
-    <button type="button" class="kx-btn kx-btn--warn" (click)="togglePendingOnly()">
-      <i class="fa" [ngClass]="pendingOnly ? 'fa-times' : 'fa-key'"></i>
-      {{ pendingOnly ? 'Ver todas' : 'Ver solo esas' }}
-    </button>
-  </section>
-
-  <!-- ===== FILTROS ===== -->
-  <section class="kx-card kx-filtros" *ngIf="!loading && integrations.length > 0">
-    <div class="kx-buscador">
-      <i class="fa fa-search"></i>
-      <input type="text" placeholder="Buscar por nombre o proveedor…"
-             [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)"
-             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-      <button type="button" *ngIf="searchTerm" (click)="onSearchChange('')" title="Borrar búsqueda">
-        <i class="fa fa-times"></i>
-      </button>
-    </div>
-
-    <div class="kx-chips">
-      <button type="button" class="kx-chip" [class.is-on]="filterStatus === 'all' && !pendingOnly"
-              (click)="onStatusFilterChange('all'); pendingOnly = false">
-        Todas <span class="kx-chip__n">{{ getTotalIntegrationsCount() }}</span>
-      </button>
-      <button type="button" class="kx-chip kx-chip--green" [class.is-on]="filterStatus === 'active'"
-              (click)="onStatusFilterChange('active')">
-        Activas <span class="kx-chip__n">{{ getActiveIntegrationsCount() }}</span>
-      </button>
-      <button type="button" class="kx-chip kx-chip--muted" [class.is-on]="filterStatus === 'inactive'"
-              (click)="onStatusFilterChange('inactive')">
-        Inactivas <span class="kx-chip__n">{{ getInactiveIntegrationsCount() }}</span>
-      </button>
-      <button type="button" class="kx-chip kx-chip--orange" [class.is-on]="pendingOnly"
-              (click)="togglePendingOnly()">
-        Sin credencial <span class="kx-chip__n">{{ getPendingCredentialsCount() }}</span>
-      </button>
-    </div>
-
-    <select class="kx-select" [ngModel]="filterCategory" (ngModelChange)="onCategoryChange($event)"
-            aria-label="Filtrar por categoría">
-      <option [ngValue]="null">Todas las categorías</option>
-      <option *ngFor="let category of categories" [value]="category">
-        {{ getCategoryLabel(category) }}
-      </option>
-    </select>
-
-    <button type="button" class="kx-btn kx-btn--limpiar" *ngIf="isFiltered()" (click)="resetFilters()">
-      <i class="fa fa-times"></i> Limpiar
-    </button>
-  </section>
-
-  <!-- ===== CARGANDO ===== -->
-  <section class="kx-card kx-estado" *ngIf="loading">
-    <div class="kx-estado__spinner"></div>
-    <p>Cargando integraciones…</p>
-  </section>
-
-  <!-- ===== ERROR ===== -->
-  <section class="kx-error" *ngIf="errorMessage && !loading">
-    <span class="kx-aviso__icon"><i class="fa fa-exclamation-circle"></i></span>
-    <div class="kx-aviso__texto">
-      <div class="kx-aviso__titulo">No se pudieron cargar las integraciones</div>
-      <p>{{ errorMessage }}</p>
-    </div>
-    <button type="button" class="kx-btn kx-btn--danger" (click)="loadIntegrations()">
-      <i class="fa fa-refresh"></i> Reintentar
-    </button>
-  </section>
-
-  <!-- ===== SIN NINGUNA INTEGRACIÓN: CATÁLOGO ===== -->
-  <div class="kx-catalogo" *ngIf="!loading && !errorMessage && integrations.length === 0">
-    <div class="kx-card kx-vacio">
-      <span class="kx-vacio__icon"><i class="fa fa-plug"></i></span>
-      <h2>Empieza a integrar</h2>
-      <p>Aún no has conectado nada. Elige del catálogo para que Katuq hable con tus otras herramientas.</p>
-    </div>
-
-    <section class="kx-seccion" *ngFor="let category of categories"
-             [hidden]="!availableIntegrations[category] || availableIntegrations[category].length === 0">
-      <header class="kx-seccion__head">
-        <span class="kx-chip-icon kx-chip-icon--sm">
-          <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-        </span>
-        <h2>{{ getCategoryLabel(category) }}</h2>
-        <span class="kx-pill">{{ getAvailableCount(category) }}</span>
-        <span class="kx-rule"></span>
-      </header>
-
-      <div class="kx-grid">
-        <article class="kx-card kx-disponible" *ngFor="let integration of availableIntegrations[category]"
-                 (click)="configureIntegration(integration, category, $event)">
-          <div class="kx-disponible__head">
-            <img [src]="uiHelper.getLogo(integration.id) || integration.logo" [alt]="integration.name"
-                 class="kx-logo" (error)="uiHelper.onImgError($event, integration.id)">
-            <div>
-              <h3>{{ integration.name }}</h3>
-              <span class="kx-badge" *ngIf="isFeatured(integration)">DESTACADO</span>
-            </div>
-          </div>
-          <p class="kx-disponible__desc">{{ integration.description }}</p>
-          <div class="kx-disponible__foot">
-            <span class="kx-btn kx-btn--ghost"><i class="fa fa-plus"></i> Configurar</span>
-          </div>
-        </article>
+      <div class="ig-stat">
+        <span class="ig-stat-label">Próximamente</span>
+        <span class="ig-stat-value ig-stat-value-slate">{{ totalProximamente }}</span>
+        <span class="ig-stat-hint">En las que estamos trabajando</span>
       </div>
     </section>
-  </div>
 
-  <!-- ===== VISTA DE TARJETAS ===== -->
-  <div *ngIf="!loading && integrations.length > 0 && viewMode === 'grid'">
-    <section class="kx-seccion" *ngFor="let category of categories" [hidden]="!shouldShowCategory(category)">
-      <header class="kx-seccion__head">
-        <span class="kx-chip-icon kx-chip-icon--sm">
-          <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-        </span>
-        <h2>{{ getCategoryLabel(category) }}</h2>
-        <span class="kx-pill">{{ countIntegrationsInCategory(category) }}</span>
-        <span class="kx-rule"></span>
-        <button type="button" class="kx-btn kx-btn--ghost" (click)="openIntegrationConfigByCategory(category)">
-          <i class="fa fa-plus"></i> Añadir
+    <section class="ig-error" *ngIf="errorMessage && !loading">
+      <div>
+        <strong>No pudimos revisar tus conexiones</strong>
+        <p>Revisa tu internet y vuelve a intentar. Mientras tanto no mostramos si cada una está conectada.</p>
+      </div>
+      <button type="button" class="ig-btn-ghost" (click)="refreshData(true)">Reintentar</button>
+    </section>
+
+    <div class="ig-toolbar">
+      <div class="ig-seg" role="group" aria-label="Qué mostrar">
+        <button type="button" [class.on]="!soloMias" [attr.aria-pressed]="!soloMias" (click)="soloMias = false">Todas</button>
+        <button type="button" [class.on]="soloMias" [attr.aria-pressed]="soloMias" (click)="soloMias = true">
+          Mis conexiones{{ listaCargada ? ' · ' + totalConectadas : '' }}
         </button>
-      </header>
+      </div>
+      <span class="ig-loading" *ngIf="!listaCargada">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Revisando tus conexiones…
+      </span>
+    </div>
 
-      <div class="kx-grid">
-        <article *ngFor="let integration of getFilteredIntegrationsByCategory(category); trackBy: trackByIntegration"
-                 class="kx-card kx-int"
-                 [class.is-off]="!integration.enabled"
-                 [class.is-ok]="integration.enabled && hasCredential(integration)"
-                 [class.is-pend]="integration.enabled && !hasCredential(integration)"
-                 (click)="openIntegrationConfig(integration)">
+    <ng-container *ngFor="let grupo of directorio">
+      <section class="ig-grupo" *ngIf="entradasVisibles(grupo).length > 0">
+        <header class="ig-grupo-head">
+          <span class="ig-grupo-ic" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path [attr.d]="grupo.icono"></path></svg>
+          </span>
+          <div>
+            <h2>{{ grupo.pregunta }}</h2>
+            <p>{{ grupo.ayuda }}</p>
+          </div>
+        </header>
 
-          <div class="kx-int__head">
-            <span class="kx-logo-box">
-              <img *ngIf="uiHelper.getLogo(integration.type) && !uiHelper.hasImageError(integration.type)"
-                   [src]="uiHelper.getLogo(integration.type)" [alt]="integration.name"
-                   (error)="handleImageError($event)" [attr.data-integration-id]="integration.id">
-              <span *ngIf="!uiHelper.getLogo(integration.type) || uiHelper.hasImageError(integration.type)"
-                    class="kx-logo-box__inicial">{{ getInitial(integration) }}</span>
-            </span>
-
-            <div class="kx-int__id">
-              <div class="kx-int__nombre">
-                <span [title]="integration.name">{{ integration.name }}</span>
-                <span class="kx-badge" *ngIf="isFeatured(integration)">DESTACADO</span>
+        <div class="ig-grid">
+          <ng-container *ngFor="let e of entradasVisibles(grupo)">
+            <article *ngIf="estadoTarjeta(e) as estado" class="ig-card"
+                     [ngClass]="'is-' + estado"
+                     [attr.role]="e.estado === 'pronto' ? null : 'button'"
+                     [attr.tabindex]="e.estado === 'pronto' ? null : 0"
+                     [attr.aria-label]="e.estado === 'pronto' ? null : e.nombre + (textoEstado(e, estado) ? ', ' + textoEstado(e, estado) : '')"
+                     (click)="abrirEntrada(e, $event)" (keydown.enter)="alTeclado(e, $event)" (keydown.space)="alTeclado(e, $event)">
+              <div class="ig-card-top">
+                <span class="ig-logo">
+                  <img *ngIf="e.logo" [src]="e.logo" alt="" loading="lazy">
+                  <span class="ig-inicial" *ngIf="!e.logo">{{ inicialDe(e.nombre) }}</span>
+                </span>
+                <span class="ig-estado" *ngIf="textoEstado(e, estado)" [ngClass]="'ig-estado-' + estado">
+                  <span class="ig-dot"></span>{{ textoEstado(e, estado) }}
+                </span>
               </div>
-              <div class="kx-int__prov">{{ getIntegrationTypeName(integration.type) }}</div>
-            </div>
 
-            <span class="kx-dot" [class.is-live]="integration.enabled"
-                  [title]="integration.enabled ? 'Activa' : 'Inactiva'"></span>
+              <h3>{{ e.nombre }}</h3>
+              <p class="ig-que">{{ e.queHace }}</p>
+              <p class="ig-detalle" *ngIf="detalleTarjeta(e, estado)">{{ detalleTarjeta(e, estado) }}</p>
+
+              <div class="ig-card-foot">
+                <span class="ig-pronto-txt" *ngIf="estado === 'pronto'">Estamos trabajando en esta</span>
+                <ng-container *ngIf="estado !== 'pronto'">
+                  <button type="button"
+                          [ngClass]="estado === 'sin' || estado === 'atencion' ? 'ig-btn-primary ig-btn-sm' : 'ig-btn-ghost ig-btn-sm'"
+                          (click)="abrirEntrada(e, $event)">{{ textoBoton(e, estado) }}</button>
+                  <button type="button" class="ig-btn-ghost ig-btn-sm" *ngIf="tieneActividad(e)"
+                          (click)="verActividad(e, $event)">Actividad</button>
+                </ng-container>
+              </div>
+            </article>
+          </ng-container>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- Conexiones guardadas de servicios que no están en el directorio: no se pierde ninguna -->
+    <section class="ig-grupo" *ngIf="otrasConexiones.length > 0 && !busquedaDir">
+      <header class="ig-grupo-head">
+        <span class="ig-grupo-ic" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7 M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg>
+        </span>
+        <div>
+          <h2>Otras conexiones</h2>
+          <p>Conexiones que tienes guardadas con otros servicios.</p>
+        </div>
+      </header>
+      <div class="ig-grid">
+        <article *ngFor="let c of otrasConexiones; trackBy: trackByIntegration" class="ig-card is-ok"
+                 role="button" tabindex="0" [attr.aria-label]="c.name + ', Conectado'"
+                 (click)="openIntegrationConfig(c)" (keydown.enter)="$event.target === $event.currentTarget && openIntegrationConfig(c)">
+          <div class="ig-card-top">
+            <span class="ig-logo"><span class="ig-inicial">{{ getInitial(c) }}</span></span>
+            <span class="ig-estado ig-estado-ok"><span class="ig-dot"></span>Conectado</span>
           </div>
-
-          <div class="kx-int__chips">
-            <span class="kx-tag" [ngClass]="integration.enabled ? 'kx-tag--green' : 'kx-tag--muted'">
-              <span class="kx-tag__dot"></span>{{ integration.enabled ? 'Activa' : 'Inactiva' }}
-            </span>
-            <span class="kx-tag kx-tag--blue" [ngClass]="getEnvironmentClass(integration)">
-              <i class="fa fa-globe"></i> {{ getEnvironmentName(integration) }}
-            </span>
-            <span class="kx-tag" [ngClass]="hasCredential(integration) ? 'kx-tag--green' : 'kx-tag--orange'">
-              <i class="fa" [ngClass]="hasCredential(integration) ? 'fa-check' : 'fa-exclamation-triangle'"></i>
-              {{ hasCredential(integration) ? getMaskedCredential(integration) : 'Falta credencial' }}
-            </span>
-          </div>
-
-          <div class="kx-int__act">
-            <i class="fa fa-clock-o"></i> {{ getActivityText(integration) }}
-          </div>
-
-          <div class="kx-int__foot">
-            <button type="button"
-                    class="kx-btn"
-                    [ngClass]="hasCredential(integration) ? 'kx-btn--suave' : 'kx-btn--primary'"
-                    (click)="editIntegration(integration, $event); $event.stopPropagation();">
-              <i class="fa" [ngClass]="hasCredential(integration) ? 'fa-pencil' : 'fa-key'"></i>
-              {{ hasCredential(integration) ? 'Editar' : 'Configurar' }}
-            </button>
-
-            <button type="button" class="kx-switch" [class.is-on]="integration.enabled"
-                    [disabled]="isOperationLoading('toggle', integration.id)"
-                    (click)="toggleIntegrationStatus(integration, $event); $event.stopPropagation();"
-                    [title]="integration.enabled ? 'Desactivar' : 'Activar'">
-              <span class="kx-switch__bola"></span>
-            </button>
-
-            <button type="button" class="kx-ico" title="Probar conexión"
-                    [disabled]="isOperationLoading('test', integration.id)"
-                    (click)="testIntegration(integration, $event); $event.stopPropagation();">
-              <i class="fa" [ngClass]="isOperationLoading('test', integration.id) ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
-            </button>
-
-            <button type="button" class="kx-ico" *ngIf="integration.type === 'shopify'"
-                    title="Dashboard de Shopify" (click)="navigateToShopifyDashboard($event)">
-              <i class="fa fa-tachometer"></i>
-            </button>
-            <button type="button" class="kx-ico"
-                    *ngIf="integration.type !== 'shopify' && hasDashboard(integration)"
-                    title="Ver dashboard" (click)="goToDashboard(integration, $event); $event.stopPropagation();">
-              <i class="fa fa-tachometer"></i>
-            </button>
-
-            <button type="button" class="kx-ico kx-ico--danger" title="Eliminar"
-                    [disabled]="isOperationLoading('delete', integration.id)"
-                    (click)="deleteIntegration(integration, $event); $event.stopPropagation();">
-              <i class="fa" [ngClass]="isOperationLoading('delete', integration.id) ? 'fa-spinner fa-spin' : 'fa-trash'"></i>
-            </button>
+          <h3>{{ c.name }}</h3>
+          <p class="ig-que">{{ getIntegrationTypeName(c.type) }}</p>
+          <div class="ig-card-foot">
+            <button type="button" class="ig-btn-ghost ig-btn-sm" (click)="editIntegration(c, $event)">Ver y editar</button>
           </div>
         </article>
-
-        <!-- Ranura para añadir: deja claro qué va en esta sección -->
-        <button type="button" class="kx-ranura" (click)="openIntegrationConfigByCategory(category)">
-          <span class="kx-ranura__icon"><i class="fa fa-plus"></i></span>
-          <span class="kx-ranura__t">Añadir {{ getCategorySingular(category) }}</span>
-          <span class="kx-ranura__s">{{ getAvailableCount(category) }} disponibles</span>
-        </button>
       </div>
     </section>
+
+    <section class="ig-empty" *ngIf="listaCargada && !hayResultados()">
+      <span class="ig-empty-title">{{ soloMias && !busquedaDir ? 'Todavía no conectas nada' : 'No encontramos esa integración' }}</span>
+      <p>{{ soloMias && !busquedaDir ? 'Toca “Todas” y elige por dónde empezar.' : 'Prueba con otra palabra, o cuéntanos en soporte qué servicio usas.' }}</p>
+      <button type="button" class="ig-btn-ghost" (click)="busquedaDir = ''; soloMias = false">Ver todas</button>
+    </section>
+
   </div>
-
-  <!-- ===== VISTA DE LISTA ===== -->
-  <section class="kx-card kx-lista" *ngIf="!loading && integrations.length > 0 && viewMode === 'list'">
-    <div class="kx-lista__scroll">
-      <div class="kx-fila kx-fila--head">
-        <span class="kx-fila__logo"></span>
-        <button type="button" class="kx-fila__nombre kx-orden" (click)="onSort('name')">
-          Integración
-          <i class="fa" *ngIf="ordenCampo === 'name'" [ngClass]="ordenAscendente ? 'fa-sort-up' : 'fa-sort-down'"></i>
-        </button>
-        <button type="button" class="kx-fila__estado kx-orden" (click)="onSort('status')">
-          Estado
-          <i class="fa" *ngIf="ordenCampo === 'status'" [ngClass]="ordenAscendente ? 'fa-sort-up' : 'fa-sort-down'"></i>
-        </button>
-        <button type="button" class="kx-fila__amb kx-orden" (click)="onSort('type')">
-          Ambiente
-          <i class="fa" *ngIf="ordenCampo === 'type'" [ngClass]="ordenAscendente ? 'fa-sort-up' : 'fa-sort-down'"></i>
-        </button>
-        <span class="kx-fila__cred">Credencial</span>
-        <button type="button" class="kx-fila__act kx-orden kx-orden--der" (click)="onSort('lastModified')">
-          Actividad
-          <i class="fa" *ngIf="ordenCampo === 'lastModified'" [ngClass]="ordenAscendente ? 'fa-sort-up' : 'fa-sort-down'"></i>
-        </button>
-        <span class="kx-fila__acc">Acciones</span>
-      </div>
-
-      <div class="kx-fila kx-fila--vacia" *ngIf="getSortedAndFilteredIntegrations().length === 0">
-        <i class="fa fa-filter"></i> Ninguna integración coincide con los filtros actuales
-      </div>
-
-      <div class="kx-fila" *ngFor="let integration of getSortedAndFilteredIntegrations(); trackBy: trackByIntegration"
-           (click)="openIntegrationConfig(integration)">
-        <span class="kx-fila__logo">
-          <span class="kx-logo-box kx-logo-box--sm">
-            <img *ngIf="uiHelper.getLogo(integration.type) && !uiHelper.hasImageError(integration.type)"
-                 [src]="uiHelper.getLogo(integration.type)" [alt]="integration.name"
-                 (error)="handleImageError($event)" [attr.data-integration-id]="integration.id">
-            <span *ngIf="!uiHelper.getLogo(integration.type) || uiHelper.hasImageError(integration.type)"
-                  class="kx-logo-box__inicial">{{ getInitial(integration) }}</span>
-          </span>
-        </span>
-
-        <span class="kx-fila__nombre">
-          <span class="kx-int__nombre">
-            <span>{{ integration.name }}</span>
-            <span class="kx-badge" *ngIf="isFeatured(integration)">DESTACADO</span>
-          </span>
-          <span class="kx-int__prov">{{ getIntegrationTypeName(integration.type) }}</span>
-        </span>
-
-        <span class="kx-fila__estado">
-          <span class="kx-tag" [ngClass]="integration.enabled ? 'kx-tag--green' : 'kx-tag--muted'">
-            <span class="kx-tag__dot"></span>{{ integration.enabled ? 'Activa' : 'Inactiva' }}
-          </span>
-        </span>
-
-        <span class="kx-fila__amb">
-          <span class="kx-tag kx-tag--blue" [ngClass]="getEnvironmentClass(integration)">
-            {{ getEnvironmentName(integration) }}
-          </span>
-        </span>
-
-        <span class="kx-fila__cred">
-          <span class="kx-tag" [ngClass]="hasCredential(integration) ? 'kx-tag--green' : 'kx-tag--orange'">
-            <i class="fa" [ngClass]="hasCredential(integration) ? 'fa-check' : 'fa-exclamation-triangle'"></i>
-            {{ hasCredential(integration) ? getMaskedCredential(integration) : 'Falta credencial' }}
-          </span>
-        </span>
-
-        <span class="kx-fila__act">{{ getActivityText(integration) }}</span>
-
-        <span class="kx-fila__acc">
-          <button type="button" class="kx-btn"
-                  [ngClass]="hasCredential(integration) ? 'kx-btn--suave' : 'kx-btn--primary'"
-                  (click)="editIntegration(integration, $event); $event.stopPropagation();">
-            <i class="fa" [ngClass]="hasCredential(integration) ? 'fa-pencil' : 'fa-key'"></i>
-            {{ hasCredential(integration) ? 'Editar' : 'Configurar' }}
-          </button>
-          <button type="button" class="kx-switch" [class.is-on]="integration.enabled"
-                  [disabled]="isOperationLoading('toggle', integration.id)"
-                  (click)="toggleIntegrationStatus(integration, $event); $event.stopPropagation();"
-                  [title]="integration.enabled ? 'Desactivar' : 'Activar'">
-            <span class="kx-switch__bola"></span>
-          </button>
-          <button type="button" class="kx-ico" title="Probar conexión"
-                  [disabled]="isOperationLoading('test', integration.id)"
-                  (click)="testIntegration(integration, $event); $event.stopPropagation();">
-            <i class="fa" [ngClass]="isOperationLoading('test', integration.id) ? 'fa-spinner fa-spin' : 'fa-bolt'"></i>
-          </button>
-          <button type="button" class="kx-ico" *ngIf="hasDashboard(integration)" title="Ver dashboard"
-                  (click)="goToDashboard(integration, $event); $event.stopPropagation();">
-            <i class="fa fa-tachometer"></i>
-          </button>
-          <button type="button" class="kx-ico kx-ico--danger" title="Eliminar"
-                  [disabled]="isOperationLoading('delete', integration.id)"
-                  (click)="deleteIntegration(integration, $event); $event.stopPropagation();">
-            <i class="fa" [ngClass]="isOperationLoading('delete', integration.id) ? 'fa-spinner fa-spin' : 'fa-trash'"></i>
-          </button>
-        </span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== BÚSQUEDA SIN RESULTADOS ===== -->
-  <section class="kx-card kx-vacio" *ngIf="!loading && integrations.length > 0 && isFiltered() && getSortedAndFilteredIntegrations().length === 0">
-    <span class="kx-vacio__icon"><i class="fa fa-search"></i></span>
-    <h2>Sin resultados</h2>
-    <p *ngIf="searchTerm">No hay integraciones que coincidan con “{{ searchTerm }}”.</p>
-    <p *ngIf="!searchTerm">Ninguna integración coincide con los filtros actuales.</p>
-    <button type="button" class="kx-btn kx-btn--primary" (click)="resetFilters()">
-      <i class="fa fa-times"></i> Limpiar filtros
-    </button>
-  </section>
 </div>
 
 <!-- Tutorial/Tooltip -->
 <div class="tutorial-overlay" *ngIf="showTutorial">
   <div class="tutorial-content">
-    <h4>Guía rápida de integraciones</h4>
-    <p>Conecta tu tienda con diversas plataformas y servicios para potenciar tu negocio.</p>
+    <h4>Así se conecta un servicio</h4>
+    <p>Son tres pasos y no necesitas saber de programación.</p>
     <div class="tutorial-steps">
       <div class="tutorial-step">
         <div class="step-number">1</div>
         <div class="step-content">
-          <h5>Selecciona una categoría</h5>
-          <p>Elige entre pasarelas de pago, plataformas e-commerce y más.</p>
+          <h5>Elige el servicio</h5>
+          <p>Búscalo en la pregunta que corresponde: dónde vendes, cómo cobras, cómo envías o cómo facturas.</p>
         </div>
       </div>
       <div class="tutorial-step">
         <div class="step-number">2</div>
         <div class="step-content">
-          <h5>Configura la integración</h5>
-          <p>Ingresa las credenciales API necesarias de tu proveedor.</p>
+          <h5>Pega tus datos</h5>
+          <p>Copia las claves que te da ese servicio en su panel. En cada campo te decimos dónde encontrarlas.</p>
         </div>
       </div>
       <div class="tutorial-step">
         <div class="step-number">3</div>
         <div class="step-content">
-          <h5>Prueba la conexión</h5>
-          <p>Verifica que todo funcione correctamente antes de activar.</p>
+          <h5>Revisa que quedó</h5>
+          <p>Cuando queda lista, la tarjeta dice “Conectado”. Si algo falta, el formulario te dice qué dato revisar antes de guardar.</p>
         </div>
       </div>
     </div>

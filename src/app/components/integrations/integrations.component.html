@@ -2,15 +2,12 @@
   <div *ngIf="isModalMode" class="kx-mh">
     <span class="kx-mh__icon"><i class="fa fa-plug"></i></span>
     <div class="kx-mh__txt">
-      <h2>{{ editingIntegrationId ? 'Editar integración' : 'Configurar integración' }}</h2>
-      <p *ngIf="!editingIntegrationId">
-        {{ showOnlyForm ? 'Paso 2 de 2 · ingresa las llaves de API' : 'Paso 1 de 2 · elige qué quieres conectar' }}
-      </p>
-      <p *ngIf="editingIntegrationId">Actualiza las llaves y el ambiente de esta conexión</p>
+      <h2>{{ tituloModal }}</h2>
+      <p>{{ subtituloModal }}</p>
     </div>
 
     <!-- Riel de pasos: dice de una cuánto falta -->
-    <div class="kx-pasos" *ngIf="!editingIntegrationId">
+    <div class="kx-pasos" *ngIf="!editingIntegrationId && !abiertoConProveedor">
       <span class="kx-paso" [class.is-cur]="!showOnlyForm" [class.is-done]="showOnlyForm">
         <span class="kx-paso__n"><i class="fa fa-check" *ngIf="showOnlyForm"></i><ng-container *ngIf="!showOnlyForm">1</ng-container></span>
         Plataforma
@@ -18,7 +15,7 @@
       <span class="kx-paso__barra" [class.is-done]="showOnlyForm"></span>
       <span class="kx-paso" [class.is-cur]="showOnlyForm">
         <span class="kx-paso__n">2</span>
-        Credenciales
+        Datos
       </span>
     </div>
 
@@ -152,27 +149,12 @@
         <div class="kx-elegida__txt">
           <span class="kx-elegida__nom">
             <strong>{{ plat.name }}</strong>
-            <button type="button" class="kx-elegida__cambiar" *ngIf="!editingIntegrationId"
+            <button type="button" class="kx-elegida__cambiar" *ngIf="!editingIntegrationId && !abiertoConProveedor"
                     (click)="backToSelection()">Cambiar</button>
           </span>
           <span class="kx-elegida__hint">{{ plat.description || plat.categoriaLabel }}</span>
         </div>
 
-        <!-- Diagnósticos que antes vivían en una segunda banda con el mismo título -->
-        <div class="kx-diag">
-          <span class="kx-diag__b" *ngIf="editingIntegrationId" [title]="'ID: ' + editingIntegrationId">
-            <i class="fa fa-hashtag"></i> {{ editingIntegrationId }}
-          </span>
-          <button type="button" class="kx-diag__b" [ngClass]="getHealthStatusClass()"
-                  (click)="refreshHealthCheck()" title="Estado del sistema · clic para actualizar">
-            <i class="fa" [ngClass]="getHealthStatusIcon()"></i> {{ getHealthStatusText() }}
-          </button>
-          <button type="button" class="kx-diag__b" [ngClass]="getValidationStatusClass()"
-                  [disabled]="validationInProgress"
-                  (click)="forceValidation()" title="Estado de validación · clic para validar">
-            <i class="fa" [ngClass]="getValidationStatusIcon()"></i> {{ getValidationStatusText() }}
-          </button>
-        </div>
       </div>
 
       <div class="back-navigation" *ngIf="!plataformaElegida">
@@ -271,7 +253,7 @@
         <div class="kx-fila2" *ngIf="selectedIntegrationType !== 'dian'">
           <div class="kx-campo">
             <label for="name">
-              Nombre de la integración <span class="kx-req">*</span>
+              Nombre para reconocerla <span class="kx-req">*</span>
             </label>
             <div class="kx-input" [class.is-mal]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
               <i class="fa fa-tag"></i>
@@ -279,73 +261,52 @@
                      placeholder="Ej.: Tienda principal">
             </div>
             <div class="kx-campo__hint" *ngIf="!(integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched)">
-              Para distinguirla si conectas varias cuentas.
+              Solo lo ves tú. Por ejemplo: Tienda principal.
             </div>
             <div class="kx-campo__error" *ngIf="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
               El nombre es obligatorio
             </div>
           </div>
 
-          <!-- Solo se ofrece si este proveedor realmente guarda el ambiente -->
-          <div class="kx-campo" *ngIf="integrationForm.get('environment') && selectedIntegrationType !== 'dian'">
-            <label>Ambiente</label>
-            <div class="kx-radios">
-              <button type="button" class="kx-radio"
-                      [class.is-on]="integrationForm.get('environment')?.value === 'production'"
-                      (click)="integrationForm.get('environment')?.setValue('production')">
-                <span class="kx-radio__p"><span></span></span>
-                <span>
-                  <strong>Producción</strong>
-                  <small>Movimientos reales</small>
-                </span>
-              </button>
-              <button type="button" class="kx-radio"
-                      [class.is-on]="integrationForm.get('environment')?.value !== 'production'"
-                      (click)="integrationForm.get('environment')?.setValue('staging')">
-                <span class="kx-radio__p"><span></span></span>
-                <span>
-                  <strong>Pruebas</strong>
-                  <small>Sin dinero real</small>
-                </span>
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- Encabezado de credenciales. El cifrado es real y verificado:
              /v1/integration/config → IntegrationConfigService.saveConfig →
              encryptSecrets (AES-256-GCM). -->
         <div class="kx-credhead" *ngIf="selectedIntegrationType !== 'dian'">
-          <span class="kx-credhead__t">Credenciales de API</span>
+          <span class="kx-credhead__t">Datos de conexión</span>
           <span class="kx-rulex"></span>
           <span class="kx-credhead__lock">
-            <i class="fa fa-lock"></i> Se guardan cifradas
+            <i class="fa fa-lock"></i> Se guardan cifrados
           </span>
         </div>
+        <p class="kx-guardadas" *ngIf="tieneClavesGuardadas">
+          <i class="fa fa-shield"></i>
+          Por seguridad no mostramos tus claves guardadas. Si dejas una clave vacía, se conserva la que ya tienes.
+        </p>
 
         <!-- Shopify Fields -->
         <ng-container *ngIf="selectedIntegrationType === 'shopify'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
-            <span>Para configurar esta integración, necesitarás crear una app en tu tienda Shopify y obtener las
-              credenciales de API.</span>
-            <a href="https://shopify.dev/docs/admin-api/getting-started" target="_blank" class="learn-more">
-              <i class="fa fa-external-link"></i> Ver documentación
+            <span>Crea una app para Katuq en tu Shopify y copia aquí su <strong>Client ID</strong> y su <strong>Client Secret</strong>. Con eso Katuq recibe tus pedidos y mantiene tus existencias al día.</span>
+            <a href="https://shopify.dev/docs/admin-api/getting-started" target="_blank" rel="noopener" class="learn-more">
+              <i class="fa fa-external-link"></i> Ver la guía de Shopify (en inglés)
             </a>
           </div>
 
-          <div class="shopify-dashboard-link mb-3">
+          <div class="shopify-dashboard-link mb-3" *ngIf="editingIntegrationId">
             <button type="button" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
               (click)="goToShopifyDashboard()">
               <i class="fa fa-tachometer-alt"></i>
-              Ver Dashboard Shopify
+              Ver la actividad de Shopify
               <i class="fa fa-arrow-right ms-1"></i>
             </button>
           </div>
 
           <div class="form-group">
             <label for="shopUrl">
-              <i class="fa fa-link"></i> URL de la tienda:
+              <i class="fa fa-link"></i> Dirección de tu tienda Shopify
               <span class="field-required">*</span>
             </label>
             <span class="p-input-icon-left">
@@ -354,146 +315,150 @@
             </span>
             <div *ngIf="integrationForm.get('shopUrl')?.invalid && integrationForm.get('shopUrl')?.touched"
               class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL de tienda Shopify válida
+              <i class="fa fa-exclamation-triangle"></i> Escribe la dirección que termina en .myshopify.com
             </div>
-            <small class="form-text text-muted">Ejemplo: mitienda.myshopify.com</small>
+            <small class="form-text text-muted">La que termina en .myshopify.com, aunque tu tienda use otro dominio.</small>
           </div>
 
           <div class="field-row">
             <div class="field-col form-group">
               <label for="apiKey">
-                <i class="fa fa-key"></i> API Key:
+                <i class="fa fa-key"></i> Client ID
                 <span class="field-required">*</span>
               </label>
               <p-password id="apiKey" formControlName="apiKey" [feedback]="false" [toggleMask]="true"></p-password>
               <div *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> API Key es requerida
+                <i class="fa fa-exclamation-triangle"></i> Pega el Client ID de tu app
               </div>
+              <small class="form-text text-muted">En las apps antiguas de Shopify se llama "Clave de API".</small>
             </div>
 
             <div class="field-col form-group">
               <label for="apiSecret">
-                <i class="fa fa-lock"></i> API Secret:
+                <i class="fa fa-lock"></i> Client Secret
                 <span class="field-required">*</span>
               </label>
-              <p-password id="apiSecret" formControlName="apiSecret" [feedback]="false" [toggleMask]="true" autocomplete="off"></p-password>
+              <p-password id="apiSecret" formControlName="apiSecret" [feedback]="false" [toggleMask]="true" autocomplete="off"
+                [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : ''"></p-password>
               <div *ngIf="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> API Secret es requerido
+                <i class="fa fa-exclamation-triangle"></i> Pega el Client Secret de tu app
               </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="accessToken">
-              <i class="fa fa-shield-alt"></i> Access Token (opcional):
-            </label>
-            <p-password id="accessToken" formControlName="accessToken" [feedback]="false" [toggleMask]="true" placeholder="shpat_... (dejar vacío para auto-generar)" autocomplete="off"></p-password>
-            <small class="form-text text-muted">
-              Si dejás este campo vacío, el sistema genera el access token automáticamente con el Cliente ID + Secreto vía OAuth
-              <code>client_credentials</code> y lo refresca cada vez que Shopify retorna 401 (los tokens de Custom Apps post-2026 expiran cada 24h).
-              Solo pegá un <code>shpat_*</code> aquí si tenés un token permanente generado manualmente.
-            </small>
-          </div>
+          <details class="kx-avanzadas">
+            <summary>Opciones avanzadas</summary>
+            <div class="form-group">
+              <label for="accessToken">
+                <i class="fa fa-shield-alt"></i> Token de acceso (opcional)
+              </label>
+              <p-password id="accessToken" formControlName="accessToken" [feedback]="false" [toggleMask]="true" placeholder="shpat_…" autocomplete="off"></p-password>
+              <small class="form-text text-muted">
+                Déjalo vacío: Katuq lo genera y lo renueva solo con el Client ID y el Client Secret.
+                Pégalo solo si Shopify te dio un token permanente.
+              </small>
+            </div>
 
-          <div class="form-group">
-            <label for="apiVersion">
-              <i class="fa fa-code-branch"></i> Versión de API:
-            </label>
-            <p-dropdown id="apiVersion" formControlName="apiVersion" [options]="apiVersionOptions" optionLabel="label" optionValue="value" placeholder="Seleccione versión" autocomplete="off"></p-dropdown>
-            <small class="form-text text-muted">Seleccione la versión de la API de Shopify a utilizar</small>
-          </div>
+            <div class="form-group">
+              <label for="apiVersion">
+                <i class="fa fa-code-branch"></i> Versión de Shopify
+              </label>
+              <p-dropdown id="apiVersion" formControlName="apiVersion" [options]="apiVersionOptions" optionLabel="label" optionValue="value" placeholder="Selecciona la versión" autocomplete="off"></p-dropdown>
+              <small class="form-text text-muted">Déjala como está, salvo que soporte te pida cambiarla.</small>
+            </div>
+          </details>
         </ng-container>
 
         <!-- Wompi Fields -->
         <ng-container *ngIf="selectedIntegrationType === 'wompi'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
-            <span>Para configurar Wompi, necesitas las claves de API de tu cuenta Wompi. Recuerda usar las claves
-              correctas según el entorno.</span>
-            <a href="https://docs.wompi.co/docs" target="_blank" class="learn-more">
-              <i class="fa fa-external-link"></i> Ver documentación
+            <span>Entra a tu panel de Wompi, en la sección <strong>Desarrolladores</strong>. Ahí están tus dos llaves y tus dos secretos. Cópialos del mismo ambiente que elegiste arriba: pruebas o producción.</span>
+            <a href="https://docs.wompi.co/docs" target="_blank" rel="noopener" class="learn-more">
+              <i class="fa fa-external-link"></i> Ver la guía de Wompi
             </a>
           </div>
 
           <div class="environment-badge">
             <span class="badge" [ngClass]="integrationForm.get('testMode')?.value ? 'badge-warning' : 'badge-success'">
               <i class="fa" [ngClass]="integrationForm.get('testMode')?.value ? 'fa-flask' : 'fa-check-circle'"></i>
-              {{integrationForm.get('testMode')?.value ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
+              {{integrationForm.get('testMode')?.value ? 'Ambiente de pruebas' : 'Ambiente de producción'}}
             </span>
           </div>
 
           <div class="field-row">
             <div class="field-col form-group">
               <label for="publicKey">
-                <i class="fa fa-key"></i> Public Key:
+                <i class="fa fa-key"></i> Llave pública
                 <span class="field-required">*</span>
               </label>
               <span class="p-input-icon-left">
                 <i class="fa fa-globe"></i>
-                <input pInputText id="publicKey" formControlName="publicKey" placeholder="pub_test_abcdef..." autocomplete="off">
+                <input pInputText id="publicKey" formControlName="publicKey" placeholder="pub_…" autocomplete="off">
               </span>
               <div *ngIf="integrationForm.get('publicKey')?.invalid && integrationForm.get('publicKey')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Public Key es requerida
+                <i class="fa fa-exclamation-triangle"></i> Pega la llave pública
               </div>
-              <small class="form-text text-muted">{{isTestMode ? 'Comienza con pub_test_' : 'Comienza con
-                pub_prod_'}}</small>
+              <small class="form-text text-muted">{{ integrationForm.get('testMode')?.value ? 'Empieza por pub_test_' : 'Empieza por pub_prod_' }}</small>
             </div>
 
             <div class="field-col form-group">
               <label for="privateKey">
-                <i class="fa fa-lock"></i> Private Key:
+                <i class="fa fa-lock"></i> Llave privada
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
-                <input type="password" id="privateKey" formControlName="privateKey" autocomplete="off">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <input type="password" id="privateKey" formControlName="privateKey" autocomplete="off"
+                  [placeholder]="editingIntegrationId ? 'Guardada · déjala vacía para conservarla' : ''">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <div *ngIf="integrationForm.get('privateKey')?.invalid && integrationForm.get('privateKey')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Private Key es requerida
+                <i class="fa fa-exclamation-triangle"></i> Pega la llave privada
               </div>
-              <small class="form-text text-muted">{{isTestMode ? 'Comienza con prv_test_' : 'Comienza con
-                prv_prod_'}}</small>
+              <small class="form-text text-muted">{{ integrationForm.get('testMode')?.value ? 'Empieza por prv_test_' : 'Empieza por prv_prod_' }}</small>
             </div>
           </div>
 
           <div class="field-row">
             <div class="field-col form-group">
               <label for="eventsSecret">
-                <i class="fa fa-bell"></i> Events Secret:
+                <i class="fa fa-bell"></i> Secreto de eventos
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
-                <input type="password" id="eventsSecret" formControlName="eventsSecret" placeholder="prod_events_..." autocomplete="off">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <input type="password" id="eventsSecret" formControlName="eventsSecret" autocomplete="off"
+                  [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : ''">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <div *ngIf="integrationForm.get('eventsSecret')?.invalid && integrationForm.get('eventsSecret')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Events Secret es requerido
+                <i class="fa fa-exclamation-triangle"></i> Pega el secreto de eventos
               </div>
-              <small class="form-text text-muted">Para validar webhooks de Wompi</small>
+              <small class="form-text text-muted">Con él Katuq confirma los pagos que te avisa Wompi.</small>
             </div>
 
             <div class="field-col form-group">
               <label for="integritySecret">
-                <i class="fa fa-shield-alt"></i> Integrity Secret:
+                <i class="fa fa-shield-alt"></i> Secreto de integridad
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
-                <input type="password" id="integritySecret" formControlName="integritySecret" placeholder="prod_integrity_..." autocomplete="off">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <input type="password" id="integritySecret" formControlName="integritySecret" autocomplete="off"
+                  [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : ''">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <div *ngIf="integrationForm.get('integritySecret')?.invalid && integrationForm.get('integritySecret')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Integrity Secret es requerido
+                <i class="fa fa-exclamation-triangle"></i> Pega el secreto de integridad
               </div>
-              <small class="form-text text-muted">Para firmar el widget de checkout</small>
+              <small class="form-text text-muted">Con él Katuq firma el botón de pago.</small>
             </div>
           </div>
         </ng-container>
@@ -710,7 +675,7 @@
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
                 <input type="password" id="clientSecret" formControlName="clientSecret">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <div *ngIf="integrationForm.get('clientSecret')?.invalid && integrationForm.get('clientSecret')?.touched"
                 class="text-danger">
@@ -776,7 +741,7 @@
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
                 <input type="password" id="secretKey" formControlName="secretKey" placeholder="sk_test_...">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <div *ngIf="integrationForm.get('secretKey')?.invalid && integrationForm.get('secretKey')?.touched"
                 class="text-danger">
@@ -795,7 +760,7 @@
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
                 <input type="password" id="webhookSecret" formControlName="webhookSecret" placeholder="whsec_...">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <small class="form-text text-muted">Secret para validar webhooks (opcional)</small>
             </div>
@@ -933,7 +898,7 @@
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
                 <input type="password" id="accessToken" formControlName="accessToken" placeholder="TEST-...">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <div *ngIf="integrationForm.get('accessToken')?.invalid && integrationForm.get('accessToken')?.touched"
                 class="text-danger">
@@ -980,7 +945,7 @@
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
                 <input type="password" id="clientSecret" formControlName="clientSecret">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <small class="form-text text-muted">Secret de la aplicación (opcional)</small>
             </div>
@@ -1011,10 +976,10 @@
               <li class="wc-onboarding-steps__item">
                 <div class="wc-onboarding-steps__num">1</div>
                 <div class="wc-onboarding-steps__body">
-                  <strong>Entrá a tu WooCommerce admin</strong>
+                  <strong>Entra a la administración de tu WooCommerce</strong>
                   <span>Ajustes → Avanzado → REST API.</span>
                   <img src="assets/integrations/woocommerce/step-1.png"
-                       alt="Ubicación de la opción REST API en WooCommerce admin"
+                       alt="Ubicación de la opción REST API en WooCommerce"
                        class="wc-onboarding-steps__img"
                        (error)="$any($event.target).style.display='none'">
                 </div>
@@ -1022,10 +987,10 @@
               <li class="wc-onboarding-steps__item">
                 <div class="wc-onboarding-steps__num">2</div>
                 <div class="wc-onboarding-steps__body">
-                  <strong>Creá una clave</strong>
-                  <span>Click en "Crear clave", dale permiso de <b>Lectura/Escritura</b>.</span>
+                  <strong>Crea una clave</strong>
+                  <span>Toca "Añadir clave" y dale permiso de <b>Lectura/Escritura</b>.</span>
                   <img src="assets/integrations/woocommerce/step-2.png"
-                       alt="Pantalla de creación de Consumer Key con permiso Lectura/Escritura"
+                       alt="Creación de la clave con permiso de Lectura/Escritura"
                        class="wc-onboarding-steps__img"
                        (error)="$any($event.target).style.display='none'">
                 </div>
@@ -1033,24 +998,24 @@
               <li class="wc-onboarding-steps__item">
                 <div class="wc-onboarding-steps__num">3</div>
                 <div class="wc-onboarding-steps__body">
-                  <strong>Copiá el Consumer Key y Secret</strong>
-                  <span>Pegalos en los campos de abajo. Listo.</span>
+                  <strong>Copia la Consumer Key y el Consumer Secret</strong>
+                  <span>Pégalos en los campos de abajo y listo.</span>
                   <img src="assets/integrations/woocommerce/step-3.png"
-                       alt="Pantalla final con Consumer Key y Consumer Secret generados"
+                       alt="Clave creada con Consumer Key y Consumer Secret"
                        class="wc-onboarding-steps__img"
                        (error)="$any($event.target).style.display='none'">
                 </div>
               </li>
             </ol>
             <a href="https://woocommerce.github.io/woocommerce-rest-api-docs/" target="_blank" rel="noopener" class="wc-onboarding-steps__doclink">
-              <i class="fa fa-external-link"></i> Ver documentación oficial de WooCommerce
+              <i class="fa fa-external-link"></i> Ver la guía oficial de WooCommerce (en inglés)
             </a>
           </div>
 
           <!-- URL de la tienda -->
           <div class="form-group">
             <label for="storeUrl">
-              <i class="fa fa-globe"></i> URL del sitio:
+              <i class="fa fa-globe"></i> Dirección de tu tienda
               <span class="field-required">*</span>
             </label>
             <div class="input-with-icon">
@@ -1059,69 +1024,55 @@
             </div>
             <div *ngIf="integrationForm.get('storeUrl')?.invalid && integrationForm.get('storeUrl')?.touched"
               class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> URL del sitio es requerida
+              <i class="fa fa-exclamation-triangle"></i> Escribe la dirección completa, empezando por https://
             </div>
-            <small class="form-text text-muted">URL completa de tu tienda WooCommerce (con https://)</small>
+            <small class="form-text text-muted">La dirección completa de tu tienda, con https://</small>
           </div>
 
           <!-- Consumer Key + Secret -->
           <div class="field-row">
             <div class="field-col form-group">
               <label for="consumerKey">
-                <i class="fa fa-key"></i> Consumer Key:
+                <i class="fa fa-key"></i> Consumer Key
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon">
                 <i class="fa fa-key prefix-icon"></i>
-                <input type="text" id="consumerKey" formControlName="consumerKey" placeholder="ck_..."
+                <input type="text" id="consumerKey" formControlName="consumerKey" placeholder="ck_…"
                   autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
               </div>
               <div *ngIf="integrationForm.get('consumerKey')?.invalid && integrationForm.get('consumerKey')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Consumer Key es requerida
+                <i class="fa fa-exclamation-triangle"></i> Pega la Consumer Key
               </div>
-              <small class="form-text text-muted">Comienza con ck_</small>
+              <small class="form-text text-muted">Empieza por ck_</small>
             </div>
 
             <div class="field-col form-group">
               <label for="consumerSecret">
-                <i class="fa fa-lock"></i> Consumer Secret:
+                <i class="fa fa-lock"></i> Consumer Secret
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
-                <input type="password" id="consumerSecret" formControlName="consumerSecret" placeholder="cs_..."
+                <input type="password" id="consumerSecret" formControlName="consumerSecret"
+                  [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : 'cs_…'"
                   autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <div
                 *ngIf="integrationForm.get('consumerSecret')?.invalid && integrationForm.get('consumerSecret')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Consumer Secret es requerido
+                <i class="fa fa-exclamation-triangle"></i> Pega el Consumer Secret
               </div>
-              <small class="form-text text-muted">Comienza con cs_</small>
-            </div>
-          </div>
-
-          <!-- Versión API -->
-          <div class="field-row">
-            <div class="field-col form-group">
-              <label for="apiVersion">
-                <i class="fa fa-code-branch"></i> Versión de API:
-              </label>
-              <select id="apiVersion" formControlName="apiVersion" class="custom-select" autocomplete="off">
-                <option value="v3">v3 (Recomendada)</option>
-                <option value="v2">v2</option>
-                <option value="v1">v1</option>
-              </select>
-              <small class="form-text text-muted">Versión de la API REST de WooCommerce</small>
+              <small class="form-text text-muted">Empieza por cs_</small>
             </div>
           </div>
 
           <!-- Bodega destino del stock (spec 003.1 AC-003.1-04 + AC-003.1-06) -->
           <div class="form-group">
             <label for="bodegaCode">
-              <i class="fa fa-warehouse"></i> Bodega destino del stock:
+              <i class="fa fa-warehouse"></i> Bodega donde quedan tus existencias
               <span class="field-required">*</span>
             </label>
             <select id="bodegaCode"
@@ -1129,7 +1080,7 @@
                     class="custom-select"
                     [disabled]="wooBodegasLoading">
               <option [ngValue]="''" disabled>
-                {{ wooBodegasLoading ? 'Cargando bodegas...' : 'Elegí una bodega' }}
+                {{ wooBodegasLoading ? 'Cargando bodegas…' : 'Elige una bodega' }}
               </option>
               <option *ngFor="let b of wooBodegas" [ngValue]="b.idBodega || b.id || b.cd">
                 {{ (b.idBodega || b.id || b.cd) }} — {{ b.nombre || b.name }}
@@ -1138,7 +1089,7 @@
             <div *ngIf="!wooBodegasLoading && !wooBodegasError && wooBodegas.length === 0"
                  class="wc-onboarding-empty">
               <i class="fa fa-exclamation-circle"></i>
-              No tenés bodegas activas. <a routerLink="/inventarios/bodegas">Creá una bodega primero</a>, después volvé acá.
+              No tienes bodegas activas. <a routerLink="/inventarios/bodegas">Crea una bodega primero</a> y vuelve aquí.
             </div>
             <div *ngIf="wooBodegasError" class="text-danger">
               <i class="fa fa-exclamation-triangle"></i> {{ wooBodegasError }}
@@ -1146,21 +1097,21 @@
             </div>
             <div *ngIf="integrationForm.get('bodegaCode')?.invalid && integrationForm.get('bodegaCode')?.touched"
                  class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> Elegí en qué bodega registrar el stock de WooCommerce.
+              <i class="fa fa-exclamation-triangle"></i> Elige en qué bodega registrar las existencias de WooCommerce.
             </div>
-            <small class="form-text text-muted">Donde Katuq va a registrar el stock que viene de tu tienda WooCommerce.</small>
+            <small class="form-text text-muted">Ahí registra Katuq las existencias que vienen de tu tienda WooCommerce.</small>
           </div>
 
           <!-- Caja "Configurar webhook entrante" — AC-003.1-05 -->
           <div class="wc-webhook-box">
             <div class="wc-webhook-box__header">
               <i class="fa fa-link"></i>
-              <span>Configurá el webhook entrante en tu tienda</span>
+              <span>Para que tus pedidos lleguen solos</span>
             </div>
             <p class="wc-webhook-box__intro">
-              Copiá esta URL y pegala en tu WooCommerce admin:
+              Copia esta dirección y pégala en tu WooCommerce, en
               <br><strong>Ajustes → Avanzado → Webhooks → Añadir webhook</strong>
-              (Estado: Activo, Tema: Pedido creado/actualizado).
+              (Estado: Activo. Tema: Pedido creado y Pedido actualizado).
             </p>
             <div class="wc-webhook-box__url-row">
               <input type="text"
@@ -1177,30 +1128,47 @@
               </button>
             </div>
             <small class="form-text text-muted">
-              Después de crear el webhook en WooCommerce, copiá el <em>Webhook Secret</em> que te muestra y pegalo abajo (opcional al crear, pero recomendado).
+              Al crear el webhook, WooCommerce te pide un "Secreto". Escríbelo también abajo.
             </small>
           </div>
 
           <!-- Webhook Secret (OPCIONAL en MVP — se completa después de crear el webhook en WC) -->
           <div class="form-group">
             <label for="webhookSecret">
-              <i class="fa fa-shield-alt"></i> Webhook Secret <small class="text-muted">(opcional al crear)</small>:
+              <i class="fa fa-shield-alt"></i> Secreto del webhook <small class="text-muted">(opcional)</small>
             </label>
             <div class="input-with-icon password-field">
               <i class="fa fa-shield-alt prefix-icon"></i>
-              <input type="password" id="webhookSecret" formControlName="webhookSecret" placeholder="whsec_...">
-              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+              <input type="password" id="webhookSecret" formControlName="webhookSecret"
+                [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : 'El mismo que escribiste en WooCommerce'">
+              <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
             </div>
-            <small class="form-text text-muted">Se usa para validar que los webhooks vengan realmente de tu tienda. Lo pegás después de crear el webhook en WC.</small>
+            <small class="form-text text-muted">Con él Katuq comprueba que cada aviso viene de verdad de tu tienda.</small>
           </div>
 
-          <!-- Verificar SSL -->
-          <div class="form-group form-check">
-            <input class="form-check-input" type="checkbox" id="verifySsl" formControlName="verifySsl">
-            <label class="form-check-label" for="verifySsl">
-              Verificar certificados SSL (recomendado)
-            </label>
-          </div>
+          <details class="kx-avanzadas">
+            <summary>Opciones avanzadas</summary>
+            <!-- Versión API -->
+            <div class="form-group">
+              <label for="apiVersion">
+                <i class="fa fa-code-branch"></i> Versión de WooCommerce
+              </label>
+              <select id="apiVersion" formControlName="apiVersion" class="custom-select" autocomplete="off">
+                <option value="v3">v3 (recomendada)</option>
+                <option value="v2">v2</option>
+                <option value="v1">v1</option>
+              </select>
+              <small class="form-text text-muted">Déjala en v3, salvo que soporte te pida cambiarla.</small>
+            </div>
+
+            <!-- Verificar SSL -->
+            <div class="form-group form-check">
+              <input class="form-check-input" type="checkbox" id="verifySsl" formControlName="verifySsl">
+              <label class="form-check-label" for="verifySsl">
+                Comprobar el certificado de seguridad de la tienda (recomendado)
+              </label>
+            </div>
+          </details>
         </ng-container>
 
         <!-- Magento Fields -->
@@ -1238,7 +1206,7 @@
             <div class="input-with-icon password-field">
               <i class="fa fa-key prefix-icon"></i>
               <input type="password" id="adminToken" formControlName="adminToken">
-              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+              <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
             </div>
             <div *ngIf="integrationForm.get('adminToken')?.invalid && integrationForm.get('adminToken')?.touched"
               class="text-danger">
@@ -1266,7 +1234,7 @@
               <div class="input-with-icon password-field">
                 <i class="fa fa-lock prefix-icon"></i>
                 <input type="password" id="password" formControlName="password">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
               </div>
               <small class="form-text text-muted">Contraseña del usuario (opcional)</small>
             </div>
@@ -1277,32 +1245,32 @@
         <ng-container *ngIf="selectedIntegrationType === 'enviame'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
-            <span>Configura la integración con Enviame.io para gestionar tus envíos y logística en Latinoamérica.</span>
-            <a href="https://docs.enviame.io/docs/v2#tag/Envios/operation/Crear-Envios-Seller" target="_blank" class="learn-more">
-              <i class="fa fa-external-link"></i> Ver documentación
+            <span>Conecta tu cuenta de Envíame para cotizar y generar las guías de tus pedidos. Todos estos datos te los da Envíame al crear tu cuenta.</span>
+            <a href="https://docs.enviame.io/docs/v2#tag/Envios/operation/Crear-Envios-Seller" target="_blank" rel="noopener" class="learn-more">
+              <i class="fa fa-external-link"></i> Ver la guía de Envíame
             </a>
           </div>
 
           <div class="field-row">
             <div class="field-col form-group">
               <label for="apiKey">
-                API Key:
+                Clave de acceso (API Key)
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
-                <input [type]="showApiKey ? 'text' : 'password'" id="apiKey" formControlName="apiKey" autocomplete="off">
-                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
+                <input [type]="showApiKey ? 'text' : 'password'" id="apiKey" formControlName="apiKey" autocomplete="off"
+                  [placeholder]="editingIntegrationId ? 'Guardada · déjala vacía para conservarla' : ''">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" (click)="toggleApiKeyVisibility()"></i>
               </div>
               <div *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> La API Key es obligatoria (mínimo 10 caracteres)
+                <i class="fa fa-exclamation-triangle"></i> Pega la clave de acceso que te dio Envíame
               </div>
-              <small class="form-text text-muted">API Key proporcionada por Enviame</small>
             </div>
 
             <div class="field-col form-group">
               <label for="id_seller">
-                ID Seller:
+                Número de vendedor (ID Seller)
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon">
@@ -1310,487 +1278,391 @@
                 <input type="text" id="id_seller" formControlName="id_seller" placeholder="Ej: 12345" autocomplete="off">
               </div>
               <div *ngIf="integrationForm.get('id_seller')?.invalid && integrationForm.get('id_seller')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> El ID Seller es obligatorio
+                <i class="fa fa-exclamation-triangle"></i> Escribe tu número de vendedor, solo números
               </div>
-              <small class="form-text text-muted">ID numérico de la empresa/seller generado por Enviame</small>
             </div>
           </div>
 
           <div class="field-row">
             <div class="field-col form-group">
               <label for="warehouse_code">
-                Código de Bodega:
+                Código de tu bodega en Envíame
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon">
                 <i class="fa fa-warehouse prefix-icon"></i>
-                <input type="text" id="warehouse_code" formControlName="warehouse_code" placeholder="Ej: bod_sell" autocomplete="off">
+                <input type="text" id="warehouse_code" formControlName="warehouse_code" autocomplete="off">
               </div>
               <div *ngIf="integrationForm.get('warehouse_code')?.invalid && integrationForm.get('warehouse_code')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> El código de bodega es obligatorio
+                <i class="fa fa-exclamation-triangle"></i> Escribe el código de la bodega de donde salen tus envíos
               </div>
-              <small class="form-text text-muted">Código de la bodega donde se originarán los envíos</small>
+              <small class="form-text text-muted">La bodega de donde salen tus envíos.</small>
             </div>
 
             <div class="field-col form-group">
-              <label for="country">
-                País:
+              <label for="default_service">
+                Tipo de servicio
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon">
-                <i class="fa fa-flag prefix-icon"></i>
-                <select id="country" formControlName="country" class="form-control" autocomplete="off">
-                  <option value="CL">Chile (CL)</option>
-                  <option value="CO">Colombia (CO)</option>
-                  <option value="PE">Perú (PE)</option>
-                  <option value="MX">México (MX)</option>
-                </select>
+                <i class="fa fa-shipping-fast prefix-icon"></i>
+                <input type="text" id="default_service" formControlName="default_service" autocomplete="off">
               </div>
-              <div *ngIf="integrationForm.get('country')?.invalid && integrationForm.get('country')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> El país es obligatorio
+              <div *ngIf="integrationForm.get('default_service')?.invalid && integrationForm.get('default_service')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Escribe el tipo de servicio que usas
               </div>
-              <small class="form-text text-muted">País donde operará el servicio</small>
+              <small class="form-text text-muted">El que usas casi siempre, como te lo nombra Envíame.</small>
             </div>
           </div>
 
           <div class="field-row">
             <div class="field-col form-group">
               <label for="default_carrier">
-                Carrier por Defecto:
+                Transportadora que más usas
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon">
                 <i class="fa fa-truck prefix-icon"></i>
-                <input type="text" id="default_carrier" formControlName="default_carrier" placeholder="Ej: STARKEN" autocomplete="off">
+                <input type="text" id="default_carrier" formControlName="default_carrier" autocomplete="off">
               </div>
               <div *ngIf="integrationForm.get('default_carrier')?.invalid && integrationForm.get('default_carrier')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> El carrier por defecto es obligatorio
+                <i class="fa fa-exclamation-triangle"></i> Escribe la transportadora
               </div>
-              <small class="form-text text-muted">Nombre del carrier predeterminado para envíos</small>
             </div>
 
             <div class="field-col form-group">
               <label for="carrier_code">
-                Código de Carrier:
+                Código de esa transportadora
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon">
                 <i class="fa fa-barcode prefix-icon"></i>
-                <input type="text" id="carrier_code" formControlName="carrier_code" placeholder="Ej: SKN, BLX" autocomplete="off">
+                <input type="text" id="carrier_code" formControlName="carrier_code" autocomplete="off">
               </div>
               <div *ngIf="integrationForm.get('carrier_code')?.invalid && integrationForm.get('carrier_code')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> El código de carrier es obligatorio
+                <i class="fa fa-exclamation-triangle"></i> Escribe el código de la transportadora
               </div>
-              <small class="form-text text-muted">Código específico del carrier (SKN=Starken, BLX=Bluexpress, etc)</small>
+              <small class="form-text text-muted">El código corto que Envíame le da a esa transportadora.</small>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="apiUrl">
-              <i class="fa fa-globe"></i> URL de API:
-              <span class="field-required">*</span>
-            </label>
-            <div class="input-with-icon">
-              <i class="fa fa-link prefix-icon"></i>
-              <input type="url" id="apiUrl" formControlName="apiUrl" placeholder="https://api.enviame.io/api/s2/v2/companies/" autocomplete="off">
-            </div>
-            <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para la API
-            </div>
-            <small class="form-text text-muted">URL base del servicio API de Enviame</small>
-          </div>
+          <details class="kx-avanzadas">
+            <summary>Opciones avanzadas</summary>
 
-          <div class="field-row">
-            <div class="field-col form-group">
-              <label for="environment">
-                <i class="fa fa-server"></i> Ambiente:
-              </label>
-              <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
-                <option value="production">Producción</option>
-                <option value="stage">Stage (Pruebas)</option>
-              </select>
-              <small class="form-text text-muted">Ambiente del servicio a utilizar</small>
+            <div class="field-row">
+              <div class="field-col form-group">
+                <label for="environment">Ambiente</label>
+                <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
+                  <option value="production">Producción (envíos reales)</option>
+                  <option value="stage">Pruebas</option>
+                </select>
+              </div>
+
+              <div class="field-col form-group">
+                <label for="country">País</label>
+                <select id="country" formControlName="country" class="form-control" autocomplete="off">
+                  <option value="CO">Colombia</option>
+                  <option value="CL">Chile</option>
+                  <option value="PE">Perú</option>
+                  <option value="MX">México</option>
+                </select>
+              </div>
             </div>
 
-            <div class="field-col form-group">
-              <label for="default_service">
-                <i class="fa fa-shipping-fast"></i> Servicio por Defecto:
-                <span class="field-required">*</span>
-              </label>
+            <div class="form-group">
+              <label for="apiUrl">Dirección del servicio de Envíame</label>
               <div class="input-with-icon">
-                <i class="fa fa-shipping-fast prefix-icon"></i>
-                <input type="text" id="default_service" formControlName="default_service" placeholder="Ej: priority, standard" autocomplete="off">
+                <i class="fa fa-link prefix-icon"></i>
+                <input type="url" id="apiUrl" formControlName="apiUrl" autocomplete="off">
               </div>
-              <div *ngIf="integrationForm.get('default_service')?.invalid && integrationForm.get('default_service')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> El servicio por defecto es obligatorio
+              <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Escribe una dirección que empiece por https://
               </div>
-              <small class="form-text text-muted">Tipo de servicio predeterminado para envíos</small>
+              <small class="form-text text-muted">Déjala como está, salvo que Envíame te dé otra.</small>
             </div>
-          </div>
 
-          <div class="field-row">
-            <div class="field-col form-group">
-              <label for="timeout">
-                <i class="fa fa-clock"></i> Timeout (segundos):
-              </label>
+            <div class="form-group">
+              <label for="webhookUrl">Dirección de avisos (opcional)</label>
               <div class="input-with-icon">
-                <i class="fa fa-hourglass-half prefix-icon"></i>
-                <input type="number" id="timeout" formControlName="timeout" min="5" max="300" placeholder="30" autocomplete="off">
+                <i class="fa fa-bell prefix-icon"></i>
+                <input type="url" id="webhookUrl" formControlName="webhookUrl" autocomplete="off">
               </div>
-              <div *ngIf="integrationForm.get('timeout')?.invalid && integrationForm.get('timeout')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> El timeout debe estar entre 5 y 300 segundos
+              <div *ngIf="integrationForm.get('webhookUrl')?.invalid && integrationForm.get('webhookUrl')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Escribe una dirección que empiece por https://
               </div>
-              <small class="form-text text-muted">Tiempo máximo de espera para respuestas</small>
             </div>
 
-            <div class="field-col form-group">
-              <label for="notifyErrors">
-                <i class="fa fa-bell"></i> Notificar errores:
-              </label>
-              <div class="toggle-container">
-                <label class="switch">
-                  <input type="checkbox" formControlName="notifyErrors" id="notifyErrors">
-                  <span class="slider"></span>
-                </label>
-                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('notifyErrors')?.value, 'inactive': !integrationForm.get('notifyErrors')?.value}">
-                  {{ integrationForm.get('notifyErrors')?.value ? 'Activado' : 'Desactivado' }}
-                </span>
+            <div class="form-group">
+              <label for="webhook_secret">Secreto de los avisos (opcional)</label>
+              <div class="input-with-icon password-field">
+                <i class="fa fa-key prefix-icon"></i>
+                <input [type]="showApiSecret ? 'text' : 'password'" id="webhook_secret" formControlName="webhook_secret" autocomplete="off">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" (click)="toggleApiSecretVisibility()"></i>
               </div>
-              <small class="form-text text-muted">Recibir notificaciones por email en caso de errores</small>
+              <div *ngIf="integrationForm.get('webhook_secret')?.invalid && integrationForm.get('webhook_secret')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Si lo usas, debe tener al menos 10 caracteres
+              </div>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label for="webhookUrl">
-              <i class="fa fa-link"></i> URL del Webhook:
-            </label>
-            <div class="input-with-icon">
-              <i class="fa fa-bell prefix-icon"></i>
-              <input type="url" id="webhookUrl" formControlName="webhookUrl" placeholder="https://tutienda.com/webhooks/enviame" autocomplete="off">
-            </div>
-            <div *ngIf="integrationForm.get('webhookUrl')?.invalid && integrationForm.get('webhookUrl')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para el webhook
-            </div>
-            <small class="form-text text-muted">URL donde recibirás notificaciones de estado de envíos</small>
-          </div>
+            <div class="field-row">
+              <div class="field-col form-group">
+                <label for="timeout">Tiempo máximo de espera (segundos)</label>
+                <div class="input-with-icon">
+                  <i class="fa fa-hourglass-half prefix-icon"></i>
+                  <input type="number" id="timeout" formControlName="timeout" min="5" max="300" autocomplete="off">
+                </div>
+              </div>
 
-          <div class="form-group">
-            <label for="webhook_secret">
-              <i class="fa fa-shield-alt"></i> Secret del Webhook:
-            </label>
-            <div class="input-with-icon password-field">
-              <i class="fa fa-key prefix-icon"></i>
-              <input [type]="showApiSecret ? 'text' : 'password'" id="webhook_secret" formControlName="webhook_secret" placeholder="Secret para validar webhooks" autocomplete="off">
-              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiSecretVisibility()"></i>
+              <div class="field-col form-group">
+                <label for="notifyErrors">Avisarme por correo si algo falla</label>
+                <div class="toggle-container">
+                  <label class="switch">
+                    <input type="checkbox" formControlName="notifyErrors" id="notifyErrors">
+                    <span class="slider"></span>
+                  </label>
+                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('notifyErrors')?.value, 'inactive': !integrationForm.get('notifyErrors')?.value}">
+                    {{ integrationForm.get('notifyErrors')?.value ? 'Sí' : 'No' }}
+                  </span>
+                </div>
+              </div>
             </div>
-            <small class="form-text text-muted">Clave secreta para validar las notificaciones de webhook (recomendado)</small>
-          </div>
-
-          <div class="integration-info-box">
-            <i class="fa fa-lightbulb"></i>
-            <span><strong>Tip:</strong> Para probar la integración, puedes usar el ambiente de Stage con credenciales de prueba proporcionadas por Enviame.</span>
-          </div>
+          </details>
         </ng-container>
 
         <!-- Partners Logística Fields -->
         <ng-container *ngIf="selectedIntegrationType === 'partners_logistics'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
-            <span>Configure la integración con su partner de logística proporcionando la API Key, URL del servicio y webhook para recibir actualizaciones.</span>
+            <span>Conecta a tu operador logístico aliado. La clave de acceso y la dirección del servicio te las da tu operador.</span>
           </div>
 
           <div class="form-group">
             <label for="apiKey">
-              <i class="fa fa-key"></i> API Key:
+              <i class="fa fa-key"></i> Clave de acceso
               <span class="field-required">*</span>
             </label>
-            <div class="input-with-icon">
+            <div class="input-with-icon password-field">
               <i class="fa fa-lock prefix-icon"></i>
-              <input type="password" id="apiKey" formControlName="apiKey" placeholder="Ingrese la API Key proporcionada por el partner">
+              <input type="password" id="apiKey" formControlName="apiKey" autocomplete="off"
+                [placeholder]="editingIntegrationId ? 'Guardada · déjala vacía para conservarla' : 'La que te dio tu operador'">
+              <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" role="button" tabindex="0" (click)="alternarVisible($event)" (keydown.enter)="alternarVisible($event)"></i>
             </div>
             <div *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> La API Key es obligatoria y debe tener al menos 10 caracteres
+              <i class="fa fa-exclamation-triangle"></i> Pega la clave de acceso (al menos 10 caracteres)
             </div>
-            <small class="form-text text-muted">Clave de autenticación proporcionada por su partner de logística</small>
           </div>
 
           <div class="form-group">
             <label for="apiUrl">
-              <i class="fa fa-globe"></i> URL de API:
+              <i class="fa fa-globe"></i> Dirección del servicio
               <span class="field-required">*</span>
             </label>
             <div class="input-with-icon">
               <i class="fa fa-link prefix-icon"></i>
-              <input type="url" id="apiUrl" formControlName="apiUrl" placeholder="https://api.partner-logistica.com/v1">
+              <input type="url" id="apiUrl" formControlName="apiUrl" placeholder="https://…">
             </div>
             <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para la API
+              <i class="fa fa-exclamation-triangle"></i> Escribe una dirección que empiece por https://
             </div>
-            <small class="form-text text-muted">URL base del servicio API del partner</small>
           </div>
 
-          <div class="form-group">
-            <label for="webhookUrl">
-              <i class="fa fa-link"></i> URL del Webhook:
-              <span class="field-required">*</span>
-            </label>
-            <div class="input-with-icon">
-              <i class="fa fa-bell prefix-icon"></i>
-              <input type="url" id="webhookUrl" formControlName="webhookUrl" placeholder="https://tutienda.com/webhooks/partners-logistics">
-            </div>
-            <div *ngIf="integrationForm.get('webhookUrl')?.invalid && integrationForm.get('webhookUrl')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para el webhook
-            </div>
-            <small class="form-text text-muted">URL donde recibirás notificaciones de estado de envíos</small>
-          </div>
+          <details class="kx-avanzadas">
+            <summary>Opciones avanzadas</summary>
 
-          <div class="field-row">
-            <div class="field-col form-group">
-              <label for="environment">
-                <i class="fa fa-server"></i> Ambiente:
-              </label>
-              <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
-                <option value="production">Producción</option>
-                <option value="staging">Staging</option>
-                <option value="development">Desarrollo</option>
-              </select>
-              <small class="form-text text-muted">Ambiente del servicio a utilizar</small>
-            </div>
-
-            <div class="field-col form-group">
-              <label for="timeout">
-                <i class="fa fa-clock"></i> Timeout (segundos):
-              </label>
+            <div class="form-group">
+              <label for="webhookUrl">Dirección donde tu operador le avisa a Katuq</label>
               <div class="input-with-icon">
-                <i class="fa fa-hourglass-half prefix-icon"></i>
-                <input type="number" id="timeout" formControlName="timeout" min="5" max="300" placeholder="30" autocomplete="off">
+                <i class="fa fa-bell prefix-icon"></i>
+                <input type="url" id="webhookUrl" formControlName="webhookUrl">
               </div>
-              <div *ngIf="integrationForm.get('timeout')?.invalid && integrationForm.get('timeout')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> El timeout debe estar entre 5 y 300 segundos
+              <div *ngIf="integrationForm.get('webhookUrl')?.invalid && integrationForm.get('webhookUrl')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Escribe una dirección que empiece por https://
               </div>
-              <small class="form-text text-muted">Tiempo máximo de espera para respuestas</small>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <div class="field-col form-group">
-              <label for="retryAttempts">
-                <i class="fa fa-redo"></i> Reintentos:
-              </label>
-              <div class="input-with-icon">
-                <i class="fa fa-repeat prefix-icon"></i>
-                <input type="number" id="retryAttempts" formControlName="retryAttempts" min="0" max="10" placeholder="3">
-              </div>
-              <div *ngIf="integrationForm.get('retryAttempts')?.invalid && integrationForm.get('retryAttempts')?.touched" class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> Los reintentos deben estar entre 0 y 10
-              </div>
-              <small class="form-text text-muted">Número de reintentos en caso de fallo</small>
+              <small class="form-text text-muted">Ya viene lista con la dirección de Katuq. Compártela con tu operador si te la pide.</small>
             </div>
 
-            <div class="field-col form-group">
-              <label for="notifyErrors">
-                <i class="fa fa-bell"></i> Notificar errores:
-              </label>
-              <div class="toggle-container">
-                <label class="switch">
-                  <input type="checkbox" formControlName="notifyErrors" id="notifyErrors">
-                  <span class="slider"></span>
-                </label>
-                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('notifyErrors')?.value, 'inactive': !integrationForm.get('notifyErrors')?.value}">
-                  {{ integrationForm.get('notifyErrors')?.value ? 'Activado' : 'Desactivado' }}
-                </span>
+            <div class="field-row">
+              <div class="field-col form-group">
+                <label for="environment">Ambiente</label>
+                <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
+                  <option value="production">Producción</option>
+                  <option value="staging">Pruebas</option>
+                  <option value="development">Desarrollo</option>
+                </select>
               </div>
-              <small class="form-text text-muted">Recibir notificaciones por email en caso de errores</small>
+
+              <div class="field-col form-group">
+                <label for="timeout">Tiempo máximo de espera (segundos)</label>
+                <div class="input-with-icon">
+                  <i class="fa fa-hourglass-half prefix-icon"></i>
+                  <input type="number" id="timeout" formControlName="timeout" min="5" max="300" autocomplete="off">
+                </div>
+              </div>
             </div>
-          </div>
+
+            <div class="field-row">
+              <div class="field-col form-group">
+                <label for="retryAttempts">Reintentos si falla</label>
+                <div class="input-with-icon">
+                  <i class="fa fa-repeat prefix-icon"></i>
+                  <input type="number" id="retryAttempts" formControlName="retryAttempts" min="0" max="10">
+                </div>
+              </div>
+
+              <div class="field-col form-group">
+                <label for="notifyErrors">Avisarme por correo si algo falla</label>
+                <div class="toggle-container">
+                  <label class="switch">
+                    <input type="checkbox" formControlName="notifyErrors" id="notifyErrors">
+                    <span class="slider"></span>
+                  </label>
+                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('notifyErrors')?.value, 'inactive': !integrationForm.get('notifyErrors')?.value}">
+                    {{ integrationForm.get('notifyErrors')?.value ? 'Sí' : 'No' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </details>
         </ng-container>
 
         <!-- Aliaddo Fulfillment Fields -->
         <ng-container *ngIf="selectedIntegrationType === 'aliaddo_fulfillment'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
-            <span>Configure la integración con Aliaddo Fulfillment para sincronizar inventario externo y gestionar órdenes de manera automática.</span>
-            <a href="https://app.aliaddo.net/docs" target="_blank" class="learn-more">
-              <i class="fa fa-external-link"></i> Ver documentación
+            <span>Conecta tu cuenta de Aliaddo para que tus existencias y tus despachos se sincronicen solos.</span>
+            <a href="https://app.aliaddo.net/docs" target="_blank" rel="noopener" class="learn-more">
+              <i class="fa fa-external-link"></i> Ver la guía de Aliaddo
             </a>
           </div>
 
-          <div class="card mb-4">
-            <div class="card-header bg-light">
-              <h6 class="mb-0">
-                <i class="fa fa-lock me-2"></i>Configuración de API
-              </h6>
+          <div class="form-group">
+            <label for="apiToken">
+              <i class="fa fa-key"></i> Token de acceso
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-key prefix-icon"></i>
+              <input [type]="showApiKey ? 'text' : 'password'" id="apiToken" formControlName="apiToken" autocomplete="off"
+                [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : 'Pega aquí tu token de Aliaddo'">
+              <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" (click)="toggleApiKeyVisibility()"></i>
             </div>
-            <div class="card-body">
-              <div class="form-group">
-                <label for="apiToken">
-                  <i class="fa fa-key"></i> Token de API:
-                  <span class="field-required">*</span>
-                </label>
-                <div class="input-with-icon password-field">
-                  <i class="fa fa-key prefix-icon"></i>
-                  <input [type]="showApiKey ? 'text' : 'password'" id="apiToken" formControlName="apiToken" placeholder="Ingresa tu token de Aliaddo" autocomplete="off">
-                  <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
-                </div>
-                <div *ngIf="integrationForm.get('apiToken')?.invalid && integrationForm.get('apiToken')?.touched" class="text-danger">
-                  <i class="fa fa-exclamation-triangle"></i> El token es obligatorio (mínimo 20 caracteres)
-                </div>
-                <small class="form-text text-muted">Obtén tu token desde: Aliaddo Dashboard → Mis datos → Integración</small>
+            <div *ngIf="integrationForm.get('apiToken')?.invalid && integrationForm.get('apiToken')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Pega el token (al menos 20 caracteres)
+            </div>
+            <small class="form-text text-muted">En Aliaddo: Mis datos → Integración.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="terceroInternoId">
+              <i class="fa fa-user-tag"></i> Contacto "Ventas Katuq" en Aliaddo
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-id-card prefix-icon"></i>
+              <input type="text" id="terceroInternoId" formControlName="terceroInternoId" placeholder="Identificador del contacto" autocomplete="off">
+            </div>
+            <div *ngIf="integrationForm.get('terceroInternoId')?.invalid && integrationForm.get('terceroInternoId')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Sin este contacto Aliaddo no puede descontar las existencias de tus ventas
+            </div>
+            <small class="form-text text-muted">
+              En Aliaddo ve a Contactos, crea uno llamado "Ventas Katuq", guárdalo y copia aquí su identificador.
+              Aliaddo lo usa para registrar las ventas que descuentan existencias.
+            </small>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="defaultWarehouseId">
+                <i class="fa fa-warehouse"></i> Bodega por defecto (opcional)
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-warehouse prefix-icon"></i>
+                <input type="text" id="defaultWarehouseId" formControlName="defaultWarehouseId" placeholder="Identificador de la bodega en Aliaddo" autocomplete="off">
               </div>
+            </div>
 
-              <div class="field-row">
-                <div class="field-col form-group">
-                  <label for="apiUrl">
-                    <i class="fa fa-globe"></i> URL de API:
-                  </label>
-                  <div class="input-with-icon">
-                    <i class="fa fa-link prefix-icon"></i>
-                    <input type="text" id="apiUrl" formControlName="apiUrl" placeholder="https://app.aliaddo.net/v1" autocomplete="off">
-                  </div>
-                  <small class="form-text text-muted">URL base del servicio API de Aliaddo</small>
-                </div>
-
-                <div class="field-col form-group">
-                  <label for="environment">
-                    <i class="fa fa-server"></i> Ambiente:
-                  </label>
-                  <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
-                    <option value="production">Producción</option>
-                    <option value="test">Pruebas</option>
-                  </select>
-                  <small class="form-text text-muted">Ambiente del servicio a utilizar</small>
-                </div>
+            <div class="field-col form-group">
+              <label for="enableAutoSync">
+                <i class="fa fa-sync"></i> Sincronizar existencias solas
+              </label>
+              <div class="toggle-container">
+                <label class="switch">
+                  <input type="checkbox" formControlName="enableAutoSync" id="enableAutoSync">
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('enableAutoSync')?.value, 'inactive': !integrationForm.get('enableAutoSync')?.value}">
+                  {{ integrationForm.get('enableAutoSync')?.value ? 'Sí' : 'No' }}
+                </span>
               </div>
             </div>
           </div>
 
-          <div class="card mb-4">
-            <div class="card-header bg-light">
-              <h6 class="mb-0">
-                <i class="fa fa-warehouse me-2"></i>Configuración de Bodega
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="form-group">
-                <label for="defaultWarehouseId">
-                  <i class="fa fa-warehouse"></i> Bodega por Defecto:
-                </label>
+          <details class="kx-avanzadas">
+            <summary>Opciones avanzadas</summary>
+
+            <div class="field-row">
+              <div class="field-col form-group">
+                <label for="apiUrl">Dirección del servicio de Aliaddo</label>
                 <div class="input-with-icon">
-                  <i class="fa fa-warehouse prefix-icon"></i>
-                  <input type="text" id="defaultWarehouseId" formControlName="defaultWarehouseId" placeholder="ID de bodega (opcional)" autocomplete="off">
+                  <i class="fa fa-link prefix-icon"></i>
+                  <input type="text" id="apiUrl" formControlName="apiUrl" autocomplete="off">
                 </div>
-                <small class="form-text text-muted">ID de la bodega predeterminada para operaciones de fulfillment</small>
               </div>
 
-              <div class="form-group mt-3">
-                <label for="terceroInternoId">
-                  <i class="fa fa-user-tag"></i> Tercero Interno (Requerido):
-                  <span class="required-badge">*</span>
-                </label>
+              <div class="field-col form-group">
+                <label for="environment">Ambiente</label>
+                <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
+                  <option value="production">Producción</option>
+                  <option value="test">Pruebas</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field-col form-group">
+                <label for="timeout">Tiempo máximo de espera (segundos)</label>
                 <div class="input-with-icon">
-                  <i class="fa fa-id-card prefix-icon"></i>
-                  <input type="text" id="terceroInternoId" formControlName="terceroInternoId" placeholder="UUID del tercero en Aliaddo" autocomplete="off">
+                  <i class="fa fa-hourglass-half prefix-icon"></i>
+                  <input type="number" id="timeout" formControlName="timeout" min="5" max="300" autocomplete="off">
                 </div>
-                <div *ngIf="integrationForm.get('terceroInternoId')?.invalid && integrationForm.get('terceroInternoId')?.touched" class="text-danger">
-                  <i class="fa fa-exclamation-triangle"></i> El Tercero Interno es requerido para crear remisiones de venta
-                </div>
-                <small class="form-text text-muted">
-                  <strong>Importante:</strong> Crea un tercero/contacto "Ventas Katuq" en Aliaddo y pega aquí su UUID.
-                  Este tercero se usa para las remisiones de venta que descuentan el stock.
-                </small>
-                <div class="alert alert-info mt-2 py-2 px-3" style="font-size: 0.85rem;">
-                  <i class="fa fa-info-circle me-1"></i>
-                  <strong>¿Cómo obtenerlo?</strong> En Aliaddo: Contactos → Crear Contacto → Nombre: "Ventas Katuq" → Guardar → Copiar el ID/UUID
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card mb-4">
-            <div class="card-header bg-light">
-              <h6 class="mb-0">
-                <i class="fa fa-cog me-2"></i>Configuración Avanzada
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="field-row">
-                <div class="field-col form-group">
-                  <label for="timeout">
-                    <i class="fa fa-clock"></i> Timeout (segundos):
-                  </label>
-                  <div class="input-with-icon">
-                    <i class="fa fa-hourglass-half prefix-icon"></i>
-                    <input type="number" id="timeout" formControlName="timeout" min="5" max="300" placeholder="30" autocomplete="off">
-                  </div>
-                  <div *ngIf="integrationForm.get('timeout')?.invalid && integrationForm.get('timeout')?.touched" class="text-danger">
-                    <i class="fa fa-exclamation-triangle"></i> El timeout debe estar entre 5 y 300 segundos
-                  </div>
-                  <small class="form-text text-muted">Tiempo máximo de espera para respuestas API</small>
-                </div>
-
-                <div class="field-col form-group">
-                  <label for="retryAttempts">
-                    <i class="fa fa-redo"></i> Intentos de Reintento:
-                  </label>
-                  <div class="input-with-icon">
-                    <i class="fa fa-repeat prefix-icon"></i>
-                    <input type="number" id="retryAttempts" formControlName="retryAttempts" min="1" max="10" placeholder="3" autocomplete="off">
-                  </div>
-                  <div *ngIf="integrationForm.get('retryAttempts')?.invalid && integrationForm.get('retryAttempts')?.touched" class="text-danger">
-                    <i class="fa fa-exclamation-triangle"></i> Los reintentos deben estar entre 1 y 10
-                  </div>
-                  <small class="form-text text-muted">Número de reintentos en caso de fallo de conexión</small>
+                <div *ngIf="integrationForm.get('timeout')?.invalid && integrationForm.get('timeout')?.touched" class="text-danger">
+                  <i class="fa fa-exclamation-triangle"></i> Entre 5 y 300 segundos
                 </div>
               </div>
 
-              <div class="form-group">
-                <label for="enableAutoSync">
-                  <i class="fa fa-sync"></i> Sincronización Automática:
-                </label>
-                <div class="toggle-container">
-                  <label class="switch">
-                    <input type="checkbox" formControlName="enableAutoSync" id="enableAutoSync">
-                    <span class="slider"></span>
-                  </label>
-                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('enableAutoSync')?.value, 'inactive': !integrationForm.get('enableAutoSync')?.value}">
-                    {{ integrationForm.get('enableAutoSync')?.value ? 'Activado' : 'Desactivado' }}
-                  </span>
-                </div>
-                <small class="form-text text-muted">Habilitar sincronización automática de inventario con Aliaddo</small>
-              </div>
-
-              <div class="form-group">
-                <label for="webhookUrl">
-                  <i class="fa fa-link"></i> URL del Webhook (Opcional):
-                </label>
+              <div class="field-col form-group">
+                <label for="retryAttempts">Reintentos si falla</label>
                 <div class="input-with-icon">
-                  <i class="fa fa-bell prefix-icon"></i>
-                  <input type="url" id="webhookUrl" formControlName="webhookUrl" placeholder="https://tutienda.com/webhooks/aliaddo" autocomplete="off">
+                  <i class="fa fa-repeat prefix-icon"></i>
+                  <input type="number" id="retryAttempts" formControlName="retryAttempts" min="1" max="10" autocomplete="off">
                 </div>
-                <div *ngIf="integrationForm.get('webhookUrl')?.invalid && integrationForm.get('webhookUrl')?.touched" class="text-danger">
-                  <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para el webhook
+                <div *ngIf="integrationForm.get('retryAttempts')?.invalid && integrationForm.get('retryAttempts')?.touched" class="text-danger">
+                  <i class="fa fa-exclamation-triangle"></i> Entre 1 y 10
                 </div>
-                <small class="form-text text-muted">URL donde recibirás notificaciones de cambios de estado</small>
-              </div>
-
-              <div class="form-group">
-                <label for="webhookSecret">
-                  <i class="fa fa-shield-alt"></i> Secret del Webhook (Opcional):
-                </label>
-                <div class="input-with-icon password-field">
-                  <i class="fa fa-key prefix-icon"></i>
-                  <input [type]="showApiSecret ? 'text' : 'password'" id="webhookSecret" formControlName="webhookSecret" placeholder="Secret para validar webhooks" autocomplete="off">
-                  <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiSecretVisibility()"></i>
-                </div>
-                <small class="form-text text-muted">Clave secreta para validar las notificaciones de webhook (recomendado)</small>
               </div>
             </div>
-          </div>
 
-          <div class="integration-info-box">
-            <i class="fa fa-lightbulb"></i>
-            <span><strong>Tip:</strong> Para probar la integración, usa el ambiente de Pruebas con un token de test proporcionado por Aliaddo.</span>
-          </div>
+            <div class="form-group">
+              <label for="webhookUrl">Dirección de avisos (opcional)</label>
+              <div class="input-with-icon">
+                <i class="fa fa-bell prefix-icon"></i>
+                <input type="url" id="webhookUrl" formControlName="webhookUrl" autocomplete="off">
+              </div>
+              <div *ngIf="integrationForm.get('webhookUrl')?.invalid && integrationForm.get('webhookUrl')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Escribe una dirección que empiece por https://
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="webhookSecret">Secreto de los avisos (opcional)</label>
+              <div class="input-with-icon password-field">
+                <i class="fa fa-key prefix-icon"></i>
+                <input [type]="showApiSecret ? 'text' : 'password'" id="webhookSecret" formControlName="webhookSecret" autocomplete="off"
+                  [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : ''">
+                <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" (click)="toggleApiSecretVisibility()"></i>
+              </div>
+            </div>
+          </details>
         </ng-container>
 
         <!-- ===== DIAN DIRECTO - SOFTWARE PROPIO ===== -->
@@ -2085,56 +1957,45 @@
           <div class="card mb-4">
             <div class="card-header bg-light">
               <h6 class="mb-0">
-                <i class="fa fa-key me-2"></i>Credenciales Siigo
+                <i class="fa fa-key me-2"></i>Tu cuenta de SIIGO
               </h6>
             </div>
             <div class="card-body">
               <div class="field-row">
                 <div class="field-col form-group">
                   <label for="siigoUsername">
-                    <i class="fa fa-user"></i> Usuario / Email: <span class="field-required">*</span>
+                    <i class="fa fa-user"></i> Usuario de SIIGO <span class="field-required">*</span>
                   </label>
                   <div class="input-with-icon">
                     <i class="fa fa-user prefix-icon"></i>
                     <input type="text" id="siigoUsername" formControlName="username" placeholder="tu-email@empresa.com" autocomplete="off">
                   </div>
                   <div *ngIf="integrationForm.get('username')?.invalid && integrationForm.get('username')?.touched" class="text-danger">
-                    <i class="fa fa-exclamation-triangle"></i> El usuario es requerido (mínimo 5 caracteres)
+                    <i class="fa fa-exclamation-triangle"></i> Escribe el correo o usuario con el que entras a SIIGO
                   </div>
-                  <small class="form-text text-muted">Email o usuario registrado en Siigo</small>
+                  <small class="form-text text-muted">El correo o usuario con el que entras a SIIGO.</small>
                 </div>
 
                 <div class="field-col form-group">
                   <label for="siigoAccessKey">
-                    <i class="fa fa-key"></i> Access Key: <span class="field-required">*</span>
+                    <i class="fa fa-key"></i> Clave de acceso (Access Key) <span class="field-required">*</span>
                   </label>
                   <div class="input-with-icon password-field">
                     <i class="fa fa-key prefix-icon"></i>
-                    <input [type]="showApiSecret ? 'text' : 'password'" id="siigoAccessKey" formControlName="accessKey" placeholder="Tu Access Key de Siigo" autocomplete="off">
+                    <input [type]="showApiSecret ? 'text' : 'password'" id="siigoAccessKey" formControlName="accessKey" [placeholder]="editingIntegrationId ? 'Guardada · déjala vacía para conservarla' : 'La clave para integraciones de tu SIIGO'" autocomplete="off">
                     <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiSecretVisibility()"></i>
                   </div>
                   <div *ngIf="integrationForm.get('accessKey')?.invalid && integrationForm.get('accessKey')?.touched" class="text-danger">
-                    <i class="fa fa-exclamation-triangle"></i> El Access Key es requerido (mínimo 10 caracteres)
+                    <i class="fa fa-exclamation-triangle"></i> Pega la clave de acceso (al menos 10 caracteres)
                   </div>
-                  <small class="form-text text-muted">Access Key proporcionada por Siigo para la API</small>
+                  <small class="form-text text-muted">La generas en SIIGO Nube, en la opción de credenciales para integraciones. Si no la encuentras, pídesela a tu contador o a SIIGO.</small>
                 </div>
               </div>
 
               <div class="field-row">
                 <div class="field-col form-group">
-                  <label for="siigoPartnerId">
-                    <i class="fa fa-handshake"></i> Partner ID:
-                  </label>
-                  <div class="input-with-icon">
-                    <i class="fa fa-handshake prefix-icon"></i>
-                    <input type="text" id="siigoPartnerId" formControlName="partnerId" readonly class="readonly-input">
-                  </div>
-                  <small class="form-text text-muted">ID del partner asignado por Siigo (Katuq)</small>
-                </div>
-
-                <div class="field-col form-group">
                   <label for="siigoTestMode">
-                    <i class="fa fa-flask"></i> Modo de Prueba:
+                    <i class="fa fa-flask"></i> Cuenta de pruebas
                   </label>
                   <div class="toggle-container">
                     <label class="switch">
@@ -2142,20 +2003,84 @@
                       <span class="slider"></span>
                     </label>
                     <span class="toggle-label" [ngClass]="{'active': integrationForm.get('testMode')?.value, 'inactive': !integrationForm.get('testMode')?.value}">
-                      {{ integrationForm.get('testMode')?.value ? 'Sandbox Activado' : 'Producción' }}
+                      {{ integrationForm.get('testMode')?.value ? 'Sí, es de pruebas' : 'No, es la real' }}
                     </span>
                   </div>
-                  <small class="form-text text-muted">Usa el ambiente de pruebas de Siigo (Sandbox)</small>
+                  <small class="form-text text-muted">Actívalo solo si SIIGO te dio una cuenta de pruebas.</small>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- Opciones de Automatización -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-magic me-2"></i>Qué hace Katuq por ti
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="siigoAutoInvoicing">
+                  <i class="fa fa-file-invoice-dollar"></i> Facturar solo
+                </label>
+                <div class="toggle-container">
+                  <label class="switch">
+                    <input type="checkbox" formControlName="enableAutoInvoicing" id="siigoAutoInvoicing">
+                    <span class="slider"></span>
+                  </label>
+                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('enableAutoInvoicing')?.value, 'inactive': !integrationForm.get('enableAutoInvoicing')?.value}">
+                    {{ integrationForm.get('enableAutoInvoicing')?.value ? 'Activado' : 'Desactivado' }}
+                  </span>
+                </div>
+                <small class="form-text text-muted">Cada pedido nuevo sale facturado en SIIGO sin que lo hagas a mano.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="siigoAutoSync">
+                  <i class="fa fa-sync"></i> Traer productos de SIIGO
+                </label>
+                <div class="toggle-container">
+                  <label class="switch">
+                    <input type="checkbox" formControlName="autoSyncInventory" id="siigoAutoSync">
+                    <span class="slider"></span>
+                  </label>
+                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('autoSyncInventory')?.value, 'inactive': !integrationForm.get('autoSyncInventory')?.value}">
+                    {{ integrationForm.get('autoSyncInventory')?.value ? 'Activado' : 'Desactivado' }}
+                  </span>
+                </div>
+                <small class="form-text text-muted">Mantiene tus productos iguales a los de SIIGO.</small>
+              </div>
+
+              <div class="form-group" *ngIf="integrationForm.get('autoSyncInventory')?.value">
+                <label for="siigoSyncFrequency">
+                  <i class="fa fa-clock"></i> Cada cuánto
+                </label>
+                <div class="input-with-icon">
+                  <i class="fa fa-clock prefix-icon"></i>
+                  <select id="siigoSyncFrequency" formControlName="syncFrequency" class="form-control">
+                    <option value="manual">Manual</option>
+                    <option value="hourly">Cada hora</option>
+                    <option value="daily">Diariamente</option>
+                    <option value="weekly">Semanalmente</option>
+                  </select>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+
+          <details class="kx-avanzadas">
+            <summary>Datos contables (para tu contador)</summary>
+            <p class="kx-avanzadas__nota" *ngIf="editingIntegrationId">
+              Para elegir estos datos de listas de tu SIIGO, usa la
+              <button type="button" class="kx-enlace" (click)="irA('/integrations/siigo')">configuración completa de SIIGO</button>.
+            </p>
           <!-- Configuración Contable -->
           <div class="card mb-4">
             <div class="card-header bg-light">
               <h6 class="mb-0">
-                <i class="fa fa-calculator me-2"></i>Configuración Contable
+                <i class="fa fa-calculator me-2"></i>Datos de facturación
               </h6>
             </div>
             <div class="card-body">
@@ -2225,64 +2150,6 @@
             </div>
           </div>
 
-          <!-- Opciones de Automatización -->
-          <div class="card mb-4">
-            <div class="card-header bg-light">
-              <h6 class="mb-0">
-                <i class="fa fa-magic me-2"></i>Automatización
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="form-group">
-                <label for="siigoAutoInvoicing">
-                  <i class="fa fa-file-invoice-dollar"></i> Facturación Automática:
-                </label>
-                <div class="toggle-container">
-                  <label class="switch">
-                    <input type="checkbox" formControlName="enableAutoInvoicing" id="siigoAutoInvoicing">
-                    <span class="slider"></span>
-                  </label>
-                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('enableAutoInvoicing')?.value, 'inactive': !integrationForm.get('enableAutoInvoicing')?.value}">
-                    {{ integrationForm.get('enableAutoInvoicing')?.value ? 'Activado' : 'Desactivado' }}
-                  </span>
-                </div>
-                <small class="form-text text-muted">Generar facturas automáticamente en Siigo al crear pedidos</small>
-              </div>
-
-              <div class="form-group">
-                <label for="siigoAutoSync">
-                  <i class="fa fa-sync"></i> Sincronización Automática de Inventario:
-                </label>
-                <div class="toggle-container">
-                  <label class="switch">
-                    <input type="checkbox" formControlName="autoSyncInventory" id="siigoAutoSync">
-                    <span class="slider"></span>
-                  </label>
-                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('autoSyncInventory')?.value, 'inactive': !integrationForm.get('autoSyncInventory')?.value}">
-                    {{ integrationForm.get('autoSyncInventory')?.value ? 'Activado' : 'Desactivado' }}
-                  </span>
-                </div>
-                <small class="form-text text-muted">Sincronizar productos automáticamente con Siigo</small>
-              </div>
-
-              <div class="form-group" *ngIf="integrationForm.get('autoSyncInventory')?.value">
-                <label for="siigoSyncFrequency">
-                  <i class="fa fa-clock"></i> Frecuencia de Sincronización:
-                </label>
-                <div class="input-with-icon">
-                  <i class="fa fa-clock prefix-icon"></i>
-                  <select id="siigoSyncFrequency" formControlName="syncFrequency" class="form-control">
-                    <option value="manual">Manual</option>
-                    <option value="hourly">Cada hora</option>
-                    <option value="daily">Diariamente</option>
-                    <option value="weekly">Semanalmente</option>
-                  </select>
-                </div>
-                <small class="form-text text-muted">Con qué frecuencia sincronizar el inventario</small>
-              </div>
-            </div>
-          </div>
-
           <!-- Mapeo de Cuentas Contables -->
           <div class="card mb-4">
             <div class="card-header bg-light">
@@ -2293,7 +2160,7 @@
             <div class="card-body">
               <div class="alert alert-info mb-3">
                 <i class="fa fa-info-circle"></i>
-                <span><strong>Nota:</strong> Ingresa los códigos de las cuentas contables según el Plan Único de Cuentas (PUC) colombiano.</span>
+                <span><strong>Para tu contador:</strong> los códigos de las cuentas según el Plan Único de Cuentas (PUC).</span>
               </div>
 
               <div class="field-row">
@@ -2359,9 +2226,11 @@
             </div>
           </div>
 
+          </details>
+
           <div class="integration-info-box">
             <i class="fa fa-lightbulb"></i>
-            <span><strong>Tip:</strong> Asegúrate de tener una cuenta activa en Siigo y las credenciales API correctas. Para obtener tu Access Key, ingresa a la configuración de tu cuenta en Siigo.</span>
+            <span><strong>Consejo:</strong> con tu usuario y tu clave de acceso basta para conectar. Los datos contables de abajo los puede llenar tu contador después.</span>
           </div>
         </ng-container>
 
@@ -2541,15 +2410,15 @@
         <ng-container *ngIf="selectedIntegrationType === 'multiop'">
           <div class="integration-info-box mb-3">
             <i class="fa fa-info-circle me-2"></i>
-            <span>Conecta Katuq con el sistema de produccion de lentes MultiOP. Los pedidos con prescripcion optica se enviaran automaticamente al laboratorio.</span>
+            <span>Conecta Katuq con el sistema de producción de lentes MultiOP. Los pedidos con fórmula óptica se envían solos al laboratorio y aquí ves cómo avanzan.</span>
           </div>
 
           <div class="row">
             <div class="col-md-12 mb-3">
               <div class="form-group">
-                <label for="apiUrl">URL del API <span class="field-required">*</span></label>
+                <label for="apiUrl">Dirección del servicio de MultiOP <span class="field-required">*</span></label>
                 <input type="text" class="form-control" id="multiopApiUrl" formControlName="apiUrl" placeholder="https://us-central1-..." />
-                <small class="text-muted">URL del backend de MultiOP</small>
+                <small class="text-muted">Te la da MultiOP.</small>
               </div>
             </div>
           </div>
@@ -2557,14 +2426,14 @@
           <div class="row">
             <div class="col-md-12 mb-3">
               <div class="form-group">
-                <label for="apiKey">API Key <span class="field-required">*</span></label>
+                <label for="apiKey">Clave de acceso <span class="field-required">*</span></label>
                 <div class="input-group">
                   <input [type]="showApiSecret ? 'text' : 'password'" class="form-control" id="multiopApiKey" formControlName="apiKey" placeholder="mop_live_..." />
                   <button type="button" class="btn btn-outline-secondary" (click)="toggleApiSecretVisibility()">
                     <i [class]="showApiSecret ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
                   </button>
                 </div>
-                <small class="text-muted">Genera la API Key desde MultiOP v2 > Maestros > Integraciones</small>
+                <small class="text-muted">En MultiOP: Maestros → Integraciones → generar clave.</small>
               </div>
             </div>
           </div>
@@ -2574,129 +2443,102 @@
         <ng-container *ngIf="selectedIntegrationType === 'prindel'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
-            <span>Configure la integración con Prindel para envíos de última milla en Colombia. Necesitará su Customer Token proporcionado por Prindel.</span>
-            <a href="https://api.prindel.com.co/swagger/doc.json" target="_blank" class="learn-more">
-              <i class="fa fa-external-link"></i> Ver documentación
-            </a>
+            <span>Prindel hace entregas de última milla en Colombia. Pide a Prindel tu token de cliente y pégalo aquí. Como Prindel no cotiza solo, el valor del envío es la tarifa que acordaste con ellos.</span>
           </div>
 
           <div class="form-group">
             <label for="customerToken">
-              <i class="fa fa-key"></i> Customer Token:
+              <i class="fa fa-key"></i> Token de cliente
               <span class="field-required">*</span>
             </label>
             <div class="input-with-icon password-field">
               <i class="fa fa-lock prefix-icon"></i>
-              <input [type]="showApiKey ? 'text' : 'password'" id="customerToken" formControlName="customerToken" placeholder="Ingrese el token de cliente de Prindel" autocomplete="off">
-              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
+              <input [type]="showApiKey ? 'text' : 'password'" id="customerToken" formControlName="customerToken" autocomplete="off"
+                [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : 'El token que te dio Prindel'">
+              <i class="fa fa-eye suffix-icon" title="Mostrar u ocultar" (click)="toggleApiKeyVisibility()"></i>
             </div>
             <div *ngIf="integrationForm.get('customerToken')?.invalid && integrationForm.get('customerToken')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> El Customer Token es obligatorio (mínimo 10 caracteres)
+              <i class="fa fa-exclamation-triangle"></i> Pega el token (al menos 10 caracteres)
             </div>
-            <small class="form-text text-muted">Token de autenticación proporcionado por Prindel (X-Customer-Token)</small>
-          </div>
-
-          <div class="form-group">
-            <label for="apiUrl">
-              <i class="fa fa-globe"></i> URL de API:
-              <span class="field-required">*</span>
-            </label>
-            <div class="input-with-icon">
-              <i class="fa fa-link prefix-icon"></i>
-              <input type="url" id="apiUrl" formControlName="apiUrl" placeholder="https://api.prindel.com.co" autocomplete="off">
-            </div>
-            <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para la API
-            </div>
-            <small class="form-text text-muted">URL base del servicio API de Prindel</small>
           </div>
 
           <div class="field-row">
             <div class="field-col form-group">
-              <label for="environment">
-                <i class="fa fa-server"></i> Ambiente:
-              </label>
-              <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
-                <option value="production">Producción</option>
-                <option value="sandbox">Sandbox</option>
-              </select>
-              <small class="form-text text-muted">Ambiente del servicio a utilizar</small>
-            </div>
-
-            <div class="field-col form-group">
               <label for="defaultRate">
-                <i class="fa fa-dollar-sign"></i> Tarifa por defecto (COP):
+                <i class="fa fa-dollar-sign"></i> Tarifa por envío (COP)
               </label>
               <div class="input-with-icon">
                 <i class="fa fa-money-bill prefix-icon"></i>
                 <input type="number" id="defaultRate" formControlName="defaultRate" min="0" placeholder="0" autocomplete="off">
               </div>
-              <small class="form-text text-muted">Tarifa acordada comercialmente (Prindel no tiene cotización automática)</small>
+              <small class="form-text text-muted">La que acordaste con Prindel.</small>
             </div>
-          </div>
 
-          <div class="field-row">
             <div class="field-col form-group">
               <label for="estimatedDays">
-                <i class="fa fa-calendar-alt"></i> Días estimados de entrega:
+                <i class="fa fa-calendar-alt"></i> Días de entrega
               </label>
               <div class="input-with-icon">
                 <i class="fa fa-clock prefix-icon"></i>
                 <input type="text" id="estimatedDays" formControlName="estimatedDays" placeholder="1-3" autocomplete="off">
               </div>
-              <small class="form-text text-muted">Tiempo estimado de entrega (ej: 1-3)</small>
+              <small class="form-text text-muted">Lo que le muestras al cliente, por ejemplo 1-3.</small>
             </div>
+          </div>
 
-            <div class="field-col form-group">
-              <label for="testMode">
-                <i class="fa fa-flask"></i> Modo de prueba:
-              </label>
-              <div class="toggle-container">
-                <label class="switch">
-                  <input type="checkbox" formControlName="testMode" id="testMode">
-                  <span class="slider"></span>
-                </label>
-                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('testMode')?.value, 'inactive': !integrationForm.get('testMode')?.value}">
-                  {{ integrationForm.get('testMode')?.value ? 'Activado' : 'Desactivado' }}
-                </span>
+          <details class="kx-avanzadas">
+            <summary>Opciones avanzadas</summary>
+
+            <div class="form-group">
+              <label for="apiUrl">Dirección del servicio de Prindel</label>
+              <div class="input-with-icon">
+                <i class="fa fa-link prefix-icon"></i>
+                <input type="url" id="apiUrl" formControlName="apiUrl" autocomplete="off">
               </div>
-              <small class="form-text text-muted">Activar para realizar pruebas sin crear envíos reales</small>
+              <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Escribe una dirección que empiece por https://
+              </div>
             </div>
-          </div>
 
-          <div class="integration-info-box">
-            <i class="fa fa-lightbulb"></i>
-            <span><strong>Nota:</strong> Prindel es un proveedor de logística de última milla especializado en Colombia. Los envíos se crean directamente sin cotización previa, con tarifa acordada comercialmente.</span>
-          </div>
+            <div class="field-row">
+              <div class="field-col form-group">
+                <label for="environment">Ambiente</label>
+                <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
+                  <option value="production">Producción</option>
+                  <option value="sandbox">Pruebas</option>
+                </select>
+              </div>
+
+              <div class="field-col form-group">
+                <label for="testMode">Modo de prueba</label>
+                <div class="toggle-container">
+                  <label class="switch">
+                    <input type="checkbox" formControlName="testMode" id="testMode">
+                    <span class="slider"></span>
+                  </label>
+                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('testMode')?.value, 'inactive': !integrationForm.get('testMode')?.value}">
+                    {{ integrationForm.get('testMode')?.value ? 'Sí, sin crear envíos reales' : 'No' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </details>
         </ng-container>
 
         <!-- ===== OSMOSIS / GUIACEREZA ===== -->
         <ng-container *ngIf="selectedIntegrationType === 'osmosis'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
-            <span>Configure la integración con <strong>Guiacereza (Osmosis)</strong> para sincronizar productos, stock por bodega y enviar pedidos automáticamente al ERP/ICG.</span>
+            <span>Conecta tu sistema <strong>Cereza</strong> para traer tus productos y existencias por bodega, y enviarle tus pedidos. Los tres datos de abajo te los da el equipo de Cereza.</span>
             <a href="https://osmosis-api.guiacereza.tech/api" target="_blank" class="learn-more">
-              <i class="fa fa-external-link"></i> Ver documentación
+              <i class="fa fa-external-link"></i> Ver la guía de Cereza
             </a>
-          </div>
-
-          <!-- API URL (opcional) -->
-          <div class="form-group">
-            <label for="osmosisApiUrl">
-              <i class="fa fa-globe"></i> API URL:
-            </label>
-            <div class="input-with-icon">
-              <i class="fa fa-globe prefix-icon"></i>
-              <input type="text" id="osmosisApiUrl" formControlName="apiUrl"
-                     placeholder="https://osmosis-api.guiacereza.tech/api" autocomplete="off">
-            </div>
-            <small class="form-text text-muted">URL base del API de Osmosis. Déjalo vacío para usar la URL por defecto.</small>
           </div>
 
           <!-- Node Slug -->
           <div class="form-group">
             <label for="nodeSlug">
-              <i class="fa fa-plug"></i> Node Slug:
+              <i class="fa fa-plug"></i> Identificador de tu nodo (Node Slug)
               <span class="field-required">*</span>
             </label>
             <div class="input-with-icon">
@@ -2705,44 +2547,43 @@
                      placeholder="Ej: mi-tienda-colombia" autocomplete="off">
             </div>
             <div *ngIf="integrationForm.get('nodeSlug')?.invalid && integrationForm.get('nodeSlug')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> El Node Slug es obligatorio (solo letras, números y guiones)
+              <i class="fa fa-exclamation-triangle"></i> Escribe el identificador: solo letras, números y guiones
             </div>
-            <small class="form-text text-muted">Identificador único de tu nodo en Osmosis. Lo provee el equipo de Guiacereza.</small>
+            <small class="form-text text-muted">Debe ser exactamente el que te dio Cereza.</small>
           </div>
 
           <!-- Client ID -->
           <div class="form-group">
             <label for="osmosisClientId">
-              <i class="fa fa-id-card"></i> Client ID:
+              <i class="fa fa-id-card"></i> Client ID
               <span class="field-required">*</span>
             </label>
             <div class="input-with-icon">
               <i class="fa fa-id-card prefix-icon"></i>
               <input type="text" id="osmosisClientId" formControlName="clientId"
-                     placeholder="Ingrese el Client ID de Osmosis" autocomplete="off">
+                     [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : 'El Client ID que te dio Cereza'" autocomplete="off">
             </div>
             <div *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched" class="text-danger">
               <i class="fa fa-exclamation-triangle"></i> El Client ID es obligatorio
             </div>
-            <small class="form-text text-muted">Credencial OAuth2 proporcionada por Guiacereza.</small>
           </div>
 
           <!-- Client Secret -->
           <div class="form-group">
             <label for="osmosisClientSecret">
-              <i class="fa fa-key"></i> Client Secret:
+              <i class="fa fa-key"></i> Client Secret
               <span class="field-required">*</span>
             </label>
             <div class="input-with-icon password-field">
               <i class="fa fa-lock prefix-icon"></i>
               <input [type]="showApiKey ? 'text' : 'password'" id="osmosisClientSecret"
-                     formControlName="clientSecret" placeholder="Ingrese el Client Secret de Osmosis" autocomplete="off">
+                     formControlName="clientSecret" [placeholder]="editingIntegrationId ? 'Guardado · déjalo vacío para conservarlo' : 'El Client Secret que te dio Cereza'" autocomplete="off">
               <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
             </div>
             <div *ngIf="integrationForm.get('clientSecret')?.invalid && integrationForm.get('clientSecret')?.touched" class="text-danger">
               <i class="fa fa-exclamation-triangle"></i> El Client Secret es obligatorio
             </div>
-            <small class="form-text text-muted">Credencial secreta OAuth2. No la compartas con nadie.</small>
+            <small class="form-text text-muted">No la compartas con nadie.</small>
           </div>
 
           <!-- Sync toggles -->
@@ -2806,7 +2647,7 @@
 
           <div class="integration-info-box">
             <i class="fa fa-lightbulb"></i>
-            <span><strong>Nota:</strong> Osmosis utiliza OAuth2 (Client Credentials). El token se renueva automáticamente cada 24 horas. Asegúrate de que el <em>nodeSlug</em> coincida exactamente con el registrado en la plataforma de Guiacereza.</span>
+            <span><strong>Nota:</strong> Katuq renueva solo el acceso a Cereza cada día. Si la prueba falla, revisa que el identificador del nodo sea exactamente el que te dio Cereza.</span>
           </div>
         </ng-container>
 
@@ -2814,13 +2655,13 @@
         <ng-container *ngIf="selectedIntegrationType === 'fullpi'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
-            <span>Configure la integración con <strong>Fullpi (WMS)</strong>: sus pedidos pagados se envían automáticamente a la bodega de Fullpi para despacho, y Katuq recibe el estado de cada envío y el inventario disponible.</span>
+            <span>Conecta tu bodega en <strong>Fullpi</strong>: tus pedidos pagados se envían a Fullpi para que los despache, y Katuq recibe el estado de cada envío y tus existencias. Los datos llegan en el correo de credenciales de Fullpi.</span>
           </div>
 
           <!-- API URL -->
           <div class="form-group">
             <label for="fullpiApiUrl">
-              <i class="fa fa-globe"></i> URL del API:
+              <i class="fa fa-globe"></i> Dirección del servicio
               <span class="field-required">*</span>
             </label>
             <div class="input-with-icon">
@@ -2831,32 +2672,32 @@
             <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
               <i class="fa fa-exclamation-triangle"></i> La URL es obligatoria y debe iniciar con https://
             </div>
-            <small class="form-text text-muted">Endpoint del WMS. Confírmalo con el correo de credenciales de Fullpi.</small>
+            <small class="form-text text-muted">Viene en el correo de credenciales de Fullpi.</small>
           </div>
 
           <!-- Secret -->
           <div class="form-group">
             <label for="fullpiSecret">
-              <i class="fa fa-key"></i> Secret de autenticación:
+              <i class="fa fa-key"></i> Clave secreta
               <span class="field-required">*</span>
             </label>
             <div class="input-with-icon password-field">
               <i class="fa fa-lock prefix-icon"></i>
               <input [type]="showApiKey ? 'text' : 'password'" id="fullpiSecret"
-                     formControlName="secret" placeholder="Secret enviado por correo por Fullpi" autocomplete="off">
+                     formControlName="secret" [placeholder]="editingIntegrationId ? 'Guardada · déjala vacía para conservarla' : 'La que llegó en el correo de Fullpi'" autocomplete="off">
               <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
             </div>
             <div *ngIf="integrationForm.get('secret')?.invalid && integrationForm.get('secret')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> El secret es obligatorio
+              <i class="fa fa-exclamation-triangle"></i> Pega la clave secreta
             </div>
-            <small class="form-text text-muted">Katuq lo guarda encriptado. Pruebas y producción usan secrets distintos (mismo endpoint).</small>
+            <small class="form-text text-muted">Pruebas y producción usan claves distintas.</small>
           </div>
 
           <div class="field-row">
             <!-- Bodega Katuq -->
             <div class="field-col form-group">
               <label for="fullpiBodegaCode">
-                <i class="fa fa-warehouse"></i> Bodega Katuq:
+                <i class="fa fa-warehouse"></i> Bodega en Katuq
                 <span class="field-required">*</span>
               </label>
               <div class="input-with-icon">
@@ -2870,7 +2711,7 @@
             <!-- Código de bodega en Fullpi -->
             <div class="field-col form-group">
               <label for="fullpiCodigoBodegaWms">
-                <i class="fa fa-boxes"></i> Código de bodega en Fullpi:
+                <i class="fa fa-boxes"></i> Código de bodega en Fullpi
               </label>
               <div class="input-with-icon">
                 <i class="fa fa-boxes prefix-icon"></i>
@@ -2893,12 +2734,12 @@
                 <option value="production">Producción</option>
               </select>
             </div>
-            <small class="form-text text-muted">Empieza en Pruebas con el secret de pruebas; al pasar a Producción solo cambias el secret y este selector.</small>
+            <small class="form-text text-muted">Empieza en Pruebas con la clave de pruebas. Para pasar a Producción cambia la clave y este selector.</small>
           </div>
 
           <div class="integration-info-box">
             <i class="fa fa-lightbulb"></i>
-            <span><strong>Nota:</strong> guardar la configuración NO enciende la sincronización. El interruptor real son los tres flows de Fullpi en la pantalla <strong>Flows</strong> (enviar pedidos, estados e inventario) — actívalos cuando la prueba de conexión pase.</span>
+            <span><strong>Importante:</strong> guardar no empieza a enviar pedidos. Cuando la prueba funcione, ve a <strong>Automatizaciones</strong> y prende las tres de Fullpi: pedidos, estados y existencias.</span>
           </div>
         </ng-container>
 
@@ -3104,11 +2945,10 @@
           </span>
           <div class="kx-prueba__txt">
             <strong *ngIf="pruebaConexion === 'idle'">Prueba la conexión antes de guardar</strong>
-            <strong *ngIf="pruebaConexion === 'ok'">Conexión verificada</strong>
-            <strong *ngIf="pruebaConexion === 'error'">La conexión falló</strong>
-            <span *ngIf="pruebaConexion === 'idle'">Verificamos las llaves contra el proveedor para que no quede activa sin funcionar.</span>
-            <span *ngIf="pruebaConexion === 'ok'">Las llaves responden correctamente. Ya puedes guardar.</span>
-            <span *ngIf="pruebaConexion === 'error'">Revisa las llaves y el ambiente; el detalle está en el mensaje de arriba.</span>
+            <strong *ngIf="pruebaConexion === 'ok'">Funciona</strong>
+            <strong *ngIf="pruebaConexion === 'error'">No funcionó</strong>
+            <span *ngIf="mensajePrueba">{{ mensajePrueba }}</span>
+            <span *ngIf="!mensajePrueba && pruebaConexion === 'idle'">Revisamos con {{ plataformaElegida?.name || 'el servicio' }} que los datos funcionen, sin guardar nada.</span>
           </div>
           <button type="button" class="kx-b kx-b--suave"
                   (click)="testConnection()"
@@ -3117,38 +2957,22 @@
             {{ isTesting ? 'Probando…' : (pruebaConexion === 'idle' ? 'Probar' : 'Probar de nuevo') }}
           </button>
 
-          <!-- Activar va acá, pegado a la verificación: es la decisión que
-               depende de ella. Se avisa si se activa sin probar, pero no se
-               bloquea — hay integraciones que no exponen prueba de conexión. -->
-          <div class="kx-activar" *ngIf="integrationForm.get('enabled')">
-            <button type="button" class="kx-sw" [class.is-on]="integrationForm.get('enabled')?.value"
-                    (click)="integrationForm.get('enabled')?.setValue(!integrationForm.get('enabled')?.value)"
-                    [title]="integrationForm.get('enabled')?.value ? 'Se guardará activa' : 'Se guardará inactiva'">
-              <span></span>
-            </button>
-            <div class="kx-activar__txt">
-              <strong>{{ integrationForm.get('enabled')?.value ? 'Se activará al guardar' : 'Se guardará inactiva' }}</strong>
-              <span *ngIf="integrationForm.get('enabled')?.value && pruebaConexion !== 'ok'">
-                Aún no has verificado la conexión: puede quedar activa sin funcionar.
-              </span>
-              <span *ngIf="integrationForm.get('enabled')?.value && pruebaConexion === 'ok'">
-                Conexión verificada, queda lista para procesar.
-              </span>
-              <span *ngIf="!integrationForm.get('enabled')?.value">
-                Puedes activarla más tarde desde el listado.
-              </span>
-            </div>
-          </div>
+        </div>
+
+        <!-- Error al guardar: junto al botón, no solo en un aviso que se va -->
+        <div class="kx-error-guardar" *ngIf="errorGuardado" role="alert">
+          <i class="fa fa-exclamation-circle"></i>
+          <span>{{ errorGuardado }}</span>
         </div>
 
         <!-- Form Actions -->
         <div class="kx-pie kx-pie--form">
           <span class="kx-pie__hint">
             <ng-container *ngIf="selectedIntegrationType === 'dian'">Tus datos se guardan cifrados y separados para este comercio</ng-container>
-            <ng-container *ngIf="selectedIntegrationType !== 'dian'">{{ pruebaConexion === 'ok' ? 'Conexión verificada · lista para guardar' : 'Las llaves se guardan cifradas' }}</ng-container>
+            <ng-container *ngIf="selectedIntegrationType !== 'dian'">{{ pruebaConexion === 'ok' ? 'Probada · lista para guardar' : 'Tus datos se guardan cifrados' }}</ng-container>
           </span>
           <div class="kx-pie__acc">
-            <button type="button" class="kx-b kx-b--suave" *ngIf="!editingIntegrationId && !dianDirectMode" (click)="backToSelection()">
+            <button type="button" class="kx-b kx-b--suave" *ngIf="!editingIntegrationId && !dianDirectMode && !abiertoConProveedor" (click)="backToSelection()">
               <i class="fa fa-arrow-left"></i> Atrás
             </button>
             <button type="button" class="kx-b kx-b--suave" *ngIf="!dianDirectMode" (click)="cancel()">Cancelar</button>
@@ -3156,7 +2980,7 @@
             <button type="submit" class="kx-b kx-b--guardar" *ngIf="selectedIntegrationType !== 'dian' || dianStep === 4"
                     [disabled]="isSaving || isLoadingEdit || (selectedIntegrationType === 'dian' ? !!dianLoadError : integrationForm.invalid)">
               <i class="fa" [ngClass]="(isSaving || isLoadingEdit) ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-              {{ isLoadingEdit ? 'Cargando datos…' : isSaving ? 'Guardando…' : (selectedIntegrationType === 'dian' ? 'Guardar y continuar' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar y activar')) }}
+              {{ isLoadingEdit ? 'Cargando datos…' : isSaving ? 'Guardando…' : (selectedIntegrationType === 'dian' ? 'Guardar y continuar' : (editingIntegrationId ? 'Guardar cambios' : 'Guardar y conectar')) }}
             </button>
           </div>
         </div>

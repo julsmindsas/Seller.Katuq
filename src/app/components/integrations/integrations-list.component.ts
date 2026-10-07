@@ -15,6 +15,35 @@ import { takeUntil, debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { IntegrationManualControlService } from "./integration-manual-control.service";
 import { Router } from "@angular/router";
 import { listSupportedProviders } from "../provider-dashboard/provider-registry";
+import Swal from "sweetalert2";
+import {
+  DIRECTORIO_INTEGRACIONES,
+  EntradaDirectorio,
+  GrupoDirectorio,
+} from "./integrations-directorio";
+import { of } from "rxjs";
+import { catchError } from "rxjs/operators";
+import {
+  WhatsappBotConfig,
+  WhatsappIntegrationConfigService,
+} from "../../shared/services/notifications/whatsapp-integration-config.service";
+import { MetaInboxService } from "../notificaciones/meta-inbox/meta-inbox.service";
+import { MetaConexiones } from "../notificaciones/meta-inbox/models/meta-thread.model";
+
+/**
+ * Estado que ve el comercio en cada tarjeta.
+ * - ok / prueba / atencion: está conectada (prueba = bot en modo sombra;
+ *   atencion = Meta pide reconectar).
+ * - sin: no está conectada.
+ * - desconocido: no se pudo saber (cargando o error); no se muestra estado.
+ */
+export type EstadoTarjeta = "pronto" | "sin" | "ok" | "prueba" | "atencion" | "desconocido";
+
+interface ResumenWhatsapp {
+  activo: boolean;
+  numeroPropio: string | null;
+  bot: WhatsappBotConfig | null;
+}
 
 interface Toast {
   type: "success" | "error" | "warning" | "info";
@@ -67,6 +96,8 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     private modal: NgbModal,
     private manualControlService: IntegrationManualControlService,
     private router: Router,
+    private whatsappConfig: WhatsappIntegrationConfigService,
+    private metaInbox: MetaInboxService,
   ) {}
 
   ngOnInit(): void {
@@ -96,6 +127,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
     // Cargar integraciones al final
     this.loadIntegrations();
+    this.cargarEstadosExternos();
   }
 
   ngOnDestroy(): void {
@@ -126,11 +158,9 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
     // Errores globales
     this.errors$.pipe(takeUntil(this.destroy$)).subscribe((errors) => {
-      if (errors.list) {
-        this.uiHelper.showError(
-          `Error al cargar integraciones: ${errors.list}`,
-        );
-      }
+      // La pantalla muestra su propio aviso de error (sin jerga) y oculta
+      // los estados, que no se pueden saber sin el listado.
+      this.errorMessage = errors.list || null;
       if (errors.delete) {
         this.uiHelper.showError(`Error al eliminar: ${errors.delete}`);
       }
@@ -177,25 +207,17 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     this.stateService.setError("list", null);
     this.integrationsService.getIntegrations().subscribe({
       next: (integrations) => {
-        if (!integrations || integrations.length === 0) {
-          this.uiHelper.showInfo(
-            "No se encontraron integraciones configuradas",
-          );
-        } else {
-          this.uiHelper.showSuccess(
-            `Se cargaron ${integrations.length} integraciones correctamente`,
-          );
+        if (integrations && integrations.length > 0) {
           this.stateService.setIntegrations(integrations);
         }
+        this.listaCargada = true;
       },
       error: (error) => {
         this.stateService.setError(
           "list",
           error.message || "Error al cargar integraciones",
         );
-        this.uiHelper.showError(
-          "No se pudieron cargar las integraciones. Verificar conexión con el servidor.",
-        );
+        this.listaCargada = true;
       },
       complete: () => {
         this.stateService.setLoading("list", false);
@@ -295,6 +317,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       size: "xl",
       backdrop: "static",
       keyboard: false,
+      windowClass: "kq-int-modal",
     });
 
     if (integration) {
@@ -313,9 +336,12 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
           this.uiHelper.showSuccess("Integración guardada correctamente");
           this.refreshData(true); // Force refresh después de guardar
         }
+        this.cargarEstadosExternos();
       },
       (dismissed) => {
         this.stateService.selectIntegration(null);
+        // WhatsApp guarda desde su propio componente y se cierra sin "saved".
+        this.cargarEstadosExternos();
       },
     );
   }
@@ -370,9 +396,16 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   }
 
   deleteIntegration(integration: Integration): void {
-    if (
-      confirm(`¿Estás seguro de eliminar la integración "${integration.name}"?`)
-    ) {
+    Swal.fire({
+      title: `¿Quitar ${integration.name}?`,
+      text: "Katuq deja de hablar con este servicio. Puedes volver a conectarlo cuando quieras.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, quitar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#B83232",
+    }).then((r) => {
+      if (!r.isConfirmed) return;
       this.integrationsService.deleteIntegration(integration.id!).subscribe({
         next: () => {
           this.uiHelper.showSuccess("Integración eliminada correctamente");
@@ -381,7 +414,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
           this.uiHelper.showError("Error al eliminar la integración");
         },
       });
-    }
+    });
   }
 
   // Métodos de utilidad para el template
@@ -797,7 +830,9 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
       type: integration.id,
       name: integration.name,
       category: category,
-      enabled: false,
+      // El backend deja activa toda integración que se guarda; marcarla
+      // "apagada" aquí solo hacía que el formulario dijera algo falso.
+      enabled: true,
       credentials: {},
     };
     this.openIntegrationModal(newIntegration as Integration);
@@ -820,6 +855,218 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
   // Propiedades que necesita el template
   availableIntegrations: any = {};
+
+  // ===== Directorio para personas no técnicas (rediseño 2026-10-07) =====
+  // Solo cambia cómo se presenta. Conectar y "Ver y editar" abren el mismo
+  // formulario de siempre, así que el guardado no cambia. La tarjeta no
+  // apaga ni borra nada: en el backend el guardado siempre deja la
+  // integración activa y el borrado de esta pantalla nunca funcionó, así que
+  // esos botones se quitaron en vez de seguir prometiendo algo que no pasaba.
+  readonly directorio: GrupoDirectorio[] = DIRECTORIO_INTEGRACIONES;
+  busquedaDir = "";
+  soloMias = false;
+  /** true cuando el listado ya respondió (con datos, vacío o con error). */
+  listaCargada = false;
+  /** undefined = cargando; null = no se pudo saber. */
+  resumenWhatsapp: ResumenWhatsapp | null | undefined = undefined;
+  conexionesMeta: MetaConexiones | null | undefined = undefined;
+
+  private readonly idsDirectorio = new Set(
+    DIRECTORIO_INTEGRACIONES.flatMap((g) =>
+      g.entradas.filter((e) => e.fuente === "config").map((e) => e.id),
+    ),
+  );
+
+  cargarEstadosExternos(): void {
+    this.whatsappConfig
+      .getResumenEstado()
+      .pipe(
+        catchError(() => of(null)),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((r) => (this.resumenWhatsapp = r));
+    this.metaInbox
+      .obtenerConexiones()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((c) => (this.conexionesMeta = c));
+  }
+
+  private tipoDe(i: Integration): string {
+    return String(i?.type || (i as any)?.provider || "").toLowerCase();
+  }
+
+  conexionDe(entrada: EntradaDirectorio): Integration | undefined {
+    if (entrada.fuente !== "config") return undefined;
+    return this.integrations.find((i) => this.tipoDe(i) === entrada.id);
+  }
+
+  estadoTarjeta(entrada: EntradaDirectorio): EstadoTarjeta {
+    if (entrada.estado === "pronto") return "pronto";
+    switch (entrada.fuente) {
+      case "config":
+        if (!this.listaCargada || this.errorMessage) return "desconocido";
+        // El listado solo trae las activas: si aparece, está conectada.
+        return this.conexionDe(entrada) ? "ok" : "sin";
+      case "whatsapp":
+        if (!this.resumenWhatsapp) return "desconocido";
+        return this.resumenWhatsapp.activo ? "ok" : "sin";
+      case "whatsapp_bot": {
+        if (!this.resumenWhatsapp) return "desconocido";
+        const bot = this.resumenWhatsapp.bot;
+        if (bot?.enabled) return bot.modoSombra ? "prueba" : "ok";
+        return "sin";
+      }
+      case "meta": {
+        const c = this.conexionesMeta;
+        if (!c) return "desconocido";
+        const estados = [c.instagram?.estado, c.facebook?.estado];
+        if (estados.includes("conectado")) return "ok";
+        if (estados.includes("reconectar")) return "atencion";
+        return "sin";
+      }
+      default:
+        return "desconocido";
+    }
+  }
+
+  textoEstado(entrada: EntradaDirectorio, estado: EstadoTarjeta): string {
+    const bot = entrada.fuente === "whatsapp_bot";
+    switch (estado) {
+      case "pronto": return "Próximamente";
+      case "ok": return bot ? "Encendido" : "Conectado";
+      case "prueba": return "En prueba";
+      case "atencion": return "Hay que reconectar";
+      case "sin": return bot ? "Apagado" : "Sin conectar";
+      default: return "";
+    }
+  }
+
+  /** Línea extra bajo la descripción cuando aporta algo concreto. */
+  detalleTarjeta(entrada: EntradaDirectorio, estado: EstadoTarjeta): string {
+    const wa = this.resumenWhatsapp;
+    if (entrada.fuente === "whatsapp" && estado === "ok" && wa) {
+      return wa.numeroPropio ? `Con tu número ${wa.numeroPropio}` : "Con el número de Katuq";
+    }
+    if (entrada.fuente === "whatsapp_bot" && estado === "sin" && wa?.bot && !wa.bot.puedeActivarse) {
+      return "Primero conecta tu propio número en WhatsApp Business.";
+    }
+    if (entrada.fuente === "whatsapp_bot" && estado === "prueba") {
+      return "Solo responde a los teléfonos de prueba.";
+    }
+    return "";
+  }
+
+  textoBoton(entrada: EntradaDirectorio, estado: EstadoTarjeta): string {
+    if (entrada.ruta) {
+      if (estado === "atencion") return "Reconectar";
+      if (estado === "sin") return "Conectar";
+      return "Abrir";
+    }
+    switch (estado) {
+      case "sin": return entrada.fuente === "whatsapp_bot" ? "Activar" : "Conectar";
+      case "ok":
+      case "prueba":
+      case "atencion": return "Ver y editar";
+      default: return "Abrir";
+    }
+  }
+
+  esConectada(estado: EstadoTarjeta): boolean {
+    return estado === "ok" || estado === "prueba" || estado === "atencion";
+  }
+
+  entradasVisibles(grupo: GrupoDirectorio): EntradaDirectorio[] {
+    const q = this.normalizar(this.busquedaDir);
+    return grupo.entradas
+      .filter((e) => !q || this.normalizar(`${e.nombre} ${e.queHace}`).includes(q))
+      .filter((e) => !this.soloMias || this.esConectada(this.estadoTarjeta(e)));
+  }
+
+  private normalizar(t: string): string {
+    return (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  }
+
+  /** Conexiones guardadas de servicios que no están en el directorio: se muestran para no perder ninguna. */
+  get otrasConexiones(): Integration[] {
+    if (this.errorMessage) return [];
+    return this.integrations.filter((i) => !this.idsDirectorio.has(this.tipoDe(i)));
+  }
+
+  get totalConectadas(): number {
+    const enDirectorio = this.directorio.reduce(
+      (n, g) => n + g.entradas.filter((e) => this.esConectada(this.estadoTarjeta(e))).length,
+      0,
+    );
+    return enDirectorio + this.otrasConexiones.length;
+  }
+
+  get totalParaConectar(): number {
+    return this.directorio.reduce(
+      (n, g) => n + g.entradas.filter((e) => this.estadoTarjeta(e) === "sin").length,
+      0,
+    );
+  }
+
+  get totalProximamente(): number {
+    return this.directorio.reduce(
+      (n, g) => n + g.entradas.filter((e) => e.estado === "pronto").length,
+      0,
+    );
+  }
+
+  hayResultados(): boolean {
+    const otras = !this.busquedaDir && this.otrasConexiones.length > 0;
+    return otras || this.directorio.some((g) => this.entradasVisibles(g).length > 0);
+  }
+
+  abrirEntrada(entrada: EntradaDirectorio, event?: Event): void {
+    event?.stopPropagation();
+    if (entrada.estado === "pronto") return;
+    if (entrada.ruta) {
+      this.router.navigateByUrl(entrada.ruta);
+      return;
+    }
+    const conexion = this.conexionDe(entrada);
+    if (conexion) {
+      this.openIntegrationModal(conexion);
+      return;
+    }
+    const tipo = entrada.abre || entrada.id;
+    const nombre = entrada.abre ? this.nombreDe(tipo) : entrada.nombre;
+    this.configureIntegration({ id: tipo, name: nombre }, entrada.categoria, event || new Event("click"));
+  }
+
+  /** Enter o espacio sobre la tarjeta (no sobre sus botones, que ya responden solos). */
+  alTeclado(entrada: EntradaDirectorio, event: Event): void {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault(); // el espacio no debe desplazar la página
+    this.abrirEntrada(entrada, event);
+  }
+
+  private nombreDe(id: string): string {
+    for (const g of this.directorio) {
+      const e = g.entradas.find((x) => x.id === id);
+      if (e) return e.nombre;
+    }
+    return id;
+  }
+
+  verActividad(entrada: EntradaDirectorio, event: Event): void {
+    event.stopPropagation();
+    const c = this.conexionDe(entrada);
+    if (!c) return;
+    if (entrada.id === "shopify") this.navigateToShopifyDashboard(event);
+    else this.goToDashboard(c, event);
+  }
+
+  tieneActividad(entrada: EntradaDirectorio): boolean {
+    const c = this.conexionDe(entrada);
+    return !!c && (entrada.id === "shopify" || this.hasDashboard(c));
+  }
+
+  inicialDe(nombre: string): string {
+    return (nombre || "?").charAt(0).toUpperCase();
+  }
 
   // Método helper para debugging
   private getCurrentCompanyId(): string {
