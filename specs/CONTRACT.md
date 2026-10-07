@@ -8180,3 +8180,30 @@ Petición del usuario: ver en la tabla, no en la ficha, cuánto vendió cada emp
 **Decisión.** `createLead` conserva `error` y `code` del backend. Pipeline (crm-list) y el formulario de Clientes corporativos (crear-cliente-modal) muestran una alerta de advertencia "Este cliente ya existe" que explica que lo atiende otro comercial y que el administrador puede asignárselo. Los demás errores muestran el mensaje del backend. Solo frontend.
 
 **Pendiente.** El backend dice "otro comercial" aunque el corporativo sea del mismo comercial o no tenga dueño: solo revisa que el documento exista.
+
+## D-359 (2026-10-07) — Las rutas `/v1/companies/:id/...` solo dejan entrar a la empresa de la sesión (o a Julsmind)
+
+**Origen.** Hallazgo colateral de D-357: `GET /v1/companies/:id` (`getCompanyById`) no validaba que el id pedido fuera la empresa del usuario. Daniel: "arregla lo de companies/:id".
+
+**Alcance real.** No era solo el GET. Las 29 rutas con `:id` del router `routers/companies.js` tenían solo `auth`. Ningún controlador comparaba la empresa pedida con la de la sesión. Con el docId de otra empresa, cualquier usuario autenticado de cualquier comercio podía:
+- leer su ficha, sus pedidos, sus productos y sus unidades de inventario;
+- agregar, editar y borrar sus sedes, contactos, marketplaces, canales y redes.
+
+El único que validaba, `PUT /:id` (`updateCompanyById`), le creía al header `company`, que controla el cliente.
+
+**Decisión.** Un middleware nuevo, `middleware/companyAccess.js` (`requireOwnCompanyOrPlatform`), va justo después de `auth` en cada ruta `/:id`.
+- Julsmind entra a cualquier empresa.
+- Un comercio solo entra a la empresa cuyo `nomComercial` coincide con la empresa del JWT. La comparación ignora mayúsculas y espacios.
+- La empresa de la sesión sale del token firmado, nunca del header.
+- Una sesión sin empresa en el token (el bypass de API key) se rechaza; ningún agente interno usa estas rutas.
+- Un id con `/` (un `%2F` decodificado por Express) se rechaza antes de leer.
+- `updateCompanyById` deja de mirar el header: lo cubre el middleware.
+
+Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, más sedes, contactos, etc. desde `companies.service`). El comercio entra a la suya con el lápiz de "Mi empresa" (D-357) y Julsmind a todas desde el listado. El `GET /v1/companies/{company}` de `kai/adk_agent` es del propio ADK, no de este backend.
+
+**Prueba.** `npm run test:company-access` (16 casos). Además del contrato del middleware, recorre el router y falla si una ruta `/:id` nueva queda sin el candado.
+
+**Pendiente, mismo router, fuera de este cambio.** Avisado en el chat.
+- `POST /updateAuthorizationCodes` no tiene `auth`: cualquiera en internet puede regenerar el `authorizationCode` de todas las empresas.
+- Los chequeos de "solo Julsmind" de `POST /estado-ciclo`, `GET /overview` y `/:id/pedidos-excluidos` / `historial-estado` leen el header `company`. Un administrador de cualquier comercio que mande `company: Julsmind` pasa. En las dos rutas `/:id` ahora solo alcanza su propia empresa; `/estado-ciclo` y `/overview` siguen abiertas.
+- `POST /changeStatus`, `/create`, `/edit` y `/delete` solo piden rol Administrador, sin validar la empresa.
