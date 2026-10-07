@@ -8269,3 +8269,32 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 **Código.** Backend `services/inventory/saleAvailabilityGate.js` + `controllers/orders.js`; pruebas `npm run test:freno-existencias` (8 casos del freno + 16 de configuración y política). Front `crear-ventas.component.ts`.
 
 **Estado.** Sin publicar. Al publicar el backend: escribir `controlExistenciasVenta: "bloquear"` en `companyConfig/ALMACEN BOMBAS` y probar en producción.
+
+## D-365 (2026-10-07) — Integraciones para personas no técnicas: directorio por preguntas de negocio y formulario honesto
+
+**Origen.** Daniel, preparando Effix: reorganizar `/integrations` para que alguien no técnico conecte y edite fácil, con el estilo de Combos y del registro, sin dañar cómo se guardan las integraciones; luego "revisa los modales".
+
+**Decisión.**
+- El listado es un directorio por preguntas: ¿Dónde vendes?, ¿Cómo cobras?, ¿Cómo envías?, ¿Cómo facturas?, ¿Cómo atiendes a tus clientes? y Otros sistemas. Fuente única: `components/integrations/integrations-directorio.ts`.
+- Conectables (17): Shopify, WooCommerce, Pedidos por WhatsApp, Wompi, Envíame, Partners Logística, Prindel, Fullpi, Aliaddo, SIIGO, World Office, Factura electrónica DIAN, WhatsApp Business, Instagram y Messenger, Automatizaciones, Cereza (Osmosis) y MultiOP.
+- Próximamente (12): Mercado Libre, Catálogo en WhatsApp, TikTok Shop, Dropi, Amazon, ePayco, Mercado Pago, Servientrega, Coordinadora, Interrapidísimo, TCC y Alegra. Escondidas, sin borrar del catálogo del servicio: Magento, PrestaShop, Stripe, PayU, PayPal, FedEx, DHL, CRM, QuickBooks, Slack, Zapier, Mailchimp, HubSpot y Google Analytics.
+- Cada tarjeta muestra solo lo que de verdad se sabe. Las de configuración salen de `GET /v1/integration/config`, que solo trae las activas: Conectado o Sin conectar. WhatsApp y su bot salen de `/v1/whatsapp/integration-config`; Instagram y Messenger de `/v1/meta/connections`; Automatizaciones no muestra estado.
+- La tarjeta ya no tiene pausa, prueba ni borrado. El guardado siempre escribe `status: 'active'`, la prueba desde el listado iba sin claves y el borrado mandaba el id del documento en vez del proveedor, así que nunca desactivó nada.
+- Formulario: abre directo en el proveedor elegido. Se quitaron el interruptor "activar", que era falso, y las insignias de diagnóstico. Queda un solo selector de ambiente por proveedor y el resultado de la prueba se ve en la misma caja. Al editar sin claves, la prueba explica que hay que reescribirlas. Los errores del backend salen traducidos, las claves guardadas dicen "Guardada · déjala vacía para conservarla", lo técnico va en "Opciones avanzadas" y los textos van en tú, sin voseo.
+- Correcciones de guardado:
+  - Aliaddo envía `terceroInternoId`: el formulario lo exigía y no lo mandaba, y sin él no hay remisiones.
+  - Una conexión nueva sin id conserva sus validaciones. Antes el 404 las borraba, y en DIAN bloqueaba el guardado.
+  - DIAN abre su asistente `/integrations/configure?provider=dian`.
+  - Partners trae prellenada `.../v1/webhooks/partner-logistica`, que el backend exige y el proveedor no usa.
+  - Envíame queda por defecto en CO.
+- ePayco pasa a Próximamente: el backend exige `customerId`, `responseUrl` y `confirmationUrl`, y el formulario no los envía.
+- Estilo: tokens de Combos (`#5F3FE0`, `#211F3A`, Geometr415) en el listado y en el modal (`_integrations-directorio.scss`, `_integrations-modal-combos.scss`, `windowClass: 'kq-int-modal'`).
+
+**Lo que no cambia.** El contrato de guardado: `POST/PUT /v1/integration/config/:provider` con `{ ...credenciales, enabled, name }`, la validación previa, el filtro de vacíos al editar y el merge del backend que conserva los secretos vacíos.
+
+**Pendiente.**
+- Envíame guarda `webhook_secret` sin cifrar, porque el backend solo cifra `webhookSecret`. Hay que corregirlo en el backend.
+- Falta la revisión visual en FLORECER.
+- Apagar una integración de verdad requiere backend, y no todos los consumidores respetan `status`; por ejemplo, la factura a SIIGO por tool.
+
+**Código.** Front `components/integrations/*` y `getResumenEstado` (solo lectura) en `shared/services/notifications/whatsapp-integration-config.service.ts`. Commit f1fbe878.
