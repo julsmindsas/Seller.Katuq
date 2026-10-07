@@ -8253,3 +8253,19 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 - Inventario: Elixir y JCR4026 en Cereza Medellín pasan de −1 a 0, y JCR4026 en Fullpi Medellín de 9 a 8.
 - Falta revisar la pantalla: la extensión de Chrome no estaba conectada.
 
+## D-362 (2026-10-07) — Vender contra lo disponible: el freno antes de crear la venta se enciende por empresa (ticket 1149)
+
+**Origen.** Ticket 1149 de ALMACÉN BOMBAS: BAS-000026 salió de BOG-01 Bogotá sin existencias. El producto se agregó al carrito viendo otra bodega y luego se cambió la bodega del pedido. El carrito se conserva a propósito al cambiar de bodega y nada revisaba el stock. El registro de BOG-01 lo creó la propia venta, en −1. Daniel: "dependiendo del comercio puede o no bloquear", y aprobó encenderlo en ALMACÉN BOMBAS.
+
+**Decisión.**
+- Se usa la configuración que ya existía desde D-164: `companyConfig/<empresa>.controlExistenciasVenta`. Solo `"bloquear"` detiene la venta. `legacy`, `sombra` y `avisar` siguen como hoy, y sin valor también. Por defecto nadie cambia.
+- El freno va en `POST /v1/orders/create`, antes del consecutivo: una venta detenida no quema número. Responde 409 `SIN_EXISTENCIAS` con un mensaje que nombra cada producto, cuánto hay, cuánto se pidió y la bodega, y que dice qué hacer. Esa ruta la usan venta asistida, el punto de venta y la app. Los pedidos de integraciones y tiendas no pasan por ella y nunca se frenan.
+- Se mide contra el saldo de la bodega del pedido con la canónica `getRealStockMap` (normaliza referencia→docId y deduplica por bodega), negativos incluidos.
+- Un producto con inventario en alguna bodega y sin registro en la del pedido cuenta como **0** ahí. Es el caso del BAS-000026: si se tratara como "no sé", el mismo caso habría pasado. Lo que no tiene inventario en ninguna bodega, y lo no inventariable, sigue libre (D-164 #3).
+- Fail-open: si falla la lectura, la venta sigue.
+- Front: venta asistida abría el paso de confirmación antes de la respuesta, y si el pedido fallaba igual mostraba "¡Pedido Procesado Exitosamente!". Ahora vuelve a Pago y muestra el mensaje del servidor; el camino de Wompi también. El punto de venta ya mostraba `err.error.msg`.
+- `avisar` (pasar con autorización) queda para cuando alguien lo pida.
+
+**Código.** Backend `services/inventory/saleAvailabilityGate.js` + `controllers/orders.js`; pruebas `npm run test:freno-existencias` (8 casos del freno + 16 de configuración y política). Front `crear-ventas.component.ts`.
+
+**Estado.** Sin publicar. Al publicar el backend: escribir `controlExistenciasVenta: "bloquear"` en `companyConfig/ALMACEN BOMBAS` y probar en producción.
