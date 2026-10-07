@@ -8340,6 +8340,8 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 
 **Alcance.** Toca a todos los comercios que imprimen desde despachos. El modal de ventas ya imprimía con `window.print` y no cambia.
 
+**Estado (2026-10-07, publicado).** Front 2026.10.07.6, servido en producción a las 17:00 (`main.0da42e4f`, `urlApi` back.katuq.com). Verificado en Chrome con Playwright: el método viejo, colgado; el nuevo, PDF en 0,3 s, impresión sin bloqueo y sandbox sin ejecutar scripts. No se probó haciendo clic en la pantalla de despachos de producción.
+
 ## D-367 (2026-10-07) — Liberar una factura anulada con nota crédito y avisar antes de facturar a Consumidor Final (ticket 1145, reabierto)
 
 **Origen.** Ticket 1145 de ALMACEN BOMBAS. BAS-000026 salió en la factura ABB 1946 a CONSUMIDOR FINAL (222222222222), aunque el cliente es Geronimo (14316727).
@@ -8368,5 +8370,12 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 **No-goals.** No se crea la nota crédito en SIIGO desde Katuq (el proveedor no la soporta). No se cambia cómo se arma la sección Facturación al crear el pedido, porque el punto de venta depende de Consumidor Final. Tampoco hay colecciones nuevas.
 
 **Riesgos.** Con los campos vacíos, el pedido sale como "sin factura" en filtros y búsquedas, que es lo correcto tras anularla. Cartera, tesorería, contabilidad y el correo no leen estos campos (mapa revisado).
+
+**Estado (2026-10-07, publicado).**
+- Backend `3711a45` en producción: `pm2 reload katuq-api`, en línea y sin errores; la ruta responde 401 sin sesión.
+- Se desplegó con fast-forward solo hasta `3711a45`, rama `fix/1145-liberar-factura` sobre `8e74bef`, unida a `backend-aws-security` con el merge `6ff9f6e`.
+- **D-363/D-364 (`1964bff`) NO quedaron en producción.** Su registro dice que la subida a git no las publica. El próximo `git pull` en el servidor las trae por fast-forward.
+- Front 2026.10.07.6.
+- BAS-000026 sigue con la factura 1946: la libera el comercio con el número de su nota crédito.
 
 **Código.** Backend `services/accounting/utils/liberarFactura.js`, `utils/consumidorFinal.js`, `AccountingManager.releaseInvoice`, `accountingController.releaseInvoice` y `routers/accounting.js`. Pruebas: `npm run test:liberar-factura` (14 casos); accounting y soloLectura sin cambios. Front `shared/utils/cliente-factura.ts`, `ventas/list` e `IntegrationsService.releaseOrderInvoice`.
