@@ -6,7 +6,7 @@
 
 ## 1. Sombra (sin cambiar comportamiento)
 - [x] 1.1 HECHO (`services/inventory/saleAvailabilityPolicy.js`, 10/10): evaluador puro con las 4 políticas conviviendo; sin cablear a la venta.
-- [ ] 1.2 Bandera y política por empresa, con apagado inmediato y sin despliegue.
+- [x] 1.2 HECHO (D-164 addendum): `companyConfig/<empresa>.controlExistenciasVenta`, fail-open.
 - [ ] 1.3 Enganche en el camino de creación de orden que SOLO evalúa y registra. Ninguna venta se detiene.
 - [ ] 1.4 Evidencia por caso: producto, bodega, pedido, faltante y política que habría aplicado.
 
@@ -16,7 +16,7 @@
 - [ ] 2.3 Presentar el conteo a Daniel: es el insumo para decidir encender, no un trámite.
 
 ## 3. Encendido gobernado
-- [ ] 3.1 Encender en una empresa, con la política elegida, y vigilar los primeros días.
+- [ ] 3.1 Encender en una empresa, con la política elegida, y vigilar los primeros días. → D-362: freno pre-creación (`saleAvailabilityGate`) hecho; ALMACÉN BOMBAS en "bloquear" al publicar (ticket 1149).
 - [ ] 3.2 Mensaje al vendedor probado con alguien de ventas: tiene que poder decidir con lo que lee.
 - [ ] 3.3 Extender empresa por empresa, cada una con su palabra.
 
