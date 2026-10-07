@@ -8380,6 +8380,48 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 
 **Código.** Backend `services/accounting/utils/liberarFactura.js`, `utils/consumidorFinal.js`, `AccountingManager.releaseInvoice`, `accountingController.releaseInvoice` y `routers/accounting.js`. Pruebas: `npm run test:liberar-factura` (14 casos); accounting y soloLectura sin cambios. Front `shared/utils/cliente-factura.ts`, `ventas/list` e `IntegrationsService.releaseOrderInvoice`.
 
+## D-368 (2026-10-07) — Productos de Cereza que nunca llegaron a Shopify: reemitir los que el bug de septiembre dejó por fuera (ticket 1139)
+
+**Origen.** Ticket 1139 de OH MY STORE: "GCD449 no aparece en Shopify". Investigación en solo lectura con un workflow de 7 agentes y dos revisiones adversariales. Datos reales de Firestore, de `flow_runs/logs` y consultas a Shopify sin mutations.
+- **Causa.** GCD449, GCD451, GCD448N y GCL340N los emitió una sola vez `cereza-products-to-shopify-a5156643`, entre el 2 y el 10 de septiembre.
+- En ese momento `shopify-product-upsert` fallaba con `params is not defined` en todos los ítems. El bug entró el 24-ago (`318ff33`) y se corrigió el 14-sep (`3040e98`), con unos 44.645 errores.
+- El trigger guarda la huella al emitir y el stock no hace parte de ella. Por eso no se volvieron a emitir, y el arreglo del 14-sep no reenvió lo que había fallado.
+- **Cuántos son de verdad: 7, no ~18.** Medido con inventario normalizado y deduplicado:
+  - Los 4 anteriores.
+  - GCJ4276A y GCJ4303A: Cereza los manda sin precio, así que `sin_precio_valido` los frenó a propósito.
+  - 7708516916169 (Cereza 27311): duplicado creado por `osmosisProductSyncService` con el código de barras como referencia. El mismo producto ya está en Shopify como GCC932.
+
+**Decisión (arreglo puntual, aplicado).**
+- Se borró en `flow_polling_state/OH MY STORE_cereza-products-to-shopify-a5156643_trigger` **solo** `lastSeenHashes` de los 4 ids: 40030, 40033, 40017 y 40018. `lastSeenIds` quedó intacto.
+- El flow los reemitió como `updated` y los procesó completos: Katuq, Shopify, stock y listas de precios.
+- No se cambió frecuencia, tope, páginas ni `onlyWithStock` (cumple D-134).
+- Herramienta: backend `scripts/reemitirProductosCereza.js` (`7a1f798`). Hace prueba en seco por defecto. Antes de escribir revisa:
+  - que el trigger lo haya leído con stock hace menos de una vuelta de rotación;
+  - que haya un solo producto por id de Cereza y una sola ficha por referencia;
+  - que no esté enlazado y que el precio de variante sea > 1;
+  - que no exista en Shopify por SKU, tag o handle y que nunca haya tenido un push exitoso;
+  - que no haya una corrida en curso.
+  - Escribe con precondición `lastUpdateTime`.
+- Se descartó `scripts/catchup-cereza-missing-shopify.js`. No sincroniza listas de precios, solo ajusta stock de la primera variante, no deja `flow_runs`, no se puede limitar a referencias y recrearía en masa productos que se borraron a propósito. **No usarlo.**
+
+**Resultado verificado (23:08 UTC).** Los 4 están creados una sola vez, ACTIVE y publicados, con su precio, stock, fotos y listas Mayorista y Modelo:
+- GCD449: $262.900, 86 unidades, Mayorista $145.900, Modelo $228.723.
+- GCD451: $208.900, 90 unidades.
+- GCD448N: $260.900, 1 unidad.
+- GCL340N: $104.900, 126 unidades.
+
+**Pendiente, con decisión aparte (no se tocó):**
+1. **GCJ4276A y GCJ4303A.** OH MY STORE tiene que cargarles precio en Cereza (listas 1 y 3). Con eso la huella cambia y el flow los crea solo.
+2. **Lote 2: 7 productos con el mismo bug y sin stock hoy** (GCD448B 40016, GCD332N, GCD333R, GCD333N, GCD334N, GCD335B y GCD342). No se destraban por adelantado: se crearían en una fecha que nadie controla. Correr el script cuando tengan stock; la revisión de stock vigente lo exige.
+3. **GCD369, GCD355, GCD356 y GCJ4147.** Se crearon en Shopify el 18-jun y después alguien los **borró**. No se recrean sin que OH MY STORE lo confirme; el script los rechaza.
+4. **187 productos enlazados cuya última emisión cayó en la ventana del bug.** Siguen en Shopify con datos de antes del fallo. Arreglarlos mueve 187 fichas y precios: decisión propia, con un diff medido primero.
+5. **Duplicado 27311 / `JgLI7idIUrJKVPiL7wlr`.** Fusionar o desactivar, y averiguar por qué el servicio lo creó con el código de barras. Su stock (1.208) infla el total.
+6. **Arreglo de fondo, que requiere spec y una excepción explícita a D-134.** Que el trigger no dé por emitido un producto mientras Shopify no lo haya creado. Sin eso, cualquier fallo futuro del paso a Shopify vuelve a dejar productos por fuera. Las revisiones advierten:
+   - La búsqueda `matchBy: sku` usa la referencia base y no encuentra el SKU compuesto (`GCD449-UNICA-BLANCO/NEG`), así que un reintento tras una creación a medias duplicaría. Antes hay que buscar por tag `katuq-cd`.
+   - `lastSyncedAt` se escribe antes de las listas de precios.
+   - Encender un modo de reintento con params incompletos deja `limit` en 0, o sea sin tope.
+   - Hallazgo aparte: el upsert solo lee el precio con IVA de la variante, que viene de la lista 1 de Cereza. El precio sin IVA de Katuq no lo salva.
+
 ## D-369 (2026-10-07) — Tiendas Katuq: completar retiro, precio visible y cantidades acumuladas
 
 **Autorización.** Después de enumerar retiro en tienda, precio mostrado por talla/color y cantidades repetidas del carrito, Daniel pidió «has todos los ajustes yaaaa». Los diffs y fallos se habían presentado en `openspec/changes/sitios-guardado-medicion/revision-pendiente/`. Se conserva la autorización de cierre «sube a git»; producción queda aparte. Registro previo: `openspec/changes/archive/2026-10-07-sitios-retiro-precio-cantidades/`.
