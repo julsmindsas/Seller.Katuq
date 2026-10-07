@@ -8268,7 +8268,11 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 
 **Código.** Backend `services/inventory/saleAvailabilityGate.js` + `controllers/orders.js`; pruebas `npm run test:freno-existencias` (8 casos del freno + 16 de configuración y política). Front `crear-ventas.component.ts`.
 
-**Estado.** Sin publicar. Al publicar el backend: escribir `controlExistenciasVenta: "bloquear"` en `companyConfig/ALMACEN BOMBAS` y probar en producción.
+**Estado (2026-10-07, publicado).**
+- Backend `8e74bef` en producción: `katuq-api` en línea desde las 15:04. Lleva también el arreglo del ticket 1150 (`5460ab6`, buscar bodega por código solo dentro de la empresa).
+- Front publicado como 2026.10.07.4 a las 15:00, con `10fb1a20` (este D-362) y `3eea2ab9` (ticket 1151, botón Imprimir visible en pantallas bajas).
+- `companyConfig/ALMACEN BOMBAS.controlExistenciasVenta = "bloquear"` desde las 15:10.
+- Tickets 1149, 1150 y 1151 cerrados con la versión 2026.10.07.4. El 1151 lo reabrió el comercio a las 16:07: la vista previa se queda en "Imprimiendo".
 
 ## D-365 (2026-10-07) — Integraciones para personas no técnicas: directorio por preguntas de negocio y formulario honesto
 
