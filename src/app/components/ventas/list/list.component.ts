@@ -4658,6 +4658,33 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pedidoDetalle = pedido;
   }
 
+  /**
+   * D-361: abre otra parte de un pedido de tienda repartido por bodega. En la
+   * vista dividida la muestra en el panel; en la tabla la deja como resultado
+   * de búsqueda, igual que buscarla por su número.
+   */
+  abrirPedidoRepartido(nroPedido: string): void {
+    if (!nroPedido) return;
+    const enLista = (this.orders || []).find((o: any) => o?.nroPedido === nroPedido);
+    if (enLista && this.modoVista === 'split') {
+      this.seleccionarPedidoDetalle(enLista);
+      return;
+    }
+    this.ventasService.searchOrders(nroPedido).subscribe({
+      next: (res: any) => {
+        const lista = Array.isArray(res) ? res : res ? [res] : [];
+        const pedido = lista.find((p: any) => p?.nroPedido === nroPedido);
+        if (!pedido) {
+          this.toastrService.warning(`No encontramos el pedido ${nroPedido}. Búscalo por su número.`, 'Pedido repartido');
+          return;
+        }
+        if (this.modoVista === 'split') this.seleccionarPedidoDetalle(pedido);
+        else this.selectOrder(pedido);
+      },
+      error: () => this.toastrService.error(`No se pudo abrir el pedido ${nroPedido}. Intenta de nuevo.`, 'Pedido repartido'),
+    });
+  }
+
   /** Nombre completo del cliente para la lista y el panel. */
   getClienteNombre(pedido: any): string {
     if (!pedido?.cliente) return "Sin cliente";

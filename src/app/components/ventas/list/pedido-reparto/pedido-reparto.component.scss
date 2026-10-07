@@ -1,0 +1,149 @@
+// Pedido repartido por bodega (D-361) — tema canónico (openspec/specs/design-system):
+// plano, superficies lila, acento #5F3FE0, labels UPPERCASE muted. Cada span lleva su
+// color propio: la regla global vieja de `span.ng-star-inserted` los pinta de azul.
+
+$accent: #5F3FE0;
+$ink: #211F3A;
+$muted: #8f8bab;
+$chip-bg: #f5f4fa;
+$chip-border: #e9e7f3;
+$surface: #faf9fe;
+$line: #ececf4;
+
+:host { display: contents; }
+
+.reparto-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  border: 1px solid $chip-border;
+  background: rgba(95, 63, 224, .08);
+  color: $accent;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: help;
+
+  i { font-size: 10px; color: $accent; }
+  .reparto-chip__txt { color: $accent; }
+}
+
+.reparto-card {
+  display: block;
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid $chip-border;
+  background: $surface;
+}
+
+.reparto-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.reparto-card__ico {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 11px;
+  background: rgba(95, 63, 224, .12);
+  color: $accent;
+  i { font-size: 14px; color: $accent; }
+}
+
+.reparto-card__titles { display: flex; flex-direction: column; min-width: 0; }
+
+.reparto-card__label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.reparto-card__sub {
+  font-size: 12.5px;
+  color: $ink;
+  b { color: $ink; font-weight: 700; }
+}
+
+.reparto-card__list { display: flex; flex-direction: column; gap: 6px; }
+
+.reparto-parte {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  border: 1px solid $line;
+  background: #fff;
+  color: $ink;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+
+  &:hover:not(:disabled) { border-color: $accent; background: $chip-bg; }
+  &:focus-visible { outline: 2px solid $accent; outline-offset: 2px; }
+  &:disabled { cursor: default; }
+
+  &.is-current { border-color: rgba(95, 63, 224, .35); background: rgba(95, 63, 224, .06); }
+  &.is-missing { border-style: dashed; background: #fff8ec; }
+}
+
+.reparto-parte__nro {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: $ink;
+  font-variant-numeric: tabular-nums;
+}
+.is-missing .reparto-parte__nro { color: #b26a00; }
+
+.reparto-parte__bodega {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: $ink;
+}
+
+.reparto-parte__prov {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 20px;
+  border: 1px solid $chip-border;
+  background: $chip-bg;
+  color: $muted;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.reparto-parte__este {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 20px;
+  background: $accent;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.reparto-parte__go { flex: 0 0 auto; color: $muted; font-size: 12px; }
+
+@media (max-width: 480px) {
+  .reparto-parte__prov { display: none; }
+}

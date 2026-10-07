@@ -8221,6 +8221,10 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 - Montos repartidos por línea: el principal absorbe los centavos y la suma de los pedidos es exactamente el original. Lo pagado se reparte en la misma proporción.
 - Enlace: `splitOrder` (`groupId` = número del principal, `part`, `totalParts`, `provider`, `idBodega`, `siblings`), más una nota en `notasDespachos` de cada pedido.
 - Referencia a la tienda en los tres (pedido de Daniel): todos conservan `nroPedidoReferencia` y el número visible del pedido de Shopify (`integrations.shopify.orderNumber`/`orderName`, el chip SH-1174). Solo el principal guarda el `orderId`, que es el que usan las búsquedas (`03a5ffa`).
+- Visible en Katuq (pedido de Daniel): `splitOrder.parts` guarda número, bodega y proveedor de cada parte (`b4a75c6`). El componente `app-pedido-reparto` (tema canónico, plano) los muestra así:
+  - Chip "1 de 3" junto al número, en la lista dividida y en la tabla, con las otras partes en el tooltip.
+  - Tarjeta "REPARTIDO POR BODEGA · Pedido de Shopify #1174" en el panel de detalle y en la fila expandida. Muestra cada parte con su bodega y su proveedor, y un clic abre la otra parte.
+  - Una parte que no se pudo crear aparece punteada como "Sin crear".
 - Si una parte no se puede crear tras 3 intentos, el principal queda con atención `reparto_incompleto` y la lista de lo que falta.
 - Flow: `katuq-order-upsert` emite un item por pedido. Una entrega repetida del mismo pedido devuelve las partes sin pisarlas. `osmosis-order-create` salta las partes que no son de Cereza (`split_part_not_cereza`).
 - Inventario: el mapeo del ajuste usa la bodega de la línea (`$json.idBodega`) y el número de su pedido. Sin reparto queda igual que antes.

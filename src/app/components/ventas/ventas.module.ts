@@ -29,6 +29,7 @@ import { NgxHotkeysModule, NgxHotkeysService } from "@balticcode/ngx-hotkeys";
 import { NgxStarRatingModule } from "ngx-star-rating";
 import { ListOrdersComponent } from "./list/list.component";
 import { Pedido3dComponent } from "./list/pedido-3d/pedido-3d.component";
+import { PedidoRepartoComponent } from "./list/pedido-reparto/pedido-reparto.component";
 import { TableModule } from "primeng/table";
 import { PedidoEntregaComponent } from "./entrega/pedido-entrega.component";
 import { PedidoFacturacionComponent } from "./facturacion/pedido-facturacion.component";
@@ -138,6 +139,7 @@ import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
   ],
   declarations: [
     Pedido3dComponent,
+    PedidoRepartoComponent,
     PedidoFacturacionComponent,
     ClientesListaComponent,
     ClientesCorporativosComponent,

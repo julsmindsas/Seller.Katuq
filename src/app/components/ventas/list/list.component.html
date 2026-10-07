@@ -332,6 +332,7 @@
                                                     <div class="pedido-row__main">
                                                         <div class="pedido-row__top">
                                                             <span class="pedido-row__nro">{{ pedido.nroPedido }}</span>
+                                                            <app-pedido-reparto [pedido]="pedido" modo="chip"></app-pedido-reparto>
                                                             <span *ngIf="isPedidoUrgente(pedido)" class="pedido-row__urg">URG</span>
                                                             <i *ngIf="isPedidoCongelado(pedido)" class="fa fa-snowflake-o pedido-row__frozen"
                                                                [title]="'Pedido congelado' | translate"></i>
@@ -436,6 +437,10 @@
                                                             </span>
                                                             <span class="pedido-valid-chip">{{ 'Validación' | translate }}: {{ pedidoDetalle.validacion ? ('Sí' | translate) : ('No' | translate) }}</span>
                                                         </div>
+
+                                                        <!-- D-361: pedido de tienda repartido en un pedido por bodega -->
+                                                        <app-pedido-reparto [pedido]="pedidoDetalle" modo="tarjeta"
+                                                                            (abrir)="abrirPedidoRepartido($event)"></app-pedido-reparto>
 
                                                         <!-- recorrido 3D del pedido (solo presentación; la línea de abajo dice lo mismo) -->
                                                         <app-pedido-3d [completados]="getProgresoCompletados(pedidoDetalle?.estadoProceso)" [estadoProceso]="pedidoDetalle?.estadoProceso" [carrito]="pedidoDetalle?.carrito" [ciudad]="pedidoDetalle?.envio?.ciudad" [transportador]="pedidoDetalle?.transportador" [urgente]="isPedidoUrgente(pedidoDetalle)"></app-pedido-3d>
@@ -1105,6 +1110,7 @@
                                                            style="font-size: 0.75rem; color: #10B981; vertical-align: middle;"
                                                            aria-label="Con tracking"></i>
                                                     </span>
+                                                    <app-pedido-reparto [pedido]="pedido" modo="chip"></app-pedido-reparto>
                                                 </div>
                                             </td>
 
@@ -1350,6 +1356,9 @@
                                         <tr style="font-size: 0.85em;">
                                             <td [attr.colspan]="getVisibleColumnsCount()">
                                                 <div class="p-2">
+                                                    <!-- D-361: pedido de tienda repartido en un pedido por bodega -->
+                                                    <app-pedido-reparto [pedido]="pedido" modo="tarjeta"
+                                                                        (abrir)="abrirPedidoRepartido($event)"></app-pedido-reparto>
                                                     <!-- Card contenedora para la tabla de productos -->
                                                     <div class="card products-expansion-card">
                                                         <div class="card-header">

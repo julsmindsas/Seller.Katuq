@@ -1,0 +1,36 @@
+<span *ngIf="reparto && modo === 'chip'"
+      class="reparto-chip"
+      [pTooltip]="tooltip"
+      tooltipPosition="top"
+      [attr.aria-label]="tooltip">
+  <i class="pi pi-sitemap"></i>
+  <span class="reparto-chip__txt">{{ reparto.part }} {{ 'de' | translate }} {{ reparto.totalParts }}</span>
+</span>
+
+<div *ngIf="reparto && modo === 'tarjeta'" class="reparto-card">
+  <div class="reparto-card__head">
+    <span class="reparto-card__ico"><i class="pi pi-sitemap"></i></span>
+    <div class="reparto-card__titles">
+      <span class="reparto-card__label">{{ 'REPARTIDO POR BODEGA' | translate }}</span>
+      <span class="reparto-card__sub">
+        {{ 'Pedido de' | translate }} <b>{{ origen }}</b> · {{ reparto.totalParts }} {{ 'pedidos, uno por bodega' | translate }}
+      </span>
+    </div>
+  </div>
+
+  <div class="reparto-card__list">
+    <button *ngFor="let parte of partes; trackBy: trackByParte"
+            type="button"
+            class="reparto-parte"
+            [class.is-current]="esEste(parte)"
+            [class.is-missing]="parte.pendiente"
+            [disabled]="parte.pendiente || esEste(parte)"
+            (click)="abrirParte(parte, $event)">
+      <span class="reparto-parte__nro">{{ parte.pendiente ? ('Sin crear' | translate) : parte.nroPedido }}</span>
+      <span class="reparto-parte__bodega">{{ parte.warehouseName || parte.idBodega || '' }}</span>
+      <span *ngIf="parte.provider" class="reparto-parte__prov">{{ proveedor(parte.provider) }}</span>
+      <span *ngIf="esEste(parte)" class="reparto-parte__este">{{ 'Este' | translate }}</span>
+      <i *ngIf="!esEste(parte) && !parte.pendiente" class="pi pi-angle-right reparto-parte__go"></i>
+    </button>
+  </div>
+</div>
