@@ -1,0 +1,26 @@
+--- a/functions/utils/vitrinaProducto.js
++++ b/functions/utils/vitrinaProducto.js
+@@ -244,7 +244,9 @@
+         id: String(v.referencia || v.titulo || i),
+         titulo: String(v.titulo || opciones.join(" · ") || `Opción ${i + 1}`).slice(0, 80),
+         opciones,
+-        precioConIva: Number((v.precio || {}).precioUnitarioConIva) || 0,
++        // D-214: talla/color identifica el despacho; el precio es el de la
++        // lista del comprador, igual que el checkout.
++        precioConIva: precios.precioConIva,
+         // El stock exacto no se publica; sí si se puede pedir o no.
+         disponible: p.disponibilidad && p.disponibilidad.inventariable === false
+           ? true
+--- a/functions/utils/siteHtml.js
++++ b/functions/utils/siteHtml.js
+@@ -4124,9 +4124,7 @@
+       }
+       if(!boton) return;
+       boton.setAttribute('data-variante', op.getAttribute('data-kq-var')||'');
+-      var pr=Number(op.getAttribute('data-precio'))||0;
+-      // Una talla puede valer distinto: si la variante trae precio, manda.
+-      if(pr>0){ boton.setAttribute('data-precio',String(pr)); precioBase=pr; if(precioEl) precioEl.textContent=money(pr+(Number(boton.getAttribute('data-extra'))||0)); }
++      // D-214: elegir talla/color conserva el precio de la lista del comprador.
+     }
+ 
+     // Se preselecciona la primera opcion disponible: sin esto, el comprador

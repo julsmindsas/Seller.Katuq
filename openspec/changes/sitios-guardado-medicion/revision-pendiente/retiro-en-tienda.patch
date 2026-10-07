@@ -1,0 +1,120 @@
+--- a/functions/controllers/sites.js
++++ b/functions/controllers/sites.js
+@@ -1738,6 +1738,43 @@
+       });
+     }
+ 
++    // ── Recoger en tienda ─────────────────────────────────────────────────
++    // El comprador elige un punto de los que el comerciante configuró. Como
++    // con las zonas y los precios, viaja solo el identificador: el servidor
++    // resuelve la dirección contra lo guardado. Un punto inventado no existe.
++    let puntoRetiro = null;
++    if (req.body.retiroId) {
++      const retiro = tienda.retiroEnTienda || {};
++      if (retiro.activo !== true) {
++        return res.status(400).json({
++          success: false,
++          message: "Esta tienda no tiene retiro en punto por ahora.",
++        });
++      }
++      const pedido = String(req.body.retiroId).slice(0, 40);
++      puntoRetiro = (retiro.puntos || []).find((p) => p && p.id === pedido) || null;
++      if (!puntoRetiro) {
++        return res.status(400).json({
++          success: false,
++          message: "Ese punto de retiro ya no está disponible. Elige otro.",
++        });
++      }
++    }
++    if (puntoRetiro && puntoRetiro.bodegaId && puntoRetiro.bodegaId !== tienda.bodegaId) {
++      const bodegaRetiro = await db.collection("warehouses")
++        .where("company", "==", sitio.company)
++        .where("idBodega", "==", puntoRetiro.bodegaId)
++        .limit(1)
++        .get();
++      if (bodegaRetiro.empty) {
++        return res.status(400).json({
++          success: false,
++          message: "Ese punto de retiro no tiene una bodega disponible. Elige otro o escríbenos.",
++        });
++      }
++      tienda.bodegaId = puntoRetiro.bodegaId;
++    }
++
+     // ── El comprador ──────────────────────────────────────────────────────
+     const { texto } = bloquesUtil.sanitizar;
+     const c = req.body.cliente || {};
+@@ -1760,7 +1797,7 @@
+     if (!comprador.telefono) {
+       return res.status(400).json({ success: false, message: "Necesitamos un teléfono para coordinar la entrega" });
+     }
+-    if (!comprador.direccion || !comprador.ciudad) {
++    if (!puntoRetiro && (!comprador.direccion || !comprador.ciudad)) {
+       return res.status(400).json({ success: false, message: "Necesitamos la dirección y la ciudad de entrega" });
+     }
+ 
+@@ -1992,29 +2029,6 @@
+         success: false,
+         message: `El pedido mínimo es ${moneda(tienda.minimoCompra)}`,
+       });
+-    }
+-
+-    // ── Recoger en tienda ─────────────────────────────────────────────────
+-    // El comprador elige un punto de los que el comerciante configuró. Como
+-    // con las zonas y los precios, viaja solo el identificador: el servidor
+-    // resuelve la dirección contra lo guardado. Un punto inventado no existe.
+-    let puntoRetiro = null;
+-    if (req.body.retiroId) {
+-      const retiro = tienda.retiroEnTienda || {};
+-      if (retiro.activo !== true) {
+-        return res.status(400).json({
+-          success: false,
+-          message: "Esta tienda no tiene retiro en punto por ahora.",
+-        });
+-      }
+-      const pedido = String(req.body.retiroId).slice(0, 40);
+-      puntoRetiro = (retiro.puntos || []).find((p) => p && p.id === pedido) || null;
+-      if (!puntoRetiro) {
+-        return res.status(400).json({
+-          success: false,
+-          message: "Ese punto de retiro ya no está disponible. Elige otro.",
+-        });
+-      }
+     }
+ 
+     // ── El envío ──────────────────────────────────────────────────────────
+--- a/functions/utils/siteOrden.js
++++ b/functions/utils/siteOrden.js
+@@ -263,6 +263,11 @@
+   // decide antes que la tarifa para que ni el modo por zonas ni la tarifa
+   // fija le cobren un domicilio que nadie va a hacer.
+   const retira = !!p.puntoRetiro;
++  if (retira) {
++    for (const linea of carrito) {
++      linea.configuracion.datosEntrega.formaEntrega = "Recoge en Tienda";
++    }
++  }
+   const envioBase = retira
+     ? 0
+     : p.envioBase !== undefined
+@@ -305,7 +310,10 @@
+   const totalImpuesto = centavos((subtotalConIva - subtotalSinIva) * factor);
+   const total = centavos(subtotalSinIvaNeto + totalImpuesto + envioCosto);
+ 
+-  const envio = construirEnvio(p.comprador, envioCosto, p.zona || null);
++  const destinatario = retira
++    ? { ...p.comprador, direccion: p.puntoRetiro.direccion, ciudad: p.puntoRetiro.ciudad || p.comprador.ciudad, barrio: "" }
++    : p.comprador;
++  const envio = construirEnvio(destinatario, envioCosto, p.zona || null);
+   const facturacion = construirFacturacion(p.comprador);
+   const cliente = construirCliente(p.comprador, p.sitio.company, envio, facturacion, ahoraISO);
+ 
+@@ -328,7 +336,7 @@
+       activo: true,
+       createdAt: ahoraISO,
+     },
+-    bodegaId: p.tienda.bodegaId,
++    bodegaId: (retira && p.puntoRetiro.bodegaId) || p.tienda.bodegaId,
+     estadoProceso: hayProduccion ? "SinProducir" : "ParaDespachar",
+     // El pago si nace pendiente: lo confirma la pasarela o el comerciante.
+     estadoPago: "Pendiente",

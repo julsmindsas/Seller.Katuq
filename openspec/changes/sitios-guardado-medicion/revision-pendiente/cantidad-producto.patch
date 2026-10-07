@@ -1,0 +1,22 @@
+--- a/functions/controllers/sites.js
++++ b/functions/controllers/sites.js
+@@ -1903,6 +1903,10 @@
+       console.error("No se pudo leer el inventario real de la tienda:", e.message);
+     }
+ 
++    const cantidadPorProducto = new Map();
++    for (const pedido of pedidos) {
++      cantidadPorProducto.set(pedido.id, (cantidadPorProducto.get(pedido.id) || 0) + pedido.cantidad);
++    }
+     const productos = [];
+     const resumenItems = [];
+     let subtotalConIva = 0;
+@@ -1943,7 +1947,7 @@
+             message: `"${vista.titulo}" se agotó mientras comprabas. Quítalo del carrito para continuar.`,
+           });
+         }
+-        if (p.cantidad > enBodega) {
++        if (cantidadPorProducto.get(p.id) > enBodega) {
+           return res.status(409).json({
+             success: false,
+             message: `De "${vista.titulo}" solo ${

@@ -8274,6 +8274,30 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 - `companyConfig/ALMACEN BOMBAS.controlExistenciasVenta = "bloquear"` desde las 15:10.
 - Tickets 1149, 1150 y 1151 cerrados con la versión 2026.10.07.4. El 1151 lo reabrió el comercio a las 16:07: la vista previa se queda en "Imprimiendo".
 
+## D-363 (2026-10-07) — Builder: proteger la edición durante guardar y no contar un enlace fallido como compra
+
+**Autorización.** Tras la revisión de código y documentación, Daniel pidió: «dale comienza pero ojo con dañar cosas». La primera tanda corrige dos regresiones de contratos existentes (D-294 y D-298); no cambia reglas comerciales ni módulos sensibles. El alcance, los criterios y las tareas se registran en `openspec/changes/sitios-guardado-medicion/` antes de aplicar.
+
+**Decisión.** Conservar los cambios hechos mientras un guardado está en vuelo y mantenerlos pendientes; no publicar automáticamente una versión anterior si se sigue editando. Conservar nuevas entradas de credenciales de medición. Un pedido de pasarela con enlace fallido/pago pendiente no emite `purchase` ni se marca como conversión contada. Contra entrega y pagos manuales mantienen D-294.
+
+**Guardarraíl.** Solo editor de sitios, script del checkout y pruebas offline. Sin cambios en precios, maestros, órdenes, inventario, consecutivos, autenticación ni flows. Sin nuevas colecciones, datos productivos ni despliegues. Los cambios sensibles de retiro, variantes y stock se preparan como diff aparte, sin aplicarlos. El versionado posterior fue autorizado por Daniel: «sube a git».
+
+**Estado.** Implementado y verificado localmente: editor 14/14 regresiones, checkout 15/15, publicación 304 correctas y cuatro pendientes previas del generador, espejo cuatro comprobaciones y compilación Angular exit 0 vía CLI directa sin incrementar versión. Una revisión independiente reprodujo y corrigió el indicador de credenciales durante edición concurrente. Sintaxis y diff propios limpios; cambios ajenos de Integraciones preservados (el diff global posterior señala whitespace en un archivo de ese trabajo paralelo). Sin arranque de backend contra Firestore, prueba visual/compra real ni despliegue. Correcciones sensibles preparadas en `revision-pendiente/`; posteriormente se aprobó y aplicó únicamente el segundo descuento confirmado bajo D-364. El resto permanece sin aplicar. Daniel autorizó commit y push a las ramas actuales; la subida a Git no incluye despliegue.
+
+## D-364 (2026-10-07) — Tiendas Katuq: no repetir una reserva ya confirmada del pedido deduplicado
+
+**Autorización.** Se presentó el diff y se explicó con stock 10 → 8 para una sola venta. Daniel confirmó que el alcance eran las tiendas propias del Landing Builder de Katuq, no Shopify, y aprobó: «ah bueno aprobado». Se aplica únicamente la guardia de reserva, un cambio sensible a la vez. Registro previo en `openspec/changes/sitios-reserva-duplicada/`.
+
+**Decisión.** Cuando `orderService.createOrder` devuelve `_duplicadoEvitado` e `inventarioDescontadoAlCrear === true`, el checkout omite su bloque de reserva existente. Si la marca es falsa o ausente, conserva el intento para recuperar una reserva fallida. Se restaura el comportamiento de D-204, sin modificar `inventoryService.js` ni otros canales.
+
+**Evidencia.** Métodos reales `crearPedido`, `createOrder` y `updateByPOS` ejecutados contra almacenamiento en memoria: dos envíos secuenciales crean una sola orden, pero el código anterior genera dos SALIDA y stock 10 → 8. El candidato deja stock 9 y un movimiento. Pasan recuperación de reserva fallida y marcas previas true/false/ausente; bloqueadas escrituras a maestros.
+
+**Guardarraíl y límites.** Sin cambios de auth, tenant, business codes, precios, productos, Shopify, colecciones, datos productivos ni despliegue. Write-set existente: `orders` (marca), `inventory` e `inventoryMovement`; productos y precios read-only. No cierra peticiones simultáneas ni el fallo entre descontar y guardar la marca. Enlaces de pago, contadores y notificaciones repetidos siguen fuera. Retiro, suma de cantidades y selector de variantes no se aplican en esta tanda.
+
+**Estado.** Implementado localmente desde el diff aprobado y revisado por un segundo agente. Regresión portable `functions/tests/sitios/pedidoReservaDuplicada.test.js`: 8/8 pasan; cuatro de los siete casos iniciales fallaban antes del fix. El contrato detecta intentos de escribir maestros aunque una dependencia atrape el error. Medición de D-363: 15/15; publicación: 304 correctas y las mismas cuatro pendientes previas. `node --check` y diff propios limpios. Sin reinicio contra Firestore, HTTP/compra real ni despliegue; otros cambios paralelos preservados. Se probaron reenvíos secuenciales, no peticiones simultáneas. Con «sube a git», Daniel autorizó versionar y subir este cambio junto a D-363 a las ramas actuales de frontend y backend.
+
+**Referencia Git.** Backend D-363/D-364: `1964bff970f646ffab3da5081cedbd117b5e2f2b`, subido a `origin/backend-aws-security`. El frontend y canon se versionan en `feature/venta-asistida-mejorada`; los diffs de revisión restantes se conservan como propuestas sin aplicar. La subida a Git no publica las correcciones en producción.
+
 ## D-365 (2026-10-07) — Integraciones para personas no técnicas: directorio por preguntas de negocio y formulario honesto
 
 **Origen.** Daniel, preparando Effix: reorganizar `/integrations` para que alguien no técnico conecte y edite fácil, con el estilo de Combos y del registro, sin dañar cómo se guardan las integraciones; luego "revisa los modales".

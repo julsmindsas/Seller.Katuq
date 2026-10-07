@@ -1,0 +1,59 @@
+--- a/functions/controllers/sites.js
++++ b/functions/controllers/sites.js
+@@ -2169,30 +2169,32 @@
+     // existente de órdenes devuelve el stock (restoreStock, idempotente). El
+     // webhook conserva su descuento SOLO como red de seguridad para pedidos
+     // sin la marca (creados antes del cambio, o cuyo descuento falló aquí).
+-    try {
+-      const inventoryService = require("../services/inventoryService");
+-      const resultado = await inventoryService.updateByPOS(
+-        { ...creada, _id: creada._id },
+-        sitio.company,
+-        "tienda-en-linea"
+-      );
+-      if (resultado && resultado.success !== false && creada._id) {
+-        await db
+-          .collection("orders")
+-          .doc(creada._id)
+-          .update({ inventarioDescontadoAlCrear: true });
+-      }
+-      console.log(
+-        `[sitios/pedido] ${creada.nroPedido} reservó inventario al crear:`,
+-        JSON.stringify(resultado)
+-      );
+-    } catch (e) {
+-      // El pedido ya existe y el comprador tiene su número: no se le daña la
+-      // compra por esto. Sin la marca, el webhook de pago descontará después.
+-      console.error(
+-        `[sitios/pedido] ${creada.nroPedido} no pudo reservar inventario:`,
+-        e.message
+-      );
++    if (!creada._duplicadoEvitado || creada.inventarioDescontadoAlCrear !== true) {
++      try {
++        const inventoryService = require("../services/inventoryService");
++        const resultado = await inventoryService.updateByPOS(
++          { ...creada, _id: creada._id },
++          sitio.company,
++          "tienda-en-linea"
++        );
++        if (resultado && resultado.success !== false && creada._id) {
++          await db
++            .collection("orders")
++            .doc(creada._id)
++            .update({ inventarioDescontadoAlCrear: true });
++        }
++        console.log(
++          `[sitios/pedido] ${creada.nroPedido} reservó inventario al crear:`,
++          JSON.stringify(resultado)
++        );
++      } catch (e) {
++        // El pedido ya existe y el comprador tiene su número: no se le daña la
++        // compra por esto. Sin la marca, el webhook de pago descontará después.
++        console.error(
++          `[sitios/pedido] ${creada.nroPedido} no pudo reservar inventario:`,
++          e.message
++        );
++      }
+     }
+ 
+     doc.ref

@@ -3506,7 +3506,8 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   private recalcularSucio(): void {
-    this.sucio = this.firmaActual() !== this.firmaGuardada;
+    this.sucio = this.firmaActual() !== this.firmaGuardada ||
+      !!this.tokenMetaNuevo.trim() || !!this.secretoGa4Nuevo.trim() || this.quitarMeta || this.quitarGa4;
   }
 
   ngOnDestroy(): void {
@@ -3669,14 +3670,27 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
       return;
     }
 
+    // D-363: la respuesta confirma esta instantánea, no lo que se siga
+    // escribiendo mientras llega. La copia también aísla los bloques anidados.
+    const enviado = {
+      nombre: this.nombre,
+      slug: this.slug,
+      dominioPropio: this.dominioPropio,
+      contenido: JSON.parse(JSON.stringify(this.contenido)) as ContenidoSitio,
+      tokenMetaNuevo: this.tokenMetaNuevo,
+      secretoGa4Nuevo: this.secretoGa4Nuevo,
+      quitarMeta: this.quitarMeta,
+      quitarGa4: this.quitarGa4,
+    };
+    const firmaEnviada = this.firmaActual();
     this.guardando = true;
     this.service
       .guardar({
         id: this.id,
-        nombre: this.nombre.trim(),
-        slug: this.slug.trim(),
-        dominioPropio: this.dominioPropio.trim(),
-        contenido: this.contenidoParaGuardar(),
+        nombre: enviado.nombre.trim(),
+        slug: enviado.slug.trim(),
+        dominioPropio: enviado.dominioPropio.trim(),
+        contenido: JSON.parse(JSON.stringify(this.contenidoParaGuardar())),
       })
       .subscribe({
         next: (res) => {
@@ -3685,9 +3699,22 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
             this.toastr.error((res && res.message) || "No pudimos guardar.");
             return;
           }
-          this.aplicarLoGuardado(res.data);
-          this.fijarComoGuardado();
+          const cambioDuranteGuardado = this.firmaActual() !== firmaEnviada ||
+            this.tokenMetaNuevo !== enviado.tokenMetaNuevo || this.secretoGa4Nuevo !== enviado.secretoGa4Nuevo ||
+            this.quitarMeta !== enviado.quitarMeta || this.quitarGa4 !== enviado.quitarGa4;
+          if (!res.data || !res.data.draft) {
+            this.toastr.error("No pudimos confirmar el contenido guardado. Vuelve a guardar antes de publicar.");
+            return;
+          }
+          this.aplicarLoGuardado(res.data, enviado, cambioDuranteGuardado);
+          this.recalcularSucio();
           if (res.avisos) this.toastr.info(res.avisos);
+          if (cambioDuranteGuardado) {
+            this.toastr.warning(alPublicar
+              ? "Hay cambios nuevos sin guardar. Revisa tu página y vuelve a pulsar Publicar."
+              : "Se guardó la versión enviada. Los cambios nuevos siguen sin guardar.");
+            return;
+          }
           if (!alPublicar) this.toastr.success("Cambios guardados");
           if (alPublicar) this.publicarAhora();
         },
@@ -3728,9 +3755,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     delete analitica.metaConversionsToken;
     delete analitica.ga4ApiSecret;
     if (this.tokenMetaNuevo.trim()) analitica.metaConversionsToken = this.tokenMetaNuevo.trim();
-    if (this.quitarMeta) analitica.metaConversionsToken = "";
+    if (this.quitarMeta && !this.tokenMetaNuevo.trim()) analitica.metaConversionsToken = "";
     if (this.secretoGa4Nuevo.trim()) analitica.ga4ApiSecret = this.secretoGa4Nuevo.trim();
-    if (this.quitarGa4) analitica.ga4ApiSecret = "";
+    if (this.quitarGa4 && !this.secretoGa4Nuevo.trim()) analitica.ga4ApiSecret = "";
     contenido.analitica = analitica;
     return contenido;
   }
@@ -3804,27 +3831,57 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
    * estaba ahí. Ahora se ve lo que quedó, y se avisa qué se cayó.
    */
   private aplicarLoGuardado(
-    data: { nombre: string; slug: string; draft: ContenidoSitio } | undefined
+    data: { nombre: string; slug: string; draft: ContenidoSitio; dominioPropio?: string },
+    enviado: {
+      nombre: string; slug: string; dominioPropio: string; contenido: ContenidoSitio;
+      tokenMetaNuevo: string; secretoGa4Nuevo: string; quitarMeta: boolean; quitarGa4: boolean;
+    },
+    conservarLocal: boolean
   ): void {
     if (!data || !data.draft) return;
 
     // Las credenciales de medición ya quedaron guardadas: se limpian los
     // campos de escritura para que un segundo guardado no las vuelva a mandar
     // ni deje un secreto escrito en pantalla.
-    this.tokenMetaNuevo = "";
-    this.secretoGa4Nuevo = "";
-    this.quitarMeta = false;
-    this.quitarGa4 = false;
+    const metaConfirmada = this.tokenMetaNuevo === enviado.tokenMetaNuevo && this.quitarMeta === enviado.quitarMeta;
+    const ga4Confirmada = this.secretoGa4Nuevo === enviado.secretoGa4Nuevo && this.quitarGa4 === enviado.quitarGa4;
+    if (metaConfirmada) {
+      this.tokenMetaNuevo = "";
+      this.quitarMeta = false;
+    }
+    if (ga4Confirmada) {
+      this.secretoGa4Nuevo = "";
+      this.quitarGa4 = false;
+    }
 
-    const perdidos = this.camposPerdidos(this.contenido, data.draft);
+    const perdidos = this.camposPerdidos(enviado.contenido, data.draft);
+    const guardado = this.completar(data.draft);
+    const nombreGuardado = data.nombre || enviado.nombre.trim();
+    const slugGuardado = data.slug || enviado.slug.trim();
+    const dominioGuardado = data.dominioPropio !== undefined ? data.dominioPropio || "" : enviado.dominioPropio.trim();
 
-    this.contenido = this.completar(data.draft);
-    if (data.slug) this.slug = data.slug;
-    if (data.nombre) this.nombre = data.nombre;
-    if ((data as any).dominioPropio !== undefined) this.dominioPropio = (data as any).dominioPropio || "";
+    if (!conservarLocal) {
+      this.contenido = guardado;
+      this.slug = slugGuardado;
+      this.nombre = nombreGuardado;
+      this.dominioPropio = dominioGuardado;
+    } else if (this.contenido && this.contenido.analitica) {
+      // Estos indicadores son confirmación del servidor, no edición del
+      // borrador. Actualizarlos evita mostrar como ausente una clave guardada,
+      // sin pisar una intención posterior de quitarla o reemplazarla.
+      if (metaConfirmada && typeof guardado.analitica.metaConversionsPuesto === "boolean") {
+        this.contenido.analitica.metaConversionsPuesto = guardado.analitica.metaConversionsPuesto;
+      }
+      if (ga4Confirmada && typeof guardado.analitica.ga4SecretoPuesto === "boolean") {
+        this.contenido.analitica.ga4SecretoPuesto = guardado.analitica.ga4SecretoPuesto;
+      }
+    }
+    // La referencia siempre corresponde al saneamiento confirmado, aunque
+    // conservemos en pantalla un borrador posterior que todavía no se guardó.
+    this.firmaGuardada = JSON.stringify({ n: nombreGuardado, s: slugGuardado, d: dominioGuardado, c: guardado });
     if (this.sitio) {
-      this.sitio.slug = data.slug || this.sitio.slug;
-      this.sitio.nombre = data.nombre || this.sitio.nombre;
+      this.sitio.slug = slugGuardado;
+      this.sitio.nombre = nombreGuardado;
     }
     this.resolverProductosDePrevia();
 
