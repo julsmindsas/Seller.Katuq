@@ -8326,3 +8326,47 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 - Apagar una integración de verdad requiere backend, y no todos los consumidores respetan `status`; por ejemplo, la factura a SIIGO por tool.
 
 **Código.** Front `components/integrations/*` y `getResumenEstado` (solo lectura) en `shared/services/notifications/whatsapp-integration-config.service.ts`. Commit f1fbe878.
+
+## D-366 (2026-10-07) — Imprimir un pedido desde despachos nunca se queda en "Generando PDF" (ticket 1151, reabierto)
+
+**Origen.** Ticket 1151 de ALMACEN BOMBAS, logística. El primer arreglo (`3eea2ab9`, botón visible en pantallas bajas) salió en 2026.10.07.4 y el comercio lo reabrió: "se queda en imprimiendo, no pasa de ahí". La vista previa de despachos (`app-imprimir-pdf`) rasterizaba la página viva con `html2canvas`. La versión 1.4.1 clona todo el documento y espera, sin tope, a que carguen todas sus imágenes (`imagesReady`). Basta una sola imagen que no responda (carga diferida, mapas, un servidor caído) para que el botón quede girando para siempre. Reproducido en Chrome: el método viejo seguía colgado a los 20 s; el nuevo genera el PDF en 0,3 s.
+
+**Decisión.**
+- **Imprimir** abre el diálogo del navegador (imprimir o "Guardar como PDF") con un iframe oculto que solo contiene la vista previa. Es lo que pedía logística: "el aceptar de la impresión".
+- **Descargar PDF** se conserva para quien lo use, pero rasteriza solo ese iframe: espera las imágenes del pedido como máximo 8 s y todo el proceso como máximo 45 s. Si se pasa, avisa y sugiere "Imprimir → Guardar como PDF".
+- El iframe lleva `sandbox="allow-same-origin allow-modals"`, sin scripts: el pedido trae textos que escribe la gente y ningún `onerror` ni `<script>` corre. Se verificó en Chrome que el sandbox no bloquea `print()` ni el PDF.
+- La vista se actualiza si el HTML llega después de abrirla (`ngOnChanges`). Antes se quedaba con el aviso "Cargando datos maestros..." (ticket 1053).
+- Utilidad compartida: `shared/utils/impresion-aislada.ts`, con `conTope` y `TiempoAgotadoError`.
+
+**Alcance.** Toca a todos los comercios que imprimen desde despachos. El modal de ventas ya imprimía con `window.print` y no cambia.
+
+## D-367 (2026-10-07) — Liberar una factura anulada con nota crédito y avisar antes de facturar a Consumidor Final (ticket 1145, reabierto)
+
+**Origen.** Ticket 1145 de ALMACEN BOMBAS. BAS-000026 salió en la factura ABB 1946 a CONSUMIDOR FINAL (222222222222), aunque el cliente es Geronimo (14316727).
+- El cliente no tenía datos de facturación y el pedido quedó con el bloque genérico.
+- La ventana "¿Generar factura?" mostraba "Cliente: Geronimo", pero el sistema contable factura con la sección Facturación.
+- Les indicamos hacer la nota crédito en SIIGO y refacturar. La nota sí se pudo hacer, pero Katuq no deja refacturar: `canEditBilling`/`puedeFacturarSiigo` en el front y `ALREADY_INVOICED` en el backend bloquean mientras haya factura. No existía forma de liberarla, ni siquiera después de una nota crédito DIAN total.
+
+**Decisión.**
+- **Liberar factura.** Nueva ruta `POST /v1/accounting/orders/:orderId/release-invoice` con `auth`, `requireJwtTenant` (empresa de la sesión) y `requireRole` para Administrador, Super Administrador, Tesorero o Tesoreria. En ALMACEN BOMBAS el rol se llama "Tesoreria"; `TREASURY_ROLES` dice "Tesorero".
+  - En una transacción verifica `order.company`.
+  - Mueve la factura a `facturasAnuladas` (arrayUnion, con nota crédito, quién y cuándo) y borra `nroFactura`, `pdfUrlInvoice`, `facturacionElectronica` y `facturacionEnProceso`.
+  - Fija `date_upd` para que una pestaña vieja reciba STALE_WRITE.
+  - Audita en `accounting_invoice_errors` con `type: 'invoice_released'`.
+  - No anula nada en el sistema contable.
+  - SIIGO y World Office exigen el número de la nota crédito. DIAN exige la nota crédito total emitida desde Katuq.
+  - No libera pedidos sin `facturacionElectronica.invoiceId` (el punto de venta guarda la referencia en `nroFactura`) ni con una facturación en curso.
+- **Recuperación.** La recuperación tras timeout o 409 (cliente + fecha + total) ya no vuelve a vincular una factura anulada de ese pedido (`recovery_rejected_invoice_annulled`).
+- **Para que no se repita.**
+  - La ventana de facturar muestra "Se factura a", con la misma prioridad que el backend.
+  - Si saldría a Consumidor Final aunque el cliente tiene documento propio, avisa, ofrece "Corregir datos de facturación" y no deja generar sin marcar "Sí, es una venta a Consumidor Final".
+  - Lo mismo en la confirmación de DIAN y World Office.
+  - La vista previa SIIGO lo avisa desde el backend.
+  - Una venta de mostrador real (cliente sin documento o con el 222222222222) no cambia.
+- **Front.** Acción "Liberar factura" en el detalle del pedido, solo para esos roles. En los datos del pedido se ven las facturas anuladas.
+
+**No-goals.** No se crea la nota crédito en SIIGO desde Katuq (el proveedor no la soporta). No se cambia cómo se arma la sección Facturación al crear el pedido, porque el punto de venta depende de Consumidor Final. Tampoco hay colecciones nuevas.
+
+**Riesgos.** Con los campos vacíos, el pedido sale como "sin factura" en filtros y búsquedas, que es lo correcto tras anularla. Cartera, tesorería, contabilidad y el correo no leen estos campos (mapa revisado).
+
+**Código.** Backend `services/accounting/utils/liberarFactura.js`, `utils/consumidorFinal.js`, `AccountingManager.releaseInvoice`, `accountingController.releaseInvoice` y `routers/accounting.js`. Pruebas: `npm run test:liberar-factura` (14 casos); accounting y soloLectura sin cambios. Front `shared/utils/cliente-factura.ts`, `ventas/list` e `IntegrationsService.releaseOrderInvoice`.
