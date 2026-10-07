@@ -8241,5 +8241,15 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
   - Pedido nuevo en Cereza Medellín con el GCC411 ($54.900).
   - Inventario: vuelven a Cereza Medellín las dos unidades mal descontadas y se descuenta el JCR4026 de Fullpi Medellín. El Elixir no tiene control de inventario.
 
-**Estado (2026-10-07).** El backend `b4a75c6` ya está en producción: `pm2 reload katuq-api`, en línea y sin errores de arranque. Salió junto con D-359, cuyas 16 pruebas pasan. Desde ese momento, los pedidos nuevos que mezclan proveedores se reparten. Siguen pendientes la publicación del front (`464819f1`), el `--apply` de los dos scripts y la verificación de ORE-001393 en pantalla: el modo automático los bloqueó.
+**Estado (2026-10-07, desplegado con "despliega" de Daniel).**
+- Backend `b4a75c6` en producción, junto con D-359.
+- Front `464819f1` publicado como 2026.10.07.1: el chunk con "REPARTIDO POR BODEGA" se sirve en producción.
+- Flow `shopify-orders-to-cereza-7e6ab5a3` en la versión 23: el inventario se descuenta por la bodega de cada línea. Respaldo en `scripts/_backup-1120-flows-*.json`.
+- ORE-001393 repartido:
+  - ORE-001393 en Distri Sex: Elixir + envío, $194.800.
+  - ORE-001465 en Fullpi Medellín: JCR4026, $173.578.
+  - ORE-001466 en Cereza Medellín: GCC411, $54.900.
+  - Los tres suman exactamente $423.278 y llevan #1174.
+- Inventario: Elixir y JCR4026 en Cereza Medellín pasan de −1 a 0, y JCR4026 en Fullpi Medellín de 9 a 8.
+- Falta revisar la pantalla: la extensión de Chrome no estaba conectada.
 
