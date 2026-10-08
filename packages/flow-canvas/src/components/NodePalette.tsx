@@ -1,17 +1,9 @@
 import React, { useMemo } from 'react';
 import classNames from 'classnames';
 import { useFlowStore } from '../store/flowStore';
-import type { NodeSpec, NodeGroup } from '../contracts/types';
+import type { NodeSpec } from '../contracts/types';
+import { NOMBRES_GRUPO, nombrePaso, descripcionPaso } from '../utils/lenguaje';
 
-const GROUP_LABELS: Record<NodeGroup, string> = {
-    osmosis: 'Osmosis (Guía Cereza)',
-    shopify: 'Shopify',
-    woocommerce: 'WooCommerce',
-    katuq: 'Katuq Internal',
-    'flow-control': 'Control de Flujo',
-    http: 'HTTP',
-    kai: 'KAI (AI)'
-};
 
 export interface NodePaletteProps {
     readOnly: boolean;
@@ -38,13 +30,13 @@ export const NodePalette: React.FC<NodePaletteProps> = ({ readOnly }) => {
     };
 
     return (
-        <aside className="kfc-sidebar" aria-label="Catálogo de nodos">
+        <aside className="kfc-sidebar" aria-label="Pasos disponibles">
             <div className="kfc-sidebar__header">
-                <h3 className="kfc-sidebar__title">Catálogo de nodos</h3>
+                <h3 className="kfc-sidebar__title">Pasos disponibles</h3>
                 <input
                     type="search"
                     className="kfc-sidebar__search"
-                    placeholder="Buscar nodo (nombre, tag, grupo)..."
+                    placeholder="Buscar paso…"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                 />
@@ -52,16 +44,16 @@ export const NodePalette: React.FC<NodePaletteProps> = ({ readOnly }) => {
             <div className="kfc-sidebar__list">
                 {catalog.length === 0 && (
                     <div className="kfc-empty">
-                        <div className="kfc-empty__title">Sin catálogo cargado</div>
+                        <div className="kfc-empty__title">No pudimos cargar los pasos</div>
                         <div className="kfc-empty__desc">
-                            El backend debe enviar el array de NodeSpec[].
+                            Recarga la página para intentarlo de nuevo.
                         </div>
                     </div>
                 )}
                 {Object.entries(groups).map(([group, specs]) => (
                     <section key={group} className="kfc-group">
                         <div className="kfc-group__title">
-                            {GROUP_LABELS[group as NodeGroup] || group} ({specs.length})
+                            {NOMBRES_GRUPO[group] || group} · {specs.length}
                         </div>
                         {specs.map((spec) => (
                             <div
@@ -69,13 +61,12 @@ export const NodePalette: React.FC<NodePaletteProps> = ({ readOnly }) => {
                                 className={classNames('kfc-palette-card')}
                                 draggable={!readOnly}
                                 onDragStart={(e) => onDragStart(e, spec)}
-                                style={{ borderLeftColor: spec.color }}
-                                title={spec.description}
+                                title={descripcionPaso(spec.type, spec.description)}
                             >
-                                <i className={classNames('kfc-palette-card__icon', spec.icon)} />
+                                <i className={classNames('kfc-palette-card__icon', spec.icon)} style={{ color: spec.color }} />
                                 <div className="kfc-palette-card__body">
-                                    <div className="kfc-palette-card__title">{spec.displayName}</div>
-                                    <div className="kfc-palette-card__desc">{spec.description}</div>
+                                    <div className="kfc-palette-card__title">{nombrePaso(spec.type, spec.displayName)}</div>
+                                    <div className="kfc-palette-card__desc">{descripcionPaso(spec.type, spec.description)}</div>
                                 </div>
                             </div>
                         ))}

@@ -1,164 +1,121 @@
-<section class="kf-templates">
-  <header class="kf-templates__header">
-    <button type="button" class="kf-btn kf-btn--ghost" (click)="goBack()">
-      <i class="pi pi-arrow-left"></i>
-      Volver
-    </button>
-    <div>
-      <h1>Plantillas listas para usar</h1>
-      <p>Elegí una sincronización armada y activala en un click.</p>
-    </div>
-  </header>
+<!-- Plantillas de Automatizaciones — lenguaje simple, estilo Combos (2026-10-07, D-350 parte C). -->
+<div class="au-page">
+  <div class="au-wrap">
 
-  <!-- Spec 003.5 — chips filtro por proveedor (AC-003.5-02) -->
-  <nav class="kf-templates__chips" *ngIf="!loading && availableProviders.length > 0" aria-label="Filtrar por tienda">
-    <button
-      type="button"
-      class="kf-chip"
-      [class.kf-chip--active]="selectedProvider === 'all'"
-      (click)="selectProvider('all')"
-    >
-      <i class="pi pi-th-large"></i> {{ providerLabel('all') }}
-    </button>
-    <button
-      type="button"
-      *ngFor="let p of availableProviders"
-      class="kf-chip"
-      [class.kf-chip--active]="selectedProvider === p"
-      (click)="selectProvider(p)"
-    >
-      {{ providerLabel(p) }}
-    </button>
-  </nav>
-
-  <div *ngIf="errorMessage" class="kf-alert">
-    <i class="pi pi-exclamation-triangle"></i>
-    <span>{{ errorMessage }}</span>
-  </div>
-
-  <div *ngIf="loading" class="kf-loading">
-    <i class="pi pi-spin pi-spinner"></i>
-    Cargando plantillas...
-  </div>
-
-  <div *ngIf="!loading && filteredTemplates.length === 0" class="kf-empty">
-    <i class="pi pi-info-circle"></i>
-    No hay plantillas para esta tienda todavía.
-  </div>
-
-  <ul class="kf-templates__grid" *ngIf="!loading && filteredTemplates.length > 0">
-    <li
-      *ngFor="let t of filteredTemplates; trackBy: trackById"
-      class="kf-template-card"
-      [class.kf-template-card--experimental]="t.experimental"
-    >
-      <div class="kf-template-card__icon">
-        <img *ngIf="t.iconLogo" [src]="t.iconLogo" [alt]="(t.provider || '') + ' logo'"
-             (error)="$any($event.target).style.display='none'">
-        <i *ngIf="!t.iconLogo" class="pi pi-th-large"></i>
+    <header class="au-head">
+      <div class="au-head-txt">
+        <button type="button" class="au-link au-volver" (click)="goBack()">← Automatizaciones</button>
+        <span class="au-eyebrow">Automatizaciones · Plantillas</span>
+        <h1 class="au-title">Elige qué quieres que <span>pase solo</span></h1>
+        <p class="au-sub">Cada plantilla ya viene armada. Revisamos que tengas conectado lo necesario y la enciendes en un clic.</p>
       </div>
-      <h2>{{ t.name }}</h2>
-      <p>{{ t.description }}</p>
-      <ul class="kf-template-card__tags" *ngIf="t.tags && t.tags.length">
-        <li *ngFor="let tag of t.tags">#{{ tag }}</li>
-      </ul>
-      <div class="kf-template-card__meta">
-        {{ t.graph.nodes.length }} pasos
-        <span *ngIf="t.experimental" class="kf-template-card__exp">· experimental</span>
-      </div>
-      <button
-        type="button"
-        class="kf-btn kf-btn--primary"
-        (click)="openWizard(t)"
-      >
-        <i class="pi pi-bolt"></i>
-        Usar plantilla
-      </button>
-    </li>
-  </ul>
-</section>
+    </header>
 
-<!-- ===================== Wizard de setup ===================== -->
-<ng-template #setupModal let-modal>
-  <div class="kf-wizard">
-    <div class="kf-wizard__header">
-      <div class="kf-wizard__heading">
-        <span class="kf-wizard__eyebrow">Activar plantilla</span>
-        <h2>{{ wizardTemplate?.name }}</h2>
-      </div>
-      <button type="button" class="kf-btn kf-btn--ghost kf-wizard__close" (click)="closeWizard()" aria-label="Cerrar">
-        <i class="pi pi-times"></i>
-      </button>
+    <!-- Spec 003.5 — filtro por sistema (AC-003.5-02) -->
+    <div class="au-seg" *ngIf="!loading && availableProviders.length > 0" role="group" aria-label="Filtrar por sistema">
+      <button type="button" [class.on]="selectedProvider === 'all'" [attr.aria-pressed]="selectedProvider === 'all'" (click)="selectProvider('all')">Todas</button>
+      <button type="button" *ngFor="let p of availableProviders" [class.on]="selectedProvider === p" [attr.aria-pressed]="selectedProvider === p" (click)="selectProvider(p)">{{ providerLabel(p) }}</button>
     </div>
 
-    <div class="kf-wizard__body">
-      <p class="kf-wizard__desc" *ngIf="wizardTemplate?.description">{{ wizardTemplate?.description }}</p>
+    <section class="au-error" *ngIf="errorMessage" role="alert"><span>{{ errorMessage }}</span></section>
 
-      <!-- Paso 1: integraciones necesarias -->
-      <section class="kf-wizard__section">
-        <h3 class="kf-wizard__section-title">
-          <i class="pi pi-link"></i> Integraciones necesarias
-        </h3>
+    <div class="au-loading" *ngIf="loading">
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      Cargando plantillas…
+    </div>
 
-        <div *ngIf="requiredIntegrations.length === 0" class="kf-wizard__hint">
-          Esta plantilla no requiere integraciones externas.
+    <section class="au-empty" *ngIf="!loading && filteredTemplates.length === 0">
+      <span class="au-empty-title">Todavía no hay plantillas para este sistema</span>
+      <button type="button" class="au-btn-ghost" (click)="selectProvider('all')">Ver todas</button>
+    </section>
+
+    <div class="au-grid" *ngIf="!loading && filteredTemplates.length > 0">
+      <article *ngFor="let t of filteredTemplates; trackBy: trackById" class="au-card">
+        <div class="au-card-top">
+          <ng-container *ngIf="ruta(t) as r">
+          <div class="au-ruta" *ngIf="r.de" [attr.aria-label]="'Lleva datos ' + (r.a.length ? 'de ' + r.de.nombre + ' a ' + nombresDe(r.a) : 'dentro de ' + r.de.nombre)">
+            <span class="au-sis"><span class="au-sis-dot" [style.background]="r.de.color"></span>{{ r.de.nombre }}</span>
+            <ng-container *ngFor="let s of r.a">
+              <svg class="au-flecha" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              <span class="au-sis"><span class="au-sis-dot" [style.background]="s.color"></span>{{ s.nombre }}</span>
+            </ng-container>
+          </div>
+          </ng-container>
+          <span class="au-estado au-estado-partial" *ngIf="t.experimental"><span class="au-dot"></span>En prueba</span>
         </div>
 
-        <ul class="kf-wizard__integrations" *ngIf="requiredIntegrations.length > 0">
-          <li *ngFor="let it of requiredIntegrations" class="kf-wizard__integration">
-            <span class="kf-wizard__integration-name">{{ it.label }}</span>
-            <span *ngIf="!integrationsVerified" class="kf-wizard__status kf-wizard__status--unknown">
-              <i class="pi pi-question-circle"></i> sin verificar
-            </span>
-            <span *ngIf="integrationsVerified && it.connected" class="kf-wizard__status kf-wizard__status--ok">
-              <i class="pi pi-check-circle"></i> conectada
-            </span>
-            <button
-              *ngIf="integrationsVerified && !it.connected"
-              type="button"
-              class="kf-btn kf-btn--warn-solid kf-btn--sm"
-              (click)="goToIntegrations()"
-            >
-              <i class="pi pi-link"></i> Conectar
-            </button>
+        <h3>{{ t.name }}</h3>
+        <p class="au-que">{{ t.description }}</p>
+
+        <dl class="au-datos">
+          <div>
+            <dt>Cuándo arranca</dt>
+            <dd>{{ cuando(t) }}</dd>
+          </div>
+        </dl>
+
+        <div class="au-card-foot">
+          <button type="button" class="au-btn-primary au-btn-sm" (click)="openWizard(t)">Usar esta plantilla</button>
+        </div>
+      </article>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== Asistente para encender una plantilla ===================== -->
+<ng-template #setupModal let-modal>
+  <div class="au-asis">
+    <div class="au-asis-head">
+      <div>
+        <span class="au-eyebrow">Encender plantilla</span>
+        <h2>{{ wizardTemplate?.name }}</h2>
+      </div>
+      <button type="button" class="au-btn-icon" (click)="closeWizard()" aria-label="Cerrar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <div class="au-asis-body">
+      <p class="au-que" *ngIf="wizardTemplate?.description">{{ wizardTemplate?.description }}</p>
+
+      <!-- Paso 1: lo que tiene que estar conectado -->
+      <section class="au-asis-paso">
+        <h3><span class="au-asis-n">1</span> Lo que tiene que estar conectado</h3>
+
+        <p class="au-asis-ayuda" *ngIf="requiredIntegrations.length === 0">No necesita conectar nada más.</p>
+
+        <ul class="au-asis-lista" *ngIf="requiredIntegrations.length > 0">
+          <li *ngFor="let it of requiredIntegrations">
+            <span class="au-asis-nombre">{{ it.label }}</span>
+            <span *ngIf="!integrationsVerified" class="au-estado au-estado-draft"><span class="au-dot"></span>Sin revisar</span>
+            <span *ngIf="integrationsVerified && it.connected" class="au-estado au-estado-active"><span class="au-dot"></span>Conectado</span>
+            <button *ngIf="integrationsVerified && !it.connected" type="button" class="au-btn-primary au-btn-sm" (click)="goToIntegrations()">Conectar</button>
           </li>
         </ul>
 
-        <div *ngIf="!integrationsVerified && requiredIntegrations.length > 0" class="kf-wizard__hint kf-wizard__hint--muted">
-          No pudimos verificar tus integraciones. Revisá que estén conectadas en
-          <a href="javascript:void(0)" (click)="goToIntegrations()">Integraciones</a>.
-        </div>
+        <p class="au-asis-ayuda" *ngIf="!integrationsVerified && requiredIntegrations.length > 0">
+          No pudimos revisar tus conexiones. Confírmalas en
+          <button type="button" class="au-link" (click)="goToIntegrations()">Integraciones</button>.
+        </p>
       </section>
 
-      <!-- Paso 2: frecuencia de sincronización -->
-      <section class="kf-wizard__section" *ngIf="pollingNodeId">
-        <h3 class="kf-wizard__section-title">
-          <i class="pi pi-clock"></i> Frecuencia de sincronización
-        </h3>
-        <div class="kf-wizard__field">
-          <select class="kf-input" [(ngModel)]="syncMinutes">
-            <option *ngFor="let opt of freqOptions" [ngValue]="opt.value">{{ opt.label }}</option>
-          </select>
-          <small class="kf-wizard__hint">Cada cuánto el flujo revisa cambios para sincronizar.</small>
-        </div>
+      <!-- Paso 2: cada cuánto -->
+      <section class="au-asis-paso" *ngIf="pollingNodeId">
+        <h3><span class="au-asis-n">2</span> Cada cuánto revisa si hay cambios</h3>
+        <select class="au-input" [(ngModel)]="syncMinutes" aria-label="Cada cuánto">
+          <option *ngFor="let opt of freqOptions" [ngValue]="opt.value">{{ opt.label }}</option>
+        </select>
+        <p class="au-asis-ayuda">Entre más seguido, más rápido se ven los cambios.</p>
       </section>
     </div>
 
-    <div class="kf-wizard__footer">
-      <button type="button" class="kf-btn" (click)="openInEditor()" [disabled]="wizardBusy">
-        <i class="pi" [ngClass]="wizardBusy ? 'pi-spin pi-spinner' : 'pi-pencil'"></i>
-        Abrir en el editor
-      </button>
-      <span class="kf-wizard__footer-spacer"></span>
-      <button
-        type="button"
-        class="kf-btn kf-btn--primary"
-        (click)="activateNow()"
-        [disabled]="wizardBusy || !canActivate"
-        [title]="!canActivate ? 'Conectá las integraciones faltantes para activar' : 'Activar el flujo'"
-      >
-        <i class="pi" [ngClass]="wizardBusy ? 'pi-spin pi-spinner' : 'pi-bolt'"></i>
-        Activar ahora
+    <div class="au-asis-pie">
+      <button type="button" class="au-link" (click)="openInEditor()" [disabled]="wizardBusy">Abrir en modo avanzado</button>
+      <span class="au-asis-falta" *ngIf="!canActivate">Primero conecta lo que falta.</span>
+      <button type="button" class="au-btn-primary" (click)="activateNow()" [disabled]="wizardBusy || !canActivate">
+        <span *ngIf="wizardBusy" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        {{ wizardBusy ? 'Encendiendo…' : 'Encender ahora' }}
       </button>
     </div>
   </div>

@@ -101,28 +101,28 @@ export const FlowCanvasApp: React.FC<FlowCanvasAppProps> = ({
     return (
         <ReactFlowProvider>
             <div className="kfc-root">
-                <NodePalette readOnly={readOnly} />
+                {!showConfig && <NodePalette readOnly={readOnly} />}
 
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative' }}>
                     <div className="kfc-toolbar">
                         <button
                             type="button"
                             className="kfc-btn"
                             onClick={() => setRightView(rightView === 'runs' ? 'none' : 'runs')}
-                            title="Ver historial / detalles del run"
+                            title="Ver el resultado de la última prueba"
                         >
                             <i className="pi pi-history" />
-                            Historial
+                            Última prueba
                         </button>
                         {!readOnly && (
                             <button
                                 type="button"
                                 className="kfc-btn"
                                 onClick={onAutoLayout}
-                                title="Reorganizar nodos automáticamente"
+                                title="Ordenar los pasos automáticamente"
                             >
                                 <i className="pi pi-sitemap" />
-                                Reorganizar
+                                Ordenar
                             </button>
                         )}
                         {!readOnly && (
@@ -131,17 +131,17 @@ export const FlowCanvasApp: React.FC<FlowCanvasAppProps> = ({
                                 className={`kfc-btn kfc-btn--primary ${runIsActive ? 'kfc-btn--running' : ''}`}
                                 onClick={onRunClick}
                                 disabled={runIsActive}
-                                title="Ejecutar test-run (Ctrl+Enter)"
+                                title="Probar ahora (Ctrl+Enter)"
                             >
                                 {runIsActive ? (
                                     <>
                                         <i className="pi pi-spin pi-spinner" />
-                                        Ejecutando…
+                                        Probando…
                                     </>
                                 ) : (
                                     <>
                                         <i className="pi pi-play" />
-                                        Ejecutar
+                                        Probar ahora
                                     </>
                                 )}
                             </button>
@@ -155,12 +155,12 @@ export const FlowCanvasApp: React.FC<FlowCanvasAppProps> = ({
                                     runStatus === 'failed' ? 'failed' :
                                     runIsActive ? 'running' : 'neutral'
                                 }`}
-                                title={`Run: ${runStatus}`}
+                                title="Resultado de la prueba"
                             >
                                 {runIsActive && <i className="pi pi-spin pi-spinner" />}
                                 {!runIsActive && runStatus === 'success' && <i className="pi pi-check-circle" />}
                                 {!runIsActive && runStatus === 'failed' && <i className="pi pi-times-circle" />}
-                                {runStats.done}/{runStats.total} nodos
+                                {runStats.done}/{runStats.total} pasos
                                 {runStats.failed > 0 && (
                                     <span className="kfc-run-badge__failed">· {runStats.failed} con error</span>
                                 )}
@@ -168,9 +168,9 @@ export const FlowCanvasApp: React.FC<FlowCanvasAppProps> = ({
                         )}
 
                         {hasCycle && (
-                            <span className="kfc-pill kfc-pill--danger" title="Hay un ciclo en el grafo">
+                            <span className="kfc-pill kfc-pill--danger" title="Hay conexiones en círculo">
                                 <i className="pi pi-exclamation-triangle" />
-                                Ciclo detectado · revisá conexiones
+                                Hay conexiones en círculo: revísalas
                             </span>
                         )}
 
@@ -199,7 +199,7 @@ export const FlowCanvasApp: React.FC<FlowCanvasAppProps> = ({
                         {isEmpty && (
                             <EmptyCanvas
                                 readOnly={readOnly}
-                                onTemplateClick={(slug) => onIntent?.('installTemplate', { slug })}
+                                onTemplateClick={() => onIntent?.('openTemplates')}
                             />
                         )}
                     </div>
@@ -214,13 +214,13 @@ export const FlowCanvasApp: React.FC<FlowCanvasAppProps> = ({
                     />
                 )}
                 {showRuns && (
-                    <aside className="kfc-config" aria-label="Historial de ejecuciones">
+                    <aside className="kfc-config" aria-label="Resultado de la prueba">
                         <div className="kfc-config__header">
                             <div>
-                                <div className="kfc-config__title">Detalles del run</div>
+                                <div className="kfc-config__title">Resultado de la prueba</div>
                                 {runContext && (
                                     <div style={{ fontSize: 11, color: '#6b7280' }}>
-                                        {runStatus} · {runContext.totalDurationMs ?? '—'} ms
+                                        {({ success: 'Bien', failed: 'Falló', partial: 'Con pendientes', running: 'Probando', cancelled: 'Cancelada' } as Record<string, string>)[runStatus || ''] || ''}{runContext.totalDurationMs != null ? ` · ${(runContext.totalDurationMs / 1000).toFixed(1).replace('.', ',')} s` : ''}
                                     </div>
                                 )}
                             </div>

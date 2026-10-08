@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import type { FlowNode, NodeSpec, JSONSchemaLike } from '../contracts/types';
 import { useFlowStore } from '../store/flowStore';
 import { findSpec, validateNodeParams } from '../utils/validators';
+import { NOMBRES_GRUPO, nombrePaso, descripcionPaso, etiquetaCampo, ayudaCampo, esAvanzado, textoOpcion } from '../utils/lenguaje';
 
 export interface ConfigPanelProps {
     onClose: () => void;
@@ -17,7 +18,7 @@ const PROVIDER_ALIASES: Record<string, string> = {
 
 /** Friendly labels for the missing-integration banner. */
 const PROVIDER_LABELS: Record<string, string> = {
-    osmosis: 'Guía Cereza',
+    osmosis: 'Cereza',
     shopify: 'Shopify',
     woocommerce: 'WooCommerce',
     siigo: 'Siigo',
@@ -92,6 +93,10 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose, onOpenIntegra
     const updateNode = useFlowStore((s) => s.updateNode);
     const deleteNode = useFlowStore((s) => s.deleteNode);
     const readOnly = useFlowStore((s) => s.readOnly);
+    // Arriba de cualquier return: los hooks no pueden quedar condicionados.
+    const [confirmandoBorrar, setConfirmandoBorrar] = useState(false);
+    const [verTecnico, setVerTecnico] = useState(false);
+    useEffect(() => { setConfirmandoBorrar(false); }, [selectedNodeId]);
 
     const node: FlowNode | undefined = useMemo(
         () => graph.nodes.find((n) => n.id === selectedNodeId),
@@ -128,9 +133,9 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose, onOpenIntegra
         return (
             <aside className="kfc-config" aria-label="Panel de configuración">
                 <div className="kfc-empty">
-                    <div className="kfc-empty__title">Sin nodo seleccionado</div>
+                    <div className="kfc-empty__title">Toca un paso para configurarlo</div>
                     <div className="kfc-empty__desc">
-                        Click en un nodo del canvas para editar sus parámetros.
+                        Aquí aparecen sus ajustes.
                     </div>
                 </div>
             </aside>
@@ -155,8 +160,12 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose, onOpenIntegra
     const onCancel = () => onClose();
 
     const onDelete = () => {
-        // eslint-disable-next-line no-alert
-        if (confirm(`Eliminar el nodo "${spec.displayName}"?`)) {
+        // Dos toques en vez de window.confirm (prohibido en el front): el primero pide confirmar.
+        if (!confirmandoBorrar) {
+            setConfirmandoBorrar(true);
+            return;
+        }
+        {
             deleteNode(node.id);
             onClose();
         }
@@ -166,8 +175,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose, onOpenIntegra
         <aside className="kfc-config" aria-label="Panel de configuración">
             <div className="kfc-config__header">
                 <div className="kfc-config__heading">
-                    <div className="kfc-config__title">{spec.displayName}</div>
-                    <div className="kfc-config__subtitle">{spec.type} · v{spec.version}</div>
+                    <div className="kfc-config__title">{nombrePaso(spec.type, spec.displayName)}</div>
+                    <div className="kfc-config__subtitle">{NOMBRES_GRUPO[spec.group] || spec.group}</div>
                 </div>
                 <button
                     type="button"
@@ -187,7 +196,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose, onOpenIntegra
                             <i className="pi pi-exclamation-triangle" />
                             <span>
                                 {missing.length === 1
-                                    ? `Necesitás conectar ${providerLabel(missing[0])} para que este paso funcione.`
+                                    ? `Conecta ${providerLabel(missing[0])} para que este paso funcione.`
                                     : `Este paso necesita estas integraciones conectadas: ${missing
                                           .map(providerLabel)
                                           .join(', ')}.`}
@@ -208,8 +217,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose, onOpenIntegra
                         </div>
                     </div>
                 )}
-                {spec.description && (
-                    <p className="kfc-config__desc">{spec.description}</p>
+                {descripcionPaso(spec.type, spec.description) && (
+                    <p className="kfc-config__desc">{descripcionPaso(spec.type, spec.description)}</p>
                 )}
                 {errors.length > 0 && (
                     <div className="kfc-config__errors" role="alert">
@@ -221,50 +230,73 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose, onOpenIntegra
 
                 {Object.keys(properties).length === 0 && (
                     <div style={{ color: '#6b7280', fontSize: 12 }}>
-                        Este nodo no tiene parámetros configurables.
+                        Este paso no necesita configuración.
                     </div>
                 )}
 
-                {Object.entries(properties).map(([name, schema]) => (
-                    <SchemaField
-                        key={name}
-                        name={name}
-                        schema={schema}
-                        value={draft[name]}
-                        mode={modes[name] || 'fixed'}
-                        required={required.includes(name)}
-                        readOnly={readOnly}
-                        inputData={inputData}
-                        onChange={(v) => setField(name, v)}
-                        onModeChange={(m) => setMode(name, m)}
-                    />
-                ))}
+                {(() => {
+                    const campo = ([name, schema]: [string, JSONSchemaLike]) => (
+                        <SchemaField
+                            key={name}
+                            name={name}
+                            schema={schema}
+                            value={draft[name]}
+                            mode={modes[name] || 'fixed'}
+                            required={required.includes(name)}
+                            readOnly={readOnly}
+                            inputData={inputData}
+                            onChange={(v) => setField(name, v)}
+                            onModeChange={(m) => setMode(name, m)}
+                        />
+                    );
+                    const todos = Object.entries(properties) as [string, JSONSchemaLike][];
+                    const principales = todos.filter(([n, sc]) => !esAvanzado(n, sc, required.includes(n)));
+                    const avanzados = todos.filter(([n, sc]) => esAvanzado(n, sc, required.includes(n)));
+                    return (
+                        <>
+                            {principales.map(campo)}
+                            {avanzados.length > 0 && (
+                                <details className="kfc-avanzado">
+                                    <summary>Ajustes avanzados · {avanzados.length}</summary>
+                                    {avanzados.map(campo)}
+                                </details>
+                            )}
+                        </>
+                    );
+                })()}
 
                 <hr className="kfc-config__sep" />
 
                 <div className="kfc-field">
-                    <label className="kfc-field__label">Notas (visibles en el canvas)</label>
+                    <label className="kfc-field__label">Notas para tu equipo (se ven en el lienzo)</label>
                     <textarea
                         className="kfc-textarea"
                         value={notes}
                         readOnly={readOnly}
                         onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Comentarios, contexto, decisiones..."
+                        placeholder="Por qué está este paso, qué revisar…"
                     />
                 </div>
 
+                <button type="button" className="kfc-tecnico-toggle" onClick={() => setVerTecnico(!verTecnico)}>
+                    {verTecnico ? 'Ocultar' : 'Ver'} detalles técnicos
+                </button>
+                {verTecnico && (
+                    <div className="kfc-config__note">Tipo: {spec.type} · versión {spec.version}</div>
+                )}
+
                 {spec.category === 'trigger' && (
                     <div className="kfc-config__note">
-                        Trigger: la suscripción (cron, webhook) se configura en el header del flow.
+                        Este paso arranca la automatización. Cada cuánto o con qué aviso se elige en «Ajustes», arriba a la derecha.
                     </div>
                 )}
             </div>
 
             <div className="kfc-config__footer">
                 {!readOnly && (
-                    <button type="button" className="kfc-btn kfc-btn--danger" onClick={onDelete}>
+                    <button type="button" className="kfc-btn kfc-btn--danger" onClick={onDelete} onBlur={() => setConfirmandoBorrar(false)}>
                         <i className="pi pi-trash" />
-                        Eliminar
+                        {confirmandoBorrar ? '¿Seguro? Toca de nuevo' : 'Quitar paso'}
                     </button>
                 )}
                 <span className="kfc-config__footer-spacer" />
@@ -274,7 +306,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose, onOpenIntegra
                 {!readOnly && (
                     <button type="button" className="kfc-btn kfc-btn--primary" onClick={onSave}>
                         <i className="pi pi-check" />
-                        Guardar
+                        Aplicar
                     </button>
                 )}
             </div>
@@ -305,8 +337,8 @@ const SchemaField: React.FC<SchemaFieldProps> = ({
     onChange,
     onModeChange
 }) => {
-    const label = schema.title || name;
-    const description = schema.description;
+    const label = etiquetaCampo(name, schema);
+    const description = ayudaCampo(name, schema);
     const type = schema.type;
     const enumValues: string[] | undefined = schema.enum;
     const inputId = `kfc-field-${name}`;
@@ -327,7 +359,6 @@ const SchemaField: React.FC<SchemaFieldProps> = ({
                         {label}
                         {required && <span className="kfc-req"> *</span>}
                     </span>
-                    <TypeChip schema={schema} />
                 </label>
                 {description && <div className="kfc-field__hint">{description}</div>}
             </div>
@@ -346,10 +377,10 @@ const SchemaField: React.FC<SchemaFieldProps> = ({
                     disabled={readOnly}
                     onChange={(e) => onChange(e.target.value)}
                 >
-                    <option value="">— elegí una opción —</option>
+                    <option value="">— elige una opción —</option>
                     {enumValues.map((v) => (
                         <option key={String(v)} value={String(v)}>
-                            {String(v)}
+                            {textoOpcion(String(v))}
                         </option>
                     ))}
                 </select>
@@ -383,7 +414,7 @@ const SchemaField: React.FC<SchemaFieldProps> = ({
                                             else onChange(arr.filter((x) => x !== opt));
                                         }}
                                     />
-                                    {opt}
+                                    {textoOpcion(opt)}
                                 </label>
                             );
                         })}
@@ -409,7 +440,7 @@ const SchemaField: React.FC<SchemaFieldProps> = ({
                                 .filter(Boolean)
                         )
                     }
-                    placeholder="valor1, valor2, valor3"
+                    placeholder="Separados por coma"
                 />
                 {description && <div className="kfc-field__hint">{description}</div>}
             </div>
@@ -474,16 +505,16 @@ const SchemaField: React.FC<SchemaFieldProps> = ({
                             onClick={() => onModeChange('fixed')}
                             disabled={readOnly}
                         >
-                            Fijo
+                            Valor fijo
                         </button>
                         <button
                             type="button"
                             className={classNames({ 'is-active': mode === 'expression' })}
                             onClick={() => onModeChange('expression')}
                             disabled={readOnly}
-                            title="Usar datos de pasos anteriores con {{ }}"
+                            title="Tomar el dato de un paso anterior"
                         >
-                            Expresión
+                            De un paso anterior
                         </button>
                     </span>
                 }
@@ -615,7 +646,7 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
                         <div className="kfc-datapick__empty">
                             <i className="pi pi-info-circle" />
                             <span>
-                                Ejecutá el flow una vez (botón «Ejecutar») para ver las
+                                Prueba la automatización una vez (botón «Probar ahora») para ver las
                                 propiedades reales del paso anterior. Mientras tanto podés
                                 insertar la raíz:
                             </span>
@@ -693,7 +724,6 @@ const FieldLabel: React.FC<{
         <span className="kfc-field__labeltext">
             {label}
             {required && <span className="kfc-req"> *</span>}
-            <TypeChip schema={schema} />
         </span>
         {right}
     </label>

@@ -4,6 +4,7 @@ import classNames from 'classnames';
 import type { NodeSpec, FlowNode, NodeStatus, NodeState } from '../contracts/types';
 import { useFlowStore } from '../store/flowStore';
 import { getInputPorts, getOutputPorts } from '../utils/validators';
+import { nombrePaso } from '../utils/lenguaje';
 
 export interface CustomNodeData {
     flowNode: FlowNode;
@@ -35,7 +36,7 @@ const CustomNodeComponent: React.FC<NodeProps<CustomNodeData>> = ({ id, data, se
     const inputs = getInputPorts(spec);
     const outputs = getOutputPorts(spec);
 
-    const headerLabel = spec?.displayName || node.type;
+    const headerLabel = nombrePaso(node.type, spec?.displayName);
     const summary = useMemo(() => paramSummary(node.params), [node.params]);
 
     const onLogsClick = useCallback(

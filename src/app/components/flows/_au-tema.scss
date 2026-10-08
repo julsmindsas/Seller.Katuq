@@ -1,0 +1,106 @@
+// Automatizaciones — piezas compartidas con el estilo de Combos y del registro
+// (2026-10-07, D-350 parte C). Plano, sin gradientes ni borde de acento (D-131).
+@import '../proceso/combos/combos-tema';
+
+@mixin au-pagina {
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 32px 28px 48px;
+  background: $cb-canvas;
+  font-family: $cb-text;
+  color: $cb-ink;
+}
+
+@mixin au-envoltura { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+
+@mixin au-encabezado {
+  .au-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  .au-head-txt { display: flex; flex-direction: column; gap: 10px; max-width: 660px; }
+  .au-eyebrow { @include cb-chip-accent; align-self: flex-start; }
+  .au-title { margin: 0; font-family: $cb-display; font-weight: normal; font-size: 30px; line-height: 1.15; color: $cb-ink; span { color: $cb-accent; } }
+  .au-sub { margin: 0; font-size: 15px; line-height: 1.55; color: $cb-body; }
+  .au-head-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+}
+
+@mixin au-botones {
+  .au-btn-primary { @include cb-btn-primary; }
+  .au-btn-ghost { @include cb-btn-ghost; }
+  .au-btn-sm { height: 36px; padding: 0 14px; font-size: 13px; border-radius: 10px; }
+  .au-btn-icon { @include cb-btn-ghost; width: 36px; height: 36px; padding: 0; }
+  .au-link {
+    padding: 0; border: 0; background: none; cursor: pointer;
+    font-family: $cb-text; font-size: 13px; font-weight: 700; color: $cb-muted; text-decoration: underline;
+    &:hover { color: $cb-accent; }
+  }
+}
+
+@mixin au-buscador {
+  .au-search {
+    display: flex; align-items: center; gap: 8px; height: 44px; min-width: 260px; margin: 0; padding: 0 14px;
+    box-sizing: border-box; border-radius: 11px; border: 1px solid $cb-chip-border; background: #fff; color: $cb-muted;
+    &:focus-within { border-color: $cb-accent-line; box-shadow: 0 0 0 3px $cb-accent-soft; }
+    input {
+      flex: 1 1 auto; min-width: 0; border: 0; outline: none; background: transparent;
+      font-family: $cb-text; font-size: 14px; color: $cb-ink;
+      &::placeholder { color: $cb-muted; }
+    }
+  }
+}
+
+@mixin au-segmentos {
+  .au-seg {
+    display: inline-flex; flex-wrap: wrap; padding: 4px; gap: 4px; border-radius: 12px; background: #fff; border: 1px solid $cb-line;
+    button {
+      height: 34px; padding: 0 14px; border: 0; border-radius: 9px; background: transparent;
+      font-family: $cb-text; font-size: 13px; font-weight: 700; color: $cb-body; cursor: pointer;
+      &.on { background: $cb-accent-soft; color: $cb-accent; }
+    }
+  }
+}
+
+@mixin au-estados {
+  .au-estado {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; white-space: nowrap;
+    font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; border: 1px solid transparent;
+    .au-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  }
+  .au-estado-active, .au-estado-success { background: $cb-ok-soft; color: $cb-ok; border-color: #c9ecd8; }
+  .au-estado-inactive, .au-estado-cancelled { background: $cb-slate-soft; color: $cb-slate; border-color: #dfe3e8; }
+  .au-estado-draft, .au-estado-pending { background: $cb-chip-bg; color: $cb-muted; border-color: $cb-chip-border; .au-dot { background: transparent; border: 1.5px solid currentColor; } }
+  .au-estado-error, .au-estado-failed { background: $cb-err-soft; color: $cb-err; border-color: #f6d3d3; }
+  .au-estado-partial { background: #FFF6E5; color: #8A5200; border-color: #F6DDB0; }
+  .au-estado-running { background: $cb-accent-soft; color: $cb-accent; border-color: $cb-accent-line; }
+}
+
+@mixin au-avisos {
+  .au-error {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px;
+    border-radius: 16px; background: $cb-err-soft; border: 1px solid #f6d3d3; color: $cb-err; font-size: 14px;
+    span { color: $cb-err; }
+  }
+  .au-loading { display: flex; align-items: center; gap: 8px; font-size: 14px; color: $cb-muted; }
+  .au-empty {
+    display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 40px 20px; text-align: center;
+    border-radius: 16px; background: #fff; border: 1px dashed $cb-accent-line;
+    p { margin: 0; color: $cb-body; font-size: 14px; max-width: 460px; }
+  }
+  .au-empty-title { font-family: $cb-display; font-size: 18px; color: $cb-ink; }
+}
+
+@mixin au-logos {
+  .au-logo {
+    width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; overflow: hidden; flex: 0 0 auto;
+    background: $cb-tile; border: 1px solid $cb-line-soft;
+    img { max-width: 26px; max-height: 26px; object-fit: contain; }
+  }
+  .au-inicial { font-family: $cb-display; font-size: 17px; color: $cb-accent; }
+
+  // Etiqueta de sistema: punto de color de la marca + nombre completo (legible).
+  .au-ruta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 30px; }
+  .au-sis {
+    display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 20px;
+    background: #fff; border: 1px solid $cb-line; font-size: 12.5px; font-weight: 700; color: $cb-ink; white-space: nowrap;
+  }
+  .au-sis-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+  .au-flecha { color: $cb-muted; flex: 0 0 auto; }
+}

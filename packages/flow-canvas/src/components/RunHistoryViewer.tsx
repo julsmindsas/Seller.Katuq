@@ -41,7 +41,7 @@ export const RunHistoryViewer: React.FC<RunHistoryViewerProps> = ({ runContext, 
             <div className="kfc-empty">
                 <div className="kfc-empty__title">Sin ejecuciones todavía</div>
                 <div className="kfc-empty__desc">
-                    Ejecutá el flow manualmente o esperá a que un trigger lo dispare.
+                    Toca «Probar ahora» o espera a que la automatización arranque sola.
                 </div>
             </div>
         );

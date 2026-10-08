@@ -5,7 +5,15 @@ import { takeUntil } from 'rxjs/operators';
 import { FlowsService } from '../services/flows.service';
 import { FlowsStateService } from '../services/flows-state.service';
 import { RunStreamService } from '../services/run-stream.service';
-import { FlowSpec, RunContext, RunStatus, RunStatusReason } from '../interfaces/flow.interface';
+import Swal from 'sweetalert2';
+import { FlowSpec, NodeSpec, RunContext, RunStatus, RunStatusReason } from '../interfaces/flow.interface';
+import {
+  cuandoFue,
+  duracionLegible,
+  textoEstadoCorrida,
+  textoMotivo,
+  textoOrigenCorrida,
+} from '../flows-lenguaje';
 
 @Component({
   selector: 'app-flow-runs',
@@ -25,6 +33,8 @@ export class FlowRunsComponent implements OnInit, OnDestroy {
   streamStatus: string = 'idle';
 
   private destroy$ = new Subject<void>();
+  /** tipo de paso → nombre legible del catálogo. */
+  private catalogo = new Map<string, NodeSpec>();
 
   constructor(
     private route: ActivatedRoute,
@@ -41,6 +51,9 @@ export class FlowRunsComponent implements OnInit, OnDestroy {
         this.loadFlowMeta();
         this.loadRuns();
       }
+    });
+    this.flowsService.getNodeCatalog().pipe(takeUntil(this.destroy$)).subscribe((catalogo) => {
+      this.catalogo = new Map((catalogo || []).map((s) => [s.type, s]));
     });
   }
 
@@ -70,7 +83,7 @@ export class FlowRunsComponent implements OnInit, OnDestroy {
         if (runs.length > 0) this.selectRun(runs[0]);
       },
       error: (err) => {
-        this.errorMessage = err?.error?.message || 'No se pudo cargar el historial.';
+        this.errorMessage = 'No pudimos cargar el historial. Revisa tu internet y vuelve a intentar.';
         this.loading = false;
       }
     });
@@ -132,10 +145,20 @@ export class FlowRunsComponent implements OnInit, OnDestroy {
 
   cancel(runId: string, event: Event): void {
     event.stopPropagation();
-    if (!confirm('¿Cancelar este run en ejecución?')) return;
-    this.flowsService.cancelRun(runId).subscribe({
-      next: () => this.loadRuns(),
-      error: (err) => { this.errorMessage = err.message; }
+    Swal.fire({
+      title: '¿Detener esta corrida?',
+      text: 'Lo que ya alcanzó a hacer no se deshace.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, detener',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#B83232',
+    }).then((r) => {
+      if (!r.isConfirmed) return;
+      this.flowsService.cancelRun(runId).subscribe({
+        next: () => this.loadRuns(),
+        error: () => { this.errorMessage = 'No pudimos detener la corrida. Vuelve a intentarlo.'; }
+      });
     });
   }
 
@@ -198,17 +221,26 @@ export class FlowRunsComponent implements OnInit, OnDestroy {
    * errors[] vacío no daba pistas de qué pasó.
    */
   statusReasonLabel(reason?: RunStatusReason): string {
-    switch (reason) {
-      case 'node_failed':
-        return 'Un nodo falló con error';
-      case 'error_port_items':
-        return 'Ítems fallaron dentro de nodos';
-      case 'no_items':
-        return 'El trigger no produjo ítems';
-      case 'ok':
-        return 'Ejecución correcta';
-      default:
-        return '';
-    }
+    return textoMotivo(reason);
+  }
+
+  // ===== Lenguaje para personas no técnicas (2026-10-07, D-350 parte C) =====
+  estadoTexto(status: RunStatus | string): string { return textoEstadoCorrida(status); }
+  cuando(iso?: string): string { return cuandoFue(iso); }
+  duracion(ms?: number): string { return duracionLegible(ms); }
+  origen(triggeredBy?: string): string { return textoOrigenCorrida(triggeredBy); }
+
+  /** Nombre del paso como lo dice el catálogo ("Shopify · Crear pedido"), no su id interno. */
+  nombrePaso(nodeId: string): string {
+    const nodo = (this.flow?.graph?.nodes || []).find((n) => n.id === nodeId);
+    const spec = nodo ? this.catalogo.get(nodo.type) : undefined;
+    return spec?.displayName || nodo?.type || nodeId;
+  }
+
+  /** Cuántos registros salieron de un paso, si se puede saber. */
+  registros(n: any): number | null {
+    const main = n?.output?.main;
+    if (!Array.isArray(main)) return null;
+    return main.reduce((t: number, rama: any) => t + (Array.isArray(rama) ? rama.length : 0), 0);
   }
 }

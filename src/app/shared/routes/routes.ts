@@ -345,7 +345,7 @@ export const content: Routes = [
         (m) => m.FlowsModule,
       ),
     canActivate: [AuthGuard],
-    data: { title: "Flujos automatizados" },
+    data: { title: "Automatizaciones" },
   },
   {
     path: "dropshipping",

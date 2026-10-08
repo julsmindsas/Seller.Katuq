@@ -129,7 +129,7 @@ export const NodeLogsDrawer: React.FC<NodeLogsDrawerProps> = ({ nodeId, onClose 
                     <div className="kfc-empty">
                         <div className="kfc-empty__title">Sin datos de ejecución</div>
                         <div className="kfc-empty__desc">
-                            Este nodo no se ha ejecutado en el run actual. Probá ejecutar el flow.
+                            Este paso no corrió en la última prueba. Toca «Probar ahora».
                         </div>
                     </div>
                 )}

@@ -10,7 +10,7 @@
         class="kf-name-input"
         [(ngModel)]="flowName"
         (ngModelChange)="hasUnsaved = true"
-        placeholder="Nombre del flujo..."
+        placeholder="Nombre de la automatización"
       />
       <input
         type="text"
@@ -22,20 +22,20 @@
     </div>
 
     <div class="kf-editor__meta">
-      <span *ngIf="flow" class="kf-meta-pill">v{{ flow.version }}</span>
+      
       <span
         *ngIf="flowStatus === 'active'"
         class="kf-meta-pill kf-meta-pill--success"
-        title="Flow activo"
+        title="Encendida"
       >
-        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--active"></i> activo
+        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--active"></i> encendida
       </span>
       <span
         *ngIf="flowStatus === 'draft'"
         class="kf-meta-pill"
-        title="Borrador"
+        title="Sin terminar"
       >
-        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--draft"></i> borrador
+        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--draft"></i> sin terminar
       </span>
       <span *ngIf="hasUnsaved" class="kf-meta-pill kf-meta-pill--warn">cambios sin guardar</span>
       <span *ngIf="saving" class="kf-meta-pill kf-meta-pill--info">
@@ -49,20 +49,20 @@
         class="kf-btn"
         (click)="toggleConfigPanel()"
         [class.kf-btn--toggled]="configPanelOpen"
-        title="Configuración del flow (tags, schedule, webhook)"
+        title="Etiquetas, cada cuánto arranca y dirección de avisos"
       >
         <i class="pi pi-cog"></i>
-        Configuración
+        Ajustes
       </button>
       <button
         *ngIf="!isNew"
         type="button"
         class="kf-btn"
         (click)="goToRuns()"
-        title="Ver runs históricos"
+        title="Ver el historial"
       >
         <i class="pi pi-history"></i>
-        Runs
+        Historial
       </button>
       <button
         *ngIf="!isNew"
@@ -73,7 +73,7 @@
         [class.kf-btn--warn]="flowStatus === 'active'"
       >
         <i class="pi" [ngClass]="flowStatus === 'active' ? 'pi-pause' : 'pi-play'"></i>
-        {{ flowStatus === 'active' ? 'Desactivar' : 'Activar' }}
+        {{ flowStatus === 'active' ? 'Apagar' : 'Encender' }}
       </button>
       <button type="button" class="kf-btn kf-btn--primary" (click)="save()" [disabled]="saving">
         <i class="pi pi-save"></i>
@@ -83,7 +83,7 @@
   </header>
 
   <!-- Collapsible flow configuration panel -->
-  <div class="kf-config-bar" *ngIf="configPanelOpen" role="region" aria-label="Configuración del flow">
+  <div class="kf-config-bar" *ngIf="configPanelOpen" role="region" aria-label="Ajustes de la automatización">
     <div class="kf-config-bar__inner">
       <div class="kf-config-section">
         <label class="kf-config-label">
@@ -111,11 +111,11 @@
         *ngIf="triggerType === 'cron' || triggerType === 'polling'"
       >
         <label class="kf-config-label">
-          <i class="pi pi-clock"></i> Programación del trigger
+          <i class="pi pi-clock"></i> Cada cuánto arranca
         </label>
         <div class="kf-schedule-grid">
           <div class="kf-field">
-            <label>Cron expression</label>
+            <label>Horario (formato avanzado)</label>
             <input
               type="text"
               class="kf-input"
@@ -126,7 +126,7 @@
             <small class="kf-hint">Ej: <code>*/5 * * * *</code> = cada 5 min, <code>0 9 * * *</code> = diario 9am</small>
           </div>
           <div class="kf-field">
-            <label>O cada N minutos</label>
+            <label>O cada cuántos minutos</label>
             <input
               type="number"
               class="kf-input"
@@ -135,14 +135,14 @@
               min="1"
               placeholder="Ej: 60 (cada hora)"
             />
-            <small class="kf-hint">Si llenás esto, ignora el cron.</small>
+            <small class="kf-hint">Si llenas este, se ignora el horario.</small>
           </div>
         </div>
       </div>
 
       <div class="kf-config-section" *ngIf="triggerType === 'webhook' && webhookUrl">
         <label class="kf-config-label">
-          <i class="pi pi-link"></i> URL pública del webhook
+          <i class="pi pi-link"></i> Dirección para los avisos
         </label>
         <div class="kf-webhook-row">
           <input
@@ -155,16 +155,15 @@
             <i class="pi pi-copy"></i> Copiar
           </button>
         </div>
-        <small class="kf-hint">Apuntá tu sistema externo a esta URL para que dispare el flow.</small>
+        <small class="kf-hint">Es la dirección a la que tu tienda manda los avisos. En Shopify va en Configuración → Notificaciones → Webhooks; en WooCommerce, en Ajustes → Avanzado → Webhooks. Si ya está configurada, no tienes que cambiar nada.</small>
       </div>
 
       <div class="kf-config-section" *ngIf="!triggerType">
         <label class="kf-config-label">
-          <i class="pi pi-info-circle"></i> Trigger
+          <i class="pi pi-info-circle"></i> Cuándo arranca
         </label>
         <small class="kf-hint">
-          Agregá un nodo trigger desde el catálogo y guardá el flow para configurar la programación
-          o webhook acá.
+          Agrega un paso de inicio desde el catálogo y guarda la automatización para elegir aquí cuándo arranca.
         </small>
       </div>
 
@@ -181,12 +180,12 @@
 
   <div *ngIf="loading" class="kf-loading">
     <i class="pi pi-spin pi-spinner"></i>
-    Cargando flujo...
+    Cargando la automatización…
   </div>
 
   <div *ngIf="!webComponentReady && !errorMessage" class="kf-loading">
     <i class="pi pi-spin pi-spinner"></i>
-    Cargando editor visual...
+    Cargando el editor…
   </div>
 
   <div *ngIf="webComponentReady && !loading" class="kf-canvas-host">
@@ -219,11 +218,11 @@
         <div class="kf-shortcut-list">
           <div class="kf-shortcut-row">
             <kbd>Ctrl</kbd> + <kbd>S</kbd>
-            <span>Guardar el flow</span>
+            <span>Guardar los cambios</span>
           </div>
           <div class="kf-shortcut-row">
             <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
-            <span>Ejecutar test-run</span>
+            <span>Probar ahora</span>
           </div>
           <div class="kf-shortcut-row">
             <kbd>Esc</kbd>
@@ -231,11 +230,11 @@
           </div>
           <div class="kf-shortcut-row">
             <kbd>Delete</kbd>
-            <span>Eliminar nodo seleccionado</span>
+            <span>Quitar el paso seleccionado</span>
           </div>
           <div class="kf-shortcut-row">
             <kbd>Click derecho</kbd>
-            <span>Sobre un nodo: ver logs y output del último run</span>
+            <span>Sobre un paso: ver qué hizo la última vez</span>
           </div>
           <div class="kf-shortcut-row">
             <kbd>?</kbd>
@@ -243,16 +242,16 @@
           </div>
           <div class="kf-shortcut-row">
             <kbd>Espacio</kbd> + <kbd>arrastrar</kbd>
-            <span>Pan en el canvas</span>
+            <span>Mover el lienzo</span>
           </div>
           <div class="kf-shortcut-row">
             <kbd>Scroll</kbd>
-            <span>Zoom in/out</span>
+            <span>Acercar o alejar</span>
           </div>
         </div>
         <div class="kf-shortcut-tip">
           <i class="pi pi-info-circle"></i>
-          En Mac, usá <kbd>Cmd</kbd> en lugar de <kbd>Ctrl</kbd>.
+          En Mac, usa <kbd>Cmd</kbd> en lugar de <kbd>Ctrl</kbd>.
         </div>
       </div>
     </div>

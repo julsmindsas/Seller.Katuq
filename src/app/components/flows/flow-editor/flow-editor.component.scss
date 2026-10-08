@@ -93,7 +93,7 @@
   }
   &--info {
     background: #dbeafe;
-    color: #1d4ed8;
+    color: #4a2fc0;
   }
   &--success {
     background: #d1fae5;
@@ -138,9 +138,9 @@
     cursor: not-allowed;
   }
   &--primary {
-    background: #2563eb;
+    background: #5F3FE0;
     color: #fff;
-    border-color: #1d4ed8;
+    border-color: #4a2fc0;
     &:hover {
       background: #1e40af;
     }
@@ -171,7 +171,7 @@
   &--toggled {
     background: #eff6ff;
     border-color: #93c5fd;
-    color: #1d4ed8;
+    color: #4a2fc0;
   }
 }
 
@@ -187,9 +187,13 @@
 }
 
 .kf-canvas-host {
-  flex: 1;
-  min-height: 600px;
-  height: calc(100vh - 200px);
+  // Alto fijo a la ventana: con `flex: 1` se estiraba hasta el alto del editor
+  // (más alto que la pantalla) y el pie del panel de un paso quedaba escondido.
+  flex: 0 0 auto;
+  // El encabezado de la app + el del editor ocupan ~230px: con 200 el panel de un
+  // paso dejaba "Aplicar" fuera de la pantalla y había que desplazar la página.
+  min-height: 480px;
+  height: calc(100vh - 310px); // deja libre la esquina del botón flotante de Opttia
   position: relative;
   display: flex;
 
@@ -198,7 +202,7 @@
     display: block;
     width: 100%;
     height: 100%;
-    min-height: 600px;
+    min-height: 480px;
     background: #f5f6fa;
   }
 }
@@ -255,7 +259,7 @@
   align-items: center;
   gap: 4px;
   background: #eff6ff;
-  color: #1d4ed8;
+  color: #4a2fc0;
   border: 1px solid #bfdbfe;
   border-radius: 12px;
   padding: 3px 4px 3px 10px;
@@ -265,7 +269,7 @@
 .kf-tag-chip__remove {
   background: transparent;
   border: 0;
-  color: #1d4ed8;
+  color: #4a2fc0;
   cursor: pointer;
   border-radius: 50%;
   width: 18px;
@@ -286,7 +290,7 @@
   min-width: 160px;
   &:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: #5F3FE0;
     border-style: solid;
     background: #fff;
   }
@@ -317,7 +321,7 @@
   color: #1f2937;
   &:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: #5F3FE0;
   }
   &--mono {
     font-family: 'Menlo', 'Consolas', monospace;
@@ -433,7 +437,7 @@
   padding: 10px 12px;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  color: #1d4ed8;
+  color: #4a2fc0;
   border-radius: 6px;
   font-size: 12px;
   display: flex;
@@ -446,6 +450,6 @@
     padding: 0 5px;
     font-family: 'Menlo', 'Consolas', monospace;
     font-size: 11px;
-    color: #1d4ed8;
+    color: #4a2fc0;
   }
 }

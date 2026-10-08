@@ -53,7 +53,7 @@
 }
 .kfc-sidebar__search:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: #5F3FE0;
 }
 
 .kfc-sidebar__list {
@@ -110,7 +110,7 @@
 .kfc-palette-card__title {
     font-weight: 600;
     font-size: 13px;
-    color: #111827;
+    color: #211F3A;
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -179,7 +179,7 @@
 .kfc-btn:hover { background: #f9fafb; border-color: #9ca3af; }
 .kfc-btn:active { transform: translateY(1px); }
 .kfc-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-.kfc-btn--primary { background: #2563eb; color: #fff; border-color: #1d4ed8; }
+.kfc-btn--primary { background: #5F3FE0; color: #fff; border-color: #4a2fc0; }
 .kfc-btn--primary:hover { background: #1e40af; border-color: #1e40af; }
 .kfc-btn--running { animation: kfc-pulse 2s ease-in-out infinite; }
 .kfc-btn--danger { color: #b91c1c; border-color: #fecaca; }
@@ -210,9 +210,9 @@
     border: 1px solid #e2e8f0;
 }
 .kfc-run-badge--running {
-    background: #dbeafe;
+    background: #ddd3fb;
     color: #1e40af;
-    border-color: #93c5fd;
+    border-color: #c9bbf7;
 }
 .kfc-run-badge--success {
     background: #d1fae5;
@@ -243,7 +243,7 @@
 }
 .kfc-pill--neutral { background: #f3f4f6; color: #6b7280; }
 .kfc-pill--danger { background: #fee2e2; color: #991b1b; }
-.kfc-pill--info { background: #dbeafe; color: #1d4ed8; }
+.kfc-pill--info { background: #ddd3fb; color: #4a2fc0; }
 
 /* ----- Custom node ----- */
 .kfc-node {
@@ -259,14 +259,14 @@
     transition: box-shadow 0.18s ease, border-color 0.18s ease;
 }
 .kfc-node--selected {
-    border-color: #2563eb;
+    border-color: #5F3FE0;
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
 }
 .kfc-node--disabled { opacity: 0.5; }
 
 /* Live status visual feedback */
 .kfc-node--live {
-    border-color: #2563eb;
+    border-color: #5F3FE0;
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18), 0 4px 12px rgba(37, 99, 235, 0.18);
 }
 .kfc-node--status-success {
@@ -279,7 +279,7 @@
 .kfc-node__live-pulse {
     position: absolute;
     inset: -2px;
-    border: 2px solid #2563eb;
+    border: 2px solid #5F3FE0;
     border-radius: 8px;
     pointer-events: none;
     animation: kfc-live-pulse 1.5s ease-out infinite;
@@ -306,7 +306,7 @@
 .kfc-node__title {
     font-weight: 600;
     font-size: 13px;
-    color: #111827;
+    color: #211F3A;
     flex: 1;
     white-space: nowrap;
     overflow: hidden;
@@ -336,8 +336,8 @@
     font-size: 13px;
 }
 .kfc-node__info-btn:hover {
-    background: #eff6ff;
-    color: #2563eb;
+    background: #efe9ff;
+    color: #5F3FE0;
 }
 
 .kfc-node__body { padding: 8px 10px 10px; font-size: 11px; color: #4b5563; }
@@ -375,13 +375,13 @@
 .kfc-node__status-spinner { font-size: 10px; }
 .kfc-node__status--pending { background: #f3f4f6; color: #6b7280; }
 .kfc-node__status--running {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: #ddd3fb;
+    color: #4a2fc0;
     animation: kfc-status-pulse 1.4s ease-in-out infinite;
 }
 @keyframes kfc-status-pulse {
-    0%, 100% { background: #dbeafe; }
-    50% { background: #bfdbfe; }
+    0%, 100% { background: #ddd3fb; }
+    50% { background: #ddd3fb; }
 }
 .kfc-node__status--success { background: #d1fae5; color: #065f46; }
 .kfc-node__status--failed { background: #fee2e2; color: #991b1b; }
@@ -426,7 +426,7 @@
 }
 .kfc-node__handle:hover {
     transform: scale(1.3);
-    border-color: #2563eb;
+    border-color: #5F3FE0;
 }
 .kfc-node__handle--error { border-color: #dc2626; }
 
@@ -459,7 +459,7 @@
 .kfc-config__title {
     font-weight: 600;
     font-size: 14px;
-    color: #111827;
+    color: #211F3A;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -576,7 +576,7 @@
 .kfc-select:focus,
 .kfc-textarea:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: #5F3FE0;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 .kfc-textarea { font-family: 'Menlo', 'Consolas', monospace; min-height: 90px; }
@@ -601,7 +601,7 @@
     border: 1px solid #e5e7eb;
     flex-shrink: 0;
 }
-.kfc-typechip--string { color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe; }
+.kfc-typechip--string { color: #4a2fc0; background: #efe9ff; border-color: #ddd3fb; }
 .kfc-typechip--number { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
 .kfc-typechip--boolean { color: #b45309; background: #fffbeb; border-color: #fde68a; }
 .kfc-typechip--enum { color: #7c3aed; background: #f5f3ff; border-color: #ddd6fe; }
@@ -622,7 +622,7 @@
     border: 1px solid transparent;
     cursor: pointer;
 }
-.kfc-checkchip.is-on { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+.kfc-checkchip.is-on { background: #ddd3fb; color: #4a2fc0; border-color: #ddd3fb; }
 
 .kfc-mode-toggle {
     display: inline-flex;
@@ -642,7 +642,7 @@
     line-height: 1.6;
 }
 .kfc-mode-toggle button:hover:not(.is-active) { background: #f3f4f6; }
-.kfc-mode-toggle button.is-active { background: #2563eb; color: #fff; }
+.kfc-mode-toggle button.is-active { background: #5F3FE0; color: #fff; }
 
 /* ----- Expression field + data picker (n8n style) ----- */
 .kfc-expr-wrap { position: relative; }
@@ -655,7 +655,7 @@
     background: #fff;
 }
 .kfc-expr:focus-within {
-    border-color: #2563eb;
+    border-color: #5F3FE0;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 .kfc-expr__fx {
@@ -693,8 +693,8 @@
     font-weight: 600;
     cursor: pointer;
 }
-.kfc-expr__pick:hover { background: #eff6ff; color: #1d4ed8; }
-.kfc-expr__pick.is-open { background: #2563eb; color: #fff; }
+.kfc-expr__pick:hover { background: #efe9ff; color: #4a2fc0; }
+.kfc-expr__pick.is-open { background: #5F3FE0; color: #fff; }
 .kfc-expr__preview {
     margin-top: 4px;
     font-size: 11px;
@@ -736,7 +736,7 @@
     padding: 6px 9px;
     font-size: 12px;
 }
-.kfc-datapick__search:focus { outline: none; border-color: #2563eb; }
+.kfc-datapick__search:focus { outline: none; border-color: #5F3FE0; }
 .kfc-datapick__list {
     list-style: none;
     margin: 0;
@@ -757,7 +757,7 @@
     text-align: left;
     font-size: 12px;
 }
-.kfc-datapick__row:hover { background: #eff6ff; }
+.kfc-datapick__row:hover { background: #efe9ff; }
 .kfc-datapick__type {
     flex-shrink: 0;
     width: 34px;
@@ -770,7 +770,7 @@
     color: #6b7280;
     background: #f3f4f6;
 }
-.kfc-datapick__type--string { color: #1d4ed8; background: #eff6ff; }
+.kfc-datapick__type--string { color: #4a2fc0; background: #efe9ff; }
 .kfc-datapick__type--number { color: #047857; background: #ecfdf5; }
 .kfc-datapick__type--boolean { color: #b45309; background: #fffbeb; }
 .kfc-datapick__type--array { color: #be185d; background: #fdf2f8; }
@@ -778,7 +778,7 @@
 .kfc-datapick__path {
     flex-shrink: 0;
     max-width: 45%;
-    color: #111827;
+    color: #211F3A;
     font-family: 'Menlo', 'Consolas', monospace;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -801,7 +801,7 @@
     color: #6b7280;
     line-height: 1.45;
 }
-.kfc-datapick__empty > i { color: #2563eb; }
+.kfc-datapick__empty > i { color: #5F3FE0; }
 .kfc-datapick__tokens { display: flex; gap: 6px; flex-wrap: wrap; }
 .kfc-datapick__noresult { padding: 8px 6px; font-size: 12px; color: #9ca3af; }
 .kfc-token {
@@ -867,7 +867,7 @@
     margin: 0 0 6px;
     font-size: 18px;
     font-weight: 700;
-    color: #111827;
+    color: #211F3A;
 }
 .kfc-canvas-empty__desc {
     margin: 0 0 20px;
@@ -912,7 +912,7 @@
 }
 .kfc-template-card__title {
     font-weight: 600;
-    color: #111827;
+    color: #211F3A;
     font-size: 13px;
     margin-bottom: 2px;
 }
@@ -926,7 +926,7 @@
     transition: color 0.12s ease, transform 0.12s ease;
 }
 .kfc-template-card:hover .kfc-template-card__cta {
-    color: #2563eb;
+    color: #5F3FE0;
     transform: translateX(2px);
 }
 .kfc-canvas-empty__hint {
@@ -1002,7 +1002,7 @@
 .kfc-drawer__title {
     font-weight: 600;
     font-size: 14px;
-    color: #111827;
+    color: #211F3A;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1037,8 +1037,8 @@
 }
 .kfc-drawer__tab:hover:not(:disabled) { color: #374151; }
 .kfc-drawer__tab.is-active {
-    color: #2563eb;
-    border-bottom-color: #2563eb;
+    color: #5F3FE0;
+    border-bottom-color: #5F3FE0;
     background: #fff;
 }
 .kfc-drawer__tab:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -1050,7 +1050,7 @@
     border-radius: 8px;
 }
 .kfc-drawer__tab.is-active .kfc-drawer__tab-count {
-    background: #dbeafe;
+    background: #ddd3fb;
     color: #1e40af;
 }
 .kfc-drawer__body {
@@ -1105,7 +1105,7 @@
     font-size: 12px;
 }
 .kfc-drawer__kv-k { color: #6b7280; font-weight: 500; }
-.kfc-drawer__kv-v { color: #111827; font-family: 'Menlo', 'Consolas', monospace; }
+.kfc-drawer__kv-v { color: #211F3A; font-family: 'Menlo', 'Consolas', monospace; }
 
 /* React Flow overrides — flat look */
 .react-flow__node { font-family: inherit; }
@@ -1114,7 +1114,7 @@
     stroke-width: 1.5;
     transition: stroke 0.2s ease;
 }
-.react-flow__edge.selected .react-flow__edge-path { stroke: #2563eb; stroke-width: 2; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: #5F3FE0; stroke-width: 2; }
 
 /* Edge states tied to run progression */
 .react-flow__edge.kfc-edge--complete .react-flow__edge-path {
@@ -1122,7 +1122,7 @@
     stroke-width: 2;
 }
 .react-flow__edge.kfc-edge--live .react-flow__edge-path {
-    stroke: #2563eb;
+    stroke: #5F3FE0;
     stroke-width: 2.5;
     stroke-dasharray: 6 4;
     animation: kfc-dash 0.8s linear infinite;
@@ -1138,3 +1138,40 @@
 
 .react-flow__controls { box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
 .react-flow__minimap { border: 1px solid #e5e7eb; border-radius: 6px; }
+
+/* ===== Look de Combos / registro (2026-10-07, D-350 parte C): plano, sin borde de acento ===== */
+.kfc-palette-card {
+    border-left-width: 1px;
+    border-radius: 12px;
+    border-color: #ececf4;
+    padding: 9px 10px;
+}
+.kfc-palette-card:hover { background: #faf9fe; border-color: #ddd3fb; }
+.kfc-palette-card__icon {
+    width: 30px; height: 30px; border-radius: 9px; display: inline-grid; place-items: center;
+    background: #f3f1fb; flex: 0 0 auto;
+}
+.kfc-sidebar__title { color: #211F3A; }
+.kfc-sidebar__search { border-radius: 10px; border-color: #e9e7f3; background: #f5f4fa; }
+.kfc-sidebar__search:focus { background: #fff; border-color: #ddd3fb; box-shadow: 0 0 0 3px #efe9ff; outline: none; }
+.kfc-btn { border-radius: 10px; border-color: #e4e2ef; }
+.kfc-btn:hover { border-color: #ddd3fb; color: #5F3FE0; }
+.kfc-btn--primary, .kfc-btn--primary:hover { color: #fff; }
+.kfc-canvas-empty__inner { border-radius: 20px; border: 1px solid #ececf4; box-shadow: 0 18px 40px -18px rgba(50, 40, 110, .35); }
+.kfc-canvas-empty__eyebrow {
+    display: inline-flex; padding: 4px 11px; border-radius: 20px; background: #efe9ff; border: 1px solid #ddd3fb;
+    color: #5F3FE0; font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 10px;
+}
+.kfc-canvas-empty__title { color: #211F3A; }
+.kfc-canvas-empty__desc { color: #5b5878; line-height: 1.55; }
+.kfc-canvas-empty__acciones { display: flex; justify-content: center; margin: 16px 0 6px; }
+.kfc-canvas-empty__acciones .kfc-btn { height: 40px; padding: 0 18px; }
+
+/* Panel de configuración de cada paso (2026-10-07) */
+.kfc-avanzado { margin: 6px 0 10px; border: 1px solid #ececf4; border-radius: 12px; background: #faf9fe; }
+.kfc-avanzado > summary { padding: 10px 12px; cursor: pointer; font-size: 13px; font-weight: 700; color: #5b5878; }
+.kfc-avanzado[open] > summary { border-bottom: 1px solid #f1f0f7; color: #211F3A; }
+.kfc-avanzado > .kfc-field { margin: 10px 12px; }
+.kfc-tecnico-toggle { margin-top: 8px; padding: 0; border: 0; background: none; color: #6f6b8f; font-size: 12px; text-decoration: underline; cursor: pointer; }
+.kfc-tecnico-toggle:hover { color: #5F3FE0; }
+.kfc-config__subtitle { font-family: inherit; }

@@ -7,18 +7,22 @@ import { ToastrService } from 'ngx-toastr';
 import { FlowsService } from '../services/flows.service';
 import { IntegrationsService } from '../../integrations/integrations.service';
 import { FlowTemplate, FlowSpec, NodeSpec } from '../interfaces/flow.interface';
+import { SistemaVisible, cuandoArranca, inicialDe, integracionesNecesarias, recorrido } from '../flows-lenguaje';
 
 /** Node credential key → integration provider key (no siempre coinciden). */
 const PROVIDER_ALIASES: { [k: string]: string } = {
-  worldoffice: 'world_office'
+  worldoffice: 'world_office',
+  aliaddo: 'aliaddo_fulfillment'
 };
 
 /** Labels amigables para el wizard. */
 const PROVIDER_LABELS: { [k: string]: string } = {
-  osmosis: 'Guía Cereza',
+  osmosis: 'Cereza',
   shopify: 'Shopify',
   woocommerce: 'WooCommerce',
-  siigo: 'Siigo',
+  siigo: 'SIIGO',
+  fullpi: 'Fullpi',
+  aliaddo_fulfillment: 'Aliaddo',
   world_office: 'World Office',
   worldoffice: 'World Office',
   aliaddo: 'Aliaddo',
@@ -35,6 +39,35 @@ function normalizeProvider(p: string): string {
 function providerLabel(p: string): string {
   const key = (p || '').toLowerCase();
   return PROVIDER_LABELS[normalizeProvider(key)] || PROVIDER_LABELS[key] || p;
+}
+
+/**
+ * Textos para el comercio. Las plantillas del backend traen nombres y
+ * descripciones técnicas ("CanonicalOrder", "Idempotente vía…") y en voseo.
+ * Solo cambia lo que se MUESTRA: se instala la misma plantilla (mismo id).
+ */
+const TEXTOS_PLANTILLA: { [idONombre: string]: { name: string; description: string } } = {
+  'cereza-products-to-shopify': {
+    name: 'Publicar en Shopify los productos de Cereza',
+    description: 'Cada 5 minutos Katuq revisa los productos que cambiaron en Cereza, los guarda y los publica en tu tienda Shopify.'
+  },
+  'shopify-orders-to-cereza': {
+    name: 'Mandar a Cereza los pedidos de Shopify',
+    description: 'Cuando entra un pedido en tu Shopify, Katuq lo registra y se lo pasa a Cereza para que lo despache. Si el aviso llega dos veces, no lo duplica.'
+  },
+  'Empujar stock de Katuq a WooCommerce': {
+    name: 'Mantener al día tus existencias en WooCommerce',
+    description: 'Cuando cambian tus existencias en Katuq, se actualizan solas en tu tienda WooCommerce. Útil si manejas varias bodegas.'
+  },
+  'Sincronizar productos de WooCommerce a Katuq': {
+    name: 'Traer a Katuq los productos de WooCommerce',
+    description: 'Cada 15 minutos Katuq trae los productos que agregues o cambies en tu tienda WooCommerce, sin que hagas nada.'
+  }
+};
+
+function conTextosParaComercio(t: FlowTemplate): FlowTemplate {
+  const textos = TEXTOS_PLANTILLA[t.id] || TEXTOS_PLANTILLA[t.name];
+  return textos ? { ...t, ...textos } : t;
 }
 
 interface RequiredIntegration {
@@ -57,7 +90,7 @@ const PILOT_TEMPLATE: FlowTemplate = {
   id: 'cereza-to-shopify',
   name: 'Cereza → Shopify',
   description:
-    'Cuando un producto cambia en Guía Cereza (Osmosis), traducilo al formato canónico, persistilo en Katuq y publicalo en Shopify.',
+    'Cuando un producto cambia en Cereza, Katuq lo guarda y lo publica en tu tienda Shopify.',
   category: 'Catálogo',
   tags: ['osmosis', 'shopify', 'productos'],
   graph: {
@@ -150,18 +183,16 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (templates) => {
-          // Always include the pilot template (dedup by id).
-          const merged = [
-            ...templates.filter((t) => t.id !== PILOT_TEMPLATE.id),
-            PILOT_TEMPLATE
-          ];
-          this.templates = merged;
+          // La plantilla local solo se usa si el backend no devolvió ninguna:
+          // repetía "Cereza → Shopify (Productos)" con otro nombre.
+          const merged = templates.length ? templates : [PILOT_TEMPLATE];
+          this.templates = merged.map(conTextosParaComercio);
           this._recomputeProvidersAndFilter();
           this.loading = false;
         },
         error: () => {
           // graceful degrade: just show the pilot
-          this.templates = [PILOT_TEMPLATE];
+          this.templates = [PILOT_TEMPLATE].map(conTextosParaComercio);
           this._recomputeProvidersAndFilter();
           this.loading = false;
         }
@@ -259,7 +290,8 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
     this.modalRef = this.modal.open(this.setupModalTpl, {
       size: 'lg',
       centered: true,
-      backdrop: 'static'
+      backdrop: 'static',
+      windowClass: 'kq-au-modal'
     });
   }
 
@@ -289,6 +321,10 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
         providers.add(normalizeProvider(c))
       );
     }
+    // El catálogo hoy no trae `credentials`, así que el asistente decía siempre
+    // "no requiere integraciones" y dejaba encender plantillas que fallarían.
+    // Se deducen también del tipo de cada paso (shopify-*, osmosis-*…).
+    integracionesNecesarias(t.graph).forEach((s) => providers.add(normalizeProvider(s.integracion!)));
     const verified = this.connectedProviders !== null;
     const connectedSet = new Set((this.connectedProviders || []).map(normalizeProvider));
     return Array.from(providers).map((p) => ({
@@ -391,7 +427,7 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
           }
           this.closeWizard();
           if (activate) {
-            this.toastr.success(`Flujo "${flow.name}" activado.`, '', { timeOut: 2800 });
+            this.toastr.success(`«${flow.name}» quedó encendida.`, '', { timeOut: 2800 });
             this.router.navigate(['/flows']);
           } else {
             this.router.navigate(['/flows/editor', flow.id]);
@@ -401,7 +437,7 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
           this.wizardBusy = false;
           if (activate) {
             this.toastr.error(
-              err?.error?.message || 'No se pudo activar el flujo. Probá abrirlo en el editor.',
+              'No pudimos encender la automatización. Ábrela en modo avanzado y revisa sus pasos.',
               'Error',
               { timeOut: 5000 }
             );
@@ -444,5 +480,24 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
 
   trackById(_i: number, t: FlowTemplate): string {
     return t.id;
+  }
+
+  // ===== Lenguaje para personas no técnicas (2026-10-07, D-350 parte C) =====
+  ruta(t: FlowTemplate): { de: SistemaVisible | null; a: SistemaVisible[] } {
+    return recorrido(t.graph, t.triggers, this.catalogByType);
+  }
+
+  cuando(t: FlowTemplate): string {
+    return cuandoArranca(t, this.catalogByType);
+  }
+
+  /** "Katuq y Shopify" / "Katuq, SIIGO y Shopify". */
+  nombresDe(sistemas: { nombre: string }[]): string {
+    const n = sistemas.map((s) => s.nombre);
+    return n.length <= 1 ? n.join('') : `${n.slice(0, -1).join(', ')} y ${n[n.length - 1]}`;
+  }
+
+  inicialDe(nombre: string): string {
+    return inicialDe(nombre);
   }
 }

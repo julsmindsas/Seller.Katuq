@@ -1,126 +1,105 @@
-<section class="kf-runs">
-  <header class="kf-runs__header">
-    <button type="button" class="kf-btn kf-btn--ghost" (click)="goBack()">
-      <i class="pi pi-arrow-left"></i>
-      Volver
-    </button>
-    <div>
-      <h1 class="kf-runs__title">{{ flow?.name || 'Historial de ejecuciones' }}</h1>
-      <p class="kf-runs__sub">{{ runs.length }} runs registrados</p>
+<!-- Historial de una automatización — lenguaje simple, estilo Combos (2026-10-07, D-350 parte C).
+     Lo técnico (ids, versiones, JSON, errores completos) queda en "Detalles técnicos". -->
+<div class="au-page">
+  <div class="au-wrap">
+
+    <header class="au-head">
+      <div class="au-head-txt">
+        <button type="button" class="au-link au-volver" (click)="goBack()">← Automatizaciones</button>
+        <span class="au-eyebrow">Historial</span>
+        <h1 class="au-title">{{ flow?.name || 'Historial' }}</h1>
+        <p class="au-sub">Las últimas veces que corrió esta automatización y qué pasó en cada una.</p>
+      </div>
+      <div class="au-head-actions">
+        <button type="button" class="au-btn-ghost" (click)="loadRuns()" [disabled]="loading">Actualizar</button>
+        <button type="button" class="au-btn-ghost" (click)="goToEditor()">Editar automatización</button>
+      </div>
+    </header>
+
+    <section class="au-error" *ngIf="errorMessage" role="alert">
+      <span>{{ errorMessage }}</span>
+    </section>
+
+    <div class="au-loading" *ngIf="loading">
+      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      Cargando el historial…
     </div>
-    <div style="flex:1"></div>
-    <button type="button" class="kf-btn" (click)="goToEditor()">
-      <i class="pi pi-pencil"></i>
-      Abrir editor
-    </button>
-    <button type="button" class="kf-btn" (click)="loadRuns()">
-      <i class="pi pi-refresh"></i>
-      Refrescar
-    </button>
-  </header>
 
-  <div *ngIf="errorMessage" class="kf-alert">
-    <i class="pi pi-exclamation-triangle"></i>
-    <span>{{ errorMessage }}</span>
-  </div>
+    <section class="au-empty" *ngIf="!loading && runs.length === 0 && !errorMessage">
+      <span class="au-empty-title">Todavía no ha corrido</span>
+      <p>Cuando la enciendas, aquí verás cada vez que corra y si salió bien.</p>
+    </section>
 
-  <div class="kf-runs__layout" *ngIf="!loading && runs.length > 0">
-    <ul class="kf-runs__list">
-      <li
-        *ngFor="let run of runs; trackBy: trackByRunId"
-        class="kf-runs__item"
-        [class.is-selected]="selectedRun?.runId === run.runId"
-        [style.borderLeftColor]="borderColor(run.status)"
-        (click)="selectRun(run)"
-      >
-        <div class="kf-runs__item-head">
-          <span class="kf-runs__item-id">{{ run.runId | slice : 0 : 12 }}…</span>
-          <span [class]="statusClass(run.status)">{{ run.status }}</span>
-        </div>
-        <div class="kf-runs__item-reason" *ngIf="statusReasonLabel(run.statusReason) as reasonLabel">
-          {{ reasonLabel }}
-        </div>
-        <div class="kf-runs__item-meta">
-          <div>{{ run.startedAt }}</div>
-          <div>{{ run.totalDurationMs ? run.totalDurationMs + ' ms' : '—' }}</div>
-        </div>
-      </li>
-    </ul>
-
-    <div class="kf-runs__detail" *ngIf="selectedRun">
-      <div class="kf-runs__detail-head">
-        <h2>Run {{ selectedRun.runId }}</h2>
-        <div class="kf-runs__detail-head-status">
-          <span [class]="statusClass(selectedRun.status)">{{ selectedRun.status }}</span>
-          <span class="kf-runs__reason" *ngIf="statusReasonLabel(selectedRun.statusReason) as reasonLabel">
-            {{ reasonLabel }}
-          </span>
-        </div>
-      </div>
-
-      <dl class="kf-runs__detail-meta">
-        <div>
-          <dt>Inicio</dt>
-          <dd>{{ selectedRun.startedAt }}</dd>
-        </div>
-        <div>
-          <dt>Fin</dt>
-          <dd>{{ selectedRun.finishedAt || '—' }}</dd>
-        </div>
-        <div>
-          <dt>Versión flow</dt>
-          <dd>v{{ selectedRun.flowVersion }}</dd>
-        </div>
-        <div>
-          <dt>Disparado por</dt>
-          <dd>{{ selectedRun.triggeredBy || 'trigger' }}</dd>
-        </div>
-      </dl>
-
-      <h3 class="kf-runs__section-title">Nodos ejecutados</h3>
-      <div class="kf-empty" *ngIf="nodeStates.length === 0">
-        Este run no ejecutó ningún nodo.
-      </div>
-      <ul class="kf-runs__nodes">
-        <li
-          *ngFor="let n of nodeStates; trackBy: trackByNodeId"
-          [style.borderLeftColor]="borderColor(n.status)"
-        >
-          <div class="kf-runs__node-head">
-            <strong>{{ n.nodeId }}</strong>
-            <span [class]="'kf-runbadge kf-runbadge--' + n.status">{{ n.status }}</span>
-          </div>
-          <div class="kf-runs__node-meta">
-            {{ n.startedAt || '—' }} · {{ n.durationMs || '—' }} ms · intento {{ n.attempt }}
-          </div>
-          <pre *ngIf="n.error" class="kf-runs__error">
-{{ n.error.code }}: {{ n.error.message }}
-{{ n.error.stack }}</pre>
-          <div class="kf-runs__erritems" *ngIf="n.errorItemCount">
-            <div class="kf-runs__erritems-head">
-              <i class="pi pi-exclamation-circle"></i>
-              {{ n.errorItemCount }} ítem(s) desviados al puerto de error
-            </div>
-            <ul class="kf-runs__errsamples" *ngIf="n.errorSamples?.length">
-              <li *ngFor="let s of n.errorSamples">
-                <span class="kf-runs__errsample-code" *ngIf="s.code">{{ s.code }}</span>
-                <span class="kf-runs__errsample-msg">{{ s.message }}</span>
-              </li>
-            </ul>
-          </div>
-          <pre *ngIf="n.output" class="kf-runs__output">{{ formatJson(n.output) }}</pre>
+    <div class="hi-layout" *ngIf="!loading && runs.length > 0">
+      <ul class="hi-lista" aria-label="Corridas">
+        <li *ngFor="let run of runs; trackBy: trackByRunId">
+          <button type="button" class="hi-fila" [class.on]="selectedRun?.runId === run.runId" (click)="selectRun(run)">
+            <span class="au-estado" [ngClass]="'au-estado-' + run.status"><span class="au-dot"></span>{{ estadoTexto(run.status) }}</span>
+            <span class="hi-cuando">{{ cuando(run.startedAt) }}</span>
+            <span class="hi-motivo" *ngIf="statusReasonLabel(run.statusReason) as motivo">{{ motivo }}</span>
+            <span class="hi-dura" *ngIf="duracion(run.totalDurationMs) as d">{{ d }}</span>
+          </button>
         </li>
       </ul>
+
+      <section class="hi-detalle" *ngIf="selectedRun">
+        <div class="hi-detalle-top">
+          <span class="au-estado" [ngClass]="'au-estado-' + selectedRun.status"><span class="au-dot"></span>{{ estadoTexto(selectedRun.status) }}</span>
+          <h2>{{ cuando(selectedRun.startedAt) }}</h2>
+          <button *ngIf="selectedRun.status === 'running'" type="button" class="au-btn-ghost au-btn-sm hi-detener"
+                  (click)="cancel(selectedRun.runId, $event)">Detener</button>
+        </div>
+
+        <dl class="hi-datos">
+          <div><dt>Qué la arrancó</dt><dd>{{ origen(selectedRun.triggeredBy) }}</dd></div>
+          <div><dt>Resultado</dt><dd>{{ statusReasonLabel(selectedRun.statusReason) || estadoTexto(selectedRun.status) }}</dd></div>
+          <div *ngIf="duracion(selectedRun.totalDurationMs) as d"><dt>Tardó</dt><dd>{{ d }}</dd></div>
+        </dl>
+
+        <h3 class="hi-sec">Paso a paso</h3>
+        <p class="hi-nada" *ngIf="nodeStates.length === 0">En esta corrida no se ejecutó ningún paso.</p>
+
+        <ol class="hi-pasos">
+          <li *ngFor="let n of nodeStates; trackBy: trackByNodeId" class="hi-paso" [ngClass]="'is-' + n.status">
+            <div class="hi-paso-top">
+              <strong>{{ nombrePaso(n.nodeId) }}</strong>
+              <span class="au-estado" [ngClass]="'au-estado-' + (n.status === 'skipped' ? 'inactive' : n.status)">
+                <span class="au-dot"></span>{{ n.status === 'skipped' ? 'Omitido' : n.status === 'pending' ? 'Pendiente' : estadoTexto(n.status) }}
+              </span>
+            </div>
+            <p class="hi-paso-meta">
+              <ng-container *ngIf="registros(n) as r">{{ r }} {{ r === 1 ? 'registro' : 'registros' }} · </ng-container>
+              <ng-container *ngIf="duracion(n.durationMs) as d">{{ d }}</ng-container>
+              <ng-container *ngIf="n.attempt > 1"> · intento {{ n.attempt }}</ng-container>
+            </p>
+            <p class="hi-paso-error" *ngIf="n.error">{{ n.error.message }}</p>
+            <div class="hi-paso-aviso" *ngIf="n.errorItemCount">
+              {{ n.errorItemCount }} {{ n.errorItemCount === 1 ? 'registro no pasó' : 'registros no pasaron' }} este paso.
+              <ul *ngIf="n.errorSamples?.length">
+                <li *ngFor="let m of n.errorSamples">{{ m.message }}</li>
+              </ul>
+            </div>
+          </li>
+        </ol>
+
+        <details class="hi-tecnico">
+          <summary>Detalles técnicos</summary>
+          <dl>
+            <div><dt>Corrida</dt><dd>{{ selectedRun.runId }}</dd></div>
+            <div><dt>Inicio</dt><dd>{{ selectedRun.startedAt }}</dd></div>
+            <div><dt>Fin</dt><dd>{{ selectedRun.finishedAt || '—' }}</dd></div>
+            <div><dt>Versión</dt><dd>v{{ selectedRun.flowVersion }}</dd></div>
+            <div><dt>Origen</dt><dd>{{ selectedRun.triggeredBy || '—' }}</dd></div>
+          </dl>
+          <div *ngFor="let n of nodeStates; trackBy: trackByNodeId" class="hi-tec-paso">
+            <strong>{{ n.nodeId }} · {{ n.status }}</strong>
+            <pre *ngIf="n.error">{{ n.error.code }}: {{ n.error.message }}
+{{ n.error.stack }}</pre>
+            <pre *ngIf="n.output">{{ formatJson(n.output) }}</pre>
+          </div>
+        </details>
+      </section>
     </div>
-  </div>
 
-  <div *ngIf="loading" class="kf-loading">
-    <i class="pi pi-spin pi-spinner"></i>
-    Cargando runs...
   </div>
-
-  <div *ngIf="!loading && runs.length === 0" class="kf-empty">
-    <h3>Todavía no hay ejecuciones</h3>
-    <p>Activá el flow o ejecutalo manualmente desde el editor.</p>
-  </div>
-</section>
+</div>

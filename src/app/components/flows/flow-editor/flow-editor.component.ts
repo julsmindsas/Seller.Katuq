@@ -10,6 +10,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, Subscription, debounceTime, interval } from 'rxjs';
 import { takeUntil, switchMap } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
+import Swal from 'sweetalert2';
+import { environment } from '../../../../environments/environment';
 import { FlowsService } from '../services/flows.service';
 import { FlowsStateService } from '../services/flows-state.service';
 import { FlowCanvasLoaderService } from '../services/flow-canvas-loader.service';
@@ -48,7 +50,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
   isNew = true;
   hasUnsaved = false;
   selectedNodeId: string | null = null;
-  flowName = 'Nuevo flujo';
+  flowName = 'Nueva automatización';
   flowDescription = '';
   flowStatus: FlowStatus = 'draft';
 
@@ -136,7 +138,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         this.isNew = true;
         this.flow = null;
         this.graph = { nodes: [], edges: [] };
-        this.flowName = 'Nuevo flujo';
+        this.flowName = 'Nueva automatización';
         this.flowDescription = '';
         this.flowStatus = 'draft';
         this.flowTags = [];
@@ -213,8 +215,10 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         intervalMinutes: trigger.config?.intervalMinutes
       };
     } else if (trigger.type === 'webhook') {
-      const path = trigger.config?.path || `flow/${flow.id}`;
-      this.webhookUrl = `${window.location.origin}/api/webhooks/${path}`;
+      // Solo se MUESTRA para copiarla: no se guarda ni cambia el aviso ya configurado.
+      // Es la ruta real del backend (routers/flows.js: POST /v1/flows/triggers/webhook/:flowId/:nodeId);
+      // la anterior armaba `<front>/api/webhooks/...`, que no existe.
+      this.webhookUrl = `${environment.urlApi}/v1/flows/triggers/webhook/${flow.id}/${trigger.nodeId}`;
     } else {
       this.scheduleDraft = {};
       this.webhookUrl = '';
@@ -258,13 +262,37 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Avoid storm-of-events: shallow compare.
-    const before = JSON.stringify(this.graph);
-    const after = JSON.stringify(detail);
-    if (before === after) return;
+    // Solo cuenta como cambio lo que se guarda (pasos, configuración, posición,
+    // conexiones). Antes se comparaba el JSON crudo: el lienzo reenvía el grafo
+    // con otro orden de llaves o campos de pantalla, y con solo abrir una
+    // automatización encendida se autoguardaba una y otra vez (OH MY STORE pasó
+    // de la versión 24 a la 29 sin ningún cambio real, 7-oct) y el navegador se congelaba.
+    if (this.huellaGrafo(this.graph) === this.huellaGrafo(detail)) return;
     this.graph = detail;
     this.hasUnsaved = true;
     this.autosaveTrigger$.next();
+  }
+
+  /** Huella estable del grafo: ignora orden de llaves y campos que no se guardan. */
+  private huellaGrafo(g: FlowGraph | null | undefined): string {
+    const ordenar = (v: any): any => {
+      if (Array.isArray(v)) return v.map(ordenar);
+      if (v && typeof v === 'object') {
+        return Object.keys(v).sort().reduce((o: any, k) => {
+          if (v[k] !== undefined) o[k] = ordenar(v[k]);
+          return o;
+        }, {});
+      }
+      return v;
+    };
+    const nodos = (g?.nodes || []).map((n: any) => ({
+      id: n.id, type: n.type, params: n.params || {}, disabled: !!n.disabled, notes: n.notes || '',
+      x: Math.round(n.position?.x ?? 0), y: Math.round(n.position?.y ?? 0),
+    })).sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    const aristas = (g?.edges || []).map((e: any) => ({
+      s: e.source, sp: e.sourcePort || 'main', t: e.target, tp: e.targetPort || 'main',
+    })).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+    return JSON.stringify(ordenar({ nodos, aristas }));
   }
 
   onNodeSelected(event: Event): void {
@@ -291,7 +319,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         // Subtle, no toast — the visual feedback in the canvas suffices.
         break;
       case 'autoLayoutApplied':
-        this.toastr.info('Nodos reorganizados.', '', { timeOut: 1800 });
+        this.toastr.info('Pasos ordenados.', '', { timeOut: 1800 });
         this.hasUnsaved = true;
         this.autosaveTrigger$.next();
         break;
@@ -301,10 +329,14 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
       case 'installTemplate':
         this.installQuickTemplate(payload?.slug);
         break;
+      case 'openTemplates':
+        // Lienzo vacío → galería real (revisa conexiones antes de encender).
+        this.router.navigate(['/flows/templates']);
+        break;
       case 'nodeAdded':
         // Subtle UX hint — surface for first-time users only would be ideal,
         // but for now the toast is short and dismissable.
-        this.toastr.success('Nodo agregado.', '', { timeOut: 1500 });
+        this.toastr.success('Paso agregado.', '', { timeOut: 1500 });
         break;
       case 'openIntegrations':
         // Banner "integración faltante" → llevar a conectar el proveedor.
@@ -327,7 +359,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           setTimeout(() => this.router.navigate(['/flows/editor', saved.id]), 600);
         } else {
           this.toastr.info(
-            'La plantilla todavía no está disponible. Probá arrastrar nodos desde el catálogo.',
+            'La plantilla todavía no está disponible. Prueba agregar pasos desde el catálogo.',
             'Plantilla no disponible',
             { timeOut: 4500 }
           );
@@ -335,7 +367,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.toastr.info(
-          'No se pudo instalar la plantilla. Probá arrastrar nodos desde el catálogo.',
+          'No se pudo instalar la plantilla. Prueba agregar pasos desde el catálogo.',
           'Plantilla no disponible',
           { timeOut: 4500 }
         );
@@ -350,7 +382,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
    */
   onRunRequested(_event: Event): void {
     if (this.isNew || !this.flow) {
-      this.toastr.warning('Guardá el flujo antes de ejecutarlo.', 'Antes de ejecutar', {
+      this.toastr.warning('Guarda la automatización antes de probarla.', 'Antes de ejecutar', {
         timeOut: 3500
       });
       return;
@@ -376,7 +408,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           }
         } else {
           this.toastr.warning(
-            'El run se inició pero no pudimos leer el contexto. Revisá la página de Ejecuciones.',
+            'El run se inició pero no pudimos leer el contexto. Revisa el historial.',
             'Run iniciado',
             { timeOut: 4500 }
           );
@@ -433,7 +465,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     if (run.status === 'success') {
       this.toastr.success(`Run completado en ${seconds}s`, 'Éxito', { timeOut: 3500 });
     } else if (run.status === 'failed') {
-      const firstError = run.errors?.[0]?.message || 'Revisá el detalle del run.';
+      const firstError = run.errors?.[0]?.message || 'Revisa el detalle en el historial.';
       this.toastr.error(firstError, `Run falló (${seconds}s)`, { timeOut: 6000 });
     } else if (run.status === 'partial') {
       this.toastr.warning(`Run parcial en ${seconds}s — algunos nodos fallaron.`, '', {
@@ -519,7 +551,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           this.state.upsertFlow(saved);
           this.saving = false;
           if (!opts.silent) {
-            this.toastr.success('Flow guardado.', '', { timeOut: 1800 });
+            this.toastr.success('Cambios guardados.', '', { timeOut: 1800 });
           }
           if (isCreation) {
             // jump to the canonical url so refresh keeps the flow loaded.
@@ -530,7 +562,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        const msg = err?.error?.message || 'No se pudo guardar el flujo.';
+        const msg = err?.error?.message || 'No pudimos guardar los cambios. Vuelve a intentarlo.';
         this.toastr.error(msg, 'Error al guardar', { timeOut: 5000 });
         this.saving = false;
         if (opts.silent) {
@@ -568,6 +600,23 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
 
   toggleActivate(): void {
     if (!this.flow || this.isNew) return;
+    if (this.flowStatus !== 'active') {
+      this.cambiarEncendido();
+      return;
+    }
+    Swal.fire({
+      title: `¿Apagar «${this.flow.name}»?`,
+      text: 'Mientras esté apagada, Katuq deja de mover estos datos. Puedes volver a encenderla cuando quieras.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, apagar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#B83232',
+    }).then((r) => { if (r.isConfirmed) this.cambiarEncendido(); });
+  }
+
+  private cambiarEncendido(): void {
+    if (!this.flow) return;
     const wasActive = this.flowStatus === 'active';
     const action = wasActive
       ? this.flowsService.deactivate(this.flow.id)
@@ -579,15 +628,15 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
           this.flowStatus = updated.status;
           this.state.upsertFlow(updated);
           if (wasActive) {
-            this.toastr.info('Flow desactivado.', '', { timeOut: 2200 });
+            this.toastr.info('Automatización apagada.', '', { timeOut: 2200 });
           } else {
-            this.toastr.success('Flow activado.', '', { timeOut: 2200 });
+            this.toastr.success('Automatización encendida.', '', { timeOut: 2200 });
           }
         }
       },
       error: (err) => {
         this.toastr.error(
-          err?.error?.message || 'No se pudo cambiar el estado.',
+          wasActive ? 'No pudimos apagarla. Vuelve a intentarlo.' : 'No pudimos encenderla. Revisa que todos sus pasos estén completos.',
           'Error',
           { timeOut: 4500 }
         );
@@ -596,10 +645,18 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    if (this.hasUnsaved && !confirm('Tenés cambios sin guardar. ¿Salir igualmente?')) {
+    if (!this.hasUnsaved) {
+      this.router.navigate(['/flows']);
       return;
     }
-    this.router.navigate(['/flows']);
+    Swal.fire({
+      title: 'Tienes cambios sin guardar',
+      text: 'Si sales ahora, se pierden.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Salir sin guardar',
+      cancelButtonText: 'Seguir editando',
+    }).then((r) => { if (r.isConfirmed) this.router.navigate(['/flows']); });
   }
 
   goToRuns(): void {
