@@ -8680,3 +8680,34 @@ Desde el despliegue de D-329 (29-sep) no hubo más caídas en `~/.pm2/pm2.log`; 
 **No verificado:** reproducción del video dentro de la captura (YouTube solo mostró la portada).
 
 **Nota de numeración:** otra sesión dejó sin commitear un D-378 distinto ("Pantalla En vivo", propuesta); el D-378 ya publicado es el de los despachos. Esa propuesta debe renumerarse.
+
+## D-380 (2026-10-08) — Las tres ideas de Jairo: factura PDF ordenada (DESPLEGADA), ensayo de la facturación automática (SIN ENCENDER) e informe ejecutivo (PROPUESTA)
+
+**Disparador.** Daniel: "hagamos las ideas de Jairo" (tickets 1123, 1124 y 1125, todos del 5-oct).
+
+### 1123 — Aspecto de la factura electrónica de Julsmind (backend `94ebf7c`, DESPLEGADA)
+La factura de ejemplo (JULS47) partía el valor unitario en dos líneas ("15.922.932,0" y "0"), no desglosaba el total y no mostraba forma de pago.
+- `createPdfBuffer` (representación gráfica; **el XML, el CUFE y la firma no cambian**) usa el tema plano del design-system: encabezado con acento, fecha de emisión, forma de pago y cliente separados, tabla con fila lila e importes alineados a la derecha en columnas con ancho para cifras de 10 dígitos.
+- Bloque de totales con Subtotal, Descuento e IVA **solo cuando la factura trae el detalle por línea**; si no, solo el Total (no se inventa un desglose). El subtotal suma el redondeo por línea, igual que el XML.
+- `reviewedInvoiceDelivery` pasa `dianPayment` (el mismo `model.payment` que arma el XML) para mostrar Contado o Crédito con vencimiento.
+- El generador lo comparten todas las facturas DIAN, no solo las de Julsmind.
+- La prueba existente lee ahora el texto de la celda (son objetos alineados) y se agregaron los casos de desglose, forma de pago y totales sin partirse.
+- Revisión adversarial: sin bloqueantes. Corregidos: columna IVA que partía desde $10.000.000 de IVA, totales partidos entre páginas con 22+ líneas y subtotal descuadrado por $0,01 con cantidades fraccionarias. Pruebas: 11 suites DIAN y `verify-dian-document-package` en verde.
+
+**Queda abierto (conocido, ya existía):**
+- Una factura **sin descuento** muestra la columna Total sin IVA y solo el Total abajo; el IVA no aparece desglosado. La recuperada (`recoveredInvoice`) sí lo muestra. Conviene mostrar siempre `taxAmount`.
+- Con ~18-21 líneas el QR puede quedar solo en una página 2.
+- En notas crédito/débito y el camino sin `dianRequestId`, las líneas salen en 0,00 por leer `producto.precio` como número (antes mostraba NaN).
+- Falta el logo del emisor: no hay logo configurado por empresa.
+
+### 1124 — Automatizar el envío de facturas con mensualidades (YA EXISTÍA: D-272, SIN ENCENDER)
+La emisión automática al pagar ya está construida. En producción **no está encendida** (`MEMBERSHIP_INVOICING_ENABLED` sin definir).
+- **Ensayo en seco** (Daniel: "ensayo en seco primero"), en el servidor y sobre el cobro `INITIAL-SUB-6so5IDG10j-MTJ5COPQ`: la factura se arma completa, total $1.500,00 = lo cobrado, IVA 0, ficha del cliente existente y **emisor listo para transmitir** en producción. No se transmitió nada a la DIAN.
+- En `billing_invoices` solo hay cobros de prueba: ningún comercio real ha pagado por ese camino. Las facturas JULS44-47 se hicieron a mano (anualidades con anticipo, que este flujo no cubre).
+- **Encenderla es de Daniel y Jairo:** cada pago emitiría una factura legal sin revisión. Falta decidirlo.
+
+### 1125 — Informe ejecutivo junto con la factura (PROPUESTA, sin código)
+Borrador en `openspec/changes/informe-ejecutivo-mensual/` (propuesta, requisitos EARS y tareas).
+- **Decidido** (Daniel): el informe cuenta por **fecha de entrega**. Los dos Excel de ejemplo no coincidían (ALMARA por entrega, Café Escobar por creación).
+- Abiertas, con recomendación: cuándo sale (con la factura), período (ciclo de facturación, no mes calendario) y a quién (todos con membresía, con interruptor por empresa).
+- Caso de prueba: el Excel de septiembre de ALMARA (1.333 pedidos, 52 cancelados, 1.281 netos, $164.684.994,89).
