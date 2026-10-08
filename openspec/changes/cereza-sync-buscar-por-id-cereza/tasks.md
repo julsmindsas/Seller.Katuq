@@ -13,4 +13,4 @@
 
 - [x] 2.1 Prueba de contrato sin red con cuatro casos: cambio de referencia (caso 27311), producto nuevo, id repetido y ficha `duplicadoDe`.
 - [x] 2.2 Validar sintaxis y correr las pruebas de Osmosis existentes.
-- [ ] 2.3 Desplegar el backend y revisar `osmosis_sync_log` durante 24 h.
+- [x] 2.3 Desplegar el backend y revisar `osmosis_sync_log` durante 24 h.

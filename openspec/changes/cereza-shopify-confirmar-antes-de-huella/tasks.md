@@ -27,6 +27,6 @@
 
 - [x] 4.1 Prueba del write-set. Falla si se escriben colecciones nuevas, o si cambian la frecuencia, `limit`, `diffPagesScan`, `diffRotatePages` u `onlyWithStock` del flow.
 - [x] 4.2 Correr `test:flows-osmosis-huella`, `test:flows-node-catalog` y las pruebas nuevas. Validar sintaxis.
-- [ ] 4.3 Desplegar con `retryMode: off` y verificar que nada cambia: las mismas emisiones por corrida.
-- [ ] 4.4 Pasar a `shadow` en `cereza-products-to-shopify-a5156643`, escribiendo los params completos y verificando `limit === 30`. Medir una semana.
+- [x] 4.3 Desplegar con `retryMode: off` y verificar que nada cambia: las mismas emisiones por corrida.
+- [x] 4.4 Pasar a `shadow` en `cereza-products-to-shopify-a5156643`, escribiendo los params completos y verificando `limit === 30`. Medir una semana.
 - [ ] 4.5 Pasar a `on` con el visto bueno de Daniel. Verificar en `flow_runs` y `shopify_push_log` durante 24 h.

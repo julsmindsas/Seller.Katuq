@@ -8472,7 +8472,9 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 **Decisión.** La propuesta OpenSpec es `cereza-sync-buscar-por-id-cereza`. Daniel la aprobó el 2026-10-07: "Aprobar ambas".
 - `_upsertProductDetalle` busca primero por `integrations.osmosis.id` y acepta el id como número o como texto. Solo si no encuentra nada busca por referencia.
 - Las fichas con `duplicadoDe` no cuentan.
-- Si encuentra dos fichas vigentes con el mismo id, lanza `OSMOSIS_ID_DUPLICADO` y no escribe nada. Hoy hay 0 en OMS, verificado sobre 8.567 fichas.
+- Si encuentra dos o más fichas vigentes con el mismo id, elige una de forma determinista: primero la de la misma referencia, después la enlazada a Shopify y después la más vieja. Avisa con la lista de fichas repetidas. Hoy hay 0 en OMS, verificado sobre 8.567 fichas.
+  - La primera versión cortaba con `OSMOSIS_ID_DUPLICADO`. La revisión adversarial mostró que eso dejaba el producto sin sincronizar mientras el flow mixto seguía creando el duplicado, y se cambió.
+- Las fichas `duplicadoDe` tampoco cuentan en la búsqueda por referencia, así que la ficha desactivada no se reactiva.
 - Si la encuentra por id con otra referencia, la referencia de la ficha **no** cambia, porque es el SKU de Shopify y el de los pedidos a Cereza. Queda el aviso en el resultado del webhook.
 - `_upsertProduct` sigue devolviendo el id (scripts y pruebas lo esperan). El webhook usa la variante con detalle y registra la acción real: `product_created`, `product_updated` o `product_unchanged`.
 
@@ -8503,7 +8505,25 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 - `tests/flows/shopifyUpsertConfirmacion.test.js` (7 casos).
 - Las pruebas que ya existían siguen en verde. La falla de `nodeCatalogCoverage` (falta `osmosis-stock-sweep` en `nodeCatalog.json`) también ocurre sin estos cambios.
 
-**Plan.**
-1. Desplegar con `retryMode: off`, que mantiene el comportamiento de hoy salvo la búsqueda por tag y la marca de borrado.
-2. Pasar a `shadow` en `cereza-products-to-shopify-a5156643` y medir una semana.
-3. Pasar a `on` con el visto bueno de Daniel.
+**Revisión adversarial antes del despliegue.** Workflow de 11 agentes: 3 lentes y una verificación que intenta refutar cada hallazgo.
+- Con `off` no hubo regresiones graves.
+- En `on` y `shadow` se corrigieron:
+  - **Escritura atómica:** estado y reintentos se guardan en un mismo batch. Antes, si fallaba la segunda escritura en sombra, se perdían los productos de la corrida.
+  - **Cambios nuevos de Cereza:** un pendiente con contenido distinto se reemite de inmediato, no 6 h después.
+  - **Vencidos:** se reemiten aunque la huella coincida, y se vuelve a revisar su confirmación. Los que no se pueden reemitir en 7 días pasan a agotados.
+  - **Sombra:** lo medido no se reintenta al pasar a `on`.
+  - **Huellas:** una confirmación vieja no pisa una huella más nueva.
+  - **Agotados:** quedan con su motivo (`variantes_rechazadas`, `listas_de_precios`, `shopify: …`).
+  - **`preciosSincronizadosEn`:** solo se marca si las listas se aplicaron. `price-list-no-encontrada` y `sin-variantes-shopify` cuentan como falla.
+  - **Búsqueda por tag:** prefiere ACTIVE.
+  - **Guarda de tope:** marca `lastPolledAt`.
+- Se descartó por refutado el riesgo del límite de 40.000 entradas de índice: con los datos reales no se llega.
+- Pruebas: trigger 19 casos, upsert y listas 9, D-370 10. Scripts `test:cereza-reintento-shopify` y `test:cereza-buscar-por-id`.
+
+**Estado (2026-10-08, desplegado).**
+- Backend `8308599` en producción: los commits D-370 `23d10d5` y D-371 `0a09bda`, la rama `fix/d370-d371-cereza` y el merge.
+- Producción ya estaba en `5bd9abf`, que desplegó otra sesión (sitios). El avance por fast-forward solo agregó los scripts de D-368 y estos dos commits. Las pruebas corrieron también en el servidor y pm2 recargó sin errores.
+- La primera corrida con el código nuevo y `off` (01:44 UTC) terminó bien.
+- El flow `cereza-products-to-shopify-a5156643` pasó a **`retryMode: shadow`** por `flowsController.update`, versión 54 → 55. Solo cambió ese parámetro y `limit` sigue en 30.
+- La primera corrida en sombra (01:50 UTC) terminó bien y escribió `reintentos.ultimaRevision`.
+- **Siguiente paso:** medir una semana (`habriaReintentado` en `flow_polling_state`) y pasar a `on` con el visto bueno de Daniel.
