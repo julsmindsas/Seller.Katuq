@@ -1,3 +1,11 @@
+// Tokens del tema canónico (openspec/specs/design-system) usados por la galería de evidencias.
+$de-accent: #5F3FE0;
+$de-accent-2: #7C5CFF;
+$de-ink: #211F3A;
+$de-line: #ececf4;
+$de-tile: #f3f1fb;
+$de-selected-border: #d9cffb;
+
 // Variables para el tema con tonos pasteles
 :root {
   --primary-color: #a8b5ff;
@@ -269,58 +277,101 @@
     border: 1px solid var(--gray-200);
   }
   
+  // Ticket 1153: miniaturas verticales (≈ foto de celular) que muestran la foto
+  // completa en vez de recortarla a un cuadrado.
   .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1rem;
-    
+
     @media (max-width: 768px) {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 0.75rem;
     }
   }
-  
+
   .gallery-item, .single-image-container {
     .image-container {
       position: relative;
-      border-radius: var(--border-radius-sm);
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: 1px solid $de-line;
+      border-radius: 11px;
+      background: $de-tile;
       overflow: hidden;
-      aspect-ratio: 1;
-      
+      aspect-ratio: 3 / 4;
+      cursor: zoom-in;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
       .evidence-image {
+        display: block;
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        transition: transform 0.3s ease;
+        object-fit: contain;
       }
-      
+
       .image-overlay {
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba($de-ink, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
         opacity: 0;
-        transition: opacity 0.3s ease;
-        cursor: pointer;
-        
+        transition: opacity 0.15s ease;
+        pointer-events: none;
+
         i {
-          color: white;
-          font-size: 1.5rem;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: $de-accent;
+          color: #fff;
+          font-size: 1.1rem;
         }
       }
-      
-      &:hover {
-        .evidence-image {
-          transform: scale(1.05);
-        }
-        
+
+      &:hover,
+      &:focus-visible {
+        border-color: $de-selected-border;
+        box-shadow: 0 6px 14px -8px rgba(50, 40, 110, 0.35);
+
         .image-overlay {
           opacity: 1;
+        }
+      }
+
+      &:focus {
+        outline: none;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $de-accent-2;
+        outline-offset: 2px;
+      }
+
+      // En pantallas táctiles no hay hover: la lupa queda visible en la esquina.
+      @media (hover: none) {
+        .image-overlay {
+          opacity: 1;
+          background: transparent;
+          align-items: flex-end;
+          justify-content: flex-end;
+          padding: 6px;
+
+          i {
+            width: 30px;
+            height: 30px;
+            font-size: 0.85rem;
+          }
         }
       }
     }
@@ -586,59 +637,6 @@
   }
 }
 
-// Image Viewer Modal
-.image-viewer-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  cursor: pointer;
-}
-
-.image-viewer-content {
-  position: relative;
-  max-width: 90%;
-  max-height: 90%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.image-viewer-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  border-radius: var(--border-radius-sm);
-  box-shadow: var(--shadow-xl);
-}
-
-.image-viewer-close {
-  position: absolute;
-  top: -40px;
-  right: 0;
-  color: white;
-  font-size: 2rem;
-  font-weight: bold;
-  cursor: pointer;
-  background: rgba(0, 0, 0, 0.5);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s ease;
-  
-  &:hover {
-    background: rgba(0, 0, 0, 0.7);
-  }
-} 
 // ---------------------------------------------------------------------------
 // Evidencia de Guía Cereza (Osmosis) — integrada en las secciones del mensajero
 // ---------------------------------------------------------------------------

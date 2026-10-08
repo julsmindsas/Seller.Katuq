@@ -731,5 +731,17 @@
   "Orden de Venta": "Sales Order",
   "Generar orden de venta profesional": "Generate professional sales order",
   "Imprimir PDF": "Print PDF",
-  "Generar documento del pedido": "Generate order document"
+  "Generar documento del pedido": "Generate order document",
+  "Visor de imagen": "Image viewer",
+  "Abrir original": "Open original",
+  "Girar": "Rotate",
+  "Acercar": "Zoom in",
+  "Alejar": "Zoom out",
+  "Ajustar a la pantalla": "Fit to screen",
+  "Nivel de zoom": "Zoom level",
+  "Foto anterior": "Previous photo",
+  "Foto siguiente": "Next photo",
+  "Imagen ampliada": "Enlarged image",
+  "No se pudo cargar la imagen": "The image could not be loaded",
+  "Ampliar foto": "Enlarge photo"
 }

@@ -166,12 +166,9 @@
   </div>
 </div>
 
-<!-- Lightbox / Image Viewer -->
-<div *ngIf="imageViewerVisible" class="image-viewer-overlay" (click)="hideImageViewer()">
-  <div class="image-viewer-content" (click)="$event.stopPropagation()">
-    <button class="image-viewer-close" (click)="hideImageViewer()">
-      <i class="pi pi-times"></i>
-    </button>
-    <img [src]="selectedImageUrl" class="image-viewer-image" alt="Vista de evidencia" />
-  </div>
-</div>
+<!-- Visor compartido: foto completa al abrir, zoom, giro y navegación (ticket 1153) -->
+<app-visor-imagen *ngIf="imageViewerVisible"
+                  [imagenes]="visorImagenes"
+                  [indiceInicial]="visorIndice"
+                  (cerrar)="hideImageViewer()">
+</app-visor-imagen>

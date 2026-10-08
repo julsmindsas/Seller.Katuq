@@ -91,9 +91,11 @@ import { GlobalMetricsComponent } from "./clientes/global-metrics/global-metrics
 import { EditarIvaLineaPedidoComponent } from "./editar-iva-linea-pedido/editar-iva-linea-pedido.component";
 
 import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
+import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-imagen.module';
 @NgModule({
   imports: [
     ImagenProductoPipe,
+    VisorImagenModule,
     NgSelectModule,
     CommonModule,
     SharedModule,

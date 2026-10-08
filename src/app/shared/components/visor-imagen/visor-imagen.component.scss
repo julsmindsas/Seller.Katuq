@@ -1,0 +1,330 @@
+// Visor de imágenes a pantalla completa (ticket 1153).
+// Tema canónico: openspec/specs/design-system/spec.md — plano, sin gradientes.
+$vi-accent: #5F3FE0;
+$vi-accent-2: #7C5CFF;
+$vi-ink: #211F3A;
+$vi-velo: rgba(darken($vi-ink, 8%), 0.95);
+$vi-blanco: #fff;
+$vi-alto-barra: 56px;
+$vi-radio-boton: 11px;
+$vi-radio-pill: 20px;
+$vi-z: 10060; // por encima de modales ng-bootstrap (1055), PrimeNG (1000+) y SweetAlert (1060)
+
+:host {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: $vi-z;
+  display: block;
+}
+
+.visor-imagen {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  background: $vi-velo;
+  color: $vi-blanco;
+  outline: none;
+  animation: vi-aparecer 0.16s ease;
+}
+
+// --- Barras -----------------------------------------------------------------
+
+.visor-imagen__barra,
+.visor-imagen__zoom {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: $vi-alto-barra;
+  background: $vi-ink;
+}
+
+.visor-imagen__barra {
+  justify-content: space-between;
+  padding: env(safe-area-inset-top, 0) 12px 0;
+}
+
+.visor-imagen__zoom {
+  justify-content: center;
+  padding: 6px 12px env(safe-area-inset-bottom, 0);
+}
+
+.visor-imagen__acciones {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.visor-imagen__contador {
+  padding: 5px 12px;
+  border-radius: $vi-radio-pill;
+  background: rgba($vi-blanco, 0.1);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.visor-imagen__porcentaje {
+  min-width: 64px;
+  padding: 5px 10px;
+  border-radius: $vi-radio-pill;
+  background: rgba($vi-blanco, 0.1);
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.visor-imagen__separador {
+  width: 1px;
+  height: 24px;
+  margin: 0 6px;
+  background: rgba($vi-blanco, 0.16);
+}
+
+.visor-imagen__boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: $vi-radio-boton;
+  background: transparent;
+  color: $vi-blanco;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+
+  i {
+    font-size: 1.05rem;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba($vi-blanco, 0.12);
+    color: $vi-blanco;
+    text-decoration: none;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $vi-accent-2;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+// --- Escenario ----------------------------------------------------------------
+
+.visor-imagen__cuerpo {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.visor-imagen__escenario {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  touch-action: none; // el visor maneja pellizco y arrastre; la página no hace zoom ni scroll
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.visor-imagen__foto {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  // Antes de medirla, la foto nunca pasa del área visible (ese era el bug: un
+  // max-height en % sobre un contenedor sin alto no limitaba nada).
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 32px);
+  object-fit: contain;
+  background: $vi-blanco; // firmas PNG transparentes siguen legibles sobre el velo oscuro
+  transform-origin: center center;
+  cursor: zoom-in;
+  -webkit-user-drag: none;
+  transition: opacity 0.15s ease;
+
+  &.is-medida {
+    max-width: none;
+    max-height: none;
+  }
+
+  &.is-cargando {
+    opacity: 0;
+  }
+
+  &.is-oculta {
+    display: none;
+  }
+
+  &.is-animada {
+    transition: opacity 0.15s ease, transform 0.2s ease, width 0.2s ease, height 0.2s ease;
+  }
+}
+
+.visor-imagen__escenario.is-ampliada .visor-imagen__foto {
+  cursor: grab;
+}
+
+.visor-imagen__escenario.is-arrastrando .visor-imagen__foto {
+  cursor: grabbing;
+}
+
+.visor-imagen__cargando {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -14px 0 0 -14px;
+  font-size: 28px;
+  color: rgba($vi-blanco, 0.8);
+  pointer-events: none;
+}
+
+.visor-imagen__error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: rgba($vi-blanco, 0.08);
+  color: rgba($vi-blanco, 0.85);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+
+  i {
+    font-size: 28px;
+    color: $vi-accent-2;
+  }
+}
+
+// --- Navegación entre fotos ---------------------------------------------------
+
+.visor-imagen__nav {
+  position: absolute;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba($vi-ink, 0.78);
+  color: $vi-blanco;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+
+  &--anterior {
+    left: 16px;
+  }
+
+  &--siguiente {
+    right: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    background: $vi-accent;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $vi-accent-2;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+}
+
+// --- Responsive ---------------------------------------------------------------
+
+@media (max-width: 575.98px) {
+  .visor-imagen__barra,
+  .visor-imagen__zoom {
+    gap: 2px;
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .visor-imagen__texto {
+    display: none;
+  }
+
+  .visor-imagen__boton {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 8px;
+  }
+
+  .visor-imagen__nav {
+    width: 40px;
+    height: 40px;
+    margin-top: -20px;
+
+    &--anterior {
+      left: 6px;
+    }
+
+    &--siguiente {
+      right: 6px;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visor-imagen,
+  .visor-imagen__foto,
+  .visor-imagen__foto.is-animada {
+    animation: none;
+    transition: none;
+  }
+}
+
+@keyframes vi-aparecer {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

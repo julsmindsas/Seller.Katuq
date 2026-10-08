@@ -30,9 +30,11 @@ export class EvidenciaEmpacadoModalComponent implements OnInit {
   processingFiles: boolean = false; // Nuevo: indica que se están procesando archivos seleccionados
   filesBeingProcessed: number = 0; // Nuevo: contador de archivos en proceso
 
-  // Image viewer (lightbox)
+  // Visor de imágenes (app-visor-imagen)
   imageViewerVisible: boolean = false;
   selectedImageUrl: string = '';
+  visorImagenes: string[] = [];
+  visorIndice: number = 0;
 
   readonly MAX_FILES = 3;
   readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -529,24 +531,32 @@ export class EvidenciaEmpacadoModalComponent implements OnInit {
   }
 
   /**
-   * Muestra el visor de imágenes (lightbox) con la imagen seleccionada
+   * Muestra el visor de imágenes con la foto seleccionada. Si la foto es de las
+   * guardadas (o de las nuevas), el visor permite pasar entre las de ese grupo.
    */
   showImageViewer(imageUrl: string): void {
     if (!imageUrl) {
-      console.warn('⚠️ No se proporcionó URL de imagen');
       return;
     }
 
-    console.log('🖼️ Mostrando imagen en lightbox');
+    const nuevas = this.files.map((f) => f.preview).filter((p): p is string => !!p);
+    const grupo = this.existingPhotos.includes(imageUrl)
+      ? this.existingPhotos
+      : nuevas.includes(imageUrl) ? nuevas : [imageUrl];
+
     this.selectedImageUrl = imageUrl;
+    this.visorImagenes = [...grupo];
+    this.visorIndice = Math.max(grupo.indexOf(imageUrl), 0);
     this.imageViewerVisible = true;
   }
 
   /**
-   * Oculta el visor de imágenes (lightbox)
+   * Oculta el visor de imágenes
    */
   hideImageViewer(): void {
     this.imageViewerVisible = false;
     this.selectedImageUrl = '';
+    this.visorImagenes = [];
+    this.visorIndice = 0;
   }
 }

@@ -682,10 +682,9 @@
           </div>
 </div>
 
-<!-- Custom Image Viewer Modal -->
-<div *ngIf="imageViewerVisible" class="image-viewer-overlay" (click)="hideImageViewer()">
-  <div class="image-viewer-content">
-    <span class="image-viewer-close">&times;</span>
-    <img [src]="selectedImageUrl" class="image-viewer-image">
-  </div>
-</div>
+<!-- Visor compartido: foto completa al abrir, zoom y giro (ticket 1153).
+     imagenProducto resuelve las rutas relativas de Osmosis igual que la miniatura. -->
+<app-visor-imagen *ngIf="imageViewerVisible"
+                  [imagenes]="[selectedImageUrl | imagenProducto]"
+                  (cerrar)="hideImageViewer()">
+</app-visor-imagen>

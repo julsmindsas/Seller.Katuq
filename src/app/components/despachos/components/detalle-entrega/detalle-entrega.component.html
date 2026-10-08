@@ -125,13 +125,15 @@
             <div class="evidence-gallery">
                 <!-- Galería unificada: imágenes del mensajero propio + de Guía Cereza -->
                 <div class="gallery-grid" *ngIf="imagenesEvidencia.length > 0">
-                    <div *ngFor="let image of imagenesEvidencia" class="gallery-item">
-                        <div class="image-container">
-                            <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" class="evidence-image" (click)="showImageViewer(image)">
-                            <div class="image-overlay" (click)="showImageViewer(image)">
-                                <i class="pi pi-search"></i>
-                            </div>
-                        </div>
+                    <div *ngFor="let image of imagenesEvidencia; let i = index" class="gallery-item">
+                        <!-- Ticket 1153: la miniatura muestra la foto completa (contain) y abre el visor con zoom -->
+                        <button type="button" class="image-container" (click)="verEvidencia(i)"
+                                [attr.aria-label]="('Ampliar foto' | translate) + ' ' + (i + 1)">
+                            <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" class="evidence-image">
+                            <span class="image-overlay" aria-hidden="true">
+                                <i class="pi pi-search-plus"></i>
+                            </span>
+                        </button>
                     </div>
                 </div>
 
@@ -214,10 +216,9 @@
     </button>
 </div>
 
-<!-- Custom Image Viewer Modal -->
-<div *ngIf="imageViewerVisible" class="image-viewer-overlay" (click)="hideImageViewer()">
-  <div class="image-viewer-content">
-    <span class="image-viewer-close">&times;</span>
-    <img [src]="selectedImageUrl" class="image-viewer-image">
-  </div>
-</div>
+<!-- Visor compartido: foto completa al abrir, zoom, giro y navegación (ticket 1153) -->
+<app-visor-imagen *ngIf="imageViewerVisible"
+                  [imagenes]="visorImagenes"
+                  [indiceInicial]="visorIndice"
+                  (cerrar)="hideImageViewer()">
+</app-visor-imagen>

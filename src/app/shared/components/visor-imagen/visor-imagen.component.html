@@ -1,0 +1,108 @@
+<div #dialogo class="visor-imagen" role="dialog" aria-modal="true" tabindex="-1"
+     [attr.aria-label]="'Visor de imagen' | translate">
+
+  <header class="visor-imagen__barra">
+    <span class="visor-imagen__contador" *ngIf="hayVarias; else sinContador" aria-live="polite">
+      {{ indice + 1 }} {{ 'de' | translate }} {{ total }}
+    </span>
+    <ng-template #sinContador><span></span></ng-template>
+
+    <div class="visor-imagen__acciones">
+      <a *ngIf="fotoActual && !esUrlLocal"
+         class="visor-imagen__boton"
+         [href]="fotoActual" target="_blank" rel="noopener"
+         [attr.aria-label]="'Abrir original' | translate"
+         [title]="'Abrir original' | translate">
+        <i class="pi pi-external-link" aria-hidden="true"></i>
+        <span class="visor-imagen__texto">{{ 'Abrir original' | translate }}</span>
+      </a>
+      <button type="button" class="visor-imagen__boton"
+              (click)="girar()" [disabled]="!fotoActual || error"
+              aria-keyshortcuts="R"
+              [attr.aria-label]="'Girar' | translate"
+              [title]="('Girar' | translate) + ' (R)'">
+        <i class="pi pi-refresh" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="visor-imagen__boton"
+              (click)="cerrarVisor()"
+              aria-keyshortcuts="Escape"
+              [attr.aria-label]="'Cerrar' | translate"
+              [title]="('Cerrar' | translate) + ' (Esc)'">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="visor-imagen__cuerpo">
+    <div #escenario class="visor-imagen__escenario"
+         [class.is-ampliada]="escala > 1"
+         [class.is-arrastrando]="arrastrando"
+         (click)="alClicEnEscenario()">
+      <img #foto *ngIf="fotoActual"
+           class="visor-imagen__foto"
+           [class.is-medida]="!!tamano"
+           [class.is-cargando]="cargando"
+           [class.is-oculta]="error"
+           [class.is-animada]="animar"
+           [src]="fotoActual"
+           [alt]="'Imagen ampliada' | translate"
+           draggable="false"
+           [style.width.px]="tamano?.ancho"
+           [style.height.px]="tamano?.alto"
+           [style.transform]="transformacion"
+           (load)="alCargar()"
+           (error)="alFallar()">
+
+      <i *ngIf="cargando && !error" class="pi pi-spin pi-spinner visor-imagen__cargando" aria-hidden="true"></i>
+
+      <div *ngIf="error || !fotoActual" class="visor-imagen__error" role="alert">
+        <i class="pi pi-image" aria-hidden="true"></i>
+        <span>{{ 'No se pudo cargar la imagen' | translate }}</span>
+      </div>
+    </div>
+
+    <ng-container *ngIf="hayVarias">
+      <button type="button" class="visor-imagen__nav visor-imagen__nav--anterior"
+              (click)="anterior()" [disabled]="!tieneAnterior"
+              aria-keyshortcuts="ArrowLeft"
+              [attr.aria-label]="'Foto anterior' | translate"
+              [title]="'Foto anterior' | translate">
+        <i class="pi pi-chevron-left" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="visor-imagen__nav visor-imagen__nav--siguiente"
+              (click)="siguiente()" [disabled]="!tieneSiguiente"
+              aria-keyshortcuts="ArrowRight"
+              [attr.aria-label]="'Foto siguiente' | translate"
+              [title]="'Foto siguiente' | translate">
+        <i class="pi pi-chevron-right" aria-hidden="true"></i>
+      </button>
+    </ng-container>
+  </div>
+
+  <footer class="visor-imagen__zoom" role="toolbar" [attr.aria-label]="'Nivel de zoom' | translate">
+    <button type="button" class="visor-imagen__boton"
+            (click)="alejar()" [disabled]="!puedeAlejar || error"
+            aria-keyshortcuts="-"
+            [attr.aria-label]="'Alejar' | translate"
+            [title]="('Alejar' | translate) + ' (−)'">
+      <i class="pi pi-search-minus" aria-hidden="true"></i>
+    </button>
+    <span class="visor-imagen__porcentaje" [title]="'Nivel de zoom' | translate">{{ porcentaje }} %</span>
+    <button type="button" class="visor-imagen__boton"
+            (click)="acercar()" [disabled]="!puedeAcercar || error || !fotoActual"
+            aria-keyshortcuts="+"
+            [attr.aria-label]="'Acercar' | translate"
+            [title]="('Acercar' | translate) + ' (+)'">
+      <i class="pi pi-search-plus" aria-hidden="true"></i>
+    </button>
+    <span class="visor-imagen__separador" aria-hidden="true"></span>
+    <button type="button" class="visor-imagen__boton"
+            (click)="ajustar()" [disabled]="estaAjustada"
+            aria-keyshortcuts="0"
+            [attr.aria-label]="'Ajustar a la pantalla' | translate"
+            [title]="('Ajustar a la pantalla' | translate) + ' (0)'">
+      <i class="pi pi-replay" aria-hidden="true"></i>
+      <span class="visor-imagen__texto">{{ 'Ajustar a la pantalla' | translate }}</span>
+    </button>
+  </footer>
+</div>

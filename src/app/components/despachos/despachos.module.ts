@@ -76,9 +76,11 @@ import { DaneCodesService } from "../../shared/services/dane-codes.service";
 import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
 
 import { ImagenProductoPipe } from '../../shared/pipes/imagen-producto.pipe';
+import { VisorImagenModule } from '../../shared/components/visor-imagen/visor-imagen.module';
 @NgModule({
   imports: [
     ImagenProductoPipe,
+    VisorImagenModule,
     CommonModule,
     ReactiveFormsModule,
     SharedModule,

@@ -11,10 +11,12 @@ export class DetalleEntregaComponent implements OnInit, OnChanges {
   @Output() onClose = new EventEmitter<void>();
   @Output() onImageClick = new EventEmitter<string>();
   
-  // Image viewer properties
+  // Visor de imágenes (app-visor-imagen)
   imageViewerVisible = false;
-  selectedImageUrl = '';
-  
+  /** Copia fija de las fotos al abrir: `imagenesEvidencia` es un getter y crea un arreglo nuevo en cada ciclo. */
+  visorImagenes: string[] = [];
+  visorIndice = 0;
+
   constructor() { }
 
   ngOnInit(): void {
@@ -40,14 +42,27 @@ export class DetalleEntregaComponent implements OnInit, OnChanges {
     this.onImageClick.emit(imageUrl);
   }
   
+  /** Abre el visor con una sola imagen (p. ej. la firma). */
   showImageViewer(imageUrl: string): void {
-    this.selectedImageUrl = imageUrl;
-    this.imageViewerVisible = true;
+    if (!imageUrl) { return; }
+    this.abrirVisor([imageUrl], 0);
   }
-  
+
+  /** Abre el visor sobre la galería de evidencias, en la foto clickeada. */
+  verEvidencia(indice: number): void {
+    this.abrirVisor(this.imagenesEvidencia, indice);
+  }
+
   hideImageViewer(): void {
     this.imageViewerVisible = false;
-    this.selectedImageUrl = '';
+    this.visorImagenes = [];
+    this.visorIndice = 0;
+  }
+
+  private abrirVisor(imagenes: string[], indice: number): void {
+    this.visorImagenes = [...imagenes];
+    this.visorIndice = indice;
+    this.imageViewerVisible = true;
   }
 
   // ---------------------------------------------------------------------------
