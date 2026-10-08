@@ -8527,3 +8527,4 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 - El flow `cereza-products-to-shopify-a5156643` pasó a **`retryMode: shadow`** por `flowsController.update`, versión 54 → 55. Solo cambió ese parámetro y `limit` sigue en 30.
 - La primera corrida en sombra (01:50 UTC) terminó bien y escribió `reintentos.ultimaRevision`.
 - **Siguiente paso:** medir una semana (`habriaReintentado` en `flow_polling_state`) y pasar a `on` con el visto bueno de Daniel.
+- **Cierre D-368 (04:05 UTC).** Los 29 precios reenviados quedaron correctos en Shopify (29/29 verificados en la tienda). Últimas 30 corridas del flow OK. La sombra no registra agotados ni productos que se habrían reintentado.
