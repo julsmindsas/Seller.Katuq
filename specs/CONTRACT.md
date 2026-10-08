@@ -8422,6 +8422,33 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
    - Encender un modo de reintento con params incompletos deja `limit` en 0, o sea sin tope.
    - Hallazgo aparte: el upsert solo lee el precio con IVA de la variante, que viene de la lista 1 de Cereza. El precio sin IVA de Katuq no lo salva.
 
+**Cierre de pendientes (2026-10-07, segunda parte).** Workflow de medición en solo lectura con verificación independiente de una muestra de 8: los 8 se confirmaron.
+- **Lote 2 aplicado.** Se borraron las huellas de los 7 productos sin stock (GCD448B 40016, GCD332N, GCD333R, GCD333N, GCD334N, GCD335B y GCD342), con `--permitir-sin-stock`. El flow los trata como a cualquier producto nuevo: los crea cuando llegue el stock. Las demás revisiones se cumplieron: no existen en Shopify, nunca tuvieron un push exitoso y su precio es mayor que 1.
+- **Los "187" son 285.** 187 de Cereza y 98 web (`katuq-web-to-shopify`) quedaron con datos de antes del bug.
+  - Listas Mayorista y Modelo: 0 diferencias.
+  - Precio público: 45 con diferencia.
+  - **No se reenviaron en bloque:**
+    - 89 nunca tuvieron un push bueno. Sus títulos en Shopify están curados a mano y el flow los pisaría con MAYÚSCULAS de Cereza.
+    - El flow les cambiaría el SKU a 16.
+    - 7 productos web están UNLISTED en Shopify a propósito.
+  - **Se reenviaron 29**, con `--actualizar`: los de Cereza con stock, con un push bueno previo y cuya única diferencia es el precio.
+    - 26 cobraban de más: la campaña subió del 35% al 40% en Cereza y Shopify quedó al 35%. Por ejemplo, GCD150 estaba en $84.435 y debe estar en $77.940.
+    - 3 estaban a mitad de precio con una rebaja que ya no existe en Cereza: GCJ3528 y GCJ3529 en $144.950 cuando valen $289.900, y GCD319R en $148.785 cuando vale $228.900. Según la verificación, el precio viejo de Shopify lo escribió `scripts/repasar-ofertas-shopify.js` (D-241) el 25-ago.
+- **Duplicado 27311 desactivado** con `scripts/desactivarDuplicadoCereza.js` (`4d5ee16`).
+  - `JgLI7idIUrJKVPiL7wlr` quedó con `exposicion.activo/activar/disponible` en false y `duplicadoDe: Ubsu0pAi2U1iSzPw3ydu`.
+  - Sus 4 registros de inventario pasaron a 0: salieron 1.208 unidades fantasma de BOD-CEREZA.
+  - Hay respaldo en JSON y registro en `inventory_audit`. No se borró nada y la ficha original sigue intacta.
+  - **Causa:** `osmosisProductSyncService` busca solo por referencia, y Cereza mandó por 45 min el código de barras como referencia.
+- **Propuestas OpenSpec creadas, pendientes de aprobación** (las dos tocan el 360):
+  - `cereza-shopify-confirmar-antes-de-huella`: la huella se guarda solo con la confirmación de Shopify y de las listas de precios; reintento acotado; excepción a D-134.
+  - `cereza-sync-buscar-por-id-cereza`: la sincronización busca por id de Cereza antes que por referencia.
+- **Siguen pendientes de decisión:**
+  - GCD369, GCD355, GCD356 y GCJ4147, que alguien borró de Shopify.
+  - 16 productos con precio distinto, todos con contenido curado o sin stock: 12 de Cereza sin stock, GCP086R, GCJ3558, GCJ464D y JCR4004. Corregirlos requiere actualizar solo el precio, sin pasar por el flow.
+  - 7 productos web UNLISTED.
+  - JCR4004: dos fichas apuntan al mismo producto de Shopify.
+  - TlJSNVodPXzg2Ses77gI: tiene el bloque `integraciones.osmosis` copiado de GCJ3188.
+
 ## D-369 (2026-10-07) — Tiendas Katuq: completar retiro, precio visible y cantidades acumuladas
 
 **Autorización.** Después de enumerar retiro en tienda, precio mostrado por talla/color y cantidades repetidas del carrito, Daniel pidió «has todos los ajustes yaaaa». Los diffs y fallos se habían presentado en `openspec/changes/sitios-guardado-medicion/revision-pendiente/`. Se conserva la autorización de cierre «sube a git»; producción queda aparte. Registro previo: `openspec/changes/archive/2026-10-07-sitios-retiro-precio-cantidades/`.
