@@ -8586,11 +8586,14 @@ Desde el despliegue de D-329 (29-sep) no hubo más caídas en `~/.pm2/pm2.log`; 
 - Front 2026.10.08.2 publicado.
 - **Riesgo conocido:** si falla el recorrido, `flujo.destroy()` no cancela la consulta en Firestore; queda pausada hasta su plazo. Solo pasa con un error, que con estos arreglos es casi inalcanzable.
 
-**Pendiente del 1081, fuera de este cambio:**
-- **Reponer el inventario de pedidos cancelados que no devolvieron.** El código ya está arreglado (D-336, `0bb2676`), pero falta reponer las unidades, y eso espera la decisión de Daniel con ALMARA y Cereza. Al 8-oct ninguno tiene ingreso de devolución:
-  - Los 7 originales: DAD-013449, ORE-000701, ORE-000810, ORE-000863, ORE-000813, ORE-000862 y ORE-001209, con 48 unidades.
-  - ORE-001032, BAR-000441 y DAD-013458, con 18 unidades.
-- **Sin hacer:** el reinicio de prueba de la máquina, que es opcional, y la rotación de `logs/pm2-out.log`, que ya pesa 2,4 GB.
+**Cierre del 1081 (8-oct, ticket en Resuelto).**
+- **Reposición de los pedidos cancelados sin devolución.** Se revisaron línea por línea los movimientos posteriores a cada venta; Daniel aprobó reponer solo uno:
+  - **BAR-000441** (CAFE ESCOBAR, BOD-005): repuesto con `restoreStock`, primero en seco. +2 `mcNqYB7O4FNb631LX48G` (4 → 6) y +1 `6umLtesU4ek4GdEtx89R` (24 → 25). Reintentarlo da "ya devuelto".
+  - **No se reponen, porque sumaría doble:** los 6 de OH MY STORE en bodegas Cereza (ORE-000701, 000863, 000813, 000862, 001209 y 001032) ya los cuadró `AJUSTE_SWEEP_CEREZA`. DAD-013449 y DAD-013458 de ALMARA (BOD-003) tuvieron ajuste y salida por inventario físico después de la venta.
+  - **ORE-000810** (OH MY STORE, BOD-008, 21 uds, saldo 0 y sin movimientos desde el 10-sep): no se repuso; queda preguntárselo a OMS.
+- **Rotación de logs:** pm2-logrotate en el daemon de ubuntu (max_size 200M, retain 10, sin comprimir) y `pm2 save`. El `pm2-out.log` de 2,4 GB se rotó. La primera copia tardó más que el ciclo del worker y dejó un segundo archivo parcial; la retención lo borra.
+- **ADK:** `firebase_admin` ahora solo sale como aviso al arrancar ("Logs endpoint not available"). No se instaló nada en el venv de producción, que tiene código sin commitear.
+- **Opcional, sin hacer:** reinicio de prueba de la máquina.
 
 ## D-374 (2026-10-08) — Visor de fotos de evidencia con zoom y la foto completa (ticket 1153, PUBLICADO 2026.10.08.1)
 
