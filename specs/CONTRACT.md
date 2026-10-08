@@ -8609,3 +8609,36 @@ Desde el despliegue de D-329 (29-sep) no hubo más caídas en `~/.pm2/pm2.log`; 
 **Verificado:** 6 casos del componente en Chrome sin ventana (foto vertical dentro de la pantalla y sin deformar, zoom con límites, siguiente foto, Esc, limpieza al cerrar). La infraestructura de pruebas del front está rota: `tsconfig.spec.json` no trae los tipos de jasmine y `quill` no está instalado. La prueba corrió con una configuración temporal que se borró después. No se probó con una sesión real de ALMARA porque no hay credenciales. Front publicado en 2026.10.08.1, commit `35bb034d`; ticket 1153 en Resuelto.
 
 **Hallazgo aparte:** `EvidenciaEmpacadoModalComponent.ngOnInit` llama `this.ref.close()` desde `e1aa51c6` (oct-2025), así que el diálogo de evidencia de empacado se cierra apenas abre.
+
+## D-376 (2026-10-08) — El pedido que se retira de una orden ya despachada queda libre al despacharla (ticket 1152, DESPLEGADA)
+
+**Contexto.** ALMARA (Yulie, ticket 1152): sacó DAD-014117 de la orden 3583 y después no pudo ponerlo en otra. Los logs del 7-oct muestran la secuencia:
+- **20:25:16:** se despachan los 4 pedidos.
+- **20:27:37:** en el editor, "Retirar" ejecuta `retirarPedido` → `cambiarEstado(3)` (Despachado → Empacado, retroceso declarado del ticket 1026). El backend responde **STALE_WRITE**, porque la copia del pedido en el editor era anterior al despacho.
+- **20:27:52:** el editor despacha la orden con 3 pedidos (`despacharOrden` → `/shippingorders/dispatch`).
+
+`dispatchShippingOrder` reemplaza los pedidos de la orden, pero no libera el retirado; esa liberación solo existía en `createAndEditShippingOrder` (ticket 1080). Santiago liberó el pedido a mano el 8-oct a las 17:37.
+
+**Decisión** (Daniel, "toma el del pedido 14117", 8-oct).
+- **Backend** (`852a227`): `dispatchShippingOrder` libera solo los `_id` que el editor manda en `pedidosRetirados`, y solo si estaban en la orden guardada y no vienen en la lista nueva. Cada uno se libera en su propia transacción, que relee el pedido. El campo no se guarda en la orden y el flujo de transportadoras (`isFromCreateShipment`) nunca libera.
+  - Una primera versión comparaba la lista nueva con la vieja. La revisión adversarial la tumbó: el botón "Despachar" del listado (`handleOrderDispatch`) manda a propósito solo los pedidos que faltan por despachar (aviso 86b8hd5wg), así que habría liberado pedidos que ya estaban en la calle.
+- **Regla compartida con la edición del 1080.** Se libera si el pedido está en EnDespacho, Empacado o Despachado y no apunta a otra orden; vacío o `"00"` no cuentan como otra orden.
+  - EnDespacho y Despachado vuelven a ParaDespachar; Empacado sigue empacado.
+  - Se limpian `shippingOrder`, `nroShippingOrder` y `transportador`, y el cambio queda en `order_status_history`. El Empacado no deja historial, porque el estado no cambia; solo queda el log `[AUDIT]`.
+- **Front** 2026.10.08.3 (`fe2842cc`): `retirarPedido` anota el `_id` en `nuevaOrdenEnvio.pedidosRetirados`; `agregarPedido1` lo quita si se vuelve a agregar, y `handleOrderDispatch` borra el campo.
+
+**Verificado:**
+- Prueba `tests/logistica/liberarPedidosQuitados.test.js`, 4 casos: retirados explícitos, lista parcial del listado sin retirados, transportadoras y edición con "00", Empacado, otra orden e id ajeno. Falla con el código anterior y con la primera versión.
+- Dos revisiones adversariales.
+- Despliegue: prod `fee5b73` → `20c65a2` (merge sobre `backend-aws-security`, porque otra sesión ya había desplegado la logística "modo Rappi"), en línea y sin errores. Front 2026.10.08.3 publicado.
+- No probado con una sesión real de ALMARA.
+
+**Incidente menor:** el primer intento de despliegue falló el fast-forward, porque producción ya estaba en `fee5b73`, pero `pm2 reload` corrió igual: el `| tail` ocultó el error del merge. Recargó el mismo código que ya corría desde las 18:42, sin efecto. Desde ahí el despliegue usa `set -e`, sin tuberías en el merge, y verifica el HEAD esperado antes de recargar.
+
+**Fuera de alcance:** `despacharOrdenEnvio` no tiene quién la llame (código muerto). `handleOrderDispatch` reutiliza un `nuevaOrdenEnvio` previo si existe, aunque al cerrar el modal se limpia.
+
+## D-377 (2026-10-08) — Se retira POST /logistica/shippingorders/edit, que no pedía autenticación (DESPLEGADA)
+
+**Hallazgo** (investigando el 1152). La ruta `updateShippingOrder` no tenía `auth` y hacía `update(req.body)` de cualquier orden de envío por id, con la empresa del encabezado. Nadie la usa: ni el Seller (su servicio v2 apunta a `/update`, que no existe), ni la app de mensajeros (todas sus ramas), ni kai, ni el backend, y nginx no registra peticiones a ella.
+
+**Decisión:** retirar la ruta (`b2ec4b1`, merge `76918ba`), desplegado aparte del 1152. Ahora responde 404 y `/shippingorders/dispatch` sigue respondiendo 401 sin token. El controlador `updateShippingOrder` queda sin uso, y `routers/logistica-backup.js`, que no se carga, todavía la declara.
