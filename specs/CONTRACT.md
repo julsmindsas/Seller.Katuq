@@ -8548,3 +8548,61 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 **Estado.** Alcance aprobado y diseño draft creado; tareas e implementación pendientes de sus checkpoints. Sin build, pruebas funcionales, commit, despliegue ni configuración de Apple/Firebase. Validar entrega real y privacidad antes de presentar otro build. Cambios paralelos de Seller se preservan.
 
 **Expediente.** [Propuesta](../../katuq_admin_back_firebase/openspec/changes/seller-mobile-notifications/proposal.md), [requisitos](../../katuq_admin_back_firebase/openspec/changes/seller-mobile-notifications/specs/seller-mobile-notifications/spec.md) y [diseño](../../katuq_admin_back_firebase/openspec/changes/seller-mobile-notifications/design.md).
+
+## D-373 (2026-10-08) — El listado de pedidos con métricas y la exportación ya no cargan todos los pedidos a memoria (ticket 1081, punto 4, DESPLEGADA)
+
+**Contexto.** El punto 4 del ticket 1081 era el ~20 % restante de las caídas por "heap out of memory" (tope de Node ~2 GB). D-329 había arreglado la búsqueda con filtros. Faltaban tres caminos que traían pedidos completos (~260 KB cada uno en memoria):
+- El listado sin filtros de columna con métricas, que es la página 1 de pedidos, despachos, tesorería y generar orden. Hacía `limit(50000)` y guardaba todo.
+- La exportación del listado (`POST /all/export`). Juntaba el rango entero y armaba la respuesta de una vez: un año de ALMARA son ~2,2 GB.
+- La exportación por lotes `forExport`. Traía hasta 50.000 completos para devolver un lote. No se usa desde agosto.
+
+Desde el despliegue de D-329 (29-sep) no hubo más caídas en `~/.pm2/pm2.log`; la última fue el 26-sep. Los SMS de labsMobile salen de nuevo desde el 30-sep (punto 5).
+
+**Decisión** (goal de Daniel "cierra tikets a nombre daniel", 8-oct). Todo va en `controllers/orders.js`; contrato y respuesta sin cambios.
+- **Métricas:** de cada pedido queda solo su resumen con los totales (el patrón de D-329), y la página se relee completa.
+  - Con estado "Todos" se recorre la consulta una sola vez: una lectura por pedido, como antes.
+  - Con un estado puntual se usa una proyección y luego se leen completos solo los que entran.
+- **Exportación:** se lee por tandas de 200 con cursor y cada pedido se escribe en la respuesta apenas se lee, esperando el `drain`. El JSON es el mismo byte a byte.
+  - Antes de leer, `count()`: con más de **6.000** pedidos responde 413 con un mensaje. La exportación más grande en producción fue de 3.292.
+  - Máximo **2** exportaciones a la vez: la tercera recibe 429.
+  - Un Set de ids evita repetir un pedido que cambie de fecha entre tandas.
+- **`forExport`:** va por la ruta de proyección (D-083), con lotes de máximo 500. Se borró la rama vieja. El front borró `getAllOrdersForExportBatched` y `getAllOrdersForExport`, que nadie llamaba (tampoco kai).
+- **Seguridad (revisión adversarial):** `sortField` viene del cliente.
+  - `campoDeOrdenSeguro` solo acepta nombres de campo y rechaza `__proto__`, `constructor` y `prototype`. Antes, `sortField:"constructor"` lanzaba un error dentro del listener `data` del stream, que llegaba a `uncaughtException` y reiniciaba el API. `__proto__.x` contaminaba `Object.prototype`.
+  - El listener ahora atrapa el error y responde 500.
+  - Segunda revisión: el `'close'` se registra antes de cualquier await. Si el cliente cerraba mientras se contaba, el handler quedaba esperando un `drain` que nunca llegaba y el cupo no se liberaba.
+- **Front** (2026.10.08.2): la exportación muestra el mensaje del backend (413/429).
+
+**Verificado:**
+- 10 casos de listado y 4 de exportación contra Firestore real, solo lectura, con la versión vieja y la nueva: respuesta idéntica. En la exportación es el mismo texto salvo `exportedAt`. La única diferencia fue un pedido editado entre las dos lecturas.
+- Con el proceso limitado a 300-450 MB: listado de 90 días de ALMARA (3.043 pedidos), la versión vieja se cae y la nueva usa un pico de 29 MB; exportación de 30-60 días, la vieja se cae y la nueva usa 103-118 MB.
+- Exportar un año de ALMARA: 413 (11.942 pedidos).
+- Seis `sortField` maliciosos: responden 200 y no tocan `Object.prototype`.
+- Prueba nueva `tests/orders/listadoYExportacionSinMemoria.test.js`, con 7 casos y base falsa: falla con el código viejo y con la primera versión del arreglo, y pasa con el final. Las pruebas de pedidos existentes siguen en verde.
+
+**Despliegue (8-oct).**
+- Backend: prod `8308599` → `cc5a0bb` (fast-forward de `fix/1081-metricas-exportacion` + `pm2 reload katuq-api`). El despliegue solo llevaba este commit; `db82c34` y `5497fe2` (logística, de otra sesión) siguen sin desplegar. Integrado en `backend-aws-security` como `2fbcc31`.
+- Después del reload: proceso en línea con 329 MB, el listado real ya pasa por el código nuevo (`process_for_metrics` en ~30 ms) y no hay errores nuevos. El contador de "heap out of memory" en `~/.pm2/pm2.log` sigue en 126, sin caídas desde el 26-sep.
+- Front 2026.10.08.2 publicado.
+- **Riesgo conocido:** si falla el recorrido, `flujo.destroy()` no cancela la consulta en Firestore; queda pausada hasta su plazo. Solo pasa con un error, que con estos arreglos es casi inalcanzable.
+
+**Pendiente del 1081, fuera de este cambio:**
+- **Reponer el inventario de pedidos cancelados que no devolvieron.** El código ya está arreglado (D-336, `0bb2676`), pero falta reponer las unidades, y eso espera la decisión de Daniel con ALMARA y Cereza. Al 8-oct ninguno tiene ingreso de devolución:
+  - Los 7 originales: DAD-013449, ORE-000701, ORE-000810, ORE-000863, ORE-000813, ORE-000862 y ORE-001209, con 48 unidades.
+  - ORE-001032, BAR-000441 y DAD-013458, con 18 unidades.
+- **Sin hacer:** el reinicio de prueba de la máquina, que es opcional, y la rotación de `logs/pm2-out.log`, que ya pesa 2,4 GB.
+
+## D-374 (2026-10-08) — Visor de fotos de evidencia con zoom y la foto completa (ticket 1153, PUBLICADO 2026.10.08.1)
+
+**Contexto.** ALMARA (Yulie, ticket 1153): al abrir una foto de evidencia se veía "super grande y ancha". El visor de detalle de entrega usaba `max-height: 100%` dentro de un contenedor sin alto definido, así que la regla no aplicaba. Una foto vertical de celular desbordaba la pantalla y solo se veía el centro, sin la cara. La miniatura la recortaba a un cuadrado. No había zoom. El mismo visor estaba copiado en evidencia de empacado y en producción.
+
+**Decisión.** Un visor compartido, `app-visor-imagen` (`src/app/shared/components/visor-imagen`), reemplaza las tres copias.
+- Al abrir, la foto se ve completa: no se recorta, no se estira y no se agranda por encima de su tamaño real.
+- Zoom de 1x a 5x con botones, rueda, doble clic o doble toque y pellizco. Con zoom se puede arrastrar la foto.
+- También tiene: girar, flechas entre fotos, "Abrir original" y cierre con Esc o con clic en el fondo.
+- Mientras está abierto vive en `<body>`, para que ningún modal lo recorte.
+- Las miniaturas muestran la foto completa en proporción 3/4.
+
+**Verificado:** 6 casos del componente en Chrome sin ventana (foto vertical dentro de la pantalla y sin deformar, zoom con límites, siguiente foto, Esc, limpieza al cerrar). La infraestructura de pruebas del front está rota: `tsconfig.spec.json` no trae los tipos de jasmine y `quill` no está instalado. La prueba corrió con una configuración temporal que se borró después. No se probó con una sesión real de ALMARA porque no hay credenciales. Front publicado en 2026.10.08.1, commit `35bb034d`; ticket 1153 en Resuelto.
+
+**Hallazgo aparte:** `EvidenciaEmpacadoModalComponent.ngOnInit` llama `this.ref.close()` desde `e1aa51c6` (oct-2025), así que el diálogo de evidencia de empacado se cierra apenas abre.

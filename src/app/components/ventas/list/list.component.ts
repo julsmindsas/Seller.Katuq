@@ -8606,8 +8606,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (error: any) {
       console.error('❌ Error al obtener pedidos para exportar:', error);
       this.toastrService.clear();
+      // Ticket 1081: el backend explica por qué no exporta (rango con más de 6000
+      // pedidos u otra exportación en curso) en `error.error.error`.
       this.toastrService.error(
-        error.message || 'Error al obtener los pedidos para exportar. Intente nuevamente.',
+        error?.error?.error || error.message || 'Error al obtener los pedidos para exportar. Intente nuevamente.',
         'Error de exportación'
       );
     } finally {
