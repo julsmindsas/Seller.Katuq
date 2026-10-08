@@ -8464,3 +8464,66 @@ Consumidores revisados: solo la ficha de empresa del frontend (`crear-empresa`, 
 **Despliegue (2026-10-07, 19:05 COT).** Daniel autorizó «despliega». Producción real `13.222.206.185`, checkout `backend-aws-security` sin cambios versionados, pasó por fast-forward de `3711a45` a `5bd9abf801604fd0b9679449ba497338ec1f257b`. Se fijó el commit probado aunque origin ya tenía otros avances. Dependencias/index/ecosystem sin cambios, sin npm install ni ejecución del script manual de D-368. 94/94 regresiones pasaron también en el servidor; suite de publicación exit 0 y sintaxis limpias. `pm2 reload katuq-api` como ubuntu sin sudo: online, PID 3459543, ready habilitado, crones y worker WooCommerce inicializados, sin errores de arranque detectados. Los archivos locales no versionados del servidor se conservaron.
 
 **Comprobación pública.** Cinco GET HTTP 200 en `florecer-regalos.katuq.com`/API: sitio publicado, portada, productos, ficha JSON y ficha HTML. Scripts nuevos presentes (guardia de sesión, refresco de carrito y retiro sin domicilio), CSP conservada y precio de ficha igual al catálogo. El producto comprobado no tenía variantes; ese caso continúa probado offline. No se enviaron pedidos ni pagos de prueba. No hubo build/deploy del frontend por esta tanda: solo cambió documentación; cambios paralelos de Flows quedaron fuera.
+
+## D-370 (2026-10-07) — La sincronización de Cereza identifica la ficha por el id de Cereza, no por la referencia (ticket 1139, aprobado por Daniel)
+
+**Origen.** D-368. El 2026-10-01, Cereza mandó por unos 45 minutos el producto 27311 con su código de barras como referencia. `osmosisProductSyncService` busca solo por referencia, así que creó una ficha duplicada con 1.208 unidades fantasma.
+
+**Decisión.** La propuesta OpenSpec es `cereza-sync-buscar-por-id-cereza`. Daniel la aprobó el 2026-10-07: "Aprobar ambas".
+- `_upsertProductDetalle` busca primero por `integrations.osmosis.id` y acepta el id como número o como texto. Solo si no encuentra nada busca por referencia.
+- Las fichas con `duplicadoDe` no cuentan.
+- Si encuentra dos o más fichas vigentes con el mismo id, elige una de forma determinista: primero la de la misma referencia, después la enlazada a Shopify y después la más vieja. Avisa con la lista de fichas repetidas. Hoy hay 0 en OMS, verificado sobre 8.567 fichas.
+  - La primera versión cortaba con `OSMOSIS_ID_DUPLICADO`. La revisión adversarial mostró que eso dejaba el producto sin sincronizar mientras el flow mixto seguía creando el duplicado, y se cambió.
+- Las fichas `duplicadoDe` tampoco cuentan en la búsqueda por referencia, así que la ficha desactivada no se reactiva.
+- Si la encuentra por id con otra referencia, la referencia de la ficha **no** cambia, porque es el SKU de Shopify y el de los pedidos a Cereza. Queda el aviso en el resultado del webhook.
+- `_upsertProduct` sigue devolviendo el id (scripts y pruebas lo esperan). El webhook usa la variante con detalle y registra la acción real: `product_created`, `product_updated` o `product_unchanged`.
+
+**Código y pruebas.**
+- Backend: `osmosisProductSyncService.js` y `osmosisWebhookService.js`.
+- `tests/integrations/osmosisBuscarPorIdCereza.test.js`: 8 casos.
+- Las pruebas de Osmosis que ya existían siguen en verde.
+
+## D-371 (2026-10-07) — Un producto de Cereza se da por sincronizado solo cuando Shopify y las listas de precios lo confirman (ticket 1139, aprobado por Daniel; excepción acotada a D-134)
+
+**Origen.** D-368. El trigger `osmosis-product-changed` guardaba la huella al emitir, sin saber si Shopify había creado el producto. Con el bug de septiembre quedaron por fuera productos nuevos y 285 fichas con datos viejos.
+
+**Decisión.** La propuesta OpenSpec es `cereza-shopify-confirmar-antes-de-huella`. Daniel la aprobó junto con la **excepción a D-134**: un producto que falló vuelve a pasar por el flow mixto (producto, imágenes y listas de precios), pero dentro del mismo `limit` por corrida y sin cambiar frecuencia, páginas ni `onlyWithStock`.
+- **Trigger** (`retryMode`: `off` por defecto, `shadow` u `on`).
+  - En `on`, la huella queda en `reintentos.pendientes` del mismo doc de `flow_polling_state` (sin colecciones nuevas) hasta que la ficha muestre, después de la emisión, `integrations.shopify.lastSyncedAt` y `preciosSincronizadosEn`, con `variantesConError` en 0.
+  - Si vence la espera (6 h, 12 h, 24 h) se reemite. Al tercer intento pasa a `agotados` y se guarda la huella.
+  - Sin precio válido en Cereza no queda pendiente.
+  - Si el reintento está encendido y `limit` no es mayor que 0, el trigger no corre.
+  - El estado de reintentos se reemplaza con `update`, porque el `set` con merge no borra llaves de un mapa.
+- **`shopify-product-upsert`.**
+  - Sin enlace, busca primero el tag `katuq-cd:<cd>`, exacto y con una consulta nueva que trae los tags. Así un reintento no duplica.
+  - Si el producto enlazado ya no existe en la tienda, lo marca `motivoAtencionShopify: 'borrado_en_shopify'` y no lo recrea.
+  - Registra `variantesConError` en el log de éxito y en el enlace.
+- **`shopify-pricelist-sync`.** Escribe `integrations.shopify.preciosSincronizadosEn` solo si no hubo `userErrors`.
+
+**Pruebas.**
+- `tests/flows/osmosisReintentoShopify.test.js` (13 casos): corre el trigger real con Cereza y Firestore simulados, incluidos el merge profundo y el write-set, que solo escribe `flow_polling_state`.
+- `tests/flows/shopifyUpsertConfirmacion.test.js` (7 casos).
+- Las pruebas que ya existían siguen en verde. La falla de `nodeCatalogCoverage` (falta `osmosis-stock-sweep` en `nodeCatalog.json`) también ocurre sin estos cambios.
+
+**Revisión adversarial antes del despliegue.** Workflow de 11 agentes: 3 lentes y una verificación que intenta refutar cada hallazgo.
+- Con `off` no hubo regresiones graves.
+- En `on` y `shadow` se corrigieron:
+  - **Escritura atómica:** estado y reintentos se guardan en un mismo batch. Antes, si fallaba la segunda escritura en sombra, se perdían los productos de la corrida.
+  - **Cambios nuevos de Cereza:** un pendiente con contenido distinto se reemite de inmediato, no 6 h después.
+  - **Vencidos:** se reemiten aunque la huella coincida, y se vuelve a revisar su confirmación. Los que no se pueden reemitir en 7 días pasan a agotados.
+  - **Sombra:** lo medido no se reintenta al pasar a `on`.
+  - **Huellas:** una confirmación vieja no pisa una huella más nueva.
+  - **Agotados:** quedan con su motivo (`variantes_rechazadas`, `listas_de_precios`, `shopify: …`).
+  - **`preciosSincronizadosEn`:** solo se marca si las listas se aplicaron. `price-list-no-encontrada` y `sin-variantes-shopify` cuentan como falla.
+  - **Búsqueda por tag:** prefiere ACTIVE.
+  - **Guarda de tope:** marca `lastPolledAt`.
+- Se descartó por refutado el riesgo del límite de 40.000 entradas de índice: con los datos reales no se llega.
+- Pruebas: trigger 19 casos, upsert y listas 9, D-370 10. Scripts `test:cereza-reintento-shopify` y `test:cereza-buscar-por-id`.
+
+**Estado (2026-10-08, desplegado).**
+- Backend `8308599` en producción: los commits D-370 `23d10d5` y D-371 `0a09bda`, la rama `fix/d370-d371-cereza` y el merge.
+- Producción ya estaba en `5bd9abf`, que desplegó otra sesión (sitios). El avance por fast-forward solo agregó los scripts de D-368 y estos dos commits. Las pruebas corrieron también en el servidor y pm2 recargó sin errores.
+- La primera corrida con el código nuevo y `off` (01:44 UTC) terminó bien.
+- El flow `cereza-products-to-shopify-a5156643` pasó a **`retryMode: shadow`** por `flowsController.update`, versión 54 → 55. Solo cambió ese parámetro y `limit` sigue en 30.
+- La primera corrida en sombra (01:50 UTC) terminó bien y escribió `reintentos.ultimaRevision`.
+- **Siguiente paso:** medir una semana (`habriaReintentado` en `flow_polling_state`) y pasar a `on` con el visto bueno de Daniel.
