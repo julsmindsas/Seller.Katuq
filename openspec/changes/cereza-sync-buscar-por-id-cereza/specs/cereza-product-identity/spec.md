@@ -22,12 +22,12 @@ Cuando la ficha se encuentra por id de Cereza y Cereza manda otra referencia, el
 - **WHEN** la ficha existe con referencia GCC932 y Cereza manda "7708516916169"
 - **THEN** la ficha conserva GCC932 y el registro de sincronización muestra el aviso con las dos referencias
 
-### Requirement: Fichas repetidas no se tocan
-Si hay más de una ficha de la empresa con el mismo id de Cereza, el sistema SHALL NOT actualizar ni crear ninguna. SHALL registrar el error para revisión humana.
+### Requirement: Fichas repetidas no frenan la sincronización
+Si hay más de una ficha vigente de la empresa con el mismo id de Cereza, el sistema SHALL elegir una de forma determinista: primero la de la misma referencia, después la enlazada a Shopify y después la más vieja. SHALL actualizar solo esa ficha y dejar el aviso con todas las repetidas. Las fichas marcadas como duplicado (`duplicadoDe`) SHALL NOT contar, ni por id ni por referencia.
 
 #### Scenario: Dos fichas con el mismo id
-- **WHEN** llega un producto cuyo id de Cereza está en dos fichas
-- **THEN** no se escribe en ninguna y el error queda registrado con las dos fichas
+- **WHEN** llega un producto cuyo id de Cereza está en dos fichas vigentes, y una tiene su referencia
+- **THEN** se actualiza esa, no se crea otra y el aviso lista las dos fichas
 
 ### Requirement: El registro dice lo que pasó
 El registro de cada evento de Cereza SHALL indicar si la ficha se creó o se actualizó.
