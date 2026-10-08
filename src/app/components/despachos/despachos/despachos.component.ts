@@ -3469,6 +3469,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
     if (this.nuevaOrdenEnvio) {
       this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados;
+      // Si lo había retirado y lo vuelve a agregar, ya no se libera al despachar.
+      if (pedido?._id && Array.isArray(this.nuevaOrdenEnvio.pedidosRetirados)) {
+        this.nuevaOrdenEnvio.pedidosRetirados = this.nuevaOrdenEnvio.pedidosRetirados.filter(
+          (id: string) => id !== pedido._id,
+        );
+      }
     }
   }
 
@@ -3565,6 +3571,14 @@ export class DespachosComponent implements OnInit, OnDestroy {
     );
     if (this.nuevaOrdenEnvio) {
       this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados;
+      // Ticket 1152: el cambio de estado de arriba puede fallar (p. ej. el pedido cambió
+      // mientras el editor estaba abierto). Al despachar, el backend libera estos pedidos
+      // de la orden aunque eso pase.
+      if (pedido?._id) {
+        const retirados = new Set<string>(this.nuevaOrdenEnvio.pedidosRetirados || []);
+        retirados.add(pedido._id);
+        this.nuevaOrdenEnvio.pedidosRetirados = [...retirados];
+      }
     }
 
     console.log('🗑️ PARENT retirarPedido FIN:', {
@@ -3625,6 +3639,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
         pedidosMovidos: [],
       };
     }
+    // Este botón manda a propósito solo los pedidos que faltan por despachar: no retira
+    // ninguno, así que no debe liberar nada (ticket 1152).
+    delete this.nuevaOrdenEnvio.pedidosRetirados;
 
     // Utilizar el método existente para despachar
     this.despacharOrden();
