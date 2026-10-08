@@ -27,6 +27,14 @@ node --test tests/sitios/editor-guardado-concurrente.test.js
 
 ## Límites y siguiente paso
 
-No se arrancó/reinició el backend local conectado a Firestore ni se desplegó esta tanda. Falta revisar visualmente el panel y efectuar una compra real tras publicar. El frontend solo cambia documentación; no requiere build por D-369.
+En la verificación previa no se arrancó/reinició el backend local conectado a Firestore ni se desplegó esta tanda; el despliegue posterior se registra abajo. Falta revisar visualmente el panel y efectuar una compra real tras publicar. El frontend solo cambia documentación; no requiere build por D-369.
 
 Carritos sin base conocida, incluidos snapshots actuales traídos por correo, conservan importe hasta confirmar con el servidor. Se conserva el fallback anterior cuando no se puede leer inventario; la validación por carrito no hace atómica la reserva entre peticiones simultáneas ni cierra una caída entre descuento y marca. Disponibilidad global de variantes y las cuatro pendientes previas del generador quedan fuera de estos tres ajustes. Productos, precios/listas, auth, Shopify y servicio global de inventario intactos.
+
+## Despliegue autorizado — 2026-10-07, 19:05 COT
+
+Daniel pidió «despliega». Backend real EC2 `13.222.206.185`: fast-forward desde `3711a45bde8dd889688bae3a0b524d1c2fbc2aef` hasta `5bd9abf801604fd0b9679449ba497338ec1f257b`. Se desplegó el commit probado, sin incorporar commits posteriores de origin. Archivos versionados limpios; archivos locales sin seguimiento conservados. Dependencias, lockfile, index y ecosystem sin cambios; no se ejecutó el script manual de reemisión D-368.
+
+En el servidor: sintaxis de cinco archivos runtime correcta, 94/94 regresiones y publicación exit 0. Recarga con `pm2 reload katuq-api` como ubuntu (sin sudo), wait_ready: true, proceso online con PID 3459543. Crons y worker WooCommerce inicializados; sin errores de arranque de módulos/sintaxis/referencias detectados en los nuevos logs.
+
+Después del cambio, cinco GET HTTP 200: API pública del sitio, portada, endpoint de productos, ficha JSON y HTML de `Esto es amor` en FLORECER. Scripts `versionSesion`, `refrescarPreciosCarrito` y guardia `!recoge()` presentes; CSP y precio catálogo/ficha coherentes. El producto no tenía variantes: precios por talla siguen verificados por regresiones offline. No se creó pedido ni se ejecutó pago de prueba. La compra real completa y la revisión visual del panel siguen pendientes. Frontend solo documentación; no se compilaron/publicaron cambios ajenos de Flows.
