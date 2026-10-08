@@ -2687,6 +2687,23 @@ $reg-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
         }
     }
 
+    .reg-video {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 16px;
+        overflow: hidden;
+        background: $reg-chip-bg;
+
+        iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    }
+
     .reg-cta {
         display: grid;
         gap: 10px;

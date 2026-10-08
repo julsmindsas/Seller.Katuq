@@ -273,6 +273,8 @@
             <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Cobros y facturación</strong>Contra entrega o transferencia desde el primer día. Conecta tu pasarela de pagos o tu SIIGO/World Office para facturar.</span></li>
           </ul>
 
+          <ng-container *ngTemplateOutlet="videoBienvenida"></ng-container>
+
           <div class="reg-cta">
             <button class="reg-btn" (click)="startFreeRegistration()" type="button">Crear mi cuenta</button>
             <p class="reg-fine">Son 5 datos. Toma menos de 1 minuto.</p>
@@ -290,6 +292,8 @@
             <li><span class="reg-tick" aria-hidden="true">✓</span><span><strong>Te acompañamos hasta tu primera venta</strong>Te guiamos por correo, paso a paso.</span></li>
           </ul>
 
+          <ng-container *ngTemplateOutlet="videoBienvenida"></ng-container>
+
           <div class="reg-cta">
             <button class="reg-btn" (click)="startFreeRegistration()" type="button">Crear mi cuenta gratis</button>
             <p class="reg-fine">Son 5 datos. Toma menos de 1 minuto.</p>
@@ -299,6 +303,19 @@
           </p>
         </div>
       </div>
+
+      <!-- Video de presentación de la bienvenida (ticket 1148) -->
+      <ng-template #videoBienvenida>
+        <div class="reg-video">
+          <iframe
+            [src]="videoBienvenidaUrl"
+            title="Gestiona todo tu negocio en un solo lugar con Inteligencia Artificial | Katuq"
+            loading="lazy"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen></iframe>
+        </div>
+      </ng-template>
 
       <!-- Paso 0.5: Video Explicativo ANTES del cuestionario -->
       <div *ngIf="currentStep === 'video'" role="main" aria-label="Video explicativo" class="video-intro-step">

@@ -8666,3 +8666,17 @@ Desde el despliegue de D-329 (29-sep) no hubo más caídas en `~/.pm2/pm2.log`; 
 **Sigue abierto:**
 - `despacharOrden` marca los pedidos como Despachado en memoria antes de la respuesta. Si el despacho falla, reintentar desde el listado dice "ya despachada".
 - Karma del front sigue roto (ver la memoria `reference_front_karma_un_spec`).
+
+## D-379 (2026-10-08) — Video de presentación en la bienvenida de /registrarse (ticket 1148, PUBLICADO 2026.10.08.5)
+
+**Pedido** (Jairo, ticket 1148): subir a /registrarse el video https://youtu.be/jTCdHUy6Bsc ("Gestiona todo tu negocio en un solo lugar con Inteligencia Artificial", canal de Katuq).
+
+**Decisión.** El video va incrustado en la pantalla de bienvenida (`diagnostic-survey`), entre las tres viñetas y el botón "Crear mi cuenta", en las dos variantes (plan gratis y campaña de vendedores). No se toca el paso `video` del diagnóstico, que sigue con su mp4 de 15 s.
+- Se usa `youtube-nocookie.com` con `rel=0`, `loading="lazy"` y sin autoplay: no deja cookies de seguimiento al cargar la página ni empieza a sonar solo.
+- La URL se confía una sola vez con `DomSanitizer` y es una constante, nunca algo que venga del usuario.
+- Estilo plano: caja 16:9 con radio 16px, sin sombras ni gradientes (design-system).
+
+**Verificado:** build de producción y `verify-dist-prod` OK; capturas con Chromium del `dist` en escritorio (480×270) y móvil 390 px (358×201), sin scroll horizontal y con el video cargando.
+**No verificado:** reproducción del video dentro de la captura (YouTube solo mostró la portada).
+
+**Nota de numeración:** otra sesión dejó sin commitear un D-378 distinto ("Pantalla En vivo", propuesta); el D-378 ya publicado es el de los despachos. Esa propuesta debe renumerarse.

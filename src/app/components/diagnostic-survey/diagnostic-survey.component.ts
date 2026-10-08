@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
 import { KatuqQuickStartService, DiagnosticResponse, PromocionRegistro } from '../../shared/services/quickstart/katuq-quickstart.service';
 import { ContextualQuestionsService, ContextualQuestion } from '../../shared/services/quickstart/contextual-questions.service';
@@ -249,6 +250,11 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     showCelebration: boolean = false;
     milestonesReached: number[] = [];
 
+    // Video de presentación de la bienvenida (ticket 1148). youtube-nocookie: no deja cookies de seguimiento al solo cargar la página.
+    readonly videoBienvenidaUrl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+        'https://www.youtube-nocookie.com/embed/jTCdHUy6Bsc?rel=0'
+    );
+
     // Variables para video explicativo
     videoPlaying: boolean = true; // Empieza reproduciendo
     videoEnded: boolean = false; // Controla si el video terminó
@@ -322,7 +328,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
         private pixeles: PixelesPautaService,
         private authService: AuthService,
         private utils: UtilsService,
-        private versionCheck: VersionCheckService
+        private versionCheck: VersionCheckService,
+        private sanitizer: DomSanitizer
     ) {
         // No se vuelve a asignar registrationQuestions aquí
         this.mainForm = this.fb.group({
