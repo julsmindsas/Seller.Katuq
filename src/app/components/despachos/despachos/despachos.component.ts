@@ -3621,27 +3621,25 @@ export class DespachosComponent implements OnInit, OnDestroy {
       totalPedidosOrden - this.pedidosSeleccionados.length;
     this.nroShippingOrder = order.nroShippingOrder;
 
-    // Inicializar nuevaOrdenEnvio si no existe
-    if (!this.nuevaOrdenEnvio) {
-      const currentCompanyStr = localStorage.getItem("currentCompany");
-      const companyName = currentCompanyStr
-        ? JSON.parse(currentCompanyStr).nomComercial
-        : "";
+    // La orden se arma siempre desde la que se pulsó. Reutilizar la que quedaba de un
+    // despacho anterior (cancelado o aún sin limpiar) mandaba estos pedidos con el
+    // número de esa otra orden. Tampoco lleva `pedidosRetirados`: este botón manda a
+    // propósito solo los que faltan por despachar y no debe liberar nada (ticket 1152).
+    const currentCompanyStr = localStorage.getItem("currentCompany");
+    const companyName = currentCompanyStr
+      ? JSON.parse(currentCompanyStr).nomComercial
+      : "";
 
-      this.nuevaOrdenEnvio = {
-        id: order.id || "",
-        nroShippingOrder: order.nroShippingOrder,
-        fecha: order.fecha || new Date().toISOString(),
-        metodoEnvio: order.metodoEnvio || '',
-        transportador: order.transportador,
-        company: companyName,
-        pedidos: [],
-        pedidosMovidos: [],
-      };
-    }
-    // Este botón manda a propósito solo los pedidos que faltan por despachar: no retira
-    // ninguno, así que no debe liberar nada (ticket 1152).
-    delete this.nuevaOrdenEnvio.pedidosRetirados;
+    this.nuevaOrdenEnvio = {
+      id: order.id || "",
+      nroShippingOrder: order.nroShippingOrder,
+      fecha: order.fecha || new Date().toISOString(),
+      metodoEnvio: order.metodoEnvio || '',
+      transportador: order.transportador,
+      company: companyName,
+      pedidos: [],
+      pedidosMovidos: [],
+    };
 
     // Utilizar el método existente para despachar
     this.despacharOrden();
@@ -3771,9 +3769,16 @@ export class DespachosComponent implements OnInit, OnDestroy {
       metodoEnvio: this.nuevaOrdenEnvio?.metodoEnvio
     });
 
+    // La orden, su número y sus pedidos se fijan antes de abrir el selector. Si mientras
+    // está abierto corre la limpieza de un despacho anterior (5 s) o se arma otra orden,
+    // este despacho no pierde sus pedidos ni toma el número de la otra (mutación 2194 → 2196).
+    const pedidos = this.pedidosSeleccionados || [];
+    let orden = this.nuevaOrdenEnvio;
+    const nroOrden = orden?.nroShippingOrder ?? this.nroShippingOrder;
+
     const avisoConteoDespacho =
       this.pedidosYaDespachadosAlReDespachar > 0
-        ? `Nota: ${this.pedidosYaDespachadosAlReDespachar} pedido(s) de esta orden ya estaban despachados y no se vuelven a despachar. Se despacharán ${this.pedidosSeleccionados?.length ?? 0}.`
+        ? `Nota: ${this.pedidosYaDespachadosAlReDespachar} pedido(s) de esta orden ya estaban despachados y no se vuelven a despachar. Se despacharán ${pedidos.length}.`
         : undefined;
     this.pedidosYaDespachadosAlReDespachar = 0; // reset tras leer el aviso
 
@@ -3795,7 +3800,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
       },
     }).then((result) => {
       if (result.isConfirmed) {
-        this.transportadorSeleccionado = result.value;
+        const transportador = result.value;
+        this.transportadorSeleccionado = transportador;
         const userLite = this.getCurrentUser();
 
         if (!userLite) {
@@ -3807,14 +3813,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // Capturar el número de la orden ACTUAL en una constante local. Usar la variable
-        // de instancia this.nroShippingOrder directamente es lo que provocaba que, si se
-        // iniciaba otro despacho mientras corría el setTimeout de limpieza, los pedidos
-        // recibieran el número de OTRA orden (mutación 2194 → 2196).
-        const nroOrden = this.nuevaOrdenEnvio?.nroShippingOrder ?? this.nroShippingOrder;
-
-        this.pedidosSeleccionados.forEach((pedido) => {
-          pedido.transportador = normalizeTransportadorName(this.transportadorSeleccionado);
+        pedidos.forEach((pedido) => {
+          pedido.transportador = normalizeTransportadorName(transportador);
           pedido.despachador = userLite;
           pedido.fechaYHorarioDespachado = new Date().toISOString();
           pedido.estadoProceso = EstadoProceso.Despachado;
@@ -3822,39 +3822,38 @@ export class DespachosComponent implements OnInit, OnDestroy {
           pedido.shippingOrder = nroOrden;
         });
 
-        // Asegurarse de que nuevaOrdenEnvio esté inicializado
-        if (!this.nuevaOrdenEnvio) {
+        if (!orden) {
           const currentCompanyStr = localStorage.getItem("currentCompany");
           const companyName = currentCompanyStr
             ? JSON.parse(currentCompanyStr).nomComercial
             : "";
 
-          this.nuevaOrdenEnvio = {
+          orden = {
             id: "",
             nroShippingOrder: nroOrden,
             fecha: new Date().toISOString(),
-            metodoEnvio: this.nuevaOrdenEnvio?.metodoEnvio || 'mensajeroPropio',
-            transportador: this.transportadorSeleccionado,
+            metodoEnvio: 'mensajeroPropio',
+            transportador,
             company: companyName,
             pedidos: [],
             pedidosMovidos: [],
           };
         }
 
-        this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados;
-        this.nuevaOrdenEnvio.transportador = normalizeTransportadorName(this.transportadorSeleccionado);
+        orden.pedidos = pedidos;
+        orden.transportador = normalizeTransportadorName(transportador);
 
         this.logisticaService
-          .dispatchShippingOrder(this.nuevaOrdenEnvio)
+          .dispatchShippingOrder(orden)
           .pipe(takeUntil(this.destroy$))
           .subscribe(
             (response) => {
               Swal.fire("Éxito", "Orden despachada exitosamente", "success");
 
               // Guardar datos antes de cerrar el modal
-              const pedidosParaImprimir = [...this.pedidosSeleccionados];
+              const pedidosParaImprimir = [...pedidos];
               const nroOrdenParaImprimir = nroOrden;
-              const transportadorParaImprimir = this.transportadorSeleccionado;
+              const transportadorParaImprimir = transportador;
 
               // Cerrar el modal
               this.modalService.dismissAll();
@@ -3873,17 +3872,22 @@ export class DespachosComponent implements OnInit, OnDestroy {
               }, 2000); // Delay de 2 segundos para asegurar que el despacho se complete
 
               // Limpiar datos después de tiempo suficiente para que termine todo el proceso.
-              // Solo limpiar la orden compartida si NO se inició otro despacho entretanto,
-              // para no borrar el número de una orden más reciente (evita contaminación).
+              // Solo se limpia lo que sigue siendo de ESTE despacho: si entretanto se abrió
+              // otro, sus pedidos, su mensajero y su orden no se tocan.
               setTimeout(() => {
-                console.log("Limpiando datos después de impresión completa...");
-                this.pedidosSeleccionados = [];
-                this.transportadorSeleccionado = null;
-                if (this.nroShippingOrder === nroOrden) {
-                  this.nroShippingOrder = null;
+                if (this.pedidosSeleccionados === pedidos) {
+                  this.pedidosSeleccionados = [];
                 }
-                if (this.nuevaOrdenEnvio?.nroShippingOrder === nroOrden) {
+                if (this.transportadorSeleccionado === transportador) {
+                  this.transportadorSeleccionado = null;
+                }
+                // Si se abrió de nuevo esta misma orden en el editor, ya es otro objeto:
+                // su número no se borra para que el editor conserve "Despachar".
+                if (this.nuevaOrdenEnvio === orden || this.nuevaOrdenEnvio == null) {
                   this.nuevaOrdenEnvio = null;
+                  if (this.nroShippingOrder === nroOrden) {
+                    this.nroShippingOrder = null;
+                  }
                 }
               }, 5000); // 5 segundos para asegurar que todos los timeouts internos terminen
             },
@@ -5762,212 +5766,6 @@ export class DespachosComponent implements OnInit, OnDestroy {
           console.log('🔄 Actualizando ordenes-despacho-v2 después de cancelar...');
           this.ordenesDespachoV2Component.loadInitialOrders();
         }
-      }
-    });
-  }
-
-  // Método para despachar una orden existente
-  private despacharOrdenEnvio(): void {
-    console.log("Despachando orden existente:", this.nuevaOrdenEnvio);
-
-    // Verificar que haya un transportador asignado
-    if (
-      !this.nuevaOrdenEnvio.transportador ||
-      this.nuevaOrdenEnvio.transportador === ""
-    ) {
-      console.error("Error: No hay transportador asignado");
-      Swal.fire(
-        "Error",
-        "Debe asignar un transportador antes de despachar la orden",
-        "error",
-      );
-      return;
-    }
-
-    // Actualizar el estado de cada pedido a "Despachado"
-    const userLite = this.getCurrentUser();
-    if (!userLite) {
-      Swal.fire(
-        "Error",
-        "No se pudo obtener información del usuario actual",
-        "error",
-      );
-      return;
-    }
-
-    // Actualizar cada pedido con los datos de despacho
-    if (
-      this.nuevaOrdenEnvio.pedidos &&
-      this.nuevaOrdenEnvio.pedidos.length > 0
-    ) {
-      this.nuevaOrdenEnvio.pedidos.forEach((pedido) => {
-        pedido.estadoProceso = EstadoProceso.Despachado;
-        pedido.transportador = this.nuevaOrdenEnvio.transportador;
-        pedido.despachador = userLite;
-        pedido.fechaYHorarioDespachado = new Date().toISOString();
-        pedido.nroShippingOrder = this.nuevaOrdenEnvio.nroShippingOrder;
-        pedido.shippingOrder = this.nuevaOrdenEnvio.nroShippingOrder;
-      });
-    }
-
-    console.log("Datos de despacho actualizados:", this.nuevaOrdenEnvio);
-
-    // Enviar la orden al servidor
-    this.logisticaService
-      .dispatchShippingOrder(this.nuevaOrdenEnvio)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          console.log("Respuesta exitosa del servidor:", response);
-
-          // Actualizar los pedidos individualmente para asegurar que se guarden los cambios
-          const actualizarPromises = this.nuevaOrdenEnvio.pedidos.map(
-            (pedido) =>
-              new Promise((resolve, reject) => {
-                this.ventasService.editOrder(pedido).subscribe({
-                  next: () => resolve(true),
-                  error: (err) => {
-                    console.error(
-                      `Error al actualizar pedido ${pedido.nroPedido}:`,
-                      err,
-                    );
-                    reject(err);
-                  },
-                });
-              }),
-          );
-
-          Promise.all(actualizarPromises)
-            .then(() => {
-              console.log(`🚚 Orden ${this.nuevaOrdenEnvio.nroShippingOrder} despachada exitosamente - Verificando geocodificación...`);
-
-              // Geocodificar automáticamente los pedidos despachados que no tienen coordenadas
-              const pedidosSinCoordenadas = this.nuevaOrdenEnvio.pedidos.filter(pedido =>
-                pedido.envio?.direccionEntrega && pedido.envio?.ciudad &&
-                (!pedido.envio?.latitud || !pedido.envio?.longitud)
-              );
-
-              if (pedidosSinCoordenadas.length > 0) {
-                console.log(`📍 Geocodificando ${pedidosSinCoordenadas.length} pedidos de la orden despachada...`);
-                this.geocodificarPedidosDespachados().then(() => {
-                  console.log(`🗺️ Actualizando mapa después de geocodificar orden despachada`);
-                  this.actualizarConfiguracionMapa();
-                }).catch(error => {
-                  console.error(`❌ Error geocodificando pedidos de la orden:`, error);
-                });
-              } else {
-                // Si todos ya tienen coordenadas, solo actualizar el mapa
-                this.actualizarConfiguracionMapa();
-              }
-
-              Swal.fire(
-                "Éxito",
-                "Orden despachada exitosamente y todos los pedidos actualizados",
-                "success",
-              );
-
-              // Actualizar la lista de órdenes
-              this.refrescarDatos();
-
-              // Cerrar el modal
-              this.modalService.dismissAll();
-            })
-            .catch((error) => {
-              console.error("Error al actualizar algunos pedidos:", error);
-              Swal.fire({
-                title: "Advertencia",
-                text: "La orden fue despachada pero hubo problemas al actualizar algunos pedidos. Se recomienda verificar el estado de los pedidos.",
-                icon: "warning",
-              });
-
-              // Actualizar la lista de órdenes
-              this.refrescarDatos();
-
-              // Cerrar el modal
-              this.modalService.dismissAll();
-            });
-        },
-        error: (error) => {
-          console.error("Error al despachar la orden de envío:", error);
-          Swal.fire(
-            "Error",
-            "Hubo un problema al despachar la orden de envío: " +
-            (error.message || "Error desconocido"),
-            "error",
-          );
-        },
-      });
-  }
-
-  // Método para solicitar selección de transportador
-  private seleccionarTransportador(): Promise<string> {
-    return new Promise((resolve) => {
-      if (
-        !this.vendors ||
-        !Array.isArray(this.vendors) ||
-        this.vendors.length === 0
-      ) {
-        // Intentar cargar transportadores si no están disponibles
-        this.logisticaService.getTransportadores()
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (data) => {
-              this.vendors = data || [];
-              if (this.vendors.length === 0) {
-                console.error(
-                  "No hay transportadores disponibles después de cargar",
-                );
-                Swal.fire("Error", "No hay transportadores disponibles", "error");
-                resolve("");
-                return;
-              }
-              this.mostrarDialogoSeleccionTransportador(resolve);
-            },
-            error: (error) => {
-              console.error("Error al cargar transportadores:", error);
-              Swal.fire(
-                "Error",
-                "No se pudieron cargar los transportadores",
-                "error",
-              );
-              resolve("");
-          },
-        });
-      } else {
-        this.mostrarDialogoSeleccionTransportador(resolve);
-      }
-    });
-  }
-
-  private mostrarDialogoSeleccionTransportador(
-    resolve: (value: string) => void,
-  ): void {
-    const opciones = this.vendors.reduce((acc, vendor) => {
-      const nombreCompleto = `${vendor.nombres} ${vendor.apellidos}`;
-      acc[nombreCompleto] = nombreCompleto;
-      return acc;
-    }, {});
-
-    Swal.fire({
-      title: "Asignar Transportador",
-      input: "select",
-      inputOptions: opciones,
-      inputPlaceholder: "Seleccione un transportador",
-      showCancelButton: true,
-      cancelButtonText: "Cancelar",
-      confirmButtonText: "Seleccionar",
-      inputValidator: (value) => {
-        if (!value) {
-          return "Debes seleccionar un transportador";
-        }
-        return null;
-      },
-    }).then((result) => {
-      if (result.isConfirmed && result.value) {
-        console.log("Transportador seleccionado:", result.value);
-        resolve(result.value);
-      } else {
-        resolve("");
       }
     });
   }

@@ -8642,3 +8642,27 @@ Desde el despliegue de D-329 (29-sep) no hubo más caídas en `~/.pm2/pm2.log`; 
 **Hallazgo** (investigando el 1152). La ruta `updateShippingOrder` no tenía `auth` y hacía `update(req.body)` de cualquier orden de envío por id, con la empresa del encabezado. Nadie la usa: ni el Seller (su servicio v2 apunta a `/update`, que no existe), ni la app de mensajeros (todas sus ramas), ni kai, ni el backend, y nginx no registra peticiones a ella.
 
 **Decisión:** retirar la ruta (`b2ec4b1`, merge `76918ba`), desplegado aparte del 1152. Ahora responde 404 y `/shippingorders/dispatch` sigue respondiendo 401 sin token. El controlador `updateShippingOrder` queda sin uso, y `routers/logistica-backup.js`, que no se carga, todavía la declara.
+
+## D-378 (2026-10-08) — Cada despacho de una orden usa sus propios datos, y el pedido Empacado que se retira de una orden queda en el historial (PUBLICADO 2026.10.08.4, DESPLEGADA)
+
+**Contexto.** Daniel ("arregla lo que falla", 8-oct) pidió cerrar los hallazgos que quedaron del 1152 (D-376).
+
+**Front** (2026.10.08.4, `despachos.component.ts`):
+- **`handleOrderDispatch`** (botón "Despachar" del listado) arma siempre la orden desde la que se pulsó. Antes reutilizaba `nuevaOrdenEnvio` si existía. Si el usuario había cancelado el selector de mensajero en otra orden, o despachaba otra dentro de los 5 s de limpieza, los pedidos se marcaban y se mandaban con el número de esa otra orden, y el backend actualizaba la orden equivocada. El objeto nuevo no lleva `pedidosRetirados`, así que el listado sigue sin liberar nada (D-376).
+- **`despacharOrden`** fija la orden, su número y sus pedidos antes de abrir el selector. La limpieza de 5 s solo borra el estado que sigue siendo de ese despacho, comparando por referencia. Si se abrió de nuevo la misma orden en el editor, no se le borra el número.
+- Se borran tres métodos privados sin uso: `despacharOrdenEnvio`, `seleccionarTransportador` y `mostrarDialogoSeleccionTransportador`. `geocodificarPedidosDespachados` queda sin llamador, pero es público y se deja.
+
+**Backend** (`bd8611a`, merge `444a192`): `recordOrderStatusChange` acepta `registrarSinCambioDeEstado`, que por defecto es false. `registrarPedidosLiberados` lo pasa en true. Así el pedido Empacado que suelta la orden deja una fila Empacado→Empacado en `order_status_history`, que el timeline ya pinta como "Sin cambio". Los demás llamadores no cambian.
+
+**Descartado:** el aviso de que `EvidenciaEmpacadoModalComponent.ngOnInit` cerraba el diálogo al abrir era falso. `ref.close()` solo está en `guardar()` y `cancelar()`, y así ha sido desde `e1aa51c6`.
+
+**Verificado:**
+- `liberarPedidosQuitados.test.js`: 4 casos OK, con el Empacado en el historial al despachar y al editar. Falla sin el cambio.
+- Revisión adversarial: OK para publicar, sin bloqueantes. Se tomó su residuo del número de la orden.
+- Build de producción y `verify-dist-prod` OK.
+- Prod `76918ba` → `444a192` por fast-forward verificado. `/v1/logistica/shippingorders/dispatch` sin token responde 401.
+- No se probó con una sesión real.
+
+**Sigue abierto:**
+- `despacharOrden` marca los pedidos como Despachado en memoria antes de la respuesta. Si el despacho falla, reintentar desde el listado dice "ya despachada".
+- Karma del front sigue roto (ver la memoria `reference_front_karma_un_spec`).
