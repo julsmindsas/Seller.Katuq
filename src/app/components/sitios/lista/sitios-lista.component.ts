@@ -6,6 +6,15 @@ import { PlantillaSitio, Sitio, SitiosService } from "../sitios.service";
 import { environment } from "../../../../environments/environment";
 import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
 import { EstadoDeTarjeta, estadoDeTarjeta, sitioSinTerminar } from "../tienda-en-un-paso/tienda-en-un-paso.logic";
+import {
+  DESCRIPCION_MAX,
+  DESCRIPCION_MIN,
+  EJEMPLOS_DESCRIPCION,
+  NOMBRE_MAX,
+  letrasQueFaltan,
+  mensajeDeErrorPaginaConIA,
+  validarDescripcion,
+} from "./pagina-con-ia.logic";
 
 /** Nombre humano de cada tipo de bloque, para los chips de la plantilla. */
 const NOMBRE_BLOQUE: { [tipo: string]: string } = {
@@ -71,7 +80,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
 
   // Asistente de creación
   mostrandoAsistente = false;
-  paso: "tipo" | "plantilla" | "datos" = "tipo";
+  paso: "tipo" | "plantilla" | "datos" | "describe" = "tipo";
   plantillas: PlantillaSitio[] = [];
   cargandoPlantillas = false;
   plantillaElegida: PlantillaSitio | null = null;
@@ -134,6 +143,15 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   objetivo = "";
   conIA = false;
   creando = false;
+
+  // Página con IA desde una descripción (bandera `landingPrompt`)
+  descripcionIA = "";
+  nombreIA = "";
+  creandoConIA = false;
+  readonly ejemplosDescripcion = EJEMPLOS_DESCRIPCION;
+  readonly descripcionMax = DESCRIPCION_MAX;
+  readonly descripcionMin = DESCRIPCION_MIN;
+  readonly nombreMax = NOMBRE_MAX;
 
   constructor(
     private service: SitiosService,
@@ -393,6 +411,8 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     this.productoIds = [];
     this.nombre = "";
     this.objetivo = "";
+    this.descripcionIA = "";
+    this.nombreIA = "";
     // El sector del kit filtra las plantillas de entrada: quien ya dijo a qué
     // se dedica no debería tener que volver a buscarlo entre todas.
     this.sectorFiltro = this.sectorMarca;
@@ -413,7 +433,7 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   }
 
   cerrarAsistente(): void {
-    if (this.creando) return;
+    if (this.creando || this.creandoConIA) return;
     this.mostrandoAsistente = false;
   }
 
@@ -463,8 +483,50 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   }
 
   atras(): void {
-    if (this.creando) return;
+    if (this.creando || this.creandoConIA) return;
     this.paso = this.paso === "datos" ? "plantilla" : "tipo";
+  }
+
+  // ── Página con IA desde una descripción (bandera landingPrompt) ─────────────
+
+  abrirDescribe(): void {
+    if (!this.features.isEnabled("landingPrompt")) return;
+    this.paso = "describe";
+  }
+
+  usarEjemplo(texto: string): void {
+    if (this.creandoConIA) return;
+    this.descripcionIA = texto;
+  }
+
+  get letrasFaltantes(): number {
+    return letrasQueFaltan(this.descripcionIA);
+  }
+
+  crearConIA(): void {
+    if (this.creandoConIA || !this.features.isEnabled("landingPrompt")) return;
+    const v = validarDescripcion(this.descripcionIA);
+    if (!v.ok) {
+      this.toastr.warning(v.mensaje);
+      return;
+    }
+    this.creandoConIA = true;
+    this.service.crearConDescripcion({ descripcion: v.descripcion, nombre: this.nombreIA.trim() }).subscribe({
+      next: (res) => {
+        this.creandoConIA = false;
+        const data = res && res.data;
+        if (!data || !data.id) {
+          this.toastr.error((res && res.message) || "No pudimos crear la página.");
+          return;
+        }
+        this.mostrandoAsistente = false;
+        this.router.navigate(["/sitios/editor", data.id]);
+      },
+      error: (e) => {
+        this.creandoConIA = false;
+        this.toastr.error(mensajeDeErrorPaginaConIA(e));
+      },
+    });
   }
 
   abrirSelectorProductos(): void {

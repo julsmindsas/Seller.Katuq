@@ -163,7 +163,7 @@
      Va con `appAlBody` porque `.page-body` abre contexto de apilamiento y el
      velo se quedaría por debajo del menú. Ver al-body.directive.ts. -->
 <div class="velo" *ngIf="mostrandoAsistente" appAlBody (click)="cerrarAsistente()">
-  <div class="caja" [class.caja--angosta]="paso === 'datos' || paso === 'tipo'" (click)="$event.stopPropagation()">
+  <div class="caja" [class.caja--angosta]="paso === 'datos' || paso === 'tipo' || paso === 'describe'" (click)="$event.stopPropagation()">
 
     <!-- ── Paso 1: qué quiere crear ── -->
     <ng-container *ngIf="paso === 'tipo'">
@@ -180,6 +180,16 @@
       </header>
 
       <div class="caja__cuerpo">
+        <!-- Página con IA desde una descripción. Solo con la bandera landingPrompt prendida. -->
+        <button class="opcion-grande opcion-grande--ia" *ngIf="features.isEnabled('landingPrompt')"
+                (click)="abrirDescribe()">
+          <span class="opcion-grande__texto">
+            <strong>Descríbela y la armamos con IA</strong>
+            <small>Cuéntanos tu negocio con tus palabras y Opttia crea la página: diseño, textos y secciones.</small>
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+
         <!-- Tienda en minutos con IA, en un solo paso. Solo con la bandera singleStepStore prendida. -->
         <button class="opcion-grande opcion-grande--ia" *ngIf="features.isEnabled('singleStepStore')"
                 (click)="abrirTiendaEnUnPaso()">
@@ -213,6 +223,63 @@
       <footer class="caja__pie">
         <span class="caja__pista">Elige una opción para continuar.</span>
         <button class="btn-fantasma" (click)="cerrarAsistente()">Cancelar</button>
+      </footer>
+    </ng-container>
+
+    <!-- ── Descríbela: un cuadro de texto y Opttia arma la página (bandera landingPrompt) ── -->
+    <ng-container *ngIf="paso === 'describe'">
+      <header class="caja__cabecera">
+        <div class="caja__titulo">
+          <div>
+            <h2>Cuéntanos de tu negocio</h2>
+            <p>Escribe como se lo contarías a un amigo. Opttia arma la página y tú la ajustas en el editor.</p>
+          </div>
+          <button class="cerrar" (click)="cerrarAsistente()" [disabled]="creandoConIA" aria-label="Cerrar">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="caja__cuerpo">
+        <div class="campo">
+          <label for="descripcion-ia">¿Qué vendes o qué haces, y qué quieres lograr con la página?</label>
+          <textarea id="descripcion-ia" rows="5" [(ngModel)]="descripcionIA" [maxlength]="descripcionMax"
+                    [disabled]="creandoConIA"
+                    placeholder="Ej: Vendo ramos de flores en Medellín. Quiero que mis clientes me escriban por WhatsApp para pedirlos."></textarea>
+          <small>
+            {{ descripcionIA.length }}/{{ descripcionMax }}
+            <ng-container *ngIf="letrasFaltantes > 0"> · Faltan {{ letrasFaltantes }} letras.</ng-container>
+            Los teléfonos y los precios se agregan después desde el editor.
+          </small>
+        </div>
+
+        <div class="ejemplos" *ngIf="!creandoConIA">
+          <span class="ejemplos__titulo">¿No sabes por dónde empezar? Toca un ejemplo:</span>
+          <div class="ejemplos__chips">
+            <button type="button" class="chip" *ngFor="let e of ejemplosDescripcion" (click)="usarEjemplo(e.texto)">
+              {{ e.titulo }}
+            </button>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="nombre-ia">Nombre de la página <span class="opcional">(opcional)</span></label>
+          <input id="nombre-ia" type="text" [(ngModel)]="nombreIA" [maxlength]="nombreMax" [disabled]="creandoConIA"
+                 placeholder="Si lo dejas vacío, Opttia lo propone" />
+        </div>
+
+        <div class="nota-ia" *ngIf="creandoConIA" role="status" aria-live="polite">
+          <strong>Opttia está armando tu página…</strong>
+          <span>Tarda cerca de 30 segundos. No cierres esta ventana.</span>
+        </div>
+      </div>
+
+      <footer class="caja__pie">
+        <span class="caja__pista">Se crea como borrador: no se publica hasta que tú lo decidas.</span>
+        <button class="btn-fantasma" (click)="atras()" [disabled]="creandoConIA">Atrás</button>
+        <button class="btn-primario btn-primario--sm" (click)="crearConIA()" [disabled]="creandoConIA || letrasFaltantes > 0">
+          {{ creandoConIA ? 'Creando…' : 'Crear mi página' }}
+        </button>
       </footer>
     </ng-container>
 

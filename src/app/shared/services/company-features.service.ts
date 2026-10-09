@@ -16,6 +16,7 @@ export const COMPANY_FEATURE_FLAGS = [
   'whatsappOrderConfirmation',
   'enviameCodGuide',
   'singleStepStore',
+  'landingPrompt',
   'product3d',
 ] as const;
 

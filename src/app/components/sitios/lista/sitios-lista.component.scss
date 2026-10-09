@@ -700,8 +700,64 @@
     @include kb-input;
   }
 
+  textarea {
+    @include kb-input;
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  .opcional {
+    font-weight: 600;
+    color: var(--kb-muted-2);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
   small {
     @include kb-hint;
+  }
+}
+
+// "Descríbela y la armamos con IA": ejemplos para empezar y aviso mientras Opttia trabaja.
+.ejemplos {
+  margin: -6px 0 18px;
+
+  &__titulo {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--kb-muted-2);
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+.nota-ia {
+  display: block;
+  padding: 13px 16px;
+  border: 1.5px solid var(--kb-accent-line-2);
+  border-radius: 14px;
+  background: var(--kb-accent-wash-4);
+
+  strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--kb-ink);
+  }
+
+  span {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--kb-muted-2);
+    font-weight: 600;
   }
 }
 

@@ -563,6 +563,16 @@ export class SitiosService extends BaseService {
   }
 
   /**
+   * Página con IA desde una descripción (bandera `landingPrompt`): el servidor interpreta el
+   * texto, arma la página en BORRADOR y responde con su id. Tarda unos 30 segundos.
+   */
+  crearConDescripcion(body: { descripcion: string; nombre?: string }): Observable<
+    Respuesta<{ id: string; nombre: string; slug: string; tipo: string; estado: string }>
+  > {
+    return this.post<any>("/v1/onboarding/pagina-con-ia", body);
+  }
+
+  /**
    * Config real para el panel de tienda: si hay pasarela PROPIA (sin ella el
    * pago en línea entra a la cuenta de la plataforma, no a la del comercio),
    * cuántas zonas de cobro existen y las formas de pago activas del maestro.
