@@ -9023,3 +9023,21 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 - "Guardar y despachar" reconstruye la orden desde cero en cada clic (`nroShippingOrder: ""`): dos clics seguidos sin cerrar la ventana crean dos órdenes y la segunda la frena la guarda de duplicados. No se tocó; no es el caso del ticket.
 - Error latente anterior en `conf-product-to-cart.component.ts` (~2016, rama "Recoge en Tienda"): `return (x.tipoEntrega = tipoEntregaComparisson || ...)` es una **asignación**, no una comparación; el filtro de adiciones no filtra y pisa `x.tipoEntrega`. No se tocó (cambia qué adiciones se ofrecen en la venta); se registra para decidir.
 - No verificado en el navegador con una orden real.
+
+## D-392 (2026-10-09) — Conteo general "Toda la bodega" en Conteos de inventario (ticket 1162, ALMACEN BOMBAS; PUBLICADO)
+
+**Disparador.** Ticket 1162 (Laura Restrepo, ALMACEN BOMBAS, idea, 9-oct): "en los conteos de bodegas poder tener un conteo general para los inventarios que estamos comenzando a hacer". Daniel: /goal "cerrar todos los tickets hoy, aprobado todo".
+
+**Hallazgo.** Conteos solo arma conteos parciales (N productos por criterio: valioso, movimiento, sin contar, por zonas; tope 500). ALMACEN BOMBAS ya lo había rodeado a mano (en BOD-005 armó 100 y 182 líneas). Sus bodegas tienen entre 17 y 491 productos registrados (BOD-002 = 491, la mayor), todas bajo el tope.
+
+**Decisión.** Quinto criterio `todo` ("Toda la bodega"): arma el conteo con **todos los productos que la bodega tiene registrados** en `inventory` (incluidas las filas con saldo 0), en orden de recorrido (ubicación), sin recortar a "cuántos productos" (el campo se oculta). Tope propio de **1.500 líneas** (`LIMITE_CONTEO_GENERAL`) porque un conteo vive en un solo documento de `inventory_audit` (1 MB; ~300 bytes por línea contada); los demás criterios conservan el tope de 500. Si la bodega supera el tope el servicio **avisa** ("admite hasta 1500; cuéntela por partes con «Por zonas»") en vez de dejar productos por fuera en silencio. La pantalla del conteo abierto gana un buscador (nombre, referencia o ubicación) cuando hay más de 15 líneas; guardar sigue enviando todas las líneas, no solo las visibles. Contar sigue sin ajustar: es evidencia en `inventory_audit`; ajustar es el paso aparte de siempre. **No toca `products`, precios ni `inventory`** (D-134). Sin colección nueva ni flag: es una opción más del mismo flujo.
+
+**Archivos.** Backend `services/inventory/cycleCountService.js` (+ test 14/14), front `conteos.component.{ts,html,scss}`, `inventario.service.ts` (tipo `CriterioConteo`), spec nuevo.
+
+**Verificado:** backend `node tests/inventory/cycleCountService.test.js` 14/14 (incluye 491 líneas completas con filas en cero, tope de 1.500 con mensaje, y que el parcial sigue topado en 500); Karma 7/7 del componente. Backend desplegado en producción (commit 586fac8, `katuq-api` reiniciado, `criterios` incluye `todo`); front publicado como 2026.10.09.14.
+**No verificado:** la pantalla en el navegador con una bodega real (armar "Toda la bodega" en BOD-002 de ALMACEN BOMBAS y contar).
+
+**Queda abierto:**
+- El criterio `movimiento` ("lo que más se mueve") ordena por `demandaNeta`, que el controlador fija en 0: hoy no ordena por movimiento real (anterior a esta decisión; no se tocó).
+- Una bodega con más de 1.500 productos no se puede contar completa de una vez; se cuenta por zonas.
+- Solo entran los productos con registro en `inventory` de esa bodega; un producto que nunca se ha movido ahí no aparece (para contarlo hay que darle entrada primero).
