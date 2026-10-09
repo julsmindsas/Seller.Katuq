@@ -9023,3 +9023,18 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 - "Guardar y despachar" reconstruye la orden desde cero en cada clic (`nroShippingOrder: ""`): dos clics seguidos sin cerrar la ventana crean dos órdenes y la segunda la frena la guarda de duplicados. No se tocó; no es el caso del ticket.
 - Error latente anterior en `conf-product-to-cart.component.ts` (~2016, rama "Recoge en Tienda"): `return (x.tipoEntrega = tipoEntregaComparisson || ...)` es una **asignación**, no una comparación; el filtro de adiciones no filtra y pisa `x.tipoEntrega`. No se tocó (cambia qué adiciones se ofrecen en la venta); se registra para decidir.
 - No verificado en el navegador con una orden real.
+
+
+### 2026-10-09 — Orden de las guías de agentes (documentación)
+
+A petición de Daniel, se consolidaron las instrucciones comunes de `CLAUDE.md`, `agent.md` y `AGENTS.md` en `AGENTS.md`. Los dos primeros quedan como entradas a la guía compartida; Claude incluye `@AGENTS.md`. Se conservaron las políticas operativas, SDD/OpenSpec, seguridad, inventario y contexto ClickUp. Se corrigieron referencias antiguas a Genkit según D-257 y su adenda, al diseño según la spec design-system, al destino actual de `environment.ts` y a los hooks de versión de `package.json`. No se cambió código ni configuración de ejecución. Validación: enlaces locales existentes y `git diff --check`.
+
+
+### 2026-10-09 — Limpieza autorizada de scripts históricos (frontend y backend)
+
+Tras la revisión estática, Daniel pidió eliminarlos. Se retiraron 16 scripts: 3 del frontend y 13 del backend. Se conservaron los guardarraíles de deploy, diagnósticos y respaldos actuales, tests y herramientas cuya falta de referencias no demuestra obsolescencia.
+
+- **Seller.Katuq:** `CREATE_REMAINING_COMPONENTS.sh`, `scripts/validate-logos.ts`, `scripts/inventario-diagnostico.js`.
+- **katuq_admin_back_firebase:** `functions/scripts/updateProductsDisponibilidad.js`, `functions/scripts/migrateCompaniesSubscription.js`, `functions/seed-mock-data.js`, `functions/scripts/cleanup-inventory-duplicates.js`, `scripts/deploy-to-lightsail.sh`, `scripts/setup-lightsail-env.sh`, `functions/_smoke_hardening.js`, `functions/debug-env.js`, `functions/scripts/tmp-gc-mapeo.js`, `functions/scripts/tmp-verif-total.js`, `functions/tmp-check-esc.js`, `functions/tmp-sombras.js`, `functions/tmp-vigia-escritura.js`.
+
+Se actualizaron las instrucciones operativas de suscripciones para retirar comandos al script eliminado. Las referencias en specs y decisiones históricas se conservan como evidencia. No se ejecutaron scripts de datos, migraciones ni despliegues; las bajas son de archivos versionados, recuperables desde Git. Validación: ninguna referencia ejecutable ni comando npm a los archivos retirados; `git diff --check` en ambos repositorios.
