@@ -5369,6 +5369,23 @@ export class DespachosComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Ticket 1160: tras crear una orden la ventana sigue abierta y se puede guardar de nuevo (por ejemplo,
+   * cambiar de Mensajero a Transportadora). Hay que quedarse con lo que respondió el backend: el número
+   * de la orden Y su id (`cd`). Sin el `cd`, el siguiente guardado se toma como una orden NUEVA y el
+   * backend rechaza el pedido con "ya está en una orden de envío activa (orden N)": la que acaba de crearse.
+   */
+  private recordarOrdenCreada(response: any): void {
+    if (!response || !this.nuevaOrdenEnvio) return;
+    if (response.nroShippingOrder) {
+      this.nroShippingOrder = response.nroShippingOrder;
+      this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
+    }
+    if (response.id && !this.nuevaOrdenEnvio.cd) {
+      this.nuevaOrdenEnvio.cd = response.id;
+    }
+  }
+
   // El backend responde 409 DUPLICATE_SHIPPING (pedido ya en una orden de envío viva)
   // y 403 CARRIER_OFFLINE con mensaje en error.error; mostrarlo en vez del texto
   // genérico del HttpErrorResponse.
@@ -5446,12 +5463,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
         next: (response) => {
           console.log("✅ Orden creada exitosamente:", response);
 
-        // Actualizar nroShippingOrder
-        if (response && response.nroShippingOrder) {
-          this.nroShippingOrder = response.nroShippingOrder;
-          this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
-          console.log("Número de orden asignado:", this.nroShippingOrder);
-        }
+        // Actualizar nroShippingOrder (y el cd de la orden recién creada)
+        this.recordarOrdenCreada(response);
+        console.log("Número de orden asignado:", this.nroShippingOrder);
 
         // IMPORTANTE: Restaurar pedidos seleccionados para el despacho
         // Esto asegura que despacharOrden() tenga acceso a los pedidos
@@ -5511,11 +5525,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
         next: (response) => {
           console.log("Respuesta exitosa del servidor:", response);
 
-          // Actualizar nroShippingOrder
-          if (response && response.nroShippingOrder) {
-            this.nroShippingOrder = response.nroShippingOrder;
-            this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
-          }
+          // Actualizar nroShippingOrder (y el cd de la orden recién creada)
+          this.recordarOrdenCreada(response);
 
           Swal.fire({
             title: "Éxito",

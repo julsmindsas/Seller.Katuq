@@ -30,6 +30,8 @@ interface VistaPagina {
   pedidos: ReadonlyArray<PedidoEnVivo>;
   etapas: ReadonlyArray<EtapaInfo>;
   ocultar: boolean;
+  /** false si el comercio apagó a Opttia (D-386): sin panel ni narración. */
+  opttiaActivo: boolean;
   /** Katuq mirando a un comercio ajeno ("Bodega" en vez de "Tu bodega"). */
   soloLectura: boolean;
   /** Espacio que la escena deja libre para los paneles flotantes (null = ninguno). */
@@ -61,6 +63,8 @@ export class EnVivoComercioPaginaComponent implements OnInit {
   /** Comercio que se mira (`?empresa=`, solo con una sesión de Katuq); el backend lo ignora para los demás. */
   readonly empresa$: Observable<string | undefined>;
   readonly vm$: Observable<VistaPagina>;
+  /** Panel de Opttia solo con el interruptor prendido (D-386). */
+  readonly opttiaActivo$: Observable<boolean>;
   /** Sesión de Julsmind: puede volver a "Toda Katuq". */
   readonly esJulsmind = sesionEsJulsmind();
   /** "Ampliar": sin paneles flotantes; la lista de eventos vuelve a su columna. */
@@ -93,11 +97,13 @@ export class EnVivoComercioPaginaComponent implements OnInit {
         pedidos: e.pedidos,
         etapas: e.etapas,
         ocultar: prefs.ocultar,
+        opttiaActivo: e.opttiaActivo !== false,
         soloLectura: e.soloLectura,
         // "Lo próximo" y "Tu flota" flotan a la izquierda solo sobre la operación; los eventos, a la derecha.
         margenes: margenesEscena({ izquierda: opcion === 'operacion', derecha: true }, ancho && !ampliado && opcion !== 'pedidos'),
       }))
     );
+    this.opttiaActivo$ = estado.estado$.pipe(map((e) => e.opttiaActivo !== false), distinctUntilChanged());
     this.conEscena$ = combineLatest([interaccion.opcionActiva$, this.sin3d$]).pipe(
       map(([opcion, sin3d]) => opcion !== 'pedidos' && !sin3d)
     );

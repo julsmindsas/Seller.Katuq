@@ -24,6 +24,15 @@
                 <i class="fa" [ngClass]="metricasSoloPropias ? 'fa-user' : 'fa-users'"></i>
                 {{ metricasBotonTexto }}
               </button>
+              <!-- D-386: Opttia en la pantalla "En vivo" (prendido por defecto) -->
+              <button *ngIf="opttiaCargado" type="button" class="metricas-equipo-btn mb-2"
+                [class.metricas-equipo-btn--propias]="opttiaEnVivo && opttiaGeneral"
+                [disabled]="!opttiaGeneral"
+                placement="bottom" [ngbTooltip]="opttiaTooltip"
+                (click)="cambiarOpttiaEnVivo()">
+                <i class="fa fa-magic"></i>
+                {{ opttiaBotonTexto }}
+              </button>
               <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="crearUsuario()">
                 <span style="color: white;">{{ 'Crear Usuario' | translate }}</span>
                 <i placement="top" ngbTooltip="{{ 'Nuevo' | translate }}"

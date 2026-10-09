@@ -251,7 +251,7 @@ export function armarMuro(comercios: ReadonlyArray<ComercioEnVivo>, entrada: Ent
         : 'Sin eventos todavía';
 
       const etapas = c.etapas ?? ({} as ComercioEnVivo['etapas']);
-      const enPreparacion = (etapas.recibido ?? 0) + (etapas.produccion ?? 0) + (etapas.alistamiento ?? 0);
+      const enPreparacion = (etapas.recibido ?? 0) + (etapas.produccion ?? 0) + (etapas.producido ?? 0) + (etapas.empacado ?? 0);
       const pedidosTexto = `${c.n} ${c.n === 1 ? 'pedido' : 'pedidos'}`;
       const estado = estadoDeTarjeta(alerta, ultimaLlegada, c.n, ahoraMs);
 
@@ -271,8 +271,8 @@ export function armarMuro(comercios: ReadonlyArray<ComercioEnVivo>, entrada: Ent
         ultimo: ultimoTexto,
         pipeline: [
           { texto: `${enPreparacion} prep.`, titulo: 'En preparación' },
-          { texto: `${etapas.listo ?? 0} listos`, titulo: 'Listos para salir' },
-          { texto: `${etapas.camino ?? 0} en ruta`, titulo: 'En camino' },
+          { texto: `${etapas.listo ?? 0} para despachar`, titulo: 'Para despachar' },
+          { texto: `${etapas.camino ?? 0} en ruta`, titulo: 'Despachados' },
           { texto: `${etapas.entregado ?? 0} entr.`, titulo: 'Entregados' },
         ],
         etiqueta: `${nombre}: ${pedidosTexto} hoy, ${estado.texto.toLowerCase()}. Abrir su tablero`,

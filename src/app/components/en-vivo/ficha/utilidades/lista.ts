@@ -10,7 +10,7 @@ import { claveDeCanal, FilaPedido, filasParaPintar, ordenarFilas } from './filas
  * con lo que la pantalla YA tiene (la foto; en toda Katuq, los eventos). No piden nada al servidor.
  *
  * Claves (`ClaveLista`): `todos` · `prep` · `ia` · `etapa:<id>` · `canal:<canal>` · `ciudad:<dane o nombre>`.
- * Cada una cuenta lo mismo que la cifra que la abre (`tarjetas.ts`), para que "En camino: 19" abra 19.
+ * Cada una cuenta lo mismo que la cifra que la abre (`tarjetas.ts`), para que "Despachados: 19" abra 19.
  */
 
 export type ClaveParseada =
@@ -24,7 +24,8 @@ export type ClaveParseada =
 const ETAPAS_VALIDAS: ReadonlyArray<EtapaId> = [
   'recibido',
   'produccion',
-  'alistamiento',
+  'producido',
+  'empacado',
   'listo',
   'camino',
   'entregado',
@@ -33,16 +34,17 @@ const ETAPAS_VALIDAS: ReadonlyArray<EtapaId> = [
 ];
 
 /** Las etapas que cuenta "En preparación". */
-const PREPARACION: ReadonlyArray<EtapaId> = ['recibido', 'produccion', 'alistamiento'];
+const PREPARACION: ReadonlyArray<EtapaId> = ['recibido', 'produccion', 'producido', 'empacado'];
 
 const NO_VENDEN: ReadonlyArray<EtapaId> = ['cancelado', 'rechazado'];
 
 const TITULO_ETAPA: Readonly<Record<EtapaId, string>> = {
-  recibido: 'Recibidos',
+  recibido: 'Sin producir',
   produccion: 'En producción',
-  alistamiento: 'En alistamiento',
-  listo: 'Listos para salir',
-  camino: 'En camino',
+  producido: 'Producidos',
+  empacado: 'Empacados',
+  listo: 'Para despachar',
+  camino: 'Despachados',
   entregado: 'Entregados hoy',
   rechazado: 'Rechazados',
   cancelado: 'Cancelados',
@@ -129,7 +131,7 @@ export function filtrarFilas(
   return ordenarFilas(filas.filter(regla));
 }
 
-/** Título sin el conteo: "En camino", "Pedidos a Medellín", "Llegaron por WhatsApp". */
+/** Título sin el conteo: "Despachados", "Pedidos a Medellín", "Llegaron por WhatsApp". */
 export function tituloDeLista(clave: ClaveLista, filasDeLaClave: ReadonlyArray<FilaPedido>, katuq: boolean): string {
   const k = parsearClave(clave);
   if (!k) return 'Pedidos';

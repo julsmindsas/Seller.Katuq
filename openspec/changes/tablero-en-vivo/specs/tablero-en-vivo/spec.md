@@ -27,19 +27,23 @@ La pantalla SHALL mostrar las cifras del día en hora de Colombia: ventas, pedid
 - **THEN** los rótulos dicen "Mis…" y las cifras, la escena, el mapa y la lista solo incluyen sus pedidos
 
 ### Requirement: Escena de la operación
-La pantalla SHALL mostrar una escena 3D donde cada pedido activo es una caja. La caja se ubica en la estación de su etapa: **Recibido** (sin producir), **Producción** (en producción o producido parcialmente), **Alistamiento** (producido totalmente, picking, packing o empacado) y **Listo para salir** (para despachar, listo para despacho o en despacho). Cada evento MUST tener su animación propia:
+La pantalla SHALL mostrar una escena 3D donde cada pedido activo es una caja. Las estaciones MUST ser los estados de proceso de Katuq, con sus nombres, en este orden sobre la banda: **Sin producir**, **En producción**, **Producido** (parcial o total), **Empacado** y **Para despachar** (también "En despacho"). Después de la banda, **Despachado** está en la calle y **Entregado** en la casa del cliente. La pantalla MUST NOT usar etapas que Katuq no tenga. Cada evento MUST tener su animación propia:
 
 | Evento | Animación |
 |---|---|
-| Pedido nuevo | la caja cae sobre Recibido con un pulso y una tarjeta con número, monto, cliente corto y ciudad |
-| Cambio de etapa | la caja viaja por la banda hasta su estación nueva |
-| Salida con mensajero | una moto con el nombre del mensajero recoge las cajas y sale por la vía |
-| Salida con transportadora | un camión carga las cajas y sale |
-| Entregado | una casa del barrio recibe la caja con un sello verde |
+| Pedido nuevo | la caja cae sobre Sin producir con un pulso y una tarjeta con número, monto, cliente corto y ciudad |
+| Cambio de estado | la caja viaja por la banda hasta la estación de su estado nuevo |
+| Despachado con mensajero propio | una moto con el nombre del mensajero recoge la caja, sale por la vía y queda parqueada frente a una casa del barrio mientras el pedido siga despachado |
+| Despachado con transportadora | un camión carga la caja y sale de la ciudad |
+| Entregado | la casa recibe la caja con un sello verde; si la llevaba un mensajero propio, su moto vuelve a la bodega |
 | Rechazado o cancelado | la caja se pone roja y desaparece |
 
+#### Scenario: Mensajero en camino
+- **WHEN** un pedido pasa a Despachado con un mensajero propio
+- **THEN** la moto con su nombre sale de la bodega y queda frente a una casa hasta que el pedido se marque Entregado
+
 #### Scenario: Cambio dentro de la misma estación
-- **WHEN** un pedido pasa de "en picking" a "en packing"
+- **WHEN** un pedido pasa de "producido parcialmente" a "producido totalmente"
 - **THEN** la caja no viaja, y el cambio aparece en la lista de eventos
 
 #### Scenario: Estación llena

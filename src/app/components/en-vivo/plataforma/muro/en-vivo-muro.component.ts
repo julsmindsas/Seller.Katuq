@@ -40,7 +40,7 @@ interface VistaMuroPantalla extends VistaMuro {
 /**
  * El muro de comercios: una tarjeta por comercio con sus ventas y pedidos de hoy, las barras por
  * hora de hoy contra la línea punteada de ayer, su último evento y su hora, sus pedidos en
- * preparación, listos, en ruta y entregados, y su estado (Vendiendo, Hace N min, Revisar o
+ * preparación, para despachar, en ruta y entregados, y su estado (Vendiendo, Hace N min, Revisar o
  * Atención). Cada evento que llega ILUMINA la tarjeta de su comercio (con un tono propio si el
  * pedido lo armó Opttia) y su cifra rueda hasta el valor nuevo. Tocar una tarjeta abre el tablero.
  *

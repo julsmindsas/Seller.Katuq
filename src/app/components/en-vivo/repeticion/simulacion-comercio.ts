@@ -27,7 +27,7 @@ import { PasoRepeticion, Simulador } from './repeticion.tipos';
  * se descarta al terminar (la pantalla vuelve al estado real).
  */
 
-const ETAPAS: ReadonlyArray<EtapaId> = ['recibido', 'produccion', 'alistamiento', 'listo', 'camino', 'entregado', 'rechazado', 'cancelado'];
+const ETAPAS: ReadonlyArray<EtapaId> = ['recibido', 'produccion', 'producido', 'empacado', 'listo', 'camino', 'entregado', 'rechazado', 'cancelado'];
 
 function conteoVacio(): ConteoPorEtapa {
   const conteo = {} as ConteoPorEtapa;

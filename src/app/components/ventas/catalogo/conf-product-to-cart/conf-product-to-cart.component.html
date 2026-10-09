@@ -512,6 +512,7 @@
                                             <div *ngIf="datosEntrega.get('formaEntrega')?.invalid && datosEntrega.get('formaEntrega')?.touched" class="invalid-feedback d-block">
                                                 {{'La forma de entrega es obligatoria' | translate}}
                                             </div>
+                                            <small *ngIf="avisoFormaEntregaUnica" class="text-muted d-block mt-1">{{ avisoFormaEntregaUnica }}</small>
                                         </div>
                                     </div>
 

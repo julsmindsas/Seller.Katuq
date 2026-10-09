@@ -87,7 +87,7 @@ export interface OpcionesTarjetas {
   soloPropias: boolean;
 }
 
-/** Las siete cifras del comercio: ventas, pedidos, en preparación, listos, en camino, entregados y Con Opttia. */
+/** Las siete cifras del comercio: ventas, pedidos, en preparación, para despachar, despachados, entregados y Con Opttia. */
 export function tarjetasComercio(
   cifras: CifrasEnVivo,
   conteos: Partial<Record<EtapaId, number>>,
@@ -96,7 +96,7 @@ export function tarjetasComercio(
 ): TarjetaCifra[] {
   const { ocultar, soloPropias } = opciones;
   const rotulo = (normal: string, propio: string): string => (soloPropias ? propio : normal);
-  const enPreparacion = (conteos.recibido ?? 0) + (conteos.produccion ?? 0) + (conteos.alistamiento ?? 0);
+  const enPreparacion = (conteos.recibido ?? 0) + (conteos.produccion ?? 0) + (conteos.producido ?? 0) + (conteos.empacado ?? 0);
   const enLaCalle = flota.filter((m) => m.enRuta).length;
   const ayer = cifras.ayerMismaHora;
 
@@ -142,12 +142,12 @@ export function tarjetasComercio(
       formato: 'entero',
       tono: 'aviso',
       icono: 'caja',
-      sub: 'Recibidos, producción y alistamiento',
+      sub: 'Sin producir, en producción, producidos y empacados',
       clave: 'prep',
     },
     {
       id: 'listos',
-      etiqueta: rotulo('Listos para salir', 'Mis pedidos listos para salir'),
+      etiqueta: rotulo('Para despachar', 'Mis pedidos para despachar'),
       valor: conteos.listo ?? 0,
       formato: 'entero',
       tono: 'acento',
@@ -157,7 +157,7 @@ export function tarjetasComercio(
     },
     {
       id: 'camino',
-      etiqueta: rotulo('En camino', 'Mis pedidos en camino'),
+      etiqueta: rotulo('Despachados', 'Mis pedidos despachados'),
       valor: conteos.camino ?? 0,
       formato: 'entero',
       tono: 'info',
@@ -250,7 +250,7 @@ export function tarjetasKatuq(g: CifrasGlobalEnVivo, opciones: { ocultar: boolea
     },
     {
       id: 'camino',
-      etiqueta: 'En camino',
+      etiqueta: 'Despachados',
       valor: g.enCamino ?? g.porEtapa?.camino ?? 0,
       formato: 'entero',
       tono: 'info',

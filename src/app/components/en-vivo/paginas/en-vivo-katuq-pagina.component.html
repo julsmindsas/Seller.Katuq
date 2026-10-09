@@ -37,7 +37,7 @@
           <app-en-vivo-katuq-muro *ngSwitchCase="'muro'"></app-en-vivo-katuq-muro>
         </ng-container>
 
-        <app-en-vivo-narracion *ngIf="vm.opcion !== 'muro'"></app-en-vivo-narracion>
+        <app-en-vivo-narracion *ngIf="(vm.opcion !== 'muro') && vm.opttiaActivo"></app-en-vivo-narracion>
         <app-en-vivo-ficha (abrirTablero)="alAbrirTablero($event)"></app-en-vivo-ficha>
       </div>
 
@@ -66,7 +66,7 @@
   <!-- Abajo -->
   <div slot="inferior" class="ev-inferior">
     <app-en-vivo-katuq-radar></app-en-vivo-katuq-radar>
-    <app-en-vivo-opttia
+    <app-en-vivo-opttia *ngIf="opttiaActivo$ | async"
       [conEscena]="(conEscena$ | async) ?? false"
       (recorrido)="alRecorrido()"
       (verEnEscena)="alVerEnEscena($event)"

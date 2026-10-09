@@ -44,7 +44,8 @@ export interface ContextoAccionesOpttia {
 const ETAPAS: ReadonlyArray<EtapaId> = [
   'recibido',
   'produccion',
-  'alistamiento',
+  'producido',
+  'empacado',
   'listo',
   'camino',
   'entregado',
@@ -53,11 +54,12 @@ const ETAPAS: ReadonlyArray<EtapaId> = [
 ];
 
 const TEXTO_ETAPA: Readonly<Record<EtapaId, string>> = {
-  recibido: 'recibidos',
+  recibido: 'sin producir',
   produccion: 'en producción',
-  alistamiento: 'en alistamiento',
-  listo: 'listos para salir',
-  camino: 'en camino',
+  producido: 'producidos',
+  empacado: 'empacados',
+  listo: 'para despachar',
+  camino: 'despachados',
   entregado: 'entregados',
   rechazado: 'rechazados',
   cancelado: 'cancelados',

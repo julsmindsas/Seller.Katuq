@@ -16,8 +16,9 @@ import { PasoRecorrido } from '../ficha.modelos';
 export const PASOS_RECORRIDO: ReadonlyArray<{ id: EtapaId; nombre: string }> = [
   { id: 'recibido', nombre: 'Pedido recibido' },
   { id: 'produccion', nombre: 'En producción' },
-  { id: 'alistamiento', nombre: 'Alistamiento' },
-  { id: 'listo', nombre: 'Listo para salir' },
+  { id: 'producido', nombre: 'Producido' },
+  { id: 'empacado', nombre: 'Empacado' },
+  { id: 'listo', nombre: 'Para despachar' },
   { id: 'camino', nombre: 'Salió a entrega' },
   { id: 'entregado', nombre: 'Entregado' },
 ];

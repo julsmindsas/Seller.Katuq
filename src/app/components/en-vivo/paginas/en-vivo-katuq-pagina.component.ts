@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 import type { MargenesEncuadre } from '../../../shared/escena-3d/escena-base';
 import { EnVivoInteraccionService, OpcionVista } from '../compartido/en-vivo-interaccion.service';
 import { EnVivoOrbeService } from '../escenas/opttia-guia.service';
@@ -29,6 +29,8 @@ interface VistaPagina {
   pedidos: ReadonlyArray<PedidoEnVivo>;
   etapas: ReadonlyArray<EtapaInfo>;
   ocultar: boolean;
+  /** false si el comercio apagó a Opttia (D-386): sin panel ni narración. */
+  opttiaActivo: boolean;
   /** Espacio que la escena deja libre para los paneles flotantes (null = ninguno). */
   margenes: Partial<MargenesEncuadre> | null;
 }
@@ -54,6 +56,8 @@ interface VistaPagina {
 })
 export class EnVivoKatuqPaginaComponent implements OnInit {
   readonly vm$: Observable<VistaPagina>;
+  /** Panel de Opttia solo con el interruptor prendido (D-386). */
+  readonly opttiaActivo$: Observable<boolean>;
   /** "Ampliar": sin paneles flotantes; la lista de eventos vuelve a su columna. */
   private readonly ampliadoSubject = new BehaviorSubject<boolean>(false);
   /** La vista elegida tiene escena 3D y esta sí se pudo montar (si no, Opttia no ofrece recorrido ni "Verlo en la escena"). */
@@ -79,10 +83,12 @@ export class EnVivoKatuqPaginaComponent implements OnInit {
         pedidos: e.pedidos,
         etapas: e.etapas,
         ocultar: prefs.ocultar,
+        opttiaActivo: e.opttiaActivo !== false,
         // "Comercio del momento" y la carrera flotan a la izquierda; los eventos, a la derecha.
         margenes: margenesEscena({ izquierda: true, derecha: true }, ancho && !ampliado && opcion !== 'muro'),
       }))
     );
+    this.opttiaActivo$ = estado.estado$.pipe(map((e) => e.opttiaActivo !== false), distinctUntilChanged());
     this.conEscena$ = combineLatest([interaccion.opcionActiva$, this.sin3d$]).pipe(
       map(([opcion, sin3d]) => opcion !== 'muro' && !sin3d)
     );
