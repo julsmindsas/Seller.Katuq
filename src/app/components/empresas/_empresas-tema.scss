@@ -1,0 +1,181 @@
+// Tema de la pantalla /empresas (rediseño 2026-10-08, D-383): la consola de plataforma
+// (Julsmind) y "Mi empresa" (cada comercio) con el estilo del registro.
+// Mismos tokens y fuentes de marca que el registro (`diagnostic-survey`, `$reg-*`) y que
+// Combos (`proceso/combos/_combos-tema.scss`), que siguen openspec/specs/design-system:
+// acento #5F3FE0, tinta #211F3A, Geometr415, plano y sin gradientes.
+
+@font-face {
+  font-family: 'Geometr415BlkBTBlack';
+  src: url('/assets/images/logo/Katuq/Geometr415%20Blk%20BT%20Black.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Geometr415L';
+  src: url('/assets/images/logo/Katuq/GEO415L.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+$em-accent: #5F3FE0;
+$em-accent-hover: #4a2fc0;
+$em-accent-soft: #efe9ff;
+$em-accent-line: #ddd3fb;
+$em-ink: #211F3A;
+$em-body: #5b5878;
+// Más oscuro que el muted del tema (#8f8bab) para que los rótulos pequeños pasen contraste 4.5:1.
+$em-muted: #6f6b8f;
+$em-line: #ececf4;
+$em-line-soft: #f1f0f7;
+$em-chip-bg: #f5f4fa;
+$em-chip-border: #e9e7f3;
+$em-ghost-border: #e4e2ef;
+$em-tile: #f3f1fb;
+$em-tint: #faf9fe;
+$em-canvas: #f6f5fb;
+$em-ok: #1E874B;
+$em-ok-soft: #E6F7EE;
+// El verde de texto sobre su fondo suave pasa 4.5:1 incluso a 10px (el #1E874B queda en 4.1:1).
+$em-ok-text: #176f3d;
+$em-warn: #9a5a00;
+$em-warn-soft: #FFF1DF;
+$em-err: #B83232;
+$em-err-soft: #FDECEC;
+
+$em-shadow-panel: 0 1px 3px rgba(30, 20, 80, .04);
+$em-shadow-btn: 0 8px 18px -8px rgba(95, 63, 224, .7);
+$em-shadow-float: 0 6px 14px -8px rgba(50, 40, 110, .35);
+
+$em-display: 'Geometr415BlkBTBlack', 'Segoe UI', system-ui, sans-serif;
+$em-text: 'Geometr415L', 'Segoe UI', system-ui, sans-serif;
+$em-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+// Rótulo de campo o sección: UPPERCASE pequeño en muted.
+@mixin em-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: $em-muted;
+}
+
+// Pastilla de acento encima del título ("PLATAFORMA KATUQ").
+@mixin em-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: $em-accent-soft;
+  border: 1px solid $em-accent-line;
+  color: $em-accent;
+  font-family: $em-display;
+  font-size: 11px;
+  font-weight: normal;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+// Título de pantalla: grande, en tinta, con una palabra en acento (<span>).
+@mixin em-titulo {
+  margin: 0;
+  font-family: $em-display;
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: normal;
+  line-height: 1.1;
+  letter-spacing: -.3px;
+  color: $em-ink;
+
+  span { color: $em-accent; }
+}
+
+@mixin em-lead {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: normal;
+  color: $em-body;
+}
+
+@mixin em-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 11px;
+  background: $em-accent;
+  color: #fff;
+  font-family: $em-display;
+  font-size: 14px;
+  font-weight: normal;
+  box-shadow: $em-shadow-btn;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+
+  &:hover:not(:disabled) { background: $em-accent-hover; transform: translateY(-1px); }
+  &:active { transform: translateY(1px); }
+  &:disabled { opacity: .6; cursor: default; }
+  @include em-foco-visible;
+}
+
+@mixin em-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 11px;
+  border: 1px solid $em-ghost-border;
+  background: #fff;
+  color: $em-body;
+  font-family: $em-display;
+  font-size: 13px;
+  font-weight: normal;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+
+  &:hover:not(:disabled) { border-color: $em-accent-line; color: $em-accent; background: $em-tint; }
+  &:disabled { opacity: .6; cursor: default; }
+  @include em-foco-visible;
+}
+
+@mixin em-input {
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid $em-chip-border;
+  background: $em-chip-bg;
+  font-size: 14px;
+  color: $em-ink;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+
+  &::placeholder { color: $em-muted; }
+  &:focus {
+    background: #fff;
+    border-color: $em-accent;
+    box-shadow: 0 0 0 3px $em-accent-soft;
+  }
+}
+
+// Una regla global (_reset.scss: button:focus { outline: none !important }) quita el foco de los botones:
+// se devuelve solo al navegar con teclado.
+@mixin em-foco-visible {
+  &:focus-visible {
+    outline: 3px solid #7C5CFF !important;
+    outline-offset: 2px;
+  }
+}
+
+@mixin em-panel {
+  background: #fff;
+  border: 1px solid $em-line;
+  border-radius: 16px;
+  box-shadow: $em-shadow-panel;
+}

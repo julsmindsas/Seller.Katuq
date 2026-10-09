@@ -2510,14 +2510,21 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     return `Próximo cobro el ${cuando} (en ${r.diasRestantes} días)${periodo}.${origen}`;
   }
 
+  // Uno solo: fechaCorta se llama desde la plantilla, por fila.
+  private readonly formatoFechaCorta = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+
   fechaCorta(valor: any): string {
     const ms = this.aMs(valor);
     if (!ms) return '—';
-    return new Date(ms).toLocaleDateString('es-CO', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
+    const fecha = new Date(ms);
+    // Un número fuera de rango haría lanzar a formatToParts y rompería el render de toda la consola.
+    if (isNaN(fecha.getTime())) return '—';
+    // "8 oct 2026": sin los "de" de la fecha larga, cabe en la columna sin partirse en dos renglones.
+    return this.formatoFechaCorta
+      .formatToParts(fecha)
+      .filter((p) => p.type !== 'literal')
+      .map((p) => p.value.replace(/\.$/, ''))
+      .join(' ');
   }
 
   /** "hace 3 minutos" para el sello de antigüedad de los datos. */

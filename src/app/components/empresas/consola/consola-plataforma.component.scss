@@ -4,12 +4,14 @@
  * gradientes. Prohibidos los primaries paralelos (#2196f3, #4361ee, #2563eb…).
  */
 
-$acento: #5F3FE0;
-$acento-suave: #F2EFFE;
-$acento-borde: #E0D9FB;
-$ink: #211F3A;
-$muted: #6B6880;
-$linea: #EDEAF6;
+@import '../empresas-tema';
+
+$acento: $em-accent;
+$acento-suave: $em-accent-soft;
+$acento-borde: $em-accent-line;
+$ink: $em-ink;
+$muted: $em-muted;
+$linea: $em-line;
 $superficie: #FFFFFF;
 $fondo: #FAF9FE;
 
@@ -20,7 +22,7 @@ $alerta-suave: #FDF6E3;
 $peligro: #D7263D;
 $peligro-suave: #FCEDEF;
 
-$r-lg: 20px;
+$r-lg: 16px;
 $r-md: 16px;
 $r-sm: 11px;
 
@@ -38,23 +40,28 @@ $r-sm: 11px;
 /* ── Encabezado ─────────────────────────────────────────────────────────── */
 .consola-head {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
+  gap: 20px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+/* Pastilla, título grande con una palabra en acento y una línea de contexto:
+   el mismo encabezado del registro. */
+.consola-eyebrow {
+  @include em-eyebrow;
+  margin-bottom: 10px;
 }
 
 .consola-titulo {
-  margin: 0 0 4px;
-  font-weight: 700;
-  color: $ink;
+  @include em-titulo;
+  margin-bottom: 8px;
 }
 
 .consola-sub {
-  margin: 0;
-  color: $muted;
-  font-size: 0.875rem;
+  @include em-lead;
+  font-size: 14px;
 }
 
 .sello {
@@ -64,38 +71,18 @@ $r-sm: 11px;
 
 .head-acciones {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .btn-primario {
-  border: 1px solid $acento;
-  background: $acento;
-  color: #fff;
-  border-radius: $r-sm;
-  padding: 9px 16px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-
-  i { margin-right: 6px; }
-  &:hover { background: darken($acento, 6%); }
+  @include em-btn-primary;
 }
 
 .btn-refrescar {
-  border: 1px solid $acento-borde;
-  background: $superficie;
+  @include em-btn-ghost;
   color: $acento;
-  border-radius: $r-sm;
-  padding: 9px 16px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.15s;
-
-  i { margin-right: 6px; }
-  &:hover:not(:disabled) { background: $acento-suave; }
-  &:disabled { opacity: 0.6; cursor: default; }
 }
 
 /* ── Estados de carga y error ───────────────────────────────────────────── */
@@ -212,8 +199,8 @@ $r-sm: 11px;
 .ctx {
   border: 1px solid $linea;
   background: $superficie;
-  border-radius: $r-sm;
-  padding: 5px 10px;
+  border-radius: 20px;
+  padding: 5px 12px;
   font: inherit;
   font-size: 0.78rem;
   color: $muted;
@@ -311,15 +298,21 @@ $r-sm: 11px;
   background: $superficie;
   border: 1px solid $linea;
   border-radius: $r-md;
-  padding: 16px 18px;
+  padding: 18px 20px;
   text-align: left;
   font: inherit;
   color: inherit;
-  transition: border-color 0.15s, background 0.15s;
+  box-shadow: $em-shadow-panel;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 
 button.kpi { cursor: pointer; }
-button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
+button.kpi:hover {
+  border-color: $acento-borde;
+  background: $acento-suave;
+  transform: translateY(-1px);
+  box-shadow: $em-shadow-float;
+}
 
 .kpi--activo {
   border-color: $acento;
@@ -327,16 +320,13 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 }
 
 .kpi-label {
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 700;
-  color: $muted;
+  @include em-label;
 }
 
 .kpi-valor {
+  font-family: $em-display;
   font-size: 1.85rem;
-  font-weight: 700;
+  font-weight: normal;
   line-height: 1.1;
   color: $ink;
   font-variant-numeric: tabular-nums;
@@ -364,7 +354,7 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
    con "sin integrar", que no decide nada. */
 .kpi--principal {
   border-color: $acento-borde;
-  background: linear-gradient(180deg, $acento-suave 0%, $superficie 70%);
+  background: $acento-suave;
 
   /* Un punto menos que el resto: en seis columnas "US$1.240" se parte en dos
      renglones al tamaño de los demás números. */
@@ -419,19 +409,9 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   }
 
   input {
+    @include em-input;
     width: 100%;
-    border: 1px solid $linea;
-    border-radius: $r-sm;
-    background: $superficie;
-    padding: 10px 36px;
-    font-size: 0.875rem;
-    color: $ink;
-
-    &:focus {
-      outline: none;
-      border-color: $acento;
-      box-shadow: 0 0 0 3px rgba($acento, 0.12);
-    }
+    padding: 0 36px;
   }
 }
 
@@ -461,36 +441,18 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 }
 
 .control-label {
-  font-size: 0.66rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 700;
-  color: $muted;
+  @include em-label;
 }
 
 .control select {
-  border: 1px solid $linea;
-  border-radius: $r-sm;
-  background: $superficie;
-  padding: 9px 12px;
-  font-size: 0.85rem;
-  color: $ink;
+  @include em-input;
+  padding: 0 12px;
+  font-size: 13px;
   cursor: pointer;
-
-  &:focus { outline: none; border-color: $acento; }
 }
 
 .btn-limpiar {
-  border: 1px solid $linea;
-  background: $superficie;
-  color: $muted;
-  border-radius: $r-sm;
-  padding: 9px 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:hover { border-color: $acento-borde; color: $acento; }
+  @include em-btn-ghost;
 }
 
 .conteo-resultados {
@@ -530,11 +492,19 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 .tabla-head {
   background: $fondo;
   border-bottom: 1px solid $linea;
-  font-size: 0.66rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 700;
-  color: $muted;
+  @include em-label;
+
+  /* Los encabezados con estas clases heredaban el tamaño y el color de los DATOS
+     (.col-num: 0.86rem en tinta) y se veían más grandes y oscuros que el resto. */
+  .col-num,
+  .col-estado,
+  .col-plan,
+  .col-acciones {
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
 }
 
 .fila {
@@ -543,12 +513,13 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   transition: background 0.12s;
 
   &:last-of-type { border-bottom: none; }
-  &:hover { background: $acento-suave; }
+  &:hover { background: #faf9ff; }
 }
 
-.fila--abierta {
-  background: $acento-suave;
-  border-bottom-color: $acento-borde;
+.fila--abierta,
+.fila--abierta:hover {
+  background: rgba(124, 92, 255, 0.09);
+  border-bottom-color: #d9cffb;
 }
 
 .fila--inactiva {
@@ -577,8 +548,9 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-family: $em-display;
+  font-size: 0.75rem;
+  font-weight: normal;
 
   &--off { background: $fondo; color: $muted; border-color: $linea; }
 }
@@ -589,8 +561,9 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
   min-width: 0;
 
   strong {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-family: $em-display;
+    font-size: 0.92rem;
+    font-weight: normal;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -693,6 +666,10 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 
   strong { font-weight: 700; }
   &--fecha { color: $muted; font-size: 0.8rem; }
+
+  /* El span que crea el *ngIf recibe su color de una regla global (span.ng-star-inserted, en azul):
+     aquí hereda el de la celda. */
+  &--fecha span:not(.texto-vencido) { color: inherit; }
 }
 
 /* Nota bajo un número de la tabla ("tope del plan"). Va en su propio renglón
@@ -1739,28 +1716,31 @@ button.kpi:hover { border-color: $acento-borde; background: $acento-suave; }
 /* Selector de vista. Dos oficios de la misma pantalla, no dos módulos. */
 .vista-switch {
   display: inline-flex;
-  background: $fondo;
-  border: 1px solid $linea;
-  border-radius: 999px;
+  background: $em-chip-bg;
+  border: 1px solid $em-chip-border;
+  border-radius: 10px;
   padding: 3px;
-  margin-right: 8px;
+  margin-right: 4px;
 
   button {
     border: 0;
     background: transparent;
     color: $muted;
-    font-size: 0.78rem;
-    font-weight: 600;
-    padding: 6px 14px;
-    border-radius: 999px;
+    font-family: $em-display;
+    font-size: 13px;
+    font-weight: normal;
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 8px;
     cursor: pointer;
+    transition: color 0.15s, background 0.15s, box-shadow 0.15s;
 
     &:hover { color: $acento; }
 
     &.activa {
       background: $superficie;
-      color: $ink;
-      box-shadow: 0 1px 2px rgba(33, 31, 58, 0.08);
+      color: $acento;
+      box-shadow: 0 1px 3px rgba(30, 20, 80, 0.12);
     }
   }
 }
