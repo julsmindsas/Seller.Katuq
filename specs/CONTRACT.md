@@ -8953,3 +8953,19 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 - Si después se quita el producto objetivo de un código dirigido, el monto no se recalcula ni se revalida (solo se topa al subtotal neto).
 - `validateCupon` (`cupones.js`) **no filtra por empresa**; el respaldo se mantiene mientras haya cupones viejos, pero lo ideal es migrarlos a Descuentos y Promociones y quitarlo.
 - `updateOrderInternal` confía en el `descuentoAplicado` que manda el cliente (igual que `create`) y varios llamadores (logística, integraciones) reenvían pedidos completos: con una copia vieja pisan ese campo.
+
+## D-388 (2026-10-09) — Bogotá aparece dentro de Cundinamarca al tomar una dirección (ticket 1157, ALMARA; PUBLICADO)
+
+**Disparador.** Ticket 1157 (Sara Restrepo, 9-oct): "estaba tomando un pedido para Bogotá y elegí Cundinamarca en el departamento y Bogotá no aparece como opción de ciudad". Daniel: "cierra otro ticket".
+
+**Causa.** El formulario "Crear dirección estructurada" (`direccion-estructurada.component.ts`) arma departamentos y municipios con el catálogo oficial DANE (`shared/data/colombia-dane-codes.ts`), donde Bogotá es su **propio departamento** ("Bogotá D.C.", código 11001) y no figura entre los municipios de Cundinamarca. Quien busca Bogotá dentro de Cundinamarca no la encuentra; el departamento "Bogotá D.C." sí estaba, pero no es donde la gente la busca. En ALMARA, los pedidos a Bogotá de los últimos 45 días (3 de 1.811) se guardaron como "Bogotá D.C." (dos, una con departamento Antioquia y otra sin departamento) y "Bogota" (una): datos malos de esta misma confusión.
+
+**Decisión.** La lista de municipios de **Cundinamarca ofrece "Bogotá D.C." de primera**. Al elegirla, el departamento pasa solo a "Bogotá D.C." (el mismo camino de la búsqueda directa de ciudad, `autoSeleccionarDepartamento`). El dato que se guarda es el mismo que si se hubiera elegido ese departamento: ciudad "Bogotá D.C.", departamento "Bogotá D.C.". La búsqueda directa de ciudad valida y sugiere contra la misma lista (con Cundinamarca elegida, escribir "Bogotá" sugiere "Bogotá D.C."). No cambia el catálogo DANE ni nada ya guardado.
+
+**Verificado:** Karma 11 de 11 (con la configuración temporal), incluida una prueba con el catálogo DANE real que protege los nombres exactos "Cundinamarca" y "Bogotá D.C.". Revisión adversarial: sin bucles ni parpadeos de la lista; corregida la búsqueda directa, que no sugería a Bogotá con Cundinamarca elegida.
+**No verificado:** el selector en el navegador con una venta real.
+
+**Queda abierto:**
+- **El departamento del modal no llega al pedido.** `pedido-entrega.component.ts` (~1078) y `clientes.component.ts` (~410) leen `resultado.estructura.departamento`, pero el modal lo devuelve en `resultado.departamento` (ticket 1046) y `obtenerEstructuraDireccion` nunca lo trae. Resultado: `departamento_entrega` conserva el valor anterior al cambiar la ciudad, que explica los pedidos de ALMARA con "Bogotá D.C." y departamento "Antioquia". No se tocó: cambia la venta asistida y no se puede probar en esa pantalla; corregirlo exige revisar cómo `departamento_entrega` filtra las zonas de cobro (nombres DANE contra los del catálogo viejo).
+- Quien ya tiene Bogotá como ciudad y elige Cundinamarca en el departamento pierde la ciudad (igual que antes); ahora Bogotá está en la lista y se elige de nuevo.
+- La misma duda puede darse en las demás pantallas con departamento → municipio del DANE (Clientes, Zonas de cobro, Bodegas / cobertura, Crear empresa); no se tocaron. Los 3 pedidos de ALMARA con departamento mal guardado no se corrigieron.
