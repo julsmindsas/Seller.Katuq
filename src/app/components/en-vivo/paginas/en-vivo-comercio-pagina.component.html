@@ -9,6 +9,8 @@
       <app-en-vivo-icono nombre="flecha"></app-en-vivo-icono>
       <span>Toda Katuq</span>
     </a>
+    <!-- Opttia prendido/apagado: solo con la empresa propia (mirando un comercio ajeno no aplica). -->
+    <app-en-vivo-opttia-interruptor *ngIf="!(empresa$ | async)"></app-en-vivo-opttia-interruptor>
     <button
       type="button"
       class="ev-btn ev-btn--ampliar"

@@ -150,6 +150,22 @@ export class EnVivoEstadoService implements OnDestroy {
     if (this.estado.conexion !== 'detenido') this.publicar({ ...this.estado, conexion: 'detenido' });
   }
 
+  /**
+   * Tras prender o apagar a Opttia (D-386): lo muestra o lo esconde ya y vuelve a abrir el canal
+   * sin borrar lo que se ve. El canal abierto trae el interruptor de cuando se conectó (y apagado
+   * ni siquiera pide resúmenes); la foto del canal nuevo trae el valor guardado.
+   */
+  cambiarOpttia(activo: boolean): void {
+    this.publicar({ ...this.estado, opttiaActivo: activo, opttia: activo ? this.estado.opttia : null });
+    const opciones = this.opciones;
+    if (!opciones || !this.suscripcion) return;
+    this.suscripcion.unsubscribe();
+    this.suscripcion = this.canal.abrir(opciones).subscribe({
+      next: (salida) => this.aplicar(salida),
+      error: () => this.publicar({ ...this.estado, conexion: 'reconectando' }),
+    });
+  }
+
   // ── Aplicar lo que llega ──────────────────────────────────────────────────
 
   private aplicar(salida: SalidaCanal): void {

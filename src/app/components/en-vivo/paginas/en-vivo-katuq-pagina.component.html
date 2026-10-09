@@ -1,6 +1,7 @@
 <app-en-vivo vista="katuq" [eventosFlotantes]="!ampliado && (vm$ | async)?.opcion !== 'muro'">
-  <!-- Encabezado: botón extra -->
+  <!-- Encabezado: botones extra -->
   <ng-container ngProjectAs="[slot=acciones]">
+    <app-en-vivo-opttia-interruptor [katuq]="true"></app-en-vivo-opttia-interruptor>
     <button
       type="button"
       class="ev-btn ev-btn--ampliar"

@@ -1,0 +1,12 @@
+<button
+  *ngIf="activado !== null"
+  type="button"
+  class="ev-btn"
+  [attr.aria-pressed]="prendido"
+  [disabled]="!general || guardando"
+  [title]="titulo"
+  (click)="cambiar()"
+>
+  <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+  <span>{{ guardando ? 'Guardando…' : texto }}</span>
+</button>

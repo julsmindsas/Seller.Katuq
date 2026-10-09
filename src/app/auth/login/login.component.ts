@@ -8,6 +8,8 @@ import { UtilsService } from '../../shared/services/utils.service';
 import { environment } from '../../../environments/environment';
 import { PixelesPautaService } from '../../shared/services/pixeles-pauta.service';
 import { SesionConfirmada } from '../../shared/services/registro-verificacion.service';
+import { INICIO_JULSMIND } from '../../shared/guards/inicio-julsmind.guard';
+import { sesionEsJulsmind } from '../../components/en-vivo/paginas/sesion-katuq';
 
 @Component({
   selector: 'app-login',
@@ -109,12 +111,12 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.router.navigate(['/change-password']);
         return;
       }
-      if (user?.rol === 'Super Administrador') {
-        this.router.navigate(['/superadmin/clientes']);
+      if (sesionEsJulsmind()) {
+        this.router.navigate([INICIO_JULSMIND]);
         return;
       }
-      if (user?.rol === 'Administrador' && user?.company === 'Julsmind') {
-        this.router.navigate(['/dashboards']);
+      if (user?.rol === 'Super Administrador') {
+        this.router.navigate(['/superadmin/clientes']);
         return;
       }
 

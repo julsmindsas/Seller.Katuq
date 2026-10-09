@@ -4,6 +4,38 @@
 // incluye con `@include ev-pagina;` — así no se duplica ni se cruzan encapsulaciones.
 $ev-ancho-flotante: 1181px;
 
+// Botón del encabezado (misma forma que los del shell, que son de otra encapsulación). Lo usan
+// las páginas y el interruptor de Opttia (`opttia/en-vivo-opttia-interruptor`).
+@mixin ev-boton-encabezado {
+  @include ev-foco;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: ev-fs(12.5);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--ev-ink-2);
+  cursor: pointer;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-chip-line);
+  border-radius: 11px;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: var(--ev-accent);
+  }
+
+  &[aria-pressed='true'] {
+    color: var(--ev-accent);
+    background: var(--ev-accent-soft);
+    border-color: var(--ev-accent-soft);
+  }
+}
+
 @mixin ev-pagina {
   // El shell (app-en-vivo) pinta su propio padding; la página no agrega nada alrededor.
   :host {
@@ -14,35 +46,9 @@ $ev-ancho-flotante: 1181px;
     --ev-narra-abajo: 18px;
   }
 
-  // Botones del encabezado (misma forma que los del shell, que son de otra encapsulación).
+  // Botones del encabezado.
   .ev-btn {
-    @include ev-foco;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    height: 38px;
-    padding: 0 14px;
-    font: inherit;
-    font-size: ev-fs(12.5);
-    font-weight: 700;
-    text-decoration: none;
-    white-space: nowrap;
-    color: var(--ev-ink-2);
-    cursor: pointer;
-    background: var(--ev-surface);
-    border: 1px solid var(--ev-chip-line);
-    border-radius: 11px;
-    transition: color 0.15s, background 0.15s;
-
-    &:hover {
-      color: var(--ev-accent);
-    }
-
-    &[aria-pressed='true'] {
-      color: var(--ev-accent);
-      background: var(--ev-accent-soft);
-      border-color: var(--ev-accent-soft);
-    }
+    @include ev-boton-encabezado;
   }
 
   .ev-btn--ampliar {

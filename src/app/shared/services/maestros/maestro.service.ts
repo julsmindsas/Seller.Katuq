@@ -38,14 +38,6 @@ export class MaestroService {
   saveMetricasEquipo(activado: boolean) {
     return this.http.put<{ success: boolean; activado: boolean }>(this.urlBase + '/v1/users/metricas-equipo', { activado }, this.httpOptions);
   }
-  /** D-386: ¿Opttia está prendido en la pantalla "En vivo" de la empresa? (`general` = interruptor del servidor). */
-  getOpttiaEnVivo() {
-    return this.http.get<{ success: boolean; activado: boolean; general: boolean }>(this.urlBase + '/v1/users/opttia-en-vivo', this.httpOptions);
-  }
-  /** D-386: prende o apaga Opttia en "En vivo" para la empresa (Administrador o Super Administrador). */
-  saveOpttiaEnVivo(activado: boolean) {
-    return this.http.put<{ success: boolean; activado: boolean }>(this.urlBase + '/v1/users/opttia-en-vivo', { activado }, this.httpOptions);
-  }
   eliminarCliente(id: any) {
     return this.http.post(this.urlBase + '/v1/clients/delete', { cd: id }, this.httpOptions);
 

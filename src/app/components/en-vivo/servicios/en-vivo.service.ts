@@ -15,12 +15,20 @@ import { rutasEnVivo } from './en-vivo-rutas';
 /** Máximo de caracteres de una pregunta a Opttia (diseño 16). */
 export const MAX_PREGUNTA = 160;
 
+const RUTA_INTERRUPTOR_OPTTIA = '/v1/users/opttia-en-vivo';
+
+/** Interruptor de Opttia en "En vivo" (D-386). `general: false` = apagado para todos desde el servidor. */
+export interface InterruptorOpttia {
+  activado: boolean;
+  general?: boolean;
+}
+
 /**
- * HTTP de "En vivo": foto (también sirve de sondeo), detalle del pedido y preguntas a
- * Opttia. TODO va por `BaseService` (el interceptor pone `Authorization`, `company`...).
+ * HTTP de "En vivo": foto (también sirve de sondeo), detalle del pedido, preguntas a Opttia y
+ * su interruptor. TODO va por `BaseService` (el interceptor pone `Authorization`, `company`...).
  * El stream no pasa por aquí: `HttpClient` no sirve para SSE (ver `EnVivoCanalService`).
  *
- * Solo lectura: ninguna llamada cambia pedidos ni nada más. Cada respuesta puede ser
+ * Ninguna llamada cambia pedidos; lo único que se escribe es el interruptor de Opttia. Cada respuesta puede ser
  * `{ disponible: false }` con 200 si el rol no tiene el menú `en-vivo`.
  *
  * Ojo con el loader global: `BaseService` no deja pasar `SKIP_LOADER`, así que el shell
@@ -41,6 +49,16 @@ export class EnVivoService extends BaseService {
   /** Foto de toda Katuq. El servidor la rechaza (403) si la empresa del token no es Julsmind. */
   fotoGlobal(): Observable<FotoGlobalEnVivo | RespuestaNoDisponible> {
     return this.get<FotoGlobalEnVivo | RespuestaNoDisponible>(rutasEnVivo.fotoGlobal());
+  }
+
+  /** Interruptor de Opttia en "En vivo" de la empresa de la sesión (`general` = el del servidor). */
+  interruptorOpttia(): Observable<InterruptorOpttia> {
+    return this.get<InterruptorOpttia>(RUTA_INTERRUPTOR_OPTTIA);
+  }
+
+  /** Prende o apaga a Opttia en "En vivo" para la empresa de la sesión (Administrador o Super Administrador). */
+  guardarInterruptorOpttia(activado: boolean): Observable<InterruptorOpttia> {
+    return this.put<InterruptorOpttia>(RUTA_INTERRUPTOR_OPTTIA, { activado });
   }
 
   /**

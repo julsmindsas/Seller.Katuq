@@ -1,0 +1,18 @@
+@import '../paginas/paginas-comun';
+
+:host {
+  display: contents;
+}
+
+.ev-btn {
+  @include ev-boton-encabezado;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+
+    &:hover {
+      color: var(--ev-ink-2);
+    }
+  }
+}

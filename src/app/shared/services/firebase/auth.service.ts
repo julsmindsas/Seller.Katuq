@@ -12,6 +12,8 @@ import { syncSentryUserContext } from "../errores/sentry-context";
 import { clearOnboardingStorage } from "../../../components/onboarding/utils/onboarding-v2.utils";
 import { LoaderService } from "../loader.service";
 import { AppLanguage, DEFAULT_APP_LANGUAGE, normalizeAppLanguage } from "../../utils/app-language.utils";
+import { INICIO_JULSMIND } from "../../guards/inicio-julsmind.guard";
+import { sesionEsJulsmind } from "../../../components/en-vivo/paginas/sesion-katuq";
 
 export interface User {
   uid: string;
@@ -149,17 +151,16 @@ export class AuthService implements OnInit {
 
       // Verificar roles y redirigir según corresponda
       const isSuperAdmin = result.rol === 'Super Administrador';
-      const isJulsmindAdmin = result.rol === 'Administrador' && result.company === 'Julsmind';
 
-      if (isSuperAdmin) {
+      if (sesionEsJulsmind()) {
+        // D-386: el inicio de Julsmind es "Katuq en vivo" (todos los comercios operando).
+        this.router.navigate([INICIO_JULSMIND]);
+        this.services.getEmpresaByName({ company: result.company });
+      } else if (isSuperAdmin) {
         // La consola de plataforma vive en "Configuración de empresa": un solo
         // sitio para administrar empresas. `/superadmin/clientes` sigue
         // existiendo como redirect para enlaces guardados.
         this.router.navigate(["/empresas"]);
-        this.services.getEmpresaByName({ company: result.company });
-      } else if (isJulsmindAdmin) {
-        // Redirigir a la página de administración de Julsmind
-        this.router.navigate(["/dashboards"]);
         this.services.getEmpresaByName({ company: result.company });
       } else {
         // Para usuarios regulares, diferenciar entre Administrador y otros roles
