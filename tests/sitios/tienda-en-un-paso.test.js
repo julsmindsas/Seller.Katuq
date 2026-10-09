@@ -642,6 +642,9 @@ test('el componente: si ya hay una tienda a medio crear, muestra SU avance en ve
   assert.equal(c.fase, 'resultado');
   assert.equal(c.resumen.puedeReintentar, true);
   assert.equal(c.errorGeneral, '');
+  // Es la tienda de OTRO envío: se dice que lo de ahora no se aplicó (y no "con los precios que pusiste").
+  assert.match(c.avisoDatosAnteriores, /lo que mandaste ahora no se aplicó/);
+  assert.match(c.avisoDatosAnteriores, /corrígelos en Productos/);
   // Reintentar usa la solicitud del servidor, no la que se generó aquí.
   servicio.colas.retomar.push(ok({ siteId: pendiente.siteId, reused: true, resumed: true, progress: avance({ siteId: pendiente.siteId, state: 'queued' }) }));
   servicio.colas.avance.length = 0;
@@ -649,6 +652,21 @@ test('el componente: si ya hay una tienda a medio crear, muestra SU avance en ve
   c.reintentar();
   assert.deepEqual(servicio.llamadas.retomar, ['tep-del-servidor']);
   assert.equal(c.fase, 'avance');
+});
+
+test('el componente: en un envío normal no sale el aviso de envío anterior, y un envío nuevo lo borra', () => {
+  const { c, servicio } = crearComponente();
+  llenar(c);
+  servicio.colas.iniciar.push(iniciada(avance({ state: 'queued', step: 'photos' })));
+  c.crear();
+  assert.equal(c.avisoDatosAnteriores, '');
+  c.avisoDatosAnteriores = 'algo viejo';
+  c.fase = 'formulario';
+  servicio.colas.iniciar.push(iniciada(avance({ state: 'queued', step: 'photos' })));
+  c.crear();
+  assert.equal(c.avisoDatosAnteriores, '');
+  const html = fs.readFileSync(path.join(CARPETA, 'tienda-en-un-paso.component.html'), 'utf8');
+  assert.match(html, /avisoDatosAnteriores \? 'con los precios del envío anterior\.' : 'con los precios que pusiste\.'/);
 });
 
 test('el componente: consulta el avance cada pocos segundos hasta que termina, y entonces avisa', () => {

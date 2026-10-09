@@ -141,6 +141,10 @@
           </li>
         </ul>
 
+        <div class="tep__banner tep__banner--aviso" *ngIf="avisoDatosAnteriores" role="status">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <span>{{ avisoDatosAnteriores }}</span>
+        </div>
         <div class="tep__banner tep__banner--aviso" *ngIf="avisoLargo" role="status">
           <i class="pi pi-info-circle" aria-hidden="true"></i>
           <span>{{ avisoLargo }}</span>
@@ -171,8 +175,13 @@
         </div>
 
         <p class="tep__cuenta" *ngIf="resumen.productos > 0">
-          {{ textoProductos(resumen.productos) }} con los precios que pusiste.
+          {{ textoProductos(resumen.productos) }} {{ avisoDatosAnteriores ? 'con los precios del envío anterior.' : 'con los precios que pusiste.' }}
         </p>
+
+        <div class="tep__banner tep__banner--aviso" *ngIf="avisoDatosAnteriores" role="status">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <span>{{ avisoDatosAnteriores }}</span>
+        </div>
 
         <ul class="tep__avisos" *ngIf="resumen.avisos.length">
           <li *ngFor="let aviso of resumen.avisos">{{ aviso }}</li>
