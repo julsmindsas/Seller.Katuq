@@ -8771,7 +8771,7 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 **Verificado:** capturas con una sesión y datos de prueba inventados, interceptando la API, primero en el servidor de desarrollo y luego sobre el bundle de producción ya compilado: consola con Empresas, Cobros (fecha vencida en rojo), Pauta y la ficha abierta, y Mi empresa, en 1440 px y 390 px; tamaños de letra, alineación de Acciones, scroll de la tabla y hover medidos con estilos calculados. Revisión adversarial: sin bloqueantes, con dos hallazgos altos y varios medios, todos corregidos: la fecha vencida que perdía el rojo, el scroll horizontal de la tabla, el encabezado Acciones, el estado activo que se borraba con el hover, el foco visible, el contraste de la píldora Activo, `role=radio` en las tarjetas de precio y `fechaCorta` (un número fuera de rango lanzaba un error). Build de producción y `verify-dist-prod` en verde.
 **No verificado:** datos reales de producción; el modo oscuro; Mi empresa con un rol que no sea administrador (el modo de precios queda de solo lectura); guardar el modo de precios y editar una empresa (no se tocó su lógica).
 
-## D-384 (2026-10-09) — Automatizaciones: conectar pasos fácil y cajas que no se cortan (sigue D-350 parte C)
+## D-384 (2026-10-09) — Automatizaciones: conectar pasos fácil y cajas que no se cortan (sigue D-350 parte C) (PUBLICADO 2026.10.09.1)
 
 **Disparador.** Daniel: "revisa las cajas de los conectores, se cortan" y "revisa que se puedan intercomunicar entre ellas fácilmente".
 
