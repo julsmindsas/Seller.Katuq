@@ -463,3 +463,20 @@
     }
   }
 } 
+
+// Pedidos para tomar desde la app (modo tipo Rappi)
+.toman-pedidos-card {
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 12px;
+
+  .toman-pedidos-icon {
+    font-size: 1.5rem;
+    color: var(--primary-dark, #8b9cff);
+  }
+
+  .form-check-input {
+    width: 2.6rem;
+    height: 1.35rem;
+    cursor: pointer;
+  }
+}

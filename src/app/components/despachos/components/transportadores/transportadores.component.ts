@@ -1,5 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import Swal from 'sweetalert2';
+import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
 
 @Component({
   selector: 'app-transportadores',
@@ -23,10 +25,58 @@ export class TransportadoresComponent implements OnInit, OnChanges {
   isLoading: boolean = false;
   showForm: boolean = false;
 
-  constructor(private formBuilder: FormBuilder) { }
+  /** Toma de pedidos desde la app del mensajero (null mientras carga o si no se pudo leer). */
+  tomanPedidos: boolean | null = null;
+  guardandoTomanPedidos = false;
+
+  constructor(private formBuilder: FormBuilder, private logistica: LogisticaServiceV2) { }
 
   ngOnInit(): void {
     this.initForm();
+    this.logistica.getMensajerosConfig().subscribe({
+      next: (r) => this.tomanPedidos = r?.config?.mensajerosTomanPedidos === true,
+      error: () => this.tomanPedidos = null,
+    });
+  }
+
+  /**
+   * Activa o apaga que los mensajeros tomen solos los pedidos listos (Empacado / Para despachar) que no
+   * tienen mensajero asignado. Se confirma antes porque cambia cómo se reparten los pedidos.
+   */
+  async cambiarTomanPedidos(valor: boolean): Promise<void> {
+    const anterior = this.tomanPedidos;
+    const r = await Swal.fire({
+      icon: 'question',
+      title: valor ? '¿Activar pedidos para tomar?' : '¿Apagar pedidos para tomar?',
+      text: valor
+        ? 'Tus mensajeros en línea verán en la app los pedidos listos que no tengan mensajero y el primero que lo tome se lo lleva. No incluye los pedidos que ya asignaste.'
+        : 'Tus mensajeros dejarán de ver pedidos para tomar. Los que ya tomaron siguen a su nombre.',
+      showCancelButton: true,
+      confirmButtonText: valor ? 'Sí, activar' : 'Sí, apagar',
+      cancelButtonText: 'Cancelar',
+    });
+    if (!r.isConfirmed) {
+      this.tomanPedidos = anterior;
+      return;
+    }
+    this.guardandoTomanPedidos = true;
+    this.logistica.saveMensajerosConfig(valor).subscribe({
+      next: () => {
+        this.tomanPedidos = valor;
+        this.guardandoTomanPedidos = false;
+      },
+      error: (e) => {
+        this.tomanPedidos = anterior;
+        this.guardandoTomanPedidos = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'No se guardó el cambio',
+          text: e?.status === 403
+            ? 'Solo un administrador de la empresa puede cambiar esto. Pídele a un administrador que lo haga.'
+            : 'No pudimos guardar el cambio. Revisa tu conexión e inténtalo de nuevo.',
+        });
+      },
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {

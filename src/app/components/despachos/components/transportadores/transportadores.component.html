@@ -8,6 +8,30 @@
     </button>
 </div>
 <div class="modal-body scrollable-content">
+    <!-- Pedidos para tomar desde la app (modo tipo Rappi): interruptor por empresa -->
+    <div class="card mb-3 toman-pedidos-card" *ngIf="!showForm">
+        <div class="card-body d-flex align-items-center gap-3">
+            <i class="pi pi-send toman-pedidos-icon"></i>
+            <div class="flex-grow-1">
+                <h6 class="mb-1">{{ 'Pedidos para tomar desde la app' | translate }}</h6>
+                <small class="text-muted">
+                    {{ 'Tus mensajeros en línea ven los pedidos listos sin mensajero y el primero que lo toma se lo lleva, lo recoge y lo entrega.' | translate }}
+                </small>
+            </div>
+            <div class="form-check form-switch m-0" *ngIf="tomanPedidos !== null; else sinConfig">
+                <input class="form-check-input" type="checkbox" role="switch" id="tomanPedidosSwitch"
+                       [checked]="tomanPedidos" [disabled]="guardandoTomanPedidos"
+                       (change)="cambiarTomanPedidos($any($event.target).checked); $any($event.target).checked = tomanPedidos">
+                <label class="form-check-label" for="tomanPedidosSwitch">
+                    {{ (tomanPedidos ? 'Activo' : 'Apagado') | translate }}
+                </label>
+            </div>
+            <ng-template #sinConfig>
+                <small class="text-muted">{{ 'No disponible' | translate }}</small>
+            </ng-template>
+        </div>
+    </div>
+
     <!-- Tabla principal de transportadores -->
     <div class="card table-card mb-3" *ngIf="!showForm">
         <div class="card-body">

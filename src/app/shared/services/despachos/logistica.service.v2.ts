@@ -34,6 +34,16 @@ export class LogisticaServiceV2 extends BaseService {
         return this.http.post(`${this.apiUrl}/v1/logistica/vendors/delete`, id);
     }
 
+    /** ¿Los mensajeros de la empresa pueden tomar pedidos listos desde la app (modo tipo Rappi)? */
+    getMensajerosConfig(): Observable<{ success: boolean; config: { mensajerosTomanPedidos: boolean } }> {
+        return this.http.get<any>(`${this.apiUrl}/v1/logistica/mensajeros/config`);
+    }
+
+    /** Enciende o apaga la toma de pedidos desde la app. Solo administradores. */
+    saveMensajerosConfig(mensajerosTomanPedidos: boolean): Observable<any> {
+        return this.http.put(`${this.apiUrl}/v1/logistica/mensajeros/config`, { mensajerosTomanPedidos });
+    }
+
     // Órdenes de envío
     /**
      * @deprecated Usar getShippingOrdersPaginated() para mejor rendimiento.
