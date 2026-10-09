@@ -171,3 +171,66 @@ describe('PedidosUtilService.getDiscount() — D-220', () => {
   });
 
 });
+
+/**
+ * Ticket 1161 — la base de cada línea que se le manda al backend al aplicar un código a un pedido ya
+ * creado. Tiene que ser la del carrito de la venta asistida: CON IVA, neta del descuento por línea y
+ * con adiciones y preferencias. Sobre ella el backend arma el monto del código y el historial.
+ */
+describe('PedidosUtilService.precioLineaConIvaNeto() — ticket 1161', () => {
+  let service: PedidosUtilService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [
+        PedidosUtilService,
+        { provide: MaestroService, useValue: {} },
+        { provide: CacheService, useValue: { get: () => null, set: () => {} } },
+      ],
+    });
+    service = TestBed.inject(PedidosUtilService);
+  });
+
+  const producto = (extra: any = {}) => ({
+    precio: { precioUnitarioSinIva: 100000, precioUnitarioConIva: 119000, precioUnitarioIva: '19', preciosVolumen: [] },
+    ...extra,
+  });
+
+  it('precio con IVA por la cantidad (la base del carrito, no la de sin IVA)', () => {
+    expect(service.precioLineaConIvaNeto({ producto: producto(), cantidad: 2, configuracion: {} })).toBe(238000);
+  });
+
+  it('descuenta el descuento por línea', () => {
+    expect(service.precioLineaConIvaNeto({ producto: producto(), cantidad: 2, descuentoLinea: 10, configuracion: {} })).toBe(214200);
+  });
+
+  it('suma adiciones y preferencias con IVA, por la cantidad', () => {
+    const item = {
+      producto: producto(),
+      cantidad: 3,
+      configuracion: {
+        adiciones: [{ cantidad: 1, referencia: { precioTotal: 4760 } }],
+        preferencias: [{ precioTotalConIva: 1190 }],
+      },
+    };
+
+    expect(service.precioLineaConIvaNeto(item)).toBe((119000 + 4760 + 1190) * 3);
+  });
+
+  it('con IVA manual recalcula desde el precio sin IVA', () => {
+    expect(service.precioLineaConIvaNeto({ producto: producto(), cantidad: 1, _ivaManualOverride: 5, configuracion: {} })).toBeCloseTo(105000, 5);
+  });
+
+  it('un producto con precio promocional usa ese precio, salvo que tenga precio por categoría de cliente', () => {
+    const promo = producto({ precioPromocional: 100000 });
+
+    expect(service.precioLineaConIvaNeto({ producto: promo, cantidad: 2, configuracion: {} })).toBe(200000);
+    expect(service.precioLineaConIvaNeto({ producto: { ...promo, _precioAplicadoPorCategoria: true }, cantidad: 2, configuracion: {} })).toBe(238000);
+  });
+
+  it('una línea sin precio o sin cantidad vale 0', () => {
+    expect(service.precioLineaConIvaNeto({ producto: {}, cantidad: 2 })).toBe(0);
+    expect(service.precioLineaConIvaNeto({ producto: producto(), cantidad: 0, configuracion: {} })).toBe(0);
+  });
+});

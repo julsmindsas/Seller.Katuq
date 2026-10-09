@@ -727,6 +727,51 @@ export class PedidosUtilService {
     }
     
     /**
+     * Precio de UNA línea del pedido, CON IVA, neto del descuento por línea y con adiciones y
+     * preferencias, sin envío. Es la misma base que el carrito de la venta asistida le manda al
+     * backend al aplicar un código (carrito.component.ts: checkPriceScale + adiciones + preferencias,
+     * por la cantidad), y sobre la que el backend arma el monto del código, el monto mínimo y el
+     * historial de redenciones (ticket 1161).
+     * Jerarquía del precio, igual que checkPriceScaleBruto: precio manual → IVA manual → promoción
+     * de catálogo (si no tiene precio por categoría) → categoría / volumen / base.
+     */
+    precioLineaConIvaNeto(itemCarrito: any): number {
+        const producto = itemCarrito?.producto;
+        if (!producto?.precio) return 0;
+
+        const cantidad = Number(itemCarrito?.cantidad) || 0;
+        const tienePrecioManual = itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+            && producto?.procesoComercial?.permitePrecioManual === true;
+        const tieneIvaManual = itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null;
+        const promo = producto?.precioPromocional;
+        const base = producto?.precio?.precioUnitarioConIva;
+        const enPromocion = typeof promo === "number" && typeof base === "number" && promo < base;
+
+        let unitario: number;
+        if (tienePrecioManual) {
+            unitario = this.calcularPrecioUnitarioConIVA(itemCarrito);
+        } else if (tieneIvaManual) {
+            unitario = this.calcularPrecioUnitarioSinIVA(itemCarrito) * (1 + Number(itemCarrito._ivaManualOverride) / 100);
+        } else if (!producto._precioAplicadoPorCategoria && enPromocion) {
+            unitario = Number(promo) || 0;
+        } else {
+            unitario = this.calcularPrecioUnitarioConIVA(itemCarrito);
+        }
+
+        const descuentoLinea = Math.min(100, Math.max(0, Number(itemCarrito?.descuentoLinea) || 0));
+        let extras = 0;
+        itemCarrito?.configuracion?.adiciones?.forEach((adicion: any) => {
+            extras += (adicion?.referencia?.precioTotal || 0) * (adicion?.cantidad || 0);
+        });
+        itemCarrito?.configuracion?.preferencias?.forEach((preferencia: any) => {
+            extras += preferencia?.precioTotalConIva || 0;
+        });
+
+        const total = (unitario * (1 - descuentoLinea / 100) + extras) * cantidad;
+        return isNaN(total) ? 0 : total;
+    }
+
+    /**
      * 🔄 NUEVO: Obtener subtotal solo de productos (sin envío)
      * Útil para casos donde se necesita el subtotal base
      */

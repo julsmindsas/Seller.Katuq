@@ -2356,7 +2356,7 @@
                     </button>
 
                     <!-- Editar/Eliminar Descuento (Solo si el pedido tiene descuento) -->
-                    <button *ngIf="!isFromProduction && selectedOrder?.porceDescuento && selectedOrder.porceDescuento > 0 && (canModifyProducts(selectedOrder) || isAdminUser())" 
+                    <button *ngIf="!isFromProduction && ((selectedOrder?.porceDescuento && selectedOrder.porceDescuento > 0) || selectedOrder?.descuentoAplicado) && (canModifyProducts(selectedOrder) || isAdminUser())" 
                             class="option-btn" 
                             type="button"
                             (click)="editarDescuentoPedido(editarDescuentoModal, selectedOrder); closeOptionsModal()">
@@ -2482,7 +2482,7 @@
                     <span translate="Aplicar"></span>
                 </button>
             </div>
-            <div class="invalid-feedback" *ngIf="errorCodigoDescuento">
+            <div class="invalid-feedback d-block" *ngIf="errorCodigoDescuento">
                 {{errorCodigoDescuento}}
             </div>
         </div>
@@ -2493,7 +2493,8 @@
             <strong>{{'Descuento aplicado exitosamente' | translate}}</strong>
             <div class="mt-2">
                 <p class="mb-1"><strong>{{'Código:' | translate}}</strong> {{descuentoAplicado.codigo}}</p>
-                <p class="mb-1"><strong>{{'Porcentaje:' | translate}}</strong> {{descuentoAplicado.porcentaje}}%</p>
+                <p class="mb-1" *ngIf="descuentoAplicado.tipo !== 'envio_gratis' && descuentoAplicado.porcentaje"><strong>{{'Porcentaje:' | translate}}</strong> {{descuentoAplicado.porcentaje}}%</p>
+                <p class="mb-1" *ngIf="descuentoAplicado.tipo === 'envio_gratis'"><strong>{{'Envío gratis' | translate}}</strong></p>
                 <p class="mb-0"><strong>{{'Valor del descuento:' | translate}}</strong> {{descuentoAplicado.valor | currency:'USD':'symbol':'1.0-0'}}</p>
             </div>
         </div>
