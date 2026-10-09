@@ -62,6 +62,8 @@
     <!-- ═══ Panel de trabajo ═══════════════════════════════════════════════ -->
     <aside class="panel">
       <nav class="pestanas">
+        <!-- Editar la página conversando con la IA (bandera landingPrompt). -->
+        <button *ngIf="puedeEditarConIA" class="pestana-ia" [class.is-active]="panel === 'ia'" (click)="panel = 'ia'">✨ Con IA</button>
         <button [class.is-active]="panel === 'bloques'" (click)="panel = 'bloques'">Secciones</button>
         <button [class.is-active]="panel === 'diseno'" (click)="panel = 'diseno'; cargarMuestrasDeLetra()">Estilo</button>
         <button [class.is-active]="panel === 'tienda'" (click)="panel = 'tienda'; cargarBodegas()">Tienda</button>
@@ -72,6 +74,38 @@
         <button [class.is-active]="panel === 'pauta'" (click)="panel = 'pauta'">Pauta</button>
         <button [class.is-active]="panel === 'ajustes'" (click)="panel = 'ajustes'">Ajustes</button>
       </nav>
+
+      <!-- ── Con IA: pedirle cambios a la página conversando ── -->
+      <div class="panel__contenido" *ngIf="panel === 'ia' && puedeEditarConIA">
+        <div class="grupo grupo--ia chat-ia">
+          <h3>Edita con IA</h3>
+          <p>Dime qué quieres cambiar de <strong>{{ nombrePaginaActiva }}</strong> y lo hago sobre la página. Si no te gusta, «Deshacer» o Ctrl+Z.</p>
+
+          <div class="chat-ia__mensajes" *ngIf="mensajesIA.length || editandoIA">
+            <div class="chat-ia__pensando" *ngIf="editandoIA" role="status" aria-live="polite">Editando tu página…</div>
+            <div *ngFor="let m of mensajesIAInverso" class="chat-ia__burbuja"
+                 [class.chat-ia__burbuja--yo]="m.rol === 'comercio'"
+                 [class.chat-ia__burbuja--error]="m.error">{{ m.texto }}</div>
+          </div>
+
+          <div class="chat-ia__sugerencias" *ngIf="!mensajesIA.length">
+            <button type="button" class="chat-ia__sugerencia" *ngFor="let s of sugerenciasIA" (click)="usarSugerenciaIA(s)">{{ s }}</button>
+          </div>
+
+          <div class="campo chat-ia__entrada">
+            <textarea rows="3" [(ngModel)]="mensajeIA" [maxlength]="instruccionMax" [disabled]="editandoIA"
+                      (keydown.enter)="alEnterChatIA($any($event))"
+                      placeholder="Ej: pon un título más llamativo, colores verdes y agrega preguntas frecuentes"></textarea>
+          </div>
+          <div class="ia-acciones">
+            <button class="btn-primario btn-primario--sm" (click)="enviarChatIA()" [disabled]="editandoIA || mensajeIA.trim().length < 3">
+              {{ editandoIA ? 'Editando…' : 'Aplicar' }}
+            </button>
+            <button class="btn-fantasma btn-fantasma--sm" *ngIf="puedeDeshacerIA" (click)="deshacerChatIA()" [disabled]="editandoIA">Deshacer el último cambio</button>
+          </div>
+          <small class="chat-ia__nota">No se guarda solo: revisa la página y toca Guardar. Fotos, productos y precios se cambian a mano.</small>
+        </div>
+      </div>
 
       <!-- ── Secciones ── -->
       <div class="panel__contenido" *ngIf="panel === 'bloques'">

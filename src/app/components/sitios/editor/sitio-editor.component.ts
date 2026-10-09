@@ -10,6 +10,15 @@ import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { SitioRenderComponent } from "../../sitio-render/sitio-render.component";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 import { LimitesPlanService } from "../../../shared/services/limites-plan.service";
+import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
+import {
+  INSTRUCCION_MAX,
+  MensajeEditarIA,
+  SUGERENCIAS_EDITAR_IA,
+  historialParaServidor,
+  mensajeDeErrorEditarIA,
+  validarInstruccion,
+} from "./editar-con-ia.logic";
 
 /** Tipos de bloque que se pueden agregar, con su nombre en cristiano. */
 const CATALOGO_BLOQUES: { tipo: string; nombre: string; descripcion: string; icono: string }[] = [
@@ -745,7 +754,9 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
     private host: ElementRef<HTMLElement>,
     private cdr: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
-    public plan: LimitesPlanService
+    public plan: LimitesPlanService,
+    // Banderas por comercio: decide si se muestra "Con IA" (editar la página conversando).
+    public features: CompanyFeaturesService
   ) {}
 
   ngOnInit(): void {
@@ -2462,6 +2473,96 @@ export class SitioEditorComponent implements OnInit, OnDestroy, AfterViewChecked
 
   /** El tema tal como estaba antes de empezar a probarse vestidos. */
   temaAnterior: any = null;
+
+  // ── Editar con IA, conversando (bandera landingPrompt) ──
+  // El servidor devuelve la página cambiada; aquí se pone en pantalla y entra al historial (Ctrl+Z).
+  // Nada se guarda hasta que la persona toque Guardar.
+  mensajesIA: MensajeEditarIA[] = [];
+  mensajeIA = "";
+  editandoIA = false;
+  readonly sugerenciasIA = SUGERENCIAS_EDITAR_IA;
+  readonly instruccionMax = INSTRUCCION_MAX;
+  private pilaDeshacerIA: string[] = [];
+
+  get puedeEditarConIA(): boolean {
+    return !!(this.features && this.features.isEnabled("landingPrompt"));
+  }
+
+  get puedeDeshacerIA(): boolean {
+    return this.pilaDeshacerIA.length > 0;
+  }
+
+  /** Los mensajes del más nuevo al más viejo: la lista se pinta de abajo hacia arriba. */
+  get mensajesIAInverso(): MensajeEditarIA[] {
+    return [...this.mensajesIA].reverse();
+  }
+
+  usarSugerenciaIA(texto: string): void {
+    if (this.editandoIA) return;
+    this.mensajeIA = texto;
+  }
+
+  alEnterChatIA(evento: KeyboardEvent): void {
+    if (evento.shiftKey) return;
+    evento.preventDefault();
+    this.enviarChatIA();
+  }
+
+  enviarChatIA(): void {
+    if (!this.contenido || this.editandoIA || !this.puedeEditarConIA) return;
+    const v = validarInstruccion(this.mensajeIA);
+    if (!v.ok) {
+      this.toastr.warning(v.mensaje);
+      return;
+    }
+    const historial = historialParaServidor(this.mensajesIA);
+    this.mensajesIA.push({ rol: "comercio", texto: v.instruccion });
+    this.mensajeIA = "";
+    this.editandoIA = true;
+    const paginaDelPedido = this.paginaActiva;
+    this.service
+      .editarConIA({
+        siteId: this.id,
+        instruccion: v.instruccion,
+        historial,
+        contenido: { bloques: this.bloques, tema: (this.contenido as any).tema },
+      })
+      .subscribe({
+        next: (res) => {
+          this.editandoIA = false;
+          const d = res && res.data;
+          if (!res || !res.success || !d) {
+            this.mensajesIA.push({ rol: "ia", texto: (res && (res as any).message) || "No pude aplicar el cambio.", error: true });
+            return;
+          }
+          // Solo se aplica sobre la misma página que se pidió (si la persona cambió de página, no se pisa otra).
+          if (d.aplicados > 0 && this.contenido && paginaDelPedido === this.paginaActiva) {
+            this.pilaDeshacerIA.push(JSON.stringify(this.contenido));
+            if (this.pilaDeshacerIA.length > 20) this.pilaDeshacerIA.shift();
+            const pagina = this.paginaEnEdicion;
+            if (pagina) pagina.bloques = d.bloques as any;
+            else (this.contenido as any).bloques = d.bloques;
+            (this.contenido as any).tema = d.tema;
+            this.seleccionado = -1;
+            this.marcarSucio();
+          }
+          this.mensajesIA.push({ rol: "ia", texto: d.mensaje });
+        },
+        error: (e) => {
+          this.editandoIA = false;
+          this.mensajesIA.push({ rol: "ia", texto: mensajeDeErrorEditarIA(e), error: true });
+        },
+      });
+  }
+
+  deshacerChatIA(): void {
+    const foto = this.pilaDeshacerIA.pop();
+    if (!foto || this.editandoIA) return;
+    this.contenido = JSON.parse(foto);
+    this.seleccionado = -1;
+    this.marcarSucio();
+    this.mensajesIA.push({ rol: "ia", texto: "Listo, deshice el último cambio." });
+  }
 
   // ── Diseñar con IA ──
   indicacionesIA = "";

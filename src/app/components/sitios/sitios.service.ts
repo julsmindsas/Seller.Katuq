@@ -563,6 +563,19 @@ export class SitiosService extends BaseService {
   }
 
   /**
+   * Editar la página con IA (bandera `landingPrompt`): manda lo que pide el comercio y la página tal como
+   * está en el editor (sin guardar); vuelve la página cambiada. El servidor NO guarda nada.
+   */
+  editarConIA(body: {
+    siteId: string;
+    instruccion: string;
+    historial: { rol: 'comercio' | 'ia'; texto: string }[];
+    contenido: { bloques: any[]; tema: any };
+  }): Observable<Respuesta<{ bloques: any[]; tema: any; aplicados: number; ignorados: number; mensaje: string }>> {
+    return this.post<any>("/v1/onboarding/pagina-con-ia/editar", body);
+  }
+
+  /**
    * Página con IA desde una descripción (bandera `landingPrompt`): el servidor interpreta el
    * texto, arma la página en BORRADOR y responde con su id. En producción tarda unos 5 segundos (medido el 9-oct).
    */
