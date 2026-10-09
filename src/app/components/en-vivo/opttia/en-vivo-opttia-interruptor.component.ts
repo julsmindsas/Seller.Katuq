@@ -1,13 +1,28 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  SimpleChanges,
+} from '@angular/core';
 import { Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 import { sesionEsAdministrador } from '../paginas/sesion-katuq';
 import { EnVivoEstadoService } from '../servicios/en-vivo-estado.service';
 import { EnVivoService } from '../servicios/en-vivo.service';
 
+/** El nombre del comercio va dentro del HTML del aviso. */
+function escapar(texto: string): string {
+  return texto.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c]);
+}
+
 /**
  * Botón "Opttia" del encabezado de "En vivo" (D-386): prende o apaga a Opttia para la empresa de
- * la sesión. En "Katuq en vivo" (sesión de Julsmind) es el de toda la plataforma. Solo lo ven el
+ * la sesión. En "Katuq en vivo" (sesión de Julsmind) es el de toda la plataforma, y mirando un
+ * comercio desde Katuq (`comercio`), el de ese comercio. Solo lo ven el
  * Administrador y el Super Administrador; el servidor rechaza a los demás. Con el interruptor general
  * del servidor apagado (`EN_VIVO_OPTTIA=false`) queda deshabilitado: "apagado por Katuq".
  *
@@ -19,9 +34,11 @@ import { EnVivoService } from '../servicios/en-vivo.service';
   styleUrls: ['./en-vivo-opttia-interruptor.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EnVivoOpttiaInterruptorComponent implements OnInit, OnDestroy {
+export class EnVivoOpttiaInterruptorComponent implements OnInit, OnChanges, OnDestroy {
   /** true en "Katuq en vivo": el aviso dice que aplica a todos los comercios juntos. */
   @Input() katuq = false;
+  /** Comercio ajeno que mira una sesión de Katuq (`?empresa=`): el botón cambia el de ese comercio. */
+  @Input() comercio?: string;
 
   /** null hasta que responde el servidor (o si no se puede leer): el botón no se pinta. */
   activado: boolean | null = null;
@@ -37,9 +54,19 @@ export class EnVivoOpttiaInterruptorComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.cargar();
+  }
+
+  /** Se pasó a mirar otro comercio sin destruir el botón: lee el interruptor de ese. */
+  ngOnChanges(cambios: SimpleChanges): void {
+    if (cambios.comercio && !cambios.comercio.firstChange) this.cargar();
+  }
+
+  private cargar(): void {
     if (!sesionEsAdministrador()) return;
+    this.activado = null;
     this.suscripciones.add(
-      this.api.interruptorOpttia().subscribe({
+      this.api.interruptorOpttia(this.comercio).subscribe({
         next: (r) => {
           this.activado = r?.activado !== false;
           this.general = r?.general !== false;
@@ -76,9 +103,12 @@ export class EnVivoOpttiaInterruptorComponent implements OnInit, OnDestroy {
   cambiar(): void {
     if (this.activado === null || !this.general || this.guardando) return;
     const nuevo = !this.activado;
-    const alcance = this.katuq
-      ? '<p style="color:#6b7280;margin:12px 0 0;font-size:13px;">Aplica a "Katuq en vivo" (todos los comercios juntos).</p>'
-      : '<p style="color:#6b7280;margin:12px 0 0;font-size:13px;">Aplica a todas las pantallas En vivo de tu empresa.</p>';
+    const donde = this.katuq
+      ? 'Aplica a "Katuq en vivo" (todos los comercios juntos).'
+      : this.comercio
+        ? `Aplica a todas las pantallas En vivo de ${escapar(this.comercio)}.`
+        : 'Aplica a todas las pantallas En vivo de tu empresa.';
+    const alcance = `<p style="color:#6b7280;margin:12px 0 0;font-size:13px;">${donde}</p>`;
     Swal.fire({
       title: nuevo ? '¿Prender a Opttia?' : '¿Apagar a Opttia?',
       html:
@@ -94,7 +124,7 @@ export class EnVivoOpttiaInterruptorComponent implements OnInit, OnDestroy {
       this.guardando = true;
       this.cambios.markForCheck();
       this.suscripciones.add(
-        this.api.guardarInterruptorOpttia(nuevo).subscribe({
+        this.api.guardarInterruptorOpttia(nuevo, this.comercio).subscribe({
           next: () => {
             this.activado = nuevo;
             this.guardando = false;
