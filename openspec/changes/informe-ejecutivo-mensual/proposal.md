@@ -1,6 +1,6 @@
 # Informe ejecutivo mensual junto con la factura (ticket 1125)
 
-> Estado: PROPUESTA — pendiente de aprobación de Daniel. No hay código. Decisión a registrar como D-XXX en `/specs/CONTRACT.md` al aprobarse.
+> Estado: **APROBADA** (Daniel, 9-oct: "aprobado todo") e **IMPLEMENTADA en el backend, con la bandera apagada** (D-394). Faltan: publicar el botón de la consola (escrito, sin compilar) y la tarea 7, mostrarle el PDF a Daniel y a Jairo antes de encenderla en ningún comercio.
 
 ## Por qué
 Jairo propone mandarle a cada comercio, junto con la factura de su membresía, un informe de lo que vendió en el período, "como el extracto mensual de una cuenta bancaria". Hoy lo arma a mano en Excel (ejemplos: ventas de septiembre de ALMARA y de Café Escobar). La factura le dice al comercio cuánto paga; el informe le muestra qué obtuvo con Katuq, que es la razón por la que renueva.
@@ -13,12 +13,11 @@ Jairo propone mandarle a cada comercio, junto con la factura de su membresía, u
 ## Decisiones ya tomadas
 - **Fecha base: la de entrega** (Daniel, 8-oct). El informe general de ALMARA usa entrega y el de Café Escobar usaba creación; el estándar es entrega.
 
-## Decisiones abiertas (para aprobar)
-1. **Cuándo sale.** Recomendado: junto con la factura, que hoy se emite cuando el comercio paga (D-272, hoy apagada en producción). Alternativa: junto con el aviso previo al corte (D-302), que no depende de la DIAN.
-2. **Período.** Recomendado: el ciclo de facturación de la empresa (`cicloFacturacion.js`), el mismo rango que decide el escalón del cobro, para que informe y factura hablen de las mismas ventas. Alternativa: mes calendario.
-3. **A quién.** Recomendado: todos los comercios con membresía activa, con un interruptor por empresa para apagarlo.
-4. **Formato.** Recomendado: PDF de resumen adjunto; el Excel detallado solo bajo pedido.
-
+## Decisiones tomadas (D-394)
+1. **Cuándo sale.** (a) **Por demanda**: en la ficha de cada empresa de la consola, "Informe de ventas" (período libre, por omisión el mes anterior). (b) **Con el comprobante de pago** (el correo "Pago confirmado") si la bandera `executiveSalesReport` de la empresa está encendida. *Desviación de la recomendación original:* no viaja en el correo de la factura DIAN, porque ese correo lo manda el proveedor y no admite adjuntos propios; el del comprobante es el que sale hoy con cada pago y no depende de que la emisión automática (D-272) esté encendida. Hoy casi ninguna membresía se paga por ese camino, así que el uso inmediato es por demanda.
+2. **Período.** El ciclo de facturación del cobro (`periodStart` y `periodEnd` de la factura interna; el día del corte es del ciclo siguiente). Por demanda, el que se escoja (máximo 400 días).
+3. **A quién.** Bandera `executiveSalesReport` (D-385), apagada por omisión. Julsmind puede bajar el informe de cualquier empresa; un comercio, solo el suyo y con la bandera encendida.
+4. **Formato.** PDF de dos páginas en el tema canónico; el Excel detallado queda fuera.
 ## No-goals
 - No crea colecciones nuevas ni endpoints "v2": reutiliza el cálculo de métricas de pedidos que ya existe en el backend.
 - No toca pedidos, inventario ni consecutivos: solo lee `orders`.

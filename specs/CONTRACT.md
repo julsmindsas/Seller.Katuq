@@ -9066,3 +9066,31 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 - Límite de la regla de empresa: una empresa cuyo nombre normalizado sea final del de otra (p. ej. "FELICIDAD" frente a "ALMARA FELICIDAD") vería las claves de la otra; con las 126 empresas actuales no ocurre.
 - Argenis (app nativa) sigue apareciendo mientras su app esté abierta aunque no trabaje; la nativa lo pone en `conectado:false` al cerrarse.
 - Geocodificación del Seller sin barrio/corregimiento (ver 1136) y coordenadas de DAD-014046.
+
+## D-394 (2026-10-09) — Informe ejecutivo de ventas por empresa (ticket 1125, Julsmind; BACKEND PUBLICADO con la bandera `executiveSalesReport` APAGADA; botón de la consola ESCRITO, sin compilar ni publicar)
+
+**Disparador.** Ticket 1125 (Jairo): mandarle a cada comercio, con la factura, un informe de lo que vendió, "como el extracto mensual de la cuenta bancaria" (hoy lo arma en Excel). La propuesta estaba en `openspec/changes/informe-ejecutivo-mensual/`; Daniel: /goal "cerrar todos los tickets hoy, aprobado todo".
+
+**Decisiones** (las recomendadas de la propuesta, con una desviación):
+1. **Cuándo.** (a) Por demanda: botón "Informe de ventas" en la ficha de cada empresa de la consola (período libre, por omisión el mes anterior). (b) Adjunto al correo del comprobante de pago ("Pago confirmado") si la bandera de la empresa está encendida. **Desviación:** no viaja en el correo de la factura DIAN, porque lo manda el proveedor y no admite adjuntos propios; el del comprobante sale hoy con cada pago y no depende de que D-272 esté encendida. En `billing_invoices` solo hay 7 cobros (los pagados son pruebas): casi nadie paga por ese camino todavía, así que el uso inmediato es por demanda.
+2. **Período.** El ciclo de facturación del cobro (`periodStart`/`periodEnd` de la factura interna; el día del corte es del ciclo siguiente). Por demanda, el que se escoja (máximo 400 días).
+3. **A quién.** `featureFlags.executiveSalesReport` (D-385), apagada por omisión. Julsmind baja el informe de cualquier empresa; un comercio, solo el suyo y con la bandera encendida (`requireOwnCompanyOrPlatform` + ONLY_ADMIN).
+4. **Formato.** PDF de dos páginas en el tema canónico (plano, sin gradientes), solo agregados. Fecha base: entrega (Daniel, 8-oct). Cancelado = `isBillableSubscriptionOrder`, la misma regla del cobro.
+
+**Qué se construyó.** Backend `services/billing/informeEjecutivo/{calculo,pedidos,pdf,index}.js` (cálculo puro y acumulativo, lectura en flujo con proyección de 18 campos, PDF con pdfmake), `controllers/informeEjecutivo.js`, ruta `GET /v1/companies/:id/informe-ejecutivo[?desde&hasta&formato=json]`, `scripts/informe-ejecutivo-ensayo.js` (genera el PDF de cualquier empresa sin enviar nada) y el hook en `subscriptionPaymentService._sendConfirmationEmail`. Front (escrito, **sin publicar**): `shared/utils/informe-ejecutivo.ts`, `CompaniesService.getInformeEjecutivoPdf` y el bloque "Informe de ventas" en la ficha de la consola; el build de producción lo detuvo el sistema por falta de memoria y el código no se subió a la rama sin compilar. Hasta entonces Julsmind baja el PDF con `scripts/informe-ejecutivo-ensayo.js` o la ruta. Solo LEE `orders`; sin colecciones nuevas; **cuadre obligatorio**: si un desglose no suma lo mismo que los indicadores, el informe no sale (422).
+
+**Verificado.**
+- El cálculo reproduce **cifra por cifra el Excel de septiembre de ALMARA** (fixture anonimizado con los 1.333 pedidos del Excel: 52 cancelados, 1.281 netos, ventas netas $164.684.994,89, 1.130 clientes únicos, anticipos, saldo, %, los siete bloques y el mejor día). Backend: 11 + 21 pruebas; flags 33/18/18, acceso 16 (30 rutas con candado), facturación sin regresiones. Karma 13/13 del front.
+- Con datos reales de hoy (solo lectura): OH MY STORE sep = 675 / 74 / 601 / 200 clientes, igual que el Excel; CAFE ESCOBAR = 22 / 1 / 21, igual; ALMARA = 1.334 / 52 / 1.282 (un pedido más entró a septiembre por reprogramación). Los tres cuadran. PDF revisado a ojo (2 páginas, sin cortar filas).
+- El informe nunca bloquea el comprobante: si falla, sale el comprobante y queda `executiveReportStatus: fallido` con el motivo en la factura interna.
+
+**No verificado.** Que el front compile en producción (el build no terminó); un envío real de comprobante con el informe adjunto (ningún comercio paga hoy por ese camino; probado con base y correo falsos); el botón de la consola en el navegador; el PDF abierto en Gmail/Outlook.
+
+**Hallazgo que se escala (no se tocó).** Las **ventas netas de hoy no coinciden con los Excel de Jairo** en los tres comercios (ALMARA −$1,9 M, OH MY STORE −$11,9 M, CAFE ESCOBAR +$0,2 M) aunque los conteos sí. Causa medida: el listado y el Excel del front **recalculan** el valor de cada pedido y el informe usa lo **guardado** (lo mismo que usa el cobro). Ejemplo: BAR-000428 guarda $620.000 (4 × $45.000 + 8 × $55.000) y el Excel mostró $532.000, que es lo mismo con 20 % de precio por volumen en las 8 unidades; OH MY STORE: IVA y total de 126 pedidos distintos; ALMARA: 67 pedidos, algunos con `totalPedidoSinDescuento` de $1 o $1.000 mientras el anticipo sigue en el valor original (DAD-013863: $88.000 → $1; DAD-013839: $16.600 → $1.000). Hay que decidir cuál es la verdad del pedido (¿el guardado debe incluir el precio por volumen?) y revisar esos pedidos de ALMARA ("Ajuste al peso"). Hasta entonces Jairo debe saber que el informe y su Excel pueden diferir en pedidos con precios por volumen o ajustes.
+
+**Queda abierto.**
+- **Publicar el botón de la consola:** código listo en el worktree `Seller.Katuq-1125` (Karma 13/13 de la utilidad); falta `ng build` de producción, despliegue y commit.
+- Tarea 7: mostrar el PDF a Daniel y a Jairo antes de encender la bandera en ningún comercio. Ejemplos de septiembre de ALMARA, OH MY STORE y CAFE ESCOBAR en `C:\Users\danie\Downloads\Informes-ejemplo-1125\`. Encender: `functions/scripts/set-company-feature.js "<empresa>" executiveSalesReport on --execute`.
+- Los pedidos sin fecha de entrega no entran al informe.
+- El comercio todavía no tiene botón propio (solo la API con la bandera encendida).
+- `tests/companies/soloLectura.test.js` falla por rutas POST de `accounting.js` y `logistica.js`, ajenas a este cambio.
