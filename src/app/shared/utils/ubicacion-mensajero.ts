@@ -18,6 +18,28 @@ export interface PuntoMensajero {
   conectado?: boolean | null;
 }
 
+/**
+ * Ticket 1159: la clave de un mensajero en `active_users` es `nombre_apellidos_<empresa>`, con la empresa en
+ * minúsculas y todo lo que no sea letra o número convertido en `_` (las vocales con tilde también).
+ * Para saber de qué empresa es, la clave debe TERMINAR en la de la empresa: antes el mapa aceptaba a quien
+ * tuviera cualquier parte del nombre contenida en el de la empresa (una "a" de "garc_a" bastaba), y
+ * dejaba ver mensajeros de otras empresas.
+ */
+export function claveEmpresa(nombre: string | null | undefined): string {
+  return String(nombre || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+}
+
+export function perteneceAEmpresa(clave: string | null | undefined, nombreEmpresa: string | null | undefined): boolean {
+  const empresa = claveEmpresa(nombreEmpresa);
+  if (!empresa) return false;
+  const propia = String(clave || '').toLowerCase().replace(/_+/g, '_');
+  return propia.length > empresa.length + 1 && propia.endsWith('_' + empresa);
+}
+
 /** Momento (ms) de la última ubicación: la hora del servidor y, si falta, la del celular. */
 export function marcaDeUbicacion(punto: PuntoMensajero | null | undefined): number | null {
   const servidor = Number(punto?.lastUpdate);

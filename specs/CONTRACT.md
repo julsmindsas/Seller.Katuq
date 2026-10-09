@@ -9041,3 +9041,28 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 - El criterio `movimiento` ("lo que más se mueve") ordena por `demandaNeta`, que el controlador fija en 0: hoy no ordena por movimiento real (anterior a esta decisión; no se tocó).
 - Una bodega con más de 1.500 productos no se puede contar completa de una vez; se cuenta por zonas.
 - Solo entran los productos con registro en `inventory` de esa bodega; un producto que nunca se ha movido ahí no aparece (para contarlo hay que darle entrada primero).
+
+## D-393 (2026-10-09) — Mapa de mensajeros: solo los de la empresa y sin movimiento inventado (tickets 1159 y 1154, ALMARA); cierre de 1136; estado de 1124 y 1125 (PUBLICADO)
+
+**Disparador.** Daniel: /goal "cerrar todos los tickets hoy, aprobado todo". Ticket 1159 (Yulie Osorno): "la ubicación de Carlos Andrés no es la real; aparecía en Bello y está en la empresa, en Laureles".
+
+**1159 / 1154 — qué se encontró.**
+- La captura del 1159 muestra "Actualizado: 9:00:43 a.m." a secas, el formato **anterior** al arreglo del 1154 (D-382, 2026.10.08.6, que oculta puntos de más de 15 min y escribe "hace X min"): la pestaña de Yulie estaba cargada de antes. El punto era de ayer, no de hoy.
+- Carlos Andrés usa la app **Flutter** (`source: flutter_app`): su último punto tiene 452 min (hoy ~9:28 a. m.), sin `conectado`, a ~5 km de Laureles (6.288, -75.568); esa app envía con un temporizador que Android pausa en segundo plano. Los de la app **nativa** (Argenis, John Bairon) reportan cada 1–2 min con `conectado: true`. El servicio en primer plano de la app Flutter **no se construye**: esa app está reemplazada por la nativa (`feature/native-apps`); la solución es pasar a Carlos Andrés a la nativa (lista de verificadores de Play, `verify`).
+- Dos hallazgos escalados en D-382 se corrigen aquí porque dañan la confianza en el mapa: (1) el filtro por empresa de `active_users` aceptaba a quien tuviera **cualquier parte** de su clave contenida en el nombre de la empresa (o al revés): una "a" suelta de "garc_a" bastaba, y dejaba ver mensajeros de **otras empresas**; (2) `simularMovimientoPedidos` movía al azar, cada 30 s, los marcadores de pedidos "Despachado" y les bajaba el tiempo estimado: datos inventados.
+
+**Decisión.** (1) `perteneceAEmpresa(clave, empresa)` en `shared/utils/ubicacion-mensajero.ts`: la clave del mensajero (`nombre_apellidos_<empresa>`) debe **terminar** en la de la empresa (minúsculas, todo lo que no sea letra o número pasa a `_`, como las apps). Validado en solo lectura contra los 23 registros reales: deja pasar exactamente las 20 de ALMARA y no esconde a ningún legítimo (solo 2 claves de prueba/otra empresa, sin coincidencias dobles). (2) Se quita la simulación de movimiento; el movimiento real es el de los mensajeros.
+
+**Verificado:** Karma 16 de 16 en la utilidad de ubicaciones (5 casos nuevos de la regla de empresa, con claves reales de ALMARA y de otras empresas). Publicado como 2026.10.09.15.
+**No verificado:** el mapa en el navegador con el punto de Carlos Andrés tras recargar.
+
+**1136 (geocodificación de "San Antonio de Prado" → Belén) — cierre.** El commit `dd98095d` de Santiago nunca llegó a GitHub. La app Android nativa **ya trae el arreglo** (commit `144bd77`, versionCode 26 / 2.0.4: la ruta usa la ciudad de entrega y el corregimiento de la zona o del barrio al geocodificar) y navega **por el texto de la dirección** cuando existe, no por las coordenadas guardadas; por eso el mensajero queda cubierto con actualizar la app. **No se hizo** el cambio del Seller (la geocodificación de la dirección estructurada no conoce barrio ni zona; cambiarlo toca la venta asistida) ni se corrigieron las coordenadas guardadas de DAD-014046 (6.2381533, -75.5838032 = Belén).
+
+**1124 (facturas de membresía automáticas).** Daniel aprobó en el /goal. El ensayo en seco del 9-oct en el servidor volvió a salir verde (factura armada completa, total = lo cobrado, IVA 0, emisor Julsmind en producción). **No se encendió:** el control de permisos del entorno bloqueó escribir `MEMBERSHIP_INVOICING_ENABLED` en el `.env` de producción. Encenderla son dos líneas (`MEMBERSHIP_INVOICING_ENABLED=true` y `MEMBERSHIP_INVOICE_TAX_RATE=0`) y reiniciar `katuq-api`. Sigue Pendiente.
+
+**1125 (informe ejecutivo mensual).** Sin código; sigue siendo propuesta (`openspec/changes/informe-ejecutivo-mensual/`). Su tarea 7 exige mostrar el PDF a Daniel y a Jairo antes de que salga a un comercio, y adjuntarlo a la factura depende de que la emisión automática (1124) esté encendida. Sigue Pendiente.
+
+**Queda abierto:**
+- Límite de la regla de empresa: una empresa cuyo nombre normalizado sea final del de otra (p. ej. "FELICIDAD" frente a "ALMARA FELICIDAD") vería las claves de la otra; con las 126 empresas actuales no ocurre.
+- Argenis (app nativa) sigue apareciendo mientras su app esté abierta aunque no trabaje; la nativa lo pone en `conectado:false` al cerrarse.
+- Geocodificación del Seller sin barrio/corregimiento (ver 1136) y coordenadas de DAD-014046.

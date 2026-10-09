@@ -1,4 +1,4 @@
-import { haceCuanto, marcaDeUbicacion, ubicacionVigente, VIGENCIA_UBICACION_MS } from './ubicacion-mensajero';
+import { claveEmpresa, haceCuanto, marcaDeUbicacion, perteneceAEmpresa, ubicacionVigente, VIGENCIA_UBICACION_MS } from './ubicacion-mensajero';
 
 /**
  * Ticket 1154 (ALMARA): datos reales de active_users del 2026-10-09 01:14 UTC.
@@ -50,6 +50,36 @@ describe('ubicacion-mensajero', () => {
     it('esconde lo que no trae hora', () => {
       expect(ubicacionVigente({}, AHORA)).toBe(false);
       expect(ubicacionVigente(undefined, AHORA)).toBe(false);
+    });
+  });
+
+  // Ticket 1159: claves reales de active_users (2026-10-09).
+  describe('perteneceAEmpresa', () => {
+    it('reconoce la clave de la empresa como el final de la clave del mensajero', () => {
+      expect(perteneceAEmpresa('argenis_alexander_echenique_cardona_almara_felicidad', 'ALMARA FELICIDAD')).toBe(true);
+      expect(perteneceAEmpresa('jairo_alberto_arango_g_mez_almara_felicidad', 'ALMARA FELICIDAD')).toBe(true);
+    });
+
+    it('no deja pasar a otra empresa aunque una parte del nombre esté contenida en la de la empresa', () => {
+      // La "a" suelta de "garc_a" y la "s" de "andr_s" hacían pasar a estos mensajeros en cualquier mapa.
+      expect(perteneceAEmpresa('stiven_andr_s_garc_a_rodr_guez_almara_felicidad', 'LA TARTALERIA')).toBe(false);
+      expect(perteneceAEmpresa('jairo_alberto_arango_g_mez_la_tartaleria', 'ALMARA FELICIDAD')).toBe(false);
+      expect(perteneceAEmpresa('pablo_moreno_tienda_demo_kai_import', 'ALMARA FELICIDAD')).toBe(false);
+    });
+
+    it('exige el nombre completo de la empresa, no solo su última palabra', () => {
+      expect(perteneceAEmpresa('ana_perez_super_felicidad', 'ALMARA FELICIDAD')).toBe(false);
+    });
+
+    it('las vocales con tilde del nombre de la empresa pasan a guion bajo, como las apps', () => {
+      expect(claveEmpresa('CAFÉ ESCOBAR')).toBe('caf_escobar');
+      expect(perteneceAEmpresa('juan_perez_caf__escobar', 'CAFÉ ESCOBAR')).toBe(true);
+    });
+
+    it('sin empresa o sin clave no pertenece a nadie', () => {
+      expect(perteneceAEmpresa('juan_perez_almara_felicidad', '')).toBe(false);
+      expect(perteneceAEmpresa('', 'ALMARA FELICIDAD')).toBe(false);
+      expect(perteneceAEmpresa('almara_felicidad', 'ALMARA FELICIDAD')).toBe(false); // sin nombre de mensajero
     });
   });
 
