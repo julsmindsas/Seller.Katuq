@@ -2019,6 +2019,20 @@ export class ConfProductToCartComponent
     }
   }
 
+  /**
+   * Ticket 1158: cuando el producto ofrece una sola forma de entrega y la empresa tiene más, explica por
+   * qué. Las formas salen del tipo de entrega del producto (Disponibilidad); sin este aviso parecía que
+   * faltaba la opción ("no tiene recoger en tienda") cuando era la configuración del producto.
+   */
+  get avisoFormaEntregaUnica(): string {
+    const formas = this.formasEntregaProducto;
+    if (!Array.isArray(formas) || formas.length !== 1) return "";
+    if (!Array.isArray(this.formasEntrega) || this.formasEntrega.length < 2) return "";
+    const tipo = this.producto?.disponibilidad?.tipoEntrega;
+    if (!tipo) return "";
+    return `Este producto solo ofrece «${formas[0].nombre}» porque su tipo de entrega es «${tipo}». Se cambia en la ficha del producto, en Disponibilidad.`;
+  }
+
   loadFormasEntregaConfiguracionProducto() {
     try {
       if (!this.tipoEntrega || this.tipoEntrega.length === 0) {
