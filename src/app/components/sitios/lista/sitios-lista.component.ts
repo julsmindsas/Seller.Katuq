@@ -544,7 +544,9 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   crearConIA(): void {
     if (this.creandoConIA || !this.features.isEnabled("landingPrompt")) return;
     const v = validarDescripcion(this.descripcionIA);
-    if (!v.ok) {
+    // "mensaje" in v y no !v.ok: el build de producción no estrecha la unión por el booleano y fallaba con
+    // TS2339 (Property 'mensaje' does not exist on type '{ ok: true; ... }').
+    if ("mensaje" in v) {
       this.toastr.warning(v.mensaje);
       return;
     }
