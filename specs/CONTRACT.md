@@ -8821,6 +8821,15 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 - **Commits:** back `b8a3e0c`, `970f30e`, `116aced`, `0890e98`; front: mensajes del registro, la página de la promoción y el panel de campañas.
 - **Pendiente:** desplegar back y luego front; probar con una cuenta NUEVA y el cupón de prueba (`--prueba --apply`, 48 h, 3 canjes), **no** bajando FLORECER a gratis (borra sus datos de cobro); decidir los límites de registro por IP en el wifi de la feria (`REG_IP_REVIEW_PER_HOUR`=4 pide confirmar correo, `REG_IP_REJECT_PER_HOUR`=12 rechaza); front sin compilar. **El descuento del plan (30 % por 6 meses / anual con mes de regalo) NO existe.**
 
+## D-391 (2026-10-09) — "Comprar ahora" contra entrega en la ficha del producto (APLICADO Y COMMITEADO; sin desplegar; bandera `buyNowCod` apagada)
+
+**Aprobado por Daniel** ("aprueba comprar ahora", 9-oct). Propuesta: back `openspec/changes/comprar-ahora-contra-entrega`. Commits back `fc6aa02` (crearPedido) y `6768641` (formulario).
+
+- **Qué hace:** con `buyNowCod`, la ficha de un producto simple muestra un formulario de una página (nombre, celular, departamento y municipio DANE, dirección, barrio, notas, unidades). Un envío crea el pedido **contra entrega** por el mismo camino del carrito (tope del plan, existencias, precios y ofertas del servidor). Precio público siempre; si el total que vio el comprador ya no es el vigente, no crea el pedido y muestra el nuevo.
+- **No cambia para los demás:** sin el bloque `compraRapida` en el cuerpo, `crearPedido` corre igual (mismos mensajes); con la bandera ausente la ficha sale idéntica.
+- **Pruebas:** 50 + 35 + 7 nuevas y las del checkout (94) en verde, sin omitidas; scripts de contrato en verde.
+- **Riesgos abiertos:** contra entrega sin pago respalda pedidos falsos que reservan existencias (falta verificación del celular o confirmación por WhatsApp); un pedido cuya respuesta se pierde puede repetirse pasados 2 min; solo productos simples, envío fijo y contra entrega activo (FLORECER vende casi todo con adiciones: hace falta un producto simple con existencias para probar). Sin segunda revisión independiente de este paquete.
+
 ## D-386 (2026-10-08) — Pantalla "En vivo" por comercio y de toda Katuq, con ficha al tocar un pedido (IMPLEMENTADA; antes numerada D-378 y D-386, que otra sesión usó para Wompi)
 
 **Pedido de Daniel (2026-10-08), en ocho mensajes:**
