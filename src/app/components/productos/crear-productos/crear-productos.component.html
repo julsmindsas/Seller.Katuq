@@ -18,11 +18,26 @@
 							</div>
 						</div>
 						<div class="mp-header__actions">
+							<!-- Llenar con una foto (bandera productFromPhoto): nace APAGADA y se prende por
+								 comercio; con la bandera apagada este encabezado es idéntico al de siempre.
+								 Solo al crear. Un solo paso: se elige la foto y el formulario se llena. -->
+							<ng-container *ngIf="puedeLlenarConFoto">
+								<input #fotoFicha type="file" accept="image/*" class="d-none"
+									aria-label="Foto del producto para llenar el formulario"
+									(change)="alElegirFotoFicha($event)" />
+								<button type="button" class="btn mp-btn mp-btn--ghost"
+									[disabled]="fichaCargando || saving || uploadingImages || procesandoImagenes"
+									[attr.aria-busy]="fichaCargando" (click)="fotoFicha.click()"
+									title="Suba una foto y se llena el formulario. Usted revisa y corrige antes de guardar.">
+									<i class="pi" [ngClass]="fichaCargando ? 'pi-spin pi-spinner' : 'pi-camera'"></i>
+									{{ fichaCargando ? 'Leyendo la foto...' : 'Llenar con una foto' }}
+								</button>
+							</ng-container>
 							<button class="btn mp-btn mp-btn--ghost" (click)="viewProduct()">
 								<i class="pi pi-eye"></i> Vista Previa
 							</button>
 							<button *ngIf="mostrarCrear" class="btn mp-btn mp-btn--primary" (click)="guardarProductos()"
-								[disabled]="saving || uploadingImages || procesandoImagenes">
+								[disabled]="saving || uploadingImages || procesandoImagenes || fichaCargando">
 								<i class="pi" [ngClass]="(saving || uploadingImages || procesandoImagenes) ? 'pi-spin pi-spinner' : 'pi-check'"></i>
 								Guardar
 							</button>

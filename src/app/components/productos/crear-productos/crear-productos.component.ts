@@ -57,6 +57,18 @@ import { DaneCodesService } from "../../../shared/services/dane-codes.service";
 import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 
 import { AVISO_REFERENCIA_CON_ESPACIOS, limpiarReferencia, referenciaRechazada } from 'src/app/shared/utils/referencia-producto';
+import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
+import { FichaDesdeFotoService } from "../../../shared/services/productos/ficha-desde-foto.service";
+import {
+  DecisionFicha,
+  buscarNodoEnArbol,
+  camposAAplicar,
+  etiquetaDeNodo,
+  planificarFicha,
+  resumenDeRelleno,
+  textoAHtml,
+  unirEtiquetas,
+} from "../../../shared/services/productos/ficha-desde-foto.mapper";
 @Component({
   selector: "app-crear-productos",
   templateUrl: "./crear-productos.component.html",
@@ -229,6 +241,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     private imageService: ImagenService,
     private proveedoresService: ProveedoresService,
     private daneCodesService: DaneCodesService,
+    public features: CompanyFeaturesService,
+    private fichaService: FichaDesdeFotoService,
   ) {
     this.kaiService.getKatuqPrompt().subscribe((res) => {
       this.kaiProductPrompt = res.promptProduct;
@@ -616,6 +630,196 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         this.kaiForm.get("photoToAnalize")!.setValue((event2.target as FileReader).result);
       };
     }
+  }
+
+  // ─── Llenar con una foto (bandera productFromPhoto) ───────────────────────
+
+  /**
+   * Función nueva: nace APAGADA para los comercios que ya operan y se prende por
+   * comercio; con la bandera apagada esta pantalla es idéntica a la de siempre.
+   * Esto solo decide qué se MUESTRA; quien manda es el servidor (403 si no está
+   * activa). Solo al CREAR: al editar, una sugerencia masiva pisaría lo que la
+   * empresa ya corrigió.
+   */
+  get puedeLlenarConFoto(): boolean {
+    return !!this.mostrarCrear && !this.isDropshippingConfigMode && this.features.isEnabled("productFromPhoto");
+  }
+
+  /** Leyendo la foto: el botón se bloquea y gira. */
+  fichaCargando = false;
+
+  /**
+   * Cuenta las veces que esta pantalla dejó de ser "el producto para el que se pidió la
+   * lectura": se empieza a guardar o se sale de la pantalla. Una ficha que llega con un
+   * número distinto al de cuando se pidió ya no es de lo que hay en pantalla y se
+   * descarta; si no, mezclaría datos con el producto que se está guardando o avisaría
+   * "Listo" en otra pantalla.
+   */
+  private generacionFicha = 0;
+
+  /**
+   * La persona eligió la foto: un solo paso. Se lee la foto, se pide la ficha y se
+   * llena el formulario; si ya había algo escrito se pregunta UNA vez antes de
+   * pisarlo. No guarda nada: queda todo en pantalla para revisar.
+   */
+  async alElegirFotoFicha(event: any): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files && input.files[0];
+    // Se limpia para poder volver a elegir la MISMA foto (si no, el navegador no avisa el cambio).
+    input.value = "";
+    // Guardando, subiendo o preparando imágenes el producto no se toca: lo que llegara de la foto se mezclaría con él.
+    if (!archivo || this.fichaCargando || this.saving || this.uploadingImages || this.procesandoImagenes) {
+      return;
+    }
+
+    const generacion = this.generacionFicha;
+    this.fichaCargando = true;
+    try {
+      const resultado = await this.fichaService.generar(archivo, () => this.fichaVigente(generacion));
+      if (resultado && this.fichaVigente(generacion)) {
+        await this.aplicarFichaDesdeFoto(resultado.ficha, resultado.foto, generacion);
+      }
+    } catch (e) {
+      console.error("[CrearProductos] No se pudo llenar el formulario con la foto", e);
+      if (this.fichaVigente(generacion)) {
+        Swal.fire("No se pudo llenar con la foto", "El formulario quedó como estaba. Intente de nuevo.", "error");
+      }
+    } finally {
+      this.fichaCargando = false;
+    }
+  }
+
+  /** ¿Sigue siendo esta pantalla el producto para el que se pidió la lectura? (y no se está guardando) */
+  private fichaVigente(generacion: number): boolean {
+    return generacion === this.generacionFicha && !this.saving;
+  }
+
+  /**
+   * Vuelca la ficha en el formulario con las reglas de `ficha-desde-foto.mapper`
+   * (las mismas del formulario rápido): solo campos vacíos; lo que ya tenía algo
+   * se pregunta una vez. Nunca toca un precio ni la referencia.
+   */
+  private async aplicarFichaDesdeFoto(ficha, foto, generacion: number): Promise<void> {
+    const plan = planificarFicha(
+      {
+        titulo: this.crearProducto.get("titulo").value,
+        descripcion: this.crearProducto.get("descripcion").value,
+        categoria: etiquetaDeNodo(this.categoriasForm.get("categorias").value),
+        caracteristicas: this.crearProducto.get("caracAdicionales").value,
+        etiquetas: this.etiquetas,
+        tieneImagenPrincipal: this.tieneImagenPrincipal(),
+      },
+      ficha,
+    );
+
+    // Tipada: sin esto `decision` es un `string` cualquiera y `camposAAplicar` (que pide 'todo' | 'vacios') no compila.
+    let decision: DecisionFicha = "vacios";
+    if (plan.conflictos.length) {
+      const respuesta = await this.fichaService.preguntarSiPisar(plan.conflictos);
+      // Cerró el aviso o canceló: no se toca nada.
+      if (!respuesta) {
+        return;
+      }
+      // Mientras la persona contestaba, la pantalla pudo cambiar de producto.
+      if (!this.fichaVigente(generacion)) {
+        return;
+      }
+      decision = respuesta;
+    }
+
+    const campos = camposAAplicar(plan, decision);
+    const aplicados = [];
+    const sinAplicar = [];
+    for (const campo of campos) {
+      ((await this.ponerCampoDeFicha(campo, plan, foto)) ? aplicados : sinAplicar).push(campo);
+    }
+
+    // La pantalla se cerró (o se empezó a guardar) mientras se preparaba la imagen: no se avisa nada.
+    if (!this.fichaVigente(generacion)) {
+      return;
+    }
+
+    // El formulario abre en la pestaña de K.A.I.: se lleva a la persona a donde está lo que se llenó.
+    if (aplicados.length && this.activeTabIndex === 0) {
+      this.irATab("Datos básicos");
+    }
+    try {
+      this.cdr.detectChanges();
+    } catch {
+      // La pantalla se cerró mientras se leía la foto: no hay nada que refrescar.
+    }
+
+    this.fichaService.avisarListo(
+      resumenDeRelleno(
+        aplicados,
+        plan.conflictos.filter((c) => !campos.includes(c)),
+        { sinAplicar, sinCategoria: plan.sinCategoria },
+      ),
+    );
+  }
+
+  /** Escribe UN campo de la ficha. Devuelve false si no se pudo (hoy, solo la categoría). */
+  private async ponerCampoDeFicha(campo, plan, foto): Promise<boolean> {
+    switch (campo) {
+      case "titulo":
+        this.crearProducto.get("titulo").setValue(plan.valores.titulo);
+        return true;
+      case "descripcion":
+        // El editor de la descripción guarda HTML: el texto va en párrafos y escapado.
+        this.crearProducto.get("descripcion").setValue(textoAHtml(plan.valores.descripcion));
+        return true;
+      case "categoria": {
+        // Se marca el MISMO nodo que el selector tiene en sus opciones; si la categoría no
+        // existe en el árbol de la empresa, no se inventa.
+        const nodo = buscarNodoEnArbol(this.categorias, plan.valores.categoria);
+        if (!nodo) {
+          return false;
+        }
+        this.categoriasForm.get("categorias").setValue(nodo);
+        return true;
+      }
+      case "caracteristicas":
+        this.crearProducto.get("caracAdicionales").setValue(plan.valores.caracteristicas);
+        return true;
+      case "etiquetas":
+        // Se SUMAN a las que ya hubiera: nunca se quita una etiqueta de la persona.
+        this.etiquetas = unirEtiquetas(this.etiquetas, plan.valores.etiquetas);
+        this.exposicion.get("etiquetas").setValue(this.etiquetas);
+        return true;
+      case "imagen":
+        await this.usarFotoComoImagenPrincipal(foto);
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * La foto que subió la persona queda como imagen principal: entra a la misma cola
+   * de imágenes pendientes que usa la pestaña "Imágenes" (se sube al GUARDAR, igual
+   * que siempre). Si ya había una principal (pendiente o ya subida) se reemplaza: solo
+   * se llega aquí si la persona lo autorizó o si no había ninguna. Las ya subidas (de un
+   * guardado que falló, o la de K.A.I.) dejan de ser la imagen del producto, pero NO se
+   * borran del almacenamiento.
+   */
+  private async usarFotoComoImagenPrincipal(foto): Promise<void> {
+    const archivo = await this.convertToWebP(foto.paraProducto);
+    for (let i = this.fileImg.length - 1; i >= 0; i--) {
+      if (this.fileImg[i].tipo === "principal") {
+        this.fileImg.splice(i, 1);
+        this.filesNames.splice(i, 1);
+      }
+    }
+    // Si una principal ya subida se quedara, `uploadPendingImages` la pone DE PRIMERA ([...actuales, ...nuevas])
+    // y la foto nueva quedaría detrás aunque el aviso diga que se reemplazó.
+    const subidas = this.crearProducto.get("imagenesPrincipales");
+    if (Array.isArray(subidas.value) && subidas.value.length > 0) {
+      subidas.setValue([]);
+    }
+    const entrada = { img: archivo, tipo: "principal", preview: undefined };
+    this.fileImg.push(entrada);
+    this.filesNames.push(this.buildUniqueFileName(archivo.name));
+    await this.generatePreviewImage(archivo, entrada);
   }
 
   // UTILIDAD: Convierte una imagen a formato WebP si no lo está ya
@@ -1601,11 +1805,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   async guardarProductos() {
-    // Evitar múltiples envíos
-    if (this.saving) {
+    // Evitar múltiples envíos (y no guardar a medio llenar mientras se lee una foto)
+    if (this.saving || this.fichaCargando) {
       return;
     }
     this.saving = true;
+    // Desde aquí, lo que se lea de una foto ya no es de este producto.
+    this.generacionFicha++;
     // Validación de precios por volumen deshabilitada para permitir precios en 0
     // let preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
     // let preciosVolumenSinPrecio = preciosVolumen.controls.filter(
@@ -3465,6 +3671,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy() {
+    // Una foto que se esté leyendo ya no es de esta pantalla: su resultado se descarta.
+    this.generacionFicha++;
     this.subs.unsubscribe();
   }
 }

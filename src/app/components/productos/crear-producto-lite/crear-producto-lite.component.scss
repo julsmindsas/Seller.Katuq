@@ -678,3 +678,33 @@ textarea.lite-input { resize: vertical; }
 .lite-mas--importar {
   margin-top: 12px;
 }
+
+// ─── Llenar con una foto (bandera productFromPhoto) ──────────────────────────
+// Mismo bloque tintado que K.A.I.: es otra forma de llenar el formulario en
+// blanco. Plano, sin degradados (D-131).
+
+// `.lite-seccion:first-of-type` le quita el relleno de arriba a la primera sección;
+// este bloque puede quedar de primero (cuando la bandera está prendida) y lleva su
+// propio relleno, igual que cualquier bloque tintado.
+.lite-seccion.lite-foto,
+.lite-seccion.lite-foto:first-of-type {
+  padding-top: 18px;
+}
+
+// Se abre desde el botón; el selector nativo de archivos no se ve.
+.lite-foto__input {
+  display: none;
+}
+
+// Lo que la foto sugirió y el formulario no tiene dónde mostrar.
+.lite-foto__resumen {
+  align-items: flex-start;
+  background: #fff;
+  border-color: #ded4ff;
+  color: var(--k-ink);
+  line-height: 1.55;
+
+  .pi { color: var(--k-accent); margin-top: 3px; }
+  span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  .lite-quitar { flex: 0 0 auto; margin-top: 2px; }
+}

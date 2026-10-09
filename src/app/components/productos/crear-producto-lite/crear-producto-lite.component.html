@@ -56,6 +56,56 @@
 
           <form class="lite-form" [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
 
+            <!-- LLENAR CON UNA FOTO -->
+            <!-- Función nueva (bandera productFromPhoto): nace APAGADA y se prende por
+                 comercio; con la bandera apagada esta pantalla es idéntica a la de siempre.
+                 Solo al crear. Un solo paso: se elige la foto y el formulario se llena;
+                 la foto queda como imagen principal y no se guarda nada hasta que la
+                 persona lo apruebe. -->
+            <section class="lite-seccion lite-kai lite-foto" *ngIf="puedeLlenarConFoto">
+              <h3 class="lite-seccion__titulo lite-seccion__titulo--kai">
+                <i class="pi pi-camera"></i> Llenar con una foto
+                <span class="lite-opcional">Nuevo</span>
+              </h3>
+              <p class="lite-kai__intro">
+                Suba una foto del producto y K.A.I. propone el título, la descripción y la
+                categoría. Después puede corregir lo que quiera: no se guarda nada hasta que
+                usted lo apruebe.
+              </p>
+
+              <div class="lite-kai__accion">
+                <input #fotoFicha id="fotoFichaEntrada" type="file" accept="image/*" class="lite-foto__input"
+                       aria-label="Foto del producto para llenar el formulario"
+                       (change)="alElegirFotoFicha($event)" />
+                <button type="button" class="lite-btn lite-btn--primary"
+                        [disabled]="fichaCargando || guardando" [attr.aria-busy]="fichaCargando"
+                        (click)="fotoFicha.click()">
+                  <i class="pi" [ngClass]="fichaCargando ? 'pi-spin pi-spinner' : 'pi-camera'"></i>
+                  {{ fichaCargando ? 'Leyendo la foto...' : 'Llenar con una foto' }}
+                </button>
+                <span class="lite-ayuda" *ngIf="!fichaCargando">
+                  JPG, PNG o WEBP. La foto queda como imagen principal del producto.
+                </span>
+                <span class="lite-ayuda" role="status" *ngIf="fichaCargando">
+                  Esto tarda unos segundos. No cierre la pantalla.
+                </span>
+              </div>
+
+              <!-- Lo que la foto sugirió y esta pantalla no tiene dónde mostrar: se ve
+                   aquí y se puede quitar. Si no se quita, se guarda con el producto. -->
+              <div class="lite-aviso lite-foto__resumen" *ngIf="fichaCaracteristicas || fichaEtiquetas.length">
+                <i class="pi pi-tags"></i>
+                <span>
+                  <strong>También se guardará con el producto:</strong>
+                  <ng-container *ngIf="fichaCaracteristicas"> {{ fichaCaracteristicas }}</ng-container>
+                  <ng-container *ngIf="fichaEtiquetas.length"> Etiquetas de búsqueda: {{ fichaEtiquetas.join(', ') }}.</ng-container>
+                </span>
+                <button type="button" class="lite-quitar" (click)="quitarDatosDeFoto()">
+                  <i class="pi pi-trash"></i> Quitar
+                </button>
+              </div>
+            </section>
+
             <!-- K.A.I. -->
             <!-- Va PRIMERA y solo al crear: su razón de ser es llenar el
                  formulario en blanco. Al editar el producto ya tiene datos y
@@ -447,7 +497,7 @@
             </section>
 
             <div class="lite-pie">
-              <button type="submit" class="lite-btn lite-btn--primary" [disabled]="guardando">
+              <button type="submit" class="lite-btn lite-btn--primary" [disabled]="guardando || fichaCargando">
                 <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'"></i>
                 {{ guardando ? 'Guardando...' : (editando ? 'Guardar cambios' : 'Guardar producto') }}
               </button>

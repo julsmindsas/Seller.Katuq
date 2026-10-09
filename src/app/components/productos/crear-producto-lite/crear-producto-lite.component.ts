@@ -13,6 +13,19 @@ import { KatuqintelligenceService } from "../../../shared/services/katuqintellig
 import { LoaderService } from "../../../shared/services/loader.service";
 import { ArchivoSubido, ImagenService } from "../../../shared/utils/image.service";
 import { urlImagenAbsoluta } from "../../../shared/utils/imagen-producto";
+import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
+import { FichaDesdeFotoService, FotoPreparada } from "../../../shared/services/productos/ficha-desde-foto.service";
+import {
+  CampoFicha,
+  DecisionFicha,
+  FichaDesdeFoto,
+  PlanFicha,
+  buscarOpcionPlana,
+  camposAAplicar,
+  planificarFicha,
+  resumenDeRelleno,
+  unirEtiquetas,
+} from "../../../shared/services/productos/ficha-desde-foto.mapper";
 
 /**
  * Creación rápida de productos.
@@ -156,6 +169,8 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
     private router: Router,
     private loader: LoaderService,
     private modalService: NgbModal,
+    public features: CompanyFeaturesService,
+    private fichaService: FichaDesdeFotoService,
   ) {
     this.formulario = this.fb.group({
       // Datos básicos
@@ -379,6 +394,180 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ─── Llenar con una foto ───────────────────────────────────────────────────
+
+  /**
+   * Función nueva (bandera `productFromPhoto`): nace APAGADA para los comercios
+   * que ya operan y se prende por comercio. Con la bandera apagada esta pantalla
+   * es idéntica a la de siempre. Esto solo decide qué se MUESTRA; quien manda es
+   * el servidor, que responde 403 si la función no está activa.
+   *
+   * Solo al crear: al editar, una sugerencia masiva pisaría lo que la empresa ya
+   * corrigió (mismo criterio que la sección de K.A.I.).
+   */
+  get puedeLlenarConFoto(): boolean {
+    return !this.editando && this.features.isEnabled("productFromPhoto");
+  }
+
+  /** Leyendo la foto: el botón se bloquea y gira. */
+  fichaCargando = false;
+
+  /**
+   * Cuenta las veces que esta pantalla dejó de ser "el producto para el que se pidió la
+   * lectura": se guarda, se pasa a registrar otro producto o se sale de la pantalla. Una
+   * ficha que llega con un número distinto al de cuando se pidió ya no es de lo que hay
+   * en pantalla y se descarta; si no, llenaría el formulario recién limpio del producto
+   * siguiente, se guardaría mezclada con otro, o avisaría "Listo" en otra pantalla.
+   */
+  private generacionFicha = 0;
+
+  /**
+   * Material y colores que sugirió la foto, ya redactados ("Material: cuero.
+   * Colores: negro y café."). Esta pantalla no tiene un campo para esto, así que
+   * se muestran en un resumen debajo del botón (con "Quitar") y viajan al guardar
+   * como "Características adicionales". Vacío = la foto no se usó o no trajo nada.
+   */
+  fichaCaracteristicas = "";
+
+  /** Etiquetas de búsqueda que sugirió la foto (hasta 10). Igual que arriba: viajan al guardar como `exposicion.etiquetas`. */
+  fichaEtiquetas: string[] = [];
+
+  /**
+   * La persona eligió la foto: un solo paso. Se lee la foto, se pide la ficha y
+   * se llena el formulario; si ya había algo escrito, se pregunta UNA vez antes
+   * de pisarlo. No guarda nada: queda todo en pantalla para revisar.
+   */
+  async alElegirFotoFicha(evento: Event): Promise<void> {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    // Se limpia para que se pueda volver a elegir la MISMA foto (si no, el navegador no avisa el cambio).
+    input.value = "";
+    // Mientras se guarda, el producto ya no se toca: lo que llegara de la foto se mezclaría con el que se está guardando.
+    if (!archivo || this.fichaCargando || this.guardando) return;
+
+    const generacion = this.generacionFicha;
+    this.fichaCargando = true;
+    try {
+      const resultado = await this.fichaService.generar(archivo, () => this.fichaVigente(generacion));
+      if (resultado && this.fichaVigente(generacion)) await this.aplicarFicha(resultado.ficha, resultado.foto, generacion);
+    } catch (e) {
+      console.error("[ProductoLite] No se pudo llenar el formulario con la foto", e);
+      if (this.fichaVigente(generacion)) {
+        Swal.fire("No se pudo llenar con la foto", "El formulario quedó como estaba. Intente de nuevo.", "error");
+      }
+    } finally {
+      this.fichaCargando = false;
+    }
+  }
+
+  /** ¿Sigue siendo esta pantalla el producto para el que se pidió la lectura? (y no se está guardando) */
+  private fichaVigente(generacion: number): boolean {
+    return generacion === this.generacionFicha && !this.guardando;
+  }
+
+  /** Quita lo que la foto sugirió y esta pantalla no muestra (características y etiquetas). */
+  quitarDatosDeFoto(): void {
+    this.fichaCaracteristicas = "";
+    this.fichaEtiquetas = [];
+  }
+
+  /**
+   * Vuelca la ficha en el formulario con las reglas de `ficha-desde-foto.mapper`:
+   * solo campos vacíos; lo que ya tenía algo se pregunta una vez. Nunca toca un
+   * precio, y la referencia (el consecutivo de la empresa) tampoco.
+   */
+  private async aplicarFicha(ficha: FichaDesdeFoto, foto: FotoPreparada, generacion: number): Promise<void> {
+    const v = this.formulario.getRawValue();
+    const plan = planificarFicha(
+      {
+        titulo: v.titulo,
+        descripcion: v.descripcion,
+        categoria: this.etiquetaDeLaCategoriaElegida(),
+        caracteristicas: this.fichaCaracteristicas,
+        etiquetas: this.fichaEtiquetas,
+        tieneImagenPrincipal: !!this.vistaPrevia,
+      },
+      ficha,
+    );
+
+    let decision: DecisionFicha = "vacios";
+    if (plan.conflictos.length) {
+      const respuesta = await this.fichaService.preguntarSiPisar(plan.conflictos);
+      // Cerró el aviso o canceló: no se toca nada.
+      if (!respuesta) return;
+      // Mientras la persona contestaba, la pantalla pudo cambiar de producto.
+      if (!this.fichaVigente(generacion)) return;
+      decision = respuesta;
+    }
+
+    const campos = camposAAplicar(plan, decision);
+    const aplicados: CampoFicha[] = [];
+    const sinAplicar: CampoFicha[] = [];
+    for (const campo of campos) {
+      (this.ponerCampoDeFicha(campo, plan, foto) ? aplicados : sinAplicar).push(campo);
+    }
+
+    this.fichaService.avisarListo(
+      resumenDeRelleno(
+        aplicados,
+        plan.conflictos.filter((c) => !campos.includes(c)),
+        { sinAplicar, sinCategoria: plan.sinCategoria },
+      ),
+    );
+  }
+
+  /** Escribe UN campo de la ficha. Devuelve false si no se pudo (hoy, solo la categoría). */
+  private ponerCampoDeFicha(campo: CampoFicha, plan: PlanFicha, foto: FotoPreparada): boolean {
+    switch (campo) {
+      case "titulo":
+        this.formulario.get("titulo").setValue(plan.valores.titulo);
+        return true;
+      case "descripcion":
+        this.formulario.get("descripcion").setValue(plan.valores.descripcion);
+        return true;
+      case "categoria": {
+        // Solo si existe de verdad entre las opciones de la empresa; si no, no se inventa.
+        const opcion = buscarOpcionPlana(this.categorias, plan.valores.categoria);
+        if (!opcion) return false;
+        this.formulario.get("categoria").setValue(opcion.nodo);
+        return true;
+      }
+      case "caracteristicas":
+        this.fichaCaracteristicas = plan.valores.caracteristicas;
+        return true;
+      case "etiquetas":
+        // Se SUMAN a las que ya hubiera: nunca se quita una etiqueta de la persona.
+        this.fichaEtiquetas = unirEtiquetas(this.fichaEtiquetas, plan.valores.etiquetas);
+        return true;
+      case "imagen":
+        this.usarFotoComoImagenPrincipal(foto);
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /** La etiqueta ("Padre › Hijo") de la categoría ya elegida, o null si no hay. */
+  private etiquetaDeLaCategoriaElegida(): string | null {
+    const nodo = this.formulario.get("categoria").value;
+    if (!nodo) return null;
+    const opcion = this.categorias.find((c) => c.nodo === nodo);
+    return opcion ? opcion.etiqueta : nodo.label || null;
+  }
+
+  /**
+   * La foto que subió la persona queda como imagen principal. Es lo mismo que
+   * hace `seleccionarArchivo`: la imagen se sube al GUARDAR, igual que siempre.
+   */
+  private usarFotoComoImagenPrincipal(foto: FotoPreparada): void {
+    this.archivo = foto.paraProducto;
+    this.vistaPrevia = foto.vistaPrevia;
+    // Si ya se había subido otra, deja de valer; y ya no es un borrado, es un reemplazo.
+    this.imagenSubida = null;
+    this.imagenEliminada = false;
+    this.progresoImagen = 0;
+  }
+
   // ─── Canales de venta ──────────────────────────────────────────────────────
 
   /**
@@ -570,6 +759,8 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Una foto que se esté leyendo ya no es de esta pantalla: su resultado se descarta.
+    this.generacionFicha++;
     // Emparejado obligatorio con el suppress del ngOnInit: el contador es
     // global y dejarlo levantado apagaría el overlay del resto de la app.
     this.loader.releaseGlobalLoader();
@@ -913,7 +1104,8 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
   }
 
   async guardar(): Promise<void> {
-    if (this.guardando) return;
+    // Mientras se lee una foto el formulario está por llenarse: guardar ahora mezclaría dos productos.
+    if (this.guardando || this.fichaCargando) return;
 
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
@@ -921,6 +1113,8 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
     }
 
     this.guardando = true;
+    // Desde aquí, lo que se lea de una foto ya no es de este producto.
+    this.generacionFicha++;
 
     try {
       // La referencia manual tiene que ser única dentro de la empresa; el
@@ -1219,7 +1413,8 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
         descripcion: v.descripcion?.trim() || "",
         fechaInicial: aFecha(hoy),
         fechaFinal: aFecha(enUnAnio),
-        caracAdicionales: "",
+        // Vacío salvo que la persona haya usado "Llenar con una foto" (bandera productFromPhoto).
+        caracAdicionales: this.fichaCaracteristicas,
         garantiasProducto: "",
         restriccionesProducto: "",
         cuidadoConsumo: "",
@@ -1271,7 +1466,8 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
         oferta: false,
         nuevo: true,
         masvendido: false,
-        etiquetas: [],
+        // Vacías salvo que la persona haya usado "Llenar con una foto" (bandera productFromPhoto).
+        etiquetas: [...this.fichaEtiquetas],
       },
       categorias: stringify(v.categoria),
       procesoComercial: {
@@ -1319,6 +1515,9 @@ export class CrearProductoLiteComponent implements OnInit, OnDestroy {
     this.quitarImagen();
     this.imagenActual = null;
     this.imagenEliminada = false;
+    // Lo que sugirió "Llenar con una foto" es de ESTE producto: no se arrastra al siguiente.
+    this.quitarDatosDeFoto();
+    this.generacionFicha++;
     this.formulario.reset({
       titulo: "",
       descripcion: "",
