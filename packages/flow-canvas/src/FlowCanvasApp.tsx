@@ -101,7 +101,7 @@ export const FlowCanvasApp: React.FC<FlowCanvasAppProps> = ({
     return (
         <ReactFlowProvider>
             <div className="kfc-root">
-                {!showConfig && <NodePalette readOnly={readOnly} />}
+                {!showConfig && <NodePalette readOnly={readOnly} onIntent={onIntent} />}
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, position: 'relative' }}>
                     <div className="kfc-toolbar">

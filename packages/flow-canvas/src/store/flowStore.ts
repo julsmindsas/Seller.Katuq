@@ -6,6 +6,7 @@ import type {
     NodeSpec,
     RunContext
 } from '../contracts/types';
+import { autoConexion } from '../utils/conexiones';
 
 export type RightView = 'config' | 'runs' | 'none';
 
@@ -43,6 +44,8 @@ export interface FlowStoreState {
 
     // graph mutations
     addNode: (node: FlowNode) => void;
+    /** Agrega el paso y, si hay un final suelto claro, lo deja conectado después de él. Devuelve ese paso. */
+    addNodeConectado: (node: FlowNode) => FlowNode | null;
     updateNode: (id: string, patch: Partial<FlowNode>) => void;
     updateNodeParams: (id: string, params: Record<string, any>) => void;
     deleteNode: (id: string) => void;
@@ -79,6 +82,18 @@ export const useFlowStore = create<FlowStoreState>((set, get) => ({
     addNode: (node) => {
         const { graph } = get();
         set({ graph: { ...graph, nodes: [...graph.nodes, node] } });
+    },
+
+    addNodeConectado: (node) => {
+        const { graph, catalog } = get();
+        const auto = autoConexion(graph, catalog, node);
+        set({
+            graph: {
+                nodes: [...graph.nodes, node],
+                edges: auto ? [...graph.edges, auto.edge] : graph.edges
+            }
+        });
+        return auto ? auto.desde : null;
     },
 
     updateNode: (id, patch) => {
@@ -171,8 +186,8 @@ export const useFlowStore = create<FlowStoreState>((set, get) => ({
 function computeLayeredLayout(
     graph: FlowGraph
 ): Record<string, { x: number; y: number }> {
-    const COLUMN_WIDTH = 280;
-    const ROW_HEIGHT = 160;
+    const COLUMN_WIDTH = 380; // caja de 250 + nombres de las salidas
+    const ROW_HEIGHT = 190;
     const ORIGIN_X = 80;
     const ORIGIN_Y = 80;
 

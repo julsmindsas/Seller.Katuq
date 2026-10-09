@@ -172,7 +172,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     this.flowsService.getById(id).subscribe({
       next: (flow) => {
         if (!flow) {
-          this.errorMessage = 'No encontramos ese flujo. Quizás fue eliminado.';
+          this.errorMessage = 'No encontramos esta automatización. Puede que la hayan eliminado o que sea de otra empresa.';
           this.loading = false;
           return;
         }
@@ -188,7 +188,9 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
         this.pushPropsToCanvas();
       },
       error: (err) => {
-        this.errorMessage = err?.error?.message || 'Error al cargar el flujo.';
+        this.errorMessage = err?.status === 403 || err?.status === 404
+          ? 'Esta automatización no existe o es de otra empresa.'
+          : 'No pudimos cargar esta automatización. Revisa tu internet y recarga la página.';
         this.loading = false;
       }
     });
@@ -311,7 +313,7 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
     const { intent, payload } = detail;
     switch (intent) {
       case 'connectionRejected':
-        this.toastr.warning(payload?.reason || 'Conexión inválida.', 'Conexión rechazada', {
+        this.toastr.warning(payload?.reason || 'Esos dos pasos no se pueden unir.', 'No se pudo conectar', {
           timeOut: 4000
         });
         break;
@@ -336,7 +338,15 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
       case 'nodeAdded':
         // Subtle UX hint — surface for first-time users only would be ideal,
         // but for now the toast is short and dismissable.
-        this.toastr.success('Paso agregado.', '', { timeOut: 1500 });
+        this.toastr.success(
+          payload?.conectadoDespuesDe
+            ? `Quedó conectado después de «${payload.conectadoDespuesDe}». Si no va ahí, toca la línea y quítala.`
+            : payload?.faltaUnir
+              ? 'Paso agregado. Únelo con una línea desde el punto morado del paso anterior.'
+              : 'Paso agregado.',
+          '',
+          { timeOut: payload?.conectadoDespuesDe ? 3500 : 3000 }
+        );
         break;
       case 'openIntegrations':
         // Banner "integración faltante" → llevar a conectar el proveedor.
@@ -522,6 +532,14 @@ export class FlowEditorComponent implements OnInit, OnDestroy {
 
   save(opts: { silent?: boolean } = {}): void {
     if (this.saving) return;
+    // Si la automatización no cargó (sin acceso, borrada o error de red), el lienzo
+    // está vacío pero el id es real: guardar la pisaría con ese lienzo vacío.
+    if (!this.isNew && !this.flow) {
+      if (!opts.silent) {
+        this.toastr.error('No se guardó nada: esta automatización no se pudo cargar. Recarga la página.', '', { timeOut: 5000 });
+      }
+      return;
+    }
     this.saving = true;
     this.errorMessage = '';
 

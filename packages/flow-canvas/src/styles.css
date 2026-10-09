@@ -1175,3 +1175,102 @@
 .kfc-tecnico-toggle { margin-top: 8px; padding: 0; border: 0; background: none; color: #6f6b8f; font-size: 12px; text-decoration: underline; cursor: pointer; }
 .kfc-tecnico-toggle:hover { color: #5F3FE0; }
 .kfc-config__subtitle { font-family: inherit; }
+
+/* Cajas de los pasos (2026-10-08): ancho fijo y título completo en hasta 2 líneas.
+   Antes 200-260px con el título cortado ("Katuq: Crear o actuali…"). */
+.kfc-node { width: 250px; min-width: 250px; max-width: 250px; border-left-width: 1px; border-radius: 12px; }
+.kfc-node__header { align-items: flex-start; gap: 0; }
+.kfc-node__icon { margin-top: 1px; }
+.kfc-node__title {
+    white-space: normal; text-overflow: clip; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.kfc-node__category-badge { text-transform: none; letter-spacing: 0; font-size: 10px; margin-top: 1px; flex: 0 0 auto; }
+.kfc-node__params li b { font-weight: 600; }
+
+/* ----- Conectar pasos fácil (2026-10-08) ----- */
+/* El paso ya no recorta sus puntos de conexión (antes salían cortados por la mitad). */
+.kfc-node { overflow: visible; }
+.kfc-node__header { border-radius: 11px 11px 0 0; }
+
+.kfc-node__handle {
+    width: 16px;
+    height: 16px;
+    border: 2.5px solid #a5b4fc;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.08);
+    cursor: crosshair;
+    z-index: 2;
+}
+/* Área de toque más grande que el punto visible. */
+.kfc-node__handle::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
+}
+.kfc-node__handle--out { background: #5F3FE0; border-color: #fff; box-shadow: 0 0 0 2px #5F3FE0; }
+.kfc-node__handle--out.kfc-node__handle--error { background: #dc2626; box-shadow: 0 0 0 2px #dc2626; }
+.kfc-node__handle:hover,
+.react-flow__handle.connectingto,
+.react-flow__handle.valid { transform: scale(1.35); }
+.react-flow__handle.connectingfrom { box-shadow: 0 0 0 5px rgba(95, 63, 224, 0.25); }
+
+/* Mientras se arrastra una línea, cualquier paso se ilumina como destino posible. */
+.react-flow.kfc-conectando .react-flow__node .kfc-node { outline: 2px dashed rgba(95, 63, 224, 0.35); outline-offset: 3px; }
+.react-flow__node:hover .kfc-node { box-shadow: 0 4px 14px rgba(95, 63, 224, 0.14); }
+
+.kfc-node__handle-label {
+    top: -20px;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
+    color: #5F3FE0;
+    background: #f4f1ff;
+    border: 1px solid #e3dcff;
+    border-radius: 999px;
+    padding: 1px 8px;
+    line-height: 16px;
+}
+.kfc-node__handle-label--out { left: 12px; }
+.kfc-node__handle-label--in { right: 12px; }
+.kfc-node__handle--error .kfc-node__handle-label { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+
+.react-flow__edge-path { stroke: #94a3b8; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: #5F3FE0; stroke-width: 3; }
+.kfc-edge-quitar {
+    position: absolute;
+    pointer-events: all;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: #dc2626;
+    color: #fff;
+    font-size: 11px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+}
+.kfc-edge-quitar:hover { background: #b91c1c; }
+.kfc-sidebar__hint { margin: 2px 0 8px; font-size: 11.5px; line-height: 1.35; color: #6b6890; }
+.kfc-palette-card { cursor: pointer; }
+.kfc-palette-card:focus-visible { outline: 2px solid #5F3FE0; outline-offset: 2px; }
+
+/* ----- Panel: de dónde viene y qué sigue ----- */
+.kfc-conex { border: 1px solid #ece8ff; background: #faf9ff; border-radius: 12px; padding: 10px 12px; margin: 0 0 14px; display: grid; gap: 8px; }
+.kfc-conex__fila { display: grid; gap: 4px; }
+.kfc-conex__rotulo { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #6b6890; }
+.kfc-conex__rotulo--error { color: #b91c1c; }
+.kfc-conex__chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.kfc-conex__chip { display: inline-flex; align-items: center; background: #fff; border: 1px solid #e3dcff; border-radius: 999px; overflow: hidden; }
+.kfc-conex__ir { border: 0; background: transparent; padding: 3px 4px 3px 10px; font-size: 12px; font-weight: 600; color: #211F3A; cursor: pointer; }
+.kfc-conex__ir:hover { color: #5F3FE0; text-decoration: underline; }
+.kfc-conex__quitar { border: 0; background: transparent; padding: 3px 8px 3px 4px; font-size: 10px; color: #9ca3af; cursor: pointer; }
+.kfc-conex__quitar:hover { color: #dc2626; }
+.kfc-conex__nada { font-size: 12px; color: #6b7280; }
+.kfc-conex__nada--alerta { color: #b45309; }
+.kfc-conex__agregar { font-size: 12px; font-weight: 600; color: #5F3FE0; border: 1px dashed #c4b5fd; background: #fff; border-radius: 999px; padding: 3px 10px; cursor: pointer; max-width: 100%; }
+.kfc-conex__aviso { font-size: 12px; color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 6px 8px; }
+.kfc-conex__nota { font-size: 11px; color: #8b88a8; }

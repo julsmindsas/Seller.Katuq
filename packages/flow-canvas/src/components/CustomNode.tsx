@@ -4,7 +4,14 @@ import classNames from 'classnames';
 import type { NodeSpec, FlowNode, NodeStatus, NodeState } from '../contracts/types';
 import { useFlowStore } from '../store/flowStore';
 import { getInputPorts, getOutputPorts } from '../utils/validators';
-import { nombrePaso } from '../utils/lenguaje';
+import { nombrePaso, etiquetaCampo, esAvanzado, textoValorCampo } from '../utils/lenguaje';
+import { nombrePuerto } from '../utils/conexiones';
+
+/** Altura del punto de conexión: uno solo va centrado; varios, repartidos. */
+function alturaPuerto(idx: number, total: number): string {
+    if (total <= 1) return '50%';
+    return `${((idx + 1) * 100) / (total + 1)}%`;
+}
 
 export interface CustomNodeData {
     flowNode: FlowNode;
@@ -37,7 +44,7 @@ const CustomNodeComponent: React.FC<NodeProps<CustomNodeData>> = ({ id, data, se
     const outputs = getOutputPorts(spec);
 
     const headerLabel = nombrePaso(node.type, spec?.displayName);
-    const summary = useMemo(() => paramSummary(node.params), [node.params]);
+    const summary = useMemo(() => paramSummary(node.params, spec), [node.params, spec]);
 
     const onLogsClick = useCallback(
         (e: React.MouseEvent) => {
@@ -68,11 +75,16 @@ const CustomNodeComponent: React.FC<NodeProps<CustomNodeData>> = ({ id, data, se
                     id={port.name}
                     type="target"
                     position={Position.Left}
-                    className={classNames('kfc-node__handle', {
+                    className={classNames('kfc-node__handle', 'kfc-node__handle--in', {
                         'kfc-node__handle--error': port.isError
                     })}
-                    style={{ top: 24 + idx * 18 }}
-                />
+                    style={{ top: alturaPuerto(idx, inputs.length) }}
+                    title="Suelta aquí una línea para que este paso reciba lo del anterior"
+                >
+                    {nombrePuerto(spec, port, 'in') && (
+                        <span className="kfc-node__handle-label kfc-node__handle-label--in">{nombrePuerto(spec, port, 'in')}</span>
+                    )}
+                </Handle>
             ))}
 
             <div className="kfc-node__header">
@@ -85,8 +97,8 @@ const CustomNodeComponent: React.FC<NodeProps<CustomNodeData>> = ({ id, data, se
                         type="button"
                         className="kfc-node__info-btn"
                         onClick={onLogsClick}
-                        title="Ver logs de este nodo"
-                        aria-label="Ver logs"
+                        title="Ver qué pasó en este paso"
+                        aria-label="Ver qué pasó en este paso"
                     >
                         <i className="pi pi-info-circle" />
                     </button>
@@ -100,13 +112,13 @@ const CustomNodeComponent: React.FC<NodeProps<CustomNodeData>> = ({ id, data, se
                 {summary.length > 0 ? (
                     <ul className="kfc-node__params">
                         {summary.slice(0, 3).map(([k, v]) => (
-                            <li key={k}>
+                            <li key={k} title={`${k}: ${v}`}>
                                 <b>{k}:</b> {v}
                             </li>
                         ))}
                     </ul>
                 ) : (
-                    <em style={{ color: '#9ca3af' }}>Sin parámetros configurados</em>
+                    <em style={{ color: '#9ca3af' }}>Sin ajustes</em>
                 )}
                 <div className="kfc-node__status-row">
                     <span className={classNames('kfc-node__status', `kfc-node__status--${status}`)}>
@@ -122,14 +134,14 @@ const CustomNodeComponent: React.FC<NodeProps<CustomNodeData>> = ({ id, data, se
                         </span>
                     )}
                     {itemsCount > 0 && status === 'success' && (
-                        <span className="kfc-node__metric" title="Items procesados">
+                        <span className="kfc-node__metric" title="Registros procesados">
                             {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
                         </span>
                     )}
                     {attempt != null && attempt > 1 && (
                         <span
                             className="kfc-node__metric kfc-node__metric--warn"
-                            title="Reintentos"
+                            title="Veces que se reintentó"
                         >
                             int. {attempt}
                         </span>
@@ -148,11 +160,16 @@ const CustomNodeComponent: React.FC<NodeProps<CustomNodeData>> = ({ id, data, se
                     id={port.name}
                     type="source"
                     position={Position.Right}
-                    className={classNames('kfc-node__handle', {
+                    className={classNames('kfc-node__handle', 'kfc-node__handle--out', {
                         'kfc-node__handle--error': port.isError
                     })}
-                    style={{ top: 24 + idx * 18 }}
-                />
+                    style={{ top: alturaPuerto(idx, outputs.length) }}
+                    title="Arrastra desde aquí hasta el siguiente paso"
+                >
+                    {nombrePuerto(spec, port, 'out') && (
+                        <span className="kfc-node__handle-label kfc-node__handle-label--out">{nombrePuerto(spec, port, 'out')}</span>
+                    )}
+                </Handle>
             ))}
 
             {isLive && <div className="kfc-node__live-pulse" aria-hidden />}
@@ -160,34 +177,41 @@ const CustomNodeComponent: React.FC<NodeProps<CustomNodeData>> = ({ id, data, se
     );
 };
 
-function paramSummary(params: Record<string, any> | undefined): Array<[string, string]> {
+/** Resumen legible: nombre del ajuste como en el panel, sin los técnicos (JSON, rutas internas). */
+function paramSummary(params: Record<string, any> | undefined, spec?: NodeSpec): Array<[string, string]> {
     if (!params) return [];
-    return Object.entries(params)
+    const props: Record<string, any> = (spec?.schema as any)?.properties || {};
+    const requeridos: string[] = (spec?.schema as any)?.required || [];
+    const visibles = Object.entries(params)
         .filter(([, v]) => v !== undefined && v !== null && v !== '')
-        .map(([k, v]) => {
-            const display =
-                typeof v === 'object' ? JSON.stringify(v).slice(0, 40) : String(v).slice(0, 40);
-            return [k, display] as [string, string];
-        });
+        .filter(([k, v]) => typeof v !== 'object' && !esAvanzado(k, props[k] || {}, requeridos.includes(k)));
+    const lista = visibles.map(([k, v]) => {
+        const valor = textoValorCampo(k, v);
+        return [etiquetaCampo(k, props[k] || {}), valor.slice(0, 40)] as [string, string];
+    });
+    // Si todo lo configurado es técnico, al menos se dice que está configurado.
+    if (!lista.length && Object.keys(params).some((k) => params[k] !== undefined && params[k] !== '')) {
+        return [['Ajustes', 'configurados']];
+    }
+    return lista;
 }
 
 function shortCategory(c: string): string {
-    if (c === 'flow-control') return 'flow';
-    return c.slice(0, 6);
+    return ({ trigger: 'Inicio', action: 'Acción', transform: 'Datos', 'flow-control': 'Lógica', ai: 'IA' } as Record<string, string>)[c] || c;
 }
 
 function translateStatus(s: NodeStatus): string {
     switch (s) {
         case 'running':
-            return 'Ejecutando';
+            return 'Probando';
         case 'success':
-            return 'Éxito';
+            return 'Bien';
         case 'failed':
             return 'Falló';
         case 'skipped':
-            return 'Saltado';
+            return 'Omitido';
         default:
-            return 'Pendiente';
+            return 'Sin probar';
     }
 }
 

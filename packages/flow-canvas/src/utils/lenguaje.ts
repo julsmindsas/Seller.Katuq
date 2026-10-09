@@ -114,7 +114,9 @@ const CAMPOS: Record<string, InfoCampo> = {
     events: { titulo: 'Qué eventos escuchar' },
     condition: { titulo: 'Condición' },
     cases: { titulo: 'Caminos' },
-    ms: { titulo: 'Milisegundos de espera' },
+    ms: { titulo: 'Cuánto esperar', ayuda: 'En milisegundos: 1000 = 1 segundo · 60000 = 1 minuto · 3600000 = 1 hora.' },
+    cronExpression: { titulo: 'Cuándo se repite', ayuda: 'Ejemplos: «0 9 * * 1» = cada lunes a las 9:00 · «*/15 * * * *» = cada 15 minutos · «0 7 * * *» = todos los días a las 7:00.' },
+    timezone: { titulo: 'Zona horaria', avanzado: true },
     agentName: { titulo: 'Agente de Opttia' },
     continueOnError: { titulo: 'Seguir aunque un registro falle' },
     url: { titulo: 'Dirección del otro sistema' },
@@ -178,9 +180,52 @@ const VALORES: Record<string, string> = {
     ACTIVE: 'Publicado', DRAFT: 'Borrador', ARCHIVED: 'Archivado',
     incremental: 'Solo lo nuevo', historico: 'Todo el histórico', full: 'Todo',
     created: 'Creado', updated: 'Actualizado', deleted: 'Eliminado',
+    fixed: 'Un tiempo fijo', until: 'Hasta una fecha',
 };
 
 /** Texto para mostrar una opción; el valor guardado no cambia. */
 export function textoOpcion(valor: string): string {
     return VALORES[valor] || valor;
+}
+
+/** Valor de un ajuste tal como se muestra en la caja del paso (lo guardado no cambia). */
+export function textoValorCampo(nombre: string, valor: any): string {
+    if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
+    if (nombre === 'cronExpression') return textoCron(String(valor));
+    if (nombre === 'ms' && Number.isFinite(Number(valor))) return duracionCorta(Number(valor));
+    return textoOpcion(String(valor));
+}
+
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+
+/** "0 9 * * 1" → "Cada lunes a las 9:00". Si no es un patrón común, lo deja como está. */
+export function textoCron(expr: string): string {
+    const p = String(expr || '').trim().split(/\s+/);
+    if (p.length !== 5) return expr;
+    const [min, hora, dia, mes, sem] = p;
+    const hm = (h: string, m: string) => `${Number(h)}:${String(Number(m)).padStart(2, '0')}`;
+    const cada = /^\*\/(\d+)$/;
+    if (cada.test(min) && hora === '*' && dia === '*' && mes === '*' && sem === '*') return `Cada ${min.match(cada)![1]} minutos`;
+    if (min === '*' && hora === '*' && dia === '*' && mes === '*' && sem === '*') return 'Cada minuto';
+    if (/^\d+$/.test(min) && hora === '*' && dia === '*' && mes === '*' && sem === '*') return 'Cada hora';
+    if (/^\d+$/.test(min) && cada.test(hora) && dia === '*' && mes === '*' && sem === '*') return `Cada ${hora.match(cada)![1]} horas`;
+    if (/^\d+$/.test(min) && /^\d+$/.test(hora) && mes === '*') {
+        const a = `a las ${hm(hora, min)}`;
+        if (dia === '*' && sem === '*') return `Todos los días ${a}`;
+        if (dia === '*' && sem === '1-5') return `De lunes a viernes ${a}`;
+        if (dia === '*' && /^\d$/.test(sem)) return `Cada ${DIAS[Number(sem)]} ${a}`;
+        if (dia === '*' && /^\d(,\d)+$/.test(sem)) return `Los ${sem.split(',').map((d) => DIAS[Number(d)]).join(', ')} ${a}`;
+        if (/^\d+$/.test(dia) && sem === '*') return `El día ${Number(dia)} de cada mes ${a}`;
+    }
+    return expr;
+}
+
+function duracionCorta(ms: number): string {
+    if (ms < 1000) return `${ms} milisegundos`;
+    const s = ms / 1000;
+    if (s < 60) return `${+s.toFixed(1)} ${s === 1 ? 'segundo' : 'segundos'}`;
+    const m = s / 60;
+    if (m < 60) return `${+m.toFixed(1)} ${m === 1 ? 'minuto' : 'minutos'}`;
+    const h = m / 60;
+    return `${+h.toFixed(1)} ${h === 1 ? 'hora' : 'horas'}`;
 }

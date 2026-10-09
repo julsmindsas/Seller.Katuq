@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import type { FlowNode, NodeSpec, JSONSchemaLike } from '../contracts/types';
 import { useFlowStore } from '../store/flowStore';
 import { findSpec, validateNodeParams } from '../utils/validators';
+import { ConexionesPaso } from './ConexionesPaso';
 import { NOMBRES_GRUPO, nombrePaso, descripcionPaso, etiquetaCampo, ayudaCampo, esAvanzado, textoOpcion } from '../utils/lenguaje';
 
 export interface ConfigPanelProps {
@@ -71,6 +72,8 @@ interface InputData {
     label: string;
     json: Record<string, any> | null;
     paths: DataPath[];
+    /** El paso recibe datos pero ninguna línea le llega todavía. */
+    sinConexion?: boolean;
 }
 
 /**
@@ -220,6 +223,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ onClose, onOpenIntegra
                 {descripcionPaso(spec.type, spec.description) && (
                     <p className="kfc-config__desc">{descripcionPaso(spec.type, spec.description)}</p>
                 )}
+                <ConexionesPaso node={node} spec={spec} />
                 {errors.length > 0 && (
                     <div className="kfc-config__errors" role="alert">
                         {errors.map((e) => (
@@ -603,7 +607,7 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
     return (
         <div className="kfc-expr-wrap">
             <div className="kfc-expr">
-                <span className="kfc-expr__fx" title="Modo expresión">
+                <span className="kfc-expr__fx" title="Dato que viene de un paso anterior">
                     <i className="pi pi-bolt" />
                 </span>
                 <input
@@ -630,7 +634,7 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
             </div>
 
             {preview !== null && (
-                <div className="kfc-expr__preview" title="Valor de muestra del último run">
+                <div className="kfc-expr__preview" title="Así se vio en la última prueba">
                     <span className="kfc-expr__preview-eq">=</span> {preview}
                 </div>
             )}
@@ -646,9 +650,9 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
                         <div className="kfc-datapick__empty">
                             <i className="pi pi-info-circle" />
                             <span>
-                                Prueba la automatización una vez (botón «Probar ahora») para ver las
-                                propiedades reales del paso anterior. Mientras tanto podés
-                                insertar la raíz:
+                                {inputData && inputData.sinConexion
+                                    ? 'Este paso todavía no recibe nada de otro paso. Conéctalo con el anterior (arriba, en «Recibe de», o con una línea en el lienzo) para usar sus datos.'
+                                    : 'Prueba la automatización una vez (botón «Probar ahora») para ver los datos reales del paso anterior. Mientras tanto puedes insertar todo el registro:'}
                             </span>
                             <div className="kfc-datapick__tokens">
                                 <button
@@ -672,7 +676,7 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
                             <input
                                 type="search"
                                 className="kfc-datapick__search"
-                                placeholder="Buscar propiedad…"
+                                placeholder="Buscar dato…"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -697,7 +701,7 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
                                 ))}
                                 {filteredPaths.length === 0 && (
                                     <li className="kfc-datapick__noresult">
-                                        Sin propiedades que coincidan con «{search}».
+                                        Ningún dato coincide con «{search}».
                                     </li>
                                 )}
                             </ul>
@@ -838,14 +842,15 @@ function resolveInputData(
         const triggerJson = runContext?.triggerData?.[0]?.json;
         if (triggerJson) {
             json = triggerJson;
-            label = 'trigger';
+            label = 'el inicio de la automatización';
         }
     }
 
     return {
         label,
         json,
-        paths: json ? flattenJson(json) : []
+        paths: json ? flattenJson(json) : [],
+        sinConexion: predecessors.length === 0 && (findSpec(catalog, node.type)?.inputs?.length || 0) > 0
     };
 }
 

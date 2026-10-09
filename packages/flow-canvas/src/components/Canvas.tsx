@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
     Background,
     BackgroundVariant,
@@ -10,16 +10,22 @@ import ReactFlow, {
     NodeChange,
     EdgeChange,
     OnConnect,
+    OnConnectStartParams,
+    MarkerType,
     ReactFlowInstance
 } from 'reactflow';
 import classNames from 'classnames';
 import { CustomNode, CustomNodeData } from './CustomNode';
 import { useFlowStore } from '../store/flowStore';
-import { findSpec, arePortsCompatible, detectCycles } from '../utils/validators';
+import { LineaEdge } from './LineaEdge';
+import { findSpec } from '../utils/validators';
 import { shortId } from '../utils/id';
-import type { FlowEdge, FlowNode } from '../contracts/types';
+import { nombrePaso } from '../utils/lenguaje';
+import { validarConexion, nuevaLinea, entradaPrincipal, salidaPrincipal } from '../utils/conexiones';
+import type { FlowNode } from '../contracts/types';
 
 const nodeTypes = { katuqNode: CustomNode };
+const edgeTypes = { linea: LineaEdge };
 
 export interface CanvasProps {
     onSelectNode: (nodeId: string | null) => void;
@@ -40,7 +46,7 @@ export const Canvas: React.FC<CanvasProps> = ({ onSelectNode, onIntent }) => {
     const selectedNodeId = useFlowStore((s) => s.selectedNodeId);
 
     const setGraph = useFlowStore((s) => s.setGraph);
-    const addNode = useFlowStore((s) => s.addNode);
+    const addNodeConectado = useFlowStore((s) => s.addNodeConectado);
     const addEdgeToStore = useFlowStore((s) => s.addEdge);
     const moveNode = useFlowStore((s) => s.moveNode);
     const deleteNode = useFlowStore((s) => s.deleteNode);
@@ -49,6 +55,11 @@ export const Canvas: React.FC<CanvasProps> = ({ onSelectNode, onIntent }) => {
 
     const wrapperRef = useRef<HTMLDivElement>(null);
     const rfInstanceRef = useRef<ReactFlowInstance | null>(null);
+    // Línea marcada (al tocarla aparece la ✕ para quitarla).
+    const [lineaMarcada, setLineaMarcada] = useState<string | null>(null);
+    const [conectando, setConectando] = useState(false);
+    // Desde dónde se empezó a arrastrar una línea, para poder soltarla encima de un paso.
+    const arrastre = useRef<{ start: OnConnectStartParams | null; conecto: boolean }>({ start: null, conecto: false });
 
     // Map FlowGraph → React Flow's expected shape.
     const rfNodes: RFNode<CustomNodeData>[] = useMemo(
@@ -80,8 +91,10 @@ export const Canvas: React.FC<CanvasProps> = ({ onSelectNode, onIntent }) => {
 
                 return {
                     id: e.id,
+                    type: 'linea',
+                    selected: lineaMarcada === e.id,
+                    markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: isErrorBranch ? '#dc2626' : '#94a3b8' },
                     source: e.source,
-                    sourcePort: e.sourcePort,
                     target: e.target,
                     sourceHandle: e.sourcePort,
                     targetHandle: e.targetPort,
@@ -93,7 +106,7 @@ export const Canvas: React.FC<CanvasProps> = ({ onSelectNode, onIntent }) => {
                     })
                 };
             }),
-        [graph.edges, runContext]
+        [graph.edges, runContext, lineaMarcada]
     );
 
     const onNodesChange = useCallback(
@@ -105,15 +118,11 @@ export const Canvas: React.FC<CanvasProps> = ({ onSelectNode, onIntent }) => {
                     moveNode(c.id, { x: c.position.x, y: c.position.y });
                 } else if (c.type === 'remove') {
                     deleteNode(c.id);
-                } else if (c.type === 'select' && c.selected) {
-                    // Solo propagamos la selección (selected:true). NO propagamos
-                    // la deselección desde onNodesChange: React Flow emite un
-                    // 'select:false' durante el mismo clic (al sincronizar el
-                    // `selected` controlado por el store) que pisaba la selección
-                    // y dejaba el nodo deseleccionado → el panel de config nunca
-                    // abría. La deselección explícita la maneja onPaneClick.
-                    onSelectNode(c.id);
                 }
+                // La selección NO se toma de aquí: React Flow la emite al PRESIONAR el
+                // mouse; abrir el panel en ese instante esconde la lista de pasos, el
+                // lienzo se corre y el clic termina en el fondo (onPaneClick) → el panel
+                // se cerraba solo. El paso se abre en onNodeClick, al soltar.
             }
         },
         [moveNode, deleteNode, onSelectNode]
@@ -128,70 +137,71 @@ export const Canvas: React.FC<CanvasProps> = ({ onSelectNode, onIntent }) => {
         [deleteEdge]
     );
 
-    const onConnect: OnConnect = useCallback(
-        (connection: Connection) => {
+    const conectar = useCallback(
+        (c: { source: string; sourcePort: string; target: string; targetPort: string }) => {
             if (readOnly) return;
-            if (!connection.source || !connection.target) return;
-
-            // Self-loop check
-            if (connection.source === connection.target) {
-                onIntent?.('connectionRejected', {
-                    reason: 'Un nodo no puede conectarse a sí mismo.'
-                });
+            const v = validarConexion(graph, catalog, c);
+            if (!v.ok) {
+                if (v.reason) onIntent?.('connectionRejected', { reason: v.reason });
                 return;
             }
-
-            const sourceNode = graph.nodes.find((n) => n.id === connection.source);
-            const targetNode = graph.nodes.find((n) => n.id === connection.target);
-            if (!sourceNode || !targetNode) return;
-
-            const sSpec = findSpec(catalog, sourceNode.type);
-            const tSpec = findSpec(catalog, targetNode.type);
-            const compat = arePortsCompatible(
-                sSpec,
-                connection.sourceHandle || 'main',
-                tSpec,
-                connection.targetHandle || 'main'
-            );
-            if (!compat.ok) {
-                onIntent?.('connectionRejected', {
-                    reason: compat.reason || 'Puertos incompatibles.'
-                });
-                return;
-            }
-
-            // Cycle pre-check: simulate adding the edge, if it creates a cycle reject
-            const tentative = {
-                ...graph,
-                edges: [
-                    ...graph.edges,
-                    {
-                        id: '__tentative__',
-                        source: connection.source,
-                        sourcePort: connection.sourceHandle || 'main',
-                        target: connection.target,
-                        targetPort: connection.targetHandle || 'main'
-                    }
-                ]
-            };
-            if (detectCycles(tentative)) {
-                onIntent?.('connectionRejected', {
-                    reason: 'Esta conexión crearía un ciclo en el flow.'
-                });
-                return;
-            }
-
-            const edge: FlowEdge = {
-                id: shortId('e'),
-                source: connection.source,
-                sourcePort: connection.sourceHandle || 'main',
-                target: connection.target,
-                targetPort: connection.targetHandle || 'main'
-            };
+            const edge = nuevaLinea(c);
             addEdgeToStore(edge);
             onIntent?.('connectionCreated', { edgeId: edge.id });
         },
         [readOnly, graph, catalog, addEdgeToStore, onIntent]
+    );
+
+    const onConnect: OnConnect = useCallback(
+        (connection: Connection) => {
+            arrastre.current.conecto = true;
+            if (!connection.source || !connection.target) return;
+            conectar({
+                source: connection.source,
+                sourcePort: connection.sourceHandle || 'main',
+                target: connection.target,
+                targetPort: connection.targetHandle || 'main'
+            });
+        },
+        [conectar]
+    );
+
+    const onConnectStart = useCallback((_e: any, params: OnConnectStartParams) => {
+        arrastre.current = { start: params, conecto: false };
+        setConectando(true);
+    }, []);
+
+    // Soltar la línea encima de cualquier parte de un paso (no solo en el puntico).
+    const onConnectEnd = useCallback(
+        (event: MouseEvent | TouchEvent) => {
+            const { start, conecto } = arrastre.current;
+            arrastre.current = { start: null, conecto: false };
+            setConectando(false);
+            if (conecto || !start?.nodeId) return;
+            const punto = 'changedTouches' in event ? event.changedTouches[0] : (event as MouseEvent);
+            if (!punto) return;
+            const raiz = (wrapperRef.current?.getRootNode() as Document | ShadowRoot | undefined) || document;
+            const el = raiz.elementFromPoint(punto.clientX, punto.clientY);
+            const otroId = (el as HTMLElement | null)?.closest('.react-flow__node')?.getAttribute('data-id');
+            if (!otroId || otroId === start.nodeId) return;
+            const otro = graph.nodes.find((n) => n.id === otroId);
+            const inicio = graph.nodes.find((n) => n.id === start.nodeId);
+            if (!otro || !inicio) return;
+            if (start.handleType === 'target') {
+                const salida = salidaPrincipal(findSpec(catalog, otro.type));
+                if (!salida) return;
+                conectar({ source: otro.id, sourcePort: salida, target: inicio.id, targetPort: start.handleId || 'main' });
+            } else {
+                const entrada = entradaPrincipal(findSpec(catalog, otro.type));
+                if (!entrada) {
+                    const v = validarConexion(graph, catalog, { source: inicio.id, sourcePort: start.handleId || 'main', target: otro.id, targetPort: 'main' });
+                    if (v.reason) onIntent?.('connectionRejected', { reason: v.reason });
+                    return;
+                }
+                conectar({ source: inicio.id, sourcePort: start.handleId || 'main', target: otro.id, targetPort: entrada });
+            }
+        },
+        [graph, catalog, conectar, onIntent]
     );
 
     const onDragOver = useCallback((event: React.DragEvent) => {
@@ -222,17 +232,31 @@ export const Canvas: React.FC<CanvasProps> = ({ onSelectNode, onIntent }) => {
                 position,
                 params: { ...(spec.defaults || {}) }
             };
-            addNode(node);
+            const habiaOtros = graph.nodes.length > 0;
+            const desde = addNodeConectado(node);
             onSelectNode(node.id);
-            onIntent?.('nodeAdded', { nodeId: node.id, type });
+            onIntent?.('nodeAdded', {
+                nodeId: node.id,
+                type,
+                conectadoDespuesDe: desde ? nombrePaso(desde.type, findSpec(catalog, desde.type)?.displayName) : null,
+                faltaUnir: !desde && habiaOtros && spec.inputs.length > 0
+            });
         },
-        [readOnly, catalog, addNode, onSelectNode, onIntent]
+        [readOnly, graph, catalog, addNodeConectado, onSelectNode, onIntent]
     );
 
-    const onPaneClick = useCallback(() => onSelectNode(null), [onSelectNode]);
+    const onPaneClick = useCallback(() => {
+        setLineaMarcada(null);
+        onSelectNode(null);
+    }, [onSelectNode]);
+
+    const onEdgeClick = useCallback((_e: React.MouseEvent, edge: RFEdge) => setLineaMarcada(edge.id), []);
 
     const onNodeClick = useCallback(
-        (_event: React.MouseEvent, n: RFNode) => onSelectNode(n.id),
+        (_event: React.MouseEvent, n: RFNode) => {
+            setLineaMarcada(null);
+            onSelectNode(n.id);
+        },
         [onSelectNode]
     );
 
@@ -248,25 +272,32 @@ export const Canvas: React.FC<CanvasProps> = ({ onSelectNode, onIntent }) => {
     return (
         <div ref={wrapperRef} className="kfc-canvas-wrapper" onDragOver={onDragOver} onDrop={onDrop}>
             <ReactFlow
+                className={conectando ? 'kfc-conectando' : undefined}
                 nodes={rfNodes}
                 edges={rfEdges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
+                onConnectStart={onConnectStart}
+                onConnectEnd={onConnectEnd}
+                connectionRadius={36}
+                onEdgeClick={onEdgeClick}
                 onPaneClick={onPaneClick}
                 onNodeClick={onNodeClick}
                 onNodeContextMenu={onNodeContextMenu}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 fitView
-                fitViewOptions={{ padding: 0.2 }}
+                fitViewOptions={{ padding: 0.3 }}
                 onInit={(inst) => (rfInstanceRef.current = inst)}
                 proOptions={{ hideAttribution: true }}
                 deleteKeyCode={readOnly ? null : ['Delete', 'Backspace']}
                 minZoom={0.2}
                 maxZoom={2}
                 defaultEdgeOptions={{
-                    style: { strokeWidth: 1.5 }
+                    style: { strokeWidth: 2 }
                 }}
+                connectionLineStyle={{ stroke: '#5F3FE0', strokeWidth: 2 }}
             >
                 <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="#d1d5db" />
                 <MiniMap

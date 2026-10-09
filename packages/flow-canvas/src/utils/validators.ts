@@ -1,4 +1,5 @@
 import type { FlowGraph, FlowNode, NodeSpec, NodePort } from '../contracts/types';
+import { etiquetaCampo } from './lenguaje';
 
 /**
  * Detects a directed cycle starting at any node. Returns true if the graph
@@ -58,7 +59,7 @@ export function validateNodeParams(node: FlowNode, spec: NodeSpec | undefined): 
     for (const key of required) {
         const v = node.params?.[key];
         if (v === undefined || v === null || v === '') {
-            errors.push(`Falta parámetro requerido: ${key}`);
+            errors.push(`Falta llenar: ${etiquetaCampo(key, (spec.schema as any).properties?.[key] || {})}`);
         }
     }
     return errors;

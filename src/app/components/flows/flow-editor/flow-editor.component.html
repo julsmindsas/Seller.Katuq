@@ -188,7 +188,13 @@
     Cargando el editor…
   </div>
 
-  <div *ngIf="webComponentReady && !loading" class="kf-canvas-host">
+  <!-- Si no cargó, no se muestra un lienzo vacío que invite a editar (y que el autoguardado pisaría). -->
+  <div *ngIf="!loading && !isNew && !flow && errorMessage" class="kf-carga-fallida" role="alert">
+    <strong>{{ errorMessage }}</strong>
+    <button type="button" class="kf-btn" (click)="goBack()">Volver a Automatizaciones</button>
+  </div>
+
+  <div *ngIf="webComponentReady && !loading && (isNew || flow)" class="kf-canvas-host">
     <katuq-flow-canvas
       #canvasEl
       (graphChange)="onGraphChange($event)"

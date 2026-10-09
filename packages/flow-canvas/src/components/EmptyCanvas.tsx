@@ -20,8 +20,8 @@ export const EmptyCanvas: React.FC<EmptyCanvasProps> = ({ readOnly, onTemplateCl
                 <span className="kfc-canvas-empty__eyebrow">Modo avanzado</span>
                 <h2 className="kfc-canvas-empty__title">Arma tu automatización paso a paso</h2>
                 <p className="kfc-canvas-empty__desc">
-                    Arrastra un paso desde la lista de la izquierda y suéltalo aquí. Empieza por el paso que la
-                    arranca (por ejemplo, «Cuando entra un pedido en Shopify») y luego conecta los demás.
+                    Toca en la lista de la izquierda el paso que la arranca (por ejemplo, «Cuando entra un pedido
+                    en Shopify») y luego los que siguen: cada uno queda conectado después del anterior.
                 </p>
                 <div className="kfc-canvas-empty__acciones">
                     <button type="button" className="kfc-btn kfc-btn--primary" onClick={() => onTemplateClick?.()}>
