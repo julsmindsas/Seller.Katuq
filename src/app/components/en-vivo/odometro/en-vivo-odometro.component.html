@@ -1,0 +1,11 @@
+<div class="odo" aria-hidden="true">
+  <ng-container *ngFor="let c of columnas; trackBy: porPosicion">
+    <span *ngIf="c.digito !== null; else simbolo" class="odo__d">
+      <span class="odo__col" [style.transform]="'translateY(-' + c.digito + 'em)'">
+        <span *ngFor="let n of digitos; trackBy: porDigito">{{ n }}</span>
+      </span>
+    </span>
+    <ng-template #simbolo><span class="odo__s">{{ c.simbolo }}</span></ng-template>
+  </ng-container>
+</div>
+<span class="ev-sr" aria-live="polite" aria-atomic="true">{{ anunciar }}</span>

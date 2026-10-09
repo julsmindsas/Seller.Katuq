@@ -1,0 +1,84 @@
+<app-en-vivo
+  vista="comercio"
+  [empresa]="(empresa$ | async) || undefined"
+  [eventosFlotantes]="!ampliado && (vm$ | async)?.opcion !== 'pedidos'"
+>
+  <!-- Encabezado: botones extra -->
+  <ng-container ngProjectAs="[slot=acciones]">
+    <a class="ev-btn" *ngIf="esJulsmind && (empresa$ | async)" routerLink="/en-vivo/katuq" title="Volver a toda Katuq">
+      <app-en-vivo-icono nombre="flecha"></app-en-vivo-icono>
+      <span>Toda Katuq</span>
+    </a>
+    <button
+      type="button"
+      class="ev-btn ev-btn--ampliar"
+      title="Ampliar la escena: quita los paneles flotantes"
+      [attr.aria-pressed]="ampliado"
+      (click)="alternarAmpliado()"
+    >
+      <span>{{ ampliado ? 'Con paneles' : 'Ampliar' }}</span>
+    </button>
+  </ng-container>
+
+  <!-- Escena: recuadro de alto fijo + paneles flotantes (o apilados) + ficha -->
+  <ng-container ngProjectAs="[slot=escena]">
+    <div class="ev-zona" *ngIf="vm$ | async as vm">
+      <div class="ev-escena-slot" [class.ev-escena-slot--lista]="vm.opcion === 'pedidos'" [attr.data-vista]="vm.opcion">
+        <!-- Una escena a la vez: "Mi operación" y "Mi país" son 3D (sin WebGL muestran su aviso) y "Pedidos" es el tablero. -->
+        <ng-container [ngSwitch]="vm.opcion">
+          <app-en-vivo-escena-operacion
+            *ngSwitchCase="'operacion'"
+            [margenes]="vm.margenes"
+            [activa]="vm.opcion === 'operacion'"
+            (disponible3d)="alDisponible3d($event)"
+          ></app-en-vivo-escena-operacion>
+          <app-en-vivo-escena-mapa
+            *ngSwitchCase="'pais'"
+            [margenes]="vm.margenes"
+            [activa]="vm.opcion === 'pais'"
+            [bodegaPropia]="!vm.soloLectura"
+            (disponible3d)="alDisponible3d($event)"
+          ></app-en-vivo-escena-mapa>
+          <app-en-vivo-tablero-pedidos *ngSwitchCase="'pedidos'"></app-en-vivo-tablero-pedidos>
+        </ng-container>
+
+        <app-en-vivo-narracion *ngIf="vm.opcion !== 'pedidos'"></app-en-vivo-narracion>
+        <app-en-vivo-ficha [empresa]="(empresa$ | async) || undefined" (abrirTablero)="alAbrirTablero($event)"></app-en-vivo-ficha>
+      </div>
+
+      <div class="ev-paneles" *ngIf="flotando(vm.opcion)">
+        <div class="ev-paneles__izq" *ngIf="vm.opcion === 'operacion'">
+          <app-en-vivo-lo-proximo></app-en-vivo-lo-proximo>
+          <app-en-vivo-flota-hud></app-en-vivo-flota-hud>
+        </div>
+        <div class="ev-paneles__der">
+          <app-en-vivo-eventos
+            [eventos]="vm.eventos"
+            [pedidos]="vm.pedidos"
+            [etapas]="vm.etapas"
+            vista="comercio"
+            [ocultar]="vm.ocultar"
+            titulo="Eventos de hoy"
+            [anunciar]="true"
+            (abrir)="abrirPedido($event)"
+            (resaltar)="resaltarPedidos($event)"
+          ></app-en-vivo-eventos>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Abajo -->
+  <div slot="inferior" class="ev-inferior">
+    <app-en-vivo-atencion-ahora></app-en-vivo-atencion-ahora>
+    <app-en-vivo-opttia
+      [conEscena]="(conEscena$ | async) ?? false"
+      (recorrido)="alRecorrido()"
+      (verEnEscena)="alVerEnEscena($event)"
+      (respondida)="alRespondida($event)"
+    ></app-en-vivo-opttia>
+    <app-en-vivo-tiempos-comercio></app-en-vivo-tiempos-comercio>
+    <app-en-vivo-logros-comercio></app-en-vivo-logros-comercio>
+    <app-en-vivo-productos-estrella class="ev-inferior__ancho"></app-en-vivo-productos-estrella>
+  </div>
+</app-en-vivo>

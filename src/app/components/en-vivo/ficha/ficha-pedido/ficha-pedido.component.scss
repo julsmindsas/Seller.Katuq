@@ -1,0 +1,202 @@
+@import '../ficha-comun';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+@include ev-tonos;
+@include fx-hero;
+@include fx-celdas;
+@include fx-seccion;
+@include fx-botones;
+
+.sr {
+  @include ev-sr;
+}
+
+.fx-monto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fx-big {
+  font-size: ev-fs(27);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ev-ink);
+}
+
+// Recorrido de hoy: una línea de tiempo con un punto por etapa.
+.tl {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    padding: 0 0 13px 28px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 17px;
+      bottom: -1px;
+      width: 2px;
+      background: var(--ev-line);
+    }
+
+    &:last-child::before {
+      display: none;
+    }
+
+    &.is-done::before {
+      background: var(--tone);
+      opacity: 0.45;
+    }
+
+    b {
+      font-size: ev-fs(12.5);
+      font-weight: 800;
+      color: var(--ev-ink);
+    }
+
+    small {
+      display: block;
+      font-size: ev-fs(11);
+      font-weight: 600;
+      color: var(--ev-muted);
+
+      &.is-sin-hora {
+        font-style: italic;
+      }
+    }
+
+    &.is-todo b {
+      font-weight: 700;
+      color: var(--ev-muted-2);
+    }
+
+    &.is-new {
+      animation: ev-paso-entra 0.55s cubic-bezier(0.2, 1.2, 0.4, 1);
+    }
+  }
+
+  .dot {
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 14px;
+    height: 14px;
+    background: var(--ev-surface);
+    border: 2px solid var(--ev-chip-line);
+    border-radius: 50%;
+  }
+
+  .is-done .dot {
+    background: var(--tone);
+    border-color: var(--tone);
+  }
+
+  .is-now .dot {
+    box-shadow: 0 0 0 4px var(--tone-soft);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border: 2px solid var(--tone);
+      border-radius: 50%;
+      opacity: 0;
+      animation: ev-latido 1.6s ease-out infinite;
+    }
+  }
+}
+
+// Productos con cantidad y valor.
+.fx-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 9px;
+    align-items: center;
+    font-size: ev-fs(12.5);
+  }
+
+  .q {
+    display: grid;
+    place-items: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 4px;
+    font-size: ev-fs(11);
+    font-weight: 800;
+    color: var(--ev-ink-2);
+    background: var(--ev-chip);
+    border-radius: 9px;
+  }
+
+  .n {
+    font-weight: 700;
+    color: var(--ev-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .p {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--ev-ink);
+  }
+}
+
+.fx-linea,
+.fx-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: ev-fs(12.5);
+  font-variant-numeric: tabular-nums;
+  color: var(--ev-ink-2);
+}
+
+.fx-total {
+  padding-top: 8px;
+  font-weight: 800;
+  font-size: ev-fs(13);
+  color: var(--ev-ink);
+  border-top: 1px dashed var(--ev-line);
+}
+
+@keyframes ev-paso-entra {
+  0% { opacity: 0; transform: translateY(-14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ev-latido {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+@include ev-sin-movimiento {
+  .tl li.is-new {
+    animation: none;
+  }
+
+  .tl .is-now .dot::after {
+    animation: none;
+    opacity: 0;
+  }
+}

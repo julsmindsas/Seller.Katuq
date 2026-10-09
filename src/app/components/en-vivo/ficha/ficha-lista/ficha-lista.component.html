@@ -1,0 +1,12 @@
+<dl class="fx-grid" *ngIf="contenido.celdas.length > 0">
+  <div class="fx-cell" *ngFor="let c of contenido.celdas; trackBy: porEtiqueta">
+    <dt>{{ c.etiqueta }}</dt>
+    <dd [ngClass]="c.clase">{{ c.valor }}</dd>
+  </div>
+</dl>
+
+<app-en-vivo-ficha-filas [filas]="contenido.filas" (abrirPedido)="abrirPedido.emit($event)"></app-en-vivo-ficha-filas>
+
+<p class="fx-vacio" *ngIf="contenido.filas.length === 0" role="status">{{ contenido.vacio }}</p>
+<p class="fx-vacio" *ngIf="contenido.restantes > 0">y {{ contenido.restantes }} más</p>
+<p class="fx-nota" *ngIf="contenido.nota">{{ contenido.nota }}</p>

@@ -1,0 +1,102 @@
+@import '../plataforma-comun';
+
+@include ev-kq-base;
+
+// Un color por tramo, siempre el mismo: preparación (aviso), espera para salir (acento) y entrega (info).
+.tramo--prep {
+  --tramo: var(--ev-warn);
+}
+
+.tramo--espera {
+  --tramo: var(--ev-accent);
+}
+
+.tramo--entrega {
+  --tramo: var(--ev-info);
+}
+
+.ciclo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ciclo__big {
+  font-size: ev-fs(30);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--ev-ink);
+  font-variant-numeric: tabular-nums;
+
+  small {
+    margin-left: 6px;
+    font-size: ev-fs(12);
+    font-weight: 700;
+    color: var(--ev-muted);
+  }
+}
+
+.ciclo__bar {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+
+  i {
+    display: block;
+    flex: 1 1 0;
+    min-width: 4px;
+    height: 100%;
+    background: var(--tramo);
+    transition: flex-grow 0.8s;
+  }
+}
+
+.ciclo__leg {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+
+  > div {
+    font-size: ev-fs(11);
+    font-weight: 700;
+    color: var(--ev-muted);
+  }
+
+  b {
+    display: block;
+    font-size: ev-fs(15);
+    font-weight: 800;
+    color: var(--ev-ink);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--tramo);
+}
+
+.ciclo__extra {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+
+  b {
+    color: var(--ev-ink);
+  }
+}
+
+@include ev-sin-movimiento {
+  .ciclo__bar i {
+    transition: none;
+  }
+}

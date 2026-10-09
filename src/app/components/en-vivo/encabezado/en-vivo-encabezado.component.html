@@ -1,0 +1,65 @@
+<header class="top">
+  <div class="brand">
+    <div class="brand__logo" [class.is-katuq]="logoKatuq" aria-hidden="true">{{ logo }}</div>
+    <div class="brand__texto">
+      <h1 class="brand__name">{{ marca }}</h1>
+      <div class="brand__eyebrow">{{ subtitulo }}</div>
+    </div>
+  </div>
+
+  <div class="live" role="status" [ngClass]="aspecto.clase" [class.is-late]="aspecto.late">
+    <span class="live__dot" aria-hidden="true"></span>
+    <span>{{ aspecto.texto }}</span>
+  </div>
+
+  <app-en-vivo-reloj [instante]="instante"></app-en-vivo-reloj>
+
+  <span class="top__spacer"></span>
+
+  <div class="seg" role="group" aria-label="Vista" *ngIf="opciones.length > 1 && !sinAcceso">
+    <button
+      *ngFor="let o of opciones; trackBy: porOpcion"
+      type="button"
+      [attr.aria-pressed]="o.id === opcionActiva"
+      (click)="elegirOpcion.emit(o.id)"
+    >{{ o.etiqueta }}</button>
+  </div>
+
+  <div class="actions" *ngIf="!sinAcceso">
+    <ng-content select="[slot=acciones]"></ng-content>
+    <button
+      type="button"
+      class="ibtn"
+      aria-label="Sonido"
+      title="Sonido (apagado hasta que lo enciendas)"
+      [attr.aria-pressed]="sonido"
+      (click)="alternarSonido.emit()"
+    >
+      <app-en-vivo-icono [nombre]="sonido ? 'sonido' : 'silencio'"></app-en-vivo-icono>
+    </button>
+    <button
+      type="button"
+      class="ibtn"
+      [attr.aria-label]="etiquetaOcultar"
+      [title]="etiquetaOcultar"
+      [attr.aria-pressed]="ocultar"
+      (click)="alternarOcultar.emit()"
+    >
+      <app-en-vivo-icono [nombre]="ocultar ? 'ojoTachado' : 'ojo'"></app-en-vivo-icono>
+    </button>
+    <button type="button" class="btn btn--ghost" [disabled]="repitiendo" title="Repetir el día" (click)="repetirDia.emit()">
+      <app-en-vivo-icono nombre="repetir"></app-en-vivo-icono>
+      <span>{{ repitiendo ? 'Repitiendo…' : 'Repetir el día' }}</span>
+    </button>
+    <button
+      type="button"
+      class="btn btn--primary"
+      title="Modo pantalla"
+      [attr.aria-pressed]="modoPantalla"
+      (click)="alternarModoPantalla.emit()"
+    >
+      <app-en-vivo-icono nombre="pantalla"></app-en-vivo-icono>
+      <span>{{ modoPantalla ? 'Salir del modo pantalla' : 'Modo pantalla' }}</span>
+    </button>
+  </div>
+</header>

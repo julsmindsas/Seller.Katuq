@@ -1,0 +1,58 @@
+@import '../plataforma-comun';
+
+@include ev-kq-base;
+@include ev-kq-filas;
+
+// La mezcla: una barra partida; cada tramo pesa lo que pesan los pedidos del canal.
+.mix {
+  display: flex;
+  gap: 2px;
+  height: 16px;
+  margin-bottom: 10px;
+  border-radius: 9px;
+  overflow: hidden;
+
+  i {
+    display: block;
+    flex: 1 1 0;
+    min-width: 3px;
+    height: 100%;
+    background: var(--tone);
+    transition: flex-grow 0.8s;
+  }
+}
+
+.punto {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone);
+}
+
+// Lo que armó Opttia: una línea aparte en el color del bot (los pedidos de Opttia no son un canal).
+.con-opttia {
+  padding: 8px 10px;
+  border-radius: 11px;
+  background: var(--tone-soft);
+
+  .row__name,
+  .row__n {
+    color: var(--tone);
+  }
+
+  .row__name {
+    font-weight: 800;
+  }
+
+  app-en-vivo-icono {
+    --ev-icono: 15px;
+  }
+}
+
+@include ev-sin-movimiento {
+  .mix i {
+    transition: none;
+  }
+}

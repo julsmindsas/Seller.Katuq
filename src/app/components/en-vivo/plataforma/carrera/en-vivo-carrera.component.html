@@ -1,0 +1,47 @@
+<section class="card" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-carrera-titulo" [class.es-compacta]="compacta">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">{{ vm.ocultar ? 'Comercios con más pedidos hoy' : 'Comercios que más venden hoy' }}</div>
+      <h2 class="card__title" id="ev-kq-carrera-titulo">La carrera de hoy</h2>
+    </div>
+    <span class="card__chip">Top {{ top }}</span>
+  </header>
+
+  <div class="card__body">
+    <p class="vacio" *ngIf="vm.filas.length === 0">Todavía no hay pedidos en ningún comercio hoy.</p>
+
+    <div class="race" role="list" *ngIf="vm.filas.length > 0" [style.--filas]="vm.visibles">
+      <div
+        *ngFor="let fila of vm.filas; trackBy: porEmpresa"
+        class="race__row"
+        role="listitem"
+        [ngClass]="fila.clase"
+        [class.is-fuera]="!fila.dentro"
+        [style.--y]="fila.y"
+        [attr.aria-hidden]="fila.dentro ? null : 'true'"
+        [attr.aria-posinset]="fila.puesto"
+        [attr.aria-setsize]="vm.total"
+      >
+        <button
+          type="button"
+          class="race__btn"
+          [attr.aria-label]="fila.etiqueta"
+          [attr.tabindex]="fila.dentro ? null : -1"
+          (click)="abrir(fila)"
+        >
+          <span class="race__pos" aria-hidden="true">{{ fila.puesto }}</span>
+          <span class="av" aria-hidden="true">{{ fila.iniciales }}</span>
+          <span class="race__name" aria-hidden="true">
+            <span class="race__nombre">{{ fila.nombre }}</span>
+            <!-- Un nodo nuevo cada vez que sube: así la animación de la marca se repite. -->
+            <ng-container *ngFor="let subida of [fila.claveSube]">
+              <span class="race__up" *ngIf="fila.sube > 0">▲ {{ fila.sube }}</span>
+            </ng-container>
+          </span>
+          <span class="race__n" aria-hidden="true">{{ fila.valor }}</span>
+          <span class="race__bar" aria-hidden="true"><i [style.width.%]="fila.ancho"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,22 @@
+<section class="card" aria-labelledby="ev-tiempos-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">Tiempos de la operación · hoy</div>
+      <h2 class="card__title" id="ev-tiempos-titulo">Del pedido a la puerta</h2>
+    </div>
+  </header>
+  <div class="card__body">
+    <div class="ciclo">
+      <div class="ciclo__big">{{ vista.ciclo }}<small>{{ vista.leyenda }}</small></div>
+      <div class="ciclo__bar" aria-hidden="true">
+        <i *ngFor="let t of vista.tramos; trackBy: porTramo" [style.flex-grow]="t.crecer" [style.background]="t.color"></i>
+      </div>
+      <div class="ciclo__leg">
+        <div *ngFor="let t of vista.tramos; trackBy: porTramo">
+          <span class="dot" [style.background]="t.color" aria-hidden="true"></span>{{ t.nombre }}<b>{{ t.valor }}</b>
+        </div>
+      </div>
+      <p class="cmp" [ngClass]="c.clase" *ngIf="vista.comparacion as c">{{ c.texto }}</p>
+    </div>
+  </div>
+</section>

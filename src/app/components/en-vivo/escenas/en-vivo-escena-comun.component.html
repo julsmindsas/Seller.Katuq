@@ -1,0 +1,25 @@
+<div class="eve-stage" #stage>
+  <canvas
+    #canvas
+    class="eve-canvas"
+    [hidden]="sin3d"
+    role="img"
+    [attr.aria-label]="etiquetaAria"
+  ></canvas>
+  <div #etiquetas class="eve-labels" aria-hidden="true"></div>
+  <app-en-vivo-orbe-boton *ngIf="!sin3d"></app-en-vivo-orbe-boton>
+  <div
+    class="eve-leyenda"
+    *ngIf="coloresLeyenda.length && !sin3d"
+    role="img"
+    aria-label="Leyenda: mientras más oscuro el departamento, más pedidos de hoy"
+  >
+    <span aria-hidden="true">Pedidos por departamento</span>
+    <i class="eve-ley-tierra" aria-hidden="true"></i>
+    <i *ngFor="let c of coloresLeyenda" [style.background]="c" aria-hidden="true"></i>
+    <span aria-hidden="true">más</span>
+  </div>
+  <div class="eve-nogl" *ngIf="sin3d" role="status">
+    <div><b>Este equipo no muestra la vista 3D.</b> Las cifras, las etapas y la lista siguen en vivo.</div>
+  </div>
+</div>

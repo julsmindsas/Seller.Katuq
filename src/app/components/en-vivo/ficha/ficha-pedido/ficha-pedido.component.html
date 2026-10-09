@@ -1,0 +1,81 @@
+<ng-container *ngIf="contenido.fase === 'listo'; else sinPedido">
+  <div class="fx-hero">
+    <div class="fx-quien">
+      <div class="fx-who">{{ contenido.cliente }}</div>
+      <div class="fx-sub" *ngIf="contenido.ubicacion">{{ contenido.ubicacion }}</div>
+    </div>
+    <span class="fx-pill" [ngClass]="contenido.etapaClase">{{ contenido.etapaNombre }}</span>
+  </div>
+
+  <div class="fx-monto" *ngIf="contenido.principal">
+    <div class="fx-big">{{ contenido.principal }}</div>
+    <div class="fx-sub" *ngIf="contenido.principalNota">{{ contenido.principalNota }}</div>
+  </div>
+
+  <dl class="fx-grid">
+    <div class="fx-cell" *ngFor="let c of contenido.celdas; trackBy: porEtiqueta">
+      <dt>{{ c.etiqueta }}</dt>
+      <dd [ngClass]="c.clase" [attr.title]="c.valor">{{ c.valor }}</dd>
+    </div>
+  </dl>
+
+  <section class="fx-sec" aria-label="Recorrido de hoy">
+    <h3 class="fx-eyebrow">Recorrido de hoy</h3>
+    <ol class="tl" aria-live="polite" aria-relevant="additions text">
+      <li
+        *ngFor="let p of contenido.recorrido; trackBy: porPaso"
+        [ngClass]="p.clase"
+        [class.is-done]="p.cumplido"
+        [class.is-todo]="!p.cumplido"
+        [class.is-now]="p.actual"
+        [class.is-new]="p.nuevo"
+      >
+        <i class="dot" aria-hidden="true"></i>
+        <b>{{ p.nombre }}<span class="sr" *ngIf="p.actual"> (etapa actual)</span></b>
+        <small [class.is-sin-hora]="p.sinHora">{{ p.detalle }}</small>
+      </li>
+    </ol>
+  </section>
+
+  <section class="fx-sec" aria-label="Productos">
+    <h3 class="fx-eyebrow">Productos</h3>
+    <p class="fx-vacio" *ngIf="contenido.productosFase === 'cargando'" role="status">Cargando los productos…</p>
+    <p class="fx-vacio" *ngIf="contenido.productosFase === 'error'">No pudimos cargar los productos de este pedido.</p>
+    <p class="fx-vacio" *ngIf="contenido.productosFase === 'listo' && contenido.productos.length === 0">
+      Este pedido no tiene productos registrados.
+    </p>
+    <ul class="fx-items" *ngIf="contenido.productos.length > 0">
+      <li *ngFor="let l of contenido.productos; trackBy: porPosicion">
+        <span class="q">{{ l.cantidad }}</span>
+        <span class="n">{{ l.nombre }}</span>
+        <span class="p">{{ l.valor }}</span>
+      </li>
+    </ul>
+    <div class="fx-linea" *ngIf="contenido.envio">
+      <span>Envío</span>
+      <span>{{ contenido.envio }}</span>
+    </div>
+    <div class="fx-total" *ngIf="contenido.total">
+      <span>Total</span>
+      <span>{{ contenido.total }}</span>
+    </div>
+  </section>
+
+  <div class="fx-acts" *ngIf="contenido.acciones.length > 0">
+    <button
+      *ngFor="let a of contenido.acciones; trackBy: porAccion"
+      type="button"
+      class="fx-btn"
+      [class.fx-btn--primaria]="a.primaria"
+      (click)="alTocar(a)"
+    >
+      {{ a.etiqueta }}
+    </button>
+  </div>
+
+  <p class="fx-nota">{{ contenido.nota }}</p>
+</ng-container>
+
+<ng-template #sinPedido>
+  <p class="fx-vacio" role="status">{{ contenido.mensaje }}</p>
+</ng-template>

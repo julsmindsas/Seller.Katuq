@@ -1,0 +1,96 @@
+@import '../plataforma-comun';
+
+@include ev-kq-base;
+@include ev-kq-av;
+@include ev-kq-pastilla;
+
+// Panel sin cabecera de tarjeta: va como bloque chico (por ejemplo flotando sobre la escena).
+.panel {
+  @include ev-panel;
+  padding: 12px 12px 10px;
+}
+
+.panel__eyebrow {
+  @include ev-etiqueta;
+  margin: 0 0 8px;
+}
+
+.momento {
+  @include ev-foco;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+
+  &:hover .momento__nombre {
+    color: var(--ev-accent);
+  }
+}
+
+.av {
+  grid-row: 1 / 3;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  font-size: ev-fs(14);
+}
+
+.momento__nombre {
+  display: block;
+  font-size: ev-fs(14.5);
+  font-weight: 800;
+  color: var(--ev-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
+}
+
+.momento__ciudad {
+  font-size: ev-fs(11.5);
+  font-weight: 700;
+  color: var(--ev-muted);
+}
+
+// Sin ciudad (con la privacidad ya va en el nombre), el nombre ocupa las dos filas junto al avatar.
+.momento.sin-ciudad .momento__nombre {
+  grid-row: 1 / 3;
+  align-self: center;
+}
+
+.momento__n {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+
+  strong {
+    font-size: ev-fs(18);
+    font-weight: 900;
+    color: var(--ev-warn);
+  }
+
+  app-en-vivo-icono {
+    --ev-icono: 12px;
+  }
+}
+
+@include ev-sin-movimiento {
+  .momento__nombre {
+    transition: none;
+  }
+}

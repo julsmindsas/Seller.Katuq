@@ -1,0 +1,35 @@
+<section class="card" aria-labelledby="ev-atencion-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">Atención ahora</div>
+      <h2 class="card__title" id="ev-atencion-titulo">{{ vista?.titulo || 'Lo que necesita tu operación' }}</h2>
+    </div>
+    <span class="chip" *ngIf="vista?.calculada">{{ vista?.chip }}</span>
+  </header>
+
+  <div class="card__body" *ngIf="vista as v">
+    <p class="vacio" role="status" *ngIf="!v.calculada">Calculando lo que necesita tu operación…</p>
+
+    <ul class="radar" *ngIf="v.calculada && v.items.length > 0" aria-live="polite" aria-relevant="additions">
+      <li *ngFor="let a of v.items; trackBy: porClave" class="alerta" [ngClass]="a.clase" [class.is-new]="a.nuevo">
+        <span class="alerta__ico"><app-en-vivo-icono [nombre]="a.icono"></app-en-vivo-icono></span>
+        <div class="alerta__cuerpo">
+          <b>{{ a.titulo }}</b>
+          <p *ngIf="a.texto">{{ a.texto }}</p>
+          <div class="opt" *ngIf="a.sugerencia">
+            <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+            <span>Opttia sugiere: {{ a.sugerencia }}</span>
+          </div>
+          <div class="alerta__acts" *ngIf="a.accion">
+            <button type="button" [attr.aria-label]="a.ariaAccion" (click)="abrir(a)">{{ a.etiquetaAccion }}</button>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+    <p class="radar__ok" role="status" *ngIf="v.calculada && v.items.length === 0">
+      <app-en-vivo-icono nombre="check"></app-en-vivo-icono>
+      <span>Todo al día: nada atascado, demorado ni sin cobrar.</span>
+    </p>
+  </div>
+</section>

@@ -1,0 +1,106 @@
+<section class="opt" aria-labelledby="ev-opt-titulo">
+  <header class="opt__cab">
+    <div class="opt__marca">
+      <span class="opt__logo" aria-hidden="true"><app-en-vivo-icono nombre="ia"></app-en-vivo-icono></span>
+      <div class="opt__marca-texto">
+        <div class="opt__etiqueta">Opttia · la inteligencia de Katuq</div>
+        <h2 class="opt__titulo" id="ev-opt-titulo">{{ titulo }}</h2>
+      </div>
+    </div>
+    <div class="opt__lado">
+      <button type="button" class="opt__recorrido" *ngIf="conEscena" (click)="alRecorrido()">
+        <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+        Recorrido en la escena
+      </button>
+      <span class="opt__cuando" *ngIf="hayResumen">{{ cuando }}</span>
+    </div>
+  </header>
+
+  <div class="opt__cuerpo">
+    <!-- Resumen: lo que se ve se escribe letra por letra; el lector de pantalla recibe el texto completo, una sola vez. -->
+    <div class="opt__resumen">
+      <p class="opt__sr" aria-live="polite">{{ lectorResumen }}</p>
+
+      <p class="opt__pensando" *ngIf="!hayResumen" role="status">
+        <span class="opt__puntos" aria-hidden="true"><i></i><i></i><i></i></span>
+        Opttia está mirando los datos…
+      </p>
+
+      <ng-container *ngIf="hayResumen">
+        <h3 class="opt__tit" aria-hidden="true">{{ titularVisible }}</h3>
+        <ul class="opt__lista" aria-label="Lo más importante ahora">
+          <li *ngFor="let p of puntos; trackBy: porIndice" class="opt__punto" [ngClass]="p.clase" [class.is-visible]="p.visible">
+            <span class="opt__punto-ico"><app-en-vivo-icono [nombre]="p.icono"></app-en-vivo-icono></span>
+            <span class="opt__punto-txt">{{ p.texto }}</span>
+            <button type="button" class="opt__punto-accion" *ngIf="p.boton as boton" (click)="alAbrir(boton)">{{ boton.etiqueta }}</button>
+          </li>
+        </ul>
+      </ng-container>
+    </div>
+
+    <button type="button" class="opt__vendido" *ngIf="vendido" (click)="alVerVendidos()">
+      <span class="opt__vendido-ico"><app-en-vivo-icono nombre="ia"></app-en-vivo-icono></span>
+      <span class="opt__vendido-txt">Vendido con Opttia hoy</span>
+      <b class="opt__vendido-n">{{ textoVendido }}</b>
+    </button>
+
+    <!-- Preguntas -->
+    <form class="opt__form" autocomplete="off" (submit)="alEnviar($event, entrada)">
+      <input
+        #entrada
+        type="text"
+        class="opt__entrada"
+        name="pregunta"
+        aria-label="Pregúntale a Opttia"
+        placeholder="Pregúntale a Opttia sobre lo que ves…"
+        [attr.maxlength]="maxCaracteres"
+        [disabled]="bloqueada"
+        (input)="alEscribir(entrada)"
+      />
+      <button type="submit" class="opt__enviar" [disabled]="bloqueada || enviando">Preguntar</button>
+    </form>
+    <div class="opt__ayuda">
+      <span class="opt__bloqueo" *ngIf="bloqueada" role="status">{{ textoBloqueo }}</span>
+      <span class="opt__contador" *ngIf="largo >= avisoCaracteres" [class.is-tope]="largo >= maxCaracteres">{{ largo }} / {{ maxCaracteres }}</span>
+    </div>
+
+    <div class="opt__chips" role="group" aria-label="Preguntas sugeridas">
+      <button
+        type="button"
+        class="opt__chip"
+        *ngFor="let q of sugeridas; trackBy: porTexto"
+        [disabled]="bloqueada || enviando"
+        (click)="alElegirSugerida(q)"
+      >
+        {{ q }}
+      </button>
+    </div>
+
+    <div class="opt__resp" *ngIf="respuesta as r" [class.is-tope]="r.fase === 'tope'" [class.is-aviso]="r.fase === 'aviso'">
+      <span class="opt__logo opt__logo--chico" aria-hidden="true"><app-en-vivo-icono nombre="ia"></app-en-vivo-icono></span>
+      <div class="opt__resp-cuerpo">
+        <span class="opt__q">{{ r.pregunta }}</span>
+        <p class="opt__sr" aria-live="polite">{{ r.lector }}</p>
+
+        <p class="opt__pensando" *ngIf="r.fase === 'pensando'" aria-hidden="true">
+          <span class="opt__puntos"><i></i><i></i><i></i></span>
+          pensando…
+        </p>
+
+        <p class="opt__a" *ngIf="r.fase === 'escribiendo' || r.fase === 'lista' || r.fase === 'aviso'" aria-hidden="true">{{ r.textoVisible }}</p>
+
+        <div class="opt__a opt__a--tope" *ngIf="r.fase === 'tope'" aria-hidden="true">
+          <b>Llegaste al tope de {{ maxPreguntasPorHora }} preguntas por hora.</b>
+          {{ textoBloqueo }}
+        </div>
+
+        <p class="opt__nota" *ngIf="r.fase === 'lista' && r.nota">{{ r.nota }}</p>
+
+        <div class="opt__acts" *ngIf="r.fase === 'lista' && (r.botones.length > 0 || (conEscena && r.verEnEscena))">
+          <button type="button" class="opt__act opt__act--escena" *ngIf="conEscena && r.verEnEscena" (click)="alVerEnEscena()">Verlo en la escena</button>
+          <button type="button" class="opt__act" *ngFor="let b of r.botones; trackBy: porIndice" (click)="alAbrir(b)">{{ b.etiqueta }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

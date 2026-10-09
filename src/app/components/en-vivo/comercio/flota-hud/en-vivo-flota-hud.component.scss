@@ -1,0 +1,79 @@
+@import '../comercio-comun';
+
+@include cm-tarjeta;
+
+.flh {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flh__row {
+  @include ev-foco;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 3px 2px;
+  text-align: left;
+  font: inherit;
+  color: var(--ev-ink);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+
+  &:hover b {
+    color: var(--ev-accent);
+  }
+}
+
+.flh__av {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--tone-soft);
+  color: var(--tone);
+  font-size: ev-fs(10);
+  font-weight: 800;
+}
+
+.flh__datos {
+  min-width: 0;
+
+  b {
+    display: block;
+    overflow: hidden;
+    font-size: ev-fs(12);
+    font-weight: 800;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: color 0.15s;
+  }
+
+  small {
+    display: block;
+    overflow: hidden;
+    font-size: ev-fs(10.5);
+    font-weight: 700;
+    color: var(--ev-muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.pill {
+  @include ev-pastilla;
+}
+
+@include ev-sin-movimiento {
+  .flh__datos b {
+    transition: none;
+  }
+}

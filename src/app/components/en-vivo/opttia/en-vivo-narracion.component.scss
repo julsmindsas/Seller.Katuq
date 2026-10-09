@@ -1,0 +1,90 @@
+@import '../en-vivo-tema';
+
+// La barra flota sobre la escena: el contenedor que la aloje debe ser `position: relative`.
+:host {
+  position: absolute;
+  left: 50%;
+  bottom: var(--ev-narra-abajo, 66px);
+  z-index: 5;
+  display: block;
+  max-width: min(760px, calc(100% - 24px));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.narra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px 9px 10px;
+  border-radius: 14px;
+  background: var(--ev-ink);
+  color: var(--ev-bg);
+  box-shadow: var(--ev-sh-pop);
+  font-size: ev-fs(13);
+  font-weight: 700;
+  animation: ev-narra-entra 0.4s ease-out;
+}
+
+.narra__logo {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--ev-pack);
+  color: var(--ev-on-accent);
+
+  app-en-vivo-icono {
+    --ev-icono: 14px;
+  }
+}
+
+.narra__txt {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  // Cursor de la máquina de escribir mientras se escribe.
+  &::after {
+    content: '▍';
+    margin-left: 2px;
+    opacity: 0.6;
+    animation: ev-narra-cursor 1s steps(2) infinite;
+  }
+}
+
+.narra.is-quieto .narra__txt::after {
+  display: none;
+}
+
+@keyframes ev-narra-entra {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ev-narra-cursor {
+  50% { opacity: 0; }
+}
+
+@media (max-width: 575.98px) {
+  :host {
+    bottom: var(--ev-narra-abajo, 60px);
+  }
+
+  .narra {
+    font-size: ev-fs(12);
+  }
+}
+
+@include ev-sin-movimiento {
+  .narra {
+    animation: none;
+  }
+
+  .narra__txt::after {
+    display: none;
+  }
+}

@@ -1,0 +1,62 @@
+@import '../en-vivo-tema';
+
+:host {
+  display: block;
+}
+
+.pulso {
+  @include ev-panel;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 20px 10px;
+  border-radius: 20px;
+}
+
+.pulso__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+
+.pulso__eyebrow {
+  @include ev-etiqueta;
+}
+
+.pulso__n {
+  font-size: ev-fs(34);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--ev-ink);
+  font-variant-numeric: tabular-nums;
+
+  small {
+    margin-left: 6px;
+    font-size: ev-fs(12);
+    font-weight: 700;
+    letter-spacing: 0;
+    color: var(--ev-muted);
+  }
+}
+
+.pulso__chip {
+  @include ev-chip;
+}
+
+// El canvas se pega al contenedor: si fuera parte del flujo, su alto (que se fija al medirlo) lo haría crecer sin fin.
+.pulso__lienzo {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 118px;
+  margin-top: 8px;
+}
+
+.pulso__cv {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}

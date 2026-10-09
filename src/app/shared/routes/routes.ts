@@ -215,6 +215,16 @@ export const content: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    // D-381: sin "En vivo" en los menús del rol, la pantalla dice "no disponible".
+    // `en-vivo/katuq` (toda la plataforma) lo cierra el backend por el token de Julsmind.
+    path: "en-vivo",
+    loadChildren: () =>
+      import("../../components/en-vivo/en-vivo.module").then(
+        (m) => m.EnVivoModule,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: "chat",
     loadChildren: () =>
       import("../../components/chat/chat.module").then((m) => m.ChatModule),

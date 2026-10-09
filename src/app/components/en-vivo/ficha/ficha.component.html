@@ -1,0 +1,27 @@
+<ng-container *ngIf="vm">
+  <div class="ev-ficha-velo" aria-hidden="true" (click)="cerrar()"></div>
+
+  <aside class="ev-ficha" role="dialog" aria-modal="false" [attr.aria-labelledby]="idTitulo">
+    <header class="ev-ficha__cabecera">
+      <button type="button" class="ev-ficha__btn ev-ficha__atras" *ngIf="vm.puedeVolver" (click)="atras()">
+        <app-en-vivo-icono [nombre]="'flecha'"></app-en-vivo-icono>
+        <span>Atrás</span>
+      </button>
+
+      <div class="ev-ficha__tit">
+        <span class="ev-ficha__eyebrow">{{ vm.contenido.eyebrow }}</span>
+        <h2 class="ev-ficha__titulo" [id]="idTitulo" tabindex="-1" #titulo>{{ vm.contenido.titulo }}</h2>
+      </div>
+
+      <button type="button" class="ev-ficha__btn ev-ficha__cerrar" (click)="cerrar()" aria-label="Cerrar la ficha">
+        <app-en-vivo-icono [nombre]="'equis'"></app-en-vivo-icono>
+      </button>
+    </header>
+
+    <div class="ev-ficha__cuerpo" #cuerpo>
+      <app-en-vivo-ficha-pedido *ngIf="vm.contenido.pedido as p" [contenido]="p" (accion)="alAccionDeFicha($event)"></app-en-vivo-ficha-pedido>
+      <app-en-vivo-ficha-lista *ngIf="vm.contenido.lista as l" [contenido]="l" (abrirPedido)="abrirFila($event)"></app-en-vivo-ficha-lista>
+      <app-en-vivo-ficha-mensajero *ngIf="vm.contenido.mensajero as m" [contenido]="m" (abrirPedido)="abrirFila($event)"></app-en-vivo-ficha-mensajero>
+    </div>
+  </aside>
+</ng-container>

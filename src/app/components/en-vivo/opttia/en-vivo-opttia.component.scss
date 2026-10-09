@@ -1,0 +1,533 @@
+@import '../en-vivo-tema';
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+@include ev-tonos;
+
+.opt {
+  @include ev-panel;
+  display: flex;
+  flex-direction: column;
+}
+
+// ── Cabecera ──
+.opt__cab {
+  @include ev-cabecera;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.opt__marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.opt__marca-texto {
+  min-width: 0;
+}
+
+.opt__logo {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--ev-pack);
+  color: var(--ev-on-accent);
+
+  app-en-vivo-icono {
+    --ev-icono: 17px;
+  }
+
+  &--chico {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+
+    app-en-vivo-icono {
+      --ev-icono: 14px;
+    }
+  }
+}
+
+.opt__etiqueta {
+  @include ev-etiqueta;
+}
+
+.opt__titulo {
+  margin: 2px 0 0;
+  font-size: ev-fs(16);
+  font-weight: 800;
+  color: var(--ev-ink);
+}
+
+.opt__lado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.opt__recorrido {
+  @include ev-foco;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 11px;
+  font: inherit;
+  font-size: ev-fs(12);
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--ev-pack);
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-pack);
+  border-radius: 10px;
+  cursor: pointer;
+
+  app-en-vivo-icono {
+    --ev-icono: 14px;
+  }
+
+  &:hover {
+    background: var(--ev-pack-soft);
+  }
+}
+
+.opt__cuando {
+  @include ev-chip;
+  background: var(--ev-pack-soft);
+  color: var(--ev-pack);
+}
+
+.opt__cuerpo {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px 16px;
+}
+
+// Texto solo para lectores de pantalla (lo que se escribe poco a poco va oculto para ellos).
+.opt__sr {
+  @include ev-sr;
+  margin: 0;
+}
+
+// ── Resumen ──
+.opt__resumen {
+  min-height: 66px;
+  font-size: ev-fs(14);
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--ev-ink);
+}
+
+.opt__tit {
+  display: block;
+  min-height: 1.55em;
+  margin: 0 0 6px;
+  font-size: ev-fs(16);
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--ev-ink);
+}
+
+.opt__lista {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+
+  @media (max-width: 767.98px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.opt__punto {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 4px 8px;
+  align-items: start;
+  font-size: ev-fs(12.5);
+  font-weight: 600;
+  color: var(--ev-ink-2);
+  opacity: 0;
+  transition: opacity 0.4s;
+
+  &.is-visible {
+    opacity: 1;
+  }
+}
+
+.opt__punto-ico {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--tone-soft);
+  color: var(--tone);
+
+  app-en-vivo-icono {
+    --ev-icono: 12px;
+  }
+}
+
+.opt__punto-txt {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.opt__punto-accion {
+  @include ev-foco;
+  grid-column: 2;
+  justify-self: start;
+  max-width: 100%;
+  height: 26px;
+  padding: 0 10px;
+  overflow: hidden;
+  font: inherit;
+  font-size: ev-fs(11.5);
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--tone);
+  background: var(--ev-surface);
+  border: 1px solid var(--tone);
+  border-radius: 9px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--tone-soft);
+  }
+}
+
+// "Opttia está mirando los datos…" / "pensando…"
+.opt__pensando {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: ev-fs(12.5);
+  font-weight: 800;
+  color: var(--ev-pack);
+}
+
+.opt__puntos {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ev-pack);
+    animation: ev-opt-punto 1s ease-in-out infinite;
+
+    &:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+  }
+}
+
+// ── Vendido con Opttia ──
+.opt__vendido {
+  @include ev-foco;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 32px;
+  margin-top: 12px;
+  padding: 4px 12px 4px 6px;
+  font: inherit;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  text-align: left;
+  color: var(--ev-ink-2);
+  background: var(--ev-pack-soft);
+  border: 1px solid transparent;
+  border-radius: 20px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--ev-pack);
+  }
+}
+
+.opt__vendido-ico {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--ev-pack);
+  color: var(--ev-on-accent);
+
+  app-en-vivo-icono {
+    --ev-icono: 12px;
+  }
+}
+
+.opt__vendido-n {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ev-pack);
+}
+
+// ── Preguntas ──
+.opt__form {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.opt__entrada {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: ev-fs(13);
+  font-weight: 600;
+  color: var(--ev-ink);
+  background: var(--ev-surface-2);
+  border: 1px solid var(--ev-chip-line);
+  border-radius: 12px;
+
+  &::placeholder {
+    color: var(--ev-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ev-pack);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.opt__enviar {
+  @include ev-foco;
+  flex: none;
+  height: 40px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: ev-fs(13);
+  font-weight: 800;
+  color: var(--ev-on-accent);
+  background: var(--ev-pack);
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+.opt__ayuda {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-height: 0;
+  font-size: ev-fs(11.5);
+  font-weight: 700;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.opt__bloqueo {
+  margin-top: 6px;
+  color: var(--ev-info);
+}
+
+.opt__contador {
+  margin: 6px 0 0 auto;
+  color: var(--ev-muted);
+  font-variant-numeric: tabular-nums;
+
+  &.is-tope {
+    color: var(--ev-warn);
+  }
+}
+
+.opt__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.opt__chip {
+  @include ev-foco;
+  height: 30px;
+  padding: 0 11px;
+  font: inherit;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-chip-line);
+  border-radius: 20px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--ev-pack);
+    border-color: var(--ev-pack);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+// ── Respuesta ──
+.opt__resp {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  font-size: ev-fs(13);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ev-ink);
+  background: var(--ev-pack-soft);
+  border-radius: 14px;
+
+  // El tope y los avisos no son errores: tono calmado, sin rojo.
+  &.is-tope {
+    background: var(--ev-info-soft);
+  }
+
+  &.is-aviso {
+    background: var(--ev-slate-soft);
+  }
+}
+
+.opt__resp-cuerpo {
+  min-width: 0;
+}
+
+.opt__q {
+  display: block;
+  margin-bottom: 3px;
+  font-size: ev-fs(11);
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ev-pack);
+  overflow-wrap: anywhere;
+}
+
+.opt__a {
+  margin: 0;
+  min-height: 1.5em;
+  overflow-wrap: anywhere;
+
+  b {
+    font-weight: 800;
+  }
+}
+
+.opt__nota {
+  margin: 6px 0 0;
+  font-size: ev-fs(11.5);
+  font-weight: 700;
+  color: var(--ev-muted);
+}
+
+.opt__acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.opt__act {
+  @include ev-foco;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 10px;
+  overflow: hidden;
+  font: inherit;
+  font-size: ev-fs(11.5);
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ev-pack);
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-pack);
+  border-radius: 9px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--ev-pack-soft);
+  }
+
+  // "Verlo en la escena": la acción principal de la respuesta.
+  &--escena {
+    color: var(--ev-on-accent);
+    background: var(--ev-pack);
+
+    &:hover {
+      background: var(--ev-pack);
+      opacity: 0.9;
+    }
+  }
+}
+
+@keyframes ev-opt-punto {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@media (max-width: 575.98px) {
+  .opt__cab {
+    padding: 12px 12px 8px;
+  }
+
+  .opt__cuerpo {
+    padding: 0 12px 12px;
+  }
+
+  .opt__lado {
+    justify-content: flex-start;
+  }
+}
+
+@include ev-sin-movimiento {
+  .opt__punto {
+    opacity: 1;
+    transition: none;
+  }
+
+  .opt__puntos i {
+    animation: none;
+    opacity: 0.8;
+  }
+}

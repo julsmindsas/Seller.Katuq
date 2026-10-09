@@ -1,0 +1,20 @@
+<section class="card" aria-labelledby="ev-productos-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">{{ soloPropias ? 'Mis productos estrella · hoy' : 'Productos estrella · hoy' }}</div>
+      <h2 class="card__title" id="ev-productos-titulo">{{ soloPropias ? 'Lo que más vendo' : 'Lo que más se vende' }}</h2>
+    </div>
+  </header>
+  <div class="card__body">
+    <p class="vacio" *ngIf="filas.length === 0">Todavía no hay ventas hoy.</p>
+    <ol class="rows" *ngIf="filas.length > 0">
+      <li class="row" *ngFor="let f of filas; trackBy: porClave">
+        <span class="row__name">{{ f.posicion }}. {{ f.nombre }}</span>
+        <span class="row__n">{{ f.unidadesTexto }}<ng-container *ngIf="f.valorTexto"> · {{ f.valorTexto }}</ng-container></span>
+        <div class="row__bar" aria-hidden="true">
+          <i [style.width.%]="f.ancho" [style.background]="f.color"></i>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>

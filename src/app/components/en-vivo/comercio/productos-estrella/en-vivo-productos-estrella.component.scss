@@ -1,0 +1,58 @@
+@import '../comercio-comun';
+
+@include cm-tarjeta;
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.row__name {
+  overflow: hidden;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.row__n {
+  font-size: ev-fs(12.5);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ev-ink);
+  white-space: nowrap;
+}
+
+.row__bar {
+  grid-column: 1 / -1;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--ev-chip);
+
+  i {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.7s cubic-bezier(0.2, 1, 0.3, 1);
+  }
+}
+
+@include ev-sin-movimiento {
+  .row__bar i {
+    transition: none;
+  }
+}

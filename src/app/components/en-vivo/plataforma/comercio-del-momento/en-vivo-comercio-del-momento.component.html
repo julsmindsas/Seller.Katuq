@@ -1,0 +1,23 @@
+<section class="panel" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-momento-titulo">
+  <div class="panel__eyebrow" id="ev-kq-momento-titulo" role="heading" aria-level="2">Comercio del momento · últimos 30 min</div>
+
+  <p class="vacio" *ngIf="!vm.momento">Todavía no hay pedidos en la última media hora.</p>
+
+  <button
+    *ngIf="vm.momento as m"
+    type="button"
+    class="momento"
+    [ngClass]="m.clase"
+    [class.sin-ciudad]="!m.ciudad"
+    [attr.aria-label]="m.etiqueta"
+    (click)="abrir(m)"
+  >
+    <span class="av" aria-hidden="true">{{ m.iniciales }}</span>
+    <b class="momento__nombre">{{ m.nombre }}</b>
+    <small class="momento__ciudad" *ngIf="m.ciudad">{{ m.ciudad }}</small>
+    <span class="momento__n">
+      <span><strong>{{ m.pedidos }}</strong> {{ m.unidad }}<ng-container *ngIf="m.ventas"> · {{ m.ventas }}</ng-container></span>
+      <span class="pill t-warn"><app-en-vivo-icono nombre="fuego"></app-en-vivo-icono>En racha</span>
+    </span>
+  </button>
+</section>

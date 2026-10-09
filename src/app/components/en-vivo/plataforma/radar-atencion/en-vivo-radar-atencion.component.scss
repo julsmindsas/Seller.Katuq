@@ -1,0 +1,130 @@
+@import '../plataforma-comun';
+
+@include ev-kq-base;
+
+.radar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 372px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+// Cada alerta lleva su tono (par fuerte / fondo suave) en el ícono; sin acento lateral (superseded por D-131).
+.alerta {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-line);
+  border-radius: 13px;
+
+  &.is-new {
+    background: var(--tone-soft);
+    animation: ev-alerta-entra 0.5s cubic-bezier(0.2, 1.2, 0.4, 1);
+  }
+
+  b {
+    display: block;
+    font-size: ev-fs(12.5);
+    font-weight: 800;
+    color: var(--ev-ink);
+  }
+
+  p {
+    margin: 2px 0 0;
+    font-size: ev-fs(11.5);
+    font-weight: 600;
+    color: var(--ev-ink-2);
+  }
+}
+
+.alerta__ico {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: var(--tone-soft);
+  color: var(--tone);
+
+  app-en-vivo-icono {
+    --ev-icono: 16px;
+  }
+}
+
+.alerta__cuerpo {
+  min-width: 0;
+}
+
+// "Opttia sugiere…": en el color del bot (par pack), con su chispa.
+.opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: ev-fs(11.5);
+  font-weight: 700;
+  color: var(--ev-pack);
+
+  app-en-vivo-icono {
+    --ev-icono: 13px;
+    margin-top: 1px;
+  }
+}
+
+.alerta__acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+
+  button {
+    @include ev-foco;
+    height: 28px;
+    padding: 0 10px;
+    font: inherit;
+    font-size: ev-fs(11.5);
+    font-weight: 800;
+    color: var(--ev-accent);
+    cursor: pointer;
+    background: var(--ev-surface);
+    border: 1px solid var(--ev-chip-line);
+    border-radius: 9px;
+
+    &:hover {
+      background: var(--ev-accent-soft);
+    }
+  }
+}
+
+.ok {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 13px;
+  background: var(--ev-ok-soft);
+  color: var(--ev-ok);
+  font-size: ev-fs(12.5);
+  font-weight: 800;
+}
+
+.sr {
+  @include ev-sr;
+}
+
+@keyframes ev-alerta-entra {
+  0% { opacity: 0; transform: translateY(-14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@include ev-sin-movimiento {
+  .alerta.is-new {
+    animation: none;
+  }
+}

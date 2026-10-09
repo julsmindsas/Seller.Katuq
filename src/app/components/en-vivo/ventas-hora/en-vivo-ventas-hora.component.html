@@ -1,0 +1,44 @@
+<section class="card" aria-labelledby="ev-vh-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">{{ etiquetaEje }}</div>
+      <h2 class="card__title" id="ev-vh-titulo">{{ titulo }}</h2>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <span><i class="sw sw--hoy"></i>Hoy</span>
+      <span><i class="sw sw--ayer"></i>Ayer</span>
+    </div>
+  </header>
+
+  <div class="card__body">
+    <p class="resumen" *ngIf="resumenResto"><b *ngIf="resumenPctTexto" class="resumen__pct" [class.is-up]="resumenPct !== null && resumenPct >= 0" [class.is-down]="resumenPct !== null && resumenPct < 0">{{ resumenPctTexto }}</b> {{ resumenResto }}</p>
+    <p class="readout">{{ lectura }}</p>
+
+    <div class="plot" role="group" [attr.aria-label]="etiquetaEje + ', hoy contra ayer'">
+      <div class="plot__grid plot__grid--tope"><span>{{ topeTexto }}</span></div>
+      <div class="plot__grid plot__grid--mitad"><span>{{ mitadTexto }}</span></div>
+      <div class="plot__grid plot__grid--base"><span>0</span></div>
+      <div class="bars" (pointerleave)="leer(null)">
+        <button
+          *ngFor="let b of barras; trackBy: porHoraDeBarra"
+          type="button"
+          class="bar"
+          [class.is-now]="b.actual"
+          [class.is-future]="b.futura"
+          [attr.aria-label]="b.etiqueta + ': ' + b.texto"
+          (pointerenter)="leer(b.hora)"
+          (focus)="leer(b.hora)"
+          (blur)="leer(null)"
+        >
+          <i [style.height.%]="b.alto"></i>
+        </button>
+      </div>
+      <svg class="ayer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <polyline [attr.points]="linea"></polyline>
+      </svg>
+    </div>
+    <div class="xaxis" aria-hidden="true">
+      <span *ngFor="let b of barras; trackBy: porHoraDeBarra">{{ b.rotulo }}</span>
+    </div>
+  </div>
+</section>

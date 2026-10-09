@@ -1,0 +1,145 @@
+// ==========================================================================
+// Piezas de toda Katuq (D-386, tareas 4.8 y 4.9). Lo que comparten la carrera, la cinta, las
+// ciudades, los canales, el radar, los tiempos, los logros y el muro: tarjeta con cabecera,
+// avatar, pastilla y filas con barra. Todo sale del tema canónico (`_en-vivo-tema.scss`): plano,
+// sin gradientes, tonos en par fuerte / fondo suave y labels en MAYÚSCULA.
+//
+// Son MIXINS (no sueltan CSS por sí solos): cada componente incluye solo lo que usa.
+//   @import '../plataforma-comun';   // ya trae el tema
+//   @include ev-kq-base;             // host + tonos + tarjeta + cabecera + vacío
+// ==========================================================================
+@import '../en-vivo-tema';
+
+// Host, tonos y tarjeta con cabecera (eyebrow + título + chip) y cuerpo.
+@mixin ev-kq-base {
+  :host {
+    display: block;
+    min-width: 0;
+  }
+
+  @include ev-tonos;
+
+  .card {
+    @include ev-panel;
+  }
+
+  .card__head {
+    @include ev-cabecera;
+  }
+
+  .card__eyebrow {
+    @include ev-etiqueta;
+  }
+
+  .card__title {
+    margin: 2px 0 0;
+    font-size: ev-fs(16);
+    font-weight: 800;
+    color: var(--ev-ink);
+  }
+
+  .card__chip {
+    @include ev-chip;
+  }
+
+  .card__body {
+    padding: 0 16px 16px;
+  }
+
+  .vacio {
+    margin: 0;
+    font-size: ev-fs(12.5);
+    font-weight: 600;
+    color: var(--ev-muted);
+  }
+}
+
+// Avatar con iniciales, del color del comercio (`--tone` / `--tone-soft`).
+@mixin ev-kq-av {
+  .av {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--tone-soft);
+    color: var(--tone);
+    font-size: ev-fs(10);
+    font-weight: 900;
+    font-style: normal;
+    letter-spacing: 0.3px;
+  }
+}
+
+@mixin ev-kq-pastilla {
+  .pill {
+    @include ev-pastilla;
+  }
+}
+
+// Filas con barra (ciudades y canales).
+@mixin ev-kq-filas {
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 10px;
+    align-items: center;
+  }
+
+  .row__name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: ev-fs(12);
+    font-weight: 700;
+    color: var(--ev-ink-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row__sub {
+    font-weight: 600;
+    color: var(--ev-muted);
+  }
+
+  .row__n {
+    font-size: ev-fs(12.5);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--ev-ink);
+  }
+
+  .row__bar {
+    grid-column: 1 / -1;
+    height: 7px;
+    border-radius: 6px;
+    background: var(--ev-chip);
+    overflow: hidden;
+
+    i {
+      display: block;
+      height: 100%;
+      border-radius: 6px;
+      background: var(--tone, var(--ev-accent));
+      transition: width 0.7s cubic-bezier(0.2, 1, 0.3, 1);
+    }
+  }
+
+  @include ev-sin-movimiento {
+    .row__bar i {
+      transition: none;
+    }
+  }
+}

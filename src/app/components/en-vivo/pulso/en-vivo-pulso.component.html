@@ -1,0 +1,13 @@
+<section class="pulso" aria-label="Pulso de pedidos">
+  <header class="pulso__head" *ngIf="datos as d">
+    <div>
+      <div class="pulso__eyebrow">{{ d.etiqueta }}</div>
+      <div class="pulso__n">
+        <span>{{ d.valor }}</span>
+        <small>{{ d.unidad }}</small>
+      </div>
+    </div>
+    <span class="pulso__chip" *ngIf="d.nota">{{ d.nota }}</span>
+  </header>
+  <div class="pulso__lienzo"><canvas #lienzo class="pulso__cv" aria-hidden="true"></canvas></div>
+</section>

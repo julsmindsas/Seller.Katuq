@@ -1,0 +1,238 @@
+@import '../../en-vivo-tema';
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+@include ev-tonos;
+
+// Alto de cada columna: quien enchufe el tablero puede fijarlo con `--ev-tablero-alto`.
+.tablero {
+  min-width: 0;
+}
+
+.vacio {
+  margin: 0 0 10px;
+  font-size: ev-fs(12.5);
+  font-weight: 600;
+  color: var(--ev-muted);
+}
+
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(210px, 1fr));
+  gap: 10px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+}
+
+.kcol {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ev-surface-2);
+  border: 1px solid var(--ev-line);
+  border-radius: 16px;
+}
+
+.kcol__h {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 12px 9px;
+  background: var(--ev-surface);
+  border-bottom: 2px solid var(--tone);
+  @include ev-etiqueta;
+  color: var(--ev-ink-2);
+
+  .dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--tone);
+  }
+
+  b {
+    margin-left: auto;
+    font-size: ev-fs(15);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    color: var(--tone);
+  }
+}
+
+.kcol__list {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 7px;
+  max-height: var(--ev-tablero-alto, min(72vh, 680px));
+  margin: 0;
+  padding: 8px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.kcol__mas,
+.kcol__vacio {
+  padding: 4px 0 2px;
+  font-size: ev-fs(11);
+  font-weight: 700;
+  color: var(--ev-muted);
+  text-align: center;
+}
+
+.kcard {
+  @include ev-foco;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 9px 10px;
+  text-align: left;
+  font: inherit;
+  color: var(--ev-ink);
+  cursor: pointer;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-line);
+  border-radius: 12px;
+  box-shadow: var(--ev-sh-panel);
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: var(--tone);
+  }
+
+  &.is-new {
+    box-shadow: 0 0 0 3px var(--tone-soft);
+    animation: ev-tarjeta-entra 0.55s cubic-bezier(0.2, 1.2, 0.4, 1);
+  }
+
+  &.is-moved {
+    box-shadow: 0 0 0 3px var(--tone-soft), var(--ev-sh-up);
+  }
+
+  &.is-tarde {
+    border-color: var(--ev-warn);
+  }
+
+  &.is-ia {
+    border-color: var(--ev-pack);
+  }
+
+  // La que Opttia señala: anillo del color de Opttia y su sugerencia debajo.
+  &.is-opt {
+    border-color: var(--ev-pack);
+    box-shadow: 0 0 0 3px var(--ev-pack-soft), var(--ev-sh-up);
+
+    &::after {
+      content: attr(data-opt);
+      display: block;
+      margin-top: 4px;
+      padding: 5px 8px;
+      font-size: ev-fs(10.5);
+      font-weight: 800;
+      line-height: 1.3;
+      white-space: normal;
+      color: var(--ev-surface);
+      background: var(--ev-pack);
+      border-radius: 9px;
+    }
+  }
+
+  b {
+    overflow: hidden;
+    font-size: ev-fs(12.5);
+    font-weight: 800;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    font-size: ev-fs(11);
+    font-weight: 600;
+    color: var(--ev-muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    app-en-vivo-icono {
+      --ev-icono: 12px;
+    }
+  }
+}
+
+.kcard__top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mono {
+  font-family: var(--ev-mono);
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-info);
+}
+
+.pill {
+  @include ev-pastilla;
+  padding: 1px 6px;
+  font-size: ev-fs(9);
+}
+
+.kcard__tiempo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  font-size: ev-fs(10.5);
+  font-weight: 800;
+  color: var(--ev-muted-2);
+  white-space: nowrap;
+
+  app-en-vivo-icono {
+    --ev-icono: 11px;
+  }
+
+  .is-tarde & {
+    color: var(--ev-warn);
+  }
+}
+
+.kcard__monto {
+  font-size: ev-fs(12.5);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.kcard__transporte {
+  margin-left: auto;
+}
+
+@keyframes ev-tarjeta-entra {
+  0% { opacity: 0; transform: translateY(-14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 620px) {
+  .kanban {
+    grid-template-columns: repeat(6, 236px);
+  }
+}
+
+@include ev-sin-movimiento {
+  .kcard,
+  .kcard.is-new {
+    animation: none;
+    transition: none;
+  }
+}

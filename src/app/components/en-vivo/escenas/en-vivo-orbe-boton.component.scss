@@ -1,0 +1,50 @@
+@import '../en-vivo-tema';
+
+// Sobre la escena, arriba al centro: los paneles flotantes viven a los lados.
+:host {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 4;
+  display: block;
+  transform: translateX(-50%);
+}
+
+.orb {
+  @include ev-foco;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: ev-fs(12);
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--ev-pack);
+  cursor: pointer;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-pack);
+  border-radius: 10px;
+  box-shadow: var(--ev-sh-up);
+  transition: color 0.15s, background 0.15s;
+
+  app-en-vivo-icono {
+    --ev-icono: 14px;
+  }
+
+  &:hover {
+    background: var(--ev-pack-soft);
+  }
+
+  &.is-on {
+    color: var(--ev-on-accent);
+    background: var(--ev-pack);
+  }
+}
+
+@include ev-sin-movimiento {
+  .orb {
+    transition: none;
+  }
+}

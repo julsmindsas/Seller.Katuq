@@ -1,0 +1,34 @@
+<section class="card" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-tiempos-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">Tiempos de la operación · hoy</div>
+      <h2 class="card__title" id="ev-kq-tiempos-titulo">Del pedido a la puerta</h2>
+    </div>
+  </header>
+
+  <div class="card__body">
+    <p class="vacio" *ngIf="!vm.hayDatos">{{ vm.nota }}</p>
+
+    <div class="ciclo" *ngIf="vm.hayDatos">
+      <div class="ciclo__big">{{ vm.ciclo }}<small>{{ vm.nota }}</small></div>
+
+      <!-- La barra es decorativa: los mismos números van en la leyenda de abajo. -->
+      <div class="ciclo__bar" aria-hidden="true">
+        <ng-container *ngFor="let t of vm.tramos; trackBy: porClave">
+          <i *ngIf="t.flex > 0" [ngClass]="'tramo--' + t.clave" [style.flex-grow]="t.flex"></i>
+        </ng-container>
+      </div>
+
+      <div class="ciclo__leg">
+        <div *ngFor="let t of vm.tramos; trackBy: porClave">
+          <span class="dot" [ngClass]="'tramo--' + t.clave" aria-hidden="true"></span>{{ t.etiqueta }}<b>{{ t.texto }}</b>
+        </div>
+      </div>
+
+      <div class="ciclo__extra">
+        <span *ngIf="vm.rapido as r">Más rápido hoy: <b>{{ r.nombre }}</b>, {{ r.texto }} de punta a punta</span>
+        <span>Con transportadora: <b>{{ vm.camion || '—' }}</b> desde que sale</span>
+      </div>
+    </div>
+  </div>
+</section>
