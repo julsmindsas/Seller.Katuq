@@ -45,6 +45,12 @@ import { UserLogged } from "../../../shared/models/User/UserLogged";
 import { UserLite } from "../../../shared/models/User/UserLite";
 import { ClienteFactura, clienteDeFactura, facturaPorErrorAConsumidorFinal } from "../../../shared/utils/cliente-factura";
 import { escaparHtml } from "../../../shared/utils/escapar-html";
+import {
+  aplicarResultadoCodigo,
+  clienteIdParaCodigo,
+  lineasParaCodigo,
+  ResultadoCodigo,
+} from "../../../shared/utils/codigo-descuento";
 import { FilterService, LazyLoadEvent, MenuItem } from "primeng/api";
 import { FilterService as SharedFilterService } from "../../../shared/services/filters/filter.service";
 import { ServiciosService } from "../../../shared/services/servicios.service";
@@ -7429,17 +7435,88 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param pedido Pedido al que se aplicará el descuento
    */
   validarYAplicarDescuento(pedido: Pedido) {
-    if (!this.codigoDescuentoIngresado) {
+    const codigo = (this.codigoDescuentoIngresado || "").trim();
+    if (!codigo) {
       this.errorCodigoDescuento = "Por favor ingrese un código de cupón";
       return;
     }
 
-    this.validandoDescuento = true;
     this.errorCodigoDescuento = "";
 
-    // Usar el mismo servicio que usa el carrito de venta asistida
+    // Ticket 1161: los códigos que crea la empresa viven en Descuentos y Promociones, el mismo
+    // módulo que usa el carrito de la venta asistida. Este modal solo miraba la colección vieja
+    // de cupones y respondía "Cupón no válido" con códigos que sí existían.
+    // Mismo pedido y mismo código: ya está aplicado, no se vuelve a redimir (gastaría otro uso del código).
+    if (pedido.descuentoAplicado?.codigoPersonalizado?.toUpperCase() === codigo.toUpperCase()) {
+      this.errorCodigoDescuento = `Este pedido ya tiene el código ${pedido.descuentoAplicado.codigoPersonalizado} aplicado`;
+      return;
+    }
+
+    this.validandoDescuento = true;
+    // La base va CON IVA y neta del descuento por línea, igual que el carrito de la venta asistida: sobre
+    // ella el backend arma el monto del código, el monto mínimo y el historial de redenciones.
+    const precioLinea = (item: any) => this.pedidoUtilService.precioLineaConIvaNeto(item);
     this.ventasService
-      .validateCupon({ code: this.codigoDescuentoIngresado })
+      .aplicarCodigoDescuento({
+        codigoPersonalizado: codigo,
+        clienteId: clienteIdParaCodigo(pedido),
+        totalCarrito: (pedido.carrito || []).reduce((total: number, item: any) => total + precioLinea(item), 0),
+        // Un solo código a la vez: si el pedido ya trae uno, este lo reemplaza.
+        codigosActivos: [],
+        items: lineasParaCodigo(pedido, precioLinea),
+      })
+      .subscribe({
+        next: (res) => {
+          this.validandoDescuento = false;
+          if (!res?.descuentoId) {
+            this.errorCodigoDescuento = "Cupón no válido";
+            return;
+          }
+          this.aplicarCodigoAlPedido(pedido, res, codigo);
+        },
+        error: (err) => {
+          // 404 = el módulo nuevo no conoce ese código: se prueba con la colección vieja de cupones.
+          if (err?.status === 404) {
+            this.validarConCuponAnterior(pedido, codigo);
+            return;
+          }
+          this.validandoDescuento = false;
+          // 400/409 traen el motivo en español (vencido, agotado, monto mínimo, no aplica a estos productos...).
+          this.errorCodigoDescuento = err?.error?.message || "Ocurrió un error al validar el código";
+        },
+      });
+  }
+
+  /** Deja el pedido con el código del módulo Descuentos y Promociones y lo guarda. */
+  private aplicarCodigoAlPedido(pedido: Pedido, res: ResultadoCodigo, codigo: string) {
+    aplicarResultadoCodigo(pedido, res, codigo);
+    pedido = this.actualizarValoresPedido(pedido);
+
+    this.descuentoAplicado = {
+      codigo: pedido.descuentoAplicado?.codigoPersonalizado || codigo,
+      tipo: res.tipo,
+      porcentaje: res.tipo === "porcentaje" ? Number(res.valor) || 0 : 0,
+      valor: pedido.totalDescuento || 0,
+    };
+
+    this.editOrder(pedido);
+
+    this.toastrService.success(
+      res.tipo === "envio_gratis"
+        ? "Envío gratis aplicado."
+        : `Código "${this.descuentoAplicado.codigo}" aplicado. Descuento: $${(pedido.totalDescuento || 0).toLocaleString()}`,
+      "Descuento Aplicado",
+      { timeOut: 5000, progressBar: true, positionClass: "toast-bottom-right" },
+    );
+  }
+
+  /**
+   * Respaldo: códigos de la colección vieja `cupones` (porcentaje sobre todo el pedido). Solo se
+   * consulta cuando el módulo nuevo responde que no conoce el código.
+   */
+  private validarConCuponAnterior(pedido: Pedido, codigo: string) {
+    this.ventasService
+      .validateCupon({ code: codigo })
       .subscribe({
         next: (value) => {
           this.validandoDescuento = false;
@@ -7454,13 +7531,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // Registrar cupón y porcentaje; actualizarValoresPedido calculará
           // el descuento exacto, totales con IVA/envío, faltaPorPagar y estadoPago
-          pedido.cuponAplicado = this.codigoDescuentoIngresado;
+          // null y no undefined: undefined se pierde en el JSON y Firestore deja el código anterior guardado.
+          (pedido as any).descuentoAplicado = null;
+          pedido.cuponAplicado = codigo;
           pedido.porceDescuento = porcentajeDescuento;
           pedido = this.actualizarValoresPedido(pedido);
 
           // Mostrar información del descuento aplicado
           this.descuentoAplicado = {
-            codigo: this.codigoDescuentoIngresado,
+            codigo,
             porcentaje: porcentajeDescuento,
             valor: pedido.totalDescuento || 0,
           };
@@ -7469,7 +7548,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.editOrder(pedido);
 
           this.toastrService.success(
-            `Cupón "${this.codigoDescuentoIngresado}" aplicado exitosamente. Descuento: $${(pedido.totalDescuento || 0).toLocaleString()}`,
+            `Cupón "${codigo}" aplicado exitosamente. Descuento: $${(pedido.totalDescuento || 0).toLocaleString()}`,
             "Descuento Aplicado",
             {
               timeOut: 5000,
@@ -7570,7 +7649,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    if (!pedido.porceDescuento || pedido.porceDescuento <= 0) {
+    if ((!pedido.porceDescuento || pedido.porceDescuento <= 0) && !pedido.descuentoAplicado) {
       this.toastrService.warning(
         "Este pedido no tiene descuento aplicado",
         "Sin Descuento",
@@ -7693,9 +7772,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Si el descuento es 0, limpiar el cupón aplicado y su snapshot (D-220:
     // dejar descuentoAplicado vivo con el monto viejo resucita el descuento
     // en el próximo getDiscount(), que ahora también lee ese campo).
-    if (this.nuevoPorcentajeDescuento === 0) {
-      pedidoOriginal.cuponAplicado = undefined;
-      pedidoOriginal.descuentoAplicado = undefined;
+    // Ticket 1161: tampoco describe el descuento un código que ya no coincide con el porcentaje escrito
+    // (fijo, dirigido o envío gratis, o un porcentaje distinto al del código). Se borra con null: con
+    // undefined el campo se pierde en el JSON y Firestore conserva el código anterior, que reaparecería.
+    const codigoAplicado = pedidoOriginal.descuentoAplicado;
+    const codigoYaNoCoincide =
+      !!codigoAplicado &&
+      (codigoAplicado.tipo !== "porcentaje" || Number(codigoAplicado.valor) !== this.nuevoPorcentajeDescuento);
+    if (this.nuevoPorcentajeDescuento === 0 || codigoYaNoCoincide) {
+      (pedidoOriginal as any).cuponAplicado = null;
+      (pedidoOriginal as any).descuentoAplicado = null;
     }
 
     // Recalcular todos los totales usando el mismo método que se usa en la tabla
@@ -8092,11 +8178,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     let costoEnvioAnterior = order.totalEnvio || 0;
     let costoEnvioNuevo = 0;
 
+    // Un código de envío gratis (descuentoAplicado.tipo) lleva el envío a cero, como en el carrito y el backend.
+    const envioGratis = order.descuentoAplicado?.tipo === "envio_gratis";
+
     if (tieneDomicilio && order.envio?.zonaCobro) {
       try {
-        costoEnvioNuevo = Number(
-          this.pedidoUtilService.getShippingCost(this.allBillingZone),
-        );
+        costoEnvioNuevo = envioGratis
+          ? 0
+          : Number(this.pedidoUtilService.getShippingCost(this.allBillingZone));
         order.totalEnvio = costoEnvioNuevo;
 
         console.log("🚚 ACTUALIZAR VALORES - Envío domicilio detectado:", {

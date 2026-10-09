@@ -1,9 +1,11 @@
-import { Component, HostListener, OnInit } from "@angular/core";
+import { Component, HostListener, OnDestroy, OnInit } from "@angular/core";
 import Swal from "sweetalert2";
 import { Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 import { PlantillaSitio, Sitio, SitiosService } from "../sitios.service";
 import { environment } from "../../../../environments/environment";
+import { CompanyFeaturesService } from "../../../shared/services/company-features.service";
+import { EstadoDeTarjeta, estadoDeTarjeta, sitioSinTerminar } from "../tienda-en-un-paso/tienda-en-un-paso.logic";
 
 /** Nombre humano de cada tipo de bloque, para los chips de la plantilla. */
 const NOMBRE_BLOQUE: { [tipo: string]: string } = {
@@ -52,7 +54,7 @@ const NOMBRE_BLOQUE: { [tipo: string]: string } = {
   templateUrl: "./sitios-lista.component.html",
   styleUrls: ["./sitios-lista.component.scss"],
 })
-export class SitiosListaComponent implements OnInit {
+export class SitiosListaComponent implements OnInit, OnDestroy {
   cargando = true;
   sitios: Sitio[] = [];
 
@@ -136,8 +138,19 @@ export class SitiosListaComponent implements OnInit {
   constructor(
     private service: SitiosService,
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    // Banderas por comercio: decide si se ofrece "Tu tienda en minutos con IA".
+    public features: CompanyFeaturesService
   ) {}
+
+  // ── Tienda en minutos con IA, en un solo paso (bandera singleStepStore) ──────
+  // Nace APAGADA: con la bandera ausente nada de esto se dibuja y la lista se ve y se
+  // comporta exactamente como antes. Quien manda es el servidor (responde 403 si está apagada).
+
+  mostrandoTiendaEnUnPaso = false;
+  /** Una tienda de esta función que quedó a medias: se muestra su avance en vez del formulario. */
+  sitioPendienteId = "";
+  private vigilancia: any = null;
 
   /** Página cuyas métricas se están viendo. Null = ninguna. */
   sitioMetricas: Sitio | null = null;
@@ -152,6 +165,13 @@ export class SitiosListaComponent implements OnInit {
   ngOnInit(): void {
     this.cargar();
     this.cargarMarca();
+  }
+
+  ngOnDestroy(): void {
+    if (this.vigilancia) {
+      clearInterval(this.vigilancia);
+      this.vigilancia = null;
+    }
   }
 
   /**
@@ -184,12 +204,75 @@ export class SitiosListaComponent implements OnInit {
       next: (res) => {
         this.cargando = false;
         this.sitios = (res && res.data) || [];
+        this.vigilar();
       },
       error: () => {
         this.cargando = false;
         this.toastr.error("No pudimos cargar tus páginas.");
       },
     });
+  }
+
+  /** Vuelve a leer la lista sin el "Cargando…" (la tienda en un solo paso avanza sola). */
+  private refrescar(): void {
+    this.service.listar().subscribe({
+      next: (res) => {
+        this.sitios = (res && res.data) || [];
+        this.vigilar();
+      },
+      error: () => undefined,
+    });
+  }
+
+  /**
+   * Mientras alguna tienda de esta función se esté creando, la lista se refresca sola
+   * cada pocos segundos; cuando ninguna se está creando, deja de hacerlo. Una lista sin
+   * tiendas de esta función (todas las de hoy) nunca arranca esto.
+   */
+  private vigilar(): void {
+    const trabajando = this.sitios.some((s) => this.tarjeta(s) === "creandose");
+    if (trabajando && !this.vigilancia) {
+      this.vigilancia = setInterval(() => this.refrescar(), 8000);
+    } else if (!trabajando && this.vigilancia) {
+      clearInterval(this.vigilancia);
+      this.vigilancia = null;
+    }
+  }
+
+  /**
+   * "creandose", "sin-terminar" o null: los sitios de siempre devuelven null. También null con la
+   * bandera apagada (por ejemplo, si se apagó después de haber estado encendida): así la tarjeta de
+   * una tienda de esta función vuelve a ser la de siempre, con su botón "Editar página", en vez de
+   * quedar con un "Retomar" que no abre nada.
+   */
+  tarjeta(sitio: Sitio): EstadoDeTarjeta {
+    if (!this.features.isEnabled("singleStepStore")) return null;
+    return estadoDeTarjeta(sitio as any);
+  }
+
+  abrirTiendaEnUnPaso(): void {
+    if (!this.features.isEnabled("singleStepStore")) return;
+    this.mostrandoAsistente = false;
+    const pendiente = sitioSinTerminar(this.sitios as any[]);
+    this.sitioPendienteId = pendiente ? pendiente.id : "";
+    this.mostrandoTiendaEnUnPaso = true;
+  }
+
+  verAvanceDe(sitio: Sitio): void {
+    if (!this.features.isEnabled("singleStepStore")) return;
+    this.sitioPendienteId = sitio.id;
+    this.mostrandoTiendaEnUnPaso = true;
+  }
+
+  cerrarTiendaEnUnPaso(): void {
+    this.mostrandoTiendaEnUnPaso = false;
+    this.sitioPendienteId = "";
+    this.refrescar();
+  }
+
+  /** El trabajo terminó (o se detuvo): la tarjeta nueva aparece sin que la persona recargue. */
+  alTerminarTiendaEnUnPaso(): void {
+    this.refrescar();
   }
 
   /**
