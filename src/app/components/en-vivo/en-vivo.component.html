@@ -1,0 +1,136 @@
+<div class="container-fluid ev-page">
+  <div #raiz class="ev-app" (pointerdown)="desbloquearSonido()" (keydown)="desbloquearSonido()">
+    <app-en-vivo-celebracion></app-en-vivo-celebracion>
+
+    <ng-container *ngIf="vm$ | async as vm">
+      <app-en-vivo-encabezado
+        [marca]="vm.marca"
+        [subtitulo]="vm.subtitulo"
+        [logo]="vm.logo"
+        [logoKatuq]="vm.vista === 'katuq'"
+        [conexion]="vm.estado.conexion"
+        [opciones]="vm.opciones"
+        [opcionActiva]="vm.opcionActiva"
+        [sonido]="vm.prefs.sonido"
+        [ocultar]="vm.prefs.ocultar"
+        [etiquetaOcultar]="vm.etiquetaOcultar"
+        [modoPantalla]="vm.modoPantalla"
+        [repitiendo]="vm.repeticion.activa"
+        [instante]="vm.repeticion.instanteMs"
+        [sinAcceso]="vm.sinAcceso"
+        (elegirOpcion)="elegirOpcion($event)"
+        (alternarSonido)="alternarSonido()"
+        (alternarOcultar)="alternarOcultar()"
+        (repetirDia)="alRepetirDia()"
+        (alternarModoPantalla)="alternarModoPantalla()"
+      >
+        <ng-container ngProjectAs="[slot=acciones]"><ng-content select="[slot=acciones]"></ng-content></ng-container>
+      </app-en-vivo-encabezado>
+
+      <div class="ev-aviso-zona" role="status" aria-live="polite">
+        <div class="ev-aviso" *ngIf="aviso">
+          <app-en-vivo-icono nombre="check"></app-en-vivo-icono>
+          <span>{{ aviso }}</span>
+        </div>
+      </div>
+
+      <!-- Repetir el día: qué se está viendo y cuánto falta (la hora real avanza en el reloj del encabezado) -->
+      <div class="ev-repeticion" *ngIf="vm.repeticion.activa" role="status" aria-live="polite">
+        <app-en-vivo-icono nombre="repetir"></app-en-vivo-icono>
+        <span class="ev-repeticion__texto">Repitiendo el día · cada llegada en su hora real</span>
+        <span
+          class="ev-repeticion__barra"
+          role="progressbar"
+          aria-label="Avance de la repetición del día"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuenow]="porcentaje(vm.repeticion.progreso)"
+        >
+          <span class="ev-repeticion__avance" [style.width.%]="porcentaje(vm.repeticion.progreso)"></span>
+        </span>
+      </div>
+
+      <!-- Sin acceso: el rol no tiene "En vivo", la sesión venció o la vista no es para este usuario. Sin datos. -->
+      <section class="ev-vacio" *ngIf="vm.sinAcceso; else tablero" aria-labelledby="ev-sin-acceso-titulo">
+        <span class="ev-vacio__icono"><app-en-vivo-icono nombre="alerta"></app-en-vivo-icono></span>
+        <h2 class="ev-vacio__titulo" id="ev-sin-acceso-titulo">{{ vm.mensajeSinAcceso.titulo }}</h2>
+        <p class="ev-vacio__texto">{{ vm.mensajeSinAcceso.texto }}</p>
+      </section>
+
+      <ng-template #tablero>
+        <p class="ev-cargando" role="status" *ngIf="!vm.estado.cargado">
+          <span class="ev-cargando__punto" aria-hidden="true"></span>
+          {{ vm.textoCarga }}
+        </p>
+
+        <ng-container *ngIf="vm.estado.cargado">
+          <ng-content select="[slot=superior]"></ng-content>
+
+          <div class="ev-heroe-fila" *ngIf="cuerpoPorDefecto">
+            <app-en-vivo-heroe [datos]="vm.heroe" [ocultar]="vm.prefs.ocultar" [ahoraMs]="vm.ahoraMs"></app-en-vivo-heroe>
+            <app-en-vivo-pulso
+              [datos]="vm.pulso"
+              [eventos]="vm.estado.eventos"
+              [pedidos]="vm.estado.pedidos"
+              [ventanaMs]="vm.ventanaPulsoMs"
+              [ocultar]="vm.prefs.ocultar"
+            ></app-en-vivo-pulso>
+          </div>
+
+          <app-en-vivo-cifras
+            *ngIf="cuerpoPorDefecto"
+            [tarjetas]="vm.tarjetas"
+            [animar]="!vm.repeticion.activa"
+            (abrir)="abrirLista($event)"
+          ></app-en-vivo-cifras>
+
+          <div class="ev-escena"><ng-content select="[slot=escena]"></ng-content></div>
+
+          <app-en-vivo-etapas
+            *ngIf="cuerpoPorDefecto"
+            [etapas]="vm.estado.etapas"
+            [conteos]="vm.conteos"
+            [animar]="!vm.repeticion.activa"
+            (abrir)="abrirLista($event)"
+          ></app-en-vivo-etapas>
+
+          <div class="ev-columnas" [class.ev-columnas--sin-eventos]="eventosFlotantes" *ngIf="cuerpoPorDefecto">
+            <app-en-vivo-eventos
+              *ngIf="!eventosFlotantes"
+              class="ev-columnas__eventos"
+              [eventos]="vm.estado.eventos"
+              [pedidos]="vm.estado.pedidos"
+              [etapas]="vm.estado.etapas"
+              [vista]="vm.vista"
+              [ocultar]="vm.prefs.ocultar"
+              [titulo]="vm.tituloEventos"
+              [anunciar]="vm.vista === 'comercio'"
+              (abrir)="abrirPedido($event, vm.estado.empresa)"
+              (resaltar)="resaltarPedidos($event)"
+            ></app-en-vivo-eventos>
+
+            <div class="ev-columnas__lado">
+              <app-en-vivo-ventas-hora
+                [porHora]="vm.porHora"
+                [hoy]="vm.hoy"
+                [ayerMismaHora]="vm.ayerMismaHora"
+                [ahoraMs]="vm.ahoraMs"
+                [ocultar]="vm.prefs.ocultar"
+              ></app-en-vivo-ventas-hora>
+              <app-en-vivo-flota
+                *ngIf="vm.vista === 'comercio'"
+                [flota]="vm.estado.flota"
+                [pedidos]="vm.estado.pedidos"
+                [actualizadoEn]="vm.estado.actualizadoEn"
+                (abrir)="abrirMensajero($event)"
+              ></app-en-vivo-flota>
+            </div>
+          </div>
+
+          <ng-content select="[slot=inferior]"></ng-content>
+          <ng-content></ng-content>
+        </ng-container>
+      </ng-template>
+    </ng-container>
+  </div>
+</div>

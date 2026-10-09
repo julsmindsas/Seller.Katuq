@@ -1,0 +1,14 @@
+<div class="eve-stage" #stage>
+  <canvas
+    #canvas
+    class="eve-canvas"
+    [hidden]="sin3d"
+    role="img"
+    aria-label="Escena 3D de la operación: los pedidos activos como cajas en sus estaciones, los mensajeros y las entregas. Las etapas, las cifras y la lista dicen lo mismo en texto."
+  ></canvas>
+  <div #etiquetas class="eve-labels" aria-hidden="true"></div>
+  <app-en-vivo-orbe-boton *ngIf="!sin3d"></app-en-vivo-orbe-boton>
+  <div class="eve-nogl" *ngIf="sin3d" role="status">
+    <div><b>Este equipo no muestra la vista 3D.</b> Las cifras, las etapas y la lista siguen en vivo.</div>
+  </div>
+</div>

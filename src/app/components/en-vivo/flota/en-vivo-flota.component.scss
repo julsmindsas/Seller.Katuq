@@ -1,0 +1,107 @@
+@import '../en-vivo-tema';
+
+:host {
+  display: block;
+}
+
+@include ev-tonos;
+
+.card {
+  @include ev-panel;
+}
+
+.card__head {
+  @include ev-cabecera;
+}
+
+.card__eyebrow {
+  @include ev-etiqueta;
+}
+
+.card__title {
+  margin: 2px 0 0;
+  font-size: ev-fs(16);
+  font-weight: 800;
+  color: var(--ev-ink);
+}
+
+.card__body {
+  padding: 0 16px 16px;
+}
+
+.vacio {
+  margin: 0;
+  font-size: ev-fs(12.5);
+  font-weight: 600;
+  color: var(--ev-muted);
+}
+
+.fleet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mens {
+  @include ev-foco;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 4px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+
+  &:hover .mens__name {
+    color: var(--ev-accent);
+  }
+}
+
+.mens__av {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--tone-soft);
+  color: var(--tone);
+  font-size: ev-fs(12);
+  font-weight: 800;
+}
+
+.mens__datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mens__name {
+  font-size: ev-fs(12.5);
+  font-weight: 700;
+  color: var(--ev-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mens__sub {
+  font-size: ev-fs(11);
+  font-weight: 600;
+  color: var(--ev-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pill {
+  @include ev-pastilla;
+}

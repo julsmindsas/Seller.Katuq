@@ -1,0 +1,19 @@
+<section class="card" aria-labelledby="ev-logros-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">Récords y proyección</div>
+      <h2 class="card__title" id="ev-logros-titulo">Para contar hoy</h2>
+    </div>
+  </header>
+  <div class="card__body" *ngIf="vista as v">
+    <div class="logros__eyebrow">{{ v.etiqueta }}</div>
+    <div class="logros__big">{{ v.grande }}</div>
+    <p class="logros__sub" [class.es-record]="v.superaRecord">{{ v.detalle }}</p>
+    <ul class="logros__lista">
+      <li class="logro" *ngFor="let f of v.filas; trackBy: porId" [ngClass]="f.clase">
+        <span class="logro__ico"><app-en-vivo-icono [nombre]="f.icono"></app-en-vivo-icono></span>
+        <span>{{ f.antes }}<b>{{ f.destacado }}</b>{{ f.despues }}</span>
+      </li>
+    </ul>
+  </div>
+</section>

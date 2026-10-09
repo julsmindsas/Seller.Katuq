@@ -1,0 +1,12 @@
+<ul class="fx-list" *ngIf="filas.length > 0">
+  <li *ngFor="let f of filas; trackBy: porId" class="fx-list__item">
+    <button type="button" class="fx-item" [attr.aria-label]="f.etiquetaAria" (click)="alTocar(f)">
+      <span class="av" [ngClass]="f.claseAvatar" aria-hidden="true">{{ f.iniciales }}</span>
+      <span class="fx-item__texto">
+        <span class="t">{{ f.titulo }}</span>
+        <span class="s">{{ f.subtitulo }}</span>
+      </span>
+      <span class="a" *ngIf="f.monto">{{ f.monto }}</span>
+    </button>
+  </li>
+</ul>

@@ -1,0 +1,13 @@
+<button
+  *ngIf="vm$ | async as vm"
+  type="button"
+  class="orb"
+  [hidden]="!vm.visible"
+  [class.is-on]="vm.enRecorrido"
+  [attr.aria-pressed]="vm.enRecorrido"
+  [attr.aria-label]="vm.aria"
+  (click)="alternar()"
+>
+  <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+  <span>{{ vm.texto }}</span>
+</button>

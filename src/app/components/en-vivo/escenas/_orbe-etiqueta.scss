@@ -1,0 +1,77 @@
+// Burbuja del orbe de Opttia (D-386, 5.14): la sugerencia sobre lo que señala. Plana, sin gradientes:
+// fondo `--ev-pack`, texto del color de la superficie (así se lee en el tema claro y en el oscuro).
+// Se incluye DENTRO del bloque de la escena (las etiquetas las crea la escena, sin encapsulación).
+@mixin eve-orbe-etiqueta {
+  .eve-lbl--opt {
+    z-index: 6;
+  }
+
+  .eve-lbl--opt .eve-lbl__in {
+    position: relative;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 2px 8px;
+    align-items: start;
+    width: max-content;
+    max-width: 270px;
+    margin-bottom: 16px;
+    padding: 9px 12px 10px 9px;
+    white-space: normal;
+    color: var(--ev-surface);
+    background: var(--ev-pack);
+    border-radius: 14px;
+    box-shadow: var(--ev-sh-pop);
+  }
+
+  // Colita hacia el orbe.
+  .eve-lbl--opt .eve-lbl__in::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    width: 12px;
+    height: 12px;
+    background: var(--ev-pack);
+    border-radius: 2px;
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .eve-lbl--opt .eve-opt__ico {
+    display: grid;
+    grid-row: 1 / 3;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    background: color-mix(in srgb, var(--ev-surface) 22%, transparent);
+    border-radius: 7px;
+  }
+
+  .eve-lbl--opt .eve-opt__ico .eve-ico {
+    width: 13px;
+    height: 13px;
+  }
+
+  .eve-lbl--opt small {
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+
+  .eve-lbl--opt b {
+    font-size: ev-fs(12);
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .eve-lbl.eve-lbl--opt.is-fixed .eve-lbl__in {
+    animation: eve-pop-in 0.4s cubic-bezier(0.2, 1.45, 0.4, 1);
+  }
+
+  @include ev-sin-movimiento {
+    .eve-lbl.eve-lbl--opt.is-fixed .eve-lbl__in {
+      animation: none;
+    }
+  }
+}

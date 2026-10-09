@@ -221,6 +221,9 @@ export class NavService implements OnDestroy {
             (!child.isOnlyAdmin || isJulsmindAdmin) &&
             (authorizedPaths.includes(child.path) ||
               (child.path === "facturacion-electronica" && canUseDianWorkspace) ||
+              // D-381: "Katuq en vivo" no depende del menú del rol; basta ser admin de Julsmind
+              // (el `isOnlyAdmin` de la entrada ya lo exige arriba).
+              (child.path === "en-vivo/katuq" && isJulsmindAdmin) ||
               (child.path === "contabilidad" && canUseBookkeepingWorkspace))
           );
         });
@@ -499,6 +502,19 @@ export class NavService implements OnDestroy {
         { path: "despachos", title: "Envíos y entregas", type: "link", icon: "send" },
         // D-354: lo ve el rol que tenga esta entrada en sus menús (se agrega en Roles).
         { path: "centro-operaciones", title: "Centro de operaciones", type: "link", icon: "layers" },
+      ],
+    },
+    {
+      // D-381: "En vivo" lo ve el rol que tenga esta entrada en sus menús (misma llave
+      // única que D-354: el path es el permiso). "Katuq en vivo" (toda la plataforma)
+      // solo aparece para los administradores de Julsmind; el candado real es del backend.
+      title: "En vivo",
+      icon: "activity",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "en-vivo", title: "En vivo", type: "link", icon: "activity" },
+        { path: "en-vivo/katuq", title: "Katuq en vivo", type: "link", icon: "globe", isOnlyAdmin: true },
       ],
     },
 

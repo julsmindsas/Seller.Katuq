@@ -1,0 +1,170 @@
+@import '../en-vivo-tema';
+
+:host {
+  display: block;
+  min-height: 0;
+}
+
+@include ev-tonos;
+
+.feed {
+  @include ev-panel;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: inherit;
+  height: 100%;
+}
+
+.feed__head {
+  @include ev-cabecera;
+}
+
+.feed__eyebrow {
+  @include ev-etiqueta;
+}
+
+.feed__title {
+  margin: 2px 0 0;
+  font-size: ev-fs(16);
+  font-weight: 800;
+  color: var(--ev-ink);
+}
+
+.feed__chip {
+  @include ev-chip;
+}
+
+.feed__vacio {
+  margin: 0;
+  padding: 18px 16px 22px;
+  font-size: ev-fs(12.5);
+  font-weight: 600;
+  color: var(--ev-muted);
+}
+
+.feed__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 10px 10px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ev {
+  @include ev-foco;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 9px 10px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  transition: background 0.2s, border-color 0.2s;
+
+  &:hover {
+    background: var(--ev-surface-2);
+    border-color: var(--ev-line);
+  }
+
+  &.is-new {
+    background: var(--tone-soft);
+    animation: ev-entra 0.55s cubic-bezier(0.2, 1.2, 0.4, 1);
+  }
+}
+
+.ev__ico {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: var(--tone-soft);
+  color: var(--tone);
+
+  app-en-vivo-icono {
+    --ev-icono: 16px;
+  }
+}
+
+.ev__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ev__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pill {
+  @include ev-pastilla;
+}
+
+.ev__hora {
+  font-size: ev-fs(10.5);
+  font-weight: 700;
+  color: var(--ev-muted-2);
+  white-space: nowrap;
+}
+
+.ev__title {
+  font-size: ev-fs(12.5);
+  font-weight: 700;
+  color: var(--ev-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  b {
+    font-weight: 800;
+  }
+}
+
+.mono {
+  font-family: var(--ev-mono);
+  font-weight: 700;
+  color: var(--ev-info);
+}
+
+.ev__meta {
+  font-size: ev-fs(11);
+  font-weight: 600;
+  color: var(--ev-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ev__amt {
+  font-size: ev-fs(13);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ev-ink);
+  white-space: nowrap;
+}
+
+@keyframes ev-entra {
+  0% { opacity: 0; transform: translateY(-14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@include ev-sin-movimiento {
+  .ev,
+  .ev.is-new {
+    animation: none;
+    transition: none;
+  }
+}

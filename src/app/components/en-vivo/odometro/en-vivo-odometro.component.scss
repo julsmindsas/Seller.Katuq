@@ -1,0 +1,53 @@
+@import '../en-vivo-tema';
+
+:host {
+  display: block;
+  position: relative;
+}
+
+// El tamaño lo manda quien lo usa con `font-size` en el host.
+.odo {
+  display: flex;
+  align-items: flex-end;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  color: var(--ev-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.odo__d {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+
+.odo__col {
+  display: flex;
+  flex-direction: column;
+  transition: transform 1.3s cubic-bezier(0.2, 1, 0.3, 1);
+
+  span {
+    display: block;
+    height: 1em;
+    line-height: 1;
+  }
+}
+
+.odo__s {
+  display: inline-block;
+  height: 1em;
+  line-height: 1;
+}
+
+.ev-sr {
+  @include ev-sr;
+}
+
+@include ev-sin-movimiento {
+  .odo__col {
+    transition: none;
+  }
+}

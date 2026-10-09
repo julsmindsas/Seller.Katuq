@@ -1,0 +1,20 @@
+<section class="card" *ngIf="filas$ | async as filas" aria-labelledby="ev-kq-ciudades-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">A dónde van los pedidos</div>
+      <h2 class="card__title" id="ev-kq-ciudades-titulo">Ciudades de hoy</h2>
+    </div>
+  </header>
+
+  <div class="card__body">
+    <p class="vacio" *ngIf="filas.length === 0">Todavía no hay pedidos con ciudad de entrega hoy.</p>
+
+    <ul class="rows" *ngIf="filas.length > 0">
+      <li class="row t-accent" *ngFor="let fila of filas; trackBy: porDane">
+        <span class="row__name">{{ fila.nombre }}<span class="row__sub" *ngIf="fila.detalle"> · {{ fila.detalle }}</span></span>
+        <span class="row__n">{{ fila.texto }}<span class="sr"> {{ fila.pedidos === 1 ? 'pedido' : 'pedidos' }}</span></span>
+        <span class="row__bar" aria-hidden="true"><i [style.width.%]="fila.ancho"></i></span>
+      </li>
+    </ul>
+  </div>
+</section>

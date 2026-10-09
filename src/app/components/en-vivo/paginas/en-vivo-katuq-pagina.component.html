@@ -1,0 +1,80 @@
+<app-en-vivo vista="katuq" [eventosFlotantes]="!ampliado && (vm$ | async)?.opcion !== 'muro'">
+  <!-- Encabezado: botón extra -->
+  <ng-container ngProjectAs="[slot=acciones]">
+    <button
+      type="button"
+      class="ev-btn ev-btn--ampliar"
+      title="Ampliar la escena: quita los paneles flotantes"
+      [attr.aria-pressed]="ampliado"
+      (click)="alternarAmpliado()"
+    >
+      <span>{{ ampliado ? 'Con paneles' : 'Ampliar' }}</span>
+    </button>
+  </ng-container>
+
+  <!-- Arriba: la cinta de "Hoy en Katuq" -->
+  <app-en-vivo-katuq-cinta slot="superior"></app-en-vivo-katuq-cinta>
+
+  <!-- Escena: recuadro de alto fijo + paneles flotantes (o apilados) + ficha -->
+  <ng-container ngProjectAs="[slot=escena]">
+    <div class="ev-zona" *ngIf="vm$ | async as vm">
+      <div class="ev-escena-slot" [class.ev-escena-slot--lista]="vm.opcion === 'muro'" [attr.data-vista]="vm.opcion">
+        <!-- Una escena a la vez: "Comercios" (ciudad) y "Colombia" (país, con su leyenda) son 3D y "Muro" no. -->
+        <ng-container [ngSwitch]="vm.opcion">
+          <app-en-vivo-escena-ciudad
+            *ngSwitchCase="'comercios'"
+            [margenes]="vm.margenes"
+            [activa]="vm.opcion === 'comercios'"
+            (disponible3d)="alDisponible3d($event)"
+          ></app-en-vivo-escena-ciudad>
+          <app-en-vivo-escena-pais
+            *ngSwitchCase="'colombia'"
+            [margenes]="vm.margenes"
+            [activa]="vm.opcion === 'colombia'"
+            [leyenda]="true"
+            (disponible3d)="alDisponible3d($event)"
+          ></app-en-vivo-escena-pais>
+          <app-en-vivo-katuq-muro *ngSwitchCase="'muro'"></app-en-vivo-katuq-muro>
+        </ng-container>
+
+        <app-en-vivo-narracion *ngIf="vm.opcion !== 'muro'"></app-en-vivo-narracion>
+        <app-en-vivo-ficha (abrirTablero)="alAbrirTablero($event)"></app-en-vivo-ficha>
+      </div>
+
+      <div class="ev-paneles" *ngIf="flotando(vm.opcion)">
+        <div class="ev-paneles__izq">
+          <app-en-vivo-katuq-momento></app-en-vivo-katuq-momento>
+          <app-en-vivo-katuq-carrera [compacta]="true"></app-en-vivo-katuq-carrera>
+        </div>
+        <div class="ev-paneles__der">
+          <app-en-vivo-eventos
+            [eventos]="vm.eventos"
+            [pedidos]="vm.pedidos"
+            [etapas]="vm.etapas"
+            vista="katuq"
+            [ocultar]="vm.ocultar"
+            titulo="En todos los comercios"
+            [anunciar]="false"
+            (abrir)="abrirPedido($event)"
+            (resaltar)="resaltarPedidos($event)"
+          ></app-en-vivo-eventos>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Abajo -->
+  <div slot="inferior" class="ev-inferior">
+    <app-en-vivo-katuq-radar></app-en-vivo-katuq-radar>
+    <app-en-vivo-opttia
+      [conEscena]="(conEscena$ | async) ?? false"
+      (recorrido)="alRecorrido()"
+      (verEnEscena)="alVerEnEscena($event)"
+      (respondida)="alRespondida($event)"
+    ></app-en-vivo-opttia>
+    <app-en-vivo-katuq-logros (celebrar)="celebrar($event)"></app-en-vivo-katuq-logros>
+    <app-en-vivo-katuq-tiempos></app-en-vivo-katuq-tiempos>
+    <app-en-vivo-katuq-canales></app-en-vivo-katuq-canales>
+    <app-en-vivo-katuq-ciudades></app-en-vivo-katuq-ciudades>
+  </div>
+</app-en-vivo>

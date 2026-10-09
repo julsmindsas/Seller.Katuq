@@ -1,0 +1,23 @@
+<section class="card" aria-labelledby="ev-flota-hud-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">Tu flota</div>
+      <h2 class="card__title" id="ev-flota-hud-titulo">Mensajeros ahora</h2>
+    </div>
+  </header>
+  <div class="card__body">
+    <p class="vacio" *ngIf="filas.length === 0">Todavía no hay mensajeros registrados.</p>
+    <ul class="flh" *ngIf="filas.length > 0">
+      <li *ngFor="let f of filas; trackBy: porClave">
+        <button type="button" class="flh__row" [attr.aria-label]="f.aria" (click)="abrir(f)">
+          <span class="flh__av" [ngClass]="f.claseAvatar" aria-hidden="true">{{ f.iniciales }}</span>
+          <span class="flh__datos">
+            <b>{{ f.nombre }}</b>
+            <small>{{ f.subtitulo }}</small>
+          </span>
+          <span class="pill" [ngClass]="f.claseEstado">{{ f.estado }}</span>
+        </button>
+      </li>
+    </ul>
+  </div>
+</section>

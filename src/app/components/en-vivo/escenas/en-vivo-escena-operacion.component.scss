@@ -1,0 +1,326 @@
+@import '../en-vivo-tema';
+@import './orbe-etiqueta';
+
+// ==========================================================================
+// Escena 3D de la operación (D-386, 5.1/5.4). Plana, sin gradientes (design-system).
+//  · Esta hoja va SIN encapsulación: las etiquetas HTML las crea la escena con `createElement`
+//    (no llevan el atributo de Angular). Por eso todo cuelga de `app-en-vivo-escena-operacion` y
+//    las clases llevan el prefijo `eve-`.
+//  · Los tokens de la escena (`--scene-*`, `--box`) viven aquí; los semánticos son los `--ev-*`
+//    del tema de la pantalla. En el modo pantalla (`.ev-tv`) la escena toma su variante oscura.
+// ==========================================================================
+
+app-en-vivo-escena-operacion {
+  // Tokens de la escena (tema claro).
+  --scene-bg: #e9e5f8;
+  --scene-plat: #fbfaff;
+  --scene-plat-side: #d8d1f2;
+  --scene-yard: #f1eefb;
+  --scene-road: #55526f;
+  --scene-mark: #ffffff;
+  --scene-walk: #e4dff6;
+  --scene-belt: #3b3854;
+  --scene-belt-2: #4f4c6b;
+  --scene-wall: #ffffff;
+  --scene-trim: #ece8fa;
+  --scene-tree: #86cfa4;
+  --scene-trunk: #a3815f;
+  --scene-wheel: #26233d;
+  --scene-glass: #cfe3ff;
+  --box: #d6a574;
+  --box-tape: #5f3fe0;
+  --dark: 0;
+
+  display: block;
+  position: relative;
+  box-sizing: border-box;
+  height: clamp(440px, 62vh, 700px);
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--ev-line, #ececf4);
+  background: var(--scene-bg);
+  box-shadow: var(--ev-sh-panel, 0 1px 3px rgba(30, 20, 80, 0.04));
+  isolation: isolate;
+  @include ev-tonos;
+
+  .eve-stage {
+    position: absolute;
+    inset: 0;
+  }
+
+  .eve-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    // En táctil el dedo hace scroll de la página; la escena gira solo con mouse.
+    touch-action: pan-y;
+  }
+
+  .eve-labels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  // Sin WebGL: el mensaje ocupa la escena; las cifras, etapas y lista siguen en vivo.
+  .eve-nogl {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    text-align: center;
+    color: var(--ev-ink-2);
+    font-size: ev-fs(13);
+    line-height: 1.45;
+
+    b {
+      display: block;
+      margin-bottom: 4px;
+      font-size: ev-fs(15);
+      color: var(--ev-ink);
+    }
+  }
+
+  // ---- etiquetas ancladas a la escena
+  .eve-lbl {
+    position: absolute;
+    left: 0;
+    top: 0;
+    white-space: nowrap;
+    will-change: transform;
+    z-index: 1;
+  }
+
+  .eve-lbl__in {
+    transform-origin: 50% 100%;
+    opacity: 0;
+  }
+
+  .eve-lbl.is-in .eve-lbl__in {
+    opacity: 1;
+    animation: eve-pop-in 0.42s cubic-bezier(0.2, 1.45, 0.4, 1);
+  }
+
+  .eve-lbl.is-fixed .eve-lbl__in {
+    opacity: 1;
+    animation: none;
+  }
+
+  .eve-lbl.is-out .eve-lbl__in {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  // Estación: punto de color, nombre, conteo y el "+N" de lo que no cabe a la vista.
+  .eve-lbl--st .eve-lbl__in {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 9px;
+    background: var(--ev-surface);
+    border: 1px solid var(--ev-line);
+    border-radius: 11px;
+    box-shadow: var(--ev-sh-up);
+    font-size: ev-fs(11);
+    font-weight: 700;
+    color: var(--ev-ink-2);
+  }
+
+  .eve-lbl--st b {
+    font-size: ev-fs(15);
+    font-weight: 800;
+    color: var(--tone);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .eve-lbl--st em {
+    font-style: normal;
+    font-size: ev-fs(10.5);
+    font-weight: 800;
+    color: var(--tone);
+    background: var(--tone-soft);
+    border-radius: 20px;
+    padding: 1px 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .eve-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--tone);
+  }
+
+  .eve-lbl--st.is-bump .eve-lbl__in {
+    animation: eve-bump 0.5s cubic-bezier(0.2, 1.5, 0.4, 1);
+  }
+
+  // Tarjeta de pedido nuevo / entregado / rechazado.
+  .eve-lbl--pop .eve-lbl__in {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 2px 10px;
+    align-items: baseline;
+    padding: 8px 11px 9px;
+    margin-bottom: 8px;
+    background: var(--ev-surface);
+    border: 1px solid var(--ev-line);
+    border-radius: 13px;
+    box-shadow: var(--ev-sh-pop);
+  }
+
+  .eve-pill {
+    @include ev-pastilla;
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .eve-mono {
+    font-family: var(--ev-mono);
+    font-size: ev-fs(13);
+    font-weight: 700;
+    color: var(--ev-info);
+  }
+
+  .eve-amt {
+    justify-self: end;
+    font-size: ev-fs(14);
+    font-weight: 800;
+    color: var(--ev-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .eve-lbl--pop small {
+    grid-column: 1 / -1;
+    font-size: ev-fs(11);
+    font-weight: 600;
+    color: var(--ev-muted);
+  }
+
+  // Nombre del vehículo (y cuántos pedidos lleva).
+  .eve-lbl--veh .eve-lbl__in {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border-radius: 20px;
+    background: var(--ev-info-soft);
+    color: var(--ev-info);
+    font-size: ev-fs(11);
+    font-weight: 800;
+    box-shadow: var(--ev-sh-up);
+  }
+
+  .eve-ico {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @include eve-orbe-etiqueta;
+
+  // Al pasar el puntero por una caja.
+  .eve-lbl--hover .eve-lbl__in {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 7px 11px 8px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    background: var(--ev-ink);
+    color: var(--ev-bg);
+    box-shadow: var(--ev-sh-pop);
+    font-size: ev-fs(11);
+    font-weight: 700;
+  }
+
+  .eve-lbl--hover b {
+    font-size: ev-fs(13);
+    font-weight: 800;
+  }
+
+  .eve-lbl--hover span {
+    opacity: 0.75;
+  }
+
+  @media (max-width: 520px) {
+    .eve-lbl--st .eve-lbl__in {
+      padding: 3px 7px;
+      font-size: 10px;
+    }
+
+    .eve-lbl--st b {
+      font-size: 13px;
+    }
+  }
+
+  // Con "reducir movimiento": las etiquetas aparecen sin salto.
+  @include ev-sin-movimiento {
+    .eve-lbl.is-in .eve-lbl__in,
+    .eve-lbl--st.is-bump .eve-lbl__in {
+      animation: none;
+      opacity: 1;
+    }
+
+    .eve-lbl.is-out .eve-lbl__in {
+      transition: none;
+    }
+  }
+}
+
+// Modo pantalla (televisor): variante oscura de la escena.
+.ev-tv app-en-vivo-escena-operacion {
+  --scene-bg: #15122b;
+  --scene-plat: #231f47;
+  --scene-plat-side: #19163a;
+  --scene-yard: #292452;
+  --scene-road: #36325f;
+  --scene-mark: #9c94d0;
+  --scene-walk: #2b2656;
+  --scene-belt: #0f0d22;
+  --scene-belt-2: #1f1b44;
+  --scene-wall: #2e2959;
+  --scene-trim: #3a3470;
+  --scene-tree: #2f7a55;
+  --scene-trunk: #6b5240;
+  --scene-wheel: #0b0a18;
+  --scene-glass: #2b4a7a;
+  --box: #c08d5b;
+  --box-tape: #9b85ff;
+  --dark: 1;
+}
+
+@keyframes eve-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.7);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes eve-bump {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.035);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

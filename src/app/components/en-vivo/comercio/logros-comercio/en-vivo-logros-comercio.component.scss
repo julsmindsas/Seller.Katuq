@@ -1,0 +1,66 @@
+@import '../comercio-comun';
+
+@include cm-tarjeta;
+
+.logros__eyebrow {
+  @include ev-etiqueta;
+}
+
+.logros__big {
+  margin-top: 4px;
+  font-size: ev-fs(30);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ev-accent);
+}
+
+.logros__sub {
+  margin: 4px 0 0;
+  font-size: ev-fs(12.5);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+
+  &.es-record {
+    color: var(--ev-ok);
+    font-weight: 800;
+  }
+}
+
+.logros__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logro {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+
+  b {
+    font-weight: 800;
+    color: var(--ev-ink);
+  }
+}
+
+.logro__ico {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--tone-soft);
+  color: var(--tone);
+
+  app-en-vivo-icono {
+    --ev-icono: 15px;
+  }
+}

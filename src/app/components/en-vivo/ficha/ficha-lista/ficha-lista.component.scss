@@ -1,0 +1,12 @@
+@import '../ficha-comun';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+@include ev-tonos;
+@include fx-celdas;
+@include fx-seccion;

@@ -1,0 +1,189 @@
+@import '../en-vivo-tema';
+
+// Estilos que comparten las dos páginas de "En vivo" (comercio y toda Katuq). Cada página los
+// incluye con `@include ev-pagina;` — así no se duplica ni se cruzan encapsulaciones.
+$ev-ancho-flotante: 1181px;
+
+@mixin ev-pagina {
+  // El shell (app-en-vivo) pinta su propio padding; la página no agrega nada alrededor.
+  :host {
+    display: block;
+  }
+
+  app-en-vivo-narracion {
+    --ev-narra-abajo: 18px;
+  }
+
+  // Botones del encabezado (misma forma que los del shell, que son de otra encapsulación).
+  .ev-btn {
+    @include ev-foco;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: ev-fs(12.5);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    color: var(--ev-ink-2);
+    cursor: pointer;
+    background: var(--ev-surface);
+    border: 1px solid var(--ev-chip-line);
+    border-radius: 11px;
+    transition: color 0.15s, background 0.15s;
+
+    &:hover {
+      color: var(--ev-accent);
+    }
+
+    &[aria-pressed='true'] {
+      color: var(--ev-accent);
+      background: var(--ev-accent-soft);
+      border-color: var(--ev-accent-soft);
+    }
+  }
+
+  .ev-btn--ampliar {
+    display: none;
+
+    @media (min-width: $ev-ancho-flotante) {
+      display: inline-flex;
+    }
+  }
+
+  // ── La zona de la escena ─────────────────────────────────────────────────
+  // `.ev-escena-slot` es el recuadro de la escena 3D (alto fijo); los paneles flotan encima en
+  // pantallas anchas y se apilan debajo en las angostas.
+  .ev-zona {
+    --ev-escena-alto: clamp(560px, 78vh, 1000px);
+    --ev-tablero-alto: calc(var(--ev-escena-alto) - 104px);
+    position: relative;
+    min-width: 0;
+  }
+
+  .ev-escena-slot {
+    position: relative;
+    box-sizing: border-box;
+    height: var(--ev-escena-alto);
+    overflow: hidden;
+    background: var(--ev-surface-2);
+    border: 1px solid var(--ev-line);
+    border-radius: 20px;
+  }
+
+  // Vistas que no son 3D (tablero de pedidos, muro) llenan el recuadro y se desplazan dentro.
+  .ev-escena-slot--lista {
+    padding: 12px;
+    overflow: auto;
+    background: var(--ev-surface);
+  }
+
+  // Las escenas 3D llenan el recuadro: el borde, el alto y el radio son del recuadro, no de la escena.
+  app-en-vivo-escena-operacion,
+  app-en-vivo-escena-mapa,
+  app-en-vivo-escena-pais,
+  app-en-vivo-escena-ciudad {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .ev-escena-vacia {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    text-align: center;
+    font-size: ev-fs(13);
+    font-weight: 700;
+    color: var(--ev-muted);
+  }
+
+  .ev-paneles {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 14px;
+    pointer-events: none;
+
+    > * {
+      pointer-events: auto;
+    }
+
+    @media (min-width: $ev-ancho-flotante) {
+      position: absolute;
+      inset: 12px 12px auto 12px;
+      z-index: 3;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      height: calc(var(--ev-escena-alto) - 24px);
+      margin-top: 0;
+    }
+  }
+
+  .ev-paneles__izq,
+  .ev-paneles__der {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+
+    @media (min-width: $ev-ancho-flotante) {
+      width: 320px;
+      max-height: 100%;
+      overflow-y: auto;
+    }
+  }
+
+  .ev-paneles__der {
+    @media (min-width: $ev-ancho-flotante) {
+      height: 100%;
+      margin-left: auto;
+    }
+
+    app-en-vivo-eventos {
+      display: block;
+      min-height: 0;
+      height: 420px;
+
+      @media (min-width: $ev-ancho-flotante) {
+        height: 100%;
+      }
+    }
+  }
+
+  // Tarjetas de abajo (Opttia, atención, tiempos, logros...).
+  .ev-inferior {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+
+    > * {
+      display: block;
+      min-width: 0;
+    }
+
+    @media (max-width: 1099.98px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .ev-inferior__ancho {
+    grid-column: 1 / -1;
+  }
+
+  app-en-vivo-katuq-cinta {
+    display: block;
+    min-width: 0;
+  }
+}

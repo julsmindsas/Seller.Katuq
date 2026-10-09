@@ -1,0 +1,158 @@
+// Piezas de estilo que comparten las partes de la ficha (pedido, lista, mensajero y filas).
+// Tokens `--ev-*` del tema canónico; plano y sin gradientes. Cada parte las incluye con @include.
+@import '../en-vivo-tema';
+
+// Encabezado de la ficha: quién (cliente, mensajero) y su pastilla.
+@mixin fx-hero {
+  .fx-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .fx-quien {
+    min-width: 0;
+  }
+
+  .fx-who {
+    font-size: ev-fs(14);
+    font-weight: 800;
+    color: var(--ev-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .fx-sub {
+    font-size: ev-fs(11.5);
+    font-weight: 600;
+    color: var(--ev-muted);
+  }
+
+  .fx-pill {
+    @include ev-pastilla;
+    flex: none;
+  }
+}
+
+// Cuadro de datos de dos columnas.
+@mixin fx-celdas {
+  .fx-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .fx-cell {
+    min-width: 0;
+    margin: 0;
+    padding: 8px 10px;
+    background: var(--ev-surface-2);
+    border: 1px solid var(--ev-line-soft);
+    border-radius: 11px;
+
+    dt {
+      display: block;
+      font-size: ev-fs(10);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--ev-muted);
+    }
+
+    dd {
+      display: block;
+      margin: 2px 0 0;
+      font-size: ev-fs(12.5);
+      font-weight: 700;
+      color: var(--tone, var(--ev-ink));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+// Sección con su etiqueta, y los textos sueltos.
+@mixin fx-seccion {
+  .fx-sec {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .fx-eyebrow {
+    @include ev-etiqueta;
+    margin: 0;
+  }
+
+  .fx-vacio {
+    margin: 0;
+    padding: 4px 0;
+    font-size: ev-fs(12.5);
+    font-weight: 600;
+    color: var(--ev-muted);
+  }
+
+  .fx-nota {
+    margin: 0;
+    font-size: ev-fs(11.5);
+    font-weight: 600;
+    color: var(--ev-muted);
+  }
+}
+
+// Botones de acción de la ficha. Ninguna acción escribe nada.
+@mixin fx-botones {
+  .fx-acts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .fx-btn {
+    @include ev-foco;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: ev-fs(12.5);
+    font-weight: 700;
+    color: var(--ev-ink-2);
+    background: var(--ev-surface);
+    border: 1px solid var(--ev-chip-line);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+
+    &:hover {
+      color: var(--ev-accent);
+      transform: translateY(-1px);
+    }
+
+    &.fx-btn--primaria {
+      color: var(--ev-on-accent);
+      background: var(--ev-accent);
+      border-color: transparent;
+      box-shadow: var(--ev-sh-btn);
+
+      &:hover {
+        color: var(--ev-on-accent);
+        background: var(--ev-accent-hover);
+      }
+    }
+  }
+
+  @include ev-sin-movimiento {
+    .fx-btn {
+      transition: none;
+
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+}

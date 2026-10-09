@@ -8679,7 +8679,7 @@ Desde el despliegue de D-329 (29-sep) no hubo más caídas en `~/.pm2/pm2.log`; 
 **Verificado:** build de producción y `verify-dist-prod` OK; capturas con Chromium del `dist` en escritorio (480×270) y móvil 390 px (358×201), sin scroll horizontal y con el video cargando.
 **No verificado:** reproducción del video dentro de la captura (YouTube solo mostró la portada).
 
-**Nota de numeración:** otra sesión dejó sin commitear un D-378 distinto ("Pantalla En vivo", propuesta); el D-378 ya publicado es el de los despachos. Esa propuesta debe renumerarse.
+**Nota de numeración:** otra sesión dejó sin commitear un D-378 distinto ("Pantalla En vivo", propuesta); el D-378 ya publicado es el de los despachos. Esa propuesta debe renumerarse. → Renumerada como **D-386** (2026-10-08; D-381 quedó para Wompi).
 
 ## D-380 (2026-10-08) — Las tres ideas de Jairo: factura PDF ordenada (DESPLEGADA), ensayo de la facturación automática (SIN ENCENDER) e informe ejecutivo (PROPUESTA)
 
@@ -8811,3 +8811,98 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 **Verificado (9-oct, pruebas en verde):** banderas 65, ficha 72 en el back y 117 de lógica pura en el front, plantillas de WhatsApp 12, más las de importación y de la plantilla (salida 0); las cuatro suites de empresas que ya existían no cambian.
 **No verificado:** compilación del front (la hará el `release`; si falla, falla antes de publicar); ninguna función probada en FLORECER; que el ADK en producción acepte imagen en `/api/ai/json` (solo se leyó su repo); nada contra Meta, Opttia ni Firestore reales.
 **Reversa.** Apagar la bandera con el script; cada función es un commit aparte y se puede revertir.
+
+## D-386 (2026-10-08) — Pantalla "En vivo" por comercio y de toda Katuq, con ficha al tocar un pedido (IMPLEMENTADA; antes numerada D-378 y D-386, que otra sesión usó para Wompi)
+
+**Pedido de Daniel (2026-10-08), en ocho mensajes:**
+1. "Un super dashboard parecido al del welcome pero más interactivo y en tiempo real, que anime cuando llega un pedido, cuando cambie de estado, cuando salga de un mensajero… super wow para mis clientes, no escatimes en nada".
+2. "Necesito que sea por comercio y también en general, que yo vea todos los comercios de Katuq operando en un super dashboard".
+3. "El mapa de la animación debe ser más amplio".
+4. "Ponles interactividad, que cuando le dé clic a un pedido pueda ver detalles".
+5. "Está muy apretado el super usuario… hazlo más grande y vistoso, hay que alardear más, más funcionalidades que entreguen valor".
+6. "Ponle algo de inteligencia artificial".
+7. "Mejoraste el super admin, haz algo para el comercio así también, parecido".
+8. "Quiero que la IA Opttia tenga incidencia en el gráfico animado".
+
+**Hallazgo que define el diseño** (lectura del backend):
+- Ningún campo de actualización lo escriben todos los caminos. La app de mensajeros, Envíame, los flows y el picking cambian `estadoProceso` sin fecha.
+- `order_status_history` y la campana (D-338) tampoco cubren todos los caminos.
+- La única fuente completa es el documento del pedido. Por eso se observan sus cambios y se comparan con la versión anterior.
+
+**Propuesta** (`openspec/changes/tablero-en-vivo/`, 7 capacidades):
+- **`tablero-en-vivo` (por comercio):**
+  - cifras que se animan, con las mismas ventas que la bienvenida;
+  - escena 3D de la operación;
+  - mapa con pulsos y arcos;
+  - lista de eventos, ventas por hora contra ayer y celebraciones;
+  - modo pantalla con "ocultar clientes y montos", sonido opcional y repetir el día.
+- **`tablero-en-vivo-plataforma` (toda Katuq, solo sesiones de Julsmind por el token):**
+  - cifras de la plataforma;
+  - mapa con una torre por comercio y "Ciudad Katuq", con un edificio por comercio;
+  - carrera de los 8 que más venden, cinta y ciudades;
+  - lista de eventos de todos los comercios;
+  - tocar un comercio abre su tablero en solo lectura.
+- **`ficha-en-vivo`:**
+  - tocar un pedido abre su ficha: recorrido de hoy con horas, productos, pago y mensajero; la cámara lo sigue;
+  - cifras, etapas, ciudades, canales y mensajeros abren su lista.
+- **`eventos-pedidos-en-vivo` (backend, solo lectura):**
+  - un detector por empresa (ventana de 7 días);
+  - un observador de toda la plataforma (desde ayer);
+  - SSE por `fetch` con el token;
+  - el detalle del pedido se pide solo al abrir su ficha.
+- **`radar-en-vivo`** (centro de mando de toda Katuq):
+  - radar de atención: pedidos atascados, silencio raro para el ritmo del comercio (menos de 1 vez en 100), rechazos y la racha más fuerte, con sugerencia y entrada al tablero;
+  - tiempos de la operación (preparación, espera, entrega y ciclo completo);
+  - proyección al cierre y récords de 90 días (`count()` por día, en memoria);
+  - muro de comercios.
+- **`opttia-en-vivo`** (IA, todo por `pedirJsonAOpttia` del ADK):
+  - resumen en palabras, en toda Katuq y por comercio;
+  - preguntas en lenguaje natural con acciones;
+  - narración por plantillas sobre la escena;
+  - **Opttia dentro de la escena 3D:** un orbe que cada 16 s vuela a lo urgente y lo señala con anillo, rayo y burbuja; recorrido guiado con la cámara; vuela a la respuesta de cada pregunta; celebra sus pedidos; en el muro y el tablero marca la tarjeta. Sin llamadas extra al modelo;
+  - "Vendido con Opttia": pedidos con `cotizacionOrigen` cuya cotización trae `origen: "whatsapp-bot"`;
+  - sin datos de clientes, con resúmenes compartidos (TTL de 15 y 30 min) y tope de 20 preguntas por usuario por hora.
+- **`centro-comercio-en-vivo`** (el mismo trato para el comercio):
+  - ventas en grande contra su récord y el pulso de su tienda;
+  - "Lo próximo" y "Atención ahora": listo sin despachar con el mensajero libre sugerido, demorado en su etapa, sin pago y mensajero mucho tiempo en la calle;
+  - "Tu flota";
+  - vista "Pedidos" (tablero por etapas que se mueve solo);
+  - tiempos frente a la mediana de Katuq, solo con 5 comercios o más y sin nombres;
+  - productos estrella.
+- **Centro de mando más grande:** ventas en grande con odómetro, el "pulso de Katuq" tipo electrocardiograma, paneles flotantes sobre la escena y el mapa teñido por departamento según la demanda.
+- **Mapas más amplios:** encuadre automático que llena el recuadro y botón "Ampliar".
+- **Write-set vacío.** Sin colecciones ni índices nuevos.
+- **Encendido:**
+  - entrada `en-vivo` en el menú del rol; piloto en FLORECER y ALMARA FELICIDAD;
+  - "Katuq en vivo" en el menú que solo ve Julsmind.
+- **Compuerta:** antes de construir se miden la memoria, las lecturas y el proxy, también del observador de plataforma.
+
+**Bugs latentes vistos de paso (sin tocar, escalados a Daniel):**
+1. El stream de ejecución de flows usa `EventSource` sin `Authorization` y siempre recibe 401 (`flows.service.ts:239-241`).
+2. **(grave)** `GET /v1/logistica/vendors/all` (`controllers/logistica.js:176-193`) devuelve los transportadores completos.
+   - Incluye la contraseña en texto plano (el login compara `pwd == password` en `logistica.js:251`), la cédula, la EPS y la ARL.
+   - La empresa sale del encabezado `company`, no del token. Con cualquier sesión válida se leen los de otra empresa.
+3. `POST /v1/orders/carrier/edit` se autoriza con una apiKey fija en el código (`orders.js:5197,5209`).
+4. El apagado del servidor no cierra los streams de flows: `runStreamService.shutdownAll` nunca se llama.
+5. **(grave)** Varios candados de plataforma le creen al encabezado `company`:
+   - Las rutas son `GET /v1/companies/overview` (`platformOverview.js:155-158`), `GET /v1/companies/all` (`companies.js:156-161`), `GET /v1/companies/billing-overview` (`billingOverview.js:253-256`) y `POST /v1/companies/estado-ciclo` (`companies.js:2189-2191`).
+   - `auth` no ata ese encabezado al token, y ninguna de esas rutas usa `requireJwtTenant`.
+   - Cualquier sesión que mande `company: Julsmind` ve todas las empresas, con contactos y cobro. Un Administrador de cualquier comercio puede cambiar el estado de ciclo de vida de otro comercio, por ejemplo suspenderlo.
+   - Arreglo propuesto: `requireJwtTenant` en esas rutas, o comparar `getJwtTenant(req)` como ya hace `getTicketsResumen`.
+   - La prueba `tests/platformMetrics/accessLock.test.js` arma la petición solo con el encabezado, así que hoy no detecta el hueco.
+   - La vista de toda Katuq de esta propuesta usa el token, nunca el encabezado.
+
+**Estado.**
+- Propuesta, 7 specs, diseño y tareas (`openspec validate --strict` en verde).
+- Prototipo v5 (con el orbe de Opttia en la escena) y 16 comercios ficticios: centro de mando del comercio y de toda Katuq, radar, muro, tablero de pedidos, Opttia (con plantillas en vez del modelo), ficha y mapas con encuadre automático. Enlace privado: https://claude.ai/artifact/PYfujuCirh6uVRtrYDLfTq
+- El prototipo sirvió para corregir la regla del radar: "50 minutos sin pedidos" daba una falsa alarma en 1 de cada 8 cargas para un comercio pequeño. La regla quedó estadística, por el ritmo de cada comercio.
+- El prototipo se probó con Playwright en escritorio (claro y oscuro) y en celular, sin errores de consola ni scroll horizontal.
+- **DESPLEGADO el 2026-10-09**, por orden de Daniel ("has el plan de trabajo y ejecútalo", luego "git pull y despliega").
+  - **Backend:** commit `f6464b2`, fusionado como `c921553` en `backend-aws-security`. En la EC2 se aplicó con `merge --ff-only` sobre `ffbb363`, y `pm2 restart katuq-api` quedó online; `/v1/analytics/en-vivo/foto` y `/global/foto` responden 401 sin token. Solo se subió lo propio.
+  - **Front:** publicado como **2026.10.09.4** (Firebase Hosting), compilado sobre el release `2026.10.09.3` más este commit; el código de D-385 que había en origin NO se incluyó.
+  - **Numeración:** esta decisión quedó como D-386 porque D-381 es de Wompi.
+  - **Estado:** nace apagada. Falta que Daniel agregue "En vivo" a los roles en Roles (piloto: ALMARA y OH MY STORE; FLORECER casi no tiene pedidos). "Katuq en vivo" ya la ve cualquier Administrador de Julsmind.
+- **Backend** (`katuq_admin_back_firebase/functions`, rama `backend-aws-security`): `services/enVivo/` (etapas, detector, proyeccion, cifras, distribuidor, plataforma, detalle, radar, opttia, ia, comercio), `routers/analyticsEnVivo.js` montado en `/v1/analytics/en-vivo` y 12 líneas aditivas en `index.js` (montaje y cierre ordenado). 13 suites en `tests/enVivo/` en verde, incluida la de contrato de cero escrituras.
+- **Front** (`src/app/components/en-vivo/`): servicios (canal SSE por fetch), shell, ficha, plataforma, comercio, opttia, repetición, escenas 3D (operación, mapa, país, ciudad) y orbe de Opttia, más `ajustarAContenido` y ganchos aditivos en `shared/escena-3d/escena-base.ts`. Entradas en `nav.service.ts` y ruta `en-vivo`. `ng build` sin errores y humo en Chromium con 3D.
+- **Medición** (design.md): la ventana de 7 días alcanza; `select()` no funciona en listeners; `EN_VIVO_MAX_EMPRESAS` = 5. FLORECER casi no tiene pedidos: el piloto con movimiento real sería ALMARA y OH MY STORE.
+- **Pendientes de Daniel:** 1.3 (SSE por back.katuq.com) y 1.7 (costo de Opttia) no se midieron; despliegue (backend primero); encender `en-vivo` en Roles; pruebas 6.3 con pedidos de demo. Los dos huecos graves de seguridad (candados de plataforma por header y contraseñas de `vendors/all`) siguen SIN arreglar: van en un cambio aparte.

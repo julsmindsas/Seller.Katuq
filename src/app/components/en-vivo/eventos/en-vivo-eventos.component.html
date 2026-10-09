@@ -1,0 +1,47 @@
+<section class="feed" aria-labelledby="ev-eventos-titulo">
+  <header class="feed__head">
+    <div>
+      <div class="feed__eyebrow">Lo que está pasando</div>
+      <h2 class="feed__title" id="ev-eventos-titulo">{{ titulo }}</h2>
+    </div>
+    <span class="feed__chip">{{ filas.length }} {{ filas.length === 1 ? 'evento' : 'eventos' }}</span>
+  </header>
+
+  <p class="feed__vacio" *ngIf="filas.length === 0">Todavía no hay movimiento hoy. Cuando entre un pedido, lo verás aquí.</p>
+
+  <ol
+    class="feed__list"
+    [attr.aria-live]="anunciar ? 'polite' : 'off'"
+    aria-relevant="additions"
+    aria-label="Eventos recientes"
+    (pointerleave)="alSalir()"
+  >
+    <li *ngFor="let f of filas; trackBy: porId" class="feed__item">
+      <button
+        type="button"
+        class="ev"
+        [ngClass]="f.clase"
+        [class.is-new]="f.nuevo"
+        (click)="alTocar(f)"
+        (pointerenter)="alEntrar(f)"
+        (focus)="alEntrar(f)"
+        (blur)="alSalir()"
+      >
+        <span class="ev__ico"><app-en-vivo-icono [nombre]="f.descripcion.icono"></app-en-vivo-icono></span>
+        <span class="ev__body">
+          <span class="ev__top">
+            <span class="pill">{{ f.descripcion.pastilla }}</span>
+            <time class="ev__hora">{{ hace(f) }}</time>
+          </span>
+          <span class="ev__title">
+            <b *ngIf="f.descripcion.negrita">{{ f.descripcion.negrita }}</b>
+            <span class="mono" *ngIf="f.descripcion.numero">#{{ f.descripcion.numero }}</span>
+            {{ f.descripcion.texto }}
+          </span>
+          <span class="ev__meta" *ngIf="f.descripcion.meta">{{ f.descripcion.meta }}</span>
+        </span>
+        <span class="ev__amt">{{ f.montoTexto }}</span>
+      </button>
+    </li>
+  </ol>
+</section>
