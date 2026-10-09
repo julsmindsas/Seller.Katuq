@@ -171,6 +171,9 @@ export class NavService implements OnDestroy {
     const isSuperAdmin = user.rol === "Super Administrador";
     const isJulsmindAdmin =
       user.rol === "Administrador" && user.company === "Julsmind";
+    const isAdminKatuqEnVivo =
+      user.company === "Julsmind" &&
+      (user.rol === "Administrador" || user.rol === "Super Administrador");
     // El centro DIAN es operativo y debe estar disponible para quien ya
     // administra integraciones o consulta la cartera del comercio.
     const canUseDianWorkspace =
@@ -221,9 +224,9 @@ export class NavService implements OnDestroy {
             (!child.isOnlyAdmin || isJulsmindAdmin) &&
             (authorizedPaths.includes(child.path) ||
               (child.path === "facturacion-electronica" && canUseDianWorkspace) ||
-              // D-381: "Katuq en vivo" no depende del menú del rol; basta ser admin de Julsmind
-              // (el `isOnlyAdmin` de la entrada ya lo exige arriba).
-              (child.path === "en-vivo/katuq" && isJulsmindAdmin) ||
+              // D-386: "Katuq en vivo" no depende del menú del rol; basta ser Administrador o
+              // Super Administrador de Julsmind (los mismos roles que acepta el backend).
+              (child.path === "en-vivo/katuq" && isAdminKatuqEnVivo) ||
               (child.path === "contabilidad" && canUseBookkeepingWorkspace))
           );
         });
@@ -514,7 +517,7 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "en-vivo", title: "En vivo", type: "link", icon: "activity" },
-        { path: "en-vivo/katuq", title: "Katuq en vivo", type: "link", icon: "globe", isOnlyAdmin: true },
+        { path: "en-vivo/katuq", title: "Katuq en vivo", type: "link", icon: "globe" },
       ],
     },
 

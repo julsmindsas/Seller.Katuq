@@ -6,7 +6,12 @@ export function sesionEsJulsmind(): boolean {
   try {
     const crudo = localStorage.getItem('user');
     const usuario = crudo ? JSON.parse(crudo) : null;
-    return !!usuario && usuario.rol === 'Administrador' && usuario.company === 'Julsmind';
+    // Mismos roles que acepta el backend para "toda Katuq" (analyticsEnVivo.js: esRolAdministrador).
+    return (
+      !!usuario &&
+      usuario.company === 'Julsmind' &&
+      (usuario.rol === 'Administrador' || usuario.rol === 'Super Administrador')
+    );
   } catch {
     return false;
   }
