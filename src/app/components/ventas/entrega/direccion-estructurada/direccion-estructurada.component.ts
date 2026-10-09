@@ -1041,7 +1041,9 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     );
     
     if (regionSeleccionada) {
-      this.municipios = regionSeleccionada.ciudades;
+      // Con la lista que ve la persona (Cundinamarca incluye a Bogotá, ticket 1157): la búsqueda
+      // directa de ciudad valida y sugiere contra esta misma lista.
+      this.municipios = this.getMunicipiosDepartamento();
     }
     
     // Limpiar ciudad seleccionada si no pertenece al nuevo departamento
@@ -1058,6 +1060,12 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     this.ciudadValida = true;
     this.ciudadInvalida = false;
     this.sugerenciasCiudad = [];
+
+    // Ticket 1157: Bogotá se ofrece dentro de Cundinamarca, pero en el catálogo DANE es su propio
+    // departamento ("Bogotá D.C."): se pasa a ese departamento, igual que con la búsqueda directa.
+    if (this.departamentoSeleccionado === 'Cundinamarca' && this.esBogota(municipio)) {
+      this.autoSeleccionarDepartamento(municipio);
+    }
   }
 
   // Auto-seleccionar departamento basado en la ciudad
@@ -1123,7 +1131,37 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       region => region.departamento === this.departamentoSeleccionado
     );
     
-    return regionSeleccionada ? regionSeleccionada.ciudades : [];
+    if (!regionSeleccionada) {
+      return [];
+    }
+
+    // Ticket 1157: en el catálogo DANE Bogotá es su propio departamento ("Bogotá D.C."), así que no
+    // salía al elegir Cundinamarca y quien tomaba un pedido para Bogotá no la encontraba. Se ofrece de
+    // primera en esa lista; elegirla pasa el departamento a "Bogotá D.C." (ver onMunicipioChange).
+    if (this.departamentoSeleccionado === "Cundinamarca") {
+      const bogota = this.nombreBogota();
+      if (bogota && !regionSeleccionada.ciudades.includes(bogota)) {
+        if (this.municipiosCundinamarcaConBogota?.base !== regionSeleccionada.ciudades) {
+          this.municipiosCundinamarcaConBogota = { base: regionSeleccionada.ciudades, lista: [bogota, ...regionSeleccionada.ciudades] };
+        }
+        return this.municipiosCundinamarcaConBogota.lista;
+      }
+    }
+
+    return regionSeleccionada.ciudades;
+  }
+
+  // La plantilla pide la lista en cada ciclo de detección: se arma una vez por lista base.
+  private municipiosCundinamarcaConBogota?: { base: string[]; lista: string[] };
+
+  /** Nombre de Bogotá en el catálogo DANE ("Bogotá D.C."), o "" si el catálogo aún no cargó. */
+  private nombreBogota(): string {
+    const region = this.datosColombiaCompletos.find((r: any) => r.departamento === "Bogotá D.C.");
+    return region?.ciudades?.find((c: string) => this.esBogota(c)) || "";
+  }
+
+  private esBogota(municipio: string): boolean {
+    return this.mismoMunicipio(municipio, "Bogotá");
   }
 
   // Inicializar datos geográficos de Colombia usando DANE codes
