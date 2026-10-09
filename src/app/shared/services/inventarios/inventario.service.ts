@@ -218,7 +218,7 @@ export interface OrdenCompra {
   createdAt?: any;
 }
 
-export type CriterioConteo = 'valor' | 'movimiento' | 'sin_contar' | 'ubicacion';
+export type CriterioConteo = 'valor' | 'movimiento' | 'sin_contar' | 'ubicacion' | 'todo';
 export type EstadoConteo = 'abierta' | 'contada' | 'aplicada' | 'cancelada';
 
 export interface LineaConteo {

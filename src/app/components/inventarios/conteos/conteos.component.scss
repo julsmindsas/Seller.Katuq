@@ -95,6 +95,31 @@ $sombra: 0 10px 30px rgba(95, 63, 224, .08);
   }
 }
 
+// Ticket 1162: buscador del conteo (un conteo general puede tener cientos de filas).
+.cnt-buscador {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $muted;
+
+  input {
+    border: 1px solid $borde;
+    border-radius: 11px;
+    padding: 9px 13px;
+    font-size: 13px;
+    color: $ink;
+    background: $tarjeta;
+    max-width: 360px;
+
+    &:focus { outline: 2px solid $acento; outline-offset: 1px; }
+  }
+
+  small { font-weight: 500; }
+}
+
 .cnt-criterios {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
