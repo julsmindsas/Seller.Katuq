@@ -564,7 +564,7 @@ export class SitiosService extends BaseService {
 
   /**
    * Página con IA desde una descripción (bandera `landingPrompt`): el servidor interpreta el
-   * texto, arma la página en BORRADOR y responde con su id. Tarda unos 30 segundos.
+   * texto, arma la página en BORRADOR y responde con su id. En producción tarda unos 5 segundos (medido el 9-oct).
    */
   crearConDescripcion(body: { descripcion: string; nombre?: string }): Observable<
     Respuesta<{ id: string; nombre: string; slug: string; tipo: string; estado: string }>
