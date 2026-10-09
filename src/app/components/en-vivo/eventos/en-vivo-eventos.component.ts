@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { EnVivoInteraccionService } from '../compartido/en-vivo-interaccion.service';
-import { EtapaInfo, EventoEnVivo, PedidoEnVivo, VistaEnVivo } from '../servicios/en-vivo.modelos';
+import { EtapaInfo, EventoCambioEstado, EventoEnVivo, PedidoEnVivo, VistaEnVivo } from '../servicios/en-vivo.modelos';
 import { describirEvento, DescripcionEvento, instanteDeEvento } from '../utilidades/describir-evento';
 import { dinero, horaRelativa } from '../utilidades/formato';
 import { cadaFueraDeZona } from '../utilidades/movimiento';
@@ -42,6 +42,19 @@ export interface EventoAbierto {
 
 const ACTUALIZAR_HORAS_MS = 5000;
 const DURACION_NUEVO_MS = 1800;
+
+// Cuando un pedido sale o termina, el servidor manda dos eventos: el cambio de estado genérico
+// ("pasó a despachado") y el específico ("Salió en moto", "Entregado"…). La lista muestra solo el
+// específico; la escena sigue recibiendo los dos (con el cambio de estado mueve la caja).
+const ESTADOS_DE_SALIDA = new Set(['Despachado', 'EnDespachoUltimaMilla']);
+const ETAPAS_CON_EVENTO_PROPIO = new Set(['entregado', 'rechazado', 'cancelado']);
+
+/** ¿Este cambio de estado ya lo cuenta un evento más específico del mismo pedido? */
+export function esCambioRepetido(evento: EventoEnVivo): boolean {
+  if (evento.tipo !== 'cambio_estado') return false;
+  const c = evento as EventoCambioEstado;
+  return ESTADOS_DE_SALIDA.has(c.estadoNuevo ?? '') || ETAPAS_CON_EVENTO_PROPIO.has(c.etapaNueva);
+}
 
 /**
  * Lista "Lo que está pasando": los eventos del más nuevo al más viejo, con su pastilla de color,
@@ -108,7 +121,8 @@ export class EnVivoEventosComponent implements OnInit, OnChanges, OnDestroy {
 
     const actuales = new Map(this.filas.map((f) => [f.id, f] as const));
     const nuevos: string[] = [];
-    this.filas = this.eventos.slice(0, Math.max(1, this.maximo)).map((evento) => {
+    const visibles = this.eventos.filter((evento) => !esCambioRepetido(evento));
+    this.filas = visibles.slice(0, Math.max(1, this.maximo)).map((evento) => {
       const previa = actuales.get(evento.id);
       const esNuevo = this.haPintado && !this.vistos.has(evento.id);
       if (esNuevo) nuevos.push(evento.id);
