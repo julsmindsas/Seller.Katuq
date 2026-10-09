@@ -8784,7 +8784,7 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 **Verificado:** en el servidor de desarrollo con FLORECER, en una automatización nueva sin guardar: agregar por toque y por arrastre con conexión automática, soltar la línea sobre el cuerpo del paso, conectar y quitar desde el panel, ✕ en la línea, nombres de las salidas del «Si… / si no…», panel al primer clic, aviso con una automatización de otra empresa. `tsc` y build del lienzo sin errores.
 **No verificado:** automatizaciones reales con historial de pruebas (FLORECER no tiene); táctil en celular.
 
-## D-381 (2026-10-09) — Wompi: avisos crudos cerrados al público (parches 01 y 02 commiteados; 03 y 04 pendientes)
+## D-381 (2026-10-09) — Wompi: avisos crudos cerrados al público (parches 01 y 02 DESPLEGADOS; 03 y 04 pendientes)
 
 **Disparador.** El encargo de la feria Effix destapó dos defectos de Wompi. (1) Desde el 2-sep los pagos por enlace de ALMARA no se confirman solos: 192 avisos descartados como "firma inválida", 150 aprobados de 48 pedidos; ALMARA aprobó a mano 46 y quedan 2 PreAprobado. (2) `GET /v1/integration/events/raw` (y `/raw/:id`, `/raw/statistics`) respondía 200 sin sesión y devolvía datos de compradores; el reproceso lo podía pedir cualquier usuario con sesión. Verificado en producción el 8-oct a las 20:11, solo el código de estado.
 
@@ -8794,5 +8794,6 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 - **03 y 04: pendientes.** Hacen que el webhook confirme con Wompi y vuelva a procesar los avisos; tocan pedidos y pagos. Antes del 03: aprobar el diff, correr el script de solo lectura y rotar la llave privada, el secreto de integridad y el de eventos de la plataforma. El 04 va un día después del 03.
 
 **Verificado.** 73 pruebas en verde (41 + 16 + 16) con base y Wompi simulados. Ningún consumidor de esas rutas en el front, el back, Support ni las apps (búsqueda en todos los repos).
-**No verificado.** Nada contra Wompi ni Firestore reales; el despliegue de 01 y 02 (hasta desplegar, las rutas siguen abiertas en producción); apps móviles ajenas a estos repos.
+**Desplegado el 9-oct.** Los dos commits salieron a producción arrastrados por el despliegue de la rama (la sesión de logística hizo push y pull en el servidor, `09c0d61`); verificado después: `GET /v1/integration/events/raw` y `/raw/statistics` responden 401 sin sesión (antes 200).
+**No verificado.** Nada contra Wompi ni Firestore reales; ver los avisos crudos con una sesión de Super Administrador de Julsmind; apps móviles ajenas a estos repos.
 **Reversa.** `git revert 1d678be` (reabre los avisos al público; no conviene). Guía de aplicación de los demás parches: `~/Downloads/_Organizado/01_Katuq/Parches-Effix-2026-10-08/`.
