@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { ColumnMappingService } from '../../services/import/column-mapping.service';
 import { ImportApiService } from '../../services/import/import-api.service';
 import { MaestroService } from '../../services/maestros/maestro.service';
+import { CompanyFeaturesService } from '../../services/company-features.service';
 import { resolverNombreApellido } from '../../utils/nombre-apellido.util';
 import {
   ColumnMapping,
@@ -126,6 +127,43 @@ const PRODUCT_DEFAULTS = {
   }
 };
 
+// ── Fotos por enlace (bandera `productImportPhotos`, nace APAGADA) ────────────
+//
+// El Excel trae la dirección de la foto como TEXTO y viaja tal cual al servidor,
+// en `photoUrls.main` / `photoUrls.additional`. Quien la valida (https, sitio
+// público, sin usuario ni contraseña, máximo 8 por producto), convierte los
+// enlaces de Google Drive y Dropbox en enlaces directos y arma la lista de fotos
+// es el SERVIDOR (`utils/productImageUrls.js`): aquí no se confía en nada que
+// salga del navegador. Con la bandera apagada nada de esto existe: ni las
+// columnas en la plantilla ni las filas en el mapeo.
+const FOTO_PRINCIPAL = 'photoUrls.main';
+const FOTO_ADICIONALES = 'photoUrls.additional';
+
+const COLUMNAS_FOTOS: TemplateColumn[] = [
+  {
+    field: FOTO_PRINCIPAL,
+    header: 'Foto principal (URL)',
+    required: false,
+    // Vacío a propósito: la fila de ejemplo de la plantilla se importa como un
+    // producto más, y un enlace de mentira dejaría una foto rota en la tienda.
+    // El formato de ejemplo va en la ayuda.
+    example: '',
+    help: 'Enlace de la foto principal, que empieza por https:// (ejemplo: https://misitio.com/fotos/camiseta.jpg). Si usas Google Drive o Dropbox, la foto tiene que estar compartida con «Cualquier persona con el enlace». Si el producto ya existe y traes un enlace, esta foto reemplaza a su foto principal; si dejas la celda vacía, conserva la que ya tiene.',
+  },
+  {
+    field: FOTO_ADICIONALES,
+    header: 'Fotos adicionales (URLs separadas por coma, espacio o salto de linea)',
+    required: false,
+    example: '',
+    help: 'Más fotos del producto: hasta 8 en total, contando la principal. Separa los enlaces con coma, espacio o salto de línea. Si no hay foto principal, la primera de estas pasa a ser la principal. Si el producto ya existe y traes enlaces aquí, reemplazan a sus otras fotos (la principal se queda, a menos que traigas una nueva); si dejas la celda vacía, conserva las que ya tiene.',
+  },
+];
+
+const ETIQUETAS_FOTOS: { [campo: string]: string } = {
+  [FOTO_PRINCIPAL]: 'Foto principal (URL)',
+  [FOTO_ADICIONALES]: 'Fotos adicionales (URLs)',
+};
+
 @Component({
   selector: 'app-import-modal',
   templateUrl: './import-modal.component.html',
@@ -221,6 +259,21 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
   // Import mode: create-only, update-only, or upsert (default)
   importMode: 'create' | 'update' | 'upsert' = 'upsert';
+
+  // --- Fotos por enlace (bandera `productImportPhotos`) ---
+  //
+  // Campos y no getters: van enlazados al template (ver el comentario de
+  // `camposObligatorios`). `fotosPorUrlActivas` se fija una sola vez, al cargar
+  // la configuración; quien manda de verdad es el servidor, que revalida la
+  // bandera en cada lote.
+  /** La empresa tiene prendida la función y estamos importando productos. */
+  fotosPorUrlActivas = false;
+  /** La plantilla de productos con las dos columnas de foto (se arma una sola vez). */
+  private productConfigConFotos: ImportConfig | null = null;
+  /** Enlaces de foto que el servidor no pudo guardar, con su fila del Excel. */
+  avisosFotos: { fila: number; referencia: string; campo: string; valor: string; mensaje: string }[] = [];
+  /** Resumen de fotos del último import; null si el archivo no traía fotos. */
+  resumenFotos: { guardadas: number; productos: number; convertidas: number; avisos: number; ignoradas: number } | null = null;
 
   // --- Categorías: aviso antes y resumen después (D-148) ---
   //
@@ -931,7 +984,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     private messageService: MessageService,
     private importApi: ImportApiService,
     private columnMappingService: ColumnMappingService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private features: CompanyFeaturesService
   ) {}
 
   ngOnInit(): void {
@@ -1032,7 +1086,27 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  /**
+   * La plantilla de productos con las dos columnas de foto al final. Se arma una
+   * sola vez: la referencia tiene que ser estable porque va enlazada a un @Input
+   * (ver el comentario de `camposObligatorios`).
+   */
+  private getProductConfigConFotos(): ImportConfig {
+    if (!this.productConfigConFotos) {
+      this.productConfigConFotos = {
+        ...this.productConfig,
+        templateColumns: [...this.productConfig.templateColumns, ...COLUMNAS_FOTOS],
+        fieldLabels: { ...this.productConfig.fieldLabels, ...ETIQUETAS_FOTOS },
+      };
+    }
+    return this.productConfigConFotos;
+  }
+
   private loadConfig(): void {
+    // Fotos por enlace: solo productos y solo si la empresa tiene la bandera.
+    // Apagada, la configuración es la de siempre (mismo objeto, mismas columnas).
+    this.fotosPorUrlActivas = this.type === 'product' && this.features.isEnabled('productImportPhotos');
+
     if (this.type === 'customer') {
       this.config = this.customerConfig;
     } else if (this.type === 'inventory') {
@@ -1040,7 +1114,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     } else if (this.type === 'category') {
       this.config = this.categoryConfig;
     } else {
-      this.config = this.productConfig;
+      this.config = this.fotosPorUrlActivas ? this.getProductConfigConFotos() : this.productConfig;
     }
     // Una sola vez por config: la referencia tiene que ser estable porque va
     // enlazada a un @Input (ver el comentario de `camposObligatorios`).
@@ -1082,6 +1156,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.preciosVolumenPorRef.clear();
     this.erroresVolumen = [];
     this.productosConVolumen = 0;
+    this.avisosFotos = [];
+    this.resumenFotos = null;
     this.mappingFields = [];
     this.availableColumns = [];
     this.importMode = 'upsert';
@@ -1453,6 +1529,87 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     revisar('tiempoEntrega', this.tiemposEntrega, 'Tiempo de entrega', true);
   }
 
+  /**
+   * Fotos por enlace (bandera `productImportPhotos`): deja SIEMPRE las dos filas
+   * de foto en el mapeo, para que la persona pueda escoger la columna aunque nadie
+   * la haya reconocido. Solo corre con la función activa; apagada no toca nada.
+   *
+   * Orden de preferencia para cada fila:
+   *  1. lo que ya trae el mapeo (encabezados de la plantilla de Katuq);
+   *  2. lo que sugirió KAI: llama `crearProducto.imagenesPrincipales` a una columna
+   *     de fotos, y eso armaba las imágenes aquí en el navegador, sin validar. Con
+   *     la función activa se trata como «Foto principal (URL)» para que la valide
+   *     el servidor;
+   *  3. el nombre del encabezado («Foto», «Imagen», «Fotos adicionales»…) siempre
+   *     que la columna de verdad traiga enlaces;
+   *  4. una fila vacía, para escogerla a mano.
+   */
+  private ofrecerCamposDeFotos(): void {
+    if (!this.fotosPorUrlActivas || this.type !== 'product' || !this.mappingResult) return;
+    if (!this.mappingResult.mappings) this.mappingResult.mappings = {};
+    const mapeos = this.mappingResult.mappings;
+
+    const deKai: [string, string][] = [
+      ['crearProducto.imagenesPrincipales', FOTO_PRINCIPAL],
+      ['crearProducto.imagenesSecundarias', FOTO_ADICIONALES],
+    ];
+    for (const [antiguo, nuevo] of deKai) {
+      if (!mapeos[antiguo]) continue;
+      if (!mapeos[nuevo]?.sourceColumn) mapeos[nuevo] = mapeos[antiguo];
+      delete mapeos[antiguo];
+    }
+
+    const usadas = new Set<string>(
+      Object.values(mapeos).map(m => m?.sourceColumn).filter(col => !!col)
+    );
+    const candidatas = this.sourceColumns.filter(col => !usadas.has(col) && this.pareceColumnaDeFotos(col));
+    const sugerir = (campo: string, columna: string | undefined): void => {
+      if (mapeos[campo]?.sourceColumn || !columna) return;
+      mapeos[campo] = {
+        sourceColumn: columna,
+        confidence: 80,
+        reasoning: 'Parece la columna de fotos por su nombre y trae enlaces. Revisa que sea la correcta.',
+      };
+    };
+    sugerir(FOTO_PRINCIPAL, candidatas.find(col => !this.esColumnaDeFotosAdicionales(col)));
+    sugerir(FOTO_ADICIONALES, candidatas.find(col => this.esColumnaDeFotosAdicionales(col)));
+
+    const sinColumna = (queFoto: string): ColumnMapping => ({
+      sourceColumn: '',
+      confidence: 0,
+      reasoning: `Opcional. Si tu archivo tiene una columna con el enlace de ${queFoto}, elígela en la lista. Si no eliges ninguna columna de fotos, los productos que ya existen quedan sin las fotos que tenían.`,
+    });
+    if (!mapeos[FOTO_PRINCIPAL]) mapeos[FOTO_PRINCIPAL] = sinColumna('la foto principal');
+    if (!mapeos[FOTO_ADICIONALES]) mapeos[FOTO_ADICIONALES] = sinColumna('las demás fotos');
+  }
+
+  /** ¿Es una de las dos filas de foto? Solo con la función activa. */
+  private esCampoDeFoto(katuqField: string): boolean {
+    return this.fotosPorUrlActivas && (katuqField === FOTO_PRINCIPAL || katuqField === FOTO_ADICIONALES);
+  }
+
+  /**
+   * ¿Esta columna parece traer fotos? Por el nombre del encabezado Y porque al
+   * menos una de las primeras filas tiene un enlace: una columna «Imagen» con
+   * nombres de archivo (camisa.jpg) no sirve y no se sugiere.
+   */
+  private pareceColumnaDeFotos(columna: string): boolean {
+    const nombre = this.normHeader(columna);
+    if (!/\b(foto|fotos|fotografia|fotografias|imagen|imagenes|image|images|photo|photos|picture|pictures|img)\d*\b/.test(nombre)) {
+      return false;
+    }
+    return this.parsedData.slice(0, 50).some(fila =>
+      /https?:\/\//i.test(String(this.getRowValue(fila, columna) ?? ''))
+    );
+  }
+
+  /** «Fotos adicionales», «Imagenes secundarias», «Foto 2»… (las demás fotos del producto). */
+  private esColumnaDeFotosAdicionales(columna: string): boolean {
+    const nombre = this.normHeader(columna);
+    return /\b(adicional|adicionales|secundaria|secundarias|extra|extras|additional|galeria|gallery|otras)\b/.test(nombre)
+      || /\b(foto|fotos|imagen|imagenes|image|images|photo|photos|img)\s?[2-9]\b/.test(nombre);
+  }
+
   private prepareMappingFields(): void {
     console.log('[ImportModal] 🔧 Preparando campos de mapeo...');
     console.log('[ImportModal] 📊 mappingResult:', this.mappingResult);
@@ -1461,6 +1618,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       console.log('[ImportModal] ⚠️ No hay mappingResult!');
       return;
     }
+
+    // Fotos por enlace: ofrece «Foto principal» y «Fotos adicionales» en el mapeo.
+    // Con la bandera apagada no hace nada.
+    this.ofrecerCamposDeFotos();
 
     this.availableColumns = this.sourceColumns.map(col => ({
       label: col,
@@ -1478,7 +1639,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       sourceColumn: mapping.sourceColumn,
       confidence: mapping.confidence,
       reasoning: mapping.reasoning,
-      isRequired: !this.mappingResult!.unmappedRequired.includes(katuqField),
+      // Las fotos nunca son obligatorias (con la función apagada esta condición
+      // no cambia nada: `esCampoDeFoto` es siempre falso).
+      isRequired: !this.mappingResult!.unmappedRequired.includes(katuqField) && !this.esCampoDeFoto(katuqField),
       isManuallyAdjusted: false,
       severity: getConfidenceSeverity(mapping.confidence),
       icon: getConfidenceIcon(mapping.confidence)
@@ -1633,6 +1796,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       // Se acumula entre lotes: el backend los reporta por lote.
       const categoriasCreadas = new Set<string>();
       let totalSinCategoria = 0;
+      // Fotos por enlace (bandera productImportPhotos): lo que el servidor reporta
+      // por lote. Solo llega si el archivo traía fotos; si no, no se muestra nada.
+      this.avisosFotos = [];
+      this.resumenFotos = null;
+      const fotos = { guardadas: 0, productos: 0, convertidas: 0, avisos: 0, ignoradas: 0 };
+      let hayInformeDeFotos = false;
 
       console.log(`[ImportModal] 📦 Enviando en ${totalBatches} lotes de ${BATCH_SIZE} (${filasAEnviar.length} total)`);
 
@@ -1685,6 +1854,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
             data.categoriasCreadas.forEach((c: string) => categoriasCreadas.add(c));
           }
           totalSinCategoria += data.sinCategoria || 0;
+          if (data.photoImport) {
+            hayInformeDeFotos = true;
+            this.acumularFotos(data.photoImport, fotos, start, filasOriginales);
+          }
 
           // Notificar progreso entre lotes
           if (totalBatches > 1) {
@@ -1720,6 +1893,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       // semanas después, cuando arma una promo por categoría y no le aplica.
       this.categoriasCreadasEnImport = [...categoriasCreadas];
       this.productosSinCategoria = totalSinCategoria;
+      this.resumenFotos = hayInformeDeFotos ? fotos : null;
 
       const entity = this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : this.type === 'category' ? 'categorías' : 'productos';
       let detail = '';
@@ -1902,6 +2076,40 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         motivo: legible[m[2]] || m[2],
       });
     });
+  }
+
+  /**
+   * Suma el informe de fotos de UN lote al total, y guarda los enlaces que el
+   * servidor no pudo aceptar con su número de fila del Excel (el servidor solo
+   * sabe la posición dentro del lote, igual que con los errores de clientes).
+   *
+   * Se guardan hasta 200 para la lista de la pantalla; el total real va aparte.
+   */
+  private acumularFotos(
+    informe: any,
+    total: { guardadas: number; productos: number; convertidas: number; avisos: number; ignoradas: number },
+    offset: number,
+    filasOriginales: number[]
+  ): void {
+    if (informe.enabled === false) {
+      total.ignoradas += Number(informe.ignoredRows) || 0;
+      return;
+    }
+    total.guardadas += Number(informe.photosSaved) || 0;
+    total.productos += Number(informe.productsWithPhotos) || 0;
+    total.convertidas += Number(informe.convertedLinks) || 0;
+    total.avisos += Number(informe.issuesTotal) || 0;
+
+    for (const aviso of informe.issues || []) {
+      if (this.avisosFotos.length >= 200) break;
+      this.avisosFotos.push({
+        fila: filasOriginales[offset + Number(aviso.index)] ?? 0,
+        referencia: String(aviso.referencia ?? ''),
+        campo: aviso.field === 'main' ? 'Foto principal' : 'Fotos adicionales',
+        valor: String(aviso.value ?? ''),
+        mensaje: String(aviso.message ?? ''),
+      });
+    }
   }
 
   /** Avance del envío, 0-100. */
@@ -2285,6 +2493,12 @@ export class ImportModalComponent implements OnInit, OnDestroy {
    * Convierte el valor según el tipo de campo esperado
    */
   private convertFieldValue(katuqField: string, value: any): any {
+    // Fotos por enlace: el texto de la celda viaja tal cual (con un tope por si
+    // alguien pega media hoja en una celda). Lo valida y lo convierte el servidor.
+    if (katuqField === FOTO_PRINCIPAL || katuqField === FOTO_ADICIONALES) {
+      return String(value).trim().slice(0, 20000);
+    }
+
     if (ImportModalComponent.BOOLEAN_FIELDS.includes(katuqField)) {
       if (typeof value === 'boolean') return value;
       if (typeof value === 'string') {
@@ -2691,6 +2905,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.preciosVolumenPorRef.clear();
     this.erroresVolumen = [];
     this.productosConVolumen = 0;
+    this.avisosFotos = [];
+    this.resumenFotos = null;
     this.mappingFields = [];
     this.availableColumns = [];
     this.standardCustomerTemplate = false;

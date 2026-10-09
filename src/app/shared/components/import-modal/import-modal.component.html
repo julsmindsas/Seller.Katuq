@@ -112,6 +112,17 @@
         porque el archivo usa la plantilla de Katuq. Revisá que cada columna apunte al campo
         correcto; podés cambiar cualquiera.
       </p>
+      <!-- Fotos por enlace (bandera productImportPhotos). Solo aparece con la
+           función activa; apagada, esta pantalla es la de siempre. -->
+      <p class="text-muted" *ngIf="fotosPorUrlActivas">
+        <i class="pi pi-image mr-1"></i>
+        Fotos: si tu archivo trae los enlaces de las fotos, asigna su columna a
+        <strong>Foto principal (URL)</strong> y a <strong>Fotos adicionales (URLs)</strong>.
+        Los enlaces tienen que empezar por <strong>https://</strong>. Los de Google Drive y
+        Dropbox se convierten solos, pero la foto debe estar compartida con
+        «Cualquier persona con el enlace». Si no asignas ninguna columna de fotos y el archivo
+        actualiza productos que ya existen, esos productos quedan sin las fotos que tenían.
+      </p>
     </div>
 
     <!-- Mobile View: Cards -->
@@ -303,6 +314,66 @@
             <strong>Categoría: Sin categoría</strong>.
           </span>
         </div>
+      </div>
+
+      <!-- Fotos por enlace (bandera productImportPhotos): qué se guardó y qué
+           enlaces no sirvieron. Va en la pantalla de resultado y no en un aviso que
+           se cierra: la persona tiene que poder anotar las filas e ir al Excel. -->
+      <div class="pendientes-categorias"
+           *ngIf="type === 'product' && resumenFotos && (resumenFotos.guardadas > 0 || resumenFotos.avisos > 0 || resumenFotos.ignoradas > 0)">
+        <div *ngIf="resumenFotos.guardadas > 0" class="pendiente-item">
+          <i class="pi pi-image"></i>
+          <span>
+            Se {{ resumenFotos.guardadas === 1 ? 'guardó' : 'guardaron' }}
+            <strong>{{ resumenFotos.guardadas }}</strong>
+            {{ resumenFotos.guardadas === 1 ? 'foto' : 'fotos' }} en
+            <strong>{{ resumenFotos.productos }}</strong>
+            {{ resumenFotos.productos === 1 ? 'producto' : 'productos' }}.
+            <ng-container *ngIf="resumenFotos.convertidas > 0">
+              {{ resumenFotos.convertidas }}
+              {{ resumenFotos.convertidas === 1 ? 'enlace de Google Drive o Dropbox se convirtió' : 'enlaces de Google Drive o Dropbox se convirtieron' }}
+              en enlace directo. Si alguna foto no se ve, revisa que esté compartida con
+              «Cualquier persona con el enlace».
+            </ng-container>
+            Revisa en Productos que las fotos se vean bien.
+          </span>
+        </div>
+        <div *ngIf="resumenFotos.avisos > 0" class="pendiente-item aviso">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>
+            <strong>{{ resumenFotos.avisos }}</strong>
+            {{ resumenFotos.avisos === 1 ? 'enlace de foto no se pudo guardar' : 'enlaces de fotos no se pudieron guardar' }}.
+            Los productos sí quedaron guardados, sin esa foto (o con la que ya tenían).
+            Corrige esos enlaces en tu Excel y vuelve a importar el archivo.
+          </span>
+        </div>
+        <div *ngIf="resumenFotos.ignoradas > 0" class="pendiente-item aviso">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>
+            Las fotos por enlace todavía no están activas para tu empresa, así que
+            <strong>{{ resumenFotos.ignoradas }}</strong>
+            {{ resumenFotos.ignoradas === 1 ? 'producto se guardó' : 'productos se guardaron' }} sin foto.
+            Escríbenos por soporte y te las activamos.
+          </span>
+        </div>
+      </div>
+
+      <div class="duplicados-archivo" *ngIf="type === 'product' && avisosFotos.length > 0">
+        <p-accordion>
+          <p-accordionTab header="Ver los enlaces de fotos con problema ({{ resumenFotos?.avisos }})">
+            <ul class="duplicados-lista">
+              <li *ngFor="let a of avisosFotos">
+                <strong>Fila {{ a.fila || '?' }}</strong>
+                <span *ngIf="a.referencia"> ({{ a.referencia }})</span>
+                · {{ a.campo }}<span *ngIf="a.valor">: <em>{{ a.valor }}</em></span>
+                <br><small>{{ a.mensaje }}</small>
+              </li>
+            </ul>
+            <small *ngIf="avisosFotos.length < (resumenFotos?.avisos || 0)">
+              Se muestran los primeros {{ avisosFotos.length }}.
+            </small>
+          </p-accordionTab>
+        </p-accordion>
       </div>
 
       <div class="batch-info mt-3" *ngIf="importResult.batchId">
