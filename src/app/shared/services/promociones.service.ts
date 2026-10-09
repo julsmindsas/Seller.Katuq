@@ -12,6 +12,13 @@ export interface PromocionPublica {
   diasPremium: number;
   /** Duración en texto legible: 90 días llegan como "3 meses". */
   duracionTexto: string;
+  /** Qué regala. Ausente o 'premium' = Premium gratis por un tiempo (lo de siempre). */
+  beneficio?: string;
+  /** Solo en los cupones que no regalan Premium: el beneficio ("30 pedidos al mes"), su detalle y los textos de la landing. */
+  titulo?: string;
+  detalle?: string;
+  puntos?: string[];
+  letraChica?: string;
 }
 
 export interface ValidacionPromocion {
@@ -39,6 +46,12 @@ export interface Campana {
   visitas: number;
   visitantes: number;
   clics: number;
+  /** Qué regala: 'premium' (las de siempre) o un cupón de feria, como 'cupoPedidos'. */
+  beneficio?: string;
+  /** El beneficio en texto para el chip: "4 meses de Premium" o "30 pedidos al mes en tu plan gratis". */
+  beneficioTexto?: string;
+  /** Por qué no se puede canjear ahora; 'AUN_NO' = todavía no abre su ventana. */
+  motivoNoDisponible?: string | null;
 }
 
 export interface ResultadoCampana {
@@ -55,6 +68,11 @@ export interface ResultadoCampana {
   conversionVisitaRegistro: number | null;
   conversionClicRegistro: number | null;
   porDia: { [fecha: string]: { v: number; u: number; c: number } };
+  /** Cuántas empresas usaron el código y cuántas de ellas pagaron un plan alguna vez. */
+  usaron?: number;
+  pagaron?: number;
+  siguenPagando?: number;
+  conversionUsoPago?: number | null;
 }
 
 /**

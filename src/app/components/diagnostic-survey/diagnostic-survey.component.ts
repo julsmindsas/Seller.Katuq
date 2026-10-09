@@ -234,6 +234,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     promocionCampana: PromocionPublica | null = null;
     promocionAplicada: PromocionRegistro | null = null;
     promocionNoAplicada: boolean = false; // el código se cayó entre la landing y el registro
+    // Cupón que NO regala Premium (ej: más pedidos al mes): la cuenta queda en el plan gratis.
+    cuponAplicado: { codigo: string; pedidosPorMes: number; mensaje: string } | null = null;
 
     // Variables para preguntas contextuales
     contextualQuestions: ContextualQuestion[] = [];
@@ -929,6 +931,8 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 // quedó hecho, no se pierde nada.
                 if (quickStartResult.promocion?.aplicada) {
                     this.promocionAplicada = quickStartResult.promocion;
+                } else if (quickStartResult.serverResponse?.cupon?.aplicado) {
+                    this.cuponAplicado = quickStartResult.serverResponse.cupon;
                 } else if (this.codigoPromocional) {
                     this.promocionNoAplicada = true;
                 }

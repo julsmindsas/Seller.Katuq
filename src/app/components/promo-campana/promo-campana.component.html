@@ -18,27 +18,36 @@
 
       <h1 class="promo-titulo">{{ promocion.nombre }}</h1>
 
-      <div class="promo-beneficio">
+      <div class="promo-beneficio" *ngIf="!promocion.titulo">
         <span class="promo-beneficio-numero">{{ promocion.duracionTexto }}</span>
         <span class="promo-beneficio-texto">de Katuq Premium, gratis</span>
+      </div>
+      <!-- Cupón que no regala Premium (ej: más pedidos al mes): se dice lo que sí da -->
+      <div class="promo-beneficio" *ngIf="promocion.titulo">
+        <span class="promo-beneficio-numero">{{ promocion.titulo }}</span>
+        <span class="promo-beneficio-texto">{{ promocion.detalle }}</span>
       </div>
 
       <p class="promo-descripcion" *ngIf="promocion.descripcion">{{ promocion.descripcion }}</p>
 
-      <ul class="promo-lista">
+      <ul class="promo-lista" *ngIf="!promocion.titulo">
         <li>Pedidos ilimitados desde el primer día</li>
         <li>Punto de venta, inventario y despachos completos</li>
         <li>Asistente de inteligencia artificial sin límite diario</li>
+      </ul>
+      <ul class="promo-lista" *ngIf="promocion.titulo">
+        <li *ngFor="let punto of promocion.puntos">{{ punto }}</li>
       </ul>
 
       <button type="button" class="promo-boton" (click)="empezar()">
         Crear mi cuenta gratis
       </button>
 
-      <p class="promo-letra-chica">
+      <p class="promo-letra-chica" *ngIf="!promocion.titulo">
         Sin tarjeta de crédito. Al terminar los {{ promocion.duracionTexto }} tu cuenta pasa al plan
         gratuito y tu información sigue intacta — te avisamos antes.
       </p>
+      <p class="promo-letra-chica" *ngIf="promocion.titulo">{{ promocion.letraChica }}</p>
     </ng-container>
 
     <!-- Promoción no disponible: nunca se deja a nadie en una pantalla muerta -->
