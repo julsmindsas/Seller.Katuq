@@ -1214,9 +1214,17 @@
               <span><i class="fa fa-phone"></i> {{ telefono(empresa) }}</span>
               <span *ngIf="empresa.pais"><i class="fa fa-map-marker"></i> {{ empresa.pais }}</span>
             </div>
-            <small class="ficha-sello" *ngIf="empresa._cachedAt">
-              Métricas calculadas {{ antiguedad(empresa._cachedAt) }}
-            </small>
+            <div class="ficha-pie-acciones">
+              <small class="ficha-sello" *ngIf="empresa._cachedAt">
+                Métricas calculadas {{ antiguedad(empresa._cachedAt) }}
+              </small>
+              <button type="button" class="btn-informe" (click)="verInformeVentas(empresa)"
+                      [disabled]="generandoInforme.has(empresa._docId)"
+                      title="Resumen de ventas del período en PDF, con los pedidos contados por fecha de entrega">
+                <i class="fa" [ngClass]="generandoInforme.has(empresa._docId) ? 'fa-spinner fa-spin' : 'fa-file-pdf-o'"></i>
+                Informe de ventas
+              </button>
+            </div>
           </div>
         </div>
       </ng-container>

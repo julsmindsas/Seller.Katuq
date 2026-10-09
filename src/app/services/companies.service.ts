@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -971,6 +971,19 @@ export class CompaniesService {
           return throwError(() => new Error('No se pudieron leer los pedidos que no se cobran.'));
         })
       );
+  }
+
+  /**
+   * El informe ejecutivo de ventas de una empresa en PDF (ticket 1125, D-394).
+   * No se atrapa el error: el PDF viene como blob y el estado HTTP decide el mensaje,
+   * que arma quien lo pide (`mensajeErrorInforme`).
+   */
+  getInformeEjecutivo(companyId: string, desde: string, hasta: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiUrl}/v1/companies/${companyId}/informe-ejecutivo`, {
+      params: { desde, hasta },
+      responseType: 'blob',
+      observe: 'response',
+    });
   }
 
   /** El historial de estados de una empresa: quién la movió, cuándo y por qué. */

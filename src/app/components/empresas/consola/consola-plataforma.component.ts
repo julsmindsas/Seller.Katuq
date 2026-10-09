@@ -24,6 +24,8 @@ import {
 import { DataStoreService } from '../../../shared/services/dataStoreService';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { SubscriptionService } from '../../../shared/services/subscription.service';
+import { escaparHtml } from '../../../shared/utils/escapar-html';
+import { mensajeErrorInforme, periodoMesAnterior, validarPeriodo } from '../../../shared/utils/informe-ejecutivo';
 
 /** Filtros de la pestaña de cobros. Cada tarjeta enciende el suyo. */
 type FiltroCobros = 'todas' | 'aCobrar' | 'sinTarjeta' | 'vencidas' | 'cortesia';
@@ -183,6 +185,9 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
   expandidaId: string | null = null;
   unidadesPorEmpresa = new Map<string, InventoryUnits>();
   cargandoUnidades = new Set<string>();
+
+  /** Empresas cuyo informe de ventas se está armando: el botón no se pulsa dos veces. */
+  generandoInforme = new Set<string>();
   errorUnidades = new Map<string, string>();
 
   /**
@@ -1282,6 +1287,78 @@ export class ConsolaPlataformaComponent implements OnInit, OnDestroy {
     if (!this.excluidosPorEmpresa[empresa._docId] && !this.cargandoExcluidos.has(empresa._docId)) {
       this.cargarExcluidos(empresa);
     }
+  }
+
+  /**
+   * Descarga el informe ejecutivo de ventas de la empresa (ticket 1125, D-394).
+   * Por omisión, el mes anterior completo. Solo lee pedidos; el servidor no lo
+   * entrega si un desglose no cuadra con los indicadores.
+   */
+  async verInformeVentas(empresa: EmpresaPanorama): Promise<void> {
+    if (this.generandoInforme.has(empresa._docId)) return;
+
+    const porOmision = periodoMesAnterior();
+    const peticion = await Swal.fire({
+      title: 'Informe de ventas',
+      html:
+        `<p class="text-muted" style="font-size:.9em">${escaparHtml(empresa.nomComercial || 'La empresa')}: los pedidos se cuentan por fecha de entrega.</p>` +
+        `<div style="display:flex;gap:12px;justify-content:center;text-align:left">` +
+        `<label style="font-size:.8em">Desde<br><input id="informe-desde" type="date" class="swal2-input" style="margin:4px 0 0" value="${porOmision.desde}"></label>` +
+        `<label style="font-size:.8em">Hasta<br><input id="informe-hasta" type="date" class="swal2-input" style="margin:4px 0 0" value="${porOmision.hasta}"></label>` +
+        `</div>`,
+      showCancelButton: true,
+      confirmButtonText: 'Descargar PDF',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      focusConfirm: false,
+      preConfirm: () => {
+        const desde = (document.getElementById('informe-desde') as HTMLInputElement).value;
+        const hasta = (document.getElementById('informe-hasta') as HTMLInputElement).value;
+        const problema = validarPeriodo(desde, hasta);
+        if (problema) {
+          Swal.showValidationMessage(problema);
+          return false;
+        }
+        return { desde, hasta };
+      },
+    });
+    if (!peticion.isConfirmed || !peticion.value) return;
+
+    const { desde, hasta } = peticion.value as { desde: string; hasta: string };
+    this.generandoInforme.add(empresa._docId);
+    this.companiesService
+      .getInformeEjecutivo(empresa._docId, desde, hasta)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.generandoInforme.delete(empresa._docId))
+      )
+      .subscribe({
+        next: (res) => {
+          const cabecera = res.headers.get('Content-Disposition') || '';
+          const nombre = /filename="?([^";]+)"?/.exec(cabecera)?.[1] || `informe-ventas-${desde}-${hasta}.pdf`;
+          const enlace = document.createElement('a');
+          const url = URL.createObjectURL(res.body as Blob);
+          enlace.href = url;
+          enlace.download = nombre;
+          enlace.click();
+          URL.revokeObjectURL(url);
+        },
+        error: async (err) => {
+          // El cuerpo del error también llega como blob: hay que leerlo para ver el mensaje.
+          let mensajeServidor: string | undefined;
+          try {
+            mensajeServidor = JSON.parse(await (err?.error as Blob).text())?.message;
+          } catch {
+            mensajeServidor = undefined;
+          }
+          Swal.fire({
+            icon: 'error',
+            title: 'No se pudo armar el informe',
+            text: mensajeErrorInforme(err?.status, mensajeServidor),
+            confirmButtonText: 'Entendido',
+          });
+        },
+      });
   }
 
   private cargarExcluidos(empresa: EmpresaPanorama): void {

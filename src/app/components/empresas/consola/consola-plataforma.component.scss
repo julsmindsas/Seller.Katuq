@@ -1159,6 +1159,22 @@ button.kpi:hover {
   a { color: $acento; text-decoration: none; &:hover { text-decoration: underline; } }
 }
 
+.ficha-pie-acciones {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-informe {
+  @include em-btn-ghost;
+  color: $acento;
+  font-size: 0.8rem;
+
+  i { margin-right: 6px; }
+  &:disabled { opacity: 0.6; cursor: progress; }
+}
+
 .ficha-sello {
   font-size: 0.7rem;
   color: $muted;
