@@ -1,0 +1,37 @@
+<section class="kpis" [attr.aria-label]="rotulo">
+  <ng-container *ngFor="let t of tarjetas; trackBy: porId">
+    <button
+      *ngIf="t.clave; else estatica"
+      type="button"
+      class="kpi is-click"
+      [ngClass]="claseDe(t)"
+      [class.is-bump]="rebotando.has(t.id)"
+      [class.is-destacada]="t.destacada"
+      (click)="alTocar(t)"
+    >
+      <ng-container *ngTemplateOutlet="cuerpo; context: { $implicit: t }"></ng-container>
+    </button>
+    <ng-template #estatica>
+      <div class="kpi" [ngClass]="claseDe(t)" [class.is-bump]="rebotando.has(t.id)" [class.is-destacada]="t.destacada">
+        <ng-container *ngTemplateOutlet="cuerpo; context: { $implicit: t }"></ng-container>
+      </div>
+    </ng-template>
+  </ng-container>
+  <p class="ev-sr" role="status" aria-live="polite" aria-atomic="true">{{ anuncio }}</p>
+</section>
+
+<ng-template #cuerpo let-t>
+  <span class="kpi__top">
+    <span class="kpi__ico"><app-en-vivo-icono [nombre]="t.icono"></app-en-vivo-icono></span>
+    <span class="kpi__label">{{ t.etiqueta }}</span>
+  </span>
+  <span class="kpi__value" aria-hidden="true" [enVivoContar]="t.valor" [contarFormato]="t.formato" [contarAnimar]="animar"></span>
+  <span class="ev-sr">{{ t.etiqueta }}: {{ formatear(t.valor, t.formato) }}</span>
+  <span class="kpi__sub" *ngIf="t.sub || t.subResaltado">
+    <b *ngIf="t.subResaltado" [class.up]="t.subDireccion === 'sube'" [class.down]="t.subDireccion === 'baja'">{{ t.subResaltado }}</b>
+    {{ t.sub }}
+  </span>
+  <span class="kpi__delta" aria-hidden="true">
+    <span *ngFor="let m of marcas[t.id]; trackBy: porMarca" class="kpi__delta-in">{{ m.texto }}</span>
+  </span>
+</ng-template>

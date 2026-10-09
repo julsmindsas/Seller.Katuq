@@ -1,0 +1,198 @@
+@import '../en-vivo-tema';
+
+:host {
+  display: block;
+}
+
+.heroe {
+  @include ev-panel;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  padding: 16px 20px 18px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.heroe__eyebrow {
+  @include ev-etiqueta;
+}
+
+// El tamaño del odómetro es el de la letra de este contenedor.
+.heroe__odo {
+  margin-top: 4px;
+  font-size: calc(clamp(38px, 3.9vw, 70px) * var(--ev-fs, 1));
+}
+
+.heroe__sub {
+  margin: 0;
+  font-size: ev-fs(12.5);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+
+  .up {
+    color: var(--ev-ok);
+    font-weight: 800;
+  }
+
+  .down {
+    color: var(--ev-bad);
+    font-weight: 800;
+  }
+}
+
+// Proyección al cierre
+.proy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.proy__txt {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-muted);
+
+  b {
+    font-weight: 800;
+    color: var(--ev-ink);
+  }
+}
+
+.proy__bar {
+  position: relative;
+  height: 10px;
+  border-radius: 8px;
+  background: var(--ev-chip);
+
+  i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 8px;
+    background: var(--ev-accent);
+    transition: width 1s cubic-bezier(0.2, 1, 0.3, 1);
+  }
+
+  em {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 8px;
+    background: var(--ev-accent-soft);
+    border: 1px dashed var(--ev-accent);
+    transition: left 1s, width 1s;
+  }
+
+  s {
+    position: absolute;
+    top: -5px;
+    bottom: -5px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--ev-warn);
+    text-decoration: none;
+    transition: left 1s;
+  }
+}
+
+.proy__leg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: ev-fs(10.5);
+  font-weight: 700;
+  color: var(--ev-muted);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+}
+
+.sw {
+  display: inline-block;
+  width: 10px;
+  height: 8px;
+  border-radius: 3px;
+}
+
+.sw--hoy {
+  background: var(--ev-accent);
+}
+
+.sw--falta {
+  background: var(--ev-accent-soft);
+  border: 1px dashed var(--ev-accent);
+}
+
+.sw--record {
+  background: var(--ev-warn);
+}
+
+// Mini gráfico por hora
+.mini {
+  margin-top: 8px;
+}
+
+.mini__leg {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: ev-fs(11);
+  font-weight: 700;
+  color: var(--ev-muted);
+}
+
+.mini__svg {
+  display: block;
+  width: 100%;
+  height: 70px;
+  margin-top: 4px;
+  overflow: visible;
+
+  rect {
+    fill: var(--ev-accent);
+    opacity: 0.8;
+    transition: all 0.7s;
+
+    &.is-ahora {
+      opacity: 1;
+    }
+
+    &.is-futura {
+      fill: var(--ev-chip-line);
+      opacity: 1;
+    }
+  }
+
+  polyline {
+    fill: none;
+    stroke: var(--ev-muted-2);
+    stroke-width: 2;
+    stroke-dasharray: 5 4;
+    vector-effect: non-scaling-stroke;
+    transition: all 0.7s;
+  }
+}
+
+.ev-sr {
+  @include ev-sr;
+}
+
+@include ev-sin-movimiento {
+  .proy__bar i,
+  .proy__bar em,
+  .proy__bar s,
+  .mini__svg rect,
+  .mini__svg polyline {
+    transition: none;
+  }
+}

@@ -1,0 +1,151 @@
+@import '../plataforma-comun';
+
+@include ev-kq-base;
+@include ev-kq-av;
+
+// En el televisor (`--ev-fs` 1,2) la cinta crece de 42 a 48 px, como el prototipo.
+.ticker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: calc(42px + (var(--ev-fs, 1) - 1) * 30px);
+  overflow: hidden;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-line);
+  border-radius: 14px;
+  box-shadow: var(--ev-sh-panel);
+}
+
+.ticker__label {
+  @include ev-etiqueta;
+  z-index: 1;
+  display: flex;
+  flex: none;
+  align-items: center;
+  align-self: stretch;
+  gap: 7px;
+  padding: 0 12px;
+  background: var(--ev-accent-soft);
+  color: var(--ev-accent);
+}
+
+.live__dot {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ev-ok);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid var(--ev-ok);
+    opacity: 0;
+    animation: ev-latido 1.6s ease-out infinite;
+  }
+}
+
+.ticker__win {
+  position: relative;
+  flex: 1 1 auto;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.vacio {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-left: 18px;
+}
+
+// Cada comercio va dos veces: la vuelta termina justo donde empezó (-50 % del ancho propio). El
+// espacio de la derecha es igual al hueco entre comercios para que no haya salto.
+.ticker__track {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  width: max-content;
+  height: 100%;
+  margin: 0 0 0 18px;
+  padding: 0 22px 0 0;
+  list-style: none;
+  white-space: nowrap;
+  animation: ev-cinta var(--dur, 70s) linear infinite;
+  will-change: transform;
+}
+
+.ticker:hover .ticker__track,
+.ticker:focus-within .ticker__track {
+  animation-play-state: paused;
+}
+
+.tk {
+  @include ev-foco;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  font: inherit;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+
+  b {
+    font-weight: 800;
+    color: var(--ev-ink);
+  }
+
+  &:hover b {
+    color: var(--ev-accent);
+  }
+}
+
+.tk__var {
+  font-weight: 800;
+
+  &.up {
+    color: var(--ev-ok);
+  }
+
+  &.down {
+    color: var(--ev-bad);
+  }
+}
+
+@keyframes ev-cinta {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes ev-latido {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+// Con "reducir movimiento" la cinta no corre: queda quieta, sin la copia, y se desplaza con el dedo o con la rueda.
+@include ev-sin-movimiento {
+  .ticker__win {
+    overflow-x: auto;
+  }
+
+  .ticker__track {
+    width: auto;
+    animation: none;
+  }
+
+  .es-copia {
+    display: none;
+  }
+
+  .live__dot::after {
+    animation: none;
+  }
+}

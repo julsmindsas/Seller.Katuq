@@ -1,0 +1,58 @@
+<section #tablero class="tablero" [attr.aria-label]="vista.soloPropias ? 'Mis pedidos por etapa, en vivo' : 'Pedidos por etapa, en vivo'">
+  <p class="vacio" role="status" *ngIf="!vista.cargado">Cargando los pedidos…</p>
+  <p class="vacio" role="status" *ngIf="vista.cargado && vista.total === 0">
+    Todavía no hay pedidos en el tablero. Cuando entre uno, lo verás aquí.
+  </p>
+
+  <div class="kanban" *ngIf="vista.cargado">
+    <section
+      class="kcol"
+      *ngFor="let c of vista.columnas; trackBy: porColumna"
+      [ngClass]="c.clase"
+      [attr.aria-label]="c.nombre + ': ' + c.total"
+    >
+      <header class="kcol__h">
+        <i class="dot" aria-hidden="true"></i>
+        <span>{{ c.nombre }}</span>
+        <b>{{ c.total }}</b>
+      </header>
+
+      <ul class="kcol__list">
+        <li *ngFor="let t of c.tarjetas; trackBy: porTarjeta">
+          <button
+            type="button"
+            class="kcard"
+            [attr.data-id]="t.id"
+            [class.is-new]="t.nuevo"
+            [class.is-moved]="t.movida"
+            [class.is-tarde]="t.tarde"
+            [class.is-ia]="t.ia"
+            [class.is-opt]="marca?.id === t.id"
+            [attr.data-opt]="textoOpttia(t.id)"
+            [attr.aria-label]="t.aria"
+            (click)="abrir(t)"
+          >
+            <span class="kcard__top">
+              <span class="mono">{{ t.numero }}</span>
+              <span class="pill t-pack" *ngIf="t.ia">Opttia</span>
+              <time class="kcard__tiempo">
+                <app-en-vivo-icono nombre="reloj" *ngIf="t.tarde"></app-en-vivo-icono>{{ t.tiempo }}
+              </time>
+            </span>
+            <b>{{ t.cliente }}</b>
+            <small *ngIf="t.lugar">{{ t.lugar }}</small>
+            <span class="kcard__top" *ngIf="t.monto || t.transporte">
+              <span class="kcard__monto">{{ t.monto }}</span>
+              <small class="kcard__transporte" *ngIf="t.transporte">
+                <app-en-vivo-icono [nombre]="t.tipoTransporte === 'transportadora' ? 'camion' : 'moto'"></app-en-vivo-icono>
+                {{ t.transporte }}
+              </small>
+            </span>
+          </button>
+        </li>
+        <li class="kcol__mas" *ngIf="c.resto > 0">y {{ c.resto }} más</li>
+        <li class="kcol__vacio" *ngIf="c.total === 0">Sin pedidos</li>
+      </ul>
+    </section>
+  </div>
+</section>

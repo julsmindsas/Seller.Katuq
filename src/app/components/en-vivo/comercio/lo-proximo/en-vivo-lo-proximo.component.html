@@ -1,0 +1,37 @@
+<section class="card" aria-labelledby="ev-prox-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">Lo próximo</div>
+      <h2 class="card__title" id="ev-prox-titulo">{{ vista?.titulo || 'Lo que conviene hacer ya' }}</h2>
+    </div>
+    <span class="chip" *ngIf="vista?.calculada">
+      <span aria-hidden="true">{{ vista?.urgentes }}</span>
+      <span class="sr">{{ vista?.urgentes }} por atender</span>
+    </span>
+  </header>
+
+  <div class="card__body" *ngIf="vista as v">
+    <p class="vacio" role="status" *ngIf="!v.calculada">Calculando lo que conviene hacer…</p>
+
+    <ul class="prox" *ngIf="v.calculada && v.proximos.length > 0">
+      <li *ngFor="let p of v.proximos; trackBy: porClave">
+        <button type="button" class="prox__item" [ngClass]="p.clase" (click)="abrir(p)">
+          <span class="prox__ico"><app-en-vivo-icono [nombre]="p.icono"></app-en-vivo-icono></span>
+          <span class="prox__txt">
+            <b>{{ p.titulo }}</b>
+            <small *ngIf="p.sugerencia">
+              <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+              <span>Opttia sugiere: {{ p.sugerencia }}</span>
+            </small>
+            <span class="sr">. {{ p.ariaAccion }}</span>
+          </span>
+        </button>
+      </li>
+    </ul>
+
+    <p class="prox__ok" role="status" *ngIf="v.calculada && v.proximos.length === 0">
+      <app-en-vivo-icono nombre="check"></app-en-vivo-icono>
+      <span>Todo al día. Nada que hacer ya.</span>
+    </p>
+  </div>
+</section>

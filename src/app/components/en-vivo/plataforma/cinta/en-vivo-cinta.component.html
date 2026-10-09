@@ -1,0 +1,27 @@
+<div class="ticker" *ngIf="vm$ | async as vm" role="region" aria-label="Comercios de Katuq hoy">
+  <div class="ticker__label"><span class="live__dot" aria-hidden="true"></span>Hoy en Katuq</div>
+
+  <div class="ticker__win">
+    <p class="vacio" *ngIf="vm.items.length === 0">Todavía no hay comercios con movimiento hoy.</p>
+
+    <ul class="ticker__track" *ngIf="vm.items.length > 0" [style.--dur]="vm.duracion + 's'">
+      <ng-container *ngFor="let copia of copias">
+        <li *ngFor="let item of vm.items; trackBy: porEmpresa" [attr.aria-hidden]="copia === 1 ? 'true' : null" [class.es-copia]="copia === 1">
+          <button
+            type="button"
+            class="tk"
+            [ngClass]="item.clase"
+            [attr.aria-label]="item.etiqueta"
+            [attr.tabindex]="copia === 1 ? -1 : null"
+            (click)="abrir(item)"
+          >
+            <i class="av" aria-hidden="true">{{ item.iniciales }}</i>
+            <b>{{ item.nombre }}</b>
+            <span>{{ item.pedidos }}<ng-container *ngIf="item.ventas"> · {{ item.ventas }}</ng-container></span>
+            <span class="tk__var" *ngIf="item.variacion" [class.up]="item.variacion.sube" [class.down]="!item.variacion.sube">{{ item.variacion.texto }}</span>
+          </button>
+        </li>
+      </ng-container>
+    </ul>
+  </div>
+</div>

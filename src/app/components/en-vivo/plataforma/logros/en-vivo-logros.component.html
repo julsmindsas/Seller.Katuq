@@ -1,0 +1,24 @@
+<section class="card" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-logros-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">Récords y proyección</div>
+      <h2 class="card__title" id="ev-kq-logros-titulo">Para contar hoy</h2>
+    </div>
+  </header>
+
+  <div class="card__body">
+    <div class="card__eyebrow">{{ vm.etiqueta }}</div>
+    <div class="logros__big">{{ vm.grande }}</div>
+    <div class="logros__sub" *ngIf="vm.hayProyeccion">
+      {{ vm.prefijo }}<span class="up" *ngIf="vm.pintaRecord">{{ vm.subtexto }}</span><ng-container *ngIf="!vm.pintaRecord">{{ vm.subtexto }}</ng-container>
+    </div>
+    <div class="logros__sub" *ngIf="!vm.hayProyeccion">Calculando cómo va el día…</div>
+
+    <ul class="logros__list">
+      <li class="logro" *ngFor="let l of vm.items; trackBy: porClave" [ngClass]="l.clase">
+        <span class="ico" aria-hidden="true"><app-en-vivo-icono [nombre]="l.icono"></app-en-vivo-icono></span>
+        <span>{{ l.antes }}<b *ngIf="l.negrita">{{ l.negrita }}</b>{{ l.despues }}</span>
+      </li>
+    </ul>
+  </div>
+</section>

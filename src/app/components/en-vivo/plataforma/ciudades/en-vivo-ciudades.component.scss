@@ -1,0 +1,13 @@
+@import '../plataforma-comun';
+
+@include ev-kq-base;
+@include ev-kq-filas;
+
+.row__sub {
+  font-size: ev-fs(10.5);
+}
+
+// Para lectores de pantalla: "23 pedidos" en vez de solo "23".
+.sr {
+  @include ev-sr;
+}

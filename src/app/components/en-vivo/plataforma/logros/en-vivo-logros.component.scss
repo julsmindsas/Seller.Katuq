@@ -1,0 +1,62 @@
+@import '../plataforma-comun';
+
+@include ev-kq-base;
+
+.logros__big {
+  margin-top: 4px;
+  font-size: ev-fs(30);
+  font-weight: 900;
+  line-height: 1;
+  color: var(--ev-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.logros__sub {
+  margin-top: 4px;
+  font-size: ev-fs(12);
+  font-weight: 600;
+  color: var(--ev-muted);
+
+  .up {
+    font-weight: 800;
+    color: var(--ev-ok);
+  }
+}
+
+.logros__list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logro {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  font-size: ev-fs(12);
+  font-weight: 700;
+  color: var(--ev-ink-2);
+
+  b {
+    font-weight: 800;
+    color: var(--ev-ink);
+  }
+}
+
+.ico {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--tone-soft);
+  color: var(--tone);
+
+  app-en-vivo-icono {
+    --ev-icono: 15px;
+  }
+}

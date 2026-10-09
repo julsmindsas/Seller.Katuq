@@ -1,0 +1,343 @@
+@import '../en-vivo-tema';
+@import './orbe-etiqueta';
+
+// ==========================================================================
+// Escenas 3D del mapa del comercio, del país de Katuq y de la ciudad de Katuq (D-386, 5.3/5.10/5.12).
+// Plano, sin gradientes (design-system).
+//  · Hoja SIN encapsulación: las etiquetas HTML las crea la escena con `createElement` (no llevan el
+//    atributo de Angular). Por eso todo cuelga de los selectores de las tres escenas y las clases
+//    llevan el prefijo `eve-`.
+//  · Los tokens de la escena (`--scene-*`, `--map-*`, `--box`) viven aquí; los semánticos son los
+//    `--ev-*` del tema de la pantalla. En el modo pantalla (`.ev-tv`) toman su variante oscura.
+// ==========================================================================
+
+app-en-vivo-escena-mapa,
+app-en-vivo-escena-pais,
+app-en-vivo-escena-ciudad {
+  // Tokens de la escena (tema claro).
+  --scene-bg: #e9e5f8;
+  --scene-plat: #fbfaff;
+  --scene-plat-side: #d8d1f2;
+  --scene-yard: #f1eefb;
+  --scene-road: #55526f;
+  --scene-mark: #ffffff;
+  --scene-walk: #e4dff6;
+  --scene-belt: #3b3854;
+  --scene-belt-2: #4f4c6b;
+  --scene-wall: #ffffff;
+  --scene-trim: #ece8fa;
+  --scene-tree: #86cfa4;
+  --scene-trunk: #a3815f;
+  --scene-wheel: #26233d;
+  --scene-glass: #cfe3ff;
+  --box: #d6a574;
+  --box-tape: #5f3fe0;
+  --map-land: #f4f1fd;
+  --map-side: #cfc6f0;
+  --map-line: #b9aee8;
+  --dark: 0;
+
+  display: block;
+  position: relative;
+  box-sizing: border-box;
+  height: clamp(480px, 70vh, 780px);
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--ev-line, #ececf4);
+  background: var(--scene-bg);
+  box-shadow: var(--ev-sh-panel, 0 1px 3px rgba(30, 20, 80, 0.04));
+  isolation: isolate;
+  @include ev-tonos;
+
+  .eve-stage {
+    position: absolute;
+    inset: 0;
+  }
+
+  .eve-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    // En táctil el dedo hace scroll de la página; la escena gira solo con mouse.
+    touch-action: pan-y;
+  }
+
+  .eve-labels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  // Sin WebGL: el mensaje ocupa la escena; las cifras, etapas y lista siguen en vivo.
+  .eve-nogl {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    text-align: center;
+    color: var(--ev-ink-2);
+    font-size: ev-fs(13);
+    line-height: 1.45;
+
+    b {
+      display: block;
+      margin-bottom: 4px;
+      font-size: ev-fs(15);
+      color: var(--ev-ink);
+    }
+  }
+
+  // ---- leyenda de demanda por departamento (solo el país de Katuq)
+  .eve-leyenda {
+    position: absolute;
+    left: 14px;
+    bottom: 66px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 11px;
+    background: var(--ev-surface);
+    border: 1px solid var(--ev-line);
+    box-shadow: var(--ev-sh-panel);
+    font-size: ev-fs(10.5);
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--ev-muted);
+    pointer-events: none;
+
+    i {
+      display: inline-block;
+      width: 16px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .eve-ley-tierra {
+      background: var(--map-land);
+      border: 1px solid var(--map-line);
+    }
+  }
+
+  // ---- etiquetas ancladas a la escena
+  .eve-lbl {
+    position: absolute;
+    left: 0;
+    top: 0;
+    white-space: nowrap;
+    will-change: transform;
+    z-index: 1;
+  }
+
+  .eve-lbl__in {
+    transform-origin: 50% 100%;
+    opacity: 0;
+  }
+
+  .eve-lbl.is-in .eve-lbl__in {
+    opacity: 1;
+    animation: eve-pop-in-mapa 0.42s cubic-bezier(0.2, 1.45, 0.4, 1);
+  }
+
+  .eve-lbl.is-fixed .eve-lbl__in {
+    opacity: 1;
+    animation: none;
+  }
+
+  .eve-lbl.is-out .eve-lbl__in {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  // Nombre fijo de una ciudad o de un comercio líder.
+  .eve-lbl--mini .eve-lbl__in {
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: var(--ev-surface);
+    border: 1px solid var(--ev-line);
+    box-shadow: var(--ev-sh-up);
+    font-size: ev-fs(10.5);
+    font-weight: 800;
+    color: var(--ev-ink-2);
+  }
+
+  .eve-lbl--mini b {
+    color: var(--tone, var(--ev-accent));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .eve-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 5px;
+    border-radius: 50%;
+    background: var(--tone);
+    vertical-align: 1px;
+  }
+
+  // Tarjeta de pedido nuevo / entregado.
+  .eve-lbl--pop .eve-lbl__in {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 2px 10px;
+    align-items: baseline;
+    padding: 8px 11px 9px;
+    margin-bottom: 8px;
+    background: var(--ev-surface);
+    border: 1px solid var(--ev-line);
+    border-radius: 13px;
+    box-shadow: var(--ev-sh-pop);
+  }
+
+  .eve-pill {
+    @include ev-pastilla;
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .eve-mono {
+    font-family: var(--ev-mono);
+    font-size: ev-fs(13);
+    font-weight: 700;
+    color: var(--ev-info);
+  }
+
+  .eve-who {
+    max-width: 190px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: ev-fs(13);
+    font-weight: 800;
+    color: var(--ev-ink);
+  }
+
+  .eve-amt {
+    justify-self: end;
+    font-size: ev-fs(14);
+    font-weight: 800;
+    color: var(--ev-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .eve-lbl--pop small {
+    grid-column: 1 / -1;
+    font-size: ev-fs(11);
+    font-weight: 600;
+    color: var(--ev-muted);
+  }
+
+  // Vehículo que sale (y cuántos pedidos lleva).
+  .eve-lbl--veh .eve-lbl__in {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border-radius: 20px;
+    background: var(--ev-info-soft);
+    color: var(--ev-info);
+    font-size: ev-fs(11);
+    font-weight: 800;
+    box-shadow: var(--ev-sh-up);
+  }
+
+  .eve-ico {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @include eve-orbe-etiqueta;
+
+  // Al pasar el puntero (o desde la lista) por una ciudad o un comercio.
+  .eve-lbl--hover .eve-lbl__in {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 7px 11px 8px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    background: var(--ev-ink);
+    color: var(--ev-bg);
+    box-shadow: var(--ev-sh-pop);
+    font-size: ev-fs(11);
+    font-weight: 700;
+  }
+
+  .eve-lbl--hover b {
+    font-size: ev-fs(13);
+    font-weight: 800;
+  }
+
+  .eve-lbl--hover span {
+    opacity: 0.75;
+  }
+
+  @media (max-width: 520px) {
+    .eve-leyenda {
+      display: none;
+    }
+  }
+
+  // Con "reducir movimiento": las etiquetas aparecen sin salto.
+  @include ev-sin-movimiento {
+    .eve-lbl.is-in .eve-lbl__in {
+      animation: none;
+      opacity: 1;
+    }
+
+    .eve-lbl.is-out .eve-lbl__in {
+      transition: none;
+    }
+  }
+}
+
+// Modo pantalla (televisor): variante oscura de las escenas.
+.ev-tv app-en-vivo-escena-mapa,
+.ev-tv app-en-vivo-escena-pais,
+.ev-tv app-en-vivo-escena-ciudad {
+  --scene-bg: #15122b;
+  --scene-plat: #231f47;
+  --scene-plat-side: #19163a;
+  --scene-yard: #292452;
+  --scene-road: #36325f;
+  --scene-mark: #9c94d0;
+  --scene-walk: #2b2656;
+  --scene-belt: #0f0d22;
+  --scene-belt-2: #1f1b44;
+  --scene-wall: #2e2959;
+  --scene-trim: #3a3470;
+  --scene-tree: #2f7a55;
+  --scene-trunk: #6b5240;
+  --scene-wheel: #0b0a18;
+  --scene-glass: #2b4a7a;
+  --box: #c08d5b;
+  --box-tape: #9b85ff;
+  --map-land: #27224f;
+  --map-side: #17143a;
+  --map-line: #4a4290;
+  --dark: 1;
+}
+
+@keyframes eve-pop-in-mapa {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.7);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

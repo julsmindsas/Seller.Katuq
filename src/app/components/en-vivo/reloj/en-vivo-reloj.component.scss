@@ -1,0 +1,25 @@
+@import '../en-vivo-tema';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.reloj__hora {
+  font-size: ev-fs(20);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ev-ink);
+}
+
+.reloj__fecha {
+  font-size: ev-fs(11);
+  font-weight: 600;
+  color: var(--ev-muted);
+
+  // Solo la primera letra en mayúscula ("Jueves, 8 de octubre"), no cada palabra.
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}

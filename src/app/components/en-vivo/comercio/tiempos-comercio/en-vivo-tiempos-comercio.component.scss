@@ -1,0 +1,83 @@
+@import '../comercio-comun';
+
+@include cm-tarjeta;
+
+.ciclo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ciclo__big {
+  font-size: ev-fs(30);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--ev-ink);
+
+  small {
+    margin-left: 6px;
+    font-size: ev-fs(12);
+    font-weight: 700;
+    color: var(--ev-muted);
+  }
+}
+
+.ciclo__bar {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 8px;
+
+  i {
+    display: block;
+    min-width: 4px;
+    height: 100%;
+    transition: flex-grow 0.8s;
+  }
+}
+
+.ciclo__leg {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+
+  div {
+    font-size: ev-fs(11);
+    font-weight: 700;
+    color: var(--ev-muted);
+  }
+
+  b {
+    display: block;
+    font-size: ev-fs(15);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--ev-ink);
+  }
+
+  .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 5px;
+    border-radius: 50%;
+  }
+}
+
+.cmp {
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: var(--tone-soft);
+  color: var(--tone);
+  font-size: ev-fs(12);
+  font-weight: 800;
+}
+
+@include ev-sin-movimiento {
+  .ciclo__bar i {
+    transition: none;
+  }
+}

@@ -1,0 +1,36 @@
+<section class="card" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-radar-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">Radar de atención</div>
+      <h2 class="card__title" id="ev-kq-radar-titulo">Quién necesita a Katuq ahora</h2>
+    </div>
+    <span class="card__chip" role="status" aria-live="polite">{{ vm.vista ? vm.vista.resumen : 'Calculando…' }}</span>
+  </header>
+
+  <div class="card__body">
+    <p class="vacio" *ngIf="!vm.vista">El radar se calcula cada 30 segundos.</p>
+
+    <div class="ok" *ngIf="vm.vista && vm.vista.alertas.length === 0">
+      <app-en-vivo-icono nombre="check"></app-en-vivo-icono>
+      Todo en orden: ningún comercio necesita atención ahora.
+    </div>
+
+    <ul class="radar" *ngIf="vm.vista && vm.vista.alertas.length > 0">
+      <li *ngFor="let a of vm.vista.alertas; trackBy: porClave" class="alerta" [ngClass]="a.clase" [class.is-new]="a.nuevo">
+        <span class="alerta__ico" aria-hidden="true"><app-en-vivo-icono [nombre]="a.icono"></app-en-vivo-icono></span>
+        <div class="alerta__cuerpo">
+          <b>{{ a.nombre }} · {{ a.titulo }}</b>
+          <p>{{ a.texto }}</p>
+          <div class="opt" *ngIf="a.sugerencia">
+            <app-en-vivo-icono nombre="ia"></app-en-vivo-icono>
+            <span>Opttia sugiere: {{ a.sugerencia }}</span>
+          </div>
+          <div class="alerta__acts" *ngIf="a.empresa">
+            <button type="button" (click)="verTablero(a)">Ver su tablero<span class="sr"> de {{ a.nombre }}</span></button>
+            <button type="button" *ngIf="a.atascado" (click)="verPedidos(a)">Ver los pedidos<span class="sr"> atascados de {{ a.nombre }}</span></button>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>

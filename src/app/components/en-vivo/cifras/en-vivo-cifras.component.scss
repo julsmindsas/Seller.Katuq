@@ -1,0 +1,160 @@
+@import '../en-vivo-tema';
+
+:host {
+  display: block;
+}
+
+@include ev-tonos;
+
+.kpis {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 12px;
+}
+
+.kpi {
+  @include ev-panel;
+  @include ev-foco;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 12px 14px 13px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: transform 0.2s, border-color 0.2s;
+
+  &.is-click {
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: var(--ev-chip-line);
+    }
+  }
+
+  &.is-bump {
+    animation: ev-rebote 0.5s cubic-bezier(0.2, 1.5, 0.4, 1);
+  }
+}
+
+.kpi__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kpi__ico {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--tone-soft);
+  color: var(--tone);
+  flex: none;
+
+  app-en-vivo-icono {
+    --ev-icono: 15px;
+  }
+}
+
+.kpi__label {
+  @include ev-etiqueta;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi__value {
+  display: block;
+  margin-top: 8px;
+  font-size: ev-fs(26);
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ev-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.is-destacada .kpi__value {
+  color: var(--ev-accent);
+}
+
+.kpi__sub {
+  display: block;
+  margin-top: 2px;
+  font-size: ev-fs(11);
+  font-weight: 600;
+  color: var(--ev-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  b {
+    font-weight: 800;
+  }
+
+  .up {
+    color: var(--ev-ok);
+  }
+
+  .down {
+    color: var(--ev-bad);
+  }
+}
+
+// Marca "+1": aparece sobre el borde superior de la tarjeta (sin tapar el rótulo), sube un poco y se va.
+.kpi__delta {
+  position: absolute;
+  top: -11px;
+  right: 10px;
+  pointer-events: none;
+}
+
+.kpi__delta-in {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: var(--tone-soft);
+  color: var(--tone);
+  font-size: ev-fs(11);
+  font-weight: 800;
+  box-shadow: var(--ev-sh-up);
+  animation: ev-marca 1.6s ease-out forwards;
+}
+
+.ev-sr {
+  @include ev-sr;
+}
+
+@keyframes ev-marca {
+  0% { opacity: 0; transform: translateY(8px) scale(0.8); }
+  15% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+@keyframes ev-rebote {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.035); }
+  100% { transform: scale(1); }
+}
+
+@include ev-sin-movimiento {
+  .kpi,
+  .kpi.is-bump {
+    animation: none;
+    transition: none;
+  }
+
+  // Sin movimiento, la marca "+1" se queda quieta un momento y se quita sola (el componente la retira).
+  .kpi__delta-in {
+    animation: none;
+  }
+}

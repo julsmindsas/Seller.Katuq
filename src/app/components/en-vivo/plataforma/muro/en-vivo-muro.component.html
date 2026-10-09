@@ -1,0 +1,55 @@
+<section class="muro" *ngIf="vm$ | async as vm" aria-label="Muro de comercios de Katuq">
+  <p class="vacio" *ngIf="vm.tarjetas.length === 0">Todavía no hay comercios con movimiento hoy.</p>
+
+  <ul class="muro__lista" *ngIf="vm.tarjetas.length > 0">
+    <li *ngFor="let t of vm.tarjetas; trackBy: porEmpresa">
+      <button
+        type="button"
+        class="tile"
+        [ngClass]="t.clase"
+        [class.is-alerta-bad]="t.alerta === 'bad'"
+        [class.is-alerta-warn]="t.alerta === 'warn'"
+        [class.is-flash]="iluminada(t.empresa) === 'flash'"
+        [class.is-ia]="iluminada(t.empresa) === 'ia'"
+        [class.is-opt]="marca?.id === t.empresa"
+        [attr.data-opt]="textoOpttia(t.empresa)"
+        [attr.aria-label]="t.etiqueta"
+        (click)="abrir(t)"
+      >
+        <span class="tile__top">
+          <span class="av" aria-hidden="true">{{ t.iniciales }}</span>
+          <span class="tile__who">
+            <b>{{ t.nombre }}</b>
+            <small *ngIf="t.ciudad">{{ t.ciudad }}</small>
+          </span>
+          <span class="pill" [ngClass]="t.estado.clase">{{ t.estado.texto }}</span>
+        </span>
+
+        <span class="tile__nums">
+          <!-- Los dígitos ruedan hasta el valor nuevo: el elemento va vacío y el texto accesible está en el aria-label del botón. -->
+          <span class="tile__v" aria-hidden="true" [enVivoContar]="t.valor" [contarFormato]="t.formato" [contarAnimar]="vm.animar"></span>
+          <span class="tile__n" *ngIf="t.pedidos">{{ t.pedidos }}</span>
+        </span>
+
+        <svg class="tile__spark" [attr.viewBox]="'0 0 ' + sparkAncho + ' ' + sparkAlto" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect
+            *ngFor="let b of t.spark.barras; trackBy: porPosicion"
+            rx="1.5"
+            [class.f]="b.futura"
+            [attr.x]="b.x"
+            [attr.y]="b.y"
+            [attr.width]="b.ancho"
+            [attr.height]="b.alto"
+          ></rect>
+          <polyline [attr.points]="t.spark.linea"></polyline>
+        </svg>
+
+        <span class="tile__last">{{ t.ultimo }}</span>
+
+        <span class="tile__pipe" aria-hidden="true">
+          <span *ngFor="let p of t.pipeline" [attr.title]="p.titulo">{{ p.texto }}</span>
+        </span>
+      </button>
+    </li>
+  </ul>
+</section>

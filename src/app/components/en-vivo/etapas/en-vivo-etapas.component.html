@@ -1,0 +1,24 @@
+<ol class="pipe" aria-label="Pedidos por etapa">
+  <li *ngFor="let p of pasos; trackBy: porId; let ultimo = last" class="pipe__item">
+    <button
+      *ngIf="tocables; else fijo"
+      type="button"
+      class="pipe__step is-click"
+      [ngClass]="p.clase"
+      [class.is-bump]="rebotando.has(p.id)"
+      (click)="alTocar(p)"
+    >
+      <i class="dot" aria-hidden="true"></i>
+      <span class="pipe__name">{{ p.nombre }}</span>
+      <span class="pipe__n">{{ p.n }}</span>
+    </button>
+    <ng-template #fijo>
+      <div class="pipe__step" [ngClass]="p.clase" [class.is-bump]="rebotando.has(p.id)">
+        <i class="dot" aria-hidden="true"></i>
+        <span class="pipe__name">{{ p.nombre }}</span>
+        <span class="pipe__n">{{ p.n }}</span>
+      </div>
+    </ng-template>
+    <span *ngIf="!ultimo" class="pipe__arrow" aria-hidden="true"><app-en-vivo-icono nombre="flecha"></app-en-vivo-icono></span>
+  </li>
+</ol>

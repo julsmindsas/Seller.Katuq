@@ -1,0 +1,163 @@
+@import '../plataforma-comun';
+
+@include ev-kq-base;
+@include ev-kq-av;
+
+// Alto de cada puesto (con 2 px de aire entre filas) y cuántas filas se ven: la carrera mide siempre
+// lo que mide su top, aunque haya menos comercios.
+.race {
+  --alto-fila: 40px;
+  position: relative;
+  overflow: hidden;
+  height: calc(var(--alto-fila) * var(--filas, 8));
+}
+
+.es-compacta .race {
+  --alto-fila: 34px;
+}
+
+// La fila nunca cambia de lugar en el DOM: sube y baja con `transform`, y eso es lo que se anima.
+.race__row {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: calc(var(--alto-fila) - 2px);
+  transform: translateY(calc(var(--y, 0) * var(--alto-fila)));
+  transition: transform 0.7s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.4s, visibility 0s;
+
+  // Las de banca esperan escondidas debajo del top: sin foco, sin clic y fuera del árbol de accesibilidad.
+  &.is-fuera {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.7s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.4s, visibility 0s 0.7s;
+  }
+}
+
+.race__btn {
+  @include ev-foco;
+  display: grid;
+  grid-template-columns: 18px 26px minmax(0, 1fr) auto;
+  grid-template-rows: auto 6px;
+  gap: 3px 9px;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 2px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+
+  &:hover .race__nombre {
+    color: var(--ev-accent);
+  }
+}
+
+.es-compacta .race__btn {
+  grid-template-columns: 16px 24px minmax(0, 1fr) auto;
+}
+
+.es-compacta .av {
+  width: 24px;
+  height: 24px;
+  font-size: ev-fs(9.5);
+}
+
+.race__pos {
+  grid-row: 1 / 3;
+  font-size: ev-fs(12);
+  font-weight: 900;
+  text-align: center;
+  color: var(--ev-muted-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.race__btn .av {
+  grid-row: 1 / 3;
+}
+
+.race__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: ev-fs(12.5);
+  font-weight: 700;
+  color: var(--ev-ink);
+}
+
+.es-compacta .race__name,
+.es-compacta .race__n {
+  font-size: ev-fs(12);
+}
+
+.race__nombre {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
+}
+
+.race__up {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: var(--ev-ok-soft);
+  color: var(--ev-ok);
+  font-size: ev-fs(10);
+  font-weight: 900;
+  opacity: 0;
+  animation: ev-sube 2.2s ease-out;
+}
+
+.race__n {
+  font-size: ev-fs(12.5);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ev-ink);
+}
+
+.race__bar {
+  grid-column: 3 / -1;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--ev-chip);
+  overflow: hidden;
+
+  i {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 6px;
+    background: var(--tone);
+    transition: width 0.7s cubic-bezier(0.2, 1, 0.3, 1);
+  }
+}
+
+@keyframes ev-sube {
+  0% { opacity: 0; transform: translateY(8px) scale(0.8); }
+  15% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+// Con "reducir movimiento" la fila salta de un puesto al otro y la marca "▲ N" queda fija hasta la siguiente lectura.
+@include ev-sin-movimiento {
+  .race__row,
+  .race__row.is-fuera,
+  .race__bar i,
+  .race__nombre {
+    transition: none;
+  }
+
+  .race__up {
+    opacity: 1;
+    animation: none;
+  }
+}

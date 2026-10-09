@@ -1,0 +1,91 @@
+@import '../ficha-comun';
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+@include ev-tonos;
+
+.fx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fx-item {
+  @include ev-foco;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  text-align: left;
+  color: var(--ev-ink);
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+
+  &:hover {
+    border-color: var(--ev-accent);
+    transform: translateX(-2px);
+  }
+}
+
+.av {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  font-size: ev-fs(10.5);
+  font-weight: 800;
+  color: var(--tone);
+  background: var(--tone-soft);
+  border-radius: 50%;
+}
+
+.fx-item__texto {
+  min-width: 0;
+}
+
+.t,
+.s {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.t {
+  font-size: ev-fs(12.5);
+  font-weight: 700;
+}
+
+.s {
+  font-size: ev-fs(11);
+  font-weight: 600;
+  color: var(--ev-muted);
+}
+
+.a {
+  font-size: ev-fs(12.5);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+@include ev-sin-movimiento {
+  .fx-item {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}

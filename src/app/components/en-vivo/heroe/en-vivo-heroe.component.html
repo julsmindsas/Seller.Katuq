@@ -1,0 +1,48 @@
+<article class="heroe" *ngIf="datos" [attr.aria-label]="etiqueta">
+  <div class="heroe__eyebrow">{{ etiqueta }}</div>
+
+  <app-en-vivo-odometro class="heroe__odo" [texto]="numero" [leyenda]="leyenda"></app-en-vivo-odometro>
+
+  <p class="heroe__sub">
+    <b *ngIf="variacionTexto" [class.up]="variacionSube" [class.down]="!variacionSube">{{ variacionSube ? '▲' : '▼' }} {{ variacionTexto }}</b>
+    {{ resto }}
+  </p>
+
+  <div class="proy" *ngIf="proyeccion as p">
+    <div class="proy__txt">
+      <span>Proyección al cierre</span>
+      <b>{{ p.texto }}</b>
+    </div>
+    <div class="proy__bar" aria-hidden="true">
+      <em [style.left.%]="p.faltaDesde" [style.width.%]="p.falta"></em>
+      <i [style.width.%]="p.hoy"></i>
+      <s *ngIf="p.record !== null" [style.left.%]="p.record"></s>
+    </div>
+    <div class="proy__leg" aria-hidden="true">
+      <span><i class="sw sw--hoy"></i>Hoy</span>
+      <span><i class="sw sw--falta"></i>Lo que falta según el ritmo</span>
+      <span><i class="sw sw--record"></i>{{ p.textoRecord }}</span>
+    </div>
+    <p class="ev-sr">{{ p.accesible }}</p>
+  </div>
+
+  <div class="mini">
+    <div class="mini__leg">
+      <span>{{ tituloMini }}</span>
+      <span>{{ estaHora }}</span>
+    </div>
+    <svg class="mini__svg" [attr.viewBox]="'0 0 300 70'" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <rect
+        *ngFor="let b of barras; trackBy: porHora"
+        [attr.x]="b.x"
+        [attr.y]="b.y"
+        [attr.width]="b.ancho"
+        [attr.height]="b.alto"
+        rx="2.5"
+        [class.is-ahora]="b.actual"
+        [class.is-futura]="b.futura"
+      ></rect>
+      <polyline [attr.points]="linea"></polyline>
+    </svg>
+  </div>
+</article>

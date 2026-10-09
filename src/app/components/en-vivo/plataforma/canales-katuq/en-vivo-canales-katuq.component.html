@@ -1,0 +1,32 @@
+<section class="card" *ngIf="vm$ | async as vm" aria-labelledby="ev-kq-canales-titulo">
+  <header class="card__head">
+    <div>
+      <div class="card__eyebrow">Canales en toda Katuq</div>
+      <h2 class="card__title" id="ev-kq-canales-titulo">De dónde llegan los pedidos</h2>
+    </div>
+  </header>
+
+  <div class="card__body">
+    <p class="vacio" *ngIf="vm.filas.length === 0">Todavía no hay pedidos hoy.</p>
+
+    <ng-container *ngIf="vm.filas.length > 0">
+      <!-- La mezcla: cada canal pesa lo que pesan sus pedidos. Los números van en las filas. -->
+      <div class="mix" aria-hidden="true">
+        <i *ngFor="let fila of vm.filas; trackBy: porCanal" [ngClass]="fila.clase" [style.flex-grow]="fila.pedidos"></i>
+      </div>
+
+      <ul class="rows">
+        <li class="row" *ngFor="let fila of vm.filas; trackBy: porCanal" [ngClass]="fila.clase">
+          <span class="row__name"><i class="punto" aria-hidden="true"></i>{{ fila.canal }}</span>
+          <span class="row__n">{{ fila.texto }}</span>
+          <span class="row__bar" aria-hidden="true"><i [style.width.%]="fila.ancho"></i></span>
+        </li>
+
+        <li class="row t-pack con-opttia" *ngIf="vm.conOpttia as ia">
+          <span class="row__name"><app-en-vivo-icono nombre="ia"></app-en-vivo-icono>{{ ia.etiqueta }}</span>
+          <span class="row__n" *ngIf="ia.texto">{{ ia.texto }}</span>
+        </li>
+      </ul>
+    </ng-container>
+  </div>
+</section>

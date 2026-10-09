@@ -1,0 +1,187 @@
+// ==========================================================================
+// Tema del tablero "En vivo" (D-386). Canon: openspec/specs/design-system.
+//   · acento #5F3FE0, tinta #211F3A, superficies lila, semánticos en par fuerte / fondo suave,
+//     radios 16/11/20, sombras violeta difusas, PLANO y SIN GRADIENTES.
+//   · Los tokens viven como variables CSS `--ev-*` en el elemento raíz del shell (`.ev-app`) y
+//     bajan solos a todos los componentes (las variables heredan aunque haya encapsulación).
+//   · DESVÍO JUSTIFICADO: el modo pantalla (`.ev-tv`) usa una variante oscura derivada de la
+//     tinta #211F3A, con los mismos tonos aclarados para contraste AA en un televisor. Vive
+//     solo en esta pantalla.
+// Uso en un componente:  @import '../en-vivo-tema';  y luego  @include ev-tonos;  si usa tonos.
+// ==========================================================================
+
+// Tamaño de letra que crece en el modo pantalla (`--ev-fs`: 1 normal, 1.2 televisor).
+@function ev-fs($px) {
+  @return calc(#{$px}px * var(--ev-fs, 1));
+}
+
+@mixin ev-tokens-claro {
+  --ev-bg: #f4f2fb;
+  --ev-surface: #ffffff;
+  --ev-surface-2: #faf9fe;
+  --ev-tile: #f3f1fb;
+  --ev-ink: #211f3a;
+  --ev-ink-2: #5b5878;
+  --ev-muted: #8f8bab;
+  --ev-muted-2: #9995b3;
+  --ev-line: #ececf4;
+  --ev-line-soft: #f1f0f7;
+  --ev-chip: #f5f4fa;
+  --ev-chip-line: #e9e7f3;
+  --ev-accent: #5f3fe0;
+  --ev-accent-2: #7c5cff;
+  --ev-accent-soft: #efe9ff;
+  --ev-accent-hover: #4a2fc0;
+  --ev-on-accent: #ffffff;
+  --ev-ok: #1e874b;
+  --ev-ok-soft: #e6f7ee;
+  --ev-warn: #d9820a;
+  --ev-warn-soft: #fff1df;
+  --ev-bad: #d64545;
+  --ev-bad-soft: #fdecec;
+  --ev-info: #1e6fd9;
+  --ev-info-soft: #e7f1ff;
+  --ev-pack: #8e27b0;
+  --ev-pack-soft: #f3e9fb;
+  --ev-slate: #5a6b78;
+  --ev-slate-soft: #eef0f3;
+  --ev-sh-panel: 0 1px 3px rgba(30, 20, 80, 0.04);
+  --ev-sh-up: 0 6px 14px -8px rgba(50, 40, 110, 0.35);
+  --ev-sh-btn: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
+  --ev-sh-pop: 0 10px 24px -12px rgba(50, 40, 110, 0.45);
+  --ev-fs: 1;
+  --ev-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+// Variante oscura del modo pantalla (televisor): mismos nombres, valores aclarados.
+@mixin ev-tokens-tv {
+  --ev-bg: #110f24;
+  --ev-surface: #1a1734;
+  --ev-surface-2: #201c3f;
+  --ev-tile: #252049;
+  --ev-ink: #f1eefc;
+  --ev-ink-2: #c7c2e6;
+  --ev-muted: #a39fc6;
+  --ev-muted-2: #8d88b3;
+  --ev-line: #2c2850;
+  --ev-line-soft: #252147;
+  --ev-chip: #221e43;
+  --ev-chip-line: #332e5e;
+  --ev-accent: #9b85ff;
+  --ev-accent-2: #b4a3ff;
+  --ev-accent-soft: #2d2560;
+  --ev-accent-hover: #b4a3ff;
+  --ev-on-accent: #14112b;
+  --ev-ok: #4cc584;
+  --ev-ok-soft: #163626;
+  --ev-warn: #f0a43a;
+  --ev-warn-soft: #3a2a12;
+  --ev-bad: #ff7b7b;
+  --ev-bad-soft: #3d1d24;
+  --ev-info: #6ea8ff;
+  --ev-info-soft: #172a4a;
+  --ev-pack: #d184f0;
+  --ev-pack-soft: #341a42;
+  --ev-slate: #a9b7c2;
+  --ev-slate-soft: #25303a;
+  --ev-sh-panel: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --ev-sh-up: 0 8px 18px -10px rgba(0, 0, 0, 0.7);
+  --ev-sh-btn: 0 8px 18px -8px rgba(155, 133, 255, 0.55);
+  --ev-sh-pop: 0 12px 26px -12px rgba(0, 0, 0, 0.8);
+  --ev-fs: 1.2;
+  color-scheme: dark;
+}
+
+// Un tono: fija `--tone` (fuerte) y `--tone-soft` (fondo suave) para el elemento que lleve la clase.
+@mixin ev-tonos {
+  .t-accent { --tone: var(--ev-accent); --tone-soft: var(--ev-accent-soft); }
+  .t-ok { --tone: var(--ev-ok); --tone-soft: var(--ev-ok-soft); }
+  .t-warn { --tone: var(--ev-warn); --tone-soft: var(--ev-warn-soft); }
+  .t-bad { --tone: var(--ev-bad); --tone-soft: var(--ev-bad-soft); }
+  .t-info { --tone: var(--ev-info); --tone-soft: var(--ev-info-soft); }
+  .t-pack { --tone: var(--ev-pack); --tone-soft: var(--ev-pack-soft); }
+  .t-slate { --tone: var(--ev-slate); --tone-soft: var(--ev-slate-soft); }
+  .t-ink { --tone: var(--ev-ink-2); --tone-soft: var(--ev-tile); }
+}
+
+// Texto solo para lectores de pantalla.
+@mixin ev-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// Foco visible de teclado.
+@mixin ev-foco {
+  &:focus-visible {
+    outline: 2px solid var(--ev-accent);
+    outline-offset: 2px;
+  }
+}
+
+// Etiqueta en MAYÚSCULA pequeña (label de sección).
+@mixin ev-etiqueta {
+  font-size: ev-fs(10.5);
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--ev-muted);
+}
+
+// Pastilla de color (par fuerte / suave del tono).
+@mixin ev-pastilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--tone-soft);
+  color: var(--tone);
+  font-size: ev-fs(10);
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+// Tarjeta / panel.
+@mixin ev-panel {
+  box-sizing: border-box;
+  background: var(--ev-surface);
+  border: 1px solid var(--ev-line);
+  border-radius: 16px;
+  box-shadow: var(--ev-sh-panel);
+  min-width: 0;
+}
+
+// Cabecera de tarjeta: etiqueta + título + chip.
+@mixin ev-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px 10px;
+}
+
+@mixin ev-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--ev-accent-soft);
+  color: var(--ev-accent);
+  font-size: ev-fs(11);
+  font-weight: 800;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+// Quita la animación a quien pidió menos movimiento.
+@mixin ev-sin-movimiento {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}

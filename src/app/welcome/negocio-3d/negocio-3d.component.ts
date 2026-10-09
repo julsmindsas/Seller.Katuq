@@ -7,8 +7,8 @@ import { CotizacionesService } from '../../components/cotizaciones/cotizaciones.
 import { CiudadMapa, MapaPedidosResponse, MapaPedidosService } from '../../shared/services/dashboard/mapa-pedidos.service';
 import type { AnclaZona } from '../../shared/escena-3d/escena-base';
 import type { EstadoEscena, FuenteLogo, LogoId, NegocioEscena, Tono, ZonaId } from './negocio-3d.scene';
-import type { GeoColombia, MapaColombiaEscena } from './mapa-colombia.scene';
-import { RAMPA_MAPA } from './mapa-rampa';
+import type { GeoColombia, MapaColombiaEscena } from '../../shared/escena-3d/mapa-colombia.scene';
+import { RAMPA_MAPA } from '../../shared/escena-3d/mapa-rampa';
 
 const LOGO_KATUQ = 'assets/images/logo/Katuq/katuq-logo-solo.png';
 const GEO_COLOMBIA = 'assets/geo/colombia.json';
@@ -297,7 +297,7 @@ export class Negocio3dComponent implements OnChanges, OnInit, AfterViewInit, OnD
           this.cargarImagen(LOGO_KATUQ, (img) => this.aplicarLogo('katuq', { imagen: img, texto: 'Katuq' }));
         }
       } else {
-        const [mod, geo] = await Promise.all([import('./mapa-colombia.scene'), cargarGeoColombia()]);
+        const [mod, geo] = await Promise.all([import('../../shared/escena-3d/mapa-colombia.scene'), cargarGeoColombia()]);
         if (this.destruido || vista !== this.vista) return;
         this.geo = geo;
         const escena = new mod.MapaColombiaEscena(T, rb.RoundedBoxGeometry, {

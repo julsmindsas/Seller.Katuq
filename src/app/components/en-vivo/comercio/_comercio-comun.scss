@@ -1,0 +1,50 @@
+// Estilos comunes de las tarjetas del centro del comercio. Tema canónico: `_en-vivo-tema.scss`
+// (plano, sin gradientes). Cada componente hace `@import '../comercio-comun'; @include cm-tarjeta;`.
+@import '../en-vivo-tema';
+
+@mixin cm-tarjeta {
+  :host {
+    display: block;
+    min-width: 0;
+  }
+
+  @include ev-tonos;
+
+  .card {
+    @include ev-panel;
+  }
+
+  .card__head {
+    @include ev-cabecera;
+  }
+
+  .card__eyebrow {
+    @include ev-etiqueta;
+  }
+
+  .card__title {
+    margin: 2px 0 0;
+    font-size: ev-fs(16);
+    font-weight: 800;
+    color: var(--ev-ink);
+  }
+
+  .card__body {
+    padding: 0 16px 16px;
+  }
+
+  .chip {
+    @include ev-chip;
+  }
+
+  .vacio {
+    margin: 0;
+    font-size: ev-fs(12.5);
+    font-weight: 600;
+    color: var(--ev-muted);
+  }
+
+  .sr {
+    @include ev-sr;
+  }
+}

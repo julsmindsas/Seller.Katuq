@@ -1,0 +1,7 @@
+<canvas #lienzo class="confeti" aria-hidden="true"></canvas>
+<div class="aviso-zona" role="status" aria-live="polite">
+  <div class="aviso" *ngIf="mensaje">
+    <span class="aviso__icono"><app-en-vivo-icono nombre="trofeo"></app-en-vivo-icono></span>
+    <span class="aviso__texto">{{ mensaje }}</span>
+  </div>
+</div>

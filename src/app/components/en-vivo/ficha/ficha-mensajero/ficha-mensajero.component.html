@@ -1,0 +1,22 @@
+<div class="fx-hero">
+  <div class="fx-quien">
+    <div class="fx-who" *ngIf="contenido.descripcion">{{ contenido.descripcion }}</div>
+    <div class="fx-sub">{{ contenido.subtitulo }}</div>
+  </div>
+  <span class="fx-pill" [ngClass]="contenido.clasePastilla">{{ contenido.pastilla }}</span>
+</div>
+
+<dl class="fx-grid" *ngIf="contenido.celdas.length > 0">
+  <div class="fx-cell" *ngFor="let c of contenido.celdas; trackBy: porEtiqueta">
+    <dt>{{ c.etiqueta }}</dt>
+    <dd [ngClass]="c.clase" [attr.title]="c.valor">{{ c.valor }}</dd>
+  </div>
+</dl>
+
+<section class="fx-sec" *ngIf="contenido.tituloLleva" [attr.aria-label]="contenido.tituloLleva">
+  <h3 class="fx-eyebrow">{{ contenido.tituloLleva }}</h3>
+  <app-en-vivo-ficha-filas [filas]="contenido.filas" (abrirPedido)="abrirPedido.emit($event)"></app-en-vivo-ficha-filas>
+  <p class="fx-vacio" *ngIf="contenido.restantes > 0">y {{ contenido.restantes }} más</p>
+</section>
+
+<p class="fx-nota">{{ contenido.nota }}</p>

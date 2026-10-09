@@ -1,6 +1,6 @@
 import type * as ThreeNS from 'three';
-import { DEG, EscenaBase, OpcionesEscena, RoundedBox, Three, VistaCamara } from '../../shared/escena-3d/escena-base';
-import type { MapaPedidosResponse } from '../../shared/services/dashboard/mapa-pedidos.service';
+import { DEG, EscenaBase, OpcionesEscena, RoundedBox, Three, VistaCamara } from './escena-base';
+import type { MapaPedidosResponse } from '../services/dashboard/mapa-pedidos.service';
 import { RAMPA_MAPA } from './mapa-rampa';
 
 // ==========================================================================
@@ -28,7 +28,7 @@ export type IdMapa = string;
 const LON0 = -73.6;
 const LAT0 = 4.4;
 const K = 1.45; // unidades de mundo por grado
-const ALTO_MAPA = 0.55;
+export const ALTO_MAPA = 0.55;
 const COLUMNAS = 8;
 const FONDO = 0xe7e2f7;
 const TIERRA = '#F1EEFC';
@@ -49,7 +49,7 @@ function dentroDe(lon: number, lat: number, poligono: number[][][]): boolean {
 const px = (lon: number) => (lon - LON0) * K;
 const py = (lat: number) => (lat - LAT0) * K;
 
-interface DeptoRuntime { mesh: ThreeNS.Mesh; centro: ThreeNS.Vector3; y: number; }
+export interface DeptoRuntime { mesh: ThreeNS.Mesh; centro: ThreeNS.Vector3; y: number; }
 interface ColumnaRuntime { grupo: ThreeNS.Group; cuerpo: ThreeNS.Mesh; disco: ThreeNS.Mesh; iso: string | null; alto: number; x: number; z: number; ancla: ThreeNS.Vector3; }
 
 export class MapaColombiaEscena extends EscenaBase<IdMapa> {
@@ -67,18 +67,25 @@ export class MapaColombiaEscena extends EscenaBase<IdMapa> {
     fondo: FONDO,
   };
 
-  private readonly deptos = new Map<string, DeptoRuntime>();
+  protected readonly deptos = new Map<string, DeptoRuntime>();
   private readonly columnas = new Map<string, ColumnaRuntime>();
   private grupoColumnas!: ThreeNS.Group;
-  private lienzo!: HTMLCanvasElement;
-  private textura!: ThreeNS.CanvasTexture;
-  private limites = { minX: 0, minY: 0, w: 1, h: 1 };
+  protected lienzo!: HTMLCanvasElement;
+  protected textura!: ThreeNS.CanvasTexture;
+  protected limites = { minX: 0, minY: 0, w: 1, h: 1 };
+  // Materiales y luces que las escenas hijas (En vivo) re-tiñen al cambiar de tema.
+  protected matTapa!: ThreeNS.MeshLambertMaterial;
+  protected matCostado!: ThreeNS.MeshLambertMaterial;
+  protected matPiso!: ThreeNS.MeshBasicMaterial;
+  protected lineaInset: ThreeNS.LineDashedMaterial | null = null;
+  protected luzHemi!: ThreeNS.HemisphereLight;
+  protected luzSol!: ThreeNS.DirectionalLight;
   private datos: MapaPedidosResponse | null = null;
   private crecer = 1; // 0..1, columnas apareciendo
   private yo: { grupo: ThreeNS.Group; anillo: ThreeNS.Mesh; x: number; z: number; iso: string | null; ancla: ThreeNS.Vector3 } | null = null;
   private lut: Uint8ClampedArray | null = null;
 
-  constructor(T: Three, RB: RoundedBox, opts: OpcionesEscena<IdMapa>, private readonly geo: GeoColombia) {
+  constructor(T: Three, RB: RoundedBox, opts: OpcionesEscena<IdMapa>, protected readonly geo: GeoColombia) {
     super(T, RB, opts);
   }
 
@@ -119,6 +126,69 @@ export class MapaColombiaEscena extends EscenaBase<IdMapa> {
     this.scene.add(grupo);
     this.yo = { grupo, anillo, x, z, iso: depto.iso, ancla: new T.Vector3(x, ALTO_MAPA, z) };
     return { iso: depto.iso, nombre: depto.nombre };
+  }
+
+  // ---------------------------------------------------- colores (las hijas los cambian)
+
+  /** Fondo de la escena. */
+  protected colorFondoMapa(): number { return FONDO; }
+  /** Relleno de la tierra en la textura del mapa. */
+  protected colorTierra(): string { return TIERRA; }
+  /** Costado (borde) de los departamentos. */
+  protected colorCostado(): number { return 0xcfc5f3; }
+  /** Borde entre departamentos, pintado sobre la textura. */
+  protected colorBorde(): string { return 'rgba(255,255,255,0.9)'; }
+  /** Recuadro punteado del archipiélago. */
+  protected colorLineaInset(): number { return 0xa996ff; }
+
+  /**
+   * Relleno de la tierra en la textura (antes del calor y de los bordes). Por defecto, un solo
+   * color; una escena hija puede pintar cada departamento de un tono (mapa de demanda).
+   */
+  protected rellenarPais(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = this.colorTierra();
+    this.trazarPais(ctx);
+    ctx.fill('evenodd');
+  }
+
+  /** Vuelve a leer los colores: re-tiñe piso, costados y recuadro, y repinta la textura. */
+  protected retemarMapa(): void {
+    this.matPiso?.color.set(this.colorFondoMapa());
+    this.matCostado?.color.set(this.colorCostado());
+    this.lineaInset?.color.set(this.colorLineaInset());
+    this.renderer?.setClearColor(this.colorFondoMapa(), 1);
+    if (this.lienzo) this.pintar();
+    this.sucio = true;
+  }
+
+  /**
+   * Posición (mundo) de una ciudad por su código DANE, a la altura del mapa más `y`. Una ciudad
+   * que el mapa no trae cae en el centro de su departamento; sin departamento, null.
+   */
+  protected posDeCiudad(dane: string | null | undefined, y = 0): ThreeNS.Vector3 | null {
+    if (!dane) return null;
+    const c = this.geo.ciudades[dane];
+    if (c) return new this.T.Vector3(px(c[0]), ALTO_MAPA + y, -py(c[1]));
+    const d = this.geo.departamentos.find((x) => x.dane === dane.slice(0, 2) && !x.inset);
+    return d ? new this.T.Vector3(px(d.centro[0]), ALTO_MAPA + y, -py(d.centro[1])) : null;
+  }
+
+  /** Puntos del contorno del país y de las ciudades a `alto` de altura: lo que debe caber en el encuadre. */
+  protected puntosDeEncuadre(alto: number): ThreeNS.Vector3[] {
+    const T = this.T;
+    const pts: ThreeNS.Vector3[] = [];
+    for (const d of this.geo.departamentos) {
+      for (const pl of d.poligonos) {
+        pl[0].forEach(([lon, lat], i) => {
+          if (i % 3 === 0) pts.push(new T.Vector3(px(lon), 0, -py(lat)), new T.Vector3(px(lon), ALTO_MAPA, -py(lat)));
+        });
+      }
+    }
+    for (const k of Object.keys(this.geo.ciudades)) {
+      const p = this.posDeCiudad(k, alto);
+      if (p) pts.push(p);
+    }
+    return pts;
   }
 
   // -------------------------------------------------------------- ganchos
@@ -187,8 +257,10 @@ export class MapaColombiaEscena extends EscenaBase<IdMapa> {
 
   private luces(): void {
     const T = this.T;
-    this.scene.add(new T.HemisphereLight(0xffffff, 0xd6cef5, 1.9));
+    this.luzHemi = new T.HemisphereLight(0xffffff, 0xd6cef5, 1.9);
+    this.scene.add(this.luzHemi);
     const sol = new T.DirectionalLight(0xffffff, 1.6);
+    this.luzSol = sol;
     sol.position.set(-12, 30, 16);
     this.scene.add(sol, sol.target);
     if (!this.opts.calidadBaja) {
@@ -206,7 +278,8 @@ export class MapaColombiaEscena extends EscenaBase<IdMapa> {
     const T = this.T;
     const g = new T.PlaneGeometry(240, 240);
     g.rotateX(-Math.PI / 2);
-    this.scene.add(new T.Mesh(g, new T.MeshBasicMaterial({ color: FONDO })));
+    this.matPiso = new T.MeshBasicMaterial({ color: this.colorFondoMapa() });
+    this.scene.add(new T.Mesh(g, this.matPiso));
     if (!this.opts.calidadBaja) {
       const sombras = new T.Mesh(g, new T.ShadowMaterial({ color: 0x2b2160, opacity: 0.14 }));
       sombras.position.y = 0.01;
@@ -236,7 +309,9 @@ export class MapaColombiaEscena extends EscenaBase<IdMapa> {
     this.textura.offset.set(-minX / this.limites.w, -minY / this.limites.h);
 
     const tapa = new T.MeshLambertMaterial({ map: this.textura });
-    const costado = new T.MeshLambertMaterial({ color: 0xcfc5f3 });
+    const costado = new T.MeshLambertMaterial({ color: this.colorCostado() });
+    this.matTapa = tapa;
+    this.matCostado = costado;
 
     for (const d of this.geo.departamentos) {
       const formas = d.poligonos.map((pl) => {
@@ -262,7 +337,7 @@ export class MapaColombiaEscena extends EscenaBase<IdMapa> {
       const pad = 0.55;
       const x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad, z0 = Math.min(...zs) - pad, z1 = Math.max(...zs) + pad;
       const pts = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]].map(([x, z]) => new T.Vector3(x, 0.03, z));
-      const linea = new T.LineLoop(new T.BufferGeometry().setFromPoints(pts), new T.LineDashedMaterial({ color: 0xa996ff, dashSize: 0.25, gapSize: 0.18 }));
+      const linea = new T.LineLoop(new T.BufferGeometry().setFromPoints(pts), (this.lineaInset = new T.LineDashedMaterial({ color: this.colorLineaInset(), dashSize: 0.25, gapSize: 0.18 })));
       linea.computeLineDistances();
       this.scene.add(linea);
     }
@@ -275,7 +350,7 @@ export class MapaColombiaEscena extends EscenaBase<IdMapa> {
     return [((px(lon) - minX) / w) * this.lienzo.width, (1 - (py(lat) - minY) / h) * this.lienzo.height];
   }
 
-  private trazarPais(ctx: CanvasRenderingContext2D, soloIso?: string): void {
+  protected trazarPais(ctx: CanvasRenderingContext2D, soloIso?: string): void {
     ctx.beginPath();
     for (const d of this.geo.departamentos) {
       if (soloIso && d.iso !== soloIso) continue;
@@ -304,13 +379,11 @@ export class MapaColombiaEscena extends EscenaBase<IdMapa> {
   }
 
   /** Pinta tierra, bordes y el calor de los pedidos en la textura del mapa. */
-  private pintar(): void {
+  protected pintar(): void {
     const ctx = this.lienzo.getContext('2d')!;
     const W = this.lienzo.width, H = this.lienzo.height;
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = TIERRA;
-    this.trazarPais(ctx);
-    ctx.fill('evenodd');
+    this.rellenarPais(ctx);
 
     const datos = this.datos;
     if (datos && (datos.conCiudad + datos.soloDepartamento) > 0) {
@@ -366,7 +439,7 @@ export class MapaColombiaEscena extends EscenaBase<IdMapa> {
     }
 
     // Bordes de departamento encima del calor
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.strokeStyle = this.colorBorde();
     ctx.lineWidth = 2;
     ctx.lineJoin = 'round';
     this.trazarPais(ctx);
