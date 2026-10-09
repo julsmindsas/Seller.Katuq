@@ -66,6 +66,9 @@ type Fase = 'cargando' | 'formulario' | 'avance' | 'resultado';
 export class TiendaEnUnPasoComponent implements OnInit, OnDestroy {
   /** Un sitio de esta función que quedó sin terminar: se muestra su avance en vez del formulario. */
   @Input() sitioPendienteId = '';
+  /** Nombre y descripción que ya trae la persona (por ejemplo, del chat de Opttia). Solo precargan el formulario. */
+  @Input() nombreInicial = '';
+  @Input() descripcionInicial = '';
 
   @Output() cerrar = new EventEmitter<void>();
   /** El trabajo terminó (publicado o en borrador) o se detuvo: la lista se refresca. */
@@ -114,7 +117,14 @@ export class TiendaEnUnPasoComponent implements OnInit, OnDestroy {
     if (this.sitioPendienteId) {
       this.fase = 'cargando';
       this.cargarPendiente(this.sitioPendienteId);
+      return;
     }
+    // Sin trabajo pendiente: el formulario abre con lo que ya traiga la persona. Solo precarga;
+    // no se manda nada hasta que ella dé el clic final.
+    const nombre = (this.nombreInicial || '').replace(/\s+/g, ' ').trim().slice(0, MAX_NOMBRE);
+    const descripcion = (this.descripcionInicial || '').replace(/\s+/g, ' ').trim().slice(0, MAX_DESCRIPCION);
+    if (nombre) this.formulario.nombre = nombre;
+    if (descripcion) this.formulario.descripcion = descripcion;
   }
 
   ngOnDestroy(): void {
