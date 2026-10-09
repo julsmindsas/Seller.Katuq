@@ -8797,3 +8797,17 @@ Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimien
 **Desplegado el 9-oct.** Los dos commits salieron a producción arrastrados por el despliegue de la rama (la sesión de logística hizo push y pull en el servidor, `09c0d61`); verificado después: `GET /v1/integration/events/raw` y `/raw/statistics` responden 401 sin sesión (antes 200).
 **No verificado.** Nada contra Wompi ni Firestore reales; ver los avisos crudos con una sesión de Super Administrador de Julsmind; apps móviles ajenas a estos repos.
 **Reversa.** `git revert 1d678be` (reabre los avisos al público; no conviene). Guía de aplicación de los demás parches: `~/Downloads/_Organizado/01_Katuq/Parches-Effix-2026-10-08/`.
+
+## D-385 (2026-10-09) — Effix: funciones nuevas detrás de un interruptor por comercio (todas apagadas)
+
+**Disparador.** Encargo de desarrollo de la feria Effix (16 al 18 de octubre; plan aprobado por Daniel el 8-oct). Regla suya: toda función nueva nace **apagada** para ALMARA FELICIDAD, OH MY STORE, CAFE ESCOBAR y ALMACEN BOMBAS, se enciende comercio por comercio y se prueba en FLORECER; lo que toque pedidos, cobro, inventario o checkout va con diff aprobado, uno a la vez.
+
+**Decisión.**
+- **Interruptor:** `featureFlags.<nombre>` en el documento de la empresa; ausente = apagada. Back: `services/companyFeatureFlags.js` (empresa del token, nunca de un encabezado; ante cualquier duda, apagada; `requireFeature` responde 403). Front: `CompanyFeaturesService`. Se prende con `functions/scripts/set-company-feature.js "<empresa>" <bandera> on --execute` (simula por defecto; escribe solo esa bandera). La ficha y el alta de empresa ignoran `featureFlags`. Catálogo: productFromPhoto, productImportPhotos, buyNowCod, whatsappCartRecovery, whatsappOrderConfirmation, enviameCodGuide, singleStepStore, product3d, pickingAlistamiento.
+- **Ya commiteadas y apagadas (no tocan pedidos, cobro ni inventario):** ficha del producto desde una foto (`productFromPhoto`), importar productos con fotos por URL (`productImportPhotos`), plantilla de tienda de un solo producto (escondida hasta cablearla) y el script que registra en Meta las dos plantillas de WhatsApp (por defecto simula; `--execute` lo corre Daniel).
+- **Pendientes, cada una con su aprobación del diff:** Wompi 03 y 04 (D-381), cupones de feria, Comprar ahora contra entrega, WhatsApp (confirmación y carrito), Envíame (contra entrega y rastreo) y alistamiento. Parches y guía paso a paso en `~/Downloads/_Organizado/01_Katuq/Parches-Effix-2026-10-08/`.
+- **No existe todavía:** el descuento del plan (30 % por 6 meses; anual con mes de regalo): solo hay diseño. 3D y el chat de Opttia para el comercio no empezaron.
+
+**Verificado (9-oct, pruebas en verde):** banderas 65, ficha 72 en el back y 117 de lógica pura en el front, plantillas de WhatsApp 12, más las de importación y de la plantilla (salida 0); las cuatro suites de empresas que ya existían no cambian.
+**No verificado:** compilación del front (la hará el `release`; si falla, falla antes de publicar); ninguna función probada en FLORECER; que el ADK en producción acepte imagen en `/api/ai/json` (solo se leyó su repo); nada contra Meta, Opttia ni Firestore reales.
+**Reversa.** Apagar la bandera con el script; cada función es un commit aparte y se puede revertir.
