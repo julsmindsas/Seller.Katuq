@@ -1,6 +1,6 @@
 import { Component, HostListener, OnDestroy, OnInit } from "@angular/core";
 import Swal from "sweetalert2";
-import { Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ToastrService } from "ngx-toastr";
 import { PlantillaSitio, Sitio, SitiosService } from "../sitios.service";
 import { environment } from "../../../../environments/environment";
@@ -15,6 +15,7 @@ import {
   mensajeDeErrorPaginaConIA,
   validarDescripcion,
 } from "./pagina-con-ia.logic";
+import { PrecargaTienda, leerEnlaceTienda } from "./enlace-tienda.logic";
 
 /** Nombre humano de cada tipo de bloque, para los chips de la plantilla. */
 const NOMBRE_BLOQUE: { [tipo: string]: string } = {
@@ -158,7 +159,9 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
     private router: Router,
     private toastr: ToastrService,
     // Banderas por comercio: decide si se ofrece "Tu tienda en minutos con IA".
-    public features: CompanyFeaturesService
+    public features: CompanyFeaturesService,
+    // Para leer el enlace que entrega el chat de Opttia (nombre y descripción de la tienda).
+    private route: ActivatedRoute
   ) {}
 
   // ── Tienda en minutos con IA, en un solo paso (bandera singleStepStore) ──────
@@ -166,6 +169,11 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   // comporta exactamente como antes. Quien manda es el servidor (responde 403 si está apagada).
 
   mostrandoTiendaEnUnPaso = false;
+  /** Lo que el chat de Opttia dejó escrito en el enlace: la pantalla abre con esto puesto. */
+  precargaNombre = "";
+  precargaDescripcion = "";
+  /** El enlace del chat, leído al abrir la pantalla y gastado una sola vez (cuando la lista ya cargó). */
+  private enlaceTienda: PrecargaTienda | null = null;
   /** Una tienda de esta función que quedó a medias: se muestra su avance en vez del formulario. */
   sitioPendienteId = "";
   private vigilancia: any = null;
@@ -181,8 +189,34 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   sectorMarca = "";
 
   ngOnInit(): void {
+    this.leerEnlaceDelChat();
     this.cargar();
     this.cargarMarca();
+  }
+
+  /**
+   * El chat de Opttia entrega `/sitios?tiendaEnUnPaso=1&nombre=…&descripcion=…`. Con la bandera
+   * apagada el enlace no hace nada. Se lee aquí, se limpia de la dirección (un refresco no vuelve a
+   * abrirlo) y la pantalla se abre cuando la lista ya cargó, para saber si hay una tienda sin terminar.
+   */
+  private leerEnlaceDelChat(): void {
+    if (!this.features.isEnabled("singleStepStore")) return;
+    const mapa = this.route && this.route.snapshot && this.route.snapshot.queryParamMap;
+    const precarga = mapa ? leerEnlaceTienda((clave) => mapa.get(clave)) : null;
+    if (!precarga) return;
+    this.enlaceTienda = precarga;
+    if (this.router && typeof this.router.navigate === "function") {
+      void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+    }
+  }
+
+  private abrirDesdeEnlace(): void {
+    const enlace = this.enlaceTienda;
+    this.enlaceTienda = null;
+    if (!enlace || !this.features.isEnabled("singleStepStore")) return;
+    this.precargaNombre = enlace.nombre;
+    this.precargaDescripcion = enlace.descripcion;
+    this.abrirTiendaEnUnPaso();
   }
 
   ngOnDestroy(): void {
@@ -223,10 +257,12 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
         this.cargando = false;
         this.sitios = (res && res.data) || [];
         this.vigilar();
+        this.abrirDesdeEnlace();
       },
       error: () => {
         this.cargando = false;
         this.toastr.error("No pudimos cargar tus páginas.");
+        this.abrirDesdeEnlace();
       },
     });
   }
@@ -285,6 +321,8 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   cerrarTiendaEnUnPaso(): void {
     this.mostrandoTiendaEnUnPaso = false;
     this.sitioPendienteId = "";
+    this.precargaNombre = "";
+    this.precargaDescripcion = "";
     this.refrescar();
   }
 
@@ -506,7 +544,9 @@ export class SitiosListaComponent implements OnInit, OnDestroy {
   crearConIA(): void {
     if (this.creandoConIA || !this.features.isEnabled("landingPrompt")) return;
     const v = validarDescripcion(this.descripcionIA);
-    if (!v.ok) {
+    // "mensaje" in v y no !v.ok: el build de producción no estrecha la unión por el booleano y fallaba con
+    // TS2339 (Property 'mensaje' does not exist on type '{ ok: true; ... }').
+    if ("mensaje" in v) {
       this.toastr.warning(v.mensaje);
       return;
     }

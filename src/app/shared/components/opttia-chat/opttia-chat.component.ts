@@ -120,6 +120,19 @@ export class OpttiaChatComponent implements OnInit, OnDestroy, AfterViewChecked 
     if (this.errorMessage) this.draft = text;
   }
 
+  /**
+   * "Crear mi tienda con IA": solo si la herramienta le llegó a esta persona (bandera de la empresa y
+   * administrador; el servidor decide). El chat no recuerda mensajes, así que no se manda solo: llena el
+   * cuadro con una frase que la persona completa, para que el nombre y lo que vende viajen JUNTOS con la intención.
+   */
+  get canSuggestStore(): boolean {
+    return this.opttia.hasTool('get_single_step_store_link');
+  }
+
+  fillStoreDraft(): void {
+    this.draft = 'Quiero crear mi tienda con IA. Mi negocio se llama … y vendo …';
+  }
+
   useSuggestion(suggestion: string): void {
     this.draft = suggestion;
     void this.send();

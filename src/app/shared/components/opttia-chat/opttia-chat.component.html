@@ -52,6 +52,9 @@
       <button type="button" *ngFor="let suggestion of suggestions" [disabled]="!opttia.canSend" (click)="useSuggestion(suggestion)">
         {{ suggestion }}
       </button>
+      <button type="button" *ngIf="canSuggestStore" [disabled]="!opttia.canSend" (click)="fillStoreDraft()">
+        Crear mi tienda con IA
+      </button>
     </div>
 
     <article class="interrupt-card" *ngIf="pendingInterrupt as interrupt">

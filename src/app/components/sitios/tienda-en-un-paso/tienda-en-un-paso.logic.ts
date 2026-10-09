@@ -123,6 +123,9 @@ export interface ResultadoValidacion {
 }
 
 export const MENSAJES = {
+  /** El servidor ya tenía OTRA tienda armándose (otro envío): se muestra esa, y lo de ahora no se aplicó. */
+  datosAnteriores:
+    'Ya había una tienda armándose con un envío anterior. Te mostramos su avance; lo que mandaste ahora no se aplicó: si cambiaste precios o fotos, corrígelos en Productos cuando termine.',
   nombre: `Escribe el nombre de tu negocio (mínimo ${MIN_NOMBRE} letras).`,
   descripcion: `Cuéntanos en una frase qué vendes (mínimo ${MIN_DESCRIPCION} letras), o sube al menos una foto de un producto.`,
   demasiadasFotos: `Puedes subir hasta ${MAX_FOTOS} fotos. Quita las que sobren e inténtalo de nuevo.`,

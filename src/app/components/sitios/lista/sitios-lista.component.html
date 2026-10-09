@@ -461,6 +461,8 @@
 <!-- Tienda en minutos con IA, en un solo paso (bandera singleStepStore). -->
 <app-tienda-en-un-paso *ngIf="mostrandoTiendaEnUnPaso && features.isEnabled('singleStepStore')"
                        [sitioPendienteId]="sitioPendienteId"
+                       [nombreInicial]="precargaNombre"
+                       [descripcionInicial]="precargaDescripcion"
                        (terminado)="alTerminarTiendaEnUnPaso()"
                        (cerrar)="cerrarTiendaEnUnPaso()">
 </app-tienda-en-un-paso>

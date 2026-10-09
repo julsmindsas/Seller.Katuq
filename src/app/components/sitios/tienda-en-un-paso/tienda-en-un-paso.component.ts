@@ -66,6 +66,9 @@ type Fase = 'cargando' | 'formulario' | 'avance' | 'resultado';
 export class TiendaEnUnPasoComponent implements OnInit, OnDestroy {
   /** Un sitio de esta función que quedó sin terminar: se muestra su avance en vez del formulario. */
   @Input() sitioPendienteId = '';
+  /** Nombre y descripción que ya trae la persona (por ejemplo, del chat de Opttia). Solo precargan el formulario. */
+  @Input() nombreInicial = '';
+  @Input() descripcionInicial = '';
 
   @Output() cerrar = new EventEmitter<void>();
   /** El trabajo terminó (publicado o en borrador) o se detuvo: la lista se refresca. */
@@ -88,6 +91,8 @@ export class TiendaEnUnPasoComponent implements OnInit, OnDestroy {
   pasos: PasoVisible[] = [];
   resumen: ResumenFinal | null = null;
   avisoLargo = '';
+  /** Se muestra la tienda de OTRO envío (el servidor ya tenía una a medio crear): lo de ahora no se aplicó. */
+  avisoDatosAnteriores = '';
   copiado = false;
 
   /** Se genera UNA vez por intento y se reusa en los reintentos (idempotencia). */
@@ -114,7 +119,14 @@ export class TiendaEnUnPasoComponent implements OnInit, OnDestroy {
     if (this.sitioPendienteId) {
       this.fase = 'cargando';
       this.cargarPendiente(this.sitioPendienteId);
+      return;
     }
+    // Sin trabajo pendiente: el formulario abre con lo que ya traiga la persona. Solo precarga;
+    // no se manda nada hasta que ella dé el clic final.
+    const nombre = (this.nombreInicial || '').replace(/\s+/g, ' ').trim().slice(0, MAX_NOMBRE);
+    const descripcion = (this.descripcionInicial || '').replace(/\s+/g, ' ').trim().slice(0, MAX_DESCRIPCION);
+    if (nombre) this.formulario.nombre = nombre;
+    if (descripcion) this.formulario.descripcion = descripcion;
   }
 
   ngOnDestroy(): void {
@@ -249,6 +261,7 @@ export class TiendaEnUnPasoComponent implements OnInit, OnDestroy {
 
     this.enviando = true;
     this.errorGeneral = '';
+    this.avisoDatosAnteriores = '';
     const solicitud = construirSolicitud(this.formulario, this.requestId);
     this.servicio.iniciar(solicitud).subscribe({
       next: (respuesta) => {
@@ -259,7 +272,10 @@ export class TiendaEnUnPasoComponent implements OnInit, OnDestroy {
         this.enviando = false;
         const mensaje = mensajeDeError(error);
         if (mensaje.siteIdPendiente) {
-          // Ya hay una tienda a medio crear: se muestra su avance y se puede retomar.
+          // Ya hay una tienda a medio crear: se muestra su avance y se puede retomar. Es de OTRO envío (con el
+          // mismo, el servidor la habría reenganchado sin error), así que lo que se mandó ahora no se aplicó:
+          // se dice, para que nadie crea que la tienda salió con los precios recién corregidos.
+          this.avisoDatosAnteriores = MENSAJES.datosAnteriores;
           this.fase = 'cargando';
           this.cargarPendiente(mensaje.siteIdPendiente);
           return;
