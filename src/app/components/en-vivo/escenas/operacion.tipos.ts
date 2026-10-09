@@ -1,13 +1,17 @@
 import type { EtapaId } from '../servicios/en-vivo.modelos';
 import type { Tokens } from './escena-tokens';
 
-/** Estaciones de la banda de la operación (las etapas que tienen caja a la vista). */
-export type EstacionId = 'recibido' | 'produccion' | 'alistamiento' | 'listo';
+/**
+ * Estaciones de la banda de la operación: los estados de proceso de Katuq que tienen caja a la
+ * vista (Sin producir, En producción, Producido, Empacado, Para despachar). Despachado va en la
+ * calle (la moto o el camión) y Entregado en la casa.
+ */
+export type EstacionId = 'recibido' | 'produccion' | 'producido' | 'empacado' | 'listo';
 
-export const ESTACIONES: ReadonlyArray<EstacionId> = ['recibido', 'produccion', 'alistamiento', 'listo'];
+export const ESTACIONES: ReadonlyArray<EstacionId> = ['recibido', 'produccion', 'producido', 'empacado', 'listo'];
 
 export const esEstacion = (etapa: EtapaId | string | null | undefined): etapa is EstacionId =>
-  etapa === 'recibido' || etapa === 'produccion' || etapa === 'alistamiento' || etapa === 'listo';
+  etapa === 'recibido' || etapa === 'produccion' || etapa === 'producido' || etapa === 'empacado' || etapa === 'listo';
 
 /** Lo que se tocó en la escena. `id`: pedido = id del pedido, estacion = id de la etapa, vehiculo = nombre del transportador. */
 export interface ToqueEscena {

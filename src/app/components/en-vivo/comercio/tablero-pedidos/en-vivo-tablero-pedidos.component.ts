@@ -46,7 +46,7 @@ const DURACION_NUEVA_MS = 1800;
 const DURACION_MOVIDA_MS = 1400;
 
 /**
- * Vista "Pedidos": el tablero por etapas (recibidos, producción, alistamiento, listos, en camino y
+ * Vista "Pedidos": el tablero por etapas (sin producir, en producción, producido, empacado, para despachar, despachado y
  * entregados hoy) con una tarjeta por pedido. Lee los pedidos de la foto del `EnVivoEstadoService`
  * y los UBICA por etapa; no calcula nada más que cuánto lleva cada uno en su etapa con sus horas.
  *

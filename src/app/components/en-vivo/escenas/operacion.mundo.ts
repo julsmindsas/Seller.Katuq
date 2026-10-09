@@ -6,13 +6,16 @@ import { EstacionId, ESTACIONES } from './operacion.tipos';
 type V3 = ThreeNS.Vector3;
 interface Pos2 { x: number; z: number; }
 
-/** Posiciones de las cuatro estaciones sobre la banda (las comparte la escena para las cajas). */
+/** Posiciones de las cinco estaciones (estados de Katuq) sobre la banda; las comparte la escena para las cajas. */
 export const PADS: Record<EstacionId, Pos2> = {
-  recibido: { x: -10, z: -5.2 },
-  produccion: { x: -4.6, z: -5.2 },
-  alistamiento: { x: 0.8, z: -5.2 },
-  listo: { x: 6.2, z: -5.2 },
+  recibido: { x: -10.6, z: -5.2 },
+  produccion: { x: -6.3, z: -5.2 },
+  producido: { x: -2.0, z: -5.2 },
+  empacado: { x: 2.3, z: -5.2 },
+  listo: { x: 6.6, z: -5.2 },
 };
+/** Donde parquea la moto frente a una casa mientras el pedido va despachado (al lado de la puerta). */
+export const PARQUEO_CASA = { dx: 1.55, z: 6.35 };
 export const BELT_Z = -2.2;
 export const PICK: Pos2 = { x: 8.7, z: -0.5 };
 const CASAS: ReadonlyArray<number> = [-14.2, -9.6, -5.0, -0.4, 4.2, 8.8];
@@ -31,7 +34,7 @@ export interface ContextoMundo {
 
 /**
  * El mundo estático de la operación: luces, plataforma, tienda con su pantalla, banda con su textura
- * animada, las cuatro estaciones con su utilería, el garaje, el barrio y la geometría de los
+ * animada, las cinco estaciones (estados de Katuq) con su utilería, el garaje, el barrio y la geometría de los
  * vehículos. Todo plano y sin gradientes; los colores salen de los tokens del tema.
  */
 export class MundoOperacion {
@@ -164,8 +167,8 @@ export class MundoOperacion {
       g.userData['zona'] = 'e:' + id;
       sc.add(g);
       this.ctx.pickables.push(g);
-      const borde = k.malla(k.gRbox(4.5, 0.1, 3.5, 0.5), k.mt(this.ctx.tonoEtapa(id)), g, p.x, 0.05, p.z, false);
-      const tapa = k.malla(k.gRbox(4.2, 0.14, 3.2, 0.42), k.mt(this.ctx.tonoEtapa(id) + '-soft'), g, p.x, 0.08, p.z, false);
+      const borde = k.malla(k.gRbox(3.95, 0.1, 3.5, 0.45), k.mt(this.ctx.tonoEtapa(id)), g, p.x, 0.05, p.z, false);
+      const tapa = k.malla(k.gRbox(3.65, 0.14, 3.2, 0.4), k.mt(this.ctx.tonoEtapa(id) + '-soft'), g, p.x, 0.08, p.z, false);
       this.padsMesh.set(id, { borde, tapa });
     });
     // utilería de cada estación
@@ -190,8 +193,16 @@ export class MundoOperacion {
       d.rotation.z = (i * Math.PI) / 4;
     }
     this.animados.push((t) => { engranaje.rotation.z = -t * 1.6; });
-    // alistamiento: mesa con cinta y cajas planas
-    x = PADS.alistamiento.x;
+    // producido: carro con los productos terminados, todavía sin empacar
+    x = PADS.producido.x;
+    k.malla(k.gRbox(2.6, 0.14, 1.3, 0.08), k.mt('scene-wall'), sc, x, 0.78, z);
+    k.malla(k.gRbox(2.6, 0.1, 1.3, 0.06), k.mt('scene-trim'), sc, x, 0.3, z);
+    ([[-1.15, -0.5], [1.15, -0.5], [-1.15, 0.5], [1.15, 0.5]] as Array<[number, number]>).forEach(([dx, dz]) =>
+      k.malla(k.gCaja(0.1, 0.72, 0.1), k.mt('scene-trim'), sc, x + dx, 0.42, z + dz));
+    ([[-0.8, -0.2], [-0.25, 0.25], [0.3, -0.2], [0.85, 0.2]] as Array<[number, number]>).forEach(([dx, dz], i) =>
+      k.malla(k.gCil(0.2, 0.24, 0.62, 16), k.mt(i % 2 ? 'warn' : 'scene-wheel'), sc, x + dx, 1.16, z + dz));
+    // empacado: mesa con cinta y cajas planas
+    x = PADS.empacado.x;
     k.malla(k.gRbox(2.9, 0.16, 1.4, 0.08), k.mt('scene-wall'), sc, x, 0.9, z);
     ([[-1.3, -0.55], [1.3, -0.55], [-1.3, 0.55], [1.3, 0.55]] as Array<[number, number]>).forEach(([dx, dz]) =>
       k.malla(k.gCaja(0.12, 0.84, 0.12), k.mt('scene-trim'), sc, x + dx, 0.42, z + dz));

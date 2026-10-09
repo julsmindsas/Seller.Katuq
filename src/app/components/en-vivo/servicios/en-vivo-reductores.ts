@@ -54,6 +54,7 @@ export function estadoInicial(vista: VistaEnVivo = 'comercio', empresa: string |
     eventos: [],
     radar: null,
     opttia: null,
+    opttiaActivo: true,
     actualizadoEn: null,
   };
 }
@@ -289,7 +290,8 @@ export function aplicarFoto(
     etapas: foto.etapas && foto.etapas.length > 0 ? foto.etapas : estado.etapas,
     eventos,
     radar: foto.radar ?? estado.radar,
-    opttia: foto.opttia ?? estado.opttia,
+    opttia: foto.opttiaActivo === false ? null : foto.opttia ?? estado.opttia,
+    opttiaActivo: foto.opttiaActivo !== false,
     actualizadoEn: generado,
   };
 

@@ -53,6 +53,9 @@ const ESPERA_RETEMA_MS = 150;
 export class EnVivoOrbeService implements OnDestroy {
   private readonly guia = new GuiaOpttia();
   private readonly anfitriones = new Map<AnfitrionOrbe, OrbeOpttia>();
+  /** Escenas anotadas: con Opttia apagado (D-386) no llevan orbe y lo recuperan si se prende. */
+  private readonly registrados = new Set<AnfitrionOrbe>();
+  private opttiaActivo = true;
   private readonly marcaSubject = new BehaviorSubject<MarcaOrbe | null>(null);
   private readonly recorridoSubject = new BehaviorSubject<RecorridoOrbe | null>(null);
   private readonly hayOrbeSubject = new BehaviorSubject<boolean>(false);
@@ -96,6 +99,20 @@ export class EnVivoOrbeService implements OnDestroy {
   /** Una escena 3D se anota: se le cuelga un orbe. Devuelve cómo quitarlo (al destruir la escena). */
   registrar(anfitrion: AnfitrionOrbe): () => void {
     this.encender();
+    this.registrados.add(anfitrion);
+    if (this.opttiaActivo) this.montarOrbe(anfitrion);
+    let vigente = true;
+    return () => {
+      if (!vigente) return;
+      vigente = false;
+      this.registrados.delete(anfitrion);
+      this.desmontarOrbe(anfitrion);
+      this.apagarSiSobra();
+    };
+  }
+
+  private montarOrbe(anfitrion: AnfitrionOrbe): void {
+    if (this.anfitriones.has(anfitrion)) return;
     const orbe = new OrbeOpttia(anfitrion, {
       alFrame: (ahoraMs) => this.alFrame(anfitrion, ahoraMs),
       alTocarOrbe: () => this.zona.run(() => this.alternarRecorrido()),
@@ -105,16 +122,16 @@ export class EnVivoOrbeService implements OnDestroy {
     this.anfitriones.set(anfitrion, orbe);
     this.guia.empezar(performance.now());
     this.publicarHayOrbe();
-    return () => {
-      const propio = this.anfitriones.get(anfitrion);
-      if (!propio) return;
-      const eraElActivo = this.activo() === anfitrion;
-      propio.destruir();
-      this.anfitriones.delete(anfitrion);
-      if (eraElActivo) this.ejecutar(this.guia.cortar());
-      this.publicarHayOrbe();
-      this.apagarSiSobra();
-    };
+  }
+
+  private desmontarOrbe(anfitrion: AnfitrionOrbe): void {
+    const propio = this.anfitriones.get(anfitrion);
+    if (!propio) return;
+    const eraElActivo = this.activo() === anfitrion;
+    propio.destruir();
+    this.anfitriones.delete(anfitrion);
+    if (eraElActivo) this.ejecutar(this.guia.cortar());
+    this.publicarHayOrbe();
   }
 
   /** ¿Hay una escena 3D con orbe? */
@@ -158,7 +175,7 @@ export class EnVivoOrbeService implements OnDestroy {
   }
 
   private turnoMarcas(): void {
-    if (this.anfitriones.size > 0 || this.interaccion.repitiendo || this.ficha.abierta || (typeof document !== 'undefined' && document.hidden)) return;
+    if (!this.opttiaActivo || this.anfitriones.size > 0 || this.interaccion.repitiendo || this.ficha.abierta || (typeof document !== 'undefined' && document.hidden)) return;
     const puntos = this.puntos();
     for (let k = 0; k < puntos.length; k++) {
       const p = puntos[this.indiceMarcas++ % puntos.length];
@@ -311,6 +328,19 @@ export class EnVivoOrbeService implements OnDestroy {
         if (!entrega) return;
         this.ejecutar(this.guia.entrega(performance.now(), entrega, this.contexto()));
       })
+    );
+    // Interruptor de Opttia (D-386): apagado quita los orbes (y el botón de recorrido, que depende de ellos).
+    s.add(
+      this.estado.estado$
+        .pipe(map((e) => e.opttiaActivo !== false), distinctUntilChanged())
+        .subscribe((activo) => {
+          this.opttiaActivo = activo;
+          if (activo) this.registrados.forEach((h) => this.montarOrbe(h));
+          else {
+            [...this.anfitriones.keys()].forEach((h) => this.desmontarOrbe(h));
+            this.limpiarMarca();
+          }
+        })
     );
     // Abrir una ficha o repetir el día corta el recorrido.
     s.add(this.ficha.abierta$.subscribe((abierta) => { if (abierta) this.cortar(); }));

@@ -23,11 +23,12 @@ export function claseTono(tono: TonoVisual | null | undefined): string {
 
 /** Las etapas de la banda, en orden, para cuando la foto aún no las trae. */
 export const ETAPAS_POR_DEFECTO: ReadonlyArray<EtapaInfo> = [
-  { id: 'recibido', nombre: 'Recibido', tono: 'neutro' },
+  { id: 'recibido', nombre: 'Sin producir', tono: 'neutro' },
   { id: 'produccion', nombre: 'En producción', tono: 'info' },
-  { id: 'alistamiento', nombre: 'Alistamiento', tono: 'aviso' },
-  { id: 'listo', nombre: 'Listo para salir', tono: 'acento' },
-  { id: 'camino', nombre: 'En camino', tono: 'info' },
+  { id: 'producido', nombre: 'Producido', tono: 'aviso' },
+  { id: 'empacado', nombre: 'Empacado', tono: 'aviso' },
+  { id: 'listo', nombre: 'Para despachar', tono: 'acento' },
+  { id: 'camino', nombre: 'Despachado', tono: 'info' },
   { id: 'entregado', nombre: 'Entregado', tono: 'ok' },
   { id: 'rechazado', nombre: 'Rechazado', tono: 'peligro' },
   { id: 'cancelado', nombre: 'Cancelado', tono: 'peligro' },
@@ -37,7 +38,8 @@ export const ETAPAS_POR_DEFECTO: ReadonlyArray<EtapaInfo> = [
 export const ETAPAS_DE_LA_BANDA: ReadonlyArray<EtapaId> = [
   'recibido',
   'produccion',
-  'alistamiento',
+  'producido',
+  'empacado',
   'listo',
   'camino',
   'entregado',

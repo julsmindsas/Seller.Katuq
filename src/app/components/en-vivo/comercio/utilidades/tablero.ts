@@ -14,13 +14,14 @@ export interface DefinicionColumna {
   nombre: string;
 }
 
-/** Las seis columnas, en orden. Los rechazados y cancelados no tienen columna. */
+/** Las siete columnas, en orden (los estados de proceso de Katuq). Los rechazados y cancelados no tienen columna. */
 export const COLUMNAS_TABLERO: ReadonlyArray<DefinicionColumna> = [
-  { id: 'recibido', nombre: 'Recibidos' },
+  { id: 'recibido', nombre: 'Sin producir' },
   { id: 'produccion', nombre: 'En producción' },
-  { id: 'alistamiento', nombre: 'Alistamiento' },
-  { id: 'listo', nombre: 'Listos para salir' },
-  { id: 'camino', nombre: 'En camino' },
+  { id: 'producido', nombre: 'Producido' },
+  { id: 'empacado', nombre: 'Empacado' },
+  { id: 'listo', nombre: 'Para despachar' },
+  { id: 'camino', nombre: 'Despachado' },
   { id: 'entregado', nombre: 'Entregados hoy' },
 ];
 
@@ -28,7 +29,8 @@ export const COLUMNAS_TABLERO: ReadonlyArray<DefinicionColumna> = [
 export const MINUTOS_TARDE: Readonly<Partial<Record<EtapaId, number>>> = {
   recibido: 30,
   produccion: 90,
-  alistamiento: 45,
+  producido: 45,
+  empacado: 45,
   listo: 45,
   camino: 80,
 };
@@ -53,7 +55,7 @@ export interface TarjetaTablero {
   tarde: boolean;
   /** Lo que lleva en la etapa ("45 min"); en entregados, hace cuánto se entregó ("hace 12 min"). */
   tiempo: string;
-  /** Quién lo lleva (solo en "En camino"): primer nombre del mensajero o nombre de la transportadora. */
+  /** Quién lo lleva (solo en "Despachado"): primer nombre del mensajero o nombre de la transportadora. */
   transporte: string;
   tipoTransporte: 'mensajero' | 'transportadora' | null;
   nuevo: boolean;
@@ -97,9 +99,9 @@ export function entradaEnEtapa(pedido: PedidoEnVivo): number | null {
 }
 
 /**
- * ¿La tarjeta va tarde? Pasados 30 / 90 / 45 / 45 / 80 minutos en recibido / producción /
- * alistamiento / listo / en camino. Los entregados no se marcan, y tampoco el envío con
- * transportadora en "En camino" (tarda horas por naturaleza).
+ * ¿La tarjeta va tarde? Pasados 30 / 90 / 45 / 45 / 45 / 80 minutos en sin producir / producción /
+ * producido / empacado / para despachar / despachado. Los entregados no se marcan, y tampoco el envío
+ * con transportadora en "Despachado" (tarda horas por naturaleza).
  */
 export function esTarde(pedido: PedidoEnVivo, enEtapaMs: number | null): boolean {
   const limite = MINUTOS_TARDE[pedido.etapa];

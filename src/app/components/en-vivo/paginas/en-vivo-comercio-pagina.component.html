@@ -42,7 +42,7 @@
           <app-en-vivo-tablero-pedidos *ngSwitchCase="'pedidos'"></app-en-vivo-tablero-pedidos>
         </ng-container>
 
-        <app-en-vivo-narracion *ngIf="vm.opcion !== 'pedidos'"></app-en-vivo-narracion>
+        <app-en-vivo-narracion *ngIf="(vm.opcion !== 'pedidos') && vm.opttiaActivo"></app-en-vivo-narracion>
         <app-en-vivo-ficha [empresa]="(empresa$ | async) || undefined" (abrirTablero)="alAbrirTablero($event)"></app-en-vivo-ficha>
       </div>
 
@@ -71,7 +71,7 @@
   <!-- Abajo -->
   <div slot="inferior" class="ev-inferior">
     <app-en-vivo-atencion-ahora></app-en-vivo-atencion-ahora>
-    <app-en-vivo-opttia
+    <app-en-vivo-opttia *ngIf="opttiaActivo$ | async"
       [conEscena]="(conEscena$ | async) ?? false"
       (recorrido)="alRecorrido()"
       (verEnEscena)="alVerEnEscena($event)"

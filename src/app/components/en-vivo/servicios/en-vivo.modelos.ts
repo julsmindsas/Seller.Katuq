@@ -24,11 +24,16 @@
 
 // ── Etapas y tonos ──────────────────────────────────────────────────────────
 
-/** Etapas de la banda de la operación. El mapa estado → etapa vive en el backend (`etapas.js`). */
+/**
+ * Etapas de la banda de la operación: son los estados de proceso de Katuq (Sin producir, En producción,
+ * Producido, Empacado, Para despachar, Despachado, Entregado). El mapa estado → etapa vive en el
+ * backend (`etapas.js`).
+ */
 export type EtapaId =
   | 'recibido'
   | 'produccion'
-  | 'alistamiento'
+  | 'producido'
+  | 'empacado'
   | 'listo'
   | 'camino'
   | 'entregado'
@@ -84,7 +89,8 @@ export interface EtapaInfo {
 export const ETAPAS_CON_HORA: ReadonlyArray<EtapaId> = [
   'recibido',
   'produccion',
-  'alistamiento',
+  'producido',
+  'empacado',
   'listo',
   'camino',
   'entregado',
@@ -552,6 +558,8 @@ export interface FotoBaseEnVivo {
   radar: RadarEnVivo | null;
   /** El último resumen de Opttia, o null si aún no hay (llega después como mensaje `opttia`). */
   opttia: ResumenOpttia | null;
+  /** Interruptor de Opttia del comercio (o de Julsmind en toda Katuq). false = la pantalla lo esconde. */
+  opttiaActivo?: boolean;
   /** Solo con `modo: 'sondeo'`. */
   sondeoCadaSegundos?: number;
 }
@@ -708,6 +716,8 @@ export interface EstadoEnVivo {
   eventos: EventoEnVivo[];
   radar: RadarEnVivo | null;
   opttia: ResumenOpttia | null;
+  /** false si el comercio apagó a Opttia (D-386): sin panel, sin orbe y sin narración. */
+  opttiaActivo: boolean;
   /** ms de la última foto aplicada. */
   actualizadoEn: number | null;
 }

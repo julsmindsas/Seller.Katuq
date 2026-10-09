@@ -39,7 +39,7 @@ MUST mostrarse a lo sumo 3 listos, 2 demorados y 2 sin pago. Los tres puntos má
 - **THEN** "Lo próximo" dice "Todo al día"
 
 ### Requirement: Tablero de pedidos en vivo
-La pantalla del comercio SHALL ofrecer la vista "Pedidos": una columna por etapa (recibidos, producción, alistamiento, listos, en camino y entregados hoy) con una tarjeta por pedido. Cada tarjeta muestra el número, el cliente corto, la ciudad, el canal, el monto, la marca "Opttia" y cuánto lleva en esa etapa.
+La pantalla del comercio SHALL ofrecer la vista "Pedidos": una columna por estado de Katuq (sin producir, en producción, producido, empacado, para despachar, despachado y entregados hoy) con una tarjeta por pedido. Cada tarjeta muestra el número, el cliente corto, la ciudad, el canal, el monto, la marca "Opttia" y cuánto lleva en esa etapa.
 - La tarjeta MUST pasar con animación a su columna nueva cuando el pedido cambie de etapa, y los pedidos nuevos MUST entrar resaltados.
 - La tarjeta que pase el tiempo normal de su etapa MUST marcarse. Los envíos con transportadora no se marcan en "En camino".
 - Cada columna muestra hasta 40 tarjetas (los entregados, las 14 últimas) y cuántas quedan.
@@ -47,8 +47,8 @@ La pantalla del comercio SHALL ofrecer la vista "Pedidos": una columna por etapa
 Tocar una tarjeta SHALL abrir la ficha del pedido.
 
 #### Scenario: Un pedido cambia de etapa
-- **WHEN** el pedido #1027 pasa de producción a alistamiento
-- **THEN** su tarjeta viaja de la columna "En producción" a "Alistamiento" y los contadores de las dos columnas cambian
+- **WHEN** el pedido #1027 pasa de En producción a Empacado
+- **THEN** su tarjeta viaja de la columna "En producción" a "Empacado" y los contadores de las dos columnas cambian
 
 ### Requirement: Tiempos frente al promedio de Katuq
 La pantalla SHALL mostrar los tiempos de hoy del comercio (ciclo completo con sus mensajeros, preparación, espera para salir y entrega). También SHALL compararlos con la mediana de los comercios de Katuq: más rápido, igual o más lento, y en qué tramo pierde más tiempo. La comparación MUST NOT nombrar ni dejar identificar a otro comercio, y MUST mostrarse solo si en el cálculo hay al menos 5 comercios.

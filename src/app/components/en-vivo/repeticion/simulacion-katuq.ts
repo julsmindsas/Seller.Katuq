@@ -25,7 +25,7 @@ import { ayerHastaElInstante } from './simulacion-comercio';
  * repetición.
  */
 
-const ETAPAS: ReadonlyArray<EtapaId> = ['recibido', 'produccion', 'alistamiento', 'listo', 'camino', 'entregado', 'rechazado', 'cancelado'];
+const ETAPAS: ReadonlyArray<EtapaId> = ['recibido', 'produccion', 'producido', 'empacado', 'listo', 'camino', 'entregado', 'rechazado', 'cancelado'];
 
 /** Escala un conteo por la parte del día que ya pasó. */
 function escalar(valor: number, razon: number): number {

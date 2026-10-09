@@ -24,7 +24,7 @@ const DURACION_REBOTE_MS = 520;
 
 /**
  * Franja de etapas en TEXTO accesible: una lista ordenada con el nombre y la cantidad de cada
- * etapa (Recibido → En producción → Alistamiento → Listo para salir → En camino → Entregado).
+ * etapa (Sin producir → En producción → Producido → Empacado → Para despachar → Despachado → Entregado).
  * Sirve sola, sin la escena 3D. Los nombres y tonos vienen del servidor (`foto.etapas`); las
  * cantidades también. Cada paso se puede tocar para abrir la lista de esos pedidos (`abrir`).
  */

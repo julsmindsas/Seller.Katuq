@@ -56,11 +56,13 @@ Motivación en `proposal.md`. Hechos del código que condicionan el diseño (inf
 
 2. **Etapas definidas en un solo lugar del backend.**
    - El mapa estado → etapa vive en el backend:
-     - `recibido`: SinProducir y desconocidos;
-     - `produccion`: EnProduccion, ProducidoParcialmente;
-     - `alistamiento`: ProducidoTotalmente, EnPicking, ListoParaPacking, EnPacking, Empacado;
-     - `listo`: ParaDespachar, ListoParaDespacho, EnDespacho;
-     - `camino`: Despachado, EnDespachoUltimaMilla;
+     - Son los estados de proceso de Katuq, con sus nombres (corregido el 2026-10-09: antes había un "Alistamiento" que Katuq no tiene):
+     - `recibido` ("Sin producir"): SinProducir y desconocidos;
+     - `produccion` ("En producción"): EnProduccion, SolicitadoProveedor, AceptadoProveedor;
+     - `producido` ("Producido"): ProducidoParcialmente, ProducidoTotalmente, Producido;
+     - `empacado` ("Empacado"): Empacado;
+     - `listo` ("Para despachar"): ParaDespachar, EnDespacho (y ListoParaDespacho, histórico);
+     - `camino` ("Despachado"): Despachado, EnDespachoUltimaMilla, DespachadoProveedor, EnTransitoProveedor;
      - `entregado`: Entregado, Cerrado;
      - `rechazado`: Rechazado;
      - `cancelado`: lo que diga `isCancelledOrder`.

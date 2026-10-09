@@ -14,7 +14,7 @@ import {
 import { Director, describirEventoEnVivo, ModoTrabajo, Trabajo } from './director';
 import { EtiquetaH, GestorEtiquetas, esc } from './etiquetas-html';
 import { KitEscena } from './kit-escena';
-import { BELT_Z, MundoOperacion, PADS, PICK, SLOTS } from './operacion.mundo';
+import { BELT_Z, MundoOperacion, PADS, PARQUEO_CASA, PICK, SLOTS } from './operacion.mundo';
 import {
   CAJAS_VISIBLES,
   ESTACIONES,
@@ -29,8 +29,10 @@ import { Tweens, ease, limitar } from './tweens';
 
 // ==========================================================================
 // Escena 3D de la operación del comercio (D-386, tareas 5.1, 5.2 y 5.4).
-// Una tienda de donde caen los pedidos, una banda con cuatro estaciones, un garaje con motos y un
-// camión, y un barrio donde se entrega. Cada pedido activo es una caja (geometría y materiales
+// Una tienda de donde caen los pedidos, una banda con una estación por estado de Katuq (Sin
+// producir, En producción, Producido, Empacado, Para despachar), un garaje con motos y un camión, y
+// un barrio donde se entrega: la moto del mensajero va hasta la casa del pedido, parquea al frente
+// mientras está Despachado y, al marcarse Entregado, deja la caja y vuelve a la bodega. Cada pedido activo es una caja (geometría y materiales
 // compartidos, a lo sumo 18 por estación y "+N"); cada evento del canal tiene su animación, que el
 // DIRECTOR ordena (máximo 6 a la vez, desvanecido si hay más de 8 en cola, salidas agrupadas).
 // Solo lectura: la escena no cambia nada de nadie. Referencia exacta de look y movimiento: el
@@ -45,13 +47,28 @@ const EXIT_X = 17.4;
 const TRUCK: Pos2 = { x: 12.6, z: -2.4 };
 const CHAQUETAS: ReadonlyArray<string> = ['accent', 'info', 'pack', 'ok'];
 
+// Nombres de Katuq. El color de cada estación es fijo para que las cinco se distingan en la
+// banda (el servidor puede repetir tono entre Producido y Empacado); el nombre sí viene del servidor.
 const NOMBRES_ETAPA: Record<EstacionId, { nombre: string; corto: string; tono: string }> = {
-  recibido: { nombre: 'Recibido', corto: 'Recibido', tono: 'slate' },
-  produccion: { nombre: 'En producción', corto: 'Producción', tono: 'info' },
-  alistamiento: { nombre: 'Alistamiento', corto: 'Alistando', tono: 'warn' },
-  listo: { nombre: 'Listo para salir', corto: 'Listo', tono: 'accent' },
+  recibido: { nombre: 'Sin producir', corto: 'Sin producir', tono: 'slate' },
+  produccion: { nombre: 'En producción', corto: 'En producción', tono: 'info' },
+  producido: { nombre: 'Producido', corto: 'Producido', tono: 'warn' },
+  empacado: { nombre: 'Empacado', corto: 'Empacado', tono: 'pack' },
+  listo: { nombre: 'Para despachar', corto: 'Para despachar', tono: 'accent' },
 };
-const CORTO_ETAPA: Record<string, string> = { recibido: 'Recibido', produccion: 'Producción', alistamiento: 'Alistando', listo: 'Listo' };
+const CORTO_ETAPA: Record<string, string> = {
+  recibido: 'Sin producir', produccion: 'En producción', producido: 'Producido', empacado: 'Empacado', listo: 'Para despachar',
+};
+/** Igual que el servidor: sin tildes, mayúsculas, espacios de más, cédula delante ni teléfono detrás. */
+const claveNombre = (n: string | null | undefined): string =>
+  String(n ?? '')
+    .replace(/^\s*\d{6,}\s*-\s*/, '')
+    .replace(/\s*-\s*\d{6,}\s*$/, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
 
 const SVG_MOTO = '<svg class="eve-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="16" r="3"/><circle cx="18" cy="16" r="3"/><path d="M6 16l4-6h5l3 6M9 10 8 7H5"/></svg>';
 const SVG_CAMION = '<svg class="eve-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="17" r="1.8"/><circle cx="17" cy="17" r="1.8"/></svg>';
@@ -59,7 +76,8 @@ const SVG_CAMION = '<svg class="eve-ico" viewBox="0 0 24 24" aria-hidden="true">
 const nf = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 const cop = (n: number): string => '$' + nf.format(Math.round(n));
 
-type Vis = 'base' | 'mov' | 'fuera';
+/** base: en el garaje · mov: andando · casa: parqueada frente a la casa del pedido · fuera: fuera de la escena (camión). */
+type Vis = 'base' | 'mov' | 'casa' | 'fuera';
 type V3 = ThreeNS.Vector3;
 
 interface Caja {
@@ -81,6 +99,8 @@ interface Vehiculo {
   etq: EtiquetaH | null;
   uso: number;
   tmp: V3;
+  /** Índice de la casa donde está (o a la que va) la moto; null en el garaje. */
+  casa: number | null;
 }
 
 interface Efecto {
@@ -144,7 +164,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
   private readonly efectos: Efecto[] = [];
 
   private readonly pedidos = new Map<string, PedidoEscena>();
-  private readonly listas: Record<EstacionId, string[]> = { recibido: [], produccion: [], alistamiento: [], listo: [] };
+  private readonly listas: Record<EstacionId, string[]> = { recibido: [], produccion: [], producido: [], empacado: [], listo: [] };
   private readonly cajas = new Map<string, Caja>();
   private readonly vehiculos: Vehiculo[] = [];
   private readonly etqEstacion = new Map<EstacionId, EtiquetaH>();
@@ -188,7 +208,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     const siguiente: Record<EstacionId, { nombre: string; corto: string; tono: string }> = { ...NOMBRES_ETAPA };
     for (const e of etapas) {
       if (!esEstacion(e.id)) continue;
-      siguiente[e.id] = { nombre: e.nombre || NOMBRES_ETAPA[e.id].nombre, corto: CORTO_ETAPA[e.id], tono: tonoCss(e.tono) };
+      siguiente[e.id] = { nombre: e.nombre || NOMBRES_ETAPA[e.id].nombre, corto: CORTO_ETAPA[e.id], tono: NOMBRES_ETAPA[e.id].tono };
     }
     this.etapas = siguiente;
     if (this.scene) this.aplicarEstacionesEstilo();
@@ -243,14 +263,18 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       } else if (o.etapa === 'camino') {
         this.pedidos.set(o.id, o);
         const veh = this.vehiculoPara(o.transportador, o.tipoTransportador);
-        if (veh) veh.pedidos.add(o.id);
+        if (veh) {
+          veh.pedidos.add(o.id);
+          if (veh.tipo === 'moto') this.ponerEnCarga(veh, this.nuevaCaja(o.id).g);
+        }
       }
     }
     if (flota) this.fijarFlota(flota);
     ESTACIONES.forEach((st) => this.acomodar(st, false));
     this.vehiculos.forEach((v) => {
-      if (v.pedidos.size) this.ponerFuera(v);
-      else this.refrescarEtiquetaVeh(v);
+      if (!v.pedidos.size) this.refrescarEtiquetaVeh(v);
+      else if (v.tipo === 'moto') this.parquearEnCasa(v, this.casaDe(v));
+      else this.ponerFuera(v);
     });
     this.refrescarConteos(false);
     this.cargando = false;
@@ -320,6 +344,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       [...v.carga.children].forEach((h) => v.carga.remove(h));
       v.obj.visible = true;
       v.vis = 'base';
+      v.casa = null;
       v.obj.position.set(v.slot.x, 0, v.slot.z);
       v.headT = v.tipo === 'moto' ? Math.PI / 2 : 0;
       v.obj.rotation.y = v.headT;
@@ -331,8 +356,8 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
 
   /** Para pruebas y telemetría de la propia escena: qué hay y qué tan ocupado está el director. */
   diagnostico(): DiagnosticoOperacion {
-    const visibles: Record<EstacionId, number> = { recibido: 0, produccion: 0, alistamiento: 0, listo: 0 };
-    const totales: Record<EstacionId, number> = { recibido: 0, produccion: 0, alistamiento: 0, listo: 0 };
+    const visibles: Record<EstacionId, number> = { recibido: 0, produccion: 0, producido: 0, empacado: 0, listo: 0 };
+    const totales: Record<EstacionId, number> = { recibido: 0, produccion: 0, producido: 0, empacado: 0, listo: 0 };
     ESTACIONES.forEach((st) => {
       totales[st] = this.listas[st].length;
       visibles[st] = this.listas[st].filter((id) => this.cajas.get(id)?.g.visible).length;
@@ -341,7 +366,7 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
       cajas: this.cajas.size,
       visibles,
       totales,
-      vehiculosFuera: this.vehiculos.filter((v) => v.vis === 'fuera').length,
+      vehiculosFuera: this.vehiculos.filter((v) => v.vis === 'fuera' || v.vis === 'casa').length,
       animadas: this.director.animadas,
       enCola: this.director.enCola,
       pico: this.director.pico,
@@ -461,13 +486,13 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     this.vehiculos.push({
       clave: o.clave, tipo: o.tipo, nombre: null, slot: o.slot, obj: o.obj,
       carga: o.obj.userData['carga'] as ThreeNS.Group, headT: o.headT, vis: 'base', pedidos: new Set(), etq: null, uso: 0,
-      tmp: new this.T.Vector3(),
+      tmp: new this.T.Vector3(), casa: null,
     });
   }
 
   private mismoNombre(a: string | null, b: string | null): boolean {
     if (!a || !b) return false;
-    return a.trim().toLowerCase() === b.trim().toLowerCase();
+    return claveNombre(a) === claveNombre(b);
   }
 
   /**
@@ -1073,7 +1098,10 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     // vehículo ocupado o sin vehículo libre, o cola larga: la caja sale con un desvanecido
     if (!veh || veh.vis !== 'base' || modo === 'desvanecido' || this.tw.reducido) {
       if (veh) this.refrescarEtiquetaVeh(veh);
-      if (veh && veh.vis === 'base') this.ponerFuera(veh);
+      if (veh && veh.vis === 'base') {
+        if (veh.tipo === 'moto') this.parquearEnCasa(veh, this.indiceCasa(os[0]));
+        else this.ponerFuera(veh);
+      }
       let pendientes = gs.length;
       const ya = (): void => { if (--pendientes <= 0) { ESTACIONES.forEach((st) => this.acomodar(st, true)); fin(); } };
       if (!gs.length) { ESTACIONES.forEach((st) => this.acomodar(st, true)); fin(); return; }
@@ -1085,10 +1113,15 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     const salir = (): void => {
       this.acomodar('listo', true);
       this.refrescarEtiquetaVeh(veh);
-      const ruta = veh.tipo === 'moto'
-        ? [this.kit.v(PICK.x, PICK.z), this.kit.v(PICK.x, LANE_OUT), this.kit.v(EXIT_X, LANE_OUT)]
-        : [this.kit.v(TRUCK.x, TRUCK.z), this.kit.v(16.2, TRUCK.z), this.kit.v(16.2, LANE_OUT), this.kit.v(EXIT_X, LANE_OUT)];
-      this.manejar(veh, ruta, veh.tipo === 'moto' ? 7.5 : 6, () => this.salirDeEscena(veh));
+      if (veh.tipo === 'moto') {
+        // A la casa del primer pedido: parquea al frente hasta que se marque Entregado.
+        const casa = this.indiceCasa(os[0]);
+        veh.casa = casa;
+        this.manejar(veh, this.rutaACasa(this.kit.v(PICK.x, PICK.z), casa), 7.5, () => this.llegarACasa(veh, casa));
+      } else {
+        const ruta = [this.kit.v(TRUCK.x, TRUCK.z), this.kit.v(16.2, TRUCK.z), this.kit.v(16.2, LANE_OUT), this.kit.v(EXIT_X, LANE_OUT)];
+        this.manejar(veh, ruta, 6, () => this.salirDeEscena(veh));
+      }
       fin();
     };
     const ir = (): void => this.cargar(veh, gs, salir);
@@ -1138,11 +1171,25 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     this.pedidos.delete(id);
     this.refrescarConteos(true);
     const c = this.cajas.get(id);
-    if (c && c.g.parent === this.scene) this.desvanecer(c.g, () => this.borrarCaja(id));
+    const indice = this.indiceCasa(o);
+    const casa = this.mundo.casas[indice] ?? this.mundo.casas[0];
+    const enMoto = !!veh && veh.tipo === 'moto' && !!c && c.g.parent === veh.carga;
+    if (enMoto && casa && veh && c && modo !== 'desvanecido' && !this.tw.reducido) {
+      // La caja salta de la moto a la puerta de la casa.
+      const puerta = this.kit.v(casa.x - 0.45, casa.z - 1.25, 0.4);
+      this.scene.attach(c.g);
+      c.viajando = true;
+      this.saltar(c.g, puerta, 0.55, 1.6, () => this.desvanecer(c.g, () => this.borrarCaja(id)));
+    } else if (c && c.g.parent) {
+      this.desvanecer(c.g, () => this.borrarCaja(id));
+    }
     ESTACIONES.forEach((st) => this.acomodar(st, true));
-    if (veh) { this.refrescarEtiquetaVeh(veh); this.revisarRegreso(veh); }
+    if (veh) {
+      this.refrescarEtiquetaVeh(veh);
+      if (veh.tipo === 'moto') this.tw.esperar(enMoto ? 0.9 : 0, () => this.siguienteParada(veh));
+      else this.revisarRegreso(veh);
+    }
     if (modo === 'desvanecido') { fin(); return; }
-    const casa = this.mundo.casas[this.indiceCasa(o)] ?? this.mundo.casas[0];
     if (!casa) { fin(); return; }
     const T = this.T;
     const pin = new T.Group();
@@ -1164,6 +1211,82 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     });
   }
 
+  /** Recorrido de la moto: sale al carril, avanza hasta la casa y parquea al frente, junto a la puerta. */
+  private rutaACasa(desde: V3, indice: number): V3[] {
+    const casa = this.mundo.casas[indice] ?? this.mundo.casas[0];
+    if (!casa) return [desde];
+    const x = casa.x + PARQUEO_CASA.dx;
+    return [desde, this.kit.v(desde.x, LANE_OUT), this.kit.v(x, LANE_OUT), this.kit.v(x, PARQUEO_CASA.z)];
+  }
+
+  /** La moto llegó a la casa: queda parqueada mirando a la casa, con su nombre y sus pedidos. */
+  private llegarACasa(v: Vehiculo, indice: number): void {
+    v.vis = 'casa';
+    v.casa = indice;
+    v.headT = -Math.PI / 2;
+    this.refrescarEtiquetaVeh(v);
+    this.sucio = true;
+    if (!v.pedidos.size) this.siguienteParada(v); // se entregó mientras iba: vuelve
+  }
+
+  /** Sin animar (al cargar la foto): la moto aparece parqueada frente a la casa. */
+  private parquearEnCasa(v: Vehiculo, indice: number): void {
+    const casa = this.mundo.casas[indice] ?? this.mundo.casas[0];
+    if (!casa) { this.ponerFuera(v); return; }
+    this.tw.cancelar(v.obj);
+    v.obj.visible = true;
+    v.obj.position.set(casa.x + PARQUEO_CASA.dx, 0, PARQUEO_CASA.z);
+    v.headT = -Math.PI / 2;
+    v.obj.rotation.y = v.headT;
+    v.vis = 'casa';
+    v.casa = indice;
+    this.refrescarEtiquetaVeh(v);
+  }
+
+  /** La casa del primer pedido que lleva la moto. */
+  private casaDe(v: Vehiculo): number {
+    for (const id of v.pedidos) {
+      const o = this.pedidos.get(id);
+      if (o) return this.indiceCasa(o);
+    }
+    return 0;
+  }
+
+  /** Después de entregar: si le quedan pedidos va a la casa del siguiente; si no, vuelve al garaje. */
+  private siguienteParada(v: Vehiculo): void {
+    if (v.vis === 'mov') return; // llegarACasa decide al llegar
+    if (v.vis !== 'casa') { this.revisarRegreso(v); return; }
+    const desde = v.obj.position.clone();
+    if (v.pedidos.size) {
+      const casa = this.casaDe(v);
+      if (casa === v.casa) return;
+      v.vis = 'mov';
+      v.casa = casa;
+      this.refrescarEtiquetaVeh(v);
+      this.manejar(v, this.rutaACasa(desde, casa), 6.5, () => this.llegarACasa(v, casa));
+      return;
+    }
+    v.vis = 'mov';
+    v.casa = null;
+    this.refrescarEtiquetaVeh(v);
+    const ruta = [desde, this.kit.v(desde.x, LANE_BACK), this.kit.v(v.slot.x, LANE_BACK), this.kit.v(v.slot.x, v.slot.z)];
+    this.manejar(v, ruta, 7, () => {
+      v.vis = 'base';
+      v.headT = Math.PI / 2;
+      this.refrescarEtiquetaVeh(v);
+    });
+  }
+
+  /** Pone una caja en la parrilla de la moto (sin animar). */
+  private ponerEnCarga(v: Vehiculo, g: ThreeNS.Group): void {
+    const n = v.carga.children.length;
+    v.carga.attach(g);
+    g.position.set(0, 0.24 + n * 0.46, 0);
+    g.rotation.set(0, 0, 0);
+    g.scale.setScalar(0.62);
+    g.visible = true;
+  }
+
   private indiceCasa(o: PedidoEscena): number {
     let h = 2166136261;
     const t = o.id;
@@ -1180,7 +1303,11 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     veh?.pedidos.delete(id);
     this.pedidos.delete(id);
     this.refrescarConteos(true);
-    if (veh) { this.refrescarEtiquetaVeh(veh); this.revisarRegreso(veh); }
+    if (veh) {
+      this.refrescarEtiquetaVeh(veh);
+      if (veh.tipo === 'moto') this.siguienteParada(veh);
+      else this.revisarRegreso(veh);
+    }
     const c = this.cajas.get(id);
     const etiqueta = ev.tipo === 'cancelado' ? 'Cancelado' : 'Rechazado';
     if (!c || !c.g.visible || c.g.parent !== this.scene) {
