@@ -88,8 +88,8 @@
       <div class="tarjeta__fila">
         <div>
           <span class="chip" [class.chip--apagado]="!campana.activo">{{ campana.codigo }}</span>
-          <span class="chip chip--info">{{ campana.duracionTexto }} de Premium</span>
-          <span class="chip chip--aviso" *ngIf="campana.activo && !campana.disponible">Sin cupo o vencida</span>
+          <span class="chip chip--info">{{ campana.beneficioTexto || (campana.duracionTexto + ' de Premium') }}</span>
+          <span class="chip chip--aviso" *ngIf="campana.activo && !campana.disponible">{{ campana.motivoNoDisponible === 'AUN_NO' ? 'Aún no abre' : 'Sin cupo o vencida' }}</span>
           <span class="chip chip--apagado" *ngIf="!campana.activo">Apagada</span>
         </div>
         <div class="tarjeta__acciones">
@@ -156,6 +156,7 @@
           </div>
           <div class="embudo__pie">
             Conversión desde la visita: <strong>{{ porcentaje(r.conversionVisitaRegistro) }}</strong>
+            <span *ngIf="r.pagaron !== undefined"> · Pagaron un plan: <strong>{{ r.pagaron }}</strong> ({{ porcentaje(r.conversionUsoPago) }} de los que usaron el código)</span>
             · Siguen en Premium: <strong>{{ r.sigueEnPremium }}</strong>
             <span *ngIf="r.degradadas"> · Ya bajaron a gratis: <strong>{{ r.degradadas }}</strong></span>
             <br />

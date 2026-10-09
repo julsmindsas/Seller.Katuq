@@ -55,10 +55,15 @@
                 Puedes pasarte a Premium cuando quieras.
               </p>
             </div>
+            <!-- Cupón que no regala Premium (ej: más pedidos al mes) -->
+            <div *ngIf="cuponAplicado" class="promo-aplicada">
+              <p class="promo-aplicada__titulo">Tu cupón quedó aplicado</p>
+              <p class="promo-aplicada__texto">{{ cuponAplicado.mensaje }}</p>
+            </div>
 
             <ul class="reg-done__list">
               <li><span class="reg-tick" aria-hidden="true">✓</span>Tu cuenta quedó creada</li>
-              <li *ngIf="!promocionAplicada"><span class="reg-tick" aria-hidden="true">✓</span>Plan gratis activo: 15 pedidos al mes</li>
+              <li *ngIf="!promocionAplicada"><span class="reg-tick" aria-hidden="true">✓</span>Plan gratis activo: {{ cuponAplicado?.pedidosPorMes || 15 }} pedidos al mes</li>
               <li><span class="reg-tick" aria-hidden="true">✓</span>Tu panel está listo para subir tus productos</li>
             </ul>
 
@@ -102,7 +107,13 @@
           </p>
         </div>
 
-        <div *ngIf="!promocionAplicada && !promocionNoAplicada" class="free-plan-created">
+        <!-- Cupón que no regala Premium (ej: más pedidos al mes) -->
+        <div *ngIf="cuponAplicado" class="promo-aplicada">
+          <p class="promo-aplicada__titulo">Tu cupón quedó aplicado</p>
+          <p class="promo-aplicada__texto">{{ cuponAplicado.mensaje }}</p>
+        </div>
+
+        <div *ngIf="!promocionAplicada && !promocionNoAplicada && !cuponAplicado" class="free-plan-created">
           <p class="free-plan-created__title">Tu cuenta Gratis está lista</p>
           <p class="free-plan-created__text">
             Puedes operar hasta 15 pedidos sin tarjeta. Cuando necesites más capacidad o funciones avanzadas,
@@ -469,8 +480,11 @@
         <!-- Beneficio de la campaña con la que llegó, para que no lo pierda de vista -->
         <div *ngIf="promocionCampana" class="promo-franja">
           <span class="promo-franja__codigo">{{ promocionCampana.codigo }}</span>
-          <span class="promo-franja__texto">
+          <span class="promo-franja__texto" *ngIf="!promocionCampana.titulo">
             <strong>{{ promocionCampana.duracionTexto }}</strong> de Premium gratis al terminar tu registro
+          </span>
+          <span class="promo-franja__texto" *ngIf="promocionCampana.titulo">
+            <strong>{{ promocionCampana.titulo }}</strong> {{ promocionCampana.detalle }}
           </span>
         </div>
 
