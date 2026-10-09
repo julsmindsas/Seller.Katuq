@@ -30,6 +30,7 @@ import { jsPDF } from "jspdf";
 import { ServiciosService } from "../../../shared/services/servicios.service";
 import "bootstrap";
 import html2canvas from "html2canvas";
+import { rasterizarTarjeta } from "../../../shared/utils/tarjeta-regalo";
 import { ClientesComponent } from "../../ventas/clientes/clientes.component";
 import Swal from "sweetalert2";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
@@ -3240,143 +3241,45 @@ export class DespachosComponent implements OnInit, OnDestroy {
     }
   }
 
-  imprimirTarjeta(tarjeta) {
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "cm",
-      format: [15, 23],
-    });
+  async imprimirTarjeta(tarjeta) {
+    // Ticket 1155: la pestaña se abre ya, dentro del clic, para que el navegador no la
+    // bloquee mientras se arma el PDF.
+    const ventana = window.open("", "_blank");
+    try {
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "cm",
+        format: [15, 23],
+        compress: true,
+      });
+      const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Configurar fuente que soporte caracteres especiales
-    doc.setFont("times", "italic"); // Restaurar Times New Roman en cursiva como estaba originalmente
-    doc.setFontSize(12); // Tamaño de la letra
+      // Área de contenido de la tarjeta (unidad cm, página 15x23).
+      // El contenido arranca en yStart y NO debe invadir el pie pre-impreso.
+      const yStart = 14;
+      const yBottomLimit = 21.5; // límite inferior seguro (evita montarse con el pie de la tarjeta)
 
-    // Width of the document
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Área de contenido de la tarjeta (unidad cm, página 15x23).
-    // El contenido arranca en yStart y NO debe invadir el pie pre-impreso.
-    const yStart = 14;
-    const yBottomLimit = 21.5; // límite inferior seguro (evita montarse con el pie de la tarjeta)
-
-    // Función helper para capitalizar cada palabra (Title Case)
-    const toTitleCase = (texto: string): string => {
-      if (!texto) return '';
-      return texto.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
-    };
-
-    // Función helper para limpiar y normalizar texto preservando ñ y tildes
-    const limpiarTexto = (texto) => {
-      if (!texto) return '';
-
-      // Convertir a string si no lo es
-      let textoStr = String(texto);
-
-      // Preservar ñ y tildes, solo limpiar emojis y caracteres problemáticos
-      let textoLimpio = textoStr
-        .replace(/[çÇ]/g, 'c') // Convertir ç en c
-        .replace(/[¿¡]/g, '') // Remover signos de interrogación y exclamación invertidos
-        // Remover TODOS los emojis y caracteres problemáticos, preservando ñ y tildes
-        .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emojis faciales
-        .replace(/[\u{1F300}-\u{1F5FF}]/gu, '') // Símbolos y pictogramas
-        .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transporte y símbolos
-        .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '') // Banderas
-        .replace(/[\u{2600}-\u{26FF}]/gu, '') // Símbolos misceláneos
-        .replace(/[\u{2700}-\u{27BF}]/gu, '') // Símbolos decorativos
-        .replace(/[\u{1F900}-\u{1F9FF}]/gu, '') // Emojis suplementarios
-        .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '') // Símbolos y pictogramas extendidos
-        .replace(/[\u{1FAB0}-\u{1FABF}]/gu, '') // Símbolos de animales y naturaleza
-        .replace(/[\u{1FAC0}-\u{1FAFF}]/gu, '') // Símbolos de objetos
-        .replace(/[\u{1FAD0}-\u{1FAFF}]/gu, '') // Símbolos de comida y bebida
-        .replace(/[\u{1FAE0}-\u{1FAFF}]/gu, '') // Símbolos de objetos
-        .replace(/[\u{1FAF0}-\u{1FAFF}]/gu, '') // Símbolos de manos
-        .replace(/[\u{1F000}-\u{1F02F}]/gu, '') // Símbolos de Mahjong
-        .replace(/[\u{1F030}-\u{1F09F}]/gu, '') // Símbolos de dominó
-        .replace(/[\u{1F0A0}-\u{1F0FF}]/gu, '') // Símbolos de cartas
-        .replace(/[\u{1F100}-\u{1F64F}]/gu, '') // Emojis varios
-        .replace(/[\u{1F650}-\u{1F67F}]/gu, '') // Símbolos ornamentales
-        .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transporte y símbolos
-        .replace(/[\u{1F700}-\u{1F77F}]/gu, '') // Símbolos alquímicos
-        .replace(/[\u{1F780}-\u{1F7FF}]/gu, '') // Símbolos geométricos
-        .replace(/[\u{1F800}-\u{1F8FF}]/gu, '') // Símbolos de flechas
-        .replace(/[\u{1F900}-\u{1F9FF}]/gu, '') // Emojis suplementarios
-        .replace(/[\u{1FA00}-\u{1FA6F}]/gu, '') // Símbolos de ajedrez
-        .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '') // Símbolos y pictogramas extendidos
-        .replace(/[\u{1FB00}-\u{1FBFF}]/gu, '') // Símbolos de legado
-        .replace(/[\u{1FC00}-\u{1FCFF}]/gu, '') // Símbolos de ornamentos
-        .replace(/[\u{1FD00}-\u{1FDFF}]/gu, '') // Símbolos de transporte
-        .replace(/[\u{1FE00}-\u{1FEFF}]/gu, '') // Símbolos de Unicode
-        .replace(/[\u{1FF00}-\u{1FFFF}]/gu, '') // Símbolos de Unicode
-        // Verificación adicional para emojis específicos que podrían escapar
-        .replace(/🩷/g, '') // Emoji corazón rosa específico
-        .replace(/[🩷🩵🩶🩸🩹🩺🩻🩼]/g, '') // Otros emojis de corazón
-        .replace(/[💕💖💗💘💙💚💛💜💝💞💟]/g, '') // Emojis de corazón varios
-        .replace(/[😀😃😄😁😆😅🤣😂🙂🙃😉😊😇]/g, '') // Emojis faciales básicos
-        .replace(/[😈👿👹👺💀👻👽🤖💩😺😸😹😻]/g, '') // Otros emojis
-        // Verificación final: eliminar cualquier carácter que no sea ASCII básico + letras españolas
-        .replace(/[^\x00-\x7FáéíóúñÁÉÍÓÚÑ]/g, '');
-
-      return textoLimpio;
-    };
-
-    // Construye el layout (posiciones relativas a yStart) para un tamaño de fuente
-    // dado. Los espaciados escalan con la fuente para reducir todo de forma uniforme.
-    const baseFont = 12;
-    const buildLayout = (fontSize: number): { ops: Array<{ text: string; y: number }>; totalHeight: number } => {
-      doc.setFontSize(fontSize);
-      const k = fontSize / baseFont; // factor de escala de los espaciados
-      const ops: Array<{ text: string; y: number }> = [];
-      let y = 0;
-
-      // Para
-      if (tarjeta.para && tarjeta.para.trim() !== '') {
-        ops.push({ text: 'Para:', y });
-        y += 0.6 * k;
-        ops.push({ text: toTitleCase(limpiarTexto(tarjeta.para)), y });
-        y += 1.5 * k;
+      // El texto (con sus emojis) va como imagen: la fuente Times del PDF no los trae.
+      // Si el mensaje no cabe, la fuente se reduce hasta que quepa. (ClickUp wdu9v75ptc)
+      const imagen = await rasterizarTarjeta(tarjeta, yBottomLimit - yStart);
+      if (imagen) {
+        doc.addImage(imagen.dataUrl, "PNG", (pageWidth - imagen.anchoCm) / 2, yStart, imagen.anchoCm, imagen.altoCm, undefined, "FAST");
       }
 
-      // Mensaje (el ancho de wrap depende del tamaño de fuente actual)
-      if (tarjeta.mensaje && tarjeta.mensaje.trim() !== '') {
-        const lineas = doc.splitTextToSize(limpiarTexto(tarjeta.mensaje), 12);
-        lineas.forEach((line: string) => {
-          ops.push({ text: line, y });
-          y += 0.5 * k;
-        });
-        y += 1.0 * k;
+      if (ventana) {
+        ventana.location.href = String(doc.output("bloburl"));
+      } else {
+        // El navegador no dejó abrir la pestaña: se descarga para que no se quede sin nada.
+        doc.save("tarjeta.pdf");
       }
-
-      // De
-      if (tarjeta.de && tarjeta.de.trim() !== '') {
-        ops.push({ text: 'De:', y });
-        y += 0.6 * k;
-        ops.push({ text: toTitleCase(limpiarTexto(tarjeta.de)), y });
-      }
-
-      return { ops, totalHeight: y };
-    };
-
-    // Auto-ajuste: si el contenido no cabe en el área disponible, reducir la fuente
-    // (y con ella los espaciados) hasta que quepa, para que un mensaje largo no se
-    // "moche" ni se monte sobre el pie de la tarjeta. (ClickUp wdu9v75ptc)
-    const maxHeight = yBottomLimit - yStart;
-    let fontSize = baseFont;
-    let layout = buildLayout(fontSize);
-    while (layout.totalHeight > maxHeight && fontSize > 7) {
-      fontSize = Math.max(7, fontSize - 0.5);
-      layout = buildLayout(fontSize);
+    } catch (error) {
+      ventana?.close();
+      Swal.fire({
+        icon: "error",
+        title: "No se pudo generar la tarjeta",
+        text: "Intenta de nuevo. Si sigue igual, avísale a soporte.",
+      });
     }
-
-    // Dibujar el contenido centrado con el tamaño de fuente final.
-    doc.setFontSize(fontSize);
-    layout.ops.forEach((op) => {
-      const lineWidth = doc.getTextWidth(op.text);
-      doc.text(op.text, (pageWidth - lineWidth) / 2, yStart + op.y);
-    });
-
-    // Generar el blob y abrir en una nueva ventana
-    const blobUrl = doc.output("bloburl");
-    window.open(blobUrl, "_blank");
   }
 
   onMetodoEnvioChange(event) {

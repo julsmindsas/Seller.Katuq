@@ -1,7 +1,9 @@
 import { Component, Input, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
-import { Subscription } from 'rxjs';
+import { interval, Subscription } from 'rxjs';
 import { SecurityService } from '../../../../shared/services/security/security.service';
+import { escaparHtml } from '../../../../shared/utils/escapar-html';
+import { haceCuanto, marcaDeUbicacion, ubicacionVigente } from '../../../../shared/utils/ubicacion-mensajero';
 
 interface UbicacionPedido {
   nroPedido: string;
@@ -22,6 +24,8 @@ interface UbicacionMensajero {
   lat: number;
   lng: number;
   timestamp: string;
+  lastUpdate?: number;
+  conectado?: boolean;
   nombre?: string;
 }
 
@@ -111,6 +115,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   private capaZonasEntrega: any = null;
   private poligonosZonas: any[] = [];
   private mensajerosSubscription: Subscription | null = null;
+  private purgaMensajerosSubscription: Subscription | null = null;
   private marcadorUbicacionUsuario: any = null;
   
   public mostrarMensajeros: boolean = true;
@@ -191,6 +196,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     if (this.mensajerosSubscription) {
       this.mensajerosSubscription.unsubscribe();
     }
+    this.purgaMensajerosSubscription?.unsubscribe();
 
     // Limpiar referencias del contenedor de Leaflet
     if (this.mapaContainer?.nativeElement) {
@@ -699,7 +705,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         const iconoMensajero = L.divIcon({
           className: 'custom-marker-mensajero',
           html: `
-            <div class="marker-mensajero-content" title="Mensajero: ${mensajero.nombre || mensajero.id}">
+            <div class="marker-mensajero-content" title="Mensajero: ${escaparHtml(mensajero.nombre || mensajero.id)}">
               <span class="marker-mensajero-icon">🛵</span>
               <div class="marker-mensajero-pulse"></div>
             </div>
@@ -710,15 +716,16 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
         const marcador = L.marker([mensajero.lat, mensajero.lng], { icon: iconoMensajero });
         
-        const popupContent = `
+        // Función y no texto armado: Leaflet la evalúa al abrir el popup, así el "hace X min"
+        // siempre está al día. La clave de Firebase y el nombre salen de datos que escriben las apps.
+        marcador.bindPopup(() => `
           <div style="font-size: 12px; color: #333;">
             <strong style="color: #007bff;">Mensajero</strong><br>
-            <strong>ID:</strong> ${mensajero.id}<br>
-            ${mensajero.nombre ? `<strong>Nombre:</strong> ${mensajero.nombre}<br>` : ''}
-            <strong>Actualizado:</strong> ${new Date(mensajero.timestamp).toLocaleTimeString()}
+            <strong>ID:</strong> ${escaparHtml(mensajero.id)}<br>
+            ${mensajero.nombre ? `<strong>Nombre:</strong> ${escaparHtml(mensajero.nombre)}<br>` : ''}
+            <strong>Actualizado:</strong> ${this.textoActualizacion(mensajero)}
           </div>
-        `;
-        marcador.bindPopup(popupContent);
+        `);
         this.capaMensajeros.addLayer(marcador);
 
         // console.log(`✅ [DEBUG] Marcador de mensajero creado exitosamente para: ${mensajero.nombre || mensajero.id} en [${mensajero.lat}, ${mensajero.lng}]`);
@@ -995,6 +1002,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     // console.log('🔍 [DEBUG] Iniciando escucha de ubicaciones de mensajeros...');
     // console.log('🔍 [DEBUG] Nombre de empresa para filtrar:', this.companyName);
 
+    this.iniciarPurgaMensajeros();
     const activeUsersRef = this.db.list('active_users');
     this.mensajerosSubscription = activeUsersRef.snapshotChanges().subscribe(snapshots => {
       // console.log('🔍 [DEBUG] Snapshots recibidos desde Firebase:', snapshots.length);
@@ -1038,33 +1046,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
           return match;
         })
         .filter(snapshot => {
-          // Filtrar por timestamp - solo mostrar mensajeros activos del día actual
-          const data = snapshot.payload.val() as any;
-          const timestamp = data?.timestamp;
-
-          if (!timestamp) {
-            // console.log(`🕒 [DEBUG] Mensajero ${snapshot.key} no tiene timestamp`);
-            return false;
-          }
-
-          const timestampDate = new Date(timestamp);
-          const today = new Date();
-
-          // Comparar solo la fecha (año, mes, día) sin las horas
-          const isToday = timestampDate.getFullYear() === today.getFullYear() &&
-                         timestampDate.getMonth() === today.getMonth() &&
-                         timestampDate.getDate() === today.getDate();
-
-          const hoursAgo = (today.getTime() - timestampDate.getTime()) / (1000 * 60 * 60);
-
-          // console.log(`🕒 [DEBUG] Mensajero ${snapshot.key}:`);
-          // console.log(`🕒 [DEBUG] - Timestamp: ${timestamp}`);
-          // console.log(`🕒 [DEBUG] - Fecha timestamp: ${timestampDate.toLocaleDateString()}`);
-          // console.log(`🕒 [DEBUG] - Fecha hoy: ${today.toLocaleDateString()}`);
-          // console.log(`🕒 [DEBUG] - ¿Es de hoy?: ${isToday}`);
-          // console.log(`🕒 [DEBUG] - Horas transcurridas: ${hoursAgo.toFixed(1)}`);
-
-          return isToday;
+          // Ticket 1154: solo se pintan ubicaciones de los últimos 15 minutos de quien no figura
+          // desconectado; el punto viejo de alguien que ya no envía no se muestra.
+          return ubicacionVigente(snapshot.payload.val() as any);
         })
         .map(snapshot => {
           const key = snapshot.key as string;
@@ -1114,6 +1098,28 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
+  /**
+   * Firebase solo avisa cuando alguien escribe: si un mensajero deja de enviar, nadie
+   * dispara el filtro. Cada minuto se quitan los puntos que ya pasaron de 15 minutos.
+   */
+  private iniciarPurgaMensajeros(): void {
+    this.purgaMensajerosSubscription?.unsubscribe();
+    this.purgaMensajerosSubscription = interval(60000).subscribe(() => {
+      const vigentes = this.mensajeros.filter(m => ubicacionVigente(m));
+      if (vigentes.length === this.mensajeros.length) {
+        return;
+      }
+      this.mensajeros = vigentes;
+      this.actualizarMarcadoresMensajeros();
+      this.cd.detectChanges();
+    });
+  }
+
+  private textoActualizacion(mensajero: UbicacionMensajero): string {
+    const marca = marcaDeUbicacion(mensajero);
+    return marca === null ? 'sin dato' : `${haceCuanto(marca)} (${new Date(marca).toLocaleTimeString()})`;
+  }
+
   public toggleMensajeros(event: any): void {
     this.mostrarMensajeros = event.target.checked;
     if (this.mostrarMensajeros) {
@@ -1123,6 +1129,8 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         this.mensajerosSubscription.unsubscribe();
         this.mensajerosSubscription = null;
       }
+      this.purgaMensajerosSubscription?.unsubscribe();
+      this.purgaMensajerosSubscription = null;
       this.mensajeros = [];
       if (this.capaMensajeros) {
         this.capaMensajeros.clearLayers();

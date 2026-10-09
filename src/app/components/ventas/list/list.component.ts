@@ -8162,8 +8162,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       ),
     });
 
+    // Ticket 1156: con Tesorería activa el servidor decide anticipo, saldo y estado de pago.
+    // Un pago por verificar no es anticipo todavía: si el pedido tiene alguno o ya está en
+    // Pospendiente, el recálculo del carrito no los toca. Antes sumaba ese pago, mandaba
+    // "Aprobado" y el guard de Tesorería lo bloqueaba con un aviso que el usuario no provocó.
+    // Sin Tesorería queda como siempre.
+    const tesoreriaDecideElPago =
+      this.treasuryService.treasuryEnabledCached === true &&
+      (order.estadoPago === EstadoPago.Pospendiente ||
+        (order.PagosAsentados ?? []).some((pago) => pago?.estadoVerificacion === "Pendiente"));
+
     // Recalcular falta por pagar y estado de pago si hay anticipos registrados
-    if (order.PagosAsentados && order.PagosAsentados.length > 0) {
+    if (!tesoreriaDecideElPago && order.PagosAsentados && order.PagosAsentados.length > 0) {
       const anticipoReal = order.PagosAsentados.reduce((sum, pago) => {
         if (
           pago.formaPago?.toLowerCase().includes("wompi") &&

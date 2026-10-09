@@ -8711,3 +8711,40 @@ Borrador en `openspec/changes/informe-ejecutivo-mensual/` (propuesta, requisitos
 - **Decidido** (Daniel): el informe cuenta por **fecha de entrega**. Los dos Excel de ejemplo no coincidían (ALMARA por entrega, Café Escobar por creación).
 - Abiertas, con recomendación: cuándo sale (con la factura), período (ciclo de facturación, no mes calendario) y a quién (todos con membresía, con interruptor por empresa).
 - Caso de prueba: el Excel de septiembre de ALMARA (1.333 pedidos, 52 cancelados, 1.281 netos, $164.684.994,89).
+
+## D-382 (2026-10-08) — Tres tickets de ALMARA que llevaba Santiago: aviso falso de Tesorería (1156), emojis en el PDF de la tarjeta (1155) y mapa de mensajeros sin puntos viejos (1154) (PUBLICADO 2026.10.08.6)
+
+**Disparador.** Daniel: "coge todos los de Santiago". Los cuatro tickets (1156, 1155, 1154 y 1136) pasan a Daniel. Lo de Santiago estaba solo en su máquina (nada suyo en GitHub), así que 1156, 1155 y 1154 se rehicieron a partir de sus diagnósticos. El 1136 (geocodificación, commit `dd98095d`) **no se rehízo**: se le pidió subirlo a una rama.
+
+### 1156 — "El estado de pago no cambió" al editar la tarjeta (aprobado por Daniel el 8-oct)
+Con Tesorería activa, un pago por verificar queda "Pendiente" y el pedido en Pospendiente. `actualizarValoresPedido` (listado de ventas) contaba ese pago como anticipo y mandaba el pedido como Aprobado; el guard de Tesorería del backend lo bloqueaba y salía un aviso que la persona no provocó.
+- Con Tesorería activa y (algún pago "Pendiente" o estado Pospendiente), el recálculo del carrito **no toca** anticipo, saldo ni estado de pago: quedan como los dejó el servidor.
+- Sin Tesorería, o con el indicador aún sin cargar, no cambia nada.
+- El backend no se toca: ya ignoraba el estado y recalculaba el anticipo con solo los pagos aprobados; el pedido DAD-014154 estaba bien guardado.
+
+### 1155 — Los emojis no llegaban al PDF de la tarjeta
+jsPDF escribe con la fuente Times del PDF, que no tiene emojis; por eso se borraban todos (y de paso la ü, los signos ¿ ¡ y cualquier letra fuera de ASCII y de las vocales con tilde).
+- El texto (Para / mensaje / De) se arma como HTML escapado en un iframe aislado (el mismo mecanismo del ticket 1151), se rasteriza con html2canvas y entra como imagen en la misma zona del PDF (y = 14 cm, límite 21,5 cm, 15×23 cm). Si no cabe, la fuente baja hasta 7 pt como antes. El pie pre-impreso no se toca.
+- `window.open` se llama dentro del clic, antes de armar el PDF, para que el navegador no bloquee la pestaña.
+- El PDF va comprimido: 25-110 KB (sin comprimir pesaba 2,5-4 MB).
+- La inicial en mayúscula ahora respeta tildes, ñ y paréntesis ("ángela" → "Ángela"; antes quedaba "áNgela").
+- Si el navegador bloquea la pestaña, el PDF se descarga (`tarjeta.pdf`) en vez de no mostrar nada.
+
+### 1154 — El mapa de mensajeros mostraba puntos viejos
+Se pintaba a todo mensajero con una ubicación fechada "hoy", sin importar hace cuánto ni si seguía en línea.
+- Solo se pintan ubicaciones de los **últimos 15 minutos** según `lastUpdate` (hora del servidor, no la del celular) y que no figuren `conectado: false` (la app nativa lo deja así con `onDisconnect`).
+- Cada minuto se quitan los que ya pasaron de 15 minutos; antes nadie volvía a evaluarlos si ningún mensajero escribía.
+- El popup dice hace cuánto se actualizó y se arma al abrirlo, así el "hace X min" siempre está al día. La clave de Firebase y el nombre se escapan.
+- **No lo arregla todo:** Carlos Andrés (app Flutter) sigue sin aparecer cuando su celular guarda la app, porque esa app envía con un temporizador que Android pausa en segundo plano. Necesita un servicio en primer plano en la app Flutter: cambio de app, pendiente aparte. Argenis seguirá apareciendo mientras su app nativa esté abierta y enviando.
+
+### Abierto (revisión adversarial; sin bloqueantes)
+- **1156, camino hermano:** con Tesorería activa, `refrescarDatos` se salta todo el recálculo, pero `actualizarValoresPedido` solo se salta con pago por verificar o Pospendiente (lo aprobado). Un vendedor que quita un producto de un pedido PreAprobado con todos los pagos verificados, y el total queda ≤ lo pagado, calcula Aprobado, el servidor lo bloquea y sale el mismo aviso. Alinearlo es un cambio en un módulo sensible: se deja para que Daniel decida.
+- **1156, ya existía:** `prepararParaGuardar` (~6396) baja Aprobado → PreAprobado sumando pagos Rechazados, Cancelados y Pendientes; el servidor solo cuenta los aprobados. Y si `GET /config` de Tesorería falla, el indicador queda en null toda la sesión.
+- **1155:** la maqueta no es idéntica a la de jsPDF (el primer renglón queda ~0,4 cm más abajo); probar impreso sobre la cartulina pre-impresa. Con doble clic salen dos pestañas.
+- **1154, ya existía:** el filtro por empresa de `active_users` usa `includes` en ambos sentidos y no ignora partes vacías (una clave como `x_da_y` coincide con "ALMARA FELICIDAD"); con las claves de hoy ninguna otra empresa pasa, pero es un cruce posible entre empresas. Aparte, `simularMovimientoPedidos` mueve al azar cada 30 s los marcadores de pedidos Despachado (datos inventados).
+
+### 1136 — Dirección que cae en un sector equivocado (SIN CAMBIOS AQUÍ)
+Santiago ya tiene un arreglo de fondo (geocodificación con barrio y corregimiento, validación de resultados y pedir marcar el punto si nada es confiable) en el commit `dd98095d` y otro en la app Flutter (`a0ec563`). Ninguno está en GitHub. Queda pendiente que lo suba a una rama para revisarlo y publicarlo.
+
+**Verificado:** Karma, 23 de 23 en verde antes de los últimos ajustes (tarjeta 7, ubicación del mensajero 11, recálculo de pago 5; Karma está roto en el repo y se corrió con la receta de configuración temporal). Los casos añadidos después (mayúscula con paréntesis, número inicial, saltos de línea al final) se comprobaron con las mismas funciones compiladas con esbuild. Render del PDF en Chromium con emojis, tildes, ü, texto con HTML y mensaje largo: sin scripts ejecutados y sin iframes que queden; PDF de 25-110 KB. Datos reales de `active_users` de ALMARA (solo lectura) para la forma de `lastUpdate`, `timestamp` y `conectado`. Revisión adversarial sin hallazgos graves; se corrigieron el respaldo de pestaña bloqueada, la mayúscula con paréntesis, los saltos de línea finales, el popup al día y el escapado del popup. Build de producción 2026.10.08.6.
+**No verificado:** impresión real del PDF sobre la tarjeta pre-impresa; el mapa con mensajeros en vivo; el aviso del 1156 con un pedido real en Pospendiente (solo el spec).
