@@ -138,6 +138,7 @@ export class TransportadoresComponent implements OnInit, OnChanges {
         ...this.selectedTransporter,
         zonasCobertura: this.selectedTransporter.zonasCobertura || []
       });
+      this.pwdOpcionalAlEditar();
       this.showForm = true;
     }
   }
@@ -174,11 +175,13 @@ export class TransportadoresComponent implements OnInit, OnChanges {
     }
 
     this.isLoading = true;
-    const formData = this.transportadorForm.value;
+    const formData = { ...this.transportadorForm.value };
     
     if (this.editMode && this.selectedTransporter) {
       formData.id = this.selectedTransporter.id;
       formData.date_edit = this.selectedTransporter.date_edit;
+      // Al editar, la contraseña solo se envía si se escribió una nueva; vacía significa "no cambiarla".
+      if (!String(formData.pwd ?? '').trim()) { delete formData.pwd; }
     }
     
     // Simular delay para mostrar loading
@@ -196,6 +199,7 @@ export class TransportadoresComponent implements OnInit, OnChanges {
 
   editTransporter(vendor: any): void {
     this.transportadorForm.patchValue(vendor);
+    this.pwdOpcionalAlEditar();
     this.editMode = true;
     this.selectedTransporter = vendor;
     this.showForm = true;
@@ -208,8 +212,24 @@ export class TransportadoresComponent implements OnInit, OnChanges {
 
   resetForm(): void {
     this.transportadorForm.reset();
+    this.pwdObligatoriaAlCrear();
     this.editMode = false;
     this.selectedTransporter = null;
+  }
+
+  /** En edición la contraseña empieza vacía y es opcional: vacía no cambia la que tiene el transportador. */
+  private pwdOpcionalAlEditar(): void {
+    const pwd = this.transportadorForm.get('pwd');
+    pwd?.setValue('');
+    pwd?.clearValidators();
+    pwd?.updateValueAndValidity();
+  }
+
+  /** En creación la contraseña es obligatoria. */
+  private pwdObligatoriaAlCrear(): void {
+    const pwd = this.transportadorForm.get('pwd');
+    pwd?.setValidators(Validators.required);
+    pwd?.updateValueAndValidity();
   }
 
   showCreateForm(): void {

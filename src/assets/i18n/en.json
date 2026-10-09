@@ -743,5 +743,7 @@
   "Foto siguiente": "Next photo",
   "Imagen ampliada": "Enlarged image",
   "No se pudo cargar la imagen": "The image could not be loaded",
-  "Ampliar foto": "Enlarge photo"
+  "Ampliar foto": "Enlarge photo",
+  "Nueva contraseña (opcional)": "New password (optional)",
+  "Déjala vacía para no cambiarla": "Leave it empty to keep the current one"
 }

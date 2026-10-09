@@ -265,9 +265,11 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="pwd">{{ 'Contraseña' | translate }}</label>
-                            <input type="password" class="form-control" id="pwd" formControlName="pwd" required>
-                            <div *ngIf="transportadorForm.get('pwd').invalid && transportadorForm.get('pwd').touched" class="text-danger">
+                            <label for="pwd">{{ (editMode ? 'Nueva contraseña (opcional)' : 'Contraseña') | translate }}</label>
+                            <input type="password" class="form-control" id="pwd" formControlName="pwd"
+                                   autocomplete="new-password" [required]="!editMode">
+                            <small class="text-muted" *ngIf="editMode">{{ 'Déjala vacía para no cambiarla' | translate }}</small>
+                            <div *ngIf="!editMode && transportadorForm.get('pwd').invalid && transportadorForm.get('pwd').touched" class="text-danger">
                                 {{ 'La contraseña es requerida' | translate }}
                             </div>
                         </div>
