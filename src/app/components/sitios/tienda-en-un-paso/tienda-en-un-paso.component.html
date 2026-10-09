@@ -1,0 +1,219 @@
+<!-- Tienda en minutos con IA, en un solo paso (bandera singleStepStore).
+     Va con `appAlBody` porque `.page-body` abre contexto de apilamiento y el velo se quedaría
+     por debajo del menú. Ver al-body.directive.ts. -->
+<div class="tep-velo" appAlBody (click)="alClicEnVelo()">
+  <section class="tep" role="dialog" aria-modal="true" aria-labelledby="tep-titulo" (click)="$event.stopPropagation()">
+
+    <header class="tep__cabecera">
+      <div class="tep__cabecera-texto">
+        <span class="tep__etiqueta">Con inteligencia artificial</span>
+        <h2 id="tep-titulo" class="tep__titulo">
+          {{ fase === 'resultado' ? 'Tu tienda' : 'Tu tienda en minutos' }}
+        </h2>
+        <p class="tep__subtitulo" *ngIf="fase === 'formulario'">
+          Cuéntanos qué vendes o sube hasta {{ maxFotos }} fotos de tus productos con su precio.
+          Nosotros armamos los productos, los textos y el diseño.
+        </p>
+        <p class="tep__subtitulo" *ngIf="fase === 'avance'">
+          Estamos armando tu tienda. Esto puede tardar un par de minutos.
+        </p>
+      </div>
+      <button type="button" class="tep__cerrar" (click)="cerrarVentana()" [disabled]="enviando" aria-label="Cerrar">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <div class="tep__cuerpo">
+
+      <!-- ── Buscando una tienda que quedó a medias ── -->
+      <div class="tep__cargando" *ngIf="fase === 'cargando'" role="status" aria-live="polite">
+        <span class="tep__giro" aria-hidden="true"></span>
+        <span>Buscando tu tienda…</span>
+      </div>
+
+      <!-- ── El formulario: una sola vista ── -->
+      <div *ngIf="fase === 'formulario'">
+
+        <div class="tep__campo" [class.has-error]="errores.nombre">
+          <label class="tep__label" for="tep-nombre">Nombre de tu negocio</label>
+          <input id="tep-nombre" class="tep__input" type="text" name="nombre" autocomplete="off"
+                 [(ngModel)]="formulario.nombre" (ngModelChange)="alEditar()"
+                 [attr.maxlength]="maxNombre" placeholder="Ej: Flores La Montaña"
+                 [attr.aria-invalid]="errores.nombre ? 'true' : null"
+                 [disabled]="enviando" />
+          <p class="tep__error" *ngIf="errores.nombre" role="alert">{{ errores.nombre }}</p>
+        </div>
+
+        <div class="tep__campo" [class.has-error]="errores.descripcion">
+          <label class="tep__label" for="tep-descripcion">¿Qué vendes? Cuéntalo en una frase</label>
+          <textarea id="tep-descripcion" class="tep__input tep__input--area" name="descripcion" rows="2"
+                    [(ngModel)]="formulario.descripcion" (ngModelChange)="alEditar()"
+                    [attr.maxlength]="maxDescripcion"
+                    placeholder="Ej: Ramos y arreglos florales con entrega el mismo día en Palmira"
+                    [attr.aria-invalid]="errores.descripcion ? 'true' : null"
+                    [disabled]="enviando"></textarea>
+          <div class="tep__fila-ayuda">
+            <p class="tep__error" *ngIf="errores.descripcion" role="alert">{{ errores.descripcion }}</p>
+            <span class="tep__contador">{{ formulario.descripcion.length }}/{{ maxDescripcion }}</span>
+          </div>
+        </div>
+
+        <div class="tep__campo">
+          <span class="tep__label">Fotos de tus productos <span class="tep__opcional">(opcional, hasta {{ maxFotos }})</span></span>
+          <p class="tep__ayuda">
+            Una foto por producto. El precio lo escribes tú: nosotros nunca lo inventamos.
+            Con la foto armamos el nombre y la descripción.
+          </p>
+
+          <ul class="tep__fotos" *ngIf="formulario.fotos.length || preparandoFotos">
+            <li class="tep__foto" *ngFor="let foto of formulario.fotos; trackBy: porId; let i = index"
+                [class.has-error]="errores.fotos[foto.id]">
+              <img class="tep__miniatura" [src]="foto.vistaPrevia" [alt]="'Foto ' + (i + 1) + ' de tu producto'" />
+              <div class="tep__foto-datos">
+                <span class="tep__foto-titulo">Foto {{ i + 1 }}</span>
+                <label class="tep__label tep__label--chico" [attr.for]="'tep-precio-' + foto.id">Precio de venta</label>
+                <div class="tep__precio">
+                  <span class="tep__precio-signo" aria-hidden="true">$</span>
+                  <input class="tep__input tep__input--precio" type="text" inputmode="numeric" autocomplete="off"
+                         [id]="'tep-precio-' + foto.id" [attr.name]="'precio' + foto.id"
+                         [(ngModel)]="foto.precioTexto" (ngModelChange)="alEditar()"
+                         placeholder="Ej: 45.000"
+                         [attr.aria-invalid]="errores.fotos[foto.id] ? 'true' : null"
+                         [disabled]="enviando" />
+                </div>
+                <span class="tep__precio-ok" *ngIf="precioEntendido(foto) && !errores.fotos[foto.id]">{{ precioEntendido(foto) }}</span>
+                <p class="tep__error" *ngIf="errores.fotos[foto.id]" role="alert">{{ errores.fotos[foto.id] }}</p>
+              </div>
+              <button type="button" class="tep__quitar" (click)="quitarFoto(foto)" [disabled]="enviando"
+                      [attr.aria-label]="'Quitar la foto ' + (i + 1)">
+                <i class="pi pi-trash" aria-hidden="true"></i>
+              </button>
+            </li>
+            <li class="tep__foto tep__foto--preparando" *ngIf="preparandoFotos > 0" role="status">
+              <span class="tep__giro" aria-hidden="true"></span>
+              <span>Preparando tu foto…</span>
+            </li>
+          </ul>
+
+          <label class="tep__subir" *ngIf="cupoDeFotos > 0" [class.is-disabled]="enviando">
+            <input class="tep__archivo" type="file" accept="image/*" multiple
+                   (change)="alElegirFotos($event)" [disabled]="enviando" />
+            <i class="pi pi-camera" aria-hidden="true"></i>
+            <span class="tep__subir-texto">{{ formulario.fotos.length ? 'Agregar otra foto' : 'Subir fotos' }}</span>
+            <small>{{ cupoDeFotos }} {{ cupoDeFotos === 1 ? 'espacio disponible' : 'espacios disponibles' }}</small>
+          </label>
+
+          <p class="tep__aviso" *ngIf="avisoFotos" role="status">{{ avisoFotos }}</p>
+          <p class="tep__nota" *ngIf="!formulario.fotos.length && !preparandoFotos">
+            Sin fotos, dejamos tu página lista como borrador y te decimos qué falta para publicarla.
+          </p>
+        </div>
+
+        <div class="tep__banner tep__banner--error" *ngIf="errorGeneral" role="alert">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+          <span>{{ errorGeneral }}</span>
+        </div>
+      </div>
+
+      <!-- ── El avance, por pasos ── -->
+      <div *ngIf="fase === 'avance'">
+        <p class="tep__mensaje" role="status" aria-live="polite">{{ (avance && avance.message) || 'Empezando…' }}</p>
+
+        <ol class="tep__pasos">
+          <li class="tep__paso" *ngFor="let paso of pasos" [ngClass]="'tep__paso--' + paso.estado">
+            <span class="tep__punto" aria-hidden="true">
+              <i class="pi pi-check" *ngIf="paso.estado === 'listo'"></i>
+              <span class="tep__giro tep__giro--chico" *ngIf="paso.estado === 'activo'"></span>
+              <i class="pi pi-minus" *ngIf="paso.estado === 'omitido'"></i>
+              <i class="pi pi-pause" *ngIf="paso.estado === 'detenido'"></i>
+            </span>
+            <span class="tep__paso-texto">
+              <strong>{{ paso.titulo }}</strong>
+              <span *ngIf="paso.detalle">{{ paso.detalle }}</span>
+            </span>
+          </li>
+        </ol>
+
+        <ul class="tep__avance-fotos" *ngIf="avance && avance.items.length">
+          <li *ngFor="let item of avance.items; let i = index" [ngClass]="'is-' + item.state">
+            <img [src]="item.photoUrl" [alt]="'Foto ' + (i + 1)" *ngIf="item.photoUrl" />
+            <span class="tep__avance-foto-estado">{{ etiquetaFoto(item.state) }}</span>
+          </li>
+        </ul>
+
+        <div class="tep__banner tep__banner--aviso" *ngIf="avisoLargo" role="status">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <span>{{ avisoLargo }}</span>
+        </div>
+        <p class="tep__nota">Puedes cerrar esta ventana: seguimos trabajando y la encuentras en Mis páginas.</p>
+      </div>
+
+      <!-- ── El resultado ── -->
+      <div *ngIf="fase === 'resultado' && resumen">
+        <div class="tep__resultado" [ngClass]="'tep__resultado--' + resumen.tono">
+          <span class="tep__icono" aria-hidden="true">
+            <i class="pi" [ngClass]="resumen.tono === 'ok' ? 'pi-check' : (resumen.tono === 'info' ? 'pi-info-circle' : 'pi-exclamation-triangle')"></i>
+          </span>
+          <div class="tep__resultado-texto">
+            <h3>{{ resumen.titulo }}</h3>
+            <p>{{ resumen.texto }}</p>
+          </div>
+        </div>
+
+        <div class="tep__enlace" *ngIf="resumen.puedeVer && avance">
+          <span class="tep__etiqueta">Tu tienda</span>
+          <div class="tep__enlace-fila">
+            <a class="tep__enlace-url" [href]="avance.siteUrl" target="_blank" rel="noopener">{{ avance.siteUrl }}</a>
+            <button type="button" class="tep__btn tep__btn--fantasma tep__btn--chico" (click)="copiarEnlace()">
+              {{ copiado ? '¡Copiado!' : 'Copiar enlace' }}
+            </button>
+          </div>
+        </div>
+
+        <p class="tep__cuenta" *ngIf="resumen.productos > 0">
+          {{ textoProductos(resumen.productos) }} con los precios que pusiste.
+        </p>
+
+        <ul class="tep__avisos" *ngIf="resumen.avisos.length">
+          <li *ngFor="let aviso of resumen.avisos">{{ aviso }}</li>
+        </ul>
+
+        <div class="tep__banner tep__banner--error" *ngIf="errorGeneral" role="alert">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+          <span>{{ errorGeneral }}</span>
+        </div>
+      </div>
+    </div>
+
+    <footer class="tep__pie">
+      <!-- Formulario -->
+      <ng-container *ngIf="fase === 'formulario'">
+        <span class="tep__pista">Tarda un par de minutos. Puedes cerrar la ventana mientras se arma.</span>
+        <button type="button" class="tep__btn tep__btn--fantasma" (click)="cerrarVentana()" [disabled]="enviando">Cancelar</button>
+        <button type="button" class="tep__btn tep__btn--primario" (click)="crear()" [disabled]="enviando">
+          <span class="tep__giro tep__giro--chico tep__giro--blanco" *ngIf="enviando" aria-hidden="true"></span>
+          {{ enviando ? 'Enviando…' : 'Crear mi tienda' }}
+        </button>
+      </ng-container>
+
+      <!-- Avance -->
+      <ng-container *ngIf="fase === 'avance'">
+        <span class="tep__pista">Seguimos aunque cierres esta ventana.</span>
+        <button type="button" class="tep__btn tep__btn--fantasma" (click)="cerrarVentana()">Cerrar y seguir en Mis páginas</button>
+      </ng-container>
+
+      <!-- Resultado -->
+      <ng-container *ngIf="fase === 'resultado' && resumen">
+        <button type="button" class="tep__btn tep__btn--fantasma" (click)="cerrarVentana()">Cerrar</button>
+        <button type="button" class="tep__btn tep__btn--fantasma" *ngIf="!resumen.puedeReintentar" (click)="irAlEditor()">Abrir en el editor</button>
+        <button type="button" class="tep__btn tep__btn--fantasma" *ngIf="!resumen.puedeVer && avance && avance.previewUrl && !resumen.puedeReintentar" (click)="verVistaPrevia()">Ver vista previa</button>
+        <button type="button" class="tep__btn tep__btn--primario" *ngIf="resumen.puedeVer" (click)="verTienda()">Ver mi tienda</button>
+        <button type="button" class="tep__btn tep__btn--primario" *ngIf="resumen.puedeAgregarProducto" (click)="agregarProducto()">Agregar un producto</button>
+        <button type="button" class="tep__btn tep__btn--primario" *ngIf="resumen.puedeReintentar" (click)="reintentar()" [disabled]="enviando">
+          <span class="tep__giro tep__giro--chico tep__giro--blanco" *ngIf="enviando" aria-hidden="true"></span>
+          {{ enviando ? 'Retomando…' : 'Reintentar' }}
+        </button>
+      </ng-container>
+    </footer>
+  </section>
+</div>

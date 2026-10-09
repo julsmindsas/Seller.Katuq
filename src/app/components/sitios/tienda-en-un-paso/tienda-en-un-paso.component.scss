@@ -1,0 +1,870 @@
+// Tienda en minutos con IA, en un solo paso.
+//
+// Tema canónico de Katuq (openspec/specs/design-system/spec.md, extraído de "Todos
+// los pedidos"): acento #5F3FE0, texto #211F3A, superficies lila, semánticos en par
+// fuerte/fondo-suave, radios 16/11/20, sombras violeta difusas y estilo PLANO: sin
+// gradientes. Los tokens van aquí arriba, junto a su fuente, hasta que exista un
+// parcial global compartido. Prefijo de módulo: `tep`.
+
+$pd-accent: #5f3fe0;
+$pd-accent-hover: #4a2fc0;
+$pd-accent-2: #7c5cff;
+$pd-ink: #211f3a;
+$pd-muted: #8f8bab;
+$pd-muted-2: #9995b3;
+$pd-line: #ececf4;
+$pd-line-soft: #f1f0f7;
+$pd-chip-bg: #f5f4fa;
+$pd-chip-border: #e9e7f3;
+$pd-tint: #faf9fe;
+$pd-tile: #f3f1fb;
+$pd-primary-soft: #efe9ff;
+
+$pd-ok: #1e874b;
+$pd-ok-soft: #e6f7ee;
+$pd-warn: #d9820a;
+$pd-warn-soft: #fff1df;
+$pd-error: #d64545;
+$pd-error-soft: #fdecec;
+$pd-info: #1e6fd9;
+$pd-info-soft: #e7f1ff;
+
+$pd-step-current: #ff9800;
+$pd-step-line: #eceaf4;
+
+$pd-radius-panel: 16px;
+$pd-radius-fila: 11px;
+$pd-radius-input: 10px;
+$pd-radius-chip: 20px;
+
+$pd-sombra-panel: 0 1px 3px rgba(30, 20, 80, 0.04);
+$pd-sombra-modal: 0 24px 60px -20px rgba(33, 31, 58, 0.45);
+$pd-sombra-boton: 0 8px 18px -8px rgba(95, 63, 224, 0.7);
+
+@keyframes tep-giro {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes tep-aparece {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ── Ventana ──────────────────────────────────────────────────────────────────
+.tep-velo {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(33, 31, 58, 0.5);
+
+  @media (max-width: 575px) {
+    padding: 12px;
+  }
+}
+
+.tep {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  max-height: 92vh;
+  background: #fff;
+  color: $pd-ink;
+  border: 1px solid $pd-line;
+  border-radius: $pd-radius-panel;
+  box-shadow: $pd-sombra-modal;
+  overflow: hidden;
+  animation: tep-aparece 0.18s ease;
+
+  &__cabecera {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex: none;
+    padding: 20px 22px 14px;
+    border-bottom: 1px solid $pd-line-soft;
+
+    @media (max-width: 575px) {
+      padding: 16px 16px 12px;
+    }
+  }
+
+  &__cabecera-texto {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__etiqueta {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: $pd-muted;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: $pd-ink;
+  }
+
+  &__subtitulo {
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: $pd-muted;
+  }
+
+  &__cerrar {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid $pd-chip-border;
+    border-radius: $pd-radius-input;
+    background: $pd-chip-bg;
+    color: $pd-muted;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      color: $pd-accent;
+      border-color: $pd-accent;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__cuerpo {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 18px 22px 8px;
+
+    @media (max-width: 575px) {
+      padding: 14px 16px 6px;
+    }
+  }
+
+  &__pie {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex: none;
+    padding: 14px 22px 18px;
+    border-top: 1px solid $pd-line-soft;
+    background: $pd-tint;
+
+    @media (max-width: 575px) {
+      padding: 12px 16px 16px;
+
+      .tep__btn {
+        flex: 1 1 auto;
+      }
+    }
+  }
+
+  &__pista {
+    flex: 1;
+    min-width: 180px;
+    font-size: 11.5px;
+    color: $pd-muted;
+  }
+}
+
+// ── Campos ───────────────────────────────────────────────────────────────────
+.tep__campo {
+  margin-bottom: 18px;
+
+  &.has-error .tep__input {
+    border-color: $pd-error;
+    background: #fff;
+  }
+}
+
+.tep__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: $pd-muted;
+
+  &--chico {
+    font-size: 9.5px;
+    margin-bottom: 4px;
+  }
+}
+
+.tep__opcional {
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  color: $pd-muted-2;
+}
+
+.tep__input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid $pd-chip-border;
+  border-radius: $pd-radius-input;
+  background: $pd-chip-bg;
+  font: inherit;
+  font-size: 13px;
+  color: $pd-ink;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &::placeholder {
+    color: $pd-muted-2;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $pd-accent;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(95, 63, 224, 0.12);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+
+  &--area {
+    height: auto;
+    min-height: 64px;
+    padding: 10px 12px;
+    line-height: 1.45;
+    resize: vertical;
+  }
+
+  &--precio {
+    padding-left: 26px;
+    font-weight: 700;
+  }
+}
+
+.tep__fila-ayuda {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.tep__contador {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: $pd-muted-2;
+}
+
+.tep__ayuda,
+.tep__nota {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: $pd-muted;
+}
+
+.tep__nota {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: $pd-radius-fila;
+  background: $pd-tint;
+  border: 1px dashed $pd-chip-border;
+}
+
+.tep__error {
+  margin: 5px 0 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: $pd-error;
+}
+
+.tep__aviso {
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  border-radius: $pd-radius-fila;
+  background: $pd-warn-soft;
+  color: $pd-warn;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+// ── Fotos ────────────────────────────────────────────────────────────────────
+.tep__fotos {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.tep__foto {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid $pd-line;
+  border-radius: $pd-radius-fila;
+  background: $pd-tint;
+
+  &.has-error {
+    border-color: $pd-error;
+    background: $pd-error-soft;
+  }
+
+  &--preparando {
+    align-items: center;
+    justify-content: center;
+    min-height: 72px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: $pd-muted;
+  }
+}
+
+.tep__miniatura {
+  flex: none;
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border: 1px solid $pd-line;
+  border-radius: $pd-radius-input;
+  background: #fff;
+}
+
+.tep__foto-datos {
+  flex: 1;
+  min-width: 0;
+}
+
+.tep__foto-titulo {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.tep__precio {
+  position: relative;
+}
+
+.tep__precio-signo {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 800;
+  color: $pd-muted;
+  pointer-events: none;
+}
+
+.tep__precio-ok {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 9px;
+  border-radius: $pd-radius-chip;
+  background: $pd-ok-soft;
+  color: $pd-ok;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.tep__quitar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid $pd-chip-border;
+  border-radius: $pd-radius-input;
+  background: #fff;
+  color: $pd-muted;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: $pd-error;
+    border-color: $pd-error;
+    background: $pd-error-soft;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.tep__subir {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px dashed $pd-chip-border;
+  border-radius: $pd-radius-fila;
+  background: #fff;
+  color: $pd-accent;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  i {
+    font-size: 16px;
+  }
+
+  small {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    color: $pd-muted;
+  }
+
+  &:hover,
+  &:focus-within {
+    border-color: $pd-accent;
+    background: $pd-tint;
+  }
+
+  &.is-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+// El campo de archivo real queda debajo del botón: accesible con teclado y lector de pantalla.
+.tep__archivo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+// ── Avisos grandes ───────────────────────────────────────────────────────────
+.tep__banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0 8px;
+  padding: 11px 13px;
+  border-radius: $pd-radius-fila;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.45;
+
+  i {
+    margin-top: 2px;
+  }
+
+  &--error {
+    background: $pd-error-soft;
+    color: $pd-error;
+  }
+
+  &--aviso {
+    background: $pd-warn-soft;
+    color: $pd-warn;
+  }
+}
+
+// ── Avance por pasos ─────────────────────────────────────────────────────────
+.tep__mensaje {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: $pd-radius-fila;
+  background: $pd-primary-soft;
+  color: $pd-accent;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.tep__pasos {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.tep__paso {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 16px;
+
+  // La línea que une los puntos.
+  &:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 28px;
+    bottom: 0;
+    width: 2px;
+    background: $pd-step-line;
+  }
+
+  &--listo:not(:last-child)::before {
+    background: $pd-ok;
+  }
+
+  &--pendiente,
+  &--omitido {
+    opacity: 0.6;
+  }
+}
+
+.tep__punto {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: $pd-step-line;
+  color: $pd-muted;
+  font-size: 12px;
+
+  .tep__paso--listo & {
+    background: $pd-ok;
+    color: #fff;
+  }
+
+  .tep__paso--activo & {
+    background: #fff;
+    border: 2px solid $pd-step-current;
+    box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.18);
+  }
+
+  .tep__paso--detenido & {
+    background: $pd-warn-soft;
+    color: $pd-warn;
+  }
+}
+
+.tep__paso-texto {
+  display: grid;
+  gap: 2px;
+  padding-top: 4px;
+
+  strong {
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  span {
+    font-size: 11.5px;
+    color: $pd-muted;
+  }
+}
+
+.tep__avance-fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    gap: 4px;
+    width: 92px;
+    text-align: center;
+
+    img {
+      width: 92px;
+      height: 92px;
+      object-fit: cover;
+      border: 1px solid $pd-line;
+      border-radius: $pd-radius-fila;
+    }
+
+    &.is-pending img,
+    &.is-skipped img {
+      opacity: 0.55;
+    }
+  }
+}
+
+.tep__avance-foto-estado {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: $pd-radius-chip;
+  background: $pd-chip-bg;
+  color: $pd-muted;
+  font-size: 10.5px;
+  font-weight: 800;
+
+  .is-ready & {
+    background: $pd-ok-soft;
+    color: $pd-ok;
+  }
+
+  .is-processing & {
+    background: $pd-primary-soft;
+    color: $pd-accent;
+  }
+
+  .is-skipped & {
+    background: $pd-warn-soft;
+    color: $pd-warn;
+  }
+}
+
+// ── Resultado ────────────────────────────────────────────────────────────────
+.tep__resultado {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border-radius: $pd-radius-panel;
+  box-shadow: $pd-sombra-panel;
+
+  h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+
+  &--ok {
+    background: $pd-ok-soft;
+    color: $pd-ok;
+
+    h3 {
+      color: $pd-ink;
+    }
+  }
+
+  &--info {
+    background: $pd-info-soft;
+    color: $pd-info;
+
+    h3 {
+      color: $pd-ink;
+    }
+  }
+
+  &--aviso {
+    background: $pd-warn-soft;
+    color: $pd-warn;
+
+    h3 {
+      color: $pd-ink;
+    }
+  }
+
+  p {
+    color: $pd-ink;
+  }
+}
+
+.tep__icono {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 18px;
+}
+
+.tep__resultado-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.tep__enlace {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid $pd-line;
+  border-radius: $pd-radius-fila;
+  background: $pd-tint;
+}
+
+.tep__enlace-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tep__enlace-url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 800;
+  color: $pd-accent;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.tep__cuenta {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: $pd-ink;
+}
+
+.tep__avisos {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+
+  li {
+    padding: 9px 12px;
+    border-radius: $pd-radius-fila;
+    background: $pd-warn-soft;
+    color: $pd-ink;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+}
+
+.tep__cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: $pd-muted;
+}
+
+// ── Botones: planos, sin degradados ──────────────────────────────────────────
+.tep__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: $pd-radius-fila;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &--primario {
+    border: 1px solid $pd-accent;
+    background: $pd-accent;
+    color: #fff;
+    box-shadow: $pd-sombra-boton;
+
+    &:hover:not(:disabled) {
+      background: $pd-accent-hover;
+      border-color: $pd-accent-hover;
+    }
+  }
+
+  &--fantasma {
+    border: 1px solid #e4e2ef;
+    background: #fff;
+    color: #5b5878;
+
+    &:hover:not(:disabled) {
+      border-color: $pd-accent;
+      color: $pd-accent;
+    }
+  }
+
+  &--chico {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pd-accent-2;
+    outline-offset: 2px;
+  }
+}
+
+// ── Indicador de trabajo ─────────────────────────────────────────────────────
+.tep__giro {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid $pd-primary-soft;
+  border-top-color: $pd-accent;
+  border-radius: 50%;
+  animation: tep-giro 0.8s linear infinite;
+
+  &--chico {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+    border-color: rgba(255, 152, 0, 0.25);
+    border-top-color: $pd-step-current;
+  }
+
+  &--blanco {
+    border-color: rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 2.4s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tep {
+    animation: none;
+  }
+}

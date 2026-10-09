@@ -345,6 +345,17 @@
     color: var(--kb-ok);
     background: var(--kb-ok-wash);
   }
+
+  // Tienda en un solo paso: mientras se crea, o si quedó a medias.
+  &--creandose {
+    color: var(--kb-warn);
+    background: var(--kb-warn-wash);
+  }
+
+  &--sin-terminar {
+    color: var(--kb-danger);
+    background: var(--kb-danger-wash);
+  }
 }
 
 .enlace {
@@ -801,6 +812,12 @@
       line-height: 1.35;
     }
   }
+}
+
+// "Tu tienda en minutos con IA": la primera opción del asistente, con el acento de la marca.
+.opcion-grande--ia {
+  border-color: var(--kb-accent-line-2);
+  background: var(--kb-accent-wash-4);
 }
 
 // El aviso de marca dentro del asistente es el mismo de la lista, más discreto.
