@@ -21,7 +21,7 @@ const leer = (f) => fs.readFileSync(f, 'utf8');
 
 test('validarInstruccion: lo corto no viaja; lo largo se recorta', () => {
   for (const corto of [undefined, null, '', '  ', 'ok']) assert.equal(L.validarInstruccion(corto).ok, false);
-  assert.deepEqual(L.validarInstruccion('  pon   un título  '), { ok: true, instruccion: 'pon un título' });
+  assert.deepEqual(L.validarInstruccion('  pon   un título  '), { ok: true, instruccion: 'pon un título', mensaje: '' });
   assert.equal(L.validarInstruccion('x'.repeat(2000)).instruccion.length, L.INSTRUCCION_MAX);
 });
 

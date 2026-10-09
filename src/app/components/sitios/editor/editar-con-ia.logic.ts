@@ -25,14 +25,19 @@ export const SUGERENCIAS_EDITAR_IA: ReadonlyArray<string> = [
   'Pon el catálogo justo después de la portada',
 ];
 
-export type ResultadoInstruccion = { ok: true; instruccion: string } | { ok: false; mensaje: string };
+/** Tipo plano a propósito: el proyecto compila sin `strictNullChecks` y ahí una unión no se estrecha con `!ok`. */
+export interface ResultadoInstruccion {
+  ok: boolean;
+  instruccion: string;
+  mensaje: string;
+}
 
 export function validarInstruccion(texto: string): ResultadoInstruccion {
   const instruccion = String(texto == null ? '' : texto).replace(/\s+/g, ' ').trim();
   if (instruccion.length < INSTRUCCION_MIN) {
-    return { ok: false, mensaje: 'Escribe qué quieres cambiar de la página (por ejemplo: «pon un título más llamativo»).' };
+    return { ok: false, instruccion: '', mensaje: 'Escribe qué quieres cambiar de la página (por ejemplo: «pon un título más llamativo»).' };
   }
-  return { ok: true, instruccion: instruccion.slice(0, INSTRUCCION_MAX) };
+  return { ok: true, instruccion: instruccion.slice(0, INSTRUCCION_MAX), mensaje: '' };
 }
 
 /** Los últimos mensajes buenos, como los entiende el servidor. Los errores no se mandan. */
