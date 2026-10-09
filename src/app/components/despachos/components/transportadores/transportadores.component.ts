@@ -29,13 +29,63 @@ export class TransportadoresComponent implements OnInit, OnChanges {
   tomanPedidos: boolean | null = null;
   guardandoTomanPedidos = false;
 
+  /** Pago al mensajero por entrega: 'ninguno' (no se muestra pago), 'fijo' ($) o 'porcentaje' (% del domicilio). */
+  pagoTipo: 'ninguno' | 'fijo' | 'porcentaje' = 'ninguno';
+  pagoValor: number | null = null;
+  guardandoPago = false;
+  pagoGuardado = false;
+  readonly pagoFijoMax = 500000;
+
   constructor(private formBuilder: FormBuilder, private logistica: LogisticaServiceV2) { }
 
   ngOnInit(): void {
     this.initForm();
     this.logistica.getMensajerosConfig().subscribe({
-      next: (r) => this.tomanPedidos = r?.config?.mensajerosTomanPedidos === true,
+      next: (r) => {
+        this.tomanPedidos = r?.config?.mensajerosTomanPedidos === true;
+        const pago = r?.config?.pagoMensajero;
+        this.pagoTipo = pago ? pago.tipo : 'ninguno';
+        this.pagoValor = pago ? pago.valor : null;
+      },
       error: () => this.tomanPedidos = null,
+    });
+  }
+
+  cambiarPagoTipo(tipo: string): void {
+    this.pagoTipo = tipo === 'fijo' || tipo === 'porcentaje' ? tipo : 'ninguno';
+    this.pagoGuardado = false;
+    if (this.pagoTipo === 'ninguno') { this.pagoValor = null; }
+  }
+
+  /** El valor escrito es válido para el tipo elegido (fijo: $1 a $500.000; porcentaje: 1 a 100). */
+  get pagoValorValido(): boolean {
+    if (this.pagoTipo === 'ninguno') { return true; }
+    const v = Number(this.pagoValor);
+    if (!Number.isFinite(v) || v <= 0) { return false; }
+    return this.pagoTipo === 'fijo' ? v <= this.pagoFijoMax : v <= 100;
+  }
+
+  /** Guarda lo que gana el mensajero por entrega. "Sin definir" quita el pago y la app deja de mostrarlo. */
+  guardarPago(): void {
+    if (!this.pagoValorValido) { return; }
+    this.guardandoPago = true;
+    this.pagoGuardado = false;
+    const pagoMensajero = this.pagoTipo === 'ninguno' ? null : { tipo: this.pagoTipo, valor: Number(this.pagoValor) };
+    this.logistica.saveMensajerosConfig({ pagoMensajero }).subscribe({
+      next: () => {
+        this.guardandoPago = false;
+        this.pagoGuardado = true;
+      },
+      error: (e) => {
+        this.guardandoPago = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'No se guardó el pago',
+          text: e?.status === 403
+            ? 'Solo un administrador de la empresa puede cambiar esto. Pídele a un administrador que lo haga.'
+            : (e?.error?.error || 'No pudimos guardar el cambio. Revisa tu conexión e inténtalo de nuevo.'),
+        });
+      },
     });
   }
 
@@ -60,7 +110,7 @@ export class TransportadoresComponent implements OnInit, OnChanges {
       return;
     }
     this.guardandoTomanPedidos = true;
-    this.logistica.saveMensajerosConfig(valor).subscribe({
+    this.logistica.saveMensajerosConfig({ mensajerosTomanPedidos: valor }).subscribe({
       next: () => {
         this.tomanPedidos = valor;
         this.guardandoTomanPedidos = false;

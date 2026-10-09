@@ -5,6 +5,17 @@ import { map, tap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
+/** Lo que gana el mensajero por entrega: un valor fijo en pesos o un porcentaje del domicilio cobrado. */
+export interface PagoMensajero {
+    tipo: 'fijo' | 'porcentaje';
+    valor: number;
+}
+
+export interface MensajerosConfigRespuesta {
+    success: boolean;
+    config: { mensajerosTomanPedidos: boolean; pagoMensajero?: PagoMensajero | null };
+}
+
 @Injectable({ providedIn: 'root' })
 export class LogisticaServiceV2 extends BaseService {
     private apiUrl = environment.urlApi;
@@ -35,13 +46,19 @@ export class LogisticaServiceV2 extends BaseService {
     }
 
     /** ¿Los mensajeros de la empresa pueden tomar pedidos listos desde la app (modo tipo Rappi)? */
-    getMensajerosConfig(): Observable<{ success: boolean; config: { mensajerosTomanPedidos: boolean } }> {
-        return this.http.get<any>(`${this.apiUrl}/v1/logistica/mensajeros/config`);
+    getMensajerosConfig(): Observable<MensajerosConfigRespuesta> {
+        return this.http.get<MensajerosConfigRespuesta>(`${this.apiUrl}/v1/logistica/mensajeros/config`);
     }
 
-    /** Enciende o apaga la toma de pedidos desde la app. Solo administradores. */
-    saveMensajerosConfig(mensajerosTomanPedidos: boolean): Observable<any> {
-        return this.http.put(`${this.apiUrl}/v1/logistica/mensajeros/config`, { mensajerosTomanPedidos });
+    /**
+     * Guarda la toma de pedidos desde la app y/o el pago al mensajero por entrega. Solo administradores.
+     * `pagoMensajero: null` quita la regla de pago.
+     */
+    saveMensajerosConfig(cambios: {
+        mensajerosTomanPedidos?: boolean;
+        pagoMensajero?: PagoMensajero | null;
+    }): Observable<MensajerosConfigRespuesta> {
+        return this.http.put<MensajerosConfigRespuesta>(`${this.apiUrl}/v1/logistica/mensajeros/config`, cambios);
     }
 
     // Órdenes de envío

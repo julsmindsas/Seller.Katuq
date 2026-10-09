@@ -30,6 +30,41 @@
                 <small class="text-muted">{{ 'No disponible' | translate }}</small>
             </ng-template>
         </div>
+        <!-- Cuánto gana el mensajero por entrega: la app lo muestra en cada pedido y suma sus ganancias -->
+        <div class="card-body pt-0" *ngIf="tomanPedidos !== null">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-5">
+                    <label class="form-label small mb-1" for="pagoTipoSelect">{{ 'Pago al mensajero por entrega' | translate }}</label>
+                    <select id="pagoTipoSelect" class="form-select form-select-sm" [value]="pagoTipo"
+                            (change)="cambiarPagoTipo($any($event.target).value)">
+                        <option value="ninguno">{{ 'Sin definir (la app no muestra pago)' | translate }}</option>
+                        <option value="fijo">{{ 'Valor fijo por entrega ($)' | translate }}</option>
+                        <option value="porcentaje">{{ 'Porcentaje del domicilio (%)' | translate }}</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3" *ngIf="pagoTipo !== 'ninguno'">
+                    <label class="form-label small mb-1" for="pagoValorInput">
+                        {{ (pagoTipo === 'fijo' ? 'Valor en pesos' : 'Porcentaje') | translate }}
+                    </label>
+                    <input id="pagoValorInput" type="number" class="form-control form-control-sm" min="1"
+                           [max]="pagoTipo === 'fijo' ? pagoFijoMax : 100"
+                           [value]="pagoValor" [class.is-invalid]="pagoValor !== null && !pagoValorValido"
+                           (input)="pagoValor = $any($event.target).value === '' ? null : +$any($event.target).value; pagoGuardado = false">
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-sm btn-primary" (click)="guardarPago()"
+                            [disabled]="guardandoPago || !pagoValorValido || (pagoTipo !== 'ninguno' && pagoValor === null)">
+                        {{ 'Guardar pago' | translate }}
+                    </button>
+                </div>
+                <div class="col-auto" *ngIf="pagoGuardado">
+                    <small class="text-success"><i class="pi pi-check me-1"></i>{{ 'Guardado' | translate }}</small>
+                </div>
+            </div>
+            <small class="text-muted d-block mt-2">
+                {{ 'Cada mensajero ve en la app cuánto gana por pedido. Al tomarlo queda fijo: si cambias la tarifa después, no afecta lo ya tomado.' | translate }}
+            </small>
+        </div>
     </div>
 
     <!-- Tabla principal de transportadores -->
