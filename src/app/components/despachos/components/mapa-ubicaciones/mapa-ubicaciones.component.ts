@@ -3,7 +3,7 @@ import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { interval, Subscription } from 'rxjs';
 import { SecurityService } from '../../../../shared/services/security/security.service';
 import { escaparHtml } from '../../../../shared/utils/escapar-html';
-import { haceCuanto, marcaDeUbicacion, ubicacionVigente } from '../../../../shared/utils/ubicacion-mensajero';
+import { haceCuanto, marcaDeUbicacion, perteneceAEmpresa, ubicacionVigente } from '../../../../shared/utils/ubicacion-mensajero';
 
 interface UbicacionPedido {
   nroPedido: string;
@@ -579,11 +579,6 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         this.agregarMarcadorUsuario();
       }
 
-      // Configurar actualización en tiempo real si está habilitada
-      if (this.tiempoReal) {
-        this.iniciarActualizacionTiempoReal();
-      }
-
       // Ajustar vista a todos los marcadores
       this.ajustarVistaAMarcadores();
 
@@ -814,32 +809,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
     this.mapa.fitBounds(grupo.getBounds().pad(0.1));
   }
 
-  private iniciarActualizacionTiempoReal(): void {
-    // Actualizar posiciones cada 30 segundos (simulado)
-    this.intervalTimer = setInterval(() => {
-      this.simularMovimientoPedidos();
-    }, 30000);
-  }
-
-  private simularMovimientoPedidos(): void {
-    // Simular pequeños movimientos para pedidos en ruta
-    this.configuracion.ubicaciones.forEach(ubicacion => {
-      if (ubicacion.estado === 'Despachado' && ubicacion.latitud && ubicacion.longitud) {
-        // Pequeño movimiento aleatorio (simulando avance en la ruta)
-        const variacion = 0.001; // Aproximadamente 100 metros
-        ubicacion.latitud += (Math.random() - 0.5) * variacion;
-        ubicacion.longitud += (Math.random() - 0.5) * variacion;
-        
-        // Actualizar tiempo estimado (reducir aleatoriamente)
-        if (ubicacion.tiempoEstimado && ubicacion.tiempoEstimado > 5) {
-          ubicacion.tiempoEstimado -= Math.floor(Math.random() * 3) + 1;
-        }
-      }
-    });
-
-    // Actualizar marcadores en el mapa
-    this.agregarMarcadores();
-  }
+  // Ticket 1159: antes un temporizador movía al azar, cada 30 s, los marcadores de pedidos Despachado
+  // (y bajaba su tiempo estimado): ubicaciones inventadas en un mapa que se usa para ubicar mensajeros.
+  // El movimiento real es el de los mensajeros, que llega de active_users.
 
   // Método público para actualizar configuración
   actualizarConfiguracion(nuevaConfiguracion: ConfiguracionMapa): void {
@@ -1017,33 +989,9 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
             // console.log('🔍 [DEBUG] No hay nombre de empresa configurado');
             return false;
           }
-          const key = snapshot.key as string;
-          const keyParts = key.split('_');
-
-          // console.log(`🔍 [DEBUG] Procesando clave: "${key}" -> partes:`, keyParts);
-
-          // Nuevo filtro más flexible: buscar la empresa en cualquier parte de la clave
-          const keyUpperCase = key.toUpperCase();
-          const companyNameUpper = this.companyName.toUpperCase();
-
-          // Buscar coincidencias parciales en las partes de la clave
-          const hasCompanyMatch = keyParts.some(part => {
-            const partUpper = part.toUpperCase();
-            return partUpper.includes(companyNameUpper) || companyNameUpper.includes(partUpper);
-          });
-
-          // También buscar en la clave completa por si la empresa tiene espacios/guiones
-          const hasKeyMatch = keyUpperCase.includes(companyNameUpper) ||
-                             companyNameUpper.includes(keyUpperCase.replace(/_/g, ' '));
-
-          const match = hasCompanyMatch || hasKeyMatch;
-
-          // console.log(`🔍 [DEBUG] Filtro flexible - Empresa: "${this.companyName}"`);
-          // console.log(`🔍 [DEBUG] - ¿Coincidencia en partes?: ${hasCompanyMatch}`);
-          // console.log(`🔍 [DEBUG] - ¿Coincidencia en clave?: ${hasKeyMatch}`);
-          // console.log(`🔍 [DEBUG] - Resultado final: ${match}`);
-
-          return match;
+          // Ticket 1159: solo los mensajeros de ESTA empresa (la clave termina en la de la empresa).
+          // El filtro anterior aceptaba cualquier parte del nombre contenida en la de la empresa.
+          return perteneceAEmpresa(snapshot.key, this.companyName);
         })
         .filter(snapshot => {
           // Ticket 1154: solo se pintan ubicaciones de los últimos 15 minutos de quien no figura

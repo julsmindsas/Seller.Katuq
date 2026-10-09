@@ -36,7 +36,7 @@
         </select>
       </label>
 
-      <label>
+      <label *ngIf="!esConteoGeneral">
         <span>Cuántos productos</span>
         <input type="number" [(ngModel)]="tamano" min="1" max="500" />
       </label>
@@ -52,7 +52,7 @@
 
     <button class="cnt-boton" (click)="armarConteo()" [disabled]="guardando">
       <i class="pi" [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-list'"></i>
-      Armar conteo de {{ tamano }} productos
+      {{ textoBotonArmar }}
     </button>
   </section>
 
@@ -126,6 +126,12 @@
         </div>
       </div>
 
+      <label class="cnt-buscador" *ngIf="s.lineas.length > 15">
+        <span>Buscar en este conteo</span>
+        <input type="search" [(ngModel)]="filtro" placeholder="Nombre, referencia o ubicación" />
+        <small *ngIf="filtro">Mostrando {{ lineasVisibles.length }} de {{ s.lineas.length }}</small>
+      </label>
+
       <div class="cnt-tabla-marco">
         <table class="cnt-tabla">
           <thead>
@@ -138,7 +144,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let linea of s.lineas" [ngClass]="claseLinea(linea)">
+            <tr *ngFor="let linea of lineasVisibles" [ngClass]="claseLinea(linea)">
               <td>
                 <!-- Ticket 1034: el nombre manda; la referencia queda debajo, como en el mapa de la bodega -->
                 <span class="cnt-nombre" *ngIf="linea.nombre">{{ linea.nombre }}</span>

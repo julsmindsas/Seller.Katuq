@@ -39,7 +39,12 @@ export class ConteosComponent implements OnInit {
     { valor: 'movimiento', label: 'Lo que más se mueve', ayuda: 'Donde más se toca es donde más se descuadra' },
     { valor: 'sin_contar', label: 'Lo que lleva más sin contarse', ayuda: 'Para que nada quede nunca sin mirar' },
     { valor: 'ubicacion', label: 'Por zonas', ayuda: 'Barrer la bodega en orden de recorrido' },
+    // Ticket 1162: el conteo general, para cuando se está arrancando el inventario de una bodega.
+    { valor: 'todo', label: 'Toda la bodega', ayuda: 'Conteo general: todos los productos que tiene registrados' },
   ];
+
+  /** Texto para encontrar un producto en un conteo largo (nombre, referencia o ubicación). */
+  filtro = '';
 
   sesiones: SesionConteo[] = [];
   sesion: SesionConteo | null = null;
@@ -73,6 +78,26 @@ export class ConteosComponent implements OnInit {
     });
   }
 
+  get esConteoGeneral(): boolean {
+    return this.criterio === 'todo';
+  }
+
+  get textoBotonArmar(): string {
+    return this.esConteoGeneral
+      ? 'Armar conteo de toda la bodega'
+      : `Armar conteo de ${this.tamano} productos`;
+  }
+
+  /** Las líneas del conteo abierto que coinciden con el buscador; sin texto, todas. */
+  get lineasVisibles(): LineaConteo[] {
+    const lineas = this.sesion?.lineas || [];
+    const texto = (this.filtro || '').trim().toLowerCase();
+    if (!texto) return lineas;
+    return lineas.filter((l) =>
+      [l.nombre, l.referencia, l.productoId, l.ubicacion].some((campo) => String(campo || '').toLowerCase().includes(texto)),
+    );
+  }
+
   armarConteo(): void {
     if (!this.bodegaSeleccionada) {
       Swal.fire('Falta la bodega', 'Escoja en qué bodega va a contar.', 'warning');
@@ -83,6 +108,7 @@ export class ConteosComponent implements OnInit {
     this.inventarioService.crearConteo(this.bodegaSeleccionada, this.criterio, this.tamano).subscribe({
       next: (sesion) => {
         this.guardando = false;
+        this.filtro = '';
         this.sesion = sesion;
         this.cargarSesiones();
       },
@@ -109,6 +135,7 @@ export class ConteosComponent implements OnInit {
 
   cerrarDetalle(): void {
     this.sesion = null;
+    this.filtro = '';
     this.cargarSesiones();
   }
 

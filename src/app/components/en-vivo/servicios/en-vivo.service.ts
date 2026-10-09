@@ -10,7 +10,7 @@ import {
   RespuestaPregunta,
   VistaEnVivo,
 } from './en-vivo.modelos';
-import { rutasEnVivo } from './en-vivo-rutas';
+import { consulta, rutasEnVivo } from './en-vivo-rutas';
 
 /** Máximo de caracteres de una pregunta a Opttia (diseño 16). */
 export const MAX_PREGUNTA = 160;
@@ -51,14 +51,17 @@ export class EnVivoService extends BaseService {
     return this.get<FotoGlobalEnVivo | RespuestaNoDisponible>(rutasEnVivo.fotoGlobal());
   }
 
-  /** Interruptor de Opttia en "En vivo" de la empresa de la sesión (`general` = el del servidor). */
-  interruptorOpttia(): Observable<InterruptorOpttia> {
-    return this.get<InterruptorOpttia>(RUTA_INTERRUPTOR_OPTTIA);
+  /**
+   * Interruptor de Opttia en "En vivo" (`general` = el del servidor). Sin `comercio`, el de la empresa
+   * de la sesión; con `comercio` (solo sesión de Katuq), el del comercio que se está mirando.
+   */
+  interruptorOpttia(comercio?: string): Observable<InterruptorOpttia> {
+    return this.get<InterruptorOpttia>(`${RUTA_INTERRUPTOR_OPTTIA}${consulta({ comercio })}`);
   }
 
-  /** Prende o apaga a Opttia en "En vivo" para la empresa de la sesión (Administrador o Super Administrador). */
-  guardarInterruptorOpttia(activado: boolean): Observable<InterruptorOpttia> {
-    return this.put<InterruptorOpttia>(RUTA_INTERRUPTOR_OPTTIA, { activado });
+  /** Prende o apaga a Opttia en "En vivo" (Administrador o Super Administrador); `comercio` como arriba. */
+  guardarInterruptorOpttia(activado: boolean, comercio?: string): Observable<InterruptorOpttia> {
+    return this.put<InterruptorOpttia>(RUTA_INTERRUPTOR_OPTTIA, comercio ? { activado, comercio } : { activado });
   }
 
   /**
