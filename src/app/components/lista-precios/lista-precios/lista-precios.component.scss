@@ -159,7 +159,12 @@
   color: #fff;                      /* activo: blanco sobre púrpura */
   background: #5F3FE0;
   border-color: transparent;
-  box-shadow: 0 4px 12px rgba(115, 102, 255, .3);
+  box-shadow: 0 4px 12px rgba(95, 63, 224, .3);
+}
+/* El título es un span del *ngIf de PrimeNG: el global `span.ng-star-inserted` lo pinta azul
+   (#4555D1) y sobre el púrpura de la pestaña activa no se ve. Que herede el color del enlace. */
+:host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link .p-tabview-title {
+  color: inherit;
 }
 :host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link:focus,
 :host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link:focus-visible {

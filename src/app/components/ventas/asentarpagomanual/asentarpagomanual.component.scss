@@ -34,9 +34,12 @@
         }
         
         &.p-highlight .p-tabview-nav-link {
-          background: #a78bfa;
+          background: #5F3FE0;
           color: white;
-          box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+          box-shadow: 0 4px 8px rgba(95, 63, 224, 0.3);
+
+          // El título es un span de *ngIf: el global `span.ng-star-inserted` lo pinta azul.
+          .p-tabview-title { color: inherit; }
         }
       }
     }
