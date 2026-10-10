@@ -46,6 +46,8 @@ export class EnVivoOpttiaInterruptorComponent implements OnInit, OnChanges, OnDe
   guardando = false;
 
   private readonly suscripciones = new Subscription();
+  /** Lectura en curso: al cambiar de comercio se cancela, para que una respuesta tardía no pise la nueva. */
+  private lectura: Subscription | null = null;
 
   constructor(
     private readonly api: EnVivoService,
@@ -65,22 +67,22 @@ export class EnVivoOpttiaInterruptorComponent implements OnInit, OnChanges, OnDe
   private cargar(): void {
     if (!sesionEsAdministrador()) return;
     this.activado = null;
-    this.suscripciones.add(
-      this.api.interruptorOpttia(this.comercio).subscribe({
-        next: (r) => {
-          this.activado = r?.activado !== false;
-          this.general = r?.general !== false;
-          this.cambios.markForCheck();
-        },
-        error: () => {
-          this.activado = null;
-          this.cambios.markForCheck();
-        },
-      })
-    );
+    this.lectura?.unsubscribe();
+    this.lectura = this.api.interruptorOpttia(this.comercio).subscribe({
+      next: (r) => {
+        this.activado = r?.activado !== false;
+        this.general = r?.general !== false;
+        this.cambios.markForCheck();
+      },
+      error: () => {
+        this.activado = null;
+        this.cambios.markForCheck();
+      },
+    });
   }
 
   ngOnDestroy(): void {
+    this.lectura?.unsubscribe();
     this.suscripciones.unsubscribe();
   }
 
