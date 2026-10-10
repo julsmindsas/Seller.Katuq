@@ -1226,7 +1226,9 @@ export class OperacionEnVivoEscena extends EscenaBase<string> {
     v.headT = -Math.PI / 2;
     this.refrescarEtiquetaVeh(v);
     this.sucio = true;
-    if (!v.pedidos.size) this.siguienteParada(v); // se entregó mientras iba: vuelve
+    // Si algo se entregó mientras iba: sin pedidos vuelve al garaje; si esta casa ya no es la del
+    // siguiente pedido, sigue hasta la de ese (siguienteParada no se mueve si ya está en la correcta).
+    this.siguienteParada(v);
   }
 
   /** Sin animar (al cargar la foto): la moto aparece parqueada frente a la casa. */

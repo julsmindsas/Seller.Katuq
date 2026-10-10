@@ -4,6 +4,7 @@ import { takeUntil, debounceTime } from "rxjs/operators";
 import { Router } from "@angular/router";
 import { CartSingletonService } from "./ventas/cart.singleton.service";
 import { UtilsService } from "./utils.service";
+import { CompanyFeaturesService } from "./company-features.service";
 
 // Menu
 export interface Menu {
@@ -73,10 +74,15 @@ export class NavService implements OnDestroy {
   public fullScreen: boolean = false;
   ALLMENUITEMS: Menu[];
 
+  // El alistamiento (picking y packing) nace apagado: su entrada del menú solo se ofrece a la
+  // empresa con la bandera `pickingAlistamiento` prendida. Último valor con el que se filtró el menú.
+  private alistamientoPrendido: boolean = false;
+
   constructor(
     private router: Router,
     private cartSingleton: CartSingletonService,
     private utils: UtilsService,
+    private features: CompanyFeaturesService,
   ) {
     const user = localStorage.getItem("user");
     if (user) {
@@ -107,6 +113,18 @@ export class NavService implements OnDestroy {
     });
     this.ALLMENUITEMS = this.utils.deepClone(this.MENUITEMS);
     this.filterMenuItemsByAuthorization();
+
+    // La empresa llega DESPUÉS de iniciar sesión (con sus banderas). Si la bandera del alistamiento
+    // cambia, se vuelve a filtrar el menú; si no cambia (el caso de casi todas las empresas) no se
+    // recalcula nada.
+    this.features
+      .isEnabled$("pickingAlistamiento")
+      .pipe(takeUntil(this.unsubscriber))
+      .subscribe((prendida) => {
+        if (prendida !== this.alistamientoPrendido) {
+          this.filterMenuItemsByAuthorization();
+        }
+      });
   }
 
   refrescarCart() {
@@ -191,6 +209,9 @@ export class NavService implements OnDestroy {
     // Verificar si dropshipping está habilitado para filtros adicionales
     const isDropshippingEnabled = this.isDropshippingEnabled();
 
+    // Alistamiento (picking y packing): sin la bandera de la empresa no se ofrece
+    this.alistamientoPrendido = this.features.isEnabled("pickingAlistamiento");
+
     // Paso 1: Filtrar elementos y sus hijos basados en roles y permisos
     const filteredMenu = this.ALLMENUITEMS.map((item) => {
       // Omitir item si es solo para superadmin/admin y el usuario no lo es
@@ -214,6 +235,15 @@ export class NavService implements OnDestroy {
             child.path &&
             child.path.includes("dropshipping") &&
             !isDropshippingEnabled
+          ) {
+            return false;
+          }
+
+          // Filtrar el alistamiento si la empresa no tiene la bandera prendida
+          if (
+            child.path &&
+            child.path.startsWith("picking-packing") &&
+            !this.alistamientoPrendido
           ) {
             return false;
           }

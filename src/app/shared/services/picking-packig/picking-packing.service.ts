@@ -1,75 +1,84 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { PickingCompletarRequest, PickingRequest, PickingResponse, Producto } from '../../../components/picking-packing/models/picking.model';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
+import { BaseService } from '../base.service';
+import { PickingAccionRespuesta, PickingCompletarRequest, PickingRequest, PickingResponse } from '../../../components/picking-packing/models/picking.model';
 import { Order, OrderListResponse } from '../../../components/picking-packing/models/order.model';
-import { map } from 'rxjs/operators';
+import { desdeEstadoServidor, EstadoPickingServidor } from '../../../components/picking-packing/picking-mensajes';
+import { catchError, map } from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root'
 })
-export class PickingPackingService {
-    // Usar una URL base estándar si no existe en environment
-    private apiUrl = environment.urlApi + '/v1';
-
-    constructor(private http: HttpClient) { }
+export class PickingPackingService extends BaseService {
+    constructor(http: HttpClient) {
+        super(http);
+    }
 
     // Pedidos
     getOrders(): Observable<OrderListResponse> {
-        const url = `${this.apiUrl}/orders/all`;
-        return this.http.get<OrderListResponse>(url);
+        return this.get<OrderListResponse>('/v1/orders/all');
     }
 
+    /** Un pedido por su número exacto (ej. ORE-001393). */
     getOrderByNroPedido(nroPedido: string): Observable<Order> {
-        const url = `${this.apiUrl}/orders/byNroPedido/${nroPedido}`;
-        return this.http.get<Order>(url);
+        return this.get<{ success: boolean; data: Order }>(
+            '/v1/orders/getOrderByNroPedido/' + encodeURIComponent(nroPedido)
+        ).pipe(map(respuesta => respuesta.data));
+    }
+
+    /** Búsqueda por número de pedido, completo o parcial. Sin resultados: lista vacía. */
+    buscarPedidos(texto: string): Observable<Order[]> {
+        return this.get<Order[]>('/v1/orders/byNroPedido/' + encodeURIComponent(texto)).pipe(
+            catchError(error => (error && error.status === 404 ? of([] as Order[]) : throwError(() => error)))
+        );
     }
 
     // Picking
-    getEstadoPicking(pickingId: string): Observable<PickingResponse> {
-        const url = `${this.apiUrl}/picking/${pickingId}`;
-        return this.http.get<PickingResponse>(url);
+    // El servidor consulta el alistamiento POR PEDIDO (no hay consulta por id de picking).
+    // Un pedido al que todavía no se le inició el alistamiento responde 404: aquí es `null`.
+    getEstadoPicking(ordenId: string): Observable<PickingResponse | null> {
+        return this.get<EstadoPickingServidor>(
+            '/v1/inventory/picking/estado/' + encodeURIComponent(ordenId)
+        ).pipe(
+            map(servidor => desdeEstadoServidor(servidor) as PickingResponse),
+            catchError(error => (error && error.status === 404 ? of(null) : throwError(() => error)))
+        );
     }
 
-    iniciarPicking(data: PickingRequest): Observable<PickingResponse> {
-        const url = `${this.apiUrl}/picking`;
-        return this.http.post<PickingResponse>(url, data);
+    iniciarPicking(data: PickingRequest): Observable<PickingAccionRespuesta> {
+        return this.post<PickingAccionRespuesta>('/v1/inventory/picking/iniciar', data);
     }
 
-    completarPicking(data: PickingCompletarRequest): Observable<PickingResponse> {
-        const url = `${this.apiUrl}/picking/${data.pickingId}/completar`;
-        return this.http.post<PickingResponse>(url, data);
+    completarPicking(data: PickingCompletarRequest): Observable<PickingAccionRespuesta> {
+        return this.post<PickingAccionRespuesta>('/v1/inventory/picking/completar', data);
     }
 
     // Datos auxiliares
+    // Las bodegas de la empresa menos las desactivadas. Una bodega sin el campo `active` cuenta como
+    // activa (así la trata el servidor al crear bodegas); por eso no se usa /bodegas/active.
     getBodegasDisponibles(): Observable<any[]> {
-        const url = `${this.apiUrl}/bodegas`;
-        return this.http.get<any[]>(url);
-    }
-
-    getProductosDisponibles(): Observable<any[]> {
-        const url = `${this.apiUrl}/productos`;
-        return this.http.get<any[]>(url);
+        return this.get<any[]>('/v1/bodegas/all').pipe(
+            map(bodegas => bodegas.filter(bodega => bodega.active !== false))
+        );
     }
 
     getOrdenesPendientes(): Observable<Order[]> {
-        const url = `${this.apiUrl}/orders/pending`;
-        return this.http.get<OrderListResponse>(url).pipe(
+        return this.get<OrderListResponse>('/v1/orders/pending').pipe(
             map(response => response.orders)
         );
     }
 
     // Servicios de Packing
     iniciarPacking(data: { ordenId: string, bodegaId: string }): Observable<any> {
-        return this.http.post(`${this.apiUrl}/inventory/packing/iniciar`, data);
+        return this.post<any>('/v1/inventory/packing/iniciar', data);
     }
 
     completarPacking(data: { packingId: string, informacionEmbalaje: any }): Observable<any> {
-        return this.http.post(`${this.apiUrl}/inventory/packing/completar`, data);
+        return this.post<any>('/v1/inventory/packing/completar', data);
     }
 
     getEstadoPacking(ordenId: string): Observable<any> {
-        return this.http.get(`${this.apiUrl}/inventory/packing/estado/${ordenId}`);
+        return this.get<any>('/v1/inventory/packing/estado/' + ordenId);
     }
-} 
+}

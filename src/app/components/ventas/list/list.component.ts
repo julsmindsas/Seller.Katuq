@@ -4774,6 +4774,45 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return ListOrdersComponent.PAGO_STATUS_MAP[status] || { short: status, full: status };
   }
 
+  /**
+   * Confirmación del pedido por WhatsApp (bandera por comercio `whatsappOrderConfirmation`,
+   * apagada de fábrica). Solo los pedidos a los que el cliente recibió el mensaje con
+   * Confirmar y Cancelar traen `confirmacionWhatsapp`; sin ese campo no se pinta nada, así
+   * que con la bandera apagada la lista queda exactamente igual. Es una marca APARTE de los
+   * estados del pedido: no los cambia ni los reemplaza.
+   */
+  etiquetaConfirmacionWhatsapp(pedido: any): { texto: string; clase: string; titulo: string } | null {
+    const conf = pedido?.confirmacionWhatsapp;
+    if (!conf?.estado) return null;
+    const proceso = pedido?.estadoProceso;
+    if (conf.estado === 'cancelado') {
+      // Solo si el pedido de verdad quedó cancelado: una cancelación a medias (la marca ya dice
+      // "cancelado" pero el pedido sigue vivo en la cola de despachos) no es una cancelación.
+      return proceso === 'Cancelado'
+        ? { texto: 'Canceló por WhatsApp', clase: 'badge-danger', titulo: 'El cliente canceló el pedido desde el mensaje de WhatsApp.' }
+        : null;
+    }
+    // Un pedido que ya se cayó (cancelado, rechazado) no está "por confirmar".
+    const caidos = ['Cancelado', 'Anulado', 'Rechazado', 'Precancelado'];
+    if (caidos.includes(proceso) || caidos.includes(pedido?.estadoPago)) return null;
+    // Las señales no se quedan pegadas: entregado o cerrado ya no hay nada que resolver con el cliente,
+    // y "por confirmar" deja de decir algo útil en cuanto el pedido salió.
+    const terminado = ['Entregado', 'Cerrado'].includes(proceso);
+    const yaSalio = terminado || ['EnDespacho', 'Despachado'].includes(proceso);
+    if (conf.cancelacionSolicitadaEn) {
+      // Importa justo cuando el pedido ya salió: hay que alcanzar a avisarle al mensajero o a la transportadora.
+      return terminado
+        ? null
+        : { texto: 'Pidió cancelar', clase: 'badge-danger', titulo: 'El cliente pidió cancelar por WhatsApp, pero el pedido ya estaba en proceso: hay que resolverlo con él.' };
+    }
+    if (conf.estado === 'confirmado') {
+      return { texto: 'Confirmado', clase: 'badge-success', titulo: 'El cliente confirmó el pedido desde el mensaje de WhatsApp.' };
+    }
+    return yaSalio
+      ? null
+      : { texto: 'Por confirmar', clase: 'badge-warning', titulo: 'Le enviamos el mensaje por WhatsApp y el cliente todavía no responde.' };
+  }
+
   // ============================================================
   // Helpers rediseño 1b (solo presentación — vista lista + panel)
   // ============================================================
